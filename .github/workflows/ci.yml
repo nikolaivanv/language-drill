@@ -35,12 +35,19 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm turbo test
 
-  neon-branch:
-    name: Create Neon Branch
+  neon-migrate:
+    name: Neon Branch & Migrate
     runs-on: ubuntu-latest
-    outputs:
-      database_url: ${{ steps.neon-create.outputs.DATABASE_URL }}
+    needs: [lint-typecheck, test]
     steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
       - name: Install neonctl
         run: npm install -g neonctl
 
@@ -56,29 +63,15 @@ jobs:
 
           DATABASE_URL=$(echo "$BRANCH_OUTPUT" | jq -r '.connection_uri')
           echo "::add-mask::$DATABASE_URL"
-          echo "DATABASE_URL=$DATABASE_URL" >> "$GITHUB_OUTPUT"
+          echo "DATABASE_URL=$DATABASE_URL" >> "$GITHUB_ENV"
 
-  migrate:
-    name: Run Migrations
-    runs-on: ubuntu-latest
-    needs: [lint-typecheck, test, neon-branch]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
       - name: Run Drizzle migrations
-        env:
-          DATABASE_URL: ${{ needs.neon-branch.outputs.database_url }}
         run: pnpm --filter @language-drill/db db:migrate
 
   preview:
     name: Vercel Preview Deploy
     runs-on: ubuntu-latest
-    needs: [migrate]
+    needs: [neon-migrate]
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
