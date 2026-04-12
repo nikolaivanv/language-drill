@@ -91,6 +91,20 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel
 
+      - name: Pull Vercel environment
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: vercel pull --yes --token "$VERCEL_TOKEN"
+
+      - name: Build with Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: vercel build --token "$VERCEL_TOKEN"
+
       - name: Deploy to Vercel Preview
         id: vercel-deploy
         env:
@@ -98,9 +112,7 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          DEPLOY_URL=$(vercel deploy apps/web \
-            --token "$VERCEL_TOKEN" \
-            --yes)
+          DEPLOY_URL=$(vercel deploy --prebuilt --token "$VERCEL_TOKEN")
           echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
 
       - name: Post preview URL as PR comment
