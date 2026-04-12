@@ -1,0 +1,115 @@
+name: PR CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ci-${{ github.event.number }}
+  cancel-in-progress: true
+
+jobs:
+  lint-typecheck:
+    name: Lint & Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo lint typecheck
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo test
+
+  neon-branch:
+    name: Create Neon Branch
+    runs-on: ubuntu-latest
+    outputs:
+      database_url: ${{ steps.neon-create.outputs.DATABASE_URL }}
+    steps:
+      - name: Install neonctl
+        run: npm install -g neonctl
+
+      - name: Create Neon branch
+        id: neon-create
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+        run: |
+          BRANCH_OUTPUT=$(neonctl branches create \
+            --project-id ${{ secrets.NEON_PROJECT_ID }} \
+            --name "pr-${{ github.event.number }}" \
+            --output json)
+
+          DATABASE_URL=$(echo "$BRANCH_OUTPUT" | jq -r '.connection_uri')
+          echo "::add-mask::$DATABASE_URL"
+          echo "DATABASE_URL=$DATABASE_URL" >> "$GITHUB_OUTPUT"
+
+  migrate:
+    name: Run Migrations
+    runs-on: ubuntu-latest
+    needs: [lint-typecheck, test, neon-branch]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Run Drizzle migrations
+        env:
+          DATABASE_URL: ${{ needs.neon-branch.outputs.database_url }}
+        run: pnpm --filter @language-drill/db db:migrate
+
+  preview:
+    name: Vercel Preview Deploy
+    runs-on: ubuntu-latest
+    needs: [migrate]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy to Vercel Preview
+        id: vercel-deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          DEPLOY_URL=$(vercel deploy apps/web \
+            --token "$VERCEL_TOKEN" \
+            --yes)
+          echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Post preview URL as PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🔗 **Preview deploy:** ${{ steps.vercel-deploy.outputs.url }}`
+            })

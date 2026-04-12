@@ -1,7 +1,7 @@
 {
   "name": "language-drill",
   "private": true,
-  "packageManager": "pnpm@9",
+  "packageManager": "pnpm@9.15.4",
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
@@ -10,9 +10,15 @@
     "test": "turbo run test"
   },
   "devDependencies": {
+    "@types/node": "^22.0.0",
     "turbo": "latest",
     "typescript": "^5.0.0",
     "eslint": "^8.0.0",
     "prettier": "^3.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/node": "^22.0.0"
+    }
   }
 }
