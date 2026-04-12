@@ -51,14 +51,21 @@ jobs:
       - name: Install neonctl
         run: npm install -g neonctl
 
-      - name: Create Neon branch
+      - name: Create or reuse Neon branch
         id: neon-create
         env:
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
         run: |
+          BRANCH_NAME="pr-${{ github.event.number }}"
+          PROJECT_ID="${{ secrets.NEON_PROJECT_ID }}"
+
+          # Delete existing branch if present (re-run scenario)
+          neonctl branches delete "$BRANCH_NAME" \
+            --project-id "$PROJECT_ID" --yes 2>/dev/null || true
+
           BRANCH_OUTPUT=$(neonctl branches create \
-            --project-id ${{ secrets.NEON_PROJECT_ID }} \
-            --name "pr-${{ github.event.number }}" \
+            --project-id "$PROJECT_ID" \
+            --name "$BRANCH_NAME" \
             --output json)
 
           DATABASE_URL=$(echo "$BRANCH_OUTPUT" | jq -r '.connection_uris[0].connection_uri')
