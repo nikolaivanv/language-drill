@@ -10,9 +10,10 @@ Full docs: `docs/architecture.md`, `docs/progress-tracking.md`.
 
 ## Positioning
 
-Target: **intermediate plateau** — learners past A2 who've exhausted Duolingo but can't yet speak fluently. Tagline: *"What you do between italki sessions."*
+Target: **intermediate plateau** — learners past A2 who've exhausted Duolingo but can't yet speak fluently. Tagline: _"What you do between italki sessions."_
 
 Differentiators (only powerful together):
+
 - Forces **written and spoken production**, not multiple-choice recognition
 - **Skill-based mastery tracking** (not XP/streaks/lessons) mapped to CEFR and real exams
 - Designed from the start for **polyglots** — multiple languages at different levels
@@ -24,21 +25,21 @@ Out of scope: accent reduction, gamification, social features, delta learning (l
 
 ## Tech Stack
 
-| Layer | Choice |
-|---|---|
-| Web frontend | Next.js (App Router) + TypeScript, hosted on Vercel |
-| Mobile (later) | Expo / React Native |
-| Backend API | AWS Lambda + API Gateway v2, Hono framework |
-| IaC | AWS CDK (TypeScript) |
-| Database | Neon (serverless Postgres) + Drizzle ORM |
-| Cache / rate limiting | Upstash Redis |
-| Auth | Clerk (passwordless + Google OAuth, invite codes) |
-| Storage | S3 + CloudFront |
-| LLM | Anthropic Claude API (`claude-sonnet-4-6`) with prompt caching |
-| TTS | AWS Polly (neural voices — EN/ES/DE/TR all supported) |
-| STT | AWS Transcribe (speaking exercises) |
-| Background jobs | EventBridge Scheduler + SQS + Lambda |
-| Monorepo | pnpm workspaces + Turborepo |
+| Layer                 | Choice                                                         |
+| --------------------- | -------------------------------------------------------------- |
+| Web frontend          | Next.js (App Router) + TypeScript, hosted on Vercel            |
+| Mobile (later)        | Expo / React Native                                            |
+| Backend API           | AWS Lambda + API Gateway v2, Hono framework                    |
+| IaC                   | AWS CDK (TypeScript)                                           |
+| Database              | Neon (serverless Postgres) + Drizzle ORM                       |
+| Cache / rate limiting | Upstash Redis                                                  |
+| Auth                  | Clerk (passwordless + Google OAuth, invite codes)              |
+| Storage               | S3 + CloudFront                                                |
+| LLM                   | Anthropic Claude API (`claude-sonnet-4-6`) with prompt caching |
+| TTS                   | AWS Polly (neural voices — EN/ES/DE/TR all supported)          |
+| STT                   | AWS Transcribe (speaking exercises)                            |
+| Background jobs       | EventBridge Scheduler + SQS + Lambda                           |
+| Monorepo              | pnpm workspaces + Turborepo                                    |
 
 **Why a separate Lambda API (not Next.js API routes):** the mobile app needs the same backend from day one; Lambda is easier to rate-limit and meter independently of Vercel.
 
@@ -60,6 +61,31 @@ infra/            — AWS CDK stack
 
 ---
 
+## Package Management
+
+- Always use the latest stable version of packages unless there's a specific
+  reason to pin (document the reason in a comment if so)
+- Before installing a package, verify it is actively maintained and not deprecated
+- Prefer packages with recent releases (within the last 6 months) and active
+  GitHub activity
+- If a package is deprecated, use the recommended replacement instead
+- Avoid packages with known security vulnerabilities
+
+---
+
+## Testing
+
+- After completing each spec task, write and run tests before marking
+  the task complete
+- Tests must pass before moving to the next task
+- Add tests to the existing test file for that module, don't create
+  orphaned test files
+- After running tests, report: X passed, Y failed, and any failures
+  with proposed fixes
+- Do not proceed to the next task if tests are failing
+
+---
+
 ## Progress Tracking Model
 
 The core differentiator. Full design: `docs/progress-tracking.md`.
@@ -67,11 +93,13 @@ The core differentiator. Full design: `docs/progress-tracking.md`.
 **Spine: CEFR (A1–C2).** All progress maps here; exam readiness (IELTS, DELE, Goethe, YDS) is derived automatically.
 
 **3-layer skill taxonomy:**
+
 1. **Macro-skills** — Listening, Reading, Writing, Speaking (maps to exam sub-scores)
 2. **Enabling competencies** — vocabulary breadth/depth, grammar accuracy/range, discourse, pragmatics, phonology
 3. **Grammar points** — individual rules per language, each tagged to a CEFR level, individually tracked
 
 **Measurement principles:**
+
 - Claude evaluates free-form answers and returns structured JSON scores per dimension
 - Mastery score `[0,1]` + confidence value per competency; updated via simplified Bayesian rule
 - Harder exercises produce stronger signals; recency-weighted; decays over time (Ebbinghaus)
