@@ -61,7 +61,7 @@ jobs:
             --name "pr-${{ github.event.number }}" \
             --output json)
 
-          DATABASE_URL=$(echo "$BRANCH_OUTPUT" | jq -r '.connection_uri')
+          DATABASE_URL=$(echo "$BRANCH_OUTPUT" | jq -r '.connection_uris[0].connection_uri')
           echo "::add-mask::$DATABASE_URL"
           echo "DATABASE_URL=$DATABASE_URL" >> "$GITHUB_ENV"
 
