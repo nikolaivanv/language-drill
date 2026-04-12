@@ -1,12 +1,12 @@
-import { describe, it, expect, vi } from 'vitest';
-import { Hono } from 'hono';
+import { describe, it, expect } from 'vitest';
+import { Hono, type MiddlewareHandler } from 'hono';
 import { authMiddleware } from './auth';
 
 type Env = { Variables: { userId: string } };
 
 function createApp() {
   const app = new Hono<Env>();
-  app.use('*', authMiddleware as any);
+  app.use('*', authMiddleware as unknown as MiddlewareHandler<Env>);
   app.get('/test', (c) => c.json({ userId: c.get('userId') }));
   return app;
 }

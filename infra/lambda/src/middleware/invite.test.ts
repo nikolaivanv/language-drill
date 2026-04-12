@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Hono } from 'hono';
+import { Hono, type MiddlewareHandler } from 'hono';
 
 // Mock the db module before importing the middleware
 vi.mock('../db', () => ({
@@ -26,7 +26,7 @@ function createApp() {
     await next();
   });
 
-  app.use('*', inviteMiddleware as any);
+  app.use('*', inviteMiddleware as unknown as MiddlewareHandler<Env>);
   app.get('/test', (c) => c.json({ ok: true }));
   return app;
 }
