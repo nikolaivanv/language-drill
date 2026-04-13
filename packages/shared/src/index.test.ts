@@ -1,6 +1,22 @@
 import { describe, it, expect } from "vitest";
-import { Language, CefrLevel } from "./index";
-import type { ApiError } from "./index";
+import {
+  Language,
+  CefrLevel,
+  ExerciseType,
+  isClozeContent,
+  isTranslationContent,
+  isVocabRecallContent,
+} from "./index";
+import type {
+  ApiError,
+  ClozeContent,
+  TranslationContent,
+  VocabRecallContent,
+  ExerciseContent,
+  Exercise,
+  EvaluationError,
+  EvaluationResult,
+} from "./index";
 
 describe("Language enum", () => {
   it("has exactly 4 values", () => {
@@ -46,5 +62,217 @@ describe("ApiError type", () => {
     expect(typeof err.error).toBe("string");
     expect(typeof err.code).toBe("string");
     expect(typeof err.status).toBe("number");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Exercise types
+// ---------------------------------------------------------------------------
+
+describe("ExerciseType enum", () => {
+  it("has exactly 3 values", () => {
+    const values = Object.values(ExerciseType);
+    expect(values).toHaveLength(3);
+  });
+
+  it("contains CLOZE, TRANSLATION, VOCAB_RECALL", () => {
+    expect(ExerciseType.CLOZE).toBe("cloze");
+    expect(ExerciseType.TRANSLATION).toBe("translation");
+    expect(ExerciseType.VOCAB_RECALL).toBe("vocab_recall");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Fixtures
+// ---------------------------------------------------------------------------
+
+const clozeContent: ClozeContent = {
+  type: ExerciseType.CLOZE,
+  instructions: "Fill in the blank.",
+  sentence: "She ___ to the store yesterday.",
+  correctAnswer: "went",
+  options: ["went", "go", "gone"],
+  context: "Past tense of 'go'",
+};
+
+const translationContent: TranslationContent = {
+  type: ExerciseType.TRANSLATION,
+  instructions: "Translate the following sentence.",
+  sourceText: "The cat is on the table.",
+  sourceLanguage: Language.EN,
+  targetLanguage: Language.ES,
+  referenceTranslation: "El gato esta en la mesa.",
+};
+
+const vocabRecallContent: VocabRecallContent = {
+  type: ExerciseType.VOCAB_RECALL,
+  instructions: "What is the word?",
+  prompt: "A place where you borrow books",
+  expectedWord: "library",
+  hints: ["starts with L", "has 7 letters"],
+  exampleSentence: "I returned my books to the library.",
+};
+
+// ---------------------------------------------------------------------------
+// Type guard tests
+// ---------------------------------------------------------------------------
+
+describe("isClozeContent", () => {
+  it("returns true for cloze content", () => {
+    expect(isClozeContent(clozeContent)).toBe(true);
+  });
+
+  it("returns false for translation content", () => {
+    expect(isClozeContent(translationContent)).toBe(false);
+  });
+
+  it("returns false for vocab_recall content", () => {
+    expect(isClozeContent(vocabRecallContent)).toBe(false);
+  });
+});
+
+describe("isTranslationContent", () => {
+  it("returns true for translation content", () => {
+    expect(isTranslationContent(translationContent)).toBe(true);
+  });
+
+  it("returns false for cloze content", () => {
+    expect(isTranslationContent(clozeContent)).toBe(false);
+  });
+
+  it("returns false for vocab_recall content", () => {
+    expect(isTranslationContent(vocabRecallContent)).toBe(false);
+  });
+});
+
+describe("isVocabRecallContent", () => {
+  it("returns true for vocab_recall content", () => {
+    expect(isVocabRecallContent(vocabRecallContent)).toBe(true);
+  });
+
+  it("returns false for cloze content", () => {
+    expect(isVocabRecallContent(clozeContent)).toBe(false);
+  });
+
+  it("returns false for translation content", () => {
+    expect(isVocabRecallContent(translationContent)).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Exercise type shape
+// ---------------------------------------------------------------------------
+
+describe("Exercise type", () => {
+  it("shape matches expected structure", () => {
+    const exercise: Exercise = {
+      id: "ex-001",
+      type: ExerciseType.CLOZE,
+      language: Language.EN,
+      difficulty: CefrLevel.B1,
+      content: clozeContent,
+    };
+
+    expect(exercise.id).toBe("ex-001");
+    expect(exercise.type).toBe(ExerciseType.CLOZE);
+    expect(exercise.language).toBe(Language.EN);
+    expect(exercise.difficulty).toBe(CefrLevel.B1);
+    expect(exercise.content.type).toBe(ExerciseType.CLOZE);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ClozeContent with optional fields omitted
+// ---------------------------------------------------------------------------
+
+describe("ClozeContent optional fields", () => {
+  it("works without options and context", () => {
+    const minimal: ClozeContent = {
+      type: ExerciseType.CLOZE,
+      instructions: "Fill in the blank.",
+      sentence: "I ___ happy.",
+      correctAnswer: "am",
+    };
+
+    expect(isClozeContent(minimal)).toBe(true);
+    expect(minimal.options).toBeUndefined();
+    expect(minimal.context).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Evaluation types
+// ---------------------------------------------------------------------------
+
+describe("EvaluationResult type", () => {
+  it("shape matches expected structure", () => {
+    const evalError: EvaluationError = {
+      type: "grammar",
+      severity: "major",
+      text: "She go to school",
+      correction: "She goes to school",
+      explanation: "Third person singular requires -s ending.",
+    };
+
+    const result: EvaluationResult = {
+      score: 0.7,
+      grammarAccuracy: 0.65,
+      vocabularyRange: "B1",
+      taskAchievement: 0.8,
+      feedback: "Good attempt with minor grammar errors.",
+      errors: [evalError],
+      estimatedCefrEvidence: "B1",
+    };
+
+    expect(result.score).toBe(0.7);
+    expect(result.grammarAccuracy).toBe(0.65);
+    expect(result.vocabularyRange).toBe("B1");
+    expect(result.taskAchievement).toBe(0.8);
+    expect(result.feedback).toBe("Good attempt with minor grammar errors.");
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].type).toBe("grammar");
+    expect(result.errors[0].severity).toBe("major");
+    expect(result.estimatedCefrEvidence).toBe("B1");
+  });
+
+  it("works with empty errors array", () => {
+    const result: EvaluationResult = {
+      score: 1.0,
+      grammarAccuracy: 1.0,
+      vocabularyRange: "C1",
+      taskAchievement: 1.0,
+      feedback: "Perfect!",
+      errors: [],
+      estimatedCefrEvidence: "C1",
+    };
+
+    expect(result.errors).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Discriminated union exhaustiveness
+// ---------------------------------------------------------------------------
+
+describe("ExerciseContent discriminated union", () => {
+  it("can be narrowed via switch on type field", () => {
+    const contents: ExerciseContent[] = [clozeContent, translationContent, vocabRecallContent];
+    const types: string[] = [];
+
+    for (const content of contents) {
+      switch (content.type) {
+        case ExerciseType.CLOZE:
+          types.push("cloze");
+          break;
+        case ExerciseType.TRANSLATION:
+          types.push("translation");
+          break;
+        case ExerciseType.VOCAB_RECALL:
+          types.push("vocab_recall");
+          break;
+      }
+    }
+
+    expect(types).toEqual(["cloze", "translation", "vocab_recall"]);
   });
 });

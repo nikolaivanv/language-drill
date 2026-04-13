@@ -1,11 +1,11 @@
 import type { Context, Next } from 'hono';
 import type { LambdaEvent } from 'hono/aws-lambda';
 
-type Variables = {
+export type Variables = {
   userId: string;
 };
 
-type Bindings = {
+export type Bindings = {
   event: LambdaEvent;
 };
 
@@ -24,6 +24,13 @@ export async function authMiddleware(
         };
       }
     | undefined;
+
+  // In local dev mode, userId is pre-set by the dev server — skip JWT extraction
+  const existingUserId = c.get('userId');
+  if (existingUserId) {
+    await next();
+    return;
+  }
 
   const sub = event?.requestContext?.authorizer?.jwt?.claims?.sub;
 
