@@ -134,7 +134,8 @@ describe('useSubmitAnswer — response validation', () => {
   });
 
   it('rejects missing feedback field', () => {
-    const { feedback: _, ...noFeedback } = validEvaluation;
+    const { feedback: _feedback, ...noFeedback } = validEvaluation;
+    void _feedback;
     expect(() => EvaluationResultSchema.parse(noFeedback)).toThrow();
   });
 
