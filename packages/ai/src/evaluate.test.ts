@@ -8,7 +8,6 @@ import type {
   ClozeContent,
   TranslationContent,
   VocabRecallContent,
-  EvaluationResult,
 } from "@language-drill/shared";
 import { buildUserPrompt, EVALUATION_SYSTEM_PROMPT } from "./prompts.js";
 import {
