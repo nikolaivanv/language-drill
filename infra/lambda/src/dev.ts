@@ -14,11 +14,23 @@ import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 
+import { users } from '@language-drill/db';
+import { db } from './db';
 import health from './routes/health';
 import exercises from './routes/exercises';
 
 const DEV_USER_ID = process.env['DEV_USER_ID'] ?? 'dev_user_001';
+const DEV_USER_EMAIL = process.env['DEV_USER_EMAIL'] ?? `${DEV_USER_ID}@local.dev`;
 const PORT = parseInt(process.env['PORT'] ?? '3001', 10);
+
+// Ensure the dev user exists — FK constraints on user_exercise_history / usage_events
+// require a matching row in the users table.
+async function ensureDevUser() {
+  await db
+    .insert(users)
+    .values({ id: DEV_USER_ID, email: DEV_USER_EMAIL })
+    .onConflictDoNothing();
+}
 
 const app = new Hono();
 
@@ -41,8 +53,15 @@ app.use('*', async (c, next) => {
 app.route('/', health);
 app.route('/', exercises);
 
-console.log(`Local API server running at http://localhost:${PORT}`);
-console.log(`  Auth bypassed — userId: ${DEV_USER_ID}`);
-console.log(`  DATABASE_URL: ${process.env['DATABASE_URL'] ? '(set)' : '(NOT SET)'}`);
-
-serve({ fetch: app.fetch, port: PORT });
+ensureDevUser()
+  .then(() => {
+    console.log(`Local API server running at http://localhost:${PORT}`);
+    console.log(`  Auth bypassed — userId: ${DEV_USER_ID} (${DEV_USER_EMAIL})`);
+    console.log(`  DATABASE_URL: ${process.env['DATABASE_URL'] ? '(set)' : '(NOT SET)'}`);
+    serve({ fetch: app.fetch, port: PORT });
+  })
+  .catch((err) => {
+    console.error('Failed to ensure dev user — is DATABASE_URL correct and migrations run?');
+    console.error(err);
+    process.exit(1);
+  });

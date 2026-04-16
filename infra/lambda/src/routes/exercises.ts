@@ -183,8 +183,9 @@ exercises.post('/exercises/:id/submit', async (c) => {
     });
 
     return c.json(result);
-  } catch {
+  } catch (err) {
     // 6. Claude failure — do NOT write to history
+    console.error('[POST /exercises/:id/submit] Claude evaluation failed:', err);
     return c.json(
       { error: 'Evaluation temporarily unavailable', code: 'AI_UNAVAILABLE' },
       502,

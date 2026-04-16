@@ -56,8 +56,39 @@ packages/api-client — TanStack Query hooks + Zod types (shared web/mobile)
 packages/db       — Drizzle schema + migrations
 packages/ai       — Claude client wrapper + prompt templates
 packages/shared   — Common types, constants
+infra/lambda      — Hono API (AWS Lambda) + local dev server
 infra/            — AWS CDK stack
 ```
+
+---
+
+## Running Locally
+
+Both servers are started from the repo root. They read `DATABASE_URL`, `ANTHROPIC_API_KEY`, and Clerk keys from `.env` (see `.env.example`).
+
+| Command | What it does |
+| --- | --- |
+| `pnpm dev` | Both API (port 3001) + web (port 3000) with colored output |
+| `pnpm dev:api` | Local Lambda API only, loads `.env` automatically |
+| `pnpm dev:web` | Next.js only, points `NEXT_PUBLIC_API_URL` at `localhost:3001` |
+| `pnpm db:migrate` | Run Drizzle migrations |
+| `pnpm db:studio` | Browse the DB in Drizzle Studio |
+| `pnpm db:seed:exercises` | Seed the exercise pool (36 idempotent exercises) |
+
+First-time setup:
+
+```bash
+pnpm install
+pnpm db:migrate
+pnpm db:seed:exercises
+pnpm dev
+```
+
+Local dev conventions:
+
+- **Auth is bypassed in the local API.** `infra/lambda/src/dev.ts` injects `userId = dev_user_001` (override via `DEV_USER_ID`). The auth middleware skips JWT extraction when a `userId` is already set — production is unaffected. The dev server auto-upserts the user row on startup.
+- **Web → local API wiring.** `pnpm dev:web` sets `NEXT_PUBLIC_API_URL=http://localhost:3001` inline, overriding anything in `apps/web/.env`.
+- **Answer submission calls Claude for real.** Ensure `ANTHROPIC_API_KEY` is set — otherwise `POST /exercises/:id/submit` returns 502. Exercise retrieval works without it.
 
 ---
 
