@@ -11,7 +11,9 @@
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "seed:exercises": "npx tsx scripts/seed-exercises.ts",
+    "test": "vitest run"
   },
   "dependencies": {
     "drizzle-orm": "^0.30.0",
@@ -19,6 +21,8 @@
   },
   "devDependencies": {
     "drizzle-kit": "^0.21.0",
-    "typescript": "^5.0.0"
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
   }
 }

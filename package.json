@@ -4,19 +4,26 @@
   "packageManager": "pnpm@9.15.4",
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "dev": "concurrently -n api,web -c blue,green --kill-others-on-fail \"pnpm dev:api\" \"pnpm dev:web\"",
+    "dev:api": "dotenv -e .env -- pnpm --filter @language-drill/lambda dev",
+    "dev:web": "NEXT_PUBLIC_API_URL=http://localhost:3001 pnpm --filter @language-drill/web dev",
+    "db:migrate": "dotenv -e .env -- pnpm --filter @language-drill/db db:migrate",
+    "db:studio": "dotenv -e .env -- pnpm --filter @language-drill/db db:studio",
+    "db:seed:exercises": "dotenv -e .env -- pnpm --filter @language-drill/db seed:exercises"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
-    "turbo": "latest",
-    "typescript": "^5.0.0",
+    "concurrently": "^9.2.1",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^8.0.0",
-    "prettier": "^3.0.0"
+    "prettier": "^3.0.0",
+    "turbo": "latest",
+    "typescript": "^5.0.0"
   },
   "pnpm": {
     "overrides": {

@@ -1,20 +1,24 @@
 /**
  * packages/ai — Claude API client wrapper and prompt template registry.
- * Phase 0 stub: structure established so Phase 1 can add evaluation prompts
- * without touching Lambda code.
+ *
+ * Provides the evaluation engine used by the submission route to score
+ * user answers via Claude with structured tool-use output.
  */
 
-export type PromptTemplate = {
-  name: string;
-  system: string;
-  user: string;
-};
+import Anthropic from "@anthropic-ai/sdk";
+
+export { EVALUATION_SYSTEM_PROMPT, buildUserPrompt } from "./prompts.js";
+export {
+  evaluateAnswer,
+  parseEvaluationResult,
+  EVALUATION_TOOL,
+  EVALUATION_TOOL_NAME,
+} from "./evaluate.js";
+export type { EvaluateAnswerInput } from "./evaluate.js";
 
 /**
- * Creates a Claude API client stub.
- * Implementation deferred to Phase 1 — returns the apiKey for now so the
- * type contract is established and importable from other packages.
+ * Creates an Anthropic client instance configured with the provided API key.
  */
-export function createClaudeClient(apiKey: string): { apiKey: string } {
-  return { apiKey };
+export function createClaudeClient(apiKey: string): Anthropic {
+  return new Anthropic({ apiKey });
 }
