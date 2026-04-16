@@ -17,8 +17,8 @@ const mockInsert = vi.fn(() => ({ values: mockValues }));
 
 vi.mock('../db', () => ({
   db: {
-    select: (...args: unknown[]) => mockSelect(...args),
-    insert: (...args: unknown[]) => mockInsert(...args),
+    select: () => mockSelect(),
+    insert: () => mockInsert(),
   },
 }));
 
@@ -27,6 +27,9 @@ vi.mock('@language-drill/ai', () => ({
   createClaudeClient: vi.fn(() => ({})),
   evaluateAnswer: (...args: unknown[]) => mockEvaluateAnswer(...args),
 }));
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyJson = Record<string, any>;
 
 describe('ExerciseQuerySchema', () => {
   it('accepts valid language + difficulty', () => {
@@ -186,7 +189,7 @@ describe('GET /exercises', () => {
     );
 
     expect(res.status).toBe(200);
-    const body = await res.json();
+    const body = await res.json() as AnyJson;
     expect(body.type).toBe('translation');
   });
 
@@ -196,7 +199,7 @@ describe('GET /exercises', () => {
     const res = await app.request('/exercises?language=TR&difficulty=C2', undefined, authEnv);
 
     expect(res.status).toBe(404);
-    const body = await res.json();
+    const body = await res.json() as AnyJson;
     expect(body.code).toBe('NO_EXERCISES');
   });
 
@@ -204,7 +207,7 @@ describe('GET /exercises', () => {
     const res = await app.request('/exercises?language=EN&difficulty=B1', undefined, unauthEnv);
 
     expect(res.status).toBe(401);
-    const body = await res.json();
+    const body = await res.json() as AnyJson;
     expect(body.code).toBe('MISSING_SUB');
   });
 
@@ -212,7 +215,7 @@ describe('GET /exercises', () => {
     const res = await app.request('/exercises?language=FR&difficulty=B1', undefined, authEnv);
 
     expect(res.status).toBe(400);
-    const body = await res.json();
+    const body = await res.json() as AnyJson;
     expect(body.code).toBe('VALIDATION_ERROR');
   });
 
@@ -220,7 +223,7 @@ describe('GET /exercises', () => {
     const res = await app.request('/exercises?language=EN', undefined, authEnv);
 
     expect(res.status).toBe(400);
-    const body = await res.json();
+    const body = await res.json() as AnyJson;
     expect(body.code).toBe('VALIDATION_ERROR');
   });
 });
@@ -284,7 +287,7 @@ describe('GET /exercises/:id', () => {
     const res = await app.request('/exercises/nonexistent-id', undefined, authEnv);
 
     expect(res.status).toBe(404);
-    const body = await res.json();
+    const body = await res.json() as AnyJson;
     expect(body.code).toBe('EXERCISE_NOT_FOUND');
     expect(body.error).toBe('Exercise not found');
   });
@@ -293,7 +296,7 @@ describe('GET /exercises/:id', () => {
     const res = await app.request('/exercises/abc-123', undefined, unauthEnv);
 
     expect(res.status).toBe(401);
-    const body = await res.json();
+    const body = await res.json() as AnyJson;
     expect(body.code).toBe('MISSING_SUB');
   });
 });
@@ -346,7 +349,7 @@ describe('POST /exercises/:id/submit', () => {
     // Second select: usage count check (where is awaited directly, no .limit())
     mockWhere
       .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit })) // exercise fetch
-      .mockResolvedValueOnce([{ count: 5 }]); // usage count
+      .mockResolvedValueOnce([{ count: 5 }] as never); // usage count
     // Mock evaluateAnswer
     mockEvaluateAnswer.mockResolvedValueOnce(sampleEvaluation);
 
@@ -361,7 +364,7 @@ describe('POST /exercises/:id/submit', () => {
     );
 
     expect(res.status).toBe(200);
-    const body = await res.json();
+    const body = await res.json() as AnyJson;
     expect(body.score).toBe(0.85);
     expect(body.feedback).toBe('Good job!');
     expect(mockInsert).toHaveBeenCalledTimes(2);
@@ -382,7 +385,7 @@ describe('POST /exercises/:id/submit', () => {
     );
 
     expect(res.status).toBe(404);
-    const body = await res.json();
+    const body = await res.json() as AnyJson;
     expect(body.code).toBe('EXERCISE_NOT_FOUND');
     expect(mockEvaluateAnswer).not.toHaveBeenCalled();
   });
@@ -393,7 +396,7 @@ describe('POST /exercises/:id/submit', () => {
     // Usage count under limit
     mockWhere
       .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }))
-      .mockResolvedValueOnce([{ count: 0 }]);
+      .mockResolvedValueOnce([{ count: 0 }] as never);
     // Claude fails
     mockEvaluateAnswer.mockRejectedValueOnce(new Error('Claude API error'));
 
@@ -408,7 +411,7 @@ describe('POST /exercises/:id/submit', () => {
     );
 
     expect(res.status).toBe(502);
-    const body = await res.json();
+    const body = await res.json() as AnyJson;
     expect(body.code).toBe('AI_UNAVAILABLE');
     // No inserts should have been called
     expect(mockInsert).not.toHaveBeenCalled();
@@ -420,7 +423,7 @@ describe('POST /exercises/:id/submit', () => {
     // Usage count at limit
     mockWhere
       .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }))
-      .mockResolvedValueOnce([{ count: 50 }]);
+      .mockResolvedValueOnce([{ count: 50 }] as never);
 
     const res = await app.request(
       '/exercises/abc-123/submit',
@@ -433,7 +436,7 @@ describe('POST /exercises/:id/submit', () => {
     );
 
     expect(res.status).toBe(429);
-    const body = await res.json();
+    const body = await res.json() as AnyJson;
     expect(body.code).toBe('RATE_LIMIT_EXCEEDED');
     expect(mockEvaluateAnswer).not.toHaveBeenCalled();
     expect(mockInsert).not.toHaveBeenCalled();
@@ -451,7 +454,7 @@ describe('POST /exercises/:id/submit', () => {
     );
 
     expect(res.status).toBe(400);
-    const body = await res.json();
+    const body = await res.json() as AnyJson;
     expect(body.code).toBe('VALIDATION_ERROR');
   });
 
@@ -467,7 +470,7 @@ describe('POST /exercises/:id/submit', () => {
     );
 
     expect(res.status).toBe(400);
-    const body = await res.json();
+    const body = await res.json() as AnyJson;
     expect(body.code).toBe('VALIDATION_ERROR');
   });
 });
