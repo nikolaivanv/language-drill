@@ -181,12 +181,79 @@ PR  → lint + typecheck + tests
     → Drizzle migrate on branch
     → Vercel preview deploy
 
-Merge → CDK deploy (Lambda + infra)
-      → Vercel production deploy
-      → Neon branch deleted
+Merge → CDK deploy (Lambda + API Gateway + S3 + SQS)
+      → Vercel production deploy (waits for CDK)
+      → Neon branch deleted (cleanup workflow)
 ```
 
 All infra via CDK — no console click-ops. Migrations are forward-only.
+
+### Production domain: `langdrill.app`
+
+| Service | Domain | DNS |
+|---|---|---|
+| Frontend (Vercel) | `langdrill.app`, `www.langdrill.app` | CNAME → `cname.vercel-dns.com` |
+| API (Lambda + API Gateway) | `api.langdrill.app` | CNAME → API Gateway custom domain |
+| Auth (Clerk) | `clerk.langdrill.app`, `accounts.langdrill.app` | CNAMEs from Clerk dashboard |
+
+DNS is managed in **Cloudflare** (registrar + DNS). All records are **DNS-only** (grey cloud) — Vercel, AWS, and Clerk handle their own TLS.
+
+### API Gateway auth architecture
+
+- JWT authorizer (Clerk) is applied **per-route** on API methods (GET/POST/PUT/PATCH/DELETE)
+- OPTIONS routes have **no authorizer** (CORS preflight doesn't carry tokens)
+- `/webhooks/clerk` has **no authorizer** (uses SVIX signature verification instead)
+- CORS is handled in **Hono middleware** (not API Gateway) to support wildcard matching for `*.vercel.app` preview deploys
+
+### Required secrets
+
+**AWS Secrets Manager** (6 secrets — runtime values for Lambda):
+
+| Secret name | Source |
+|---|---|
+| `language-drill/DATABASE_URL` | Neon connection string |
+| `language-drill/CLERK_SECRET_KEY` | Clerk dashboard → API Keys |
+| `language-drill/CLERK_WEBHOOK_SECRET` | Clerk dashboard → Webhooks |
+| `language-drill/ANTHROPIC_API_KEY` | Anthropic console |
+| `language-drill/UPSTASH_REDIS_REST_URL` | Upstash console → REST API tab |
+| `language-drill/UPSTASH_REDIS_REST_TOKEN` | Upstash console → REST API tab |
+
+**GitHub Actions secrets** (9 secrets — deploy-time credentials):
+
+| Secret | Purpose |
+|---|---|
+| `AWS_ACCESS_KEY_ID` | IAM user for CDK deploy |
+| `AWS_SECRET_ACCESS_KEY` | IAM user for CDK deploy |
+| `AWS_REGION` | e.g. `eu-central-1` |
+| `CLERK_ISSUER_URL` | Clerk production instance URL (e.g. `https://clerk.langdrill.app`) |
+| `CLERK_AUDIENCE` | Leave empty — defaults to `language-drill` |
+| `API_DOMAIN_NAME` | `api.langdrill.app` (optional — omit to skip custom domain) |
+| `VERCEL_TOKEN` | From vercel.com/account/tokens |
+| `VERCEL_ORG_ID` | From Vercel dashboard |
+| `VERCEL_PROJECT_ID` | From Vercel dashboard |
+
+**Vercel environment variables:**
+
+| Variable | Production | Preview |
+|---|---|---|
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | `pk_live_...` (prod Clerk) | `pk_test_...` (dev Clerk) |
+| `CLERK_SECRET_KEY` | `sk_live_...` (prod Clerk) | `sk_test_...` (dev Clerk) |
+| `NEXT_PUBLIC_API_URL` | `https://api.langdrill.app` | `https://api.langdrill.app` |
+
+### Clerk JWT setup
+
+The Clerk production instance must have a **JWT template** named `api` with these claims:
+
+```json
+{
+  "aud": "language-drill",
+  "sub": "{{user.id}}"
+}
+```
+
+The frontend requests tokens via `getToken({ template: 'api' })`. API Gateway validates the JWT against Clerk's JWKS endpoint.
+
+A **webhook** must be configured in Clerk pointing to `https://api.langdrill.app/webhooks/clerk` (subscribe to `user.created`). This creates the user row in the database on signup.
 
 ---
 
