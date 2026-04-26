@@ -14,10 +14,13 @@ import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 
-import { users } from '@language-drill/db';
+import { eq } from 'drizzle-orm';
+
+import { users, userLanguageProfiles } from '@language-drill/db';
 import { db } from './db';
 import health from './routes/health';
 import exercises from './routes/exercises';
+import profiles from './routes/profiles';
 
 const DEV_USER_ID = process.env['DEV_USER_ID'] ?? 'dev_user_001';
 const DEV_USER_EMAIL = process.env['DEV_USER_EMAIL'] ?? `${DEV_USER_ID}@local.dev`;
@@ -30,6 +33,20 @@ async function ensureDevUser() {
     .insert(users)
     .values({ id: DEV_USER_ID, email: DEV_USER_EMAIL })
     .onConflictDoNothing();
+
+  // Seed default language profiles if the dev user has none
+  const existing = await db
+    .select()
+    .from(userLanguageProfiles)
+    .where(eq(userLanguageProfiles.userId, DEV_USER_ID));
+
+  if (existing.length === 0) {
+    await db.insert(userLanguageProfiles).values([
+      { userId: DEV_USER_ID, language: 'EN', proficiencyLevel: 'B1', assessedAt: new Date() },
+      { userId: DEV_USER_ID, language: 'ES', proficiencyLevel: 'A2', assessedAt: new Date() },
+    ]);
+    console.log('Dev user profiles seeded');
+  }
 }
 
 const app = new Hono();
@@ -52,6 +69,7 @@ app.use('*', async (c, next) => {
 
 app.route('/', health);
 app.route('/', exercises);
+app.route('/', profiles);
 
 ensureDevUser()
   .then(() => {

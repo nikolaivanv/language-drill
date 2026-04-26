@@ -29,6 +29,7 @@ jobs:
           CLERK_ISSUER_URL: ${{ secrets.CLERK_ISSUER_URL }}
           CLERK_AUDIENCE: ${{ secrets.CLERK_AUDIENCE }}
           PRODUCTION_ORIGIN: ${{ secrets.PRODUCTION_ORIGIN }}
+          API_DOMAIN_NAME: ${{ secrets.API_DOMAIN_NAME }}
         run: cd infra && pnpm cdk deploy --require-approval never
 
   vercel-prod:

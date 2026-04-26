@@ -4,6 +4,9 @@ on:
   pull_request:
     types: [closed]
 
+permissions:
+  contents: read
+
 jobs:
   neon-cleanup:
     name: Delete Neon Branch
@@ -17,6 +20,6 @@ jobs:
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
         run: |
           neonctl branches delete \
-            --project-id ${{ secrets.NEON_PROJECT_ID }} \
+            --project-id "${{ secrets.NEON_PROJECT_ID }}" \
             "pr-${{ github.event.number }}" \
-            --yes
+            --yes 2>&1 || echo "Branch pr-${{ github.event.number }} not found or already deleted"

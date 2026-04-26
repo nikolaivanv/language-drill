@@ -104,6 +104,20 @@ Local dev conventions:
 
 ---
 
+## Pre-Push Checks
+
+Before pushing to GitHub, **always** run the full suite from the repo root and confirm zero failures:
+
+```bash
+pnpm lint        # ESLint across all packages (including `next lint` for web)
+pnpm typecheck   # tsc --noEmit across all packages
+pnpm test        # Vitest across all packages
+```
+
+Do not push if any of these fail. Fix issues locally first.
+
+---
+
 ## Testing
 
 - After completing each spec task, write and run tests before marking

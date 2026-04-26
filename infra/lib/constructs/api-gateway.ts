@@ -1,18 +1,23 @@
+import { CfnOutput } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import {
   CorsHttpMethod,
+  DomainName,
   HttpApi,
   HttpMethod,
 } from "aws-cdk-lib/aws-apigatewayv2";
+import { ApiMapping } from "aws-cdk-lib/aws-apigatewayv2";
 import { HttpJwtAuthorizer } from "aws-cdk-lib/aws-apigatewayv2-authorizers";
 import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import { IFunction } from "aws-cdk-lib/aws-lambda";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
 
 export interface ApiGatewayConstructProps {
   handler: IFunction;
   clerkIssuerUrl: string;
   clerkAudience: string[];
   productionOrigin?: string;
+  apiDomainName?: string;
 }
 
 export class ApiGatewayConstruct extends Construct {
@@ -29,7 +34,7 @@ export class ApiGatewayConstruct extends Construct {
       }
     );
 
-    const allowOrigins = ["https://*.vercel.app"];
+    const allowOrigins = ["https://*.vercel.app", "https://langdrill.app"];
     if (props.productionOrigin) {
       allowOrigins.push(props.productionOrigin);
     }
@@ -54,5 +59,28 @@ export class ApiGatewayConstruct extends Construct {
       methods: [HttpMethod.ANY],
       integration: lambdaIntegration,
     });
+
+    if (props.apiDomainName) {
+      const certificate = new acm.Certificate(this, "ApiCertificate", {
+        domainName: props.apiDomainName,
+        validation: acm.CertificateValidation.fromDns(),
+      });
+
+      const domain = new DomainName(this, "ApiDomain", {
+        domainName: props.apiDomainName,
+        certificate,
+      });
+
+      new ApiMapping(this, "ApiMapping", {
+        api: this.httpApi,
+        domainName: domain,
+      });
+
+      new CfnOutput(this, "ApiDomainTarget", {
+        value: domain.regionalDomainName,
+        description:
+          "Add a CNAME in Cloudflare: api.langdrill.app → this value",
+      });
+    }
   }
 }

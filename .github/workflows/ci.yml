@@ -70,6 +70,7 @@ jobs:
           BRANCH_OUTPUT=$(neonctl branches create \
             --project-id "$PROJECT_ID" \
             --name "$BRANCH_NAME" \
+            --suspend-timeout 300 \
             --output json)
 
           DATABASE_URL=$(echo "$BRANCH_OUTPUT" | jq -r '.connection_uris[0].connection_uri')
