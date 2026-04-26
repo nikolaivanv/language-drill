@@ -10,10 +10,10 @@ export type AuthenticatedFetch = (path: string, init?: RequestInit) => Promise<R
  * as a Bearer authorization header to all requests.
  */
 export function createAuthenticatedFetch(
-  getToken: () => Promise<string | null>,
+  getToken: (options?: { template?: string }) => Promise<string | null>,
 ): AuthenticatedFetch {
   return async (path: string, init?: RequestInit): Promise<Response> => {
-    const token = await getToken();
+    const token = await getToken({ template: 'api' });
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',

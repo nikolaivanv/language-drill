@@ -8,7 +8,7 @@ import { auth } from '@clerk/nextjs/server';
  */
 export async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
   const { getToken } = await auth();
-  const token = await getToken();
+  const token = await getToken({ template: 'api' });
 
   if (!token) {
     throw new Error('Not authenticated — no Clerk session token available');
