@@ -31,11 +31,18 @@ export class LambdaConstruct extends Construct {
       "AnthropicApiKey",
       "language-drill/ANTHROPIC_API_KEY"
     );
-    const upstashRedisUrl = secretsmanager.Secret.fromSecretNameV2(
+    const upstashRedisRestUrl = secretsmanager.Secret.fromSecretNameV2(
       this,
-      "UpstashRedisUrl",
-      "language-drill/UPSTASH_REDIS_URL"
+      "UpstashRedisRestUrl",
+      "language-drill/UPSTASH_REDIS_REST_URL"
     );
+    const upstashRedisRestToken = secretsmanager.Secret.fromSecretNameV2(
+      this,
+      "UpstashRedisRestToken",
+      "language-drill/UPSTASH_REDIS_REST_TOKEN"
+    );
+
+    const projectRoot = path.join(__dirname, "../../..");
 
     this.handler = new lambda.NodejsFunction(this, "Handler", {
       entry: path.join(__dirname, "../../lambda/src/index.ts"),
@@ -43,16 +50,33 @@ export class LambdaConstruct extends Construct {
       runtime: Runtime.NODEJS_20_X,
       timeout: Duration.seconds(15),
       memorySize: 256,
+      depsLockFilePath: path.join(projectRoot, "pnpm-lock.yaml"),
       bundling: {
         minify: true,
         sourceMap: true,
+        esbuildArgs: {
+          "--alias:@language-drill/shared": path.join(
+            projectRoot,
+            "packages/shared/src/index.ts"
+          ),
+          "--alias:@language-drill/db": path.join(
+            projectRoot,
+            "packages/db/src/index.ts"
+          ),
+          "--alias:@language-drill/ai": path.join(
+            projectRoot,
+            "packages/ai/src/index.ts"
+          ),
+        },
       },
       environment: {
         DATABASE_URL: databaseUrl.secretValue.unsafeUnwrap(),
         CLERK_SECRET_KEY: clerkSecretKey.secretValue.unsafeUnwrap(),
         CLERK_WEBHOOK_SECRET: clerkWebhookSecret.secretValue.unsafeUnwrap(),
         ANTHROPIC_API_KEY: anthropicApiKey.secretValue.unsafeUnwrap(),
-        UPSTASH_REDIS_URL: upstashRedisUrl.secretValue.unsafeUnwrap(),
+        UPSTASH_REDIS_REST_URL: upstashRedisRestUrl.secretValue.unsafeUnwrap(),
+        UPSTASH_REDIS_REST_TOKEN:
+          upstashRedisRestToken.secretValue.unsafeUnwrap(),
       },
     });
 
@@ -60,6 +84,7 @@ export class LambdaConstruct extends Construct {
     clerkSecretKey.grantRead(this.handler);
     clerkWebhookSecret.grantRead(this.handler);
     anthropicApiKey.grantRead(this.handler);
-    upstashRedisUrl.grantRead(this.handler);
+    upstashRedisRestUrl.grantRead(this.handler);
+    upstashRedisRestToken.grantRead(this.handler);
   }
 }
