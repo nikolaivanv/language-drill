@@ -14,7 +14,7 @@ app.use(
   cors({
     origin: (origin) => {
       if (origin.endsWith('.vercel.app')) return origin;
-      if (origin === 'https://langdrill.app') return origin;
+      if (origin === 'https://langdrill.app' || origin === 'https://www.langdrill.app') return origin;
       return null;
     },
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
