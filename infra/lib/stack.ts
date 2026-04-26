@@ -16,6 +16,7 @@ export class LanguageDrillStack extends Stack {
       clerkIssuerUrl: process.env.CLERK_ISSUER_URL ?? "https://clerk.example.com",
       clerkAudience: (process.env.CLERK_AUDIENCE ?? "language-drill").split(",").filter(Boolean),
       productionOrigin: process.env.PRODUCTION_ORIGIN,
+      apiDomainName: process.env.API_DOMAIN_NAME,
     });
 
     const storage = new StorageConstruct(this, "Storage");
