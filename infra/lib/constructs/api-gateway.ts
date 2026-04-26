@@ -35,7 +35,6 @@ export class ApiGatewayConstruct extends Construct {
 
     this.httpApi = new HttpApi(this, "HttpApi", {
       apiName: "language-drill-api",
-      defaultAuthorizer: authorizer,
     });
 
     const lambdaIntegration = new HttpLambdaIntegration(
@@ -53,20 +52,19 @@ export class ApiGatewayConstruct extends Construct {
         HttpMethod.DELETE,
       ],
       integration: lambdaIntegration,
+      authorizer,
     });
 
     this.httpApi.addRoutes({
       path: "/{proxy+}",
       methods: [HttpMethod.OPTIONS],
       integration: lambdaIntegration,
-      authorizer: new HttpNoneAuthorizer(),
     });
 
     this.httpApi.addRoutes({
       path: "/webhooks/clerk",
       methods: [HttpMethod.POST],
       integration: lambdaIntegration,
-      authorizer: new HttpNoneAuthorizer(),
     });
 
     if (props.apiDomainName) {
