@@ -2,7 +2,6 @@ import { CfnOutput } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import {
   ApiMapping,
-  CorsHttpMethod,
   DomainName,
   HttpApi,
   HttpMethod,
@@ -16,7 +15,6 @@ export interface ApiGatewayConstructProps {
   handler: IFunction;
   clerkIssuerUrl: string;
   clerkAudience: string[];
-  productionOrigin?: string;
   apiDomainName?: string;
 }
 
@@ -34,18 +32,8 @@ export class ApiGatewayConstruct extends Construct {
       }
     );
 
-    const allowOrigins = new Set(["https://*.vercel.app", "https://langdrill.app"]);
-    if (props.productionOrigin) {
-      allowOrigins.add(props.productionOrigin);
-    }
-
     this.httpApi = new HttpApi(this, "HttpApi", {
       apiName: "language-drill-api",
-      corsPreflight: {
-        allowOrigins: [...allowOrigins],
-        allowMethods: [CorsHttpMethod.ANY],
-        allowHeaders: ["Authorization", "Content-Type"],
-      },
       defaultAuthorizer: authorizer,
     });
 
