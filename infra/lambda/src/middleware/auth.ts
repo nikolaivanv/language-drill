@@ -39,7 +39,7 @@ export async function authMiddleware(
       hasEnv: !!c.env,
       hasEvent: !!c.env?.event,
       eventKeys: c.env?.event ? Object.keys(c.env.event as object) : [],
-      requestContext: (c.env?.event as Record<string, unknown>)?.requestContext,
+      requestContext: (c.env?.event as unknown as Record<string, unknown>)?.requestContext,
     }));
     return c.json({ error: 'Unauthorized', code: 'MISSING_SUB' }, 401);
   }
