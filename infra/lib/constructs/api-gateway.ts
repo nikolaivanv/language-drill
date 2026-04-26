@@ -5,6 +5,7 @@ import {
   DomainName,
   HttpApi,
   HttpMethod,
+  HttpNoneAuthorizer,
 } from "aws-cdk-lib/aws-apigatewayv2";
 import { HttpJwtAuthorizer } from "aws-cdk-lib/aws-apigatewayv2-authorizers";
 import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
@@ -44,8 +45,21 @@ export class ApiGatewayConstruct extends Construct {
 
     this.httpApi.addRoutes({
       path: "/{proxy+}",
-      methods: [HttpMethod.ANY],
+      methods: [
+        HttpMethod.GET,
+        HttpMethod.POST,
+        HttpMethod.PUT,
+        HttpMethod.PATCH,
+        HttpMethod.DELETE,
+      ],
       integration: lambdaIntegration,
+    });
+
+    this.httpApi.addRoutes({
+      path: "/{proxy+}",
+      methods: [HttpMethod.OPTIONS],
+      integration: lambdaIntegration,
+      authorizer: new HttpNoneAuthorizer(),
     });
 
     if (props.apiDomainName) {
