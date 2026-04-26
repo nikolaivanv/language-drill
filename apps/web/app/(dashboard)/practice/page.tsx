@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import {
   Language,
   CefrLevel,
+  LANGUAGE_NAMES,
   isClozeContent,
   isTranslationContent,
   isVocabRecallContent,
@@ -13,6 +15,7 @@ import type { ExerciseContent } from "@language-drill/shared";
 import {
   useExercise,
   useSubmitAnswer,
+  useLanguageProfiles,
   createAuthenticatedFetch,
   type ExerciseResponse,
   type EvaluationResultResponse,
@@ -414,16 +417,30 @@ function AnswerInput({
 
 export default function PracticePage() {
   const { getToken } = useAuth();
+  const router = useRouter();
   const fetchFn = useMemo(
     () => createAuthenticatedFetch(getToken),
     [getToken],
   );
+
+  const { data: profilesData } = useLanguageProfiles({ fetchFn });
+  const profiles = profilesData?.profiles ?? [];
 
   const [language, setLanguage] = useState<Language>(Language.EN);
   const [difficulty, setDifficulty] = useState<CefrLevel>(CefrLevel.B1);
   const [answer, setAnswer] = useState("");
   const [evaluation, setEvaluation] =
     useState<EvaluationResultResponse | null>(null);
+
+  const initializedRef = useRef(false);
+  useEffect(() => {
+    if (profiles.length > 0 && !initializedRef.current) {
+      initializedRef.current = true;
+      const first = profiles[0];
+      setLanguage(first.language as Language);
+      setDifficulty((first.proficiencyLevel as CefrLevel) ?? CefrLevel.B1);
+    }
+  }, [profiles]);
 
   const {
     data: exercise,
@@ -467,14 +484,32 @@ export default function PracticePage() {
           Language
           <select
             value={language}
-            onChange={(e) => setLanguage(e.target.value as Language)}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === "__add") {
+                // Reset select to previous value before navigating
+                e.target.value = language;
+                router.push("/onboarding");
+                return;
+              }
+              const newLang = value as Language;
+              setLanguage(newLang);
+              // Update difficulty to match the selected profile's proficiency
+              const matchingProfile = profiles.find(
+                (p) => p.language === newLang,
+              );
+              if (matchingProfile) {
+                setDifficulty(matchingProfile.proficiencyLevel as CefrLevel);
+              }
+            }}
             className="rounded border border-gray-300 bg-white px-3 py-2"
           >
-            {Object.values(Language).map((l) => (
-              <option key={l} value={l}>
-                {l}
+            {profiles.map((p) => (
+              <option key={p.language} value={p.language}>
+                {LANGUAGE_NAMES[p.language as Language] ?? p.language}
               </option>
             ))}
+            <option value="__add">+ Add language</option>
           </select>
         </label>
 

@@ -7,6 +7,12 @@ export {
   ApiErrorSchema,
   type ApiErrorResponse,
 } from './schemas/exercise';
+export {
+  LanguageProfileSchema,
+  LanguageProfilesResponseSchema,
+  type LanguageProfileResponse,
+  type LanguageProfilesResponse,
+} from './schemas/profile';
 export { useHealth } from './hooks/useHealth';
 export {
   useExercise,
@@ -15,4 +21,10 @@ export {
   type SubmitAnswerParams,
   type UseSubmitAnswerOptions,
 } from './hooks/useExercise';
+export {
+  useLanguageProfiles,
+  useSaveLanguageProfiles,
+  type UseLanguageProfilesParams,
+  type UseSaveLanguageProfilesParams,
+} from './hooks/useLanguageProfiles';
 export { createAuthenticatedFetch, type AuthenticatedFetch } from './fetchClient';

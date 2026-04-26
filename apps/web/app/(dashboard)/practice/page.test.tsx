@@ -14,14 +14,21 @@ vi.mock("@clerk/nextjs", () => ({
   useAuth: () => ({ getToken: mockGetToken }),
 }));
 
+const mockPush = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mockPush }),
+}));
+
 const mockUseExercise = vi.fn();
 const mockMutate = vi.fn();
 const mockReset = vi.fn();
 const mockUseSubmitAnswer = vi.fn();
+const mockUseLanguageProfiles = vi.fn();
 
 vi.mock("@language-drill/api-client", () => ({
   useExercise: (...args: unknown[]) => mockUseExercise(...args),
   useSubmitAnswer: (...args: unknown[]) => mockUseSubmitAnswer(...args),
+  useLanguageProfiles: (...args: unknown[]) => mockUseLanguageProfiles(...args),
   createAuthenticatedFetch: vi.fn(() => vi.fn()),
 }));
 
@@ -45,6 +52,16 @@ function renderWithProviders(ui: React.ReactElement) {
 describe("PracticePage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseLanguageProfiles.mockReturnValue({
+      data: {
+        profiles: [
+          { language: "EN", proficiencyLevel: "B1" },
+          { language: "ES", proficiencyLevel: "A2" },
+        ],
+      },
+      isLoading: false,
+      error: null,
+    });
     mockUseSubmitAnswer.mockReturnValue({
       mutate: mockMutate,
       reset: mockReset,
@@ -161,10 +178,12 @@ describe("PracticePage", () => {
     expect(
       screen.getByText("The cat is on the table."),
     ).toBeInTheDocument();
-    // "EN" appears in both the language selector option and the source language badge
-    expect(screen.getAllByText("EN").length).toBeGreaterThanOrEqual(2);
-    // "ES" appears in the language selector option and the target language badge
-    expect(screen.getAllByText("ES").length).toBeGreaterThanOrEqual(2);
+    // "EN" appears in the source language badge and exercise badge
+    expect(screen.getAllByText("EN").length).toBeGreaterThanOrEqual(1);
+    // "ES" appears in the target language badge
+    expect(screen.getAllByText("ES").length).toBeGreaterThanOrEqual(1);
+    // Language selector shows display names from profiles
+    expect(screen.getByText("English")).toBeInTheDocument();
   });
 
   it("renders a vocab recall exercise", () => {

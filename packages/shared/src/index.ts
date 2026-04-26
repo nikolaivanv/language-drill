@@ -14,6 +14,31 @@ export enum CefrLevel {
   C2 = "C2",
 }
 
+// ---------------------------------------------------------------------------
+// Language profile types
+// ---------------------------------------------------------------------------
+
+export type LanguageProfile = {
+  language: Language;
+  proficiencyLevel: CefrLevel;
+};
+
+export const CEFR_DESCRIPTIONS: Record<CefrLevel, string> = {
+  [CefrLevel.A1]: "I know basic words and phrases",
+  [CefrLevel.A2]: "I can handle simple conversations",
+  [CefrLevel.B1]: "I can discuss familiar topics",
+  [CefrLevel.B2]: "I can speak fluently on most topics",
+  [CefrLevel.C1]: "I can express myself precisely",
+  [CefrLevel.C2]: "I understand virtually everything",
+};
+
+export const LANGUAGE_NAMES: Record<Language, string> = {
+  [Language.EN]: "English",
+  [Language.ES]: "Spanish",
+  [Language.DE]: "German",
+  [Language.TR]: "Turkish",
+};
+
 export type ApiError = {
   error: string;
   code: string;
