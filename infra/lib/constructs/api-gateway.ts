@@ -34,15 +34,15 @@ export class ApiGatewayConstruct extends Construct {
       }
     );
 
-    const allowOrigins = ["https://*.vercel.app", "https://langdrill.app"];
+    const allowOrigins = new Set(["https://*.vercel.app", "https://langdrill.app"]);
     if (props.productionOrigin) {
-      allowOrigins.push(props.productionOrigin);
+      allowOrigins.add(props.productionOrigin);
     }
 
     this.httpApi = new HttpApi(this, "HttpApi", {
       apiName: "language-drill-api",
       corsPreflight: {
-        allowOrigins,
+        allowOrigins: [...allowOrigins],
         allowMethods: [CorsHttpMethod.ANY],
         allowHeaders: ["Authorization", "Content-Type"],
       },
