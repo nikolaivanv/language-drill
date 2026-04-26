@@ -1,12 +1,12 @@
 import { CfnOutput } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import {
+  ApiMapping,
   CorsHttpMethod,
   DomainName,
   HttpApi,
   HttpMethod,
 } from "aws-cdk-lib/aws-apigatewayv2";
-import { ApiMapping } from "aws-cdk-lib/aws-apigatewayv2";
 import { HttpJwtAuthorizer } from "aws-cdk-lib/aws-apigatewayv2-authorizers";
 import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import { IFunction } from "aws-cdk-lib/aws-lambda";
