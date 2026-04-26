@@ -62,6 +62,13 @@ export class ApiGatewayConstruct extends Construct {
       authorizer: new HttpNoneAuthorizer(),
     });
 
+    this.httpApi.addRoutes({
+      path: "/webhooks/clerk",
+      methods: [HttpMethod.POST],
+      integration: lambdaIntegration,
+      authorizer: new HttpNoneAuthorizer(),
+    });
+
     if (props.apiDomainName) {
       const certificate = new acm.Certificate(this, "ApiCertificate", {
         domainName: props.apiDomainName,
