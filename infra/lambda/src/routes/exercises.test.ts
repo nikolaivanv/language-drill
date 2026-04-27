@@ -12,7 +12,12 @@ const mockWhere = vi.fn(() => ({ orderBy: mockOrderBy, limit: mockLimit }));
 const mockFrom = vi.fn(() => ({ where: mockWhere }));
 const mockSelect = vi.fn(() => ({ from: mockFrom }));
 
-const mockValues = vi.fn(() => Promise.resolve([]));
+const mockOnConflictDoNothing = vi.fn(() => Promise.resolve());
+const mockValues = vi.fn(() => {
+  const p = Promise.resolve([]) as Promise<never[]> & { onConflictDoNothing: typeof mockOnConflictDoNothing };
+  p.onConflictDoNothing = mockOnConflictDoNothing;
+  return p;
+});
 const mockInsert = vi.fn(() => ({ values: mockValues }));
 
 vi.mock('../db', () => ({
@@ -20,6 +25,13 @@ vi.mock('../db', () => ({
     select: () => mockSelect(),
     insert: () => mockInsert(),
   },
+}));
+
+vi.mock('@language-drill/db', () => ({
+  users: { id: 'id' },
+  exercises: {},
+  userExerciseHistory: {},
+  usageEvents: {},
 }));
 
 const mockEvaluateAnswer = vi.fn();
@@ -367,7 +379,7 @@ describe('POST /exercises/:id/submit', () => {
     const body = await res.json() as AnyJson;
     expect(body.score).toBe(0.85);
     expect(body.feedback).toBe('Good job!');
-    expect(mockInsert).toHaveBeenCalledTimes(2);
+    expect(mockInsert).toHaveBeenCalledTimes(3);
     expect(mockEvaluateAnswer).toHaveBeenCalledTimes(1);
   });
 
@@ -413,8 +425,8 @@ describe('POST /exercises/:id/submit', () => {
     expect(res.status).toBe(502);
     const body = await res.json() as AnyJson;
     expect(body.code).toBe('AI_UNAVAILABLE');
-    // No inserts should have been called
-    expect(mockInsert).not.toHaveBeenCalled();
+    // Only the auth middleware user upsert — no history/usage inserts
+    expect(mockInsert).toHaveBeenCalledTimes(1);
   });
 
   it('returns 429 when daily evaluation limit is exceeded', async () => {
@@ -439,7 +451,8 @@ describe('POST /exercises/:id/submit', () => {
     const body = await res.json() as AnyJson;
     expect(body.code).toBe('RATE_LIMIT_EXCEEDED');
     expect(mockEvaluateAnswer).not.toHaveBeenCalled();
-    expect(mockInsert).not.toHaveBeenCalled();
+    // Only the auth middleware user upsert — no history/usage inserts
+    expect(mockInsert).toHaveBeenCalledTimes(1);
   });
 
   it('returns 400 for invalid request body', async () => {
