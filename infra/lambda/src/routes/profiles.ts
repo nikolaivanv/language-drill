@@ -29,7 +29,7 @@ const UpdateProfilesSchema = z.object({
 
 const profiles = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
-profiles.use('*', authMiddleware);
+profiles.use('/profiles/*', authMiddleware);
 
 // ---------------------------------------------------------------------------
 // GET /profiles/languages — return the current user's language profiles
