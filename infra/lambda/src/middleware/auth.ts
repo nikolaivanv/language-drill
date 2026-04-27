@@ -35,6 +35,12 @@ export async function authMiddleware(
   const sub = event?.requestContext?.authorizer?.jwt?.claims?.sub;
 
   if (!sub) {
+    console.error('MISSING_SUB debug', JSON.stringify({
+      hasEnv: !!c.env,
+      hasEvent: !!c.env?.event,
+      eventKeys: c.env?.event ? Object.keys(c.env.event as object) : [],
+      requestContext: (c.env?.event as unknown as Record<string, unknown>)?.requestContext,
+    }));
     return c.json({ error: 'Unauthorized', code: 'MISSING_SUB' }, 401);
   }
 

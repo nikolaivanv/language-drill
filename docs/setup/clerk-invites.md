@@ -66,9 +66,27 @@ done
 
 ## Webhook Integration
 
+Configure a webhook in Clerk Dashboard → Webhooks:
+
+- **Endpoint URL:** `https://api.langdrill.app/webhooks/clerk`
+- **Events:** `user.created` (and optionally `user.updated`, `user.deleted`)
+- **Signing Secret:** store in AWS Secrets Manager as `language-drill/CLERK_WEBHOOK_SECRET`
+
+The `/webhooks/clerk` route bypasses JWT auth at the API Gateway level (uses SVIX signature verification instead).
+
 When an invited user completes sign-up, Clerk fires a `user.created` webhook. Our Lambda handler (`infra/lambda/src/routes/webhooks/clerk.ts`) catches this event and:
 
 1. Inserts a row in the `users` table
 2. Marks the corresponding `invitations` row as used (`usedBy`, `usedAt`)
 
 This provides the defense-in-depth layer: even if Clerk's invitation check were bypassed, the Lambda invite middleware would still reject API calls from users without a valid invite record.
+
+## JWT Template
+
+The Clerk production instance requires a JWT template named `api`:
+
+1. Go to Clerk Dashboard → JWT Templates → Create template
+2. **Name:** `api`
+3. **Claims:** `{ "aud": "language-drill", "sub": "{{user.id}}" }`
+
+The frontend uses `getToken({ template: 'api' })` to request tokens. API Gateway validates these against Clerk's JWKS endpoint (`https://clerk.langdrill.app/.well-known/jwks.json`).

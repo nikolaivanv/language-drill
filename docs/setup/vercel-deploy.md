@@ -42,9 +42,14 @@ from the monorepo root — it detects pnpm workspaces automatically.
 
 **Environment variables:**
 
-- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` — Clerk publishable key
-- `CLERK_SECRET_KEY` — Clerk secret key
-- `NEXT_PUBLIC_API_URL` — API Gateway endpoint (set once CDK is deployed)
+| Variable | Production | Preview | Notes |
+|---|---|---|---|
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | `pk_live_...` | `pk_test_...` | Prod vs dev Clerk instance |
+| `CLERK_SECRET_KEY` | `sk_live_...` | `sk_test_...` | Prod vs dev Clerk instance |
+| `NEXT_PUBLIC_API_URL` | `https://api.langdrill.app` | `https://api.langdrill.app` | Custom domain for Lambda API |
+
+Preview deploys use dev Clerk keys so PR previews don't create real users in production.
+Development environment is not used — local dev runs via `pnpm dev`.
 
 **Git integration:** Do NOT connect the GitHub repo in Vercel's Git settings.
 Deploys are triggered exclusively via CLI from GitHub Actions. If the repo is
