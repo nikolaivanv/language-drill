@@ -10,7 +10,12 @@ const mockWhere = vi.fn(() => ({ orderBy: mockOrderBy }));
 const mockFrom = vi.fn(() => ({ where: mockWhere }));
 const mockSelect = vi.fn(() => ({ from: mockFrom }));
 
-const mockValues = vi.fn(() => Promise.resolve([]));
+const mockOnConflictDoNothing = vi.fn(() => Promise.resolve());
+const mockValues = vi.fn(() => {
+  const p = Promise.resolve([]) as Promise<never[]> & { onConflictDoNothing: typeof mockOnConflictDoNothing };
+  p.onConflictDoNothing = mockOnConflictDoNothing;
+  return p;
+});
 const mockInsert = vi.fn(() => ({ values: mockValues }));
 
 const mockDeleteWhere = vi.fn(() => Promise.resolve());
@@ -22,6 +27,11 @@ vi.mock('../db', () => ({
     insert: () => mockInsert(),
     delete: () => mockDelete(),
   },
+}));
+
+vi.mock('@language-drill/db', () => ({
+  users: { id: 'id' },
+  userLanguageProfiles: {},
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -124,7 +134,7 @@ describe('PUT /profiles/languages', () => {
     const body = await res.json();
     expect(body).toEqual({ profiles });
     expect(mockDelete).toHaveBeenCalledTimes(1);
-    expect(mockInsert).toHaveBeenCalledTimes(1);
+    expect(mockInsert).toHaveBeenCalledTimes(2);
   });
 
   it('replaces existing profiles atomically', async () => {
@@ -166,7 +176,7 @@ describe('PUT /profiles/languages', () => {
     expect(body).toEqual({ profiles: newProfiles });
     // Should delete old + insert new
     expect(mockDelete).toHaveBeenCalledTimes(1);
-    expect(mockInsert).toHaveBeenCalledTimes(1);
+    expect(mockInsert).toHaveBeenCalledTimes(2);
   });
 
   it('rejects empty profiles array with 400', async () => {

@@ -1,5 +1,7 @@
 import type { Context, Next } from 'hono';
 import type { LambdaEvent } from 'hono/aws-lambda';
+import { db } from '../db';
+import { users } from '@language-drill/db';
 
 export type Variables = {
   userId: string;
@@ -35,13 +37,17 @@ export async function authMiddleware(
   const sub = event?.requestContext?.authorizer?.jwt?.claims?.sub;
 
   if (!sub) {
-    console.error('MISSING_SUB debug', JSON.stringify({
-      hasEnv: !!c.env,
-      hasEvent: !!c.env?.event,
-      eventKeys: c.env?.event ? Object.keys(c.env.event as object) : [],
-      requestContext: (c.env?.event as unknown as Record<string, unknown>)?.requestContext,
-    }));
     return c.json({ error: 'Unauthorized', code: 'MISSING_SUB' }, 401);
+  }
+
+  // Ensure user row exists — fallback for missed/delayed Clerk webhooks
+  try {
+    await db
+      .insert(users)
+      .values({ id: sub, email: 'pending-webhook@placeholder' })
+      .onConflictDoNothing({ target: users.id });
+  } catch (err) {
+    console.error('Failed to ensure user row:', err);
   }
 
   c.set('userId', sub);
