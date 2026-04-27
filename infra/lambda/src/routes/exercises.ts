@@ -34,7 +34,7 @@ export const SubmitAnswerSchema = z.object({
 
 const exercises = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
-exercises.use('*', authMiddleware);
+exercises.use('/exercises/*', authMiddleware);
 
 // ---------------------------------------------------------------------------
 // GET /exercises — return a random exercise matching the given filters
