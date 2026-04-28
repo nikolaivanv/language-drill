@@ -1,0 +1,97 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { useClerk, useUser } from '@clerk/nextjs';
+
+function getInitials(
+  firstName?: string | null,
+  lastName?: string | null
+): string {
+  const f = firstName?.[0];
+  const l = lastName?.[0];
+  if (f && l) return (f + l).toUpperCase();
+  if (f) return f.toUpperCase();
+  return '?';
+}
+
+export function UserFooter() {
+  const { user, isLoaded } = useUser();
+  const { signOut } = useClerk();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false);
+    }
+    document.addEventListener('mousedown', onClick);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onClick);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  if (!isLoaded) {
+    return (
+      <div className="mt-auto flex items-center gap-s-3 px-s-3 pt-[18px] border-t border-rule">
+        <div className="w-[30px] h-[30px] rounded-full bg-paper-2 animate-pulse" />
+        <div className="flex-1 h-3 bg-paper-2 rounded animate-pulse" />
+      </div>
+    );
+  }
+
+  const initials = getInitials(user?.firstName, user?.lastName);
+  const name = user?.firstName ?? 'you';
+
+  return (
+    <div ref={ref} className="relative mt-auto pt-[18px] border-t border-rule">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="w-full flex items-center gap-s-3 px-s-3 py-s-2 rounded-r-sm hover:bg-paper-2 transition-colors duration-150 focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(26,22,18,0.08)]"
+      >
+        <span className="w-[30px] h-[30px] rounded-full bg-accent-soft text-accent-2 font-display text-[14px] font-semibold flex items-center justify-center flex-shrink-0">
+          {initials}
+        </span>
+        <span className="flex-1 text-left text-[13px] text-ink truncate">
+          {name.toLowerCase()}
+        </span>
+        <span className="text-ink-mute" aria-hidden="true">
+          ⋯
+        </span>
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          className="absolute bottom-full left-0 right-0 mb-1 z-10 bg-card border border-rule rounded-r-md shadow-2 py-1"
+        >
+          <Link
+            href="/settings"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="block px-s-3 py-s-2 text-[13px] text-ink hover:bg-paper-2 transition-colors duration-150 focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(26,22,18,0.08)]"
+          >
+            settings
+          </Link>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => signOut({ redirectUrl: '/sign-in' })}
+            className="w-full text-left px-s-3 py-s-2 text-[13px] text-ink hover:bg-paper-2 transition-colors duration-150 focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(26,22,18,0.08)]"
+          >
+            sign out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -7,6 +7,8 @@ import {
   useLanguageProfiles,
   createAuthenticatedFetch,
 } from "@language-drill/api-client";
+import type { LanguageProfile } from "@language-drill/shared";
+import { ActiveLanguageProvider, AppShell } from "../../components/shell";
 
 export default function DashboardLayout({
   children,
@@ -27,8 +29,8 @@ export default function DashboardLayout({
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600" />
+      <div className="flex min-h-screen items-center justify-center bg-paper">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-paper-2 border-t-ink" />
       </div>
     );
   }
@@ -36,17 +38,15 @@ export default function DashboardLayout({
   // Error state — do NOT redirect to onboarding on fetch failure
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="max-w-md rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-          <p className="font-medium text-red-700">
-            Failed to load your profile
-          </p>
-          <p className="mt-1 text-sm text-red-600">{error.message}</p>
+      <div className="flex min-h-screen items-center justify-center bg-paper">
+        <div className="max-w-md rounded-r-lg border border-rule bg-card p-s-6 text-center shadow-1">
+          <p className="t-display-s">failed to load your profile</p>
+          <p className="t-small mt-s-2">{error.message}</p>
           <button
             onClick={() => refetch()}
-            className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+            className="mt-s-4 rounded-r-md bg-ink text-paper px-s-4 py-s-2 text-[13px] font-medium transition-all duration-150 hover:bg-accent-2"
           >
-            Retry
+            retry
           </button>
         </div>
       </div>
@@ -57,12 +57,20 @@ export default function DashboardLayout({
   if (data && data.profiles.length === 0) {
     router.push("/onboarding");
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600" />
+      <div className="flex min-h-screen items-center justify-center bg-paper">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-paper-2 border-t-ink" />
       </div>
     );
   }
 
-  // Loaded, has profiles — render children
-  return <>{children}</>;
+  // Loaded, has profiles — render shell wrapping children.
+  // The API-client schema types `language` as `string` (loose Zod schema),
+  // but values at runtime match the `Language` enum. Cast at the boundary
+  // so the strictly-typed shell components receive the shared LanguageProfile.
+  const profiles = (data?.profiles ?? []) as LanguageProfile[];
+  return (
+    <ActiveLanguageProvider profiles={profiles}>
+      <AppShell profiles={profiles}>{children}</AppShell>
+    </ActiveLanguageProvider>
+  );
 }
