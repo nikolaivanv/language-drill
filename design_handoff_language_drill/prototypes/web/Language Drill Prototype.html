@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Language Drill — Hi-fi Prototype</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="hifi/styles.css?v=3" />
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" src="hifi/shell.jsx"></script>
+  <script type="text/babel" src="hifi/onboarding.jsx"></script>
+  <script type="text/babel" src="hifi/dashboard.jsx"></script>
+  <script type="text/babel" src="hifi/cloze.jsx"></script>
+  <script type="text/babel" src="hifi/translation.jsx"></script>
+  <script type="text/babel" src="hifi/vocab.jsx"></script>
+  <script type="text/babel" src="hifi/feedback.jsx"></script>
+  <script type="text/babel" src="hifi/progress.jsx"></script>
+  <script type="text/babel" src="hifi/theory.jsx"></script>
+  <script type="text/babel" src="hifi/read.jsx"></script>
+
+  <script type="text/babel">
+    function App() {
+      const [screen, setScreen] = React.useState(localStorage.getItem('drill_screen') || 'onboarding');
+      const [results, setResults] = React.useState([]);
+      const go = (s) => { setScreen(s); localStorage.setItem('drill_screen', s); };
+
+      // tiny floating jump bar
+      const Jump = () => (
+        <div style={{
+          position: 'fixed', bottom: 18, right: 18, zIndex: 50,
+          background: 'rgba(26,22,18,0.92)', color: '#fff',
+          padding: '6px 8px', borderRadius: 999, display: 'flex', gap: 4,
+          fontSize: 11, fontFamily: 'Inter', backdropFilter: 'blur(8px)',
+          boxShadow: '0 8px 24px rgba(0,0,0,.25)',
+        }}>
+          {[
+            ['onboarding', 'onb'], ['dashboard', 'home'], ['read', 'read'], ['cloze', 'cloze'], ['translation', 'translate'], ['vocab', 'vocab'],
+            ['feedback', 'debrief'], ['progress', 'progress'],
+          ].map(([id, lbl]) => (
+            <button key={id} onClick={() => {
+              if (id === 'feedback' && results.length === 0) {
+                // synthesize a sample run for jump
+                setResults(window.CLOZE_ITEMS.map((it, i) => ({ correct: i !== 5, item: it, picked: i !== 5 ? it.blank : it.options[0] })));
+              }
+              go(id);
+            }} style={{
+              border: 'none', background: screen === id ? '#c96442' : 'transparent',
+              color: '#fff', padding: '4px 10px', borderRadius: 999, cursor: 'pointer', fontSize: 11,
+            }}>{lbl}</button>
+          ))}
+        </div>
+      );
+
+      return (
+        <>
+          {screen === 'onboarding' && <OnbHiFi onDone={() => go('dashboard')} />}
+          {screen === 'dashboard' && <DashHiFi onStartDrill={() => go('cloze')} onNav={go} />}
+          {screen === 'cloze' && <ClozeHiFi onComplete={(r) => { setResults(r); go('feedback'); }} onNav={go} />}
+          {screen === 'translation' && <TranslationHiFi onComplete={(r) => { setResults(r); go('feedback'); }} onNav={go} />}
+          {screen === 'vocab' && <VocabHiFi onComplete={(r) => { setResults(r); go('feedback'); }} onNav={go} />}
+          {screen === 'feedback' && <FeedbackHiFi results={results.length ? results : window.CLOZE_ITEMS.map((it) => ({ correct: true, item: it, picked: it.blank }))} onContinue={() => { setResults([]); go('cloze'); }} onNav={go} />}
+          {screen === 'progress' && <ProgressHiFi onNav={go} />}
+          {screen === 'read' && <ReadHiFi onNav={go} />}
+          <Jump />
+        </>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

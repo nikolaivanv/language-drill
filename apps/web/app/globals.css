@@ -1,1 +1,151 @@
 @import "tailwindcss";
+
+@theme {
+  /* ─── Colors ─── */
+  --color-paper: #faf7f1;
+  --color-paper-2: #f2ede2;
+  --color-paper-3: #e8e1d2;
+  --color-card: #ffffff;
+
+  --color-ink: #1a1612;
+  --color-ink-2: #3d362e;
+  --color-ink-soft: #5a5148;
+  --color-ink-mute: #8a8074;
+
+  --color-rule: #d8d0bf;
+  --color-rule-strong: #c9bfac;
+
+  --color-accent: #c96442;
+  --color-accent-2: #b15535;
+  --color-accent-soft: #f7e2d3;
+
+  --color-hilite: #f4d35e;
+  --color-hilite-soft: #fbeeb6;
+
+  --color-ok: #5b8a5a;
+  --color-ok-soft: #d8e6d3;
+
+  /* ─── Font families (bound to next/font CSS vars) ─── */
+  --font-display: var(--font-fraunces), 'Iowan Old Style', Georgia, serif;
+  --font-ui: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, Menlo, monospace;
+  --font-hand: var(--font-caveat), cursive;
+
+  /* ─── Spacing ─── */
+  --spacing-s-1: 4px;
+  --spacing-s-2: 8px;
+  --spacing-s-3: 12px;
+  --spacing-s-4: 16px;
+  --spacing-s-5: 20px;
+  --spacing-s-6: 24px;
+  --spacing-s-7: 32px;
+  --spacing-s-8: 40px;
+
+  /* ─── Border radius ─── */
+  --radius-r-sm: 6px;
+  --radius-r-md: 10px;
+  --radius-r-lg: 16px;
+  --radius-r-xl: 24px;
+  --radius-r-pill: 999px;
+
+  /* ─── Line heights ─── */
+  --leading-display-tight: 1.05;
+  --leading-display: 1.1;
+  --leading-display-medium: 1.2;
+  --leading-body: 1.55;
+  --leading-ui: 1.4;
+
+  /* ─── Shadows ─── */
+  --shadow-1: 0 1px 2px rgba(26,22,18,0.05), 0 1px 3px rgba(26,22,18,0.06);
+  --shadow-2: 0 2px 4px rgba(26,22,18,0.06), 0 8px 24px rgba(26,22,18,0.08);
+  --shadow-3: 0 4px 12px rgba(26,22,18,0.10), 0 24px 60px rgba(26,22,18,0.14);
+
+  /* ─── Layout ─── */
+  --width-max-content: 1100px;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink-2);
+    font-family: var(--font-ui);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* ─── Type scale (utility classes) ─── */
+.t-display-xl {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 56px;
+  line-height: 1.05;
+  letter-spacing: -1.5px;
+  font-variation-settings: "SOFT" 50, "opsz" 144;
+  color: var(--color-ink);
+}
+.t-display-l {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 40px;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  font-variation-settings: "SOFT" 50, "opsz" 144;
+  color: var(--color-ink);
+}
+.t-display-m {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 28px;
+  line-height: 1.2;
+  letter-spacing: -0.4px;
+  color: var(--color-ink);
+}
+.t-display-s {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 22px;
+  line-height: 1.25;
+  letter-spacing: -0.2px;
+  color: var(--color-ink);
+}
+.t-body-l {
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--color-ink-2);
+}
+.t-body {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--color-ink-2);
+}
+.t-small {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-ink-soft);
+}
+.t-micro {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--color-ink-mute);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  font-weight: 500;
+}
+.t-hand {
+  font-family: var(--font-hand);
+  font-weight: 600;
+}
+.t-mono {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum";
+}
+
+/* ─── Shared utilities ─── */
+.fade-in {
+  animation: fade 0.35s ease both;
+}
+@keyframes fade {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}

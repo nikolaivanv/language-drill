@@ -1,0 +1,143 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Language Drill — Wireframes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Architects+Daughter&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    html, body { margin: 0; padding: 0; background: #f0eee9; overflow: hidden; }
+    body { font-family: 'Architects Daughter', system-ui, sans-serif; }
+    #root { width: 100vw; height: 100vh; }
+  </style>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="wf-kit.jsx"></script>
+  <script type="text/babel" src="wf-dashboard.jsx"></script>
+  <script type="text/babel" src="wf-drill.jsx"></script>
+  <script type="text/babel" src="wf-exercises.jsx"></script>
+  <script type="text/babel" src="wf-more.jsx"></script>
+  <script type="text/babel" src="wf-onboarding.jsx"></script>
+
+  <script type="text/babel">
+    const W = 900, H = 600;
+
+    function Section({ id, title, subtitle, cards }) {
+      return (
+        <DCSection id={id} title={title} subtitle={subtitle}>
+          {cards.map(([lbl, Comp]) => (
+            <DCArtboard key={lbl} id={lbl.split(' ')[0]} label={lbl} width={W} height={H}>
+              <Comp />
+            </DCArtboard>
+          ))}
+        </DCSection>
+      );
+    }
+
+    function App() {
+      return (
+        <DesignCanvas minScale={0.1} maxScale={2}>
+          <div data-screen-label="00 Intro" style={{ padding: '0 60px 40px', maxWidth: 900 }}>
+            <div style={{ fontFamily: WF.handFont, fontSize: 48, fontWeight: 700, color: WF.ink, lineHeight: 1 }}>
+              language drill — wireframe exploration
+            </div>
+            <div style={{ fontFamily: WF.uiFont, fontSize: 15, color: WF.inkSoft, marginTop: 12, lineHeight: 1.5, maxWidth: 640 }}>
+              3 directions per screen, mid-fi. all w/ the same header &amp; visual vocabulary so you can mix+match.
+              goal: B1–C1 learners, active production, honest skill-based progress, polyglot quick-switch in header.
+              <b> drag grips to reorder, click a label to focus an artboard.</b>
+            </div>
+            <div style={{ display: 'flex', gap: 16, marginTop: 16, fontFamily: WF.uiFont, fontSize: 12, color: WF.inkMute }}>
+              <span>◯ placeholder imagery = striped box</span>
+              <span>◯ handwritten notes = design rationale</span>
+              <span>◯ mono = numbers/values</span>
+              <span>◯ single accent = <span style={{ color: WF.accent }}>warm orange</span></span>
+            </div>
+          </div>
+
+          <Section id="onboarding" title="0 · Onboarding" subtitle="First-run: pick languages, levels, goals — with a self-assessment offramp"
+            cards={[
+              ['A · Conversational', OnbA],
+              ['B · Wizard (4 steps)', OnbB],
+              ['C · Single-page dense', OnbC],
+              ['T · Self-assessment test', OnbTest],
+            ]} />
+
+          <Section id="dash" title="1 · Home / Dashboard" subtitle="Where polyglot learners land"
+            cards={[
+              ['A · Stats-forward', DashA],
+              ['B · Today\'s lesson plan', DashB],
+              ['C · Unified polyglot feed', DashC],
+            ]} />
+
+          <Section id="drill" title="2 · Drill session shell" subtitle="The core loop — 3 metaphors"
+            cards={[
+              ['A · Mixed circuit', DrillA],
+              ['B · Coach-guided chat', DrillB],
+              ['C · Timed rally', DrillC],
+            ]} />
+
+          <Section id="write" title="3 · Writing exercise" subtitle="Active production — the key differentiator"
+            cards={[
+              ['A · Inline grading', WriteA],
+              ['B · Translate split', WriteB],
+              ['C · Draft → coach → rewrite', WriteC],
+            ]} />
+
+          <Section id="speak" title="4 · Speaking exercise" subtitle="Shadowing, free convo, phonetic"
+            cards={[
+              ['A · Shadow & compare', SpeakA],
+              ['B · Open conversation', SpeakB],
+              ['C · Minimal pair phonetic', SpeakC],
+            ]} />
+
+          <Section id="cloze" title="5 · Cloze / fill-in-blank" subtitle="Typing, dragging, SRS stack"
+            cards={[
+              ['A · Typed, in context', ClozeA],
+              ['B · Drag from word bank', ClozeB],
+              ['C · SRS stack', ClozeC],
+            ]} />
+
+          <Section id="listen" title="6 · Listening exercise" subtitle="Dictation, comprehension, karaoke"
+            cards={[
+              ['A · Dictation', ListenA],
+              ['B · Comprehension (no transcript)', ListenB],
+              ['C · Karaoke follow', ListenC],
+            ]} />
+
+          <Section id="feedback" title="7 · Post-session feedback" subtitle="AI evaluation — 3 presentation styles"
+            cards={[
+              ['A · Marginalia (inline)', FbA],
+              ['B · Diff (yours vs correct)', FbB],
+              ['C · Coach debrief + skill impact', FbC],
+            ]} />
+
+          <Section id="progress" title="8 · Progress / skill breakdown" subtitle="Honest skill models, not XP"
+            cards={[
+              ['A · Radar / shape', ProgA],
+              ['B · Heatmap (topic × recency)', ProgB],
+              ['C · Trend sparklines', ProgC],
+            ]} />
+
+          <div style={{ padding: '0 60px 120px', maxWidth: 720 }}>
+            <div style={{ fontFamily: WF.handFont, fontSize: 26, fontWeight: 600, color: WF.ink }}>pick & remix</div>
+            <div style={{ fontFamily: WF.uiFont, fontSize: 13, color: WF.inkSoft, marginTop: 6, lineHeight: 1.5 }}>
+              my instinct: DashB (lesson plan) + DrillB (coach-guided) + FbC (debrief) tell the clearest "what I do between italki sessions" story.
+              ProgA (radar) is the boldest progress view — it makes the intermediate-plateau shape legible at a glance.
+              let me know which directions to combine and I'll build a clickable prototype.
+            </div>
+          </div>
+        </DesignCanvas>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

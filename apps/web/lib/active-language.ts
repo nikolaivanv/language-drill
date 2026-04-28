@@ -1,0 +1,27 @@
+import { Language } from '@language-drill/shared';
+
+export type LearningLanguage = Exclude<Language, Language.EN>;
+
+const COOKIE_NAME = 'active_language';
+
+const VALID_LEARNING_LANGUAGES = new Set<string>([
+  Language.ES,
+  Language.DE,
+  Language.TR,
+]);
+
+export function isLearningLanguage(value: unknown): value is LearningLanguage {
+  return typeof value === 'string' && VALID_LEARNING_LANGUAGES.has(value);
+}
+
+export function readActiveLanguageCookie(): LearningLanguage | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(/(?:^|;\s*)active_language=([^;]+)/);
+  if (!match) return null;
+  const raw = decodeURIComponent(match[1]);
+  return isLearningLanguage(raw) ? raw : null;
+}
+
+export function writeActiveLanguageCookie(lang: LearningLanguage): void {
+  document.cookie = `${COOKIE_NAME}=${lang}; path=/; SameSite=Lax; max-age=31536000`;
+}
