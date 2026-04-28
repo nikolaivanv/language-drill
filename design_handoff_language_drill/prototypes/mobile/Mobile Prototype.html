@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mobile Prototype — Language Drill</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #ece5d6; font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; color: #1a1612; }
+    #root { height: 100vh; }
+    button { font-family: inherit; }
+    *, *::before, *::after { box-sizing: border-box; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="mobile/android-frame.jsx"></script>
+  <script type="text/babel" src="mobile/design-canvas.jsx"></script>
+  <script type="text/babel" src="mobile/m-kit.jsx"></script>
+  <script type="text/babel" src="mobile/onboarding.jsx"></script>
+  <script type="text/babel" src="mobile/dashboard.jsx"></script>
+  <script type="text/babel" src="mobile/cloze.jsx"></script>
+  <script type="text/babel" src="mobile/translation.jsx"></script>
+  <script type="text/babel" src="mobile/vocab.jsx"></script>
+  <script type="text/babel" src="mobile/debrief.jsx"></script>
+  <script type="text/babel" src="mobile/progress.jsx"></script>
+  <script type="text/babel" src="mobile/read.jsx"></script>
+
+  <script type="text/babel" data-presets="env,react">
+    // Phone — wraps any screen in our android frame, no app bar (we render our own header)
+    function Phone({ children, dark = false, label }) {
+      return (
+        <div data-screen-label={label} style={{ position: 'relative' }}>
+          <AndroidDevice dark={dark}>
+            <div style={{ height: '100%', overflow: 'hidden', position: 'relative' }}>
+              {children}
+            </div>
+          </AndroidDevice>
+        </div>
+      );
+    }
+
+    // Theory bottom sheet shown over a faded dashboard, for a clean preview
+    function TheoryPreview() {
+      return (
+        <div style={{ height: '100%', position: 'relative', background: M.paper2 }}>
+          <div style={{ position: 'absolute', inset: 0, opacity: 0.55, pointerEvents: 'none' }}>
+            <MobileDashboard />
+          </div>
+          <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, top: '12%' }}>
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(26,22,18,0.4)' }} />
+            <div style={{
+              position: 'absolute', left: 0, right: 0, bottom: 0, top: 0,
+              background: M.paper, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+              boxShadow: '0 -10px 40px rgba(0,0,0,0.18)',
+              display: 'flex', flexDirection: 'column',
+            }}>
+              <div style={{ padding: '10px 0 6px' }}>
+                <div style={{ width: 40, height: 4, borderRadius: 2, background: M.ruleStrong, margin: '0 auto' }} />
+              </div>
+              <div style={{ padding: '4px 20px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+                <div style={{ ...T.display(20) }}>pluscuamperfecto</div>
+                <button style={{ width: 32, height: 32, border: 'none', background: 'transparent', borderRadius: 16, fontSize: 20, color: M.inkSoft }}>×</button>
+              </div>
+              <div style={{ flex: 1, overflowY: 'auto' }}>
+                <TheoryContent />
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      const W = 412; // android frame width default
+      const FRAME_W = W + 16; // border 8 each side
+      const FRAME_H = 892 + 16;
+
+      return (
+        <DesignCanvas defaultBg="#ece5d6">
+          <DCSection id="hero" title="mobile prototype" subtitle="android, conventional material patterns over our paper/ink palette · 412 × 892">
+            <DCArtboard id="dashboard-1" label="dashboard · today's plan" width={FRAME_W} height={FRAME_H}>
+              <Phone label="Dashboard"><MobileDashboard /></Phone>
+            </DCArtboard>
+            <DCArtboard id="onboarding-1" label="onboarding · 1 languages" width={FRAME_W} height={FRAME_H}>
+              <Phone label="Onboarding · languages"><MobileOnboarding initialStep={0} /></Phone>
+            </DCArtboard>
+            <DCArtboard id="onboarding-2" label="onboarding · 2 level + placement" width={FRAME_W} height={FRAME_H}>
+              <Phone label="Onboarding · level"><MobileOnboarding initialStep={1} /></Phone>
+            </DCArtboard>
+            <DCArtboard id="onboarding-3" label="onboarding · 3 goals" width={FRAME_W} height={FRAME_H}>
+              <Phone label="Onboarding · goals"><MobileOnboarding initialStep={2} /></Phone>
+            </DCArtboard>
+            <DCArtboard id="onboarding-4" label="onboarding · 4 schedule" width={FRAME_W} height={FRAME_H}>
+              <Phone label="Onboarding · schedule"><MobileOnboarding initialStep={3} /></Phone>
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="drills" title="drill exercises" subtitle="three exercise types · in-progress and graded states">
+            <DCArtboard id="cloze-choice" label="cloze · multi-choice (graded)" width={FRAME_W} height={FRAME_H}>
+              <Phone label="Cloze · multi-choice"><MobileCloze mode="choice" /></Phone>
+            </DCArtboard>
+            <DCArtboard id="cloze-typed" label="cloze · typed answer (graded)" width={FRAME_W} height={FRAME_H}>
+              <Phone label="Cloze · typed"><MobileCloze mode="typed" /></Phone>
+            </DCArtboard>
+            <DCArtboard id="translation-typing" label="translation · mid-typing (keyboard up)" width={FRAME_W} height={FRAME_H}>
+              <Phone label="Translation · typing"><MobileTranslation state="typing" /></Phone>
+            </DCArtboard>
+            <DCArtboard id="translation-graded" label="translation · graded" width={FRAME_W} height={FRAME_H}>
+              <Phone label="Translation · graded"><MobileTranslation state="graded" /></Phone>
+            </DCArtboard>
+            <DCArtboard id="vocab-hint" label="vocab · hint revealed" width={FRAME_W} height={FRAME_H}>
+              <Phone label="Vocab · with hint"><MobileVocab state="hint" /></Phone>
+            </DCArtboard>
+            <DCArtboard id="vocab-graded" label="vocab · graded" width={FRAME_W} height={FRAME_H}>
+              <Phone label="Vocab · graded"><MobileVocab state="graded" /></Phone>
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="end" title="debrief, theory, progress" subtitle="closing the loop">
+            <DCArtboard id="debrief-1" label="post-session debrief" width={FRAME_W} height={FRAME_H}>
+              <Phone label="Debrief"><MobileDebrief /></Phone>
+            </DCArtboard>
+            <DCArtboard id="theory-1" label="theory · bottom sheet" width={FRAME_W} height={FRAME_H}>
+              <Phone label="Theory sheet"><TheoryPreview /></Phone>
+            </DCArtboard>
+            <DCArtboard id="progress-1" label="progress · stats" width={FRAME_W} height={FRAME_H}>
+              <Phone label="Progress"><MobileProgress /></Phone>
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="read" title="read & collect" subtitle="paste a passage from anything you're reading · words above your level surface in the next session">
+            <DCArtboard id="read-empty" label="read · empty / first time" width={FRAME_W} height={FRAME_H}>
+              <Phone label="Read · empty"><MobileRead scene="empty" /></Phone>
+            </DCArtboard>
+            <DCArtboard id="read-paste" label="read · paste a text" width={FRAME_W} height={FRAME_H}>
+              <Phone label="Read · paste"><MobileRead scene="paste" /></Phone>
+            </DCArtboard>
+            <DCArtboard id="read-annotated" label="read · annotated (subtle)" width={FRAME_W} height={FRAME_H}>
+              <Phone label="Read · annotated"><MobileRead scene="annotated" /></Phone>
+            </DCArtboard>
+            <DCArtboard id="read-history" label="read · history of past texts" width={FRAME_W} height={FRAME_H}>
+              <Phone label="Read · history"><MobileRead scene="history" /></Phone>
+            </DCArtboard>
+          </DCSection>
+        </DesignCanvas>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
