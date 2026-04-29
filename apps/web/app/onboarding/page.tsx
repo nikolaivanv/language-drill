@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
+import { Suspense, useCallback, useEffect, useMemo } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -35,9 +35,29 @@ import type { OnboardingState } from "../../components/onboarding";
 // Submit orchestration (task 31c) lives in `OnboardingPageBody` so it can
 // read the wizard's reducer state via `useOnboarding()`. The shell stays
 // stateless and assumes the provider is wrapped above it.
+//
+// `useSearchParams()` forces the page out of static prerendering. Next.js
+// requires the bailout to be wrapped in a Suspense boundary, so the default
+// export is a thin Suspense wrapper around the real page content.
 // ---------------------------------------------------------------------------
 
 export default function OnboardingPage() {
+  return (
+    <Suspense fallback={<LoadingScreen />}>
+      <OnboardingPageContent />
+    </Suspense>
+  );
+}
+
+function LoadingScreen() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-paper">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-paper-2 border-t-ink" />
+    </div>
+  );
+}
+
+function OnboardingPageContent() {
   const { getToken } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -78,11 +98,7 @@ export default function OnboardingPage() {
 
   if (isLoading) {
     // Mirrors the dashboard layout's loading state (apps/web/app/(dashboard)/layout.tsx).
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-paper">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-paper-2 border-t-ink" />
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (hasError) {
