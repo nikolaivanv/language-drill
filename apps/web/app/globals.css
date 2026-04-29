@@ -140,6 +140,16 @@
   font-family: var(--font-mono);
   font-feature-settings: "tnum";
 }
+.hilite {
+  background: linear-gradient(
+    180deg,
+    transparent 55%,
+    var(--color-hilite-soft) 55%,
+    var(--color-hilite-soft) 95%,
+    transparent 95%
+  );
+  padding: 0 3px;
+}
 
 /* ─── Shared utilities ─── */
 .fade-in {

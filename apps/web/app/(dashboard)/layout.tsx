@@ -63,11 +63,10 @@ export default function DashboardLayout({
     );
   }
 
-  // Loaded, has profiles — render shell wrapping children.
-  // The API-client schema types `language` as `string` (loose Zod schema),
-  // but values at runtime match the `Language` enum. Cast at the boundary
-  // so the strictly-typed shell components receive the shared LanguageProfile.
-  const profiles = (data?.profiles ?? []) as LanguageProfile[];
+  // Loaded, has profiles — render shell wrapping children. The API-client
+  // schema validates `language` and `proficiencyLevel` as native enums, so
+  // `data.profiles` is already typed as `LanguageProfile[]`-compatible.
+  const profiles: LanguageProfile[] = data?.profiles ?? [];
   return (
     <ActiveLanguageProvider profiles={profiles}>
       <AppShell profiles={profiles}>{children}</AppShell>

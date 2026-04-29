@@ -5,14 +5,32 @@ export interface CheckboxProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
   className?: string;
+  /**
+   * IDs of the elements that label this checkbox. Forwarded to
+   * `aria-labelledby` on the underlying `<button role="checkbox">` so screen
+   * readers announce the visible label text — the wrapping `<label>` element
+   * does not auto-associate for non-native controls.
+   */
+  'aria-labelledby'?: string;
+  /** Inline accessible name. Use `aria-labelledby` instead when the label is
+   * already in the DOM. */
+  'aria-label'?: string;
 }
 
-export function Checkbox({ checked, onChange, className }: CheckboxProps) {
+export function Checkbox({
+  checked,
+  onChange,
+  className,
+  'aria-labelledby': ariaLabelledBy,
+  'aria-label': ariaLabel,
+}: CheckboxProps) {
   return (
     <button
       type="button"
       role="checkbox"
       aria-checked={checked}
+      aria-labelledby={ariaLabelledBy}
+      aria-label={ariaLabel}
       onClick={() => onChange(!checked)}
       className={cn(
         'inline-flex items-center justify-center min-w-[32px] min-h-[32px] cursor-pointer',

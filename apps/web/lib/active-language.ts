@@ -1,6 +1,9 @@
-import { Language } from '@language-drill/shared';
+import { Language, type LearningLanguage } from '@language-drill/shared';
 
-export type LearningLanguage = Exclude<Language, Language.EN>;
+// Re-export the canonical `LearningLanguage` type from `@language-drill/shared`
+// so callers that import it from this module keep working. The shared
+// definition is structurally identical (`Exclude<Language, Language.EN>`).
+export type { LearningLanguage };
 
 const COOKIE_NAME = 'active_language';
 
