@@ -181,8 +181,9 @@ PR  → lint + typecheck + tests
     → Drizzle migrate on branch
     → Vercel preview deploy
 
-Merge → CDK deploy (Lambda + API Gateway + S3 + SQS)
-      → Vercel production deploy (waits for CDK)
+Merge → Drizzle migrate (production Neon)
+      → CDK deploy (Lambda + API Gateway + S3 + SQS) — waits for migrate
+      → Vercel production deploy — waits for CDK
       → Neon branch deleted (cleanup workflow)
 ```
 
@@ -218,7 +219,7 @@ DNS is managed in **Cloudflare** (registrar + DNS). All records are **DNS-only**
 | `language-drill/UPSTASH_REDIS_REST_URL` | Upstash console → REST API tab |
 | `language-drill/UPSTASH_REDIS_REST_TOKEN` | Upstash console → REST API tab |
 
-**GitHub Actions secrets** (9 secrets — deploy-time credentials):
+**GitHub Actions secrets** (10 secrets — deploy-time credentials):
 
 | Secret | Purpose |
 |---|---|
@@ -231,6 +232,7 @@ DNS is managed in **Cloudflare** (registrar + DNS). All records are **DNS-only**
 | `VERCEL_TOKEN` | From vercel.com/account/tokens |
 | `VERCEL_ORG_ID` | From Vercel dashboard |
 | `VERCEL_PROJECT_ID` | From Vercel dashboard |
+| `DATABASE_URL` | Production Neon connection string — used by `deploy.yml` to apply Drizzle migrations before CDK + Vercel deploy |
 
 **Vercel environment variables:**
 
