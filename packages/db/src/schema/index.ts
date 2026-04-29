@@ -8,7 +8,8 @@
 //   invitations(code)                               — invite lookup at signup
 //   invitations(usedBy)                             — API invite check middleware
 
-export { users, userLanguageProfiles } from './users';
+export { users, userLanguageProfiles, userPreferences } from './users';
+export type { UserPreferences, NewUserPreferences } from './users';
 export { skills, skillTopics } from './skills';
 export { exercises, exerciseTags } from './exercises';
 export { userExerciseHistory, spacedRepetitionCards } from './progress';

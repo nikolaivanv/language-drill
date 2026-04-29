@@ -134,3 +134,9 @@ export type EvaluationResult = {
   errors: EvaluationError[];
   estimatedCefrEvidence: string;
 };
+
+// ---------------------------------------------------------------------------
+// Onboarding constants
+// ---------------------------------------------------------------------------
+
+export * from "./onboarding";

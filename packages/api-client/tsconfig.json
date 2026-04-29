@@ -2,7 +2,13 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    // DOM lib + jsx are required by the `usePreferences.test.ts` hook test,
+    // which uses `@testing-library/react`'s `renderHook` (DOM types) and
+    // `React.createElement` to build the QueryClientProvider wrapper.
+    // The runtime tests run under jsdom (see vitest.config.ts).
+    "lib": ["ES2022", "DOM"],
+    "jsx": "react"
   },
   "include": ["src"]
 }

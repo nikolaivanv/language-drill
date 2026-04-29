@@ -1,271 +1,266 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
-import {
-  Language,
-  CefrLevel,
-  LANGUAGE_NAMES,
-  CEFR_DESCRIPTIONS,
-} from "@language-drill/shared";
-import type { LanguageProfile } from "@language-drill/shared";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   useLanguageProfiles,
-  useSaveLanguageProfiles,
+  useGetPreferences,
+  useSavePreferences,
   createAuthenticatedFetch,
+  type AuthenticatedFetch,
+  type SavePreferencesArgs,
 } from "@language-drill/api-client";
+import {
+  OnboardingProvider,
+  OnboardingShell,
+  initialEditState,
+  initialNewUserState,
+  useOnboarding,
+} from "../../components/onboarding";
+import type { OnboardingState } from "../../components/onboarding";
 
 // ---------------------------------------------------------------------------
-// Constants
+// OnboardingPage — routing/loading/hydration + submit orchestration
 // ---------------------------------------------------------------------------
-
-const LANGUAGE_FLAGS: Record<Language, string> = {
-  [Language.EN]: "\uD83C\uDDEC\uD83C\uDDE7",
-  [Language.ES]: "\uD83C\uDDEA\uD83C\uDDF8",
-  [Language.DE]: "\uD83C\uDDE9\uD83C\uDDEA",
-  [Language.TR]: "\uD83C\uDDF9\uD83C\uDDF7",
-};
-
-const ALL_LANGUAGES = Object.values(Language);
-const ALL_CEFR_LEVELS = Object.values(CefrLevel);
-
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
-
-function LoadingSkeleton() {
-  return (
-    <div className="animate-pulse space-y-4">
-      <div className="h-8 w-1/2 rounded bg-gray-200" />
-      <div className="grid grid-cols-2 gap-4">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-32 rounded-lg bg-gray-200" />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function CefrHelper() {
-  const [expanded, setExpanded] = useState(false);
-
-  return (
-    <div className="rounded-lg border border-gray-200 bg-gray-50">
-      <button
-        type="button"
-        onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-gray-700"
-      >
-        <span>What do these levels mean?</span>
-        <svg
-          className={`h-4 w-4 text-gray-500 transition-transform ${expanded ? "rotate-180" : ""}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-
-      {expanded && (
-        <div className="border-t border-gray-200 px-4 py-3">
-          <dl className="space-y-2">
-            {ALL_CEFR_LEVELS.map((level) => (
-              <div key={level} className="flex gap-3 text-sm">
-                <dt className="w-8 shrink-0 font-semibold text-gray-700">
-                  {level}
-                </dt>
-                <dd className="text-gray-600">{CEFR_DESCRIPTIONS[level]}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function LanguageCard({
-  language,
-  selected,
-  cefrLevel,
-  onToggle,
-  onLevelChange,
-}: {
-  language: Language;
-  selected: boolean;
-  cefrLevel: CefrLevel;
-  onToggle: () => void;
-  onLevelChange: (level: CefrLevel) => void;
-}) {
-  return (
-    <div
-      className={`cursor-pointer rounded-lg border-2 p-4 transition-colors ${
-        selected
-          ? "border-blue-500 bg-blue-50"
-          : "border-gray-200 bg-white hover:border-gray-300"
-      }`}
-      onClick={onToggle}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onToggle();
-        }
-      }}
-    >
-      <div className="flex items-center gap-3">
-        <span className="text-2xl">{LANGUAGE_FLAGS[language]}</span>
-        <span className="text-lg font-medium text-gray-900">
-          {LANGUAGE_NAMES[language]}
-        </span>
-      </div>
-
-      {selected && (
-        <div className="mt-3" onClick={(e) => e.stopPropagation()}>
-          <label className="block text-xs font-medium text-gray-500 mb-1">
-            Your level
-          </label>
-          <select
-            value={cefrLevel}
-            onChange={(e) => onLevelChange(e.target.value as CefrLevel)}
-            className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm"
-          >
-            {ALL_CEFR_LEVELS.map((level) => (
-              <option key={level} value={level}>
-                {level} — {CEFR_DESCRIPTIONS[level]}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Main page
+// Owns the data plumbing for the onboarding route:
+//   - reads `?edit=1` to decide whether to hydrate preferences
+//   - hydrates language profiles (always) and preferences (edit mode only)
+//   - shows a spinner card while either query is loading
+//   - shows a paper-card error with retry when hydration fails in edit mode
+//   - redirects returning users with profiles to `/` when not in edit mode
+//   - mounts the wizard inside an `OnboardingProvider` so `OnboardingPageBody`
+//     can read state + dispatch and orchestrate the final submit
+//
+// Submit orchestration (task 31c) lives in `OnboardingPageBody` so it can
+// read the wizard's reducer state via `useOnboarding()`. The shell stays
+// stateless and assumes the provider is wrapped above it.
 // ---------------------------------------------------------------------------
 
 export default function OnboardingPage() {
   const { getToken } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editMode = searchParams?.get("edit") === "1";
+
+  // Stable fetchFn so TanStack Query doesn't see a new function every render.
   const fetchFn = useMemo(
     () => createAuthenticatedFetch(getToken),
     [getToken],
   );
 
-  const { data: profilesData, isLoading } = useLanguageProfiles({ fetchFn });
-  const saveMutation = useSaveLanguageProfiles({ fetchFn });
+  // Profiles always — needed for the returning-user redirect predicate.
+  const profilesQuery = useLanguageProfiles({ fetchFn });
 
-  const [selections, setSelections] = useState<Map<Language, CefrLevel>>(
-    new Map(),
-  );
-  const [initialized, setInitialized] = useState(false);
+  // Preferences only in edit mode — `enabled: false` makes this a no-op
+  // (isLoading=false, isError=false, data=undefined) for new users.
+  const preferencesQuery = useGetPreferences({ fetchFn, enabled: editMode });
 
-  // Pre-populate state from existing profiles (edit mode)
+  const isLoading = profilesQuery.isLoading || preferencesQuery.isLoading;
+
+  // In edit mode both queries are required; in new-user mode only profiles.
+  const hasError = editMode
+    ? profilesQuery.isError || preferencesQuery.isError
+    : profilesQuery.isError;
+
+  const hasProfiles =
+    profilesQuery.data !== undefined && profilesQuery.data.profiles.length > 0;
+  const shouldRedirect = hasProfiles && !editMode;
+
+  // Redirect side-effect lives in useEffect to keep render pure and to be
+  // safe under React strict mode. The matching render branch returns null
+  // so the screen stays clean during the navigation tick.
   useEffect(() => {
-    if (initialized || isLoading || !profilesData) return;
-    if (profilesData.profiles.length > 0) {
-      const map = new Map<Language, CefrLevel>();
-      for (const p of profilesData.profiles) {
-        map.set(p.language as Language, p.proficiencyLevel as CefrLevel);
-      }
-      setSelections(map);
+    if (shouldRedirect) {
+      router.replace("/");
     }
-    setInitialized(true);
-  }, [profilesData, isLoading, initialized]);
-
-  const isEditMode =
-    profilesData !== undefined && profilesData.profiles.length > 0;
-
-  const toggleLanguage = (lang: Language) => {
-    setSelections((prev) => {
-      const next = new Map(prev);
-      if (next.has(lang)) {
-        next.delete(lang);
-      } else {
-        next.set(lang, CefrLevel.B1);
-      }
-      return next;
-    });
-  };
-
-  const setLevel = (lang: Language, level: CefrLevel) => {
-    setSelections((prev) => {
-      const next = new Map(prev);
-      next.set(lang, level);
-      return next;
-    });
-  };
-
-  const handleSave = () => {
-    const profiles: LanguageProfile[] = Array.from(selections.entries()).map(
-      ([language, proficiencyLevel]) => ({ language, proficiencyLevel }),
-    );
-    saveMutation.mutate(profiles, {
-      onSuccess: () => {
-        router.push("/");
-      },
-    });
-  };
+  }, [shouldRedirect, router]);
 
   if (isLoading) {
+    // Mirrors the dashboard layout's loading state (apps/web/app/(dashboard)/layout.tsx).
     return (
-      <div className="mx-auto max-w-2xl p-6">
-        <LoadingSkeleton />
+      <div className="flex min-h-screen items-center justify-center bg-paper">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-paper-2 border-t-ink" />
       </div>
     );
   }
 
-  return (
-    <div className="mx-auto max-w-2xl p-6">
-      <h1 className="mb-2 text-2xl font-bold">
-        {isEditMode ? "Edit your languages" : "Set up your languages"}
-      </h1>
-      <p className="mb-6 text-gray-600">
-        Select the languages you want to practice and your current level in
-        each.
-      </p>
-
-      <div className="mb-6 grid grid-cols-2 gap-4">
-        {ALL_LANGUAGES.map((lang) => (
-          <LanguageCard
-            key={lang}
-            language={lang}
-            selected={selections.has(lang)}
-            cefrLevel={selections.get(lang) ?? CefrLevel.B1}
-            onToggle={() => toggleLanguage(lang)}
-            onLevelChange={(level) => setLevel(lang, level)}
-          />
-        ))}
-      </div>
-
-      <div className="mb-6">
-        <CefrHelper />
-      </div>
-
-      {saveMutation.error && (
-        <div className="mb-4 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          <p className="font-medium">Failed to save</p>
-          <p className="mt-1">{saveMutation.error.message}</p>
+  if (hasError) {
+    // Paper-card error state matching the dashboard layout's error markup.
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-paper">
+        <div className="max-w-md rounded-r-lg border border-rule bg-card p-s-6 text-center shadow-1">
+          <p className="t-display-s">couldn&apos;t load your settings</p>
+          <p className="t-small mt-s-2">
+            we couldn&apos;t reach the server. check your connection and try
+            again.
+          </p>
+          <button
+            onClick={() => {
+              void profilesQuery.refetch();
+              if (editMode) void preferencesQuery.refetch();
+            }}
+            className="mt-s-4 rounded-r-md bg-ink text-paper px-s-4 py-s-2 text-[13px] font-medium transition-all duration-150 hover:bg-accent-2"
+          >
+            try again
+          </button>
         </div>
-      )}
+      </div>
+    );
+  }
 
-      <button
-        onClick={handleSave}
-        disabled={selections.size === 0 || saveMutation.isPending}
-        className="w-full rounded-lg bg-blue-600 px-4 py-3 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
-      >
-        {saveMutation.isPending
-          ? "Saving..."
-          : isEditMode
-            ? "Save changes"
-            : "Start practicing"}
-      </button>
-    </div>
+  if (shouldRedirect) {
+    // Effect above is in flight — render nothing while the route changes.
+    return null;
+  }
+
+  // All gates have passed — render the wizard with hydrated state.
+  // In edit mode the loading + error gates above guarantee
+  // `preferencesQuery.data` is defined, so the non-null assertion is safe.
+  const initialState = editMode
+    ? initialEditState(
+        profilesQuery.data?.profiles ?? [],
+        preferencesQuery.data!,
+      )
+    : initialNewUserState();
+
+  return (
+    <OnboardingProvider initialState={initialState}>
+      <OnboardingPageBody
+        mode={editMode ? "edit" : "new"}
+        fetchFn={fetchFn}
+      />
+    </OnboardingProvider>
   );
+}
+
+// ---------------------------------------------------------------------------
+// OnboardingPageBody — submit orchestration + redirect
+// ---------------------------------------------------------------------------
+// Lives inside `OnboardingProvider` so it can `useOnboarding()` to read state
+// + dispatch. Wires `useSavePreferences` and orchestrates the step-4 submit:
+//   1. `submitStart` → CTA enters loading state.
+//   2. `mutateAsync(buildSaveArgs(state))` — throws on non-2xx (status code
+//      attached to the Error by `createAuthenticatedFetch`).
+//   3. On resolve: dispatch `submitSuccess` and navigate.
+//      - new mode  → `router.push('/')`.
+//      - edit mode → same-origin referrer if any, else `/settings`. The
+//        same-origin guard prevents an open-redirect via a crafted referrer.
+//   4. On reject: classify the error (4xx / 5xx / network) and dispatch
+//      `submitError` so `WizardFooter` can announce it via `role="alert"`.
+// ---------------------------------------------------------------------------
+
+interface OnboardingPageBodyProps {
+  mode: "new" | "edit";
+  fetchFn: AuthenticatedFetch;
+}
+
+function OnboardingPageBody({ mode, fetchFn }: OnboardingPageBodyProps) {
+  const { state, dispatch } = useOnboarding();
+  const router = useRouter();
+  const saveMutation = useSavePreferences({ fetchFn });
+
+  const handleComplete = useCallback(async () => {
+    const args = buildSaveArgs(state);
+    dispatch({ type: "submitStart" });
+    try {
+      await saveMutation.mutateAsync(args);
+      dispatch({ type: "submitSuccess" });
+      if (mode === "new") {
+        router.push("/");
+      } else {
+        router.push(sameOriginReferrer() ?? "/settings");
+      }
+    } catch (err) {
+      const { kind, message } = classifyError(err);
+      dispatch({ type: "submitError", kind, message });
+    }
+  }, [state, dispatch, saveMutation, router, mode]);
+
+  return <OnboardingShell mode={mode} onComplete={handleComplete} />;
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Build the wire payload for `useSavePreferences` from the wizard's reducer
+ * state. The reducer's `selectCanAdvance` gate ensures `primaryLanguage`,
+ * `primaryLevel`, and `dailyMinutes` are non-null on Step 4 — but we throw
+ * defensively so a bug in the gate manifests as a clear error rather than
+ * a silent bad payload.
+ */
+function buildSaveArgs(state: OnboardingState): SavePreferencesArgs {
+  if (
+    state.primaryLanguage === null ||
+    state.primaryLevel === null ||
+    state.dailyMinutes === null
+  ) {
+    throw new Error(
+      "cannot submit without primaryLanguage, primaryLevel, and dailyMinutes",
+    );
+  }
+  return {
+    languages: state.languages,
+    primaryLanguage: state.primaryLanguage,
+    primaryLevel: state.primaryLevel,
+    goals: state.goals,
+    notes: state.notes,
+    dailyMinutes: state.dailyMinutes,
+    gentleNudges: state.gentleNudges,
+  };
+}
+
+/**
+ * Returns `document.referrer` only when it parses cleanly AND its origin
+ * matches the current window's origin. Returns `null` for empty, malformed,
+ * or cross-origin referrers — protecting against an open-redirect via a
+ * crafted referrer header.
+ */
+function sameOriginReferrer(): string | null {
+  if (typeof window === "undefined") return null;
+  if (!document.referrer) return null;
+  try {
+    const ref = new URL(document.referrer);
+    if (ref.origin === window.location.origin) {
+      return document.referrer;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Map a thrown error from `useSavePreferences` to a discriminated `kind` +
+ * user-facing message. `createAuthenticatedFetch` attaches `.status` to the
+ * Error on non-2xx responses; absent status means the request never reached
+ * the server (network error / fetch failure).
+ *
+ *   4xx → show server message verbatim (R7.5)
+ *   5xx → "something went wrong — try again." (R7.6)
+ *   network → "something went wrong — try again." (design.md error scenario 3)
+ */
+function classifyError(err: unknown): {
+  kind: "4xx" | "5xx" | "network";
+  message: string;
+} {
+  if (err instanceof Error) {
+    const status = (err as Error & { status?: number }).status;
+    if (typeof status === "number") {
+      if (status >= 400 && status < 500) {
+        return {
+          kind: "4xx",
+          message: err.message || "invalid input. please check the form.",
+        };
+      }
+      if (status >= 500) {
+        return { kind: "5xx", message: "something went wrong — try again." };
+      }
+    }
+  }
+  // No status property → fetch never produced a response (network error or
+  // pre-flight failure). Surface the same friendly message as 5xx.
+  return { kind: "network", message: "something went wrong — try again." };
 }
