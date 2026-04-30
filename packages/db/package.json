@@ -17,13 +17,13 @@
   },
   "dependencies": {
     "@language-drill/shared": "workspace:*",
-    "@neondatabase/serverless": "^0.9.0",
-    "drizzle-orm": "^0.30.0",
+    "@neondatabase/serverless": "^1.1.0",
+    "drizzle-orm": "^0.45.2",
     "ws": "^8.20.0"
   },
   "devDependencies": {
     "@types/ws": "^8.18.1",
-    "drizzle-kit": "^0.21.0",
+    "drizzle-kit": "^0.31.10",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0",
     "vitest": "^1.0.0"
