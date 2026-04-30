@@ -78,7 +78,7 @@ const PUT_OK_RESPONSE = {
 
 /** Convenience: pulls the captured JSON body of the first fetch call. */
 function readPutBody(
-  fetchFn: Mock<Parameters<AuthenticatedFetch>, ReturnType<AuthenticatedFetch>>,
+  fetchFn: Mock<AuthenticatedFetch>,
 ): Record<string, unknown> {
   const init = fetchFn.mock.calls[0]?.[1];
   expect(init).toBeDefined();
@@ -100,7 +100,7 @@ describe('useSavePreferences — wire payload build', () => {
 
   it('builds profiles[] with a single primary language at the chosen level', async () => {
     const fetchFn = vi
-      .fn<Parameters<AuthenticatedFetch>, ReturnType<AuthenticatedFetch>>()
+      .fn<AuthenticatedFetch>()
       .mockResolvedValue(jsonResponse(PUT_OK_RESPONSE));
 
     const { result } = renderHook(() => useSavePreferences({ fetchFn }), {
@@ -137,7 +137,7 @@ describe('useSavePreferences — wire payload build', () => {
 
   it('fills non-primary selected languages with proficiencyLevel A1 (R3.8)', async () => {
     const fetchFn = vi
-      .fn<Parameters<AuthenticatedFetch>, ReturnType<AuthenticatedFetch>>()
+      .fn<AuthenticatedFetch>()
       .mockResolvedValue(
         jsonResponse({
           profiles: [
@@ -193,7 +193,7 @@ describe('useSavePreferences — notes normalisation (R4.6)', () => {
 
   it('converts CRLF to LF and trims surrounding whitespace before sending', async () => {
     const fetchFn = vi
-      .fn<Parameters<AuthenticatedFetch>, ReturnType<AuthenticatedFetch>>()
+      .fn<AuthenticatedFetch>()
       .mockResolvedValue(jsonResponse(PUT_OK_RESPONSE));
 
     const { result } = renderHook(() => useSavePreferences({ fetchFn }), {
@@ -220,7 +220,7 @@ describe('useSavePreferences — notes normalisation (R4.6)', () => {
 
   it('accepts notes that are exactly 500 chars after trim', async () => {
     const fetchFn = vi
-      .fn<Parameters<AuthenticatedFetch>, ReturnType<AuthenticatedFetch>>()
+      .fn<AuthenticatedFetch>()
       .mockResolvedValue(jsonResponse(PUT_OK_RESPONSE));
 
     const { result } = renderHook(() => useSavePreferences({ fetchFn }), {
@@ -249,7 +249,7 @@ describe('useSavePreferences — notes normalisation (R4.6)', () => {
 
   it('rejects notes that are 501 chars after trim (validation runs post-trim)', async () => {
     const fetchFn = vi
-      .fn<Parameters<AuthenticatedFetch>, ReturnType<AuthenticatedFetch>>()
+      .fn<AuthenticatedFetch>()
       .mockResolvedValue(jsonResponse(PUT_OK_RESPONSE));
 
     const { result } = renderHook(() => useSavePreferences({ fetchFn }), {
@@ -295,7 +295,7 @@ describe('useSavePreferences — error propagation', () => {
     };
 
     const fetchFn = vi
-      .fn<Parameters<AuthenticatedFetch>, ReturnType<AuthenticatedFetch>>()
+      .fn<AuthenticatedFetch>()
       .mockRejectedValue(serverError);
 
     const { result } = renderHook(() => useSavePreferences({ fetchFn }), {
@@ -328,7 +328,7 @@ describe('useSavePreferences — cache invalidation (R9.4)', () => {
 
   it('invalidates both ["languageProfiles"] and ["preferences"] on 2xx success', async () => {
     const fetchFn = vi
-      .fn<Parameters<AuthenticatedFetch>, ReturnType<AuthenticatedFetch>>()
+      .fn<AuthenticatedFetch>()
       .mockResolvedValue(jsonResponse(PUT_OK_RESPONSE));
 
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
@@ -378,7 +378,7 @@ describe('useGetPreferences — enabled flag', () => {
 
   it('does not call fetchFn when enabled: false', async () => {
     const fetchFn = vi
-      .fn<Parameters<AuthenticatedFetch>, ReturnType<AuthenticatedFetch>>()
+      .fn<AuthenticatedFetch>()
       .mockResolvedValue(
         jsonResponse({
           primaryLanguage: 'ES',
@@ -412,7 +412,7 @@ describe('useGetPreferences — enabled flag', () => {
       notes: 'taking notes',
     };
     const fetchFn = vi
-      .fn<Parameters<AuthenticatedFetch>, ReturnType<AuthenticatedFetch>>()
+      .fn<AuthenticatedFetch>()
       .mockResolvedValue(jsonResponse(responseBody));
 
     const { result } = renderHook(() => useGetPreferences({ fetchFn }), {
