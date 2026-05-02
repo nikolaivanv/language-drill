@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { App } from "aws-cdk-lib";
 import { Template } from "aws-cdk-lib/assertions";
 import { LanguageDrillStack } from "../lib/stack";
@@ -49,12 +49,22 @@ function buildProdStack() {
   });
 }
 
+// CDK synth runs esbuild bundling per stack instantiation (~1s on CI). Build
+// each stack once and reuse the synthesized Template across all assertions in
+// the describe block — cuts the suite from N synths to 2.
 describe("LanguageDrillStack-dev", () => {
+  let devStack: LanguageDrillStack;
+  let devTemplate: Template;
+  let prodTemplate: Template;
+
+  beforeAll(() => {
+    devStack = buildDevStack();
+    devTemplate = Template.fromStack(devStack);
+    prodTemplate = Template.fromStack(buildProdStack());
+  });
+
   it("IAM policies reference only dev secrets (no prod leak)", () => {
-    const stack = buildDevStack();
-    const policies = Template.fromStack(stack).findResources(
-      "AWS::IAM::Policy",
-    );
+    const policies = devTemplate.findResources("AWS::IAM::Policy");
     const serialized = JSON.stringify(policies);
 
     // Dev prefix flowed through to at least DATABASE_URL and CLERK_SECRET_KEY.
@@ -69,28 +79,19 @@ describe("LanguageDrillStack-dev", () => {
   });
 
   it("API Gateway is named language-drill-api-dev", () => {
-    const stack = buildDevStack();
-    Template.fromStack(stack).hasResourceProperties(
-      "AWS::ApiGatewayV2::Api",
-      {
-        Name: "language-drill-api-dev",
-      },
-    );
+    devTemplate.hasResourceProperties("AWS::ApiGatewayV2::Api", {
+      Name: "language-drill-api-dev",
+    });
   });
 
   it("stack carries the env=dev tag", () => {
-    const stack = buildDevStack();
-    // Force synthesis so the Tags.of(...) aspect is applied to the stack
-    // aggregator before we query it.
-    Template.fromStack(stack);
-    expect(stack.tags.tagValues()).toEqual({ env: "dev" });
+    // beforeAll already called Template.fromStack(devStack), which forces the
+    // Tags.of(...) aspect to apply before stack.tags is queried.
+    expect(devStack.tags.tagValues()).toEqual({ env: "dev" });
   });
 
   it("Lambda environment exposes ENV_NAME=dev and the dev ALLOWED_ORIGINS list", () => {
-    const stack = buildDevStack();
-    const lambdas = Template.fromStack(stack).findResources(
-      "AWS::Lambda::Function",
-    );
+    const lambdas = devTemplate.findResources("AWS::Lambda::Function");
     const fns = Object.values(lambdas);
     expect(fns).toHaveLength(1);
 
@@ -106,12 +107,10 @@ describe("LanguageDrillStack-dev", () => {
   // Phase 1 contract: prod will eventually have N>0 EventBridge rules; dev
   // must stay at 0 regardless of how many prod gets.
   it("does not deploy any EventBridge rules when enableScheduledJobs is false", () => {
-    const stack = buildDevStack();
-    Template.fromStack(stack).resourceCountIs("AWS::Events::Rule", 0);
+    devTemplate.resourceCountIs("AWS::Events::Rule", 0);
   });
 
   it("prod stack currently has zero EventBridge rules (Phase 1 will add them)", () => {
-    const stack = buildProdStack();
-    Template.fromStack(stack).resourceCountIs("AWS::Events::Rule", 0);
+    prodTemplate.resourceCountIs("AWS::Events::Rule", 0);
   });
 });
