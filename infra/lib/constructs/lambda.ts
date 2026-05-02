@@ -5,41 +5,46 @@ import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import * as path from "path";
 
+export interface LambdaConstructProps {
+  secretsPrefix: string;
+  additionalEnv?: Record<string, string>;
+}
+
 export class LambdaConstruct extends Construct {
   public readonly handler: lambda.NodejsFunction;
 
-  constructor(scope: Construct, id: string) {
+  constructor(scope: Construct, id: string, props: LambdaConstructProps) {
     super(scope, id);
 
     const databaseUrl = secretsmanager.Secret.fromSecretNameV2(
       this,
       "DatabaseUrl",
-      "language-drill/DATABASE_URL"
+      `${props.secretsPrefix}/DATABASE_URL`
     );
     const clerkSecretKey = secretsmanager.Secret.fromSecretNameV2(
       this,
       "ClerkSecretKey",
-      "language-drill/CLERK_SECRET_KEY"
+      `${props.secretsPrefix}/CLERK_SECRET_KEY`
     );
     const clerkWebhookSecret = secretsmanager.Secret.fromSecretNameV2(
       this,
       "ClerkWebhookSecret",
-      "language-drill/CLERK_WEBHOOK_SECRET"
+      `${props.secretsPrefix}/CLERK_WEBHOOK_SECRET`
     );
     const anthropicApiKey = secretsmanager.Secret.fromSecretNameV2(
       this,
       "AnthropicApiKey",
-      "language-drill/ANTHROPIC_API_KEY"
+      `${props.secretsPrefix}/ANTHROPIC_API_KEY`
     );
     const upstashRedisRestUrl = secretsmanager.Secret.fromSecretNameV2(
       this,
       "UpstashRedisRestUrl",
-      "language-drill/UPSTASH_REDIS_REST_URL"
+      `${props.secretsPrefix}/UPSTASH_REDIS_REST_URL`
     );
     const upstashRedisRestToken = secretsmanager.Secret.fromSecretNameV2(
       this,
       "UpstashRedisRestToken",
-      "language-drill/UPSTASH_REDIS_REST_TOKEN"
+      `${props.secretsPrefix}/UPSTASH_REDIS_REST_TOKEN`
     );
 
     const projectRoot = path.join(__dirname, "../../..");
@@ -69,7 +74,9 @@ export class LambdaConstruct extends Construct {
           ),
         },
       },
+      // additionalEnv is spread first so secret-derived vars below cannot be overridden by callers.
       environment: {
+        ...(props.additionalEnv ?? {}),
         DATABASE_URL: databaseUrl.secretValue.unsafeUnwrap(),
         CLERK_SECRET_KEY: clerkSecretKey.secretValue.unsafeUnwrap(),
         CLERK_WEBHOOK_SECRET: clerkWebhookSecret.secretValue.unsafeUnwrap(),

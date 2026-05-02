@@ -189,6 +189,19 @@ Merge → Drizzle migrate (production Neon)
 
 All infra via CDK — no console click-ops. Migrations are forward-only.
 
+### Environment matrix
+
+Production and dev share the same code via a single `LanguageDrillStack` class instantiated twice in `infra/bin/app.ts`; data, auth, and runtime resources are isolated per env.
+
+| Service | Production | Dev |
+|---|---|---|
+| API domain | `api.langdrill.app` | `api-dev.langdrill.app` |
+| CDK stack name | `LanguageDrillStack` | `LanguageDrillStack-dev` |
+| Neon branch | `production` | `dev` |
+| Clerk instance | prod (`pk_live_*`, `sk_live_*`) | dev (`pk_test_*`, `sk_test_*`) |
+| AWS Secrets Manager prefix | `language-drill/` | `language-drill-dev/` |
+| Vercel env scope | Production | Preview |
+
 ### Production domain: `langdrill.app`
 
 | Service | Domain | DNS |

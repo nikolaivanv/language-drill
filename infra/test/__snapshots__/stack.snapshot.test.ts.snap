@@ -1,0 +1,921 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN template 1`] = `
+{
+  "Outputs": {
+    "ApiGatewayApiDomainTarget4375270F": {
+      "Description": "Add a CNAME in Cloudflare: api.langdrill.app → this value",
+      "Value": {
+        "Fn::GetAtt": [
+          "ApiGatewayApiDomain7EBCAF8D",
+          "RegionalDomainName",
+        ],
+      },
+    },
+    "ApiUrl": {
+      "Description": "API Gateway endpoint URL",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Ref": "ApiGatewayHttpApi55B01A81",
+            },
+            ".execute-api.us-east-1.",
+            {
+              "Ref": "AWS::URLSuffix",
+            },
+            "/",
+          ],
+        ],
+      },
+    },
+  },
+  "Parameters": {
+    "BootstrapVersion": {
+      "Default": "/cdk-bootstrap/hnb659fds/version",
+      "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "ApiGatewayApiCertificate57E1D46D": {
+      "Properties": {
+        "DomainName": "api.langdrill.app",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+          {
+            "Key": "Name",
+            "Value": "LanguageDrillStack/ApiGateway/ApiCertificate",
+          },
+        ],
+        "ValidationMethod": "DNS",
+      },
+      "Type": "AWS::CertificateManager::Certificate",
+    },
+    "ApiGatewayApiDomain7EBCAF8D": {
+      "Properties": {
+        "DomainName": "api.langdrill.app",
+        "DomainNameConfigurations": [
+          {
+            "CertificateArn": {
+              "Ref": "ApiGatewayApiCertificate57E1D46D",
+            },
+            "EndpointType": "REGIONAL",
+          },
+        ],
+        "Tags": {
+          "env": "prod",
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::DomainName",
+    },
+    "ApiGatewayApiMappingDFFE7F88": {
+      "DependsOn": [
+        "ApiGatewayHttpApiDefaultStage22FF1A97",
+      ],
+      "Properties": {
+        "ApiId": {
+          "Ref": "ApiGatewayHttpApi55B01A81",
+        },
+        "DomainName": {
+          "Ref": "ApiGatewayApiDomain7EBCAF8D",
+        },
+        "Stage": "$default",
+      },
+      "Type": "AWS::ApiGatewayV2::ApiMapping",
+    },
+    "ApiGatewayHttpApi55B01A81": {
+      "Properties": {
+        "Name": "language-drill-api",
+        "ProtocolType": "HTTP",
+        "Tags": {
+          "env": "prod",
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Api",
+    },
+    "ApiGatewayHttpApiClerkJwtAuthorizer2889DFA0": {
+      "Properties": {
+        "ApiId": {
+          "Ref": "ApiGatewayHttpApi55B01A81",
+        },
+        "AuthorizerType": "JWT",
+        "IdentitySource": [
+          "$request.header.Authorization",
+        ],
+        "JwtConfiguration": {
+          "Audience": [
+            "language-drill",
+          ],
+          "Issuer": "https://clerk.example.com",
+        },
+        "Name": "ClerkJwtAuthorizer",
+      },
+      "Type": "AWS::ApiGatewayV2::Authorizer",
+    },
+    "ApiGatewayHttpApiDELETEproxyF0BD21E0": {
+      "Properties": {
+        "ApiId": {
+          "Ref": "ApiGatewayHttpApi55B01A81",
+        },
+        "AuthorizationType": "JWT",
+        "AuthorizerId": {
+          "Ref": "ApiGatewayHttpApiClerkJwtAuthorizer2889DFA0",
+        },
+        "RouteKey": "DELETE /{proxy+}",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "ApiGatewayHttpApiGETproxyLambdaIntegrationDD4BBDC4",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "ApiGatewayHttpApiDELETEproxyLambdaIntegrationPermission71A0ED70": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "LambdaHandlerF6372945",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:us-east-1:123456789012:",
+              {
+                "Ref": "ApiGatewayHttpApi55B01A81",
+              },
+              "/*/*/{proxy+}",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "ApiGatewayHttpApiDefaultStage22FF1A97": {
+      "Properties": {
+        "ApiId": {
+          "Ref": "ApiGatewayHttpApi55B01A81",
+        },
+        "AutoDeploy": true,
+        "StageName": "$default",
+        "Tags": {
+          "env": "prod",
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Stage",
+    },
+    "ApiGatewayHttpApiGETproxyCDCF95D7": {
+      "Properties": {
+        "ApiId": {
+          "Ref": "ApiGatewayHttpApi55B01A81",
+        },
+        "AuthorizationType": "JWT",
+        "AuthorizerId": {
+          "Ref": "ApiGatewayHttpApiClerkJwtAuthorizer2889DFA0",
+        },
+        "RouteKey": "GET /{proxy+}",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "ApiGatewayHttpApiGETproxyLambdaIntegrationDD4BBDC4",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "ApiGatewayHttpApiGETproxyLambdaIntegrationDD4BBDC4": {
+      "Properties": {
+        "ApiId": {
+          "Ref": "ApiGatewayHttpApi55B01A81",
+        },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::GetAtt": [
+            "LambdaHandlerF6372945",
+            "Arn",
+          ],
+        },
+        "PayloadFormatVersion": "2.0",
+      },
+      "Type": "AWS::ApiGatewayV2::Integration",
+    },
+    "ApiGatewayHttpApiGETproxyLambdaIntegrationPermission314D53A1": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "LambdaHandlerF6372945",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:us-east-1:123456789012:",
+              {
+                "Ref": "ApiGatewayHttpApi55B01A81",
+              },
+              "/*/*/{proxy+}",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "ApiGatewayHttpApiOPTIONSproxy719D1011": {
+      "Properties": {
+        "ApiId": {
+          "Ref": "ApiGatewayHttpApi55B01A81",
+        },
+        "AuthorizationType": "NONE",
+        "RouteKey": "OPTIONS /{proxy+}",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "ApiGatewayHttpApiGETproxyLambdaIntegrationDD4BBDC4",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "ApiGatewayHttpApiOPTIONSproxyLambdaIntegrationPermission3CF58B7C": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "LambdaHandlerF6372945",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:us-east-1:123456789012:",
+              {
+                "Ref": "ApiGatewayHttpApi55B01A81",
+              },
+              "/*/*/{proxy+}",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "ApiGatewayHttpApiPATCHproxy0F4C34DF": {
+      "Properties": {
+        "ApiId": {
+          "Ref": "ApiGatewayHttpApi55B01A81",
+        },
+        "AuthorizationType": "JWT",
+        "AuthorizerId": {
+          "Ref": "ApiGatewayHttpApiClerkJwtAuthorizer2889DFA0",
+        },
+        "RouteKey": "PATCH /{proxy+}",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "ApiGatewayHttpApiGETproxyLambdaIntegrationDD4BBDC4",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "ApiGatewayHttpApiPATCHproxyLambdaIntegrationPermissionEFAA994F": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "LambdaHandlerF6372945",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:us-east-1:123456789012:",
+              {
+                "Ref": "ApiGatewayHttpApi55B01A81",
+              },
+              "/*/*/{proxy+}",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "ApiGatewayHttpApiPOSTproxyC254FC6E": {
+      "Properties": {
+        "ApiId": {
+          "Ref": "ApiGatewayHttpApi55B01A81",
+        },
+        "AuthorizationType": "JWT",
+        "AuthorizerId": {
+          "Ref": "ApiGatewayHttpApiClerkJwtAuthorizer2889DFA0",
+        },
+        "RouteKey": "POST /{proxy+}",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "ApiGatewayHttpApiGETproxyLambdaIntegrationDD4BBDC4",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "ApiGatewayHttpApiPOSTproxyLambdaIntegrationPermissionC21BEA62": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "LambdaHandlerF6372945",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:us-east-1:123456789012:",
+              {
+                "Ref": "ApiGatewayHttpApi55B01A81",
+              },
+              "/*/*/{proxy+}",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "ApiGatewayHttpApiPOSTwebhooksclerkBE4F9013": {
+      "Properties": {
+        "ApiId": {
+          "Ref": "ApiGatewayHttpApi55B01A81",
+        },
+        "AuthorizationType": "NONE",
+        "RouteKey": "POST /webhooks/clerk",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "ApiGatewayHttpApiGETproxyLambdaIntegrationDD4BBDC4",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "ApiGatewayHttpApiPOSTwebhooksclerkLambdaIntegrationPermissionE7625DF0": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "LambdaHandlerF6372945",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:us-east-1:123456789012:",
+              {
+                "Ref": "ApiGatewayHttpApi55B01A81",
+              },
+              "/*/*/webhooks/clerk",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "ApiGatewayHttpApiPUTproxy9DBCC280": {
+      "Properties": {
+        "ApiId": {
+          "Ref": "ApiGatewayHttpApi55B01A81",
+        },
+        "AuthorizationType": "JWT",
+        "AuthorizerId": {
+          "Ref": "ApiGatewayHttpApiClerkJwtAuthorizer2889DFA0",
+        },
+        "RouteKey": "PUT /{proxy+}",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "ApiGatewayHttpApiGETproxyLambdaIntegrationDD4BBDC4",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "ApiGatewayHttpApiPUTproxyLambdaIntegrationPermission8C481A8B": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "LambdaHandlerF6372945",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:us-east-1:123456789012:",
+              {
+                "Ref": "ApiGatewayHttpApi55B01A81",
+              },
+              "/*/*/{proxy+}",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "LambdaHandlerF6372945": {
+      "DependsOn": [
+        "LambdaHandlerServiceRoleDefaultPolicyBE5FAE6F",
+        "LambdaHandlerServiceRole00F05BC9",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-123456789012-us-east-1",
+          "S3Key": "<asset-hash>.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "ALLOWED_ORIGINS": "https://*.vercel.app,https://langdrill.app,https://www.langdrill.app",
+            "ANTHROPIC_API_KEY": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/ANTHROPIC_API_KEY:SecretString:::}}",
+                ],
+              ],
+            },
+            "CLERK_SECRET_KEY": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/CLERK_SECRET_KEY:SecretString:::}}",
+                ],
+              ],
+            },
+            "CLERK_WEBHOOK_SECRET": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/CLERK_WEBHOOK_SECRET:SecretString:::}}",
+                ],
+              ],
+            },
+            "DATABASE_URL": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/DATABASE_URL:SecretString:::}}",
+                ],
+              ],
+            },
+            "ENV_NAME": "prod",
+            "UPSTASH_REDIS_REST_TOKEN": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/UPSTASH_REDIS_REST_TOKEN:SecretString:::}}",
+                ],
+              ],
+            },
+            "UPSTASH_REDIS_REST_URL": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/UPSTASH_REDIS_REST_URL:SecretString:::}}",
+                ],
+              ],
+            },
+          },
+        },
+        "Handler": "index.handler",
+        "MemorySize": 256,
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaHandlerServiceRole00F05BC9",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Timeout": 15,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "LambdaHandlerServiceRole00F05BC9": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "LambdaHandlerServiceRoleDefaultPolicyBE5FAE6F": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/DATABASE_URL-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/CLERK_SECRET_KEY-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/CLERK_WEBHOOK_SECRET-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/ANTHROPIC_API_KEY-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/UPSTASH_REDIS_REST_URL-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/UPSTASH_REDIS_REST_TOKEN-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "StorageContentBucket858D6C32",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "StorageContentBucket858D6C32",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "QueueJobsQueue16F00CB9",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "LambdaHandlerServiceRoleDefaultPolicyBE5FAE6F",
+        "Roles": [
+          {
+            "Ref": "LambdaHandlerServiceRole00F05BC9",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "QueueDeadLetterQueue27D1B28A": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "MessageRetentionPeriod": 1209600,
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "QueueJobsQueue16F00CB9": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "QueueDeadLetterQueue27D1B28A",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "VisibilityTimeout": 90,
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "StorageContentBucket858D6C32": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "VersioningConfiguration": {
+          "Status": "Enabled",
+        },
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+  },
+  "Rules": {
+    "CheckBootstrapVersion": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Contains": [
+                  [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                  ],
+                  {
+                    "Ref": "BootstrapVersion",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.",
+        },
+      ],
+    },
+  },
+}
+`;
