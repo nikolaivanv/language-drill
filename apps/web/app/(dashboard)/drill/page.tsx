@@ -20,6 +20,13 @@ import {
   type ExerciseResponse,
   type EvaluationResultResponse,
 } from "@language-drill/api-client";
+import { useActiveLanguage } from "../../../components/shell";
+import {
+  TheoryPanel,
+  TheoryTrigger,
+  type TheoryTopicId,
+} from "../../../components/theory";
+import { topicIdForHint } from "../../../lib/theory-topic-map";
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -432,6 +439,19 @@ export default function PracticePage() {
   const [evaluation, setEvaluation] =
     useState<EvaluationResultResponse | null>(null);
 
+  // Theory panel state. The active *learning* language (from the app shell)
+  // — not the page-local exercise filter — scopes which topics are available.
+  const { activeLanguage } = useActiveLanguage();
+  const [openTopicId, setOpenTopicId] = useState<TheoryTopicId | null>(null);
+  const [triggerEl, setTriggerEl] = useState<HTMLElement | null>(null);
+
+  // Close the panel if the user switches their active learning language
+  // (FR-8.6). The trigger pill on the new language's exercise will offer to
+  // reopen if a topic mapping exists.
+  useEffect(() => {
+    setOpenTopicId(null);
+  }, [activeLanguage]);
+
   const initializedRef = useRef(false);
   useEffect(() => {
     if (profiles.length > 0 && !initializedRef.current) {
@@ -474,6 +494,17 @@ export default function PracticePage() {
     submitMutation.reset();
     refetch();
   };
+
+  // Map the current exercise's topicHint (if any) to a known theory topic id
+  // for the user's active learning language. Returns null when there's no
+  // exercise yet, no hint, the hint is unmapped, or the language has no theory.
+  const exerciseContent =
+    exercise && !isLoading && !error
+      ? (exercise.contentJson as ExerciseContent)
+      : null;
+  const theoryTopicId = exerciseContent
+    ? topicIdForHint(exerciseContent.topicHint, activeLanguage)
+    : null;
 
   return (
     <div className="mx-auto max-w-2xl p-6">
@@ -535,6 +566,19 @@ export default function PracticePage() {
 
       {exercise && !isLoading && !error && (
         <>
+          {theoryTopicId && (
+            <div className="mb-3 flex justify-end">
+              <TheoryTrigger
+                topicId={theoryTopicId}
+                language={activeLanguage}
+                onOpen={(id, el) => {
+                  setOpenTopicId(id);
+                  setTriggerEl(el);
+                }}
+              />
+            </div>
+          )}
+
           <ExercisePrompt exercise={exercise} />
 
           {!evaluation && (
@@ -554,6 +598,15 @@ export default function PracticePage() {
             />
           )}
         </>
+      )}
+
+      {openTopicId && (
+        <TheoryPanel
+          topicId={openTopicId}
+          language={activeLanguage}
+          triggerEl={triggerEl}
+          onClose={() => setOpenTopicId(null)}
+        />
       )}
     </div>
   );
