@@ -141,15 +141,73 @@ gh secret set DEV_DATABASE_URL --body "$(neonctl connection-string dev --project
 
 ## Environment Variables for Deploy
 
-Set these env vars before running `cdk deploy` or `cdk synth`:
+`bin/app.ts` instantiates **both** stacks unconditionally and uses `requireEnv()` to fail synth fast on missing values. Even when you deploy only one stack via `--exclusively`, CDK still synthesizes both — so all of the variables below are required for any deploy or synth.
 
 | Variable | Description |
 |---|---|
-| `CDK_DEFAULT_ACCOUNT` | AWS account ID |
-| `CDK_DEFAULT_REGION` | AWS region (e.g. `us-east-1`) |
-| `CLERK_ISSUER_URL` | Clerk JWT issuer URL (e.g. `https://<your-domain>.clerk.accounts.dev`) |
-| `CLERK_AUDIENCE` | Comma-separated JWT audience values |
-| `PRODUCTION_ORIGIN` | Production web app origin (e.g. `https://yourdomain.com`) — optional |
+| `CDK_DEFAULT_ACCOUNT` | AWS account ID (auto-populated by `cdk` from your AWS creds) |
+| `CDK_DEFAULT_REGION` | AWS region — must be `eu-central-1` (where prod lives) |
+| `AWS_REGION` | Same as above; AWS CLI reads this one |
+| `API_DOMAIN_NAME` | `api.langdrill.app` (prod API custom domain) |
+| `CLERK_ISSUER_URL` | `https://clerk.langdrill.app` (prod Clerk frontend API) |
+| `CLERK_AUDIENCE` | Optional, defaults to `language-drill` |
+| `API_DOMAIN_NAME_DEV` | `api-dev.langdrill.app` (dev API custom domain) |
+| `CLERK_ISSUER_URL_DEV` | Dev Clerk frontend API URL (e.g. `https://robust-goose-5.clerk.accounts.dev`) |
+| `CLERK_AUDIENCE_DEV` | Optional, defaults to `language-drill` |
+
+## Running deploys locally
+
+The same `pnpm --filter infra deploy:prod` / `deploy:dev` scripts CI uses also work from your laptop, given AWS credentials with the right permissions and the env vars above.
+
+### Quick fix when synth fails on missing env vars
+
+If you see `Error: Missing required env var: API_DOMAIN_NAME` (or any of the four URL/domain vars), export them in your shell and re-run:
+
+```bash
+export AWS_REGION=eu-central-1
+export CDK_DEFAULT_REGION=eu-central-1
+export API_DOMAIN_NAME=api.langdrill.app
+export CLERK_ISSUER_URL=https://clerk.langdrill.app
+export API_DOMAIN_NAME_DEV=api-dev.langdrill.app
+export CLERK_ISSUER_URL_DEV=https://robust-goose-5.clerk.accounts.dev
+
+pnpm --filter infra deploy:dev
+```
+
+This is intentional behaviour — Requirement 3.5 in the `dev-neon-env` spec mandates fail-fast synth rather than silent skipping. Both prod and dev values are needed because synth runs against the whole CDK app even when `--exclusively` targets a single stack.
+
+### Persist across shell sessions
+
+To stop having to re-export every new terminal, append the same block to your shell rc file:
+
+```bash
+# zsh (default on macOS)
+cat >> ~/.zshrc <<'EOF'
+
+# language-drill CDK env
+export AWS_REGION=eu-central-1
+export CDK_DEFAULT_REGION=eu-central-1
+export API_DOMAIN_NAME=api.langdrill.app
+export CLERK_ISSUER_URL=https://clerk.langdrill.app
+export API_DOMAIN_NAME_DEV=api-dev.langdrill.app
+export CLERK_ISSUER_URL_DEV=https://robust-goose-5.clerk.accounts.dev
+EOF
+
+source ~/.zshrc
+```
+
+For bash users, swap `~/.zshrc` for `~/.bashrc` (or `~/.bash_profile` on macOS).
+
+After that, `pnpm --filter infra deploy:dev` and `pnpm --filter infra deploy:prod` work from any new terminal without any per-session export dance.
+
+### AWS credentials
+
+Both deploys use whatever AWS credentials your shell already provides (`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` env vars, an `AWS_PROFILE` selection, or `~/.aws/credentials`). The IAM identity needs:
+
+- Permission to assume the CDK bootstrap roles `cdk-hnb659fds-*-role-<account>-eu-central-1` (the same identity GitHub Actions uses works locally too)
+- Or, if you can't assume those roles, direct CloudFormation / IAM / S3 / SSM permissions to do the equivalent
+
+If `aws sts get-caller-identity` shows the wrong account, switch profiles before running `pnpm --filter infra deploy:dev`. CDK reports the account mismatch as `current credentials could not be used to assume ... but are for the right account` — that warning is non-fatal as long as the account is correct; if the account is wrong, deploy will fail.
 
 ## Commands
 
