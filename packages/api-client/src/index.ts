@@ -20,6 +20,20 @@ export {
   SavePreferencesInputSchema,
   type SavePreferencesInput,
 } from './schemas/preferences';
+export {
+  RadarAxisKeyEnum,
+  RadarAxisSchema,
+  ProgressRadarResponseSchema,
+  HeatmapTopicSchema,
+  ShadeThresholdsSchema,
+  ProgressHeatmapResponseSchema,
+  type RadarAxisKey,
+  type RadarAxis,
+  type ProgressRadarResponse,
+  type HeatmapTopic,
+  type ShadeThresholds,
+  type ProgressHeatmapResponse,
+} from './schemas/progress';
 export { useHealth } from './hooks/useHealth';
 export {
   useExercise,
@@ -40,4 +54,10 @@ export {
   type SavePreferencesArgs,
   type SavePreferencesResponse,
 } from './hooks/usePreferences';
+export {
+  useProgressRadar,
+  useProgressHeatmap,
+  type UseProgressRadarParams,
+  type UseProgressHeatmapParams,
+} from './hooks/useProgress';
 export { createAuthenticatedFetch, type AuthenticatedFetch } from './fetchClient';
