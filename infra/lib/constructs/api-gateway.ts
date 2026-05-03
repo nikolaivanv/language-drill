@@ -14,6 +14,7 @@ import * as acm from "aws-cdk-lib/aws-certificatemanager";
 
 export interface ApiGatewayConstructProps {
   handler: IFunction;
+  apiName: string;
   clerkIssuerUrl: string;
   clerkAudience: string[];
   apiDomainName?: string;
@@ -34,7 +35,7 @@ export class ApiGatewayConstruct extends Construct {
     );
 
     this.httpApi = new HttpApi(this, "HttpApi", {
-      apiName: "language-drill-api",
+      apiName: props.apiName,
     });
 
     const lambdaIntegration = new HttpLambdaIntegration(
@@ -85,8 +86,7 @@ export class ApiGatewayConstruct extends Construct {
 
       new CfnOutput(this, "ApiDomainTarget", {
         value: domain.regionalDomainName,
-        description:
-          "Add a CNAME in Cloudflare: api.langdrill.app → this value",
+        description: `Add a CNAME in Cloudflare: ${props.apiDomainName} → this value`,
       });
     }
   }

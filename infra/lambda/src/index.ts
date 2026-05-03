@@ -9,14 +9,38 @@ import webhooks from './routes/webhooks/clerk';
 
 const app = new Hono();
 
+const FALLBACK_ORIGINS = [
+  'https://*.vercel.app',
+  'https://langdrill.app',
+  'https://www.langdrill.app',
+];
+
+const parsedAllowedOrigins = (process.env['ALLOWED_ORIGINS'] ?? '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+const allowedOriginPatterns =
+  parsedAllowedOrigins.length > 0 ? parsedAllowedOrigins : FALLBACK_ORIGINS;
+
+export function matchOrigin(origin: string): string | null {
+  for (const pattern of allowedOriginPatterns) {
+    if (pattern === origin) return origin;
+    const wildcardMatch = pattern.match(/^(https?:\/\/)\*\.(.+)$/);
+    if (wildcardMatch) {
+      const [, scheme, suffix] = wildcardMatch;
+      const escapedSuffix = suffix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const re = new RegExp(`^${scheme}([^/]+\\.)?${escapedSuffix}$`);
+      if (re.test(origin)) return origin;
+    }
+  }
+  return null;
+}
+
 app.use(
   '*',
   cors({
-    origin: (origin) => {
-      if (origin.endsWith('.vercel.app')) return origin;
-      if (origin === 'https://langdrill.app' || origin === 'https://www.langdrill.app') return origin;
-      return null;
-    },
+    origin: (origin) => matchOrigin(origin),
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Authorization', 'Content-Type'],
   })

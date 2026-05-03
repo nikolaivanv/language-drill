@@ -6,8 +6,13 @@
     "synth": "cdk synth",
     "deploy": "cdk deploy",
     "diff": "cdk diff",
+    "synth:prod": "cdk synth LanguageDrillStack --exclusively",
+    "synth:dev": "cdk synth LanguageDrillStack-dev --exclusively",
+    "deploy:prod": "cdk deploy LanguageDrillStack --exclusively --require-approval never",
+    "deploy:dev": "cdk deploy LanguageDrillStack-dev --exclusively --require-approval never",
     "build": "tsc",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "aws-cdk-lib": "^2.251.0",
@@ -17,6 +22,7 @@
     "aws-cdk": "^2.1120.0",
     "esbuild": "^0.28.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^4.1.5"
   }
 }
