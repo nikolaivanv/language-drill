@@ -112,6 +112,22 @@ describe('AccentPicker', () => {
     });
   });
 
+  it('disables buttons when the disabled prop is true', () => {
+    function DisabledHarness() {
+      const ref = useRef<HTMLInputElement>(null);
+      return (
+        <div>
+          <input ref={ref} data-testid="target" />
+          <AccentPicker language="ES" targetRef={ref} disabled />
+        </div>
+      );
+    }
+    render(<DisabledHarness />);
+    screen.getAllByRole('button').forEach((btn) => {
+      expect(btn).toBeDisabled();
+    });
+  });
+
   it('uses mono font on buttons', () => {
     render(<ControlledHarness language="ES" />);
     const btn = screen.getByRole('button', { name: 'insert ñ' });
