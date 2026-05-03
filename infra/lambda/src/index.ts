@@ -5,6 +5,7 @@ import { cors } from 'hono/cors';
 import health from './routes/health';
 import exercises from './routes/exercises';
 import profiles from './routes/profiles';
+import progress from './routes/progress';
 import webhooks from './routes/webhooks/clerk';
 
 const app = new Hono();
@@ -49,6 +50,7 @@ app.use(
 app.route('/', health);
 app.route('/', exercises);
 app.route('/', profiles);
+app.route('/', progress);
 app.route('/', webhooks);
 
 export const handler = handle(app);
