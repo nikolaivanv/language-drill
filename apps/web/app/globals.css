@@ -501,3 +501,41 @@
     scroll-behavior: auto;
   }
 }
+
+.coach-fade-in {
+  animation: coach-fade-in 150ms ease-out;
+}
+@keyframes coach-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.gloss {
+  position: relative;
+  border-bottom: 1px dotted var(--color-ink-mute);
+  cursor: help;
+}
+
+.gloss-tooltip {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  padding: 4px 8px;
+  background: var(--color-ink);
+  color: var(--color-paper);
+  font-size: 12px;
+  line-height: 1.4;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+}
+
+.gloss:hover > .gloss-tooltip,
+.gloss:focus-within > .gloss-tooltip,
+.gloss:focus > .gloss-tooltip {
+  opacity: 1;
+}

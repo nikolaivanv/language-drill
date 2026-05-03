@@ -3,10 +3,9 @@ import { cn } from '../../lib/cn';
 
 export type ChipVariant = 'default' | 'solid' | 'accent' | 'ok';
 
-export interface ChipProps {
+export interface ChipProps extends React.HTMLAttributes<HTMLSpanElement> {
   variant?: ChipVariant;
   children: React.ReactNode;
-  className?: string;
 }
 
 const shared =
@@ -19,9 +18,17 @@ const variantClasses: Record<ChipVariant, string> = {
   ok: 'border border-ok-soft bg-ok-soft text-ok',
 };
 
-export function Chip({ variant = 'default', children, className }: ChipProps) {
+export function Chip({
+  variant = 'default',
+  children,
+  className,
+  ...rest
+}: ChipProps) {
   return (
-    <span className={cn(shared, variantClasses[variant], className)}>
+    <span
+      {...rest}
+      className={cn(shared, variantClasses[variant], className)}
+    >
       {children}
     </span>
   );

@@ -29,7 +29,7 @@ These are decisions made up front to align the prototypes with `docs/exercise-st
 | **A** | [design-system](#phase-a--design-system) | ✅ complete | ~2 days | — |
 | **B** | [app-shell](#phase-b--app-shell) | ✅ complete | ~1 day | A |
 | **C** | [onboarding](#phase-c--onboarding) | ✅ complete | ~2 days | A, B |
-| **F** | exercise-ui | ⬜ not started | ~3 days | A, B |
+| **F** | [exercise-ui](#phase-f--exercise-ui-redesign) | ✅ complete | ~3 days | A, B |
 | **E** | session-flow | ⬜ not started | ~2 days | F |
 | **D** | dashboard | ⬜ not started | ~2 days | A, B, E |
 | **G** | debrief | ⬜ not started | ~2 days | E |
@@ -128,13 +128,19 @@ Multi-exercise sessions with a top progress bar, navigation between exercises, a
 
 ## Phase F — Exercise UI redesign
 
-**Spec:** to be written (`.claude/specs/exercise-ui/`)
+**Spec:** `.claude/specs/exercise-ui/` (33/33 tasks complete)
 
-Redesign the existing cloze, translation, and vocab exercise UIs to match the prototypes:
+Redesigned the existing cloze, translation, and vocab exercise UIs to match the prototypes:
 
-- **Cloze** — split layout (large prompt + coach rail), type-it default with optional MC toggle (clearly labelled as scaffolding), accent picker, sage/terracotta feedback strip
-- **Translation** — eyebrow + English source + glossed words + textarea + accent picker; graded view with diff display and alternate accepted translations
-- **Vocab recall** — definition card + progressive hints (first letter → syllable count → example sentence), graded state with pronunciation/context/confusion notes
+- **Cloze** — split layout (280px coach rail + main), type-it default with optional MC toggle (labelled "reduces progress signal"), accent picker, sage/yellow/terracotta verdict shell
+- **Translation** — `EN → {LANG}` eyebrow + glossed source (~60-entry static list, hover tooltips) + textarea + accent picker + on-demand hint ladder (gloss → half-reference → full-reference); evaluated view shows diff rows + reference-translation card
+- **Vocab recall** — definition card + auto-focused input + progressive hints (first letter → letter count → example sentence with masked target) + accent picker; evaluated view shows target word, example, and a confusions list parsed from Claude feedback
+
+**Output:**
+- Helpers: `apps/web/lib/drill/{verdict-tier,coach-messages,cloze-blank,syllabify,parse-confusions}.ts` + `apps/web/lib/translation/gloss-en.ts`
+- Components: `apps/web/app/(dashboard)/drill/_components/{drill-layout,coach-rail,exercise-pane,cloze-exercise,translation-exercise,vocab-exercise,feedback-shell,glossed-text,hint-row,loading-skeleton}.tsx`
+- New `disabled` prop on `AccentPicker`; rewrote `drill/page.tsx` (560 → 289 lines) and `drill/page.test.tsx` (653 → 578 lines)
+- Theory-panel wiring from Phase H preserved verbatim
 
 **Backend impact:** None — same existing endpoints; UI-only changes.
 

@@ -9,6 +9,7 @@ export interface AccentPickerProps {
   language: AccentLanguage;
   targetRef: React.RefObject<HTMLInputElement | HTMLTextAreaElement | null>;
   className?: string;
+  disabled?: boolean;
 }
 
 const ACCENT_CHARS: Partial<Record<AccentLanguage, string[]>> = {
@@ -60,6 +61,7 @@ export function AccentPicker({
   language,
   targetRef,
   className,
+  disabled,
 }: AccentPickerProps) {
   const chars = ACCENT_CHARS[language];
 
@@ -74,6 +76,8 @@ export function AccentPicker({
 
   if (!chars) return null;
 
+  const isDisabled = !hasTarget || disabled === true;
+
   const handleClick = (char: string) => {
     const el = targetRef.current;
     if (!el) return;
@@ -87,7 +91,7 @@ export function AccentPicker({
           key={char}
           type="button"
           onClick={() => handleClick(char)}
-          disabled={!hasTarget}
+          disabled={isDisabled}
           className={buttonClasses}
           aria-label={`insert ${char}`}
         >

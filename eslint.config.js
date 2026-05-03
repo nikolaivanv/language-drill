@@ -4,7 +4,7 @@ const tsParser = require('@typescript-eslint/parser');
 /** @type {import('eslint').Linter.Config[]} */
 module.exports = [
   {
-    ignores: ['**/dist/', '**/node_modules/', '**/.next/', '**/cdk.out/'],
+    ignores: ['**/dist/', '**/node_modules/', '**/.next/', '**/cdk.out/', '**/next-env.d.ts'],
   },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
