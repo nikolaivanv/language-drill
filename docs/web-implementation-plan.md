@@ -28,12 +28,12 @@ These are decisions made up front to align the prototypes with `docs/exercise-st
 |-------|------|--------|--------|------------|
 | **A** | [design-system](#phase-a--design-system) | ✅ complete | ~2 days | — |
 | **B** | [app-shell](#phase-b--app-shell) | ✅ complete | ~1 day | A |
-| **C** | onboarding | 🚧 in progress | ~2 days | A, B |
+| **C** | [onboarding](#phase-c--onboarding) | ✅ complete | ~2 days | A, B |
 | **F** | exercise-ui | ⬜ not started | ~3 days | A, B |
 | **E** | session-flow | ⬜ not started | ~2 days | F |
 | **D** | dashboard | ⬜ not started | ~2 days | A, B, E |
 | **G** | debrief | ⬜ not started | ~2 days | E |
-| **H** | theory-panel | ⬜ not started | ~2 days | A |
+| **H** | [theory-panel](#phase-h--theory-reference-panel) | ✅ complete | ~2 days | A |
 | **I** | progress | ⬜ not started | ~3 days | A, B |
 | **J** | read-collect | ⬜ not started | ~4 days | A, B, D |
 
@@ -77,7 +77,7 @@ The persistent left-rail navigation: 220px sidebar with brand mark, language swi
 
 ## Phase C — Onboarding
 
-**Spec:** to be written (`.claude/specs/onboarding/`)
+**Spec:** `.claude/specs/onboarding/`
 
 Replace the current single-step onboarding with the 4-step flow from `prototypes/web/hifi/onboarding.jsx`:
 
@@ -157,7 +157,7 @@ After a session ends, route to `/practice/debrief/[sessionId]` with:
 
 ## Phase H — Theory reference panel
 
-**Spec:** to be written (`.claude/specs/theory-panel/`)
+**Spec:** `.claude/specs/theory-panel/`
 
 A right-side slide-over panel (max 960px, backdrop blur) reachable from any drill via the "show me theory" button. Contains a TOC sidebar (240px, scroll-synced) and content sections per grammar topic: what is it, when to use it, formation tables, examples, common pitfalls.
 
