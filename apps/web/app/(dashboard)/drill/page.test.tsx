@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ExerciseType, Language } from "@language-drill/shared";
+import { CefrLevel, ExerciseType, Language } from "@language-drill/shared";
+import { ActiveLanguageProvider } from "../../../components/shell";
 import PracticePage from "./page";
 
 // ---------------------------------------------------------------------------
@@ -36,12 +37,24 @@ vi.mock("@language-drill/api-client", () => ({
 // Helpers
 // ---------------------------------------------------------------------------
 
-function renderWithProviders(ui: React.ReactElement) {
+function renderWithProviders(
+  ui: React.ReactElement,
+  options: { activeLanguage?: Language.ES | Language.DE | Language.TR } = {},
+) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
+  // Default to ES so the theory trigger has a populated registry available
+  // when tests pass a topicHint. Individual tests can override.
+  const profileLang = options.activeLanguage ?? Language.ES;
   return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
+    <QueryClientProvider client={queryClient}>
+      <ActiveLanguageProvider
+        profiles={[{ language: profileLang, proficiencyLevel: CefrLevel.B1 }]}
+      >
+        {ui}
+      </ActiveLanguageProvider>
+    </QueryClientProvider>,
   );
 }
 
@@ -550,5 +563,91 @@ describe("PracticePage", () => {
 
     expect(screen.getByText("Keep practicing")).toBeInTheDocument();
     expect(screen.getByText("20%")).toBeInTheDocument();
+  });
+
+  // -------------------------------------------------------------------------
+  // Theory panel integration
+  // -------------------------------------------------------------------------
+
+  it("renders the theory trigger when the exercise has a mapped topicHint", () => {
+    mockUseExercise.mockReturnValue({
+      data: {
+        id: "ex-theory-1",
+        type: "cloze",
+        language: "ES",
+        difficulty: "B1",
+        contentJson: {
+          type: ExerciseType.CLOZE,
+          instructions: "Fill in the blank",
+          sentence: "Espero que ____ tiempo.",
+          correctAnswer: "tengas",
+          topicHint: "subjunctive",
+        },
+      },
+      isLoading: false,
+      error: null,
+    });
+
+    renderWithProviders(<PracticePage />, { activeLanguage: Language.ES });
+
+    expect(
+      screen.getByRole("button", { name: /theory · el subjuntivo/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("does NOT render the theory trigger when topicHint is missing", () => {
+    mockUseExercise.mockReturnValue({
+      data: {
+        id: "ex-theory-2",
+        type: "cloze",
+        language: "ES",
+        difficulty: "B1",
+        contentJson: {
+          type: ExerciseType.CLOZE,
+          instructions: "Fill in the blank",
+          sentence: "She ____ home yesterday.",
+          correctAnswer: "went",
+          // no topicHint
+        },
+      },
+      isLoading: false,
+      error: null,
+    });
+
+    renderWithProviders(<PracticePage />, { activeLanguage: Language.ES });
+
+    expect(
+      screen.queryByRole("button", { name: /^theory · /i }),
+    ).toBeNull();
+  });
+
+  it("opens the theory panel when the trigger is clicked", () => {
+    mockUseExercise.mockReturnValue({
+      data: {
+        id: "ex-theory-3",
+        type: "cloze",
+        language: "ES",
+        difficulty: "B1",
+        contentJson: {
+          type: ExerciseType.CLOZE,
+          instructions: "Fill in the blank",
+          sentence: "Espero que ____ tiempo.",
+          correctAnswer: "tengas",
+          topicHint: "subjunctive",
+        },
+      },
+      isLoading: false,
+      error: null,
+    });
+
+    renderWithProviders(<PracticePage />, { activeLanguage: Language.ES });
+
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /theory · el subjuntivo/i }),
+    );
+
+    expect(document.body.querySelector('[role="dialog"]')).not.toBeNull();
   });
 });

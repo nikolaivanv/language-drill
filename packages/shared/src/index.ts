@@ -67,6 +67,7 @@ export type ClozeContent = {
   correctAnswer: string;
   options?: string[];
   context?: string;
+  topicHint?: string;
 };
 
 export type TranslationContent = {
@@ -76,6 +77,7 @@ export type TranslationContent = {
   sourceLanguage: Language;
   targetLanguage: Language;
   referenceTranslation: string;
+  topicHint?: string;
 };
 
 export type VocabRecallContent = {
@@ -85,6 +87,7 @@ export type VocabRecallContent = {
   expectedWord: string;
   hints: string[];
   exampleSentence: string;
+  topicHint?: string;
 };
 
 export type ExerciseContent = ClozeContent | TranslationContent | VocabRecallContent;
