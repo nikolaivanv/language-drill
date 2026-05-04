@@ -6,6 +6,7 @@ import health from './routes/health';
 import exercises from './routes/exercises';
 import sessions from './routes/sessions';
 import profiles from './routes/profiles';
+import progress from './routes/progress';
 import webhooks from './routes/webhooks/clerk';
 
 const app = new Hono();
@@ -51,6 +52,7 @@ app.route('/', health);
 app.route('/', exercises);
 app.route('/', sessions);
 app.route('/', profiles);
+app.route('/', progress);
 app.route('/', webhooks);
 
 export const handler = handle(app);
