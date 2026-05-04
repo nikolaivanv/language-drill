@@ -1,6 +1,7 @@
 import { index, integer, jsonb, pgTable, real, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 import { exercises } from './exercises';
+import { practiceSessions } from './sessions';
 import { users } from './users';
 
 export const userExerciseHistory = pgTable(
@@ -9,6 +10,7 @@ export const userExerciseHistory = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     userId: text('user_id').references(() => users.id),
     exerciseId: uuid('exercise_id').references(() => exercises.id),
+    sessionId: uuid('session_id').references(() => practiceSessions.id, { onDelete: 'set null' }),
     score: real('score'), // 0.0–1.0
     responseJson: jsonb('response_json'), // user's answer + Claude evaluation output
     evaluatedAt: timestamp('evaluated_at'),
@@ -19,6 +21,8 @@ export const userExerciseHistory = pgTable(
       table.userId,
       table.evaluatedAt,
     ),
+    // Index for session completion: count correct rows by sessionId
+    sessionIdIdx: index('user_exercise_history_session_id_idx').on(table.sessionId),
   }),
 );
 

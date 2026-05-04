@@ -3,7 +3,12 @@ import { z } from 'zod';
 import { eq, and, sql, gte, count } from 'drizzle-orm';
 import { Language, CefrLevel, ExerciseType } from '@language-drill/shared';
 import type { ExerciseContent } from '@language-drill/shared';
-import { exercises as exercisesTable, userExerciseHistory, usageEvents } from '@language-drill/db';
+import {
+  exercises as exercisesTable,
+  practiceSessions,
+  userExerciseHistory,
+  usageEvents,
+} from '@language-drill/db';
 import { createClaudeClient, evaluateAnswer } from '@language-drill/ai';
 import { db } from '../db';
 import { authMiddleware } from '../middleware/auth';
@@ -26,6 +31,7 @@ export const ExerciseQuerySchema = z.object({
 /** Request body for POST /exercises/:id/submit */
 export const SubmitAnswerSchema = z.object({
   answer: z.string().min(1),
+  sessionId: z.string().uuid().optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -121,7 +127,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
       400,
     );
   }
-  const { answer: userAnswer } = bodyResult.data;
+  const { answer: userAnswer, sessionId } = bodyResult.data;
 
   // 2. Fetch exercise by ID
   const rows = await db
@@ -136,6 +142,29 @@ exercises.post('/exercises/:id/submit', async (c) => {
 
   const exercise = rows[0];
   const userId = c.get('userId');
+
+  // 2b. Validate session linkage BEFORE rate-limit + Claude — no side effects on failure
+  if (sessionId !== undefined) {
+    const sessionRows = await db
+      .select({
+        userId: practiceSessions.userId,
+        completedAt: practiceSessions.completedAt,
+        exerciseIds: practiceSessions.exerciseIds,
+      })
+      .from(practiceSessions)
+      .where(eq(practiceSessions.id, sessionId))
+      .limit(1);
+
+    const session = sessionRows[0];
+    if (
+      !session ||
+      session.userId !== userId ||
+      session.completedAt !== null ||
+      !session.exerciseIds.includes(id)
+    ) {
+      return c.json({ error: 'Invalid session', code: 'INVALID_SESSION' }, 400);
+    }
+  }
 
   // 3. Check daily usage limit
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -171,6 +200,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
     await db.insert(userExerciseHistory).values({
       userId,
       exerciseId: id,
+      sessionId,
       score: result.score,
       responseJson: { userAnswer, evaluation: result },
       evaluatedAt: new Date(),

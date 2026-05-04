@@ -16,6 +16,7 @@ export interface ClozeExerciseProps {
   submission: SubmissionState;
   onSubmit: (answer: string, meta: SubmissionMeta) => void;
   onNext: () => void;
+  nextLabel?: string;
 }
 
 function isAccentLanguage(lang: string): lang is 'ES' | 'DE' | 'TR' {
@@ -28,6 +29,7 @@ export function ClozeExercise({
   submission,
   onSubmit,
   onNext,
+  nextLabel,
 }: ClozeExerciseProps) {
   const [mode, setMode] = React.useState<'type' | 'mc'>('type');
   const [usedMc, setUsedMc] = React.useState(false);
@@ -160,6 +162,7 @@ export function ClozeExercise({
               scoreChipText={`${Math.round(submission.result.score * 100)}%`}
               scaffolded={usedMc}
               onNext={onNext}
+              nextLabel={nextLabel}
             >
               <p className="t-body">{submission.result.feedback}</p>
             </FeedbackShell>

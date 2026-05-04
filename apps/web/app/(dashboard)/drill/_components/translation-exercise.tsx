@@ -26,6 +26,7 @@ export interface TranslationExerciseProps {
   submission: SubmissionState;
   onSubmit: (answer: string, meta: SubmissionMeta) => void;
   onNext: () => void;
+  nextLabel?: string;
 }
 
 function isAccentLanguage(lang: string): lang is 'ES' | 'DE' | 'TR' {
@@ -79,6 +80,7 @@ export function TranslationExercise({
   submission,
   onSubmit,
   onNext,
+  nextLabel,
 }: TranslationExerciseProps) {
   const [answer, setAnswer] = React.useState('');
   const [hintCount, setHintCount] = React.useState<0 | 1 | 2 | 3>(0);
@@ -189,6 +191,7 @@ export function TranslationExercise({
               scoreChipText={`${Math.round(submission.result.score * 100)}%`}
               hintLevel={hintCount}
               onNext={onNext}
+              nextLabel={nextLabel}
             >
               <div className="flex flex-col gap-s-4">
                 {errors.length > 0 && (

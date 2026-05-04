@@ -22,6 +22,7 @@ export interface ExercisePaneProps {
   submission: SubmissionState;
   onSubmit: (answer: string, meta: SubmissionMeta) => void;
   onNext: () => void;
+  nextLabel?: string;
 }
 
 export function ExercisePane({
@@ -30,6 +31,7 @@ export function ExercisePane({
   submission,
   onSubmit,
   onNext,
+  nextLabel,
 }: ExercisePaneProps) {
   const content = exercise.contentJson as ExerciseContent;
 
@@ -50,6 +52,7 @@ export function ExercisePane({
         submission={submission}
         onSubmit={onSubmit}
         onNext={onNext}
+        nextLabel={nextLabel}
       />
     );
   }
@@ -63,6 +66,7 @@ export function ExercisePane({
         submission={submission}
         onSubmit={onSubmit}
         onNext={onNext}
+        nextLabel={nextLabel}
       />
     );
   }
@@ -76,6 +80,7 @@ export function ExercisePane({
         submission={submission}
         onSubmit={onSubmit}
         onNext={onNext}
+        nextLabel={nextLabel}
       />
     );
   }

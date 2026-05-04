@@ -30,7 +30,7 @@ These are decisions made up front to align the prototypes with `docs/exercise-st
 | **B** | [app-shell](#phase-b--app-shell) | ✅ complete | ~1 day | A |
 | **C** | [onboarding](#phase-c--onboarding) | ✅ complete | ~2 days | A, B |
 | **F** | [exercise-ui](#phase-f--exercise-ui-redesign) | ✅ complete | ~3 days | A, B |
-| **E** | session-flow | ⬜ not started | ~2 days | F |
+| **E** | [session-flow](#phase-e--session-flow) | ✅ complete | ~2 days | F |
 | **D** | dashboard | ⬜ not started | ~2 days | A, B, E |
 | **G** | debrief | ⬜ not started | ~2 days | E |
 | **H** | [theory-panel](#phase-h--theory-reference-panel) | ✅ complete | ~2 days | A |
@@ -114,15 +114,25 @@ Includes the **dashboard entry card for Read & Collect** (added in section J).
 
 ## Phase E — Session flow
 
-**Spec:** to be written (`.claude/specs/session-flow/`)
+**Spec:** `.claude/specs/session-flow/` (29/29 tasks complete)
 
-Multi-exercise sessions with a top progress bar, navigation between exercises, and a session summary at the end. Replaces the current single-exercise practice page.
+Wraps the single-exercise drill page in a server-tracked session of N pre-selected exercises (default 5) bound to one `(language, difficulty)` filter. Submitting items advances a top progress bar; the last item routes to a lightweight summary screen.
+
+**Output:**
+- Reducer + selectors: `apps/web/app/(dashboard)/drill/_components/session-reducer.ts` (SessionState discriminated union, sessionReducer with 12 actions, `selectCurrentItem` / `selectProgressFraction` / `selectIsLastItem`)
+- Components: `_components/{session-summary,submission-error-card}.tsx`; threaded a `nextLabel` prop through `feedback-shell` + `{cloze,translation,vocab}-exercise` + `exercise-pane`
+- Helpers: `apps/web/lib/drill/session-config.ts` (`DEFAULT_EXERCISE_COUNT = 5`); `coach-messages.ts` gains a `sessionComplete` branch
+- API client: `packages/api-client/src/{schemas/session,hooks/useSession}.ts` (`useCreateSession`, `useCompleteSession`); `useSubmitAnswer` threads optional `sessionId`
+- Server: `infra/lambda/src/routes/sessions.ts` (`POST /sessions`, `POST /sessions/:id/complete` with race-safe atomic UPDATE); `routes/exercises.ts` validates ownership/membership when `sessionId` is present, before rate-limit/Claude
+- Schema: `packages/db/src/schema/sessions.ts` + `progress.ts` adds `session_id` FK + index; migration `0003_*.sql`
+- Shared: `CORRECT_THRESHOLD = 0.7` exported and used by both the server's `correctCount` query and the UI verdict tier
+- Page: `drill/page.tsx` rewritten as a session host (creation effect, per-item submit threading sessionId, "see results" on the last item, summary screen, rate-limit "end session early" + 5xx "skip item" buttons); `drill/page.test.tsx` rewritten with 16 cases covering create → per-item → completion → summary
 
 **Backend impact:**
-- New `practiceSessions` table (id, userId, language, startedAt, completedAt, exerciseCount, correctCount)
-- `userExerciseHistory` gets a `sessionId` foreign key
-- `POST /sessions` — create session, returns id + exercise list
-- `POST /sessions/:id/complete` — finalize session, return summary stats
+- New `practiceSessions` table (id, userId, language, difficulty, exerciseCount, correctCount, exerciseIds JSONB, startedAt, completedAt)
+- `userExerciseHistory` gains a nullable `sessionId` foreign key (`ON DELETE SET NULL`) and an index
+- `POST /sessions` — create session, returns id + exercise manifest; 422 `INSUFFICIENT_EXERCISES` when the pool is too small
+- `POST /sessions/:id/complete` — finalize via atomic UPDATE; returns summary `{ exerciseCount, correctCount, attemptedCount, skippedCount, durationSeconds }`
 
 ---
 

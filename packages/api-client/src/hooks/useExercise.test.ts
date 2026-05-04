@@ -1,5 +1,10 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { renderHook, act } from '@testing-library/react';
+import { createElement, type ReactNode } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ExerciseResponseSchema, EvaluationResultSchema } from '../schemas/exercise';
+import { useSubmitAnswer } from './useExercise';
+import type { AuthenticatedFetch } from '../fetchClient';
 
 /**
  * These tests verify the Zod validation that useExercise and useSubmitAnswer
@@ -187,5 +192,72 @@ describe('URL parameter construction', () => {
     const exerciseId = 'abc-123';
     const path = `/exercises/${exerciseId}/submit`;
     expect(path).toBe('/exercises/abc-123/submit');
+  });
+});
+
+describe('useSubmitAnswer — sessionId threading', () => {
+  function jsonResponse(body: unknown): Response {
+    return { ok: true, status: 200, json: async () => body } as unknown as Response;
+  }
+
+  function buildWrapper() {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    return function Wrapper({ children }: { children: ReactNode }) {
+      return createElement(QueryClientProvider, { client: queryClient }, children);
+    };
+  }
+
+  const SAMPLE_EVALUATION = {
+    score: 0.8,
+    grammarAccuracy: 0.9,
+    vocabularyRange: 'B1',
+    taskAchievement: 0.8,
+    feedback: 'good',
+    errors: [],
+    estimatedCefrEvidence: 'B1',
+  };
+
+  it('omits sessionId from body when not provided', async () => {
+    const fetchFn = vi.fn<AuthenticatedFetch>().mockResolvedValue(
+      jsonResponse(SAMPLE_EVALUATION),
+    );
+    const { result } = renderHook(() => useSubmitAnswer({ fetchFn }), {
+      wrapper: buildWrapper(),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({ exerciseId: 'ex-1', answer: 'hola' });
+    });
+
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchFn.mock.calls[0];
+    expect(url).toBe('/exercises/ex-1/submit');
+    expect(init?.method).toBe('POST');
+    const body = JSON.parse(init?.body as string) as Record<string, unknown>;
+    expect(body).toEqual({ answer: 'hola' });
+    expect(body).not.toHaveProperty('sessionId');
+  });
+
+  it('includes sessionId in body when provided', async () => {
+    const fetchFn = vi.fn<AuthenticatedFetch>().mockResolvedValue(
+      jsonResponse(SAMPLE_EVALUATION),
+    );
+    const { result } = renderHook(() => useSubmitAnswer({ fetchFn }), {
+      wrapper: buildWrapper(),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        exerciseId: 'ex-2',
+        answer: 'hola',
+        sessionId: 'session-uuid-abc',
+      });
+    });
+
+    const [, init] = fetchFn.mock.calls[0];
+    const body = JSON.parse(init?.body as string) as Record<string, unknown>;
+    expect(body).toEqual({ answer: 'hola', sessionId: 'session-uuid-abc' });
   });
 });

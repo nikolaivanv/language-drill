@@ -39,6 +39,9 @@ export const LANGUAGE_NAMES: Record<Language, string> = {
   [Language.TR]: "Turkish",
 };
 
+// Score >= this counts as correct in session summaries; matches the 'solid' tier in apps/web/lib/drill/verdict-tier.ts
+export const CORRECT_THRESHOLD = 0.7;
+
 export type ApiError = {
   error: string;
   code: string;
