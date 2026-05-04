@@ -34,7 +34,7 @@ These are decisions made up front to align the prototypes with `docs/exercise-st
 | **D** | dashboard | ⬜ not started | ~2 days | A, B, E |
 | **G** | debrief | ⬜ not started | ~2 days | E |
 | **H** | [theory-panel](#phase-h--theory-reference-panel) | ✅ complete | ~2 days | A |
-| **I** | progress | ⬜ not started | ~3 days | A, B |
+| **I** | [progress-page](#phase-i--progress-page) | ✅ complete | ~3 days | A, B |
 | **J** | read-collect | ⬜ not started | ~4 days | A, B, D |
 
 **Total:** ~23 working days. Phases A → B → F → E form the critical path; H, I, J can be parallelized once their deps are in.
@@ -175,7 +175,7 @@ A right-side slide-over panel (max 960px, backdrop blur) reachable from any dril
 
 ## Phase I — Progress page
 
-**Spec:** to be written (`.claude/specs/progress/`)
+**Spec:** `.claude/specs/progress-page/`
 
 The progress dashboard at `/progress`:
 
