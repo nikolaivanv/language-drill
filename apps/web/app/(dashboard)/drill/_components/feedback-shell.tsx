@@ -13,6 +13,7 @@ export interface FeedbackShellProps {
   hintLevel?: 0 | 1 | 2 | 3;
   children: React.ReactNode;
   onNext: () => void;
+  nextLabel?: string;
 }
 
 const TIER_BG: Record<VerdictTier, string> = {
@@ -29,6 +30,7 @@ export function FeedbackShell({
   hintLevel,
   children,
   onNext,
+  nextLabel = 'next',
 }: FeedbackShellProps) {
   return (
     <Card padding="lg" className={cn(TIER_BG[tier])}>
@@ -50,7 +52,7 @@ export function FeedbackShell({
       <div className="mt-s-4">{children}</div>
       <div className="mt-s-6 flex justify-end">
         <Button variant="accent" onClick={onNext}>
-          next
+          {nextLabel}
         </Button>
       </div>
     </Card>

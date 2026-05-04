@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import {
@@ -12,7 +12,8 @@ import {
   type EvaluationResult,
 } from '@language-drill/shared';
 import {
-  useExercise,
+  useCreateSession,
+  useCompleteSession,
   useSubmitAnswer,
   useLanguageProfiles,
   createAuthenticatedFetch,
@@ -24,12 +25,22 @@ import {
   type TheoryTopicId,
 } from '../../../components/theory';
 import { topicIdForHint } from '../../../lib/theory-topic-map';
-import { Button, Card } from '../../../components/ui';
+import { Card } from '../../../components/ui';
 import { coachMessage } from '../../../lib/drill/coach-messages';
+import { DEFAULT_EXERCISE_COUNT } from '../../../lib/drill/session-config';
 import { CoachRail } from './_components/coach-rail';
 import { DrillLayout } from './_components/drill-layout';
 import { ExercisePane } from './_components/exercise-pane';
-import type { SubmissionMeta, SubmissionState } from './_components/types';
+import {
+  initialSessionState,
+  selectCurrentItem,
+  selectIsLastItem,
+  selectProgressFraction,
+  sessionReducer,
+} from './_components/session-reducer';
+import { SessionSummary } from './_components/session-summary';
+import { SubmissionErrorCard } from './_components/submission-error-card';
+import type { SubmissionMeta } from './_components/types';
 
 interface SelectorsProps {
   language: Language;
@@ -84,22 +95,10 @@ function Selectors(p: SelectorsProps) {
   );
 }
 
-function SubmissionErrorCard({ error, onRetry }: { error: Error; onRetry: () => void }) {
-  const isRateLimit = error.message.includes('429') || /rate limit/i.test(error.message);
-  const message = isRateLimit
-    ? "You've reached your daily practice limit. Come back tomorrow!"
-    : `Failed to submit answer: ${error.message}`;
-  return (
-    <Card
-      padding="lg"
-      className={isRateLimit ? 'bg-[var(--color-hilite-soft)]' : 'bg-[var(--color-accent-soft)]'}
-    >
-      <p className="t-body">{message}</p>
-      <div className="mt-s-3">
-        <Button variant="default" onClick={onRetry}>try again</Button>
-      </div>
-    </Card>
-  );
+function isInsufficientExercises(err: Error): boolean {
+  const status = (err as Error & { status?: number }).status;
+  const body = (err as Error & { body?: { code?: string } }).body;
+  return status === 422 || body?.code === 'INSUFFICIENT_EXERCISES';
 }
 
 export default function PracticePage() {
@@ -112,10 +111,9 @@ export default function PracticePage() {
 
   const [language, setLanguage] = useState<Language>(Language.EN);
   const [difficulty, setDifficulty] = useState<CefrLevel>(CefrLevel.B1);
-  const [submission, setSubmission] = useState<SubmissionState>({ kind: 'idle' });
+  const [initialized, setInitialized] = useState(false);
+  const [state, dispatch] = useReducer(sessionReducer, initialSessionState);
 
-  // activeLanguage drives theory scope + renderers' accent picker.
-  // `language` (above) is the page-local exercise filter.
   const { activeLanguage } = useActiveLanguage();
   const [openTopicId, setOpenTopicId] = useState<TheoryTopicId | null>(null);
   const [triggerEl, setTriggerEl] = useState<HTMLElement | null>(null);
@@ -124,62 +122,147 @@ export default function PracticePage() {
     setOpenTopicId(null);
   }, [activeLanguage]);
 
-  const initializedRef = useRef(false);
+  // Initialize selectors from the first profile once profiles load. We gate
+  // the session-creation effect below on `initialized` so it doesn't fire
+  // before the user's real (language, difficulty) lands in state.
   useEffect(() => {
-    if (profiles.length > 0 && !initializedRef.current) {
-      initializedRef.current = true;
+    if (profiles.length > 0 && !initialized) {
       const first = profiles[0];
       setLanguage(first.language as Language);
       setDifficulty((first.proficiencyLevel as CefrLevel) ?? CefrLevel.B1);
+      setInitialized(true);
     }
-  }, [profiles]);
+  }, [profiles, initialized]);
 
-  const { data: exercise, isLoading, error, refetch } = useExercise({
-    language,
-    difficulty,
-    fetchFn,
-  });
+  const createSession = useCreateSession({ fetchFn });
   const submitMutation = useSubmitAnswer({ fetchFn });
+  const completeSession = useCompleteSession({ fetchFn });
+
+  function fireCompleteSession(sessionId: string) {
+    completeSession.mutate(
+      { sessionId },
+      {
+        onSuccess: (summary) =>
+          dispatch({ type: 'COMPLETE_SUCCEEDED', summary }),
+        onError: (err) =>
+          dispatch({ type: 'COMPLETE_FAILED', error: err as Error }),
+      },
+    );
+  }
+
+  // Strict-mode double-fire guard for the create-session kickoff. The flag
+  // resets whenever we leave `idle` so a subsequent RESET (selector change)
+  // can re-fire the effect.
+  const sessionKickoffRef = useRef(false);
+  useEffect(() => {
+    if (!initialized) return;
+    if (state.kind !== 'idle') {
+      sessionKickoffRef.current = false;
+      return;
+    }
+    if (sessionKickoffRef.current) return;
+    sessionKickoffRef.current = true;
+
+    dispatch({ type: 'CREATE_REQUESTED' });
+    createSession.mutate(
+      { language, difficulty, exerciseCount: DEFAULT_EXERCISE_COUNT },
+      {
+        onSuccess: (data) => dispatch({ type: 'CREATE_SUCCEEDED', session: data }),
+        onError: (err) => dispatch({ type: 'CREATE_FAILED', error: err as Error }),
+      },
+    );
+  }, [initialized, state.kind, language, difficulty, createSession]);
 
   function handleSubmit(answer: string, meta: SubmissionMeta) {
-    if (!exercise || !answer.trim()) return;
-    setSubmission({ kind: 'submitting' });
+    if (state.kind !== 'inSession') return;
+    const item = selectCurrentItem(state);
+    if (!item || !answer.trim()) return;
+    dispatch({ type: 'ITEM_SUBMITTING' });
     submitMutation.mutate(
-      { exerciseId: exercise.id, answer: answer.trim() },
+      {
+        exerciseId: item.id,
+        answer: answer.trim(),
+        sessionId: state.session.id,
+      },
       {
         onSuccess: (result) =>
-          setSubmission({ kind: 'evaluated', result: result as EvaluationResult, meta }),
-        onError: (err) => setSubmission({ kind: 'error', error: err as Error }),
+          dispatch({
+            type: 'ITEM_EVALUATED',
+            result: result as EvaluationResult,
+            meta,
+          }),
+        onError: (err) => dispatch({ type: 'ITEM_ERROR', error: err as Error }),
       },
     );
   }
 
   function handleNext() {
-    setSubmission({ kind: 'idle' });
+    if (state.kind !== 'inSession') return;
+    if (selectIsLastItem(state)) {
+      const sessionId = state.session.id;
+      dispatch({ type: 'COMPLETE_REQUESTED' });
+      fireCompleteSession(sessionId);
+      return;
+    }
+    setOpenTopicId(null);
+    setTriggerEl(null);
     submitMutation.reset();
-    refetch();
+    dispatch({ type: 'ITEM_NEXT' });
   }
 
   function handleRetry() {
-    setSubmission({ kind: 'idle' });
     submitMutation.reset();
+    dispatch({ type: 'ITEM_RETRY' });
+  }
+
+  function handleSkip() {
+    if (state.kind !== 'inSession') return;
+    if (state.perItemSubmission.kind !== 'error') return;
+    setOpenTopicId(null);
+    setTriggerEl(null);
+    submitMutation.reset();
+    dispatch({ type: 'ITEM_SKIP' });
+  }
+
+  function handleEndSession() {
+    if (state.kind !== 'inSession') return;
+    const sessionId = state.session.id;
+    submitMutation.reset();
+    dispatch({ type: 'COMPLETE_REQUESTED' });
+    fireCompleteSession(sessionId);
   }
 
   function handleLanguageChange(newLang: Language) {
     setLanguage(newLang);
     const matching = profiles.find((p) => p.language === newLang);
     if (matching) setDifficulty(matching.proficiencyLevel as CefrLevel);
+    submitMutation.reset();
+    dispatch({ type: 'RESET' });
   }
 
-  // Map current exercise's topicHint → known theory topic id for activeLanguage.
-  const exerciseContent =
-    exercise && !isLoading && !error ? (exercise.contentJson as ExerciseContent) : null;
+  function handleDifficultyChange(newDifficulty: CefrLevel) {
+    setDifficulty(newDifficulty);
+    submitMutation.reset();
+    dispatch({ type: 'RESET' });
+  }
+
+  const currentItem = selectCurrentItem(state);
+  const exerciseContent = currentItem
+    ? (currentItem.contentJson as ExerciseContent)
+    : null;
   const theoryTopicId = exerciseContent
     ? topicIdForHint(exerciseContent.topicHint, activeLanguage)
     : null;
 
   const exerciseTypeForRail: ExerciseType =
-    exerciseContent && 'type' in exerciseContent ? exerciseContent.type : ExerciseType.CLOZE;
+    exerciseContent && 'type' in exerciseContent
+      ? exerciseContent.type
+      : ExerciseType.CLOZE;
+
+  const submission =
+    state.kind === 'inSession'
+      ? state.perItemSubmission
+      : ({ kind: 'idle' } as const);
 
   const coachMsg =
     submission.kind === 'evaluated'
@@ -196,12 +279,13 @@ export default function PracticePage() {
       difficulty={difficulty}
       profiles={profiles}
       onLanguageChange={handleLanguageChange}
-      onDifficultyChange={setDifficulty}
+      onDifficultyChange={handleDifficultyChange}
       onAddLanguage={() => router.push('/onboarding')}
     />
   );
 
-  if (!exercise && !error && profiles.length === 0) {
+  // Zero-profiles placeholder (unchanged from prior page)
+  if (profiles.length === 0) {
     return (
       <div className="p-s-6">
         <h1 className="t-display-l mb-s-6">practice</h1>
@@ -210,15 +294,14 @@ export default function PracticePage() {
     );
   }
 
-  const is404 =
-    !!error &&
-    (error.message.includes('404') || error.message.toLowerCase().includes('not found'));
+  const insufficient =
+    state.kind === 'createError' && isInsufficientExercises(state.error);
 
   const main = (
     <>
       {selectors}
 
-      {error && !isLoading && is404 && (
+      {insufficient && (
         <Card padding="lg" className="bg-paper-2">
           <p className="t-body">
             no exercises available for {LANGUAGE_NAMES[language] ?? language} at {difficulty}
@@ -227,13 +310,13 @@ export default function PracticePage() {
         </Card>
       )}
 
-      {error && !isLoading && !is404 && (
+      {state.kind === 'createError' && !insufficient && (
         <Card padding="lg" className="bg-[var(--color-accent-soft)]">
-          <p className="t-body">{error.message}</p>
+          <p className="t-body">{state.error.message}</p>
         </Card>
       )}
 
-      {exercise && !isLoading && !error && (
+      {state.kind === 'inSession' && currentItem && (
         <>
           {theoryTopicId && (
             <div className="mb-s-3 flex justify-end">
@@ -248,18 +331,32 @@ export default function PracticePage() {
             </div>
           )}
           <ExercisePane
-            exercise={exercise}
+            exercise={currentItem}
             language={activeLanguage}
-            submission={submission}
+            submission={state.perItemSubmission}
             onSubmit={handleSubmit}
             onNext={handleNext}
+            nextLabel={selectIsLastItem(state) ? 'see results' : 'next'}
           />
-          {submission.kind === 'error' && (
+          {state.perItemSubmission.kind === 'error' && (
             <div className="mt-s-4">
-              <SubmissionErrorCard error={submission.error} onRetry={handleRetry} />
+              <SubmissionErrorCard
+                error={state.perItemSubmission.error}
+                onRetry={handleRetry}
+                onSkip={handleSkip}
+                onEndSession={handleEndSession}
+              />
             </div>
           )}
         </>
+      )}
+
+      {state.kind === 'summary' && (
+        <SessionSummary
+          summary={state.summary}
+          onAnother={() => dispatch({ type: 'RESET' })}
+          onDone={() => router.push('/')}
+        />
       )}
     </>
   );
@@ -268,13 +365,13 @@ export default function PracticePage() {
     <>
       <DrillLayout
         rail={
-          exercise ? (
+          currentItem ? (
             <CoachRail message={coachMsg} exerciseType={exerciseTypeForRail} />
           ) : null
         }
         main={main}
-        progressFraction={0}
-        isLoading={isLoading}
+        progressFraction={selectProgressFraction(state)}
+        isLoading={state.kind === 'creating' || state.kind === 'completing'}
       />
       {openTopicId && (
         <TheoryPanel

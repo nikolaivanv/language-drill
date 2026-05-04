@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { CefrLevel, ExerciseType, Language } from '@language-drill/shared';
 import { ActiveLanguageProvider } from '../../../components/shell';
@@ -20,15 +20,14 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
-const mockUseExercise = vi.fn();
-const mockMutate = vi.fn();
-const mockReset = vi.fn();
-const mockRefetch = vi.fn();
+const mockUseCreateSession = vi.fn();
+const mockUseCompleteSession = vi.fn();
 const mockUseSubmitAnswer = vi.fn();
 const mockUseLanguageProfiles = vi.fn();
 
 vi.mock('@language-drill/api-client', () => ({
-  useExercise: (...args: unknown[]) => mockUseExercise(...args),
+  useCreateSession: (...args: unknown[]) => mockUseCreateSession(...args),
+  useCompleteSession: (...args: unknown[]) => mockUseCompleteSession(...args),
   useSubmitAnswer: (...args: unknown[]) => mockUseSubmitAnswer(...args),
   useLanguageProfiles: (...args: unknown[]) => mockUseLanguageProfiles(...args),
   createAuthenticatedFetch: vi.fn(() => vi.fn()),
@@ -38,50 +37,27 @@ vi.mock('@language-drill/api-client', () => ({
 // Fixtures
 // ---------------------------------------------------------------------------
 
-// Cloze fixture intentionally OMITS topicHint so the theory trigger does not
-// render — theory wiring is covered by component-level theory panel tests.
-const clozeExercise = {
-  id: 'ex-1',
-  type: 'cloze' as const,
-  language: 'ES',
-  difficulty: 'B1',
-  contentJson: {
-    type: ExerciseType.CLOZE,
-    instructions: 'fill the blank',
-    sentence: 'Yo ___ pan.',
-    correctAnswer: 'como',
-    options: ['como', 'comes', 'come'],
-  },
-};
+function makeClozeExercise(index: number) {
+  return {
+    id: `ex-${index}`,
+    type: 'cloze' as const,
+    language: 'ES',
+    difficulty: 'B1',
+    contentJson: {
+      type: ExerciseType.CLOZE,
+      instructions: 'fill the blank',
+      sentence: `sentence-${index} ___ end.`,
+      correctAnswer: 'middle',
+      options: ['middle', 'foo', 'bar'],
+    },
+  };
+}
 
-const translationExercise = {
-  id: 'ex-2',
-  type: 'translation' as const,
-  language: 'ES',
-  difficulty: 'B1',
-  contentJson: {
-    type: ExerciseType.TRANSLATION,
-    instructions: 'translate to spanish',
-    sourceText: 'I read books.',
-    sourceLanguage: Language.EN,
-    targetLanguage: Language.ES,
-    referenceTranslation: 'Yo leo libros.',
-  },
-};
+const SESSION_ID = '11111111-1111-1111-1111-111111111111';
 
-const vocabExercise = {
-  id: 'ex-3',
-  type: 'vocab_recall' as const,
-  language: 'ES',
-  difficulty: 'B1',
-  contentJson: {
-    type: ExerciseType.VOCAB_RECALL,
-    instructions: 'what is the spanish word for:',
-    prompt: 'butterfly',
-    expectedWord: 'mariposa',
-    hints: ['it flies'],
-    exampleSentence: 'La mariposa es bonita.',
-  },
+const SAMPLE_MANIFEST = {
+  id: SESSION_ID,
+  exercises: [0, 1, 2, 3, 4].map(makeClozeExercise),
 };
 
 function mockEval(score: number, errors: unknown[] = []) {
@@ -100,18 +76,14 @@ function mockEval(score: number, errors: unknown[] = []) {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function renderWithProviders(
-  ui: React.ReactElement,
-  options: { activeLanguage?: Language.ES | Language.DE | Language.TR } = {},
-) {
+function renderWithProviders(ui: React.ReactElement) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  const profileLang = options.activeLanguage ?? Language.ES;
   return render(
     <QueryClientProvider client={queryClient}>
       <ActiveLanguageProvider
-        profiles={[{ language: profileLang, proficiencyLevel: CefrLevel.B1 }]}
+        profiles={[{ language: Language.ES, proficiencyLevel: CefrLevel.B1 }]}
       >
         {ui}
       </ActiveLanguageProvider>
@@ -119,53 +91,49 @@ function renderWithProviders(
   );
 }
 
-/**
- * Stub `useSubmitAnswer` so that calling `mutate(vars, opts)` synchronously
- * invokes `opts.onSuccess(result)` — letting tests assert the evaluated UI
- * without needing async waits.
- */
-function stubSubmitWithSuccess(result: unknown) {
-  mockUseSubmitAnswer.mockReturnValue({
-    mutate: vi.fn(
-      (
-        _vars: unknown,
-        opts: { onSuccess: (data: unknown) => void; onError: (err: Error) => void },
-      ) => {
-        opts.onSuccess(result);
-      },
-    ),
-    reset: mockReset,
+// Mutation handles. Re-created in beforeEach so call counts are isolated per
+// test. Tests reach into these directly to assert mutate args / call count.
+let createMutate: ReturnType<typeof vi.fn>;
+let createReset: ReturnType<typeof vi.fn>;
+let submitMutate: ReturnType<typeof vi.fn>;
+let submitReset: ReturnType<typeof vi.fn>;
+let completeMutate: ReturnType<typeof vi.fn>;
+
+function setCreateMock(mutateImpl: (vars: unknown, opts: {
+  onSuccess?: (data: unknown) => void;
+  onError?: (err: Error) => void;
+}) => void) {
+  createMutate = vi.fn(mutateImpl);
+  createReset = vi.fn();
+  mockUseCreateSession.mockReturnValue({
+    mutate: createMutate,
+    reset: createReset,
     isPending: false,
     error: null,
   });
 }
 
-/**
- * Stub `useSubmitAnswer` so that calling `mutate(vars, opts)` synchronously
- * invokes `opts.onError(error)`.
- */
-function stubSubmitWithError(error: Error) {
+function setSubmitMock(mutateImpl: (vars: unknown, opts: {
+  onSuccess?: (data: unknown) => void;
+  onError?: (err: Error) => void;
+}) => void) {
+  submitMutate = vi.fn(mutateImpl);
+  submitReset = vi.fn();
   mockUseSubmitAnswer.mockReturnValue({
-    mutate: vi.fn(
-      (
-        _vars: unknown,
-        opts: { onSuccess: (data: unknown) => void; onError: (err: Error) => void },
-      ) => {
-        opts.onError(error);
-      },
-    ),
-    reset: mockReset,
+    mutate: submitMutate,
+    reset: submitReset,
     isPending: false,
     error: null,
   });
 }
 
 // ---------------------------------------------------------------------------
-// Default mock setup
+// Default mock setup — synchronous resolution so render() lands in inSession.
 // ---------------------------------------------------------------------------
 
 beforeEach(() => {
   vi.clearAllMocks();
+
   mockUseLanguageProfiles.mockReturnValue({
     data: {
       profiles: [
@@ -176,17 +144,21 @@ beforeEach(() => {
     isLoading: false,
     error: null,
   });
-  mockUseSubmitAnswer.mockReturnValue({
-    mutate: mockMutate,
-    reset: mockReset,
+
+  // Default create: synchronously fires onSuccess with the manifest.
+  setCreateMock((_vars, opts) => opts.onSuccess?.(SAMPLE_MANIFEST));
+
+  // Default submit: no-op so the page stays in `submitting` after click
+  // unless a test stubs an outcome.
+  setSubmitMock(() => {});
+
+  // Stubbed but not exercised in 28a — 28b will re-stub for completion paths.
+  completeMutate = vi.fn();
+  mockUseCompleteSession.mockReturnValue({
+    mutate: completeMutate,
+    reset: vi.fn(),
     isPending: false,
     error: null,
-  });
-  mockUseExercise.mockReturnValue({
-    data: clozeExercise,
-    isLoading: false,
-    error: null,
-    refetch: mockRefetch,
   });
 });
 
@@ -196,153 +168,19 @@ beforeEach(() => {
 
 describe('PracticePage', () => {
   // -------------------------------------------------------------------------
-  describe('rendering', () => {
-    it('renders the lowercase "practice" heading on the pre-selection screen', () => {
-      // The heading only renders in the pre-language-selection branch
-      // (profiles.length === 0). Once profiles are loaded the page returns
-      // the DrillLayout, which has no h1.
+  describe('mount + creation', () => {
+    it('mount with profiles → useCreateSession.mutate called once with the active filter', () => {
       mockUseLanguageProfiles.mockReturnValue({
-        data: { profiles: [] },
+        data: { profiles: [{ language: 'ES', proficiencyLevel: 'B1' }] },
         isLoading: false,
         error: null,
       });
-      mockUseExercise.mockReturnValue({
-        data: undefined,
-        isLoading: false,
-        error: null,
-        refetch: mockRefetch,
-      });
+
       renderWithProviders(<PracticePage />);
-      const heading = screen.getByRole('heading', { level: 1 });
-      expect(heading).toHaveTextContent('practice');
-    });
 
-    it('renders both Language and Difficulty selectors', () => {
-      renderWithProviders(<PracticePage />);
-      expect(screen.getByLabelText(/Language/)).toBeInTheDocument();
-      expect(screen.getByLabelText(/Difficulty/)).toBeInTheDocument();
-    });
-
-    it('renders the loading skeleton (animate-pulse) while fetching', () => {
-      mockUseExercise.mockReturnValue({
-        data: undefined,
-        isLoading: true,
-        error: null,
-        refetch: mockRefetch,
-      });
-      const { container } = renderWithProviders(<PracticePage />);
-      expect(container.querySelector('.animate-pulse')).toBeInTheDocument();
-    });
-
-    it('renders the rail (CoachRail) when an exercise is loaded', () => {
-      renderWithProviders(<PracticePage />);
-      // Rail content from CoachRail
-      expect(screen.getByText('coach')).toBeInTheDocument();
-      expect(screen.getByText('guiding this session')).toBeInTheDocument();
-    });
-
-    it('pre-language-selection: with no profiles, renders bare selectors and NO rail', () => {
-      mockUseLanguageProfiles.mockReturnValue({
-        data: { profiles: [] },
-        isLoading: false,
-        error: null,
-      });
-      mockUseExercise.mockReturnValue({
-        data: undefined,
-        isLoading: false,
-        error: null,
-        refetch: mockRefetch,
-      });
-      renderWithProviders(<PracticePage />);
-      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-        'practice',
-      );
-      expect(screen.getByLabelText(/Language/)).toBeInTheDocument();
-      expect(screen.getByLabelText(/Difficulty/)).toBeInTheDocument();
-      // Rail content must NOT be in the DOM (no DrillLayout rail)
-      expect(screen.queryByText('coach')).not.toBeInTheDocument();
-      expect(screen.queryByText('guiding this session')).not.toBeInTheDocument();
-    });
-
-    it('shows the 404 empty-state card when useExercise returns a 404 error', () => {
-      mockUseExercise.mockReturnValue({
-        data: undefined,
-        isLoading: false,
-        error: new Error('Request failed with status 404'),
-        refetch: mockRefetch,
-      });
-      renderWithProviders(<PracticePage />);
-      expect(
-        screen.getByText(/no exercises available for Spanish at B1/),
-      ).toBeInTheDocument();
-      expect(screen.getByText('try a different difficulty')).toBeInTheDocument();
-    });
-
-    it('shows the generic load-error card with the error message for non-404 errors', () => {
-      mockUseExercise.mockReturnValue({
-        data: undefined,
-        isLoading: false,
-        error: new Error('connection refused'),
-        refetch: mockRefetch,
-      });
-      renderWithProviders(<PracticePage />);
-      expect(screen.getByText('connection refused')).toBeInTheDocument();
-    });
-  });
-
-  // -------------------------------------------------------------------------
-  describe('exercise dispatch', () => {
-    it('renders the cloze input when content is cloze', () => {
-      // Default beforeEach loads clozeExercise
-      renderWithProviders(<PracticePage />);
-      expect(screen.getByRole('button', { name: /submit/i })).toBeInTheDocument();
-      // The cloze sentence with blank is shown
-      expect(screen.getByText(/Yo/)).toBeInTheDocument();
-    });
-
-    it('renders the translation textarea + "EN → ES" eyebrow when content is translation', () => {
-      mockUseExercise.mockReturnValue({
-        data: translationExercise,
-        isLoading: false,
-        error: null,
-        refetch: mockRefetch,
-      });
-      renderWithProviders(<PracticePage />);
-      expect(screen.getByText(/EN\s*→\s*ES/)).toBeInTheDocument();
-      // Source text appears glossed inline
-      expect(screen.getByText(/I read books/)).toBeInTheDocument();
-    });
-
-    it('renders the vocab prompt when content is vocab_recall', () => {
-      mockUseExercise.mockReturnValue({
-        data: vocabExercise,
-        isLoading: false,
-        error: null,
-        refetch: mockRefetch,
-      });
-      renderWithProviders(<PracticePage />);
-      expect(screen.getByText('butterfly')).toBeInTheDocument();
-    });
-  });
-
-  // -------------------------------------------------------------------------
-  describe('submission flow', () => {
-    it('submit button is disabled when answer is empty', () => {
-      renderWithProviders(<PracticePage />);
-      expect(screen.getByRole('button', { name: /submit/i })).toBeDisabled();
-    });
-
-    it('submit button enables after typing and calls mutate with { exerciseId, answer }', () => {
-      renderWithProviders(<PracticePage />);
-      const input = screen.getByRole('textbox');
-      fireEvent.change(input, { target: { value: 'como' } });
-
-      const submitBtn = screen.getByRole('button', { name: /submit/i });
-      expect(submitBtn).toBeEnabled();
-      fireEvent.click(submitBtn);
-
-      expect(mockMutate).toHaveBeenCalledWith(
-        { exerciseId: 'ex-1', answer: 'como' },
+      expect(createMutate).toHaveBeenCalledTimes(1);
+      expect(createMutate).toHaveBeenCalledWith(
+        { language: 'ES', difficulty: 'B1', exerciseCount: 5 },
         expect.objectContaining({
           onSuccess: expect.any(Function),
           onError: expect.any(Function),
@@ -350,229 +188,398 @@ describe('PracticePage', () => {
       );
     });
 
-    it('shows the spinner state on the submit button while submission is pending', () => {
-      // Stub mutate as a no-op so the page stays in `submission.kind ==
-      // 'submitting'` after click — neither onSuccess nor onError fires.
-      mockUseSubmitAnswer.mockReturnValue({
-        mutate: vi.fn(),
-        reset: mockReset,
-        isPending: false,
-        error: null,
-      });
-      const { container } = renderWithProviders(<PracticePage />);
-      const input = screen.getByRole('textbox');
-      fireEvent.change(input, { target: { value: 'como' } });
-      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
-
-      // Once loading=true the Button replaces its children with a Spinner,
-      // so it no longer has an accessible name "submit". Query by aria-busy
-      // attribute on the now-spinning button.
-      const busyButton = container.querySelector('button[aria-busy="true"]');
-      expect(busyButton).not.toBeNull();
-      expect(busyButton).toBeDisabled();
-      // The animated spinner SVG is in the DOM
-      expect(container.querySelector('svg.animate-spin')).not.toBeNull();
+    it('shows manifest item 0 once create-session resolves', () => {
+      renderWithProviders(<PracticePage />);
+      expect(screen.getByText(/sentence-0/)).toBeInTheDocument();
     });
 
-    it('on successful submit synchronously, FeedbackShell renders with the verdict label', () => {
-      stubSubmitWithSuccess(mockEval(0.97));
+    it('progress bar starts at 0 (idle, item 0)', () => {
       renderWithProviders(<PracticePage />);
-      const input = screen.getByRole('textbox');
-      fireEvent.change(input, { target: { value: 'como' } });
+      const progressBar = screen.getByRole('progressbar');
+      expect(progressBar.getAttribute('aria-valuenow')).toBe('0');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  describe('per-item flow', () => {
+    it('submit item 0 → verdict shown; progress bar reflects evaluated state (1/5 = 20)', () => {
+      setSubmitMock((_vars, opts) => opts.onSuccess?.(mockEval(0.97)));
+      renderWithProviders(<PracticePage />);
+
+      fireEvent.change(screen.getByRole('textbox'), {
+        target: { value: 'middle' },
+      });
       fireEvent.click(screen.getByRole('button', { name: /submit/i }));
 
       expect(screen.getByText('spot on')).toBeInTheDocument();
-      // The FeedbackShell exposes a "next" button
-      expect(screen.getByRole('button', { name: 'next' })).toBeInTheDocument();
+      expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe(
+        '20',
+      );
     });
-  });
 
-  // -------------------------------------------------------------------------
-  describe('feedback tier mapping (one per band)', () => {
-    function submitClozeWithScore(score: number) {
-      stubSubmitWithSuccess(mockEval(score));
+    it('submit threads sessionId through to the submit mutation', () => {
+      setSubmitMock((_vars, opts) => opts.onSuccess?.(mockEval(0.97)));
       renderWithProviders(<PracticePage />);
-      const input = screen.getByRole('textbox');
-      fireEvent.change(input, { target: { value: 'como' } });
-      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
-    }
 
-    it('score=0.97 → sage tier ("spot on") with ok-soft background', () => {
-      submitClozeWithScore(0.97);
-      const verdict = screen.getByText('spot on');
-      // FeedbackShell sets bg via the Card root — walk up to find the card
-      const card = verdict.closest('[class*="bg-["]');
-      expect(card).not.toBeNull();
-      expect(card!.className).toContain('bg-[var(--color-ok-soft)]');
-    });
-
-    it('score=0.80 → yellow tier ("close") with hilite-soft background', () => {
-      submitClozeWithScore(0.8);
-      const verdict = screen.getByText('close');
-      const card = verdict.closest('[class*="bg-["]');
-      expect(card).not.toBeNull();
-      expect(card!.className).toContain('bg-[var(--color-hilite-soft)]');
-    });
-
-    it('score=0.30 → terracotta tier ("wrong") with accent-soft background', () => {
-      submitClozeWithScore(0.3);
-      const verdict = screen.getByText('wrong');
-      const card = verdict.closest('[class*="bg-["]');
-      expect(card).not.toBeNull();
-      expect(card!.className).toContain('bg-[var(--color-accent-soft)]');
-    });
-  });
-
-  // -------------------------------------------------------------------------
-  describe('error handling (submission)', () => {
-    it('429 error → yellow tier soft background + verbatim rate-limit copy', () => {
-      stubSubmitWithError(new Error('Request failed with status 429'));
-      renderWithProviders(<PracticePage />);
       fireEvent.change(screen.getByRole('textbox'), {
-        target: { value: 'como' },
+        target: { value: 'middle' },
       });
       fireEvent.click(screen.getByRole('button', { name: /submit/i }));
 
-      const message = screen.getByText(
-        "You've reached your daily practice limit. Come back tomorrow!",
+      expect(submitMutate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          exerciseId: 'ex-0',
+          answer: 'middle',
+          sessionId: SESSION_ID,
+        }),
+        expect.any(Object),
       );
-      expect(message).toBeInTheDocument();
-      const card = message.closest('[class*="bg-["]');
-      expect(card!.className).toContain('bg-[var(--color-hilite-soft)]');
-      // try-again button is present
+    });
+
+    it('click "next" after evaluation → exercise pane shows manifest item 1; progress reflects 1/5', () => {
+      setSubmitMock((_vars, opts) => opts.onSuccess?.(mockEval(0.97)));
+      renderWithProviders(<PracticePage />);
+
+      fireEvent.change(screen.getByRole('textbox'), {
+        target: { value: 'middle' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+
+      // The verdict-card "next" button (not "see results" — we're not on the
+      // last item yet).
+      fireEvent.click(screen.getByRole('button', { name: 'next' }));
+
+      expect(screen.getByText(/sentence-1/)).toBeInTheDocument();
+      expect(screen.queryByText(/sentence-0/)).not.toBeInTheDocument();
+      // index=1, idle → 1/5 = 20
+      expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe(
+        '20',
+      );
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  describe('selector change', () => {
+    it('changing language dispatches RESET → useCreateSession.mutate fires again with the new filter', () => {
+      renderWithProviders(<PracticePage />);
+
+      // Initial create call
+      expect(createMutate).toHaveBeenCalledWith(
+        { language: 'ES', difficulty: 'B1', exerciseCount: 5 },
+        expect.any(Object),
+      );
+      const callsBefore = createMutate.mock.calls.length;
+
+      fireEvent.change(screen.getByLabelText(/Language/), {
+        target: { value: 'DE' },
+      });
+
+      expect(createMutate.mock.calls.length).toBeGreaterThan(callsBefore);
+      const lastCallArgs =
+        createMutate.mock.calls[createMutate.mock.calls.length - 1][0];
+      expect(lastCallArgs).toEqual({
+        language: 'DE',
+        difficulty: 'A2',
+        exerciseCount: 5,
+      });
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  describe('submission error (5xx)', () => {
+    it('renders the error card with "try again" when submit fails with a generic 5xx', () => {
+      setSubmitMock((_vars, opts) =>
+        opts.onError?.(new Error('Bad gateway 502')),
+      );
+      renderWithProviders(<PracticePage />);
+
+      fireEvent.change(screen.getByRole('textbox'), {
+        target: { value: 'middle' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+
       expect(
-        screen.getByRole('button', { name: /try again/i }),
+        screen.getByText('Failed to submit answer: Bad gateway 502'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'try again' }),
       ).toBeInTheDocument();
     });
-
-    it('502 generic error → terracotta tier soft background + verbatim "Failed to submit answer:" copy', () => {
-      stubSubmitWithError(new Error('Bad gateway 502'));
-      renderWithProviders(<PracticePage />);
-      fireEvent.change(screen.getByRole('textbox'), {
-        target: { value: 'como' },
-      });
-      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
-
-      const message = screen.getByText(
-        'Failed to submit answer: Bad gateway 502',
-      );
-      expect(message).toBeInTheDocument();
-      const card = message.closest('[class*="bg-["]');
-      expect(card!.className).toContain('bg-[var(--color-accent-soft)]');
-    });
   });
 
   // -------------------------------------------------------------------------
-  describe('next clears state', () => {
-    it('clicking "next" after evaluation calls reset() + refetch() and clears the FeedbackShell', () => {
-      stubSubmitWithSuccess(mockEval(0.97));
-      renderWithProviders(<PracticePage />);
-      fireEvent.change(screen.getByRole('textbox'), {
-        target: { value: 'como' },
-      });
-      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
-
-      // Verdict label is in the DOM
-      expect(screen.getByText('spot on')).toBeInTheDocument();
-
-      const nextBtn = screen.getByRole('button', { name: 'next' });
-      fireEvent.click(nextBtn);
-
-      // Mutation reset and exercise refetch were both invoked
-      expect(mockReset).toHaveBeenCalled();
-      expect(mockRefetch).toHaveBeenCalled();
-      // FeedbackShell is gone (verdict label no longer in DOM)
-      expect(screen.queryByText('spot on')).not.toBeInTheDocument();
-      // Submit button reappears in idle state (the renderer is back to input mode)
-      expect(screen.getByRole('button', { name: /submit/i })).toBeInTheDocument();
-    });
-  });
-
-  // -------------------------------------------------------------------------
-  // Req 1.6 — no gamification across the four page states.
-  //
-  // Forbidden tokens (with word boundaries to avoid false positives like
-  // "today", "everyday", "Wednesday"):
-  //   - /\bstreak\b/i
-  //   - /\bxp\b/i
-  //   - /\bday\b/i
-  //   - /\blesson\b/i
-  //   - /session\s+\d+\s+of\s+\d+/i  ← the literal "session N of M" pattern;
-  //     bare "session" (e.g. "guiding this session" in CoachRail) is allowed.
-  // -------------------------------------------------------------------------
-  describe('no gamification (Req 1.6)', () => {
-    const FORBIDDEN: ReadonlyArray<{ name: string; re: RegExp }> = [
-      { name: 'streak', re: /\bstreak\b/i },
-      { name: 'XP', re: /\bxp\b/i },
-      { name: 'day (word-boundary)', re: /\bday\b/i },
-      { name: 'lesson', re: /\blesson\b/i },
-      { name: 'session N of M', re: /session\s+\d+\s+of\s+\d+/i },
-    ];
-
-    function expectNoGamification(label: string, container: HTMLElement) {
-      const text = container.textContent ?? '';
-      for (const { name, re } of FORBIDDEN) {
-        if (re.test(text)) {
-          throw new Error(
-            `[${label}] forbidden gamification token "${name}" matched in rendered DOM. ` +
-              `Body text:\n${text}`,
-          );
-        }
-      }
-    }
-
-    it('sweeps the four states (loading, idle, evaluated, error) for forbidden tokens', () => {
-      // ---- loading ----
-      mockUseExercise.mockReturnValue({
-        data: undefined,
-        isLoading: true,
-        error: null,
-        refetch: mockRefetch,
-      });
-      const loadingRender = renderWithProviders(<PracticePage />);
-      expectNoGamification('loading', loadingRender.container);
-      loadingRender.unmount();
-
-      // ---- idle (default cloze, no submission) ----
-      mockUseExercise.mockReturnValue({
-        data: clozeExercise,
+  describe('zero profiles', () => {
+    it('renders the no-profiles placeholder; useCreateSession.mutate is NOT called', () => {
+      mockUseLanguageProfiles.mockReturnValue({
+        data: { profiles: [] },
         isLoading: false,
         error: null,
-        refetch: mockRefetch,
       });
-      mockUseSubmitAnswer.mockReturnValue({
-        mutate: mockMutate,
-        reset: mockReset,
-        isPending: false,
-        error: null,
-      });
-      const idleRender = renderWithProviders(<PracticePage />);
-      expectNoGamification('idle', idleRender.container);
-      idleRender.unmount();
 
-      // ---- evaluated (sync onSuccess) ----
-      stubSubmitWithSuccess(mockEval(0.97));
-      const evaluatedRender = renderWithProviders(<PracticePage />);
-      const inputEl = within(evaluatedRender.container).getByRole('textbox');
-      fireEvent.change(inputEl, { target: { value: 'como' } });
-      fireEvent.click(
-        within(evaluatedRender.container).getByRole('button', {
-          name: /submit/i,
+      renderWithProviders(<PracticePage />);
+
+      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+        'practice',
+      );
+      expect(createMutate).not.toHaveBeenCalled();
+      // No coach rail or progress bar in the zero-profiles placeholder
+      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  describe('422 INSUFFICIENT_EXERCISES', () => {
+    it('renders the "no exercises available" card when create-session fails with 422', () => {
+      const err = new Error('Not enough exercises in the pool for this filter');
+      (err as Error & { status?: number }).status = 422;
+      (err as Error & { body?: { code?: string } }).body = {
+        code: 'INSUFFICIENT_EXERCISES',
+      };
+      setCreateMock((_vars, opts) => opts.onError?.(err));
+
+      renderWithProviders(<PracticePage />);
+
+      expect(
+        screen.getByText(/no exercises available for Spanish at B1/),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText('try a different difficulty'),
+      ).toBeInTheDocument();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // 28b — completion + summary + session-aware error paths
+  // -------------------------------------------------------------------------
+
+  function happySummary(overrides: Partial<{
+    exerciseCount: number;
+    correctCount: number;
+    attemptedCount: number;
+    skippedCount: number;
+    durationSeconds: number;
+  }> = {}) {
+    return {
+      id: SESSION_ID,
+      exerciseCount: 5,
+      correctCount: 4,
+      attemptedCount: 5,
+      skippedCount: 0,
+      durationSeconds: 240,
+      ...overrides,
+    };
+  }
+
+  // Step through items 0..(stopAt-1) by submitting each and clicking "next".
+  // Leaves the page on item `stopAt` with an idle textbox.
+  function advanceToItem(stopAt: number) {
+    for (let i = 0; i < stopAt; i++) {
+      fireEvent.change(screen.getByRole('textbox'), {
+        target: { value: 'middle' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+      fireEvent.click(screen.getByRole('button', { name: 'next' }));
+    }
+  }
+
+  describe('completion', () => {
+    it('next-button label reads "see results" on the last item (after submit)', () => {
+      setSubmitMock((_vars, opts) => opts.onSuccess?.(mockEval(0.97)));
+      renderWithProviders(<PracticePage />);
+
+      // Items 0..3: submit + next
+      advanceToItem(4);
+
+      // On item 4 (last): submit
+      expect(screen.getByText(/sentence-4/)).toBeInTheDocument();
+      fireEvent.change(screen.getByRole('textbox'), {
+        target: { value: 'middle' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+
+      expect(
+        screen.getByRole('button', { name: 'see results' }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'next' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('clicking "see results" calls useCompleteSession.mutate and shows the summary', () => {
+      setSubmitMock((_vars, opts) => opts.onSuccess?.(mockEval(0.97)));
+      completeMutate.mockImplementation((_vars, opts) =>
+        opts.onSuccess?.(happySummary()),
+      );
+      renderWithProviders(<PracticePage />);
+
+      advanceToItem(4);
+      fireEvent.change(screen.getByRole('textbox'), {
+        target: { value: 'middle' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+      fireEvent.click(screen.getByRole('button', { name: 'see results' }));
+
+      expect(completeMutate).toHaveBeenCalledWith(
+        { sessionId: SESSION_ID },
+        expect.objectContaining({
+          onSuccess: expect.any(Function),
+          onError: expect.any(Function),
         }),
       );
-      expectNoGamification('evaluated', evaluatedRender.container);
-      evaluatedRender.unmount();
+      expect(screen.getByText('4 of 5')).toBeInTheDocument();
+      expect(screen.getByText('80%')).toBeInTheDocument();
+    });
+  });
 
-      // ---- error (sync onError) ----
-      stubSubmitWithError(new Error('Bad gateway 502'));
-      const errorRender = renderWithProviders(<PracticePage />);
-      const errInput = within(errorRender.container).getByRole('textbox');
-      fireEvent.change(errInput, { target: { value: 'como' } });
-      fireEvent.click(
-        within(errorRender.container).getByRole('button', { name: /submit/i }),
+  describe('summary actions', () => {
+    function completeSession() {
+      advanceToItem(4);
+      fireEvent.change(screen.getByRole('textbox'), {
+        target: { value: 'middle' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+      fireEvent.click(screen.getByRole('button', { name: 'see results' }));
+    }
+
+    it('"another session" resets and re-fires useCreateSession.mutate', () => {
+      setSubmitMock((_vars, opts) => opts.onSuccess?.(mockEval(0.97)));
+      completeMutate.mockImplementation((_vars, opts) =>
+        opts.onSuccess?.(happySummary()),
       );
-      expectNoGamification('error', errorRender.container);
-      errorRender.unmount();
+      renderWithProviders(<PracticePage />);
+
+      completeSession();
+
+      const callsBefore = createMutate.mock.calls.length;
+      fireEvent.click(screen.getByRole('button', { name: 'another session' }));
+
+      expect(createMutate.mock.calls.length).toBeGreaterThan(callsBefore);
+      // Summary is gone; we're back on item 0 of a fresh session
+      expect(screen.queryByText('4 of 5')).not.toBeInTheDocument();
+      expect(screen.getByText(/sentence-0/)).toBeInTheDocument();
+    });
+
+    it('"done" navigates to /', () => {
+      setSubmitMock((_vars, opts) => opts.onSuccess?.(mockEval(0.97)));
+      completeMutate.mockImplementation((_vars, opts) =>
+        opts.onSuccess?.(happySummary()),
+      );
+      renderWithProviders(<PracticePage />);
+
+      completeSession();
+
+      fireEvent.click(screen.getByRole('button', { name: 'done' }));
+      expect(mockPush).toHaveBeenCalledWith('/');
+    });
+  });
+
+  describe('rate-limit "end session early"', () => {
+    it('clicking "end session early" calls useCompleteSession.mutate and shows the summary', () => {
+      setSubmitMock((_vars, opts) =>
+        opts.onError?.(new Error('Request failed with status 429')),
+      );
+      completeMutate.mockImplementation((_vars, opts) =>
+        opts.onSuccess?.(
+          happySummary({
+            correctCount: 0,
+            attemptedCount: 0,
+            skippedCount: 5,
+            durationSeconds: 30,
+          }),
+        ),
+      );
+      renderWithProviders(<PracticePage />);
+
+      fireEvent.change(screen.getByRole('textbox'), {
+        target: { value: 'middle' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+
+      // Rate-limit card with the right buttons
+      expect(
+        screen.getByText(
+          "You've reached your daily practice limit. Come back tomorrow!",
+        ),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'end session early' }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'skip item' }),
+      ).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'end session early' }));
+
+      expect(completeMutate).toHaveBeenCalledWith(
+        { sessionId: SESSION_ID },
+        expect.any(Object),
+      );
+      // Summary rendered — em-dash for accuracy when attemptedCount=0
+      expect(screen.getByText('0 of 5 · 5 skipped')).toBeInTheDocument();
+      expect(screen.getByText('—')).toBeInTheDocument();
+    });
+  });
+
+  describe('5xx "skip item"', () => {
+    it('"skip item" advances index; subsequent summary shows the skipped count', () => {
+      // Default impl: success. One-shot first call: error.
+      setSubmitMock((_vars, opts) => opts.onSuccess?.(mockEval(0.97)));
+      submitMutate.mockImplementationOnce((_vars, opts) =>
+        opts.onError?.(new Error('Bad gateway 502')),
+      );
+
+      completeMutate.mockImplementation((_vars, opts) =>
+        opts.onSuccess?.(
+          happySummary({
+            correctCount: 3,
+            attemptedCount: 4,
+            skippedCount: 1,
+            durationSeconds: 200,
+          }),
+        ),
+      );
+      renderWithProviders(<PracticePage />);
+
+      // Item 0: submit → 502 error
+      fireEvent.change(screen.getByRole('textbox'), {
+        target: { value: 'middle' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+
+      // Both buttons present in the error card
+      expect(
+        screen.getByRole('button', { name: 'try again' }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'skip item' }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'end session early' }),
+      ).not.toBeInTheDocument();
+
+      // Skip → advance to item 1
+      fireEvent.click(screen.getByRole('button', { name: 'skip item' }));
+      expect(screen.getByText(/sentence-1/)).toBeInTheDocument();
+
+      // Items 1..3: submit + next
+      for (let i = 1; i < 4; i++) {
+        fireEvent.change(screen.getByRole('textbox'), {
+          target: { value: 'middle' },
+        });
+        fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+        fireEvent.click(screen.getByRole('button', { name: 'next' }));
+      }
+      // Item 4 (last): submit + see results
+      fireEvent.change(screen.getByRole('textbox'), {
+        target: { value: 'middle' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+      fireEvent.click(screen.getByRole('button', { name: 'see results' }));
+
+      // Summary shows the skipped-count line
+      expect(screen.getByText('3 of 5 · 1 skipped')).toBeInTheDocument();
+      // Accuracy = 3/4 = 75%
+      expect(screen.getByText('75%')).toBeInTheDocument();
     });
   });
 });

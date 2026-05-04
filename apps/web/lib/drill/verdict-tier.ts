@@ -1,4 +1,4 @@
-import type { EvaluationError } from '@language-drill/shared';
+import { CORRECT_THRESHOLD, type EvaluationError } from '@language-drill/shared';
 
 export type VerdictTier = 'sage' | 'yellow' | 'terracotta';
 
@@ -7,7 +7,7 @@ export type VerdictResult = { tier: VerdictTier; label: string };
 export function clozeVerdict(score: number): VerdictResult {
   if (score >= 0.95) {
     return { tier: 'sage', label: 'spot on' };
-  } else if (score >= 0.7) {
+  } else if (score >= CORRECT_THRESHOLD) {
     return { tier: 'yellow', label: 'close' };
   } else if (score >= 0.4) {
     return { tier: 'yellow', label: 'off — see why' };
@@ -19,7 +19,7 @@ export function clozeVerdict(score: number): VerdictResult {
 export function translationVerdict(score: number): VerdictResult {
   if (score >= 0.95) {
     return { tier: 'sage', label: 'spot on' };
-  } else if (score >= 0.7) {
+  } else if (score >= CORRECT_THRESHOLD) {
     return { tier: 'yellow', label: 'meaning is right · small issues' };
   } else if (score >= 0.4) {
     return { tier: 'yellow', label: 'gist is there · grammar drifted' };
@@ -37,7 +37,7 @@ export function vocabVerdict(
 
   if (score === 1.0) {
     return { tier: 'sage', label: 'exact' };
-  } else if (score >= 0.7 && score < 1.0 && hasGrammarError) {
+  } else if (score >= CORRECT_THRESHOLD && score < 1.0 && hasGrammarError) {
     return { tier: 'yellow', label: 'right word · wrong inflection' };
   } else if (
     score >= 0.6 &&

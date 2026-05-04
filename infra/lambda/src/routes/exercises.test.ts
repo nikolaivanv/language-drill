@@ -32,6 +32,12 @@ vi.mock('@language-drill/db', () => ({
   exercises: {},
   userExerciseHistory: {},
   usageEvents: {},
+  practiceSessions: {
+    id: 'id',
+    userId: 'user_id',
+    completedAt: 'completed_at',
+    exerciseIds: 'exercise_ids',
+  },
 }));
 
 const mockEvaluateAnswer = vi.fn();
@@ -485,5 +491,148 @@ describe('POST /exercises/:id/submit', () => {
     expect(res.status).toBe(400);
     const body = await res.json() as AnyJson;
     expect(body.code).toBe('VALIDATION_ERROR');
+  });
+
+  // -------------------------------------------------------------------------
+  // sessionId-bound submission paths (Req 5.4, 5.5)
+  // -------------------------------------------------------------------------
+
+  const validSessionId = '11111111-1111-1111-1111-111111111111';
+
+  it('writes sessionId into history when a valid session is provided', async () => {
+    // exercise fetch → session fetch → usage count
+    mockLimit
+      .mockResolvedValueOnce([sampleExercise])
+      .mockResolvedValueOnce([
+        { userId: 'user_123', completedAt: null, exerciseIds: ['abc-123'] },
+      ]);
+    mockWhere
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }))
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }))
+      .mockResolvedValueOnce([{ count: 5 }] as never);
+    mockEvaluateAnswer.mockResolvedValueOnce(sampleEvaluation);
+
+    const res = await app.request(
+      '/exercises/abc-123/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'I went to the store', sessionId: validSessionId }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    // Insert order: 1) auth user upsert, 2) userExerciseHistory, 3) usageEvents
+    expect(mockValues).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        exerciseId: 'abc-123',
+        sessionId: validSessionId,
+      }),
+    );
+  });
+
+  it('returns 400 INVALID_SESSION when sessionId belongs to another user', async () => {
+    mockLimit
+      .mockResolvedValueOnce([sampleExercise])
+      .mockResolvedValueOnce([
+        { userId: 'user_999', completedAt: null, exerciseIds: ['abc-123'] },
+      ]);
+    mockWhere
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }))
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }));
+
+    const res = await app.request(
+      '/exercises/abc-123/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'foo', sessionId: validSessionId }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(400);
+    const body = await res.json() as AnyJson;
+    expect(body.code).toBe('INVALID_SESSION');
+    expect(mockEvaluateAnswer).not.toHaveBeenCalled();
+    // Only the auth middleware user upsert — no history/usage inserts
+    expect(mockInsert).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns 400 INVALID_SESSION when session is already completed', async () => {
+    mockLimit
+      .mockResolvedValueOnce([sampleExercise])
+      .mockResolvedValueOnce([
+        { userId: 'user_123', completedAt: new Date(), exerciseIds: ['abc-123'] },
+      ]);
+    mockWhere
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }))
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }));
+
+    const res = await app.request(
+      '/exercises/abc-123/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'foo', sessionId: validSessionId }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(400);
+    const body = await res.json() as AnyJson;
+    expect(body.code).toBe('INVALID_SESSION');
+    expect(mockEvaluateAnswer).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 INVALID_SESSION when exercise is not in the session manifest', async () => {
+    mockLimit
+      .mockResolvedValueOnce([sampleExercise])
+      .mockResolvedValueOnce([
+        { userId: 'user_123', completedAt: null, exerciseIds: ['other-exercise-id'] },
+      ]);
+    mockWhere
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }))
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }));
+
+    const res = await app.request(
+      '/exercises/abc-123/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'foo', sessionId: validSessionId }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(400);
+    const body = await res.json() as AnyJson;
+    expect(body.code).toBe('INVALID_SESSION');
+    expect(mockEvaluateAnswer).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 INVALID_SESSION when sessionId does not exist', async () => {
+    mockLimit
+      .mockResolvedValueOnce([sampleExercise])
+      .mockResolvedValueOnce([]);
+    mockWhere
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }))
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }));
+
+    const res = await app.request(
+      '/exercises/abc-123/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'foo', sessionId: validSessionId }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(400);
+    const body = await res.json() as AnyJson;
+    expect(body.code).toBe('INVALID_SESSION');
   });
 });

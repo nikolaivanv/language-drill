@@ -17,6 +17,7 @@ export interface VocabExerciseProps {
   submission: SubmissionState;
   onSubmit: (answer: string, meta: SubmissionMeta) => void;
   onNext: () => void;
+  nextLabel?: string;
 }
 
 function isAccentLanguage(lang: string): lang is 'ES' | 'DE' | 'TR' {
@@ -29,6 +30,7 @@ export function VocabExercise({
   submission,
   onSubmit,
   onNext,
+  nextLabel,
 }: VocabExerciseProps) {
   const [answer, setAnswer] = React.useState('');
   const [hintLevel, setHintLevel] = React.useState<0 | 1 | 2 | 3>(0);
@@ -109,6 +111,7 @@ export function VocabExercise({
               scoreChipText={`${Math.round(submission.result.score * 100)}%`}
               hintLevel={hintLevel}
               onNext={onNext}
+              nextLabel={nextLabel}
             >
               <div className="flex flex-col gap-s-4">
                 <p className="t-display-m">{content.expectedWord}</p>

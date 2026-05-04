@@ -47,6 +47,7 @@ export function useExercise({
 export type SubmitAnswerParams = {
   exerciseId: string;
   answer: string;
+  sessionId?: string;
 };
 
 export type UseSubmitAnswerOptions = {
@@ -57,16 +58,20 @@ export function useSubmitAnswer({ fetchFn }: UseSubmitAnswerOptions) {
   const queryClient = useQueryClient();
 
   return useMutation<EvaluationResultResponse, Error, SubmitAnswerParams>({
-    mutationFn: async ({ exerciseId, answer }) => {
+    mutationFn: async ({ exerciseId, answer, sessionId }) => {
+      const body: { answer: string; sessionId?: string } = { answer };
+      if (sessionId !== undefined) body.sessionId = sessionId;
       const response = await fetchFn(`/exercises/${exerciseId}/submit`, {
         method: 'POST',
-        body: JSON.stringify({ answer }),
+        body: JSON.stringify(body),
       });
       const json: unknown = await response.json();
       return EvaluationResultSchema.parse(json);
     },
     onSuccess: () => {
-      // Invalidate exercise queries so next fetch gets a fresh exercise
+      // Invalidate exercise queries so next fetch gets a fresh exercise.
+      // No-op for session-driven flows (page reads from manifest, not the cache);
+      // kept for backward compatibility with single-exercise callers (mobile).
       queryClient.invalidateQueries({ queryKey: ['exercise'] });
     },
   });

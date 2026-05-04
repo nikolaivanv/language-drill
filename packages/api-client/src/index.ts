@@ -21,6 +21,14 @@ export {
   type SavePreferencesInput,
 } from './schemas/preferences';
 export {
+  CreateSessionRequestSchema,
+  type CreateSessionRequest,
+  CreateSessionResponseSchema,
+  type CreateSessionResponse,
+  CompleteSessionResponseSchema,
+  type CompleteSessionResponse,
+} from './schemas/session';
+export {
   RadarAxisKeyEnum,
   RadarAxisSchema,
   ProgressRadarResponseSchema,
@@ -42,6 +50,13 @@ export {
   type SubmitAnswerParams,
   type UseSubmitAnswerOptions,
 } from './hooks/useExercise';
+export {
+  useCreateSession,
+  useCompleteSession,
+  type UseCreateSessionOptions,
+  type UseCompleteSessionOptions,
+  type CompleteSessionParams,
+} from './hooks/useSession';
 export {
   useLanguageProfiles,
   type UseLanguageProfilesParams,

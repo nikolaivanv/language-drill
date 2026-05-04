@@ -2,7 +2,8 @@ import { ExerciseType } from "@language-drill/shared";
 
 export type CoachContext =
   | { kind: "idle"; type: ExerciseType }
-  | { kind: "evaluated"; type: ExerciseType; score: number };
+  | { kind: "evaluated"; type: ExerciseType; score: number }
+  | { kind: "sessionComplete"; accuracy: number | null };
 
 type Tier = "praise" | "light" | "encourage" | "reset";
 
@@ -75,12 +76,21 @@ function evaluatedMessage(type: ExerciseType, score: number): string {
   throw new Error(`unknown coach tier for score ${score}`);
 }
 
+function sessionCompleteMessage(accuracy: number | null): string {
+  if (accuracy === null) return "Nice work — let's see what landed.";
+  if (accuracy >= 0.9) return "Strong session — that one stuck.";
+  if (accuracy >= 0.7) return "Solid session.";
+  return "That one was tough — good signal.";
+}
+
 export function coachMessage(ctx: CoachContext): string {
   switch (ctx.kind) {
     case "idle":
       return idleMessage(ctx.type);
     case "evaluated":
       return evaluatedMessage(ctx.type, ctx.score);
+    case "sessionComplete":
+      return sessionCompleteMessage(ctx.accuracy);
     default: {
       const _exhaustive: never = ctx;
       throw new Error(`unknown CoachContext: ${String(_exhaustive)}`);
