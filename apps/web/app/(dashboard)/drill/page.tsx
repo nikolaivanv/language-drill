@@ -38,7 +38,6 @@ import {
   selectProgressFraction,
   sessionReducer,
 } from './_components/session-reducer';
-import { SessionSummary } from './_components/session-summary';
 import { SubmissionErrorCard } from './_components/submission-error-card';
 import type { SubmissionMeta } from './_components/types';
 
@@ -142,8 +141,7 @@ export default function PracticePage() {
     completeSession.mutate(
       { sessionId },
       {
-        onSuccess: (summary) =>
-          dispatch({ type: 'COMPLETE_SUCCEEDED', summary }),
+        onSuccess: () => router.push(`/drill/debrief/${sessionId}`),
         onError: (err) =>
           dispatch({ type: 'COMPLETE_FAILED', error: err as Error }),
       },
@@ -351,13 +349,6 @@ export default function PracticePage() {
         </>
       )}
 
-      {state.kind === 'summary' && (
-        <SessionSummary
-          summary={state.summary}
-          onAnother={() => dispatch({ type: 'RESET' })}
-          onDone={() => router.push('/')}
-        />
-      )}
     </>
   );
 

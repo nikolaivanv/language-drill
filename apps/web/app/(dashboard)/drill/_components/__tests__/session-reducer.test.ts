@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { EvaluationResult } from '@language-drill/shared';
 import type {
-  CompleteSessionResponse,
   CreateSessionResponse,
   ExerciseResponse,
 } from '@language-drill/api-client';
@@ -54,15 +53,6 @@ const sampleEvaluation: EvaluationResult = {
 
 const sampleMeta: SubmissionMeta = { hintLevel: 0 };
 
-const sampleSummary: CompleteSessionResponse = {
-  id: '11111111-1111-1111-1111-111111111111',
-  exerciseCount: 2,
-  correctCount: 1,
-  attemptedCount: 2,
-  skippedCount: 0,
-  durationSeconds: 120,
-};
-
 const inSessionState: SessionState = {
   kind: 'inSession',
   session: { id: sampleCreateResponse.id },
@@ -110,12 +100,6 @@ describe('sessionReducer / CREATE_REQUESTED', () => {
     const next = sessionReducer(inSessionState, { type: 'CREATE_REQUESTED' });
     expect(next).toBe(inSessionState);
   });
-
-  it('is a no-op from summary', () => {
-    const start: SessionState = { kind: 'summary', summary: sampleSummary };
-    const next = sessionReducer(start, { type: 'CREATE_REQUESTED' });
-    expect(next).toBe(start);
-  });
 });
 
 // ---------------------------------------------------------------------------
@@ -140,15 +124,6 @@ describe('sessionReducer / CREATE_SUCCEEDED', () => {
 
   it('is a no-op from idle', () => {
     const start: SessionState = { kind: 'idle' };
-    const next = sessionReducer(start, {
-      type: 'CREATE_SUCCEEDED',
-      session: sampleCreateResponse,
-    });
-    expect(next).toBe(start);
-  });
-
-  it('is a no-op from summary (locked-in example from spec)', () => {
-    const start: SessionState = { kind: 'summary', summary: sampleSummary };
     const next = sessionReducer(start, {
       type: 'CREATE_SUCCEEDED',
       session: sampleCreateResponse,
@@ -237,8 +212,6 @@ describe('sessionReducer / per-item actions', () => {
     expect(sessionReducer(start, action)).toBe(start);
     const creating: SessionState = { kind: 'creating' };
     expect(sessionReducer(creating, action)).toBe(creating);
-    const summary: SessionState = { kind: 'summary', summary: sampleSummary };
-    expect(sessionReducer(summary, action)).toBe(summary);
   });
 });
 
@@ -384,28 +357,17 @@ describe('sessionReducer / COMPLETE_REQUESTED', () => {
     const start: SessionState = { kind: 'idle' };
     expect(sessionReducer(start, { type: 'COMPLETE_REQUESTED' })).toBe(start);
   });
-
-  it('is a no-op from summary', () => {
-    const start: SessionState = { kind: 'summary', summary: sampleSummary };
-    expect(sessionReducer(start, { type: 'COMPLETE_REQUESTED' })).toBe(start);
-  });
 });
 
-describe('sessionReducer / COMPLETE_SUCCEEDED', () => {
-  it('transitions completing → summary with summary payload', () => {
-    const start: SessionState = { ...inSessionState, kind: 'completing' };
-    const next = sessionReducer(start, {
-      type: 'COMPLETE_SUCCEEDED',
-      summary: sampleSummary,
-    });
-    expect(next).toEqual({ kind: 'summary', summary: sampleSummary });
-  });
-
-  it('is a no-op when not in completing', () => {
-    const start: SessionState = inSessionState;
-    expect(
-      sessionReducer(start, { type: 'COMPLETE_SUCCEEDED', summary: sampleSummary }),
-    ).toBe(start);
+describe('sessionReducer / COMPLETE_SUCCEEDED removal', () => {
+  // Phase G replaces the COMPLETE_SUCCEEDED action + `summary` state with a
+  // navigation to /drill/debrief/[sessionId]. Asserting at the type level
+  // that the action is no longer part of `SessionAction` keeps anyone from
+  // reintroducing it without thinking about the page-level routing.
+  it('COMPLETE_SUCCEEDED is no longer a valid SessionAction (type-level guard)', () => {
+    // @ts-expect-error — COMPLETE_SUCCEEDED was removed in Phase G
+    const invalidAction: SessionAction = { type: 'COMPLETE_SUCCEEDED' };
+    expect(invalidAction).toBeDefined();
   });
 });
 
@@ -466,10 +428,6 @@ describe('sessionReducer / RESET', () => {
       name: 'completing',
       from: { ...inSessionState, kind: 'completing' },
     },
-    {
-      name: 'summary',
-      from: { kind: 'summary', summary: sampleSummary },
-    },
   ])('returns to idle from $name', ({ from }) => {
     expect(sessionReducer(from, { type: 'RESET' })).toEqual({ kind: 'idle' });
   });
@@ -501,10 +459,6 @@ describe('selectCurrentItem', () => {
     {
       name: 'completing',
       state: { ...inSessionState, kind: 'completing' },
-    },
-    {
-      name: 'summary',
-      state: { kind: 'summary', summary: sampleSummary },
     },
   ])('returns null when state is $name', ({ state }) => {
     expect(selectCurrentItem(state)).toBeNull();
@@ -564,12 +518,6 @@ describe('selectProgressFraction', () => {
     expect(selectProgressFraction(state)).toBe(1);
   });
 
-  it('returns 1 in summary', () => {
-    expect(
-      selectProgressFraction({ kind: 'summary', summary: sampleSummary }),
-    ).toBe(1);
-  });
-
   it('clamps to [0, 1]', () => {
     // Construct an out-of-bounds inSession state to confirm the clamp.
     const state: SessionState = {
@@ -611,17 +559,17 @@ describe('selectIsLastItem', () => {
         index: sampleItems.length - 1,
       },
     },
-    {
-      name: 'summary',
-      state: { kind: 'summary', summary: sampleSummary },
-    },
   ])('returns false when state is $name', ({ state }) => {
     expect(selectIsLastItem(state)).toBe(false);
   });
 });
 
 describe('sessionReducer / full sequence', () => {
-  it('runs create → submit → evaluate → next … → complete → summary → reset → idle', () => {
+  // Phase G: `completing` is now the terminal state in-reducer. On
+  // useCompleteSession success the page navigates to /drill/debrief/[id] and
+  // the page (with its reducer) unmounts. RESET still returns to idle for
+  // the in-place selector-change retry path.
+  it('runs create → submit → evaluate → next … → complete → completing → reset → idle', () => {
     let state: SessionState = initialSessionState;
 
     state = sessionReducer(state, { type: 'CREATE_REQUESTED' });
@@ -662,12 +610,6 @@ describe('sessionReducer / full sequence', () => {
 
     state = sessionReducer(state, { type: 'COMPLETE_REQUESTED' });
     expect(state.kind).toBe('completing');
-
-    state = sessionReducer(state, {
-      type: 'COMPLETE_SUCCEEDED',
-      summary: sampleSummary,
-    });
-    expect(state).toEqual({ kind: 'summary', summary: sampleSummary });
 
     state = sessionReducer(state, { type: 'RESET' });
     expect(state).toEqual({ kind: 'idle' });
