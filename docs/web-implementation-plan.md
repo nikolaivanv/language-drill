@@ -31,7 +31,7 @@ These are decisions made up front to align the prototypes with `docs/exercise-st
 | **C** | [onboarding](#phase-c--onboarding) | ✅ complete | ~2 days | A, B |
 | **F** | [exercise-ui](#phase-f--exercise-ui-redesign) | ✅ complete | ~3 days | A, B |
 | **E** | [session-flow](#phase-e--session-flow) | ✅ complete | ~2 days | F |
-| **D** | dashboard | ⬜ not started | ~2 days | A, B, E |
+| **D** | [dashboard](#phase-d--dashboard--todays-plan) | ✅ complete | ~2 days | A, B, E |
 | **G** | [debrief](#phase-g--post-session-debrief) | ✅ complete | ~2 days | E |
 | **H** | [theory-panel](#phase-h--theory-reference-panel) | ✅ complete | ~2 days | A |
 | **I** | [progress-page](#phase-i--progress-page) | ✅ complete | ~3 days | A, B |
@@ -96,19 +96,24 @@ Plus the **left coach pane** (320px) showing brand, avatar, contextual coach mes
 
 ## Phase D — Dashboard / today's plan
 
-**Spec:** to be written (`.claude/specs/dashboard/`)
+**Spec:** `.claude/specs/dashboard/` (35/35 tasks complete)
 
-Replace the current minimal welcome page with the editorial dashboard from `prototypes/web/hifi/dashboard.jsx`:
+Replaced the welcome placeholder with the editorial dashboard from `prototypes/web/hifi/dashboard.jsx`. Two parallel TanStack Query hooks fan out to per-section orchestrators with their own error / loading / empty states; no streaks, XP, or lesson-completion counters anywhere.
 
-- **Greeting header** — eyebrow + display title with localized greeting + body with current level and time
-- **Editorial timeline** — 5-item visual rail (circles + connecting line, colored accents, exercise type + topic + difficulty chip per item)
-- **Skill snapshot grid** — 2-column grid of 6 skill metrics (listening, reading, writing, speaking, grammar, vocabulary) with CEFR band chip + percentage bar + delta indicator
+**Output:**
+- Wire schema + hook: `packages/api-client/src/schemas/today.ts` (`TodayPlanResponseSchema` + inferred types) and `packages/api-client/src/hooks/useTodayPlan.ts` (typed query, `staleTime: 60s`, language-keyed cache key)
+- Pure plan composition: `infra/lambda/src/lib/today-plan.ts` (`startOfUtcDay`, `V1_PLAN_SHAPE` of `cloze, cloze, translation, vocab_recall, cloze`, `composeFreshPlan`, `hydrateFromSession`, plus `ESTIMATED_MINUTES_BY_TYPE` and `ITEMS_BY_TYPE` constants)
+- Lambda route: `GET /sessions/today` in `infra/lambda/src/routes/sessions.ts` — Path A hydrates from today's `practice_sessions` row (LEFT JOIN `user_exercise_history`), Path B composes a fresh plan from a UNION-ALL pool sample; insufficient pool returns `code: 'INSUFFICIENT_POOL'` with `items: []`
+- Page-scoped helpers: `apps/web/app/(dashboard)/_lib/{greeting,timeline-labels,framing-rules}.ts` — time-of-day greeting / ISO-week math, slot-prefix + type-label tables, deterministic framing-paragraph generator (no Claude call)
+- UI components: `apps/web/app/(dashboard)/_components/{greeting-block,dashboard-header,timeline-item,today-timeline,state-cards,skill-row,skill-snapshot-grid,read-collect-card}.tsx` — `GreetingBlock` defers time-dependent strings to a post-mount `useEffect` to avoid SSR mismatch; `TodayTimeline` switches between skeleton / error / pool-not-ready / all-done / rail; `SkillSnapshotGrid` sorts axes weakest-first with `key.localeCompare` tiebreak
+- Page: `apps/web/app/(dashboard)/page.tsx` rewritten as the dashboard host (parallel `useTodayPlan` + `useProgressRadar`, per-section error boundaries via the orchestrators)
 
 **Backend impact:**
-- New `GET /sessions/today` — returns 5 planned exercises (simple weighted heuristic in v1; adaptive logic later)
-- New `GET /stats/skills` — per-skill mastery summary for the active language
+- New `GET /sessions/today?language=<ES|DE|TR>` — returns `{ language, generatedAt, totalEstimatedMinutes, items, summary, code }` keyed by today's UTC date; ≤ 2 SQL round-trips (today-session lookup + proficiency-level fetch in parallel via `Promise.all`, then either Path-A items join or Path-B pool sample)
+- No new tables — reuses `practice_sessions`, `user_exercise_history`, `exercises`, `user_language_profiles`
+- Skill snapshot reuses the existing `GET /progress/radar` endpoint (no new `/stats/skills` endpoint added — the radar already covers the six axes)
 
-Includes the **dashboard entry card for Read & Collect** (added in section J).
+Includes the **dashboard entry card for Read & Collect** (linking to `/read`, added ahead of section J).
 
 ---
 

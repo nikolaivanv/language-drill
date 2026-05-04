@@ -23,8 +23,14 @@ const mockWhere = vi.fn(() => {
     },
   };
 });
-const mockFrom = vi.fn(() => ({ where: mockWhere }));
+// leftJoin chains back to `where`, which is already thenable — used by
+// GET /sessions/today's Path A items query (no .limit / no .orderBy).
+const mockLeftJoin = vi.fn(() => ({ where: mockWhere }));
+const mockFrom = vi.fn(() => ({ where: mockWhere, leftJoin: mockLeftJoin }));
 const mockSelect = vi.fn(() => ({ from: mockFrom }));
+
+// db.execute(sql`...`) — used by GET /sessions/today's Path B UNION-ALL.
+const mockExecute = vi.fn();
 
 const mockReturning = vi.fn();
 const mockOnConflictDoNothing = vi.fn(() => Promise.resolve());
@@ -51,30 +57,37 @@ const mockUpdateWhere = vi.fn((_cond?: unknown) => ({ returning: mockUpdateRetur
 const mockSet = vi.fn((_payload?: unknown) => ({ where: mockUpdateWhere }));
 const mockUpdate = vi.fn((_table?: unknown) => ({ set: mockSet }));
 
-// `mockExecute` powers `await db.execute(sql\`...\`)` — used by the items
-// subquery in GET /sessions/:id/debrief. Returns a pg-style QueryResult shape
-// (`{ rows: [...] }`) by default; tests override per-case via mockResolvedValueOnce.
-// Type the rows as `unknown[]` so per-test fixtures with arbitrary shapes assign cleanly.
-type ExecuteResult = { rows: unknown[] };
-const mockExecute = vi.fn<(q?: unknown) => Promise<ExecuteResult>>(() =>
-  Promise.resolve({ rows: [] }),
-);
-
 vi.mock('../db', () => ({
   db: {
     select: () => mockSelect(),
     insert: () => mockInsert(),
     update: (table: unknown) => mockUpdate(table),
-    execute: (q: unknown) => mockExecute(q),
+    execute: (sqlExpr: unknown) => mockExecute(sqlExpr),
   },
 }));
 
 vi.mock('@language-drill/db', () => ({
   users: { id: 'id' },
-  exercises: {},
-  userExerciseHistory: {},
+  exercises: {
+    id: 'id',
+    type: 'type',
+    contentJson: 'content_json',
+    difficulty: 'difficulty',
+    language: 'language',
+  },
+  userExerciseHistory: { id: 'id', exerciseId: 'exerciseId', sessionId: 'sessionId' },
+  userLanguageProfiles: {
+    userId: 'user_id',
+    language: 'language',
+    proficiencyLevel: 'proficiency_level',
+  },
   usageEvents: {},
-  practiceSessions: { id: 'id' },
+  practiceSessions: {
+    id: 'id',
+    userId: 'user_id',
+    language: 'language',
+    startedAt: 'started_at',
+  },
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -481,6 +494,258 @@ describe('POST /sessions/:id/complete', () => {
     const body = (await res.json()) as AnyJson;
     expect(body.code).toBe('INVALID_SESSION');
     expect(mockUpdateReturning).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /sessions/today route tests
+// ---------------------------------------------------------------------------
+
+describe('GET /sessions/today', () => {
+  let app: Hono;
+
+  const authEnv = {
+    event: {
+      requestContext: {
+        authorizer: { jwt: { claims: { sub: 'user_123' } } },
+      },
+    },
+  };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const mod = await import('./sessions');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  // -------------------------------------------------------------------------
+  // Validation + auth
+  // -------------------------------------------------------------------------
+
+  it('returns 400 VALIDATION_ERROR when the language query param is missing', async () => {
+    const res = await app.request('/sessions/today', { method: 'GET' }, authEnv);
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('returns 400 VALIDATION_ERROR for language=EN (LearningLanguageEnum is ES/DE/TR)', async () => {
+    const res = await app.request(
+      '/sessions/today?language=EN',
+      { method: 'GET' },
+      authEnv,
+    );
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('returns 401 for unauthenticated requests', async () => {
+    const res = await app.request(
+      '/sessions/today?language=ES',
+      { method: 'GET' },
+      { event: { requestContext: {} } },
+    );
+    expect(res.status).toBe(401);
+  });
+
+  // -------------------------------------------------------------------------
+  // Path A — hydrate from today's session
+  // -------------------------------------------------------------------------
+
+  it('Path A: today-session with all items attempted and completedAt set returns done items + summary', async () => {
+    const startedAt = new Date('2026-05-04T08:00:00Z');
+    const completedAt = new Date('2026-05-04T08:18:00Z'); // +18 min
+
+    // Query 1 (parallel): today's session row + proficiency level
+    mockLimit
+      .mockResolvedValueOnce([
+        {
+          sessionId: 'session-uuid-1',
+          exerciseIds: ['e1', 'e2', 'e3', 'e4', 'e5'],
+          exerciseCount: 5,
+          correctCount: 4,
+          startedAt,
+          completedAt,
+        },
+      ])
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
+
+    // Query 2 (Path A): leftJoin exercises × user_exercise_history
+    // Every exerciseId has a history row → every item is `done`.
+    mockSelectAwait.mockResolvedValueOnce([
+      { exerciseId: 'e1', type: 'cloze', topicHint: 'subjunctive', difficulty: 'B1', historyId: 'h1' },
+      { exerciseId: 'e2', type: 'cloze', topicHint: 'pronoun', difficulty: 'B1', historyId: 'h2' },
+      { exerciseId: 'e3', type: 'translation', topicHint: null, difficulty: 'B1', historyId: 'h3' },
+      { exerciseId: 'e4', type: 'vocab_recall', topicHint: 'food', difficulty: 'B1', historyId: 'h4' },
+      { exerciseId: 'e5', type: 'cloze', topicHint: 'preterite', difficulty: 'B1', historyId: 'h5' },
+    ]);
+
+    const res = await app.request(
+      '/sessions/today?language=ES',
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.language).toBe('ES');
+    expect(body.code).toBeNull();
+    expect(body.items).toHaveLength(5);
+    expect(body.items.every((it: AnyJson) => it.status === 'done')).toBe(true);
+    expect(body.summary).toEqual({
+      itemCount: 5,
+      correctCount: 4,
+      durationMinutes: 18,
+    });
+    // Sum: cloze 2 + cloze 2 + translation 4 + vocab_recall 2 + cloze 2 = 12
+    expect(body.totalEstimatedMinutes).toBe(12);
+    // No pool sample query in Path A
+    expect(mockExecute).not.toHaveBeenCalled();
+  });
+
+  it('Path A: today-session with partial attempts returns mixed statuses + summary: null', async () => {
+    const startedAt = new Date('2026-05-04T08:00:00Z');
+
+    mockLimit
+      .mockResolvedValueOnce([
+        {
+          sessionId: 'session-uuid-2',
+          exerciseIds: ['e1', 'e2', 'e3', 'e4', 'e5'],
+          exerciseCount: 5,
+          correctCount: 0, // not finalised yet
+          startedAt,
+          completedAt: null,
+        },
+      ])
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
+
+    // Only e1 and e2 have history rows → first two `done`, rest `queued`.
+    mockSelectAwait.mockResolvedValueOnce([
+      { exerciseId: 'e1', type: 'cloze', topicHint: 'subjunctive', difficulty: 'B1', historyId: 'h1' },
+      { exerciseId: 'e2', type: 'cloze', topicHint: 'pronoun', difficulty: 'B1', historyId: 'h2' },
+      { exerciseId: 'e3', type: 'translation', topicHint: null, difficulty: 'B1', historyId: null },
+      { exerciseId: 'e4', type: 'vocab_recall', topicHint: 'food', difficulty: 'B1', historyId: null },
+      { exerciseId: 'e5', type: 'cloze', topicHint: 'preterite', difficulty: 'B1', historyId: null },
+    ]);
+
+    const res = await app.request(
+      '/sessions/today?language=ES',
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.items.map((it: AnyJson) => it.status)).toEqual([
+      'done',
+      'done',
+      'queued',
+      'queued',
+      'queued',
+    ]);
+    expect(body.summary).toBeNull();
+  });
+
+  // -------------------------------------------------------------------------
+  // Path B — fresh plan composition
+  // -------------------------------------------------------------------------
+
+  it('Path B: no today-session, pool returns 5 draws → 5 queued items in V1_PLAN_SHAPE order', async () => {
+    // No today-session row + proficiency level B2.
+    mockLimit
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B2' }]);
+
+    // UNION-ALL of 5 LIMIT 1 selects, in slot order:
+    // cloze, cloze, translation, vocab_recall, cloze
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        { id: 'p1', type: 'cloze', topic_hint: 'pronouns', difficulty: 'B2' },
+        { id: 'p2', type: 'cloze', topic_hint: 'subjunctive', difficulty: 'B2' },
+        { id: 'p3', type: 'translation', topic_hint: null, difficulty: 'B2' },
+        { id: 'p4', type: 'vocab_recall', topic_hint: 'food', difficulty: 'B2' },
+        { id: 'p5', type: 'cloze', topic_hint: 'preterite', difficulty: 'B2' },
+      ],
+    });
+
+    const res = await app.request(
+      '/sessions/today?language=ES',
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBeNull();
+    expect(body.summary).toBeNull();
+    expect(body.items).toHaveLength(5);
+    expect(body.items.every((it: AnyJson) => it.status === 'queued')).toBe(true);
+    expect(body.items.map((it: AnyJson) => it.type)).toEqual([
+      'cloze',
+      'cloze',
+      'translation',
+      'vocab_recall',
+      'cloze',
+    ]);
+    expect(body.items.map((it: AnyJson) => it.index)).toEqual([1, 2, 3, 4, 5]);
+    // cloze 2 + cloze 2 + translation 4 + vocab_recall 2 + cloze 2 = 12
+    expect(body.totalEstimatedMinutes).toBe(12);
+  });
+
+  it('Path B: pool returns < 5 draws → items: [], code: INSUFFICIENT_POOL, status 200', async () => {
+    mockLimit
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
+
+    // Only 3 draws — translation and the cool-down cloze were missing.
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        { id: 'p1', type: 'cloze', topic_hint: 'pronouns', difficulty: 'B1' },
+        { id: 'p2', type: 'cloze', topic_hint: 'subjunctive', difficulty: 'B1' },
+        { id: 'p4', type: 'vocab_recall', topic_hint: 'food', difficulty: 'B1' },
+      ],
+    });
+
+    const res = await app.request(
+      '/sessions/today?language=ES',
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.items).toEqual([]);
+    expect(body.code).toBe('INSUFFICIENT_POOL');
+    expect(body.summary).toBeNull();
+    expect(body.totalEstimatedMinutes).toBe(0);
+  });
+
+  it('Path B: defaults to B1 when the user has no language profile row', async () => {
+    mockLimit
+      .mockResolvedValueOnce([]) // no today-session
+      .mockResolvedValueOnce([]); // no profile row → fallback to B1
+
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        { id: 'p1', type: 'cloze', topic_hint: null, difficulty: 'B1' },
+        { id: 'p2', type: 'cloze', topic_hint: null, difficulty: 'B1' },
+        { id: 'p3', type: 'translation', topic_hint: null, difficulty: 'B1' },
+        { id: 'p4', type: 'vocab_recall', topic_hint: null, difficulty: 'B1' },
+        { id: 'p5', type: 'cloze', topic_hint: null, difficulty: 'B1' },
+      ],
+    });
+
+    const res = await app.request(
+      '/sessions/today?language=DE',
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.items.every((it: AnyJson) => it.difficulty === 'B1')).toBe(true);
   });
 });
 
