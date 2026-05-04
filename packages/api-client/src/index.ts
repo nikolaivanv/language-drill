@@ -42,6 +42,16 @@ export {
   type ShadeThresholds,
   type ProgressHeatmapResponse,
 } from './schemas/progress';
+export {
+  TodayPlanItemStatusEnum,
+  TodayPlanItemSchema,
+  TodayPlanSummarySchema,
+  TodayPlanResponseSchema,
+  type TodayPlanItemStatus,
+  type TodayPlanItem,
+  type TodayPlanSummary,
+  type TodayPlanResponse,
+} from './schemas/today';
 export { useHealth } from './hooks/useHealth';
 export {
   useExercise,
@@ -75,4 +85,8 @@ export {
   type UseProgressRadarParams,
   type UseProgressHeatmapParams,
 } from './hooks/useProgress';
+export {
+  useTodayPlan,
+  type UseTodayPlanParams,
+} from './hooks/useTodayPlan';
 export { createAuthenticatedFetch, type AuthenticatedFetch } from './fetchClient';
