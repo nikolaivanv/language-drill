@@ -349,26 +349,9 @@ describe('PracticePage', () => {
   });
 
   // -------------------------------------------------------------------------
-  // 28b — completion + summary + session-aware error paths
+  // Completion + session-aware error paths (Phase G — onSuccess routes to
+  // /drill/debrief/[sessionId] instead of rendering an in-page summary).
   // -------------------------------------------------------------------------
-
-  function happySummary(overrides: Partial<{
-    exerciseCount: number;
-    correctCount: number;
-    attemptedCount: number;
-    skippedCount: number;
-    durationSeconds: number;
-  }> = {}) {
-    return {
-      id: SESSION_ID,
-      exerciseCount: 5,
-      correctCount: 4,
-      attemptedCount: 5,
-      skippedCount: 0,
-      durationSeconds: 240,
-      ...overrides,
-    };
-  }
 
   // Step through items 0..(stopAt-1) by submitting each and clicking "next".
   // Leaves the page on item `stopAt` with an idle textbox.
@@ -405,10 +388,12 @@ describe('PracticePage', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('clicking "see results" calls useCompleteSession.mutate and shows the summary', () => {
+    it('clicking "see results" calls useCompleteSession.mutate and navigates to /drill/debrief/[sessionId]', () => {
       setSubmitMock((_vars, opts) => opts.onSuccess?.(mockEval(0.97)));
+      // Phase G: onSuccess routes to the debrief page; no summary payload
+      // is read by the page anymore, so passing `undefined` is fine.
       completeMutate.mockImplementation((_vars, opts) =>
-        opts.onSuccess?.(happySummary()),
+        opts.onSuccess?.(undefined),
       );
       renderWithProviders(<PracticePage />);
 
@@ -426,67 +411,17 @@ describe('PracticePage', () => {
           onError: expect.any(Function),
         }),
       );
-      expect(screen.getByText('4 of 5')).toBeInTheDocument();
-      expect(screen.getByText('80%')).toBeInTheDocument();
-    });
-  });
-
-  describe('summary actions', () => {
-    function completeSession() {
-      advanceToItem(4);
-      fireEvent.change(screen.getByRole('textbox'), {
-        target: { value: 'middle' },
-      });
-      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
-      fireEvent.click(screen.getByRole('button', { name: 'see results' }));
-    }
-
-    it('"another session" resets and re-fires useCreateSession.mutate', () => {
-      setSubmitMock((_vars, opts) => opts.onSuccess?.(mockEval(0.97)));
-      completeMutate.mockImplementation((_vars, opts) =>
-        opts.onSuccess?.(happySummary()),
-      );
-      renderWithProviders(<PracticePage />);
-
-      completeSession();
-
-      const callsBefore = createMutate.mock.calls.length;
-      fireEvent.click(screen.getByRole('button', { name: 'another session' }));
-
-      expect(createMutate.mock.calls.length).toBeGreaterThan(callsBefore);
-      // Summary is gone; we're back on item 0 of a fresh session
-      expect(screen.queryByText('4 of 5')).not.toBeInTheDocument();
-      expect(screen.getByText(/sentence-0/)).toBeInTheDocument();
-    });
-
-    it('"done" navigates to /', () => {
-      setSubmitMock((_vars, opts) => opts.onSuccess?.(mockEval(0.97)));
-      completeMutate.mockImplementation((_vars, opts) =>
-        opts.onSuccess?.(happySummary()),
-      );
-      renderWithProviders(<PracticePage />);
-
-      completeSession();
-
-      fireEvent.click(screen.getByRole('button', { name: 'done' }));
-      expect(mockPush).toHaveBeenCalledWith('/');
+      expect(mockPush).toHaveBeenCalledWith(`/drill/debrief/${SESSION_ID}`);
     });
   });
 
   describe('rate-limit "end session early"', () => {
-    it('clicking "end session early" calls useCompleteSession.mutate and shows the summary', () => {
+    it('clicking "end session early" calls useCompleteSession.mutate and navigates to /drill/debrief/[sessionId]', () => {
       setSubmitMock((_vars, opts) =>
         opts.onError?.(new Error('Request failed with status 429')),
       );
       completeMutate.mockImplementation((_vars, opts) =>
-        opts.onSuccess?.(
-          happySummary({
-            correctCount: 0,
-            attemptedCount: 0,
-            skippedCount: 5,
-            durationSeconds: 30,
-          }),
-        ),
+        opts.onSuccess?.(undefined),
       );
       renderWithProviders(<PracticePage />);
 
@@ -514,14 +449,12 @@ describe('PracticePage', () => {
         { sessionId: SESSION_ID },
         expect.any(Object),
       );
-      // Summary rendered — em-dash for accuracy when attemptedCount=0
-      expect(screen.getByText('0 of 5 · 5 skipped')).toBeInTheDocument();
-      expect(screen.getByText('—')).toBeInTheDocument();
+      expect(mockPush).toHaveBeenCalledWith(`/drill/debrief/${SESSION_ID}`);
     });
   });
 
   describe('5xx "skip item"', () => {
-    it('"skip item" advances index; subsequent summary shows the skipped count', () => {
+    it('"skip item" advances index; final "see results" navigates to debrief', () => {
       // Default impl: success. One-shot first call: error.
       setSubmitMock((_vars, opts) => opts.onSuccess?.(mockEval(0.97)));
       submitMutate.mockImplementationOnce((_vars, opts) =>
@@ -529,14 +462,7 @@ describe('PracticePage', () => {
       );
 
       completeMutate.mockImplementation((_vars, opts) =>
-        opts.onSuccess?.(
-          happySummary({
-            correctCount: 3,
-            attemptedCount: 4,
-            skippedCount: 1,
-            durationSeconds: 200,
-          }),
-        ),
+        opts.onSuccess?.(undefined),
       );
       renderWithProviders(<PracticePage />);
 
@@ -569,17 +495,14 @@ describe('PracticePage', () => {
         fireEvent.click(screen.getByRole('button', { name: /submit/i }));
         fireEvent.click(screen.getByRole('button', { name: 'next' }));
       }
-      // Item 4 (last): submit + see results
+      // Item 4 (last): submit + see results → debrief navigation
       fireEvent.change(screen.getByRole('textbox'), {
         target: { value: 'middle' },
       });
       fireEvent.click(screen.getByRole('button', { name: /submit/i }));
       fireEvent.click(screen.getByRole('button', { name: 'see results' }));
 
-      // Summary shows the skipped-count line
-      expect(screen.getByText('3 of 5 · 1 skipped')).toBeInTheDocument();
-      // Accuracy = 3/4 = 75%
-      expect(screen.getByText('75%')).toBeInTheDocument();
+      expect(mockPush).toHaveBeenCalledWith(`/drill/debrief/${SESSION_ID}`);
     });
   });
 });

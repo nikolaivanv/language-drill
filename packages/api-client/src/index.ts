@@ -29,6 +29,14 @@ export {
   type CompleteSessionResponse,
 } from './schemas/session';
 export {
+  DebriefItemStatusSchema,
+  type DebriefItemStatus,
+  DebriefItemSchema,
+  type DebriefItem,
+  DebriefResponseSchema,
+  type DebriefResponse,
+} from './schemas/debrief';
+export {
   RadarAxisKeyEnum,
   RadarAxisSchema,
   ProgressRadarResponseSchema,
@@ -57,6 +65,10 @@ export {
   type UseCompleteSessionOptions,
   type CompleteSessionParams,
 } from './hooks/useSession';
+export {
+  useSessionDebrief,
+  type UseSessionDebriefOptions,
+} from './hooks/useDebrief';
 export {
   useLanguageProfiles,
   type UseLanguageProfilesParams,

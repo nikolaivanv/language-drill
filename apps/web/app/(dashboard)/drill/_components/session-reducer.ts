@@ -1,6 +1,5 @@
 import type { EvaluationResult } from '@language-drill/shared';
 import type {
-  CompleteSessionResponse,
   CreateSessionResponse,
   ExerciseResponse,
 } from '@language-drill/api-client';
@@ -19,8 +18,7 @@ export type SessionState =
   | { kind: 'creating' }
   | { kind: 'createError'; error: Error }
   | ({ kind: 'inSession' } & SessionInProgress)
-  | ({ kind: 'completing' } & SessionInProgress)
-  | { kind: 'summary'; summary: CompleteSessionResponse };
+  | ({ kind: 'completing' } & SessionInProgress);
 
 export type SessionAction =
   | { type: 'CREATE_REQUESTED' }
@@ -33,7 +31,6 @@ export type SessionAction =
   | { type: 'ITEM_SKIP' }
   | { type: 'ITEM_RETRY' }
   | { type: 'COMPLETE_REQUESTED' }
-  | { type: 'COMPLETE_SUCCEEDED'; summary: CompleteSessionResponse }
   | { type: 'COMPLETE_FAILED'; error: Error }
   | { type: 'RESET' };
 
@@ -113,10 +110,6 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
       if (state.kind !== 'inSession') return state;
       return { ...state, kind: 'completing' };
 
-    case 'COMPLETE_SUCCEEDED':
-      if (state.kind !== 'completing') return state;
-      return { kind: 'summary', summary: action.summary };
-
     case 'COMPLETE_FAILED':
       if (state.kind !== 'completing') return state;
       // Strip 'completing' back to 'inSession'; per-item state is preserved.
@@ -163,7 +156,6 @@ export function selectProgressFraction(state: SessionState): number {
       return clamp01((state.index + evaluatedBoost) / state.items.length);
     }
     case 'completing':
-    case 'summary':
       return 1;
     default: {
       const _exhaustive: never = state;
