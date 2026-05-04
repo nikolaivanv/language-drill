@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { eq, and, sql, isNull, gte, desc, inArray } from 'drizzle-orm';
+import { eq, and, sql, isNull, isNotNull, gte, desc, inArray } from 'drizzle-orm';
 import { Language, CefrLevel, CORRECT_THRESHOLD, ExerciseType } from '@language-drill/shared';
 import {
   exercises as exercisesTable,
@@ -425,5 +425,177 @@ const EXERCISE_TYPES = new Set<string>(Object.values(ExerciseType));
 function isExerciseType(value: string): value is ExerciseType {
   return EXERCISE_TYPES.has(value);
 }
+
+// ---------------------------------------------------------------------------
+// GET /sessions/:id/debrief — read-only post-session debrief
+// ---------------------------------------------------------------------------
+// Returns session metadata + per-item review data in manifest order. Pure
+// read: no Claude, no writes. Two SQL trips: one for the session row
+// (ownership + completion gate), one for the per-item join via DISTINCT ON
+// to collapse retries to the most-recent submission per (session, exercise).
+//
+// 404 collapses cross-user, unknown-id, and not-completed cases into the
+// same response per NFR Security (avoids leaking session existence).
+// ---------------------------------------------------------------------------
+
+interface DebriefItemRow {
+  exercise_id: string;
+  type: string;
+  content_json: unknown;
+  score: number | null;
+  response_json: unknown;
+}
+
+/**
+ * Defensive parse of `user_exercise_history.response_json`. The submit handler
+ * writes `{ userAnswer, evaluation }`, but if a row is malformed (e.g. older
+ * format, manual edit), we degrade gracefully: null both fields, but the row
+ * still counts as attempted (status derives from `score`). See Error Handling
+ * §7 in design.md.
+ */
+function parseResponseJson(raw: unknown): {
+  userAnswer: string | null;
+  evaluation: unknown | null;
+} {
+  if (!raw || typeof raw !== 'object') {
+    return { userAnswer: null, evaluation: null };
+  }
+  const obj = raw as Record<string, unknown>;
+  const userAnswer = typeof obj.userAnswer === 'string' ? obj.userAnswer : null;
+  const evaluation =
+    obj.evaluation && typeof obj.evaluation === 'object' ? obj.evaluation : null;
+  return { userAnswer, evaluation };
+}
+
+sessions.get('/sessions/:id/debrief', async (c) => {
+  const id = c.req.param('id');
+  const userId = c.get('userId');
+
+  // 0. Validate UUID up front. Malformed UUIDs short-circuit before any DB call.
+  const idResult = z.string().uuid().safeParse(id);
+  if (!idResult.success) {
+    c.header('Cache-Control', 'no-store');
+    return c.json(
+      {
+        error: 'Invalid session id',
+        code: 'VALIDATION_ERROR',
+        details: idResult.error.flatten(),
+      },
+      400,
+    );
+  }
+
+  // 1. Session row + ownership + completion check in a single SELECT.
+  //    Cross-user / unknown / not-yet-completed all collapse to no-row → 404.
+  const sessionRows = await db
+    .select()
+    .from(practiceSessions)
+    .where(
+      and(
+        eq(practiceSessions.id, id),
+        eq(practiceSessions.userId, userId),
+        isNotNull(practiceSessions.completedAt),
+      ),
+    )
+    .limit(1);
+
+  if (sessionRows.length === 0) {
+    c.header('Cache-Control', 'no-store');
+    return c.json(
+      { error: 'Session not found', code: 'SESSION_NOT_FOUND' },
+      404,
+    );
+  }
+
+  const session = sessionRows[0];
+  const exerciseIds = session.exerciseIds as string[];
+
+  // 2. Items query — single SQL trip, DISTINCT ON collapses retries to the
+  //    most-recent submission per (session_id, exercise_id). LEFT JOIN ensures
+  //    skipped items (no history row) still surface. NULLS LAST is defensive:
+  //    `evaluated_at` is nullable in the schema.
+  const itemsResult = await db.execute(sql`
+    SELECT e.id AS exercise_id, e.type, e.content_json,
+           h.score, h.response_json
+    FROM exercises e
+    LEFT JOIN (
+      SELECT DISTINCT ON (exercise_id)
+             exercise_id, score, response_json, evaluated_at
+      FROM user_exercise_history
+      WHERE session_id = ${id}
+      ORDER BY exercise_id, evaluated_at DESC NULLS LAST
+    ) h ON h.exercise_id = e.id
+    WHERE e.id = ANY(${exerciseIds})
+  `);
+
+  // Drizzle's neon-serverless `db.execute` returns the pg-style QueryResult,
+  // typed loosely. Narrow it to the projected shape via cast.
+  const itemRows = itemsResult.rows as unknown as DebriefItemRow[];
+
+  // Build a lookup so we can iterate the manifest in order (Req 2.1).
+  const rowMap = new Map<string, DebriefItemRow>();
+  for (const row of itemRows) {
+    rowMap.set(row.exercise_id, row);
+  }
+
+  const items = exerciseIds
+    .map((exerciseId) => {
+      const row = rowMap.get(exerciseId);
+      if (!row) return null; // exercise rows are immutable; defensive only
+      const hasHistory = row.score !== null && row.score !== undefined;
+      if (!hasHistory) {
+        return {
+          exerciseId,
+          type: row.type as ExerciseType,
+          contentJson: row.content_json,
+          status: 'skipped' as const,
+          userAnswer: null,
+          score: null,
+          evaluation: null,
+        };
+      }
+      const score = Number(row.score);
+      const { userAnswer, evaluation } = parseResponseJson(row.response_json);
+      const status: 'correct' | 'incorrect' =
+        score >= CORRECT_THRESHOLD ? 'correct' : 'incorrect';
+      return {
+        exerciseId,
+        type: row.type as ExerciseType,
+        contentJson: row.content_json,
+        status,
+        userAnswer,
+        score,
+        evaluation,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
+
+  // Counters derived from items so they stay aligned with per-item statuses.
+  const attemptedCount = items.filter((i) => i.status !== 'skipped').length;
+  const correctCount = items.filter((i) => i.status === 'correct').length;
+  const skippedCount = session.exerciseCount - attemptedCount;
+
+  const startedAt = new Date(session.startedAt as Date);
+  const completedAt = new Date(session.completedAt as Date);
+  const durationSeconds = Math.max(
+    0,
+    Math.floor((completedAt.getTime() - startedAt.getTime()) / 1000),
+  );
+
+  c.header('Cache-Control', 'private, max-age=300');
+  return c.json({
+    id: session.id,
+    language: session.language,
+    difficulty: session.difficulty,
+    startedAt: startedAt.toISOString(),
+    completedAt: completedAt.toISOString(),
+    durationSeconds,
+    exerciseCount: session.exerciseCount,
+    correctCount,
+    attemptedCount,
+    skippedCount,
+    items,
+  });
+});
 
 export default sessions;

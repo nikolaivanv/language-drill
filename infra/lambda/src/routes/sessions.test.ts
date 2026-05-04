@@ -748,3 +748,456 @@ describe('GET /sessions/today', () => {
     expect(body.items.every((it: AnyJson) => it.difficulty === 'B1')).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// GET /sessions/:id/debrief route tests
+// ---------------------------------------------------------------------------
+
+describe('GET /sessions/:id/debrief', () => {
+  let app: Hono;
+
+  const authEnv = {
+    event: {
+      requestContext: {
+        authorizer: { jwt: { claims: { sub: 'user_123' } } },
+      },
+    },
+  };
+
+  // A valid v4 UUID for the session id used in tests.
+  const SESSION_ID = '11111111-2222-4222-8222-555555555555';
+  const EX_1 = 'ex-1';
+  const EX_2 = 'ex-2';
+  const EX_3 = 'ex-3';
+
+  // Phase E `responseJson` shape: { userAnswer, evaluation }
+  const sampleEvaluation = {
+    score: 0.92,
+    grammarAccuracy: 0.95,
+    vocabularyRange: 'B1',
+    taskAchievement: 0.9,
+    feedback: 'Solid.',
+    errors: [],
+    estimatedCefrEvidence: 'B1',
+  };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const mod = await import('./sessions');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  it('returns the debrief payload for a completed session (manifest order, mixed statuses)', async () => {
+    // 1. Session row select — owned by user_123, completed.
+    const startedAt = new Date('2026-05-04T10:00:00.000Z');
+    const completedAt = new Date('2026-05-04T10:04:38.000Z');
+    mockLimit.mockResolvedValueOnce([
+      {
+        id: SESSION_ID,
+        userId: 'user_123',
+        language: 'ES',
+        difficulty: 'B1',
+        exerciseCount: 3,
+        correctCount: 1,
+        exerciseIds: [EX_1, EX_2, EX_3], // manifest order
+        startedAt,
+        completedAt,
+      },
+    ]);
+
+    // 2. Items query — out-of-order rows; route must reorder by manifest.
+    //    EX_2 is correct (score >= 0.7), EX_1 is incorrect, EX_3 is skipped (no history).
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        {
+          exercise_id: EX_2,
+          type: 'translation',
+          content_json: { instructions: 'Translate', sourceText: 'hi' },
+          score: 0.85,
+          response_json: { userAnswer: 'hola', evaluation: sampleEvaluation },
+        },
+        {
+          exercise_id: EX_1,
+          type: 'cloze',
+          content_json: { instructions: 'Fill', sentence: 'Yo ___' },
+          score: 0.4,
+          response_json: { userAnswer: 'fui', evaluation: sampleEvaluation },
+        },
+        {
+          // Manifest exercise present in pool but no history row → skipped.
+          // The LEFT JOIN still emits the row with null score/response_json.
+          exercise_id: EX_3,
+          type: 'vocab_recall',
+          content_json: { prompt: 'kitchen pan', expectedWord: 'sartén' },
+          score: null,
+          response_json: null,
+        },
+      ],
+    });
+
+    const res = await app.request(
+      `/sessions/${SESSION_ID}/debrief`,
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('cache-control')).toBe('private, max-age=300');
+
+    const body = (await res.json()) as AnyJson;
+    expect(body.id).toBe(SESSION_ID);
+    expect(body.language).toBe('ES');
+    expect(body.difficulty).toBe('B1');
+    expect(body.exerciseCount).toBe(3);
+    expect(body.correctCount).toBe(1);
+    expect(body.attemptedCount).toBe(2);
+    expect(body.skippedCount).toBe(1);
+    expect(body.durationSeconds).toBe(278);
+    expect(body.startedAt).toBe(startedAt.toISOString());
+    expect(body.completedAt).toBe(completedAt.toISOString());
+
+    // Items must be in manifest order — not in the row order returned by the SQL.
+    expect(body.items).toHaveLength(3);
+    expect(body.items[0].exerciseId).toBe(EX_1);
+    expect(body.items[0].status).toBe('incorrect');
+    expect(body.items[0].userAnswer).toBe('fui');
+    expect(body.items[0].score).toBe(0.4);
+    expect(body.items[0].evaluation).toEqual(sampleEvaluation);
+
+    expect(body.items[1].exerciseId).toBe(EX_2);
+    expect(body.items[1].status).toBe('correct');
+    expect(body.items[1].userAnswer).toBe('hola');
+    expect(body.items[1].score).toBe(0.85);
+
+    expect(body.items[2].exerciseId).toBe(EX_3);
+    expect(body.items[2].status).toBe('skipped');
+    expect(body.items[2].userAnswer).toBeNull();
+    expect(body.items[2].score).toBeNull();
+    expect(body.items[2].evaluation).toBeNull();
+  });
+
+  it('returns 404 SESSION_NOT_FOUND when the session is owned by a different user', async () => {
+    // The session-row WHERE includes eq(userId), so a foreign session yields 0 rows.
+    mockLimit.mockResolvedValueOnce([]);
+
+    const res = await app.request(
+      `/sessions/${SESSION_ID}/debrief`,
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(404);
+    expect(res.headers.get('cache-control')).toBe('no-store');
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBe('SESSION_NOT_FOUND');
+    // Critical: no items query was issued for an unauthorized session.
+    expect(mockExecute).not.toHaveBeenCalled();
+  });
+
+  it('returns 404 SESSION_NOT_FOUND when the session id is unknown', async () => {
+    mockLimit.mockResolvedValueOnce([]);
+
+    const res = await app.request(
+      `/sessions/${SESSION_ID}/debrief`,
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(404);
+    expect(res.headers.get('cache-control')).toBe('no-store');
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBe('SESSION_NOT_FOUND');
+  });
+
+  it('returns 404 SESSION_NOT_FOUND when the session is not yet completed', async () => {
+    // The session-row WHERE includes isNotNull(completedAt), so an in-progress
+    // session returns 0 rows. Same response shape as cross-user / unknown to
+    // avoid leaking session existence (NFR Security).
+    mockLimit.mockResolvedValueOnce([]);
+
+    const res = await app.request(
+      `/sessions/${SESSION_ID}/debrief`,
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(404);
+    expect(res.headers.get('cache-control')).toBe('no-store');
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBe('SESSION_NOT_FOUND');
+  });
+
+  it('returns 400 VALIDATION_ERROR for a non-uuid id', async () => {
+    const res = await app.request(
+      '/sessions/not-a-uuid/debrief',
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(400);
+    expect(res.headers.get('cache-control')).toBe('no-store');
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBe('VALIDATION_ERROR');
+    // No DB calls dispatched for a malformed id (no items query, no session row).
+    expect(mockExecute).not.toHaveBeenCalled();
+  });
+
+  it('returns 401 for unauthenticated requests', async () => {
+    const res = await app.request(
+      `/sessions/${SESSION_ID}/debrief`,
+      { method: 'GET' },
+      { event: { requestContext: {} } },
+    );
+
+    expect(res.status).toBe(401);
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBe('MISSING_SUB');
+  });
+
+  // -------------------------------------------------------------------------
+  // Retry-collapse semantics (Req 2.2)
+  // -------------------------------------------------------------------------
+  // DISTINCT ON in the SQL (with ORDER BY exercise_id, evaluated_at DESC NULLS
+  // LAST) guarantees the items query returns at most ONE row per exercise. The
+  // test mocks that post-DISTINCT-ON result with the "later" submission's
+  // score/responseJson and verifies the route propagates it untouched. Earlier
+  // submissions never reach the response. The SQL shape itself is enforced by
+  // code review of the raw `sql\`...\`` template in routes/sessions.ts.
+
+  it('uses the most-recent submission per exercise (retry collapse via DISTINCT ON)', async () => {
+    const startedAt = new Date('2026-05-04T10:00:00.000Z');
+    const completedAt = new Date('2026-05-04T10:05:00.000Z');
+    mockLimit.mockResolvedValueOnce([
+      {
+        id: SESSION_ID,
+        userId: 'user_123',
+        language: 'ES',
+        difficulty: 'B1',
+        exerciseCount: 1,
+        correctCount: 1,
+        exerciseIds: [EX_1],
+        startedAt,
+        completedAt,
+      },
+    ]);
+
+    // Only the later submission is returned (DISTINCT ON has already applied).
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        {
+          exercise_id: EX_1,
+          type: 'cloze',
+          content_json: { instructions: 'Fill', sentence: 'Yo ___' },
+          score: 0.9, // later submission — passes CORRECT_THRESHOLD
+          response_json: {
+            userAnswer: 'leo',
+            evaluation: sampleEvaluation,
+          },
+        },
+      ],
+    });
+
+    const res = await app.request(
+      `/sessions/${SESSION_ID}/debrief`,
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    // Exactly one item in the response — earlier retries do not surface.
+    expect(body.items).toHaveLength(1);
+    expect(body.items[0].score).toBe(0.9);
+    expect(body.items[0].userAnswer).toBe('leo');
+    expect(body.items[0].status).toBe('correct');
+    // The items query was issued exactly once.
+    expect(mockExecute).toHaveBeenCalledTimes(1);
+  });
+
+  // -------------------------------------------------------------------------
+  // Empty user_exercise_history (Req 2.3, design.md Error Handling §6)
+  // -------------------------------------------------------------------------
+
+  it('returns 200 with all items skipped when user_exercise_history is empty', async () => {
+    const startedAt = new Date('2026-05-04T10:00:00.000Z');
+    const completedAt = new Date('2026-05-04T10:01:00.000Z');
+    mockLimit.mockResolvedValueOnce([
+      {
+        id: SESSION_ID,
+        userId: 'user_123',
+        language: 'DE',
+        difficulty: 'B2',
+        exerciseCount: 3,
+        correctCount: 0,
+        exerciseIds: [EX_1, EX_2, EX_3],
+        startedAt,
+        completedAt,
+      },
+    ]);
+
+    // LEFT JOIN still returns one row per manifest exercise, but every row has
+    // null score/response_json because the right side is empty.
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        {
+          exercise_id: EX_1,
+          type: 'cloze',
+          content_json: { sentence: 'a ___' },
+          score: null,
+          response_json: null,
+        },
+        {
+          exercise_id: EX_2,
+          type: 'translation',
+          content_json: { sourceText: 'hello' },
+          score: null,
+          response_json: null,
+        },
+        {
+          exercise_id: EX_3,
+          type: 'vocab_recall',
+          content_json: { prompt: 'kitchen pan' },
+          score: null,
+          response_json: null,
+        },
+      ],
+    });
+
+    const res = await app.request(
+      `/sessions/${SESSION_ID}/debrief`,
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.exerciseCount).toBe(3);
+    expect(body.correctCount).toBe(0);
+    expect(body.attemptedCount).toBe(0);
+    expect(body.skippedCount).toBe(3);
+    expect(body.items).toHaveLength(3);
+    for (const item of body.items as AnyJson[]) {
+      expect(item.status).toBe('skipped');
+      expect(item.userAnswer).toBeNull();
+      expect(item.score).toBeNull();
+      expect(item.evaluation).toBeNull();
+    }
+  });
+
+  // -------------------------------------------------------------------------
+  // Malformed responseJson (Req 2.9, design.md Error Handling §7)
+  // -------------------------------------------------------------------------
+  // A history row with a present `score` but malformed `response_json` should:
+  //   - count toward `attemptedCount` (matches Phase E `count(distinct
+  //     exercise_id) FROM user_exercise_history WHERE session_id = $1`)
+  //   - report `userAnswer: null`, `evaluation: null` (defensive)
+  //   - derive `status` from `score` against CORRECT_THRESHOLD (so it can still
+  //     contribute to `correctCount` if the score is high enough)
+
+  it('keeps a malformed responseJson row in attemptedCount with null userAnswer/evaluation', async () => {
+    const startedAt = new Date('2026-05-04T10:00:00.000Z');
+    const completedAt = new Date('2026-05-04T10:02:00.000Z');
+    mockLimit.mockResolvedValueOnce([
+      {
+        id: SESSION_ID,
+        userId: 'user_123',
+        language: 'ES',
+        difficulty: 'B1',
+        exerciseCount: 2,
+        correctCount: 1,
+        exerciseIds: [EX_1, EX_2],
+        startedAt,
+        completedAt,
+      },
+    ]);
+
+    // EX_1: malformed responseJson, but score is present and >= threshold.
+    // EX_2: well-formed, low score → incorrect.
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        {
+          exercise_id: EX_1,
+          type: 'cloze',
+          content_json: { sentence: 'a ___' },
+          score: 0.9,
+          response_json: { foo: 'bar' }, // malformed — no userAnswer, no evaluation
+        },
+        {
+          exercise_id: EX_2,
+          type: 'cloze',
+          content_json: { sentence: 'b ___' },
+          score: 0.3,
+          response_json: { userAnswer: 'wrong', evaluation: sampleEvaluation },
+        },
+      ],
+    });
+
+    const res = await app.request(
+      `/sessions/${SESSION_ID}/debrief`,
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    // Both rows count as attempted — the malformed JSON does NOT push the row
+    // into `skipped`.
+    expect(body.attemptedCount).toBe(2);
+    expect(body.skippedCount).toBe(0);
+    // EX_1 has score >= CORRECT_THRESHOLD → correct, even with null userAnswer.
+    expect(body.correctCount).toBe(1);
+
+    expect(body.items[0].status).toBe('correct');
+    expect(body.items[0].score).toBe(0.9);
+    expect(body.items[0].userAnswer).toBeNull();
+    expect(body.items[0].evaluation).toBeNull();
+
+    expect(body.items[1].status).toBe('incorrect');
+    expect(body.items[1].score).toBe(0.3);
+    expect(body.items[1].userAnswer).toBe('wrong');
+    expect(body.items[1].evaluation).toEqual(sampleEvaluation);
+  });
+
+  // -------------------------------------------------------------------------
+  // Cache-Control header (NFR Performance)
+  // -------------------------------------------------------------------------
+
+  it('sets Cache-Control: private, max-age=300 on the success path', async () => {
+    const startedAt = new Date('2026-05-04T10:00:00.000Z');
+    const completedAt = new Date('2026-05-04T10:01:00.000Z');
+    mockLimit.mockResolvedValueOnce([
+      {
+        id: SESSION_ID,
+        userId: 'user_123',
+        language: 'ES',
+        difficulty: 'B1',
+        exerciseCount: 1,
+        correctCount: 0,
+        exerciseIds: [EX_1],
+        startedAt,
+        completedAt,
+      },
+    ]);
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        {
+          exercise_id: EX_1,
+          type: 'cloze',
+          content_json: {},
+          score: null,
+          response_json: null,
+        },
+      ],
+    });
+
+    const res = await app.request(
+      `/sessions/${SESSION_ID}/debrief`,
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('cache-control')).toBe('private, max-age=300');
+  });
+});

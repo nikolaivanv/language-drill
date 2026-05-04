@@ -31,8 +31,8 @@ These are decisions made up front to align the prototypes with `docs/exercise-st
 | **C** | [onboarding](#phase-c--onboarding) | ✅ complete | ~2 days | A, B |
 | **F** | [exercise-ui](#phase-f--exercise-ui-redesign) | ✅ complete | ~3 days | A, B |
 | **E** | [session-flow](#phase-e--session-flow) | ✅ complete | ~2 days | F |
-| **D** | dashboard | ⬜ not started | ~2 days | A, B, E |
-| **G** | debrief | ⬜ not started | ~2 days | E |
+| **D** | [dashboard](#phase-d--dashboard--todays-plan) | ✅ complete | ~2 days | A, B, E |
+| **G** | [debrief](#phase-g--post-session-debrief) | ✅ complete | ~2 days | E |
 | **H** | [theory-panel](#phase-h--theory-reference-panel) | ✅ complete | ~2 days | A |
 | **I** | [progress-page](#phase-i--progress-page) | ✅ complete | ~3 days | A, B |
 | **J** | read-collect | ⬜ not started | ~4 days | A, B, D |
@@ -96,19 +96,24 @@ Plus the **left coach pane** (320px) showing brand, avatar, contextual coach mes
 
 ## Phase D — Dashboard / today's plan
 
-**Spec:** to be written (`.claude/specs/dashboard/`)
+**Spec:** `.claude/specs/dashboard/` (35/35 tasks complete)
 
-Replace the current minimal welcome page with the editorial dashboard from `prototypes/web/hifi/dashboard.jsx`:
+Replaced the welcome placeholder with the editorial dashboard from `prototypes/web/hifi/dashboard.jsx`. Two parallel TanStack Query hooks fan out to per-section orchestrators with their own error / loading / empty states; no streaks, XP, or lesson-completion counters anywhere.
 
-- **Greeting header** — eyebrow + display title with localized greeting + body with current level and time
-- **Editorial timeline** — 5-item visual rail (circles + connecting line, colored accents, exercise type + topic + difficulty chip per item)
-- **Skill snapshot grid** — 2-column grid of 6 skill metrics (listening, reading, writing, speaking, grammar, vocabulary) with CEFR band chip + percentage bar + delta indicator
+**Output:**
+- Wire schema + hook: `packages/api-client/src/schemas/today.ts` (`TodayPlanResponseSchema` + inferred types) and `packages/api-client/src/hooks/useTodayPlan.ts` (typed query, `staleTime: 60s`, language-keyed cache key)
+- Pure plan composition: `infra/lambda/src/lib/today-plan.ts` (`startOfUtcDay`, `V1_PLAN_SHAPE` of `cloze, cloze, translation, vocab_recall, cloze`, `composeFreshPlan`, `hydrateFromSession`, plus `ESTIMATED_MINUTES_BY_TYPE` and `ITEMS_BY_TYPE` constants)
+- Lambda route: `GET /sessions/today` in `infra/lambda/src/routes/sessions.ts` — Path A hydrates from today's `practice_sessions` row (LEFT JOIN `user_exercise_history`), Path B composes a fresh plan from a UNION-ALL pool sample; insufficient pool returns `code: 'INSUFFICIENT_POOL'` with `items: []`
+- Page-scoped helpers: `apps/web/app/(dashboard)/_lib/{greeting,timeline-labels,framing-rules}.ts` — time-of-day greeting / ISO-week math, slot-prefix + type-label tables, deterministic framing-paragraph generator (no Claude call)
+- UI components: `apps/web/app/(dashboard)/_components/{greeting-block,dashboard-header,timeline-item,today-timeline,state-cards,skill-row,skill-snapshot-grid,read-collect-card}.tsx` — `GreetingBlock` defers time-dependent strings to a post-mount `useEffect` to avoid SSR mismatch; `TodayTimeline` switches between skeleton / error / pool-not-ready / all-done / rail; `SkillSnapshotGrid` sorts axes weakest-first with `key.localeCompare` tiebreak
+- Page: `apps/web/app/(dashboard)/page.tsx` rewritten as the dashboard host (parallel `useTodayPlan` + `useProgressRadar`, per-section error boundaries via the orchestrators)
 
 **Backend impact:**
-- New `GET /sessions/today` — returns 5 planned exercises (simple weighted heuristic in v1; adaptive logic later)
-- New `GET /stats/skills` — per-skill mastery summary for the active language
+- New `GET /sessions/today?language=<ES|DE|TR>` — returns `{ language, generatedAt, totalEstimatedMinutes, items, summary, code }` keyed by today's UTC date; ≤ 2 SQL round-trips (today-session lookup + proficiency-level fetch in parallel via `Promise.all`, then either Path-A items join or Path-B pool sample)
+- No new tables — reuses `practice_sessions`, `user_exercise_history`, `exercises`, `user_language_profiles`
+- Skill snapshot reuses the existing `GET /progress/radar` endpoint (no new `/stats/skills` endpoint added — the radar already covers the six axes)
 
-Includes the **dashboard entry card for Read & Collect** (added in section J).
+Includes the **dashboard entry card for Read & Collect** (linking to `/read`, added ahead of section J).
 
 ---
 
@@ -158,16 +163,22 @@ Redesigned the existing cloze, translation, and vocab exercise UIs to match the 
 
 ## Phase G — Post-session debrief
 
-**Spec:** to be written (`.claude/specs/debrief/`)
+**Spec:** `.claude/specs/debrief/` (21/21 tasks complete)
 
-After a session ends, route to `/practice/debrief/[sessionId]` with:
+Replaces the in-page `SessionSummary` card from Phase E with a routed page at `/drill/debrief/[sessionId]`. The drill page now navigates to the debrief on `useCompleteSession` success; the debrief page reads a single endpoint that returns session metadata + per-item review data in manifest order.
 
-- Header: accuracy summary (x of y, %), coach message varying by accuracy tier
-- Tabs: **Review** (per-item diff list) / **Debrief** (coach narrative + skill delta bars + "what's next")
-- Action footer: "next session" / "see progress" / "done"
+**Output:**
+- Helpers: `apps/web/lib/drill/{accuracy-tier,debrief-narrative}.ts` — three-bucket tier function (high / mid / low) + templated coach narrative with what's-next routing (`/progress` for high tier, `/drill` otherwise)
+- API client: `packages/api-client/src/{schemas/debrief,hooks/useDebrief}.ts` — `DebriefResponseSchema` + `useSessionDebrief` (TanStack `useQuery`, `staleTime: Infinity` since the payload is immutable once `completedAt` is set)
+- Server: `infra/lambda/src/routes/sessions.ts` adds `GET /sessions/:id/debrief` — single SQL trip using `DISTINCT ON (exercise_id) ORDER BY evaluated_at DESC NULLS LAST` to collapse retry rows; ownership + completion gate in one `WHERE`; cross-user / unknown / not-completed all return 404; `Cache-Control: private, max-age=300` on success only
+- Page: `apps/web/app/(dashboard)/drill/debrief/[sessionId]/page.tsx` orchestrates `useSessionDebrief` + tab state; renders `<DebriefSkeleton>` / `<DebriefNotFound>` / full view (header + tabs + footer); 8-case integration tests
+- Components: `apps/web/app/(dashboard)/drill/debrief/_components/{debrief-header,debrief-tabs,debrief-tab,review-tab,review-item-card,debrief-footer,debrief-not-found,debrief-skeleton}.tsx` — editorial header (tier-keyed display title, `m:ss` duration, lowercase invariant); WAI-ARIA tablist mirroring `progress-tabs.tsx`; per-item review cards for cloze / translation / vocab with collapsed-by-default for correct items; three-button action footer
+- Phase E cleanup: removed `SessionSummary` component + test, dropped the `summary` discriminant from `SessionState` and the `COMPLETE_SUCCEEDED` action, simplified `selectProgressFraction` accordingly; drill page tests now assert `router.push('/drill/debrief/${sessionId}')` instead of summary markup
 
 **Backend impact:**
-- `GET /sessions/:id/debrief` — session summary + per-item results + skill deltas (snapshot pre-session mastery to compute deltas)
+- `GET /sessions/:id/debrief` — pure read, no Claude calls, no row writes. Returns session metadata, aggregate counters (`exerciseCount` / `correctCount` / `attemptedCount` / `skippedCount`), and a manifest-ordered `items` array; per-item `status` derives from the most-recent `user_exercise_history.score` against `CORRECT_THRESHOLD` (0.7), or `'skipped'` if no history row exists for the manifest exercise
+- **No new migrations** — Phase E's `0003_*.sql` already supplied the `(session_id)` index this endpoint depends on
+- Skill deltas explicitly deferred — endpoint shape leaves room to add them later without a versioned breaking change
 
 ---
 
