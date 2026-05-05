@@ -9,6 +9,7 @@ import {
   userLanguageProfiles,
 } from '@language-drill/db';
 import { db } from '../db';
+import { approvedStatusFilter } from '../lib/exercise-filters';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
 import {
@@ -74,7 +75,8 @@ sessions.post('/sessions', async (c) => {
   const { language, difficulty, exerciseCount } = bodyResult.data;
   const userId = c.get('userId');
 
-  // Pull a random manifest of N exercises for this (language, difficulty)
+  // Pull a random manifest of N exercises for this (language, difficulty).
+  // Insufficient post-filter draws fall through to INSUFFICIENT_EXERCISES.
   const rows = await db
     .select()
     .from(exercisesTable)
@@ -82,6 +84,7 @@ sessions.post('/sessions', async (c) => {
       and(
         eq(exercisesTable.language, language),
         eq(exercisesTable.difficulty, difficulty),
+        approvedStatusFilter(exercisesTable),
       ),
     )
     .orderBy(sql`random()`)
@@ -261,6 +264,12 @@ sessions.get('/sessions/today', async (c) => {
 
     // Single round trip: project the exercise rows joined LEFT to history
     // filtered by sessionId. historyId IS NOT NULL ⇒ user attempted it.
+    //
+    // Deliberate non-filter on review_status: this read hydrates exercises by
+    // stored manifest IDs. A flagged exercise that was already in a session
+    // manifest stays in that session; filtering would create a phantom missing
+    // slot for the user. See lib/exercise-filters.ts for the inventory of
+    // filtered vs. non-filtered call sites.
     const itemRows = await db
       .select({
         exerciseId: exercisesTable.id,
@@ -371,6 +380,9 @@ async function sampleFreshPool(params: {
   difficulty: CefrLevel;
 }): Promise<PoolDraw[]> {
   const { language, difficulty } = params;
+  // Raw-SQL UNION-ALL: must inline the review_status predicate per subquery
+  // (no Drizzle helper here). Mirrors `approvedStatusFilter` in the helper at
+  // lib/exercise-filters.ts; keep both in sync if APPROVED_STATUSES changes.
   const slotQueries = V1_PLAN_SHAPE.map(
     (slot) => sql`
       (SELECT id, type, content_json->>'topicHint' AS topic_hint, difficulty
@@ -378,6 +390,7 @@ async function sampleFreshPool(params: {
        WHERE language = ${language}
          AND difficulty = ${difficulty}
          AND type = ${slot.type}
+         AND review_status IN ('auto-approved', 'manual-approved')
        ORDER BY random()
        LIMIT 1)
     `,
@@ -514,6 +527,11 @@ sessions.get('/sessions/:id/debrief', async (c) => {
   //    most-recent submission per (session_id, exercise_id). LEFT JOIN ensures
   //    skipped items (no history row) still surface. NULLS LAST is defensive:
   //    `evaluated_at` is nullable in the schema.
+  //
+  // Deliberate non-filter on review_status: like Path A above, this hydrates
+  // exercises by IDs already committed to a practice_sessions manifest.
+  // Filtering would drop a flagged exercise from a completed session's debrief
+  // view — wrong UX. See lib/exercise-filters.ts for the inventory.
   const itemsResult = await db.execute(sql`
     SELECT e.id AS exercise_id, e.type, e.content_json,
            h.score, h.response_json

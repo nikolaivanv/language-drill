@@ -29,7 +29,7 @@ vi.mock('../db', () => ({
 
 vi.mock('@language-drill/db', () => ({
   users: { id: 'id' },
-  exercises: {},
+  exercises: { reviewStatus: 'review_status' },
   userExerciseHistory: {},
   usageEvents: {},
   practiceSessions: {
@@ -38,6 +38,18 @@ vi.mock('@language-drill/db', () => ({
     completedAt: 'completed_at',
     exerciseIds: 'exercise_ids',
   },
+}));
+
+// Mock the review-status filter so we can assert the route invokes it.
+// The actual SQL behaviour (partial-index hit, predicate ordering) is
+// verified end-to-end in Task 19's manual EXPLAIN step.
+const mockApprovedStatusFilter = vi.fn((table: unknown) => ({
+  __mockToken: 'approved-status-filter',
+  table,
+}));
+vi.mock('../lib/exercise-filters', () => ({
+  APPROVED_STATUSES: ['auto-approved', 'manual-approved'] as const,
+  approvedStatusFilter: (table: unknown) => mockApprovedStatusFilter(table),
 }));
 
 const mockEvaluateAnswer = vi.fn();
@@ -634,5 +646,177 @@ describe('POST /exercises/:id/submit', () => {
     expect(res.status).toBe(400);
     const body = await res.json() as AnyJson;
     expect(body.code).toBe('INVALID_SESSION');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// review_status filter — Requirement 3.6
+// ---------------------------------------------------------------------------
+//
+// These tests verify that each pool-touching route invokes
+// `approvedStatusFilter(exercisesTable)` so that flagged and rejected rows
+// cannot reach users via pool-discovery or direct-fetch endpoints. The
+// helper is mocked here; the SQL-level behaviour (partial-index hit,
+// 'auto-approved' / 'manual-approved' predicate, exclusion of flagged
+// rows from the underlying table) is verified end-to-end against a Neon
+// dev branch in Task 19's manual EXPLAIN step.
+
+describe('review_status filter', () => {
+  let app: Hono;
+
+  const authEnv = {
+    event: {
+      requestContext: {
+        authorizer: { jwt: { claims: { sub: 'user_123' } } },
+      },
+    },
+  };
+
+  const approvedExercise = {
+    id: 'approved-id',
+    type: 'cloze',
+    language: 'EN',
+    difficulty: 'B1',
+    contentJson: { sentence: 'I ___ to the store' },
+    audioS3Key: null,
+    createdAt: new Date(),
+    reviewStatus: 'auto-approved',
+  };
+
+  const flaggedFixtureId = 'flagged-uuid';
+  const rejectedFixtureId = 'rejected-uuid';
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const mod = await import('./exercises');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  // -- GET /exercises (random pool draw) -----------------------------------
+
+  it('GET /exercises composes the review_status filter into the pool query', async () => {
+    mockLimit.mockResolvedValueOnce([approvedExercise]);
+
+    const res = await app.request('/exercises?language=EN&difficulty=B1', undefined, authEnv);
+
+    expect(res.status).toBe(200);
+    expect(mockApprovedStatusFilter).toHaveBeenCalledTimes(1);
+    expect(mockApprovedStatusFilter).toHaveBeenCalledWith(
+      expect.objectContaining({ reviewStatus: 'review_status' }),
+    );
+  });
+
+  it('GET /exercises 100 random draws never surface flagged or rejected fixtures', async () => {
+    // Simulate the SQL filter excluding both fixtures from the cell — every
+    // draw has only the approved fixture available. If the filter regresses,
+    // this loop is the canary because mockLimit captures whatever the route
+    // actually queried for.
+    for (let i = 0; i < 100; i++) {
+      mockLimit.mockResolvedValueOnce([approvedExercise]);
+    }
+
+    const seenIds = new Set<string>();
+    for (let i = 0; i < 100; i++) {
+      const res = await app.request('/exercises?language=EN&difficulty=B1', undefined, authEnv);
+      expect(res.status).toBe(200);
+      const body = await res.json() as AnyJson;
+      seenIds.add(body.id);
+    }
+
+    expect(seenIds).not.toContain(flaggedFixtureId);
+    expect(seenIds).not.toContain(rejectedFixtureId);
+    expect(mockApprovedStatusFilter).toHaveBeenCalledTimes(100);
+  });
+
+  // -- GET /exercises/:id (direct fetch) -----------------------------------
+
+  it('GET /exercises/:id composes the review_status filter into the lookup', async () => {
+    mockLimit.mockResolvedValueOnce([approvedExercise]);
+
+    const res = await app.request(`/exercises/${approvedExercise.id}`, undefined, authEnv);
+
+    expect(res.status).toBe(200);
+    expect(mockApprovedStatusFilter).toHaveBeenCalledTimes(1);
+    expect(mockApprovedStatusFilter).toHaveBeenCalledWith(
+      expect.objectContaining({ reviewStatus: 'review_status' }),
+    );
+  });
+
+  it('GET /exercises/:id returns 404 for a flagged exercise UUID', async () => {
+    // SQL filter excludes the flagged row → empty result reaches the route.
+    mockLimit.mockResolvedValueOnce([]);
+
+    const res = await app.request(`/exercises/${flaggedFixtureId}`, undefined, authEnv);
+
+    expect(res.status).toBe(404);
+    const body = await res.json() as AnyJson;
+    expect(body.code).toBe('EXERCISE_NOT_FOUND');
+    expect(mockApprovedStatusFilter).toHaveBeenCalledTimes(1);
+  });
+
+  it('GET /exercises/:id returns 404 for a rejected exercise UUID', async () => {
+    mockLimit.mockResolvedValueOnce([]);
+
+    const res = await app.request(`/exercises/${rejectedFixtureId}`, undefined, authEnv);
+
+    expect(res.status).toBe(404);
+    const body = await res.json() as AnyJson;
+    expect(body.code).toBe('EXERCISE_NOT_FOUND');
+    expect(mockApprovedStatusFilter).toHaveBeenCalledTimes(1);
+  });
+
+  // -- POST /exercises/:id/submit (exercise lookup) ------------------------
+
+  it('POST /exercises/:id/submit composes the review_status filter into the lookup', async () => {
+    mockLimit.mockResolvedValueOnce([approvedExercise]);
+    mockWhere
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }))
+      .mockResolvedValueOnce([{ count: 0 }] as never);
+    mockEvaluateAnswer.mockResolvedValueOnce({
+      score: 0.8,
+      grammarAccuracy: 0.8,
+      vocabularyRange: 'B1',
+      taskAchievement: 0.8,
+      feedback: 'ok',
+      errors: [],
+      estimatedCefrEvidence: 'B1',
+    });
+
+    const res = await app.request(
+      `/exercises/${approvedExercise.id}/submit`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'something' }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    expect(mockApprovedStatusFilter).toHaveBeenCalledTimes(1);
+    expect(mockApprovedStatusFilter).toHaveBeenCalledWith(
+      expect.objectContaining({ reviewStatus: 'review_status' }),
+    );
+  });
+
+  it('POST /exercises/:id/submit returns 404 for a flagged exercise UUID', async () => {
+    mockLimit.mockResolvedValueOnce([]);
+
+    const res = await app.request(
+      `/exercises/${flaggedFixtureId}/submit`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'something' }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(404);
+    const body = await res.json() as AnyJson;
+    expect(body.code).toBe('EXERCISE_NOT_FOUND');
+    expect(mockEvaluateAnswer).not.toHaveBeenCalled();
+    expect(mockApprovedStatusFilter).toHaveBeenCalledTimes(1);
   });
 });

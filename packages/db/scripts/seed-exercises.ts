@@ -11,49 +11,21 @@
  * Requires DATABASE_URL env var to be set.
  */
 
-import { createDb } from '../src/client';
-import { exercises } from '../src/schema/index';
+import { fileURLToPath } from 'node:url';
 
-// ---------------------------------------------------------------------------
-// Deterministic UUID generation (v5-style using a simple hash)
-// ---------------------------------------------------------------------------
+import type { LearningLanguage } from '@language-drill/shared';
+import { and, eq, isNull, or } from 'drizzle-orm';
 
-/**
- * Generates a deterministic UUID from a string key.
- * Uses a basic hash mapped to UUID v4 format with the version nibble set to 5.
- */
-function deterministicUuid(key: string): string {
-  // Simple 128-bit hash via two rounds of string hashing
-  let h1 = 0x811c9dc5;
-  let h2 = 0x01000193;
-  let h3 = 0xdeadbeef;
-  let h4 = 0xcafebabe;
-
-  for (let i = 0; i < key.length; i++) {
-    const c = key.charCodeAt(i);
-    h1 = Math.imul(h1 ^ c, 0x01000193) >>> 0;
-    h2 = Math.imul(h2 ^ c, 0x811c9dc5) >>> 0;
-    h3 = Math.imul(h3 ^ c, 0x0100019d) >>> 0;
-    h4 = Math.imul(h4 ^ c, 0x811c9dd1) >>> 0;
-  }
-
-  const hex = [h1, h2, h3, h4].map((h) => h.toString(16).padStart(8, '0')).join('');
-
-  // Format as UUID with version nibble = 5
-  return [
-    hex.slice(0, 8),
-    hex.slice(8, 12),
-    '5' + hex.slice(13, 16),
-    ((parseInt(hex[16], 16) & 0x3) | 0x8).toString(16) + hex.slice(17, 20),
-    hex.slice(20, 32),
-  ].join('-');
-}
+import { createDb, type Db } from '../src/client';
+import { ALL_CURRICULA, type CurriculumCefrLevel, type GrammarPoint } from '../src/curriculum';
+import { deterministicUuid } from '../src/lib/deterministic-uuid';
+import { exerciseTags, exercises, skillTopics, skills } from '../src/schema/index';
 
 // ---------------------------------------------------------------------------
 // Exercise seed data
 // ---------------------------------------------------------------------------
 
-type SeedExercise = {
+export type SeedExercise = {
   key: string;
   type: string;
   language: string;
@@ -61,7 +33,7 @@ type SeedExercise = {
   contentJson: Record<string, unknown>;
 };
 
-const SEED_EXERCISES: SeedExercise[] = [
+export const SEED_EXERCISES: SeedExercise[] = [
   // =========================================================================
   // ENGLISH
   // =========================================================================
@@ -608,6 +580,255 @@ const SEED_EXERCISES: SeedExercise[] = [
 ];
 
 // ---------------------------------------------------------------------------
+// Seed-key → curriculum-key mapping
+// ---------------------------------------------------------------------------
+//
+// Hand-curated, exhaustive for non-EN seeds. Every non-EN entry in
+// SEED_EXERCISES MUST appear here; the 9 EN seeds are intentionally absent
+// (EN is source-only — Requirement 5.5). `planSeedTags` enforces both halves.
+//
+// Vocab-recall seeds map to vocab-umbrella curriculum entries (kind: 'vocab')
+// because Phase 1's curriculum is grammar-first. Phase 2's vocab path will
+// replace the umbrellas with frequency-band rows; the discriminator on
+// GrammarPoint.kind, not a string-suffix sniff, is what later code branches on.
+
+export const SEED_KEY_TO_GRAMMAR_POINT: Readonly<Record<string, string>> = {
+  // Spanish
+  'es-cloze-a2-1': 'es-a2-preterite-irregular',
+  'es-cloze-b1-1': 'es-b1-present-subjunctive',
+  'es-cloze-b2-1': 'es-b2-conditional-perfect',
+  'es-translation-a2-1': 'es-a2-gustar-type-verbs',
+  'es-translation-b1-1': 'es-b1-llevar-time-expressions',
+  'es-translation-b2-1': 'es-b2-past-subjunctive',
+  'es-vocab-a2-1': 'es-a2-everyday-vocab',
+  'es-vocab-b1-1': 'es-b1-environment-vocab',
+  'es-vocab-b2-1': 'es-b2-abstract-noun-vocab',
+  // German
+  'de-cloze-a2-1': 'de-a2-perfekt-with-sein',
+  'de-cloze-b1-1': 'de-b1-relative-pronouns',
+  'de-cloze-b2-1': 'de-b2-konjunktiv-ii',
+  'de-translation-a2-1': 'de-a2-akkusativ-prepositions',
+  'de-translation-b1-1': 'de-b1-dass-clause-perfekt',
+  'de-translation-b2-1': 'de-b2-genitive-prepositions',
+  'de-vocab-a2-1': 'de-a2-housing-vocab',
+  'de-vocab-b1-1': 'de-b1-environment-vocab',
+  'de-vocab-b2-1': 'de-b2-academic-noun-vocab',
+  // Turkish
+  'tr-cloze-a2-1': 'tr-a2-dili-past',
+  'tr-cloze-b1-1': 'tr-b1-causal-conjunctions',
+  'tr-cloze-b2-1': 'tr-b2-passive-with-nominalization',
+  'tr-translation-a2-1': 'tr-a2-question-formation',
+  'tr-translation-b1-1': 'tr-b1-keske-optative',
+  'tr-translation-b2-1': 'tr-b2-relative-clause-participles',
+  'tr-vocab-a2-1': 'tr-a2-everyday-vocab',
+  'tr-vocab-b1-1': 'tr-b1-abstract-noun-vocab',
+  'tr-vocab-b2-1': 'tr-b2-academic-noun-vocab',
+};
+
+// ---------------------------------------------------------------------------
+// Pure planning helpers (no DB I/O — testable in isolation)
+// ---------------------------------------------------------------------------
+
+/**
+ * The shape of a `skill_topics` row planned from a curriculum entry. Resolution
+ * of `skillKey` into a concrete `skillId` happens at write time in Task 12's
+ * `seedSkillTopics` — kept out of the planner so this stays a pure function.
+ */
+export type SkillTopicPlan = {
+  /** `deterministicUuid('skill-topic:' + grammarPoint.key)` */
+  id: string;
+  skillKey: { language: LearningLanguage; name: 'grammar' };
+  name: string;
+  cefrLevel: CurriculumCefrLevel;
+  language: LearningLanguage;
+};
+
+/**
+ * Plans the rows that would be inserted into `skill_topics` for a curriculum.
+ * One row per entry; `id` derived deterministically so re-runs are idempotent.
+ */
+export function planSkillTopics(curriculum: readonly GrammarPoint[]): SkillTopicPlan[] {
+  return curriculum.map((entry) => ({
+    id: deterministicUuid(`skill-topic:${entry.key}`),
+    skillKey: { language: entry.language, name: 'grammar' },
+    name: entry.name,
+    cefrLevel: entry.cefrLevel,
+    language: entry.language,
+  }));
+}
+
+/**
+ * Plans the `exercise_tags` rows for the existing seed catalogue and validates
+ * the SEED_KEY_TO_GRAMMAR_POINT mapping against the curriculum.
+ *
+ * Throws (Requirement 5.6) when:
+ *  - any non-EN seed lacks an entry in `mapping`, or
+ *  - any mapping value resolves to no curriculum entry.
+ *
+ * Returns the resolved tag tuples plus the count of EN seeds that are
+ * intentionally left untagged (EN is source-only — Requirement 5.5).
+ */
+export function planSeedTags(
+  seeds: readonly SeedExercise[],
+  mapping: Readonly<Record<string, string>>,
+  curriculum: readonly GrammarPoint[],
+): { tags: Array<{ seedKey: string; grammarPointKey: string }>; untaggedEnSeeds: number } {
+  const curriculumLookup = new Map(curriculum.map((entry) => [entry.key, entry] as const));
+  const tags: Array<{ seedKey: string; grammarPointKey: string }> = [];
+  let untaggedEnSeeds = 0;
+
+  for (const seed of seeds) {
+    if (seed.language === 'EN') {
+      untaggedEnSeeds++;
+      continue;
+    }
+
+    const grammarPointKey = mapping[seed.key];
+    if (grammarPointKey === undefined) {
+      throw new Error(
+        `Seed exercise '${seed.key}' has no curriculum mapping. Add it to SEED_KEY_TO_GRAMMAR_POINT or remove the seed.`,
+      );
+    }
+
+    if (!curriculumLookup.has(grammarPointKey)) {
+      throw new Error(
+        `Seed exercise '${seed.key}' maps to unknown curriculum key '${grammarPointKey}'. Add the curriculum entry or fix the mapping.`,
+      );
+    }
+
+    tags.push({ seedKey: seed.key, grammarPointKey });
+  }
+
+  return { tags, untaggedEnSeeds };
+}
+
+// ---------------------------------------------------------------------------
+// DB-write functions (idempotent under repeated runs — Requirement 5.4)
+// ---------------------------------------------------------------------------
+
+const LEARNING_LANGUAGES: readonly LearningLanguage[] = ['ES', 'DE', 'TR'] as LearningLanguage[];
+
+/** Deterministic UUID for the (language, 'grammar') skill row. */
+function grammarSkillId(language: LearningLanguage): string {
+  return deterministicUuid(`skill:${language}:grammar`);
+}
+
+/**
+ * Ensures a `skills` row exists for each (LearningLanguage, 'grammar') pair.
+ * Idempotent via deterministic id + ON CONFLICT DO NOTHING.
+ */
+export async function upsertGrammarSkills(
+  db: Db,
+): Promise<{ inserted: number; skipped: number }> {
+  let inserted = 0;
+  for (const language of LEARNING_LANGUAGES) {
+    const result = await db
+      .insert(skills)
+      .values({
+        id: grammarSkillId(language),
+        name: 'grammar',
+        language,
+      })
+      .onConflictDoNothing()
+      .returning({ id: skills.id });
+    if (result.length > 0) inserted++;
+  }
+  return { inserted, skipped: LEARNING_LANGUAGES.length - inserted };
+}
+
+/**
+ * Upserts one `skill_topics` row per curriculum entry. Batches one multi-row
+ * INSERT per language for performance (NFR Performance — see requirements.md).
+ */
+export async function seedSkillTopics(
+  db: Db,
+): Promise<{ inserted: number; skipped: number }> {
+  const plans = planSkillTopics(ALL_CURRICULA);
+
+  // Group by language so each multi-row INSERT batches a homogeneous
+  // (language, skillId) set. The skillId for each row is the deterministic id
+  // of the matching (language, 'grammar') skills row from upsertGrammarSkills.
+  const plansByLanguage = new Map<LearningLanguage, SkillTopicPlan[]>();
+  for (const plan of plans) {
+    const bucket = plansByLanguage.get(plan.language);
+    if (bucket) bucket.push(plan);
+    else plansByLanguage.set(plan.language, [plan]);
+  }
+
+  let inserted = 0;
+  for (const [language, languagePlans] of plansByLanguage) {
+    const skillId = grammarSkillId(language);
+    const rows = languagePlans.map((plan) => ({
+      id: plan.id,
+      skillId,
+      name: plan.name,
+      cefrLevel: plan.cefrLevel,
+      language: plan.language,
+    }));
+    const result = await db
+      .insert(skillTopics)
+      .values(rows)
+      .onConflictDoNothing()
+      .returning({ id: skillTopics.id });
+    inserted += result.length;
+  }
+
+  return { inserted, skipped: plans.length - inserted };
+}
+
+/**
+ * Backfills the existing seed exercises with their curriculum tag and inserts
+ * the matching `exercise_tags` rows. The UPDATE refuses to clobber a manually
+ * set value: it only writes when the column is NULL or already equal to the
+ * planned value (Requirement 5.4).
+ */
+export async function tagExistingSeeds(db: Db): Promise<{
+  tagged: number;
+  alreadyTagged: number;
+  untaggedEnSeeds: number;
+}> {
+  const { tags, untaggedEnSeeds } = planSeedTags(
+    SEED_EXERCISES,
+    SEED_KEY_TO_GRAMMAR_POINT,
+    ALL_CURRICULA,
+  );
+
+  let tagged = 0;
+  let alreadyTagged = 0;
+
+  for (const tag of tags) {
+    const exerciseId = deterministicUuid(tag.seedKey);
+    const skillTopicId = deterministicUuid(`skill-topic:${tag.grammarPointKey}`);
+
+    // 1. Backfill exercises.grammar_point_key. Idempotent guard: only update
+    // when NULL or already equal to the planned value, never overwriting a
+    // manually-set tag.
+    await db
+      .update(exercises)
+      .set({ grammarPointKey: tag.grammarPointKey })
+      .where(
+        and(
+          eq(exercises.id, exerciseId),
+          or(isNull(exercises.grammarPointKey), eq(exercises.grammarPointKey, tag.grammarPointKey)),
+        ),
+      );
+
+    // 2. Insert the exercise_tags row. ON CONFLICT DO NOTHING tells us whether
+    // the row was already present — drives the inserted/skipped count.
+    const result = await db
+      .insert(exerciseTags)
+      .values({ exerciseId, skillTopicId })
+      .onConflictDoNothing()
+      .returning({ exerciseId: exerciseTags.exerciseId });
+
+    if (result.length > 0) tagged++;
+    else alreadyTagged++;
+  }
+
+  return { tagged, alreadyTagged, untaggedEnSeeds };
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -656,10 +877,31 @@ async function main() {
     console.log(`\n  (${skipped} exercise(s) already existed — skipped)`);
   }
 
-  console.log(`\nDone. ${totalInserted} exercise(s) created.`);
+  // Curriculum-driven seed of skills, skill_topics, and exercise_tags.
+  // Order matters: skills before skill_topics (FK), skill_topics before tags
+  // (FK on exercise_tags.skill_topic_id).
+  await upsertGrammarSkills(db);
+  const skillTopicsResult = await seedSkillTopics(db);
+  const tagResult = await tagExistingSeeds(db);
+
+  console.log('\nSkill topics:');
+  console.log(`  inserted: ${skillTopicsResult.inserted}`);
+  console.log(`  skipped (already present): ${skillTopicsResult.skipped}`);
+
+  console.log('\nExercise tags:');
+  console.log(`  inserted: ${tagResult.tagged}`);
+  console.log(`  skipped (already present): ${tagResult.alreadyTagged}`);
+  console.log(`  untagged EN seeds: ${tagResult.untaggedEnSeeds} (EN is source-only)`);
+
+  console.log(`\nDone. ${totalInserted} exercise(s) created, ${tagResult.tagged} tagged.`);
 }
 
-main().catch((err) => {
-  console.error('Seed script failed:', err);
-  process.exit(1);
-});
+// Only auto-run when invoked directly (e.g. `pnpm db:seed:exercises`); skip
+// when the module is imported by tests.
+const isDirectRun = process.argv[1] && process.argv[1] === fileURLToPath(import.meta.url);
+if (isDirectRun) {
+  main().catch((err) => {
+    console.error('Seed script failed:', err);
+    process.exit(1);
+  });
+}
