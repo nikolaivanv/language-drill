@@ -19,6 +19,14 @@ export {
   EVALUATION_TOOL_NAME,
 } from "./evaluate.js";
 export type { EvaluateAnswerInput } from "./evaluate.js";
+export {
+  ANNOTATE_SYSTEM_PROMPT,
+  ANNOTATE_TOOL,
+  ANNOTATE_TOOL_NAME,
+  annotateText,
+  parseAnnotateResult,
+} from "./annotate.js";
+export type { AnnotateInput, AnnotateOutput } from "./annotate.js";
 
 export {
   GENERATION_MODEL,

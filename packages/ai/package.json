@@ -14,7 +14,8 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.1",
     "@language-drill/db": "workspace:*",
-    "@language-drill/shared": "workspace:*"
+    "@language-drill/shared": "workspace:*",
+    "zod": "^3.23.0"
   },
   "devDependencies": {
     "typescript": "^5.0.0",

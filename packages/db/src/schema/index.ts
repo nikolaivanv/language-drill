@@ -12,6 +12,9 @@
 //   exercises(language, difficulty, type, grammarPointKey)
 //     WHERE review_status IN ('auto-approved', 'manual-approved') — pool lookup
 //   generation_jobs(cellKey, startedAt DESC)        — daily refill scheduler
+//   read_entries(userId, language, pastedAt DESC)   — entry-list / most-recent lookup
+//   user_vocabulary(userId, language)               — drill-time vocab fetch by language
+//   user_vocabulary(userId, language, word) UNIQUE  — bank dedup across passages
 
 export { users, userLanguageProfiles, userPreferences } from './users';
 export type { UserPreferences, NewUserPreferences } from './users';
@@ -20,6 +23,7 @@ export { exercises, exerciseTags } from './exercises';
 export type { Exercise } from './exercises';
 export { userExerciseHistory, spacedRepetitionCards } from './progress';
 export { practiceSessions } from './sessions';
+export { readEntries, userVocabulary } from './read';
 export { playlists, playlistItems } from './playlists';
 export { invitations, usageEvents } from './access';
 export { generationJobs } from './generation';

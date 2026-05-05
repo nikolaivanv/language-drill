@@ -10,7 +10,7 @@
     "lint": "eslint src/**/*.ts",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "tsx scripts/migrate.ts",
     "db:studio": "drizzle-kit studio",
     "generate:exercises": "npx tsx scripts/generate-exercises.ts",
     "seed:exercises": "npx tsx scripts/seed-exercises.ts",
