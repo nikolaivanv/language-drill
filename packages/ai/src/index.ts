@@ -7,7 +7,11 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 
-export { EVALUATION_SYSTEM_PROMPT, buildUserPrompt } from "./prompts.js";
+export {
+  EVALUATION_SYSTEM_PROMPT,
+  buildUserPrompt,
+  CEFR_LEVEL_DESCRIPTORS,
+} from "./prompts.js";
 export {
   evaluateAnswer,
   parseEvaluationResult,
@@ -15,6 +19,44 @@ export {
   EVALUATION_TOOL_NAME,
 } from "./evaluate.js";
 export type { EvaluateAnswerInput } from "./evaluate.js";
+
+export {
+  GENERATION_MODEL,
+  GENERATION_MAX_TOKENS,
+  GENERATION_TEMPERATURE,
+  TOOL_NAME_BY_TYPE,
+  GENERATION_TOOL_BY_TYPE,
+  CLOZE_GENERATION_TOOL,
+  TRANSLATION_GENERATION_TOOL,
+  VOCAB_RECALL_GENERATION_TOOL,
+  generateBatch,
+  exerciseDraftId,
+  parseGeneratedClozeDraft,
+  parseGeneratedTranslationDraft,
+  parseGeneratedVocabRecallDraft,
+} from "./generate.js";
+export type {
+  GenerationSpec,
+  ExerciseDraft,
+  GenerateBatchResult,
+} from "./generate.js";
+
+export {
+  buildGenerationSystemPrompt,
+  buildGenerationUserPrompt,
+  canonicalSurface,
+  tailRecentStems,
+  MAX_RECENT_STEMS_IN_PROMPT,
+} from "./generation-prompts.js";
+export type { GenerationPromptInputs } from "./generation-prompts.js";
+
+export {
+  SONNET_4_5_PRICING,
+  estimateCostUsd,
+  addUsage,
+  ZERO_USAGE,
+} from "./cost-model.js";
+export type { ClaudeUsageBreakdown } from "./cost-model.js";
 
 /**
  * Creates an Anthropic client instance configured with the provided API key.

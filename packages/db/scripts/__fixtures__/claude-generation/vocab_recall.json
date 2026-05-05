@@ -1,0 +1,29 @@
+[
+  {
+    "type": "vocab_recall",
+    "instructions": "Produce the Spanish word that matches the description.",
+    "prompt": "The verb meaning 'to wait' or 'to hope', commonly followed by the subjunctive.",
+    "expectedWord": "esperar",
+    "hints": ["Starts with 'e'", "Three syllables", "Ends in -ar"],
+    "exampleSentence": "Voy a esperar el autobús en la parada.",
+    "topicHint": "everyday"
+  },
+  {
+    "type": "vocab_recall",
+    "instructions": "Provide the Spanish noun for the given definition.",
+    "prompt": "A planned gathering of people, often at work, to discuss something.",
+    "expectedWord": "reunión",
+    "hints": ["Starts with 'r'", "Three syllables", "Has a written accent"],
+    "exampleSentence": "La reunión empieza a las nueve de la mañana.",
+    "topicHint": "work"
+  },
+  {
+    "type": "vocab_recall",
+    "instructions": "Give the Spanish verb that fits the clue.",
+    "prompt": "The verb meaning 'to attend' (e.g. a class, a meeting, an event).",
+    "expectedWord": "asistir",
+    "hints": ["Starts with 'a'", "Three syllables", "Ends in -ir"],
+    "exampleSentence": "Tengo que asistir a la reunión mañana.",
+    "topicHint": "work"
+  }
+]

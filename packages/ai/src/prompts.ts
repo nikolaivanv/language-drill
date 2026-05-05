@@ -16,6 +16,26 @@ import {
 } from "@language-drill/shared";
 
 // ---------------------------------------------------------------------------
+// CEFR descriptors — single source of truth shared between the evaluator
+// system prompt and the generator prompt builder (packages/ai/src/generation-prompts.ts).
+// ---------------------------------------------------------------------------
+
+export const CEFR_LEVEL_DESCRIPTORS: Readonly<Record<CefrLevel, string>> = Object.freeze({
+  A1: "Can use very basic phrases and simple sentences. Vocabulary limited to high-frequency everyday words.",
+  A2: "Can handle short, simple sentences on familiar topics. Basic connectors (and, but, because). Present and past tenses.",
+  B1: "Can produce connected text on familiar topics. Reasonable range of vocabulary. Most common tenses used accurately.",
+  B2: "Can produce clear, detailed text on a wide range of subjects. Good grammatical control; occasional slips do not cause misunderstanding. Varied vocabulary with some idiomatic expressions.",
+  C1: "Can produce well-structured, detailed text on complex subjects. Consistent grammatical accuracy. Wide vocabulary including less common words and collocations.",
+  C2: "Can produce sophisticated, nuanced text. Near-native grammatical control. Extensive vocabulary with precise word choice and natural idiomatic usage.",
+});
+
+const CEFR_DESCRIPTOR_BULLETS = (
+  Object.entries(CEFR_LEVEL_DESCRIPTORS) as [CefrLevel, string][]
+)
+  .map(([level, descriptor]) => `- **${level}**: ${descriptor}`)
+  .join("\n");
+
+// ---------------------------------------------------------------------------
 // System prompt
 // ---------------------------------------------------------------------------
 
@@ -35,12 +55,7 @@ You must evaluate every answer across these dimensions:
 
 ## CEFR Level Descriptors
 
-- **A1**: Can use very basic phrases and simple sentences. Vocabulary limited to high-frequency everyday words.
-- **A2**: Can handle short, simple sentences on familiar topics. Basic connectors (and, but, because). Present and past tenses.
-- **B1**: Can produce connected text on familiar topics. Reasonable range of vocabulary. Most common tenses used accurately.
-- **B2**: Can produce clear, detailed text on a wide range of subjects. Good grammatical control; occasional slips do not cause misunderstanding. Varied vocabulary with some idiomatic expressions.
-- **C1**: Can produce well-structured, detailed text on complex subjects. Consistent grammatical accuracy. Wide vocabulary including less common words and collocations.
-- **C2**: Can produce sophisticated, nuanced text. Near-native grammatical control. Extensive vocabulary with precise word choice and natural idiomatic usage.
+${CEFR_DESCRIPTOR_BULLETS}
 
 ## Language-Specific Notes
 

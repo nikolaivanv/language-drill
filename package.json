@@ -12,7 +12,8 @@
     "dev:web": "NEXT_PUBLIC_API_URL=http://localhost:3001 pnpm --filter @language-drill/web dev",
     "db:migrate": "dotenv -e .env -- pnpm --filter @language-drill/db db:migrate",
     "db:studio": "dotenv -e .env -- pnpm --filter @language-drill/db db:studio",
-    "db:seed:exercises": "dotenv -e .env -- pnpm --filter @language-drill/db seed:exercises"
+    "db:seed:exercises": "dotenv -e .env -- pnpm --filter @language-drill/db seed:exercises",
+    "generate:exercises": "dotenv -e .env -- pnpm --filter @language-drill/db generate:exercises"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

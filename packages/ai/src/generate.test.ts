@@ -1,0 +1,454 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import {
+  CefrLevel,
+  ExerciseType,
+  Language,
+  isClozeContent,
+  isTranslationContent,
+  isVocabRecallContent,
+} from "@language-drill/shared";
+import { getGrammarPoint } from "@language-drill/db";
+
+import { createClaudeClient } from "./index.js";
+import {
+  CLOZE_GENERATION_TOOL,
+  GENERATION_MODEL,
+  GENERATION_TEMPERATURE,
+  TOOL_NAME_BY_TYPE,
+  TRANSLATION_GENERATION_TOOL,
+  VOCAB_RECALL_GENERATION_TOOL,
+  exerciseDraftId,
+  generateBatch,
+  type GenerationSpec,
+} from "./generate.js";
+
+// ---------------------------------------------------------------------------
+// Fixtures
+// ---------------------------------------------------------------------------
+
+const grammarPoint = getGrammarPoint("es-b1-present-subjunctive");
+if (!grammarPoint) {
+  throw new Error(
+    "test fixture missing: curriculum entry 'es-b1-present-subjunctive'",
+  );
+}
+
+const baseSpec: GenerationSpec = {
+  language: Language.ES,
+  cefrLevel: CefrLevel.B1,
+  exerciseType: ExerciseType.CLOZE,
+  grammarPoint,
+  topicDomain: null,
+  count: 1,
+  batchSeed: "test-seed",
+};
+
+const validClozeInput = {
+  instructions: "Fill the blank with the correct subjunctive form.",
+  sentence: "Espero que ___ a tiempo.",
+  correctAnswer: "lleguen",
+};
+
+const validTranslationInput = {
+  instructions: "Translate the following sentence into Spanish.",
+  sourceText: "I hope you arrive on time.",
+  sourceLanguage: "EN",
+  targetLanguage: "ES",
+  referenceTranslation: "Espero que llegues a tiempo.",
+};
+
+const validVocabInput = {
+  instructions: "Produce the word that fits the description.",
+  prompt: "A place where books are borrowed.",
+  expectedWord: "biblioteca",
+  hints: ["Starts with B", "8 letters"],
+  exampleSentence: "Voy a la biblioteca para estudiar.",
+};
+
+const baseUsage = {
+  input_tokens: 100,
+  cache_creation_input_tokens: 50,
+  cache_read_input_tokens: 0,
+  output_tokens: 200,
+};
+
+// ---------------------------------------------------------------------------
+// Cross-file invariants
+// ---------------------------------------------------------------------------
+
+describe("GENERATION_MODEL", () => {
+  it("matches the literal evaluate.ts pins (cross-file invariant)", () => {
+    expect(GENERATION_MODEL).toBe("claude-sonnet-4-5");
+  });
+});
+
+describe("Tool-name DRY", () => {
+  it("TOOL_NAME_BY_TYPE.cloze === CLOZE_GENERATION_TOOL.name", () => {
+    expect(TOOL_NAME_BY_TYPE.cloze).toBe(CLOZE_GENERATION_TOOL.name);
+  });
+
+  it("TOOL_NAME_BY_TYPE.translation === TRANSLATION_GENERATION_TOOL.name", () => {
+    expect(TOOL_NAME_BY_TYPE.translation).toBe(
+      TRANSLATION_GENERATION_TOOL.name,
+    );
+  });
+
+  it("TOOL_NAME_BY_TYPE.vocab_recall === VOCAB_RECALL_GENERATION_TOOL.name", () => {
+    expect(TOOL_NAME_BY_TYPE.vocab_recall).toBe(
+      VOCAB_RECALL_GENERATION_TOOL.name,
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// exerciseDraftId
+// ---------------------------------------------------------------------------
+
+describe("exerciseDraftId", () => {
+  it("is deterministic for identical (spec, ordinal)", () => {
+    expect(exerciseDraftId(baseSpec, 0)).toBe(exerciseDraftId(baseSpec, 0));
+  });
+
+  it("varies by ordinal", () => {
+    expect(exerciseDraftId(baseSpec, 0)).not.toBe(exerciseDraftId(baseSpec, 1));
+  });
+
+  it("varies by batchSeed", () => {
+    expect(exerciseDraftId(baseSpec, 0)).not.toBe(
+      exerciseDraftId({ ...baseSpec, batchSeed: "different" }, 0),
+    );
+  });
+
+  it("varies by language", () => {
+    expect(exerciseDraftId(baseSpec, 0)).not.toBe(
+      exerciseDraftId({ ...baseSpec, language: Language.DE }, 0),
+    );
+  });
+
+  it("returns a UUID-shaped string", () => {
+    expect(exerciseDraftId(baseSpec, 0)).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// generateBatch (mocked SDK)
+// ---------------------------------------------------------------------------
+
+describe("generateBatch", () => {
+  const mockCreate = vi.fn();
+  const mockClient = {
+    messages: { create: mockCreate },
+  } as unknown as ReturnType<typeof createClaudeClient>;
+
+  beforeEach(() => {
+    mockCreate.mockReset();
+  });
+
+  // ---- Happy-path × 3 types ----
+
+  it("produces a valid cloze draft and dispatches the cloze tool", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_1",
+          name: TOOL_NAME_BY_TYPE.cloze,
+          input: validClozeInput,
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: baseUsage,
+    });
+
+    const { drafts, tokenUsage } = await generateBatch(mockClient, baseSpec);
+
+    expect(drafts).toHaveLength(1);
+    expect(isClozeContent(drafts[0].contentJson)).toBe(true);
+    expect(drafts[0].metadata.modelId).toBe(GENERATION_MODEL);
+    expect(drafts[0].metadata.grammarPointKey).toBe(grammarPoint.key);
+    expect(drafts[0].metadata.inBatchDuplicate).toBe(false);
+    expect(tokenUsage.inputTokens).toBe(baseUsage.input_tokens);
+    expect(tokenUsage.outputTokens).toBe(baseUsage.output_tokens);
+
+    const callArgs = mockCreate.mock.calls[0][0];
+    expect(callArgs.model).toBe(GENERATION_MODEL);
+    expect(callArgs.temperature).toBe(GENERATION_TEMPERATURE);
+    expect(callArgs.tools).toHaveLength(1);
+    expect(callArgs.tool_choice).toEqual({
+      type: "tool",
+      name: TOOL_NAME_BY_TYPE.cloze,
+    });
+    expect(callArgs.system).toEqual([
+      {
+        type: "text",
+        text: expect.any(String),
+        cache_control: { type: "ephemeral" },
+      },
+    ]);
+  });
+
+  it("produces a valid translation draft and dispatches the translation tool", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_2",
+          name: TOOL_NAME_BY_TYPE.translation,
+          input: validTranslationInput,
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: baseUsage,
+    });
+
+    const { drafts } = await generateBatch(mockClient, {
+      ...baseSpec,
+      exerciseType: ExerciseType.TRANSLATION,
+    });
+
+    expect(drafts).toHaveLength(1);
+    expect(isTranslationContent(drafts[0].contentJson)).toBe(true);
+
+    const callArgs = mockCreate.mock.calls[0][0];
+    expect(callArgs.tool_choice.name).toBe(TOOL_NAME_BY_TYPE.translation);
+  });
+
+  it("produces a valid vocab_recall draft and dispatches the vocab tool", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_3",
+          name: TOOL_NAME_BY_TYPE.vocab_recall,
+          input: validVocabInput,
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: baseUsage,
+    });
+
+    const { drafts } = await generateBatch(mockClient, {
+      ...baseSpec,
+      exerciseType: ExerciseType.VOCAB_RECALL,
+    });
+
+    expect(drafts).toHaveLength(1);
+    expect(isVocabRecallContent(drafts[0].contentJson)).toBe(true);
+
+    const callArgs = mockCreate.mock.calls[0][0];
+    expect(callArgs.tool_choice.name).toBe(TOOL_NAME_BY_TYPE.vocab_recall);
+  });
+
+  // ---- Guards ----
+
+  it("rejects EN before any Claude call", async () => {
+    const enSpec = { ...baseSpec, language: Language.EN } as unknown as GenerationSpec;
+    await expect(generateBatch(mockClient, enSpec)).rejects.toThrow(
+      /resolved decision #4/,
+    );
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects unsupported exerciseType before any Claude call", async () => {
+    const unsupported = {
+      ...baseSpec,
+      exerciseType: "sentence_construction" as ExerciseType,
+    };
+    await expect(generateBatch(mockClient, unsupported)).rejects.toThrow(
+      /Unsupported exerciseType/,
+    );
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  // ---- Malformed responses ----
+
+  it("throws ordinal=0 malformed when no tool_use block is returned", async () => {
+    mockCreate.mockResolvedValue({
+      content: [{ type: "text", text: "Sorry, I cannot do that." }],
+      stop_reason: "end_turn",
+      usage: baseUsage,
+    });
+
+    await expect(generateBatch(mockClient, baseSpec)).rejects.toThrow(
+      /ordinal=0 malformed: no tool_use block/,
+    );
+  });
+
+  it("throws ordinal=0 malformed when the tool name is wrong", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_x",
+          name: "submit_random_thing",
+          input: validClozeInput,
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: baseUsage,
+    });
+
+    await expect(generateBatch(mockClient, baseSpec)).rejects.toThrow(
+      /ordinal=0 malformed: expected tool 'submit_cloze_exercise'/,
+    );
+  });
+
+  it("throws ordinal=0 malformed when the parser rejects the tool input", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_y",
+          name: TOOL_NAME_BY_TYPE.cloze,
+          input: {
+            ...validClozeInput,
+            sentence: "no blank here", // missing '___' → cloze parser throws
+          },
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: baseUsage,
+    });
+
+    await expect(generateBatch(mockClient, baseSpec)).rejects.toThrow(
+      /ordinal=0 malformed: cloze draft: invalid sentence/,
+    );
+  });
+
+  // ---- Within-batch behavior ----
+
+  it("propagates the previous draft's canonical surface into the next call's system prompt", async () => {
+    let callIndex = 0;
+    mockCreate.mockImplementation(() => {
+      const idx = callIndex++;
+      return Promise.resolve({
+        content: [
+          {
+            type: "tool_use",
+            id: `toolu_${idx}`,
+            name: TOOL_NAME_BY_TYPE.cloze,
+            input: {
+              ...validClozeInput,
+              sentence: `Yo ___ ejercicio número ${idx} aquí.`,
+            },
+          },
+        ],
+        stop_reason: "tool_use",
+        usage: baseUsage,
+      });
+    });
+
+    const { drafts } = await generateBatch(mockClient, {
+      ...baseSpec,
+      count: 2,
+    });
+
+    expect(drafts).toHaveLength(2);
+    const secondCallSystem = mockCreate.mock.calls[1][0].system[0].text;
+    // The first draft's canonical surface (lowercased, diacritic-stripped) of
+    // "Yo ___ ejercicio número 0 aquí." appears as a bullet in the second
+    // call's system prompt.
+    expect(secondCallSystem).toContain("yo ___ ejercicio numero 0 aqui.");
+  });
+
+  it("caps the recentStems bullet block at MAX_RECENT_STEMS_IN_PROMPT (30) on the 32nd call", async () => {
+    let callIndex = 0;
+    mockCreate.mockImplementation(() => {
+      const idx = callIndex++;
+      return Promise.resolve({
+        content: [
+          {
+            type: "tool_use",
+            id: `toolu_${idx}`,
+            name: TOOL_NAME_BY_TYPE.cloze,
+            input: {
+              ...validClozeInput,
+              // Each draft gets a unique sentence so canonicalSurface produces
+              // 32 distinct stems.
+              sentence: `Frase número ${idx} con ___ aquí.`,
+            },
+          },
+        ],
+        stop_reason: "tool_use",
+        usage: baseUsage,
+      });
+    });
+
+    await generateBatch(mockClient, { ...baseSpec, count: 32 });
+
+    // Inspect the system prompt sent on the 32nd call (mock.calls index 31).
+    const lastSystem = mockCreate.mock.calls[31][0].system[0].text;
+    // Count bullet lines under the "## Hard constraints" section. The
+    // generation-prompts builder renders each stem as `\n  - <surface>`.
+    const bulletCount = (lastSystem.match(/\n  - /g) ?? []).length;
+    expect(bulletCount).toBe(30);
+    // Sanity: the very first draft's surface (idx=0) should have been dropped
+    // from the LRU window by now.
+    expect(lastSystem).not.toContain("frase numero 0 con ___ aqui.");
+    // And the most recent (idx=30, i.e. the 31st draft) should still be there.
+    expect(lastSystem).toContain("frase numero 30 con ___ aqui.");
+  });
+
+  // ---- Token aggregation ----
+
+  it("aggregates tokenUsage across drafts (3-draft happy path)", async () => {
+    const usage = {
+      input_tokens: 100,
+      cache_creation_input_tokens: 0,
+      cache_read_input_tokens: 50,
+      output_tokens: 200,
+    };
+    let callIndex = 0;
+    mockCreate.mockImplementation(() => {
+      const idx = callIndex++;
+      return Promise.resolve({
+        content: [
+          {
+            type: "tool_use",
+            id: `toolu_${idx}`,
+            name: TOOL_NAME_BY_TYPE.cloze,
+            input: {
+              ...validClozeInput,
+              sentence: `Frase ${idx} con ___ aquí.`,
+            },
+          },
+        ],
+        stop_reason: "tool_use",
+        usage,
+      });
+    });
+
+    const { tokenUsage } = await generateBatch(mockClient, {
+      ...baseSpec,
+      count: 3,
+    });
+
+    expect(tokenUsage).toEqual({
+      inputTokens: 300,
+      cacheCreationInputTokens: 0,
+      cacheReadInputTokens: 150,
+      outputTokens: 600,
+    });
+  });
+
+  it("falls back to 0 when usage cache fields are missing", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_1",
+          name: TOOL_NAME_BY_TYPE.cloze,
+          input: validClozeInput,
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: { input_tokens: 100, output_tokens: 200 },
+    });
+
+    const { tokenUsage } = await generateBatch(mockClient, baseSpec);
+    expect(tokenUsage.cacheCreationInputTokens).toBe(0);
+    expect(tokenUsage.cacheReadInputTokens).toBe(0);
+  });
+});

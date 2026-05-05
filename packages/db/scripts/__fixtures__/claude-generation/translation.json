@@ -1,0 +1,29 @@
+[
+  {
+    "type": "translation",
+    "instructions": "Translate the following English sentence into Spanish.",
+    "sourceText": "I hope you come to the party soon.",
+    "sourceLanguage": "EN",
+    "targetLanguage": "ES",
+    "referenceTranslation": "Espero que vengas pronto a la fiesta.",
+    "topicHint": "social"
+  },
+  {
+    "type": "translation",
+    "instructions": "Translate the following English sentence into Spanish.",
+    "sourceText": "When I have time, I will call you.",
+    "sourceLanguage": "EN",
+    "targetLanguage": "ES",
+    "referenceTranslation": "Cuando tenga tiempo, te llamaré.",
+    "topicHint": "everyday"
+  },
+  {
+    "type": "translation",
+    "instructions": "Translate the following English sentence into Spanish.",
+    "sourceText": "It is important that we attend the meeting on time.",
+    "sourceLanguage": "EN",
+    "targetLanguage": "ES",
+    "referenceTranslation": "Es importante que asistamos a la reunión a tiempo.",
+    "topicHint": "work"
+  }
+]
