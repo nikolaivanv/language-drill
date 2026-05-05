@@ -98,7 +98,7 @@ Total estimated effort: **~10–12 working days**, broken into six phases. Phase
 | Phase | Output | Effort | Depends on | Status |
 |-------|--------|--------|------------|--------|
 | 1 | Curriculum data + schema migration | ~1.5d | — | **Shipped** |
-| 2 | Generator core + CLI driver | ~2d | 1 | Pending |
+| 2 | Generator core + CLI driver | ~2d | 1 | **Shipped** |
 | 3 | Validation + dedup + review queue | ~2d | 2 | Pending |
 | 4 | Lambda + SQS + EventBridge | ~2d | 3 | Pending |
 | 5 | Pool monitoring + adaptive scheduling | ~1.5d | 4 | Pending |
@@ -197,6 +197,8 @@ Update `seed-exercises.ts` (or split into a new `seed-skills.ts`) so `skill_topi
 ---
 
 ### Phase 2 — Generator core + CLI
+
+**Status: shipped.** Spec docs live at `.claude/specs/exercise-generation-phase-2/`. The CLI runs end-to-end against the dev Neon branch: `pnpm generate:exercises --lang es --level B1 --type cloze --grammar-point es-b1-present-subjunctive --count 3` produced 3 valid cloze drafts in 16s for $0.0225 (smoke captured in the PR description). Phase 3 (validator pass + across-batch dedup) is the next dependency.
 
 **Goal:** a single command — `pnpm generate:exercises --lang es --level B1 --type cloze --grammar-point es-b1-present-subjunctive --count 50` — that produces drafts and inserts them into `exercises` with `review_status = 'auto-approved'` (validation comes in Phase 3).
 

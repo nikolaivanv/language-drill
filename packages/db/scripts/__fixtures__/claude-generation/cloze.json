@@ -1,0 +1,26 @@
+[
+  {
+    "type": "cloze",
+    "instructions": "Fill in the blank with the correct present subjunctive form.",
+    "sentence": "Espero que tú ___ pronto a la fiesta.",
+    "correctAnswer": "vengas",
+    "context": "Present subjunctive after expressions of hope (esperar que).",
+    "topicHint": "social"
+  },
+  {
+    "type": "cloze",
+    "instructions": "Complete the sentence with the appropriate verb form.",
+    "sentence": "Cuando ___ tiempo, te llamaré por teléfono.",
+    "correctAnswer": "tenga",
+    "context": "Subjunctive in adverbial clauses with cuando referring to the future.",
+    "topicHint": "everyday"
+  },
+  {
+    "type": "cloze",
+    "instructions": "Fill in the blank using the present subjunctive.",
+    "sentence": "Es importante que nosotros ___ a la reunión a tiempo.",
+    "correctAnswer": "asistamos",
+    "options": ["asistimos", "asistamos", "asistiremos", "asistíamos"],
+    "topicHint": "work"
+  }
+]
