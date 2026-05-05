@@ -35,7 +35,7 @@ These are decisions made up front to align the prototypes with `docs/exercise-st
 | **G** | [debrief](#phase-g--post-session-debrief) | ✅ complete | ~2 days | E |
 | **H** | [theory-panel](#phase-h--theory-reference-panel) | ✅ complete | ~2 days | A |
 | **I** | [progress-page](#phase-i--progress-page) | ✅ complete | ~3 days | A, B |
-| **J** | read-collect | ⬜ not started | ~4 days | A, B, D |
+| **J** | [read-collect](#phase-j--read--collect) | ✅ complete | ~4 days | A, B, D |
 
 **Total:** ~23 working days. Phases A → B → F → E form the critical path; H, I, J can be parallelized once their deps are in.
 
@@ -213,23 +213,26 @@ The progress dashboard at `/progress`:
 
 ## Phase J — Read & collect
 
-**Spec:** to be written (`.claude/specs/read-collect/`)
+**Spec:** `.claude/specs/read-collect/` (39/39 tasks complete)
 
-Per `SCREENS.md §8`, a parallel entry point reachable from the dashboard card and the left nav. The user pastes a passage; Claude flags above-level words; saved words flow into cloze, vocab recall, and translation drills tagged "from your reading".
+A parallel entry point reachable from the dashboard card and the left nav. The user pastes a passage (≤ 2,000 chars); Claude flags above-level words via prompt-cached annotation; saved words land in `user_vocabulary` tagged `source = 'reading'` ready for the future drill-weaving phase. v1 ships the data plumbing — drill weaving is explicitly deferred (Requirement 13).
 
-**Views:** `empty` / `pasting` / `annotated` / `history` (toggled via top-bar buttons)
-
-**Key features:**
-- Annotated reader: 2-column layout (text pane + sticky 280px word bank rail)
-- Highlight intensity toggle: subtle (dotted underline) / assertive (amber wash)
-- Word card popover: 320px, lemma + POS + CEFR + gloss + example + "save to bank"
-- History view of past texts
+**Output:**
+- Shared constants + Zod types: `packages/shared/src/read.ts` (`READ_TEXT_MAX_CHARS`, `READ_CEFR_TOP_RANK` map, `WordFlagSchema`, `FlaggedMapSchema`)
+- Drizzle schema: `packages/db/src/schema/read.ts` adds `read_entries` + `user_vocabulary` (unique on `(user_id, language, word)`, descending index on `(user_id, language, pasted_at DESC)`); migration `0004_*.sql`
+- Claude annotation: `packages/ai/src/annotate.ts` — `submit_annotated_words` tool + ephemeral-cached system prompt + `parseAnnotateResult` (dedupes matched forms by first-seen; rejects on Zod parse failure)
+- Lambda router: `infra/lambda/src/routes/read.ts` mounts five routes (`POST /read/annotate`, `POST /read/entries`, `GET /read/entries`, `GET /read/entries/:id`, `PUT /read/entries/:id/bank`); annotation rate-limit shares the existing `usage_events` daily cap with exercise eval; save + bank-update both run in `db.transaction` so the entry row and vocab upserts can never drift
+- API client: `packages/api-client/src/schemas/read.ts` + four hooks (`useReadAnnotate`, `useReadEntries`, `useReadEntry`, `useSaveReadEntry`, `useUpdateReadBank`) — `useUpdateReadBank` does cache-driven optimistic updates + rollback via `setQueryData` in `onMutate` / `onError`
+- Page-level helpers: `apps/web/app/(dashboard)/read/_lib/{tokenize,calibration-copy}.ts` (Unicode-aware `\p{P}` tokenizer; `~B1+ calibration / showing words rarer than top-3000 · refined by your known set` copy generator with null fallback)
+- Reducer: `apps/web/app/(dashboard)/read/_state/read-page-reducer.ts` (15-action discriminated union; `LOAD_ENTRY` clears popover + toasts in one step; `ENTRY_PERSISTED` pins the new id and raises the save toast atomically; `SET_BANK_FROM_ENTRY` is the rollback hook)
+- Components: `apps/web/app/(dashboard)/read/_components/{read-top-bar,empty-view,paste-view,annotated-view,annotated-text,annotated-skeleton,annotated-error,annotated-footer,intensity-toggle,calibration-strip,word-popover,word-bank-rail,history-view,history-empty-state,save-toast,inline-error-toast}.tsx` plus `word-flag-styles.module.css` — every visual reuses `apps/web/components/ui/`; the WAI-ARIA radiogroup intensity toggle, the click-clamped popover, and the data-word-aware outside-click handler land here
+- Page: `apps/web/app/(dashboard)/read/page.tsx` rewritten as the read host; integration tests in `page.test.tsx` cover every spec scenario including 429 → "annotate →" disabled, optimistic bank rollback + inline error toast, and the SaveToast 4 s auto-dismiss with fake timers
 
 **Backend impact:**
-- New `readEntries` table (id, userId, language, title, source, text, flaggedWords JSONB, bank string[], pastedAt)
-- `POST /read/annotate` — Claude pass to flag above-level words, returns `WordFlag[]`
-- `POST /read/entries`, `GET /read/entries`, `GET /read/entries/:id`, `PUT /read/entries/:id/bank`
-- Saved words upserted into `user_vocabulary` with `source = 'reading'` for drill integration
+- Two new tables (`read_entries`, `user_vocabulary`) + migration `0004_*.sql` — no destructive DDL on existing tables
+- Five new routes mounted under `/read/*`, all auth-gated via the existing `authMiddleware`; OPTIONS routes have no authorizer (CORS preflight)
+- Annotation calls insert one `usage_events` row each (`eventType: 'read_annotation'`, metadata `{ language, textLength, flaggedCount }`); the rate-limit query counts `IN ('ai_evaluation', 'read_annotation')` against `DAILY_EVAL_LIMIT = 50`
+- 404-not-403 anti-leak applied on every ownership check (matches `GET /sessions/:id/debrief`)
 
 This screen accelerates **Layer 3 — Reading integration** from `exercise-strategy.md` (originally Phase 3+); the design promotes it to a first-class feature.
 
