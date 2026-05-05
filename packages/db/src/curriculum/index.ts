@@ -1,0 +1,156 @@
+import deCurriculum from './de';
+import esCurriculum from './es';
+import trCurriculum from './tr';
+import type { GrammarPoint } from './types';
+
+export type { CurriculumCefrLevel, GrammarPoint } from './types';
+export { esCurriculum, deCurriculum, trCurriculum };
+
+/**
+ * The full Phase-1 curriculum: all entries from all three learning languages,
+ * concatenated and frozen. Order is ES → DE → TR.
+ */
+export const ALL_CURRICULA: readonly GrammarPoint[] = Object.freeze([
+  ...esCurriculum,
+  ...deCurriculum,
+  ...trCurriculum,
+]);
+
+const GRAMMAR_POINT_INDEX: ReadonlyMap<string, GrammarPoint> = new Map(
+  ALL_CURRICULA.map((entry) => [entry.key, entry] as const),
+);
+
+/** O(1) lookup by curriculum key. */
+export function getGrammarPoint(key: string): GrammarPoint | undefined {
+  return GRAMMAR_POINT_INDEX.get(key);
+}
+
+const KEY_REGEX = /^(es|de|tr)-(a1|a2|b1|b2)-[a-z0-9-]+$/;
+
+const LANGUAGE_PREFIX_BY_LANGUAGE: Readonly<Record<string, string>> = {
+  ES: 'es',
+  DE: 'de',
+  TR: 'tr',
+};
+
+const PER_LANGUAGE_GRAMMAR_MIN: Readonly<Record<string, Record<string, number>>> = {
+  ES: { A1: 4, A2: 5, B1: 6, B2: 5 },
+  DE: { A1: 4, A2: 5, B1: 6, B2: 5 },
+  TR: { A1: 4, A2: 5, B1: 6, B2: 5 },
+};
+
+/**
+ * Throws if any cross-cutting curriculum invariant is violated. Designed to be
+ * called from `curriculum.test.ts` so the test suite fails fast if the shipped
+ * curriculum drifts. Production code does not call this — production trusts the
+ * invariants because the test gate blocks bad merges.
+ *
+ * The optional `curriculum` argument lets mutation tests pass a cloned and
+ * deliberately-broken copy without touching the frozen `ALL_CURRICULA`.
+ */
+export function assertCurriculumInvariants(
+  curriculum: readonly GrammarPoint[] = ALL_CURRICULA,
+): void {
+  const seenKeys = new Set<string>();
+  const lookup = new Map(curriculum.map((entry) => [entry.key, entry] as const));
+
+  for (const entry of curriculum) {
+    // 1. Key format
+    if (!KEY_REGEX.test(entry.key)) {
+      throw new Error(`Curriculum invariant violated: malformed key '${entry.key}'`);
+    }
+
+    // 2. Globally unique keys
+    if (seenKeys.has(entry.key)) {
+      throw new Error(`Curriculum invariant violated: duplicate key '${entry.key}'`);
+    }
+    seenKeys.add(entry.key);
+
+    // 3. language field matches the key prefix
+    const expectedPrefix = LANGUAGE_PREFIX_BY_LANGUAGE[entry.language];
+    if (!expectedPrefix || !entry.key.startsWith(`${expectedPrefix}-`)) {
+      throw new Error(
+        `Curriculum invariant violated: language '${entry.language}' does not match key prefix on '${entry.key}'`,
+      );
+    }
+
+    // 4. cefrLevel matches the key infix
+    const keyInfix = entry.key.split('-')[1].toUpperCase();
+    if (keyInfix !== entry.cefrLevel) {
+      throw new Error(
+        `Curriculum invariant violated: cefrLevel '${entry.cefrLevel}' does not match key infix on '${entry.key}'`,
+      );
+    }
+
+    // 5. examplesPositive.length >= 2
+    if (entry.examplesPositive.length < 2) {
+      throw new Error(
+        `Curriculum invariant violated: '${entry.key}' has fewer than 2 positive examples`,
+      );
+    }
+
+    // 6. examplesNegative.length >= 1, each starts with '*'
+    if (entry.examplesNegative.length < 1) {
+      throw new Error(
+        `Curriculum invariant violated: '${entry.key}' has no negative examples`,
+      );
+    }
+    for (const negative of entry.examplesNegative) {
+      if (!negative.startsWith('*')) {
+        throw new Error(
+          `Curriculum invariant violated: '${entry.key}' has a negative example missing the leading '*': ${negative}`,
+        );
+      }
+    }
+
+    // 7. commonErrors.length >= 1
+    if (entry.commonErrors.length < 1) {
+      throw new Error(
+        `Curriculum invariant violated: '${entry.key}' has no commonErrors`,
+      );
+    }
+
+    // 8. description.length <= 200
+    if (entry.description.length > 200) {
+      throw new Error(
+        `Curriculum invariant violated: '${entry.key}' description exceeds 200 characters (got ${entry.description.length})`,
+      );
+    }
+
+    // 9. prerequisiteKeys (if present) resolve in the same language
+    if (entry.prerequisiteKeys) {
+      for (const prerequisite of entry.prerequisiteKeys) {
+        const target = lookup.get(prerequisite);
+        if (!target) {
+          throw new Error(
+            `Curriculum invariant violated: '${entry.key}' has dangling prerequisite '${prerequisite}'`,
+          );
+        }
+        if (target.language !== entry.language) {
+          throw new Error(
+            `Curriculum invariant violated: '${entry.key}' has cross-language prerequisite '${prerequisite}' (${target.language} vs ${entry.language})`,
+          );
+        }
+      }
+    }
+  }
+
+  // 10. Per-language grammar counts
+  const perLanguageCounts: Record<string, Record<string, number>> = {};
+  for (const entry of curriculum) {
+    if (entry.kind !== 'grammar') continue;
+    perLanguageCounts[entry.language] ??= {};
+    perLanguageCounts[entry.language][entry.cefrLevel] =
+      (perLanguageCounts[entry.language][entry.cefrLevel] ?? 0) + 1;
+  }
+  for (const [language, mins] of Object.entries(PER_LANGUAGE_GRAMMAR_MIN)) {
+    for (const [level, min] of Object.entries(mins)) {
+      const got = perLanguageCounts[language]?.[level] ?? 0;
+      if (got < min) {
+        throw new Error(
+          `Curriculum invariant violated: ${language} ${level} grammar count ${got} below minimum ${min}`,
+        );
+      }
+    }
+  }
+}

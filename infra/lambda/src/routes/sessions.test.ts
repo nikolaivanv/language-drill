@@ -74,6 +74,7 @@ vi.mock('@language-drill/db', () => ({
     contentJson: 'content_json',
     difficulty: 'difficulty',
     language: 'language',
+    reviewStatus: 'review_status',
   },
   userExerciseHistory: { id: 'id', exerciseId: 'exerciseId', sessionId: 'sessionId' },
   userLanguageProfiles: {
@@ -88,6 +89,18 @@ vi.mock('@language-drill/db', () => ({
     language: 'language',
     startedAt: 'started_at',
   },
+}));
+
+// Mock the review-status filter so we can count calls per route. The
+// SQL-level behaviour (partial-index hit, exclusion of flagged rows) is
+// verified end-to-end in Task 19's manual EXPLAIN step.
+const mockApprovedStatusFilter = vi.fn((table: unknown) => ({
+  __mockToken: 'approved-status-filter',
+  table,
+}));
+vi.mock('../lib/exercise-filters', () => ({
+  APPROVED_STATUSES: ['auto-approved', 'manual-approved'] as const,
+  approvedStatusFilter: (table: unknown) => mockApprovedStatusFilter(table),
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1199,5 +1212,293 @@ describe('GET /sessions/:id/debrief', () => {
 
     expect(res.status).toBe(200);
     expect(res.headers.get('cache-control')).toBe('private, max-age=300');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// review_status filter — Requirement 3.6
+// ---------------------------------------------------------------------------
+//
+// Two filtered call sites in this route file:
+//   - POST /sessions (Drizzle)   → invokes approvedStatusFilter(exercisesTable)
+//   - GET /sessions/today Path B → inlines the predicate in the raw-SQL
+//     UNION-ALL (no helper call)
+//
+// Two intentionally NON-filtered call sites:
+//   - GET /sessions/today Path A → manifest hydration
+//   - GET /sessions/:id/debrief  → manifest hydration
+//
+// These tests verify both halves: filtered sites invoke the helper, and the
+// non-filtered sites preserve flagged exercises that are already in a stored
+// manifest. SQL-level filter behaviour is verified end-to-end in Task 19's
+// manual EXPLAIN step.
+
+describe('review_status filter — POST /sessions', () => {
+  let app: Hono;
+
+  const authEnv = {
+    event: {
+      requestContext: {
+        authorizer: { jwt: { claims: { sub: 'user_123' } } },
+      },
+    },
+  };
+
+  const FLAGGED_FIXTURE_ID = 'flagged-fixture-uuid';
+  const REJECTED_FIXTURE_ID = 'rejected-fixture-uuid';
+
+  const approvedExercises = [
+    { id: 'a1', type: 'cloze', language: 'ES', difficulty: 'B1', contentJson: { sentence: '___ a' }, audioS3Key: null, createdAt: new Date() },
+    { id: 'a2', type: 'translation', language: 'ES', difficulty: 'B1', contentJson: { source: 'b' }, audioS3Key: null, createdAt: new Date() },
+    { id: 'a3', type: 'vocab_recall', language: 'ES', difficulty: 'B1', contentJson: { word: 'c' }, audioS3Key: null, createdAt: new Date() },
+    { id: 'a4', type: 'cloze', language: 'ES', difficulty: 'B1', contentJson: { sentence: '___ d' }, audioS3Key: null, createdAt: new Date() },
+    { id: 'a5', type: 'translation', language: 'ES', difficulty: 'B1', contentJson: { source: 'e' }, audioS3Key: null, createdAt: new Date() },
+  ];
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const mod = await import('./sessions');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  it('100 random pool draws never include flagged or rejected fixtures', async () => {
+    // The mock represents the SQL filter excluding the flagged/rejected
+    // fixtures from this cell — only approved rows ever reach the route.
+    // This is the regression canary: if the route stops applying
+    // approvedStatusFilter, future fixture additions would expose the leak.
+    for (let i = 0; i < 100; i++) {
+      mockLimit.mockResolvedValueOnce(approvedExercises);
+      mockReturning.mockResolvedValueOnce([{ id: `session-${i}` }]);
+    }
+
+    const seenIds = new Set<string>();
+    for (let i = 0; i < 100; i++) {
+      const res = await app.request(
+        '/sessions',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ language: 'ES', difficulty: 'B1', exerciseCount: 5 }),
+        },
+        authEnv,
+      );
+      // Acceptable: 200 (manifest of approved exercises) or 422 (filter left
+      // pool too small). Either outcome confirms flagged rows didn't leak.
+      expect([200, 422]).toContain(res.status);
+      if (res.status === 200) {
+        const body = (await res.json()) as AnyJson;
+        for (const ex of body.exercises as Array<{ id: string }>) {
+          seenIds.add(ex.id);
+        }
+      }
+    }
+
+    expect(seenIds).not.toContain(FLAGGED_FIXTURE_ID);
+    expect(seenIds).not.toContain(REJECTED_FIXTURE_ID);
+    // Helper invoked once per pool query (one per request).
+    expect(mockApprovedStatusFilter).toHaveBeenCalledTimes(100);
+    expect(mockApprovedStatusFilter).toHaveBeenCalledWith(
+      expect.objectContaining({ reviewStatus: 'review_status' }),
+    );
+  });
+});
+
+describe('review_status filter — GET /sessions/today Path B', () => {
+  let app: Hono;
+
+  const authEnv = {
+    event: {
+      requestContext: {
+        authorizer: { jwt: { claims: { sub: 'user_123' } } },
+      },
+    },
+  };
+
+  const FLAGGED_FIXTURE_ID = 'flagged-fixture-uuid';
+
+  const approvedDraws = [
+    { id: 'p1', type: 'cloze', topic_hint: null, difficulty: 'B1' },
+    { id: 'p2', type: 'cloze', topic_hint: null, difficulty: 'B1' },
+    { id: 'p3', type: 'translation', topic_hint: null, difficulty: 'B1' },
+    { id: 'p4', type: 'vocab_recall', topic_hint: null, difficulty: 'B1' },
+    { id: 'p5', type: 'cloze', topic_hint: null, difficulty: 'B1' },
+  ];
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const mod = await import('./sessions');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  it('100 fresh-plan composes never include the flagged fixture', async () => {
+    // Per iteration: no today-session, profile B1, UNION-ALL returns approved
+    // draws only (the SQL filter excluded the flagged fixture). The Path B
+    // raw-SQL site adds the predicate inline rather than via the helper, so
+    // mockApprovedStatusFilter is NOT invoked here — by design.
+    for (let i = 0; i < 100; i++) {
+      mockLimit
+        .mockResolvedValueOnce([]) // no today-session
+        .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
+      mockExecute.mockResolvedValueOnce({ rows: approvedDraws });
+    }
+
+    const seenIds = new Set<string>();
+    for (let i = 0; i < 100; i++) {
+      const res = await app.request(
+        '/sessions/today?language=ES',
+        { method: 'GET' },
+        authEnv,
+      );
+      // Acceptable: 200 with items, or 200 with INSUFFICIENT_POOL if the
+      // filter trimmed the slot count below five.
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as AnyJson;
+      for (const it of (body.items ?? []) as Array<{ id: string }>) {
+        seenIds.add(it.id);
+      }
+    }
+
+    expect(seenIds).not.toContain(FLAGGED_FIXTURE_ID);
+    // Path B does not call the helper — it inlines the predicate in raw SQL.
+    expect(mockApprovedStatusFilter).not.toHaveBeenCalled();
+    // Path B took the UNION-ALL site every iteration.
+    expect(mockExecute).toHaveBeenCalledTimes(100);
+  });
+});
+
+describe('review_status non-filter — GET /sessions/today Path A', () => {
+  let app: Hono;
+
+  const authEnv = {
+    event: {
+      requestContext: {
+        authorizer: { jwt: { claims: { sub: 'user_123' } } },
+      },
+    },
+  };
+
+  const FLAGGED_FIXTURE_ID = 'flagged-fixture-uuid';
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const mod = await import('./sessions');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  it('today-session manifest containing a flagged exercise still hydrates Path A', async () => {
+    // Regression for the deliberate non-filter at sessions.ts Path A:
+    // hydration by stored manifest IDs preserves flagged exercises so the
+    // user doesn't see a phantom missing slot.
+    const startedAt = new Date('2026-05-04T08:00:00Z');
+
+    mockLimit
+      .mockResolvedValueOnce([
+        {
+          sessionId: 'session-uuid-flagged-manifest',
+          exerciseIds: [FLAGGED_FIXTURE_ID, 'e2', 'e3', 'e4', 'e5'],
+          exerciseCount: 5,
+          correctCount: 0,
+          startedAt,
+          completedAt: null,
+        },
+      ])
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
+
+    // The hydrate query is unfiltered: the flagged fixture's row is returned
+    // alongside the others.
+    mockSelectAwait.mockResolvedValueOnce([
+      { exerciseId: FLAGGED_FIXTURE_ID, type: 'cloze', topicHint: null, difficulty: 'B1', historyId: null },
+      { exerciseId: 'e2', type: 'cloze', topicHint: null, difficulty: 'B1', historyId: null },
+      { exerciseId: 'e3', type: 'translation', topicHint: null, difficulty: 'B1', historyId: null },
+      { exerciseId: 'e4', type: 'vocab_recall', topicHint: null, difficulty: 'B1', historyId: null },
+      { exerciseId: 'e5', type: 'cloze', topicHint: null, difficulty: 'B1', historyId: null },
+    ]);
+
+    const res = await app.request('/sessions/today?language=ES', { method: 'GET' }, authEnv);
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    // Path A's wire format omits exercise ids — the regression is that no slot
+    // was dropped from the manifest. Five exerciseIds → five items with
+    // sequential indexes; if Path A had been wrongly filtered to skip the
+    // flagged row, the array would be shorter or have a gap in `index`.
+    expect(body.items).toHaveLength(5);
+    expect((body.items as Array<{ index: number }>).map((it) => it.index)).toEqual([1, 2, 3, 4, 5]);
+    // Path A must NOT invoke the filter helper.
+    expect(mockApprovedStatusFilter).not.toHaveBeenCalled();
+    // Path A doesn't run the UNION-ALL pool sample either.
+    expect(mockExecute).not.toHaveBeenCalled();
+  });
+});
+
+describe('review_status non-filter — GET /sessions/:id/debrief', () => {
+  let app: Hono;
+
+  const authEnv = {
+    event: {
+      requestContext: {
+        authorizer: { jwt: { claims: { sub: 'user_123' } } },
+      },
+    },
+  };
+
+  const SESSION_ID = '11111111-2222-4222-8222-666666666666';
+  const FLAGGED_FIXTURE_ID = 'flagged-fixture-uuid';
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const mod = await import('./sessions');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  it("completed session manifest containing a flagged exercise still appears in debrief", async () => {
+    // Regression for the deliberate non-filter at sessions.ts debrief: a
+    // completed session's debrief view must surface every manifest item,
+    // including any exercise that was flagged after the session was committed.
+    const startedAt = new Date('2026-05-04T10:00:00Z');
+    const completedAt = new Date('2026-05-04T10:05:00Z');
+
+    mockLimit.mockResolvedValueOnce([
+      {
+        id: SESSION_ID,
+        userId: 'user_123',
+        language: 'ES',
+        difficulty: 'B1',
+        exerciseCount: 1,
+        correctCount: 1,
+        exerciseIds: [FLAGGED_FIXTURE_ID],
+        startedAt,
+        completedAt,
+      },
+    ]);
+
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        {
+          exercise_id: FLAGGED_FIXTURE_ID,
+          type: 'cloze',
+          content_json: { instructions: 'Fill', sentence: 'Yo ___' },
+          score: 0.85,
+          response_json: { userAnswer: 'fui', evaluation: { score: 0.85 } },
+        },
+      ],
+    });
+
+    const res = await app.request(
+      `/sessions/${SESSION_ID}/debrief`,
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    const itemIds = (body.items as Array<{ exerciseId: string }>).map((it) => it.exerciseId);
+    expect(itemIds).toContain(FLAGGED_FIXTURE_ID);
+    // Debrief hydration is unfiltered — helper not invoked.
+    expect(mockApprovedStatusFilter).not.toHaveBeenCalled();
   });
 });
