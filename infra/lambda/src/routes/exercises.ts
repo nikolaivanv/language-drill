@@ -11,6 +11,7 @@ import {
 } from '@language-drill/db';
 import { createClaudeClient, evaluateAnswer } from '@language-drill/ai';
 import { db } from '../db';
+import { approvedStatusFilter } from '../lib/exercise-filters';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
 
@@ -60,6 +61,7 @@ exercises.get('/exercises', async (c) => {
   const conditions = [
     eq(exercisesTable.language, language),
     eq(exercisesTable.difficulty, difficulty),
+    approvedStatusFilter(exercisesTable),
   ];
 
   if (type) {
@@ -96,7 +98,7 @@ exercises.get('/exercises/:id', async (c) => {
   const rows = await db
     .select()
     .from(exercisesTable)
-    .where(eq(exercisesTable.id, id))
+    .where(and(eq(exercisesTable.id, id), approvedStatusFilter(exercisesTable)))
     .limit(1);
 
   if (rows.length === 0) {
@@ -133,7 +135,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
   const rows = await db
     .select()
     .from(exercisesTable)
-    .where(eq(exercisesTable.id, id))
+    .where(and(eq(exercisesTable.id, id), approvedStatusFilter(exercisesTable)))
     .limit(1);
 
   if (rows.length === 0) {

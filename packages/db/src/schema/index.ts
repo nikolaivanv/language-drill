@@ -9,12 +9,18 @@
 //   practice_sessions(userId, startedAt)            — recent-sessions queries
 //   invitations(code)                               — invite lookup at signup
 //   invitations(usedBy)                             — API invite check middleware
+//   exercises(language, difficulty, type, grammarPointKey)
+//     WHERE review_status IN ('auto-approved', 'manual-approved') — pool lookup
+//   generation_jobs(cellKey, startedAt DESC)        — daily refill scheduler
 
 export { users, userLanguageProfiles, userPreferences } from './users';
 export type { UserPreferences, NewUserPreferences } from './users';
 export { skills, skillTopics } from './skills';
 export { exercises, exerciseTags } from './exercises';
+export type { Exercise } from './exercises';
 export { userExerciseHistory, spacedRepetitionCards } from './progress';
 export { practiceSessions } from './sessions';
 export { playlists, playlistItems } from './playlists';
 export { invitations, usageEvents } from './access';
+export { generationJobs } from './generation';
+export type { GenerationJob, NewGenerationJob } from './generation';
