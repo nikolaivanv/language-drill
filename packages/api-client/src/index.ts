@@ -60,6 +60,30 @@ export {
   type TodayPlanSummary,
   type TodayPlanResponse,
 } from './schemas/today';
+export {
+  AnnotateRequestSchema,
+  AnnotateResponseSchema,
+  SaveReadEntryRequestSchema,
+  SaveReadEntryResponseSchema,
+  UpdateBankRequestSchema,
+  UpdateBankResponseSchema,
+  ReadEntrySummarySchema,
+  ReadEntriesResponseSchema,
+  ReadEntryResponseSchema,
+  WordFlagSchema,
+  FlaggedMapSchema,
+  type AnnotateRequest,
+  type AnnotateResponse,
+  type SaveReadEntryRequest,
+  type SaveReadEntryResponse,
+  type UpdateBankRequest,
+  type UpdateBankResponse,
+  type ReadEntrySummary,
+  type ReadEntriesResponse,
+  type ReadEntryResponse,
+  type WordFlag,
+  type FlaggedMap,
+} from './schemas/read';
 export { useHealth } from './hooks/useHealth';
 export {
   useExercise,
@@ -101,4 +125,21 @@ export {
   useTodayPlan,
   type UseTodayPlanParams,
 } from './hooks/useTodayPlan';
+export {
+  useReadAnnotate,
+  type UseReadAnnotateOptions,
+} from './hooks/useReadAnnotate';
+export {
+  useReadEntries,
+  useReadEntry,
+  type UseReadEntriesParams,
+  type UseReadEntryParams,
+} from './hooks/useReadEntries';
+export {
+  useSaveReadEntry,
+  useUpdateReadBank,
+  type UseSaveReadEntryOptions,
+  type UseUpdateReadBankOptions,
+  type UpdateReadBankParams,
+} from './hooks/useReadEntryMutations';
 export { createAuthenticatedFetch, type AuthenticatedFetch } from './fetchClient';

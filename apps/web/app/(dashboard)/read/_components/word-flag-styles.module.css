@@ -1,0 +1,74 @@
+/* ---------------------------------------------------------------------------
+ * Word-flag styles (`.rd-word` in the prototype) for the AnnotatedText reader.
+ * One CSS Module so the React tree stays pure markup. Class names map to:
+ *   styles.word       — base reset (always applied)
+ *   styles.subtle     — dotted-underline intensity
+ *   styles.assertive  — amber-wash intensity
+ *   styles.saved      — bank-modifier (compounds with subtle/assertive)
+ *   styles.active     — popover-anchor override (beats all other classes)
+ * --------------------------------------------------------------------------- */
+
+.word {
+  background: transparent;
+  border: none;
+  border-radius: 2px;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  margin: 0;
+  padding: 0;
+  transition: all 0.12s;
+}
+
+/* SUBTLE — dotted accent underline */
+.subtle {
+  text-decoration: underline dotted var(--color-accent);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+}
+
+.subtle:hover {
+  background: var(--color-accent-soft);
+  text-decoration-style: solid;
+}
+
+/* ASSERTIVE — amber-wash gradient */
+.assertive {
+  background: linear-gradient(
+    180deg,
+    transparent 50%,
+    var(--color-hilite-soft) 50%,
+    var(--color-hilite-soft) 92%,
+    transparent 92%
+  );
+  padding: 0 1px;
+}
+
+.assertive:hover {
+  background: var(--color-hilite-soft);
+}
+
+/* SAVED — modifier; compounds with intensity */
+.saved.subtle {
+  color: var(--color-accent-2);
+  font-weight: 500;
+  text-decoration: underline solid var(--color-accent);
+  text-decoration-thickness: 2px;
+}
+
+.saved.assertive {
+  background: var(--color-accent-soft);
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px var(--color-accent-soft);
+  color: var(--color-accent-2);
+  font-weight: 500;
+}
+
+/* ACTIVE — popover-anchor override; beats both intensity and saved */
+.active {
+  background: var(--color-ink) !important;
+  border-radius: 3px !important;
+  color: var(--color-paper) !important;
+  padding: 0 3px !important;
+  text-decoration: none !important;
+}

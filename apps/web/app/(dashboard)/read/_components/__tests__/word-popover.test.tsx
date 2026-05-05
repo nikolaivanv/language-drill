@@ -1,0 +1,138 @@
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import type { WordFlag } from '@language-drill/shared';
+import { CefrLevel } from '@language-drill/shared';
+import { WordPopover } from '../word-popover';
+
+// ---------------------------------------------------------------------------
+// WordPopover — callbacks, keyboard escape, position clamp.
+// (Requirements 7.1–7.7, 14.3)
+// ---------------------------------------------------------------------------
+
+const ENTRY: WordFlag = {
+  lemma: 'aldea',
+  pos: 'noun',
+  gloss: 'a small village',
+  example: 'la aldea está cerca del río',
+  freq: 4321,
+  cefr: CefrLevel.B2,
+};
+
+const baseProps = {
+  entry: ENTRY,
+  word: 'aldea',
+  x: 600,
+  y: 200,
+  containerWidth: 1200,
+  inBank: false,
+  onSave: () => {},
+  onSkip: () => {},
+  onClose: () => {},
+} as const;
+
+describe('WordPopover — header / body content', () => {
+  it('renders the lemma, POS, gloss, CEFR, example, and freq', () => {
+    render(<WordPopover {...baseProps} />);
+    expect(screen.getByText('aldea')).toBeInTheDocument();
+    expect(screen.getByText('noun')).toBeInTheDocument();
+    expect(screen.getByText('a small village')).toBeInTheDocument();
+    expect(screen.getByText('B2')).toBeInTheDocument();
+    expect(
+      screen.getByText('la aldea está cerca del río'),
+    ).toBeInTheDocument();
+    // 4321 is rendered with the en-US thousands separator: "4,321".
+    expect(screen.getByText(/freq #4,321/)).toBeInTheDocument();
+  });
+});
+
+describe('WordPopover — save / skip / Escape', () => {
+  it('clicking save fires onSave', () => {
+    const onSave = vi.fn();
+    render(<WordPopover {...baseProps} onSave={onSave} />);
+    fireEvent.click(
+      screen.getByRole('button', { name: /\+ save to bank/i }),
+    );
+    expect(onSave).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows the "✓ saved · undo" accent button when inBank is true', () => {
+    const onSave = vi.fn();
+    render(<WordPopover {...baseProps} inBank={true} onSave={onSave} />);
+    const button = screen.getByRole('button', { name: /✓ saved · undo/i });
+    expect(button).toBeInTheDocument();
+    fireEvent.click(button);
+    expect(onSave).toHaveBeenCalledTimes(1);
+    // The "+ save to bank" label should not be on screen when banked.
+    expect(
+      screen.queryByRole('button', { name: /\+ save to bank/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('clicking skip fires onSkip', () => {
+    const onSkip = vi.fn();
+    render(<WordPopover {...baseProps} onSkip={onSkip} />);
+    fireEvent.click(screen.getByRole('button', { name: /^skip$/i }));
+    expect(onSkip).toHaveBeenCalledTimes(1);
+  });
+
+  it('Escape on the popover fires onClose', () => {
+    const onClose = vi.fn();
+    render(<WordPopover {...baseProps} onClose={onClose} />);
+    const dialog = screen.getByRole('dialog');
+    fireEvent.keyDown(dialog, { key: 'Escape' });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('clicks inside the popover do not bubble (parent outside-click handler is shielded)', () => {
+    const parentClick = vi.fn();
+    render(
+      <div onClick={parentClick}>
+        <WordPopover {...baseProps} />
+      </div>,
+    );
+    fireEvent.click(screen.getByRole('dialog'));
+    expect(parentClick).not.toHaveBeenCalled();
+  });
+});
+
+describe('WordPopover — position clamp', () => {
+  it('pins to left edge (left = 8) when x = 0', () => {
+    render(<WordPopover {...baseProps} x={0} containerWidth={1200} />);
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.style.left).toBe('8px');
+  });
+
+  it('pins to right edge (left = containerWidth - 320) when x = containerWidth', () => {
+    render(<WordPopover {...baseProps} x={1200} containerWidth={1200} />);
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.style.left).toBe('880px'); // 1200 - 320
+  });
+
+  it('centers the card on the click coordinate when there is room on both sides', () => {
+    render(<WordPopover {...baseProps} x={600} containerWidth={1200} />);
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.style.left).toBe('440px'); // 600 - 160
+  });
+
+  it('places top at the supplied y', () => {
+    render(<WordPopover {...baseProps} y={250} />);
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.style.top).toBe('250px');
+  });
+});
+
+describe('WordPopover — autoFocus', () => {
+  it('focuses the skip button when autoFocus is true', () => {
+    render(<WordPopover {...baseProps} autoFocus />);
+    expect(
+      screen.getByRole('button', { name: /^skip$/i }),
+    ).toHaveFocus();
+  });
+
+  it('does not steal focus when autoFocus is false', () => {
+    render(<WordPopover {...baseProps} />);
+    expect(
+      screen.getByRole('button', { name: /^skip$/i }),
+    ).not.toHaveFocus();
+  });
+});
