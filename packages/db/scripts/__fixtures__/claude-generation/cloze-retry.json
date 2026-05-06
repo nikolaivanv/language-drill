@@ -1,0 +1,10 @@
+[
+  {
+    "type": "cloze",
+    "instructions": "Fill in the blank with the correct present subjunctive form.",
+    "sentence": "Quiero que ella ___ la verdad sin miedo.",
+    "correctAnswer": "diga",
+    "context": "Present subjunctive after expressions of desire (querer que).",
+    "topicHint": "everyday"
+  }
+]

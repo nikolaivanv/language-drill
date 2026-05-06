@@ -66,6 +66,23 @@ export {
 } from "./cost-model.js";
 export type { ClaudeUsageBreakdown } from "./cost-model.js";
 
+export {
+  validateDraft,
+  parseValidationResult,
+  VALIDATION_TOOL,
+  VALIDATION_TOOL_NAME,
+  VALIDATION_MODEL,
+  VALIDATION_MAX_TOKENS,
+  VALIDATION_TEMPERATURE,
+} from "./validate.js";
+export type { ValidationResult, ValidateDraftResult } from "./validate.js";
+
+export {
+  buildValidationSystemPrompt,
+  buildValidationUserPrompt,
+  VALIDATION_SYSTEM_PROMPT_TEMPLATE,
+} from "./validation-prompts.js";
+
 /**
  * Creates an Anthropic client instance configured with the provided API key.
  */

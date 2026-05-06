@@ -26,9 +26,11 @@ import {
   GENERATION_MODEL,
   ZERO_USAGE,
   addUsage,
+  canonicalSurface,
   createClaudeClient,
   estimateCostUsd,
   generateBatch,
+  validateDraft,
   type ClaudeUsageBreakdown,
   type ExerciseDraft,
   type GenerationSpec,
@@ -55,6 +57,8 @@ import {
   type Cell,
 } from './generate-exercises-resolve-cells';
 import { createMockAnthropicClient } from './generate-exercises-mock-client';
+import { routeValidationResult } from './generate-exercises-validate';
+import { requireEnv } from './env-helpers';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -97,26 +101,26 @@ export type CellResult = {
   cell: Cell;
   jobId: string;
   status: 'succeeded' | 'failed' | 'skipped-cost-cap';
+  /** Rows that survived dedup AND validation (was: every successful generateBatch result in Phase 2). */
   insertedCount: number;
+  /** Drafts whose first INSERT collided with the dedup index (per-ordinal granularity). */
   skippedCount: number;
+  /** Generator + validator + retries combined. */
   tokenUsage: ClaudeUsageBreakdown;
   costUsd: number;
   errorMessage?: string;
   durationMs: number;
   inBatchDuplicateCount: number;
+  // Phase 3:
+  /** Every draft that hit the validator (incl. retries). */
+  validatedCount: number;
+  /** 'flagged' rows inserted. */
+  flaggedCount: number;
+  /** Routed-rejected + retry-given-up. */
+  rejectedCount: number;
+  /** Ordinals where all 3 retries collided or all rejected. */
+  dedupGivenUpCount: number;
 };
-
-// ---------------------------------------------------------------------------
-// Env helpers
-// ---------------------------------------------------------------------------
-
-export function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (value === undefined || value === '') {
-    throw new Error(`${name} environment variable is not set`);
-  }
-  return value;
-}
 
 // ---------------------------------------------------------------------------
 // Dry-run summary
@@ -146,6 +150,197 @@ export function printDryRunSummary(cells: readonly Cell[], args: ParsedArgs): vo
   process.stdout.write(
     `Total estimated cost: ~$${totalCost.toFixed(4)} (cap: $${args.maxCostUsd.toFixed(2)})\n`,
   );
+}
+
+// ---------------------------------------------------------------------------
+// validateAndInsertWithRetry — Phase 3 per-draft pipeline.
+//
+// For each draft produced by `generateBatch`, runs the validator → routes
+// the verdict → on auto-approved/flagged inserts the row, on rejected drops
+// it, on dedup-collision regenerates a fresh draft with a bumped batchSeed
+// and retries (up to 3× per ordinal). Returns one of five terminal statuses
+// the caller (Task 16's runOneCell) folds into the cell-level counters.
+// ---------------------------------------------------------------------------
+
+const MAX_DEDUP_RETRIES = 3;
+
+export type DraftOutcome = {
+  terminalStatus:
+    | 'inserted-approved'
+    | 'inserted-flagged'
+    | 'rejected'
+    | 'first-attempt-dedup-then-success'
+    | 'dedup-given-up';
+  /** Set when terminalStatus is one of the inserted-* / dedup-then-success cases. */
+  terminalReviewStatus?: 'auto-approved' | 'flagged';
+  /** Generator + validator usage from retries (the original generator call's
+   *  usage is folded by the caller; the original validator call's usage IS
+   *  included here — see validate.test.ts:295 regression note in design). */
+  extraUsage: ClaudeUsageBreakdown;
+  /** Additional drafts Claude produced via retries (0..MAX_DEDUP_RETRIES). */
+  extraProduced: number;
+  /** 1 (original validator call) + N retry validator calls. */
+  validatedCount: number;
+};
+
+export type RunOneCellOpts = {
+  db: Db;
+  client: Anthropic;
+  spec: GenerationSpec;
+  draft: ExerciseDraft;
+  ordinal: number;
+  cell: Cell;
+  args: ParsedArgs;
+  generatedAt: Date;
+};
+
+/**
+ * Issue a single-draft regeneration with a bumped batchSeed so the
+ * deterministic UUID derivation produces a fresh id distinct from the
+ * original/prior retry attempts.
+ */
+async function runRetryGeneration(
+  client: Anthropic,
+  spec: GenerationSpec,
+  retryN: number,
+): Promise<{ draft: ExerciseDraft; usage: ClaudeUsageBreakdown }> {
+  const retrySpec: GenerationSpec = {
+    ...spec,
+    count: 1,
+    batchSeed: `${spec.batchSeed}::retry-${retryN}`,
+  };
+  const result = await generateBatch(client, retrySpec);
+  return { draft: result.drafts[0], usage: result.tokenUsage };
+}
+
+export async function validateAndInsertWithRetry(
+  opts: RunOneCellOpts,
+): Promise<DraftOutcome> {
+  let extraUsage: ClaudeUsageBreakdown = ZERO_USAGE;
+  let extraProduced = 0;
+  let validatedCount = 0;
+
+  // Attempt 0 = the original draft from the cell's batch. Subsequent attempts
+  // are dedup retries.
+  let currentDraft: ExerciseDraft = opts.draft;
+  let firstAttemptDeduped = false;
+
+  for (let attempt = 0; attempt <= MAX_DEDUP_RETRIES; attempt++) {
+    if (aborted) throw new Error('Aborted by user (SIGINT)');
+
+    // Validate. Every validator call's usage folds into extraUsage — there
+    // is NO conditional guard on attempt index (the bug the design validator
+    // caught). Token-totals regression test in Task 25 enforces this.
+    const { result, tokenUsage: valUsage } = await validateDraft(
+      opts.client,
+      currentDraft,
+      opts.spec,
+    );
+    extraUsage = addUsage(extraUsage, valUsage);
+    validatedCount++;
+
+    const decision = routeValidationResult(result);
+
+    // ---- Rejected branch ------------------------------------------------
+    if (decision.reviewStatus === 'rejected') {
+      // If we're already retrying a dedup-collided slot, dispatch another
+      // retry; if we've exhausted retries, give up on this slot.
+      if (firstAttemptDeduped && attempt < MAX_DEDUP_RETRIES) {
+        const retry = await runRetryGeneration(
+          opts.client,
+          opts.spec,
+          attempt + 1,
+        );
+        currentDraft = retry.draft;
+        extraUsage = addUsage(extraUsage, retry.usage);
+        extraProduced += 1;
+        continue;
+      }
+      return firstAttemptDeduped
+        ? {
+            terminalStatus: 'dedup-given-up',
+            extraUsage,
+            extraProduced,
+            validatedCount,
+          }
+        : {
+            terminalStatus: 'rejected',
+            extraUsage,
+            extraProduced,
+            validatedCount,
+          };
+    }
+
+    // ---- Auto-approved or flagged branch — attempt INSERT ---------------
+    const dedupKey = canonicalSurface(currentDraft.contentJson);
+    const contentWithKey = { ...currentDraft.contentJson, _dedupKey: dedupKey };
+    const inserted = await opts.db
+      .insert(exercises)
+      .values({
+        id: currentDraft.id,
+        type: opts.cell.exerciseType,
+        language: opts.cell.language,
+        difficulty: opts.cell.cefrLevel,
+        contentJson: contentWithKey,
+        grammarPointKey: opts.cell.grammarPoint.key,
+        topicDomain: opts.args.topicDomain,
+        generationSource: 'claude-realtime' as const,
+        modelId: GENERATION_MODEL,
+        reviewStatus: decision.reviewStatus,
+        qualityScore: result.qualityScore,
+        flaggedReasons:
+          decision.flaggedReasons.length > 0 ? decision.flaggedReasons : null,
+        generatedAt: opts.generatedAt,
+      })
+      .onConflictDoNothing()
+      .returning({ id: exercises.id });
+
+    if (inserted.length > 0) {
+      // Tag insert. PK (exerciseId, skillTopicId) covers re-runs.
+      const skillTopicId = deterministicUuid(
+        `skill-topic:${opts.cell.grammarPoint.key}`,
+      );
+      await opts.db
+        .insert(exerciseTags)
+        .values({ exerciseId: currentDraft.id, skillTopicId })
+        .onConflictDoNothing();
+
+      const terminalStatus = firstAttemptDeduped
+        ? ('first-attempt-dedup-then-success' as const)
+        : decision.reviewStatus === 'auto-approved'
+          ? ('inserted-approved' as const)
+          : ('inserted-flagged' as const);
+
+      return {
+        terminalStatus,
+        terminalReviewStatus: decision.reviewStatus,
+        extraUsage,
+        extraProduced,
+        validatedCount,
+      };
+    }
+
+    // INSERT was a no-op: dedup-index conflict on _dedupKey within the cell.
+    firstAttemptDeduped = true;
+    if (attempt < MAX_DEDUP_RETRIES) {
+      const retry = await runRetryGeneration(
+        opts.client,
+        opts.spec,
+        attempt + 1,
+      );
+      currentDraft = retry.draft;
+      extraUsage = addUsage(extraUsage, retry.usage);
+      extraProduced += 1;
+    }
+  }
+
+  // All attempts collided with the dedup index without a successful INSERT.
+  return {
+    terminalStatus: 'dedup-given-up',
+    extraUsage,
+    extraProduced,
+    validatedCount,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -209,23 +404,88 @@ export async function runOneCell(
     batchSeed: args.batchSeed,
   };
 
-  let drafts: ExerciseDraft[];
-  let tokenUsage: ClaudeUsageBreakdown;
+  // Phase 3 accumulators. `combinedUsage` starts at the generator batch's
+  // usage so the original generator call is counted exactly once; per-draft
+  // `outcome.extraUsage` covers every validator call + every retry's
+  // generator+validator. Counts grow during the per-ordinal loop below.
+  let combinedUsage: ClaudeUsageBreakdown = ZERO_USAGE;
+  let producedCount = 0;
+  let approvedCount = 0;
+  let flaggedCount = 0;
+  let rejectedCount = 0;
+  let validatedCount = 0;
+  let dedupGivenUpCount = 0;
+  let insertedCount = 0;
+  let firstAttemptSkippedCount = 0;
+  let inBatchDuplicateCount = 0;
+  const generatedAt = new Date();
+
   try {
-    const result = await generateBatch(client, spec);
-    drafts = result.drafts;
-    tokenUsage = result.tokenUsage;
-    // Window between Claude resolving and the bulk INSERT — if SIGINT arrived
-    // during the Claude call, abort here so partial drafts never land.
+    const batch = await generateBatch(client, spec);
+    // Window between Claude resolving and the per-draft loop — if SIGINT
+    // arrived during the Claude call, abort here so partial drafts never land.
     if (aborted) {
       throw new Error('Aborted by user (SIGINT)');
+    }
+    combinedUsage = addUsage(combinedUsage, batch.tokenUsage);
+    producedCount += batch.drafts.length;
+    inBatchDuplicateCount = batch.drafts.filter(
+      (d) => d.metadata.inBatchDuplicate,
+    ).length;
+
+    for (let ordinal = 0; ordinal < batch.drafts.length; ordinal++) {
+      const draft = batch.drafts[ordinal];
+      if (aborted) throw new Error('Aborted by user (SIGINT)');
+
+      const outcome = await validateAndInsertWithRetry({
+        db,
+        client,
+        spec,
+        draft,
+        ordinal,
+        cell,
+        args,
+        generatedAt,
+      });
+
+      combinedUsage = addUsage(combinedUsage, outcome.extraUsage);
+      producedCount += outcome.extraProduced;
+      validatedCount += outcome.validatedCount;
+
+      switch (outcome.terminalStatus) {
+        case 'inserted-approved':
+          approvedCount += 1;
+          insertedCount += 1;
+          break;
+        case 'inserted-flagged':
+          flaggedCount += 1;
+          insertedCount += 1;
+          break;
+        case 'rejected':
+          rejectedCount += 1;
+          break;
+        case 'first-attempt-dedup-then-success':
+          firstAttemptSkippedCount += 1;
+          insertedCount += 1;
+          if (outcome.terminalReviewStatus === 'auto-approved') {
+            approvedCount += 1;
+          } else {
+            flaggedCount += 1;
+          }
+          break;
+        case 'dedup-given-up':
+          firstAttemptSkippedCount += 1;
+          rejectedCount += 1;
+          dedupGivenUpCount += 1;
+          break;
+      }
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return failClosed({
       cell,
       jobId,
-      tokenUsage: ZERO_USAGE,
+      tokenUsage: combinedUsage,
       durationMs: Date.now() - startedAt,
       errorMessage: message,
       auditRowExists: true,
@@ -233,54 +493,24 @@ export async function runOneCell(
     });
   }
 
-  // Bulk insert drafts. Re-runs hit the deterministic ID and skip silently.
-  const generatedAt = new Date();
-  const insertedRows = await db
-    .insert(exercises)
-    .values(
-      drafts.map((d) => ({
-        id: d.id,
-        type: cell.exerciseType,
-        language: cell.language,
-        difficulty: cell.cefrLevel,
-        contentJson: d.contentJson,
-        grammarPointKey: cell.grammarPoint.key,
-        topicDomain: args.topicDomain,
-        generationSource: 'claude-realtime' as const,
-        modelId: GENERATION_MODEL,
-        reviewStatus: 'auto-approved' as const,
-        generatedAt,
-      })),
-    )
-    .onConflictDoNothing()
-    .returning({ id: exercises.id });
-  const insertedIds = new Set(insertedRows.map((r) => r.id));
-
-  // Bulk insert exercise_tags. PK (exerciseId, skillTopicId) covers re-runs.
-  await db
-    .insert(exerciseTags)
-    .values(drafts.map((d) => ({ exerciseId: d.id, skillTopicId })))
-    .onConflictDoNothing();
-
-  const costUsd = estimateCostUsd(tokenUsage);
+  const costUsd = estimateCostUsd(combinedUsage);
   const totalInputTokens =
-    tokenUsage.inputTokens +
-    tokenUsage.cacheCreationInputTokens +
-    tokenUsage.cacheReadInputTokens;
+    combinedUsage.inputTokens +
+    combinedUsage.cacheCreationInputTokens +
+    combinedUsage.cacheReadInputTokens;
 
-  // Close the audit row as 'succeeded'. approved = produced (validator deferred
-  // to Phase 3 — every produced draft is auto-approved).
+  // Close the audit row as 'succeeded'. Counts reflect Phase 3 outcomes.
   await db
     .update(generationJobs)
     .set({
       status: 'succeeded',
       finishedAt: new Date(),
-      producedCount: drafts.length,
-      approvedCount: drafts.length,
-      flaggedCount: 0,
-      rejectedCount: 0,
+      producedCount,
+      approvedCount,
+      flaggedCount,
+      rejectedCount,
       inputTokensUsed: totalInputTokens,
-      outputTokensUsed: tokenUsage.outputTokens,
+      outputTokensUsed: combinedUsage.outputTokens,
       costUsdEstimate: costUsd.toFixed(4),
     })
     .where(eq(generationJobs.id, jobId));
@@ -289,12 +519,16 @@ export async function runOneCell(
     cell,
     jobId,
     status: 'succeeded',
-    insertedCount: insertedIds.size,
-    skippedCount: drafts.length - insertedIds.size,
-    tokenUsage,
+    insertedCount,
+    skippedCount: firstAttemptSkippedCount,
+    tokenUsage: combinedUsage,
     costUsd,
     durationMs: Date.now() - startedAt,
-    inBatchDuplicateCount: drafts.filter((d) => d.metadata.inBatchDuplicate).length,
+    inBatchDuplicateCount,
+    validatedCount,
+    flaggedCount,
+    rejectedCount,
+    dedupGivenUpCount,
   };
 }
 
@@ -332,6 +566,10 @@ async function failClosed(opts: {
     errorMessage: truncatedMessage,
     durationMs: opts.durationMs,
     inBatchDuplicateCount: 0,
+    validatedCount: 0,
+    flaggedCount: 0,
+    rejectedCount: 0,
+    dedupGivenUpCount: 0,
   };
 }
 
@@ -384,7 +622,6 @@ function formatDuration(ms: number): string {
 
 function formatCellLine(result: CellResult): string {
   const { cell } = result;
-  const draftsRequested = result.insertedCount + result.skippedCount;
   const inputTotal =
     result.tokenUsage.inputTokens +
     result.tokenUsage.cacheCreationInputTokens +
@@ -392,9 +629,28 @@ function formatCellLine(result: CellResult): string {
   const cached = result.tokenUsage.cacheReadInputTokens;
   const output = result.tokenUsage.outputTokens;
 
+  // For succeeded rows show the Phase 3 validation breakdown. For failed /
+  // skipped-cost-cap rows the validator never ran for most/all drafts; fall
+  // back to Phase 2's "<inserted>, <skipped>" format since the breakdown
+  // would be misleading.
+  let totalDrafts: number;
+  let breakdown: string;
+  if (result.status === 'succeeded') {
+    totalDrafts = result.insertedCount + result.rejectedCount;
+    const approvedCount = result.insertedCount - result.flaggedCount;
+    const plainRejectedCount = result.rejectedCount - result.dedupGivenUpCount;
+    breakdown =
+      `${result.insertedCount} inserted ` +
+      `(${approvedCount} approved, ${result.flaggedCount} flagged, ` +
+      `${plainRejectedCount} rejected, ${result.dedupGivenUpCount} dedup-given-up)`;
+  } else {
+    totalDrafts = result.insertedCount + result.skippedCount;
+    breakdown = `${result.insertedCount} inserted, ${result.skippedCount} skipped`;
+  }
+
   let line =
     `[${cell.language} ${cell.cefrLevel} ${cell.exerciseType} ${cell.grammarPoint.key}]` +
-    ` ${draftsRequested} drafts → ${result.insertedCount} inserted, ${result.skippedCount} skipped` +
+    ` ${totalDrafts} drafts → ${breakdown}` +
     ` — ${inputTotal.toLocaleString('en-US')} input (${cached.toLocaleString('en-US')} cached)` +
     ` / ${output.toLocaleString('en-US')} output tokens` +
     ` — $${result.costUsd.toFixed(4)}` +
@@ -434,6 +690,14 @@ export function printSummary(
   const failed = results.filter((r) => r.status === 'failed').length;
   const skipped = results.filter((r) => r.status === 'skipped-cost-cap').length;
   const draftsInserted = results.reduce((sum, r) => sum + r.insertedCount, 0);
+  const totalFlagged = results.reduce((sum, r) => sum + r.flaggedCount, 0);
+  const totalApproved = draftsInserted - totalFlagged;
+  const totalRejected = results.reduce((sum, r) => sum + r.rejectedCount, 0);
+  const totalDedupGivenUp = results.reduce(
+    (sum, r) => sum + r.dedupGivenUpCount,
+    0,
+  );
+  const plainRejected = totalRejected - totalDedupGivenUp;
   const totalUsage = results.reduce<ClaudeUsageBreakdown>(
     (acc, r) => addUsage(acc, r.tokenUsage),
     ZERO_USAGE,
@@ -446,7 +710,15 @@ export function printSummary(
   process.stdout.write(
     `Cells: ${results.length} (${succeeded} succeeded, ${failed} failed, ${skipped} skipped)\n`,
   );
-  process.stdout.write(`Drafts inserted: ${draftsInserted.toLocaleString('en-US')}\n`);
+  process.stdout.write(
+    `Drafts inserted: ${draftsInserted.toLocaleString('en-US')}` +
+      ` (${totalApproved.toLocaleString('en-US')} approved,` +
+      ` ${totalFlagged.toLocaleString('en-US')} flagged)\n`,
+  );
+  process.stdout.write(
+    `Validation outcomes: ${plainRejected.toLocaleString('en-US')} rejected,` +
+      ` ${totalDedupGivenUp.toLocaleString('en-US')} dedup-given-up\n`,
+  );
   process.stdout.write(
     `Total input tokens: ${totalInput.toLocaleString('en-US')} (cached: ${totalCached.toLocaleString('en-US')})\n`,
   );
@@ -509,6 +781,10 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
         errorMessage: 'Aborted by user (SIGINT)',
         durationMs: 0,
         inBatchDuplicateCount: 0,
+        validatedCount: 0,
+        flaggedCount: 0,
+        rejectedCount: 0,
+        dedupGivenUpCount: 0,
       };
     }
     if (totalCostUsd >= args.maxCostUsd) {
@@ -522,6 +798,10 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
         costUsd: 0,
         durationMs: 0,
         inBatchDuplicateCount: 0,
+        validatedCount: 0,
+        flaggedCount: 0,
+        rejectedCount: 0,
+        dedupGivenUpCount: 0,
       };
     }
     const result = await runOneCell(db, client, cell, args);

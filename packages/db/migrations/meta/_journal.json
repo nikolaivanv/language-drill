@@ -43,6 +43,13 @@
       "when": 1778008598206,
       "tag": "0005_woozy_deathstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1778023451337,
+      "tag": "0006_spicy_apocalypse",
+      "breakpoints": true
     }
   ]
 }

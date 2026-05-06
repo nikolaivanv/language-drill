@@ -1,0 +1,8 @@
+{
+  "qualityScore": 0.6,
+  "ambiguous": true,
+  "levelMatch": true,
+  "grammarPointMatch": true,
+  "culturalIssues": [],
+  "flaggedReasons": ["borderline answer ambiguity"]
+}
