@@ -1,0 +1,3 @@
+-- TODO(prod): change to CREATE UNIQUE INDEX CONCURRENTLY when running on the production branch.
+-- Drizzle-kit doesn't emit CONCURRENTLY for uniqueIndex; the dev branch is too small for it to matter.
+CREATE UNIQUE INDEX "exercises_dedup_idx" ON "exercises" USING btree ("language","type","difficulty","grammar_point_key",(content_json->>'_dedupKey')) WHERE "exercises"."review_status" IN ('auto-approved', 'manual-approved', 'flagged') AND content_json ? '_dedupKey';

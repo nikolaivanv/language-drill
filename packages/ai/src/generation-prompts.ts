@@ -145,7 +145,9 @@ function normaliseSurface(text: string): string {
   return text
     .toLowerCase()
     .normalize("NFKD")
-    .replace(/\p{Diacritic}+/gu, "");
+    .replace(/\p{Diacritic}+/gu, "")
+    .replace(/\s+/gu, " ")
+    .trim();
 }
 
 export function canonicalSurface(content: ExerciseContent): string {

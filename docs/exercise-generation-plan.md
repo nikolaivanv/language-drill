@@ -99,7 +99,7 @@ Total estimated effort: **~10–12 working days**, broken into six phases. Phase
 |-------|--------|--------|------------|--------|
 | 1 | Curriculum data + schema migration | ~1.5d | — | **Shipped** |
 | 2 | Generator core + CLI driver | ~2d | 1 | **Shipped** |
-| 3 | Validation + dedup + review queue | ~2d | 2 | Pending |
+| 3 | Validation + dedup + review queue | ~2d | 2 | **Shipped** |
 | 4 | Lambda + SQS + EventBridge | ~2d | 3 | Pending |
 | 5 | Pool monitoring + adaptive scheduling | ~1.5d | 4 | Pending |
 | 6 | Generators for new exercise types as added | rolling | 2 | Pending |
@@ -325,6 +325,8 @@ Following the project convention (tests next to module, no orphan files):
 ---
 
 ### Phase 3 — Validation, dedup, review queue
+
+**Status: shipped.** Spec docs live at `.claude/specs/exercise-generation-phase-3/`. Validator + router land in `packages/ai/src/{validate,validation-prompts}.ts` and `packages/db/scripts/generate-exercises-validate.ts`; across-batch dedup ships as the partial UNIQUE index `exercises_dedup_idx` in migration `0006_*.sql`; `runOneCell` now wires generator → validator → router → dedup-retry (up to 3× per ordinal) and writes `approved_count` / `flagged_count` / `rejected_count` to `generation_jobs`. The review CLI lands as `pnpm review:flagged --lang … --type … --limit …` with single-keystroke approve/reject/skip/quit. End-to-end smoke against the dev Neon branch: `pnpm generate:exercises --count 3` produced 2 auto-approved + 0 flagged + 1 rejected (validator vetoed the third draft) for $0.0415 in 29s; the validator-standalone smoke auto-approved one draft of each type at q=0.85; the review CLI smoke flipped a row to `flagged` via SQL, drove `s` then `a` across two runs, and confirmed the final state was `manual-approved` with `flagged_reasons=NULL`. Phase 4 (Lambda + SQS + EventBridge) is the next dependency.
 
 **Goal:** every generated draft passes through quality control before users see it. Anything ambiguous gets `review_status = 'flagged'` and is invisible until a human approves it.
 

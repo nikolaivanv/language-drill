@@ -1,5 +1,5 @@
 import { type InferSelectModel, sql } from 'drizzle-orm';
-import { index, jsonb, pgTable, primaryKey, real, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { index, jsonb, pgTable, primaryKey, real, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 
 import { skillTopics } from './skills';
 
@@ -10,6 +10,12 @@ export const exercises = pgTable(
     type: text('type'), // cloze | translation | vocab_recall | listening | speaking | ...
     language: text('language'), // EN | ES | DE | TR
     difficulty: text('difficulty'), // cefrLevel: A1 | A2 | B1 | B2 | C1 | C2
+    // The JSONB blob carries the discriminated-union ExerciseContent shape from
+    // @language-drill/shared, plus a writer-only `_dedupKey: string` field added
+    // at insert time (Phase 3) and read by the partial UNIQUE index below via
+    // (content_json->>'_dedupKey'). Type guards in @language-drill/shared
+    // discriminate on `type` and ignore unrelated fields, so the writer
+    // metadata is invisible to runtime consumers.
     contentJson: jsonb('content_json'), // exercise body, options, expected answer shape
     audioS3Key: text('audio_s3_key'), // nullable
     createdAt: timestamp('created_at').defaultNow(),
@@ -27,6 +33,22 @@ export const exercises = pgTable(
     poolLookupIdx: index('exercises_pool_lookup_idx')
       .on(table.language, table.difficulty, table.type, table.grammarPointKey)
       .where(sql`${table.reviewStatus} IN ('auto-approved', 'manual-approved')`),
+    // Phase 3 — across-batch surface dedup. The `flagged` review_status is
+    // included so a flagged duplicate of an already-approved row is blocked
+    // at insert time (review CLI's tryApprove path catches the conflict and
+    // demotes via the same constraint). `content_json ? '_dedupKey'` excludes
+    // the 36 hand-authored seed rows (no _dedupKey) from the uniqueness check.
+    dedupIdx: uniqueIndex('exercises_dedup_idx')
+      .on(
+        table.language,
+        table.type,
+        table.difficulty,
+        table.grammarPointKey,
+        sql`(content_json->>'_dedupKey')`,
+      )
+      .where(
+        sql`${table.reviewStatus} IN ('auto-approved', 'manual-approved', 'flagged') AND content_json ? '_dedupKey'`,
+      ),
   }),
 );
 

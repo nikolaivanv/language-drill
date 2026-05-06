@@ -197,6 +197,38 @@ describe("canonicalSurface", () => {
     };
     expect(canonicalSurface(content)).toBe("subjuntivo");
   });
+
+  it("collapses internal whitespace runs to a single space", () => {
+    const content: ClozeContent = {
+      type: ExerciseType.CLOZE,
+      instructions: "x",
+      sentence: "Yo  HABLO   españól.",
+      correctAnswer: "x",
+    };
+    expect(canonicalSurface(content)).toBe("yo hablo espanol.");
+  });
+
+  it("trims leading and trailing whitespace", () => {
+    const content: ClozeContent = {
+      type: ExerciseType.CLOZE,
+      instructions: "x",
+      sentence: "  espero que llegues a tiempo.  ",
+      correctAnswer: "llegues",
+    };
+    expect(canonicalSurface(content)).toBe("espero que llegues a tiempo.");
+  });
+
+  it("treats tabs and newlines as whitespace via \\s", () => {
+    const content: TranslationContent = {
+      type: ExerciseType.TRANSLATION,
+      instructions: "x",
+      sourceText: "I\thope\nyou arrive on time.",
+      sourceLanguage: Language.EN,
+      targetLanguage: Language.ES,
+      referenceTranslation: "Espero que llegues a tiempo.",
+    };
+    expect(canonicalSurface(content)).toBe("i hope you arrive on time.");
+  });
 });
 
 // ---------------------------------------------------------------------------

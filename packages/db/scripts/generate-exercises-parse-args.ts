@@ -12,6 +12,7 @@
 import { ExerciseType, type LearningLanguage } from '@language-drill/shared';
 
 import type { CurriculumCefrLevel } from '../src/curriculum';
+import { collectRawFlags, requireString } from './parse-args-common';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -168,57 +169,6 @@ export function parseGenerateArgs(argv: readonly string[]): ParsedArgs {
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
-
-const BOOLEAN_FLAGS: ReadonlySet<string> = new Set(['dry-run', 'allow-prod', 'help']);
-
-function collectRawFlags(argv: readonly string[]): Map<string, string> {
-  const out = new Map<string, string>();
-
-  for (let i = 0; i < argv.length; i++) {
-    const token = argv[i];
-    if (!token.startsWith('--')) {
-      throw new Error(`unexpected positional argument '${token}'`);
-    }
-
-    const eqIdx = token.indexOf('=');
-    let name: string;
-    let value: string | undefined;
-
-    if (eqIdx >= 0) {
-      name = token.slice(2, eqIdx);
-      value = token.slice(eqIdx + 1);
-    } else {
-      name = token.slice(2);
-      value = undefined;
-    }
-
-    if (BOOLEAN_FLAGS.has(name)) {
-      out.set(name, 'true');
-      continue;
-    }
-
-    if (value === undefined) {
-      const next = argv[i + 1];
-      if (next === undefined || next.startsWith('--')) {
-        throw new Error(`--${name} requires a value`);
-      }
-      value = next;
-      i++;
-    }
-
-    out.set(name, value);
-  }
-
-  return out;
-}
-
-function requireString(raw: Map<string, string>, name: string): string {
-  const value = raw.get(name);
-  if (value === undefined || value === '') {
-    throw new Error(`--${name} is required`);
-  }
-  return value;
-}
 
 function parseTypeFlag(raw: string | undefined): ExerciseType | 'all' {
   if (raw === undefined) return 'all';
