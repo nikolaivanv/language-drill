@@ -103,6 +103,7 @@ Total estimated effort: **~10–12 working days**, broken into six phases. Phase
 | 4 | Lambda + SQS + EventBridge | ~2d | 3 | Pending |
 | 5 | Pool monitoring + adaptive scheduling | ~1.5d | 4 | Pending |
 | 6 | Generators for new exercise types as added | rolling | 2 | Pending |
+| 7 | Variations from existing anchors (class A only) | ~5d | 5 | Deferred — activation criteria in §Phase 7 |
 
 ---
 
@@ -518,6 +519,198 @@ When `docs/exercise-strategy.md` Phases 2+ ship, each new exercise type adds:
 4. Optional: new metadata columns if the type needs them (e.g. `audio_s3_key` already exists for listening).
 
 Order matches the strategy doc: sentence construction → error correction → paragraph → contextual paraphrase → dialogue → mini-essay → listening → speaking. Each is roughly 0.5–1d of generator work given the framework from Phases 1–4.
+
+---
+
+### Phase 7 — Variations from existing anchors (deferred)
+
+**Status:** deferred. Schema and CLI scaffolding land only after Phase 5 produces real "this cell needs depth" signal.
+
+**Goal:** multiply pool depth by deriving sibling exercises from a single validated **anchor** (e.g. swap the subject pronoun in "yo voy a la escuela" → "él va a la escuela" → "ellas van a la escuela"). Variations are useful when one well-validated anchor can seed multiple practice instances that drill the same target without re-running full generation.
+
+**Framing — not a cost play.** Round-1 generation is already ~$170 (§5); shaving variations off Sonnet doesn't move the needle financially. The win is **pool depth** for high-traffic cells and **pedagogical coherence** — minimal-pair drill is a known-good practice pattern for procedural memory (especially conjugation/agreement). Defer until live signal tells us *which* cells benefit; building it speculatively risks solving a problem we don't have.
+
+**7.1 — Three variation classes, three different cost profiles**
+
+Not all "variations" are the same. The doc treats them as three separate features that share infrastructure but ship independently.
+
+| Class | Example | LLM needed? | Risk |
+|-------|---------|-------------|------|
+| A. Conjugation / agreement swap | `yo voy` → `él va` → `ellas van` | None — deterministic table per language | Only valid when the cell's grammar point *is* conjugation/agreement. Otherwise the swap dilutes the target. |
+| B. Synonym / adjective swap | `Es una casa **grande**` → `Es una casa **enorme**` | Haiku (cheap) | Register and CEFR drift — `enorme` may not be the same level as `grande`. Validator (Phase 3) becomes load-bearing. |
+| C. Polarity / question / passive transforms | `Fui al cine` → `¿Fui al cine?` → `No fui al cine` | — | **Not a variation.** These often shift which grammar point is being tested (do-support, negative concord, subjunctive after negation). Generate fresh through the existing pipeline and tag honestly. Out of scope for Phase 7. |
+
+Phase 7 ships A first (zero LLM cost, lowest risk), then B if signal supports it.
+
+**7.2 — Eligibility model**
+
+Variation eligibility is a property of the curriculum entry, not the exercise. Each grammar point declares which transformations are pedagogically valid for it:
+
+```ts
+// packages/db/src/curriculum/<lang>.ts
+{
+  key: 'es-a2-present-indicative',
+  // ...
+  variationStrategies: ['conjugation'],  // safe — swapping subjects is the practice
+}
+
+{
+  key: 'es-b1-ser-vs-estar',
+  // ...
+  variationStrategies: [],  // empty — conjugation swaps don't test ser/estar choice
+}
+
+{
+  key: 'es-b1-vocabulary-feelings',
+  // ...
+  variationStrategies: ['synonym'],  // synonym swaps inside the *same* CEFR band
+}
+```
+
+Cells whose grammar point declares an empty `variationStrategies` get fresh exercises only — the same as today. This is the explicit guardrail against "vary everything, dilute everything."
+
+**7.3 — Schema**
+
+One additive migration:
+
+```sql
+ALTER TABLE exercises
+  ADD COLUMN parent_exercise_id UUID REFERENCES exercises(id) ON DELETE SET NULL;
+
+CREATE INDEX exercises_parent_idx ON exercises (parent_exercise_id)
+  WHERE parent_exercise_id IS NOT NULL;
+```
+
+Plus two new values for the existing `generation_source` column: `'variation-rule'` (class A) and `'variation-claude'` (class B). No new tables — variations are still rows in `exercises`, with their own `quality_score` from the validator.
+
+**7.4 — Pipeline**
+
+New module `packages/ai/src/variations.ts` exposes:
+
+```ts
+export async function expandAnchor(
+  anchor: Exercise,
+  curriculum: GrammarPoint,
+  client?: Anthropic,
+): Promise<ExerciseDraft[]>;
+```
+
+Two paths share the Phase 3 validator and the existing dedup index. Each variation has a distinct `_dedupKey` from `exercises_dedup_idx` because the surface differs — no schema work is needed for dedup.
+
+**7.4.1 — Class A: rule-based conjugation/agreement**
+
+Variation-time cost is ~$0. The cost is **up-front authoring**: each eligible anchor needs slot annotations, and each language needs a conjugation engine. Class A is not "free" — it's amortized. Honest accounting matters because the up-front work is the actual gating risk for activating Phase 7.
+
+**Anchor templates (the gating idea).** Class A only fires on anchors that opt in by carrying a structured template alongside the rendered content. Anchors without a template silently no-op. This keeps the engine a pure substitution + agreement machine — it never has to parse free text:
+
+```ts
+// Opt-in fields added to ClozeContent / TranslationContent / VocabRecallContent:
+template?: {
+  text: '{subject} {verb:ir,present} a la escuela.';
+  slots: {
+    subject: { kind: 'pronoun-set'; set: 'es-personal' };
+    'verb:ir,present': { kind: 'verb'; lemma: 'ir'; tense: 'present'; mood: 'indicative' };
+  };
+  agreement: [
+    { controller: 'subject'; target: 'verb:ir,present'; features: ['person', 'number'] },
+  ];
+};
+```
+
+Producing templates:
+
+- The Phase 2 generator gets an optional second tool, `emit_template`, used only when the cell's curriculum entry has `'conjugation'` in `variationStrategies`. The model returns both the rendered exercise and the template that produces it.
+- A Phase 3 validator addition (`templateConsistency`) re-renders the template using the engine and asserts equality with the anchor's `contentJson`. This catches generator hallucinations *before* a single variation is produced.
+- Anchors that fail `templateConsistency` are still inserted (without a template), so class A coverage is best-effort, not blocking. The pool stays healthy even if template emission has gaps.
+
+**Per-language engines.** The engine maps `(lemma, tense, mood, person, number)` → surface form. Each language gets its own module under `packages/ai/src/conjugation/<lang>.ts` behind a shared interface:
+
+```ts
+interface ConjugationEngine {
+  language: Language;
+  conjugate(spec: ConjugationSpec): string;
+  pronounSet(name: string): Array<{ person: 1 | 2 | 3; number: 'sg' | 'pl'; surface: string }>;
+  agree?(form: string, features: AgreementFeatures): string;  // adjective/article endings
+}
+```
+
+Sourcing varies by language:
+
+| Lang | Approach | Coverage in scope | Effort |
+|------|----------|-------------------|--------|
+| ES | Wrap an existing OSS verb conjugator (e.g. `verbecc`-family) + small `-o/-a/-os/-as` adjective-agreement function | Full A1–C2 verb forms; gender/number on slot adjectives | ~0.5d |
+| DE | Wrap an existing OSS DE verb conjugator + hand-rolled article/adjective-ending table for nom/acc/dat/gen | Verbs + agreement on slot articles/adjectives in fixed-case contexts | ~1.5d (case endings are the bulk) |
+| TR | Hand-rolled (~250 LOC): vowel-harmony function + agglutinative builder for the ~12 productive verbal suffixes used at A1–B2 | Personal endings + present/past on the curriculum's ~30 anchor verbs | ~2d |
+| EN | Hand-rolled (~50 LOC): 3rd-person `-s`, irregular table, contraction map | Full | ~0.25d |
+
+Two honest notes on this table:
+
+- **Library choice is the implementer's call.** OSS verb conjugators exist for ES and DE in several flavors; pick whichever is MIT-licensed, currently maintained, and passes our irregular-verb fixture tests. Wrap any chosen library behind `ConjugationEngine` so swapping it is a one-file change.
+- **TR is the riskiest.** Mature Turkish morphology libraries (Zemberek and its ports) are heavy and JVM-rooted; npm options are stale. We deliberately limit TR to a small productive surface so a hand-rolled engine is feasible. If A1–B2 TR coverage outgrows that surface in practice, we revisit — at that point a serious morphology dependency earns its weight.
+
+**Scope of "agreement."** Class A handles:
+
+- Subject–verb agreement in person and number (the canonical case).
+- Adjective–noun gender/number agreement *when the noun is itself a slot* (ES/DE).
+- DE article–noun case endings *when the case is fixed by surrounding context* (e.g. `mit` always governs dative — the engine doesn't have to choose the case, only inflect).
+
+Out of scope for Phase 7:
+
+- Free word-order rearrangements (DE V2 fronting, TR scrambling) — too easy to break naturalness.
+- Aspect/tense shifts (preterite ↔ imperfect, perfect ↔ simple past) — these are *different* grammar points; generate fresh through Phase 2.
+- TR nominal case morphology — defer until B2+ TR content needs it.
+
+**Failure modes and tests.** Property-based tests live next to each engine:
+
+1. **Irregular-verb fixtures.** For every verb in the curriculum's irregular list, conjugate across all `(person, number, tense)` cells and assert against a hand-curated truth table at `packages/ai/src/conjugation/__fixtures__/<lang>-irregulars.json`. One fixture per language; small (~50 verbs each).
+2. **Anchor round-trip.** For every anchor in the seed pool with a template, run `expandAnchor` → feed each variation through the Phase 3 validator → assert `qualityScore >= 0.7` and `templateConsistency` passes. A variation the validator rejects but the engine produced means either the engine is buggy or the anchor's template was wrong — either way it surfaces at generation time, not at runtime.
+3. **No-template no-op.** Anchors without `template` must return `[]` from `expandAnchor` — never throw, never silently fall back to LLM. This is the guardrail that keeps class A from masquerading as class B.
+
+**7.4.2 — Class B: Haiku synonym swaps**
+
+Single Haiku call per anchor proposes 3–5 in-band synonym substitutions, anchored to a controlled vocabulary list for `(language, cefrLevel)` passed inline in the prompt. Cost: ~$0.001–0.002 per variation vs. ~$0.005 per fresh Sonnet draft. Output goes through the Phase 3 validator unchanged — `levelMatch` is the load-bearing check here, since drift between `grande` (A2) and `enorme` (B1) is exactly the failure mode.
+
+Class B depends on class A shipping first: it reuses the same `expandAnchor` entry point, the same `parent_exercise_id` linkage, and the same validator routing. Estimated +1d on top of class A's ~5d.
+
+**7.4.3 — Shared infrastructure**
+
+Both classes:
+
+- Run through the existing Phase 3 validator (`claude-sonnet-4-5`) at the same quality bar as fresh exercises. No discount, no shortcut — quality is held constant regardless of how a draft was produced.
+- Emit drafts into the same `exercises` table with `parent_exercise_id` set and `generation_source` set to `'variation-rule'` or `'variation-claude'`.
+- Hit the existing `exercises_dedup_idx` partial unique index on insert; collisions silently no-op via `ON CONFLICT DO NOTHING`.
+
+**7.5 — Session-sequencer interaction (Phase 5 dependency)**
+
+This is the load-bearing piece — get it wrong and variations feel like padding instead of drill.
+
+The Phase 5 sequencer must be `parent_exercise_id`-aware:
+
+- **Within a single session:** never present more than one exercise from the same anchor family (anchor + its variations). Otherwise the user sees `yo voy / él va / ellas van` back-to-back and it reads as repetition.
+- **Across sessions:** variations of the same anchor are spaced by at least one full session for class A, or at least 24 hours for class B. The deterministic-conjugation case is more drill-friendly than the synonym case, where repetition feels less natural.
+- **Mastery weighting:** no special discount. A variation is the same exercise format with the same evaluator; the Bayesian update treats it like any other exercise. Discounting variations would conflate "novelty" (which is a session-sequencer concern) with "evidence quality" (which is a mastery-update concern).
+
+**7.6 — Activation criteria**
+
+Phase 7 ships when *at least one* of these holds (data comes from Phase 5's pool monitoring):
+
+1. A cell consistently drains faster than the daily refill keeps up — depth, not freshness, is the bottleneck.
+2. Users repeatedly score >0.85 on a cell across sessions and the recommender can't level them up (e.g. the next CEFR level isn't authored yet) — drill on the same point would help.
+3. Direct user feedback that a specific grammar point feels under-practiced relative to the others.
+
+If none of these signals appear within ~3 months of Phase 5 going live, Phase 7 stays on the shelf. The plan explicitly accepts that this work may never be needed.
+
+**7.7 — Open questions (resolve at activation, not now)**
+
+- How many variations per anchor as a hard cap? (Lean: 5 for class A, 3 for class B.)
+- Should the recommender mark anchor + variations as a "skill drill block" the user can opt into explicitly, vs. invisibly weaving them in?
+- Do we need a separate `quality_score` weight per generation source for the cost dashboard's approval-rate tile?
+- Class B specifically: do we need a controlled vocabulary list per `(language, cefrLevel)` to bound synonym drift, or is the Haiku prompt + validator sufficient? (Suspect: list needed, but cheap to author.)
+
+**Out of scope:**
+- Class C transforms (polarity / question / passive). Generate fresh.
+- Cross-language variations (same content rendered in multiple target languages). Different feature.
+- Anchor-of-an-anchor (variations whose parent is itself a variation). Anchors must have `parent_exercise_id IS NULL`.
 
 ---
 
