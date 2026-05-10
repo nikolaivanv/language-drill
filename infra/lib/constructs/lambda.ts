@@ -84,6 +84,10 @@ export class LambdaConstruct extends Construct {
         UPSTASH_REDIS_REST_URL: upstashRedisRestUrl.secretValue.unsafeUnwrap(),
         UPSTASH_REDIS_REST_TOKEN:
           upstashRedisRestToken.secretValue.unsafeUnwrap(),
+        // Phase 5 — plain env var (not a secret); flows from stack.ts via
+        // additionalEnv. Defaults to empty so the env key is always present
+        // and the admin middleware can fail closed without a redeploy.
+        ADMIN_USER_IDS: props.additionalEnv?.ADMIN_USER_IDS ?? "",
       },
     });
 

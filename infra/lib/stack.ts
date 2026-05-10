@@ -17,6 +17,10 @@ export interface LanguageDrillStackProps extends StackProps {
   clerkAudience: string[];
   allowedOrigins: string[];
   enableScheduledJobs: boolean;
+  // Comma-separated list of Clerk user IDs allowed to call /admin/* routes
+  // (Phase 5). Plain env var, not a Secrets Manager secret — values are user
+  // IDs, not credentials.
+  adminUserIds?: string;
 }
 
 export class LanguageDrillStack extends Stack {
@@ -28,6 +32,7 @@ export class LanguageDrillStack extends Stack {
       additionalEnv: {
         ALLOWED_ORIGINS: props.allowedOrigins.join(","),
         ENV_NAME: props.envName,
+        ADMIN_USER_IDS: props.adminUserIds ?? "",
       },
     });
 

@@ -143,3 +143,9 @@ export {
   type UpdateReadBankParams,
 } from './hooks/useReadEntryMutations';
 export { createAuthenticatedFetch, type AuthenticatedFetch } from './fetchClient';
+export {
+  PoolStatusItemSchema,
+  type PoolStatusItem,
+  GenerationStatsSchema,
+  type GenerationStats,
+} from './schemas/pool-status';
