@@ -32,6 +32,7 @@ new LanguageDrillStack(app, "LanguageDrillStack", {
     "https://www.langdrill.app",
   ],
   enableScheduledJobs: true,
+  adminUserIds: process.env.ADMIN_USER_IDS,
 });
 
 new LanguageDrillStack(app, "LanguageDrillStack-dev", {
@@ -44,4 +45,5 @@ new LanguageDrillStack(app, "LanguageDrillStack-dev", {
   clerkAudience: parseAudience(process.env.CLERK_AUDIENCE_DEV, "language-drill"),
   allowedOrigins: ["https://*.vercel.app", "http://localhost:3000"],
   enableScheduledJobs: false,
+  adminUserIds: process.env.ADMIN_USER_IDS_DEV,
 });
