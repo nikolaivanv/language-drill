@@ -227,12 +227,18 @@ Flag every word in the passage rarer than top-${input.topRank} OR with a CEFR ba
 // Main caller
 // ---------------------------------------------------------------------------
 
-const MODEL = "claude-sonnet-4-5" as const;
+// Haiku, not Sonnet — annotate is the only AI surface where output volume can
+// approach the 29s Lambda budget (A1 + Turkish ⇒ many flags × 7-field JSON
+// entries). Sonnet's per-token output rate caused Lambda timeouts in prod
+// after the MAX_TOKENS bump in PR #49; Haiku is 2–3× faster on tool-use and
+// fits comfortably inside the 29s ceiling. Other AI surfaces (evaluate,
+// validate, generate) keep Sonnet — they have small, bounded outputs.
+const MODEL = "claude-haiku-4-5-20251001" as const;
 // Sized for the worst case (A1 user → top_rank 750 → most content words in a
 // 2000-char passage qualify, each emitted as a 7-field JSON entry). 2048 was
 // undersized and truncated mid-tool-call, leaving `flagged` non-array at parse
-// time. Kept well below Sonnet's 64k output ceiling; the prompt also caps
-// output to 40 words so realistic usage stays far below this budget.
+// time. The prompt also caps output to 40 words so realistic usage stays far
+// below this budget.
 const MAX_TOKENS = 8192;
 
 /**
