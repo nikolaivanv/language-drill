@@ -33,7 +33,7 @@
       "dependsOn": ["@language-drill/shared#build", "@language-drill/ai#build"]
     },
     "@language-drill/db#test": {
-      "dependsOn": ["@language-drill/shared#build", "@language-drill/ai#build"]
+      "dependsOn": ["@language-drill/shared#build", "@language-drill/ai#build", "@language-drill/db#build"]
     }
   }
 }
