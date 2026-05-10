@@ -103,6 +103,8 @@ Words at or below the user's level — and high-frequency closed-class words lik
 
 If no words qualify, submit an empty \`flagged\` array. Do not flag words "just to be helpful" — silence is the correct answer for an in-level passage.
 
+Flag AT MOST 40 words per call. If more than 40 words qualify, return only the 40 rarest by corpus rank (largest \`freq\` values).
+
 ## Surface Form Requirement
 
 Each flagged item MUST include a \`matchedForm\`: the EXACT lowercased surface form as it appears in the passage (with diacritics preserved). If the same lemma appears in two different inflected forms in the passage, return only the first occurrence's form — duplicates are deduped by first-seen on the server.
@@ -179,11 +181,15 @@ const MatchedFormSchema = z.string().min(1).max(120);
  */
 export function parseAnnotateResult(input: unknown): AnnotateOutput {
   if (typeof input !== "object" || input === null) {
-    throw new Error("Annotate result must be an object");
+    throw new Error(
+      `Annotate result must be an object (got typeof ${typeof input})`,
+    );
   }
   const raw = input as Record<string, unknown>;
   if (!Array.isArray(raw.flagged)) {
-    throw new Error("Annotate result.flagged must be an array");
+    throw new Error(
+      `Annotate result.flagged must be an array (got typeof ${typeof raw.flagged}; keys: [${Object.keys(raw).join(", ")}])`,
+    );
   }
 
   const flagged: Record<string, WordFlag> = {};
@@ -222,7 +228,12 @@ Flag every word in the passage rarer than top-${input.topRank} OR with a CEFR ba
 // ---------------------------------------------------------------------------
 
 const MODEL = "claude-sonnet-4-5" as const;
-const MAX_TOKENS = 2048;
+// Sized for the worst case (A1 user → top_rank 750 → most content words in a
+// 2000-char passage qualify, each emitted as a 7-field JSON entry). 2048 was
+// undersized and truncated mid-tool-call, leaving `flagged` non-array at parse
+// time. Kept well below Sonnet's 64k output ceiling; the prompt also caps
+// output to 40 words so realistic usage stays far below this budget.
+const MAX_TOKENS = 8192;
 
 /**
  * Annotates a passage via Claude tool-use. Throws on SDK/API failures or
@@ -271,6 +282,16 @@ export async function annotateText(
   if (toolUseBlock.name !== ANNOTATE_TOOL_NAME) {
     throw new Error(
       `Unexpected tool name: expected "${ANNOTATE_TOOL_NAME}", got "${toolUseBlock.name}"`,
+    );
+  }
+
+  // Named branch for the truncation case so CloudWatch shows the cause
+  // directly. The SDK aggregates partial input_json_delta chunks into
+  // `input`, which leaves `flagged` missing or non-array — without this
+  // check the generic parser error wins and the truncation signal is lost.
+  if (response.stop_reason === "max_tokens") {
+    throw new Error(
+      "Claude annotation truncated by max_tokens (output exceeded budget)",
     );
   }
 

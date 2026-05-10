@@ -158,9 +158,13 @@ describe("parseAnnotateResult", () => {
     expect(() => parseAnnotateResult("oops")).toThrow();
   });
 
-  it("rejects when flagged is not an array", () => {
+  it("rejects when flagged is not an array (and surfaces typeof + keys for diagnostics)", () => {
     expect(() => parseAnnotateResult({ flagged: "no" })).toThrow(
-      /flagged must be an array/i,
+      /flagged must be an array.*typeof string.*keys: \[flagged\]/i,
+    );
+    // Missing key — covers the truncation-shaped `{}` payload.
+    expect(() => parseAnnotateResult({})).toThrow(
+      /flagged must be an array.*typeof undefined.*keys: \[\]/i,
     );
   });
 
@@ -353,5 +357,48 @@ describe("annotateText", () => {
     await expect(annotateText(mockClient, annotateInput)).rejects.toThrow(
       "API rate limit exceeded",
     );
+  });
+
+  // Truncation: SDK aggregates partial input_json_delta chunks into
+  // `input` when stop_reason flips to "max_tokens" mid-tool-call. The
+  // resulting payload is either an empty object or one where `flagged`
+  // is missing/non-array. The caller must short-circuit with a named
+  // error before the generic parser throw swallows the signal.
+  describe("max_tokens truncation", () => {
+    it("throws a dedicated truncation error when stop_reason is max_tokens (empty input)", async () => {
+      mockCreate.mockResolvedValue({
+        content: [
+          {
+            type: "tool_use",
+            id: "toolu_trunc_1",
+            name: ANNOTATE_TOOL_NAME,
+            input: {},
+          },
+        ],
+        stop_reason: "max_tokens",
+      });
+
+      await expect(annotateText(mockClient, annotateInput)).rejects.toThrow(
+        /truncated by max_tokens/i,
+      );
+    });
+
+    it("throws the truncation error even if `flagged` is present-but-null", async () => {
+      mockCreate.mockResolvedValue({
+        content: [
+          {
+            type: "tool_use",
+            id: "toolu_trunc_2",
+            name: ANNOTATE_TOOL_NAME,
+            input: { flagged: null },
+          },
+        ],
+        stop_reason: "max_tokens",
+      });
+
+      await expect(annotateText(mockClient, annotateInput)).rejects.toThrow(
+        /truncated by max_tokens/i,
+      );
+    });
   });
 });

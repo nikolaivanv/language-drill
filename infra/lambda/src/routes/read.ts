@@ -162,7 +162,11 @@ read.post('/read/annotate', async (c) => {
     flagged = result.flagged;
   } catch (err) {
     // Claude failure — DO NOT write a usage row; user can retry.
-    console.error('[POST /read/annotate] Claude annotation failed:', err);
+    console.error('[POST /read/annotate] Claude annotation failed:', err, {
+      language,
+      proficiencyLevel,
+      textLength: text.length,
+    });
     return c.json(
       { error: 'Evaluation temporarily unavailable', code: 'AI_UNAVAILABLE' },
       502,
