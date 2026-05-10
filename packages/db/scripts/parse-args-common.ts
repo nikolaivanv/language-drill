@@ -19,6 +19,7 @@ export const BOOLEAN_FLAGS: ReadonlySet<string> = new Set([
   'dry-run',
   'allow-prod',
   'help',
+  'queue',
 ]);
 
 /**

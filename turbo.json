@@ -15,12 +15,22 @@
     "test": {
       "dependsOn": ["^build"]
     },
-    "@language-drill/db#build": {
+    "@language-drill/ai#build": {
       "dependsOn": ["@language-drill/shared#build"],
       "outputs": ["dist/**"]
     },
-    "@language-drill/db#typecheck": {
+    "@language-drill/ai#typecheck": {
       "dependsOn": ["@language-drill/shared#build"]
+    },
+    "@language-drill/ai#test": {
+      "dependsOn": ["@language-drill/shared#build", "@language-drill/db#build"]
+    },
+    "@language-drill/db#build": {
+      "dependsOn": ["@language-drill/shared#build", "@language-drill/ai#build"],
+      "outputs": ["dist/**"]
+    },
+    "@language-drill/db#typecheck": {
+      "dependsOn": ["@language-drill/shared#build", "@language-drill/ai#build"]
     },
     "@language-drill/db#test": {
       "dependsOn": ["@language-drill/shared#build", "@language-drill/ai#build"]

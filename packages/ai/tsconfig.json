@@ -4,5 +4,7 @@
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "include": ["src"]
+  "include": ["src"],
+  "// exclude": "Tests are checked by vitest at runtime; tsc --noEmit excludes them so cross-package runtime imports (e.g. ai/src/*.test.ts → @language-drill/db's curriculum data) don't force a build-order dep. Matches packages/db/tsconfig.json convention.",
+  "exclude": ["**/*.test.ts"]
 }

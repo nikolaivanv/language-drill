@@ -4,6 +4,9 @@ import { LambdaConstruct } from "./constructs/lambda";
 import { ApiGatewayConstruct } from "./constructs/api-gateway";
 import { StorageConstruct } from "./constructs/storage";
 import { QueueConstruct } from "./constructs/queue";
+import { GenerationQueueConstruct } from "./constructs/generation-queue";
+import { GenerationLambdaConstruct } from "./constructs/generation-lambda";
+import { SchedulerLambdaConstruct } from "./constructs/scheduler-lambda";
 
 export interface LanguageDrillStackProps extends StackProps {
   envName: "prod" | "dev";
@@ -43,9 +46,33 @@ export class LanguageDrillStack extends Stack {
     storage.bucket.grantRead(lambda.handler);
     queue.queue.grantSendMessages(lambda.handler);
 
+    // Phase 4 — generation pipeline (SQS + consumer Lambda + scheduler).
+    // The Lambda is created on both stacks; the EventBridge rule is gated on
+    // enableScheduledJobs (true in prod, false in dev).
+    const generationQueue = new GenerationQueueConstruct(
+      this,
+      "GenerationQueue",
+    );
+    new GenerationLambdaConstruct(this, "GenerationLambdaWrap", {
+      queue: generationQueue.queue,
+      secretsPrefix: props.secretsPrefix,
+      envName: props.envName,
+      reservedConcurrency: 3,
+    });
+    new SchedulerLambdaConstruct(this, "SchedulerLambdaWrap", {
+      queue: generationQueue.queue,
+      secretsPrefix: props.secretsPrefix,
+      enableScheduledJobs: props.enableScheduledJobs,
+    });
+
     new CfnOutput(this, "ApiUrl", {
       value: apiGateway.httpApi.url ?? "",
       description: "API Gateway endpoint URL",
+    });
+    new CfnOutput(this, "GenerationQueueUrl", {
+      value: generationQueue.queue.queueUrl,
+      description:
+        "SQS queue for generation jobs (Phase 4). Set GENERATION_QUEUE_URL to this for the CLI --queue flag.",
     });
 
     Tags.of(this).add("env", props.envName);
