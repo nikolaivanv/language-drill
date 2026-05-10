@@ -2,8 +2,14 @@ import { CefrLevel, Language } from '@language-drill/shared';
 
 import type { GrammarPoint } from './types';
 
+// TEMPORARILY REDUCED (2026-05-10): TR B1 + B2 grammar entries and the B1/B2
+// vocab umbrellas are commented out so the prod scheduler stops generating
+// them. To restore: uncomment the B1/B2 sections below, restore B1/B2 in the
+// destructure, bump TR back in PER_LANGUAGE_GRAMMAR_MIN (curriculum/index.ts),
+// restore TR B1/B2 entries in SEED_KEY_TO_GRAMMAR_POINT (seed-exercises.ts),
+// and re-enable the per-language counts assertions for Turkish (curriculum.test.ts).
 const TR = Language.TR;
-const { A1, A2, B1, B2 } = CefrLevel;
+const { A1, A2 } = CefrLevel;
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -155,6 +161,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     prerequisiteKeys: ['tr-a1-locative'],
   },
 
+  /*
   // ---------------------------------------------------------------------------
   // B1
   // ---------------------------------------------------------------------------
@@ -354,6 +361,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     ],
     prerequisiteKeys: ['tr-b2-relative-clause-participles'],
   },
+  */
 
   // ---------------------------------------------------------------------------
   // Vocab umbrellas — kind: 'vocab'
@@ -373,6 +381,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Confusing aile (family) with akraba (relatives).',
     ],
   },
+  /*
   {
     key: 'tr-b1-abstract-noun-vocab',
     kind: 'vocab',
@@ -403,6 +412,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Mixing Ottoman-derived and Turkic-derived synonyms with mismatched register.',
     ],
   },
+  */
 ];
 
 export { trCurriculum };

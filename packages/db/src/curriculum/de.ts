@@ -1,11 +1,19 @@
-import { CefrLevel, Language } from '@language-drill/shared';
+// TEMPORARILY DISABLED (2026-05-10): all DE curriculum entries are commented
+// out so the prod scheduler stops generating German exercises. To restore:
+//   1. Uncomment the array body below.
+//   2. Restore the destructure / imports below.
+//   3. Bump DE back in PER_LANGUAGE_GRAMMAR_MIN (curriculum/index.ts).
+//   4. Restore the DE entries in SEED_KEY_TO_GRAMMAR_POINT (seed-exercises.ts).
+//   5. Re-enable the per-language counts test for German (curriculum.test.ts).
+// import { CefrLevel, Language } from '@language-drill/shared';
 
 import type { GrammarPoint } from './types';
 
-const DE = Language.DE;
-const { A1, A2, B1, B2 } = CefrLevel;
+// const DE = Language.DE;
+// const { A1, A2, B1, B2 } = CefrLevel;
 
 const deCurriculum: readonly GrammarPoint[] = [
+  /*
   // ---------------------------------------------------------------------------
   // A1
   // ---------------------------------------------------------------------------
@@ -406,6 +414,7 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Calquing English derived nouns instead of using the standard German equivalent.',
     ],
   },
+  */
 ];
 
 export { deCurriculum };

@@ -59,31 +59,55 @@ describe('planSkillTopics', () => {
 });
 
 describe('planSeedTags', () => {
-  it('returns 27 tags and 9 untagged EN seeds for the canonical inputs', () => {
-    const result = planSeedTags(SEED_EXERCISES, SEED_KEY_TO_GRAMMAR_POINT, ALL_CURRICULA);
-    expect(result.tags).toHaveLength(27);
+  it('returns one tag per active mapping plus 9 untagged EN seeds (reduced curriculum)', () => {
+    // SEED_KEY_TO_GRAMMAR_POINT is temporarily reduced (see seed-exercises.ts).
+    // Filter SEED_EXERCISES to only EN seeds and seeds whose mapping is still
+    // active so the happy-path assertion remains meaningful. Restore the
+    // unfiltered call (and the original 27 / 9 expectations) when the
+    // commented-out mappings are uncommented.
+    const activeNonEnKeys = new Set(Object.keys(SEED_KEY_TO_GRAMMAR_POINT));
+    const activeSeeds = SEED_EXERCISES.filter(
+      (s) => s.language === 'EN' || activeNonEnKeys.has(s.key),
+    );
+    const result = planSeedTags(activeSeeds, SEED_KEY_TO_GRAMMAR_POINT, ALL_CURRICULA);
+    expect(result.tags).toHaveLength(activeNonEnKeys.size);
     expect(result.untaggedEnSeeds).toBe(9);
   });
 
   it('throws naming the offending seed when a non-EN mapping is missing', () => {
+    // 'es-cloze-b1-1' is an active mapping; deleting it from a clone reproduces
+    // the original "missing mapping" error. Filter SEED_EXERCISES to actively-
+    // mapped + EN seeds so the throw is triggered by our deletion rather than
+    // by another seed whose mapping is currently disabled. Restore to
+    // 'es-cloze-a2-1' and the unfiltered SEED_EXERCISES when that mapping is
+    // uncommented.
+    const activeNonEnKeys = new Set(Object.keys(SEED_KEY_TO_GRAMMAR_POINT));
+    const activeSeeds = SEED_EXERCISES.filter(
+      (s) => s.language === 'EN' || activeNonEnKeys.has(s.key),
+    );
     const broken = { ...SEED_KEY_TO_GRAMMAR_POINT };
-    delete (broken as Record<string, string>)['es-cloze-a2-1'];
-    expect(() => planSeedTags(SEED_EXERCISES, broken, ALL_CURRICULA)).toThrow(
-      /'es-cloze-a2-1' has no curriculum mapping/,
+    delete (broken as Record<string, string>)['es-cloze-b1-1'];
+    expect(() => planSeedTags(activeSeeds, broken, ALL_CURRICULA)).toThrow(
+      /'es-cloze-b1-1' has no curriculum mapping/,
     );
   });
 
   it('throws naming the offending seed when a mapping points to an unknown curriculum key', () => {
-    const broken = { ...SEED_KEY_TO_GRAMMAR_POINT, 'es-cloze-a2-1': 'es-zz-fake' };
-    expect(() => planSeedTags(SEED_EXERCISES, broken, ALL_CURRICULA)).toThrow(
-      /'es-cloze-a2-1' maps to unknown curriculum key 'es-zz-fake'/,
+    // Same restore note as above — swap back to 'es-cloze-a2-1' when active.
+    const activeNonEnKeys = new Set(Object.keys(SEED_KEY_TO_GRAMMAR_POINT));
+    const activeSeeds = SEED_EXERCISES.filter(
+      (s) => s.language === 'EN' || activeNonEnKeys.has(s.key),
+    );
+    const broken = { ...SEED_KEY_TO_GRAMMAR_POINT, 'es-cloze-b1-1': 'es-zz-fake' };
+    expect(() => planSeedTags(activeSeeds, broken, ALL_CURRICULA)).toThrow(
+      /'es-cloze-b1-1' maps to unknown curriculum key 'es-zz-fake'/,
     );
   });
 });
 
 describe('SEED_KEY_TO_GRAMMAR_POINT', () => {
-  it('has exactly 27 entries', () => {
-    expect(Object.keys(SEED_KEY_TO_GRAMMAR_POINT)).toHaveLength(27);
+  it('has exactly 9 active entries (reduced from 27 while curriculum is disabled)', () => {
+    expect(Object.keys(SEED_KEY_TO_GRAMMAR_POINT)).toHaveLength(9);
   });
 
   it('contains no EN keys (EN seeds are intentionally untagged)', () => {

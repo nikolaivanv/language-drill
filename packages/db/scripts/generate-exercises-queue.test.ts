@@ -76,17 +76,25 @@ const PROD_QUEUE_URL =
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** Real cells from the live curriculum, narrowed to round-1 CEFR levels. */
+/**
+ * Real cells from the live curriculum, narrowed to round-1 CEFR levels. When
+ * `n` exceeds the available cell count the helper cycles through the pool so
+ * count-only assertions (e.g. MAX_CLI_CELLS_PER_INVOCATION) keep working while
+ * the curriculum is temporarily reduced. The cycled duplicates are harmless
+ * because `postCellsToQueue` does not dedupe.
+ */
 function pickRoundOneCells(n: number): Cell[] {
   const all = enumerateCurriculumCells(ALL_CURRICULA).filter((c) =>
     (ROUND_1_CEFR_LEVELS as readonly string[]).includes(c.cefrLevel),
   );
-  if (all.length < n) {
-    throw new Error(
-      `Curriculum has only ${all.length} round-1 cells; test wanted ${n}.`,
-    );
+  if (all.length === 0) {
+    throw new Error('Curriculum has no round-1 cells; cannot pick any.');
   }
-  return all.slice(0, n);
+  const out: Cell[] = [];
+  for (let i = 0; i < n; i++) {
+    out.push(all[i % all.length]);
+  }
+  return out;
 }
 
 function defaultArgs(cells: readonly Cell[]): PostToQueueArgs {

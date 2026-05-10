@@ -86,18 +86,23 @@ describe('assertCurriculumInvariants', () => {
   });
 
   it('throws on a cross-language prerequisite', () => {
+    // DE is temporarily disabled (see de.ts), so use TR for the cross-language
+    // example. Restore to DE when DE entries are uncommented.
     const esIndex = ALL_CURRICULA.findIndex((e) => e.language === 'ES');
-    const deKey = ALL_CURRICULA.find((e) => e.language === 'DE')!.key;
-    const broken = mutateAt(esIndex, { prerequisiteKeys: [deKey] });
+    const trKey = ALL_CURRICULA.find((e) => e.language === 'TR')!.key;
+    const broken = mutateAt(esIndex, { prerequisiteKeys: [trKey] });
     expect(() => assertCurriculumInvariants(broken)).toThrow(/cross-language prerequisite/);
   });
 
   it('throws when a per-language grammar count drops below the minimum', () => {
+    // ES A1 minimum is temporarily 0 (see PER_LANGUAGE_GRAMMAR_MIN), so this
+    // test now drops ES B1 (still required: 6). Restore to ES A1 when the A1
+    // entries are uncommented.
     const trimmed = ALL_CURRICULA
-      .filter((e) => !(e.language === 'ES' && e.cefrLevel === 'A1'))
+      .filter((e) => !(e.language === 'ES' && e.cefrLevel === 'B1'))
       .map((e) => ({ ...e, prerequisiteKeys: undefined }));
     expect(() => assertCurriculumInvariants(trimmed)).toThrow(
-      /ES A1 grammar count 0 below minimum 4/,
+      /ES B1 grammar count 0 below minimum 6/,
     );
   });
 });
@@ -130,33 +135,34 @@ describe('per-language counts', () => {
     return { grammar, vocab };
   }
 
-  it('Spanish meets minimums (≥4 A1, ≥5 A2, ≥6 B1, ≥5 B2 grammar) and has 3 vocab umbrellas', () => {
+  // TEMPORARILY REDUCED (2026-05-10): assertions match the currently-active
+  // curriculum subset. Restore the original ≥4/≥5/≥6/≥5 assertions and
+  // vocab.toBe(3) when es.ts/de.ts/tr.ts entries are uncommented.
+
+  it('Spanish meets minimums (B1 + B2 only while A1/A2 are disabled) and has 2 vocab umbrellas', () => {
     const { grammar, vocab } = countsFor(esCurriculum);
-    expect(grammar.A1).toBeGreaterThanOrEqual(4);
-    expect(grammar.A2).toBeGreaterThanOrEqual(5);
+    expect(grammar.A1).toBe(0);
+    expect(grammar.A2).toBe(0);
     expect(grammar.B1).toBeGreaterThanOrEqual(6);
     expect(grammar.B2).toBeGreaterThanOrEqual(5);
-    expect(vocab).toBe(3);
-    expect(grammar.A1 + grammar.A2 + grammar.B1 + grammar.B2).toBeGreaterThanOrEqual(20);
+    expect(vocab).toBe(2);
   });
 
-  it('German meets minimums and has 3 vocab umbrellas', () => {
+  it('German is fully disabled (no grammar entries, no vocab umbrellas)', () => {
     const { grammar, vocab } = countsFor(deCurriculum);
-    expect(grammar.A1).toBeGreaterThanOrEqual(4);
-    expect(grammar.A2).toBeGreaterThanOrEqual(5);
-    expect(grammar.B1).toBeGreaterThanOrEqual(6);
-    expect(grammar.B2).toBeGreaterThanOrEqual(5);
-    expect(vocab).toBe(3);
-    expect(grammar.A1 + grammar.A2 + grammar.B1 + grammar.B2).toBeGreaterThanOrEqual(20);
+    expect(grammar.A1).toBe(0);
+    expect(grammar.A2).toBe(0);
+    expect(grammar.B1).toBe(0);
+    expect(grammar.B2).toBe(0);
+    expect(vocab).toBe(0);
   });
 
-  it('Turkish meets minimums and has 3 vocab umbrellas', () => {
+  it('Turkish meets minimums (A1 + A2 only while B1/B2 are disabled) and has 1 vocab umbrella', () => {
     const { grammar, vocab } = countsFor(trCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(4);
     expect(grammar.A2).toBeGreaterThanOrEqual(5);
-    expect(grammar.B1).toBeGreaterThanOrEqual(6);
-    expect(grammar.B2).toBeGreaterThanOrEqual(5);
-    expect(vocab).toBe(3);
-    expect(grammar.A1 + grammar.A2 + grammar.B1 + grammar.B2).toBeGreaterThanOrEqual(20);
+    expect(grammar.B1).toBe(0);
+    expect(grammar.B2).toBe(0);
+    expect(vocab).toBe(1);
   });
 });
