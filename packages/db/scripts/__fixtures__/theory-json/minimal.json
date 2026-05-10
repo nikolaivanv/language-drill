@@ -1,0 +1,18 @@
+{
+  "id": "minimal-test",
+  "title": "minimal test topic",
+  "subtitle": "one section, one paragraph",
+  "cefr": "A1",
+  "sections": [
+    {
+      "id": "only",
+      "title": "only section",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [{ "kind": "text", "text": "Just one paragraph." }]
+        }
+      ]
+    }
+  ]
+}

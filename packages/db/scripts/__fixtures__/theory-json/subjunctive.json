@@ -1,0 +1,618 @@
+{
+  "id": "subjunctive",
+  "title": "el subjuntivo",
+  "subtitle": "present subjunctive · doubt, hope, desire, hypotheticals",
+  "cefr": "B1–B2",
+  "sections": [
+    {
+      "id": "what",
+      "title": "what is it?",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            { "kind": "text", "text": "the " },
+            {
+              "kind": "hilite",
+              "children": [{ "kind": "text", "text": "subjunctive" }]
+            },
+            { "kind": "text", "text": " is a " },
+            {
+              "kind": "strong",
+              "children": [{ "kind": "text", "text": "mood" }]
+            },
+            {
+              "kind": "text",
+              "text": ", not a tense. it expresses how the speaker feels about an action — doubt, desire, emotion, possibility — rather than stating it as fact."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            { "kind": "text", "text": "english has it (rare): " },
+            {
+              "kind": "em",
+              "children": [
+                { "kind": "text", "text": "“i suggest he " },
+                {
+                  "kind": "strong",
+                  "children": [{ "kind": "text", "text": "be" }]
+                },
+                { "kind": "text", "text": " here”" }
+              ]
+            },
+            { "kind": "text", "text": ", " },
+            {
+              "kind": "em",
+              "children": [
+                { "kind": "text", "text": "“if i " },
+                {
+                  "kind": "strong",
+                  "children": [{ "kind": "text", "text": "were" }]
+                },
+                { "kind": "text", "text": " you”" }
+              ]
+            },
+            { "kind": "text", "text": ". spanish uses it constantly." }
+          ]
+        },
+        {
+          "kind": "callout",
+          "variant": "default",
+          "children": [
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "strong",
+                  "children": [{ "kind": "text", "text": "indicative" }]
+                },
+                { "kind": "text", "text": " = facts. " },
+                {
+                  "kind": "strong",
+                  "children": [{ "kind": "text", "text": "subjunctive" }]
+                },
+                {
+                  "kind": "text",
+                  "text": " = subjective takes (doubt, hope, want, react)."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "when",
+      "title": "when to use it",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            { "kind": "text", "text": "after a small set of " },
+            {
+              "kind": "em",
+              "children": [{ "kind": "text", "text": "trigger expressions" }]
+            },
+            { "kind": "text", "text": " in a main clause, followed by " },
+            {
+              "kind": "mono",
+              "children": [{ "kind": "text", "text": "que" }]
+            },
+            { "kind": "text", "text": " + a different subject:" }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [{ "kind": "text", "text": "doubt:" }]
+                  },
+                  { "kind": "text", "text": " " },
+                  {
+                    "kind": "mono",
+                    "children": [{ "kind": "text", "text": "no creo que…" }]
+                  },
+                  { "kind": "text", "text": ", " },
+                  {
+                    "kind": "mono",
+                    "children": [{ "kind": "text", "text": "dudo que…" }]
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [{ "kind": "text", "text": "hope / wish:" }]
+                  },
+                  { "kind": "text", "text": " " },
+                  {
+                    "kind": "mono",
+                    "children": [{ "kind": "text", "text": "espero que…" }]
+                  },
+                  { "kind": "text", "text": ", " },
+                  {
+                    "kind": "mono",
+                    "children": [{ "kind": "text", "text": "ojalá…" }]
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      { "kind": "text", "text": "desire / request:" }
+                    ]
+                  },
+                  { "kind": "text", "text": " " },
+                  {
+                    "kind": "mono",
+                    "children": [{ "kind": "text", "text": "quiero que…" }]
+                  },
+                  { "kind": "text", "text": ", " },
+                  {
+                    "kind": "mono",
+                    "children": [{ "kind": "text", "text": "te pido que…" }]
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [{ "kind": "text", "text": "emotion:" }]
+                  },
+                  { "kind": "text", "text": " " },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      { "kind": "text", "text": "me alegro de que…" }
+                    ]
+                  },
+                  { "kind": "text", "text": ", " },
+                  {
+                    "kind": "mono",
+                    "children": [{ "kind": "text", "text": "es triste que…" }]
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [{ "kind": "text", "text": "impersonal:" }]
+                  },
+                  { "kind": "text", "text": " " },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      { "kind": "text", "text": "es importante que…" }
+                    ]
+                  },
+                  { "kind": "text", "text": ", " },
+                  {
+                    "kind": "mono",
+                    "children": [{ "kind": "text", "text": "es posible que…" }]
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [{ "kind": "text", "text": "concession:" }]
+                  },
+                  { "kind": "text", "text": " " },
+                  {
+                    "kind": "mono",
+                    "children": [{ "kind": "text", "text": "aunque…" }]
+                  },
+                  { "kind": "text", "text": " (when uncertain)" }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "relative clauses w/ unknown antecedent:"
+                      }
+                    ]
+                  },
+                  { "kind": "text", "text": " " },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      { "kind": "text", "text": "busco un libro que sea…" }
+                    ]
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "kind": "callout",
+          "variant": "warn",
+          "children": [
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "strong",
+                  "children": [{ "kind": "text", "text": "WEIRDO" }]
+                },
+                { "kind": "text", "text": " — common mnemonic: " },
+                {
+                  "kind": "strong",
+                  "children": [{ "kind": "text", "text": "W" }]
+                },
+                { "kind": "text", "text": "ishes, " },
+                {
+                  "kind": "strong",
+                  "children": [{ "kind": "text", "text": "E" }]
+                },
+                { "kind": "text", "text": "motion, " },
+                {
+                  "kind": "strong",
+                  "children": [{ "kind": "text", "text": "I" }]
+                },
+                { "kind": "text", "text": "mpersonal, " },
+                {
+                  "kind": "strong",
+                  "children": [{ "kind": "text", "text": "R" }]
+                },
+                { "kind": "text", "text": "ecommendations, " },
+                {
+                  "kind": "strong",
+                  "children": [{ "kind": "text", "text": "D" }]
+                },
+                { "kind": "text", "text": "oubt, " },
+                {
+                  "kind": "strong",
+                  "children": [{ "kind": "text", "text": "O" }]
+                },
+                { "kind": "text", "text": "jalá." }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "form-regular",
+      "title": "how it's formed · regular",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            { "kind": "text", "text": "start from the " },
+            {
+              "kind": "mono",
+              "children": [{ "kind": "text", "text": "yo" }]
+            },
+            {
+              "kind": "text",
+              "text": " form of the present indicative, drop the "
+            },
+            {
+              "kind": "mono",
+              "children": [{ "kind": "text", "text": "-o" }]
+            },
+            { "kind": "text", "text": ", and swap endings:" }
+          ]
+        },
+        {
+          "kind": "conjugation-table",
+          "head": ["", "-AR (hablar)", "-ER (comer)", "-IR (vivir)"],
+          "rows": [
+            ["yo", "hable", "coma", "viva"],
+            ["tú", "hables", "comas", "vivas"],
+            ["él/ella", "hable", "coma", "viva"],
+            ["nosotros", "hablemos", "comamos", "vivamos"],
+            ["vosotros", "habléis", "comáis", "viváis"],
+            ["ellos", "hablen", "coman", "vivan"]
+          ]
+        },
+        {
+          "kind": "callout",
+          "variant": "default",
+          "children": [
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "strong",
+                  "children": [
+                    { "kind": "text", "text": "“opposite vowel” rule:" }
+                  ]
+                },
+                { "kind": "text", "text": " -AR verbs take " },
+                {
+                  "kind": "mono",
+                  "children": [{ "kind": "text", "text": "e" }]
+                },
+                { "kind": "text", "text": " endings, -ER/-IR verbs take " },
+                {
+                  "kind": "mono",
+                  "children": [{ "kind": "text", "text": "a" }]
+                },
+                { "kind": "text", "text": " endings." }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "form-irregular",
+      "title": "irregulars to memorize",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "six common verbs are fully irregular. mnemonic: "
+            },
+            {
+              "kind": "strong",
+              "children": [{ "kind": "text", "text": "DISHES" }]
+            },
+            { "kind": "text", "text": " — " },
+            {
+              "kind": "mono",
+              "children": [
+                { "kind": "text", "text": "dar, ir, ser, haber, estar, saber" }
+              ]
+            },
+            { "kind": "text", "text": "." }
+          ]
+        },
+        {
+          "kind": "conjugation-table",
+          "head": ["infinitive", "yo", "tú", "él", "nosotros", "ellos"],
+          "rows": [
+            ["ser", "sea", "seas", "sea", "seamos", "sean"],
+            ["estar", "esté", "estés", "esté", "estemos", "estén"],
+            ["ir", "vaya", "vayas", "vaya", "vayamos", "vayan"],
+            ["haber", "haya", "hayas", "haya", "hayamos", "hayan"],
+            ["saber", "sepa", "sepas", "sepa", "sepamos", "sepan"],
+            ["dar", "dé", "des", "dé", "demos", "den"]
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "stem-changing verbs (e→ie, o→ue) keep their changes in subjunctive. spelling-change verbs (-car, -gar, -zar) shift to "
+            },
+            {
+              "kind": "mono",
+              "children": [{ "kind": "text", "text": "-que, -gue, -ce" }]
+            },
+            { "kind": "text", "text": "." }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "examples",
+      "title": "examples in context",
+      "body": [
+        {
+          "kind": "example",
+          "target": [
+            { "kind": "text", "text": "No creo que " },
+            {
+              "kind": "hilite",
+              "children": [{ "kind": "text", "text": "tenga" }]
+            },
+            { "kind": "text", "text": " tiempo hoy." }
+          ],
+          "en": "I don't think I have time today.",
+          "note": [
+            { "kind": "text", "text": "“no creo que” → doubt → subjunctive of " },
+            {
+              "kind": "em",
+              "children": [{ "kind": "text", "text": "tener" }]
+            },
+            { "kind": "text", "text": "." }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            { "kind": "text", "text": "Espero que mis amigos " },
+            {
+              "kind": "hilite",
+              "children": [{ "kind": "text", "text": "vengan" }]
+            },
+            { "kind": "text", "text": " a la fiesta." }
+          ],
+          "en": "I hope my friends come to the party.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "“esperar que” → wish/hope → subjunctive of "
+            },
+            {
+              "kind": "em",
+              "children": [{ "kind": "text", "text": "venir" }]
+            },
+            { "kind": "text", "text": "." }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            { "kind": "text", "text": "Es importante que tú " },
+            {
+              "kind": "hilite",
+              "children": [{ "kind": "text", "text": "digas" }]
+            },
+            { "kind": "text", "text": " la verdad." }
+          ],
+          "en": "It's important that you tell the truth.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "impersonal expression → subjunctive of "
+            },
+            {
+              "kind": "em",
+              "children": [{ "kind": "text", "text": "decir" }]
+            },
+            { "kind": "text", "text": "." }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            { "kind": "text", "text": "Quiero un coche que " },
+            {
+              "kind": "hilite",
+              "children": [{ "kind": "text", "text": "gaste" }]
+            },
+            { "kind": "text", "text": " poco combustible." }
+          ],
+          "en": "I want a car that uses little fuel.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "non-specific antecedent (any car like that) → subjunctive in the relative clause."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pitfalls",
+      "title": "common pitfalls",
+      "body": [
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [{ "kind": "text", "text": "same subject?" }]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " use the infinitive, not subjunctive: "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [{ "kind": "text", "text": "quiero ir" }]
+                  },
+                  { "kind": "text", "text": ", not " },
+                  {
+                    "kind": "mono",
+                    "children": [{ "kind": "text", "text": "quiero que vaya" }]
+                  },
+                  { "kind": "text", "text": "." }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [{ "kind": "text", "text": "creo que" }]
+                  },
+                  { "kind": "text", "text": " (affirmative) takes " },
+                  {
+                    "kind": "em",
+                    "children": [{ "kind": "text", "text": "indicative" }]
+                  },
+                  { "kind": "text", "text": ": " },
+                  {
+                    "kind": "mono",
+                    "children": [{ "kind": "text", "text": "creo que viene" }]
+                  },
+                  { "kind": "text", "text": ". only " },
+                  {
+                    "kind": "mono",
+                    "children": [{ "kind": "text", "text": "no creo que" }]
+                  },
+                  { "kind": "text", "text": " triggers subjunctive." }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [{ "kind": "text", "text": "cuando" }]
+                  },
+                  { "kind": "text", "text": " + future event → subjunctive: " },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      { "kind": "text", "text": "cuando llegue, te llamo" }
+                    ]
+                  },
+                  { "kind": "text", "text": ". about a habit → indicative." }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [{ "kind": "text", "text": "aunque" }]
+                  },
+                  { "kind": "text", "text": " + uncertain → subjunctive; " },
+                  {
+                    "kind": "strong",
+                    "children": [{ "kind": "text", "text": "aunque" }]
+                  },
+                  { "kind": "text", "text": " + known fact → indicative." }
+                ]
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -57,6 +57,20 @@
       "when": 1778404446028,
       "tag": "0007_aromatic_harry_osborn",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1778452798888,
+      "tag": "0008_mixed_catseye",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1778452812368,
+      "tag": "0009_jazzy_killraven",
+      "breakpoints": true
     }
   ]
 }
