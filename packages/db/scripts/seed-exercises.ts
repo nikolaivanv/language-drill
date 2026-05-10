@@ -592,37 +592,41 @@ export const SEED_EXERCISES: SeedExercise[] = [
 // replace the umbrellas with frequency-band rows; the discriminator on
 // GrammarPoint.kind, not a string-suffix sniff, is what later code branches on.
 
+// TEMPORARILY REDUCED (2026-05-10): mappings for currently-disabled curriculum
+// entries are commented out so the resolution test in seed-exercises.test.ts
+// keeps passing. Restore each commented line when the matching grammar point
+// is uncommented in es.ts/de.ts/tr.ts, and bump the entry count in the test.
 export const SEED_KEY_TO_GRAMMAR_POINT: Readonly<Record<string, string>> = {
   // Spanish
-  'es-cloze-a2-1': 'es-a2-preterite-irregular',
+  // 'es-cloze-a2-1': 'es-a2-preterite-irregular',
   'es-cloze-b1-1': 'es-b1-present-subjunctive',
   'es-cloze-b2-1': 'es-b2-conditional-perfect',
-  'es-translation-a2-1': 'es-a2-gustar-type-verbs',
+  // 'es-translation-a2-1': 'es-a2-gustar-type-verbs',
   'es-translation-b1-1': 'es-b1-llevar-time-expressions',
   'es-translation-b2-1': 'es-b2-past-subjunctive',
-  'es-vocab-a2-1': 'es-a2-everyday-vocab',
+  // 'es-vocab-a2-1': 'es-a2-everyday-vocab',
   'es-vocab-b1-1': 'es-b1-environment-vocab',
   'es-vocab-b2-1': 'es-b2-abstract-noun-vocab',
-  // German
-  'de-cloze-a2-1': 'de-a2-perfekt-with-sein',
-  'de-cloze-b1-1': 'de-b1-relative-pronouns',
-  'de-cloze-b2-1': 'de-b2-konjunktiv-ii',
-  'de-translation-a2-1': 'de-a2-akkusativ-prepositions',
-  'de-translation-b1-1': 'de-b1-dass-clause-perfekt',
-  'de-translation-b2-1': 'de-b2-genitive-prepositions',
-  'de-vocab-a2-1': 'de-a2-housing-vocab',
-  'de-vocab-b1-1': 'de-b1-environment-vocab',
-  'de-vocab-b2-1': 'de-b2-academic-noun-vocab',
+  // German — fully disabled
+  // 'de-cloze-a2-1': 'de-a2-perfekt-with-sein',
+  // 'de-cloze-b1-1': 'de-b1-relative-pronouns',
+  // 'de-cloze-b2-1': 'de-b2-konjunktiv-ii',
+  // 'de-translation-a2-1': 'de-a2-akkusativ-prepositions',
+  // 'de-translation-b1-1': 'de-b1-dass-clause-perfekt',
+  // 'de-translation-b2-1': 'de-b2-genitive-prepositions',
+  // 'de-vocab-a2-1': 'de-a2-housing-vocab',
+  // 'de-vocab-b1-1': 'de-b1-environment-vocab',
+  // 'de-vocab-b2-1': 'de-b2-academic-noun-vocab',
   // Turkish
   'tr-cloze-a2-1': 'tr-a2-dili-past',
-  'tr-cloze-b1-1': 'tr-b1-causal-conjunctions',
-  'tr-cloze-b2-1': 'tr-b2-passive-with-nominalization',
+  // 'tr-cloze-b1-1': 'tr-b1-causal-conjunctions',
+  // 'tr-cloze-b2-1': 'tr-b2-passive-with-nominalization',
   'tr-translation-a2-1': 'tr-a2-question-formation',
-  'tr-translation-b1-1': 'tr-b1-keske-optative',
-  'tr-translation-b2-1': 'tr-b2-relative-clause-participles',
+  // 'tr-translation-b1-1': 'tr-b1-keske-optative',
+  // 'tr-translation-b2-1': 'tr-b2-relative-clause-participles',
   'tr-vocab-a2-1': 'tr-a2-everyday-vocab',
-  'tr-vocab-b1-1': 'tr-b1-abstract-noun-vocab',
-  'tr-vocab-b2-1': 'tr-b2-academic-noun-vocab',
+  // 'tr-vocab-b1-1': 'tr-b1-abstract-noun-vocab',
+  // 'tr-vocab-b2-1': 'tr-b2-academic-noun-vocab',
 };
 
 // ---------------------------------------------------------------------------

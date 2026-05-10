@@ -2,10 +2,17 @@ import { CefrLevel, Language } from '@language-drill/shared';
 
 import type { GrammarPoint } from './types';
 
+// TEMPORARILY REDUCED (2026-05-10): ES A1 + A2 grammar entries and the A2
+// vocab umbrella are commented out so the prod scheduler stops generating
+// them. To restore: uncomment the A1/A2 sections below, restore A1/A2 in the
+// destructure, bump ES back in PER_LANGUAGE_GRAMMAR_MIN (curriculum/index.ts),
+// restore ES A2 entries in SEED_KEY_TO_GRAMMAR_POINT (seed-exercises.ts), and
+// re-enable the per-language counts assertions for Spanish (curriculum.test.ts).
 const ES = Language.ES;
-const { A1, A2, B1, B2 } = CefrLevel;
+const { B1, B2 } = CefrLevel;
 
 const esCurriculum: readonly GrammarPoint[] = [
+  /*
   // ---------------------------------------------------------------------------
   // A1
   // ---------------------------------------------------------------------------
@@ -153,6 +160,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Misplacing the pronoun after the verb in finite tenses ("*levantome").',
     ],
   },
+  */
 
   // ---------------------------------------------------------------------------
   // B1
@@ -172,7 +180,8 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Forgetting the stem changes that carry over from the present indicative.',
       'Failing to switch the e/o stem vowels in the yo form.',
     ],
-    prerequisiteKeys: ['es-a1-present-indicative-regular'],
+    // Restore when es-a1-present-indicative-regular is uncommented:
+    // prerequisiteKeys: ['es-a1-present-indicative-regular'],
   },
   {
     key: 'es-b1-conditional',
@@ -348,12 +357,14 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Treating ser/estar as interchangeable for adjectives that flip meaning.',
       'Using ser with resultant-state past participles ("*la puerta es cerrada").',
     ],
-    prerequisiteKeys: ['es-a1-ser-estar-basic'],
+    // Restore when es-a1-ser-estar-basic is uncommented:
+    // prerequisiteKeys: ['es-a1-ser-estar-basic'],
   },
 
   // ---------------------------------------------------------------------------
   // Vocab umbrellas — kind: 'vocab'
   // ---------------------------------------------------------------------------
+  /*
   {
     key: 'es-a2-everyday-vocab',
     kind: 'vocab',
@@ -369,6 +380,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Mismatching gender on common nouns such as "el problema" (masculine despite -a).',
     ],
   },
+  */
   {
     key: 'es-b1-environment-vocab',
     kind: 'vocab',
