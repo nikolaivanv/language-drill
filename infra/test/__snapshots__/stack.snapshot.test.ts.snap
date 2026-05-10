@@ -917,7 +917,7 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
           },
         },
         "Handler": "index.handler",
-        "MemorySize": 256,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "LambdaHandlerServiceRole00F05BC9",
@@ -931,7 +931,7 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
             "Value": "prod",
           },
         ],
-        "Timeout": 15,
+        "Timeout": 29,
       },
       "Type": "AWS::Lambda::Function",
     },
