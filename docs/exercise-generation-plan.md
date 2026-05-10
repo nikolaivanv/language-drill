@@ -101,7 +101,7 @@ Total estimated effort: **~10–12 working days**, broken into six phases. Phase
 | 2 | Generator core + CLI driver | ~2d | 1 | **Shipped** |
 | 3 | Validation + dedup + review queue | ~2d | 2 | **Shipped** |
 | 4 | Lambda + SQS + EventBridge | ~2d | 3 | **Shipped** |
-| 5 | Pool monitoring + adaptive scheduling | ~1.5d | 4 | Pending |
+| 5 | Pool monitoring + adaptive scheduling | ~1.5d | 4 | **Shipped** |
 | 6 | Generators for new exercise types as added | rolling | 2 | Pending |
 | 7 | Variations from existing anchors (class A only) | ~5d | 5 | Deferred — activation criteria in §Phase 7 |
 
@@ -470,6 +470,8 @@ This is the "refill" loop. It runs daily; in steady state most cells are at targ
 ---
 
 ### Phase 5 — Pool monitoring & adaptive replenishment
+
+**Status: shipped.** Spec docs live at `.claude/specs/exercise-generation-phase-5/`. Two new admin Lambda endpoints land in `infra/lambda/src/routes/admin.ts` — `GET /admin/pool-status` (per-cell approved/flagged/rejected counts, last-refilled-at, 7-day depletion rate, target size) and `GET /admin/generation-stats` (cost spend this week/month, job counts by status over 7d, approval rates by `(language, level, type)` over 30d). Both routes are gated by `adminMiddleware` reading `ADMIN_USER_IDS` from env at request time; the env var threads from `LanguageDrillStackProps.adminUserIds` through `LambdaConstruct` (plain env var, not a Secrets Manager secret). `targetCellSize(depletionRate7d)` ships in `packages/db/src/lib/target-cell-size.ts` with the four-tier mapping (50/75/100/200) and is consumed by the pool-status endpoint. A covering index `user_exercise_history(exercise_id, evaluated_at)` (migration `0007_*.sql`) keeps the depletion-rate join off a sequential scan. The web app gets a server-side admin guard at `apps/web/app/(dashboard)/admin/layout.tsx` (Clerk `sessionClaims.publicMetadata.admin`) and a dashboard page at `/admin/generation` rendering four panels — Generation Cost, Jobs This Week, Approval Rates, and a client-sortable Pool Coverage table colored red/amber/green by `approved/targetSize`. Final state: `pnpm typecheck` 11/11, `pnpm test` 11/11 (web 1244, lambda 298 incl. 8 new admin-route tests + 6 admin-middleware tests, infra 22), `pnpm lint` 6/6. Phase 6 (new exercise types) is the next gated dependency; Phase 7 (variations) remains deferred per its own activation criteria.
 
 This is where the generator stops being a static seed and starts behaving like a pool.
 

@@ -1,0 +1,1 @@
+CREATE INDEX "user_exercise_history_exercise_id_idx" ON "user_exercise_history" USING btree ("exercise_id","evaluated_at");

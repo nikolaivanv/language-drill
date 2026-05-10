@@ -23,6 +23,11 @@ export const userExerciseHistory = pgTable(
     ),
     // Index for session completion: count correct rows by sessionId
     sessionIdIdx: index('user_exercise_history_session_id_idx').on(table.sessionId),
+    // Covering index for pool-status depletion query: join exercises → filter 7d → group by cell
+    exerciseIdEvaluatedAtIdx: index('user_exercise_history_exercise_id_idx').on(
+      table.exerciseId,
+      table.evaluatedAt,
+    ),
   }),
 );
 

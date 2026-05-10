@@ -39,6 +39,11 @@ export {
 export { requireEnv } from './lib/env';
 export { chunk } from './lib/chunk';
 
+// Phase 5 — pool target sizing. Consumed by the admin pool-status endpoint
+// (`infra/lambda/src/routes/admin.ts`) which derives a cell's refill target
+// from its observed 7-day depletion rate.
+export { targetCellSize } from './lib/target-cell-size';
+
 // Phase 4 — orchestration core + curriculum-cell enumeration. The CLI script
 // and the generation Lambda both import `runOneCell` from here.
 export * from './generation';
