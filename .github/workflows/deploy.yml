@@ -50,6 +50,8 @@ jobs:
           CLERK_ISSUER_URL_DEV: ${{ secrets.CLERK_ISSUER_URL_DEV }}
           CLERK_AUDIENCE_DEV: ${{ secrets.CLERK_AUDIENCE_DEV }}
           API_DOMAIN_NAME_DEV: ${{ secrets.API_DOMAIN_NAME_DEV }}
+          ADMIN_USER_IDS: ${{ secrets.ADMIN_USER_IDS }}
+          ADMIN_USER_IDS_DEV: ${{ secrets.ADMIN_USER_IDS_DEV }}
         run: cd infra && pnpm cdk deploy LanguageDrillStack --exclusively --require-approval never
 
   vercel-prod:
@@ -111,4 +113,6 @@ jobs:
           CLERK_ISSUER_URL_DEV: ${{ secrets.CLERK_ISSUER_URL_DEV }}
           CLERK_AUDIENCE_DEV: ${{ secrets.CLERK_AUDIENCE_DEV }}
           API_DOMAIN_NAME_DEV: ${{ secrets.API_DOMAIN_NAME_DEV }}
+          ADMIN_USER_IDS: ${{ secrets.ADMIN_USER_IDS }}
+          ADMIN_USER_IDS_DEV: ${{ secrets.ADMIN_USER_IDS_DEV }}
         run: cd infra && pnpm cdk deploy LanguageDrillStack-dev --exclusively --require-approval never
