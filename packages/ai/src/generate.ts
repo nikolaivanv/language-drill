@@ -19,10 +19,11 @@ import {
   type ExerciseContent,
   ExerciseType,
   Language,
+  deterministicUuid,
+  type GrammarPoint,
   type TranslationContent,
   type VocabRecallContent,
 } from "@language-drill/shared";
-import { deterministicUuid, type GrammarPoint } from "@language-drill/db";
 
 import { ZERO_USAGE, addUsage, type ClaudeUsageBreakdown } from "./cost-model.js";
 import {

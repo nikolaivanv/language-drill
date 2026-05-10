@@ -12,6 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@aws-sdk/client-sqs": "^3.1044.0",
     "@hono/node-server": "^1.19.14",
     "@language-drill/ai": "workspace:*",
     "@language-drill/db": "workspace:*",

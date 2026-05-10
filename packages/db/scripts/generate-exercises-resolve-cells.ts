@@ -3,29 +3,29 @@
  *
  * Turns a `ParsedArgs` object plus a curriculum snapshot into the typed list of
  * `Cell` rows the orchestrator iterates over. Pure — no DB, no Claude.
+ *
+ * Phase 4 extracted the cross-product enumeration into
+ * `packages/db/src/generation/cells.ts`'s `enumerateCurriculumCells` so the
+ * scheduler Lambda + this CLI cannot drift on which cells exist. `resolveCells`
+ * is now a thin slicer over that universe + the existing single-grammar-point
+ * validation paths.
  */
 
-import { ExerciseType, type LearningLanguage } from '@language-drill/shared';
+import { ExerciseType } from '@language-drill/shared';
 
-import type { CurriculumCefrLevel, GrammarPoint } from '../src/curriculum';
-import { assertValidCellKey } from '../src/lib/cell-key';
+import type { GrammarPoint } from '../src/curriculum';
+import { type Cell, enumerateCurriculumCells } from '../src/generation/cells';
 
 import type { ParsedArgs } from './generate-exercises-parse-args';
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-export type Cell = {
-  language: LearningLanguage;
-  cefrLevel: CurriculumCefrLevel;
-  exerciseType: ExerciseType;
-  grammarPoint: GrammarPoint;
-  cellKey: string;
-};
+// Re-export `Cell` so existing callers (`generate-exercises.ts`) continue to
+// import it from the same path; the canonical type now lives in `src/generation/`.
+export type { Cell };
 
 // ---------------------------------------------------------------------------
-// resolveCells
+// Kind compatibility (kept here only for the single-grammar-point validation
+// branch — the universe enumeration uses the same compatibility rules inside
+// `enumerateCurriculumCells`).
 // ---------------------------------------------------------------------------
 
 const GRAMMAR_KIND_TYPES: ReadonlyArray<ExerciseType> = [
@@ -33,24 +33,30 @@ const GRAMMAR_KIND_TYPES: ReadonlyArray<ExerciseType> = [
   ExerciseType.TRANSLATION,
 ];
 const VOCAB_KIND_TYPES: ReadonlyArray<ExerciseType> = [ExerciseType.VOCAB_RECALL];
-const ALL_TYPES: ReadonlyArray<ExerciseType> = [
-  ExerciseType.CLOZE,
-  ExerciseType.TRANSLATION,
-  ExerciseType.VOCAB_RECALL,
-];
+
+function isCompatible(kind: GrammarPoint['kind'], exerciseType: ExerciseType): boolean {
+  const compatible = kind === 'vocab' ? VOCAB_KIND_TYPES : GRAMMAR_KIND_TYPES;
+  return compatible.includes(exerciseType);
+}
+
+// ---------------------------------------------------------------------------
+// resolveCells
+// ---------------------------------------------------------------------------
 
 export function resolveCells(
   args: ParsedArgs,
   curriculum: readonly GrammarPoint[],
 ): Cell[] {
-  const cells: Cell[] = [];
+  const universe = enumerateCurriculumCells(curriculum);
 
   if (args.grammarPoint !== null) {
-    // Branch 1: single grammar point + concrete type (Task 12 enforces type !== 'all').
+    // Branch 1: single grammar point + concrete type. Validate the explicit
+    // arguments against the curriculum entry, then pick the matching cell from
+    // the universe.
     if (args.type === 'all') {
       // Defense-in-depth: parseGenerateArgs already rejects this combo.
       throw new Error(
-        "you must scope --type when generating against a single grammar point",
+        'you must scope --type when generating against a single grammar point',
       );
     }
 
@@ -74,55 +80,33 @@ export function resolveCells(
       );
     }
 
-    cells.push(buildCell(entry, args.type, args.lang, args.level));
-  } else {
-    // Branch 2 / 3: filter curriculum to (lang, level), pair with the requested
-    // type(s), respecting kind-compatibility.
-    const types = args.type === 'all' ? ALL_TYPES : [args.type];
-    const matchingEntries = curriculum.filter(
-      (g) => g.language === args.lang && g.cefrLevel === args.level,
+    // The (grammarPoint, type) pair is valid → it must exist in the universe.
+    const cell = universe.find(
+      (c) => c.grammarPoint.key === args.grammarPoint && c.exerciseType === args.type,
     );
-
-    for (const entry of matchingEntries) {
-      for (const exerciseType of types) {
-        if (!isCompatible(entry.kind, exerciseType)) continue;
-        cells.push(buildCell(entry, exerciseType, args.lang, args.level));
-      }
+    if (!cell) {
+      throw new Error(
+        `internal: enumerateCurriculumCells did not produce a cell for ${args.grammarPoint}/${args.type}`,
+      );
     }
+    return [cell];
   }
 
-  if (cells.length === 0) {
+  // Branch 2 / 3: slice the universe by (lang, level, type).
+  const typeFilter = args.type === 'all' ? null : args.type;
+  const matched = universe.filter(
+    (c) =>
+      c.language === args.lang &&
+      c.cefrLevel === args.level &&
+      (typeFilter === null || c.exerciseType === typeFilter),
+  );
+
+  if (matched.length === 0) {
     throw new Error(
       `no cells resolved for --lang ${args.lang} --level ${args.level} --type ${args.type}` +
         (args.grammarPoint ? ` --grammar-point ${args.grammarPoint}` : ''),
     );
   }
 
-  return cells;
-}
-
-// ---------------------------------------------------------------------------
-// Internal helpers
-// ---------------------------------------------------------------------------
-
-function isCompatible(kind: GrammarPoint['kind'], exerciseType: ExerciseType): boolean {
-  const compatible = kind === 'vocab' ? VOCAB_KIND_TYPES : GRAMMAR_KIND_TYPES;
-  return compatible.includes(exerciseType);
-}
-
-function buildCell(
-  entry: GrammarPoint,
-  exerciseType: ExerciseType,
-  lang: LearningLanguage,
-  level: CurriculumCefrLevel,
-): Cell {
-  const cellKey = `${lang.toLowerCase()}:${level.toLowerCase()}:${exerciseType}:${entry.key}`;
-  assertValidCellKey(cellKey);
-  return {
-    language: lang,
-    cefrLevel: level,
-    exerciseType,
-    grammarPoint: entry,
-    cellKey,
-  };
+  return matched;
 }

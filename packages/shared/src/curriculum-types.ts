@@ -1,0 +1,57 @@
+/**
+ * Phase 4 break-the-cycle: the `GrammarPoint` and `CurriculumCefrLevel` types
+ * live here in `@language-drill/shared` (rather than in `@language-drill/db`)
+ * so `@language-drill/ai` can reference them without depending on `db`. The
+ * curriculum DATA (`esCurriculum`, `getGrammarPoint`, etc.) still lives in
+ * `db`, where it's read alongside the Drizzle schema.
+ *
+ * Pre-Phase-4 these types lived in `packages/db/src/curriculum/types.ts`;
+ * that file now re-exports from this module for back-compat.
+ */
+
+import type { CefrLevel } from './index';
+import type { LearningLanguage } from './onboarding';
+
+/**
+ * The CEFR levels covered by the round-1 curriculum. C1/C2 are intentionally
+ * out of scope per Requirement 1.4 — extend this when higher levels ship.
+ */
+export type CurriculumCefrLevel = Extract<CefrLevel, 'A1' | 'A2' | 'B1' | 'B2'>;
+
+/**
+ * One entry in the per-language curriculum: the typed contract every
+ * `curriculum/{es,de,tr}.ts` module compiles against and the Phase 2 generator
+ * imports as plain data.
+ *
+ * Frozen-shape `Readonly<...>` so consumers cannot mutate cross-module state at
+ * runtime. The `kind` discriminator branches the generator's prompt strategy:
+ *
+ *   - `'grammar'` — a real grammar point. Phase 2 prompt builders inject
+ *     `description`, `examplesPositive`, `examplesNegative`, and `commonErrors`
+ *     verbatim into the system prompt.
+ *   - `'vocab'`   — a frequency-band umbrella entry that covers vocab-recall
+ *     cells for a given (language, level). Phase 1 needs these so every non-EN
+ *     seed exercise can be tagged with a non-null `grammar_point_key`
+ *     (Requirement 5.3). Phase 2's vocab path will eventually replace the
+ *     umbrellas with finer-grained frequency-band rows; until then, the
+ *     discriminator — *not* a string-suffix sniff against the `key` — is what
+ *     downstream code branches on.
+ */
+export type GrammarPoint = Readonly<{
+  /** Stable identifier; format: `<lang>-<level>-<slug>`, e.g. `'es-b1-present-subjunctive'`. */
+  key: string;
+  kind: 'grammar' | 'vocab';
+  name: string;
+  /** ≤ 200 chars; English; injected verbatim into Phase 2 prompts. */
+  description: string;
+  cefrLevel: CurriculumCefrLevel;
+  language: LearningLanguage;
+  /** ≥ 2 items; canonical correct production examples. */
+  examplesPositive: readonly string[];
+  /** ≥ 1 item; incorrect production marked with leading `*`. */
+  examplesNegative: readonly string[];
+  /** ≥ 1 item; common L2 errors learners make on this point. */
+  commonErrors: readonly string[];
+  /** Same-language curriculum keys this point depends on. Empty array permitted. */
+  prerequisiteKeys?: readonly string[];
+}>;

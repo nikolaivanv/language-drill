@@ -11,9 +11,9 @@ import {
   type CefrLevel,
   type ExerciseContent,
   ExerciseType,
+  type GrammarPoint,
   type Language,
 } from "@language-drill/shared";
-import type { GrammarPoint } from "@language-drill/db";
 
 import { CEFR_LEVEL_DESCRIPTORS } from "./prompts.js";
 import { TOOL_NAME_BY_TYPE } from "./generate.js";

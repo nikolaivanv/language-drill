@@ -91,26 +91,46 @@ describe("LanguageDrillStack-dev", () => {
   });
 
   it("Lambda environment exposes ENV_NAME=dev and the dev ALLOWED_ORIGINS list", () => {
-    const lambdas = devTemplate.findResources("AWS::Lambda::Function");
-    const fns = Object.values(lambdas);
-    expect(fns).toHaveLength(1);
-
-    const fn = fns[0] as {
-      Properties: { Environment: { Variables: Record<string, string> } };
+    type LambdaResource = {
+      Properties: {
+        Runtime?: string;
+        Environment?: { Variables?: Record<string, string> };
+      };
     };
-    expect(fn.Properties.Environment.Variables.ENV_NAME).toBe("dev");
-    expect(fn.Properties.Environment.Variables.ALLOWED_ORIGINS).toBe(
+
+    const lambdas = devTemplate.findResources("AWS::Lambda::Function");
+    const fns = Object.values(lambdas) as LambdaResource[];
+
+    // Phase 4 adds two more application Lambdas (Generation + Scheduler), each
+    // on nodejs20.x. CDK's logRetention shortcut also synthesizes a maintenance
+    // Lambda on a different runtime (currently nodejs22.x); filter it out so
+    // this assertion tracks application Lambdas only.
+    const appFns = fns.filter((f) => f.Properties.Runtime === "nodejs20.x");
+    expect(appFns).toHaveLength(3);
+
+    // The API Lambda is the only one with CLERK_SECRET_KEY in its env — the
+    // generation pipeline Lambdas have a strict minimum-privilege secrets set.
+    const apiFn = appFns.find(
+      (f) =>
+        !!f.Properties.Environment?.Variables &&
+        "CLERK_SECRET_KEY" in f.Properties.Environment.Variables,
+    );
+    expect(apiFn).toBeDefined();
+
+    const apiVars = apiFn!.Properties.Environment!.Variables!;
+    expect(apiVars.ENV_NAME).toBe("dev");
+    expect(apiVars.ALLOWED_ORIGINS).toBe(
       "https://*.vercel.app,http://localhost:3000",
     );
   });
 
-  // Phase 1 contract: prod will eventually have N>0 EventBridge rules; dev
-  // must stay at 0 regardless of how many prod gets.
+  // Dev stays at 0 EventBridge rules regardless of how many prod gets.
   it("does not deploy any EventBridge rules when enableScheduledJobs is false", () => {
     devTemplate.resourceCountIs("AWS::Events::Rule", 0);
   });
 
-  it("prod stack currently has zero EventBridge rules (Phase 1 will add them)", () => {
-    prodTemplate.resourceCountIs("AWS::Events::Rule", 0);
+  // Phase 4 wires the SchedulerLambda's daily refill rule when enableScheduledJobs=true.
+  it("prod stack deploys exactly one EventBridge rule (the Phase 4 scheduler refill)", () => {
+    prodTemplate.resourceCountIs("AWS::Events::Rule", 1);
   });
 });

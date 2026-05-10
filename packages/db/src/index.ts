@@ -25,4 +25,20 @@ export type { CurriculumCefrLevel, GrammarPoint } from './curriculum';
 // behind exerciseDraftId in packages/ai/src/generate.ts, and assertValidCellKey
 // is the defense-in-depth check the CLI runs before each generation_jobs INSERT.
 export { deterministicUuid } from './lib/deterministic-uuid';
-export { assertValidCellKey } from './lib/cell-key';
+export {
+  assertValidCellKey,
+  buildCellKey,
+  buildCellKeyFromRow,
+} from './lib/cell-key';
+
+// Phase 4 — env helpers consumed by both the CLI scripts and the generation
+// Lambda (`infra/lambda/src/generation/`). The Lambda's bundling tree includes
+// only `packages/db/src/` (per the esbuild aliases in the Lambda construct),
+// so this re-export is what makes `import { requireEnv } from '@language-drill/db'`
+// work from inside the Lambda.
+export { requireEnv } from './lib/env';
+export { chunk } from './lib/chunk';
+
+// Phase 4 — orchestration core + curriculum-cell enumeration. The CLI script
+// and the generation Lambda both import `runOneCell` from here.
+export * from './generation';

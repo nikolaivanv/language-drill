@@ -31,6 +31,12 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
         ],
       },
     },
+    "GenerationQueueUrl": {
+      "Description": "SQS queue for generation jobs (Phase 4). Set GENERATION_QUEUE_URL to this for the CLI --queue flag.",
+      "Value": {
+        "Ref": "GenerationQueueB318CF3E",
+      },
+    },
   },
   "Parameters": {
     "BootstrapVersion": {
@@ -512,6 +518,315 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
       },
       "Type": "AWS::Lambda::Permission",
     },
+    "GenerationLambdaWrapGenerationErrorsAlarm3DD6FF6D": {
+      "Properties": {
+        "AlarmDescription": "Phase 4: generation Lambda recorded > 5 errors in a single day.",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "GenerationLambdaWrapHandler1113D722",
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "Errors",
+        "Namespace": "AWS/Lambda",
+        "Period": 86400,
+        "Statistic": "Sum",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Threshold": 5,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "GenerationLambdaWrapHandler1113D722": {
+      "DependsOn": [
+        "GenerationLambdaWrapHandlerServiceRoleDefaultPolicy6F57C426",
+        "GenerationLambdaWrapHandlerServiceRole7CBE6A41",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-123456789012-us-east-1",
+          "S3Key": "<asset-hash>.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "ANTHROPIC_API_KEY": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/ANTHROPIC_API_KEY:SecretString:::}}",
+                ],
+              ],
+            },
+            "DATABASE_URL": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/DATABASE_URL:SecretString:::}}",
+                ],
+              ],
+            },
+            "ENV_NAME": "prod",
+          },
+        },
+        "Handler": "index.handler",
+        "MemorySize": 1024,
+        "ReservedConcurrentExecutions": 3,
+        "Role": {
+          "Fn::GetAtt": [
+            "GenerationLambdaWrapHandlerServiceRole7CBE6A41",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Timeout": 600,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "GenerationLambdaWrapHandlerLogRetention735575A4": {
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "GenerationLambdaWrapHandler1113D722",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 30,
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::LogRetention",
+    },
+    "GenerationLambdaWrapHandlerServiceRole7CBE6A41": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "GenerationLambdaWrapHandlerServiceRoleDefaultPolicy6F57C426": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/DATABASE_URL-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/ANTHROPIC_API_KEY-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "GenerationQueueB318CF3E",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "GenerationLambdaWrapHandlerServiceRoleDefaultPolicy6F57C426",
+        "Roles": [
+          {
+            "Ref": "GenerationLambdaWrapHandlerServiceRole7CBE6A41",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "GenerationLambdaWrapHandlerSqsEventSourceLanguageDrillStackGenerationQueueAB5A4ED2F889EC5A": {
+      "Properties": {
+        "BatchSize": 1,
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "GenerationQueueB318CF3E",
+            "Arn",
+          ],
+        },
+        "FunctionName": {
+          "Ref": "GenerationLambdaWrapHandler1113D722",
+        },
+        "FunctionResponseTypes": [
+          "ReportBatchItemFailures",
+        ],
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+      },
+      "Type": "AWS::Lambda::EventSourceMapping",
+    },
+    "GenerationQueueB318CF3E": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "GenerationQueueGenerationDeadLetterQueue979A7EC1",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "VisibilityTimeout": 600,
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "GenerationQueueGenerationDeadLetterQueue979A7EC1": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "MessageRetentionPeriod": 1209600,
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "GenerationQueueGenerationDlqDepthAlarm159A0E71": {
+      "Properties": {
+        "AlarmDescription": "Phase 4: a generation message survived every redelivery and landed in the DLQ.",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Dimensions": [
+          {
+            "Name": "QueueName",
+            "Value": {
+              "Fn::GetAtt": [
+                "GenerationQueueGenerationDeadLetterQueue979A7EC1",
+                "QueueName",
+              ],
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "ApproximateNumberOfMessagesVisible",
+        "Namespace": "AWS/SQS",
+        "Period": 300,
+        "Statistic": "Maximum",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
     "LambdaHandlerF6372945": {
       "DependsOn": [
         "LambdaHandlerServiceRoleDefaultPolicyBE5FAE6F",
@@ -830,6 +1145,95 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
       },
       "Type": "AWS::IAM::Policy",
     },
+    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A": {
+      "DependsOn": [
+        "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB",
+        "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-123456789012-us-east-1",
+          "S3Key": "<asset-hash>.zip",
+        },
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:PutRetentionPolicy",
+                "logs:DeleteRetentionPolicy",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB",
+        "Roles": [
+          {
+            "Ref": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
     "QueueDeadLetterQueue27D1B28A": {
       "DeletionPolicy": "Delete",
       "Properties": {
@@ -866,6 +1270,207 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
       },
       "Type": "AWS::SQS::Queue",
       "UpdateReplacePolicy": "Delete",
+    },
+    "SchedulerLambdaWrapHandler98188032": {
+      "DependsOn": [
+        "SchedulerLambdaWrapHandlerServiceRoleDefaultPolicy292C4AB7",
+        "SchedulerLambdaWrapHandlerServiceRole5F508912",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-123456789012-us-east-1",
+          "S3Key": "<asset-hash>.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "DATABASE_URL": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/DATABASE_URL:SecretString:::}}",
+                ],
+              ],
+            },
+            "GENERATION_QUEUE_URL": {
+              "Ref": "GenerationQueueB318CF3E",
+            },
+          },
+        },
+        "Handler": "index.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "SchedulerLambdaWrapHandlerServiceRole5F508912",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Timeout": 60,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "SchedulerLambdaWrapHandlerLogRetention2926B541": {
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "SchedulerLambdaWrapHandler98188032",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 30,
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::LogRetention",
+    },
+    "SchedulerLambdaWrapHandlerServiceRole5F508912": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "SchedulerLambdaWrapHandlerServiceRoleDefaultPolicy292C4AB7": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/DATABASE_URL-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "GenerationQueueB318CF3E",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "SchedulerLambdaWrapHandlerServiceRoleDefaultPolicy292C4AB7",
+        "Roles": [
+          {
+            "Ref": "SchedulerLambdaWrapHandlerServiceRole5F508912",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "SchedulerLambdaWrapSchedulerRule53B6E355": {
+      "Properties": {
+        "Description": "Phase 4: daily refill scheduler — walks the curriculum and enqueues under-target cells.",
+        "ScheduleExpression": "cron(0 4 * * ? *)",
+        "State": "ENABLED",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
+                "SchedulerLambdaWrapHandler98188032",
+                "Arn",
+              ],
+            },
+            "Id": "Target0",
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "SchedulerLambdaWrapSchedulerRuleAllowEventRuleLanguageDrillStackSchedulerLambdaWrapHandler6A855A17DF9360C1": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "SchedulerLambdaWrapHandler98188032",
+            "Arn",
+          ],
+        },
+        "Principal": "events.amazonaws.com",
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "SchedulerLambdaWrapSchedulerRule53B6E355",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
     },
     "StorageContentBucket858D6C32": {
       "DeletionPolicy": "Retain",

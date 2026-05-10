@@ -100,7 +100,7 @@ Total estimated effort: **~10–12 working days**, broken into six phases. Phase
 | 1 | Curriculum data + schema migration | ~1.5d | — | **Shipped** |
 | 2 | Generator core + CLI driver | ~2d | 1 | **Shipped** |
 | 3 | Validation + dedup + review queue | ~2d | 2 | **Shipped** |
-| 4 | Lambda + SQS + EventBridge | ~2d | 3 | Pending |
+| 4 | Lambda + SQS + EventBridge | ~2d | 3 | **Shipped** |
 | 5 | Pool monitoring + adaptive scheduling | ~1.5d | 4 | Pending |
 | 6 | Generators for new exercise types as added | rolling | 2 | Pending |
 | 7 | Variations from existing anchors (class A only) | ~5d | 5 | Deferred — activation criteria in §Phase 7 |
@@ -392,6 +392,8 @@ Walks flagged exercises one by one, prints them, prompts `[a]pprove / [r]eject /
 ---
 
 ### Phase 4 — Productionization (Lambda + SQS + EventBridge)
+
+**Status: shipped.** Spec docs live at `.claude/specs/exercise-generation-phase-4/`. A dedicated generation SQS queue + DLQ (`GenerationQueueConstruct`), a worker Lambda (`GenerationLambdaConstruct`, SqsEventSource, reserved concurrency=3), and a scheduler Lambda (`SchedulerLambdaConstruct`, optional EventBridge daily rule) are wired into `infra/lib/stack.ts` and exposed via CDK output `GenerationQueueUrl`. The CLI gains a `--queue` flag that posts `GenerationJobMessage` objects directly to SQS instead of running Claude locally. `GrammarPoint` and `CurriculumCefrLevel` were moved from `@language-drill/db` to `@language-drill/shared` to break the build cycle introduced by the Lambda handler importing `runOneCell` from `packages/ai`. End-to-end smoke against `LanguageDrillStack-dev`: CLI posted job `cbccb4df-4895-4772-a551-a0a4aa1893da`, Lambda completed in 65 s, `approved_count=3 / flagged=0 / rejected=0`, three `auto-approved` rows confirmed in the dev DB. Phase 5 (pool monitoring + adaptive replenishment) is the next dependency.
 
 **Goal:** the same generator runs unattended on AWS. The CLI stays usable for ad-hoc fills.
 

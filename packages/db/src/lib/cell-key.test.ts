@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { assertValidCellKey } from './cell-key';
+import {
+  assertValidCellKey,
+  buildCellKey,
+  buildCellKeyFromRow,
+} from './cell-key';
 
 describe('assertValidCellKey', () => {
   it('accepts valid round-1 cell keys', () => {
@@ -29,5 +33,87 @@ describe('assertValidCellKey', () => {
   it('throws on an unknown exercise type', () => {
     const broken = 'es:b1:listening:es-b1-present-subjunctive';
     expect(() => assertValidCellKey(broken)).toThrow(/cell_key/);
+  });
+});
+
+describe('buildCellKey', () => {
+  it('lowercases language, level, and exercise type', () => {
+    expect(
+      buildCellKey({
+        language: 'ES',
+        cefrLevel: 'B1',
+        exerciseType: 'CLOZE',
+        grammarPointKey: 'es-b1-present-subjunctive',
+      }),
+    ).toBe('es:b1:cloze:es-b1-present-subjunctive');
+  });
+
+  it('preserves the grammarPointKey case (it is already lowercase by convention)', () => {
+    // The grammar-point key is the curriculum key; it carries underscores or
+    // hyphens but is NEVER mixed-case, so we don't lowercase it.
+    expect(
+      buildCellKey({
+        language: 'es',
+        cefrLevel: 'b1',
+        exerciseType: 'cloze',
+        grammarPointKey: 'es-b1-Mixed-Case',
+      }),
+    ).toBe('es:b1:cloze:es-b1-Mixed-Case');
+  });
+
+  it('round-trips through assertValidCellKey for valid round-1 inputs', () => {
+    const key = buildCellKey({
+      language: 'TR',
+      cefrLevel: 'B2',
+      exerciseType: 'vocab_recall',
+      grammarPointKey: 'tr-b2-academic-noun-vocab',
+    });
+    expect(() => assertValidCellKey(key)).not.toThrow();
+  });
+});
+
+describe('buildCellKeyFromRow', () => {
+  it('builds a valid cellKey when every column is non-null', () => {
+    const key = buildCellKeyFromRow({
+      language: 'es',
+      difficulty: 'B1',
+      type: 'cloze',
+      grammarPointKey: 'es-b1-present-subjunctive',
+    });
+    expect(key).toBe('es:b1:cloze:es-b1-present-subjunctive');
+    expect(() => assertValidCellKey(key)).not.toThrow();
+  });
+
+  it('emits a sentinel-bearing key when language is NULL (caught by assertValidCellKey)', () => {
+    const key = buildCellKeyFromRow({
+      language: null,
+      difficulty: 'B1',
+      type: 'cloze',
+      grammarPointKey: 'es-b1-present-subjunctive',
+    });
+    expect(key).toBe('?:b1:cloze:es-b1-present-subjunctive');
+    expect(() => assertValidCellKey(key)).toThrow(/cell_key/);
+  });
+
+  it('emits a sentinel-bearing key when grammarPointKey is NULL', () => {
+    const key = buildCellKeyFromRow({
+      language: 'es',
+      difficulty: 'B1',
+      type: 'cloze',
+      grammarPointKey: null,
+    });
+    expect(key).toBe('es:b1:cloze:?');
+    expect(() => assertValidCellKey(key)).toThrow(/cell_key/);
+  });
+
+  it('emits a fully-sentinel key when every column is NULL', () => {
+    const key = buildCellKeyFromRow({
+      language: null,
+      difficulty: null,
+      type: null,
+      grammarPointKey: null,
+    });
+    expect(key).toBe('?:?:?:?');
+    expect(() => assertValidCellKey(key)).toThrow(/cell_key/);
   });
 });

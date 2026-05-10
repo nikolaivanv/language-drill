@@ -152,3 +152,11 @@ export * from "./onboarding";
 // ---------------------------------------------------------------------------
 
 export * from "./read";
+
+// ---------------------------------------------------------------------------
+// Phase 4 — moved here from `@language-drill/db` to break the build cycle
+// (the db barrel still re-exports both for back-compat).
+// ---------------------------------------------------------------------------
+
+export { deterministicUuid } from "./deterministic-uuid";
+export type { CurriculumCefrLevel, GrammarPoint } from "./curriculum-types";

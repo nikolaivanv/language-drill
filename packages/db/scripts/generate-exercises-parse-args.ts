@@ -30,6 +30,10 @@ export type ParsedArgs = {
   concurrency: number;
   dryRun: boolean;
   allowProd: boolean;
+  /** Phase 4: post a `GenerationJobMessage` per cell to SQS instead of running
+   *  the cell locally; the generation Lambda picks the message up and runs
+   *  `runOneCell` against the dev/prod Neon branch. */
+  queue: boolean;
 };
 
 // ---------------------------------------------------------------------------
@@ -79,6 +83,11 @@ Optional flags:
                                evaluator; prefer off-hours.
   --dry-run                    Print resolved cells + cost estimate; no DB or
                                Claude calls.
+  --queue                      Post one GenerationJobMessage per cell to SQS
+                               instead of running locally. The generation
+                               Lambda picks them up. Requires
+                               GENERATION_QUEUE_URL + AWS_REGION in env.
+                               Incompatible with --concurrency >1.
   --allow-prod                 Required when NODE_ENV=production. The Phase 4
                                Lambda is the supported prod path.
   --help                       Print this help and exit 0.
@@ -130,12 +139,19 @@ export function parseGenerateArgs(argv: readonly string[]): ParsedArgs {
   const concurrency = parseConcurrency(raw.get('concurrency'));
   const dryRun = raw.get('dry-run') === 'true';
   const allowProd = raw.get('allow-prod') === 'true';
+  const queue = raw.get('queue') === 'true';
 
   // Cross-flag validation ---------------------------------------------------
 
   if (grammarPoint !== null && type === 'all') {
     throw new Error(
       "you must scope --type when generating against a single grammar point (e.g. --type cloze)",
+    );
+  }
+
+  if (queue && concurrency > 1) {
+    throw new Error(
+      '--queue is incompatible with --concurrency >1; the scheduler caps Lambda parallelism',
     );
   }
 
@@ -163,6 +179,7 @@ export function parseGenerateArgs(argv: readonly string[]): ParsedArgs {
     concurrency,
     dryRun,
     allowProd,
+    queue,
   };
 }
 

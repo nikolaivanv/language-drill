@@ -1,0 +1,33 @@
+/**
+ * Tiny logging helpers for the generation Lambda handler. The handler emits
+ * structured-JSON log lines via `console.log(JSON.stringify({...}))`; these
+ * helpers keep the call sites short:
+ *   - `errMessage` extracts a string from an `unknown` thrown value.
+ *   - `summarizeResult` projects the count fields of a `CellResult` into the
+ *     shape the handler logs on completion.
+ */
+
+import type { CellResult } from '@language-drill/db';
+
+export function errMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
+
+export function summarizeResult(r: CellResult): {
+  inserted: number;
+  approved: number;
+  flagged: number;
+  rejected: number;
+  dedupGivenUp: number;
+  durationMs: number;
+} {
+  return {
+    inserted: r.insertedCount,
+    // Phase 3 invariant: inserted = auto-approved ∪ flagged.
+    approved: r.insertedCount - r.flaggedCount,
+    flagged: r.flaggedCount,
+    rejected: r.rejectedCount,
+    dedupGivenUp: r.dedupGivenUpCount,
+    durationMs: r.durationMs,
+  };
+}

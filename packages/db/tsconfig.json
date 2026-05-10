@@ -4,5 +4,7 @@
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "include": ["src"]
+  "include": ["src"],
+  "// exclude": "Tests are checked by vitest at runtime; tsc --noEmit excludes them so cross-boundary imports (e.g. src/.../*.test.ts → scripts/generate-exercises-mock-client.ts) don't trip rootDir. Matches the existing convention where scripts/*.test.ts files were never tsc-checked.",
+  "exclude": ["**/*.test.ts"]
 }

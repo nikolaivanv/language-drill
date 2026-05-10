@@ -1,45 +1,9 @@
-import type { CefrLevel, LearningLanguage } from '@language-drill/shared';
-
 /**
- * The CEFR levels covered by the round-1 curriculum. C1/C2 are intentionally
- * out of scope per Requirement 1.4 — extend this when higher levels ship.
+ * Phase 4 — `GrammarPoint` and `CurriculumCefrLevel` moved to
+ * `@language-drill/shared` to break the build cycle (`ai/src` was importing
+ * `GrammarPoint` as a type from `db`, while `db/src` was importing runtime
+ * helpers from `ai`). This file is a back-compat re-export so existing
+ * imports like `import type { GrammarPoint } from '@language-drill/db'` keep
+ * working unchanged via the package barrel.
  */
-export type CurriculumCefrLevel = Extract<CefrLevel, 'A1' | 'A2' | 'B1' | 'B2'>;
-
-/**
- * One entry in the per-language curriculum: the typed contract every
- * `curriculum/{es,de,tr}.ts` module compiles against and the Phase 2 generator
- * imports as plain data.
- *
- * Frozen-shape `Readonly<...>` so consumers cannot mutate cross-module state at
- * runtime. The `kind` discriminator branches the generator's prompt strategy:
- *
- *   - `'grammar'` — a real grammar point. Phase 2 prompt builders inject
- *     `description`, `examplesPositive`, `examplesNegative`, and `commonErrors`
- *     verbatim into the system prompt.
- *   - `'vocab'`   — a frequency-band umbrella entry that covers vocab-recall
- *     cells for a given (language, level). Phase 1 needs these so every non-EN
- *     seed exercise can be tagged with a non-null `grammar_point_key`
- *     (Requirement 5.3). Phase 2's vocab path will eventually replace the
- *     umbrellas with finer-grained frequency-band rows; until then, the
- *     discriminator — *not* a string-suffix sniff against the `key` — is what
- *     downstream code branches on.
- */
-export type GrammarPoint = Readonly<{
-  /** Stable identifier; format: `<lang>-<level>-<slug>`, e.g. `'es-b1-present-subjunctive'`. */
-  key: string;
-  kind: 'grammar' | 'vocab';
-  name: string;
-  /** ≤ 200 chars; English; injected verbatim into Phase 2 prompts. */
-  description: string;
-  cefrLevel: CurriculumCefrLevel;
-  language: LearningLanguage;
-  /** ≥ 2 items; canonical correct production examples. */
-  examplesPositive: readonly string[];
-  /** ≥ 1 item; incorrect production marked with leading `*`. */
-  examplesNegative: readonly string[];
-  /** ≥ 1 item; common L2 errors learners make on this point. */
-  commonErrors: readonly string[];
-  /** Same-language curriculum keys this point depends on. Empty array permitted. */
-  prerequisiteKeys?: readonly string[];
-}>;
+export type { CurriculumCefrLevel, GrammarPoint } from '@language-drill/shared';
