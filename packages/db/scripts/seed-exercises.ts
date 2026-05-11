@@ -791,8 +791,18 @@ export async function tagExistingSeeds(db: Db): Promise<{
   alreadyTagged: number;
   untaggedEnSeeds: number;
 }> {
+  // SEED_KEY_TO_GRAMMAR_POINT is temporarily reduced (see comment on the
+  // constant). Non-EN seeds whose mapping is currently commented out remain in
+  // the catalogue intentionally — filter them out before handing the list to
+  // planSeedTags so its strict "every non-EN seed must have a mapping" guard
+  // still catches real drift. Restore the unfiltered call when the commented
+  // mappings are reinstated.
+  const activeNonEnKeys = new Set(Object.keys(SEED_KEY_TO_GRAMMAR_POINT));
+  const seedsForTagging = SEED_EXERCISES.filter(
+    (seed) => seed.language === 'EN' || activeNonEnKeys.has(seed.key),
+  );
   const { tags, untaggedEnSeeds } = planSeedTags(
-    SEED_EXERCISES,
+    seedsForTagging,
     SEED_KEY_TO_GRAMMAR_POINT,
     ALL_CURRICULA,
   );
