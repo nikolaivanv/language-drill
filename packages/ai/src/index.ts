@@ -90,6 +90,51 @@ export {
 // Lambda's pre-filter (more-responsive-reading spec Req 1.1).
 export * from "./frequency/index.js";
 
+export {
+  THEORY_TOOL_NAME,
+  THEORY_GENERATION_MODEL,
+  THEORY_GENERATION_TEMPERATURE,
+  THEORY_GENERATION_MAX_TOKENS,
+  THEORY_GENERATION_TOOL,
+  generateTheoryTopic,
+  theoryDraftId,
+  deriveTheoryTopicId,
+} from "./theory-generate.js";
+export type {
+  TheoryGenerationSpec,
+  TheoryDraft,
+  TheoryGenerateResult,
+} from "./theory-generate.js";
+
+export {
+  buildTheorySystemPrompt,
+  buildTheoryUserPrompt,
+} from "./theory-prompts.js";
+export type { TheoryPromptInputs } from "./theory-prompts.js";
+
+export { THEORY_VALIDATION_THRESHOLDS } from "./theory-validation-thresholds.js";
+export type { THEORY_VALIDATION_THRESHOLDS_TYPE } from "./theory-validation-thresholds.js";
+
+export {
+  validateTheoryDraft,
+  parseTheoryValidationResult,
+  THEORY_VALIDATION_TOOL,
+  THEORY_VALIDATION_TOOL_NAME,
+  THEORY_VALIDATION_MODEL,
+  THEORY_VALIDATION_MAX_TOKENS,
+  THEORY_VALIDATION_TEMPERATURE,
+} from "./theory-validate.js";
+export type {
+  TheoryValidationResult,
+  ValidateTheoryDraftResult,
+} from "./theory-validate.js";
+
+export {
+  buildTheoryValidationSystemPrompt,
+  buildTheoryValidationUserPrompt,
+  THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE,
+} from "./theory-validation-prompts.js";
+
 /**
  * Creates an Anthropic client instance configured with the provided API key.
  */

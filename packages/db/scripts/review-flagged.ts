@@ -306,14 +306,30 @@ function createBufferedReader(source: Readable): KeystrokeReader {
 // ---------------------------------------------------------------------------
 
 /**
- * SQLSTATE `23505` is Postgres's `unique_violation`. `tryApprove` catches it
- * to demote the row to `rejected` per Requirement 6.10 — the partial UNIQUE
- * index from Requirement 4.1 fires when a flagged duplicate would be promoted
- * to `manual-approved` while another approved row already occupies the slot.
+ * SQLSTATE `23505` is Postgres's `unique_violation`. `tryApprove` catches
+ * it to demote the row to `rejected` per Requirement 6.10 — the partial
+ * UNIQUE index fires when a flagged duplicate would be promoted to
+ * `manual-approved` while another approved row already occupies the slot.
+ *
+ * Walks the `cause` chain because Drizzle (and `pg`-style drivers) often
+ * wrap the original Postgres error in a higher-level "Failed query: ..."
+ * Error whose `.cause` carries the SQLSTATE. The exercise-side tests use a
+ * fake `Db` that throws an Error with a top-level `code`, so a single-
+ * level check passed there; the theory-side integration test hits a real
+ * Neon round-trip and exposes the wrapping.
  */
 export function isUniqueViolation(err: unknown): boolean {
-  if (err instanceof Error && 'code' in err) {
-    return (err as { code: string }).code === '23505';
+  let current: unknown = err;
+  // Bound the walk so a self-referential `cause` doesn't loop forever.
+  for (let depth = 0; depth < 8; depth++) {
+    if (current instanceof Error && 'code' in current) {
+      if ((current as { code: unknown }).code === '23505') return true;
+    }
+    if (current instanceof Error && current.cause !== undefined) {
+      current = current.cause;
+      continue;
+    }
+    return false;
   }
   return false;
 }

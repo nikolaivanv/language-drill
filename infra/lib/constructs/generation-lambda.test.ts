@@ -27,20 +27,21 @@ describe('GenerationLambdaConstruct', () => {
     template = Template.fromStack(stack);
   });
 
-  it('creates a NodejsFunction with timeout 600, memory 1024, reserved concurrency 3', () => {
+  it('creates a NodejsFunction with timeout 900, memory 1024, reserved concurrency 3', () => {
     template.hasResourceProperties('AWS::Lambda::Function', {
       Runtime: 'nodejs20.x',
-      Timeout: 600,
+      Timeout: 900,
       MemorySize: 1024,
       ReservedConcurrentExecutions: 3,
     });
   });
 
-  it('wires the Lambda to the SQS queue with BatchSize=1 and ReportBatchItemFailures', () => {
+  it('wires the Lambda to the SQS queue with BatchSize=1, ReportBatchItemFailures, and MaximumConcurrency matching reservedConcurrency', () => {
     template.resourceCountIs('AWS::Lambda::EventSourceMapping', 1);
     template.hasResourceProperties('AWS::Lambda::EventSourceMapping', {
       BatchSize: 1,
       FunctionResponseTypes: ['ReportBatchItemFailures'],
+      ScalingConfig: { MaximumConcurrency: 3 },
     });
   });
 

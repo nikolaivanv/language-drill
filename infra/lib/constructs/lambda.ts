@@ -53,8 +53,11 @@ export class LambdaConstruct extends Construct {
       entry: path.join(__dirname, "../../lambda/src/index.ts"),
       handler: "handler",
       runtime: Runtime.NODEJS_20_X,
-      timeout: Duration.seconds(15),
-      memorySize: 256,
+      // 29 s is the max API Gateway HTTP API will wait for an integration.
+      // Claude tool-use calls in /read/annotate and /exercises/:id/submit can
+      // exceed 15 s with cold containers + cross-region DB round-trips.
+      timeout: Duration.seconds(29),
+      memorySize: 512,
       depsLockFilePath: path.join(projectRoot, "pnpm-lock.yaml"),
       bundling: {
         minify: true,

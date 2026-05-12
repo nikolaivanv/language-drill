@@ -846,7 +846,7 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
             "Value": "prod",
           },
         ],
-        "Timeout": 600,
+        "Timeout": 900,
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -995,6 +995,9 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
         "FunctionResponseTypes": [
           "ReportBatchItemFailures",
         ],
+        "ScalingConfig": {
+          "MaximumConcurrency": 3,
+        },
         "Tags": [
           {
             "Key": "env",
@@ -1022,7 +1025,7 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
             "Value": "prod",
           },
         ],
-        "VisibilityTimeout": 600,
+        "VisibilityTimeout": 900,
       },
       "Type": "AWS::SQS::Queue",
       "UpdateReplacePolicy": "Delete",
@@ -1162,7 +1165,7 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
           },
         },
         "Handler": "index.handler",
-        "MemorySize": 256,
+        "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
             "LambdaHandlerServiceRole00F05BC9",
@@ -1176,7 +1179,7 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
             "Value": "prod",
           },
         ],
-        "Timeout": 15,
+        "Timeout": 29,
       },
       "Type": "AWS::Lambda::Function",
     },

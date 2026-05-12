@@ -25,9 +25,9 @@ describe('GenerationQueueConstruct', () => {
     template.resourceCountIs('AWS::SQS::Queue', 2);
   });
 
-  it('main queue has visibility timeout 600 and a redrive policy with maxReceiveCount 3', () => {
+  it('main queue has visibility timeout 900 (matches Lambda) and a redrive policy with maxReceiveCount 3', () => {
     template.hasResourceProperties('AWS::SQS::Queue', {
-      VisibilityTimeout: 600,
+      VisibilityTimeout: 900,
       RedrivePolicy: Match.objectLike({ maxReceiveCount: 3 }),
     });
   });

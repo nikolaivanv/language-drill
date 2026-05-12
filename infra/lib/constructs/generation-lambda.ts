@@ -61,7 +61,12 @@ export class GenerationLambdaConstruct extends Construct {
       entry: path.join(__dirname, '../../lambda/src/generation/handler.ts'),
       handler: 'handler',
       runtime: Runtime.NODEJS_20_X,
-      timeout: Duration.seconds(600),
+      // 900 s is the AWS Lambda hard maximum. Bumped from 600 s on 2026-05-12
+      // after the daily scheduled batch silently killed 34/43 cells: successful
+      // runs took 325–402 s, so cells with a couple of dedupe retries tipped
+      // over the old limit. The queue's `visibilityTimeout` is bumped to match
+      // so SQS doesn't redeliver a still-running message.
+      timeout: Duration.seconds(900),
       memorySize: 1024,
       reservedConcurrentExecutions: props.reservedConcurrency,
       depsLockFilePath: path.join(projectRoot, 'pnpm-lock.yaml'),
@@ -102,6 +107,16 @@ export class GenerationLambdaConstruct extends Construct {
       new SqsEventSource(props.queue, {
         batchSize: 1,
         reportBatchItemFailures: true,
+        // Match `reservedConcurrency` so the SQS poller never fetches more
+        // messages than the Lambda can actually invoke on. Without this,
+        // SQS pre-fetches up to its internal limit, holds the excess
+        // "in-flight" until `visibilityTimeout` expires, releases them,
+        // re-fetches, and after `maxReceiveCount` of those visibility-
+        // expiry cycles silently DLQs the messages — even though the
+        // Lambda never ran on them. Observed live on 2026-05-12: a 34-
+        // message redrive produced 24 phantom DLQs alongside 9 real
+        // successes purely because of this pre-fetch behaviour.
+        maxConcurrency: props.reservedConcurrency,
       }),
     );
 

@@ -90,6 +90,7 @@ function cellResultBase(): CellResult {
     flaggedCount: 0,
     rejectedCount: 0,
     dedupGivenUpCount: 0,
+    malformedDraftCount: 0,
   };
 }
 
@@ -101,6 +102,7 @@ describe('summarizeResult', () => {
       flagged: 0,
       rejected: 0,
       dedupGivenUp: 0,
+      malformedDrafts: 0,
       durationMs: 0,
     });
   });
@@ -117,6 +119,7 @@ describe('summarizeResult', () => {
       flagged: 3,
       rejected: 0,
       dedupGivenUp: 0,
+      malformedDrafts: 0,
       durationMs: 0,
     });
   });
@@ -133,6 +136,7 @@ describe('summarizeResult', () => {
       flagged: 5,
       rejected: 0,
       dedupGivenUp: 0,
+      malformedDrafts: 0,
       durationMs: 0,
     });
   });
@@ -151,6 +155,7 @@ describe('summarizeResult', () => {
       flagged: 0,
       rejected: 0,
       dedupGivenUp: 0,
+      malformedDrafts: 0,
       durationMs: 0,
     });
   });
@@ -166,6 +171,7 @@ describe('summarizeResult', () => {
       flagged: 0,
       rejected: 0,
       dedupGivenUp: 0,
+      malformedDrafts: 0,
       durationMs: 180_000,
     });
   });
@@ -187,7 +193,28 @@ describe('summarizeResult', () => {
       flagged: 1,
       rejected: 2,
       dedupGivenUp: 1,
+      malformedDrafts: 0,
       durationMs: 1234,
+    });
+  });
+
+  it('surfaces malformedDraftCount on the projection (production-incident signal)', () => {
+    const r: CellResult = {
+      ...cellResultBase(),
+      insertedCount: 49,
+      flaggedCount: 0,
+      rejectedCount: 0,
+      malformedDraftCount: 1,
+      durationMs: 360_000,
+    };
+    expect(summarizeResult(r)).toEqual({
+      inserted: 49,
+      approved: 49,
+      flagged: 0,
+      rejected: 0,
+      dedupGivenUp: 0,
+      malformedDrafts: 1,
+      durationMs: 360_000,
     });
   });
 });

@@ -26,6 +26,14 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: pnpm --filter @language-drill/db db:migrate
 
+      - name: Build @language-drill/shared (required by seed script)
+        run: pnpm --filter @language-drill/shared build
+
+      - name: Seed curriculum (skill_topics, seed exercises) against production
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: pnpm --filter @language-drill/db seed:exercises
+
   cdk-deploy-prod:
     name: CDK Deploy (prod)
     runs-on: ubuntu-latest
@@ -114,6 +122,14 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
         run: pnpm --filter @language-drill/db db:migrate
+
+      - name: Build @language-drill/shared (required by seed script)
+        run: pnpm --filter @language-drill/shared build
+
+      - name: Seed curriculum (skill_topics, seed exercises) against dev
+        env:
+          DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
+        run: pnpm --filter @language-drill/db seed:exercises
 
   cdk-deploy-dev:
     name: CDK Deploy (dev)

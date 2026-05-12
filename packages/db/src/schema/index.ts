@@ -28,3 +28,10 @@ export { playlists, playlistItems } from './playlists';
 export { invitations, usageEvents } from './access';
 export { generationJobs } from './generation';
 export type { GenerationJob, NewGenerationJob } from './generation';
+export { theoryTopics, theoryGenerationJobs } from './theory';
+export type {
+  TheoryTopic,
+  NewTheoryTopic,
+  TheoryGenerationJob,
+  NewTheoryGenerationJob,
+} from './theory';

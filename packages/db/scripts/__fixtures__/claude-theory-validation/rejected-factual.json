@@ -1,0 +1,9 @@
+{
+  "qualityScore": 0.4,
+  "factualErrors": ["claims subjunctive is used after \"creo que\"; in modern usage it takes indicative"],
+  "levelMismatch": false,
+  "sectionsIncomplete": [],
+  "examplesUseGrammarPoint": true,
+  "culturalIssues": [],
+  "flaggedReasons": []
+}

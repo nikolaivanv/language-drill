@@ -166,6 +166,18 @@ export * from "./tokenize";
 export * from "./cors";
 
 // ---------------------------------------------------------------------------
+// Theory content JSON taxonomy
+// ---------------------------------------------------------------------------
+
+export type {
+  TheoryTopicJson,
+  TheorySectionJson,
+  TheoryBlockJson,
+  TheoryInlineJson,
+} from "./theory";
+export { parseTheoryTopicJson, parseBlock, parseInline } from "./theory";
+
+// ---------------------------------------------------------------------------
 // Phase 4 — moved here from `@language-drill/db` to break the build cycle
 // (the db barrel still re-exports both for back-compat).
 // ---------------------------------------------------------------------------

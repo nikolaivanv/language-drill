@@ -7,6 +7,20 @@
 export * from './client';
 export * from './schema';
 
+// Explicit re-export of the theory schema module so consumers can import
+// theory tables and their inferred row/insert types via the package barrel
+// without reaching into ./schema/theory. The `export * from './schema'`
+// wildcard above also covers these, but the explicit form documents the
+// public surface for downstream callers (Phase 2 CLI, Phase 5 panel).
+export {
+  theoryTopics,
+  theoryGenerationJobs,
+  type TheoryTopic,
+  type NewTheoryTopic,
+  type TheoryGenerationJob,
+  type NewTheoryGenerationJob,
+} from './schema/theory';
+
 // Curriculum (grammar-point taxonomy consumed by the generator and the seed
 // script). Internal Phase-1 callers used relative imports; Phase 2 widens the
 // surface so packages/ai and packages/db/scripts can import via the barrel.
@@ -30,6 +44,11 @@ export {
   buildCellKey,
   buildCellKeyFromRow,
 } from './lib/cell-key';
+export {
+  THEORY_CELL_KEY_REGEX,
+  assertValidTheoryCellKey,
+  buildTheoryCellKey,
+} from './lib/theory-cell-key';
 
 // Phase 4 — env helpers consumed by both the CLI scripts and the generation
 // Lambda (`infra/lambda/src/generation/`). The Lambda's bundling tree includes
@@ -47,3 +66,4 @@ export { targetCellSize } from './lib/target-cell-size';
 // Phase 4 — orchestration core + curriculum-cell enumeration. The CLI script
 // and the generation Lambda both import `runOneCell` from here.
 export * from './generation';
+export * from './theory-generation';

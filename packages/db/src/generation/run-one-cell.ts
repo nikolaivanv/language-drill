@@ -33,6 +33,8 @@ import {
   type ClaudeUsageBreakdown,
   type ExerciseDraft,
   type GenerationSpec,
+  type ValidateDraftResult,
+  type ValidationResult,
 } from '@language-drill/ai';
 import { eq } from 'drizzle-orm';
 
@@ -48,12 +50,25 @@ import {
 
 import type { Cell } from './cells';
 import { routeValidationResult } from './routing';
+import { runValidatorPool } from './validator-pool';
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
 const MAX_DEDUP_RETRIES = 3;
+
+/**
+ * Cap on concurrent `validateDraft` calls per cell. Tuned against:
+ * (a) Anthropic Sonnet 4.6 org-tier RPM — at Lambda reservedConcurrency=3
+ *     and this cap=5, we top out at ~15 in-flight validator calls across
+ *     all cells, comfortably under the org-tier ceiling.
+ * (b) Setting this to 1 makes runOneCell byte-identical to the pre-spec
+ *     serial loop — useful as an emergency rollback knob.
+ * See docs/tech-debt.md "Per-draft validation loop" entry for the broader
+ * context (generation loop is still serial; spec covers validator only).
+ */
+const MAX_VALIDATOR_CONCURRENCY = 5;
 
 /** generation_jobs.error_message column truncates at 1000 chars. */
 const ERROR_MESSAGE_MAX_LENGTH = 1000;
@@ -84,6 +99,13 @@ export type CellResult = {
   rejectedCount: number;
   /** Ordinals where all 3 retries collided or all rejected. */
   dedupGivenUpCount: number;
+  /**
+   * Ordinals where Claude returned a payload that failed parse/validation in
+   * `generateBatch`. Per-ordinal failures don't abort the cell anymore — the
+   * count here surfaces them for operational visibility. A cell only fails-
+   * closed on this dimension when *every* ordinal is malformed.
+   */
+  malformedDraftCount: number;
 };
 
 export type DraftOutcome = {
@@ -171,6 +193,12 @@ type ValidateAndInsertOpts = {
   };
   generatedAt: Date;
   signal?: AbortSignal;
+  /**
+   * Phase A's pre-computed first validation. When supplied, attempt 0 of the
+   * retry loop uses this instead of calling `validateDraft` again. Attempts
+   * 1+ (dedup retries) always call `validateDraft` live.
+   */
+  precomputedFirstValidation?: ValidateDraftResult;
 };
 
 export async function validateAndInsertWithRetry(
@@ -191,12 +219,20 @@ export async function validateAndInsertWithRetry(
     // Validate. Every validator call's usage folds into extraUsage — there
     // is NO conditional guard on attempt index (the bug the design validator
     // caught in Phase 3). Token-totals regression test in Task 25 enforces this.
+    // Attempt 0 consumes Phase A's pre-computed result when supplied; later
+    // attempts (dedup-retry path) always call validateDraft live.
     if (opts.signal?.aborted) throw new Error('Aborted by user (SIGINT)');
-    const { result, tokenUsage: valUsage } = await validateDraft(
-      opts.client,
-      currentDraft,
-      opts.spec,
-    );
+    let result: ValidationResult;
+    let valUsage: ClaudeUsageBreakdown;
+    if (attempt === 0 && opts.precomputedFirstValidation) {
+      ({ result, tokenUsage: valUsage } = opts.precomputedFirstValidation);
+    } else {
+      ({ result, tokenUsage: valUsage } = await validateDraft(
+        opts.client,
+        currentDraft,
+        opts.spec,
+      ));
+    }
     extraUsage = addUsage(extraUsage, valUsage);
     validatedCount++;
 
@@ -377,6 +413,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
   let insertedCount = 0;
   let firstAttemptSkippedCount = 0;
   let inBatchDuplicateCount = 0;
+  let malformedDraftCount = 0;
   const generatedAt = new Date();
 
   try {
@@ -393,6 +430,29 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     inBatchDuplicateCount = batch.drafts.filter(
       (d) => d.metadata.inBatchDuplicate,
     ).length;
+    malformedDraftCount = batch.malformedDrafts.length;
+
+    // All ordinals malformed → the cell genuinely has nothing to insert.
+    // Fail-closed with a summary that includes the first malformed message
+    // so CloudWatch carries the actionable detail.
+    if (batch.drafts.length === 0 && malformedDraftCount > 0) {
+      const first = batch.malformedDrafts[0]?.errorMessage ?? '(no detail)';
+      throw new Error(
+        `All ${malformedDraftCount} drafts malformed; first: ${first}`,
+      );
+    }
+
+    // Phase A — parallel first-validation. The pool throws on the first
+    // failure (network, 429, SIGINT); the outer try/catch routes that into
+    // the existing failClosed path. Dedup-retry iterations inside
+    // validateAndInsertWithRetry stay sequential and call validateDraft live.
+    const firstValidations = await runValidatorPool({
+      drafts: batch.drafts,
+      client,
+      spec,
+      signal,
+      concurrency: MAX_VALIDATOR_CONCURRENCY,
+    });
 
     for (let ordinal = 0; ordinal < batch.drafts.length; ordinal++) {
       const draft = batch.drafts[ordinal];
@@ -408,6 +468,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
         args,
         generatedAt,
         signal,
+        precomputedFirstValidation: firstValidations.get(ordinal),
       });
 
       combinedUsage = addUsage(combinedUsage, outcome.extraUsage);
@@ -452,6 +513,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       errorMessage: message,
       auditRowExists: true,
       db,
+      malformedDraftCount,
     });
   }
 
@@ -491,6 +553,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     flaggedCount,
     rejectedCount,
     dedupGivenUpCount,
+    malformedDraftCount,
   };
 }
 
@@ -506,6 +569,8 @@ async function failClosed(opts: {
   errorMessage: string;
   auditRowExists: boolean;
   db: Db;
+  /** Threaded through from the outer scope so the count survives the fail path. */
+  malformedDraftCount?: number;
 }): Promise<CellResult> {
   const truncatedMessage = opts.errorMessage.slice(0, ERROR_MESSAGE_MAX_LENGTH);
   if (opts.auditRowExists) {
@@ -533,5 +598,6 @@ async function failClosed(opts: {
     flaggedCount: 0,
     rejectedCount: 0,
     dedupGivenUpCount: 0,
+    malformedDraftCount: opts.malformedDraftCount ?? 0,
   };
 }
