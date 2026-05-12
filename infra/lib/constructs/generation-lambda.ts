@@ -107,6 +107,16 @@ export class GenerationLambdaConstruct extends Construct {
       new SqsEventSource(props.queue, {
         batchSize: 1,
         reportBatchItemFailures: true,
+        // Match `reservedConcurrency` so the SQS poller never fetches more
+        // messages than the Lambda can actually invoke on. Without this,
+        // SQS pre-fetches up to its internal limit, holds the excess
+        // "in-flight" until `visibilityTimeout` expires, releases them,
+        // re-fetches, and after `maxReceiveCount` of those visibility-
+        // expiry cycles silently DLQs the messages — even though the
+        // Lambda never ran on them. Observed live on 2026-05-12: a 34-
+        // message redrive produced 24 phantom DLQs alongside 9 real
+        // successes purely because of this pre-fetch behaviour.
+        maxConcurrency: props.reservedConcurrency,
       }),
     );
 
