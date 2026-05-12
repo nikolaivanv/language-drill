@@ -1,14 +1,8 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./dist"
-    // `rootDir` intentionally omitted. The CDK construct in
-    // `lib/constructs/annotate-stream-lambda.ts` imports a small constant
-    // from `packages/shared/src/cors.ts` via a relative path — that source
-    // file lives outside `infra/`, which would otherwise trip TS6059.
-    // Build emission isn't part of CI (deploy goes through ts-node JIT);
-    // `typecheck` runs with --noEmit, so the implicit rootDir
-    // (LCA of all referenced files) is harmless.
+    "outDir": "./dist",
+    "rootDir": "."
   },
   "include": ["bin/**/*.ts", "lib/**/*.ts", "test/**/*.ts"],
   "exclude": ["cdk.out", "dist", "node_modules"]
