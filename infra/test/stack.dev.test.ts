@@ -101,14 +101,14 @@ describe("LanguageDrillStack-dev", () => {
     const lambdas = devTemplate.findResources("AWS::Lambda::Function");
     const fns = Object.values(lambdas) as LambdaResource[];
 
-    // Phase 4 added two application Lambdas (Generation + Scheduler);
-    // more-responsive-reading adds one more (AnnotateStream behind a Function
-    // URL). All four run on nodejs20.x. CDK's logRetention shortcut also
-    // synthesizes a maintenance Lambda on a different runtime (currently
-    // nodejs22.x); filter it out so this assertion tracks application
-    // Lambdas only.
+    // The dev stack runs five application Lambdas on nodejs20.x: API,
+    // Generation (consumer), Scheduler (exercise), AnnotateStream (SSE
+    // Function URL), TheoryGeneration (consumer), and TheoryScheduler. CDK's
+    // logRetention shortcut also synthesizes a maintenance Lambda on a
+    // different runtime (currently nodejs22.x); filter it out so this
+    // assertion tracks application Lambdas only.
     const appFns = fns.filter((f) => f.Properties.Runtime === "nodejs20.x");
-    expect(appFns).toHaveLength(4);
+    expect(appFns).toHaveLength(6);
 
     // The API Lambda is the only one with CLERK_SECRET_KEY in its env — the
     // generation pipeline Lambdas have a strict minimum-privilege secrets set.
@@ -131,8 +131,9 @@ describe("LanguageDrillStack-dev", () => {
     devTemplate.resourceCountIs("AWS::Events::Rule", 0);
   });
 
-  // Phase 4 wires the SchedulerLambda's daily refill rule when enableScheduledJobs=true.
-  it("prod stack deploys exactly one EventBridge rule (the Phase 4 scheduler refill)", () => {
-    prodTemplate.resourceCountIs("AWS::Events::Rule", 1);
+  // Phase 4 wires two EventBridge rules when enableScheduledJobs=true: the
+  // exercise scheduler (daily) and the theory scheduler (weekly Mondays).
+  it("prod stack deploys exactly two EventBridge rules (exercise + theory schedulers)", () => {
+    prodTemplate.resourceCountIs("AWS::Events::Rule", 2);
   });
 });

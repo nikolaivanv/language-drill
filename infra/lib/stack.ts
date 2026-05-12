@@ -8,6 +8,9 @@ import { GenerationQueueConstruct } from "./constructs/generation-queue";
 import { GenerationLambdaConstruct } from "./constructs/generation-lambda";
 import { SchedulerLambdaConstruct } from "./constructs/scheduler-lambda";
 import { AnnotateStreamLambdaConstruct } from "./constructs/annotate-stream-lambda";
+import { TheoryGenerationQueueConstruct } from "./constructs/theory-generation-queue";
+import { TheoryGenerationLambdaConstruct } from "./constructs/theory-generation-lambda";
+import { TheorySchedulerLambdaConstruct } from "./constructs/theory-scheduler-lambda";
 
 export interface LanguageDrillStackProps extends StackProps {
   envName: "prod" | "dev";
@@ -81,6 +84,26 @@ export class LanguageDrillStack extends Stack {
       { secretsPrefix: props.secretsPrefix },
     );
 
+    // Phase 4 (theory) — parallel theory generation pipeline. Independent
+    // queue + DLQ + reserved-concurrency budget from the exercise pipeline;
+    // reuses the same `enableScheduledJobs` flag (single source of truth for
+    // both pipelines' cron gating).
+    const theoryQueue = new TheoryGenerationQueueConstruct(
+      this,
+      "TheoryGenerationQueue",
+    );
+    new TheoryGenerationLambdaConstruct(this, "TheoryGenerationLambdaWrap", {
+      queue: theoryQueue.queue,
+      secretsPrefix: props.secretsPrefix,
+      envName: props.envName,
+      reservedConcurrency: 2,
+    });
+    new TheorySchedulerLambdaConstruct(this, "TheorySchedulerLambdaWrap", {
+      queue: theoryQueue.queue,
+      secretsPrefix: props.secretsPrefix,
+      enableScheduledJobs: props.enableScheduledJobs,
+    });
+
     new CfnOutput(this, "ApiUrl", {
       value: apiGateway.httpApi.url ?? "",
       description: "API Gateway endpoint URL",
@@ -93,6 +116,11 @@ export class LanguageDrillStack extends Stack {
     new CfnOutput(this, "AnnotateStreamUrl", {
       value: annotateStream.functionUrl,
       description: "Function URL for /read/annotate streaming endpoint",
+    });
+    new CfnOutput(this, "TheoryGenerationQueueUrl", {
+      value: theoryQueue.queue.queueUrl,
+      description:
+        "SQS queue URL for theory generation (Phase 4). Set THEORY_GENERATION_QUEUE_URL to this for `pnpm generate:theory --queue`.",
     });
 
     Tags.of(this).add("env", props.envName);
