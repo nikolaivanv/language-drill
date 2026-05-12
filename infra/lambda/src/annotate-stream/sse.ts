@@ -47,9 +47,29 @@ export type SseWriter = {
   openSse(): void;
   writeEvent<T>(type: SseEventType, payload: T): void;
   writeTerminal<T>(type: SseTerminalType, payload: T): void;
-  errorJson(status: number, body: object): void;
-  cors200(): void;
-  close(): void;
+  /**
+   * Closes the JSON-error branch. Returns a Promise that resolves once the
+   * underlying response stream has fully flushed — the caller MUST await it
+   * before returning from the Lambda handler, otherwise the AWS runtime can
+   * close the socket while the final write is still buffered (see `close`).
+   */
+  errorJson(status: number, body: object): Promise<void>;
+  /**
+   * Closes the OPTIONS-preflight branch. See `errorJson` for why callers
+   * must await.
+   */
+  cors200(): Promise<void>;
+  /**
+   * Flushes any buffered writes and waits for the underlying response stream
+   * to emit `'finish'` before resolving. The Lambda handler MUST await this
+   * before returning — otherwise AWS's response-streaming runtime closes the
+   * socket on handler-resolve and any bytes still queued in userspace
+   * (typically the last `done`/`error` frame) are silently dropped on the
+   * client side. Earlier writes (`meta`, then a slow Claude call) make it
+   * because the kernel drains the buffer during that wait; the final write
+   * doesn't have that grace window.
+   */
+  close(): Promise<void>;
   readonly terminated: boolean;
 };
 
@@ -103,17 +123,23 @@ export function createSseWriter(responseStream: ResponseStream): SseWriter {
         headers: { "content-type": "application/json" },
       });
       errorStream.write(JSON.stringify(body));
-      errorStream.end();
+      return new Promise<void>((resolve) => {
+        errorStream.end(resolve);
+      });
     },
     cors200() {
       const corsStream = awslambda.HttpResponseStream.from(responseStream, {
         statusCode: 204,
         headers: { ...CORS_PREFLIGHT_HEADERS },
       });
-      corsStream.end();
+      return new Promise<void>((resolve) => {
+        corsStream.end(resolve);
+      });
     },
     close() {
-      stream.end();
+      return new Promise<void>((resolve) => {
+        stream.end(resolve);
+      });
     },
     get terminated() {
       return terminated;

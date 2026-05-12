@@ -88,6 +88,16 @@ export function AnnotatedView({
   const flaggedKeys = Object.keys(entry.flaggedWords);
   const flaggedCount = flaggedKeys.length;
   const hasFlagged = flaggedCount > 0;
+  // While annotation is still streaming, we don't yet know if there will be
+  // any above-level words — the iterator could still yield flags. Showing
+  // `ZeroFlaggedStrip` ("this passage is well within your level — nice.") at
+  // that moment misleads the user before annotation is complete. Reserve the
+  // 2-column grid + bank rail during streaming too so the layout doesn't
+  // shift when the first flag arrives (NFR Usability — no layout shift on
+  // tint).
+  const isStreaming = annotateStreaming !== undefined;
+  const showRail = hasFlagged || isStreaming;
+  const showZeroFlaggedState = !hasFlagged && !isStreaming;
 
   const bankSet = React.useMemo(() => new Set(bank), [bank]);
 
@@ -131,7 +141,7 @@ export function AnnotatedView({
     <div
       className="grid items-start gap-s-6"
       style={{
-        gridTemplateColumns: hasFlagged
+        gridTemplateColumns: showRail
           ? 'minmax(0, 1fr) 280px'
           : 'minmax(0, 1fr)',
       }}
@@ -205,12 +215,12 @@ export function AnnotatedView({
             onSave={onSave}
             isSaving={isSaving}
           />
-        ) : (
+        ) : showZeroFlaggedState ? (
           <ZeroFlaggedStrip onPasteNew={onPasteNew} />
-        )}
+        ) : null}
       </div>
 
-      {hasFlagged && (
+      {showRail && (
         <WordBankRail
           bank={bank}
           flaggedMap={entry.flaggedWords}
