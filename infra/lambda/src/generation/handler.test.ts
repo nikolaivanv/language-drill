@@ -156,6 +156,7 @@ function cellResultBase(): CellResult {
     flaggedCount: 0,
     rejectedCount: 0,
     dedupGivenUpCount: 0,
+    malformedDraftCount: 0,
   };
 }
 

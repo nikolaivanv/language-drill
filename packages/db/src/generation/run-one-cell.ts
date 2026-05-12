@@ -84,6 +84,13 @@ export type CellResult = {
   rejectedCount: number;
   /** Ordinals where all 3 retries collided or all rejected. */
   dedupGivenUpCount: number;
+  /**
+   * Ordinals where Claude returned a payload that failed parse/validation in
+   * `generateBatch`. Per-ordinal failures don't abort the cell anymore — the
+   * count here surfaces them for operational visibility. A cell only fails-
+   * closed on this dimension when *every* ordinal is malformed.
+   */
+  malformedDraftCount: number;
 };
 
 export type DraftOutcome = {
@@ -377,6 +384,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
   let insertedCount = 0;
   let firstAttemptSkippedCount = 0;
   let inBatchDuplicateCount = 0;
+  let malformedDraftCount = 0;
   const generatedAt = new Date();
 
   try {
@@ -393,6 +401,17 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     inBatchDuplicateCount = batch.drafts.filter(
       (d) => d.metadata.inBatchDuplicate,
     ).length;
+    malformedDraftCount = batch.malformedDrafts.length;
+
+    // All ordinals malformed → the cell genuinely has nothing to insert.
+    // Fail-closed with a summary that includes the first malformed message
+    // so CloudWatch carries the actionable detail.
+    if (batch.drafts.length === 0 && malformedDraftCount > 0) {
+      const first = batch.malformedDrafts[0]?.errorMessage ?? '(no detail)';
+      throw new Error(
+        `All ${malformedDraftCount} drafts malformed; first: ${first}`,
+      );
+    }
 
     for (let ordinal = 0; ordinal < batch.drafts.length; ordinal++) {
       const draft = batch.drafts[ordinal];
@@ -452,6 +471,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       errorMessage: message,
       auditRowExists: true,
       db,
+      malformedDraftCount,
     });
   }
 
@@ -491,6 +511,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     flaggedCount,
     rejectedCount,
     dedupGivenUpCount,
+    malformedDraftCount,
   };
 }
 
@@ -506,6 +527,8 @@ async function failClosed(opts: {
   errorMessage: string;
   auditRowExists: boolean;
   db: Db;
+  /** Threaded through from the outer scope so the count survives the fail path. */
+  malformedDraftCount?: number;
 }): Promise<CellResult> {
   const truncatedMessage = opts.errorMessage.slice(0, ERROR_MESSAGE_MAX_LENGTH);
   if (opts.auditRowExists) {
@@ -533,5 +556,6 @@ async function failClosed(opts: {
     flaggedCount: 0,
     rejectedCount: 0,
     dedupGivenUpCount: 0,
+    malformedDraftCount: opts.malformedDraftCount ?? 0,
   };
 }
