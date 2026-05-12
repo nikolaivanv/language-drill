@@ -189,6 +189,50 @@ describe('GET /admin/pool-status', () => {
     expect(body.code).toBe('VALIDATION_ERROR');
   });
 
+  it('serialises lastRefilledAt as an ISO string when a cell has a successful job', async () => {
+    // Regression: production crashed with `lastRefilledAt.toISOString is not
+    // a function` once the first successful generation job populated
+    // `finished_at`. The route now relies on Drizzle to decode the
+    // MAX(timestamptz) aggregate to a Date (via `.mapWith(...)` on the
+    // query); this test pushes a Date to confirm the consumption path
+    // surfaces it as an ISO string in the response.
+    const refilledAt = new Date('2026-05-12T04:01:17.491Z');
+    queryQueue.push(
+      [],
+      [
+        {
+          cellKey: 'es:b1:cloze:es-b1-present-subjunctive',
+          lastRefilledAt: refilledAt,
+        },
+      ],
+      [],
+    );
+
+    const res = await app.request('/admin/pool-status', undefined, adminEnv);
+    expect(res.status).toBe(200);
+
+    const body = (await res.json()) as AnyJson[];
+    const match = body.find(
+      (item) =>
+        item.language === 'ES' &&
+        item.level === 'B1' &&
+        item.type === 'cloze' &&
+        item.grammarPointKey === 'es-b1-present-subjunctive',
+    );
+    expect(match).toBeDefined();
+    expect(match?.lastRefilledAt).toBe(refilledAt.toISOString());
+
+    // Cells without a matching successful job still serialise null.
+    const unmatched = body.find(
+      (item) =>
+        item.language !== 'ES' ||
+        item.level !== 'B1' ||
+        item.type !== 'cloze' ||
+        item.grammarPointKey !== 'es-b1-present-subjunctive',
+    );
+    expect(unmatched?.lastRefilledAt).toBeNull();
+  });
+
   it('includes cells with zero approved exercises (the urgent-refill set)', async () => {
     // DB returns counts for ONE arbitrary cell only — every other cell must
     // still appear in the response with zeroed counts.
