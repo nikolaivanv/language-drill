@@ -83,6 +83,28 @@ export {
   VALIDATION_SYSTEM_PROMPT_TEMPLATE,
 } from "./validation-prompts.js";
 
+export {
+  THEORY_TOOL_NAME,
+  THEORY_GENERATION_MODEL,
+  THEORY_GENERATION_TEMPERATURE,
+  THEORY_GENERATION_MAX_TOKENS,
+  THEORY_GENERATION_TOOL,
+  generateTheoryTopic,
+  theoryDraftId,
+  deriveTheoryTopicId,
+} from "./theory-generate.js";
+export type {
+  TheoryGenerationSpec,
+  TheoryDraft,
+  TheoryGenerateResult,
+} from "./theory-generate.js";
+
+export {
+  buildTheorySystemPrompt,
+  buildTheoryUserPrompt,
+} from "./theory-prompts.js";
+export type { TheoryPromptInputs } from "./theory-prompts.js";
+
 /**
  * Creates an Anthropic client instance configured with the provided API key.
  */

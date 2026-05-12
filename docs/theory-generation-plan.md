@@ -161,7 +161,7 @@ Total estimated effort: **~6–8 working days**. Smaller than exercise generatio
 | Phase | Output | Effort | Depends on | Status |
 |-------|--------|--------|------------|--------|
 | 1 | `TheoryTopicJson` schema + DB tables + renderer | ~1.5d | — | ✅ shipped (worktree-theory-content-generation) |
-| 2 | Generator core + CLI driver | ~1.5d | 1 | pending |
+| 2 | Generator core + CLI driver | ~1.5d | 1 | ✅ shipped (worktree-theory-generation-phase-2) |
 | 3 | Validator + routing + review CLI | ~1d | 2 | pending |
 | 4 | Lambda + SQS + EventBridge | ~1d | 3 | pending |
 | 5 | Panel registry fallback + admin tile | ~1d | 4 | pending |

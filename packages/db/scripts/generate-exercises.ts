@@ -49,6 +49,7 @@ import {
   type Cell,
 } from './generate-exercises-resolve-cells';
 import { createMockAnthropicClient } from './generate-exercises-mock-client';
+import { pLimit } from './p-limit';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -99,39 +100,6 @@ export function printDryRunSummary(cells: readonly Cell[], args: ParsedArgs): vo
   process.stdout.write(
     `Total estimated cost: ~$${totalCost.toFixed(4)} (cap: $${args.maxCostUsd.toFixed(2)})\n`,
   );
-}
-
-// ---------------------------------------------------------------------------
-// pLimit — tiny inline concurrency limiter (avoids a third-party dep).
-// ---------------------------------------------------------------------------
-
-type LimitFn = <T>(fn: () => Promise<T>) => Promise<T>;
-
-export function pLimit(concurrency: number): LimitFn {
-  if (concurrency < 1) throw new Error('pLimit: concurrency must be >= 1');
-  let active = 0;
-  const queue: Array<() => void> = [];
-
-  const next = (): void => {
-    if (active >= concurrency) return;
-    const job = queue.shift();
-    if (job) job();
-  };
-
-  return <T>(fn: () => Promise<T>): Promise<T> =>
-    new Promise<T>((resolve, reject) => {
-      const run = (): void => {
-        active++;
-        fn()
-          .then(resolve, reject)
-          .finally(() => {
-            active--;
-            next();
-          });
-      };
-      queue.push(run);
-      next();
-    });
 }
 
 // ---------------------------------------------------------------------------
