@@ -750,6 +750,9 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
         "FunctionResponseTypes": [
           "ReportBatchItemFailures",
         ],
+        "ScalingConfig": {
+          "MaximumConcurrency": 3,
+        },
         "Tags": [
           {
             "Key": "env",

@@ -36,11 +36,12 @@ describe('GenerationLambdaConstruct', () => {
     });
   });
 
-  it('wires the Lambda to the SQS queue with BatchSize=1 and ReportBatchItemFailures', () => {
+  it('wires the Lambda to the SQS queue with BatchSize=1, ReportBatchItemFailures, and MaximumConcurrency matching reservedConcurrency', () => {
     template.resourceCountIs('AWS::Lambda::EventSourceMapping', 1);
     template.hasResourceProperties('AWS::Lambda::EventSourceMapping', {
       BatchSize: 1,
       FunctionResponseTypes: ['ReportBatchItemFailures'],
+      ScalingConfig: { MaximumConcurrency: 3 },
     });
   });
 
