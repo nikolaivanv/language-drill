@@ -6,9 +6,10 @@
  * I/O — the function is fully testable from a vitest unit.
  *
  * Structural mirror of `generate-exercises-parse-args.ts`. Theory generation
- * has no `--type` / `--count` / `--queue` / `--topic-domain` axes — it
- * produces one explainer per (lang, level, grammar-point) cell — so those
- * flags are intentionally absent.
+ * has no `--type` / `--count` / `--topic-domain` axes — it produces one
+ * explainer per (lang, level, grammar-point) cell — so those flags are
+ * intentionally absent. The `--queue` flag was added in Phase 4 (Req 4.1)
+ * for SQS dispatch to the theory generation Lambda.
  *
  * The CLI surface is documented in spec
  * `.claude/specs/theory-generation-phase-2/requirements.md` §Requirement 6.
@@ -32,6 +33,7 @@ export type ParsedTheoryArgs = {
   concurrency: number;
   dryRun: boolean;
   allowProd: boolean;
+  queue: boolean;
 };
 
 // ---------------------------------------------------------------------------
@@ -73,6 +75,11 @@ Optional flags:
                                Claude calls.
   --allow-prod                 Required when NODE_ENV=production. The Phase 4
                                Lambda is the supported prod path.
+  --queue                      Post one SQS message per resolved cell to the
+                               theory generation queue (requires
+                               THEORY_GENERATION_QUEUE_URL env var). Replaces
+                               in-process generation; the scheduler is the
+                               right tool for whole-curriculum fills.
   --help                       Print this help and exit 0.
 
 Environment:
@@ -121,6 +128,7 @@ export function parseTheoryGenerateArgs(
   const concurrency = parseConcurrency(raw.get('concurrency'));
   const dryRun = raw.get('dry-run') === 'true';
   const allowProd = raw.get('allow-prod') === 'true';
+  const queue = raw.get('queue') === 'true';
 
   // Warnings (non-fatal) ----------------------------------------------------
 
@@ -137,6 +145,7 @@ export function parseTheoryGenerateArgs(
     concurrency,
     dryRun,
     allowProd,
+    queue,
   };
 }
 

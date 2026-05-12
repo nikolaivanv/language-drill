@@ -22,6 +22,7 @@ describe('generate-theory-parse-args > parseTheoryGenerateArgs', () => {
       concurrency: 1,
       dryRun: false,
       allowProd: false,
+      queue: false,
     });
   });
 
