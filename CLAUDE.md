@@ -68,9 +68,10 @@ Both servers are started from the repo root. They read `DATABASE_URL`, `ANTHROPI
 
 | Command | What it does |
 | --- | --- |
-| `pnpm dev` | Both API (port 3001) + web (port 3000) with colored output |
+| `pnpm dev` | API (port 3001) + streaming-annotate Lambda (port 3002) + web (port 3000), colored output |
 | `pnpm dev:api` | Local Lambda API only, loads `.env` automatically |
-| `pnpm dev:web` | Next.js only, points `NEXT_PUBLIC_API_URL` at `localhost:3001` |
+| `pnpm dev:stream` | Streaming-annotate Lambda only (port 3002), loads `.env` automatically |
+| `pnpm dev:web` | Next.js only, points `NEXT_PUBLIC_API_URL` at `localhost:3001` and `NEXT_PUBLIC_ANNOTATE_STREAM_URL` at `localhost:3002` |
 | `pnpm db:migrate` | Run Drizzle migrations |
 | `pnpm db:studio` | Browse the DB in Drizzle Studio |
 | `pnpm db:seed:exercises` | Seed the exercise pool (36 idempotent exercises) |
@@ -87,7 +88,8 @@ pnpm dev
 Local dev conventions:
 
 - **Auth is bypassed in the local API.** `infra/lambda/src/dev.ts` injects `userId = dev_user_001` (override via `DEV_USER_ID`). The auth middleware skips JWT extraction when a `userId` is already set — production is unaffected. The dev server auto-upserts the user row on startup.
-- **Web → local API wiring.** `pnpm dev:web` sets `NEXT_PUBLIC_API_URL=http://localhost:3001` inline, overriding anything in `apps/web/.env`.
+- **Web → local API wiring.** `pnpm dev:web` sets `NEXT_PUBLIC_API_URL=http://localhost:3001` and `NEXT_PUBLIC_ANNOTATE_STREAM_URL=http://localhost:3002` inline, overriding anything in `apps/web/.env`.
+- **Streaming-annotate auth bypass.** `infra/lambda/src/annotate-stream/dev.ts` honors `DEV_USER_ID` exactly like the Hono dev server — Clerk JWT verification short-circuits to the env value when it is set.
 - **Answer submission calls Claude for real.** Ensure `ANTHROPIC_API_KEY` is set — otherwise `POST /exercises/:id/submit` returns 502. Exercise retrieval works without it.
 
 ---
@@ -218,6 +220,7 @@ DNS is managed in **Cloudflare** (registrar + DNS). All records are **DNS-only**
 - OPTIONS routes have **no authorizer** (CORS preflight doesn't carry tokens)
 - `/webhooks/clerk` has **no authorizer** (uses SVIX signature verification instead)
 - CORS is handled in **Hono middleware** (not API Gateway) to support wildcard matching for `*.vercel.app` preview deploys
+- The `POST /read/annotate` endpoint is served by a **separate** Lambda Function URL with `InvokeMode: RESPONSE_STREAM` (not API Gateway) because the response is SSE. JWT verification happens inside that Lambda via `@clerk/backend`. The Function URL is exposed by CDK as the `AnnotateStreamUrl` CloudFormation output and synced into Vercel as `NEXT_PUBLIC_ANNOTATE_STREAM_URL` by `.github/workflows/deploy.yml`.
 
 ### Required secrets
 
@@ -254,6 +257,7 @@ DNS is managed in **Cloudflare** (registrar + DNS). All records are **DNS-only**
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | `pk_live_...` (prod Clerk) | `pk_test_...` (dev Clerk) |
 | `CLERK_SECRET_KEY` | `sk_live_...` (prod Clerk) | `sk_test_...` (dev Clerk) |
 | `NEXT_PUBLIC_API_URL` | `https://api.langdrill.app` | `https://api.langdrill.app` |
+| `NEXT_PUBLIC_ANNOTATE_STREAM_URL` | auto-synced from `LanguageDrillStack` CFN output | auto-synced from `LanguageDrillStack-dev` CFN output |
 
 ### Clerk JWT setup
 

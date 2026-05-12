@@ -42,6 +42,17 @@ type Props = {
   intensity: Intensity;
   activeWord: ActiveWord | null;
   calibration: { eyebrow: string; explanation: string };
+  /**
+   * When set, the calibration strip shows the streaming progress UI
+   * ("annotating · M / N" + determinate bar). Cleared once annotation
+   * completes (Req 5.3, 5.5).
+   */
+  annotateStreaming?: { flaggedCount: number; candidateCount: number };
+  /**
+   * When true (and not streaming), the calibration strip's explanation slot
+   * is replaced with "· no above-level words" (Req §NFR Usability).
+   */
+  noAboveLevelWords?: boolean;
   isSaving: boolean;
   onIntensityChange: (intensity: Intensity) => void;
   /**
@@ -63,6 +74,8 @@ export function AnnotatedView({
   intensity,
   activeWord,
   calibration,
+  annotateStreaming,
+  noAboveLevelWords,
   isSaving,
   onIntensityChange,
   onPopoverOpen,
@@ -143,6 +156,8 @@ export function AnnotatedView({
           <CalibrationStrip
             eyebrow={calibration.eyebrow}
             explanation={calibration.explanation}
+            streaming={annotateStreaming}
+            noAboveLevelWords={noAboveLevelWords}
           />
         </div>
 

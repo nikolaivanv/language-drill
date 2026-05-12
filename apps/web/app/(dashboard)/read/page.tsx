@@ -23,7 +23,7 @@ import { useAuth } from '@clerk/nextjs';
 import {
   createAuthenticatedFetch,
   useLanguageProfiles,
-  useReadAnnotate,
+  useReadAnnotateStream,
   useReadEntries,
   useReadEntry,
   useSaveReadEntry,
@@ -39,7 +39,10 @@ import {
   selectActiveEntry,
   type View,
 } from './_state/read-page-reducer';
-import { AnnotatedError } from './_components/annotated-error';
+import {
+  AnnotatedError,
+  type AnnotatedErrorKind,
+} from './_components/annotated-error';
 import { AnnotatedSkeleton } from './_components/annotated-skeleton';
 import { AnnotatedView } from './_components/annotated-view';
 import { EmptyView } from './_components/empty-view';
@@ -53,19 +56,19 @@ import { SaveToast } from './_components/save-toast';
 const SAVE_TOAST_MS = 4000;
 const INLINE_ERROR_MS = 3000;
 
-function annotationErrorKind(err: unknown): {
-  body: string;
-  rateLimited: boolean;
-} | null {
-  if (!err) return null;
-  if (!(err instanceof Error)) {
-    return { body: 'something went wrong — try again', rateLimited: false };
+function errorKindFromCode(code: string): AnnotatedErrorKind {
+  switch (code) {
+    case 'RATE_LIMIT_EXCEEDED':
+      return 'rateLimit';
+    case 'UNSUPPORTED_LANGUAGE':
+      return 'unsupported';
+    case 'AI_UNAVAILABLE':
+      return 'aiUnavailable';
+    case 'VALIDATION_ERROR':
+      return 'validation';
+    default:
+      return 'other';
   }
-  const status = (err as Error & { status?: number }).status;
-  return {
-    body: err.message || 'something went wrong — try again',
-    rateLimited: status === 429,
-  };
 }
 
 export default function ReadPage() {
@@ -94,7 +97,15 @@ export default function ReadPage() {
     enabled: state.activeEntryId !== null,
   });
 
-  const annotate = useReadAnnotate({ fetchFn });
+  // Streaming SSE annotation hook (Phase J task 38). The hook owns its own
+  // state machine; the page reads `annotate.state.phase` and `flaggedMap`
+  // directly rather than mirroring into the reducer. The reducer's
+  // `annotateStream` slice (task 36) is reserved for future selector consumers
+  // and stays dormant here.
+  const annotate = useReadAnnotateStream({
+    baseUrl: process.env.NEXT_PUBLIC_ANNOTATE_STREAM_URL ?? '',
+    getToken,
+  });
   const saveEntry = useSaveReadEntry({ fetchFn });
   const updateBank = useUpdateReadBank({ fetchFn });
 
@@ -159,18 +170,48 @@ export default function ReadPage() {
   );
 
   const persistedEntry: ReadEntryResponse | null = entryQuery.data ?? null;
+  // The hook's reducer always exposes a `flaggedMap` in non-idle phases
+  // (streaming/complete/error retain partials — see hook docstring & Req 5.10).
+  const streamingFlaggedMap =
+    annotate.state.phase === 'streaming' ||
+    annotate.state.phase === 'complete' ||
+    annotate.state.phase === 'error'
+      ? annotate.state.flaggedMap
+      : null;
   const ephemeralEntry =
-    state.activeEntryId === null && annotate.data
+    state.activeEntryId === null && streamingFlaggedMap !== null
       ? {
           text: state.paste.text,
           title: state.paste.title,
           source: '',
-          flaggedWords: annotate.data.flagged,
+          flaggedWords: streamingFlaggedMap,
         }
       : null;
   const annotatedEntry = persistedEntry ?? ephemeralEntry;
 
-  const annotateError = annotationErrorKind(annotate.error);
+  const annotateError =
+    annotate.state.phase === 'error'
+      ? {
+          body:
+            annotate.state.error.message || 'something went wrong — try again',
+          rateLimited:
+            annotate.state.error.code === 'RATE_LIMIT_EXCEEDED' ||
+            annotate.state.error.status === 429,
+          kind: errorKindFromCode(annotate.state.error.code),
+        }
+      : null;
+
+  // Streaming progress + zero-flagged signal for <CalibrationStrip /> (task 37).
+  const streamingProgress =
+    annotate.state.phase === 'streaming'
+      ? {
+          flaggedCount: annotate.state.flaggedCount,
+          candidateCount: annotate.state.candidateCount,
+        }
+      : undefined;
+
+  const noAboveLevelWords =
+    annotate.state.phase === 'complete' && annotate.state.flaggedCount === 0;
 
   // selectActiveEntry is exercised by reducer tests; not strictly needed here
   // since we resolve the persisted entry via TanStack Query, but referencing
@@ -188,8 +229,12 @@ export default function ReadPage() {
 
   const handleViewChange = (view: View) => {
     if (view === 'pasting') {
+      // Req 5.7: abort any in-flight stream when leaving the annotated view.
+      // `abort()` is a no-op when no controller is active.
+      annotate.abort();
       dispatch({ type: 'PASTE_RESET' });
       annotate.reset();
+      dispatch({ type: 'ANNOTATE_RESET' });
       dispatch({ type: 'SET_VIEW', view: 'pasting' });
       return;
     }
@@ -203,6 +248,8 @@ export default function ReadPage() {
       dispatch({ type: 'SET_VIEW', view: target });
       return;
     }
+    // history / empty — also drop any in-flight stream (Req 5.7).
+    annotate.abort();
     dispatch({ type: 'SET_VIEW', view });
   };
 
@@ -214,6 +261,8 @@ export default function ReadPage() {
   };
 
   const handlePasteCancel = () => {
+    // Cancelling the paste form drops any in-flight stream as well (Req 5.7).
+    annotate.abort();
     if (entries.length >= 1 || annotatedEntry !== null) {
       dispatch({ type: 'SET_VIEW', view: 'annotated' });
     } else {
@@ -222,19 +271,17 @@ export default function ReadPage() {
   };
 
   const handleAnnotate = () => {
-    annotate.mutate(
-      {
-        language: activeLanguage,
-        text: state.paste.text,
-      },
-      {
-        onSuccess: () => {
-          // Ephemeral state: no activeEntryId yet, bank starts empty.
-          dispatch({ type: 'SET_BANK_FROM_ENTRY', bank: [] });
-          dispatch({ type: 'SET_VIEW', view: 'annotated' });
-        },
-      },
-    );
+    // Req 5.1: switch to the annotated view IMMEDIATELY with the raw text
+    // before any network response. Compose existing reducer actions instead of
+    // adding a single `PASTE_SUBMIT` action — the visible effects we need are
+    // "ephemeral bank empty" + "view = annotated".
+    dispatch({ type: 'SET_BANK_FROM_ENTRY', bank: [] });
+    dispatch({ type: 'SET_VIEW', view: 'annotated' });
+    // Keep the reducer's annotateStream slice in sync for any selector
+    // consumer (selectFlaggedMap, etc.); runtime rendering reads from
+    // `annotate.state` directly so this dispatch is presently advisory.
+    dispatch({ type: 'ANNOTATE_START' });
+    annotate.start({ language: activeLanguage, text: state.paste.text });
   };
 
   const handleIntensityChange = (intensity: 'subtle' | 'assertive') => {
@@ -298,14 +345,15 @@ export default function ReadPage() {
   const handleSave = () => {
     if (state.bank.length === 0) return;
     if (state.activeEntryId !== null) return; // already persisted
-    if (!annotate.data) return; // no flagged map
+    // Req 5.8: save is disabled until the stream has terminated successfully.
+    if (annotate.state.phase !== 'complete') return;
     saveEntry.mutate(
       {
         language: activeLanguage,
         title: state.paste.title,
         source: '',
         text: state.paste.text,
-        flagged: annotate.data.flagged,
+        flagged: annotate.state.flaggedMap,
         bank: state.bank,
       },
       {
@@ -329,8 +377,11 @@ export default function ReadPage() {
   };
 
   const handlePasteNew = () => {
+    // Req 5.7: abort any in-flight stream before resetting paste form.
+    annotate.abort();
     dispatch({ type: 'PASTE_RESET' });
     annotate.reset();
+    dispatch({ type: 'ANNOTATE_RESET' });
     dispatch({ type: 'SET_VIEW', view: 'pasting' });
   };
 
@@ -353,7 +404,7 @@ export default function ReadPage() {
         onChange={handlePasteFieldChange}
         onCancel={handlePasteCancel}
         onAnnotate={handleAnnotate}
-        isLoading={annotate.isPending}
+        isLoading={annotate.state.phase === 'streaming'}
         errorBody={annotateError?.body ?? null}
         rateLimited={annotateError?.rateLimited ?? false}
       />
@@ -380,6 +431,31 @@ export default function ReadPage() {
           }}
         />
       );
+    } else if (
+      // When the stream errors mid-flight on a fresh paste (no persisted
+      // entry, no partial flags yet), surface the inline error card so the
+      // user can edit or retry. Req 5.10: when partial flags ARE present we
+      // prefer to leave them visible (handled by falling through to
+      // AnnotatedView below).
+      state.activeEntryId === null &&
+      annotateError !== null &&
+      (annotatedEntry === null ||
+        Object.keys(annotatedEntry.flaggedWords).length === 0)
+    ) {
+      body = (
+        <AnnotatedError
+          body={annotateError.body}
+          kind={annotateError.kind}
+          onEditText={handlePasteNew}
+          onTryAgain={() => {
+            // Re-fire the stream with the current paste text.
+            annotate.start({
+              language: activeLanguage,
+              text: state.paste.text,
+            });
+          }}
+        />
+      );
     } else if (annotatedEntry) {
       body = (
         <AnnotatedView
@@ -391,6 +467,8 @@ export default function ReadPage() {
             eyebrow: calibration.eyebrow,
             explanation: calibration.explanation,
           }}
+          annotateStreaming={streamingProgress}
+          noAboveLevelWords={noAboveLevelWords}
           isSaving={saveEntry.isPending}
           onIntensityChange={handleIntensityChange}
           onPopoverOpen={handlePopoverOpen}

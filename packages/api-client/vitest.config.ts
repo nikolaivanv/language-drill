@@ -11,5 +11,10 @@ export default defineConfig({
     // it just fine.
     environment: 'jsdom',
     globals: true,
+    // Restrict discovery to source — `tsc --build` writes compiled
+    // `*.test.js` into `dist/`, and without this exclude vitest would
+    // pick up stale snapshots of deleted test files.
+    include: ['src/**/*.test.{ts,tsx}'],
+    exclude: ['dist/**', 'node_modules/**'],
   },
 });

@@ -32,7 +32,12 @@
   text-decoration-style: solid;
 }
 
-/* ASSERTIVE — amber-wash gradient */
+/* ASSERTIVE — amber-wash gradient
+ *
+ * NOTE: horizontal padding intentionally omitted (was `0 1px` before task 37).
+ * The gradient is purely a background — no padding means a span flipping from
+ * non-flagged to flagged mid-stream cannot push neighbouring text sideways
+ * (Req §NFR Usability — no layout shift on flag-event tint). */
 .assertive {
   background: linear-gradient(
     180deg,
@@ -41,7 +46,7 @@
     var(--color-hilite-soft) 92%,
     transparent 92%
   );
-  padding: 0 1px;
+  padding: 0;
 }
 
 .assertive:hover {

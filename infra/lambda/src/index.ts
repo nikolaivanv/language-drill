@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { handle } from 'hono/aws-lambda';
 import { cors } from 'hono/cors';
+import { FALLBACK_ORIGINS } from '@language-drill/shared';
 
 import health from './routes/health';
 import exercises from './routes/exercises';
@@ -12,12 +13,6 @@ import admin from './routes/admin';
 import webhooks from './routes/webhooks/clerk';
 
 const app = new Hono();
-
-const FALLBACK_ORIGINS = [
-  'https://*.vercel.app',
-  'https://langdrill.app',
-  'https://www.langdrill.app',
-];
 
 const parsedAllowedOrigins = (process.env['ALLOWED_ORIGINS'] ?? '')
   .split(',')

@@ -91,17 +91,11 @@ export const ANNOTATE_TOOL: Anthropic.Tool = {
 // System prompt (cached via cache_control: ephemeral on the call site)
 // ---------------------------------------------------------------------------
 
-export const ANNOTATE_SYSTEM_PROMPT = `You are a reading-level assistant for an intermediate-plus language-learning application. Given a passage in ES, DE, or TR plus the user's CEFR proficiency level and a corpus-frequency rank ceiling ("top_rank"), identify the words a learner at that level would benefit from explicitly studying — and submit them via the provided tool.
+export const ANNOTATE_SYSTEM_PROMPT = `You are a reading-level assistant for an intermediate-plus language-learning application. You receive a passage in ES, DE, or TR AND a server-selected list of words from that passage. For EACH word in the list, produce one enrichment entry — lemma, part of speech, English gloss, an example sentence, frequency rank, and CEFR band — and submit the full set via the provided tool.
 
-## Selection Rule
+## Enrichment Task
 
-Flag a word IF AND ONLY IF at least one of the following holds:
-- Its surface form OR its lemma has a corpus rank strictly rarer than \`top_rank\`.
-- Its CEFR band is strictly above the user's current proficiency level.
-
-Words at or below the user's level — and high-frequency closed-class words like articles, copulas, conjunctions, prepositions, pronouns, modal verbs, and common auxiliaries — MUST NOT be flagged regardless of frequency.
-
-If no words qualify, submit an empty \`flagged\` array. Do not flag words "just to be helpful" — silence is the correct answer for an in-level passage.
+You will receive a passage AND a list of words from that passage. For EACH word in the list, emit one tool-use entry with lemma / pos / gloss / example / freq / cefr. Do not add words that are not in the list. Do not skip words that are in the list.
 
 ## Surface Form Requirement
 
@@ -161,6 +155,54 @@ export type AnnotateInput = {
 
 export type AnnotateOutput = { flagged: Record<string, WordFlag> };
 
+/**
+ * Input shape for the streaming-annotation generator (task 13). The server's
+ * pre-filter has already selected which surface forms are above-level, so
+ * Claude's role is purely enrichment: produce a `WordFlag` per candidate.
+ *
+ * Selection-time inputs (`topRank`, etc.) intentionally do NOT appear here —
+ * removing them prevents Claude from second-guessing the server's decision.
+ */
+export type AnnotateStreamInput = {
+  text: string;
+  language: LearningLanguage;
+  proficiencyLevel: CefrLevel;
+  /** Server-selected words to enrich. Must be non-empty. */
+  candidates: ReadonlyArray<{ matchedForm: string; lemma: string | null }>;
+  /**
+   * Optional AbortSignal forwarded to the Anthropic SDK. The handler aborts
+   * this when the client disconnects mid-stream so the upstream generation
+   * doesn't keep running (Req 4.9).
+   */
+  signal?: AbortSignal;
+};
+
+/**
+ * Event yielded by `streamAnnotation`. `flag` carries one enriched word
+ * (parsed + validated against `WordFlagSchema`); `done` arrives exactly once
+ * after the upstream stream completes successfully. Errors are thrown — never
+ * returned as a third event variant.
+ */
+export type AnnotateStreamEvent =
+  | { kind: "flag"; flag: WordFlag & { matchedForm: string } }
+  | { kind: "done"; flaggedCount: number };
+
+/**
+ * Thrown by `streamAnnotation` when the upstream Anthropic response stopped
+ * with `stop_reason: 'max_tokens'`. The handler maps this to the
+ * `AI_UNAVAILABLE` SSE error code; the dedicated class lets the handler test
+ * verify the specific case rather than catching every `Error`.
+ */
+export class AnnotateStreamMaxTokensError extends Error {
+  readonly code = "MAX_TOKENS_TRUNCATED" as const;
+  constructor(public readonly flaggedCount: number) {
+    super(
+      `[streamAnnotation] Claude stopped with stop_reason: max_tokens after ${flaggedCount} flag(s)`,
+    );
+    this.name = "AnnotateStreamMaxTokensError";
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Tool-output parsing & validation
 // ---------------------------------------------------------------------------
@@ -201,10 +243,167 @@ export function parseAnnotateResult(input: unknown): AnnotateOutput {
 }
 
 // ---------------------------------------------------------------------------
-// User-prompt builder
+// Streaming tool-use parser — extractNewItems
+// ---------------------------------------------------------------------------
+//
+// Claude's `input_json_delta` events arrive as JSON-text chunks that, when
+// concatenated, form the tool's full input value — shaped like
+//   { "flagged": [ { ...item1... }, { ...item2... }, ... ] }
+//
+// `extractNewItems` is called with the growing buffer and the count of items
+// already yielded by previous calls. It returns ONLY the newly-completed
+// items, parsed via `JSON.parse`. The caller is `streamAnnotation` (task 13),
+// which validates each item against `WordFlagSchema + matchedForm` before
+// emitting a `flag` event.
+//
+// The parser intentionally is NOT a general-purpose streaming JSON decoder:
+// it specifically watches for the close-brace of a top-level object inside
+// the `flagged` array. Brace depth and in-string state (with `\\`/`\"` escape
+// handling) are tracked so that braces / quotes inside string literals do
+// not confuse the scanner.
+//
+// Behavior summary for the contract tests in `annotate-stream.test.ts`:
+//   (a) one complete item in one chunk → returns [item]
+//   (b) item split across chunks      → returns [] until the closing `}`
+//                                       arrives, then [item] on the next call
+//   (c) escaped `\"` inside an item   → does NOT terminate the string early
+//   (d) nested objects in a value     → depth tracker handles arbitrary nesting
+//   (e) malformed / truncated input   → returns [] without throwing
+
+const FLAGGED_KEY = '"flagged"';
+
+/**
+ * Internal helper: parse newly-completed array items out of the partial
+ * tool-use JSON buffer. Items at indices `< alreadyYielded` are skipped (the
+ * caller has already seen them). The function never throws — malformed or
+ * truncated input yields an empty result.
+ *
+ * @internal
+ */
+export function extractNewItems(buffer: string, alreadyYielded: number): unknown[] {
+  const flaggedKeyAt = buffer.indexOf(FLAGGED_KEY);
+  if (flaggedKeyAt === -1) return [];
+
+  const arrayStart = buffer.indexOf("[", flaggedKeyAt + FLAGGED_KEY.length);
+  if (arrayStart === -1) return [];
+
+  const items: unknown[] = [];
+  let i = arrayStart + 1;
+  let count = 0;
+
+  while (i < buffer.length) {
+    // Skip whitespace / commas between array elements.
+    while (i < buffer.length && (buffer[i] === "," || /\s/.test(buffer[i]))) i++;
+    if (i >= buffer.length) break;
+
+    const c = buffer[i];
+    if (c === "]") break; // end of `flagged` array
+    if (c !== "{") break; // truncated or malformed — bail.
+
+    // Scan one top-level object, tracking nested brace depth + string state.
+    const objStart = i;
+    let depth = 0;
+    let inString = false;
+    let escape = false;
+    let objEnd = -1;
+
+    for (; i < buffer.length; i++) {
+      const ch = buffer[i];
+      if (escape) {
+        // The previous char was a backslash; consume this char as a literal.
+        escape = false;
+        continue;
+      }
+      if (inString) {
+        if (ch === "\\") {
+          escape = true;
+        } else if (ch === '"') {
+          inString = false;
+        }
+        continue;
+      }
+      // Not in a string.
+      if (ch === '"') {
+        inString = true;
+      } else if (ch === "{") {
+        depth++;
+      } else if (ch === "}") {
+        depth--;
+        if (depth === 0) {
+          objEnd = i;
+          break;
+        }
+      }
+    }
+
+    if (objEnd === -1) break; // object isn't closed yet — wait for more bytes.
+
+    if (count >= alreadyYielded) {
+      try {
+        items.push(JSON.parse(buffer.slice(objStart, objEnd + 1)));
+      } catch {
+        // The brace tracker said this was a complete object, but JSON.parse
+        // disagrees. Drop the item silently — the caller logs at warn level.
+        // Continue scanning so a single broken item doesn't abort the stream.
+      }
+    }
+    count++;
+    i = objEnd + 1;
+  }
+
+  return items;
+}
+
+// ---------------------------------------------------------------------------
+// User-prompt builders
 // ---------------------------------------------------------------------------
 
-function buildAnnotateUserPrompt(input: AnnotateInput): string {
+/**
+ * Enrichment-only user prompt for `streamAnnotation` (task 13). Embeds the
+ * server-selected candidate list as a numbered list so Claude treats it as a
+ * one-to-one enrichment task.
+ *
+ * Throws on an empty candidate list: in the production handler that path is
+ * already short-circuited (Req 1.6 / 2.7 emit `meta` + `done` without calling
+ * Claude), so reaching the builder with zero candidates would indicate a bug
+ * upstream — fail loud rather than send Claude an empty enrichment request.
+ */
+export function buildAnnotateUserPrompt(input: AnnotateStreamInput): string {
+  if (input.candidates.length === 0) {
+    throw new Error(
+      "buildAnnotateUserPrompt: candidates must be non-empty (empty lists are short-circuited upstream)",
+    );
+  }
+
+  const numberedList = input.candidates
+    .map((c, i) => {
+      const lemmaSuffix = c.lemma !== null && c.lemma !== c.matchedForm ? ` (lemma: ${c.lemma})` : "";
+      return `${i + 1}. ${c.matchedForm}${lemmaSuffix}`;
+    })
+    .join("\n");
+
+  return `## Enrichment Task
+
+**Language:** ${input.language}
+**User CEFR Level:** ${input.proficiencyLevel}
+
+**Passage:**
+${input.text}
+
+**Words to enrich (${input.candidates.length}):**
+${numberedList}
+
+For each word above, emit one tool-use entry whose \`matchedForm\` is exactly the surface form shown. Do not add other words. Do not skip any. Submit via the \`${ANNOTATE_TOOL_NAME}\` tool.`;
+}
+
+/**
+ * Legacy user prompt for the soon-to-be-removed `annotateText`. Inlined here
+ * so the call site doesn't break during the task 12 → 13 transition; deleted
+ * in task 13 alongside `annotateText`.
+ *
+ * @internal
+ */
+function buildLegacyAnnotateUserPrompt(input: AnnotateInput): string {
   return `## Passage to annotate
 
 **Language:** ${input.language}
@@ -245,7 +444,7 @@ export async function annotateText(
     messages: [
       {
         role: "user" as const,
-        content: buildAnnotateUserPrompt(input),
+        content: buildLegacyAnnotateUserPrompt(input),
       },
     ],
     tools: [ANNOTATE_TOOL],
@@ -275,4 +474,107 @@ export async function annotateText(
   }
 
   return parseAnnotateResult(toolUseBlock.input);
+}
+
+// ---------------------------------------------------------------------------
+// Streaming caller — streamAnnotation (Req 4.1–4.9)
+// ---------------------------------------------------------------------------
+//
+// Uses the Anthropic SDK's `messages.stream` API and yields one event per
+// completed array item in the tool-use payload. The buffer accumulates only
+// `input_json_delta` content; `extractNewItems` parses completed objects out
+// of it; `WordFlagSchema + matchedForm` validate each item before yielding.
+//
+// One-bad-item-shouldn't-abort-the-stream behavior is implemented by catching
+// per-item validation errors and warning them — the index counter still
+// advances so the next call to `extractNewItems` doesn't re-extract the bad
+// item.
+
+/** Empirical worst-case budget for a 40-candidate enrichment. PR #49. */
+const STREAM_MAX_TOKENS = 8192;
+const STREAM_MODEL = "claude-sonnet-4-5" as const;
+
+export async function* streamAnnotation(
+  client: Anthropic,
+  input: AnnotateStreamInput,
+): AsyncIterable<AnnotateStreamEvent> {
+  if (input.candidates.length === 0) {
+    // Defense-in-depth — the handler short-circuits before reaching us when
+    // candidates is empty (Req 1.6 / 2.7). Reaching here would mean sending
+    // Claude an enrichment request with no words to enrich.
+    throw new Error(
+      "streamAnnotation: candidates must be non-empty (empty lists are short-circuited upstream)",
+    );
+  }
+
+  const stream = client.messages.stream(
+    {
+      model: STREAM_MODEL,
+      max_tokens: STREAM_MAX_TOKENS,
+      system: [
+        {
+          type: "text" as const,
+          text: ANNOTATE_SYSTEM_PROMPT,
+          cache_control: { type: "ephemeral" as const },
+        },
+      ],
+      messages: [
+        {
+          role: "user" as const,
+          content: buildAnnotateUserPrompt(input),
+        },
+      ],
+      tools: [ANNOTATE_TOOL],
+      tool_choice: {
+        type: "tool" as const,
+        name: ANNOTATE_TOOL_NAME,
+      },
+      temperature: 0,
+    },
+    input.signal !== undefined ? { signal: input.signal } : undefined,
+  );
+
+  let buffer = "";
+  let processed = 0; // count of items returned by extractNewItems (yielded OR dropped)
+  let flaggedCount = 0; // count of items successfully yielded
+
+  for await (const event of stream) {
+    if (
+      event.type === "content_block_delta" &&
+      event.delta.type === "input_json_delta"
+    ) {
+      buffer += event.delta.partial_json;
+
+      for (const item of extractNewItems(buffer, processed)) {
+        processed++;
+        try {
+          if (typeof item !== "object" || item === null || Array.isArray(item)) {
+            throw new Error("Item is not a non-null object");
+          }
+          const itemObj = item as Record<string, unknown>;
+          const matchedForm = MatchedFormSchema.parse(itemObj.matchedForm);
+          // Strip matchedForm before validating the remainder against
+          // WordFlagSchema (matched the existing parseAnnotateResult pattern).
+          const { matchedForm: _matchedForm, ...rest } = itemObj;
+          void _matchedForm;
+          const flag = WordFlagSchema.parse(rest);
+          yield { kind: "flag", flag: { ...flag, matchedForm } };
+          flaggedCount++;
+        } catch (err) {
+          // Req 4.8: drop a single bad item, log at warn, continue.
+          console.warn("[streamAnnotation] dropped malformed item", err);
+        }
+      }
+    }
+  }
+
+  const finalMessage = await stream.finalMessage();
+  if (finalMessage.stop_reason === "max_tokens") {
+    console.warn("[streamAnnotation] truncated by max_tokens", {
+      yielded: flaggedCount,
+    });
+    throw new AnnotateStreamMaxTokensError(flaggedCount);
+  }
+
+  yield { kind: "done", flaggedCount };
 }

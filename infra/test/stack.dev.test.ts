@@ -101,12 +101,14 @@ describe("LanguageDrillStack-dev", () => {
     const lambdas = devTemplate.findResources("AWS::Lambda::Function");
     const fns = Object.values(lambdas) as LambdaResource[];
 
-    // Phase 4 adds two more application Lambdas (Generation + Scheduler), each
-    // on nodejs20.x. CDK's logRetention shortcut also synthesizes a maintenance
-    // Lambda on a different runtime (currently nodejs22.x); filter it out so
-    // this assertion tracks application Lambdas only.
+    // Phase 4 added two application Lambdas (Generation + Scheduler);
+    // more-responsive-reading adds one more (AnnotateStream behind a Function
+    // URL). All four run on nodejs20.x. CDK's logRetention shortcut also
+    // synthesizes a maintenance Lambda on a different runtime (currently
+    // nodejs22.x); filter it out so this assertion tracks application
+    // Lambdas only.
     const appFns = fns.filter((f) => f.Properties.Runtime === "nodejs20.x");
-    expect(appFns).toHaveLength(3);
+    expect(appFns).toHaveLength(4);
 
     // The API Lambda is the only one with CLERK_SECRET_KEY in its env — the
     // generation pipeline Lambdas have a strict minimum-privilege secrets set.

@@ -2,7 +2,8 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "resolveJsonModule": true
   },
   "include": ["src"],
   "// exclude": "Tests are checked by vitest at runtime; tsc --noEmit excludes them so cross-package runtime imports (e.g. ai/src/*.test.ts → @language-drill/db's curriculum data) don't force a build-order dep. Matches packages/db/tsconfig.json convention.",

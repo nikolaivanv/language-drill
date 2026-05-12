@@ -7,6 +7,7 @@ import { QueueConstruct } from "./constructs/queue";
 import { GenerationQueueConstruct } from "./constructs/generation-queue";
 import { GenerationLambdaConstruct } from "./constructs/generation-lambda";
 import { SchedulerLambdaConstruct } from "./constructs/scheduler-lambda";
+import { AnnotateStreamLambdaConstruct } from "./constructs/annotate-stream-lambda";
 
 export interface LanguageDrillStackProps extends StackProps {
   envName: "prod" | "dev";
@@ -70,6 +71,16 @@ export class LanguageDrillStack extends Stack {
       enableScheduledJobs: props.enableScheduledJobs,
     });
 
+    // more-responsive-reading — streaming-annotate Lambda + Function URL.
+    // Sits OUTSIDE the API Gateway path because the response is SSE; the
+    // Function URL's RESPONSE_STREAM invoke mode forwards bytes as the
+    // handler writes them, which API Gateway's Lambda integration cannot do.
+    const annotateStream = new AnnotateStreamLambdaConstruct(
+      this,
+      "AnnotateStream",
+      { secretsPrefix: props.secretsPrefix },
+    );
+
     new CfnOutput(this, "ApiUrl", {
       value: apiGateway.httpApi.url ?? "",
       description: "API Gateway endpoint URL",
@@ -78,6 +89,10 @@ export class LanguageDrillStack extends Stack {
       value: generationQueue.queue.queueUrl,
       description:
         "SQS queue for generation jobs (Phase 4). Set GENERATION_QUEUE_URL to this for the CLI --queue flag.",
+    });
+    new CfnOutput(this, "AnnotateStreamUrl", {
+      value: annotateStream.functionUrl,
+      description: "Function URL for /read/annotate streaming endpoint",
     });
 
     Tags.of(this).add("env", props.envName);

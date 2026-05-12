@@ -152,6 +152,36 @@ describe('AnnotatedView — outside-click dismissal', () => {
   });
 });
 
+describe('AnnotatedView — calibration strip pass-through (task 37)', () => {
+  it('shows the streaming progress UI when annotateStreaming is set', () => {
+    render(
+      <AnnotatedView
+        {...baseProps}
+        annotateStreaming={{ flaggedCount: 1, candidateCount: 5 }}
+      />,
+    );
+    expect(screen.getByText(/annotating · 1 \/ 5/)).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    // Eyebrow must not render while streaming.
+    expect(screen.queryByText('~B1+ calibration')).not.toBeInTheDocument();
+  });
+
+  it('shows "· no above-level words" when noAboveLevelWords is true and not streaming', () => {
+    render(
+      <AnnotatedView
+        {...baseProps}
+        entry={{ ...baseProps.entry, flaggedWords: {} }}
+        noAboveLevelWords
+      />,
+    );
+    expect(screen.getByText('· no above-level words')).toBeInTheDocument();
+    expect(
+      screen.queryByText('showing words rarer than top-3000'),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText('~B1+ calibration')).toBeInTheDocument();
+  });
+});
+
 describe('AnnotatedView — popover composition', () => {
   it('renders the popover only when activeWord points at a flagged entry', () => {
     const { rerender } = render(<AnnotatedView {...baseProps} activeWord={null} />);

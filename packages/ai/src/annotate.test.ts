@@ -89,12 +89,19 @@ describe("ANNOTATE_TOOL", () => {
 // ---------------------------------------------------------------------------
 
 describe("ANNOTATE_SYSTEM_PROMPT", () => {
-  it("documents the selection rule (rarer than top_rank OR above level)", () => {
-    expect(ANNOTATE_SYSTEM_PROMPT).toContain("top_rank");
-    expect(ANNOTATE_SYSTEM_PROMPT).toContain("CEFR band is strictly above");
+  it("frames the task as enrichment, not selection (task 12 rewrite)", () => {
+    // Selection happens server-side now; Claude only enriches the words it
+    // receives. The rewritten prompt must not still tell Claude to filter.
+    expect(ANNOTATE_SYSTEM_PROMPT).toMatch(/Enrichment Task/);
+    expect(ANNOTATE_SYSTEM_PROMPT).toMatch(/list of words/);
+    expect(ANNOTATE_SYSTEM_PROMPT).not.toMatch(/top_rank/);
+    expect(ANNOTATE_SYSTEM_PROMPT).not.toMatch(/Selection Rule/);
   });
 
-  it("bans closed-class words", () => {
+  it("still names closed-class words in the per-language guidance", () => {
+    // Per-language hints continue to mention closed-class examples ("la", "der",
+    // "ve", etc.) for matchedForm-vs-lemma intuition — selection wording is gone
+    // but the linguistic guidance stays.
     expect(ANNOTATE_SYSTEM_PROMPT).toMatch(/closed-class/);
   });
 

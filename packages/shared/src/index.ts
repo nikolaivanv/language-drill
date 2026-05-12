@@ -154,6 +154,18 @@ export * from "./onboarding";
 export * from "./read";
 
 // ---------------------------------------------------------------------------
+// Shared passage tokenizer (used by both web renderer and server pre-filter)
+// ---------------------------------------------------------------------------
+
+export * from "./tokenize";
+
+// ---------------------------------------------------------------------------
+// Shared CORS allow-list (Hono middleware + Function URL CORS)
+// ---------------------------------------------------------------------------
+
+export * from "./cors";
+
+// ---------------------------------------------------------------------------
 // Phase 4 — moved here from `@language-drill/db` to break the build cycle
 // (the db barrel still re-exports both for back-compat).
 // ---------------------------------------------------------------------------

@@ -13,11 +13,59 @@
 // vertical slice.
 // ---------------------------------------------------------------------------
 
+import type { FlaggedMap, WordFlag } from '@language-drill/shared';
+
 export type View = 'empty' | 'pasting' | 'annotated' | 'history';
 
 export type Intensity = 'subtle' | 'assertive';
 
 export type ActiveWord = { word: string; x: number; y: number };
+
+// ---------------------------------------------------------------------------
+// Streaming-annotate slice (more-responsive-reading spec, Req 5.3–5.6)
+// ---------------------------------------------------------------------------
+// Mirrors `AnnotateStreamState` exposed by `useReadAnnotateStream`. The page
+// owns this slice (rather than reading the hook's state directly) so that
+// `flaggedMap` for the annotated view has a single source of truth —
+// `selectFlaggedMap` below prefers this slice while a stream is in flight
+// AND falls back to the persisted entry's `flaggedWords` when viewing
+// history.
+
+export type AnnotateCalibration = {
+  cefr: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+  top: number;
+};
+
+export type AnnotateError = {
+  code: string;
+  message: string;
+  status?: number;
+};
+
+export type AnnotateStreamSlice =
+  | { phase: 'idle' }
+  | {
+      phase: 'streaming';
+      candidateCount: number;
+      flaggedMap: FlaggedMap;
+      flaggedCount: number;
+      calibration: AnnotateCalibration;
+    }
+  | {
+      phase: 'complete';
+      candidateCount: number;
+      flaggedMap: FlaggedMap;
+      flaggedCount: number;
+      calibration: AnnotateCalibration;
+    }
+  | {
+      phase: 'error';
+      candidateCount?: number;
+      flaggedMap: FlaggedMap;
+      flaggedCount: number;
+      calibration?: AnnotateCalibration;
+      error: AnnotateError;
+    };
 
 export type ReadPageState = {
   view: View;
@@ -30,6 +78,7 @@ export type ReadPageState = {
   intensity: Intensity;
   saveToast: { count: number } | null;
   inlineError: { kind: 'save' | 'bank' } | null;
+  annotateStream: AnnotateStreamSlice;
 };
 
 export type Action =
@@ -47,7 +96,13 @@ export type Action =
   | { type: 'SHOW_INLINE_ERROR'; kind: 'save' | 'bank' }
   | { type: 'DISMISS_INLINE_ERROR' }
   | { type: 'LOAD_ENTRY'; entryId: string }
-  | { type: 'ENTRY_PERSISTED'; entryId: string };
+  | { type: 'ENTRY_PERSISTED'; entryId: string }
+  | { type: 'ANNOTATE_START' }
+  | { type: 'ANNOTATE_META'; calibration: AnnotateCalibration; candidateCount: number }
+  | { type: 'ANNOTATE_FLAG'; matchedForm: string; flag: WordFlag }
+  | { type: 'ANNOTATE_DONE'; flaggedCount: number }
+  | { type: 'ANNOTATE_ERROR'; error: AnnotateError }
+  | { type: 'ANNOTATE_RESET' };
 
 export const initialState: ReadPageState = {
   view: 'empty',
@@ -58,6 +113,17 @@ export const initialState: ReadPageState = {
   intensity: 'subtle',
   saveToast: null,
   inlineError: null,
+  annotateStream: { phase: 'idle' },
+};
+
+// Streaming starts with empty accumulators and a placeholder calibration —
+// META overwrites the placeholder before any flag arrives.
+const STREAMING_PLACEHOLDER: Extract<AnnotateStreamSlice, { phase: 'streaming' }> = {
+  phase: 'streaming',
+  candidateCount: 0,
+  flaggedMap: {},
+  flaggedCount: 0,
+  calibration: { cefr: 'B1', top: 0 },
 };
 
 export function readPageReducer(state: ReadPageState, action: Action): ReadPageState {
@@ -146,6 +212,72 @@ export function readPageReducer(state: ReadPageState, action: Action): ReadPageS
         inlineError: null,
       };
 
+    case 'ANNOTATE_START':
+      // Aborts the slice's prior accumulators; the next META/FLAG fills it in.
+      return { ...state, annotateStream: STREAMING_PLACEHOLDER };
+
+    case 'ANNOTATE_META':
+      // Ignored outside `streaming` — defensive against an out-of-order
+      // sync from the hook's useEffect.
+      if (state.annotateStream.phase !== 'streaming') return state;
+      return {
+        ...state,
+        annotateStream: {
+          ...state.annotateStream,
+          calibration: action.calibration,
+          candidateCount: action.candidateCount,
+        },
+      };
+
+    case 'ANNOTATE_FLAG':
+      if (state.annotateStream.phase !== 'streaming') return state;
+      return {
+        ...state,
+        annotateStream: {
+          ...state.annotateStream,
+          flaggedMap: {
+            ...state.annotateStream.flaggedMap,
+            [action.matchedForm]: action.flag,
+          },
+          flaggedCount: state.annotateStream.flaggedCount + 1,
+        },
+      };
+
+    case 'ANNOTATE_DONE':
+      if (state.annotateStream.phase !== 'streaming') return state;
+      return {
+        ...state,
+        annotateStream: {
+          phase: 'complete',
+          candidateCount: state.annotateStream.candidateCount,
+          flaggedMap: state.annotateStream.flaggedMap,
+          flaggedCount: action.flaggedCount,
+          calibration: state.annotateStream.calibration,
+        },
+      };
+
+    case 'ANNOTATE_ERROR': {
+      // Carry the streaming accumulators (`flaggedMap`, calibration, etc.)
+      // into the error state so partial flags stay visible (Req 5.10).
+      const prev = state.annotateStream;
+      const carry =
+        prev.phase === 'streaming' || prev.phase === 'complete'
+          ? {
+              candidateCount: prev.candidateCount,
+              flaggedMap: prev.flaggedMap,
+              flaggedCount: prev.flaggedCount,
+              calibration: prev.calibration,
+            }
+          : { flaggedMap: {} as FlaggedMap, flaggedCount: 0 };
+      return {
+        ...state,
+        annotateStream: { phase: 'error', ...carry, error: action.error },
+      };
+    }
+
+    case 'ANNOTATE_RESET':
+      return { ...state, annotateStream: { phase: 'idle' } };
+
     default: {
       const _exhaustive: never = action;
       throw new Error(`unknown read action: ${String(_exhaustive)}`);
@@ -205,4 +337,22 @@ export function selectActiveEntry<T extends { id: string }>(
     return entries.find((e) => e.id === state.activeEntryId) ?? null;
   }
   return mostRecent;
+}
+
+/**
+ * Resolve the `flaggedMap` for the annotated view. Prefers the live stream
+ * slice while a stream is in flight (any phase other than `idle`); falls
+ * back to the persisted entry's `flaggedWords` when viewing history.
+ *
+ * more-responsive-reading Req 5.3 / 5.5 (live render during streaming) +
+ * Req 5.10 (partial flags retained on error).
+ */
+export function selectFlaggedMap(
+  state: ReadPageState,
+  persistedFlaggedWords: FlaggedMap | null | undefined,
+): FlaggedMap {
+  if (state.annotateStream.phase !== 'idle') {
+    return state.annotateStream.flaggedMap;
+  }
+  return persistedFlaggedWords ?? {};
 }

@@ -62,7 +62,10 @@ export {
 } from './schemas/today';
 export {
   AnnotateRequestSchema,
-  AnnotateResponseSchema,
+  AnnotateMetaEventSchema,
+  AnnotateFlagEventSchema,
+  AnnotateDoneEventSchema,
+  AnnotateErrorEventSchema,
   SaveReadEntryRequestSchema,
   SaveReadEntryResponseSchema,
   UpdateBankRequestSchema,
@@ -73,7 +76,10 @@ export {
   WordFlagSchema,
   FlaggedMapSchema,
   type AnnotateRequest,
-  type AnnotateResponse,
+  type AnnotateMetaEvent,
+  type AnnotateFlagEvent,
+  type AnnotateDoneEvent,
+  type AnnotateErrorEvent,
   type SaveReadEntryRequest,
   type SaveReadEntryResponse,
   type UpdateBankRequest,
@@ -126,9 +132,12 @@ export {
   type UseTodayPlanParams,
 } from './hooks/useTodayPlan';
 export {
-  useReadAnnotate,
-  type UseReadAnnotateOptions,
-} from './hooks/useReadAnnotate';
+  useReadAnnotateStream,
+  type UseReadAnnotateStreamOptions,
+  type UseReadAnnotateStreamReturn,
+  type AnnotateStreamState,
+} from './hooks/useReadAnnotateStream';
+export { fetchSse, type SseFrame, type FetchSseError } from './sse-client';
 export {
   useReadEntries,
   useReadEntry,

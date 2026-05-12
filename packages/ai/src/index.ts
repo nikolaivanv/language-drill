@@ -23,10 +23,13 @@ export {
   ANNOTATE_SYSTEM_PROMPT,
   ANNOTATE_TOOL,
   ANNOTATE_TOOL_NAME,
-  annotateText,
-  parseAnnotateResult,
+  AnnotateStreamMaxTokensError,
+  streamAnnotation,
 } from "./annotate.js";
-export type { AnnotateInput, AnnotateOutput } from "./annotate.js";
+export type {
+  AnnotateStreamEvent,
+  AnnotateStreamInput,
+} from "./annotate.js";
 
 export {
   GENERATION_MODEL,
@@ -82,6 +85,10 @@ export {
   buildValidationUserPrompt,
   VALIDATION_SYSTEM_PROMPT_TEMPLATE,
 } from "./validation-prompts.js";
+
+// Per-language frequency-dictionary lookup used by the streaming-annotate
+// Lambda's pre-filter (more-responsive-reading spec Req 1.1).
+export * from "./frequency/index.js";
 
 /**
  * Creates an Anthropic client instance configured with the provided API key.

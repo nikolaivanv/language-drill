@@ -64,6 +64,32 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel
 
+      - name: Read AnnotateStreamUrl from prod CFN outputs
+        id: prod_stream_url
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          URL=$(aws cloudformation describe-stacks \
+            --stack-name LanguageDrillStack \
+            --query "Stacks[0].Outputs[?OutputKey=='AnnotateStreamUrl'].OutputValue" \
+            --output text)
+          if [ -z "$URL" ] || [ "$URL" = "None" ]; then
+            echo "::error::AnnotateStreamUrl output not found on LanguageDrillStack"
+            exit 1
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Sync NEXT_PUBLIC_ANNOTATE_STREAM_URL to Vercel production
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          vercel env rm NEXT_PUBLIC_ANNOTATE_STREAM_URL production --yes --token "$VERCEL_TOKEN" || true
+          echo "${{ steps.prod_stream_url.outputs.url }}" | vercel env add NEXT_PUBLIC_ANNOTATE_STREAM_URL production --token "$VERCEL_TOKEN"
+
       - name: Deploy to Vercel Production
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -116,3 +142,39 @@ jobs:
           ADMIN_USER_IDS: ${{ secrets.ADMIN_USER_IDS }}
           ADMIN_USER_IDS_DEV: ${{ secrets.ADMIN_USER_IDS_DEV }}
         run: cd infra && pnpm cdk deploy LanguageDrillStack-dev --exclusively --require-approval never
+
+  vercel-env-dev:
+    name: Sync Stream URL to Vercel (preview)
+    runs-on: ubuntu-latest
+    needs: [cdk-deploy-dev]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Read AnnotateStreamUrl from dev CFN outputs
+        id: dev_stream_url
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          URL=$(aws cloudformation describe-stacks \
+            --stack-name LanguageDrillStack-dev \
+            --query "Stacks[0].Outputs[?OutputKey=='AnnotateStreamUrl'].OutputValue" \
+            --output text)
+          if [ -z "$URL" ] || [ "$URL" = "None" ]; then
+            echo "::error::AnnotateStreamUrl output not found on LanguageDrillStack-dev"
+            exit 1
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Sync NEXT_PUBLIC_ANNOTATE_STREAM_URL to Vercel preview
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          vercel env rm NEXT_PUBLIC_ANNOTATE_STREAM_URL preview --yes --token "$VERCEL_TOKEN" || true
+          echo "${{ steps.dev_stream_url.outputs.url }}" | vercel env add NEXT_PUBLIC_ANNOTATE_STREAM_URL preview --token "$VERCEL_TOKEN"
