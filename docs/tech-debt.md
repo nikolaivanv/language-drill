@@ -6,7 +6,8 @@ A living log of known issues to address. Add new entries at the top; mark as res
 
 ## Annotate-stream Function URL CORS allows all origins
 
-- **Status:** open (worked around in PR #96 — set `allowedOrigins: ["*"]`)
+- **Status:** open (worked around in PR #97 — set `allowedOrigins: ["*"]`)
+- **See also:** [`aws-lambda-gotchas.md`](./aws-lambda-gotchas.md) §1 — the permanent reference for Function URL CORS schema quirks.
 - **Discovered:** 2026-05-12 (production deploy after PR #95 — CloudFormation rejected `https://*.vercel.app` with `isn't a valid origin`)
 - **Scope:** `infra/lib/constructs/annotate-stream-lambda.ts` Function URL CORS
 - **Severity:** low (JWT verification + daily rate-limit are the real security boundary; browser CORS is a politeness filter, not authorization)
@@ -49,7 +50,7 @@ Important: the main API Lambda's CORS lives in Hono middleware. The streaming La
 **Owner:** unassigned
 **Tracking:** none yet — open a GitHub issue when prioritizing
 **References:**
-- PR #96 — workaround.
+- PR #97 — workaround.
 - `infra/lambda/src/index.ts:25` — `matchOrigin` to extract.
 - `packages/shared/src/cors.ts` — where to put it.
 - AWS docs on Function URL CORS (vs API Gateway): https://docs.aws.amazon.com/lambda/latest/dg/urls-configuration.html#urls-cors
@@ -62,6 +63,7 @@ Important: the main API Lambda's CORS lives in Hono middleware. The streaming La
 - **Discovered:** 2026-05-12 (production deploy failed after PR #91 merged the streaming-annotate feature)
 - **Scope:** `packages/shared/` — its tsconfig + every relative `export * from "./x"` / `import { y } from "./z"` inside `src/`
 - **Severity:** medium (currently survives via bundler lenience + a CDK-side workaround; will resurface whenever a Node-strict consumer is added)
+- **See also:** [`aws-lambda-gotchas.md`](./aws-lambda-gotchas.md) §3 — the permanent reference for ts-node + CDK module resolution.
 
 **Root cause:**
 `packages/shared` compiles with `module` defaulting to ES2022 (target ES2022 → ESM output) but `package.json` has no `"type": "module"` and `main`/`types` point at plain `dist/index.js`/`dist/index.d.ts`. The compiled `dist/index.js` therefore contains ESM syntax with relative re-exports that omit the `.js` extension:
