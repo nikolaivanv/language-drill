@@ -66,3 +66,4 @@ export { targetCellSize } from './lib/target-cell-size';
 // Phase 4 — orchestration core + curriculum-cell enumeration. The CLI script
 // and the generation Lambda both import `runOneCell` from here.
 export * from './generation';
+export * from './theory-generation';
