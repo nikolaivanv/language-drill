@@ -1,23 +1,35 @@
 /**
  * Per-cell orchestration for theory generation. Opens an audit row, calls
- * `generateTheoryTopic`, INSERTs the resulting draft into `theory_topics`,
- * closes the audit row. Cell-isolated try/catch — a single bad cell never
- * halts the run.
+ * `generateTheoryTopic`, validates the draft via `validateTheoryDraft`,
+ * routes the validation result through `routeTheoryValidationResult`, and
+ * INSERTs the theory_topics row (or skips it for the rejected branch).
+ * Cell-isolated try/catch — a single bad cell never halts the run.
  *
  * Structural mirror of `packages/db/src/generation/run-one-cell.ts` minus
- * three things that don't exist for theory:
- *   1. No per-ordinal loop. Theory is one page per cell (Req 5.1) — there
- *      is no `count` arg and no batch iteration.
- *   2. No validator branch. Phase 2 routes every draft to
- *      `'auto-approved'` (Phase 3 will introduce the validator + the
- *      `'flagged' | 'rejected'` review-status branches).
- *   3. No dedup retry helper. The single partial unique index
- *      `theory_topics_pool_lookup_idx` on
- *      `(language, grammar_point_key) WHERE review_status IN
- *      ('auto-approved', 'manual-approved')` returns 0 rows from
- *      `.onConflictDoNothing()` when a cell is already filled; the
- *      orchestrator surfaces that as a `skipped-cost-cap`-style success
- *      with `skippedCount: 1` rather than re-rolling.
+ * the per-ordinal loop and dedup-retry helper — theory is one page per
+ * cell (Req 5.1), so there is no batch iteration. The partial unique
+ * index `theory_topics_pool_lookup_idx` on
+ * `(language, grammar_point_key) WHERE review_status IN
+ * ('auto-approved', 'manual-approved')` is consulted only on the
+ * auto-approved branch via `.onConflictDoNothing()`; flagged and rejected
+ * rows are not covered by the index.
+ *
+ * Three terminal router branches (Req 4.3 / 4.4 / 4.5):
+ *   - 'rejected'     → no INSERT into theory_topics; audit row closes
+ *                      with rejected=true.
+ *   - 'flagged'      → INSERT with review_status='flagged'; audit row
+ *                      closes with flagged=true. The partial unique
+ *                      index does NOT fire on flagged rows (its
+ *                      predicate matches only approved review statuses).
+ *   - 'auto-approved'→ INSERT with review_status='auto-approved' +
+ *                      `.onConflictDoNothing()`; on dedup collision the
+ *                      audit row closes with the Phase 2 cell-already-
+ *                      filled message (Req 4.7).
+ *
+ * Two SIGINT recheck points (Req 4.8) — once between generator and
+ * validator (so an abort skips the validator's tokens) and once between
+ * validator and INSERT (so an abort skips the DB write but reports
+ * accumulated generator + validator tokens honestly).
  *
  * The `auditRowExists` flag on `failClosed` distinguishes precheck
  * failures (audit row never INSERTed) from in-flight failures (audit row
@@ -28,10 +40,13 @@ import type Anthropic from '@anthropic-ai/sdk';
 import {
   GENERATION_MODEL,
   ZERO_USAGE,
+  addUsage,
   estimateCostUsd,
   generateTheoryTopic,
+  validateTheoryDraft,
   type ClaudeUsageBreakdown,
   type TheoryGenerationSpec,
+  type TheoryValidationResult,
 } from '@language-drill/ai';
 import { eq } from 'drizzle-orm';
 
@@ -40,6 +55,7 @@ import { assertValidTheoryCellKey } from '../lib/theory-cell-key';
 import { theoryGenerationJobs, theoryTopics } from '../schema/index';
 
 import type { TheoryCell } from './cells';
+import { routeTheoryValidationResult } from './routing';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -207,9 +223,11 @@ export async function runOneTheoryCell(
       });
     }
 
-    // SIGINT recheck after the Claude call. If the user aborted during the
-    // call we've already paid for the tokens — report them honestly in the
-    // failure result rather than zeroing them out.
+    // SIGINT recheck #1 — between generator and validator. If the user
+    // aborted during the generator call we've already paid for those
+    // tokens; report them honestly. Skipping the validator here is the
+    // whole point of this recheck (Req 4.8 — don't pay for the validator
+    // call when the user has signalled an abort).
     if (signal?.aborted) {
       return failClosed({
         cell,
@@ -222,30 +240,50 @@ export async function runOneTheoryCell(
       });
     }
 
-    // 6. INSERT the draft. `.onConflictDoNothing()` on the partial unique
-    //    index `theory_topics_pool_lookup_idx` returns 0 rows when the cell
-    //    is already filled by a prior approved/manual-approved row — Phase 2
-    //    surfaces that as a 'succeeded' result with `skippedCount: 1` rather
-    //    than re-rolling.
-    const generatedAt = new Date();
-    const inserted = await db
-      .insert(theoryTopics)
-      .values({
-        id: draft.id,
-        language: cell.language,
-        grammarPointKey: cell.grammarPoint.key,
-        topicId: draft.topicId,
-        cefrLevel: cell.cefrLevel,
-        contentJson: draft.contentJson,
-        generationSource: 'claude-realtime',
-        modelId: GENERATION_MODEL,
-        reviewStatus: 'auto-approved',
-        qualityScore: null,
-        flaggedReasons: null,
-        generatedAt,
-      })
-      .onConflictDoNothing()
-      .returning({ id: theoryTopics.id });
+    // 6. Validate the draft. On throw, the audit row is closed as
+    //    'failed' carrying ONLY the generator's tokenUsage — we never
+    //    received a usage breakdown for the validator call so we can't
+    //    bill what we don't have a measurement for (Req 4.6).
+    let validationResult: TheoryValidationResult;
+    try {
+      const { result, tokenUsage: validatorUsage } = await validateTheoryDraft(
+        client,
+        draft,
+        spec,
+      );
+      validationResult = result;
+      tokenUsage = addUsage(tokenUsage, validatorUsage);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return failClosed({
+        cell,
+        jobId,
+        tokenUsage,
+        durationMs: Date.now() - startedAt,
+        errorMessage: message,
+        auditRowExists: true,
+        db,
+      });
+    }
+
+    // SIGINT recheck #2 — between validator and INSERT. Both Claude
+    // calls have completed; abort skips only the DB write. Accumulated
+    // tokens (generator + validator) are reported honestly.
+    if (signal?.aborted) {
+      return failClosed({
+        cell,
+        jobId,
+        tokenUsage,
+        durationMs: Date.now() - startedAt,
+        errorMessage: 'Aborted by user (SIGINT)',
+        auditRowExists: true,
+        db,
+      });
+    }
+
+    // 7. Route the validation result. The router is pure — no I/O — so
+    //    it cannot throw and does not need its own SIGINT recheck.
+    const decision = routeTheoryValidationResult(validationResult);
 
     const costUsd = estimateCostUsd(tokenUsage);
     const inputTokensUsed =
@@ -253,63 +291,167 @@ export async function runOneTheoryCell(
       tokenUsage.cacheCreationInputTokens +
       tokenUsage.cacheReadInputTokens;
 
-    // 7a. Dedup skip — partial-index collision, cell already filled.
-    if (inserted.length === 0) {
-      const skipMessage = 'cell already filled (partial index collision)';
-      await db
-        .update(theoryGenerationJobs)
-        .set({
+    // 8. Switch on the three terminal router branches.
+    switch (decision.reviewStatus) {
+      case 'rejected': {
+        // 8a. Rejected — no INSERT into theory_topics. Audit row closes
+        //     with status='succeeded' and rejected=true (Req 4.3). The
+        //     run was technically a success (we got a validator verdict);
+        //     the rejected boolean carries the verdict's outcome.
+        await db
+          .update(theoryGenerationJobs)
+          .set({
+            status: 'succeeded',
+            finishedAt: new Date(),
+            approved: false,
+            flagged: false,
+            rejected: true,
+            inputTokensUsed,
+            outputTokensUsed: tokenUsage.outputTokens,
+            costUsdEstimate: costUsd.toFixed(4),
+          })
+          .where(eq(theoryGenerationJobs.id, jobId));
+
+        return {
+          cell,
+          jobId,
           status: 'succeeded',
-          finishedAt: new Date(),
-          approved: false,
-          flagged: false,
-          rejected: false,
-          inputTokensUsed,
-          outputTokensUsed: tokenUsage.outputTokens,
-          costUsdEstimate: costUsd.toFixed(4),
-          errorMessage: skipMessage,
-        })
-        .where(eq(theoryGenerationJobs.id, jobId));
+          insertedCount: 0,
+          skippedCount: 0,
+          tokenUsage,
+          costUsd,
+          durationMs: Date.now() - startedAt,
+        };
+      }
 
-      return {
-        cell,
-        jobId,
-        status: 'succeeded',
-        insertedCount: 0,
-        skippedCount: 1,
-        tokenUsage,
-        costUsd,
-        durationMs: Date.now() - startedAt,
-        errorMessage: skipMessage,
-      };
+      case 'flagged': {
+        // 8b. Flagged — INSERT with review_status='flagged'. The partial
+        //     unique index `theory_topics_pool_lookup_idx` is predicated
+        //     on `review_status IN ('auto-approved', 'manual-approved')`,
+        //     so a flagged INSERT cannot collide with it. No
+        //     `.onConflictDoNothing()` needed (Req 4.4).
+        await db.insert(theoryTopics).values({
+          id: draft.id,
+          language: cell.language,
+          grammarPointKey: cell.grammarPoint.key,
+          topicId: draft.topicId,
+          cefrLevel: cell.cefrLevel,
+          contentJson: draft.contentJson,
+          generationSource: 'claude-realtime',
+          modelId: GENERATION_MODEL,
+          reviewStatus: 'flagged',
+          qualityScore: validationResult.qualityScore,
+          flaggedReasons: decision.flaggedReasons,
+          generatedAt: new Date(),
+        });
+
+        await db
+          .update(theoryGenerationJobs)
+          .set({
+            status: 'succeeded',
+            finishedAt: new Date(),
+            approved: false,
+            flagged: true,
+            rejected: false,
+            inputTokensUsed,
+            outputTokensUsed: tokenUsage.outputTokens,
+            costUsdEstimate: costUsd.toFixed(4),
+          })
+          .where(eq(theoryGenerationJobs.id, jobId));
+
+        return {
+          cell,
+          jobId,
+          status: 'succeeded',
+          insertedCount: 1,
+          skippedCount: 0,
+          tokenUsage,
+          costUsd,
+          durationMs: Date.now() - startedAt,
+        };
+      }
+
+      case 'auto-approved': {
+        // 8c. Auto-approved — INSERT with `.onConflictDoNothing()` on
+        //     the partial unique index. A 0-row return signals that the
+        //     cell was already filled by a prior approved row (Req 4.7).
+        const inserted = await db
+          .insert(theoryTopics)
+          .values({
+            id: draft.id,
+            language: cell.language,
+            grammarPointKey: cell.grammarPoint.key,
+            topicId: draft.topicId,
+            cefrLevel: cell.cefrLevel,
+            contentJson: draft.contentJson,
+            generationSource: 'claude-realtime',
+            modelId: GENERATION_MODEL,
+            reviewStatus: 'auto-approved',
+            qualityScore: validationResult.qualityScore,
+            flaggedReasons: null,
+            generatedAt: new Date(),
+          })
+          .onConflictDoNothing()
+          .returning({ id: theoryTopics.id });
+
+        if (inserted.length === 0) {
+          // Dedup skip — partial-index collision, cell already filled.
+          // Preserved from Phase 2 verbatim (Req 4.7).
+          const skipMessage = 'cell already filled (partial index collision)';
+          await db
+            .update(theoryGenerationJobs)
+            .set({
+              status: 'succeeded',
+              finishedAt: new Date(),
+              approved: false,
+              flagged: false,
+              rejected: false,
+              inputTokensUsed,
+              outputTokensUsed: tokenUsage.outputTokens,
+              costUsdEstimate: costUsd.toFixed(4),
+              errorMessage: skipMessage,
+            })
+            .where(eq(theoryGenerationJobs.id, jobId));
+
+          return {
+            cell,
+            jobId,
+            status: 'succeeded',
+            insertedCount: 0,
+            skippedCount: 1,
+            tokenUsage,
+            costUsd,
+            durationMs: Date.now() - startedAt,
+            errorMessage: skipMessage,
+          };
+        }
+
+        await db
+          .update(theoryGenerationJobs)
+          .set({
+            status: 'succeeded',
+            finishedAt: new Date(),
+            approved: true,
+            flagged: false,
+            rejected: false,
+            inputTokensUsed,
+            outputTokensUsed: tokenUsage.outputTokens,
+            costUsdEstimate: costUsd.toFixed(4),
+          })
+          .where(eq(theoryGenerationJobs.id, jobId));
+
+        return {
+          cell,
+          jobId,
+          status: 'succeeded',
+          insertedCount: 1,
+          skippedCount: 0,
+          tokenUsage,
+          costUsd,
+          durationMs: Date.now() - startedAt,
+        };
+      }
     }
-
-    // 7b. Success — the row landed. Phase 2 routes every draft to
-    //     `approved: true` because there is no validator yet (Phase 3).
-    await db
-      .update(theoryGenerationJobs)
-      .set({
-        status: 'succeeded',
-        finishedAt: new Date(),
-        approved: true,
-        flagged: false,
-        rejected: false,
-        inputTokensUsed,
-        outputTokensUsed: tokenUsage.outputTokens,
-        costUsdEstimate: costUsd.toFixed(4),
-      })
-      .where(eq(theoryGenerationJobs.id, jobId));
-
-    return {
-      cell,
-      jobId,
-      status: 'succeeded',
-      insertedCount: 1,
-      skippedCount: 0,
-      tokenUsage,
-      costUsd,
-      durationMs: Date.now() - startedAt,
-    };
   } catch (err) {
     // Defensive outer catch — any unexpected throw (DB error, etc.) still
     // produces a `failClosed` result. The audit row was INSERTed at step 3.

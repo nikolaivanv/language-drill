@@ -1,0 +1,9 @@
+{
+  "qualityScore": 0.6,
+  "factualErrors": [],
+  "levelMismatch": false,
+  "sectionsIncomplete": [],
+  "examplesUseGrammarPoint": true,
+  "culturalIssues": [],
+  "flaggedReasons": ["voice is too encouraging"]
+}

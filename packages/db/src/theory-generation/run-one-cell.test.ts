@@ -16,7 +16,10 @@
  */
 
 import type Anthropic from '@anthropic-ai/sdk';
-import { THEORY_TOOL_NAME } from '@language-drill/ai';
+import {
+  THEORY_TOOL_NAME,
+  THEORY_VALIDATION_TOOL_NAME,
+} from '@language-drill/ai';
 import { CefrLevel, Language, type LearningLanguage } from '@language-drill/shared';
 import { eq, like } from 'drizzle-orm';
 import { readFileSync } from 'node:fs';
@@ -50,7 +53,8 @@ const __dirname = dirname(__filename);
 
 /**
  * Phase 1's well-formed sample theory page. Replayed verbatim by the inline
- * mock Anthropic client below as the `tool_use.input`.
+ * mock Anthropic client below as the `tool_use.input` for the generator
+ * call.
  */
 const subjunctiveFixture: Record<string, unknown> = JSON.parse(
   readFileSync(
@@ -58,6 +62,26 @@ const subjunctiveFixture: Record<string, unknown> = JSON.parse(
     'utf8',
   ),
 ) as Record<string, unknown>;
+
+/**
+ * Phase 3 validation fixtures (loaded from the same on-disk fixtures the
+ * mock client uses in `MOCK_CLAUDE=1` mode). Replayed verbatim by the
+ * inline mock as the validator's `tool_use.input`.
+ */
+const VALIDATION_FIXTURES_DIR = resolve(
+  __dirname,
+  '../../scripts/__fixtures__/claude-theory-validation',
+);
+
+function loadValidationFixture(name: string): Record<string, unknown> {
+  return JSON.parse(
+    readFileSync(resolve(VALIDATION_FIXTURES_DIR, name), 'utf8'),
+  ) as Record<string, unknown>;
+}
+
+const VALIDATION_AUTO_APPROVED = loadValidationFixture('auto-approved.json');
+const VALIDATION_FLAGGED = loadValidationFixture('flagged-quality.json');
+const VALIDATION_REJECTED = loadValidationFixture('rejected-factual.json');
 
 const TEST_TIMEOUT_MS = 60_000;
 
@@ -73,37 +97,108 @@ const TEST_KEY_PREFIX = 'es-b1-test-rotc-';
 // Inline mock client
 // ---------------------------------------------------------------------------
 
+type MockClientOpts = {
+  /** Generator response payload. Default: `subjunctiveFixture`. */
+  generatorInput?: unknown;
+  /** Validator response payload. Default: auto-approved fixture. */
+  validatorInput?: unknown;
+  /**
+   * When set, overrides the validator response's `tool_use.name` —
+   * triggers `validateTheoryDraft`'s "Unexpected tool name" branch.
+   */
+  validatorToolName?: string;
+  /**
+   * When true, `client.messages.create` throws for the validator call —
+   * simulates a network/API failure on the second Claude round-trip.
+   */
+  validatorThrows?: boolean;
+  /**
+   * Fires once, AFTER the generator response is built, BEFORE it is
+   * returned. Used by the SIGINT-between test to abort the controller in
+   * the window between the generator awaiting and the orchestrator
+   * checking `signal.aborted`.
+   */
+  onGeneratorReturn?: () => void;
+};
+
 /**
- * Build a fresh `Anthropic`-shaped mock whose `messages.create` returns a
- * single `tool_use` block carrying `toolUseInput` as its `.input`. Each
- * call returns a fresh `vi.fn()` so per-test spy assertions don't bleed
- * across tests.
+ * Build a fresh `Anthropic`-shaped mock whose `messages.create` dispatches
+ * on `tool_choice.name`: generator vs validator. Each call returns a fresh
+ * `vi.fn()` so per-test spy assertions don't bleed across tests.
+ *
+ * After Phase 3, every cell triggers two Claude round-trips (generator +
+ * validator). The mock returns auto-approved for the validator by default
+ * so existing Phase 2 happy-path tests continue to pass without changes.
  */
 function makeMockClient(
-  toolUseInput: unknown = subjunctiveFixture,
+  opts: MockClientOpts = {},
 ): { client: Anthropic; create: ReturnType<typeof vi.fn> } {
-  const create = vi.fn().mockResolvedValue({
-    content: [
-      {
-        type: 'tool_use',
-        id: 'toolu_test',
-        name: THEORY_TOOL_NAME,
-        input: toolUseInput,
+  const generatorInput = opts.generatorInput ?? subjunctiveFixture;
+  const validatorInput = opts.validatorInput ?? VALIDATION_AUTO_APPROVED;
+  const validatorToolName =
+    opts.validatorToolName ?? THEORY_VALIDATION_TOOL_NAME;
+
+  const create = vi
+    .fn()
+    .mockImplementation(
+      async (args: { tool_choice?: { name?: string } }) => {
+        const toolName = args.tool_choice?.name;
+
+        if (toolName === THEORY_VALIDATION_TOOL_NAME) {
+          if (opts.validatorThrows) {
+            throw new Error('Mock validator: synthetic API failure');
+          }
+          return {
+            content: [
+              {
+                type: 'tool_use',
+                id: 'toolu_test_v',
+                name: validatorToolName,
+                input: validatorInput,
+              },
+            ],
+            usage: {
+              input_tokens: 800,
+              cache_creation_input_tokens: 0,
+              cache_read_input_tokens: 0,
+              output_tokens: 200,
+            },
+            stop_reason: 'tool_use',
+            id: 'msg_test_v',
+            type: 'message',
+            role: 'assistant',
+            model: 'claude-sonnet-4-5',
+            stop_sequence: null,
+          };
+        }
+
+        // Generator branch (default — covers unknown tool names too, which
+        // is the Phase 2 behavior any pre-existing caller relied on).
+        opts.onGeneratorReturn?.();
+        return {
+          content: [
+            {
+              type: 'tool_use',
+              id: 'toolu_test_g',
+              name: THEORY_TOOL_NAME,
+              input: generatorInput,
+            },
+          ],
+          usage: {
+            input_tokens: 1500,
+            cache_creation_input_tokens: 0,
+            cache_read_input_tokens: 0,
+            output_tokens: 800,
+          },
+          stop_reason: 'tool_use',
+          id: 'msg_test_g',
+          type: 'message',
+          role: 'assistant',
+          model: 'claude-sonnet-4-5',
+          stop_sequence: null,
+        };
       },
-    ],
-    usage: {
-      input_tokens: 1500,
-      cache_creation_input_tokens: 0,
-      cache_read_input_tokens: 0,
-      output_tokens: 800,
-    },
-    stop_reason: 'tool_use',
-    id: 'msg_test',
-    type: 'message',
-    role: 'assistant',
-    model: 'claude-sonnet-4-5',
-    stop_sequence: null,
-  });
+    );
   const client = { messages: { create } } as unknown as Anthropic;
   return { client, create };
 }
@@ -313,8 +408,10 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
         expect(second.errorMessage).toContain('Audit row id collision');
 
         // Spy assertion: the second call MUST short-circuit before reaching
-        // the generator. Claude was called exactly once (for cellA).
-        expect(create).toHaveBeenCalledTimes(1);
+        // the generator. Claude was called exactly twice for cellA — once
+        // for the generator, once for the validator (Phase 3) — and zero
+        // additional times for cellB.
+        expect(create).toHaveBeenCalledTimes(2);
       },
     );
 
@@ -337,7 +434,7 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
           sections: [],
         };
         const cell = buildTestCell();
-        const { client } = makeMockClient(malformed);
+        const { client } = makeMockClient({ generatorInput: malformed });
         const jobId = randomUUID();
 
         const result = await runOneTheoryCell({
@@ -390,6 +487,245 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
         expect(result.status).toBe('failed');
         expect(result.errorMessage).toBe('Aborted by user (SIGINT)');
         expect(create).not.toHaveBeenCalled();
+      },
+    );
+
+    // -----------------------------------------------------------------------
+    // Phase 3 — auto-approved branch (Req 4.5)
+    // -----------------------------------------------------------------------
+
+    it(
+      'inserts auto-approved row when validator approves (Req 4.5)',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        const cell = buildTestCell();
+        const { client, create } = makeMockClient({
+          validatorInput: VALIDATION_AUTO_APPROVED,
+        });
+        const jobId = randomUUID();
+
+        const result: TheoryCellResult = await runOneTheoryCell({
+          db,
+          client,
+          cell,
+          args: { batchSeed: 'test', maxCostUsd: 1.0 },
+          jobId,
+          trigger: 'cli',
+        });
+
+        expect(result.status).toBe('succeeded');
+        expect(result.insertedCount).toBe(1);
+        expect(result.skippedCount).toBe(0);
+        // Two Claude calls — generator + validator.
+        expect(create).toHaveBeenCalledTimes(2);
+
+        const topicRows = await db
+          .select()
+          .from(theoryTopics)
+          .where(eq(theoryTopics.grammarPointKey, cell.grammarPoint.key));
+        expect(topicRows).toHaveLength(1);
+        expect(topicRows[0].reviewStatus).toBe('auto-approved');
+        expect(topicRows[0].qualityScore).toBeCloseTo(0.85, 6);
+        expect(topicRows[0].flaggedReasons).toBeNull();
+
+        const jobRows = await db
+          .select()
+          .from(theoryGenerationJobs)
+          .where(eq(theoryGenerationJobs.id, jobId));
+        expect(jobRows).toHaveLength(1);
+        expect(jobRows[0].status).toBe('succeeded');
+        expect(jobRows[0].approved).toBe(true);
+        expect(jobRows[0].flagged).toBe(false);
+        expect(jobRows[0].rejected).toBe(false);
+      },
+    );
+
+    // -----------------------------------------------------------------------
+    // Phase 3 — flagged branch (Req 4.4)
+    // -----------------------------------------------------------------------
+
+    it(
+      'inserts flagged row when validator flags (Req 4.4)',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        const cell = buildTestCell();
+        const { client } = makeMockClient({
+          validatorInput: VALIDATION_FLAGGED,
+        });
+        const jobId = randomUUID();
+
+        const result = await runOneTheoryCell({
+          db,
+          client,
+          cell,
+          args: { batchSeed: 'test', maxCostUsd: 1.0 },
+          jobId,
+          trigger: 'cli',
+        });
+
+        expect(result.status).toBe('succeeded');
+        expect(result.insertedCount).toBe(1);
+        expect(result.skippedCount).toBe(0);
+
+        const topicRows = await db
+          .select()
+          .from(theoryTopics)
+          .where(eq(theoryTopics.grammarPointKey, cell.grammarPoint.key));
+        expect(topicRows).toHaveLength(1);
+        expect(topicRows[0].reviewStatus).toBe('flagged');
+        expect(topicRows[0].qualityScore).toBeCloseTo(0.6, 6);
+        // Router builds the reasons list: low-score header first, then the
+        // validator's free-text flaggedReasons in order.
+        expect(topicRows[0].flaggedReasons).toEqual([
+          'low quality score (<0.7)',
+          'voice is too encouraging',
+        ]);
+
+        const jobRows = await db
+          .select()
+          .from(theoryGenerationJobs)
+          .where(eq(theoryGenerationJobs.id, jobId));
+        expect(jobRows).toHaveLength(1);
+        expect(jobRows[0].status).toBe('succeeded');
+        expect(jobRows[0].approved).toBe(false);
+        expect(jobRows[0].flagged).toBe(true);
+        expect(jobRows[0].rejected).toBe(false);
+      },
+    );
+
+    // -----------------------------------------------------------------------
+    // Phase 3 — rejected branch (Req 4.3)
+    // -----------------------------------------------------------------------
+
+    it(
+      'skips INSERT when validator rejects (Req 4.3)',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        const cell = buildTestCell();
+        const { client } = makeMockClient({
+          validatorInput: VALIDATION_REJECTED,
+        });
+        const jobId = randomUUID();
+
+        const result = await runOneTheoryCell({
+          db,
+          client,
+          cell,
+          args: { batchSeed: 'test', maxCostUsd: 1.0 },
+          jobId,
+          trigger: 'cli',
+        });
+
+        expect(result.status).toBe('succeeded');
+        expect(result.insertedCount).toBe(0);
+        expect(result.skippedCount).toBe(0);
+
+        const topicRows = await db
+          .select()
+          .from(theoryTopics)
+          .where(eq(theoryTopics.grammarPointKey, cell.grammarPoint.key));
+        expect(topicRows).toHaveLength(0);
+
+        const jobRows = await db
+          .select()
+          .from(theoryGenerationJobs)
+          .where(eq(theoryGenerationJobs.id, jobId));
+        expect(jobRows).toHaveLength(1);
+        expect(jobRows[0].status).toBe('succeeded');
+        expect(jobRows[0].approved).toBe(false);
+        expect(jobRows[0].flagged).toBe(false);
+        expect(jobRows[0].rejected).toBe(true);
+      },
+    );
+
+    // -----------------------------------------------------------------------
+    // Phase 3 — validator-failure path (Req 4.6)
+    // -----------------------------------------------------------------------
+
+    it(
+      'preserves generator tokenUsage when validator throws (Req 4.6)',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        const cell = buildTestCell();
+        // Validator response carries the wrong tool name → triggers
+        // `validateTheoryDraft`'s "Unexpected tool name" branch.
+        const { client } = makeMockClient({
+          validatorToolName: 'not_the_validator_tool',
+        });
+        const jobId = randomUUID();
+
+        const result = await runOneTheoryCell({
+          db,
+          client,
+          cell,
+          args: { batchSeed: 'test', maxCostUsd: 1.0 },
+          jobId,
+          trigger: 'cli',
+        });
+
+        expect(result.status).toBe('failed');
+        // Truncated to ≤ 1000 chars (ERROR_MESSAGE_MAX_LENGTH).
+        expect(result.errorMessage ?? '').toMatch(/Unexpected tool name/);
+        expect((result.errorMessage ?? '').length).toBeLessThanOrEqual(1000);
+        // Generator's tokens are preserved — we already paid for them.
+        expect(result.tokenUsage.inputTokens).toBeGreaterThan(0);
+        expect(result.tokenUsage.outputTokens).toBeGreaterThan(0);
+
+        const jobRows = await db
+          .select()
+          .from(theoryGenerationJobs)
+          .where(eq(theoryGenerationJobs.id, jobId));
+        expect(jobRows).toHaveLength(1);
+        expect(jobRows[0].status).toBe('failed');
+        // No INSERT into theory_topics on validator failure.
+        const topicRows = await db
+          .select()
+          .from(theoryTopics)
+          .where(eq(theoryTopics.grammarPointKey, cell.grammarPoint.key));
+        expect(topicRows).toHaveLength(0);
+      },
+    );
+
+    // -----------------------------------------------------------------------
+    // Phase 3 — SIGINT between generator and validator (Req 4.8)
+    // -----------------------------------------------------------------------
+
+    it(
+      'aborts cleanly on SIGINT between generator and validator (Req 4.8)',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        const cell = buildTestCell();
+        const ac = new AbortController();
+        // Abort during the generator's mock callback — fires after the
+        // generator response is built but before recheck #1 runs.
+        const { client, create } = makeMockClient({
+          onGeneratorReturn: () => ac.abort(),
+        });
+
+        const result = await runOneTheoryCell({
+          db,
+          client,
+          cell,
+          args: { batchSeed: 'test', maxCostUsd: 1.0 },
+          jobId: randomUUID(),
+          trigger: 'cli',
+          signal: ac.signal,
+        });
+
+        expect(result.status).toBe('failed');
+        expect(result.errorMessage).toBe('Aborted by user (SIGINT)');
+        // Only one Claude call — the validator was never invoked.
+        expect(create).toHaveBeenCalledTimes(1);
+        // Generator's tokens are reported honestly.
+        expect(result.tokenUsage.inputTokens).toBeGreaterThan(0);
+        expect(result.tokenUsage.outputTokens).toBeGreaterThan(0);
+
+        // No row in theory_topics.
+        const topicRows = await db
+          .select()
+          .from(theoryTopics)
+          .where(eq(theoryTopics.grammarPointKey, cell.grammarPoint.key));
+        expect(topicRows).toHaveLength(0);
       },
     );
   },

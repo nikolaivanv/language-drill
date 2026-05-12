@@ -105,6 +105,29 @@ export {
 } from "./theory-prompts.js";
 export type { TheoryPromptInputs } from "./theory-prompts.js";
 
+export { THEORY_VALIDATION_THRESHOLDS } from "./theory-validation-thresholds.js";
+export type { THEORY_VALIDATION_THRESHOLDS_TYPE } from "./theory-validation-thresholds.js";
+
+export {
+  validateTheoryDraft,
+  parseTheoryValidationResult,
+  THEORY_VALIDATION_TOOL,
+  THEORY_VALIDATION_TOOL_NAME,
+  THEORY_VALIDATION_MODEL,
+  THEORY_VALIDATION_MAX_TOKENS,
+  THEORY_VALIDATION_TEMPERATURE,
+} from "./theory-validate.js";
+export type {
+  TheoryValidationResult,
+  ValidateTheoryDraftResult,
+} from "./theory-validate.js";
+
+export {
+  buildTheoryValidationSystemPrompt,
+  buildTheoryValidationUserPrompt,
+  THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE,
+} from "./theory-validation-prompts.js";
+
 /**
  * Creates an Anthropic client instance configured with the provided API key.
  */
