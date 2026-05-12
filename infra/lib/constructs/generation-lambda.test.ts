@@ -27,10 +27,10 @@ describe('GenerationLambdaConstruct', () => {
     template = Template.fromStack(stack);
   });
 
-  it('creates a NodejsFunction with timeout 600, memory 1024, reserved concurrency 3', () => {
+  it('creates a NodejsFunction with timeout 900, memory 1024, reserved concurrency 3', () => {
     template.hasResourceProperties('AWS::Lambda::Function', {
       Runtime: 'nodejs20.x',
-      Timeout: 600,
+      Timeout: 900,
       MemorySize: 1024,
       ReservedConcurrentExecutions: 3,
     });
