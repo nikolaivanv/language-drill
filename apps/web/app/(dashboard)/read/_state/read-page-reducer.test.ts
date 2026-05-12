@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
+import type { FlaggedMap, WordFlag } from '@language-drill/shared';
 import {
   initialState,
   readPageReducer,
   selectActiveEntry,
+  selectFlaggedMap,
   selectShouldShowAnnotatedSkeleton,
   selectShouldShowEmpty,
   type ReadPageState,
@@ -31,6 +33,7 @@ describe('initialState', () => {
       intensity: 'subtle',
       saveToast: null,
       inlineError: null,
+      annotateStream: { phase: 'idle' },
     });
   });
 });
@@ -398,5 +401,270 @@ describe('selectActiveEntry', () => {
   it('returns null when no entries and no most-recent fallback', () => {
     const state = withState({ activeEntryId: null });
     expect(selectActiveEntry(state, [], null)).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Streaming-annotate slice + ANNOTATE_* actions
+// ---------------------------------------------------------------------------
+
+const ALDEA_FLAG: WordFlag = {
+  lemma: 'aldea',
+  pos: 'noun',
+  gloss: 'small village',
+  example: 'Visitamos la aldea ayer.',
+  freq: 4200,
+  cefr: 'B2',
+};
+const INDIFERENCIA_FLAG: WordFlag = {
+  lemma: 'indiferencia',
+  pos: 'noun',
+  gloss: 'indifference',
+  example: 'Su indiferencia me sorprendió.',
+  freq: 5800,
+  cefr: 'B2',
+};
+
+describe('ANNOTATE_START', () => {
+  it('transitions the slice from idle to streaming with empty accumulators', () => {
+    const after = readPageReducer(initialState, { type: 'ANNOTATE_START' });
+
+    expect(after.annotateStream).toEqual({
+      phase: 'streaming',
+      candidateCount: 0,
+      flaggedMap: {},
+      flaggedCount: 0,
+      calibration: { cefr: 'B1', top: 0 },
+    });
+  });
+
+  it('discards prior accumulators when called from complete or error', () => {
+    const before = withState({
+      annotateStream: {
+        phase: 'complete',
+        candidateCount: 5,
+        flaggedMap: { aldea: ALDEA_FLAG },
+        flaggedCount: 1,
+        calibration: { cefr: 'B2', top: 5000 },
+      },
+    });
+    const after = readPageReducer(before, { type: 'ANNOTATE_START' });
+
+    expect(after.annotateStream.phase).toBe('streaming');
+    if (after.annotateStream.phase !== 'streaming') throw new Error('phase');
+    expect(after.annotateStream.flaggedMap).toEqual({});
+    expect(after.annotateStream.flaggedCount).toBe(0);
+  });
+});
+
+describe('ANNOTATE_META', () => {
+  it('fills in calibration + candidateCount on a streaming slice', () => {
+    const started = readPageReducer(initialState, { type: 'ANNOTATE_START' });
+    const after = readPageReducer(started, {
+      type: 'ANNOTATE_META',
+      calibration: { cefr: 'B1', top: 3000 },
+      candidateCount: 12,
+    });
+
+    expect(after.annotateStream.phase).toBe('streaming');
+    if (after.annotateStream.phase !== 'streaming') throw new Error('phase');
+    expect(after.annotateStream.calibration).toEqual({ cefr: 'B1', top: 3000 });
+    expect(after.annotateStream.candidateCount).toBe(12);
+  });
+
+  it('is a no-op when the slice is not in `streaming`', () => {
+    const before = withState({ annotateStream: { phase: 'idle' } });
+    const after = readPageReducer(before, {
+      type: 'ANNOTATE_META',
+      calibration: { cefr: 'B1', top: 3000 },
+      candidateCount: 12,
+    });
+    expect(after.annotateStream).toEqual({ phase: 'idle' });
+  });
+});
+
+describe('ANNOTATE_FLAG', () => {
+  it('appends to flaggedMap and increments flaggedCount', () => {
+    let state = readPageReducer(initialState, { type: 'ANNOTATE_START' });
+    state = readPageReducer(state, {
+      type: 'ANNOTATE_META',
+      calibration: { cefr: 'B1', top: 3000 },
+      candidateCount: 2,
+    });
+    state = readPageReducer(state, {
+      type: 'ANNOTATE_FLAG',
+      matchedForm: 'aldea',
+      flag: ALDEA_FLAG,
+    });
+
+    if (state.annotateStream.phase !== 'streaming') throw new Error('phase');
+    expect(state.annotateStream.flaggedMap).toEqual({ aldea: ALDEA_FLAG });
+    expect(state.annotateStream.flaggedCount).toBe(1);
+
+    state = readPageReducer(state, {
+      type: 'ANNOTATE_FLAG',
+      matchedForm: 'indiferencia',
+      flag: INDIFERENCIA_FLAG,
+    });
+    if (state.annotateStream.phase !== 'streaming') throw new Error('phase');
+    expect(Object.keys(state.annotateStream.flaggedMap)).toEqual([
+      'aldea',
+      'indiferencia',
+    ]);
+    expect(state.annotateStream.flaggedCount).toBe(2);
+  });
+
+  it('is a no-op when the slice is not in `streaming`', () => {
+    const before = withState({ annotateStream: { phase: 'idle' } });
+    const after = readPageReducer(before, {
+      type: 'ANNOTATE_FLAG',
+      matchedForm: 'aldea',
+      flag: ALDEA_FLAG,
+    });
+    expect(after.annotateStream).toEqual({ phase: 'idle' });
+  });
+});
+
+describe('ANNOTATE_DONE', () => {
+  it('transitions streaming → complete, preserving accumulators', () => {
+    let state = readPageReducer(initialState, { type: 'ANNOTATE_START' });
+    state = readPageReducer(state, {
+      type: 'ANNOTATE_META',
+      calibration: { cefr: 'B1', top: 3000 },
+      candidateCount: 3,
+    });
+    state = readPageReducer(state, {
+      type: 'ANNOTATE_FLAG',
+      matchedForm: 'aldea',
+      flag: ALDEA_FLAG,
+    });
+    state = readPageReducer(state, { type: 'ANNOTATE_DONE', flaggedCount: 1 });
+
+    expect(state.annotateStream).toEqual({
+      phase: 'complete',
+      candidateCount: 3,
+      flaggedMap: { aldea: ALDEA_FLAG },
+      flaggedCount: 1,
+      calibration: { cefr: 'B1', top: 3000 },
+    });
+  });
+
+  it('is a no-op when the slice is not in `streaming`', () => {
+    const before = withState({ annotateStream: { phase: 'idle' } });
+    const after = readPageReducer(before, { type: 'ANNOTATE_DONE', flaggedCount: 0 });
+    expect(after.annotateStream).toEqual({ phase: 'idle' });
+  });
+});
+
+describe('ANNOTATE_ERROR', () => {
+  it('preserves the streaming accumulators (Req 5.10 partial-flag retention)', () => {
+    let state = readPageReducer(initialState, { type: 'ANNOTATE_START' });
+    state = readPageReducer(state, {
+      type: 'ANNOTATE_META',
+      calibration: { cefr: 'B1', top: 3000 },
+      candidateCount: 4,
+    });
+    state = readPageReducer(state, {
+      type: 'ANNOTATE_FLAG',
+      matchedForm: 'aldea',
+      flag: ALDEA_FLAG,
+    });
+    state = readPageReducer(state, {
+      type: 'ANNOTATE_ERROR',
+      error: { code: 'AI_UNAVAILABLE', message: 'Evaluation temporarily unavailable' },
+    });
+
+    expect(state.annotateStream.phase).toBe('error');
+    if (state.annotateStream.phase !== 'error') throw new Error('phase');
+    expect(state.annotateStream.flaggedMap).toEqual({ aldea: ALDEA_FLAG });
+    expect(state.annotateStream.flaggedCount).toBe(1);
+    expect(state.annotateStream.calibration).toEqual({ cefr: 'B1', top: 3000 });
+    expect(state.annotateStream.candidateCount).toBe(4);
+    expect(state.annotateStream.error.code).toBe('AI_UNAVAILABLE');
+  });
+
+  it('produces empty accumulators when the slice was idle (e.g. pre-stream 429)', () => {
+    const after = readPageReducer(initialState, {
+      type: 'ANNOTATE_ERROR',
+      error: { code: 'RATE_LIMIT_EXCEEDED', message: 'Slow down', status: 429 },
+    });
+    expect(after.annotateStream.phase).toBe('error');
+    if (after.annotateStream.phase !== 'error') throw new Error('phase');
+    expect(after.annotateStream.flaggedMap).toEqual({});
+    expect(after.annotateStream.flaggedCount).toBe(0);
+    expect(after.annotateStream.error.status).toBe(429);
+  });
+});
+
+describe('ANNOTATE_RESET', () => {
+  it('returns the slice to idle from any phase', () => {
+    const before = withState({
+      annotateStream: {
+        phase: 'complete',
+        candidateCount: 2,
+        flaggedMap: { aldea: ALDEA_FLAG },
+        flaggedCount: 1,
+        calibration: { cefr: 'B1', top: 3000 },
+      },
+    });
+    const after = readPageReducer(before, { type: 'ANNOTATE_RESET' });
+    expect(after.annotateStream).toEqual({ phase: 'idle' });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// selectFlaggedMap
+// ---------------------------------------------------------------------------
+
+describe('selectFlaggedMap', () => {
+  const persisted: FlaggedMap = { historical: ALDEA_FLAG };
+  const live: FlaggedMap = { aldea: ALDEA_FLAG };
+
+  it('falls back to the persisted entry while the slice is idle', () => {
+    const state = withState({ annotateStream: { phase: 'idle' } });
+    expect(selectFlaggedMap(state, persisted)).toEqual(persisted);
+  });
+
+  it('returns the live slice during streaming', () => {
+    const state = withState({
+      annotateStream: {
+        phase: 'streaming',
+        candidateCount: 1,
+        flaggedMap: live,
+        flaggedCount: 1,
+        calibration: { cefr: 'B1', top: 3000 },
+      },
+    });
+    expect(selectFlaggedMap(state, persisted)).toEqual(live);
+  });
+
+  it('returns the live slice on complete (post-stream, pre-history)', () => {
+    const state = withState({
+      annotateStream: {
+        phase: 'complete',
+        candidateCount: 1,
+        flaggedMap: live,
+        flaggedCount: 1,
+        calibration: { cefr: 'B1', top: 3000 },
+      },
+    });
+    expect(selectFlaggedMap(state, persisted)).toEqual(live);
+  });
+
+  it('returns the live (partial) slice on error', () => {
+    const state = withState({
+      annotateStream: {
+        phase: 'error',
+        flaggedMap: live,
+        flaggedCount: 1,
+        error: { code: 'AI_UNAVAILABLE', message: 'x' },
+      },
+    });
+    expect(selectFlaggedMap(state, persisted)).toEqual(live);
+  });
+
+  it('returns {} when both the slice is idle and the persisted entry is null', () => {
+    const state = withState({ annotateStream: { phase: 'idle' } });
+    expect(selectFlaggedMap(state, null)).toEqual({});
   });
 });

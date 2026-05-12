@@ -1,11 +1,10 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { and, count, desc, eq, gte, inArray, sql } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import {
   CefrLevel,
   FlaggedMapSchema,
   Language,
-  READ_CEFR_TOP_RANK,
   READ_HISTORY_LIMIT,
   READ_PREVIEW_CHARS,
   READ_SOURCE_MAX_CHARS,
@@ -13,14 +12,10 @@ import {
   READ_TITLE_MAX_CHARS,
 } from '@language-drill/shared';
 import type { LearningLanguage } from '@language-drill/shared';
-import { readEntries, usageEvents, userLanguageProfiles, userVocabulary } from '@language-drill/db';
-import { annotateText, createClaudeClient } from '@language-drill/ai';
+import { readEntries, userVocabulary } from '@language-drill/db';
 import { db } from '../db';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
-
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY ?? '';
-const DAILY_EVAL_LIMIT = 50;
 
 // ---------------------------------------------------------------------------
 // Validation schemas
@@ -32,16 +27,6 @@ const DAILY_EVAL_LIMIT = 50;
 // ---------------------------------------------------------------------------
 
 const LearningLanguageEnum = z.enum([Language.ES, Language.DE, Language.TR]);
-
-// `language` is parsed as the full `Language` enum (incl. EN) so the handler
-// can distinguish "shape error" from "EN is source-only" — the latter has its
-// own 400 UNSUPPORTED_LANGUAGE response per Requirement 5.4. Other endpoints
-// in this router use the narrower LearningLanguageEnum (rejects EN as a
-// generic VALIDATION_ERROR) since their requirements don't carve out EN.
-const AnnotateBodySchema = z.object({
-  text: z.string().trim().min(1).max(READ_TEXT_MAX_CHARS),
-  language: z.nativeEnum(Language),
-});
 
 const ListEntriesQuerySchema = z.object({
   language: LearningLanguageEnum,
@@ -65,12 +50,6 @@ const SaveEntryBodySchema = z.object({
   bank: z.array(z.string().min(1)).min(1),
 });
 
-const DEFAULT_PROFICIENCY_LEVEL = CefrLevel.B1;
-const CEFR_LEVELS = new Set<string>(Object.values(CefrLevel));
-function isCefrLevel(value: string | null | undefined): value is CefrLevel {
-  return typeof value === 'string' && CEFR_LEVELS.has(value);
-}
-
 // ---------------------------------------------------------------------------
 // Router
 // ---------------------------------------------------------------------------
@@ -78,116 +57,6 @@ function isCefrLevel(value: string | null | undefined): value is CefrLevel {
 const read = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 read.use('/read/*', authMiddleware);
-
-// ---------------------------------------------------------------------------
-// POST /read/annotate — flag above-level words via Claude (Requirement 5)
-// ---------------------------------------------------------------------------
-// Rate-limited against the same DAILY_EVAL_LIMIT bucket as ai_evaluation —
-// counted across both event types within a rolling 24h window. Failures from
-// Claude are mapped to 502 AI_UNAVAILABLE and DO NOT increment the counter.
-// ---------------------------------------------------------------------------
-read.post('/read/annotate', async (c) => {
-  const bodyResult = AnnotateBodySchema.safeParse(
-    await c.req.json().catch(() => ({})),
-  );
-  if (!bodyResult.success) {
-    return c.json(
-      {
-        error: 'Invalid request body',
-        code: 'VALIDATION_ERROR',
-        details: bodyResult.error.flatten(),
-      },
-      400,
-    );
-  }
-  const { text, language } = bodyResult.data;
-
-  if (language === Language.EN) {
-    return c.json(
-      { error: 'English is not a supported learning language', code: 'UNSUPPORTED_LANGUAGE' },
-      400,
-    );
-  }
-
-  const userId = c.get('userId');
-
-  // Rate-limit window is rolling 24h; mirrors `routes/exercises.ts` so the
-  // two AI surfaces share the same daily cap.
-  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
-  const [usageRows, profileRows] = await Promise.all([
-    db
-      .select({ count: count() })
-      .from(usageEvents)
-      .where(
-        and(
-          eq(usageEvents.userId, userId),
-          inArray(usageEvents.eventType, ['ai_evaluation', 'read_annotation']),
-          gte(usageEvents.createdAt, oneDayAgo),
-        ),
-      ),
-    db
-      .select({ proficiencyLevel: userLanguageProfiles.proficiencyLevel })
-      .from(userLanguageProfiles)
-      .where(
-        and(
-          eq(userLanguageProfiles.userId, userId),
-          eq(userLanguageProfiles.language, language),
-        ),
-      )
-      .limit(1),
-  ]);
-
-  if (Number(usageRows[0]?.count ?? 0) >= DAILY_EVAL_LIMIT) {
-    return c.json(
-      { error: 'Daily evaluation limit exceeded', code: 'RATE_LIMIT_EXCEEDED' },
-      429,
-    );
-  }
-
-  const proficiencyLevel = isCefrLevel(profileRows[0]?.proficiencyLevel)
-    ? profileRows[0].proficiencyLevel
-    : DEFAULT_PROFICIENCY_LEVEL;
-  const topRank = READ_CEFR_TOP_RANK[proficiencyLevel];
-
-  let flagged;
-  try {
-    const client = createClaudeClient(ANTHROPIC_API_KEY);
-    const result = await annotateText(client, {
-      text,
-      language: language as LearningLanguage,
-      proficiencyLevel,
-      topRank,
-    });
-    flagged = result.flagged;
-  } catch (err) {
-    // Claude failure — DO NOT write a usage row; user can retry.
-    console.error('[POST /read/annotate] Claude annotation failed:', err, {
-      language,
-      proficiencyLevel,
-      textLength: text.length,
-    });
-    return c.json(
-      { error: 'Evaluation temporarily unavailable', code: 'AI_UNAVAILABLE' },
-      502,
-    );
-  }
-
-  await db.insert(usageEvents).values({
-    userId,
-    eventType: 'read_annotation',
-    metadata: {
-      language,
-      textLength: text.length,
-      flaggedCount: Object.keys(flagged).length,
-    },
-  });
-
-  return c.json({
-    flagged,
-    calibration: { cefr: proficiencyLevel, top: topRank },
-  });
-});
 
 // ---------------------------------------------------------------------------
 // POST /read/entries — persist a freshly-annotated passage + its bank

@@ -21,8 +21,12 @@ import { LearningLanguageEnum } from './preferences';
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
-// POST /read/annotate
+// POST /read/annotate (streaming)
 // ---------------------------------------------------------------------------
+// The endpoint returns Server-Sent Events. Each frame's `data` payload is
+// validated against the matching schema below before the client reducer
+// touches it (Req 3.2, 3.8). The legacy single-shot `AnnotateResponseSchema`
+// is gone — the streaming Lambda emits four distinct event types instead.
 
 export const AnnotateRequestSchema = z.object({
   text: z.string().min(1).max(READ_TEXT_MAX_CHARS),
@@ -31,15 +35,51 @@ export const AnnotateRequestSchema = z.object({
 
 export type AnnotateRequest = z.infer<typeof AnnotateRequestSchema>;
 
-export const AnnotateResponseSchema = z.object({
-  flagged: FlaggedMapSchema,
+// `meta` — sent once at stream open. Carries the calibration the server
+// applied AND the candidate count, so the client can render the progress
+// strip with a meaningful denominator before any `flag` arrives.
+export const AnnotateMetaEventSchema = z.object({
   calibration: z.object({
     cefr: z.nativeEnum(CefrLevel),
     top: z.number().int().nonnegative(),
   }),
+  candidateCount: z.number().int().nonnegative(),
 });
 
-export type AnnotateResponse = z.infer<typeof AnnotateResponseSchema>;
+export type AnnotateMetaEvent = z.infer<typeof AnnotateMetaEventSchema>;
+
+// `flag` — one per enriched word. Extends WordFlag with `matchedForm` so the
+// client knows which token in the passage to tint. The cap of 120 matches the
+// server-side `MatchedFormSchema` in `packages/ai/src/annotate.ts`.
+export const AnnotateFlagEventSchema = WordFlagSchema.extend({
+  matchedForm: z.string().min(1).max(120),
+});
+
+export type AnnotateFlagEvent = z.infer<typeof AnnotateFlagEventSchema>;
+
+// `done` — terminal success event. `flaggedCount` lets the UI assert the
+// stream finished cleanly (vs. closed without `done`/`error`, which the hook
+// surfaces as an AI_UNAVAILABLE per Req 5.10).
+export const AnnotateDoneEventSchema = z.object({
+  flaggedCount: z.number().int().nonnegative(),
+});
+
+export type AnnotateDoneEvent = z.infer<typeof AnnotateDoneEventSchema>;
+
+// `error` — terminal failure event. The four codes mirror the gates in the
+// streaming handler (`infra/lambda/src/annotate-stream/handler.ts`); the
+// client maps each to a specific UI surface.
+export const AnnotateErrorEventSchema = z.object({
+  code: z.enum([
+    "AI_UNAVAILABLE",
+    "VALIDATION_ERROR",
+    "RATE_LIMIT_EXCEEDED",
+    "UNSUPPORTED_LANGUAGE",
+  ]),
+  message: z.string(),
+});
+
+export type AnnotateErrorEvent = z.infer<typeof AnnotateErrorEventSchema>;
 
 // ---------------------------------------------------------------------------
 // POST /read/entries

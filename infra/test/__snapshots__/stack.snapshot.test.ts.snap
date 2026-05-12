@@ -3,6 +3,15 @@
 exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN template 1`] = `
 {
   "Outputs": {
+    "AnnotateStreamUrl": {
+      "Description": "Function URL for /read/annotate streaming endpoint",
+      "Value": {
+        "Fn::GetAtt": [
+          "AnnotateStreamUrl211DD16F",
+          "FunctionUrl",
+        ],
+      },
+    },
     "ApiGatewayApiDomainTarget4375270F": {
       "Description": "Add a CNAME in Cloudflare: api.langdrill.app → this value",
       "Value": {
@@ -46,6 +55,242 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
     },
   },
   "Resources": {
+    "AnnotateStreamHandlerECDF8AEA": {
+      "DependsOn": [
+        "AnnotateStreamHandlerServiceRoleDefaultPolicy4629907F",
+        "AnnotateStreamHandlerServiceRoleF47FEC63",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-123456789012-us-east-1",
+          "S3Key": "<asset-hash>.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "ANTHROPIC_API_KEY": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/ANTHROPIC_API_KEY:SecretString:::}}",
+                ],
+              ],
+            },
+            "CLERK_SECRET_KEY": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/CLERK_SECRET_KEY:SecretString:::}}",
+                ],
+              ],
+            },
+            "DATABASE_URL": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/DATABASE_URL:SecretString:::}}",
+                ],
+              ],
+            },
+          },
+        },
+        "Handler": "index.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "AnnotateStreamHandlerServiceRoleF47FEC63",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Timeout": 29,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "AnnotateStreamHandlerServiceRoleDefaultPolicy4629907F": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/DATABASE_URL-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/CLERK_SECRET_KEY-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/ANTHROPIC_API_KEY-??????",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AnnotateStreamHandlerServiceRoleDefaultPolicy4629907F",
+        "Roles": [
+          {
+            "Ref": "AnnotateStreamHandlerServiceRoleF47FEC63",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "AnnotateStreamHandlerServiceRoleF47FEC63": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AnnotateStreamHandlerinvokefunction76ECC421": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AnnotateStreamHandlerECDF8AEA",
+            "Arn",
+          ],
+        },
+        "InvokedViaFunctionUrl": true,
+        "Principal": "*",
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AnnotateStreamHandlerinvokefunctionurl03363BCE": {
+      "Properties": {
+        "Action": "lambda:InvokeFunctionUrl",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AnnotateStreamHandlerECDF8AEA",
+            "Arn",
+          ],
+        },
+        "FunctionUrlAuthType": "NONE",
+        "Principal": "*",
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AnnotateStreamUrl211DD16F": {
+      "Properties": {
+        "AuthType": "NONE",
+        "Cors": {
+          "AllowHeaders": [
+            "Authorization",
+            "Content-Type",
+          ],
+          "AllowMethods": [
+            "POST",
+            "OPTIONS",
+          ],
+          "AllowOrigins": [
+            "https://*.vercel.app",
+            "https://langdrill.app",
+            "https://www.langdrill.app",
+          ],
+          "MaxAge": 3600,
+        },
+        "InvokeMode": "RESPONSE_STREAM",
+        "TargetFunctionArn": {
+          "Fn::GetAtt": [
+            "AnnotateStreamHandlerECDF8AEA",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Url",
+    },
     "ApiGatewayApiCertificate57E1D46D": {
       "Properties": {
         "DomainName": "api.langdrill.app",

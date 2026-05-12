@@ -7,8 +7,11 @@ import {
   READ_SOURCE_MAX_CHARS,
 } from '@language-drill/shared';
 import {
+  AnnotateDoneEventSchema,
+  AnnotateErrorEventSchema,
+  AnnotateFlagEventSchema,
+  AnnotateMetaEventSchema,
   AnnotateRequestSchema,
-  AnnotateResponseSchema,
   ReadEntriesResponseSchema,
   ReadEntryResponseSchema,
   ReadEntrySummarySchema,
@@ -91,51 +94,142 @@ describe('AnnotateRequestSchema', () => {
 });
 
 // ---------------------------------------------------------------------------
-// AnnotateResponseSchema
+// Annotate streaming events — meta / flag / done / error
 // ---------------------------------------------------------------------------
 
-describe('AnnotateResponseSchema', () => {
-  it('accepts a valid response', () => {
-    const result = AnnotateResponseSchema.safeParse({
-      flagged: validFlaggedMap,
+describe('AnnotateMetaEventSchema', () => {
+  it('accepts a valid meta event', () => {
+    const result = AnnotateMetaEventSchema.safeParse({
       calibration: { cefr: CefrLevel.B1, top: 3000 },
+      candidateCount: 12,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts candidateCount=0', () => {
+    const result = AnnotateMetaEventSchema.safeParse({
+      calibration: { cefr: CefrLevel.A2, top: 1500 },
+      candidateCount: 0,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects a meta event missing candidateCount', () => {
+    const result = AnnotateMetaEventSchema.safeParse({
+      calibration: { cefr: CefrLevel.B1, top: 3000 },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a meta event missing calibration', () => {
+    const result = AnnotateMetaEventSchema.safeParse({ candidateCount: 5 });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects negative candidateCount', () => {
+    const result = AnnotateMetaEventSchema.safeParse({
+      calibration: { cefr: CefrLevel.B1, top: 3000 },
+      candidateCount: -1,
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('AnnotateFlagEventSchema', () => {
+  it('accepts a valid flag event', () => {
+    const result = AnnotateFlagEventSchema.safeParse({
+      ...validFlag,
+      matchedForm: 'aldea',
     });
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.flagged.aldea.lemma).toBe('aldea');
-      expect(result.data.calibration.top).toBe(3000);
+      expect(result.data.matchedForm).toBe('aldea');
+      expect(result.data.lemma).toBe('aldea');
     }
   });
 
-  it('accepts an empty flagged map (in-level passage)', () => {
-    const result = AnnotateResponseSchema.safeParse({
-      flagged: {},
-      calibration: { cefr: CefrLevel.B2, top: 5000 },
+  it('rejects a flag event missing matchedForm', () => {
+    const result = AnnotateFlagEventSchema.safeParse(validFlag);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects an empty matchedForm', () => {
+    const result = AnnotateFlagEventSchema.safeParse({
+      ...validFlag,
+      matchedForm: '',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a matchedForm longer than 120 chars', () => {
+    const result = AnnotateFlagEventSchema.safeParse({
+      ...validFlag,
+      matchedForm: 'a'.repeat(121),
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a flag event missing a required WordFlag field', () => {
+    const result = AnnotateFlagEventSchema.safeParse({
+      ...validFlag,
+      matchedForm: 'aldea',
+      lemma: undefined,
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('AnnotateDoneEventSchema', () => {
+  it('accepts a valid done event', () => {
+    const result = AnnotateDoneEventSchema.safeParse({ flaggedCount: 7 });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts flaggedCount=0 (no candidates passed the pre-filter)', () => {
+    const result = AnnotateDoneEventSchema.safeParse({ flaggedCount: 0 });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects a done event missing flaggedCount', () => {
+    const result = AnnotateDoneEventSchema.safeParse({});
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects negative flaggedCount', () => {
+    const result = AnnotateDoneEventSchema.safeParse({ flaggedCount: -1 });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('AnnotateErrorEventSchema', () => {
+  it.each([
+    'AI_UNAVAILABLE',
+    'VALIDATION_ERROR',
+    'RATE_LIMIT_EXCEEDED',
+    'UNSUPPORTED_LANGUAGE',
+  ])('accepts each error code: %s', (code) => {
+    const result = AnnotateErrorEventSchema.safeParse({
+      code,
+      message: 'something went wrong',
     });
     expect(result.success).toBe(true);
   });
 
-  it('rejects when calibration.cefr is missing', () => {
-    const result = AnnotateResponseSchema.safeParse({
-      flagged: validFlaggedMap,
-      calibration: { top: 3000 },
+  it('rejects an unknown code', () => {
+    const result = AnnotateErrorEventSchema.safeParse({
+      code: 'SOMETHING_ELSE',
+      message: 'oops',
     });
     expect(result.success).toBe(false);
   });
 
-  it('rejects when calibration.top is negative', () => {
-    const result = AnnotateResponseSchema.safeParse({
-      flagged: {},
-      calibration: { cefr: CefrLevel.B1, top: -5 },
-    });
+  it('rejects an error event missing message', () => {
+    const result = AnnotateErrorEventSchema.safeParse({ code: 'AI_UNAVAILABLE' });
     expect(result.success).toBe(false);
   });
 
-  it('rejects flag entries missing a required WordFlag field', () => {
-    const result = AnnotateResponseSchema.safeParse({
-      flagged: { aldea: { ...validFlag, lemma: undefined } },
-      calibration: { cefr: CefrLevel.B1, top: 3000 },
-    });
+  it('rejects an error event missing code', () => {
+    const result = AnnotateErrorEventSchema.safeParse({ message: 'oops' });
     expect(result.success).toBe(false);
   });
 });

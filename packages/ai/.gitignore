@@ -1,0 +1,6 @@
+# Maintainer-supplied frequency-corpus TSVs — see docs/data-sources.md.
+# Generated JSON outputs (packages/ai/src/frequency/{es,de,tr}.json) ARE
+# checked in; only the upstream sources stay local. Pattern has no trailing
+# slash so it also matches the case where this is a symlink to the main
+# repo's sources directory rather than a real folder.
+scripts/sources

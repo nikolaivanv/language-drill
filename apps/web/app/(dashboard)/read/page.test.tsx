@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { CefrLevel, Language } from '@language-drill/shared';
+import type { FlaggedMap, WordFlag } from '@language-drill/shared';
 import type {
   ReadEntriesResponse,
   ReadEntryResponse,
@@ -26,7 +27,7 @@ vi.mock('next/navigation', () => ({
 const mockUseLanguageProfiles = vi.fn();
 const mockUseReadEntries = vi.fn();
 const mockUseReadEntry = vi.fn();
-const mockUseReadAnnotate = vi.fn();
+const mockUseReadAnnotateStream = vi.fn();
 const mockUseSaveReadEntry = vi.fn();
 const mockUseUpdateReadBank = vi.fn();
 
@@ -34,7 +35,8 @@ vi.mock('@language-drill/api-client', () => ({
   useLanguageProfiles: (...args: unknown[]) => mockUseLanguageProfiles(...args),
   useReadEntries: (...args: unknown[]) => mockUseReadEntries(...args),
   useReadEntry: (...args: unknown[]) => mockUseReadEntry(...args),
-  useReadAnnotate: (...args: unknown[]) => mockUseReadAnnotate(...args),
+  useReadAnnotateStream: (...args: unknown[]) =>
+    mockUseReadAnnotateStream(...args),
   useSaveReadEntry: (...args: unknown[]) => mockUseSaveReadEntry(...args),
   useUpdateReadBank: (...args: unknown[]) => mockUseUpdateReadBank(...args),
   createAuthenticatedFetch: vi.fn(() => vi.fn()),
@@ -47,7 +49,7 @@ vi.mock('@language-drill/api-client', () => ({
 const ENTRY_ID = '11111111-1111-1111-1111-111111111111';
 const ENTRY_ID_2 = '22222222-2222-2222-2222-222222222222';
 
-const FLAG_ALDEA = {
+const FLAG_ALDEA: WordFlag = {
   lemma: 'aldea',
   pos: 'noun',
   gloss: 'a small village',
@@ -100,11 +102,86 @@ const ENTRIES_3: ReadEntriesResponse = {
 };
 
 // ---------------------------------------------------------------------------
-// Mock helpers
+// Mock helpers — streaming annotate hook
+// ---------------------------------------------------------------------------
+//
+// The new hook contract is `{ state, start, abort, reset }` where `state`
+// is a discriminated union over `phase`. The mock returns whatever value
+// is currently stored in `currentAnnotateState`; tests can mutate that
+// directly (and call `rerender(...)`) or via `annotateStart.mockImplementation`
+// to flip the state when the page calls `start(...)`.
+
+type Calibration = { cefr: string; top: number };
+
+type AnnotateStreamState =
+  | { phase: 'idle' }
+  | {
+      phase: 'streaming';
+      candidateCount: number;
+      flaggedMap: FlaggedMap;
+      flaggedCount: number;
+      calibration: Calibration;
+    }
+  | {
+      phase: 'complete';
+      candidateCount: number;
+      flaggedMap: FlaggedMap;
+      flaggedCount: number;
+      calibration: Calibration;
+    }
+  | {
+      phase: 'error';
+      candidateCount?: number;
+      flaggedMap: FlaggedMap;
+      flaggedCount: number;
+      calibration?: Calibration;
+      error: { code: string; message: string; status?: number };
+    };
+
+let annotateStart: ReturnType<typeof vi.fn>;
+let annotateAbort: ReturnType<typeof vi.fn>;
+let annotateResetMock: ReturnType<typeof vi.fn>;
+let currentAnnotateState: AnnotateStreamState = { phase: 'idle' };
+
+function setAnnotateState(state: AnnotateStreamState) {
+  currentAnnotateState = state;
+}
+
+function resetAnnotateMock() {
+  currentAnnotateState = { phase: 'idle' };
+  annotateStart = vi.fn();
+  annotateAbort = vi.fn();
+  annotateResetMock = vi.fn();
+  mockUseReadAnnotateStream.mockImplementation(() => ({
+    state: currentAnnotateState,
+    start: annotateStart,
+    abort: annotateAbort,
+    reset: annotateResetMock,
+  }));
+}
+
+// Convenience: stub `start` so calling it flips the hook into `complete`
+// with the provided flagged map. The page re-renders synchronously after
+// the click handler dispatches reducer actions, so the next read of
+// `mockUseReadAnnotateStream` returns the freshly-mutated state.
+function stubAnnotateCompleteOnStart(
+  flagged: FlaggedMap = { aldea: FLAG_ALDEA },
+) {
+  annotateStart.mockImplementation(() => {
+    setAnnotateState({
+      phase: 'complete',
+      flaggedMap: flagged,
+      flaggedCount: Object.keys(flagged).length,
+      candidateCount: Object.keys(flagged).length,
+      calibration: { cefr: 'B1', top: 3000 },
+    });
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Mock helpers — other hooks
 // ---------------------------------------------------------------------------
 
-let annotateMutate: ReturnType<typeof vi.fn>;
-let annotateReset: ReturnType<typeof vi.fn>;
 let saveMutate: ReturnType<typeof vi.fn>;
 let updateBankMutate: ReturnType<typeof vi.fn>;
 
@@ -112,23 +189,6 @@ type MutateImpl = (
   vars: unknown,
   opts?: { onSuccess?: (data: unknown) => void; onError?: (err: Error) => void },
 ) => void;
-
-function setAnnotate(opts: {
-  mutateImpl?: MutateImpl;
-  data?: unknown;
-  error?: Error | null;
-  isPending?: boolean;
-} = {}) {
-  annotateMutate = vi.fn(opts.mutateImpl ?? (() => {}));
-  annotateReset = vi.fn();
-  mockUseReadAnnotate.mockReturnValue({
-    mutate: annotateMutate,
-    reset: annotateReset,
-    data: opts.data ?? undefined,
-    error: opts.error ?? null,
-    isPending: opts.isPending ?? false,
-  });
-}
 
 function setSave(opts: { mutateImpl?: MutateImpl; isPending?: boolean } = {}) {
   saveMutate = vi.fn(opts.mutateImpl ?? (() => {}));
@@ -211,7 +271,7 @@ beforeEach(() => {
   setProfile(CefrLevel.B1);
   setEntries({ entries: [] });
   setEntry(undefined);
-  setAnnotate();
+  resetAnnotateMock();
   setSave();
   setUpdateBank();
 });
@@ -306,36 +366,38 @@ describe('ReadPage — paste view counter behavior', () => {
   });
 });
 
-describe('ReadPage — annotate flow', () => {
-  it('clicking "annotate →" calls the mutation with the typed text', () => {
+describe('ReadPage — streaming annotate flow', () => {
+  it('clicking "annotate →" transitions to the annotated view immediately and shows the raw text before any flags arrive (Req 5.1)', () => {
+    // Keep state idle: the streaming events never "arrive" in this test.
+    // The view flip is driven by the reducer dispatch inside handleAnnotate,
+    // not by the hook's state — so the raw text must render before any flag
+    // events. NOTE: with phase='idle', the page renders <AnnotatedSkeleton />
+    // (no annotatedEntry yet) — see the "shows raw text DURING streaming"
+    // case below for the post-START render path.
     renderPage();
     fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
     fireEvent.change(screen.getByLabelText(/passage/i), {
       target: { value: 'había una vez' },
     });
     fireEvent.click(screen.getByRole('button', { name: /annotate →/i }));
-    expect(annotateMutate).toHaveBeenCalledTimes(1);
-    expect(annotateMutate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        language: Language.ES,
-        text: 'había una vez',
-      }),
-      expect.any(Object),
-    );
+    // The hook's `start` is called with the typed text.
+    expect(annotateStart).toHaveBeenCalledTimes(1);
+    expect(annotateStart).toHaveBeenCalledWith({
+      language: Language.ES,
+      text: 'había una vez',
+    });
   });
 
-  it('on annotate success, switches to the AnnotatedView with the ephemeral entry', () => {
-    setAnnotate({
-      mutateImpl: (_vars, opts) => {
-        opts?.onSuccess?.({
-          flagged: { aldea: FLAG_ALDEA },
-          calibration: { cefr: CefrLevel.B1, top: 3000 },
-        });
-      },
-      data: {
-        flagged: { aldea: FLAG_ALDEA },
-        calibration: { cefr: CefrLevel.B1, top: 3000 },
-      },
+  it('shows the raw pasted text during streaming, before any flagged word arrives', () => {
+    // Simulate hook entering `streaming` with empty flaggedMap on `start`.
+    annotateStart.mockImplementation(() => {
+      setAnnotateState({
+        phase: 'streaming',
+        candidateCount: 0,
+        flaggedMap: {},
+        flaggedCount: 0,
+        calibration: { cefr: 'B1', top: 0 },
+      });
     });
     renderPage();
     fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
@@ -343,27 +405,251 @@ describe('ReadPage — annotate flow', () => {
       target: { value: 'aldea grande' },
     });
     fireEvent.click(screen.getByRole('button', { name: /annotate →/i }));
-    // After onSuccess, view flips to annotated and the rail shows.
-    expect(screen.getByText('word bank')).toBeInTheDocument();
-    // The flagged word renders as a button.
+    // Reader text is visible (rendered inside the AnnotatedView).
+    expect(screen.getByTestId('rd-text')).toHaveTextContent('aldea grande');
+    // No flagged-word buttons rendered yet — flaggedMap is empty.
+    expect(screen.queryByRole('button', { name: 'aldea' })).not.toBeInTheDocument();
+  });
+
+  it('renders the progress strip during streaming and increments flaggedCount as flags arrive (Req 5.3)', () => {
+    // Click happens while idle (so PasteView is interactive). `start` flips
+    // the hook into `streaming { candidateCount: 5, flaggedCount: 0 }`.
+    annotateStart.mockImplementation(() => {
+      setAnnotateState({
+        phase: 'streaming',
+        candidateCount: 5,
+        flaggedMap: {},
+        flaggedCount: 0,
+        calibration: { cefr: 'B1', top: 3000 },
+      });
+    });
+    const { rerender } = renderPage();
+    fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
+    fireEvent.change(screen.getByLabelText(/passage/i), {
+      target: { value: 'aldea grande' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /annotate →/i }));
+
+    // Initial: 0 / 5
+    expect(screen.getByText(/annotating · 0 \/ 5/)).toBeInTheDocument();
+    const bar = screen.getByRole('progressbar');
+    expect(bar).toHaveAttribute('aria-valuenow', '0');
+    expect(bar).toHaveAttribute('aria-valuemax', '5');
+
+    // Advance: 2 flags arrived. The reducer (in real life) would receive
+    // FLAG events; here we mutate the mock state and force a re-render via
+    // the rerender helper.
+    setAnnotateState({
+      phase: 'streaming',
+      candidateCount: 5,
+      flaggedMap: { aldea: FLAG_ALDEA },
+      flaggedCount: 2,
+      calibration: { cefr: 'B1', top: 3000 },
+    });
+    rerender(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <ActiveLanguageProvider
+          profiles={[{ language: Language.ES, proficiencyLevel: CefrLevel.B1 }]}
+        >
+          <ReadPage />
+        </ActiveLanguageProvider>
+      </QueryClientProvider>,
+    );
+    expect(screen.getByText(/annotating · 2 \/ 5/)).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toHaveAttribute(
+      'aria-valuenow',
+      '2',
+    );
+  });
+
+  it('save button is disabled during streaming, enabled on complete, and remains disabled on error (Req 5.8)', () => {
+    // To reach the AnnotatedFooter we need ≥1 flagged word AND ≥1 bank entry.
+    // Drive: start in streaming with one flag → click flag → save-to-bank →
+    // assert save button state in each phase.
+    const flagged: FlaggedMap = { aldea: FLAG_ALDEA };
+    annotateStart.mockImplementation(() => {
+      setAnnotateState({
+        phase: 'streaming',
+        candidateCount: 1,
+        flaggedMap: flagged,
+        flaggedCount: 1,
+        calibration: { cefr: 'B1', top: 3000 },
+      });
+    });
+    const { rerender } = renderPage();
+    fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
+    fireEvent.change(screen.getByLabelText(/passage/i), {
+      target: { value: 'aldea grande' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /annotate →/i }));
+
+    // Add aldea to bank (ephemeral entry — local toggle).
+    fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: /\+ save to bank/i }),
+    );
+
+    // Streaming: save CTA is rendered but the click should no-op (Req 5.8).
+    // We assert by clicking and confirming the save mutation was NOT fired.
+    const saveBtnStreaming = screen.getByRole('button', {
+      name: /save 1 to bank →/i,
+    });
+    fireEvent.click(saveBtnStreaming);
+    expect(saveMutate).not.toHaveBeenCalled();
+
+    const renderProviders = (children: React.ReactNode) => (
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <ActiveLanguageProvider
+          profiles={[{ language: Language.ES, proficiencyLevel: CefrLevel.B1 }]}
+        >
+          {children}
+        </ActiveLanguageProvider>
+      </QueryClientProvider>
+    );
+
+    // Complete: save mutation fires.
+    setAnnotateState({
+      phase: 'complete',
+      candidateCount: 1,
+      flaggedMap: flagged,
+      flaggedCount: 1,
+      calibration: { cefr: 'B1', top: 3000 },
+    });
+    rerender(renderProviders(<ReadPage />));
+    fireEvent.click(
+      screen.getByRole('button', { name: /save 1 to bank →/i }),
+    );
+    expect(saveMutate).toHaveBeenCalledTimes(1);
+
+    // Reset the save mutation spy and flip to error: save should NOT fire.
+    saveMutate.mockClear();
+    setAnnotateState({
+      phase: 'error',
+      candidateCount: 1,
+      flaggedMap: flagged,
+      flaggedCount: 1,
+      calibration: { cefr: 'B1', top: 3000 },
+      error: { code: 'AI_UNAVAILABLE', message: 'down', status: 502 },
+    });
+    rerender(renderProviders(<ReadPage />));
+    // Footer is still rendered (Req 5.10 — partials retained on error).
+    fireEvent.click(
+      screen.getByRole('button', { name: /save 1 to bank →/i }),
+    );
+    expect(saveMutate).not.toHaveBeenCalled();
+  });
+
+  it('error event with partial flags retains the AnnotatedView (and does NOT surface the inline AnnotatedError card) — Req 5.6, 5.10', () => {
+    // start flips to error WITH a partial flag already buffered.
+    annotateStart.mockImplementation(() => {
+      setAnnotateState({
+        phase: 'error',
+        candidateCount: 5,
+        flaggedMap: { aldea: FLAG_ALDEA },
+        flaggedCount: 1,
+        error: { code: 'AI_UNAVAILABLE', message: 'down', status: 502 },
+      });
+    });
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
+    fireEvent.change(screen.getByLabelText(/passage/i), {
+      target: { value: 'aldea grande' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /annotate →/i }));
+    // Partial flagged word still rendered.
     expect(
       screen.getByRole('button', { name: 'aldea' }),
     ).toBeInTheDocument();
+    // The dedicated AnnotatedError heading is NOT shown.
+    expect(
+      screen.queryByText("couldn't annotate this"),
+    ).not.toBeInTheDocument();
   });
 
-  it('annotation 429 surfaces in PasteView and disables the annotate button (Req 11.4)', () => {
-    const error = new Error("you've hit today's evaluation limit (50). it resets daily.");
-    (error as Error & { status?: number }).status = 429;
-    setAnnotate({ error });
+  it('error event with zero partial flags surfaces the AnnotatedError card (Req 5.6)', () => {
+    annotateStart.mockImplementation(() => {
+      setAnnotateState({
+        phase: 'error',
+        candidateCount: 0,
+        flaggedMap: {},
+        flaggedCount: 0,
+        error: {
+          code: 'AI_UNAVAILABLE',
+          message: 'something went wrong — try again',
+          status: 502,
+        },
+      });
+    });
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
+    fireEvent.change(screen.getByLabelText(/passage/i), {
+      target: { value: 'foo bar baz' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /annotate →/i }));
+    expect(screen.getByText("couldn't annotate this")).toBeInTheDocument();
+    expect(
+      screen.getByText('something went wrong — try again'),
+    ).toBeInTheDocument();
+  });
+
+  it('clicking "+ paste new" mid-stream calls abort and reset on the hook (Req 5.7)', () => {
+    // Click annotate while idle so the PasteView is interactive; `start`
+    // flips the hook into `streaming` so the AnnotatedView (with the
+    // "+ paste new" button in the top bar) is rendered.
+    annotateStart.mockImplementation(() => {
+      setAnnotateState({
+        phase: 'streaming',
+        candidateCount: 5,
+        flaggedMap: { aldea: FLAG_ALDEA },
+        flaggedCount: 1,
+        calibration: { cefr: 'B1', top: 3000 },
+      });
+    });
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
+    fireEvent.change(screen.getByLabelText(/passage/i), {
+      target: { value: 'aldea grande' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /annotate →/i }));
+    // Sanity: streaming + flagged word visible.
+    expect(screen.getByText(/annotating · 1 \/ 5/)).toBeInTheDocument();
+    // Click "+ paste new" — should abort and reset.
+    fireEvent.click(screen.getByRole('button', { name: /\+ paste new/i }));
+    expect(annotateAbort).toHaveBeenCalled();
+    expect(annotateResetMock).toHaveBeenCalled();
+  });
+
+  it('annotation rate-limit (429) error surfaces in the AnnotatedError card with "try again" disabled (Req 11.4)', () => {
+    annotateStart.mockImplementation(() => {
+      setAnnotateState({
+        phase: 'error',
+        candidateCount: 0,
+        flaggedMap: {},
+        flaggedCount: 0,
+        error: {
+          code: 'RATE_LIMIT_EXCEEDED',
+          message: "you've hit today's evaluation limit (50). it resets daily.",
+          status: 429,
+        },
+      });
+    });
     renderPage();
     fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
     fireEvent.change(screen.getByLabelText(/passage/i), {
       target: { value: 'había una vez' },
     });
-    expect(screen.getByRole('alert')).toHaveTextContent(/evaluation limit/i);
+    fireEvent.click(screen.getByRole('button', { name: /annotate →/i }));
+    // After the click, the view flips to 'annotated' and renders AnnotatedError.
+    expect(screen.getByText("couldn't annotate this")).toBeInTheDocument();
+    expect(screen.getByText(/evaluation limit/i)).toBeInTheDocument();
+    // Per Req 11.4 the "try again" button is disabled for rate-limit kind.
     expect(
-      screen.getByRole('button', { name: /annotate →/i }),
+      screen.getByRole('button', { name: /try again/i }),
     ).toBeDisabled();
+    // "edit text" is still enabled so the user can go back to PasteView.
+    expect(
+      screen.getByRole('button', { name: /edit text/i }),
+    ).toBeEnabled();
   });
 });
 
@@ -416,17 +702,7 @@ describe('ReadPage — popover + bank flow', () => {
 
 describe('ReadPage — save flow + toast', () => {
   it('clicking "save N to bank →" fires the save mutation and shows the SaveToast on success', () => {
-    setAnnotate({
-      mutateImpl: (_vars, opts) =>
-        opts?.onSuccess?.({
-          flagged: { aldea: FLAG_ALDEA },
-          calibration: { cefr: CefrLevel.B1, top: 3000 },
-        }),
-      data: {
-        flagged: { aldea: FLAG_ALDEA },
-        calibration: { cefr: CefrLevel.B1, top: 3000 },
-      },
-    });
+    stubAnnotateCompleteOnStart();
     setSave({
       mutateImpl: (_vars, opts) =>
         opts?.onSuccess?.({ id: ENTRY_ID, pastedAt: '2026-05-05T00:00:00.000Z' }),
@@ -453,17 +729,7 @@ describe('ReadPage — save flow + toast', () => {
 
   it('SaveToast auto-dismisses after 4 seconds (Req 8.3)', () => {
     vi.useFakeTimers();
-    setAnnotate({
-      mutateImpl: (_vars, opts) =>
-        opts?.onSuccess?.({
-          flagged: { aldea: FLAG_ALDEA },
-          calibration: { cefr: CefrLevel.B1, top: 3000 },
-        }),
-      data: {
-        flagged: { aldea: FLAG_ALDEA },
-        calibration: { cefr: CefrLevel.B1, top: 3000 },
-      },
-    });
+    stubAnnotateCompleteOnStart();
     setSave({
       mutateImpl: (_vars, opts) =>
         opts?.onSuccess?.({ id: ENTRY_ID, pastedAt: '2026-05-05T00:00:00.000Z' }),
@@ -489,17 +755,7 @@ describe('ReadPage — save flow + toast', () => {
   });
 
   it('"see next session" routes to /drill', () => {
-    setAnnotate({
-      mutateImpl: (_vars, opts) =>
-        opts?.onSuccess?.({
-          flagged: { aldea: FLAG_ALDEA },
-          calibration: { cefr: CefrLevel.B1, top: 3000 },
-        }),
-      data: {
-        flagged: { aldea: FLAG_ALDEA },
-        calibration: { cefr: CefrLevel.B1, top: 3000 },
-      },
-    });
+    stubAnnotateCompleteOnStart();
     setSave({
       mutateImpl: (_vars, opts) =>
         opts?.onSuccess?.({ id: ENTRY_ID, pastedAt: '2026-05-05T00:00:00.000Z' }),

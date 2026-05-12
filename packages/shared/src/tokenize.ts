@@ -8,6 +8,10 @@
 // only handled the ES punctuation set — this version covers anything in the
 // Unicode `\p{P}` (Punctuation) class plus whitespace, so the same code works
 // for ES `¿¡`, DE `„ « »`, TR `…` and em-dashes without per-language branches.
+//
+// The server-side pre-filter shares this tokenizer (more-responsive-reading
+// spec Req 1.3): single-character tokens and digit-only tokens are emitted as
+// `sep` so they never enter the candidate set sent to Claude.
 // ---------------------------------------------------------------------------
 
 export type TokenSpan = {
@@ -23,6 +27,7 @@ export type TokenSpan = {
 const SEPARATOR_SPLIT_RE = /([\s\p{P}]+)/u;
 
 const PUNCT_STRIP_RE = /\p{P}/gu;
+const DIGIT_ONLY_RE = /^\d+$/u;
 
 export function tokenize(text: string): TokenSpan[] {
   if (text.length === 0) return [];
@@ -34,6 +39,11 @@ export function tokenize(text: string): TokenSpan[] {
     // With a capturing-group split, odd indices are the captured separators
     // and even indices are the gaps between them.
     if (i % 2 === 1) {
+      tokens.push({ kind: 'sep', raw: part, key: '' });
+    } else if (part.length === 1 || DIGIT_ONLY_RE.test(part)) {
+      // Single-character and numeric-only tokens are not learning targets —
+      // emit as `sep` so the renderer keeps them inline as plain text and the
+      // pre-filter never treats them as candidates.
       tokens.push({ kind: 'sep', raw: part, key: '' });
     } else {
       tokens.push({

@@ -14,9 +14,8 @@
 // ---------------------------------------------------------------------------
 
 import * as React from 'react';
-import type { FlaggedMap } from '@language-drill/shared';
+import { tokenize, type FlaggedMap } from '@language-drill/shared';
 import { cn } from '../../../../lib/cn';
-import { tokenize } from '../_lib/tokenize';
 import type { Intensity } from '../_state/read-page-reducer';
 import styles from './word-flag-styles.module.css';
 
