@@ -162,7 +162,10 @@ describe("generateBatch", () => {
       usage: baseUsage,
     });
 
-    const { drafts, tokenUsage } = await generateBatch(mockClient, baseSpec);
+    const { drafts, tokenUsage, malformedDrafts } = await generateBatch(
+      mockClient,
+      baseSpec,
+    );
 
     expect(drafts).toHaveLength(1);
     expect(isClozeContent(drafts[0].contentJson)).toBe(true);
@@ -171,6 +174,7 @@ describe("generateBatch", () => {
     expect(drafts[0].metadata.inBatchDuplicate).toBe(false);
     expect(tokenUsage.inputTokens).toBe(baseUsage.input_tokens);
     expect(tokenUsage.outputTokens).toBe(baseUsage.output_tokens);
+    expect(malformedDrafts).toEqual([]);
 
     const callArgs = mockCreate.mock.calls[0][0];
     expect(callArgs.model).toBe(GENERATION_MODEL);
@@ -262,21 +266,40 @@ describe("generateBatch", () => {
     expect(mockCreate).not.toHaveBeenCalled();
   });
 
-  // ---- Malformed responses ----
+  // ---- Per-ordinal loss tolerance ----
+  //
+  // The three malformed-response cases below used to abort the whole batch;
+  // post-loss-tolerance they capture the failure into `malformedDrafts` and
+  // continue. With count=1 the batch returns 0 drafts + 1 malformed entry.
+  // Token usage still folds in — Claude's call cost real tokens. See
+  // `.claude/bugs/cloze-empty-correct-answer/` and
+  // `.claude/bugs/vocab-recall-multi-word-rejected/` for the production
+  // incidents that motivated the change.
 
-  it("throws ordinal=0 malformed when no tool_use block is returned", async () => {
+  it("records malformed instead of throwing when no tool_use block is returned", async () => {
     mockCreate.mockResolvedValue({
       content: [{ type: "text", text: "Sorry, I cannot do that." }],
       stop_reason: "end_turn",
       usage: baseUsage,
     });
 
-    await expect(generateBatch(mockClient, baseSpec)).rejects.toThrow(
-      /ordinal=0 malformed: no tool_use block/,
+    const { drafts, malformedDrafts, tokenUsage } = await generateBatch(
+      mockClient,
+      baseSpec,
     );
+
+    expect(drafts).toHaveLength(0);
+    expect(malformedDrafts).toHaveLength(1);
+    expect(malformedDrafts[0].ordinal).toBe(0);
+    expect(malformedDrafts[0].errorMessage).toMatch(
+      /ordinal=0 malformed: no tool_use block returned \(stop_reason=end_turn\)/,
+    );
+    // Token usage still accounted for — Claude's call cost real tokens.
+    expect(tokenUsage.inputTokens).toBe(baseUsage.input_tokens);
+    expect(tokenUsage.outputTokens).toBe(baseUsage.output_tokens);
   });
 
-  it("throws ordinal=0 malformed when the tool name is wrong", async () => {
+  it("records malformed instead of throwing when the tool name is wrong", async () => {
     mockCreate.mockResolvedValue({
       content: [
         {
@@ -290,12 +313,19 @@ describe("generateBatch", () => {
       usage: baseUsage,
     });
 
-    await expect(generateBatch(mockClient, baseSpec)).rejects.toThrow(
+    const { drafts, malformedDrafts } = await generateBatch(
+      mockClient,
+      baseSpec,
+    );
+
+    expect(drafts).toHaveLength(0);
+    expect(malformedDrafts).toHaveLength(1);
+    expect(malformedDrafts[0].errorMessage).toMatch(
       /ordinal=0 malformed: expected tool 'submit_cloze_exercise'/,
     );
   });
 
-  it("throws ordinal=0 malformed when the parser rejects the tool input", async () => {
+  it("records malformed instead of throwing when the parser rejects the tool input", async () => {
     mockCreate.mockResolvedValue({
       content: [
         {
@@ -312,9 +342,126 @@ describe("generateBatch", () => {
       usage: baseUsage,
     });
 
-    await expect(generateBatch(mockClient, baseSpec)).rejects.toThrow(
+    const { drafts, malformedDrafts } = await generateBatch(
+      mockClient,
+      baseSpec,
+    );
+
+    expect(drafts).toHaveLength(0);
+    expect(malformedDrafts).toHaveLength(1);
+    expect(malformedDrafts[0].errorMessage).toMatch(
       /ordinal=0 malformed: cloze draft: invalid sentence/,
     );
+  });
+
+  it("salvages surrounding drafts when one ordinal in the middle is malformed", async () => {
+    // Three calls: two valid clozes flanking one with an empty correctAnswer
+    // (the actual production failure from 2026-05-12, jobId 58f8f79c).
+    let callIndex = 0;
+    mockCreate.mockImplementation(() => {
+      const idx = callIndex++;
+      const sentence = `Espero que ___ pronto número ${idx}.`;
+      const input = {
+        ...validClozeInput,
+        sentence,
+        // Middle ordinal mimics the production "correctAnswer must contain
+        // non-whitespace characters" throw path.
+        correctAnswer: idx === 1 ? "" : `lleguen${idx}`,
+      };
+      return Promise.resolve({
+        content: [
+          {
+            type: "tool_use",
+            id: `toolu_${idx}`,
+            name: TOOL_NAME_BY_TYPE.cloze,
+            input,
+          },
+        ],
+        stop_reason: "tool_use",
+        usage: baseUsage,
+      });
+    });
+
+    const { drafts, malformedDrafts, tokenUsage } = await generateBatch(
+      mockClient,
+      { ...baseSpec, count: 3 },
+    );
+
+    // Surrounding ordinals (0 and 2) survived; ordinal 1 was captured.
+    expect(drafts).toHaveLength(2);
+    expect(malformedDrafts).toHaveLength(1);
+    expect(malformedDrafts[0].ordinal).toBe(1);
+    expect(malformedDrafts[0].errorMessage).toMatch(
+      /ordinal=1 malformed: cloze draft: invalid correctAnswer/,
+    );
+
+    // All 3 Claude calls fired (no short-circuit), and all 3 contribute to
+    // token usage — including the one that produced the malformed payload.
+    expect(mockCreate).toHaveBeenCalledTimes(3);
+    expect(tokenUsage.inputTokens).toBe(baseUsage.input_tokens * 3);
+    expect(tokenUsage.outputTokens).toBe(baseUsage.output_tokens * 3);
+  });
+
+  it("captures vocab_recall multi-word expectedWord as malformed, salvages siblings", async () => {
+    // The other shape of the production loss-intolerance bug: the
+    // es-b1-environment-vocab cell hit
+    //   vocab_recall draft: invalid expectedWord: must be a single token
+    //   (no whitespace), got "medio ambiente"
+    // on a single ordinal and lost the whole cell. Post-fix the rest survive.
+    let callIndex = 0;
+    mockCreate.mockImplementation(() => {
+      const idx = callIndex++;
+      const expectedWord = idx === 0 ? "medio ambiente" : `palabra${idx}`;
+      return Promise.resolve({
+        content: [
+          {
+            type: "tool_use",
+            id: `toolu_v_${idx}`,
+            name: TOOL_NAME_BY_TYPE.vocab_recall,
+            input: {
+              ...validVocabInput,
+              prompt: `Definition ${idx}.`,
+              expectedWord,
+              exampleSentence: `Ejemplo ${idx} con ${expectedWord}.`,
+            },
+          },
+        ],
+        stop_reason: "tool_use",
+        usage: baseUsage,
+      });
+    });
+
+    const { drafts, malformedDrafts } = await generateBatch(mockClient, {
+      ...baseSpec,
+      exerciseType: ExerciseType.VOCAB_RECALL,
+      count: 2,
+    });
+
+    expect(drafts).toHaveLength(1);
+    expect(malformedDrafts).toHaveLength(1);
+    expect(malformedDrafts[0].ordinal).toBe(0);
+    expect(malformedDrafts[0].errorMessage).toMatch(
+      /ordinal=0 malformed: vocab_recall draft: invalid expectedWord: must be a single token \(no whitespace\), got "medio ambiente"/,
+    );
+  });
+
+  it("returns an empty drafts array when every ordinal is malformed", async () => {
+    // The cell-level orchestrator (runOneCell) decides this is a fail-closed
+    // condition; generateBatch itself just reports it.
+    mockCreate.mockResolvedValue({
+      content: [{ type: "text", text: "I cannot do that." }],
+      stop_reason: "end_turn",
+      usage: baseUsage,
+    });
+
+    const { drafts, malformedDrafts } = await generateBatch(mockClient, {
+      ...baseSpec,
+      count: 3,
+    });
+
+    expect(drafts).toHaveLength(0);
+    expect(malformedDrafts).toHaveLength(3);
+    expect(malformedDrafts.map((m) => m.ordinal)).toEqual([0, 1, 2]);
   });
 
   // ---- Within-batch behavior ----

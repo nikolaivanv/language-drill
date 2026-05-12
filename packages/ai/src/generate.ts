@@ -254,9 +254,24 @@ export type ExerciseDraft = {
   };
 };
 
+export type MalformedDraft = {
+  ordinal: number;
+  /** The validator / parser message, with the `Draft ordinal=N malformed: ` prefix. */
+  errorMessage: string;
+};
+
 export type GenerateBatchResult = {
   drafts: ExerciseDraft[];
   tokenUsage: ClaudeUsageBreakdown;
+  /**
+   * Ordinals where Claude returned a payload that failed parsing or validation.
+   * Per-ordinal failures no longer abort the batch (so one bad draft in 50
+   * doesn't kill the other 49); the offending ordinals show up here for
+   * caller-level logging and operational visibility. Token usage for the
+   * malformed responses is still folded into `tokenUsage` — the Claude call
+   * happened and cost real tokens.
+   */
+  malformedDrafts: MalformedDraft[];
 };
 
 // ---------------------------------------------------------------------------
@@ -537,6 +552,7 @@ export async function generateBatch(
   const seenStems = new Set<string>();
   let tokenUsage: ClaudeUsageBreakdown = ZERO_USAGE;
   const drafts: ExerciseDraft[] = [];
+  const malformedDrafts: MalformedDraft[] = [];
 
   for (let ordinal = 0; ordinal < spec.count; ordinal++) {
     const systemText = buildGenerationSystemPrompt(
@@ -550,6 +566,9 @@ export async function generateBatch(
     );
     const tool = GENERATION_TOOL_BY_TYPE[spec.exerciseType];
 
+    // Infrastructure-level failures (network, rate-limit, auth) propagate
+    // — they're not per-ordinal data quality issues. Only the parse/validate
+    // path below is loss-tolerant.
     const response = await client.messages.create({
       model: GENERATION_MODEL,
       max_tokens: GENERATION_MAX_TOKENS,
@@ -566,30 +585,39 @@ export async function generateBatch(
       temperature: GENERATION_TEMPERATURE,
     });
 
-    const toolUseBlock = response.content.find(
-      (block): block is Anthropic.ToolUseBlock => block.type === "tool_use",
-    );
-    if (!toolUseBlock) {
-      throw new Error(
-        `Draft ordinal=${ordinal} malformed: no tool_use block returned (stop_reason=${response.stop_reason})`,
-      );
-    }
-    if (toolUseBlock.name !== tool.name) {
-      throw new Error(
-        `Draft ordinal=${ordinal} malformed: expected tool '${tool.name}', got '${toolUseBlock.name}'`,
-      );
-    }
+    // Token usage is paid whether the parse succeeds or not — fold it in
+    // before deciding what to do with the payload so per-ordinal failures
+    // still get accounted for in cost reporting.
+    const usage = readUsage(response);
+    tokenUsage = addUsage(tokenUsage, usage);
 
     let content: ExerciseContent;
     try {
+      const toolUseBlock = response.content.find(
+        (block): block is Anthropic.ToolUseBlock => block.type === "tool_use",
+      );
+      if (!toolUseBlock) {
+        throw new Error(
+          `no tool_use block returned (stop_reason=${response.stop_reason})`,
+        );
+      }
+      if (toolUseBlock.name !== tool.name) {
+        throw new Error(
+          `expected tool '${tool.name}', got '${toolUseBlock.name}'`,
+        );
+      }
       content = parseToolInput(toolUseBlock.input, spec);
     } catch (err) {
+      // Per-ordinal failure: record, skip, continue. The cell-level
+      // orchestrator (`runOneCell`) decides whether the surviving drafts
+      // are enough to count the cell as succeeded.
       const message = err instanceof Error ? err.message : String(err);
-      throw new Error(`Draft ordinal=${ordinal} malformed: ${message}`);
+      malformedDrafts.push({
+        ordinal,
+        errorMessage: `Draft ordinal=${ordinal} malformed: ${message}`,
+      });
+      continue;
     }
-
-    const usage = readUsage(response);
-    tokenUsage = addUsage(tokenUsage, usage);
 
     const surface = canonicalSurface(content);
     const inBatchDuplicate = seenStems.has(surface);
@@ -615,7 +643,7 @@ export async function generateBatch(
     });
   }
 
-  return { drafts, tokenUsage };
+  return { drafts, tokenUsage, malformedDrafts };
 }
 
 // Dispatches to the matching parser. Exported via the function level only —

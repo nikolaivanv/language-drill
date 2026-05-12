@@ -164,6 +164,9 @@ function formatCellLine(result: CellResult): string {
   if (result.inBatchDuplicateCount > 0) {
     line += ` [${result.inBatchDuplicateCount} in-batch duplicates]`;
   }
+  if (result.malformedDraftCount > 0) {
+    line += ` [${result.malformedDraftCount} malformed drafts]`;
+  }
 
   return line;
 }

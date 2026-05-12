@@ -19,6 +19,7 @@ export function summarizeResult(r: CellResult): {
   flagged: number;
   rejected: number;
   dedupGivenUp: number;
+  malformedDrafts: number;
   durationMs: number;
 } {
   return {
@@ -28,6 +29,7 @@ export function summarizeResult(r: CellResult): {
     flagged: r.flaggedCount,
     rejected: r.rejectedCount,
     dedupGivenUp: r.dedupGivenUpCount,
+    malformedDrafts: r.malformedDraftCount,
     durationMs: r.durationMs,
   };
 }
