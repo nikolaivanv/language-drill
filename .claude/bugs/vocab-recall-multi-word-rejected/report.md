@@ -1,5 +1,22 @@
 # Bug Report
 
+## Status
+
+**Fixed — 2026-05-12.** Branch `worktree-vocab_recall-single-token-check`.
+
+The `parseGeneratedVocabRecallDraft` validator now accepts multi-word `expectedWord` values (Fix Option 1 from the original analysis). On parse the value is normalized to its canonical surface — `trim()` + collapse internal whitespace runs to a single space — and the stored `expectedWord` is the normalized form, so dedup (`canonicalSurface`), evaluator grading, and UI display all agree on one form. Whitespace-only values are still rejected. The tool-schema description for `expectedWord` was updated in lockstep so Claude is no longer told to avoid whitespace; the field now explicitly allows short multi-word lexemes (`medio ambiente`, `cambio climático`, `efecto invernadero`) when the curriculum names them.
+
+Scope was kept narrow:
+- `packages/ai/src/generate.ts` — tool-schema description + validator body (the only two sites that enforced the single-token rule).
+- `packages/ai/src/generate.test.ts` — the existing "captures multi-word as malformed" test was flipped to assert success + normalization; an added test confirms whitespace-only is still rejected.
+
+Confirmed safe by inspection (no code change needed):
+- `packages/ai/src/evaluate.ts` — answers are Claude-graded as free text; multi-token answers were already handled.
+- `apps/web/.../drill/_components/vocab-exercise.tsx`, `hint-row.tsx` — render `expectedWord` as-is and mask it in the example sentence with `\b<word>\b`; both work for multi-token strings.
+- `packages/db/scripts/seed-exercises.ts:289` ships `expectedWord: 'medio ambiente'`; that seed is the live regression fixture proving the UI / evaluator path is multi-word-safe.
+
+Pre-push suite (`pnpm lint && pnpm typecheck && pnpm test`) is green from the worktree.
+
 ## Bug Summary
 
 `parseGeneratedVocabRecallDraft` rejects any `vocab_recall` exercise whose `expectedWord` contains whitespace, throwing `vocab_recall draft: invalid expectedWord: must be a single token (no whitespace), got "<value>"`. Multi-word lexemes are common headwords in the active curriculum (e.g. Spanish `medio ambiente`, `cambio climático`, `efecto invernadero`), so a portion of every `vocab_recall` cell terminally fails generation while the rest of the batch succeeds.

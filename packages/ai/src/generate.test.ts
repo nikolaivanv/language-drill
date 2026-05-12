@@ -6,6 +6,7 @@ import {
   isClozeContent,
   isTranslationContent,
   isVocabRecallContent,
+  type VocabRecallContent,
 } from "@language-drill/shared";
 import { getGrammarPoint } from "@language-drill/db";
 
@@ -402,16 +403,20 @@ describe("generateBatch", () => {
     expect(tokenUsage.outputTokens).toBe(baseUsage.output_tokens * 3);
   });
 
-  it("captures vocab_recall multi-word expectedWord as malformed, salvages siblings", async () => {
-    // The other shape of the production loss-intolerance bug: the
-    // es-b1-environment-vocab cell hit
-    //   vocab_recall draft: invalid expectedWord: must be a single token
-    //   (no whitespace), got "medio ambiente"
-    // on a single ordinal and lost the whole cell. Post-fix the rest survive.
+  it("accepts vocab_recall multi-word expectedWord and normalizes whitespace", async () => {
+    // Regression for `.claude/bugs/vocab-recall-multi-word-rejected/`: the
+    // validator used to reject any whitespace in expectedWord, which killed
+    // the es-b1-environment-vocab cell every time Claude proposed `medio
+    // ambiente` (a canonical positive example from that umbrella's
+    // curriculum). The fix relaxes the validator to allow multi-word
+    // lexemes and normalizes the stored value (trim + collapse internal
+    // whitespace runs) so dedup, grading, and display all agree.
     let callIndex = 0;
     mockCreate.mockImplementation(() => {
       const idx = callIndex++;
-      const expectedWord = idx === 0 ? "medio ambiente" : `palabra${idx}`;
+      // Ordinal 0: messy whitespace around a multi-word lexeme — exercises
+      // both the "multi-word is fine" and the normalization paths.
+      const expectedWord = idx === 0 ? "  medio   ambiente " : `palabra${idx}`;
       return Promise.resolve({
         content: [
           {
@@ -422,7 +427,7 @@ describe("generateBatch", () => {
               ...validVocabInput,
               prompt: `Definition ${idx}.`,
               expectedWord,
-              exampleSentence: `Ejemplo ${idx} con ${expectedWord}.`,
+              exampleSentence: `Ejemplo ${idx} con ${expectedWord.trim()}.`,
             },
           },
         ],
@@ -437,11 +442,45 @@ describe("generateBatch", () => {
       count: 2,
     });
 
-    expect(drafts).toHaveLength(1);
+    expect(drafts).toHaveLength(2);
+    expect(malformedDrafts).toHaveLength(0);
+    expect(isVocabRecallContent(drafts[0].contentJson)).toBe(true);
+    const firstContent = drafts[0].contentJson as VocabRecallContent;
+    expect(firstContent.expectedWord).toBe("medio ambiente");
+    const secondContent = drafts[1].contentJson as VocabRecallContent;
+    expect(secondContent.expectedWord).toBe("palabra1");
+  });
+
+  it("captures vocab_recall whitespace-only expectedWord as malformed", async () => {
+    // The relaxed validator still rejects whitespace-only `expectedWord`:
+    // multi-word is fine, but the lexeme has to contain at least one
+    // non-whitespace character.
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_v_ws",
+          name: TOOL_NAME_BY_TYPE.vocab_recall,
+          input: {
+            ...validVocabInput,
+            expectedWord: "   ",
+          },
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: baseUsage,
+    });
+
+    const { drafts, malformedDrafts } = await generateBatch(mockClient, {
+      ...baseSpec,
+      exerciseType: ExerciseType.VOCAB_RECALL,
+      count: 1,
+    });
+
+    expect(drafts).toHaveLength(0);
     expect(malformedDrafts).toHaveLength(1);
-    expect(malformedDrafts[0].ordinal).toBe(0);
     expect(malformedDrafts[0].errorMessage).toMatch(
-      /ordinal=0 malformed: vocab_recall draft: invalid expectedWord: must be a single token \(no whitespace\), got "medio ambiente"/,
+      /ordinal=0 malformed: vocab_recall draft: invalid expectedWord: must contain non-whitespace characters/,
     );
   });
 
