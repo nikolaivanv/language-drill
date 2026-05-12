@@ -10,7 +10,14 @@ import {
   Runtime,
 } from "aws-cdk-lib/aws-lambda";
 import * as path from "path";
-import { FALLBACK_ORIGINS } from "@language-drill/shared";
+// Imported via relative source path rather than the `@language-drill/shared`
+// bare specifier. The shared package compiles to ESM under
+// `packages/shared/dist/`, and its internal re-exports omit `.js` extensions —
+// fine for bundlers (Next.js, esbuild) but Node's ESM resolver, which
+// ts-node invokes when compiling this file during `cdk synth`, rejects the
+// extensionless references and fails with ERR_MODULE_NOT_FOUND. Resolving
+// directly to the .ts source sidesteps the dist/ entry entirely.
+import { FALLBACK_ORIGINS } from "../../../packages/shared/src/cors";
 
 /**
  * Streaming-annotate Lambda + Function URL.
