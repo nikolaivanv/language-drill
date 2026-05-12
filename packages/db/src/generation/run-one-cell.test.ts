@@ -14,8 +14,13 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
+import type Anthropic from '@anthropic-ai/sdk';
 import {
+  VALIDATION_TOOL_NAME,
   canonicalSurface,
   exerciseDraftId,
   type GenerationSpec,
@@ -159,6 +164,58 @@ async function invokeRunOneCell(
   batchSeed: string,
 ): Promise<ReturnType<typeof runOneCell>> {
   const client = createMockAnthropicClient();
+  return runOneCell({
+    db,
+    client,
+    cell: buildTestCell(),
+    args: {
+      count,
+      batchSeed,
+      topicDomain: null,
+      maxCostUsd: 5,
+    },
+    jobId: randomUUID(),
+    trigger: 'cli',
+  });
+}
+
+/**
+ * Wraps `createMockAnthropicClient` so the test can count generator vs.
+ * validator calls by inspecting `args.tool_choice.name`. Used by the Phase A
+ * (validator-parallelization) assertions to prove (a) no double-validation
+ * on attempt 0, (b) dedup retries still issue live validateDraft calls, and
+ * (d) the all-malformed-batch path fail-closes before the worker pool runs.
+ */
+function createCountingMockClient(): {
+  client: Anthropic;
+  counts: { validator: number; generator: number };
+} {
+  const inner = createMockAnthropicClient();
+  const counts = { validator: 0, generator: 0 };
+  const innerCreate = inner.messages.create.bind(inner.messages);
+  const wrappedCreate = (
+    args: Anthropic.Messages.MessageCreateParamsNonStreaming,
+  ): ReturnType<typeof innerCreate> => {
+    const tc = args.tool_choice;
+    if (tc && tc.type === 'tool' && tc.name === VALIDATION_TOOL_NAME) {
+      counts.validator += 1;
+    } else {
+      counts.generator += 1;
+    }
+    return innerCreate(args);
+  };
+  const client = {
+    messages: { create: wrappedCreate },
+  } as unknown as Anthropic;
+  return { client, counts };
+}
+
+async function invokeRunOneCellWithClient(
+  db: Db,
+  client: Anthropic,
+  count: number,
+  batchSeed: string,
+): Promise<ReturnType<typeof runOneCell>> {
   return runOneCell({
     db,
     client,
@@ -410,6 +467,179 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
         expect(job.errorMessage ?? '').toMatch(
           /Mock validator: synthetic failure/,
         );
+      },
+    );
+
+    // -----------------------------------------------------------------------
+    // Phase A — validator-parallelization invariants.
+    //
+    // Each `validateAndInsertWithRetry` attempt still increments
+    // `validatedCount`, but attempt 0 now consumes Phase A's pre-computed
+    // result instead of calling `validateDraft` live. Therefore: total live
+    // validator calls (counted by the wrapping client) should equal
+    // `result.validatedCount`. Under the pre-spec serial loop the live count
+    // would be `drafts.length + result.validatedCount` (Phase A's calls + a
+    // second wave from attempt 0). The four cases below pin the new
+    // contract end-to-end through Neon + the mock client.
+    // -----------------------------------------------------------------------
+
+    it(
+      'Phase A: no double-validation — precomputed result is consumed at attempt 0',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        const { client, counts } = createCountingMockClient();
+        const result = await invokeRunOneCellWithClient(
+          db,
+          client,
+          10,
+          'phase-A-test-no-double-validation',
+        );
+
+        // With the pre-computed value consumed, every counter++ inside
+        // validateAndInsertWithRetry maps 1:1 to either a Phase A live call
+        // (attempt 0) or a dedup-retry live call (attempts 1+). Total live
+        // validator calls therefore equals validatedCount.
+        expect(counts.validator).toBe(result.validatedCount);
+        // Sanity floor: Phase A alone must issue one call per surviving draft.
+        expect(counts.validator).toBeGreaterThanOrEqual(10);
+      },
+    );
+
+    it(
+      'Phase A: dedup retry still issues a live validateDraft (pre-existing row collision)',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        // Seed an auto-approved row whose _dedupKey matches CLOZE_FIXTURES[0].
+        // Drafts at ordinals 0, 3, 6, 9 share that canonical surface (3-fixture
+        // mod-cycle) — each will collide on first INSERT and enter the
+        // retry-generate path, which must call validateDraft live.
+        await seedAutoApprovedRow(db, CLOZE_FIXTURES[0]);
+
+        const { client, counts } = createCountingMockClient();
+        const result = await invokeRunOneCellWithClient(
+          db,
+          client,
+          10,
+          'phase-A-test-retry-live',
+        );
+
+        // 10 Phase A live calls + at least one live retry call.
+        expect(counts.validator).toBeGreaterThan(10);
+        expect(result.skippedCount).toBeGreaterThanOrEqual(1);
+        // Same no-double-validation invariant as the previous test, under
+        // retries this time.
+        expect(counts.validator).toBe(result.validatedCount);
+      },
+    );
+
+    it(
+      'Phase A: parallel-draft canonical-surface collision resolves to exactly one INSERT',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        // Two fixtures with the same `sentence` produce the same canonical
+        // surface. Both validate in parallel under Phase A; Phase B must
+        // serialize the INSERTs via `onConflictDoNothing` so exactly one row
+        // lands, and the second draft enters the retry-generate path.
+        const tmpFixturesDir = mkdtempSync(
+          join(tmpdir(), 'phase-A-canonical-collision-'),
+        );
+        try {
+          writeFileSync(
+            join(tmpFixturesDir, 'cloze.json'),
+            JSON.stringify([
+              {
+                type: ExerciseType.CLOZE,
+                instructions:
+                  'Fill in the blank with the correct present subjunctive form.',
+                sentence: 'Espero que tú ___ pronto a la fiesta.',
+                correctAnswer: 'vengas',
+                context: 'first context',
+                topicHint: 'social',
+              },
+              {
+                type: ExerciseType.CLOZE,
+                instructions:
+                  'Complete the sentence with the appropriate verb form.',
+                sentence: 'Espero que tú ___ pronto a la fiesta.',
+                correctAnswer: 'vengas',
+                context: 'second context',
+                topicHint: 'everyday',
+              },
+            ]),
+          );
+          process.env['MOCK_CLAUDE_FIXTURES_DIR'] = tmpFixturesDir;
+
+          const result = await invokeRunOneCell(
+            db,
+            2,
+            'phase-A-test-canonical-collision',
+          );
+
+          // Exactly one row survives for the shared canonical surface.
+          const inserted = await db
+            .select({ id: exercises.id })
+            .from(exercises)
+            .where(
+              and(
+                eq(exercises.generationSource, 'claude-realtime'),
+                eq(exercises.grammarPointKey, TEST_GRAMMAR_POINT_KEY),
+              ),
+            );
+          expect(inserted).toHaveLength(1);
+
+          // The second draft must have collided on first INSERT and entered
+          // the retry path — fingerprinted by firstAttemptSkippedCount (==
+          // result.skippedCount via the CellResult shape).
+          expect(result.skippedCount).toBe(1);
+        } finally {
+          rmSync(tmpFixturesDir, { recursive: true, force: true });
+        }
+      },
+    );
+
+    it(
+      'Phase A: all-malformed batch fail-closes before the worker pool runs',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        // Fixtures that fail the cloze parser (missing `correctAnswer`, no
+        // `___` blank). `generateBatch` returns `drafts: []` +
+        // `malformedDrafts: [...]`; `runOneCell` throws "All N drafts
+        // malformed" BEFORE Phase A is reached — so the wrapped client's
+        // validator counter stays at 0.
+        const tmpFixturesDir = mkdtempSync(
+          join(tmpdir(), 'phase-A-all-malformed-'),
+        );
+        try {
+          writeFileSync(
+            join(tmpFixturesDir, 'cloze.json'),
+            JSON.stringify([
+              { instructions: 'broken fixture', sentence: 'no blank' },
+            ]),
+          );
+          process.env['MOCK_CLAUDE_FIXTURES_DIR'] = tmpFixturesDir;
+
+          const { client, counts } = createCountingMockClient();
+          const result = await invokeRunOneCellWithClient(
+            db,
+            client,
+            1,
+            'phase-A-test-all-malformed',
+          );
+
+          expect(result.status).toBe('failed');
+          expect(result.errorMessage ?? '').toMatch(/All 1 drafts malformed/);
+          // Phase A short-circuits: no validator calls were issued.
+          expect(counts.validator).toBe(0);
+
+          const jobs = await db
+            .select()
+            .from(generationJobs)
+            .where(eq(generationJobs.cellKey, TEST_CELL_KEY));
+          expect(jobs).toHaveLength(1);
+          expect(jobs[0].status).toBe('failed');
+        } finally {
+          rmSync(tmpFixturesDir, { recursive: true, force: true });
+        }
       },
     );
 
