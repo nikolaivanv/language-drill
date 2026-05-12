@@ -104,6 +104,40 @@ describe('AnnotatedView — zero flagged words', () => {
     );
     expect(onPasteNew).toHaveBeenCalledTimes(1);
   });
+
+  it('does NOT show the "within your level" message while annotation is still streaming, even with zero flags so far', () => {
+    // The misleading-UX bug: during streaming with no flags yet, the page
+    // was rendering ZeroFlaggedStrip because flaggedCount === 0 — looked
+    // like "passage too easy" when really the iterator just hadn't yielded
+    // anything yet.
+    render(
+      <AnnotatedView
+        {...baseProps}
+        entry={{ ...baseProps.entry, flaggedWords: {} }}
+        annotateStreaming={{ flaggedCount: 0, candidateCount: 5 }}
+      />,
+    );
+    expect(
+      screen.queryByText('this passage is well within your level — nice.'),
+    ).not.toBeInTheDocument();
+    // The rail column is reserved during streaming so the layout doesn't
+    // shift when the first flag tints (NFR Usability).
+    expect(screen.getByText('word bank')).toBeInTheDocument();
+  });
+
+  it('shows the "within your level" message after streaming completes with zero flags', () => {
+    // The legitimate path: stream done, zero flags. ZeroFlaggedStrip is
+    // correct here — annotateStreaming is undefined (complete state).
+    render(
+      <AnnotatedView
+        {...baseProps}
+        entry={{ ...baseProps.entry, flaggedWords: {} }}
+      />,
+    );
+    expect(
+      screen.getByText('this passage is well within your level — nice.'),
+    ).toBeInTheDocument();
+  });
 });
 
 describe('AnnotatedView — outside-click dismissal', () => {

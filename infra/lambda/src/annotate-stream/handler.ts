@@ -73,16 +73,25 @@ export const handler = awslambda.streamifyResponse<
 >(async (event, responseStream) => {
   const writer = createSseWriter(responseStream);
 
+  // Every exit path below MUST `await` whichever writer method emits the
+  // final bytes (`cors200`, `errorJson`, or `close`). AWS's response-streaming
+  // runtime closes the socket as soon as this handler's promise resolves —
+  // without an explicit wait for the underlying `Writable` to emit `'finish'`,
+  // the last write can stay queued in userspace and never reach the client.
+  // The symptom is "browser receives `meta` but never `flag`/`done`" because
+  // `meta` is followed by a slow Claude call that gives the kernel time to
+  // drain, while `done`/`error` aren't.
+
   // ---- Gate 1: OPTIONS preflight ----
   const method = event.requestContext?.http?.method ?? "POST";
   if (method === "OPTIONS") {
-    writer.cors200();
+    await writer.cors200();
     return;
   }
 
   // ---- Gate 2: method != POST ----
   if (method !== "POST") {
-    writer.errorJson(405, { code: "METHOD_NOT_ALLOWED", message: "Method Not Allowed" });
+    await writer.errorJson(405, { code: "METHOD_NOT_ALLOWED", message: "Method Not Allowed" });
     return;
   }
 
@@ -92,12 +101,12 @@ export const handler = awslambda.streamifyResponse<
   try {
     parsedJson = JSON.parse(rawBody);
   } catch {
-    writer.errorJson(400, { code: "VALIDATION_ERROR", message: "Invalid JSON body" });
+    await writer.errorJson(400, { code: "VALIDATION_ERROR", message: "Invalid JSON body" });
     return;
   }
   const bodyResult = AnnotateRequestSchema.safeParse(parsedJson);
   if (!bodyResult.success) {
-    writer.errorJson(400, {
+    await writer.errorJson(400, {
       code: "VALIDATION_ERROR",
       message: "Invalid request body",
     });
@@ -107,7 +116,7 @@ export const handler = awslambda.streamifyResponse<
 
   // ---- Gate 4: EN is source-only ----
   if (language === Language.EN) {
-    writer.errorJson(400, {
+    await writer.errorJson(400, {
       code: "UNSUPPORTED_LANGUAGE",
       message: "English is not a supported learning language",
     });
@@ -120,7 +129,7 @@ export const handler = awslambda.streamifyResponse<
     event.headers?.authorization ?? event.headers?.Authorization;
   const userId = await verifyClerkJwt(authHeader);
   if (!userId) {
-    writer.errorJson(401, { code: "MISSING_SUB", message: "Unauthorized" });
+    await writer.errorJson(401, { code: "MISSING_SUB", message: "Unauthorized" });
     return;
   }
 
@@ -137,7 +146,7 @@ export const handler = awslambda.streamifyResponse<
       ),
     );
   if (Number(usageRows[0]?.count ?? 0) >= DAILY_EVAL_LIMIT) {
-    writer.errorJson(429, {
+    await writer.errorJson(429, {
       code: "RATE_LIMIT_EXCEEDED",
       message: "Daily evaluation limit exceeded",
     });
@@ -160,12 +169,21 @@ export const handler = awslambda.streamifyResponse<
     calibration,
     candidateCount: candidates.length,
   });
+  console.log("[annotate-stream] meta emitted", {
+    userId,
+    language: learningLanguage,
+    textLength: text.length,
+    candidateCount: candidates.length,
+    proficiencyLevel: calibration.cefr,
+  });
 
   // Step 8: empty candidate list short-circuit (Req 1.6 / 2.5).
   // No Claude call, no usage_events row — the user paid nothing for an
   // in-level passage.
   if (candidates.length === 0) {
     writer.writeTerminal("done", { flaggedCount: 0 });
+    console.log("[annotate-stream] done (empty candidate list)");
+    await writer.close();
     return;
   }
 
@@ -189,6 +207,7 @@ export const handler = awslambda.streamifyResponse<
         flaggedCount++;
       }
     }
+    console.log("[annotate-stream] streamAnnotation completed", { flaggedCount });
   } catch (err) {
     // The iterator throws on Claude errors, malformed responses, or the
     // dedicated `AnnotateStreamMaxTokensError`. All three collapse to the
@@ -209,6 +228,7 @@ export const handler = awslambda.streamifyResponse<
         message: "Evaluation temporarily unavailable",
       });
     }
+    await writer.close();
     return;
   }
 
@@ -236,6 +256,8 @@ export const handler = awslambda.streamifyResponse<
   if (!writer.terminated) {
     writer.writeTerminal("done", { flaggedCount });
   }
+  console.log("[annotate-stream] done (success)", { flaggedCount });
+  await writer.close();
 });
 
 // ---------------------------------------------------------------------------

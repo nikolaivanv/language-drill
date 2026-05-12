@@ -177,6 +177,21 @@ describe("createSseWriter — writeEvent / writeTerminal framing (Req 3.3)", () 
       /before openSse/,
     );
   });
+
+  it("close() resolves only after the underlying stream emits 'finish'", async () => {
+    const writer = createSseWriter(stream);
+    writer.openSse();
+    writer.writeTerminal("done", { flaggedCount: 0 });
+
+    // `harness.ended` flips inside the underlying Writable's `final` callback;
+    // that callback is what `stream.end(cb)` invokes. The Promise returned by
+    // `close()` must resolve *after* that — i.e. once 'finish' is emitted.
+    // Without the explicit await, the AWS runtime closes the socket on
+    // handler-resolve and the last frame can be dropped client-side.
+    expect(harness.ended).toBe(false);
+    await writer.close();
+    expect(harness.ended).toBe(true);
+  });
 });
 
 describe("createSseWriter — errorJson (non-SSE branch)", () => {
