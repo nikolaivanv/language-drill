@@ -14,21 +14,32 @@ const {
   mockUsageInsertValues,
   streamAnnotationImpl,
 } = vi.hoisted(() => {
-  let impl: (() => AsyncIterable<unknown>) | null = null;
+  // The impl optionally receives the same (client, input) the real
+  // `streamAnnotation` does — tests that care about the abort signal (e.g.
+  // the soft-deadline path) need it; tests that don't can still pass a
+  // no-arg generator.
+  type Impl = (
+    client?: unknown,
+    input?: { signal?: AbortSignal },
+  ) => AsyncIterable<unknown>;
+  let impl: Impl | null = null;
   return {
     mockVerifyClerkJwt: vi.fn(),
     mockBuildCandidateList: vi.fn(),
     mockUsageCount: vi.fn(),
     mockUsageInsertValues: vi.fn(),
     streamAnnotationImpl: {
-      set(fn: () => AsyncIterable<unknown>) {
+      set(fn: Impl) {
         impl = fn;
       },
-      get(): AsyncIterable<unknown> {
+      get(
+        client?: unknown,
+        input?: { signal?: AbortSignal },
+      ): AsyncIterable<unknown> {
         if (!impl) {
           throw new Error("streamAnnotation called but no impl was set");
         }
-        return impl();
+        return impl(client, input);
       },
     },
   };
@@ -52,7 +63,8 @@ vi.mock("@language-drill/ai", () => {
   }
   return {
     createClaudeClient: vi.fn(() => ({})),
-    streamAnnotation: () => streamAnnotationImpl.get(),
+    streamAnnotation: (client: unknown, input: { signal?: AbortSignal }) =>
+      streamAnnotationImpl.get(client, input),
     AnnotateStreamMaxTokensError: AnnotateStreamMaxTokensErrorStub,
     loadFrequency: () => ({
       lookup: () => null,
@@ -437,6 +449,66 @@ describe("annotate-stream handler — Claude failures (Req 3.3, 4.8, 4.9)", () =
 
     expect(mockUsageInsertValues).not.toHaveBeenCalled();
     errSpy.mockRestore();
+  });
+
+  it("soft-deadline fires before Lambda timeout → error frame with passage-too-long message; no done; no usage row", async () => {
+    // Simulate a Claude stream that takes longer than the 25 s soft-deadline.
+    // Fake timers let us advance past it instantly; the iterator awaits the
+    // signal so the deadline's `abort.abort()` is what surfaces as an
+    // AbortError up the iterator chain.
+    vi.useFakeTimers();
+
+    mockBuildCandidateList.mockResolvedValueOnce({
+      candidates: [{ matchedForm: "aldea", lemma: "aldea" }],
+      calibration: { cefr: "B1", top: 3000 },
+    });
+
+    streamAnnotationImpl.set(async function* (
+      _client?: unknown,
+      input?: { signal?: AbortSignal },
+    ) {
+      await new Promise<void>((resolve, reject) => {
+        if (input?.signal?.aborted) {
+          reject(new Error("AbortError"));
+          return;
+        }
+        input?.signal?.addEventListener("abort", () => {
+          reject(new Error("AbortError"));
+        });
+      });
+      // Unreachable — the abort path resolves the test before this yields.
+      yield { kind: "flag", flag: ALDEA_FLAG };
+    });
+
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const handlerPromise = handler(
+      buildPostEvent({ text: PASSAGE, language: "ES" }),
+      makeResponseStream(),
+      {} as never,
+    );
+
+    // Advance past the 25 s soft-deadline. Timer fires → abort → iterator
+    // rejects → handler catch block writes the friendlier error frame.
+    await vi.advanceTimersByTimeAsync(25_000);
+    await handlerPromise;
+
+    const frames = parseSseFrames();
+    expect(frames.map((f) => f.event)).toEqual(["meta", "error"]);
+    const errorPayload = frames[1].data as { code: string; message: string };
+    expect(errorPayload.code).toBe("AI_UNAVAILABLE");
+    // The deadline-specific message — distinguishes from the generic catch
+    // path, so the user sees the actionable hint instead of "Evaluation
+    // temporarily unavailable".
+    expect(errorPayload.message).toMatch(/longer than expected/i);
+    expect(warnSpy).toHaveBeenCalledWith(
+      "[annotate-stream] soft-deadline fired",
+      expect.objectContaining({ thresholdMs: 25_000 }),
+    );
+    expect(mockUsageInsertValues).not.toHaveBeenCalled();
+
+    warnSpy.mockRestore();
+    vi.useRealTimers();
   });
 
   it("max_tokens truncation → error with AI_UNAVAILABLE; no done; no usage row; logged as warn", async () => {
