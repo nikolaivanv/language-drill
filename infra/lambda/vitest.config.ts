@@ -9,8 +9,10 @@ export default defineConfig({
     // co-located tests, further inflating per-worker import cost. When the
     // full monorepo suite runs all workspaces in parallel via turbo, the
     // `await import('./admin')` inside admin.test.ts's `beforeEach` stretches
-    // past 30 s on the first two tests in a worker. 60 s gives comfortable
-    // headroom without masking real hangs.
-    hookTimeout: 60_000,
+    // past 60 s on the first two tests in a worker. The real "hang" guard
+    // is the 29 s Lambda timeout in prod — vitest's hookTimeout is just
+    // there to abort genuinely stuck async tests. 120 s gives comfortable
+    // headroom under CI contention.
+    hookTimeout: 120_000,
   },
 });

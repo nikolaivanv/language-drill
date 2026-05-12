@@ -188,8 +188,22 @@ export const handler = awslambda.streamifyResponse<
   }
 
   // Step 9: client-disconnect → abort upstream Claude stream (Req 4.9).
+  // ALSO: soft-deadline at 25 s. The Lambda timeout is 29 s, but if Claude
+  // streaming runs past 25 s we want to abort it ourselves AND write a
+  // useful `error` frame before the runtime SIGKILLs us — otherwise the
+  // client sees the body close with no terminal event and surfaces the
+  // unhelpful "Stream ended unexpectedly" message.
   const abort = new AbortController();
+  let deadlineFired = false;
   responseStream.on("close", () => abort.abort());
+  const SOFT_DEADLINE_MS = 25_000;
+  const deadlineTimer = setTimeout(() => {
+    deadlineFired = true;
+    console.warn("[annotate-stream] soft-deadline fired", {
+      thresholdMs: SOFT_DEADLINE_MS,
+    });
+    abort.abort();
+  }, SOFT_DEADLINE_MS);
 
   // Step 10: stream Claude's enrichment events, one flag at a time.
   let flaggedCount = 0;
@@ -209,12 +223,23 @@ export const handler = awslambda.streamifyResponse<
     }
     console.log("[annotate-stream] streamAnnotation completed", { flaggedCount });
   } catch (err) {
-    // The iterator throws on Claude errors, malformed responses, or the
-    // dedicated `AnnotateStreamMaxTokensError`. All three collapse to the
-    // same observable: `error` with `code: 'AI_UNAVAILABLE'` IFF we haven't
-    // already terminated (`terminated` is the wire-protocol single source
-    // of truth — see Req 3.3).
-    if (err instanceof AnnotateStreamMaxTokensError) {
+    // The iterator throws on Claude errors, malformed responses, the
+    // dedicated `AnnotateStreamMaxTokensError`, or an abort (client-close
+    // OR our own soft-deadline). All four collapse to the same observable:
+    // `error` with `code: 'AI_UNAVAILABLE'` IFF we haven't already
+    // terminated (`terminated` is the wire-protocol single source of
+    // truth — see Req 3.3). The deadline path gets a more specific
+    // message so the user knows the passage was too heavy, not that AI
+    // is broken.
+    const message = deadlineFired
+      ? "Annotation took longer than expected — try a shorter passage."
+      : "Evaluation temporarily unavailable";
+    if (deadlineFired) {
+      console.warn(
+        "[annotate-stream] soft-deadline aborted streamAnnotation",
+        { flaggedCount },
+      );
+    } else if (err instanceof AnnotateStreamMaxTokensError) {
       console.warn(
         "[annotate-stream] max_tokens truncation",
         { flaggedCount },
@@ -225,12 +250,15 @@ export const handler = awslambda.streamifyResponse<
     if (!writer.terminated) {
       writer.writeTerminal("error", {
         code: "AI_UNAVAILABLE",
-        message: "Evaluation temporarily unavailable",
+        message,
       });
     }
+    clearTimeout(deadlineTimer);
     await writer.close();
     return;
   }
+  // Iterator completed cleanly — no need to fire the deadline anymore.
+  clearTimeout(deadlineTimer);
 
   // Step 11: insert the usage_events row AFTER the iterator finishes
   // successfully. A throw here MUST NOT cascade into a terminal `error` —

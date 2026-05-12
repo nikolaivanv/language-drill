@@ -40,11 +40,20 @@ const DEFAULT_PROFICIENCY_LEVEL = CefrLevel.B1;
 const CEFR_LEVELS = new Set<string>(Object.values(CefrLevel));
 
 /**
- * PR #49's empirical cap. The downstream `streamAnnotation` allocates
- * `max_tokens: 8192` for the enrichment response; 40 entries fits within
- * the ~150–200 tokens/entry envelope with headroom for outliers.
+ * Cap chosen against the Lambda 29 s wall-clock budget, NOT the model's
+ * `max_tokens` budget. PR #49 originally picked 40 against `max_tokens:
+ * 8192` and missed that latency was the real constraint — a 40-entry
+ * Sonnet call ran the full 29 s and timed out in production (PR #100).
+ *
+ * Defense in depth: even with annotation on Haiku 4.5 (PR #100 — 2–3× faster
+ * streaming than Sonnet), 20 entries × ~175 tokens ≈ 3500 output tokens fits
+ * comfortably under both `max_tokens` and the 29 s ceiling. The handler also
+ * runs a 25 s soft-deadline that emits a useful `error` frame before the
+ * runtime would kill us — so this cap is the "make most requests fast"
+ * lever, with the soft-deadline as the "make rare overruns surface
+ * gracefully" lever.
  */
-const CANDIDATE_LIMIT = 40;
+const CANDIDATE_LIMIT = 20;
 
 // ---------------------------------------------------------------------------
 // Types
