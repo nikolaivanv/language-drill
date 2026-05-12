@@ -50,7 +50,9 @@ describe("AnnotateStreamLambdaConstruct", () => {
           "https://langdrill.app",
           "https://www.langdrill.app",
         ]),
-        AllowMethods: Match.arrayWith(["POST", "OPTIONS"]),
+        // AWS Lambda Function URL CORS doesn't accept `OPTIONS` in
+        // `AllowMethods` — preflight is implicit. Asserting only `POST`.
+        AllowMethods: Match.arrayWith(["POST"]),
         AllowHeaders: Match.arrayWith(["Authorization", "Content-Type"]),
       }),
     });
