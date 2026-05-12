@@ -4,6 +4,55 @@ A living log of known issues to address. Add new entries at the top; mark as res
 
 ---
 
+## Per-draft validation loop in `runOneCell` is strictly serial
+
+- **Status:** open
+- **Discovered:** 2026-05-12 (during the PR #71 DLQ-redrive observation)
+- **Scope:** generation Lambda — `packages/db/src/generation/run-one-cell.ts:397-444`
+- **Severity:** medium (correctness is fine; pipeline wall-clock + headroom are the cost)
+
+**Root cause:**
+`runOneCell` does one batched Claude call to generate ~50 drafts, then iterates the resulting array **sequentially** and calls `validateAndInsertWithRetry` per draft. That helper makes one full `validateDraft` Claude round-trip (`packages/ai/src/validate.ts:256`, `max_tokens: 1024`) for every draft before moving on. The dedup-conflict path can trigger up to `MAX_DEDUP_RETRIES = 3` extra validate+regenerate cycles on top.
+
+Measured on the post-PR-#71 redrive (2026-05-12):
+- Successful cells: `durationMs` 325–402 s for `inserted` 44–50.
+- Per-draft cost: ~5–8 s average (one Claude validation round-trip).
+- Generation call + DB inserts are small fractions of the total — the wall-clock is dominated by the serialized validate fan-out.
+
+**Verified:** measurement source is the structured `cell succeeded` log lines in `/aws/lambda/LanguageDrillStack-GenerationLambdaWrapHandler1113-...` for jobIds completed during the redrive window starting 11:14 UTC.
+
+**Symptoms this causes:**
+- Pre-#71, cells with a couple of dedup retries tipped past the 600 s Lambda timeout, got silently killed, and DLQ'd after `maxReceiveCount: 3` redeliveries (34 of 43 today).
+- Post-#71, headroom is 900 s — comfortable for now, but the failure mode is the same shape (linear in `count`). If we ever bump `MIN_PER_CELL` or generate longer cells, the same timeout cliff reappears.
+- A daily batch of ~50 cells × ~6 min wall-clock at concurrency 3 takes ~100 min of Lambda time; parallelizing validation would shrink each cell to ~60–90 s and the batch to ~15–25 min.
+
+**Remediation:**
+Parallelize the validate fan-out with a small concurrency cap (start at 5–8 and tune against the Anthropic org-tier rate limits — Phase 4 reserved Lambda concurrency at 3 specifically to leave validator headroom). Sketch:
+
+1. Split the per-draft loop into two phases:
+   - **Phase A — validate in parallel.** `Promise.all(batch.drafts.map(p-limit(8)(validateDraft)))` to collect verdicts. Independent calls, no shared state.
+   - **Phase B — insert+dedup sequentially** (or with a smaller cap). Keeps the dedup-retry coupling with the SQL unique-index intact, since that path needs to observe one conflict before regenerating the next draft.
+2. Preserve cancellation: thread the existing `AbortSignal` through the `p-limit` wrapper so SIGINT (CLI) still aborts cleanly.
+3. Preserve cost accounting: aggregate `combinedUsage` after Phase A resolves rather than incrementally; semantics unchanged.
+4. Tests:
+   - `run-one-cell.test.ts` already covers the serial path; add a case that asserts validate calls overlap in time (mock `validateDraft` to record start/end timestamps and assert at least two overlap).
+   - Existing dedup-retry tests should still pass — Phase B keeps the sequential insert path.
+
+**Why we can't ignore it:**
+- Single biggest contributor to today's DLQ accumulation (PR #71 raised the ceiling but didn't fix the slope).
+- Linear-in-`count` wall-clock means future curriculum growth (more grammar points × more vocab umbrellas) pushes us back toward the 900 s ceiling.
+- The soft-deadline-with-audit-row patch (option b in the post-#71 plan) is far less valuable if the wall-clock fits comfortably under timeout; this should land first.
+
+**Owner:** unassigned
+**Tracking:** none yet — open a GitHub issue when prioritizing
+**References:**
+- PR #71 (`d3f3c48`) — Lambda timeout 600 → 900 s; surfaced this slope as the underlying issue.
+- `packages/db/src/generation/run-one-cell.ts:397-444` — the loop.
+- `packages/ai/src/validate.ts:256` — the Claude call paid 50× per cell.
+- Anthropic Sonnet 4.6 org rate limits — gating factor on the concurrency cap; pull current value before tuning.
+
+---
+
 ## ESLint v9 incompatibility breaks `pnpm lint`
 
 - **Status:** resolved 2026-05-03 (during exercise-ui task 33)
