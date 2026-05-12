@@ -179,7 +179,7 @@ export const VOCAB_RECALL_GENERATION_TOOL: Anthropic.Tool = {
       expectedWord: {
         type: "string",
         description:
-          "The single target word the learner should produce. Must be a single token (no whitespace).",
+          "The target lexeme the learner should produce. Usually a single word, but a short multi-word lexeme (e.g. 'medio ambiente', 'cambio climático', 'efecto invernadero') is allowed when the curriculum names one. Use the canonical headword form: no leading/trailing whitespace, no internal whitespace runs longer than a single space, and no surrounding articles unless the article is part of the lexeme itself.",
       },
       hints: {
         type: "array",
@@ -454,14 +454,20 @@ export function parseGeneratedVocabRecallDraft(
 
   const instructions = requireString(input, "instructions", ctx);
   const prompt = requireString(input, "prompt", ctx);
-  const expectedWord = requireString(input, "expectedWord", ctx);
+  const expectedWordRaw = requireString(input, "expectedWord", ctx);
   const hints = requireStringArray(input, "hints", ctx);
   const exampleSentence = requireString(input, "exampleSentence", ctx);
   const topicHint = optionalString(input, "topicHint", ctx);
 
-  if (expectedWord.trim().split(/\s+/).length !== 1) {
+  // Multi-word lexemes are valid headwords in several languages (Spanish
+  // `medio ambiente`, `cambio climático`, etc.) and already ship in the
+  // curated seeds — see `.claude/bugs/vocab-recall-multi-word-rejected/`.
+  // Normalize to canonical surface (trim + collapse internal whitespace)
+  // so downstream dedup, grading, and display agree on a single form.
+  const expectedWord = expectedWordRaw.trim().replace(/\s+/g, " ");
+  if (expectedWord.length === 0) {
     throw new Error(
-      `${ctx}: invalid expectedWord: must be a single token (no whitespace), got ${JSON.stringify(expectedWord)}`,
+      `${ctx}: invalid expectedWord: must contain non-whitespace characters, got ${JSON.stringify(expectedWordRaw)}`,
     );
   }
 
