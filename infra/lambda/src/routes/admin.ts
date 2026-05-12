@@ -76,7 +76,12 @@ admin.get('/admin/pool-status', async (c) => {
     db
       .select({
         cellKey: generationJobs.cellKey,
-        lastRefilledAt: sql<Date | null>`MAX(${generationJobs.finishedAt})`,
+        // `.mapWith(finishedAt)` reuses the column's timestamptz→Date decoder
+        // for the aggregate; the `sql<Date | null>` cast alone is types-only
+        // and the Neon driver returns raw `MAX(timestamptz)` as a string.
+        lastRefilledAt: sql<Date | null>`MAX(${generationJobs.finishedAt})`.mapWith(
+          generationJobs.finishedAt,
+        ),
       })
       .from(generationJobs)
       .where(eq(generationJobs.status, 'succeeded'))
