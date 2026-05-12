@@ -32,7 +32,12 @@ export class GenerationQueueConstruct extends Construct {
     });
 
     this.queue = new sqs.Queue(this, 'GenerationQueue', {
-      visibilityTimeout: Duration.seconds(600),
+      // Must match the consumer Lambda's timeout (900 s; AWS Lambda hard
+      // maximum). If `visibilityTimeout < lambda.timeout`, SQS redelivers a
+      // still-running message and the cell gets processed twice — wasting
+      // Anthropic budget and tripping the dedup-retry guard. Bumped from
+      // 600 s on 2026-05-12 alongside the Lambda timeout bump.
+      visibilityTimeout: Duration.seconds(900),
       deadLetterQueue: {
         queue: this.deadLetterQueue,
         maxReceiveCount: 3,
