@@ -10,14 +10,6 @@ import {
   Runtime,
 } from "aws-cdk-lib/aws-lambda";
 import * as path from "path";
-// Imported via relative source path rather than the `@language-drill/shared`
-// bare specifier. The shared package compiles to ESM under
-// `packages/shared/dist/`, and its internal re-exports omit `.js` extensions —
-// fine for bundlers (Next.js, esbuild) but Node's ESM resolver, which
-// ts-node invokes when compiling this file during `cdk synth`, rejects the
-// extensionless references and fails with ERR_MODULE_NOT_FOUND. Resolving
-// directly to the .ts source sidesteps the dist/ entry entirely.
-import { FALLBACK_ORIGINS } from "../../../packages/shared/src/cors";
 
 /**
  * Streaming-annotate Lambda + Function URL.
@@ -115,11 +107,18 @@ export class AnnotateStreamLambdaConstruct extends Construct {
       authType: FunctionUrlAuthType.NONE,
       invokeMode: InvokeMode.RESPONSE_STREAM,
       cors: {
-        allowedOrigins: [...FALLBACK_ORIGINS],
-        // AWS Lambda Function URL CORS rejects `OPTIONS` in `AllowMethods`
-        // — only [GET, PUT, HEAD, POST, PATCH, DELETE, *] are accepted.
-        // Preflight `OPTIONS` is handled implicitly by the platform when
-        // `AllowMethods` lists any method; we don't need to enumerate it.
+        // AWS Lambda Function URL CORS doesn't support subdomain wildcards
+        // like `https://*.vercel.app` (unlike API Gateway HTTP API CORS,
+        // which does). It accepts only full URLs, `https://*`, or `*`.
+        // Using `*` here is acceptable because JWT verification + the daily
+        // usage-event rate-limit are the real security boundary; browser
+        // CORS is a politeness filter, not an authorization check. See
+        // docs/tech-debt.md for the follow-up to implement per-origin
+        // matching in the handler instead.
+        allowedOrigins: ["*"],
+        // Function URL CORS rejects `OPTIONS` in `AllowMethods` — only
+        // [GET, PUT, HEAD, POST, PATCH, DELETE, *] are accepted. Preflight
+        // is handled implicitly by the platform.
         allowedMethods: [HttpMethod.POST],
         allowedHeaders: ["Authorization", "Content-Type"],
         maxAge: Duration.hours(1),

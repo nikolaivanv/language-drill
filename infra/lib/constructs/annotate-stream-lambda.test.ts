@@ -42,16 +42,13 @@ describe("AnnotateStreamLambdaConstruct", () => {
     });
   });
 
-  it("CORS allow-list includes https://*.vercel.app and the production hostnames", () => {
+  it("CORS allows all origins (per-origin matching is a follow-up — see tech-debt.md)", () => {
+    // AWS Lambda Function URL CORS doesn't support subdomain wildcards
+    // (`https://*.vercel.app`) — only full URLs, `https://*`, or `*`.
+    // Using `*` here pending the planned in-handler matchOrigin migration.
     template.hasResourceProperties("AWS::Lambda::Url", {
       Cors: Match.objectLike({
-        AllowOrigins: Match.arrayWith([
-          "https://*.vercel.app",
-          "https://langdrill.app",
-          "https://www.langdrill.app",
-        ]),
-        // AWS Lambda Function URL CORS doesn't accept `OPTIONS` in
-        // `AllowMethods` — preflight is implicit. Asserting only `POST`.
+        AllowOrigins: ["*"],
         AllowMethods: Match.arrayWith(["POST"]),
         AllowHeaders: Match.arrayWith(["Authorization", "Content-Type"]),
       }),

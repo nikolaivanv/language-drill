@@ -4,6 +4,58 @@ A living log of known issues to address. Add new entries at the top; mark as res
 
 ---
 
+## Annotate-stream Function URL CORS allows all origins
+
+- **Status:** open (worked around in PR #96 — set `allowedOrigins: ["*"]`)
+- **Discovered:** 2026-05-12 (production deploy after PR #95 — CloudFormation rejected `https://*.vercel.app` with `isn't a valid origin`)
+- **Scope:** `infra/lib/constructs/annotate-stream-lambda.ts` Function URL CORS
+- **Severity:** low (JWT verification + daily rate-limit are the real security boundary; browser CORS is a politeness filter, not authorization)
+
+**Root cause:**
+AWS Lambda Function URL CORS uses a different (more restrictive) schema than API Gateway HTTP API CORS. Function URL `AllowOrigins` accepts only:
+- Full URLs (`https://www.example.com`)
+- `https://*` (any HTTPS origin)
+- `*` (any origin)
+
+It does **not** accept subdomain wildcards like `https://*.vercel.app` — which is exactly what we want for Vercel preview deploys. API Gateway accepts them; Function URL doesn't. The original construct copied the API-Gateway-style list verbatim.
+
+**Verified:** CloudFormation returned `https://*.vercel.app isn't a valid origin. An origin must be in a valid URL format. For example: https://www.example.com, https://*, or the wildcard character (*).` on `AWS::Lambda::Url` resource creation. Local `cdk synth` doesn't catch this — schema validation only fires server-side during resource creation, after `synth` and asset publish have succeeded.
+
+**Current workaround:** `allowedOrigins: ["*"]`. Means any origin can make POST requests to the Function URL. The JWT auth still gates access — only authenticated users' tokens work — but the surface area is technically wider than the API Gateway endpoints (which retain the regex-matched allow-list via Hono middleware).
+
+**Remediation:**
+Move CORS enforcement into the streaming handler, matching the pattern already in `infra/lambda/src/index.ts:25` (`matchOrigin`):
+
+1. **Promote `matchOrigin` to `packages/shared/src/cors.ts`** so both Lambdas import it from one place (alongside `FALLBACK_ORIGINS`).
+2. **Update the streaming handler's SSE writer (`infra/lambda/src/annotate-stream/sse.ts`)** to:
+   - Accept the request's `Origin` header.
+   - Pass it through `matchOrigin`.
+   - Emit `Access-Control-Allow-Origin: <matched-origin-or-omitted>` and `Access-Control-Allow-Credentials: true` (if needed) on every response branch: `openSse()`, `errorJson()`, and `cors200()`.
+3. **Remove the `cors` config from the Function URL** in the construct. With in-handler CORS the platform CORS layer is redundant.
+4. **Tests**: extend `sse.test.ts` and `handler.test.ts` with origin-echo cases (Vercel preview, prod hostname, unauthorized origin).
+
+Important: the main API Lambda's CORS lives in Hono middleware. The streaming Lambda doesn't use Hono. So the new code is a thin handler-level adapter, not a Hono middleware reuse.
+
+**Acceptance criteria for the fix:**
+- Revert `allowedOrigins: ["*"]` in `infra/lib/constructs/annotate-stream-lambda.ts` to either `undefined` (no CDK CORS config) or just the bare `["*"]` retained as a belt-and-braces fallback.
+- `infra/lib/constructs/annotate-stream-lambda.test.ts` asserts the in-handler origin echo via the SSE writer's response shape.
+- End-to-end: a Vercel preview origin (`https://my-feature-abc123.vercel.app`) receives `Access-Control-Allow-Origin: https://my-feature-abc123.vercel.app` on the SSE response. An unauthorized origin receives no allow-origin header → browser blocks.
+
+**Why we can't ignore it:**
+- The streaming endpoint POSTs from authenticated browser sessions, so JWT theft via XSS on any page that holds the token is the actual threat — and browser CORS doesn't defend against that anyway. So the security delta is small.
+- But: the design doc explicitly said "CORS allow-list is identical to the main Lambda's ... and is implemented in the new handler" (more-responsive-reading/design.md §Integration Points). The current state diverges from the design.
+- Consistency with the main Lambda's pattern is worth ~50 lines of handler/sse-writer plumbing.
+
+**Owner:** unassigned
+**Tracking:** none yet — open a GitHub issue when prioritizing
+**References:**
+- PR #96 — workaround.
+- `infra/lambda/src/index.ts:25` — `matchOrigin` to extract.
+- `packages/shared/src/cors.ts` — where to put it.
+- AWS docs on Function URL CORS (vs API Gateway): https://docs.aws.amazon.com/lambda/latest/dg/urls-configuration.html#urls-cors
+
+---
+
 ## `@language-drill/shared` emits ESM with extensionless relative imports
 
 - **Status:** open (worked around in PR #94)
