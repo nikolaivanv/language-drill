@@ -1,3 +1,11 @@
+// Direct import of `useReducer`/`useRef`/`useCallback` from "react" trips
+// Next.js's static "client-only API" check when the api-client barrel is
+// pulled into a Server Component (e.g. admin/generation/page.tsx). Marking
+// the module as a client boundary tells the bundler not to evaluate it on
+// the server. Other hooks in this package use TanStack Query and call into
+// React indirectly, so they don't need the directive.
+"use client";
+
 import { useCallback, useReducer, useRef } from "react";
 import type { FlaggedMap, LearningLanguage, WordFlag } from "@language-drill/shared";
 
