@@ -15,6 +15,7 @@
     "generate:exercises": "npx tsx scripts/generate-exercises.ts",
     "generate:theory": "npx tsx scripts/generate-theory.ts",
     "review:flagged": "npx tsx scripts/review-flagged.ts",
+    "review:flagged-theory": "npx tsx scripts/review-flagged-theory.ts",
     "seed:exercises": "npx tsx scripts/seed-exercises.ts",
     "test": "vitest run"
   },

@@ -15,7 +15,8 @@
     "db:seed:exercises": "dotenv -e .env -- pnpm --filter @language-drill/db seed:exercises",
     "generate:exercises": "dotenv -e .env -- pnpm --filter @language-drill/db generate:exercises",
     "generate:theory": "dotenv -e .env -- pnpm --filter @language-drill/db generate:theory",
-    "review:flagged": "dotenv -e .env -- pnpm --filter @language-drill/db review:flagged"
+    "review:flagged": "dotenv -e .env -- pnpm --filter @language-drill/db review:flagged",
+    "review:flagged-theory": "dotenv -e .env -- pnpm --filter @language-drill/db review:flagged-theory"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

@@ -162,7 +162,7 @@ Total estimated effort: **~6–8 working days**. Smaller than exercise generatio
 |-------|--------|--------|------------|--------|
 | 1 | `TheoryTopicJson` schema + DB tables + renderer | ~1.5d | — | ✅ shipped (worktree-theory-content-generation) |
 | 2 | Generator core + CLI driver | ~1.5d | 1 | ✅ shipped (worktree-theory-generation-phase-2) |
-| 3 | Validator + routing + review CLI | ~1d | 2 | pending |
+| 3 | Validator + routing + review CLI | ~1d | 2 | ✅ shipped |
 | 4 | Lambda + SQS + EventBridge | ~1d | 3 | pending |
 | 5 | Panel registry fallback + admin tile | ~1d | 4 | pending |
 
@@ -463,7 +463,9 @@ Following project convention (tests next to module):
 
 ---
 
-### Phase 3 — Validator + routing + review CLI
+### Phase 3 — Validator + routing + review CLI ✅ shipped
+
+**Status:** Complete. Spec at `.claude/specs/theory-generation-phase-3/`. All 21 tasks merged. The validator (`packages/ai/src/theory-validate.ts`) + router (`packages/db/src/theory-generation/routing.ts`) + orchestrator wiring (`runOneTheoryCell` in `packages/db/src/theory-generation/run-one-cell.ts`) + review CLI (`pnpm review:flagged-theory`) are live. Two deliberate deltas from the sketch below: (1) the `[e]dit` branch is deferred — Phase 3 ships with `a / r / s / q` keymap parity to the exercise reviewer; the salvageable-edit case is rejected-and-regenerated next batch. (2) Routing accumulates all flag conditions in a single deterministic pass (low-score header + level mismatch + each incomplete section + examples off-target + free-text reasons) instead of the early-return chain — a row that's both off-level AND has incomplete sections surfaces both reasons in the reviewer's terminal.
 
 **Goal:** every generated draft passes through quality control. Anything ambiguous gets `review_status = 'flagged'` and is invisible to the panel until a human approves.
 
