@@ -272,7 +272,6 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
           ],
           "AllowMethods": [
             "POST",
-            "OPTIONS",
           ],
           "AllowOrigins": [
             "https://*.vercel.app",

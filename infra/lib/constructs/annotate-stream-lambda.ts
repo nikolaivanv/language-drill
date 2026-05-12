@@ -116,7 +116,11 @@ export class AnnotateStreamLambdaConstruct extends Construct {
       invokeMode: InvokeMode.RESPONSE_STREAM,
       cors: {
         allowedOrigins: [...FALLBACK_ORIGINS],
-        allowedMethods: [HttpMethod.POST, HttpMethod.OPTIONS],
+        // AWS Lambda Function URL CORS rejects `OPTIONS` in `AllowMethods`
+        // — only [GET, PUT, HEAD, POST, PATCH, DELETE, *] are accepted.
+        // Preflight `OPTIONS` is handled implicitly by the platform when
+        // `AllowMethods` lists any method; we don't need to enumerate it.
+        allowedMethods: [HttpMethod.POST],
         allowedHeaders: ["Authorization", "Content-Type"],
         maxAge: Duration.hours(1),
       },
