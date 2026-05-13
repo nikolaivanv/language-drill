@@ -101,13 +101,15 @@ describe("LanguageDrillStack-dev", () => {
     const lambdas = devTemplate.findResources("AWS::Lambda::Function");
     const fns = Object.values(lambdas) as LambdaResource[];
 
-    // The dev stack runs five application Lambdas on nodejs20.x: API,
-    // Generation (consumer), Scheduler (exercise), AnnotateStream (SSE
-    // Function URL), TheoryGeneration (consumer), and TheoryScheduler. CDK's
-    // logRetention shortcut also synthesizes a maintenance Lambda on a
-    // different runtime (currently nodejs22.x); filter it out so this
-    // assertion tracks application Lambdas only.
-    const appFns = fns.filter((f) => f.Properties.Runtime === "nodejs20.x");
+    // The dev stack runs six application Lambdas: API, Generation (consumer),
+    // Scheduler (exercise), AnnotateStream (SSE Function URL), TheoryGeneration
+    // (consumer), and TheoryScheduler. CDK's logRetention shortcut also
+    // synthesizes a maintenance Lambda on the same runtime; filter by the
+    // presence of DATABASE_URL in env so this assertion tracks application
+    // Lambdas only (the LogRetention provider has no app env vars).
+    const appFns = fns.filter(
+      (f) => !!f.Properties.Environment?.Variables?.DATABASE_URL,
+    );
     expect(appFns).toHaveLength(6);
 
     // The API Lambda is the only one with CLERK_SECRET_KEY in its env — the

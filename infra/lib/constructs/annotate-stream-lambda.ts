@@ -64,7 +64,7 @@ export class AnnotateStreamLambdaConstruct extends Construct {
         "../../lambda/src/annotate-stream/handler.ts",
       ),
       handler: "handler",
-      runtime: Runtime.NODEJS_20_X,
+      runtime: Runtime.NODEJS_22_X,
       // 29s is the Function URL's max useful timeout (CloudFront fronting
       // Function URLs drops idle connections at 30s). The pipeline targets
       // p95 ≤ 18s end-to-end, so 29s leaves headroom for slow Claude responses

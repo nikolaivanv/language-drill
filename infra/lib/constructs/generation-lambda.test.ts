@@ -29,7 +29,7 @@ describe('GenerationLambdaConstruct', () => {
 
   it('creates a NodejsFunction with timeout 900, memory 1024, reserved concurrency 3', () => {
     template.hasResourceProperties('AWS::Lambda::Function', {
-      Runtime: 'nodejs20.x',
+      Runtime: 'nodejs22.x',
       Timeout: 900,
       MemorySize: 1024,
       ReservedConcurrentExecutions: 3,
