@@ -60,7 +60,7 @@ export class GenerationLambdaConstruct extends Construct {
     this.handler = new lambda.NodejsFunction(this, 'Handler', {
       entry: path.join(__dirname, '../../lambda/src/generation/handler.ts'),
       handler: 'handler',
-      runtime: Runtime.NODEJS_20_X,
+      runtime: Runtime.NODEJS_22_X,
       // 900 s is the AWS Lambda hard maximum. Bumped from 600 s on 2026-05-12
       // after the daily scheduled batch silently killed 34/43 cells: successful
       // runs took 325–402 s, so cells with a couple of dedupe retries tipped

@@ -29,7 +29,7 @@ describe("AnnotateStreamLambdaConstruct", () => {
 
   it("creates the streaming Lambda with timeout=29 and memorySize=512", () => {
     template.hasResourceProperties("AWS::Lambda::Function", {
-      Runtime: "nodejs20.x",
+      Runtime: "nodejs22.x",
       Timeout: 29,
       MemorySize: 512,
     });

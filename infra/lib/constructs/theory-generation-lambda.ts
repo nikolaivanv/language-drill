@@ -65,7 +65,7 @@ export class TheoryGenerationLambdaConstruct extends Construct {
         '../../lambda/src/theory-generation/handler.ts',
       ),
       handler: 'handler',
-      runtime: Runtime.NODEJS_20_X,
+      runtime: Runtime.NODEJS_22_X,
       // 900 s is the AWS Lambda hard maximum. Matches the exercise-side
       // PR #71 fix from day 1: cells with retry storms can run several
       // hundred seconds, and `visibilityTimeout` on the queue is set to

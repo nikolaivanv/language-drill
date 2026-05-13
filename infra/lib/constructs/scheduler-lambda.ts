@@ -53,7 +53,7 @@ export class SchedulerLambdaConstruct extends Construct {
     this.handler = new lambda.NodejsFunction(this, 'Handler', {
       entry: path.join(__dirname, '../../lambda/src/generation/scheduler.ts'),
       handler: 'handler',
-      runtime: Runtime.NODEJS_20_X,
+      runtime: Runtime.NODEJS_22_X,
       timeout: Duration.seconds(60),
       memorySize: 512,
       depsLockFilePath: path.join(projectRoot, 'pnpm-lock.yaml'),

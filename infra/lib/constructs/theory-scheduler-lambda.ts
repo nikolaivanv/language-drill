@@ -61,7 +61,7 @@ export class TheorySchedulerLambdaConstruct extends Construct {
         '../../lambda/src/theory-generation/scheduler.ts',
       ),
       handler: 'handler',
-      runtime: Runtime.NODEJS_20_X,
+      runtime: Runtime.NODEJS_22_X,
       timeout: Duration.seconds(60),
       memorySize: 512,
       depsLockFilePath: path.join(projectRoot, 'pnpm-lock.yaml'),
