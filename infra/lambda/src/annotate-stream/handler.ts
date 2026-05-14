@@ -31,9 +31,12 @@ import {
 import type { LearningLanguage } from "@language-drill/shared";
 import { usageEvents } from "@language-drill/db";
 import {
+  ANNOTATE_SYSTEM_PROMPT_VERSION,
   AnnotateStreamMaxTokensError,
-  createClaudeClient,
+  createObservedClaudeClient,
+  flushObservability,
   streamAnnotation,
+  withLlmTrace,
 } from "@language-drill/ai";
 
 import { db } from "../db";
@@ -73,168 +76,199 @@ export const handler = awslambda.streamifyResponse<
 >(async (event, responseStream) => {
   const writer = createSseWriter(responseStream);
 
-  // ---- Gate 1: OPTIONS preflight ----
-  const method = event.requestContext?.http?.method ?? "POST";
-  if (method === "OPTIONS") {
-    writer.cors200();
-    return;
-  }
-
-  // ---- Gate 2: method != POST ----
-  if (method !== "POST") {
-    writer.errorJson(405, { code: "METHOD_NOT_ALLOWED", message: "Method Not Allowed" });
-    return;
-  }
-
-  // ---- Gate 3: parse + validate body ----
-  const rawBody = readBodyString(event);
-  let parsedJson: unknown;
+  // Outer try/finally guarantees one `flushObservability()` per invocation
+  // on every path — success, error, abort, and the validation gates that
+  // short-circuit before any Claude call (Req 6 AC 2). The flush is a
+  // synchronous no-op when Langfuse is disabled (keys absent in vitest /
+  // local dev), so wrapping the entire handler — including gates that
+  // never start a trace — costs nothing.
   try {
-    parsedJson = JSON.parse(rawBody);
-  } catch {
-    writer.errorJson(400, { code: "VALIDATION_ERROR", message: "Invalid JSON body" });
-    return;
-  }
-  const bodyResult = AnnotateRequestSchema.safeParse(parsedJson);
-  if (!bodyResult.success) {
-    writer.errorJson(400, {
-      code: "VALIDATION_ERROR",
-      message: "Invalid request body",
-    });
-    return;
-  }
-  const { text, language } = bodyResult.data;
-
-  // ---- Gate 4: EN is source-only ----
-  if (language === Language.EN) {
-    writer.errorJson(400, {
-      code: "UNSUPPORTED_LANGUAGE",
-      message: "English is not a supported learning language",
-    });
-    return;
-  }
-  const learningLanguage = language as LearningLanguage;
-
-  // ---- Gate 5: Clerk JWT verification ----
-  const authHeader =
-    event.headers?.authorization ?? event.headers?.Authorization;
-  const userId = await verifyClerkJwt(authHeader);
-  if (!userId) {
-    writer.errorJson(401, { code: "MISSING_SUB", message: "Unauthorized" });
-    return;
-  }
-
-  // ---- Gate 6: rate-limit (rolling 24h, shared with ai_evaluation) ----
-  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const usageRows = await db
-    .select({ count: count() })
-    .from(usageEvents)
-    .where(
-      and(
-        eq(usageEvents.userId, userId),
-        inArray(usageEvents.eventType, ["ai_evaluation", "read_annotation"]),
-        gte(usageEvents.createdAt, oneDayAgo),
-      ),
-    );
-  if (Number(usageRows[0]?.count ?? 0) >= DAILY_EVAL_LIMIT) {
-    writer.errorJson(429, {
-      code: "RATE_LIMIT_EXCEEDED",
-      message: "Daily evaluation limit exceeded",
-    });
-    return;
-  }
-
-  // ---------------------------------------------------------------------
-  // Gates passed — open the SSE stream and begin the candidate pipeline.
-  // ---------------------------------------------------------------------
-  writer.openSse();
-
-  // Step 7: pre-filter + post-filter → candidate list + calibration.
-  const { candidates, calibration } = await buildCandidateList({
-    userId,
-    language: learningLanguage,
-    text,
-  });
-
-  writer.writeEvent("meta", {
-    calibration,
-    candidateCount: candidates.length,
-  });
-
-  // Step 8: empty candidate list short-circuit (Req 1.6 / 2.5).
-  // No Claude call, no usage_events row — the user paid nothing for an
-  // in-level passage.
-  if (candidates.length === 0) {
-    writer.writeTerminal("done", { flaggedCount: 0 });
-    return;
-  }
-
-  // Step 9: client-disconnect → abort upstream Claude stream (Req 4.9).
-  const abort = new AbortController();
-  responseStream.on("close", () => abort.abort());
-
-  // Step 10: stream Claude's enrichment events, one flag at a time.
-  let flaggedCount = 0;
-  try {
-    const client = createClaudeClient(ANTHROPIC_API_KEY);
-    for await (const ev of streamAnnotation(client, {
-      text,
-      language: learningLanguage,
-      proficiencyLevel: calibration.cefr,
-      candidates,
-      signal: abort.signal,
-    })) {
-      if (ev.kind === "flag") {
-        writer.writeEvent("flag", ev.flag);
-        flaggedCount++;
-      }
+    // ---- Gate 1: OPTIONS preflight ----
+    const method = event.requestContext?.http?.method ?? "POST";
+    if (method === "OPTIONS") {
+      writer.cors200();
+      return;
     }
-  } catch (err) {
-    // The iterator throws on Claude errors, malformed responses, or the
-    // dedicated `AnnotateStreamMaxTokensError`. All three collapse to the
-    // same observable: `error` with `code: 'AI_UNAVAILABLE'` IFF we haven't
-    // already terminated (`terminated` is the wire-protocol single source
-    // of truth — see Req 3.3).
-    if (err instanceof AnnotateStreamMaxTokensError) {
-      console.warn(
-        "[annotate-stream] max_tokens truncation",
-        { flaggedCount },
-      );
-    } else {
-      console.error("[annotate-stream] streamAnnotation threw", err);
+
+    // ---- Gate 2: method != POST ----
+    if (method !== "POST") {
+      writer.errorJson(405, { code: "METHOD_NOT_ALLOWED", message: "Method Not Allowed" });
+      return;
     }
-    if (!writer.terminated) {
-      writer.writeTerminal("error", {
-        code: "AI_UNAVAILABLE",
-        message: "Evaluation temporarily unavailable",
+
+    // ---- Gate 3: parse + validate body ----
+    const rawBody = readBodyString(event);
+    let parsedJson: unknown;
+    try {
+      parsedJson = JSON.parse(rawBody);
+    } catch {
+      writer.errorJson(400, { code: "VALIDATION_ERROR", message: "Invalid JSON body" });
+      return;
+    }
+    const bodyResult = AnnotateRequestSchema.safeParse(parsedJson);
+    if (!bodyResult.success) {
+      writer.errorJson(400, {
+        code: "VALIDATION_ERROR",
+        message: "Invalid request body",
       });
+      return;
     }
-    return;
-  }
+    const { text, language } = bodyResult.data;
 
-  // Step 11: insert the usage_events row AFTER the iterator finishes
-  // successfully. A throw here MUST NOT cascade into a terminal `error` —
-  // the user got their flags, and a failed metering write is a backend
-  // observability problem, not a UX-visible one.
-  try {
-    await db.insert(usageEvents).values({
+    // ---- Gate 4: EN is source-only ----
+    if (language === Language.EN) {
+      writer.errorJson(400, {
+        code: "UNSUPPORTED_LANGUAGE",
+        message: "English is not a supported learning language",
+      });
+      return;
+    }
+    const learningLanguage = language as LearningLanguage;
+
+    // ---- Gate 5: Clerk JWT verification ----
+    const authHeader =
+      event.headers?.authorization ?? event.headers?.Authorization;
+    const userId = await verifyClerkJwt(authHeader);
+    if (!userId) {
+      writer.errorJson(401, { code: "MISSING_SUB", message: "Unauthorized" });
+      return;
+    }
+
+    // ---- Gate 6: rate-limit (rolling 24h, shared with ai_evaluation) ----
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const usageRows = await db
+      .select({ count: count() })
+      .from(usageEvents)
+      .where(
+        and(
+          eq(usageEvents.userId, userId),
+          inArray(usageEvents.eventType, ["ai_evaluation", "read_annotation"]),
+          gte(usageEvents.createdAt, oneDayAgo),
+        ),
+      );
+    if (Number(usageRows[0]?.count ?? 0) >= DAILY_EVAL_LIMIT) {
+      writer.errorJson(429, {
+        code: "RATE_LIMIT_EXCEEDED",
+        message: "Daily evaluation limit exceeded",
+      });
+      return;
+    }
+
+    // -------------------------------------------------------------------
+    // Gates passed — open the SSE stream and begin the candidate pipeline.
+    // -------------------------------------------------------------------
+    writer.openSse();
+
+    // Step 7: pre-filter + post-filter → candidate list + calibration.
+    const { candidates, calibration } = await buildCandidateList({
       userId,
-      eventType: "read_annotation",
-      metadata: {
-        language: learningLanguage,
-        textLength: text.length,
-        candidateCount: candidates.length,
-        flaggedCount,
-      },
+      language: learningLanguage,
+      text,
     });
-  } catch (err) {
-    console.error("[annotate-stream] usage insert failed", err);
-  }
 
-  // Step 12: terminal `done`. The writer's `terminated` flag ensures we
-  // never reach here twice.
-  if (!writer.terminated) {
-    writer.writeTerminal("done", { flaggedCount });
+    writer.writeEvent("meta", {
+      calibration,
+      candidateCount: candidates.length,
+    });
+
+    // Step 8: empty candidate list short-circuit (Req 1.6 / 2.5).
+    // No Claude call, no usage_events row — the user paid nothing for an
+    // in-level passage.
+    if (candidates.length === 0) {
+      writer.writeTerminal("done", { flaggedCount: 0 });
+      return;
+    }
+
+    // Step 9: client-disconnect → abort upstream Claude stream (Req 4.9).
+    const abort = new AbortController();
+    responseStream.on("close", () => abort.abort());
+
+    // Step 10: stream Claude's enrichment events, one flag at a time —
+    // wrapped in `withLlmTrace` so the Anthropic Proxy can emit one
+    // Langfuse generation tagged with the call-site metadata (Req 2 AC 2).
+    // The trace context lives in AsyncLocalStorage; the Proxy reads it
+    // at the start of `messages.stream` (design.md §Tracing model).
+    const requestId = event.requestContext?.requestId ?? "local";
+    let flaggedCount = 0;
+    try {
+      await withLlmTrace(
+        {
+          feature: "annotate",
+          env: (process.env.LANGFUSE_ENV ?? "dev") as "prod" | "dev",
+          promptVersion: ANNOTATE_SYSTEM_PROMPT_VERSION,
+          requestId,
+          userId,
+          language: learningLanguage,
+          cefrLevel: calibration.cefr,
+          exerciseType: "reading",
+          candidateCount: candidates.length,
+        },
+        async () => {
+          const client = createObservedClaudeClient(ANTHROPIC_API_KEY);
+          for await (const ev of streamAnnotation(client, {
+            text,
+            language: learningLanguage,
+            proficiencyLevel: calibration.cefr,
+            candidates,
+            signal: abort.signal,
+          })) {
+            if (ev.kind === "flag") {
+              writer.writeEvent("flag", ev.flag);
+              flaggedCount++;
+            }
+          }
+        },
+      );
+    } catch (err) {
+      // The iterator throws on Claude errors, malformed responses, or the
+      // dedicated `AnnotateStreamMaxTokensError`. All three collapse to the
+      // same observable: `error` with `code: 'AI_UNAVAILABLE'` IFF we haven't
+      // already terminated (`terminated` is the wire-protocol single source
+      // of truth — see Req 3.3). The Proxy already finalized the Langfuse
+      // generation with level=ERROR before re-throwing (Req 5 AC 3).
+      if (err instanceof AnnotateStreamMaxTokensError) {
+        console.warn(
+          "[annotate-stream] max_tokens truncation",
+          { flaggedCount },
+        );
+      } else {
+        console.error("[annotate-stream] streamAnnotation threw", err);
+      }
+      if (!writer.terminated) {
+        writer.writeTerminal("error", {
+          code: "AI_UNAVAILABLE",
+          message: "Evaluation temporarily unavailable",
+        });
+      }
+      return;
+    }
+
+    // Step 11: insert the usage_events row AFTER the iterator finishes
+    // successfully. A throw here MUST NOT cascade into a terminal `error` —
+    // the user got their flags, and a failed metering write is a backend
+    // observability problem, not a UX-visible one.
+    try {
+      await db.insert(usageEvents).values({
+        userId,
+        eventType: "read_annotation",
+        metadata: {
+          language: learningLanguage,
+          textLength: text.length,
+          candidateCount: candidates.length,
+          flaggedCount,
+        },
+      });
+    } catch (err) {
+      console.error("[annotate-stream] usage insert failed", err);
+    }
+
+    // Step 12: terminal `done`. The writer's `terminated` flag ensures we
+    // never reach here twice.
+    if (!writer.terminated) {
+      writer.writeTerminal("done", { flaggedCount });
+    }
+  } finally {
+    await flushObservability();
   }
 });
 

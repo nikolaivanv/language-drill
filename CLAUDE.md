@@ -106,6 +106,26 @@ Local dev conventions:
 
 ---
 
+## Prompt Editing
+
+When editing any `*_SYSTEM_PROMPT` constant in `packages/ai/src/`, bump the
+matching `*_PROMPT_VERSION` constant to today's date (`<surface>@YYYY-MM-DD`)
+in the same commit. Langfuse dashboards cohort traces by `promptVersion`, so
+failing to bump means old and new traces collapse into one population and
+A/B-style comparisons become impossible. The version constants live alongside
+each prompt and are re-exported from `packages/ai/src/index.ts`:
+
+| Prompt file | Version constant |
+|---|---|
+| `prompts.ts` | `EVALUATION_SYSTEM_PROMPT_VERSION` |
+| `annotate.ts` | `ANNOTATE_SYSTEM_PROMPT_VERSION` |
+| `generation-prompts.ts` | `GENERATION_PROMPT_VERSION` |
+| `validation-prompts.ts` | `VALIDATION_PROMPT_VERSION` |
+| `theory-prompts.ts` | `THEORY_GENERATION_PROMPT_VERSION` |
+| `theory-validation-prompts.ts` | `THEORY_VALIDATION_PROMPT_VERSION` |
+
+---
+
 ## Pre-Push Checks
 
 Before pushing to GitHub, **always** run the full suite from the repo root and confirm zero failures:
@@ -224,7 +244,7 @@ DNS is managed in **Cloudflare** (registrar + DNS). All records are **DNS-only**
 
 ### Required secrets
 
-**AWS Secrets Manager** (6 secrets — runtime values for Lambda):
+**AWS Secrets Manager** (8 secrets — runtime values for Lambda):
 
 | Secret name | Source |
 |---|---|
@@ -234,6 +254,8 @@ DNS is managed in **Cloudflare** (registrar + DNS). All records are **DNS-only**
 | `language-drill/ANTHROPIC_API_KEY` | Anthropic console |
 | `language-drill/UPSTASH_REDIS_REST_URL` | Upstash console → REST API tab |
 | `language-drill/UPSTASH_REDIS_REST_TOKEN` | Upstash console → REST API tab |
+| `language-drill/LANGFUSE_PUBLIC_KEY` | Langfuse console → Project Settings → API Keys |
+| `language-drill/LANGFUSE_SECRET_KEY` | Langfuse console → Project Settings → API Keys |
 
 **GitHub Actions secrets** (10 secrets — deploy-time credentials):
 

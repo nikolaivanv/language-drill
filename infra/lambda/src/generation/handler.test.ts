@@ -46,6 +46,16 @@ import type {
 
 const mockRunOneCell = vi.fn();
 const mockCheckAuditRowState = vi.fn();
+// Observability spies — Task 16 asserts per-record flush + per-record trace
+// scope (Req 6.3 / 7.4). Defaults are passthrough/no-op so existing tests
+// keep their behaviour; new observability tests inspect `.mock.calls`.
+const mockFlushObservability = vi.fn<() => Promise<void>>(
+  () => Promise.resolve(),
+);
+const mockWithLlmTrace = vi.fn(
+  <T>(_ctx: unknown, fn: () => T | Promise<T>): Promise<T> =>
+    Promise.resolve(fn()),
+);
 
 vi.mock('@language-drill/db', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@language-drill/db')>();
@@ -64,6 +74,13 @@ vi.mock('@language-drill/ai', async (importOriginal) => {
   return {
     ...actual,
     createClaudeClient: vi.fn(() => ({}) as never),
+    // Drop-in replacement post-Task 15 — the handler's cold-start client is
+    // now `createObservedClaudeClient`. `{}` is fine because `runOneCell` is
+    // mocked and never inspects the client shape.
+    createObservedClaudeClient: vi.fn(() => ({}) as never),
+    withLlmTrace: <T>(ctx: unknown, fn: () => T | Promise<T>) =>
+      mockWithLlmTrace(ctx, fn),
+    flushObservability: () => mockFlushObservability(),
   };
 });
 
@@ -196,6 +213,14 @@ let consoleLogSpy: MockInstance<typeof console.log>;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // `vi.clearAllMocks()` clears call records but preserves implementations.
+  // Re-pin the trace + flush spies defensively so each test starts with the
+  // documented passthrough/no-op behaviour even if a prior test patched them.
+  mockWithLlmTrace.mockImplementation(
+    <T>(_ctx: unknown, fn: () => T | Promise<T>): Promise<T> =>
+      Promise.resolve(fn()),
+  );
+  mockFlushObservability.mockImplementation(() => Promise.resolve());
   consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 });
 
@@ -490,5 +515,192 @@ describe('SQS handler', () => {
     );
     expect(log['status']).toBe('skipped-cost-cap');
     expect(log['errorMessage']).toBe('cost cap reached at $0.50');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Task 16: per-record flush + per-record trace scope (Req 6.3, 7.4)
+// ---------------------------------------------------------------------------
+//
+// The SQS handler wraps each record in `try/catch/finally` where the `finally`
+// drains Langfuse traces via `flushObservability`. The `runOneCell` call is
+// itself wrapped in `withLlmTrace` so the Anthropic Proxy can tag every
+// generate + validate call inside one cell-job with the shared metadata
+// (jobId, cellKey, language, cefr, type). These tests prove:
+//   - flush runs once per record on success AND every failure branch,
+//   - the trace scope is opened around `runOneCell` with the right metadata,
+//   - with Langfuse env vars absent (vitest default), batchItemFailures is
+//     byte-identical to the pre-spec contract.
+
+describe('SQS handler — observability flush + trace scope', () => {
+  it('success path → flushObservability called exactly once per record', async () => {
+    mockCheckAuditRowState.mockResolvedValueOnce({ status: 'absent' });
+    mockRunOneCell.mockResolvedValueOnce({
+      ...cellResultBase(),
+      status: 'succeeded',
+      insertedCount: 5,
+    });
+
+    const event = eventWith([
+      recordWith(JSON.stringify(validMessage()), 'msg-flush-ok'),
+    ]);
+    await handler(event);
+
+    expect(mockFlushObservability).toHaveBeenCalledTimes(1);
+  });
+
+  it('runOneCell throws → flushObservability still called exactly once per record', async () => {
+    mockCheckAuditRowState.mockResolvedValueOnce({ status: 'absent' });
+    mockRunOneCell.mockRejectedValueOnce(new Error('upstream timeout'));
+
+    const event = eventWith([
+      recordWith(JSON.stringify(validMessage()), 'msg-flush-throw'),
+    ]);
+    const result = await handler(event);
+
+    expect(result.batchItemFailures).toEqual([
+      { itemIdentifier: 'msg-flush-throw' },
+    ]);
+    expect(mockFlushObservability).toHaveBeenCalledTimes(1);
+  });
+
+  it('pre-trace gate (parse fail) → flushObservability still called exactly once', async () => {
+    // Parse fail short-circuits *before* `withLlmTrace` is ever entered.
+    // The per-record `finally` MUST still flush — that's the contract for
+    // every code path through the loop, not just the ones that opened a
+    // trace.
+    const event = eventWith([recordWith('not-json', 'msg-flush-parse')]);
+    const result = await handler(event);
+
+    expect(result.batchItemFailures).toEqual([
+      { itemIdentifier: 'msg-flush-parse' },
+    ]);
+    expect(mockFlushObservability).toHaveBeenCalledTimes(1);
+    // No trace ever opened — parse fail short-circuits before runOneCell.
+    expect(mockWithLlmTrace).not.toHaveBeenCalled();
+  });
+
+  it('two-record batch → flushObservability called exactly twice (once per record)', async () => {
+    mockCheckAuditRowState
+      .mockResolvedValueOnce({ status: 'absent' })
+      .mockResolvedValueOnce({ status: 'absent' });
+    mockRunOneCell
+      .mockResolvedValueOnce({
+        ...cellResultBase(),
+        status: 'succeeded',
+        insertedCount: 5,
+      })
+      .mockRejectedValueOnce(new Error('boom'));
+
+    const event = eventWith([
+      recordWith(JSON.stringify(validMessage()), 'msg-batch-1'),
+      recordWith(JSON.stringify(validMessage()), 'msg-batch-2'),
+    ]);
+    const result = await handler(event);
+
+    // Only the failing record reports a batchItemFailure.
+    expect(result.batchItemFailures).toEqual([
+      { itemIdentifier: 'msg-batch-2' },
+    ]);
+    // One flush per record, regardless of per-record outcome.
+    expect(mockFlushObservability).toHaveBeenCalledTimes(2);
+  });
+
+  it('trace scope is entered around runOneCell with the cell + job metadata', async () => {
+    mockCheckAuditRowState.mockResolvedValueOnce({ status: 'absent' });
+
+    // Capture the order of (a) withLlmTrace entry and (b) runOneCell entry
+    // so we can prove the trace ALS scope is open when runOneCell runs.
+    const callOrder: string[] = [];
+    mockWithLlmTrace.mockImplementationOnce(
+      <T>(ctx: unknown, fn: () => T | Promise<T>): Promise<T> => {
+        callOrder.push(`withLlmTrace:enter(${(ctx as { feature: string }).feature})`);
+        return Promise.resolve(fn()).then((v) => {
+          callOrder.push('withLlmTrace:exit');
+          return v;
+        });
+      },
+    );
+    mockRunOneCell.mockImplementationOnce(async () => {
+      callOrder.push('runOneCell');
+      return {
+        ...cellResultBase(),
+        status: 'succeeded',
+        insertedCount: 5,
+      };
+    });
+
+    const event = eventWith([
+      recordWith(JSON.stringify(validMessage()), 'msg-trace-ctx'),
+    ]);
+    await handler(event);
+
+    // Sequence proof: trace opens → runOneCell runs → trace closes.
+    expect(callOrder).toEqual([
+      'withLlmTrace:enter(generate)',
+      'runOneCell',
+      'withLlmTrace:exit',
+    ]);
+
+    // Context contents — the Proxy reads these from ALS to tag every
+    // `messages.create` issued by runOneCell. `feature='generate'` is the
+    // shared default; the Proxy overrides it to 'validate' for
+    // validation tool calls via TOOL_NAME_TO_FEATURE.
+    expect(mockWithLlmTrace).toHaveBeenCalledTimes(1);
+    const ctx = mockWithLlmTrace.mock.calls[0]![0] as {
+      feature: string;
+      env: string;
+      promptVersion: string;
+      requestId: string;
+      jobId: string;
+      cellKey: string;
+      language: string;
+      cefrLevel: string;
+      exerciseType: string;
+    };
+    expect(ctx.feature).toBe('generate');
+    expect(ctx.requestId).toBe('msg-trace-ctx');
+    expect(ctx.jobId).toBe('job-test-123');
+    expect(ctx.cellKey).toBe('es:b1:cloze:es-b1-present-subjunctive');
+    expect(ctx.language).toBe('ES');
+    expect(ctx.cefrLevel).toBe('B1');
+    expect(ctx.exerciseType).toBe('cloze');
+    // The version string is the literal from packages/ai/src/generation-prompts.ts.
+    // Match the date-stamped format `generate@YYYY-MM-DD` without locking the date.
+    expect(ctx.promptVersion).toMatch(/^generate@\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('LANGFUSE_PUBLIC_KEY unset (default) → batchItemFailures shape is byte-identical to pre-spec', async () => {
+    // Defensive: vitest leaves Langfuse env vars unset by default, but
+    // a prior test could have leaked them. This test pins the no-op
+    // contract end-to-end (Req 7 AC 4): the handler's return value is
+    // determined entirely by record-parse, gate, and runOneCell outcomes —
+    // never by the observability layer.
+    expect(process.env['LANGFUSE_PUBLIC_KEY']).toBeUndefined();
+
+    mockCheckAuditRowState
+      .mockResolvedValueOnce({ status: 'absent' })
+      .mockResolvedValueOnce({ status: 'absent' });
+    mockRunOneCell
+      .mockResolvedValueOnce({
+        ...cellResultBase(),
+        status: 'succeeded',
+        insertedCount: 5,
+      })
+      .mockRejectedValueOnce(new Error('boom'));
+
+    const event = eventWith([
+      recordWith(JSON.stringify(validMessage()), 'msg-noop-1'),
+      recordWith(JSON.stringify(validMessage()), 'msg-noop-2'),
+      recordWith('not-json', 'msg-noop-3'),
+    ]);
+    const result = await handler(event);
+
+    // Same shape pre-spec would emit: only the runOneCell-throw and the
+    // parse-fail records report as batchItemFailures.
+    expect(result.batchItemFailures).toEqual([
+      { itemIdentifier: 'msg-noop-2' },
+      { itemIdentifier: 'msg-noop-3' },
+    ]);
   });
 });

@@ -42,6 +42,12 @@ const CEFR_DESCRIPTOR_BULLETS = (
 // Consumers SHOULD use buildValidationSystemPrompt instead.
 // ---------------------------------------------------------------------------
 
+// Bump in the same commit as any semantic edit to
+// VALIDATION_SYSTEM_PROMPT_TEMPLATE. Drives the Langfuse trace
+// `promptVersion` tag — dashboards cohort old vs. new prompt traces by
+// this string.
+export const VALIDATION_PROMPT_VERSION = "validate@2026-05-12";
+
 export const VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language exercises for {{language}} learners at CEFR {{cefrLevel}}. Your job is to validate one already-generated exercise that targets the grammar point: {{grammarPoint.name}}.
 
 Be conservative. Reject anything ambiguous, anything mis-leveled, anything that fails to target the configured grammar point, and anything with cultural issues. Score on the high side only when the exercise is genuinely unambiguous, well-leveled, and on-point.

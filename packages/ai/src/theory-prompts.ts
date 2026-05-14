@@ -42,6 +42,12 @@ function renderBulletList(items: readonly string[]): string {
   return items.map((item) => `- ${item}`).join("\n");
 }
 
+// Bump in the same commit as any semantic edit to the theory-generation
+// system prompt (this file's `buildTheorySystemPrompt`). Drives the
+// Langfuse trace `promptVersion` tag — dashboards cohort old vs. new
+// prompt traces by this string.
+export const THEORY_GENERATION_PROMPT_VERSION = "theory-generate@2026-05-12";
+
 export function buildTheorySystemPrompt(inputs: TheoryPromptInputs): string {
   const { language, cefrLevel, grammarPoint } = inputs;
   const languageName = LANGUAGE_NAMES[language];

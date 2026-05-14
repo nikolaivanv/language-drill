@@ -91,6 +91,11 @@ export const ANNOTATE_TOOL: Anthropic.Tool = {
 // System prompt (cached via cache_control: ephemeral on the call site)
 // ---------------------------------------------------------------------------
 
+// Bump in the same commit as any semantic edit to ANNOTATE_SYSTEM_PROMPT.
+// Drives the Langfuse trace `promptVersion` tag — dashboards cohort old vs.
+// new prompt traces by this string.
+export const ANNOTATE_SYSTEM_PROMPT_VERSION = "annotate@2026-05-12";
+
 export const ANNOTATE_SYSTEM_PROMPT = `You are a reading-level assistant for an intermediate-plus language-learning application. You receive a passage in ES, DE, or TR AND a server-selected list of words from that passage. For EACH word in the list, produce one enrichment entry — lemma, part of speech, English gloss, an example sentence, frequency rank, and CEFR band — and submit the full set via the provided tool.
 
 ## Enrichment Task

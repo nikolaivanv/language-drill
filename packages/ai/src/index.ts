@@ -9,6 +9,7 @@ import Anthropic from "@anthropic-ai/sdk";
 
 export {
   EVALUATION_SYSTEM_PROMPT,
+  EVALUATION_SYSTEM_PROMPT_VERSION,
   buildUserPrompt,
   CEFR_LEVEL_DESCRIPTORS,
 } from "./prompts.js";
@@ -21,6 +22,7 @@ export {
 export type { EvaluateAnswerInput } from "./evaluate.js";
 export {
   ANNOTATE_SYSTEM_PROMPT,
+  ANNOTATE_SYSTEM_PROMPT_VERSION,
   ANNOTATE_TOOL,
   ANNOTATE_TOOL_NAME,
   AnnotateStreamMaxTokensError,
@@ -57,6 +59,7 @@ export {
   buildGenerationUserPrompt,
   canonicalSurface,
   tailRecentStems,
+  GENERATION_PROMPT_VERSION,
   MAX_RECENT_STEMS_IN_PROMPT,
 } from "./generation-prompts.js";
 export type { GenerationPromptInputs } from "./generation-prompts.js";
@@ -83,6 +86,7 @@ export type { ValidationResult, ValidateDraftResult } from "./validate.js";
 export {
   buildValidationSystemPrompt,
   buildValidationUserPrompt,
+  VALIDATION_PROMPT_VERSION,
   VALIDATION_SYSTEM_PROMPT_TEMPLATE,
 } from "./validation-prompts.js";
 
@@ -109,6 +113,7 @@ export type {
 export {
   buildTheorySystemPrompt,
   buildTheoryUserPrompt,
+  THEORY_GENERATION_PROMPT_VERSION,
 } from "./theory-prompts.js";
 export type { TheoryPromptInputs } from "./theory-prompts.js";
 
@@ -132,6 +137,7 @@ export type {
 export {
   buildTheoryValidationSystemPrompt,
   buildTheoryValidationUserPrompt,
+  THEORY_VALIDATION_PROMPT_VERSION,
   THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE,
 } from "./theory-validation-prompts.js";
 
@@ -141,3 +147,23 @@ export {
 export function createClaudeClient(apiKey: string): Anthropic {
   return new Anthropic({ apiKey });
 }
+
+// ---------------------------------------------------------------------------
+// Langfuse observability (Phase 1)
+// ---------------------------------------------------------------------------
+
+export {
+  createObservedClaudeClient,
+  withLlmTrace,
+  getCurrentLlmTraceContext,
+  getLangfuse,
+  flushObservability,
+  LANGFUSE_FLUSH_TIMEOUT_MS,
+  TOOL_NAME_TO_FEATURE,
+  __resetForTests as __resetObservabilityForTests,
+} from "./observability.js";
+export type {
+  LlmFeature,
+  LlmEnv,
+  LlmTraceContext,
+} from "./observability.js";

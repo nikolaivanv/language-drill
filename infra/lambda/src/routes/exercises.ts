@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { eq, and, sql, gte, count } from 'drizzle-orm';
@@ -9,7 +10,12 @@ import {
   userExerciseHistory,
   usageEvents,
 } from '@language-drill/db';
-import { createClaudeClient, evaluateAnswer } from '@language-drill/ai';
+import {
+  createObservedClaudeClient,
+  evaluateAnswer,
+  EVALUATION_SYSTEM_PROMPT_VERSION,
+  withLlmTrace,
+} from '@language-drill/ai';
 import { db } from '../db';
 import { approvedStatusFilter } from '../lib/exercise-filters';
 import { authMiddleware } from '../middleware/auth';
@@ -188,18 +194,43 @@ exercises.post('/exercises/:id/submit', async (c) => {
     );
   }
 
-  // 4. Call Claude for evaluation
-  try {
-    const client = createClaudeClient(ANTHROPIC_API_KEY);
-    const result = await evaluateAnswer(client, {
-      exercise: exercise.contentJson as ExerciseContent,
-      userAnswer,
-      language: exercise.language as Language,
-      difficulty: exercise.difficulty as CefrLevel,
-    });
+  // 4. Mint the submissionId BEFORE the Claude call so the userExerciseHistory
+  // row id and the Langfuse trace id are 1:1 — enables a one-click jump from
+  // the DB row to the trace (Req 9 AC 2). UUID v4 fits the existing
+  // `uuid().defaultRandom()` column without a schema change.
+  const submissionId = randomUUID();
+  const requestId =
+    (c.env?.event as { requestContext?: { requestId?: string } } | undefined)
+      ?.requestContext?.requestId ?? 'local';
 
-    // 5. Record history and usage on success
+  // 5. Call Claude for evaluation
+  try {
+    const client = createObservedClaudeClient(ANTHROPIC_API_KEY);
+    const result = await withLlmTrace(
+      {
+        feature: 'evaluate',
+        env: (process.env.LANGFUSE_ENV ?? 'dev') as 'prod' | 'dev',
+        promptVersion: EVALUATION_SYSTEM_PROMPT_VERSION,
+        requestId,
+        userId,
+        submissionId,
+        language: exercise.language as Language,
+        cefrLevel: exercise.difficulty as CefrLevel,
+        exerciseType: exercise.type as ExerciseType,
+      },
+      () =>
+        evaluateAnswer(client, {
+          exercise: exercise.contentJson as ExerciseContent,
+          userAnswer,
+          language: exercise.language as Language,
+          difficulty: exercise.difficulty as CefrLevel,
+        }),
+    );
+
+    // 6. Record history and usage on success — `id: submissionId` makes the
+    // history row id equal to the Langfuse trace tag (see step 4 above).
     await db.insert(userExerciseHistory).values({
+      id: submissionId,
       userId,
       exerciseId: id,
       sessionId,
@@ -216,7 +247,9 @@ exercises.post('/exercises/:id/submit', async (c) => {
 
     return c.json(result);
   } catch (err) {
-    // 6. Claude failure — do NOT write to history
+    // 7. Claude failure — do NOT write to history. The Proxy already
+    // finalized the Langfuse generation with level=ERROR (Req 5 AC 3)
+    // before re-throwing here.
     console.error('[POST /exercises/:id/submit] Claude evaluation failed:', err);
     return c.json(
       { error: 'Evaluation temporarily unavailable', code: 'AI_UNAVAILABLE' },

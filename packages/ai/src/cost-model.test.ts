@@ -6,6 +6,10 @@ import {
   estimateCostUsd,
   type ClaudeUsageBreakdown,
 } from "./cost-model.js";
+import {
+  buildCostDetails,
+  mapUsageDetails,
+} from "./observability.js";
 
 describe("SONNET_4_5_PRICING", () => {
   it("is frozen", () => {
@@ -127,5 +131,80 @@ describe("addUsage", () => {
     };
     expect(addUsage(usage, ZERO_USAGE)).toEqual(usage);
     expect(addUsage(ZERO_USAGE, usage)).toEqual(usage);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Cost-reconciliation round-trip (Req 4 AC 3)
+// ---------------------------------------------------------------------------
+//
+// The Langfuse Proxy reports per-bucket USD via `buildCostDetails`; the DB's
+// `generation_jobs.cost_usd_estimate` column is fed by `estimateCostUsd`.
+// Dashboards lose meaning if these two diverge. The contract is "agree to
+// within $0.0001 per generation" — `estimateCostUsd` rounds to 4 decimal
+// places, so the unrounded sum and the rounded estimate can differ by at
+// most half a step. This test fixes that contract across realistic usage
+// shapes.
+
+describe("cost reconciliation — buildCostDetails ↔ estimateCostUsd (Req 4 AC 3)", () => {
+  /** Convert an Anthropic-style usage object to ClaudeUsageBreakdown. */
+  function toBreakdown(u: {
+    input_tokens?: number;
+    cache_creation_input_tokens?: number;
+    cache_read_input_tokens?: number;
+    output_tokens?: number;
+  }): ClaudeUsageBreakdown {
+    return {
+      inputTokens: u.input_tokens ?? 0,
+      cacheCreationInputTokens: u.cache_creation_input_tokens ?? 0,
+      cacheReadInputTokens: u.cache_read_input_tokens ?? 0,
+      outputTokens: u.output_tokens ?? 0,
+    };
+  }
+
+  // Realistic mix of shapes the four AI surfaces actually emit.
+  const fixtures = [
+    { label: "all-zero",
+      u: {} },
+    { label: "evaluate (cache-heavy)",
+      u: { input_tokens: 80, cache_creation_input_tokens: 0, cache_read_input_tokens: 2400, output_tokens: 180 } },
+    { label: "generate (no cache)",
+      u: { input_tokens: 1800, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, output_tokens: 720 } },
+    { label: "first-call cache write",
+      u: { input_tokens: 0, cache_creation_input_tokens: 3500, cache_read_input_tokens: 0, output_tokens: 60 } },
+    { label: "annotate (large output)",
+      u: { input_tokens: 200, cache_creation_input_tokens: 0, cache_read_input_tokens: 1900, output_tokens: 7800 } },
+    { label: "validate (small)",
+      u: { input_tokens: 100, cache_creation_input_tokens: 200, cache_read_input_tokens: 50, output_tokens: 75 } },
+    { label: "tiny",
+      u: { input_tokens: 1, output_tokens: 1 } },
+    { label: "very large (Phase-2 worst case)",
+      u: { input_tokens: 50_000, cache_creation_input_tokens: 12_000, cache_read_input_tokens: 250_000, output_tokens: 8000 } },
+  ];
+
+  for (const { label, u } of fixtures) {
+    it(`agrees to within $0.0001 for: ${label}`, () => {
+      const dashboardSum = Object.values(buildCostDetails(u)).reduce(
+        (acc, v) => acc + v,
+        0,
+      );
+      const dbEstimate = estimateCostUsd(toBreakdown(u));
+      expect(Math.abs(dashboardSum - dbEstimate)).toBeLessThanOrEqual(0.0001);
+    });
+  }
+
+  it("mapUsageDetails keys match the four ClaudeUsageBreakdown buckets (1:1 dashboards)", () => {
+    const sample = {
+      input_tokens: 1,
+      cache_creation_input_tokens: 2,
+      cache_read_input_tokens: 3,
+      output_tokens: 4,
+    };
+    expect(mapUsageDetails(sample)).toEqual({
+      input: 1,
+      cache_creation_input: 2,
+      cache_read_input: 3,
+      output: 4,
+    });
   });
 });

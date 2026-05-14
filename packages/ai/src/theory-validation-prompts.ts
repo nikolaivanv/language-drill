@@ -53,6 +53,12 @@ const CEFR_DESCRIPTOR_BULLETS = (
 // instead.
 // ---------------------------------------------------------------------------
 
+// Bump in the same commit as any semantic edit to
+// THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE. Drives the Langfuse trace
+// `promptVersion` tag — dashboards cohort old vs. new prompt traces by
+// this string.
+export const THEORY_VALIDATION_PROMPT_VERSION = "theory-validate@2026-05-12";
+
 export const THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language reference material for adult learners. The page is for CEFR {{cefrLevel}} {{languageName}} and explains the grammar point: {{grammarPoint.name}}.
 
 Be conservative. Reject anything factually wrong, anything mis-leveled, anything whose examples fail to demonstrate the configured grammar point, and anything with cultural issues. Score on the high side only when the page is genuinely accurate, well-leveled, and on-point.
