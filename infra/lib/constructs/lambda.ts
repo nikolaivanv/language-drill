@@ -46,6 +46,16 @@ export class LambdaConstruct extends Construct {
       "UpstashRedisRestToken",
       `${props.secretsPrefix}/UPSTASH_REDIS_REST_TOKEN`
     );
+    const langfusePublicKey = secretsmanager.Secret.fromSecretNameV2(
+      this,
+      "LangfusePublicKey",
+      `${props.secretsPrefix}/LANGFUSE_PUBLIC_KEY`
+    );
+    const langfuseSecretKey = secretsmanager.Secret.fromSecretNameV2(
+      this,
+      "LangfuseSecretKey",
+      `${props.secretsPrefix}/LANGFUSE_SECRET_KEY`
+    );
 
     const projectRoot = path.join(__dirname, "../../..");
 
@@ -87,6 +97,14 @@ export class LambdaConstruct extends Construct {
         UPSTASH_REDIS_REST_URL: upstashRedisRestUrl.secretValue.unsafeUnwrap(),
         UPSTASH_REDIS_REST_TOKEN:
           upstashRedisRestToken.secretValue.unsafeUnwrap(),
+        LANGFUSE_PUBLIC_KEY: langfusePublicKey.secretValue.unsafeUnwrap(),
+        LANGFUSE_SECRET_KEY: langfuseSecretKey.secretValue.unsafeUnwrap(),
+        // Non-secret derived from `secretsPrefix` — single source of truth
+        // for "are we prod or dev?" so trace `env` tags stay consistent
+        // without scattering stack-name checks across handlers
+        // (design.md §Component 3).
+        LANGFUSE_ENV:
+          props.secretsPrefix === "language-drill" ? "prod" : "dev",
         // Phase 5 — plain env var (not a secret); flows from stack.ts via
         // additionalEnv. Defaults to empty so the env key is always present
         // and the admin middleware can fail closed without a redeploy.
@@ -100,5 +118,7 @@ export class LambdaConstruct extends Construct {
     anthropicApiKey.grantRead(this.handler);
     upstashRedisRestUrl.grantRead(this.handler);
     upstashRedisRestToken.grantRead(this.handler);
+    langfusePublicKey.grantRead(this.handler);
+    langfuseSecretKey.grantRead(this.handler);
   }
 }

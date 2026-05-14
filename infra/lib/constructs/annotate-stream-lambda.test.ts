@@ -55,18 +55,33 @@ describe("AnnotateStreamLambdaConstruct", () => {
     });
   });
 
-  it("IAM policies grant the three secrets the streaming handler needs and only those", () => {
+  it("IAM policies grant the streaming handler's secrets (DB + Clerk + Anthropic + Langfuse) and nothing else", () => {
     const policies = template.findResources("AWS::IAM::Policy");
     const serialized = JSON.stringify(policies);
 
     expect(serialized).toContain("/DATABASE_URL");
     expect(serialized).toContain("/CLERK_SECRET_KEY");
     expect(serialized).toContain("/ANTHROPIC_API_KEY");
+    // Phase-1 Langfuse secrets (Req 8.1 / 8.2) — added by Task 19.
+    expect(serialized).toContain("/LANGFUSE_PUBLIC_KEY");
+    expect(serialized).toContain("/LANGFUSE_SECRET_KEY");
 
     // The streaming Lambda does not read Upstash (no rate-limit token bucket
     // on this path), nor the Clerk webhook secret (no SVIX verification).
     expect(serialized).not.toContain("/UPSTASH_REDIS_REST_URL");
     expect(serialized).not.toContain("/UPSTASH_REDIS_REST_TOKEN");
     expect(serialized).not.toContain("/CLERK_WEBHOOK_SECRET");
+  });
+
+  it("Lambda Environment.Variables includes LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, and LANGFUSE_ENV='dev'", () => {
+    template.hasResourceProperties("AWS::Lambda::Function", {
+      Environment: {
+        Variables: Match.objectLike({
+          LANGFUSE_PUBLIC_KEY: Match.anyValue(),
+          LANGFUSE_SECRET_KEY: Match.anyValue(),
+          LANGFUSE_ENV: "dev",
+        }),
+      },
+    });
   });
 });

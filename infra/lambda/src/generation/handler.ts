@@ -28,7 +28,12 @@ import {
   type Cell,
   type CellResult,
 } from '@language-drill/db';
-import { createClaudeClient } from '@language-drill/ai';
+import {
+  createObservedClaudeClient,
+  flushObservability,
+  GENERATION_PROMPT_VERSION,
+  withLlmTrace,
+} from '@language-drill/ai';
 import type { SQSBatchResponse, SQSEvent } from 'aws-lambda';
 
 import {
@@ -42,7 +47,12 @@ import { errMessage, summarizeResult } from './log';
 // ---------------------------------------------------------------------------
 
 const db = createDb(requireEnv('DATABASE_URL'));
-const client = createClaudeClient(requireEnv('ANTHROPIC_API_KEY'));
+// Observed Anthropic client — vanilla `new Anthropic({apiKey})` when
+// Langfuse env vars are unset (Req 1 AC 2), Proxy-wrapped otherwise.
+// One module-singleton shared across SQS records; the Anthropic Proxy
+// reads ALS per call so trace metadata stays per-record correct even
+// though the client itself is reused (design.md §2c).
+const client = createObservedClaudeClient(requireEnv('ANTHROPIC_API_KEY'));
 
 // ---------------------------------------------------------------------------
 // Logging
@@ -165,21 +175,42 @@ export async function handler(event: SQSEvent): Promise<SQSBatchResponse> {
       // 7. Dispatch to runOneCell. A throw here is caller-visible (network,
       //    bug) and warrants redelivery; the audit row is `runOneCell`'s
       //    responsibility for terminal-failure persistence.
+      //
+      //    Wrapped in `withLlmTrace` so the Anthropic Proxy can tag every
+      //    `generate`-AND-`validate` call inside this cell with the shared
+      //    job + cell metadata (Req 2 AC 3 / 4). The Proxy disambiguates
+      //    feature='generate' vs 'validate' from the outgoing tool name
+      //    via `TOOL_NAME_TO_FEATURE` (design.md §2c); ALS carries the
+      //    shared fields, the Proxy picks the per-call feature tag.
       let result: CellResult;
       try {
-        result = await runOneCell({
-          db,
-          client,
-          cell,
-          args: {
-            count: parsed.spec.count,
-            batchSeed: parsed.spec.batchSeed,
-            topicDomain: parsed.spec.topicDomain,
-            maxCostUsd: parsed.maxCostUsd,
+        result = await withLlmTrace(
+          {
+            feature: 'generate',
+            env: (process.env.LANGFUSE_ENV ?? 'dev') as 'prod' | 'dev',
+            promptVersion: GENERATION_PROMPT_VERSION,
+            requestId: record.messageId,
+            jobId: parsed.jobId,
+            cellKey: cell.cellKey,
+            language: parsed.spec.language,
+            cefrLevel: parsed.spec.cefrLevel,
+            exerciseType: parsed.spec.exerciseType,
           },
-          jobId: parsed.jobId,
-          trigger: parsed.trigger,
-        });
+          () =>
+            runOneCell({
+              db,
+              client,
+              cell,
+              args: {
+                count: parsed.spec.count,
+                batchSeed: parsed.spec.batchSeed,
+                topicDomain: parsed.spec.topicDomain,
+                maxCostUsd: parsed.maxCostUsd,
+              },
+              jobId: parsed.jobId,
+              trigger: parsed.trigger,
+            }),
+        );
       } catch (err) {
         log({
           level: 'error',
@@ -224,6 +255,12 @@ export async function handler(event: SQSEvent): Promise<SQSBatchResponse> {
         message: 'unhandled error in per-record flow',
       });
       batchItemFailures.push({ itemIdentifier: record.messageId });
+    } finally {
+      // Drain buffered traces per record so each cell's generate +
+      // validate traces land in Langfuse before the Lambda freezes
+      // between SQS batches (Req 6 AC 3). No-op when Langfuse is
+      // disabled — `continue` in any pre-trace gate also lands here.
+      await flushObservability();
     }
   }
 

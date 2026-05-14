@@ -7,11 +7,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Hoisted mocks driven per-test. `streamAnnotationImpl` is the active async
 // generator factory; tests swap it via `setStreamAnnotation(...)`.
+//
+// `mockFlushObservability` + `mockWithLlmTrace` are hoisted so individual
+// tests can assert on call counts and captured trace context (Task 14
+// enforces the flush + trace-context contract for the streaming Lambda —
+// Req 6.2 / Req 7.2).
 const {
   mockVerifyClerkJwt,
   mockBuildCandidateList,
   mockUsageCount,
   mockUsageInsertValues,
+  mockFlushObservability,
+  mockWithLlmTrace,
   streamAnnotationImpl,
 } = vi.hoisted(() => {
   // The impl optionally receives the same (client, input) the real
@@ -28,6 +35,14 @@ const {
     mockBuildCandidateList: vi.fn(),
     mockUsageCount: vi.fn(),
     mockUsageInsertValues: vi.fn(),
+    mockFlushObservability: vi.fn<() => Promise<void>>(() => Promise.resolve()),
+    // Transparent passthrough by default — Langfuse is disabled in vitest,
+    // so this matches production no-op behaviour. Tests can `.mock.calls`
+    // to inspect the captured `LlmTraceContext`.
+    mockWithLlmTrace: vi.fn(
+      <T>(_ctx: unknown, fn: () => T | Promise<T>): Promise<T> =>
+        Promise.resolve(fn()),
+    ),
     streamAnnotationImpl: {
       set(fn: Impl) {
         impl = fn;
@@ -63,6 +78,11 @@ vi.mock("@language-drill/ai", () => {
   }
   return {
     createClaudeClient: vi.fn(() => ({})),
+    // Drop-in replacement for `createClaudeClient` post-Task 13; identical
+    // shape (no Langfuse env vars in vitest → vanilla Anthropic in prod).
+    createObservedClaudeClient: vi.fn(() => ({})),
+    // Forward (client, input) so tests that need the abort signal (soft-
+    // deadline path) can capture it via `streamAnnotationImpl.set`.
     streamAnnotation: (client: unknown, input: { signal?: AbortSignal }) =>
       streamAnnotationImpl.get(client, input),
     AnnotateStreamMaxTokensError: AnnotateStreamMaxTokensErrorStub,
@@ -70,6 +90,13 @@ vi.mock("@language-drill/ai", () => {
       lookup: () => null,
       isStopword: () => false,
     }),
+    // Trace + flush spies are hoisted (top of file) so individual tests
+    // can assert on the captured `LlmTraceContext` and the per-invocation
+    // flush count (Req 6.2 / Req 7.2).
+    withLlmTrace: <T>(ctx: unknown, fn: () => T | Promise<T>) =>
+      mockWithLlmTrace(ctx, fn),
+    flushObservability: () => mockFlushObservability(),
+    ANNOTATE_SYSTEM_PROMPT_VERSION: "annotate@test",
   };
 });
 
@@ -225,6 +252,16 @@ beforeEach(() => {
   mockBuildCandidateList.mockReset();
   mockUsageCount.mockReset().mockResolvedValue([{ count: 5 }]);
   mockUsageInsertValues.mockReset();
+  // `.mockReset()` strips the default implementation, so re-pin both spies
+  // to their passthrough/no-op defaults. Call records start empty for each
+  // test — the observability assertions below depend on this.
+  mockFlushObservability.mockReset().mockImplementation(() => Promise.resolve());
+  mockWithLlmTrace
+    .mockReset()
+    .mockImplementation(
+      <T>(_ctx: unknown, fn: () => T | Promise<T>): Promise<T> =>
+        Promise.resolve(fn()),
+    );
 });
 
 afterEach(() => {
@@ -572,5 +609,168 @@ describe("annotate-stream handler — usage insert resilience", () => {
     );
 
     errSpy.mockRestore();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Task 14: flush + trace-context contract (Req 6.2, 7.2)
+// ---------------------------------------------------------------------------
+//
+// The handler wraps its entire body in `try { ... } finally { await
+// flushObservability(); }` so every invocation — success, error, abort, or
+// short-circuit gate — drains the Langfuse buffer exactly once before
+// returning. The `withLlmTrace` scope around the Claude stream carries the
+// per-call metadata the Anthropic Proxy reads from ALS to tag the emitted
+// generation. The Proxy → Langfuse mapping itself is exercised by
+// `packages/ai/src/observability.test.ts` (Task 9); these tests lock in
+// the handler's contract with that package.
+
+describe("annotate-stream handler — observability flush + trace context", () => {
+  it("happy path: flushObservability is called exactly once after done", async () => {
+    mockBuildCandidateList.mockResolvedValueOnce({
+      candidates: [
+        { matchedForm: "aldea", lemma: "aldea" },
+        { matchedForm: "indiferencia", lemma: "indiferencia" },
+      ],
+      calibration: { cefr: "B1", top: 3000 },
+    });
+    streamAnnotationImpl.set(async function* () {
+      yield { kind: "flag", flag: ALDEA_FLAG };
+      yield { kind: "flag", flag: INDIFERENCIA_FLAG };
+    });
+
+    await handler(
+      buildPostEvent({ text: PASSAGE, language: "ES" }),
+      makeResponseStream(),
+      {} as never,
+    );
+
+    const frames = parseSseFrames();
+    expect(frames.map((f) => f.event)).toEqual(["meta", "flag", "flag", "done"]);
+    expect(mockFlushObservability).toHaveBeenCalledTimes(1);
+  });
+
+  it("Claude error path: flushObservability is called exactly once after error", async () => {
+    mockBuildCandidateList.mockResolvedValueOnce({
+      candidates: [{ matchedForm: "aldea", lemma: "aldea" }],
+      calibration: { cefr: "B1", top: 3000 },
+    });
+    streamAnnotationImpl.set(async function* () {
+      yield { kind: "flag", flag: ALDEA_FLAG };
+      throw new Error("upstream timeout");
+    });
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await handler(
+      buildPostEvent({ text: PASSAGE, language: "ES" }),
+      makeResponseStream(),
+      {} as never,
+    );
+
+    const frames = parseSseFrames();
+    expect(frames.map((f) => f.event)).toEqual(["meta", "flag", "error"]);
+    expect(mockFlushObservability).toHaveBeenCalledTimes(1);
+
+    errSpy.mockRestore();
+  });
+
+  it("max_tokens truncation path: flushObservability is called exactly once after error", async () => {
+    mockBuildCandidateList.mockResolvedValueOnce({
+      candidates: [{ matchedForm: "aldea", lemma: "aldea" }],
+      calibration: { cefr: "A1", top: 750 },
+    });
+    const ai = await import("@language-drill/ai");
+    streamAnnotationImpl.set(async function* () {
+      throw new ai.AnnotateStreamMaxTokensError(0);
+    });
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    await handler(
+      buildPostEvent({ text: PASSAGE, language: "ES" }),
+      makeResponseStream(),
+      {} as never,
+    );
+
+    expect(mockFlushObservability).toHaveBeenCalledTimes(1);
+
+    warnSpy.mockRestore();
+  });
+
+  it("pre-stream gate (rate-limit 429): flushObservability still called exactly once", async () => {
+    // Even the short-circuit paths must flush — they don't open a trace,
+    // so the flush is a no-op in production, but the contract is "one
+    // flush per Lambda invocation" regardless of outcome.
+    mockUsageCount.mockResolvedValueOnce([{ count: 50 }]);
+
+    await handler(
+      buildPostEvent({ text: PASSAGE, language: "ES" }),
+      makeResponseStream(),
+      {} as never,
+    );
+
+    expect(harness.fromCalls[0].statusCode).toBe(429);
+    expect(mockFlushObservability).toHaveBeenCalledTimes(1);
+    // No trace ever opened — the rate-limit gate short-circuits before
+    // the Claude call.
+    expect(mockWithLlmTrace).not.toHaveBeenCalled();
+  });
+
+  it("trace context carries candidateCount + feature=annotate + per-call metadata, capturing flaggedCount via the streamAnnotation run inside the scope", async () => {
+    mockBuildCandidateList.mockResolvedValueOnce({
+      candidates: [
+        { matchedForm: "aldea", lemma: "aldea" },
+        { matchedForm: "indiferencia", lemma: "indiferencia" },
+      ],
+      calibration: { cefr: "B1", top: 3000 },
+    });
+    streamAnnotationImpl.set(async function* () {
+      yield { kind: "flag", flag: ALDEA_FLAG };
+      yield { kind: "flag", flag: INDIFERENCIA_FLAG };
+    });
+
+    await handler(
+      buildPostEvent({ text: PASSAGE, language: "ES" }),
+      makeResponseStream(),
+      {} as never,
+    );
+
+    // One `withLlmTrace` scope per invocation — wraps the Claude stream
+    // iteration. The Anthropic Proxy (mocked-out at this layer; verified
+    // in observability.test.ts Task 9) reads ALS at the start of
+    // `messages.stream` and finalizes the generation with `flaggedCount =
+    // collected.length` at stream end.
+    expect(mockWithLlmTrace).toHaveBeenCalledTimes(1);
+    const ctx = mockWithLlmTrace.mock.calls[0]![0] as {
+      feature: string;
+      env: string;
+      promptVersion: string;
+      requestId: string;
+      userId: string;
+      language: string;
+      cefrLevel: string;
+      exerciseType: string;
+      candidateCount: number;
+    };
+    expect(ctx.feature).toBe("annotate");
+    expect(ctx.userId).toBe("user_123");
+    expect(ctx.language).toBe("ES");
+    expect(ctx.cefrLevel).toBe("B1");
+    expect(ctx.exerciseType).toBe("reading");
+    expect(ctx.promptVersion).toBe("annotate@test");
+    expect(ctx.requestId).toBe("req-1");
+    // candidateCount lives in the trace context directly (Req 2 AC 2).
+    expect(ctx.candidateCount).toBe(2);
+
+    // flaggedCount is captured by the Proxy at stream end (collected from
+    // `content_block_delta` events — see observability.ts `wrapStream`).
+    // At the handler-test layer we verify the same count reaches the
+    // usage_events row, which proves the stream iteration completed inside
+    // the trace scope.
+    expect(mockUsageInsertValues).toHaveBeenCalledTimes(1);
+    const row = mockUsageInsertValues.mock.calls[0][0] as {
+      metadata: { candidateCount: number; flaggedCount: number };
+    };
+    expect(row.metadata.candidateCount).toBe(2);
+    expect(row.metadata.flaggedCount).toBe(2);
   });
 });

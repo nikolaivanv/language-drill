@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Hono } from 'hono';
 import { ExerciseQuerySchema, SubmitAnswerSchema } from './exercises';
 
@@ -53,9 +53,31 @@ vi.mock('../lib/exercise-filters', () => ({
 }));
 
 const mockEvaluateAnswer = vi.fn();
+// Spy on `withLlmTrace` so observability tests can inspect the trace
+// context the route assembles. Default behaviour: transparent passthrough
+// (Langfuse is disabled in vitest — no env keys — so this matches the
+// real production behaviour for the no-op path).
+const mockWithLlmTrace = vi.fn(
+  <T>(_ctx: unknown, fn: () => T | Promise<T>): Promise<T> =>
+    Promise.resolve(fn()),
+);
 vi.mock('@language-drill/ai', () => ({
   createClaudeClient: vi.fn(() => ({})),
+  createObservedClaudeClient: vi.fn(() => ({})),
   evaluateAnswer: (...args: unknown[]) => mockEvaluateAnswer(...args),
+  withLlmTrace: <T>(ctx: unknown, fn: () => T | Promise<T>) =>
+    mockWithLlmTrace(ctx, fn),
+  EVALUATION_SYSTEM_PROMPT_VERSION: 'evaluate@test',
+}));
+
+// Mock `node:crypto` so observability tests can pin `submissionId` and
+// assert the 1:1 mapping between the Langfuse trace tag and the
+// `userExerciseHistory.id` (design.md Open Question 1). The default
+// implementation returns a stable string so existing tests that don't
+// care about the value still see deterministic inserts.
+const mockRandomUUID = vi.fn(() => '00000000-0000-0000-0000-000000000000');
+vi.mock('node:crypto', () => ({
+  randomUUID: () => mockRandomUUID(),
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -818,5 +840,207 @@ describe('review_status filter', () => {
     expect(body.code).toBe('EXERCISE_NOT_FOUND');
     expect(mockEvaluateAnswer).not.toHaveBeenCalled();
     expect(mockApprovedStatusFilter).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /exercises/:id/submit — observability swap + submissionId contract
+// ---------------------------------------------------------------------------
+//
+// Task 12 (langfuse-implementation-phase-1): the route was changed to mint
+// a `submissionId` UUID before the Claude call, wrap `evaluateAnswer` in
+// `withLlmTrace`, and use the same UUID as both the trace tag AND the
+// `userExerciseHistory.id` on insert. These tests lock in:
+//   (a) no-op when LANGFUSE_PUBLIC_KEY is unset — response and DB row are
+//       indistinguishable from the pre-spec route.
+//   (b) the inserted history row id equals the route's minted submissionId
+//       (verified by stubbing `randomUUID`).
+//   (c) when Langfuse env is set, the trace context handed to
+//       `withLlmTrace` carries `feature='evaluate'` and a `submissionId`
+//       that matches the inserted row id — i.e. the Proxy will tag the
+//       Langfuse generation accordingly. The Proxy → tag/metadata mapping
+//       itself is exercised by `packages/ai/src/observability.test.ts`.
+
+describe('POST /exercises/:id/submit — observability', () => {
+  let app: Hono;
+
+  const authEnv = {
+    event: {
+      requestContext: {
+        authorizer: { jwt: { claims: { sub: 'user_123' } } },
+        requestId: 'req-abc-123',
+      },
+    },
+  };
+
+  const sampleExercise = {
+    id: 'abc-123',
+    type: 'cloze',
+    language: 'EN',
+    difficulty: 'B1',
+    contentJson: { sentence: 'I ___ to the store', options: ['go', 'went', 'gone'] },
+    audioS3Key: null,
+    createdAt: new Date(),
+  };
+
+  const sampleEvaluation = {
+    score: 0.85,
+    grammarAccuracy: 0.9,
+    vocabularyRange: 'B1',
+    taskAchievement: 0.8,
+    feedback: 'Good job!',
+    errors: [],
+    estimatedCefrEvidence: 'B1',
+  };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    // `vi.clearAllMocks()` clears call records but preserves mock
+    // implementations set via `vi.fn(impl)`. Re-pin the defaults for the
+    // two spies we control so the tests are order-independent.
+    mockWithLlmTrace.mockImplementation(
+      <T>(_ctx: unknown, fn: () => T | Promise<T>) => Promise.resolve(fn()),
+    );
+    mockRandomUUID.mockImplementation(() => '00000000-0000-0000-0000-000000000000');
+    const mod = await import('./exercises');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('(a) LANGFUSE_PUBLIC_KEY unset: inserts history row and returns the evaluation byte-identical to the pre-spec response', async () => {
+    // Defensive: vitest does not load Langfuse env vars by default, but
+    // an earlier test could have leaked. Force the no-op path explicitly.
+    vi.stubEnv('LANGFUSE_PUBLIC_KEY', '');
+    vi.stubEnv('LANGFUSE_SECRET_KEY', '');
+
+    mockLimit.mockResolvedValueOnce([sampleExercise]);
+    mockWhere
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }))
+      .mockResolvedValueOnce([{ count: 0 }] as never);
+    mockEvaluateAnswer.mockResolvedValueOnce(sampleEvaluation);
+
+    const res = await app.request(
+      '/exercises/abc-123/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'I went to the store' }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    // Byte-identical to the pre-spec response: just `result` from
+    // `evaluateAnswer`, no observability-added fields.
+    expect(body).toEqual(sampleEvaluation);
+
+    // Three inserts: auth user upsert (1), userExerciseHistory (2),
+    // usageEvents (3). Identical to pre-spec.
+    expect(mockInsert).toHaveBeenCalledTimes(3);
+    expect(mockValues).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        exerciseId: 'abc-123',
+        userId: 'user_123',
+        score: 0.85,
+        responseJson: {
+          userAnswer: 'I went to the store',
+          evaluation: sampleEvaluation,
+        },
+      }),
+    );
+  });
+
+  it('(b) userExerciseHistory.id equals the route-minted submissionId (stubbed randomUUID)', async () => {
+    const stubbedId = '11111111-2222-3333-4444-555555555555';
+    mockRandomUUID.mockReturnValueOnce(stubbedId);
+
+    mockLimit.mockResolvedValueOnce([sampleExercise]);
+    mockWhere
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }))
+      .mockResolvedValueOnce([{ count: 0 }] as never);
+    mockEvaluateAnswer.mockResolvedValueOnce(sampleEvaluation);
+
+    const res = await app.request(
+      '/exercises/abc-123/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'I went to the store' }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    // The 2nd insert is the userExerciseHistory row. Its `id` MUST equal
+    // the route's `submissionId` so the DB row and the Langfuse trace are
+    // 1:1 (Req 2 AC 7, design.md Open Question 1).
+    expect(mockValues).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        id: stubbedId,
+        exerciseId: 'abc-123',
+      }),
+    );
+  });
+
+  it('(c) Langfuse env set: trace context carries feature=evaluate and submissionId matching the inserted row id', async () => {
+    vi.stubEnv('LANGFUSE_PUBLIC_KEY', 'pk-lf-test');
+    vi.stubEnv('LANGFUSE_SECRET_KEY', 'sk-lf-test');
+    const stubbedId = '99999999-8888-7777-6666-555555555555';
+    mockRandomUUID.mockReturnValueOnce(stubbedId);
+
+    mockLimit.mockResolvedValueOnce([sampleExercise]);
+    mockWhere
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }))
+      .mockResolvedValueOnce([{ count: 0 }] as never);
+    mockEvaluateAnswer.mockResolvedValueOnce(sampleEvaluation);
+
+    const res = await app.request(
+      '/exercises/abc-123/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'I went to the store' }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+
+    // Exactly one trace per submission. The Anthropic Proxy emits one
+    // Langfuse generation inside this ALS scope — that mapping is verified
+    // by `packages/ai/src/observability.test.ts` (Task 8 success-path test).
+    expect(mockWithLlmTrace).toHaveBeenCalledTimes(1);
+    const ctx = mockWithLlmTrace.mock.calls[0]![0] as {
+      feature: string;
+      submissionId: string;
+      userId: string;
+      language: string;
+      cefrLevel: string;
+      exerciseType: string;
+      promptVersion: string;
+      requestId: string;
+      env: string;
+    };
+    expect(ctx.feature).toBe('evaluate');
+    expect(ctx.submissionId).toBe(stubbedId);
+    expect(ctx.userId).toBe('user_123');
+    expect(ctx.language).toBe('EN');
+    expect(ctx.cefrLevel).toBe('B1');
+    expect(ctx.exerciseType).toBe('cloze');
+    expect(ctx.promptVersion).toBe('evaluate@test');
+    expect(ctx.requestId).toBe('req-abc-123');
+
+    // The inserted row id must equal the trace's submissionId (Req 2 AC 7).
+    expect(mockValues).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ id: stubbedId }),
+    );
   });
 });

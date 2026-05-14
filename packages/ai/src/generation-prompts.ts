@@ -105,6 +105,12 @@ function renderRecentStems(recentStems: readonly string[]): string {
   return tail.map((stem) => `  - ${stem}`).join("\n");
 }
 
+// Bump in the same commit as any semantic edit to the generation system
+// prompt (this file's `buildGenerationSystemPrompt`). Drives the Langfuse
+// trace `promptVersion` tag — dashboards cohort old vs. new prompt traces
+// by this string.
+export const GENERATION_PROMPT_VERSION = "generate@2026-05-12";
+
 /**
  * Wording differs per type so Claude reads it the way the cell is constrained:
  * vocab cells are constrained at the target-word level, sentence cells at the

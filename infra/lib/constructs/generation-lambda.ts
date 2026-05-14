@@ -54,6 +54,16 @@ export class GenerationLambdaConstruct extends Construct {
       'AnthropicApiKey',
       `${props.secretsPrefix}/ANTHROPIC_API_KEY`,
     );
+    const langfusePublicKey = secretsmanager.Secret.fromSecretNameV2(
+      this,
+      'LangfusePublicKey',
+      `${props.secretsPrefix}/LANGFUSE_PUBLIC_KEY`,
+    );
+    const langfuseSecretKey = secretsmanager.Secret.fromSecretNameV2(
+      this,
+      'LangfuseSecretKey',
+      `${props.secretsPrefix}/LANGFUSE_SECRET_KEY`,
+    );
 
     const projectRoot = path.join(__dirname, '../../..');
 
@@ -97,11 +107,20 @@ export class GenerationLambdaConstruct extends Construct {
         ENV_NAME: props.envName,
         DATABASE_URL: databaseUrl.secretValue.unsafeUnwrap(),
         ANTHROPIC_API_KEY: anthropicApiKey.secretValue.unsafeUnwrap(),
+        LANGFUSE_PUBLIC_KEY: langfusePublicKey.secretValue.unsafeUnwrap(),
+        LANGFUSE_SECRET_KEY: langfuseSecretKey.secretValue.unsafeUnwrap(),
+        // Non-secret derived from `secretsPrefix` — single source of truth
+        // for prod vs dev so trace `env` tags are consistent across all
+        // three Lambda runtimes (design.md §Component 3).
+        LANGFUSE_ENV:
+          props.secretsPrefix === 'language-drill' ? 'prod' : 'dev',
       },
     });
 
     databaseUrl.grantRead(this.handler);
     anthropicApiKey.grantRead(this.handler);
+    langfusePublicKey.grantRead(this.handler);
+    langfuseSecretKey.grantRead(this.handler);
 
     this.handler.addEventSource(
       new SqsEventSource(props.queue, {

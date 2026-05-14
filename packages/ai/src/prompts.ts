@@ -39,6 +39,11 @@ const CEFR_DESCRIPTOR_BULLETS = (
 // System prompt
 // ---------------------------------------------------------------------------
 
+// Bump in the same commit as any semantic edit to EVALUATION_SYSTEM_PROMPT.
+// Drives the Langfuse trace `promptVersion` tag — dashboards cohort old vs.
+// new prompt traces by this string.
+export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-05-12";
+
 export const EVALUATION_SYSTEM_PROMPT = `You are an expert language evaluator for a language-learning application. Your role is to evaluate user answers to language exercises with precision and pedagogical insight.
 
 ## Evaluation Rubric

@@ -1,7 +1,9 @@
 import { Hono } from 'hono';
 import { handle } from 'hono/aws-lambda';
 import { cors } from 'hono/cors';
+import type { Context, Next } from 'hono';
 import { FALLBACK_ORIGINS } from '@language-drill/shared';
+import { flushObservability } from '@language-drill/ai';
 
 import health from './routes/health';
 import exercises from './routes/exercises';
@@ -44,6 +46,25 @@ app.use(
     allowHeaders: ['Authorization', 'Content-Type'],
   })
 );
+
+/**
+ * Drain buffered Langfuse traces after every request so the Lambda's next
+ * freeze doesn't drop them. `flushObservability` is a no-op when Langfuse
+ * is disabled, and races flushAsync against a 200ms hard cap so a slow
+ * sink can never delay the response (Req 6 AC 1 + AC 5).
+ *
+ * Exported for direct unit testing — middlewares are easier to verify as
+ * pure functions than via app.request roundtrips.
+ */
+export async function flushMiddleware(_c: Context, next: Next): Promise<void> {
+  try {
+    await next();
+  } finally {
+    await flushObservability();
+  }
+}
+
+app.use('*', flushMiddleware);
 
 app.route('/', health);
 app.route('/', exercises);

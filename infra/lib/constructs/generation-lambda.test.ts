@@ -1,5 +1,5 @@
 import { App, Stack } from 'aws-cdk-lib';
-import { Template } from 'aws-cdk-lib/assertions';
+import { Match, Template } from 'aws-cdk-lib/assertions';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { describe, beforeAll, expect, it } from 'vitest';
 
@@ -58,16 +58,31 @@ describe('GenerationLambdaConstruct', () => {
     });
   });
 
-  it('IAM policies grant access to DATABASE_URL and ANTHROPIC_API_KEY only', () => {
+  it('IAM policies grant access to DATABASE_URL, ANTHROPIC_API_KEY, and the two Langfuse secrets only', () => {
     const policies = template.findResources('AWS::IAM::Policy');
     const serialized = JSON.stringify(policies);
 
     expect(serialized).toContain('/DATABASE_URL');
     expect(serialized).toContain('/ANTHROPIC_API_KEY');
+    // Phase-1 Langfuse secrets (Req 8.1 / 8.2) — added by Task 18.
+    expect(serialized).toContain('/LANGFUSE_PUBLIC_KEY');
+    expect(serialized).toContain('/LANGFUSE_SECRET_KEY');
 
     expect(serialized).not.toContain('/CLERK_SECRET_KEY');
     expect(serialized).not.toContain('/CLERK_WEBHOOK_SECRET');
     expect(serialized).not.toContain('/UPSTASH_REDIS_REST_URL');
     expect(serialized).not.toContain('/UPSTASH_REDIS_REST_TOKEN');
+  });
+
+  it("Lambda Environment.Variables includes LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, and LANGFUSE_ENV='dev'", () => {
+    template.hasResourceProperties('AWS::Lambda::Function', {
+      Environment: {
+        Variables: Match.objectLike({
+          LANGFUSE_PUBLIC_KEY: Match.anyValue(),
+          LANGFUSE_SECRET_KEY: Match.anyValue(),
+          LANGFUSE_ENV: 'dev',
+        }),
+      },
+    });
   });
 });
