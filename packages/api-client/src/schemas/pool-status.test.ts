@@ -64,6 +64,7 @@ describe('GenerationStatsSchema', () => {
           approvedCount: 8,
           flaggedCount: 1,
           rejectedCount: 1,
+          dedupGivenUpCount: 0,
           approvalRate: 0.8,
         },
       ],
@@ -80,6 +81,25 @@ describe('GenerationStatsSchema', () => {
           level: 'B1',
           type: 'cloze',
           approvedCount: '5',
+          flaggedCount: 1,
+          rejectedCount: 1,
+          dedupGivenUpCount: 0,
+          approvalRate: 0.5,
+        },
+      ],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a GenerationStats where an approvalRates entry is missing dedupGivenUpCount', () => {
+    const result = GenerationStatsSchema.safeParse({
+      ...baseStats,
+      approvalRates: [
+        {
+          language: 'EN',
+          level: 'B1',
+          type: 'cloze',
+          approvedCount: 5,
           flaggedCount: 1,
           rejectedCount: 1,
           approvalRate: 0.5,

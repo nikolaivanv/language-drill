@@ -232,6 +232,15 @@ export type GenerationSpec = {
   count: number;
   /** Default `'phase-2-default'` from the CLI. Bump to add 50 more drafts to a cell. */
   batchSeed: string;
+  /**
+   * Surfaces already persisted in this cell, fed into the generator's system
+   * prompt so Claude stops proposing what `exercises_dedup_idx` would reject
+   * on insert. Populated by `runOneCell` for `vocab_recall` cells; left
+   * undefined for cloze/translation (where the surface space is unbounded).
+   * Frozen for the whole batch — same list across every ordinal in the cell
+   * — so the prompt-cache prefix stays stable.
+   */
+  priorPoolSurfaces?: readonly string[];
 };
 
 export type ExerciseDraft = {
@@ -552,6 +561,7 @@ export async function generateBatch(
     cefrLevel: spec.cefrLevel,
     exerciseType: spec.exerciseType,
     grammarPoint: spec.grammarPoint,
+    priorPoolSurfaces: spec.priorPoolSurfaces,
   };
 
   const recentStems: string[] = [];
