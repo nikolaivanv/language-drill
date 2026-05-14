@@ -62,7 +62,7 @@ export class LambdaConstruct extends Construct {
     this.handler = new lambda.NodejsFunction(this, "Handler", {
       entry: path.join(__dirname, "../../lambda/src/index.ts"),
       handler: "handler",
-      runtime: Runtime.NODEJS_20_X,
+      runtime: Runtime.NODEJS_22_X,
       // 29 s is the max API Gateway HTTP API will wait for an integration.
       // Claude tool-use calls in /read/annotate and /exercises/:id/submit can
       // exceed 15 s with cold containers + cross-region DB round-trips.

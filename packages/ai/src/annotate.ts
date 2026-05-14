@@ -524,7 +524,15 @@ export async function annotateText(
 
 /** Empirical worst-case budget for a 40-candidate enrichment. PR #49. */
 const STREAM_MAX_TOKENS = 8192;
-const STREAM_MODEL = "claude-sonnet-4-5" as const;
+// Annotation is the only AI surface on Haiku 4.5 — same precedent as PR #51
+// for the original (pre-streaming) `/read/annotate` handler. The task is
+// enrichment, not reasoning: structured tool-use output for each candidate
+// word (lemma / pos / gloss / example). Haiku is 2–3× faster than Sonnet on
+// streaming tool-use, which is what lets us fit under the 29 s Lambda
+// ceiling even on cold-start passages. Other AI surfaces (`evaluate`,
+// `validate`, `generate`) keep Sonnet — their outputs are small and
+// bounded, and reasoning quality matters more than wall-clock.
+const STREAM_MODEL = "claude-haiku-4-5-20251001" as const;
 
 export async function* streamAnnotation(
   client: Anthropic,

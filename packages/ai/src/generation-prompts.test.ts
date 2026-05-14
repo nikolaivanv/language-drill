@@ -11,10 +11,12 @@ import { getGrammarPoint } from "@language-drill/db";
 
 import { CEFR_LEVEL_DESCRIPTORS, EVALUATION_SYSTEM_PROMPT } from "./prompts.js";
 import {
+  MAX_PRIOR_POOL_SURFACES_IN_PROMPT,
   MAX_RECENT_STEMS_IN_PROMPT,
   buildGenerationSystemPrompt,
   buildGenerationUserPrompt,
   canonicalSurface,
+  capPriorPoolSurfaces,
   tailRecentStems,
   type GenerationPromptInputs,
 } from "./generation-prompts.js";
@@ -118,6 +120,113 @@ describe("buildGenerationSystemPrompt", () => {
     // Last 30 should survive.
     expect(prompt).toContain("stem-2");
     expect(prompt).toContain("stem-31");
+  });
+
+  it("omits the 'Already in the pool' section when priorPoolSurfaces is undefined", () => {
+    const prompt = buildGenerationSystemPrompt(baseInputs, []);
+    expect(prompt).not.toContain("Already in the pool");
+  });
+
+  it("omits the 'Already in the pool' section when priorPoolSurfaces is empty", () => {
+    const prompt = buildGenerationSystemPrompt(
+      { ...baseInputs, priorPoolSurfaces: [] },
+      [],
+    );
+    expect(prompt).not.toContain("Already in the pool");
+  });
+
+  it("uses vocab-specific wording for VOCAB_RECALL and renders each prior word", () => {
+    const priors = ["kahvaltı", "ekmek", "araba"];
+    const prompt = buildGenerationSystemPrompt(
+      {
+        ...baseInputs,
+        exerciseType: ExerciseType.VOCAB_RECALL,
+        priorPoolSurfaces: priors,
+      },
+      [],
+    );
+    expect(prompt).toContain(
+      "## Already in the pool — do NOT propose any of these target words",
+    );
+    for (const word of priors) {
+      expect(prompt).toContain(`- ${word}`);
+    }
+  });
+
+  it("uses sentence-surface wording for non-VOCAB_RECALL types", () => {
+    const prompt = buildGenerationSystemPrompt(
+      {
+        ...baseInputs,
+        exerciseType: ExerciseType.CLOZE,
+        priorPoolSurfaces: ["yo hablo espanol."],
+      },
+      [],
+    );
+    expect(prompt).toContain(
+      "## Already in the pool — do NOT propose any exercise whose surface matches these",
+    );
+    expect(prompt).toContain("- yo hablo espanol.");
+  });
+
+  it("caps priorPoolSurfaces at MAX_PRIOR_POOL_SURFACES_IN_PROMPT", () => {
+    const priors = Array.from(
+      { length: MAX_PRIOR_POOL_SURFACES_IN_PROMPT + 5 },
+      (_, i) => `word-${i}`,
+    );
+    const prompt = buildGenerationSystemPrompt(
+      {
+        ...baseInputs,
+        exerciseType: ExerciseType.VOCAB_RECALL,
+        priorPoolSurfaces: priors,
+      },
+      [],
+    );
+    // First MAX entries kept, tail dropped (deterministic order so cache
+    // prefix is stable across ordinals).
+    expect(prompt).toContain(`- word-0`);
+    expect(prompt).toContain(`- word-${MAX_PRIOR_POOL_SURFACES_IN_PROMPT - 1}`);
+    expect(prompt).not.toContain(
+      `- word-${MAX_PRIOR_POOL_SURFACES_IN_PROMPT}\n`,
+    );
+  });
+
+  it("is deterministic when priorPoolSurfaces is supplied (cache invariant)", () => {
+    const inputs: GenerationPromptInputs = {
+      ...baseInputs,
+      exerciseType: ExerciseType.VOCAB_RECALL,
+      priorPoolSurfaces: ["a", "b", "c"],
+    };
+    expect(buildGenerationSystemPrompt(inputs, ["x"])).toBe(
+      buildGenerationSystemPrompt(inputs, ["x"]),
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// capPriorPoolSurfaces
+// ---------------------------------------------------------------------------
+
+describe("capPriorPoolSurfaces", () => {
+  it("returns the input unchanged when within the cap", () => {
+    const surfaces = ["a", "b", "c"];
+    expect(capPriorPoolSurfaces(surfaces)).toEqual(surfaces);
+  });
+
+  it("returns the first MAX_PRIOR_POOL_SURFACES_IN_PROMPT entries when oversized", () => {
+    const surfaces = Array.from(
+      { length: MAX_PRIOR_POOL_SURFACES_IN_PROMPT + 10 },
+      (_, i) => `w${i}`,
+    );
+    const capped = capPriorPoolSurfaces(surfaces);
+    expect(capped).toHaveLength(MAX_PRIOR_POOL_SURFACES_IN_PROMPT);
+    expect(capped[0]).toBe("w0");
+    expect(capped[capped.length - 1]).toBe(
+      `w${MAX_PRIOR_POOL_SURFACES_IN_PROMPT - 1}`,
+    );
+  });
+
+  it("returns an empty array when input is empty", () => {
+    expect(capPriorPoolSurfaces([])).toEqual([]);
   });
 });
 

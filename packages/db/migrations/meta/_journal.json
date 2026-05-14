@@ -71,6 +71,13 @@
       "when": 1778452812368,
       "tag": "0009_jazzy_killraven",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1778774714842,
+      "tag": "0010_fine_the_fury",
+      "breakpoints": true
     }
   ]
 }

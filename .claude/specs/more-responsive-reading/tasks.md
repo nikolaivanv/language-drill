@@ -441,7 +441,7 @@ Tests are co-located with the code they exercise (`packages/.../*.test.ts`, `app
   - Purpose: keep onboarding doc honest.
   - _Requirements: §Architecture, §Local development_
 
-- [ ] 45. **(Manual)** End-to-end verification of NFR performance budgets
+- [x] 45. **(Manual)** End-to-end verification of NFR performance budgets
   - Not a code task — a deploy + measure step. Run after every task above is merged.
   - Deploy the worktree branch to `LanguageDrillStack-dev`. Open the dev frontend in a Vercel preview.
   - **Cold case:** wait ≥10 minutes for Lambda container to recycle. Paste a 1500-char Spanish passage. Record (a) time-to-passage-paint (target ≤ 100 ms — pure client-side), (b) time-to-first-flag (target ≤ 6 s p95), (c) time-to-done (target ≤ 18 s p95).

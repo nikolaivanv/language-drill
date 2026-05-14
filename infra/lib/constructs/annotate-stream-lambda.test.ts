@@ -29,7 +29,7 @@ describe("AnnotateStreamLambdaConstruct", () => {
 
   it("creates the streaming Lambda with timeout=29 and memorySize=512", () => {
     template.hasResourceProperties("AWS::Lambda::Function", {
-      Runtime: "nodejs20.x",
+      Runtime: "nodejs22.x",
       Timeout: 29,
       MemorySize: 512,
     });
@@ -42,15 +42,14 @@ describe("AnnotateStreamLambdaConstruct", () => {
     });
   });
 
-  it("CORS allow-list includes https://*.vercel.app and the production hostnames", () => {
+  it("CORS allows all origins (per-origin matching is a follow-up — see tech-debt.md)", () => {
+    // AWS Lambda Function URL CORS doesn't support subdomain wildcards
+    // (`https://*.vercel.app`) — only full URLs, `https://*`, or `*`.
+    // Using `*` here pending the planned in-handler matchOrigin migration.
     template.hasResourceProperties("AWS::Lambda::Url", {
       Cors: Match.objectLike({
-        AllowOrigins: Match.arrayWith([
-          "https://*.vercel.app",
-          "https://langdrill.app",
-          "https://www.langdrill.app",
-        ]),
-        AllowMethods: Match.arrayWith(["POST", "OPTIONS"]),
+        AllowOrigins: ["*"],
+        AllowMethods: Match.arrayWith(["POST"]),
         AllowHeaders: Match.arrayWith(["Authorization", "Content-Type"]),
       }),
     });

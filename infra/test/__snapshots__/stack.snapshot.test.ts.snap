@@ -46,6 +46,12 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
         "Ref": "GenerationQueueB318CF3E",
       },
     },
+    "TheoryGenerationQueueUrl": {
+      "Description": "SQS queue URL for theory generation (Phase 4). Set THEORY_GENERATION_QUEUE_URL to this for \`pnpm generate:theory --queue\`.",
+      "Value": {
+        "Ref": "TheoryGenerationQueue3711446E",
+      },
+    },
   },
   "Parameters": {
     "BootstrapVersion": {
@@ -138,7 +144,7 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Tags": [
           {
             "Key": "env",
@@ -335,12 +341,9 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
           ],
           "AllowMethods": [
             "POST",
-            "OPTIONS",
           ],
           "AllowOrigins": [
-            "https://*.vercel.app",
-            "https://langdrill.app",
-            "https://www.langdrill.app",
+            "*",
           ],
           "MaxAge": 3600,
         },
@@ -927,7 +930,7 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Tags": [
           {
             "Key": "env",
@@ -1323,7 +1326,7 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Tags": [
           {
             "Key": "env",
@@ -1746,7 +1749,7 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Tags": [
           {
             "Key": "env",
@@ -1931,6 +1934,519 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
       },
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
+    },
+    "TheoryGenerationLambdaWrapHandler7986EB56": {
+      "DependsOn": [
+        "TheoryGenerationLambdaWrapHandlerServiceRoleDefaultPolicy075F4767",
+        "TheoryGenerationLambdaWrapHandlerServiceRole8BDCBCC8",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-123456789012-us-east-1",
+          "S3Key": "<asset-hash>.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "ANTHROPIC_API_KEY": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/ANTHROPIC_API_KEY:SecretString:::}}",
+                ],
+              ],
+            },
+            "DATABASE_URL": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/DATABASE_URL:SecretString:::}}",
+                ],
+              ],
+            },
+            "ENV_NAME": "prod",
+          },
+        },
+        "Handler": "index.handler",
+        "MemorySize": 1024,
+        "ReservedConcurrentExecutions": 2,
+        "Role": {
+          "Fn::GetAtt": [
+            "TheoryGenerationLambdaWrapHandlerServiceRole8BDCBCC8",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "TheoryGenerationLambdaWrapHandlerLogRetentionEA0A6F96": {
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "TheoryGenerationLambdaWrapHandler7986EB56",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 30,
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::LogRetention",
+    },
+    "TheoryGenerationLambdaWrapHandlerServiceRole8BDCBCC8": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TheoryGenerationLambdaWrapHandlerServiceRoleDefaultPolicy075F4767": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/DATABASE_URL-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/ANTHROPIC_API_KEY-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "TheoryGenerationQueue3711446E",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TheoryGenerationLambdaWrapHandlerServiceRoleDefaultPolicy075F4767",
+        "Roles": [
+          {
+            "Ref": "TheoryGenerationLambdaWrapHandlerServiceRole8BDCBCC8",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "TheoryGenerationLambdaWrapHandlerSqsEventSourceLanguageDrillStackTheoryGenerationQueue45564FD584976B36": {
+      "Properties": {
+        "BatchSize": 1,
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "TheoryGenerationQueue3711446E",
+            "Arn",
+          ],
+        },
+        "FunctionName": {
+          "Ref": "TheoryGenerationLambdaWrapHandler7986EB56",
+        },
+        "FunctionResponseTypes": [
+          "ReportBatchItemFailures",
+        ],
+        "ScalingConfig": {
+          "MaximumConcurrency": 2,
+        },
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+      },
+      "Type": "AWS::Lambda::EventSourceMapping",
+    },
+    "TheoryGenerationLambdaWrapTheoryGenerationErrorsAlarm109F8424": {
+      "Properties": {
+        "AlarmDescription": "Phase 4 (theory): theory generation Lambda recorded > 5 errors in a single day.",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "TheoryGenerationLambdaWrapHandler7986EB56",
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "Errors",
+        "Namespace": "AWS/Lambda",
+        "Period": 86400,
+        "Statistic": "Sum",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Threshold": 5,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "TheoryGenerationQueue3711446E": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "TheoryGenerationQueueTheoryGenerationDeadLetterQueueE4E16EEF",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "VisibilityTimeout": 900,
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TheoryGenerationQueueTheoryGenerationDeadLetterQueueE4E16EEF": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "MessageRetentionPeriod": 1209600,
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TheoryGenerationQueueTheoryGenerationDlqDepthAlarm3CFA12AE": {
+      "Properties": {
+        "AlarmDescription": "Phase 4 (theory): a theory generation message survived every redelivery and landed in the DLQ.",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Dimensions": [
+          {
+            "Name": "QueueName",
+            "Value": {
+              "Fn::GetAtt": [
+                "TheoryGenerationQueueTheoryGenerationDeadLetterQueueE4E16EEF",
+                "QueueName",
+              ],
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "ApproximateNumberOfMessagesVisible",
+        "Namespace": "AWS/SQS",
+        "Period": 300,
+        "Statistic": "Maximum",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "TheorySchedulerLambdaWrapHandler13EF21B0": {
+      "DependsOn": [
+        "TheorySchedulerLambdaWrapHandlerServiceRoleDefaultPolicyF14355AD",
+        "TheorySchedulerLambdaWrapHandlerServiceRoleD1AF0FE2",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-123456789012-us-east-1",
+          "S3Key": "<asset-hash>.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "DATABASE_URL": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/DATABASE_URL:SecretString:::}}",
+                ],
+              ],
+            },
+            "THEORY_GENERATION_QUEUE_URL": {
+              "Ref": "TheoryGenerationQueue3711446E",
+            },
+          },
+        },
+        "Handler": "index.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "TheorySchedulerLambdaWrapHandlerServiceRoleD1AF0FE2",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Timeout": 60,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "TheorySchedulerLambdaWrapHandlerLogRetentionF7A8A1B0": {
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "TheorySchedulerLambdaWrapHandler13EF21B0",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 30,
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::LogRetention",
+    },
+    "TheorySchedulerLambdaWrapHandlerServiceRoleD1AF0FE2": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TheorySchedulerLambdaWrapHandlerServiceRoleDefaultPolicyF14355AD": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/DATABASE_URL-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "TheoryGenerationQueue3711446E",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TheorySchedulerLambdaWrapHandlerServiceRoleDefaultPolicyF14355AD",
+        "Roles": [
+          {
+            "Ref": "TheorySchedulerLambdaWrapHandlerServiceRoleD1AF0FE2",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "TheorySchedulerLambdaWrapTheorySchedulerRule51B22AED": {
+      "Properties": {
+        "Description": "Phase 4 (theory): weekly refill scheduler — walks the curriculum and enqueues cells missing approved rows.",
+        "ScheduleExpression": "cron(0 4 ? * MON *)",
+        "State": "ENABLED",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
+                "TheorySchedulerLambdaWrapHandler13EF21B0",
+                "Arn",
+              ],
+            },
+            "Id": "Target0",
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "TheorySchedulerLambdaWrapTheorySchedulerRuleAllowEventRuleLanguageDrillStackTheorySchedulerLambdaWrapHandler8D2CBA35873C879A": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "TheorySchedulerLambdaWrapHandler13EF21B0",
+            "Arn",
+          ],
+        },
+        "Principal": "events.amazonaws.com",
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "TheorySchedulerLambdaWrapTheorySchedulerRule51B22AED",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
     },
   },
   "Rules": {

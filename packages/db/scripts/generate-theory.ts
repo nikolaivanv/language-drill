@@ -4,10 +4,15 @@
  * `runOneTheoryCell` (`@language-drill/db` → `packages/db/src/theory-
  * generation/`), applies the cell-level cost cap, and prints a summary.
  *
- * Phase 2's scope mirrors `generate-exercises.ts` minus two axes:
- *   - No `--queue` branch — Phase 4's Lambda replaces the CLI for prod.
+ * Phase 2's scope mirrored `generate-exercises.ts` minus two axes:
  *   - No validation-breakdown columns — theory has no validator pass
  *     (Req 7.4); the per-cell summary is `<inserted>/<total>` only.
+ *
+ * Phase 4 added the `--queue` branch (Req 4.x): when `args.queue` is true,
+ * `main` dispatches one SQS message per resolved cell to the theory
+ * generation queue (`THEORY_GENERATION_QUEUE_URL`) and exits without making
+ * any Claude calls. The in-process generation path below remains the
+ * default.
  *
  * Usage:
  *   pnpm generate:theory --lang es --level B1 \
@@ -24,6 +29,7 @@ import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 import type Anthropic from '@anthropic-ai/sdk';
+import { SQSClient } from '@aws-sdk/client-sqs';
 import {
   ZERO_USAGE,
   addUsage,
@@ -45,6 +51,7 @@ import {
   parseTheoryGenerateArgs,
   type ParsedTheoryArgs,
 } from './generate-theory-parse-args';
+import { postTheoryCellsToQueue } from './generate-theory-queue';
 import { resolveTheoryCells } from './generate-theory-resolve-cells';
 import { pLimit } from './p-limit';
 
@@ -192,6 +199,35 @@ export async function main(
   const signal = abortController.signal;
 
   const cells = resolveTheoryCells(args, ALL_CURRICULA);
+
+  // Phase 4 (Req 4.x): SQS dispatch path. `postTheoryCellsToQueue` handles
+  // both live (`--queue`) and dry-run (`--queue --dry-run`) modes; this
+  // branch short-circuits the in-process generation flow below.
+  if (args.queue) {
+    const queueUrl = process.env['THEORY_GENERATION_QUEUE_URL'];
+    if (!queueUrl) {
+      process.stderr.write(
+        '--queue requires THEORY_GENERATION_QUEUE_URL env var\n',
+      );
+      process.exit(1);
+    }
+    const sqs = new SQSClient({});
+    try {
+      await postTheoryCellsToQueue(sqs, queueUrl, {
+        cells,
+        batchSeed: args.batchSeed,
+        maxCostUsd: args.maxCostUsd,
+        allowProd: args.allowProd,
+        dryRun: args.dryRun,
+      });
+      process.exit(0);
+    } catch (err) {
+      process.stderr.write(
+        `${err instanceof Error ? err.message : String(err)}\n`,
+      );
+      process.exit(1);
+    }
+  }
 
   if (args.dryRun) {
     printDryRunSummary(cells, args);

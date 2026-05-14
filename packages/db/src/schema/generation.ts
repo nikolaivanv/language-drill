@@ -13,6 +13,17 @@ export const generationJobs = pgTable(
     approvedCount: integer('approved_count').notNull().default(0),
     flaggedCount: integer('flagged_count').notNull().default(0),
     rejectedCount: integer('rejected_count').notNull().default(0),
+    /**
+     * Slots where all `MAX_DEDUP_RETRIES` regenerations hit the
+     * `exercises_dedup_idx` UNIQUE index. Already included in `rejectedCount`
+     * (per the `CellResult` contract that the CLI relies on for its breakdown
+     * line); persisted separately so the admin approval-rate metric can
+     * exclude search-space exhaustion from a quality denominator. Defaults to
+     * 0 — historical rows written before this column existed report 0 and the
+     * approval rate over those rows continues to look low for cells where
+     * dedup dominated. New rows populate it from `CellResult.dedupGivenUpCount`.
+     */
+    dedupGivenUpCount: integer('dedup_given_up_count').notNull().default(0),
     status: text('status').notNull(), // queued | running | succeeded | failed (TS-enforced)
     startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
     finishedAt: timestamp('finished_at', { withTimezone: true }),

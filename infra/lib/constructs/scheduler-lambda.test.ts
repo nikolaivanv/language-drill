@@ -43,7 +43,7 @@ describe('SchedulerLambdaConstruct', () => {
 
     it('creates the scheduler Lambda with timeout 60 and memory 512', () => {
       template.hasResourceProperties('AWS::Lambda::Function', {
-        Runtime: 'nodejs20.x',
+        Runtime: 'nodejs22.x',
         Timeout: 60,
         MemorySize: 512,
       });
@@ -71,7 +71,7 @@ describe('SchedulerLambdaConstruct', () => {
 
     it('still creates the scheduler Lambda for ad-hoc invocation', () => {
       template.hasResourceProperties('AWS::Lambda::Function', {
-        Runtime: 'nodejs20.x',
+        Runtime: 'nodejs22.x',
         Timeout: 60,
         MemorySize: 512,
       });

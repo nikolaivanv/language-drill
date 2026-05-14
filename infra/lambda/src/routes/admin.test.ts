@@ -301,11 +301,12 @@ describe('GET /admin/generation-stats', () => {
       ],
       [
         {
-          // 7 approved + 2 flagged + 1 rejected → rate = 0.7 exactly
+          // 7 approved + 2 flagged + 1 rejected (no dedup) → rate = 0.7 exactly
           cellKey: 'es:b1:cloze:es-b1-present-subjunctive',
           approved: 7,
           flagged: 2,
           rejected: 1,
+          dedupGivenUp: 0,
         },
       ],
     );
@@ -334,9 +335,76 @@ describe('GET /admin/generation-stats', () => {
     expect(row.approvedCount).toBe(7);
     expect(row.flaggedCount).toBe(2);
     expect(row.rejectedCount).toBe(1);
+    expect(row.dedupGivenUpCount).toBe(0);
     expect(row.approvalRate).toBe(0.7);
     // Rate is rounded to 3 decimal places — the truncation happens in the
     // route, so the JSON value must not carry more precision.
     expect(Math.round(row.approvalRate * 1000)).toBe(700);
+  });
+
+  it('excludes dedup-given-up from the approval-rate denominator', async () => {
+    queryQueue.push(
+      [{ weekCost: '0', monthCost: '0' }],
+      [],
+      [
+        {
+          // 7 approved + 0 flagged + 13 rejected (10 of which were dedup).
+          // Old formula: 7 / (7+0+13) = 0.35
+          // New formula (dedup backed out): 7 / (7+0+3) = 0.7
+          cellKey: 'tr:a2:vocab_recall:tr-a2-everyday-vocab',
+          approved: 7,
+          flagged: 0,
+          rejected: 13,
+          dedupGivenUp: 10,
+        },
+      ],
+    );
+
+    const res = await app.request(
+      '/admin/generation-stats',
+      undefined,
+      adminEnv,
+    );
+    expect(res.status).toBe(200);
+
+    const body = (await res.json()) as AnyJson;
+    expect(body.approvalRates).toHaveLength(1);
+    const row = body.approvalRates[0];
+    expect(row.type).toBe('vocab_recall');
+    expect(row.rejectedCount).toBe(13);
+    expect(row.dedupGivenUpCount).toBe(10);
+    expect(row.approvalRate).toBe(0.7);
+  });
+
+  it('clamps the dedup back-out at zero when dedupGivenUp > rejected (legacy rows)', async () => {
+    // Pre-column rows could in theory present dedup > rejected if someone
+    // backfilled. Defend against negative denominators rather than dividing
+    // by a negative count.
+    queryQueue.push(
+      [{ weekCost: '0', monthCost: '0' }],
+      [],
+      [
+        {
+          cellKey: 'es:b1:cloze:es-b1-present-subjunctive',
+          approved: 5,
+          flagged: 0,
+          rejected: 2,
+          dedupGivenUp: 7,
+        },
+      ],
+    );
+
+    const res = await app.request(
+      '/admin/generation-stats',
+      undefined,
+      adminEnv,
+    );
+    expect(res.status).toBe(200);
+
+    const body = (await res.json()) as AnyJson;
+    expect(body.approvalRates).toHaveLength(1);
+    const row = body.approvalRates[0];
+    // Math.max(0, 2-7)=0; denominator = 5+0+0 = 5; rate = 5/5 = 1.0
+    expect(row.approvalRate).toBe(1);
   });
 });

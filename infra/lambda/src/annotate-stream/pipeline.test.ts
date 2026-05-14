@@ -237,7 +237,7 @@ describe("buildCandidateList — determinism (Req 1.7)", () => {
 });
 
 describe("buildCandidateList — A1 worst case cap (Req 2.4, 2.7)", () => {
-  it("(g) 60 above-topRank words → exactly 40 returned, the 40 rarest; known-rare ranks ahead of unknowns", async () => {
+  it("(g) 60 above-topRank words → exactly 20 returned, the 20 rarest; known-rare ranks ahead of unknowns", async () => {
     // Build 50 known words with ranks well above A1's topRank (750), AND 10
     // unknown-to-corpus words. The known set ranks from 1000 to 5900 (step 100).
     const KNOWN = Array.from({ length: 50 }, (_, i) => ({
@@ -255,11 +255,16 @@ describe("buildCandidateList — A1 worst case cap (Req 2.4, 2.7)", () => {
     const result = await buildCandidateList({ ...BASE_INPUT, text });
 
     expect(result.calibration).toEqual({ cefr: CefrLevel.A1, top: 750 });
-    expect(result.candidates).toHaveLength(40);
+    // CANDIDATE_LIMIT was lowered from 40 to 20 (PR #100) — the original
+    // 40-cap fit the model's `max_tokens` budget but ran past the 29 s
+    // Lambda wall-clock ceiling on Sonnet. 20 keeps the most pedagogically
+    // useful (rarest) candidates while leaving comfortable wall-clock
+    // headroom even on Haiku.
+    expect(result.candidates).toHaveLength(20);
 
-    // Top-40 by rarity. The 40 rarest of the 50 known words have ranks
-    // 2000..5900 (i.e. indices 10..49 in KNOWN, sorted descending by rank).
-    const expectedRarestForms = KNOWN.slice(10) // ranks 2000..5900
+    // Top-20 by rarity. The 20 rarest of the 50 known words have ranks
+    // 4000..5900 (i.e. indices 30..49 in KNOWN, sorted descending by rank).
+    const expectedRarestForms = KNOWN.slice(30) // ranks 4000..5900
       .map((k) => k.form)
       .reverse(); // rarest (5900) first
     expect(result.candidates.map((c) => c.matchedForm)).toEqual(
@@ -273,7 +278,7 @@ describe("buildCandidateList — A1 worst case cap (Req 2.4, 2.7)", () => {
     }
   });
 
-  it("(h) all-unknown corpus → still capped at 40 by first-seen order; no crash", async () => {
+  it("(h) all-unknown corpus → still capped at 20 by first-seen order; no crash", async () => {
     // 50 unknown-to-corpus forms, no known-rare alternatives.
     const forms = Array.from({ length: 50 }, (_, i) => `mystery${i}`);
     mockFreqLookup.mockImplementation(() => null);
@@ -283,11 +288,11 @@ describe("buildCandidateList — A1 worst case cap (Req 2.4, 2.7)", () => {
       text: forms.join(" "),
     });
 
-    expect(result.candidates).toHaveLength(40);
+    expect(result.candidates).toHaveLength(20);
     // First-seen order is preserved since every survivor has the same
     // effectiveRank (topRank + 1) and Array.sort is stable.
     expect(result.candidates.map((c) => c.matchedForm)).toEqual(
-      forms.slice(0, 40),
+      forms.slice(0, 20),
     );
     // Every entry has lemma === null because they're unknown.
     expect(result.candidates.every((c) => c.lemma === null)).toBe(true);

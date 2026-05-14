@@ -36,7 +36,8 @@ import {
   type ValidateDraftResult,
   type ValidationResult,
 } from '@language-drill/ai';
-import { eq } from 'drizzle-orm';
+import { ExerciseType } from '@language-drill/shared';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 
 import type { Db } from '../client';
 import { assertValidCellKey } from '../lib/cell-key';
@@ -57,6 +58,17 @@ import { runValidatorPool } from './validator-pool';
 // ---------------------------------------------------------------------------
 
 const MAX_DEDUP_RETRIES = 3;
+
+/**
+ * Bound on how many existing `expectedWord` values get pulled from the pool
+ * and fed back into the generator's system prompt as a "do not propose these"
+ * list. Matches `MAX_PRIOR_POOL_SURFACES_IN_PROMPT` over in
+ * `packages/ai/src/generation-prompts.ts` (the prompt-side cap), so the DB
+ * never returns more rows than the prompt would render. 250 covers every
+ * vocab umbrella's plausible inventory at our CEFR-A1–B2 round-1 scope while
+ * keeping the prompt under ~2.5 kB of bullets.
+ */
+const MAX_PRIOR_POOL_SURFACES = 250;
 
 /**
  * Cap on concurrent `validateDraft` calls per cell. Tuned against:
@@ -156,6 +168,49 @@ export type RunOneCellInput = {
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * Pulls existing `expectedWord` values from the pool for a vocab_recall cell
+ * so the generator can be told what's already covered. Filtered to the same
+ * rows that `exercises_dedup_idx` covers — anything that would cause an
+ * `ON CONFLICT DO NOTHING` no-op at insert time. Capped at
+ * `MAX_PRIOR_POOL_SURFACES` so a runaway cell doesn't blow up the prompt
+ * size; deterministic ordering keeps the system-prompt bytes stable across
+ * ordinals so the cache prefix hits.
+ *
+ * Returns an empty array — not undefined — when the cell is currently empty,
+ * so the caller can pass it through as `priorPoolSurfaces: []` and the
+ * prompt renderer omits the section.
+ */
+async function fetchPriorVocabRecallSurfaces(
+  db: Db,
+  cell: Cell,
+): Promise<readonly string[]> {
+  const rows = await db
+    .select({
+      surface: sql<string>`content_json->>'expectedWord'`,
+    })
+    .from(exercises)
+    .where(
+      and(
+        eq(exercises.language, cell.language),
+        eq(exercises.difficulty, cell.cefrLevel),
+        eq(exercises.type, cell.exerciseType),
+        eq(exercises.grammarPointKey, cell.grammarPoint.key),
+        inArray(exercises.reviewStatus, [
+          'auto-approved',
+          'manual-approved',
+          'flagged',
+        ]),
+        sql`content_json ? 'expectedWord'`,
+      ),
+    )
+    .orderBy(sql`content_json->>'expectedWord'`)
+    .limit(MAX_PRIOR_POOL_SURFACES);
+  return rows
+    .map((r) => r.surface)
+    .filter((s): s is string => typeof s === 'string' && s.length > 0);
+}
 
 /**
  * Issue a single-draft regeneration with a bumped batchSeed so the
@@ -389,16 +444,6 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     trigger,
   });
 
-  const spec: GenerationSpec = {
-    language: cell.language,
-    cefrLevel: cell.cefrLevel,
-    exerciseType: cell.exerciseType,
-    grammarPoint: cell.grammarPoint,
-    topicDomain: args.topicDomain,
-    count: args.count,
-    batchSeed: args.batchSeed,
-  };
-
   // Phase 3 accumulators. `combinedUsage` starts at the generator batch's
   // usage so the original generator call is counted exactly once; per-draft
   // `outcome.extraUsage` covers every validator call + every retry's
@@ -416,8 +461,33 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
   let malformedDraftCount = 0;
   const generatedAt = new Date();
 
+  // Built inside the try so any failure in the priors query routes through
+  // failClosed (audit row already exists in 'running' state at this point).
+  let spec: GenerationSpec;
+
   try {
     if (signal?.aborted) throw new Error('Aborted by user (SIGINT)');
+
+    // Pull the existing vocab inventory for this cell so the generator can
+    // avoid re-proposing words that `exercises_dedup_idx` would reject on
+    // insert. Limited to vocab_recall because cloze/translation have an
+    // effectively unbounded surface space — listing all prior sentences
+    // would bloat the prompt without payback.
+    const priorPoolSurfaces =
+      cell.exerciseType === ExerciseType.VOCAB_RECALL
+        ? await fetchPriorVocabRecallSurfaces(db, cell)
+        : undefined;
+
+    spec = {
+      language: cell.language,
+      cefrLevel: cell.cefrLevel,
+      exerciseType: cell.exerciseType,
+      grammarPoint: cell.grammarPoint,
+      topicDomain: args.topicDomain,
+      count: args.count,
+      batchSeed: args.batchSeed,
+      priorPoolSurfaces,
+    };
 
     const batch = await generateBatch(client, spec);
     // Window between Claude resolving and the per-draft loop — if SIGINT
@@ -524,6 +594,9 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     combinedUsage.cacheReadInputTokens;
 
   // Close the audit row as 'succeeded'. Counts reflect Phase 3 outcomes.
+  // `dedupGivenUpCount` is persisted alongside `rejectedCount` (which already
+  // includes it per the CLI's breakdown contract) so the admin approval-rate
+  // metric can back it out — see `infra/lambda/src/routes/admin.ts`.
   await db
     .update(generationJobs)
     .set({
@@ -533,6 +606,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       approvedCount,
       flaggedCount,
       rejectedCount,
+      dedupGivenUpCount,
       inputTokensUsed: totalInputTokens,
       outputTokensUsed: combinedUsage.outputTokens,
       costUsdEstimate: costUsd.toFixed(4),

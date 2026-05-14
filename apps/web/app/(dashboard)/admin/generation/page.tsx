@@ -87,7 +87,12 @@ export default async function AdminGenerationPage() {
                   <th>Approved</th>
                   <th>Flagged</th>
                   <th>Rejected</th>
-                  <th>Rate %</th>
+                  <th title="Slots where all dedup retries collided — search-space exhaustion, not validator rejection. Already included in Rejected.">
+                    Dedup
+                  </th>
+                  <th title="approved / (approved + flagged + (rejected − dedup))">
+                    Rate %
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -99,6 +104,7 @@ export default async function AdminGenerationPage() {
                     <td>{row.approvedCount}</td>
                     <td>{row.flaggedCount}</td>
                     <td>{row.rejectedCount}</td>
+                    <td>{row.dedupGivenUpCount}</td>
                     <td>{(row.approvalRate * 100).toFixed(1)}%</td>
                   </tr>
                 ))}

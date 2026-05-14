@@ -4,6 +4,125 @@ A living log of known issues to address. Add new entries at the top; mark as res
 
 ---
 
+## Annotate-stream Function URL CORS allows all origins
+
+- **Status:** open (worked around in PR #97 — set `allowedOrigins: ["*"]`)
+- **See also:** [`aws-lambda-gotchas.md`](./aws-lambda-gotchas.md) §1 — the permanent reference for Function URL CORS schema quirks.
+- **Discovered:** 2026-05-12 (production deploy after PR #95 — CloudFormation rejected `https://*.vercel.app` with `isn't a valid origin`)
+- **Scope:** `infra/lib/constructs/annotate-stream-lambda.ts` Function URL CORS
+- **Severity:** low (JWT verification + daily rate-limit are the real security boundary; browser CORS is a politeness filter, not authorization)
+
+**Root cause:**
+AWS Lambda Function URL CORS uses a different (more restrictive) schema than API Gateway HTTP API CORS. Function URL `AllowOrigins` accepts only:
+- Full URLs (`https://www.example.com`)
+- `https://*` (any HTTPS origin)
+- `*` (any origin)
+
+It does **not** accept subdomain wildcards like `https://*.vercel.app` — which is exactly what we want for Vercel preview deploys. API Gateway accepts them; Function URL doesn't. The original construct copied the API-Gateway-style list verbatim.
+
+**Verified:** CloudFormation returned `https://*.vercel.app isn't a valid origin. An origin must be in a valid URL format. For example: https://www.example.com, https://*, or the wildcard character (*).` on `AWS::Lambda::Url` resource creation. Local `cdk synth` doesn't catch this — schema validation only fires server-side during resource creation, after `synth` and asset publish have succeeded.
+
+**Current workaround:** `allowedOrigins: ["*"]`. Means any origin can make POST requests to the Function URL. The JWT auth still gates access — only authenticated users' tokens work — but the surface area is technically wider than the API Gateway endpoints (which retain the regex-matched allow-list via Hono middleware).
+
+**Remediation:**
+Move CORS enforcement into the streaming handler, matching the pattern already in `infra/lambda/src/index.ts:25` (`matchOrigin`):
+
+1. **Promote `matchOrigin` to `packages/shared/src/cors.ts`** so both Lambdas import it from one place (alongside `FALLBACK_ORIGINS`).
+2. **Update the streaming handler's SSE writer (`infra/lambda/src/annotate-stream/sse.ts`)** to:
+   - Accept the request's `Origin` header.
+   - Pass it through `matchOrigin`.
+   - Emit `Access-Control-Allow-Origin: <matched-origin-or-omitted>` and `Access-Control-Allow-Credentials: true` (if needed) on every response branch: `openSse()`, `errorJson()`, and `cors200()`.
+3. **Remove the `cors` config from the Function URL** in the construct. With in-handler CORS the platform CORS layer is redundant.
+4. **Tests**: extend `sse.test.ts` and `handler.test.ts` with origin-echo cases (Vercel preview, prod hostname, unauthorized origin).
+
+Important: the main API Lambda's CORS lives in Hono middleware. The streaming Lambda doesn't use Hono. So the new code is a thin handler-level adapter, not a Hono middleware reuse.
+
+**Acceptance criteria for the fix:**
+- Revert `allowedOrigins: ["*"]` in `infra/lib/constructs/annotate-stream-lambda.ts` to either `undefined` (no CDK CORS config) or just the bare `["*"]` retained as a belt-and-braces fallback.
+- `infra/lib/constructs/annotate-stream-lambda.test.ts` asserts the in-handler origin echo via the SSE writer's response shape.
+- End-to-end: a Vercel preview origin (`https://my-feature-abc123.vercel.app`) receives `Access-Control-Allow-Origin: https://my-feature-abc123.vercel.app` on the SSE response. An unauthorized origin receives no allow-origin header → browser blocks.
+
+**Why we can't ignore it:**
+- The streaming endpoint POSTs from authenticated browser sessions, so JWT theft via XSS on any page that holds the token is the actual threat — and browser CORS doesn't defend against that anyway. So the security delta is small.
+- But: the design doc explicitly said "CORS allow-list is identical to the main Lambda's ... and is implemented in the new handler" (more-responsive-reading/design.md §Integration Points). The current state diverges from the design.
+- Consistency with the main Lambda's pattern is worth ~50 lines of handler/sse-writer plumbing.
+
+**Owner:** unassigned
+**Tracking:** none yet — open a GitHub issue when prioritizing
+**References:**
+- PR #97 — workaround.
+- `infra/lambda/src/index.ts:25` — `matchOrigin` to extract.
+- `packages/shared/src/cors.ts` — where to put it.
+- AWS docs on Function URL CORS (vs API Gateway): https://docs.aws.amazon.com/lambda/latest/dg/urls-configuration.html#urls-cors
+
+---
+
+## `@language-drill/shared` emits ESM with extensionless relative imports
+
+- **Status:** open (worked around in PR #94)
+- **Discovered:** 2026-05-12 (production deploy failed after PR #91 merged the streaming-annotate feature)
+- **Scope:** `packages/shared/` — its tsconfig + every relative `export * from "./x"` / `import { y } from "./z"` inside `src/`
+- **Severity:** medium (currently survives via bundler lenience + a CDK-side workaround; will resurface whenever a Node-strict consumer is added)
+- **See also:** [`aws-lambda-gotchas.md`](./aws-lambda-gotchas.md) §3 — the permanent reference for ts-node + CDK module resolution.
+
+**Root cause:**
+`packages/shared` compiles with `module` defaulting to ES2022 (target ES2022 → ESM output) but `package.json` has no `"type": "module"` and `main`/`types` point at plain `dist/index.js`/`dist/index.d.ts`. The compiled `dist/index.js` therefore contains ESM syntax with relative re-exports that omit the `.js` extension:
+
+```js
+export * from "./onboarding";
+export * from "./read";
+export * from "./tokenize";
+export * from "./cors";
+```
+
+That layout is fine for the consumers we currently have — Next.js, esbuild (Lambda bundling), and tsx all resolve extensionless imports as a matter of convenience — but it violates the ESM spec, which requires explicit extensions on relative specifiers. Node's strict ESM resolver (the one ts-node hits via `require(esm)` when it loads the package from a CJS-compiled file) rejects them with `ERR_MODULE_NOT_FOUND: Cannot find module '...packages/shared/dist/onboarding'`.
+
+**Verified:** reproduced on `main` locally with `pnpm --filter @language-drill/shared build && cd infra && pnpm cdk synth LanguageDrillStack`. The CI failure on commit `3b4d452` is the same trace. The first time this surfaced was during the streaming-annotate rollout — task 26b added `import { FALLBACK_ORIGINS } from "@language-drill/shared"` in `infra/lib/constructs/annotate-stream-lambda.ts`, which is the only Node-strict-ESM consumer in the tree. Every other consumer either bundles the source or uses tsx.
+
+**Symptoms this causes:**
+- Production deploy blocked between PRs #93 and #94 (ts-node, invoked by `cdk synth`, couldn't load `dist/index.js`).
+- Latent — any future infra construct that imports a value from `@language-drill/shared` will re-trip the same failure unless it follows the relative-source-path workaround.
+- Subtle blast radius: works in `pnpm dev`, in `pnpm test`, in Next.js build, in the Lambda esbuild bundle. Fails only at `cdk synth`/`cdk deploy`. So a regression won't show up in pre-push CI — only in the deploy job.
+
+**Remediation options (pick one):**
+
+1. **Add `.js` extensions to every relative import in `packages/shared/src/`** and enable `"verbatimModuleSyntax": true` (or rely on TypeScript 5.7+'s `rewriteRelativeImportExtensions`) so tsc preserves them in output.
+   - Pros: smallest behavioral change for downstream; package becomes ESM-spec-correct; works for every consumer without workarounds.
+   - Cons: touches every relative import in shared (counting `index.ts` re-exports plus internal cross-references — probably 10–20 lines). Has to be done atomically with a tsconfig change so `tsc` doesn't error on `.js` specifiers pointing at `.ts` sources.
+
+2. **Switch `packages/shared` to CJS output** (add `"module": "commonjs"` to its tsconfig, optionally `"type": "commonjs"` to `package.json`).
+   - Pros: extensionless requires work natively; no source-level churn.
+   - Cons: Next.js's tree-shaking is materially better with ESM input; api-client and the web app would lose that. Probably regresses bundle size.
+
+3. **Add an `exports` map to `packages/shared/package.json`** with both ESM (`.mjs` or `dist/index.js`-with-`type:module`) and CJS conditional exports. Build script emits both.
+   - Pros: belt-and-braces; future consumers in either ecosystem just work.
+   - Cons: heaviest change; requires dual emit and adjusting the build script.
+
+Approach #1 is the recommended path: smallest patch, keeps everything ESM, and converts shared into a properly-spec'd ESM package without affecting bundle behavior.
+
+**Acceptance criteria for the fix:**
+- Revert the relative-source-path workaround in `infra/lib/constructs/annotate-stream-lambda.ts` (re-import via `@language-drill/shared`).
+- Revert the `rootDir` removal in `infra/tsconfig.json`.
+- `pnpm --filter @language-drill/shared build && cd infra && pnpm cdk synth LanguageDrillStack` succeeds (or fails only on missing runtime env vars).
+- Full pre-push suite (`pnpm lint && pnpm typecheck && pnpm test`) green.
+- Vercel preview build green (proves no Next.js regression).
+
+**Why we can't ignore it:**
+- The current state requires every infra consumer of shared to use the relative-source-path pattern — easy to forget, and grep-unfriendly compared to the package-name import.
+- ts-node is the canonical "strict Node ESM" entry point used by CDK; we will keep adding constructs over time.
+- The shared package is supposed to be the single source of truth for cross-workspace constants; making it inconvenient to consume from infra defeats that.
+
+**Owner:** unassigned
+**Tracking:** none yet — open a GitHub issue when prioritizing
+**References:**
+- PR #94 — the targeted CDK workaround that unblocked production deploy.
+- `infra/lib/constructs/annotate-stream-lambda.ts:13–20` — the comment explaining why the relative-source path is used.
+- `packages/shared/tsconfig.json` + `packages/shared/package.json` — the package-level settings to change.
+- Node ESM resolver spec: https://nodejs.org/api/esm.html#mandatory-file-extensions
+- TypeScript `rewriteRelativeImportExtensions`: https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-7.html
+
+---
+
 ## Per-draft validation loop in `runOneCell` is strictly serial
 
 - **Status:** open

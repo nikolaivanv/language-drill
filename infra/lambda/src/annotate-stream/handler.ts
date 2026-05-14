@@ -82,17 +82,26 @@ export const handler = awslambda.streamifyResponse<
   // synchronous no-op when Langfuse is disabled (keys absent in vitest /
   // local dev), so wrapping the entire handler — including gates that
   // never start a trace — costs nothing.
+  //
+  // Every exit path below MUST `await` whichever writer method emits the
+  // final bytes (`cors200`, `errorJson`, or `close`). AWS's response-streaming
+  // runtime closes the socket as soon as this handler's promise resolves —
+  // without an explicit wait for the underlying `Writable` to emit `'finish'`,
+  // the last write can stay queued in userspace and never reach the client.
+  // The symptom is "browser receives `meta` but never `flag`/`done`" because
+  // `meta` is followed by a slow Claude call that gives the kernel time to
+  // drain, while `done`/`error` aren't.
   try {
     // ---- Gate 1: OPTIONS preflight ----
     const method = event.requestContext?.http?.method ?? "POST";
     if (method === "OPTIONS") {
-      writer.cors200();
+      await writer.cors200();
       return;
     }
 
     // ---- Gate 2: method != POST ----
     if (method !== "POST") {
-      writer.errorJson(405, { code: "METHOD_NOT_ALLOWED", message: "Method Not Allowed" });
+      await writer.errorJson(405, { code: "METHOD_NOT_ALLOWED", message: "Method Not Allowed" });
       return;
     }
 
@@ -102,12 +111,12 @@ export const handler = awslambda.streamifyResponse<
     try {
       parsedJson = JSON.parse(rawBody);
     } catch {
-      writer.errorJson(400, { code: "VALIDATION_ERROR", message: "Invalid JSON body" });
+      await writer.errorJson(400, { code: "VALIDATION_ERROR", message: "Invalid JSON body" });
       return;
     }
     const bodyResult = AnnotateRequestSchema.safeParse(parsedJson);
     if (!bodyResult.success) {
-      writer.errorJson(400, {
+      await writer.errorJson(400, {
         code: "VALIDATION_ERROR",
         message: "Invalid request body",
       });
@@ -117,7 +126,7 @@ export const handler = awslambda.streamifyResponse<
 
     // ---- Gate 4: EN is source-only ----
     if (language === Language.EN) {
-      writer.errorJson(400, {
+      await writer.errorJson(400, {
         code: "UNSUPPORTED_LANGUAGE",
         message: "English is not a supported learning language",
       });
@@ -130,7 +139,7 @@ export const handler = awslambda.streamifyResponse<
       event.headers?.authorization ?? event.headers?.Authorization;
     const userId = await verifyClerkJwt(authHeader);
     if (!userId) {
-      writer.errorJson(401, { code: "MISSING_SUB", message: "Unauthorized" });
+      await writer.errorJson(401, { code: "MISSING_SUB", message: "Unauthorized" });
       return;
     }
 
@@ -147,7 +156,7 @@ export const handler = awslambda.streamifyResponse<
         ),
       );
     if (Number(usageRows[0]?.count ?? 0) >= DAILY_EVAL_LIMIT) {
-      writer.errorJson(429, {
+      await writer.errorJson(429, {
         code: "RATE_LIMIT_EXCEEDED",
         message: "Daily evaluation limit exceeded",
       });
@@ -170,18 +179,41 @@ export const handler = awslambda.streamifyResponse<
       calibration,
       candidateCount: candidates.length,
     });
+    console.log("[annotate-stream] meta emitted", {
+      userId,
+      language: learningLanguage,
+      textLength: text.length,
+      candidateCount: candidates.length,
+      proficiencyLevel: calibration.cefr,
+    });
 
     // Step 8: empty candidate list short-circuit (Req 1.6 / 2.5).
     // No Claude call, no usage_events row — the user paid nothing for an
     // in-level passage.
     if (candidates.length === 0) {
       writer.writeTerminal("done", { flaggedCount: 0 });
+      console.log("[annotate-stream] done (empty candidate list)");
+      await writer.close();
       return;
     }
 
     // Step 9: client-disconnect → abort upstream Claude stream (Req 4.9).
+    // ALSO: soft-deadline at 25 s. The Lambda timeout is 29 s, but if Claude
+    // streaming runs past 25 s we want to abort it ourselves AND write a
+    // useful `error` frame before the runtime SIGKILLs us — otherwise the
+    // client sees the body close with no terminal event and surfaces the
+    // unhelpful "Stream ended unexpectedly" message.
     const abort = new AbortController();
+    let deadlineFired = false;
     responseStream.on("close", () => abort.abort());
+    const SOFT_DEADLINE_MS = 25_000;
+    const deadlineTimer = setTimeout(() => {
+      deadlineFired = true;
+      console.warn("[annotate-stream] soft-deadline fired", {
+        thresholdMs: SOFT_DEADLINE_MS,
+      });
+      abort.abort();
+    }, SOFT_DEADLINE_MS);
 
     // Step 10: stream Claude's enrichment events, one flag at a time —
     // wrapped in `withLlmTrace` so the Anthropic Proxy can emit one
@@ -219,14 +251,27 @@ export const handler = awslambda.streamifyResponse<
           }
         },
       );
+      console.log("[annotate-stream] streamAnnotation completed", { flaggedCount });
     } catch (err) {
-      // The iterator throws on Claude errors, malformed responses, or the
-      // dedicated `AnnotateStreamMaxTokensError`. All three collapse to the
-      // same observable: `error` with `code: 'AI_UNAVAILABLE'` IFF we haven't
-      // already terminated (`terminated` is the wire-protocol single source
-      // of truth — see Req 3.3). The Proxy already finalized the Langfuse
-      // generation with level=ERROR before re-throwing (Req 5 AC 3).
-      if (err instanceof AnnotateStreamMaxTokensError) {
+      // The iterator throws on Claude errors, malformed responses, the
+      // dedicated `AnnotateStreamMaxTokensError`, or an abort (client-close
+      // OR our own soft-deadline). All four collapse to the same observable:
+      // `error` with `code: 'AI_UNAVAILABLE'` IFF we haven't already
+      // terminated (`terminated` is the wire-protocol single source of
+      // truth — see Req 3.3). The deadline path gets a more specific
+      // message so the user knows the passage was too heavy, not that AI
+      // is broken. The Proxy already finalized the Langfuse generation
+      // with level=ERROR (or WARNING for client_disconnect / max_tokens)
+      // before re-throwing here (Req 5 AC 3).
+      const message = deadlineFired
+        ? "Annotation took longer than expected — try a shorter passage."
+        : "Evaluation temporarily unavailable";
+      if (deadlineFired) {
+        console.warn(
+          "[annotate-stream] soft-deadline aborted streamAnnotation",
+          { flaggedCount },
+        );
+      } else if (err instanceof AnnotateStreamMaxTokensError) {
         console.warn(
           "[annotate-stream] max_tokens truncation",
           { flaggedCount },
@@ -237,11 +282,15 @@ export const handler = awslambda.streamifyResponse<
       if (!writer.terminated) {
         writer.writeTerminal("error", {
           code: "AI_UNAVAILABLE",
-          message: "Evaluation temporarily unavailable",
+          message,
         });
       }
+      clearTimeout(deadlineTimer);
+      await writer.close();
       return;
     }
+    // Iterator completed cleanly — no need to fire the deadline anymore.
+    clearTimeout(deadlineTimer);
 
     // Step 11: insert the usage_events row AFTER the iterator finishes
     // successfully. A throw here MUST NOT cascade into a terminal `error` —
@@ -267,6 +316,8 @@ export const handler = awslambda.streamifyResponse<
     if (!writer.terminated) {
       writer.writeTerminal("done", { flaggedCount });
     }
+    console.log("[annotate-stream] done (success)", { flaggedCount });
+    await writer.close();
   } finally {
     await flushObservability();
   }

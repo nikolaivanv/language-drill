@@ -10,7 +10,6 @@ import {
   Runtime,
 } from "aws-cdk-lib/aws-lambda";
 import * as path from "path";
-import { FALLBACK_ORIGINS } from "@language-drill/shared";
 
 /**
  * Streaming-annotate Lambda + Function URL.
@@ -75,7 +74,7 @@ export class AnnotateStreamLambdaConstruct extends Construct {
         "../../lambda/src/annotate-stream/handler.ts",
       ),
       handler: "handler",
-      runtime: Runtime.NODEJS_20_X,
+      runtime: Runtime.NODEJS_22_X,
       // 29s is the Function URL's max useful timeout (CloudFront fronting
       // Function URLs drops idle connections at 30s). The pipeline targets
       // p95 ≤ 18s end-to-end, so 29s leaves headroom for slow Claude responses
@@ -127,8 +126,19 @@ export class AnnotateStreamLambdaConstruct extends Construct {
       authType: FunctionUrlAuthType.NONE,
       invokeMode: InvokeMode.RESPONSE_STREAM,
       cors: {
-        allowedOrigins: [...FALLBACK_ORIGINS],
-        allowedMethods: [HttpMethod.POST, HttpMethod.OPTIONS],
+        // AWS Lambda Function URL CORS doesn't support subdomain wildcards
+        // like `https://*.vercel.app` (unlike API Gateway HTTP API CORS,
+        // which does). It accepts only full URLs, `https://*`, or `*`.
+        // Using `*` here is acceptable because JWT verification + the daily
+        // usage-event rate-limit are the real security boundary; browser
+        // CORS is a politeness filter, not an authorization check. See
+        // docs/tech-debt.md for the follow-up to implement per-origin
+        // matching in the handler instead.
+        allowedOrigins: ["*"],
+        // Function URL CORS rejects `OPTIONS` in `AllowMethods` — only
+        // [GET, PUT, HEAD, POST, PATCH, DELETE, *] are accepted. Preflight
+        // is handled implicitly by the platform.
+        allowedMethods: [HttpMethod.POST],
         allowedHeaders: ["Authorization", "Content-Type"],
         maxAge: Duration.hours(1),
       },
