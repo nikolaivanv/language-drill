@@ -424,6 +424,10 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
         expect(job.flaggedCount).toBe(0);
         // dedup-given-up rolls into rejectedCount per the writer.
         expect(job.rejectedCount).toBe(1);
+        // …and is also persisted separately so the admin approval-rate
+        // metric can back it out (search-space exhaustion, not a quality
+        // signal).
+        expect(job.dedupGivenUpCount).toBe(1);
       },
     );
 

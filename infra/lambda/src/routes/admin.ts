@@ -224,12 +224,18 @@ admin.get('/admin/generation-stats', async (c) => {
     // Q3 — approval counts per cellKey (30d). Aggregation by (language,
     // level, type) — across grammar points — happens in JS after parsing the
     // cellKey, since `generationJobs` doesn't store the components separately.
+    // `dedupGivenUp` is pulled separately so the approval-rate denominator can
+    // back it out — dedup-give-ups are search-space exhaustion, not a quality
+    // signal. `rejectedCount` already includes dedup per the runOneCell
+    // contract; subtracting `dedupGivenUpCount` gives the validator-only
+    // rejected count.
     db
       .select({
         cellKey: generationJobs.cellKey,
         approved: sql<number>`SUM(${generationJobs.approvedCount})::int`,
         flagged: sql<number>`SUM(${generationJobs.flaggedCount})::int`,
         rejected: sql<number>`SUM(${generationJobs.rejectedCount})::int`,
+        dedupGivenUp: sql<number>`SUM(${generationJobs.dedupGivenUpCount})::int`,
       })
       .from(generationJobs)
       .where(gte(generationJobs.startedAt, sql`NOW() - INTERVAL '30 days'`))
@@ -264,6 +270,7 @@ admin.get('/admin/generation-stats', async (c) => {
       approvedCount: number;
       flaggedCount: number;
       rejectedCount: number;
+      dedupGivenUpCount: number;
     }
   >();
   for (const row of approvalRows) {
@@ -280,17 +287,28 @@ admin.get('/admin/generation-stats', async (c) => {
       approvedCount: 0,
       flaggedCount: 0,
       rejectedCount: 0,
+      dedupGivenUpCount: 0,
     };
     existing.approvedCount += row.approved;
     existing.flaggedCount += row.flagged;
     existing.rejectedCount += row.rejected;
+    existing.dedupGivenUpCount += row.dedupGivenUp;
     approvalAgg.set(groupKey, existing);
   }
 
   const approvalRates = [...approvalAgg.values()]
     .map((entry) => {
+      // Validator-only rejected: back out dedup-give-ups, which are search-
+      // space exhaustion, not a quality verdict. `Math.max(0, …)` defends
+      // against the rare case where pre-column historical rows have
+      // dedupGivenUp > rejected (shouldn't happen with current writers, but
+      // wrong-by-construction beats divide-by-negative).
+      const plainRejected = Math.max(
+        0,
+        entry.rejectedCount - entry.dedupGivenUpCount,
+      );
       const total =
-        entry.approvedCount + entry.flaggedCount + entry.rejectedCount;
+        entry.approvedCount + entry.flaggedCount + plainRejected;
       return {
         ...entry,
         total,

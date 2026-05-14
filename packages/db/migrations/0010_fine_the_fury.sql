@@ -1,0 +1,1 @@
+ALTER TABLE "generation_jobs" ADD COLUMN "dedup_given_up_count" integer DEFAULT 0 NOT NULL;

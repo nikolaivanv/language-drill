@@ -39,7 +39,19 @@ export const GenerationStatsSchema = z.object({
       type: z.string(),
       approvedCount: z.number(),
       flaggedCount: z.number(),
+      /**
+       * Includes dedup-given-up per the runOneCell contract. To get the
+       * validator-only rejected count: `rejectedCount - dedupGivenUpCount`
+       * (clamped at 0). The `approvalRate` field already does this subtraction.
+       */
       rejectedCount: z.number(),
+      /**
+       * Slots where Claude exhausted retries against `exercises_dedup_idx`.
+       * Already counted inside `rejectedCount`; surfaced separately so
+       * operators can distinguish "validator said no" from "search space
+       * exhausted" without needing to dig into CloudWatch.
+       */
+      dedupGivenUpCount: z.number(),
       approvalRate: z.number(),
     }),
   ),

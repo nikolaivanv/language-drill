@@ -35,8 +35,28 @@ import { TOOL_NAME_BY_TYPE } from "./generate.js";
  */
 export const MAX_RECENT_STEMS_IN_PROMPT = 30;
 
+/**
+ * Cap on how many pool-surfaces appear in the system prompt's "already in the
+ * pool" list. Used by `vocab_recall` cells to feed Claude the words that have
+ * already been generated and persisted — without this, the generator gravitates
+ * to the same high-frequency words each run and the partial UNIQUE index
+ * `exercises_dedup_idx` rejects them on insert, dragging effective approval
+ * rate down even though the validator never said no. 250 keeps prompt size
+ * bounded (~2.5 kB of bullets) while comfortably covering every saturated
+ * vocab umbrella's word inventory.
+ */
+export const MAX_PRIOR_POOL_SURFACES_IN_PROMPT = 250;
+
 export function tailRecentStems(stems: readonly string[]): string[] {
   return stems.slice(-MAX_RECENT_STEMS_IN_PROMPT);
+}
+
+export function capPriorPoolSurfaces(
+  surfaces: readonly string[],
+): readonly string[] {
+  return surfaces.length <= MAX_PRIOR_POOL_SURFACES_IN_PROMPT
+    ? surfaces
+    : surfaces.slice(0, MAX_PRIOR_POOL_SURFACES_IN_PROMPT);
 }
 
 // ---------------------------------------------------------------------------
@@ -48,6 +68,16 @@ export type GenerationPromptInputs = {
   cefrLevel: CefrLevel;
   exerciseType: ExerciseType;
   grammarPoint: GrammarPoint;
+  /**
+   * Surfaces already in the persisted pool for this cell — passed by the
+   * caller (currently only `runOneCell` for `vocab_recall`) so the generator
+   * stops re-proposing words/sentences that would collide with
+   * `exercises_dedup_idx`. The list is frozen for the duration of the batch
+   * (same content for every ordinal), preserving prompt-cache hits across
+   * ordinals within a cell. Empty/undefined → the "Already in the pool"
+   * section is omitted entirely.
+   */
+  priorPoolSurfaces?: readonly string[];
 };
 
 // ---------------------------------------------------------------------------
@@ -75,11 +105,32 @@ function renderRecentStems(recentStems: readonly string[]): string {
   return tail.map((stem) => `  - ${stem}`).join("\n");
 }
 
+/**
+ * Wording differs per type so Claude reads it the way the cell is constrained:
+ * vocab cells are constrained at the target-word level, sentence cells at the
+ * stem level. Returns the empty string when there are no priors so the section
+ * is omitted entirely.
+ */
+function renderPriorPoolSection(
+  exerciseType: ExerciseType,
+  priorPoolSurfaces: readonly string[] | undefined,
+): string {
+  if (!priorPoolSurfaces || priorPoolSurfaces.length === 0) return "";
+  const capped = capPriorPoolSurfaces(priorPoolSurfaces);
+  const bullets = capped.map((surface) => `  - ${surface}`).join("\n");
+  const heading =
+    exerciseType === ExerciseType.VOCAB_RECALL
+      ? "## Already in the pool — do NOT propose any of these target words"
+      : "## Already in the pool — do NOT propose any exercise whose surface matches these";
+  return `${heading}\n\n${bullets}\n\n`;
+}
+
 export function buildGenerationSystemPrompt(
   inputs: GenerationPromptInputs,
   recentStems: readonly string[],
 ): string {
-  const { language, cefrLevel, exerciseType, grammarPoint } = inputs;
+  const { language, cefrLevel, exerciseType, grammarPoint, priorPoolSurfaces } =
+    inputs;
   const toolName = TOOL_NAME_BY_TYPE[exerciseType];
 
   return `You are an expert language exercise author for ${language} learners at CEFR ${cefrLevel}. Your job is to produce one exercise of type ${exerciseType} that targets exactly one grammar point: ${grammarPoint.name}.
@@ -104,7 +155,7 @@ ${renderBulletList(grammarPoint.commonErrors)}
 
 ${CEFR_DESCRIPTOR_BULLETS}
 
-## Hard constraints
+${renderPriorPoolSection(exerciseType, priorPoolSurfaces)}## Hard constraints
 
 - The correct answer must be uniquely correct given the surrounding context.
 - Vocabulary outside CEFR ${cefrLevel} is forbidden unless the exercise explicitly tests it.
