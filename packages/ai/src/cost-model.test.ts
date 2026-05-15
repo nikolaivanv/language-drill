@@ -184,12 +184,18 @@ describe("cost reconciliation — buildCostDetails ↔ estimateCostUsd (Req 4 AC
 
   for (const { label, u } of fixtures) {
     it(`agrees to within $0.0001 for: ${label}`, () => {
-      const dashboardSum = Object.values(buildCostDetails(u)).reduce(
-        (acc, v) => acc + v,
-        0,
-      );
+      // `buildCostDetails` returns the four per-bucket USD values PLUS an
+      // explicit `total` (Langfuse-dashboard hint). The parity invariant
+      // is over the buckets only — including `total` in the sum would
+      // double-count.
+      const details = buildCostDetails(u);
+      const { total, ...buckets } = details;
+      const bucketSum = Object.values(buckets).reduce((acc, v) => acc + v, 0);
       const dbEstimate = estimateCostUsd(toBreakdown(u));
-      expect(Math.abs(dashboardSum - dbEstimate)).toBeLessThanOrEqual(0.0001);
+      expect(Math.abs(bucketSum - dbEstimate)).toBeLessThanOrEqual(0.0001);
+      // The explicit `total` key matches the bucket sum exactly (same
+      // arithmetic, no rounding).
+      expect(total).toBeCloseTo(bucketSum, 12);
     });
   }
 
