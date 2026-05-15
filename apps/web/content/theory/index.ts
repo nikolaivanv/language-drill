@@ -1,3 +1,8 @@
+/**
+ * Static theory registry. Hand-authored TSX topics take precedence over
+ * DB-stored rows; for DB-backed access use `useTheoryTopic` /
+ * `useTheoryTopics` from `apps/web/lib/hooks/`.
+ */
 import type { LearningLanguage } from '@language-drill/shared';
 import type { TheoryTopic } from '../../components/theory/types';
 import subjunctive from './es/subjunctive';
@@ -19,7 +24,7 @@ export type TheoryTopicId =
   | keyof (typeof theoryRegistry)['DE']
   | keyof (typeof theoryRegistry)['TR'];
 
-export function getTheoryTopic(
+export function getStaticTheoryTopic(
   language: LearningLanguage,
   topicId: string,
 ): TheoryTopic | null {
@@ -27,7 +32,7 @@ export function getTheoryTopic(
   return langMap[topicId] ?? null;
 }
 
-export function listTheoryTopics(
+export function listStaticTheoryTopics(
   language: LearningLanguage,
 ): Array<Pick<TheoryTopic, 'id' | 'title' | 'cefr'>> {
   const langMap = theoryRegistry[language] as Record<string, TheoryTopic>;

@@ -1,21 +1,22 @@
 import { LANGUAGE_NAMES, type LearningLanguage } from '@language-drill/shared';
-import {
-  listTheoryTopics,
-  type TheoryTopicId,
-} from '../../content/theory';
+import type { AuthenticatedFetch } from '@language-drill/api-client';
+import { type TheoryTopicId } from '../../content/theory';
+import { useTheoryTopics } from '../../lib/hooks/use-theory-topics';
 
 type TheoryEmptyProps = {
   attemptedTopicId: string;
   language: LearningLanguage;
   onSwitchTopic: (topicId: TheoryTopicId) => void;
+  fetchFn?: AuthenticatedFetch;
 };
 
 export function TheoryEmpty({
   attemptedTopicId,
   language,
   onSwitchTopic,
+  fetchFn,
 }: TheoryEmptyProps) {
-  const others = listTheoryTopics(language);
+  const { topics: others } = useTheoryTopics({ language, fetchFn });
 
   return (
     <div className="theory-empty">

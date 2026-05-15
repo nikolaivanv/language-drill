@@ -5,6 +5,7 @@ import { FALLBACK_ORIGINS } from '@language-drill/shared';
 
 import health from './routes/health';
 import exercises from './routes/exercises';
+import theory from './routes/theory';
 import sessions from './routes/sessions';
 import profiles from './routes/profiles';
 import progress from './routes/progress';
@@ -47,6 +48,7 @@ app.use(
 
 app.route('/', health);
 app.route('/', exercises);
+app.route('/', theory);
 app.route('/', sessions);
 app.route('/', profiles);
 app.route('/', progress);

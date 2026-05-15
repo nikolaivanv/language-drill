@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
 import {
-  getTheoryTopic,
-  listTheoryTopics,
+  getStaticTheoryTopic,
+  listStaticTheoryTopics,
   theoryRegistry,
 } from '..';
 import { Language } from '@language-drill/shared';
@@ -41,26 +41,26 @@ describe('theory registry · ES topics', () => {
   });
 });
 
-describe('getTheoryTopic', () => {
+describe('getStaticTheoryTopic', () => {
   it('returns the topic when present', () => {
-    expect(getTheoryTopic(Language.ES, 'subjunctive')).not.toBeNull();
-    expect(getTheoryTopic(Language.ES, 'preterite-imperfect')).not.toBeNull();
-    expect(getTheoryTopic(Language.ES, 'conditional')).not.toBeNull();
+    expect(getStaticTheoryTopic(Language.ES, 'subjunctive')).not.toBeNull();
+    expect(getStaticTheoryTopic(Language.ES, 'preterite-imperfect')).not.toBeNull();
+    expect(getStaticTheoryTopic(Language.ES, 'conditional')).not.toBeNull();
   });
 
   it('returns null for unknown topic ids', () => {
-    expect(getTheoryTopic(Language.ES, 'nonexistent')).toBeNull();
+    expect(getStaticTheoryTopic(Language.ES, 'nonexistent')).toBeNull();
   });
 
   it('returns null for languages with empty registries (DE, TR in v1)', () => {
-    expect(getTheoryTopic(Language.DE, 'subjunctive')).toBeNull();
-    expect(getTheoryTopic(Language.TR, 'subjunctive')).toBeNull();
+    expect(getStaticTheoryTopic(Language.DE, 'subjunctive')).toBeNull();
+    expect(getStaticTheoryTopic(Language.TR, 'subjunctive')).toBeNull();
   });
 });
 
-describe('listTheoryTopics', () => {
+describe('listStaticTheoryTopics', () => {
   it('returns all ES topics sorted by title', () => {
-    const list = listTheoryTopics(Language.ES);
+    const list = listStaticTheoryTopics(Language.ES);
     expect(list.length).toBe(Object.keys(theoryRegistry.ES).length);
 
     const titles = list.map((t) => t.title);
@@ -69,14 +69,14 @@ describe('listTheoryTopics', () => {
   });
 
   it('returns only id, title, and cefr — not the section bodies', () => {
-    const list = listTheoryTopics(Language.ES);
+    const list = listStaticTheoryTopics(Language.ES);
     for (const t of list) {
       expect(Object.keys(t).sort()).toEqual(['cefr', 'id', 'title']);
     }
   });
 
   it('returns an empty array for languages with empty registries', () => {
-    expect(listTheoryTopics(Language.DE)).toEqual([]);
-    expect(listTheoryTopics(Language.TR)).toEqual([]);
+    expect(listStaticTheoryTopics(Language.DE)).toEqual([]);
+    expect(listStaticTheoryTopics(Language.TR)).toEqual([]);
   });
 });

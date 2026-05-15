@@ -1,8 +1,20 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
+import { type ReactNode } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Language } from '@language-drill/shared';
 import { TheoryPanel } from '../theory-panel';
 import { mockIntersectionObserverInstances } from '../../../vitest.setup';
+
+// TheoryPanel consumes `useTheoryTopic` (TanStack Query) — provider required
+// in scope. Tests omit `fetchFn`, so the hook degrades to static-only and
+// `useQuery` stays `enabled: false`.
+function Wrapper({ children }: { children: ReactNode }) {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+}
 
 beforeEach(() => {
   mockIntersectionObserverInstances.length = 0;
@@ -26,6 +38,7 @@ describe('TheoryPanel', () => {
         triggerEl={null}
         onClose={vi.fn()}
       />,
+      { wrapper: Wrapper },
     );
     expect(document.body.querySelector('[role="dialog"]')).not.toBeNull();
   });
@@ -38,6 +51,7 @@ describe('TheoryPanel', () => {
         triggerEl={null}
         onClose={vi.fn()}
       />,
+      { wrapper: Wrapper },
     );
     const dialog = document.body.querySelector(
       '[role="dialog"]',
@@ -59,6 +73,7 @@ describe('TheoryPanel', () => {
         triggerEl={null}
         onClose={onClose}
       />,
+      { wrapper: Wrapper },
     );
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(onClose).toHaveBeenCalled();
@@ -73,6 +88,7 @@ describe('TheoryPanel', () => {
         triggerEl={null}
         onClose={onClose}
       />,
+      { wrapper: Wrapper },
     );
     const overlay = document.body.querySelector('.theory-overlay');
     expect(overlay).not.toBeNull();
@@ -89,6 +105,7 @@ describe('TheoryPanel', () => {
         triggerEl={null}
         onClose={onClose}
       />,
+      { wrapper: Wrapper },
     );
     const dialog = document.body.querySelector('[role="dialog"]') as HTMLElement;
     fireEvent.click(dialog);
@@ -104,6 +121,7 @@ describe('TheoryPanel', () => {
         triggerEl={null}
         onClose={onClose}
       />,
+      { wrapper: Wrapper },
     );
     fireEvent.click(screen.getByRole('button', { name: /close/i }));
     expect(onClose).toHaveBeenCalled();
@@ -118,6 +136,7 @@ describe('TheoryPanel', () => {
         triggerEl={null}
         onClose={onClose}
       />,
+      { wrapper: Wrapper },
     );
     fireEvent.click(screen.getByRole('button', { name: /back to drill/i }));
     expect(onClose).toHaveBeenCalled();
@@ -131,6 +150,7 @@ describe('TheoryPanel', () => {
         triggerEl={null}
         onClose={vi.fn()}
       />,
+      { wrapper: Wrapper },
     );
 
     const dialog = document.body.querySelector(
@@ -162,6 +182,7 @@ describe('TheoryPanel', () => {
         triggerEl={null}
         onClose={vi.fn()}
       />,
+      { wrapper: Wrapper },
     );
     // Empty-state copy from theory-empty.tsx — the "coming soon" line is
     // unique to the no-topics-for-this-language branch (FR-7.2).

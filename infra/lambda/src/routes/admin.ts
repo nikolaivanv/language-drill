@@ -9,6 +9,7 @@ import {
   exercises,
   generationJobs,
   targetCellSize,
+  theoryTopics,
   userExerciseHistory,
 } from '@language-drill/db';
 import { db } from '../db';
@@ -307,6 +308,89 @@ admin.get('/admin/generation-stats', async (c) => {
     jobsThisWeek,
     approvalRates,
   });
+});
+
+// ---------------------------------------------------------------------------
+// GET /admin/theory/coverage — 12-row coverage of approved/flagged theory rows
+// joined against the curriculum's grammar-point count per (language, level).
+// Always 12 rows (3 languages × 4 levels), even when both counts are zero —
+// the client decides how to render zero-total cells.
+// ---------------------------------------------------------------------------
+
+const COVERAGE_LANGUAGES = ['ES', 'DE', 'TR'] as const;
+const COVERAGE_LEVELS = ['A1', 'A2', 'B1', 'B2'] as const;
+
+type CoverageLanguage = (typeof COVERAGE_LANGUAGES)[number];
+type CoverageLevel = (typeof COVERAGE_LEVELS)[number];
+
+/**
+ * Curriculum denominator per (language, level): the count of distinct grammar
+ * points. `enumerateCurriculumCells` returns one cell per (grammarPoint,
+ * exerciseType) pair — for theory we collapse to distinct grammar points by
+ * deduping on `grammarPoint.key`.
+ */
+function theoryCurriculumTotals(): Map<string, number> {
+  const totals = new Map<string, Set<string>>();
+  for (const cell of enumerateCurriculumCells(ALL_CURRICULA)) {
+    if (cell.grammarPoint.kind !== 'grammar') continue;
+    const key = `${cell.language}:${cell.cefrLevel}`;
+    let set = totals.get(key);
+    if (!set) {
+      set = new Set<string>();
+      totals.set(key, set);
+    }
+    set.add(cell.grammarPoint.key);
+  }
+  const result = new Map<string, number>();
+  for (const [key, set] of totals) {
+    result.set(key, set.size);
+  }
+  return result;
+}
+
+admin.get('/admin/theory/coverage', async (c) => {
+  const aggregateRows = await db
+    .select({
+      language: theoryTopics.language,
+      level: theoryTopics.cefrLevel,
+      approved: sql<number>`COUNT(*) FILTER (WHERE ${theoryTopics.reviewStatus} IN ('auto-approved', 'manual-approved'))::int`,
+      flagged: sql<number>`COUNT(*) FILTER (WHERE ${theoryTopics.reviewStatus} = 'flagged')::int`,
+    })
+    .from(theoryTopics)
+    .groupBy(theoryTopics.language, theoryTopics.cefrLevel);
+
+  const aggregates = new Map<string, { approved: number; flagged: number }>();
+  for (const row of aggregateRows) {
+    aggregates.set(`${row.language}:${row.level}`, {
+      approved: row.approved,
+      flagged: row.flagged,
+    });
+  }
+
+  const totals = theoryCurriculumTotals();
+
+  const rows: Array<{
+    language: CoverageLanguage;
+    level: CoverageLevel;
+    approved: number;
+    flagged: number;
+    total: number;
+  }> = [];
+  for (const language of COVERAGE_LANGUAGES) {
+    for (const level of COVERAGE_LEVELS) {
+      const key = `${language}:${level}`;
+      const agg = aggregates.get(key);
+      rows.push({
+        language,
+        level,
+        approved: agg?.approved ?? 0,
+        flagged: agg?.flagged ?? 0,
+        total: totals.get(key) ?? 0,
+      });
+    }
+  }
+
+  return c.json({ rows });
 });
 
 export default admin;

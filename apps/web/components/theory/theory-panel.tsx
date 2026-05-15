@@ -3,10 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { LearningLanguage } from '@language-drill/shared';
-import {
-  getTheoryTopic,
-  type TheoryTopicId,
-} from '../../content/theory';
+import type { AuthenticatedFetch } from '@language-drill/api-client';
+import { type TheoryTopicId } from '../../content/theory';
+import { useTheoryTopic } from '../../lib/hooks/use-theory-topic';
 import { Chip } from '../ui/chip';
 import { TheoryContent } from './theory-content';
 import { TheoryEmpty } from './theory-empty';
@@ -20,6 +19,7 @@ type TheoryPanelProps = {
   language: LearningLanguage;
   triggerEl: HTMLElement | null;
   onClose: () => void;
+  fetchFn?: AuthenticatedFetch;
 };
 
 export function TheoryPanel({
@@ -27,13 +27,18 @@ export function TheoryPanel({
   language,
   triggerEl,
   onClose,
+  fetchFn,
 }: TheoryPanelProps) {
   const [internalTopicId, setInternalTopicId] = useState<TheoryTopicId>(topicId);
   const panelRef = useRef<HTMLElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
 
-  const topic = getTheoryTopic(language, internalTopicId);
+  const { topic, isLoading, isError } = useTheoryTopic({
+    language,
+    topicId: internalTopicId,
+    fetchFn,
+  });
   const sectionIds = topic ? topic.sections.map((s) => s.id) : [];
 
   // Hooks must be called unconditionally before any early returns.
@@ -131,6 +136,7 @@ export function TheoryPanel({
               onJump={handleJump}
               language={language}
               onSwitchTopic={setInternalTopicId}
+              fetchFn={fetchFn}
             />
             <TheoryContent
               topic={topic}
@@ -140,11 +146,20 @@ export function TheoryPanel({
               onClose={onClose}
             />
           </div>
+        ) : isLoading ? (
+          <div className="theory-loading">
+            <span className="t-small">loading theory…</span>
+          </div>
+        ) : isError ? (
+          <div className="theory-error">
+            <span className="t-small">couldn&apos;t load theory — try again</span>
+          </div>
         ) : (
           <TheoryEmpty
             attemptedTopicId={internalTopicId}
             language={language}
             onSwitchTopic={setInternalTopicId}
+            fetchFn={fetchFn}
           />
         )}
       </aside>

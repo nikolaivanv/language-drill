@@ -325,6 +325,7 @@ export default function PracticePage() {
                   setOpenTopicId(id);
                   setTriggerEl(el);
                 }}
+                fetchFn={fetchFn}
               />
             </div>
           )}
@@ -370,6 +371,7 @@ export default function PracticePage() {
           language={activeLanguage}
           triggerEl={triggerEl}
           onClose={() => setOpenTopicId(null)}
+          fetchFn={fetchFn}
         />
       )}
     </>

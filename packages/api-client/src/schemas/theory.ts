@@ -1,0 +1,41 @@
+/**
+ * Zod envelopes for the theory API's list-style responses.
+ *
+ * The single-topic endpoint (`GET /theory/:lang/:topicId`) does NOT have a
+ * Zod schema here. Its body is the `TheoryTopicJson` taxonomy already parsed
+ * by `parseTheoryTopicJson` in `@language-drill/shared`. Both server and
+ * client call that hand-written parser instead of defining a second schema,
+ * keeping one source-of-truth for the topic body (design refinement of
+ * requirements doc Req 2).
+ */
+import { z } from 'zod';
+
+// Envelope for GET /theory/:lang
+export const TheoryListItemSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  cefr: z.string(),
+});
+
+export const TheoryListResponseSchema = z.object({
+  topics: z.array(TheoryListItemSchema),
+});
+
+export type TheoryListItem = z.infer<typeof TheoryListItemSchema>;
+export type TheoryListResponse = z.infer<typeof TheoryListResponseSchema>;
+
+// Envelope for GET /admin/theory/coverage
+export const TheoryCoverageRowSchema = z.object({
+  language: z.enum(['ES', 'DE', 'TR']),
+  level: z.enum(['A1', 'A2', 'B1', 'B2']),
+  approved: z.number().int().nonnegative(),
+  flagged: z.number().int().nonnegative(),
+  total: z.number().int().nonnegative(),
+});
+
+export const TheoryCoverageResponseSchema = z.object({
+  rows: z.array(TheoryCoverageRowSchema),
+});
+
+export type TheoryCoverageRow = z.infer<typeof TheoryCoverageRowSchema>;
+export type TheoryCoverageResponse = z.infer<typeof TheoryCoverageResponseSchema>;
