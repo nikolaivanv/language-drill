@@ -4,7 +4,6 @@ import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import {
-  Language,
   CefrLevel,
   LANGUAGE_NAMES,
   ExerciseType,
@@ -42,40 +41,13 @@ import { SubmissionErrorCard } from './_components/submission-error-card';
 import type { SubmissionMeta } from './_components/types';
 
 interface SelectorsProps {
-  language: Language;
   difficulty: CefrLevel;
-  profiles: { language: string; proficiencyLevel: string }[];
-  onLanguageChange: (lang: Language) => void;
   onDifficultyChange: (level: CefrLevel) => void;
-  onAddLanguage: () => void;
 }
 
 function Selectors(p: SelectorsProps) {
   return (
     <div className="mb-s-6 flex gap-s-4">
-      <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-        Language
-        <select
-          value={p.language}
-          onChange={(e) => {
-            const v = e.target.value;
-            if (v === '__add') {
-              e.target.value = p.language;
-              p.onAddLanguage();
-              return;
-            }
-            p.onLanguageChange(v as Language);
-          }}
-          className="rounded border border-gray-300 bg-white px-3 py-2"
-        >
-          {p.profiles.map((pr) => (
-            <option key={pr.language} value={pr.language}>
-              {LANGUAGE_NAMES[pr.language as Language] ?? pr.language}
-            </option>
-          ))}
-          <option value="__add">+ Add language</option>
-        </select>
-      </label>
       <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
         Difficulty
         <select
@@ -108,7 +80,6 @@ export default function PracticePage() {
   const { data: profilesData } = useLanguageProfiles({ fetchFn });
   const profiles = profilesData?.profiles ?? [];
 
-  const [language, setLanguage] = useState<Language>(Language.EN);
   const [difficulty, setDifficulty] = useState<CefrLevel>(CefrLevel.B1);
   const [initialized, setInitialized] = useState(false);
   const [state, dispatch] = useReducer(sessionReducer, initialSessionState);
@@ -121,17 +92,16 @@ export default function PracticePage() {
     setOpenTopicId(null);
   }, [activeLanguage]);
 
-  // Initialize selectors from the first profile once profiles load. We gate
-  // the session-creation effect below on `initialized` so it doesn't fire
-  // before the user's real (language, difficulty) lands in state.
+  // Initialize difficulty from the profile matching the active language once
+  // profiles load. The session-creation effect below is gated on `initialized`
+  // so it doesn't fire before the user's real difficulty lands in state.
   useEffect(() => {
     if (profiles.length > 0 && !initialized) {
-      const first = profiles[0];
-      setLanguage(first.language as Language);
-      setDifficulty((first.proficiencyLevel as CefrLevel) ?? CefrLevel.B1);
+      const matching = profiles.find((p) => p.language === activeLanguage);
+      setDifficulty((matching?.proficiencyLevel as CefrLevel) ?? CefrLevel.B1);
       setInitialized(true);
     }
-  }, [profiles, initialized]);
+  }, [profiles, initialized, activeLanguage]);
 
   const createSession = useCreateSession({ fetchFn });
   const submitMutation = useSubmitAnswer({ fetchFn });
@@ -163,13 +133,13 @@ export default function PracticePage() {
 
     dispatch({ type: 'CREATE_REQUESTED' });
     createSession.mutate(
-      { language, difficulty, exerciseCount: DEFAULT_EXERCISE_COUNT },
+      { language: activeLanguage, difficulty, exerciseCount: DEFAULT_EXERCISE_COUNT },
       {
         onSuccess: (data) => dispatch({ type: 'CREATE_SUCCEEDED', session: data }),
         onError: (err) => dispatch({ type: 'CREATE_FAILED', error: err as Error }),
       },
     );
-  }, [initialized, state.kind, language, difficulty, createSession]);
+  }, [initialized, state.kind, activeLanguage, difficulty, createSession]);
 
   function handleSubmit(answer: string, meta: SubmissionMeta) {
     if (state.kind !== 'inSession') return;
@@ -230,14 +200,6 @@ export default function PracticePage() {
     fireCompleteSession(sessionId);
   }
 
-  function handleLanguageChange(newLang: Language) {
-    setLanguage(newLang);
-    const matching = profiles.find((p) => p.language === newLang);
-    if (matching) setDifficulty(matching.proficiencyLevel as CefrLevel);
-    submitMutation.reset();
-    dispatch({ type: 'RESET' });
-  }
-
   function handleDifficultyChange(newDifficulty: CefrLevel) {
     setDifficulty(newDifficulty);
     submitMutation.reset();
@@ -273,12 +235,8 @@ export default function PracticePage() {
 
   const selectors = (
     <Selectors
-      language={language}
       difficulty={difficulty}
-      profiles={profiles}
-      onLanguageChange={handleLanguageChange}
       onDifficultyChange={handleDifficultyChange}
-      onAddLanguage={() => router.push('/onboarding')}
     />
   );
 
@@ -302,7 +260,7 @@ export default function PracticePage() {
       {insufficient && (
         <Card padding="lg" className="bg-paper-2">
           <p className="t-body">
-            no exercises available for {LANGUAGE_NAMES[language] ?? language} at {difficulty}
+            no exercises available for {LANGUAGE_NAMES[activeLanguage] ?? activeLanguage} at {difficulty}
           </p>
           <p className="t-small text-ink-mute mt-s-2">try a different difficulty</p>
         </Card>
