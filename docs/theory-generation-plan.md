@@ -163,8 +163,8 @@ Total estimated effort: **~6–8 working days**. Smaller than exercise generatio
 | 1 | `TheoryTopicJson` schema + DB tables + renderer | ~1.5d | — | ✅ shipped (worktree-theory-content-generation) |
 | 2 | Generator core + CLI driver | ~1.5d | 1 | ✅ shipped (worktree-theory-generation-phase-2) |
 | 3 | Validator + routing + review CLI | ~1d | 2 | ✅ shipped |
-| 4 | Lambda + SQS + EventBridge | ~1d | 3 | pending |
-| 5 | Panel registry fallback + admin tile | ~1d | 4 | pending |
+| 4 | Lambda + SQS + EventBridge | ~1d | 3 | ✅ shipped (PR #100) |
+| 5 | Panel registry fallback + admin tile | ~1d | 4 | ✅ shipped (PR #118) |
 
 ---
 
@@ -536,7 +536,9 @@ Mirrors `packages/db/scripts/review-flagged.ts` byte-for-byte except for the pri
 
 ---
 
-### Phase 4 — Productionization (Lambda + SQS + EventBridge)
+### Phase 4 — Productionization (Lambda + SQS + EventBridge) ✅ shipped
+
+**Status:** Complete. Spec at `.claude/specs/theory-generation-phase-4/`. Merged via PR #100. The weekly EventBridge cron (Monday 04:00 UTC) is live in prod (`enableScheduledJobs: true`) and dormant in dev (`enableScheduledJobs: false`).
 
 **Goal:** the same generator runs unattended on AWS, refilling the catalog when curriculum entries are added.
 
@@ -596,7 +598,9 @@ Theory shares the same secrets as exercise generation (`ANTHROPIC_API_KEY`, `DAT
 
 ---
 
-### Phase 5 — Panel registry fallback + admin tile
+### Phase 5 — Panel registry fallback + admin tile ✅ shipped
+
+**Status:** Complete. Spec at `.claude/specs/theory-generation-phase-5/`. All 28 tasks done; shipped via PR #118. Two deliberate deltas from the sketch below: (1) the registry rename split sync vs DB-backed paths explicitly — `getTheoryTopic` / `listTheoryTopics` were renamed to `getStaticTheoryTopic` / `listStaticTheoryTopics`, and DB-backed access goes through the new `useTheoryTopic` / `useTheoryTopics` hooks in `apps/web/lib/hooks/` (the panel/trigger/toc/empty components all consume the hook pair instead of calling the registry directly). (2) The Upstash Redis 5-minute cache layer is deferred — the `theory_topics_panel_idx` partial index makes the route a single index-only scan, and TanStack Query's in-tab `staleTime: 5 * 60 * 1000` covers repeat opens; the Upstash layer remains a follow-up if the live latency dashboard ever shows the route as a hot spot.
 
 **Goal:** generated theory shows up in the panel without code changes per topic; the admin dashboard surfaces theory coverage.
 
