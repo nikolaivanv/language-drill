@@ -50,6 +50,7 @@ import {
 } from '../schema/index';
 
 import type { Cell } from './cells';
+import { runGeneratorPool } from './generator-pool';
 import { routeValidationResult } from './routing';
 import { runValidatorPool } from './validator-pool';
 
@@ -81,6 +82,15 @@ const MAX_PRIOR_POOL_SURFACES = 250;
  * context (generation loop is still serial; spec covers validator only).
  */
 const MAX_VALIDATOR_CONCURRENCY = 5;
+
+/**
+ * Maximum in-flight `generateOneDraft` calls per cell. Mirrors
+ * MAX_VALIDATOR_CONCURRENCY: the two pools run sequentially within a cell
+ * (generator pool drains, then validator pool starts), so peak in-flight per
+ * cell is still 5 Claude calls. Setting this to 1 makes generation
+ * byte-identical to the pre-spec serial loop — emergency rollback knob.
+ */
+const MAX_GENERATOR_CONCURRENCY = 5;
 
 /** generation_jobs.error_message column truncates at 1000 chars. */
 const ERROR_MESSAGE_MAX_LENGTH = 1000;
@@ -159,8 +169,9 @@ export type RunOneCellInput = {
   trigger: 'cli' | 'scheduled' | 'admin';
   /**
    * Optional cooperative-cancellation signal. The CLI bridges its SIGINT
-   * handler to `AbortController.signal`; the Lambda omits this (its abort path
-   * is the SQS visibility timeout + Lambda timeout).
+   * handler; the Lambda bridges its soft-deadline (Lambda remaining time
+   * minus a buffer) so audit rows finalize as `failed` instead of leaking
+   * as zombie `running` rows when AWS hard-kills the process.
    */
   signal?: AbortSignal;
 };
@@ -286,6 +297,7 @@ export async function validateAndInsertWithRetry(
         opts.client,
         currentDraft,
         opts.spec,
+        opts.signal,
       ));
     }
     extraUsage = addUsage(extraUsage, valUsage);
@@ -489,9 +501,16 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       priorPoolSurfaces,
     };
 
-    const batch = await generateBatch(client, spec);
-    // Window between Claude resolving and the per-draft loop — if SIGINT
-    // arrived during the Claude call, abort here so partial drafts never land.
+    const batch = await runGeneratorPool({
+      client,
+      spec,
+      count: args.count,
+      signal,
+      concurrency: MAX_GENERATOR_CONCURRENCY,
+    });
+    // Window between the generator pool resolving and the per-draft loop —
+    // if SIGINT/soft-deadline arrived during the last in-flight Claude call,
+    // abort here so partial drafts never land.
     if (signal?.aborted) {
       throw new Error('Aborted by user (SIGINT)');
     }

@@ -238,6 +238,7 @@ export async function validateDraft(
   client: Anthropic,
   draft: ExerciseDraft,
   spec: GenerationSpec,
+  signal?: AbortSignal,
 ): Promise<ValidateDraftResult> {
   // Top-of-function guard. Keys off `draft.contentJson.type` (not
   // `spec.exerciseType`) so a caller that hands the validator a draft whose
@@ -253,21 +254,24 @@ export async function validateDraft(
   const systemText = buildValidationSystemPrompt(spec);
   const userText = buildValidationUserPrompt(draft, spec);
 
-  const response = await client.messages.create({
-    model: VALIDATION_MODEL,
-    max_tokens: VALIDATION_MAX_TOKENS,
-    system: [
-      {
-        type: "text" as const,
-        text: systemText,
-        cache_control: { type: "ephemeral" as const },
-      },
-    ],
-    messages: [{ role: "user" as const, content: userText }],
-    tools: [VALIDATION_TOOL],
-    tool_choice: { type: "tool" as const, name: VALIDATION_TOOL_NAME },
-    temperature: VALIDATION_TEMPERATURE,
-  });
+  const response = await client.messages.create(
+    {
+      model: VALIDATION_MODEL,
+      max_tokens: VALIDATION_MAX_TOKENS,
+      system: [
+        {
+          type: "text" as const,
+          text: systemText,
+          cache_control: { type: "ephemeral" as const },
+        },
+      ],
+      messages: [{ role: "user" as const, content: userText }],
+      tools: [VALIDATION_TOOL],
+      tool_choice: { type: "tool" as const, name: VALIDATION_TOOL_NAME },
+      temperature: VALIDATION_TEMPERATURE,
+    },
+    { signal },
+  );
 
   const toolUseBlock = response.content.find(
     (block): block is Anthropic.ToolUseBlock => block.type === "tool_use",

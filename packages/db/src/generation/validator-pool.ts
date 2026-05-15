@@ -43,7 +43,12 @@ export async function runValidatorPool(opts: {
       // `Map.set(ordinal, …)` skip locking.
       const ordinal = nextOrdinal++;
       if (ordinal >= drafts.length) return;
-      const validation = await validateDraft(client, drafts[ordinal], spec);
+      const validation = await validateDraft(
+        client,
+        drafts[ordinal],
+        spec,
+        signal,
+      );
       results.set(ordinal, validation);
     }
   };

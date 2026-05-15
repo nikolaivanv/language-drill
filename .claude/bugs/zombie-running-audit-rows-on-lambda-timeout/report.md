@@ -117,3 +117,52 @@ The handler's idempotency guard is correct in design — it prevents two concurr
 - **Partial-cell exercises**: when the soft deadline fires mid-loop, any drafts already INSERTed into `exercises` remain there (they're each their own transaction, not part of a cell-level transaction). Is that OK? Pro: pool gets some new content even from a failed cell. Con: the `generation_jobs.approved_count` won't reflect them because the loop exits via the catch path. Need to decide whether `failClosed` should bump the count to match `exercises` reality, or whether partial cells should roll back. Suggested: keep the partial inserts (they're valid) but have `failClosed` populate `approved_count`/`flagged_count`/`rejected_count` from the loop-local counters before writing the audit row.
 - **Safety margin tuning**: the suggested 10 s above is a guess. Should be tuned against observed `failClosed` latency (DB UPDATE on `generation_jobs` over Neon WS) + a margin for in-flight Claude calls. 5 s might be too tight; 15 s might unnecessarily kill cells that would have finished in time.
 - **Should we also implement option 2 (stuck-row heuristic) preemptively?** The soft deadline only catches Lambda timeouts; it doesn't catch OOMs, segfaults, or runtime exits that bypass `setTimeout`. Defense in depth.
+
+---
+
+## Resolution Log
+
+**2026-05-16 — branch `worktree-exercise-generation-optimization`**
+
+Implemented the recommended fix (Option 1) plus the belt-and-suspenders operational tool. The stuck-row heuristic in the handler (Option 2) was deferred — the soft-deadline finalizer should make zombies vanishingly rare, and the new `cleanup:zombies` operator script reclaims any that still slip past (Lambda OOM, hard process crash before `setTimeout` fires).
+
+### Code changes
+
+- `infra/lambda/src/generation/handler.ts` — added `Context` parameter, `SOFT_DEADLINE_BUFFER_MS = 30_000`, `AbortController` + `setTimeout` at `getRemainingTimeInMillis() - buffer`, passes `signal` into `runOneCell`, clears the timer in a `finally`.
+- `packages/ai/src/generate.ts` + `packages/ai/src/validate.ts` — threaded `signal?: AbortSignal` into `client.messages.create` so in-flight Claude HTTPS calls abort promptly instead of stranding the 30 s buffer waiting on a hung socket.
+- `packages/db/src/generation/run-one-cell.ts` — no structural change; existing `try/catch` + `failClosed` already routes any thrown abort through `UPDATE generation_jobs SET status='failed', finished_at=now(), error_message=…`.
+- `packages/db/scripts/cleanup-zombie-jobs.ts` — new operator script with `--dry-run` (default), `--apply`, `--max-age-minutes`, `--limit`. `DELETE` (not `UPDATE status='failed'`) because the handler's idempotency guard treats `failed` as `completed` and would skip re-running; `DELETE` lets the next scheduler tick re-queue cleanly. Wired as `pnpm --filter @language-drill/db cleanup:zombies`.
+
+### Buffer-size decision
+
+30 s on a 900 s budget (3.3% overhead). Three things must happen after the soft deadline fires: in-flight Claude HTTP teardown over Neon serverless WS (~5 s p99), `UPDATE generation_jobs` round-trip (200–600 ms typical, ~2 s p99 cold-connection retry), and a small slack. 10 s — as originally suggested in this report — felt risky; 30 s leaves headroom for the rare-but-real cold-DB-connection retry.
+
+### Open questions revisited
+
+- **Partial-cell exercises** — kept the existing behaviour: drafts already INSERTed before the abort stay in `exercises`. They are valid; the validator approved them. `failClosed` does NOT bump `approved_count` to match — the cell as a unit didn't succeed, so the audit row's counts staying at `0` is honest. Operators reading the audit table know `status='failed'` means "do not trust the count fields"; the `exercises` table is the source of truth for what's in the pool.
+- **Stuck-row heuristic** — deferred. The `cleanup:zombies` script covers the residual case operationally without inviting the race window the heuristic would create.
+
+### Outstanding manual cleanup
+
+Production has at least one extant zombie that pre-dates this fix:
+
+```
+es-b1-environment-vocab  started_at = 2026-05-12 04:00:56 UTC  status='running'
+```
+
+Operator should run (in prod psql) before the next scheduler tick:
+
+```sql
+BEGIN;
+DELETE FROM generation_jobs
+WHERE cell_key LIKE '%es-b1-environment-vocab%'
+  AND status = 'running'
+  AND started_at < NOW() - INTERVAL '15 minutes'
+RETURNING id, cell_key, status, started_at;
+COMMIT;
+```
+
+Or equivalently:
+```
+DATABASE_URL=... pnpm --filter @language-drill/db cleanup:zombies -- --apply
+```
