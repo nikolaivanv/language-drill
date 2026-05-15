@@ -222,7 +222,7 @@ code to leverage with `_Leverage: path/to/file.ts_`.
   - _Leverage: existing scripts in root `package.json` (`lint`, `typecheck`, `test`)_
   - _Requirements: 7.4_
 
-- [ ] 24. Manual post-deploy verification — five day-one use cases
+- [x] 24. Manual post-deploy verification — five day-one use cases
   - Files: none (operator runbook step)
   - After merging and the CDK deploy completes for the dev stack: (a) submit one answer from `apps/web` against dev API and verify a Langfuse trace appears in `language-drill-dev` with `submissionId` matching the new `userExerciseHistory.id`; (b) trigger one generation cell and verify N generate + 1..M validate traces share `jobId` and `cellKey`; (c) trigger one annotation and verify a single trace with `flaggedCount` and the WordFlag array; (d) pin five dashboards in the dev project covering Req 9 AC 1–5; (e) promote the dashboard definitions to the prod project.
   - Purpose: dashboard acceptance gate.
