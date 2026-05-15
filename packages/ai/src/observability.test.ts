@@ -274,15 +274,22 @@ describe("Anthropic Proxy — messages.create", () => {
         exerciseType: "cloze",
       }),
     });
+    // v2 tag schema (`dimension:value`) — see `buildTraceTags` for why.
+    // Each tag is a namespaced key:value pair so dashboards can both
+    // filter (`tag matches language:*`) AND group by tag (each distinct
+    // value becomes a breakdown bucket).
     const tags = (spies.traceCalls[0] as { tags: string[] }).tags;
     expect(tags).toEqual(
       expect.arrayContaining([
-        "evaluate",
-        "dev",
-        "claude-sonnet-4-5",
-        "es",
-        "B1",
-        "cloze",
+        "feature:evaluate",
+        "env:dev",
+        "model:claude-sonnet-4-5",
+        // promptVersion derives from makeCtx — match the date-stamped pattern
+        // rather than a literal so prompt-version bumps don't break tests.
+        expect.stringMatching(/^promptVersion:evaluate@\d{4}-\d{2}-\d{2}$/),
+        "language:es",
+        "cefrLevel:B1",
+        "exerciseType:cloze",
         "submissionId:sub-xyz",
       ]),
     );
@@ -377,7 +384,10 @@ describe("Anthropic Proxy — messages.create", () => {
 
     expect(spies.traceCalls[0]).toMatchObject({ name: "validate" });
     const tags = (spies.traceCalls[0] as { tags: string[] }).tags;
-    expect(tags).toContain("validate");
+    // v2 schema — namespaced. Also asserts cellKey landed as a tag so
+    // dashboard 4 (per-cell rejection rate) can group by it.
+    expect(tags).toContain("feature:validate");
+    expect(tags).toContain("cellKey:es|B1|cloze");
     // Generate-side ALS metadata still passes through.
     expect(spies.traceCalls[0]).toMatchObject({
       metadata: expect.objectContaining({

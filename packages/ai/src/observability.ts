@@ -377,22 +377,44 @@ function buildTraceMetadata(
 }
 
 /**
- * Build the v1 tag schema (design.md Model 3 §1). `language` is lowercased
- * to match Req 3 AC 1 (`en` | `es` | `de` | `tr`). `submissionId` is
- * *also* tagged (Model 3 §3) so the Req 9 AC 2 "pivot from submissionId"
- * dashboard filter is one-click.
+ * Build the v2 tag schema — every tag is `dimension:value` so Langfuse
+ * dashboards can both **filter** (prefix `language:*`) and **group by**
+ * tag value (`language:es`, `language:de`, …) for breakdown charts.
+ *
+ * The v1 schema (Phase 1) used bare values (`es`, `B1`, `cloze`). Langfuse's
+ * dashboard group-by only works on tags, not metadata, but with bare-value
+ * tags every trace has 6-7 unrelated tags and the UI can't tell which one
+ * represents which dimension. Namespacing solves both filter and group-by
+ * in one go; the schema is forward-extensible (just keep the
+ * `dimension:value` rule for any new tag).
+ *
+ * `language` is lowercased to match Req 3 AC 1 (`en` | `es` | `de` | `tr`).
+ * `submissionId` was already namespaced in v1 — kept as-is. `promptVersion`
+ * and `cellKey` were metadata-only in v1; promoted to tags so dashboards
+ * 3 (prompt-version A/B) and 4 (per-cell rejection rate) can group by them.
+ *
+ * `requestId` and `jobId` stay metadata-only — they're high-cardinality
+ * pivot keys, used for filtering one specific trace, not for breakdown.
  */
 function buildTraceTags(
   ctx: LlmTraceContext,
   feature: LlmFeature,
   model: string,
 ): string[] {
-  const tags: string[] = [feature, ctx.env, model];
-  if (ctx.language) tags.push(String(ctx.language).toLowerCase());
-  if (ctx.cefrLevel) tags.push(ctx.cefrLevel);
-  if (ctx.exerciseType !== undefined && ctx.exerciseType !== null) {
-    tags.push(String(ctx.exerciseType));
+  const tags: string[] = [
+    `feature:${feature}`,
+    `env:${ctx.env}`,
+    `model:${model}`,
+    `promptVersion:${ctx.promptVersion}`,
+  ];
+  if (ctx.language) {
+    tags.push(`language:${String(ctx.language).toLowerCase()}`);
   }
+  if (ctx.cefrLevel) tags.push(`cefrLevel:${ctx.cefrLevel}`);
+  if (ctx.exerciseType !== undefined && ctx.exerciseType !== null) {
+    tags.push(`exerciseType:${ctx.exerciseType}`);
+  }
+  if (ctx.cellKey) tags.push(`cellKey:${ctx.cellKey}`);
   if (ctx.submissionId) tags.push(`submissionId:${ctx.submissionId}`);
   return tags;
 }
