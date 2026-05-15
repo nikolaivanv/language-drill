@@ -4,6 +4,45 @@ A living log of known issues to address. Add new entries at the top; mark as res
 
 ---
 
+## Langfuse `validate` traces missing `exerciseId` metadata
+
+- **Status:** open (Phase 1 design accepted the gap; verified live in prod 2026-05-15)
+- **Discovered:** 2026-05-15 (Task 24 post-deploy verification — observed validate trace with `feature/jobId/cellKey/promptVersion/env` but no `exerciseId`)
+- **Scope:** `packages/ai/src/observability.ts` (Proxy ALS read), `infra/lambda/src/generation/handler.ts` (single outer `withLlmTrace` scope), `packages/db/src/generation/run-one-cell.ts` (where individual validate calls are dispatched)
+- **Severity:** low — none of the five Phase-1 dashboards (Req 9 AC 1–5) need it; per-cell rejection rate aggregates by `cellKey`, which IS present on every validate trace
+
+**Root cause:**
+The generation Lambda enters `withLlmTrace` once per SQS record with the *shared* metadata (`jobId`, `cellKey`, `language`, `cefrLevel`, `exerciseType`). Inside that single ALS scope, `runOneCell` dispatches N `generate` Claude calls *and* 1..M `validate` Claude calls. The Proxy reads ALS at call time and swaps `feature` per call via `TOOL_NAME_TO_FEATURE` — that's why validate traces correctly inherit `jobId`/`cellKey` and get `feature='validate'`. But ALS doesn't know which specific draft is being validated, because that information lives inside `run-one-cell.ts` (in `packages/db`), which the Phase-1 spec deliberately kept observability-free for layering reasons (`.claude/specs/langfuse-implementation-phase-1/design.md §2c` — "Why a single outer scope, not nested").
+
+**Requirements gap:** Req 2 AC 4 stated `validate` traces SHALL carry `exerciseId` (the draft id under validation). The design accepted partial coverage because Req 9 AC 4's dashboard math works on `cellKey` aggregation, not per-draft pairing.
+
+**Remediation (two reasonable options):**
+
+1. **Nested `withLlmTrace` inside the validation loop.** Modify `packages/db/src/generation/run-one-cell.ts` to import `withLlmTrace` from `@language-drill/ai` and open a nested scope around each `validateDraft(...)` call carrying `{ ...inheritedCtx, exerciseId: draft.id }`. ALS scopes nest cleanly — the inner store shadows the outer for the duration of the call. **Cost:** breaks the "packages/db observability-free" layering rule. Honest about it because run-one-cell already orchestrates LLM calls — adding trace context is in scope for an orchestrator.
+2. **Proxy-side extraction.** Have the Proxy parse the request's tool input on `feature='validate'` to find a draft identifier (e.g. `draft.id` or a stable hash of the draft payload). Keeps `packages/db` clean. **Cost:** fragile — the validation prompt's input shape isn't a stable API; any prompt edit could silently break the extraction without test coverage catching it.
+
+Recommended: **option 1**, despite the layering violation. The "no LLM observability in packages/db" rule made sense when only `packages/ai` issued Claude calls; once `run-one-cell` became the orchestrator, that rule stopped pulling its weight. Move the per-validate-call trace scope into the orchestrator and update the relevant tests.
+
+**Acceptance criteria for the fix:**
+- Every Langfuse trace with `feature='validate'` from the generation pipeline carries `metadata.exerciseId === <the draft row id under validation>`.
+- `packages/db/src/generation/run-one-cell.test.ts` asserts the nested `withLlmTrace` scope is opened per draft (mock the symbol — same pattern used in `infra/lambda/src/generation/handler.test.ts`).
+- A retry of the same draft (validation failed, regenerate-and-revalidate) produces a *new* validate trace with the *same* `exerciseId` — proves the pairing is stable across retries.
+- Dashboard: pin a "per-draft validation outcome" view filtered to `feature='validate'`, grouped by `metadata.exerciseId`, showing the eventual approve/reject status. This is a Phase-2 nice-to-have, not a Phase-1 blocker.
+
+**Why we can't ignore it forever:**
+- Debugging "this exercise has weird feedback" against a generation job currently requires landing on the draft via `cellKey` then scanning every validate trace in that cell for the matching tool input. With `exerciseId` it's a one-click filter.
+- The Phase-1 spec acknowledged this gap explicitly in `requirements.md` Req 2 AC 4 — closing the loop is a contract-completeness fix, not a feature add.
+
+**Owner:** unassigned
+**Tracking:** none yet — open a GitHub issue when prioritizing (good first-issue candidate for whoever picks up Phase 2 observability work)
+**References:**
+- `.claude/specs/langfuse-implementation-phase-1/requirements.md` Req 2 AC 4
+- `.claude/specs/langfuse-implementation-phase-1/design.md §2c` (the deliberate-deferral note)
+- `packages/ai/src/observability.ts` — `TOOL_NAME_TO_FEATURE` map shows how feature-switching already happens without per-call ALS edits
+- `packages/db/src/generation/run-one-cell.ts` — the orchestrator that would host the nested scope
+
+---
+
 ## Annotate-stream Function URL CORS allows all origins
 
 - **Status:** open (worked around in PR #97 — set `allowedOrigins: ["*"]`)

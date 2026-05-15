@@ -321,6 +321,13 @@ function resolveFeature(
  * Build the trace-level metadata object. Mirrors design.md Model 3:
  * cross-reference ids (submission/job/cell/exercise) plus operational
  * fields go here; the tag schema (Model 3 §1) is built separately.
+ *
+ * `language`, `cefrLevel`, and `exerciseType` are *also* in `metadata`
+ * (and not only as tags) so Langfuse dashboards can `group by` them.
+ * Tags are great for filter-search ("show traces tagged `es`") but
+ * Langfuse's group-by selector keys off structured metadata fields —
+ * a "cost broken down by language" chart needs `metadata.language` to
+ * exist (Req 9 AC 1 dashboard).
  */
 // Langfuse SDK v3 narrows metadata values to `string | number | boolean |
 // string[] | null`. The builder's return type matches so the call sites
@@ -344,6 +351,14 @@ function buildTraceMetadata(
   if (ctx.cellKey !== undefined) m.cellKey = ctx.cellKey;
   if (ctx.exerciseId !== undefined) m.exerciseId = ctx.exerciseId;
   if (ctx.candidateCount !== undefined) m.candidateCount = ctx.candidateCount;
+  // Dashboard-pivot dimensions: tag-and-metadata so both filter UIs and
+  // group-by selectors work. Language is lowercased to match the tag
+  // canonicalisation in `buildTraceTags` (Req 3 AC 1: `en` | `es` | …).
+  if (ctx.language) m.language = String(ctx.language).toLowerCase();
+  if (ctx.cefrLevel) m.cefrLevel = ctx.cefrLevel;
+  if (ctx.exerciseType !== undefined && ctx.exerciseType !== null) {
+    m.exerciseType = String(ctx.exerciseType);
+  }
   return m;
 }
 

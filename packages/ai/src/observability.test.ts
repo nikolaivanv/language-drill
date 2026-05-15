@@ -254,7 +254,10 @@ describe("Anthropic Proxy — messages.create", () => {
 
     expect(result).toEqual(mockResponse);
 
-    // Trace was created with the right user / tags / metadata.
+    // Trace was created with the right user / tags / metadata. Note:
+    // language / cefrLevel / exerciseType appear in BOTH `metadata`
+    // (for dashboard group-by — Req 9 AC 1) and `tags` (for filter-
+    // search). The tag assertions below cover the latter.
     expect(spies.traceCalls).toHaveLength(1);
     expect(spies.traceCalls[0]).toMatchObject({
       name: "evaluate",
@@ -266,6 +269,9 @@ describe("Anthropic Proxy — messages.create", () => {
         requestId: "req-1",
         submissionId: "sub-xyz",
         model: "claude-sonnet-4-5",
+        language: "es",
+        cefrLevel: "B1",
+        exerciseType: "cloze",
       }),
     });
     const tags = (spies.traceCalls[0] as { tags: string[] }).tags;
