@@ -34,7 +34,7 @@ import {
   GENERATION_PROMPT_VERSION,
   withLlmTrace,
 } from '@language-drill/ai';
-import type { SQSBatchResponse, SQSEvent } from 'aws-lambda';
+import type { Context, SQSBatchResponse, SQSEvent } from 'aws-lambda';
 
 import {
   checkAuditRowState,
@@ -55,6 +55,19 @@ const db = createDb(requireEnv('DATABASE_URL'));
 const client = createObservedClaudeClient(requireEnv('ANTHROPIC_API_KEY'));
 
 // ---------------------------------------------------------------------------
+// Soft-deadline buffer
+//
+// AWS hard-kills the Lambda at the configured 900 s timeout with no JS-level
+// finally/catch opportunity, leaving audit rows stuck in `running`. We fire
+// an AbortController this many ms before the hard timeout so `runOneCell`'s
+// outer try/catch routes through `failClosed` and writes `status='failed'`
+// before AWS pulls the plug. 30 s leaves headroom for in-flight Claude HTTP
+// teardown + Neon WS round-trip + p99 cold-connection retry.
+// ---------------------------------------------------------------------------
+
+const SOFT_DEADLINE_BUFFER_MS = 30_000;
+
+// ---------------------------------------------------------------------------
 // Logging
 // ---------------------------------------------------------------------------
 
@@ -66,7 +79,10 @@ function log(payload: Record<string, unknown>): void {
 // Handler
 // ---------------------------------------------------------------------------
 
-export async function handler(event: SQSEvent): Promise<SQSBatchResponse> {
+export async function handler(
+  event: SQSEvent,
+  context: Context,
+): Promise<SQSBatchResponse> {
   const batchItemFailures: SQSBatchResponse['batchItemFailures'] = [];
 
   for (const record of event.Records) {
@@ -182,6 +198,25 @@ export async function handler(event: SQSEvent): Promise<SQSBatchResponse> {
       //    feature='generate' vs 'validate' from the outgoing tool name
       //    via `TOOL_NAME_TO_FEATURE` (design.md §2c); ALS carries the
       //    shared fields, the Proxy picks the per-call feature tag.
+      // Soft-deadline: abort `runOneCell` ~30 s before AWS hard-kills the
+      // Lambda. `runOneCell`'s outer try/catch routes the abort through
+      // `failClosed`, finalizing the audit row as `status='failed'`. Without
+      // this, the row stays in `'running'` and the idempotency guard at step
+      // 4 above defers every redelivery until DLQ.
+      const remainingMs = context.getRemainingTimeInMillis();
+      const deadlineMs = Math.max(
+        remainingMs - SOFT_DEADLINE_BUFFER_MS,
+        1_000,
+      );
+      const controller = new AbortController();
+      const timer = setTimeout(() => {
+        controller.abort(
+          new Error(
+            'Approaching Lambda timeout; finalized before forced termination',
+          ),
+        );
+      }, deadlineMs);
+
       let result: CellResult;
       try {
         result = await withLlmTrace(
@@ -209,6 +244,7 @@ export async function handler(event: SQSEvent): Promise<SQSBatchResponse> {
               },
               jobId: parsed.jobId,
               trigger: parsed.trigger,
+              signal: controller.signal,
             }),
         );
       } catch (err) {
@@ -221,6 +257,8 @@ export async function handler(event: SQSEvent): Promise<SQSBatchResponse> {
         });
         batchItemFailures.push({ itemIdentifier: record.messageId });
         continue;
+      } finally {
+        clearTimeout(timer);
       }
 
       // Result dispatch. Req 2.4 amendment: terminal failures (audit row

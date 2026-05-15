@@ -31,7 +31,7 @@ import {
   Language,
   type LearningLanguage,
 } from '@language-drill/shared';
-import type { SQSEvent, SQSRecord } from 'aws-lambda';
+import type { Context, SQSEvent, SQSRecord } from 'aws-lambda';
 import type {
   Cell,
   CellResult,
@@ -143,6 +143,12 @@ function eventWith(records: SQSRecord[]): SQSEvent {
   return { Records: records } as SQSEvent;
 }
 
+function fakeContext(remainingMs = 900_000): Context {
+  return {
+    getRemainingTimeInMillis: () => remainingMs,
+  } as unknown as Context;
+}
+
 function buildCell(): Cell {
   return {
     language: Language.ES as LearningLanguage,
@@ -247,7 +253,7 @@ describe('SQS handler', () => {
     const event = eventWith([
       recordWith(JSON.stringify(validMessage()), 'msg-success'),
     ]);
-    const result = await handler(event);
+    const result = await handler(event, fakeContext());
 
     expect(result.batchItemFailures).toEqual([]);
     expect(mockRunOneCell).toHaveBeenCalledTimes(1);
@@ -263,7 +269,7 @@ describe('SQS handler', () => {
 
   it('malformed record body (not JSON) → messageId in failures, never calls audit check', async () => {
     const event = eventWith([recordWith('not-json', 'msg-malformed')]);
-    const result = await handler(event);
+    const result = await handler(event, fakeContext());
 
     expect(result.batchItemFailures).toEqual([
       { itemIdentifier: 'msg-malformed' },
@@ -286,7 +292,7 @@ describe('SQS handler', () => {
     expect(longBody.length).toBeGreaterThan(1000);
 
     const event = eventWith([recordWith(longBody, 'msg-long')]);
-    const result = await handler(event);
+    const result = await handler(event, fakeContext());
 
     expect(result.batchItemFailures).toEqual([
       { itemIdentifier: 'msg-long' },
@@ -307,7 +313,7 @@ describe('SQS handler', () => {
     msg.spec.grammarPointKey = 'es-b1-fake-grammar-point';
 
     const event = eventWith([recordWith(JSON.stringify(msg), 'msg-miss')]);
-    const result = await handler(event);
+    const result = await handler(event, fakeContext());
 
     expect(result.batchItemFailures).toEqual([
       { itemIdentifier: 'msg-miss' },
@@ -328,7 +334,7 @@ describe('SQS handler', () => {
     const event = eventWith([
       recordWith(JSON.stringify(validMessage()), 'msg-inprogress'),
     ]);
-    const result = await handler(event);
+    const result = await handler(event, fakeContext());
 
     expect(result.batchItemFailures).toEqual([
       { itemIdentifier: 'msg-inprogress' },
@@ -351,7 +357,7 @@ describe('SQS handler', () => {
     const event = eventWith([
       recordWith(JSON.stringify(validMessage()), 'msg-done-ok'),
     ]);
-    const result = await handler(event);
+    const result = await handler(event, fakeContext());
 
     expect(result.batchItemFailures).toEqual([]);
     expect(mockRunOneCell).not.toHaveBeenCalled();
@@ -372,7 +378,7 @@ describe('SQS handler', () => {
     const event = eventWith([
       recordWith(JSON.stringify(validMessage()), 'msg-done-failed'),
     ]);
-    const result = await handler(event);
+    const result = await handler(event, fakeContext());
 
     expect(result.batchItemFailures).toEqual([]);
     expect(mockRunOneCell).not.toHaveBeenCalled();
@@ -390,7 +396,7 @@ describe('SQS handler', () => {
     msg.spec.cefrLevel = 'C1' as CurriculumCefrLevel;
 
     const event = eventWith([recordWith(JSON.stringify(msg), 'msg-c1')]);
-    const result = await handler(event);
+    const result = await handler(event, fakeContext());
 
     expect(result.batchItemFailures).toEqual([
       { itemIdentifier: 'msg-c1' },
@@ -412,7 +418,7 @@ describe('SQS handler', () => {
     const event = eventWith([
       recordWith(JSON.stringify(validMessage()), 'msg-prod-cli'),
     ]);
-    const result = await handler(event);
+    const result = await handler(event, fakeContext());
 
     expect(result.batchItemFailures).toEqual([
       { itemIdentifier: 'msg-prod-cli' },
@@ -442,7 +448,7 @@ describe('SQS handler', () => {
     const event = eventWith([
       recordWith(JSON.stringify(msg), 'msg-prod-scheduled'),
     ]);
-    const result = await handler(event);
+    const result = await handler(event, fakeContext());
 
     expect(result.batchItemFailures).toEqual([]);
     expect(mockRunOneCell).toHaveBeenCalledTimes(1);
@@ -455,7 +461,7 @@ describe('SQS handler', () => {
     const event = eventWith([
       recordWith(JSON.stringify(validMessage()), 'msg-throw'),
     ]);
-    const result = await handler(event);
+    const result = await handler(event, fakeContext());
 
     expect(result.batchItemFailures).toEqual([
       { itemIdentifier: 'msg-throw' },
@@ -479,7 +485,7 @@ describe('SQS handler', () => {
     const event = eventWith([
       recordWith(JSON.stringify(validMessage()), 'msg-failed'),
     ]);
-    const result = await handler(event);
+    const result = await handler(event, fakeContext());
 
     expect(result.batchItemFailures).toEqual([]);
     expect(mockRunOneCell).toHaveBeenCalledTimes(1);
@@ -504,7 +510,7 @@ describe('SQS handler', () => {
     const event = eventWith([
       recordWith(JSON.stringify(validMessage()), 'msg-cap'),
     ]);
-    const result = await handler(event);
+    const result = await handler(event, fakeContext());
 
     expect(result.batchItemFailures).toEqual([]);
     expect(mockRunOneCell).toHaveBeenCalledTimes(1);
@@ -544,7 +550,7 @@ describe('SQS handler — observability flush + trace scope', () => {
     const event = eventWith([
       recordWith(JSON.stringify(validMessage()), 'msg-flush-ok'),
     ]);
-    await handler(event);
+    await handler(event, fakeContext());
 
     expect(mockFlushObservability).toHaveBeenCalledTimes(1);
   });
@@ -556,7 +562,7 @@ describe('SQS handler — observability flush + trace scope', () => {
     const event = eventWith([
       recordWith(JSON.stringify(validMessage()), 'msg-flush-throw'),
     ]);
-    const result = await handler(event);
+    const result = await handler(event, fakeContext());
 
     expect(result.batchItemFailures).toEqual([
       { itemIdentifier: 'msg-flush-throw' },
@@ -570,7 +576,7 @@ describe('SQS handler — observability flush + trace scope', () => {
     // every code path through the loop, not just the ones that opened a
     // trace.
     const event = eventWith([recordWith('not-json', 'msg-flush-parse')]);
-    const result = await handler(event);
+    const result = await handler(event, fakeContext());
 
     expect(result.batchItemFailures).toEqual([
       { itemIdentifier: 'msg-flush-parse' },
@@ -596,7 +602,7 @@ describe('SQS handler — observability flush + trace scope', () => {
       recordWith(JSON.stringify(validMessage()), 'msg-batch-1'),
       recordWith(JSON.stringify(validMessage()), 'msg-batch-2'),
     ]);
-    const result = await handler(event);
+    const result = await handler(event, fakeContext());
 
     // Only the failing record reports a batchItemFailure.
     expect(result.batchItemFailures).toEqual([
@@ -633,7 +639,7 @@ describe('SQS handler — observability flush + trace scope', () => {
     const event = eventWith([
       recordWith(JSON.stringify(validMessage()), 'msg-trace-ctx'),
     ]);
-    await handler(event);
+    await handler(event, fakeContext());
 
     // Sequence proof: trace opens → runOneCell runs → trace closes.
     expect(callOrder).toEqual([
@@ -694,7 +700,7 @@ describe('SQS handler — observability flush + trace scope', () => {
       recordWith(JSON.stringify(validMessage()), 'msg-noop-2'),
       recordWith('not-json', 'msg-noop-3'),
     ]);
-    const result = await handler(event);
+    const result = await handler(event, fakeContext());
 
     // Same shape pre-spec would emit: only the runOneCell-throw and the
     // parse-fail records report as batchItemFailures.
@@ -702,5 +708,114 @@ describe('SQS handler — observability flush + trace scope', () => {
       { itemIdentifier: 'msg-noop-2' },
       { itemIdentifier: 'msg-noop-3' },
     ]);
+  });
+
+  // -------------------------------------------------------------------------
+  // Soft-deadline / Lambda-timeout finalization
+  // -------------------------------------------------------------------------
+
+  it('passes context-derived AbortSignal into runOneCell so the soft deadline can finalize the audit row', async () => {
+    mockCheckAuditRowState.mockResolvedValueOnce({ status: 'absent' });
+    mockRunOneCell.mockResolvedValueOnce({
+      ...cellResultBase(),
+      status: 'succeeded',
+      insertedCount: 5,
+    });
+
+    const event = eventWith([
+      recordWith(JSON.stringify(validMessage()), 'msg-signal'),
+    ]);
+    await handler(event, fakeContext(900_000));
+
+    expect(mockRunOneCell).toHaveBeenCalledTimes(1);
+    const call = mockRunOneCell.mock.calls[0][0] as {
+      signal?: AbortSignal;
+    };
+    expect(call.signal).toBeInstanceOf(AbortSignal);
+    expect(call.signal?.aborted).toBe(false);
+  });
+
+  it('soft deadline (remaining - 30s buffer) aborts runOneCell before the Lambda hard timeout', async () => {
+    vi.useFakeTimers();
+    try {
+      mockCheckAuditRowState.mockResolvedValueOnce({ status: 'absent' });
+
+      // runOneCell waits for the signal — mimics a real cell call hung on a
+      // long-running Claude generation. When the soft deadline aborts, the
+      // mock resolves with a 'failed' CellResult, the same shape failClosed
+      // returns when the abort propagates through runOneCell's catch path.
+      let capturedSignal: AbortSignal | undefined;
+      mockRunOneCell.mockImplementationOnce((input: { signal: AbortSignal }) => {
+        capturedSignal = input.signal;
+        return new Promise((resolve) => {
+          input.signal.addEventListener('abort', () => {
+            resolve({
+              ...cellResultBase(),
+              status: 'failed',
+              errorMessage:
+                'Approaching Lambda timeout; finalized before forced termination',
+            });
+          });
+        });
+      });
+
+      const event = eventWith([
+        recordWith(JSON.stringify(validMessage()), 'msg-deadline'),
+      ]);
+      // 35 s remaining → soft deadline fires at 35 s − 30 s buffer = 5 s.
+      const handlerPromise = handler(event, fakeContext(35_000));
+
+      // Before the timer fires, the signal must not be aborted yet.
+      await vi.advanceTimersByTimeAsync(4_900);
+      expect(capturedSignal?.aborted).toBe(false);
+
+      // Cross the 5 s threshold — the soft deadline fires.
+      await vi.advanceTimersByTimeAsync(200);
+      expect(capturedSignal?.aborted).toBe(true);
+
+      const result = await handlerPromise;
+      // failClosed-style 'failed' CellResult is NOT pushed to batchItemFailures
+      // — redelivery would just trip the idempotency guard. See handler.ts
+      // line ~270 ("terminal failures (audit row already has the verdict)").
+      expect(result.batchItemFailures).toEqual([]);
+
+      const log = findLogLine(
+        consoleLogSpy,
+        (e) => e['message'] === 'cell terminal-failed',
+      );
+      expect(log['status']).toBe('failed');
+      expect(log['errorMessage']).toBe(
+        'Approaching Lambda timeout; finalized before forced termination',
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('clears the soft-deadline timer after runOneCell resolves so no stray abort fires later', async () => {
+    vi.useFakeTimers();
+    try {
+      mockCheckAuditRowState.mockResolvedValueOnce({ status: 'absent' });
+      let capturedSignal: AbortSignal | undefined;
+      mockRunOneCell.mockImplementationOnce((input: { signal: AbortSignal }) => {
+        capturedSignal = input.signal;
+        return Promise.resolve({
+          ...cellResultBase(),
+          status: 'succeeded',
+          insertedCount: 5,
+        });
+      });
+
+      const event = eventWith([
+        recordWith(JSON.stringify(validMessage()), 'msg-clear'),
+      ]);
+      await handler(event, fakeContext(35_000));
+
+      // Push past where the soft deadline would have fired (5 s + slack).
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(capturedSignal?.aborted).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

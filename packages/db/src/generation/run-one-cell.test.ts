@@ -602,6 +602,48 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
     );
 
     it(
+      'pre-aborted signal: audit row finalizes as failed with the soft-deadline error message',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        const controller = new AbortController();
+        controller.abort();
+
+        const client = createMockAnthropicClient();
+        const result = await runOneCell({
+          db,
+          client,
+          cell: buildTestCell(),
+          args: {
+            count: 3,
+            batchSeed: 'phase-soft-deadline-pre-abort',
+            topicDomain: null,
+            maxCostUsd: 5,
+          },
+          jobId: randomUUID(),
+          trigger: 'scheduled',
+          signal: controller.signal,
+        });
+
+        expect(result.status).toBe('failed');
+
+        const jobs = await db
+          .select()
+          .from(generationJobs)
+          .where(eq(generationJobs.cellKey, TEST_CELL_KEY));
+        expect(jobs).toHaveLength(1);
+        expect(jobs[0].status).toBe('failed');
+        expect(jobs[0].finishedAt).not.toBeNull();
+        // No exercises should have been inserted before the abort fired at
+        // the top of the try block (line 469 in run-one-cell.ts).
+        const inserted = await db
+          .select({ id: exercises.id })
+          .from(exercises)
+          .where(eq(exercises.grammarPointKey, TEST_GRAMMAR_POINT_KEY));
+        expect(inserted).toHaveLength(0);
+      },
+    );
+
+    it(
       'Phase A: all-malformed batch fail-closes before the worker pool runs',
       { timeout: TEST_TIMEOUT_MS },
       async () => {

@@ -505,7 +505,7 @@ describe("generateBatch", () => {
 
   // ---- Within-batch behavior ----
 
-  it("propagates the previous draft's canonical surface into the next call's system prompt", async () => {
+  it("sends a byte-identical system prompt for every ordinal so prompt caching hits across the batch", async () => {
     let callIndex = 0;
     mockCreate.mockImplementation(() => {
       const idx = callIndex++;
@@ -528,53 +528,19 @@ describe("generateBatch", () => {
 
     const { drafts } = await generateBatch(mockClient, {
       ...baseSpec,
-      count: 2,
+      count: 3,
     });
 
-    expect(drafts).toHaveLength(2);
-    const secondCallSystem = mockCreate.mock.calls[1][0].system[0].text;
-    // The first draft's canonical surface (lowercased, diacritic-stripped) of
-    // "Yo ___ ejercicio número 0 aquí." appears as a bullet in the second
-    // call's system prompt.
-    expect(secondCallSystem).toContain("yo ___ ejercicio numero 0 aqui.");
-  });
-
-  it("caps the recentStems bullet block at MAX_RECENT_STEMS_IN_PROMPT (30) on the 32nd call", async () => {
-    let callIndex = 0;
-    mockCreate.mockImplementation(() => {
-      const idx = callIndex++;
-      return Promise.resolve({
-        content: [
-          {
-            type: "tool_use",
-            id: `toolu_${idx}`,
-            name: TOOL_NAME_BY_TYPE.cloze,
-            input: {
-              ...validClozeInput,
-              // Each draft gets a unique sentence so canonicalSurface produces
-              // 32 distinct stems.
-              sentence: `Frase número ${idx} con ___ aquí.`,
-            },
-          },
-        ],
-        stop_reason: "tool_use",
-        usage: baseUsage,
-      });
-    });
-
-    await generateBatch(mockClient, { ...baseSpec, count: 32 });
-
-    // Inspect the system prompt sent on the 32nd call (mock.calls index 31).
-    const lastSystem = mockCreate.mock.calls[31][0].system[0].text;
-    // Count bullet lines under the "## Hard constraints" section. The
-    // generation-prompts builder renders each stem as `\n  - <surface>`.
-    const bulletCount = (lastSystem.match(/\n  - /g) ?? []).length;
-    expect(bulletCount).toBe(30);
-    // Sanity: the very first draft's surface (idx=0) should have been dropped
-    // from the LRU window by now.
-    expect(lastSystem).not.toContain("frase numero 0 con ___ aqui.");
-    // And the most recent (idx=30, i.e. the 31st draft) should still be there.
-    expect(lastSystem).toContain("frase numero 30 con ___ aqui.");
+    expect(drafts).toHaveLength(3);
+    const systemTexts = mockCreate.mock.calls.map(
+      (c) => c[0].system[0].text as string,
+    );
+    expect(systemTexts[0]).toBe(systemTexts[1]);
+    expect(systemTexts[1]).toBe(systemTexts[2]);
+    // Recent-stems hint renders "(none yet)" because intra-batch feedback is
+    // dropped — this is the cache-stability guarantee.
+    expect(systemTexts[0]).toContain("(none yet)");
+    expect(systemTexts[2]).not.toContain("yo ___ ejercicio numero 0 aqui.");
   });
 
   // ---- Token aggregation ----

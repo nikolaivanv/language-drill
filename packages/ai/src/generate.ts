@@ -30,7 +30,6 @@ import {
   buildGenerationSystemPrompt,
   buildGenerationUserPrompt,
   canonicalSurface,
-  tailRecentStems,
   type GenerationPromptInputs,
 } from "./generation-prompts.js";
 
@@ -533,13 +532,158 @@ function readUsage(response: Anthropic.Message): ClaudeUsageBreakdown {
 }
 
 // ---------------------------------------------------------------------------
-// generateBatch — skeleton (Task 8). The per-iter Claude/parse/dedup loop
-// body lands in Task 9.
+// generateOneDraft — single-ordinal Claude call. Stateless across ordinals so
+// callers (sequential generateBatch + the parallel generator-pool in
+// packages/db/src/generation/generator-pool.ts) can fan it out freely. The
+// `inBatchDuplicate` flag is left `false` here — only the caller, which sees
+// the whole batch in ordinal order, can populate it. Use
+// `populateInBatchDuplicates` after collecting all results.
+// ---------------------------------------------------------------------------
+
+export type GenerateOneDraftResult =
+  | { kind: "draft"; draft: ExerciseDraft; usage: ClaudeUsageBreakdown }
+  | {
+      kind: "malformed";
+      malformed: MalformedDraft;
+      usage: ClaudeUsageBreakdown;
+    };
+
+export async function generateOneDraft(
+  client: Anthropic,
+  spec: GenerationSpec,
+  ordinal: number,
+  signal?: AbortSignal,
+): Promise<GenerateOneDraftResult> {
+  const promptInputs: GenerationPromptInputs = {
+    language: spec.language,
+    cefrLevel: spec.cefrLevel,
+    exerciseType: spec.exerciseType,
+    grammarPoint: spec.grammarPoint,
+    priorPoolSurfaces: spec.priorPoolSurfaces,
+  };
+
+  // Empty `recentStems` — intra-batch diversity feedback was dropped when the
+  // per-ordinal loop became parallelizable. Hard dedup is still enforced
+  // downstream: `populateInBatchDuplicates` flags within-batch collisions,
+  // `exercises_dedup_idx` rejects cross-batch collisions at INSERT time, and
+  // `runRetryGeneration` (sequential, sees prior drafts via dedup-index
+  // collision) handles retries.
+  const systemText = buildGenerationSystemPrompt(promptInputs, []);
+  const userText = buildGenerationUserPrompt(
+    promptInputs,
+    ordinal,
+    spec.topicDomain,
+  );
+  const tool = GENERATION_TOOL_BY_TYPE[spec.exerciseType];
+
+  // Infrastructure-level failures (network, rate-limit, auth) propagate
+  // — they're not per-ordinal data quality issues. Only the parse path
+  // below is loss-tolerant.
+  const response = await client.messages.create(
+    {
+      model: GENERATION_MODEL,
+      max_tokens: GENERATION_MAX_TOKENS,
+      system: [
+        {
+          type: "text" as const,
+          text: systemText,
+          cache_control: { type: "ephemeral" as const },
+        },
+      ],
+      messages: [{ role: "user" as const, content: userText }],
+      tools: [tool],
+      tool_choice: { type: "tool" as const, name: tool.name },
+      temperature: GENERATION_TEMPERATURE,
+    },
+    { signal },
+  );
+
+  // Token usage is paid whether the parse succeeds or not — return it on
+  // both branches so per-ordinal failures are still accounted for in cost
+  // reporting.
+  const usage = readUsage(response);
+
+  let content: ExerciseContent;
+  try {
+    const toolUseBlock = response.content.find(
+      (block): block is Anthropic.ToolUseBlock => block.type === "tool_use",
+    );
+    if (!toolUseBlock) {
+      throw new Error(
+        `no tool_use block returned (stop_reason=${response.stop_reason})`,
+      );
+    }
+    if (toolUseBlock.name !== tool.name) {
+      throw new Error(
+        `expected tool '${tool.name}', got '${toolUseBlock.name}'`,
+      );
+    }
+    content = parseToolInput(toolUseBlock.input, spec);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return {
+      kind: "malformed",
+      malformed: {
+        ordinal,
+        errorMessage: `Draft ordinal=${ordinal} malformed: ${message}`,
+      },
+      usage,
+    };
+  }
+
+  return {
+    kind: "draft",
+    draft: {
+      id: exerciseDraftId(spec, ordinal),
+      contentJson: content,
+      metadata: {
+        grammarPointKey: spec.grammarPoint.key,
+        topicDomain: spec.topicDomain,
+        modelId: GENERATION_MODEL,
+        inputTokens:
+          usage.inputTokens +
+          usage.cacheCreationInputTokens +
+          usage.cacheReadInputTokens,
+        outputTokens: usage.outputTokens,
+        cacheCreationInputTokens: usage.cacheCreationInputTokens,
+        cacheReadInputTokens: usage.cacheReadInputTokens,
+        inBatchDuplicate: false,
+      },
+    },
+    usage,
+  };
+}
+
+/**
+ * Walks drafts in ordinal order, setting `inBatchDuplicate = true` on every
+ * occurrence after the first whose canonical surface matches an earlier draft
+ * in the array. Mutates in place. Caller responsibility: pass drafts in
+ * ordinal order so the marking is deterministic across serial and parallel
+ * generation paths.
+ */
+export function populateInBatchDuplicates(drafts: ExerciseDraft[]): void {
+  const seen = new Set<string>();
+  for (const draft of drafts) {
+    const surface = canonicalSurface(draft.contentJson);
+    if (seen.has(surface)) {
+      draft.metadata.inBatchDuplicate = true;
+    } else {
+      seen.add(surface);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// generateBatch — sequential wrapper. The parallel path lives in
+// `packages/db/src/generation/generator-pool.ts` (calls `generateOneDraft`
+// directly). This wrapper is kept for `runRetryGeneration` (count=1) and any
+// other caller that wants serial semantics with no concurrency concerns.
 // ---------------------------------------------------------------------------
 
 export async function generateBatch(
   client: Anthropic,
   spec: GenerationSpec,
+  signal?: AbortSignal,
 ): Promise<GenerateBatchResult> {
   // Top-of-function guards. The CLI rejects EN at argument-parse time; the
   // guard here exists so a caller that bypassed the CLI (e.g. an SDK consumer
@@ -556,109 +700,21 @@ export async function generateBatch(
     throw new Error(`Unsupported exerciseType: ${spec.exerciseType}`);
   }
 
-  const promptInputs: GenerationPromptInputs = {
-    language: spec.language,
-    cefrLevel: spec.cefrLevel,
-    exerciseType: spec.exerciseType,
-    grammarPoint: spec.grammarPoint,
-    priorPoolSurfaces: spec.priorPoolSurfaces,
-  };
-
-  const recentStems: string[] = [];
-  const seenStems = new Set<string>();
   let tokenUsage: ClaudeUsageBreakdown = ZERO_USAGE;
   const drafts: ExerciseDraft[] = [];
   const malformedDrafts: MalformedDraft[] = [];
 
   for (let ordinal = 0; ordinal < spec.count; ordinal++) {
-    const systemText = buildGenerationSystemPrompt(
-      promptInputs,
-      tailRecentStems(recentStems),
-    );
-    const userText = buildGenerationUserPrompt(
-      promptInputs,
-      ordinal,
-      spec.topicDomain,
-    );
-    const tool = GENERATION_TOOL_BY_TYPE[spec.exerciseType];
-
-    // Infrastructure-level failures (network, rate-limit, auth) propagate
-    // — they're not per-ordinal data quality issues. Only the parse/validate
-    // path below is loss-tolerant.
-    const response = await client.messages.create({
-      model: GENERATION_MODEL,
-      max_tokens: GENERATION_MAX_TOKENS,
-      system: [
-        {
-          type: "text" as const,
-          text: systemText,
-          cache_control: { type: "ephemeral" as const },
-        },
-      ],
-      messages: [{ role: "user" as const, content: userText }],
-      tools: [tool],
-      tool_choice: { type: "tool" as const, name: tool.name },
-      temperature: GENERATION_TEMPERATURE,
-    });
-
-    // Token usage is paid whether the parse succeeds or not — fold it in
-    // before deciding what to do with the payload so per-ordinal failures
-    // still get accounted for in cost reporting.
-    const usage = readUsage(response);
-    tokenUsage = addUsage(tokenUsage, usage);
-
-    let content: ExerciseContent;
-    try {
-      const toolUseBlock = response.content.find(
-        (block): block is Anthropic.ToolUseBlock => block.type === "tool_use",
-      );
-      if (!toolUseBlock) {
-        throw new Error(
-          `no tool_use block returned (stop_reason=${response.stop_reason})`,
-        );
-      }
-      if (toolUseBlock.name !== tool.name) {
-        throw new Error(
-          `expected tool '${tool.name}', got '${toolUseBlock.name}'`,
-        );
-      }
-      content = parseToolInput(toolUseBlock.input, spec);
-    } catch (err) {
-      // Per-ordinal failure: record, skip, continue. The cell-level
-      // orchestrator (`runOneCell`) decides whether the surviving drafts
-      // are enough to count the cell as succeeded.
-      const message = err instanceof Error ? err.message : String(err);
-      malformedDrafts.push({
-        ordinal,
-        errorMessage: `Draft ordinal=${ordinal} malformed: ${message}`,
-      });
-      continue;
+    const result = await generateOneDraft(client, spec, ordinal, signal);
+    tokenUsage = addUsage(tokenUsage, result.usage);
+    if (result.kind === "draft") {
+      drafts.push(result.draft);
+    } else {
+      malformedDrafts.push(result.malformed);
     }
-
-    const surface = canonicalSurface(content);
-    const inBatchDuplicate = seenStems.has(surface);
-    seenStems.add(surface);
-    recentStems.push(surface);
-
-    drafts.push({
-      id: exerciseDraftId(spec, ordinal),
-      contentJson: content,
-      metadata: {
-        grammarPointKey: spec.grammarPoint.key,
-        topicDomain: spec.topicDomain,
-        modelId: GENERATION_MODEL,
-        inputTokens:
-          usage.inputTokens +
-          usage.cacheCreationInputTokens +
-          usage.cacheReadInputTokens,
-        outputTokens: usage.outputTokens,
-        cacheCreationInputTokens: usage.cacheCreationInputTokens,
-        cacheReadInputTokens: usage.cacheReadInputTokens,
-        inBatchDuplicate,
-      },
-    });
   }
 
+  populateInBatchDuplicates(drafts);
   return { drafts, tokenUsage, malformedDrafts };
 }
 

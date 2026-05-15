@@ -43,6 +43,8 @@ export {
   TRANSLATION_GENERATION_TOOL,
   VOCAB_RECALL_GENERATION_TOOL,
   generateBatch,
+  generateOneDraft,
+  populateInBatchDuplicates,
   exerciseDraftId,
   parseGeneratedClozeDraft,
   parseGeneratedTranslationDraft,
@@ -52,6 +54,8 @@ export type {
   GenerationSpec,
   ExerciseDraft,
   GenerateBatchResult,
+  GenerateOneDraftResult,
+  MalformedDraft,
 } from "./generate.js";
 
 export {
