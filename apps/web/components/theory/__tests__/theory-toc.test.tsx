@@ -1,8 +1,20 @@
 import { describe, it, expect, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
+import { type ReactNode } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Language } from '@language-drill/shared';
 import { TheoryToc } from '../theory-toc';
 import type { TheoryTopic } from '../types';
+
+// TheoryToc consumes `useTheoryTopics` (TanStack Query) — provider required
+// in scope even though the tests omit `fetchFn` (the hook degrades to
+// static-only with `enabled: false`).
+function Wrapper({ children }: { children: ReactNode }) {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+}
 
 const mockTopic: TheoryTopic = {
   id: 'subjunctive',
@@ -26,6 +38,7 @@ describe('TheoryToc', () => {
         language={Language.ES}
         onSwitchTopic={vi.fn()}
       />,
+      { wrapper: Wrapper },
     );
 
     const sectionButtons = screen.getAllByRole('button');
@@ -44,6 +57,7 @@ describe('TheoryToc', () => {
         language={Language.ES}
         onSwitchTopic={vi.fn()}
       />,
+      { wrapper: Wrapper },
     );
     const activeBtn = screen.getByRole('button', { name: 'when to use it' });
     expect(activeBtn.getAttribute('aria-current')).toBe('true');
@@ -62,6 +76,7 @@ describe('TheoryToc', () => {
         language={Language.ES}
         onSwitchTopic={vi.fn()}
       />,
+      { wrapper: Wrapper },
     );
     fireEvent.click(screen.getByRole('button', { name: 'examples' }));
     expect(onJump).toHaveBeenCalledWith('examples');
@@ -76,6 +91,7 @@ describe('TheoryToc', () => {
         language={Language.ES}
         onSwitchTopic={vi.fn()}
       />,
+      { wrapper: Wrapper },
     );
     // ES has 3 topics; subjunctive is current, so 2 others should appear.
     expect(screen.getByText(/other topics/i)).toBeInTheDocument();
@@ -98,6 +114,7 @@ describe('TheoryToc', () => {
         language={Language.DE}
         onSwitchTopic={vi.fn()}
       />,
+      { wrapper: Wrapper },
     );
     expect(screen.queryByText(/other topics/i)).toBeNull();
   });
@@ -112,6 +129,7 @@ describe('TheoryToc', () => {
         language={Language.ES}
         onSwitchTopic={onSwitchTopic}
       />,
+      { wrapper: Wrapper },
     );
     fireEvent.click(
       screen.getByRole('button', { name: /pretérito vs\. imperfecto/i }),

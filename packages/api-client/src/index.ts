@@ -158,3 +158,20 @@ export {
   GenerationStatsSchema,
   type GenerationStats,
 } from './schemas/pool-status';
+export {
+  TheoryListItemSchema,
+  TheoryListResponseSchema,
+  TheoryCoverageRowSchema,
+  TheoryCoverageResponseSchema,
+  type TheoryListItem,
+  type TheoryListResponse,
+  type TheoryCoverageRow,
+  type TheoryCoverageResponse,
+} from './schemas/theory';
+export {
+  parseTheoryTopicJson,
+  type TheoryTopicJson,
+  type TheorySectionJson,
+  type TheoryBlockJson,
+  type TheoryInlineJson,
+} from '@language-drill/shared';

@@ -1,6 +1,6 @@
 import type { LearningLanguage } from '@language-drill/shared';
 import {
-  getTheoryTopic,
+  getStaticTheoryTopic,
   type TheoryTopicId,
 } from '../content/theory';
 
@@ -37,5 +37,5 @@ export function topicIdForHint(
     return null;
   }
 
-  return getTheoryTopic(language, id) ? id : null;
+  return getStaticTheoryTopic(language, id) ? id : null;
 }

@@ -21,6 +21,11 @@ import { db } from './db';
 import health from './routes/health';
 import exercises from './routes/exercises';
 import profiles from './routes/profiles';
+import sessions from './routes/sessions';
+import progress from './routes/progress';
+import read from './routes/read';
+import theory from './routes/theory';
+import admin from './routes/admin';
 
 const DEV_USER_ID = process.env['DEV_USER_ID'] ?? 'dev_user_001';
 const DEV_USER_EMAIL = process.env['DEV_USER_EMAIL'] ?? `${DEV_USER_ID}@local.dev`;
@@ -70,6 +75,11 @@ app.use('*', async (c, next) => {
 app.route('/', health);
 app.route('/', exercises);
 app.route('/', profiles);
+app.route('/', sessions);
+app.route('/', progress);
+app.route('/', read);
+app.route('/', theory);
+app.route('/', admin);
 
 ensureDevUser()
   .then(() => {

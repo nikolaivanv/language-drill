@@ -1,8 +1,7 @@
 import type { LearningLanguage } from '@language-drill/shared';
-import {
-  listTheoryTopics,
-  type TheoryTopicId,
-} from '../../content/theory';
+import type { AuthenticatedFetch } from '@language-drill/api-client';
+import { type TheoryTopicId } from '../../content/theory';
+import { useTheoryTopics } from '../../lib/hooks/use-theory-topics';
 import { cn } from '../../lib/cn';
 import type { TheoryTopic } from './types';
 
@@ -12,6 +11,7 @@ type TheoryTocProps = {
   onJump: (sectionId: string) => void;
   language: LearningLanguage;
   onSwitchTopic: (topicId: TheoryTopicId) => void;
+  fetchFn?: AuthenticatedFetch;
 };
 
 export function TheoryToc({
@@ -20,8 +20,10 @@ export function TheoryToc({
   onJump,
   language,
   onSwitchTopic,
+  fetchFn,
 }: TheoryTocProps) {
-  const others = listTheoryTopics(language).filter((t) => t.id !== topic.id);
+  const { topics: allTopics } = useTheoryTopics({ language, fetchFn });
+  const others = allTopics.filter((t) => t.id !== topic.id);
 
   return (
     <nav className="theory-toc" aria-label="theory sections">

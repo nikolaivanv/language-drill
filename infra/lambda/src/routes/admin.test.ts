@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Hono } from 'hono';
+import {
+  ALL_CURRICULA,
+  enumerateCurriculumCells,
+} from '@language-drill/db';
 
 // ---------------------------------------------------------------------------
 // DB chain mock
@@ -406,5 +410,94 @@ describe('GET /admin/generation-stats', () => {
     const row = body.approvalRates[0];
     // Math.max(0, 2-7)=0; denominator = 5+0+0 = 5; rate = 5/5 = 1.0
     expect(row.approvalRate).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /admin/theory/coverage
+// ---------------------------------------------------------------------------
+
+/**
+ * Recreate the route's curriculum-denominator computation so the test can
+ * assert per-cell totals without hardcoding curriculum-specific counts. The
+ * route iterates the same way: distinct grammar-point keys per (lang, level).
+ */
+function expectedCurriculumTotals(): Map<string, number> {
+  const buckets = new Map<string, Set<string>>();
+  for (const cell of enumerateCurriculumCells(ALL_CURRICULA)) {
+    if (cell.grammarPoint.kind !== 'grammar') continue;
+    const key = `${cell.language}:${cell.cefrLevel}`;
+    let set = buckets.get(key);
+    if (!set) {
+      set = new Set<string>();
+      buckets.set(key, set);
+    }
+    set.add(cell.grammarPoint.key);
+  }
+  const result = new Map<string, number>();
+  for (const [key, set] of buckets) {
+    result.set(key, set.size);
+  }
+  return result;
+}
+
+describe('GET /admin/theory/coverage', () => {
+  it('returns 403 for a non-admin user (admin middleware inheritance)', async () => {
+    const res = await app.request(
+      '/admin/theory/coverage',
+      undefined,
+      nonAdminEnv,
+    );
+    expect(res.status).toBe(403);
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBe('FORBIDDEN');
+  });
+
+  it('returns 12 rows joining the DB aggregate against curriculum totals', async () => {
+    // Seed: two approved ES B1 rows, one flagged ES B2 row.
+    queryQueue.push([
+      { language: 'ES', level: 'B1', approved: 2, flagged: 0 },
+      { language: 'ES', level: 'B2', approved: 0, flagged: 1 },
+    ]);
+
+    const res = await app.request(
+      '/admin/theory/coverage',
+      undefined,
+      adminEnv,
+    );
+    expect(res.status).toBe(200);
+
+    const body = (await res.json()) as AnyJson;
+    expect(body.rows).toHaveLength(12);
+
+    const totals = expectedCurriculumTotals();
+    const byKey = new Map<string, AnyJson>();
+    for (const row of body.rows as AnyJson[]) {
+      byKey.set(`${row.language}:${row.level}`, row);
+    }
+
+    // Sanity: every (language × level) combination is present.
+    for (const language of ['ES', 'DE', 'TR'] as const) {
+      for (const level of ['A1', 'A2', 'B1', 'B2'] as const) {
+        const row = byKey.get(`${language}:${level}`);
+        expect(row, `missing row ${language}/${level}`).toBeDefined();
+        expect(row?.total).toBe(totals.get(`${language}:${level}`) ?? 0);
+      }
+    }
+
+    const esB1 = byKey.get('ES:B1');
+    expect(esB1?.approved).toBe(2);
+    expect(esB1?.flagged).toBe(0);
+
+    const esB2 = byKey.get('ES:B2');
+    expect(esB2?.approved).toBe(0);
+    expect(esB2?.flagged).toBe(1);
+
+    // All other cells must have zero counts.
+    for (const [key, row] of byKey) {
+      if (key === 'ES:B1' || key === 'ES:B2') continue;
+      expect(row.approved).toBe(0);
+      expect(row.flagged).toBe(0);
+    }
   });
 });
