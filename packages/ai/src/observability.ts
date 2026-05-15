@@ -242,19 +242,33 @@ export function mapUsageDetails(
  * Per-bucket USD cost. Sum across buckets equals `estimateCostUsd(usage)`
  * to within rounding (Req 4 AC 3) — verified by the round-trip test in
  * `cost-model.test.ts` (Task 8b).
+ *
+ * Includes an explicit `total` key in addition to the four buckets:
+ * Langfuse's dashboard "Total cost" widget reads `total` directly when
+ * present, falling back to a server-side sum of the remaining keys
+ * otherwise. The sum-fallback is unreliable with custom buckets like
+ * `cache_creation_input`, so we set `total` explicitly. (`buildCostDetails`
+ * is also called by the `cost-model.test.ts` round-trip — that test
+ * subtracts out the `total` key so the parity invariant still holds.)
  */
 export function buildCostDetails(
   u: AnthropicUsageLike | null | undefined,
 ): Record<string, number> {
+  const input = (u?.input_tokens ?? 0) * SONNET_4_5_PRICING.inputUsdPerToken;
+  const cache_creation_input =
+    (u?.cache_creation_input_tokens ?? 0) *
+    SONNET_4_5_PRICING.cacheWriteUsdPerToken;
+  const cache_read_input =
+    (u?.cache_read_input_tokens ?? 0) *
+    SONNET_4_5_PRICING.cacheReadUsdPerToken;
+  const output =
+    (u?.output_tokens ?? 0) * SONNET_4_5_PRICING.outputUsdPerToken;
   return {
-    input: (u?.input_tokens ?? 0) * SONNET_4_5_PRICING.inputUsdPerToken,
-    cache_creation_input:
-      (u?.cache_creation_input_tokens ?? 0) *
-      SONNET_4_5_PRICING.cacheWriteUsdPerToken,
-    cache_read_input:
-      (u?.cache_read_input_tokens ?? 0) *
-      SONNET_4_5_PRICING.cacheReadUsdPerToken,
-    output: (u?.output_tokens ?? 0) * SONNET_4_5_PRICING.outputUsdPerToken,
+    input,
+    cache_creation_input,
+    cache_read_input,
+    output,
+    total: input + cache_creation_input + cache_read_input + output,
   };
 }
 
@@ -321,6 +335,13 @@ function resolveFeature(
  * Build the trace-level metadata object. Mirrors design.md Model 3:
  * cross-reference ids (submission/job/cell/exercise) plus operational
  * fields go here; the tag schema (Model 3 §1) is built separately.
+ *
+ * `language`, `cefrLevel`, and `exerciseType` are *also* in `metadata`
+ * (and not only as tags) so Langfuse dashboards can `group by` them.
+ * Tags are great for filter-search ("show traces tagged `es`") but
+ * Langfuse's group-by selector keys off structured metadata fields —
+ * a "cost broken down by language" chart needs `metadata.language` to
+ * exist (Req 9 AC 1 dashboard).
  */
 // Langfuse SDK v3 narrows metadata values to `string | number | boolean |
 // string[] | null`. The builder's return type matches so the call sites
@@ -344,6 +365,14 @@ function buildTraceMetadata(
   if (ctx.cellKey !== undefined) m.cellKey = ctx.cellKey;
   if (ctx.exerciseId !== undefined) m.exerciseId = ctx.exerciseId;
   if (ctx.candidateCount !== undefined) m.candidateCount = ctx.candidateCount;
+  // Dashboard-pivot dimensions: tag-and-metadata so both filter UIs and
+  // group-by selectors work. Language is lowercased to match the tag
+  // canonicalisation in `buildTraceTags` (Req 3 AC 1: `en` | `es` | …).
+  if (ctx.language) m.language = String(ctx.language).toLowerCase();
+  if (ctx.cefrLevel) m.cefrLevel = ctx.cefrLevel;
+  if (ctx.exerciseType !== undefined && ctx.exerciseType !== null) {
+    m.exerciseType = String(ctx.exerciseType);
+  }
   return m;
 }
 
@@ -652,10 +681,29 @@ function wrapAnthropic(inner: Anthropic, lf: Langfuse): Anthropic {
               const toolUseBlock = response.content.find(
                 (b) => b.type === "tool_use",
               );
+              // Generic-on-shape: if the tool input carries a numeric `score`
+              // field, mirror it into trace metadata so dashboards can
+              // aggregate it (avg-score-by-language, etc.). Today only
+              // `evaluate` emits a score, but the guard `typeof === 'number'`
+              // keeps the Proxy decoupled from per-surface schemas. NOTE:
+              // this is a *user-progress* metric, not an LLM-quality metric —
+              // do NOT route it through Langfuse's first-class Scores API.
+              const toolInput = toolUseBlock?.input as
+                | Record<string, unknown>
+                | undefined;
+              const scoreOnInput = toolInput?.score;
+              const endMetadata: Record<string, LangfuseMetadataValue> = {};
+              if (typeof scoreOnInput === "number") {
+                endMetadata.score = scoreOnInput;
+              }
+
               gen.end({
                 output: toolUseBlock?.input ?? response.content,
                 usageDetails: mapUsageDetails(response.usage),
                 costDetails: buildCostDetails(response.usage),
+                ...(Object.keys(endMetadata).length > 0
+                  ? { metadata: endMetadata }
+                  : {}),
               });
             } catch (lfErr) {
               warnOnce("Langfuse generation.end (success path) failed", lfErr);

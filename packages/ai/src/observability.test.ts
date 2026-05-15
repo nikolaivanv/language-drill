@@ -254,7 +254,10 @@ describe("Anthropic Proxy — messages.create", () => {
 
     expect(result).toEqual(mockResponse);
 
-    // Trace was created with the right user / tags / metadata.
+    // Trace was created with the right user / tags / metadata. Note:
+    // language / cefrLevel / exerciseType appear in BOTH `metadata`
+    // (for dashboard group-by — Req 9 AC 1) and `tags` (for filter-
+    // search). The tag assertions below cover the latter.
     expect(spies.traceCalls).toHaveLength(1);
     expect(spies.traceCalls[0]).toMatchObject({
       name: "evaluate",
@@ -266,6 +269,9 @@ describe("Anthropic Proxy — messages.create", () => {
         requestId: "req-1",
         submissionId: "sub-xyz",
         model: "claude-sonnet-4-5",
+        language: "es",
+        cefrLevel: "B1",
+        exerciseType: "cloze",
       }),
     });
     const tags = (spies.traceCalls[0] as { tags: string[] }).tags;
@@ -297,6 +303,9 @@ describe("Anthropic Proxy — messages.create", () => {
     });
 
     // Generation.end called with parsed tool_use output + four-bucket usage.
+    // `metadata.score` mirrors the numeric `score` from the tool input so
+    // dashboards can compute `avg(metadata.score)` grouped by language
+    // (user-progress metric — NOT a Langfuse Scores API value).
     expect(spies.endCalls).toHaveLength(1);
     expect(spies.endCalls[0]).toMatchObject({
       output: { score: 0.8, feedback: "good" },
@@ -311,8 +320,42 @@ describe("Anthropic Proxy — messages.create", () => {
         cache_creation_input: expect.any(Number),
         cache_read_input: expect.any(Number),
         output: expect.any(Number),
+        // Explicit `total` key — Langfuse's dashboard widget reads this
+        // directly rather than summing custom buckets server-side.
+        total: expect.any(Number),
       }),
+      metadata: { score: 0.8 },
     });
+  });
+
+  it("omits metadata.score when the tool input has no numeric `score` field (validate / generate / annotate)", async () => {
+    const spies = installLangfuseSpyMock();
+    mocks.mockCreate.mockResolvedValueOnce({
+      content: [
+        {
+          type: "tool_use",
+          id: "v",
+          name: VALIDATION_TOOL_NAME,
+          // No `score` field — typical for validate/generate tool outputs.
+          input: { ok: true, reason: null },
+        },
+      ],
+      usage: { input_tokens: 10, output_tokens: 5 },
+      stop_reason: "tool_use",
+    });
+
+    const client = createObservedClaudeClient("api-key");
+    await withLlmTrace(
+      makeCtx({ feature: "generate", jobId: "job-1", cellKey: "es|B1|cloze" }),
+      () =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (client.messages.create as any)(makeRequest(VALIDATION_TOOL_NAME)),
+    );
+
+    // `gen.end` is called but without a `metadata` key — confirms the
+    // guard `typeof === 'number'` doesn't fire on the absent field.
+    expect(spies.endCalls).toHaveLength(1);
+    expect(spies.endCalls[0]).not.toHaveProperty("metadata");
   });
 
   it("disambiguates `feature` via TOOL_NAME_TO_FEATURE (validate tool inside generate scope)", async () => {
