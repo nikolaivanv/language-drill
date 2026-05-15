@@ -260,25 +260,25 @@ describe('PracticePage', () => {
 
   // -------------------------------------------------------------------------
   describe('selector change', () => {
-    it('changing language dispatches RESET → useCreateSession.mutate fires again with the new filter', () => {
+    it('changing difficulty dispatches RESET → useCreateSession.mutate fires again with the new difficulty', () => {
       renderWithProviders(<PracticePage />);
 
-      // Initial create call
+      // Initial create call uses the active language (ES) from the provider
       expect(createMutate).toHaveBeenCalledWith(
         { language: 'ES', difficulty: 'B1', exerciseCount: 5 },
         expect.any(Object),
       );
       const callsBefore = createMutate.mock.calls.length;
 
-      fireEvent.change(screen.getByLabelText(/Language/), {
-        target: { value: 'DE' },
+      fireEvent.change(screen.getByLabelText(/Difficulty/), {
+        target: { value: 'A2' },
       });
 
       expect(createMutate.mock.calls.length).toBeGreaterThan(callsBefore);
       const lastCallArgs =
         createMutate.mock.calls[createMutate.mock.calls.length - 1][0];
       expect(lastCallArgs).toEqual({
-        language: 'DE',
+        language: 'ES',
         difficulty: 'A2',
         exerciseCount: 5,
       });
