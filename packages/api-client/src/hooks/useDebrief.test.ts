@@ -179,13 +179,18 @@ describe('useSessionDebrief — response parsing', () => {
     expect(result.current.data?.items[1]?.status).toBe('skipped');
   });
 
-  it('rejects when the response body fails Zod validation', async () => {
+  it('rejects with a typed shape-mismatch error when the response body fails Zod validation', async () => {
     // `id` is not a UUID — schema rejects.
     const fetchFn = vi
       .fn<AuthenticatedFetch>()
       .mockResolvedValue(
         jsonResponse({ ...SAMPLE_RESPONSE, id: 'not-a-uuid' }),
       );
+
+    // Silence the diagnostic console.warn the hook emits on a parse failure
+    // (it surfaces `result.error.issues` for DevTools — useful in prod,
+    // noise in tests).
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const { result } = renderHook(
       () => useSessionDebrief({ sessionId: SESSION_ID, fetchFn }),
@@ -194,6 +199,17 @@ describe('useSessionDebrief — response parsing', () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(fetchFn).toHaveBeenCalledTimes(1);
+    expect(result.current.error?.message).toBe('Debrief response shape mismatch');
+    // The Zod error rides along on `cause` so callers can inspect issues.
+    const cause = (result.current.error as Error & { cause?: unknown }).cause;
+    expect(cause).toBeDefined();
+    expect((cause as { issues?: unknown }).issues).toBeDefined();
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[useSessionDebrief] response shape mismatch',
+      expect.any(Array),
+    );
+    warnSpy.mockRestore();
   });
 });
 

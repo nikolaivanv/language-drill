@@ -890,9 +890,10 @@ describe('GET /sessions/:id/debrief', () => {
     expect(body.items[2].evaluation).toBeNull();
   });
 
-  it('returns 404 SESSION_NOT_FOUND when the session is owned by a different user', async () => {
+  it('returns 404 SESSION_NOT_FOUND when the session is owned by a different user, and logs a forensic debrief.not_found event', async () => {
     // The session-row WHERE includes eq(userId), so a foreign session yields 0 rows.
     mockLimit.mockResolvedValueOnce([]);
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const res = await app.request(
       `/sessions/${SESSION_ID}/debrief`,
@@ -906,6 +907,13 @@ describe('GET /sessions/:id/debrief', () => {
     expect(body.code).toBe('SESSION_NOT_FOUND');
     // Critical: no items query was issued for an unauthorized session.
     expect(mockExecute).not.toHaveBeenCalled();
+
+    // Forensic log fired so CloudWatch can pin which axis tripped a real user.
+    expect(warnSpy).toHaveBeenCalledWith(
+      'debrief: session row not found for ownership+completion predicate',
+      { event: 'debrief.not_found', sessionId: SESSION_ID, userId: 'user_123' },
+    );
+    warnSpy.mockRestore();
   });
 
   it('returns 404 SESSION_NOT_FOUND when the session id is unknown', async () => {

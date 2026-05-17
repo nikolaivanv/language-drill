@@ -513,6 +513,13 @@ sessions.get('/sessions/:id/debrief', async (c) => {
     .limit(1);
 
   if (sessionRows.length === 0) {
+    // Forensic log: the 404 collapses cross-user / unknown / not-completed by
+    // design (NFR Security), but in production we want to know which axis
+    // tripped a real user. Greppable by `event:debrief.not_found`.
+    console.warn(
+      'debrief: session row not found for ownership+completion predicate',
+      { event: 'debrief.not_found', sessionId: id, userId },
+    );
     c.header('Cache-Control', 'no-store');
     return c.json(
       { error: 'Session not found', code: 'SESSION_NOT_FOUND' },

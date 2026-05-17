@@ -239,7 +239,7 @@ describe('DebriefPage', () => {
   });
 
   // -------------------------------------------------------------------------
-  describe('error states (404 + 5xx collapse to DebriefNotFound)', () => {
+  describe('error states (404 → DebriefNotFound; everything else → DebriefLoadError)', () => {
     it('renders DebriefNotFound on 404; no tabs, no footer', async () => {
       const err = new Error('Session not found') as Error & { status?: number };
       err.status = 404;
@@ -248,6 +248,7 @@ describe('DebriefPage', () => {
         isPending: false,
         isError: true,
         error: err,
+        refetch: vi.fn(),
       });
 
       renderPage();
@@ -266,7 +267,8 @@ describe('DebriefPage', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('renders DebriefNotFound on a generic 5xx (same branch in v1 — no inline retry)', async () => {
+    it('renders DebriefLoadError on a 5xx; clicking "try again" calls query.refetch', async () => {
+      const refetch = vi.fn();
       const err = new Error('Bad gateway 502') as Error & { status?: number };
       err.status = 502;
       mockUseSessionDebrief.mockReturnValue({
@@ -274,18 +276,49 @@ describe('DebriefPage', () => {
         isPending: false,
         isError: true,
         error: err,
+        refetch,
       });
 
       renderPage();
 
       expect(
-        await screen.findByRole('heading', { level: 1, name: 'session not found' }),
+        await screen.findByRole('heading', {
+          level: 1,
+          name: "couldn't load this debrief",
+        }),
       ).toBeInTheDocument();
+      const retryButton = screen.getByRole('button', { name: 'try again' });
+      fireEvent.click(retryButton);
+      expect(refetch).toHaveBeenCalledTimes(1);
 
-      // No retry button (v1 has no inline retry — confirmed in tasks.md t17).
+      // The 404 fallback is NOT what renders here — assert by absence.
       expect(
-        screen.queryByRole('button', { name: /retry/i }),
+        screen.queryByRole('heading', { level: 1, name: 'session not found' }),
       ).not.toBeInTheDocument();
+    });
+
+    it('renders DebriefLoadError when the error has no status (network / parse failure)', async () => {
+      const refetch = vi.fn();
+      const err = new Error('Debrief response shape mismatch');
+      mockUseSessionDebrief.mockReturnValue({
+        data: undefined,
+        isPending: false,
+        isError: true,
+        error: err,
+        refetch,
+      });
+
+      renderPage();
+
+      expect(
+        await screen.findByRole('heading', {
+          level: 1,
+          name: "couldn't load this debrief",
+        }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'try again' }),
+      ).toBeInTheDocument();
     });
   });
 
