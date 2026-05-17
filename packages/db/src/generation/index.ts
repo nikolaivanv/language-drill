@@ -31,8 +31,11 @@ export {
 
 export {
   runOneCell,
-  validateAndInsertWithRetry,
   type CellResult,
-  type DraftOutcome,
   type RunOneCellInput,
 } from './run-one-cell';
+
+export {
+  validateAndInsertWithRetry,
+  type DraftOutcome,
+} from './validate-and-insert';

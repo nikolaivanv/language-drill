@@ -331,6 +331,71 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
     );
 
     it(
+      'parity: 5-ordinal mixed batch counters land in the right buckets under the parallel outcome pool',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        // Regression guard for the parallel outcome pool (PR #124). Five
+        // ordinals span every non-dedup terminalStatus the post-walk
+        // accumulator handles:
+        //   - 0 → auto-approved (insert path)
+        //   - 1 → flagged       (insert path)
+        //   - 2 → rejected      (no insert)
+        //   - 3 → flagged       (insert path)
+        //   - 4 → auto-approved (insert path)
+        // The pool can complete these in any order, but the post-walk in
+        // run-one-cell.ts iterates by ordinal so the final counters must
+        // be deterministic. (Dedup-given-up is covered separately by the
+        // count=1 test below.)
+        process.env['MOCK_VALIDATION_OUTCOMES'] = JSON.stringify({
+          '0': 'approved',
+          '1': 'flagged',
+          '2': 'rejected',
+          '3': 'flagged',
+          '4': 'approved',
+        });
+
+        const batchSeed = 'phase-parity-test-pool';
+        const result = await invokeRunOneCell(db, 5, batchSeed);
+
+        expect(result.status).toBe('succeeded');
+        expect(result.insertedCount).toBe(4);
+        expect(result.skippedCount).toBe(0);
+        expect(result.dedupGivenUpCount).toBe(0);
+
+        const jobs = await db
+          .select()
+          .from(generationJobs)
+          .where(eq(generationJobs.cellKey, TEST_CELL_KEY));
+        expect(jobs).toHaveLength(1);
+        const job = jobs[0];
+        expect(job.status).toBe('succeeded');
+        expect(job.producedCount).toBe(5);
+        expect(job.approvedCount).toBe(2);
+        expect(job.flaggedCount).toBe(2);
+        expect(job.rejectedCount).toBe(1);
+        expect(job.dedupGivenUpCount).toBe(0);
+
+        // Per-ordinal exercise-row spot check — confirms the precomputed
+        // first-validation was forwarded by ordinal (not shuffled by the
+        // pool's worker dispatch).
+        const spec = buildTestSpec(batchSeed, 5);
+        const rowByOrd = await Promise.all(
+          [0, 1, 2, 3, 4].map((ord) =>
+            db
+              .select()
+              .from(exercises)
+              .where(eq(exercises.id, exerciseDraftId(spec, ord))),
+          ),
+        );
+        expect(rowByOrd[0][0]?.reviewStatus).toBe('auto-approved');
+        expect(rowByOrd[1][0]?.reviewStatus).toBe('flagged');
+        expect(rowByOrd[2]).toHaveLength(0); // rejected → no row
+        expect(rowByOrd[3][0]?.reviewStatus).toBe('flagged');
+        expect(rowByOrd[4][0]?.reviewStatus).toBe('auto-approved');
+      },
+    );
+
+    it(
       'dedup-retry happy path: ordinal-0 collides, retry-1 inserts',
       { timeout: TEST_TIMEOUT_MS },
       async () => {
