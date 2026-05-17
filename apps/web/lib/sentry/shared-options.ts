@@ -2,23 +2,28 @@ import { beforeSend } from './before-send';
 
 export type SentryEnvironment = 'production' | 'preview' | 'development';
 
-// Safely read an env var. In the browser, `process` may be undefined or a
-// minimal polyfill, so `process.env.X` can throw. Wrap every access.
-function readEnv(key: string): string | undefined {
+// IMPORTANT: every env var must be read via a LITERAL `process.env.X`
+// expression. Next.js's DefinePlugin only inlines literal accesses into
+// the browser bundle — `process.env[key]` or `process.env?.[key]` defeats
+// inlining and the value disappears at runtime. The closure wrapper
+// defers evaluation so the try/catch can actually catch a throw on the
+// process access itself (rare, but possible on exotic embeddings).
+function safe<T>(fn: () => T): T | undefined {
   try {
-    return typeof process !== 'undefined' ? process.env?.[key] : undefined;
+    return fn();
   } catch {
     return undefined;
   }
 }
 
 export function resolveEnvironment(): SentryEnvironment {
-  // Prefer the NEXT_PUBLIC_* variant so the value is inlined into the
-  // browser bundle by Next.js's DefinePlugin. The non-prefixed VERCEL_ENV
-  // is available server-side at runtime and remains the fallback for
-  // Server Components / Route Handlers / Edge.
+  // NEXT_PUBLIC_VERCEL_ENV is inlined into the browser bundle (must be
+  // added to Vercel referencing $VERCEL_ENV). The non-prefixed VERCEL_ENV
+  // is the server-side fallback for Server Components / Route Handlers /
+  // Edge runtimes.
   const env =
-    readEnv('NEXT_PUBLIC_VERCEL_ENV') ?? readEnv('VERCEL_ENV');
+    safe(() => process.env.NEXT_PUBLIC_VERCEL_ENV) ??
+    safe(() => process.env.VERCEL_ENV);
   if (env === 'production' || env === 'preview' || env === 'development') {
     return env;
   }
@@ -26,13 +31,9 @@ export function resolveEnvironment(): SentryEnvironment {
 }
 
 export function resolveRelease(): string | undefined {
-  // Same prefix logic as resolveEnvironment. Also: withSentryConfig's
-  // build-time plugin injects the release into the client bundle via a
-  // SENTRY_RELEASE constant the SDK reads automatically, so a missing
-  // value here on the client is recoverable.
   return (
-    readEnv('NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA') ??
-    readEnv('VERCEL_GIT_COMMIT_SHA')
+    safe(() => process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA) ??
+    safe(() => process.env.VERCEL_GIT_COMMIT_SHA)
   );
 }
 
@@ -46,7 +47,7 @@ export interface SharedSentryOptions {
 }
 
 export function getSharedSentryOptions(): SharedSentryOptions {
-  const dsn = readEnv('NEXT_PUBLIC_SENTRY_DSN');
+  const dsn = safe(() => process.env.NEXT_PUBLIC_SENTRY_DSN);
   return {
     dsn,
     environment: resolveEnvironment(),
