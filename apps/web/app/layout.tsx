@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
 
+import SentryUserContext from '../components/sentry/sentry-user-context';
+
 import { fraunces, inter, jetbrainsMono, caveat } from './fonts';
 import { Providers } from './providers';
 import './globals.css';
@@ -17,6 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
+      <SentryUserContext />
       <html
           lang="en"
           className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable} ${caveat.variable}`}

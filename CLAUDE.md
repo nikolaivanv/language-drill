@@ -39,6 +39,7 @@ Out of scope: accent reduction, gamification, social features, delta learning (l
 | TTS                   | AWS Polly (neural voices — EN/ES/DE/TR all supported)          |
 | STT                   | AWS Transcribe (speaking exercises)                            |
 | Background jobs       | EventBridge Scheduler + SQS + Lambda                           |
+| Frontend monitoring   | Sentry (`@sentry/nextjs`) — frontend only; Lambda errors remain in CloudWatch |
 | Monorepo              | pnpm workspaces + Turborepo                                    |
 
 **Why a separate Lambda API (not Next.js API routes):** the mobile app needs the same backend from day one; Lambda is easier to rate-limit and meter independently of Vercel.
@@ -280,6 +281,14 @@ DNS is managed in **Cloudflare** (registrar + DNS). All records are **DNS-only**
 | `CLERK_SECRET_KEY` | `sk_live_...` (prod Clerk) | `sk_test_...` (dev Clerk) |
 | `NEXT_PUBLIC_API_URL` | `https://api.langdrill.app` | `https://api.langdrill.app` |
 | `NEXT_PUBLIC_ANNOTATE_STREAM_URL` | auto-synced from `LanguageDrillStack` CFN output | auto-synced from `LanguageDrillStack-dev` CFN output |
+| `NEXT_PUBLIC_SENTRY_DSN` | prod Sentry project DSN | dev Sentry project DSN |
+| `SENTRY_AUTH_TOKEN` | server-only; from Sentry → Settings → Auth Tokens (scopes: `project:releases`, `project:write`) | same token |
+| `SENTRY_ORG` | Sentry org slug | same |
+| `SENTRY_PROJECT` | Sentry project slug | same |
+
+### Observability boundaries
+
+Sentry covers browser, React render, and Next.js server-side / edge errors in `apps/web`. **Lambda API errors stay in CloudWatch**; **LLM call traces stay in Langfuse**. The three tools do not overlap — when triaging an incident, pick the inbox that matches the runtime where the error originated.
 
 ### Clerk JWT setup
 
