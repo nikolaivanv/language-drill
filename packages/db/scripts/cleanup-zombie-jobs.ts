@@ -21,7 +21,7 @@
  *   pnpm --filter @language-drill/db cleanup:zombies -- --limit 10
  */
 
-import { and, eq, lt, sql } from 'drizzle-orm';
+import { and, eq, inArray, lt, sql } from 'drizzle-orm';
 
 import { createDb, type Db } from '../src/client';
 import { generationJobs } from '../src/schema/index';
@@ -48,7 +48,11 @@ export function parseCleanupArgs(argv: readonly string[]): CleanupZombieJobsArgs
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
-    if (arg === '--apply') {
+    // pnpm forwards `--` as an arg when callers use `pnpm <cmd> -- --apply`.
+    // Treat it as a separator and skip.
+    if (arg === '--') {
+      continue;
+    } else if (arg === '--apply') {
       apply = true;
     } else if (arg === '--dry-run') {
       apply = false;
@@ -114,7 +118,11 @@ export async function deleteZombieJobs(
     .where(
       and(
         eq(generationJobs.status, 'running'),
-        sql`${generationJobs.id} = ANY(${ids})`,
+        // `inArray` instead of raw `= ANY(${ids})` so drizzle binds the JS
+        // array as a Postgres array properly. Raw interpolation passes the
+        // array as a single text param and Postgres rejects with `22P02`
+        // ("Array value must start with '{'").
+        inArray(generationJobs.id, [...ids]),
       ),
     )
     .returning({
