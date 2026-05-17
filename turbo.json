@@ -34,6 +34,18 @@
     },
     "@language-drill/db#test": {
       "dependsOn": ["@language-drill/shared#build", "@language-drill/ai#build", "@language-drill/db#build"]
+    },
+    "@language-drill/web#build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**"],
+      "env": [
+        "NEXT_PUBLIC_SENTRY_DSN",
+        "SENTRY_AUTH_TOKEN",
+        "SENTRY_ORG",
+        "SENTRY_PROJECT",
+        "VERCEL_ENV",
+        "VERCEL_GIT_COMMIT_SHA"
+      ]
     }
   }
 }
