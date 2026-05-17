@@ -539,6 +539,11 @@ sessions.get('/sessions/:id/debrief', async (c) => {
   // exercises by IDs already committed to a practice_sessions manifest.
   // Filtering would drop a flagged exercise from a completed session's debrief
   // view — wrong UX. See lib/exercise-filters.ts for the inventory.
+  // Drizzle's `sql\`\`` interpolates a JS array as a positional record
+  // `($N, $N+1, …)` — a Postgres ROW, not an array. `ANY(record)` is invalid
+  // syntax (`op ANY/ALL (array) requires array on right side`). `IN (record)`
+  // accepts the same record shape, so we use IN here. See bug
+  // `.claude/bugs/debrief-items-query-failure/`.
   const itemsResult = await db.execute(sql`
     SELECT e.id AS exercise_id, e.type, e.content_json,
            h.score, h.response_json
@@ -550,7 +555,7 @@ sessions.get('/sessions/:id/debrief', async (c) => {
       WHERE session_id = ${id}
       ORDER BY exercise_id, evaluated_at DESC NULLS LAST
     ) h ON h.exercise_id = e.id
-    WHERE e.id = ANY(${exerciseIds})
+    WHERE e.id IN ${exerciseIds}
   `);
 
   // Drizzle's neon-serverless `db.execute` returns the pg-style QueryResult,

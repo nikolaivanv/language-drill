@@ -949,6 +949,55 @@ describe('GET /sessions/:id/debrief', () => {
     expect(body.code).toBe('SESSION_NOT_FOUND');
   });
 
+  it('items query uses `IN`, not `ANY`, on the exerciseIds interpolation (regression — see .claude/bugs/debrief-items-query-failure)', async () => {
+    // Drizzle's `sql\`\`` interpolates a JS array as a positional record
+    // `($N, ...)`. `ANY((record))` is invalid Postgres syntax — it broke prod
+    // with `op ANY/ALL (array) requires array on right side`. `IN (record)`
+    // accepts the same record shape and is valid. Lock the shape here so any
+    // regression is caught at unit-test time, since CI does not run SQL
+    // against a real Postgres for these handlers (only migrations).
+    const startedAt = new Date('2026-05-04T10:00:00.000Z');
+    const completedAt = new Date('2026-05-04T10:04:38.000Z');
+    mockLimit.mockResolvedValueOnce([
+      {
+        id: SESSION_ID,
+        userId: 'user_123',
+        language: 'TR',
+        difficulty: 'A1',
+        exerciseCount: 1,
+        correctCount: 0,
+        exerciseIds: [EX_1],
+        startedAt,
+        completedAt,
+      },
+    ]);
+    mockExecute.mockResolvedValueOnce({ rows: [] });
+
+    await app.request(
+      `/sessions/${SESSION_ID}/debrief`,
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(mockExecute).toHaveBeenCalledTimes(1);
+    const sqlExpr = mockExecute.mock.calls[0]?.[0] as {
+      queryChunks: Array<{ value?: string[] } | unknown>;
+    };
+
+    // Reconstruct the static-text skeleton of the SQL. queryChunks alternates
+    // between `{ value: [string] }` static fragments and interpolated params.
+    const staticText = sqlExpr.queryChunks
+      .filter(
+        (c): c is { value: string[] } =>
+          !!c && typeof c === 'object' && 'value' in c,
+      )
+      .map((c) => c.value.join(''))
+      .join(' /*param*/ ');
+
+    expect(staticText).toContain('e.id IN');
+    expect(staticText).not.toContain('ANY(');
+  });
+
   it('returns 400 VALIDATION_ERROR for a non-uuid id', async () => {
     const res = await app.request(
       '/sessions/not-a-uuid/debrief',
