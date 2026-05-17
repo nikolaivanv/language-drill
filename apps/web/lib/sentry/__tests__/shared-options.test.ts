@@ -10,6 +10,8 @@ import {
 const ENV_KEYS = [
   'VERCEL_ENV',
   'VERCEL_GIT_COMMIT_SHA',
+  'NEXT_PUBLIC_VERCEL_ENV',
+  'NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA',
   'NEXT_PUBLIC_SENTRY_DSN',
 ] as const;
 
@@ -50,6 +52,17 @@ describe('resolveEnvironment', () => {
     process.env.VERCEL_ENV = 'staging';
     expect(resolveEnvironment()).toBe('development');
   });
+
+  it('prefers NEXT_PUBLIC_VERCEL_ENV over VERCEL_ENV (browser path)', () => {
+    process.env.NEXT_PUBLIC_VERCEL_ENV = 'preview';
+    process.env.VERCEL_ENV = 'production';
+    expect(resolveEnvironment()).toBe('preview');
+  });
+
+  it('falls back to VERCEL_ENV when only the non-prefixed var is set (server path)', () => {
+    process.env.VERCEL_ENV = 'production';
+    expect(resolveEnvironment()).toBe('production');
+  });
 });
 
 describe('resolveRelease', () => {
@@ -58,8 +71,14 @@ describe('resolveRelease', () => {
     expect(resolveRelease()).toBe('abc1234');
   });
 
-  it('returns undefined when VERCEL_GIT_COMMIT_SHA is unset', () => {
+  it('returns undefined when both forms are unset', () => {
     expect(resolveRelease()).toBeUndefined();
+  });
+
+  it('prefers NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA over VERCEL_GIT_COMMIT_SHA', () => {
+    process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA = 'deadbeef';
+    process.env.VERCEL_GIT_COMMIT_SHA = 'cafebabe';
+    expect(resolveRelease()).toBe('deadbeef');
   });
 });
 
