@@ -34,7 +34,20 @@ export function useSessionDebrief({
     queryFn: async () => {
       const response = await fetchFn(`/sessions/${sessionId}/debrief`);
       const json: unknown = await response.json();
-      return DebriefResponseSchema.parse(json);
+      const result = DebriefResponseSchema.safeParse(json);
+      if (!result.success) {
+        // Surface the Zod issues so DevTools shows the offending field. The
+        // page's catch-all error UI is otherwise indistinguishable from an
+        // HTTP failure — this is the only place the shape mismatch is named.
+        console.warn(
+          '[useSessionDebrief] response shape mismatch',
+          result.error.issues,
+        );
+        throw new Error('Debrief response shape mismatch', {
+          cause: result.error,
+        });
+      }
+      return result.data;
     },
     enabled,
     staleTime: Infinity,
