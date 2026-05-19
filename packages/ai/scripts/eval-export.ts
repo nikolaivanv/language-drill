@@ -603,6 +603,49 @@ export async function runEvalExport(opts: {
 }
 
 // ---------------------------------------------------------------------------
+// Date normalization — Langfuse's traceList expects ISO-8601 date-time
+// ---------------------------------------------------------------------------
+
+/**
+ * Langfuse's `/api/public/traces` rejects bare `YYYY-MM-DD` strings with a
+ * 400 because the OpenAPI schema marks `fromTimestamp` / `toTimestamp` as
+ * `format: date-time` — so they must include a time + timezone component.
+ *
+ * Operators reasonably write `--from 2026-05-17 --to 2026-05-20` though.
+ * Resolution: at the CLI boundary, if the value is a bare date, pad it
+ * to UTC start-of-day (`--from`) or UTC end-of-day (`--to`). Full ISO
+ * datetimes pass through verbatim. Anything `new Date()` can't parse
+ * throws a clear error before we hit the network.
+ *
+ * Semantics: `--from <date>` and `--to <date>` together include all
+ * traces with timestamps from the start of the `from` day through the
+ * end of the `to` day inclusive (≈ what an operator naturally expects).
+ */
+const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+export function normalizeFromTimestamp(value: string): string {
+  if (DATE_ONLY_RE.test(value)) return `${value}T00:00:00.000Z`;
+  return validateIsoDatetime(value, "--from");
+}
+
+export function normalizeToTimestamp(value: string): string {
+  if (DATE_ONLY_RE.test(value)) return `${value}T23:59:59.999Z`;
+  return validateIsoDatetime(value, "--to");
+}
+
+function validateIsoDatetime(value: string, flag: string): string {
+  const ms = Date.parse(value);
+  if (!Number.isFinite(ms)) {
+    throw new Error(
+      `[eval-export] ${flag} must be YYYY-MM-DD or ISO-8601 datetime, got ${JSON.stringify(value)}`,
+    );
+  }
+  // Re-emit via toISOString so the API receives a canonical UTC form
+  // regardless of which timezone the operator typed.
+  return new Date(ms).toISOString();
+}
+
+// ---------------------------------------------------------------------------
 // argv parsing
 // ---------------------------------------------------------------------------
 
@@ -658,8 +701,8 @@ export function parseEvalExportArgs(argv: string[] = process.argv.slice(2)): Eva
   }
 
   return {
-    from: parsed.values.from!,
-    to: parsed.values.to!,
+    from: normalizeFromTimestamp(parsed.values.from!),
+    to: normalizeToTimestamp(parsed.values.to!),
     sample,
     dataset: parsed.values.dataset!,
     language: parsed.values.language,
@@ -671,15 +714,18 @@ export function parseEvalExportArgs(argv: string[] = process.argv.slice(2)): Eva
 function printUsage(): void {
   console.log(
     [
-      "Usage: pnpm eval:export --from <iso> --to <iso> --sample <n> --dataset <name>",
+      "Usage: pnpm eval:export --from <date> --to <date> --sample <n> --dataset <name>",
       "                       [--language <code>] [--cefr <level>] [--seed <int>]",
       "",
       "Samples Phase-1 evaluation traces from Langfuse into a candidate eval dataset.",
       "",
-      "  --from <iso>        Inclusive lower bound on trace.timestamp (ISO 8601).",
-      "  --to <iso>          Exclusive upper bound on trace.timestamp (ISO 8601).",
+      "  --from <date>       Lower bound on trace.timestamp. Accepts YYYY-MM-DD",
+      "                      (interpreted as UTC start-of-day) or full ISO-8601.",
+      "  --to <date>         Upper bound on trace.timestamp. Accepts YYYY-MM-DD",
+      "                      (interpreted as UTC end-of-day, inclusive of that day)",
+      "                      or full ISO-8601.",
       "  --sample <n>        Desired sampled-item count (capped at population size).",
-      "  --dataset <name>    Langfuse dataset to write into (created in task 23).",
+      "  --dataset <name>    Langfuse dataset to write into.",
       "  --language <code>   Optional language filter — ES, DE, TR.",
       "  --cefr <level>      Optional CEFR filter — A1, A2, B1, B2, C1, C2.",
       "  --seed <int>        Optional PRNG seed for reproducible sampling.",
