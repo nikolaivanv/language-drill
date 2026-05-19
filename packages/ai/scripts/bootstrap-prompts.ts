@@ -2,15 +2,21 @@
  * packages/ai — bootstrap-prompts CLI (Phase 2 Tasks 20 + 21).
  *
  * Idempotent one-shot registration of the six Phase-2 prompts in a Langfuse
- * project. For each prompt:
+ * project. Bootstrap flow:
  *
- *   - GET the live `production`-labeled version.
- *   - If missing (404) → CREATE from the in-repo fallback string/template,
- *     stamping `localVersion` / `surface` / `registeredAt` into the prompt's
- *     `config` so dashboards can pivot by the in-repo version constant.
- *   - If present → log "exists, skipping."
- *   - On any other SDK error → log and exit non-zero (refuses to silently
- *     create when the API is in an unknown state).
+ *   1. LIST every prompt that currently carries the `production` label
+ *      (one paginated call, `langfuse.api.promptsList`). Build a set of
+ *      names.
+ *   2. For each manifest entry: skip if its name is in the set; otherwise
+ *      CREATE from the in-repo fallback string/template, stamping
+ *      `localVersion` / `surface` / `registeredAt` into the prompt's
+ *      `config` so dashboards can pivot by the in-repo version constant.
+ *   3. If the list call fails (network, auth, 500), abort with no writes —
+ *      we won't blindly create when we can't tell what's already there.
+ *
+ * The list-first strategy avoids the per-prompt `getPrompt` probes the old
+ * implementation used, which generated noisy SDK-level stderr stack traces
+ * on first-run (the SDK logs every 404 before the throw reaches us).
  *
  * Run with:
  *   pnpm bootstrap-prompts            (default mode — write to Langfuse)
@@ -20,7 +26,9 @@
  * `--check` is the operator's "is Langfuse out of sync with main?" command.
  * For each prompt, it fetches the live `production` body and compares it
  * byte-for-byte to the in-repo source. Any mismatch prints a unified diff
- * and exits 1; an all-match run exits 0.
+ * and exits 1; an all-match run exits 0. `--check` still uses `getPrompt`
+ * per prompt because there a 404 IS a meaningful signal (drift), unlike
+ * the bootstrap path where it just means "needs creating."
  *
  * Honors `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` / `LANGFUSE_BASE_URL`
  * via the shared `getLangfuse()` helper from `./observability.ts`.
@@ -113,11 +121,23 @@ export const PROMPTS: readonly PromptManifestEntry[] = [
 // ---------------------------------------------------------------------------
 
 /**
- * The narrow surface of the Langfuse client `bootstrapPrompts` consumes.
+ * The narrow surface of the Langfuse client this script consumes.
  * Defining the port lets tests inject a stub without spinning up the full
- * SDK or mocking the `Langfuse` constructor.
+ * SDK or mocking the `Langfuse` constructor. `api.promptsList` is used by
+ * the bootstrap path; `getPrompt` is used by `--check` (where a 404 is a
+ * drift signal, not a "create me" cue); `createPrompt` writes new prompts.
  */
 export type LangfusePromptClient = {
+  api: {
+    promptsList: (query: {
+      label?: string;
+      limit?: number;
+      page?: number;
+    }) => Promise<{
+      data: ReadonlyArray<{ name: string }>;
+      meta: { totalPages: number; page: number };
+    }>;
+  };
   getPrompt: (
     name: string,
     version?: number,
@@ -133,25 +153,34 @@ export type LangfusePromptClient = {
 };
 
 // ---------------------------------------------------------------------------
-// 404 detection — Langfuse SDK is broad about how "not found" surfaces
+// fetchProductionPromptNames — one-shot list of existing prompts
 // ---------------------------------------------------------------------------
 
 /**
- * The Langfuse SDK doesn't expose a typed error class for "prompt
- * doesn't exist." Detection is intentionally broad: any thrown error
- * with `status === 404` OR a message matching `/not\s*found/i` counts.
- * Anything else (auth, network, 500) bubbles up as a hard failure so
- * the script doesn't silently create prompts when the API is in an
- * unknown state.
+ * Cap on pagination loops. Six prompts at `limit: 100` finishes in one
+ * call; the cap is a defense against an SDK that misreports `totalPages`
+ * (loop-forever bug → silent quota drain). 50 pages × 100/page = 5000
+ * prompts before we bail, which is far past any realistic project size.
  */
-function isPromptNotFoundError(err: unknown): boolean {
-  if (err === null || typeof err !== "object") return false;
-  const record = err as { status?: unknown; message?: unknown };
-  if (record.status === 404) return true;
-  if (typeof record.message === "string" && /not\s*found/i.test(record.message)) {
-    return true;
+const PROMPTS_LIST_PAGE_CAP = 50;
+const PROMPTS_LIST_PAGE_SIZE = 100;
+
+async function fetchProductionPromptNames(
+  langfuse: LangfusePromptClient,
+): Promise<Set<string>> {
+  const names = new Set<string>();
+  let page = 1;
+  for (let i = 0; i < PROMPTS_LIST_PAGE_CAP; i++) {
+    const resp = await langfuse.api.promptsList({
+      label: PROMPT_LABEL_PRODUCTION,
+      limit: PROMPTS_LIST_PAGE_SIZE,
+      page,
+    });
+    for (const meta of resp.data) names.add(meta.name);
+    if (page >= resp.meta.totalPages) break;
+    page++;
   }
-  return false;
+  return names;
 }
 
 // ---------------------------------------------------------------------------
@@ -200,36 +229,38 @@ export async function bootstrapPrompts(
   const skipped: string[] = [];
   const errors: Array<{ name: string; error: unknown }> = [];
 
+  // One list call up front replaces N per-prompt `getPrompt` probes. The
+  // old approach generated a 404 stack trace on stderr from the Langfuse
+  // SDK for every missing prompt on first-run, which looked alarming even
+  // though our caller handled the throw correctly.
+  let existingNames: Set<string>;
+  try {
+    existingNames = await fetchProductionPromptNames(langfuse);
+  } catch (err) {
+    // Can't tell what exists → refuse to create blind. Every manifest
+    // entry is recorded as errored so the CLI exits non-zero and the
+    // operator sees which surfaces were affected.
+    log(
+      `✗ promptsList failed; refusing to create blind. Run again after the API recovers.`,
+      err,
+    );
+    return {
+      created: [],
+      skipped: [],
+      errors: prompts.map((p) => ({ name: p.name, error: err })),
+    };
+  }
+
   for (const entry of prompts) {
-    try {
-      const existing = await langfuse.getPrompt(entry.name, undefined, {
-        label: PROMPT_LABEL_PRODUCTION,
-        cacheTtlSeconds: 0,
-      });
-      // `existing` is the live prompt — log and move on. The SDK returns
-      // a `TextPromptClient` whose `version` is a number; surface it for
-      // operator confidence even though the bootstrap doesn't act on it.
-      const liveVersion =
-        existing && typeof existing === "object" && "version" in existing
-          ? String((existing as { version: unknown }).version)
-          : "?";
+    if (existingNames.has(entry.name)) {
       log(
-        `✓ ${entry.name} already exists at v${liveVersion} (label=${PROMPT_LABEL_PRODUCTION}), skipping`,
+        `✓ ${entry.name} already exists (label=${PROMPT_LABEL_PRODUCTION}), skipping`,
       );
       skipped.push(entry.name);
       continue;
-    } catch (err) {
-      if (!isPromptNotFoundError(err)) {
-        log(
-          `✗ ${entry.name}: fetch failed for an unexpected reason; aborting`,
-          err,
-        );
-        errors.push({ name: entry.name, error: err });
-        continue;
-      }
     }
 
-    // 404 → create (or dry-run log) the prompt.
+    // Missing → create (or dry-run log) the prompt.
     const config = {
       localVersion: entry.version,
       surface: entry.surface,
