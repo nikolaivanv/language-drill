@@ -1,12 +1,22 @@
 # Phase 2 — Post-deploy verification runbook
 
+**Status: ✅ Complete.** All six scenarios were exercised end-to-end on
+2026-05-20 against dev (scenarios 1–4) and prod (scenarios 1, 5, 6); the
+audit IDs live in the PR that ticked off task 31. The runbook stays as
+the operator playbook for re-verification after future infra changes.
+
 Operator checklist for **Task 31** of `langfuse-implementation-phase-2`. Run
 all six scenarios end-to-end after the PR merges and the dev CDK deploy
 completes. Tick each `[ ]` as it passes. Anything that fails: open a bug
 against this spec; do not consider Phase 2 shipped until all six are green.
 
-**Target environment:** dev only (Langfuse project `language-drill-dev`, API
-`api-dev.langdrill.app`, Vercel preview).
+**Target environment:** dev for scenarios 1–4 (Langfuse project
+`language-drill-dev`, API `api-dev.langdrill.app`, Vercel preview).
+Scenarios 5–6 (`eval:export` / `eval`) can run against **either dev or
+prod** — operator choice — provided every env var below points at the
+same environment (mixing dev Langfuse with prod Neon will silently
+produce empty datasets because submissionIds won't resolve across
+environments).
 
 **Preconditions:**
 
@@ -15,13 +25,28 @@ against this spec; do not consider Phase 2 shipped until all six are green.
   for the merge commit. Confirm via `gh run list --workflow=deploy` →
   status `success`.
 - You have a working local clone of `main` with `pnpm install` run.
-- The dev Langfuse keys are present in your **local `.env`** at the repo
-  root as `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY`. The CLIs read
-  these straight from `process.env` — they do **not** consult AWS at
-  runtime. The canonical source of truth lives in AWS Secrets Manager
-  under the dev prefix `language-drill-dev/` (`language-drill-dev/LANGFUSE_PUBLIC_KEY`,
-  `language-drill-dev/LANGFUSE_SECRET_KEY`); copy from there into `.env`
-  if you don't already have them:
+- The relevant secrets are available to the CLIs via `process.env`. The
+  CLIs read them straight from the shell — they do **not** consult AWS
+  at runtime. The canonical source of truth is AWS Secrets Manager under
+  the matching prefix (`language-drill-dev/` for dev, `language-drill/`
+  for prod). Per CLI:
+
+  | CLI | Reads | Why |
+  |---|---|---|
+  | `pnpm bootstrap-prompts` | `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` | writes the 6 prompts to the targeted Langfuse project |
+  | `pnpm eval:export` | `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, **`DATABASE_URL`** | samples traces from Langfuse **and** joins back to Neon's `user_exercise_history` for the user answer + exercise content; both must point at the same environment or every submissionId will fail to resolve |
+  | `pnpm eval` | `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `ANTHROPIC_API_KEY` | iterates dataset items in Langfuse, calls Claude per item via the candidate prompt; `ANTHROPIC_API_KEY` controls which Anthropic account is billed |
+
+  Two ways to wire the values into the shell:
+
+  1. **Copy into `.env`** (easiest for ongoing dev work; persists across
+     commands). The repo's `pnpm` scripts auto-load `.env` via
+     `dotenv -e .env --`.
+  2. **Inline-pipe for one command** (best for prod — keeps creds off
+     disk; inline env vars override `.env` thanks to `dotenv-cli`'s
+     `override: false` default).
+
+  Example: pulling dev Langfuse keys into `.env` (one-time):
   ```bash
   aws secretsmanager get-secret-value \
     --secret-id language-drill-dev/LANGFUSE_PUBLIC_KEY \
@@ -33,6 +58,37 @@ against this spec; do not consider Phase 2 shipped until all six are green.
 
 Quote the trace ID / dataset run URL / Langfuse prompt URL in each tick so
 this checklist is also the audit record.
+
+### Running scenarios 5–6 against **production**
+
+Inline-pipe all three env vars (Langfuse keys + `DATABASE_URL`) in a
+single command so prod creds materialize for one process and vanish on
+exit. Your local `.env` (presumably pointing at dev) stays untouched:
+
+```bash
+LANGFUSE_PUBLIC_KEY=$(aws secretsmanager get-secret-value \
+    --secret-id language-drill/LANGFUSE_PUBLIC_KEY --region eu-central-1 \
+    --query SecretString --output text) \
+LANGFUSE_SECRET_KEY=$(aws secretsmanager get-secret-value \
+    --secret-id language-drill/LANGFUSE_SECRET_KEY --region eu-central-1 \
+    --query SecretString --output text) \
+DATABASE_URL=$(aws secretsmanager get-secret-value \
+    --secret-id language-drill/DATABASE_URL --region eu-central-1 \
+    --query SecretString --output text) \
+pnpm eval:export --from 2026-05-17 --to 2026-05-20 --sample 10 --dataset eval-smoke
+```
+
+Same shape for `pnpm bootstrap-prompts` (drop `DATABASE_URL`) and
+`pnpm eval` (swap `DATABASE_URL` for `ANTHROPIC_API_KEY` if you want a
+specific Anthropic account billed; otherwise leave it inherited from
+`.env`).
+
+`eval:export` is read-only against the DB (one SELECT JOIN per sampled
+trace) — non-destructive, but it does hit prod's Neon connection pool
+from your laptop and the user answers + exercises end up in a Langfuse
+dataset visible to anyone with Langfuse access. For routine iteration,
+prefer a prod-branched dev Neon branch (Neon's branching feature) so the
+rows match without querying live prod.
 
 ---
 
