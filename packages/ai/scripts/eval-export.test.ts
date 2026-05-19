@@ -24,6 +24,8 @@ import {
   fetchAllEvaluateTraces,
   getOrCreateDataset,
   mulberry32,
+  normalizeFromTimestamp,
+  normalizeToTimestamp,
   parseEvalExportArgs,
   runEvalExport,
   runEvalExportSampling,
@@ -180,7 +182,7 @@ describe("fetchAllEvaluateTraces", () => {
 // ---------------------------------------------------------------------------
 
 describe("parseEvalExportArgs", () => {
-  it("parses every required arg + optional language/cefr/seed", () => {
+  it("parses every required arg + optional language/cefr/seed and normalizes date-only inputs to ISO datetimes", () => {
     const parsed = parseEvalExportArgs([
       "--from",
       "2026-05-10",
@@ -198,8 +200,10 @@ describe("parseEvalExportArgs", () => {
       "42",
     ]);
     expect(parsed).toEqual({
-      from: "2026-05-10",
-      to: "2026-05-17",
+      // Date-only inputs get padded to UTC start/end-of-day so Langfuse's
+      // `format: date-time` API doesn't reject them with a 400.
+      from: "2026-05-10T00:00:00.000Z",
+      to: "2026-05-17T23:59:59.999Z",
       sample: 10,
       dataset: "eval-smoke",
       language: "es",
@@ -251,6 +255,68 @@ describe("parseEvalExportArgs", () => {
         "1.5",
       ]),
     ).toThrow(/--seed/);
+  });
+
+  it("throws with a clear message when --from is unparseable", () => {
+    expect(() =>
+      parseEvalExportArgs([
+        "--from",
+        "yesterday",
+        "--to",
+        "2026-05-17",
+        "--sample",
+        "10",
+        "--dataset",
+        "eval-smoke",
+      ]),
+    ).toThrow(/--from.*yesterday/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// normalizeFromTimestamp / normalizeToTimestamp — bare date → ISO datetime
+// ---------------------------------------------------------------------------
+
+describe("normalizeFromTimestamp", () => {
+  it("pads YYYY-MM-DD to UTC start-of-day so Langfuse's date-time API accepts it", () => {
+    expect(normalizeFromTimestamp("2026-05-17")).toBe("2026-05-17T00:00:00.000Z");
+  });
+
+  it("passes full ISO-8601 datetimes through (re-emitted as canonical UTC)", () => {
+    expect(normalizeFromTimestamp("2026-05-17T08:30:00Z")).toBe(
+      "2026-05-17T08:30:00.000Z",
+    );
+  });
+
+  it("converts non-UTC offsets to UTC", () => {
+    // +02:00 means the local moment is 2 hours ahead of UTC.
+    expect(normalizeFromTimestamp("2026-05-17T10:00:00+02:00")).toBe(
+      "2026-05-17T08:00:00.000Z",
+    );
+  });
+
+  it("throws on garbage input with a message that names the flag and the bad value", () => {
+    expect(() => normalizeFromTimestamp("not-a-date")).toThrow(
+      /--from.*not-a-date/,
+    );
+  });
+});
+
+describe("normalizeToTimestamp", () => {
+  it("pads YYYY-MM-DD to UTC end-of-day so '--to <day>' is inclusive of that day", () => {
+    expect(normalizeToTimestamp("2026-05-17")).toBe("2026-05-17T23:59:59.999Z");
+  });
+
+  it("passes full ISO-8601 datetimes through unchanged (canonical UTC)", () => {
+    expect(normalizeToTimestamp("2026-05-17T08:30:00Z")).toBe(
+      "2026-05-17T08:30:00.000Z",
+    );
+  });
+
+  it("throws on garbage input with a message that names the flag and the bad value", () => {
+    expect(() => normalizeToTimestamp("yesterday")).toThrow(
+      /--to.*yesterday/,
+    );
   });
 });
 
