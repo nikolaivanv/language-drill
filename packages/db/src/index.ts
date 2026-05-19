@@ -7,12 +7,6 @@
 export * from './client';
 export * from './schema';
 
-// Re-export the Drizzle SQL helpers external workspace packages need so they
-// don't have to declare drizzle-orm as a direct dependency. Keeps the ORM
-// dependency boundary inside @language-drill/db — packages/ai needs `eq` for
-// `eval-export.ts`'s read-only lookup against userExerciseHistory.
-export { and, eq, gte, lt, lte, sql } from 'drizzle-orm';
-
 // Explicit re-export of the theory schema module so consumers can import
 // theory tables and their inferred row/insert types via the package barrel
 // without reaching into ./schema/theory. The `export * from './schema'`

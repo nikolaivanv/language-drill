@@ -34,12 +34,12 @@
 import { parseArgs } from "node:util";
 import { fileURLToPath } from "node:url";
 
+import { eq } from "drizzle-orm";
 import type { Langfuse } from "langfuse";
 
 import {
   type Db,
   createDb,
-  eq,
   exercises,
   requireEnv,
   userExerciseHistory,
