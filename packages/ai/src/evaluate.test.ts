@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   Language,
   CefrLevel,
@@ -9,7 +9,11 @@ import type {
   TranslationContent,
   VocabRecallContent,
 } from "@language-drill/shared";
-import { buildUserPrompt, EVALUATION_SYSTEM_PROMPT } from "./prompts.js";
+import {
+  buildUserPrompt,
+  EVALUATION_SYSTEM_PROMPT,
+  EVALUATION_SYSTEM_PROMPT_VERSION,
+} from "./prompts.js";
 import {
   evaluateAnswer,
   parseEvaluationResult,
@@ -17,6 +21,16 @@ import {
   EVALUATION_TOOL,
 } from "./evaluate.js";
 import { createClaudeClient } from "./index.js";
+import {
+  __resetForTests as __resetObservabilityForTests,
+  getCurrentLlmTraceContext,
+  withLlmTrace,
+  type LlmTraceContext,
+} from "./observability.js";
+import {
+  __resetRegistryForTests,
+  sha8,
+} from "./prompts-registry.js";
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -464,6 +478,184 @@ describe("evaluateAnswer", () => {
     // Verify user prompt was constructed for vocab recall
     const userMsg = mockCreate.mock.calls[0][0].messages[0].content;
     expect(userMsg).toContain("Vocabulary Recall");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// evaluateAnswer + prompts-registry integration (Phase 2 — Task 7)
+// ---------------------------------------------------------------------------
+
+/**
+ * These cases pin the override + fallback paths for Phase 2's
+ * `getPromptOrFallback` integration. Tests above already cover the
+ * default path (LANGFUSE_PUBLIC_KEY unset → fallback prompt text matches
+ * the in-repo `EVALUATION_SYSTEM_PROMPT` byte-for-byte); the cases here
+ * specifically assert:
+ *
+ *   - The `systemPromptOverride` field plumbs the candidate text through
+ *     to `messages.create` verbatim, AND stamps the trace with
+ *     `promptVersion=override:<sha8>` so eval-runner traces don't pollute
+ *     production cohort dashboards.
+ *   - Without an override, the resolved version on the ALS frame is the
+ *     `fallback:<localVersion>` form (since the test suite runs with
+ *     `LANGFUSE_PUBLIC_KEY` unset by default, so the registry takes the
+ *     fallback path).
+ */
+describe("evaluateAnswer + prompts-registry", () => {
+  const mockCreate = vi.fn();
+  const mockClient = {
+    messages: { create: mockCreate },
+  } as unknown as ReturnType<typeof createClaudeClient>;
+
+  const ENV_KEYS = [
+    "LANGFUSE_PUBLIC_KEY",
+    "LANGFUSE_SECRET_KEY",
+    "LANGFUSE_BASE_URL",
+  ] as const;
+  const envSnapshot = new Map<string, string | undefined>();
+
+  beforeEach(() => {
+    // Test suite runs with Langfuse keys unset by default — be explicit so
+    // these cases don't depend on shell state.
+    for (const k of ENV_KEYS) {
+      envSnapshot.set(k, process.env[k]);
+      delete process.env[k];
+    }
+    mockCreate.mockReset();
+    __resetRegistryForTests();
+    __resetObservabilityForTests();
+  });
+
+  afterEach(() => {
+    for (const k of ENV_KEYS) {
+      const v = envSnapshot.get(k);
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+    __resetRegistryForTests();
+    __resetObservabilityForTests();
+  });
+
+  function baseCtx(
+    overrides: Partial<LlmTraceContext> = {},
+  ): LlmTraceContext {
+    return {
+      feature: "evaluate",
+      env: "dev",
+      promptVersion: "pending",
+      requestId: "test-request-001",
+      userId: "dev_user_001",
+      language: Language.EN,
+      cefrLevel: CefrLevel.B1,
+      exerciseType: ExerciseType.CLOZE,
+      ...overrides,
+    };
+  }
+
+  function mockClaudeResponse(): void {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_phase2",
+          name: EVALUATION_TOOL_NAME,
+          input: validEvaluationInput,
+        },
+      ],
+      stop_reason: "tool_use",
+    });
+  }
+
+  it("uses systemPromptOverride verbatim in the messages.create system block", async () => {
+    mockClaudeResponse();
+    const override = "CUSTOM_CANDIDATE_PROMPT body for eval run";
+
+    await evaluateAnswer(mockClient, {
+      exercise: clozeContent,
+      userAnswer: "went",
+      language: Language.EN,
+      difficulty: CefrLevel.B1,
+      systemPromptOverride: override,
+    });
+
+    const callArgs = mockCreate.mock.calls[0][0];
+    expect(callArgs.system).toEqual([
+      {
+        type: "text",
+        text: override,
+        cache_control: { type: "ephemeral" },
+      },
+    ]);
+  });
+
+  it("stamps promptVersion=override:<sha8> on the trace when systemPromptOverride is set", async () => {
+    mockClaudeResponse();
+    const override = "CUSTOM_CANDIDATE_PROMPT body for eval run";
+    const expectedTag = `override:${sha8(override)}`;
+
+    await withLlmTrace(baseCtx(), async () => {
+      await evaluateAnswer(mockClient, {
+        exercise: clozeContent,
+        userAnswer: "went",
+        language: Language.EN,
+        difficulty: CefrLevel.B1,
+        systemPromptOverride: override,
+      });
+      const ctx = getCurrentLlmTraceContext();
+      expect(ctx?.promptVersion).toBe(expectedTag);
+      expect(ctx?.promptFallback).toBe(false);
+    });
+  });
+
+  it("falls back to EVALUATION_SYSTEM_PROMPT with `fallback:<v>` promptVersion when no override + Langfuse unset", async () => {
+    // LANGFUSE_PUBLIC_KEY is unset (beforeEach), so the registry takes the
+    // fallback path — system text must be the in-repo string, promptVersion
+    // must be the `fallback:<localVersion>` cohort tag.
+    mockClaudeResponse();
+    const expectedTag = `fallback:${EVALUATION_SYSTEM_PROMPT_VERSION}`;
+
+    await withLlmTrace(baseCtx(), async () => {
+      await evaluateAnswer(mockClient, {
+        exercise: clozeContent,
+        userAnswer: "went",
+        language: Language.EN,
+        difficulty: CefrLevel.B1,
+      });
+      const ctx = getCurrentLlmTraceContext();
+      expect(ctx?.promptVersion).toBe(expectedTag);
+      expect(ctx?.promptFallback).toBe(true);
+    });
+
+    // Sanity: the fallback path produces byte-identical system text to
+    // pre-Phase-2 behavior.
+    const callArgs = mockCreate.mock.calls[0][0];
+    expect(callArgs.system).toEqual([
+      {
+        type: "text",
+        text: EVALUATION_SYSTEM_PROMPT,
+        cache_control: { type: "ephemeral" },
+      },
+    ]);
+  });
+
+  it("does not call setResolvedPromptVersion on the override path with fromFallback=true", async () => {
+    // Override path explicitly passes `false` to fromFallback. Confirm the
+    // trace metadata reflects that — eval-runner output should never look
+    // like a fallback to dashboards.
+    mockClaudeResponse();
+    const override = "another candidate";
+
+    await withLlmTrace(baseCtx(), async () => {
+      await evaluateAnswer(mockClient, {
+        exercise: clozeContent,
+        userAnswer: "went",
+        language: Language.EN,
+        difficulty: CefrLevel.B1,
+        systemPromptOverride: override,
+      });
+      const ctx = getCurrentLlmTraceContext();
+      expect(ctx?.promptFallback).toBe(false);
+    });
   });
 });
 

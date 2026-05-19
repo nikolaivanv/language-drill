@@ -16,6 +16,9 @@ import {
   WordFlagSchema,
 } from "@language-drill/shared";
 
+import { setResolvedPromptVersion } from "./observability.js";
+import { getPromptOrFallback, sha8 } from "./prompts-registry.js";
+
 // ---------------------------------------------------------------------------
 // Tool schema — the structured output Claude must produce
 // ---------------------------------------------------------------------------
@@ -182,6 +185,15 @@ export type AnnotateStreamInput = {
    * doesn't keep running (Req 4.9).
    */
   signal?: AbortSignal;
+  /**
+   * Phase-2: bypass the Langfuse registry and use this verbatim as the
+   * system prompt. Symmetric with `EvaluateAnswerInput.systemPromptOverride`
+   * — there is no eval runner for annotation in Phase 2, but the field is
+   * added uniformly so ad-hoc CLI experiments and future eval surfaces
+   * can supply a candidate prompt without forking the function. When set,
+   * the trace's `promptVersion` is stamped `override:<sha8(text)>`.
+   */
+  systemPromptOverride?: string;
 };
 
 /**
@@ -547,6 +559,30 @@ export async function* streamAnnotation(
     );
   }
 
+  // Resolve the system prompt. Three paths (mirror `evaluateAnswer`):
+  //   - override (CLI / eval): use verbatim, stamp `override:<sha8>`.
+  //   - registry hit: `langfuse:<N>` cohort, fromFallback=false.
+  //   - registry miss / outage / unset: `fallback:<localVersion>` cohort.
+  // The fetch happens BEFORE `client.messages.stream` so the resolved
+  // version lands on the ALS frame before the Phase-1 Proxy reads it.
+  // Annotation already awaits upstream setup before opening the SSE
+  // stream, so the extra await is free on time-to-first-event.
+  let systemPromptText: string;
+  if (input.systemPromptOverride !== undefined) {
+    systemPromptText = input.systemPromptOverride;
+    setResolvedPromptVersion(
+      `override:${sha8(input.systemPromptOverride)}`,
+      false,
+    );
+  } else {
+    const resolved = await getPromptOrFallback(
+      "annotate-system-prompt",
+      ANNOTATE_SYSTEM_PROMPT,
+      ANNOTATE_SYSTEM_PROMPT_VERSION,
+    );
+    systemPromptText = resolved.text;
+  }
+
   const stream = client.messages.stream(
     {
       model: STREAM_MODEL,
@@ -554,7 +590,7 @@ export async function* streamAnnotation(
       system: [
         {
           type: "text" as const,
-          text: ANNOTATE_SYSTEM_PROMPT,
+          text: systemPromptText,
           cache_control: { type: "ephemeral" as const },
         },
       ],

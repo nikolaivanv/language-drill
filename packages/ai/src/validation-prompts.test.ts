@@ -15,8 +15,10 @@ import type { ExerciseDraft, GenerationSpec } from "./generate.js";
 import {
   buildValidationSystemPrompt,
   buildValidationUserPrompt,
+  computeValidationPromptVars,
   VALIDATION_SYSTEM_PROMPT_TEMPLATE,
 } from "./validation-prompts.js";
+import { applyTemplate } from "./prompts-registry.js";
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -61,14 +63,18 @@ function makeDraft(content: ExerciseContent): ExerciseDraft {
 // ---------------------------------------------------------------------------
 
 describe("buildValidationSystemPrompt", () => {
-  it("is deterministic — same spec returns identical bytes (cache invariant)", () => {
-    const a = buildValidationSystemPrompt(baseSpec);
-    const b = buildValidationSystemPrompt(baseSpec);
+  it("is deterministic — same spec returns identical bytes (cache invariant)", async () => {
+    // Async since Phase-2: must await both before comparing, otherwise
+    // `toBe` compares two distinct Promise references and fails trivially.
+    const [a, b] = await Promise.all([
+      buildValidationSystemPrompt(baseSpec),
+      buildValidationSystemPrompt(baseSpec),
+    ]);
     expect(a).toBe(b);
   });
 
-  it("inlines the grammar-point name, description, positive examples, and common errors verbatim", () => {
-    const prompt = buildValidationSystemPrompt(baseSpec);
+  it("inlines the grammar-point name, description, positive examples, and common errors verbatim", async () => {
+    const prompt = await buildValidationSystemPrompt(baseSpec);
     expect(prompt).toContain(grammarPoint.name);
     expect(prompt).toContain(grammarPoint.description);
     for (const example of grammarPoint.examplesPositive) {
@@ -79,22 +85,22 @@ describe("buildValidationSystemPrompt", () => {
     }
   });
 
-  it("interpolates language and CEFR level into the header and the dimension descriptions", () => {
-    const prompt = buildValidationSystemPrompt(baseSpec);
+  it("interpolates language and CEFR level into the header and the dimension descriptions", async () => {
+    const prompt = await buildValidationSystemPrompt(baseSpec);
     expect(prompt).toContain("ES learners at CEFR B1");
     expect(prompt).toContain("does the difficulty match B1?");
     expect(prompt).toContain(`does this actually test ${grammarPoint.name}?`);
   });
 
-  it("shares CEFR descriptors with EVALUATION_SYSTEM_PROMPT (DRY invariant — Req 2.4)", () => {
+  it("shares CEFR descriptors with EVALUATION_SYSTEM_PROMPT (DRY invariant — Req 2.4)", async () => {
     const b1Descriptor = CEFR_LEVEL_DESCRIPTORS[CefrLevel.B1];
-    const validatorPrompt = buildValidationSystemPrompt(baseSpec);
+    const validatorPrompt = await buildValidationSystemPrompt(baseSpec);
     expect(validatorPrompt).toContain(b1Descriptor);
     expect(EVALUATION_SYSTEM_PROMPT).toContain(b1Descriptor);
   });
 
-  it("contains the routing-implication block verbatim from plan §3.1", () => {
-    const prompt = buildValidationSystemPrompt(baseSpec);
+  it("contains the routing-implication block verbatim from plan §3.1", async () => {
+    const prompt = await buildValidationSystemPrompt(baseSpec);
     // qualityScore < 0.5 OR cultural issue → REJECTED
     expect(prompt).toContain(
       "qualityScore < 0.5  OR  any cultural issue  → REJECTED",
@@ -111,29 +117,72 @@ describe("buildValidationSystemPrompt", () => {
     expect(prompt).toContain("otherwise");
   });
 
-  it("instructs Claude to use the submit_validation_result tool only", () => {
-    const prompt = buildValidationSystemPrompt(baseSpec);
+  it("instructs Claude to use the submit_validation_result tool only", async () => {
+    const prompt = await buildValidationSystemPrompt(baseSpec);
     expect(prompt).toContain("submit_validation_result");
     expect(prompt).toContain("Do not return plain text");
   });
 
-  it("contains the strict-reviewer framing", () => {
-    const prompt = buildValidationSystemPrompt(baseSpec);
+  it("contains the strict-reviewer framing", async () => {
+    const prompt = await buildValidationSystemPrompt(baseSpec);
     expect(prompt).toContain("strict reviewer");
     expect(prompt).toContain("Be conservative");
   });
 });
 
 // ---------------------------------------------------------------------------
-// VALIDATION_SYSTEM_PROMPT_TEMPLATE
+// VALIDATION_SYSTEM_PROMPT_TEMPLATE byte parity (Phase 2, Task 12)
 // ---------------------------------------------------------------------------
 
-describe("VALIDATION_SYSTEM_PROMPT_TEMPLATE", () => {
-  it("contains the placeholder tokens that buildValidationSystemPrompt interpolates", () => {
-    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain("{{language}}");
-    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain("{{cefrLevel}}");
-    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain("{{grammarPoint.name}}");
-    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain("{{CEFR_DESCRIPTORS}}");
+/**
+ * Pins the contract: `applyTemplate(TEMPLATE, computeVars(spec)).text`
+ * MUST equal `buildValidationSystemPrompt(spec)` byte-for-byte. The
+ * pre-Phase-2 template used nested-path placeholders (`{{grammarPoint.
+ * name}}`, `{{CEFR_DESCRIPTORS}}`) that the Mustache subset doesn't
+ * resolve to anything; this block proves the rewritten flat-string
+ * template is a true drop-in for the live builder before Task 13
+ * routes both through `getPromptWithVarsOrFallback`.
+ *
+ * Why this matters: Anthropic's ephemeral prompt cache requires
+ * byte-identical system blocks across validator calls within the
+ * 5-min window. Drift between the template and the in-code builder
+ * silently breaks the cache and inflates validation cost.
+ */
+describe("VALIDATION_SYSTEM_PROMPT_TEMPLATE byte parity", () => {
+  async function assertParity(spec: GenerationSpec): Promise<void> {
+    // Builder is now async (Phase-2, Task 13). Fallback path (Langfuse
+    // keys unset in CI) returns the template-substituted string, so
+    // byte parity vs. local `applyTemplate(TEMPLATE, vars)` still holds.
+    const builderOutput = await buildValidationSystemPrompt(spec);
+    const templateOutput = applyTemplate(
+      VALIDATION_SYSTEM_PROMPT_TEMPLATE,
+      computeValidationPromptVars(spec),
+    );
+    expect(templateOutput.missingVars).toEqual([]);
+    expect(templateOutput.text).toBe(builderOutput);
+  }
+
+  it("ES / B1 / cloze / es-b1-present-subjunctive (base fixture)", async () => {
+    await assertParity(baseSpec);
+  });
+
+  it("survives a different language + level combination (cache parity across specs)", async () => {
+    // Turkish A1 vowel-harmony is in the live curriculum and uses a
+    // distinct example/error vocabulary, exercising the
+    // `positiveExamplesBullets`/`commonErrorsBullets` substitution paths
+    // with content separate from the base fixture.
+    const altGrammarPoint = getGrammarPoint("tr-a1-vowel-harmony");
+    if (!altGrammarPoint) {
+      throw new Error(
+        "test fixture missing: curriculum entry 'tr-a1-vowel-harmony'",
+      );
+    }
+    await assertParity({
+      ...baseSpec,
+      language: Language.TR,
+      cefrLevel: CefrLevel.A1,
+      grammarPoint: altGrammarPoint,
+    });
   });
 });
 

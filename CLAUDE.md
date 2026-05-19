@@ -76,6 +76,9 @@ Both servers are started from the repo root. They read `DATABASE_URL`, `ANTHROPI
 | `pnpm db:migrate` | Run Drizzle migrations |
 | `pnpm db:studio` | Browse the DB in Drizzle Studio |
 | `pnpm db:seed:exercises` | Seed the exercise pool (36 idempotent exercises) |
+| `pnpm bootstrap-prompts` | Idempotently register the six system prompts in Langfuse from the in-repo fallback strings. Supports `--dry-run` and `--check` (drift detection vs. live `production` label). |
+| `pnpm eval:export` | Sample evaluation traces from Langfuse over a date window and write them as items into a Langfuse dataset (joined back to `user_exercise_history` for the user answer + exercise). |
+| `pnpm eval` | Run a candidate prompt against a Langfuse dataset, link each per-item trace to the dataset run, and write a quality/cost/latency summary to `./eval-runs/<runName>.json`. |
 
 First-time setup:
 
@@ -124,6 +127,11 @@ each prompt and are re-exported from `packages/ai/src/index.ts`:
 | `validation-prompts.ts` | `VALIDATION_PROMPT_VERSION` |
 | `theory-prompts.ts` | `THEORY_GENERATION_PROMPT_VERSION` |
 | `theory-validation-prompts.ts` | `THEORY_VALIDATION_PROMPT_VERSION` |
+
+Langfuse is now the live source for these prompts; the in-repo
+`*_SYSTEM_PROMPT` constant is the fallback. Bumping
+`*_SYSTEM_PROMPT_VERSION` is still required (drives the fallback cohort tag
+and signals reviewers that the local fallback also changed).
 
 ---
 

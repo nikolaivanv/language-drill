@@ -24,6 +24,7 @@ import {
 
 import { CEFR_LEVEL_DESCRIPTORS } from "./prompts.js";
 import type { ExerciseDraft, GenerationSpec } from "./generate.js";
+import { getPromptWithVarsOrFallback } from "./prompts-registry.js";
 
 // ---------------------------------------------------------------------------
 // CEFR descriptor block — built once at module load, reused on every call so
@@ -37,62 +38,6 @@ const CEFR_DESCRIPTOR_BULLETS = (
   .join("\n");
 
 // ---------------------------------------------------------------------------
-// Raw template constant — exposed for tests so they can assert structural
-// invariants (presence of headings, etc.) against a single source of truth.
-// Consumers SHOULD use buildValidationSystemPrompt instead.
-// ---------------------------------------------------------------------------
-
-// Bump in the same commit as any semantic edit to
-// VALIDATION_SYSTEM_PROMPT_TEMPLATE. Drives the Langfuse trace
-// `promptVersion` tag — dashboards cohort old vs. new prompt traces by
-// this string.
-export const VALIDATION_PROMPT_VERSION = "validate@2026-05-12";
-
-export const VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language exercises for {{language}} learners at CEFR {{cefrLevel}}. Your job is to validate one already-generated exercise that targets the grammar point: {{grammarPoint.name}}.
-
-Be conservative. Reject anything ambiguous, anything mis-leveled, anything that fails to target the configured grammar point, and anything with cultural issues. Score on the high side only when the exercise is genuinely unambiguous, well-leveled, and on-point.
-
-## Routing implication of your scores
-
-Your output is routed by these rules:
-- qualityScore < 0.5  OR  any cultural issue  → REJECTED (dropped, not stored)
-- qualityScore in [0.5, 0.7)                  → FLAGGED (waits for human review)
-- qualityScore >= 0.7 AND not ambiguous AND levelMatch AND grammarPointMatch
-                                              → AUTO-APPROVED (visible to learners)
-- otherwise                                    → FLAGGED
-
-Score conservatively — a flagged draft costs a human ~30 seconds of review; an auto-approved bad draft corrupts the learner's progress model.
-
-## Grammar point context
-
-{{grammarPoint.description}}
-
-## Positive examples
-
-{{grammarPoint.examplesPositive}}
-
-## Common learner errors (the exercise should expose these, not propagate them)
-
-{{grammarPoint.commonErrors}}
-
-## CEFR level descriptors
-
-{{CEFR_DESCRIPTORS}}
-
-## Dimensions to score (one-to-one with the tool's required fields)
-
-1. **qualityScore** (0.0–1.0): overall fitness.
-2. **ambiguous** (boolean): is there more than one substantively-correct answer?
-3. **levelMatch** (boolean): does the difficulty match {{cefrLevel}}?
-4. **grammarPointMatch** (boolean): does this actually test {{grammarPoint.name}}?
-5. **culturalIssues** (array of strings): stereotyping, sensitive content, exclusion. Empty array when none.
-6. **flaggedReasons** (array of strings): anything else a reviewer should know.
-
-## Output
-
-You MUST use the submit_validation_result tool. Do not return plain text.`;
-
-// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -101,12 +46,24 @@ function renderBulletList(items: readonly string[]): string {
 }
 
 // ---------------------------------------------------------------------------
-// System prompt
+// Raw template constant — Langfuse-registered body for `validate-system-prompt`.
+// Phase 2 rewrites this in terms of FLAT placeholders only — the original
+// Phase-1 placeholders used nested paths (`{{grammarPoint.name}}`,
+// `{{CEFR_DESCRIPTORS}}`) which Langfuse's Mustache `compile(vars)` and our
+// in-code `applyTemplate` cannot bridge byte-for-byte. The
+// `VALIDATION_SYSTEM_PROMPT_TEMPLATE byte parity` test block pins
+// `applyTemplate(TEMPLATE, computeValidationPromptVars(spec)).text ===
+// buildValidationSystemPrompt(spec)` so any drift between the template and
+// the live builder is caught at PR time.
 // ---------------------------------------------------------------------------
 
-export function buildValidationSystemPrompt(spec: GenerationSpec): string {
-  const { language, cefrLevel, grammarPoint } = spec;
-  return `You are a strict reviewer of language exercises for ${language} learners at CEFR ${cefrLevel}. Your job is to validate one already-generated exercise that targets the grammar point: ${grammarPoint.name}.
+// Bump in the same commit as any semantic edit to
+// VALIDATION_SYSTEM_PROMPT_TEMPLATE. Drives the Langfuse trace
+// `promptVersion` tag — dashboards cohort old vs. new prompt traces by
+// this string.
+export const VALIDATION_PROMPT_VERSION = "validate@2026-05-12";
+
+export const VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language exercises for {{language}} learners at CEFR {{cefrLevel}}. Your job is to validate one already-generated exercise that targets the grammar point: {{grammarPointName}}.
 
 Be conservative. Reject anything ambiguous, anything mis-leveled, anything that fails to target the configured grammar point, and anything with cultural issues. Score on the high side only when the exercise is genuinely unambiguous, well-leveled, and on-point.
 
@@ -123,32 +80,81 @@ Score conservatively — a flagged draft costs a human ~30 seconds of review; an
 
 ## Grammar point context
 
-${grammarPoint.description}
+{{grammarPointDescription}}
 
 ## Positive examples
 
-${renderBulletList(grammarPoint.examplesPositive)}
+{{positiveExamplesBullets}}
 
 ## Common learner errors (the exercise should expose these, not propagate them)
 
-${renderBulletList(grammarPoint.commonErrors)}
+{{commonErrorsBullets}}
 
 ## CEFR level descriptors
 
-${CEFR_DESCRIPTOR_BULLETS}
+{{cefrDescriptors}}
 
 ## Dimensions to score (one-to-one with the tool's required fields)
 
 1. **qualityScore** (0.0–1.0): overall fitness.
 2. **ambiguous** (boolean): is there more than one substantively-correct answer?
-3. **levelMatch** (boolean): does the difficulty match ${cefrLevel}?
-4. **grammarPointMatch** (boolean): does this actually test ${grammarPoint.name}?
+3. **levelMatch** (boolean): does the difficulty match {{cefrLevel}}?
+4. **grammarPointMatch** (boolean): does this actually test {{grammarPointName}}?
 5. **culturalIssues** (array of strings): stereotyping, sensitive content, exclusion. Empty array when none.
 6. **flaggedReasons** (array of strings): anything else a reviewer should know.
 
 ## Output
 
 You MUST use the submit_validation_result tool. Do not return plain text.`;
+
+// ---------------------------------------------------------------------------
+// System prompt
+// ---------------------------------------------------------------------------
+
+/**
+ * Flat-string var map consumed by both the in-code fallback substituter
+ * and Langfuse's `compile(vars)`. Mirrors the shape required by
+ * `VALIDATION_SYSTEM_PROMPT_TEMPLATE`. Pulled out of the builder so the
+ * Task-12 snapshot parity test can exercise the same computation the
+ * builder does (Task 13's async refactor will route both through it).
+ */
+export function computeValidationPromptVars(
+  spec: GenerationSpec,
+): Record<string, string> {
+  const { language, cefrLevel, grammarPoint } = spec;
+  return {
+    language,
+    cefrLevel,
+    grammarPointName: grammarPoint.name,
+    grammarPointDescription: grammarPoint.description,
+    positiveExamplesBullets: renderBulletList(grammarPoint.examplesPositive),
+    commonErrorsBullets: renderBulletList(grammarPoint.commonErrors),
+    cefrDescriptors: CEFR_DESCRIPTOR_BULLETS,
+  };
+}
+
+/**
+ * Builds the validator system prompt, fetching the live body from
+ * Langfuse (label `production`) and falling back to
+ * `VALIDATION_SYSTEM_PROMPT_TEMPLATE` on outage / unset keys / compile
+ * mismatch. Byte parity between the two paths is pinned by the
+ * `VALIDATION_SYSTEM_PROMPT_TEMPLATE byte parity` test block.
+ *
+ * Async because the Langfuse fetch is async (cached in-process for 5 min
+ * so warm Lambdas pay zero per-request cost). The single caller
+ * (`validateDraft` in `validate.ts`) is already `async`.
+ */
+export async function buildValidationSystemPrompt(
+  spec: GenerationSpec,
+): Promise<string> {
+  const vars = computeValidationPromptVars(spec);
+  const { text } = await getPromptWithVarsOrFallback(
+    "validate-system-prompt",
+    VALIDATION_SYSTEM_PROMPT_TEMPLATE,
+    VALIDATION_PROMPT_VERSION,
+    vars,
+  );
+  return text;
 }
 
 // ---------------------------------------------------------------------------

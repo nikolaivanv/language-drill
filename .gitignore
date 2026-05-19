@@ -47,3 +47,6 @@ coverage/
 # AWS CDK
 cdk.out/
 *.d.ts.map
+
+# Eval runner output (packages/ai/scripts/eval-run.ts)
+eval-runs/

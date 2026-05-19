@@ -1,15 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import { esCurriculum } from "@language-drill/db";
+import { esCurriculum, trCurriculum } from "@language-drill/db";
 import { Language, type TheoryTopicJson } from "@language-drill/shared";
 
 import type { TheoryDraft, TheoryGenerationSpec } from "./theory-generate.js";
 import {
   buildTheoryValidationSystemPrompt,
   buildTheoryValidationUserPrompt,
+  computeTheoryValidationPromptVars,
   THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE,
 } from "./theory-validation-prompts.js";
 import { THEORY_VALIDATION_THRESHOLDS } from "./theory-validation-thresholds.js";
+import { applyTemplate } from "./prompts-registry.js";
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -65,39 +67,54 @@ function makeDraft(content: TheoryTopicJson = sampleTopic): TheoryDraft {
 }
 
 // ---------------------------------------------------------------------------
-// THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE — structural anchors (Req 2.1)
+// THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE byte parity (Phase 2, Task 17)
 // ---------------------------------------------------------------------------
 
-describe("THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE", () => {
-  it("contains every section heading expected by buildTheoryValidationSystemPrompt", () => {
-    expect(THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain(
-      "## Grammar point context",
+/**
+ * Pins the contract: `applyTemplate(TEMPLATE, computeVars(spec)).text`
+ * MUST equal `buildTheoryValidationSystemPrompt(spec)` byte-for-byte.
+ * The pre-Phase-2 template used nested-path placeholders
+ * (`{{grammarPoint.name}}`, `{{CEFR_DESCRIPTORS}}`) that the Mustache
+ * subset doesn't resolve; this block proves the rewritten flat-string
+ * template is a true drop-in for the live builder before Task 18
+ * routes both through `getPromptWithVarsOrFallback`.
+ *
+ * Why this matters: Anthropic's ephemeral prompt cache requires
+ * byte-identical system blocks across theory-validator calls within
+ * the 5-min window. Drift between the template and the in-code
+ * builder silently breaks the cache and inflates validation cost.
+ */
+describe("THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE byte parity", () => {
+  async function assertParity(spec: TheoryGenerationSpec): Promise<void> {
+    // Builder is now async (Phase-2, Task 18). Fallback path (Langfuse
+    // keys unset in CI) returns the template-substituted string, so byte
+    // parity vs. local `applyTemplate(TEMPLATE, vars)` still holds.
+    const builderOutput = await buildTheoryValidationSystemPrompt(spec);
+    const templateOutput = applyTemplate(
+      THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE,
+      computeTheoryValidationPromptVars(spec),
     );
-    expect(THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain(
-      "## Positive examples",
-    );
-    expect(THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain(
-      "## Common learner errors",
-    );
-    expect(THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain(
-      "## CEFR level descriptors",
-    );
-    expect(THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain(
-      "## Required sections",
-    );
-    expect(THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain(
-      "## Routing implication of your scores",
-    );
-    expect(THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain(
-      "## Dimensions to score",
-    );
-    expect(THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain("## Output");
+    expect(templateOutput.missingVars).toEqual([]);
+    expect(templateOutput.text).toBe(builderOutput);
+  }
+
+  it("ES base fixture (first grammar entry)", async () => {
+    await assertParity(baseSpec);
   });
 
-  it("names the submit_theory_validation_result tool in the closing directive", () => {
-    expect(THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain(
-      "submit_theory_validation_result",
-    );
+  it("survives a different language input (TR cross-language coverage)", async () => {
+    // Different language exercises the `{{languageName}}` LANGUAGE_NAMES
+    // lookup branch with content distinct from the base fixture.
+    const altEntry = trCurriculum.find((e) => e.kind === "grammar");
+    if (!altEntry) {
+      throw new Error("test fixture missing: no TR grammar entry available");
+    }
+    await assertParity({
+      language: Language.TR,
+      cefrLevel: altEntry.cefrLevel,
+      grammarPoint: altEntry,
+      batchSeed: "test-seed",
+    });
   });
 });
 
@@ -106,14 +123,16 @@ describe("THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE", () => {
 // ---------------------------------------------------------------------------
 
 describe("buildTheoryValidationSystemPrompt", () => {
-  it("is deterministic — same spec returns identical bytes (Req 2.2, cache invariant)", () => {
-    const a = buildTheoryValidationSystemPrompt(baseSpec);
-    const b = buildTheoryValidationSystemPrompt(baseSpec);
+  it("is deterministic — same spec returns identical bytes (Req 2.2, cache invariant)", async () => {
+    const [a, b] = await Promise.all([
+      buildTheoryValidationSystemPrompt(baseSpec),
+      buildTheoryValidationSystemPrompt(baseSpec),
+    ]);
     expect(a).toBe(b);
   });
 
-  it("inlines the grammar-point name, description, positive examples, and common errors verbatim (Req 2.1)", () => {
-    const prompt = buildTheoryValidationSystemPrompt(baseSpec);
+  it("inlines the grammar-point name, description, positive examples, and common errors verbatim (Req 2.1)", async () => {
+    const prompt = await buildTheoryValidationSystemPrompt(baseSpec);
     expect(prompt).toContain(grammarEntry.name);
     expect(prompt).toContain(grammarEntry.description);
     for (const example of grammarEntry.examplesPositive) {
@@ -124,15 +143,15 @@ describe("buildTheoryValidationSystemPrompt", () => {
     }
   });
 
-  it("includes the CEFR level both in the role line and in the level descriptors block", () => {
-    const prompt = buildTheoryValidationSystemPrompt(baseSpec);
+  it("includes the CEFR level both in the role line and in the level descriptors block", async () => {
+    const prompt = await buildTheoryValidationSystemPrompt(baseSpec);
     expect(prompt).toContain(`CEFR ${baseSpec.cefrLevel}`);
     // The descriptor block uses `- **A1**:`, `- **B1**:`, etc.
     expect(prompt).toContain(`- **${baseSpec.cefrLevel}**:`);
   });
 
-  it("interpolates the routing thresholds from THEORY_VALIDATION_THRESHOLDS (Req 2.5)", () => {
-    const prompt = buildTheoryValidationSystemPrompt(baseSpec);
+  it("interpolates the routing thresholds from THEORY_VALIDATION_THRESHOLDS (Req 2.5)", async () => {
+    const prompt = await buildTheoryValidationSystemPrompt(baseSpec);
     expect(prompt).toContain(
       THEORY_VALIDATION_THRESHOLDS.flagQualityFloor.toString(),
     );
@@ -141,8 +160,8 @@ describe("buildTheoryValidationSystemPrompt", () => {
     );
   });
 
-  it("lists the five required sections in generator order (Req 2.1 design Component 2)", () => {
-    const prompt = buildTheoryValidationSystemPrompt(baseSpec);
+  it("lists the five required sections in generator order (Req 2.1 design Component 2)", async () => {
+    const prompt = await buildTheoryValidationSystemPrompt(baseSpec);
     const sections = [
       "what is it?",
       "when to use it",
@@ -160,15 +179,15 @@ describe("buildTheoryValidationSystemPrompt", () => {
     }
   });
 
-  it("closes with the submit_theory_validation_result tool directive", () => {
-    const prompt = buildTheoryValidationSystemPrompt(baseSpec);
+  it("closes with the submit_theory_validation_result tool directive", async () => {
+    const prompt = await buildTheoryValidationSystemPrompt(baseSpec);
     expect(prompt).toContain(
       "You MUST use the submit_theory_validation_result tool",
     );
   });
 
-  it("does NOT include draft-specific content (Req 2.4 — spec-only system prompt)", () => {
-    const prompt = buildTheoryValidationSystemPrompt(baseSpec);
+  it("does NOT include draft-specific content (Req 2.4 — spec-only system prompt)", async () => {
+    const prompt = await buildTheoryValidationSystemPrompt(baseSpec);
     // The draft's topicId, batchSeed, or any draft-side metadata must not leak
     // into the cacheable system prompt.
     expect(prompt).not.toContain("b1-sample");

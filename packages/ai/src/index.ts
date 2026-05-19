@@ -64,6 +64,7 @@ export {
   canonicalSurface,
   tailRecentStems,
   GENERATION_PROMPT_VERSION,
+  GENERATION_SYSTEM_PROMPT_TEMPLATE,
   MAX_RECENT_STEMS_IN_PROMPT,
 } from "./generation-prompts.js";
 export type { GenerationPromptInputs } from "./generation-prompts.js";
@@ -118,6 +119,7 @@ export {
   buildTheorySystemPrompt,
   buildTheoryUserPrompt,
   THEORY_GENERATION_PROMPT_VERSION,
+  THEORY_SYSTEM_PROMPT_TEMPLATE,
 } from "./theory-prompts.js";
 export type { TheoryPromptInputs } from "./theory-prompts.js";
 
@@ -160,6 +162,7 @@ export {
   createObservedClaudeClient,
   withLlmTrace,
   getCurrentLlmTraceContext,
+  setResolvedPromptVersion,
   getLangfuse,
   flushObservability,
   LANGFUSE_FLUSH_TIMEOUT_MS,
@@ -171,3 +174,18 @@ export type {
   LlmEnv,
   LlmTraceContext,
 } from "./observability.js";
+
+// ---------------------------------------------------------------------------
+// Langfuse prompt registry (Phase 2)
+// ---------------------------------------------------------------------------
+
+export {
+  applyTemplate,
+  getPromptOrFallback,
+  getPromptWithVarsOrFallback,
+  LANGFUSE_PROMPT_CACHE_TTL_MS,
+  LANGFUSE_PROMPT_FETCH_TIMEOUT_MS,
+  PROMPT_LABEL_PRODUCTION,
+  __resetRegistryForTests,
+} from "./prompts-registry.js";
+export type { ResolvedPrompt } from "./prompts-registry.js";

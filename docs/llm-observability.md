@@ -149,6 +149,167 @@ These are the acceptance criteria. If a dashboard can't answer them in <60 s of 
 - **Phase 2 — Prompt registry + datasets (3–5 days).** Migrate the four system prompts into Langfuse's prompt management. Add a `pnpm eval` script that runs a candidate prompt against a labelled dataset of past submissions and produces a quality/cost/latency diff vs. current.
 - **Phase 3 — Online evals (deferred, scope TBD).** Use Langfuse's LLM-as-judge to score a sample of live evaluation outputs against a rubric (e.g., "does the feedback cite a specific error?"). Only worth doing once Phase 2 dataset eval is in routine use.
 
+## 7a. Phase 2 — Prompt registry
+
+Phase 2 makes every system prompt **fetched from Langfuse at runtime**, with
+the in-repo `*_SYSTEM_PROMPT` / `*_SYSTEM_PROMPT_TEMPLATE` string acting as a
+fail-soft fallback. This is what lets a non-engineer (or me on mobile) iterate
+on prompt copy without a deploy, while keeping the build green and the runtime
+robust when Langfuse is unreachable.
+
+### 7a.1 Registered prompts
+
+Six prompts are registered, one per Claude surface. Names are the registry
+keys — change them only in lockstep with the manifest in
+`packages/ai/scripts/bootstrap-prompts.ts` and the call sites under
+`packages/ai/src/`.
+
+| Langfuse prompt name | Surface | In-repo fallback constant |
+|---|---|---|
+| `evaluate-system-prompt` | answer evaluation | `EVALUATION_SYSTEM_PROMPT` |
+| `annotate-system-prompt` | reading annotation | `ANNOTATE_SYSTEM_PROMPT` |
+| `generate-system-prompt` | exercise generation | `GENERATION_SYSTEM_PROMPT_TEMPLATE` |
+| `validate-system-prompt` | exercise validation | `VALIDATION_SYSTEM_PROMPT_TEMPLATE` |
+| `theory-generate-system-prompt` | theory generation | `THEORY_SYSTEM_PROMPT_TEMPLATE` |
+| `theory-validate-system-prompt` | theory validation | `THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE` |
+
+The four `*_TEMPLATE` constants use flat `{{varName}}` placeholders. Each
+builder (`buildGenerationSystemPrompt`, `buildValidationSystemPrompt`, etc.)
+computes the var bag, then calls `getPromptWithVarsOrFallback(...)`, which
+either compiles the Langfuse prompt with those vars or substitutes them into
+the in-repo template — both paths produce the same string when the Langfuse
+copy is byte-identical to the fallback (asserted by the snapshot parity
+tests).
+
+### 7a.2 Label convention
+
+Two labels are reserved:
+
+- **`production`** — the body the runtime fetches. Exactly one version per
+  prompt holds this label at any time. Bootstrap registers v1 with
+  `['production']` on first run; moving the label to v2 is how you ship a
+  prompt change without a deploy.
+- **`candidate-<slug>`** — any non-production variant under evaluation. Used
+  by `pnpm eval --candidate langfuse:<name>@candidate-foo` to fetch a draft
+  prompt by label rather than copy-pasting a file. Free-form slug; pick
+  something dashboard-readable (`candidate-2026-05-17-tighter-feedback`).
+
+Operator-facing prompts always carry `production`; experiments carry
+`candidate-*`. Nothing in the runtime parses these labels — they are pure
+convention enforced by the CLIs and the dashboards.
+
+### 7a.3 Cache TTL — why 5 minutes
+
+Each Lambda process caches the resolved prompt body for **5 minutes**
+(`LANGFUSE_PROMPT_CACHE_TTL_MS=300000`) in a module-scope map. Trade-offs:
+
+- **Lower (e.g. 30 s):** dashboard label flips take effect within ~30 s, but
+  every cold Lambda + every 30 s window adds a Langfuse round-trip to the hot
+  path — capped at 250 ms by the fetch timeout, but still adds tail latency
+  the fallback wouldn't add.
+- **5 min (current default):** roughly 12 Langfuse calls per process per hour
+  per prompt — cheap, well inside free tier, and 5 min is the worst case for
+  a prompt edit to roll out. Lambda cold starts evict the cache independently,
+  so most real users see the new prompt much sooner.
+- **Higher (e.g. 1 hour):** invisible savings, slower rollouts. Not worth it.
+
+Override per environment via `LANGFUSE_PROMPT_CACHE_TTL_MS` in `.env`. The
+`LANGFUSE_PROMPT_FETCH_TIMEOUT_MS` knob (default 250 ms) is the hard ceiling
+on how long a single fetch can block a Claude call before the registry
+gives up and falls back — keep this tight.
+
+### 7a.4 Fallback behaviour
+
+The registry **never throws**. Every fetch path is fail-soft and returns the
+in-repo string + `fromFallback: true`. Triggers:
+
+1. `LANGFUSE_PUBLIC_KEY` is unset (local dev / CI without keys).
+2. Langfuse returns no production-labeled version for the prompt name.
+3. The fetch exceeds `LANGFUSE_PROMPT_FETCH_TIMEOUT_MS`.
+4. The Langfuse SDK throws (5xx, network, malformed response, compile error).
+5. (Templated only) the compiled Langfuse body still contains a `{{var}}` the
+   caller didn't pass — assumed to be a registry/template-drift bug; we
+   prefer the in-repo template that we can read in source.
+
+Every fallback bumps `promptFallback=true` and `promptVersion=fallback:<v>`
+on the trace, warns **once per process** to stderr (`warnOnce`), and proceeds
+as if Langfuse never existed. Dashboards pivot on `promptFallback` to see how
+often this fires — a steady non-zero rate means Langfuse is degraded; a one-
+off cold-start blip is normal.
+
+### 7a.5 Operator commands
+
+Three CLIs ship from `packages/ai/scripts/`, wired as root-level pnpm
+shortcuts so they work from any monorepo directory.
+
+| Command | What it does |
+|---|---|
+| `pnpm bootstrap-prompts` | Registers any of the six prompts that don't yet exist in the configured Langfuse project (uses the in-repo string/template as v1, labels it `production`). Skips already-existing prompts. Idempotent — safe to re-run. |
+| `pnpm bootstrap-prompts --dry-run` | Prints what it would create without writing to Langfuse. Use as a smoke test on a fresh project. |
+| `pnpm bootstrap-prompts --check` | **Drift detection**: read-only. For each prompt, fetches the live `production` body and compares byte-for-byte to the in-repo source. Exits 1 with a unified diff if anything has drifted. Run in CI / pre-push to catch silent dashboard-vs-source skew. |
+| `pnpm eval:export --from <iso> --to <iso> --sample <n> --dataset <name> [--language <l>] [--cefr <c>] [--seed <int>]` | Pulls evaluation traces from Langfuse in the date window, uniformly samples `n` of them, joins each back to the original `user_exercise_history` row for the user answer + exercise content, and writes the result as items into a Langfuse dataset (dedup'd by `submissionId`). |
+| `pnpm eval --dataset <name> --candidate <ref> [--run-name <name>] [--allow-prod] [--limit <n>]` | Runs a candidate prompt against the dataset. `<ref>` is either `file:<path>` (a local txt file) or `langfuse:<name>@<label>` (e.g. a `candidate-*`-labelled draft). Links every per-item trace to the dataset run so the Langfuse UI shows them side-by-side with the baseline. Prints a markdown summary table and writes `./eval-runs/<runName>.json`. Refuses to run with `LANGFUSE_ENV=prod` unless `--allow-prod` is set (Req 8 AC 4 guard). |
+
+### 7a.6 `eval-runs/` artefact
+
+Each `pnpm eval` invocation writes a JSON file to the gitignored
+`eval-runs/` directory. The shape (`EvalRunSummary` in
+`packages/ai/scripts/eval-run.ts`):
+
+```jsonc
+{
+  "runName": "candidate-a1b2c3d4-2026-05-17T18-30-00Z",
+  "promptSha": "a1b2c3d4",
+  "candidateSource": "file:./fixtures/candidate.txt",
+  "datasetName": "eval-smoke",
+  "startedAt": "2026-05-17T18:30:00.000Z",
+  "itemCount": 50,
+  "okCount": 49,
+  "errorCount": 1,
+
+  "score":           { "avgDelta": 0.04, "p95AbsDelta": 0.18, "signFlips": 2 },
+  "grammarAccuracy": { "avgDelta": 0.06, "p95AbsDelta": 0.20, "signFlips": 1 },
+  "taskAchievement": { "avgDelta": 0.02, "p95AbsDelta": 0.15, "signFlips": 3 },
+  "errorCountDelta": { "avgDelta": -0.3, "p95AbsDelta": 1.0 },
+
+  "cefr":      { "agreementRate": 0.86, "avgDistance": 0.16 },
+  "costUsd":   { "candidate": 0.4231, "baseline": null,  "deltaPct": null },
+  "latencyMs": { "candidate": { "p50": 1840, "p95": 3120 },
+                 "baseline":  { "p50": null, "p95": null } },
+
+  "errors": [{ "itemId": "ds-item-42", "submissionId": "sub_xyz", "error": "..." }],
+  "perItem": [/* full ItemResult[] for offline inspection */]
+}
+```
+
+The `perItem` array carries the raw per-dataset-item record (input, expected
+output, actual output, latency, cost). The top-level fields are the
+decision-grade summary — pin them in a PR comment when proposing a prompt
+change.
+
+### 7a.7 Quality / cost / latency diff metrics
+
+`computeDiff` (in `eval-run.ts`) produces one summary per run. Read the
+table left-to-right when deciding whether to ship a candidate.
+
+| Field | What it measures | Decision signal |
+|---|---|---|
+| `score.avgDelta` | mean `(candidate.score − expected.score)` across all OK items | central tendency of quality change; ±0.05 is in the noise band |
+| `score.p95AbsDelta` | p95 of `|candidate − expected|` per item | tail movement; large p95 with small avg = mixed reviews |
+| `score.signFlips` | count of items where candidate and baseline land on opposite sides of the 0.5 routing boundary | the only metric that captures "would this answer be routed differently?" |
+| `grammarAccuracy.*` / `taskAchievement.*` | same triple, per sub-dimension | drill into which evaluator dimension moved |
+| `errorCountDelta.avgDelta` | avg `(candidate.errors.length − expected.errors.length)` | how much more / less error-spotting the candidate does (no sign-flip metric — there's no semantic threshold) |
+| `cefr.agreementRate` | fraction of items where candidate's CEFR estimate matches the baseline's | top-level "did we re-grade the level?" rate |
+| `cefr.avgDistance` | mean `|cefrIndex(candidate) − cefrIndex(baseline)|` on the `A1=0 … C2=5` scale | how far off the disagreements are |
+| `costUsd.candidate` / `.baseline` / `.deltaPct` | rolled-up Anthropic spend over the run | candidate cost is always populated; baseline is `null` today (the exporter doesn't carry usage through — a follow-up enables a true delta) |
+| `latencyMs.candidate.{p50,p95}` | timed inside the eval loop | candidate latency is always populated; baseline is `null` today for the same reason as cost |
+| `errorCount` / `errors[]` | items where the candidate threw or produced an unparseable tool-use | non-zero `errors[]` exits the CLI with code 1 — never ship a candidate that didn't complete the run |
+
+Until the exporter carries baseline usage and latency through, judge cost
+and latency against an explicit re-run of `production` (i.e. run `pnpm eval`
+twice on the same dataset, once with `--candidate langfuse:<name>@production`
+and once with the proposed candidate, then diff the two summaries).
+
 ## 8. Open questions
 
 - **Sampling on generation?** Generation runs in batches and is by far the highest-volume call site. Free-tier impact is the deciding factor — measure for one week at sample rate 1.0 before deciding.

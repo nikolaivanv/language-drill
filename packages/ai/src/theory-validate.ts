@@ -302,7 +302,7 @@ export async function validateTheoryDraft(
   draft: TheoryDraft,
   spec: TheoryGenerationSpec,
 ): Promise<ValidateTheoryDraftResult> {
-  const systemText = buildTheoryValidationSystemPrompt(spec);
+  const systemText = await buildTheoryValidationSystemPrompt(spec);
   const userText = buildTheoryValidationUserPrompt(draft, spec);
 
   const response = await client.messages.create({

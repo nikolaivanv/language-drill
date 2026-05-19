@@ -16,7 +16,11 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import Anthropic from "@anthropic-ai/sdk";
 import type { CefrLevel, ExerciseType, Language } from "@language-drill/shared";
-import { Langfuse, type LangfuseGenerationClient } from "langfuse";
+import {
+  Langfuse,
+  type LangfuseGenerationClient,
+  type LangfuseTraceClient,
+} from "langfuse";
 import { extractNewItems } from "./annotate.js";
 import { SONNET_4_5_PRICING } from "./cost-model.js";
 
@@ -63,6 +67,27 @@ export interface LlmTraceContext {
   // `null` is allowed for surfaces with no single type.
   exerciseType?: ExerciseType | "reading" | "theory" | null;
   candidateCount?: number;
+  /**
+   * Phase-2: invoked once per Claude call after the Langfuse trace object
+   * is created. Receives the live `LangfuseTraceClient` so callers (the
+   * Phase-2 eval runner) can pass the trace directly to
+   * `datasetItem.link(trace, runName)` — the SDK's `LinkDatasetItem`
+   * accepts a `LangfuseObjectClient`, not a bare id.
+   *
+   * The Proxy invokes this synchronously while still inside the ALS scope
+   * — no escape from the surrounding `withLlmTrace`. Errors thrown inside
+   * the callback are swallowed via the module-scope `warnOnce` so a buggy
+   * caller can't fail a user request.
+   */
+  onTraceCreated?: (trace: LangfuseTraceClient) => void;
+  /**
+   * Phase-2: set by `prompts-registry`'s `setResolvedPromptVersion` when
+   * the registry took the fallback path (Langfuse outage, timeout, keys
+   * unset, or compile-time mismatch). Surfaced into trace metadata so
+   * dashboards can spot periods of degraded prompt-fetch behavior with a
+   * single filter (`promptFallback = true`).
+   */
+  promptFallback?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -132,6 +157,39 @@ export function withLlmTrace<T>(
  */
 export function getCurrentLlmTraceContext(): LlmTraceContext | undefined {
   return als.getStore();
+}
+
+/**
+ * Phase-2: mutate the current ALS frame's `promptVersion` (and optional
+ * `promptFallback`) after `packages/ai/src/prompts-registry.ts` has
+ * resolved a prompt — so the subsequent `messages.create` Proxy reads
+ * the *resolved* version (e.g. `langfuse:7` or
+ * `fallback:evaluate@2026-05-12`) rather than the placeholder the caller
+ * passed into `withLlmTrace`.
+ *
+ * ALS stores objects by reference, so this in-place mutation is visible
+ * to every downstream read in the same async chain — which is exactly
+ * what the Phase-1 Proxy does at the start of each `messages.create`.
+ *
+ * No-op outside a `withLlmTrace` scope (covers test harnesses and
+ * ad-hoc scripts that call surface fns directly).
+ *
+ * **Retry-constraint invariant** (documented for future code): today no
+ * surface function issues a second `messages.create` after the first
+ * within a single `withLlmTrace` scope. If a retry path is added in the
+ * future, callers MUST re-call `getPromptOrFallback` before each attempt
+ * so a TTL boundary doesn't silently version-skew the second trace.
+ * `setResolvedPromptVersion` is idempotent — repeating with the same
+ * version is a no-op; repeating with a new version overwrites cleanly.
+ */
+export function setResolvedPromptVersion(
+  version: string,
+  fromFallback: boolean = false,
+): void {
+  const store = als.getStore();
+  if (!store) return;
+  store.promptVersion = version;
+  store.promptFallback = fromFallback;
 }
 
 // ---------------------------------------------------------------------------
@@ -365,6 +423,7 @@ function buildTraceMetadata(
   if (ctx.cellKey !== undefined) m.cellKey = ctx.cellKey;
   if (ctx.exerciseId !== undefined) m.exerciseId = ctx.exerciseId;
   if (ctx.candidateCount !== undefined) m.candidateCount = ctx.candidateCount;
+  if (ctx.promptFallback !== undefined) m.promptFallback = ctx.promptFallback;
   // Dashboard-pivot dimensions: tag-and-metadata so both filter UIs and
   // group-by selectors work. Language is lowercased to match the tag
   // canonicalisation in `buildTraceTags` (Req 3 AC 1: `en` | `es` | …).
@@ -459,6 +518,13 @@ function startLangfuseGeneration(
       tags: traceTags,
       metadata: traceMetadata,
     });
+    if (ctx.onTraceCreated) {
+      try {
+        ctx.onTraceCreated(trace);
+      } catch (cbErr) {
+        warnOnce("onTraceCreated callback threw", cbErr);
+      }
+    }
     return trace.generation({
       name: feature,
       model: request.model,

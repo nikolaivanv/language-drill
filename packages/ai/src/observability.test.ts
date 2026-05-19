@@ -31,6 +31,7 @@ import {
   getCurrentLlmTraceContext,
   getLangfuse,
   LANGFUSE_FLUSH_TIMEOUT_MS,
+  setResolvedPromptVersion,
   TOOL_NAME_TO_FEATURE,
   withLlmTrace,
   type LlmFeature,
@@ -499,6 +500,112 @@ describe("Anthropic Proxy — messages.create", () => {
     expect(result.usage.input_tokens).toBe(1);
     expect(spies.traceCalls).toHaveLength(0);
   });
+
+  // -------------------------------------------------------------------------
+  // Phase-2: onTraceCreated callback + promptFallback metadata
+  // -------------------------------------------------------------------------
+
+  it("invokes onTraceCreated once with a non-null LangfuseTraceClient", async () => {
+    // Distinct mock that returns the trace object so we can compare
+    // identity. The callback should receive exactly this object.
+    const traceObj = {
+      id: "trace-abc",
+      generation: () => ({ end: () => {} }),
+    };
+    vi.mocked(Langfuse).mockImplementationOnce(function (
+      this: {
+        flushAsync: () => Promise<void>;
+        trace: () => unknown;
+      },
+    ) {
+      this.flushAsync = vi.fn().mockResolvedValue(undefined);
+      this.trace = () => traceObj;
+    });
+    mocks.mockCreate.mockResolvedValueOnce({
+      content: [
+        {
+          type: "tool_use",
+          id: "x",
+          name: EVALUATION_TOOL_NAME,
+          input: { score: 0.5 },
+        },
+      ],
+      usage: { input_tokens: 1, output_tokens: 1 },
+      stop_reason: "tool_use",
+    });
+
+    const callback = vi.fn();
+    const client = createObservedClaudeClient("api-key");
+    await withLlmTrace(makeCtx({ onTraceCreated: callback }), () =>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (client.messages.create as any)(makeRequest()),
+    );
+
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback.mock.calls[0][0]).toBe(traceObj);
+  });
+
+  it("swallows a throwing onTraceCreated callback and warns once", async () => {
+    installLangfuseSpyMock();
+    mocks.mockCreate.mockResolvedValueOnce({
+      content: [
+        {
+          type: "tool_use",
+          id: "x",
+          name: EVALUATION_TOOL_NAME,
+          input: { score: 1 },
+        },
+      ],
+      usage: { input_tokens: 1, output_tokens: 1 },
+      stop_reason: "tool_use",
+    });
+
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const client = createObservedClaudeClient("api-key");
+    const onTraceCreated = vi.fn(() => {
+      throw new Error("callback boom");
+    });
+
+    // The Claude call must resolve normally even though the callback threw.
+    const result = await withLlmTrace(makeCtx({ onTraceCreated }), () =>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (client.messages.create as any)(makeRequest()),
+    );
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((result as any).usage.input_tokens).toBe(1);
+    expect(onTraceCreated).toHaveBeenCalledTimes(1);
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy.mock.calls[0][1]).toContain("onTraceCreated");
+    warnSpy.mockRestore();
+  });
+
+  it("surfaces ctx.promptFallback=true as trace metadata (Req 4 AC 2)", async () => {
+    const spies = installLangfuseSpyMock();
+    mocks.mockCreate.mockResolvedValueOnce({
+      content: [
+        {
+          type: "tool_use",
+          id: "x",
+          name: EVALUATION_TOOL_NAME,
+          input: { score: 0.5 },
+        },
+      ],
+      usage: { input_tokens: 1, output_tokens: 1 },
+      stop_reason: "tool_use",
+    });
+
+    const client = createObservedClaudeClient("api-key");
+    await withLlmTrace(makeCtx({ promptFallback: true }), () =>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (client.messages.create as any)(makeRequest()),
+    );
+
+    expect(spies.traceCalls).toHaveLength(1);
+    expect(spies.traceCalls[0]).toMatchObject({
+      metadata: expect.objectContaining({ promptFallback: true }),
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -889,6 +996,81 @@ describe("withLlmTrace", () => {
         throw new Error("boom");
       }),
     ).rejects.toThrow("boom");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// setResolvedPromptVersion — Phase-2 ALS mutator
+// ---------------------------------------------------------------------------
+
+describe("setResolvedPromptVersion", () => {
+  it("mutates promptVersion + promptFallback visible to subsequent getCurrentLlmTraceContext", async () => {
+    await withLlmTrace(makeCtx({ promptVersion: "pending" }), () => {
+      expect(getCurrentLlmTraceContext()?.promptVersion).toBe("pending");
+      expect(getCurrentLlmTraceContext()?.promptFallback).toBeUndefined();
+
+      setResolvedPromptVersion("langfuse:7", false);
+
+      expect(getCurrentLlmTraceContext()?.promptVersion).toBe("langfuse:7");
+      expect(getCurrentLlmTraceContext()?.promptFallback).toBe(false);
+    });
+  });
+
+  it("records the fallback flag when fromFallback is true", async () => {
+    await withLlmTrace(makeCtx({ promptVersion: "pending" }), () => {
+      setResolvedPromptVersion("fallback:evaluate@2026-05-12", true);
+      const ctx = getCurrentLlmTraceContext();
+      expect(ctx?.promptVersion).toBe("fallback:evaluate@2026-05-12");
+      expect(ctx?.promptFallback).toBe(true);
+    });
+  });
+
+  it("defaults fromFallback to false when omitted", async () => {
+    await withLlmTrace(makeCtx({ promptVersion: "pending" }), () => {
+      setResolvedPromptVersion("langfuse:3");
+      expect(getCurrentLlmTraceContext()?.promptFallback).toBe(false);
+    });
+  });
+
+  it("is idempotent — repeating with the same version is a no-op; repeating with a new version overwrites", async () => {
+    await withLlmTrace(makeCtx({ promptVersion: "pending" }), () => {
+      setResolvedPromptVersion("langfuse:7");
+      setResolvedPromptVersion("langfuse:7");
+      expect(getCurrentLlmTraceContext()?.promptVersion).toBe("langfuse:7");
+
+      setResolvedPromptVersion("langfuse:8", false);
+      expect(getCurrentLlmTraceContext()?.promptVersion).toBe("langfuse:8");
+    });
+  });
+
+  it("is a no-op outside a withLlmTrace scope (does not throw)", () => {
+    expect(() => setResolvedPromptVersion("langfuse:1")).not.toThrow();
+    expect(getCurrentLlmTraceContext()).toBeUndefined();
+  });
+
+  it("mutation persists across awaited microtasks within the same scope", async () => {
+    await withLlmTrace(makeCtx({ promptVersion: "pending" }), async () => {
+      setResolvedPromptVersion("langfuse:5");
+      await Promise.resolve();
+      expect(getCurrentLlmTraceContext()?.promptVersion).toBe("langfuse:5");
+    });
+  });
+
+  it("does not leak the mutation across concurrent withLlmTrace scopes", async () => {
+    const [a, b] = await Promise.all([
+      withLlmTrace(makeCtx({ promptVersion: "pending", requestId: "A" }), async () => {
+        setResolvedPromptVersion("langfuse:A");
+        await Promise.resolve();
+        return getCurrentLlmTraceContext()?.promptVersion;
+      }),
+      withLlmTrace(makeCtx({ promptVersion: "pending", requestId: "B" }), async () => {
+        setResolvedPromptVersion("langfuse:B");
+        await Promise.resolve();
+        return getCurrentLlmTraceContext()?.promptVersion;
+      }),
+    ]);
+    expect(a).toBe("langfuse:A");
+    expect(b).toBe("langfuse:B");
   });
 });
 
