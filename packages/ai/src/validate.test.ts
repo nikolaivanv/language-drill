@@ -69,6 +69,7 @@ function makeDraft(content: ExerciseContent): ExerciseDraft {
 const validValidationInput: ValidationResult = {
   qualityScore: 0.85,
   ambiguous: false,
+  contextSpoilsAnswer: false,
   levelMatch: true,
   grammarPointMatch: true,
   culturalIssues: [],
@@ -102,11 +103,12 @@ describe("VALIDATION_TOOL", () => {
     expect(VALIDATION_TOOL_NAME).toBe("submit_validation_result");
   });
 
-  it("declares all six required fields", () => {
+  it("declares all required fields", () => {
     const required = (VALIDATION_TOOL.input_schema as { required: string[] })
       .required;
     expect(required).toContain("qualityScore");
     expect(required).toContain("ambiguous");
+    expect(required).toContain("contextSpoilsAnswer");
     expect(required).toContain("levelMatch");
     expect(required).toContain("grammarPointMatch");
     expect(required).toContain("culturalIssues");

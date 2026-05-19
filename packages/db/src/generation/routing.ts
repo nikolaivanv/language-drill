@@ -52,9 +52,10 @@ export type RoutingDecision = {
  *
  * Reasons-ordering rules (matching the JSDoc on the public design):
  *
- *   REJECTED branch (qualityScore < 0.5 OR culturalIssues non-empty):
+ *   REJECTED branch (qualityScore < 0.5 OR culturalIssues non-empty OR contextSpoilsAnswer):
  *     1. 'low quality score (<0.5)'  (only when qualityScore < 0.5)
- *     2. ...result.culturalIssues    (in original order)
+ *     2. 'context spoils answer'     (only when result.contextSpoilsAnswer)
+ *     3. ...result.culturalIssues    (in original order)
  *
  *   AUTO-APPROVED branch (all conjuncts hold): flaggedReasons is always [].
  *
@@ -71,18 +72,22 @@ export type RoutingDecision = {
 export function routeValidationResult(
   result: ValidationResult,
 ): RoutingDecision {
-  // -- Rejected branch: hard veto on low score OR cultural issues. --
-  // Intentional from plan §3.1: a high-quality draft (qualityScore = 0.9)
-  // with even one culturalIssues entry routes to 'rejected', NOT 'flagged'.
-  // The reviewer never sees rejected items, so cultural concerns must be
-  // filtered here, not deferred to manual review.
+  // -- Rejected branch: hard veto on low score OR cultural issues OR a context
+  // that gives away the answer. `contextSpoilsAnswer` joins `culturalIssues`
+  // as a content-level veto: the draft can never become useful (the spoiler
+  // text is baked into the exercise body), so manual review would waste a
+  // reviewer's time. Same reason we don't flag — we reject.
   if (
     result.qualityScore < VALIDATION_THRESHOLDS.flagQualityFloor ||
+    result.contextSpoilsAnswer ||
     result.culturalIssues.length > 0
   ) {
     const reasons: string[] = [];
     if (result.qualityScore < VALIDATION_THRESHOLDS.flagQualityFloor) {
       reasons.push('low quality score (<0.5)');
+    }
+    if (result.contextSpoilsAnswer) {
+      reasons.push('context spoils answer');
     }
     for (const issue of result.culturalIssues) {
       reasons.push(issue);
@@ -94,6 +99,7 @@ export function routeValidationResult(
   const approves =
     result.qualityScore >= VALIDATION_THRESHOLDS.approveQualityFloor &&
     !result.ambiguous &&
+    !result.contextSpoilsAnswer &&
     result.levelMatch &&
     result.grammarPointMatch &&
     result.culturalIssues.length === 0;

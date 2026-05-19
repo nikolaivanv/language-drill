@@ -70,7 +70,12 @@ export const VALIDATION_TOOL: Anthropic.Tool = {
       ambiguous: {
         type: "boolean",
         description:
-          "True if more than one substantively different answer would be equally correct given the surrounding context. Cloze/vocab require exactly one correct answer; translation allows surface variation but must have one canonical meaning.",
+          "True if more than one substantively different answer would be equally correct. For cloze: true when more than one plausibly-fitting lexeme/form satisfies the targeted grammar point in this sentence AND the draft's `acceptableAnswers` list does not enumerate them (e.g. 'Sınıfta sekiz ___ var' — chair/student/book all fit — with no `acceptableAnswers`). For translation: surface variation is fine, but two structurally different correct translations is ambiguous. For vocab_recall: the prompt must single out exactly one headword.",
+      },
+      contextSpoilsAnswer: {
+        type: "boolean",
+        description:
+          "True if the draft's `instructions` or `context` field gives away the answer — names the required suffix/form, states the rule's outcome, or otherwise lets the learner write the answer without engaging with the blank. Naming the rule category (e.g. 'vowel harmony', 'plural agreement after a numeral') is acceptable; stating the outcome (e.g. 'front vowel (e) requires -ler suffix' for a blank that takes -ler) is not. Auto-approval requires this to be false.",
       },
       levelMatch: {
         type: "boolean",
@@ -98,6 +103,7 @@ export const VALIDATION_TOOL: Anthropic.Tool = {
     required: [
       "qualityScore",
       "ambiguous",
+      "contextSpoilsAnswer",
       "levelMatch",
       "grammarPointMatch",
       "culturalIssues",
@@ -115,6 +121,13 @@ export type ValidationResult = {
   qualityScore: number;
   /** Multiple equally-correct answers? */
   ambiguous: boolean;
+  /**
+   * Does the draft's `instructions` or `context` field state the rule's
+   * outcome / name the required suffix or form / otherwise let the learner
+   * write the answer without engaging with the blank? `true` is a hard veto:
+   * `routeValidationResult` rejects the draft regardless of `qualityScore`.
+   */
+  contextSpoilsAnswer: boolean;
   /** Does the draft sit at the requested CEFR level? */
   levelMatch: boolean;
   /** Does the draft actually test the target grammar point? */
@@ -184,8 +197,13 @@ export function parseValidationResult(input: unknown): ValidationResult {
     );
   }
 
-  // Three boolean fields.
-  for (const field of ["ambiguous", "levelMatch", "grammarPointMatch"] as const) {
+  // Four boolean fields.
+  for (const field of [
+    "ambiguous",
+    "contextSpoilsAnswer",
+    "levelMatch",
+    "grammarPointMatch",
+  ] as const) {
     if (typeof raw[field] !== "boolean") {
       throw new Error(
         `Invalid ${field}: must be a boolean, got ${JSON.stringify(raw[field])}`,
@@ -200,6 +218,7 @@ export function parseValidationResult(input: unknown): ValidationResult {
   return {
     qualityScore,
     ambiguous: raw.ambiguous as boolean,
+    contextSpoilsAnswer: raw.contextSpoilsAnswer as boolean,
     levelMatch: raw.levelMatch as boolean,
     grammarPointMatch: raw.grammarPointMatch as boolean,
     culturalIssues,

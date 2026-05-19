@@ -194,6 +194,77 @@ describe("generateBatch", () => {
     ]);
   });
 
+  it("threads acceptableAnswers through the cloze parser when supplied", async () => {
+    // Regression: the "Sınıfta sekiz ___ var" case from Turkish A1. The
+    // generator must be able to declare every lexeme that satisfies the
+    // grammar point so the evaluator marks chair/student/book/etc. as
+    // fully correct.
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_1b",
+          name: TOOL_NAME_BY_TYPE.cloze,
+          input: {
+            ...validClozeInput,
+            acceptableAnswers: ["llegues", "vengas", "estés"],
+          },
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: baseUsage,
+    });
+
+    const { drafts } = await generateBatch(mockClient, baseSpec);
+    const content = drafts[0].contentJson;
+    expect(content.type).toBe(ExerciseType.CLOZE);
+    if (content.type !== ExerciseType.CLOZE) throw new Error("type guard");
+    expect(content.acceptableAnswers).toEqual(["llegues", "vengas", "estés"]);
+  });
+
+  it("omits acceptableAnswers from the draft when the generator passes an empty array", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_1c",
+          name: TOOL_NAME_BY_TYPE.cloze,
+          input: { ...validClozeInput, acceptableAnswers: [] },
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: baseUsage,
+    });
+
+    const { drafts } = await generateBatch(mockClient, baseSpec);
+    const content = drafts[0].contentJson;
+    if (content.type !== ExerciseType.CLOZE) throw new Error("type guard");
+    expect(content.acceptableAnswers).toBeUndefined();
+  });
+
+  it("rejects acceptableAnswers entries that are empty/whitespace", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_1d",
+          name: TOOL_NAME_BY_TYPE.cloze,
+          input: { ...validClozeInput, acceptableAnswers: ["llegues", "   "] },
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: baseUsage,
+    });
+
+    const { drafts, malformedDrafts } = await generateBatch(
+      mockClient,
+      baseSpec,
+    );
+    expect(drafts).toEqual([]);
+    expect(malformedDrafts).toHaveLength(1);
+    expect(malformedDrafts[0].errorMessage).toContain("acceptableAnswers[1]");
+  });
+
   it("produces a valid translation draft and dispatches the translation tool", async () => {
     mockCreate.mockResolvedValue({
       content: [

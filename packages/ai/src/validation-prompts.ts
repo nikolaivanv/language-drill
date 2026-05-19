@@ -61,7 +61,7 @@ function renderBulletList(items: readonly string[]): string {
 // VALIDATION_SYSTEM_PROMPT_TEMPLATE. Drives the Langfuse trace
 // `promptVersion` tag — dashboards cohort old vs. new prompt traces by
 // this string.
-export const VALIDATION_PROMPT_VERSION = "validate@2026-05-12";
+export const VALIDATION_PROMPT_VERSION = "validate@2026-05-19";
 
 export const VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language exercises for {{language}} learners at CEFR {{cefrLevel}}. Your job is to validate one already-generated exercise that targets the grammar point: {{grammarPointName}}.
 
@@ -70,9 +70,9 @@ Be conservative. Reject anything ambiguous, anything mis-leveled, anything that 
 ## Routing implication of your scores
 
 Your output is routed by these rules:
-- qualityScore < 0.5  OR  any cultural issue  → REJECTED (dropped, not stored)
+- qualityScore < 0.5  OR  any cultural issue  OR  contextSpoilsAnswer  → REJECTED (dropped, not stored)
 - qualityScore in [0.5, 0.7)                  → FLAGGED (waits for human review)
-- qualityScore >= 0.7 AND not ambiguous AND levelMatch AND grammarPointMatch
+- qualityScore >= 0.7 AND not ambiguous AND not contextSpoilsAnswer AND levelMatch AND grammarPointMatch
                                               → AUTO-APPROVED (visible to learners)
 - otherwise                                    → FLAGGED
 
@@ -97,11 +97,12 @@ Score conservatively — a flagged draft costs a human ~30 seconds of review; an
 ## Dimensions to score (one-to-one with the tool's required fields)
 
 1. **qualityScore** (0.0–1.0): overall fitness.
-2. **ambiguous** (boolean): is there more than one substantively-correct answer?
-3. **levelMatch** (boolean): does the difficulty match {{cefrLevel}}?
-4. **grammarPointMatch** (boolean): does this actually test {{grammarPointName}}?
-5. **culturalIssues** (array of strings): stereotyping, sensitive content, exclusion. Empty array when none.
-6. **flaggedReasons** (array of strings): anything else a reviewer should know.
+2. **ambiguous** (boolean): more than one substantively-correct answer? For **cloze**, true when more than one plausibly-fitting lexeme/form satisfies the targeted grammar point in this sentence AND the draft's \`acceptableAnswers\` does not enumerate them. Example: "Sınıfta sekiz ___ var" (eight ___ in the classroom) — chair, student, book, pencil all satisfy "no plural after numerals" equally; \`correctAnswer: "öğrenci"\` alone is ambiguous, but \`correctAnswer: "öğrenci"\` + \`acceptableAnswers: ["sandalye", "kitap", "kalem", ...]\` is not. For **translation**, surface variation is fine; two structurally different correct translations is ambiguous. For **vocab_recall**, the prompt/definition must pick out exactly one headword.
+3. **contextSpoilsAnswer** (boolean): does the draft's \`instructions\` or \`context\` field state the rule's outcome, name the required suffix/form, or otherwise let the learner write the answer without engaging with the blank? Naming the rule category is fine ("vowel harmony", "plural agreement after a numeral"); stating the outcome is not ("front vowel (e) requires -ler suffix" above a blank that takes -ler, "Use the plural form" above a blank where the answer is plural). \`true\` is a hard veto — the draft is rejected.
+4. **levelMatch** (boolean): does the difficulty match {{cefrLevel}}?
+5. **grammarPointMatch** (boolean): does this actually test {{grammarPointName}}?
+6. **culturalIssues** (array of strings): stereotyping, sensitive content, exclusion. Empty array when none.
+7. **flaggedReasons** (array of strings): anything else a reviewer should know.
 
 ## Output
 
@@ -177,6 +178,7 @@ function buildClozeValidationUserPrompt(
 **Instructions:** ${content.instructions}
 **Sentence:** ${content.sentence}
 **Correct Answer:** ${content.correctAnswer}
+${content.acceptableAnswers && content.acceptableAnswers.length > 0 ? `**Acceptable Answers (also accepted):** ${content.acceptableAnswers.join(", ")}` : "**Acceptable Answers (also accepted):** (none declared — `correctAnswer` must be the only plausible fill)"}
 ${content.options ? `**Options:** ${content.options.join(", ")}` : ""}
 ${content.context ? `**Context:** ${content.context}` : ""}
 

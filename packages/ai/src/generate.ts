@@ -87,7 +87,13 @@ export const CLOZE_GENERATION_TOOL: Anthropic.Tool = {
       correctAnswer: {
         type: "string",
         description:
-          "The single correct fill for the blank. Must be unambiguously correct in the sentence's context.",
+          "The canonical fill for the blank. Must satisfy the targeted grammar point. If the sentence's surrounding text does not pick out one specific lexeme/form, you MUST also populate `acceptableAnswers` with every other lexeme/form that fits — otherwise the exercise is ambiguous and will be rejected.",
+      },
+      acceptableAnswers: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Every additional lexeme/form (beyond `correctAnswer`) that fits the blank and satisfies the targeted grammar point in this exact sentence. Required whenever the surrounding text does not single out one specific word — e.g. for 'Sınıfta sekiz ___ var', supply ['öğrenci', 'kitap', 'kalem', ...]. Omit (or pass `[]`) only when the sentence references the blank's referent explicitly enough that no other lexeme plausibly fits.",
       },
       options: {
         type: "array",
@@ -98,7 +104,7 @@ export const CLOZE_GENERATION_TOOL: Anthropic.Tool = {
       context: {
         type: "string",
         description:
-          "Optional clarifying context — register, scenario, or grammar pointer.",
+          "Optional one-line framing shown above the sentence. May name the grammar category being tested (e.g. 'vowel harmony', 'noun-numeral agreement') but MUST NOT state the rule's outcome or otherwise reveal the answer. 'Vowel harmony: front vowel (e) requires -ler suffix' is forbidden — it tells the learner the answer. 'Plural agreement after a numeral' is acceptable. Same constraint applies to `instructions`.",
       },
       topicHint: {
         type: "string",
@@ -369,6 +375,7 @@ export function parseGeneratedClozeDraft(
   const instructions = requireString(input, "instructions", ctx);
   const sentence = requireString(input, "sentence", ctx);
   const correctAnswer = requireString(input, "correctAnswer", ctx);
+  const acceptableAnswers = optionalStringArray(input, "acceptableAnswers", ctx);
   const options = optionalStringArray(input, "options", ctx);
   const contextField = optionalString(input, "context", ctx);
   const topicHint = optionalString(input, "topicHint", ctx);
@@ -383,12 +390,24 @@ export function parseGeneratedClozeDraft(
       `${ctx}: invalid sentence: must contain a '___' blank marker`,
     );
   }
+  if (acceptableAnswers !== undefined) {
+    for (let i = 0; i < acceptableAnswers.length; i++) {
+      if (acceptableAnswers[i].trim().length === 0) {
+        throw new Error(
+          `${ctx}: invalid acceptableAnswers[${i}]: must contain non-whitespace characters`,
+        );
+      }
+    }
+  }
 
   return {
     type: ExerciseType.CLOZE,
     instructions,
     sentence,
     correctAnswer,
+    ...(acceptableAnswers !== undefined && acceptableAnswers.length > 0
+      ? { acceptableAnswers }
+      : {}),
     ...(options !== undefined ? { options } : {}),
     ...(contextField !== undefined ? { context: contextField } : {}),
     ...(topicHint !== undefined ? { topicHint } : {}),
