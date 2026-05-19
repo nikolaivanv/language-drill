@@ -408,27 +408,36 @@ describe("buildExistingSubmissionIdSet", () => {
 });
 
 describe("getOrCreateDataset", () => {
-  it("returns existing items when the dataset already exists", async () => {
+  it("upserts the dataset and returns the items from the paginated list endpoint", async () => {
+    // Existing dataset case: createDataset returns the existing row (the
+    // Langfuse endpoint is documented as an upsert), datasetItemsList
+    // returns the rows.
     const stub: LangfuseDatasetApi = {
-      api: { traceList: vi.fn() },
-      getDataset: vi.fn().mockResolvedValue({
-        items: [{ metadata: { submissionId: "x" } }],
-      }),
-      createDataset: vi.fn(),
+      api: {
+        traceList: vi.fn(),
+        datasetItemsList: vi.fn().mockResolvedValue({
+          data: [{ metadata: { submissionId: "x" } }],
+          meta: { totalPages: 1, page: 1, limit: 100, totalItems: 1 },
+        }),
+      },
+      createDataset: vi.fn().mockResolvedValue({ id: "ds-1" }),
       createDatasetItem: vi.fn(),
     };
     const { existingItems } = await getOrCreateDataset(stub, "eval-smoke");
     expect(existingItems).toEqual([{ metadata: { submissionId: "x" } }]);
-    expect(stub.createDataset).not.toHaveBeenCalled();
+    // createDataset is always called now — it upserts.
+    expect(stub.createDataset).toHaveBeenCalledWith({ name: "eval-smoke" });
   });
 
-  it("creates the dataset on 404 and returns an empty item list", async () => {
-    const notFound = Object.assign(new Error("Dataset not found"), {
-      status: 404,
-    });
+  it("returns an empty item list when the dataset was freshly created", async () => {
     const stub: LangfuseDatasetApi = {
-      api: { traceList: vi.fn() },
-      getDataset: vi.fn().mockRejectedValue(notFound),
+      api: {
+        traceList: vi.fn(),
+        datasetItemsList: vi.fn().mockResolvedValue({
+          data: [],
+          meta: { totalPages: 1, page: 1, limit: 100, totalItems: 0 },
+        }),
+      },
       createDataset: vi.fn().mockResolvedValue({ id: "ds-1" }),
       createDatasetItem: vi.fn(),
     };
@@ -437,16 +446,48 @@ describe("getOrCreateDataset", () => {
     expect(stub.createDataset).toHaveBeenCalledWith({ name: "eval-smoke" });
   });
 
-  it("rethrows non-404 getDataset errors (unknown SDK state is fatal)", async () => {
-    const authErr = Object.assign(new Error("Unauthorized"), { status: 401 });
+  it("propagates createDataset failures (unknown SDK state is fatal — Scenario d)", async () => {
+    const outage = new Error("ECONNRESET");
+    const datasetItemsList = vi.fn();
     const stub: LangfuseDatasetApi = {
-      api: { traceList: vi.fn() },
-      getDataset: vi.fn().mockRejectedValue(authErr),
-      createDataset: vi.fn(),
+      api: { traceList: vi.fn(), datasetItemsList },
+      createDataset: vi.fn().mockRejectedValue(outage),
       createDatasetItem: vi.fn(),
     };
-    await expect(getOrCreateDataset(stub, "eval-smoke")).rejects.toBe(authErr);
-    expect(stub.createDataset).not.toHaveBeenCalled();
+    await expect(getOrCreateDataset(stub, "eval-smoke")).rejects.toBe(outage);
+    // We refuse to list items against a dataset we couldn't upsert.
+    expect(datasetItemsList).not.toHaveBeenCalled();
+  });
+
+  it("paginates the items list until totalPages is reached", async () => {
+    const datasetItemsList = vi
+      .fn()
+      .mockResolvedValueOnce({
+        data: [{ metadata: { submissionId: "a" } }],
+        meta: { totalPages: 2, page: 1, limit: 100, totalItems: 2 },
+      })
+      .mockResolvedValueOnce({
+        data: [{ metadata: { submissionId: "b" } }],
+        meta: { totalPages: 2, page: 2, limit: 100, totalItems: 2 },
+      });
+    const stub: LangfuseDatasetApi = {
+      api: { traceList: vi.fn(), datasetItemsList },
+      createDataset: vi.fn().mockResolvedValue({ id: "ds-1" }),
+      createDatasetItem: vi.fn(),
+    };
+    const { existingItems } = await getOrCreateDataset(stub, "eval-smoke");
+    expect(existingItems).toHaveLength(2);
+    expect(datasetItemsList).toHaveBeenCalledTimes(2);
+    expect(datasetItemsList).toHaveBeenNthCalledWith(1, {
+      datasetName: "eval-smoke",
+      limit: 100,
+      page: 1,
+    });
+    expect(datasetItemsList).toHaveBeenNthCalledWith(2, {
+      datasetName: "eval-smoke",
+      limit: 100,
+      page: 2,
+    });
   });
 });
 
@@ -492,7 +533,6 @@ function makeDbStub(
 
 function makeLangfuseStub(opts: {
   existingItems?: ReadonlyArray<{ metadata?: unknown }>;
-  getDatasetThrows?: unknown;
   createDatasetThrows?: unknown;
   createDatasetItemThrows?: unknown;
   fetched?: ReadonlyArray<FetchedTrace>;
@@ -502,9 +542,18 @@ function makeLangfuseStub(opts: {
   createDataset: ReturnType<typeof vi.fn>;
 } {
   const traceList = vi.fn().mockResolvedValue({ data: opts.fetched ?? [] });
-  const getDataset = vi.fn(async () => {
-    if (opts.getDatasetThrows) throw opts.getDatasetThrows;
-    return { items: opts.existingItems ?? [] };
+  const existingItems = opts.existingItems ?? [];
+  // Single-page response — every existing-items test below fits well under
+  // 100 items; the pagination path is exercised explicitly in
+  // `getOrCreateDataset > paginates the items list`.
+  const datasetItemsList = vi.fn().mockResolvedValue({
+    data: existingItems,
+    meta: {
+      totalPages: 1,
+      page: 1,
+      limit: 100,
+      totalItems: existingItems.length,
+    },
   });
   const createDataset = vi.fn(async () => {
     if (opts.createDatasetThrows) throw opts.createDatasetThrows;
@@ -516,8 +565,7 @@ function makeLangfuseStub(opts: {
   });
   return {
     langfuse: {
-      api: { traceList },
-      getDataset,
+      api: { traceList, datasetItemsList },
       createDataset,
       createDatasetItem,
     },
@@ -671,10 +719,8 @@ describe("runEvalExport — case (d) createDataset outage", () => {
       makeTrace(`sub-${i + 1}`),
     );
     const outage = new Error("ECONNRESET");
-    const notFound = Object.assign(new Error("not found"), { status: 404 });
     const { langfuse, createDatasetItem } = makeLangfuseStub({
       fetched,
-      getDatasetThrows: notFound,
       createDatasetThrows: outage,
     });
     const db = makeDbStub(["sub-1", "sub-2", "sub-3", "sub-4", "sub-5"]);

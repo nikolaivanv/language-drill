@@ -132,7 +132,7 @@ export function uniformSample<T>(
  * a stub without spinning up the full Langfuse client.
  */
 export type LangfuseTraceApi = {
-  api: Pick<Langfuse["api"], "traceList">;
+  api: Pick<Langfuse["api"], "traceList" | "datasetItemsList">;
 };
 
 /**
@@ -201,9 +201,6 @@ export async function fetchAllEvaluateTraces(opts: {
  * `LangfuseTraceApi` so a single test stub covers both fetch and write.
  */
 export type LangfuseDatasetApi = LangfuseTraceApi & {
-  getDataset: (
-    name: string,
-  ) => Promise<{ items: ReadonlyArray<{ metadata?: unknown }> }>;
   createDataset: (
     input: string | { name: string; description?: string; metadata?: unknown },
   ) => Promise<unknown>;
@@ -324,43 +321,56 @@ export function extractTraceMetadata(trace: FetchedTrace): TraceMetadataPick {
 }
 
 /**
- * Detection for "dataset doesn't exist" — same broad heuristic as the
- * bootstrap script: either `status === 404` OR a free-form "not found"
- * message. Anything else propagates up; "unknown SDK state" is never a
- * cue to create a new dataset.
+ * Cap on items-pagination loops. Same shape as `TRACE_LIST_PAGE_SIZE`: 100
+ * per page (Langfuse Cloud's accepted bound) × a 50-page hard cap = 5000
+ * items before we bail, far past any realistic eval dataset.
  */
-function isDatasetNotFoundError(err: unknown): boolean {
-  if (err === null || typeof err !== "object") return false;
-  const r = err as { status?: unknown; message?: unknown };
-  if (r.status === 404) return true;
-  if (typeof r.message === "string" && /not\s*found/i.test(r.message)) {
-    return true;
-  }
-  return false;
-}
+export const DATASET_ITEMS_PAGE_SIZE = 100;
+const DATASET_ITEMS_PAGE_CAP = 50;
 
 /**
- * Get-or-create the named Langfuse dataset, returning the existing items
- * (or an empty list if newly created). Hard fails on any non-404 fetch
- * error AND on createDataset failures — the test gate for the latter is
- * eval-export's "exit non-zero" promise on outage.
+ * Get-or-create the named Langfuse dataset, returning every existing item
+ * (or an empty list when freshly created).
+ *
+ * We deliberately do NOT use the SDK's `getDataset` helper to "check
+ * existence" first. That method is buggy on missing datasets in
+ * `langfuse-core@3.38.20`: when the dataset doesn't exist, the SDK logs
+ * the 404 to stderr and then crashes downstream with
+ * `TypeError: itemsResponse.data is not iterable` because it tries to
+ * iterate `_getDatasetItems(...).data` on a path that already 404'd. See
+ * `langfuse-core/lib/index.cjs.js:1910-1925`.
+ *
+ * Instead:
+ *   1. `createDataset({name})` unconditionally. The SDK docs the endpoint
+ *      as "Upserts the dataset if it already exists" — idempotent, safe
+ *      to re-run.
+ *   2. Paginate `api.datasetItemsList({datasetName, …})` directly, which
+ *      throws cleanly on real errors.
+ *
+ * `createDataset` failures propagate (Scenario d — CLI exits non-zero).
+ * Item-fetch failures also propagate; we'd rather fail loudly than write
+ * to a dataset we can't dedupe against.
  */
 export async function getOrCreateDataset(
   langfuse: LangfuseDatasetApi,
   name: string,
 ): Promise<{ existingItems: ReadonlyArray<{ metadata?: unknown }> }> {
-  try {
-    const existing = await langfuse.getDataset(name);
-    return { existingItems: existing.items ?? [] };
-  } catch (err) {
-    if (!isDatasetNotFoundError(err)) {
-      throw err;
-    }
-    // Dataset doesn't exist — create it. If createDataset throws, propagate
-    // so the CLI exits non-zero (Scenario d).
-    await langfuse.createDataset({ name });
-    return { existingItems: [] };
+  await langfuse.createDataset({ name });
+
+  const items: Array<{ metadata?: unknown }> = [];
+  let page = 1;
+  for (let i = 0; i < DATASET_ITEMS_PAGE_CAP; i++) {
+    const resp = await langfuse.api.datasetItemsList({
+      datasetName: name,
+      limit: DATASET_ITEMS_PAGE_SIZE,
+      page,
+    });
+    items.push(...resp.data);
+    if (page >= resp.meta.totalPages) break;
+    page++;
   }
+
+  return { existingItems: items };
 }
 
 /**
