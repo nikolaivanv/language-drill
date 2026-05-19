@@ -1,8 +1,9 @@
 # LLM Observability with Langfuse
 
-Status: proposal — not yet implemented.
+Status: **Phase 1 + Phase 2 shipped (2026-05-20).** Phase 3 (online evals)
+remains deferred — re-evaluate when Phase 2 dataset evals are in routine use.
 Owner: see git blame.
-Last updated: 2026-05-11.
+Last updated: 2026-05-20.
 
 ## 1. Why
 
@@ -145,8 +146,8 @@ These are the acceptance criteria. If a dashboard can't answer them in <60 s of 
 
 ## 7. Phase plan
 
-- **Phase 1 — Read-only tracing (1–2 days).** Wrapper client + metadata injection + Lambda flush hook. All four call sites traced. Tags schema v1 frozen. Dashboards for the five use cases above built and pinned. Existing cost model untouched.
-- **Phase 2 — Prompt registry + datasets (3–5 days).** Migrate the four system prompts into Langfuse's prompt management. Add a `pnpm eval` script that runs a candidate prompt against a labelled dataset of past submissions and produces a quality/cost/latency diff vs. current.
+- **Phase 1 — Read-only tracing.** ✅ **Shipped.** Wrapper client + metadata injection + Lambda flush hook in place. All four call sites traced (plus the theory generation/validation surfaces added during implementation, for six total). Tags schema v1 frozen. Dashboards for the five use cases above built and pinned. Existing cost model untouched.
+- **Phase 2 — Prompt registry + datasets.** ✅ **Shipped (2026-05-20).** All six system prompts registered in Langfuse with `production` labels; runtime fetches via `getPromptOrFallback` / `getPromptWithVarsOrFallback` with a 5-min cache and in-repo fail-soft fallback. CLIs `pnpm bootstrap-prompts`, `pnpm eval:export`, and `pnpm eval` ship from `packages/ai/scripts/`. Acceptance gate (six post-deploy scenarios) passed — see `.claude/specs/langfuse-implementation-phase-2/phase-2-post-deploy-runbook.md`.
 - **Phase 3 — Online evals (deferred, scope TBD).** Use Langfuse's LLM-as-judge to score a sample of live evaluation outputs against a rubric (e.g., "does the feedback cite a specific error?"). Only worth doing once Phase 2 dataset eval is in routine use.
 
 ## 7a. Phase 2 — Prompt registry

@@ -1,5 +1,15 @@
 # Implementation Plan
 
+## Status
+
+**✅ Complete — all 31 tasks shipped (2026-05-20).** Tasks 1–30 landed
+with the Phase 2 PR; task 31's six post-deploy scenarios were exercised
+end-to-end against dev and prod per
+`phase-2-post-deploy-runbook.md`. Phase 2's "fetch prompts from Langfuse
+at runtime with in-repo fallback + eval/CLI workflow" is in production.
+
+---
+
 ## Task Overview
 
 Phase 2 implementation goes in **five layers**, each layer green-locked
@@ -342,7 +352,7 @@ and existing code to leverage with `_Leverage: path/to/file.ts_`.
   - _Leverage: existing scripts in root `package.json` (`lint`, `typecheck`, `test`)_
   - _Requirements: 7.3, 7.4_
 
-- [ ] 31. Manual post-deploy verification — six acceptance scenarios
+- [x] 31. Manual post-deploy verification — six acceptance scenarios
   - Files: none (operator runbook step). Printable checklist:
     `.claude/specs/langfuse-implementation-phase-2/phase-2-post-deploy-runbook.md`
   - After merging:
