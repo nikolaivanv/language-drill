@@ -11,7 +11,13 @@ import type {
   Language,
   EvaluationResult,
 } from "@language-drill/shared";
-import { EVALUATION_SYSTEM_PROMPT, buildUserPrompt } from "./prompts.js";
+import { setResolvedPromptVersion } from "./observability.js";
+import {
+  EVALUATION_SYSTEM_PROMPT,
+  EVALUATION_SYSTEM_PROMPT_VERSION,
+  buildUserPrompt,
+} from "./prompts.js";
+import { getPromptOrFallback, sha8 } from "./prompts-registry.js";
 
 // ---------------------------------------------------------------------------
 // Tool schema — mirrors EvaluationResult type
@@ -112,6 +118,14 @@ export type EvaluateAnswerInput = {
   userAnswer: string;
   language: Language;
   difficulty: CefrLevel;
+  /**
+   * Phase-2: bypass the Langfuse registry and use this verbatim as the
+   * system prompt. Used by `pnpm eval` (the eval runner) to evaluate
+   * dataset items against a candidate prompt. When set, the trace's
+   * `promptVersion` is stamped `override:<sha8(text)>` so dashboards
+   * can cohort eval-run traffic separately from production traces.
+   */
+  systemPromptOverride?: string;
 };
 
 // ---------------------------------------------------------------------------
@@ -221,9 +235,29 @@ export async function evaluateAnswer(
   client: Anthropic,
   input: EvaluateAnswerInput,
 ): Promise<EvaluationResult> {
-  const { exercise, userAnswer, language, difficulty } = input;
+  const { exercise, userAnswer, language, difficulty, systemPromptOverride } =
+    input;
 
   const userPrompt = buildUserPrompt(exercise, userAnswer, language, difficulty);
+
+  // Resolve the system prompt. Three paths:
+  //   - override (eval runner): use verbatim, stamp `override:<sha8>` cohort.
+  //   - registry hit: `langfuse:<N>` cohort, fromFallback=false.
+  //   - registry miss / outage / unset: `fallback:<localVersion>` cohort.
+  // The registry helper handles `setResolvedPromptVersion` for the latter
+  // two; the override path sets it explicitly here.
+  let systemPromptText: string;
+  if (systemPromptOverride !== undefined) {
+    systemPromptText = systemPromptOverride;
+    setResolvedPromptVersion(`override:${sha8(systemPromptOverride)}`, false);
+  } else {
+    const resolved = await getPromptOrFallback(
+      "evaluate-system-prompt",
+      EVALUATION_SYSTEM_PROMPT,
+      EVALUATION_SYSTEM_PROMPT_VERSION,
+    );
+    systemPromptText = resolved.text;
+  }
 
   const response = await client.messages.create({
     model: MODEL,
@@ -231,7 +265,7 @@ export async function evaluateAnswer(
     system: [
       {
         type: "text" as const,
-        text: EVALUATION_SYSTEM_PROMPT,
+        text: systemPromptText,
         cache_control: { type: "ephemeral" as const },
       },
     ],

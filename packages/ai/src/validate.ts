@@ -251,7 +251,7 @@ export async function validateDraft(
     );
   }
 
-  const systemText = buildValidationSystemPrompt(spec);
+  const systemText = await buildValidationSystemPrompt(spec);
   const userText = buildValidationUserPrompt(draft, spec);
 
   const response = await client.messages.create(

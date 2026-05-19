@@ -568,7 +568,7 @@ export async function generateOneDraft(
   // `exercises_dedup_idx` rejects cross-batch collisions at INSERT time, and
   // `runRetryGeneration` (sequential, sees prior drafts via dedup-index
   // collision) handles retries.
-  const systemText = buildGenerationSystemPrompt(promptInputs, []);
+  const systemText = await buildGenerationSystemPrompt(promptInputs, []);
   const userText = buildGenerationUserPrompt(
     promptInputs,
     ordinal,

@@ -7,6 +7,9 @@
   "scripts": {
     "build": "tsc",
     "build:frequency": "tsx scripts/build-frequency.ts",
+    "bootstrap-prompts": "tsx scripts/bootstrap-prompts.ts",
+    "eval:export": "tsx scripts/eval-export.ts",
+    "eval": "tsx scripts/eval-run.ts",
     "dev": "tsc --watch",
     "lint": "eslint src/**/*.ts",
     "typecheck": "tsc --noEmit",

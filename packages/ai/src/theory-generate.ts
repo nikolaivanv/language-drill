@@ -378,7 +378,7 @@ export async function generateTheoryTopic(
     grammarPoint: spec.grammarPoint,
   };
 
-  const systemText = buildTheorySystemPrompt(promptInputs);
+  const systemText = await buildTheorySystemPrompt(promptInputs);
   const userText = buildTheoryUserPrompt(promptInputs);
 
   const response = await client.messages.create({

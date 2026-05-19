@@ -1,8 +1,10 @@
 import type Anthropic from "@anthropic-ai/sdk";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CefrLevel, Language } from "@language-drill/shared";
 
 import {
+  ANNOTATE_SYSTEM_PROMPT,
+  ANNOTATE_SYSTEM_PROMPT_VERSION,
   AnnotateStreamMaxTokensError,
   buildAnnotateUserPrompt,
   extractNewItems,
@@ -10,6 +12,13 @@ import {
   type AnnotateStreamEvent,
   type AnnotateStreamInput,
 } from "./annotate";
+import {
+  __resetForTests as __resetObservabilityForTests,
+  getCurrentLlmTraceContext,
+  withLlmTrace,
+  type LlmTraceContext,
+} from "./observability";
+import { __resetRegistryForTests, sha8 } from "./prompts-registry";
 
 // ---------------------------------------------------------------------------
 // Contract tests for the streaming-JSON-array helper used by
@@ -421,5 +430,137 @@ describe("streamAnnotation", () => {
     ).rejects.toThrow(/non-empty/i);
     // The mock SDK should not even have been called.
     expect((client.messages.stream as unknown as { mock: { calls: unknown[] } }).mock.calls).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// streamAnnotation + prompts-registry integration (Phase 2 — Task 8)
+// ---------------------------------------------------------------------------
+
+/**
+ * These cases pin the override + fallback paths for Phase 2's
+ * `getPromptOrFallback` integration in `streamAnnotation`. Matches the
+ * shape of the `evaluateAnswer + prompts-registry` block in
+ * `evaluate.test.ts` so the two surfaces stay symmetric.
+ */
+describe("streamAnnotation + prompts-registry", () => {
+  const ENV_KEYS = [
+    "LANGFUSE_PUBLIC_KEY",
+    "LANGFUSE_SECRET_KEY",
+    "LANGFUSE_BASE_URL",
+  ] as const;
+  const envSnapshot = new Map<string, string | undefined>();
+
+  beforeEach(() => {
+    for (const k of ENV_KEYS) {
+      envSnapshot.set(k, process.env[k]);
+      delete process.env[k];
+    }
+    __resetRegistryForTests();
+    __resetObservabilityForTests();
+  });
+
+  afterEach(() => {
+    for (const k of ENV_KEYS) {
+      const v = envSnapshot.get(k);
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+    __resetRegistryForTests();
+    __resetObservabilityForTests();
+  });
+
+  function baseCtx(
+    overrides: Partial<LlmTraceContext> = {},
+  ): LlmTraceContext {
+    return {
+      feature: "annotate",
+      env: "dev",
+      promptVersion: "pending",
+      requestId: "test-request-annotate-001",
+      userId: "dev_user_001",
+      language: Language.ES,
+      cefrLevel: CefrLevel.B1,
+      ...overrides,
+    };
+  }
+
+  it("uses systemPromptOverride verbatim in the messages.stream system block", async () => {
+    const override = "CUSTOM_CANDIDATE_ANNOTATE_PROMPT body";
+    const fullJson = JSON.stringify({ flagged: [validItem1] });
+    const stream = fakeStream([fullJson]);
+    const streamSpy = vi.fn(() => stream);
+    const client = {
+      messages: { stream: streamSpy },
+    } as unknown as Anthropic;
+
+    await collect(
+      streamAnnotation(client, {
+        ...baseStreamInput,
+        systemPromptOverride: override,
+      }),
+    );
+
+    const callArgs = streamSpy.mock.calls[0][0] as {
+      system: Array<{ type: string; text: string; cache_control: unknown }>;
+    };
+    expect(callArgs.system).toEqual([
+      {
+        type: "text",
+        text: override,
+        cache_control: { type: "ephemeral" },
+      },
+    ]);
+  });
+
+  it("stamps promptVersion=override:<sha8> on the trace when systemPromptOverride is set", async () => {
+    const override = "CUSTOM_CANDIDATE_ANNOTATE_PROMPT body";
+    const expectedTag = `override:${sha8(override)}`;
+    const fullJson = JSON.stringify({ flagged: [validItem1] });
+    const stream = fakeStream([fullJson]);
+    const client = {
+      messages: { stream: vi.fn(() => stream) },
+    } as unknown as Anthropic;
+
+    await withLlmTrace(baseCtx(), async () => {
+      await collect(
+        streamAnnotation(client, {
+          ...baseStreamInput,
+          systemPromptOverride: override,
+        }),
+      );
+      const ctx = getCurrentLlmTraceContext();
+      expect(ctx?.promptVersion).toBe(expectedTag);
+      expect(ctx?.promptFallback).toBe(false);
+    });
+  });
+
+  it("falls back to ANNOTATE_SYSTEM_PROMPT with `fallback:<v>` promptVersion when no override + Langfuse unset", async () => {
+    const expectedTag = `fallback:${ANNOTATE_SYSTEM_PROMPT_VERSION}`;
+    const fullJson = JSON.stringify({ flagged: [validItem1] });
+    const stream = fakeStream([fullJson]);
+    const streamSpy = vi.fn(() => stream);
+    const client = {
+      messages: { stream: streamSpy },
+    } as unknown as Anthropic;
+
+    await withLlmTrace(baseCtx(), async () => {
+      await collect(streamAnnotation(client, baseStreamInput));
+      const ctx = getCurrentLlmTraceContext();
+      expect(ctx?.promptVersion).toBe(expectedTag);
+      expect(ctx?.promptFallback).toBe(true);
+    });
+
+    // Sanity: fallback path produces byte-identical system text to pre-Phase-2.
+    const callArgs = streamSpy.mock.calls[0][0] as {
+      system: Array<{ type: string; text: string; cache_control: unknown }>;
+    };
+    expect(callArgs.system).toEqual([
+      {
+        type: "text",
+        text: ANNOTATE_SYSTEM_PROMPT,
+        cache_control: { type: "ephemeral" },
+      },
+    ]);
   });
 });

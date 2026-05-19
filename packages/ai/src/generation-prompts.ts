@@ -17,6 +17,7 @@ import {
 
 import { CEFR_LEVEL_DESCRIPTORS } from "./prompts.js";
 import { TOOL_NAME_BY_TYPE } from "./generate.js";
+import { getPromptWithVarsOrFallback } from "./prompts-registry.js";
 
 // The TOOL_NAME_BY_TYPE import comes from generate.ts. The two modules form
 // a circular import on paper — generate.ts will import from this file in
@@ -131,48 +132,107 @@ function renderPriorPoolSection(
   return `${heading}\n\n${bullets}\n\n`;
 }
 
-export function buildGenerationSystemPrompt(
-  inputs: GenerationPromptInputs,
-  recentStems: readonly string[],
-): string {
-  const { language, cefrLevel, exerciseType, grammarPoint, priorPoolSurfaces } =
-    inputs;
-  const toolName = TOOL_NAME_BY_TYPE[exerciseType];
-
-  return `You are an expert language exercise author for ${language} learners at CEFR ${cefrLevel}. Your job is to produce one exercise of type ${exerciseType} that targets exactly one grammar point: ${grammarPoint.name}.
+/**
+ * Phase-2 Langfuse-registered template. Identical to the body
+ * `buildGenerationSystemPrompt` returns, with every interpolation replaced
+ * by a `{{flatVar}}` placeholder consumable by both `applyTemplate`
+ * (in-code fallback) and Langfuse's Mustache.js `compile(vars)` (live
+ * fetch). The `generation-prompts.test.ts` snapshot block asserts byte
+ * parity for `applyTemplate(TEMPLATE, computeGenerationPromptVars(...))`
+ * against the current sync builder output so any drift between the two
+ * is caught at PR time.
+ *
+ * Placeholder set is **flat strings only** (no nested paths) so the two
+ * substituters produce identical bytes — required for Anthropic
+ * prompt-cache parity.
+ */
+export const GENERATION_SYSTEM_PROMPT_TEMPLATE = `You are an expert language exercise author for {{language}} learners at CEFR {{cefrLevel}}. Your job is to produce one exercise of type {{exerciseType}} that targets exactly one grammar point: {{grammarPointName}}.
 
 ## Grammar point context
 
-${grammarPoint.description}
+{{grammarPointDescription}}
 
 ## Positive examples
 
-${renderBulletList(grammarPoint.examplesPositive)}
+{{positiveExamplesBullets}}
 
 ## Negative examples (incorrect production — for awareness only, do not include in the exercise)
 
-${renderBulletList(grammarPoint.examplesNegative)}
+{{negativeExamplesBullets}}
 
 ## Common learner errors
 
-${renderBulletList(grammarPoint.commonErrors)}
+{{commonErrorsBullets}}
 
 ## CEFR level descriptors
 
-${CEFR_DESCRIPTOR_BULLETS}
+{{cefrDescriptors}}
 
-${renderPriorPoolSection(exerciseType, priorPoolSurfaces)}## Hard constraints
+{{priorPoolSection}}## Hard constraints
 
 - The correct answer must be uniquely correct given the surrounding context.
-- Vocabulary outside CEFR ${cefrLevel} is forbidden unless the exercise explicitly tests it.
+- Vocabulary outside CEFR {{cefrLevel}} is forbidden unless the exercise explicitly tests it.
 - Do not produce an exercise that resembles any of these existing stems:
-${renderRecentStems(recentStems)}
+{{recentStemsBlock}}
 - One exercise per tool call. Do not batch multiple inside one tool call.
 - You MUST use the provided tool. Do not return plain text.
 
 ## Output
 
-Use the ${toolName} tool with all required fields populated.`;
+Use the {{toolName}} tool with all required fields populated.`;
+
+/**
+ * Flat-string var map consumed by both the in-code fallback substituter
+ * and Langfuse's `compile(vars)`. Mirrors the shape required by
+ * `GENERATION_SYSTEM_PROMPT_TEMPLATE`. Pulled out of the builder so the
+ * Task-9 snapshot parity test can exercise the same computation the
+ * builder does (and Task 10's async refactor will route both through it).
+ */
+export function computeGenerationPromptVars(
+  inputs: GenerationPromptInputs,
+  recentStems: readonly string[],
+): Record<string, string> {
+  const { language, cefrLevel, exerciseType, grammarPoint, priorPoolSurfaces } =
+    inputs;
+  return {
+    language,
+    cefrLevel,
+    exerciseType,
+    grammarPointName: grammarPoint.name,
+    grammarPointDescription: grammarPoint.description,
+    positiveExamplesBullets: renderBulletList(grammarPoint.examplesPositive),
+    negativeExamplesBullets: renderBulletList(grammarPoint.examplesNegative),
+    commonErrorsBullets: renderBulletList(grammarPoint.commonErrors),
+    cefrDescriptors: CEFR_DESCRIPTOR_BULLETS,
+    priorPoolSection: renderPriorPoolSection(exerciseType, priorPoolSurfaces),
+    recentStemsBlock: renderRecentStems(recentStems),
+    toolName: TOOL_NAME_BY_TYPE[exerciseType],
+  };
+}
+
+/**
+ * Builds the generation system prompt, fetching the live body from
+ * Langfuse (label `production`) and falling back to
+ * `GENERATION_SYSTEM_PROMPT_TEMPLATE` on outage / unset keys / compile
+ * mismatch. Byte parity between the two paths is pinned by the
+ * `GENERATION_SYSTEM_PROMPT_TEMPLATE byte parity` test block.
+ *
+ * Async because the Langfuse fetch is async (cached in-process for 5 min
+ * so warm Lambdas pay zero per-request cost). The single caller
+ * (`generateBatch` in `generate.ts`) is already `async`.
+ */
+export async function buildGenerationSystemPrompt(
+  inputs: GenerationPromptInputs,
+  recentStems: readonly string[],
+): Promise<string> {
+  const vars = computeGenerationPromptVars(inputs, recentStems);
+  const { text } = await getPromptWithVarsOrFallback(
+    "generate-system-prompt",
+    GENERATION_SYSTEM_PROMPT_TEMPLATE,
+    GENERATION_PROMPT_VERSION,
+    vars,
+  );
+  return text;
 }
 
 // ---------------------------------------------------------------------------
