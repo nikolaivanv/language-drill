@@ -9,11 +9,9 @@
  *   (c) one exists, five missing → 5 creates, 1 skip
  *   (d) --dry-run → 0 actual creates, 6 entries marked as "would create"
  *
- * Plus a fail-fast check for non-404 errors and a smoke test on the
- * 404-detection heuristic, since the Langfuse SDK signals "not found"
- * via either `status === 404` or a free-form message — the script
- * handles both, and a regression there would silently break first-run
- * setup.
+ * Plus a fail-loud check for `api.promptsList` outages (we refuse to
+ * create blind when we can't tell what exists), and a pagination smoke
+ * test to confirm the page loop terminates correctly.
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -56,31 +54,44 @@ const TWO_PROMPT_FIXTURE: readonly PromptManifestEntry[] = [
 
 const FIXED_NOW = new Date("2026-05-17T12:00:00.000Z");
 
-function notFoundError(message = "Prompt not found"): Error & { status: number } {
-  // Mimic the Langfuse SDK's actual error shape — Error + numeric `status`
-  // plus a free-form message; the script's heuristic detects either.
-  const err = new Error(message) as Error & { status: number };
-  err.status = 404;
-  return err;
+/**
+ * Build a one-page `api.promptsList` response. The SDK paginates, but six
+ * prompts always fit on page 1 — multi-page behaviour is exercised
+ * explicitly in the pagination test below.
+ */
+function makeListResp(
+  names: readonly string[],
+  meta: { totalPages: number; page: number } = { totalPages: 1, page: 1 },
+): { data: ReadonlyArray<{ name: string }>; meta: { totalPages: number; page: number } } {
+  return { data: names.map((name) => ({ name })), meta };
 }
 
 function makeStubClient(impl: {
+  promptsList?: LangfusePromptClient["api"]["promptsList"];
   getPrompt?: LangfusePromptClient["getPrompt"];
   createPrompt?: LangfusePromptClient["createPrompt"];
 } = {}): {
   client: LangfusePromptClient;
+  promptsList: ReturnType<typeof vi.fn>;
   getPrompt: ReturnType<typeof vi.fn>;
   createPrompt: ReturnType<typeof vi.fn>;
 } {
+  // Default: empty production-label list → "fresh project" semantics.
+  const promptsList = vi.fn(
+    impl.promptsList ?? (async () => makeListResp([])),
+  );
   const getPrompt = vi.fn(
-    impl.getPrompt ?? (async () => {
-      throw notFoundError();
-    }),
+    impl.getPrompt ?? (async () => ({ version: 1, prompt: "x" })),
   );
   const createPrompt = vi.fn(
     impl.createPrompt ?? (async () => ({ id: "ok" })),
   );
-  return { client: { getPrompt, createPrompt }, getPrompt, createPrompt };
+  return {
+    client: { api: { promptsList }, getPrompt, createPrompt },
+    promptsList,
+    getPrompt,
+    createPrompt,
+  };
 }
 
 function baseOpts(
@@ -141,8 +152,8 @@ describe("PROMPTS manifest", () => {
 // ---------------------------------------------------------------------------
 
 describe("bootstrapPrompts — fresh project (case a)", () => {
-  it("creates every prompt when none exist, stamping localVersion/surface/registeredAt", async () => {
-    const { client, getPrompt, createPrompt } = makeStubClient();
+  it("creates every prompt when the production-label list is empty, stamping localVersion/surface/registeredAt", async () => {
+    const { client, promptsList, getPrompt, createPrompt } = makeStubClient();
 
     const result = await bootstrapPrompts(baseOpts({ langfuse: client }));
 
@@ -150,13 +161,15 @@ describe("bootstrapPrompts — fresh project (case a)", () => {
     expect(result.skipped).toEqual([]);
     expect(result.errors).toEqual([]);
 
-    expect(getPrompt).toHaveBeenCalledTimes(2);
-    expect(getPrompt).toHaveBeenNthCalledWith(
-      1,
-      "prompt-a",
-      undefined,
-      { label: "production", cacheTtlSeconds: 0 },
-    );
+    // One list call up front replaces per-prompt getPrompt probes — that's
+    // the whole point of the refactor (no SDK-level 404 stderr noise).
+    expect(promptsList).toHaveBeenCalledTimes(1);
+    expect(promptsList).toHaveBeenCalledWith({
+      label: "production",
+      limit: 100,
+      page: 1,
+    });
+    expect(getPrompt).not.toHaveBeenCalled();
 
     expect(createPrompt).toHaveBeenCalledTimes(2);
     expect(createPrompt).toHaveBeenNthCalledWith(1, {
@@ -178,9 +191,9 @@ describe("bootstrapPrompts — fresh project (case a)", () => {
 // ---------------------------------------------------------------------------
 
 describe("bootstrapPrompts — all prompts exist (case b)", () => {
-  it("makes zero createPrompt calls when every prompt is present", async () => {
-    const { client, getPrompt, createPrompt } = makeStubClient({
-      getPrompt: async () => ({ version: 7, prompt: "x" }),
+  it("makes zero createPrompt calls when every prompt is in the production-label list", async () => {
+    const { client, promptsList, createPrompt } = makeStubClient({
+      promptsList: async () => makeListResp(["prompt-a", "prompt-b"]),
     });
 
     const result = await bootstrapPrompts(baseOpts({ langfuse: client }));
@@ -188,7 +201,7 @@ describe("bootstrapPrompts — all prompts exist (case b)", () => {
     expect(result.created).toEqual([]);
     expect(result.skipped).toEqual(["prompt-a", "prompt-b"]);
     expect(result.errors).toEqual([]);
-    expect(getPrompt).toHaveBeenCalledTimes(2);
+    expect(promptsList).toHaveBeenCalledTimes(1);
     expect(createPrompt).not.toHaveBeenCalled();
   });
 });
@@ -200,12 +213,8 @@ describe("bootstrapPrompts — all prompts exist (case b)", () => {
 describe("bootstrapPrompts — partial create (case c)", () => {
   it("creates only the missing prompts when one of two already exists", async () => {
     // prompt-a exists; prompt-b doesn't.
-    const getPromptImpl = vi
-      .fn()
-      .mockResolvedValueOnce({ version: 3, prompt: "existing" })
-      .mockRejectedValueOnce(notFoundError());
     const { client, createPrompt } = makeStubClient({
-      getPrompt: getPromptImpl,
+      promptsList: async () => makeListResp(["prompt-a"]),
     });
 
     const result = await bootstrapPrompts(baseOpts({ langfuse: client }));
@@ -245,46 +254,66 @@ describe("bootstrapPrompts — --dry-run (case d)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Hard failures — non-404 errors record + do NOT create
+// Hard failures — promptsList outage → no writes, every entry errored
 // ---------------------------------------------------------------------------
 
-describe("bootstrapPrompts — non-404 error", () => {
-  it("records the error AND skips create when getPrompt fails for a non-404 reason", async () => {
-    // Network outage / auth failure → unknown SDK state → refuse to create.
+describe("bootstrapPrompts — promptsList fails", () => {
+  it("records every manifest entry as errored and skips ALL creates when the list call throws", async () => {
+    // Auth failure / network outage / 500 → unknown API state → refuse to
+    // create. The bootstrap can't tell whether prompts already exist, so
+    // creating blind risks duplicating production-labeled prompts.
     const authErr = Object.assign(new Error("Unauthorized"), { status: 401 });
-    const getPromptImpl = vi
-      .fn()
-      .mockRejectedValueOnce(authErr)
-      .mockRejectedValueOnce(notFoundError());
     const { client, createPrompt } = makeStubClient({
-      getPrompt: getPromptImpl,
+      promptsList: vi.fn().mockRejectedValue(authErr),
     });
 
     const result = await bootstrapPrompts(baseOpts({ langfuse: client }));
 
-    expect(result.errors).toHaveLength(1);
-    expect(result.errors[0]).toMatchObject({ name: "prompt-a" });
-    // The 404 row still creates — bootstrap should be resilient
-    // per-prompt, not abort the whole batch on the first hard failure.
-    expect(result.created).toEqual(["prompt-b"]);
-    expect(createPrompt).toHaveBeenCalledTimes(1);
+    expect(result.created).toEqual([]);
+    expect(result.skipped).toEqual([]);
+    expect(result.errors).toHaveLength(2);
+    expect(result.errors).toEqual([
+      { name: "prompt-a", error: authErr },
+      { name: "prompt-b", error: authErr },
+    ]);
+    expect(createPrompt).not.toHaveBeenCalled();
   });
+});
 
-  it("treats a message-only 'not found' as a 404 (status absent)", async () => {
-    // Some SDK versions throw an Error with the message only, no .status.
-    // The heuristic must still create the prompt rather than fail loud.
-    const messageOnly404 = new Error(
-      "API returned: Prompt with name 'foo' Not Found",
-    );
-    const { client, createPrompt } = makeStubClient({
-      getPrompt: vi.fn().mockRejectedValue(messageOnly404),
-    });
+// ---------------------------------------------------------------------------
+// Pagination — `promptsList` page loop terminates correctly
+// ---------------------------------------------------------------------------
+
+describe("bootstrapPrompts — paginated list", () => {
+  it("walks every page of the promptsList response before deciding what to create", async () => {
+    // prompt-a returned on page 1, prompt-b returned on page 2.
+    // Both should be in the seen-set → 0 creates.
+    const promptsList = vi
+      .fn()
+      .mockResolvedValueOnce(
+        makeListResp(["prompt-a"], { totalPages: 2, page: 1 }),
+      )
+      .mockResolvedValueOnce(
+        makeListResp(["prompt-b"], { totalPages: 2, page: 2 }),
+      );
+    const { client, createPrompt } = makeStubClient({ promptsList });
 
     const result = await bootstrapPrompts(baseOpts({ langfuse: client }));
 
-    expect(result.errors).toEqual([]);
-    expect(result.created).toEqual(["prompt-a", "prompt-b"]);
-    expect(createPrompt).toHaveBeenCalledTimes(2);
+    expect(promptsList).toHaveBeenCalledTimes(2);
+    expect(promptsList).toHaveBeenNthCalledWith(1, {
+      label: "production",
+      limit: 100,
+      page: 1,
+    });
+    expect(promptsList).toHaveBeenNthCalledWith(2, {
+      label: "production",
+      limit: 100,
+      page: 2,
+    });
+    expect(result.skipped).toEqual(["prompt-a", "prompt-b"]);
+    expect(result.created).toEqual([]);
+    expect(createPrompt).not.toHaveBeenCalled();
   });
 });
 
@@ -376,10 +405,7 @@ describe("checkPrompts — all match (case a)", () => {
       .mockResolvedValueOnce({ version: 7, prompt: TWO_PROMPT_FIXTURE[0].text })
       .mockResolvedValueOnce({ version: 4, prompt: TWO_PROMPT_FIXTURE[1].text });
     const log = vi.fn();
-    const client: LangfusePromptClient = {
-      getPrompt,
-      createPrompt: vi.fn(),
-    };
+    const { client } = makeStubClient({ getPrompt });
 
     const result = await checkPrompts(baseCheckOpts({ langfuse: client, log }));
 
@@ -409,10 +435,7 @@ describe("checkPrompts — drift detected (case b)", () => {
       .mockResolvedValueOnce({ version: 9, prompt: driftedLive })
       .mockResolvedValueOnce({ version: 4, prompt: TWO_PROMPT_FIXTURE[1].text });
     const log = vi.fn();
-    const client: LangfusePromptClient = {
-      getPrompt,
-      createPrompt: vi.fn(),
-    };
+    const { client } = makeStubClient({ getPrompt });
 
     const result = await checkPrompts(baseCheckOpts({ langfuse: client, log }));
 
@@ -438,10 +461,7 @@ describe("checkPrompts — Langfuse outage (case c)", () => {
     const networkErr = new Error("ECONNRESET");
     const getPrompt = vi.fn().mockRejectedValue(networkErr);
     const log = vi.fn();
-    const client: LangfusePromptClient = {
-      getPrompt,
-      createPrompt: vi.fn(),
-    };
+    const { client } = makeStubClient({ getPrompt });
 
     const result = await checkPrompts(baseCheckOpts({ langfuse: client, log }));
 
@@ -471,10 +491,7 @@ describe("checkPrompts — Langfuse outage (case c)", () => {
       .fn()
       .mockRejectedValueOnce(notFound)
       .mockResolvedValueOnce({ version: 4, prompt: TWO_PROMPT_FIXTURE[1].text });
-    const client: LangfusePromptClient = {
-      getPrompt,
-      createPrompt: vi.fn(),
-    };
+    const { client } = makeStubClient({ getPrompt });
 
     const result = await checkPrompts(baseCheckOpts({ langfuse: client }));
 
@@ -486,10 +503,7 @@ describe("checkPrompts — Langfuse outage (case c)", () => {
   it("records an error when the live prompt object is missing the `prompt` field", async () => {
     // Defensive: future SDK shape changes shouldn't silently pass a check.
     const getPrompt = vi.fn().mockResolvedValue({ version: 7 /* no prompt */ });
-    const client: LangfusePromptClient = {
-      getPrompt,
-      createPrompt: vi.fn(),
-    };
+    const { client } = makeStubClient({ getPrompt });
 
     const result = await checkPrompts(baseCheckOpts({ langfuse: client }));
 
