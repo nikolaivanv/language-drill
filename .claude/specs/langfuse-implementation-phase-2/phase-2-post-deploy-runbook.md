@@ -14,9 +14,22 @@ against this spec; do not consider Phase 2 shipped until all six are green.
 - `.github/workflows/deploy.yml` has finished both the CDK and Vercel jobs
   for the merge commit. Confirm via `gh run list --workflow=deploy` →
   status `success`.
-- You have the dev Langfuse keys in `language-drill/LANGFUSE_PUBLIC_KEY` /
-  `language-drill/LANGFUSE_SECRET_KEY` (AWS Secrets Manager, dev prefix).
 - You have a working local clone of `main` with `pnpm install` run.
+- The dev Langfuse keys are present in your **local `.env`** at the repo
+  root as `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY`. The CLIs read
+  these straight from `process.env` — they do **not** consult AWS at
+  runtime. The canonical source of truth lives in AWS Secrets Manager
+  under the dev prefix `language-drill-dev/` (`language-drill-dev/LANGFUSE_PUBLIC_KEY`,
+  `language-drill-dev/LANGFUSE_SECRET_KEY`); copy from there into `.env`
+  if you don't already have them:
+  ```bash
+  aws secretsmanager get-secret-value \
+    --secret-id language-drill-dev/LANGFUSE_PUBLIC_KEY \
+    --query SecretString --output text
+  aws secretsmanager get-secret-value \
+    --secret-id language-drill-dev/LANGFUSE_SECRET_KEY \
+    --query SecretString --output text
+  ```
 
 Quote the trace ID / dataset run URL / Langfuse prompt URL in each tick so
 this checklist is also the audit record.
@@ -31,8 +44,12 @@ _Requirements: 1.1, 1.2, 1.3_
   ```bash
   pnpm bootstrap-prompts
   ```
-  Run from the repo root with your `.env` pointed at the dev Langfuse
-  project (`LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` from dev secrets).
+  Run from the repo root. The script reads `LANGFUSE_PUBLIC_KEY` /
+  `LANGFUSE_SECRET_KEY` from `process.env`; the easiest way to get them
+  there is `set -a; source .env; set +a; pnpm bootstrap-prompts` (or use
+  `dotenv -e .env -- pnpm bootstrap-prompts`). If the keys are missing
+  the CLI exits with `"Langfuse client unavailable — set
+  LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY in your env"`.
 - **Pass condition:** stdout lists **6 created** rows on a fresh project,
   or **6 already-exist / 0 created** on a re-run. Open the Langfuse UI →
   *Prompts* and confirm all six names appear:
