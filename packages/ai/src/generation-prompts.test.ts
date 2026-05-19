@@ -96,6 +96,22 @@ describe("buildGenerationSystemPrompt", () => {
     );
   });
 
+  it("forbids ambiguous blanks and spoiling context", async () => {
+    // Regression: two production bugs from the Turkish A1 pool.
+    //   - "Sınıfta sekiz ___ var" (chair/student/book all fit) → must require
+    //     either narrower sentence framing or `acceptableAnswers`.
+    //   - "Vowel harmony: front vowel (e) requires -ler suffix" above
+    //     "Odada pencere___" → context literally states the answer.
+    const prompt = await buildGenerationSystemPrompt(baseInputs, []);
+    expect(prompt).toContain("Ambiguous blank");
+    expect(prompt).toContain("acceptableAnswers");
+    expect(prompt).toContain("Spoiled blank");
+    // The two failure exemplars must appear verbatim so Claude reads them as
+    // concrete pattern-match anchors, not paraphrased advice.
+    expect(prompt).toContain("Sınıfta sekiz ___ var");
+    expect(prompt).toContain("Vowel harmony: front vowel (e) requires -ler suffix");
+  });
+
   it("instructs Claude to use the matching tool name", async () => {
     const cloze = await buildGenerationSystemPrompt(baseInputs, []);
     expect(cloze).toContain("submit_cloze_exercise");

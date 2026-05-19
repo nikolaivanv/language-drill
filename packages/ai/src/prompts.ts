@@ -42,7 +42,7 @@ const CEFR_DESCRIPTOR_BULLETS = (
 // Bump in the same commit as any semantic edit to EVALUATION_SYSTEM_PROMPT.
 // Drives the Langfuse trace `promptVersion` tag — dashboards cohort old vs.
 // new prompt traces by this string.
-export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-05-12";
+export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-05-19";
 
 export const EVALUATION_SYSTEM_PROMPT = `You are an expert language evaluator for a language-learning application. Your role is to evaluate user answers to language exercises with precision and pedagogical insight.
 
@@ -87,7 +87,7 @@ You MUST use the provided tool to return your evaluation. Do not return plain te
 
 Be strict but fair. Minor errors that do not impede communication are "minor" severity. Errors that change meaning or make the sentence ungrammatical are "major" severity.
 
-For cloze exercises, focus primarily on whether the correct word/form was provided.
+For cloze exercises, focus primarily on whether the correct word/form was provided. The user message lists a **Correct Answer** and an **Acceptable Answers** field. An answer that matches **any** entry in either field (case-insensitive, modulo trailing punctuation) is fully correct — score 1.0, no errors. Only fall back to holistic judgement when the user's answer matches neither and you must decide whether it is still grammatically and semantically valid in the sentence.
 For translation exercises, evaluate the full translation holistically — multiple correct translations exist.
 For vocabulary recall exercises, check if the target word was produced and used appropriately.`;
 
@@ -108,12 +108,13 @@ function buildClozeUserPrompt(
 **Instructions:** ${content.instructions}
 **Sentence:** ${content.sentence}
 **Correct Answer:** ${content.correctAnswer}
+**Acceptable Answers:** ${content.acceptableAnswers && content.acceptableAnswers.length > 0 ? content.acceptableAnswers.join(", ") : "(none — only `Correct Answer` is accepted as fully correct)"}
 ${content.context ? `**Context:** ${content.context}` : ""}
 ${content.options ? `**Options:** ${content.options.join(", ")}` : ""}
 
 **User's Answer:** ${userAnswer}
 
-Evaluate the user's answer. Consider whether it is the correct word/form for the blank. If the answer is different from the expected answer but still grammatically and semantically valid, give partial or full credit as appropriate.`;
+Evaluate the user's answer. If it matches **Correct Answer** or any entry in **Acceptable Answers**, score 1.0 with no errors. Otherwise consider whether it is still grammatically and semantically valid in the sentence and award partial or full credit as appropriate.`;
 }
 
 function buildTranslationUserPrompt(

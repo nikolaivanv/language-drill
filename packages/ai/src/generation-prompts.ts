@@ -110,7 +110,7 @@ function renderRecentStems(recentStems: readonly string[]): string {
 // prompt (this file's `buildGenerationSystemPrompt`). Drives the Langfuse
 // trace `promptVersion` tag — dashboards cohort old vs. new prompt traces
 // by this string.
-export const GENERATION_PROMPT_VERSION = "generate@2026-05-12";
+export const GENERATION_PROMPT_VERSION = "generate@2026-05-19";
 
 /**
  * Wording differs per type so Claude reads it the way the cell is constrained:
@@ -170,7 +170,9 @@ export const GENERATION_SYSTEM_PROMPT_TEMPLATE = `You are an expert language exe
 
 {{priorPoolSection}}## Hard constraints
 
-- The correct answer must be uniquely correct given the surrounding context.
+- **The learner must produce the answer themselves.** Two failure modes are forbidden:
+  - **Ambiguous blank.** For a cloze, the answer must be uniquely produced. Either (a) the surrounding sentence constrains the blank so only one specific lexeme/form plausibly fits — every other candidate is ruled out by something explicit in the sentence — OR (b) for grammar-shape clozes where many lexemes satisfy the rule, you populate \`acceptableAnswers\` with every lexeme that fits. Sentences like "Sınıfta sekiz ___ var" ("There are eight ___ in the classroom") are forbidden without \`acceptableAnswers\`, because chair, student, book, pencil, and many other nouns all satisfy the rule equally. For translation, the reference translation must be the dominant rendering — minor variants are accepted at evaluation time, but the source text must not admit two structurally different correct translations. For vocab_recall, the prompt/definition must pick out exactly one headword.
+  - **Spoiled blank.** The \`instructions\` and \`context\` fields may name the grammar category being tested (e.g. "vowel harmony", "noun-numeral agreement") but MUST NOT state the rule's outcome, name the required suffix/form, or otherwise let the learner produce the answer without engaging with the blank. "Vowel harmony: front vowel (e) requires -ler suffix" above "Odada pencere___ açık" is forbidden — it tells the learner the answer is "-ler". "Plural agreement after a numeral" above "Sınıfta sekiz ___ var" is acceptable — it names the rule type without giving the form.
 - Vocabulary outside CEFR {{cefrLevel}} is forbidden unless the exercise explicitly tests it.
 - Do not produce an exercise that resembles any of these existing stems:
 {{recentStemsBlock}}

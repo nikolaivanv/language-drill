@@ -13,6 +13,7 @@ import {
 const PASSING: ValidationResult = {
   qualityScore: 0.85,
   ambiguous: false,
+  contextSpoilsAnswer: false,
   levelMatch: true,
   grammarPointMatch: true,
   culturalIssues: [],
@@ -86,6 +87,37 @@ describe("routeValidationResult — rejected branch", () => {
 
     const exactly = routeValidationResult(withResult({ qualityScore: 0.5 }));
     expect(exactly.reviewStatus).not.toBe("rejected");
+  });
+
+  it("rejects on contextSpoilsAnswer alone, even when qualityScore is high (hard veto)", () => {
+    // Regression: the "Vowel harmony: front vowel (e) requires -ler suffix"
+    // case from the Turkish A1 pool. Score is fine, target is on-point, but
+    // the context literally states the answer — the draft can never be
+    // useful, so we reject (not flag).
+    const decision = routeValidationResult(
+      withResult({
+        qualityScore: 0.9,
+        contextSpoilsAnswer: true,
+      }),
+    );
+    expect(decision.reviewStatus).toBe("rejected");
+    expect(decision.flaggedReasons).toEqual(["context spoils answer"]);
+  });
+
+  it("orders 'context spoils answer' before cultural issues when both fire", () => {
+    const decision = routeValidationResult(
+      withResult({
+        qualityScore: 0.3,
+        contextSpoilsAnswer: true,
+        culturalIssues: ["sensitive content"],
+      }),
+    );
+    expect(decision.reviewStatus).toBe("rejected");
+    expect(decision.flaggedReasons).toEqual([
+      "low quality score (<0.5)",
+      "context spoils answer",
+      "sensitive content",
+    ]);
   });
 });
 

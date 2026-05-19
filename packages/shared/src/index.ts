@@ -68,6 +68,16 @@ export type ClozeContent = {
   instructions: string;
   sentence: string;
   correctAnswer: string;
+  /**
+   * Optional. Every additional lexeme/form that fits the blank under the
+   * targeted grammar point. Used when the sentence's surrounding context does
+   * not single out one specific word (e.g. "Sınıfta sekiz ___ var" — chair,
+   * student, book all satisfy the no-plural-after-numerals rule). The
+   * evaluator accepts any entry here as a fully-correct answer.
+   * `correctAnswer` is NOT auto-included in this list; the evaluator checks
+   * both fields independently.
+   */
+  acceptableAnswers?: string[];
   options?: string[];
   context?: string;
   topicHint?: string;

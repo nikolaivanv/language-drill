@@ -101,16 +101,16 @@ describe("buildValidationSystemPrompt", () => {
 
   it("contains the routing-implication block verbatim from plan §3.1", async () => {
     const prompt = await buildValidationSystemPrompt(baseSpec);
-    // qualityScore < 0.5 OR cultural issue → REJECTED
+    // qualityScore < 0.5 OR cultural issue OR contextSpoilsAnswer → REJECTED
     expect(prompt).toContain(
-      "qualityScore < 0.5  OR  any cultural issue  → REJECTED",
+      "qualityScore < 0.5  OR  any cultural issue  OR  contextSpoilsAnswer  → REJECTED",
     );
     // qualityScore in [0.5, 0.7) → FLAGGED
     expect(prompt).toContain("qualityScore in [0.5, 0.7)");
     expect(prompt).toContain("FLAGGED (waits for human review)");
     // qualityScore >= 0.7 conjunction → AUTO-APPROVED
     expect(prompt).toContain(
-      "qualityScore >= 0.7 AND not ambiguous AND levelMatch AND grammarPointMatch",
+      "qualityScore >= 0.7 AND not ambiguous AND not contextSpoilsAnswer AND levelMatch AND grammarPointMatch",
     );
     expect(prompt).toContain("AUTO-APPROVED (visible to learners)");
     // Otherwise → FLAGGED catch-all
