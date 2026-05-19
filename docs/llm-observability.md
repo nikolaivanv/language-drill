@@ -242,6 +242,10 @@ off cold-start blip is normal.
 Three CLIs ship from `packages/ai/scripts/`, wired as root-level pnpm
 shortcuts so they work from any monorepo directory.
 
+> For an end-to-end workflow that uses these CLIs (prompt edit → eval →
+> promote → revalidate the existing pool), see
+> [`docs/runbooks/prompt-update-and-revalidate.md`](runbooks/prompt-update-and-revalidate.md).
+
 | Command | What it does |
 |---|---|
 | `pnpm bootstrap-prompts` | Registers any of the six prompts that don't yet exist in the configured Langfuse project (uses the in-repo string/template as v1, labels it `production`). Skips already-existing prompts. Idempotent — safe to re-run. |

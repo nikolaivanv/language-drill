@@ -134,6 +134,10 @@ Langfuse is now the live source for these prompts; the in-repo
 `*_SYSTEM_PROMPT_VERSION` is still required (drives the fallback cohort tag
 and signals reviewers that the local fallback also changed).
 
+For a generation/validation bug that needs a prompt update **and** a
+re-pass over the existing exercise pool, follow
+[`docs/runbooks/prompt-update-and-revalidate.md`](docs/runbooks/prompt-update-and-revalidate.md).
+
 ---
 
 ## Pre-Push Checks
