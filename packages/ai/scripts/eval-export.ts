@@ -146,7 +146,14 @@ export type FetchedTrace = {
   metadata?: Record<string, unknown> | null;
 } & Record<string, unknown>;
 
-const TRACE_LIST_PAGE_SIZE = 1000;
+// Langfuse Cloud caps `/api/public/traces?limit` server-side. Empirically
+// `limit=1000` returns HTTP 400 ("Bad Request") even though the SDK type
+// accepts it; the SDK's own `traceList` docstring hedges: "If you encounter
+// api issues due to too large page sizes, try to reduce the limit."
+// 100 matches the bootstrap-prompts list call and is well within accepted
+// bounds. The paginator below already loops, so the only cost of a smaller
+// page is one extra HTTP request per ~100 traces fetched.
+export const TRACE_LIST_PAGE_SIZE = 100;
 
 /**
  * Walks `langfuse.api.traceList` from page 1 forward until the API stops
@@ -763,12 +770,32 @@ async function main(): Promise<void> {
   }
 }
 
+/**
+ * The Langfuse SDK throws a `Response` object on non-2xx replies. `Response`'s
+ * default toString prints `[object Response]` and Node's util.inspect shows
+ * the public getters (status, headers, etc.) but NOT the body — which is
+ * where the actual error message lives. Read it once before exiting so the
+ * operator sees something they can act on.
+ */
+async function formatError(err: unknown): Promise<string> {
+  if (err instanceof Response) {
+    let body: string;
+    try {
+      body = await err.text();
+    } catch {
+      body = "<unable to read response body>";
+    }
+    return `HTTP ${err.status} ${err.statusText} from ${err.url}\n  body: ${body}`;
+  }
+  return err instanceof Error ? `${err.message}\n${err.stack ?? ""}` : String(err);
+}
+
 const isMain =
   process.argv[1] !== undefined &&
   fileURLToPath(import.meta.url) === process.argv[1];
 if (isMain) {
-  main().catch((err) => {
-    console.error("[eval-export] unhandled failure:", err);
+  main().catch(async (err) => {
+    console.error("[eval-export] unhandled failure:", await formatError(err));
     process.exit(1);
   });
 }

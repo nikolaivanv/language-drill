@@ -29,6 +29,7 @@ import {
   parseEvalExportArgs,
   runEvalExport,
   runEvalExportSampling,
+  TRACE_LIST_PAGE_SIZE,
   uniformSample,
   writeSampledTracesToDataset,
   type DbExerciseLookup,
@@ -127,13 +128,10 @@ describe("uniformSample", () => {
 
 describe("fetchAllEvaluateTraces", () => {
   it("paginates until a short page arrives", async () => {
-    // Page 1 returns 1000 → page 2 returns 1000 → page 3 returns 3 (short).
-    // We use small payloads here (1 row per page) and override the SDK page
-    // size? No — the script uses the constant `TRACE_LIST_PAGE_SIZE = 1000`,
-    // so to exercise pagination we need the mock to return exactly 1000-row
-    // pages. Easier: stub returns a "full" page (1000 entries) twice, then
-    // a partial page on call 3, then asserts the call count.
-    const fullPage = Array.from({ length: 1000 }, (_, i) => ({
+    // To exercise pagination we need the mock to return exactly
+    // TRACE_LIST_PAGE_SIZE-row pages so the loop keeps going, then a short
+    // page on the next call so the loop exits.
+    const fullPage = Array.from({ length: TRACE_LIST_PAGE_SIZE }, (_, i) => ({
       id: `t${i}`,
     })) as FetchedTrace[];
     const shortPage: FetchedTrace[] = [{ id: "tail-1" }, { id: "tail-2" }];
@@ -150,14 +148,14 @@ describe("fetchAllEvaluateTraces", () => {
       toTimestamp: "2026-05-17",
     });
 
-    expect(all).toHaveLength(1002);
+    expect(all).toHaveLength(TRACE_LIST_PAGE_SIZE + 2);
     expect(traceList).toHaveBeenCalledTimes(2);
     expect(traceList).toHaveBeenNthCalledWith(1, {
       tags: ["feature:evaluate"],
       fromTimestamp: "2026-05-10",
       toTimestamp: "2026-05-17",
       page: 1,
-      limit: 1000,
+      limit: TRACE_LIST_PAGE_SIZE,
     });
   });
 
