@@ -16,6 +16,7 @@
     "generate:theory": "npx tsx scripts/generate-theory.ts",
     "review:flagged": "npx tsx scripts/review-flagged.ts",
     "review:flagged-theory": "npx tsx scripts/review-flagged-theory.ts",
+    "revalidate:cloze": "npx tsx scripts/revalidate-cloze-pool.ts",
     "seed:exercises": "npx tsx scripts/seed-exercises.ts",
     "cleanup:zombies": "npx tsx scripts/cleanup-zombie-jobs.ts",
     "test": "vitest run"

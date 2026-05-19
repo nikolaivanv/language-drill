@@ -76,6 +76,7 @@ Both servers are started from the repo root. They read `DATABASE_URL`, `ANTHROPI
 | `pnpm db:migrate` | Run Drizzle migrations |
 | `pnpm db:studio` | Browse the DB in Drizzle Studio |
 | `pnpm db:seed:exercises` | Seed the exercise pool (36 idempotent exercises) |
+| `pnpm revalidate:cloze` | One-off CLI to re-score every stored cloze through the current validator and demote failures. Dry-run by default; pass `--apply` to write. Supports `--language`, `--cefr`, `--limit`, `--concurrency`, `--max-cost-usd`. |
 | `pnpm bootstrap-prompts` | Idempotently register the six system prompts in Langfuse from the in-repo fallback strings. Supports `--dry-run` and `--check` (drift detection vs. live `production` label). |
 | `pnpm eval:export` | Sample evaluation traces from Langfuse over a date window and write them as items into a Langfuse dataset (joined back to `user_exercise_history` for the user answer + exercise). |
 | `pnpm eval` | Run a candidate prompt against a Langfuse dataset, link each per-item trace to the dataset run, and write a quality/cost/latency summary to `./eval-runs/<runName>.json`. |
