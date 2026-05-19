@@ -16,7 +16,10 @@ import {
   WordFlagSchema,
 } from "@language-drill/shared";
 
-import { setResolvedPromptVersion } from "./observability.js";
+import {
+  setResolvedPromptClient,
+  setResolvedPromptVersion,
+} from "./observability.js";
 import { getPromptOrFallback, sha8 } from "./prompts-registry.js";
 
 // ---------------------------------------------------------------------------
@@ -574,6 +577,10 @@ export async function* streamAnnotation(
       `override:${sha8(input.systemPromptOverride)}`,
       false,
     );
+    // Mirror `evaluateAnswer`: clear any client a prior call in this ALS
+    // scope might have set, so the override trace records without a
+    // prompt link (matching the `override:<sha8>` semantics).
+    setResolvedPromptClient(null);
   } else {
     const resolved = await getPromptOrFallback(
       "annotate-system-prompt",

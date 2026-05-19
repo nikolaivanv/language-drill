@@ -218,6 +218,10 @@ describe("getPromptOrFallback (skeleton)", () => {
       const ctx = getCurrentLlmTraceContext();
       expect(ctx?.promptVersion).toBe("fallback:evaluate@2026-05-12");
       expect(ctx?.promptFallback).toBe(true);
+      // No live Langfuse client to link — `setResolvedPromptClient(null)`
+      // pairs with the fallback version so the trace records without a
+      // prompt link (matches the `fallback:` cohort semantics).
+      expect(ctx?.promptClient).toBeNull();
     });
   });
 
@@ -298,6 +302,8 @@ describe("getPromptWithVarsOrFallback (Langfuse unset)", () => {
       const ctx = getCurrentLlmTraceContext();
       expect(ctx?.promptVersion).toBe("fallback:generate@2026-05-12");
       expect(ctx?.promptFallback).toBe(true);
+      // No live client on the LF-unset fallback path.
+      expect(ctx?.promptClient).toBeNull();
     });
   });
 });
@@ -421,6 +427,10 @@ describe("getPromptOrFallback (real fetch)", () => {
       const ctx = getCurrentLlmTraceContext();
       expect(ctx?.promptVersion).toBe("langfuse:3");
       expect(ctx?.promptFallback).toBe(false);
+      // The live `TextPromptClient` lands on the ALS frame so
+      // `startLangfuseGeneration` can pass it to `trace.generation` and
+      // Langfuse renders the clickable "Prompt: <name>@v<n>" pill.
+      expect(ctx?.promptClient).toMatchObject({ prompt: "live", version: 3 });
     });
   });
 
@@ -707,6 +717,9 @@ describe("getPromptWithVarsOrFallback (real fetch + compile)", () => {
       const ctx = getCurrentLlmTraceContext();
       expect(ctx?.promptVersion).toBe("langfuse:9");
       expect(ctx?.promptFallback).toBe(false);
+      // Live templated client lands on the ALS frame on the success path,
+      // identical to the static-prompt branch.
+      expect(ctx?.promptClient).toMatchObject({ version: 9 });
     });
   });
 
@@ -791,6 +804,8 @@ describe("getPromptWithVarsOrFallback (real fetch + compile)", () => {
       const ctx = getCurrentLlmTraceContext();
       expect(ctx?.promptVersion).toBe("fallback:generate@2026-05-12");
       expect(ctx?.promptFallback).toBe(true);
+      // Compile-throw demotes to fallback → no live client → null on ALS.
+      expect(ctx?.promptClient).toBeNull();
     });
     warnSpy.mockRestore();
   });

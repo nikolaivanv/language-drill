@@ -20,6 +20,7 @@ import {
   Langfuse,
   type LangfuseGenerationClient,
   type LangfuseTraceClient,
+  type TextPromptClient,
 } from "langfuse";
 import { extractNewItems } from "./annotate.js";
 import { SONNET_4_5_PRICING } from "./cost-model.js";
@@ -88,6 +89,22 @@ export interface LlmTraceContext {
    * single filter (`promptFallback = true`).
    */
   promptFallback?: boolean;
+  /**
+   * Phase-2: live `TextPromptClient` for the resolved Langfuse prompt,
+   * set by `prompts-registry`'s `setResolvedPromptClient` after a
+   * successful fetch. When passed to `trace.generation({ prompt })`,
+   * Langfuse links the generation to the prompt entry — the trace UI
+   * shows a clickable "Prompt: <name>@v<n>" pill and dataset-run metrics
+   * roll up per-prompt.
+   *
+   * `null` (or unset) means no live client is available — either the
+   * fallback path was taken (Langfuse outage / 404 / keys unset) or the
+   * caller passed a literal `systemPromptOverride`. The generation is
+   * recorded without a prompt link in those cases; `promptFallback=true`
+   * already disambiguates "Langfuse was reachable but we chose to skip
+   * it" from "we used the live Langfuse copy."
+   */
+  promptClient?: TextPromptClient | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -190,6 +207,25 @@ export function setResolvedPromptVersion(
   if (!store) return;
   store.promptVersion = version;
   store.promptFallback = fromFallback;
+}
+
+/**
+ * Phase-2: stash the live `TextPromptClient` on the current ALS frame
+ * after `prompts-registry` has resolved a prompt. `startLangfuseGeneration`
+ * reads this and passes it to `trace.generation({ prompt })` so Langfuse
+ * links the generation to the prompt entry (clickable prompt-name pill in
+ * the trace UI + per-prompt dataset-run metrics).
+ *
+ * Pass `null` to clear (fallback / override paths where no live client
+ * exists). Symmetric with `setResolvedPromptVersion` — same ALS frame,
+ * same in-place mutation semantics, same no-op-outside-scope contract.
+ */
+export function setResolvedPromptClient(
+  client: TextPromptClient | null,
+): void {
+  const store = als.getStore();
+  if (!store) return;
+  store.promptClient = client;
 }
 
 // ---------------------------------------------------------------------------
@@ -525,6 +561,13 @@ function startLangfuseGeneration(
         warnOnce("onTraceCreated callback threw", cbErr);
       }
     }
+    // `prompt: <TextPromptClient>` links this generation to the resolved
+    // Langfuse prompt entry — trace UI shows a clickable "Prompt:
+    // <name>@v<n>" pill, and dataset-run metrics roll up per-prompt.
+    // Fallback / override paths leave `ctx.promptClient` null, in which
+    // case we omit the field entirely (Langfuse complains if we pass
+    // `null`). `promptFallback=true` on the metadata already tells
+    // dashboards why the link is missing.
     return trace.generation({
       name: feature,
       model: request.model,
@@ -534,6 +577,7 @@ function startLangfuseGeneration(
       },
       modelParameters: extractModelParameters(request),
       metadata: traceMetadata,
+      ...(ctx.promptClient ? { prompt: ctx.promptClient } : {}),
     });
   } catch (err) {
     warnOnce("Langfuse trace/generation start failed", err);

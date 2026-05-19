@@ -31,7 +31,11 @@
 import { createHash } from "node:crypto";
 
 import type { TextPromptClient } from "langfuse";
-import { getLangfuse, setResolvedPromptVersion } from "./observability.js";
+import {
+  getLangfuse,
+  setResolvedPromptClient,
+  setResolvedPromptVersion,
+} from "./observability.js";
 
 // ---------------------------------------------------------------------------
 // Public constants
@@ -368,6 +372,11 @@ export async function getPromptOrFallback(
 ): Promise<ResolvedPrompt> {
   const entry = await getCacheEntry(name, fallback, fallbackVersion, label);
   setResolvedPromptVersion(entry.resolved.version, entry.resolved.fromFallback);
+  // `entry.promptClient` is the live `TextPromptClient` on a Langfuse hit
+  // and `null` on the fallback path — `setResolvedPromptClient` forwards
+  // either to the ALS frame so `startLangfuseGeneration` can decide
+  // whether to link this generation to the prompt entry.
+  setResolvedPromptClient(entry.promptClient);
   return entry.resolved;
 }
 
@@ -414,6 +423,7 @@ export async function getPromptWithVarsOrFallback(
   if (!entry.promptClient) {
     const { text } = applyTemplate(fallbackTemplate, vars);
     setResolvedPromptVersion(entry.resolved.version, true);
+    setResolvedPromptClient(null);
     return { ...entry.resolved, text };
   }
 
@@ -433,6 +443,7 @@ export async function getPromptWithVarsOrFallback(
     const { text } = applyTemplate(fallbackTemplate, vars);
     const fallbackVersionTag = `fallback:${fallbackVersion}`;
     setResolvedPromptVersion(fallbackVersionTag, true);
+    setResolvedPromptClient(null);
     return { text, version: fallbackVersionTag, fromFallback: true };
   }
 
@@ -450,10 +461,12 @@ export async function getPromptWithVarsOrFallback(
     const { text } = applyTemplate(fallbackTemplate, vars);
     const fallbackVersionTag = `fallback:${fallbackVersion}`;
     setResolvedPromptVersion(fallbackVersionTag, true);
+    setResolvedPromptClient(null);
     return { text, version: fallbackVersionTag, fromFallback: true };
   }
 
   setResolvedPromptVersion(entry.resolved.version, false);
+  setResolvedPromptClient(entry.promptClient);
   return { text: compiled, version: entry.resolved.version, fromFallback: false };
 }
 

@@ -163,6 +163,7 @@ export {
   withLlmTrace,
   getCurrentLlmTraceContext,
   setResolvedPromptVersion,
+  setResolvedPromptClient,
   getLangfuse,
   flushObservability,
   LANGFUSE_FLUSH_TIMEOUT_MS,

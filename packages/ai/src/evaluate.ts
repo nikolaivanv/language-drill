@@ -11,7 +11,10 @@ import type {
   Language,
   EvaluationResult,
 } from "@language-drill/shared";
-import { setResolvedPromptVersion } from "./observability.js";
+import {
+  setResolvedPromptClient,
+  setResolvedPromptVersion,
+} from "./observability.js";
 import {
   EVALUATION_SYSTEM_PROMPT,
   EVALUATION_SYSTEM_PROMPT_VERSION,
@@ -250,6 +253,11 @@ export async function evaluateAnswer(
   if (systemPromptOverride !== undefined) {
     systemPromptText = systemPromptOverride;
     setResolvedPromptVersion(`override:${sha8(systemPromptOverride)}`, false);
+    // No live Langfuse prompt to link — clear in case a prior call in this
+    // ALS scope had set a real client. (Today there's never a second call
+    // in scope, but keep the invariant: every promptVersion set is paired
+    // with a matching promptClient set.)
+    setResolvedPromptClient(null);
   } else {
     const resolved = await getPromptOrFallback(
       "evaluate-system-prompt",

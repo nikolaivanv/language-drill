@@ -31,6 +31,7 @@ import {
   getCurrentLlmTraceContext,
   getLangfuse,
   LANGFUSE_FLUSH_TIMEOUT_MS,
+  setResolvedPromptClient,
   setResolvedPromptVersion,
   TOOL_NAME_TO_FEATURE,
   withLlmTrace,
@@ -606,6 +607,66 @@ describe("Anthropic Proxy — messages.create", () => {
       metadata: expect.objectContaining({ promptFallback: true }),
     });
   });
+
+  it("forwards ctx.promptClient to trace.generation as `prompt` so Langfuse links the prompt entry", async () => {
+    const spies = installLangfuseSpyMock();
+    mocks.mockCreate.mockResolvedValueOnce({
+      content: [
+        {
+          type: "tool_use",
+          id: "x",
+          name: EVALUATION_TOOL_NAME,
+          input: { score: 0.5 },
+        },
+      ],
+      usage: { input_tokens: 1, output_tokens: 1 },
+      stop_reason: "tool_use",
+    });
+
+    // Stub: any object satisfies the `prompt` slot (Langfuse SDK uses it
+    // for identity, not introspection). Cast keeps the test stub from
+    // re-implementing TextPromptClient's full surface.
+    const fakePromptClient = { name: "evaluate-system-prompt", version: 7 };
+
+    const client = createObservedClaudeClient("api-key");
+    await withLlmTrace(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      makeCtx({ promptClient: fakePromptClient as any }),
+      () =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (client.messages.create as any)(makeRequest()),
+    );
+
+    expect(spies.genCalls).toHaveLength(1);
+    expect(spies.genCalls[0]).toMatchObject({ prompt: fakePromptClient });
+  });
+
+  it("omits the `prompt` field on the generation when ctx.promptClient is null (fallback / override path)", async () => {
+    const spies = installLangfuseSpyMock();
+    mocks.mockCreate.mockResolvedValueOnce({
+      content: [
+        {
+          type: "tool_use",
+          id: "x",
+          name: EVALUATION_TOOL_NAME,
+          input: { score: 0.5 },
+        },
+      ],
+      usage: { input_tokens: 1, output_tokens: 1 },
+      stop_reason: "tool_use",
+    });
+
+    const client = createObservedClaudeClient("api-key");
+    await withLlmTrace(makeCtx({ promptClient: null }), () =>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (client.messages.create as any)(makeRequest()),
+    );
+
+    expect(spies.genCalls).toHaveLength(1);
+    // Langfuse rejects an explicit `null` for `prompt`; we must omit the
+    // key entirely. The fallback-path trace stays valid with no link.
+    expect(spies.genCalls[0]).not.toHaveProperty("prompt");
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -1071,6 +1132,62 @@ describe("setResolvedPromptVersion", () => {
     ]);
     expect(a).toBe("langfuse:A");
     expect(b).toBe("langfuse:B");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// setResolvedPromptClient — Phase-2 ALS mutator (prompt-link wiring)
+// ---------------------------------------------------------------------------
+
+describe("setResolvedPromptClient", () => {
+  it("mutates promptClient visible to subsequent getCurrentLlmTraceContext", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const fakeClient = { name: "evaluate-system-prompt", version: 3 } as any;
+    await withLlmTrace(makeCtx(), () => {
+      expect(getCurrentLlmTraceContext()?.promptClient).toBeUndefined();
+
+      setResolvedPromptClient(fakeClient);
+
+      expect(getCurrentLlmTraceContext()?.promptClient).toBe(fakeClient);
+    });
+  });
+
+  it("accepts null to clear (fallback / override path semantics)", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const fakeClient = { name: "x", version: 1 } as any;
+    await withLlmTrace(makeCtx({ promptClient: fakeClient }), () => {
+      expect(getCurrentLlmTraceContext()?.promptClient).toBe(fakeClient);
+      setResolvedPromptClient(null);
+      expect(getCurrentLlmTraceContext()?.promptClient).toBeNull();
+    });
+  });
+
+  it("is a no-op outside a withLlmTrace scope (does not throw)", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(() => setResolvedPromptClient({} as any)).not.toThrow();
+    expect(() => setResolvedPromptClient(null)).not.toThrow();
+    expect(getCurrentLlmTraceContext()).toBeUndefined();
+  });
+
+  it("does not leak the mutation across concurrent withLlmTrace scopes", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const clientA = { name: "A" } as any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const clientB = { name: "B" } as any;
+    const [a, b] = await Promise.all([
+      withLlmTrace(makeCtx({ requestId: "A" }), async () => {
+        setResolvedPromptClient(clientA);
+        await Promise.resolve();
+        return getCurrentLlmTraceContext()?.promptClient;
+      }),
+      withLlmTrace(makeCtx({ requestId: "B" }), async () => {
+        setResolvedPromptClient(clientB);
+        await Promise.resolve();
+        return getCurrentLlmTraceContext()?.promptClient;
+      }),
+    ]);
+    expect(a).toBe(clientA);
+    expect(b).toBe(clientB);
   });
 });
 
