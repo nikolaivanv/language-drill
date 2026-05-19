@@ -8,6 +8,35 @@ Dependency flow: helpers → context → leaf components → composed components
 
 ---
 
+## Status
+
+All 22 tasks complete — verified against the codebase on 2026-05-19. Files listed in each task exist under `apps/web/lib/`, `apps/web/components/shell/`, and `apps/web/app/(dashboard)/`. The `/practice → /drill` migration is in place (`practice/page.tsx` is a `redirect('/drill')` stub).
+
+- [x] Task 1: Active language helpers
+- [x] Task 2: Active language helpers tests
+- [x] Task 3: ActiveLanguageProvider component
+- [x] Task 4: Flagdot component
+- [x] Task 5: Flagdot tests
+- [x] Task 6: NavIcons component
+- [x] Task 7: NavItem component
+- [x] Task 8: NavItem tests
+- [x] Task 9: NavItems composition
+- [x] Task 10: Brand component
+- [x] Task 11: LanguageSwitcher component
+- [x] Task 12: LanguageSwitcher tests
+- [x] Task 13: UserFooter component
+- [x] Task 14: UserFooter tests
+- [x] Task 15: Nav composition
+- [x] Task 16: AppShell wrapper
+- [x] Task 17: Shell barrel export
+- [x] Task 18: Wire shell into dashboard layout
+- [x] Task 19: Migrate /practice → /drill
+- [x] Task 20: Read placeholder page
+- [x] Task 21: Progress placeholder page
+- [x] Task 22: Settings placeholder page
+
+---
+
 ## Task 1: Active language helpers
 
 **Ref:** FR-6.1, FR-6.4, NFR-4

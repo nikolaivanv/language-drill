@@ -8,6 +8,35 @@ Dependencies flow: tokens → fonts → base styles → cn helper → components
 
 ---
 
+## Status
+
+All 22 tasks complete — verified against the codebase on 2026-05-19. Tokens + base styles live in `apps/web/app/globals.css`, fonts in `apps/web/app/fonts.ts`, the `cn()` helper in `apps/web/lib/cn.ts`, and all 9 UI components + their tests exist under `apps/web/components/ui/` with a barrel export at `index.ts`.
+
+- [x] Task 1: Design tokens in globals.css
+- [x] Task 2: Font loading setup
+- [x] Task 3: Base styles and type scale
+- [x] Task 4: cn() helper
+- [x] Task 5: Button component
+- [x] Task 6: Button tests
+- [x] Task 7: Chip component
+- [x] Task 8: Chip tests
+- [x] Task 9: Card component
+- [x] Task 10: Card tests
+- [x] Task 11: Bar component
+- [x] Task 12: Bar tests
+- [x] Task 13: Input component
+- [x] Task 14: Textarea component
+- [x] Task 15: Input and Textarea tests
+- [x] Task 16: Choice component
+- [x] Task 17: Choice tests
+- [x] Task 18: Checkbox component
+- [x] Task 19: Checkbox tests
+- [x] Task 20: AccentPicker component
+- [x] Task 21: AccentPicker tests
+- [x] Task 22: Barrel export and final verification
+
+---
+
 ## Task 1: Design tokens in globals.css
 
 **Ref:** FR-1.1–FR-1.9, US-1
