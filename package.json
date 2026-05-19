@@ -18,6 +18,7 @@
     "generate:theory": "dotenv -e .env -- pnpm --filter @language-drill/db generate:theory",
     "review:flagged": "dotenv -e .env -- pnpm --filter @language-drill/db review:flagged",
     "review:flagged-theory": "dotenv -e .env -- pnpm --filter @language-drill/db review:flagged-theory",
+    "revalidate:cloze": "dotenv -e .env -- pnpm --filter @language-drill/db revalidate:cloze",
     "bootstrap-prompts": "dotenv -e .env -- pnpm --filter @language-drill/ai bootstrap-prompts",
     "eval:export": "dotenv -e .env -- pnpm --filter @language-drill/ai eval:export",
     "eval": "dotenv -e .env -- pnpm --filter @language-drill/ai eval"
