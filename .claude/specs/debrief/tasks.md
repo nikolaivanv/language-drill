@@ -40,7 +40,7 @@ Tasks are sized for 15–30 minute execution. Task 18 (page integration tests, 8
 
 ### Helpers
 
-- [ ] 1. Add `accuracy-tier` helper with tests
+- [x] 1. Add `accuracy-tier` helper with tests
   - Files: `apps/web/lib/drill/accuracy-tier.ts` (new); `apps/web/lib/drill/__tests__/accuracy-tier.test.ts` (new)
   - Export `AccuracyTier = 'high' | 'mid' | 'low'`
   - Export `accuracyTier(correctCount: number, attemptedCount: number): AccuracyTier` per Req 3.2–3.4: ≥0.8 → 'high'; ≥0.5 and <0.8 → 'mid'; <0.5 (or `attemptedCount === 0`) → 'low'
@@ -49,7 +49,7 @@ Tasks are sized for 15–30 minute execution. Task 18 (page integration tests, 8
   - Purpose: Single source of truth for the three header tiers, reused by header / narrative / what's-next router (Req 3.2–3.4, 4.4)
   - _Requirements: 3.2, 3.3, 3.4, 4.4_
 
-- [ ] 2. Add `debrief-narrative` helper with tests
+- [x] 2. Add `debrief-narrative` helper with tests
   - Files: `apps/web/lib/drill/debrief-narrative.ts` (new); `apps/web/lib/drill/__tests__/debrief-narrative.test.ts` (new)
   - Define `Narrative = { paragraphs: [string] | [string, string], whatsNextHref: '/drill' | '/progress', whatsNextLabel: string }`
   - Define `NarrativeInput = { tier: AccuracyTier, language: Language, exerciseCount: number, correctCount: number, attemptedCount: number, skippedCount: number }`
@@ -63,7 +63,7 @@ Tasks are sized for 15–30 minute execution. Task 18 (page integration tests, 8
 
 ### API client
 
-- [ ] 3. Create debrief Zod schemas with tests
+- [x] 3. Create debrief Zod schemas with tests
   - Files: `packages/api-client/src/schemas/debrief.ts` (new); `packages/api-client/src/schemas/debrief.test.ts` (new)
   - Define `DebriefItemStatusSchema = z.enum(['correct', 'incorrect', 'skipped'])` and inferred type `DebriefItemStatus`
   - Define `DebriefItemSchema` with: `exerciseId: string().uuid()`, `type: nativeEnum(ExerciseType)`, `contentJson: unknown()`, `status: DebriefItemStatusSchema`, `userAnswer: string().nullable()`, `score: number().min(0).max(1).nullable()`, `evaluation: EvaluationResultSchema.nullable()`
@@ -74,7 +74,7 @@ Tasks are sized for 15–30 minute execution. Task 18 (page integration tests, 8
   - _Leverage: packages/api-client/src/schemas/exercise.ts (EvaluationResultSchema, ExerciseResponseSchema test pattern)_
   - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [ ] 4. Create `useSessionDebrief` query hook with tests
+- [x] 4. Create `useSessionDebrief` query hook with tests
   - Files: `packages/api-client/src/hooks/useDebrief.ts` (new); `packages/api-client/src/hooks/useDebrief.test.ts` (new)
   - Implement `useSessionDebrief({ sessionId, fetchFn, enabled = true })` returning a `useQuery<DebriefResponse, Error>` with `queryKey: ['session-debrief', sessionId]`, `staleTime: Infinity`
   - `queryFn`: `GET /sessions/${sessionId}/debrief`, parse with `DebriefResponseSchema`
@@ -83,7 +83,7 @@ Tasks are sized for 15–30 minute execution. Task 18 (page integration tests, 8
   - _Leverage: packages/api-client/src/hooks/useExercise.ts (useQuery pattern); packages/api-client/src/hooks/useSession.test.ts (test scaffolding)_
   - _Requirements: 2.1_
 
-- [ ] 5. Export debrief schemas and hook from api-client index
+- [x] 5. Export debrief schemas and hook from api-client index
   - Files: `packages/api-client/src/index.ts` (modify)
   - Add `export * from './schemas/debrief';` and `export * from './hooks/useDebrief';`
   - Run `pnpm --filter @language-drill/api-client typecheck` to confirm no export collisions
@@ -93,7 +93,7 @@ Tasks are sized for 15–30 minute execution. Task 18 (page integration tests, 8
 
 ### Lambda API (debrief endpoint)
 
-- [ ] 6. Add GET /sessions/:id/debrief handler — happy path + 404 ownership
+- [x] 6. Add GET /sessions/:id/debrief handler — happy path + 404 ownership
   - Files: `infra/lambda/src/routes/sessions.ts` (modify); `infra/lambda/src/routes/sessions.test.ts` (modify)
   - Add a `GET /sessions/:id/debrief` handler under the existing `sessions.use('/sessions/*', authMiddleware)` mount
   - Validate `id` with `z.string().uuid()`; on parse failure return HTTP 400 `VALIDATION_ERROR` per existing pattern in `sessions.ts:42`
@@ -107,7 +107,7 @@ Tasks are sized for 15–30 minute execution. Task 18 (page integration tests, 8
   - _Leverage: infra/lambda/src/routes/sessions.ts (existing complete handler for the auth/db/atomic-update pattern); packages/db/src/schema/{sessions,progress}.ts; packages/shared (CORRECT_THRESHOLD)_
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.7, 2.8, 2.9_
 
-- [ ] 7. Add retry-collapse and malformed-responseJson tests for /debrief endpoint
+- [x] 7. Add retry-collapse and malformed-responseJson tests for /debrief endpoint
   - Files: `infra/lambda/src/routes/sessions.test.ts` (modify)
   - Test: when `(session_id, exercise_id)` has TWO history rows with different `evaluated_at` values, the response item's `score` and `userAnswer` come from the later row (Req 2.2); the earlier row is not surfaced as a separate item
   - Test: a session with zero `user_exercise_history` rows → all items skipped, `attemptedCount === 0`, header response remains 200 (Req 2.3, Error Handling §6)
@@ -119,7 +119,7 @@ Tasks are sized for 15–30 minute execution. Task 18 (page integration tests, 8
 
 ### Web — components
 
-- [ ] 8. Create `DebriefHeader` component with tests
+- [x] 8. Create `DebriefHeader` component with tests
   - Files: `apps/web/app/(dashboard)/drill/debrief/_components/debrief-header.tsx` (new); `apps/web/app/(dashboard)/drill/debrief/_components/__tests__/debrief-header.test.tsx` (new)
   - Props: `{ debrief: DebriefResponse }` (typed import from `@language-drill/api-client`)
   - Render: eyebrow `t-micro` "session done · {m:ss}"; title `t-display-xl` from `TIER_TITLE[tier]`; body `t-body-l` "you got X of Y · accuracy Z%[ · N skipped]" where Z = `Math.round((correctCount / attemptedCount) * 100)` or `—` when `attemptedCount === 0` (Req 3.1)
@@ -131,7 +131,7 @@ Tasks are sized for 15–30 minute execution. Task 18 (page integration tests, 8
   - _Leverage: apps/web/lib/drill/accuracy-tier.ts (from task 1); apps/web/components/ui (typography classes via globals.css); packages/api-client (DebriefResponse type)_
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7_
 
-- [ ] 9. Create `DebriefTabs` component with tests
+- [x] 9. Create `DebriefTabs` component with tests
   - Files: `apps/web/app/(dashboard)/drill/debrief/_components/debrief-tabs.tsx` (new); `apps/web/app/(dashboard)/drill/debrief/_components/__tests__/debrief-tabs.test.tsx` (new)
   - Props: `{ active: 'debrief' | 'review', onChange: (tab) => void, children: ReactNode }`
   - Mirror the keyboard handling, refs, and aria attribute pattern from `progress-tabs.tsx` exactly: `role="tablist"`, two `role="tab"` buttons (debrief / review) with `aria-selected`, `aria-controls`, `tabIndex` roving; ArrowLeft/ArrowRight cycle, Home/End jump; single `role="tabpanel"` wrapping `children` with `aria-labelledby`
@@ -141,7 +141,7 @@ Tasks are sized for 15–30 minute execution. Task 18 (page integration tests, 8
   - _Leverage: apps/web/app/(dashboard)/progress/_components/progress-tabs.tsx (port the keyboard/ARIA mechanics)_
   - _Requirements: 7.1, 7.3_
 
-- [ ] 10. Create `DebriefTab` panel content with tests
+- [x] 10. Create `DebriefTab` panel content with tests
   - Files: `apps/web/app/(dashboard)/drill/debrief/_components/debrief-tab.tsx` (new); `apps/web/app/(dashboard)/drill/debrief/_components/__tests__/debrief-tab.test.tsx` (new)
   - Props: `{ debrief: DebriefResponse }`
   - Compute `tier = accuracyTier(...)`, `narrative = debriefNarrative({ tier, language, exerciseCount, correctCount, attemptedCount, skippedCount })`
@@ -153,7 +153,7 @@ Tasks are sized for 15–30 minute execution. Task 18 (page integration tests, 8
   - _Leverage: apps/web/lib/drill/accuracy-tier.ts; apps/web/lib/drill/debrief-narrative.ts; apps/web/lib/drill/coach-messages.ts (sessionComplete branch); apps/web/components/ui (Card)_
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-- [ ] 11. Create `ReviewItemCard` — header chrome + cloze body with tests
+- [x] 11. Create `ReviewItemCard` — header chrome + cloze body with tests
   - Files: `apps/web/app/(dashboard)/drill/debrief/_components/review-item-card.tsx` (new); `apps/web/app/(dashboard)/drill/debrief/_components/__tests__/review-item-card.test.tsx` (new)
   - Props: `{ index: number, item: DebriefItem }`
   - Local state: `expanded: boolean`, initial `item.status !== 'correct'` (Req 5.9)
@@ -165,7 +165,7 @@ Tasks are sized for 15–30 minute execution. Task 18 (page integration tests, 8
   - _Leverage: apps/web/lib/drill/cloze-blank.ts (splitClozeSentence); packages/shared (isClozeContent type guard); apps/web/components/ui (Card, Chip)_
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.8, 5.9_
 
-- [ ] 12. Add translation + vocab branches to `ReviewItemCard` with tests
+- [x] 12. Add translation + vocab branches to `ReviewItemCard` with tests
   - Files: `apps/web/app/(dashboard)/drill/debrief/_components/review-item-card.tsx` (modify); `apps/web/app/(dashboard)/drill/debrief/_components/__tests__/review-item-card.test.tsx` (modify)
   - Translation branch (`item.type === 'translation'` AND not skipped): two cells side by side — "your translation" with `item.userAnswer`; "reference" / "one accepted form" with `content.referenceTranslation`. `evaluation.feedback` below (Req 5.6)
   - Vocab branch (`item.type === 'vocab_recall'` AND not skipped): italic prompt definition above two cells — "you typed" with `item.userAnswer`; "target word" with `content.expectedWord` and the example sentence below (Req 5.7)
@@ -174,7 +174,7 @@ Tasks are sized for 15–30 minute execution. Task 18 (page integration tests, 8
   - _Leverage: apps/web/app/(dashboard)/drill/debrief/_components/review-item-card.tsx (from task 11); packages/shared (isTranslationContent, isVocabRecallContent type guards)_
   - _Requirements: 5.6, 5.7_
 
-- [ ] 13. Create `ReviewTab` panel content with tests
+- [x] 13. Create `ReviewTab` panel content with tests
   - Files: `apps/web/app/(dashboard)/drill/debrief/_components/review-tab.tsx` (new); `apps/web/app/(dashboard)/drill/debrief/_components/__tests__/review-tab.test.tsx` (new)
   - Props: `{ items: DebriefItem[] }`
   - Render: a vertical stack of `ReviewItemCard` — `items.map((item, index) => <ReviewItemCard key={item.exerciseId} index={index} item={item} />)`
@@ -183,7 +183,7 @@ Tasks are sized for 15–30 minute execution. Task 18 (page integration tests, 8
   - _Leverage: apps/web/app/(dashboard)/drill/debrief/_components/review-item-card.tsx (from tasks 11+12)_
   - _Requirements: 5.1_
 
-- [ ] 14. Create `DebriefFooter` component with tests
+- [x] 14. Create `DebriefFooter` component with tests
   - Files: `apps/web/app/(dashboard)/drill/debrief/_components/debrief-footer.tsx` (new); `apps/web/app/(dashboard)/drill/debrief/_components/__tests__/debrief-footer.test.tsx` (new)
   - Props: `{ tier: AccuracyTier }` (currently unused — accept it now so future copy variations are non-breaking; mark with a TS-level eslint-disable-next-line if needed, OR leave unused for now)
   - Render: a flex row of three `Button`s — primary "another session", default "see your progress →", default "done"
@@ -193,7 +193,7 @@ Tasks are sized for 15–30 minute execution. Task 18 (page integration tests, 8
   - _Leverage: apps/web/components/ui (Button); next/navigation (useRouter)_
   - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
-- [ ] 15. Create `DebriefNotFound` component with tests
+- [x] 15. Create `DebriefNotFound` component with tests
   - Files: `apps/web/app/(dashboard)/drill/debrief/_components/debrief-not-found.tsx` (new); `apps/web/app/(dashboard)/drill/debrief/_components/__tests__/debrief-not-found.test.tsx` (new)
   - Props: none
   - Render: centered `Card` with `t-display-l` "session not found"; `t-body` "this session may not exist or may not be yours yet — start a new one from drill."; primary `Button` "back to drill" → `router.push('/drill')`
@@ -202,7 +202,7 @@ Tasks are sized for 15–30 minute execution. Task 18 (page integration tests, 8
   - _Leverage: apps/web/components/ui (Card, Button); next/navigation (useRouter)_
   - _Requirements: 1.6_
 
-- [ ] 16. Create `DebriefSkeleton` component (loading placeholder)
+- [x] 16. Create `DebriefSkeleton` component (loading placeholder)
   - Files: `apps/web/app/(dashboard)/drill/debrief/_components/debrief-skeleton.tsx` (new)
   - Props: none
   - Render: header chrome (placeholder bars) + tab strip + 3 placeholder cards using existing `--paper-3`/`--paper-2` tokens (match the existing `loading-skeleton.tsx` shimmer style)
