@@ -68,6 +68,12 @@ describe('WordPopover — save / skip / Escape', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('shows "close" instead of "skip" when inBank is true', () => {
+    render(<WordPopover {...baseProps} inBank={true} />);
+    expect(screen.getByRole('button', { name: /^close$/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^skip$/i })).not.toBeInTheDocument();
+  });
+
   it('clicking skip fires onSkip', () => {
     const onSkip = vi.fn();
     render(<WordPopover {...baseProps} onSkip={onSkip} />);
@@ -92,6 +98,42 @@ describe('WordPopover — save / skip / Escape', () => {
     );
     fireEvent.click(screen.getByRole('dialog'));
     expect(parentClick).not.toHaveBeenCalled();
+  });
+
+  it('clicking outside the popover fires onClose', () => {
+    const onClose = vi.fn();
+    render(
+      <div>
+        <div data-testid="outside">outside area</div>
+        <WordPopover {...baseProps} onClose={onClose} />
+      </div>,
+    );
+    fireEvent.mouseDown(screen.getByTestId('outside'));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('clicking on a word button (data-word) does not close the popover', () => {
+    const onClose = vi.fn();
+    render(
+      <div>
+        <button data-word="test">word button</button>
+        <WordPopover {...baseProps} onClose={onClose} />
+      </div>,
+    );
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'word button' }));
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('clicking inside the popover does not fire onClose', () => {
+    const onClose = vi.fn();
+    render(
+      <div>
+        <div data-testid="outside">outside area</div>
+        <WordPopover {...baseProps} onClose={onClose} />
+      </div>,
+    );
+    fireEvent.mouseDown(screen.getByRole('dialog'));
+    expect(onClose).not.toHaveBeenCalled();
   });
 });
 
@@ -126,6 +168,13 @@ describe('WordPopover — autoFocus', () => {
     render(<WordPopover {...baseProps} autoFocus />);
     expect(
       screen.getByRole('button', { name: /^skip$/i }),
+    ).toHaveFocus();
+  });
+
+  it('focuses the close button when autoFocus is true and inBank is true', () => {
+    render(<WordPopover {...baseProps} autoFocus inBank={true} />);
+    expect(
+      screen.getByRole('button', { name: /^close$/i }),
     ).toHaveFocus();
   });
 

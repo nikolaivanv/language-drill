@@ -56,6 +56,7 @@ export function WordPopover({
   autoFocus,
 }: Props) {
   const skipRef = React.useRef<HTMLButtonElement>(null);
+  const popoverRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     if (autoFocus) {
@@ -63,11 +64,24 @@ export function WordPopover({
     }
   }, [autoFocus]);
 
+  React.useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      if (popoverRef.current?.contains(target)) return;
+      if (target.closest('[data-word]')) return;
+      onClose();
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [onClose]);
+
   const adjustedX = clampLeft(x, containerWidth);
   const pointerLeft = x - adjustedX - 6;
 
   return (
     <div
+      ref={popoverRef}
       role="dialog"
       aria-label={`word card for ${word}`}
       data-testid="word-popover"
@@ -147,7 +161,7 @@ export function WordPopover({
           freq #{entry.freq.toLocaleString('en-US')}
         </span>
         <Button ref={skipRef} variant="ghost" size="sm" onClick={onSkip}>
-          skip
+          {inBank ? 'close' : 'skip'}
         </Button>
         <Button
           variant={inBank ? 'accent' : 'primary'}
