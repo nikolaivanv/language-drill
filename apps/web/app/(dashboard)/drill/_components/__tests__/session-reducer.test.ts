@@ -25,6 +25,7 @@ const sampleItems: ExerciseResponse[] = [
     type: 'cloze',
     language: 'EN',
     difficulty: 'B1',
+    grammarPointKey: null,
     contentJson: { sentence: 'I ___ home', options: ['go', 'went'] },
   },
   {
@@ -32,6 +33,7 @@ const sampleItems: ExerciseResponse[] = [
     type: 'cloze',
     language: 'EN',
     difficulty: 'B1',
+    grammarPointKey: null,
     contentJson: { sentence: 'She ___ tired', options: ['is', 'are'] },
   },
 ];

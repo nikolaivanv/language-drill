@@ -20,6 +20,9 @@ export type DebriefItemStatus = z.infer<typeof DebriefItemStatusSchema>;
 export const DebriefItemSchema = z.object({
   exerciseId: z.string().uuid(),
   type: z.nativeEnum(ExerciseType),
+  // Nullable: see ExerciseResponseSchema. Used by review-item-card to surface
+  // the theory pill in retrospect when the grammar point has an explainer.
+  grammarPointKey: z.string().nullable(),
   // contentJson is type-discriminated by `type`; consumers narrow via
   // isClozeContent / isTranslationContent / isVocabRecallContent type guards
   // from @language-drill/shared.

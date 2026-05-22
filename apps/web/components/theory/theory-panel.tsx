@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { LearningLanguage } from '@language-drill/shared';
 import type { AuthenticatedFetch } from '@language-drill/api-client';
-import { type TheoryTopicId } from '../../content/theory';
 import { useTheoryTopic } from '../../lib/hooks/use-theory-topic';
 import { Chip } from '../ui/chip';
 import { TheoryContent } from './theory-content';
@@ -15,7 +14,7 @@ import { useFocusTrap } from './use-focus-trap';
 import { useScrollSpy } from './use-scroll-spy';
 
 type TheoryPanelProps = {
-  topicId: TheoryTopicId;
+  topicId: string;
   language: LearningLanguage;
   triggerEl: HTMLElement | null;
   onClose: () => void;
@@ -29,7 +28,7 @@ export function TheoryPanel({
   onClose,
   fetchFn,
 }: TheoryPanelProps) {
-  const [internalTopicId, setInternalTopicId] = useState<TheoryTopicId>(topicId);
+  const [internalTopicId, setInternalTopicId] = useState<string>(topicId);
   const panelRef = useRef<HTMLElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);

@@ -1,41 +1,25 @@
 import type { LearningLanguage } from '@language-drill/shared';
-import {
-  getStaticTheoryTopic,
-  type TheoryTopicId,
-} from '../content/theory';
 
-// Maps the free-text `topicHint` field on `ExerciseContent` to a closed enum of
-// theory topic ids known to the registry. Entries are added alongside their
-// corresponding content files (see `apps/web/content/theory/es/*.tsx`).
-export const HINT_TO_TOPIC: Record<string, TheoryTopicId> = {
-  subjunctive: 'subjunctive',
-  'present-subjunctive': 'subjunctive',
-  'preterite-vs-imperfect': 'preterite-imperfect',
-  'pret-imp': 'preterite-imperfect',
-  conditional: 'conditional',
-};
-
-const warnedHints = new Set<string>();
-
-export function topicIdForHint(
-  hint: string | undefined,
+// Derives the theory topic id from an exercise's `grammar_point_key`.
+//
+// Convention: `<lang>-<rest>` (e.g. `tr-a1-vowel-harmony`) maps to topic id
+// `<rest>` (e.g. `a1-vowel-harmony`). This matches the slug used by
+// `theory_topics.topic_id` so a DB-backed render-from-JSON lookup
+// (`GET /theory/:lang/:topicId`) and the static TSX registry both key off the
+// same value.
+//
+// The resolver is purely a string transform — it does NOT check whether a
+// matching theory topic exists. That decision is owned by `useTheoryTopic`,
+// which falls back from static TSX to DB. Returning a non-null id here means
+// "try to render it"; `useTheoryTopic` returning null means "no content yet,
+// don't render the pill".
+export function topicIdForGrammarPointKey(
+  grammarPointKey: string | null | undefined,
   language: LearningLanguage,
-): TheoryTopicId | null {
-  if (!hint) return null;
-
-  const id = HINT_TO_TOPIC[hint];
-
-  if (!id) {
-    if (process.env.NODE_ENV === 'development' && !warnedHints.has(hint)) {
-      warnedHints.add(hint);
-      console.warn(
-        `[theory] Unmapped topic hint: "${hint}". ` +
-          `Add to HINT_TO_TOPIC in apps/web/lib/theory-topic-map.ts ` +
-          `or to the registry in apps/web/content/theory/index.ts.`,
-      );
-    }
-    return null;
-  }
-
-  return getStaticTheoryTopic(language, id) ? id : null;
+): string | null {
+  if (!grammarPointKey) return null;
+  const prefix = `${language.toLowerCase()}-`;
+  if (!grammarPointKey.startsWith(prefix)) return null;
+  const rest = grammarPointKey.slice(prefix.length);
+  return rest === '' ? null : rest;
 }

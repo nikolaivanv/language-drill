@@ -1,6 +1,5 @@
 import { Component, type ReactNode, type RefObject } from 'react';
 import type { LearningLanguage } from '@language-drill/shared';
-import type { TheoryTopicId } from '../../content/theory';
 import { Button } from '../ui/button';
 import { TheoryEmpty } from './theory-empty';
 import type { TheoryTopic } from './types';
@@ -43,7 +42,7 @@ type TheoryContentProps = {
   topic: TheoryTopic;
   scrollRef: RefObject<HTMLDivElement | null>;
   language: LearningLanguage;
-  onSwitchTopic: (topicId: TheoryTopicId) => void;
+  onSwitchTopic: (topicId: string) => void;
   onClose: () => void;
 };
 

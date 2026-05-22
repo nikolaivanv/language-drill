@@ -59,6 +59,7 @@ const SAMPLE_EXERCISE = {
   type: 'cloze',
   language: 'ES',
   difficulty: 'B1',
+  grammarPointKey: 'es-b1-preterite-vs-imperfect',
   contentJson: {
     instructions: 'Fill in the blank',
     sentence: 'Ella ___ al parque.',

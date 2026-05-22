@@ -120,6 +120,7 @@ sessions.post('/sessions', async (c) => {
       type: r.type,
       language: r.language,
       difficulty: r.difficulty,
+      grammarPointKey: r.grammarPointKey,
       contentJson: r.contentJson,
     })),
   });
@@ -454,6 +455,7 @@ function isExerciseType(value: string): value is ExerciseType {
 interface DebriefItemRow {
   exercise_id: string;
   type: string;
+  grammar_point_key: string | null;
   content_json: unknown;
   score: number | null;
   response_json: unknown;
@@ -545,7 +547,7 @@ sessions.get('/sessions/:id/debrief', async (c) => {
   // accepts the same record shape, so we use IN here. See bug
   // `.claude/bugs/debrief-items-query-failure/`.
   const itemsResult = await db.execute(sql`
-    SELECT e.id AS exercise_id, e.type, e.content_json,
+    SELECT e.id AS exercise_id, e.type, e.grammar_point_key, e.content_json,
            h.score, h.response_json
     FROM exercises e
     LEFT JOIN (
@@ -577,6 +579,7 @@ sessions.get('/sessions/:id/debrief', async (c) => {
         return {
           exerciseId,
           type: row.type as ExerciseType,
+          grammarPointKey: row.grammar_point_key,
           contentJson: row.content_json,
           status: 'skipped' as const,
           userAnswer: null,
@@ -591,6 +594,7 @@ sessions.get('/sessions/:id/debrief', async (c) => {
       return {
         exerciseId,
         type: row.type as ExerciseType,
+        grammarPointKey: row.grammar_point_key,
         contentJson: row.content_json,
         status,
         userAnswer,

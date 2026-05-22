@@ -1,12 +1,11 @@
 import { LANGUAGE_NAMES, type LearningLanguage } from '@language-drill/shared';
 import type { AuthenticatedFetch } from '@language-drill/api-client';
-import { type TheoryTopicId } from '../../content/theory';
 import { useTheoryTopics } from '../../lib/hooks/use-theory-topics';
 
 type TheoryEmptyProps = {
   attemptedTopicId: string;
   language: LearningLanguage;
-  onSwitchTopic: (topicId: TheoryTopicId) => void;
+  onSwitchTopic: (topicId: string) => void;
   fetchFn?: AuthenticatedFetch;
 };
 
@@ -36,7 +35,7 @@ export function TheoryEmpty({
                 <button
                   type="button"
                   className="theory-otherbtn"
-                  onClick={() => onSwitchTopic(t.id as TheoryTopicId)}
+                  onClick={() => onSwitchTopic(t.id)}
                 >
                   → {t.title}
                 </button>

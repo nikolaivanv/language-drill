@@ -26,6 +26,7 @@ function clozeItem(
   return {
     exerciseId: id,
     type: ExerciseType.CLOZE,
+    grammarPointKey: null,
     contentJson: {
       type: ExerciseType.CLOZE,
       instructions: 'Fill in',
