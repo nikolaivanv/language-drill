@@ -59,6 +59,7 @@ describe('CreateSessionResponseSchema', () => {
           type: 'cloze',
           language: 'EN',
           difficulty: 'B1',
+          grammarPointKey: 'es-b1-conditional',
           contentJson: { instructions: 'Fill in the blank', sentence: 'I ___ to the store' },
         },
       ],

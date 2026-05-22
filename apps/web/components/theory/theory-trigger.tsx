@@ -3,13 +3,16 @@
 import type { MouseEvent } from 'react';
 import type { LearningLanguage } from '@language-drill/shared';
 import type { AuthenticatedFetch } from '@language-drill/api-client';
-import { type TheoryTopicId } from '../../content/theory';
 import { useTheoryTopic } from '../../lib/hooks/use-theory-topic';
 
+// `topicId` is `string` (not the closed `TheoryTopicId` enum) because
+// DB-backed theory topics — generated from the curriculum — are not part
+// of the hand-authored static registry. `useTheoryTopic` accepts any
+// string and decides whether to render based on static-or-DB lookup.
 type TheoryTriggerProps = {
-  topicId: TheoryTopicId;
+  topicId: string;
   language: LearningLanguage;
-  onOpen: (topicId: TheoryTopicId, triggerEl: HTMLElement) => void;
+  onOpen: (topicId: string, triggerEl: HTMLElement) => void;
   fetchFn?: AuthenticatedFetch;
 };
 

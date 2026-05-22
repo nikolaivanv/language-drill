@@ -22,6 +22,7 @@ const validEvaluation = {
 const validAttemptedItem = {
   exerciseId: '11111111-1111-4111-8111-111111111111',
   type: 'cloze',
+  grammarPointKey: 'es-b1-conditional',
   contentJson: { instructions: 'Fill in', sentence: 'Yo ___ libros' },
   status: 'correct',
   userAnswer: 'leo',
@@ -32,6 +33,7 @@ const validAttemptedItem = {
 const validSkippedItem = {
   exerciseId: '22222222-2222-4222-8222-222222222222',
   type: 'translation',
+  grammarPointKey: null,
   contentJson: {
     instructions: 'Translate',
     sourceText: 'I am hungry',
@@ -86,6 +88,17 @@ describe('DebriefItemSchema', () => {
     expect(result.userAnswer).toBe('leo');
     expect(result.score).toBe(0.95);
     expect(result.evaluation).not.toBeNull();
+    expect(result.grammarPointKey).toBe('es-b1-conditional');
+  });
+
+  it('accepts a null grammarPointKey on grammar-agnostic items', () => {
+    const result = DebriefItemSchema.parse(validSkippedItem);
+    expect(result.grammarPointKey).toBeNull();
+  });
+
+  it('requires grammarPointKey field (nullable, not optional)', () => {
+    const { grammarPointKey: _omitted, ...withoutKey } = validAttemptedItem;
+    expect(() => DebriefItemSchema.parse(withoutKey)).toThrow();
   });
 
   it('parses a valid skipped item with null fields (Req 2.3)', () => {

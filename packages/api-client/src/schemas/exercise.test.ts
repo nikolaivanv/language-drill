@@ -12,6 +12,7 @@ describe('ExerciseResponseSchema', () => {
       type: 'cloze',
       language: 'EN',
       difficulty: 'B1',
+      grammarPointKey: 'es-b1-conditional',
       contentJson: { instructions: 'Fill in the blank', sentence: 'I ___ to the store' },
     };
     const result = ExerciseResponseSchema.parse(data);
@@ -19,6 +20,7 @@ describe('ExerciseResponseSchema', () => {
     expect(result.type).toBe('cloze');
     expect(result.language).toBe('EN');
     expect(result.difficulty).toBe('B1');
+    expect(result.grammarPointKey).toBe('es-b1-conditional');
     expect(result.contentJson).toEqual(data.contentJson);
   });
 
@@ -28,15 +30,29 @@ describe('ExerciseResponseSchema', () => {
       type: 'translation',
       language: 'ES',
       difficulty: 'A2',
+      grammarPointKey: null,
       contentJson: null,
     };
     const result = ExerciseResponseSchema.parse(data);
     expect(result.contentJson).toBeNull();
+    expect(result.grammarPointKey).toBeNull();
   });
 
   it('rejects missing required fields', () => {
     expect(() => ExerciseResponseSchema.parse({ id: 'abc' })).toThrow();
     expect(() => ExerciseResponseSchema.parse({})).toThrow();
+  });
+
+  it('requires grammarPointKey to be present (nullable, not optional)', () => {
+    expect(() =>
+      ExerciseResponseSchema.parse({
+        id: 'abc',
+        type: 'cloze',
+        language: 'ES',
+        difficulty: 'B1',
+        contentJson: null,
+      }),
+    ).toThrow();
   });
 });
 

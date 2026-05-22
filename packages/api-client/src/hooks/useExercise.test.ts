@@ -22,6 +22,7 @@ describe('useExercise — response validation', () => {
       type: 'cloze',
       language: 'EN',
       difficulty: 'B1',
+      grammarPointKey: 'es-b1-conditional',
       contentJson: {
         instructions: 'Fill in the blank',
         sentence: 'She ___ to the park.',
@@ -33,6 +34,7 @@ describe('useExercise — response validation', () => {
     expect(result.type).toBe('cloze');
     expect(result.language).toBe('EN');
     expect(result.difficulty).toBe('B1');
+    expect(result.grammarPointKey).toBe('es-b1-conditional');
     expect(result.contentJson).toEqual(data.contentJson);
   });
 
@@ -42,10 +44,12 @@ describe('useExercise — response validation', () => {
       type: 'translation',
       language: 'ES',
       difficulty: 'A2',
+      grammarPointKey: null,
       contentJson: null,
     };
     const result = ExerciseResponseSchema.parse(data);
     expect(result.contentJson).toBeNull();
+    expect(result.grammarPointKey).toBeNull();
   });
 
   it('rejects exercise missing id', () => {

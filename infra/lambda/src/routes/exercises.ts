@@ -91,6 +91,7 @@ exercises.get('/exercises', async (c) => {
     type: row.type,
     language: row.language,
     difficulty: row.difficulty,
+    grammarPointKey: row.grammarPointKey,
     contentJson: row.contentJson,
   });
 });
@@ -117,6 +118,7 @@ exercises.get('/exercises/:id', async (c) => {
     type: row.type,
     language: row.language,
     difficulty: row.difficulty,
+    grammarPointKey: row.grammarPointKey,
     contentJson: row.contentJson,
   });
 });

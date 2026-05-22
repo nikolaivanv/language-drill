@@ -1,52 +1,43 @@
 import { describe, it, expect } from 'vitest';
 import { Language } from '@language-drill/shared';
-import { HINT_TO_TOPIC, topicIdForHint } from '../theory-topic-map';
+import { topicIdForGrammarPointKey } from '../theory-topic-map';
 
-describe('topicIdForHint', () => {
-  it('returns null when the hint is undefined', () => {
-    expect(topicIdForHint(undefined, Language.ES)).toBeNull();
-  });
-
-  it('returns null when the hint is an empty string', () => {
-    expect(topicIdForHint('', Language.ES)).toBeNull();
-  });
-
-  it('maps a known hint to its registered topic id for ES', () => {
-    expect(topicIdForHint('subjunctive', Language.ES)).toBe('subjunctive');
-  });
-
-  it('maps the alias "present-subjunctive" to the same topic', () => {
-    expect(topicIdForHint('present-subjunctive', Language.ES)).toBe(
-      'subjunctive',
+describe('topicIdForGrammarPointKey', () => {
+  it('strips the language prefix and returns the rest', () => {
+    expect(topicIdForGrammarPointKey('tr-a1-vowel-harmony', Language.TR)).toBe(
+      'a1-vowel-harmony',
     );
-  });
-
-  it('maps "preterite-vs-imperfect" and "pret-imp" to preterite-imperfect', () => {
-    expect(topicIdForHint('preterite-vs-imperfect', Language.ES)).toBe(
-      'preterite-imperfect',
+    expect(topicIdForGrammarPointKey('es-b1-conditional', Language.ES)).toBe(
+      'b1-conditional',
     );
-    expect(topicIdForHint('pret-imp', Language.ES)).toBe('preterite-imperfect');
+    expect(
+      topicIdForGrammarPointKey('de-a2-modal-verbs', Language.DE),
+    ).toBe('a2-modal-verbs');
   });
 
-  it('returns null when the hint is unmapped', () => {
-    expect(topicIdForHint('past-subjunctive', Language.ES)).toBeNull();
-    expect(topicIdForHint('totally-fake-topic', Language.ES)).toBeNull();
+  it('returns null for null / undefined / empty input', () => {
+    expect(topicIdForGrammarPointKey(null, Language.ES)).toBeNull();
+    expect(topicIdForGrammarPointKey(undefined, Language.ES)).toBeNull();
+    expect(topicIdForGrammarPointKey('', Language.ES)).toBeNull();
   });
 
-  it('returns null for cross-language gaps (mapped hint, language without that topic)', () => {
-    // 'subjunctive' is in HINT_TO_TOPIC but DE/TR have empty registries in v1.
-    expect(topicIdForHint('subjunctive', Language.DE)).toBeNull();
-    expect(topicIdForHint('subjunctive', Language.TR)).toBeNull();
+  it('returns null when the prefix does not match the language', () => {
+    // Defensive: a TR exercise should never expose a key prefixed `es-`,
+    // but if it does we refuse to render — avoids cross-language theory
+    // lookups (`GET /theory/TR/b1-conditional` with no TR row).
+    expect(topicIdForGrammarPointKey('es-b1-conditional', Language.TR)).toBeNull();
+    expect(topicIdForGrammarPointKey('tr-a1-locative', Language.DE)).toBeNull();
   });
 
-  it('every value in HINT_TO_TOPIC is one of the valid registry ids', () => {
-    const validIds = new Set([
-      'subjunctive',
-      'preterite-imperfect',
-      'conditional',
-    ]);
-    for (const id of Object.values(HINT_TO_TOPIC)) {
-      expect(validIds.has(id)).toBe(true);
-    }
+  it('returns null when the key has no segment after the language prefix', () => {
+    expect(topicIdForGrammarPointKey('tr-', Language.TR)).toBeNull();
+  });
+
+  it('matches the prefix case-insensitively against the language enum', () => {
+    // Language enum values are uppercase ("TR"); keys in the DB are
+    // lowercase-prefixed ("tr-..."). The resolver normalises.
+    expect(topicIdForGrammarPointKey('tr-a1-locative', Language.TR)).toBe(
+      'a1-locative',
+    );
   });
 });

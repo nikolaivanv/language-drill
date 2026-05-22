@@ -1,6 +1,5 @@
 import type { LearningLanguage } from '@language-drill/shared';
 import type { AuthenticatedFetch } from '@language-drill/api-client';
-import { type TheoryTopicId } from '../../content/theory';
 import { useTheoryTopics } from '../../lib/hooks/use-theory-topics';
 import { cn } from '../../lib/cn';
 import type { TheoryTopic } from './types';
@@ -10,7 +9,7 @@ type TheoryTocProps = {
   activeSectionId: string;
   onJump: (sectionId: string) => void;
   language: LearningLanguage;
-  onSwitchTopic: (topicId: TheoryTopicId) => void;
+  onSwitchTopic: (topicId: string) => void;
   fetchFn?: AuthenticatedFetch;
 };
 
@@ -54,7 +53,7 @@ export function TheoryToc({
               key={t.id}
               type="button"
               className="theory-otherbtn"
-              onClick={() => onSwitchTopic(t.id as TheoryTopicId)}
+              onClick={() => onSwitchTopic(t.id)}
             >
               → {t.title}
             </button>

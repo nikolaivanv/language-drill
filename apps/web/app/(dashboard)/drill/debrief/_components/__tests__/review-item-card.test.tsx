@@ -22,6 +22,7 @@ function clozeItem(overrides: Partial<DebriefItem> = {}): DebriefItem {
   return {
     exerciseId: '11111111-1111-4111-8111-111111111111',
     type: ExerciseType.CLOZE,
+    grammarPointKey: null,
     contentJson: {
       type: ExerciseType.CLOZE,
       instructions: 'Fill in the blank',
@@ -299,6 +300,7 @@ function translationItem(overrides: Partial<DebriefItem> = {}): DebriefItem {
   return {
     exerciseId: '22222222-2222-4222-8222-222222222222',
     type: ExerciseType.TRANSLATION,
+    grammarPointKey: null,
     contentJson: {
       type: ExerciseType.TRANSLATION,
       instructions: 'Translate to Spanish',
@@ -370,6 +372,7 @@ function vocabItem(overrides: Partial<DebriefItem> = {}): DebriefItem {
   return {
     exerciseId: '33333333-3333-4333-8333-333333333333',
     type: ExerciseType.VOCAB_RECALL,
+    grammarPointKey: null,
     contentJson: {
       type: ExerciseType.VOCAB_RECALL,
       instructions: 'Recall the Spanish word',

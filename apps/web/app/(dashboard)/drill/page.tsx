@@ -21,9 +21,8 @@ import { useActiveLanguage } from '../../../components/shell';
 import {
   TheoryPanel,
   TheoryTrigger,
-  type TheoryTopicId,
 } from '../../../components/theory';
-import { topicIdForHint } from '../../../lib/theory-topic-map';
+import { topicIdForGrammarPointKey } from '../../../lib/theory-topic-map';
 import { Card } from '../../../components/ui';
 import { coachMessage } from '../../../lib/drill/coach-messages';
 import { DEFAULT_EXERCISE_COUNT } from '../../../lib/drill/session-config';
@@ -85,7 +84,7 @@ export default function PracticePage() {
   const [state, dispatch] = useReducer(sessionReducer, initialSessionState);
 
   const { activeLanguage } = useActiveLanguage();
-  const [openTopicId, setOpenTopicId] = useState<TheoryTopicId | null>(null);
+  const [openTopicId, setOpenTopicId] = useState<string | null>(null);
   const [triggerEl, setTriggerEl] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -210,9 +209,10 @@ export default function PracticePage() {
   const exerciseContent = currentItem
     ? (currentItem.contentJson as ExerciseContent)
     : null;
-  const theoryTopicId = exerciseContent
-    ? topicIdForHint(exerciseContent.topicHint, activeLanguage)
-    : null;
+  const theoryTopicId = topicIdForGrammarPointKey(
+    currentItem?.grammarPointKey ?? null,
+    activeLanguage,
+  );
 
   const exerciseTypeForRail: ExerciseType =
     exerciseContent && 'type' in exerciseContent

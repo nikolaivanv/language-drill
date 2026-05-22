@@ -6,6 +6,10 @@ export const ExerciseResponseSchema = z.object({
   type: z.string(),
   language: z.string(),
   difficulty: z.string(),
+  // Nullable: the DB column is `text` nullable. Vocab-recall and other
+  // grammar-agnostic exercise types omit it; theory-trigger lookups
+  // gracefully no-op when null.
+  grammarPointKey: z.string().nullable(),
   contentJson: z.unknown(),
 });
 

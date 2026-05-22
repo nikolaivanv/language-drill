@@ -59,6 +59,7 @@ function makeClozeItem(index: number, overrides: Record<string, unknown> = {}) {
   return {
     exerciseId: `aaaaaaaa-${index}aaa-4aaa-8aaa-aaaaaaaaaaaa`,
     type: ExerciseType.CLOZE,
+    grammarPointKey: null,
     contentJson: {
       type: ExerciseType.CLOZE,
       instructions: 'fill the blank',
