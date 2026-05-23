@@ -48,6 +48,11 @@
         "VERCEL_ENV",
         "VERCEL_GIT_COMMIT_SHA"
       ]
+    },
+    "@language-drill/web#test:e2e": {
+      "cache": false,
+      "persistent": false,
+      "dependsOn": ["^build"]
     }
   }
 }
