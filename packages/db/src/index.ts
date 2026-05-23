@@ -31,6 +31,10 @@ export {
   trCurriculum,
   getGrammarPoint,
   assertCurriculumInvariants,
+  CURRICULUM_VERSION_ES,
+  CURRICULUM_VERSION_DE,
+  CURRICULUM_VERSION_TR,
+  CURRICULUM_VERSION_BY_LANGUAGE,
 } from './curriculum';
 export type { CurriculumCefrLevel, GrammarPoint } from './curriculum';
 

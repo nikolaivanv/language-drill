@@ -61,7 +61,7 @@ function renderBulletList(items: readonly string[]): string {
 // VALIDATION_SYSTEM_PROMPT_TEMPLATE. Drives the Langfuse trace
 // `promptVersion` tag — dashboards cohort old vs. new prompt traces by
 // this string.
-export const VALIDATION_PROMPT_VERSION = "validate@2026-05-19";
+export const VALIDATION_PROMPT_VERSION = "validate@2026-05-23";
 
 export const VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language exercises for {{language}} learners at CEFR {{cefrLevel}}. Your job is to validate one already-generated exercise that targets the grammar point: {{grammarPointName}}.
 
@@ -96,13 +96,27 @@ Score conservatively — a flagged draft costs a human ~30 seconds of review; an
 
 ## Dimensions to score (one-to-one with the tool's required fields)
 
-1. **qualityScore** (0.0–1.0): overall fitness.
-2. **ambiguous** (boolean): more than one substantively-correct answer? For **cloze**, true when more than one plausibly-fitting lexeme/form satisfies the targeted grammar point in this sentence AND the draft's \`acceptableAnswers\` does not enumerate them. Example: "Sınıfta sekiz ___ var" (eight ___ in the classroom) — chair, student, book, pencil all satisfy "no plural after numerals" equally; \`correctAnswer: "öğrenci"\` alone is ambiguous, but \`correctAnswer: "öğrenci"\` + \`acceptableAnswers: ["sandalye", "kitap", "kalem", ...]\` is not. For **translation**, surface variation is fine; two structurally different correct translations is ambiguous. For **vocab_recall**, the prompt/definition must pick out exactly one headword.
-3. **contextSpoilsAnswer** (boolean): does the draft's \`instructions\` or \`context\` field state the rule's outcome, name the required suffix/form, or otherwise let the learner write the answer without engaging with the blank? Naming the rule category is fine ("vowel harmony", "plural agreement after a numeral"); stating the outcome is not ("front vowel (e) requires -ler suffix" above a blank that takes -ler, "Use the plural form" above a blank where the answer is plural). \`true\` is a hard veto — the draft is rejected.
+1. **qualityScore** (0.0–1.0): overall fitness. Anchor to one of the values below; interpolate only when a draft sits cleanly between two anchors. Do NOT default to 0.7/0.75 as a "looks OK" floor.
+   - **1.0** — exceptional; could anchor a published textbook unit.
+   - **0.9** — publishable as-is by a native-speaker teacher.
+   - **0.8** — publishable with one cosmetic edit.
+   - **0.65** — borderline; clear issue but salvageable. Routes to FLAGGED.
+   - **0.5** — unusable; reject. Routes to REJECTED.
+2. **ambiguous** (boolean): more than one substantively-correct answer? For **cloze**, true when multiple lexemes/forms satisfy the grammar point in this sentence AND \`acceptableAnswers\` does not enumerate them. For **translation**, surface variation is fine; structurally different correct translations is ambiguous. For **vocab_recall**, the prompt must pick out exactly one headword.
+   - "Sınıfta sekiz ___ var." / \`correctAnswer: "öğrenci"\` — sandalye, kalem, kitap, defter all satisfy no-plural-after-numeral equally; needs \`acceptableAnswers\`.
+   - "Evde yeni ___ var. Onlar çok güzel." / \`correctAnswer: "perdeler"\` — perdeler, kitaplar, çiçekler, lambalar all fit "plural + positive descriptor"; the follow-on doesn't disambiguate. Needs \`acceptableAnswers\` or tighter framing ("Onları yıkamayı unutma" picks out perdeler).
+   - "Ben çok mutlu___" / \`correctAnswer: "um"\` or \`"yum"\` — buffer-consonant blank: vowel-final stem "mutlu" + 1sg copular \`-Im\` requires buffer \`-y-\`. Without \`acceptableAnswers\` listing both ("um" and "yum"), or embedding \`-y-\` in the visible stem as "mutluy___", set \`ambiguous = true\` AND add \`'buffer-consonant ambiguous blank'\` to \`flaggedReasons\`.
+   - Translation: no clean production example yet (non-binding); judge "structurally different correct translations" against the spec.
+3. **contextSpoilsAnswer** (boolean): does the draft's \`instructions\` or \`context\` state the rule's outcome, name the required suffix/form, or otherwise let the learner write the answer without engaging with the blank? Naming the rule category is fine ("vowel harmony", "plural agreement after a numeral"); stating the outcome is not. Also true when \`context\` exhaustively enumerates every member of the closed set of forms the grammar point selects between. \`true\` is a hard veto.
+   - "Vowel harmony: stem 'çocuk' (u = back, unrounded → -lar)" / blank "lar" — context derives the answer from the stem.
+   - "Use -da/-de after voiced consonants, -ta/-te after voiceless" / blank one of "-da/-de/-ta/-te" — closed set exhaustively enumerated.
+   - "Vowel harmony: front vowel stems take -ler suffix" above "Odada pencere___" / blank "ler" — rule's outcome stated for the exact stem class.
 4. **levelMatch** (boolean): does the difficulty match {{cefrLevel}}?
 5. **grammarPointMatch** (boolean): does this actually test {{grammarPointName}}?
+   - Set \`false\` when the blank's construction is a different grammar-point key from the cell's declared point, **even when grammatically related**. Example: \`correctAnswer: "da"\` in a \`tr-a1-vowel-harmony\` cell tests locative \`-DA\` (belongs in \`tr-a1-locative\`) — the suffix incidentally obeys vowel harmony but the blank tests locative selection. The grammar-point-key boundary is the rule, not the broader grammar family.
 6. **culturalIssues** (array of strings): stereotyping, sensitive content, exclusion. Empty array when none.
 7. **flaggedReasons** (array of strings): anything else a reviewer should know.
+   - Cell over-concentration: when validating a draft for \`tr-a1-vowel-harmony\` (or any grammar-shape cell with multiple surface forms) where the blank tests the plural suffix \`-lAr/-lEr\`, add \`'cell over-concentrated on plural suffix'\`. Soft signal — does not change routing for this draft; aggregates at review time so a >50 % rate surfaces the imbalance.
 
 ## Output
 

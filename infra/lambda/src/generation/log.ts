@@ -20,6 +20,7 @@ export function summarizeResult(r: CellResult): {
   rejected: number;
   dedupGivenUp: number;
   malformedDrafts: number;
+  parserFailedOrdinals: number;
   durationMs: number;
 } {
   return {
@@ -30,6 +31,10 @@ export function summarizeResult(r: CellResult): {
     rejected: r.rejectedCount,
     dedupGivenUp: r.dedupGivenUpCount,
     malformedDrafts: r.malformedDraftCount,
+    // R5.4 — ordinals where every retry slot produced a parser failure.
+    // Already a subset of `rejected`; surfaced separately so CloudWatch
+    // can alert on a stuck failure mode (`> 0.2 ratio` over multiple jobs).
+    parserFailedOrdinals: r.parserFailedCount,
     durationMs: r.durationMs,
   };
 }

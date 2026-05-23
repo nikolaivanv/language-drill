@@ -1,10 +1,30 @@
-import deCurriculum from './de';
-import esCurriculum from './es';
-import trCurriculum from './tr';
+import { Language, type LearningLanguage } from '@language-drill/shared';
+
+import deCurriculum, { CURRICULUM_VERSION_DE } from './de';
+import esCurriculum, { CURRICULUM_VERSION_ES } from './es';
+import trCurriculum, { CURRICULUM_VERSION_TR } from './tr';
 import type { GrammarPoint } from './types';
 
 export type { CurriculumCefrLevel, GrammarPoint } from './types';
 export { esCurriculum, deCurriculum, trCurriculum };
+export { CURRICULUM_VERSION_ES, CURRICULUM_VERSION_DE, CURRICULUM_VERSION_TR };
+
+/**
+ * One-stop lookup for the per-language curriculum version. The scheduler in
+ * `infra/lambda/src/generation/scheduler.ts` compares each cell's
+ * `cell.language` against this map to resolve the expected curriculum
+ * version, and `run-one-cell.ts` reads it on `generation_jobs` INSERT to
+ * populate the `curriculum_version` column.
+ *
+ * Keyed off `LearningLanguage` (not the full `Language` enum) because EN is
+ * a source-only language for translation exercises and has no curriculum
+ * module — the type system enforces that EN cannot be looked up here.
+ */
+export const CURRICULUM_VERSION_BY_LANGUAGE: Readonly<Record<LearningLanguage, string>> = {
+  [Language.ES]: CURRICULUM_VERSION_ES,
+  [Language.DE]: CURRICULUM_VERSION_DE,
+  [Language.TR]: CURRICULUM_VERSION_TR,
+};
 
 /**
  * The full Phase-1 curriculum: all entries from all three learning languages,

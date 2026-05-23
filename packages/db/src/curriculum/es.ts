@@ -11,6 +11,17 @@ import type { GrammarPoint } from './types';
 const ES = Language.ES;
 const { B1, B2 } = CefrLevel;
 
+/**
+ * Per-language curriculum version. Bump in the same commit as any edit to
+ * this file's grammar entries (analogous to `*_PROMPT_VERSION` in
+ * `packages/ai/src/`). The scheduler in `infra/lambda/src/generation/`
+ * compares this to the value recorded on the most recent succeeded
+ * generation_jobs row for each cell — when they differ, any
+ * "saturated-dedup" or "low-yield" suppression on that cell clears, on the
+ * assumption that the curriculum edit may have unblocked the search space.
+ */
+export const CURRICULUM_VERSION_ES = '2026-05-23';
+
 const esCurriculum: readonly GrammarPoint[] = [
   /*
   // ---------------------------------------------------------------------------

@@ -55,10 +55,23 @@ const hoisted = vi.hoisted(() => {
   const mockWhere = vi.fn(() => ({ groupBy: mockGroupBy }));
   const mockFrom = vi.fn(() => ({ where: mockWhere }));
   const mockSelect = vi.fn(() => ({ from: mockFrom }));
-  return { mockSqsSend, mockGroupBy, mockWhere, mockFrom, mockSelect };
+  // R6.2 / R1.4 — the `loadMostRecentSucceededJobPerCell` query goes through
+  // `db.execute(sql\`...\`)`. The handler narrows `result.rows` to a typed
+  // row shape, so the mock must return that shape (or [] by default).
+  const mockExecute = vi.fn<
+    () => Promise<{ rows: ReadonlyArray<unknown> }>
+  >(() => Promise.resolve({ rows: [] }));
+  return {
+    mockSqsSend,
+    mockGroupBy,
+    mockWhere,
+    mockFrom,
+    mockSelect,
+    mockExecute,
+  };
 });
 
-const { mockSqsSend, mockGroupBy } = hoisted;
+const { mockSqsSend, mockGroupBy, mockExecute } = hoisted;
 
 // `SQSClient` and `SendMessageBatchCommand` are invoked with `new`, so they
 // must be real constructor functions.
@@ -79,7 +92,13 @@ vi.mock('@language-drill/db', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@language-drill/db')>();
   return {
     ...actual,
-    createDb: vi.fn(() => ({ select: hoisted.mockSelect }) as never),
+    createDb: vi.fn(
+      () =>
+        ({
+          select: hoisted.mockSelect,
+          execute: hoisted.mockExecute,
+        }) as never,
+    ),
     requireEnv: vi.fn((name: string) => {
       if (name === 'GENERATION_QUEUE_URL') {
         return 'https://sqs.eu-central-1.amazonaws.com/000000000000/LanguageDrillStack-dev-GenerationQueue';
@@ -95,11 +114,13 @@ vi.mock('@language-drill/db', async (importOriginal) => {
 // path as the in-mock spreads, so they are the actual implementations.
 import {
   ALL_CURRICULA,
+  CURRICULUM_VERSION_BY_LANGUAGE,
   ROUND_1_CEFR_LEVELS,
   deterministicUuid,
   enumerateCurriculumCells,
   type Cell,
 } from '@language-drill/db';
+import type { LearningLanguage } from '@language-drill/shared';
 import { handler } from './scheduler';
 import { parseGenerationJobMessage } from './job-message';
 
@@ -114,6 +135,9 @@ beforeEach(() => {
   // Default: empty result set → every cell gets count = 0 → all are under-target.
   // Tests override per scenario.
   mockGroupBy.mockResolvedValue([]);
+  // Default: no recent succeeded jobs → no R6 suppression possible → every
+  // cell schedulable subject only to the approvedInPool check.
+  mockExecute.mockResolvedValue({ rows: [] });
   consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 });
 
@@ -262,7 +286,8 @@ describe('scheduler handler', () => {
   });
 
   it('empty under-target list → no SQS calls, "Pool at target" log emitted', async () => {
-    // Every round-1 cell at TARGET_PER_CELL=50; nothing under MIN_PER_CELL=25.
+    // Every round-1 cell at TARGET_PER_CELL=50; nothing is under target.
+    // (Phase 4: MIN_PER_CELL hysteresis was removed — see scheduler-decision.ts.)
     mockGroupBy.mockResolvedValueOnce(rowsToFillAllCellsExcept(new Set()));
 
     await handler();
@@ -396,5 +421,144 @@ describe('scheduler handler', () => {
     expect(log).toBeDefined();
     expect(log!['level']).toBe('warn');
     expect(log!['durationMs']).toBeGreaterThanOrEqual(31_000);
+  });
+
+  // -------------------------------------------------------------------------
+  // R6 — top-up-to-target + suppression scenarios
+  //
+  // Scenarios A, B, C from tasks.md task 21. Each picks ONE specific Round-1
+  // cell to manipulate; every other cell is at TARGET so it lands as
+  // skip-target-reached and contributes only to the suppressed counter.
+  // -------------------------------------------------------------------------
+
+  it('R6 scenario A: 30 approved + saturated-dedup job + curriculum match → 0 enqueued, suppressed.saturatedDedup === 1', async () => {
+    // Pick the first Round-1 cell as the test subject. The rest are at TARGET.
+    const subject = allRoundOneCells()[0];
+    const subjectKeys = new Set([subject.cellKey]);
+    mockGroupBy.mockResolvedValueOnce(rowsToFillAllCellsExcept(subjectKeys, 30));
+
+    // R6.1 saturation thresholds at requestedCount=50:
+    //   ceil(0.5 * 50) = 25 (dedup-given-up threshold, inclusive)
+    //   ceil(0.3 * 50) = 15 (approved threshold, strict upper bound)
+    // So `dedupGivenUpCount=25 AND approvedCount=14` saturates. Curriculum
+    // version matches the on-disk constant for the subject's language → R6.4
+    // mismatch does NOT clear suppression.
+    const currentVersion =
+      CURRICULUM_VERSION_BY_LANGUAGE[subject.language as LearningLanguage];
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        {
+          cell_key: subject.cellKey,
+          approved_count: 14,
+          requested_count: 50,
+          dedup_given_up_count: 25,
+          curriculum_version: currentVersion,
+          finished_at: new Date('2026-05-22T00:00:00Z'),
+        },
+      ],
+    });
+
+    await handler();
+
+    // No SQS calls — saturated-dedup suppresses the only under-target cell.
+    expect(mockSqsSend).not.toHaveBeenCalled();
+    expect(capturedBatches()).toEqual([]);
+
+    // Per-skip log line for the subject cell (grep target).
+    const skipLog = findLogLine(
+      (e) =>
+        e['cellKey'] === subject.cellKey &&
+        e['reason'] === 'saturated-dedup',
+    );
+    expect(skipLog).toBeDefined();
+
+    // Completion log includes the suppressed summary with saturatedDedup === 1.
+    const completionLog = findLogLine(
+      (e) =>
+        typeof e['message'] === 'string' &&
+        ((e['message'] as string).includes('Pool at target') ||
+          (e['message'] as string).includes('scheduler complete')),
+    );
+    expect(completionLog).toBeDefined();
+    const suppressed = completionLog!['suppressed'] as Record<string, number>;
+    expect(suppressed['saturatedDedup']).toBe(1);
+  });
+
+  it('R6 scenario B: same setup with bumped curriculum version → 1 message with need = 20', async () => {
+    // Same approved + saturated-dedup as scenario A, but the recent job's
+    // recorded curriculumVersion is STALE (older than the on-disk constant),
+    // so R6.4 fires and suppression clears → the cell is enqueued.
+    const subject = allRoundOneCells()[0];
+    const subjectKeys = new Set([subject.cellKey]);
+    mockGroupBy.mockResolvedValueOnce(rowsToFillAllCellsExcept(subjectKeys, 30));
+
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        {
+          cell_key: subject.cellKey,
+          approved_count: 14,
+          requested_count: 50,
+          dedup_given_up_count: 25,
+          // Any value different from `CURRICULUM_VERSION_BY_LANGUAGE[...]`
+          // triggers the R6.4 suppression-cleared branch in decideEnqueue.
+          curriculum_version: '2026-04-01',
+          finished_at: new Date('2026-05-22T00:00:00Z'),
+        },
+      ],
+    });
+
+    await handler();
+
+    const batches = capturedBatches();
+    expect(batches).toHaveLength(1);
+    expect(batches[0].Entries).toHaveLength(1);
+
+    const [msg] = decodeBatch(batches[0]).map((m) =>
+      parseGenerationJobMessage(m),
+    );
+    expect(msg.spec.grammarPointKey).toBe(subject.grammarPoint.key);
+    expect(msg.spec.cefrLevel).toBe(subject.cefrLevel);
+    expect(msg.spec.language).toBe(subject.language);
+    // TARGET_PER_CELL=50 minus approvedInPool=30 = 20.
+    expect(msg.spec.count).toBe(20);
+
+    // Completion log shows zero suppressions (suppression cleared).
+    const completionLog = findLogLine(
+      (e) =>
+        typeof e['message'] === 'string' &&
+        (e['message'] as string).includes('scheduler complete'),
+    );
+    expect(completionLog).toBeDefined();
+    const suppressed = completionLog!['suppressed'] as Record<string, number>;
+    expect(suppressed['saturatedDedup']).toBe(0);
+    expect(suppressed['lowYield']).toBe(0);
+  });
+
+  it('R6 scenario C: 48 approved + no recent job → 1 message with need = 2 (top-up-to-target, previously skipped under MIN_PER_CELL hysteresis)', async () => {
+    // Under the old MIN_PER_CELL=25 hysteresis, a cell at 48 approved
+    // wouldn't qualify (48 >= 25 → skipped). Under the new TARGET-only
+    // policy, anything < 50 is topped up. This test pins the new behavior.
+    const subject = allRoundOneCells()[0];
+    const subjectKeys = new Set([subject.cellKey]);
+    mockGroupBy.mockResolvedValueOnce(rowsToFillAllCellsExcept(subjectKeys, 48));
+
+    // No recent job for the subject → no suppression possible → enqueue.
+    // The default `mockExecute.mockResolvedValue({ rows: [] })` from
+    // beforeEach already provides this; the explicit assertion below
+    // documents the dependency for future readers.
+    expect(mockExecute).toBeDefined();
+
+    await handler();
+
+    const batches = capturedBatches();
+    expect(batches).toHaveLength(1);
+    expect(batches[0].Entries).toHaveLength(1);
+
+    const [msg] = decodeBatch(batches[0]).map((m) =>
+      parseGenerationJobMessage(m),
+    );
+    expect(msg.spec.grammarPointKey).toBe(subject.grammarPoint.key);
+    // TARGET_PER_CELL=50 minus approvedInPool=48 = 2.
+    expect(msg.spec.count).toBe(2);
   });
 });

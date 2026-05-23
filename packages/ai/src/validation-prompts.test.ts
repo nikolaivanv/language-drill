@@ -128,6 +128,63 @@ describe("buildValidationSystemPrompt", () => {
     expect(prompt).toContain("strict reviewer");
     expect(prompt).toContain("Be conservative");
   });
+
+  it("pins the cluster A edits — 5-anchor rubric + R3.A/R3.B/R7.3 triples + R2.4/R2.6 bullets", async () => {
+    // One regression net for everything that landed in the R3 + R4 + R7
+    // validator-prompt edit (tasks 8 + 9 + 10). Pin each individually so a
+    // future edit can't silently drop one while preserving the others.
+    const prompt = await buildValidationSystemPrompt(baseSpec);
+
+    // R4.1 — anchored qualityScore rubric. Pin the 0.9 anchor + the
+    // "publishable" wording that ties the rubric to the requirement.
+    expect(prompt).toContain("0.9");
+    expect(prompt).toContain("publishable");
+    expect(prompt).toContain("1.0");
+    expect(prompt).toContain("0.8");
+    expect(prompt).toContain("0.65");
+    expect(prompt).toContain("0.5");
+
+    // R3.B retained — the original "Sınıfta sekiz" exemplar must survive
+    // the reformat into the triple block.
+    expect(prompt).toContain("Sınıfta sekiz");
+    // R3.B new — the "Evde yeni" exemplar added in task 9.
+    expect(prompt).toContain("Evde yeni");
+    // R7.3 — the buffer-consonant "mutlu" exemplar added in task 9.
+    expect(prompt).toContain("mutlu");
+    expect(prompt).toContain("buffer-consonant ambiguous blank");
+
+    // R3.A — the three contextSpoilsAnswer triples added in task 8.
+    expect(prompt).toContain("çocuk");
+    expect(prompt).toContain("-da/-de");
+    expect(prompt).toContain("Odada pencere");
+
+    // R2.4 — the over-concentration soft signal added in task 10.
+    expect(prompt).toContain("cell over-concentrated on plural suffix");
+
+    // R2.6 — the grammarPointMatch sub-bullet uses the `correctAnswer: "da"`
+    // outlier in `tr-a1-vowel-harmony` as the worked example.
+    expect(prompt).toContain('correctAnswer: "da"');
+    expect(prompt).toContain("tr-a1-vowel-harmony");
+    expect(prompt).toContain("tr-a1-locative");
+  });
+
+  it("template raw size stays within the NFR token budget (+44 % raw cap)", () => {
+    // The NFR caps billed cost at +15 %, but the underlying raw-size
+    // budget that produces that result with the existing ≥0.8 cache-hit
+    // rate is +44 % (~415 tokens / ~1,680 bytes added to the original
+    // 3,805-byte template). 5,500 is the rounded ceiling.
+    //
+    // We assert on the TEMPLATE literal, not the rendered output, because:
+    //   - The template is what Langfuse stores and what Anthropic's
+    //     prompt-cache keys on byte-for-byte.
+    //   - The rendered output is template + per-spec grammar-point content
+    //     (descriptions, examples, common errors, CEFR descriptors) which
+    //     varies by language/level and is not what the NFR budgets — those
+    //     substitutions are already counted against the API per-call.
+    //   - The math `3,805 + ~44 % = 5,500` lines up exactly with the
+    //     template raw size, not with any rendered fixture.
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(5500);
+  });
 });
 
 // ---------------------------------------------------------------------------

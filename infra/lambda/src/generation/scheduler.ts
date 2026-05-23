@@ -22,6 +22,7 @@
 
 import {
   ALL_CURRICULA,
+  CURRICULUM_VERSION_BY_LANGUAGE,
   buildCellKeyFromRow,
   chunk,
   createDb,
@@ -29,20 +30,20 @@ import {
   enumerateCurriculumCells,
   exercises,
   requireEnv,
-  ROUND_1_CEFR_LEVELS,
   type Cell,
+  type Db,
 } from '@language-drill/db';
+import type { LearningLanguage } from '@language-drill/shared';
 import { SendMessageBatchCommand, SQSClient } from '@aws-sdk/client-sqs';
 import { inArray, sql } from 'drizzle-orm';
 
 import type { GenerationJobMessage } from './job-message';
+import { decideEnqueue, type RecentJob } from './scheduler-decision';
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const MIN_PER_CELL = 25;
-const TARGET_PER_CELL = 50;
 const SCHEDULER_PER_CELL_COST_CAP_USD = 0.5;
 const SLOW_QUERY_WARNING_MS = 30_000;
 /** SQS `SendMessageBatch` hard limit. */
@@ -61,6 +62,59 @@ const sqs = new SQSClient({ region: requireEnv('AWS_REGION') });
 
 function log(payload: Record<string, unknown>): void {
   console.log(JSON.stringify(payload));
+}
+
+// ---------------------------------------------------------------------------
+// loadMostRecentSucceededJobPerCell
+// ---------------------------------------------------------------------------
+
+/**
+ * Read the most recent succeeded `generation_jobs` row for each `cell_key`.
+ *
+ * `DISTINCT ON` collapses retries (same cell, multiple succeeded jobs across
+ * days) to the one with the latest `started_at`. The `generation_jobs_cell_idx`
+ * index `(cell_key, started_at desc)` makes this a single bounded scan even
+ * with thousands of historical rows.
+ *
+ * Returned map is keyed by `cell_key`; cells with no succeeded job are
+ * absent (the caller treats `undefined` lookups as `null`).
+ */
+async function loadMostRecentSucceededJobPerCell(
+  db: Db,
+): Promise<Map<string, RecentJob>> {
+  const result = await db.execute(sql`
+    SELECT DISTINCT ON (cell_key)
+           cell_key, approved_count, requested_count, dedup_given_up_count,
+           curriculum_version, finished_at
+    FROM generation_jobs
+    WHERE status = 'succeeded'
+    ORDER BY cell_key, started_at DESC
+  `);
+
+  type Row = {
+    cell_key: string;
+    approved_count: number;
+    requested_count: number;
+    dedup_given_up_count: number;
+    curriculum_version: string | null;
+    finished_at: Date | string;
+  };
+
+  const rows = result.rows as unknown as Row[];
+  const map = new Map<string, RecentJob>();
+  for (const row of rows) {
+    map.set(row.cell_key, {
+      approvedCount: row.approved_count,
+      requestedCount: row.requested_count,
+      dedupGivenUpCount: row.dedup_given_up_count,
+      curriculumVersion: row.curriculum_version,
+      finishedAt:
+        row.finished_at instanceof Date
+          ? row.finished_at
+          : new Date(row.finished_at),
+    });
+  }
+  return map;
 }
 
 // ---------------------------------------------------------------------------
@@ -119,27 +173,76 @@ export async function handler(): Promise<void> {
     approvedByCell.set(buildCellKeyFromRow(row), row.approved);
   }
 
-  // 4. Identify under-target cells. Round-1 narrowing (Req 4.5) skips C1/C2
-  //    curriculum entries silently — the consumer Lambda's guard (Req 2.7) is
-  //    defense-in-depth on top of this filter.
+  // 4. Second SQL aggregate: most recent succeeded job per cell. Drives the
+  //    R6 suppression checks (saturated-dedup + low-yield + curriculum-
+  //    version-mismatch-clears-suppression). Uses `generation_jobs_cell_idx`.
+  const recentJobByCell = await loadMostRecentSucceededJobPerCell(db);
+
+  // 5. Decide per cell. `decideEnqueue` is pure — see scheduler-decision.ts
+  //    for the precedence rules. Aggregate counters per skip reason so the
+  //    final summary log surfaces the imbalance.
   const undersized: Array<{ cell: Cell; need: number }> = [];
+  const suppressed = {
+    targetReached: 0,
+    lowYield: 0,
+    saturatedDedup: 0,
+    c2: 0,
+  };
   for (const cell of allCells) {
-    if (!(ROUND_1_CEFR_LEVELS as readonly string[]).includes(cell.cefrLevel)) {
-      continue;
-    }
-    const current = approvedByCell.get(cell.cellKey) ?? 0;
-    if (current < MIN_PER_CELL) {
-      undersized.push({ cell, need: TARGET_PER_CELL - current });
+    const approvedInPool = approvedByCell.get(cell.cellKey) ?? 0;
+    const recentJob = recentJobByCell.get(cell.cellKey) ?? null;
+    const curriculumVersionOnDisk =
+      CURRICULUM_VERSION_BY_LANGUAGE[cell.language as LearningLanguage];
+    const decision = decideEnqueue(
+      cell,
+      approvedInPool,
+      recentJob,
+      curriculumVersionOnDisk,
+    );
+    switch (decision.kind) {
+      case 'enqueue':
+        undersized.push({ cell, need: decision.need });
+        break;
+      case 'skip-c2':
+        suppressed.c2 += 1;
+        // C2/C1 cells are filtered silently — no per-cell log line (would
+        // flood CloudWatch with hundreds of identical entries every tick).
+        break;
+      case 'skip-target-reached':
+        suppressed.targetReached += 1;
+        // Same rationale as skip-c2: the common-case skip stays silent.
+        break;
+      case 'skip-low-yield':
+        suppressed.lowYield += 1;
+        log({
+          level: 'info',
+          cellKey: cell.cellKey,
+          reason: 'saturated-low-yield',
+          message: 'cell suppressed: low-yield',
+        });
+        break;
+      case 'skip-saturated-dedup':
+        suppressed.saturatedDedup += 1;
+        log({
+          level: 'info',
+          cellKey: cell.cellKey,
+          reason: 'saturated-dedup',
+          message: 'cell suppressed: saturated-dedup',
+        });
+        break;
     }
   }
 
-  // 5. Empty-curriculum-slice fast path (Req 4.9): nothing under target →
-  //    don't even open an SQS connection.
+  // 6. Empty-curriculum-slice fast path (Req 4.9): nothing to enqueue →
+  //    don't even open an SQS connection. Suppression summary still emitted
+  //    so the operator can see *why* nothing was enqueued.
   if (undersized.length === 0) {
     log({
       level: 'info',
+      enqueued: 0,
+      suppressed,
       durationMs: Date.now() - startedAt,
-      message: 'Pool at target — no jobs enqueued',
+      message: 'Pool at target or fully suppressed — no jobs enqueued',
     });
     return;
   }
@@ -184,6 +287,7 @@ export async function handler(): Promise<void> {
   log({
     level: 'info',
     enqueued: messages.length,
+    suppressed,
     durationMs: Date.now() - startedAt,
     message: 'scheduler complete',
   });

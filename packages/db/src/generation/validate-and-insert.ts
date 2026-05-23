@@ -26,10 +26,13 @@ import {
   addUsage,
   canonicalSurface,
   generateBatch,
+  getCurrentLlmTraceContext,
   validateDraft,
+  withLlmTrace,
   type ClaudeUsageBreakdown,
   type ExerciseDraft,
   type GenerationSpec,
+  type MalformedDraft,
   type ValidateDraftResult,
   type ValidationResult,
 } from '@language-drill/ai';
@@ -42,6 +45,23 @@ import type { Cell } from './cells';
 import { routeValidationResult } from './routing';
 
 const MAX_DEDUP_RETRIES = 3;
+
+/**
+ * Outcome of a single regeneration attempt. `ok: true` means the generator
+ * produced a parseable draft; `ok: false` means Claude returned a tool
+ * call that the parser rejected (the draft landed in `result.malformedDrafts`
+ * instead of `result.drafts`).
+ *
+ * Both variants carry `usage` so the caller can fold the wasted-call cost
+ * into `extraUsage` regardless of whether the retry yielded a usable draft.
+ * Before this discriminated union, `runRetryGeneration` returned
+ * `{ draft: undefined, usage }` on parser failures, and the caller crashed
+ * on `currentDraft.contentJson`. The R5 fix is to make the failure visible
+ * at the type level so the call sites must handle it explicitly.
+ */
+export type RetryOutcome =
+  | { ok: true; draft: ExerciseDraft; usage: ClaudeUsageBreakdown }
+  | { ok: false; malformed: MalformedDraft; usage: ClaudeUsageBreakdown };
 
 export type DraftOutcome = {
   terminalStatus:
@@ -60,6 +80,16 @@ export type DraftOutcome = {
   extraProduced: number;
   /** 1 (original validator call) + N retry validator calls. */
   validatedCount: number;
+  /**
+   * Set to `true` ONLY when `terminalStatus === 'rejected'` and the
+   * rejection is due to a parser-failed retry at the last allowed slot
+   * (the regenerated draft landed in `result.malformedDrafts` and no
+   * retry budget remains). The caller (`runOneCell`) bumps
+   * `CellResult.parserFailedCount` by 1 when this is `true`, so the
+   * structured log surfaces parser-failed ordinals separately from
+   * validator-rejected ones. R5.4.
+   */
+  parserFailedAtFinal?: boolean;
 };
 
 export type ValidateAndInsertOpts = {
@@ -89,13 +119,19 @@ export type ValidateAndInsertOpts = {
  * Issue a single-draft regeneration with a bumped batchSeed so the
  * deterministic UUID derivation produces a fresh id distinct from the
  * original/prior retry attempts.
+ *
+ * Returns a discriminated union so a parser-failed retry (where Claude's
+ * tool call was malformed and the draft landed in `result.malformedDrafts`)
+ * surfaces cleanly as `{ ok: false, malformed, usage }`. The caller folds
+ * `usage` into `extraUsage` in both branches — the wasted call cost is
+ * accounted for whether or not the draft was usable.
  */
 async function runRetryGeneration(
   client: Anthropic,
   spec: GenerationSpec,
   retryN: number,
   signal: AbortSignal | undefined,
-): Promise<{ draft: ExerciseDraft; usage: ClaudeUsageBreakdown }> {
+): Promise<RetryOutcome> {
   if (signal?.aborted) throw new Error('Aborted by user (SIGINT)');
   const retrySpec: GenerationSpec = {
     ...spec,
@@ -103,12 +139,39 @@ async function runRetryGeneration(
     batchSeed: `${spec.batchSeed}::retry-${retryN}`,
   };
   const result = await generateBatch(client, retrySpec);
-  return { draft: result.drafts[0], usage: result.tokenUsage };
+  if (result.drafts.length === 0) {
+    // Parser failure: Claude responded but the tool call did not yield a
+    // valid draft (malformed `correctAnswer`, missing required field, etc.).
+    // The MalformedDraft carries the parser error message for logging.
+    return {
+      ok: false,
+      malformed: result.malformedDrafts[0],
+      usage: result.tokenUsage,
+    };
+  }
+  return { ok: true, draft: result.drafts[0], usage: result.tokenUsage };
 }
 
 export async function validateAndInsertWithRetry(
   opts: ValidateAndInsertOpts,
 ): Promise<DraftOutcome> {
+  // Per-ordinal Langfuse-trace scope (R8). Nests inside the cell-level
+  // `withLlmTrace` wrap in `infra/lambda/src/generation/handler.ts:222` —
+  // the parent scope already carries `feature: 'generate'`, env, prompt
+  // version, jobId, cellKey, language, cefrLevel, exerciseType. This inner
+  // scope contributes only `exerciseId` so every generator + validator +
+  // retry call emitted by this ordinal's per-attempt loop shares the same
+  // `exerciseId` join key in Langfuse. `opts.draft.id` is the deterministic
+  // UUID for the ordinal (`deterministicUuid(spec | batchSeed | ordinal)`)
+  // and matches the `exercises.id` primary key on a successful first-attempt
+  // insert.
+  //
+  // CLI runs (`packages/db/scripts/generate-exercises.ts`) call into this
+  // function without a parent `withLlmTrace` scope; in that case the
+  // Anthropic Proxy is already a no-op for tracing, so we skip the wrap
+  // rather than fabricate a context with missing required fields.
+  const parentCtx = getCurrentLlmTraceContext();
+  const body = async (): Promise<DraftOutcome> => {
   let extraUsage: ClaudeUsageBreakdown = ZERO_USAGE;
   let extraProduced = 0;
   let validatedCount = 0;
@@ -155,9 +218,31 @@ export async function validateAndInsertWithRetry(
           attempt + 1,
           opts.signal,
         );
-        currentDraft = retry.draft;
+        // Fold the retry's usage and bump extraProduced UNCONDITIONALLY —
+        // the wasted call cost is attributable to this ordinal whether or
+        // not Claude returned a parseable draft (R5.1, R5.2).
         extraUsage = addUsage(extraUsage, retry.usage);
         extraProduced += 1;
+        if (!retry.ok) {
+          // Parser failure on a dedup-retry. If this was the LAST allowed
+          // retry slot (attempt + 1 === MAX_DEDUP_RETRIES, equivalent to
+          // the design's `attempt >= MAX_DEDUP_RETRIES` after dispatch),
+          // short-circuit with parserFailedAtFinal so `runOneCell` can
+          // bump CellResult.parserFailedCount. Otherwise, continue — the
+          // next iteration revalidates the old (rejected) currentDraft
+          // and dispatches a fresh retry from this same branch.
+          if (attempt + 1 >= MAX_DEDUP_RETRIES) {
+            return {
+              terminalStatus: 'rejected',
+              parserFailedAtFinal: true,
+              extraUsage,
+              extraProduced,
+              validatedCount,
+            };
+          }
+          continue;
+        }
+        currentDraft = retry.draft;
         continue;
       }
       return firstAttemptDeduped
@@ -236,9 +321,29 @@ export async function validateAndInsertWithRetry(
         attempt + 1,
         opts.signal,
       );
-      currentDraft = retry.draft;
+      // Fold the retry's usage and bump extraProduced UNCONDITIONALLY —
+      // the wasted call cost is attributable to this ordinal whether or
+      // not Claude returned a parseable draft (R5.1, R5.2).
       extraUsage = addUsage(extraUsage, retry.usage);
       extraProduced += 1;
+      if (!retry.ok) {
+        // Parser failure on the dedup retry. If this was the last allowed
+        // retry slot, short-circuit with parserFailedAtFinal; otherwise,
+        // continue to the next iteration where the OLD currentDraft will
+        // be revalidated (the validator's same approve/flag decision and
+        // INSERT will dedup again, then we'll dispatch another retry).
+        if (attempt + 1 >= MAX_DEDUP_RETRIES) {
+          return {
+            terminalStatus: 'rejected',
+            parserFailedAtFinal: true,
+            extraUsage,
+            extraProduced,
+            validatedCount,
+          };
+        }
+        continue;
+      }
+      currentDraft = retry.draft;
     }
   }
 
@@ -249,4 +354,9 @@ export async function validateAndInsertWithRetry(
     extraProduced,
     validatedCount,
   };
+  };
+
+  return parentCtx
+    ? withLlmTrace({ ...parentCtx, exerciseId: opts.draft.id }, body)
+    : body();
 }

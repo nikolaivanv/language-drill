@@ -180,6 +180,7 @@ function cellResultBase(): CellResult {
     rejectedCount: 0,
     dedupGivenUpCount: 0,
     malformedDraftCount: 0,
+    parserFailedCount: 0,
   };
 }
 

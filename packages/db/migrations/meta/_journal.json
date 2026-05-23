@@ -78,6 +78,13 @@
       "when": 1778774714842,
       "tag": "0010_fine_the_fury",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1779492115945,
+      "tag": "0011_add_curriculum_version_to_generation_jobs",
+      "breakpoints": true
     }
   ]
 }
