@@ -317,11 +317,26 @@ export function parseTheoryTopicJson(input: unknown): TheoryTopicJson {
       `Invalid topic: must be an object, got ${describeType(input)}`,
     );
   }
-  const id = requireString(input, "id", "");
-  const title = requireString(input, "title", "");
-  const subtitle = requireString(input, "subtitle", "");
-  const cefr = requireString(input, "cefr", "");
-  const sectionsRaw = requireNonEmptyArray(input, "sections", "");
+  // Anthropic's tool-use occasionally serializes nested arrays as JSON
+  // string literals instead of native arrays — observed on ~75% of
+  // theory-generation runs (audit row 2026-05-18 `tr:a1:tr-a1-locative`
+  // + probe runs 2026-05-23 seeds b/c/d). Defensive parse: if `sections`
+  // came through as a JSON string, decode it once. Any other shape falls
+  // through to the existing requireNonEmptyArray check.
+  const normalized: Record<string, unknown> = { ...input };
+  if (typeof normalized.sections === "string") {
+    try {
+      const parsed: unknown = JSON.parse(normalized.sections);
+      if (Array.isArray(parsed)) normalized.sections = parsed;
+    } catch {
+      // Fall through — the next check will throw with a clearer message.
+    }
+  }
+  const id = requireString(normalized, "id", "");
+  const title = requireString(normalized, "title", "");
+  const subtitle = requireString(normalized, "subtitle", "");
+  const cefr = requireString(normalized, "cefr", "");
+  const sectionsRaw = requireNonEmptyArray(normalized, "sections", "");
 
   const seen = new Map<string, number>();
   const sections: TheorySectionJson[] = sectionsRaw.map((s, i) => {
