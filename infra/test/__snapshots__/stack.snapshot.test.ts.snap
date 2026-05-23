@@ -1972,6 +1972,31 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
               ],
             },
             "ENV_NAME": "prod",
+            "LANGFUSE_ENV": "prod",
+            "LANGFUSE_PUBLIC_KEY": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/LANGFUSE_PUBLIC_KEY:SecretString:::}}",
+                ],
+              ],
+            },
+            "LANGFUSE_SECRET_KEY": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/LANGFUSE_SECRET_KEY:SecretString:::}}",
+                ],
+              ],
+            },
           },
         },
         "Handler": "index.handler",
@@ -2092,6 +2117,44 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
                       "Ref": "AWS::Partition",
                     },
                     ":secretsmanager:us-east-1:123456789012:secret:language-drill/ANTHROPIC_API_KEY-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/LANGFUSE_PUBLIC_KEY-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/LANGFUSE_SECRET_KEY-??????",
                   ],
                 ],
               },

@@ -31,7 +31,12 @@ import {
   type TheoryCell,
   type TheoryCellResult,
 } from '@language-drill/db';
-import { createClaudeClient } from '@language-drill/ai';
+import {
+  createClaudeClient,
+  flushObservability,
+  THEORY_GENERATION_PROMPT_VERSION,
+  withLlmTrace,
+} from '@language-drill/ai';
 import type { Context, SQSBatchResponse, SQSEvent } from 'aws-lambda';
 
 import {
@@ -210,20 +215,41 @@ export async function handler(
         // 9. Dispatch. `runOneTheoryCell` already accepts `signal?: AbortSignal`
         //    (Phase 3 contract) and threads it through generator + validator
         //    with `failClosed` finalization on abort.
+        //
+        //    Wrapped in `withLlmTrace` so the Anthropic Proxy can tag every
+        //    `generate-theory` AND `validate-theory` call inside this cell
+        //    with the shared job + cell metadata. The Proxy disambiguates
+        //    feature='generate-theory' vs 'validate-theory' from the
+        //    outgoing tool name via `TOOL_NAME_TO_FEATURE` (one outer ALS
+        //    scope is sufficient — see design Component 2).
         let result: TheoryCellResult;
         try {
-          result = await runOneTheoryCell({
-            db,
-            client,
-            cell,
-            args: {
-              batchSeed: parsed.spec.batchSeed,
-              maxCostUsd: parsed.maxCostUsd,
+          result = await withLlmTrace(
+            {
+              feature: 'generate-theory',
+              env: (process.env.LANGFUSE_ENV ?? 'dev') as 'prod' | 'dev',
+              promptVersion: THEORY_GENERATION_PROMPT_VERSION,
+              requestId: record.messageId,
+              jobId: parsed.jobId,
+              cellKey: cell.cellKey,
+              language: parsed.spec.language,
+              cefrLevel: parsed.spec.cefrLevel,
+              exerciseType: 'theory',
             },
-            jobId: parsed.jobId,
-            trigger: parsed.trigger,
-            signal: controller.signal,
-          });
+            () =>
+              runOneTheoryCell({
+                db,
+                client,
+                cell,
+                args: {
+                  batchSeed: parsed.spec.batchSeed,
+                  maxCostUsd: parsed.maxCostUsd,
+                },
+                jobId: parsed.jobId,
+                trigger: parsed.trigger,
+                signal: controller.signal,
+              }),
+          );
         } catch (err) {
           // The orchestrator's failClosed branch should swallow most errors,
           // but a defensive catch here keeps the per-record flow isolated.
@@ -263,6 +289,10 @@ export async function handler(
         // Req 2a.5 — clearTimeout regardless of outcome so the timer cannot
         // leak across invocations in the same warm Lambda container.
         clearTimeout(timer);
+        // Drain buffered traces per record so each cell's generate-theory +
+        // validate-theory traces land in Langfuse before the Lambda freezes
+        // between SQS batches. No-op when Langfuse is disabled.
+        await flushObservability();
       }
     } catch (err) {
       // Outer safety net for unanticipated throws (curriculum miss, audit

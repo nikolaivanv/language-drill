@@ -25,6 +25,7 @@ import {
   deterministicUuid,
   enumerateTheoryCells,
   requireEnv,
+  theoryGenerationJobs,
   theoryTopics,
   THEORY_ROUND_1_CEFR_LEVELS,
   type TheoryCell,
@@ -33,7 +34,7 @@ import {
   SendMessageBatchCommand,
   SQSClient,
 } from '@aws-sdk/client-sqs';
-import { inArray } from 'drizzle-orm';
+import { and, eq, gte, inArray, sql } from 'drizzle-orm';
 
 import type { TheoryGenerationJobMessage } from './job-message';
 
@@ -53,6 +54,16 @@ const SLOW_QUERY_WARNING_MS = 30_000;
 
 /** SQS hard limit on `SendMessageBatchCommand.Entries`. */
 const MAX_BATCH_SIZE = 10;
+
+/**
+ * Per-cell rejection backoff: once a cell accumulates this many
+ * `theory_generation_jobs` rows with `rejected = true` inside the
+ * rolling window, the scheduler stops re-enqueueing it. Aging the
+ * oldest rejection out of the window self-heals — a fixed prompt
+ * re-attempts the cell on the next sweep automatically.
+ */
+const THEORY_REJECTION_BACKOFF_THRESHOLD = 3;
+const THEORY_REJECTION_BACKOFF_WINDOW_DAYS = 14;
 
 // ---------------------------------------------------------------------------
 // Cold-start singletons
@@ -120,6 +131,52 @@ export async function handler(): Promise<void> {
     approvedSet.add(`${row.language}|${row.grammarPointKey}`);
   }
 
+  // Per-cell rejection backoff (theory-gen-observability-resilience Req 3):
+  // aggregate the count of recent rejections per `cell_key` and suppress
+  // any cell at or above the threshold. The key-space here is `cellKey`
+  // (which embeds CEFR via `buildTheoryCellKey`) — distinct from the
+  // approved-set's `${language}|${grammarPointKey}` key-space, which
+  // matches `theory_topics`' (language, grammarPointKey) uniqueness.
+  // The two key-spaces look similar but represent different facts;
+  // harmonizing them would let an A1 cell's rejections suppress its B1
+  // sibling, which is wrong.
+  const windowStart = new Date(
+    Date.now() - THEORY_REJECTION_BACKOFF_WINDOW_DAYS * 86_400_000,
+  );
+
+  const rejectionQueryStartedAt = Date.now();
+  const rejectionCounts = await db
+    .select({
+      cellKey: theoryGenerationJobs.cellKey,
+      count: sql<number>`COUNT(*)::int`,
+    })
+    .from(theoryGenerationJobs)
+    .where(
+      and(
+        eq(theoryGenerationJobs.rejected, true),
+        gte(theoryGenerationJobs.startedAt, windowStart),
+      ),
+    )
+    .groupBy(theoryGenerationJobs.cellKey);
+  const rejectionQueryDurationMs = Date.now() - rejectionQueryStartedAt;
+
+  if (rejectionQueryDurationMs > SLOW_QUERY_WARNING_MS) {
+    log({
+      level: 'warn',
+      durationMs: rejectionQueryDurationMs,
+      message: `rejection-count query exceeded ${SLOW_QUERY_WARNING_MS}ms warning threshold`,
+    });
+  }
+
+  const suppressedCells = new Set<string>();
+  const rejectionCountByCellKey = new Map<string, number>();
+  for (const row of rejectionCounts) {
+    rejectionCountByCellKey.set(row.cellKey, row.count);
+    if (row.count >= THEORY_REJECTION_BACKOFF_THRESHOLD) {
+      suppressedCells.add(row.cellKey);
+    }
+  }
+
   // Diff: every grammar cell at a round-1 CEFR level that isn't already
   // approved gets enqueued. C1/C2 cells are silently filtered (Req 3.4).
   const undersized: TheoryCell[] = [];
@@ -132,9 +189,20 @@ export async function handler(): Promise<void> {
       continue;
     }
     const lookup = `${cell.language}|${cell.grammarPoint.key}`;
-    if (!approvedSet.has(lookup)) {
-      undersized.push(cell);
+    if (approvedSet.has(lookup)) {
+      continue;
     }
+    if (suppressedCells.has(cell.cellKey)) {
+      log({
+        level: 'warn',
+        cellKey: cell.cellKey,
+        recentRejections: rejectionCountByCellKey.get(cell.cellKey) ?? 0,
+        backoffWindowDays: THEORY_REJECTION_BACKOFF_WINDOW_DAYS,
+        message: 'theory cell suppressed by rejection backoff',
+      });
+      continue;
+    }
+    undersized.push(cell);
   }
 
   // Empty-slice fast path (Req 3.7) — no SQS connection opened.

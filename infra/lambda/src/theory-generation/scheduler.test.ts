@@ -43,17 +43,49 @@ type ApprovedRow = {
   grammarPointKey: string;
 };
 
+type RejectionCountRow = {
+  cellKey: string;
+  count: number;
+};
+
 const hoisted = vi.hoisted(() => {
   const mockSqsSend = vi.fn<(command: unknown) => Promise<unknown>>(() =>
     Promise.resolve({}),
   );
-  const mockWhere = vi.fn<() => Promise<ApprovedRow[]>>();
-  const mockFrom = vi.fn(() => ({ where: mockWhere }));
+  // The scheduler now issues two aggregate queries:
+  //   - approved-set: `db.select(...).from(...).where(...)` (awaited directly)
+  //   - rejection-count: `db.select(...).from(...).where(...).groupBy(...)`
+  // The chain returned by `.where(...)` is a thenable that ALSO carries a
+  // `.groupBy(...)` method. Awaiting it delegates to `mockWhere(...)`
+  // (preserves the existing approved-set behavior); calling `.groupBy(...)`
+  // delegates to `mockGroupBy(...)`. Each test configures the two mocks
+  // independently via `mockResolvedValueOnce`.
+  const mockWhere =
+    vi.fn<(...args: unknown[]) => Promise<ApprovedRow[]>>();
+  const mockGroupBy =
+    vi.fn<(...args: unknown[]) => Promise<RejectionCountRow[]>>();
+  const mockFrom = vi.fn(() => ({
+    where: (...args: unknown[]) => {
+      const wherePromise = mockWhere(...args);
+      return {
+        then: <TResult1 = ApprovedRow[], TResult2 = never>(
+          onFulfilled?:
+            | ((value: ApprovedRow[]) => TResult1 | PromiseLike<TResult1>)
+            | null,
+          onRejected?:
+            | ((reason: unknown) => TResult2 | PromiseLike<TResult2>)
+            | null,
+        ): PromiseLike<TResult1 | TResult2> =>
+          wherePromise.then(onFulfilled, onRejected),
+        groupBy: (...gArgs: unknown[]) => mockGroupBy(...gArgs),
+      };
+    },
+  }));
   const mockSelect = vi.fn(() => ({ from: mockFrom }));
-  return { mockSqsSend, mockWhere, mockFrom, mockSelect };
+  return { mockSqsSend, mockWhere, mockGroupBy, mockFrom, mockSelect };
 });
 
-const { mockSqsSend, mockWhere } = hoisted;
+const { mockSqsSend, mockWhere, mockGroupBy, mockSelect } = hoisted;
 
 // `SQSClient` and `SendMessageBatchCommand` are invoked with `new`, so they
 // must be real constructor functions.
@@ -110,6 +142,9 @@ beforeEach(() => {
   // Default: empty result set → every grammar+round-1 cell becomes under-
   // target. Tests override per scenario.
   mockWhere.mockResolvedValue([]);
+  // Default: no recent rejections → no cell is suppressed by the backoff
+  // filter. Tests override per scenario via `mockResolvedValueOnce`.
+  mockGroupBy.mockResolvedValue([]);
   consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 });
 
@@ -141,6 +176,24 @@ function findLogLine(
     if (predicate(entry)) return entry;
   }
   return undefined;
+}
+
+function collectLogLines(
+  predicate: (entry: Record<string, unknown>) => boolean,
+): Record<string, unknown>[] {
+  const matches: Record<string, unknown>[] = [];
+  for (const call of consoleLogSpy.mock.calls) {
+    const arg = call[0];
+    if (typeof arg !== 'string') continue;
+    let entry: Record<string, unknown>;
+    try {
+      entry = JSON.parse(arg) as Record<string, unknown>;
+    } catch {
+      continue;
+    }
+    if (predicate(entry)) matches.push(entry);
+  }
+  return matches;
 }
 
 type CapturedBatch = {
@@ -377,5 +430,160 @@ describe('theory scheduler handler', () => {
     expect(log!['batchSize']).toBe(2);
     expect(Array.isArray(log!['jobIds'])).toBe(true);
     expect((log!['jobIds'] as unknown[]).length).toBe(2);
+  });
+
+  // ---------------------------------------------------------------------------
+  // theory-gen-observability-resilience Req 3 — per-cell rejection backoff
+  // ---------------------------------------------------------------------------
+
+  describe('per-cell rejection backoff (Req 3)', () => {
+    /**
+     * Build the approved-set so exactly `undertargetCells` are missing
+     * from approved. Returns the cells and the rows the mock should
+     * resolve as the approved-set query result.
+     */
+    function setupUndertarget(undertargetCells: TheoryCell[]): {
+      undertargetCells: TheoryCell[];
+      approvedRows: ApprovedRow[];
+    } {
+      const undertargetKeys = new Set(undertargetCells.map((c) => c.cellKey));
+      return {
+        undertargetCells,
+        approvedRows: rowsFillingAllExcept(undertargetKeys),
+      };
+    }
+
+    const SUPPRESS_MSG = 'theory cell suppressed by rejection backoff';
+
+    it('(a) cell with 0 rejections passes the filter', async () => {
+      const [target] = allRoundOneGrammarCells();
+      const { approvedRows } = setupUndertarget([target!]);
+      mockWhere.mockResolvedValueOnce(approvedRows);
+      mockGroupBy.mockResolvedValueOnce([]);
+
+      await handler();
+
+      const messages = capturedBatches()
+        .flatMap(decodeBatch)
+        .map((m) => parseTheoryGenerationJobMessage(m));
+      expect(messages).toHaveLength(1);
+      expect(messages[0].spec.grammarPointKey).toBe(target!.grammarPoint.key);
+      expect(
+        findLogLine((e) => e['message'] === SUPPRESS_MSG),
+      ).toBeUndefined();
+    });
+
+    it('(b) cell with 2 rejections in the last 14 days passes the filter', async () => {
+      const [target] = allRoundOneGrammarCells();
+      const { approvedRows } = setupUndertarget([target!]);
+      mockWhere.mockResolvedValueOnce(approvedRows);
+      mockGroupBy.mockResolvedValueOnce([
+        { cellKey: target!.cellKey, count: 2 },
+      ]);
+
+      await handler();
+
+      const messages = capturedBatches()
+        .flatMap(decodeBatch)
+        .map((m) => parseTheoryGenerationJobMessage(m));
+      expect(messages).toHaveLength(1);
+      expect(messages[0].spec.grammarPointKey).toBe(target!.grammarPoint.key);
+      expect(
+        findLogLine((e) => e['message'] === SUPPRESS_MSG),
+      ).toBeUndefined();
+    });
+
+    it('(c) cell with 3 rejections in the last 14 days is excluded AND emits the structured warn log exactly once', async () => {
+      const [target] = allRoundOneGrammarCells();
+      const { approvedRows } = setupUndertarget([target!]);
+      mockWhere.mockResolvedValueOnce(approvedRows);
+      mockGroupBy.mockResolvedValueOnce([
+        { cellKey: target!.cellKey, count: 3 },
+      ]);
+
+      await handler();
+
+      // Not enqueued.
+      const messages = capturedBatches().flatMap(decodeBatch);
+      expect(messages).toHaveLength(0);
+      expect(mockSqsSend).not.toHaveBeenCalled();
+
+      // Exactly one structured warn log with the expected shape.
+      const suppressionLogs = collectLogLines(
+        (e) => e['message'] === SUPPRESS_MSG,
+      );
+      expect(suppressionLogs).toHaveLength(1);
+      expect(suppressionLogs[0]['level']).toBe('warn');
+      expect(suppressionLogs[0]['cellKey']).toBe(target!.cellKey);
+      expect(suppressionLogs[0]['recentRejections']).toBe(3);
+      expect(suppressionLogs[0]['backoffWindowDays']).toBe(14);
+    });
+
+    it('(d) cell with 3 rejections but the oldest is 15 days old (2 in window) passes the filter', async () => {
+      // The DB-side `WHERE started_at >= now() - interval 14 days` ages the
+      // oldest rejection out before COUNT(*), so the query returns 2.
+      // This pins that the scheduler trusts the query's post-window count
+      // rather than applying its own window logic on top.
+      const [target] = allRoundOneGrammarCells();
+      const { approvedRows } = setupUndertarget([target!]);
+      mockWhere.mockResolvedValueOnce(approvedRows);
+      mockGroupBy.mockResolvedValueOnce([
+        { cellKey: target!.cellKey, count: 2 },
+      ]);
+
+      await handler();
+
+      const messages = capturedBatches()
+        .flatMap(decodeBatch)
+        .map((m) => parseTheoryGenerationJobMessage(m));
+      expect(messages).toHaveLength(1);
+      expect(messages[0].spec.grammarPointKey).toBe(target!.grammarPoint.key);
+    });
+
+    it('(e) two excluded cells emit the structured warn log exactly twice — not once, not three times', async () => {
+      const all = allRoundOneGrammarCells();
+      const cellA = all[0]!;
+      const cellB = all[1]!;
+      const { approvedRows } = setupUndertarget([cellA, cellB]);
+      mockWhere.mockResolvedValueOnce(approvedRows);
+      mockGroupBy.mockResolvedValueOnce([
+        { cellKey: cellA.cellKey, count: 4 },
+        { cellKey: cellB.cellKey, count: 7 },
+      ]);
+
+      await handler();
+
+      // Neither cell enqueued.
+      expect(capturedBatches().flatMap(decodeBatch)).toHaveLength(0);
+
+      const suppressionLogs = collectLogLines(
+        (e) => e['message'] === SUPPRESS_MSG,
+      );
+      expect(suppressionLogs).toHaveLength(2);
+      const loggedKeys = suppressionLogs.map((l) => l['cellKey']);
+      expect(loggedKeys).toContain(cellA.cellKey);
+      expect(loggedKeys).toContain(cellB.cellKey);
+
+      // Each carries its own recentRejections count, not a shared/stale
+      // value.
+      const logA = suppressionLogs.find((l) => l['cellKey'] === cellA.cellKey);
+      const logB = suppressionLogs.find((l) => l['cellKey'] === cellB.cellKey);
+      expect(logA!['recentRejections']).toBe(4);
+      expect(logB!['recentRejections']).toBe(7);
+    });
+
+    it('the rejection-count query is invoked exactly once per sweep (Req 3.5)', async () => {
+      mockWhere.mockResolvedValueOnce([]);
+      mockGroupBy.mockResolvedValueOnce([]);
+
+      await handler();
+
+      // Two `db.select(...)` calls per sweep: one for approved-set, one
+      // for rejection-count. No per-cell N+1.
+      expect(mockSelect).toHaveBeenCalledTimes(2);
+      // And exactly one `.groupBy(...)` terminator — the rejection-count
+      // query.
+      expect(mockGroupBy).toHaveBeenCalledTimes(1);
+    });
   });
 });

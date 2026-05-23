@@ -56,6 +56,22 @@ export class TheoryGenerationLambdaConstruct extends Construct {
       'AnthropicApiKey',
       `${props.secretsPrefix}/ANTHROPIC_API_KEY`,
     );
+    // Required for the `withLlmTrace` wiring in
+    // `infra/lambda/src/theory-generation/handler.ts` — without these env
+    // vars `getLangfuse()` returns null and the Anthropic Proxy passes
+    // through silently. The `language-drill/LANGFUSE_*` entries already
+    // exist in both dev and prod Secrets Manager (used by the exercise
+    // Lambda since Phase 1 Langfuse shipped).
+    const langfusePublicKey = secretsmanager.Secret.fromSecretNameV2(
+      this,
+      'TheoryLangfusePublicKey',
+      `${props.secretsPrefix}/LANGFUSE_PUBLIC_KEY`,
+    );
+    const langfuseSecretKey = secretsmanager.Secret.fromSecretNameV2(
+      this,
+      'TheoryLangfuseSecretKey',
+      `${props.secretsPrefix}/LANGFUSE_SECRET_KEY`,
+    );
 
     const projectRoot = path.join(__dirname, '../../..');
 
@@ -101,11 +117,20 @@ export class TheoryGenerationLambdaConstruct extends Construct {
         ENV_NAME: props.envName,
         DATABASE_URL: databaseUrl.secretValue.unsafeUnwrap(),
         ANTHROPIC_API_KEY: anthropicApiKey.secretValue.unsafeUnwrap(),
+        LANGFUSE_PUBLIC_KEY: langfusePublicKey.secretValue.unsafeUnwrap(),
+        LANGFUSE_SECRET_KEY: langfuseSecretKey.secretValue.unsafeUnwrap(),
+        // Non-secret derived from `secretsPrefix` — single source of truth
+        // for prod vs dev so trace `env` tags are consistent across the
+        // exercise + theory + read-annotate Lambdas.
+        LANGFUSE_ENV:
+          props.secretsPrefix === 'language-drill' ? 'prod' : 'dev',
       },
     });
 
     databaseUrl.grantRead(this.handler);
     anthropicApiKey.grantRead(this.handler);
+    langfusePublicKey.grantRead(this.handler);
+    langfuseSecretKey.grantRead(this.handler);
 
     this.handler.addEventSource(
       new SqsEventSource(props.queue, {

@@ -298,6 +298,11 @@ export async function runOneTheoryCell(
         //     with status='succeeded' and rejected=true (Req 4.3). The
         //     run was technically a success (we got a validator verdict);
         //     the rejected boolean carries the verdict's outcome.
+        const rawMessage =
+          decision.flaggedReasons.length > 0
+            ? decision.flaggedReasons.join('; ')
+            : 'rejected (no reasons reported)';
+        const errorMessage = rawMessage.slice(0, ERROR_MESSAGE_MAX_LENGTH);
         await db
           .update(theoryGenerationJobs)
           .set({
@@ -306,6 +311,7 @@ export async function runOneTheoryCell(
             approved: false,
             flagged: false,
             rejected: true,
+            errorMessage,
             inputTokensUsed,
             outputTokensUsed: tokenUsage.outputTokens,
             costUsdEstimate: costUsd.toFixed(4),

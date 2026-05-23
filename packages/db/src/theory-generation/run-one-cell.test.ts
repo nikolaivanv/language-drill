@@ -41,8 +41,24 @@ import type { CurriculumCefrLevel, GrammarPoint } from '../curriculum';
 import { buildTheoryCellKey } from '../lib/theory-cell-key';
 import { theoryGenerationJobs, theoryTopics } from '../schema/index';
 
+import { routeTheoryValidationResult } from './routing';
 import { runOneTheoryCell, type TheoryCellResult } from './run-one-cell';
 import type { TheoryCell } from './cells';
+
+// Wrap `routeTheoryValidationResult` so per-test `mockReturnValueOnce`
+// can force the defensive empty-reasons branch in `run-one-cell.ts` —
+// the real router never produces a rejected verdict with an empty
+// `flaggedReasons` array, so the only way to pin that code path is to
+// override the routing decision for one specific call. The default
+// passes through to the real implementation, so other tests are
+// unaffected.
+vi.mock('./routing', async () => {
+  const actual = await vi.importActual<typeof import('./routing')>('./routing');
+  return {
+    ...actual,
+    routeTheoryValidationResult: vi.fn(actual.routeTheoryValidationResult),
+  };
+});
 
 // ---------------------------------------------------------------------------
 // Fixture loading
@@ -635,6 +651,193 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
         expect(jobRows[0].approved).toBe(false);
         expect(jobRows[0].flagged).toBe(false);
         expect(jobRows[0].rejected).toBe(true);
+      },
+    );
+
+    // -----------------------------------------------------------------------
+    // Spec theory-gen-observability-resilience — Req 1
+    // -----------------------------------------------------------------------
+
+    it(
+      'persists error_message joined from decision.flaggedReasons on rejected (Req 1.1, 1.3)',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        // Two factualErrors → router routes to rejected with
+        // `flaggedReasons = [...factualErrors]`; the orchestrator joins them
+        // with `'; '` and writes the result to `error_message`.
+        const cell = buildTestCell();
+        const { client } = makeMockClient({
+          validatorInput: {
+            qualityScore: 0.4,
+            factualErrors: [
+              'first factual error',
+              'second factual error',
+            ],
+            levelMismatch: false,
+            sectionsIncomplete: [],
+            examplesUseGrammarPoint: true,
+            culturalIssues: [],
+            flaggedReasons: [],
+          },
+        });
+        const jobId = randomUUID();
+
+        const result = await runOneTheoryCell({
+          db,
+          client,
+          cell,
+          args: { batchSeed: 'test', maxCostUsd: 1.0 },
+          jobId,
+          trigger: 'cli',
+        });
+
+        expect(result.status).toBe('succeeded');
+
+        const jobRows = await db
+          .select()
+          .from(theoryGenerationJobs)
+          .where(eq(theoryGenerationJobs.id, jobId));
+        expect(jobRows).toHaveLength(1);
+        expect(jobRows[0].rejected).toBe(true);
+        expect(jobRows[0].errorMessage).toBe(
+          'first factual error; second factual error',
+        );
+      },
+    );
+
+    it(
+      'writes the empty-reasons sentinel when flaggedReasons is [] (Req 1.2)',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        // The real router never produces a rejected verdict with empty
+        // reasons — every rejected branch pushes at least one entry. Force
+        // it here to pin the defensive sentinel branch in run-one-cell.ts.
+        vi.mocked(routeTheoryValidationResult).mockReturnValueOnce({
+          reviewStatus: 'rejected',
+          flaggedReasons: [],
+        });
+
+        const cell = buildTestCell();
+        const { client } = makeMockClient({
+          validatorInput: VALIDATION_REJECTED,
+        });
+        const jobId = randomUUID();
+
+        const result = await runOneTheoryCell({
+          db,
+          client,
+          cell,
+          args: { batchSeed: 'test', maxCostUsd: 1.0 },
+          jobId,
+          trigger: 'cli',
+        });
+
+        expect(result.status).toBe('succeeded');
+        expect(vi.mocked(routeTheoryValidationResult)).toHaveBeenCalled();
+
+        const jobRows = await db
+          .select()
+          .from(theoryGenerationJobs)
+          .where(eq(theoryGenerationJobs.id, jobId));
+        expect(jobRows).toHaveLength(1);
+        expect(jobRows[0].rejected).toBe(true);
+        expect(jobRows[0].errorMessage).toBe('rejected (no reasons reported)');
+      },
+    );
+
+    it(
+      'truncates error_message to ERROR_MESSAGE_MAX_LENGTH (1000 chars) when joined reasons overflow (Req 1.1)',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        // 10 reasons × 150 chars + 9 × 2-char separators = 1518 chars; the
+        // orchestrator must slice to exactly 1000.
+        const longReason = 'x'.repeat(150);
+        const factualErrors = Array.from({ length: 10 }, () => longReason);
+
+        const cell = buildTestCell();
+        const { client } = makeMockClient({
+          validatorInput: {
+            qualityScore: 0.4,
+            factualErrors,
+            levelMismatch: false,
+            sectionsIncomplete: [],
+            examplesUseGrammarPoint: true,
+            culturalIssues: [],
+            flaggedReasons: [],
+          },
+        });
+        const jobId = randomUUID();
+
+        const result = await runOneTheoryCell({
+          db,
+          client,
+          cell,
+          args: { batchSeed: 'test', maxCostUsd: 1.0 },
+          jobId,
+          trigger: 'cli',
+        });
+
+        expect(result.status).toBe('succeeded');
+
+        const jobRows = await db
+          .select()
+          .from(theoryGenerationJobs)
+          .where(eq(theoryGenerationJobs.id, jobId));
+        expect(jobRows).toHaveLength(1);
+        expect(jobRows[0].rejected).toBe(true);
+        expect(jobRows[0].errorMessage?.length).toBe(1000);
+      },
+    );
+
+    it(
+      'does NOT write error_message on the flagged or auto-approved INSERT branches (Req 1.4)',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        // -- Flagged branch
+        const flaggedCell = buildTestCell();
+        const { client: flaggedClient } = makeMockClient({
+          validatorInput: VALIDATION_FLAGGED,
+        });
+        const flaggedJobId = randomUUID();
+        await runOneTheoryCell({
+          db,
+          client: flaggedClient,
+          cell: flaggedCell,
+          args: { batchSeed: 'test', maxCostUsd: 1.0 },
+          jobId: flaggedJobId,
+          trigger: 'cli',
+        });
+        const flaggedRows = await db
+          .select()
+          .from(theoryGenerationJobs)
+          .where(eq(theoryGenerationJobs.id, flaggedJobId));
+        expect(flaggedRows).toHaveLength(1);
+        expect(flaggedRows[0].flagged).toBe(true);
+        expect(flaggedRows[0].errorMessage).toBeNull();
+
+        // -- Auto-approved INSERT branch (the dedup-skip sub-path at
+        //    run-one-cell.ts:400 is unrelated to this spec and is covered
+        //    by the pre-existing "reports skipped-cell" test).
+        const approvedCell = buildTestCell();
+        const { client: approvedClient } = makeMockClient({
+          validatorInput: VALIDATION_AUTO_APPROVED,
+        });
+        const approvedJobId = randomUUID();
+        await runOneTheoryCell({
+          db,
+          client: approvedClient,
+          cell: approvedCell,
+          args: { batchSeed: 'test', maxCostUsd: 1.0 },
+          jobId: approvedJobId,
+          trigger: 'cli',
+        });
+        const approvedRows = await db
+          .select()
+          .from(theoryGenerationJobs)
+          .where(eq(theoryGenerationJobs.id, approvedJobId));
+        expect(approvedRows).toHaveLength(1);
+        expect(approvedRows[0].approved).toBe(true);
+        expect(approvedRows[0].errorMessage).toBeNull();
       },
     );
 
