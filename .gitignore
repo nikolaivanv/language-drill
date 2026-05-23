@@ -50,3 +50,9 @@ cdk.out/
 
 # Eval runner output (packages/ai/scripts/eval-run.ts)
 eval-runs/
+
+# Playwright (apps/web/e2e — see docs/testing.md)
+playwright-report/
+test-results/
+**/e2e/.auth/
+.clerk/

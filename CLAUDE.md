@@ -165,6 +165,15 @@ Do not push if any of these fail. Fix issues locally first.
   with proposed fixes
 - Do not proceed to the next task if tests are failing
 
+### End-to-end (Playwright)
+
+The E2E suite lives in `apps/web/e2e/` and runs via
+`pnpm --filter @language-drill/web test:e2e`. Default project is
+`authenticated` (tests start already signed in via the shared
+storageState produced by `auth.setup.ts`); only smoke tests that
+exercise the Clerk-hosted sign-in surface should use the
+`unauthenticated` project. Full guide: `docs/testing.md`.
+
 ---
 
 ## Progress Tracking Model
