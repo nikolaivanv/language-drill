@@ -215,6 +215,40 @@ Sequence:
 4. Move the `production` label to the new version.
 5. Confirm with `pnpm bootstrap-prompts --check`.
 
+#### Programmatic alternative — `pnpm push-prompts`
+
+When you've decided the merged in-repo body should go straight to
+`production` (eval already done, or the change is low-risk), `pnpm
+push-prompts` does steps 3–4 for **every drifted prompt at once** instead of
+hand-editing each in the dashboard. It detects drift exactly as
+`--check` does, logs each prompt's prior `production` version (your revert
+target), then mints a new `production`-labeled version from the in-repo body.
+In-sync prompts are skipped, and it aborts without writing if drift detection
+errors — so it's safe on an env that's only partially behind.
+
+It writes straight to the `production` label (no `candidate-*` / eval gate),
+so only use it once you're comfortable promoting. Target the env via its
+`LANGFUSE_*` keys and **run once per environment**:
+
+```bash
+PK=$(aws --region eu-central-1 secretsmanager get-secret-value \
+  --secret-id language-drill/LANGFUSE_PUBLIC_KEY --query SecretString --output text)
+SK=$(aws --region eu-central-1 secretsmanager get-secret-value \
+  --secret-id language-drill/LANGFUSE_SECRET_KEY --query SecretString --output text)
+
+# Preview, then apply, then confirm. Inline creds bypass `.env`.
+for flag in "--dry-run" ""; do
+  LANGFUSE_PUBLIC_KEY="$PK" LANGFUSE_SECRET_KEY="$SK" LANGFUSE_BASE_URL=https://cloud.langfuse.com \
+    pnpm --filter @language-drill/ai push-prompts $flag
+done
+LANGFUSE_PUBLIC_KEY="$PK" LANGFUSE_SECRET_KEY="$SK" LANGFUSE_BASE_URL=https://cloud.langfuse.com \
+  pnpm --filter @language-drill/ai bootstrap-prompts --check
+```
+
+Swap the secret prefix to `language-drill-dev/` for the dev project. To
+revert, re-point the `production` label at the logged prior version in the
+dashboard.
+
 Wait at least 5 min after the label flip before §3, so the runtime cache is
 guaranteed to have picked up the new body.
 

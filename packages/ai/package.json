@@ -8,6 +8,7 @@
     "build": "tsc",
     "build:frequency": "tsx scripts/build-frequency.ts",
     "bootstrap-prompts": "tsx scripts/bootstrap-prompts.ts",
+    "push-prompts": "tsx scripts/push-prompts.ts",
     "eval:export": "tsx scripts/eval-export.ts",
     "eval": "tsx scripts/eval-run.ts",
     "dev": "tsc --watch",
