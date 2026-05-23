@@ -91,6 +91,7 @@ function cellResultBase(): CellResult {
     rejectedCount: 0,
     dedupGivenUpCount: 0,
     malformedDraftCount: 0,
+    parserFailedCount: 0,
   };
 }
 
@@ -103,6 +104,7 @@ describe('summarizeResult', () => {
       rejected: 0,
       dedupGivenUp: 0,
       malformedDrafts: 0,
+      parserFailedOrdinals: 0,
       durationMs: 0,
     });
   });
@@ -120,6 +122,7 @@ describe('summarizeResult', () => {
       rejected: 0,
       dedupGivenUp: 0,
       malformedDrafts: 0,
+      parserFailedOrdinals: 0,
       durationMs: 0,
     });
   });
@@ -137,6 +140,7 @@ describe('summarizeResult', () => {
       rejected: 0,
       dedupGivenUp: 0,
       malformedDrafts: 0,
+      parserFailedOrdinals: 0,
       durationMs: 0,
     });
   });
@@ -156,6 +160,7 @@ describe('summarizeResult', () => {
       rejected: 0,
       dedupGivenUp: 0,
       malformedDrafts: 0,
+      parserFailedOrdinals: 0,
       durationMs: 0,
     });
   });
@@ -172,6 +177,7 @@ describe('summarizeResult', () => {
       rejected: 0,
       dedupGivenUp: 0,
       malformedDrafts: 0,
+      parserFailedOrdinals: 0,
       durationMs: 180_000,
     });
   });
@@ -194,6 +200,7 @@ describe('summarizeResult', () => {
       rejected: 2,
       dedupGivenUp: 1,
       malformedDrafts: 0,
+      parserFailedOrdinals: 0,
       durationMs: 1234,
     });
   });
@@ -214,7 +221,32 @@ describe('summarizeResult', () => {
       rejected: 0,
       dedupGivenUp: 0,
       malformedDrafts: 1,
+      parserFailedOrdinals: 0,
       durationMs: 360_000,
+    });
+  });
+
+  it('surfaces parserFailedCount on the projection as parserFailedOrdinals (R5.4)', () => {
+    // Parser-failed ordinals are also counted in rejectedCount (they
+    // terminate with terminalStatus='rejected'), but the dedicated field
+    // splits the stuck-failure signal from validator-rejected ordinals so
+    // CloudWatch can alert on `parserFailedOrdinals > 0.2 * count`.
+    const r: CellResult = {
+      ...cellResultBase(),
+      insertedCount: 2,
+      rejectedCount: 1,
+      parserFailedCount: 1,
+      durationMs: 120_000,
+    };
+    expect(summarizeResult(r)).toEqual({
+      inserted: 2,
+      approved: 2,
+      flagged: 0,
+      rejected: 1,
+      dedupGivenUp: 0,
+      malformedDrafts: 0,
+      parserFailedOrdinals: 1,
+      durationMs: 120_000,
     });
   });
 });

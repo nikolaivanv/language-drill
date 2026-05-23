@@ -32,6 +32,13 @@ export const generationJobs = pgTable(
     costUsdEstimate: numeric('cost_usd_estimate', { precision: 10, scale: 4 }),
     trigger: text('trigger').notNull(), // cli | scheduled | admin (TS-enforced)
     errorMessage: text('error_message'),
+    /**
+     * Curriculum-source version (e.g. `'2026-05-23'`) for the cell's language
+     * at the time this job ran. The scheduler compares this to the on-disk
+     * `CURRICULUM_VERSION_<LANG>` constant to decide whether suppression
+     * should clear after a curriculum edit. NULL on legacy rows pre-migration.
+     */
+    curriculumVersion: text('curriculum_version'),
   },
   (table) => ({
     cellIdx: index('generation_jobs_cell_idx').on(table.cellKey, table.startedAt.desc()),

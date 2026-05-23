@@ -214,6 +214,9 @@ exercises.post('/exercises/:id/submit', async (c) => {
         requestId,
         userId,
         submissionId,
+        // R8: shared Langfuse join key with the generation+validation traces
+        // for this exercise (`exercises.id` PK; same deterministic UUID).
+        exerciseId: id,
         language: exercise.language as Language,
         cefrLevel: exercise.difficulty as CefrLevel,
         exerciseType: exercise.type as ExerciseType,

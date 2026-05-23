@@ -1,8 +1,13 @@
+import { Language, type LearningLanguage } from '@language-drill/shared';
 import { describe, expect, it } from 'vitest';
 
 import {
   ALL_CURRICULA,
   assertCurriculumInvariants,
+  CURRICULUM_VERSION_BY_LANGUAGE,
+  CURRICULUM_VERSION_DE,
+  CURRICULUM_VERSION_ES,
+  CURRICULUM_VERSION_TR,
   deCurriculum,
   esCurriculum,
   getGrammarPoint,
@@ -164,5 +169,35 @@ describe('per-language counts', () => {
     expect(grammar.B1).toBe(0);
     expect(grammar.B2).toBe(0);
     expect(vocab).toBe(1);
+  });
+});
+
+describe('CURRICULUM_VERSION_<LANG> constants', () => {
+  // CLAUDE.md requires that any curriculum edit bumps the matching
+  // CURRICULUM_VERSION_<LANG> in the same commit. Asserting the shape here
+  // catches typos (e.g. empty string, '2026-5-23', '2026-05-23-draft') at PR
+  // time so we never ship a curriculum_version row that breaks the
+  // YYYY-MM-DD invariant downstream consumers rely on.
+  it('every learning language exports a YYYY-MM-DD version constant', () => {
+    expect(CURRICULUM_VERSION_ES).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(CURRICULUM_VERSION_DE).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(CURRICULUM_VERSION_TR).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+});
+
+describe('CURRICULUM_VERSION_BY_LANGUAGE', () => {
+  // LearningLanguage = Exclude<Language, Language.EN> — EN is excluded by the
+  // type because it has no curriculum module. If a new learning language is
+  // added to the enum, this test will fail until the map gets an entry.
+  it('has an entry for every LearningLanguage value (exhaustiveness)', () => {
+    const expected: LearningLanguage[] = [Language.ES, Language.DE, Language.TR];
+    const keys = Object.keys(CURRICULUM_VERSION_BY_LANGUAGE) as LearningLanguage[];
+    expect(new Set(keys)).toEqual(new Set(expected));
+  });
+
+  it('each value matches the language-specific constant', () => {
+    expect(CURRICULUM_VERSION_BY_LANGUAGE[Language.ES]).toBe(CURRICULUM_VERSION_ES);
+    expect(CURRICULUM_VERSION_BY_LANGUAGE[Language.DE]).toBe(CURRICULUM_VERSION_DE);
+    expect(CURRICULUM_VERSION_BY_LANGUAGE[Language.TR]).toBe(CURRICULUM_VERSION_TR);
   });
 });

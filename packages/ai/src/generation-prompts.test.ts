@@ -112,6 +112,38 @@ describe("buildGenerationSystemPrompt", () => {
     expect(prompt).toContain("Vowel harmony: front vowel (e) requires -ler suffix");
   });
 
+  it("pins the R2.3 / R3.B.7 / R7.1 hard-constraint bullets added in cluster B", async () => {
+    // Three independent rules that all live under "Hard constraints" and
+    // were added together. Pin each so a future edit can't silently drop
+    // one while preserving the others.
+    const prompt = await buildGenerationSystemPrompt(baseInputs, []);
+
+    // (a) R2.3 — vowel-harmony cell-level coverage rule. The prompt must
+    // both name "vowel harmony" AND carry a recognizable substring of the
+    // diversity constraint (covering both 2-way and 4-way patterns; capping
+    // plural-suffix blanks at 50% of the batch).
+    expect(prompt).toContain("tr-a1-vowel-harmony");
+    expect(prompt).toContain("BOTH 2-way");
+    expect(prompt).toContain("4-way");
+    expect(prompt).toContain("at least three of the four high-vowel slots");
+    expect(prompt).toContain("more than 50% of the batch");
+
+    // (b) R7.1 — buffer-consonant ambiguity rule with the production
+    // exemplar ("mutluy___" → "um" vs "yum") so Claude has a concrete
+    // pattern to match.
+    expect(prompt).toContain("Buffer-consonant ambiguity");
+    expect(prompt).toContain("mutluy___");
+    expect(prompt).toContain("buffer consonant");
+
+    // (c) R3.B.7 — unique-answer reiteration for grammar-shape clozes.
+    // Must include the new "Evde yeni" exemplar and the explicit
+    // "either constrain ... OR list every plausible lexeme in
+    // acceptableAnswers" wording.
+    expect(prompt).toContain("Evde yeni ___ var");
+    expect(prompt).toContain("Either constrain the sentence");
+    expect(prompt).toContain("list every plausible lexeme in `acceptableAnswers`");
+  });
+
   it("instructs Claude to use the matching tool name", async () => {
     const cloze = await buildGenerationSystemPrompt(baseInputs, []);
     expect(cloze).toContain("submit_cloze_exercise");

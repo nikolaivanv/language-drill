@@ -29,10 +29,11 @@ import {
   type ClaudeUsageBreakdown,
   type GenerationSpec,
 } from '@language-drill/ai';
-import { ExerciseType } from '@language-drill/shared';
+import { ExerciseType, type LearningLanguage } from '@language-drill/shared';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 
 import type { Db } from '../client';
+import { CURRICULUM_VERSION_BY_LANGUAGE } from '../curriculum';
 import { assertValidCellKey } from '../lib/cell-key';
 import { deterministicUuid } from '../lib/deterministic-uuid';
 import {
@@ -138,6 +139,20 @@ export type CellResult = {
    * closed on this dimension when *every* ordinal is malformed.
    */
   malformedDraftCount: number;
+  /**
+   * Ordinals where the dedup-retry path exhausted every retry slot on
+   * parser failures (each regenerated draft landed in
+   * `result.malformedDrafts` instead of `result.drafts`). Distinct from
+   * `malformedDraftCount` — that one counts initial-batch parse failures
+   * (a generator-prompt-malforming signal). `parserFailedCount` counts
+   * ordinals where even retries couldn't recover, which is alarm-worthy
+   * (`> 0.2` ratio over multiple jobs signals a stuck failure mode).
+   * Already included in `rejectedCount` (these ordinals terminate with
+   * `terminalStatus = 'rejected'`); surfaced separately so the structured
+   * log line can split parser-failed ordinals from validator-rejected
+   * ones. R5.4.
+   */
+  parserFailedCount: number;
 };
 
 /**
@@ -249,13 +264,20 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     });
   }
 
-  // Open the audit row in 'running' state.
+  // Open the audit row in 'running' state. `curriculumVersion` records the
+  // on-disk `CURRICULUM_VERSION_<LANG>` constant for the cell's language so
+  // the scheduler can detect a curriculum edit on the next tick and clear
+  // any low-yield / saturated-dedup suppression that was based on a stale
+  // curriculum revision. `Cell.language` is a `LearningLanguage` by
+  // construction (cells only exist for ES/DE/TR curricula), so the lookup
+  // is total.
   await db.insert(generationJobs).values({
     id: jobId,
     cellKey: cell.cellKey,
     requestedCount: args.count,
     status: 'running',
     trigger,
+    curriculumVersion: CURRICULUM_VERSION_BY_LANGUAGE[cell.language as LearningLanguage],
   });
 
   // Phase 3 accumulators. `combinedUsage` starts at the generator batch's
@@ -273,6 +295,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
   let firstAttemptSkippedCount = 0;
   let inBatchDuplicateCount = 0;
   let malformedDraftCount = 0;
+  let parserFailedCount = 0;
   const generatedAt = new Date();
 
   // Built inside the try so any failure in the priors query routes through
@@ -372,6 +395,9 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       combinedUsage = addUsage(combinedUsage, outcome.extraUsage);
       producedCount += outcome.extraProduced;
       validatedCount += outcome.validatedCount;
+      if (outcome.parserFailedAtFinal) {
+        parserFailedCount += 1;
+      }
 
       switch (outcome.terminalStatus) {
         case 'inserted-approved':
@@ -412,6 +438,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       auditRowExists: true,
       db,
       malformedDraftCount,
+      parserFailedCount,
     });
   }
 
@@ -456,6 +483,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     rejectedCount,
     dedupGivenUpCount,
     malformedDraftCount,
+    parserFailedCount,
   };
 }
 
@@ -473,6 +501,8 @@ async function failClosed(opts: {
   db: Db;
   /** Threaded through from the outer scope so the count survives the fail path. */
   malformedDraftCount?: number;
+  /** Threaded through from the outer scope so the count survives the fail path. */
+  parserFailedCount?: number;
 }): Promise<CellResult> {
   const truncatedMessage = opts.errorMessage.slice(0, ERROR_MESSAGE_MAX_LENGTH);
   if (opts.auditRowExists) {
@@ -501,5 +531,6 @@ async function failClosed(opts: {
     rejectedCount: 0,
     dedupGivenUpCount: 0,
     malformedDraftCount: opts.malformedDraftCount ?? 0,
+    parserFailedCount: opts.parserFailedCount ?? 0,
   };
 }

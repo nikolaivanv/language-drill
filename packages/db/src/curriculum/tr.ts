@@ -11,6 +11,17 @@ import type { GrammarPoint } from './types';
 const TR = Language.TR;
 const { A1, A2 } = CefrLevel;
 
+/**
+ * Per-language curriculum version. Bump in the same commit as any edit to
+ * this file's grammar entries (analogous to `*_PROMPT_VERSION` in
+ * `packages/ai/src/`). The scheduler in `infra/lambda/src/generation/`
+ * compares this to the value recorded on the most recent succeeded
+ * generation_jobs row for each cell — when they differ, any
+ * "saturated-dedup" or "low-yield" suppression on that cell clears, on the
+ * assumption that the curriculum edit may have unblocked the search space.
+ */
+export const CURRICULUM_VERSION_TR = '2026-05-23';
+
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   // A1
@@ -20,14 +31,29 @@ const trCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Vowel harmony',
     description:
-      'Choosing suffix vowels to harmonise with the last vowel of the stem: 2-way (e/a) for low vowels and 4-way (i/ı/u/ü) for high vowels.',
+      "Suffix vowels harmonise with the stem's last vowel. 2-way (e/a): plural -lAr, locative -DA, ablative -DAn. 4-way (i/ı/u/ü): accusative -(y)I, possessive -(s)I, dative, past -DI. Drill both patterns.",
     cefrLevel: A1,
     language: TR,
-    examplesPositive: ['evler (houses)', 'okullar (schools)'],
-    examplesNegative: ['*okuller'],
+    examplesPositive: [
+      'evler (houses) — front vowel /e/ → -ler',
+      'okullar (schools) — back vowel /u/ → -lar',
+      'evi (the house, accusative) — front unrounded /e/ stem → -i',
+      'kapıyı (the door, accusative) — back unrounded /a/ stem → -ı',
+      'okulu (the school, accusative) — back rounded /u/ stem → -u',
+      'gülü (the rose, accusative) — front rounded /ü/ stem → -ü',
+      'işte (at work, locative) — front unrounded /i/ stem → -te',
+      'köprüye (to the bridge, dative) — front rounded /ü/ stem → -ye',
+    ],
+    examplesNegative: [
+      '*okuller (wrong — back-vowel stem requires -lar)',
+      '*evyi (wrong — accusative on /e/ stem is -(y)i with /y/ buffer → "evi", not "evyi")',
+      '*okulı (wrong — back rounded /u/ stem requires -u, not -ı)',
+    ],
     commonErrors: [
       'Defaulting to one vowel form (-ler) regardless of the stem vowel.',
       'Treating loanwords as if they followed front-vowel harmony when they take back-vowel suffixes.',
+      'Picking the wrong member of the 4-way high-vowel set — e.g. using -ı on a rounded stem where -u is required (okulı vs. okulu), or using -i on a back-vowel stem where -ı is required.',
+      'Conflating the 2-way (low-vowel) and 4-way (high-vowel) harmony patterns — applying -lAr/-lEr logic to suffixes that take the 4-way pattern, such as the accusative -(y)I.',
     ],
   },
   {

@@ -265,4 +265,71 @@ describe('decideDemotion', () => {
     const action = decideDemotion('rejected' as ReviewStatus, passingResult);
     expect(action.kind).toBe('skip');
   });
+
+  // -------------------------------------------------------------------------
+  // R3.C.8 regression cases — these pin the demotion behavior on existing
+  // approved offenders once the updated R3.A / R3.B / R7 validator prompt
+  // ships and `pnpm revalidate:cloze --apply` runs through them. Each test
+  // models one production failure pattern with the specific `ValidationResult`
+  // shape the new prompt would return.
+  // -------------------------------------------------------------------------
+
+  it('R3.A regression: spoiled-context demote with qualityScore=0.5 routes auto-approved → rejected', () => {
+    // Production pattern: TR A1 vowel-harmony cloze whose context spelled the
+    // rule out above the blank ("(u = back, unrounded → -lar)" / blank "lar").
+    // The new validator returns `contextSpoilsAnswer: true` and a qualityScore
+    // at the 0.5 floor. The floor check uses strict `<`, so 'low quality score
+    // (<0.5)' is NOT pushed; the contextSpoilsAnswer veto alone is sufficient
+    // to land the row in 'rejected' with 'context spoils answer' as the
+    // leading reason.
+    const action = decideDemotion(
+      'auto-approved',
+      makeResult({ qualityScore: 0.5, contextSpoilsAnswer: true }),
+    );
+    expect(action.kind).toBe('demote');
+    if (action.kind !== 'demote') return;
+    expect(action.to).toBe('rejected');
+    expect(action.reasons).toContain('context spoils answer');
+  });
+
+  it('R3.B regression: ambiguous-fill demote with qualityScore=0.65 routes auto-approved → flagged', () => {
+    // Production pattern: TR A1 cloze "Evde yeni ___ var. Onlar çok güzel." /
+    // "perdeler" — multiple lexemes (kitaplar, çiçekler, lambalar) fit the
+    // sentence equally well. The new validator returns `ambiguous: true` and a
+    // qualityScore in the 0.5..0.7 borderline band. Both signals collapse the
+    // row to 'flagged' rather than 'rejected', because the exercise is
+    // salvageable with an `acceptableAnswers` edit.
+    const action = decideDemotion(
+      'auto-approved',
+      makeResult({ qualityScore: 0.65, ambiguous: true }),
+    );
+    expect(action.kind).toBe('demote');
+    if (action.kind !== 'demote') return;
+    expect(action.to).toBe('flagged');
+    expect(action.reasons).toContain('ambiguous');
+    expect(action.reasons).toContain('low quality score (<0.7)');
+  });
+
+  it('R7.2/R7.3 regression: buffer-consonant ambiguous blank demotes auto-approved → flagged with reason carried through', () => {
+    // Production pattern: TR A1 cloze "Ben çok mutlu___" / "um" — the blank
+    // position absorbs the buffer consonant `-y-` without `acceptableAnswers`,
+    // so both "um" (linguistic suffix) and "yum" (visible completion) are
+    // gradeable. R7.2 instructs the validator to set `ambiguous: true` AND
+    // surface the specific 'buffer-consonant ambiguous blank' string in
+    // `flaggedReasons` so the review CLI can distinguish lexeme-ambiguity
+    // (R3.B) from buffer-consonant-ambiguity (R7) at triage time.
+    const action = decideDemotion(
+      'auto-approved',
+      makeResult({
+        qualityScore: 0.65,
+        ambiguous: true,
+        flaggedReasons: ['buffer-consonant ambiguous blank'],
+      }),
+    );
+    expect(action.kind).toBe('demote');
+    if (action.kind !== 'demote') return;
+    expect(action.to).toBe('flagged');
+    expect(action.reasons).toContain('ambiguous');
+    expect(action.reasons).toContain('buffer-consonant ambiguous blank');
+  });
 });
