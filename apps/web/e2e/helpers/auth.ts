@@ -227,6 +227,17 @@ export async function signInThroughUI(
   }
 
   if (await otpInput.isVisible()) {
+    // Device-verification ("new device") step: Clerk may show the OTP
+    // input before the verification code has been fully prepared on the
+    // server. Typing the code immediately results in "You need to send a
+    // verification code before attempting to verify." Fix: wait for the
+    // Resend button's cooldown to expire, click it to explicitly prepare
+    // the verification, then enter the fixed `424242` test OTP.
+    const resendButton = page.getByRole('button', { name: /resend/i });
+    if (await resendButton.count() > 0) {
+      await resendButton.click({ timeout: 45_000 });
+      await page.waitForTimeout(1_000);
+    }
     await otpInput.pressSequentially(CLERK_TEST_OTP_CODE);
   }
 
