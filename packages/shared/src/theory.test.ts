@@ -53,6 +53,35 @@ describe("parseTheoryTopicJson — happy paths", () => {
   });
 });
 
+describe("parseTheoryTopicJson — defensive sections-as-string decode", () => {
+  // Anthropic's tool-use occasionally serializes nested arrays as JSON
+  // string literals. Production audit row 2026-05-18
+  // `tr:a1:tr-a1-locative` failed for this reason; probe runs on
+  // 2026-05-23 reproduced it on ~75% of attempts. The parser must
+  // tolerate this by JSON-parsing a string-valued `sections` field.
+  it("accepts sections as a JSON-encoded string", () => {
+    const original = cloneMinimal();
+    const stringified = {
+      ...original,
+      sections: JSON.stringify(original.sections),
+    };
+    const parsed = parseTheoryTopicJson(stringified);
+    expect(parsed).toEqual(original);
+  });
+
+  it("still rejects an unparseable string", () => {
+    const bad = cloneMinimal();
+    bad.sections = "this is not JSON";
+    expect(() => parseTheoryTopicJson(bad)).toThrow(/sections.*non-empty/);
+  });
+
+  it("still rejects a string that parses to a non-array", () => {
+    const bad = cloneMinimal();
+    bad.sections = JSON.stringify({ not: "an array" });
+    expect(() => parseTheoryTopicJson(bad)).toThrow(/sections.*non-empty/);
+  });
+});
+
 describe("parseTheoryTopicJson — top-level rejection", () => {
   it("rejects a number", () => {
     expect(() => parseTheoryTopicJson(42)).toThrow(
