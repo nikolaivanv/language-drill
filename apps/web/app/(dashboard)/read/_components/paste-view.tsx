@@ -57,7 +57,7 @@ export function PasteView({
   const cannotAnnotate = isLoading || isEmpty || tooLong || rateLimited;
 
   return (
-    <div className="mx-auto max-w-[720px]">
+    <div className="mx-auto max-w-[720px] mobile:max-w-none">
       <div className="t-micro">new text</div>
       <h2 className="t-display-m mt-[4px] mb-[22px]">paste a passage</h2>
 

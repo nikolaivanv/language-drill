@@ -119,6 +119,26 @@ describe('SkillSnapshotGrid — sort order', () => {
   });
 });
 
+describe('SkillSnapshotGrid — canonical breakpoint (Req 4.4, 1.6)', () => {
+  it('stacks the skill meters 1-col ≤760 / 2-col above (no ad-hoc sm:)', () => {
+    const axes: RadarAxis[] = [
+      axis('grammar', 0.42),
+      axis('vocabulary', 0.7),
+    ];
+    const { container } = render(
+      <SkillSnapshotGrid
+        {...baseGridProps}
+        data={radar(axes)}
+        isLoading={false}
+        error={null}
+      />,
+    );
+    const grid = container.querySelector('.grid')!;
+    expect(grid).toHaveClass('grid-cols-2', 'mobile:grid-cols-1');
+    expect(grid).not.toHaveClass('sm:grid-cols-2');
+  });
+});
+
 describe('SkillSnapshotGrid — error state', () => {
   it('renders an error card with a retry button that calls onRetry', () => {
     const onRetry = vi.fn();

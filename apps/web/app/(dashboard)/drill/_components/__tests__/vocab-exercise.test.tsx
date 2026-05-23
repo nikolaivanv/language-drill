@@ -11,6 +11,11 @@ import {
   type SubmissionState,
   type VocabExerciseProps,
 } from '../vocab-exercise';
+import {
+  DrillActionProvider,
+  useDrillAction,
+  type DrillPrimaryAction,
+} from '../drill-action-context';
 
 const baseContent: VocabRecallContent = {
   type: ExerciseType.VOCAB_RECALL,
@@ -214,5 +219,51 @@ describe('VocabExercise', () => {
         ).toBeInTheDocument();
       },
     );
+  });
+
+  describe('mobile action publishing', () => {
+    function renderActive(overrides: Partial<VocabExerciseProps> = {}) {
+      const onSubmit = vi.fn();
+      let captured: DrillPrimaryAction | null = null;
+      function Capture() {
+        captured = useDrillAction().primaryAction;
+        return null;
+      }
+      const utils = render(
+        <DrillActionProvider active>
+          <VocabExercise
+            content={baseContent}
+            language={Language.ES}
+            submission={idleSubmission}
+            onSubmit={onSubmit}
+            onNext={vi.fn()}
+            {...overrides}
+          />
+          <Capture />
+        </DrillActionProvider>,
+      );
+      return { onSubmit, getCaptured: () => captured, ...utils };
+    }
+
+    it('omits the inline submit button when active', () => {
+      renderActive();
+      expect(screen.queryByRole('button', { name: 'submit' })).toBeNull();
+    });
+
+    it('publishes the submit action once an answer is typed', () => {
+      const { onSubmit, getCaptured } = renderActive();
+      fireEvent.change(screen.getByRole('textbox'), {
+        target: { value: 'aprovechar' },
+      });
+      const action = getCaptured();
+      expect(action?.label).toBe('submit');
+      expect(action?.disabled).toBe(false);
+
+      action?.onClick();
+      expect(onSubmit).toHaveBeenCalledWith(
+        'aprovechar',
+        expect.objectContaining({ hintLevel: 0 }),
+      );
+    });
   });
 });

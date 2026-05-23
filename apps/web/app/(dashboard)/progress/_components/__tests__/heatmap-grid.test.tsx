@@ -123,6 +123,22 @@ describe('HeatmapGrid', () => {
     expect(dayCells[29].getAttribute('title')).toBe('2026-04-30: 1 attempt');
   });
 
+  it('squeezes day cells and left-aligns the label at mobile width (Req 9.3)', () => {
+    const { container } = render(
+      <HeatmapGrid
+        topics={[topic({ name: 'subjunctive' })]}
+        shadeThresholds={THRESHOLDS}
+        now={NOW}
+      />,
+    );
+    // Day cells: 22px desktop cap, 12px mobile cap.
+    const cell = container.querySelector('[data-shade]')!;
+    expect(cell).toHaveClass('max-h-[22px]', 'mobile:max-h-[12px]', 'aspect-square');
+    // Topic label: 170px right-aligned desktop → narrower, left-aligned mobile.
+    const label = screen.getByText('subjunctive');
+    expect(label).toHaveClass('w-[170px]', 'text-right', 'mobile:w-[84px]', 'mobile:text-left');
+  });
+
   it('renders a four-swatch shade legend', () => {
     const { container } = render(
       <HeatmapGrid

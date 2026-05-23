@@ -133,6 +133,15 @@ describe('TimelineItem — rail line', () => {
   });
 });
 
+describe('TimelineItem — mobile rail node (Req 4.3)', () => {
+  it('shrinks the rail circle from 38px to ~28px at mobile width', () => {
+    const { container } = renderItem({ status: 'queued', index: 2 });
+    const circle = container.querySelector('.rounded-full')!;
+    expect(circle).toHaveClass('h-[38px]', 'w-[38px]');
+    expect(circle).toHaveClass('mobile:h-[28px]', 'mobile:w-[28px]');
+  });
+});
+
 describe('TimelineItem — planned-time chip', () => {
   it('shows the estimated minutes', () => {
     renderItem({ estimatedMinutes: 9 });

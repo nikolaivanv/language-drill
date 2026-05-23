@@ -1,7 +1,10 @@
 'use client';
 
 import type { LanguageProfile } from '@language-drill/shared';
+import { useIsMobile } from '../../lib/responsive';
 import { Nav } from './nav';
+import { MobileTopBar } from './mobile-top-bar';
+import { MobileTabBar } from './mobile-tab-bar';
 
 interface AppShellProps {
   profiles: LanguageProfile[];
@@ -9,6 +12,23 @@ interface AppShellProps {
 }
 
 export function AppShell({ profiles, children }: AppShellProps) {
+  const isMobile = useIsMobile();
+
+  // Mobile: top app-bar + scrollable content + bottom tab-bar. `useIsMobile`
+  // is false on the server and first client render, so the desktop tree below
+  // is always the SSR/hydration output — this branch mounts after reconcile.
+  if (isMobile) {
+    return (
+      <div className="flex min-h-screen flex-col bg-paper">
+        <MobileTopBar profiles={profiles} />
+        <main className="min-w-0 flex-1 bg-paper px-[18px] pt-[18px] pb-[calc(64px+env(safe-area-inset-bottom)+18px)]">
+          {children}
+        </main>
+        <MobileTabBar />
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-paper">
       <Nav profiles={profiles} />

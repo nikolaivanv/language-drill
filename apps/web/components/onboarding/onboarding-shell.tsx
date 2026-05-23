@@ -31,7 +31,10 @@ export interface OnboardingShellProps {
 
 export function OnboardingShell({ mode, onComplete }: OnboardingShellProps) {
   return (
-    <div className="flex min-h-screen bg-paper">
+    // Row on desktop (coach rail + content). At ≤760 the rail is hidden and the
+    // layout stacks so the MobileCoachHeader sits on top and the content fills
+    // the width (Req 10.1).
+    <div className="flex mobile:flex-col min-h-screen bg-paper">
       <CoachPane />
       <MobileCoachHeader />
       <WizardRightPane mode={mode} onComplete={onComplete} />
@@ -70,7 +73,9 @@ function WizardRightPane({
       data-testid="onboarding-wizard-right-pane"
       className="flex-1"
     >
-      <div className="max-w-[760px] mx-auto px-[64px] py-[56px] flex flex-col gap-s-7">
+      {/* Canonical 18px gutter + tighter vertical rhythm at ≤760 so the
+          WizardProgress sits near the top of the screen (Req 10.2, 10.4). */}
+      <div className="max-w-[760px] mx-auto px-[64px] mobile:px-[18px] py-[56px] mobile:py-[24px] flex flex-col gap-s-7">
         <WizardProgress />
         <ActiveStep />
         <WizardFooter onPrimary={onPrimary} />

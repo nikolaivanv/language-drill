@@ -82,7 +82,7 @@ export function StepLanguages() {
       </header>
 
       <div
-        className="grid grid-cols-2 gap-[12px]"
+        className="grid grid-cols-2 mobile:grid-cols-1 gap-[12px]"
         role="group"
         aria-label="learning languages"
       >
@@ -92,6 +92,7 @@ export function StepLanguages() {
             mode="checkbox"
             selected={isSelected(language)}
             onSelect={() => handleToggle(language)}
+            className="mobile:min-h-[48px]"
           >
             <span className="flex items-center gap-s-3">
               <Flagdot language={language} />

@@ -11,6 +11,11 @@ import {
   type SubmissionState,
   type TranslationExerciseProps,
 } from '../translation-exercise';
+import {
+  DrillActionProvider,
+  useDrillAction,
+  type DrillPrimaryAction,
+} from '../drill-action-context';
 
 const baseContent: TranslationContent = {
   type: ExerciseType.TRANSLATION,
@@ -302,5 +307,54 @@ describe('TranslationExercise', () => {
         ).toBeInTheDocument();
       },
     );
+  });
+
+  describe('mobile action publishing', () => {
+    function renderActive(overrides: Partial<TranslationExerciseProps> = {}) {
+      const onSubmit = vi.fn();
+      let captured: DrillPrimaryAction | null = null;
+      function Capture() {
+        captured = useDrillAction().primaryAction;
+        return null;
+      }
+      const utils = render(
+        <DrillActionProvider active>
+          <TranslationExercise
+            content={baseContent}
+            language={Language.ES}
+            submission={idleSubmission}
+            onSubmit={onSubmit}
+            onNext={vi.fn()}
+            {...overrides}
+          />
+          <Capture />
+        </DrillActionProvider>,
+      );
+      return { onSubmit, getCaptured: () => captured, ...utils };
+    }
+
+    it('omits the inline submit button but keeps the hint button inline', () => {
+      renderActive();
+      expect(screen.queryByRole('button', { name: 'submit' })).toBeNull();
+      expect(
+        screen.getByRole('button', { name: 'show me a hint' }),
+      ).toBeInTheDocument();
+    });
+
+    it('publishes the submit action once an answer is typed', () => {
+      const { onSubmit, getCaptured } = renderActive();
+      fireEvent.change(screen.getByRole('textbox'), {
+        target: { value: 'apenas puedo' },
+      });
+      const action = getCaptured();
+      expect(action?.label).toBe('submit');
+      expect(action?.disabled).toBe(false);
+
+      action?.onClick();
+      expect(onSubmit).toHaveBeenCalledWith(
+        'apenas puedo',
+        expect.objectContaining({ hintCount: 0 }),
+      );
+    });
   });
 });

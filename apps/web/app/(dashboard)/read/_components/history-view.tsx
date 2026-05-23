@@ -19,7 +19,7 @@ type Props = {
 
 export function HistoryView({ entries, onOpen }: Props) {
   return (
-    <div className="max-w-[800px]">
+    <div className="max-w-[800px] mobile:max-w-none">
       <div className="t-micro mb-[6px]">your reading</div>
       <h2 className="t-display-m mt-[4px] mb-[22px]">past texts</h2>
       <ul className="flex flex-col gap-[10px]">

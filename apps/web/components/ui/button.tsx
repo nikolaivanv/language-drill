@@ -27,10 +27,14 @@ const variantClasses: Record<ButtonVariant, string> = {
     'border border-accent bg-accent text-white hover:bg-accent-2 hover:border-accent-2',
 };
 
+// `mobile:` floors give every button a ≥44px square tap target at ≤760px
+// (Req 11.1) — the min-width also pads icon-only buttons into a ≥44px hit box.
+// Desktop sizes are unchanged (the floors sit below the natural md/lg heights
+// and only raise the sm/icon cases on touch).
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: 'px-s-3 py-[6px] text-[12px] rounded-r-sm min-h-[32px]',
-  md: 'px-[18px] py-[10px] text-[13px] rounded-r-md',
-  lg: 'px-s-6 py-[14px] text-[15px] rounded-r-md',
+  sm: 'px-s-3 py-[6px] text-[12px] rounded-r-sm min-h-[32px] mobile:min-h-[44px] mobile:min-w-[44px]',
+  md: 'px-[18px] py-[10px] text-[13px] rounded-r-md mobile:min-h-[44px] mobile:min-w-[44px]',
+  lg: 'px-s-6 py-[14px] text-[15px] rounded-r-md mobile:min-h-[44px] mobile:min-w-[44px]',
 };
 
 const disabledClasses =

@@ -23,7 +23,9 @@ import {
   useTodayPlan,
 } from '@language-drill/api-client';
 import { useActiveLanguage } from '../../components/shell/active-language-provider';
+import { useIsMobile } from '../../lib/responsive';
 import { DashboardHeader } from './_components/dashboard-header';
+import { NextUpCard } from './_components/next-up-card';
 import { ReadCollectCard } from './_components/read-collect-card';
 import { SkillSnapshotGrid } from './_components/skill-snapshot-grid';
 import { TodayTimeline } from './_components/today-timeline';
@@ -41,6 +43,8 @@ export default function DashboardPage() {
   const todayPlan = useTodayPlan({ fetchFn, language: activeLanguage });
   const radar = useProgressRadar({ fetchFn, language: activeLanguage });
 
+  const isMobile = useIsMobile();
+
   return (
     <div className="space-y-s-7">
       <DashboardHeader
@@ -49,6 +53,10 @@ export default function DashboardPage() {
         axes={radar.data?.axes}
         totalEstimatedMinutes={todayPlan.data?.totalEstimatedMinutes ?? null}
       />
+      {/* Mobile-only one-tap CTA directly under the greeting (Req 4.2). */}
+      {isMobile && (
+        <NextUpCard data={todayPlan.data} language={activeLanguage} />
+      )}
       <TodayTimeline
         data={todayPlan.data}
         isLoading={todayPlan.isLoading}

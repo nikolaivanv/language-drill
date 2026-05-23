@@ -1,8 +1,20 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import type { FlaggedMap } from '@language-drill/shared';
 import { CefrLevel } from '@language-drill/shared';
 import { AnnotatedView } from '../annotated-view';
+
+// AnnotatedView branches on `useIsMobile()` — default to desktop so the
+// existing 2-column / popover / rail assertions hold; the mobile suite flips
+// it on to exercise the chip + bottom sheets.
+const mockIsMobile = vi.fn(() => false);
+vi.mock('../../../../../lib/responsive', () => ({
+  useIsMobile: () => mockIsMobile(),
+}));
+
+beforeEach(() => {
+  mockIsMobile.mockReturnValue(false);
+});
 
 // ---------------------------------------------------------------------------
 // AnnotatedView — composition + outside-click + zero-flagged path
@@ -242,6 +254,69 @@ describe('AnnotatedView — popover composition', () => {
     fireEvent.click(
       screen.getByRole('button', { name: /\+ save to bank/i }),
     );
+    expect(onBankToggle).toHaveBeenCalledWith('aldea');
+  });
+});
+
+describe('AnnotatedView — mobile branch (≤760px)', () => {
+  beforeEach(() => {
+    mockIsMobile.mockReturnValue(true);
+  });
+
+  it('renders a word-bank chip instead of the sticky rail', () => {
+    render(<AnnotatedView {...baseProps} />);
+    // The chip opens the bank sheet; the standalone rail/popover are absent.
+    expect(
+      screen.getByRole('button', { name: /word bank · 0/i }),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId('word-popover')).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('opens the word bank sheet (with the intensity toggle) when the chip is tapped', () => {
+    render(<AnnotatedView {...baseProps} bank={['aldea']} />);
+    expect(
+      screen.queryByRole('radiogroup', { name: /highlight intensity/i }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /word bank · 1/i }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(
+      screen.getByRole('radiogroup', { name: /highlight intensity/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('tapping a flagged word fires onPopoverOpen (reusing the reducer action)', () => {
+    const onPopoverOpen = vi.fn();
+    render(<AnnotatedView {...baseProps} onPopoverOpen={onPopoverOpen} />);
+    fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
+    expect(onPopoverOpen).toHaveBeenCalledWith('aldea', expect.any(Number), expect.any(Number));
+  });
+
+  it('opens the word card as a sheet (not the anchored popover) for the active word', () => {
+    render(
+      <AnnotatedView
+        {...baseProps}
+        activeWord={{ word: 'aldea', x: 100, y: 50 }}
+      />,
+    );
+    // The word card content shows inside a dialog, but not the popover shell.
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.queryByTestId('word-popover')).not.toBeInTheDocument();
+    expect(screen.getByText('a small village')).toBeInTheDocument();
+    // BottomSheet's close affordance proves it's the sheet, not the popover.
+    expect(screen.getByRole('button', { name: 'close' })).toBeInTheDocument();
+  });
+
+  it('wires the word sheet save to onBankToggle for the active word', () => {
+    const onBankToggle = vi.fn();
+    render(
+      <AnnotatedView
+        {...baseProps}
+        activeWord={{ word: 'aldea', x: 100, y: 50 }}
+        onBankToggle={onBankToggle}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: /\+ save to bank/i }));
     expect(onBankToggle).toHaveBeenCalledWith('aldea');
   });
 });

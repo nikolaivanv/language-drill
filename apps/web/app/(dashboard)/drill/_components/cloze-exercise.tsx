@@ -5,6 +5,7 @@ import type { ClozeContent, LearningLanguage } from '@language-drill/shared';
 import { AccentPicker, Button, Choice, Input } from '../../../../components/ui';
 import { splitClozeSentence } from '../../../../lib/drill/cloze-blank';
 import { clozeVerdict } from '../../../../lib/drill/verdict-tier';
+import { useDrillAction } from './drill-action-context';
 import { FeedbackShell } from './feedback-shell';
 import type { SubmissionMeta, SubmissionState } from './types';
 
@@ -65,6 +66,30 @@ export function ClozeExercise({
     onSubmit(value, { usedMc });
   }
 
+  // On mobile, publish the submit CTA to the sticky action bar instead of
+  // rendering it inline. Once evaluated, FeedbackShell owns the action (next).
+  const { active, setPrimaryAction } = useDrillAction();
+  React.useEffect(() => {
+    if (!active || submission.kind === 'evaluated') return;
+    setPrimaryAction({
+      label: 'submit',
+      onClick: handleSubmit,
+      disabled: !canSubmit || isLocked,
+      loading: submission.kind === 'submitting',
+    });
+    // handleSubmit closes over mode/answer/selectedOption/usedMc — all listed.
+  }, [
+    active,
+    setPrimaryAction,
+    submission.kind,
+    canSubmit,
+    isLocked,
+    mode,
+    answer,
+    selectedOption,
+    usedMc,
+  ]);
+
   const { before, after, hasBlank } = splitClozeSentence(content.sentence);
 
   return (
@@ -118,7 +143,7 @@ export function ClozeExercise({
           )}
         </div>
       ) : (
-        <div className="flex flex-wrap gap-s-2">
+        <div className="flex flex-wrap gap-s-2 mobile:flex-col">
           {content.options?.map((opt) => {
             const pill = (
               <Choice
@@ -143,14 +168,16 @@ export function ClozeExercise({
         </div>
       )}
 
-      <Button
-        variant="primary"
-        onClick={handleSubmit}
-        disabled={!canSubmit || isLocked}
-        loading={submission.kind === 'submitting'}
-      >
-        submit
-      </Button>
+      {!active && (
+        <Button
+          variant="primary"
+          onClick={handleSubmit}
+          disabled={!canSubmit || isLocked}
+          loading={submission.kind === 'submitting'}
+        >
+          submit
+        </Button>
+      )}
 
       {submission.kind === 'evaluated' &&
         (() => {

@@ -9,9 +9,9 @@ import { Chip } from '../ui/chip';
 import { TheoryContent } from './theory-content';
 import { TheoryEmpty } from './theory-empty';
 import { TheoryToc } from './theory-toc';
-import { useBodyScrollLock } from './use-body-scroll-lock';
-import { useFocusTrap } from './use-focus-trap';
-import { useScrollSpy } from './use-scroll-spy';
+import { useBodyScrollLock } from '../../lib/hooks/use-body-scroll-lock';
+import { useFocusTrap } from '../../lib/hooks/use-focus-trap';
+import { useScrollSpy } from '../../lib/hooks/use-scroll-spy';
 
 type TheoryPanelProps = {
   topicId: string;

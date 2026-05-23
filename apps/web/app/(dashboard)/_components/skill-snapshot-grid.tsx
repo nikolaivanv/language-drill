@@ -52,7 +52,7 @@ export function SkillSnapshotGrid({
       )}
 
       {!isLoading && !error && data && !isEmpty(data) && (
-        <div className="grid grid-cols-1 gap-x-s-7 gap-y-s-4 sm:grid-cols-2">
+        <div className="grid grid-cols-2 mobile:grid-cols-1 gap-x-s-7 gap-y-s-4">
           {sortAxes(data).map((axis) => (
             <SkillRow key={axis.key} axis={axis} />
           ))}
@@ -111,7 +111,7 @@ function SectionHeader({ language }: { language: LearningLanguage }) {
 function GridSkeleton() {
   return (
     <div
-      className="grid grid-cols-1 gap-x-s-7 gap-y-s-4 sm:grid-cols-2"
+      className="grid grid-cols-2 mobile:grid-cols-1 gap-x-s-7 gap-y-s-4"
       aria-hidden
     >
       {[0, 1, 2, 3, 4, 5].map((i) => (

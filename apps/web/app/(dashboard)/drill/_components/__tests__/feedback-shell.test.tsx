@@ -1,6 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { FeedbackShell } from '../feedback-shell';
+import {
+  DrillActionProvider,
+  useDrillAction,
+  type DrillPrimaryAction,
+} from '../drill-action-context';
 
 function renderShell(overrides: Partial<React.ComponentProps<typeof FeedbackShell>> = {}) {
   const props = {
@@ -100,6 +105,49 @@ describe('FeedbackShell', () => {
       const onNext = vi.fn();
       renderShell({ onNext });
       fireEvent.click(screen.getByRole('button', { name: /next/i }));
+      expect(onNext).toHaveBeenCalledTimes(1);
+    });
+
+    it('renders the inline next button on desktop (no provider / inactive)', () => {
+      renderShell();
+      expect(
+        screen.getByRole('button', { name: /next/i }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('mobile action publishing', () => {
+    it('publishes the next action and omits the inline button when active', () => {
+      const onNext = vi.fn();
+      let captured: DrillPrimaryAction | null = null;
+      const getCaptured = () => captured;
+      function Capture() {
+        captured = useDrillAction().primaryAction;
+        return null;
+      }
+      render(
+        <DrillActionProvider active>
+          <FeedbackShell
+            tier="sage"
+            label="spot on"
+            scoreChipText="94%"
+            onNext={onNext}
+            nextLabel="see results"
+          >
+            <p>body</p>
+          </FeedbackShell>
+          <Capture />
+        </DrillActionProvider>,
+      );
+
+      // No inline next button while active.
+      expect(screen.queryByRole('button', { name: 'see results' })).toBeNull();
+
+      // The published action carries the next label + onNext + accent variant.
+      const action = getCaptured();
+      expect(action?.label).toBe('see results');
+      expect(action?.variant).toBe('accent');
+      action?.onClick();
       expect(onNext).toHaveBeenCalledTimes(1);
     });
   });

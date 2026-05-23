@@ -94,7 +94,7 @@ export function StepGoals() {
       <div
         role="group"
         aria-label="goals"
-        className="grid grid-cols-1 gap-[12px] [@media(min-width:600px)]:grid-cols-2 [@media(min-width:600px)]:grid-rows-3"
+        className="grid grid-cols-2 grid-rows-3 gap-[12px] mobile:grid-cols-1 mobile:grid-rows-none"
       >
         {GOAL_IDS.map((id) => {
           const { emoji, label, description } = GOAL_COPY[id];
@@ -105,6 +105,7 @@ export function StepGoals() {
               mode="checkbox"
               selected={selected}
               onSelect={() => dispatch({ type: 'toggleGoal', goal: id })}
+              className="mobile:min-h-[48px]"
             >
               <span className="flex items-start gap-s-3 w-full">
                 <span aria-hidden="true" className="text-[18px] leading-none">

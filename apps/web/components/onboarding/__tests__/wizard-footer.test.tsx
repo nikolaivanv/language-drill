@@ -271,6 +271,28 @@ describe('WizardFooter — error display (R7.8)', () => {
   });
 });
 
+describe('WizardFooter — mobile sticky action bar (R10.2, 10.4)', () => {
+  it('applies sticky bottom-bar classes at mobile while keeping the controls', () => {
+    renderFooter(buildState({ step: 2, languages: [Language.ES] }));
+    const footer = screen.getByTestId('onboarding-wizard-footer');
+    expect(footer).toHaveClass(
+      'mobile:sticky',
+      'mobile:bottom-0',
+      'mobile:bg-paper',
+    );
+    // Both navigation controls remain present.
+    expect(screen.getByTestId('wizard-footer-back')).toBeInTheDocument();
+    expect(screen.getByTestId('wizard-footer-primary')).toBeInTheDocument();
+  });
+
+  it('gives the back + primary controls a ≥44px mobile tap target', () => {
+    renderFooter(buildState({ step: 2, languages: [Language.ES] }));
+    expect(screen.getByTestId('wizard-footer-back')).toHaveClass(
+      'mobile:min-h-[44px]',
+    );
+  });
+});
+
 describe('WizardFooter — primary onClick', () => {
   it('invokes onPrimary when the CTA is clicked', () => {
     const onPrimary = vi.fn();

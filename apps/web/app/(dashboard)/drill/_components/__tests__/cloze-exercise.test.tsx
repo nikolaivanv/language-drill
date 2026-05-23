@@ -10,6 +10,11 @@ import {
   type ClozeExerciseProps,
   type SubmissionState,
 } from '../cloze-exercise';
+import {
+  DrillActionProvider,
+  useDrillAction,
+  type DrillPrimaryAction,
+} from '../drill-action-context';
 
 const baseContent: ClozeContent = {
   type: ExerciseType.CLOZE,
@@ -275,5 +280,58 @@ describe('ClozeExercise', () => {
     // fallback can't be tested at the component level without bypassing
     // types. The `isAccentLanguage` guard exists for forward compatibility.
     it.skip('falls back gracefully for non-accent languages', () => {});
+  });
+
+  describe('mobile action publishing', () => {
+    function renderActive(overrides: Partial<ClozeExerciseProps> = {}) {
+      const onSubmit = vi.fn();
+      let captured: DrillPrimaryAction | null = null;
+      function Capture() {
+        captured = useDrillAction().primaryAction;
+        return null;
+      }
+      const utils = render(
+        <DrillActionProvider active>
+          <ClozeExercise
+            content={baseContent}
+            language={Language.ES}
+            submission={idleSubmission}
+            onSubmit={onSubmit}
+            onNext={vi.fn()}
+            {...overrides}
+          />
+          <Capture />
+        </DrillActionProvider>,
+      );
+      return { onSubmit, getCaptured: () => captured, ...utils };
+    }
+
+    it('omits the inline submit button when active', () => {
+      renderActive();
+      expect(screen.queryByRole('button', { name: 'submit' })).toBeNull();
+    });
+
+    it('publishes an enabled submit action once a valid answer is typed', () => {
+      const { onSubmit, getCaptured, container } = renderActive();
+      const input = container.querySelector('input') as HTMLInputElement;
+      fireEvent.change(input, { target: { value: 'como' } });
+
+      const action = getCaptured();
+      expect(action?.label).toBe('submit');
+      expect(action?.disabled).toBe(false);
+
+      action?.onClick();
+      expect(onSubmit).toHaveBeenCalledWith(
+        'como',
+        expect.objectContaining({ usedMc: false }),
+      );
+    });
+
+    it('keeps MC options stacked in a single column (mobile:flex-col)', () => {
+      const { container } = renderActive();
+      fireEvent.click(screen.getByText(/reduces progress signal/i));
+      const optionsRow = container.querySelector('.mobile\\:flex-col');
+      expect(optionsRow).not.toBeNull();
+    });
   });
 });

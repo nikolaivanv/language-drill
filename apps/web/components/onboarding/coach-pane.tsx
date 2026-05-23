@@ -34,7 +34,10 @@ export function CoachPane() {
   return (
     <aside
       data-testid="onboarding-coach-pane"
-      className="hidden lg:flex w-[320px] flex-shrink-0 flex-col gap-s-6 border-r border-rule bg-paper-2 px-s-6 py-[22px]"
+      // Visible ≥761px; hidden at the canonical ≤760 breakpoint where the
+      // MobileCoachHeader carries the coach intent (Req 10.1, 1.6). `hidden`
+      // removes it from the a11y tree so the message isn't double-announced.
+      className="flex mobile:hidden w-[320px] flex-shrink-0 flex-col gap-s-6 border-r border-rule bg-paper-2 px-s-6 py-[22px]"
     >
       <Brand />
 

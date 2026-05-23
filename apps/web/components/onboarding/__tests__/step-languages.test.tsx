@@ -30,6 +30,14 @@ function renderInProvider(state: OnboardingState, ui: React.ReactNode) {
   );
 }
 
+describe('StepLanguages — mobile single-column (R10.3, 1.6)', () => {
+  it('stacks the language grid to one column at ≤760', () => {
+    renderInProvider(initialNewUserState(), <StepLanguages />);
+    const group = screen.getByRole('group', { name: /learning languages/i });
+    expect(group).toHaveClass('grid-cols-2', 'mobile:grid-cols-1');
+  });
+});
+
 describe('StepLanguages', () => {
   it('renders the 3 learning-language tiles in ES → DE → TR order', () => {
     renderInProvider(initialNewUserState(), <StepLanguages />);

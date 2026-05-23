@@ -112,6 +112,22 @@ describe('ShapeTab', () => {
     expect(screen.queryByText('not enough data yet')).toBeNull();
   });
 
+  it('stacks the radar + side cards into a single column at mobile (Req 9.2, 9.4)', () => {
+    const { container } = render(
+      <ShapeTab
+        language={Language.ES}
+        data={buildResponse(
+          buildAxes({ grammar: { mastery: 0.6, evidence: 6 } }),
+        )}
+        isLoading={false}
+        error={null}
+        totalEvidence={12}
+      />,
+    );
+    const grid = container.querySelector('.grid')!;
+    expect(grid).toHaveClass('grid-cols-[1fr_320px]', 'mobile:grid-cols-1');
+  });
+
   it('hides ObservationCard when computeObservation returns null but still shows Legend and Recommend', () => {
     // Balanced shape with one axis dragging — only weakest-drag observation
     // would fire. Use balanced + no axis below 0.4 → null observation, but

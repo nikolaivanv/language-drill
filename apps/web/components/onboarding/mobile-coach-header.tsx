@@ -30,7 +30,10 @@ export function MobileCoachHeader() {
   return (
     <header
       data-testid="onboarding-mobile-coach-header"
-      className="lg:hidden flex flex-col gap-s-2 border-b border-rule bg-paper-2 px-s-4 py-s-3"
+      // Shown only at the canonical ≤760 breakpoint; hidden ≥761 where the full
+      // CoachPane takes over (Req 10.1, 1.6). `display:none` above 760 keeps it
+      // out of the a11y tree so the coach message isn't double-announced.
+      className="hidden mobile:flex flex-col gap-s-2 border-b border-rule bg-paper-2 px-s-4 py-s-3"
     >
       <Brand />
       <p aria-live="polite" className="t-body text-ink-2">

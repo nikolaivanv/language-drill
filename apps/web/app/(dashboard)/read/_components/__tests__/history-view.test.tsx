@@ -68,6 +68,16 @@ describe('HistoryView — card content', () => {
   });
 });
 
+describe('HistoryView — mobile reflow', () => {
+  it('drops the desktop max-width cap so the cards go full-width on mobile (Req 8.5)', () => {
+    const { container } = render(
+      <HistoryView entries={ENTRIES} onOpen={() => {}} />,
+    );
+    expect(container.firstChild).toHaveClass('mobile:max-w-none');
+    expect(container.firstChild).toHaveClass('max-w-[800px]');
+  });
+});
+
 describe('HistoryView — clicks', () => {
   it('clicking a card fires onOpen with the entry id', () => {
     const onOpen = vi.fn();
