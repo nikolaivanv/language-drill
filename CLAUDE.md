@@ -77,7 +77,8 @@ Both servers are started from the repo root. They read `DATABASE_URL`, `ANTHROPI
 | `pnpm db:studio` | Browse the DB in Drizzle Studio |
 | `pnpm db:seed:exercises` | Seed the exercise pool (36 idempotent exercises) |
 | `pnpm revalidate:cloze` | One-off CLI to re-score every stored cloze through the current validator and demote failures. Dry-run by default; pass `--apply` to write. Supports `--language`, `--cefr`, `--limit`, `--concurrency`, `--max-cost-usd`. |
-| `pnpm bootstrap-prompts` | Idempotently register the six system prompts in Langfuse from the in-repo fallback strings. Supports `--dry-run` and `--check` (drift detection vs. live `production` label). |
+| `pnpm bootstrap-prompts` | Idempotently register the six system prompts in Langfuse from the in-repo fallback strings. Supports `--dry-run` and `--check` (drift detection vs. live `production` label). **Create-only** — does not update prompts that already exist. |
+| `pnpm push-prompts` | Push a new `production`-labeled version of every prompt that has **drifted** from the in-repo source (the update `bootstrap-prompts` can't do). Detects drift the same way `--check` does, logs each prompt's prior version as the revert target, then writes; in-sync prompts are skipped. Selects the env via `LANGFUSE_*` keys — run once per environment. Supports `--dry-run`. |
 | `pnpm eval:export` | Sample evaluation traces from Langfuse over a date window and write them as items into a Langfuse dataset (joined back to `user_exercise_history` for the user answer + exercise). |
 | `pnpm eval` | Run a candidate prompt against a Langfuse dataset, link each per-item trace to the dataset run, and write a quality/cost/latency summary to `./eval-runs/<runName>.json`. |
 
@@ -133,6 +134,35 @@ Langfuse is now the live source for these prompts; the in-repo
 `*_SYSTEM_PROMPT` constant is the fallback. Bumping
 `*_SYSTEM_PROMPT_VERSION` is still required (drives the fallback cohort tag
 and signals reviewers that the local fallback also changed).
+
+Editing the in-repo constant alone is **not enough** — the runtime fetches
+the body from Langfuse, so a merged prompt edit keeps serving the old body
+until you mirror it. `bootstrap-prompts` won't help here (it's create-only).
+After merging a prompt change, sync each environment's Langfuse project from
+the in-repo source:
+
+```bash
+# Pull the target env's Langfuse creds from Secrets Manager (region is
+# eu-central-1; prefix `language-drill/` for prod, `language-drill-dev/` for dev).
+PK=$(aws --region eu-central-1 secretsmanager get-secret-value \
+  --secret-id language-drill/LANGFUSE_PUBLIC_KEY --query SecretString --output text)
+SK=$(aws --region eu-central-1 secretsmanager get-secret-value \
+  --secret-id language-drill/LANGFUSE_SECRET_KEY --query SecretString --output text)
+
+# Preview, then apply. Inline creds bypass `.env`; only drifted prompts push.
+LANGFUSE_PUBLIC_KEY="$PK" LANGFUSE_SECRET_KEY="$SK" LANGFUSE_BASE_URL=https://cloud.langfuse.com \
+  pnpm --filter @language-drill/ai push-prompts --dry-run
+LANGFUSE_PUBLIC_KEY="$PK" LANGFUSE_SECRET_KEY="$SK" LANGFUSE_BASE_URL=https://cloud.langfuse.com \
+  pnpm --filter @language-drill/ai push-prompts
+
+# Confirm in sync (exit 0 = no drift). Repeat the whole block for dev.
+LANGFUSE_PUBLIC_KEY="$PK" LANGFUSE_SECRET_KEY="$SK" LANGFUSE_BASE_URL=https://cloud.langfuse.com \
+  pnpm --filter @language-drill/ai bootstrap-prompts --check
+```
+
+The runtime picks up the new body within ~5 min (Lambda module-scope cache
+TTL). To revert, re-point the `production` label at the prior version
+(logged by `push-prompts`) in the Langfuse dashboard.
 
 For a generation/validation bug that needs a prompt update **and** a
 re-pass over the existing exercise pool, follow
