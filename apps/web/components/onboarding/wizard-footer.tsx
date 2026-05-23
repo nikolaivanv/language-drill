@@ -82,6 +82,7 @@ export function WizardFooter({ onPrimary }: WizardFooterProps) {
           variant="ghost"
           size="md"
           href="/settings"
+          className="mobile:min-h-[44px]"
           data-testid="wizard-footer-cancel"
         >
           cancel
@@ -94,6 +95,7 @@ export function WizardFooter({ onPrimary }: WizardFooterProps) {
         variant="ghost"
         size="md"
         onClick={() => dispatch({ type: 'goBack' })}
+        className="mobile:min-h-[44px]"
         data-testid="wizard-footer-back"
       >
         back
@@ -102,8 +104,11 @@ export function WizardFooter({ onPrimary }: WizardFooterProps) {
   })();
 
   return (
+    // Desktop: a static row at the end of the step. Mobile (≤760): a sticky
+    // bottom action bar, broken to the screen edges, with ≥44px controls
+    // (Req 10.2, 10.4, 11.1).
     <div
-      className="flex flex-col gap-s-2"
+      className="flex flex-col gap-s-2 mobile:sticky mobile:bottom-0 mobile:z-10 mobile:-mx-[18px] mobile:border-t mobile:border-rule mobile:bg-paper mobile:px-[18px] mobile:py-[12px]"
       data-testid="onboarding-wizard-footer"
     >
       {errorMessage ? (

@@ -26,7 +26,10 @@ import {
 import { CalibrationStrip } from './calibration-strip';
 import { IntensityToggle } from './intensity-toggle';
 import { WordBankRail } from './word-bank-rail';
+import { WordBankSheet } from './word-bank-sheet';
 import { WordPopover } from './word-popover';
+import { WordSheet } from './word-sheet';
+import { useIsMobile } from '../../../../lib/responsive';
 import type { ActiveWord, Intensity } from '../_state/read-page-reducer';
 
 type AnnotatedEntry = {
@@ -101,6 +104,13 @@ export function AnnotatedView({
 
   const bankSet = React.useMemo(() => new Set(bank), [bank]);
 
+  // Mobile (≤760px) swaps the sticky rail + anchored popover for bottom sheets:
+  // a toolbar chip opens the bank sheet, a word tap opens the word sheet. The
+  // reducer's `activeWord` state (and the same open/close handlers) is reused —
+  // only the presentation differs (Req 8.1–8.3).
+  const isMobile = useIsMobile();
+  const [bankSheetOpen, setBankSheetOpen] = React.useState(false);
+
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = React.useState(1000);
 
@@ -137,6 +147,102 @@ export function AnnotatedView({
     onPopoverOpen(word, x, y);
   };
 
+  // ---- Mobile: single column + toolbar chip + bottom sheets ----------------
+  if (isMobile) {
+    return (
+      <div>
+        {/* Header — bank chip replaces the rail; intensity moves into the sheet */}
+        <div className="mb-[12px] flex items-start justify-between gap-[16px]">
+          <div className="min-w-0">
+            <h2 className="t-display-m">{entry.title || 'untitled passage'}</h2>
+            {entry.source && (
+              <div className="t-small text-ink-soft mt-[4px]">{entry.source}</div>
+            )}
+          </div>
+          {showRail && (
+            <button
+              type="button"
+              onClick={() => setBankSheetOpen(true)}
+              className="t-small inline-flex min-h-[44px] flex-none items-center gap-[6px] rounded-r-pill border border-rule bg-card px-[14px] font-medium text-ink transition-colors hover:border-ink"
+            >
+              word bank · {bank.length}
+            </button>
+          )}
+        </div>
+
+        {/* Calibration */}
+        <div className="border-b border-dashed border-rule pb-[14px] mb-[22px]">
+          <CalibrationStrip
+            eyebrow={calibration.eyebrow}
+            explanation={calibration.explanation}
+            streaming={annotateStreaming}
+            noAboveLevelWords={noAboveLevelWords}
+          />
+        </div>
+
+        {/* Reader text — the word sheet replaces the click-anchored popover */}
+        <div
+          ref={containerRef}
+          data-testid="rd-text"
+          className="rd-text relative"
+          onClick={handleContainerClick}
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 19,
+            lineHeight: 1.75,
+          }}
+        >
+          <AnnotatedText
+            text={entry.text}
+            flaggedMap={entry.flaggedWords}
+            intensity={intensity}
+            bankSet={bankSet}
+            activeWord={activeWord?.word ?? null}
+            onWordClick={handleWordClick}
+          />
+        </div>
+
+        {/* Footer */}
+        {hasFlagged ? (
+          <AnnotatedFooter
+            flaggedCount={flaggedCount}
+            savedCount={bank.length}
+            onClearBank={onClearBank}
+            onSave={onSave}
+            isSaving={isSaving}
+          />
+        ) : showZeroFlaggedState ? (
+          <ZeroFlaggedStrip onPasteNew={onPasteNew} />
+        ) : null}
+
+        {/* Bottom sheets (portaled) */}
+        <WordSheet
+          open={activeFlag !== null}
+          entry={activeFlag}
+          word={activeWord?.word ?? ''}
+          inBank={activeWord !== null && bankSet.has(activeWord.word)}
+          onSave={() => {
+            if (activeWord) onBankToggle(activeWord.word);
+          }}
+          onSkip={onPopoverClose}
+          onClose={onPopoverClose}
+        />
+        {showRail && (
+          <WordBankSheet
+            open={bankSheetOpen}
+            onClose={() => setBankSheetOpen(false)}
+            bank={bank}
+            flaggedMap={entry.flaggedWords}
+            intensity={intensity}
+            onIntensityChange={onIntensityChange}
+            onRemove={onBankToggle}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // ---- Desktop: 2-column grid + anchored popover + sticky rail -------------
   return (
     <div
       className="grid items-start gap-s-6"

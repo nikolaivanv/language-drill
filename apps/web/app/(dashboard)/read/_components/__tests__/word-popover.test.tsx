@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import type { WordFlag } from '@language-drill/shared';
 import { CefrLevel } from '@language-drill/shared';
 import { WordPopover } from '../word-popover';
+import { WordCardBody } from '../word-card-body';
 
 // ---------------------------------------------------------------------------
 // WordPopover — callbacks, keyboard escape, position clamp.
@@ -160,6 +161,57 @@ describe('WordPopover — position clamp', () => {
     render(<WordPopover {...baseProps} y={250} />);
     const dialog = screen.getByRole('dialog');
     expect(dialog.style.top).toBe('250px');
+  });
+});
+
+describe('WordCardBody — shared content (extracted from the popover)', () => {
+  it('renders the lemma, POS, gloss, CEFR, example, and freq', () => {
+    render(
+      <WordCardBody
+        entry={ENTRY}
+        inBank={false}
+        onSave={() => {}}
+        onSkip={() => {}}
+      />,
+    );
+    expect(screen.getByText('aldea')).toBeInTheDocument();
+    expect(screen.getByText('noun')).toBeInTheDocument();
+    expect(screen.getByText('a small village')).toBeInTheDocument();
+    expect(screen.getByText('B2')).toBeInTheDocument();
+    expect(screen.getByText('la aldea está cerca del río')).toBeInTheDocument();
+    expect(screen.getByText(/freq #4,321/)).toBeInTheDocument();
+  });
+
+  it('fires onSave / onSkip from the footer buttons', () => {
+    const onSave = vi.fn();
+    const onSkip = vi.fn();
+    render(
+      <WordCardBody
+        entry={ENTRY}
+        inBank={false}
+        onSave={onSave}
+        onSkip={onSkip}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: /\+ save to bank/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^skip$/i }));
+    expect(onSave).toHaveBeenCalledTimes(1);
+    expect(onSkip).toHaveBeenCalledTimes(1);
+  });
+
+  it('swaps to the banked labels when inBank is true', () => {
+    render(
+      <WordCardBody
+        entry={ENTRY}
+        inBank={true}
+        onSave={() => {}}
+        onSkip={() => {}}
+      />,
+    );
+    expect(
+      screen.getByRole('button', { name: /✓ saved · undo/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^close$/i })).toBeInTheDocument();
   });
 });
 

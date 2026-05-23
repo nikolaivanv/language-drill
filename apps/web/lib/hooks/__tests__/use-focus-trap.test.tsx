@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { fireEvent, render } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { useRef } from 'react';
 import { useFocusTrap } from '../use-focus-trap';
 
@@ -11,6 +11,20 @@ function Harness({ active }: { active: boolean }) {
       <button>first</button>
       <button>second</button>
       <button>third</button>
+    </div>
+  );
+}
+
+// Sheets (word card, paste) render form fields, so the widened selector must
+// treat inputs and textareas as focusable.
+function FormHarness() {
+  const ref = useRef<HTMLDivElement>(null);
+  useFocusTrap(true, ref);
+  return (
+    <div ref={ref}>
+      <input type="hidden" defaultValue="ignored" />
+      <input aria-label="name" />
+      <textarea aria-label="notes" />
     </div>
   );
 }
@@ -68,5 +82,20 @@ describe('useFocusTrap', () => {
     expect(document.activeElement).toBe(outside);
 
     document.body.removeChild(outside);
+  });
+
+  it('traps focus on input and textarea fields, skipping hidden inputs', () => {
+    render(<FormHarness />);
+    const input = screen.getByLabelText('name');
+    const textarea = screen.getByLabelText('notes');
+
+    // The first non-hidden focusable (the text input) is auto-focused.
+    expect(document.activeElement).toBe(input);
+
+    // Tab from the last focusable (the textarea) wraps back to the input —
+    // proving textarea is recognized as focusable and the hidden input is not.
+    textarea.focus();
+    fireEvent.keyDown(document, { key: 'Tab' });
+    expect(document.activeElement).toBe(input);
   });
 });

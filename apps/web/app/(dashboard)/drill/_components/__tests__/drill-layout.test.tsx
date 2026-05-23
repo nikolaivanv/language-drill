@@ -1,6 +1,17 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { DrillLayout } from '../drill-layout';
+
+// Default to desktop (false) so the existing assertions below — which expect
+// the side rail — keep passing. The mobile suite flips this per-test.
+const mockIsMobile = vi.fn(() => false);
+vi.mock('../../../../../lib/responsive', () => ({
+  useIsMobile: () => mockIsMobile(),
+}));
+
+beforeEach(() => {
+  mockIsMobile.mockReturnValue(false);
+});
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -147,5 +158,51 @@ describe('DrillLayout', () => {
     );
 
     expect(screen.getByTestId('main-slot')).toBeInTheDocument();
+  });
+
+  // ---- Mobile branch ------------------------------------------------------
+
+  describe('mobile', () => {
+    beforeEach(() => {
+      mockIsMobile.mockReturnValue(true);
+    });
+
+    it('renders main + the action-bar slot and omits the side rail', () => {
+      render(
+        <DrillLayout
+          rail={<div data-testid="rail-slot" />}
+          main={<div data-testid="main-slot" />}
+          actionBar={<div data-testid="action-bar-slot" />}
+        />
+      );
+
+      expect(screen.getByTestId('main-slot')).toBeInTheDocument();
+      expect(screen.getByTestId('action-bar-slot')).toBeInTheDocument();
+      expect(screen.queryByTestId('rail-slot')).not.toBeInTheDocument();
+    });
+
+    it('keeps the top progress strip on mobile', () => {
+      render(
+        <DrillLayout
+          rail={null}
+          main={<div data-testid="main-slot" />}
+          progressFraction={0.5}
+        />
+      );
+      const fill = screen.getByRole('progressbar').firstElementChild;
+      expect(fill).toHaveStyle({ width: '50%' });
+    });
+  });
+
+  it('renders the side rail (not the action bar) on desktop', () => {
+    render(
+      <DrillLayout
+        rail={<div data-testid="rail-slot" />}
+        main={<div data-testid="main-slot" />}
+        actionBar={<div data-testid="action-bar-slot" />}
+      />
+    );
+    expect(screen.getByTestId('rail-slot')).toBeInTheDocument();
+    expect(screen.queryByTestId('action-bar-slot')).not.toBeInTheDocument();
   });
 });

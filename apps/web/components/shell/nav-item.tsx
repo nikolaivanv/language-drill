@@ -10,7 +10,9 @@ interface NavItemProps {
   icon: React.ReactNode;
 }
 
-function isActive(pathname: string, href: string): boolean {
+// Shared active-route logic: root `/` matches exactly; other destinations also
+// match nested routes. Reused by the desktop rail and the mobile tab-bar.
+export function isActive(pathname: string, href: string): boolean {
   if (href === '/') return pathname === '/';
   return pathname === href || pathname.startsWith(`${href}/`);
 }

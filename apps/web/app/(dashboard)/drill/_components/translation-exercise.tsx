@@ -14,6 +14,7 @@ import {
 } from '../../../../components/ui';
 import { translationVerdict } from '../../../../lib/drill/verdict-tier';
 import { lookupGloss } from '../../../../lib/translation/gloss-en';
+import { useDrillAction } from './drill-action-context';
 import { FeedbackShell } from './feedback-shell';
 import { GlossedText } from './glossed-text';
 import type { SubmissionMeta, SubmissionState } from './types';
@@ -116,6 +117,20 @@ export function TranslationExercise({
 
   const canSubmit = answer.trim().length > 0;
 
+  // On mobile, publish the submit CTA to the sticky action bar; the "show me a
+  // hint" control stays inline in the body. FeedbackShell owns the next action.
+  const { active, setPrimaryAction } = useDrillAction();
+  React.useEffect(() => {
+    if (!active || submission.kind === 'evaluated') return;
+    setPrimaryAction({
+      label: 'submit',
+      onClick: handleSubmit,
+      disabled: !canSubmit || isLocked,
+      loading: submission.kind === 'submitting',
+    });
+    // handleSubmit closes over answer/hintCount — both listed.
+  }, [active, setPrimaryAction, submission.kind, canSubmit, isLocked, answer, hintCount]);
+
   return (
     <div className="flex flex-col gap-s-4">
       <p className="t-micro text-ink-mute">EN &rarr; {language}</p>
@@ -170,14 +185,16 @@ export function TranslationExercise({
             show me a hint
           </Button>
         )}
-        <Button
-          variant="primary"
-          onClick={handleSubmit}
-          disabled={!canSubmit || isLocked}
-          loading={submission.kind === 'submitting'}
-        >
-          submit
-        </Button>
+        {!active && (
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            disabled={!canSubmit || isLocked}
+            loading={submission.kind === 'submitting'}
+          >
+            submit
+          </Button>
+        )}
       </div>
 
       {submission.kind === 'evaluated' &&

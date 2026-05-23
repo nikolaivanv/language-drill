@@ -1,10 +1,21 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Language } from '@language-drill/shared';
 import { TheoryToc } from '../theory-toc';
 import type { TheoryTopic } from '../types';
+
+// TheoryToc branches on `useIsMobile()` — default to desktop so the existing
+// sidebar assertions hold; the mobile-strip test flips it on.
+const mockIsMobile = vi.fn(() => false);
+vi.mock('../../../lib/responsive', () => ({
+  useIsMobile: () => mockIsMobile(),
+}));
+
+beforeEach(() => {
+  mockIsMobile.mockReturnValue(false);
+});
 
 // TheoryToc consumes `useTheoryTopics` (TanStack Query) — provider required
 // in scope even though the tests omit `fetchFn` (the hook degrades to
@@ -135,5 +146,97 @@ describe('TheoryToc', () => {
       screen.getByRole('button', { name: /pretérito vs\. imperfecto/i }),
     );
     expect(onSwitchTopic).toHaveBeenCalledWith('preterite-imperfect');
+  });
+
+  it('renders the vertical sidebar (not the strip) on desktop', () => {
+    render(
+      <TheoryToc
+        topic={mockTopic}
+        activeSectionId="what"
+        onJump={vi.fn()}
+        language={Language.ES}
+        onSwitchTopic={vi.fn()}
+      />,
+      { wrapper: Wrapper },
+    );
+    const nav = screen.getByRole('navigation', { name: /theory sections/i });
+    expect(nav).not.toHaveClass('theory-toc-strip');
+    // Sidebar-only chrome: the "jump to" label and the stacked "other topics".
+    expect(screen.getByText(/jump to/i)).toBeInTheDocument();
+    expect(screen.getByText(/other topics/i)).toBeInTheDocument();
+  });
+
+  describe('mobile (≤760px)', () => {
+    beforeEach(() => {
+      mockIsMobile.mockReturnValue(true);
+    });
+
+    it('renders a horizontal strip instead of the vertical sidebar', () => {
+      render(
+        <TheoryToc
+          topic={mockTopic}
+          activeSectionId="what"
+          onJump={vi.fn()}
+          language={Language.ES}
+          onSwitchTopic={vi.fn()}
+        />,
+        { wrapper: Wrapper },
+      );
+      const nav = screen.getByRole('navigation', { name: /theory sections/i });
+      expect(nav).toHaveClass('theory-toc-strip');
+      // The vertical-only chrome is dropped on the strip.
+      expect(screen.queryByText(/jump to/i)).toBeNull();
+      expect(screen.queryByText(/other topics/i)).toBeNull();
+    });
+
+    it('keeps jump-to-section: clicking a tab calls onJump', () => {
+      const onJump = vi.fn();
+      render(
+        <TheoryToc
+          topic={mockTopic}
+          activeSectionId="what"
+          onJump={onJump}
+          language={Language.ES}
+          onSwitchTopic={vi.fn()}
+        />,
+        { wrapper: Wrapper },
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'examples' }));
+      expect(onJump).toHaveBeenCalledWith('examples');
+    });
+
+    it('highlights the active section tab with aria-current', () => {
+      render(
+        <TheoryToc
+          topic={mockTopic}
+          activeSectionId="when"
+          onJump={vi.fn()}
+          language={Language.ES}
+          onSwitchTopic={vi.fn()}
+        />,
+        { wrapper: Wrapper },
+      );
+      const activeBtn = screen.getByRole('button', { name: 'when to use it' });
+      expect(activeBtn.getAttribute('aria-current')).toBe('true');
+      expect(activeBtn).toHaveClass('active');
+    });
+
+    it('folds topic switches into the strip as trailing tabs', () => {
+      const onSwitchTopic = vi.fn();
+      render(
+        <TheoryToc
+          topic={mockTopic}
+          activeSectionId="what"
+          onJump={vi.fn()}
+          language={Language.ES}
+          onSwitchTopic={onSwitchTopic}
+        />,
+        { wrapper: Wrapper },
+      );
+      fireEvent.click(
+        screen.getByRole('button', { name: /pretérito vs\. imperfecto/i }),
+      );
+      expect(onSwitchTopic).toHaveBeenCalledWith('preterite-imperfect');
+    });
   });
 });

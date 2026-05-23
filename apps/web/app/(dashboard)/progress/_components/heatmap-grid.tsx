@@ -89,11 +89,10 @@ export function HeatmapGrid({
             style={{ display: 'flex', alignItems: 'center', gap: 12 }}
           >
             <div
-              style={{
-                width: 170,
-                fontSize: 12,
-                textAlign: 'right',
-              }}
+              // Desktop: 170px right-aligned label. Mobile (≤760px): narrower,
+              // left-aligned, smaller font so the day cells get room without
+              // clipping the topic name (Req 9.3).
+              className="w-[170px] text-right text-[12px] mobile:w-[84px] mobile:text-left mobile:text-[11px] mobile:leading-tight"
             >
               {topic.name}
             </div>
@@ -109,14 +108,11 @@ export function HeatmapGrid({
                     key={dayIdx}
                     title={title}
                     data-shade={shade}
-                    style={{
-                      flex: 1,
-                      aspectRatio: 1,
-                      maxHeight: 22,
-                      background: SHADE_BG[shade],
-                      border: '1px solid rgba(26,22,18,0.08)',
-                      borderRadius: 3,
-                    }}
+                    // Square day cell, capped at 22px desktop / 12px mobile so
+                    // 30 columns fit a phone width (Req 9.3). Shade stays inline
+                    // (dynamic from the server threshold table).
+                    className="flex-1 aspect-square max-h-[22px] mobile:max-h-[12px] rounded-[3px] border border-[rgba(26,22,18,0.08)]"
+                    style={{ background: SHADE_BG[shade] }}
                   />
                 );
               })}

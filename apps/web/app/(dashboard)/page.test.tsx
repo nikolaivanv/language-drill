@@ -42,6 +42,12 @@ vi.mock('../../components/shell/active-language-provider', () => ({
   useActiveLanguage: () => mockUseActiveLanguage(),
 }));
 
+// Default to desktop so the existing assertions hold; the mobile test flips it.
+const mockIsMobile = vi.fn(() => false);
+vi.mock('../../lib/responsive', () => ({
+  useIsMobile: () => mockIsMobile(),
+}));
+
 const mockUseTodayPlan = vi.fn();
 const mockUseProgressRadar = vi.fn();
 
@@ -127,6 +133,7 @@ function planResponse(
 // ---------------------------------------------------------------------------
 
 beforeEach(() => {
+  mockIsMobile.mockReturnValue(false);
   mockUseActiveLanguage.mockReturnValue({
     activeLanguage: Language.ES,
     setActiveLanguage: () => {},
@@ -198,6 +205,21 @@ describe('DashboardPage — happy path', () => {
     });
     render(<DashboardPage />);
     expect(screen.getByText('~22 min planned')).toBeInTheDocument();
+  });
+});
+
+describe('DashboardPage — mobile "next up" CTA (Req 4.2)', () => {
+  it('renders the NextUpCard under the greeting on mobile, routing to the drill', () => {
+    mockIsMobile.mockReturnValue(true);
+    render(<DashboardPage />);
+    const cta = screen.getByRole('link', { name: /next up/i });
+    expect(cta).toHaveAttribute('href', '/drill?language=ES');
+  });
+
+  it('does not render the NextUpCard on desktop', () => {
+    mockIsMobile.mockReturnValue(false);
+    render(<DashboardPage />);
+    expect(screen.queryByRole('link', { name: /next up/i })).toBeNull();
   });
 });
 

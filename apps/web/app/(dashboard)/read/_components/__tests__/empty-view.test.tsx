@@ -41,6 +41,17 @@ describe('EmptyView — step 2 CEFR token', () => {
   });
 });
 
+describe('EmptyView — mobile reflow', () => {
+  it('drops the desktop max-width cap so the column goes full-width on mobile (Req 8.5)', () => {
+    const { container } = render(
+      <EmptyView onPaste={() => {}} cefrToken={CefrLevel.B1} />,
+    );
+    expect(container.firstChild).toHaveClass('mobile:max-w-none', 'mobile:mt-[32px]');
+    // Desktop cap is preserved.
+    expect(container.firstChild).toHaveClass('max-w-[640px]');
+  });
+});
+
 describe('EmptyView — header copy invariants', () => {
   it('renders the Caveat eyebrow, hero title, and body paragraph', () => {
     render(<EmptyView onPaste={() => {}} cefrToken={CefrLevel.B1} />);

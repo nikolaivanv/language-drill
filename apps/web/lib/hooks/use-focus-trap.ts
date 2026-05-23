@@ -4,11 +4,11 @@ import { useEffect, type RefObject } from 'react';
 // element inside `containerRef`, and Tab/Shift+Tab wrap around the first/last
 // focusable elements so keyboard users cannot leave the dialog.
 //
-// The selector intentionally omits `select`, `textarea`, and `[contenteditable]`
-// — the theory panel is a read-only reference and never renders form fields.
-// If a future variant adds inputs, widen the selector at that point.
+// Covers the form controls the read word/paste sheets render in addition to
+// links and buttons. Hidden inputs are excluded so they never receive focus.
+// (`[contenteditable]` is still omitted — no sheet uses it yet.)
 const FOCUSABLE_SELECTOR =
-  'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  'a[href], button:not([disabled]), input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 export function useFocusTrap(
   active: boolean,

@@ -11,8 +11,11 @@ export interface ChoiceProps {
   className?: string;
 }
 
+// `mobile:min-h-[48px]` gives choice cards a ≥48px tap target at ≤760px
+// (Req 11.1); `items-center` keeps the content vertically centred in the taller
+// box. Desktop height (driven by padding) is unchanged.
 const shared =
-  'flex items-center gap-[10px] px-s-4 py-s-3 rounded-r-md cursor-pointer transition-all duration-150 text-left w-full';
+  'flex items-center gap-[10px] px-s-4 py-s-3 rounded-r-md cursor-pointer transition-all duration-150 text-left w-full mobile:min-h-[48px]';
 
 function RadioIndicator({ selected }: { selected: boolean }) {
   return (

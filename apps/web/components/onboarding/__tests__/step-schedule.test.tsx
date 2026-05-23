@@ -48,6 +48,15 @@ function renderInProvider(state: OnboardingState, ui: React.ReactNode) {
   );
 }
 
+describe('StepSchedule — mobile stack/wrap (R10.5, 1.6)', () => {
+  it('reconciles the time grid to the canonical breakpoint (2×2 ≤760, 4-up above, no ad-hoc 600px)', () => {
+    renderInProvider({ ...initialNewUserState(), step: 4 }, <StepSchedule />);
+    const group = screen.getByRole('radiogroup', { name: /daily time/i });
+    expect(group).toHaveClass('grid-cols-4', 'mobile:grid-cols-2');
+    expect(group.className).not.toContain('min-width:600px');
+  });
+});
+
 describe('StepSchedule', () => {
   it('renders 4 time tiles in DAILY_MINUTES order with the default 10-min tile selected (R5.1, R5.2)', () => {
     const state: OnboardingState = { ...initialNewUserState(), step: 4 };

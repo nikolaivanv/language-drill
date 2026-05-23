@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Enables the `mobile:` utility prefix project-wide. Mirrors MOBILE_MAX_WIDTH
+   in lib/responsive.ts — keep the 760px value in sync. */
+@custom-variant mobile (@media (max-width: 760px));
+
 @theme {
   /* ─── Colors ─── */
   --color-paper: #faf7f1;
@@ -151,6 +155,24 @@
   padding: 0 3px;
 }
 
+/* ─── Mobile type-scale overrides (≤760px, mirrors MOBILE_MAX_WIDTH) ─── */
+/* Shrinks the display sizes for phone width and holds line-height ≥ 1.2 so
+   wrapped display headlines never collide. body/small/micro/mono unchanged. */
+@media (max-width: 760px) {
+  .t-display-xl {
+    font-size: 34px;
+    line-height: 1.2;
+  }
+  .t-display-l {
+    font-size: 28px;
+    line-height: 1.2;
+  }
+  .t-display-m {
+    font-size: 22px;
+    line-height: 1.2;
+  }
+}
+
 /* ─── Shared utilities ─── */
 .fade-in {
   animation: fade 0.35s ease both;
@@ -211,6 +233,22 @@
 @keyframes theory-slide-in {
   from { transform: translateX(24px); opacity: 0; }
   to   { transform: none; opacity: 1; }
+}
+
+/* ─── Bottom sheet (mobile) ─── */
+@keyframes sheet-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes sheet-slide {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.sheet-scrim {
+  animation: sheet-fade 0.2s ease both;
+}
+.sheet-panel {
+  animation: sheet-slide 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 /* ─── Theory: header ─── */
@@ -321,6 +359,54 @@
 .theory-otherbtn:hover {
   color: var(--color-ink);
   background: var(--color-paper-3);
+}
+
+/* ─── Theory: mobile reflow (≤760px, mirrors MOBILE_MAX_WIDTH) ─── */
+/* Right slide-over → full-screen bottom sheet; TOC sidebar → horizontal strip.
+   Placed after the base .theory-* rules so these overrides win on source order.
+   The reduced-motion block below already lists .theory-panel, so the slide-up
+   animation is disabled under `prefers-reduced-motion: reduce`. */
+@media (max-width: 760px) {
+  .theory-overlay {
+    align-items: flex-end;
+  }
+  .theory-panel {
+    width: 100vw;
+    height: 92vh;
+    max-height: 92vh;
+    border-left: 0;
+    border-radius: 24px 24px 0 0;
+    animation: theory-slide-up 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  .theory-body {
+    flex-direction: column;
+  }
+  .theory-toc {
+    width: 100%;
+    border-right: 0;
+    border-bottom: 1px solid var(--color-rule);
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+  .theory-toc ul {
+    flex-direction: row;
+    margin-top: 0;
+  }
+  .theory-toc ul button {
+    width: auto;
+    flex-shrink: 0;
+    white-space: nowrap;
+    border-left: 0;
+    border-bottom: 2px solid transparent;
+  }
+  .theory-toc ul button.active {
+    border-left-color: transparent;
+    border-bottom-color: var(--color-accent);
+  }
+}
+@keyframes theory-slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: none; opacity: 1; }
 }
 
 /* ─── Theory: scrollable content column ─── */
@@ -494,7 +580,9 @@
 /* ─── Reduced-motion preference (FR-9.7) ─── */
 @media (prefers-reduced-motion: reduce) {
   .theory-overlay,
-  .theory-panel {
+  .theory-panel,
+  .sheet-scrim,
+  .sheet-panel {
     animation: none;
   }
   .theory-scroll {

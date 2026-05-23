@@ -29,6 +29,15 @@ function renderInProvider(state: OnboardingState, ui: React.ReactNode) {
   );
 }
 
+describe('StepGoals — mobile single-column (R10.3, 1.6)', () => {
+  it('reconciles the goal grid to the canonical breakpoint (1-col ≤760, no ad-hoc 600px)', () => {
+    renderInProvider({ ...initialNewUserState(), step: 3 }, <StepGoals />);
+    const group = screen.getByRole('group', { name: /goals/i });
+    expect(group).toHaveClass('grid-cols-2', 'mobile:grid-cols-1');
+    expect(group.className).not.toContain('min-width:600px');
+  });
+});
+
 describe('StepGoals', () => {
   it('renders all 6 goal tiles in the canonical GOAL_IDS order with emojis aria-hidden', () => {
     const state: OnboardingState = { ...initialNewUserState(), step: 3 };

@@ -53,7 +53,7 @@ export function TimelineItem({
       <div className="flex flex-shrink-0 flex-col items-center">
         <div
           className={cn(
-            'flex h-[38px] w-[38px] items-center justify-center rounded-full border-[1.5px] font-mono text-[12px] font-semibold',
+            'flex h-[38px] w-[38px] mobile:h-[28px] mobile:w-[28px] mobile:text-[10px] items-center justify-center rounded-full border-[1.5px] font-mono text-[12px] font-semibold',
             isDone && 'border-ok bg-ok text-paper',
             isNextUp &&
               'border-accent bg-accent text-paper shadow-[0_0_0_4px_var(--color-accent-soft)]',

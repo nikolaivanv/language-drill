@@ -77,6 +77,31 @@ describe('DebriefFooter — router push targets', () => {
 // Tier prop is accepted and does not affect routing in v1
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Mobile reflow → sticky bottom action bar (Req 7.5, 11.1)
+// ---------------------------------------------------------------------------
+
+describe('DebriefFooter — mobile sticky action bar', () => {
+  it('applies sticky bottom-bar classes at mobile while keeping all three actions', () => {
+    const { container } = render(<DebriefFooter tier="high" />);
+    const bar = container.firstChild as HTMLElement;
+    expect(bar).toHaveClass(
+      'mobile:sticky',
+      'mobile:bottom-0',
+      'mobile:bg-paper',
+      'mobile:flex-col',
+    );
+    expect(screen.getAllByRole('button')).toHaveLength(3);
+  });
+
+  it('gives each control a ≥44px mobile tap target', () => {
+    render(<DebriefFooter tier="high" />);
+    for (const name of [/see your progress/, 'done', 'another session']) {
+      expect(screen.getByRole('button', { name })).toHaveClass('mobile:min-h-[44px]');
+    }
+  });
+});
+
 describe('DebriefFooter — tier prop accepted', () => {
   it('accepts tier="high" without throwing or changing route targets', () => {
     render(<DebriefFooter tier="high" />);

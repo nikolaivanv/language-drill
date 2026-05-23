@@ -59,7 +59,9 @@ export function StepSchedule() {
       <div
         role="radiogroup"
         aria-label="daily time"
-        className="grid grid-cols-2 gap-[12px] [@media(min-width:600px)]:grid-cols-4"
+        // Canonical breakpoint (Req 1.6): 4-up ≥761, 2×2 at ≤760 so the four
+        // compact number tiles wrap without overflow (Req 10.5 "stack/wrap").
+        className="grid grid-cols-4 mobile:grid-cols-2 gap-[12px]"
       >
         {DAILY_MINUTES.map((minutes) => (
           <Choice
@@ -69,6 +71,7 @@ export function StepSchedule() {
             onSelect={() =>
               dispatch({ type: 'setDailyMinutes', minutes })
             }
+            className="mobile:min-h-[48px]"
           >
             <span className="flex flex-col items-start">
               <span className="t-display-m text-ink">{minutes}</span>

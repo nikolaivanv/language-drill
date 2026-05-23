@@ -95,6 +95,24 @@ describe('Button', () => {
     expect(button.className).toContain('text-[15px]');
   });
 
+  // ---- Mobile tap-target floor (Req 11.1) ---------------------------------
+
+  it.each(['sm', 'md', 'lg'] as const)(
+    'applies the ≥44px mobile tap-target floor for %s size',
+    (size) => {
+      render(<Button size={size}>Tap</Button>);
+      const button = screen.getByRole('button', { name: 'Tap' });
+      expect(button.className).toContain('mobile:min-h-[44px]');
+      expect(button.className).toContain('mobile:min-w-[44px]');
+    },
+  );
+
+  it('leaves the desktop sm min-height (32px) unchanged', () => {
+    render(<Button size="sm">Small</Button>);
+    const button = screen.getByRole('button', { name: 'Small' });
+    expect(button.className).toContain('min-h-[32px]');
+  });
+
   // ---- Disabled state -----------------------------------------------------
 
   it('sets aria-disabled and opacity class when disabled', () => {

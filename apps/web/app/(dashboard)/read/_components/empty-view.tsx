@@ -25,7 +25,7 @@ export function EmptyView({ onPaste, cefrToken }: Props) {
       : `i highlight words rarer than your current band (~${cefrToken}+).`;
 
   return (
-    <div className="mx-auto mt-[60px] max-w-[640px] text-center">
+    <div className="mx-auto mt-[60px] max-w-[640px] text-center mobile:mt-[32px] mobile:max-w-none">
       <div className="t-hand text-accent text-[26px] leading-[1.2] mb-[4px]">
         read in the wild
       </div>

@@ -40,6 +40,16 @@ describe('RadarChart', () => {
     expect(svg.getAttribute('width')).toBe('100%');
   });
 
+  it('clamps to a ~320px square on mobile while keeping the 440px desktop cap', () => {
+    const { container } = render(
+      <RadarChart language={Language.ES} axes={buildAxes({})} />,
+    );
+    const svg = container.querySelector('svg')!;
+    expect(svg).toHaveClass('max-w-[440px]', 'mobile:max-w-[320px]');
+    // Still fluid up to the cap (legible, centered by the flex wrapper).
+    expect(svg.getAttribute('width')).toBe('100%');
+  });
+
   it('renders all six axis labels as <text> children', () => {
     const { container } = render(
       <RadarChart language={Language.ES} axes={buildAxes({})} />,

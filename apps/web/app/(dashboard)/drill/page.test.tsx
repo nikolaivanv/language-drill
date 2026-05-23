@@ -20,6 +20,13 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
+// Default desktop (false); the mobile suite flips this per-test. Existing
+// desktop assertions rely on the inline submit/next buttons.
+const mockIsMobile = vi.fn(() => false);
+vi.mock('../../../lib/responsive', () => ({
+  useIsMobile: () => mockIsMobile(),
+}));
+
 const mockUseCreateSession = vi.fn();
 const mockUseCompleteSession = vi.fn();
 const mockUseSubmitAnswer = vi.fn();
@@ -133,6 +140,7 @@ function setSubmitMock(mutateImpl: (vars: unknown, opts: {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockIsMobile.mockReturnValue(false);
 
   mockUseLanguageProfiles.mockReturnValue({
     data: {
@@ -503,6 +511,59 @@ describe('PracticePage', () => {
       fireEvent.click(screen.getByRole('button', { name: 'see results' }));
 
       expect(mockPush).toHaveBeenCalledWith(`/drill/debrief/${SESSION_ID}`);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  describe('desktop vs mobile chrome', () => {
+    it('renders the coach rail (not a coach card) on desktop', () => {
+      renderWithProviders(<PracticePage />);
+      // CoachRail's "guiding this session" caption is unique to the rail.
+      expect(screen.getByText('guiding this session')).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /coach/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('renders the coach card, session dots, and a sticky action bar on mobile', () => {
+      mockIsMobile.mockReturnValue(true);
+      renderWithProviders(<PracticePage />);
+
+      // Coach rail collapses into a collapsible card (a button) on mobile.
+      expect(
+        screen.getByRole('button', { name: /coach/i }),
+      ).toBeInTheDocument();
+      expect(screen.queryByText('guiding this session')).not.toBeInTheDocument();
+
+      // Session dots above the prompt.
+      expect(
+        screen.getByRole('list', { name: /item 1 of 5/i }),
+      ).toBeInTheDocument();
+
+      // The submit CTA lives in the action bar (published, not inline).
+      expect(
+        screen.getByRole('button', { name: 'submit' }),
+      ).toBeInTheDocument();
+    });
+
+    it('submit → next advances the cursor via the action bar on mobile', () => {
+      mockIsMobile.mockReturnValue(true);
+      setSubmitMock((_vars, opts) => opts.onSuccess?.(mockEval(0.97)));
+      renderWithProviders(<PracticePage />);
+
+      expect(screen.getByText(/sentence-0/)).toBeInTheDocument();
+
+      fireEvent.change(screen.getByRole('textbox'), {
+        target: { value: 'middle' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'submit' }));
+
+      // Verdict shown; the action bar now carries "next".
+      expect(screen.getByText('spot on')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'next' }));
+
+      expect(screen.getByText(/sentence-1/)).toBeInTheDocument();
+      expect(screen.queryByText(/sentence-0/)).not.toBeInTheDocument();
     });
   });
 });

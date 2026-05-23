@@ -65,7 +65,10 @@ export function RadarChart({ language, axes }: RadarChartProps) {
         viewBox={`0 0 ${VIEW} ${VIEW}`}
         width="100%"
         height="auto"
-        style={{ maxWidth: 440 }}
+        // Caps at 440px on desktop; clamps to a ~320px square on mobile so the
+        // radar fits a phone without sideways scroll (Req 9.1). The flex wrapper
+        // keeps it centered at both widths.
+        className="max-w-[440px] mobile:max-w-[320px]"
       >
         <title>{`Skill radar for ${languageName}`}</title>
         <desc>

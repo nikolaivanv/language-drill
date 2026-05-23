@@ -24,3 +24,6 @@ export type { CheckboxProps } from './checkbox';
 
 export { AccentPicker } from './accent-picker';
 export type { AccentPickerProps, AccentLanguage } from './accent-picker';
+
+export { BottomSheet } from './bottom-sheet';
+export type { BottomSheetProps } from './bottom-sheet';

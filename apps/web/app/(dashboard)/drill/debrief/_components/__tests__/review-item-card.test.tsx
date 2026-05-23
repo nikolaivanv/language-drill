@@ -293,6 +293,23 @@ describe('ReviewItemCard — no theory trigger', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Canonical breakpoint reconciliation (Req 7.4, 1.6)
+// ---------------------------------------------------------------------------
+
+describe('ReviewItemCard — diff grid uses the canonical breakpoint', () => {
+  it('renders the two-cell diff at 1-col ≤760 / 2-col above (no ad-hoc md:)', () => {
+    const { container } = render(
+      <ReviewItemCard index={0} item={clozeItem()} />,
+    );
+    // The incorrect cloze body is expanded by default and holds the diff grid.
+    const grid = container.querySelector('.grid');
+    expect(grid).not.toBeNull();
+    expect(grid).toHaveClass('grid-cols-2', 'mobile:grid-cols-1');
+    expect(grid).not.toHaveClass('md:grid-cols-2');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Translation body fixtures + tests (Req 5.6)
 // ---------------------------------------------------------------------------
 

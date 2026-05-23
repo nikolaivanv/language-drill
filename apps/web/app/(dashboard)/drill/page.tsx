@@ -23,11 +23,19 @@ import {
   TheoryTrigger,
 } from '../../../components/theory';
 import { topicIdForGrammarPointKey } from '../../../lib/theory-topic-map';
+import { useIsMobile } from '../../../lib/responsive';
 import { Card } from '../../../components/ui';
 import { coachMessage } from '../../../lib/drill/coach-messages';
 import { DEFAULT_EXERCISE_COUNT } from '../../../lib/drill/session-config';
 import { CoachRail } from './_components/coach-rail';
+import { CoachCard } from './_components/coach-card';
+import { SessionDots } from './_components/session-dots';
 import { DrillLayout } from './_components/drill-layout';
+import {
+  DrillActionProvider,
+  useDrillAction,
+} from './_components/drill-action-context';
+import { DrillActionBar } from './_components/drill-action-bar';
 import { ExercisePane } from './_components/exercise-pane';
 import {
   initialSessionState,
@@ -71,6 +79,17 @@ function isInsufficientExercises(err: Error): boolean {
   return status === 422 || body?.code === 'INSUFFICIENT_EXERCISES';
 }
 
+// Publishes the "item N of M" progress meta to the drill action bar. Lives
+// inside DrillActionProvider so it can reach the context.
+function DrillMetaSync({ current, total }: { current: number; total: number }) {
+  const { setMeta } = useDrillAction();
+  useEffect(() => {
+    setMeta({ current, total });
+    return () => setMeta(null);
+  }, [setMeta, current, total]);
+  return null;
+}
+
 export default function PracticePage() {
   const { getToken } = useAuth();
   const router = useRouter();
@@ -84,6 +103,7 @@ export default function PracticePage() {
   const [state, dispatch] = useReducer(sessionReducer, initialSessionState);
 
   const { activeLanguage } = useActiveLanguage();
+  const isMobile = useIsMobile();
   const [openTopicId, setOpenTopicId] = useState<string | null>(null);
   const [triggerEl, setTriggerEl] = useState<HTMLElement | null>(null);
 
@@ -253,8 +273,16 @@ export default function PracticePage() {
   const insufficient =
     state.kind === 'createError' && isInsufficientExercises(state.error);
 
+  const sessionPosition =
+    state.kind === 'inSession'
+      ? { current: state.index + 1, total: state.items.length }
+      : null;
+
   const main = (
     <>
+      {/* Mobile: the coach rail collapses into a card at the top of content. */}
+      {isMobile && currentItem && <CoachCard message={coachMsg} />}
+
       {selectors}
 
       {insufficient && (
@@ -274,6 +302,15 @@ export default function PracticePage() {
 
       {state.kind === 'inSession' && currentItem && (
         <>
+          {/* Mobile: horizontal session-position dots above the prompt. */}
+          {isMobile && sessionPosition && (
+            <div className="mb-s-3">
+              <SessionDots
+                current={sessionPosition.current}
+                total={sessionPosition.total}
+              />
+            </div>
+          )}
           {theoryTopicId && (
             <div className="mb-s-3 flex justify-end">
               <TheoryTrigger
@@ -312,17 +349,24 @@ export default function PracticePage() {
   );
 
   return (
-    <>
+    <DrillActionProvider active={isMobile}>
       <DrillLayout
         rail={
-          currentItem ? (
+          !isMobile && currentItem ? (
             <CoachRail message={coachMsg} exerciseType={exerciseTypeForRail} />
           ) : null
         }
         main={main}
+        actionBar={isMobile ? <DrillActionBar /> : undefined}
         progressFraction={selectProgressFraction(state)}
         isLoading={state.kind === 'creating' || state.kind === 'completing'}
       />
+      {isMobile && sessionPosition && (
+        <DrillMetaSync
+          current={sessionPosition.current}
+          total={sessionPosition.total}
+        />
+      )}
       {openTopicId && (
         <TheoryPanel
           topicId={openTopicId}
@@ -332,6 +376,6 @@ export default function PracticePage() {
           fetchFn={fetchFn}
         />
       )}
-    </>
+    </DrillActionProvider>
   );
 }

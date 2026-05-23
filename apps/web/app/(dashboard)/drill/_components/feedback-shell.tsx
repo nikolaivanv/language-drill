@@ -4,6 +4,7 @@ import * as React from 'react';
 import { Button, Card, Chip } from '../../../../components/ui';
 import { cn } from '../../../../lib/cn';
 import type { VerdictTier } from '../../../../lib/drill/verdict-tier';
+import { useDrillAction } from './drill-action-context';
 
 export interface FeedbackShellProps {
   tier: VerdictTier;
@@ -32,6 +33,15 @@ export function FeedbackShell({
   onNext,
   nextLabel = 'next',
 }: FeedbackShellProps) {
+  // On mobile, publish "next" to the sticky action bar and omit the inline
+  // button; the cleanup clears it when the feedback unmounts (next item).
+  const { active, setPrimaryAction } = useDrillAction();
+  React.useEffect(() => {
+    if (!active) return;
+    setPrimaryAction({ label: nextLabel, onClick: onNext, variant: 'accent' });
+    return () => setPrimaryAction(null);
+  }, [active, nextLabel, onNext, setPrimaryAction]);
+
   return (
     <Card padding="lg" className={cn(TIER_BG[tier])}>
       <div className="flex flex-wrap items-center gap-s-3">
@@ -50,11 +60,13 @@ export function FeedbackShell({
         )}
       </div>
       <div className="mt-s-4">{children}</div>
-      <div className="mt-s-6 flex justify-end">
-        <Button variant="accent" onClick={onNext}>
-          {nextLabel}
-        </Button>
-      </div>
+      {!active && (
+        <div className="mt-s-6 flex justify-end">
+          <Button variant="accent" onClick={onNext}>
+            {nextLabel}
+          </Button>
+        </div>
+      )}
     </Card>
   );
 }

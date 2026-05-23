@@ -5,6 +5,7 @@ import type { LearningLanguage, VocabRecallContent } from '@language-drill/share
 import { AccentPicker, Button, Card, Input } from '../../../../components/ui';
 import { parseConfusions } from '../../../../lib/drill/parse-confusions';
 import { vocabVerdict } from '../../../../lib/drill/verdict-tier';
+import { useDrillAction } from './drill-action-context';
 import { FeedbackShell } from './feedback-shell';
 import { HintRow } from './hint-row';
 import type { SubmissionMeta, SubmissionState } from './types';
@@ -57,6 +58,20 @@ export function VocabExercise({
 
   const canSubmit = answer.trim().length > 0;
 
+  // On mobile, publish the submit CTA to the sticky action bar instead of
+  // rendering it inline. FeedbackShell owns the action once evaluated.
+  const { active, setPrimaryAction } = useDrillAction();
+  React.useEffect(() => {
+    if (!active || submission.kind === 'evaluated') return;
+    setPrimaryAction({
+      label: 'submit',
+      onClick: handleSubmit,
+      disabled: !canSubmit || isLocked,
+      loading: submission.kind === 'submitting',
+    });
+    // handleSubmit closes over answer/hintLevel — both listed.
+  }, [active, setPrimaryAction, submission.kind, canSubmit, isLocked, answer, hintLevel]);
+
   return (
     <div className="flex flex-col gap-s-4">
       <Card padding="lg">
@@ -88,14 +103,16 @@ export function VocabExercise({
         onAdvance={handleAdvanceHint}
       />
 
-      <Button
-        variant="primary"
-        onClick={handleSubmit}
-        disabled={!canSubmit || isLocked}
-        loading={submission.kind === 'submitting'}
-      >
-        submit
-      </Button>
+      {!active && (
+        <Button
+          variant="primary"
+          onClick={handleSubmit}
+          disabled={!canSubmit || isLocked}
+          loading={submission.kind === 'submitting'}
+        >
+          submit
+        </Button>
+      )}
 
       {submission.kind === 'evaluated' &&
         (() => {

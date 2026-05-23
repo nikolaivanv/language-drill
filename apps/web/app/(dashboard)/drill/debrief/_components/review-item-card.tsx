@@ -190,7 +190,7 @@ function ClozeBody({ item, content }: ClozeBodyProps) {
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-s-3">
+      <div className="grid grid-cols-2 mobile:grid-cols-1 gap-s-3">
         <div className="rounded-r-md p-s-3 bg-paper-2">
           <div className="t-micro">your answer</div>
           <div
@@ -247,7 +247,7 @@ function TranslationBody({ item, content }: TranslationBodyProps) {
   return (
     <>
       <p className="t-small italic mb-s-2">"{content.sourceText}"</p>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-s-3">
+      <div className="grid grid-cols-2 mobile:grid-cols-1 gap-s-3">
         <div className="rounded-r-md p-s-3 bg-paper-2">
           <div className="t-micro">your translation</div>
           <div
@@ -306,7 +306,7 @@ function VocabBody({ item, content }: VocabBodyProps) {
   return (
     <>
       <p className="t-small italic mb-s-2">"{content.prompt}"</p>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-s-3">
+      <div className="grid grid-cols-2 mobile:grid-cols-1 gap-s-3">
         <div className="rounded-r-md p-s-3 bg-paper-2">
           <div className="t-micro">you typed</div>
           <div

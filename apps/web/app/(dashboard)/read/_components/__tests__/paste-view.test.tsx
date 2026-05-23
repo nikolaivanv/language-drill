@@ -136,6 +136,25 @@ describe('PasteView — loading state', () => {
   });
 });
 
+describe('PasteView — mobile reflow', () => {
+  it('drops the desktop max-width cap so the form goes full-width on mobile (Req 8.4)', () => {
+    const { container } = render(<PasteView {...defaultProps} />);
+    expect(container.firstChild).toHaveClass('mobile:max-w-none');
+    expect(container.firstChild).toHaveClass('max-w-[720px]');
+  });
+
+  it('keeps the char-limit disabled behavior intact at mobile width', () => {
+    // Reflow is class-only — the limit gate is unchanged.
+    render(
+      <PasteView
+        {...defaultProps}
+        paste={{ title: '', source: '', text: 'a'.repeat(2001) }}
+      />,
+    );
+    expect(screen.getByRole('button', { name: /annotate →/i })).toBeDisabled();
+  });
+});
+
 describe('PasteView — errorBody card', () => {
   it('renders the inline error card with heading + body when errorBody is non-null', () => {
     render(

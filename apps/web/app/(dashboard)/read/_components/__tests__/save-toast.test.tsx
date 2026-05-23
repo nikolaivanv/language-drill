@@ -61,4 +61,22 @@ describe('SaveToast', () => {
     fireEvent.click(screen.getByRole('button', { name: /dismiss/i }));
     expect(onDismiss).toHaveBeenCalledTimes(1);
   });
+
+  it('insets from the screen edges and clears the tab-bar on mobile (Req 8.6)', () => {
+    render(
+      <SaveToast count={2} onSeeNextSession={() => {}} onDismiss={() => {}} />,
+    );
+    const status = screen.getByRole('status');
+    // Mobile overrides: span between 16px insets, drop the desktop centering,
+    // and sit above the bottom tab-bar/action area.
+    expect(status).toHaveClass(
+      'mobile:left-[16px]',
+      'mobile:right-[16px]',
+      'mobile:w-auto',
+      'mobile:translate-x-0',
+      'mobile:bottom-[88px]',
+    );
+    // Desktop centering is preserved.
+    expect(status).toHaveClass('left-1/2', '-translate-x-1/2');
+  });
 });

@@ -23,8 +23,7 @@ export function SaveToast({ count, onSeeNextSession, onDismiss }: Props) {
     <div
       role="status"
       aria-live="polite"
-      className="fixed left-1/2 z-50 flex w-[min(540px,calc(100vw-32px))] -translate-x-1/2 items-center gap-[12px] rounded-r-md bg-ink px-[18px] py-[14px] text-paper shadow-3"
-      style={{ bottom: 80 }}
+      className="fixed bottom-[80px] left-1/2 z-50 flex w-[min(540px,calc(100vw-32px))] -translate-x-1/2 items-center gap-[12px] rounded-r-md bg-ink px-[18px] py-[14px] text-paper shadow-3 mobile:bottom-[88px] mobile:left-[16px] mobile:right-[16px] mobile:w-auto mobile:translate-x-0"
     >
       <span
         aria-hidden

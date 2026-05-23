@@ -128,4 +128,13 @@ describe('Choice', () => {
     );
     expect(screen.getByRole('radio').className).toContain('mt-2');
   });
+
+  it('applies the ≥48px mobile tap-target floor (Req 11.1)', () => {
+    render(
+      <Choice selected={false} onSelect={() => {}}>
+        option
+      </Choice>
+    );
+    expect(screen.getByRole('radio').className).toContain('mobile:min-h-[48px]');
+  });
 });

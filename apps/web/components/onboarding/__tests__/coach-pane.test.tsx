@@ -15,6 +15,7 @@ import {
   type OnboardingState,
 } from '../use-onboarding-reducer';
 import { CoachPane } from '../coach-pane';
+import { MobileCoachHeader } from '../mobile-coach-header';
 
 function buildState(overrides: Partial<OnboardingState> = {}): OnboardingState {
   return { ...initialNewUserState(), ...overrides };
@@ -80,6 +81,26 @@ describe('CoachPane — per-step coach message (R6.3)', () => {
         'last thing — how much time can you usually give me?'
       )
     ).toBeInTheDocument();
+  });
+});
+
+describe('CoachPane / MobileCoachHeader — canonical breakpoint visibility (R10.1, 1.6)', () => {
+  it('the coach pane shows ≥761 and hides ≤760 (flex + mobile:hidden, no lg:)', () => {
+    renderCoachPane(buildState({ step: 1 }));
+    const pane = screen.getByTestId('onboarding-coach-pane');
+    expect(pane).toHaveClass('flex', 'mobile:hidden');
+    expect(pane.className).not.toContain('lg:');
+  });
+
+  it('the mobile coach header hides ≥761 and shows ≤760 (hidden + mobile:flex, no lg:)', () => {
+    render(
+      <OnboardingProvider initialState={buildState({ step: 1 })}>
+        <MobileCoachHeader />
+      </OnboardingProvider>,
+    );
+    const header = screen.getByTestId('onboarding-mobile-coach-header');
+    expect(header).toHaveClass('hidden', 'mobile:flex');
+    expect(header.className).not.toContain('lg:');
   });
 });
 

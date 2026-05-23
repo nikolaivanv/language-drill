@@ -73,14 +73,9 @@ export function ShapeTab({
   const showNotEnoughData = totalEvidence < NOT_ENOUGH_EVIDENCE_THRESHOLD;
 
   return (
-    <div
-      style={{
-        marginTop: 28,
-        display: 'grid',
-        gridTemplateColumns: '1fr 320px',
-        gap: 32,
-      }}
-    >
+    // Desktop: radar (1fr) + 320px side-card column. Mobile (≤760px): single
+    // column — the side cards stack below the radar at full width (Req 9.2, 9.4).
+    <div className="mt-[28px] grid grid-cols-[1fr_320px] gap-[32px] mobile:grid-cols-1 mobile:gap-[18px]">
       <Card padding="lg">
         <RadarChart language={language} axes={data.axes} />
       </Card>

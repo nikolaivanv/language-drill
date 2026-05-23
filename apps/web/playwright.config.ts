@@ -69,10 +69,28 @@ export default defineConfig({
     {
       name: 'authenticated',
       testDir: './e2e/tests/authenticated',
+      // The mobile-responsive spec runs only in `authenticated-mobile` (it
+      // drives a phone-width viewport); exclude it from the desktop project.
+      testIgnore: /mobile-responsive\.spec\.ts$/,
       dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
         storageState: STORAGE_STATE_PATH,
+      },
+    },
+    {
+      // Phone-width regression project (402×874 — matches the `mobile:` CSS
+      // variant's ≤760 media query). Reuses the signed-in storageState. Only
+      // the mobile-responsive smoke spec runs here; its desktop-guard block
+      // overrides the viewport back to a wide size inline.
+      name: 'authenticated-mobile',
+      testDir: './e2e/tests/authenticated',
+      testMatch: /mobile-responsive\.spec\.ts$/,
+      dependencies: ['setup'],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: STORAGE_STATE_PATH,
+        viewport: { width: 402, height: 874 },
       },
     },
     {
