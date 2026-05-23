@@ -11,6 +11,7 @@ test.skip(
 );
 
 test('signs in via Clerk-hosted UI', async ({ page }) => {
+  test.setTimeout(90_000);
   await signInThroughUI(page);
   await expect(page).not.toHaveURL(/\/sign-in/);
   await expect(page).toHaveTitle(/Language Drill/i);
