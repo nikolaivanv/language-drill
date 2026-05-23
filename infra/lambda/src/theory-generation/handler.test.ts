@@ -52,6 +52,16 @@ import type {
 
 const mockRunOneTheoryCell = vi.fn();
 const mockCheckTheoryAuditRowState = vi.fn();
+// Observability spies — Req 2.7 asserts per-record flush + per-record trace
+// scope (Req 2.1-2.6). Defaults are passthrough/no-op so existing tests
+// keep their behaviour; new observability tests inspect `.mock.calls`.
+const mockFlushObservability = vi.fn<() => Promise<void>>(
+  () => Promise.resolve(),
+);
+const mockWithLlmTrace = vi.fn(
+  <T>(_ctx: unknown, fn: () => T | Promise<T>): Promise<T> =>
+    Promise.resolve(fn()),
+);
 
 vi.mock('@language-drill/db', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@language-drill/db')>();
@@ -70,6 +80,9 @@ vi.mock('@language-drill/ai', async (importOriginal) => {
   return {
     ...actual,
     createClaudeClient: vi.fn(() => ({}) as never),
+    withLlmTrace: <T>(ctx: unknown, fn: () => T | Promise<T>) =>
+      mockWithLlmTrace(ctx, fn),
+    flushObservability: () => mockFlushObservability(),
   };
 });
 
@@ -193,6 +206,14 @@ let consoleLogSpy: MockInstance<typeof console.log>;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // `vi.clearAllMocks()` clears call records but preserves implementations.
+  // Re-pin the trace + flush spies defensively so each test starts with the
+  // documented passthrough/no-op behaviour even if a prior test patched them.
+  mockWithLlmTrace.mockImplementation(
+    <T>(_ctx: unknown, fn: () => T | Promise<T>): Promise<T> =>
+      Promise.resolve(fn()),
+  );
+  mockFlushObservability.mockImplementation(() => Promise.resolve());
   consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 });
 
@@ -601,5 +622,147 @@ describe('SQS handler — soft-deadline AbortController (Req 2a)', () => {
     expect(handlerCall).toBeDefined();
 
     setTimeoutSpy.mockRestore();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// theory-gen-observability-resilience Req 2 — observability flush + trace
+// scope. The handler wraps each cell's `runOneTheoryCell` dispatch in
+// `withLlmTrace` so the Anthropic Proxy can tag every generate-theory +
+// validate-theory call with the shared cell + job metadata, and drains
+// buffered traces via `flushObservability` in the inner `finally` (alongside
+// the existing `clearTimeout(timer)`).
+// ---------------------------------------------------------------------------
+
+describe('SQS handler — observability flush + trace scope (Req 2)', () => {
+  it('wraps runOneTheoryCell in withLlmTrace with the expected context shape (Req 2.1, 2.3, 2.7)', async () => {
+    mockCheckTheoryAuditRowState.mockResolvedValueOnce({ status: 'absent' });
+
+    // Capture the order of (a) withLlmTrace entry and (b) runOneTheoryCell
+    // entry so we can prove the trace ALS scope is open when the orchestrator
+    // runs — the Proxy reads ALS per `messages.create` call.
+    const callOrder: string[] = [];
+    mockWithLlmTrace.mockImplementationOnce(
+      <T>(ctx: unknown, fn: () => T | Promise<T>): Promise<T> => {
+        callOrder.push(
+          `withLlmTrace:enter(${(ctx as { feature: string }).feature})`,
+        );
+        return Promise.resolve(fn()).then((v) => {
+          callOrder.push('withLlmTrace:exit');
+          return v;
+        });
+      },
+    );
+    mockRunOneTheoryCell.mockImplementationOnce(async () => {
+      callOrder.push('runOneTheoryCell');
+      return {
+        ...cellResultBase(),
+        status: 'succeeded',
+        insertedCount: 1,
+      };
+    });
+
+    const event = eventWith([
+      recordWith(JSON.stringify(validMessage()), 'msg-trace-ctx'),
+    ]);
+    await handler(event, makeContext(60_000));
+
+    // Sequence proof: trace opens → runOneTheoryCell runs → trace closes.
+    expect(callOrder).toEqual([
+      'withLlmTrace:enter(generate-theory)',
+      'runOneTheoryCell',
+      'withLlmTrace:exit',
+    ]);
+
+    // Context contents — the Proxy reads these from ALS to tag every
+    // `messages.create` issued by `runOneTheoryCell`. `feature='generate-theory'`
+    // is the shared default; the Proxy overrides it to `'validate-theory'`
+    // for the validator tool call via TOOL_NAME_TO_FEATURE.
+    expect(mockWithLlmTrace).toHaveBeenCalledTimes(1);
+    const ctx = mockWithLlmTrace.mock.calls[0]![0] as {
+      feature: string;
+      env: string;
+      promptVersion: string;
+      requestId: string;
+      jobId: string;
+      cellKey: string;
+      language: string;
+      cefrLevel: string;
+      exerciseType: string;
+    };
+    expect(ctx.feature).toBe('generate-theory');
+    expect(ctx.exerciseType).toBe('theory');
+    expect(ctx.requestId).toBe('msg-trace-ctx');
+    expect(ctx.jobId).toBe('job-test-123');
+    expect(ctx.cellKey).toBe('es:b1:es-b1-present-subjunctive');
+    expect(ctx.language).toBe('ES');
+    expect(ctx.cefrLevel).toBe('B1');
+    // env defaults to 'dev' when LANGFUSE_ENV is unset (vitest default).
+    expect(ctx.env).toBe('dev');
+    // The version string is the literal from
+    // packages/ai/src/theory-prompts.ts. Match the date-stamped format
+    // `theory-generate@YYYY-MM-DD` without locking the date.
+    expect(ctx.promptVersion).toMatch(/^theory-generate@\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('success path → flushObservability called exactly once per record (Req 2.2)', async () => {
+    mockCheckTheoryAuditRowState.mockResolvedValueOnce({ status: 'absent' });
+    mockRunOneTheoryCell.mockResolvedValueOnce({
+      ...cellResultBase(),
+      status: 'succeeded',
+      insertedCount: 1,
+    });
+
+    const event = eventWith([
+      recordWith(JSON.stringify(validMessage()), 'msg-flush-ok'),
+    ]);
+    await handler(event, makeContext(60_000));
+
+    expect(mockFlushObservability).toHaveBeenCalledTimes(1);
+  });
+
+  it('runOneTheoryCell throws → flushObservability still called exactly once per record (Req 2.2)', async () => {
+    // The inner `finally` MUST drain Langfuse traces even when the
+    // orchestrator throws, otherwise a Lambda freeze drops the
+    // partially-buffered generate-theory trace.
+    mockCheckTheoryAuditRowState.mockResolvedValueOnce({ status: 'absent' });
+    mockRunOneTheoryCell.mockRejectedValueOnce(new Error('upstream timeout'));
+
+    const event = eventWith([
+      recordWith(JSON.stringify(validMessage()), 'msg-flush-throw'),
+    ]);
+    const result = await handler(event, makeContext(60_000));
+
+    expect(result.batchItemFailures).toEqual([
+      { itemIdentifier: 'msg-flush-throw' },
+    ]);
+    expect(mockFlushObservability).toHaveBeenCalledTimes(1);
+  });
+
+  it('two-record batch → flushObservability called exactly twice (once per record)', async () => {
+    mockCheckTheoryAuditRowState
+      .mockResolvedValueOnce({ status: 'absent' })
+      .mockResolvedValueOnce({ status: 'absent' });
+    mockRunOneTheoryCell
+      .mockResolvedValueOnce({
+        ...cellResultBase(),
+        status: 'succeeded',
+        insertedCount: 1,
+      })
+      .mockRejectedValueOnce(new Error('boom'));
+
+    const event = eventWith([
+      recordWith(JSON.stringify(validMessage()), 'msg-batch-1'),
+      recordWith(JSON.stringify(validMessage()), 'msg-batch-2'),
+    ]);
+    const result = await handler(event, makeContext(60_000));
+
+    // Only the failing record reports a batchItemFailure.
+    expect(result.batchItemFailures).toEqual([
+      { itemIdentifier: 'msg-batch-2' },
+    ]);
+    // One flush per record that reaches the inner try, regardless of
+    // per-record outcome.
+    expect(mockFlushObservability).toHaveBeenCalledTimes(2);
   });
 });
