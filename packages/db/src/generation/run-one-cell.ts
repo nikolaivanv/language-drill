@@ -153,6 +153,19 @@ export type CellResult = {
    * ones. R5.4.
    */
   parserFailedCount: number;
+  /**
+   * Frequency map of validator rejection reasons across the ordinals this cell
+   * discarded — `{ reason: count }`. Folds each rejected ordinal's
+   * `DraftOutcome.rejectionReasons` (a genuine validation veto's
+   * `flaggedReasons`, or `[PARSER_FAILURE_REASON]` for a parser-failed slot).
+   * `dedup-given-up` ordinals contribute nothing (not a quality reason). A
+   * single ordinal can add several reasons, so the counts sum to >= the
+   * plain-rejected ordinal count. Persisted to
+   * `generation_jobs.rejection_reason_counts` (NULL when empty) and surfaced in
+   * the structured completion log; pairs with the already-persisted
+   * `exercises.flagged_reasons` to give the full reason distribution.
+   */
+  rejectionReasonCounts: Record<string, number>;
 };
 
 /**
@@ -296,6 +309,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
   let inBatchDuplicateCount = 0;
   let malformedDraftCount = 0;
   let parserFailedCount = 0;
+  const rejectionReasonCounts: Record<string, number> = {};
   const generatedAt = new Date();
 
   // Built inside the try so any failure in the priors query routes through
@@ -410,6 +424,12 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
           break;
         case 'rejected':
           rejectedCount += 1;
+          // Fold this discarded ordinal's reasons into the per-cell frequency
+          // map. Always set for a 'rejected' terminal (validator veto reasons,
+          // or [PARSER_FAILURE_REASON]); the `?? []` is a defensive no-op.
+          for (const reason of outcome.rejectionReasons ?? []) {
+            rejectionReasonCounts[reason] = (rejectionReasonCounts[reason] ?? 0) + 1;
+          }
           break;
         case 'first-attempt-dedup-then-success':
           firstAttemptSkippedCount += 1;
@@ -462,6 +482,10 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       flaggedCount,
       rejectedCount,
       dedupGivenUpCount,
+      // NULL (not `{}`) when the cell rejected nothing, so the column reads as
+      // "no rejections" rather than an empty object on inspection.
+      rejectionReasonCounts:
+        Object.keys(rejectionReasonCounts).length > 0 ? rejectionReasonCounts : null,
       inputTokensUsed: totalInputTokens,
       outputTokensUsed: combinedUsage.outputTokens,
       costUsdEstimate: costUsd.toFixed(4),
@@ -484,6 +508,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     dedupGivenUpCount,
     malformedDraftCount,
     parserFailedCount,
+    rejectionReasonCounts,
   };
 }
 
@@ -532,5 +557,6 @@ async function failClosed(opts: {
     dedupGivenUpCount: 0,
     malformedDraftCount: opts.malformedDraftCount ?? 0,
     parserFailedCount: opts.parserFailedCount ?? 0,
+    rejectionReasonCounts: {},
   };
 }

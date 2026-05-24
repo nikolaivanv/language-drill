@@ -44,7 +44,10 @@ vi.mock('@language-drill/ai', async () => {
 
 import { generateBatch, validateDraft } from '@language-drill/ai';
 
-import { validateAndInsertWithRetry } from './validate-and-insert';
+import {
+  PARSER_FAILURE_REASON,
+  validateAndInsertWithRetry,
+} from './validate-and-insert';
 
 const mockValidateDraft = vi.mocked(validateDraft);
 const mockGenerateBatch = vi.mocked(generateBatch);
@@ -94,6 +97,26 @@ const PASSING_VALIDATION: ValidateDraftResult = {
     qualityScore: 0.9,
     ambiguous: false,
     contextSpoilsAnswer: false,
+    levelMatch: true,
+    grammarPointMatch: true,
+    culturalIssues: [],
+    flaggedReasons: [],
+  },
+  tokenUsage: {
+    inputTokens: 10,
+    cacheCreationInputTokens: 0,
+    cacheReadInputTokens: 0,
+    outputTokens: 5,
+  },
+};
+
+/** Routes to `rejected`: sub-0.5 quality AND a spoiling context, so the
+ *  routed reasons are deterministic and ordered (low-quality, then spoils). */
+const REJECTING_VALIDATION: ValidateDraftResult = {
+  result: {
+    qualityScore: 0.3,
+    ambiguous: false,
+    contextSpoilsAnswer: true,
     levelMatch: true,
     grammarPointMatch: true,
     culturalIssues: [],
@@ -445,5 +468,83 @@ describe('validateAndInsertWithRetry — deterministic Turkish gate', () => {
 
     expect(outcome.terminalStatus).toBe('inserted-approved');
     expect(capture.exercise?.reviewStatus).toBe('auto-approved');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Rejection-reason capture — the discarded ordinal carries its reasons out via
+// `DraftOutcome.rejectionReasons` so `runOneCell` can aggregate the
+// distribution. Insert behavior is unchanged; this only surfaces what was
+// already computed and previously thrown away.
+// ---------------------------------------------------------------------------
+
+describe('validateAndInsertWithRetry — rejectionReasons capture', () => {
+  it('surfaces the routed validator reasons on a first-attempt rejection', async () => {
+    mockValidateDraft.mockResolvedValue(REJECTING_VALIDATION);
+
+    const outcome = await validateAndInsertWithRetry({
+      db: makeDedupAlwaysCollidesDb(), // insert never reached on the rejected branch
+      client: mockClient,
+      spec,
+      draft: makeDraft(),
+      ordinal: 0,
+      cell,
+      args,
+      generatedAt,
+    });
+
+    expect(outcome.terminalStatus).toBe('rejected');
+    // routeValidationResult order: low-quality first, then context-spoils.
+    expect(outcome.rejectionReasons).toEqual([
+      'low quality score (<0.5)',
+      'context spoils answer',
+    ]);
+    // No retry: a non-deduped first-attempt rejection terminates immediately.
+    expect(mockGenerateBatch).not.toHaveBeenCalled();
+  });
+
+  it('captures the deterministic wrong-harmony reason (prepended) on a TR rejection', async () => {
+    // LLM approves, but the pure Turkish gate vetoes the wrong allomorph.
+    mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
+
+    const outcome = await validateAndInsertWithRetry({
+      db: makeDedupAlwaysCollidesDb(),
+      client: mockClient,
+      spec: trSpec,
+      draft: makeTrDraft('Pazarda taze domat___ satıyorlar.', 'ler'),
+      ordinal: 0,
+      cell: trCell,
+      args,
+      generatedAt,
+    });
+
+    expect(outcome.terminalStatus).toBe('rejected');
+    expect(outcome.rejectionReasons?.[0]).toMatch(
+      /^wrong vowel-harmony allomorph \(deterministic\)/,
+    );
+  });
+
+  it('uses the synthetic PARSER_FAILURE_REASON when retries exhaust on parser failures', async () => {
+    mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
+    mockGenerateBatch.mockResolvedValue({
+      drafts: [],
+      malformedDrafts: [{ ordinal: 0, errorMessage: 'parser err' }],
+      tokenUsage: PARSER_FAIL_USAGE,
+    } satisfies GenerateBatchResult);
+
+    const outcome = await validateAndInsertWithRetry({
+      db: makeDedupAlwaysCollidesDb(),
+      client: mockClient,
+      spec,
+      draft: makeDraft(),
+      ordinal: 0,
+      cell,
+      args,
+      generatedAt,
+    });
+
+    expect(outcome.terminalStatus).toBe('rejected');
+    expect(outcome.parserFailedAtFinal).toBe(true);
+    expect(outcome.rejectionReasons).toEqual([PARSER_FAILURE_REASON]);
   });
 });

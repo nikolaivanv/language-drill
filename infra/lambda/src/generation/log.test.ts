@@ -92,6 +92,7 @@ function cellResultBase(): CellResult {
     dedupGivenUpCount: 0,
     malformedDraftCount: 0,
     parserFailedCount: 0,
+    rejectionReasonCounts: {},
   };
 }
 
@@ -105,6 +106,7 @@ describe('summarizeResult', () => {
       dedupGivenUp: 0,
       malformedDrafts: 0,
       parserFailedOrdinals: 0,
+      rejectionReasons: {},
       durationMs: 0,
     });
   });
@@ -123,6 +125,7 @@ describe('summarizeResult', () => {
       dedupGivenUp: 0,
       malformedDrafts: 0,
       parserFailedOrdinals: 0,
+      rejectionReasons: {},
       durationMs: 0,
     });
   });
@@ -141,6 +144,7 @@ describe('summarizeResult', () => {
       dedupGivenUp: 0,
       malformedDrafts: 0,
       parserFailedOrdinals: 0,
+      rejectionReasons: {},
       durationMs: 0,
     });
   });
@@ -161,6 +165,7 @@ describe('summarizeResult', () => {
       dedupGivenUp: 0,
       malformedDrafts: 0,
       parserFailedOrdinals: 0,
+      rejectionReasons: {},
       durationMs: 0,
     });
   });
@@ -178,6 +183,7 @@ describe('summarizeResult', () => {
       dedupGivenUp: 0,
       malformedDrafts: 0,
       parserFailedOrdinals: 0,
+      rejectionReasons: {},
       durationMs: 180_000,
     });
   });
@@ -201,6 +207,7 @@ describe('summarizeResult', () => {
       dedupGivenUp: 1,
       malformedDrafts: 0,
       parserFailedOrdinals: 0,
+      rejectionReasons: {},
       durationMs: 1234,
     });
   });
@@ -222,6 +229,7 @@ describe('summarizeResult', () => {
       dedupGivenUp: 0,
       malformedDrafts: 1,
       parserFailedOrdinals: 0,
+      rejectionReasons: {},
       durationMs: 360_000,
     });
   });
@@ -246,7 +254,34 @@ describe('summarizeResult', () => {
       dedupGivenUp: 0,
       malformedDrafts: 0,
       parserFailedOrdinals: 1,
+      rejectionReasons: {},
       durationMs: 120_000,
+    });
+  });
+
+  it('passes the rejection-reason frequency map through unchanged', () => {
+    const r: CellResult = {
+      ...cellResultBase(),
+      insertedCount: 8,
+      rejectedCount: 4,
+      rejectionReasonCounts: {
+        'context spoils answer': 3,
+        'low quality score (<0.5)': 2,
+      },
+    };
+    expect(summarizeResult(r)).toEqual({
+      inserted: 8,
+      approved: 8,
+      flagged: 0,
+      rejected: 4,
+      dedupGivenUp: 0,
+      malformedDrafts: 0,
+      parserFailedOrdinals: 0,
+      rejectionReasons: {
+        'context spoils answer': 3,
+        'low quality score (<0.5)': 2,
+      },
+      durationMs: 0,
     });
   });
 });

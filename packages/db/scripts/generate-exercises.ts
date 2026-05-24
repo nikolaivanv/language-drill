@@ -218,6 +218,29 @@ export function printSummary(
     `Validation outcomes: ${plainRejected.toLocaleString('en-US')} rejected,` +
       ` ${totalDedupGivenUp.toLocaleString('en-US')} dedup-given-up\n`,
   );
+
+  // Aggregate the per-cell rejection-reason maps into a single run-wide
+  // distribution, sorted by frequency. This is the signal for deciding whether
+  // a validator→generator repair pass is worth building: a distribution
+  // dominated by amendable reasons (e.g. 'context spoils answer') argues for
+  // it; one dominated by 'low quality score (<0.5)' or cultural vetoes does
+  // not. Counts can exceed `plainRejected` (one ordinal may carry several
+  // reasons). Omitted entirely when nothing was rejected.
+  const rejectionReasons = results.reduce<Record<string, number>>((acc, r) => {
+    for (const [reason, count] of Object.entries(r.rejectionReasonCounts)) {
+      acc[reason] = (acc[reason] ?? 0) + count;
+    }
+    return acc;
+  }, {});
+  const sortedReasons = Object.entries(rejectionReasons).sort(
+    ([, a], [, b]) => b - a,
+  );
+  if (sortedReasons.length > 0) {
+    process.stdout.write('Rejection reasons:\n');
+    for (const [reason, count] of sortedReasons) {
+      process.stdout.write(`  ${count.toLocaleString('en-US')}× ${reason}\n`);
+    }
+  }
   process.stdout.write(
     `Total input tokens: ${totalInput.toLocaleString('en-US')} (cached: ${totalCached.toLocaleString('en-US')})\n`,
   );

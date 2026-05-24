@@ -85,6 +85,13 @@
       "when": 1779492115945,
       "tag": "0011_add_curriculum_version_to_generation_jobs",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1779640199226,
+      "tag": "0012_add_rejection_reason_counts_to_generation_jobs",
+      "breakpoints": true
     }
   ]
 }

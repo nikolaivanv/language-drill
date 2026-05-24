@@ -91,7 +91,26 @@ export type DraftOutcome = {
    * validator-rejected ones. R5.4.
    */
   parserFailedAtFinal?: boolean;
+  /**
+   * The validator's rejection reasons for this discarded ordinal, set ONLY
+   * when `terminalStatus === 'rejected'`. For a genuine validation veto this
+   * is `RoutingDecision.flaggedReasons` (low-quality / context-spoils /
+   * cultural / deterministic-harmony — always non-empty for the rejected
+   * branch). For a parser-failure-at-final slot it is the synthetic
+   * `[PARSER_FAILURE_REASON]`. `dedup-given-up` does NOT set this — search-
+   * space exhaustion is tracked separately and is not a quality reason.
+   * `runOneCell` folds these into the per-cell `rejectionReasonCounts` map.
+   */
+  rejectionReasons?: string[];
 };
+
+/**
+ * Synthetic rejection reason for an ordinal whose every retry slot produced a
+ * parser failure (`parserFailedAtFinal`). Kept distinct from validator vetoes
+ * so the reason distribution separates "Claude emitted unparseable tool calls"
+ * from genuine content rejections.
+ */
+export const PARSER_FAILURE_REASON = 'parser failure (retry exhausted)';
 
 export type ValidateAndInsertOpts = {
   db: Db;
@@ -243,6 +262,7 @@ export async function validateAndInsertWithRetry(
             return {
               terminalStatus: 'rejected',
               parserFailedAtFinal: true,
+              rejectionReasons: [PARSER_FAILURE_REASON],
               extraUsage,
               extraProduced,
               validatedCount,
@@ -262,6 +282,12 @@ export async function validateAndInsertWithRetry(
           }
         : {
             terminalStatus: 'rejected',
+            // `decision.flaggedReasons` is non-empty here: the rejected branch
+            // is only entered on a low-quality / context-spoils / cultural
+            // veto (or a deterministic-harmony downgrade), each of which
+            // pushes at least one reason in `routeValidationResult` /
+            // `applyDeterministicChecks`.
+            rejectionReasons: decision.flaggedReasons,
             extraUsage,
             extraProduced,
             validatedCount,
@@ -344,6 +370,7 @@ export async function validateAndInsertWithRetry(
           return {
             terminalStatus: 'rejected',
             parserFailedAtFinal: true,
+            rejectionReasons: [PARSER_FAILURE_REASON],
             extraUsage,
             extraProduced,
             validatedCount,
