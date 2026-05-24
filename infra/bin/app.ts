@@ -32,6 +32,11 @@ new LanguageDrillStack(app, "LanguageDrillStack", {
     "https://www.langdrill.app",
   ],
   enableScheduledJobs: true,
+  // TEMPORARY (paused 2026-05-25): daily exercise-refill cron is off while we
+  // troubleshoot rejection rates and rework exercise formats. Theory generation
+  // is unaffected. To re-enable, delete this line (defaults back to
+  // `enableScheduledJobs`) and redeploy LanguageDrillStack.
+  enableScheduledExerciseGeneration: false,
   adminUserIds: process.env.ADMIN_USER_IDS,
 });
 
