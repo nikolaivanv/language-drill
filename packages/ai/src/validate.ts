@@ -7,7 +7,7 @@
  *
  * Mirrors `evaluate.ts` structurally — same `Anthropic.Tool` shape, same
  * `tool_choice` form (Task 8), same cached `system` block (Task 8). The model
- * id is intentionally pinned to the same `claude-sonnet-4-5` constant the
+ * id is intentionally pinned to the same `claude-sonnet-4-6` constant the
  * generator and evaluator use today (resolved decision #1 in
  * `docs/exercise-generation-plan.md`); the cross-file invariant is asserted in
  * `validate.test.ts` (Task 9).
@@ -36,7 +36,7 @@ import {
  * `validate.test.ts` so the three Claude paths (generator, validator,
  * evaluator) cannot drift independently.
  */
-export const VALIDATION_MODEL = "claude-sonnet-4-5" as const;
+export const VALIDATION_MODEL = "claude-sonnet-4-6" as const;
 
 export const VALIDATION_MAX_TOKENS = 1024;
 

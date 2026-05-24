@@ -176,7 +176,7 @@ function makeRequest(
   toolName = EVALUATION_TOOL_NAME,
 ): FakeAnthropicCreateRequest {
   return {
-    model: "claude-sonnet-4-5",
+    model: "claude-sonnet-4-6",
     max_tokens: 1024,
     system: "you are a helper",
     messages: [{ role: "user", content: "hi" }],
@@ -270,7 +270,7 @@ describe("Anthropic Proxy — messages.create", () => {
         promptVersion: ctx.promptVersion,
         requestId: "req-1",
         submissionId: "sub-xyz",
-        model: "claude-sonnet-4-5",
+        model: "claude-sonnet-4-6",
         language: "es",
         cefrLevel: "B1",
         exerciseType: "cloze",
@@ -285,7 +285,7 @@ describe("Anthropic Proxy — messages.create", () => {
       expect.arrayContaining([
         "feature:evaluate",
         "env:dev",
-        "model:claude-sonnet-4-5",
+        "model:claude-sonnet-4-6",
         // promptVersion derives from makeCtx — match the date-stamped pattern
         // rather than a literal so prompt-version bumps don't break tests.
         expect.stringMatching(/^promptVersion:evaluate@\d{4}-\d{2}-\d{2}$/),
@@ -300,7 +300,7 @@ describe("Anthropic Proxy — messages.create", () => {
     expect(spies.genCalls).toHaveLength(1);
     expect(spies.genCalls[0]).toMatchObject({
       name: "evaluate",
-      model: "claude-sonnet-4-5",
+      model: "claude-sonnet-4-6",
       input: {
         system: "you are a helper",
         messages: [{ role: "user", content: "hi" }],

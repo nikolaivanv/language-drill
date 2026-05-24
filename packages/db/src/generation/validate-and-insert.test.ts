@@ -310,3 +310,140 @@ describe('validateAndInsertWithRetry — R5 malformed-retry recovery', () => {
     expect(outcome.terminalStatus).toBe('rejected');
   });
 });
+
+// ---------------------------------------------------------------------------
+// tr-harmony-eval-grounding R3.2/R3.3 — the deterministic gate downgrades an
+// LLM-approved Turkish cloze on the live insert path, with no extra Claude
+// calls (the checker is pure).
+// ---------------------------------------------------------------------------
+
+const trGrammarPoint = {
+  key: 'tr-a1-vowel-harmony',
+  language: Language.TR,
+  cefrLevel: CefrLevel.A1,
+  title: 'Vowel harmony',
+  summary: 'test',
+} as unknown as GenerationSpec['grammarPoint'];
+
+const trSpec: GenerationSpec = {
+  language: Language.TR,
+  cefrLevel: CefrLevel.A1,
+  exerciseType: ExerciseType.CLOZE,
+  grammarPoint: trGrammarPoint,
+  topicDomain: null,
+  count: 1,
+  batchSeed: 'tr-seed',
+};
+
+const trCell: Cell = {
+  language: Language.TR,
+  cefrLevel: CefrLevel.A1,
+  exerciseType: ExerciseType.CLOZE,
+  grammarPoint: trGrammarPoint,
+  cellKey: 'tr:a1:cloze:tr-a1-vowel-harmony',
+};
+
+function makeTrDraft(sentence: string, correctAnswer: string): ExerciseDraft {
+  return {
+    id: 'draft-0',
+    contentJson: {
+      type: ExerciseType.CLOZE,
+      instructions: 'Fill in the blank.',
+      sentence,
+      correctAnswer,
+    },
+    metadata: {
+      grammarPointKey: 'tr-a1-vowel-harmony',
+      topicDomain: null,
+      modelId: 'claude-sonnet-4-6',
+      inputTokens: 0,
+      outputTokens: 0,
+      cacheCreationInputTokens: 0,
+      cacheReadInputTokens: 0,
+      inBatchDuplicate: false,
+    },
+  };
+}
+
+/** Stub DB whose exercises INSERT succeeds (returns one row), capturing the
+ *  inserted `values` so the test can assert reviewStatus/flaggedReasons. */
+function makeInsertSucceedsDb(capture: { exercise?: Record<string, unknown> }): Db {
+  return {
+    insert: () => ({
+      values: (v: Record<string, unknown>) => {
+        if (v && typeof v === 'object' && 'reviewStatus' in v) capture.exercise = v;
+        const id = (v as { id?: string }).id ?? 'x';
+        return {
+          onConflictDoNothing: () =>
+            Object.assign(Promise.resolve([{ id }]), {
+              returning: () => Promise.resolve([{ id }]),
+            }),
+        };
+      },
+    }),
+  } as unknown as Db;
+}
+
+describe('validateAndInsertWithRetry — deterministic Turkish gate', () => {
+  it('rejects an LLM-approved cloze with a wrong-harmony blank, with no generator call', async () => {
+    mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
+
+    const outcome = await validateAndInsertWithRetry({
+      db: makeDedupAlwaysCollidesDb(), // insert never reached on the rejected branch
+      client: mockClient,
+      spec: trSpec,
+      draft: makeTrDraft('Pazarda taze domat___ satıyorlar.', 'ler'),
+      ordinal: 0,
+      cell: trCell,
+      args,
+      generatedAt,
+    });
+
+    expect(outcome.terminalStatus).toBe('rejected');
+    expect(mockGenerateBatch).not.toHaveBeenCalled(); // pure check, no extra Claude call
+    expect(outcome.validatedCount).toBe(1);
+  });
+
+  it('inserts a non-word-stem cloze as flagged with the deterministic reason persisted', async () => {
+    mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
+    const capture: { exercise?: Record<string, unknown> } = {};
+
+    const outcome = await validateAndInsertWithRetry({
+      db: makeInsertSucceedsDb(capture),
+      client: mockClient,
+      spec: trSpec,
+      draft: makeTrDraft('Bu domeş___ geldi.', 'ler'),
+      ordinal: 0,
+      cell: trCell,
+      args,
+      generatedAt,
+    });
+
+    expect(outcome.terminalStatus).toBe('inserted-flagged');
+    expect(outcome.terminalReviewStatus).toBe('flagged');
+    expect(capture.exercise?.reviewStatus).toBe('flagged');
+    expect(capture.exercise?.flaggedReasons).toContain(
+      'suspected malformed surface form (deterministic): domeşler',
+    );
+    expect(mockGenerateBatch).not.toHaveBeenCalled();
+  });
+
+  it('leaves a clean Turkish cloze auto-approved (gate is pass-through)', async () => {
+    mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
+    const capture: { exercise?: Record<string, unknown> } = {};
+
+    const outcome = await validateAndInsertWithRetry({
+      db: makeInsertSucceedsDb(capture),
+      client: mockClient,
+      spec: trSpec,
+      draft: makeTrDraft('Sokakta ev___ var.', 'ler'),
+      ordinal: 0,
+      cell: trCell,
+      args,
+      generatedAt,
+    });
+
+    expect(outcome.terminalStatus).toBe('inserted-approved');
+    expect(capture.exercise?.reviewStatus).toBe('auto-approved');
+  });
+});

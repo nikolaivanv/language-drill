@@ -7,7 +7,7 @@
  * in Task 5.
  *
  * Structural mirror of `validate.ts`. The model id is aliased to
- * `GENERATION_MODEL` (the same `claude-sonnet-4-5` constant the generator
+ * `GENERATION_MODEL` (the same `claude-sonnet-4-6` constant the generator
  * and the exercise validator pin) so the three Claude paths cannot drift
  * — Task 6's cross-file equality assertion fails CI if one path is bumped
  * without the others.

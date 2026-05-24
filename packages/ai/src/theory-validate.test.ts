@@ -92,7 +92,7 @@ describe("THEORY_VALIDATION_MODEL", () => {
     // Together with the GENERATION_MODEL assertion above, this pins the
     // generator, the exercise validator (validate.test.ts:91), and the
     // theory validator to a single Sonnet revision.
-    expect(THEORY_VALIDATION_MODEL).toBe("claude-sonnet-4-5");
+    expect(THEORY_VALIDATION_MODEL).toBe("claude-sonnet-4-6");
   });
 });
 

@@ -61,11 +61,13 @@ import {
   Language,
   isClozeContent,
   type ClozeContent,
+  type ExerciseContent,
 } from '@language-drill/shared';
 
 import { createDb, type Db } from '../src/client';
 import { getGrammarPoint } from '../src/curriculum';
 import { exercises } from '../src/schema';
+import { applyDeterministicChecks } from '../src/generation/deterministic-checks';
 import {
   routeValidationResult,
   type ReviewStatus,
@@ -321,6 +323,8 @@ export type DemotionAction =
 export function decideDemotion(
   currentStatus: ReviewStatus,
   result: ValidationResult,
+  content?: ExerciseContent,
+  language?: Language,
 ): DemotionAction {
   if (currentStatus === 'manual-approved') {
     return { kind: 'skip', from: currentStatus, reason: 'manual-approved' };
@@ -329,7 +333,13 @@ export function decideDemotion(
     return { kind: 'skip', from: currentStatus, reason: 'rejected' };
   }
 
-  const routed = routeValidationResult(result);
+  // Same deterministic gate the live generation path uses (R3.1
+  // single-source-of-truth). Optional content/language keep the bare
+  // 2-arg callers (older tests) working — they get pure LLM routing.
+  const routed =
+    content && language
+      ? applyDeterministicChecks(routeValidationResult(result), content, language)
+      : routeValidationResult(result);
 
   // Demote-only ranking: rejected < flagged < auto-approved.
   const rank: Record<ReviewStatus, number> = {
@@ -538,7 +548,12 @@ async function main(): Promise<void> {
           );
         }
 
-        const action = decideDemotion(row.reviewStatus as ReviewStatus, result);
+        const action = decideDemotion(
+          row.reviewStatus as ReviewStatus,
+          result,
+          recon.draft.contentJson,
+          (row.language ?? undefined) as Language | undefined,
+        );
         if (action.kind === 'skip') {
           outcomes[idx] = { kind: 'skip', row, reason: action.reason };
           return;

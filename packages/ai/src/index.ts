@@ -99,6 +99,18 @@ export {
 // Lambda's pre-filter (more-responsive-reading spec Req 1.1).
 export * from "./frequency/index.js";
 
+// Deterministic Turkish vowel-harmony + word-formedness checker. Consumed by
+// the generation/revalidation routing combiner in `packages/db`.
+export {
+  checkTurkishCloze,
+  lastVowel,
+  firstVowel,
+  harmonize,
+  extractSuffixalStem,
+  VOWELS,
+} from "./turkish-harmony.js";
+export type { DeterministicVerdict, TurkishVowel } from "./turkish-harmony.js";
+
 export {
   THEORY_TOOL_NAME,
   THEORY_GENERATION_MODEL,
