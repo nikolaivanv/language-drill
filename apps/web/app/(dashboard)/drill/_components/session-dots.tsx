@@ -15,7 +15,10 @@ export function SessionDots({ current, total }: SessionDotsProps) {
   return (
     <ol
       aria-label={`item ${current} of ${total}`}
-      className="m-0 flex list-none items-center gap-s-2 overflow-x-auto p-0"
+      // `overflow-x-auto` makes the browser compute `overflow-y` to `auto` too,
+      // which clips the current item's 2px `ring`. The `p-s-1` padding (4px)
+      // gives the ring room so it isn't cropped at the row's edges.
+      className="m-0 flex list-none items-center gap-s-2 overflow-x-auto p-s-1"
     >
       {Array.from({ length: total }, (_, i) => {
         const position = i + 1;

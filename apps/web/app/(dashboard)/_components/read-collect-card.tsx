@@ -31,7 +31,7 @@ export function ReadCollectCard() {
           </svg>
         </div>
 
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <div className="mb-s-1 flex items-center gap-s-2">
             <h3 className="t-display-s">reading something this week?</h3>
             <Chip variant="accent">new</Chip>
@@ -42,7 +42,7 @@ export function ReadCollectCard() {
           </p>
         </div>
 
-        <Button variant="primary" size="md" href="/read">
+        <Button variant="primary" size="md" href="/read" className="shrink-0">
           open reader →
         </Button>
       </div>
