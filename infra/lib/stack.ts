@@ -21,6 +21,11 @@ export interface LanguageDrillStackProps extends StackProps {
   clerkAudience: string[];
   allowedOrigins: string[];
   enableScheduledJobs: boolean;
+  // Per-pipeline override for the daily exercise-generation cron. Defaults to
+  // `enableScheduledJobs` when unset, so dev/prod behaviour is unchanged unless
+  // a stack explicitly opts out. Lets us pause exercise refill independently of
+  // the weekly theory-generation cron (which stays on `enableScheduledJobs`).
+  enableScheduledExerciseGeneration?: boolean;
   // Comma-separated list of Clerk user IDs allowed to call /admin/* routes
   // (Phase 5). Plain env var, not a Secrets Manager secret — values are user
   // IDs, not credentials.
@@ -71,7 +76,9 @@ export class LanguageDrillStack extends Stack {
     new SchedulerLambdaConstruct(this, "SchedulerLambdaWrap", {
       queue: generationQueue.queue,
       secretsPrefix: props.secretsPrefix,
-      enableScheduledJobs: props.enableScheduledJobs,
+      // Exercise refill can be paused independently of theory generation.
+      enableScheduledJobs:
+        props.enableScheduledExerciseGeneration ?? props.enableScheduledJobs,
     });
 
     // more-responsive-reading — streaming-annotate Lambda + Function URL.
@@ -85,9 +92,9 @@ export class LanguageDrillStack extends Stack {
     );
 
     // Phase 4 (theory) — parallel theory generation pipeline. Independent
-    // queue + DLQ + reserved-concurrency budget from the exercise pipeline;
-    // reuses the same `enableScheduledJobs` flag (single source of truth for
-    // both pipelines' cron gating).
+    // queue + DLQ + reserved-concurrency budget from the exercise pipeline.
+    // Cron gating stays on `enableScheduledJobs`; the exercise pipeline above
+    // can be paused independently via `enableScheduledExerciseGeneration`.
     const theoryQueue = new TheoryGenerationQueueConstruct(
       this,
       "TheoryGenerationQueue",
