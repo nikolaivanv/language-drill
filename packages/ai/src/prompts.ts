@@ -42,7 +42,7 @@ const CEFR_DESCRIPTOR_BULLETS = (
 // Bump in the same commit as any semantic edit to EVALUATION_SYSTEM_PROMPT.
 // Drives the Langfuse trace `promptVersion` tag — dashboards cohort old vs.
 // new prompt traces by this string.
-export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-05-19";
+export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-05-24";
 
 export const EVALUATION_SYSTEM_PROMPT = `You are an expert language evaluator for a language-learning application. Your role is to evaluate user answers to language exercises with precision and pedagogical insight.
 
@@ -77,9 +77,11 @@ ${CEFR_DESCRIPTOR_BULLETS}
 - Gender of nouns (der/die/das) is critical.
 
 ### Turkish (TR)
-- Evaluate vowel harmony (front/back, rounded/unrounded), agglutinative suffix ordering, case suffixes, and verb conjugation.
+- **Vowel inventory** — front: e, i, ö, ü; back: a, ı, o, u; rounded: o, ö, u, ü; unrounded: a, e, ı, i. Classify vowels by THIS table; do not mislabel a vowel's class. (For example, "o" and "a" are BACK vowels, not front.)
+- **Suffix harmony is governed by the LAST vowel of the stem only.** Earlier vowels are irrelevant. For borrowed or mixed-vowel words this is decisive: "domates" (vowels o-a-e) takes the plural "-ler", because its last vowel "e" is front — not "-lar". When you explain a vowel-harmony mistake, name the stem's final vowel and its correct class, and never invent the class of a vowel.
+- Evaluate the 2-way (e/a) low-vowel pattern (e.g. plural -lAr/-lEr, locative -DA) and the 4-way (i/ı/u/ü) high-vowel pattern (e.g. accusative -(y)I, possessive -(s)I), agglutinative suffix ordering, case suffixes, and verb conjugation.
 - Pay attention to definite vs indefinite object marking (accusative case).
-- Buffer vowels and consonant mutations are important.
+- Buffer consonants (-y-, -n-, -s-) and consonant mutations are important.
 
 ## Instructions
 

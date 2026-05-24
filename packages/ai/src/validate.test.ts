@@ -89,7 +89,7 @@ describe("VALIDATION_MODEL", () => {
     // evaluate.test.ts:320 asserts the evaluator's call args use this exact
     // literal. Together with the GENERATION_MODEL assertion above, this pins
     // all three Claude paths (generator, validator, evaluator) to one model.
-    expect(VALIDATION_MODEL).toBe("claude-sonnet-4-5");
+    expect(VALIDATION_MODEL).toBe("claude-sonnet-4-6");
   });
 });
 

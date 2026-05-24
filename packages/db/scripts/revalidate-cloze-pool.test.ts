@@ -332,4 +332,65 @@ describe('decideDemotion', () => {
     expect(action.reasons).toContain('ambiguous');
     expect(action.reasons).toContain('buffer-consonant ambiguous blank');
   });
+
+  // -------------------------------------------------------------------------
+  // tr-harmony-eval-grounding R3.5 — the deterministic gate runs inside
+  // decideDemotion when content + language are supplied. These pin demotion of
+  // existing approved offenders that the LLM validator would still pass.
+  // -------------------------------------------------------------------------
+
+  function clz(sentence: string, correctAnswer: string) {
+    return {
+      type: ExerciseType.CLOZE,
+      instructions: 'Fill in the blank.',
+      sentence,
+      correctAnswer,
+    };
+  }
+
+  it('deterministic: demotes auto-approved → rejected for a wrong-harmony cloze (domatler)', () => {
+    const action = decideDemotion(
+      'auto-approved',
+      passingResult, // LLM still approves
+      clz('Pazarda taze domat___ satıyorlar.', 'ler'),
+      Language.TR,
+    );
+    expect(action.kind).toBe('demote');
+    if (action.kind !== 'demote') return;
+    expect(action.to).toBe('rejected');
+    expect(action.reasons[0]).toBe(
+      'wrong vowel-harmony allomorph (deterministic): expected lar, got ler',
+    );
+  });
+
+  it('deterministic: demotes auto-approved → flagged for a non-word stem', () => {
+    const action = decideDemotion(
+      'auto-approved',
+      passingResult,
+      clz('Bu domeş___ geldi.', 'ler'),
+      Language.TR,
+    );
+    expect(action.kind).toBe('demote');
+    if (action.kind !== 'demote') return;
+    expect(action.to).toBe('flagged');
+    expect(action.reasons).toContain(
+      'suspected malformed surface form (deterministic): domeşler',
+    );
+  });
+
+  it('deterministic: no-change for a clean Turkish cloze (ev + ler)', () => {
+    const action = decideDemotion(
+      'auto-approved',
+      passingResult,
+      clz('Sokakta ev___ var.', 'ler'),
+      Language.TR,
+    );
+    expect(action.kind).toBe('no-change');
+  });
+
+  it('deterministic: omitting content/language skips the gate (backward-compat)', () => {
+    // Same wrong-harmony content, but bare 2-arg call → pure LLM routing only.
+    const action = decideDemotion('auto-approved', passingResult);
+    expect(action.kind).toBe('no-change');
+  });
 });

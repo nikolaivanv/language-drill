@@ -167,8 +167,21 @@ describe("EVALUATION_SYSTEM_PROMPT", () => {
 
   it("contains language-specific details", () => {
     expect(EVALUATION_SYSTEM_PROMPT).toContain("subjuntivo");
-    expect(EVALUATION_SYSTEM_PROMPT).toContain("vowel harmony");
     expect(EVALUATION_SYSTEM_PROMPT).toContain("Akkusativ");
+  });
+
+  it("grounds the Turkish vowel inventory so the evaluator cannot fabricate classes (tr-harmony-eval-grounding R4.1, R4.2)", () => {
+    // The explicit inventory + the corrective that o/a are back vowels.
+    expect(EVALUATION_SYSTEM_PROMPT).toContain("front: e, i, ö, ü");
+    expect(EVALUATION_SYSTEM_PROMPT).toContain("back: a, ı, o, u");
+    expect(EVALUATION_SYSTEM_PROMPT).toContain('"o" and "a" are BACK vowels');
+    // Harmony keys off the last vowel only, illustrated with the borrowed word.
+    expect(EVALUATION_SYSTEM_PROMPT).toContain("LAST vowel of the stem only");
+    expect(EVALUATION_SYSTEM_PROMPT).toContain("domates");
+  });
+
+  it("bumps EVALUATION_SYSTEM_PROMPT_VERSION for the grounded prompt (R4.3)", () => {
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-05-24");
   });
 });
 
@@ -331,7 +344,7 @@ describe("evaluateAnswer", () => {
     // Verify the SDK was called correctly
     expect(mockCreate).toHaveBeenCalledOnce();
     const callArgs = mockCreate.mock.calls[0][0];
-    expect(callArgs.model).toBe("claude-sonnet-4-5");
+    expect(callArgs.model).toBe("claude-sonnet-4-6");
     expect(callArgs.temperature).toBe(0);
     expect(callArgs.tools).toHaveLength(1);
     expect(callArgs.tools[0].name).toBe(EVALUATION_TOOL_NAME);

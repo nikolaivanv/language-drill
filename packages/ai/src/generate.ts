@@ -43,7 +43,7 @@ import {
  * evaluate.test.ts:320 — bumping the generator without bumping the evaluator
  * (or vice versa) fails CI.
  */
-export const GENERATION_MODEL = "claude-sonnet-4-5" as const;
+export const GENERATION_MODEL = "claude-sonnet-4-6" as const;
 
 export const GENERATION_MAX_TOKENS = 1024;
 

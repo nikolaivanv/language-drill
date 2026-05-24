@@ -90,7 +90,7 @@ function makeStubClient(toolUseInput: unknown, opts: StubOpts = {}): Anthropic {
         id: "msg_test",
         type: "message",
         role: "assistant",
-        model: "claude-sonnet-4-5",
+        model: "claude-sonnet-4-6",
         stop_sequence: null,
       }),
     },
@@ -113,7 +113,7 @@ function makeNoToolUseStubClient(): Anthropic {
         id: "msg_test",
         type: "message",
         role: "assistant",
-        model: "claude-sonnet-4-5",
+        model: "claude-sonnet-4-6",
         stop_sequence: null,
       }),
     },
@@ -170,9 +170,9 @@ describe("theory-generate / pure helpers", () => {
   // -------------------------------------------------------------------------
 
   describe("theory-generate model pin (Req 8.3)", () => {
-    it("THEORY_GENERATION_MODEL aliases GENERATION_MODEL and is pinned to claude-sonnet-4-5", () => {
+    it("THEORY_GENERATION_MODEL aliases GENERATION_MODEL and is pinned to claude-sonnet-4-6", () => {
       expect(THEORY_GENERATION_MODEL).toBe(GENERATION_MODEL);
-      expect(THEORY_GENERATION_MODEL).toBe("claude-sonnet-4-5");
+      expect(THEORY_GENERATION_MODEL).toBe("claude-sonnet-4-6");
     });
   });
 });

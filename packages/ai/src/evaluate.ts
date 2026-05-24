@@ -221,7 +221,7 @@ export function parseEvaluationResult(input: unknown): EvaluationResult {
 // ---------------------------------------------------------------------------
 
 /** Default model for evaluation */
-const MODEL = "claude-sonnet-4-5" as const;
+const MODEL = "claude-sonnet-4-6" as const;
 
 /** Max tokens for evaluation responses */
 const MAX_TOKENS = 1024;

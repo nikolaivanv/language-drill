@@ -79,7 +79,7 @@ const baseUsage = {
 
 describe("GENERATION_MODEL", () => {
   it("matches the literal evaluate.ts pins (cross-file invariant)", () => {
-    expect(GENERATION_MODEL).toBe("claude-sonnet-4-5");
+    expect(GENERATION_MODEL).toBe("claude-sonnet-4-6");
   });
 });
 

@@ -42,6 +42,7 @@ import { deterministicUuid } from '../lib/deterministic-uuid';
 import { exerciseTags, exercises } from '../schema/index';
 
 import type { Cell } from './cells';
+import { applyDeterministicChecks } from './deterministic-checks';
 import { routeValidationResult } from './routing';
 
 const MAX_DEDUP_RETRIES = 3;
@@ -205,7 +206,14 @@ export async function validateAndInsertWithRetry(
     extraUsage = addUsage(extraUsage, valUsage);
     validatedCount++;
 
-    const decision = routeValidationResult(result);
+    // Deterministic Turkish gate runs after the LLM routing decision and can
+    // only downgrade it (wrong-harmony → rejected; non-word-stem → flagged).
+    // Pass-through for non-TR / non-cloze / non-suffixal blanks (R3).
+    const decision = applyDeterministicChecks(
+      routeValidationResult(result),
+      currentDraft.contentJson,
+      opts.cell.language,
+    );
 
     // ---- Rejected branch ------------------------------------------------
     if (decision.reviewStatus === 'rejected') {
