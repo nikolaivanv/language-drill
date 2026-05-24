@@ -552,6 +552,40 @@
   justify-content: flex-end;
 }
 
+/* ─── Theory: mobile compaction (≤760px) ─── */
+/* On the bottom-sheet, spend the limited height on content, not chrome: tighter
+   header + tab-strip gutters, and a solid full-width action bar pinned to the
+   bottom (vs. the desktop sticky-gradient CTA, which on a short sheet reads as a
+   button floating over the text). Must sit AFTER the base .theory-scroll /
+   .theory-footer-cta rules — the earlier ≤760px block (line ~369) precedes them,
+   so only a later block wins on source order. */
+@media (max-width: 760px) {
+  .theory-header {
+    padding: var(--spacing-s-4) 18px var(--spacing-s-3);
+  }
+  .theory-toc {
+    padding: var(--spacing-s-2) 18px;
+  }
+  .theory-scroll {
+    padding: var(--spacing-s-4) 18px 0;
+  }
+  .theory-footer-cta {
+    /* full-bleed to the sheet edges (cancels .theory-scroll's 18px gutter) */
+    margin: var(--spacing-s-4) -18px 0;
+    padding: var(--spacing-s-3) 18px
+      calc(var(--spacing-s-3) + env(safe-area-inset-bottom));
+    /* solid bar + rule instead of the fading gradient, so text can't bleed
+       through and the button no longer looks like it's hovering */
+    background: var(--color-paper);
+    border-top: 1px solid var(--color-rule);
+  }
+  /* stretch the CTA across the bar — removes the right-offset "floating" look */
+  .theory-footer-cta > a,
+  .theory-footer-cta > button {
+    width: 100%;
+  }
+}
+
 /* ─── Theory: empty state ─── */
 .theory-empty {
   flex: 1;

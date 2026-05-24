@@ -32,26 +32,30 @@ export function AnnotatedFooter({
   const skippedCount = Math.max(0, flaggedCount - savedCount);
   const noBank = savedCount === 0;
   return (
-    <div className="mt-[28px] flex items-center gap-[14px] rounded-r-md bg-paper-2 px-[18px] py-[14px]">
+    <div className="mt-[28px] flex flex-wrap items-center gap-[14px] rounded-r-md bg-paper-2 px-[18px] py-[14px]">
       <span className="t-mono text-[11px] text-ink-mute">
         {flaggedCount} flagged · {savedCount} saved · {skippedCount} skipped
       </span>
-      <span className="flex-1" />
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onClearBank}
-        disabled={noBank}
-      >
-        clear bank
-      </Button>
-      <Button
-        variant="primary"
-        onClick={onSave}
-        disabled={noBank || isSaving}
-      >
-        {isSaving ? 'saving…' : `save ${savedCount} to bank →`}
-      </Button>
+      {/* ml-auto right-aligns the action group on desktop and lets it wrap to
+          its own line on mobile; shrink-0 keeps the buttons at full label
+          width so "save N to bank →" isn't clipped. */}
+      <div className="ml-auto flex shrink-0 items-center gap-[14px]">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClearBank}
+          disabled={noBank}
+        >
+          clear bank
+        </Button>
+        <Button
+          variant="primary"
+          onClick={onSave}
+          disabled={noBank || isSaving}
+        >
+          {isSaving ? 'saving…' : `save ${savedCount} to bank →`}
+        </Button>
+      </div>
     </div>
   );
 }
