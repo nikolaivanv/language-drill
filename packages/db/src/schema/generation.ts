@@ -1,5 +1,5 @@
 import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
-import { index, integer, numeric, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { index, integer, jsonb, numeric, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 export const generationJobs = pgTable(
   'generation_jobs',
@@ -39,6 +39,24 @@ export const generationJobs = pgTable(
      * should clear after a curriculum edit. NULL on legacy rows pre-migration.
      */
     curriculumVersion: text('curriculum_version'),
+    /**
+     * Frequency map of validator rejection reasons for the drafts this cell
+     * discarded — `{ reason: count }`, e.g. `{ 'context spoils answer': 2,
+     * 'low quality score (<0.5)': 5 }`. Aggregates `RoutingDecision.flaggedReasons`
+     * across every ordinal that terminated `rejected` (a genuine validation
+     * veto or a parser-failure-at-final slot); `dedup-given-up` ordinals do NOT
+     * contribute (search-space exhaustion is not a quality reason — see
+     * `dedupGivenUpCount`). A single ordinal can contribute several reasons, so
+     * the counts sum to >= the plain-rejected ordinal count.
+     *
+     * Flagged exercises already persist their reasons in
+     * `exercises.flagged_reasons`; this column closes the gap for the rejected
+     * population, whose drafts are discarded without a row. Together the two
+     * give the full reason distribution needed to judge whether a
+     * validator→generator repair pass is worth building. NULL when the cell
+     * rejected nothing, and on legacy rows pre-migration.
+     */
+    rejectionReasonCounts: jsonb('rejection_reason_counts').$type<Record<string, number>>(),
   },
   (table) => ({
     cellIdx: index('generation_jobs_cell_idx').on(table.cellKey, table.startedAt.desc()),

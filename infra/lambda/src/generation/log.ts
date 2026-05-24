@@ -21,6 +21,7 @@ export function summarizeResult(r: CellResult): {
   dedupGivenUp: number;
   malformedDrafts: number;
   parserFailedOrdinals: number;
+  rejectionReasons: Record<string, number>;
   durationMs: number;
 } {
   return {
@@ -35,6 +36,11 @@ export function summarizeResult(r: CellResult): {
     // Already a subset of `rejected`; surfaced separately so CloudWatch
     // can alert on a stuck failure mode (`> 0.2 ratio` over multiple jobs).
     parserFailedOrdinals: r.parserFailedCount,
+    // Frequency map of validator rejection reasons across discarded ordinals,
+    // so CloudWatch carries the same distribution persisted to
+    // `generation_jobs.rejection_reason_counts`. Empty `{}` when nothing was
+    // rejected.
+    rejectionReasons: r.rejectionReasonCounts,
     durationMs: r.durationMs,
   };
 }

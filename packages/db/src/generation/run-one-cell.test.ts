@@ -278,7 +278,7 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
         });
 
         const batchSeed = 'phase-4-test-mixed';
-        await invokeRunOneCell(db, 3, batchSeed);
+        const result = await invokeRunOneCell(db, 3, batchSeed);
 
         const spec = buildTestSpec(batchSeed, 3);
         const id0 = exerciseDraftId(spec, 0);
@@ -319,6 +319,16 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
         expect(job.flaggedCount).toBe(1);
         expect(job.rejectedCount).toBe(1);
         expect(Number(job.costUsdEstimate ?? 0)).toBeGreaterThan(0);
+
+        // Rejection-reason distribution: ordinal 2's fixture is sub-0.5
+        // quality, so the routed reason is captured both on the CellResult and
+        // persisted to the audit row.
+        expect(result.rejectionReasonCounts).toEqual({
+          'low quality score (<0.5)': 1,
+        });
+        expect(job.rejectionReasonCounts).toEqual({
+          'low quality score (<0.5)': 1,
+        });
 
         // Token regression guard. Mock token shape:
         //   1 generator call (cache-write):   input=1500 cacheRead=0    output=400
@@ -462,6 +472,9 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
         expect(result.dedupGivenUpCount).toBe(1);
         expect(result.rejectedCount).toBe(1);
         expect(result.insertedCount).toBe(0);
+        // dedup-given-up is search-space exhaustion, NOT a validator veto, so
+        // it must not contribute to the rejection-reason distribution.
+        expect(result.rejectionReasonCounts).toEqual({});
 
         // No new rows inserted by the writer (every attempt collided).
         const inserted = await db
@@ -493,6 +506,8 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
         // metric can back it out (search-space exhaustion, not a quality
         // signal).
         expect(job.dedupGivenUpCount).toBe(1);
+        // No genuine validator rejection → the column is NULL, not `{}`.
+        expect(job.rejectionReasonCounts).toBeNull();
       },
     );
 
