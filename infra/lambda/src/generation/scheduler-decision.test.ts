@@ -16,6 +16,7 @@ import type { Cell } from '@language-drill/db';
 import {
   decideEnqueue,
   LOW_YIELD_THRESHOLD,
+  PREDICTIVE_SATURATION_MARGIN_FRACTION,
   SATURATED_DEDUP_APPROVED_FRACTION,
   SATURATED_DEDUP_REQ_FRACTION,
   TARGET_PER_CELL,
@@ -96,6 +97,10 @@ describe('decideEnqueue — constant values', () => {
   it('SATURATED_DEDUP_APPROVED_FRACTION = 0.3', () => {
     expect(SATURATED_DEDUP_APPROVED_FRACTION).toBe(0.3);
   });
+
+  it('PREDICTIVE_SATURATION_MARGIN_FRACTION = 0.2', () => {
+    expect(PREDICTIVE_SATURATION_MARGIN_FRACTION).toBe(0.2);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -104,13 +109,14 @@ describe('decideEnqueue — constant values', () => {
 
 describe('decideEnqueue — table-driven cases', () => {
   it('case 1: C2 cell → skip-c2 (Round-1 narrowing per Req 4.5)', () => {
-    const decision = decideEnqueue(C2_CELL, 0, null, CURRENT_VERSION);
+    const decision = decideEnqueue(C2_CELL, 0, TARGET_PER_CELL, null, CURRENT_VERSION);
     expect(decision).toEqual({ kind: 'skip-c2' });
   });
 
   it('case 2: approvedInPool ≥ TARGET → skip-target-reached (R1.3)', () => {
     const decision = decideEnqueue(
       ROUND_1_CELL,
+      TARGET_PER_CELL,
       TARGET_PER_CELL,
       makeRecentJob(),
       CURRENT_VERSION,
@@ -122,6 +128,7 @@ describe('decideEnqueue — table-driven cases', () => {
     const overshoot = decideEnqueue(
       ROUND_1_CELL,
       TARGET_PER_CELL + 5,
+      TARGET_PER_CELL,
       makeRecentJob(),
       CURRENT_VERSION,
     );
@@ -129,7 +136,7 @@ describe('decideEnqueue — table-driven cases', () => {
   });
 
   it('case 3: no recentJob, under target → enqueue with need = TARGET - approved', () => {
-    const decision = decideEnqueue(ROUND_1_CELL, 12, null, CURRENT_VERSION);
+    const decision = decideEnqueue(ROUND_1_CELL, 12, TARGET_PER_CELL, null, CURRENT_VERSION);
     expect(decision).toEqual({ kind: 'enqueue', need: TARGET_PER_CELL - 12 });
   });
 
@@ -139,6 +146,7 @@ describe('decideEnqueue — table-driven cases', () => {
     const decision = decideEnqueue(
       ROUND_1_CELL,
       20,
+      TARGET_PER_CELL,
       makeRecentJob({ approvedCount: 2, requestedCount: 50 }),
       CURRENT_VERSION,
     );
@@ -149,6 +157,7 @@ describe('decideEnqueue — table-driven cases', () => {
     const decision = decideEnqueue(
       ROUND_1_CELL,
       20,
+      TARGET_PER_CELL,
       makeRecentJob({
         approvedCount: 2,
         requestedCount: 50,
@@ -168,6 +177,7 @@ describe('decideEnqueue — table-driven cases', () => {
     const decision = decideEnqueue(
       ROUND_1_CELL,
       15,
+      TARGET_PER_CELL,
       makeRecentJob({
         approvedCount: 5,
         requestedCount: 20,
@@ -182,6 +192,7 @@ describe('decideEnqueue — table-driven cases', () => {
     const decision = decideEnqueue(
       ROUND_1_CELL,
       15,
+      TARGET_PER_CELL,
       makeRecentJob({
         approvedCount: 2,
         requestedCount: 10,
@@ -201,6 +212,7 @@ describe('decideEnqueue — table-driven cases', () => {
     const decision = decideEnqueue(
       ROUND_1_CELL,
       15,
+      TARGET_PER_CELL,
       makeRecentJob({
         approvedCount: 2,
         requestedCount: 10,
@@ -217,6 +229,7 @@ describe('decideEnqueue — table-driven cases', () => {
     const decision = decideEnqueue(
       ROUND_1_CELL,
       15,
+      TARGET_PER_CELL,
       makeRecentJob({
         approvedCount: 2,
         requestedCount: 50,
@@ -234,6 +247,7 @@ describe('decideEnqueue — table-driven cases', () => {
     const decision = decideEnqueue(
       ROUND_1_CELL,
       15,
+      TARGET_PER_CELL,
       makeRecentJob({ approvedCount: 2, requestedCount: 50 }),
       undefined,
     );
@@ -247,6 +261,7 @@ describe('decideEnqueue — table-driven cases', () => {
     const decision = decideEnqueue(
       ROUND_1_CELL,
       TARGET_PER_CELL - 1,
+      TARGET_PER_CELL,
       null,
       CURRENT_VERSION,
     );
@@ -261,6 +276,7 @@ describe('decideEnqueue — table-driven cases', () => {
     const decision = decideEnqueue(
       ROUND_1_CELL,
       0,
+      TARGET_PER_CELL,
       makeRecentJob({
         approvedCount: 0,
         requestedCount: 0,
@@ -276,7 +292,7 @@ describe('decideEnqueue — table-driven cases', () => {
   it('case 12 (variant): approvedInPool=0 with no recent job → enqueue full TARGET', () => {
     // The "totally empty cell" first-run case. Confirms `need = TARGET`
     // when the pool is at zero.
-    const decision = decideEnqueue(ROUND_1_CELL, 0, null, CURRENT_VERSION);
+    const decision = decideEnqueue(ROUND_1_CELL, 0, TARGET_PER_CELL, null, CURRENT_VERSION);
     expect(decision).toEqual({ kind: 'enqueue', need: TARGET_PER_CELL });
   });
 
@@ -287,9 +303,104 @@ describe('decideEnqueue — table-driven cases', () => {
     const decision = decideEnqueue(
       C2_CELL,
       TARGET_PER_CELL + 10,
+      TARGET_PER_CELL,
       makeRecentJob(),
       CURRENT_VERSION,
     );
     expect(decision).toEqual({ kind: 'skip-c2' });
+  });
+
+  it('R3: target-reached and need are computed against the resolved per-cell target, not the global 50', () => {
+    // A narrow A1/A2 cell resolves to a target well below TARGET_PER_CELL.
+    // With target=20, a pool of 20 is "reached" even though 20 < 50…
+    expect(
+      decideEnqueue(ROUND_1_CELL, 20, 20, null, CURRENT_VERSION),
+    ).toEqual({ kind: 'skip-target-reached' });
+    // …and `need` is measured against the resolved target (20 - 18 = 2),
+    // not 50 - 18.
+    expect(
+      decideEnqueue(ROUND_1_CELL, 18, 20, null, CURRENT_VERSION),
+    ).toEqual({ kind: 'enqueue', need: 2 });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Predictive saturation (R4.1 / R4.4 / R4.5)
+//
+// target = TARGET_PER_CELL = 50 → predictiveMargin = ceil(0.2 * 50) = 10.
+// dedup-ratio threshold at requestedCount=50 → ceil(0.5 * 50) = 25.
+// ---------------------------------------------------------------------------
+
+describe('decideEnqueue — predictive saturation', () => {
+  it('R4.1: near-ceiling + dedup-heavy last run → skip on the same tick, even when that run was productive', () => {
+    // approvedInPool=45 → need=5 ≤ margin=10 (near ceiling).
+    // dedupGivenUp=25 ≥ 25 → dedup-heavy. approvedCount=20 ≥ ceil(0.3*50)=15,
+    // so the REACTIVE saturated-dedup branch does NOT fire — the suppression
+    // here can only be the predictive branch (no fully-wasteful run required).
+    const decision = decideEnqueue(
+      ROUND_1_CELL,
+      45,
+      TARGET_PER_CELL,
+      makeRecentJob({
+        approvedCount: 20,
+        requestedCount: 50,
+        dedupGivenUpCount: 25,
+      }),
+      CURRENT_VERSION,
+    );
+    expect(decision).toEqual({ kind: 'skip-saturated-dedup' });
+  });
+
+  it('does NOT fire when the pool is not near the ceiling (need beyond the margin)', () => {
+    // approvedInPool=20 → need=30 > margin=10. Same dedup-heavy-but-productive
+    // job, so neither predictive nor reactive saturated-dedup fires → enqueue.
+    const decision = decideEnqueue(
+      ROUND_1_CELL,
+      20,
+      TARGET_PER_CELL,
+      makeRecentJob({
+        approvedCount: 20,
+        requestedCount: 50,
+        dedupGivenUpCount: 25,
+      }),
+      CURRENT_VERSION,
+    );
+    expect(decision).toEqual({ kind: 'enqueue', need: 30 });
+  });
+
+  it('does NOT fire when the most-recent run was not dedup-heavy', () => {
+    // Near ceiling (need=5) but dedupGivenUp=5 < 25 → predictive condition
+    // unmet → enqueue the small remaining need.
+    const decision = decideEnqueue(
+      ROUND_1_CELL,
+      45,
+      TARGET_PER_CELL,
+      makeRecentJob({
+        approvedCount: 20,
+        requestedCount: 50,
+        dedupGivenUpCount: 5,
+      }),
+      CURRENT_VERSION,
+    );
+    expect(decision).toEqual({ kind: 'enqueue', need: 5 });
+  });
+
+  it('R4.4: curriculum-version mismatch clears predictive suppression', () => {
+    // Same near-ceiling + dedup-heavy setup as the R4.1 case, but the recorded
+    // curriculumVersion is stale → the version-mismatch branch (step 4) clears
+    // suppression before the predictive branch is reached → enqueue.
+    const decision = decideEnqueue(
+      ROUND_1_CELL,
+      45,
+      TARGET_PER_CELL,
+      makeRecentJob({
+        approvedCount: 20,
+        requestedCount: 50,
+        dedupGivenUpCount: 25,
+        curriculumVersion: STALE_VERSION,
+      }),
+      CURRENT_VERSION,
+    );
+    expect(decision).toEqual({ kind: 'enqueue', need: 5 });
   });
 });

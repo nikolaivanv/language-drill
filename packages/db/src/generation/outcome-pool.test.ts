@@ -33,7 +33,12 @@ vi.mock('./validate-and-insert', async () => {
 });
 
 import { validateAndInsertWithRetry } from './validate-and-insert';
-import { runOutcomePool } from './outcome-pool';
+import {
+  EARLY_BAIL_PROBE_COUNT,
+  EARLY_BAIL_RATIO,
+  runOutcomePool,
+} from './outcome-pool';
+import type { ValidatorPoolEntry } from './validator-pool';
 
 const mockValidateAndInsert = vi.mocked(validateAndInsertWithRetry);
 const mockClient = {} as unknown as Anthropic;
@@ -142,6 +147,22 @@ function makeOutcome(ordinal: number): DraftOutcome {
   };
 }
 
+/** A `dedup-given-up` outcome — the terminal status the early-bail breaker
+ *  counts toward its dedup-domination ratio (R4.2). */
+function makeDedupGivenUp(): DraftOutcome {
+  return {
+    terminalStatus: 'dedup-given-up',
+    extraUsage: {
+      inputTokens: 0,
+      cacheCreationInputTokens: 0,
+      cacheReadInputTokens: 0,
+      outputTokens: 0,
+    },
+    extraProduced: 0,
+    validatedCount: 1,
+  };
+}
+
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -173,7 +194,7 @@ describe('runOutcomePool', () => {
     });
 
     const drafts = makeDrafts(5);
-    const results = await runOutcomePool({
+    const { results } = await runOutcomePool({
       db: mockDb,
       client: mockClient,
       spec,
@@ -204,7 +225,7 @@ describe('runOutcomePool', () => {
     });
 
     const drafts = makeDrafts(10);
-    const results = await runOutcomePool({
+    const { results } = await runOutcomePool({
       db: mockDb,
       client: mockClient,
       spec,
@@ -231,7 +252,7 @@ describe('runOutcomePool', () => {
     });
 
     const drafts = makeDrafts(6);
-    const results = await runOutcomePool({
+    const { results } = await runOutcomePool({
       db: mockDb,
       client: mockClient,
       spec,
@@ -338,7 +359,7 @@ describe('runOutcomePool', () => {
     });
 
     const drafts = makeDrafts(3);
-    const results = await runOutcomePool({
+    const { results } = await runOutcomePool({
       db: mockDb,
       client: mockClient,
       spec,
@@ -402,5 +423,152 @@ describe('runOutcomePool', () => {
         firstValidations.get(opts.ordinal),
       );
     }
+  });
+
+  it('routes a parse-failed first-validation to rejected without re-validating (R8.3)', async () => {
+    mockValidateAndInsert.mockImplementation(async (opts) =>
+      makeOutcome(opts.ordinal),
+    );
+
+    const sentinelOrdinal = 2;
+    const firstValidations = new Map<number, ValidatorPoolEntry>();
+    for (let i = 0; i < 5; i++) {
+      firstValidations.set(
+        i,
+        i === sentinelOrdinal
+          ? {
+              kind: 'parse-failed',
+              message:
+                'Invalid qualityScore: must be a number between 0 and 1, got undefined',
+            }
+          : makeValidation(i),
+      );
+    }
+
+    const { results } = await runOutcomePool({
+      db: mockDb,
+      client: mockClient,
+      spec,
+      drafts: makeDrafts(5),
+      cell,
+      args,
+      generatedAt,
+      firstValidations,
+      concurrency: 3,
+    });
+
+    // Every ordinal produced an outcome (the malformed response did NOT abort
+    // the cell) and the sentinel ordinal terminated `rejected`.
+    expect(results.size).toBe(5);
+    const sentinelOutcome = results.get(sentinelOrdinal);
+    expect(sentinelOutcome?.terminalStatus).toBe('rejected');
+    expect(sentinelOutcome?.validatorParseFailedAtFirst).toBe(true);
+
+    // `validateAndInsertWithRetry` ran for the four good ordinals — NOT for the
+    // parse-failed one (it is routed straight to rejected, never re-validated).
+    expect(mockValidateAndInsert).toHaveBeenCalledTimes(4);
+    const calledOrdinals = mockValidateAndInsert.mock.calls
+      .map((c) => c[0].ordinal)
+      .sort((a, b) => a - b);
+    expect(calledOrdinals).toEqual([0, 1, 3, 4]);
+  });
+
+  // -------------------------------------------------------------------------
+  // R4.2 / R4.3 — within-run early-bail circuit breaker
+  // -------------------------------------------------------------------------
+
+  it('pins the early-bail constants', () => {
+    expect(EARLY_BAIL_PROBE_COUNT).toBe(8);
+    expect(EARLY_BAIL_RATIO).toBe(0.7);
+  });
+
+  it('early-bails when dedup-given-up dominates after the probe count (R4.2)', async () => {
+    mockValidateAndInsert.mockImplementation(async () => makeDedupGivenUp());
+
+    const drafts = makeDrafts(20);
+    const { results, earlyBailed } = await runOutcomePool({
+      db: mockDb,
+      client: mockClient,
+      spec,
+      drafts,
+      cell,
+      args,
+      generatedAt,
+      firstValidations: makeFirstValidations(20),
+      // Serial → the breaker trips deterministically at exactly the probe count.
+      concurrency: 1,
+    });
+
+    expect(earlyBailed).toBe(true);
+    // Stops dispatching once armed — only the probe sample is processed, the
+    // remaining ordinals are skipped rather than grinding their retry budget.
+    expect(results.size).toBe(EARLY_BAIL_PROBE_COUNT);
+    expect(mockValidateAndInsert).toHaveBeenCalledTimes(EARLY_BAIL_PROBE_COUNT);
+  });
+
+  it('does not early-bail on a healthy run — every ordinal is processed (R4.3)', async () => {
+    mockValidateAndInsert.mockImplementation(async (opts) =>
+      makeOutcome(opts.ordinal),
+    );
+
+    const drafts = makeDrafts(10);
+    const { results, earlyBailed } = await runOutcomePool({
+      db: mockDb,
+      client: mockClient,
+      spec,
+      drafts,
+      cell,
+      args,
+      generatedAt,
+      firstValidations: makeFirstValidations(10),
+      concurrency: 1,
+    });
+
+    expect(earlyBailed).toBe(false);
+    expect(results.size).toBe(10);
+    expect(mockValidateAndInsert).toHaveBeenCalledTimes(10);
+  });
+
+  it('does not arm the breaker before the probe count (small all-dedup sample)', async () => {
+    mockValidateAndInsert.mockImplementation(async () => makeDedupGivenUp());
+
+    const drafts = makeDrafts(EARLY_BAIL_PROBE_COUNT - 1);
+    const { results, earlyBailed } = await runOutcomePool({
+      db: mockDb,
+      client: mockClient,
+      spec,
+      drafts,
+      cell,
+      args,
+      generatedAt,
+      firstValidations: makeFirstValidations(EARLY_BAIL_PROBE_COUNT - 1),
+      concurrency: 1,
+    });
+
+    expect(earlyBailed).toBe(false);
+    expect(results.size).toBe(EARLY_BAIL_PROBE_COUNT - 1);
+  });
+
+  it('does not bail when the dedup ratio stays below the threshold', async () => {
+    // Alternate dedup / healthy → running ratio stays at 0.5 < EARLY_BAIL_RATIO.
+    mockValidateAndInsert.mockImplementation(async (opts) =>
+      opts.ordinal % 2 === 0 ? makeDedupGivenUp() : makeOutcome(opts.ordinal),
+    );
+
+    const drafts = makeDrafts(12);
+    const { results, earlyBailed } = await runOutcomePool({
+      db: mockDb,
+      client: mockClient,
+      spec,
+      drafts,
+      cell,
+      args,
+      generatedAt,
+      firstValidations: makeFirstValidations(12),
+      concurrency: 1,
+    });
+
+    expect(earlyBailed).toBe(false);
+    expect(results.size).toBe(12);
   });
 });

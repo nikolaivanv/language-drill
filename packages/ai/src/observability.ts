@@ -69,6 +69,16 @@ export interface LlmTraceContext {
   exerciseType?: ExerciseType | "reading" | "theory" | null;
   candidateCount?: number;
   /**
+   * R5 frequency-seeded generation: the content-word lemma the generator was
+   * asked to build this draft around, plus its dictionary rank. Recorded as
+   * named trace metadata (not an ad-hoc field) so seeded vs unseeded `generate`
+   * cohorts are queryable in Langfuse. `generate` path only; both unset for an
+   * unseeded ordinal, and `seedRank` may be unset if the lemma is not a
+   * frequency-file surface key.
+   */
+  seedWord?: string;
+  seedRank?: number;
+  /**
    * Phase-2: invoked once per Claude call after the Langfuse trace object
    * is created. Receives the live `LangfuseTraceClient` so callers (the
    * Phase-2 eval runner) can pass the trace directly to
@@ -459,6 +469,8 @@ function buildTraceMetadata(
   if (ctx.cellKey !== undefined) m.cellKey = ctx.cellKey;
   if (ctx.exerciseId !== undefined) m.exerciseId = ctx.exerciseId;
   if (ctx.candidateCount !== undefined) m.candidateCount = ctx.candidateCount;
+  if (ctx.seedWord !== undefined) m.seedWord = ctx.seedWord;
+  if (ctx.seedRank !== undefined) m.seedRank = ctx.seedRank;
   if (ctx.promptFallback !== undefined) m.promptFallback = ctx.promptFallback;
   // Dashboard-pivot dimensions: tag-and-metadata so both filter UIs and
   // group-by selectors work. Language is lowercased to match the tag

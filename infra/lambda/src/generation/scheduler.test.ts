@@ -123,6 +123,8 @@ import {
 import type { LearningLanguage } from '@language-drill/shared';
 import { handler } from './scheduler';
 import { parseGenerationJobMessage } from './job-message';
+import { resolveCellTarget } from './cell-targets';
+import { TARGET_PER_CELL } from './scheduler-decision';
 
 // ---------------------------------------------------------------------------
 // Lifecycle
@@ -200,9 +202,26 @@ function allRoundOneCells(): Cell[] {
 }
 
 /**
- * Build a row set that puts every round-1 cell at `approved=50` (TARGET_PER_CELL),
- * EXCEPT the cells whose `cellKey` is in `undertargetKeys`, which get
- * `approved=currentForUndertarget`.
+ * Round-1 cells whose resolved per-cell target (R3) equals the global
+ * `TARGET_PER_CELL` (B1/B2 cloze/translation, which fall through the
+ * `CELL_TARGET_DEFAULTS` table to the global fallback). Tests that assert a
+ * specific `need`/`count` value pick their subject from here so the arithmetic
+ * stays `TARGET_PER_CELL - approved` — narrow A1/A2 and vocab cells resolve to
+ * other targets.
+ */
+function cellsWithGlobalTarget(): Cell[] {
+  return allRoundOneCells().filter(
+    (c) => resolveCellTarget(c) === TARGET_PER_CELL,
+  );
+}
+
+/**
+ * Build a row set that puts every round-1 cell at its **resolved per-cell
+ * target** (R3 — so each is `skip-target-reached`), EXCEPT the cells whose
+ * `cellKey` is in `undertargetKeys`, which get `approved=currentForUndertarget`.
+ * Filling to `resolveCellTarget(cell)` (not a flat 50) is required now that
+ * targets vary by `(exerciseType, cefrLevel)` — a flat 50 would leave
+ * vocab_recall cells (target 60–75) under their target and spuriously enqueued.
  *
  * Row shape MUST match `buildCellKeyFromRow` byte-for-byte: that helper feeds
  * `language` / `difficulty` / `type` / `grammarPointKey` straight through
@@ -223,7 +242,9 @@ function rowsToFillAllCellsExcept(
       difficulty: cell.cefrLevel,
       type: cell.exerciseType,
       grammarPointKey: cell.grammarPoint.key,
-      approved: undertargetKeys.has(cell.cellKey) ? currentForUndertarget : 50,
+      approved: undertargetKeys.has(cell.cellKey)
+        ? currentForUndertarget
+        : resolveCellTarget(cell),
     });
   }
   return rows;
@@ -235,7 +256,8 @@ function rowsToFillAllCellsExcept(
 
 describe('scheduler handler', () => {
   it('two under-target cells → one batch with two messages, all parsing cleanly', async () => {
-    const undertargetCells = allRoundOneCells().slice(0, 2);
+    // Subjects resolve to TARGET_PER_CELL so `count === 40` (= 50 − 10) holds.
+    const undertargetCells = cellsWithGlobalTarget().slice(0, 2);
     const undertargetKeys = new Set(undertargetCells.map((c) => c.cellKey));
     mockGroupBy.mockResolvedValueOnce(
       rowsToFillAllCellsExcept(undertargetKeys, 10),
@@ -433,7 +455,7 @@ describe('scheduler handler', () => {
 
   it('R6 scenario A: 30 approved + saturated-dedup job + curriculum match → 0 enqueued, suppressed.saturatedDedup === 1', async () => {
     // Pick the first Round-1 cell as the test subject. The rest are at TARGET.
-    const subject = allRoundOneCells()[0];
+    const subject = cellsWithGlobalTarget()[0];
     const subjectKeys = new Set([subject.cellKey]);
     mockGroupBy.mockResolvedValueOnce(rowsToFillAllCellsExcept(subjectKeys, 30));
 
@@ -488,7 +510,7 @@ describe('scheduler handler', () => {
     // Same approved + saturated-dedup as scenario A, but the recent job's
     // recorded curriculumVersion is STALE (older than the on-disk constant),
     // so R6.4 fires and suppression clears → the cell is enqueued.
-    const subject = allRoundOneCells()[0];
+    const subject = cellsWithGlobalTarget()[0];
     const subjectKeys = new Set([subject.cellKey]);
     mockGroupBy.mockResolvedValueOnce(rowsToFillAllCellsExcept(subjectKeys, 30));
 
@@ -538,7 +560,7 @@ describe('scheduler handler', () => {
     // Under the old MIN_PER_CELL=25 hysteresis, a cell at 48 approved
     // wouldn't qualify (48 >= 25 → skipped). Under the new TARGET-only
     // policy, anything < 50 is topped up. This test pins the new behavior.
-    const subject = allRoundOneCells()[0];
+    const subject = cellsWithGlobalTarget()[0];
     const subjectKeys = new Set([subject.cellKey]);
     mockGroupBy.mockResolvedValueOnce(rowsToFillAllCellsExcept(subjectKeys, 48));
 

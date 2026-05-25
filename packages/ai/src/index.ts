@@ -80,6 +80,7 @@ export type { ClaudeUsageBreakdown } from "./cost-model.js";
 export {
   validateDraft,
   parseValidationResult,
+  ValidationParseError,
   VALIDATION_TOOL,
   VALIDATION_TOOL_NAME,
   VALIDATION_MODEL,

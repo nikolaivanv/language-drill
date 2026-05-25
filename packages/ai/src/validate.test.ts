@@ -13,6 +13,7 @@ import { GENERATION_MODEL } from "./generate.js";
 import {
   parseValidationResult,
   validateDraft,
+  ValidationParseError,
   VALIDATION_MAX_TOKENS,
   VALIDATION_MODEL,
   VALIDATION_TEMPERATURE,
@@ -126,19 +127,22 @@ describe("parseValidationResult", () => {
     expect(result).toEqual(validValidationInput);
   });
 
-  it("throws when input is not an object", () => {
-    expect(() => parseValidationResult(null)).toThrow(
-      "Validation result must be an object",
-    );
-    expect(() => parseValidationResult("string")).toThrow(
-      "Validation result must be an object",
-    );
-    expect(() => parseValidationResult(42)).toThrow(
-      "Validation result must be an object",
-    );
+  it("throws ValidationParseError when input is not an object", () => {
+    for (const bad of [null, "string", 42]) {
+      expect(() => parseValidationResult(bad)).toThrow(ValidationParseError);
+      expect(() => parseValidationResult(bad)).toThrow(
+        "Validation result must be an object",
+      );
+    }
   });
 
-  it("throws when qualityScore is not a number", () => {
+  it("throws ValidationParseError when qualityScore is not a number", () => {
+    expect(() =>
+      parseValidationResult({
+        ...validValidationInput,
+        qualityScore: "not a number",
+      }),
+    ).toThrow(ValidationParseError);
     expect(() =>
       parseValidationResult({
         ...validValidationInput,
@@ -147,68 +151,87 @@ describe("parseValidationResult", () => {
     ).toThrow("Invalid qualityScore");
   });
 
-  it("throws when qualityScore is below 0", () => {
+  it("throws ValidationParseError when qualityScore is below 0", () => {
     expect(() =>
       parseValidationResult({ ...validValidationInput, qualityScore: -0.1 }),
-    ).toThrow("Invalid qualityScore");
+    ).toThrow(ValidationParseError);
   });
 
-  it("throws when qualityScore is above 1", () => {
+  it("throws ValidationParseError when qualityScore is above 1", () => {
     expect(() =>
       parseValidationResult({ ...validValidationInput, qualityScore: 1.1 }),
-    ).toThrow("Invalid qualityScore");
+    ).toThrow(ValidationParseError);
   });
 
-  it("throws when ambiguous is not a boolean", () => {
+  it("throws ValidationParseError when ambiguous is not a boolean", () => {
+    expect(() =>
+      parseValidationResult({ ...validValidationInput, ambiguous: "yes" }),
+    ).toThrow(ValidationParseError);
     expect(() =>
       parseValidationResult({ ...validValidationInput, ambiguous: "yes" }),
     ).toThrow("Invalid ambiguous");
   });
 
-  it("throws when levelMatch is not a boolean", () => {
+  it("throws ValidationParseError when levelMatch is not a boolean", () => {
     expect(() =>
       parseValidationResult({ ...validValidationInput, levelMatch: 1 }),
-    ).toThrow("Invalid levelMatch");
+    ).toThrow(ValidationParseError);
   });
 
-  it("throws when grammarPointMatch is not a boolean", () => {
+  it("throws ValidationParseError when grammarPointMatch is not a boolean", () => {
     expect(() =>
       parseValidationResult({
         ...validValidationInput,
         grammarPointMatch: null,
       }),
-    ).toThrow("Invalid grammarPointMatch");
+    ).toThrow(ValidationParseError);
   });
 
-  it("throws when culturalIssues is not an array", () => {
-    expect(() =>
-      parseValidationResult({
-        ...validValidationInput,
-        culturalIssues: "stereotyping",
-      }),
-    ).toThrow("Invalid culturalIssues");
+  // --- R8 leniency: the two reason arrays are non-load-bearing ------------
+
+  it("coerces a non-array culturalIssues to [] instead of throwing", () => {
+    const result = parseValidationResult({
+      ...validValidationInput,
+      culturalIssues: "stereotyping",
+    });
+    expect(result.culturalIssues).toEqual([]);
   });
 
-  it("throws when culturalIssues contains a non-string element", () => {
-    expect(() =>
-      parseValidationResult({
-        ...validValidationInput,
-        culturalIssues: ["valid", 42],
-      }),
-    ).toThrow("Invalid culturalIssues[1]");
+  it("drops non-string elements from culturalIssues", () => {
+    const result = parseValidationResult({
+      ...validValidationInput,
+      culturalIssues: ["valid", 42, "also valid"],
+    });
+    expect(result.culturalIssues).toEqual(["valid", "also valid"]);
   });
 
-  it("throws when flaggedReasons is not an array", () => {
-    expect(() =>
-      parseValidationResult({
-        ...validValidationInput,
-        flaggedReasons: { notAnArray: true },
-      }),
-    ).toThrow("Invalid flaggedReasons");
+  it("coerces a non-array flaggedReasons to [] instead of throwing", () => {
+    const result = parseValidationResult({
+      ...validValidationInput,
+      flaggedReasons: { notAnArray: true },
+    });
+    expect(result.flaggedReasons).toEqual([]);
   });
 
-  it("throws when a required field is missing", () => {
+  it("coerces a missing flaggedReasons to [] (the 2026-05-24 failure)", () => {
+    // Reproduces `Invalid flaggedReasons: must be an array, got undefined`
+    // — now a no-op, not a cell-killing throw.
+    const { flaggedReasons: _omit, ...withoutFlagged } = validValidationInput;
+    const result = parseValidationResult(withoutFlagged);
+    expect(result.flaggedReasons).toEqual([]);
+    // The rest of the result is intact.
+    expect(result.qualityScore).toBe(validValidationInput.qualityScore);
+  });
+
+  it("coerces a missing culturalIssues to []", () => {
+    const { culturalIssues: _omit, ...withoutCultural } = validValidationInput;
+    const result = parseValidationResult(withoutCultural);
+    expect(result.culturalIssues).toEqual([]);
+  });
+
+  it("throws ValidationParseError when a load-bearing field is missing", () => {
     const { qualityScore: _omit, ...partial } = validValidationInput;
+    expect(() => parseValidationResult(partial)).toThrow(ValidationParseError);
     expect(() => parseValidationResult(partial)).toThrow("Invalid qualityScore");
   });
 });

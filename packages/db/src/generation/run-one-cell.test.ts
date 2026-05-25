@@ -51,7 +51,12 @@ import { exerciseTags, exercises, generationJobs } from '../schema/index';
 import { createMockAnthropicClient } from '../../scripts/generate-exercises-mock-client';
 
 import type { Cell } from './cells';
-import { runOneCell } from './run-one-cell';
+import {
+  buildSeedWords,
+  fetchPriorVocabRecallSurfaces,
+  runOneCell,
+} from './run-one-cell';
+import { VOCAB_MAX_PER_WORD } from './validate-and-insert';
 
 // ---------------------------------------------------------------------------
 // Fixtures and helpers
@@ -232,6 +237,54 @@ async function invokeRunOneCellWithClient(
 }
 
 // ---------------------------------------------------------------------------
+// buildSeedWords — pure seedable-type gate + picker wiring (R5.1). Runs without
+// a database (delegates to the deterministic `pickSeeds` over the bundled
+// frequency dictionary), so it lives outside the DB-gated integration suite.
+// ---------------------------------------------------------------------------
+
+describe('buildSeedWords', () => {
+  const clozeCell = buildTestCell(); // ES B1 cloze
+
+  it('seeds a cloze cell with one slot per ordinal', () => {
+    const seeds = buildSeedWords(clozeCell, 5, 'seed-batch', new Set());
+    expect(seeds).toBeDefined();
+    expect(seeds).toHaveLength(5);
+    // The ES B1 band is non-empty, so at least some ordinals get a real seed.
+    expect(seeds!.some((s) => s !== null)).toBe(true);
+  });
+
+  it('seeds a translation cell', () => {
+    const translationCell: Cell = {
+      ...clozeCell,
+      exerciseType: ExerciseType.TRANSLATION,
+    };
+    expect(buildSeedWords(translationCell, 3, 'seed-batch', new Set())).toHaveLength(
+      3,
+    );
+  });
+
+  it('does NOT seed a vocab_recall cell (returns undefined)', () => {
+    const vocabCell: Cell = {
+      ...clozeCell,
+      exerciseType: ExerciseType.VOCAB_RECALL,
+    };
+    expect(buildSeedWords(vocabCell, 5, 'seed-batch', new Set())).toBeUndefined();
+  });
+
+  it('excludes prior seeds (cross-run dedup, R5.3)', () => {
+    const all = buildSeedWords(clozeCell, 10, 'seed-batch', new Set())!;
+    const firstNonNull = all.find((s): s is string => s !== null)!;
+    const reseeded = buildSeedWords(
+      clozeCell,
+      10,
+      'seed-batch',
+      new Set([firstNonNull]),
+    )!;
+    expect(reseeded).not.toContain(firstNonNull);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -263,6 +316,7 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
       await cleanCellRows(db);
       delete process.env['MOCK_VALIDATION_OUTCOMES'];
       delete process.env['MOCK_VALIDATION_THROW_ORDINAL'];
+      delete process.env['MOCK_VALIDATION_MALFORM_ORDINAL'];
       delete process.env['MOCK_CLAUDE_FIXTURES_DIR'];
       process.exitCode = 0;
     });
@@ -554,6 +608,46 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
       },
     );
 
+    it(
+      'R8.3: a malformed validator response isolates to one ordinal — cell still succeeds',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        // Unlike a transport throw (which fails the cell closed, above), a
+        // malformed validator RESPONSE on ordinal 1 must cost only that
+        // ordinal: the cell still succeeds, ordinal 1 is rejected + counted as
+        // a validator-parse failure, and the other two ordinals insert.
+        process.env['MOCK_VALIDATION_MALFORM_ORDINAL'] = '1';
+
+        const result = await invokeRunOneCell(
+          db,
+          3,
+          'phase-4-test-validator-malform',
+        );
+
+        expect(result.status).toBe('succeeded');
+        expect(result.validatorParseFailedCount).toBe(1);
+        // The malformed ordinal terminates `rejected` (folded into the count).
+        expect(result.rejectedCount).toBeGreaterThanOrEqual(1);
+        // The other two ordinals survived validation and were inserted.
+        expect(result.insertedCount).toBe(2);
+
+        // The synthetic reason is folded into the rejection distribution.
+        expect(
+          result.rejectionReasonCounts[
+            'validator parse failure (malformed response)'
+          ],
+        ).toBe(1);
+
+        const jobs = await db
+          .select()
+          .from(generationJobs)
+          .where(eq(generationJobs.cellKey, TEST_CELL_KEY));
+        expect(jobs).toHaveLength(1);
+        expect(jobs[0].status).toBe('succeeded');
+        expect(jobs[0].rejectedCount).toBeGreaterThanOrEqual(1);
+      },
+    );
+
     // -----------------------------------------------------------------------
     // Phase A — validator-parallelization invariants.
     //
@@ -769,5 +863,108 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
       },
     );
 
+  },
+);
+
+// ---------------------------------------------------------------------------
+// fetchPriorVocabRecallSurfaces — R6.5 at-cap avoid-set. Under the `word::cue`
+// dedup key a word may carry up to VOCAB_MAX_PER_WORD exercises, so the
+// generator's avoid-set must contain ONLY words that have reached the cap;
+// under-cap words are intentionally omitted so they can be re-proposed with a
+// new cue. The grouping/HAVING is SQL-side, so this is a DB-gated integration
+// test like its siblings above.
+// ---------------------------------------------------------------------------
+
+const VOCAB_CAP_GP_KEY = 'es-a1-vocab-cap-test';
+
+const vocabCapCell: Cell = {
+  language: Language.ES as LearningLanguage,
+  cefrLevel: CefrLevel.A1 as CurriculumCefrLevel,
+  exerciseType: ExerciseType.VOCAB_RECALL,
+  grammarPoint: { key: VOCAB_CAP_GP_KEY } as unknown as Cell['grammarPoint'],
+  cellKey: `es:a1:vocab_recall:${VOCAB_CAP_GP_KEY}`,
+};
+
+async function seedVocabRow(
+  db: Db,
+  expectedWord: string,
+  prompt: string,
+): Promise<void> {
+  const content = {
+    type: ExerciseType.VOCAB_RECALL,
+    instructions: 'Recall the word.',
+    prompt,
+    expectedWord,
+    hints: [],
+    exampleSentence: 'x',
+  };
+  const dedupKey = canonicalSurface(
+    content as Parameters<typeof canonicalSurface>[0],
+  );
+  await db.insert(exercises).values({
+    id: randomUUID(),
+    type: ExerciseType.VOCAB_RECALL,
+    language: Language.ES,
+    difficulty: 'A1',
+    contentJson: { ...content, _dedupKey: dedupKey },
+    grammarPointKey: VOCAB_CAP_GP_KEY,
+    generationSource: 'claude-realtime',
+    modelId: 'claude-sonnet-4-5',
+    reviewStatus: 'auto-approved',
+    generatedAt: new Date('2026-04-01T00:00:00Z'),
+  });
+}
+
+async function cleanVocabCapRows(db: Db): Promise<void> {
+  const rows = await db
+    .select({ id: exercises.id })
+    .from(exercises)
+    .where(eq(exercises.grammarPointKey, VOCAB_CAP_GP_KEY));
+  for (const row of rows) {
+    await db.delete(exerciseTags).where(eq(exerciseTags.exerciseId, row.id));
+    await db.delete(exercises).where(eq(exercises.id, row.id));
+  }
+}
+
+describe.skipIf(!process.env['TEST_DATABASE_URL'])(
+  'fetchPriorVocabRecallSurfaces — R6.5 at-cap avoid-set',
+  () => {
+    let db: Db;
+
+    beforeAll(() => {
+      db = createDb(process.env['TEST_DATABASE_URL']!);
+    });
+
+    beforeEach(async () => {
+      await cleanVocabCapRows(db);
+    });
+
+    afterEach(async () => {
+      await cleanVocabCapRows(db);
+    });
+
+    it('returns only words that have reached the per-word cap', async () => {
+      // "casa": VOCAB_MAX_PER_WORD distinct (word, cue) rows → at cap.
+      for (let i = 0; i < VOCAB_MAX_PER_WORD; i++) {
+        await seedVocabRow(db, 'casa', `cue número ${i}`);
+      }
+      // "perro": one short of the cap → still re-proposable with a new cue.
+      for (let i = 0; i < VOCAB_MAX_PER_WORD - 1; i++) {
+        await seedVocabRow(db, 'perro', `cue número ${i}`);
+      }
+
+      const surfaces = await fetchPriorVocabRecallSurfaces(db, vocabCapCell);
+
+      expect(surfaces).toContain('casa');
+      expect(surfaces).not.toContain('perro');
+    });
+
+    it('returns an empty avoid-set when no word has reached the cap', async () => {
+      await seedVocabRow(db, 'gato', 'sólo una pista');
+
+      const surfaces = await fetchPriorVocabRecallSurfaces(db, vocabCapCell);
+
+      expect(surfaces).toEqual([]);
+    });
   },
 );

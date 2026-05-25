@@ -38,6 +38,7 @@ import { SendMessageBatchCommand, SQSClient } from '@aws-sdk/client-sqs';
 import { inArray, sql } from 'drizzle-orm';
 
 import type { GenerationJobMessage } from './job-message';
+import { resolveCellTarget } from './cell-targets';
 import { decideEnqueue, type RecentJob } from './scheduler-decision';
 
 // ---------------------------------------------------------------------------
@@ -193,9 +194,13 @@ export async function handler(): Promise<void> {
     const recentJob = recentJobByCell.get(cell.cellKey) ?? null;
     const curriculumVersionOnDisk =
       CURRICULUM_VERSION_BY_LANGUAGE[cell.language as LearningLanguage];
+    // R3: per-cell target (override → table → TARGET_PER_CELL) instead of the
+    // flat global, so narrow A1/A2 cells stop grinding an unreachable 50.
+    const target = resolveCellTarget(cell);
     const decision = decideEnqueue(
       cell,
       approvedInPool,
+      target,
       recentJob,
       curriculumVersionOnDisk,
     );

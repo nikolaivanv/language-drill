@@ -1,0 +1,1 @@
+CREATE INDEX "exercises_vocab_word_idx" ON "exercises" USING btree ("language","type","difficulty","grammar_point_key",(content_json->>'expectedWord')) WHERE "exercises"."review_status" IN ('auto-approved', 'manual-approved', 'flagged');

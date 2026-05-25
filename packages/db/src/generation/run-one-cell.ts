@@ -45,6 +45,8 @@ import {
 import type { Cell } from './cells';
 import { runGeneratorPool } from './generator-pool';
 import { runOutcomePool } from './outcome-pool';
+import { pickSeeds } from './seed-picker';
+import { VOCAB_MAX_PER_WORD } from './validate-and-insert';
 import { runValidatorPool } from './validator-pool';
 
 // ---------------------------------------------------------------------------
@@ -154,6 +156,16 @@ export type CellResult = {
    */
   parserFailedCount: number;
   /**
+   * Ordinals whose VALIDATOR returned a malformed first-validation response
+   * (a `ValidationParseError` isolated to the ordinal by `runValidatorPool`,
+   * R8.3). Mirrors `parserFailedCount` (which counts *generator* parse
+   * failures): already included in `rejectedCount` (these ordinals terminate
+   * `rejected`), surfaced separately so the structured log can split
+   * validator-parse failures from genuine content vetoes. A single malformed
+   * validator response costs at most one ordinal, never the whole cell.
+   */
+  validatorParseFailedCount: number;
+  /**
    * Frequency map of validator rejection reasons across the ordinals this cell
    * discarded — `{ reason: count }`. Folds each rejected ordinal's
    * `DraftOutcome.rejectionReasons` (a genuine validation veto's
@@ -166,6 +178,14 @@ export type CellResult = {
    * `exercises.flagged_reasons` to give the full reason distribution.
    */
   rejectionReasonCounts: Record<string, number>;
+  /**
+   * R4.2/R4.3 — `true` when the within-run dedup circuit breaker tripped in
+   * `runOutcomePool` and the cell stopped dispatching remaining ordinals. The
+   * cell still closes `succeeded` with accurate counts for the ordinals it did
+   * process; this flag distinguishes an early-bail from a normal completion in
+   * the structured log (`summarizeResult`). Always `false` on the failed path.
+   */
+  earlyBailed: boolean;
 };
 
 /**
@@ -200,19 +220,27 @@ export type RunOneCellInput = {
 // ---------------------------------------------------------------------------
 
 /**
- * Pulls existing `expectedWord` values from the pool for a vocab_recall cell
- * so the generator can be told what's already covered. Filtered to the same
- * rows that `exercises_dedup_idx` covers — anything that would cause an
- * `ON CONFLICT DO NOTHING` no-op at insert time. Capped at
- * `MAX_PRIOR_POOL_SURFACES` so a runaway cell doesn't blow up the prompt
- * size; deterministic ordering keeps the system-prompt bytes stable across
- * ordinals so the cache prefix hits.
+ * Pulls the `expectedWord` values that have **reached the R6 per-word cap**
+ * (`VOCAB_MAX_PER_WORD`) for a vocab_recall cell, to feed the generator's
+ * "do not propose these" list. Under the `word::cue` dedup key (task 21) a
+ * word can carry up to N exercises with distinct retrieval cues, so the
+ * avoid-set is no longer "every word already present" — only the saturated
+ * ones. Under-cap words are deliberately omitted so the generator MAY
+ * re-propose them with a new cue, letting the cell fill toward
+ * `N × distinctWords` rather than `1 × distinctWords` (R6.5).
  *
- * Returns an empty array — not undefined — when the cell is currently empty,
- * so the caller can pass it through as `priorPoolSurfaces: []` and the
- * prompt renderer omits the section.
+ * Grouped + `HAVING count(*) >= VOCAB_MAX_PER_WORD` over the same review-status
+ * set the insert-time cap (`countApprovedForWord`) counts, so the avoid-set is
+ * exactly the words the cap would now reject. Capped at
+ * `MAX_PRIOR_POOL_SURFACES` so a runaway cell doesn't blow up the prompt size;
+ * deterministic ordering keeps the system-prompt bytes stable across ordinals
+ * so the cache prefix hits.
+ *
+ * Returns an empty array — not undefined — when no word is at cap yet, so the
+ * caller can pass it through as `priorPoolSurfaces: []` and the prompt
+ * renderer omits the section.
  */
-async function fetchPriorVocabRecallSurfaces(
+export async function fetchPriorVocabRecallSurfaces(
   db: Db,
   cell: Cell,
 ): Promise<readonly string[]> {
@@ -235,11 +263,76 @@ async function fetchPriorVocabRecallSurfaces(
         sql`content_json ? 'expectedWord'`,
       ),
     )
+    .groupBy(sql`content_json->>'expectedWord'`)
+    .having(sql`count(*) >= ${VOCAB_MAX_PER_WORD}`)
     .orderBy(sql`content_json->>'expectedWord'`)
     .limit(MAX_PRIOR_POOL_SURFACES);
   return rows
     .map((r) => r.surface)
     .filter((s): s is string => typeof s === 'string' && s.length > 0);
+}
+
+/**
+ * Pulls the frequency seeds already anchored in this cell's live pool (R5.3),
+ * read from the writer-only `content_json.seedWord` field that
+ * `validateAndInsertWithRetry` persisted (task 14). Scoped to the same cell +
+ * review-status set as the dedup index, so the returned set is exactly the
+ * lemmas a fresh batch should avoid re-proposing. Returns lemmas (deduped by
+ * the caller's `Set`); empty when nothing in the cell carries a seed.
+ */
+async function fetchPriorSeeds(
+  db: Db,
+  cell: Cell,
+): Promise<readonly string[]> {
+  const rows = await db
+    .select({ seed: sql<string>`content_json->>'seedWord'` })
+    .from(exercises)
+    .where(
+      and(
+        eq(exercises.language, cell.language),
+        eq(exercises.difficulty, cell.cefrLevel),
+        eq(exercises.type, cell.exerciseType),
+        eq(exercises.grammarPointKey, cell.grammarPoint.key),
+        inArray(exercises.reviewStatus, [
+          'auto-approved',
+          'manual-approved',
+          'flagged',
+        ]),
+        sql`content_json ? 'seedWord'`,
+      ),
+    );
+  return rows
+    .map((r) => r.seed)
+    .filter((s): s is string => typeof s === 'string' && s.length > 0);
+}
+
+/**
+ * Builds the per-ordinal frequency-seed list for a cell (R5.1), or `undefined`
+ * for cell types that are NOT frequency-seeded. Only `cloze`/`translation`
+ * cells are seeded — `vocab_recall` is constrained at the target-word level, so
+ * a lexical seed would fight its own dedup. Pure (delegates to the deterministic
+ * `pickSeeds`); the DB-backed `exclude` set is supplied by the caller via
+ * `fetchPriorSeeds`. Exported for unit testing the seedable-type gate.
+ */
+export function buildSeedWords(
+  cell: Cell,
+  count: number,
+  batchSeed: string,
+  priorSeeds: ReadonlySet<string>,
+): readonly (string | null)[] | undefined {
+  if (
+    cell.exerciseType !== ExerciseType.CLOZE &&
+    cell.exerciseType !== ExerciseType.TRANSLATION
+  ) {
+    return undefined;
+  }
+  return pickSeeds({
+    language: cell.language,
+    cefrLevel: cell.cefrLevel,
+    batchSeed,
+    count,
+    exclude: priorSeeds,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -309,6 +402,11 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
   let inBatchDuplicateCount = 0;
   let malformedDraftCount = 0;
   let parserFailedCount = 0;
+  let validatorParseFailedCount = 0;
+  // R4.2 — set from the outcome pool's circuit breaker; surfaced on the result
+  // + structured log. Declared in the outer scope so it survives to the
+  // success return below.
+  let earlyBailed = false;
   const rejectionReasonCounts: Record<string, number> = {};
   const generatedAt = new Date();
 
@@ -329,6 +427,22 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
         ? await fetchPriorVocabRecallSurfaces(db, cell)
         : undefined;
 
+    // R5: anchor each cloze/translation ordinal on a distinct frequency-band
+    // word, excluding seeds already used in this cell's pool (cross-run dedup).
+    // `buildSeedWords` returns `undefined` for vocab_recall, leaving it
+    // unseeded. Fetching priors only for seedable types avoids a needless query
+    // on vocab cells.
+    const isSeedableType =
+      cell.exerciseType === ExerciseType.CLOZE ||
+      cell.exerciseType === ExerciseType.TRANSLATION;
+    const priorSeeds = isSeedableType ? await fetchPriorSeeds(db, cell) : [];
+    const seedWords = buildSeedWords(
+      cell,
+      args.count,
+      args.batchSeed,
+      new Set(priorSeeds),
+    );
+
     spec = {
       language: cell.language,
       cefrLevel: cell.cefrLevel,
@@ -338,6 +452,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       count: args.count,
       batchSeed: args.batchSeed,
       priorPoolSurfaces,
+      seedWords,
     };
 
     const batch = await runGeneratorPool({
@@ -389,7 +504,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     // try/catch routes into `failClosed`. Counters are accumulated in the
     // post-walk below, in ordinal order, so the final values are
     // deterministic across serial and parallel runs.
-    const outcomes = await runOutcomePool({
+    const poolResult = await runOutcomePool({
       db,
       client,
       spec,
@@ -401,6 +516,11 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       signal,
       concurrency: MAX_OUTCOME_CONCURRENCY,
     });
+    const outcomes = poolResult.results;
+    // R4.2/R4.3 — record whether the dedup circuit breaker tripped. The counts
+    // accumulated below still reflect exactly the ordinals that resolved, so the
+    // audit row closes `succeeded` with accurate numbers (R4.3).
+    earlyBailed = poolResult.earlyBailed;
 
     for (let ordinal = 0; ordinal < batch.drafts.length; ordinal++) {
       const outcome = outcomes.get(ordinal);
@@ -411,6 +531,9 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       validatedCount += outcome.validatedCount;
       if (outcome.parserFailedAtFinal) {
         parserFailedCount += 1;
+      }
+      if (outcome.validatorParseFailedAtFirst) {
+        validatorParseFailedCount += 1;
       }
 
       switch (outcome.terminalStatus) {
@@ -459,6 +582,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       db,
       malformedDraftCount,
       parserFailedCount,
+      validatorParseFailedCount,
     });
   }
 
@@ -508,7 +632,9 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     dedupGivenUpCount,
     malformedDraftCount,
     parserFailedCount,
+    validatorParseFailedCount,
     rejectionReasonCounts,
+    earlyBailed,
   };
 }
 
@@ -528,6 +654,8 @@ async function failClosed(opts: {
   malformedDraftCount?: number;
   /** Threaded through from the outer scope so the count survives the fail path. */
   parserFailedCount?: number;
+  /** Threaded through from the outer scope so the count survives the fail path. */
+  validatorParseFailedCount?: number;
 }): Promise<CellResult> {
   const truncatedMessage = opts.errorMessage.slice(0, ERROR_MESSAGE_MAX_LENGTH);
   if (opts.auditRowExists) {
@@ -557,6 +685,9 @@ async function failClosed(opts: {
     dedupGivenUpCount: 0,
     malformedDraftCount: opts.malformedDraftCount ?? 0,
     parserFailedCount: opts.parserFailedCount ?? 0,
+    validatorParseFailedCount: opts.validatorParseFailedCount ?? 0,
     rejectionReasonCounts: {},
+    // A failed cell never early-bailed — the bail is a success-path concept.
+    earlyBailed: false,
   };
 }

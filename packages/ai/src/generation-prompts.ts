@@ -110,7 +110,7 @@ function renderRecentStems(recentStems: readonly string[]): string {
 // prompt (this file's `buildGenerationSystemPrompt`). Drives the Langfuse
 // trace `promptVersion` tag — dashboards cohort old vs. new prompt traces
 // by this string.
-export const GENERATION_PROMPT_VERSION = "generate@2026-05-23";
+export const GENERATION_PROMPT_VERSION = "generate@2026-05-25";
 
 /**
  * Wording differs per type so Claude reads it the way the cell is constrained:
@@ -173,7 +173,15 @@ export const GENERATION_SYSTEM_PROMPT_TEMPLATE = `You are an expert language exe
 - **The learner must produce the answer themselves.** Two failure modes are forbidden:
   - **Ambiguous blank.** For a cloze, the answer must be uniquely produced. Either (a) the surrounding sentence constrains the blank so only one specific lexeme/form plausibly fits — every other candidate is ruled out by something explicit in the sentence — OR (b) for grammar-shape clozes where many lexemes satisfy the rule, you populate \`acceptableAnswers\` with every lexeme that fits. Sentences like "Sınıfta sekiz ___ var" ("There are eight ___ in the classroom") are forbidden without \`acceptableAnswers\`, because chair, student, book, pencil, and many other nouns all satisfy the rule equally. Likewise "Evde yeni ___ var. Onlar çok güzel." is forbidden with \`correctAnswer: "perdeler"\` alone — curtains, books, lamps, flowers all satisfy "plural, positive descriptor" equally; the "Onlar çok güzel" follow-on signals plurality but not which lexeme. Either constrain the sentence ("Evde yeni ___ var. Onları yıkamayı unutma." — "don't forget to wash them" picks out "perdeler") or list every plausible lexeme in \`acceptableAnswers\`. For translation, the reference translation must be the dominant rendering — minor variants are accepted at evaluation time, but the source text must not admit two structurally different correct translations. For vocab_recall, the prompt/definition must pick out exactly one headword.
   - **Spoiled blank.** The \`instructions\` and \`context\` fields may name the grammar category being tested (e.g. "vowel harmony", "noun-numeral agreement") but MUST NOT state the rule's outcome, name the required suffix/form, or otherwise let the learner produce the answer without engaging with the blank. "Vowel harmony: front vowel (e) requires -ler suffix" above "Odada pencere___ açık" is forbidden — it tells the learner the answer is "-ler". "Plural agreement after a numeral" above "Sınıfta sekiz ___ var" is acceptable — it names the rule type without giving the form.
-  - **Buffer-consonant ambiguity.** When a cloze blank tests a suffix whose canonical form takes a buffer consonant on vowel-final stems (Turkish \`-y-\` before vowel-initial copular suffixes like \`-Im/-sIn/-Iz\`; \`-n-\` before suffixes on possessive-marked stems; \`-s-\` in 3sg possessive on vowel-final stems), the visible blank must be unambiguous about whether the buffer belongs to the stem or to the answer. EITHER embed the buffer in the visible stem so the blank is exactly the linguistic suffix ("Ben çok mutluy___" → \`correctAnswer: "um"\`) OR populate \`acceptableAnswers\` with both buffer-included and buffer-excluded forms (\`correctAnswer: "yum", acceptableAnswers: ["um"]\` or the reverse) and clarify in \`instructions\` which form is preferred. Doing neither is forbidden — a learner mentally completing the word "mutluyum" will naturally type "yum" as the visible blank fill, and the exercise must not punish that.
+- **Blank granularity — the \`___\` blank is the WHOLE inflected word.** In every language, the \`___\` in \`sentence\` stands for the entire inflected surface form, and \`correctAnswer\` is that complete word — never a bare suffix/inflection fragment (\`yi\`, \`en\`, \`t\`) and never a stem with the blank attached (\`kahve___\`, \`vol___\`). When the stem mutates at its boundary under the target inflection, the displayed text MUST NOT reveal the mutated stem; the learner produces the whole mutated form as the answer:
+  - **TR** consonant softening / buffer consonants: \`kahve\` → \`kahveyi\`, \`kitap\` → \`kitabı\`, \`köpek\` → \`köpeğe\`. Blank the whole word — "Annem her sabah ___ içiyor. (kahve)" → \`kahveyi\` — never "Annem her sabah kahve___ içiyor." → \`yi\`.
+  - **ES** stem-changing / irregular / orthographic shifts: \`volver\` → \`vuelven\`, \`tener\` → \`tengo\`, \`buscar\` → \`busqué\`. Never "vol___" → \`vemos\`: a shown stem both spoils the word and is wrong for stressed/irregular forms.
+  - **DE** ablaut / umlaut: \`fahren\` → \`fährt\`, \`geben\` → \`gibt\`, \`Apfel\` → \`Äpfel\`. Blank the whole word, not "f___" → \`ährt\`.
+  A partial (suffix-only) blank either shows the citation stem — making the correct fill wrong — or shows the mutated stem — revealing the irregularity. Mixing partial blanks for regular words with whole-word blanks for irregular ones itself leaks which words are irregular, so the whole-word rule is uniform across regulars and irregulars. This supersedes the earlier Turkish suffix-only / stem-embedded-buffer convention (e.g. "Ben çok mutlu___" → \`um\`), which is no longer used for newly generated cloze.
+- **Turkish case clozes — generic instruction, context-forced case, optional L1 gloss.** For a TR cloze whose grammar point is a **case** (accusative, dative, locative, ablative, genitive), the \`instructions\` MUST be generic — "Fill in the blank with the correct form of the word in parentheses" — and MUST NOT name the case or the suffix; the noun's citation (dictionary) form MUST appear in parentheses next to the sentence (e.g. "Her sabah ___ gidiyorum. (okul)" → \`okula\`). The surrounding sentence MUST constrain exactly **one** case as correct so that dropping the case name from the instruction does not make the blank \`ambiguous\`: motion-toward forces dative ("...___ gidiyorum" → \`okula\`), motion-from forces ablative ("...___ geldim" → \`okuldan\`), static location forces locative, and so on. Because **accusative** marks *definiteness* — hard to force in a short L2-only sentence, since "kahve içiyor" (generic) and "kahveyi içiyor" (definite) are both grammatical — an accusative cloze MUST carry a disambiguation device: EITHER explicit definiteness-forcing context OR an English gloss in the optional \`glossEn\` field (e.g. "Annem ___ içiyor. (kahve)" with \`glossEn: "My mother is drinking the coffee"\` → \`kahveyi\`). Populate \`glossEn\` for CEFR **A1–A2 only**; omit it for **B1+** (this cell is CEFR {{cefrLevel}}), where richer L2 context is expected to disambiguate. The gloss MUST obey the **Spoiled blank** rule above — it conveys meaning/case **without** stating the rule outcome or the required form: "I drink the coffee" is allowed; "use the accusative -yi" is forbidden.
+- **Do not leak the answer in the visible text (anti-leak).** Apart from the parenthetical citation hint — which is the word to *inflect*, not the answer form — nothing in the visible \`sentence\`, \`context\`, \`glossEn\`, or \`instructions\` may let the learner write the blank without engaging the grammar point. Concretely forbidden: the target's inflected form (or the bare lexeme, when the task is lexical) appearing elsewhere in the sentence; an L1 gloss or near-synonym that names the exact target word; a cue phrase that makes the fill mechanical. Negative example — "Bu ___ çok eski. Bu kitabı dün aldım. (kitap)" leaks "kitabı" in the next clause, and a \`glossEn\` like "I drink the coffee (kahveyi)" that spells out the inflected form is forbidden. This is the generator-side guard for the validator's \`contextSpoilsAnswer\` veto, which remains in force.
+- **Stay on target.** The blank MUST require the cell's declared grammar point ({{grammarPointName}}) to solve — not merely a related or incidentally-present construction. A fill that happens to obey the rule while actually testing a different grammar-point key is off-target: e.g. in a \`tr-a1-vowel-harmony\` cell, a blank whose answer is the locative \`-DA\` ("evde") tests locative *selection* — its own grammar point — and only incidentally obeys vowel harmony, so it does not drill harmony. Choose a blank that cannot be solved without applying {{grammarPointName}}. This is the generator-side guard for the validator's \`grammarPointMatch=false\` flag.
+- **One correct fill, or enumerate them.** Before finalizing, verify that exactly one form fills the blank — or that \`acceptableAnswers\` lists every form that does. If a competent learner could defend a second word/form as correct given only the visible context, the draft is ambiguous: either tighten the sentence so only one fits, or enumerate all of them in \`acceptableAnswers\`. Do not ship a lone \`correctAnswer\` when the context admits synonyms or alternative inflections. This reinforces the **Ambiguous blank** rule above and reduces the validator's \`ambiguous\` flag.
 - Vocabulary outside CEFR {{cefrLevel}} is forbidden unless the exercise explicitly tests it.
 - **Cell-level coverage for \`tr-a1-vowel-harmony\`.** This cell drills BOTH 2-way (low-vowel e/a) AND 4-way (high-vowel i/ı/u/ü) harmony. Drafts that only test the plural suffix -lAr/-lEr cover one half of the grammar point and are forbidden in the cell-wide majority. Across a batch for this cell: (a) at least three of the four high-vowel slots (i, ı, u, ü) MUST be exercised by non-plural suffixes (accusative -(y)I, locative -DA on a high-vowel stem, possessive -(s)I, dative -(y)A on a high-vowel stem, past -DI); (b) both low-vowel slots (e and a) MUST appear at least once; (c) the plural suffix -lAr/-lEr MUST NOT be the blanked element in more than 50% of the batch. This constraint applies only to cells targeting \`tr-a1-vowel-harmony\` — other cells are unconstrained on this axis.
 - Do not produce an exercise that resembles any of these existing stems:
@@ -247,14 +255,26 @@ export function buildGenerationUserPrompt(
   inputs: GenerationPromptInputs,
   ordinal: number,
   topicDomain: string | null,
+  // R5.4: the frequency seed is injected HERE (per-draft user prompt), never in
+  // the cached system prompt, so the Anthropic cache prefix stays byte-identical
+  // across the batch. `null`/absent → unseeded (byte-identical to the prior
+  // output, preserving back-compat for existing callers).
+  seedWord: string | null = null,
 ): string {
   const toolName = TOOL_NAME_BY_TYPE[inputs.exerciseType];
   const domain = topicDomain ?? "mixed";
+  // R5.5: a LOOSE constraint — anchor on the seed, but allow a similar-frequency
+  // substitute when it doesn't fit the grammar point, so seeding doesn't trade
+  // dedup rejections for quality rejections.
+  const seedBlock =
+    seedWord && seedWord.length > 0
+      ? `Build this exercise around the word "${seedWord}". If "${seedWord}" does not fit ${inputs.grammarPoint.name} naturally, choose a related content word of similar frequency instead.\n\n`
+      : "";
   return `Produce exercise #${ordinal + 1}.
 
 Topic domain: ${domain}
 
-Use the ${toolName} tool.`;
+${seedBlock}Use the ${toolName} tool.`;
 }
 
 // ---------------------------------------------------------------------------
@@ -278,7 +298,11 @@ export function canonicalSurface(content: ExerciseContent): string {
     case ExerciseType.TRANSLATION:
       return normaliseSurface(content.sourceText);
     case ExerciseType.VOCAB_RECALL:
-      return normaliseSurface(content.expectedWord);
+      // Word + retrieval cue. Same word with a different cue (`prompt`) is a
+      // distinct surface — R6 allows up to N exercises per word — but an
+      // identical (word, cue) pair collapses to the same key and is blocked
+      // as an exact duplicate.
+      return `${normaliseSurface(content.expectedWord)}::${normaliseSurface(content.prompt)}`;
     default: {
       const _exhaustive: never = content;
       throw new Error(

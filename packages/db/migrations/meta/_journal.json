@@ -92,6 +92,13 @@
       "when": 1779640199226,
       "tag": "0012_add_rejection_reason_counts_to_generation_jobs",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1779713931972,
+      "tag": "0013_vocab_word_index",
+      "breakpoints": true
     }
   ]
 }

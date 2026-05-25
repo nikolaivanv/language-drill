@@ -20,6 +20,8 @@
  */
 
 import type Anthropic from '@anthropic-ai/sdk';
+import { ExerciseType } from '@language-drill/shared';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import {
   GENERATION_MODEL,
   ZERO_USAGE,
@@ -27,6 +29,7 @@ import {
   canonicalSurface,
   generateBatch,
   getCurrentLlmTraceContext,
+  loadFrequency,
   validateDraft,
   withLlmTrace,
   type ClaudeUsageBreakdown,
@@ -46,6 +49,50 @@ import { applyDeterministicChecks } from './deterministic-checks';
 import { routeValidationResult } from './routing';
 
 const MAX_DEDUP_RETRIES = 3;
+
+/**
+ * R6 — maximum approved/flagged `vocab_recall` exercises permitted per
+ * `expectedWord` within a single cell. The `word::cue` dedup key (task 21)
+ * lets the same word recur with a different retrieval cue; this count cap
+ * stops context variation from collapsing vocabulary breadth — once a word
+ * holds N exercises, a fresh draft for it is treated as a collision and the
+ * generator is asked for a different word. Exported so the prior-surface
+ * fetch (`run-one-cell`) can flag at-cap words as the avoid-set with the same
+ * threshold (task 23).
+ */
+export const VOCAB_MAX_PER_WORD = 4;
+
+/**
+ * Counts the approved/flagged `vocab_recall` rows already stored for
+ * `(cell, expectedWord)`. Scoped to exactly the rows the partial index
+ * `exercises_vocab_word_idx` covers (review_status IN auto-approved /
+ * manual-approved / flagged), so the count is index-backed. Drives the R6
+ * per-word cap below.
+ */
+async function countApprovedForWord(
+  db: Db,
+  cell: Cell,
+  expectedWord: string,
+): Promise<number> {
+  const rows = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(exercises)
+    .where(
+      and(
+        eq(exercises.language, cell.language),
+        eq(exercises.difficulty, cell.cefrLevel),
+        eq(exercises.type, cell.exerciseType),
+        eq(exercises.grammarPointKey, cell.grammarPoint.key),
+        eq(sql`content_json->>'expectedWord'`, expectedWord),
+        inArray(exercises.reviewStatus, [
+          'auto-approved',
+          'manual-approved',
+          'flagged',
+        ]),
+      ),
+    );
+  return rows[0]?.n ?? 0;
+}
 
 /**
  * Outcome of a single regeneration attempt. `ok: true` means the generator
@@ -92,6 +139,16 @@ export type DraftOutcome = {
    */
   parserFailedAtFinal?: boolean;
   /**
+   * Set to `true` ONLY when this ordinal's FIRST validation (computed by the
+   * parallel validator pool) was a parse-failed sentinel — the validator
+   * returned a malformed tool call that raised a `ValidationParseError`
+   * (R8.3). The ordinal terminates `rejected` without re-validating; the
+   * caller (`runOneCell`) bumps `CellResult.validatorParseFailedCount` so the
+   * structured log separates validator-parse failures from genuine vetoes
+   * (mirrors `parserFailedAtFinal`, which counts *generator* parse failures).
+   */
+  validatorParseFailedAtFirst?: boolean;
+  /**
    * The validator's rejection reasons for this discarded ordinal, set ONLY
    * when `terminalStatus === 'rejected'`. For a genuine validation veto this
    * is `RoutingDecision.flaggedReasons` (low-quality / context-spoils /
@@ -111,6 +168,36 @@ export type DraftOutcome = {
  * from genuine content rejections.
  */
 export const PARSER_FAILURE_REASON = 'parser failure (retry exhausted)';
+
+/**
+ * Synthetic rejection reason for an ordinal whose VALIDATOR returned a
+ * malformed tool call on its first validation (a `ValidationParseError` caught
+ * by `runValidatorPool`, R8). Kept distinct from `PARSER_FAILURE_REASON`
+ * (a *generator* parse failure) so the reason distribution separates "the
+ * validator emitted an unparseable response" from genuine content vetoes.
+ */
+export const VALIDATOR_PARSE_FAILURE_REASON =
+  'validator parse failure (malformed response)';
+
+/**
+ * Builds the terminal outcome for an ordinal whose first validation (from the
+ * validator pool) was a parse-failed sentinel (R8.3). Routes straight to
+ * `rejected` WITHOUT re-validating: the validator already returned a malformed
+ * response for this draft, and one bad response must cost at most one ordinal,
+ * never the whole cell. `validatedCount` is 1 (the validator was invoked
+ * once); the failed call's token usage is unrecoverable from the thrown
+ * `ValidationParseError`, so `extraUsage` is zero.
+ */
+export function validatorParseFailedOutcome(): DraftOutcome {
+  return {
+    terminalStatus: 'rejected',
+    validatorParseFailedAtFirst: true,
+    rejectionReasons: [VALIDATOR_PARSE_FAILURE_REASON],
+    extraUsage: ZERO_USAGE,
+    extraProduced: 0,
+    validatedCount: 1,
+  };
+}
 
 export type ValidateAndInsertOpts = {
   db: Db;
@@ -190,6 +277,18 @@ export async function validateAndInsertWithRetry(
   // function without a parent `withLlmTrace` scope; in that case the
   // Anthropic Proxy is already a no-op for tracing, so we skip the wrap
   // rather than fabricate a context with missing required fields.
+  // R5: the ordinal's frequency seed — used in two places below: persisted into
+  // content_json (writer-only, for the cross-run exclude set) AND surfaced as
+  // named per-ordinal trace metadata (`seedWord`/`seedRank`) so seeded vs
+  // unseeded `generate` cohorts are queryable (R5.7). `seedRank` is the lemma's
+  // dictionary rank, looked up from the bundled frequency file (omitted when
+  // the lemma is not a surface key). Only cloze/translation cells carry seeds.
+  const seedWord = opts.spec.seedWords?.[opts.ordinal] ?? null;
+  const seedRank =
+    seedWord !== null
+      ? loadFrequency(opts.cell.language).lookup(seedWord)?.rank
+      : undefined;
+
   const parentCtx = getCurrentLlmTraceContext();
   const body = async (): Promise<DraftOutcome> => {
   let extraUsage: ClaudeUsageBreakdown = ZERO_USAGE;
@@ -295,28 +394,57 @@ export async function validateAndInsertWithRetry(
     }
 
     // ---- Auto-approved or flagged branch — attempt INSERT ---------------
+    // R5.3/R5.7: persist the ordinal's frequency seed (hoisted above) as a
+    // writer-only field alongside `_dedupKey` — same pattern (invisible to
+    // runtime consumers, which discriminate on `type`). `fetchPriorSeeds`
+    // (task 15) reads it back via `content_json->>'seedWord'` to build the
+    // cross-run "already anchored" exclude set.
     const dedupKey = canonicalSurface(currentDraft.contentJson);
-    const contentWithKey = { ...currentDraft.contentJson, _dedupKey: dedupKey };
-    const inserted = await opts.db
-      .insert(exercises)
-      .values({
-        id: currentDraft.id,
-        type: opts.cell.exerciseType,
-        language: opts.cell.language,
-        difficulty: opts.cell.cefrLevel,
-        contentJson: contentWithKey,
-        grammarPointKey: opts.cell.grammarPoint.key,
-        topicDomain: opts.args.topicDomain,
-        generationSource: 'claude-realtime' as const,
-        modelId: GENERATION_MODEL,
-        reviewStatus: decision.reviewStatus,
-        qualityScore: result.qualityScore,
-        flaggedReasons:
-          decision.flaggedReasons.length > 0 ? decision.flaggedReasons : null,
-        generatedAt: opts.generatedAt,
-      })
-      .onConflictDoNothing()
-      .returning({ id: exercises.id });
+    const contentWithKey = {
+      ...currentDraft.contentJson,
+      _dedupKey: dedupKey,
+      ...(seedWord ? { seedWord } : {}),
+    };
+
+    // R6 per-word cap: for vocab_recall, refuse to insert an (N+1)-th exercise
+    // for an already-saturated word. Treated as a collision (empty `inserted`)
+    // so the shared dedup-retry path below regenerates with a different word;
+    // if every retry stays at cap, the ordinal ends `dedup-given-up` (existing
+    // accounting). The `_dedupKey` unique index would NOT catch this — the
+    // `word::cue` key differs per cue — so the count is the only guard.
+    const capReached =
+      opts.cell.exerciseType === ExerciseType.VOCAB_RECALL &&
+      currentDraft.contentJson.type === ExerciseType.VOCAB_RECALL &&
+      (await countApprovedForWord(
+        opts.db,
+        opts.cell,
+        currentDraft.contentJson.expectedWord,
+      )) >= VOCAB_MAX_PER_WORD;
+
+    const inserted = capReached
+      ? []
+      : await opts.db
+          .insert(exercises)
+          .values({
+            id: currentDraft.id,
+            type: opts.cell.exerciseType,
+            language: opts.cell.language,
+            difficulty: opts.cell.cefrLevel,
+            contentJson: contentWithKey,
+            grammarPointKey: opts.cell.grammarPoint.key,
+            topicDomain: opts.args.topicDomain,
+            generationSource: 'claude-realtime' as const,
+            modelId: GENERATION_MODEL,
+            reviewStatus: decision.reviewStatus,
+            qualityScore: result.qualityScore,
+            flaggedReasons:
+              decision.flaggedReasons.length > 0
+                ? decision.flaggedReasons
+                : null,
+            generatedAt: opts.generatedAt,
+          })
+          .onConflictDoNothing()
+          .returning({ id: exercises.id });
 
     if (inserted.length > 0) {
       // Tag insert. PK (exerciseId, skillTopicId) covers re-runs.
@@ -346,7 +474,9 @@ export async function validateAndInsertWithRetry(
       };
     }
 
-    // INSERT was a no-op: dedup-index conflict on _dedupKey within the cell.
+    // INSERT was a no-op: dedup-index conflict on _dedupKey within the cell,
+    // OR the R6 per-word cap was reached (skipped INSERT). Either way the slot
+    // is exhausted for this draft — regenerate with a bumped seed.
     firstAttemptDeduped = true;
     if (attempt < MAX_DEDUP_RETRIES) {
       const retry = await runRetryGeneration(
@@ -392,6 +522,14 @@ export async function validateAndInsertWithRetry(
   };
 
   return parentCtx
-    ? withLlmTrace({ ...parentCtx, exerciseId: opts.draft.id }, body)
+    ? withLlmTrace(
+        {
+          ...parentCtx,
+          exerciseId: opts.draft.id,
+          ...(seedWord !== null ? { seedWord } : {}),
+          ...(seedRank !== undefined ? { seedRank } : {}),
+        },
+        body,
+      )
     : body();
 }

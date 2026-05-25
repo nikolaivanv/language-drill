@@ -92,7 +92,9 @@ function cellResultBase(): CellResult {
     dedupGivenUpCount: 0,
     malformedDraftCount: 0,
     parserFailedCount: 0,
+    validatorParseFailedCount: 0,
     rejectionReasonCounts: {},
+    earlyBailed: false,
   };
 }
 
@@ -106,6 +108,8 @@ describe('summarizeResult', () => {
       dedupGivenUp: 0,
       malformedDrafts: 0,
       parserFailedOrdinals: 0,
+      validatorParseFailedOrdinals: 0,
+      earlyBailed: false,
       rejectionReasons: {},
       durationMs: 0,
     });
@@ -125,6 +129,8 @@ describe('summarizeResult', () => {
       dedupGivenUp: 0,
       malformedDrafts: 0,
       parserFailedOrdinals: 0,
+      validatorParseFailedOrdinals: 0,
+      earlyBailed: false,
       rejectionReasons: {},
       durationMs: 0,
     });
@@ -144,6 +150,8 @@ describe('summarizeResult', () => {
       dedupGivenUp: 0,
       malformedDrafts: 0,
       parserFailedOrdinals: 0,
+      validatorParseFailedOrdinals: 0,
+      earlyBailed: false,
       rejectionReasons: {},
       durationMs: 0,
     });
@@ -165,6 +173,8 @@ describe('summarizeResult', () => {
       dedupGivenUp: 0,
       malformedDrafts: 0,
       parserFailedOrdinals: 0,
+      validatorParseFailedOrdinals: 0,
+      earlyBailed: false,
       rejectionReasons: {},
       durationMs: 0,
     });
@@ -183,6 +193,8 @@ describe('summarizeResult', () => {
       dedupGivenUp: 0,
       malformedDrafts: 0,
       parserFailedOrdinals: 0,
+      validatorParseFailedOrdinals: 0,
+      earlyBailed: false,
       rejectionReasons: {},
       durationMs: 180_000,
     });
@@ -207,6 +219,8 @@ describe('summarizeResult', () => {
       dedupGivenUp: 1,
       malformedDrafts: 0,
       parserFailedOrdinals: 0,
+      validatorParseFailedOrdinals: 0,
+      earlyBailed: false,
       rejectionReasons: {},
       durationMs: 1234,
     });
@@ -229,6 +243,8 @@ describe('summarizeResult', () => {
       dedupGivenUp: 0,
       malformedDrafts: 1,
       parserFailedOrdinals: 0,
+      validatorParseFailedOrdinals: 0,
+      earlyBailed: false,
       rejectionReasons: {},
       durationMs: 360_000,
     });
@@ -254,6 +270,34 @@ describe('summarizeResult', () => {
       dedupGivenUp: 0,
       malformedDrafts: 0,
       parserFailedOrdinals: 1,
+      validatorParseFailedOrdinals: 0,
+      earlyBailed: false,
+      rejectionReasons: {},
+      durationMs: 120_000,
+    });
+  });
+
+  it('surfaces validatorParseFailedCount as validatorParseFailedOrdinals (R8.3)', () => {
+    // Validator-parse-failed ordinals are also counted in rejectedCount (they
+    // terminate with terminalStatus='rejected'), but the dedicated field
+    // splits "the validator emitted a malformed response" from genuine vetoes.
+    const r: CellResult = {
+      ...cellResultBase(),
+      insertedCount: 2,
+      rejectedCount: 1,
+      validatorParseFailedCount: 1,
+      durationMs: 120_000,
+    };
+    expect(summarizeResult(r)).toEqual({
+      inserted: 2,
+      approved: 2,
+      flagged: 0,
+      rejected: 1,
+      dedupGivenUp: 0,
+      malformedDrafts: 0,
+      parserFailedOrdinals: 0,
+      validatorParseFailedOrdinals: 1,
+      earlyBailed: false,
       rejectionReasons: {},
       durationMs: 120_000,
     });
@@ -277,11 +321,27 @@ describe('summarizeResult', () => {
       dedupGivenUp: 0,
       malformedDrafts: 0,
       parserFailedOrdinals: 0,
+      validatorParseFailedOrdinals: 0,
+      earlyBailed: false,
       rejectionReasons: {
         'context spoils answer': 3,
         'low quality score (<0.5)': 2,
       },
       durationMs: 0,
     });
+  });
+
+  it('surfaces earlyBailed on the projection (R4.3 — distinguishes a bail from a normal completion)', () => {
+    // The cell still closed `succeeded` with accurate counts, but the dedup
+    // circuit breaker tripped mid-run — the log line must carry that distinction.
+    const r: CellResult = {
+      ...cellResultBase(),
+      status: 'succeeded',
+      insertedCount: 6,
+      earlyBailed: true,
+    };
+    expect(summarizeResult(r).earlyBailed).toBe(true);
+    // …and a normal completion projects false.
+    expect(summarizeResult(cellResultBase()).earlyBailed).toBe(false);
   });
 });

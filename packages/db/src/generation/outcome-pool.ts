@@ -21,19 +21,45 @@
  */
 
 import type Anthropic from '@anthropic-ai/sdk';
-import type {
-  ExerciseDraft,
-  GenerationSpec,
-  ValidateDraftResult,
-} from '@language-drill/ai';
+import type { ExerciseDraft, GenerationSpec } from '@language-drill/ai';
 
 import type { Db } from '../client';
 
 import type { Cell } from './cells';
 import {
   validateAndInsertWithRetry,
+  validatorParseFailedOutcome,
   type DraftOutcome,
 } from './validate-and-insert';
+import {
+  isParseFailedValidation,
+  type ValidatorPoolEntry,
+} from './validator-pool';
+
+/**
+ * R4.2 — within-run early-bail probe size. The circuit breaker only arms after
+ * this many outcomes have resolved, so a small unlucky run of collisions on a
+ * tiny sample can't trip it.
+ */
+export const EARLY_BAIL_PROBE_COUNT = 8;
+
+/**
+ * R4.2 — dedup-domination threshold. Once `EARLY_BAIL_PROBE_COUNT` outcomes have
+ * resolved, the breaker trips if at least this fraction of them are
+ * `dedup-given-up` (the search space is exhausted; further ordinals would
+ * mostly collide for no new variety).
+ */
+export const EARLY_BAIL_RATIO = 0.7;
+
+export type RunOutcomePoolResult = {
+  results: Map<number, DraftOutcome>;
+  /**
+   * R4.2/R4.3 — `true` when the dedup circuit breaker tripped mid-run and the
+   * pool stopped dispatching remaining ordinals. The cell still closes
+   * `succeeded`; `runOneCell` surfaces this on `CellResult` + the log (task 20).
+   */
+  earlyBailed: boolean;
+};
 
 export async function runOutcomePool(opts: {
   db: Db;
@@ -48,10 +74,10 @@ export async function runOutcomePool(opts: {
     maxCostUsd: number;
   };
   generatedAt: Date;
-  firstValidations: Map<number, ValidateDraftResult>;
+  firstValidations: Map<number, ValidatorPoolEntry>;
   signal?: AbortSignal;
   concurrency: number;
-}): Promise<Map<number, DraftOutcome>> {
+}): Promise<RunOutcomePoolResult> {
   const {
     db,
     client,
@@ -71,33 +97,64 @@ export async function runOutcomePool(opts: {
 
   const results = new Map<number, DraftOutcome>();
   let nextOrdinal = 0;
+  // R4.2 running counters + breaker flag. A plain boolean (not a derived
+  // AbortController passed downstream) is deliberate: workers `return`
+  // gracefully on it so the cell closes `succeeded` (R4.3). Routing a bail
+  // signal into `validateAndInsertWithRetry` would instead make in-flight calls
+  // throw `Aborted by user (SIGINT)` and fail-close the cell. The parent
+  // `signal` (genuine SIGINT / soft-deadline) keeps its fail-close throw below.
+  let dedupGivenUpCount = 0;
+  let earlyBailed = false;
 
   const worker = async (): Promise<void> => {
     for (;;) {
       if (signal?.aborted) throw new Error('Aborted by user (SIGINT)');
+      // R4.2 — circuit breaker tripped: stop pulling new ordinals WITHOUT
+      // throwing. In-flight ordinals already past this point finish and record
+      // their outcomes; only not-yet-dispatched ordinals are skipped.
+      if (earlyBailed) return;
       // JS is single-threaded — `nextOrdinal++` and the bound check both
       // resolve before any `await`, so no two workers ever read the same
       // ordinal even with N workers contending. Same property is what lets
       // `Map.set(ordinal, …)` skip locking.
       const ordinal = nextOrdinal++;
       if (ordinal >= drafts.length) return;
-      const outcome = await validateAndInsertWithRetry({
-        db,
-        client,
-        spec,
-        draft: drafts[ordinal],
-        ordinal,
-        cell,
-        args,
-        generatedAt,
-        signal,
-        precomputedFirstValidation: firstValidations.get(ordinal),
-      });
+      // R8.3: a parse-failed first-validation means the validator returned a
+      // malformed response for this draft. Route it straight to `rejected`
+      // (counted as a validator-parse failure) instead of re-validating — one
+      // bad response costs one ordinal, never the whole cell.
+      const pre = firstValidations.get(ordinal);
+      let outcome: DraftOutcome;
+      if (pre && isParseFailedValidation(pre)) {
+        outcome = validatorParseFailedOutcome();
+      } else {
+        outcome = await validateAndInsertWithRetry({
+          db,
+          client,
+          spec,
+          draft: drafts[ordinal],
+          ordinal,
+          cell,
+          args,
+          generatedAt,
+          signal,
+          precomputedFirstValidation: pre,
+        });
+      }
       results.set(ordinal, outcome);
+      if (outcome.terminalStatus === 'dedup-given-up') dedupGivenUpCount++;
+      // Arm only after the probe count; trip when dedup dominates the sample.
+      if (
+        !earlyBailed &&
+        results.size >= EARLY_BAIL_PROBE_COUNT &&
+        dedupGivenUpCount / results.size >= EARLY_BAIL_RATIO
+      ) {
+        earlyBailed = true;
+      }
     }
   };
 
   const workerCount = Math.min(concurrency, drafts.length);
   await Promise.all(Array.from({ length: workerCount }, worker));
-  return results;
+  return { results, earlyBailed };
 }

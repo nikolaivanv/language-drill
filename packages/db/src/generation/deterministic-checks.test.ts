@@ -6,6 +6,8 @@ import {
   Language,
 } from '@language-drill/shared';
 
+import { checkTurkishCloze } from '@language-drill/ai';
+
 import { applyDeterministicChecks } from './deterministic-checks';
 import type { RoutingDecision } from './routing';
 
@@ -126,4 +128,58 @@ describe('applyDeterministicChecks — pass-through', () => {
       decision,
     );
   });
+});
+
+// ---------------------------------------------------------------------------
+// R1.5 — whole-word blanks must not regress the deterministic harmony gate.
+// Under the new universal whole-word convention the `___` is a standalone token
+// (whitespace before it), so `extractSuffixalStem` finds no visible suffixal
+// stem and the gate is inert: it can never emit a false wrong-harmony /
+// non-word-stem on a full inflected surface — including stems that mutate at the
+// boundary, the cases a partial-blank checker was most likely to misfire on.
+// ---------------------------------------------------------------------------
+
+describe('whole-word TR cloze — R1.5 no harmony-gate regression', () => {
+  // Each fixture blanks the WHOLE inflected word (lemma in parens) over a stem
+  // that mutates under the inflection — the format-change risk surface for R1.
+  const wholeWordClozes: ReadonlyArray<{
+    label: string;
+    content: ClozeContent;
+    answer: string;
+  }> = [
+    {
+      label: 'accusative + buffer -y- (kahve → kahveyi)',
+      content: cloze('Annem her sabah ___ içiyor. (kahve)', 'kahveyi'),
+      answer: 'kahveyi',
+    },
+    {
+      label: 'accusative + consonant softening p→b (kitap → kitabı)',
+      content: cloze('Öğretmen ___ açtı. (kitap)', 'kitabı'),
+      answer: 'kitabı',
+    },
+    {
+      label: 'dative + consonant softening k→ğ (köpek → köpeğe)',
+      content: cloze('Mamayı ___ verdim. (köpek)', 'köpeğe'),
+      answer: 'köpeğe',
+    },
+  ];
+
+  for (const { label, content, answer } of wholeWordClozes) {
+    it(`emits no false wrong-harmony/non-word-stem verdict: ${label}`, () => {
+      // The checker sees no suffixal stem (whitespace before `___`), so it must
+      // NOT manufacture a harmony/word-formedness verdict on the whole word.
+      const verdict = checkTurkishCloze(content);
+      expect(verdict.kind).not.toBe('wrong-harmony');
+      expect(verdict.kind).not.toBe('non-word-stem');
+
+      // The routing decision therefore passes through untouched (no downgrade).
+      const decision = approved();
+      expect(
+        applyDeterministicChecks(decision, content, Language.TR),
+      ).toEqual(decision);
+
+      // And the stored answer is the COMPLETE inflected word, not a bare suffix.
+      expect(content.correctAnswer).toBe(answer);
+    });
+  }
 });

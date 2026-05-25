@@ -1,11 +1,16 @@
 import { describe, it, expect } from "vitest";
-import { Language, type LearningLanguage } from "@language-drill/shared";
+import { CefrLevel, Language, type LearningLanguage } from "@language-drill/shared";
 
 import {
   assertFrequencyFile,
   assertStopwordList,
+  cefrRankWindow,
+  frequencyBand,
   loadFrequency,
 } from "./index";
+
+import esFreq from "./es.json";
+import esStopwords from "./stopwords-es.json";
 
 // ---------------------------------------------------------------------------
 // Frequency-lookup contract tests (more-responsive-reading spec Req 1.1, 1.2,
@@ -170,5 +175,121 @@ describe("module-init guards — Error Handling fail-fast", () => {
     it("accepts an empty array", () => {
       expect(() => assertStopwordList(Language.ES, [])).not.toThrow();
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// CEFR → frequency-rank window (exercise-generation-quality R5.2). Coarse,
+// design-tunable proxy used by the seed picker.
+// ---------------------------------------------------------------------------
+
+describe("cefrRankWindow", () => {
+  it("maps each CEFR level to its coarse rank band (spec boundaries)", () => {
+    expect(cefrRankWindow(CefrLevel.A1)).toEqual({ rankMin: 1, rankMax: 1000 });
+    expect(cefrRankWindow(CefrLevel.A2)).toEqual({ rankMin: 1000, rankMax: 2500 });
+    expect(cefrRankWindow(CefrLevel.B1)).toEqual({ rankMin: 2500, rankMax: 5000 });
+    expect(cefrRankWindow(CefrLevel.B2)).toEqual({ rankMin: 5000, rankMax: 10000 });
+    expect(cefrRankWindow(CefrLevel.C1)).toEqual({ rankMin: 10000, rankMax: 20000 });
+    expect(cefrRankWindow(CefrLevel.C2)).toEqual({ rankMin: 20000, rankMax: 40000 });
+  });
+
+  it("windows are contiguous and strictly ascending (no gaps)", () => {
+    const levels = [
+      CefrLevel.A1,
+      CefrLevel.A2,
+      CefrLevel.B1,
+      CefrLevel.B2,
+      CefrLevel.C1,
+      CefrLevel.C2,
+    ];
+    for (let i = 1; i < levels.length; i++) {
+      const prev = cefrRankWindow(levels[i - 1]);
+      const cur = cefrRankWindow(levels[i]);
+      expect(cur.rankMin).toBe(prev.rankMax); // contiguous: next picks up where prev ends
+      expect(cur.rankMax).toBeGreaterThan(cur.rankMin); // non-empty, ascending
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Frequency band accessor (R5.1, R5.2): rank-banded, stopword-free, lemma-
+// deduped, rank-sorted seed candidates with per-(language, band) caching.
+// ---------------------------------------------------------------------------
+
+describe("frequencyBand", () => {
+  const A1 = cefrRankWindow(CefrLevel.A1); // { 1, 1000 }
+  const B2 = cefrRankWindow(CefrLevel.B2); // { 5000, 10000 }
+
+  it("excludes closed-class stopwords from the band", () => {
+    const { isStopword } = loadFrequency(Language.ES);
+    const band = frequencyBand(Language.ES, A1.rankMin, A1.rankMax);
+    // Every returned lemma is a content word, never a closed-class stopword.
+    for (const lemma of band) {
+      expect(isStopword(lemma)).toBe(false);
+    }
+    // And a specific known top-rank stopword is absent.
+    expect(band).not.toContain("el");
+  });
+
+  it("dedupes by lemma — no repeated entries", () => {
+    const band = frequencyBand(Language.ES, A1.rankMin, A1.rankMax);
+    expect(new Set(band).size).toBe(band.length);
+  });
+
+  it("restricts candidates to the requested rank window", () => {
+    // A top-frequency content lemma (rank ~74) belongs to A1, not to B2.
+    const casaLemma = loadFrequency(Language.ES).lookup("casa")!.lemma;
+    expect(frequencyBand(Language.ES, A1.rankMin, A1.rankMax)).toContain(casaLemma);
+    expect(frequencyBand(Language.ES, B2.rankMin, B2.rankMax)).not.toContain(
+      casaLemma,
+    );
+  });
+
+  it("is sorted by rank ascending and every lemma is justified in-window", () => {
+    // Reference: lemma → lowest in-window rank, mirroring the production
+    // window-first dedup, derived independently from the raw bundled JSON +
+    // stopword list. Lets us assert window-restriction and sort order without
+    // the band exposing ranks.
+    const freq = esFreq as Record<string, { lemma: string; rank: number }>;
+    const stop = new Set(esStopwords as string[]);
+    const inWindowRank = new Map<string, number>();
+    for (const [surface, e] of Object.entries(freq)) {
+      if (e.rank < A1.rankMin || e.rank > A1.rankMax) continue;
+      if (stop.has(surface) || stop.has(e.lemma)) continue;
+      const existing = inWindowRank.get(e.lemma);
+      if (existing === undefined || e.rank < existing) {
+        inWindowRank.set(e.lemma, e.rank);
+      }
+    }
+
+    const band = frequencyBand(Language.ES, A1.rankMin, A1.rankMax);
+    expect(band.length).toBeGreaterThan(0);
+
+    const ranks = band.map((lemma) => {
+      const r = inWindowRank.get(lemma);
+      // window-restricted: each returned lemma has an in-window justification.
+      expect(r).toBeDefined();
+      expect(r!).toBeGreaterThanOrEqual(A1.rankMin);
+      expect(r!).toBeLessThanOrEqual(A1.rankMax);
+      return r!;
+    });
+
+    // rank-sorted ascending.
+    for (let i = 1; i < ranks.length; i++) {
+      expect(ranks[i]).toBeGreaterThanOrEqual(ranks[i - 1]);
+    }
+  });
+
+  it("returns the same cached instance for the same (language, band)", () => {
+    const a = frequencyBand(Language.TR, 1, 1000);
+    const b = frequencyBand(Language.TR, 1, 1000);
+    expect(a).toBe(b); // identity — repeated calls reuse the cached frozen array
+    // A different band is a different instance.
+    expect(frequencyBand(Language.TR, 2500, 5000)).not.toBe(a);
+  });
+
+  it("returns a frozen array (callers cannot mutate the cached band)", () => {
+    const band = frequencyBand(Language.ES, A1.rankMin, A1.rankMax);
+    expect(Object.isFrozen(band)).toBe(true);
   });
 });

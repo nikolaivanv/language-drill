@@ -98,6 +98,12 @@ export function ClozeExercise({
         <p className="t-small text-ink-mute">{content.context}</p>
       )}
 
+      {/* Optional L1 (English) disambiguation gloss — A1–A2 case clozes. Italic
+          to read as a meaning hint, visually distinct from the `context` line. */}
+      {content.glossEn && content.glossEn.length > 0 && (
+        <p className="t-small italic text-ink-mute">{content.glossEn}</p>
+      )}
+
       <p className="t-display-s">
         {hasBlank ? (
           <>

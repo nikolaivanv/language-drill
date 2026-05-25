@@ -111,6 +111,11 @@ export const CLOZE_GENERATION_TOOL: Anthropic.Tool = {
         description:
           "Optional topic theme (e.g. 'travel', 'work', 'family').",
       },
+      glossEn: {
+        type: "string",
+        description:
+          "Optional one-line English gloss shown above the sentence as a disambiguation device — chiefly for Turkish accusative (definiteness-marking) clozes where a short L2-only sentence cannot force the case. Include it for CEFR A1–A2; omit it for B1+. It MUST convey meaning/case WITHOUT stating the rule's outcome or naming the required form: 'I drink the coffee' is allowed; 'use the accusative -yi' is forbidden (same anti-spoil constraint as `context`).",
+      },
     },
     required: ["instructions", "sentence", "correctAnswer"],
   },
@@ -246,6 +251,15 @@ export type GenerationSpec = {
    * — so the prompt-cache prefix stays stable.
    */
   priorPoolSurfaces?: readonly string[];
+  /**
+   * Per-ordinal frequency seed (R5): `seedWords[ordinal]` is a content-word
+   * lemma the generator should build the draft around, or `null` for an
+   * unseeded ordinal. Injected into the per-draft USER prompt only (never the
+   * cached system prompt), so the Anthropic cache prefix stays byte-identical
+   * across the batch. Populated by `runOneCell` for cloze/translation cells
+   * (task 15); `undefined` → every ordinal unseeded.
+   */
+  seedWords?: readonly (string | null)[];
 };
 
 export type ExerciseDraft = {
@@ -379,6 +393,7 @@ export function parseGeneratedClozeDraft(
   const options = optionalStringArray(input, "options", ctx);
   const contextField = optionalString(input, "context", ctx);
   const topicHint = optionalString(input, "topicHint", ctx);
+  const glossEn = optionalString(input, "glossEn", ctx);
 
   if (correctAnswer.trim().length === 0) {
     throw new Error(
@@ -411,6 +426,7 @@ export function parseGeneratedClozeDraft(
     ...(options !== undefined ? { options } : {}),
     ...(contextField !== undefined ? { context: contextField } : {}),
     ...(topicHint !== undefined ? { topicHint } : {}),
+    ...(glossEn !== undefined ? { glossEn } : {}),
   };
 }
 
@@ -592,6 +608,7 @@ export async function generateOneDraft(
     promptInputs,
     ordinal,
     spec.topicDomain,
+    spec.seedWords?.[ordinal] ?? null,
   );
   const tool = GENERATION_TOOL_BY_TYPE[spec.exerciseType];
 
