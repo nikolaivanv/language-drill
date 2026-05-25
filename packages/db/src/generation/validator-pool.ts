@@ -1,9 +1,15 @@
 /**
  * Bounded worker pool that fans out `validateDraft` calls across a draft set
  * with a fixed in-flight cap. Pure orchestration — no DB access, no business
- * logic, no per-ordinal state machine. The first worker throw rejects the
- * pool; in-flight calls drain in the background but no new ordinals are
- * dispatched.
+ * logic, no per-ordinal state machine.
+ *
+ * Failure contract (R8): a per-draft `ValidationParseError` (the validator
+ * returned a malformed tool call — e.g. a non-number `qualityScore`) is
+ * ISOLATED to its ordinal as a `{ kind: 'parse-failed', message }` sentinel in
+ * the result map; it does NOT reject the pool. Any OTHER throw (transport /
+ * 429 / network / SIGINT-abort) still rejects the pool on first occurrence —
+ * in-flight calls drain in the background but no new ordinals are dispatched —
+ * because retrying the whole cell on the next tick is the right response there.
  *
  * Consumed by `runOneCell` (Phase A — parallel first-validation). Dedup-retry
  * iterations (attempts 1+) keep calling `validateDraft` live inside
@@ -13,11 +19,33 @@
 
 import type Anthropic from '@anthropic-ai/sdk';
 import {
+  ValidationParseError,
   validateDraft,
   type ExerciseDraft,
   type GenerationSpec,
   type ValidateDraftResult,
 } from '@language-drill/ai';
+
+/**
+ * Sentinel stored in the result map when a single ordinal's first-validation
+ * raised a `ValidationParseError` (R8.2). The consumer (`outcome-pool` /
+ * `run-one-cell`, task 26) routes it to a `rejected` ordinal and counts it,
+ * instead of the whole cell failing closed.
+ */
+export type ParseFailedValidation = {
+  kind: 'parse-failed';
+  message: string;
+};
+
+/** A validator-pool result-map value: a real validation or a parse-fail sentinel. */
+export type ValidatorPoolEntry = ValidateDraftResult | ParseFailedValidation;
+
+/** Narrows a result-map entry to the parse-failed sentinel. */
+export function isParseFailedValidation(
+  entry: ValidatorPoolEntry,
+): entry is ParseFailedValidation {
+  return 'kind' in entry && entry.kind === 'parse-failed';
+}
 
 export async function runValidatorPool(opts: {
   drafts: readonly ExerciseDraft[];
@@ -25,13 +53,13 @@ export async function runValidatorPool(opts: {
   spec: GenerationSpec;
   signal?: AbortSignal;
   concurrency: number;
-}): Promise<Map<number, ValidateDraftResult>> {
+}): Promise<Map<number, ValidatorPoolEntry>> {
   const { drafts, client, spec, signal, concurrency } = opts;
   if (concurrency < 1) {
     throw new Error('runValidatorPool: concurrency must be >= 1');
   }
 
-  const results = new Map<number, ValidateDraftResult>();
+  const results = new Map<number, ValidatorPoolEntry>();
   let nextOrdinal = 0;
 
   const worker = async (): Promise<void> => {
@@ -43,13 +71,23 @@ export async function runValidatorPool(opts: {
       // `Map.set(ordinal, …)` skip locking.
       const ordinal = nextOrdinal++;
       if (ordinal >= drafts.length) return;
-      const validation = await validateDraft(
-        client,
-        drafts[ordinal],
-        spec,
-        signal,
-      );
-      results.set(ordinal, validation);
+      try {
+        const validation = await validateDraft(
+          client,
+          drafts[ordinal],
+          spec,
+          signal,
+        );
+        results.set(ordinal, validation);
+      } catch (err) {
+        // R8.2/R8.4: a malformed validator response is isolated to this
+        // ordinal; everything else (transport, abort) rejects the pool.
+        if (err instanceof ValidationParseError) {
+          results.set(ordinal, { kind: 'parse-failed', message: err.message });
+        } else {
+          throw err;
+        }
+      }
     }
   };
 

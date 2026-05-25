@@ -26,7 +26,7 @@ vi.mock('@language-drill/ai', async () => {
   };
 });
 
-import { validateDraft } from '@language-drill/ai';
+import { validateDraft, ValidationParseError } from '@language-drill/ai';
 
 import { runValidatorPool } from './validator-pool';
 
@@ -219,6 +219,60 @@ describe('runValidatorPool', () => {
         concurrency: 4,
       }),
     ).rejects.toThrow('validator boom');
+  });
+
+  it('isolates a ValidationParseError to its ordinal (sentinel, not rejection)', async () => {
+    const badOrdinal = 2;
+    mockValidateDraft.mockImplementation(async (_client, draft) => {
+      const ordinal = Number(draft.id.split('-')[1]);
+      if (ordinal === badOrdinal) {
+        throw new ValidationParseError(
+          'Invalid qualityScore: must be a number between 0 and 1, got undefined',
+        );
+      }
+      await delay(5);
+      return makeResult(ordinal);
+    });
+
+    // The whole pool resolves — the malformed response did NOT reject it (R8.2).
+    const results = await runValidatorPool({
+      drafts: makeDrafts(5),
+      client: mockClient,
+      spec,
+      concurrency: 3,
+    });
+
+    expect(results.size).toBe(5);
+    // The bad ordinal carries the parse-failed sentinel...
+    expect(results.get(badOrdinal)).toEqual({
+      kind: 'parse-failed',
+      message:
+        'Invalid qualityScore: must be a number between 0 and 1, got undefined',
+    });
+    // ...while every other ordinal validated normally.
+    for (const i of [0, 1, 3, 4]) {
+      expect(results.get(i)).toEqual(makeResult(i));
+    }
+  });
+
+  it('still rejects the pool on a non-parse (transport) error', async () => {
+    mockValidateDraft.mockImplementation(async (_client, draft) => {
+      const ordinal = Number(draft.id.split('-')[1]);
+      // A 429/network-style failure is NOT a ValidationParseError — it must
+      // still reject so the cell retries on the next tick (R8.4).
+      if (ordinal === 3) throw new Error('429 rate limited');
+      await delay(5);
+      return makeResult(ordinal);
+    });
+
+    await expect(
+      runValidatorPool({
+        drafts: makeDrafts(8),
+        client: mockClient,
+        spec,
+        concurrency: 4,
+      }),
+    ).rejects.toThrow('429 rate limited');
   });
 
   it('rejects with SIGINT message when signal is already aborted', async () => {

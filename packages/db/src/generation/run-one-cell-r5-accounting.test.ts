@@ -150,6 +150,9 @@ function makeApprovedOutcome(): DraftOutcome {
  * Minimal DB stub for the run-one-cell call paths exercised by this test:
  *   - `db.select(...).from(skillTopics).where(...).limit(1)` returns one row
  *     so the skill-topic precheck passes.
+ *   - `db.select(...).from(exercises).where(...)` (awaited directly) returns
+ *     `[]` so the R5 `fetchPriorSeeds` query (now run for CLOZE/translation
+ *     cells) yields an empty cross-run exclude set.
  *   - `db.insert(generationJobs).values(...)` resolves (audit row open).
  *   - `db.update(generationJobs).set(...).where(...)` resolves (audit row
  *     close with terminal counters).
@@ -159,10 +162,15 @@ function makeApprovedOutcome(): DraftOutcome {
  */
 function makeStubDb(): Db {
   const selectChain = {
+    // `where()` is a thenable resolving to `[]` (fetchPriorSeeds awaits it
+    // directly) that also carries `.limit()` for the skill-topic precheck and
+    // `.orderBy().limit()` for the vocab-priors query (unused for CLOZE).
     from: () => ({
-      where: () => ({
-        limit: () => Promise.resolve([{ id: 'skill-topic-stub' }]),
-      }),
+      where: () =>
+        Object.assign(Promise.resolve([] as unknown[]), {
+          limit: () => Promise.resolve([{ id: 'skill-topic-stub' }]),
+          orderBy: () => ({ limit: () => Promise.resolve([]) }),
+        }),
     }),
   };
   const insertChain = {
@@ -208,13 +216,15 @@ describe('runOneCell — R5.4 parserFailedCount accounting', () => {
     );
     // Ordinal 1 is the parser-failed-at-final outcome. The other two are
     // straightforward approved inserts so the cell otherwise succeeds.
-    mockOutcomePool.mockResolvedValue(
-      new Map<number, DraftOutcome>([
+    // `runOutcomePool` now returns `{ results, earlyBailed }` (R4.2).
+    mockOutcomePool.mockResolvedValue({
+      results: new Map<number, DraftOutcome>([
         [0, makeApprovedOutcome()],
         [1, makeRejectedOutcome(true)],
         [2, makeApprovedOutcome()],
       ]),
-    );
+      earlyBailed: false,
+    });
 
     const result: CellResult = await runOneCell({
       db: makeStubDb(),
@@ -250,5 +260,95 @@ describe('runOneCell — R5.4 parserFailedCount accounting', () => {
     // shape directly. Here we just confirm the source field is present and
     // non-zero so the projection has something to surface.
     expect(result.parserFailedCount).toBeGreaterThan(0);
+  });
+});
+
+describe('runOneCell — R4.3 earlyBailed accounting', () => {
+  it('records earlyBailed=true on CellResult while still closing succeeded with accurate counts', async () => {
+    const drafts = [makeDraft(0), makeDraft(1), makeDraft(2)];
+
+    mockGeneratorPool.mockResolvedValue({
+      drafts,
+      tokenUsage: ZERO_USAGE,
+      malformedDrafts: [],
+    });
+    mockValidatorPool.mockResolvedValue(
+      new Map([
+        [0, makeFirstValidation(0)],
+        [1, makeFirstValidation(1)],
+        [2, makeFirstValidation(2)],
+      ]),
+    );
+    // The pool reports it tripped the dedup circuit breaker mid-run. Only two
+    // ordinals resolved (the third was skipped on bail), both approved.
+    mockOutcomePool.mockResolvedValue({
+      results: new Map<number, DraftOutcome>([
+        [0, makeApprovedOutcome()],
+        [1, makeApprovedOutcome()],
+      ]),
+      earlyBailed: true,
+    });
+
+    const result: CellResult = await runOneCell({
+      db: makeStubDb(),
+      client: mockClient,
+      cell,
+      args: {
+        count: 3,
+        batchSeed: 'r4-earlybail-test',
+        topicDomain: null,
+        maxCostUsd: 5,
+      },
+      jobId: 'job-r4-test',
+      trigger: 'cli',
+    });
+
+    // R4.3 — the bail is surfaced on the result…
+    expect(result.earlyBailed).toBe(true);
+    // …the cell still closes `succeeded`…
+    expect(result.status).toBe('succeeded');
+    // …with counts reflecting only the ordinals that actually resolved.
+    expect(result.insertedCount).toBe(2);
+  });
+
+  it('records earlyBailed=false on a normal completion', async () => {
+    const drafts = [makeDraft(0), makeDraft(1)];
+
+    mockGeneratorPool.mockResolvedValue({
+      drafts,
+      tokenUsage: ZERO_USAGE,
+      malformedDrafts: [],
+    });
+    mockValidatorPool.mockResolvedValue(
+      new Map([
+        [0, makeFirstValidation(0)],
+        [1, makeFirstValidation(1)],
+      ]),
+    );
+    mockOutcomePool.mockResolvedValue({
+      results: new Map<number, DraftOutcome>([
+        [0, makeApprovedOutcome()],
+        [1, makeApprovedOutcome()],
+      ]),
+      earlyBailed: false,
+    });
+
+    const result: CellResult = await runOneCell({
+      db: makeStubDb(),
+      client: mockClient,
+      cell,
+      args: {
+        count: 2,
+        batchSeed: 'r4-nobail-test',
+        topicDomain: null,
+        maxCostUsd: 5,
+      },
+      jobId: 'job-r4-nobail',
+      trigger: 'cli',
+    });
+
+    expect(result.earlyBailed).toBe(false);
+    expect(result.status).toBe('succeeded');
+    expect(result.insertedCount).toBe(2);
   });
 });

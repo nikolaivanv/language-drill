@@ -46,6 +46,7 @@ import { generateBatch, validateDraft } from '@language-drill/ai';
 
 import {
   PARSER_FAILURE_REASON,
+  VOCAB_MAX_PER_WORD,
   validateAndInsertWithRetry,
 } from './validate-and-insert';
 
@@ -472,6 +473,93 @@ describe('validateAndInsertWithRetry — deterministic Turkish gate', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Seed persistence (R5.3 / R5.7): the ordinal's frequency seed is written as a
+// writer-only `seedWord` inside content_json (next to `_dedupKey`) so a later
+// run can read it back as the cross-run "already anchored" exclude set.
+// ---------------------------------------------------------------------------
+
+describe('validateAndInsertWithRetry — seed persistence', () => {
+  it('persists the ordinal seed as a writer-only seedWord in content_json', async () => {
+    mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
+    const capture: { exercise?: Record<string, unknown> } = {};
+
+    const outcome = await validateAndInsertWithRetry({
+      db: makeInsertSucceedsDb(capture),
+      client: mockClient,
+      spec: { ...trSpec, seedWords: ['kahve'] }, // seed assigned to ordinal 0
+      draft: makeTrDraft('Sokakta ev___ var.', 'ler'),
+      ordinal: 0,
+      cell: trCell,
+      args,
+      generatedAt,
+    });
+
+    expect(outcome.terminalStatus).toBe('inserted-approved');
+    const content = capture.exercise?.contentJson as Record<string, unknown>;
+    expect(content.seedWord).toBe('kahve');
+    // The existing dedup key is still written alongside it.
+    expect(content._dedupKey).toEqual(expect.any(String));
+  });
+
+  it('reads the seed at the ordinal index (not slot 0)', async () => {
+    mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
+    const capture: { exercise?: Record<string, unknown> } = {};
+
+    await validateAndInsertWithRetry({
+      db: makeInsertSucceedsDb(capture),
+      client: mockClient,
+      spec: { ...trSpec, seedWords: ['kahve', 'kitap', 'okul'] },
+      draft: makeTrDraft('Sokakta ev___ var.', 'ler'),
+      ordinal: 2,
+      cell: trCell,
+      args,
+      generatedAt,
+    });
+
+    const content = capture.exercise?.contentJson as Record<string, unknown>;
+    expect(content.seedWord).toBe('okul');
+  });
+
+  it('omits seedWord when the spec carries no seeds', async () => {
+    mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
+    const capture: { exercise?: Record<string, unknown> } = {};
+
+    await validateAndInsertWithRetry({
+      db: makeInsertSucceedsDb(capture),
+      client: mockClient,
+      spec: trSpec, // no seedWords
+      draft: makeTrDraft('Sokakta ev___ var.', 'ler'),
+      ordinal: 0,
+      cell: trCell,
+      args,
+      generatedAt,
+    });
+
+    const content = capture.exercise?.contentJson as Record<string, unknown>;
+    expect('seedWord' in content).toBe(false);
+  });
+
+  it('omits seedWord when the ordinal seed is null (unseeded fallback)', async () => {
+    mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
+    const capture: { exercise?: Record<string, unknown> } = {};
+
+    await validateAndInsertWithRetry({
+      db: makeInsertSucceedsDb(capture),
+      client: mockClient,
+      spec: { ...trSpec, seedWords: [null] },
+      draft: makeTrDraft('Sokakta ev___ var.', 'ler'),
+      ordinal: 0,
+      cell: trCell,
+      args,
+      generatedAt,
+    });
+
+    const content = capture.exercise?.contentJson as Record<string, unknown>;
+    expect('seedWord' in content).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Rejection-reason capture — the discarded ordinal carries its reasons out via
 // `DraftOutcome.rejectionReasons` so `runOneCell` can aggregate the
 // distribution. Insert behavior is unchanged; this only surfaces what was
@@ -546,5 +634,162 @@ describe('validateAndInsertWithRetry — rejectionReasons capture', () => {
     expect(outcome.terminalStatus).toBe('rejected');
     expect(outcome.parserFailedAtFinal).toBe(true);
     expect(outcome.rejectionReasons).toEqual([PARSER_FAILURE_REASON]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// R6 — vocab_recall per-word count cap. Before INSERT, the approved/flagged
+// rows for (cell, expectedWord) are counted; at/over VOCAB_MAX_PER_WORD the
+// draft is treated as a collision and routed through the dedup-retry path
+// (asks the generator for a different word). Under cap, the insert proceeds.
+// ---------------------------------------------------------------------------
+
+const vocabGrammarPoint = {
+  key: 'es-a1-vocab',
+  language: Language.ES,
+  cefrLevel: CefrLevel.A1,
+  title: 'Core vocabulary',
+  summary: 'test',
+} as unknown as GenerationSpec['grammarPoint'];
+
+const vocabSpec: GenerationSpec = {
+  language: Language.ES,
+  cefrLevel: CefrLevel.A1,
+  exerciseType: ExerciseType.VOCAB_RECALL,
+  grammarPoint: vocabGrammarPoint,
+  topicDomain: null,
+  count: 1,
+  batchSeed: 'vocab-seed',
+};
+
+const vocabCell: Cell = {
+  language: Language.ES,
+  cefrLevel: CefrLevel.A1,
+  exerciseType: ExerciseType.VOCAB_RECALL,
+  grammarPoint: vocabGrammarPoint,
+  cellKey: 'es:a1:vocab_recall:es-a1-vocab',
+};
+
+function makeVocabDraft(): ExerciseDraft {
+  return {
+    id: 'vocab-draft-0',
+    contentJson: {
+      type: ExerciseType.VOCAB_RECALL,
+      instructions: 'Recall the word.',
+      prompt: 'What is the Spanish for "house"?',
+      expectedWord: 'casa',
+      hints: [],
+      exampleSentence: 'La casa es grande.',
+    },
+    metadata: {
+      grammarPointKey: 'es-a1-vocab',
+      topicDomain: null,
+      modelId: 'claude-sonnet-4-6',
+      inputTokens: 0,
+      outputTokens: 0,
+      cacheCreationInputTokens: 0,
+      cacheReadInputTokens: 0,
+      inBatchDuplicate: false,
+    },
+  };
+}
+
+/**
+ * Stub DB whose per-word count query (`select(...).from(...).where(...)`)
+ * resolves to `wordCount`, and whose exercises/tags INSERT succeeds (returns
+ * one row), optionally capturing the inserted exercise `values`.
+ */
+function makeVocabDb(wordCount: number, capture?: { exercise?: Record<string, unknown> }): Db {
+  return {
+    select: () => ({
+      from: () => ({
+        where: () => Promise.resolve([{ n: wordCount }]),
+      }),
+    }),
+    insert: () => ({
+      values: (v: Record<string, unknown>) => {
+        if (capture && v && typeof v === 'object' && 'reviewStatus' in v) {
+          capture.exercise = v;
+        }
+        const id = (v as { id?: string }).id ?? 'x';
+        return {
+          onConflictDoNothing: () =>
+            Object.assign(Promise.resolve([{ id }]), {
+              returning: () => Promise.resolve([{ id }]),
+            }),
+        };
+      },
+    }),
+  } as unknown as Db;
+}
+
+describe('validateAndInsertWithRetry — R6 vocab per-word cap', () => {
+  it('inserts a vocab_recall draft when the word is under the per-word cap', async () => {
+    mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
+    const capture: { exercise?: Record<string, unknown> } = {};
+
+    const outcome = await validateAndInsertWithRetry({
+      db: makeVocabDb(VOCAB_MAX_PER_WORD - 1, capture),
+      client: mockClient,
+      spec: vocabSpec,
+      draft: makeVocabDraft(),
+      ordinal: 0,
+      cell: vocabCell,
+      args,
+      generatedAt,
+    });
+
+    expect(outcome.terminalStatus).toBe('inserted-approved');
+    // Under cap: the INSERT proceeded, no regeneration was needed.
+    expect(mockGenerateBatch).not.toHaveBeenCalled();
+    expect((capture.exercise?.contentJson as Record<string, unknown>).expectedWord).toBe('casa');
+  });
+
+  it('routes an at-cap vocab_recall word through dedup-retry to dedup-given-up', async () => {
+    mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
+    // Every retry returns a parseable vocab draft for the SAME word, so the
+    // cap check trips on every attempt and the slot is never inserted.
+    mockGenerateBatch.mockResolvedValue({
+      drafts: [makeVocabDraft()],
+      malformedDrafts: [],
+      tokenUsage: PARSER_FAIL_USAGE,
+    } satisfies GenerateBatchResult);
+
+    const outcome = await validateAndInsertWithRetry({
+      db: makeVocabDb(VOCAB_MAX_PER_WORD), // word already at the cap
+      client: mockClient,
+      spec: vocabSpec,
+      draft: makeVocabDraft(),
+      ordinal: 0,
+      cell: vocabCell,
+      args,
+      generatedAt,
+    });
+
+    // At cap → collision on every attempt → all retries exhausted.
+    expect(outcome.terminalStatus).toBe('dedup-given-up');
+    // The generator WAS asked for a different word (one retry per remaining slot).
+    expect(outcome.extraProduced).toBe(3);
+    expect(mockGenerateBatch).toHaveBeenCalledTimes(3);
+  });
+
+  it('does not apply the per-word cap to cloze cells', async () => {
+    // A non-vocab cell whose count query (if ever called) would report "at cap"
+    // must still insert — the cap is vocab_recall-only.
+    mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
+
+    const outcome = await validateAndInsertWithRetry({
+      db: makeVocabDb(VOCAB_MAX_PER_WORD),
+      client: mockClient,
+      spec, // CLOZE spec/cell from the top of the file
+      draft: makeDraft(),
+      ordinal: 0,
+      cell,
+      args,
+      generatedAt,
+    });
+
+    expect(outcome.terminalStatus).toBe('inserted-approved');
+    expect(mockGenerateBatch).not.toHaveBeenCalled();
   });
 });

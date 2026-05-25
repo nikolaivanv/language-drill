@@ -11,6 +11,7 @@ import { getGrammarPoint } from "@language-drill/db";
 
 import { CEFR_LEVEL_DESCRIPTORS, EVALUATION_SYSTEM_PROMPT } from "./prompts.js";
 import {
+  GENERATION_PROMPT_VERSION,
   GENERATION_SYSTEM_PROMPT_TEMPLATE,
   MAX_PRIOR_POOL_SURFACES_IN_PROMPT,
   MAX_RECENT_STEMS_IN_PROMPT,
@@ -112,8 +113,8 @@ describe("buildGenerationSystemPrompt", () => {
     expect(prompt).toContain("Vowel harmony: front vowel (e) requires -ler suffix");
   });
 
-  it("pins the R2.3 / R3.B.7 / R7.1 hard-constraint bullets added in cluster B", async () => {
-    // Three independent rules that all live under "Hard constraints" and
+  it("pins the R2.3 / R3.B.7 hard-constraint bullets added in cluster B", async () => {
+    // Independent rules that all live under "Hard constraints" and
     // were added together. Pin each so a future edit can't silently drop
     // one while preserving the others.
     const prompt = await buildGenerationSystemPrompt(baseInputs, []);
@@ -128,12 +129,10 @@ describe("buildGenerationSystemPrompt", () => {
     expect(prompt).toContain("at least three of the four high-vowel slots");
     expect(prompt).toContain("more than 50% of the batch");
 
-    // (b) R7.1 — buffer-consonant ambiguity rule with the production
-    // exemplar ("mutluy___" → "um" vs "yum") so Claude has a concrete
-    // pattern to match.
-    expect(prompt).toContain("Buffer-consonant ambiguity");
-    expect(prompt).toContain("mutluy___");
-    expect(prompt).toContain("buffer consonant");
+    // (b) The R7.1 buffer-consonant ambiguity rule was removed by the
+    // whole-word "Blank granularity" rule (R1.4) — whole-word blanks make
+    // the buffer boundary moot. The buffer-absent + whole-word-present
+    // assertions live in the dedicated Phase-2 cluster test below.
 
     // (c) R3.B.7 — unique-answer reiteration for grammar-shape clozes.
     // Must include the new "Evde yeni" exemplar and the explicit
@@ -142,6 +141,47 @@ describe("buildGenerationSystemPrompt", () => {
     expect(prompt).toContain("Evde yeni ___ var");
     expect(prompt).toContain("Either constrain the sentence");
     expect(prompt).toContain("list every plausible lexeme in `acceptableAnswers`");
+  });
+
+  it("pins the Phase-2 prompt cluster: whole-word blanks (R1), TR case gloss (R2), anti-leak/on-target (R7)", async () => {
+    // The R1/R2/R7 generation-prompt edit landed as one coordinated cluster
+    // (tasks 4–6, single version bump in task 7). Pin every limb so a later
+    // edit can't silently drop one — and guard the deleted buffer-consonant
+    // rule against reintroduction.
+    const prompt = await buildGenerationSystemPrompt(baseInputs, []);
+
+    // R1.1 / R1.3 — universal whole-word "Blank granularity" rule, with the
+    // per-language mutation exemplars as concrete pattern anchors.
+    expect(prompt).toContain("Blank granularity");
+    expect(prompt).toContain("WHOLE inflected word");
+    expect(prompt).toContain("kahveyi"); // TR consonant softening / buffer
+    expect(prompt).toContain("kitabı"); // TR
+    expect(prompt).toContain("vuelven"); // ES stem-change
+    expect(prompt).toContain("busqué"); // ES orthographic shift
+    expect(prompt).toContain("fährt"); // DE umlaut
+
+    // R1.4 — the superseded buffer-consonant ambiguity rule is gone (whole-word
+    // blanks make the buffer boundary moot). Both its heading and its unique
+    // "buffer-included" wording must be absent.
+    expect(prompt).not.toContain("Buffer-consonant ambiguity");
+    expect(prompt).not.toContain("buffer-included");
+
+    // R2.1 / R2.3 / R2.4 — TR case clozes: generic instruction, optional L1
+    // gloss as the disambiguation device, level-gated (omitted for B1+).
+    expect(prompt).toContain("correct form of the word in parentheses");
+    expect(prompt).toContain("glossEn");
+    expect(prompt).toContain("omit it for");
+
+    // R7.1 / R7.2 / R7.3 — generator-side anti-leak, stay-on-target, single-fill.
+    expect(prompt).toContain("anti-leak");
+    expect(prompt).toContain("Stay on target");
+    expect(prompt).toContain("One correct fill, or enumerate them");
+  });
+
+  it("carries a bumped, correctly-formatted GENERATION_PROMPT_VERSION", () => {
+    // R1.7 / R2.6 / R7.4 — the coordinated prompt edit must ship a
+    // `generate@YYYY-MM-DD` version so Langfuse cohorts old vs new traces.
+    expect(GENERATION_PROMPT_VERSION).toMatch(/^generate@\d{4}-\d{2}-\d{2}$/);
   });
 
   it("instructs Claude to use the matching tool name", async () => {
@@ -403,6 +443,35 @@ describe("buildGenerationUserPrompt", () => {
       ),
     ).toContain("submit_translation_exercise");
   });
+
+  it("appends the loose seed instruction only when a seed is supplied (R5.5)", () => {
+    const seeded = buildGenerationUserPrompt(baseInputs, 0, null, "viajar");
+    expect(seeded).toContain('Build this exercise around the word "viajar".');
+    // Loose: names the grammar point and offers a similar-frequency substitute.
+    expect(seeded).toContain(baseInputs.grammarPoint.name);
+    expect(seeded).toContain("a related content word of similar frequency");
+  });
+
+  it("omits the seed line — byte-identical to the unseeded output — when seed is null/absent", () => {
+    const unseededArg = buildGenerationUserPrompt(baseInputs, 0, null, null);
+    const noArg = buildGenerationUserPrompt(baseInputs, 0, null);
+    expect(unseededArg).toBe(noArg); // back-compat: existing 3-arg callers unaffected
+    expect(unseededArg).not.toContain("Build this exercise around");
+  });
+
+  it("treats an empty-string seed as unseeded", () => {
+    expect(buildGenerationUserPrompt(baseInputs, 0, null, "")).toBe(
+      buildGenerationUserPrompt(baseInputs, 0, null),
+    );
+  });
+
+  it("never leaks the seed into the cached system prompt (R5.4 cache-prefix invariant)", async () => {
+    // The seed lives ONLY in the per-draft user prompt; the system prompt
+    // builder takes no seed and must stay byte-identical across the batch.
+    const system = await buildGenerationSystemPrompt(baseInputs, []);
+    expect(system).not.toContain("viajar");
+    expect(system).not.toContain("Build this exercise around");
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -432,16 +501,51 @@ describe("canonicalSurface", () => {
     expect(canonicalSurface(content)).toBe("the cat is on the mat.");
   });
 
-  it("uses expectedWord for vocab content", () => {
+  it("combines expectedWord and prompt cue for vocab content", () => {
     const content: VocabRecallContent = {
       type: ExerciseType.VOCAB_RECALL,
       instructions: "x",
-      prompt: "x",
+      prompt: "What is the Spanish for 'subjunctive'?",
       expectedWord: "Subjuntivo",
       hints: [],
       exampleSentence: "x",
     };
-    expect(canonicalSurface(content)).toBe("subjuntivo");
+    expect(canonicalSurface(content)).toBe(
+      "subjuntivo::what is the spanish for 'subjunctive'?",
+    );
+  });
+
+  it("yields a different key for the same word with a different cue", () => {
+    const base: VocabRecallContent = {
+      type: ExerciseType.VOCAB_RECALL,
+      instructions: "x",
+      prompt: "Translate: to return",
+      expectedWord: "volver",
+      hints: [],
+      exampleSentence: "x",
+    };
+    const otherCue: VocabRecallContent = { ...base, prompt: "Antonym of 'ir'" };
+    expect(canonicalSurface(base)).not.toBe(canonicalSurface(otherCue));
+  });
+
+  it("yields the same key for an identical (word, cue) pair", () => {
+    const base: VocabRecallContent = {
+      type: ExerciseType.VOCAB_RECALL,
+      instructions: "x",
+      prompt: "Translate: to RETURN",
+      expectedWord: "Volver",
+      hints: [],
+      exampleSentence: "first example sentence",
+    };
+    // Differs only on hint-level fields (case, exampleSentence) — collapses to
+    // the same key, so it is blocked as an exact duplicate.
+    const dup: VocabRecallContent = {
+      ...base,
+      expectedWord: "volver",
+      prompt: "translate: to return",
+      exampleSentence: "a different example sentence",
+    };
+    expect(canonicalSurface(base)).toBe(canonicalSurface(dup));
   });
 
   it("collapses internal whitespace runs to a single space", () => {

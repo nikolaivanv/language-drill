@@ -181,7 +181,9 @@ function cellResultBase(): CellResult {
     dedupGivenUpCount: 0,
     malformedDraftCount: 0,
     parserFailedCount: 0,
+    validatorParseFailedCount: 0,
     rejectionReasonCounts: {},
+    earlyBailed: false,
   };
 }
 

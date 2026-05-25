@@ -73,6 +73,23 @@ describe('ClozeExercise', () => {
       ).not.toBeInTheDocument();
     });
 
+    it('renders the optional L1 gloss when glossEn is provided (R2.4)', () => {
+      renderCloze({
+        content: { ...baseContent, glossEn: 'My mother is drinking the coffee.' },
+      });
+      expect(
+        screen.getByText('My mother is drinking the coffee.'),
+      ).toBeInTheDocument();
+    });
+
+    it('does not render a gloss line when glossEn is undefined', () => {
+      // baseContent carries no glossEn, so the default render must omit it.
+      renderCloze();
+      expect(
+        screen.queryByText('My mother is drinking the coffee.'),
+      ).not.toBeInTheDocument();
+    });
+
     it('renders the sentence with the blank as a span containing ?', () => {
       const { container } = renderCloze();
       // The blank span is rendered inline; query by text content "?"

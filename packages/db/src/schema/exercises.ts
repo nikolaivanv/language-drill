@@ -49,6 +49,22 @@ export const exercises = pgTable(
       .where(
         sql`${table.reviewStatus} IN ('auto-approved', 'manual-approved', 'flagged') AND content_json ? '_dedupKey'`,
       ),
+    // Supports the vocab_recall per-word count cap (≤ N exercises per
+    // `expectedWord` per cell). The `validateAndInsertWithRetry` path counts
+    // existing approved/flagged rows for (cell, expectedWord) before INSERT;
+    // this partial index keeps that count cheap. Column order mirrors
+    // `exercises_dedup_idx` (language, type, difficulty, grammarPointKey, expr).
+    vocabWordIdx: index('exercises_vocab_word_idx')
+      .on(
+        table.language,
+        table.type,
+        table.difficulty,
+        table.grammarPointKey,
+        sql`(content_json->>'expectedWord')`,
+      )
+      .where(
+        sql`${table.reviewStatus} IN ('auto-approved', 'manual-approved', 'flagged')`,
+      ),
   }),
 );
 

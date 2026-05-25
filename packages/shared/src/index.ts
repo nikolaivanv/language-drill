@@ -80,6 +80,16 @@ export type ClozeContent = {
   acceptableAnswers?: string[];
   options?: string[];
   context?: string;
+  /**
+   * Optional L1 (English) gloss shown as a disambiguation aid. Used for
+   * Turkish case clozes at A1–A2, where context alone may not force the
+   * required case (notably accusative, which marks definiteness). Omitted by
+   * default for B1+. MUST NOT state the rule outcome or the required form —
+   * it disambiguates meaning, it does not spoil the answer (see the
+   * generation prompt's "Spoiled blank" rule). Rendered in the same
+   * above-sentence slot as `context`.
+   */
+  glossEn?: string;
   topicHint?: string;
 };
 

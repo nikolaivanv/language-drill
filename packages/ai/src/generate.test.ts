@@ -20,6 +20,7 @@ import {
   VOCAB_RECALL_GENERATION_TOOL,
   exerciseDraftId,
   generateBatch,
+  parseGeneratedClozeDraft,
   type GenerationSpec,
 } from "./generate.js";
 
@@ -130,6 +131,48 @@ describe("exerciseDraftId", () => {
     expect(exerciseDraftId(baseSpec, 0)).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseGeneratedClozeDraft — optional glossEn (R2.3, R2.6)
+// ---------------------------------------------------------------------------
+
+describe("parseGeneratedClozeDraft glossEn", () => {
+  it("exposes glossEn as an optional property on the cloze tool schema", () => {
+    const props = CLOZE_GENERATION_TOOL.input_schema.properties as Record<
+      string,
+      unknown
+    >;
+    expect(props.glossEn).toBeDefined();
+    // Optional: must NOT be in the tool's required list.
+    expect(CLOZE_GENERATION_TOOL.input_schema.required).not.toContain("glossEn");
+  });
+
+  it("parses glossEn when present, mirroring context/topicHint", () => {
+    const content = parseGeneratedClozeDraft(
+      {
+        ...validClozeInput,
+        glossEn: "My mother is drinking the coffee",
+      },
+      baseSpec,
+    );
+    expect(content.glossEn).toBe("My mother is drinking the coffee");
+  });
+
+  it("omits glossEn entirely when absent (key not present)", () => {
+    const content = parseGeneratedClozeDraft(validClozeInput, baseSpec);
+    expect(content.glossEn).toBeUndefined();
+    expect("glossEn" in content).toBe(false);
+  });
+
+  it("rejects a non-string glossEn (same guard as other optional strings)", () => {
+    expect(() =>
+      parseGeneratedClozeDraft(
+        { ...validClozeInput, glossEn: 42 },
+        baseSpec,
+      ),
+    ).toThrow(/glossEn/);
   });
 });
 

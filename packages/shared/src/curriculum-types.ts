@@ -54,4 +54,13 @@ export type GrammarPoint = Readonly<{
   commonErrors: readonly string[];
   /** Same-language curriculum keys this point depends on. Empty array permitted. */
   prerequisiteKeys?: readonly string[];
+  /**
+   * Optional per-cell distinct-exercise ceiling. Overrides the
+   * `(exerciseType, cefrLevel)` default in the scheduler's target resolver
+   * (`resolveCellTarget`). Set this for narrow points whose realistic supply
+   * of distinct exercises is well below the global default — so the scheduler
+   * stops topping up at a reachable number instead of grinding unreachable
+   * targets into dedup waste.
+   */
+  targetOverride?: number;
 }>;

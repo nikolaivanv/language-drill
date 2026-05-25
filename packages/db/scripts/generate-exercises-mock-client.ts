@@ -105,6 +105,26 @@ function parseValidationThrowOrdinal(): number | null {
   return parsed;
 }
 
+/**
+ * Optional `MOCK_VALIDATION_MALFORM_ORDINAL` env var. When set to an integer N,
+ * the mock validator RETURNS a tool call with a malformed input (missing the
+ * load-bearing `qualityScore`) on the validator call with that ordinal. Unlike
+ * `MOCK_VALIDATION_THROW_ORDINAL` (a transport-style throw), this drives
+ * `parseValidationResult` to raise `ValidationParseError`, exercising the R8
+ * validator-pool isolation path. Off by default.
+ */
+function parseValidationMalformOrdinal(): number | null {
+  const raw = process.env['MOCK_VALIDATION_MALFORM_ORDINAL'];
+  if (raw === undefined || raw === '') return null;
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || String(parsed) !== raw.trim()) {
+    throw new Error(
+      `MOCK_VALIDATION_MALFORM_ORDINAL must be an integer, got ${JSON.stringify(raw)}`,
+    );
+  }
+  return parsed;
+}
+
 function parseValidationOutcomes(): Record<string, ValidationOutcome> {
   const raw = process.env['MOCK_VALIDATION_OUTCOMES'];
   if (raw === undefined || raw === '') return {};
@@ -252,6 +272,47 @@ export function createMockAnthropicClient(): Anthropic {
         throw new Error(
           `Mock validator: synthetic failure on ordinal ${failingOrdinal}`,
         );
+      }
+
+      const malformOrdinal = parseValidationMalformOrdinal();
+      if (malformOrdinal !== null && malformOrdinal === validatorCallOrdinal) {
+        // R8 — return a well-formed tool call whose INPUT omits the load-bearing
+        // `qualityScore`, so `parseValidationResult` raises `ValidationParseError`.
+        // `runValidatorPool` isolates this to the ordinal (→ rejected) instead of
+        // failing the whole cell closed.
+        const ord = validatorCallOrdinal;
+        validatorCallOrdinal += 1;
+        validatorTotalCalls += 1;
+        const usage = makeUsage(validatorTotalCalls === 1);
+        const malformed: Anthropic.Message = {
+          id: `msg_mock_v_${validatorTotalCalls}`,
+          type: 'message',
+          role: 'assistant',
+          model: GENERATION_MODEL,
+          content: [
+            {
+              type: 'tool_use',
+              id: `toolu_mock_v_${ord}`,
+              name: VALIDATION_TOOL_NAME,
+              input: {
+                // qualityScore intentionally omitted (load-bearing field).
+                ambiguous: false,
+                contextSpoilsAnswer: false,
+                levelMatch: true,
+                grammarPointMatch: true,
+                culturalIssues: [],
+                flaggedReasons: [],
+              },
+              caller: { type: 'direct' },
+            },
+          ],
+          stop_reason: 'tool_use',
+          stop_sequence: null,
+          stop_details: null,
+          usage,
+          container: null,
+        };
+        return malformed;
       }
 
       const outcomes = parseValidationOutcomes();

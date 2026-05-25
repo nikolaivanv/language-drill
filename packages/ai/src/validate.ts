@@ -151,53 +151,74 @@ export type ValidateDraftResult = {
 
 // ---------------------------------------------------------------------------
 // parseValidationResult — validates and coerces a raw tool-use input into a
-// ValidationResult. Throws field-level errors on shape mismatch. Mirrors
-// `parseEvaluationResult` (evaluate.ts:128-200): error messages use the
-// `Invalid <field>: must be <expected>, got <JSON.stringify(value)>` format
-// so an operator inspecting `generation_jobs.error_message` can find the
-// offending field immediately.
+// ValidationResult. Mirrors `parseEvaluationResult` (evaluate.ts:128-200):
+// error messages use the `Invalid <field>: must be <expected>, got
+// <JSON.stringify(value)>` format so an operator inspecting
+// `generation_jobs.error_message` can find the offending field immediately.
+//
+// R8 split: load-bearing fields (`qualityScore` + the four booleans, which
+// `routeValidationResult` actually branches on) throw a typed
+// `ValidationParseError` so `runValidatorPool` can isolate one bad response to
+// its ordinal instead of failing the whole cell closed. The two reason arrays
+// (`flaggedReasons` / `culturalIssues`) are NON-load-bearing annotations —
+// routing only consumes them when present — so a missing/non-array value (the
+// exact `Invalid flaggedReasons: must be an array, got undefined` that killed
+// `tr-a1-cloze-personal-suffixes` on 2026-05-24) leniently coerces to `[]`,
+// and stray non-string elements are dropped, rather than vetoing the draft.
 // ---------------------------------------------------------------------------
+
+/**
+ * Thrown by `parseValidationResult` when a LOAD-BEARING field is missing or
+ * malformed (`qualityScore` out of range / non-number, or any of the four
+ * routing booleans non-boolean). Distinct from a bare `Error` so
+ * `runValidatorPool` (R8) can catch *this* per worker and route the single
+ * ordinal to `rejected` (parse-failed), while genuine transport/abort errors —
+ * which are NOT `ValidationParseError` — still propagate and fail the cell
+ * closed (the correct response to a 429 / network drop / SIGINT).
+ */
+export class ValidationParseError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ValidationParseError";
+  }
+}
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-function requireStringArray(
+/**
+ * Lenient reader for the non-load-bearing reason arrays. A missing or
+ * non-array value yields `[]`; an array yields only its string elements (stray
+ * non-strings are dropped). Never throws — these fields never gate routing, so
+ * a malformed one must not cost the draft (R8.2).
+ */
+function coerceStringArray(
   raw: Record<string, unknown>,
   field: string,
 ): string[] {
   const v = raw[field];
-  if (!Array.isArray(v)) {
-    throw new Error(
-      `Invalid ${field}: must be an array, got ${JSON.stringify(v)}`,
-    );
-  }
-  for (let i = 0; i < v.length; i++) {
-    if (typeof v[i] !== "string") {
-      throw new Error(
-        `Invalid ${field}[${i}]: must be a string, got ${JSON.stringify(v[i])}`,
-      );
-    }
-  }
-  return v as string[];
+  if (!Array.isArray(v)) return [];
+  return v.filter((item): item is string => typeof item === "string");
 }
 
 export function parseValidationResult(input: unknown): ValidationResult {
   if (!isObject(input)) {
-    throw new Error("Validation result must be an object");
+    throw new ValidationParseError("Validation result must be an object");
   }
 
   const raw = input;
 
-  // qualityScore: number in [0, 1].
+  // qualityScore: number in [0, 1]. Load-bearing — drives the
+  // reject/flag/approve routing — so a bad value is a hard parse failure.
   const qualityScore = raw.qualityScore;
   if (typeof qualityScore !== "number" || qualityScore < 0 || qualityScore > 1) {
-    throw new Error(
+    throw new ValidationParseError(
       `Invalid qualityScore: must be a number between 0 and 1, got ${JSON.stringify(qualityScore)}`,
     );
   }
 
-  // Four boolean fields.
+  // Four boolean fields. Each is a routing veto, so all are load-bearing.
   for (const field of [
     "ambiguous",
     "contextSpoilsAnswer",
@@ -205,15 +226,15 @@ export function parseValidationResult(input: unknown): ValidationResult {
     "grammarPointMatch",
   ] as const) {
     if (typeof raw[field] !== "boolean") {
-      throw new Error(
+      throw new ValidationParseError(
         `Invalid ${field}: must be a boolean, got ${JSON.stringify(raw[field])}`,
       );
     }
   }
 
-  // Two array-of-strings fields.
-  const culturalIssues = requireStringArray(raw, "culturalIssues");
-  const flaggedReasons = requireStringArray(raw, "flaggedReasons");
+  // Two array-of-strings fields — non-load-bearing, coerced leniently (R8).
+  const culturalIssues = coerceStringArray(raw, "culturalIssues");
+  const flaggedReasons = coerceStringArray(raw, "flaggedReasons");
 
   return {
     qualityScore,

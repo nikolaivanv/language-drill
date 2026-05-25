@@ -95,6 +95,32 @@ const STOPWORDS_BY_LANGUAGE: Record<LearningLanguage, ReadonlySet<string>> = {
 // same instance — cheap and lets callers safely close over the methods.
 const LOOKUP_CACHE: Partial<Record<LearningLanguage, FrequencyLookup>> = {};
 
+// Cache the computed `frequencyBand` result per `(language, rankMin, rankMax)`.
+// The scan-dedupe-sort below is O(file) per band; caching makes repeated calls
+// for the same band (every ordinal in a cell) return the identical frozen
+// instance — mirroring `LOOKUP_CACHE`.
+const BAND_CACHE: Map<string, readonly string[]> = new Map();
+
+// ---------------------------------------------------------------------------
+// CEFR → frequency-rank window (R5.2). Coarse, design-tunable proxy: the
+// frequency `cefr` field is unpopulated, so word rank stands in for level. The
+// windows are contiguous (A2 picks up where A1 leaves off); the shared boundary
+// rank is harmless since the seed picker only consults one level's window per
+// batch. Curriculum cells are A1–B2; C1/C2 extend the same pattern for totality.
+// Distinct from `READ_CEFR_TOP_RANK` (a single ceiling for the reading
+// pre-filter) — this is a [min, max] band, since seeds should sit AT the
+// learner's level, not anywhere below it.
+// ---------------------------------------------------------------------------
+
+const CEFR_RANK_WINDOW = {
+  A1: { rankMin: 1, rankMax: 1000 },
+  A2: { rankMin: 1000, rankMax: 2500 },
+  B1: { rankMin: 2500, rankMax: 5000 },
+  B2: { rankMin: 5000, rankMax: 10000 },
+  C1: { rankMin: 10000, rankMax: 20000 },
+  C2: { rankMin: 20000, rankMax: 40000 },
+} as const satisfies Record<CefrLevel, { rankMin: number; rankMax: number }>;
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -116,4 +142,65 @@ export function loadFrequency(language: LearningLanguage): FrequencyLookup {
 
   LOOKUP_CACHE[language] = lookup;
   return lookup;
+}
+
+/**
+ * The coarse `[rankMin, rankMax]` frequency-rank band that proxies a CEFR
+ * level for seed-candidate selection (R5.2). Inclusive on both ends. Tunable
+ * in one place — the seed picker is the only consumer.
+ */
+export function cefrRankWindow(cefr: CefrLevel): {
+  rankMin: number;
+  rankMax: number;
+} {
+  return CEFR_RANK_WINDOW[cefr];
+}
+
+/**
+ * Returns the content-word **lemmas** whose frequency rank falls inside the
+ * `[rankMin, rankMax]` band (inclusive), for use as deterministic generation
+ * seeds (R5.1, R5.2). The frequency files are keyed by *surface form* and are
+ * not pre-sorted, and many surfaces share one lemma+rank — so this:
+ *   1. scans the file once,
+ *   2. drops closed-class words via the stopword list (either the surface key
+ *      or the lemma matching a stopword excludes the entry),
+ *   3. dedupes by lemma (keeping the lowest rank seen),
+ *   4. restricts to the rank window,
+ *   5. sorts by rank ascending (lemma as a deterministic tie-break),
+ * and caches the frozen result per `(language, band)` so repeated calls for the
+ * same band return the identical instance.
+ */
+export function frequencyBand(
+  language: LearningLanguage,
+  rankMin: number,
+  rankMax: number,
+): readonly string[] {
+  const cacheKey = `${language}:${rankMin}:${rankMax}`;
+  const cached = BAND_CACHE.get(cacheKey);
+  if (cached !== undefined) return cached;
+
+  const freqMap = FREQUENCY_BY_LANGUAGE[language];
+  const stopwordSet = STOPWORDS_BY_LANGUAGE[language];
+
+  // lemma -> lowest rank seen for it within the window
+  const byLemma = new Map<string, number>();
+  for (const [surface, entry] of Object.entries(freqMap)) {
+    if (entry.rank < rankMin || entry.rank > rankMax) continue;
+    if (stopwordSet.has(surface) || stopwordSet.has(entry.lemma)) continue;
+    const existing = byLemma.get(entry.lemma);
+    if (existing === undefined || entry.rank < existing) {
+      byLemma.set(entry.lemma, entry.rank);
+    }
+  }
+
+  const band = Object.freeze(
+    [...byLemma.entries()]
+      .sort(([lemmaA, rankA], [lemmaB, rankB]) =>
+        rankA !== rankB ? rankA - rankB : lemmaA < lemmaB ? -1 : lemmaA > lemmaB ? 1 : 0,
+      )
+      .map(([lemma]) => lemma),
+  );
+
+  BAND_CACHE.set(cacheKey, band);
+  return band;
 }
