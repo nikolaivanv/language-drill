@@ -13,6 +13,7 @@ import {
   userExerciseHistory,
 } from '@language-drill/db';
 import { db } from '../db';
+import { resolveCellTarget } from '../generation/cell-targets';
 import { authMiddleware } from '../middleware/auth';
 import { adminMiddleware } from '../middleware/admin';
 import type { Bindings, Variables } from '../middleware/auth';
@@ -174,7 +175,14 @@ admin.get('/admin/pool-status', async (c) => {
       rejected: counts.rejected,
       lastRefilledAt: lastRefilledByCell.get(cellKey) ?? null,
       depletionRate7d,
+      // `targetSize` is the demand-derived ideal pool size (depletion tiers,
+      // floors at 50 for idle cells). `generationTarget` is what the scheduler
+      // actually tops the cell up to (`resolveCellTarget`: per-cell R3 target,
+      // e.g. 20 for A1 cloze). Both are surfaced so the dashboard's coverage
+      // reflects the real generation goal, and a generationTarget below
+      // targetSize flags a cell whose target may need raising.
       targetSize: targetCellSize(depletionRate7d),
+      generationTarget: resolveCellTarget(cell),
     };
   });
 

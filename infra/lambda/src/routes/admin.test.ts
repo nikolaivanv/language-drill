@@ -158,7 +158,12 @@ describe('GET /admin/pool-status', () => {
       expect(item.rejected).toBe(0);
       expect(item.lastRefilledAt).toBeNull();
       expect(item.depletionRate7d).toBe(0);
+      // Idle cells (0 depletion) floor at the demand tier of 50...
       expect(item.targetSize).toBe(50);
+      // ...but the generation target is the per-cell R3 value (cloze/translation
+      // 20/30 at A1/A2 → 50 at B1/B2; vocab_recall 60/75), never the flat 50
+      // unless the table falls through. Assert it resolved to a known target.
+      expect([20, 30, 50, 60, 75]).toContain(item.generationTarget);
       expect(['ES', 'DE', 'TR']).toContain(item.language);
       expect(['A1', 'A2', 'B1', 'B2']).toContain(item.level);
       expect(['cloze', 'translation', 'vocab_recall']).toContain(item.type);
