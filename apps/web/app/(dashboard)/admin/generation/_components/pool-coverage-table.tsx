@@ -16,11 +16,14 @@ function coverageBgClass(ratio: number): string {
 export function PoolCoverageTable({ items }: Props) {
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
+  // Coverage is measured against the generation target — the number the
+  // scheduler actually tops the cell up to — not the demand-derived
+  // `targetSize`, so an idle cell isn't shown as perpetually under-filled.
   const sortedItems = useMemo(
     () =>
       [...items].sort((a, b) => {
-        const ra = a.approved / a.targetSize;
-        const rb = b.approved / b.targetSize;
+        const ra = a.approved / a.generationTarget;
+        const rb = b.approved / b.generationTarget;
         return sortDir === 'asc' ? ra - rb : rb - ra;
       }),
     [items, sortDir],
@@ -35,7 +38,8 @@ export function PoolCoverageTable({ items }: Props) {
           <th>Type</th>
           <th>Grammar Point</th>
           <th>Approved</th>
-          <th>Target</th>
+          <th>Gen Target</th>
+          <th>Demand</th>
           <th>
             <button
               type="button"
@@ -50,7 +54,7 @@ export function PoolCoverageTable({ items }: Props) {
       </thead>
       <tbody>
         {sortedItems.map((item) => {
-          const ratio = item.approved / item.targetSize;
+          const ratio = item.approved / item.generationTarget;
           return (
             <tr
               key={`${item.language}:${item.level}:${item.type}:${item.grammarPointKey}`}
@@ -61,6 +65,7 @@ export function PoolCoverageTable({ items }: Props) {
               <td>{item.type}</td>
               <td>{item.grammarPointKey}</td>
               <td>{item.approved}</td>
+              <td>{item.generationTarget}</td>
               <td>{item.targetSize}</td>
               <td>{(ratio * 100).toFixed(1)}%</td>
             </tr>

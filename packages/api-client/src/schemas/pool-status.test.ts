@@ -12,7 +12,8 @@ describe('PoolStatusItemSchema', () => {
     rejected: 1,
     lastRefilledAt: null,
     depletionRate7d: 0.3,
-    targetSize: 20,
+    targetSize: 50,
+    generationTarget: 20,
   };
 
   it('parses a valid PoolStatusItem with lastRefilledAt: null', () => {
@@ -31,6 +32,12 @@ describe('PoolStatusItemSchema', () => {
   it('rejects a PoolStatusItem missing the grammarPointKey field', () => {
     const { grammarPointKey: _omitted, ...withoutKey } = baseItem;
     const result = PoolStatusItemSchema.safeParse(withoutKey);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a PoolStatusItem missing the generationTarget field', () => {
+    const { generationTarget: _omitted, ...withoutTarget } = baseItem;
+    const result = PoolStatusItemSchema.safeParse(withoutTarget);
     expect(result.success).toBe(false);
   });
 });

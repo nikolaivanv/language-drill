@@ -14,7 +14,15 @@ export const PoolStatusItemSchema = z.object({
   rejected: z.number(),
   lastRefilledAt: z.string().nullable(),
   depletionRate7d: z.number(),
+  /** Demand-derived ideal pool size (depletion tiers; floors at 50 when idle). */
   targetSize: z.number(),
+  /**
+   * The per-cell generation target the scheduler actually fills toward
+   * (`resolveCellTarget`, R3) — e.g. 20 for an A1 cloze cell. Distinct from
+   * `targetSize`: coverage % is measured against this, and a value below
+   * `targetSize` signals a cell whose target may warrant raising.
+   */
+  generationTarget: z.number(),
 });
 
 export type PoolStatusItem = z.infer<typeof PoolStatusItemSchema>;
