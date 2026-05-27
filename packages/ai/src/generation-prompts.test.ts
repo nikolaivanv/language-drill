@@ -178,6 +178,24 @@ describe("buildGenerationSystemPrompt", () => {
     expect(prompt).toContain("One correct fill, or enumerate them");
   });
 
+  it("pins the Turkish personal/copular-suffix cloze rule (lemma hint, person + animacy)", async () => {
+    // Grammar-point-specific rule for tr-a1-personal-suffixes: the cell that
+    // rejected 12/17 drafts on `low quality`. Lemma-only hint (not the
+    // inflected answer), 3sg Ø is valid, 3pl -lAr is human-only / otherwise
+    // enumerated in acceptableAnswers, and -DIr is the wrong default.
+    const prompt = await buildGenerationSystemPrompt(baseInputs, []);
+
+    expect(prompt).toContain("personal/copular-suffix clozes");
+    expect(prompt).toContain(
+      "citation (dictionary) form, NEVER the inflected answer",
+    );
+    expect(prompt).toContain("(tamirci)"); // lemma hint…
+    expect(prompt).toContain("never `(tamirciyim)`"); // …not the inflected answer
+    expect(prompt).toContain("3sg takes Ø");
+    expect(prompt).toContain("3pl -lAr is optional and HUMAN-only");
+    expect(prompt).toContain("acceptableAnswers"); // human-3pl enumeration
+  });
+
   it("carries a bumped, correctly-formatted GENERATION_PROMPT_VERSION", () => {
     // R1.7 / R2.6 / R7.4 — the coordinated prompt edit must ship a
     // `generate@YYYY-MM-DD` version so Langfuse cohorts old vs new traces.
