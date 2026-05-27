@@ -61,14 +61,28 @@ const trCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Personal (copular) suffixes',
     description:
-      'Predicate suffixes -(y)Im, -sIn, Ø, -(y)Iz, -sInIz, -lAr that mark person on nominal predicates ("I am a teacher" → öğretmenim).',
+      'Copular person suffixes on nominal predicates: 1sg -(y)Im, 2sg -sIn, 3sg Ø, 1pl -(y)Iz, 2pl -sInIz, 3pl -lAr (optional, human subjects only). Conversational -DIr is the wrong default.',
     cefrLevel: A1,
     language: TR,
-    examplesPositive: ['Ben öğretmenim.', 'Sen öğrencisin.'],
-    examplesNegative: ['*Ben öğretmen.'],
+    examplesPositive: [
+      'Ben öğretmenim.', // 1sg -(y)Im — I am a teacher
+      'Sen öğrencisin.', // 2sg -sIn — you are a student
+      'O bir doktor.', // 3sg Ø — s/he is a doctor (no suffix is the correct form)
+      'Biz hazırız.', // 1pl -(y)Iz — we are ready
+      'Siz yorgunsunuz.', // 2pl -sInIz — you (pl) are tired
+      'Kediler küçük.', // 3pl, non-human subject → no -lAr — the cats are small
+      'Öğrenciler çalışkanlar.', // 3pl, human subject → optional -lAr — the students are hardworking
+    ],
+    examplesNegative: [
+      '*Ben öğretmen.', // dropped the obligatory 1sg -(y)Im
+      '*Kediler küçükler.', // -lAr forced onto a non-human plural subject
+      '*Bu masa güzeldir.', // -DIr as a conversational default (should be "Bu masa güzel")
+    ],
     commonErrors: [
-      'Dropping the personal suffix and relying on the pronoun alone.',
-      'Using -dir as a default predicate marker in conversational contexts.',
+      'Dropping the obligatory personal suffix (e.g. *Ben öğretmen for Ben öğretmenim).',
+      'Using -DIr as a default spoken copula (Bu güzeldir instead of Bu güzel).',
+      'Adding 3pl -lAr to non-human subjects (*Kediler küçükler).',
+      'Treating 3pl -lAr as mandatory; with human subjects it is optional, with non-human subjects it is omitted.',
     ],
   },
   {
