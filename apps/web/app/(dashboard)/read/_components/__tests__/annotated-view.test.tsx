@@ -42,11 +42,18 @@ const baseProps = {
   bank: [],
   intensity: 'subtle' as const,
   activeWord: null,
+  deepCard: { status: 'idle' } as const,
   calibration: { eyebrow: '~B1+ calibration', explanation: 'showing words rarer than top-3000' },
   isSaving: false,
   onIntensityChange: () => {},
   onPopoverOpen: () => {},
   onPopoverClose: () => {},
+  onSpanSelect: () => {},
+  onDeepRetry: () => {},
+  onSaveCard: () => {},
+  onUndoCard: () => {},
+  savedSpan: null,
+  savedWordKeys: new Set<string>(),
   onBankToggle: () => {},
   onClearBank: () => {},
   onSave: () => {},
@@ -255,6 +262,49 @@ describe('AnnotatedView — popover composition', () => {
       screen.getByRole('button', { name: /\+ save to bank/i }),
     );
     expect(onBankToggle).toHaveBeenCalledWith('aldea');
+  });
+});
+
+describe('AnnotatedView — deep-card save / undo (Req 8.4, 8.5)', () => {
+  const LOADED_WORD = {
+    status: 'loaded' as const,
+    span: { start: 0, end: 5, type: 'word' as const, x: 100, y: 50 },
+    card: {
+      type: 'word' as const,
+      surface: 'aldea',
+      lemma: 'aldea',
+      pos: 'noun',
+      contextualSense: 'a small rural settlement',
+      definition: 'pueblo pequeño',
+      definitionLabel: 'Español',
+      cefr: CefrLevel.B2,
+      freq: 4321,
+    },
+  };
+
+  it('routes the deep card save button to onSaveCard with the card + span', () => {
+    const onSaveCard = vi.fn();
+    render(
+      <AnnotatedView {...baseProps} deepCard={LOADED_WORD} onSaveCard={onSaveCard} />,
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: /\+ save to vocabulary/i }),
+    );
+    expect(onSaveCard).toHaveBeenCalledWith(LOADED_WORD.card, LOADED_WORD.span);
+  });
+
+  it('shows the saved footer and routes to onUndoCard when the span is the saved one', () => {
+    const onUndoCard = vi.fn();
+    render(
+      <AnnotatedView
+        {...baseProps}
+        deepCard={LOADED_WORD}
+        savedSpan={{ start: 0, end: 5 }}
+        onUndoCard={onUndoCard}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: /✓ saved · undo/i }));
+    expect(onUndoCard).toHaveBeenCalledTimes(1);
   });
 });
 

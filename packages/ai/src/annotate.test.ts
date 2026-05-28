@@ -5,6 +5,7 @@ import {
   ANNOTATE_TOOL,
   ANNOTATE_TOOL_NAME,
   annotateText,
+  isProperNounPos,
   parseAnnotateResult,
   type AnnotateInput,
 } from "./annotate.js";
@@ -64,23 +65,23 @@ describe("ANNOTATE_TOOL", () => {
     expect(flagged.type).toBe("array");
   });
 
-  it("requires the seven WordFlag fields per item", () => {
+  it("requires the six slim WordFlag fields per item and omits `example`", () => {
     const props = ANNOTATE_TOOL.input_schema.properties as Record<
       string,
-      { items: { required: string[] } }
+      { items: { required: string[]; properties: Record<string, unknown> } }
     >;
-    const itemRequired = props.flagged.items.required;
-    expect(itemRequired).toEqual(
-      expect.arrayContaining([
-        "matchedForm",
-        "lemma",
-        "pos",
-        "gloss",
-        "example",
-        "freq",
-        "cefr",
-      ]),
-    );
+    const item = props.flagged.items;
+    expect(item.required).toEqual([
+      "matchedForm",
+      "lemma",
+      "pos",
+      "gloss",
+      "freq",
+      "cefr",
+    ]);
+    // The slim skim card drops `example` — neither required nor a property.
+    expect(item.required).not.toContain("example");
+    expect(item.properties).not.toHaveProperty("example");
   });
 });
 
@@ -89,13 +90,27 @@ describe("ANNOTATE_TOOL", () => {
 // ---------------------------------------------------------------------------
 
 describe("ANNOTATE_SYSTEM_PROMPT", () => {
-  it("frames the task as enrichment, not selection (task 12 rewrite)", () => {
-    // Selection happens server-side now; Claude only enriches the words it
+  it("frames the task as a per-word highlight pass, not selection", () => {
+    // Selection happens server-side now; Claude only annotates the words it
     // receives. The rewritten prompt must not still tell Claude to filter.
-    expect(ANNOTATE_SYSTEM_PROMPT).toMatch(/Enrichment Task/);
+    expect(ANNOTATE_SYSTEM_PROMPT).toMatch(/Highlight Task/);
     expect(ANNOTATE_SYSTEM_PROMPT).toMatch(/list of words/);
     expect(ANNOTATE_SYSTEM_PROMPT).not.toMatch(/top_rank/);
     expect(ANNOTATE_SYSTEM_PROMPT).not.toMatch(/Selection Rule/);
+  });
+
+  it("instructs the slim pass to omit example sentences", () => {
+    // The skim pass no longer emits examples (deep cards supply them); the
+    // prompt must say so rather than ask for an example field.
+    expect(ANNOTATE_SYSTEM_PROMPT).toMatch(/example sentences?/i);
+    expect(ANNOTATE_SYSTEM_PROMPT).toMatch(/Do NOT produce example/);
+  });
+
+  it("instructs Claude never to flag proper nouns and not to use capitalization as the signal", () => {
+    expect(ANNOTATE_SYSTEM_PROMPT).toMatch(/Never Flag Proper Nouns/);
+    expect(ANNOTATE_SYSTEM_PROMPT).toMatch(/proper noun/i);
+    // German caps all nouns — the prompt must rule capitalization out as the cue.
+    expect(ANNOTATE_SYSTEM_PROMPT).toMatch(/capitaliz/i);
   });
 
   it("still names closed-class words in the per-language guidance", () => {
@@ -117,6 +132,33 @@ describe("ANNOTATE_SYSTEM_PROMPT", () => {
     expect(ANNOTATE_SYSTEM_PROMPT).toContain("aldea");
     expect(ANNOTATE_SYSTEM_PROMPT).toContain("Wirtschaftsaufschwung");
     expect(ANNOTATE_SYSTEM_PROMPT).toContain("davranışlarıyla");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// isProperNounPos — proper-noun POS guard (Req 2.4)
+// ---------------------------------------------------------------------------
+
+describe("isProperNounPos", () => {
+  it("matches common proper-noun spellings, case-insensitively", () => {
+    for (const pos of [
+      "proper noun",
+      "Proper Noun",
+      "PROPER NOUN",
+      "proper-noun",
+      "proper_noun",
+      "propernoun",
+      "PROPN",
+      "propn",
+    ]) {
+      expect(isProperNounPos(pos)).toBe(true);
+    }
+  });
+
+  it("does not false-positive on common/related parts of speech", () => {
+    for (const pos of ["noun", "pronoun", "verb", "adjective", "adverb", "n", "pn"]) {
+      expect(isProperNounPos(pos)).toBe(false);
+    }
   });
 });
 

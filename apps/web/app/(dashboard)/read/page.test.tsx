@@ -9,6 +9,7 @@ import type {
 } from '@language-drill/api-client';
 import { ActiveLanguageProvider } from '../../../components/shell';
 import ReadPage from './page';
+import wordFlagStyles from './_components/word-flag-styles.module.css';
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -30,6 +31,9 @@ const mockUseReadEntry = vi.fn();
 const mockUseReadAnnotateStream = vi.fn();
 const mockUseSaveReadEntry = vi.fn();
 const mockUseUpdateReadBank = vi.fn();
+const mockUseReadAnnotateSpan = vi.fn();
+const mockUseSaveVocabularyCard = vi.fn();
+const mockUseDeleteVocabularyCard = vi.fn();
 
 vi.mock('@language-drill/api-client', () => ({
   useLanguageProfiles: (...args: unknown[]) => mockUseLanguageProfiles(...args),
@@ -39,6 +43,11 @@ vi.mock('@language-drill/api-client', () => ({
     mockUseReadAnnotateStream(...args),
   useSaveReadEntry: (...args: unknown[]) => mockUseSaveReadEntry(...args),
   useUpdateReadBank: (...args: unknown[]) => mockUseUpdateReadBank(...args),
+  useReadAnnotateSpan: (...args: unknown[]) => mockUseReadAnnotateSpan(...args),
+  useSaveVocabularyCard: (...args: unknown[]) =>
+    mockUseSaveVocabularyCard(...args),
+  useDeleteVocabularyCard: (...args: unknown[]) =>
+    mockUseDeleteVocabularyCard(...args),
   createAuthenticatedFetch: vi.fn(() => vi.fn()),
 }));
 
@@ -184,6 +193,9 @@ function stubAnnotateCompleteOnStart(
 
 let saveMutate: ReturnType<typeof vi.fn>;
 let updateBankMutate: ReturnType<typeof vi.fn>;
+let spanMutate: ReturnType<typeof vi.fn>;
+let saveVocabMutate: ReturnType<typeof vi.fn>;
+let deleteVocabMutate: ReturnType<typeof vi.fn>;
 
 type MutateImpl = (
   vars: unknown,
@@ -208,6 +220,35 @@ function setUpdateBank(
     mutate: updateBankMutate,
     reset: vi.fn(),
     isPending: opts.isPending ?? false,
+    error: null,
+  });
+}
+
+function setAnnotateSpan(opts: { mutateImpl?: MutateImpl } = {}) {
+  spanMutate = vi.fn(opts.mutateImpl ?? (() => {}));
+  mockUseReadAnnotateSpan.mockReturnValue({
+    mutate: spanMutate,
+    reset: vi.fn(),
+    isPending: false,
+    error: null,
+  });
+}
+
+function setVocabMutations(
+  opts: { saveImpl?: MutateImpl; deleteImpl?: MutateImpl } = {},
+) {
+  saveVocabMutate = vi.fn(opts.saveImpl ?? (() => {}));
+  deleteVocabMutate = vi.fn(opts.deleteImpl ?? (() => {}));
+  mockUseSaveVocabularyCard.mockReturnValue({
+    mutate: saveVocabMutate,
+    reset: vi.fn(),
+    isPending: false,
+    error: null,
+  });
+  mockUseDeleteVocabularyCard.mockReturnValue({
+    mutate: deleteVocabMutate,
+    reset: vi.fn(),
+    isPending: false,
     error: null,
   });
 }
@@ -274,6 +315,8 @@ beforeEach(() => {
   resetAnnotateMock();
   setSave();
   setUpdateBank();
+  setAnnotateSpan();
+  setVocabMutations();
 });
 
 afterEach(() => {
@@ -407,8 +450,12 @@ describe('ReadPage — streaming annotate flow', () => {
     fireEvent.click(screen.getByRole('button', { name: /annotate →/i }));
     // Reader text is visible (rendered inside the AnnotatedView).
     expect(screen.getByTestId('rd-text')).toHaveTextContent('aldea grande');
-    // No flagged-word buttons rendered yet — flaggedMap is empty.
-    expect(screen.queryByRole('button', { name: 'aldea' })).not.toBeInTheDocument();
+    // Every word is now tappable (tap-any-word, Req 3.2), but with an empty
+    // flaggedMap none carries the flagged-highlight styling yet.
+    const aldea = screen.getByRole('button', { name: 'aldea' });
+    expect(aldea.className).not.toContain(wordFlagStyles.subtle);
+    expect(aldea.className).not.toContain(wordFlagStyles.assertive);
+    expect(aldea.className).not.toContain(wordFlagStyles.saved);
   });
 
   it('renders the progress strip during streaming and increments flaggedCount as flags arrive (Req 5.3)', () => {
@@ -696,6 +743,132 @@ describe('ReadPage — popover + bank flow', () => {
     );
     expect(
       screen.getByText("couldn't update — try again"),
+    ).toBeInTheDocument();
+  });
+});
+
+describe('ReadPage — deep annotation flow (Req 3, 9.4, 11)', () => {
+  // 'aldea' occupies offsets [0,5) in 'aldea grande'.
+  const DEEP_ALDEA: NonNullable<ReadEntryResponse['spanAnnotations']>[string] = {
+    type: 'word',
+    surface: 'aldea',
+    lemma: 'aldea',
+    pos: 'noun',
+    contextualSense: 'a small rural settlement',
+    definition: 'pueblo pequeño',
+    definitionLabel: 'Español',
+    cefr: CefrLevel.B2,
+    freq: 4321,
+  };
+
+  it('tapping a word fires the deep endpoint with the passage text, offsets, and entryId (Req 3.2, 3.4)', () => {
+    setEntries(ENTRIES_3);
+    setEntry(FULL_ENTRY);
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
+    expect(spanMutate).toHaveBeenCalledTimes(1);
+    expect(spanMutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        language: Language.ES,
+        text: 'aldea grande',
+        start: 0,
+        end: 5,
+        entryId: ENTRY_ID,
+      }),
+      expect.any(Object),
+    );
+  });
+
+  it('renders a persisted span instantly and does NOT call the endpoint (Req 11.3, 11.4)', () => {
+    setEntries(ENTRIES_3);
+    setEntry({ ...FULL_ENTRY, spanAnnotations: { '0:5': DEEP_ALDEA } });
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
+    // Loaded deep card renders from the seeded snapshot…
+    expect(screen.getByText('pueblo pequeño')).toBeInTheDocument();
+    // …and the deep endpoint is never hit.
+    expect(spanMutate).not.toHaveBeenCalled();
+  });
+
+  it('swaps the resolved deep card in on success (Req 3.3)', () => {
+    setEntries(ENTRIES_3);
+    setEntry(FULL_ENTRY);
+    setAnnotateSpan({
+      mutateImpl: (_vars, opts) => opts?.onSuccess?.(DEEP_ALDEA),
+    });
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
+    expect(screen.getByText('pueblo pequeño')).toBeInTheDocument();
+  });
+
+  it('surfaces an inline error and retries from the card (Req 9.4)', () => {
+    setEntries(ENTRIES_3);
+    setEntry(FULL_ENTRY);
+    setAnnotateSpan({
+      mutateImpl: (_vars, opts) => {
+        const err = new Error('network blip');
+        (err as { status?: number }).status = 502;
+        opts?.onError?.(err);
+      },
+    });
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
+    expect(screen.getByTestId('deep-card-error')).toBeInTheDocument();
+    expect(spanMutate).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole('button', { name: /try again/i }));
+    expect(spanMutate).toHaveBeenCalledTimes(2);
+  });
+
+  const VOCAB_ID = '99999999-9999-9999-9999-999999999999';
+
+  function saveAldea() {
+    setEntries(ENTRIES_3);
+    setEntry(FULL_ENTRY);
+    setAnnotateSpan({
+      mutateImpl: (_vars, opts) => opts?.onSuccess?.(DEEP_ALDEA),
+    });
+    setVocabMutations({
+      saveImpl: (_vars, opts) => opts?.onSuccess?.({ id: VOCAB_ID }),
+      deleteImpl: (_vars, opts) => opts?.onSuccess?.({ id: VOCAB_ID }),
+    });
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: /\+ save to vocabulary/i }),
+    );
+  }
+
+  it('saving a resolved word card posts it to vocabulary and shows the toast (Req 8.4)', () => {
+    saveAldea();
+    expect(saveVocabMutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        language: Language.ES,
+        card: DEEP_ALDEA,
+        sourceReadEntryId: ENTRY_ID,
+      }),
+      expect.any(Object),
+    );
+    // Confirmation toast + the card footer flipped to the saved state.
+    expect(screen.getByRole('status')).toHaveTextContent(/saved.*to vocabulary/i);
+    expect(
+      screen.getByRole('button', { name: /✓ saved · undo/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('flips the in-passage word to the saved style after a save (Req 8.4)', () => {
+    saveAldea();
+    const token = screen.getByRole('button', { name: 'aldea' });
+    expect(token.className).toContain(wordFlagStyles.saved);
+  });
+
+  it('undo from the toast deletes the vocabulary record and reverts (Req 8.5)', () => {
+    saveAldea();
+    fireEvent.click(screen.getByRole('button', { name: /^undo$/i }));
+    expect(deleteVocabMutate).toHaveBeenCalledWith(VOCAB_ID, expect.any(Object));
+    // Toast gone and the card footer reverted to the unsaved label.
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /\+ save to vocabulary/i }),
     ).toBeInTheDocument();
   });
 });

@@ -77,3 +77,11 @@
   padding: 0 3px !important;
   text-decoration: none !important;
 }
+
+/* SELECTING — transient wash while a multi-word span is being mouse-dragged.
+ * Applied to every word token inside the in-progress selection range; cleared
+ * on mouseup when the span resolves. */
+.selecting {
+  background: var(--color-accent-soft);
+  border-radius: 2px;
+}

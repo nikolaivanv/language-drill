@@ -20,6 +20,7 @@ import { Langfuse } from "langfuse";
 import { CefrLevel, ExerciseType, Language } from "@language-drill/shared";
 import { ANNOTATE_TOOL_NAME } from "./annotate.js";
 import { EVALUATION_TOOL_NAME } from "./evaluate.js";
+import { READ_SPAN_TOOL_NAME } from "./read-span.js";
 import { TOOL_NAME_BY_TYPE } from "./generate.js";
 import { THEORY_TOOL_NAME } from "./theory-generate.js";
 import { THEORY_VALIDATION_TOOL_NAME } from "./theory-validate.js";
@@ -1306,6 +1307,7 @@ describe("TOOL_NAME_TO_FEATURE", () => {
   const expected: ReadonlyArray<readonly [string, LlmFeature]> = [
     [EVALUATION_TOOL_NAME, "evaluate"],
     [ANNOTATE_TOOL_NAME, "annotate"],
+    [READ_SPAN_TOOL_NAME, "annotate-span"],
     [TOOL_NAME_BY_TYPE.cloze, "generate"],
     [TOOL_NAME_BY_TYPE.translation, "generate"],
     [TOOL_NAME_BY_TYPE.vocab_recall, "generate"],

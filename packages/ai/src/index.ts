@@ -26,12 +26,26 @@ export {
   ANNOTATE_TOOL,
   ANNOTATE_TOOL_NAME,
   AnnotateStreamMaxTokensError,
+  isProperNounPos,
   streamAnnotation,
 } from "./annotate.js";
 export type {
   AnnotateStreamEvent,
   AnnotateStreamInput,
 } from "./annotate.js";
+
+// Read: Deep Annotation — on-demand span enrichment (Sonnet). The deep
+// counterpart to the cheap skim pass in `annotate.js`.
+export {
+  READ_SPAN_SYSTEM_PROMPT,
+  READ_SPAN_PROMPT_VERSION,
+  READ_SPAN_TOOL,
+  READ_SPAN_TOOL_NAME,
+  annotateSpan,
+  parseSpanResult,
+  buildSpanUserPrompt,
+} from "./read-span.js";
+export type { AnnotateSpanInput, SpanType } from "./read-span.js";
 
 export {
   GENERATION_MODEL,

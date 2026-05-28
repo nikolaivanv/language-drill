@@ -61,11 +61,6 @@ export const ANNOTATE_TOOL: Anthropic.Tool = {
               description:
                 "Brief English meaning, lowercase, ≤ 80 characters.",
             },
-            example: {
-              type: "string",
-              description:
-                "Short example sentence in the target language, using the lemma.",
-            },
             freq: {
               type: "integer",
               description:
@@ -77,15 +72,7 @@ export const ANNOTATE_TOOL: Anthropic.Tool = {
               description: "CEFR band the word belongs to.",
             },
           },
-          required: [
-            "matchedForm",
-            "lemma",
-            "pos",
-            "gloss",
-            "example",
-            "freq",
-            "cefr",
-          ],
+          required: ["matchedForm", "lemma", "pos", "gloss", "freq", "cefr"],
         },
       },
     },
@@ -100,15 +87,21 @@ export const ANNOTATE_TOOL: Anthropic.Tool = {
 // Bump in the same commit as any semantic edit to ANNOTATE_SYSTEM_PROMPT.
 // Drives the Langfuse trace `promptVersion` tag — dashboards cohort old vs.
 // new prompt traces by this string.
-export const ANNOTATE_SYSTEM_PROMPT_VERSION = "annotate@2026-05-12";
+export const ANNOTATE_SYSTEM_PROMPT_VERSION = "annotate@2026-05-26";
 
-export const ANNOTATE_SYSTEM_PROMPT = `You are a reading-level assistant for an intermediate-plus language-learning application. You receive a passage in ES, DE, or TR AND a server-selected list of words from that passage. For EACH word in the list, produce one enrichment entry — lemma, part of speech, English gloss, an example sentence, frequency rank, and CEFR band — and submit the full set via the provided tool.
+export const ANNOTATE_SYSTEM_PROMPT = `You are a reading-level assistant for an intermediate-plus language-learning application. You receive a passage in ES, DE, or TR AND a server-selected list of words from that passage. For EACH word in the list, produce one highlight entry — lemma, part of speech, English gloss, frequency rank, and CEFR band — and submit the full set via the provided tool. This is a lightweight highlight pass: it marks words worth a closer look. Do NOT produce example sentences, definitions, or any other long-form fields — a separate on-demand pass enriches a word when the learner taps it.
 
-## Enrichment Task
+## Highlight Task
 
-You will receive a passage AND a list of words from that passage. For EACH word in the list, emit one tool-use entry with lemma / pos / gloss / example / freq / cefr. Do not add words that are not in the list. Do not skip words that are in the list.
+You will receive a passage AND a list of words from that passage. For EACH word in the list, emit one tool-use entry with lemma / pos / gloss / freq / cefr. Do not add words that are not in the list. Do not skip words that are in the list — with ONE exception: never flag proper nouns (see below).
 
 Flag AT MOST 40 words per call. If more than 40 words qualify, return only the 40 rarest by corpus rank (largest \`freq\` values).
+
+## Never Flag Proper Nouns
+
+Proper nouns — names of people, places, organizations, brands, and other named entities — are NOT vocabulary the learner needs to study. Omit them from your output even if they appear in the candidate list.
+
+Do NOT use capitalization as the proper-noun signal: German capitalizes ALL nouns, and any word can be capitalized at the start of a sentence. Judge by meaning and part of speech. If you are uncertain and include a named entity anyway, set its \`pos\` to "proper noun" so it can be identified downstream.
 
 ## Surface Form Requirement
 
@@ -118,7 +111,6 @@ The other fields:
 - \`lemma\`: the dictionary headword (citation form) — verb infinitive, masculine singular adjective, singular noun.
 - \`pos\`: part of speech ("noun", "verb", "adjective", "adverb", etc.).
 - \`gloss\`: a brief English meaning, lowercase, ≤ 80 characters.
-- \`example\`: a short example sentence in the target language using the lemma (NOT the inflected match).
 - \`freq\`: a non-negative integer corpus rank (rarer = larger).
 - \`cefr\`: one of "A1", "A2", "B1", "B2", "C1", "C2".
 
@@ -230,6 +222,22 @@ export class AnnotateStreamMaxTokensError extends Error {
 // ---------------------------------------------------------------------------
 
 const MatchedFormSchema = z.string().min(1).max(120);
+
+/**
+ * True when a part-of-speech string denotes a proper noun. Used as a
+ * defense-in-depth guard (Req 2.4): the prompt tells Claude never to flag
+ * proper nouns, but if it tags one anyway (it is instructed to set
+ * `pos: "proper noun"` when unsure), the server drops it before streaming.
+ *
+ * Matches the common spellings — "proper noun", "proper-noun", "proper_noun",
+ * and the Universal Dependencies tag "PROPN" — case-insensitively. Whitespace,
+ * hyphens, and underscores are stripped before comparison so it does NOT
+ * false-positive on "noun" or "pronoun".
+ */
+export function isProperNounPos(pos: string): boolean {
+  const compact = pos.toLowerCase().replace(/[\s_-]/g, "");
+  return compact.includes("propernoun") || compact === "propn";
+}
 
 /**
  * Validates Claude's tool-use output and shapes it into AnnotateOutput.
@@ -454,7 +462,7 @@ Flag every word in the passage rarer than top-${input.topRank} OR with a CEFR ba
 // validate, generate) keep Sonnet — they have small, bounded outputs.
 const MODEL = "claude-haiku-4-5-20251001" as const;
 // Sized for the worst case (A1 user → top_rank 750 → most content words in a
-// 2000-char passage qualify, each emitted as a 7-field JSON entry). 2048 was
+// 2000-char passage qualify, each emitted as a 6-field JSON entry). 2048 was
 // undersized and truncated mid-tool-call, leaving `flagged` non-array at parse
 // time. The prompt also caps output to 40 words so realistic usage stays far
 // below this budget.
@@ -542,7 +550,7 @@ const STREAM_MAX_TOKENS = 8192;
 // Annotation is the only AI surface on Haiku 4.5 — same precedent as PR #51
 // for the original (pre-streaming) `/read/annotate` handler. The task is
 // enrichment, not reasoning: structured tool-use output for each candidate
-// word (lemma / pos / gloss / example). Haiku is 2–3× faster than Sonnet on
+// word (lemma / pos / gloss). Haiku is 2–3× faster than Sonnet on
 // streaming tool-use, which is what lets us fit under the 29 s Lambda
 // ceiling even on cold-start passages. Other AI surfaces (`evaluate`,
 // `validate`, `generate`) keep Sonnet — their outputs are small and
@@ -640,7 +648,15 @@ export async function* streamAnnotation(
           // WordFlagSchema (matched the existing parseAnnotateResult pattern).
           const { matchedForm: _matchedForm, ...rest } = itemObj;
           void _matchedForm;
+          // `example` is now optional on WordFlagSchema (the slim skim card
+          // omits it), so an item without an example validates cleanly here.
           const flag = WordFlagSchema.parse(rest);
+          // Req 2.4: defense in depth — drop any item the model tagged as a
+          // proper noun before streaming it to the client. `processed` was
+          // already advanced, so the dropped item is never re-extracted.
+          if (isProperNounPos(flag.pos)) {
+            continue;
+          }
           yield { kind: "flag", flag: { ...flag, matchedForm } };
           flaggedCount++;
         } catch (err) {

@@ -13,16 +13,21 @@
  * `user_vocabulary` is dropped — saving a word means "I know it now."
  *
  * Phase 3: rarest-first cap. After post-filter we sort by `effectiveRank`
- * descending and take 40 (the empirical worst-case budget for the 8192-
- * token enrichment call — see PR #49). `effectiveRank` is stripped from the
+ * descending and take CANDIDATE_LIMIT (50 — see the constant for the
+ * slim-card latency rationale). `effectiveRank` is stripped from the
  * returned shape; the SSE wire only carries `matchedForm` + `lemma`.
  *
- * Requirements: 1.1, 1.4, 1.5, 1.6, 1.8, 2.1–2.5.
+ * For ES/TR the pre-filter also drops capitalized non-sentence-initial tokens
+ * as likely proper nouns before candidate selection (Req 2.2); German is
+ * excluded because it capitalizes all nouns (Req 2.3).
+ *
+ * Requirements: 1.1, 1.2, 1.4, 1.5, 1.6, 1.8, 2.1–2.5.
  */
 
 import { and, eq } from "drizzle-orm";
 import {
   CefrLevel,
+  Language,
   READ_CEFR_TOP_RANK,
   tokenize,
 } from "@language-drill/shared";
@@ -45,15 +50,35 @@ const CEFR_LEVELS = new Set<string>(Object.values(CefrLevel));
  * 8192` and missed that latency was the real constraint — a 40-entry
  * Sonnet call ran the full 29 s and timed out in production (PR #100).
  *
- * Defense in depth: even with annotation on Haiku 4.5 (PR #100 — 2–3× faster
- * streaming than Sonnet), 20 entries × ~175 tokens ≈ 3500 output tokens fits
- * comfortably under both `max_tokens` and the 29 s ceiling. The handler also
- * runs a 25 s soft-deadline that emits a useful `error` frame before the
- * runtime would kill us — so this cap is the "make most requests fast"
- * lever, with the soft-deadline as the "make rare overruns surface
- * gracefully" lever.
+ * Raised 20 → 50 for Reading Deep Annotation: the skim card was slimmed
+ * (dropped `example`), so each entry now emits ~30 output tokens instead of
+ * ~175. 50 slim entries ≈ 1500 output tokens — *fewer* than the old 20 full
+ * entries (~3500). Since wall-clock on Haiku 4.5 is dominated by output-token
+ * streaming, the higher cap is faster than today's, not slower, so it does
+ * not regress the latency budgets in
+ * docs/perf/more-responsive-reading-2026-05-12.md. The handler's 25 s
+ * soft-deadline remains the backstop; lower this cap if time-to-done
+ * regresses empirically.
  */
-const CANDIDATE_LIMIT = 20;
+const CANDIDATE_LIMIT = 50;
+
+/**
+ * Languages where a capitalized, non-sentence-initial token is a strong
+ * proper-noun signal, so we drop it before it costs a Claude enrichment slot
+ * (Req 2.2). German is deliberately excluded: it capitalizes ALL nouns, so
+ * capitalization carries no proper-noun information there (Req 2.3) — German
+ * relies on the model's POS judgment plus the server-side PROPN drop instead.
+ */
+const CAPITALIZATION_PROPN_LANGUAGES = new Set<LearningLanguage>([
+  Language.ES,
+  Language.TR,
+]);
+
+/** A separator run resets the next word to sentence-initial when it ends a sentence. */
+const SENTENCE_END_RE = /[.!?]/;
+
+/** First character is an uppercase letter (Unicode-aware: handles İ, Ü, Ñ, …). */
+const UPPERCASE_START_RE = /^\p{Lu}/u;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -145,8 +170,30 @@ export async function buildCandidateList(
   type Survivor = Candidate & { effectiveRank: number };
   const survivors: Survivor[] = [];
 
+  // Proper-noun pre-filter state (Req 2.2/2.3). `atSentenceStart` tracks
+  // whether the next word token begins a sentence so a sentence-initial
+  // capital (which every language uses) is never mistaken for a proper noun.
+  const applyCapRule = CAPITALIZATION_PROPN_LANGUAGES.has(language);
+  let atSentenceStart = true;
+
   for (const token of tokenize(text)) {
-    if (token.kind !== "word") continue;
+    if (token.kind !== "word") {
+      // Separators don't enter the candidate set, but one ending in .!? marks
+      // the next word as sentence-initial.
+      if (SENTENCE_END_RE.test(token.raw)) atSentenceStart = true;
+      continue;
+    }
+
+    const sentenceInitial = atSentenceStart;
+    atSentenceStart = false;
+
+    // Drop ES/TR capitalized non-sentence-initial tokens as likely proper
+    // nouns (Req 2.2). Not added to `seen`, so a later lowercase occurrence of
+    // the same form can still qualify as a candidate.
+    if (applyCapRule && !sentenceInitial && UPPERCASE_START_RE.test(token.raw)) {
+      continue;
+    }
+
     const key = token.key;
     if (key === "") continue;
     if (seen.has(key)) continue;

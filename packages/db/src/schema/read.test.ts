@@ -13,6 +13,21 @@ describe('read schema', () => {
     expect(readEntries.text).toBeDefined();
   });
 
+  it('adds the deep-annotation jsonb columns as nullable (Req 8.1, 11.1)', () => {
+    const reCfg = getTableConfig(readEntries);
+    const span = reCfg.columns.find((c) => c.name === 'span_annotations');
+    expect(span).toBeDefined();
+    expect(span!.getSQLType()).toBe('jsonb');
+    // Nullable — absent ⇒ no deep cards persisted yet.
+    expect(span!.notNull).toBe(false);
+
+    const uvCfg = getTableConfig(userVocabulary);
+    const card = uvCfg.columns.find((c) => c.name === 'card');
+    expect(card).toBeDefined();
+    expect(card!.getSQLType()).toBe('jsonb');
+    expect(card!.notNull).toBe(false);
+  });
+
   it('declares the unique constraint and helper index on userVocabulary', () => {
     const cfg = getTableConfig(userVocabulary);
     expect(
@@ -21,6 +36,17 @@ describe('read schema', () => {
     expect(
       cfg.indexes.some((i) => i.config.name === 'user_vocabulary_user_lang_idx'),
     ).toBe(true);
+  });
+
+  it('leaves the (user, language, word) unique key unchanged after the additions (Req 8.3)', () => {
+    const cfg = getTableConfig(userVocabulary);
+    const uq = cfg.uniqueConstraints.find(
+      (u) => u.name === 'user_vocabulary_user_lang_word_uq',
+    );
+    expect(uq).toBeDefined();
+    expect(uq!.columns.map((c) => c.name)).toEqual(['user_id', 'language', 'word']);
+    // The `card` column added no new unique constraint.
+    expect(cfg.uniqueConstraints).toHaveLength(1);
   });
 
   it('declares the descending pastedAt index on readEntries', () => {

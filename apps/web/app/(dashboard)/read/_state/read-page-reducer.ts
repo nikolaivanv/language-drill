@@ -13,13 +13,53 @@
 // vertical slice.
 // ---------------------------------------------------------------------------
 
-import type { FlaggedMap, WordFlag } from '@language-drill/shared';
+import type {
+  DeepCard,
+  FlaggedMap,
+  SpanAnnotations,
+  WordFlag,
+} from '@language-drill/shared';
 
 export type View = 'empty' | 'pasting' | 'annotated' | 'history';
 
 export type Intensity = 'subtle' | 'assertive';
 
 export type ActiveWord = { word: string; x: number; y: number };
+
+// ---------------------------------------------------------------------------
+// Deep-annotation slice (reading-deep-annotation spec, Req 9.3, 9.4, 11.4)
+// ---------------------------------------------------------------------------
+// The on-demand deep card is a small state machine over a single active span.
+// `OPEN_DEEP_CARD` arms it: a span already present in `spanAnnotations` renders
+// instantly as `loaded` (Req 11.4); otherwise it opens `loading` while the page
+// fires `useReadAnnotateSpan` (Req 9.3). `DEEP_CARD_RESOLVED`/`DEEP_CARD_ERROR`
+// settle it (Req 9.4), and every resolve is merged into `spanAnnotations` so a
+// re-tap within the session is served from cache with no new model call
+// (Req 3.5). The span type is the client hint; the server is authoritative.
+
+/** Span shapes a deep card can take — kept in lockstep with the shared union. */
+export type SpanType = DeepCard['type'];
+
+/** An active span: its character offsets, type, and container-relative anchor. */
+export type DeepSpan = {
+  start: number;
+  end: number;
+  type: SpanType;
+  /** Anchor position relative to the rd-text container (mirrors ActiveWord). */
+  x: number;
+  y: number;
+};
+
+export type DeepCardSlice =
+  | { status: 'idle' }
+  | { status: 'loading'; span: DeepSpan }
+  | { status: 'loaded'; span: DeepSpan; card: DeepCard }
+  | { status: 'error'; span: DeepSpan; error: AnnotateError };
+
+/** Cache key for a span within `spanAnnotations` — matches the server's. */
+export function spanKey(start: number, end: number): string {
+  return `${start}:${end}`;
+}
 
 // ---------------------------------------------------------------------------
 // Streaming-annotate slice (more-responsive-reading spec, Req 5.3–5.6)
@@ -79,6 +119,14 @@ export type ReadPageState = {
   saveToast: { count: number } | null;
   inlineError: { kind: 'save' | 'bank' } | null;
   annotateStream: AnnotateStreamSlice;
+  /** On-demand deep-annotation card state machine (Req 9.3, 9.4). */
+  deepCard: DeepCardSlice;
+  /**
+   * Resolved deep cards for the open passage, keyed by "start:end". Seeded from
+   * a loaded saved entry (Req 11.3) and grown as spans resolve in-session
+   * (Req 3.5); the `OPEN_DEEP_CARD` cache check reads it (Req 11.4).
+   */
+  spanAnnotations: SpanAnnotations;
 };
 
 export type Action =
@@ -102,7 +150,12 @@ export type Action =
   | { type: 'ANNOTATE_FLAG'; matchedForm: string; flag: WordFlag }
   | { type: 'ANNOTATE_DONE'; flaggedCount: number }
   | { type: 'ANNOTATE_ERROR'; error: AnnotateError }
-  | { type: 'ANNOTATE_RESET' };
+  | { type: 'ANNOTATE_RESET' }
+  | { type: 'OPEN_DEEP_CARD'; span: DeepSpan }
+  | { type: 'DEEP_CARD_RESOLVED'; span: DeepSpan; card: DeepCard }
+  | { type: 'DEEP_CARD_ERROR'; span: DeepSpan; error: AnnotateError }
+  | { type: 'DISMISS_DEEP_CARD' }
+  | { type: 'SET_SPAN_ANNOTATIONS'; spanAnnotations: SpanAnnotations };
 
 export const initialState: ReadPageState = {
   view: 'empty',
@@ -114,6 +167,8 @@ export const initialState: ReadPageState = {
   saveToast: null,
   inlineError: null,
   annotateStream: { phase: 'idle' },
+  deepCard: { status: 'idle' },
+  spanAnnotations: {},
 };
 
 // Streaming starts with empty accumulators and a placeholder calibration —
@@ -189,7 +244,9 @@ export function readPageReducer(state: ReadPageState, action: Action): ReadPageS
 
     case 'LOAD_ENTRY':
       // A freshly-loaded entry should land in a clean state: clear popover,
-      // pending save toast, and any prior inline error.
+      // pending save toast, and any prior inline error. The deep-card slice and
+      // the prior entry's span annotations are reset too — the page re-seeds
+      // `spanAnnotations` from the newly-loaded entry via SET_SPAN_ANNOTATIONS.
       return {
         ...state,
         view: 'annotated',
@@ -197,6 +254,8 @@ export function readPageReducer(state: ReadPageState, action: Action): ReadPageS
         activeWord: null,
         saveToast: null,
         inlineError: null,
+        deepCard: { status: 'idle' },
+        spanAnnotations: {},
       };
 
     case 'ENTRY_PERSISTED':
@@ -214,7 +273,14 @@ export function readPageReducer(state: ReadPageState, action: Action): ReadPageS
 
     case 'ANNOTATE_START':
       // Aborts the slice's prior accumulators; the next META/FLAG fills it in.
-      return { ...state, annotateStream: STREAMING_PLACEHOLDER };
+      // A new annotation is a brand-new passage, so the deep-card slice and any
+      // session span annotations from the prior passage are cleared.
+      return {
+        ...state,
+        annotateStream: STREAMING_PLACEHOLDER,
+        deepCard: { status: 'idle' },
+        spanAnnotations: {},
+      };
 
     case 'ANNOTATE_META':
       // Ignored outside `streaming` — defensive against an out-of-order
@@ -277,6 +343,68 @@ export function readPageReducer(state: ReadPageState, action: Action): ReadPageS
 
     case 'ANNOTATE_RESET':
       return { ...state, annotateStream: { phase: 'idle' } };
+
+    case 'OPEN_DEEP_CARD': {
+      // Cache hit (Req 11.4): a span already resolved this session (or seeded
+      // from the saved entry) renders instantly, bypassing the endpoint.
+      // Otherwise open `loading` (Req 9.3) — the page fires the mutation.
+      const cached = state.spanAnnotations[spanKey(action.span.start, action.span.end)];
+      return {
+        ...state,
+        deepCard: cached
+          ? { status: 'loaded', span: action.span, card: cached }
+          : { status: 'loading', span: action.span },
+      };
+    }
+
+    case 'DEEP_CARD_RESOLVED': {
+      // Always cache the resolved card into the session map (Req 3.5) — even if
+      // the user already dismissed or moved to another span, a later re-tap is
+      // then instant. Only swap the visible card when the resolve still matches
+      // the open span (guards against a stale/out-of-order resolve).
+      const key = spanKey(action.span.start, action.span.end);
+      const spanAnnotations = { ...state.spanAnnotations, [key]: action.card };
+      const current = state.deepCard;
+      const matchesOpen =
+        current.status !== 'idle' &&
+        current.span.start === action.span.start &&
+        current.span.end === action.span.end;
+      return {
+        ...state,
+        spanAnnotations,
+        deepCard: matchesOpen
+          ? { status: 'loaded', span: action.span, card: action.card }
+          : state.deepCard,
+      };
+    }
+
+    case 'DEEP_CARD_ERROR': {
+      // Only surface the error if it still matches the open span (Req 9.4);
+      // a stale failure for a dismissed/replaced span is ignored.
+      const current = state.deepCard;
+      const matchesOpen =
+        current.status !== 'idle' &&
+        current.span.start === action.span.start &&
+        current.span.end === action.span.end;
+      if (!matchesOpen) return state;
+      return {
+        ...state,
+        deepCard: { status: 'error', span: action.span, error: action.error },
+      };
+    }
+
+    case 'DISMISS_DEEP_CARD':
+      return { ...state, deepCard: { status: 'idle' } };
+
+    case 'SET_SPAN_ANNOTATIONS':
+      // Seed/merge the open entry's persisted deep cards (Req 11.3). Merge (not
+      // replace) so any cards resolved before the entry query settled survive;
+      // LOAD_ENTRY already cleared the prior entry's map, so on a fresh load
+      // this is effectively a replace.
+      return {
+        ...state,
+        spanAnnotations: { ...state.spanAnnotations, ...action.spanAnnotations },
+      };
 
     default: {
       const _exhaustive: never = action;

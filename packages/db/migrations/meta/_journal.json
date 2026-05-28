@@ -99,6 +99,13 @@
       "when": 1779713931972,
       "tag": "0013_vocab_word_index",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1779781884500,
+      "tag": "0014_add_deep_annotation_columns",
+      "breakpoints": true
     }
   ]
 }

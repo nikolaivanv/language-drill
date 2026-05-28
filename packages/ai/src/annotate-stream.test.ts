@@ -375,6 +375,65 @@ describe("streamAnnotation", () => {
     }
   });
 
+  // ── (slim) a flag that omits `example` is accepted and streamed (Req 1.1) ─
+  it("accepts and streams a slim flag that omits `example`", async () => {
+    // The slimmed skim card no longer emits `example`; WordFlagSchema made it
+    // optional, so the item validates and streams without that field.
+    const slimItem = {
+      matchedForm: "vapor",
+      lemma: "vapor",
+      pos: "noun",
+      gloss: "steam",
+      freq: 7000,
+      cefr: "B2",
+    };
+    const stream = fakeStream([JSON.stringify({ flagged: [slimItem] })]);
+    const client = {
+      messages: { stream: vi.fn(() => stream) },
+    } as unknown as Anthropic;
+
+    const events = await collect(streamAnnotation(client, baseStreamInput));
+
+    expect(events).toHaveLength(2);
+    expect(events[0]).toEqual({ kind: "flag", flag: { ...slimItem } });
+    expect(events[1]).toEqual({ kind: "done", flaggedCount: 1 });
+    // The streamed flag carries no `example` key.
+    if (events[0].kind === "flag") {
+      expect(events[0].flag).not.toHaveProperty("example");
+    }
+  });
+
+  // ── (propn) a pos=proper-noun item is dropped before streaming (Req 2.4) ──
+  it("drops an item whose pos is a proper noun before streaming", async () => {
+    // Defense in depth: the prompt tells Claude not to flag proper nouns, but
+    // any it tags as one (pos: "proper noun") is dropped server-side before a
+    // `flag` event is emitted — so only the two real words + `done` remain.
+    const propnItem = {
+      matchedForm: "madrid",
+      lemma: "Madrid",
+      pos: "proper noun",
+      gloss: "capital of spain",
+      freq: 1500,
+      cefr: "A1",
+    };
+    const stream = fakeStream([
+      JSON.stringify({ flagged: [validItem1, propnItem, validItem2] }),
+    ]);
+    const client = {
+      messages: { stream: vi.fn(() => stream) },
+    } as unknown as Anthropic;
+
+    const events = await collect(streamAnnotation(client, baseStreamInput));
+
+    // The proper-noun item is silently dropped (it parses fine — it is not
+    // malformed — so the drop is by pos, not by validation failure).
+    expect(events).toEqual([
+      { kind: "flag", flag: { ...validItem1 } },
+      { kind: "flag", flag: { ...validItem2 } },
+      { kind: "done", flaggedCount: 2 },
+    ]);
+  });
+
   // ── (d) Anthropic SDK throws → exception propagates ───────────────────────
   it("propagates an SDK error out of the iterator", async () => {
     const sdkError = new Error("network down");

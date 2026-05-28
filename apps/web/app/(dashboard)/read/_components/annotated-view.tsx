@@ -17,8 +17,8 @@
 // ---------------------------------------------------------------------------
 
 import * as React from 'react';
-import type { FlaggedMap } from '@language-drill/shared';
-import { AnnotatedText } from './annotated-text';
+import type { DeepCard, FlaggedMap } from '@language-drill/shared';
+import { AnnotatedText, type SpanSelection } from './annotated-text';
 import {
   AnnotatedFooter,
   ZeroFlaggedStrip,
@@ -30,7 +30,12 @@ import { WordBankSheet } from './word-bank-sheet';
 import { WordPopover } from './word-popover';
 import { WordSheet } from './word-sheet';
 import { useIsMobile } from '../../../../lib/responsive';
-import type { ActiveWord, Intensity } from '../_state/read-page-reducer';
+import type {
+  ActiveWord,
+  DeepCardSlice,
+  DeepSpan,
+  Intensity,
+} from '../_state/read-page-reducer';
 
 type AnnotatedEntry = {
   text: string;
@@ -44,6 +49,8 @@ type Props = {
   bank: string[];
   intensity: Intensity;
   activeWord: ActiveWord | null;
+  /** On-demand deep-annotation state machine (Req 3, 9.3, 9.4, 11.4). */
+  deepCard: DeepCardSlice;
   calibration: { eyebrow: string; explanation: string };
   /**
    * When set, the calibration strip shows the streaming progress UI
@@ -65,6 +72,22 @@ type Props = {
    */
   onPopoverOpen: (word: string, x: number, y: number) => void;
   onPopoverClose: () => void;
+  /**
+   * A tap on any word or a drag-selected phrase/sentence. Offsets + the
+   * container-relative anchor are forwarded; the parent fires the deep
+   * endpoint (or serves a cache hit) (Req 3.2, 4.1, 4.3, 5.1, 11.4).
+   */
+  onSpanSelect: (span: DeepSpan) => void;
+  /** Re-run the deep annotation from the inline error state (Req 9.4). */
+  onDeepRetry: () => void;
+  /** Save the resolved word/phrase deep card to vocabulary (Req 8.4). */
+  onSaveCard: (card: DeepCard, span: DeepSpan) => void;
+  /** Undo the just-saved deep card (Req 8.5). */
+  onUndoCard: () => void;
+  /** Offsets of the just-saved span, so the open card shows the "saved" footer. */
+  savedSpan: { start: number; end: number } | null;
+  /** Lowercased surface forms saved to vocabulary, for the in-passage style. */
+  savedWordKeys: Set<string>;
   onBankToggle: (word: string) => void;
   onClearBank: () => void;
   onSave: () => void;
@@ -76,6 +99,7 @@ export function AnnotatedView({
   bank,
   intensity,
   activeWord,
+  deepCard,
   calibration,
   annotateStreaming,
   noAboveLevelWords,
@@ -83,6 +107,12 @@ export function AnnotatedView({
   onIntensityChange,
   onPopoverOpen,
   onPopoverClose,
+  onSpanSelect,
+  onDeepRetry,
+  onSaveCard,
+  onUndoCard,
+  savedSpan,
+  savedWordKeys,
   onBankToggle,
   onClearBank,
   onSave,
@@ -125,6 +155,8 @@ export function AnnotatedView({
     return () => ro.disconnect();
   }, []);
 
+  const deepActive = deepCard.status !== 'idle';
+
   const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement | null;
     if (!target) return;
@@ -132,19 +164,82 @@ export function AnnotatedView({
     if (target.closest('[data-word]')) return;
     // Popover stops propagation already, but defensive against future edits.
     if (target.closest('[data-testid="word-popover"]')) return;
-    if (activeWord !== null) onPopoverClose();
+    if (activeWord !== null || deepActive) onPopoverClose();
   };
 
   const activeFlag =
     activeWord !== null ? entry.flaggedWords[activeWord.word] : null;
 
-  const handleWordClick = (word: string, rect: DOMRect) => {
+  // Convert a viewport-space rect into the rd-text container's coordinate space
+  // so the popover anchors correctly (mirrors `handleWordClick`).
+  const containerXY = (rect: DOMRect): { x: number; y: number } => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container) return { x: 0, y: 0 };
     const containerRect = container.getBoundingClientRect();
-    const x = rect.left - containerRect.left + rect.width / 2;
-    const y = rect.bottom - containerRect.top + 6;
+    return {
+      x: rect.left - containerRect.left + rect.width / 2,
+      y: rect.bottom - containerRect.top + 6,
+    };
+  };
+
+  const handleWordClick = (word: string, rect: DOMRect) => {
+    const { x, y } = containerXY(rect);
     onPopoverOpen(word, x, y);
+  };
+
+  // Every tap (as a word span) and every drag selection flows here; the anchor
+  // travels with the span so the deep card opens at the selection (Req 3.2,
+  // 4.1, 5.1).
+  const handleSpanSelect = (sel: SpanSelection) => {
+    const { x, y } = containerXY(sel.rect);
+    onSpanSelect({ start: sel.start, end: sel.end, type: sel.type, x, y });
+  };
+
+  // ---- Card chrome wiring (shared desktop popover / mobile sheet) ----------
+  // The deep slice owns the card once a span is selected; while it is `loading`
+  // a flagged word still shows its skim gloss as the preview (Req 3.1), then
+  // swaps to the deep card on resolve WITHOUT remounting the chrome (Req 3.3) —
+  // achieved by withholding the deep slice from the chrome during the skim
+  // preview so the same `WordPopover`/`WordSheet` instance stays mounted.
+  const skimPreviewDuringLoad = deepCard.status === 'loading' && activeFlag != null;
+  const chromeDeepCard: DeepCardSlice | undefined =
+    deepActive && !skimPreviewDuringLoad ? deepCard : undefined;
+  const cardOpen = deepActive || (activeFlag !== null && activeWord !== null);
+  const anchor = deepActive
+    ? { x: deepCard.span.x, y: deepCard.span.y }
+    : activeWord
+      ? { x: activeWord.x, y: activeWord.y }
+      : null;
+  // Label/headword for the chrome: the active flagged word, else the selected
+  // substring (so a phrase/sentence card has a sensible aria-label).
+  const cardWord = deepActive
+    ? entry.text.slice(deepCard.span.start, deepCard.span.end)
+    : (activeWord?.word ?? '');
+
+  // The loaded deep slice, if any (kept whole so its `span` narrows for save).
+  const loadedDeep = deepCard.status === 'loaded' ? deepCard : null;
+  // Whether the open deep card's span is the just-saved one — drives the
+  // card footer's "✓ saved · undo" state (Req 8.4).
+  const deepCardSaved =
+    savedSpan !== null &&
+    deepCard.status !== 'idle' &&
+    savedSpan.start === deepCard.span.start &&
+    savedSpan.end === deepCard.span.end;
+  // `inBank` for the chrome: the deep-save state when a deep card is loaded,
+  // otherwise the skim word's entry-bank membership.
+  const cardInBank = loadedDeep
+    ? deepCardSaved
+    : activeWord !== null && bankSet.has(activeWord.word);
+
+  const handleCardSave = () => {
+    // Loaded word/phrase deep card → vocabulary save / undo (Req 8.4, 8.5).
+    if (loadedDeep && loadedDeep.card.type !== 'sentence') {
+      if (deepCardSaved) onUndoCard();
+      else onSaveCard(loadedDeep.card, loadedDeep.span);
+      return;
+    }
+    // Skim card (flagged word, incl. the loading preview) → entry-bank toggle.
+    if (activeWord) onBankToggle(activeWord.word);
   };
 
   // ---- Mobile: single column + toolbar chip + bottom sheets ----------------
@@ -197,8 +292,10 @@ export function AnnotatedView({
             flaggedMap={entry.flaggedWords}
             intensity={intensity}
             bankSet={bankSet}
+            savedWordKeys={savedWordKeys}
             activeWord={activeWord?.word ?? null}
             onWordClick={handleWordClick}
+            onSpanSelect={handleSpanSelect}
           />
         </div>
 
@@ -217,13 +314,13 @@ export function AnnotatedView({
 
         {/* Bottom sheets (portaled) */}
         <WordSheet
-          open={activeFlag !== null}
+          open={cardOpen}
           entry={activeFlag}
-          word={activeWord?.word ?? ''}
-          inBank={activeWord !== null && bankSet.has(activeWord.word)}
-          onSave={() => {
-            if (activeWord) onBankToggle(activeWord.word);
-          }}
+          word={cardWord}
+          inBank={cardInBank}
+          deepCard={chromeDeepCard}
+          onRetry={onDeepRetry}
+          onSave={handleCardSave}
           onSkip={onPopoverClose}
           onClose={onPopoverClose}
         />
@@ -294,18 +391,22 @@ export function AnnotatedView({
             flaggedMap={entry.flaggedWords}
             intensity={intensity}
             bankSet={bankSet}
+            savedWordKeys={savedWordKeys}
             activeWord={activeWord?.word ?? null}
             onWordClick={handleWordClick}
+            onSpanSelect={handleSpanSelect}
           />
-          {activeFlag && activeWord && (
+          {cardOpen && anchor && (
             <WordPopover
               entry={activeFlag}
-              word={activeWord.word}
-              x={activeWord.x}
-              y={activeWord.y}
+              word={cardWord}
+              x={anchor.x}
+              y={anchor.y}
               containerWidth={containerWidth}
-              inBank={bankSet.has(activeWord.word)}
-              onSave={() => onBankToggle(activeWord.word)}
+              inBank={cardInBank}
+              deepCard={chromeDeepCard}
+              onRetry={onDeepRetry}
+              onSave={handleCardSave}
               onSkip={onPopoverClose}
               onClose={onPopoverClose}
             />

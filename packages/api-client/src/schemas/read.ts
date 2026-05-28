@@ -1,10 +1,12 @@
 import { z } from 'zod';
 import {
   CefrLevel,
+  DeepCardSchema,
   FlaggedMapSchema,
   READ_SOURCE_MAX_CHARS,
   READ_TEXT_MAX_CHARS,
   READ_TITLE_MAX_CHARS,
+  SpanAnnotationsSchema,
   WordFlagSchema,
 } from '@language-drill/shared';
 import { LearningLanguageEnum } from './preferences';
@@ -158,12 +160,83 @@ export const ReadEntryResponseSchema = z.object({
   text: z.string(),
   flaggedWords: FlaggedMapSchema,
   bank: z.array(z.string()),
+  // Deep cards resolved on this entry, keyed by "start:end" offsets. Optional:
+  // older/unsaved entries carry none. `useReadAnnotateSpan` writes resolved
+  // cards through here so a re-tapped span renders from cache without a new
+  // model call (Req 3.5, 11.4); the annotated view reads it to render persisted
+  // annotations on open (Req 11.3).
+  spanAnnotations: SpanAnnotationsSchema.optional(),
   pastedAt: z.string().datetime(),
 });
 
 export type ReadEntryResponse = z.infer<typeof ReadEntryResponseSchema>;
 
+// ---------------------------------------------------------------------------
+// POST /read/annotate-span — on-demand deep annotation (Req 3.4, 10.4)
+// ---------------------------------------------------------------------------
+// Mirrors the server's `AnnotateSpanBodySchema` (`infra/lambda/src/routes/read.ts`):
+// the full passage + the selected span's character offsets (so the model can
+// resolve the contextual sense against the real sentence), plus an optional
+// `entryId` present only for a saved History entry. The `start < end` /
+// in-range cross-field invariant is enforced server-side, matching the
+// server's post-`safeParse` check. The response is the shared `DeepCard`.
+
+export const AnnotateSpanRequestSchema = z.object({
+  language: LearningLanguageEnum,
+  text: z.string().min(1).max(READ_TEXT_MAX_CHARS),
+  start: z.number().int().nonnegative(),
+  end: z.number().int().nonnegative(),
+  entryId: z.string().uuid().optional(),
+});
+
+export type AnnotateSpanRequest = z.infer<typeof AnnotateSpanRequestSchema>;
+
+// The deep-annotation response IS the shared deep-card union — the same schema
+// the server returns and persists, so the client never re-derives the shape.
+export const AnnotateSpanResponseSchema = DeepCardSchema;
+
+export type AnnotateSpanResponse = z.infer<typeof AnnotateSpanResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// POST /read/vocabulary — save a deep card to the bank (Req 8.1)
+// ---------------------------------------------------------------------------
+// Mirrors the server's `SaveVocabularyBodySchema`. The whole resolved card is
+// posted (it lives only transiently client-side); the server derives the
+// lexical columns and snapshots the card. Sentence cards are rejected
+// server-side (Req 8.6) — the request schema accepts the full union so the
+// client surfaces that rejection as a normal 400.
+
+export const SaveVocabularyCardRequestSchema = z.object({
+  language: LearningLanguageEnum,
+  card: DeepCardSchema,
+  sourceReadEntryId: z.string().uuid().optional(),
+});
+
+export type SaveVocabularyCardRequest = z.infer<
+  typeof SaveVocabularyCardRequestSchema
+>;
+
+export const SaveVocabularyCardResponseSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export type SaveVocabularyCardResponse = z.infer<
+  typeof SaveVocabularyCardResponseSchema
+>;
+
+// ---------------------------------------------------------------------------
+// DELETE /read/vocabulary/:id — undo a save (Req 8.5)
+// ---------------------------------------------------------------------------
+
+export const DeleteVocabularyCardResponseSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export type DeleteVocabularyCardResponse = z.infer<
+  typeof DeleteVocabularyCardResponseSchema
+>;
+
 // Re-export for hook consumers that want the shared building blocks without
 // reaching back into `@language-drill/shared`.
-export { WordFlagSchema, FlaggedMapSchema };
-export type { WordFlag, FlaggedMap } from '@language-drill/shared';
+export { WordFlagSchema, FlaggedMapSchema, DeepCardSchema };
+export type { WordFlag, FlaggedMap, DeepCard } from '@language-drill/shared';

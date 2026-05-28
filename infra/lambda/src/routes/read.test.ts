@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Hono } from 'hono';
+import { annotateSpan } from '@language-drill/ai';
+
+const mockedAnnotateSpan = vi.mocked(annotateSpan);
 
 // ---------------------------------------------------------------------------
 // Mock the db module before importing the router
@@ -16,16 +19,36 @@ import { Hono } from 'hono';
 const mockLimit = vi.fn();
 const mockOrderBy = vi.fn(() => ({ limit: mockLimit }));
 
-const mockWhere = vi.fn(() => ({
-  orderBy: mockOrderBy,
-  limit: mockLimit,
-}));
+// `.where()` is both a chain-continuation (list/single-entry routes call
+// `.orderBy()`/`.limit()` on it) AND, for the rate-limit COUNT query in
+// `POST /read/annotate-span`, the awaited terminator (no `.limit()`). So the
+// return value is a thenable carrying `.orderBy`/`.limit`. `whereResolved` is
+// what an awaited `.where()` resolves to (the COUNT row); chains that continue
+// to `.limit()` ignore it and use `mockLimit` instead.
+let whereResolved: unknown = [{ count: 0 }];
+const mockWhere = vi.fn(() => {
+  const p = Promise.resolve(whereResolved) as Promise<unknown> & {
+    orderBy: typeof mockOrderBy;
+    limit: typeof mockLimit;
+  };
+  p.orderBy = mockOrderBy;
+  p.limit = mockLimit;
+  return p;
+});
 const mockFrom = vi.fn(() => ({ where: mockWhere }));
 const mockSelect = vi.fn(() => ({ from: mockFrom }));
 
 const mockOnConflictDoNothing = vi.fn(() => Promise.resolve());
-const mockOnConflictDoUpdate = vi.fn(() => Promise.resolve());
 const mockReturning = vi.fn();
+// `.onConflictDoUpdate()` is awaited directly by the entry/bank routes but
+// chained into `.returning()` by `POST /read/vocabulary`; expose both.
+const mockOnConflictDoUpdate = vi.fn(() => {
+  const p = Promise.resolve() as Promise<void> & {
+    returning: typeof mockReturning;
+  };
+  p.returning = mockReturning;
+  return p;
+});
 const mockValues = vi.fn(() => {
   const p = Promise.resolve([]) as Promise<never[]> & {
     onConflictDoNothing: typeof mockOnConflictDoNothing;
@@ -38,6 +61,16 @@ const mockValues = vi.fn(() => {
   return p;
 });
 const mockInsert = vi.fn(() => ({ values: mockValues }));
+
+// UPDATE chain — `db.update(t).set({...}).where(...)` (annotate-span write-back).
+const mockUpdateWhere = vi.fn(() => Promise.resolve());
+const mockSet = vi.fn(() => ({ where: mockUpdateWhere }));
+const mockUpdate = vi.fn(() => ({ set: mockSet }));
+
+// DELETE chain — `db.delete(t).where(...).returning({id})` (vocabulary undo).
+const mockDeleteReturning = vi.fn();
+const mockDeleteWhere = vi.fn(() => ({ returning: mockDeleteReturning }));
+const mockDelete = vi.fn(() => ({ where: mockDeleteWhere }));
 
 // ---------------------------------------------------------------------------
 // Transaction mock — supports two write paths:
@@ -113,6 +146,8 @@ vi.mock('../db', () => ({
   db: {
     select: () => mockSelect(),
     insert: () => mockInsert(),
+    update: () => mockUpdate(),
+    delete: () => mockDelete(),
     transaction: (cb: (tx: unknown) => unknown) => mockTransaction(cb),
   },
 }));
@@ -128,13 +163,47 @@ vi.mock('@language-drill/db', () => ({
     text: 'text',
     flaggedWords: 'flagged_words',
     bank: 'bank',
+    spanAnnotations: 'span_annotations',
     pastedAt: 'pasted_at',
   },
   userVocabulary: {
+    id: 'id',
     userId: 'user_id',
     language: 'language',
     word: 'word',
+    lemma: 'lemma',
+    source: 'source',
+    sourceReadEntryId: 'source_read_entry_id',
+    pos: 'pos',
+    gloss: 'gloss',
+    exampleSentence: 'example_sentence',
+    frequencyRank: 'frequency_rank',
+    cefrBand: 'cefr_band',
+    card: 'card',
+    addedAt: 'added_at',
   },
+  userLanguageProfiles: {
+    userId: 'user_id',
+    language: 'language',
+    proficiencyLevel: 'proficiency_level',
+  },
+  usageEvents: {
+    userId: 'user_id',
+    eventType: 'event_type',
+    createdAt: 'created_at',
+    metadata: 'metadata',
+  },
+}));
+
+// `read.ts` calls the deep-span model module; mock it so no Anthropic call is
+// made. `withLlmTrace` must invoke its callback and return the result (the
+// route wraps `annotateSpan` in it). `createObservedClaudeClient` returns an
+// inert stub. `annotateSpan` is configured per-test.
+vi.mock('@language-drill/ai', () => ({
+  annotateSpan: vi.fn(),
+  createObservedClaudeClient: vi.fn(() => ({})),
+  withLlmTrace: vi.fn((_ctx: unknown, fn: () => unknown) => fn()),
+  READ_SPAN_PROMPT_VERSION: 'read-span@test',
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -783,5 +852,465 @@ describe('PUT /read/entries/:id/bank', () => {
     const body = (await res.json()) as AnyJson;
     expect(body.code).toBe('VALIDATION_ERROR');
     expect(mockLimit).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Helpers for the deep-span / vocabulary routes
+// ---------------------------------------------------------------------------
+// The auth middleware fires `db.insert(users).values({id,email})` on every
+// request, so `mockValues` always carries that call too. We pick out the
+// route's own inserts by row shape.
+// ---------------------------------------------------------------------------
+
+// `mockValues` is declared with no params, so `mock.calls` is typed as empty
+// tuples — read the first arg through an `unknown[][]` cast.
+function valuesArgs(): Array<Record<string, unknown>> {
+  return (mockValues.mock.calls as unknown as unknown[][]).map(
+    (call) => call[0] as Record<string, unknown>,
+  );
+}
+
+function usageInsertCalls(): Array<Record<string, unknown>> {
+  return valuesArgs().filter(
+    (arg) => arg?.eventType === 'read_span_annotation',
+  );
+}
+
+function vocabInsertCalls(): Array<Record<string, unknown>> {
+  return valuesArgs().filter(
+    (arg) =>
+      arg != null && typeof arg === 'object' && 'word' in arg && 'card' in arg,
+  );
+}
+
+const authEnv = {
+  event: {
+    requestContext: {
+      requestId: 'req-test',
+      authorizer: { jwt: { claims: { sub: 'user_123' } } },
+    },
+  },
+};
+
+// Minimal valid DeepCards (parsed by the REAL DeepCardSchema — `@language-drill/shared`
+// is not mocked here).
+const wordCard = {
+  type: 'word' as const,
+  surface: 'casa',
+  lemma: 'casa',
+  pos: 'noun',
+  contextualSense: 'house (here: the family home)',
+  definition: 'edificio para vivir',
+  definitionLabel: 'Español',
+  cefr: 'A1' as const,
+  freq: 120,
+};
+
+const phraseCard = {
+  type: 'phrase' as const,
+  surface: 'de repente',
+  literal: 'of sudden',
+  idiomaticMeaning: 'suddenly',
+  register: 'neutral',
+};
+
+const sentenceCard = {
+  type: 'sentence' as const,
+  surface: 'La casa es bonita.',
+  translation: 'The house is pretty.',
+  breakdown: [{ chunk: 'La casa', role: 'subject', note: 'definite NP' }],
+  grammarNotes: ['ser + adjective'],
+};
+
+// ---------------------------------------------------------------------------
+// POST /read/annotate-span — on-demand deep annotation (Req 3,4,5,10,11)
+// ---------------------------------------------------------------------------
+
+describe('POST /read/annotate-span', () => {
+  let app: Hono;
+
+  // "La casa es bonita." — "casa" occupies [3,7) → resolves to a `word` span.
+  const text = 'La casa es bonita.';
+  const start = 3;
+  const end = 7;
+  const key = '3:7';
+  const entryUuid = '33333333-3333-3333-3333-333333333333';
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    resetTxCapture();
+    whereResolved = [{ count: 0 }];
+    mockedAnnotateSpan.mockReset();
+    mockedAnnotateSpan.mockResolvedValue(wordCard);
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const mod = await import('./read');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  it('happy path (owned entry, cache miss): resolves, writes back, meters once', async () => {
+    // 1st .limit() = cache lookup (miss); 2nd .limit() = profile lookup.
+    mockLimit
+      .mockResolvedValueOnce([{ spanAnnotations: null }])
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
+
+    const res = await app.request(
+      '/read/annotate-span',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: 'ES', text, start, end, entryId: entryUuid }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual(wordCard);
+
+    // Model called once with the server-resolved span type + CEFR.
+    expect(mockedAnnotateSpan).toHaveBeenCalledTimes(1);
+    expect(mockedAnnotateSpan.mock.calls[0][1]).toEqual({
+      language: 'ES',
+      text,
+      start,
+      end,
+      spanType: 'word',
+      proficiencyLevel: 'B1',
+    });
+
+    // Write-back onto the owned entry (Req 11.1) — a `span_annotations` SET.
+    expect(mockUpdate).toHaveBeenCalledTimes(1);
+    expect(mockSet).toHaveBeenCalledTimes(1);
+    expect((mockSet.mock.calls as unknown as unknown[][])[0][0]).toHaveProperty(
+      'spanAnnotations',
+    );
+
+    // Exactly one metering row, on the dedicated bucket (Req 10.2).
+    expect(usageInsertCalls()).toHaveLength(1);
+    expect(usageInsertCalls()[0]).toMatchObject({
+      userId: 'user_123',
+      eventType: 'read_span_annotation',
+      metadata: { language: 'ES', spanType: 'word', entryId: entryUuid },
+    });
+  });
+
+  it('no entryId ⇒ no DB write-back, but still meters (Req 11.2)', async () => {
+    // No cache lookup (no entryId); 1st .limit() = profile lookup.
+    mockLimit.mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
+
+    const res = await app.request(
+      '/read/annotate-span',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: 'ES', text, start, end }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual(wordCard);
+    expect(mockedAnnotateSpan).toHaveBeenCalledTimes(1);
+    // CRITICAL (Req 11.2): an unsaved passage is never written to the DB.
+    expect(mockUpdate).not.toHaveBeenCalled();
+    // Metering still happens for the real model call.
+    expect(usageInsertCalls()).toHaveLength(1);
+  });
+
+  it('cache hit (persisted span on owned entry): no model, no metering (Req 3.5, 10.1)', async () => {
+    mockLimit.mockResolvedValueOnce([
+      { spanAnnotations: { [key]: wordCard } },
+    ]);
+
+    const res = await app.request(
+      '/read/annotate-span',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: 'ES', text, start, end, entryId: entryUuid }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual(wordCard);
+    // No model call, no write-back, no metering on a cache hit.
+    expect(mockedAnnotateSpan).not.toHaveBeenCalled();
+    expect(mockUpdate).not.toHaveBeenCalled();
+    expect(usageInsertCalls()).toHaveLength(0);
+  });
+
+  it('returns 429 RATE_LIMIT_EXCEEDED when the read_span budget is spent (Req 10.2)', async () => {
+    whereResolved = [{ count: 150 }];
+
+    const res = await app.request(
+      '/read/annotate-span',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: 'ES', text, start, end }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(429);
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBe('RATE_LIMIT_EXCEEDED');
+    expect(mockedAnnotateSpan).not.toHaveBeenCalled();
+    expect(usageInsertCalls()).toHaveLength(0);
+  });
+
+  it('returns 400 VALIDATION_ERROR when offsets are out of range (Req 10.4)', async () => {
+    const res = await app.request(
+      '/read/annotate-span',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: 'ES', text, start: 3, end: 999 }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBe('VALIDATION_ERROR');
+    expect(mockedAnnotateSpan).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 VALIDATION_ERROR when start >= end (Req 10.4)', async () => {
+    const res = await app.request(
+      '/read/annotate-span',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: 'ES', text, start: 7, end: 3 }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as AnyJson).code).toBe('VALIDATION_ERROR');
+    expect(mockedAnnotateSpan).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 VALIDATION_ERROR for an unsupported language (Req 10.4)', async () => {
+    const res = await app.request(
+      '/read/annotate-span',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: 'EN', text, start, end }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as AnyJson).code).toBe('VALIDATION_ERROR');
+    expect(mockedAnnotateSpan).not.toHaveBeenCalled();
+  });
+
+  it('returns 502 AI_UNAVAILABLE on a model failure and does NOT meter or write back', async () => {
+    mockLimit
+      .mockResolvedValueOnce([{ spanAnnotations: null }])
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
+    mockedAnnotateSpan.mockRejectedValueOnce(new Error('sonnet exploded'));
+
+    const res = await app.request(
+      '/read/annotate-span',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: 'ES', text, start, end, entryId: entryUuid }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(502);
+    expect(((await res.json()) as AnyJson).code).toBe('AI_UNAVAILABLE');
+    // No metering / no write-back for a call that produced nothing.
+    expect(usageInsertCalls()).toHaveLength(0);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /read/vocabulary — save a deep card to the bank (Req 8)
+// ---------------------------------------------------------------------------
+
+describe('POST /read/vocabulary', () => {
+  let app: Hono;
+
+  const entryUuid = '44444444-4444-4444-4444-444444444444';
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    resetTxCapture();
+    whereResolved = [{ count: 0 }];
+    mockReturning.mockReset();
+    const mod = await import('./read');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  it('saves a word card: persists the lexical core + card snapshot, returns { id }', async () => {
+    mockReturning.mockResolvedValueOnce([{ id: 'vocab-1' }]);
+
+    const res = await app.request(
+      '/read/vocabulary',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: 'ES', card: wordCard, sourceReadEntryId: entryUuid }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ id: 'vocab-1' });
+
+    const rows = vocabInsertCalls();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      userId: 'user_123',
+      language: 'ES',
+      word: 'casa',
+      lemma: 'casa',
+      source: 'reading',
+      sourceReadEntryId: entryUuid,
+      pos: 'noun',
+      gloss: 'house (here: the family home)',
+      frequencyRank: 120,
+      cefrBand: 'A1',
+      card: wordCard,
+    });
+
+    // Independence (Req 11.7): saving to vocabulary never touches an entry's
+    // span_annotations.
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it('saves a phrase card: derives lemma←citation??surface, pos="phrase", null freq/cefr', async () => {
+    mockReturning.mockResolvedValueOnce([{ id: 'vocab-2' }]);
+
+    const res = await app.request(
+      '/read/vocabulary',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: 'ES', card: phraseCard }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ id: 'vocab-2' });
+
+    const rows = vocabInsertCalls();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      word: 'de repente',
+      lemma: 'de repente', // no citation → surface
+      pos: 'phrase',
+      gloss: 'suddenly',
+      exampleSentence: '',
+      frequencyRank: null,
+      cefrBand: null,
+      sourceReadEntryId: null,
+      card: phraseCard,
+    });
+  });
+
+  it('rejects a sentence card with 400 (Req 8.6) and writes nothing', async () => {
+    const res = await app.request(
+      '/read/vocabulary',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: 'ES', card: sentenceCard }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as AnyJson).code).toBe('VALIDATION_ERROR');
+    expect(vocabInsertCalls()).toHaveLength(0);
+  });
+
+  it('returns 400 VALIDATION_ERROR for a malformed card (bad type)', async () => {
+    const res = await app.request(
+      '/read/vocabulary',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: 'ES', card: { type: 'bogus' } }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as AnyJson).code).toBe('VALIDATION_ERROR');
+    expect(vocabInsertCalls()).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DELETE /read/vocabulary/:id — undo a save (Req 8.5)
+// ---------------------------------------------------------------------------
+
+describe('DELETE /read/vocabulary/:id', () => {
+  let app: Hono;
+
+  const validUuid = '55555555-5555-5555-5555-555555555555';
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    resetTxCapture();
+    whereResolved = [{ count: 0 }];
+    mockDeleteReturning.mockReset();
+    const mod = await import('./read');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  it('removes the owned record and returns { id }', async () => {
+    mockDeleteReturning.mockResolvedValueOnce([{ id: validUuid }]);
+
+    const res = await app.request(
+      `/read/vocabulary/${validUuid}`,
+      { method: 'DELETE' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ id: validUuid });
+    expect(mockDelete).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns 404 VOCAB_NOT_FOUND + no-store when nothing was deleted (cross-user/unknown)', async () => {
+    mockDeleteReturning.mockResolvedValueOnce([]);
+
+    const res = await app.request(
+      `/read/vocabulary/${validUuid}`,
+      { method: 'DELETE' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(404);
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
+    expect(((await res.json()) as AnyJson).code).toBe('VOCAB_NOT_FOUND');
+  });
+
+  it('returns 404 VOCAB_NOT_FOUND + no-store for a malformed UUID (no DB call)', async () => {
+    const res = await app.request(
+      '/read/vocabulary/not-a-uuid',
+      { method: 'DELETE' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(404);
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
+    expect(((await res.json()) as AnyJson).code).toBe('VOCAB_NOT_FOUND');
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 });

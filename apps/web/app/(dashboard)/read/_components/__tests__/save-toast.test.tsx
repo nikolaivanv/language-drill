@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { SaveToast } from '../save-toast';
+import { SaveToast, VocabSaveToast } from '../save-toast';
 
 // ---------------------------------------------------------------------------
 // SaveToast — count + callbacks + a11y (Requirements 8.2, 14.4).
@@ -78,5 +78,34 @@ describe('SaveToast', () => {
     );
     // Desktop centering is preserved.
     expect(status).toHaveClass('left-1/2', '-translate-x-1/2');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// VocabSaveToast — deep card → vocabulary confirmation + undo (Req 8.4, 8.5)
+// ---------------------------------------------------------------------------
+
+describe('VocabSaveToast', () => {
+  it('names the saved item and declares role="status" (Req 8.4)', () => {
+    render(<VocabSaveToast label="aldea" onUndo={() => {}} onDismiss={() => {}} />);
+    const status = screen.getByRole('status');
+    expect(status).toHaveAttribute('aria-live', 'polite');
+    expect(status).toHaveTextContent(/saved “aldea” to vocabulary/i);
+  });
+
+  it('clicking "undo" fires onUndo (Req 8.5)', () => {
+    const onUndo = vi.fn();
+    render(<VocabSaveToast label="aldea" onUndo={onUndo} onDismiss={() => {}} />);
+    fireEvent.click(screen.getByRole('button', { name: /^undo$/i }));
+    expect(onUndo).toHaveBeenCalledTimes(1);
+  });
+
+  it('clicking the × dismiss fires onDismiss', () => {
+    const onDismiss = vi.fn();
+    render(
+      <VocabSaveToast label="aldea" onUndo={() => {}} onDismiss={onDismiss} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: /dismiss/i }));
+    expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 });

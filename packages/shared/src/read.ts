@@ -45,7 +45,9 @@ export const WordFlagSchema = z.object({
   lemma: z.string().min(1),
   pos: z.string().min(1),
   gloss: z.string().min(1),
-  example: z.string().min(1),
+  // Optional: the slimmed skim pass omits `example` (deep cards supply
+  // examples). Stored entries that still carry an `example` stay valid.
+  example: z.string().min(1).optional(),
   freq: z.number().int().nonnegative(),
   cefr: z.enum(["A1", "A2", "B1", "B2", "C1", "C2"]),
 });
@@ -59,3 +61,125 @@ export type WordFlag = z.infer<typeof WordFlagSchema>;
 export const FlaggedMapSchema = z.record(z.string().min(1), WordFlagSchema);
 
 export type FlaggedMap = z.infer<typeof FlaggedMapSchema>;
+
+// ---------------------------------------------------------------------------
+// Deep cards — the rich, on-demand annotation contract (Reading Part 1)
+// ---------------------------------------------------------------------------
+// The single authoritative contract for the Sonnet deep-annotation path,
+// shared by the AI parser (packages/ai), the Hono route, the api-client wire
+// schemas, and the Drizzle `$type` on `read_entries.span_annotations` and
+// `user_vocabulary.card`. A `DeepCard` is one of three shapes discriminated on
+// `type`; the server decides the span type from offsets and the model emits
+// the matching shape.
+//
+// CEFR is spelled as a literal `z.enum` (not `z.nativeEnum(CefrLevel)`) for the
+// same module-init-cycle reason documented above WordFlagSchema.
+// ---------------------------------------------------------------------------
+
+const CefrEnum = z.enum(["A1", "A2", "B1", "B2", "C1", "C2"]);
+
+// Morpheme-level breakdown with a sentence-grounded "why this form" — the
+// standout field for Turkish agglutination and German case/separable prefixes.
+export const MorphologySchema = z.object({
+  root: z.string().min(1),
+  rootGloss: z.string().min(1),
+  segments: z.array(
+    z.object({
+      morph: z.string().min(1),
+      function: z.string().min(1),
+    }),
+  ),
+  whyThisForm: z.string().min(1),
+});
+
+export type Morphology = z.infer<typeof MorphologySchema>;
+
+// Inflection facts shown inline near the header (e.g. German gender + plural,
+// Turkish root + plural).
+export const InflectionSchema = z.object({
+  forms: z.array(
+    z.object({
+      label: z.string().min(1),
+      value: z.string().min(1),
+    }),
+  ),
+});
+
+export type Inflection = z.infer<typeof InflectionSchema>;
+
+export const DeepWordCardSchema = z.object({
+  type: z.literal("word"),
+  surface: z.string().min(1),
+  lemma: z.string().min(1),
+  pos: z.string().min(1),
+  contextualSense: z.string().min(1),
+  definition: z.string().min(1),
+  definitionLabel: z.string().min(1),
+  cefr: CefrEnum,
+  freq: z.number().int().nonnegative(),
+  inflection: InflectionSchema.optional(),
+  morphology: MorphologySchema.optional(),
+  synonyms: z
+    .array(z.object({ word: z.string().min(1), note: z.string().min(1) }))
+    .optional(),
+  collocations: z
+    .array(z.object({ phrase: z.string().min(1), gloss: z.string().min(1) }))
+    .optional(),
+  register: z.string().min(1).optional(),
+  extraExample: z
+    .object({ tl: z.string().min(1), en: z.string().min(1) })
+    .optional(),
+});
+
+export type DeepWordCard = z.infer<typeof DeepWordCardSchema>;
+
+export const DeepPhraseCardSchema = z.object({
+  type: z.literal("phrase"),
+  surface: z.string().min(1),
+  citation: z.string().min(1).optional(),
+  literal: z.string().min(1),
+  idiomaticMeaning: z.string().min(1),
+  register: z.string().min(1),
+  example: z.object({ tl: z.string().min(1), en: z.string().min(1) }).optional(),
+  synonyms: z
+    .array(z.object({ phrase: z.string().min(1), note: z.string().min(1) }))
+    .optional(),
+});
+
+export type DeepPhraseCard = z.infer<typeof DeepPhraseCardSchema>;
+
+export const DeepSentenceCardSchema = z.object({
+  type: z.literal("sentence"),
+  surface: z.string().min(1),
+  translation: z.string().min(1),
+  breakdown: z.array(
+    z.object({
+      chunk: z.string().min(1),
+      role: z.string().min(1),
+      note: z.string().min(1),
+    }),
+  ),
+  grammarNotes: z.array(z.string().min(1)),
+});
+
+export type DeepSentenceCard = z.infer<typeof DeepSentenceCardSchema>;
+
+// Discriminated on `type` so a malformed/missing `type` is rejected and the
+// downstream UI can switch layouts on the literal.
+export const DeepCardSchema = z.discriminatedUnion("type", [
+  DeepWordCardSchema,
+  DeepPhraseCardSchema,
+  DeepSentenceCardSchema,
+]);
+
+export type DeepCard = z.infer<typeof DeepCardSchema>;
+
+// ---------------------------------------------------------------------------
+// SpanAnnotations — `read_entries.span_annotations`, keyed by "start:end"
+// character offsets so a reopened History entry renders its persisted deep
+// cards without re-calling Claude.
+// ---------------------------------------------------------------------------
+
+export const SpanAnnotationsSchema = z.record(z.string().min(1), DeepCardSchema);
+
+export type SpanAnnotations = z.infer<typeof SpanAnnotationsSchema>;

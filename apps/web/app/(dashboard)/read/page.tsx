@@ -17,26 +17,32 @@
 // the two together.
 // ---------------------------------------------------------------------------
 
-import { useMemo, useReducer, useEffect, useRef } from 'react';
+import { useMemo, useReducer, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import {
   createAuthenticatedFetch,
+  useDeleteVocabularyCard,
   useLanguageProfiles,
+  useReadAnnotateSpan,
   useReadAnnotateStream,
   useReadEntries,
   useReadEntry,
   useSaveReadEntry,
+  useSaveVocabularyCard,
   useUpdateReadBank,
   type ReadEntryResponse,
 } from '@language-drill/api-client';
-import { CefrLevel } from '@language-drill/shared';
+import { CefrLevel, type DeepCard } from '@language-drill/shared';
 import { useActiveLanguage } from '../../../components/shell/active-language-provider';
 import { calibrationCopy } from './_lib/calibration-copy';
 import {
   initialState,
   readPageReducer,
   selectActiveEntry,
+  spanKey,
+  type AnnotateError,
+  type DeepSpan,
   type View,
 } from './_state/read-page-reducer';
 import {
@@ -51,10 +57,26 @@ import { HistoryView } from './_components/history-view';
 import { InlineErrorToast } from './_components/inline-error-toast';
 import { PasteView } from './_components/paste-view';
 import { ReadTopBar } from './_components/read-top-bar';
-import { SaveToast } from './_components/save-toast';
+import { SaveToast, VocabSaveToast } from './_components/save-toast';
 
 const SAVE_TOAST_MS = 4000;
 const INLINE_ERROR_MS = 3000;
+
+// Map a thrown `createAuthenticatedFetch` error (carries `.status` + `.body`)
+// into the reducer's `AnnotateError` shape for the deep-card error slice. The
+// card body keys retry-disable off `status === 429` and shows `message`.
+function toAnnotateError(err: unknown): AnnotateError {
+  const e = err as {
+    message?: string;
+    status?: number;
+    body?: { code?: string } | null;
+  };
+  return {
+    code: e.body?.code ?? 'DEEP_ANNOTATE_FAILED',
+    message: e.message || 'something went wrong — try again',
+    status: e.status,
+  };
+}
 
 function errorKindFromCode(code: string): AnnotatedErrorKind {
   switch (code) {
@@ -108,6 +130,27 @@ export default function ReadPage() {
   });
   const saveEntry = useSaveReadEntry({ fetchFn });
   const updateBank = useUpdateReadBank({ fetchFn });
+  // On-demand deep annotation (Sonnet). Writes resolved cards through into the
+  // `['readEntry', id]` cache's spanAnnotations when the span belongs to a
+  // saved entry (Req 11.4); the seeding effect below mirrors that back into the
+  // reducer so a re-tap is an instant cache hit.
+  const annotateSpan = useReadAnnotateSpan({ fetchFn });
+  // Deep card → vocabulary save + undo (Req 8.4, 8.5). Independent of the entry
+  // bank and of entry `spanAnnotations` (Req 11.7).
+  const saveVocab = useSaveVocabularyCard({ fetchFn });
+  const deleteVocab = useDeleteVocabularyCard({ fetchFn });
+
+  // The just-saved deep card: its span (so the open card reflects the "saved"
+  // footer), the vocabulary record id (for undo), and the surface key (so the
+  // in-passage token flips to the `.saved` style for word saves). `null` until
+  // a save lands; cleared on undo or when a different span is saved.
+  const [deepSaved, setDeepSaved] = useState<{
+    start: number;
+    end: number;
+    vocabId: string;
+    wordKey: string | null;
+  } | null>(null);
+  const [vocabToast, setVocabToast] = useState<{ label: string } | null>(null);
 
   // -------------------------------------------------------------------------
   // Effects (per task 33's "Required useEffects" list)
@@ -142,6 +185,21 @@ export default function ReadPage() {
     return () => clearTimeout(t);
   }, [state.inlineError]);
 
+  // 4. Vocab-save toast auto-dismiss (4 s). The saved record (and the card's
+  // "saved" footer + in-passage style) persists; only the toast fades.
+  useEffect(() => {
+    if (vocabToast === null) return;
+    const t = setTimeout(() => setVocabToast(null), SAVE_TOAST_MS);
+    return () => clearTimeout(t);
+  }, [vocabToast]);
+
+  // 5. Drop the deep-save badge + toast when the open passage changes — the
+  // saved span no longer maps to what's on screen.
+  useEffect(() => {
+    setDeepSaved(null);
+    setVocabToast(null);
+  }, [state.activeEntryId]);
+
   // Sync local bank to the persisted entry's bank when it loads. Also covers
   // optimistic-update rollback: when `useUpdateReadBank.onError` calls
   // `setQueryData(previousEntry)`, this effect fires with the rolled-back
@@ -158,6 +216,21 @@ export default function ReadPage() {
     }
     lastSyncedBankIdRef.current = data.id;
     dispatch({ type: 'SET_BANK_FROM_ENTRY', bank: data.bank });
+  }, [entryQuery.data]);
+
+  // Seed the open entry's persisted deep cards into the reducer (Req 11.3), so
+  // a reopened saved text renders its stored spans with no model call and a tap
+  // on a stored span is an instant cache hit (Req 11.4). Re-fires when the
+  // entry cache changes — including `useReadAnnotateSpan`'s write-through — so
+  // the reducer's session map stays in lockstep with the durable store. The
+  // reducer MERGES, so cards resolved before the query settled survive.
+  useEffect(() => {
+    const data = entryQuery.data;
+    if (!data) return;
+    dispatch({
+      type: 'SET_SPAN_ANNOTATIONS',
+      spanAnnotations: data.spanAnnotations ?? {},
+    });
   }, [entryQuery.data]);
 
   // -------------------------------------------------------------------------
@@ -293,8 +366,98 @@ export default function ReadPage() {
   };
 
   const handlePopoverClose = () => {
+    // Dismiss whichever card is open — the skim popover and/or the deep card.
     dispatch({ type: 'CLOSE_POPOVER' });
+    dispatch({ type: 'DISMISS_DEEP_CARD' });
   };
+
+  // Fire the deep-annotation request for a span and route the result into the
+  // reducer's deep-card state machine (Req 3.4, 9.4). `entryId` is sent only
+  // for a saved entry, so the server persists onto it (Req 11.1) and skips the
+  // DB write for unsaved text (Req 11.2).
+  const runSpanAnnotation = (span: DeepSpan) => {
+    annotateSpan.mutate(
+      {
+        language: activeLanguage,
+        text: annotatedEntry?.text ?? state.paste.text,
+        start: span.start,
+        end: span.end,
+        entryId: state.activeEntryId ?? undefined,
+      },
+      {
+        onSuccess: (card) =>
+          dispatch({ type: 'DEEP_CARD_RESOLVED', span, card }),
+        onError: (err) =>
+          dispatch({ type: 'DEEP_CARD_ERROR', span, error: toAnnotateError(err) }),
+      },
+    );
+  };
+
+  // Tap/drag on any span. A span already in `spanAnnotations` (seeded from the
+  // saved entry or resolved earlier this session) renders instantly from cache
+  // — no endpoint, no model (Req 3.5, 11.4). Otherwise open `loading` and fire.
+  const handleSpanSelect = (span: DeepSpan) => {
+    const cached = state.spanAnnotations[spanKey(span.start, span.end)];
+    dispatch({ type: 'OPEN_DEEP_CARD', span });
+    if (cached) return;
+    runSpanAnnotation(span);
+  };
+
+  // Retry from the inline error state (Req 9.4): re-arm loading + re-fire for
+  // the still-open span.
+  const handleDeepRetry = () => {
+    if (state.deepCard.status === 'idle') return;
+    const { span } = state.deepCard;
+    dispatch({ type: 'OPEN_DEEP_CARD', span });
+    runSpanAnnotation(span);
+  };
+
+  // Save a resolved word/phrase deep card to vocabulary (Req 8.4). The whole
+  // card is posted (it's transient client-side); `sourceReadEntryId` is sent
+  // for a saved entry. On success: remember the record for undo + the surface
+  // for the in-passage style, and raise the confirmation toast. Sentence cards
+  // are not savable (Req 5.4/8.6) — guarded here and server-side.
+  const handleSaveCard = (card: DeepCard, span: DeepSpan) => {
+    if (card.type === 'sentence') return;
+    saveVocab.mutate(
+      {
+        language: activeLanguage,
+        card,
+        sourceReadEntryId: state.activeEntryId ?? undefined,
+      },
+      {
+        onSuccess: ({ id }) => {
+          setDeepSaved({
+            start: span.start,
+            end: span.end,
+            vocabId: id,
+            wordKey: card.type === 'word' ? card.surface.toLowerCase() : null,
+          });
+          setVocabToast({ label: card.surface });
+        },
+        onError: () => dispatch({ type: 'SHOW_INLINE_ERROR', kind: 'save' }),
+      },
+    );
+  };
+
+  // Undo the just-saved card (Req 8.5): delete the record, then revert the
+  // "saved" footer/style and dismiss the toast.
+  const handleUndoCard = () => {
+    if (!deepSaved) return;
+    deleteVocab.mutate(deepSaved.vocabId, {
+      onSuccess: () => {
+        setDeepSaved(null);
+        setVocabToast(null);
+      },
+      onError: () => dispatch({ type: 'SHOW_INLINE_ERROR', kind: 'save' }),
+    });
+  };
+
+  // Surface forms shown with the "saved" style in the passage (Req 8.4).
+  const savedWordKeys = useMemo(
+    () => (deepSaved?.wordKey ? new Set([deepSaved.wordKey]) : new Set<string>()),
+    [deepSaved],
+  );
 
   const handleBankToggle = (word: string) => {
     if (state.activeEntryId === null) {
@@ -463,6 +626,7 @@ export default function ReadPage() {
           bank={state.bank}
           intensity={state.intensity}
           activeWord={state.activeWord}
+          deepCard={state.deepCard}
           calibration={{
             eyebrow: calibration.eyebrow,
             explanation: calibration.explanation,
@@ -473,6 +637,14 @@ export default function ReadPage() {
           onIntensityChange={handleIntensityChange}
           onPopoverOpen={handlePopoverOpen}
           onPopoverClose={handlePopoverClose}
+          onSpanSelect={handleSpanSelect}
+          onDeepRetry={handleDeepRetry}
+          onSaveCard={handleSaveCard}
+          onUndoCard={handleUndoCard}
+          savedSpan={
+            deepSaved ? { start: deepSaved.start, end: deepSaved.end } : null
+          }
+          savedWordKeys={savedWordKeys}
           onBankToggle={handleBankToggle}
           onClearBank={handleClearBank}
           onSave={handleSave}
@@ -504,6 +676,13 @@ export default function ReadPage() {
         <InlineErrorToast
           kind={state.inlineError.kind}
           onDismiss={() => dispatch({ type: 'DISMISS_INLINE_ERROR' })}
+        />
+      )}
+      {vocabToast !== null && (
+        <VocabSaveToast
+          label={vocabToast.label}
+          onUndo={handleUndoCard}
+          onDismiss={() => setVocabToast(null)}
         />
       )}
     </div>
