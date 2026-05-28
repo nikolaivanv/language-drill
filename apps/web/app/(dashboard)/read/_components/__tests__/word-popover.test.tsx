@@ -1,9 +1,14 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import type { WordFlag } from '@language-drill/shared';
+import type {
+  WordFlag,
+  DeepWordCard,
+  DeepSentenceCard,
+} from '@language-drill/shared';
 import { CefrLevel } from '@language-drill/shared';
 import { WordPopover } from '../word-popover';
 import { WordCardBody } from '../word-card-body';
+import type { DeepSpan } from '../../_state/read-page-reducer';
 
 // ---------------------------------------------------------------------------
 // WordPopover — callbacks, keyboard escape, position clamp.
@@ -212,6 +217,125 @@ describe('WordCardBody — shared content (extracted from the popover)', () => {
       screen.getByRole('button', { name: /✓ saved · undo/i }),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^close$/i })).toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Deep-card states rendered by `deepCard.status` (Req 9.3, 9.4)
+// ---------------------------------------------------------------------------
+
+const SPAN: DeepSpan = { start: 0, end: 5, type: 'word', x: 600, y: 200 };
+
+const WORD_CARD: DeepWordCard = {
+  type: 'word',
+  surface: 'aldea',
+  lemma: 'aldea',
+  pos: 'noun',
+  contextualSense: 'small village',
+  definition: 'pueblo pequeño',
+  definitionLabel: 'Español',
+  cefr: 'B2',
+  freq: 4321,
+};
+
+const SENTENCE_CARD: DeepSentenceCard = {
+  type: 'sentence',
+  surface: 'La aldea está cerca.',
+  translation: 'The village is near.',
+  breakdown: [{ chunk: 'La aldea', role: 'subject', note: 'the village' }],
+  grammarNotes: ['definite article'],
+};
+
+describe('WordPopover — deep-card loading (Req 9.3)', () => {
+  it('keeps the chrome mounted and shows the "looking it up" skeleton', () => {
+    render(
+      <WordPopover
+        {...baseProps}
+        entry={null}
+        deepCard={{ status: 'loading', span: SPAN }}
+      />,
+    );
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByTestId('deep-card-skeleton')).toBeInTheDocument();
+    expect(screen.getByText(/looking it up/i)).toBeInTheDocument();
+    // The skim entry body is not shown while the deep card loads.
+    expect(screen.queryByText('a small village')).not.toBeInTheDocument();
+  });
+});
+
+describe('WordPopover — deep-card error (Req 9.4)', () => {
+  it('shows an inline error with an enabled retry that fires onRetry', () => {
+    const onRetry = vi.fn();
+    render(
+      <WordPopover
+        {...baseProps}
+        entry={null}
+        onRetry={onRetry}
+        deepCard={{
+          status: 'error',
+          span: SPAN,
+          error: { code: 'ai_unavailable', message: 'network blip', status: 502 },
+        }}
+      />,
+    );
+    expect(screen.getByTestId('deep-card-error')).toBeInTheDocument();
+    expect(screen.getByText('network blip')).toBeInTheDocument();
+    const retry = screen.getByRole('button', { name: /try again/i });
+    expect(retry).toBeEnabled();
+    fireEvent.click(retry);
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it('disables retry on a rate-limit (429)', () => {
+    render(
+      <WordPopover
+        {...baseProps}
+        entry={null}
+        deepCard={{
+          status: 'error',
+          span: SPAN,
+          error: { code: 'rate_limited', message: 'daily limit reached', status: 429 },
+        }}
+      />,
+    );
+    expect(screen.getByRole('button', { name: /try again/i })).toBeDisabled();
+  });
+});
+
+describe('WordPopover — deep-card loaded', () => {
+  it('renders the loaded word card and takes precedence over the skim entry', () => {
+    render(
+      <WordPopover
+        {...baseProps}
+        deepCard={{ status: 'loaded', span: SPAN, card: WORD_CARD }}
+      />,
+    );
+    expect(screen.getByText('pueblo pequeño')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /\+ save to vocabulary/i }),
+    ).toBeInTheDocument();
+    // The skim card's "+ save to bank" label is gone — deep card won.
+    expect(
+      screen.queryByRole('button', { name: /\+ save to bank/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('renders a loaded sentence card with no save action', () => {
+    render(
+      <WordPopover
+        {...baseProps}
+        entry={null}
+        deepCard={{
+          status: 'loaded',
+          span: { ...SPAN, type: 'sentence' },
+          card: SENTENCE_CARD,
+        }}
+      />,
+    );
+    expect(screen.getByText('The village is near.')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /save/i }),
+    ).not.toBeInTheDocument();
   });
 });
 

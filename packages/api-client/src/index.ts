@@ -73,8 +73,14 @@ export {
   ReadEntrySummarySchema,
   ReadEntriesResponseSchema,
   ReadEntryResponseSchema,
+  AnnotateSpanRequestSchema,
+  AnnotateSpanResponseSchema,
+  SaveVocabularyCardRequestSchema,
+  SaveVocabularyCardResponseSchema,
+  DeleteVocabularyCardResponseSchema,
   WordFlagSchema,
   FlaggedMapSchema,
+  DeepCardSchema,
   type AnnotateRequest,
   type AnnotateMetaEvent,
   type AnnotateFlagEvent,
@@ -87,8 +93,14 @@ export {
   type ReadEntrySummary,
   type ReadEntriesResponse,
   type ReadEntryResponse,
+  type AnnotateSpanRequest,
+  type AnnotateSpanResponse,
+  type SaveVocabularyCardRequest,
+  type SaveVocabularyCardResponse,
+  type DeleteVocabularyCardResponse,
   type WordFlag,
   type FlaggedMap,
+  type DeepCard,
 } from './schemas/read';
 export { useHealth } from './hooks/useHealth';
 export {
@@ -151,6 +163,16 @@ export {
   type UseUpdateReadBankOptions,
   type UpdateReadBankParams,
 } from './hooks/useReadEntryMutations';
+export {
+  useReadAnnotateSpan,
+  type UseReadAnnotateSpanOptions,
+} from './hooks/useReadAnnotateSpan';
+export {
+  useSaveVocabularyCard,
+  useDeleteVocabularyCard,
+  type UseSaveVocabularyCardOptions,
+  type UseDeleteVocabularyCardOptions,
+} from './hooks/useVocabularyMutations';
 export { createAuthenticatedFetch, type AuthenticatedFetch } from './fetchClient';
 export {
   PoolStatusItemSchema,

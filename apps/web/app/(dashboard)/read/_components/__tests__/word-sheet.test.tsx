@@ -1,8 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import type { WordFlag } from '@language-drill/shared';
+import type { WordFlag, DeepWordCard } from '@language-drill/shared';
 import { CefrLevel } from '@language-drill/shared';
 import { WordSheet } from '../word-sheet';
+import type { DeepSpan } from '../../_state/read-page-reducer';
 
 const ENTRY: WordFlag = {
   lemma: 'aldea',
@@ -66,5 +67,69 @@ describe('WordSheet', () => {
     fireEvent.keyDown(document, { key: 'Escape' });
 
     expect(onClose).toHaveBeenCalledTimes(3);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Deep-card states rendered by `deepCard.status` (Req 9.3, 9.4)
+// ---------------------------------------------------------------------------
+
+const SPAN: DeepSpan = { start: 0, end: 5, type: 'word', x: 0, y: 0 };
+
+const WORD_CARD: DeepWordCard = {
+  type: 'word',
+  surface: 'aldea',
+  lemma: 'aldea',
+  pos: 'noun',
+  contextualSense: 'small village',
+  definition: 'pueblo pequeño',
+  definitionLabel: 'Español',
+  cefr: 'B2',
+  freq: 4321,
+};
+
+describe('WordSheet — deep-card states', () => {
+  it('opens with the skeleton while loading, even without a skim entry (Req 9.3)', () => {
+    render(
+      <WordSheet
+        {...baseProps}
+        entry={null}
+        deepCard={{ status: 'loading', span: SPAN }}
+      />,
+    );
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByTestId('deep-card-skeleton')).toBeInTheDocument();
+  });
+
+  it('shows the inline error + retry on failure (Req 9.4)', () => {
+    const onRetry = vi.fn();
+    render(
+      <WordSheet
+        {...baseProps}
+        entry={null}
+        onRetry={onRetry}
+        deepCard={{
+          status: 'error',
+          span: SPAN,
+          error: { code: 'ai_unavailable', message: 'network blip', status: 502 },
+        }}
+      />,
+    );
+    expect(screen.getByTestId('deep-card-error')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /try again/i }));
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders the loaded deep word card over the skim entry', () => {
+    render(
+      <WordSheet
+        {...baseProps}
+        deepCard={{ status: 'loaded', span: SPAN, card: WORD_CARD }}
+      />,
+    );
+    expect(screen.getByText('pueblo pequeño')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /\+ save to vocabulary/i }),
+    ).toBeInTheDocument();
   });
 });

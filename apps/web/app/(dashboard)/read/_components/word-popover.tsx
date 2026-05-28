@@ -18,12 +18,14 @@
 
 import * as React from 'react';
 import type { WordFlag } from '@language-drill/shared';
-import { WordCardBody } from './word-card-body';
+import { WordCardBody, DeepCardContent } from './word-card-body';
+import type { DeepCardSlice } from '../_state/read-page-reducer';
 
 const POPOVER_WIDTH = 320;
 
 type Props = {
-  entry: WordFlag;
+  /** The skim entry shown for a flagged word; omitted for a cold deep tap. */
+  entry?: WordFlag | null;
   word: string;
   x: number;
   y: number;
@@ -32,6 +34,17 @@ type Props = {
   onSave: () => void;
   onSkip: () => void;
   onClose: () => void;
+  /**
+   * The deep-card lifecycle. When present and not `idle` it takes precedence
+   * over `entry` and the chrome renders the skeleton / inline error / loaded
+   * deep card by status (Req 9.3, 9.4). The chrome stays mounted across the
+   * loading→loaded transition so it never tears down (Req 3.3).
+   */
+  deepCard?: DeepCardSlice;
+  /** Re-run the deep annotation from the inline error state (Req 9.4). */
+  onRetry?: () => void;
+  /** Resolve a sentence-card grammar note to a Theory route (Req 5.3). */
+  resolveTheoryHref?: (note: string) => string | null;
   /** When true, focus moves to the skip button on mount — used for keyboard openings. */
   autoFocus?: boolean;
 };
@@ -53,6 +66,9 @@ export function WordPopover({
   onSave,
   onSkip,
   onClose,
+  deepCard,
+  onRetry,
+  resolveTheoryHref,
   autoFocus,
 }: Props) {
   const skipRef = React.useRef<HTMLButtonElement>(null);
@@ -121,13 +137,26 @@ export function WordPopover({
         }}
       />
 
-      <WordCardBody
-        entry={entry}
-        inBank={inBank}
-        onSave={onSave}
-        onSkip={onSkip}
-        skipRef={skipRef}
-      />
+      {deepCard && deepCard.status !== 'idle' ? (
+        <DeepCardContent
+          slice={deepCard}
+          inBank={inBank}
+          onSave={onSave}
+          onSkip={onSkip}
+          onClose={onClose}
+          onRetry={onRetry ?? onClose}
+          resolveTheoryHref={resolveTheoryHref}
+          skipRef={skipRef}
+        />
+      ) : entry ? (
+        <WordCardBody
+          entry={entry}
+          inBank={inBank}
+          onSave={onSave}
+          onSkip={onSkip}
+          skipRef={skipRef}
+        />
+      ) : null}
     </div>
   );
 }

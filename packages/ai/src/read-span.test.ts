@@ -1,0 +1,555 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { CefrLevel, Language } from "@language-drill/shared";
+import {
+  annotateSpan,
+  buildSpanUserPrompt,
+  parseSpanResult,
+  READ_SPAN_PROMPT_VERSION,
+  READ_SPAN_SYSTEM_PROMPT,
+  READ_SPAN_TOOL,
+  READ_SPAN_TOOL_NAME,
+} from "./read-span.js";
+import { createClaudeClient } from "./index.js";
+import {
+  __resetForTests as __resetObservabilityForTests,
+  getCurrentLlmTraceContext,
+  withLlmTrace,
+  type LlmTraceContext,
+} from "./observability.js";
+import { __resetRegistryForTests } from "./prompts-registry.js";
+
+// ---------------------------------------------------------------------------
+// Fixtures — one valid card per `DeepCard` shape
+// ---------------------------------------------------------------------------
+
+// A fully-populated Turkish word card: exercises every optional section,
+// including the morphology breakdown (the Req 7 standout).
+const validWordCard = {
+  type: "word",
+  surface: "evlerinden",
+  lemma: "ev",
+  pos: "noun",
+  contextualSense: "from their houses",
+  definition: "Bir ailenin yaşadığı, içinde oturulan yapı.",
+  definitionLabel: "Türkçe",
+  cefr: "B1",
+  freq: 4200,
+  inflection: {
+    forms: [
+      { label: "root", value: "ev" },
+      { label: "plural", value: "evler" },
+    ],
+  },
+  morphology: {
+    root: "ev",
+    rootGloss: "house",
+    segments: [
+      { morph: "ev", function: "root (house)" },
+      { morph: "-ler", function: "plural" },
+      { morph: "-i", function: "3rd-person possessive" },
+      { morph: "-n", function: "buffer consonant" },
+      { morph: "-den", function: "ablative case" },
+    ],
+    whyThisForm:
+      "Ablative (-den) because the verb 'çıktılar' expresses motion away from the houses.",
+  },
+  synonyms: [{ word: "konut", note: "more formal/official" }],
+  collocations: [{ phrase: "evden çıkmak", gloss: "to leave the house" }],
+  register: "neutral",
+  extraExample: {
+    tl: "Akşam geç saatte evlerinden ayrıldılar.",
+    en: "They left their houses late in the evening.",
+  },
+} as const;
+
+// Minimal word card — required fields only, every optional omitted.
+const minimalWordCard = {
+  type: "word",
+  surface: "evler",
+  lemma: "ev",
+  pos: "noun",
+  contextualSense: "houses",
+  definition: "İnsanların yaşadığı yapılar.",
+  definitionLabel: "Türkçe",
+  cefr: "A1",
+  freq: 800,
+} as const;
+
+const validPhraseCard = {
+  type: "phrase",
+  surface: "echar de menos",
+  citation: "echar de menos",
+  literal: "to throw of less",
+  idiomaticMeaning: "to miss (someone or something)",
+  register: "neutral",
+  example: { tl: "Echo de menos a mi familia.", en: "I miss my family." },
+  synonyms: [{ phrase: "extrañar", note: "Latin America" }],
+} as const;
+
+const validSentenceCard = {
+  type: "sentence",
+  surface: "Aunque estaba cansado, siguió trabajando hasta el amanecer.",
+  translation: "Even though he was tired, he kept working until dawn.",
+  breakdown: [
+    {
+      chunk: "Aunque estaba cansado",
+      role: "subordinate clause",
+      note: "concessive 'aunque' + imperfect for a background state",
+    },
+    {
+      chunk: "siguió trabajando",
+      role: "main verb",
+      note: "seguir + gerund = 'to keep doing'",
+    },
+    { chunk: "hasta el amanecer", role: "time complement", note: "'until dawn'" },
+  ],
+  grammarNotes: ["Concessive clauses with 'aunque'", "seguir + gerundio"],
+} as const;
+
+const trPassage = "Çocuklar evlerinden erkenden çıktılar.";
+const spanStart = trPassage.indexOf("evlerinden");
+const spanEnd = spanStart + "evlerinden".length;
+
+// ---------------------------------------------------------------------------
+// Langfuse env helpers — keep the registry on its fallback path so the
+// resolved system text is the in-repo prompt regardless of shell state.
+// ---------------------------------------------------------------------------
+
+const LANGFUSE_ENV_KEYS = [
+  "LANGFUSE_PUBLIC_KEY",
+  "LANGFUSE_SECRET_KEY",
+  "LANGFUSE_BASE_URL",
+] as const;
+
+function snapshotAndClearLangfuseEnv(): Map<string, string | undefined> {
+  const snapshot = new Map<string, string | undefined>();
+  for (const k of LANGFUSE_ENV_KEYS) {
+    snapshot.set(k, process.env[k]);
+    delete process.env[k];
+  }
+  return snapshot;
+}
+
+function restoreLangfuseEnv(snapshot: Map<string, string | undefined>): void {
+  for (const k of LANGFUSE_ENV_KEYS) {
+    const v = snapshot.get(k);
+    if (v === undefined) delete process.env[k];
+    else process.env[k] = v;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// READ_SPAN_TOOL / prompt sanity
+// ---------------------------------------------------------------------------
+
+describe("READ_SPAN_TOOL", () => {
+  it("uses the expected tool name", () => {
+    expect(READ_SPAN_TOOL.name).toBe("submit_deep_card");
+    expect(READ_SPAN_TOOL_NAME).toBe("submit_deep_card");
+  });
+
+  it("offers exactly the three card shapes via `oneOf`", () => {
+    const schema = READ_SPAN_TOOL.input_schema as { oneOf?: unknown[] };
+    expect(Array.isArray(schema.oneOf)).toBe(true);
+    expect(schema.oneOf).toHaveLength(3);
+  });
+});
+
+describe("READ_SPAN_SYSTEM_PROMPT", () => {
+  it("instructs the model that the caller decides the card type", () => {
+    expect(READ_SPAN_SYSTEM_PROMPT).toContain("caller decides the card type");
+  });
+
+  it("requires the tool call (no plain-text replies)", () => {
+    expect(READ_SPAN_SYSTEM_PROMPT).toContain(READ_SPAN_TOOL_NAME);
+    expect(READ_SPAN_SYSTEM_PROMPT).toMatch(/MUST call/i);
+  });
+
+  it("pins the version constant", () => {
+    expect(READ_SPAN_PROMPT_VERSION).toBe("read-span@2026-05-28");
+  });
+
+  it("carries per-language morphology guidance for Turkish and German (Req 7)", () => {
+    expect(READ_SPAN_SYSTEM_PROMPT).toContain("Morphology by language");
+    // Turkish: morpheme segmentation + sentence-grounded "why this form".
+    expect(READ_SPAN_SYSTEM_PROMPT).toMatch(/agglutinative/i);
+    expect(READ_SPAN_SYSTEM_PROMPT).toMatch(/ablative/i);
+    // German: case + separable-prefix guidance.
+    expect(READ_SPAN_SYSTEM_PROMPT).toMatch(/separable/i);
+    expect(READ_SPAN_SYSTEM_PROMPT).toMatch(/dative/i);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseSpanResult — Req 6.1 (accepts each card type; rejects malformed)
+// ---------------------------------------------------------------------------
+
+describe("parseSpanResult", () => {
+  it("accepts a fully-populated word card", () => {
+    const card = parseSpanResult(validWordCard);
+    expect(card.type).toBe("word");
+    if (card.type === "word") {
+      expect(card.surface).toBe("evlerinden");
+      expect(card.morphology?.segments).toHaveLength(5);
+      expect(card.morphology?.whyThisForm).toContain("Ablative");
+    }
+  });
+
+  it("accepts a minimal word card with every optional omitted", () => {
+    const card = parseSpanResult(minimalWordCard);
+    expect(card.type).toBe("word");
+    if (card.type === "word") {
+      expect(card.inflection).toBeUndefined();
+      expect(card.morphology).toBeUndefined();
+      expect(card.synonyms).toBeUndefined();
+    }
+  });
+
+  it("accepts a phrase card", () => {
+    const card = parseSpanResult(validPhraseCard);
+    expect(card.type).toBe("phrase");
+    if (card.type === "phrase") {
+      expect(card.idiomaticMeaning).toContain("to miss");
+      expect(card.literal).toBe("to throw of less");
+    }
+  });
+
+  it("accepts a sentence card", () => {
+    const card = parseSpanResult(validSentenceCard);
+    expect(card.type).toBe("sentence");
+    if (card.type === "sentence") {
+      expect(card.breakdown).toHaveLength(3);
+      expect(card.grammarNotes.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("rejects a card with no `type` discriminant", () => {
+    const { type: _omit, ...noType } = validWordCard;
+    expect(() => parseSpanResult(noType)).toThrow();
+  });
+
+  it("rejects an unknown card type", () => {
+    expect(() => parseSpanResult({ ...validWordCard, type: "paragraph" })).toThrow();
+  });
+
+  it("rejects a word card missing a required field", () => {
+    const { lemma: _omit, ...noLemma } = validWordCard;
+    expect(() => parseSpanResult(noLemma)).toThrow();
+  });
+
+  it("rejects a word card with a wrong-typed field", () => {
+    expect(() => parseSpanResult({ ...validWordCard, freq: "lots" })).toThrow();
+  });
+
+  it("rejects a phrase card missing its idiomatic meaning", () => {
+    const { idiomaticMeaning: _omit, ...broken } = validPhraseCard;
+    expect(() => parseSpanResult(broken)).toThrow();
+  });
+
+  it("rejects non-object input", () => {
+    expect(() => parseSpanResult("nope")).toThrow();
+    expect(() => parseSpanResult(null)).toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Morphology contract — Req 7.1 (Turkish segmentation), 7.2 (German case /
+// separable prefix), 7.3 (sentence-grounded `whyThisForm`).
+// ---------------------------------------------------------------------------
+// The schema fields exist from task 1; these assertions pin the contract the
+// task-30 prompt is meant to elicit. Each segment must carry both a `morph`
+// and a `function` label, and `whyThisForm` must cite the in-sentence trigger
+// (not a generic rule). A card without morphology must still validate, since
+// the field is optional and only emitted when the word has informative
+// internal structure.
+// ---------------------------------------------------------------------------
+
+// A German separable-prefix card mirroring the prompt's one-shot — pins the
+// Req 7.2 contract for the German path (alongside the Turkish fixture above).
+const germanSeparableCard = {
+  type: "word",
+  surface: "vor",
+  lemma: "vorstellen",
+  pos: "verb",
+  contextualSense: "introduce (separable prefix)",
+  definition: "Jemandem eine andere Person bekannt machen.",
+  definitionLabel: "Deutsch",
+  cefr: "B1",
+  freq: 2500,
+  morphology: {
+    root: "vorstellen",
+    rootGloss: "to introduce",
+    segments: [
+      { morph: "stellte", function: "conjugated stem (3sg past)" },
+      { morph: "vor", function: "separable prefix" },
+    ],
+    whyThisForm:
+      "'vorstellen' is a separable verb; in a main clause the prefix 'vor' detaches and moves to the end of the clause.",
+  },
+} as const;
+
+describe("morphology — populated breakdowns + sentence-grounded whyThisForm (Req 7)", () => {
+  it("parses a Turkish word card with morpheme segments labelled by function (Req 7.1)", () => {
+    const card = parseSpanResult(validWordCard);
+    if (card.type !== "word") throw new Error("expected word card");
+    expect(card.morphology).toBeDefined();
+    const { root, rootGloss, segments } = card.morphology!;
+    expect(root).toBe("ev");
+    expect(rootGloss).toBe("house");
+
+    // Every segment carries BOTH a surface morph and a function label.
+    for (const seg of segments) {
+      expect(seg.morph.length).toBeGreaterThan(0);
+      expect(seg.function.length).toBeGreaterThan(0);
+    }
+    // The agglutinated pieces are present, each tagged with its grammatical role.
+    expect(segments.map((s) => s.morph)).toEqual(
+      expect.arrayContaining(["ev", "-ler", "-i", "-den"]),
+    );
+    expect(segments.map((s) => s.function)).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/root/i),
+        expect.stringMatching(/plural/i),
+        expect.stringMatching(/possess/i),
+        expect.stringMatching(/ablative/i),
+      ]),
+    );
+  });
+
+  it("Turkish whyThisForm cites the in-sentence trigger, not a generic rule (Req 7.3)", () => {
+    const card = parseSpanResult(validWordCard);
+    if (card.type !== "word") throw new Error("expected word card");
+    // The fixture's reasoning names the governing verb from the passage —
+    // i.e. it's grounded in the sentence, not a standalone rule statement.
+    expect(card.morphology?.whyThisForm).toMatch(/çıktılar/);
+  });
+
+  it("parses a German word card with a separable-prefix breakdown (Req 7.2)", () => {
+    const card = parseSpanResult(germanSeparableCard);
+    if (card.type !== "word") throw new Error("expected word card");
+    expect(card.morphology).toBeDefined();
+    const segments = card.morphology!.segments;
+    expect(segments).toHaveLength(2);
+    expect(
+      segments.find((s) => /separable/i.test(s.function)),
+    ).toBeDefined();
+    // German Req 7.3: whyThisForm names the syntactic trigger (separable verb
+    // / main-clause rule) rather than just defining the word.
+    expect(card.morphology?.whyThisForm).toMatch(/separable verb|main clause/i);
+  });
+
+  it("a word card without morphology still validates (Req 7 optionality)", () => {
+    const card = parseSpanResult(minimalWordCard);
+    if (card.type !== "word") throw new Error("expected word card");
+    expect(card.morphology).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buildSpanUserPrompt
+// ---------------------------------------------------------------------------
+
+describe("buildSpanUserPrompt", () => {
+  it("includes the language, CEFR level, requested card type, span, and full passage", () => {
+    const prompt = buildSpanUserPrompt({
+      language: Language.TR,
+      text: trPassage,
+      start: spanStart,
+      end: spanEnd,
+      spanType: "word",
+      proficiencyLevel: CefrLevel.B1,
+    });
+
+    expect(prompt).toContain("TR");
+    expect(prompt).toContain("B1");
+    expect(prompt).toContain("word");
+    expect(prompt).toContain("evlerinden");
+    expect(prompt).toContain(trPassage);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// annotateSpan — mocked SDK (Req 6.1 — forced tool call → DeepCard)
+// ---------------------------------------------------------------------------
+
+describe("annotateSpan", () => {
+  const mockCreate = vi.fn();
+  const mockClient = {
+    messages: { create: mockCreate },
+  } as unknown as ReturnType<typeof createClaudeClient>;
+
+  let envSnapshot: Map<string, string | undefined>;
+
+  const wordInput = {
+    language: Language.TR,
+    text: trPassage,
+    start: spanStart,
+    end: spanEnd,
+    spanType: "word" as const,
+    proficiencyLevel: CefrLevel.B1,
+  };
+
+  beforeEach(() => {
+    envSnapshot = snapshotAndClearLangfuseEnv();
+    mockCreate.mockReset();
+    __resetRegistryForTests();
+    __resetObservabilityForTests();
+  });
+
+  afterEach(() => {
+    restoreLangfuseEnv(envSnapshot);
+    __resetRegistryForTests();
+    __resetObservabilityForTests();
+  });
+
+  it("calls Sonnet with a forced tool choice and returns the parsed card", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        { type: "tool_use", id: "toolu_w", name: READ_SPAN_TOOL_NAME, input: validWordCard },
+      ],
+      stop_reason: "tool_use",
+    });
+
+    const card = await annotateSpan(mockClient, wordInput);
+
+    expect(card.type).toBe("word");
+    if (card.type === "word") expect(card.surface).toBe("evlerinden");
+
+    expect(mockCreate).toHaveBeenCalledOnce();
+    const callArgs = mockCreate.mock.calls[0][0];
+    expect(callArgs.model).toBe("claude-sonnet-4-6");
+    expect(callArgs.temperature).toBe(0);
+    expect(callArgs.tools).toHaveLength(1);
+    expect(callArgs.tools[0].name).toBe(READ_SPAN_TOOL_NAME);
+    expect(callArgs.tool_choice).toEqual({ type: "tool", name: READ_SPAN_TOOL_NAME });
+
+    // Fallback path (Langfuse unset) → system text is the in-repo prompt,
+    // cached with cache_control: ephemeral (mirrors evaluate.ts).
+    expect(callArgs.system).toEqual([
+      { type: "text", text: READ_SPAN_SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
+    ]);
+
+    // The requested span type is threaded into the user prompt.
+    expect(callArgs.messages[0].content).toContain("word");
+    expect(callArgs.messages[0].content).toContain("evlerinden");
+  });
+
+  it("returns a phrase card when the phrase shape is produced", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        { type: "tool_use", id: "toolu_p", name: READ_SPAN_TOOL_NAME, input: validPhraseCard },
+      ],
+      stop_reason: "tool_use",
+    });
+
+    const card = await annotateSpan(mockClient, { ...wordInput, spanType: "phrase" });
+    expect(card.type).toBe("phrase");
+  });
+
+  it("throws when Claude returns no tool_use block", async () => {
+    mockCreate.mockResolvedValue({
+      content: [{ type: "text", text: "I cannot annotate this." }],
+      stop_reason: "end_turn",
+    });
+
+    await expect(annotateSpan(mockClient, wordInput)).rejects.toThrow(
+      "Claude did not return a tool use block",
+    );
+  });
+
+  it("throws when Claude returns the wrong tool name", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        { type: "tool_use", id: "toolu_x", name: "some_other_tool", input: validWordCard },
+      ],
+      stop_reason: "tool_use",
+    });
+
+    await expect(annotateSpan(mockClient, wordInput)).rejects.toThrow("Unexpected tool name");
+  });
+
+  it("throws when the tool input fails DeepCard validation", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_bad",
+          name: READ_SPAN_TOOL_NAME,
+          input: { type: "word", surface: "evler" }, // missing required fields
+        },
+      ],
+      stop_reason: "tool_use",
+    });
+
+    await expect(annotateSpan(mockClient, wordInput)).rejects.toThrow();
+  });
+
+  it("propagates SDK errors", async () => {
+    mockCreate.mockRejectedValue(new Error("API overloaded"));
+    await expect(annotateSpan(mockClient, wordInput)).rejects.toThrow("API overloaded");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// annotateSpan + prompts-registry — fallback cohort tag when Langfuse unset
+// ---------------------------------------------------------------------------
+
+describe("annotateSpan + prompts-registry", () => {
+  const mockCreate = vi.fn();
+  const mockClient = {
+    messages: { create: mockCreate },
+  } as unknown as ReturnType<typeof createClaudeClient>;
+
+  let envSnapshot: Map<string, string | undefined>;
+
+  beforeEach(() => {
+    envSnapshot = snapshotAndClearLangfuseEnv();
+    mockCreate.mockReset();
+    __resetRegistryForTests();
+    __resetObservabilityForTests();
+  });
+
+  afterEach(() => {
+    restoreLangfuseEnv(envSnapshot);
+    __resetRegistryForTests();
+    __resetObservabilityForTests();
+  });
+
+  function baseCtx(): LlmTraceContext {
+    return {
+      // "annotate" is the closest existing LlmFeature; the route (task 17)
+      // owns the trace feature. The feature value is irrelevant here — this
+      // test asserts the prompt-version stamping done by getPromptOrFallback.
+      feature: "annotate",
+      env: "dev",
+      promptVersion: "pending",
+      requestId: "test-request-001",
+      userId: "dev_user_001",
+      language: Language.TR,
+      cefrLevel: CefrLevel.B1,
+    };
+  }
+
+  it("stamps `fallback:<version>` on the trace when Langfuse is unset", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        { type: "tool_use", id: "toolu_fb", name: READ_SPAN_TOOL_NAME, input: validWordCard },
+      ],
+      stop_reason: "tool_use",
+    });
+
+    await withLlmTrace(baseCtx(), async () => {
+      await annotateSpan(mockClient, {
+        language: Language.TR,
+        text: trPassage,
+        start: spanStart,
+        end: spanEnd,
+        spanType: "word",
+        proficiencyLevel: CefrLevel.B1,
+      });
+      const ctx = getCurrentLlmTraceContext();
+      expect(ctx?.promptVersion).toBe(`fallback:${READ_SPAN_PROMPT_VERSION}`);
+      expect(ctx?.promptFallback).toBe(true);
+    });
+  });
+});

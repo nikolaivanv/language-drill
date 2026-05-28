@@ -1,7 +1,7 @@
 /**
  * packages/ai — bootstrap-prompts CLI (Phase 2 Tasks 20 + 21).
  *
- * Idempotent one-shot registration of the six Phase-2 prompts in a Langfuse
+ * Idempotent one-shot registration of the registry prompts in a Langfuse
  * project. Bootstrap flow:
  *
  *   1. LIST every prompt that currently carries the `production` label
@@ -45,6 +45,8 @@ import {
   GENERATION_PROMPT_VERSION,
   GENERATION_SYSTEM_PROMPT_TEMPLATE,
   PROMPT_LABEL_PRODUCTION,
+  READ_SPAN_PROMPT_VERSION,
+  READ_SPAN_SYSTEM_PROMPT,
   THEORY_GENERATION_PROMPT_VERSION,
   THEORY_SYSTEM_PROMPT_TEMPLATE,
   THEORY_VALIDATION_PROMPT_VERSION,
@@ -113,6 +115,12 @@ export const PROMPTS: readonly PromptManifestEntry[] = [
     text: THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE,
     version: THEORY_VALIDATION_PROMPT_VERSION,
     surface: "theory-validate",
+  },
+  {
+    name: "read-span-system-prompt",
+    text: READ_SPAN_SYSTEM_PROMPT,
+    version: READ_SPAN_PROMPT_VERSION,
+    surface: "read-span",
   },
 ];
 
@@ -466,7 +474,7 @@ async function main(): Promise<void> {
       [
         "Usage: pnpm bootstrap-prompts [--dry-run | --check]",
         "",
-        "Registers the six Phase-2 system prompts in the Langfuse project",
+        "Registers the registry system prompts in the Langfuse project",
         "selected by LANGFUSE_PUBLIC_KEY / LANGFUSE_SECRET_KEY / LANGFUSE_BASE_URL.",
         "",
         "  --dry-run   Show what would be created; do not write to Langfuse.",

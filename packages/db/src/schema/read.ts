@@ -11,7 +11,13 @@
 
 import { index, integer, jsonb, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 import { desc } from 'drizzle-orm';
-import type { CefrLevel, LearningLanguage, WordFlag } from '@language-drill/shared';
+import type {
+  CefrLevel,
+  DeepCard,
+  LearningLanguage,
+  SpanAnnotations,
+  WordFlag,
+} from '@language-drill/shared';
 import { users } from './users';
 
 export const readEntries = pgTable(
@@ -25,6 +31,11 @@ export const readEntries = pgTable(
     text: text('text').notNull(),
     flaggedWords: jsonb('flagged_words').$type<Record<string, WordFlag>>().notNull(),
     bank: jsonb('bank').$type<string[]>().notNull().default([]),
+    // Deep cards resolved on-demand for this entry, keyed by "start:end"
+    // character offsets. Nullable: null/absent ⇒ no deep cards persisted yet
+    // (Req 11.1). Written incrementally via a jsonb merge, never re-saving the
+    // whole entry.
+    spanAnnotations: jsonb('span_annotations').$type<SpanAnnotations>(),
     pastedAt: timestamp('pasted_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({
@@ -58,6 +69,10 @@ export const userVocabulary = pgTable(
     exampleSentence: text('example_sentence').notNull(),
     frequencyRank: integer('frequency_rank'),
     cefrBand: text('cefr_band').$type<CefrLevel>(),
+    // The full deep-card snapshot captured at save time (word|phrase only).
+    // Nullable: the lexical columns above stay authoritative for queries; the
+    // snapshot powers the Part-2 review unit (Req 8.1).
+    card: jsonb('card').$type<DeepCard>(),
     addedAt: timestamp('added_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({

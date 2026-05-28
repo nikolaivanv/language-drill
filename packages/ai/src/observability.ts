@@ -32,6 +32,7 @@ import { SONNET_4_5_PRICING } from "./cost-model.js";
 export type LlmFeature =
   | "evaluate"
   | "annotate"
+  | "annotate-span"
   | "generate"
   | "validate"
   | "generate-theory"
@@ -130,9 +131,10 @@ export interface LlmTraceContext {
  *
  * Keys are literal strings, NOT imported constants, on purpose:
  * `observability.test.ts` cross-checks them against the matching exports
- * (`EVALUATION_TOOL_NAME`, `ANNOTATE_TOOL_NAME`, `TOOL_NAME_BY_TYPE`,
- * `VALIDATION_TOOL_NAME`, `THEORY_TOOL_NAME`, `THEORY_VALIDATION_TOOL_NAME`),
- * so a rename in either place fails the test loudly.
+ * (`EVALUATION_TOOL_NAME`, `ANNOTATE_TOOL_NAME`, `READ_SPAN_TOOL_NAME`,
+ * `TOOL_NAME_BY_TYPE`, `VALIDATION_TOOL_NAME`, `THEORY_TOOL_NAME`,
+ * `THEORY_VALIDATION_TOOL_NAME`), so a rename in either place fails the
+ * test loudly.
  *
  * If a tool name is missing from the map (an unrecognized future tool),
  * the Proxy falls back to the ALS `feature` value and warns once.
@@ -140,6 +142,7 @@ export interface LlmTraceContext {
 export const TOOL_NAME_TO_FEATURE: ReadonlyMap<string, LlmFeature> = new Map([
   ["submit_evaluation", "evaluate"],
   ["submit_annotated_words", "annotate"],
+  ["submit_deep_card", "annotate-span"],
   ["submit_cloze_exercise", "generate"],
   ["submit_translation_exercise", "generate"],
   ["submit_vocab_recall_exercise", "generate"],

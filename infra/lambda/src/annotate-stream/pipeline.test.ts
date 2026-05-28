@@ -237,7 +237,7 @@ describe("buildCandidateList — determinism (Req 1.7)", () => {
 });
 
 describe("buildCandidateList — A1 worst case cap (Req 2.4, 2.7)", () => {
-  it("(g) 60 above-topRank words → exactly 20 returned, the 20 rarest; known-rare ranks ahead of unknowns", async () => {
+  it("(g) 60 candidates (50 known-rare + 10 unknown) → exactly 50 returned, the 50 known-rare; unknowns ranked behind are excluded", async () => {
     // Build 50 known words with ranks well above A1's topRank (750), AND 10
     // unknown-to-corpus words. The known set ranks from 1000 to 5900 (step 100).
     const KNOWN = Array.from({ length: 50 }, (_, i) => ({
@@ -255,32 +255,28 @@ describe("buildCandidateList — A1 worst case cap (Req 2.4, 2.7)", () => {
     const result = await buildCandidateList({ ...BASE_INPUT, text });
 
     expect(result.calibration).toEqual({ cefr: CefrLevel.A1, top: 750 });
-    // CANDIDATE_LIMIT was lowered from 40 to 20 (PR #100) — the original
-    // 40-cap fit the model's `max_tokens` budget but ran past the 29 s
-    // Lambda wall-clock ceiling on Sonnet. 20 keeps the most pedagogically
-    // useful (rarest) candidates while leaving comfortable wall-clock
-    // headroom even on Haiku.
-    expect(result.candidates).toHaveLength(20);
+    // CANDIDATE_LIMIT was raised 20 → 50 for Reading Deep Annotation: the
+    // skim card was slimmed (dropped `example`), so 50 slim entries emit
+    // fewer output tokens than the old 20 full entries and stay within the
+    // 29 s Lambda ceiling. 60 survivors here truncate to the 50 rarest.
+    expect(result.candidates).toHaveLength(50);
 
-    // Top-20 by rarity. The 20 rarest of the 50 known words have ranks
-    // 4000..5900 (i.e. indices 30..49 in KNOWN, sorted descending by rank).
-    const expectedRarestForms = KNOWN.slice(30) // ranks 4000..5900
-      .map((k) => k.form)
-      .reverse(); // rarest (5900) first
+    // The 50 known-rare words fill the cap; the 10 unknowns (demoted to
+    // `topRank + 1`) rank behind every one of them and are dropped.
+    const expectedRarestForms = KNOWN.map((k) => k.form).reverse(); // rarest (5900) first
     expect(result.candidates.map((c) => c.matchedForm)).toEqual(
       expectedRarestForms,
     );
 
-    // Sanity: no unknown made it in, because the 10 demoted-to-`topRank+1`
-    // unknowns rank behind every selected known-rare word.
+    // Sanity: no unknown made it in.
     for (const u of UNKNOWN) {
       expect(result.candidates.find((c) => c.matchedForm === u)).toBeUndefined();
     }
   });
 
-  it("(h) all-unknown corpus → still capped at 20 by first-seen order; no crash", async () => {
-    // 50 unknown-to-corpus forms, no known-rare alternatives.
-    const forms = Array.from({ length: 50 }, (_, i) => `mystery${i}`);
+  it("(h) all-unknown corpus → still capped at 50 by first-seen order; no crash", async () => {
+    // 60 unknown-to-corpus forms, no known-rare alternatives → truncate to 50.
+    const forms = Array.from({ length: 60 }, (_, i) => `mystery${i}`);
     mockFreqLookup.mockImplementation(() => null);
 
     const result = await buildCandidateList({
@@ -288,13 +284,88 @@ describe("buildCandidateList — A1 worst case cap (Req 2.4, 2.7)", () => {
       text: forms.join(" "),
     });
 
-    expect(result.candidates).toHaveLength(20);
+    expect(result.candidates).toHaveLength(50);
     // First-seen order is preserved since every survivor has the same
     // effectiveRank (topRank + 1) and Array.sort is stable.
     expect(result.candidates.map((c) => c.matchedForm)).toEqual(
-      forms.slice(0, 20),
+      forms.slice(0, 50),
     );
     // Every entry has lemma === null because they're unknown.
     expect(result.candidates.every((c) => c.lemma === null)).toBe(true);
+  });
+});
+
+describe("buildCandidateList — slim cap + proper-noun pre-filter (Req 1.2, 1.4, 2.2, 2.3)", () => {
+  it("(i) admits up to 50 candidates — broader coverage than the former 20-cap (Req 1.2)", async () => {
+    // 50 distinct known-rare words, all above B1's topRank (3000). The former
+    // cap (20) would have dropped 30 of them; the raised cap keeps all 50.
+    const KNOWN = Array.from({ length: 50 }, (_, i) => ({
+      form: `palabra${i}`,
+      rank: 4000 + i * 100,
+    }));
+    mockFreqLookup.mockImplementation(
+      freqFor(Object.fromEntries(KNOWN.map((k) => [k.form, k.rank]))),
+    );
+
+    const result = await buildCandidateList({
+      ...BASE_INPUT,
+      text: KNOWN.map((k) => k.form).join(" "),
+    });
+
+    expect(result.candidates).toHaveLength(50);
+  });
+
+  it("(j) ES: drops a mid-sentence capitalized token but keeps a sentence-initial one (Req 2.2)", async () => {
+    // Defaults: every word unknown (a candidate), no stopwords. "Carlos" opens
+    // the sentence so its capital is allowed; "Sevilla" is a mid-sentence
+    // capital and is dropped as a likely proper noun. "y" is single-char →
+    // tokenized as a separator, so it never appears.
+    const result = await buildCandidateList({
+      ...BASE_INPUT,
+      text: "Carlos comió manzanas y visitó Sevilla",
+    });
+
+    const forms = result.candidates.map((c) => c.matchedForm);
+    expect(forms).toContain("carlos"); // sentence-initial capital survives
+    expect(forms).not.toContain("sevilla"); // mid-sentence capital dropped
+    expect(forms).toEqual(
+      expect.arrayContaining(["comió", "manzanas", "visitó"]),
+    );
+  });
+
+  it("(k) TR: drops a mid-sentence capitalized token (Req 2.2)", async () => {
+    const result = await buildCandidateList({
+      ...BASE_INPUT,
+      language: Language.TR,
+      text: "kitabı Ahmet okudu",
+    });
+
+    const forms = result.candidates.map((c) => c.matchedForm);
+    expect(forms).not.toContain("ahmet"); // mid-sentence capital dropped
+    expect(forms).toEqual(expect.arrayContaining(["kitabı", "okudu"]));
+  });
+
+  it("(l) DE: a capitalized mid-sentence noun is NOT dropped by capitalization (Req 2.3)", async () => {
+    // German capitalizes all nouns, so capitalization is not a proper-noun
+    // signal — "Hund" must survive the pre-filter.
+    const result = await buildCandidateList({
+      ...BASE_INPUT,
+      language: Language.DE,
+      text: "der Hund läuft schnell",
+    });
+
+    const forms = result.candidates.map((c) => c.matchedForm);
+    expect(forms).toContain("hund");
+  });
+
+  it("(m) all-stopword passage → zero candidates (empty-candidate shortcut, Req 1.4)", async () => {
+    mockIsStopword.mockImplementation(() => true);
+
+    const result = await buildCandidateList({
+      ...BASE_INPUT,
+      text: "porque entonces aunque",
+    });
+
+    expect(result.candidates).toEqual([]);
   });
 });

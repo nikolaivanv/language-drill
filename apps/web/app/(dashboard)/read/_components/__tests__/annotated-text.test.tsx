@@ -54,7 +54,7 @@ describe('AnnotatedText — flagged vs unflagged tokens', () => {
     expect(button.className).not.toContain(styles.active);
   });
 
-  it('renders an unflagged word as plain text (no button, no class)', () => {
+  it('renders an unflagged word as an interactive button without highlight classes (Req 3.2)', () => {
     render(
       <AnnotatedText
         text="aldea grande"
@@ -65,12 +65,14 @@ describe('AnnotatedText — flagged vs unflagged tokens', () => {
         onWordClick={() => {}}
       />,
     );
-    // "grande" is not in the flagged map → no button.
-    expect(
-      screen.queryByRole('button', { name: 'grande' }),
-    ).not.toBeInTheDocument();
-    // But its raw text still appears in the rendered output.
-    expect(screen.getByText(/grande/)).toBeInTheDocument();
+    // "grande" is not flagged but is still tappable (tap-any-word).
+    const grande = screen.getByRole('button', { name: 'grande' });
+    expect(grande).toHaveAttribute('data-word', 'grande');
+    // Base reset class, but no flag-highlight modifiers.
+    expect(grande.className).toContain(styles.word);
+    expect(grande.className).not.toContain(styles.subtle);
+    expect(grande.className).not.toContain(styles.assertive);
+    expect(grande.className).not.toContain(styles.saved);
   });
 
   it('preserves separator characters in the rendered output', () => {
@@ -193,5 +195,158 @@ describe('AnnotatedText — intensity / saved / active modifiers', () => {
     const pueblo = screen.getByRole('button', { name: 'pueblo' });
     expect(aldea.className).toContain(styles.active);
     expect(pueblo.className).not.toContain(styles.active);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// onSpanSelect — tap reporting + offsets (Req 3.2)
+// ---------------------------------------------------------------------------
+
+describe('AnnotatedText — onSpanSelect on tap', () => {
+  it('reports a word span with character offsets when a flagged word is tapped', () => {
+    const onSpanSelect = vi.fn();
+    const onWordClick = vi.fn();
+    render(
+      // "aldea grande" → aldea [0,5], grande [6,12]
+      <AnnotatedText
+        text="aldea grande"
+        flaggedMap={FLAGGED}
+        intensity="subtle"
+        bankSet={new Set()}
+        activeWord={null}
+        onWordClick={onWordClick}
+        onSpanSelect={onSpanSelect}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
+
+    expect(onSpanSelect).toHaveBeenCalledTimes(1);
+    expect(onSpanSelect.mock.calls[0][0]).toMatchObject({
+      start: 0,
+      end: 5,
+      type: 'word',
+    });
+    // Flagged word → onWordClick also fires (skim popover channel).
+    expect(onWordClick).toHaveBeenCalledTimes(1);
+    expect(onWordClick.mock.calls[0][0]).toBe('aldea');
+  });
+
+  it('reports a word span for an UNFLAGGED tap but does NOT fire onWordClick', () => {
+    const onSpanSelect = vi.fn();
+    const onWordClick = vi.fn();
+    render(
+      <AnnotatedText
+        text="aldea grande"
+        flaggedMap={FLAGGED}
+        intensity="subtle"
+        bankSet={new Set()}
+        activeWord={null}
+        onWordClick={onWordClick}
+        onSpanSelect={onSpanSelect}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'grande' }));
+
+    expect(onSpanSelect).toHaveBeenCalledTimes(1);
+    expect(onSpanSelect.mock.calls[0][0]).toMatchObject({
+      start: 6,
+      end: 12,
+      type: 'word',
+    });
+    // onWordClick is flagged-only — never fires for a non-flagged word.
+    expect(onWordClick).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// onSpanSelect — mouse-drag selection mapping (Req 4.1, 4.3, 5.1)
+// ---------------------------------------------------------------------------
+
+describe('AnnotatedText — drag selection', () => {
+  // "la aldea grande es bonita." token offsets:
+  //   la[0,2] aldea[3,8] grande[9,15] es[16,18] bonita[19,25] .[25,26]
+  const TEXT = 'la aldea grande es bonita.';
+
+  it('maps a multi-word sub-sentence drag to a phrase span', () => {
+    const onSpanSelect = vi.fn();
+    render(
+      <AnnotatedText
+        text={TEXT}
+        flaggedMap={{}}
+        intensity="subtle"
+        bankSet={new Set()}
+        activeWord={null}
+        onWordClick={() => {}}
+        onSpanSelect={onSpanSelect}
+      />,
+    );
+    const aldea = screen.getByRole('button', { name: 'aldea' });
+    const grande = screen.getByRole('button', { name: 'grande' });
+
+    fireEvent.mouseDown(aldea);
+    fireEvent.mouseEnter(grande);
+    fireEvent.mouseUp(grande); // bubbles to the window mouseup listener
+
+    expect(onSpanSelect).toHaveBeenCalledTimes(1);
+    expect(onSpanSelect.mock.calls[0][0]).toMatchObject({
+      start: 3,
+      end: 15,
+      type: 'phrase',
+    });
+  });
+
+  it('maps a full-sentence drag to a sentence span', () => {
+    const onSpanSelect = vi.fn();
+    render(
+      <AnnotatedText
+        text={TEXT}
+        flaggedMap={{}}
+        intensity="subtle"
+        bankSet={new Set()}
+        activeWord={null}
+        onWordClick={() => {}}
+        onSpanSelect={onSpanSelect}
+      />,
+    );
+    const la = screen.getByRole('button', { name: 'la' });
+    const bonita = screen.getByRole('button', { name: 'bonita' });
+
+    fireEvent.mouseDown(la);
+    fireEvent.mouseEnter(bonita);
+    fireEvent.mouseUp(bonita);
+
+    expect(onSpanSelect).toHaveBeenCalledTimes(1);
+    expect(onSpanSelect.mock.calls[0][0]).toMatchObject({
+      start: 0,
+      end: 25,
+      type: 'sentence',
+    });
+  });
+
+  it('a mouse tap (down→up, no drag) reports a single word and swallows the trailing click', () => {
+    const onSpanSelect = vi.fn();
+    render(
+      <AnnotatedText
+        text={TEXT}
+        flaggedMap={{}}
+        intensity="subtle"
+        bankSet={new Set()}
+        activeWord={null}
+        onWordClick={() => {}}
+        onSpanSelect={onSpanSelect}
+      />,
+    );
+    const grande = screen.getByRole('button', { name: 'grande' });
+
+    fireEvent.mouseDown(grande);
+    fireEvent.mouseUp(grande);
+    fireEvent.click(grande); // trailing synthetic click — must be ignored
+
+    expect(onSpanSelect).toHaveBeenCalledTimes(1);
+    expect(onSpanSelect.mock.calls[0][0]).toMatchObject({
+      start: 9,
+      end: 15,
+      type: 'word',
+    });
   });
 });

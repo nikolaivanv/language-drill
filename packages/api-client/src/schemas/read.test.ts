@@ -12,11 +12,16 @@ import {
   AnnotateFlagEventSchema,
   AnnotateMetaEventSchema,
   AnnotateRequestSchema,
+  AnnotateSpanRequestSchema,
+  AnnotateSpanResponseSchema,
+  DeleteVocabularyCardResponseSchema,
   ReadEntriesResponseSchema,
   ReadEntryResponseSchema,
   ReadEntrySummarySchema,
   SaveReadEntryRequestSchema,
   SaveReadEntryResponseSchema,
+  SaveVocabularyCardRequestSchema,
+  SaveVocabularyCardResponseSchema,
   UpdateBankRequestSchema,
   UpdateBankResponseSchema,
 } from './read';
@@ -527,5 +532,241 @@ describe('ReadEntryResponseSchema', () => {
       pastedAt: 'yesterday',
     });
     expect(result.success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DeepCard fixtures (valid against the shared discriminated union)
+// ---------------------------------------------------------------------------
+
+const validWordCard = {
+  type: 'word' as const,
+  surface: 'casa',
+  lemma: 'casa',
+  pos: 'noun',
+  contextualSense: 'house (here: the family home)',
+  definition: 'edificio para vivir',
+  definitionLabel: 'Español',
+  cefr: CefrLevel.A1,
+  freq: 120,
+};
+
+const validPhraseCard = {
+  type: 'phrase' as const,
+  surface: 'de repente',
+  literal: 'of sudden',
+  idiomaticMeaning: 'suddenly',
+  register: 'neutral',
+};
+
+const validSentenceCard = {
+  type: 'sentence' as const,
+  surface: 'La casa es bonita.',
+  translation: 'The house is pretty.',
+  breakdown: [{ chunk: 'La casa', role: 'subject', note: 'definite NP' }],
+  grammarNotes: ['ser + adjective'],
+};
+
+// ---------------------------------------------------------------------------
+// AnnotateSpanRequestSchema
+// ---------------------------------------------------------------------------
+
+describe('AnnotateSpanRequestSchema', () => {
+  const validReq = {
+    language: Language.ES,
+    text: 'La casa es bonita.',
+    start: 3,
+    end: 7,
+  };
+
+  it('accepts a valid request without entryId', () => {
+    expect(AnnotateSpanRequestSchema.safeParse(validReq).success).toBe(true);
+  });
+
+  it('accepts a valid request with an entryId', () => {
+    const result = AnnotateSpanRequestSchema.safeParse({
+      ...validReq,
+      entryId: validUuid,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts start === 0 (offsets are non-negative)', () => {
+    const result = AnnotateSpanRequestSchema.safeParse({
+      ...validReq,
+      start: 0,
+      end: 2,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects text > READ_TEXT_MAX_CHARS', () => {
+    const result = AnnotateSpanRequestSchema.safeParse({
+      ...validReq,
+      text: 'a'.repeat(READ_TEXT_MAX_CHARS + 1),
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects empty text', () => {
+    expect(
+      AnnotateSpanRequestSchema.safeParse({ ...validReq, text: '' }).success,
+    ).toBe(false);
+  });
+
+  it('rejects a negative offset', () => {
+    expect(
+      AnnotateSpanRequestSchema.safeParse({ ...validReq, start: -1 }).success,
+    ).toBe(false);
+  });
+
+  it('rejects a non-integer offset', () => {
+    expect(
+      AnnotateSpanRequestSchema.safeParse({ ...validReq, end: 7.5 }).success,
+    ).toBe(false);
+  });
+
+  it('rejects a malformed entryId', () => {
+    const result = AnnotateSpanRequestSchema.safeParse({
+      ...validReq,
+      entryId: 'not-a-uuid',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects language=EN', () => {
+    expect(
+      AnnotateSpanRequestSchema.safeParse({ ...validReq, language: Language.EN })
+        .success,
+    ).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// AnnotateSpanResponseSchema (= shared DeepCardSchema)
+// ---------------------------------------------------------------------------
+
+describe('AnnotateSpanResponseSchema', () => {
+  it('accepts a word card', () => {
+    expect(AnnotateSpanResponseSchema.safeParse(validWordCard).success).toBe(
+      true,
+    );
+  });
+
+  it('accepts a phrase card', () => {
+    expect(AnnotateSpanResponseSchema.safeParse(validPhraseCard).success).toBe(
+      true,
+    );
+  });
+
+  it('accepts a sentence card', () => {
+    expect(
+      AnnotateSpanResponseSchema.safeParse(validSentenceCard).success,
+    ).toBe(true);
+  });
+
+  it('rejects a card missing the discriminant `type`', () => {
+    const { type: _omit, ...noType } = validWordCard;
+    expect(AnnotateSpanResponseSchema.safeParse(noType).success).toBe(false);
+  });
+
+  it('rejects an unknown card type', () => {
+    expect(
+      AnnotateSpanResponseSchema.safeParse({ ...validWordCard, type: 'bogus' })
+        .success,
+    ).toBe(false);
+  });
+
+  it('rejects a word card missing a required field', () => {
+    const { definition: _omit, ...incomplete } = validWordCard;
+    expect(AnnotateSpanResponseSchema.safeParse(incomplete).success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// SaveVocabularyCardRequestSchema
+// ---------------------------------------------------------------------------
+
+describe('SaveVocabularyCardRequestSchema', () => {
+  it('accepts a word card with a sourceReadEntryId', () => {
+    const result = SaveVocabularyCardRequestSchema.safeParse({
+      language: Language.ES,
+      card: validWordCard,
+      sourceReadEntryId: validUuid,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts a phrase card without a sourceReadEntryId', () => {
+    const result = SaveVocabularyCardRequestSchema.safeParse({
+      language: Language.ES,
+      card: validPhraseCard,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts a sentence card at the wire level (server rejects it per Req 8.6)', () => {
+    const result = SaveVocabularyCardRequestSchema.safeParse({
+      language: Language.ES,
+      card: validSentenceCard,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects a malformed card', () => {
+    const result = SaveVocabularyCardRequestSchema.safeParse({
+      language: Language.ES,
+      card: { type: 'word' },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a malformed sourceReadEntryId', () => {
+    const result = SaveVocabularyCardRequestSchema.safeParse({
+      language: Language.ES,
+      card: validWordCard,
+      sourceReadEntryId: 'nope',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects language=EN', () => {
+    const result = SaveVocabularyCardRequestSchema.safeParse({
+      language: Language.EN,
+      card: validWordCard,
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// SaveVocabularyCardResponseSchema / DeleteVocabularyCardResponseSchema
+// ---------------------------------------------------------------------------
+
+describe('SaveVocabularyCardResponseSchema', () => {
+  it('accepts a valid { id } response', () => {
+    expect(
+      SaveVocabularyCardResponseSchema.safeParse({ id: validUuid }).success,
+    ).toBe(true);
+  });
+
+  it('rejects a non-UUID id', () => {
+    expect(
+      SaveVocabularyCardResponseSchema.safeParse({ id: 'not-a-uuid' }).success,
+    ).toBe(false);
+  });
+});
+
+describe('DeleteVocabularyCardResponseSchema', () => {
+  it('accepts a valid { id } response', () => {
+    expect(
+      DeleteVocabularyCardResponseSchema.safeParse({ id: validUuid }).success,
+    ).toBe(true);
+  });
+
+  it('rejects a non-UUID id', () => {
+    expect(
+      DeleteVocabularyCardResponseSchema.safeParse({ id: 'not-a-uuid' }).success,
+    ).toBe(false);
   });
 });
