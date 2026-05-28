@@ -65,7 +65,18 @@ export function WordSheet({
       maxHeight="50vh"
       title={<span className="t-micro">{sheetTitle(deepCard)}</span>}
     >
-      {deepCard && deepCard.status !== 'idle' ? (
+      {deepCard?.status === 'loading' && entry ? (
+        // Skim preview while the deep card resolves (Req 3.1); the inline
+        // footer indicator + the sheet's "looking up" eyebrow together signal
+        // the background fetch.
+        <WordCardBody
+          entry={entry}
+          inBank={inBank}
+          onSave={onSave}
+          onSkip={onSkip}
+          loadingDeep
+        />
+      ) : deepCard && deepCard.status !== 'idle' ? (
         <DeepCardContent
           slice={deepCard}
           inBank={inBank}

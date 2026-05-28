@@ -89,6 +89,18 @@ const WORD_CARD: DeepWordCard = {
 };
 
 describe('WordSheet — deep-card states', () => {
+  it('shows the skim preview with an inline "looking it up…" indicator when loading and a flagged entry is present (Req 3.1, 3.3)', () => {
+    render(
+      <WordSheet
+        {...baseProps}
+        deepCard={{ status: 'loading', span: SPAN }}
+      />,
+    );
+    expect(screen.getByText('a small village')).toBeInTheDocument();
+    expect(screen.getByTestId('skim-loading-deep')).toBeInTheDocument();
+    expect(screen.queryByTestId('deep-card-skeleton')).toBeNull();
+  });
+
   it('opens with the skeleton while loading, even without a skim entry (Req 9.3)', () => {
     render(
       <WordSheet
