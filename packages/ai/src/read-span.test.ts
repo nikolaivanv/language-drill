@@ -4,10 +4,13 @@ import {
   annotateSpan,
   buildSpanUserPrompt,
   parseSpanResult,
+  pickSpanTool,
+  READ_SPAN_PHRASE_TOOL,
   READ_SPAN_PROMPT_VERSION,
+  READ_SPAN_SENTENCE_TOOL,
   READ_SPAN_SYSTEM_PROMPT,
-  READ_SPAN_TOOL,
   READ_SPAN_TOOL_NAME,
+  READ_SPAN_WORD_TOOL,
 } from "./read-span.js";
 import { createClaudeClient } from "./index.js";
 import {
@@ -139,19 +142,64 @@ function restoreLangfuseEnv(snapshot: Map<string, string | undefined>): void {
 }
 
 // ---------------------------------------------------------------------------
-// READ_SPAN_TOOL / prompt sanity
+// Span tools / prompt sanity
 // ---------------------------------------------------------------------------
+// Anthropic's tool-use API rejects `oneOf` / `allOf` / `anyOf` at the top
+// level of `input_schema` with a 400; the original single `READ_SPAN_TOOL`
+// triggered that in prod. The caller picks the exact-shape tool per call
+// via `pickSpanTool(spanType)`, keeping the union an internal client concept.
 
-describe("READ_SPAN_TOOL", () => {
-  it("uses the expected tool name", () => {
-    expect(READ_SPAN_TOOL.name).toBe("submit_deep_card");
+const SPAN_TOOLS = [
+  READ_SPAN_WORD_TOOL,
+  READ_SPAN_PHRASE_TOOL,
+  READ_SPAN_SENTENCE_TOOL,
+] as const;
+
+describe("span tools", () => {
+  it("share the constant tool name so the system prompt stays valid", () => {
     expect(READ_SPAN_TOOL_NAME).toBe("submit_deep_card");
+    for (const tool of SPAN_TOOLS) {
+      expect(tool.name).toBe("submit_deep_card");
+    }
   });
 
-  it("offers exactly the three card shapes via `oneOf`", () => {
-    const schema = READ_SPAN_TOOL.input_schema as { oneOf?: unknown[] };
-    expect(Array.isArray(schema.oneOf)).toBe(true);
-    expect(schema.oneOf).toHaveLength(3);
+  // Regression guard for the prod 502: Anthropic's API rejects top-level
+  // `oneOf`/`allOf`/`anyOf` on `input_schema`. Each per-shape tool must be a
+  // flat object schema.
+  it("each tool's input_schema is a flat object — no top-level oneOf/allOf/anyOf", () => {
+    for (const tool of SPAN_TOOLS) {
+      const schema = tool.input_schema as Record<string, unknown>;
+      expect(schema.type).toBe("object");
+      expect(schema.oneOf).toBeUndefined();
+      expect(schema.allOf).toBeUndefined();
+      expect(schema.anyOf).toBeUndefined();
+      expect(schema.properties).toBeDefined();
+    }
+  });
+
+  it("`pickSpanTool` returns the matching per-shape tool", () => {
+    expect(pickSpanTool("word")).toBe(READ_SPAN_WORD_TOOL);
+    expect(pickSpanTool("phrase")).toBe(READ_SPAN_PHRASE_TOOL);
+    expect(pickSpanTool("sentence")).toBe(READ_SPAN_SENTENCE_TOOL);
+  });
+
+  it("each tool forces the matching `type` literal in its required list", () => {
+    const word = READ_SPAN_WORD_TOOL.input_schema as {
+      properties: { type: { enum: string[] } };
+      required: string[];
+    };
+    expect(word.properties.type.enum).toEqual(["word"]);
+    expect(word.required).toContain("type");
+
+    const phrase = READ_SPAN_PHRASE_TOOL.input_schema as {
+      properties: { type: { enum: string[] } };
+    };
+    expect(phrase.properties.type.enum).toEqual(["phrase"]);
+
+    const sentence = READ_SPAN_SENTENCE_TOOL.input_schema as {
+      properties: { type: { enum: string[] } };
+    };
+    expect(sentence.properties.type.enum).toEqual(["sentence"]);
   });
 });
 

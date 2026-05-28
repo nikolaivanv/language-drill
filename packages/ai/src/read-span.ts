@@ -261,15 +261,55 @@ const SENTENCE_CARD_SCHEMA = {
   required: ["type", "surface", "translation", "breakdown", "grammarNotes"],
 };
 
-export const READ_SPAN_TOOL: Anthropic.Tool = {
-  name: READ_SPAN_TOOL_NAME,
-  description:
-    "Submit the deep annotation card for the selected span. Produce exactly the card matching the requested span type (word, phrase, or sentence).",
-  input_schema: {
-    type: "object" as const,
-    oneOf: [WORD_CARD_SCHEMA, PHRASE_CARD_SCHEMA, SENTENCE_CARD_SCHEMA],
-  },
-};
+// Anthropic's tool-use API rejects `oneOf` / `allOf` / `anyOf` at the top
+// level of `input_schema` (400 invalid_request_error). The caller already
+// decides `spanType`, so we hand the model the EXACT-SHAPE schema for that
+// type and lock `tool_choice` to the single tool — the discriminated union
+// stays an internal client concept (validated by `parseSpanResult`). The
+// tool NAME is constant so the system prompt's `submit_deep_card` reference
+// is unaffected and `READ_SPAN_PROMPT_VERSION` does not need bumping.
+
+function makeSpanTool(
+  schema:
+    | typeof WORD_CARD_SCHEMA
+    | typeof PHRASE_CARD_SCHEMA
+    | typeof SENTENCE_CARD_SCHEMA,
+  description: string,
+): Anthropic.Tool {
+  return {
+    name: READ_SPAN_TOOL_NAME,
+    description,
+    input_schema: {
+      type: "object" as const,
+      properties: schema.properties,
+      required: schema.required,
+    },
+  };
+}
+
+export const READ_SPAN_WORD_TOOL = makeSpanTool(
+  WORD_CARD_SCHEMA,
+  "Submit the deep word card for the selected span.",
+);
+export const READ_SPAN_PHRASE_TOOL = makeSpanTool(
+  PHRASE_CARD_SCHEMA,
+  "Submit the deep phrase card for the selected span.",
+);
+export const READ_SPAN_SENTENCE_TOOL = makeSpanTool(
+  SENTENCE_CARD_SCHEMA,
+  "Submit the deep sentence card for the selected span.",
+);
+
+export function pickSpanTool(spanType: SpanType): Anthropic.Tool {
+  switch (spanType) {
+    case "word":
+      return READ_SPAN_WORD_TOOL;
+    case "phrase":
+      return READ_SPAN_PHRASE_TOOL;
+    case "sentence":
+      return READ_SPAN_SENTENCE_TOOL;
+  }
+}
 
 // ---------------------------------------------------------------------------
 // System prompt (cached via cache_control: ephemeral on the call site)
@@ -451,7 +491,7 @@ export async function annotateSpan(
         content: userPrompt,
       },
     ],
-    tools: [READ_SPAN_TOOL],
+    tools: [pickSpanTool(input.spanType)],
     tool_choice: {
       type: "tool" as const,
       name: READ_SPAN_TOOL_NAME,

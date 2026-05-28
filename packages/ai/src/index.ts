@@ -39,8 +39,11 @@ export type {
 export {
   READ_SPAN_SYSTEM_PROMPT,
   READ_SPAN_PROMPT_VERSION,
-  READ_SPAN_TOOL,
   READ_SPAN_TOOL_NAME,
+  READ_SPAN_WORD_TOOL,
+  READ_SPAN_PHRASE_TOOL,
+  READ_SPAN_SENTENCE_TOOL,
+  pickSpanTool,
   annotateSpan,
   parseSpanResult,
   buildSpanUserPrompt,
