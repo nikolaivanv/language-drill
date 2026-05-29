@@ -448,10 +448,10 @@ export const SEED_EXERCISES: SeedExercise[] = [
 
   // TR — Cloze
   {
-    key: 'tr-cloze-a2-1',
+    key: 'tr-cloze-a1-1',
     type: 'cloze',
     language: 'TR',
-    difficulty: 'A2',
+    difficulty: 'A1',
     contentJson: {
       type: 'cloze',
       instructions: 'Boşluğu doğru fiil çekimi ile doldurun.',
@@ -492,10 +492,10 @@ export const SEED_EXERCISES: SeedExercise[] = [
 
   // TR — Translation
   {
-    key: 'tr-translation-a2-1',
+    key: 'tr-translation-a1-1',
     type: 'translation',
     language: 'TR',
-    difficulty: 'A2',
+    difficulty: 'A1',
     contentJson: {
       type: 'translation',
       instructions: 'Aşağıdaki cümleyi Türkçeye çevirin.',
@@ -617,11 +617,11 @@ export const SEED_KEY_TO_GRAMMAR_POINT: Readonly<Record<string, string>> = {
   // 'de-vocab-a2-1': 'de-a2-housing-vocab',
   // 'de-vocab-b1-1': 'de-b1-environment-vocab',
   // 'de-vocab-b2-1': 'de-b2-academic-noun-vocab',
-  // Turkish
-  'tr-cloze-a2-1': 'tr-a2-dili-past',
+  // Turkish — di'li past + questions relocated to A1 (2026-05-28); vocab umbrella stays at A2
+  'tr-cloze-a1-1': 'tr-a1-dili-past',
   // 'tr-cloze-b1-1': 'tr-b1-causal-conjunctions',
   // 'tr-cloze-b2-1': 'tr-b2-passive-with-nominalization',
-  'tr-translation-a2-1': 'tr-a2-question-formation',
+  'tr-translation-a1-1': 'tr-a1-questions',
   // 'tr-translation-b1-1': 'tr-b1-keske-optative',
   // 'tr-translation-b2-1': 'tr-b2-relative-clause-participles',
   'tr-vocab-a2-1': 'tr-a2-everyday-vocab',
