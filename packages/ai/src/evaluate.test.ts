@@ -344,7 +344,7 @@ describe("evaluateAnswer", () => {
     // Verify the SDK was called correctly
     expect(mockCreate).toHaveBeenCalledOnce();
     const callArgs = mockCreate.mock.calls[0][0];
-    expect(callArgs.model).toBe("claude-sonnet-4-6");
+    expect(callArgs.model).toBe("claude-haiku-4-5-20251001");
     expect(callArgs.temperature).toBe(0);
     expect(callArgs.tools).toHaveLength(1);
     expect(callArgs.tools[0].name).toBe(EVALUATION_TOOL_NAME);

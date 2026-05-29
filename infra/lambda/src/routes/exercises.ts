@@ -14,6 +14,8 @@ import {
   createObservedClaudeClient,
   evaluateAnswer,
   EVALUATION_SYSTEM_PROMPT_VERSION,
+  EVAL_REQUEST_TIMEOUT_MS,
+  EVAL_MAX_RETRIES,
   withLlmTrace,
 } from '@language-drill/ai';
 import { db } from '../db';
@@ -207,7 +209,14 @@ exercises.post('/exercises/:id/submit', async (c) => {
 
   // 5. Call Claude for evaluation
   try {
-    const client = createObservedClaudeClient(ANTHROPIC_API_KEY);
+    // Eval-specific timeout/retries (Req 4.1): this client is constructed per
+    // submit and used only for the evaluation call, so the fail-fast posture
+    // is applied at construction (robust against the Langfuse Proxy not
+    // forwarding per-request options).
+    const client = createObservedClaudeClient(ANTHROPIC_API_KEY, {
+      timeout: EVAL_REQUEST_TIMEOUT_MS,
+      maxRetries: EVAL_MAX_RETRIES,
+    });
     const result = await withLlmTrace(
       {
         feature: 'evaluate',

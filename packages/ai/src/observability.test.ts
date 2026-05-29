@@ -66,12 +66,15 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock("@anthropic-ai/sdk", () => {
   class MockAnthropic {
+    // Captures the constructor options so tests can assert that per-surface
+    // `timeout` / `maxRetries` reach `new Anthropic(...)` (Req 4.1, 4.4).
+    readonly opts: { apiKey: string; timeout?: number; maxRetries?: number };
     messages = {
       create: mocks.mockCreate,
       stream: mocks.mockStream,
     };
-    constructor(_opts: { apiKey: string }) {
-      void _opts;
+    constructor(opts: { apiKey: string; timeout?: number; maxRetries?: number }) {
+      this.opts = opts;
     }
   }
   return { default: MockAnthropic };
@@ -155,6 +158,41 @@ describe("createObservedClaudeClient (skeleton)", () => {
     // further down.
     expect(client).toBeInstanceOf(Anthropic);
     expect(typeof client.messages.create).toBe("function");
+  });
+
+  // Read the constructor opts the (Langfuse-disabled) vanilla instance
+  // captured — see the MockAnthropic stub above.
+  const ctorOpts = (client: Anthropic) =>
+    (client as unknown as { opts: { apiKey: string; timeout?: number; maxRetries?: number } })
+      .opts;
+
+  it("passes timeout/maxRetries through to the Anthropic constructor (Req 4.1, 4.4)", () => {
+    // Langfuse disabled → the returned client IS the inner Anthropic instance.
+    const client = createObservedClaudeClient("test-api-key", {
+      timeout: 17_000,
+      maxRetries: 1,
+    });
+    expect(ctorOpts(client)).toEqual({
+      apiKey: "test-api-key",
+      timeout: 17_000,
+      maxRetries: 1,
+    });
+  });
+
+  it("is unchanged when no opts are given — only apiKey reaches the constructor", () => {
+    const client = createObservedClaudeClient("test-api-key");
+    // No `timeout`/`maxRetries` keys are injected, so the SDK defaults apply.
+    expect(ctorOpts(client)).toEqual({ apiKey: "test-api-key" });
+  });
+
+  it("forwards opts even when the client is wrapped by the Langfuse Proxy", () => {
+    process.env.LANGFUSE_PUBLIC_KEY = "pk-lf-test";
+    process.env.LANGFUSE_SECRET_KEY = "sk-lf-test";
+    // The Proxy wraps `.messages` but transparently forwards other property
+    // reads (incl. `opts`) to the inner instance, so the constructor values
+    // are still observable.
+    const client = createObservedClaudeClient("test-api-key", { maxRetries: 1 });
+    expect(ctorOpts(client)).toEqual({ apiKey: "test-api-key", maxRetries: 1 });
   });
 });
 

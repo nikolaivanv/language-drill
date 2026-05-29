@@ -18,6 +18,8 @@ export {
   parseEvaluationResult,
   EVALUATION_TOOL,
   EVALUATION_TOOL_NAME,
+  EVAL_REQUEST_TIMEOUT_MS,
+  EVAL_MAX_RETRIES,
 } from "./evaluate.js";
 export type { EvaluateAnswerInput } from "./evaluate.js";
 export {

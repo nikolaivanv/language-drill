@@ -68,6 +68,8 @@ vi.mock('@language-drill/ai', () => ({
   withLlmTrace: <T>(ctx: unknown, fn: () => T | Promise<T>) =>
     mockWithLlmTrace(ctx, fn),
   EVALUATION_SYSTEM_PROMPT_VERSION: 'evaluate@test',
+  EVAL_REQUEST_TIMEOUT_MS: 18_000,
+  EVAL_MAX_RETRIES: 1,
 }));
 
 // Mock `node:crypto` so observability tests can pin `submissionId` and

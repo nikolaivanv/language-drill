@@ -888,9 +888,20 @@ function wrapAnthropic(inner: Anthropic, lf: Langfuse): Anthropic {
  * `Anthropic` instance when Langfuse is disabled (Req 1 AC 2); otherwise
  * returns a Proxy that records each `messages.create` call as a Langfuse
  * generation (Req 1 AC 3).
+ *
+ * `opts` (optional) sets per-surface `timeout` / `maxRetries` at the
+ * Anthropic client constructor. We apply them here rather than per-request
+ * so they take effect regardless of whether the Langfuse Proxy forwards a
+ * second request-options argument — the constructor values are the floor for
+ * every call the returned client makes. Omitting `opts` is behaviour-identical
+ * to the original single-arg factory (the SDK defaults: `maxRetries: 2`, a
+ * 10-minute timeout).
  */
-export function createObservedClaudeClient(apiKey: string): Anthropic {
-  const inner = new Anthropic({ apiKey });
+export function createObservedClaudeClient(
+  apiKey: string,
+  opts?: { timeout?: number; maxRetries?: number },
+): Anthropic {
+  const inner = new Anthropic({ apiKey, ...opts });
   const lf = getLangfuse();
   if (!lf) return inner;
   return wrapAnthropic(inner, lf);
