@@ -19,22 +19,18 @@
 //     (Req 3.2, 4.1, 4.3, 5.1). The server recomputes the type authoritatively;
 //     the `type` here is the client hint that drives card layout.
 //
-// Drag model: a word press arms a selection, moving over words extends the
-// head, and releasing finalizes it (so releasing over whitespace still
-// resolves). The trailing synthetic click after a pointer interaction is
-// swallowed so a tap isn't double-handled; a bare click (no preceding press,
-// e.g. keyboard activation) is handled directly.
-//
-// The selection *core* (begin/extend/finalize) is input-agnostic; two adapters
-// feed it:
-//   - Mouse: mousedown arms, mouseenter extends, a window-level mouseup
-//     finalizes.
-//   - Touch: a long-press (~400 ms held still) arms — a quick tap stays a
-//     single-word tap and an immediate swipe scrolls the passage — then dragging
-//     extends (via `elementFromPoint`, since touchmove targets don't change as
-//     the finger moves) and lifting finalizes. Scroll is suppressed only while a
-//     selection is active, via a non-passive `touchmove` `preventDefault`
-//     (`touch-action`/pointer-event `preventDefault` can't do this per-gesture).
+// Selection model:
+//   - Mouse (desktop): mousedown on a word arms a selection, mouseenter over
+//     words extends the head, and a window-level mouseup finalizes it (so
+//     releasing over whitespace still resolves) into the smallest span type
+//     (word | phrase | sentence). The trailing synthetic click is swallowed so
+//     a drag isn't double-handled; a bare click (keyboard activation) is handled
+//     directly. The begin/extend/finalize core is factored out for clarity.
+//   - Touch (mobile): a tap fires a single-word `onSpanSelect` via the synthetic
+//     click. Multi-word spans are NOT built here — the parent (`AnnotatedView`)
+//     turns a second tap into a span extension (tap-first / tap-last), since the
+//     card-open state it needs lives there. (A long-press gesture was tried but
+//     the OS text-selection callout can't be suppressed by `touch-action`.)
 //
 // Visuals come from `word-flag-styles.module.css` — no inline styles.
 // ---------------------------------------------------------------------------
@@ -166,17 +162,6 @@ function unionRect(a: DOMRect | null, b: DOMRect | null): DOMRect {
   return new DOMRect(left, top, right - left, bottom - top);
 }
 
-// Touch tuning. A press must be held this long (and stay within the slop
-// radius) to arm a selection — shorter is a tap, moving sooner is a scroll.
-const LONG_PRESS_MS = 400;
-const MOVE_SLOP_PX = 10;
-
-/** The word `<button>` under a point (or null) — hit-tested for touch drag,
- *  since a touchmove's target stays the element the finger first touched. */
-function wordAtPoint(x: number, y: number): HTMLElement | null {
-  return document.elementFromPoint(x, y)?.closest<HTMLElement>('[data-idx]') ?? null;
-}
-
 export function AnnotatedText({
   text,
   flaggedMap,
@@ -301,117 +286,6 @@ export function AnnotatedText({
     emitTap(token, e.currentTarget.getBoundingClientRect());
   };
 
-  // ---- Touch adapter (long-press → drag) ----------------------------------
-  // Native listeners on `document`: this component renders a fragment (no
-  // element of its own), and handlers early-return unless the touch is inside a
-  // `[data-idx]` word, which only this component renders. `touchmove` is
-  // non-passive so we can `preventDefault` to suppress scroll *while selecting*.
-  const longPressTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const touchStartRef = React.useRef<{ x: number; y: number; index: number; rect: DOMRect } | null>(null);
-  const selectingRef = React.useRef(false);
-
-  React.useEffect(() => {
-    const clearLongPress = () => {
-      if (longPressTimerRef.current !== null) {
-        clearTimeout(longPressTimerRef.current);
-        longPressTimerRef.current = null;
-      }
-    };
-
-    const onTouchStart = (e: TouchEvent) => {
-      if (e.touches.length !== 1) {
-        // A second finger (pinch/zoom) abandons any pending/active selection.
-        clearLongPress();
-        if (selectingRef.current) {
-          selectingRef.current = false;
-          selectionRef.current = null;
-          setSelRange(null);
-        }
-        return;
-      }
-      const t = e.touches[0];
-      const word = (t.target as Element | null)?.closest<HTMLElement>('[data-idx]');
-      if (!word) return;
-      const index = Number(word.dataset.idx);
-      if (!Number.isInteger(index)) return;
-      const rect = word.getBoundingClientRect();
-      touchStartRef.current = { x: t.clientX, y: t.clientY, index, rect };
-      selectingRef.current = false;
-      clearLongPress();
-      longPressTimerRef.current = setTimeout(() => {
-        longPressTimerRef.current = null;
-        const start = touchStartRef.current;
-        if (!start) return;
-        selectingRef.current = true;
-        beginSelection(start.index, start.rect); // anchor word highlights
-        navigator.vibrate?.(10);
-      }, LONG_PRESS_MS);
-    };
-
-    const onTouchMove = (e: TouchEvent) => {
-      const start = touchStartRef.current;
-      if (!start) return;
-      const t = e.touches[0];
-      if (!selectingRef.current) {
-        // Moved before the long-press armed → it's a scroll: drop the timer and
-        // let the browser handle it (no preventDefault).
-        const moved = Math.hypot(t.clientX - start.x, t.clientY - start.y);
-        if (moved > MOVE_SLOP_PX) {
-          clearLongPress();
-          touchStartRef.current = null;
-        }
-        return;
-      }
-      // Active selection — own the gesture and extend to the word under the
-      // finger (touchmove targets don't update, so hit-test the point).
-      e.preventDefault();
-      const word = wordAtPoint(t.clientX, t.clientY);
-      const index = word ? Number(word.dataset.idx) : NaN;
-      if (!Number.isInteger(index)) return;
-      extendSelection(index, word!.getBoundingClientRect());
-    };
-
-    const onTouchEnd = (e: TouchEvent) => {
-      clearLongPress();
-      const start = touchStartRef.current;
-      touchStartRef.current = null;
-      if (selectingRef.current) {
-        selectingRef.current = false;
-        // Suppress the synthetic mouse click that follows touchend.
-        e.preventDefault();
-        finalizeSelection();
-        return;
-      }
-      if (!start) return;
-      // No long-press fired and we never bailed to scroll → a tap.
-      e.preventDefault();
-      pointerHandledRef.current = true;
-      emitTap(liveRef.current.tokens[start.index], start.rect);
-    };
-
-    const onTouchCancel = () => {
-      clearLongPress();
-      touchStartRef.current = null;
-      if (selectingRef.current) {
-        selectingRef.current = false;
-        selectionRef.current = null;
-        setSelRange(null);
-      }
-    };
-
-    document.addEventListener('touchstart', onTouchStart, { passive: true });
-    document.addEventListener('touchmove', onTouchMove, { passive: false });
-    document.addEventListener('touchend', onTouchEnd);
-    document.addEventListener('touchcancel', onTouchCancel);
-    return () => {
-      clearLongPress();
-      document.removeEventListener('touchstart', onTouchStart);
-      document.removeEventListener('touchmove', onTouchMove);
-      document.removeEventListener('touchend', onTouchEnd);
-      document.removeEventListener('touchcancel', onTouchCancel);
-    };
-  }, [beginSelection, extendSelection, finalizeSelection, emitTap]);
-
   return (
     <>
       {tokens.map((token, i) => {
@@ -427,7 +301,6 @@ export function AnnotatedText({
             key={i}
             type="button"
             data-word={token.key}
-            data-idx={i}
             className={cn(
               styles.word,
               // Highlight classes apply to flagged words only; non-flagged

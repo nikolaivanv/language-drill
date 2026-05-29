@@ -844,6 +844,55 @@ describe('ReadPage — deep annotation flow (Req 3, 9.4, 11)', () => {
       screen.getByRole('button', { name: /\+ save to vocabulary/i }),
     ).toBeInTheDocument();
   });
+
+  // "One save does both": a deep-card save also banks the word + persists the
+  // text to history, and the vocab record links to that entry.
+  it('also adds the word to the bank (PUT) on an already-saved entry', () => {
+    saveAldea(); // FULL_ENTRY has an empty bank
+    expect(updateBankMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ id: ENTRY_ID, bank: ['aldea'] }),
+      expect.any(Object),
+    );
+  });
+
+  it('undo also removes the word it added to the bank', () => {
+    saveAldea();
+    updateBankMutate.mockClear();
+    fireEvent.click(screen.getByRole('button', { name: /^undo$/i }));
+    expect(updateBankMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ id: ENTRY_ID, bank: [] }),
+      expect.any(Object),
+    );
+  });
+
+  it('on a fresh paste, saving a word lazy-POSTs the entry first, then links the vocab to it', () => {
+    stubAnnotateCompleteOnStart();
+    setSave({
+      mutateImpl: (_vars, opts) =>
+        opts?.onSuccess?.({ id: ENTRY_ID, pastedAt: '2026-05-05T00:00:00.000Z' }),
+    });
+    setAnnotateSpan({ mutateImpl: (_vars, opts) => opts?.onSuccess?.(DEEP_ALDEA) });
+    setVocabMutations({ saveImpl: (_vars, opts) => opts?.onSuccess?.({ id: VOCAB_ID }) });
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
+    fireEvent.change(screen.getByLabelText(/passage/i), {
+      target: { value: 'aldea grande' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /annotate →/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
+    fireEvent.click(screen.getByRole('button', { name: /\+ save to vocabulary/i }));
+
+    // The source text is persisted (with the banked word) so it lands in history…
+    expect(saveMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ text: 'aldea grande', bank: ['aldea'] }),
+      expect.any(Object),
+    );
+    // …and the vocab record links to the just-created entry.
+    expect(saveVocabMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ card: DEEP_ALDEA, sourceReadEntryId: ENTRY_ID }),
+      expect.any(Object),
+    );
+  });
 });
 
 describe('ReadPage — lazy entry save + toast', () => {

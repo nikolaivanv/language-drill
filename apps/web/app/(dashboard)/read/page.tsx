@@ -149,6 +149,8 @@ export default function ReadPage() {
     end: number;
     vocabId: string;
     wordKey: string | null;
+    /** This save added `wordKey` to the entry bank — so undo should remove it. */
+    banked: boolean;
   } | null>(null);
   const [vocabToast, setVocabToast] = useState<{ label: string } | null>(null);
 
@@ -421,42 +423,98 @@ export default function ReadPage() {
     runSpanAnnotation(span);
   };
 
-  // Save a resolved word/phrase deep card to vocabulary (Req 8.4). The whole
-  // card is posted (it's transient client-side); `sourceReadEntryId` is sent
-  // for a saved entry. On success: remember the record for undo + the surface
-  // for the in-passage style, and raise the confirmation toast. Sentence cards
-  // are not savable (Req 5.4/8.6) — guarded here and server-side.
+  // Save a resolved word/phrase deep card (Req 8.4). One save does everything a
+  // user expects from "save this word": it goes to the spaced-repetition
+  // vocabulary AND, for a word card, to the passage's word bank — which lazy-
+  // creates the read entry so the text lands in history (matching the bank-save
+  // path) and lets the vocab record link back to it via `sourceReadEntryId`.
+  // The FK requires the entry to exist first, so on a fresh paste we POST the
+  // entry, then save the linked vocab in its onSuccess. Sentence cards are not
+  // savable (Req 5.4/8.6) — guarded here and server-side.
   const handleSaveCard = (card: DeepCard, span: DeepSpan) => {
     if (card.type === 'sentence') return;
-    saveVocab.mutate(
+    const word = card.type === 'word' ? card.surface.toLowerCase() : null;
+
+    const saveVocabLinked = (sourceReadEntryId: string | undefined, banked: boolean) => {
+      saveVocab.mutate(
+        { language: activeLanguage, card, sourceReadEntryId },
+        {
+          onSuccess: ({ id }) => {
+            setDeepSaved({ start: span.start, end: span.end, vocabId: id, wordKey: word, banked });
+            setVocabToast({ label: card.surface });
+          },
+          onError: () => dispatch({ type: 'SHOW_INLINE_ERROR', kind: 'save' }),
+        },
+      );
+    };
+
+    // Already-persisted entry: bank the word (PUT) if it's new, then link vocab.
+    if (state.activeEntryId !== null) {
+      const banked = word !== null && !state.bank.includes(word);
+      if (banked) {
+        dispatch({ type: 'TOGGLE_BANK_WORD', word });
+        updateBank.mutate(
+          { id: state.activeEntryId, language: activeLanguage, bank: [...state.bank, word] },
+          { onError: () => dispatch({ type: 'SHOW_INLINE_ERROR', kind: 'bank' }) },
+        );
+      }
+      saveVocabLinked(state.activeEntryId, banked);
+      return;
+    }
+
+    // Fresh paste: persist the source FIRST (so the vocab FK can link), banking
+    // the word, then save the linked vocab. If the stream hasn't completed or a
+    // POST is already in flight, fall back to an unlinked vocab save so the
+    // user's action isn't dropped (the source just won't be linked this time).
+    if (annotate.state.phase !== 'complete' || saveEntry.isPending) {
+      saveVocabLinked(undefined, false);
+      return;
+    }
+    if (word !== null) dispatch({ type: 'TOGGLE_BANK_WORD', word });
+    saveEntry.mutate(
       {
         language: activeLanguage,
-        card,
-        sourceReadEntryId: state.activeEntryId ?? undefined,
+        title: state.paste.title,
+        source: '',
+        text: state.paste.text,
+        flagged: annotate.state.flaggedMap,
+        bank: word !== null ? [...state.bank, word] : state.bank,
       },
       {
-        onSuccess: ({ id }) => {
-          setDeepSaved({
-            start: span.start,
-            end: span.end,
-            vocabId: id,
-            wordKey: card.type === 'word' ? card.surface.toLowerCase() : null,
-          });
-          setVocabToast({ label: card.surface });
+        onSuccess: (data) => {
+          dispatch({ type: 'ENTRY_PERSISTED', entryId: data.id });
+          saveVocabLinked(data.id, word !== null);
         },
-        onError: () => dispatch({ type: 'SHOW_INLINE_ERROR', kind: 'save' }),
+        onError: () => {
+          dispatch({ type: 'SHOW_INLINE_ERROR', kind: 'save' });
+          saveVocabLinked(undefined, false);
+        },
       },
     );
   };
 
-  // Undo the just-saved card (Req 8.5): delete the record, then revert the
-  // "saved" footer/style and dismiss the toast.
+  // Undo the just-saved card (Req 8.5): delete the vocab record, revert the
+  // "saved" footer/style + toast, and — if this save added the word to the bank
+  // — remove it again (PUT). The history entry itself stays; un-banking never
+  // deletes entries.
   const handleUndoCard = () => {
     if (!deepSaved) return;
-    deleteVocab.mutate(deepSaved.vocabId, {
+    const { vocabId, wordKey, banked } = deepSaved;
+    deleteVocab.mutate(vocabId, {
       onSuccess: () => {
         setDeepSaved(null);
         setVocabToast(null);
+        if (banked && wordKey && state.activeEntryId !== null && state.bank.includes(wordKey)) {
+          dispatch({ type: 'TOGGLE_BANK_WORD', word: wordKey });
+          updateBank.mutate(
+            {
+              id: state.activeEntryId,
+              language: activeLanguage,
+              bank: state.bank.filter((w) => w !== wordKey),
+            },
+            { onError: () => dispatch({ type: 'SHOW_INLINE_ERROR', kind: 'bank' }) },
+          );
+        }
       },
       onError: () => dispatch({ type: 'SHOW_INLINE_ERROR', kind: 'save' }),
     });

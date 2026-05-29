@@ -76,6 +76,14 @@ export function WordSheet({
   const deepActive = deepCard != null && deepCard.status !== 'idle';
   const isOpen = open && (deepActive || entry !== null);
 
+  // The body currently shows a single word (skim card or a loaded word deep
+  // card) — so a second tap can grow it into a phrase. Hidden for phrase/
+  // sentence cards, the loading skeleton, and the error state.
+  const isWordCard =
+    (deepCard?.status === 'loading' && entry !== null) ||
+    (deepCard?.status === 'loaded' && deepCard.card.type === 'word') ||
+    (!deepActive && entry !== null);
+
   const [snap, setSnap] = useState<number | string | null>(PEEK);
 
   // Always (re)open at the peek detent; a fresh tap shouldn't inherit the
@@ -95,12 +103,14 @@ export function WordSheet({
       snapPoints={SNAP_POINTS}
       activeSnapPoint={snap}
       setActiveSnapPoint={setSnap}
-      // Keep the scrim at full strength across both detents (default fades it
-      // in only as you approach the last snap point).
-      fadeFromIndex={0}
+      // Non-modal: no dimming scrim, and the passage stays interactive behind the
+      // peeking card. That's what makes tap-first/tap-last work — you can scroll
+      // the text and tap a second word to extend the span (handled in
+      // AnnotatedView). Dismiss via ×, drag-down, or tapping empty passage
+      // (AnnotatedView's outside-click). A modal scrim would swallow that tap.
+      modal={false}
     >
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-[90] bg-[rgba(26,22,18,0.42)]" />
         <Drawer.Content
           aria-label={`word card for ${word}`}
           // No separate description region — silence the radix dialog warning.
@@ -155,6 +165,15 @@ export function WordSheet({
               />
             ) : null}
           </div>
+
+          {isWordCard ? (
+            <div
+              className="t-micro flex-none px-[18px] pb-[14px] pt-[6px] text-ink-soft"
+              aria-hidden="true"
+            >
+              tap another word to extend →
+            </div>
+          ) : null}
         </Drawer.Content>
       </Drawer.Portal>
     </Drawer.Root>
