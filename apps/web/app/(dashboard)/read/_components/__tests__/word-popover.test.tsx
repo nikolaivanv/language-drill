@@ -130,6 +130,20 @@ describe('WordPopover — save / skip / Escape', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
+  it('clicking a toast (role="status") does not close the popover (Req 8.5 undo-from-toast)', () => {
+    const onClose = vi.fn();
+    render(
+      <div>
+        <div role="status">
+          <button>undo</button>
+        </div>
+        <WordPopover {...baseProps} onClose={onClose} />
+      </div>,
+    );
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'undo' }));
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
   it('clicking inside the popover does not fire onClose', () => {
     const onClose = vi.fn();
     render(
