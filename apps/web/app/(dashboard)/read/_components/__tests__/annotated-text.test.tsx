@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, createEvent, act } from '@testing-library/react';
 import type { FlaggedMap } from '@language-drill/shared';
 import { CefrLevel } from '@language-drill/shared';
 import { AnnotatedText } from '../annotated-text';
@@ -384,5 +384,101 @@ describe('AnnotatedText — drag selection', () => {
       end: 15,
       type: 'word',
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Touch: long-press → drag selection (mobile). The touch adapter lives on
+// document-level listeners; jsdom has no layout, so `elementFromPoint` is
+// stubbed and the long-press timer is driven with fake timers.
+// ---------------------------------------------------------------------------
+
+describe('AnnotatedText — touch selection', () => {
+  // la[0,2] aldea[3,8] grande[9,15] es[16,18] bonita[19,25] .[25,26]
+  const TEXT = 'la aldea grande es bonita.';
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    // jsdom doesn't implement elementFromPoint; drop any stub we added.
+    Reflect.deleteProperty(document, 'elementFromPoint');
+  });
+
+  function setup() {
+    const onSpanSelect = vi.fn();
+    render(
+      <AnnotatedText
+        text={TEXT}
+        flaggedMap={{}}
+        intensity="subtle"
+        bankSet={new Set()}
+        activeWord={null}
+        onWordClick={() => {}}
+        onSpanSelect={onSpanSelect}
+      />,
+    );
+    return { onSpanSelect };
+  }
+
+  const touch = (node: Element, x: number, y: number) => ({
+    touches: [{ clientX: x, clientY: y, target: node }],
+  });
+
+  it('a quick tap (no hold) reports a single word', () => {
+    const { onSpanSelect } = setup();
+    const grande = screen.getByRole('button', { name: 'grande' });
+
+    fireEvent.touchStart(grande, touch(grande, 100, 100));
+    fireEvent.touchEnd(grande); // before the long-press timer fires
+
+    expect(onSpanSelect).toHaveBeenCalledTimes(1);
+    expect(onSpanSelect.mock.calls[0][0]).toMatchObject({ start: 9, end: 15, type: 'word' });
+  });
+
+  it('a long-press highlights the pressed word (selection armed)', () => {
+    setup();
+    const aldea = screen.getByRole('button', { name: 'aldea' });
+
+    fireEvent.touchStart(aldea, touch(aldea, 100, 100));
+    act(() => vi.advanceTimersByTime(400));
+
+    expect(aldea.className).toContain(styles.selecting);
+  });
+
+  it('long-press then drag across words reports the phrase span', () => {
+    const { onSpanSelect } = setup();
+    const aldea = screen.getByRole('button', { name: 'aldea' });
+    const grande = screen.getByRole('button', { name: 'grande' });
+
+    // jsdom has no layout — hit-test the drag point to the target word.
+    document.elementFromPoint = vi.fn(() => grande);
+
+    fireEvent.touchStart(aldea, touch(aldea, 100, 100));
+    act(() => vi.advanceTimersByTime(400)); // arm selection on aldea
+    fireEvent.touchMove(aldea, touch(grande, 200, 100)); // finger over grande
+    fireEvent.touchEnd(aldea);
+
+    expect(onSpanSelect).toHaveBeenCalledTimes(1);
+    expect(onSpanSelect.mock.calls[0][0]).toMatchObject({ start: 3, end: 15, type: 'phrase' });
+  });
+
+  it('moving before the long-press is a scroll — no selection, no preventDefault', () => {
+    const { onSpanSelect } = setup();
+    const aldea = screen.getByRole('button', { name: 'aldea' });
+
+    fireEvent.touchStart(aldea, touch(aldea, 100, 100));
+    // Drag past the slop radius before the timer fires → treated as scroll.
+    const move = createEvent.touchMove(aldea, touch(aldea, 100, 140));
+    fireEvent(aldea, move);
+
+    expect(move.defaultPrevented).toBe(false); // browser keeps the scroll
+    act(() => vi.advanceTimersByTime(400)); // timer was cancelled — no-op
+    fireEvent.touchEnd(aldea);
+
+    expect(onSpanSelect).not.toHaveBeenCalled();
+    expect(aldea.className).not.toContain(styles.selecting);
   });
 });
