@@ -18,6 +18,11 @@
   margin: 0;
   padding: 0;
   transition: all 0.12s;
+  /* Allow scroll/pan to start on a word and drop the 300ms tap delay +
+   * double-tap zoom. Scroll is suppressed only while a multi-word selection is
+   * active, via a non-passive touchmove preventDefault in AnnotatedText —
+   * `touch-action: none` here would kill scrolling that starts on text. */
+  touch-action: manipulation;
 }
 
 /* SUBTLE — dotted accent underline */
