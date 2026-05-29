@@ -295,6 +295,42 @@ describe('AnnotatedText — drag selection', () => {
     });
   });
 
+  it('swallows the synthetic click bubbled to the container after a drag (regression: open card was being dismissed)', () => {
+    // After mousedown on A and mouseup on B (A≠B) browsers fire a click on
+    // the common ancestor — which the rd-text container's outside-click
+    // handler reads as "dismiss". The drag handler installs a one-shot
+    // capture-phase listener that calls `stopPropagation` on that click.
+    const onSpanSelect = vi.fn();
+    const onContainerClick = vi.fn();
+    render(
+      <div onClick={onContainerClick}>
+        <AnnotatedText
+          text={TEXT}
+          flaggedMap={{}}
+          intensity="subtle"
+          bankSet={new Set()}
+          activeWord={null}
+          onWordClick={() => {}}
+          onSpanSelect={onSpanSelect}
+        />
+      </div>,
+    );
+    const aldea = screen.getByRole('button', { name: 'aldea' });
+    const grande = screen.getByRole('button', { name: 'grande' });
+
+    fireEvent.mouseDown(aldea);
+    fireEvent.mouseEnter(grande);
+    fireEvent.mouseUp(grande);
+    expect(onSpanSelect).toHaveBeenCalledTimes(1);
+
+    // Browsers fire `click` on the common ancestor after a cross-element drag.
+    // Dispatch a native bubbling click event on the container and confirm the
+    // swallow handler stopped it from reaching the parent's onClick.
+    const container = aldea.parentElement!.parentElement!;
+    container.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(onContainerClick).not.toHaveBeenCalled();
+  });
+
   it('maps a full-sentence drag to a sentence span', () => {
     const onSpanSelect = vi.fn();
     render(
