@@ -137,7 +137,19 @@ export function WordPopover({
         }}
       />
 
-      {deepCard && deepCard.status !== 'idle' ? (
+      {deepCard?.status === 'loading' && entry ? (
+        // Skim preview while the deep card resolves (Req 3.1) — same skim
+        // body, with a footer indicator so the user knows a richer card is
+        // incoming and the chrome isn't stuck.
+        <WordCardBody
+          entry={entry}
+          inBank={inBank}
+          onSave={onSave}
+          onSkip={onSkip}
+          skipRef={skipRef}
+          loadingDeep
+        />
+      ) : deepCard && deepCard.status !== 'idle' ? (
         <DeepCardContent
           slice={deepCard}
           inBank={inBank}

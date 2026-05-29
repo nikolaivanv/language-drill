@@ -196,14 +196,12 @@ export function AnnotatedView({
   };
 
   // ---- Card chrome wiring (shared desktop popover / mobile sheet) ----------
-  // The deep slice owns the card once a span is selected; while it is `loading`
-  // a flagged word still shows its skim gloss as the preview (Req 3.1), then
-  // swaps to the deep card on resolve WITHOUT remounting the chrome (Req 3.3) —
-  // achieved by withholding the deep slice from the chrome during the skim
-  // preview so the same `WordPopover`/`WordSheet` instance stays mounted.
-  const skimPreviewDuringLoad = deepCard.status === 'loading' && activeFlag != null;
-  const chromeDeepCard: DeepCardSlice | undefined =
-    deepActive && !skimPreviewDuringLoad ? deepCard : undefined;
+  // The deep slice is forwarded as-is; the chrome decides what to render by
+  // status — `loading` with a flagged `entry` shows the skim card with an
+  // inline "looking it up…" footer indicator (Req 3.1 + 3.3 clarity), and the
+  // same `WordPopover`/`WordSheet` instance stays mounted across the swap to
+  // the loaded deep card.
+  const chromeDeepCard: DeepCardSlice | undefined = deepActive ? deepCard : undefined;
   const cardOpen = deepActive || (activeFlag !== null && activeWord !== null);
   const anchor = deepActive
     ? { x: deepCard.span.x, y: deepCard.span.y }

@@ -28,9 +28,23 @@ type Props = {
   onSkip: () => void;
   /** Forwarded onto the skip/close button — used by the popover's autoFocus. */
   skipRef?: React.Ref<HTMLButtonElement>;
+  /**
+   * When true, the footer swaps the `freq #…` line for a spinner + "looking
+   * it up…" caption, signalling that a richer deep card is loading in the
+   * background. Used for the skim-preview-during-deep-load window for a
+   * flagged-word tap (Req 3.1 + 3.3 clarity).
+   */
+  loadingDeep?: boolean;
 };
 
-export function WordCardBody({ entry, inBank, onSave, onSkip, skipRef }: Props) {
+export function WordCardBody({
+  entry,
+  inBank,
+  onSave,
+  onSkip,
+  skipRef,
+  loadingDeep,
+}: Props) {
   return (
     <>
       {/* Header */}
@@ -67,11 +81,27 @@ export function WordCardBody({ entry, inBank, onSave, onSkip, skipRef }: Props) 
         </p>
       </div>
 
-      {/* Footer */}
+      {/* Footer — swaps `freq #…` for an inline loading indicator while the
+       *  deep card resolves in the background (Req 3.1 + 3.3 clarity). The
+       *  freq returns implicitly once the deep card body swaps in (it carries
+       *  its own freq display). */}
       <div className="flex items-center gap-[6px] border-t border-rule bg-paper-2 px-[12px] py-[10px]">
-        <span className="t-mono flex-1 text-[10px] text-ink-mute">
-          freq #{entry.freq.toLocaleString('en-US')}
-        </span>
+        {loadingDeep ? (
+          <span
+            data-testid="skim-loading-deep"
+            className="t-mono flex flex-1 items-center gap-[6px] text-[10px] uppercase tracking-wide text-ink-mute"
+          >
+            <span
+              aria-hidden
+              className="inline-block h-[10px] w-[10px] animate-spin rounded-full border border-rule border-t-accent"
+            />
+            looking it up…
+          </span>
+        ) : (
+          <span className="t-mono flex-1 text-[10px] text-ink-mute">
+            freq #{entry.freq.toLocaleString('en-US')}
+          </span>
+        )}
         <Button ref={skipRef} variant="ghost" size="sm" onClick={onSkip}>
           {inBank ? 'close' : 'skip'}
         </Button>
