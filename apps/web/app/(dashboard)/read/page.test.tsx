@@ -509,79 +509,52 @@ describe('ReadPage — streaming annotate flow', () => {
     );
   });
 
-  it('save button is disabled during streaming, enabled on complete, and remains disabled on error (Req 5.8)', () => {
-    // To reach the AnnotatedFooter we need ≥1 flagged word AND ≥1 bank entry.
-    // Drive: start in streaming with one flag → click flag → save-to-bank →
-    // assert save button state in each phase.
-    const flagged: FlaggedMap = { aldea: FLAG_ALDEA };
+  it('a bank toggle during streaming updates local state but does NOT lazy-POST the entry (Req 5.8)', () => {
+    // The Req 5.8 "save disabled until complete" guard now lives inside
+    // `handleBankToggle`: a toggle while `phase !== 'complete'` skips the POST.
     annotateStart.mockImplementation(() => {
       setAnnotateState({
         phase: 'streaming',
         candidateCount: 1,
-        flaggedMap: flagged,
+        flaggedMap: { aldea: FLAG_ALDEA },
         flaggedCount: 1,
         calibration: { cefr: 'B1', top: 3000 },
       });
     });
-    const { rerender } = renderPage();
+    renderPage();
     fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
     fireEvent.change(screen.getByLabelText(/passage/i), {
       target: { value: 'aldea grande' },
     });
     fireEvent.click(screen.getByRole('button', { name: /annotate →/i }));
-
-    // Add aldea to bank (ephemeral entry — local toggle).
     fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
     fireEvent.click(
       screen.getByRole('button', { name: /\+ save to bank/i }),
     );
-
-    // Streaming: save CTA is rendered but the click should no-op (Req 5.8).
-    // We assert by clicking and confirming the save mutation was NOT fired.
-    const saveBtnStreaming = screen.getByRole('button', {
-      name: /save 1 to bank →/i,
-    });
-    fireEvent.click(saveBtnStreaming);
     expect(saveMutate).not.toHaveBeenCalled();
+  });
 
-    const renderProviders = (children: React.ReactNode) => (
-      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
-        <ActiveLanguageProvider
-          profiles={[{ language: Language.ES, proficiencyLevel: CefrLevel.B1 }]}
-        >
-          {children}
-        </ActiveLanguageProvider>
-      </QueryClientProvider>
-    );
-
-    // Complete: save mutation fires.
-    setAnnotateState({
-      phase: 'complete',
-      candidateCount: 1,
-      flaggedMap: flagged,
-      flaggedCount: 1,
-      calibration: { cefr: 'B1', top: 3000 },
+  it('a bank toggle on a stream-error state does NOT lazy-POST the entry (Req 5.8)', () => {
+    annotateStart.mockImplementation(() => {
+      setAnnotateState({
+        phase: 'error',
+        candidateCount: 1,
+        flaggedMap: { aldea: FLAG_ALDEA },
+        flaggedCount: 1,
+        calibration: { cefr: 'B1', top: 3000 },
+        error: { code: 'AI_UNAVAILABLE', message: 'down', status: 502 },
+      });
     });
-    rerender(renderProviders(<ReadPage />));
-    fireEvent.click(
-      screen.getByRole('button', { name: /save 1 to bank →/i }),
-    );
-    expect(saveMutate).toHaveBeenCalledTimes(1);
-
-    // Reset the save mutation spy and flip to error: save should NOT fire.
-    saveMutate.mockClear();
-    setAnnotateState({
-      phase: 'error',
-      candidateCount: 1,
-      flaggedMap: flagged,
-      flaggedCount: 1,
-      calibration: { cefr: 'B1', top: 3000 },
-      error: { code: 'AI_UNAVAILABLE', message: 'down', status: 502 },
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
+    fireEvent.change(screen.getByLabelText(/passage/i), {
+      target: { value: 'aldea grande' },
     });
-    rerender(renderProviders(<ReadPage />));
-    // Footer is still rendered (Req 5.10 — partials retained on error).
+    fireEvent.click(screen.getByRole('button', { name: /annotate →/i }));
+    // Partial flags survive into the error state, so the popover still opens.
+    fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
     fireEvent.click(
-      screen.getByRole('button', { name: /save 1 to bank →/i }),
+      screen.getByRole('button', { name: /\+ save to bank/i }),
     );
     expect(saveMutate).not.toHaveBeenCalled();
   });
@@ -873,8 +846,12 @@ describe('ReadPage — deep annotation flow (Req 3, 9.4, 11)', () => {
   });
 });
 
-describe('ReadPage — save flow + toast', () => {
-  it('clicking "save N to bank →" fires the save mutation and shows the SaveToast on success', () => {
+describe('ReadPage — lazy entry save + toast', () => {
+  // The explicit "save N to bank →" footer button is gone. The first
+  // `+ save to bank` on a fresh paste lazy-creates the entry via
+  // `useSaveReadEntry`, then the SaveToast confirms.
+
+  it('first "+ save to bank" lazy-POSTs the entry and raises the SaveToast', () => {
     stubAnnotateCompleteOnStart();
     setSave({
       mutateImpl: (_vars, opts) =>
@@ -890,10 +867,15 @@ describe('ReadPage — save flow + toast', () => {
     fireEvent.click(
       screen.getByRole('button', { name: /\+ save to bank/i }),
     );
-    fireEvent.click(
-      screen.getByRole('button', { name: /save 1 to bank →/i }),
-    );
     expect(saveMutate).toHaveBeenCalledTimes(1);
+    expect(saveMutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        language: Language.ES,
+        text: 'aldea grande',
+        bank: ['aldea'],
+      }),
+      expect.any(Object),
+    );
     expect(screen.getByRole('status')).toHaveTextContent(/1 word added/);
     expect(screen.getByRole('status')).toHaveTextContent(
       /your next session will weave them in/,
@@ -917,9 +899,6 @@ describe('ReadPage — save flow + toast', () => {
     fireEvent.click(
       screen.getByRole('button', { name: /\+ save to bank/i }),
     );
-    fireEvent.click(
-      screen.getByRole('button', { name: /save 1 to bank →/i }),
-    );
     expect(screen.getByRole('status')).toBeInTheDocument();
     act(() => {
       vi.advanceTimersByTime(4000);
@@ -927,7 +906,7 @@ describe('ReadPage — save flow + toast', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
-  it('"see next session" routes to /drill', () => {
+  it('"see next session" from the SaveToast routes to /drill', () => {
     stubAnnotateCompleteOnStart();
     setSave({
       mutateImpl: (_vars, opts) =>
@@ -942,9 +921,6 @@ describe('ReadPage — save flow + toast', () => {
     fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
     fireEvent.click(
       screen.getByRole('button', { name: /\+ save to bank/i }),
-    );
-    fireEvent.click(
-      screen.getByRole('button', { name: /save 1 to bank →/i }),
     );
     fireEvent.click(
       screen.getByRole('button', { name: /see next session/i }),

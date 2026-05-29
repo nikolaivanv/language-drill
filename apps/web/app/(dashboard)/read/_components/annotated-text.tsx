@@ -221,6 +221,16 @@ export function AnnotatedText({
     }
     const type = resolveSpanType(txt, start, end, toks);
     emit?.({ start, end, type, rect });
+
+    // After mousedown on word A and mouseup on word B (A≠B), browsers fire a
+    // synthetic click on the common ancestor — the rd-text container — which
+    // its outside-click handler then treats as a "dismiss the open card" tap.
+    // Swallow that one trailing click so the just-opened deep card sticks.
+    const swallow = (e: MouseEvent) => {
+      e.stopPropagation();
+      window.removeEventListener('click', swallow, true);
+    };
+    window.addEventListener('click', swallow, true);
   }, [emitTap]);
 
   const handleMouseDown = (index: number, e: React.MouseEvent<HTMLButtonElement>) => {

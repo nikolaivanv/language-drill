@@ -459,57 +459,47 @@ export default function ReadPage() {
     [deepSaved],
   );
 
+  // Bank toggle from the popover / sheet. Two paths:
+  //   - Existing History entry → PUT /read/entries/:id/bank to sync the new
+  //     bank list (immediate persistence).
+  //   - Brand-new pasted passage → lazy-create the entry on the FIRST save:
+  //     POST /read/entries with the current bank. Subsequent saves use the
+  //     PUT path once `activeEntryId` is set. (Replaces the previous explicit
+  //     "Save N to bank →" footer button, which has been removed.)
+  //
+  // If the user toggles another word while the lazy-POST is in flight, that
+  // toggle updates local state only; the next toggle after `ENTRY_PERSISTED`
+  // lights up the PUT path and syncs. The race window is the POST's RTT — a
+  // worst-case ~200ms — and the user can always re-tap to recover.
   const handleBankToggle = (word: string) => {
-    if (state.activeEntryId === null) {
-      dispatch({ type: 'TOGGLE_BANK_WORD', word });
-      return;
-    }
     const inBank = state.bank.includes(word);
     const newBank = inBank
       ? state.bank.filter((w) => w !== word)
       : [...state.bank, word];
     dispatch({ type: 'TOGGLE_BANK_WORD', word });
-    updateBank.mutate(
-      {
-        id: state.activeEntryId,
-        language: activeLanguage,
-        bank: newBank,
-      },
-      {
-        onError: () => {
-          // The bank-sync effect picks up `setQueryData(previousEntry)` from
-          // useUpdateReadBank.onError and rolls the reducer's bank back.
-          dispatch({ type: 'SHOW_INLINE_ERROR', kind: 'bank' });
-        },
-      },
-    );
-  };
 
-  const handleClearBank = () => {
-    if (state.activeEntryId === null) {
-      dispatch({ type: 'CLEAR_BANK_LOCAL' });
+    if (state.activeEntryId !== null) {
+      updateBank.mutate(
+        {
+          id: state.activeEntryId,
+          language: activeLanguage,
+          bank: newBank,
+        },
+        {
+          onError: () => {
+            // The bank-sync effect picks up `setQueryData(previousEntry)` from
+            // useUpdateReadBank.onError and rolls the reducer's bank back.
+            dispatch({ type: 'SHOW_INLINE_ERROR', kind: 'bank' });
+          },
+        },
+      );
       return;
     }
-    dispatch({ type: 'CLEAR_BANK_LOCAL' });
-    updateBank.mutate(
-      {
-        id: state.activeEntryId,
-        language: activeLanguage,
-        bank: [],
-      },
-      {
-        onError: () => {
-          dispatch({ type: 'SHOW_INLINE_ERROR', kind: 'bank' });
-        },
-      },
-    );
-  };
 
-  const handleSave = () => {
-    if (state.bank.length === 0) return;
-    if (state.activeEntryId !== null) return; // already persisted
-    // Req 5.8: save is disabled until the stream has terminated successfully.
+    // Lazy-create path.
+    if (saveEntry.isPending) return;
     if (annotate.state.phase !== 'complete') return;
+    if (newBank.length === 0) return;
     saveEntry.mutate(
       {
         language: activeLanguage,
@@ -517,7 +507,7 @@ export default function ReadPage() {
         source: '',
         text: state.paste.text,
         flagged: annotate.state.flaggedMap,
-        bank: state.bank,
+        bank: newBank,
       },
       {
         onSuccess: (data) => {
@@ -633,7 +623,6 @@ export default function ReadPage() {
           }}
           annotateStreaming={streamingProgress}
           noAboveLevelWords={noAboveLevelWords}
-          isSaving={saveEntry.isPending}
           onIntensityChange={handleIntensityChange}
           onPopoverOpen={handlePopoverOpen}
           onPopoverClose={handlePopoverClose}
@@ -646,8 +635,6 @@ export default function ReadPage() {
           }
           savedWordKeys={savedWordKeys}
           onBankToggle={handleBankToggle}
-          onClearBank={handleClearBank}
-          onSave={handleSave}
           onPasteNew={handlePasteNew}
         />
       );

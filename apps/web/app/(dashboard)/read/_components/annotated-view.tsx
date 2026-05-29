@@ -19,10 +19,7 @@
 import * as React from 'react';
 import type { DeepCard, FlaggedMap } from '@language-drill/shared';
 import { AnnotatedText, type SpanSelection } from './annotated-text';
-import {
-  AnnotatedFooter,
-  ZeroFlaggedStrip,
-} from './annotated-footer';
+import { ZeroFlaggedStrip } from './annotated-footer';
 import { CalibrationStrip } from './calibration-strip';
 import { IntensityToggle } from './intensity-toggle';
 import { WordBankRail } from './word-bank-rail';
@@ -63,7 +60,6 @@ type Props = {
    * is replaced with "· no above-level words" (Req §NFR Usability).
    */
   noAboveLevelWords?: boolean;
-  isSaving: boolean;
   onIntensityChange: (intensity: Intensity) => void;
   /**
    * Called when a flagged-word button is clicked. `x` and `y` are already
@@ -89,8 +85,6 @@ type Props = {
   /** Lowercased surface forms saved to vocabulary, for the in-passage style. */
   savedWordKeys: Set<string>;
   onBankToggle: (word: string) => void;
-  onClearBank: () => void;
-  onSave: () => void;
   onPasteNew: () => void;
 };
 
@@ -103,7 +97,6 @@ export function AnnotatedView({
   calibration,
   annotateStreaming,
   noAboveLevelWords,
-  isSaving,
   onIntensityChange,
   onPopoverOpen,
   onPopoverClose,
@@ -114,13 +107,10 @@ export function AnnotatedView({
   savedSpan,
   savedWordKeys,
   onBankToggle,
-  onClearBank,
-  onSave,
   onPasteNew,
 }: Props) {
   const flaggedKeys = Object.keys(entry.flaggedWords);
-  const flaggedCount = flaggedKeys.length;
-  const hasFlagged = flaggedCount > 0;
+  const hasFlagged = flaggedKeys.length > 0;
   // While annotation is still streaming, we don't yet know if there will be
   // any above-level words — the iterator could still yield flags. Showing
   // `ZeroFlaggedStrip` ("this passage is well within your level — nice.") at
@@ -297,16 +287,10 @@ export function AnnotatedView({
           />
         </div>
 
-        {/* Footer */}
-        {hasFlagged ? (
-          <AnnotatedFooter
-            flaggedCount={flaggedCount}
-            savedCount={bank.length}
-            onClearBank={onClearBank}
-            onSave={onSave}
-            isSaving={isSaving}
-          />
-        ) : showZeroFlaggedState ? (
+        {/* Footer — only the zero-flagged "well within your level" strip; bank
+         *  saves persist immediately so there's no explicit "save N to bank"
+         *  action, and the flagged/saved/skipped tally added little signal. */}
+        {!hasFlagged && showZeroFlaggedState ? (
           <ZeroFlaggedStrip onPasteNew={onPasteNew} />
         ) : null}
 
@@ -411,16 +395,10 @@ export function AnnotatedView({
           )}
         </div>
 
-        {/* Footer */}
-        {hasFlagged ? (
-          <AnnotatedFooter
-            flaggedCount={flaggedCount}
-            savedCount={bank.length}
-            onClearBank={onClearBank}
-            onSave={onSave}
-            isSaving={isSaving}
-          />
-        ) : showZeroFlaggedState ? (
+        {/* Footer — only the zero-flagged "well within your level" strip; bank
+         *  saves persist immediately so there's no explicit "save N to bank"
+         *  action, and the flagged/saved/skipped tally added little signal. */}
+        {!hasFlagged && showZeroFlaggedState ? (
           <ZeroFlaggedStrip onPasteNew={onPasteNew} />
         ) : null}
       </div>

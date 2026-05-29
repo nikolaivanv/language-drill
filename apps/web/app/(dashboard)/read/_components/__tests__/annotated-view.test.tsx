@@ -44,7 +44,6 @@ const baseProps = {
   activeWord: null,
   deepCard: { status: 'idle' } as const,
   calibration: { eyebrow: '~B1+ calibration', explanation: 'showing words rarer than top-3000' },
-  isSaving: false,
   onIntensityChange: () => {},
   onPopoverOpen: () => {},
   onPopoverClose: () => {},
@@ -55,23 +54,23 @@ const baseProps = {
   savedSpan: null,
   savedWordKeys: new Set<string>(),
   onBankToggle: () => {},
-  onClearBank: () => {},
-  onSave: () => {},
   onPasteNew: () => {},
 };
 
 describe('AnnotatedView — flagged ≥ 1', () => {
-  it('renders the rail, reader, and footer when there is at least one flagged word', () => {
+  it('renders the header, calibration strip, reader, and word-bank rail when there is at least one flagged word', () => {
     render(<AnnotatedView {...baseProps} />);
-    // Header
     expect(screen.getByText('Cien años — ch. 1')).toBeInTheDocument();
     expect(screen.getByText('García Márquez')).toBeInTheDocument();
-    // Calibration strip
     expect(screen.getByText('~B1+ calibration')).toBeInTheDocument();
-    // Word bank rail
     expect(screen.getByText('word bank')).toBeInTheDocument();
-    // Footer
-    expect(screen.getByText(/1 flagged · 0 saved · 1 skipped/)).toBeInTheDocument();
+    // The footer "N flagged · M saved · K skipped" tally and "save N to bank
+    // →" button are gone — bank saves persist immediately, so the explicit
+    // save action was redundant and the tally added little signal.
+    expect(screen.queryByText(/flagged ·/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /save \d+ to bank/i }),
+    ).not.toBeInTheDocument();
   });
 
   it('hides the source line when entry.source is empty', () => {
