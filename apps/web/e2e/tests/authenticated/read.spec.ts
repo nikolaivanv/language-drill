@@ -271,10 +271,11 @@ test('a sentence drag-select renders a sentence card with no save action (Req 5.
   await mockReadApi(page, { deepResponse: DEEP_SENTENCE });
   await openSeededEntry(page);
 
-  // Drag from "la" to "tranquila" — together they cover the first sentence
-  // [0,25), which the client's `resolveSpanType` maps to `sentence`.
-  // `exact: true` keeps "la" from also matching "tranquila" (substring).
-  const first = page.getByRole('button', { name: 'la', exact: true });
+  // Drag from "La" to "tranquila" — together they cover the first sentence
+  // [0,25), which the client's `resolveSpanType` maps to `sentence`. The word
+  // renders capitalized at the sentence start; `exact: true` (case-sensitive)
+  // pins it to "La" and keeps it from matching "tranquila" (substring "la").
+  const first = page.getByRole('button', { name: 'La', exact: true });
   const last = page.getByRole('button', { name: 'tranquila' });
   await first.hover();
   await page.mouse.down();
@@ -393,6 +394,11 @@ test('Escape dismisses the open deep card (Req 9.6)', async ({ page }) => {
   await page.getByRole('button', { name: 'aldea' }).click();
   await expect(page.getByText('pueblo pequeño')).toBeVisible();
 
-  await page.keyboard.press('Escape');
+  // The desktop popover handles Escape via a *local* onKeyDown, and opening by
+  // mouse leaves focus on the word in the passage (the popover isn't
+  // auto-focused). So drive the keyboard-dismiss path the way a keyboard user
+  // would: with focus inside the card. The in-card "skip" control is a stable
+  // focus target — pressing Escape there bubbles to the popover's handler.
+  await page.getByRole('button', { name: 'skip' }).press('Escape');
   await expect(page.getByText('pueblo pequeño')).toHaveCount(0);
 });
