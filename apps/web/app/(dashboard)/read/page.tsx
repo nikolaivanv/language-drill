@@ -156,14 +156,23 @@ export default function ReadPage() {
   // Effects (per task 33's "Required useEffects" list)
   // -------------------------------------------------------------------------
 
-  // 1. Resolve most-recent entry on first load / language change.
+  // 1. Resolve most-recent entry on first load / language change — once per
+  //    language, NOT a perpetual "if activeEntryId is null, grab the most
+  //    recent". The paste-new and fresh-annotation flows deliberately run with
+  //    `activeEntryId === null` (so the ephemeral pasted text renders); a
+  //    perpetual auto-resolver would hijack them — bouncing a fresh paste back
+  //    to the old text, or kicking the user out of the paste form. The ref
+  //    fires the auto-resolve exactly once after each language's list loads.
+  const autoResolvedLangRef = useRef<string | null>(null);
   useEffect(() => {
     if (!entriesQuery.data) return;
+    if (autoResolvedLangRef.current === activeLanguage) return;
+    autoResolvedLangRef.current = activeLanguage;
     const list = entriesQuery.data.entries;
     if (state.activeEntryId === null && list.length >= 1) {
       dispatch({ type: 'LOAD_ENTRY', entryId: list[0].id });
     }
-  }, [entriesQuery.data, state.activeEntryId]);
+  }, [entriesQuery.data, activeLanguage, state.activeEntryId]);
 
   // 2. Save-toast auto-dismiss (4 s).
   useEffect(() => {
