@@ -140,9 +140,11 @@ describe('per-language counts', () => {
     return { grammar, vocab };
   }
 
-  // TEMPORARILY REDUCED (2026-05-10): assertions match the currently-active
-  // curriculum subset. Restore the original ≥4/≥5/≥6/≥5 assertions and
-  // vocab.toBe(3) when es.ts/de.ts/tr.ts entries are uncommented.
+  // ES/DE are TEMPORARILY REDUCED (2026-05-10): assertions match the
+  // currently-active curriculum subset. Restore the original ≥4/≥5/≥6/≥5
+  // assertions and vocab.toBe(3) for ES/DE when their A1/A2 entries are
+  // uncommented. TR (2026-05-28) is now at full Yedi İklim A1+A2 parity
+  // (26 A1 + 14 A2 grammar + 1 vocab umbrella); B1/B2 remain disabled.
 
   it('Spanish meets minimums (B1 + B2 only while A1/A2 are disabled) and has 2 vocab umbrellas', () => {
     const { grammar, vocab } = countsFor(esCurriculum);
@@ -162,10 +164,10 @@ describe('per-language counts', () => {
     expect(vocab).toBe(0);
   });
 
-  it('Turkish meets minimums (A1 + A2 only while B1/B2 are disabled) and has 1 vocab umbrella', () => {
+  it('Turkish is at full Yedi İklim A1 + A2 parity (B1/B2 disabled) and has 1 vocab umbrella', () => {
     const { grammar, vocab } = countsFor(trCurriculum);
-    expect(grammar.A1).toBeGreaterThanOrEqual(4);
-    expect(grammar.A2).toBeGreaterThanOrEqual(5);
+    expect(grammar.A1).toBeGreaterThanOrEqual(26);
+    expect(grammar.A2).toBeGreaterThanOrEqual(14);
     expect(grammar.B1).toBe(0);
     expect(grammar.B2).toBe(0);
     expect(vocab).toBe(1);
