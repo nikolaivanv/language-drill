@@ -69,7 +69,19 @@ vi.mock('@language-drill/db', () => ({
     contentJson: 'content_json',
     reviewStatus: 'review_status',
     generatedAt: 'generated_at',
+    grammarPointKey: 'grammar_point_key',
   },
+  // The list route enriches each row with its curriculum-order position. Mock
+  // a tiny lookup so order flow-through is assertable; unknown keys resolve to
+  // `undefined` (which the route maps to `order: null`). `resolveTheoryCategory`
+  // is NOT mocked — the route uses the real `@language-drill/shared` resolver.
+  curriculumOrderOf: (key: string): number | undefined =>
+    (
+      ({ 'es-b2-compound-tenses': 7, 'tr-a1-vowel-harmony': 0 }) as Record<
+        string,
+        number
+      >
+    )[key],
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -318,6 +330,111 @@ describe('GET /theory/:lang — list endpoint', () => {
     const warnArgs = warnSpy.mock.calls[0];
     expect(JSON.stringify(warnArgs)).toContain('"dropped":1');
     expect(JSON.stringify(warnArgs)).toContain('"language":"ES"');
+
+    warnSpy.mockRestore();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /theory/:lang — category + curriculum-order enrichment
+// ---------------------------------------------------------------------------
+
+describe('GET /theory/:lang — enrichment', () => {
+  let app: Hono;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const mod = await import('./theory');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  it('enriches each topic with category + curriculum order from its grammar-point key', async () => {
+    mockRowsResolver.mockResolvedValueOnce([
+      {
+        id: 'topic-tenses',
+        title: 'compound tenses',
+        cefr: 'B2',
+        grammarPointKey: 'es-b2-compound-tenses',
+      },
+    ]);
+    mockTotalResolver.mockResolvedValueOnce([{ total: 1 }]);
+
+    const res = await app.request('/theory/ES', undefined, authEnv);
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.topics).toHaveLength(1);
+    expect(body.topics[0]).toEqual({
+      id: 'topic-tenses',
+      title: 'compound tenses',
+      cefr: 'B2',
+      category: 'tenses', // real resolveTheoryCategory mapping
+      order: 7, // mocked curriculumOrderOf
+    });
+    // grammarPointKey is internal — it must not leak into the wire contract.
+    expect(body.topics[0].grammarPointKey).toBeUndefined();
+  });
+
+  it("falls back to category 'other' + order null for an unmapped grammar-point key", async () => {
+    mockRowsResolver.mockResolvedValueOnce([
+      {
+        id: 'topic-mystery',
+        title: 'mystery topic',
+        cefr: 'B1',
+        grammarPointKey: 'es-zz-not-in-any-map',
+      },
+    ]);
+    mockTotalResolver.mockResolvedValueOnce([{ total: 1 }]);
+
+    const res = await app.request('/theory/ES', undefined, authEnv);
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.topics[0].category).toBe('other');
+    expect(body.topics[0].order).toBeNull();
+  });
+
+  it("falls back to category 'other' + order null when grammarPointKey is null", async () => {
+    mockRowsResolver.mockResolvedValueOnce([
+      {
+        id: 'topic-nokey',
+        title: 'no grammar key',
+        cefr: 'B1',
+        grammarPointKey: null,
+      },
+    ]);
+    mockTotalResolver.mockResolvedValueOnce([{ total: 1 }]);
+
+    const res = await app.request('/theory/ES', undefined, authEnv);
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.topics[0].category).toBe('other');
+    expect(body.topics[0].order).toBeNull();
+  });
+
+  it('still skips corrupt rows and warns while enriching the survivors', async () => {
+    mockRowsResolver.mockResolvedValueOnce([
+      {
+        id: 'topic-harmony',
+        title: 'vowel harmony',
+        cefr: 'A1',
+        grammarPointKey: 'tr-a1-vowel-harmony',
+      },
+    ]);
+    mockTotalResolver.mockResolvedValueOnce([{ total: 2 }]);
+
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    const res = await app.request('/theory/TR', undefined, authEnv);
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.topics).toHaveLength(1);
+    expect(body.topics[0].category).toBe('orthography');
+    expect(body.topics[0].order).toBe(0);
+    expect(warnSpy).toHaveBeenCalledTimes(1);
 
     warnSpy.mockRestore();
   });

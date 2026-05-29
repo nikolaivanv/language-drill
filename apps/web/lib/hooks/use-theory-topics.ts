@@ -4,7 +4,11 @@ import {
   TheoryListResponseSchema,
   type TheoryListItem,
 } from '@language-drill/api-client';
-import type { LearningLanguage } from '@language-drill/shared';
+import {
+  type LearningLanguage,
+  type TheoryCategoryId,
+  FALLBACK_CATEGORY_ID,
+} from '@language-drill/shared';
 import { listStaticTheoryTopics } from '../../content/theory';
 
 export type UseTheoryTopicsParams = {
@@ -16,8 +20,21 @@ export type UseTheoryTopicsParams = {
   fetchFn?: AuthenticatedFetch;
 };
 
+/**
+ * A topic row as the library consumes it: the wire fields plus the server-side
+ * enrichment (`category`, `order`). `TheoryToc`/`TheoryEmpty` read only
+ * `id`/`title`, so widening this is non-breaking for those call sites.
+ */
+export type TheoryTopicListItem = {
+  id: string;
+  title: string;
+  cefr: string;
+  category: TheoryCategoryId;
+  order: number | null;
+};
+
 export type UseTheoryTopicsResult = {
-  topics: Array<{ id: string; title: string; cefr: string }>;
+  topics: TheoryTopicListItem[];
   isLoading: boolean;
   isError: boolean;
   error: Error | null;
@@ -29,11 +46,28 @@ function sortByTitle<T extends { title: string }>(items: T[]): T[] {
   return [...items].sort((a, b) => a.title.localeCompare(b.title));
 }
 
+// DB items carry `category` as a plain string (the schema doesn't re-derive
+// the union); the server only ever emits a valid `TheoryCategoryId`, so narrow
+// it here. Static (editorial-override) topics have no curriculum key, so they
+// default to the fallback category and a null curriculum position.
+function toListItem(
+  item: TheoryListItem | { id: string; title: string; cefr: string },
+): TheoryTopicListItem {
+  const enriched = item as Partial<TheoryListItem>;
+  return {
+    id: item.id,
+    title: item.title,
+    cefr: item.cefr,
+    category: (enriched.category as TheoryCategoryId | undefined) ?? FALLBACK_CATEGORY_ID,
+    order: enriched.order ?? null,
+  };
+}
+
 export function useTheoryTopics({
   language,
   fetchFn,
 }: UseTheoryTopicsParams): UseTheoryTopicsResult {
-  const staticTopics = listStaticTheoryTopics(language);
+  const staticTopics = listStaticTheoryTopics(language).map(toListItem);
 
   const dbQuery = useQuery<TheoryListItem[], Error>({
     queryKey: ['theory', 'list', language],
@@ -56,7 +90,7 @@ export function useTheoryTopics({
     };
   }
 
-  const dbTopics = dbQuery.data ?? [];
+  const dbTopics = (dbQuery.data ?? []).map(toListItem);
   const seen = new Set(staticTopics.map((t) => t.id));
   const merged = sortByTitle([
     ...staticTopics,

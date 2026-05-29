@@ -3,6 +3,7 @@ import {
   TodayIcon,
   DrillIcon,
   ReadIcon,
+  TheoryIcon,
   ProgressIcon,
 } from './nav-icons';
 
@@ -13,11 +14,13 @@ export interface NavDestination {
 }
 
 // Single source of nav truth, shared by the desktop rail (`NavItems`) and the
-// mobile tab-bar. The four primary destinations — no invented routes.
+// mobile tab-bar. `theory` sits between `read` and `progress` — the
+// reference surface you reach between drills.
 export const NAV_DESTINATIONS: NavDestination[] = [
   { href: '/', label: 'today', icon: <TodayIcon /> },
   { href: '/drill', label: 'drill', icon: <DrillIcon /> },
   { href: '/read', label: 'read', icon: <ReadIcon /> },
+  { href: '/theory', label: 'theory', icon: <TheoryIcon /> },
   { href: '/progress', label: 'progress', icon: <ProgressIcon /> },
 ];
 

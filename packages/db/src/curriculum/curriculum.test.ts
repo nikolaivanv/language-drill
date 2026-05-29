@@ -8,6 +8,7 @@ import {
   CURRICULUM_VERSION_DE,
   CURRICULUM_VERSION_ES,
   CURRICULUM_VERSION_TR,
+  curriculumOrderOf,
   deCurriculum,
   esCurriculum,
   getGrammarPoint,
@@ -123,6 +124,40 @@ describe('getGrammarPoint', () => {
 
   it('returns undefined for an unknown key', () => {
     expect(getGrammarPoint('xx-z9-no-such-thing')).toBeUndefined();
+  });
+});
+
+describe('curriculumOrderOf', () => {
+  it('returns the 0-based index of a key within its own language array', () => {
+    esCurriculum.forEach((entry, index) => {
+      expect(curriculumOrderOf(entry.key)).toBe(index);
+    });
+    trCurriculum.forEach((entry, index) => {
+      expect(curriculumOrderOf(entry.key)).toBe(index);
+    });
+  });
+
+  it('restarts numbering per language (each first entry is 0)', () => {
+    if (esCurriculum.length > 0) {
+      expect(curriculumOrderOf(esCurriculum[0].key)).toBe(0);
+    }
+    if (trCurriculum.length > 0) {
+      expect(curriculumOrderOf(trCurriculum[0].key)).toBe(0);
+    }
+  });
+
+  it('orders consecutive entries within a language ascending', () => {
+    for (let i = 1; i < trCurriculum.length; i++) {
+      const prev = curriculumOrderOf(trCurriculum[i - 1].key);
+      const curr = curriculumOrderOf(trCurriculum[i].key);
+      expect(prev).toBeDefined();
+      expect(curr).toBeDefined();
+      expect(curr as number).toBeGreaterThan(prev as number);
+    }
+  });
+
+  it('returns undefined for an unknown key', () => {
+    expect(curriculumOrderOf('xx-z9-no-such-thing')).toBeUndefined();
   });
 });
 

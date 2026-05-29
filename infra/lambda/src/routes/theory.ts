@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { and, count, eq, inArray, sql } from 'drizzle-orm';
-import { theoryTopics } from '@language-drill/db';
-import { parseTheoryTopicJson } from '@language-drill/shared';
+import { theoryTopics, curriculumOrderOf } from '@language-drill/db';
+import { parseTheoryTopicJson, resolveTheoryCategory } from '@language-drill/shared';
 import { db } from '../db';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
@@ -98,6 +98,7 @@ theory.get('/theory/:lang', async (c) => {
           id: theoryTopics.topicId,
           title: sql<string>`${theoryTopics.contentJson}->>'title'`,
           cefr: sql<string>`${theoryTopics.contentJson}->>'cefr'`,
+          grammarPointKey: theoryTopics.grammarPointKey,
         })
         .from(theoryTopics)
         .where(
@@ -128,7 +129,18 @@ theory.get('/theory/:lang', async (c) => {
       );
     }
 
-    return c.json({ topics: rows });
+    // Enrich each surviving row with its theory category and curriculum-order
+    // position, both resolved from the topic's grammar-point key. Done here
+    // (server-side) so the client groups/sorts without shipping curriculum
+    // data to the browser. `grammarPointKey` itself is not part of the wire
+    // contract — drop it after enrichment.
+    const topics = rows.map(({ grammarPointKey, ...rest }) => ({
+      ...rest,
+      category: resolveTheoryCategory(grammarPointKey),
+      order: curriculumOrderOf(grammarPointKey ?? '') ?? null,
+    }));
+
+    return c.json({ topics });
   } catch (dbError) {
     const message = dbError instanceof Error ? dbError.message : String(dbError);
     console.error(`theory: list query failed for ${lang}: ${message}`);
