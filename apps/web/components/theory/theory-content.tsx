@@ -1,42 +1,19 @@
-import { Component, type ReactNode, type RefObject } from 'react';
+import { type RefObject } from 'react';
 import type { LearningLanguage } from '@language-drill/shared';
 import { Button } from '../ui/button';
-import { TheoryEmpty } from './theory-empty';
+import { TheorySections } from './theory-sections';
 import type { TheoryTopic } from './types';
 
 // ---------------------------------------------------------------------------
-// Error boundary
+// Content column (in-drill panel)
 // ---------------------------------------------------------------------------
 //
-// Catches render-time errors inside topic content (e.g., a typo in a primitive
-// usage, a broken table row). The footer is rendered *outside* this boundary
-// so the "back to drill" CTA still works even if every section crashes.
-// Reliability NFR — design.md §"Error Handling · Scenario 3".
-
-class TheoryErrorBoundary extends Component<
-  { fallback: ReactNode; children: ReactNode },
-  { hasError: boolean }
-> {
-  state = { hasError: false };
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error: unknown) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[theory] section render failed:', error);
-    }
-  }
-
-  render() {
-    return this.state.hasError ? this.props.fallback : this.props.children;
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Content column
-// ---------------------------------------------------------------------------
+// Owns the panel's scroll container, bottom spacer, and "back to drill" footer.
+// The error-boundary-wrapped section list itself is the shared <TheorySections>
+// (also used by the standalone library detail page) — kept outside the footer
+// so the CTA still works even if every section crashes. DOM output is
+// unchanged from before the extraction (reliability NFR — panel behavior
+// preserved by composition, not rewrite).
 
 type TheoryContentProps = {
   topic: TheoryTopic;
@@ -55,22 +32,11 @@ export function TheoryContent({
 }: TheoryContentProps) {
   return (
     <div ref={scrollRef} className="theory-scroll">
-      <TheoryErrorBoundary
-        fallback={
-          <TheoryEmpty
-            attemptedTopicId={topic.id}
-            language={language}
-            onSwitchTopic={onSwitchTopic}
-          />
-        }
-      >
-        {topic.sections.map((s) => (
-          <section key={s.id} id={s.id} className="theory-section">
-            <h3 className="theory-section-title">{s.title}</h3>
-            <div className="theory-content">{s.body}</div>
-          </section>
-        ))}
-      </TheoryErrorBoundary>
+      <TheorySections
+        topic={topic}
+        language={language}
+        onSwitchTopic={onSwitchTopic}
+      />
 
       <div style={{ height: 80 }} aria-hidden="true" />
 

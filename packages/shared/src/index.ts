@@ -198,6 +198,12 @@ export type {
 export { parseTheoryTopicJson, parseBlock, parseInline } from "./theory";
 
 // ---------------------------------------------------------------------------
+// Theory library — curriculum-anchored category taxonomy
+// ---------------------------------------------------------------------------
+
+export * from "./theory-categories";
+
+// ---------------------------------------------------------------------------
 // Phase 4 — moved here from `@language-drill/db` to break the build cycle
 // (the db barrel still re-exports both for back-compat).
 // ---------------------------------------------------------------------------

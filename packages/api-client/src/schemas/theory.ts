@@ -11,10 +11,19 @@
 import { z } from 'zod';
 
 // Envelope for GET /theory/:lang
+//
+// `category` + `order` are server-side enrichment fields (a topic's theory
+// category resolved from its grammar-point key, and its 0-based curriculum
+// position). They carry `.default()`s so the schema still parses legacy
+// payloads from a server that predates the enrichment — additive contract,
+// per design §"Component 4". `order` is null when the topic has no resolvable
+// curriculum position; the library sorts such topics last.
 export const TheoryListItemSchema = z.object({
   id: z.string(),
   title: z.string(),
   cefr: z.string(),
+  category: z.string().default('other'),
+  order: z.number().nullable().default(null),
 });
 
 export const TheoryListResponseSchema = z.object({

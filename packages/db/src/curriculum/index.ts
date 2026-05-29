@@ -45,6 +45,29 @@ export function getGrammarPoint(key: string): GrammarPoint | undefined {
   return GRAMMAR_POINT_INDEX.get(key);
 }
 
+/**
+ * Curriculum sequence number for the theory library's "curriculum order"
+ * sort: a grammar point's 0-based position within its OWN language's
+ * curriculum array (ES, DE, TR each restart at 0). Built once at module load
+ * from the per-language arrays — `ALL_CURRICULA` is not used here because its
+ * concatenation would offset DE/TR positions by the lengths of the languages
+ * before them.
+ */
+const CURRICULUM_ORDER_INDEX: ReadonlyMap<string, number> = new Map(
+  [esCurriculum, deCurriculum, trCurriculum].flatMap((curriculum) =>
+    curriculum.map((entry, index) => [entry.key, index] as const),
+  ),
+);
+
+/**
+ * Position of `key` within its language's curriculum array (0-based), or
+ * `undefined` for an unknown key. Callers (the theory list endpoint) sort
+ * topics with an `undefined` order last.
+ */
+export function curriculumOrderOf(key: string): number | undefined {
+  return CURRICULUM_ORDER_INDEX.get(key);
+}
+
 const KEY_REGEX = /^(es|de|tr)-(a1|a2|b1|b2)-[a-z0-9-]+$/;
 
 const LANGUAGE_PREFIX_BY_LANGUAGE: Readonly<Record<string, string>> = {
