@@ -102,13 +102,13 @@ async function mockReadApi(
 ): Promise<{ deepCallCount: () => number }> {
   let deepCalls = 0;
 
-  await page.route('**/language-profiles', (route) =>
+  await page.route('**/profiles/languages', (route) =>
     route.fulfill(
       reply({ profiles: [{ language: 'ES', proficiencyLevel: 'B1' }] }),
     ),
   );
 
-  await page.route('**/read/entries', (route) => {
+  await page.route(/\/read\/entries(\?|$)/, (route) => {
     if (route.request().method() !== 'GET') return route.fallback();
     return route.fulfill(
       reply({
@@ -321,12 +321,12 @@ test('a failed deep call shows the inline error, retry fires another call (Req 9
   // clicking "try again" so the retry resolves into a loaded card.
   let shouldFail = true;
   let calls = 0;
-  await page.route('**/language-profiles', (route) =>
+  await page.route('**/profiles/languages', (route) =>
     route.fulfill(
       reply({ profiles: [{ language: 'ES', proficiencyLevel: 'B1' }] }),
     ),
   );
-  await page.route('**/read/entries', (route) =>
+  await page.route(/\/read\/entries(\?|$)/, (route) =>
     route.fulfill(
       reply({
         entries: [
