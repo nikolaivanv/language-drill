@@ -145,6 +145,12 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
+      # `auth.setup` imports `@language-drill/db` (createDb) as a built package,
+      # and the dev server resolves the other workspace packages' `dist`. A bare
+      # `pnpm install` doesn't run their `tsc` build, so compile them first.
+      - name: Build workspace packages
+        run: pnpm turbo build --filter='./packages/*'
+
       - name: Install Playwright Chromium + system deps
         run: pnpm --filter @language-drill/web exec playwright install --with-deps chromium
 
