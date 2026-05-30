@@ -1,26 +1,25 @@
 'use client';
 
 // ---------------------------------------------------------------------------
-// WordBankRail — sticky right column listing locally-banked words
+// WordBankRail — sticky right column listing words saved from this passage
 // ---------------------------------------------------------------------------
-// Walks `bank` in insertion order, renders a paper-2 row per entry that
-// resolves to a flag in `flaggedMap`. Bank entries that fail to resolve
-// (defensive: a saved entry whose flag was somehow dropped server-side)
-// are skipped silently — no row, no error. Empty-bank renders the dashed-
-// border "tap a highlighted word…" card; the footer note + "from your
-// reading" chip render in both states (Requirements 6.3, 8.7, 8.8).
+// Renders every `user_vocabulary` row sourced from this entry — flagged-banked
+// words AND on-demand deep-card saves alike — in save order. Each row shows the
+// lemma + gloss + CEFR (or a "phr" marker for phrases); ✕ unsaves it (deletes
+// the vocabulary record, server-side also dropping the orphaned review card).
+// Empty state nudges the save gesture; the footer note + "from your reading"
+// chip render in both states (Requirements 6.3, 8.7, 8.8).
 // ---------------------------------------------------------------------------
 
-import type { FlaggedMap } from '@language-drill/shared';
+import type { SavedVocabItem } from '@language-drill/api-client';
 import { Chip } from '../../../../components/ui/chip';
 
 type Props = {
-  bank: string[];
-  flaggedMap: FlaggedMap;
-  onRemove: (word: string) => void;
+  saved: SavedVocabItem[];
+  onUnsave: (item: SavedVocabItem) => void;
 };
 
-export function WordBankRail({ bank, flaggedMap, onRemove }: Props) {
+export function WordBankRail({ saved, onUnsave }: Props) {
   return (
     <aside
       className="sticky top-[24px] flex flex-col rounded-r-lg border border-rule bg-card pt-[18px] px-[18px] pb-[12px]"
@@ -28,54 +27,48 @@ export function WordBankRail({ bank, flaggedMap, onRemove }: Props) {
     >
       <div className="flex items-baseline justify-between mb-[10px]">
         <div className="t-display-s">word bank</div>
-        <div className="t-mono text-[11px] text-ink-mute">{bank.length}</div>
+        <div className="t-mono text-[11px] text-ink-mute">{saved.length}</div>
       </div>
-      <div className="t-small mb-[14px]">marked from this passage</div>
+      <div className="t-small mb-[14px]">saved from this passage</div>
 
-      {bank.length === 0 ? (
-        <div
-          className="t-small text-ink-mute rounded-r-md border border-dashed border-rule p-[18px] text-center leading-[1.5]"
-        >
-          tap a highlighted word to see its meaning, then save it here.
+      {saved.length === 0 ? (
+        <div className="t-small text-ink-mute rounded-r-md border border-dashed border-rule p-[18px] text-center leading-[1.5]">
+          tap a word to see its meaning, then save it here.
         </div>
       ) : (
         <ul className="-mr-[8px] flex min-h-0 flex-col gap-[6px] overflow-y-auto pr-[8px]">
-          {bank.map((word) => {
-            const flag = flaggedMap[word];
-            if (!flag) return null;
-            return (
-              <li
-                key={word}
-                className="flex items-start gap-[8px] rounded-r-sm bg-paper-2 px-[10px] py-[8px]"
-              >
-                <div className="min-w-0 flex-1">
-                  <div
-                    style={{
-                      fontFamily: 'var(--font-display)',
-                      fontSize: 14,
-                      fontWeight: 500,
-                    }}
-                  >
-                    {flag.lemma}
-                  </div>
-                  <div className="t-small text-[11px] text-ink-soft">
-                    {flag.gloss}
-                  </div>
-                </div>
-                <span className="t-mono mt-[2px] text-[10px] text-ink-mute">
-                  {flag.cefr}
-                </span>
-                <button
-                  type="button"
-                  aria-label={`remove ${flag.lemma}`}
-                  onClick={() => onRemove(word)}
-                  className="mt-[2px] cursor-pointer border-none bg-transparent p-0 text-[14px] leading-none text-ink-mute hover:text-ink"
+          {saved.map((item) => (
+            <li
+              key={item.id}
+              className="flex items-start gap-[8px] rounded-r-sm bg-paper-2 px-[10px] py-[8px]"
+            >
+              <div className="min-w-0 flex-1">
+                <div
+                  style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: 14,
+                    fontWeight: 500,
+                  }}
                 >
-                  ×
-                </button>
-              </li>
-            );
-          })}
+                  {item.lemma}
+                </div>
+                <div className="t-small text-[11px] text-ink-soft">
+                  {item.gloss}
+                </div>
+              </div>
+              <span className="t-mono mt-[2px] text-[10px] text-ink-mute">
+                {item.type === 'phrase' ? 'phr' : (item.cefr ?? '')}
+              </span>
+              <button
+                type="button"
+                aria-label={`remove ${item.lemma}`}
+                onClick={() => onUnsave(item)}
+                className="mt-[2px] cursor-pointer border-none bg-transparent p-0 text-[14px] leading-none text-ink-mute hover:text-ink"
+              >
+                ×
+              </button>
+            </li>
+          ))}
         </ul>
       )}
 
