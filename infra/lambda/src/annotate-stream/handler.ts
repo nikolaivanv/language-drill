@@ -43,6 +43,8 @@ import { db } from "../db";
 import { verifyClerkJwt } from "./jwt";
 import { buildCandidateList } from "./pipeline";
 import { createSseWriter } from "./sse";
+import type { SseWriter } from "./sse";
+import { handleDeepSpan } from "./deep-flow";
 
 // Touch `loadFrequency` so esbuild can't tree-shake the side-effecting
 // import above. Reading any language is fine — `loadFrequency` is memoized
@@ -66,6 +68,26 @@ const AnnotateRequestSchema = z.object({
   language: z.nativeEnum(Language),
 });
 
+// Deep-span (single-card) streaming request. Like `AnnotateRequestSchema`,
+// `language` is the full `Language` enum so EN gets a dedicated 400
+// UNSUPPORTED_LANGUAGE rather than a generic shape error. Unlike the skim
+// schema, `text` is NOT trimmed — `start`/`end` are character offsets into the
+// exact text, so trimming would shift them out of alignment. The cross-field
+// invariant `start < end <= text.length` can't be expressed inline; the deep
+// flow (task 13a) validates it after `safeParse` and returns VALIDATION_ERROR.
+// `entryId` is present only for SAVED entries (drives the cache-hit lookup and
+// best-effort write-back); its absence means an unsaved passage. Mirrors the
+// (now-removed) `read.ts` `AnnotateSpanBodySchema`.
+export const AnnotateSpanStreamRequest = z.object({
+  text: z.string().min(1).max(READ_TEXT_MAX_CHARS),
+  language: z.nativeEnum(Language),
+  start: z.number().int().nonnegative(),
+  end: z.number().int().nonnegative(),
+  entryId: z.string().uuid().optional(),
+});
+
+export type AnnotateSpanStreamRequest = z.infer<typeof AnnotateSpanStreamRequest>;
+
 // ---------------------------------------------------------------------------
 // Handler
 // ---------------------------------------------------------------------------
@@ -76,12 +98,9 @@ export const handler = awslambda.streamifyResponse<
 >(async (event, responseStream) => {
   const writer = createSseWriter(responseStream);
 
-  // Outer try/finally guarantees one `flushObservability()` per invocation
-  // on every path — success, error, abort, and the validation gates that
-  // short-circuit before any Claude call (Req 6 AC 2). The flush is a
-  // synchronous no-op when Langfuse is disabled (keys absent in vitest /
-  // local dev), so wrapping the entire handler — including gates that
-  // never start a trace — costs nothing.
+  // `withObservabilityFlush` guarantees one `flushObservability()` per
+  // invocation on every path — success, error, abort, and the validation
+  // gates that short-circuit before any Claude call (Req 6 AC 2).
   //
   // Every exit path below MUST `await` whichever writer method emits the
   // final bytes (`cors200`, `errorJson`, or `close`). AWS's response-streaming
@@ -91,57 +110,33 @@ export const handler = awslambda.streamifyResponse<
   // The symptom is "browser receives `meta` but never `flag`/`done`" because
   // `meta` is followed by a slow Claude call that gives the kernel time to
   // drain, while `done`/`error` aren't.
-  try {
-    // ---- Gate 1: OPTIONS preflight ----
-    const method = event.requestContext?.http?.method ?? "POST";
-    if (method === "OPTIONS") {
-      await writer.cors200();
-      return;
-    }
-
-    // ---- Gate 2: method != POST ----
-    if (method !== "POST") {
-      await writer.errorJson(405, { code: "METHOD_NOT_ALLOWED", message: "Method Not Allowed" });
-      return;
-    }
-
-    // ---- Gate 3: parse + validate body ----
-    const rawBody = readBodyString(event);
-    let parsedJson: unknown;
-    try {
-      parsedJson = JSON.parse(rawBody);
-    } catch {
-      await writer.errorJson(400, { code: "VALIDATION_ERROR", message: "Invalid JSON body" });
-      return;
-    }
-    const bodyResult = AnnotateRequestSchema.safeParse(parsedJson);
-    if (!bodyResult.success) {
-      await writer.errorJson(400, {
-        code: "VALIDATION_ERROR",
-        message: "Invalid request body",
+  await withObservabilityFlush(async () => {
+    // ---- Path dispatch ----
+    // Both flows live on the same Function URL; the deep-span endpoint is
+    // reached at `…/read/annotate-span` while the skim pass answers at the
+    // bare base URL (and `…/read/annotate`). The two flows validate different
+    // body shapes, so the schema is chosen here before the shared gates parse
+    // the body. OPTIONS preflight carries no body, so gate 1 short-circuits
+    // identically on either branch.
+    if (isDeepSpanPath(event)) {
+      const gate = await runRequestGates(event, writer, AnnotateSpanStreamRequest);
+      if (!gate.proceed) return;
+      await handleDeepSpan({
+        event,
+        responseStream,
+        writer,
+        userId: gate.userId,
+        learningLanguage: gate.learningLanguage,
+        request: gate.data,
       });
       return;
     }
-    const { text, language } = bodyResult.data;
 
-    // ---- Gate 4: EN is source-only ----
-    if (language === Language.EN) {
-      await writer.errorJson(400, {
-        code: "UNSUPPORTED_LANGUAGE",
-        message: "English is not a supported learning language",
-      });
-      return;
-    }
-    const learningLanguage = language as LearningLanguage;
-
-    // ---- Gate 5: Clerk JWT verification ----
-    const authHeader =
-      event.headers?.authorization ?? event.headers?.Authorization;
-    const userId = await verifyClerkJwt(authHeader);
-    if (!userId) {
-      await writer.errorJson(401, { code: "MISSING_SUB", message: "Unauthorized" });
-      return;
-    }
+    // ---- Gates 1–5: OPTIONS / method / body / EN / JWT (shared) ----
+    const gate = await runRequestGates(event, writer, AnnotateRequestSchema);
+    if (!gate.proceed) return;
+    const { learningLanguage, userId } = gate;
+    const { text } = gate.data;
 
     // ---- Gate 6: rate-limit (rolling 24h, shared with ai_evaluation) ----
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -318,14 +313,134 @@ export const handler = awslambda.streamifyResponse<
     }
     console.log("[annotate-stream] done (success)", { flaggedCount });
     await writer.close();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Shared flow helpers (skim + deep)
+// ---------------------------------------------------------------------------
+
+/**
+ * Wraps a flow in the once-per-invocation `flushObservability()` discipline
+ * (Req 6 AC 2). The flush is a synchronous no-op when Langfuse is disabled
+ * (keys absent in vitest / local dev), so wrapping even the pure-gate
+ * short-circuits — which never start a trace — costs nothing. Both the skim
+ * and deep-span flows run inside this so a trace started mid-flow is always
+ * flushed before the handler's promise resolves.
+ */
+export async function withObservabilityFlush(
+  run: () => Promise<void>,
+): Promise<void> {
+  try {
+    await run();
   } finally {
     await flushObservability();
   }
-});
+}
+
+/**
+ * The outcome of {@link runRequestGates}: either an early response was already
+ * written + awaited (`proceed: false`, the caller just returns) or every gate
+ * passed and the parsed body, the EN-narrowed `learningLanguage`, and the
+ * verified `userId` are handed back for the flow-specific remainder.
+ */
+type RequestGateResult<T> =
+  | { proceed: false }
+  | {
+      proceed: true;
+      data: T;
+      learningLanguage: LearningLanguage;
+      userId: string;
+    };
+
+/**
+ * Request gates 1–5 for the streaming-annotate Function URL, run by BOTH the
+ * skim and deep-span flows so neither duplicates them:
+ *   1. OPTIONS preflight                  → 204 (cors200)
+ *   2. method != POST                     → 405 METHOD_NOT_ALLOWED
+ *   3. JSON parse + body schema validate  → 400 VALIDATION_ERROR
+ *   4. EN is source-only                  → 400 UNSUPPORTED_LANGUAGE
+ *   5. Clerk JWT                          → 401 MISSING_SUB
+ *
+ * On any failure the matching terminal response is written AND awaited here;
+ * the caller receives `{ proceed: false }` and must simply `return`. The body
+ * schema is injected so each flow validates its own shape
+ * (`AnnotateRequestSchema` vs `AnnotateSpanStreamRequest`) — both yield a
+ * `language` field, which is all gate 4 inspects. Gate 6 (rate-limit) is
+ * intentionally NOT shared: each flow owns its own bucket / limit (Req 2.3).
+ */
+export async function runRequestGates<T extends { language: Language }>(
+  event: LambdaFunctionURLEvent,
+  writer: SseWriter,
+  schema: z.ZodType<T>,
+): Promise<RequestGateResult<T>> {
+  // ---- Gate 1: OPTIONS preflight ----
+  const method = event.requestContext?.http?.method ?? "POST";
+  if (method === "OPTIONS") {
+    await writer.cors200();
+    return { proceed: false };
+  }
+
+  // ---- Gate 2: method != POST ----
+  if (method !== "POST") {
+    await writer.errorJson(405, { code: "METHOD_NOT_ALLOWED", message: "Method Not Allowed" });
+    return { proceed: false };
+  }
+
+  // ---- Gate 3: parse + validate body ----
+  const rawBody = readBodyString(event);
+  let parsedJson: unknown;
+  try {
+    parsedJson = JSON.parse(rawBody);
+  } catch {
+    await writer.errorJson(400, { code: "VALIDATION_ERROR", message: "Invalid JSON body" });
+    return { proceed: false };
+  }
+  const bodyResult = schema.safeParse(parsedJson);
+  if (!bodyResult.success) {
+    await writer.errorJson(400, {
+      code: "VALIDATION_ERROR",
+      message: "Invalid request body",
+    });
+    return { proceed: false };
+  }
+
+  // ---- Gate 4: EN is source-only ----
+  if (bodyResult.data.language === Language.EN) {
+    await writer.errorJson(400, {
+      code: "UNSUPPORTED_LANGUAGE",
+      message: "English is not a supported learning language",
+    });
+    return { proceed: false };
+  }
+  const learningLanguage = bodyResult.data.language as LearningLanguage;
+
+  // ---- Gate 5: Clerk JWT verification ----
+  const authHeader =
+    event.headers?.authorization ?? event.headers?.Authorization;
+  const userId = await verifyClerkJwt(authHeader);
+  if (!userId) {
+    await writer.errorJson(401, { code: "MISSING_SUB", message: "Unauthorized" });
+    return { proceed: false };
+  }
+
+  return { proceed: true, data: bodyResult.data, learningLanguage, userId };
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * True when the request targets the deep-span endpoint. Prefers the API-style
+ * `requestContext.http.path` and falls back to `rawPath` (Function URL events
+ * always carry one of the two). The bare base URL and `…/read/annotate` are
+ * NOT matched, so they fall through to the skim flow.
+ */
+function isDeepSpanPath(event: LambdaFunctionURLEvent): boolean {
+  const path = event.requestContext?.http?.path ?? event.rawPath ?? "";
+  return path.endsWith("/read/annotate-span");
+}
 
 function readBodyString(event: LambdaFunctionURLEvent): string {
   if (event.body === undefined || event.body === null) return "";

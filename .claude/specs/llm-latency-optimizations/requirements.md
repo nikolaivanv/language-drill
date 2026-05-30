@@ -82,6 +82,8 @@ The fourth deliverable is **documentation only**: capture the postponed Groq / C
 2. WHEN the document describes the evaluation plan THEN it SHALL specify that any candidate Groq/Cerebras model is to be benchmarked head-to-head through the existing `pnpm eval` harness (quality/cost/latency) before adoption, and that the AI Gateway is not a natural fit because the calls run in Lambda, not on Vercel.
 3. WHEN the document is added THEN it SHALL be cross-referenced from this spec and SHALL not modify any runtime code path.
 
+> **Delivered:** [`docs/llm-fast-inference-exploration.md`](../../../docs/llm-fast-inference-exploration.md) — captures the opportunity (throughput scales with output size → deep cards benefit more than evaluation), why it's deferred, the trade-offs (non-Claude families, loss of Anthropic prompt caching, prompt re-tuning + re-validation, new provider/secret/observability wiring, availability risk), the `pnpm eval` head-to-head gate, and why the Vercel AI Gateway isn't a fit (calls run in Lambda, not on Vercel).
+
 ## Non-Functional Requirements
 
 ### Performance

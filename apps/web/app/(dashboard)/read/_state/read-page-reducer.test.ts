@@ -713,7 +713,7 @@ describe('OPEN_DEEP_CARD', () => {
       type: 'OPEN_DEEP_CARD',
       span: WORD_SPAN,
     });
-    expect(state.deepCard).toEqual({ status: 'loading', span: WORD_SPAN });
+    expect(state.deepCard).toEqual({ status: 'loading', span: WORD_SPAN, partial: {} });
   });
 
   it('opens `loaded` instantly from cache for a span already in spanAnnotations (Req 11.4)', () => {
@@ -732,9 +732,86 @@ describe('OPEN_DEEP_CARD', () => {
   });
 });
 
+describe('DEEP_CARD_FIELD', () => {
+  it('merges a streamed field into the open loading card partial (Req 1.2)', () => {
+    const loading = withState({
+      deepCard: { status: 'loading', span: WORD_SPAN, partial: {} },
+    });
+    const state = readPageReducer(loading, {
+      type: 'DEEP_CARD_FIELD',
+      span: WORD_SPAN,
+      key: 'definition',
+      value: 'edificio para vivir',
+    });
+    expect(state.deepCard).toEqual({
+      status: 'loading',
+      span: WORD_SPAN,
+      partial: { definition: 'edificio para vivir' },
+    });
+  });
+
+  it('accumulates multiple fields in order', () => {
+    let state = withState({
+      deepCard: { status: 'loading', span: WORD_SPAN, partial: {} },
+    });
+    state = readPageReducer(state, {
+      type: 'DEEP_CARD_FIELD',
+      span: WORD_SPAN,
+      key: 'type',
+      value: 'word',
+    });
+    state = readPageReducer(state, {
+      type: 'DEEP_CARD_FIELD',
+      span: WORD_SPAN,
+      key: 'definition',
+      value: 'edificio',
+    });
+    expect(state.deepCard).toEqual({
+      status: 'loading',
+      span: WORD_SPAN,
+      partial: { type: 'word', definition: 'edificio' },
+    });
+  });
+
+  it('ignores a field for a span that is not the open one', () => {
+    const otherSpan: DeepSpan = { start: 9, end: 15, type: 'word', x: 0, y: 0 };
+    const loading = withState({
+      deepCard: { status: 'loading', span: otherSpan, partial: {} },
+    });
+    const state = readPageReducer(loading, {
+      type: 'DEEP_CARD_FIELD',
+      span: WORD_SPAN,
+      key: 'definition',
+      value: 'edificio',
+    });
+    expect(state.deepCard).toEqual({
+      status: 'loading',
+      span: otherSpan,
+      partial: {},
+    });
+  });
+
+  it('ignores a field when the slice is not loading (e.g. already loaded)', () => {
+    const loaded = withState({
+      deepCard: { status: 'loaded', span: WORD_SPAN, card: WORD_CARD },
+    });
+    const state = readPageReducer(loaded, {
+      type: 'DEEP_CARD_FIELD',
+      span: WORD_SPAN,
+      key: 'definition',
+      value: 'overwrite',
+    });
+    expect(state.deepCard).toEqual({
+      status: 'loaded',
+      span: WORD_SPAN,
+      card: WORD_CARD,
+    });
+  });
+});
+
 describe('DEEP_CARD_RESOLVED', () => {
   it('sets `loaded` and caches the card when it matches the open span (Req 3.5)', () => {
-    const loading = withState({ deepCard: { status: 'loading', span: WORD_SPAN } });
+    const loading = withState({ deepCard: { status: 'loading', span: WORD_SPAN, partial: {} } });
     const state = readPageReducer(loading, {
       type: 'DEEP_CARD_RESOLVED',
       span: WORD_SPAN,
@@ -750,7 +827,7 @@ describe('DEEP_CARD_RESOLVED', () => {
 
   it('still caches but does not replace the visible card for a non-matching span', () => {
     const otherSpan: DeepSpan = { start: 9, end: 15, type: 'word', x: 0, y: 0 };
-    const loading = withState({ deepCard: { status: 'loading', span: otherSpan } });
+    const loading = withState({ deepCard: { status: 'loading', span: otherSpan, partial: {} } });
     const state = readPageReducer(loading, {
       type: 'DEEP_CARD_RESOLVED',
       span: WORD_SPAN,
@@ -759,7 +836,7 @@ describe('DEEP_CARD_RESOLVED', () => {
     // Cached for a future tap…
     expect(state.spanAnnotations[spanKey(3, 7)]).toEqual(WORD_CARD);
     // …but the open card (a different span) is untouched.
-    expect(state.deepCard).toEqual({ status: 'loading', span: otherSpan });
+    expect(state.deepCard).toEqual({ status: 'loading', span: otherSpan, partial: {} });
   });
 
   it('caches a resolve that arrives after dismissal (idle), without reopening', () => {
@@ -775,7 +852,7 @@ describe('DEEP_CARD_RESOLVED', () => {
 
 describe('DEEP_CARD_ERROR', () => {
   it('sets `error` when it matches the open span (Req 9.4)', () => {
-    const loading = withState({ deepCard: { status: 'loading', span: WORD_SPAN } });
+    const loading = withState({ deepCard: { status: 'loading', span: WORD_SPAN, partial: {} } });
     const error = { code: 'AI_UNAVAILABLE', message: 'boom' };
     const state = readPageReducer(loading, {
       type: 'DEEP_CARD_ERROR',
@@ -787,13 +864,13 @@ describe('DEEP_CARD_ERROR', () => {
 
   it('ignores an error for a span that is no longer open', () => {
     const otherSpan: DeepSpan = { start: 9, end: 15, type: 'word', x: 0, y: 0 };
-    const loading = withState({ deepCard: { status: 'loading', span: otherSpan } });
+    const loading = withState({ deepCard: { status: 'loading', span: otherSpan, partial: {} } });
     const state = readPageReducer(loading, {
       type: 'DEEP_CARD_ERROR',
       span: WORD_SPAN,
       error: { code: 'AI_UNAVAILABLE', message: 'boom' },
     });
-    expect(state.deepCard).toEqual({ status: 'loading', span: otherSpan });
+    expect(state.deepCard).toEqual({ status: 'loading', span: otherSpan, partial: {} });
   });
 });
 
@@ -835,7 +912,7 @@ describe('deep-card reset on new passage', () => {
 
   it('ANNOTATE_START clears the deep card and span annotations for the new passage', () => {
     const dirty = withState({
-      deepCard: { status: 'loading', span: WORD_SPAN },
+      deepCard: { status: 'loading', span: WORD_SPAN, partial: {} },
       spanAnnotations: { [spanKey(3, 7)]: WORD_CARD },
     });
     const state = readPageReducer(dirty, { type: 'ANNOTATE_START' });

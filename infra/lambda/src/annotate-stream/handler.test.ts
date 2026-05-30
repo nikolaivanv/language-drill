@@ -60,6 +60,33 @@ const {
   };
 });
 
+// Deep-flow integration helpers (task 16): the deep flow is NOT mocked here —
+// the real `handleDeepSpan` runs through the handler with `streamSpan` + DB
+// mocked. `streamSpanImpl` is the swappable async-generator factory;
+// `dbSelectQueue` feeds each deep `select().…where()[.limit()]` chain its rows
+// (FIFO); `mockReadEntriesUpdate` records the write-back `set(...)`.
+const { streamSpanImpl, dbSelectQueue, mockReadEntriesUpdate, mockStreamSpan } =
+  vi.hoisted(() => {
+    type Impl = (client?: unknown, input?: unknown) => AsyncIterable<unknown>;
+    let impl: Impl | null = null;
+    return {
+      streamSpanImpl: {
+        set(fn: Impl | null) {
+          impl = fn;
+        },
+        get(client?: unknown, input?: unknown): AsyncIterable<unknown> {
+          if (!impl) throw new Error("streamSpan called but no impl was set");
+          return impl(client, input);
+        },
+      },
+      dbSelectQueue: [] as unknown[][],
+      mockReadEntriesUpdate: vi.fn(),
+      // Records every `streamSpan(...)` call so tests can assert it ran
+      // (real deep call) or didn't (cache hit / pre-model short-circuit).
+      mockStreamSpan: vi.fn(),
+    };
+  });
+
 vi.mock("./jwt", () => ({
   verifyClerkJwt: (h: string | undefined) => mockVerifyClerkJwt(h),
 }));
@@ -76,6 +103,12 @@ vi.mock("@language-drill/ai", () => {
       this.name = "AnnotateStreamMaxTokensError";
     }
   }
+  class ReadSpanStreamMaxTokensErrorStub extends Error {
+    constructor(public readonly emittedFields: number) {
+      super(`read-span max_tokens after ${emittedFields}`);
+      this.name = "ReadSpanStreamMaxTokensError";
+    }
+  }
   return {
     createClaudeClient: vi.fn(() => ({})),
     // Drop-in replacement for `createClaudeClient` post-Task 13; identical
@@ -85,7 +118,13 @@ vi.mock("@language-drill/ai", () => {
     // deadline path) can capture it via `streamAnnotationImpl.set`.
     streamAnnotation: (client: unknown, input: { signal?: AbortSignal }) =>
       streamAnnotationImpl.get(client, input),
+    // Deep-flow streaming (task 16 integration): swappable like streamAnnotation.
+    streamSpan: (client: unknown, input: unknown) => {
+      mockStreamSpan();
+      return streamSpanImpl.get(client, input);
+    },
     AnnotateStreamMaxTokensError: AnnotateStreamMaxTokensErrorStub,
+    ReadSpanStreamMaxTokensError: ReadSpanStreamMaxTokensErrorStub,
     loadFrequency: () => ({
       lookup: () => null,
       isStopword: () => false,
@@ -97,27 +136,52 @@ vi.mock("@language-drill/ai", () => {
       mockWithLlmTrace(ctx, fn),
     flushObservability: () => mockFlushObservability(),
     ANNOTATE_SYSTEM_PROMPT_VERSION: "annotate@test",
+    READ_SPAN_PROMPT_VERSION: "read-span@test",
   };
 });
 
 vi.mock("@language-drill/db", () => ({
   usageEvents: { __mock: "usageEvents" },
+  // The deep flow (real, not mocked) queries these two tables.
+  readEntries: { id: "id", userId: "user_id", spanAnnotations: "span_annotations" },
+  userLanguageProfiles: {
+    userId: "user_id",
+    language: "language",
+    proficiencyLevel: "proficiency_level",
+  },
 }));
 
 vi.mock("../db", () => {
-  const usageWhere = () => ({
-    then(resolve: (v: unknown) => void, reject: (e: unknown) => void) {
-      return Promise.resolve(mockUsageCount()).then(resolve, reject);
-    },
+  // Each `select().from().where()[.limit()]` chain resolves the next queued
+  // rows (deep flow's cache/rate/profile queries push their own); when the
+  // queue is empty it falls back to `mockUsageCount()` (the skim flow's single
+  // rolling-count query). `.limit()` and direct-await each consume exactly one
+  // entry, so a query never double-consumes.
+  const nextSelectRows = (): Promise<unknown> =>
+    dbSelectQueue.length
+      ? Promise.resolve(dbSelectQueue.shift())
+      : Promise.resolve(mockUsageCount());
+  const selectWhere = () => ({
+    limit: () => nextSelectRows(),
+    then: (resolve: (v: unknown) => void, reject: (e: unknown) => void) =>
+      nextSelectRows().then(resolve, reject),
   });
   return {
     db: {
-      select: () => ({ from: () => ({ where: usageWhere }) }),
+      select: () => ({ from: () => ({ where: selectWhere }) }),
       insert: () => ({
         values: (row: unknown) => {
           mockUsageInsertValues(row);
           return Promise.resolve();
         },
+      }),
+      update: () => ({
+        set: (vals: unknown) => ({
+          where: () => {
+            mockReadEntriesUpdate(vals);
+            return Promise.resolve();
+          },
+        }),
       }),
     },
   };
@@ -129,6 +193,7 @@ vi.mock("drizzle-orm", () => ({
   count: () => "count_expr",
   gte: (...args: unknown[]) => args,
   inArray: (...args: unknown[]) => args,
+  sql: (strings: TemplateStringsArray, ...exprs: unknown[]) => ({ strings, exprs }),
 }));
 
 // ---------------------------------------------------------------------------
@@ -181,7 +246,7 @@ function resetHarness(): void {
 }
 
 // Import the SUT AFTER `vi.hoisted` has installed the global.
-import { handler } from "./handler";
+import { handler, AnnotateSpanStreamRequest } from "./handler";
 import type { LambdaFunctionURLEvent } from "aws-lambda";
 
 // ---------------------------------------------------------------------------
@@ -246,12 +311,26 @@ function makeResponseStream(): Writable {
   return new Writable({ write(_c, _e, cb) { cb(); } });
 }
 
+/** A POST event whose path targets a given route (sets both path fields). */
+function buildPostEventAtPath(path: string, body: object): LambdaFunctionURLEvent {
+  const event = buildPostEvent(body);
+  event.rawPath = path;
+  if (event.requestContext?.http) event.requestContext.http.path = path;
+  return event;
+}
+
 beforeEach(() => {
   resetHarness();
   mockVerifyClerkJwt.mockReset().mockResolvedValue("user_123");
   mockBuildCandidateList.mockReset();
   mockUsageCount.mockReset().mockResolvedValue([{ count: 5 }]);
   mockUsageInsertValues.mockReset();
+  mockReadEntriesUpdate.mockReset();
+  mockStreamSpan.mockReset();
+  dbSelectQueue.length = 0;
+  // Default: any unexpected streamSpan call fails loudly. Tests that exercise a
+  // real deep call override this via `streamSpanImpl.set(...)`.
+  streamSpanImpl.set(null);
   // `.mockReset()` strips the default implementation, so re-pin both spies
   // to their passthrough/no-op defaults. Call records start empty for each
   // test — the observability assertions below depend on this.
@@ -772,5 +851,286 @@ describe("annotate-stream handler — observability flush + trace context", () =
     };
     expect(row.metadata.candidateCount).toBe(2);
     expect(row.metadata.flaggedCount).toBe(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// AnnotateSpanStreamRequest schema (task 11, Req 2.2/2.4)
+// ---------------------------------------------------------------------------
+// Field-level shape only. The cross-field invariant (start < end <= length)
+// is enforced by the deep flow (task 13a), not the schema, so this block
+// covers only what the Zod object itself accepts/rejects.
+
+describe("AnnotateSpanStreamRequest schema", () => {
+  const valid = {
+    text: "La aldea recibió al pintor.",
+    language: "ES",
+    start: 3,
+    end: 8,
+  };
+
+  it("accepts a well-formed body without entryId (unsaved passage)", () => {
+    const result = AnnotateSpanStreamRequest.safeParse(valid);
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts a uuid entryId (saved entry)", () => {
+    const result = AnnotateSpanStreamRequest.safeParse({
+      ...valid,
+      entryId: "11111111-1111-1111-1111-111111111111",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("parses EN at the schema level (EN is rejected later as UNSUPPORTED_LANGUAGE, not a shape error)", () => {
+    const result = AnnotateSpanStreamRequest.safeParse({ ...valid, language: "EN" });
+    expect(result.success).toBe(true);
+  });
+
+  it("does NOT trim text — offsets must stay aligned to the exact string", () => {
+    const padded = { ...valid, text: "  hi  " };
+    const result = AnnotateSpanStreamRequest.safeParse(padded);
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.text).toBe("  hi  ");
+  });
+
+  it("rejects empty text, negative/non-integer offsets, a non-uuid entryId, and missing fields", () => {
+    expect(AnnotateSpanStreamRequest.safeParse({ ...valid, text: "" }).success).toBe(false);
+    expect(AnnotateSpanStreamRequest.safeParse({ ...valid, start: -1 }).success).toBe(false);
+    expect(AnnotateSpanStreamRequest.safeParse({ ...valid, end: 2.5 }).success).toBe(false);
+    expect(
+      AnnotateSpanStreamRequest.safeParse({ ...valid, entryId: "not-a-uuid" }).success,
+    ).toBe(false);
+    expect(AnnotateSpanStreamRequest.safeParse({ text: "hi", language: "ES" }).success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Deep-span flow integration (task 16, Req 1.4–1.8, 2.1–2.7)
+// ---------------------------------------------------------------------------
+// The REAL `handleDeepSpan` runs through the handler; only `streamSpan` and
+// the DB are mocked. These cover the full skim-vs-deep stitch end-to-end at
+// the SSE wire boundary; per-branch logic is also unit-tested in
+// `deep-flow.test.ts`.
+
+const DEEP_CARD = {
+  type: "word",
+  headword: "aldea",
+  definition: "a small village",
+};
+
+/** Drive `streamSpan` with scripted `field` events then a terminal `done`. */
+function setSpanStream(
+  fields: Array<{ key: string; value: unknown }>,
+  card: unknown,
+): void {
+  streamSpanImpl.set(async function* () {
+    for (const f of fields) yield { kind: "field", key: f.key, value: f.value };
+    yield { kind: "done", card };
+  });
+}
+
+/** A valid deep-span POST body (the "aldea" word span of PASSAGE). */
+function deepBody(overrides: Record<string, unknown> = {}) {
+  return { text: PASSAGE, language: "ES", start: 3, end: 8, ...overrides };
+}
+
+describe("annotate-stream handler — deep-flow integration", () => {
+  it("real deep call: streams field→done, meters one read_span_annotation row, no write-back without entryId", async () => {
+    dbSelectQueue.push([{ count: 0 }]); // rate-limit
+    dbSelectQueue.push([{ proficiencyLevel: "B1" }]); // profile
+    setSpanStream(
+      [
+        { key: "type", value: "word" },
+        { key: "definition", value: "a small village" },
+      ],
+      DEEP_CARD,
+    );
+
+    await handler(
+      buildPostEventAtPath("/read/annotate-span", deepBody()),
+      makeResponseStream(),
+      {} as never,
+    );
+
+    const frames = parseSseFrames();
+    expect(frames.map((f) => f.event)).toEqual(["field", "field", "done"]);
+    expect(frames[2].data).toEqual({ card: DEEP_CARD });
+    // Streamed via the deep flow, not the skim pipeline.
+    expect(mockStreamSpan).toHaveBeenCalledTimes(1);
+    expect(mockBuildCandidateList).not.toHaveBeenCalled();
+    // Exactly one usage row, on the dedicated event type; no write-back (unsaved).
+    expect(mockUsageInsertValues).toHaveBeenCalledTimes(1);
+    expect(mockUsageInsertValues.mock.calls[0][0]).toMatchObject({
+      eventType: "read_span_annotation",
+      metadata: { language: "ES", spanType: "word" },
+    });
+    expect(mockReadEntriesUpdate).not.toHaveBeenCalled();
+    // Flush-once and a single terminal frame.
+    expect(mockFlushObservability).toHaveBeenCalledTimes(1);
+    expect(frames.filter((f) => f.event === "done" || f.event === "error")).toHaveLength(1);
+  });
+
+  it("saved entry: writes back to span_annotations exactly once", async () => {
+    dbSelectQueue.push([]); // cache miss
+    dbSelectQueue.push([{ count: 0 }]); // rate-limit
+    dbSelectQueue.push([{ proficiencyLevel: "B1" }]); // profile
+    setSpanStream([{ key: "type", value: "word" }], DEEP_CARD);
+
+    await handler(
+      buildPostEventAtPath(
+        "/read/annotate-span",
+        deepBody({ entryId: "11111111-1111-1111-1111-111111111111" }),
+      ),
+      makeResponseStream(),
+      {} as never,
+    );
+
+    expect(mockStreamSpan).toHaveBeenCalledTimes(1);
+    expect(mockReadEntriesUpdate).toHaveBeenCalledTimes(1);
+    expect(mockUsageInsertValues).toHaveBeenCalledTimes(1);
+  });
+
+  it("cache hit: emits field+done from the stored card with NO streamSpan call and NO meter", async () => {
+    // Saved entry already holds the "3:8" card.
+    dbSelectQueue.push([{ spanAnnotations: { "3:8": DEEP_CARD } }]);
+
+    await handler(
+      buildPostEventAtPath(
+        "/read/annotate-span",
+        deepBody({ entryId: "11111111-1111-1111-1111-111111111111" }),
+      ),
+      makeResponseStream(),
+      {} as never,
+    );
+
+    const frames = parseSseFrames();
+    expect(frames.map((f) => f.event)).toEqual(["field", "field", "field", "done"]);
+    expect(frames[3].data).toEqual({ card: DEEP_CARD });
+    expect(mockStreamSpan).not.toHaveBeenCalled();
+    expect(mockUsageInsertValues).not.toHaveBeenCalled();
+    expect(mockReadEntriesUpdate).not.toHaveBeenCalled();
+    expect(mockFlushObservability).toHaveBeenCalledTimes(1);
+  });
+
+  it("offset validation: start >= end → 400 VALIDATION_ERROR, no stream, flush-once", async () => {
+    await handler(
+      buildPostEventAtPath("/read/annotate-span", deepBody({ start: 8, end: 8 })),
+      makeResponseStream(),
+      {} as never,
+    );
+
+    expect(harness.fromCalls[0].statusCode).toBe(400);
+    expect(JSON.parse(harness.writes[0])).toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(mockStreamSpan).not.toHaveBeenCalled();
+    expect(mockFlushObservability).toHaveBeenCalledTimes(1);
+  });
+
+  it("EN on the deep path → 400 UNSUPPORTED_LANGUAGE (deep schema gate 4)", async () => {
+    await handler(
+      buildPostEventAtPath("/read/annotate-span", deepBody({ language: "EN" })),
+      makeResponseStream(),
+      {} as never,
+    );
+
+    expect(harness.fromCalls[0].statusCode).toBe(400);
+    expect(JSON.parse(harness.writes[0])).toMatchObject({ code: "UNSUPPORTED_LANGUAGE" });
+    expect(mockStreamSpan).not.toHaveBeenCalled();
+  });
+
+  it("malformed deep body (missing offsets) → 400 VALIDATION_ERROR", async () => {
+    await handler(
+      buildPostEventAtPath("/read/annotate-span", { text: PASSAGE, language: "ES" }),
+      makeResponseStream(),
+      {} as never,
+    );
+
+    expect(harness.fromCalls[0].statusCode).toBe(400);
+    expect(JSON.parse(harness.writes[0])).toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(mockStreamSpan).not.toHaveBeenCalled();
+  });
+
+  it("dedicated read_span_annotation rate-limit at 150 → 429, no stream, no meter", async () => {
+    dbSelectQueue.push([{ count: 150 }]); // at the deep cap (NOT the skim 50)
+
+    await handler(
+      buildPostEventAtPath("/read/annotate-span", deepBody()),
+      makeResponseStream(),
+      {} as never,
+    );
+
+    expect(harness.fromCalls[0].statusCode).toBe(429);
+    expect(JSON.parse(harness.writes[0])).toMatchObject({ code: "RATE_LIMIT_EXCEEDED" });
+    expect(mockStreamSpan).not.toHaveBeenCalled();
+    expect(mockUsageInsertValues).not.toHaveBeenCalled();
+    expect(mockFlushObservability).toHaveBeenCalledTimes(1);
+  });
+
+  it("proceeds at 50 (the skim cap) — the deep bucket is independent", async () => {
+    dbSelectQueue.push([{ count: 50 }]); // would block the skim flow; deep cap is 150
+    dbSelectQueue.push([{ proficiencyLevel: "B1" }]);
+    setSpanStream([{ key: "type", value: "word" }], DEEP_CARD);
+
+    await handler(
+      buildPostEventAtPath("/read/annotate-span", deepBody()),
+      makeResponseStream(),
+      {} as never,
+    );
+
+    expect(mockStreamSpan).toHaveBeenCalledTimes(1);
+    expect(parseSseFrames().at(-1)?.event).toBe("done");
+  });
+
+  it("streamSpan abort/error → terminal error AI_UNAVAILABLE and NO meter", async () => {
+    dbSelectQueue.push([{ count: 0 }]); // rate-limit
+    dbSelectQueue.push([{ proficiencyLevel: "B1" }]); // profile
+    streamSpanImpl.set(async function* () {
+      throw new Error("aborted");
+    });
+
+    await handler(
+      buildPostEventAtPath("/read/annotate-span", deepBody()),
+      makeResponseStream(),
+      {} as never,
+    );
+
+    const frames = parseSseFrames();
+    expect(frames.at(-1)?.event).toBe("error");
+    expect((frames.at(-1)?.data as { code: string }).code).toBe("AI_UNAVAILABLE");
+    expect(mockUsageInsertValues).not.toHaveBeenCalled(); // no meter on abort
+    expect(mockFlushObservability).toHaveBeenCalledTimes(1);
+  });
+
+  it("routes the bare base URL to the skim flow (buildCandidateList runs, streamSpan does not)", async () => {
+    mockBuildCandidateList.mockResolvedValueOnce({
+      candidates: [],
+      calibration: { cefr: "B1", top: 3000 },
+    });
+
+    await handler(
+      buildPostEventAtPath("/", { text: PASSAGE, language: "ES" }),
+      makeResponseStream(),
+      {} as never,
+    );
+
+    expect(mockBuildCandidateList).toHaveBeenCalledTimes(1);
+    expect(mockStreamSpan).not.toHaveBeenCalled();
+  });
+
+  it("falls back to rawPath when requestContext.http.path is absent (deep)", async () => {
+    dbSelectQueue.push([{ count: 0 }]);
+    dbSelectQueue.push([{ proficiencyLevel: "B1" }]);
+    setSpanStream([{ key: "type", value: "word" }], DEEP_CARD);
+
+    const event = buildPostEvent(deepBody());
+    event.rawPath = "/read/annotate-span";
+    if (event.requestContext?.http) {
+      (event.requestContext.http as { path?: string }).path = undefined;
+    }
+
+    await handler(event, makeResponseStream(), {} as never);
+
+    expect(mockStreamSpan).toHaveBeenCalledTimes(1);
+    expect(mockBuildCandidateList).not.toHaveBeenCalled();
   });
 });

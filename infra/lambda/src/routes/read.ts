@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { and, count, desc, eq, gte, sql } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import {
   CefrLevel,
   DeepCardSchema,
@@ -13,41 +13,10 @@ import {
   READ_TITLE_MAX_CHARS,
 } from '@language-drill/shared';
 import type { DeepCard, LearningLanguage } from '@language-drill/shared';
-import {
-  readEntries,
-  userLanguageProfiles,
-  userVocabulary,
-  usageEvents,
-} from '@language-drill/db';
-import {
-  annotateSpan,
-  createObservedClaudeClient,
-  READ_SPAN_PROMPT_VERSION,
-  withLlmTrace,
-} from '@language-drill/ai';
+import { readEntries, userVocabulary } from '@language-drill/db';
 import { db } from '../db';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
-import { resolveSpanType } from './read-span-utils';
-
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY ?? '';
-
-// Per-user daily cap for on-demand deep span annotations (Req 10.2). This is a
-// SEPARATE budget from the shared `ai_evaluation`/`read_annotation` 50/day
-// bucket — counted off its own `read_span_annotation` event type — because a
-// single reading session can fire many cheap span taps and must not starve the
-// answer-evaluation budget. Mirrors `DAILY_EVAL_LIMIT` in `routes/exercises.ts`
-// as a route-module constant.
-const READ_SPAN_DAILY_LIMIT = 150;
-
-// CEFR fallback for the deep call when the user has no profile row for this
-// language — same default `annotate-stream/pipeline.ts` applies.
-const DEFAULT_PROFICIENCY_LEVEL = CefrLevel.B1;
-const CEFR_LEVELS = new Set<string>(Object.values(CefrLevel));
-
-function isCefrLevel(value: string | null | undefined): value is CefrLevel {
-  return typeof value === 'string' && CEFR_LEVELS.has(value);
-}
 
 // ---------------------------------------------------------------------------
 // Validation schemas
@@ -80,20 +49,6 @@ const SaveEntryBodySchema = z.object({
   text: z.string().min(1).max(READ_TEXT_MAX_CHARS),
   flagged: FlaggedMapSchema,
   bank: z.array(z.string().min(1)).min(1),
-});
-
-// Deep span-annotation request (Req 10.4). `start`/`end` are character offsets
-// into `text`; the `start < end` and `end <= text.length` cross-field checks
-// run after `safeParse` (Zod can't express them inline). `entryId` is present
-// only for a SAVED History entry — its absence means there's no durable cache
-// and no write-back (Req 11.2). The client may send a `spanType` hint, but the
-// server recomputes it authoritatively, so it's not part of the schema.
-const AnnotateSpanBodySchema = z.object({
-  language: LearningLanguageEnum,
-  text: z.string().min(1).max(READ_TEXT_MAX_CHARS),
-  start: z.number().int().nonnegative(),
-  end: z.number().int().nonnegative(),
-  entryId: z.string().uuid().optional(),
 });
 
 // Save a deep card to the personal vocabulary bank (Req 8). The resolved
@@ -474,191 +429,6 @@ read.put('/read/entries/:id/bank', async (c) => {
   });
 
   return c.json({ id, bank: newBank });
-});
-
-// ---------------------------------------------------------------------------
-// POST /read/annotate-span — on-demand deep annotation of a span (Req 3,4,5,10,11)
-// ---------------------------------------------------------------------------
-// Server-authoritative flow for a tapped word / selected phrase / selected
-// sentence. The span type is recomputed here from the offsets (never trusted
-// from the client) because it drives the cache key, the save-rejection rule,
-// and the card layout.
-//
-//   1. Zod-validate the body + the offset cross-field invariants (Req 10.4).
-//   2. Derive `spanType` from the offsets via `resolveSpanType`.
-//   3. Cache hit (SAVED entries only): if `entryId` is owned AND its
-//      `span_annotations` already holds the "start:end" key, return that card
-//      with NO model call and NO metering (Req 3.5, 10.1). Unsaved passages
-//      carry no `entryId`, so within-session repeats rely on client state
-//      (Req 11.2) — there is no server cache for them.
-//   4. Rate-limit on a SEPARATE `read_span_annotation` bucket (Req 10.2).
-//   5. Call `annotateSpan` (Sonnet) inside `withLlmTrace` (Req 3,4,5).
-//   6. Write-back (SAVED entries only): incrementally merge the card into
-//      `span_annotations` keyed by "start:end" — scoped to id+user so an
-//      unowned entry is a no-op. Best-effort: a write failure is logged and
-//      swallowed, never failing an already-successful request (Req 11.1, 11.6).
-//   7. Insert exactly one `read_span_annotation` usage row — only after a real
-//      successful call (skipped on cache hit / failure). Also best-effort.
-//   8. Return the `DeepCard`.
-// ---------------------------------------------------------------------------
-read.post('/read/annotate-span', async (c) => {
-  const bodyResult = AnnotateSpanBodySchema.safeParse(
-    await c.req.json().catch(() => ({})),
-  );
-  if (!bodyResult.success) {
-    return c.json(
-      {
-        error: 'Invalid request body',
-        code: 'VALIDATION_ERROR',
-        details: bodyResult.error.flatten(),
-      },
-      400,
-    );
-  }
-  const { language, text, start, end, entryId } = bodyResult.data;
-
-  // Cross-field invariants Zod can't express: a non-empty, in-range span.
-  if (start >= end || end > text.length) {
-    return c.json(
-      {
-        error: 'Span offsets out of range',
-        code: 'VALIDATION_ERROR',
-        details: { start, end, textLength: text.length },
-      },
-      400,
-    );
-  }
-
-  const userId = c.get('userId');
-
-  // Server-authoritative span type — drives the cache key and the card shape.
-  const spanType = resolveSpanType(text, start, end);
-  const key = `${start}:${end}`;
-
-  // 3. Durable cache (saved entries only). Ownership is enforced by the
-  // `user_id` predicate, so a cross-user / unknown `entryId` simply misses.
-  if (entryId) {
-    const rows = await db
-      .select({ spanAnnotations: readEntries.spanAnnotations })
-      .from(readEntries)
-      .where(and(eq(readEntries.id, entryId), eq(readEntries.userId, userId)))
-      .limit(1);
-
-    const cached = rows[0]?.spanAnnotations?.[key];
-    if (cached) {
-      return c.json(cached);
-    }
-  }
-
-  // 4. Rate-limit against the dedicated `read_span_annotation` budget — a
-  // SEPARATE bucket from `ai_evaluation`/`read_annotation` (Req 10.2).
-  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const [{ count: todayCount }] = await db
-    .select({ count: count() })
-    .from(usageEvents)
-    .where(
-      and(
-        eq(usageEvents.userId, userId),
-        eq(usageEvents.eventType, 'read_span_annotation'),
-        gte(usageEvents.createdAt, oneDayAgo),
-      ),
-    );
-
-  if (Number(todayCount) >= READ_SPAN_DAILY_LIMIT) {
-    return c.json(
-      { error: 'Daily span-annotation limit exceeded', code: 'RATE_LIMIT_EXCEEDED' },
-      429,
-    );
-  }
-
-  // Resolve the learner's CEFR level for this language (default B1), exactly
-  // as `annotate-stream/pipeline.ts` does.
-  const profileRows = await db
-    .select({ proficiencyLevel: userLanguageProfiles.proficiencyLevel })
-    .from(userLanguageProfiles)
-    .where(
-      and(
-        eq(userLanguageProfiles.userId, userId),
-        eq(userLanguageProfiles.language, language as LearningLanguage),
-      ),
-    )
-    .limit(1);
-  const proficiencyLevel = isCefrLevel(profileRows[0]?.proficiencyLevel)
-    ? profileRows[0].proficiencyLevel
-    : DEFAULT_PROFICIENCY_LEVEL;
-
-  const requestId =
-    (c.env?.event as { requestContext?: { requestId?: string } } | undefined)
-      ?.requestContext?.requestId ?? 'local';
-
-  // 5. Deep call inside the trace scope. The Proxy maps the `submit_deep_card`
-  // tool to the `annotate-span` feature, so the ALS `feature` here is only the
-  // fallback if the tool name is ever absent. `language` is the ES/DE/TR enum,
-  // assignable both to the trace's `Language` and `annotateSpan`'s
-  // `LearningLanguage` without a cast.
-  let card;
-  try {
-    const client = createObservedClaudeClient(ANTHROPIC_API_KEY);
-    card = await withLlmTrace(
-      {
-        feature: 'annotate-span',
-        env: (process.env.LANGFUSE_ENV ?? 'dev') as 'prod' | 'dev',
-        promptVersion: READ_SPAN_PROMPT_VERSION,
-        requestId,
-        userId,
-        language,
-        cefrLevel: proficiencyLevel,
-        exerciseType: 'reading',
-      },
-      () =>
-        annotateSpan(client, {
-          language,
-          text,
-          start,
-          end,
-          spanType,
-          proficiencyLevel,
-        }),
-    );
-  } catch (err) {
-    // Deep call failed/timed out — no usage row, no write-back (Req error row).
-    console.error('[POST /read/annotate-span] deep annotation failed:', err);
-    return c.json(
-      { error: 'Annotation temporarily unavailable', code: 'AI_UNAVAILABLE' },
-      502,
-    );
-  }
-
-  // 6. Write-back onto the saved entry (Req 11.1, 11.6) — incremental merge,
-  // scoped to id+user so an unowned `entryId` is a no-op. Best-effort: a
-  // failure here is logged and swallowed because the card already resolved.
-  if (entryId) {
-    try {
-      await db
-        .update(readEntries)
-        .set({
-          spanAnnotations: sql`COALESCE(${readEntries.spanAnnotations}, '{}'::jsonb) || jsonb_build_object(${key}, ${JSON.stringify(card)}::jsonb)`,
-        })
-        .where(and(eq(readEntries.id, entryId), eq(readEntries.userId, userId)));
-    } catch (err) {
-      console.error('[POST /read/annotate-span] span_annotations write-back failed:', err);
-    }
-  }
-
-  // 7. Meter exactly one real call. Best-effort: a metering write failure is a
-  // backend observability problem, not a UX-visible one.
-  try {
-    await db.insert(usageEvents).values({
-      userId,
-      eventType: 'read_span_annotation',
-      metadata: { language, spanType, entryId: entryId ?? null },
-    });
-  } catch (err) {
-    console.error('[POST /read/annotate-span] usage insert failed:', err);
-  }
-
-  // 8. Return the resolved card.
-  return c.json(card);
 });
 
 // ---------------------------------------------------------------------------

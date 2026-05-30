@@ -40,7 +40,9 @@ const CORS_PREFLIGHT_HEADERS = {
   "access-control-max-age": "3600",
 } as const;
 
-export type SseEventType = "meta" | "flag";
+// `field` carries one completed top-level key of a deep-card object as it
+// streams (Req 1.1); `meta`/`flag` are the skim path's non-terminal events.
+export type SseEventType = "meta" | "flag" | "field";
 export type SseTerminalType = "done" | "error";
 
 export type SseWriter = {

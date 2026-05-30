@@ -24,6 +24,7 @@ import {
   type LearningLanguage,
 } from "@language-drill/shared";
 
+import { extractCompletedFields } from "./annotate.js";
 import { getPromptOrFallback } from "./prompts-registry.js";
 
 // ---------------------------------------------------------------------------
@@ -518,4 +519,140 @@ export async function annotateSpan(
   }
 
   return parseSpanResult(toolUseBlock.input);
+}
+
+// ---------------------------------------------------------------------------
+// Streaming caller — streamSpan (Req 1.1, 1.3, 1.4, 1.5)
+// ---------------------------------------------------------------------------
+//
+// The streaming counterpart to `annotateSpan`, mirroring `streamAnnotation`
+// (annotate.ts). Where the skim pass streams ITEMS out of an array, a deep
+// card is a single OBJECT — so this streams top-level FIELDS as each completes
+// (via `extractCompletedFields`), letting the client render `definition` etc.
+// long before the heavy `morphology`/`synonyms` sections arrive.
+//
+// The streamed `field` events are a PREVIEW; the authoritative card is the
+// terminal `done`, produced by running the SAME `parseSpanResult`
+// (`DeepCardSchema`) validation over the SDK-assembled tool input from
+// `finalMessage()` — byte-identical to what the non-streaming `annotateSpan`
+// returns. So partial-parse quirks can never reach the saved/displayed card.
+
+/** Event yielded by `streamSpan`: a preview `field`, then the terminal `done`. */
+export type ReadSpanStreamEvent =
+  | { kind: "field"; key: string; value: unknown }
+  | { kind: "done"; card: DeepCard };
+
+/**
+ * Thrown by `streamSpan` when the upstream response stopped with
+ * `stop_reason: "max_tokens"` — the tool input is truncated and cannot
+ * assemble into a schema-valid `DeepCard`. The handler maps this to a terminal
+ * `error` SSE frame (`AI_UNAVAILABLE`); the dedicated class mirrors
+ * `AnnotateStreamMaxTokensError` so the handler can branch on it.
+ */
+export class ReadSpanStreamMaxTokensError extends Error {
+  constructor(public readonly emittedFields: number) {
+    super(
+      `[streamSpan] Claude stopped with stop_reason: max_tokens after ${emittedFields} field(s)`,
+    );
+    this.name = "ReadSpanStreamMaxTokensError";
+  }
+}
+
+// One retry instead of the SDK default of 2; no client timeout — the
+// time bound is the streaming Lambda's 25 s soft deadline + AbortSignal, not
+// an SDK request timeout that could sever a healthy long generation (Req 4.2,
+// design Key Decision 5).
+const STREAM_MAX_RETRIES = 1;
+
+/**
+ * Streams a `DeepCard` for a span in context via Claude tool-use, yielding
+ * each top-level field as it completes and finally the fully-validated card.
+ * Throws on SDK/API failures, an abort, malformed final output, or
+ * `ReadSpanStreamMaxTokensError`; the handler translates throws to a terminal
+ * `error` frame. The caller wraps this in `withLlmTrace`.
+ */
+export async function* streamSpan(
+  client: Anthropic,
+  input: AnnotateSpanInput & { signal?: AbortSignal },
+): AsyncIterable<ReadSpanStreamEvent> {
+  const userPrompt = buildSpanUserPrompt(input);
+
+  // Resolve the system prompt via the registry (Langfuse hit → `langfuse:<N>`
+  // cohort; miss/outage/unset → `fallback:<localVersion>`). The helper stamps
+  // the resolved version on the ALS frame so the caller's `withLlmTrace`
+  // records the right `promptVersion` — same flow as `annotateSpan`.
+  const resolved = await getPromptOrFallback(
+    "read-span-system-prompt",
+    READ_SPAN_SYSTEM_PROMPT,
+    READ_SPAN_PROMPT_VERSION,
+  );
+
+  const stream = client.messages.stream(
+    {
+      model: MODEL,
+      max_tokens: MAX_TOKENS,
+      system: [
+        {
+          type: "text" as const,
+          text: resolved.text,
+          cache_control: { type: "ephemeral" as const },
+        },
+      ],
+      messages: [
+        {
+          role: "user" as const,
+          content: userPrompt,
+        },
+      ],
+      tools: [pickSpanTool(input.spanType)],
+      tool_choice: {
+        type: "tool" as const,
+        name: READ_SPAN_TOOL_NAME,
+      },
+      temperature: 0,
+    },
+    { signal: input.signal, maxRetries: STREAM_MAX_RETRIES },
+  );
+
+  let buffer = "";
+  let emitted = 0; // count of fields already yielded (preview)
+
+  for await (const event of stream) {
+    if (
+      event.type === "content_block_delta" &&
+      event.delta.type === "input_json_delta"
+    ) {
+      buffer += event.delta.partial_json;
+      for (const field of extractCompletedFields(buffer, emitted)) {
+        emitted++;
+        yield { kind: "field", key: field.key, value: field.value };
+      }
+    }
+  }
+
+  const finalMessage = await stream.finalMessage();
+  if (finalMessage.stop_reason === "max_tokens") {
+    console.warn("[streamSpan] truncated by max_tokens", { emitted });
+    throw new ReadSpanStreamMaxTokensError(emitted);
+  }
+
+  // Authoritative validation: run the SAME parse the non-streaming path uses,
+  // over the SDK-assembled tool input — this is the card the client keeps.
+  const toolUseBlock = finalMessage.content.find(
+    (block): block is Anthropic.ToolUseBlock => block.type === "tool_use",
+  );
+  if (!toolUseBlock) {
+    throw new Error(
+      "Claude did not return a tool use block. " +
+        `Stop reason: ${finalMessage.stop_reason}. ` +
+        `Content types: ${finalMessage.content.map((b) => b.type).join(", ")}`,
+    );
+  }
+  if (toolUseBlock.name !== READ_SPAN_TOOL_NAME) {
+    throw new Error(
+      `Unexpected tool name: expected "${READ_SPAN_TOOL_NAME}", got "${toolUseBlock.name}"`,
+    );
+  }
+
+  yield { kind: "done", card: parseSpanResult(toolUseBlock.input) };
 }

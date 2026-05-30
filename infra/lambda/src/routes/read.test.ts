@@ -1,8 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Hono } from 'hono';
-import { annotateSpan } from '@language-drill/ai';
-
-const mockedAnnotateSpan = vi.mocked(annotateSpan);
 
 // ---------------------------------------------------------------------------
 // Mock the db module before importing the router
@@ -20,11 +17,11 @@ const mockLimit = vi.fn();
 const mockOrderBy = vi.fn(() => ({ limit: mockLimit }));
 
 // `.where()` is both a chain-continuation (list/single-entry routes call
-// `.orderBy()`/`.limit()` on it) AND, for the rate-limit COUNT query in
-// `POST /read/annotate-span`, the awaited terminator (no `.limit()`). So the
-// return value is a thenable carrying `.orderBy`/`.limit`. `whereResolved` is
-// what an awaited `.where()` resolves to (the COUNT row); chains that continue
-// to `.limit()` ignore it and use `mockLimit` instead.
+// `.orderBy()`/`.limit()` on it) AND an awaited terminator (no `.limit()`) for
+// COUNT-style queries. So the return value is a thenable carrying
+// `.orderBy`/`.limit`. `whereResolved` is what an awaited `.where()` resolves
+// to (the COUNT row); chains that continue to `.limit()` ignore it and use
+// `mockLimit` instead.
 let whereResolved: unknown = [{ count: 0 }];
 const mockWhere = vi.fn(() => {
   const p = Promise.resolve(whereResolved) as Promise<unknown> & {
@@ -62,7 +59,10 @@ const mockValues = vi.fn(() => {
 });
 const mockInsert = vi.fn(() => ({ values: mockValues }));
 
-// UPDATE chain — `db.update(t).set({...}).where(...)` (annotate-span write-back).
+// UPDATE chain — `db.update(t).set({...}).where(...)`. No read route mutates via
+// UPDATE anymore (the span_annotations write-back moved to the annotate-stream
+// Lambda); retained so the vocabulary independence test can assert it is never
+// called.
 const mockUpdateWhere = vi.fn(() => Promise.resolve());
 const mockSet = vi.fn(() => ({ where: mockUpdateWhere }));
 const mockUpdate = vi.fn(() => ({ set: mockSet }));
@@ -193,17 +193,6 @@ vi.mock('@language-drill/db', () => ({
     createdAt: 'created_at',
     metadata: 'metadata',
   },
-}));
-
-// `read.ts` calls the deep-span model module; mock it so no Anthropic call is
-// made. `withLlmTrace` must invoke its callback and return the result (the
-// route wraps `annotateSpan` in it). `createObservedClaudeClient` returns an
-// inert stub. `annotateSpan` is configured per-test.
-vi.mock('@language-drill/ai', () => ({
-  annotateSpan: vi.fn(),
-  createObservedClaudeClient: vi.fn(() => ({})),
-  withLlmTrace: vi.fn((_ctx: unknown, fn: () => unknown) => fn()),
-  READ_SPAN_PROMPT_VERSION: 'read-span@test',
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -871,12 +860,6 @@ function valuesArgs(): Array<Record<string, unknown>> {
   );
 }
 
-function usageInsertCalls(): Array<Record<string, unknown>> {
-  return valuesArgs().filter(
-    (arg) => arg?.eventType === 'read_span_annotation',
-  );
-}
-
 function vocabInsertCalls(): Array<Record<string, unknown>> {
   return valuesArgs().filter(
     (arg) =>
@@ -922,217 +905,6 @@ const sentenceCard = {
   breakdown: [{ chunk: 'La casa', role: 'subject', note: 'definite NP' }],
   grammarNotes: ['ser + adjective'],
 };
-
-// ---------------------------------------------------------------------------
-// POST /read/annotate-span — on-demand deep annotation (Req 3,4,5,10,11)
-// ---------------------------------------------------------------------------
-
-describe('POST /read/annotate-span', () => {
-  let app: Hono;
-
-  // "La casa es bonita." — "casa" occupies [3,7) → resolves to a `word` span.
-  const text = 'La casa es bonita.';
-  const start = 3;
-  const end = 7;
-  const key = '3:7';
-  const entryUuid = '33333333-3333-3333-3333-333333333333';
-
-  beforeEach(async () => {
-    vi.clearAllMocks();
-    resetTxCapture();
-    whereResolved = [{ count: 0 }];
-    mockedAnnotateSpan.mockReset();
-    mockedAnnotateSpan.mockResolvedValue(wordCard);
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-    const mod = await import('./read');
-    app = new Hono();
-    app.route('/', mod.default);
-  });
-
-  it('happy path (owned entry, cache miss): resolves, writes back, meters once', async () => {
-    // 1st .limit() = cache lookup (miss); 2nd .limit() = profile lookup.
-    mockLimit
-      .mockResolvedValueOnce([{ spanAnnotations: null }])
-      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
-
-    const res = await app.request(
-      '/read/annotate-span',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ language: 'ES', text, start, end, entryId: entryUuid }),
-      },
-      authEnv,
-    );
-
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual(wordCard);
-
-    // Model called once with the server-resolved span type + CEFR.
-    expect(mockedAnnotateSpan).toHaveBeenCalledTimes(1);
-    expect(mockedAnnotateSpan.mock.calls[0][1]).toEqual({
-      language: 'ES',
-      text,
-      start,
-      end,
-      spanType: 'word',
-      proficiencyLevel: 'B1',
-    });
-
-    // Write-back onto the owned entry (Req 11.1) — a `span_annotations` SET.
-    expect(mockUpdate).toHaveBeenCalledTimes(1);
-    expect(mockSet).toHaveBeenCalledTimes(1);
-    expect((mockSet.mock.calls as unknown as unknown[][])[0][0]).toHaveProperty(
-      'spanAnnotations',
-    );
-
-    // Exactly one metering row, on the dedicated bucket (Req 10.2).
-    expect(usageInsertCalls()).toHaveLength(1);
-    expect(usageInsertCalls()[0]).toMatchObject({
-      userId: 'user_123',
-      eventType: 'read_span_annotation',
-      metadata: { language: 'ES', spanType: 'word', entryId: entryUuid },
-    });
-  });
-
-  it('no entryId ⇒ no DB write-back, but still meters (Req 11.2)', async () => {
-    // No cache lookup (no entryId); 1st .limit() = profile lookup.
-    mockLimit.mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
-
-    const res = await app.request(
-      '/read/annotate-span',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ language: 'ES', text, start, end }),
-      },
-      authEnv,
-    );
-
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual(wordCard);
-    expect(mockedAnnotateSpan).toHaveBeenCalledTimes(1);
-    // CRITICAL (Req 11.2): an unsaved passage is never written to the DB.
-    expect(mockUpdate).not.toHaveBeenCalled();
-    // Metering still happens for the real model call.
-    expect(usageInsertCalls()).toHaveLength(1);
-  });
-
-  it('cache hit (persisted span on owned entry): no model, no metering (Req 3.5, 10.1)', async () => {
-    mockLimit.mockResolvedValueOnce([
-      { spanAnnotations: { [key]: wordCard } },
-    ]);
-
-    const res = await app.request(
-      '/read/annotate-span',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ language: 'ES', text, start, end, entryId: entryUuid }),
-      },
-      authEnv,
-    );
-
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual(wordCard);
-    // No model call, no write-back, no metering on a cache hit.
-    expect(mockedAnnotateSpan).not.toHaveBeenCalled();
-    expect(mockUpdate).not.toHaveBeenCalled();
-    expect(usageInsertCalls()).toHaveLength(0);
-  });
-
-  it('returns 429 RATE_LIMIT_EXCEEDED when the read_span budget is spent (Req 10.2)', async () => {
-    whereResolved = [{ count: 150 }];
-
-    const res = await app.request(
-      '/read/annotate-span',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ language: 'ES', text, start, end }),
-      },
-      authEnv,
-    );
-
-    expect(res.status).toBe(429);
-    const body = (await res.json()) as AnyJson;
-    expect(body.code).toBe('RATE_LIMIT_EXCEEDED');
-    expect(mockedAnnotateSpan).not.toHaveBeenCalled();
-    expect(usageInsertCalls()).toHaveLength(0);
-  });
-
-  it('returns 400 VALIDATION_ERROR when offsets are out of range (Req 10.4)', async () => {
-    const res = await app.request(
-      '/read/annotate-span',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ language: 'ES', text, start: 3, end: 999 }),
-      },
-      authEnv,
-    );
-
-    expect(res.status).toBe(400);
-    const body = (await res.json()) as AnyJson;
-    expect(body.code).toBe('VALIDATION_ERROR');
-    expect(mockedAnnotateSpan).not.toHaveBeenCalled();
-  });
-
-  it('returns 400 VALIDATION_ERROR when start >= end (Req 10.4)', async () => {
-    const res = await app.request(
-      '/read/annotate-span',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ language: 'ES', text, start: 7, end: 3 }),
-      },
-      authEnv,
-    );
-
-    expect(res.status).toBe(400);
-    expect(((await res.json()) as AnyJson).code).toBe('VALIDATION_ERROR');
-    expect(mockedAnnotateSpan).not.toHaveBeenCalled();
-  });
-
-  it('returns 400 VALIDATION_ERROR for an unsupported language (Req 10.4)', async () => {
-    const res = await app.request(
-      '/read/annotate-span',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ language: 'EN', text, start, end }),
-      },
-      authEnv,
-    );
-
-    expect(res.status).toBe(400);
-    expect(((await res.json()) as AnyJson).code).toBe('VALIDATION_ERROR');
-    expect(mockedAnnotateSpan).not.toHaveBeenCalled();
-  });
-
-  it('returns 502 AI_UNAVAILABLE on a model failure and does NOT meter or write back', async () => {
-    mockLimit
-      .mockResolvedValueOnce([{ spanAnnotations: null }])
-      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
-    mockedAnnotateSpan.mockRejectedValueOnce(new Error('sonnet exploded'));
-
-    const res = await app.request(
-      '/read/annotate-span',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ language: 'ES', text, start, end, entryId: entryUuid }),
-      },
-      authEnv,
-    );
-
-    expect(res.status).toBe(502);
-    expect(((await res.json()) as AnyJson).code).toBe('AI_UNAVAILABLE');
-    // No metering / no write-back for a call that produced nothing.
-    expect(usageInsertCalls()).toHaveLength(0);
-    expect(mockUpdate).not.toHaveBeenCalled();
-  });
-});
 
 // ---------------------------------------------------------------------------
 // POST /read/vocabulary — save a deep card to the bank (Req 8)

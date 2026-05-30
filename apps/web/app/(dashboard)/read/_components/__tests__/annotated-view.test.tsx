@@ -386,7 +386,7 @@ describe('AnnotatedView — mobile tap-first/tap-last', () => {
     entry: { ...baseProps.entry, text: TEXT, flaggedWords: {} as FlaggedMap },
   };
   const loadingFor = (start: number, end: number) =>
-    ({ status: 'loading' as const, span: { start, end, type: 'word' as const, x: 0, y: 0 } });
+    ({ status: 'loading' as const, span: { start, end, type: 'word' as const, x: 0, y: 0 }, partial: {} });
 
   it('first tap opens a single word; a second tap while the card is open extends to a span', () => {
     const onSpanSelect = vi.fn();

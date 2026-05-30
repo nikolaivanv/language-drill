@@ -345,6 +345,10 @@ describe("evaluateAnswer", () => {
     expect(mockCreate).toHaveBeenCalledOnce();
     const callArgs = mockCreate.mock.calls[0][0];
     expect(callArgs.model).toBe("claude-haiku-4-5-20251001");
+    // Timeout/maxRetries are applied at client construction (in the route via
+    // createObservedClaudeClient), NOT per-request here — lock that evaluate.ts
+    // passes no second request-options arg to messages.create. (Req 4.1)
+    expect(mockCreate.mock.calls[0][1]).toBeUndefined();
     expect(callArgs.temperature).toBe(0);
     expect(callArgs.tools).toHaveLength(1);
     expect(callArgs.tools[0].name).toBe(EVALUATION_TOOL_NAME);

@@ -7,6 +7,7 @@ import {
   ANNOTATE_SYSTEM_PROMPT_VERSION,
   AnnotateStreamMaxTokensError,
   buildAnnotateUserPrompt,
+  extractCompletedFields,
   extractNewItems,
   streamAnnotation,
   type AnnotateStreamEvent,
@@ -132,6 +133,117 @@ describe("extractNewItems", () => {
     ]);
     expect(extractNewItems(buffer, 2)).toEqual([{ matchedForm: "c" }]);
     expect(extractNewItems(buffer, 3)).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Contract tests for `extractCompletedFields` — the single-object streaming
+// parser used by the deep-card stream (`streamSpan`). The deep card streams
+// top-level FIELDS out of one object, so the byte-boundary guarantee is: each
+// top-level key is emitted exactly once, in order, the moment it is provably
+// complete; the caller (streamSpan) accumulates them into the partial card.
+// ---------------------------------------------------------------------------
+
+describe("extractCompletedFields", () => {
+  // A representative word card: a leading string, a nested object, an array,
+  // and a TRAILING primitive (the hardest case — a number is only safe to emit
+  // once a delimiter follows it).
+  const CARD =
+    '{"type":"word","surface":"casa","morphology":{"root":"cas","segments":[{"morph":"cas","function":"root"}]},"synonyms":["hogar","vivienda"],"freq":1234}';
+
+  // Replays the buffer the way `streamAnnotation` does: re-invoke at EVERY byte
+  // boundary, passing the running emitted-count, and accumulate fresh fields.
+  function streamByByte(full: string): Array<{ key: string; value: unknown }> {
+    const emitted: Array<{ key: string; value: unknown }> = [];
+    for (let n = 1; n <= full.length; n++) {
+      const fresh = extractCompletedFields(full.slice(0, n), emitted.length);
+      emitted.push(...fresh);
+    }
+    return emitted;
+  }
+
+  it("emits every top-level field exactly once, in order, across all byte splits", () => {
+    const emitted = streamByByte(CARD);
+    expect(emitted.map((f) => f.key)).toEqual([
+      "type",
+      "surface",
+      "morphology",
+      "synonyms",
+      "freq",
+    ]);
+    // Values are fully parsed (nested object + array intact).
+    expect(emitted).toEqual([
+      { key: "type", value: "word" },
+      { key: "surface", value: "casa" },
+      {
+        key: "morphology",
+        value: {
+          root: "cas",
+          segments: [{ morph: "cas", function: "root" }],
+        },
+      },
+      { key: "synonyms", value: ["hogar", "vivienda"] },
+      { key: "freq", value: 1234 },
+    ]);
+  });
+
+  it("emits a string field the moment its closing quote arrives — no trailing comma needed", () => {
+    expect(extractCompletedFields('{"surface":"casa"', 0)).toEqual([
+      { key: "surface", value: "casa" },
+    ]);
+  });
+
+  it("withholds a nested object/array until it is fully closed", () => {
+    // Open but unclosed → nothing.
+    expect(extractCompletedFields('{"morphology":{"root":"cas"', 0)).toEqual([]);
+    // Closed (inner `}`) → emitted, even with no card-closing brace yet.
+    expect(extractCompletedFields('{"morphology":{"root":"cas"}', 0)).toEqual([
+      { key: "morphology", value: { root: "cas" } },
+    ]);
+  });
+
+  it("withholds a primitive until a delimiter proves it is complete", () => {
+    // No delimiter yet — `1234` might still be growing.
+    expect(extractCompletedFields('{"freq":1234', 0)).toEqual([]);
+    // Closing brace is the delimiter.
+    expect(extractCompletedFields('{"freq":1234}', 0)).toEqual([
+      { key: "freq", value: 1234 },
+    ]);
+    // A comma is equally a valid terminator.
+    expect(extractCompletedFields('{"freq":1234,', 0)).toEqual([
+      { key: "freq", value: 1234 },
+    ]);
+  });
+
+  it("does not terminate a string value early on escaped quotes", () => {
+    expect(extractCompletedFields('{"note":"say \\"hi\\""}', 0)).toEqual([
+      { key: "note", value: 'say "hi"' },
+    ]);
+  });
+
+  it("skips fields at indices < alreadyEmitted", () => {
+    expect(extractCompletedFields(CARD, 0)).toHaveLength(5);
+    expect(extractCompletedFields(CARD, 3).map((f) => f.key)).toEqual([
+      "synonyms",
+      "freq",
+    ]);
+    expect(extractCompletedFields(CARD, 5)).toEqual([]);
+  });
+
+  it("returns [] without throwing on truncated or junk input", () => {
+    expect(extractCompletedFields("absolute garbage 123", 0)).toEqual([]);
+    expect(extractCompletedFields("{", 0)).toEqual([]);
+    expect(extractCompletedFields('{"type"', 0)).toEqual([]); // no colon yet
+    expect(extractCompletedFields('{"type":', 0)).toEqual([]); // no value yet
+    expect(extractCompletedFields('{"type":"wor', 0)).toEqual([]); // unterminated string
+  });
+
+  it("skips a field the tracker accepts but JSON.parse rejects, then emits the next", () => {
+    // `1.2.3` is not valid JSON; it is skipped, and the following field still
+    // emits (the counter advances so the bad field is not retried).
+    expect(extractCompletedFields('{"freq":1.2.3,"type":"word"}', 0)).toEqual([
+      { key: "type", value: "word" },
+    ]);
   });
 });
 
@@ -570,6 +682,20 @@ describe("streamAnnotation + prompts-registry", () => {
         cache_control: { type: "ephemeral" },
       },
     ]);
+  });
+
+  it("passes maxRetries: 1 to messages.stream (matches the deep-span retry posture, Req 4.3)", async () => {
+    const fullJson = JSON.stringify({ flagged: [validItem1] });
+    const stream = fakeStream([fullJson]);
+    const streamSpy = vi.fn(() => stream);
+    const client = {
+      messages: { stream: streamSpy },
+    } as unknown as Anthropic;
+
+    await collect(streamAnnotation(client, baseStreamInput));
+
+    const options = streamSpy.mock.calls[0][1] as { maxRetries?: number };
+    expect(options.maxRetries).toBe(1);
   });
 
   it("stamps promptVersion=override:<sha8> on the trace when systemPromptOverride is set", async () => {

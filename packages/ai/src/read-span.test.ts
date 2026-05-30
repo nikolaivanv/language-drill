@@ -11,7 +11,11 @@ import {
   READ_SPAN_SYSTEM_PROMPT,
   READ_SPAN_TOOL_NAME,
   READ_SPAN_WORD_TOOL,
+  ReadSpanStreamMaxTokensError,
+  streamSpan,
+  type ReadSpanStreamEvent,
 } from "./read-span.js";
+import type Anthropic from "@anthropic-ai/sdk";
 import { createClaudeClient } from "./index.js";
 import {
   __resetForTests as __resetObservabilityForTests,
@@ -599,5 +603,171 @@ describe("annotateSpan + prompts-registry", () => {
       expect(ctx?.promptVersion).toBe(`fallback:${READ_SPAN_PROMPT_VERSION}`);
       expect(ctx?.promptFallback).toBe(true);
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// streamSpan — mocked streaming SDK (Req 1.1, 1.3, 1.4, 1.5)
+// ---------------------------------------------------------------------------
+
+/**
+ * Minimal stand-in for `client.messages.stream(...)`: an async-iterable of
+ * `input_json_delta` events plus a `finalMessage()` that returns the assembled
+ * tool_use block (the authoritative card source). Mirrors `fakeStream` in
+ * annotate-stream.test.ts but carries `content` so `streamSpan` can extract +
+ * validate the final card.
+ */
+function fakeSpanStream(
+  deltas: ReadonlyArray<string>,
+  opts: {
+    stopReason?: "tool_use" | "end_turn" | "max_tokens";
+    cardInput?: unknown;
+    content?: unknown[];
+    abortSignal?: AbortSignal;
+  } = {},
+) {
+  return {
+    async *[Symbol.asyncIterator]() {
+      for (const partial_json of deltas) {
+        if (opts.abortSignal?.aborted) {
+          const err = new Error("aborted");
+          err.name = "AbortError";
+          throw err;
+        }
+        yield {
+          type: "content_block_delta",
+          index: 0,
+          delta: { type: "input_json_delta", partial_json },
+        };
+      }
+    },
+    finalMessage: async () => ({
+      stop_reason: opts.stopReason ?? "tool_use",
+      content:
+        opts.content ??
+        [
+          {
+            type: "tool_use",
+            id: "toolu_s",
+            name: READ_SPAN_TOOL_NAME,
+            input: opts.cardInput,
+          },
+        ],
+    }),
+  };
+}
+
+async function collectSpan(
+  iterable: AsyncIterable<ReadSpanStreamEvent>,
+): Promise<ReadSpanStreamEvent[]> {
+  const events: ReadSpanStreamEvent[] = [];
+  for await (const ev of iterable) events.push(ev);
+  return events;
+}
+
+describe("streamSpan", () => {
+  let envSnapshot: Map<string, string | undefined>;
+
+  const wordInput = {
+    language: Language.TR,
+    text: trPassage,
+    start: spanStart,
+    end: spanEnd,
+    spanType: "word" as const,
+    proficiencyLevel: CefrLevel.B1,
+  };
+
+  beforeEach(() => {
+    envSnapshot = snapshotAndClearLangfuseEnv();
+    __resetRegistryForTests();
+    __resetObservabilityForTests();
+  });
+
+  afterEach(() => {
+    restoreLangfuseEnv(envSnapshot);
+    __resetRegistryForTests();
+    __resetObservabilityForTests();
+  });
+
+  it("streams each top-level field then a done with the validated card", async () => {
+    const fullJson = JSON.stringify(minimalWordCard);
+    const split = Math.floor(fullJson.length / 2);
+    const deltas = [fullJson.slice(0, split), fullJson.slice(split)];
+
+    const stream = fakeSpanStream(deltas, { cardInput: minimalWordCard });
+    const client = {
+      messages: { stream: vi.fn(() => stream) },
+    } as unknown as Anthropic;
+
+    const events = await collectSpan(streamSpan(client, wordInput));
+
+    // Every top-level key of the card streams as a `field`, in order…
+    const fieldKeys = events
+      .filter((e): e is Extract<ReadSpanStreamEvent, { kind: "field" }> => e.kind === "field")
+      .map((e) => e.key);
+    expect(fieldKeys).toEqual(Object.keys(minimalWordCard));
+
+    // …followed by exactly one terminal `done` carrying the parsed card.
+    const last = events[events.length - 1];
+    expect(last.kind).toBe("done");
+    if (last.kind === "done") {
+      expect(last.card).toEqual(parseSpanResult(minimalWordCard));
+    }
+    // Only one done, and it is last.
+    expect(events.filter((e) => e.kind === "done")).toHaveLength(1);
+
+    // Streamed with maxRetries:1 and no client timeout (Req 4.2).
+    const streamFn = (client.messages as unknown as { stream: ReturnType<typeof vi.fn> }).stream;
+    expect(streamFn.mock.calls[0][1]).toMatchObject({ maxRetries: 1 });
+    expect(streamFn.mock.calls[0][1]).not.toHaveProperty("timeout");
+  });
+
+  it("throws ReadSpanStreamMaxTokensError on stop_reason: max_tokens", async () => {
+    // A truncated buffer (open object) + max_tokens stop.
+    const stream = fakeSpanStream(['{"type":"word"'], { stopReason: "max_tokens" });
+    const client = {
+      messages: { stream: vi.fn(() => stream) },
+    } as unknown as Anthropic;
+
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      await expect(collectSpan(streamSpan(client, wordInput))).rejects.toBeInstanceOf(
+        ReadSpanStreamMaxTokensError,
+      );
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
+  it("ends without `done` when the AbortSignal fires mid-stream", async () => {
+    const fullJson = JSON.stringify(minimalWordCard);
+    // First delta completes exactly one field (`"type":"word",`), so the first
+    // pull yields one `field`; the second pull pumps the stream and aborts.
+    const firstFieldEnd = fullJson.indexOf(",") + 1;
+    const deltas = [fullJson.slice(0, firstFieldEnd), fullJson.slice(firstFieldEnd)];
+
+    const controller = new AbortController();
+    const stream = fakeSpanStream(deltas, {
+      cardInput: minimalWordCard,
+      abortSignal: controller.signal,
+    });
+    const client = {
+      messages: { stream: vi.fn(() => stream) },
+    } as unknown as Anthropic;
+
+    const iterator = streamSpan(client, {
+      ...wordInput,
+      signal: controller.signal,
+    })[Symbol.asyncIterator]();
+
+    const first = await iterator.next();
+    expect(first.done).toBe(false);
+    expect(first.value).toEqual({ kind: "field", key: "type", value: "word" });
+
+    controller.abort();
+
+    // The next pull pumps the mock iterator, which throws AbortError — the
+    // generator never reaches `yield done`.
+    await expect(iterator.next()).rejects.toMatchObject({ name: "AbortError" });
   });
 });

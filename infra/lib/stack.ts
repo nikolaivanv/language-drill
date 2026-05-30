@@ -122,7 +122,8 @@ export class LanguageDrillStack extends Stack {
     });
     new CfnOutput(this, "AnnotateStreamUrl", {
       value: annotateStream.functionUrl,
-      description: "Function URL for /read/annotate streaming endpoint",
+      description:
+        "Function URL for the SSE read endpoints: /read/annotate (skim) and /read/annotate-span (deep card)",
     });
     new CfnOutput(this, "TheoryGenerationQueueUrl", {
       value: theoryQueue.queue.queueUrl,

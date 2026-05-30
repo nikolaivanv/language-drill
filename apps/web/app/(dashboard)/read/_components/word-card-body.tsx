@@ -15,7 +15,7 @@
 // ---------------------------------------------------------------------------
 
 import * as React from 'react';
-import type { DeepWordCard, WordFlag } from '@language-drill/shared';
+import type { DeepCard, DeepWordCard, WordFlag } from '@language-drill/shared';
 import { Button } from '../../../../components/ui/button';
 import { PhraseCardBody } from './phrase-card-body';
 import { SentenceCardBody } from './sentence-card-body';
@@ -381,6 +381,117 @@ export function DeepCardSkeleton() {
 }
 
 // ---------------------------------------------------------------------------
+// DeepCardPartial — progressive field-by-field preview while streaming (Req 1.2)
+// ---------------------------------------------------------------------------
+// The deep card now streams its top-level fields over SSE; the reducer merges
+// each completed `"key": value` into the `loading` slice's `partial`. This body
+// renders the text fields received SO FAR — the headword and its primary
+// meaning / secondary line — above a "looking it up…" caption, so the learner
+// sees content in well under a second instead of a ~10 s spinner (Req 1, 1.2).
+//
+// The streamed values are a PREVIEW only; the authoritative card replaces this
+// on the terminal `done` (Req 1.3). Until ANY displayable field has arrived we
+// fall back to `<DeepCardSkeleton />`, which preserves the instant-open chrome
+// and the empty-`partial` behavior the loading tests pin.
+//
+// `partial` is `Partial<DeepCard>` but, mid-stream, only some keys exist and the
+// discriminant `type` may not have arrived yet — so we read fields defensively
+// (string-typed, non-empty) rather than switching on `type`.
+// ---------------------------------------------------------------------------
+
+function str(value: unknown): string | undefined {
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
+
+export function DeepCardPartial({ partial }: { partial: Partial<DeepCard> }) {
+  const p = partial as Record<string, unknown>;
+  const surface = str(p.surface);
+  // Primary meaning — whichever of the three card shapes has streamed in.
+  const meaning =
+    str(p.contextualSense) ?? str(p.idiomaticMeaning) ?? str(p.translation);
+  const meaningLabel = str(p.contextualSense)
+    ? 'here'
+    : str(p.idiomaticMeaning)
+      ? 'means'
+      : 'translation';
+  // Secondary line — the target-language definition (word) or literal (phrase).
+  const secondary = str(p.definition) ?? str(p.literal);
+  const secondaryLabel = str(p.definition)
+    ? (str(p.definitionLabel) ?? 'definition')
+    : 'literal';
+
+  // Nothing displayable yet → keep the instant-open skeleton (Req 9.3).
+  if (!surface && !meaning && !secondary) {
+    return <DeepCardSkeleton />;
+  }
+
+  return (
+    <div data-testid="deep-card-partial">
+      {/* Header — the headword as soon as `surface` lands */}
+      <div className="border-b border-rule px-[16px] pt-[14px] pb-[10px]">
+        {surface ? (
+          <span
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 22,
+              fontWeight: 500,
+              letterSpacing: '-0.2px',
+            }}
+          >
+            {surface}
+          </span>
+        ) : (
+          <span
+            aria-hidden
+            className="block h-[20px] w-[120px] rounded-r-sm bg-paper-3 animate-pulse"
+          />
+        )}
+      </div>
+
+      {/* Body — fields fill in as they arrive; absent ones show a shimmer line */}
+      <div className="px-[16px] py-[12px]">
+        {meaning ? (
+          <div>
+            <span className="t-micro">{meaningLabel}</span>
+            <p className="t-body text-ink-2 mt-[2px]">“{meaning}”</p>
+          </div>
+        ) : (
+          <span
+            aria-hidden
+            className="block h-[12px] w-[85%] rounded-r-sm bg-paper-3 animate-pulse"
+          />
+        )}
+
+        {secondary && (
+          <div className="mt-[12px]">
+            <div className="t-micro">{secondaryLabel}</div>
+            <p
+              className="mt-[2px]"
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 15,
+                lineHeight: 1.5,
+              }}
+            >
+              {secondary}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Caption — still streaming the heavier sections (morphology, synonyms…) */}
+      <div className="t-small text-ink-mute flex items-center gap-[8px] border-t border-rule bg-paper-2 px-[16px] py-[10px]">
+        <span
+          aria-hidden
+          className="inline-block h-[12px] w-[12px] animate-spin rounded-full border border-rule border-t-accent"
+        />
+        looking it up…
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // DeepCardError — inline error + retry body (Req 9.4)
 // ---------------------------------------------------------------------------
 // Replaces the card body on a failed/timed-out deep call instead of silently
@@ -458,7 +569,9 @@ export function DeepCardContent({
   resolveTheoryHref?: (note: string) => string | null;
 }) {
   if (slice.status === 'loading') {
-    return <DeepCardSkeleton />;
+    // Progressive preview: render whatever top-level fields have streamed in so
+    // far (Req 1.2), falling back to the skeleton until the first one arrives.
+    return <DeepCardPartial partial={slice.partial} />;
   }
   if (slice.status === 'error') {
     return (

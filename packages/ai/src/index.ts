@@ -28,6 +28,7 @@ export {
   ANNOTATE_TOOL,
   ANNOTATE_TOOL_NAME,
   AnnotateStreamMaxTokensError,
+  extractCompletedFields,
   isProperNounPos,
   streamAnnotation,
 } from "./annotate.js";
@@ -49,8 +50,14 @@ export {
   annotateSpan,
   parseSpanResult,
   buildSpanUserPrompt,
+  streamSpan,
+  ReadSpanStreamMaxTokensError,
 } from "./read-span.js";
-export type { AnnotateSpanInput, SpanType } from "./read-span.js";
+export type {
+  AnnotateSpanInput,
+  SpanType,
+  ReadSpanStreamEvent,
+} from "./read-span.js";
 
 export {
   GENERATION_MODEL,

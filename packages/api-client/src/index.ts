@@ -164,9 +164,13 @@ export {
   type UpdateReadBankParams,
 } from './hooks/useReadEntryMutations';
 export {
-  useReadAnnotateSpan,
-  type UseReadAnnotateSpanOptions,
-} from './hooks/useReadAnnotateSpan';
+  useReadAnnotateSpanStream,
+  type UseReadAnnotateSpanStreamOptions,
+  type UseReadAnnotateSpanStreamReturn,
+  type DeepCardStreamState,
+  type DeepCardErrorPayload,
+  type Span,
+} from './hooks/useReadAnnotateSpanStream';
 export {
   useSaveVocabularyCard,
   useDeleteVocabularyCard,
