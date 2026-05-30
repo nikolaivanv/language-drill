@@ -52,10 +52,17 @@ const GRAMMAR_KIND_TYPES: ReadonlyArray<ExerciseType> = [
   ExerciseType.CLOZE,
   ExerciseType.TRANSLATION,
 ];
+const GRAMMAR_CLOZE_UNSUITABLE_TYPES: ReadonlyArray<ExerciseType> = [
+  ExerciseType.TRANSLATION,
+];
 const VOCAB_KIND_TYPES: ReadonlyArray<ExerciseType> = [ExerciseType.VOCAB_RECALL];
 
-function compatibleTypes(kind: GrammarPoint['kind']): ReadonlyArray<ExerciseType> {
-  return kind === 'vocab' ? VOCAB_KIND_TYPES : GRAMMAR_KIND_TYPES;
+function compatibleTypes(entry: GrammarPoint): ReadonlyArray<ExerciseType> {
+  if (entry.kind === 'vocab') return VOCAB_KIND_TYPES;
+  // `clozeUnsuitable` grammar points drop the cloze cell (the blank's answer is
+  // leaked by the other half of the construction, or near-synonym alternants
+  // both fit) and keep only `translation`.
+  return entry.clozeUnsuitable ? GRAMMAR_CLOZE_UNSUITABLE_TYPES : GRAMMAR_KIND_TYPES;
 }
 
 // ---------------------------------------------------------------------------
@@ -76,7 +83,7 @@ export function enumerateCurriculumCells(
 ): Cell[] {
   const cells: Cell[] = [];
   for (const entry of curriculum) {
-    for (const exerciseType of compatibleTypes(entry.kind)) {
+    for (const exerciseType of compatibleTypes(entry)) {
       const cellKey = buildCellKey({
         language: entry.language,
         cefrLevel: entry.cefrLevel,

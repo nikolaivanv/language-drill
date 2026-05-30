@@ -113,6 +113,42 @@ describe('assertCurriculumInvariants', () => {
   });
 });
 
+describe('curriculum clozeUnsuitable flag', () => {
+  it('passes invariants on the shipped curriculum (with the four TR-A2 flags)', () => {
+    expect(() => assertCurriculumInvariants()).not.toThrow();
+  });
+
+  it('throws when a vocab umbrella is flagged clozeUnsuitable', () => {
+    const syntheticFlaggedVocab: GrammarPoint = {
+      key: 'tr-a2-synthetic-vocab-umbrella',
+      kind: 'vocab',
+      name: 'Synthetic vocab umbrella',
+      description: 'Synthetic vocab entry for clozeUnsuitable invariant testing.',
+      cefrLevel: 'A2',
+      language: Language.TR,
+      examplesPositive: ['bir', 'iki'],
+      examplesNegative: ['*yanlış'],
+      commonErrors: ['hata'],
+      clozeUnsuitable: true,
+    };
+    expect(() => assertCurriculumInvariants([syntheticFlaggedVocab])).toThrow(
+      "'tr-a2-synthetic-vocab-umbrella' is clozeUnsuitable but not kind 'grammar'",
+    );
+  });
+
+  it('flags exactly the four bipartite TR-A2 grammar points', () => {
+    const flaggedKeys = [
+      'tr-a2-converbs',
+      'tr-a2-correlative-conjunctions',
+      'tr-a2-nominalization',
+      'tr-a2-relative-an',
+    ];
+    for (const key of flaggedKeys) {
+      expect(getGrammarPoint(key)?.clozeUnsuitable).toBe(true);
+    }
+  });
+});
+
 describe('getGrammarPoint', () => {
   it('returns the matching entry for a known key', () => {
     const entry = getGrammarPoint('es-b1-present-subjunctive');

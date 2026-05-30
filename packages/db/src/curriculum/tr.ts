@@ -21,6 +21,10 @@ const { A1, A2 } = CefrLevel;
  * generation_jobs row for each cell — when they differ, any
  * "saturated-dedup" or "low-yield" suppression on that cell clears, on the
  * assumption that the curriculum edit may have unblocked the search space.
+ *
+ * Current value `2026-05-30` reflects the #220 book-grounded audit of all 40
+ * grammar points; the Yedi İklim A1+A2 *parity* (the 26 A1 + 14 A2 count noted
+ * in the header above) was aligned earlier, on 2026-05-28.
  */
 export const CURRICULUM_VERSION_TR = '2026-05-30';
 
@@ -834,6 +838,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Using -(y)Ip / -(y)ArAk when the two clauses have different subjects — these converbs normally require the same subject; use finite coordination instead.',
     ],
     prerequisiteKeys: ['tr-a1-present-continuous'],
+    clozeUnsuitable: true,
   },
   {
     key: 'tr-a2-converb-temporal',
@@ -888,6 +893,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Picking the wrong harmonised form (*okumek instead of okumak).',
     ],
     prerequisiteKeys: ['tr-a1-possessive-suffixes'],
+    clozeUnsuitable: true,
   },
   {
     key: 'tr-a2-relative-an',
@@ -916,6 +922,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Dropping the -y- buffer on the negative -mA stem (*gelmeen / *çalışmaan instead of gelmeyen / çalışmayan).',
     ],
     prerequisiteKeys: ['tr-a1-present-continuous'],
+    clozeUnsuitable: true,
   },
   {
     key: 'tr-a2-gibi-kadar',
@@ -968,6 +975,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Using only one half of the correlative pair (a single "hem"); Turkish requires both halves.',
       'Forgetting that the last conjunct of hem…hem and ya…ya commonly takes de/da ("hem … hem de", "ya … ya da").',
     ],
+    clozeUnsuitable: true,
   },
   {
     key: 'tr-a2-causal-connectors',
