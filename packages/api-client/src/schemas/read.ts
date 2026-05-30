@@ -152,6 +152,21 @@ export type ReadEntriesResponse = z.infer<typeof ReadEntriesResponseSchema>;
 // GET /read/entries/:id
 // ---------------------------------------------------------------------------
 
+// One saved item shown in the word-bank panel — a `user_vocabulary` row sourced
+// from this passage. Covers both flagged-banked words and on-demand deep-card
+// saves; `cefr` is null for phrases (and older rows). `id` is the vocab record
+// id, the delete target for unsaving (Req 8.5).
+export const SavedVocabItemSchema = z.object({
+  id: z.string().uuid(),
+  word: z.string(),
+  lemma: z.string(),
+  gloss: z.string(),
+  type: z.enum(['word', 'phrase']),
+  cefr: z.nativeEnum(CefrLevel).nullable(),
+});
+
+export type SavedVocabItem = z.infer<typeof SavedVocabItemSchema>;
+
 export const ReadEntryResponseSchema = z.object({
   id: z.string().uuid(),
   language: LearningLanguageEnum,
@@ -160,6 +175,9 @@ export const ReadEntryResponseSchema = z.object({
   text: z.string(),
   flaggedWords: FlaggedMapSchema,
   bank: z.array(z.string()),
+  // Everything saved from this passage (flagged + on-demand), for the word-bank
+  // panel. Optional for backward-compat with cached/older payloads.
+  savedVocab: z.array(SavedVocabItemSchema).optional(),
   // Deep cards resolved on this entry, keyed by "start:end" offsets. Optional:
   // older/unsaved entries carry none. `useReadAnnotateSpan` writes resolved
   // cards through here so a re-tapped span renders from cache without a new
