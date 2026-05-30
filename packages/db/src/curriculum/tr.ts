@@ -834,6 +834,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Using -(y)Ip / -(y)ArAk when the two clauses have different subjects — these converbs normally require the same subject; use finite coordination instead.',
     ],
     prerequisiteKeys: ['tr-a1-present-continuous'],
+    clozeUnsuitable: true,
   },
   {
     key: 'tr-a2-converb-temporal',
@@ -888,6 +889,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Picking the wrong harmonised form (*okumek instead of okumak).',
     ],
     prerequisiteKeys: ['tr-a1-possessive-suffixes'],
+    clozeUnsuitable: true,
   },
   {
     key: 'tr-a2-relative-an',
@@ -916,6 +918,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Dropping the -y- buffer on the negative -mA stem (*gelmeen / *çalışmaan instead of gelmeyen / çalışmayan).',
     ],
     prerequisiteKeys: ['tr-a1-present-continuous'],
+    clozeUnsuitable: true,
   },
   {
     key: 'tr-a2-gibi-kadar',
@@ -968,6 +971,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Using only one half of the correlative pair (a single "hem"); Turkish requires both halves.',
       'Forgetting that the last conjunct of hem…hem and ya…ya commonly takes de/da ("hem … hem de", "ya … ya da").',
     ],
+    clozeUnsuitable: true,
   },
   {
     key: 'tr-a2-causal-connectors',

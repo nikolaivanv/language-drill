@@ -63,4 +63,16 @@ export type GrammarPoint = Readonly<{
    * targets into dedup waste.
    */
   targetOverride?: number;
+  /**
+   * Optional opt-in that suppresses the `cloze` cell for this point in
+   * `enumerateCurriculumCells` (the point still gets its `translation` cell).
+   * Set this for clause-linking / bipartite constructions where cloze is
+   * structurally unsuited: the blank's answer is leaked by the other half of
+   * the construction, or near-synonym alternants both fit the blank (e.g.
+   * `koşa koşa`/`koşarak`, `gezmek`/`gezme`). Data-driven and
+   * language-agnostic — only valid on `kind: 'grammar'` entries (a `vocab`
+   * umbrella has no cloze cell to suppress; enforced by curriculum invariant).
+   * Absent/`false` ⇒ today's behavior (grammar → `cloze` + `translation`).
+   */
+  clozeUnsuitable?: boolean;
 }>;

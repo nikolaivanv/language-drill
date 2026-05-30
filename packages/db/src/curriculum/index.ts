@@ -181,6 +181,14 @@ export function assertCurriculumInvariants(
         }
       }
     }
+
+    // 9b. clozeUnsuitable is only meaningful on grammar points — a vocab
+    //     umbrella has no cloze cell to suppress, so flagging one is a data error.
+    if (entry.clozeUnsuitable && entry.kind !== 'grammar') {
+      throw new Error(
+        `Curriculum invariant violated: '${entry.key}' is clozeUnsuitable but not kind 'grammar'`,
+      );
+    }
   }
 
   // 10. Per-language grammar counts
