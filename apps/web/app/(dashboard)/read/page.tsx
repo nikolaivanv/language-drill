@@ -22,6 +22,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import {
   createAuthenticatedFetch,
+  useActiveReviewLemmas,
   useDeleteVocabularyCard,
   useLanguageProfiles,
   useReadAnnotateSpan,
@@ -112,6 +113,18 @@ export default function ReadPage() {
 
   const entriesQuery = useReadEntries({ fetchFn, language: activeLanguage });
   const entries = entriesQuery.data?.entries ?? [];
+
+  // Words in the spaced-review rotation for the active language → the distinct
+  // under-review highlight in the reader (Req 13.2). Lemma + surface sets are
+  // lowercased once here; AnnotatedText matches each token against them.
+  const activeReviewLemmas = useActiveReviewLemmas({ fetchFn, language: activeLanguage });
+  const underReview = useMemo(
+    () => ({
+      lemmas: new Set((activeReviewLemmas.data?.lemmas ?? []).map((l) => l.toLowerCase())),
+      surfaces: new Set((activeReviewLemmas.data?.surfaces ?? []).map((s) => s.toLowerCase())),
+    }),
+    [activeReviewLemmas.data],
+  );
 
   const entryQuery = useReadEntry({
     fetchFn,
@@ -645,6 +658,7 @@ export default function ReadPage() {
             deepSaved ? { start: deepSaved.start, end: deepSaved.end } : null
           }
           savedWordKeys={savedWordKeys}
+          underReview={underReview}
           onBankToggle={handleBankToggle}
           onClearBank={handleClearBank}
           onSave={handleSave}

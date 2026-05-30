@@ -8,6 +8,8 @@ interface NavItemProps {
   href: string;
   label: string;
   icon: React.ReactNode;
+  /** Optional count pill (e.g. the Review due badge); hidden when 0. */
+  badge?: number;
 }
 
 // Shared active-route logic: root `/` matches exactly; other destinations also
@@ -17,9 +19,10 @@ export function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function NavItem({ href, label, icon }: NavItemProps) {
+export function NavItem({ href, label, icon, badge }: NavItemProps) {
   const pathname = usePathname();
   const active = isActive(pathname, href);
+  const showBadge = typeof badge === 'number' && badge > 0;
 
   return (
     <li>
@@ -35,6 +38,18 @@ export function NavItem({ href, label, icon }: NavItemProps) {
       >
         <span className="flex-shrink-0 w-4 h-4">{icon}</span>
         <span>{label}</span>
+        {showBadge ? (
+          <span
+            data-testid="review-due-badge"
+            aria-label={`${badge} due`}
+            className={cn(
+              'ml-auto min-w-[18px] rounded-full px-[6px] py-px text-center text-[11px] leading-[16px]',
+              active ? 'bg-paper text-ink' : 'bg-ink text-paper'
+            )}
+          >
+            {badge}
+          </span>
+        ) : null}
       </Link>
     </li>
   );

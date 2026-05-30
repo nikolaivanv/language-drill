@@ -48,6 +48,9 @@ vi.mock('@language-drill/api-client', () => ({
     mockUseSaveVocabularyCard(...args),
   useDeleteVocabularyCard: (...args: unknown[]) =>
     mockUseDeleteVocabularyCard(...args),
+  // Under-review highlight source (Req 13.2) — default to no active lemmas so
+  // existing reader assertions are unaffected.
+  useActiveReviewLemmas: () => ({ data: { lemmas: [], surfaces: [] } }),
   createAuthenticatedFetch: vi.fn(() => vi.fn()),
 }));
 

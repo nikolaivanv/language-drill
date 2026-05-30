@@ -13,6 +13,7 @@ import {
   DEFAULT_SHADE_THRESHOLDS,
   type ContributingRow,
 } from '../lib/progress-aggregation';
+import { reviewContributingRows } from '../lib/review/evidence';
 
 // ---------------------------------------------------------------------------
 // Validation schemas
@@ -107,7 +108,12 @@ progress.get('/progress/radar', async (c) => {
     });
   }
 
-  const axes = aggregateRadar(rows, now);
+  // UNION in vocabulary-review evidence over the same 90-day window so reviews
+  // advance the radar (Req 9.1, 9.5). The two review sentinels route to the
+  // vocabulary + grammar axes via `axisForExerciseType`.
+  const reviewRows = await reviewContributingRows(db, userId, language, ROLLING_WINDOW_DAYS);
+
+  const axes = aggregateRadar([...rows, ...reviewRows], now);
   return c.json({ language, axes });
 });
 

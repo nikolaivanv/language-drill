@@ -9,13 +9,16 @@
 // word is saved across multiple passages.
 // ---------------------------------------------------------------------------
 
-import { index, integer, jsonb, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
+import { index, integer, jsonb, pgTable, real, smallint, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 import { desc } from 'drizzle-orm';
 import type {
   CefrLevel,
   DeepCard,
   LearningLanguage,
+  ReviewItemType,
+  ReviewOutcome,
   SpanAnnotations,
+  VocabReviewStatus,
   WordFlag,
 } from '@language-drill/shared';
 import { users } from './users';
@@ -82,5 +85,131 @@ export const userVocabulary = pgTable(
       t.word,
     ),
     userLangIdx: index('user_vocabulary_user_lang_idx').on(t.userId, t.language),
+  }),
+);
+
+// ---------------------------------------------------------------------------
+// Vocabulary Review (Part 2) — FSRS scheduler state
+// ---------------------------------------------------------------------------
+// One row per logical review card `(user, language, lemma)`. The existing
+// per-surface `userVocabulary` rows are pooled into a card's occurrences at
+// query time; this table holds only the spaced-repetition state, keeping
+// `userVocabulary`'s surface-form key untouched (non-destructive Part 2).
+//
+// `fsrsCardJson` is the round-trip source of truth for the `ts-fsrs` Card; the
+// scheduler module (infra/lambda/src/lib/review) owns its shape, so it is typed
+// generically here to keep `@language-drill/db` free of a `ts-fsrs` dependency.
+// `stability`, `difficulty`, `reps`, `lapses`, `state`, and `dueAt` are
+// denormalized from that Card for indexed queries and direct UI reads.
+// ---------------------------------------------------------------------------
+
+export const vocabularyReviewState = pgTable(
+  'vocabulary_review_state',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    language: text('language').$type<LearningLanguage>().notNull(),
+    lemma: text('lemma').notNull(),
+    fsrsCardJson: jsonb('fsrs_card_json').$type<Record<string, unknown>>().notNull(),
+    stability: real('stability').notNull(),
+    difficulty: real('difficulty').notNull(),
+    reps: integer('reps').notNull().default(0),
+    lapses: integer('lapses').notNull().default(0),
+    state: text('state').$type<VocabReviewStatus>().notNull().default('new'),
+    lastReviewedAt: timestamp('last_reviewed_at', { withTimezone: true }),
+    dueAt: timestamp('due_at', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    userLangLemmaUq: unique('vocabulary_review_state_user_lang_lemma_uq').on(
+      t.userId,
+      t.language,
+      t.lemma,
+    ),
+    // Queue build: due cards per language ordered by due date.
+    userLangDueAtIdx: index('vocabulary_review_state_user_lang_due_at_idx').on(
+      t.userId,
+      t.language,
+      t.dueAt,
+    ),
+    // Bank filters / leech surfacing by lifecycle state.
+    userLangStateIdx: index('vocabulary_review_state_user_lang_state_idx').on(
+      t.userId,
+      t.language,
+      t.state,
+    ),
+  }),
+);
+
+// ---------------------------------------------------------------------------
+// Vocabulary Review (Part 2) — review sessions
+// ---------------------------------------------------------------------------
+// One row per started review session, mirroring `practiceSessions`. Groups the
+// `vocabulary_review_log` rows for the end-of-session summary. `filter` records
+// the queue filter used (e.g. `{ readEntryId }`, `{ grammarPoint }`, or null
+// for the default per-language queue).
+// ---------------------------------------------------------------------------
+
+export const vocabularyReviewSessions = pgTable(
+  'vocabulary_review_sessions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    language: text('language').$type<LearningLanguage>().notNull(),
+    filter: jsonb('filter'),
+    itemCount: smallint('item_count').notNull(),
+    startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+  },
+  (t) => ({
+    userIdStartedAtIdx: index('vocabulary_review_sessions_user_id_started_at_idx').on(
+      t.userId,
+      t.startedAt,
+    ),
+  }),
+);
+
+// ---------------------------------------------------------------------------
+// Vocabulary Review (Part 2) — graded-item evidence log
+// ---------------------------------------------------------------------------
+// One row per graded review item. This is the evidence feed the progress radar
+// UNIONs in (the existing `userExerciseHistory.exerciseId` FK forbids writing
+// review rows there). Also backs the word-detail review history. `grammarPoints`
+// holds the tested occurrence's free-text labels for the "what moved" deltas.
+// ---------------------------------------------------------------------------
+
+export const vocabularyReviewLog = pgTable(
+  'vocabulary_review_log',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    language: text('language').$type<LearningLanguage>().notNull(),
+    reviewStateId: uuid('review_state_id')
+      .references(() => vocabularyReviewState.id, { onDelete: 'cascade' })
+      .notNull(),
+    sessionId: uuid('session_id').references(() => vocabularyReviewSessions.id, {
+      onDelete: 'set null',
+    }),
+    lemma: text('lemma').notNull(),
+    itemType: text('item_type').$type<ReviewItemType>().notNull(),
+    surface: text('surface'),
+    outcome: text('outcome').$type<ReviewOutcome>().notNull(),
+    rating: smallint('rating').notNull(),
+    cefrBand: text('cefr_band').$type<CefrLevel>(),
+    grammarPoints: jsonb('grammar_points').$type<string[]>().notNull().default([]),
+    reviewedAt: timestamp('reviewed_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    // Radar UNION + grammar-delta aggregation by recency.
+    userLangReviewedAtIdx: index('vocabulary_review_log_user_lang_reviewed_at_idx').on(
+      t.userId,
+      t.language,
+      t.reviewedAt,
+    ),
+    // Word-detail review history per card.
+    reviewStateReviewedAtIdx: index('vocabulary_review_log_review_state_reviewed_at_idx').on(
+      t.reviewStateId,
+      t.reviewedAt,
+    ),
   }),
 );

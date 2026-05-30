@@ -88,6 +88,12 @@ type Props = {
   savedSpan: { start: number; end: number } | null;
   /** Lowercased surface forms saved to vocabulary, for the in-passage style. */
   savedWordKeys: Set<string>;
+  /**
+   * Words in the spaced-review rotation, for the distinct under-review highlight
+   * (Req 13.2). Lowercased lemma + surface sets from `useActiveReviewLemmas`
+   * (fetched in the page). Optional — absent ⇒ no highlight.
+   */
+  underReview?: { lemmas: Set<string>; surfaces: Set<string> };
   onBankToggle: (word: string) => void;
   onClearBank: () => void;
   onSave: () => void;
@@ -113,6 +119,7 @@ export function AnnotatedView({
   onUndoCard,
   savedSpan,
   savedWordKeys,
+  underReview,
   onBankToggle,
   onClearBank,
   onSave,
@@ -293,6 +300,7 @@ export function AnnotatedView({
             intensity={intensity}
             bankSet={bankSet}
             savedWordKeys={savedWordKeys}
+            underReview={underReview}
             activeWord={activeWord?.word ?? null}
             onWordClick={handleWordClick}
             onSpanSelect={handleSpanSelect}
@@ -392,6 +400,7 @@ export function AnnotatedView({
             intensity={intensity}
             bankSet={bankSet}
             savedWordKeys={savedWordKeys}
+            underReview={underReview}
             activeWord={activeWord?.word ?? null}
             onWordClick={handleWordClick}
             onSpanSelect={handleSpanSelect}

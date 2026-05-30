@@ -5,12 +5,14 @@ import { usePathname } from 'next/navigation';
 import { cn } from '../../lib/cn';
 import { NAV_DESTINATIONS } from './nav-items';
 import { isActive } from './nav-item';
+import { useReviewDueCount } from './use-review-due-count';
 
 // Thumb-reachable primary nav at phone width: a fixed ~64px bar mapping the
 // shared NAV_DESTINATIONS to icon + label buttons, anchored above the
 // home-indicator safe area. Active state mirrors the desktop rail's NavItem.
 export function MobileTabBar() {
   const pathname = usePathname();
+  const dueCount = useReviewDueCount();
 
   return (
     <nav
@@ -20,6 +22,7 @@ export function MobileTabBar() {
     >
       {NAV_DESTINATIONS.map((d) => {
         const active = isActive(pathname, d.href);
+        const showBadge = d.href === '/review' && dueCount > 0;
         return (
           <Link
             key={d.href}
@@ -30,8 +33,17 @@ export function MobileTabBar() {
               active ? 'text-ink' : 'text-ink-mute hover:text-ink-soft',
             )}
           >
-            <span className="flex h-4 w-4 items-center justify-center">
+            <span className="relative flex h-4 w-4 items-center justify-center">
               {d.icon}
+              {showBadge ? (
+                <span
+                  data-testid="review-due-badge"
+                  aria-label={`${dueCount} due`}
+                  className="absolute -right-2 -top-1.5 min-w-[15px] rounded-full bg-ink px-[4px] text-center text-[9px] leading-[15px] text-paper"
+                >
+                  {dueCount}
+                </span>
+              ) : null}
             </span>
             <span>{d.label}</span>
           </Link>

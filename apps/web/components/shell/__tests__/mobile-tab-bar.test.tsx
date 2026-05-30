@@ -3,6 +3,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MobileTabBar } from '../mobile-tab-bar';
 import { NAV_DESTINATIONS } from '../nav-items';
 
+vi.mock('../use-review-due-count', () => ({
+  useReviewDueCount: () => 0,
+}));
+
 const mockUsePathname = vi.fn();
 
 vi.mock('next/navigation', () => ({

@@ -12,6 +12,7 @@ import sessions from './routes/sessions';
 import profiles from './routes/profiles';
 import progress from './routes/progress';
 import read from './routes/read';
+import review from './routes/review';
 import admin from './routes/admin';
 import webhooks from './routes/webhooks/clerk';
 
@@ -43,7 +44,7 @@ app.use(
   '*',
   cors({
     origin: (origin) => matchOrigin(origin),
-    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Authorization', 'Content-Type'],
   })
 );
@@ -74,6 +75,7 @@ app.route('/', sessions);
 app.route('/', profiles);
 app.route('/', progress);
 app.route('/', read);
+app.route('/', review);
 app.route('/', admin);
 app.route('/', webhooks);
 
