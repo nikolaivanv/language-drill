@@ -464,6 +464,10 @@ describe('AnnotatedText — under-review highlight', () => {
   });
 });
 
-// Touch multi-word selection is now orchestrated by the parent (AnnotatedView)
-// as tap-first/tap-last — see annotated-view.test.tsx. A touch tap reaches this
-// component via the synthetic click, already covered by the tap tests above.
+// Touch multi-word selection is a select-first drag handled by native
+// touchstart/move/end listeners in this component (sharing the begin/extend/
+// finalize core exercised by the mouse-drag tests above). The gesture itself
+// depends on real layout (`document.elementFromPoint`, live bounding rects)
+// which jsdom doesn't provide, so it's covered end-to-end by the touch E2E
+// (read-mobile-touch.spec.ts). A plain touch tap reaches this component via the
+// synthetic click, already covered by the tap tests above.

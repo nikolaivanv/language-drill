@@ -77,8 +77,8 @@ export function WordSheet({
   const isOpen = open && (deepActive || entry !== null);
 
   // The body currently shows a single word (skim card or a loaded word deep
-  // card) — so a second tap can grow it into a phrase. Hidden for phrase/
-  // sentence cards, the loading skeleton, and the error state.
+  // card) — so the hint can nudge the drag-to-select-a-phrase gesture. Hidden
+  // for phrase/sentence cards, the loading skeleton, and the error state.
   const isWordCard =
     (deepCard?.status === 'loading' && entry !== null) ||
     (deepCard?.status === 'loaded' && deepCard.card.type === 'word') ||
@@ -90,6 +90,30 @@ export function WordSheet({
   // previous card's expanded state.
   useEffect(() => {
     if (isOpen) setSnap(PEEK);
+  }, [isOpen]);
+
+  // vaul (via Radix) locks `document.body { pointer-events: none }` while the
+  // drawer is open — even with `modal={false}` + `snapPoints` (an upstream bug,
+  // still present in vaul 1.1.2). That cascades to the passage and silently
+  // kills every tap behind the peeking sheet, so tap-first/tap-last's second tap
+  // (handled in AnnotatedView) can never land and outside-tap dismissal breaks.
+  // Force the body interactive while this non-modal sheet is open; the sheet's
+  // own content keeps its `pointer-events: auto`, so only the background is
+  // un-locked. A MutationObserver re-asserts it because vaul re-writes the style
+  // on every snap change. (Verified by the touch E2E in read-mobile-touch.spec.)
+  useEffect(() => {
+    if (!isOpen || typeof document === 'undefined') return;
+    const { body } = document;
+    const unlock = () => {
+      if (body.style.pointerEvents === 'none') body.style.pointerEvents = 'auto';
+    };
+    unlock();
+    const observer = new MutationObserver(unlock);
+    observer.observe(body, { attributes: true, attributeFilter: ['style'] });
+    return () => {
+      observer.disconnect();
+      body.style.pointerEvents = '';
+    };
   }, [isOpen]);
 
   const expanded = snap === EXPANDED;
@@ -171,7 +195,7 @@ export function WordSheet({
               className="t-micro flex-none px-[18px] pb-[14px] pt-[6px] text-ink-soft"
               aria-hidden="true"
             >
-              tap another word to extend →
+              drag across the text to select a phrase →
             </div>
           ) : null}
         </Drawer.Content>

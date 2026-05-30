@@ -26,11 +26,15 @@
 //     (word | phrase | sentence). The trailing synthetic click is swallowed so
 //     a drag isn't double-handled; a bare click (keyboard activation) is handled
 //     directly. The begin/extend/finalize core is factored out for clarity.
-//   - Touch (mobile): a tap fires a single-word `onSpanSelect` via the synthetic
-//     click. Multi-word spans are NOT built here — the parent (`AnnotatedView`)
-//     turns a second tap into a span extension (tap-first / tap-last), since the
-//     card-open state it needs lives there. (A long-press gesture was tried but
-//     the OS text-selection callout can't be suppressed by `touch-action`.)
+//   - Touch (mobile): select-first drag. A horizontal drag from a word selects
+//     a multi-word span live (the finger's word becomes the moving head) and
+//     fires one `onSpanSelect` for the final span on release — so nothing covers
+//     the passage during selection and a phrase costs a single model call. A
+//     plain tap (no drag) falls through to the synthetic click → single word.
+//     The listeners are native + non-passive (React attaches touch handlers
+//     passively, which forbids the `preventDefault` that captures the gesture
+//     and suppresses the trailing emulated mouse events); `touch-action: pan-y`
+//     leaves a vertical drag to scroll the passage natively.
 //
 // Visuals come from `word-flag-styles.module.css` — no inline styles.
 // ---------------------------------------------------------------------------
@@ -205,6 +209,9 @@ export function AnnotatedText({
   // synthetic click is ignored.
   const pointerHandledRef = React.useRef(false);
   const [selRange, setSelRange] = React.useState<{ min: number; max: number } | null>(null);
+  // Wraps the rendered tokens so the touch adapter can attach native,
+  // non-passive listeners (see the effect below).
+  const rootRef = React.useRef<HTMLSpanElement>(null);
 
   const emitTap = React.useCallback((token: OffsetToken, rect: DOMRect) => {
     const live = liveRef.current;
@@ -294,8 +301,90 @@ export function AnnotatedText({
     emitTap(token, e.currentTarget.getBoundingClientRect());
   };
 
+  // ---- Touch adapter (mobile) ---------------------------------------------
+  // Select-first drag, sharing the same begin/extend/finalize core as the mouse
+  // adapter. Native listeners (not React props) because `onTouchMove` is passive
+  // under React, and we must `preventDefault` to (a) stop the passage scrolling
+  // mid-selection and (b) cancel the emulated mouse/click events that would
+  // otherwise re-handle the drag as a single-word tap.
+  React.useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    const START_THRESHOLD = 8; // px of travel before a horizontal drag counts
+    let startIndex: number | null = null;
+    let startX = 0;
+    let startY = 0;
+    let selecting = false;
+
+    const wordAt = (
+      x: number,
+      y: number,
+    ): { index: number; rect: DOMRect } | null => {
+      const el = document
+        .elementFromPoint(x, y)
+        ?.closest<HTMLElement>('[data-idx]');
+      if (!el) return null;
+      return { index: Number(el.dataset.idx), rect: el.getBoundingClientRect() };
+    };
+
+    const onStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      const t = e.touches[0];
+      const hit =
+        (e.target as HTMLElement | null)?.closest<HTMLElement>('[data-idx]') ??
+        document.elementFromPoint(t.clientX, t.clientY)?.closest<HTMLElement>('[data-idx]') ??
+        null;
+      startIndex = hit ? Number(hit.dataset.idx) : null;
+      startX = t.clientX;
+      startY = t.clientY;
+      selecting = false;
+    };
+
+    const onMove = (e: TouchEvent) => {
+      if (startIndex === null || e.touches.length !== 1) return;
+      const t = e.touches[0];
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
+      if (!selecting) {
+        // Commit to a selection only on a clearly horizontal drag; a vertical
+        // drag is a scroll (touch-action: pan-y handles it) — bail out.
+        if (Math.abs(dx) > START_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
+          selecting = true;
+          beginSelection(startIndex, wordAt(startX, startY)?.rect ?? new DOMRect());
+        } else if (Math.abs(dy) > START_THRESHOLD) {
+          startIndex = null;
+          return;
+        } else {
+          return;
+        }
+      }
+      // Own the gesture: stop the scroll + suppress the emulated mouse events.
+      e.preventDefault();
+      const hit = wordAt(t.clientX, t.clientY);
+      if (hit) extendSelection(hit.index, hit.rect);
+    };
+
+    const onEnd = () => {
+      if (selecting) finalizeSelection();
+      startIndex = null;
+      selecting = false;
+    };
+
+    root.addEventListener('touchstart', onStart, { passive: false });
+    root.addEventListener('touchmove', onMove, { passive: false });
+    root.addEventListener('touchend', onEnd, { passive: false });
+    root.addEventListener('touchcancel', onEnd, { passive: false });
+    return () => {
+      root.removeEventListener('touchstart', onStart);
+      root.removeEventListener('touchmove', onMove);
+      root.removeEventListener('touchend', onEnd);
+      root.removeEventListener('touchcancel', onEnd);
+    };
+  }, [beginSelection, extendSelection, finalizeSelection]);
+
   return (
-    <>
+    <span ref={rootRef}>
       {tokens.map((token, i) => {
         if (token.kind === 'sep') {
           return <React.Fragment key={i}>{token.raw}</React.Fragment>;
@@ -317,6 +406,7 @@ export function AnnotatedText({
             key={i}
             type="button"
             data-word={token.key}
+            data-idx={i}
             className={cn(
               styles.word,
               // Highlight classes apply to flagged words only; non-flagged
@@ -335,6 +425,6 @@ export function AnnotatedText({
           </button>
         );
       })}
-    </>
+    </span>
   );
 }
