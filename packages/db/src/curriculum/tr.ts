@@ -21,6 +21,10 @@ const { A1, A2 } = CefrLevel;
  * generation_jobs row for each cell — when they differ, any
  * "saturated-dedup" or "low-yield" suppression on that cell clears, on the
  * assumption that the curriculum edit may have unblocked the search space.
+ *
+ * Current value `2026-05-30` reflects the #220 book-grounded audit of all 40
+ * grammar points; the Yedi İklim A1+A2 *parity* (the 26 A1 + 14 A2 count noted
+ * in the header above) was aligned earlier, on 2026-05-28.
  */
 export const CURRICULUM_VERSION_TR = '2026-05-30';
 
