@@ -99,7 +99,7 @@ describe('WordSheet — deep-card states', () => {
     render(
       <WordSheet
         {...baseProps}
-        deepCard={{ status: 'loading', span: SPAN }}
+        deepCard={{ status: 'loading', span: SPAN, partial: {} }}
       />,
     );
     expect(screen.getByText('a small village')).toBeInTheDocument();
@@ -112,7 +112,7 @@ describe('WordSheet — deep-card states', () => {
       <WordSheet
         {...baseProps}
         entry={null}
-        deepCard={{ status: 'loading', span: SPAN }}
+        deepCard={{ status: 'loading', span: SPAN, partial: {} }}
       />,
     );
     expect(screen.getByRole('dialog')).toBeInTheDocument();

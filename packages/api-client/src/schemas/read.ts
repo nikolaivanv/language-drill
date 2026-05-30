@@ -179,10 +179,10 @@ export const ReadEntryResponseSchema = z.object({
   // panel. Optional for backward-compat with cached/older payloads.
   savedVocab: z.array(SavedVocabItemSchema).optional(),
   // Deep cards resolved on this entry, keyed by "start:end" offsets. Optional:
-  // older/unsaved entries carry none. `useReadAnnotateSpan` writes resolved
-  // cards through here so a re-tapped span renders from cache without a new
-  // model call (Req 3.5, 11.4); the annotated view reads it to render persisted
-  // annotations on open (Req 11.3).
+  // older/unsaved entries carry none. The read page's `useReadAnnotateSpanStream`
+  // `onResolved` writes resolved cards through here so a re-tapped span renders
+  // from cache without a new model call (Req 3.5, 11.4); the annotated view reads
+  // it to render persisted annotations on open (Req 11.3).
   spanAnnotations: SpanAnnotationsSchema.optional(),
   pastedAt: z.string().datetime(),
 });
@@ -214,6 +214,35 @@ export type AnnotateSpanRequest = z.infer<typeof AnnotateSpanRequestSchema>;
 export const AnnotateSpanResponseSchema = DeepCardSchema;
 
 export type AnnotateSpanResponse = z.infer<typeof AnnotateSpanResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// POST /read/annotate-span — SSE streaming events (Req 1.1, 1.3)
+// ---------------------------------------------------------------------------
+// The deep-span endpoint now STREAMS the card field-by-field over SSE (the
+// Function URL `/read/annotate-span` path), mirroring the skim pass. A deep
+// card is a single object, so each top-level field arrives as its own preview
+// `field` event; the terminal `done` carries the authoritative, fully-validated
+// `DeepCard` (re-parsed server-side from the assembled tool input). The `error`
+// terminal reuses `AnnotateErrorEventSchema` — the same four codes/UI surfaces
+// as the skim stream.
+
+// `field` — a completed top-level key of the streaming card. `value` is
+// deliberately `unknown`: it's a PREVIEW fragment, never the source of truth
+// (that's the `done` card), so the client merges it into a partial card for
+// progressive render without per-field validation.
+export const AnnotateSpanFieldEventSchema = z.object({
+  key: z.string(),
+  value: z.unknown(),
+});
+
+export type AnnotateSpanFieldEvent = z.infer<typeof AnnotateSpanFieldEventSchema>;
+
+// `done` — terminal success event carrying the authoritative deep card.
+export const AnnotateSpanDoneEventSchema = z.object({
+  card: DeepCardSchema,
+});
+
+export type AnnotateSpanDoneEvent = z.infer<typeof AnnotateSpanDoneEventSchema>;
 
 // ---------------------------------------------------------------------------
 // POST /read/vocabulary — save a deep card to the bank (Req 8.1)

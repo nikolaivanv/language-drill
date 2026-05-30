@@ -6,50 +6,31 @@
  * honors `DEV_USER_ID` to skip Clerk JWT verification (the bypass lives in
  * `./jwt.ts`).
  *
+ * Serves BOTH endpoints the Function URL handler dispatches by path: the skim
+ * pass (`POST /read/annotate` and the bare base URL) and the deep-span stream
+ * (`POST /read/annotate-span`). `synthesizeEvent` sets `requestContext.http
+ * .path` from the request URL, which is what the handler's path dispatch
+ * branches on; the `DEV_USER_ID` bypass in `./jwt.ts` runs before any path
+ * logic, so it applies to both flows identically.
+ *
  * Usage:
  *   DATABASE_URL=... ANTHROPIC_API_KEY=... DEV_USER_ID=dev_user_001 \
  *     npx tsx --watch src/annotate-stream/dev.ts
  */
 
+// IMPORTANT: the `awslambda` stub MUST be installed before `./handler` is
+// evaluated (the handler reads the global at module init). Bundlers hoist all
+// `import` statements above top-level statements, so the stub can't be a plain
+// assignment here — it lives in `./awslambda-shim` and is imported FIRST.
+// Side-effect imports run in source order, so this reliably wins the race.
+import './awslambda-shim';
+
 import http from 'node:http';
 import type { Writable } from 'node:stream';
 import type { LambdaFunctionURLEvent } from 'aws-lambda';
 
-// IMPORTANT: stub `awslambda` BEFORE importing the handler — the handler reads
-// it at module init via `awslambda.streamifyResponse(...)`. Any import that
-// transitively loads `./handler` before this stub is installed will crash.
-//
-// `streamifyResponse: (handler) => handler` is a pass-through — the AWS shim
-// wraps the handler to expose the (event, responseStream, context) signature,
-// which is already what our handler is written against, so no wrapping is
-// needed locally.
-//
-// `HttpResponseStream.from` is the moment the handler commits to a status
-// code + headers. The dev shim applies them to the `http.ServerResponse`
-// (which is itself a Writable) and returns the same stream so subsequent
-// writes flow straight to the socket.
-(globalThis as unknown as { awslambda: unknown }).awslambda = {
-  streamifyResponse: <T extends (...args: never[]) => unknown>(handler: T): T =>
-    handler,
-  HttpResponseStream: {
-    from(
-      underlyingStream: Writable,
-      prelude: { statusCode: number; headers?: Record<string, string> },
-    ): Writable {
-      const res = underlyingStream as unknown as http.ServerResponse;
-      // Guard: only the first `from(...)` per request gets to write headers.
-      // `openSse()` and `errorJson()` are mutually exclusive in the handler
-      // (only one branch ever fires), so this guard is defensive.
-      if (!res.headersSent) {
-        res.writeHead(prelude.statusCode, prelude.headers ?? {});
-      }
-      return underlyingStream;
-    },
-  },
-};
-
-// The handler import deliberately comes AFTER the `awslambda` stub above —
-// it reads the global at module-init time.
+// The handler import deliberately comes AFTER the `awslambda-shim` import above
+// — it reads the global at module-init time.
 import { handler } from './handler';
 
 const PORT = parseInt(process.env['STREAM_PORT'] ?? '3002', 10);
@@ -64,7 +45,8 @@ if (!process.env['DEV_USER_ID']) {
 /**
  * Build a synthetic Lambda Function URL event from an incoming Node request.
  * Only the fields the handler actually reads are populated meaningfully —
- * `requestContext.http.method` (routing), `headers` (auth), `body` (parsing).
+ * `requestContext.http.method` + `.path` (method gate + skim/deep path
+ * dispatch), `headers` (auth), `body` (parsing).
  */
 function synthesizeEvent(
   req: http.IncomingMessage,

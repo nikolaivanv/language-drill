@@ -389,6 +389,160 @@ export function extractNewItems(buffer: string, alreadyYielded: number): unknown
 }
 
 // ---------------------------------------------------------------------------
+// Streaming tool-use parser — extractCompletedFields
+// ---------------------------------------------------------------------------
+//
+// The object-property sibling of `extractNewItems`, used by the deep-card
+// stream (`streamSpan`, read-span.ts). Where the skim pass streams items out
+// of an ARRAY, a deep card is a single OBJECT — so this pulls completed
+// top-level `"key": value` pairs out of the growing tool-input buffer, shaped
+// like:
+//   { "type": "word", "surface": "...", "lemma": "...", "morphology": {...} }
+//
+// It returns ONLY the entries beyond `alreadyEmitted`, in emit order, so the
+// caller can yield each field as soon as it is fully formed. Like
+// `extractNewItems` it is NOT a general JSON decoder and never throws:
+//   - string / object / array values are emitted the moment their closing
+//     `"` / `}` / `]` arrives (the early-render win — `surface`, `definition`,
+//     etc. land immediately).
+//   - primitive values (number / true / false / null) are emitted only once a
+//     following delimiter (`,` or `}`) proves they are complete, so a number
+//     still mid-stream (`1234` that may grow to `12345`) is never emitted early.
+//   - a fragment the brace/quote tracker accepts but `JSON.parse` rejects is
+//     skipped silently; the field counter still advances so it is not retried.
+
+/**
+ * Scan one JSON value starting at `s` (the index of its first character).
+ * Returns the index of the value's LAST character (inclusive) once the value
+ * is provably complete, or `null` if more bytes are needed / it is malformed.
+ *
+ * @internal
+ */
+function scanJsonValue(buffer: string, s: number): number | null {
+  const c = buffer[s];
+
+  // String — scan to the matching unescaped closing quote.
+  if (c === '"') {
+    let escape = false;
+    for (let i = s + 1; i < buffer.length; i++) {
+      const ch = buffer[i];
+      if (escape) {
+        escape = false;
+        continue;
+      }
+      if (ch === "\\") escape = true;
+      else if (ch === '"') return i;
+    }
+    return null; // unterminated string
+  }
+
+  // Object / array — track nested depth (across both `{}` and `[]`) plus
+  // in-string state, return when depth falls back to 0.
+  if (c === "{" || c === "[") {
+    let depth = 0;
+    let inString = false;
+    let escape = false;
+    for (let i = s; i < buffer.length; i++) {
+      const ch = buffer[i];
+      if (escape) {
+        escape = false;
+        continue;
+      }
+      if (inString) {
+        if (ch === "\\") escape = true;
+        else if (ch === '"') inString = false;
+        continue;
+      }
+      if (ch === '"') inString = true;
+      else if (ch === "{" || ch === "[") depth++;
+      else if (ch === "}" || ch === "]") {
+        depth--;
+        if (depth === 0) return i;
+      }
+    }
+    return null; // not closed yet
+  }
+
+  // Primitive (number / true / false / null) — complete only when a delimiter
+  // follows, so a still-growing literal is never emitted early.
+  for (let i = s; i < buffer.length; i++) {
+    const ch = buffer[i];
+    if (ch === "," || ch === "}" || ch === "]") {
+      let end = i - 1;
+      while (end >= s && /\s/.test(buffer[end])) end--;
+      return end >= s ? end : null;
+    }
+  }
+  return null; // no terminating delimiter yet
+}
+
+/**
+ * Parse newly-completed top-level fields out of the partial deep-card tool-use
+ * JSON buffer. Fields at indices `< alreadyEmitted` are skipped (the caller
+ * has already seen them). Never throws — malformed / truncated input yields an
+ * empty result and the stream simply waits for more bytes.
+ *
+ * @internal
+ */
+export function extractCompletedFields(
+  buffer: string,
+  alreadyEmitted: number,
+): Array<{ key: string; value: unknown }> {
+  const objStart = buffer.indexOf("{");
+  if (objStart === -1) return [];
+
+  const out: Array<{ key: string; value: unknown }> = [];
+  let count = 0;
+  let i = objStart + 1;
+
+  while (i < buffer.length) {
+    // Skip whitespace / commas between members.
+    while (i < buffer.length && (buffer[i] === "," || /\s/.test(buffer[i]))) i++;
+    if (i >= buffer.length) break;
+    if (buffer[i] === "}") break; // end of the object
+    if (buffer[i] !== '"') break; // truncated / malformed key — wait or bail.
+
+    // Key (a JSON string).
+    const keyStart = i;
+    const keyEnd = scanJsonValue(buffer, keyStart);
+    if (keyEnd === null) break; // key still streaming
+    let key: string;
+    try {
+      key = JSON.parse(buffer.slice(keyStart, keyEnd + 1)) as string;
+    } catch {
+      break; // malformed key — stop scanning this buffer
+    }
+    i = keyEnd + 1;
+
+    // `:` separator.
+    while (i < buffer.length && /\s/.test(buffer[i])) i++;
+    if (i >= buffer.length || buffer[i] !== ":") break; // colon not here yet
+    i++;
+    while (i < buffer.length && /\s/.test(buffer[i])) i++;
+    if (i >= buffer.length) break; // value not started
+
+    // Value.
+    const valStart = i;
+    const valEnd = scanJsonValue(buffer, valStart);
+    if (valEnd === null) break; // value still streaming — wait for more bytes
+
+    if (count >= alreadyEmitted) {
+      try {
+        const value = JSON.parse(buffer.slice(valStart, valEnd + 1));
+        out.push({ key, value });
+      } catch {
+        // Tracker accepted it but JSON.parse rejected — skip this field but
+        // still advance the counter so it is not re-extracted next call.
+      }
+    }
+    count++;
+    i = valEnd + 1;
+  }
+
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 // User-prompt builders
 // ---------------------------------------------------------------------------
 
@@ -557,6 +711,12 @@ const STREAM_MAX_TOKENS = 8192;
 // bounded, and reasoning quality matters more than wall-clock.
 const STREAM_MODEL = "claude-haiku-4-5-20251001" as const;
 
+// One retry instead of the SDK default of 2; no client timeout — the time
+// bound is the streaming Lambda's soft deadline + AbortSignal, not an SDK
+// request timeout that could sever a healthy long generation. Matches the
+// deep-span `streamSpan` retry posture (Req 4.3).
+const STREAM_MAX_RETRIES = 1;
+
 export async function* streamAnnotation(
   client: Anthropic,
   input: AnnotateStreamInput,
@@ -622,7 +782,7 @@ export async function* streamAnnotation(
       },
       temperature: 0,
     },
-    input.signal !== undefined ? { signal: input.signal } : undefined,
+    { signal: input.signal, maxRetries: STREAM_MAX_RETRIES },
   );
 
   let buffer = "";

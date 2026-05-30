@@ -18,6 +18,8 @@ export {
   parseEvaluationResult,
   EVALUATION_TOOL,
   EVALUATION_TOOL_NAME,
+  EVAL_REQUEST_TIMEOUT_MS,
+  EVAL_MAX_RETRIES,
 } from "./evaluate.js";
 export type { EvaluateAnswerInput } from "./evaluate.js";
 export {
@@ -26,6 +28,7 @@ export {
   ANNOTATE_TOOL,
   ANNOTATE_TOOL_NAME,
   AnnotateStreamMaxTokensError,
+  extractCompletedFields,
   isProperNounPos,
   streamAnnotation,
 } from "./annotate.js";
@@ -47,8 +50,14 @@ export {
   annotateSpan,
   parseSpanResult,
   buildSpanUserPrompt,
+  streamSpan,
+  ReadSpanStreamMaxTokensError,
 } from "./read-span.js";
-export type { AnnotateSpanInput, SpanType } from "./read-span.js";
+export type {
+  AnnotateSpanInput,
+  SpanType,
+  ReadSpanStreamEvent,
+} from "./read-span.js";
 
 export {
   GENERATION_MODEL,

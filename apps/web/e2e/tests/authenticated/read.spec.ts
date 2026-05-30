@@ -80,6 +80,51 @@ type FulfillOptions = Parameters<Route['fulfill']>[0];
 const reply = (body: unknown, status = 200): FulfillOptions =>
   json(body, status);
 
+// ---------------------------------------------------------------------------
+// SSE helpers — the deep endpoint now streams (Req 1.1).
+// ---------------------------------------------------------------------------
+// The deep card is served over Server-Sent Events: each top-level field is
+// emitted as a `field` frame, then a terminal `done` frame carries the full
+// validated card (matching the server's `event: <type>\ndata: <json>\n\n`
+// framing in `infra/lambda/src/annotate-stream/sse.ts`). The client
+// (`useReadAnnotateSpanStream` → `fetchSse`) consumes it.
+//
+// NOTE on observing "a field before done": Playwright's `route.fulfill`
+// delivers the whole body atomically (no chunked flush), so the browser reads
+// the field + done frames in one network read and the client paints the final
+// card in a single React batch — the deep card's OWN per-field preview never
+// gets an intermediate paint here. That progressive paint is covered by the
+// unit/component suite (`word-popover.test.tsx` DeepCardPartial,
+// `page.test.tsx`). What this suite reliably observes is the SKIM field shown
+// while the deep card streams (a flagged word's gloss is visible before the
+// deep `done` lands), plus the final card's correctness over the real SSE wire.
+function sseFrame(type: string, payload: unknown): string {
+  return `event: ${type}\ndata: ${JSON.stringify(payload)}\n\n`;
+}
+
+// field-per-key → terminal `done` carrying the full card.
+function sseCardBody(card: Record<string, unknown>): string {
+  const fields = Object.entries(card)
+    .map(([key, value]) => sseFrame('field', { key, value }))
+    .join('');
+  return fields + sseFrame('done', { card });
+}
+
+// 200 `text/event-stream` reply (the wire the client requires; `fetchSse`
+// rejects a 200 that isn't `text/event-stream`).
+const sseReply = (body: string): FulfillOptions => ({
+  status: 200,
+  contentType: 'text/event-stream',
+  body,
+});
+
+// A terminal `error` frame (mid-stream failure path, Req 1.5) — still a 200
+// SSE response, the failure is carried in-band.
+const sseErrorReply = (
+  code = 'AI_UNAVAILABLE',
+  message = 'temporarily unavailable',
+): FulfillOptions => sseReply(sseFrame('error', { code, message }));
+
 type MockOptions = {
   /** Pre-seed the entry's persisted deep cards (Req 11.3). */
   spanAnnotations?: Record<string, unknown>;
@@ -150,14 +195,15 @@ async function mockReadApi(
     deepCalls += 1;
     if (opts.deepGate) await opts.deepGate.wait;
     if (opts.deepFail) {
-      return route.fulfill(
-        reply(
-          { error: 'temporarily unavailable', code: 'AI_UNAVAILABLE' },
-          502,
-        ),
-      );
+      return route.fulfill(sseErrorReply());
     }
-    return route.fulfill(reply(opts.deepResponse ?? DEEP_WORD));
+    return route.fulfill(
+      sseReply(
+        sseCardBody(
+          (opts.deepResponse ?? DEEP_WORD) as Record<string, unknown>,
+        ),
+      ),
+    );
   });
 
   await page.route('**/read/vocabulary', (route) => {
@@ -208,6 +254,41 @@ test('cold tap on an unflagged word renders the skeleton, then the deep card (Re
   release();
   await expect(page.getByText('pueblo pequeño')).toBeVisible();
   await expect(page.getByTestId('deep-card-skeleton')).toHaveCount(0);
+});
+
+// ---------------------------------------------------------------------------
+// 1b. Progressive: a field is visible BEFORE the streamed `done` lands, then
+//     the deep card swaps in (Req 1.1, 1.2, 1.3). For a flagged word the skim
+//     card (with its gloss) renders instantly and stays up — with the "looking
+//     it up…" indicator — while the deep stream is in flight; the deep `done`
+//     then replaces it. This is the reliably-observable "field before done" in
+//     E2E (the deep card's own per-field preview is unit-tested — see the SSE
+//     helper note above).
+// ---------------------------------------------------------------------------
+test('a field is visible before the streamed done, then the deep card swaps in (Req 1.2, 1.3)', async ({
+  page,
+}) => {
+  let release!: () => void;
+  const gate = {
+    wait: new Promise<void>((resolve) => {
+      release = resolve;
+    }),
+  };
+  await mockReadApi(page, { deepGate: gate });
+  await openSeededEntry(page);
+
+  // Tap the flagged word: the skim field is visible immediately, before the
+  // deep stream has produced anything.
+  await page.getByRole('button', { name: 'aldea' }).click();
+  await expect(page.getByText('small village')).toBeVisible();
+  await expect(page.getByTestId('skim-loading-deep')).toBeVisible();
+  // The deep card has NOT resolved yet (its `done` is gated).
+  await expect(page.getByText('pueblo pequeño')).toHaveCount(0);
+
+  // Release the gated SSE response → the terminal `done` card swaps in.
+  release();
+  await expect(page.getByText('pueblo pequeño')).toBeVisible();
+  await expect(page.getByTestId('skim-loading-deep')).toHaveCount(0);
 });
 
 // ---------------------------------------------------------------------------
@@ -408,14 +489,10 @@ test('a failed deep call shows the inline error, retry fires another call (Req 9
   await page.route('**/read/annotate-span', async (route) => {
     calls += 1;
     if (shouldFail) {
-      return route.fulfill(
-        reply(
-          { error: 'temporarily unavailable', code: 'AI_UNAVAILABLE' },
-          502,
-        ),
-      );
+      // Mid-stream failure carried as a terminal `error` SSE frame (Req 1.5).
+      return route.fulfill(sseErrorReply());
     }
-    return route.fulfill(reply(DEEP_WORD));
+    return route.fulfill(sseReply(sseCardBody(DEEP_WORD)));
   });
 
   await openSeededEntry(page);

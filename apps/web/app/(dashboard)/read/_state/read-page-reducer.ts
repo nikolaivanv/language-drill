@@ -32,10 +32,12 @@ export type ActiveWord = { word: string; x: number; y: number };
 // The on-demand deep card is a small state machine over a single active span.
 // `OPEN_DEEP_CARD` arms it: a span already present in `spanAnnotations` renders
 // instantly as `loaded` (Req 11.4); otherwise it opens `loading` while the page
-// fires `useReadAnnotateSpan` (Req 9.3). `DEEP_CARD_RESOLVED`/`DEEP_CARD_ERROR`
-// settle it (Req 9.4), and every resolve is merged into `spanAnnotations` so a
-// re-tap within the session is served from cache with no new model call
-// (Req 3.5). The span type is the client hint; the server is authoritative.
+// streams the card via `useReadAnnotateSpanStream` (Req 9.3). `DEEP_CARD_FIELD`
+// fills the `loading` slice's `partial` field-by-field (Req 1.2);
+// `DEEP_CARD_RESOLVED`/`DEEP_CARD_ERROR` settle it (Req 9.4, 1.3), and every
+// resolve is merged into `spanAnnotations` so a re-tap within the session is
+// served from cache with no new model call (Req 3.5). The span type is the
+// client hint; the server is authoritative.
 
 /** Span shapes a deep card can take — kept in lockstep with the shared union. */
 export type SpanType = DeepCard['type'];
@@ -52,7 +54,11 @@ export type DeepSpan = {
 
 export type DeepCardSlice =
   | { status: 'idle' }
-  | { status: 'loading'; span: DeepSpan }
+  // `loading` is the streaming state: the card opens immediately and fills in
+  // field-by-field as `DEEP_CARD_FIELD` events arrive (Req 1.2). `partial` is
+  // the progressively-built preview; the authoritative card lands via
+  // `DEEP_CARD_RESOLVED` (Req 1.3).
+  | { status: 'loading'; span: DeepSpan; partial: Partial<DeepCard> }
   | { status: 'loaded'; span: DeepSpan; card: DeepCard }
   | { status: 'error'; span: DeepSpan; error: AnnotateError };
 
@@ -152,6 +158,7 @@ export type Action =
   | { type: 'ANNOTATE_ERROR'; error: AnnotateError }
   | { type: 'ANNOTATE_RESET' }
   | { type: 'OPEN_DEEP_CARD'; span: DeepSpan }
+  | { type: 'DEEP_CARD_FIELD'; span: DeepSpan; key: string; value: unknown }
   | { type: 'DEEP_CARD_RESOLVED'; span: DeepSpan; card: DeepCard }
   | { type: 'DEEP_CARD_ERROR'; span: DeepSpan; error: AnnotateError }
   | { type: 'DISMISS_DEEP_CARD' }
@@ -362,7 +369,32 @@ export function readPageReducer(state: ReadPageState, action: Action): ReadPageS
         ...state,
         deepCard: cached
           ? { status: 'loaded', span: action.span, card: cached }
-          : { status: 'loading', span: action.span },
+          : { status: 'loading', span: action.span, partial: {} },
+      };
+    }
+
+    case 'DEEP_CARD_FIELD': {
+      // Merge a streamed field into the open card's partial preview (Req 1.2).
+      // Only while still `loading` AND the field belongs to the open span — a
+      // stale field for a dismissed/replaced span is ignored (mirrors the
+      // RESOLVED/ERROR stale guards).
+      const current = state.deepCard;
+      if (
+        current.status !== 'loading' ||
+        current.span.start !== action.span.start ||
+        current.span.end !== action.span.end
+      ) {
+        return state;
+      }
+      return {
+        ...state,
+        deepCard: {
+          ...current,
+          partial: {
+            ...current.partial,
+            [action.key]: action.value,
+          } as Partial<DeepCard>,
+        },
       };
     }
 

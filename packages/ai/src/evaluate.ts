@@ -220,11 +220,36 @@ export function parseEvaluationResult(input: unknown): EvaluationResult {
 // Main evaluation function
 // ---------------------------------------------------------------------------
 
-/** Default model for evaluation */
-const MODEL = "claude-sonnet-4-6" as const;
+// Evaluation runs on Haiku 4.5 (same precedent as the annotate/skim
+// `STREAM_MODEL`). The evaluation output is small and bounded (a single
+// `submit_evaluation` tool call, ≤1024 tokens), so Haiku's ~2–3× speedup on
+// structured tool-use is a large interactive-latency win with little reasoning
+// risk; the swap is gated by the `pnpm eval` Langfuse-dataset harness and is
+// reversible by restoring this one constant. NOTE: changing the model is NOT a
+// prompt-body edit, so `EVALUATION_SYSTEM_PROMPT_VERSION` is intentionally NOT
+// bumped — Langfuse records the model natively on each generation, and bumping
+// the prompt-version cohort for a model-only change would corrupt prompt A/B
+// comparisons (see CLAUDE.md "Prompt Editing").
+const MODEL = "claude-haiku-4-5-20251001" as const;
 
 /** Max tokens for evaluation responses */
 const MAX_TOKENS = 1024;
+
+/**
+ * SDK request timeout for the (non-streaming, user-waiting) evaluation call.
+ * The submit→feedback loop is interactive, so we fail fast rather than inherit
+ * the SDK's 10-minute default. ~18 s leaves room for a slow-but-real Haiku
+ * response while bounding the tail. (Req 4.1)
+ */
+export const EVAL_REQUEST_TIMEOUT_MS = 18_000;
+
+/**
+ * One retry instead of the SDK default of 2. A transient upstream blip gets a
+ * single fast retry; beyond that we surface the failure as `502 AI_UNAVAILABLE`
+ * rather than letting exponential backoff triple the latency a user waits
+ * through. (Req 4.1, 4.5)
+ */
+export const EVAL_MAX_RETRIES = 1;
 
 /**
  * Evaluates a user's answer to a language exercise using Claude.

@@ -12,6 +12,8 @@ import {
   AnnotateFlagEventSchema,
   AnnotateMetaEventSchema,
   AnnotateRequestSchema,
+  AnnotateSpanDoneEventSchema,
+  AnnotateSpanFieldEventSchema,
   AnnotateSpanRequestSchema,
   AnnotateSpanResponseSchema,
   DeleteVocabularyCardResponseSchema,
@@ -680,6 +682,74 @@ describe('AnnotateSpanResponseSchema', () => {
   it('rejects a word card missing a required field', () => {
     const { definition: _omit, ...incomplete } = validWordCard;
     expect(AnnotateSpanResponseSchema.safeParse(incomplete).success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// AnnotateSpanFieldEventSchema (deep-span SSE `field`)
+// ---------------------------------------------------------------------------
+
+describe('AnnotateSpanFieldEventSchema', () => {
+  it('round-trips a string-valued field', () => {
+    const result = AnnotateSpanFieldEventSchema.safeParse({
+      key: 'definition',
+      value: 'edificio para vivir',
+    });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data).toEqual({
+      key: 'definition',
+      value: 'edificio para vivir',
+    });
+  });
+
+  it('accepts any value shape (preview fragment, not the source of truth)', () => {
+    expect(
+      AnnotateSpanFieldEventSchema.safeParse({ key: 'cefr', value: 'A1' }).success,
+    ).toBe(true);
+    expect(
+      AnnotateSpanFieldEventSchema.safeParse({ key: 'freq', value: 120 }).success,
+    ).toBe(true);
+    expect(
+      AnnotateSpanFieldEventSchema.safeParse({
+        key: 'breakdown',
+        value: [{ chunk: 'La casa', role: 'subject' }],
+      }).success,
+    ).toBe(true);
+  });
+
+  it('rejects a missing or non-string key', () => {
+    expect(AnnotateSpanFieldEventSchema.safeParse({ value: 'x' }).success).toBe(false);
+    expect(
+      AnnotateSpanFieldEventSchema.safeParse({ key: 42, value: 'x' }).success,
+    ).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// AnnotateSpanDoneEventSchema (deep-span SSE terminal `done`)
+// ---------------------------------------------------------------------------
+
+describe('AnnotateSpanDoneEventSchema', () => {
+  it('round-trips a word-card payload', () => {
+    const result = AnnotateSpanDoneEventSchema.safeParse({ card: validWordCard });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.card).toEqual(validWordCard);
+  });
+
+  it('accepts phrase and sentence cards (the full DeepCard union)', () => {
+    expect(
+      AnnotateSpanDoneEventSchema.safeParse({ card: validPhraseCard }).success,
+    ).toBe(true);
+    expect(
+      AnnotateSpanDoneEventSchema.safeParse({ card: validSentenceCard }).success,
+    ).toBe(true);
+  });
+
+  it('rejects a missing card and an invalid card shape', () => {
+    expect(AnnotateSpanDoneEventSchema.safeParse({}).success).toBe(false);
+    expect(
+      AnnotateSpanDoneEventSchema.safeParse({ card: { type: 'bogus' } }).success,
+    ).toBe(false);
   });
 });
 

@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Hono } from 'hono';
+import {
+  createObservedClaudeClient,
+  EVAL_REQUEST_TIMEOUT_MS,
+  EVAL_MAX_RETRIES,
+} from '@language-drill/ai';
 import { ExerciseQuerySchema, SubmitAnswerSchema } from './exercises';
 
 // ---------------------------------------------------------------------------
@@ -68,6 +73,8 @@ vi.mock('@language-drill/ai', () => ({
   withLlmTrace: <T>(ctx: unknown, fn: () => T | Promise<T>) =>
     mockWithLlmTrace(ctx, fn),
   EVALUATION_SYSTEM_PROMPT_VERSION: 'evaluate@test',
+  EVAL_REQUEST_TIMEOUT_MS: 18_000,
+  EVAL_MAX_RETRIES: 1,
 }));
 
 // Mock `node:crypto` so observability tests can pin `submissionId` and
@@ -421,6 +428,12 @@ describe('POST /exercises/:id/submit', () => {
     expect(body.feedback).toBe('Good job!');
     expect(mockInsert).toHaveBeenCalledTimes(3);
     expect(mockEvaluateAnswer).toHaveBeenCalledTimes(1);
+    // The eval client is constructed with the fail-fast timeout/retries
+    // (Req 4.1, 4.5) — applied at construction, not per-request.
+    expect(vi.mocked(createObservedClaudeClient)).toHaveBeenCalledWith(
+      expect.any(String),
+      { timeout: EVAL_REQUEST_TIMEOUT_MS, maxRetries: EVAL_MAX_RETRIES },
+    );
   });
 
   it('returns 404 when exercise does not exist', async () => {

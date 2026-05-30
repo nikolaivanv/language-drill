@@ -297,7 +297,7 @@ describe('WordPopover — skim preview while the deep card loads (Req 3.1, 3.3)'
     render(
       <WordPopover
         {...baseProps}
-        deepCard={{ status: 'loading', span: SPAN }}
+        deepCard={{ status: 'loading', span: SPAN, partial: {} }}
       />,
     );
     // Skim card content (the gloss) shows…
@@ -316,7 +316,7 @@ describe('WordPopover — deep-card loading (Req 9.3)', () => {
       <WordPopover
         {...baseProps}
         entry={null}
-        deepCard={{ status: 'loading', span: SPAN }}
+        deepCard={{ status: 'loading', span: SPAN, partial: {} }}
       />,
     );
     expect(screen.getByRole('dialog')).toBeInTheDocument();
@@ -324,6 +324,50 @@ describe('WordPopover — deep-card loading (Req 9.3)', () => {
     expect(screen.getByText(/looking it up/i)).toBeInTheDocument();
     // The skim entry body is not shown while the deep card loads.
     expect(screen.queryByText('a small village')).not.toBeInTheDocument();
+  });
+});
+
+describe('WordPopover — deep-card progressive preview (Req 1.2)', () => {
+  it('renders the streamed fields so far above the "looking it up…" caption, not the bare skeleton', () => {
+    render(
+      <WordPopover
+        {...baseProps}
+        entry={null}
+        deepCard={{
+          status: 'loading',
+          span: SPAN,
+          partial: {
+            surface: 'aldea',
+            contextualSense: 'a small rural settlement',
+            definition: 'pueblo pequeño',
+            definitionLabel: 'Español',
+          },
+        }}
+      />,
+    );
+    // The fields received so far are visible (the contextual sense is rendered
+    // inside typographic quotes, so match on a substring).
+    expect(screen.getByTestId('deep-card-partial')).toBeInTheDocument();
+    expect(screen.getByText(/a small rural settlement/)).toBeInTheDocument();
+    expect(screen.getByText('pueblo pequeño')).toBeInTheDocument();
+    // …it still signals that generation is ongoing…
+    expect(screen.getByText(/looking it up/i)).toBeInTheDocument();
+    // …and the bare skeleton is no longer the thing on screen.
+    expect(screen.queryByTestId('deep-card-skeleton')).toBeNull();
+  });
+
+  it('falls back to the skeleton while the partial is still empty', () => {
+    render(
+      <WordPopover
+        {...baseProps}
+        entry={null}
+        deepCard={{ status: 'loading', span: SPAN, partial: {} }}
+      />,
+    );
+    // No field has arrived yet → instant-open skeleton (Req 9.3), not the
+    // partial preview.
+    expect(screen.getByTestId('deep-card-skeleton')).toBeInTheDocument();
+    expect(screen.queryByTestId('deep-card-partial')).toBeNull();
   });
 });
 

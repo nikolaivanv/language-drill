@@ -4,7 +4,7 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
 {
   "Outputs": {
     "AnnotateStreamUrl": {
-      "Description": "Function URL for /read/annotate streaming endpoint",
+      "Description": "Function URL for the SSE read endpoints: /read/annotate (skim) and /read/annotate-span (deep card)",
       "Value": {
         "Fn::GetAtt": [
           "AnnotateStreamUrl211DD16F",

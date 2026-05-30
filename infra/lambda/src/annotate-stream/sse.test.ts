@@ -129,6 +129,17 @@ describe("createSseWriter — writeEvent / writeTerminal framing (Req 3.3)", () 
     );
   });
 
+  it("writeEvent('field', payload) emits one `event: field\\ndata: <json>\\n\\n` frame", () => {
+    const writer = createSseWriter(stream);
+    writer.openSse();
+    writer.writeEvent("field", { key: "definition", value: "a small village" });
+
+    expect(harness.wrappedWrites).toHaveLength(1);
+    expect(harness.wrappedWrites[0]).toBe(
+      `event: field\ndata: ${JSON.stringify({ key: "definition", value: "a small village" })}\n\n`,
+    );
+  });
+
   it("writeTerminal('done', payload) emits the frame AND flips `terminated`", () => {
     const writer = createSseWriter(stream);
     writer.openSse();

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { CefrLevel, Language } from '@language-drill/shared';
-import type { FlaggedMap, WordFlag } from '@language-drill/shared';
+import type { DeepCard, FlaggedMap, WordFlag } from '@language-drill/shared';
 import type {
   ReadEntriesResponse,
   ReadEntryResponse,
@@ -31,7 +31,7 @@ const mockUseReadEntry = vi.fn();
 const mockUseReadAnnotateStream = vi.fn();
 const mockUseSaveReadEntry = vi.fn();
 const mockUseUpdateReadBank = vi.fn();
-const mockUseReadAnnotateSpan = vi.fn();
+const mockUseReadAnnotateSpanStream = vi.fn();
 const mockUseSaveVocabularyCard = vi.fn();
 const mockUseDeleteVocabularyCard = vi.fn();
 
@@ -43,7 +43,8 @@ vi.mock('@language-drill/api-client', () => ({
     mockUseReadAnnotateStream(...args),
   useSaveReadEntry: (...args: unknown[]) => mockUseSaveReadEntry(...args),
   useUpdateReadBank: (...args: unknown[]) => mockUseUpdateReadBank(...args),
-  useReadAnnotateSpan: (...args: unknown[]) => mockUseReadAnnotateSpan(...args),
+  useReadAnnotateSpanStream: (...args: unknown[]) =>
+    mockUseReadAnnotateSpanStream(...args),
   useSaveVocabularyCard: (...args: unknown[]) =>
     mockUseSaveVocabularyCard(...args),
   useDeleteVocabularyCard: (...args: unknown[]) =>
@@ -191,12 +192,99 @@ function stubAnnotateCompleteOnStart(
 }
 
 // ---------------------------------------------------------------------------
+// Mock helpers — streaming deep-span hook (useReadAnnotateSpanStream)
+// ---------------------------------------------------------------------------
+//
+// The deep card now streams: the hook contract is `{ state, start, abort,
+// reset }` where `state` is `{ phase: 'idle' | 'streaming' | 'complete' |
+// 'error' }`. The page mirrors that state into its reducer's `deepCard` slice
+// via an effect, so flipping `currentSpanState` on `start(...)` drives the
+// progressive → terminal render. `stub*OnStart` helpers wire `start` to flip
+// the phase synchronously; the page re-renders off the reducer dispatch in
+// `handleSpanSelect`, so the next read of the mock returns the new state.
+
+type SpanReq = {
+  language: Language;
+  text: string;
+  start: number;
+  end: number;
+  entryId?: string;
+};
+
+type DeepCardStreamState =
+  | { phase: 'idle' }
+  | { phase: 'streaming'; partial: Record<string, unknown>; span: SpanReq }
+  | { phase: 'complete'; card: DeepCard; span: SpanReq }
+  | {
+      phase: 'error';
+      error: { code: string; message: string; status?: number };
+      span: SpanReq;
+    };
+
+let spanStart: ReturnType<typeof vi.fn>;
+let spanAbort: ReturnType<typeof vi.fn>;
+let spanResetMock: ReturnType<typeof vi.fn>;
+let currentSpanState: DeepCardStreamState = { phase: 'idle' };
+let lastSpanOnResolved: ((card: DeepCard, span: SpanReq) => void) | undefined;
+
+function setSpanState(state: DeepCardStreamState) {
+  currentSpanState = state;
+}
+
+function resetSpanMock() {
+  currentSpanState = { phase: 'idle' };
+  spanStart = vi.fn();
+  spanAbort = vi.fn();
+  spanResetMock = vi.fn();
+  lastSpanOnResolved = undefined;
+  mockUseReadAnnotateSpanStream.mockImplementation(
+    (opts: { onResolved?: (card: DeepCard, span: SpanReq) => void } = {}) => {
+      lastSpanOnResolved = opts.onResolved;
+      return {
+        state: currentSpanState,
+        start: spanStart,
+        abort: spanAbort,
+        reset: spanResetMock,
+      };
+    },
+  );
+}
+
+// `start` → terminal `complete`: the stream resolves immediately with `card`
+// and fires `onResolved` (the page's entry-cache write-through), exactly as a
+// `done` frame would.
+function stubSpanCompleteOnStart(card: DeepCard) {
+  spanStart.mockImplementation((input: SpanReq) => {
+    setSpanState({ phase: 'complete', card, span: input });
+    lastSpanOnResolved?.(card, input);
+  });
+}
+
+// `start` → `streaming` and STAYS there (no terminal): the deep card slice
+// stays `loading`, so the chrome shows the progressive/loading state.
+function stubSpanStreamingOnStart(partial: Record<string, unknown>) {
+  spanStart.mockImplementation((input: SpanReq) => {
+    setSpanState({ phase: 'streaming', partial, span: input });
+  });
+}
+
+// `start` → terminal `error`: mirrors a mid-stream upstream failure (Req 1.5).
+function stubSpanErrorOnStart(error: {
+  code: string;
+  message: string;
+  status?: number;
+}) {
+  spanStart.mockImplementation((input: SpanReq) => {
+    setSpanState({ phase: 'error', error, span: input });
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Mock helpers — other hooks
 // ---------------------------------------------------------------------------
 
 let saveMutate: ReturnType<typeof vi.fn>;
 let updateBankMutate: ReturnType<typeof vi.fn>;
-let spanMutate: ReturnType<typeof vi.fn>;
 let saveVocabMutate: ReturnType<typeof vi.fn>;
 let deleteVocabMutate: ReturnType<typeof vi.fn>;
 
@@ -223,16 +311,6 @@ function setUpdateBank(
     mutate: updateBankMutate,
     reset: vi.fn(),
     isPending: opts.isPending ?? false,
-    error: null,
-  });
-}
-
-function setAnnotateSpan(opts: { mutateImpl?: MutateImpl } = {}) {
-  spanMutate = vi.fn(opts.mutateImpl ?? (() => {}));
-  mockUseReadAnnotateSpan.mockReturnValue({
-    mutate: spanMutate,
-    reset: vi.fn(),
-    isPending: false,
     error: null,
   });
 }
@@ -318,7 +396,7 @@ beforeEach(() => {
   resetAnnotateMock();
   setSave();
   setUpdateBank();
-  setAnnotateSpan();
+  resetSpanMock();
   setVocabMutations();
 });
 
@@ -737,62 +815,85 @@ describe('ReadPage — deep annotation flow (Req 3, 9.4, 11)', () => {
     freq: 4321,
   };
 
-  it('tapping a word fires the deep endpoint with the passage text, offsets, and entryId (Req 3.2, 3.4)', () => {
+  it('tapping a word starts the deep stream with the passage text, offsets, and entryId (Req 3.2, 3.4)', () => {
     setEntries(ENTRIES_3);
     setEntry(FULL_ENTRY);
     renderPage();
     fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
-    expect(spanMutate).toHaveBeenCalledTimes(1);
-    expect(spanMutate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        language: Language.ES,
-        text: 'aldea grande',
-        start: 0,
-        end: 5,
-        entryId: ENTRY_ID,
-      }),
-      expect.any(Object),
-    );
+    expect(spanStart).toHaveBeenCalledTimes(1);
+    expect(spanStart).toHaveBeenCalledWith({
+      language: Language.ES,
+      text: 'aldea grande',
+      start: 0,
+      end: 5,
+      entryId: ENTRY_ID,
+    });
   });
 
-  it('renders a persisted span instantly and does NOT call the endpoint (Req 11.3, 11.4)', () => {
+  it('renders a persisted span instantly and does NOT start the stream (Req 11.3, 11.4, 2.8)', () => {
     setEntries(ENTRIES_3);
     setEntry({ ...FULL_ENTRY, spanAnnotations: { '0:5': DEEP_ALDEA } });
     renderPage();
     fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
     // Loaded deep card renders from the seeded snapshot…
     expect(screen.getByText('pueblo pequeño')).toBeInTheDocument();
-    // …and the deep endpoint is never hit.
-    expect(spanMutate).not.toHaveBeenCalled();
+    // …and the stream is never started.
+    expect(spanStart).not.toHaveBeenCalled();
   });
 
-  it('swaps the resolved deep card in on success (Req 3.3)', () => {
+  it('shows a field mid-stream then swaps to the deep card on the terminal done (Req 1.2, 1.3, 3.3)', () => {
     setEntries(ENTRIES_3);
     setEntry(FULL_ENTRY);
-    setAnnotateSpan({
-      mutateImpl: (_vars, opts) => opts?.onSuccess?.(DEEP_ALDEA),
-    });
+    // First tap keeps the stream in `streaming`: the deep slice stays
+    // `loading`, so the chrome shows the skim card + the "looking it up…"
+    // indicator — a field is visible mid-stream (Req 1.2).
+    stubSpanStreamingOnStart({ contextualSense: 'a small rural settlement' });
+    const { unmount } = renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
+    expect(spanStart).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('a small village')).toBeInTheDocument();
+    expect(screen.getByTestId('skim-loading-deep')).toBeInTheDocument();
+    // The deep card body has not replaced the skim preview yet.
+    expect(screen.queryByText('pueblo pequeño')).not.toBeInTheDocument();
+    unmount();
+
+    // A terminal `done` swaps the authoritative deep card in (Req 1.3).
+    stubSpanCompleteOnStart(DEEP_ALDEA);
     renderPage();
     fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
     expect(screen.getByText('pueblo pequeño')).toBeInTheDocument();
   });
 
-  it('surfaces an inline error and retries from the card (Req 9.4)', () => {
+  it('a repeat tap within the session renders from cache with no new stream (Req 2.8)', () => {
     setEntries(ENTRIES_3);
     setEntry(FULL_ENTRY);
-    setAnnotateSpan({
-      mutateImpl: (_vars, opts) => {
-        const err = new Error('network blip');
-        (err as { status?: number }).status = 502;
-        opts?.onError?.(err);
-      },
+    stubSpanCompleteOnStart(DEEP_ALDEA);
+    renderPage();
+    // First tap resolves and seeds the reducer's spanAnnotations session map.
+    fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
+    expect(screen.getByText('pueblo pequeño')).toBeInTheDocument();
+    expect(spanStart).toHaveBeenCalledTimes(1);
+    // Re-tap the same span — the OPEN_DEEP_CARD cache check serves it from the
+    // session map with no second stream (Req 2.8).
+    fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
+    expect(screen.getByText('pueblo pequeño')).toBeInTheDocument();
+    expect(spanStart).toHaveBeenCalledTimes(1);
+  });
+
+  it('surfaces an inline error and retries from the card (Req 1.5, 9.4)', () => {
+    setEntries(ENTRIES_3);
+    setEntry(FULL_ENTRY);
+    stubSpanErrorOnStart({
+      code: 'AI_UNAVAILABLE',
+      message: 'network blip',
+      status: 502,
     });
     renderPage();
     fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
     expect(screen.getByTestId('deep-card-error')).toBeInTheDocument();
-    expect(spanMutate).toHaveBeenCalledTimes(1);
+    expect(spanStart).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByRole('button', { name: /try again/i }));
-    expect(spanMutate).toHaveBeenCalledTimes(2);
+    expect(spanStart).toHaveBeenCalledTimes(2);
   });
 
   const VOCAB_ID = '99999999-9999-9999-9999-999999999999';
@@ -800,9 +901,7 @@ describe('ReadPage — deep annotation flow (Req 3, 9.4, 11)', () => {
   function saveAldea() {
     setEntries(ENTRIES_3);
     setEntry(FULL_ENTRY);
-    setAnnotateSpan({
-      mutateImpl: (_vars, opts) => opts?.onSuccess?.(DEEP_ALDEA),
-    });
+    stubSpanCompleteOnStart(DEEP_ALDEA);
     setVocabMutations({
       saveImpl: (_vars, opts) => opts?.onSuccess?.({ id: VOCAB_ID }),
       deleteImpl: (_vars, opts) => opts?.onSuccess?.({ id: VOCAB_ID }),
@@ -889,9 +988,7 @@ describe('ReadPage — deep annotation flow (Req 3, 9.4, 11)', () => {
       };
     setEntries(ENTRIES_3);
     setEntry(FULL_ENTRY); // flaggedWords = { aldea } only
-    setAnnotateSpan({
-      mutateImpl: (_vars, opts) => opts?.onSuccess?.(DEEP_GRANDE),
-    });
+    stubSpanCompleteOnStart(DEEP_GRANDE);
     setVocabMutations({
       saveImpl: (_vars, opts) => opts?.onSuccess?.({ id: VOCAB_ID }),
     });
@@ -920,7 +1017,7 @@ describe('ReadPage — deep annotation flow (Req 3, 9.4, 11)', () => {
       mutateImpl: (_vars, opts) =>
         opts?.onSuccess?.({ id: ENTRY_ID, pastedAt: '2026-05-05T00:00:00.000Z' }),
     });
-    setAnnotateSpan({ mutateImpl: (_vars, opts) => opts?.onSuccess?.(DEEP_ALDEA) });
+    stubSpanCompleteOnStart(DEEP_ALDEA);
     setVocabMutations({ saveImpl: (_vars, opts) => opts?.onSuccess?.({ id: VOCAB_ID }) });
     renderPage();
     fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));

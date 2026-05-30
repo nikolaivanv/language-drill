@@ -26,7 +26,7 @@ import {
   useActiveReviewLemmas,
   useDeleteVocabularyCard,
   useLanguageProfiles,
-  useReadAnnotateSpan,
+  useReadAnnotateSpanStream,
   useReadAnnotateStream,
   useReadEntries,
   useReadEntry,
@@ -64,22 +64,6 @@ import { SaveToast, VocabSaveToast } from './_components/save-toast';
 
 const SAVE_TOAST_MS = 4000;
 const INLINE_ERROR_MS = 3000;
-
-// Map a thrown `createAuthenticatedFetch` error (carries `.status` + `.body`)
-// into the reducer's `AnnotateError` shape for the deep-card error slice. The
-// card body keys retry-disable off `status === 429` and shows `message`.
-function toAnnotateError(err: unknown): AnnotateError {
-  const e = err as {
-    message?: string;
-    status?: number;
-    body?: { code?: string } | null;
-  };
-  return {
-    code: e.body?.code ?? 'DEEP_ANNOTATE_FAILED',
-    message: e.message || 'something went wrong — try again',
-    status: e.status,
-  };
-}
 
 // Build the word-bank panel row for a just-saved deep card. Mirrors the
 // server's `savedVocab` projection (read.ts) so optimistic rows match a later
@@ -128,6 +112,7 @@ export default function ReadPage() {
   const { getToken } = useAuth();
   const router = useRouter();
   const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
+  const queryClient = useQueryClient();
 
   const [state, dispatch] = useReducer(readPageReducer, initialState);
 
@@ -172,16 +157,43 @@ export default function ReadPage() {
   });
   const saveEntry = useSaveReadEntry({ fetchFn });
   const updateBank = useUpdateReadBank({ fetchFn });
-  // On-demand deep annotation (Sonnet). Writes resolved cards through into the
-  // `['readEntry', id]` cache's spanAnnotations when the span belongs to a
-  // saved entry (Req 11.4); the seeding effect below mirrors that back into the
-  // reducer so a re-tap is an instant cache hit.
-  const annotateSpan = useReadAnnotateSpan({ fetchFn });
+  // On-demand deep annotation — now streamed field-by-field (Req 1.1, 1.2). The
+  // hook owns its own state machine; the effect below mirrors that into the
+  // reducer's `deepCard` slice (DEEP_CARD_FIELD/RESOLVED/ERROR) so the annotated
+  // view renders progressively. `onResolved` is the streaming counterpart of the
+  // old mutation's `onSuccess`: for a SAVED span it writes the authoritative card
+  // through into the `['readEntry', id]` cache's `spanAnnotations` (Req 2.8,
+  // 11.4); the seeding effect below mirrors that back into the reducer so a
+  // re-tap is an instant cache hit. Unsaved text carries no `entryId`, so its
+  // cards live only in the reducer session map (via DEEP_CARD_RESOLVED).
+  const annotateSpan = useReadAnnotateSpanStream({
+    baseUrl: process.env.NEXT_PUBLIC_ANNOTATE_STREAM_URL ?? '',
+    getToken,
+    onResolved: (card, span) => {
+      if (!span.entryId) return;
+      const existing = queryClient.getQueryData<ReadEntryResponse>([
+        'readEntry',
+        span.entryId,
+      ]);
+      if (!existing) return;
+      const key = `${span.start}:${span.end}`;
+      queryClient.setQueryData<ReadEntryResponse>(['readEntry', span.entryId], {
+        ...existing,
+        spanAnnotations: {
+          ...(existing.spanAnnotations ?? {}),
+          [key]: card,
+        },
+      });
+    },
+  });
+  // The span currently driving `annotateSpan` — carried in a ref so the
+  // hook-state→reducer mirror effect has the full `DeepSpan` (type/x/y) to
+  // dispatch with, matched by start/end to the open card.
+  const openDeepSpanRef = useRef<DeepSpan | null>(null);
   // Deep card → vocabulary save + undo (Req 8.4, 8.5). Independent of the entry
   // bank and of entry `spanAnnotations` (Req 11.7).
   const saveVocab = useSaveVocabularyCard({ fetchFn });
   const deleteVocab = useDeleteVocabularyCard({ fetchFn });
-  const queryClient = useQueryClient();
 
   // Optimistically patch the open entry's saved-vocab list in the query cache,
   // so the word-bank panel reflects a save/unsave instantly (the deep-save and
@@ -287,8 +299,8 @@ export default function ReadPage() {
   // Seed the open entry's persisted deep cards into the reducer (Req 11.3), so
   // a reopened saved text renders its stored spans with no model call and a tap
   // on a stored span is an instant cache hit (Req 11.4). Re-fires when the
-  // entry cache changes — including `useReadAnnotateSpan`'s write-through — so
-  // the reducer's session map stays in lockstep with the durable store. The
+  // entry cache changes — including `annotateSpan.onResolved`'s write-through —
+  // so the reducer's session map stays in lockstep with the durable store. The
   // reducer MERGES, so cards resolved before the query settled survive.
   useEffect(() => {
     const data = entryQuery.data;
@@ -298,6 +310,33 @@ export default function ReadPage() {
       spanAnnotations: data.spanAnnotations ?? {},
     });
   }, [entryQuery.data]);
+
+  // Mirror the deep-span stream hook's state into the reducer's `deepCard`
+  // slice. `streaming` → DEEP_CARD_FIELD per completed field (the reducer
+  // merges, so re-dispatching the full partial is idempotent); `complete` →
+  // DEEP_CARD_RESOLVED (lands the card in the session map even for unsaved
+  // text, which `onResolved` skips); `error` → DEEP_CARD_ERROR. The reducer's
+  // start/end guards drop any dispatch that no longer matches the open span,
+  // so a late frame from a superseded span is ignored.
+  const spanStreamState = annotateSpan.state;
+  useEffect(() => {
+    const span = openDeepSpanRef.current;
+    if (!span) return;
+    if (spanStreamState.phase === 'streaming') {
+      for (const [key, value] of Object.entries(spanStreamState.partial)) {
+        dispatch({ type: 'DEEP_CARD_FIELD', span, key, value });
+      }
+    } else if (spanStreamState.phase === 'complete') {
+      dispatch({ type: 'DEEP_CARD_RESOLVED', span, card: spanStreamState.card });
+    } else if (spanStreamState.phase === 'error') {
+      const error: AnnotateError = {
+        code: spanStreamState.error.code,
+        message: spanStreamState.error.message,
+        status: spanStreamState.error.status,
+      };
+      dispatch({ type: 'DEEP_CARD_ERROR', span, error });
+    }
+  }, [spanStreamState]);
 
   // -------------------------------------------------------------------------
   // Derived view data
@@ -437,26 +476,20 @@ export default function ReadPage() {
     dispatch({ type: 'DISMISS_DEEP_CARD' });
   };
 
-  // Fire the deep-annotation request for a span and route the result into the
-  // reducer's deep-card state machine (Req 3.4, 9.4). `entryId` is sent only
-  // for a saved entry, so the server persists onto it (Req 11.1) and skips the
-  // DB write for unsaved text (Req 11.2).
+  // Open the deep-span stream for a span (Req 1.1). Records the span in the ref
+  // so the mirror effect can route streamed fields + the terminal card/error
+  // back into the reducer's deep-card slice (Req 1.2, 1.3, 1.5). `entryId` is
+  // sent only for a saved entry, so the server persists onto it (Req 11.1) and
+  // skips the DB write for unsaved text (Req 11.2).
   const runSpanAnnotation = (span: DeepSpan) => {
-    annotateSpan.mutate(
-      {
-        language: activeLanguage,
-        text: annotatedEntry?.text ?? state.paste.text,
-        start: span.start,
-        end: span.end,
-        entryId: state.activeEntryId ?? undefined,
-      },
-      {
-        onSuccess: (card) =>
-          dispatch({ type: 'DEEP_CARD_RESOLVED', span, card }),
-        onError: (err) =>
-          dispatch({ type: 'DEEP_CARD_ERROR', span, error: toAnnotateError(err) }),
-      },
-    );
+    openDeepSpanRef.current = span;
+    annotateSpan.start({
+      language: activeLanguage,
+      text: annotatedEntry?.text ?? state.paste.text,
+      start: span.start,
+      end: span.end,
+      entryId: state.activeEntryId ?? undefined,
+    });
   };
 
   // Tap/drag on any span. A span already in `spanAnnotations` (seeded from the
