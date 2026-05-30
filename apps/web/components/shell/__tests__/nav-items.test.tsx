@@ -2,6 +2,10 @@ import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { NavItems, NAV_DESTINATIONS } from '../nav-items';
 
+vi.mock('../use-review-due-count', () => ({
+  useReviewDueCount: () => 0,
+}));
+
 vi.mock('next/navigation', () => ({
   usePathname: () => '/',
 }));
@@ -23,11 +27,12 @@ vi.mock('next/link', () => ({
 }));
 
 describe('NavItems', () => {
-  it('exposes the primary destinations in order (theory between read and progress)', () => {
+  it('exposes the primary destinations in order (review + theory between read and progress)', () => {
     expect(NAV_DESTINATIONS.map((d) => d.href)).toEqual([
       '/',
       '/drill',
       '/read',
+      '/review',
       '/theory',
       '/progress',
     ]);
@@ -35,6 +40,7 @@ describe('NavItems', () => {
       'today',
       'drill',
       'read',
+      'review',
       'theory',
       'progress',
     ]);

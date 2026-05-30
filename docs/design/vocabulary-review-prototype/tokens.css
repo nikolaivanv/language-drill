@@ -1,0 +1,93 @@
+/* ─────────────────────────────────────────────────────────────
+   Language Drill — design tokens
+   Single source of truth for color, type, spacing, radius, shadow.
+   Identical values are used on web and mobile. Where the platforms
+   differ, both are listed and labeled (web / mobile).
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  /* ─── Color: paper / ink palette ─── */
+  --paper: #faf7f1;        /* primary background — warm off-white */
+  --paper-2: #f2ede2;      /* recessed surface — sidebar, hover */
+  --paper-3: #e8e1d2;      /* deepest paper — meter track, divider fill */
+  --card: #ffffff;         /* elevated surface — drill items, dialogs */
+
+  --ink: #1a1612;          /* primary text + active fill */
+  --ink-2: #3d362e;        /* body copy (web) */
+  --ink-soft: #5a5148;     /* secondary text */
+  --ink-mute: #8a8074;     /* tertiary / metadata */
+
+  --rule: #d8d0bf;         /* default border / divider (web) */
+  --rule-mobile: #e0d8c8;  /* slightly lighter on mobile to compensate for retina */
+  --rule-strong: #c9bfac;  /* high-contrast border (sheet handle, key outlines) */
+
+  /* ─── Color: accent (terracotta) ─── */
+  --accent: #c96442;       /* primary accent + warning */
+  --accent-2: #b15535;     /* hover state */
+  --accent-soft: #f7e2d3;  /* tint background (callouts, chips) */
+
+  /* ─── Color: highlight (amber) ─── */
+  --hilite: #f4d35e;       /* underline / marker tip */
+  --hilite-soft: #fbeeb6;  /* highlight wash for selected choice */
+
+  /* ─── Color: success (sage) ─── */
+  --ok: #5b8a5a;           /* correct / success */
+  --ok-soft: #d8e6d3;      /* success tint */
+
+  /* ─── Typography ─── */
+  --t-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --t-ui: 'Inter', system-ui, -apple-system, sans-serif;
+  --t-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --t-hand: 'Caveat', cursive;
+
+  /* Display sizes (Fraunces, weight 500, opsz: 144) */
+  --fs-display-xl: 56px;   /* hero, web */
+  --fs-display-l: 40px;    /* page title, web */
+  --fs-display-m: 28px;    /* section title */
+  --fs-display-s: 22px;    /* card title */
+  --fs-display-mobile: 26px; /* mobile hero — replaces XL/L on phone */
+
+  /* UI sizes (Inter) */
+  --fs-body-l: 17px;       /* lead paragraph, web */
+  --fs-body: 14px;         /* default body */
+  --fs-small: 12px;
+  --fs-micro: 11px;        /* uppercase, letter-spacing 1.2px */
+
+  /* Line heights — see usage notes in HANDOFF.md */
+  --lh-display-tight: 1.05;  /* 56px */
+  --lh-display: 1.1;         /* 40px */
+  --lh-display-medium: 1.2;  /* 28px and below — DO use this for any wrappable headline */
+  --lh-body: 1.55;
+  --lh-ui: 1.4;
+
+  /* ─── Radius ─── */
+  --r-sm: 6px;             /* chips, kbd, small buttons */
+  --r-md: 10px;            /* default — buttons, inputs, choice cards */
+  --r-lg: 16px;            /* cards (web) */
+  --r-mobile-3: 14px;      /* mobile card */
+  --r-mobile-4: 20px;
+  --r-xl: 24px;            /* sheet header (mobile bottom sheet) */
+  --r-pill: 999px;         /* chips, bars, mobile buttons */
+
+  /* ─── Spacing scale (mobile uses these) ─── */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-7: 32px;
+  --s-8: 40px;
+
+  /* ─── Shadows ─── */
+  --shadow-1: 0 1px 2px rgba(26,22,18,0.05), 0 1px 3px rgba(26,22,18,0.06);
+  --shadow-2: 0 2px 4px rgba(26,22,18,0.06), 0 8px 24px rgba(26,22,18,0.08);
+  --shadow-3: 0 4px 12px rgba(26,22,18,0.10), 0 24px 60px rgba(26,22,18,0.14);
+  --shadow-fab: 0 6px 18px rgba(26,22,18,0.30);
+  --shadow-sheet: 0 -10px 40px rgba(0,0,0,0.18);
+
+  /* ─── Tap targets / heights ─── */
+  --tap-target: 48px;      /* mobile minimum (primary button) */
+  --tap-md: 40px;
+  --tap-sm: 32px;
+}

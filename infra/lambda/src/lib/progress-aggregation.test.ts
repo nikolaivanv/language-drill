@@ -51,6 +51,11 @@ describe('axisForExerciseType', () => {
     expect(axisForExerciseType('reading_short_answer')).toBe('reading');
   });
 
+  it('maps the vocabulary-review sentinels onto their axes (Req 9.1, 9.3)', () => {
+    expect(axisForExerciseType('vocab_review_vocab')).toBe('vocabulary');
+    expect(axisForExerciseType('vocab_review_grammar')).toBe('grammar');
+  });
+
   it('returns null for unknown types', () => {
     expect(axisForExerciseType('mystery_type')).toBeNull();
     expect(axisForExerciseType('')).toBeNull();
