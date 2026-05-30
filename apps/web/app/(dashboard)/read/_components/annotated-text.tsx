@@ -80,6 +80,13 @@ type Props = {
    * (Req 11.7).
    */
   savedWordKeys?: Set<string>;
+  /**
+   * Words currently in the spaced-review rotation (Req 13.2). A token is under
+   * review when its flag's `lemma` ∈ `lemmas` (primary) or its surface key ∈
+   * `surfaces` (fallback for non-flagged words / annotations lacking a lemma).
+   * Both sets are lowercased. Drives the distinct `.underReview` highlight.
+   */
+  underReview?: { lemmas: Set<string>; surfaces: Set<string> };
   onWordClick: (word: string, rect: DOMRect) => void;
   onSpanSelect?: (span: SpanSelection) => void;
 };
@@ -173,6 +180,7 @@ export function AnnotatedText({
   bankSet,
   activeWord,
   savedWordKeys,
+  underReview,
   onWordClick,
   onSpanSelect,
 }: Props) {
@@ -381,10 +389,18 @@ export function AnnotatedText({
         if (token.kind === 'sep') {
           return <React.Fragment key={i}>{token.raw}</React.Fragment>;
         }
-        const isFlagged = Boolean(flaggedMap[token.key]);
+        const flag = flaggedMap[token.key];
+        const isFlagged = Boolean(flag);
         const inBank = bankSet.has(token.key) || Boolean(savedWordKeys?.has(token.key));
         const isActive = activeWord === token.key;
         const inSelection = selRange !== null && i >= selRange.min && i <= selRange.max;
+        // Under review: flag lemma matches (primary) or surface key matches
+        // (fallback — covers non-flagged words still in the rotation) (Req 13.2).
+        const isUnderReview = Boolean(
+          underReview &&
+            ((flag && underReview.lemmas.has(flag.lemma.toLowerCase())) ||
+              underReview.surfaces.has(token.key)),
+        );
         return (
           <button
             key={i}
@@ -397,6 +413,7 @@ export function AnnotatedText({
               // words stay visually plain but remain interactive.
               isFlagged && styles[intensity],
               isFlagged && inBank && styles.saved,
+              isUnderReview && styles.underReview,
               isActive && styles.active,
               inSelection && styles.selecting,
             )}

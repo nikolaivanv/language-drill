@@ -22,6 +22,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import {
   createAuthenticatedFetch,
+  useActiveReviewLemmas,
   useDeleteVocabularyCard,
   useLanguageProfiles,
   useReadAnnotateSpan,
@@ -112,6 +113,18 @@ export default function ReadPage() {
 
   const entriesQuery = useReadEntries({ fetchFn, language: activeLanguage });
   const entries = entriesQuery.data?.entries ?? [];
+
+  // Words in the spaced-review rotation for the active language → the distinct
+  // under-review highlight in the reader (Req 13.2). Lemma + surface sets are
+  // lowercased once here; AnnotatedText matches each token against them.
+  const activeReviewLemmas = useActiveReviewLemmas({ fetchFn, language: activeLanguage });
+  const underReview = useMemo(
+    () => ({
+      lemmas: new Set((activeReviewLemmas.data?.lemmas ?? []).map((l) => l.toLowerCase())),
+      surfaces: new Set((activeReviewLemmas.data?.surfaces ?? []).map((s) => s.toLowerCase())),
+    }),
+    [activeReviewLemmas.data],
+  );
 
   const entryQuery = useReadEntry({
     fetchFn,
@@ -435,6 +448,21 @@ export default function ReadPage() {
     if (card.type === 'sentence') return;
     const word = card.type === 'word' ? card.surface.toLowerCase() : null;
 
+    // A deep card can resolve ANY tapped word, not just the auto-flagged ones.
+    // The passage word bank, however, only holds flagged words: the server
+    // rejects a bank containing a non-flagged word (bank ⊆ flagged, enforced on
+    // both POST /read/entries and PUT .../bank) and the WordBankRail can't even
+    // render one (it resolves each entry through `flaggedMap`). So a non-flagged
+    // word still saves to vocabulary, but it must NOT be added to the bank —
+    // otherwise the bank write 400s and the user sees a spurious
+    // "couldn't update — try again" alongside the successful vocab save.
+    const flaggedWords = annotatedEntry?.flaggedWords ?? {};
+    const bankableWord =
+      word !== null &&
+      Object.prototype.hasOwnProperty.call(flaggedWords, word)
+        ? word
+        : null;
+
     const saveVocabLinked = (sourceReadEntryId: string | undefined, banked: boolean) => {
       saveVocab.mutate(
         { language: activeLanguage, card, sourceReadEntryId },
@@ -448,13 +476,14 @@ export default function ReadPage() {
       );
     };
 
-    // Already-persisted entry: bank the word (PUT) if it's new, then link vocab.
+    // Already-persisted entry: bank the word (PUT) if it's a flagged word that's
+    // new to the bank, then link vocab.
     if (state.activeEntryId !== null) {
-      const banked = word !== null && !state.bank.includes(word);
+      const banked = bankableWord !== null && !state.bank.includes(bankableWord);
       if (banked) {
-        dispatch({ type: 'TOGGLE_BANK_WORD', word });
+        dispatch({ type: 'TOGGLE_BANK_WORD', word: bankableWord });
         updateBank.mutate(
-          { id: state.activeEntryId, language: activeLanguage, bank: [...state.bank, word] },
+          { id: state.activeEntryId, language: activeLanguage, bank: [...state.bank, bankableWord] },
           { onError: () => dispatch({ type: 'SHOW_INLINE_ERROR', kind: 'bank' }) },
         );
       }
@@ -470,7 +499,7 @@ export default function ReadPage() {
       saveVocabLinked(undefined, false);
       return;
     }
-    if (word !== null) dispatch({ type: 'TOGGLE_BANK_WORD', word });
+    if (bankableWord !== null) dispatch({ type: 'TOGGLE_BANK_WORD', word: bankableWord });
     saveEntry.mutate(
       {
         language: activeLanguage,
@@ -478,12 +507,12 @@ export default function ReadPage() {
         source: '',
         text: state.paste.text,
         flagged: annotate.state.flaggedMap,
-        bank: word !== null ? [...state.bank, word] : state.bank,
+        bank: bankableWord !== null ? [...state.bank, bankableWord] : state.bank,
       },
       {
         onSuccess: (data) => {
           dispatch({ type: 'ENTRY_PERSISTED', entryId: data.id });
-          saveVocabLinked(data.id, word !== null);
+          saveVocabLinked(data.id, bankableWord !== null);
         },
         onError: () => {
           dispatch({ type: 'SHOW_INLINE_ERROR', kind: 'save' });
@@ -701,6 +730,7 @@ export default function ReadPage() {
             deepSaved ? { start: deepSaved.start, end: deepSaved.end } : null
           }
           savedWordKeys={savedWordKeys}
+          underReview={underReview}
           onBankToggle={handleBankToggle}
           onPasteNew={handlePasteNew}
         />

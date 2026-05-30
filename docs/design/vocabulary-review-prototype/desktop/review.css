@@ -1,0 +1,152 @@
+/* Review-feature-specific styles. Reuses tokens from hifi/styles.css. */
+
+/* Frame: each artboard hosts a fake app. AppShell only renders nicely inside
+ * fixed-size containers, so we wrap with .rv-frame and let it scroll if content
+ * overflows the artboard. */
+.rv-frame { width: 100%; height: 100%; background: var(--paper); display: flex; overflow: hidden; }
+.rv-frame .rv-nav {
+  width: 220px; flex-shrink: 0; border-right: 1px solid var(--rule);
+  padding: 22px 16px; background: var(--paper);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.rv-frame .rv-main { flex: 1; min-width: 0; overflow-y: auto; display: flex; flex-direction: column; }
+.rv-frame .rv-main-inner { padding: 32px 44px; max-width: 1100px; width: 100%; margin: 0 auto; }
+
+.rv-brand { display: flex; align-items: center; gap: 8px; padding: 0 8px 18px; }
+.rv-brand .mark { width: 28px; height: 28px; border-radius: 7px; background: var(--ink); color: var(--paper); display: flex; align-items: center; justify-content: center; }
+.rv-brand .name { font-family: var(--t-display); font-size: 20px; font-weight: 600; letter-spacing: -0.4px; }
+
+.rv-langswitch {
+  margin-bottom: 14px; padding: 10px 12px;
+  border: 1px solid var(--rule); border-radius: var(--r-md);
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.rv-langswitch .left { display: flex; align-items: center; gap: 8px; }
+
+.rv-navitem {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; border-radius: var(--r-sm);
+  font-size: 13px; color: var(--ink-soft); cursor: pointer;
+  border: none; background: transparent; text-align: left; width: 100%;
+}
+.rv-navitem:hover { background: var(--paper-2); color: var(--ink); }
+.rv-navitem.active { background: var(--ink); color: var(--paper); }
+.rv-navitem.active .rv-count { background: rgba(255,255,255,.18); color: var(--paper); }
+.rv-count { margin-left: auto; font-family: var(--t-mono); font-size: 10px; padding: 1px 6px; border-radius: 4px; background: var(--paper-2); color: var(--ink-mute); }
+
+.rv-userfoot { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--rule); padding-top: 18px; }
+.rv-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-2); display: flex; align-items: center; justify-content: center; font-family: var(--t-display); font-size: 14px; font-weight: 600; }
+
+/* Status pills used in bank + detail */
+.rv-status {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 500; font-family: var(--t-ui);
+  border: 1px solid transparent;
+}
+.rv-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.rv-status.new      { color: var(--ink-soft); background: var(--paper-2); }
+.rv-status.learning { color: #a47427; background: #f6e7c8; }
+.rv-status.mature   { color: var(--ok); background: var(--ok-soft); }
+.rv-status.leech    { color: var(--accent-2); background: var(--accent-soft); }
+.rv-status.known    { color: #3b6790; background: #dee9f5; }
+.rv-status.suspended{ color: var(--ink-mute); background: var(--paper-3); }
+
+/* FSRS meter — twin bars for stability/difficulty */
+.rv-fsrs { display: grid; grid-template-columns: 80px 1fr 40px; gap: 8px 12px; align-items: center; }
+.rv-fsrs .lab { font-size: 11px; color: var(--ink-mute); text-transform: uppercase; letter-spacing: 0.8px; }
+.rv-fsrs .val { font-family: var(--t-mono); font-size: 12px; color: var(--ink-soft); text-align: right; }
+.rv-fsrs .bar { height: 5px; background: var(--paper-3); border-radius: 999px; overflow: hidden; }
+.rv-fsrs .bar > i { display: block; height: 100%; background: var(--ink); border-radius: 999px; }
+.rv-fsrs .bar > i.warn { background: var(--accent); }
+
+/* Soft section heading */
+.rv-h { font-size: 11px; color: var(--ink-mute); text-transform: uppercase; letter-spacing: 1.2px; font-weight: 500; }
+
+/* Sentence with a cloze blank */
+.rv-cloze-blank {
+  display: inline-block; min-width: 140px;
+  border-bottom: 2px solid var(--ink);
+  padding: 0 8px 2px; margin: 0 4px;
+  font-family: var(--t-mono); font-weight: 500;
+  background: var(--hilite-soft); color: var(--ink);
+}
+.rv-cloze-blank.empty { background: var(--paper-2); color: var(--ink-mute); }
+
+/* Audio button (listening) */
+.rv-audio-bubble {
+  width: 96px; height: 96px; border-radius: 50%;
+  background: var(--ink); color: var(--paper);
+  display: flex; align-items: center; justify-content: center;
+  border: none; cursor: pointer;
+  box-shadow: var(--shadow-2);
+  position: relative;
+}
+.rv-audio-bubble::after {
+  content: ''; position: absolute; inset: -8px; border-radius: 50%;
+  border: 1.5px solid var(--ink); opacity: 0.18;
+}
+
+/* Compact list-row used in bank */
+.rv-row {
+  display: grid;
+  grid-template-columns: 28px 1.4fr 1.6fr 90px 110px 80px 40px;
+  align-items: center; gap: 14px;
+  padding: 12px 16px; border-bottom: 1px solid var(--rule);
+}
+.rv-row.head {
+  border-top: 1px solid var(--rule);
+  background: var(--paper-2);
+  font-size: 11px; color: var(--ink-mute); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 500;
+}
+.rv-row:not(.head):hover { background: var(--paper-2); cursor: pointer; }
+
+/* Tiny sparkline for review history */
+.rv-spark { display: flex; align-items: flex-end; gap: 2px; height: 18px; }
+.rv-spark i { display: block; width: 4px; background: var(--ink-soft); border-radius: 1px; }
+.rv-spark i.miss { background: var(--accent); }
+
+/* Modal-on-canvas */
+.rv-modal-scrim {
+  position: absolute; inset: 0;
+  background: rgba(26,22,18,0.42); backdrop-filter: blur(3px);
+  display: flex; align-items: center; justify-content: center;
+}
+.rv-modal {
+  width: 520px; max-width: 92%;
+  background: var(--paper); border-radius: var(--r-lg); border: 1px solid var(--rule);
+  box-shadow: var(--shadow-3); overflow: hidden;
+}
+
+/* Type-mix chips */
+.rv-mix {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 999px;
+  font-size: 11px; font-family: var(--t-ui); font-weight: 500;
+  border: 1px solid var(--rule); background: var(--card); color: var(--ink-soft);
+}
+.rv-mix .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-soft); }
+.rv-mix.cloze   .dot { background: #b15535; }
+.rv-mix.meaning .dot { background: #c8a13a; }
+.rv-mix.useit   .dot { background: #5b8a5a; }
+.rv-mix.recog   .dot { background: #8a8074; }
+.rv-mix.listen  .dot { background: #3b6790; }
+
+/* tiny squiggle ok/miss tick */
+.rv-tick { width: 14px; height: 14px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; }
+.rv-tick.ok   { background: var(--ok); color: #fff; }
+.rv-tick.miss { background: var(--accent); color: #fff; }
+.rv-tick.skip { background: var(--ink-mute); color: #fff; }
+
+/* Coach quote block */
+.rv-coach {
+  display: flex; gap: 12px; padding: 14px 16px;
+  background: var(--paper-2); border-radius: var(--r-md); border: 1px solid var(--rule);
+}
+.rv-coach .av {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--ink); color: var(--paper);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--t-display); font-size: 13px; font-weight: 600;
+  flex-shrink: 0;
+}

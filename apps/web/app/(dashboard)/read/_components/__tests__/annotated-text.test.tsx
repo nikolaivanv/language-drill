@@ -387,6 +387,83 @@ describe('AnnotatedText — drag selection', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// Under-review highlight (Req 13.2)
+// ---------------------------------------------------------------------------
+
+describe('AnnotatedText — under-review highlight', () => {
+  it('applies the underReview class to a flagged word whose lemma is in rotation', () => {
+    render(
+      <AnnotatedText
+        text="aldea grande"
+        flaggedMap={FLAGGED}
+        intensity="subtle"
+        bankSet={new Set()}
+        activeWord={null}
+        underReview={{ lemmas: new Set(['aldea']), surfaces: new Set() }}
+        onWordClick={() => {}}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'aldea' }).className).toContain(
+      styles.underReview,
+    );
+  });
+
+  it('applies the underReview class to a non-flagged word via the surface fallback', () => {
+    render(
+      <AnnotatedText
+        text="aldea grande"
+        flaggedMap={FLAGGED}
+        intensity="subtle"
+        bankSet={new Set()}
+        activeWord={null}
+        underReview={{ lemmas: new Set(), surfaces: new Set(['grande']) }}
+        onWordClick={() => {}}
+      />,
+    );
+    // "grande" is not flagged but is in the rotation by surface.
+    expect(screen.getByRole('button', { name: 'grande' }).className).toContain(
+      styles.underReview,
+    );
+  });
+
+  it('does not apply the underReview class when nothing matches', () => {
+    render(
+      <AnnotatedText
+        text="aldea grande"
+        flaggedMap={FLAGGED}
+        intensity="subtle"
+        bankSet={new Set()}
+        activeWord={null}
+        underReview={{ lemmas: new Set(['otro']), surfaces: new Set(['nada']) }}
+        onWordClick={() => {}}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'aldea' }).className).not.toContain(
+      styles.underReview,
+    );
+    expect(screen.getByRole('button', { name: 'grande' }).className).not.toContain(
+      styles.underReview,
+    );
+  });
+
+  it('applies no highlight when the underReview prop is omitted', () => {
+    render(
+      <AnnotatedText
+        text="aldea grande"
+        flaggedMap={FLAGGED}
+        intensity="subtle"
+        bankSet={new Set()}
+        activeWord={null}
+        onWordClick={() => {}}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'aldea' }).className).not.toContain(
+      styles.underReview,
+    );
+  });
+});
+
 // Touch multi-word selection is a select-first drag handled by native
 // touchstart/move/end listeners in this component (sharing the begin/extend/
 // finalize core exercised by the mouse-drag tests above). The gesture itself
