@@ -868,6 +868,52 @@ describe('ReadPage — deep annotation flow (Req 3, 9.4, 11)', () => {
     );
   });
 
+  // Regression: a deep card can resolve ANY tapped word, but the passage word
+  // bank only holds flagged words (bank ⊆ flagged, enforced server-side). Saving
+  // a NON-flagged word must save to vocabulary WITHOUT attempting the bank PUT —
+  // otherwise the bank write 400s and the user sees a spurious "couldn't update
+  // — try again" beside the successful vocab save.
+  it('saving a non-flagged tapped word skips the bank PUT (no spurious error)', () => {
+    // 'grande' occupies offsets [6,12) in 'aldea grande' and is NOT flagged.
+    const DEEP_GRANDE: NonNullable<ReadEntryResponse['spanAnnotations']>[string] =
+      {
+        type: 'word',
+        surface: 'grande',
+        lemma: 'grande',
+        pos: 'adjective',
+        contextualSense: 'big',
+        definition: 'de gran tamaño',
+        definitionLabel: 'Español',
+        cefr: CefrLevel.A1,
+        freq: 120,
+      };
+    setEntries(ENTRIES_3);
+    setEntry(FULL_ENTRY); // flaggedWords = { aldea } only
+    setAnnotateSpan({
+      mutateImpl: (_vars, opts) => opts?.onSuccess?.(DEEP_GRANDE),
+    });
+    setVocabMutations({
+      saveImpl: (_vars, opts) => opts?.onSuccess?.({ id: VOCAB_ID }),
+    });
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'grande' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: /\+ save to vocabulary/i }),
+    );
+
+    // Vocab save still happens and confirms…
+    expect(saveVocabMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ card: DEEP_GRANDE, sourceReadEntryId: ENTRY_ID }),
+      expect.any(Object),
+    );
+    expect(screen.getByRole('status')).toHaveTextContent(/saved.*to vocabulary/i);
+    // …but the bank is never touched and no error toast appears.
+    expect(updateBankMutate).not.toHaveBeenCalled();
+    expect(
+      screen.queryByText("couldn't update — try again"),
+    ).not.toBeInTheDocument();
+  });
+
   it('on a fresh paste, saving a word lazy-POSTs the entry first, then links the vocab to it', () => {
     stubAnnotateCompleteOnStart();
     setSave({
