@@ -79,6 +79,15 @@ const RESERVED_LISTENING = 'listening';
 const RESERVED_SPEAKING = 'speaking';
 const RESERVED_READING_PREFIX = 'reading';
 
+// Vocabulary Review evidence sentinels (Req 9.1, 9.3). These are the literal
+// values of `REVIEW_VOCAB_TYPE` / `REVIEW_GRAMMAR_TYPE` exported from
+// `review/evidence.ts`; spelled out here (rather than imported) because
+// evidence.ts imports from this module, so importing back would form a cycle.
+// They MUST match the constants there. Without these cases a review
+// ContributingRow falls through to `default → null` and is silently dropped.
+const REVIEW_VOCAB_TYPE = 'vocab_review_vocab';
+const REVIEW_GRAMMAR_TYPE = 'vocab_review_grammar';
+
 export function axisForExerciseType(type: string): RadarAxisKey | null {
   switch (type) {
     case ExerciseType.CLOZE:
@@ -91,6 +100,10 @@ export function axisForExerciseType(type: string): RadarAxisKey | null {
       return 'listening';
     case RESERVED_SPEAKING:
       return 'speaking';
+    case REVIEW_VOCAB_TYPE:
+      return 'vocabulary';
+    case REVIEW_GRAMMAR_TYPE:
+      return 'grammar';
     default:
       if (type.startsWith(RESERVED_READING_PREFIX)) return 'reading';
       return null;

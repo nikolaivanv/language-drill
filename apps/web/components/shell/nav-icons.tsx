@@ -44,6 +44,18 @@ export function ReadIcon() {
   );
 }
 
+export function ReviewIcon() {
+  // Repeat/cycle loop — evokes spaced-repetition review.
+  return (
+    <svg {...SHARED_PROPS} aria-hidden="true">
+      <path d="M3 8a5 5 0 0 1 8.5-3.5L13 6" />
+      <path d="M13 3.5V6h-2.5" />
+      <path d="M13 8a5 5 0 0 1-8.5 3.5L3 10" />
+      <path d="M3 12.5V10h2.5" />
+    </svg>
+  );
+}
+
 export function ProgressIcon() {
   return (
     <svg {...SHARED_PROPS} aria-hidden="true">

@@ -14,7 +14,12 @@ import { CefrLevel, ExerciseType } from '@language-drill/shared';
 
 const mockWhere = vi.fn();
 const mockInnerJoin = vi.fn(() => ({ where: mockWhere }));
-const mockFrom = vi.fn(() => ({ innerJoin: mockInnerJoin }));
+// The radar handler now also issues a no-innerJoin review-evidence query
+// (`reviewContributingRows`): `select(...).from(vocabularyReviewLog).where(...)`.
+// `mockReviewWhere` is that terminal — defaults to no review rows; a test can
+// `mockReviewWhere.mockResolvedValueOnce(rows)` to drive radar movement.
+const mockReviewWhere = vi.fn(() => Promise.resolve<unknown[]>([]));
+const mockFrom = vi.fn(() => ({ innerJoin: mockInnerJoin, where: mockReviewWhere }));
 const mockSelect = vi.fn(() => ({ from: mockFrom }));
 
 vi.mock('../db', () => ({
@@ -36,6 +41,14 @@ vi.mock('@language-drill/db', () => ({
     exerciseId: 'exercise_id',
     score: 'score',
     evaluatedAt: 'evaluated_at',
+  },
+  vocabularyReviewLog: {
+    userId: 'user_id',
+    language: 'language',
+    outcome: 'outcome',
+    cefrBand: 'cefr_band',
+    grammarPoints: 'grammar_points',
+    reviewedAt: 'reviewed_at',
   },
 }));
 
@@ -230,6 +243,102 @@ describe('GET /progress/radar', () => {
     expect(res.status).toBe(401);
     const body = (await res.json()) as AnyJson;
     expect(body.code).toBe('MISSING_SUB');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /progress/radar — vocabulary-review evidence UNIONed in (Req 9.5)
+// ---------------------------------------------------------------------------
+// `mockReviewWhere` stands in for the `reviewContributingRows` query; it
+// resolves the raw `vocabulary_review_log` projection
+// (`{ outcome, cefrBand, grammarPoints, reviewedAt }`), which the real
+// evidence mapper turns into vocabulary (+ grammar) ContributingRows.
+
+type ReviewLogRow = {
+  outcome: 'correct' | 'partial' | 'incorrect';
+  cefrBand: string | null;
+  grammarPoints: string[];
+  reviewedAt: Date;
+};
+
+function reviewLogRow(overrides: Partial<ReviewLogRow> = {}): ReviewLogRow {
+  return {
+    outcome: 'correct',
+    cefrBand: CefrLevel.B1,
+    grammarPoints: [],
+    reviewedAt: new Date(NOW_MS),
+    ...overrides,
+  };
+}
+
+describe('GET /progress/radar — review evidence', () => {
+  let app: Hono;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const mod = await import('./progress');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  it('advances the vocabulary axis from review evidence alone', async () => {
+    mockWhere.mockResolvedValueOnce([]); // no exercise history
+    mockReviewWhere.mockResolvedValueOnce([reviewLogRow(), reviewLogRow()]);
+
+    const res = await app.request('/progress/radar?language=ES', undefined, authEnv);
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    const byKey = Object.fromEntries(body.axes.map((a: AnyJson) => [a.key, a]));
+    expect(byKey.vocabulary.evidenceCount).toBe(2);
+    expect(byKey.vocabulary.currentMastery).toBeCloseTo(1, 5); // two correct reviews
+    expect(byKey.grammar.evidenceCount).toBe(0); // no grammar points
+  });
+
+  it('also advances the grammar axis when a review carries grammar points, unioned with exercise evidence', async () => {
+    mockWhere.mockResolvedValueOnce([radarRow({ type: ExerciseType.VOCAB_RECALL })]);
+    mockReviewWhere.mockResolvedValueOnce([reviewLogRow({ grammarPoints: ['dative'] })]);
+
+    const res = await app.request('/progress/radar?language=ES', undefined, authEnv);
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    const byKey = Object.fromEntries(body.axes.map((a: AnyJson) => [a.key, a]));
+    // One exercise vocab_recall row + one review vocab row → vocabulary axis.
+    expect(byKey.vocabulary.evidenceCount).toBe(2);
+    // The grammar-points row routes to the grammar axis.
+    expect(byKey.grammar.evidenceCount).toBe(1);
+  });
+
+  it('recency-weights review evidence within the window (old negative decays)', async () => {
+    // The hard 90-day cut lives in the SQL WHERE; here we assert the
+    // recency-weighting the radar applies: a recent correct + recent incorrect
+    // sits near 0.5, while the same pair with the incorrect aged 80 days rises
+    // (the stale miss is down-weighted).
+    mockWhere.mockResolvedValueOnce([]);
+    mockReviewWhere.mockResolvedValueOnce([
+      reviewLogRow({ outcome: 'correct' }),
+      reviewLogRow({ outcome: 'incorrect' }),
+    ]);
+    const recentRes = await app.request('/progress/radar?language=ES', undefined, authEnv);
+    const recent = (await recentRes.json()) as AnyJson;
+    const masteryRecent = Object.fromEntries(
+      recent.axes.map((a: AnyJson) => [a.key, a]),
+    ).vocabulary.currentMastery;
+
+    mockWhere.mockResolvedValueOnce([]);
+    mockReviewWhere.mockResolvedValueOnce([
+      reviewLogRow({ outcome: 'correct' }),
+      reviewLogRow({ outcome: 'incorrect', reviewedAt: new Date(NOW_MS - 80 * DAY) }),
+    ]);
+    const agedRes = await app.request('/progress/radar?language=ES', undefined, authEnv);
+    const aged = (await agedRes.json()) as AnyJson;
+    const masteryAged = Object.fromEntries(
+      aged.axes.map((a: AnyJson) => [a.key, a]),
+    ).vocabulary.currentMastery;
+
+    expect(masteryRecent).toBeGreaterThan(0);
+    expect(masteryAged).toBeGreaterThan(masteryRecent);
   });
 });
 

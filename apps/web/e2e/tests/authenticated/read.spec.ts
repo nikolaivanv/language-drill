@@ -327,9 +327,11 @@ test('saving a word card raises the toast, flips the footer, and undoes from the
   await page
     .getByRole('button', { name: /\+ save to vocabulary/i })
     .click();
-  const toast = page.getByRole('status');
+  // A word-card save persists to BOTH vocabulary and the passage word bank, so
+  // two toasts share role="status" (VocabSaveToast + the entry SaveToast).
+  // Scope to the vocabulary confirmation so the locator stays unambiguous.
+  const toast = page.getByRole('status').filter({ hasText: /saved.*to vocabulary/i });
   await expect(toast).toBeVisible();
-  await expect(toast).toContainText(/saved.*to vocabulary/i);
   await expect(
     page.getByRole('button', { name: /✓ saved · undo/i }),
   ).toBeVisible();

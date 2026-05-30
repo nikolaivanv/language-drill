@@ -93,7 +93,7 @@ describe("buildGenerationSystemPrompt", () => {
     const prompt = await buildGenerationSystemPrompt(baseInputs, []);
     expect(prompt).toContain("ES learners at CEFR B1");
     expect(prompt).toContain(
-      "Vocabulary outside CEFR B1 is forbidden unless the exercise explicitly tests it.",
+      "every content word MUST be high-frequency everyday vocabulary at or below CEFR B1",
     );
   });
 
@@ -200,6 +200,14 @@ describe("buildGenerationSystemPrompt", () => {
     // R1.7 / R2.6 / R7.4 — the coordinated prompt edit must ship a
     // `generate@YYYY-MM-DD` version so Langfuse cohorts old vs new traces.
     expect(GENERATION_PROMPT_VERSION).toMatch(/^generate@\d{4}-\d{2}-\d{2}$/);
+    // Task 10: the single bump covering the Task 7–9 generation-prompt guardrails.
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-05-30");
+    // Tasks 7–9: pin the new guardrail phrases in the cached template prefix.
+    expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
+      "every content word MUST be high-frequency everyday vocabulary at or below CEFR {{cefrLevel}}",
+    );
+    expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain("Safe, neutral topics");
+    expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain("dalgayı");
   });
 
   it("instructs Claude to use the matching tool name", async () => {
