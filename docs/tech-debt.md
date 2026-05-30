@@ -4,6 +4,48 @@ A living log of known issues to address. Add new entries at the top; mark as res
 
 ---
 
+## No generation-quality eval harness (`pnpm eval` only covers the evaluation prompt)
+
+- **Status:** open
+- **Discovered:** 2026-05-30 (post-merge of PR #227, generation-quality-improvements — the spec named `pnpm eval` as the pre-merge gate for its generation-prompt guardrails; on inspection the tool can't do that)
+- **Scope:** `packages/ai/scripts/eval-run.ts` (+ `eval-export.ts`); the `pnpm eval` / `pnpm eval:export` root scripts
+- **Severity:** medium — no correctness risk, but generation-prompt PRs ship without a quantitative pre-merge quality signal, and a spec/runbook actively points operators at a gate that returns zero signal (and spends real Anthropic budget doing so)
+
+**Root cause:**
+`eval-run.ts` resolves `--candidate` to a prompt body and feeds it to `evaluateAnswer` as a `systemPromptOverride`, then scores the result against captured *evaluation* baselines (dataset items are `EvaluateAnswerInput` — exercise + user answer, exported from `user_exercise_history`). It never imports or invokes the generation prompt builders (`buildGenerationSystemPrompt` / `buildGenerationUserPrompt`) or the validator. So it measures the **answer-evaluation** prompt only. Pointing it at a generation-prompt change exercises a prompt that change doesn't touch — the diff is noise, and every item still bills the Anthropic key.
+
+The `generation-quality-improvements` design/requirements (Testing Strategy → "`pnpm eval` (manual, pre-merge): run the new generation prompt against a Langfuse dataset … This is the gate for the model-judgment guardrails") assumed a capability that does not exist. Treat any doc that calls `pnpm eval` a generation gate as a documentation bug until the harness below lands.
+
+**Interim validation path (what PR #227 actually used):**
+1. Unit tests pin the prompt text and the byte-parity / Anthropic cache-prefix contract.
+2. After merge + `pnpm push-prompts` (the runtime serves the live Langfuse body; the in-repo constant is only the fallback), the `GENERATION_PROMPT_VERSION` bump clears prompt-version suppression so cells regenerate against the new body on the next scheduled run.
+3. **Validate observationally on the post-merge run** by comparing `generation_jobs.rejection_reason_counts` and the flagged-tag distribution against the prior baseline (for #227: the 2026-05-30 TR run, 35.6% approved). This is the design's stated success metric — it is *post-merge and observational*, not a pre-merge gate.
+
+**Remediation — a real generation eval (`eval-gen`):**
+1. **Dataset of cells, not answers.** A `(language, cefrLevel, exerciseType, grammarPointKey)` list — exported from `generation_jobs` (over-sampling failure-prone cells) or hand-curated. Distinct from the `eval:export` answer-submission datasets.
+2. **OLD-vs-NEW runner.** For each cell, build the system+user prompt via `buildGenerationSystemPrompt` / `buildGenerationUserPrompt` for both prompt versions, generate N drafts each, then score every draft with the existing **validator** (`validate-system-prompt` via `validateDraft`).
+3. **Diff that matters for generation.** Approval rate, `rejection_reason` distribution, and flag-tag distribution — candidate vs baseline — rather than the per-dimension score deltas `eval-run.ts` computes for evaluation.
+4. **Reuse the guard rails** from `eval-run.ts`: `LANGFUSE_ENV=prod` requires `--allow-prod`, and add a `--max-cost-usd` cap (it spends Anthropic budget per draft, ~N× more than answer-eval).
+
+**Acceptance criteria for the fix:**
+- A `pnpm eval:gen` (or equivalent) script that, given a cell dataset and two prompt sources, reports approval-rate and rejection-reason/flag-tag deltas between them, writing a JSON summary like `eval-run.ts` does.
+- The `generation-quality-improvements` design/requirements (and any future spec) reference *this* script — not `pnpm eval` — as the generation gate.
+- A unit test exercising the runner with stubbed generate+validate calls (mirroring `eval-run.test.ts`'s injectable-executor pattern).
+
+**Why we can't ignore it:**
+- Generation-prompt changes are exactly where regressions are expensive (a bad prompt re-sweeps the pool at real cost — the #227 baseline run was ~$30.80) and where unit tests are weakest (they pin wording, not model behavior).
+- The current docs send the next operator to spend budget on a no-signal run; that's a foot-gun, not just a missing feature.
+
+**Owner:** unassigned
+**Tracking:** none yet — open a GitHub issue when prioritizing
+**References:**
+- PR #227 — generation-quality-improvements (surfaced the gap during post-merge).
+- `.claude/specs/generation-quality-improvements/design.md` Testing Strategy + `requirements.md` NFR Performance/Cost — the mistaken "`pnpm eval` is the generation gate" assumption.
+- `packages/ai/scripts/eval-run.ts` — the evaluation-only harness to mirror.
+- `packages/ai/src/generation-prompts.ts` (`buildGenerationSystemPrompt`) + `packages/ai/src/validate.ts` (`validateDraft`) — the builders/validator a generation eval would drive.
+
+---
+
 ## Langfuse `validate` traces missing `exerciseId` metadata
 
 - **Status:** open (Phase 1 design accepted the gap; verified live in prod 2026-05-15)
