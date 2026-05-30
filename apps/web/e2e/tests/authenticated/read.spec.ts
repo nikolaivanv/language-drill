@@ -345,6 +345,51 @@ test('saving a word card raises the toast, flips the footer, and undoes from the
 });
 
 // ---------------------------------------------------------------------------
+// 3b. Saving an ON-DEMAND (non-flagged) word adds it to the word-bank panel.
+//     This is the case the old bank-only rail dropped: the bank is flagged-only,
+//     so an on-demand save never showed there. The panel is now driven by the
+//     entry's saved vocabulary, so it appears (and ✕ unsaves it).
+// ---------------------------------------------------------------------------
+test('an on-demand (non-flagged) save appears in the word-bank panel and ✕ removes it', async ({
+  page,
+}) => {
+  // Deep card for the UNFLAGGED word "tranquila" — so the save is a pure vocab
+  // save (not a bank add), exactly the on-demand case that used to vanish.
+  await mockReadApi(page, {
+    deepResponse: {
+      type: 'word',
+      surface: 'tranquila',
+      lemma: 'tranquila',
+      pos: 'adjective',
+      contextualSense: 'calm, quiet',
+      definition: 'tranquilo/a',
+      definitionLabel: 'Español',
+      cefr: 'B1',
+      freq: 2000,
+    },
+  });
+  await openSeededEntry(page);
+
+  // The panel starts empty — nothing saved from this passage yet.
+  const rail = page.getByRole('complementary');
+  await expect(rail.getByText(/tap a word to see its meaning/i)).toBeVisible();
+
+  // Tap the UNFLAGGED word ("tranquila") and save its deep card.
+  await page.getByRole('button', { name: 'tranquila' }).click();
+  await expect(page.getByText('tranquilo/a')).toBeVisible();
+  await page.getByRole('button', { name: /\+ save to vocabulary/i }).click();
+
+  // It now shows in the panel — the reported bug (on-demand saves were dropped).
+  await expect(rail.getByRole('listitem')).toHaveCount(1);
+  await expect(rail.getByRole('listitem').first()).toContainText('tranquila');
+
+  // ✕ unsaves it → the row leaves the panel, back to the empty state.
+  await rail.getByRole('button', { name: /remove tranquila/i }).click();
+  await expect(rail.getByRole('listitem')).toHaveCount(0);
+  await expect(rail.getByText(/tap a word to see its meaning/i)).toBeVisible();
+});
+
+// ---------------------------------------------------------------------------
 // 4. A sentence card carries no save action (Req 5.4) — exercised by
 //    drag-selecting the first sentence end-to-end.
 // ---------------------------------------------------------------------------

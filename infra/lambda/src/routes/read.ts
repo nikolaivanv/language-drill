@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, sql } from 'drizzle-orm';
 import {
   CefrLevel,
   DeepCardSchema,
@@ -13,7 +13,11 @@ import {
   READ_TITLE_MAX_CHARS,
 } from '@language-drill/shared';
 import type { DeepCard, LearningLanguage } from '@language-drill/shared';
-import { readEntries, userVocabulary } from '@language-drill/db';
+import {
+  readEntries,
+  userVocabulary,
+  vocabularyReviewState,
+} from '@language-drill/db';
 import { db } from '../db';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
@@ -285,6 +289,42 @@ read.get('/read/entries/:id', async (c) => {
   }
 
   const row = rows[0];
+
+  // Everything the user saved from THIS passage — flagged-banked words AND
+  // on-demand deep-card saves alike create a `user_vocabulary` row stamped with
+  // `sourceReadEntryId`, so this one query is the complete "saved from this
+  // passage" set the word-bank panel renders (not the `bank` column, which only
+  // holds flagged words). Ordered oldest-first to match save order.
+  const savedRows = await db
+    .select({
+      id: userVocabulary.id,
+      word: userVocabulary.word,
+      lemma: userVocabulary.lemma,
+      gloss: userVocabulary.gloss,
+      pos: userVocabulary.pos,
+      cefrBand: userVocabulary.cefrBand,
+      card: userVocabulary.card,
+    })
+    .from(userVocabulary)
+    .where(
+      and(
+        eq(userVocabulary.userId, userId),
+        eq(userVocabulary.sourceReadEntryId, id),
+      ),
+    )
+    .orderBy(asc(userVocabulary.addedAt));
+
+  const savedVocab = savedRows.map((v) => ({
+    id: v.id,
+    word: v.word,
+    lemma: v.lemma,
+    gloss: v.gloss,
+    // The card snapshot is authoritative for word|phrase; `pos: 'phrase'` is the
+    // fallback for older rows saved without one.
+    type: v.card?.type === 'phrase' || v.pos === 'phrase' ? 'phrase' : 'word',
+    cefr: v.cefrBand,
+  }));
+
   return c.json({
     id: row.id,
     language: row.language,
@@ -293,6 +333,7 @@ read.get('/read/entries/:id', async (c) => {
     text: row.text,
     flaggedWords: row.flaggedWords,
     bank: row.bank,
+    savedVocab,
     pastedAt: (row.pastedAt as Date).toISOString(),
   });
 });
@@ -558,17 +599,56 @@ read.delete('/read/vocabulary/:id', async (c) => {
     );
   }
 
-  const deleted = await db
-    .delete(userVocabulary)
-    .where(
-      and(
-        eq(userVocabulary.id, id),
-        eq(userVocabulary.userId, userId),
-      ),
-    )
-    .returning({ id: userVocabulary.id });
+  // Delete the row and, if it was the LAST surface backing its review card,
+  // drop the orphaned FSRS state too — so "unsave" removes the word from the
+  // vocabulary review queue, not just the reading panel. (review state is keyed
+  // by lemma and pools `user_vocabulary` rows; an orphan would otherwise linger
+  // as a context-less card. `vocabulary_review_log.review_state_id` cascades.)
+  const result = await db.transaction(async (tx) => {
+    const deleted = await tx
+      .delete(userVocabulary)
+      .where(
+        and(
+          eq(userVocabulary.id, id),
+          eq(userVocabulary.userId, userId),
+        ),
+      )
+      .returning({
+        id: userVocabulary.id,
+        language: userVocabulary.language,
+        lemma: userVocabulary.lemma,
+      });
 
-  if (deleted.length === 0) {
+    if (deleted.length === 0) return null;
+    const { language, lemma } = deleted[0];
+
+    const [{ remaining }] = await tx
+      .select({ remaining: count() })
+      .from(userVocabulary)
+      .where(
+        and(
+          eq(userVocabulary.userId, userId),
+          eq(userVocabulary.language, language),
+          eq(userVocabulary.lemma, lemma),
+        ),
+      );
+
+    if (remaining === 0) {
+      await tx
+        .delete(vocabularyReviewState)
+        .where(
+          and(
+            eq(vocabularyReviewState.userId, userId),
+            eq(vocabularyReviewState.language, language),
+            eq(vocabularyReviewState.lemma, lemma),
+          ),
+        );
+    }
+
+    return deleted[0];
+  });
+
+  if (result === null) {
     c.header('Cache-Control', 'no-store');
     return c.json(
       { error: 'Vocabulary record not found', code: 'VOCAB_NOT_FOUND' },
@@ -576,7 +656,7 @@ read.delete('/read/vocabulary/:id', async (c) => {
     );
   }
 
-  return c.json({ id: deleted[0].id });
+  return c.json({ id: result.id });
 });
 
 export default read;

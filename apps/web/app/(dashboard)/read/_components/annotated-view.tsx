@@ -18,6 +18,7 @@
 
 import * as React from 'react';
 import type { DeepCard, FlaggedMap } from '@language-drill/shared';
+import type { SavedVocabItem } from '@language-drill/api-client';
 import { AnnotatedText, type SpanSelection } from './annotated-text';
 import { ZeroFlaggedStrip } from './annotated-footer';
 import { CalibrationStrip } from './calibration-strip';
@@ -85,6 +86,13 @@ type Props = {
   /** Lowercased surface forms saved to vocabulary, for the in-passage style. */
   savedWordKeys: Set<string>;
   /**
+   * Everything saved from this passage (flagged + on-demand), rendered in the
+   * word-bank panel. The superset of `bank`; persists across reloads.
+   */
+  savedVocab: SavedVocabItem[];
+  /** Unsave (✕) a saved row — deletes the vocabulary record. */
+  onUnsaveVocab: (item: SavedVocabItem) => void;
+  /**
    * Words in the spaced-review rotation, for the distinct under-review highlight
    * (Req 13.2). Lowercased lemma + surface sets from `useActiveReviewLemmas`
    * (fetched in the page). Optional — absent ⇒ no highlight.
@@ -112,6 +120,8 @@ export function AnnotatedView({
   onUndoCard,
   savedSpan,
   savedWordKeys,
+  savedVocab,
+  onUnsaveVocab,
   underReview,
   onBankToggle,
   onPasteNew,
@@ -126,7 +136,7 @@ export function AnnotatedView({
   // shift when the first flag arrives (NFR Usability — no layout shift on
   // tint).
   const isStreaming = annotateStreaming !== undefined;
-  const showRail = hasFlagged || isStreaming;
+  const showRail = hasFlagged || isStreaming || savedVocab.length > 0;
   const showZeroFlaggedState = !hasFlagged && !isStreaming;
 
   const bankSet = React.useMemo(() => new Set(bank), [bank]);
@@ -258,7 +268,7 @@ export function AnnotatedView({
               onClick={() => setBankSheetOpen(true)}
               className="t-small inline-flex min-h-[44px] flex-none items-center gap-[6px] rounded-r-pill border border-rule bg-card px-[14px] font-medium text-ink transition-colors hover:border-ink"
             >
-              word bank · {bank.length}
+              word bank · {savedVocab.length}
             </button>
           )}
         </div>
@@ -321,11 +331,10 @@ export function AnnotatedView({
           <WordBankSheet
             open={bankSheetOpen}
             onClose={() => setBankSheetOpen(false)}
-            bank={bank}
-            flaggedMap={entry.flaggedWords}
+            saved={savedVocab}
             intensity={intensity}
             onIntensityChange={onIntensityChange}
-            onRemove={onBankToggle}
+            onUnsave={onUnsaveVocab}
           />
         )}
       </div>
@@ -416,11 +425,7 @@ export function AnnotatedView({
       </div>
 
       {showRail && (
-        <WordBankRail
-          bank={bank}
-          flaggedMap={entry.flaggedWords}
-          onRemove={onBankToggle}
-        />
+        <WordBankRail saved={savedVocab} onUnsave={onUnsaveVocab} />
       )}
     </div>
   );

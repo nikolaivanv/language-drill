@@ -1,35 +1,32 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import type { FlaggedMap } from '@language-drill/shared';
 import { CefrLevel } from '@language-drill/shared';
+import type { SavedVocabItem } from '@language-drill/api-client';
 import { WordBankSheet } from '../word-bank-sheet';
 
-const FLAGGED: FlaggedMap = {
-  aldea: {
-    lemma: 'aldea',
-    pos: 'noun',
-    gloss: 'a small village',
-    example: 'la aldea está cerca',
-    freq: 4321,
-    cefr: CefrLevel.B2,
-  },
+const ALDEA: SavedVocabItem = {
+  id: '11111111-1111-1111-1111-111111111111',
+  word: 'aldea',
+  lemma: 'aldea',
+  gloss: 'a small village',
+  type: 'word',
+  cefr: CefrLevel.B2,
 };
 
 const baseProps = {
   open: true,
   onClose: () => {},
-  bank: ['aldea'],
-  flaggedMap: FLAGGED,
+  saved: [ALDEA],
   intensity: 'subtle' as const,
   onIntensityChange: () => {},
-  onRemove: () => {},
+  onUnsave: () => {},
 };
 
 describe('WordBankSheet', () => {
-  it('renders the bank rows and the intensity toggle in the header', () => {
+  it('renders the saved rows and the intensity toggle in the header', () => {
     render(<WordBankSheet {...baseProps} />);
     expect(screen.getByRole('dialog')).toBeInTheDocument();
-    // Bank row (from WordBankRail).
+    // Saved row (from WordBankRail).
     expect(screen.getByText('aldea')).toBeInTheDocument();
     expect(screen.getByText('a small village')).toBeInTheDocument();
     // Intensity toggle (Req 8.3).
@@ -49,11 +46,11 @@ describe('WordBankSheet', () => {
     expect(onIntensityChange).toHaveBeenCalledWith('assertive');
   });
 
-  it('fires onRemove when a bank row remove button is clicked', () => {
-    const onRemove = vi.fn();
-    render(<WordBankSheet {...baseProps} onRemove={onRemove} />);
+  it('fires onUnsave when a saved row remove button is clicked', () => {
+    const onUnsave = vi.fn();
+    render(<WordBankSheet {...baseProps} onUnsave={onUnsave} />);
     fireEvent.click(screen.getByRole('button', { name: /remove aldea/i }));
-    expect(onRemove).toHaveBeenCalledWith('aldea');
+    expect(onUnsave).toHaveBeenCalledWith(ALDEA);
   });
 
   it('closes on the close button, the scrim, and Escape', () => {

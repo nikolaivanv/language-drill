@@ -53,6 +53,8 @@ const baseProps = {
   onUndoCard: () => {},
   savedSpan: null,
   savedWordKeys: new Set<string>(),
+  savedVocab: [],
+  onUnsaveVocab: () => {},
   onBankToggle: () => {},
   onPasteNew: () => {},
 };
@@ -323,7 +325,21 @@ describe('AnnotatedView — mobile branch (≤760px)', () => {
   });
 
   it('opens the word bank sheet (with the intensity toggle) when the chip is tapped', () => {
-    render(<AnnotatedView {...baseProps} bank={['aldea']} />);
+    render(
+      <AnnotatedView
+        {...baseProps}
+        savedVocab={[
+          {
+            id: '11111111-1111-1111-1111-111111111111',
+            word: 'aldea',
+            lemma: 'aldea',
+            gloss: 'a small village',
+            type: 'word',
+            cefr: CefrLevel.B2,
+          },
+        ]}
+      />,
+    );
     expect(
       screen.queryByRole('radiogroup', { name: /highlight intensity/i }),
     ).not.toBeInTheDocument();

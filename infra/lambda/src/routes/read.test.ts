@@ -14,7 +14,17 @@ import { Hono } from 'hono';
 // ---------------------------------------------------------------------------
 
 const mockLimit = vi.fn();
-const mockOrderBy = vi.fn(() => ({ limit: mockLimit }));
+// `.orderBy()` is awaited directly by the GET-entry `savedVocab` query (resolves
+// to `savedVocabRows`) AND chained into `.limit()` by the history-list endpoint,
+// so it's a thenable carrying `.limit`.
+let savedVocabRows: unknown[] = [];
+const mockOrderBy = vi.fn(() => {
+  const p = Promise.resolve(savedVocabRows) as Promise<unknown> & {
+    limit: typeof mockLimit;
+  };
+  p.limit = mockLimit;
+  return p;
+});
 
 // `.where()` is both a chain-continuation (list/single-entry routes call
 // `.orderBy()`/`.limit()` on it) AND an awaited terminator (no `.limit()`) for
@@ -93,12 +103,21 @@ const txCapture = {
   entryUpdateBank: [] as Array<string[]>,
 };
 
+// DELETE /read/vocabulary/:id runs in a transaction now: delete the vocab row
+// (returning id/language/lemma), count remaining rows for the lemma, then drop
+// the orphaned review state. These configure that path.
+let txDeletedVocab: Array<Record<string, unknown>> = [];
+let txRemainingCount = 0;
+
 function resetTxCapture(): void {
   txCapture.entryInsertValues = [];
   txCapture.entryReturning = [];
   txCapture.vocabInsertRows = [];
   txCapture.vocabUpsertSets = [];
   txCapture.entryUpdateBank = [];
+  txDeletedVocab = [];
+  txRemainingCount = 0;
+  savedVocabRows = [];
 }
 
 const mockTransaction = vi.fn(async (cb: (tx: unknown) => unknown) => {
@@ -137,6 +156,24 @@ const mockTransaction = vi.fn(async (cb: (tx: unknown) => unknown) => {
         txCapture.entryUpdateBank.push(payload.bank);
         return { where: () => Promise.resolve() };
       },
+    }),
+    // `tx.delete(t).where(...)` is awaited directly (review-state cleanup) or
+    // chained into `.returning(...)` (the vocab row delete).
+    delete: (_table: unknown) => ({
+      where: (..._args: unknown[]) => {
+        const p = Promise.resolve() as Promise<void> & {
+          returning: () => Promise<Array<Record<string, unknown>>>;
+        };
+        p.returning = () => Promise.resolve(txDeletedVocab);
+        return p;
+      },
+    }),
+    // `tx.select({ remaining: count() }).from(t).where(...)` — the orphan check.
+    select: (_cols: unknown) => ({
+      from: (_t: unknown) => ({
+        where: (..._args: unknown[]) =>
+          Promise.resolve([{ remaining: txRemainingCount }]),
+      }),
     }),
   };
   return cb(tx);
@@ -192,6 +229,11 @@ vi.mock('@language-drill/db', () => ({
     eventType: 'event_type',
     createdAt: 'created_at',
     metadata: 'metadata',
+  },
+  vocabularyReviewState: {
+    userId: 'user_id',
+    language: 'language',
+    lemma: 'lemma',
   },
 }));
 
@@ -568,6 +610,12 @@ describe('GET /read/entries/:id', () => {
         pastedAt,
       },
     ]);
+    // Saved-from-this-passage vocab: one flagged-banked word + one on-demand
+    // phrase save (the case the old bank-only panel dropped).
+    savedVocabRows = [
+      { id: 'v1', word: 'aldea', lemma: 'aldea', gloss: 'village', pos: 'noun', cefrBand: 'B2', card: { type: 'word' } },
+      { id: 'v2', word: 'echar de menos', lemma: 'echar de menos', gloss: 'to miss', pos: 'phrase', cefrBand: null, card: { type: 'phrase' } },
+    ];
 
     const res = await app.request(
       `/read/entries/${validUuid}`,
@@ -585,6 +633,10 @@ describe('GET /read/entries/:id', () => {
       text: 'La aldea ...',
       flaggedWords: { aldea: { lemma: 'aldea', pos: 'noun', gloss: '', example: '', freq: 1, cefr: 'B2' } },
       bank: ['aldea'],
+      savedVocab: [
+        { id: 'v1', word: 'aldea', lemma: 'aldea', gloss: 'village', type: 'word', cefr: 'B2' },
+        { id: 'v2', word: 'echar de menos', lemma: 'echar de menos', gloss: 'to miss', type: 'phrase', cefr: null },
+      ],
       pastedAt: pastedAt.toISOString(),
     });
   });
@@ -1046,7 +1098,9 @@ describe('DELETE /read/vocabulary/:id', () => {
   });
 
   it('removes the owned record and returns { id }', async () => {
-    mockDeleteReturning.mockResolvedValueOnce([{ id: validUuid }]);
+    // Deleting the last surface for a lemma also drops its orphaned review card.
+    txDeletedVocab = [{ id: validUuid, language: 'ES', lemma: 'aldea' }];
+    txRemainingCount = 0;
 
     const res = await app.request(
       `/read/vocabulary/${validUuid}`,
@@ -1056,11 +1110,24 @@ describe('DELETE /read/vocabulary/:id', () => {
 
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ id: validUuid });
-    expect(mockDelete).toHaveBeenCalledTimes(1);
+  });
+
+  it('still returns { id } when other surfaces keep the lemma alive (review card kept)', async () => {
+    txDeletedVocab = [{ id: validUuid, language: 'ES', lemma: 'aldea' }];
+    txRemainingCount = 2; // another surface for this lemma remains
+
+    const res = await app.request(
+      `/read/vocabulary/${validUuid}`,
+      { method: 'DELETE' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ id: validUuid });
   });
 
   it('returns 404 VOCAB_NOT_FOUND + no-store when nothing was deleted (cross-user/unknown)', async () => {
-    mockDeleteReturning.mockResolvedValueOnce([]);
+    txDeletedVocab = [];
 
     const res = await app.request(
       `/read/vocabulary/${validUuid}`,

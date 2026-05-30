@@ -34,6 +34,7 @@ import {
   useSaveVocabularyCard,
   useUpdateReadBank,
   type ReadEntryResponse,
+  type SavedVocabItem,
 } from '@language-drill/api-client';
 import { CefrLevel, type DeepCard } from '@language-drill/shared';
 import { useActiveLanguage } from '../../../components/shell/active-language-provider';
@@ -63,6 +64,33 @@ import { SaveToast, VocabSaveToast } from './_components/save-toast';
 
 const SAVE_TOAST_MS = 4000;
 const INLINE_ERROR_MS = 3000;
+
+// Build the word-bank panel row for a just-saved deep card. Mirrors the
+// server's `savedVocab` projection (read.ts) so optimistic rows match a later
+// refetch. Sentence cards aren't savable → null.
+function vocabItemFromCard(id: string, card: DeepCard): SavedVocabItem | null {
+  if (card.type === 'word') {
+    return {
+      id,
+      word: card.surface,
+      lemma: card.lemma,
+      gloss: card.contextualSense,
+      type: 'word',
+      cefr: card.cefr as CefrLevel,
+    };
+  }
+  if (card.type === 'phrase') {
+    return {
+      id,
+      word: card.surface,
+      lemma: card.citation ?? card.surface,
+      gloss: card.idiomaticMeaning,
+      type: 'phrase',
+      cefr: null,
+    };
+  }
+  return null;
+}
 
 function errorKindFromCode(code: string): AnnotatedErrorKind {
   switch (code) {
@@ -166,6 +194,18 @@ export default function ReadPage() {
   // bank and of entry `spanAnnotations` (Req 11.7).
   const saveVocab = useSaveVocabularyCard({ fetchFn });
   const deleteVocab = useDeleteVocabularyCard({ fetchFn });
+
+  // Optimistically patch the open entry's saved-vocab list in the query cache,
+  // so the word-bank panel reflects a save/unsave instantly (the deep-save and
+  // unsave paths carry the vocab id; other writes reconcile on the next fetch).
+  const patchSavedVocab = (
+    entryId: string,
+    fn: (items: SavedVocabItem[]) => SavedVocabItem[],
+  ) => {
+    queryClient.setQueryData<ReadEntryResponse>(['readEntry', entryId], (prev) =>
+      prev ? { ...prev, savedVocab: fn(prev.savedVocab ?? []) } : prev,
+    );
+  };
 
   // The just-saved deep card: its span (so the open card reflects the "saved"
   // footer), the vocabulary record id (for undo), and the surface key (so the
@@ -505,6 +545,16 @@ export default function ReadPage() {
           onSuccess: ({ id }) => {
             setDeepSaved({ start: span.start, end: span.end, vocabId: id, wordKey: word, banked });
             setVocabToast({ label: card.surface });
+            // Surface the save in the word-bank panel immediately (Req: show all
+            // saved words, flagged or on-demand). Append to match the server's
+            // oldest-first order; replace any prior row for the same surface.
+            const item = vocabItemFromCard(id, card);
+            if (item && sourceReadEntryId) {
+              patchSavedVocab(sourceReadEntryId, (items) => [
+                ...items.filter((v) => v.word.toLowerCase() !== item.word.toLowerCase()),
+                item,
+              ]);
+            }
           },
           onError: () => dispatch({ type: 'SHOW_INLINE_ERROR', kind: 'save' }),
         },
@@ -564,10 +614,16 @@ export default function ReadPage() {
   const handleUndoCard = () => {
     if (!deepSaved) return;
     const { vocabId, wordKey, banked } = deepSaved;
+    const entryId = state.activeEntryId;
     deleteVocab.mutate(vocabId, {
       onSuccess: () => {
         setDeepSaved(null);
         setVocabToast(null);
+        // Mirror the unsave in the word-bank panel (the save optimistically
+        // added this row).
+        if (entryId) {
+          patchSavedVocab(entryId, (items) => items.filter((v) => v.id !== vocabId));
+        }
         if (banked && wordKey && state.activeEntryId !== null && state.bank.includes(wordKey)) {
           dispatch({ type: 'TOGGLE_BANK_WORD', word: wordKey });
           updateBank.mutate(
@@ -584,11 +640,57 @@ export default function ReadPage() {
     });
   };
 
-  // Surface forms shown with the "saved" style in the passage (Req 8.4).
-  const savedWordKeys = useMemo(
-    () => (deepSaved?.wordKey ? new Set([deepSaved.wordKey]) : new Set<string>()),
-    [deepSaved],
-  );
+  // Everything saved from this passage (flagged-banked + on-demand), driving the
+  // word-bank panel. Sourced from the entry query (which the save/unsave paths
+  // patch optimistically), so it persists across reloads — unlike `state.bank`,
+  // which only holds flagged words.
+  const savedVocab = entryQuery.data?.savedVocab ?? [];
+
+  // Surface forms shown with the "saved" style in the passage (Req 8.4) — every
+  // saved single word, plus the just-saved one before the query settles.
+  const savedWordKeys = useMemo(() => {
+    const keys = new Set(
+      savedVocab.filter((v) => v.type === 'word').map((v) => v.word.toLowerCase()),
+    );
+    if (deepSaved?.wordKey) keys.add(deepSaved.wordKey);
+    return keys;
+  }, [savedVocab, deepSaved]);
+
+  // Unsave (✕) a row from the word-bank panel: delete the vocabulary record
+  // (server also drops the now-orphaned FSRS review card), drop it from the
+  // panel optimistically, clear the open card's "saved" state if it was this
+  // row, and un-bank it if it was a flagged bank word (keeps `savedCount` and
+  // the bank column honest).
+  const handleUnsaveVocab = (item: SavedVocabItem) => {
+    const entryId = state.activeEntryId;
+    if (entryId) {
+      patchSavedVocab(entryId, (items) => items.filter((v) => v.id !== item.id));
+    }
+    if (deepSaved?.vocabId === item.id) {
+      setDeepSaved(null);
+      setVocabToast(null);
+    }
+    const lower = item.word.toLowerCase();
+    if (entryId !== null && state.bank.includes(lower)) {
+      dispatch({ type: 'TOGGLE_BANK_WORD', word: lower });
+      updateBank.mutate(
+        {
+          id: entryId,
+          language: activeLanguage,
+          bank: state.bank.filter((w) => w !== lower),
+        },
+        { onError: () => dispatch({ type: 'SHOW_INLINE_ERROR', kind: 'bank' }) },
+      );
+    }
+    deleteVocab.mutate(item.id, {
+      onError: () => {
+        dispatch({ type: 'SHOW_INLINE_ERROR', kind: 'save' });
+        if (entryId) {
+          void queryClient.invalidateQueries({ queryKey: ['readEntry', entryId] });
+        }
+      },
+    });
+  };
 
   // Bank toggle from the popover / sheet. Two paths:
   //   - Existing History entry → PUT /read/entries/:id/bank to sync the new
@@ -765,6 +867,8 @@ export default function ReadPage() {
             deepSaved ? { start: deepSaved.start, end: deepSaved.end } : null
           }
           savedWordKeys={savedWordKeys}
+          savedVocab={savedVocab}
+          onUnsaveVocab={handleUnsaveVocab}
           underReview={underReview}
           onBankToggle={handleBankToggle}
           onPasteNew={handlePasteNew}
