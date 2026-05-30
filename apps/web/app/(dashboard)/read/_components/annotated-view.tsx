@@ -177,36 +177,14 @@ export function AnnotatedView({
     onPopoverOpen(word, x, y);
   };
 
-  // Touch tap-first/tap-last: the first tap opens a single word and is
-  // remembered as the anchor; while a card is open, a second tap on a different
-  // word grows the span (anchor → tapped) instead of replacing the card. Lives
-  // here (not in AnnotatedText) because it keys off the card-open state. Desktop
-  // keeps mouse-drag; this ref is only consulted on mobile.
-  const tapAnchorRef = React.useRef<{ start: number; end: number } | null>(null);
-  React.useEffect(() => {
-    // A closed card resets the anchor, so the next tap starts a fresh word.
-    if (!deepActive) tapAnchorRef.current = null;
-  }, [deepActive]);
-
-  // Every tap (as a word span) and every drag selection flows here; the anchor
-  // travels with the span so the deep card opens at the selection (Req 3.2,
-  // 4.1, 5.1).
+  // Every selection flows here — a tap (single word) or a drag (phrase /
+  // sentence), on desktop (mouse) or mobile (touch-drag). The span is already
+  // fully resolved in AnnotatedText, so this just maps the rect to the
+  // container's coordinate space and forwards it; the card opens at the
+  // selection (Req 3.2, 4.1, 5.1). Select-first means one model call per span
+  // and no card covering the passage during selection.
   const handleSpanSelect = (sel: SpanSelection) => {
     const { x, y } = containerXY(sel.rect);
-    const anchor = tapAnchorRef.current;
-    const sameAsAnchor =
-      anchor !== null && sel.start === anchor.start && sel.end === anchor.end;
-    if (isMobile && deepActive && anchor && !sameAsAnchor) {
-      // Extend: merge the anchor and the tapped word into one span. The server
-      // recomputes the authoritative type; 'phrase' is the multi-word hint.
-      const start = Math.min(anchor.start, sel.start);
-      const end = Math.max(anchor.end, sel.end);
-      tapAnchorRef.current = { start, end };
-      onSpanSelect({ start, end, type: 'phrase', x, y });
-      return;
-    }
-    // First tap (or desktop / no open card): single word; remember the anchor.
-    tapAnchorRef.current = { start: sel.start, end: sel.end };
     onSpanSelect({ start: sel.start, end: sel.end, type: sel.type, x, y });
   };
 

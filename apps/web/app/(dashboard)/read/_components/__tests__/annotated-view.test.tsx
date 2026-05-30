@@ -371,12 +371,15 @@ describe('AnnotatedView — mobile branch (≤760px)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Mobile tap-first / tap-last span selection. The anchor logic lives in
-// AnnotatedView (it keys off the card-open `deepCard` prop); a touch tap reaches
-// it via the word button's synthetic click.
+// Span-select forwarding. AnnotatedView no longer anchors tap-first/tap-last;
+// AnnotatedText resolves the full span (a tap → word, a drag → phrase/sentence)
+// and AnnotatedView just maps the rect to container coords and forwards it. The
+// touch-drag GESTURE needs real layout (elementFromPoint), so it's covered by
+// the touch E2E (read-mobile-touch.spec); here we assert the forwarding via the
+// mouse-drag path, which shares the same resolve/emit core in AnnotatedText.
 // ---------------------------------------------------------------------------
 
-describe('AnnotatedView — mobile tap-first/tap-last', () => {
+describe('AnnotatedView — span-select forwarding', () => {
   beforeEach(() => mockIsMobile.mockReturnValue(true));
 
   // la[0,2] aldea[3,8] grande[9,15] es[16,18]
@@ -385,55 +388,39 @@ describe('AnnotatedView — mobile tap-first/tap-last', () => {
     ...baseProps,
     entry: { ...baseProps.entry, text: TEXT, flaggedWords: {} as FlaggedMap },
   };
-  const loadingFor = (start: number, end: number) =>
-    ({ status: 'loading' as const, span: { start, end, type: 'word' as const, x: 0, y: 0 } });
 
-  it('first tap opens a single word; a second tap while the card is open extends to a span', () => {
+  it('forwards a plain tap as a one-word span', () => {
     const onSpanSelect = vi.fn();
-    const { rerender } = render(
+    render(
       <AnnotatedView {...tapProps} onSpanSelect={onSpanSelect} deepCard={{ status: 'idle' }} />,
     );
 
-    // First tap → single word 'aldea' [3,8], remembered as the anchor.
     fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
     expect(onSpanSelect).toHaveBeenLastCalledWith(
       expect.objectContaining({ start: 3, end: 8, type: 'word' }),
     );
+  });
 
-    // The card is now open (deep loading) — re-render as the parent would.
-    rerender(
-      <AnnotatedView {...tapProps} onSpanSelect={onSpanSelect} deepCard={loadingFor(3, 8)} />,
+  it('forwards a multi-word drag as a single phrase span (one emit, no anchoring)', () => {
+    const onSpanSelect = vi.fn();
+    render(
+      <AnnotatedView {...tapProps} onSpanSelect={onSpanSelect} deepCard={{ status: 'idle' }} />,
     );
 
-    // Second tap on 'grande' [9,15] → merged span [3,15]. While the sheet is
-    // open, vaul's Radix dialog marks the passage `aria-hidden` (the card is the
-    // active surface), but it stays pointer-interactive (modal={false}) — so we
-    // query past aria-hidden with `hidden: true`.
-    fireEvent.click(screen.getByRole('button', { name: 'grande', hidden: true }));
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'aldea' }));
+    fireEvent.mouseEnter(screen.getByRole('button', { name: 'grande' }));
+    fireEvent.mouseUp(window);
+
+    expect(onSpanSelect).toHaveBeenCalledTimes(1);
     expect(onSpanSelect).toHaveBeenLastCalledWith(
       expect.objectContaining({ start: 3, end: 15, type: 'phrase' }),
     );
-  });
 
-  it('closing the card resets the anchor — the next tap is a single word again', () => {
-    const onSpanSelect = vi.fn();
-    const { rerender } = render(
-      <AnnotatedView {...tapProps} onSpanSelect={onSpanSelect} deepCard={{ status: 'idle' }} />,
-    );
-    fireEvent.click(screen.getByRole('button', { name: 'aldea' })); // anchor = aldea
-    rerender(
-      <AnnotatedView {...tapProps} onSpanSelect={onSpanSelect} deepCard={loadingFor(3, 8)} />,
-    );
-    rerender(
-      <AnnotatedView {...tapProps} onSpanSelect={onSpanSelect} deepCard={{ status: 'idle' }} />,
-    ); // closed → anchor cleared
-
-    onSpanSelect.mockClear();
-    // (vaul's close is animated; in jsdom the dialog's aria-hidden lingers, so
-    // query past it. deepCard is idle, so the tap resolves as a single word.)
-    fireEvent.click(screen.getByRole('button', { name: 'grande', hidden: true }));
-    expect(onSpanSelect).toHaveBeenLastCalledWith(
-      expect.objectContaining({ start: 9, end: 15, type: 'word' }),
-    );
+    // A real browser fires a synthetic click on the container after a
+    // cross-element drag; finalizeSelection installs a one-shot swallower for
+    // exactly that click (so the open card isn't dismissed). Fire it here to
+    // mirror the browser and consume the listener (no second emit).
+    fireEvent.click(screen.getByRole('button', { name: 'grande' }));
+    expect(onSpanSelect).toHaveBeenCalledTimes(1);
   });
 });
