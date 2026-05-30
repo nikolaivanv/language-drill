@@ -114,10 +114,16 @@ jobs:
   e2e:
     name: E2E (Playwright)
     runs-on: ubuntu-latest
-    # Reuses the migrated Neon PR branch (createTestUser upserts the test-user
-    # row there). Runs in parallel with `preview`.
-    needs: [neon-migrate]
+    # Self-contained — the web specs mock every API call, so this only needs the
+    # dev Clerk instance + a migrated DB for `createTestUser`. The canonical
+    # `+clerk_test` user is upserted idempotently (onConflictDoNothing), so
+    # pointing at the shared dev Neon branch is safe even across parallel PRs.
+    needs: [lint-typecheck, test]
     env:
+      # Dev Neon branch connection string — a DEDICATED secret, NOT the prod
+      # `DATABASE_URL`. E2E only writes the idempotent test user + a default
+      # language profile here.
+      DATABASE_URL: ${{ secrets.E2E_DATABASE_URL }}
       # Dev Clerk instance (pk_test_/sk_test_). The suite hard-refuses pk_live_.
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.E2E_CLERK_PUBLISHABLE_KEY }}
       CLERK_SECRET_KEY: ${{ secrets.E2E_CLERK_SECRET_KEY }}
@@ -137,20 +143,6 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-
-      # Resolve the migrated PR branch's connection string in-job. (Passing it
-      # as a `neon-migrate` job output doesn't work: GitHub strips masked values
-      # from cross-job outputs, so it arrives empty. Writing to this job's
-      # GITHUB_ENV has no such restriction.)
-      - name: Resolve E2E database URL
-        env:
-          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
-        run: |
-          npm install -g neonctl
-          DATABASE_URL=$(neonctl connection-string "pr-${{ github.event.number }}" \
-            --project-id "${{ secrets.NEON_PROJECT_ID }}")
-          echo "::add-mask::$DATABASE_URL"
-          echo "DATABASE_URL=$DATABASE_URL" >> "$GITHUB_ENV"
 
       # `auth.setup` imports `@language-drill/db` (createDb) as a built package,
       # and the dev server resolves the other workspace packages' `dist`. A bare

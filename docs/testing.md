@@ -120,11 +120,11 @@ with `E2E missing env: <NAME>`.
 
 ## CI
 
-The `e2e` job in `.github/workflows/ci.yml` runs the suite on every PR. It
-needs `lint-typecheck` + `test` to pass, then `neon-migrate` (it reuses that
-job's migrated per-PR Neon branch via the `database_url` job output, where
-`auth.setup` upserts the test user). It runs in parallel with the Vercel
-preview deploy.
+The `e2e` job in `.github/workflows/ci.yml` runs the suite on every PR once
+`lint-typecheck` + `test` pass. It's self-contained: `auth.setup` upserts the
+canonical `+clerk_test` user idempotently into the **dev** Neon branch
+(`E2E_DATABASE_URL`), so it needs no per-PR database and runs in parallel with
+`neon-migrate` / the preview deploy.
 
 It does **not** target the preview URL: the web specs mock every API call with
 `page.route`, so they only need the frontend served (Playwright starts
@@ -142,7 +142,7 @@ The four Clerk vars come from GitHub Actions secrets that must point at the
 | `E2E_CLERK_SECRET_KEY` | `CLERK_SECRET_KEY` |
 | `E2E_CLERK_USER_EMAIL` | `E2E_CLERK_USER_EMAIL` (must contain `+clerk_test`) |
 | `E2E_CLERK_USER_PASSWORD` | `E2E_CLERK_USER_PASSWORD` |
+| `E2E_DATABASE_URL` | `DATABASE_URL` (dev Neon branch — NOT the prod `DATABASE_URL` secret) |
 
-`DATABASE_URL` is the `neon-migrate` branch; `NEON_API_KEY` / `NEON_PROJECT_ID`
-are already configured. Until these four secrets exist, the `e2e` job fails
-fast with `E2E missing env: <NAME>`.
+Until these five secrets exist, the `e2e` job fails fast with
+`E2E missing env: <NAME>`.
