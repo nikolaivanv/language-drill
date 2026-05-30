@@ -54,19 +54,25 @@ describe('WordSheet', () => {
     expect(onSkip).toHaveBeenCalledTimes(1);
   });
 
-  it('closes on the close button, the scrim, and Escape', () => {
+  it('closes on the close button and Escape', () => {
     const onClose = vi.fn();
     render(<WordSheet {...baseProps} onClose={onClose} />);
 
-    // Close button (BottomSheet header).
+    // Close button in the sheet header.
     fireEvent.click(screen.getByRole('button', { name: 'close' }));
-    // Scrim is the dialog's portal parent.
-    const scrim = screen.getByRole('dialog').parentElement as HTMLElement;
-    fireEvent.click(scrim);
-    // Escape.
+    // Escape (handled by the vaul drawer → onOpenChange(false) → onClose).
     fireEvent.keyDown(document, { key: 'Escape' });
 
-    expect(onClose).toHaveBeenCalledTimes(3);
+    expect(onClose).toHaveBeenCalledTimes(2);
+    // Scrim-click and drag-to-dismiss are pointer-gesture dismissals owned by
+    // vaul; they're exercised in the e2e suite rather than simulated in jsdom.
+  });
+
+  it('renders a draggable handle (drag up to expand, down to dismiss)', () => {
+    render(<WordSheet {...baseProps} />);
+    // vaul tags its grabber with data-vaul-handle; its presence is the
+    // affordance that the sheet is resizable across snap points.
+    expect(document.querySelector('[data-vaul-handle]')).toBeInTheDocument();
   });
 });
 
@@ -89,6 +95,18 @@ const WORD_CARD: DeepWordCard = {
 };
 
 describe('WordSheet — deep-card states', () => {
+  it('shows the skim preview with an inline "looking it up…" indicator when loading and a flagged entry is present (Req 3.1, 3.3)', () => {
+    render(
+      <WordSheet
+        {...baseProps}
+        deepCard={{ status: 'loading', span: SPAN }}
+      />,
+    );
+    expect(screen.getByText('a small village')).toBeInTheDocument();
+    expect(screen.getByTestId('skim-loading-deep')).toBeInTheDocument();
+    expect(screen.queryByTestId('deep-card-skeleton')).toBeNull();
+  });
+
   it('opens with the skeleton while loading, even without a skim entry (Req 9.3)', () => {
     render(
       <WordSheet

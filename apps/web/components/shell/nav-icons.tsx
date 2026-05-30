@@ -66,3 +66,17 @@ export function ProgressIcon() {
     </svg>
   );
 }
+
+// A 2×2 grid / catalog glyph for the theory library — deliberately distinct
+// from the open-book ReadIcon so "theory" and "read" read differently in the
+// nav.
+export function TheoryIcon() {
+  return (
+    <svg {...SHARED_PROPS} aria-hidden="true">
+      <rect x="2" y="2" width="5" height="5" rx="1" />
+      <rect x="9" y="2" width="5" height="5" rx="1" />
+      <rect x="2" y="9" width="5" height="5" rx="1" />
+      <rect x="9" y="9" width="5" height="5" rx="1" />
+    </svg>
+  );
+}

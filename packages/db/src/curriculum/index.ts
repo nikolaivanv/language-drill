@@ -45,6 +45,29 @@ export function getGrammarPoint(key: string): GrammarPoint | undefined {
   return GRAMMAR_POINT_INDEX.get(key);
 }
 
+/**
+ * Curriculum sequence number for the theory library's "curriculum order"
+ * sort: a grammar point's 0-based position within its OWN language's
+ * curriculum array (ES, DE, TR each restart at 0). Built once at module load
+ * from the per-language arrays — `ALL_CURRICULA` is not used here because its
+ * concatenation would offset DE/TR positions by the lengths of the languages
+ * before them.
+ */
+const CURRICULUM_ORDER_INDEX: ReadonlyMap<string, number> = new Map(
+  [esCurriculum, deCurriculum, trCurriculum].flatMap((curriculum) =>
+    curriculum.map((entry, index) => [entry.key, index] as const),
+  ),
+);
+
+/**
+ * Position of `key` within its language's curriculum array (0-based), or
+ * `undefined` for an unknown key. Callers (the theory list endpoint) sort
+ * topics with an `undefined` order last.
+ */
+export function curriculumOrderOf(key: string): number | undefined {
+  return CURRICULUM_ORDER_INDEX.get(key);
+}
+
 const KEY_REGEX = /^(es|de|tr)-(a1|a2|b1|b2)-[a-z0-9-]+$/;
 
 const LANGUAGE_PREFIX_BY_LANGUAGE: Readonly<Record<string, string>> = {
@@ -53,14 +76,15 @@ const LANGUAGE_PREFIX_BY_LANGUAGE: Readonly<Record<string, string>> = {
   TR: 'tr',
 };
 
-// TEMPORARILY REDUCED (2026-05-10) to match the curriculum entries that are
-// currently uncommented in es.ts / de.ts / tr.ts. When restoring those entries,
-// bump these minimums back to ES/DE/TR { A1: 4, A2: 5, B1: 6, B2: 5 } and
-// re-enable the per-language counts assertions in curriculum.test.ts.
+// TR is now full-A1/A2 (Yedi İklim parity, 2026-05-28); B1/B2 remain disabled.
+// ES/DE are still TEMPORARILY REDUCED (2026-05-10) to match the entries
+// currently uncommented in es.ts / de.ts. When restoring those entries, bump
+// the ES/DE minimums back to { A1: 4, A2: 5, B1: 6, B2: 5 } and re-enable the
+// per-language counts assertions in curriculum.test.ts.
 const PER_LANGUAGE_GRAMMAR_MIN: Readonly<Record<string, Record<string, number>>> = {
   ES: { A1: 0, A2: 0, B1: 6, B2: 5 },
   DE: { A1: 0, A2: 0, B1: 0, B2: 0 },
-  TR: { A1: 4, A2: 5, B1: 0, B2: 0 },
+  TR: { A1: 26, A2: 14, B1: 0, B2: 0 },
 };
 
 /**

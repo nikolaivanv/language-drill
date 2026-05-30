@@ -27,12 +27,13 @@ vi.mock('next/link', () => ({
 }));
 
 describe('NavItems', () => {
-  it('exposes the primary destinations in order', () => {
+  it('exposes the primary destinations in order (review + theory between read and progress)', () => {
     expect(NAV_DESTINATIONS.map((d) => d.href)).toEqual([
       '/',
       '/drill',
       '/read',
       '/review',
+      '/theory',
       '/progress',
     ]);
     expect(NAV_DESTINATIONS.map((d) => d.label)).toEqual([
@@ -40,6 +41,7 @@ describe('NavItems', () => {
       'drill',
       'read',
       'review',
+      'theory',
       'progress',
     ]);
   });

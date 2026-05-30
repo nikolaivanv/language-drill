@@ -203,6 +203,78 @@ describe('tokenize', () => {
     expect(joinRaw(tokens)).toBe('café2x');
   });
 
+  // -------------------------------------------------------------------------
+  // Word-internal connectors — hyphen-minus and apostrophes between word chars
+  // -------------------------------------------------------------------------
+
+  it('keeps a hyphen-minus between word chars as part of the word: "e-posta"', () => {
+    const tokens = tokenize('e-posta');
+    expect(tokens).toEqual([
+      { kind: 'word', raw: 'e-posta', key: 'e-posta' },
+    ]);
+    expect(joinRaw(tokens)).toBe('e-posta');
+  });
+
+  it('keeps a hyphen between multi-character words: "well-known"', () => {
+    const tokens = tokenize('well-known');
+    expect(tokens).toEqual([
+      { kind: 'word', raw: 'well-known', key: 'well-known' },
+    ]);
+    expect(joinRaw(tokens)).toBe('well-known');
+  });
+
+  it('keeps an ASCII apostrophe between word chars: "don\'t"', () => {
+    const tokens = tokenize("don't");
+    expect(tokens).toEqual([{ kind: 'word', raw: "don't", key: "don't" }]);
+    expect(joinRaw(tokens)).toBe("don't");
+  });
+
+  it('keeps a curly apostrophe between word chars: "Anne’nin"', () => {
+    const tokens = tokenize('Anne’nin');
+    expect(tokens).toEqual([
+      { kind: 'word', raw: 'Anne’nin', key: 'anne’nin' },
+    ]);
+    expect(joinRaw(tokens)).toBe('Anne’nin');
+  });
+
+  it('treats a leading hyphen as a separator: "-abc"', () => {
+    const tokens = tokenize('-abc');
+    expect(tokens).toEqual([
+      { kind: 'sep', raw: '-', key: '' },
+      { kind: 'word', raw: 'abc', key: 'abc' },
+    ]);
+    expect(joinRaw(tokens)).toBe('-abc');
+  });
+
+  it('treats a trailing hyphen as a separator: "abc-"', () => {
+    const tokens = tokenize('abc-');
+    expect(tokens).toEqual([
+      { kind: 'word', raw: 'abc', key: 'abc' },
+      { kind: 'sep', raw: '-', key: '' },
+    ]);
+    expect(joinRaw(tokens)).toBe('abc-');
+  });
+
+  it('keeps em-dashes as separators even between word chars: "foo—bar"', () => {
+    // Regression guard: the internal-connector rule is restricted to
+    // hyphen-minus + apostrophes, NOT em-dash / en-dash, which always split.
+    const tokens = tokenize('foo—bar');
+    expect(tokens).toEqual([
+      { kind: 'word', raw: 'foo', key: 'foo' },
+      { kind: 'sep', raw: '—', key: '' },
+      { kind: 'word', raw: 'bar', key: 'bar' },
+    ]);
+  });
+
+  it('word keys match the skim pass\' lowercased matchedForm', () => {
+    // Documents the contract with annotate.ts: `matchedForm` is the lowercased
+    // EXACT surface form. The tokenizer's key must match it so the flaggedMap
+    // lookup hits for hyphenated and apostrophe'd words.
+    const tokens = tokenize('E-posta gönderdim.');
+    const wordKeys = tokens.filter((t) => t.kind === 'word').map((t) => t.key);
+    expect(wordKeys).toEqual(['e-posta', 'gönderdim']);
+  });
+
   it('preserves round-trip across mixed scripts and digits: "Привет 2024 dünya!"', () => {
     // Cyrillic "Привет" (6 chars, word), digit-only "2024" (sep under new
     // behavior), Latin-extended "dünya" (5 chars, word). Round-trip must hold.

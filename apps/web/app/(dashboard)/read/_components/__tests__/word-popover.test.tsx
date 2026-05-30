@@ -130,6 +130,20 @@ describe('WordPopover — save / skip / Escape', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
+  it('clicking a toast (role="status") does not close the popover (Req 8.5 undo-from-toast)', () => {
+    const onClose = vi.fn();
+    render(
+      <div>
+        <div role="status">
+          <button>undo</button>
+        </div>
+        <WordPopover {...baseProps} onClose={onClose} />
+      </div>,
+    );
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'undo' }));
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
   it('clicking inside the popover does not fire onClose', () => {
     const onClose = vi.fn();
     render(
@@ -218,6 +232,38 @@ describe('WordCardBody — shared content (extracted from the popover)', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^close$/i })).toBeInTheDocument();
   });
+
+  // Req 3.1 + 3.3 clarity — the user must see that a richer card is loading.
+  it('replaces the freq line with a "looking it up…" caption when loadingDeep is true', () => {
+    const { rerender } = render(
+      <WordCardBody
+        entry={ENTRY}
+        inBank={false}
+        onSave={() => {}}
+        onSkip={() => {}}
+      />,
+    );
+    expect(screen.getByText(/freq #4,321/)).toBeInTheDocument();
+    expect(screen.queryByTestId('skim-loading-deep')).toBeNull();
+
+    rerender(
+      <WordCardBody
+        entry={ENTRY}
+        inBank={false}
+        onSave={() => {}}
+        onSkip={() => {}}
+        loadingDeep
+      />,
+    );
+    expect(screen.queryByText(/freq #4,321/)).toBeNull();
+    const indicator = screen.getByTestId('skim-loading-deep');
+    expect(indicator).toHaveTextContent(/looking it up/i);
+    // Save/skip stay live so the user can still bank the skim or dismiss.
+    expect(
+      screen.getByRole('button', { name: /\+ save to bank/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^skip$/i })).toBeInTheDocument();
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -245,6 +291,24 @@ const SENTENCE_CARD: DeepSentenceCard = {
   breakdown: [{ chunk: 'La aldea', role: 'subject', note: 'the village' }],
   grammarNotes: ['definite article'],
 };
+
+describe('WordPopover — skim preview while the deep card loads (Req 3.1, 3.3)', () => {
+  it('renders the skim WordCardBody with the inline "looking it up…" indicator when loading and an entry is present', () => {
+    render(
+      <WordPopover
+        {...baseProps}
+        deepCard={{ status: 'loading', span: SPAN }}
+      />,
+    );
+    // Skim card content (the gloss) shows…
+    expect(screen.getByText('a small village')).toBeInTheDocument();
+    // …with the loading indicator swapped in for the freq line…
+    expect(screen.getByTestId('skim-loading-deep')).toBeInTheDocument();
+    expect(screen.queryByText(/freq #/)).toBeNull();
+    // …and the skeleton is NOT shown (the chrome chose skim preview, not skeleton).
+    expect(screen.queryByTestId('deep-card-skeleton')).toBeNull();
+  });
+});
 
 describe('WordPopover — deep-card loading (Req 9.3)', () => {
   it('keeps the chrome mounted and shows the "looking it up" skeleton', () => {

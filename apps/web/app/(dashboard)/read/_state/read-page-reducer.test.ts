@@ -459,6 +459,15 @@ describe('ANNOTATE_START', () => {
     expect(after.annotateStream.flaggedMap).toEqual({});
     expect(after.annotateStream.flaggedCount).toBe(0);
   });
+
+  it('detaches from a previously loaded entry so a fresh paste renders ephemerally', () => {
+    // Regression: pasting a new text and clicking Annotate while a history
+    // entry was open used to keep `activeEntryId` bound, so the persisted entry
+    // won the render and the old text reopened instead of the pasted one.
+    const before = withState({ activeEntryId: 'history-entry-1' });
+    const after = readPageReducer(before, { type: 'ANNOTATE_START' });
+    expect(after.activeEntryId).toBeNull();
+  });
 });
 
 describe('ANNOTATE_META', () => {

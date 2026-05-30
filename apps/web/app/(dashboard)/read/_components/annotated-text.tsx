@@ -19,11 +19,18 @@
 //     (Req 3.2, 4.1, 4.3, 5.1). The server recomputes the type authoritatively;
 //     the `type` here is the client hint that drives card layout.
 //
-// Drag model: mousedown on a word arms a selection, mouseenter over words
-// extends the head, and a window-level mouseup finalizes it (so releasing over
-// whitespace still resolves). The trailing synthetic click after a mouse
-// interaction is swallowed so a tap isn't double-handled; a bare click (no
-// preceding mousedown, e.g. keyboard activation) is handled directly.
+// Selection model:
+//   - Mouse (desktop): mousedown on a word arms a selection, mouseenter over
+//     words extends the head, and a window-level mouseup finalizes it (so
+//     releasing over whitespace still resolves) into the smallest span type
+//     (word | phrase | sentence). The trailing synthetic click is swallowed so
+//     a drag isn't double-handled; a bare click (keyboard activation) is handled
+//     directly. The begin/extend/finalize core is factored out for clarity.
+//   - Touch (mobile): a tap fires a single-word `onSpanSelect` via the synthetic
+//     click. Multi-word spans are NOT built here — the parent (`AnnotatedView`)
+//     turns a second tap into a span extension (tap-first / tap-last), since the
+//     card-open state it needs lives there. (A long-press gesture was tried but
+//     the OS text-selection callout can't be suppressed by `touch-action`.)
 //
 // Visuals come from `word-flag-styles.module.css` — no inline styles.
 // ---------------------------------------------------------------------------
@@ -194,8 +201,9 @@ export function AnnotatedText({
   const selectionRef = React.useRef<{ anchor: number; head: number } | null>(null);
   const anchorRectRef = React.useRef<DOMRect | null>(null);
   const headRectRef = React.useRef<DOMRect | null>(null);
-  // True immediately after a mouse interaction so the trailing click is ignored.
-  const mouseHandledRef = React.useRef(false);
+  // True immediately after a pointer/touch interaction so the trailing
+  // synthetic click is ignored.
+  const pointerHandledRef = React.useRef(false);
   const [selRange, setSelRange] = React.useState<{ min: number; max: number } | null>(null);
 
   const emitTap = React.useCallback((token: OffsetToken, rect: DOMRect) => {
@@ -205,15 +213,31 @@ export function AnnotatedText({
     live.onSpanSelect?.({ start: token.start, end: token.end, type: 'word', rect });
   }, []);
 
-  // Stable handler (empty deps) — reads everything through refs so the same
-  // function instance is added and removed from `window`.
-  const onWindowMouseUp = React.useCallback(() => {
-    window.removeEventListener('mouseup', onWindowMouseUp);
+  // ---- Selection core (input-agnostic) ------------------------------------
+  // All three read/write the refs above + the highlight state, so the mouse and
+  // touch adapters share identical begin/extend/finalize behaviour.
+
+  const beginSelection = React.useCallback((index: number, rect: DOMRect) => {
+    selectionRef.current = { anchor: index, head: index };
+    anchorRectRef.current = rect;
+    headRectRef.current = rect;
+    setSelRange({ min: index, max: index });
+  }, []);
+
+  const extendSelection = React.useCallback((index: number, rect: DOMRect) => {
+    const sel = selectionRef.current;
+    if (!sel) return;
+    selectionRef.current = { anchor: sel.anchor, head: index };
+    headRectRef.current = rect;
+    setSelRange({ min: Math.min(sel.anchor, index), max: Math.max(sel.anchor, index) });
+  }, []);
+
+  const finalizeSelection = React.useCallback(() => {
     const sel = selectionRef.current;
     selectionRef.current = null;
     setSelRange(null);
     if (!sel) return;
-    mouseHandledRef.current = true;
+    pointerHandledRef.current = true;
 
     const { tokens: toks, text: txt, onSpanSelect: emit } = liveRef.current;
     const min = Math.min(sel.anchor, sel.head);
@@ -229,32 +253,42 @@ export function AnnotatedText({
     }
     const type = resolveSpanType(txt, start, end, toks);
     emit?.({ start, end, type, rect });
+
+    // After a press on word A and release on word B (A≠B), browsers fire a
+    // synthetic click on the common ancestor — the rd-text container — which
+    // its outside-click handler then treats as a "dismiss the open card" tap.
+    // Swallow that one trailing click so the just-opened deep card sticks.
+    const swallow = (e: MouseEvent) => {
+      e.stopPropagation();
+      window.removeEventListener('click', swallow, true);
+    };
+    window.addEventListener('click', swallow, true);
   }, [emitTap]);
+
+  // ---- Mouse adapter ------------------------------------------------------
+  // Stable handler (empty deps) — reads everything through refs so the same
+  // function instance is added and removed from `window`.
+  const onWindowMouseUp = React.useCallback(() => {
+    window.removeEventListener('mouseup', onWindowMouseUp);
+    finalizeSelection();
+  }, [finalizeSelection]);
 
   const handleMouseDown = (index: number, e: React.MouseEvent<HTMLButtonElement>) => {
     // Suppress native text selection so the drag is ours.
     e.preventDefault();
-    const rect = e.currentTarget.getBoundingClientRect();
-    selectionRef.current = { anchor: index, head: index };
-    anchorRectRef.current = rect;
-    headRectRef.current = rect;
-    setSelRange({ min: index, max: index });
+    beginSelection(index, e.currentTarget.getBoundingClientRect());
     window.addEventListener('mouseup', onWindowMouseUp);
   };
 
   const handleMouseEnter = (index: number, e: React.MouseEvent<HTMLButtonElement>) => {
-    const sel = selectionRef.current;
-    if (!sel) return;
-    selectionRef.current = { anchor: sel.anchor, head: index };
-    headRectRef.current = e.currentTarget.getBoundingClientRect();
-    setSelRange({ min: Math.min(sel.anchor, index), max: Math.max(sel.anchor, index) });
+    extendSelection(index, e.currentTarget.getBoundingClientRect());
   };
 
   const handleClick = (token: OffsetToken, e: React.MouseEvent<HTMLButtonElement>) => {
-    // Swallow the click that trails a mouse interaction already handled by the
-    // window mouseup; allow a bare click (keyboard activation) through.
-    if (mouseHandledRef.current) {
-      mouseHandledRef.current = false;
+    // Swallow the click that trails a pointer interaction already handled by
+    // the window mouseup / touchend; allow a bare click (keyboard) through.
+    if (pointerHandledRef.current) {
+      pointerHandledRef.current = false;
       return;
     }
     emitTap(token, e.currentTarget.getBoundingClientRect());

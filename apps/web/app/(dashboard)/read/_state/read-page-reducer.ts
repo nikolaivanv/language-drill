@@ -275,8 +275,17 @@ export function readPageReducer(state: ReadPageState, action: Action): ReadPageS
       // Aborts the slice's prior accumulators; the next META/FLAG fills it in.
       // A new annotation is a brand-new passage, so the deep-card slice and any
       // session span annotations from the prior passage are cleared.
+      //
+      // Detach from any persisted/most-recent entry (`activeEntryId: null`): a
+      // freshly pasted text has no row yet, and the page renders the ephemeral
+      // entry (the pasted text + streaming flags) only while `activeEntryId` is
+      // null. Without this, a prior history entry stays bound and wins the
+      // `persistedEntry ?? ephemeralEntry` render, so Annotate would open the
+      // old text instead of the pasted one. ENTRY_PERSISTED re-binds the id
+      // once the text is saved.
       return {
         ...state,
+        activeEntryId: null,
         annotateStream: STREAMING_PLACEHOLDER,
         deepCard: { status: 'idle' },
         spanAnnotations: {},

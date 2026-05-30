@@ -18,6 +18,14 @@
   margin: 0;
   padding: 0;
   transition: all 0.12s;
+  /* Allow scroll/pan to start on a word and drop the 300ms tap delay +
+   * double-tap zoom. */
+  touch-action: manipulation;
+  /* Tap-to-annotate owns the press; suppress the OS text-selection + Copy/Share
+   * callout that a long-press would otherwise trigger on touch. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* SUBTLE — dotted accent underline */

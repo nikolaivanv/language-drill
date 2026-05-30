@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  TheoryListItemSchema,
   TheoryListResponseSchema,
   TheoryCoverageResponseSchema,
   type TheoryCoverageRow,
@@ -26,6 +27,60 @@ describe('TheoryListResponseSchema', () => {
   it('rejects a list item with a non-string id', () => {
     const result = TheoryListResponseSchema.safeParse({
       topics: [{ id: 123, title: 'oops', cefr: 'B1' }],
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('TheoryListItemSchema — category/order enrichment', () => {
+  it('preserves category + order on an enriched item', () => {
+    const result = TheoryListItemSchema.safeParse({
+      id: 'es-b2-compound-tenses',
+      title: 'compound tenses',
+      cefr: 'B2',
+      category: 'tenses',
+      order: 7,
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.category).toBe('tenses');
+      expect(result.data.order).toBe(7);
+    }
+  });
+
+  it("defaults category to 'other' and order to null on a legacy item (additive contract)", () => {
+    const result = TheoryListItemSchema.safeParse({
+      id: 'subjunctive',
+      title: 'the present subjunctive',
+      cefr: 'B1–B2',
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.category).toBe('other');
+      expect(result.data.order).toBeNull();
+    }
+  });
+
+  it('accepts an explicit null order', () => {
+    const result = TheoryListItemSchema.safeParse({
+      id: 'x',
+      title: 'x',
+      cefr: 'A1',
+      category: 'other',
+      order: null,
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.order).toBeNull();
+    }
+  });
+
+  it('rejects a non-numeric order', () => {
+    const result = TheoryListItemSchema.safeParse({
+      id: 'x',
+      title: 'x',
+      cefr: 'A1',
+      order: 'first',
     });
     expect(result.success).toBe(false);
   });

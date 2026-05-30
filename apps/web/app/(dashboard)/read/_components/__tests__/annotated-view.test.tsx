@@ -44,7 +44,6 @@ const baseProps = {
   activeWord: null,
   deepCard: { status: 'idle' } as const,
   calibration: { eyebrow: '~B1+ calibration', explanation: 'showing words rarer than top-3000' },
-  isSaving: false,
   onIntensityChange: () => {},
   onPopoverOpen: () => {},
   onPopoverClose: () => {},
@@ -55,23 +54,23 @@ const baseProps = {
   savedSpan: null,
   savedWordKeys: new Set<string>(),
   onBankToggle: () => {},
-  onClearBank: () => {},
-  onSave: () => {},
   onPasteNew: () => {},
 };
 
 describe('AnnotatedView — flagged ≥ 1', () => {
-  it('renders the rail, reader, and footer when there is at least one flagged word', () => {
+  it('renders the header, calibration strip, reader, and word-bank rail when there is at least one flagged word', () => {
     render(<AnnotatedView {...baseProps} />);
-    // Header
     expect(screen.getByText('Cien años — ch. 1')).toBeInTheDocument();
     expect(screen.getByText('García Márquez')).toBeInTheDocument();
-    // Calibration strip
     expect(screen.getByText('~B1+ calibration')).toBeInTheDocument();
-    // Word bank rail
     expect(screen.getByText('word bank')).toBeInTheDocument();
-    // Footer
-    expect(screen.getByText(/1 flagged · 0 saved · 1 skipped/)).toBeInTheDocument();
+    // The footer "N flagged · M saved · K skipped" tally and "save N to bank
+    // →" button are gone — bank saves persist immediately, so the explicit
+    // save action was redundant and the tally added little signal.
+    expect(screen.queryByText(/flagged ·/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /save \d+ to bank/i }),
+    ).not.toBeInTheDocument();
   });
 
   it('hides the source line when entry.source is empty', () => {
@@ -368,5 +367,73 @@ describe('AnnotatedView — mobile branch (≤760px)', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: /\+ save to bank/i }));
     expect(onBankToggle).toHaveBeenCalledWith('aldea');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Mobile tap-first / tap-last span selection. The anchor logic lives in
+// AnnotatedView (it keys off the card-open `deepCard` prop); a touch tap reaches
+// it via the word button's synthetic click.
+// ---------------------------------------------------------------------------
+
+describe('AnnotatedView — mobile tap-first/tap-last', () => {
+  beforeEach(() => mockIsMobile.mockReturnValue(true));
+
+  // la[0,2] aldea[3,8] grande[9,15] es[16,18]
+  const TEXT = 'la aldea grande es';
+  const tapProps = {
+    ...baseProps,
+    entry: { ...baseProps.entry, text: TEXT, flaggedWords: {} as FlaggedMap },
+  };
+  const loadingFor = (start: number, end: number) =>
+    ({ status: 'loading' as const, span: { start, end, type: 'word' as const, x: 0, y: 0 } });
+
+  it('first tap opens a single word; a second tap while the card is open extends to a span', () => {
+    const onSpanSelect = vi.fn();
+    const { rerender } = render(
+      <AnnotatedView {...tapProps} onSpanSelect={onSpanSelect} deepCard={{ status: 'idle' }} />,
+    );
+
+    // First tap → single word 'aldea' [3,8], remembered as the anchor.
+    fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
+    expect(onSpanSelect).toHaveBeenLastCalledWith(
+      expect.objectContaining({ start: 3, end: 8, type: 'word' }),
+    );
+
+    // The card is now open (deep loading) — re-render as the parent would.
+    rerender(
+      <AnnotatedView {...tapProps} onSpanSelect={onSpanSelect} deepCard={loadingFor(3, 8)} />,
+    );
+
+    // Second tap on 'grande' [9,15] → merged span [3,15]. While the sheet is
+    // open, vaul's Radix dialog marks the passage `aria-hidden` (the card is the
+    // active surface), but it stays pointer-interactive (modal={false}) — so we
+    // query past aria-hidden with `hidden: true`.
+    fireEvent.click(screen.getByRole('button', { name: 'grande', hidden: true }));
+    expect(onSpanSelect).toHaveBeenLastCalledWith(
+      expect.objectContaining({ start: 3, end: 15, type: 'phrase' }),
+    );
+  });
+
+  it('closing the card resets the anchor — the next tap is a single word again', () => {
+    const onSpanSelect = vi.fn();
+    const { rerender } = render(
+      <AnnotatedView {...tapProps} onSpanSelect={onSpanSelect} deepCard={{ status: 'idle' }} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'aldea' })); // anchor = aldea
+    rerender(
+      <AnnotatedView {...tapProps} onSpanSelect={onSpanSelect} deepCard={loadingFor(3, 8)} />,
+    );
+    rerender(
+      <AnnotatedView {...tapProps} onSpanSelect={onSpanSelect} deepCard={{ status: 'idle' }} />,
+    ); // closed → anchor cleared
+
+    onSpanSelect.mockClear();
+    // (vaul's close is animated; in jsdom the dialog's aria-hidden lingers, so
+    // query past it. deepCard is idle, so the tap resolves as a single word.)
+    fireEvent.click(screen.getByRole('button', { name: 'grande', hidden: true }));
+    expect(onSpanSelect).toHaveBeenLastCalledWith(
+      expect.objectContaining({ start: 9, end: 15, type: 'word' }),
+    );
   });
 });

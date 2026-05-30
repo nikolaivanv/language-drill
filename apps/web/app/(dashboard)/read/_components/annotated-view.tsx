@@ -19,10 +19,7 @@
 import * as React from 'react';
 import type { DeepCard, FlaggedMap } from '@language-drill/shared';
 import { AnnotatedText, type SpanSelection } from './annotated-text';
-import {
-  AnnotatedFooter,
-  ZeroFlaggedStrip,
-} from './annotated-footer';
+import { ZeroFlaggedStrip } from './annotated-footer';
 import { CalibrationStrip } from './calibration-strip';
 import { IntensityToggle } from './intensity-toggle';
 import { WordBankRail } from './word-bank-rail';
@@ -63,7 +60,6 @@ type Props = {
    * is replaced with "· no above-level words" (Req §NFR Usability).
    */
   noAboveLevelWords?: boolean;
-  isSaving: boolean;
   onIntensityChange: (intensity: Intensity) => void;
   /**
    * Called when a flagged-word button is clicked. `x` and `y` are already
@@ -95,8 +91,6 @@ type Props = {
    */
   underReview?: { lemmas: Set<string>; surfaces: Set<string> };
   onBankToggle: (word: string) => void;
-  onClearBank: () => void;
-  onSave: () => void;
   onPasteNew: () => void;
 };
 
@@ -109,7 +103,6 @@ export function AnnotatedView({
   calibration,
   annotateStreaming,
   noAboveLevelWords,
-  isSaving,
   onIntensityChange,
   onPopoverOpen,
   onPopoverClose,
@@ -121,13 +114,10 @@ export function AnnotatedView({
   savedWordKeys,
   underReview,
   onBankToggle,
-  onClearBank,
-  onSave,
   onPasteNew,
 }: Props) {
   const flaggedKeys = Object.keys(entry.flaggedWords);
-  const flaggedCount = flaggedKeys.length;
-  const hasFlagged = flaggedCount > 0;
+  const hasFlagged = flaggedKeys.length > 0;
   // While annotation is still streaming, we don't yet know if there will be
   // any above-level words — the iterator could still yield flags. Showing
   // `ZeroFlaggedStrip` ("this passage is well within your level — nice.") at
@@ -194,23 +184,46 @@ export function AnnotatedView({
     onPopoverOpen(word, x, y);
   };
 
+  // Touch tap-first/tap-last: the first tap opens a single word and is
+  // remembered as the anchor; while a card is open, a second tap on a different
+  // word grows the span (anchor → tapped) instead of replacing the card. Lives
+  // here (not in AnnotatedText) because it keys off the card-open state. Desktop
+  // keeps mouse-drag; this ref is only consulted on mobile.
+  const tapAnchorRef = React.useRef<{ start: number; end: number } | null>(null);
+  React.useEffect(() => {
+    // A closed card resets the anchor, so the next tap starts a fresh word.
+    if (!deepActive) tapAnchorRef.current = null;
+  }, [deepActive]);
+
   // Every tap (as a word span) and every drag selection flows here; the anchor
   // travels with the span so the deep card opens at the selection (Req 3.2,
   // 4.1, 5.1).
   const handleSpanSelect = (sel: SpanSelection) => {
     const { x, y } = containerXY(sel.rect);
+    const anchor = tapAnchorRef.current;
+    const sameAsAnchor =
+      anchor !== null && sel.start === anchor.start && sel.end === anchor.end;
+    if (isMobile && deepActive && anchor && !sameAsAnchor) {
+      // Extend: merge the anchor and the tapped word into one span. The server
+      // recomputes the authoritative type; 'phrase' is the multi-word hint.
+      const start = Math.min(anchor.start, sel.start);
+      const end = Math.max(anchor.end, sel.end);
+      tapAnchorRef.current = { start, end };
+      onSpanSelect({ start, end, type: 'phrase', x, y });
+      return;
+    }
+    // First tap (or desktop / no open card): single word; remember the anchor.
+    tapAnchorRef.current = { start: sel.start, end: sel.end };
     onSpanSelect({ start: sel.start, end: sel.end, type: sel.type, x, y });
   };
 
   // ---- Card chrome wiring (shared desktop popover / mobile sheet) ----------
-  // The deep slice owns the card once a span is selected; while it is `loading`
-  // a flagged word still shows its skim gloss as the preview (Req 3.1), then
-  // swaps to the deep card on resolve WITHOUT remounting the chrome (Req 3.3) —
-  // achieved by withholding the deep slice from the chrome during the skim
-  // preview so the same `WordPopover`/`WordSheet` instance stays mounted.
-  const skimPreviewDuringLoad = deepCard.status === 'loading' && activeFlag != null;
-  const chromeDeepCard: DeepCardSlice | undefined =
-    deepActive && !skimPreviewDuringLoad ? deepCard : undefined;
+  // The deep slice is forwarded as-is; the chrome decides what to render by
+  // status — `loading` with a flagged `entry` shows the skim card with an
+  // inline "looking it up…" footer indicator (Req 3.1 + 3.3 clarity), and the
+  // same `WordPopover`/`WordSheet` instance stays mounted across the swap to
+  // the loaded deep card.
+  const chromeDeepCard: DeepCardSlice | undefined = deepActive ? deepCard : undefined;
   const cardOpen = deepActive || (activeFlag !== null && activeWord !== null);
   const anchor = deepActive
     ? { x: deepCard.span.x, y: deepCard.span.y }
@@ -307,16 +320,10 @@ export function AnnotatedView({
           />
         </div>
 
-        {/* Footer */}
-        {hasFlagged ? (
-          <AnnotatedFooter
-            flaggedCount={flaggedCount}
-            savedCount={bank.length}
-            onClearBank={onClearBank}
-            onSave={onSave}
-            isSaving={isSaving}
-          />
-        ) : showZeroFlaggedState ? (
+        {/* Footer — only the zero-flagged "well within your level" strip; bank
+         *  saves persist immediately so there's no explicit "save N to bank"
+         *  action, and the flagged/saved/skipped tally added little signal. */}
+        {!hasFlagged && showZeroFlaggedState ? (
           <ZeroFlaggedStrip onPasteNew={onPasteNew} />
         ) : null}
 
@@ -422,16 +429,10 @@ export function AnnotatedView({
           )}
         </div>
 
-        {/* Footer */}
-        {hasFlagged ? (
-          <AnnotatedFooter
-            flaggedCount={flaggedCount}
-            savedCount={bank.length}
-            onClearBank={onClearBank}
-            onSave={onSave}
-            isSaving={isSaving}
-          />
-        ) : showZeroFlaggedState ? (
+        {/* Footer — only the zero-flagged "well within your level" strip; bank
+         *  saves persist immediately so there's no explicit "save N to bank"
+         *  action, and the flagged/saved/skipped tally added little signal. */}
+        {!hasFlagged && showZeroFlaggedState ? (
           <ZeroFlaggedStrip onPasteNew={onPasteNew} />
         ) : null}
       </div>

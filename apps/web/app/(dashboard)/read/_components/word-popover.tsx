@@ -86,6 +86,11 @@ export function WordPopover({
       if (!target) return;
       if (popoverRef.current?.contains(target)) return;
       if (target.closest('[data-word]')) return;
+      // A click on a toast notification (e.g. the vocab save/undo confirmation,
+      // `role="status"`) is part of the card's own flow — most importantly the
+      // "undo from the toast" affordance (Req 8.5), which reverts the save in
+      // place. Treating it as a click-away would tear the card down mid-undo.
+      if (target.closest('[role="status"]')) return;
       onClose();
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -137,7 +142,19 @@ export function WordPopover({
         }}
       />
 
-      {deepCard && deepCard.status !== 'idle' ? (
+      {deepCard?.status === 'loading' && entry ? (
+        // Skim preview while the deep card resolves (Req 3.1) — same skim
+        // body, with a footer indicator so the user knows a richer card is
+        // incoming and the chrome isn't stuck.
+        <WordCardBody
+          entry={entry}
+          inBank={inBank}
+          onSave={onSave}
+          onSkip={onSkip}
+          skipRef={skipRef}
+          loadingDeep
+        />
+      ) : deepCard && deepCard.status !== 'idle' ? (
         <DeepCardContent
           slice={deepCard}
           inBank={inBank}

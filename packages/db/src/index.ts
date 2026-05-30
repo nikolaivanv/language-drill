@@ -30,6 +30,7 @@ export {
   deCurriculum,
   trCurriculum,
   getGrammarPoint,
+  curriculumOrderOf,
   assertCurriculumInvariants,
   CURRICULUM_VERSION_ES,
   CURRICULUM_VERSION_DE,

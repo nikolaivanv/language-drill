@@ -190,4 +190,64 @@ describe('useTheoryTopics', () => {
       'zzz-tail',
     ]);
   });
+
+  it('carries category + order through from DB topics', async () => {
+    const fetchFn = vi.fn<AuthenticatedFetch>().mockResolvedValue(
+      jsonResponse({
+        topics: [
+          {
+            id: 'topic-tenses',
+            title: 'compound tenses',
+            cefr: 'B2',
+            category: 'tenses',
+            order: 7,
+          },
+        ],
+      }),
+    );
+
+    const { result } = renderHook(
+      () => useTheoryTopics({ language: Language.DE, fetchFn }),
+      { wrapper: buildWrapper(queryClient) },
+    );
+
+    await waitFor(() => expect(result.current.topics).toHaveLength(1));
+
+    expect(result.current.topics[0]).toMatchObject({
+      id: 'topic-tenses',
+      category: 'tenses',
+      order: 7,
+    });
+  });
+
+  it("defaults DB topics lacking category/order to 'other'/null (legacy payload)", async () => {
+    const fetchFn = vi.fn<AuthenticatedFetch>().mockResolvedValue(
+      jsonResponse({
+        topics: [{ id: 'topic-legacy', title: 'legacy', cefr: 'B1' }],
+      }),
+    );
+
+    const { result } = renderHook(
+      () => useTheoryTopics({ language: Language.DE, fetchFn }),
+      { wrapper: buildWrapper(queryClient) },
+    );
+
+    await waitFor(() => expect(result.current.topics).toHaveLength(1));
+
+    expect(result.current.topics[0].category).toBe('other');
+    expect(result.current.topics[0].order).toBeNull();
+  });
+
+  it("gives static (editorial-override) topics category 'other' and order null", () => {
+    const { result } = renderHook(
+      () => useTheoryTopics({ language: Language.ES }),
+      { wrapper: buildWrapper(queryClient) },
+    );
+
+    expect(result.current.topics).toHaveLength(3);
+    for (const topic of result.current.topics) {
+      expect(topic.category).toBe('other');
+      expect(topic.order).toBeNull();
+    }
+  });
 });

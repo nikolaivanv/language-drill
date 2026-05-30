@@ -8,6 +8,7 @@ import {
   CURRICULUM_VERSION_DE,
   CURRICULUM_VERSION_ES,
   CURRICULUM_VERSION_TR,
+  curriculumOrderOf,
   deCurriculum,
   esCurriculum,
   getGrammarPoint,
@@ -126,6 +127,40 @@ describe('getGrammarPoint', () => {
   });
 });
 
+describe('curriculumOrderOf', () => {
+  it('returns the 0-based index of a key within its own language array', () => {
+    esCurriculum.forEach((entry, index) => {
+      expect(curriculumOrderOf(entry.key)).toBe(index);
+    });
+    trCurriculum.forEach((entry, index) => {
+      expect(curriculumOrderOf(entry.key)).toBe(index);
+    });
+  });
+
+  it('restarts numbering per language (each first entry is 0)', () => {
+    if (esCurriculum.length > 0) {
+      expect(curriculumOrderOf(esCurriculum[0].key)).toBe(0);
+    }
+    if (trCurriculum.length > 0) {
+      expect(curriculumOrderOf(trCurriculum[0].key)).toBe(0);
+    }
+  });
+
+  it('orders consecutive entries within a language ascending', () => {
+    for (let i = 1; i < trCurriculum.length; i++) {
+      const prev = curriculumOrderOf(trCurriculum[i - 1].key);
+      const curr = curriculumOrderOf(trCurriculum[i].key);
+      expect(prev).toBeDefined();
+      expect(curr).toBeDefined();
+      expect(curr as number).toBeGreaterThan(prev as number);
+    }
+  });
+
+  it('returns undefined for an unknown key', () => {
+    expect(curriculumOrderOf('xx-z9-no-such-thing')).toBeUndefined();
+  });
+});
+
 describe('per-language counts', () => {
   function countsFor(curriculum: readonly GrammarPoint[]) {
     const grammar = { A1: 0, A2: 0, B1: 0, B2: 0 } as Record<string, number>;
@@ -140,9 +175,11 @@ describe('per-language counts', () => {
     return { grammar, vocab };
   }
 
-  // TEMPORARILY REDUCED (2026-05-10): assertions match the currently-active
-  // curriculum subset. Restore the original ≥4/≥5/≥6/≥5 assertions and
-  // vocab.toBe(3) when es.ts/de.ts/tr.ts entries are uncommented.
+  // ES/DE are TEMPORARILY REDUCED (2026-05-10): assertions match the
+  // currently-active curriculum subset. Restore the original ≥4/≥5/≥6/≥5
+  // assertions and vocab.toBe(3) for ES/DE when their A1/A2 entries are
+  // uncommented. TR (2026-05-28) is now at full Yedi İklim A1+A2 parity
+  // (26 A1 + 14 A2 grammar + 1 vocab umbrella); B1/B2 remain disabled.
 
   it('Spanish meets minimums (B1 + B2 only while A1/A2 are disabled) and has 2 vocab umbrellas', () => {
     const { grammar, vocab } = countsFor(esCurriculum);
@@ -162,10 +199,10 @@ describe('per-language counts', () => {
     expect(vocab).toBe(0);
   });
 
-  it('Turkish meets minimums (A1 + A2 only while B1/B2 are disabled) and has 1 vocab umbrella', () => {
+  it('Turkish is at full Yedi İklim A1 + A2 parity (B1/B2 disabled) and has 1 vocab umbrella', () => {
     const { grammar, vocab } = countsFor(trCurriculum);
-    expect(grammar.A1).toBeGreaterThanOrEqual(4);
-    expect(grammar.A2).toBeGreaterThanOrEqual(5);
+    expect(grammar.A1).toBeGreaterThanOrEqual(26);
+    expect(grammar.A2).toBeGreaterThanOrEqual(14);
     expect(grammar.B1).toBe(0);
     expect(grammar.B2).toBe(0);
     expect(vocab).toBe(1);

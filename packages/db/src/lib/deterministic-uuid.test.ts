@@ -36,9 +36,9 @@ describe('deterministicUuid', () => {
       'de-cloze-a2-1', 'de-cloze-b1-1', 'de-cloze-b2-1',
       'de-translation-a2-1', 'de-translation-b1-1', 'de-translation-b2-1',
       'de-vocab-a2-1', 'de-vocab-b1-1', 'de-vocab-b2-1',
-      // TR
-      'tr-cloze-a2-1', 'tr-cloze-b1-1', 'tr-cloze-b2-1',
-      'tr-translation-a2-1', 'tr-translation-b1-1', 'tr-translation-b2-1',
+      // TR (cloze + translation A1 since 2026-05-28; vocab umbrella stays A2)
+      'tr-cloze-a1-1', 'tr-cloze-b1-1', 'tr-cloze-b2-1',
+      'tr-translation-a1-1', 'tr-translation-b1-1', 'tr-translation-b2-1',
       'tr-vocab-a2-1', 'tr-vocab-b1-1', 'tr-vocab-b2-1',
     ];
 

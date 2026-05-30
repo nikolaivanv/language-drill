@@ -624,6 +624,76 @@
   }
 }
 
+/* ─── Theory library: index page (controls, group/row separators) ─── */
+/* Most index layout is handled inline / with Tailwind utilities inside the
+   `_components`; these rules cover the semantic hooks that still need real
+   layout. Colors and spacing resolve to tokens only (tech.md: no ad-hoc
+   colors/spacing). */
+.theory-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--spacing-s-6);
+}
+.theory-controls-mobile {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-s-4);
+}
+.theory-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+/* Drop the last row's divider so it doesn't double up with the card frame
+   (desktop) or the next accordion header (mobile). */
+.theory-group .theory-topic-row:last-child {
+  border-bottom: 0;
+}
+
+/* ─── Theory library: detail page ─── */
+/* The detail page reuses .theory-body / .theory-toc / .theory-scroll /
+   .theory-footer-cta from the in-drill panel. Unlike the panel (a fixed-height
+   overlay), the page sits inside the dashboard <main>, so .theory-detail must
+   establish a bounded height itself — otherwise .theory-scroll (flex:1;
+   overflow-y:auto) never scrolls and useScrollSpy's IntersectionObserver root
+   can't track sections (design §"Scroll-spy root"). Desktop <main> content is
+   padded py-[36px] (72px total); the page fills the remaining viewport. */
+.theory-detail {
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - 72px);
+  min-height: 0;
+}
+.theory-detail-header {
+  flex-shrink: 0;
+  padding-bottom: var(--spacing-s-4);
+  border-bottom: 1px solid var(--color-rule);
+}
+.theory-detail-body {
+  margin-top: var(--spacing-s-5);
+}
+
+/* ─── Theory library: mobile reflow (≤760px, mirrors MOBILE_MAX_WIDTH) ─── */
+@media (max-width: 760px) {
+  /* Mobile shell chrome: 52px top bar + 18px main top pad + 64px tab bar +
+     18px main bottom pad + safe-area inset. The detail fills what's left so
+     .theory-scroll stays the scroller (scroll-spy depends on it). */
+  .theory-detail {
+    height: calc(100dvh - 152px - env(safe-area-inset-bottom));
+  }
+  .theory-detail-body {
+    margin-top: var(--spacing-s-4);
+  }
+  /* Defense for the SSR / first-render frame before useIsMobile resolves to
+     true and adds .theory-controls-mobile. */
+  .theory-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-s-4);
+  }
+}
+
 .coach-fade-in {
   animation: coach-fade-in 150ms ease-out;
 }
