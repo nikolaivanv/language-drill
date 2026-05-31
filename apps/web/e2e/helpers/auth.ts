@@ -66,6 +66,17 @@ export async function createTestUser(
 
   if (existing.data.length > 0) {
     userId = existing.data[0]!.id;
+    // Re-sync the password to the current env value. Without this, a test user
+    // provisioned in an earlier run (or by hand) keeps its old password, so the
+    // UI sign-in smoke test fails with "Password is incorrect" when the
+    // `E2E_CLERK_USER_PASSWORD` secret differs from what Clerk has on file.
+    // (The authenticated suite signs in via email_code and is unaffected; only
+    // `signInThroughUI` uses the password — but keeping them in lockstep makes
+    // the secret the single source of truth.)
+    await clerkClient.users.updateUser(userId, {
+      password,
+      skipPasswordChecks: true,
+    });
   } else {
     const newUser = await clerkClient.users.createUser({
       emailAddress: [email],

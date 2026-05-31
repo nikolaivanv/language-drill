@@ -120,9 +120,29 @@ with `E2E missing env: <NAME>`.
 
 ## CI
 
-The suite needs the same five required env vars listed above. In
-`.github/workflows/ci.yml` they come from GitHub Actions secrets, except
-`DATABASE_URL` which is produced by the `neon-migrate` job that creates a
-per-PR ephemeral branch. `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and
-`CLERK_SECRET_KEY` must point at the **dev** Clerk instance — the same
-keys used for Vercel preview deploys.
+The `e2e` job in `.github/workflows/ci.yml` runs the suite on every PR once
+`lint-typecheck` + `test` pass. It's self-contained: `auth.setup` upserts the
+canonical `+clerk_test` user idempotently into the **dev** Neon branch
+(`E2E_DATABASE_URL`), so it needs no per-PR database and runs in parallel with
+`neon-migrate` / the preview deploy.
+
+It does **not** target the preview URL: the web specs mock every API call with
+`page.route`, so they only need the frontend served (Playwright starts
+`next dev` itself when `PLAYWRIGHT_BASE_URL` is unset) plus a dev Clerk session
+— no live Lambda API. The full-stack drill/theory smoke tests in
+`mobile-responsive.spec.ts` are gated on `E2E_FULL_STACK` (unset in CI) and
+**skip**; run them against a preview deploy or local full stack when needed.
+
+The four Clerk vars come from GitHub Actions secrets that must point at the
+**dev** Clerk instance (`pk_test_`/`sk_test_` — the suite refuses `pk_live_`):
+
+| GitHub secret | Maps to env var |
+|---|---|
+| `E2E_CLERK_PUBLISHABLE_KEY` | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` |
+| `E2E_CLERK_SECRET_KEY` | `CLERK_SECRET_KEY` |
+| `E2E_CLERK_USER_EMAIL` | `E2E_CLERK_USER_EMAIL` (must contain `+clerk_test`) |
+| `E2E_CLERK_USER_PASSWORD` | `E2E_CLERK_USER_PASSWORD` |
+| `E2E_DATABASE_URL` | `DATABASE_URL` (dev Neon branch — NOT the prod `DATABASE_URL` secret) |
+
+Until these five secrets exist, the `e2e` job fails fast with
+`E2E missing env: <NAME>`.

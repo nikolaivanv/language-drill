@@ -173,7 +173,7 @@ async function mockReviewApi(
   const items = opts.items ?? [CLOZE_ITEM, MEANING_ITEM, RECOGNITION_ITEM];
   const bankRows = opts.bankRows ?? BANK_ROWS;
 
-  await page.route('**/language-profiles', (route) =>
+  await page.route('**/profiles/languages', (route) =>
     route.fulfill(reply({ profiles: [{ language: 'ES', proficiencyLevel: 'B1' }] })),
   );
 
@@ -226,7 +226,14 @@ async function mockReviewApi(
   });
 
   // GET /review/bank?language=&status=&q= — honour the status filter.
+  // The page route `/review/bank` shares this path, so the glob also matches the
+  // top-level document navigation AND its Next.js script chunk
+  // (.../review/bank/page-*.js). Only mock the actual API call (fetch/xhr) —
+  // otherwise the page document, or worse its JS bundle, is served raw JSON and
+  // the app never boots.
   await page.route('**/review/bank**', (route) => {
+    const type = route.request().resourceType();
+    if (type !== 'fetch' && type !== 'xhr') return route.fallback();
     const url = new URL(route.request().url());
     const status = url.searchParams.get('status');
     const rows = status ? bankRows.filter((r) => r.status === status) : bankRows;
@@ -258,7 +265,9 @@ async function mockReviewApi(
   );
 
   if (opts.withRead) {
-    await page.route('**/read/entries', (route) => {
+    // Regex (not a bare `**/read/entries` glob) so the query-stringed list call
+    // `/read/entries?language=ES` is matched — mirrors read.spec.
+    await page.route(/\/read\/entries(\?|$)/, (route) => {
       if (route.request().method() !== 'GET') return route.fallback();
       return route.fulfill(
         reply({
@@ -309,7 +318,9 @@ test('hub shows the per-language queue breakdown and a start CTA (Req 4.2)', asy
   // Per-language label + the three queue stats.
   await expect(page.getByText(/spaced review · español/i)).toBeVisible();
   await expect(page.getByText('due reviews')).toBeVisible();
-  await expect(page.getByText('new intake')).toBeVisible();
+  // `exact` — the "start a focused subset" panel also has a "new intake only
+  // (N)" button, which a substring match would collide with.
+  await expect(page.getByText('new intake', { exact: true })).toBeVisible();
   await expect(page.getByText('leech rescue')).toBeVisible();
   // Start CTA carries the total; no gamification copy anywhere.
   await expect(page.getByRole('link', { name: /start review/i })).toBeVisible();

@@ -110,3 +110,64 @@ jobs:
               repo: context.repo.repo,
               body: `🔗 **Preview deploy:** ${{ steps.vercel-deploy.outputs.url }}`
             })
+
+  e2e:
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    # Self-contained — the web specs mock every API call, so this only needs the
+    # dev Clerk instance + a migrated DB for `createTestUser`. The canonical
+    # `+clerk_test` user is upserted idempotently (onConflictDoNothing), so
+    # pointing at the shared dev Neon branch is safe even across parallel PRs.
+    needs: [lint-typecheck, test]
+    env:
+      # Dev Neon branch connection string — a DEDICATED secret, NOT the prod
+      # `DATABASE_URL`. E2E only writes the idempotent test user + a default
+      # language profile here.
+      DATABASE_URL: ${{ secrets.E2E_DATABASE_URL }}
+      # Dev Clerk instance (pk_test_/sk_test_). The suite hard-refuses pk_live_.
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.E2E_CLERK_PUBLISHABLE_KEY }}
+      CLERK_SECRET_KEY: ${{ secrets.E2E_CLERK_SECRET_KEY }}
+      E2E_CLERK_USER_EMAIL: ${{ secrets.E2E_CLERK_USER_EMAIL }}
+      E2E_CLERK_USER_PASSWORD: ${{ secrets.E2E_CLERK_USER_PASSWORD }}
+      # The web tests mock every API call via page.route, so the API never
+      # actually has to be up — this just needs to be a valid URL for the
+      # locally-served frontend. (No E2E_FULL_STACK ⇒ the drill/theory smoke
+      # tests, which need a real seeded backend, skip.)
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_ANNOTATE_STREAM_URL: http://localhost:3002
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # `auth.setup` imports `@language-drill/db` (createDb) as a built package,
+      # and the dev server resolves the other workspace packages' `dist`. A bare
+      # `pnpm install` doesn't run their `tsc` build, so compile them first.
+      - name: Build workspace packages
+        run: pnpm turbo build --filter='./packages/*'
+
+      - name: Install Playwright Chromium + system deps
+        run: pnpm --filter @language-drill/web exec playwright install --with-deps chromium
+
+      # Production build so the suite runs against `next start` (no React
+      # StrictMode), matching what ships on Vercel. NEXT_PUBLIC_* are baked in
+      # here from the job env.
+      - name: Build web app
+        run: pnpm --filter @language-drill/web build
+
+      # No PLAYWRIGHT_BASE_URL ⇒ playwright.config starts the server itself
+      # (`next start` in CI) and runs against http://localhost:3000.
+      - name: Run E2E suite
+        run: pnpm --filter @language-drill/web test:e2e
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
+          retention-days: 7

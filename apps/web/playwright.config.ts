@@ -111,7 +111,14 @@ export default defineConfig({
   ...(useWebServer
     ? {
         webServer: {
-          command: 'pnpm --filter @language-drill/web dev',
+          // In CI, serve a PRODUCTION build (`next start`, after a `build`
+          // step) — `next dev` enables React StrictMode, whose simulated
+          // unmount/remount drops a start-on-mount mutation's per-call
+          // `onSuccess` (TanStack v5), breaking e.g. the review-session start.
+          // Locally, `next dev` is fine and needs no build.
+          command: process.env['CI']
+            ? 'pnpm --filter @language-drill/web start'
+            : 'pnpm --filter @language-drill/web dev',
           // Probe a public route — `/` is rewritten to a 404 by Clerk's
           // middleware until the browser completes its dev-browser
           // handshake, which curl/Playwright's HTTP health probe can't do.
