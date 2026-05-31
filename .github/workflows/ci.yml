@@ -153,8 +153,14 @@ jobs:
       - name: Install Playwright Chromium + system deps
         run: pnpm --filter @language-drill/web exec playwright install --with-deps chromium
 
-      # No PLAYWRIGHT_BASE_URL ⇒ playwright.config starts the Next.js dev server
-      # itself and runs against http://localhost:3000.
+      # Production build so the suite runs against `next start` (no React
+      # StrictMode), matching what ships on Vercel. NEXT_PUBLIC_* are baked in
+      # here from the job env.
+      - name: Build web app
+        run: pnpm --filter @language-drill/web build
+
+      # No PLAYWRIGHT_BASE_URL ⇒ playwright.config starts the server itself
+      # (`next start` in CI) and runs against http://localhost:3000.
       - name: Run E2E suite
         run: pnpm --filter @language-drill/web test:e2e
 
