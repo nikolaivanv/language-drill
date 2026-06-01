@@ -102,7 +102,8 @@ The `generation-quality-improvements` design/requirements (Testing Strategy → 
 
 ## Langfuse `validate` traces missing `exerciseId` metadata
 
-- **Status:** open (Phase 1 design accepted the gap; verified live in prod 2026-05-15)
+- **Status:** resolved 2026-06-02 (runtime fix landed in commit `81fb20d`, "Generation quality fixes (R1–R8)"; test coverage added 2026-06-02 — see Resolution below). All acceptance criteria met except the Phase-2 dashboard nice-to-have.
+- **Status (original):** open (Phase 1 design accepted the gap; verified live in prod 2026-05-15)
 - **Discovered:** 2026-05-15 (Task 24 post-deploy verification — observed validate trace with `feature/jobId/cellKey/promptVersion/env` but no `exerciseId`)
 - **Scope:** `packages/ai/src/observability.ts` (Proxy ALS read), `infra/lambda/src/generation/handler.ts` (single outer `withLlmTrace` scope), `packages/db/src/generation/run-one-cell.ts` (where individual validate calls are dispatched)
 - **Severity:** low — none of the five Phase-1 dashboards (Req 9 AC 1–5) need it; per-cell rejection rate aggregates by `cellKey`, which IS present on every validate trace
@@ -136,6 +137,18 @@ Recommended: **option 1**, despite the layering violation. The "no LLM observabi
 - `.claude/specs/langfuse-implementation-phase-1/design.md §2c` (the deliberate-deferral note)
 - `packages/ai/src/observability.ts` — `TOOL_NAME_TO_FEATURE` map shows how feature-switching already happens without per-call ALS edits
 - `packages/db/src/generation/run-one-cell.ts` — the orchestrator that would host the nested scope
+
+**Resolution (2026-06-02, commit `81fb20d`):**
+Implemented as option 1 (nested `withLlmTrace`), but hosted one layer below where the entry proposed — in `validateAndInsertWithRetry` rather than `run-one-cell.ts`. This is strictly better coverage: a single `exerciseId`-tagged scope wraps the entire per-ordinal attempt loop, so the first validation, every dedup-retry validation, and the retry-generation calls all inherit the same `exerciseId`.
+- `packages/db/src/generation/validate-and-insert.ts:292` reads the outer cell scope via `getCurrentLlmTraceContext()`; `:524-534` opens `withLlmTrace({ ...parentCtx, exerciseId: opts.draft.id, ... }, body)`. The `parentCtx ? … : body()` guard no-ops on CLI runs with no outer scope.
+- `exerciseId` is a first-class field on `LlmTraceContext` (`packages/ai/src/observability.ts:64`) and is emitted by `buildTraceMetadata` (`:473`), so the Anthropic proxy now tags every `validate` generation with `metadata.exerciseId`. The retry-stability AC is satisfied for free: a regenerate-and-revalidate reuses the same scope, so the new validate trace carries the same `exerciseId`.
+
+**Test coverage (2026-06-02):** `packages/db/src/generation/validate-and-insert.test.ts` gained a `per-ordinal exerciseId trace scope` describe block (3 cases). It drives the **real** ALS — `withLlmTrace` / `getCurrentLlmTraceContext` are left unmocked (the test's `vi.mock` spreads `...actual`), so they share the module-singleton `AsyncLocalStorage` with the production code and the test asserts true end-to-end context propagation, not a stubbed call count:
+- `exerciseId === draft.id` on the validate call, inheriting the parent cell scope (`feature`/`jobId`/`cellKey`/`promptVersion`) — covers AC #1 and #2.
+- The same `exerciseId` is observed across every dedup-retry validation even as `currentDraft` is replaced mid-loop — covers AC #3 (retry stability).
+- The CLI no-parent-scope path opens no scope (observed context is `undefined`) rather than fabricating one with missing required fields.
+
+The entry's original AC #2 named `run-one-cell.test.ts`, but since the fix lives in `validate-and-insert.ts` the test belongs alongside it. The Phase-2 dashboard AC (#4 — a per-draft validation-outcome view grouped by `metadata.exerciseId`) remains an explicit nice-to-have, not a blocker.
 
 ---
 
@@ -260,7 +273,8 @@ Approach #1 is the recommended path: smallest patch, keeps everything ESM, and c
 
 ## Per-draft validation loop in `runOneCell` is strictly serial
 
-- **Status:** open
+- **Status:** resolved 2026-06-02 (parallelized across commits `d7429c9` / `a630ab8` / `d8a3faa`; verified still in place. See Resolution below).
+- **Status (original):** open
 - **Discovered:** 2026-05-12 (during the PR #71 DLQ-redrive observation)
 - **Scope:** generation Lambda — `packages/db/src/generation/run-one-cell.ts:397-444`
 - **Severity:** medium (correctness is fine; pipeline wall-clock + headroom are the cost)
@@ -297,13 +311,30 @@ Parallelize the validate fan-out with a small concurrency cap (start at 5–8 an
 - Linear-in-`count` wall-clock means future curriculum growth (more grammar points × more vocab umbrellas) pushes us back toward the 900 s ceiling.
 - The soft-deadline-with-audit-row patch (option b in the post-#71 plan) is far less valuable if the wall-clock fits comfortably under timeout; this should land first.
 
+**Resolution (2026-06-02):**
+The serial `for`-over-`batch.drafts` loop is gone, replaced by a three-stage bounded-worker pipeline in `packages/db/src/generation/`, implementing the proposed Phase-A/Phase-B split (and then some):
+- **`generator-pool.ts` (`runGeneratorPool`)** — parallel draft generation (the `generateBatch` fan-out).
+- **`validator-pool.ts` (`runValidatorPool`)** — Phase A: first-validation of every draft in parallel, returning a `Map<ordinal, ValidatorPoolEntry>`.
+- **`outcome-pool.ts` (`runOutcomePool`)** — Phase B: parallel `validateAndInsertWithRetry`, consuming each draft's pre-computed first-validation via the `precomputedFirstValidation` opt (so attempt 0 reuses the Phase-A verdict instead of re-calling Claude). The per-ordinal attempt loop *inside* `validateAndInsertWithRetry` stays sequential by design — the dedup-detection contract needs to observe one INSERT collision before regenerating — which is the entry's "Phase B keeps the sequential insert path."
+
+Each pool is a hand-rolled shared-counter worker pool (`await Promise.all` over N workers pulling `nextOrdinal++`), **not** `p-limit` — equivalent bounded concurrency, but it also cleanly expresses the R4.2 dedup early-bail circuit breaker and R8 per-ordinal validator-parse isolation that were layered on later. Wired in `run-one-cell.ts` (Phase A then Phase B), all three caps default to **5** (`MAX_GENERATOR_CONCURRENCY` / `MAX_VALIDATOR_CONCURRENCY` / `MAX_OUTCOME_CONCURRENCY`), documented as emergency rollback knobs — set any to `1` to recover the old serial behavior for that stage.
+
+Acceptance criteria met:
+- **AbortSignal preserved** — threaded from `RunOneCellInput` through both pools into each worker (`if (signal?.aborted) throw …`) and onward to `validateDraft`. The R4.2 early-bail deliberately uses a separate boolean (graceful `return`, cell closes `succeeded`) kept distinct from the fail-closed `signal`.
+- **Usage accounting preserved** — `combinedUsage` is aggregated *after* the pool resolves, walking ordinals `0..N` in order (`addUsage(combinedUsage, outcome.extraUsage)`), so totals are deterministic across serial and parallel runs. Covered by `run-one-cell-r5-accounting.test.ts`.
+- **Concurrency overlap is tested directly** — `validator-pool.test.ts` and `outcome-pool.test.ts` each have a `'runs in parallel with concurrency=5 (observed overlap)'` case that tracks live in-flight count and asserts `2 ≤ maxInFlight ≤ 5`, plus inverse `concurrency=1` (`maxInFlight === 1`), cap-clamping, out-of-order-completion ordinal-keying, and abort cases. This satisfies the original AC ("assert validate calls overlap in time"). Pool suites: 26 tests, all passing.
+
+**Stale-comment cleanup outstanding:** the comment at `run-one-cell.ts:74-75` still reads "generation loop is still serial; spec covers validator only," which is now inaccurate (the generator pool exists too). Minor doc-in-code fix, not a behavioral gap.
+
 **Owner:** unassigned
 **Tracking:** none yet — open a GitHub issue when prioritizing
 **References:**
 - PR #71 (`d3f3c48`) — Lambda timeout 600 → 900 s; surfaced this slope as the underlying issue.
-- `packages/db/src/generation/run-one-cell.ts:397-444` — the loop.
+- `packages/db/src/generation/run-one-cell.ts:397-444` — the loop (original, pre-fix line range).
+- `packages/db/src/generation/{generator,validator,outcome}-pool.ts` — the parallel pipeline that replaced it.
 - `packages/ai/src/validate.ts:256` — the Claude call paid 50× per cell.
 - Anthropic Sonnet 4.6 org rate limits — gating factor on the concurrency cap; pull current value before tuning.
+- Commits `d7429c9` (generator pool), `a630ab8` (validator pool + `precomputedFirstValidation`), `d8a3faa` (outcome pool).
 
 ---
 
