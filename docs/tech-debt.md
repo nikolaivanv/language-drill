@@ -4,6 +4,60 @@ A living log of known issues to address. Add new entries at the top; mark as res
 
 ---
 
+## `rejection_reason_counts` / `flagged_reasons` mix canonical tags with free-form model prose (no canonical reason code)
+
+- **Status:** open
+- **Discovered:** 2026-06-01 (analysing the daily scheduled TR generation run — `generation_jobs.rejection_reason_counts` contained a 200-char paragraph as a single map key)
+- **Scope:** `packages/db/src/generation/routing.ts:49-129` (where reasons are assembled), `packages/ai/src/validate.ts:96-145` (`ValidationResult.flaggedReasons` / `culturalIssues` — free-form `string[]`), `packages/ai/src/validation-prompts.ts:108-119` (prompt instructs free-text reasons), `packages/db/src/generation/run-one-cell.ts:410,548-556,599-617` (the `rejection_reason_counts` frequency map), `packages/db/src/generation/validate-and-insert.ts:440-443` (`exercises.flagged_reasons` persist), `packages/db/src/generation/deterministic-checks.ts:39-77` (Turkish reason strings that interpolate values)
+- **Severity:** medium — no correctness or runtime risk, but it corrupts the exact analytics signal `rejection_reason_counts` was added to provide (migration `0012`), so the planned data-gated validator→generator repair loop can't aggregate over it
+
+**Root cause:**
+`routeValidationResult()` builds the reason arrays from two incompatible sources and concatenates them:
+
+1. **Canonical tags** — a fixed, hand-written set of strings emitted on deterministic predicates: `'low quality score (<0.5)'`, `'context spoils answer'` (rejected branch); `'low quality score (<0.7)'`, `'ambiguous'`, `'level mismatch'`, `'grammar point mismatch'` (flagged branch). Plus the synthetic `'parser failure (retry exhausted)'` / `'validator parse failure (malformed response)'` (`validate-and-insert.ts:170,180`).
+2. **Free-form model prose** — the validator's `result.culturalIssues[]` and `result.flaggedReasons[]`, which the tool schema and prompt explicitly define as free-text (`validate.ts:96-101`: *"Free-text descriptions…"*; `validation-prompts.ts:118`: *"Add anything that future-you would want to see when reviewing manually"*). These are unbounded English sentences with no canonical form.
+3. **Value-interpolated deterministic strings** — `deterministic-checks.ts` emits e.g. `'wrong vowel-harmony allomorph (deterministic): expected <X>, got <Y>'`, so even the deterministic path produces a distinct key per token.
+
+All three flow into the same array, which `run-one-cell.ts` folds into `rejectionReasonCounts[reason]++` — i.e. the **reason string is the map key**. There is no canonical reason enum anywhere in the codebase. So every unique paragraph becomes its own bucket with count 1, and the value-interpolated strings never collide either.
+
+**Evidence (2026-06-01 prod scheduled run, TR A1/A2, 56 jobs):**
+- `rejection_reason_counts` aggregated across the run: `low quality score (<0.5)` → 64, `context spoils answer` → 34, and a single bucket `The reference translation uses 'Ulan' as the equivalent of 'Hey', but 'Ulan' is a coarse, potentially offensive interjection in Turkish … [200+ chars]` → 1.
+- `exercises.flagged_reasons` (JSON arrays) the same day mixed canonical tags — `low quality score (<0.7)` (153), `ambiguous` (104), `level mismatch` (89), `grammar point mismatch` (6) — with multi-sentence model explanations stored as sibling array elements.
+
+The canonical tags aggregate cleanly; everything else is noise that defeats `GROUP BY reason`.
+
+**Remediation:**
+Separate the canonical reason **code** from the free-text **detail**:
+
+1. **Introduce a canonical reason enum** (e.g. `packages/shared/src/generation-reasons.ts` exporting a `RejectionReasonCode` / `FlagReasonCode` union) covering the `routing.ts` tags, the parser/validator-failure synthetics, and a *category* for each deterministic check (`vowel-harmony-allomorph`, `malformed-surface-form`) and for validator free-text (`cultural-issue`, `validator-note`) — **without** interpolated values.
+2. **Carry reasons as `{ code, detail? }`** out of `routeValidationResult()` / the deterministic checks. The `code` is enum-constrained; `detail` holds the free-form prose and interpolated values.
+3. **Key the frequency map on `code` only** in `run-one-cell.ts` — so `rejection_reason_counts` has bounded cardinality and aggregates across cells and days.
+4. **Keep `exercises.flagged_reasons` human-readable** for the manual review UI, but store it as `{ code, detail }[]` (or a `codes: string[]` + `notes: string[]` split) so dashboards filter on codes while reviewers still see the prose.
+5. Backfill is optional — historical rows can stay as-is (the entry documents the format change); new runs get clean codes.
+
+**Acceptance criteria for the fix:**
+- A canonical reason-code constant exists and is the single source of truth; `routing.ts`, `deterministic-checks.ts`, and `validate-and-insert.ts` reference it instead of inline string literals.
+- `generation_jobs.rejection_reason_counts` keys are drawn exclusively from that enum (assert in `run-one-cell.test.ts` that no map key contains a colon-interpolated value or a sentence-length string).
+- Free-form validator prose is still retained per exercise (in `detail` / `notes`), so manual review loses no context.
+- `SELECT reason, SUM(...) FROM generation_jobs, LATERAL jsonb_each_text(rejection_reason_counts) GROUP BY reason` on a post-fix run returns a bounded, stable set of rows.
+
+**Why we can't ignore it:**
+- Migration `0012` added `rejection_reason_counts` specifically to gate a validator→generator repair loop on rejection-reason frequencies (see `project_rejection_reason_logging`). Unbounded, per-row-unique keys make that aggregation meaningless — the feature is currently collecting data it can't use.
+- Key cardinality grows without bound (one new bucket per unique model sentence / per interpolated token), so any dashboard or `GROUP BY` over these columns degrades over time rather than converging.
+- It silently understates the real top reasons: 34 genuine `context spoils answer` rejections are easy to miss next to dozens of one-off prose buckets.
+
+**Owner:** unassigned
+**Tracking:** none yet — open a GitHub issue when prioritizing
+**References:**
+- `packages/db/migrations/0012_add_rejection_reason_counts_to_generation_jobs.sql` — the column this debt undermines.
+- `packages/db/src/generation/routing.ts:49-129` — canonical tags + free-form concatenation.
+- `packages/ai/src/validate.ts:96-145` — `ValidationResult` free-text reason arrays.
+- `packages/ai/src/validation-prompts.ts:108-119` — prompt instructing free-text reasons.
+- `packages/db/src/generation/run-one-cell.ts:548-556` — the `reason`-as-key fold.
+- `packages/db/src/generation/deterministic-checks.ts:39-77` — value-interpolated reason strings.
+
+---
+
 ## No generation-quality eval harness (`pnpm eval` only covers the evaluation prompt)
 
 - **Status:** open
