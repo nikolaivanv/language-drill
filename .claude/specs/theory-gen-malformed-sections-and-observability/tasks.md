@@ -177,13 +177,13 @@ Layered fix for the 36% theory-generation hard-failure rate plus four observabil
   - _Leverage: CLAUDE.md "Pre-Push Checks"_
   - _Requirements: all_
 
-- [ ] 21. (Operational, non-code) Sync the theory-validate prompt to Langfuse
+- [x] 21. (Operational, non-code) Sync the theory-validate prompt to Langfuse
   - After merge, run `pnpm push-prompts` for `theory-validate-system-prompt` in dev then prod per the CLAUDE.md "Prompt Editing" runbook; confirm with `bootstrap-prompts --check`
   - Purpose: make the live prompt body match the in-repo edit from task 11 (R5.3)
   - _Leverage: CLAUDE.md "Prompt Editing" runbook, `pnpm push-prompts`_
   - _Requirements: 5.3_
 
-- [ ] 22. (Operational, non-code) Re-enqueue the 13 historical 2026-06-01 failed cells
+- [x] 22. (Operational, non-code) Re-enqueue the 13 historical 2026-06-01 failed cells
   - After deploy, re-enqueue the failed Turkish cells via the existing CLI/SQS path (no new code); verify they generate cleanly and the new `CellFailed` metric stays below the alarm threshold on the next sweep
   - Purpose: regenerate the lost pages with the fix in place (out-of-scope as code; tracked here)
   - _Leverage: existing theory-generation CLI / SQS enqueue path_
