@@ -47,7 +47,7 @@ function renderBulletList(items: readonly string[]): string {
 // system prompt (this file's `buildTheorySystemPrompt`). Drives the
 // Langfuse trace `promptVersion` tag — dashboards cohort old vs. new
 // prompt traces by this string.
-export const THEORY_GENERATION_PROMPT_VERSION = "theory-generate@2026-05-23";
+export const THEORY_GENERATION_PROMPT_VERSION = "theory-generate@2026-06-02";
 
 /**
  * Phase-2 Langfuse-registered template. Identical to the body
@@ -93,7 +93,10 @@ Editorial. Concise. Lowercase headings. Treat the reader as an adult. No padding
 
 ## Output format
 
-Call the {{toolName}} tool exactly once with the structured topic. Each section.body is an array of typed blocks (paragraph, callout, example, list, conjugation-table). Inline emphasis goes through the inline-node union (text, strong, em, hilite, mono) — do not use raw HTML or markdown.`;
+Call the {{toolName}} tool exactly once with the structured topic. Each section.body is an array of typed blocks (paragraph, callout, example, list, conjugation-table). Inline emphasis goes through the inline-node union (text, strong, em, hilite, mono) — do not use raw HTML or markdown.
+
+- Return \`sections\` as a **native JSON array** — never as a JSON string. Do not wrap the array in quotes or serialize it yourself; emit it as a real array value.
+- Inside \`text\` values, **avoid raw double-quotes** — prefer guillemets «…» or typographic quotes "…", and escape any literal \`"\` you must include. Unescaped inner quotes break the structured output.`;
 
 /**
  * Flat-string var map consumed by both the in-code fallback substituter

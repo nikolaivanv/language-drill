@@ -71,7 +71,7 @@ function renderBulletList(items: readonly string[]): string {
 // THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE. Drives the Langfuse trace
 // `promptVersion` tag — dashboards cohort old vs. new prompt traces by
 // this string.
-export const THEORY_VALIDATION_PROMPT_VERSION = "theory-validate@2026-05-12";
+export const THEORY_VALIDATION_PROMPT_VERSION = "theory-validate@2026-06-02";
 
 export const THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language reference material for adult learners. The page is for CEFR {{cefrLevel}} {{languageName}} and explains the grammar point: {{grammarPointName}}.
 
@@ -122,7 +122,7 @@ Score conservatively — a flagged page costs a human ~30 seconds of review; an 
 4. **sectionsIncomplete** (array of strings): names of required sections that are missing or thin. Empty array when all five sections are adequate.
 5. **examplesUseGrammarPoint** (boolean): do the example blocks actually demonstrate {{grammarPointName}}?
 6. **culturalIssues** (array of strings): stereotyping, sensitive content, exclusion. Empty array when none.
-7. **flaggedReasons** (array of strings): anything else a reviewer should know.
+7. **flaggedReasons** (array of strings): anything else a reviewer should know. Emit one concise final reason per issue — state only the conclusion, no step-by-step reasoning, self-correction, or hedging (never "wait, let me reconsider…").
 
 ## Output
 

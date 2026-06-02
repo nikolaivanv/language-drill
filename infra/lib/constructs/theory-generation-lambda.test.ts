@@ -59,6 +59,32 @@ describe('TheoryGenerationLambdaConstruct', () => {
     });
   });
 
+  it('creates the application-level CellFailed alarm (Namespace LanguageDrill/TheoryGeneration, threshold >= 5, env dimension)', () => {
+    template.hasResourceProperties('AWS::CloudWatch::Alarm', {
+      MetricName: 'CellFailed',
+      Namespace: 'LanguageDrill/TheoryGeneration',
+      Statistic: 'Sum',
+      Period: 86400,
+      Threshold: 5,
+      ComparisonOperator: 'GreaterThanOrEqualToThreshold',
+      TreatMissingData: 'notBreaching',
+      EvaluationPeriods: 1,
+      // env dimension must match the handler's emitted EMF `env` value (this
+      // stack uses the `language-drill-dev` prefix → 'dev').
+      Dimensions: [{ Name: 'env', Value: 'dev' }],
+    });
+  });
+
+  it('retains the Lambda-runtime Errors alarm alongside the new CellFailed alarm (two distinct alarms)', () => {
+    // Req 3.5 — the application-level alarm is additive; the runtime-errors
+    // alarm must not be replaced.
+    template.resourceCountIs('AWS::CloudWatch::Alarm', 2);
+    template.hasResourceProperties('AWS::CloudWatch::Alarm', {
+      MetricName: 'Errors',
+      Namespace: 'AWS/Lambda',
+    });
+  });
+
   it('IAM policies grant access to DATABASE_URL, ANTHROPIC_API_KEY, and LANGFUSE_* only', () => {
     const policies = template.findResources('AWS::IAM::Policy');
     const serialized = JSON.stringify(policies);

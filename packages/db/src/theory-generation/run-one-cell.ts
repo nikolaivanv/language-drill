@@ -43,6 +43,7 @@ import {
   addUsage,
   estimateCostUsd,
   generateTheoryTopic,
+  TheoryDraftMalformedError,
   validateTheoryDraft,
   type ClaudeUsageBreakdown,
   type TheoryGenerationSpec,
@@ -202,9 +203,11 @@ export async function runOneTheoryCell(
       });
     }
 
-    // 5. Call the generator. On throw, the audit row is closed as 'failed'
-    //    with `tokenUsage: ZERO_USAGE` — we never received a usage breakdown
-    //    so we can't bill anything.
+    // 5. Call the generator. On a malformed-draft throw the audit row is
+    //    closed as 'failed' carrying the tokens every attempt burned —
+    //    `TheoryDraftMalformedError.tokenUsage` is the sum across all retries
+    //    (Req 2.1, 2.2, 2.3). Any other throw has no usage breakdown to bill,
+    //    so it falls back to ZERO_USAGE.
     let draft;
     try {
       const result = await generateTheoryTopic(client, spec);
@@ -212,10 +215,12 @@ export async function runOneTheoryCell(
       draft = result.draft;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
+      const failureUsage =
+        err instanceof TheoryDraftMalformedError ? err.tokenUsage : ZERO_USAGE;
       return failClosed({
         cell,
         jobId,
-        tokenUsage: ZERO_USAGE,
+        tokenUsage: failureUsage,
         durationMs: Date.now() - startedAt,
         errorMessage: message,
         auditRowExists: true,
@@ -488,6 +493,27 @@ async function failClosed(opts: {
   db: Db;
 }): Promise<TheoryCellResult> {
   const truncatedMessage = opts.errorMessage.slice(0, ERROR_MESSAGE_MAX_LENGTH);
+
+  // Best-effort token accounting (Req 2.2): record the tokens the failed
+  // attempt(s) burned instead of leaving the columns NULL. Fail-open
+  // (NFR Reliability) — if the (pure) cost math ever throws, the cell still
+  // records as 'failed' with the usage columns left unset (NULL).
+  let inputTokensUsed: number | undefined;
+  let outputTokensUsed: number | undefined;
+  let costUsdEstimate: string | undefined;
+  let costUsd = 0;
+  try {
+    inputTokensUsed =
+      opts.tokenUsage.inputTokens +
+      opts.tokenUsage.cacheCreationInputTokens +
+      opts.tokenUsage.cacheReadInputTokens;
+    outputTokensUsed = opts.tokenUsage.outputTokens;
+    costUsd = estimateCostUsd(opts.tokenUsage);
+    costUsdEstimate = costUsd.toFixed(4);
+  } catch {
+    // Leave usage columns NULL; never let accounting fail the run.
+  }
+
   if (opts.auditRowExists) {
     await opts.db
       .update(theoryGenerationJobs)
@@ -495,6 +521,9 @@ async function failClosed(opts: {
         status: 'failed',
         finishedAt: new Date(),
         errorMessage: truncatedMessage,
+        inputTokensUsed,
+        outputTokensUsed,
+        costUsdEstimate,
       })
       .where(eq(theoryGenerationJobs.id, opts.jobId));
   }
@@ -505,7 +534,7 @@ async function failClosed(opts: {
     insertedCount: 0,
     skippedCount: 0,
     tokenUsage: opts.tokenUsage,
-    costUsd: estimateCostUsd(opts.tokenUsage),
+    costUsd,
     durationMs: opts.durationMs,
     errorMessage: truncatedMessage,
   };
