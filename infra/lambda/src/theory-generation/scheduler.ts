@@ -34,7 +34,7 @@ import {
   SendMessageBatchCommand,
   SQSClient,
 } from '@aws-sdk/client-sqs';
-import { and, eq, gte, inArray, sql } from 'drizzle-orm';
+import { and, eq, gte, inArray, or, sql } from 'drizzle-orm';
 
 import type { TheoryGenerationJobMessage } from './job-message';
 
@@ -56,14 +56,15 @@ const SLOW_QUERY_WARNING_MS = 30_000;
 const MAX_BATCH_SIZE = 10;
 
 /**
- * Per-cell rejection backoff: once a cell accumulates this many
- * `theory_generation_jobs` rows with `rejected = true` inside the
- * rolling window, the scheduler stops re-enqueueing it. Aging the
- * oldest rejection out of the window self-heals — a fixed prompt
- * re-attempts the cell on the next sweep automatically.
+ * Per-cell unproductive-attempt backoff: once a cell accumulates this many
+ * unproductive `theory_generation_jobs` rows — `rejected = true` OR
+ * `status = 'failed'` — inside the rolling window, the scheduler stops
+ * re-enqueueing it (Req 4.1, 4.2). Aging the oldest unproductive attempt out
+ * of the window self-heals — a fixed prompt re-attempts the cell on the next
+ * sweep automatically.
  */
-const THEORY_REJECTION_BACKOFF_THRESHOLD = 3;
-const THEORY_REJECTION_BACKOFF_WINDOW_DAYS = 14;
+const THEORY_BACKOFF_THRESHOLD = 3;
+const THEORY_BACKOFF_WINDOW_DAYS = 14;
 
 // ---------------------------------------------------------------------------
 // Cold-start singletons
@@ -131,48 +132,59 @@ export async function handler(): Promise<void> {
     approvedSet.add(`${row.language}|${row.grammarPointKey}`);
   }
 
-  // Per-cell rejection backoff (theory-gen-observability-resilience Req 3):
-  // aggregate the count of recent rejections per `cell_key` and suppress
-  // any cell at or above the threshold. The key-space here is `cellKey`
-  // (which embeds CEFR via `buildTheoryCellKey`) — distinct from the
-  // approved-set's `${language}|${grammarPointKey}` key-space, which
-  // matches `theory_topics`' (language, grammarPointKey) uniqueness.
-  // The two key-spaces look similar but represent different facts;
-  // harmonizing them would let an A1 cell's rejections suppress its B1
-  // sibling, which is wrong.
+  // Per-cell unproductive-attempt backoff (Req 4): aggregate the count of
+  // recent unproductive attempts per `cell_key` — `rejected = true` OR
+  // `status = 'failed'` — and suppress any cell at or above the threshold.
+  // A deterministically-failing cell (malformed/unrecoverable draft) is just
+  // as wasteful to re-enqueue as a rejected one, so both count (Req 4.1).
+  // `recentRejections` is retained as a rejection-only sub-count via a single
+  // FILTERed aggregate, so this stays one round-trip (Req 4.3) and existing
+  // operator alerting keyed on `recentRejections` keeps working (Req 4.4).
+  // The key-space here is `cellKey` (which embeds CEFR via
+  // `buildTheoryCellKey`) — distinct from the approved-set's
+  // `${language}|${grammarPointKey}` key-space, which matches `theory_topics`'
+  // (language, grammarPointKey) uniqueness. The two key-spaces look similar
+  // but represent different facts; harmonizing them would let an A1 cell's
+  // failures suppress its B1 sibling, which is wrong.
   const windowStart = new Date(
-    Date.now() - THEORY_REJECTION_BACKOFF_WINDOW_DAYS * 86_400_000,
+    Date.now() - THEORY_BACKOFF_WINDOW_DAYS * 86_400_000,
   );
 
-  const rejectionQueryStartedAt = Date.now();
-  const rejectionCounts = await db
+  const backoffQueryStartedAt = Date.now();
+  const unproductiveCounts = await db
     .select({
       cellKey: theoryGenerationJobs.cellKey,
-      count: sql<number>`COUNT(*)::int`,
+      unproductive: sql<number>`COUNT(*)::int`,
+      rejections: sql<number>`COUNT(*) FILTER (WHERE ${theoryGenerationJobs.rejected} = true)::int`,
     })
     .from(theoryGenerationJobs)
     .where(
       and(
-        eq(theoryGenerationJobs.rejected, true),
+        or(
+          eq(theoryGenerationJobs.rejected, true),
+          eq(theoryGenerationJobs.status, 'failed'),
+        ),
         gte(theoryGenerationJobs.startedAt, windowStart),
       ),
     )
     .groupBy(theoryGenerationJobs.cellKey);
-  const rejectionQueryDurationMs = Date.now() - rejectionQueryStartedAt;
+  const backoffQueryDurationMs = Date.now() - backoffQueryStartedAt;
 
-  if (rejectionQueryDurationMs > SLOW_QUERY_WARNING_MS) {
+  if (backoffQueryDurationMs > SLOW_QUERY_WARNING_MS) {
     log({
       level: 'warn',
-      durationMs: rejectionQueryDurationMs,
-      message: `rejection-count query exceeded ${SLOW_QUERY_WARNING_MS}ms warning threshold`,
+      durationMs: backoffQueryDurationMs,
+      message: `unproductive-attempt count query exceeded ${SLOW_QUERY_WARNING_MS}ms warning threshold`,
     });
   }
 
   const suppressedCells = new Set<string>();
+  const unproductiveCountByCellKey = new Map<string, number>();
   const rejectionCountByCellKey = new Map<string, number>();
-  for (const row of rejectionCounts) {
-    rejectionCountByCellKey.set(row.cellKey, row.count);
-    if (row.count >= THEORY_REJECTION_BACKOFF_THRESHOLD) {
+  for (const row of unproductiveCounts) {
+    unproductiveCountByCellKey.set(row.cellKey, row.unproductive);
+    rejectionCountByCellKey.set(row.cellKey, row.rejections);
+    if (row.unproductive >= THEORY_BACKOFF_THRESHOLD) {
       suppressedCells.add(row.cellKey);
     }
   }
@@ -196,9 +208,11 @@ export async function handler(): Promise<void> {
       log({
         level: 'warn',
         cellKey: cell.cellKey,
+        recentUnproductiveAttempts:
+          unproductiveCountByCellKey.get(cell.cellKey) ?? 0,
         recentRejections: rejectionCountByCellKey.get(cell.cellKey) ?? 0,
-        backoffWindowDays: THEORY_REJECTION_BACKOFF_WINDOW_DAYS,
-        message: 'theory cell suppressed by rejection backoff',
+        backoffWindowDays: THEORY_BACKOFF_WINDOW_DAYS,
+        message: 'theory cell suppressed by unproductive-attempt backoff',
       });
       continue;
     }

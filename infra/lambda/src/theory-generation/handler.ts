@@ -44,6 +44,7 @@ import {
   parseTheoryGenerationJobMessage,
 } from './job-message';
 import { errMessage, summarizeTheoryResult } from './log';
+import { emitCellOutcomeMetric } from './metrics';
 
 // ---------------------------------------------------------------------------
 // Cold-start singletons
@@ -264,8 +265,14 @@ export async function handler(
           continue;
         }
 
-        // 10. Result dispatch.
+        // 10. Result dispatch. `env` mirrors the value handed to withLlmTrace
+        //     above and is the EMF `env` dimension the CellFailed alarm keys on
+        //     (Req 3.1, 3.2). Emitted only on terminal outcomes — the
+        //     runOneTheoryCell-threw catch above defers to SQS redelivery + the
+        //     Lambda Errors alarm instead.
+        const env = process.env.LANGFUSE_ENV ?? 'dev';
         if (result.status === 'succeeded') {
+          emitCellOutcomeMetric('succeeded', env);
           log({
             level: 'info',
             jobId: parsed.jobId,
@@ -278,6 +285,8 @@ export async function handler(
         // 'failed' OR 'skipped-cost-cap' — terminal failure; audit row
         // carries the verdict. Silent ack (no batchItemFailures push) —
         // redelivery would just trip the idempotency guard on the next call.
+        // `skipped-cost-cap` emits no metric (deliberate budget stop).
+        emitCellOutcomeMetric(result.status, env);
         log({
           level: 'warn',
           jobId: parsed.jobId,

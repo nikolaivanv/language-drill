@@ -32,7 +32,7 @@ import {
   parseTheoryTopicJson,
 } from "@language-drill/shared";
 
-import type { ClaudeUsageBreakdown } from "./cost-model.js";
+import { addUsage, ZERO_USAGE, type ClaudeUsageBreakdown } from "./cost-model.js";
 import { GENERATION_MODEL } from "./generate.js";
 import {
   buildTheorySystemPrompt,
@@ -59,6 +59,15 @@ export const THEORY_GENERATION_MODEL = GENERATION_MODEL;
 export const THEORY_GENERATION_TEMPERATURE = 0.4 as const;
 
 export const THEORY_GENERATION_MAX_TOKENS = 8192 as const;
+
+/**
+ * Additional regeneration attempts on a malformed draft before the cell is
+ * recorded as failed (Req 1.3). Default 2 → up to 3 total Claude calls. The
+ * malformed failure is intermittent at temperature 0.4, so a re-roll usually
+ * parses. Overridable per-call via `generateTheoryTopic`'s `opts.maxRetries`
+ * (used by unit tests); production passes the default.
+ */
+export const THEORY_GENERATION_MAX_RETRIES = 2 as const;
 
 // ---------------------------------------------------------------------------
 // Tool schema — mirrors `TheoryTopicJson` from @language-drill/shared field
@@ -298,6 +307,25 @@ export type TheoryGenerateResult = {
   tokenUsage: ClaudeUsageBreakdown;
 };
 
+/**
+ * Thrown by `generateTheoryTopic` when a returned draft is malformed — no
+ * tool_use block, the wrong tool, or input that `parseTheoryTopicJson`
+ * rejects. Carries the Claude `response.usage` captured BEFORE the parse step
+ * so the caller can bill the tokens the attempt actually burned (Req 2.1) and
+ * decide whether to regenerate (Req 1.3). The two top-level guards (EN /
+ * non-grammar) throw a plain `Error` instead — they fire before any Claude
+ * call, so there is no usage and the failure is not retryable.
+ */
+export class TheoryDraftMalformedError extends Error {
+  constructor(
+    message: string,
+    readonly tokenUsage: ClaudeUsageBreakdown,
+  ) {
+    super(message);
+    this.name = "TheoryDraftMalformedError";
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Deterministic ID helpers
 // ---------------------------------------------------------------------------
@@ -356,6 +384,7 @@ function readUsage(response: Anthropic.Message): ClaudeUsageBreakdown {
 export async function generateTheoryTopic(
   client: Anthropic,
   spec: TheoryGenerationSpec,
+  opts: { maxRetries?: number } = {},
 ): Promise<TheoryGenerateResult> {
   // Top guards. The cast through `Language` mirrors generate.ts:520 — TS
   // would otherwise reject the EN comparison as tautologically false because
@@ -381,63 +410,112 @@ export async function generateTheoryTopic(
   const systemText = await buildTheorySystemPrompt(promptInputs);
   const userText = buildTheoryUserPrompt(promptInputs);
 
-  const response = await client.messages.create({
-    model: GENERATION_MODEL,
-    max_tokens: THEORY_GENERATION_MAX_TOKENS,
-    system: [
-      {
-        type: "text" as const,
-        text: systemText,
-        cache_control: { type: "ephemeral" as const },
-      },
-    ],
-    messages: [{ role: "user" as const, content: userText }],
-    tools: [THEORY_GENERATION_TOOL],
-    tool_choice: { type: "tool" as const, name: THEORY_TOOL_NAME },
-    temperature: THEORY_GENERATION_TEMPERATURE,
-  });
+  const maxRetries = opts.maxRetries ?? THEORY_GENERATION_MAX_RETRIES;
+  // Mirror `buildTheoryCellKey` (@language-drill/db) — `<lang>:<level>:<gp-key>`
+  // with each segment lowercased — without importing it (db imports ai, so the
+  // reverse would be a circular dependency). Used only for the retry log line.
+  const cellKey =
+    `${spec.language}:${spec.cefrLevel}:${spec.grammarPoint.key}`.toLowerCase();
 
-  const toolUseBlock = response.content.find(
-    (block): block is Anthropic.ToolUseBlock => block.type === "tool_use",
-  );
-  if (!toolUseBlock) {
-    throw new Error(
-      `Theory draft malformed: no tool_use block returned (stop_reason=${response.stop_reason})`,
-    );
+  // Regenerate on a malformed draft (Req 1.3): the failure is intermittent at
+  // temperature 0.4, so a re-roll usually parses. Usage is summed across every
+  // attempt (Req 2.3) — failed attempts fold in via the caught error below,
+  // the winning attempt at the success return.
+  let cumulativeUsage: ClaudeUsageBreakdown = ZERO_USAGE;
+
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const response = await client.messages.create({
+        model: GENERATION_MODEL,
+        max_tokens: THEORY_GENERATION_MAX_TOKENS,
+        system: [
+          {
+            type: "text" as const,
+            text: systemText,
+            cache_control: { type: "ephemeral" as const },
+          },
+        ],
+        messages: [{ role: "user" as const, content: userText }],
+        tools: [THEORY_GENERATION_TOOL],
+        tool_choice: { type: "tool" as const, name: THEORY_TOOL_NAME },
+        temperature: THEORY_GENERATION_TEMPERATURE,
+      });
+
+      // Capture usage BEFORE any parse/validation throw (Req 2.1) so a
+      // malformed draft still propagates the tokens the call actually burned.
+      const usage = readUsage(response);
+
+      const toolUseBlock = response.content.find(
+        (block): block is Anthropic.ToolUseBlock => block.type === "tool_use",
+      );
+      if (!toolUseBlock) {
+        throw new TheoryDraftMalformedError(
+          `Theory draft malformed: no tool_use block returned (stop_reason=${response.stop_reason})`,
+          usage,
+        );
+      }
+      if (toolUseBlock.name !== THEORY_TOOL_NAME) {
+        throw new TheoryDraftMalformedError(
+          `Theory draft malformed: expected tool '${THEORY_TOOL_NAME}', got '${toolUseBlock.name}'`,
+          usage,
+        );
+      }
+
+      let contentJson: TheoryTopicJson;
+      try {
+        contentJson = parseTheoryTopicJson(toolUseBlock.input);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        throw new TheoryDraftMalformedError(
+          `Theory draft malformed: ${message}`,
+          usage,
+        );
+      }
+
+      // Success. `draft.metadata` describes the winning attempt; the returned
+      // `tokenUsage` is the cumulative sum across all attempts (Req 2.3).
+      return {
+        draft: {
+          id: theoryDraftId(spec),
+          topicId: deriveTheoryTopicId(spec.grammarPoint.key),
+          contentJson,
+          metadata: {
+            grammarPointKey: spec.grammarPoint.key,
+            modelId: GENERATION_MODEL,
+            inputTokens:
+              usage.inputTokens +
+              usage.cacheCreationInputTokens +
+              usage.cacheReadInputTokens,
+            outputTokens: usage.outputTokens,
+            cacheCreationInputTokens: usage.cacheCreationInputTokens,
+            cacheReadInputTokens: usage.cacheReadInputTokens,
+          },
+        },
+        tokenUsage: addUsage(cumulativeUsage, usage),
+      };
+    } catch (err) {
+      if (err instanceof TheoryDraftMalformedError) {
+        cumulativeUsage = addUsage(cumulativeUsage, err.tokenUsage);
+        if (attempt < maxRetries) {
+          // Per-retry structured log (Req 1.4) so retry frequency is greppable
+          // in CloudWatch.
+          console.log(
+            JSON.stringify({
+              level: "warn",
+              cellKey,
+              attempt,
+              message: "theory draft malformed — regenerating",
+            }),
+          );
+          continue;
+        }
+        // Retry budget exhausted (Req 1.9) — rethrow carrying the cumulative
+        // usage so the caller records every attempt's tokens (Req 2.3).
+        throw new TheoryDraftMalformedError(err.message, cumulativeUsage);
+      }
+      // Non-malformed throw (e.g. a transient API/network error) — not retried
+      // by this loop (Req 1.3 targets the malformed path); propagate as-is.
+      throw err;
+    }
   }
-  if (toolUseBlock.name !== THEORY_TOOL_NAME) {
-    throw new Error(
-      `Theory draft malformed: expected tool '${THEORY_TOOL_NAME}', got '${toolUseBlock.name}'`,
-    );
-  }
-
-  let contentJson: TheoryTopicJson;
-  try {
-    contentJson = parseTheoryTopicJson(toolUseBlock.input);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    throw new Error(`Theory draft malformed: ${message}`);
-  }
-
-  const usage = readUsage(response);
-
-  return {
-    draft: {
-      id: theoryDraftId(spec),
-      topicId: deriveTheoryTopicId(spec.grammarPoint.key),
-      contentJson,
-      metadata: {
-        grammarPointKey: spec.grammarPoint.key,
-        modelId: GENERATION_MODEL,
-        inputTokens:
-          usage.inputTokens +
-          usage.cacheCreationInputTokens +
-          usage.cacheReadInputTokens,
-        outputTokens: usage.outputTokens,
-        cacheCreationInputTokens: usage.cacheCreationInputTokens,
-        cacheReadInputTokens: usage.cacheReadInputTokens,
-      },
-    },
-    tokenUsage: usage,
-  };
 }

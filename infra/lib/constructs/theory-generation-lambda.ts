@@ -38,6 +38,7 @@ export interface TheoryGenerationLambdaConstructProps {
 export class TheoryGenerationLambdaConstruct extends Construct {
   public readonly handler: lambda.NodejsFunction;
   public readonly errorsAlarm: cloudwatch.Alarm;
+  public readonly cellFailuresAlarm: cloudwatch.Alarm;
 
   constructor(
     scope: Construct,
@@ -162,6 +163,35 @@ export class TheoryGenerationLambdaConstruct extends Construct {
         treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
         alarmDescription:
           'Phase 4 (theory): theory generation Lambda recorded > 5 errors in a single day.',
+      },
+    );
+
+    // Application-level failure alarm (Req 3.4, 3.5), distinct from the
+    // Lambda-runtime `errorsAlarm` above. The `env` dimension reuses the same
+    // expression that sets `LANGFUSE_ENV` (lines above) — which is exactly the
+    // EMF `env` dimension the handler emits — so the alarm watches the stream
+    // the runtime actually writes to. A mismatch would silently watch nothing.
+    const langfuseEnv =
+      props.secretsPrefix === 'language-drill' ? 'prod' : 'dev';
+    this.cellFailuresAlarm = new cloudwatch.Alarm(
+      this,
+      'TheoryGenerationCellFailuresAlarm',
+      {
+        metric: new cloudwatch.Metric({
+          namespace: 'LanguageDrill/TheoryGeneration',
+          metricName: 'CellFailed',
+          dimensionsMap: { env: langfuseEnv },
+          period: Duration.days(1),
+          statistic: cloudwatch.Stats.SUM,
+        }),
+        threshold: 5,
+        evaluationPeriods: 1,
+        comparisonOperator:
+          cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        alarmDescription:
+          'Phase 4 (theory): >= 5 theory cells failed at the APPLICATION level in one day ' +
+          '(malformed/unrecoverable drafts), distinct from the Lambda runtime Errors alarm.',
       },
     );
   }

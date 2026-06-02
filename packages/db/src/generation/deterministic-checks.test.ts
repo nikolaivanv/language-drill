@@ -3,6 +3,8 @@ import {
   type ClozeContent,
   type ExerciseContent,
   ExerciseType,
+  type GenerationReason,
+  GenerationReasonCode,
   Language,
 } from '@language-drill/shared';
 
@@ -26,10 +28,20 @@ function cloze(sentence: string, correctAnswer: string): ClozeContent {
   };
 }
 
-const approved = (reasons: string[] = []): RoutingDecision => ({
+const approved = (reasons: GenerationReason[] = []): RoutingDecision => ({
   reviewStatus: 'auto-approved',
   flaggedReasons: reasons,
 });
+
+// Canonical detail strings the checker produces for the fixtures below.
+const HARMONY = {
+  code: GenerationReasonCode.VowelHarmonyAllomorph,
+  detail: 'expected lar, got ler',
+} as const;
+const MALFORMED = {
+  code: GenerationReasonCode.MalformedSurfaceForm,
+  detail: 'domeşler',
+} as const;
 
 // Fixtures keyed to known checkTurkishCloze verdicts:
 const WRONG_HARMONY = cloze('Pazarda taze domat___ satıyorlar.', 'ler'); // expects lar
@@ -40,21 +52,23 @@ describe('applyDeterministicChecks — wrong-harmony', () => {
   it('forces rejected from a high-score auto-approved decision', () => {
     const out = applyDeterministicChecks(approved(), WRONG_HARMONY, Language.TR);
     expect(out.reviewStatus).toBe('rejected');
-    expect(out.flaggedReasons[0]).toBe(
-      'wrong vowel-harmony allomorph (deterministic): expected lar, got ler',
-    );
+    // Interpolated allomorph values live in `detail`; the code is bounded.
+    expect(out.flaggedReasons[0]).toEqual(HARMONY);
   });
 
   it('prepends its reason ahead of pre-existing LLM reasons', () => {
     const out = applyDeterministicChecks(
-      { reviewStatus: 'flagged', flaggedReasons: ['ambiguous'] },
+      {
+        reviewStatus: 'flagged',
+        flaggedReasons: [{ code: GenerationReasonCode.Ambiguous }],
+      },
       WRONG_HARMONY,
       Language.TR,
     );
     expect(out.reviewStatus).toBe('rejected');
     expect(out.flaggedReasons).toEqual([
-      'wrong vowel-harmony allomorph (deterministic): expected lar, got ler',
-      'ambiguous',
+      HARMONY,
+      { code: GenerationReasonCode.Ambiguous },
     ]);
   });
 });
@@ -63,34 +77,36 @@ describe('applyDeterministicChecks — non-word-stem', () => {
   it('downgrades auto-approved to flagged and appends its reason', () => {
     const out = applyDeterministicChecks(approved(), NON_WORD, Language.TR);
     expect(out.reviewStatus).toBe('flagged');
-    expect(out.flaggedReasons).toEqual([
-      'suspected malformed surface form (deterministic): domeşler',
-    ]);
+    expect(out.flaggedReasons).toEqual([MALFORMED]);
   });
 
   it('keeps an already-flagged status and appends after existing reasons', () => {
     const out = applyDeterministicChecks(
-      { reviewStatus: 'flagged', flaggedReasons: ['ambiguous'] },
+      {
+        reviewStatus: 'flagged',
+        flaggedReasons: [{ code: GenerationReasonCode.Ambiguous }],
+      },
       NON_WORD,
       Language.TR,
     );
     expect(out.reviewStatus).toBe('flagged');
     expect(out.flaggedReasons).toEqual([
-      'ambiguous',
-      'suspected malformed surface form (deterministic): domeşler',
+      { code: GenerationReasonCode.Ambiguous },
+      MALFORMED,
     ]);
   });
 
   it('never upgrades an already-rejected decision', () => {
     const out = applyDeterministicChecks(
-      { reviewStatus: 'rejected', flaggedReasons: ['low quality score (<0.5)'] },
+      {
+        reviewStatus: 'rejected',
+        flaggedReasons: [{ code: GenerationReasonCode.LowQualityReject }],
+      },
       NON_WORD,
       Language.TR,
     );
     expect(out.reviewStatus).toBe('rejected');
-    expect(out.flaggedReasons).toContain(
-      'suspected malformed surface form (deterministic): domeşler',
-    );
+    expect(out.flaggedReasons).toContainEqual(MALFORMED);
   });
 });
 

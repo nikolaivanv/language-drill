@@ -8,6 +8,7 @@ import {
   buildTheoryValidationSystemPrompt,
   buildTheoryValidationUserPrompt,
   computeTheoryValidationPromptVars,
+  THEORY_VALIDATION_PROMPT_VERSION,
   THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE,
 } from "./theory-validation-prompts.js";
 import { THEORY_VALIDATION_THRESHOLDS } from "./theory-validation-thresholds.js";
@@ -186,6 +187,18 @@ describe("buildTheoryValidationSystemPrompt", () => {
     );
   });
 
+  // R5.1/R5.2/R5.4: flaggedReasons must carry one concise final reason per
+  // issue — no validator chain-of-thought leaking into error_message / the
+  // reviewer UI. Model behavior isn't unit-testable, so we pin the
+  // instruction's presence in the rendered prompt.
+  it("instructs concise flaggedReasons with no chain-of-thought (R5.1/R5.2)", async () => {
+    const prompt = await buildTheoryValidationSystemPrompt(baseSpec);
+    expect(prompt).toContain("one concise final reason per issue");
+    expect(prompt).toContain(
+      "no step-by-step reasoning, self-correction, or hedging",
+    );
+  });
+
   it("does NOT include draft-specific content (Req 2.4 — spec-only system prompt)", async () => {
     const prompt = await buildTheoryValidationSystemPrompt(baseSpec);
     // The draft's topicId, batchSeed, or any draft-side metadata must not leak
@@ -193,6 +206,18 @@ describe("buildTheoryValidationSystemPrompt", () => {
     expect(prompt).not.toContain("b1-sample");
     expect(prompt).not.toContain("test-seed");
     expect(prompt).not.toContain("Sample content.");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Prompt version (R5.3)
+// ---------------------------------------------------------------------------
+
+describe("THEORY_VALIDATION_PROMPT_VERSION", () => {
+  // Bumped in the same change as the R5.1 concise-flaggedReasons edit so
+  // Langfuse dashboards cohort the new prompt traces separately from the old.
+  it("is the dated version for the concise-flaggedReasons edit", () => {
+    expect(THEORY_VALIDATION_PROMPT_VERSION).toBe("theory-validate@2026-06-02");
   });
 });
 

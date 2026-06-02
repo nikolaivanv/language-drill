@@ -59,9 +59,11 @@ import {
   CefrLevel,
   ExerciseType,
   Language,
+  formatReason,
   isClozeContent,
   type ClozeContent,
   type ExerciseContent,
+  type GenerationReason,
 } from '@language-drill/shared';
 
 import { createDb, type Db } from '../src/client';
@@ -317,7 +319,7 @@ export function reconstructDraftAndSpec(
 
 export type DemotionAction =
   | { kind: 'no-change'; from: ReviewStatus; to: ReviewStatus }
-  | { kind: 'demote'; from: ReviewStatus; to: ReviewStatus; reasons: string[] }
+  | { kind: 'demote'; from: ReviewStatus; to: ReviewStatus; reasons: GenerationReason[] }
   | { kind: 'skip'; from: ReviewStatus; reason: 'manual-approved' | 'rejected' };
 
 export function decideDemotion(
@@ -449,7 +451,10 @@ function printSummary(outcomes: readonly Outcome[], usage: ClaudeUsageBreakdown,
     process.stdout.write('\nDemotions:\n');
     for (const o of outcomes) {
       if (o.kind !== 'demote') continue;
-      const reasons = o.action.reasons.length > 0 ? o.action.reasons.join('; ') : '(no reasons)';
+      const reasons =
+        o.action.reasons.length > 0
+          ? o.action.reasons.map(formatReason).join('; ')
+          : '(no reasons)';
       process.stdout.write(
         `  ${o.row.id}  ${o.row.language}/${o.row.difficulty}  ` +
           `${o.action.from} → ${o.action.to}  qs=${o.result.qualityScore.toFixed(2)}  ${reasons}\n`,

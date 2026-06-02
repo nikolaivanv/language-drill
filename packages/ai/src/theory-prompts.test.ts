@@ -6,6 +6,7 @@ import {
   buildTheorySystemPrompt,
   buildTheoryUserPrompt,
   computeTheoryPromptVars,
+  THEORY_GENERATION_PROMPT_VERSION,
   THEORY_SYSTEM_PROMPT_TEMPLATE,
   type TheoryPromptInputs,
 } from "./theory-prompts.js";
@@ -91,6 +92,30 @@ describe("buildTheorySystemPrompt", () => {
     expect(prompt).toContain("Editorial. Concise. Lowercase headings.");
     expect(prompt).toContain("No padding, no encouragement, no emojis.");
     expect(prompt).toContain("submit_theory_topic");
+  });
+
+  // R1.5/R1.8: the prompt must instruct the model to emit `sections` as a
+  // native array and to avoid raw inner double-quotes, reducing malformed
+  // stringification at the source. Model behavior isn't unit-testable, so we
+  // pin the instruction's presence in the rendered prompt.
+  it("instructs the model to return sections as a native array and avoid raw double-quotes", async () => {
+    const prompt = await buildTheorySystemPrompt(TEST_INPUT);
+    expect(prompt).toContain("native JSON array");
+    expect(prompt).toContain("never as a JSON string");
+    expect(prompt).toContain("avoid raw double-quotes");
+    expect(prompt).toContain("guillemets");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Prompt version (R1.6)
+// ---------------------------------------------------------------------------
+
+describe("THEORY_GENERATION_PROMPT_VERSION", () => {
+  // Bumped in the same change as the R1.5 output-format hardening so Langfuse
+  // dashboards cohort the new prompt traces separately from the old.
+  it("is the dated version for the malformed-sections hardening", () => {
+    expect(THEORY_GENERATION_PROMPT_VERSION).toBe("theory-generate@2026-06-02");
   });
 });
 

@@ -5,6 +5,11 @@
  * logic itself is unchanged — these tests just pin that the now-firing
  * booleans map to the documented `(reviewStatus, flaggedReasons)` pairs.
  *
+ * Reasons are now `{ code, detail? }` (`GenerationReason`) rather than bare
+ * strings — these tests pin the canonical code per branch, the documented
+ * ordering, and that free-form prose (culturalIssues / validator flaggedReasons)
+ * lands in `detail` under the `cultural-issue` / `validator-note` codes.
+ *
  * The exhaustive coverage of `routeValidationResult` lives at
  * `packages/db/scripts/generate-exercises-validate.test.ts` (Phase 3
  * back-compat home). This file is the canonical home alongside the
@@ -13,6 +18,7 @@
  */
 import { describe, it, expect } from "vitest";
 import type { ValidationResult } from "@language-drill/ai";
+import { GenerationReasonCode } from "@language-drill/shared";
 
 import { routeValidationResult } from "./routing";
 
@@ -30,6 +36,10 @@ function withResult(overrides: Partial<ValidationResult>): ValidationResult {
   return { ...PASSING, ...overrides };
 }
 
+function codes(decision: { flaggedReasons: { code: GenerationReasonCode }[] }) {
+  return decision.flaggedReasons.map((r) => r.code);
+}
+
 describe("routeValidationResult — cluster-A boolean vetoes", () => {
   it("flags `ambiguous = true` with the rest of the result passing", () => {
     // R3.B — the validator now actually fires `ambiguous` on the
@@ -38,7 +48,7 @@ describe("routeValidationResult — cluster-A boolean vetoes", () => {
     // and a reviewer's eyes are the cheapest disambiguator.
     const decision = routeValidationResult(withResult({ ambiguous: true }));
     expect(decision.reviewStatus).toBe("flagged");
-    expect(decision.flaggedReasons).toContain("ambiguous");
+    expect(codes(decision)).toContain(GenerationReasonCode.Ambiguous);
   });
 
   it("rejects `contextSpoilsAnswer = true` with the rest of the result passing", () => {
@@ -51,9 +61,11 @@ describe("routeValidationResult — cluster-A boolean vetoes", () => {
       withResult({ contextSpoilsAnswer: true }),
     );
     expect(decision.reviewStatus).toBe("rejected");
-    // 'context spoils answer' must be the FIRST reason in the rejected
+    // `context-spoils-answer` must be the FIRST reason in the rejected
     // branch (no low-score reason precedes it when qualityScore is high).
-    expect(decision.flaggedReasons[0]).toBe("context spoils answer");
+    expect(decision.flaggedReasons[0]).toEqual({
+      code: GenerationReasonCode.ContextSpoilsAnswer,
+    });
   });
 
   it("flags `grammarPointMatch = false` with the rest of the result passing", () => {
@@ -66,6 +78,63 @@ describe("routeValidationResult — cluster-A boolean vetoes", () => {
       withResult({ grammarPointMatch: false }),
     );
     expect(decision.reviewStatus).toBe("flagged");
-    expect(decision.flaggedReasons).toContain("grammar point mismatch");
+    expect(codes(decision)).toContain(
+      GenerationReasonCode.GrammarPointMismatch,
+    );
+  });
+});
+
+describe("routeValidationResult — reason codes, detail, and ordering", () => {
+  it("rejects low quality and carries culturalIssues prose in detail under cultural-issue", () => {
+    const decision = routeValidationResult(
+      withResult({
+        qualityScore: 0.3,
+        contextSpoilsAnswer: true,
+        culturalIssues: ["'Ulan' is a coarse interjection", "stereotype"],
+      }),
+    );
+    expect(decision.reviewStatus).toBe("rejected");
+    // Documented reject-branch order: low-quality, context-spoils, then each
+    // cultural issue in original order with prose in `detail`.
+    expect(decision.flaggedReasons).toEqual([
+      { code: GenerationReasonCode.LowQualityReject },
+      { code: GenerationReasonCode.ContextSpoilsAnswer },
+      {
+        code: GenerationReasonCode.CulturalIssue,
+        detail: "'Ulan' is a coarse interjection",
+      },
+      { code: GenerationReasonCode.CulturalIssue, detail: "stereotype" },
+    ]);
+  });
+
+  it("flags low quality and carries validator flaggedReasons prose in detail under validator-note", () => {
+    const decision = routeValidationResult(
+      withResult({
+        qualityScore: 0.6,
+        ambiguous: true,
+        levelMatch: false,
+        grammarPointMatch: false,
+        flaggedReasons: ["buffer-consonant ambiguous blank"],
+      }),
+    );
+    expect(decision.reviewStatus).toBe("flagged");
+    // Documented flag-branch order: low-quality(<0.7), ambiguous, level,
+    // grammar-point, then validator notes in original order.
+    expect(decision.flaggedReasons).toEqual([
+      { code: GenerationReasonCode.LowQualityFlag },
+      { code: GenerationReasonCode.Ambiguous },
+      { code: GenerationReasonCode.LevelMismatch },
+      { code: GenerationReasonCode.GrammarPointMismatch },
+      {
+        code: GenerationReasonCode.ValidatorNote,
+        detail: "buffer-consonant ambiguous blank",
+      },
+    ]);
+  });
+
+  it("auto-approves a fully passing result with no reasons", () => {
+    const decision = routeValidationResult(PASSING);
+    expect(decision.reviewStatus).toBe("auto-approved");
+    expect(decision.flaggedReasons).toEqual([]);
   });
 });

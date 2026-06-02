@@ -489,6 +489,83 @@ describe('SQS handler — dispatch + result handling', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// CellFailed EMF emission (Req 3.6) — the handler emits the application-level
+// failure metric on every terminal *outcome* (failed → 1, succeeded → 0) and
+// nothing on `skipped-cost-cap` (a deliberate budget stop, not a failure).
+// ---------------------------------------------------------------------------
+
+describe('SQS handler — CellFailed EMF emission', () => {
+  /** True if any captured console.log line is an EMF record carrying CellFailed. */
+  function emittedCellFailed(): boolean {
+    return consoleLogSpy.mock.calls.some((call) => {
+      const arg = call[0];
+      if (typeof arg !== 'string') return false;
+      try {
+        return 'CellFailed' in (JSON.parse(arg) as Record<string, unknown>);
+      } catch {
+        return false;
+      }
+    });
+  }
+
+  it("emits CellFailed=1 on a 'failed' outcome", async () => {
+    mockCheckTheoryAuditRowState.mockResolvedValueOnce({ status: 'absent' });
+    mockRunOneTheoryCell.mockResolvedValueOnce({
+      ...cellResultBase(),
+      status: 'failed',
+      errorMessage: 'validator rejected',
+    });
+
+    const event = eventWith([
+      recordWith(JSON.stringify(validMessage()), 'msg-emf-failed'),
+    ]);
+    await handler(event, makeContext(60_000));
+
+    const emf = findLogLine(consoleLogSpy, (e) => 'CellFailed' in e);
+    expect(emf['CellFailed']).toBe(1);
+    // EMF envelope shape the CloudWatch alarm keys on.
+    const aws = emf['_aws'] as Record<string, unknown>;
+    const directive = (aws['CloudWatchMetrics'] as Array<Record<string, unknown>>)[0]!;
+    expect(directive['Namespace']).toBe('LanguageDrill/TheoryGeneration');
+    expect(emf['env']).toBe('dev');
+  });
+
+  it("emits CellFailed=0 on a 'succeeded' outcome", async () => {
+    mockCheckTheoryAuditRowState.mockResolvedValueOnce({ status: 'absent' });
+    mockRunOneTheoryCell.mockResolvedValueOnce({
+      ...cellResultBase(),
+      status: 'succeeded',
+      insertedCount: 1,
+      durationMs: 1234,
+    });
+
+    const event = eventWith([
+      recordWith(JSON.stringify(validMessage()), 'msg-emf-success'),
+    ]);
+    await handler(event, makeContext(60_000));
+
+    const emf = findLogLine(consoleLogSpy, (e) => 'CellFailed' in e);
+    expect(emf['CellFailed']).toBe(0);
+  });
+
+  it("emits no CellFailed line on 'skipped-cost-cap'", async () => {
+    mockCheckTheoryAuditRowState.mockResolvedValueOnce({ status: 'absent' });
+    mockRunOneTheoryCell.mockResolvedValueOnce({
+      ...cellResultBase(),
+      status: 'skipped-cost-cap',
+      errorMessage: 'cost cap reached at $0.25',
+    });
+
+    const event = eventWith([
+      recordWith(JSON.stringify(validMessage()), 'msg-emf-cap'),
+    ]);
+    await handler(event, makeContext(60_000));
+
+    expect(emittedCellFailed()).toBe(false);
+  });
+});
+
 describe('SQS handler — soft-deadline AbortController (Req 2a)', () => {
   it('arms setTimeout with (remainingMs - 10_000) when remainingMs = 30_000', async () => {
     mockCheckTheoryAuditRowState.mockResolvedValueOnce({ status: 'absent' });

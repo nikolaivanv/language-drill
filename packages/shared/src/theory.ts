@@ -14,6 +14,8 @@
  * here is for generated content only.
  */
 
+import { jsonrepair } from "jsonrepair";
+
 export type TheoryInlineJson =
   | { kind: "text"; text: string }
   | { kind: "strong"; children: TheoryInlineJson[] }
@@ -311,6 +313,35 @@ export function parseBlock(raw: unknown, path: string): TheoryBlockJson {
   }
 }
 
+/**
+ * Decode a string that is *meant* to be JSON. Pure and deterministic: the
+ * same input always yields the same output, with no I/O.
+ *
+ * 1. `JSON.parse` first — recovers a model that stringified **valid** JSON
+ *    (the original 2026-05-18 behavior, preserved).
+ * 2. On failure, a **best-effort** `jsonrepair` pass — recovers simple
+ *    malformed shapes (e.g. a single unescaped inner double-quote) without a
+ *    Claude re-roll.
+ * 3. If repair also fails (e.g. the 2026-06-01 shape with *multiple* unescaped
+ *    inner quotes adjacent to `(` `)` `/`, which defeats jsonrepair's
+ *    delimiter heuristic), return `undefined` so the caller's
+ *    `requireNonEmptyArray` throws a clear error — which drives the
+ *    generator's regenerate retry, the guaranteed recovery path. `jsonrepair`
+ *    is the only place a malformed string is touched; the `try/catch` makes
+ *    "can't repair" a clean fall-through, never an uncaught throw.
+ */
+function decodeMaybeRepaired(raw: string): unknown {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    try {
+      return JSON.parse(jsonrepair(raw));
+    } catch {
+      return undefined;
+    }
+  }
+}
+
 export function parseTheoryTopicJson(input: unknown): TheoryTopicJson {
   if (!isObject(input)) {
     throw new Error(
@@ -321,16 +352,13 @@ export function parseTheoryTopicJson(input: unknown): TheoryTopicJson {
   // string literals instead of native arrays — observed on ~75% of
   // theory-generation runs (audit row 2026-05-18 `tr:a1:tr-a1-locative`
   // + probe runs 2026-05-23 seeds b/c/d). Defensive parse: if `sections`
-  // came through as a JSON string, decode it once. Any other shape falls
-  // through to the existing requireNonEmptyArray check.
+  // came through as a JSON string, decode it (valid JSON wins; otherwise a
+  // best-effort tolerant repair). Any other shape — or an unrepairable
+  // string — falls through to the existing requireNonEmptyArray check.
   const normalized: Record<string, unknown> = { ...input };
   if (typeof normalized.sections === "string") {
-    try {
-      const parsed: unknown = JSON.parse(normalized.sections);
-      if (Array.isArray(parsed)) normalized.sections = parsed;
-    } catch {
-      // Fall through — the next check will throw with a clearer message.
-    }
+    const decoded = decodeMaybeRepaired(normalized.sections);
+    if (Array.isArray(decoded)) normalized.sections = decoded;
   }
   const id = requireString(normalized, "id", "");
   const title = requireString(normalized, "title", "");
