@@ -1,3 +1,4 @@
+import type { GenerationReason } from '@language-drill/shared';
 import { type InferSelectModel, sql } from 'drizzle-orm';
 import { index, jsonb, pgTable, primaryKey, real, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 
@@ -26,7 +27,7 @@ export const exercises = pgTable(
     modelId: text('model_id'),
     qualityScore: real('quality_score'),
     reviewStatus: text('review_status').notNull().default('auto-approved'),
-    flaggedReasons: jsonb('flagged_reasons'),
+    flaggedReasons: jsonb('flagged_reasons').$type<GenerationReason[]>(),
     generatedAt: timestamp('generated_at', { withTimezone: true }),
   },
   (table) => ({

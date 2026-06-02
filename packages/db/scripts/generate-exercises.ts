@@ -30,6 +30,10 @@ import {
   estimateCostUsd,
   type ClaudeUsageBreakdown,
 } from '@language-drill/ai';
+import {
+  REASON_LABELS,
+  type GenerationReasonCode,
+} from '@language-drill/shared';
 
 import { createDb } from '../src/client';
 import { ALL_CURRICULA } from '../src/curriculum';
@@ -220,12 +224,14 @@ export function printSummary(
   );
 
   // Aggregate the per-cell rejection-reason maps into a single run-wide
-  // distribution, sorted by frequency. This is the signal for deciding whether
-  // a validator→generator repair pass is worth building: a distribution
-  // dominated by amendable reasons (e.g. 'context spoils answer') argues for
-  // it; one dominated by 'low quality score (<0.5)' or cultural vetoes does
-  // not. Counts can exceed `plainRejected` (one ordinal may carry several
-  // reasons). Omitted entirely when nothing was rejected.
+  // distribution, sorted by frequency. The map keys are canonical reason
+  // *codes* (e.g. 'context-spoils-answer'); they group cleanly, and we render
+  // each via its REASON_LABELS friendly name below. This is the signal for
+  // deciding whether a validator→generator repair pass is worth building: a
+  // distribution dominated by amendable reasons (e.g. context-spoils) argues
+  // for it; one dominated by low-quality or cultural vetoes does not. Counts
+  // can exceed `plainRejected` (one ordinal may carry several reasons).
+  // Omitted entirely when nothing was rejected.
   const rejectionReasons = results.reduce<Record<string, number>>((acc, r) => {
     for (const [reason, count] of Object.entries(r.rejectionReasonCounts)) {
       acc[reason] = (acc[reason] ?? 0) + count;
@@ -238,7 +244,10 @@ export function printSummary(
   if (sortedReasons.length > 0) {
     process.stdout.write('Rejection reasons:\n');
     for (const [reason, count] of sortedReasons) {
-      process.stdout.write(`  ${count.toLocaleString('en-US')}× ${reason}\n`);
+      // Keys are canonical codes; show the friendly label, falling back to the
+      // raw code for any unknown/legacy key so the summary never blanks out.
+      const label = REASON_LABELS[reason as GenerationReasonCode] ?? reason;
+      process.stdout.write(`  ${count.toLocaleString('en-US')}× ${label}\n`);
     }
   }
   process.stdout.write(

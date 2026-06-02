@@ -20,7 +20,11 @@
  */
 
 import type Anthropic from '@anthropic-ai/sdk';
-import { ExerciseType } from '@language-drill/shared';
+import {
+  ExerciseType,
+  type GenerationReason,
+  GenerationReasonCode,
+} from '@language-drill/shared';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import {
   GENERATION_MODEL,
@@ -156,28 +160,33 @@ export type DraftOutcome = {
    * branch). For a parser-failure-at-final slot it is the synthetic
    * `[PARSER_FAILURE_REASON]`. `dedup-given-up` does NOT set this — search-
    * space exhaustion is tracked separately and is not a quality reason.
-   * `runOneCell` folds these into the per-cell `rejectionReasonCounts` map.
+   * `runOneCell` folds these (keyed on `code`) into the per-cell
+   * `rejectionReasonCounts` map.
    */
-  rejectionReasons?: string[];
+  rejectionReasons?: GenerationReason[];
 };
 
 /**
  * Synthetic rejection reason for an ordinal whose every retry slot produced a
  * parser failure (`parserFailedAtFinal`). Kept distinct from validator vetoes
- * so the reason distribution separates "Claude emitted unparseable tool calls"
- * from genuine content rejections.
+ * (its own `parser-failure` code) so the reason distribution separates "Claude
+ * emitted unparseable tool calls" from genuine content rejections.
  */
-export const PARSER_FAILURE_REASON = 'parser failure (retry exhausted)';
+export const PARSER_FAILURE_REASON: GenerationReason = {
+  code: GenerationReasonCode.ParserFailure,
+};
 
 /**
  * Synthetic rejection reason for an ordinal whose VALIDATOR returned a
  * malformed tool call on its first validation (a `ValidationParseError` caught
  * by `runValidatorPool`, R8). Kept distinct from `PARSER_FAILURE_REASON`
- * (a *generator* parse failure) so the reason distribution separates "the
- * validator emitted an unparseable response" from genuine content vetoes.
+ * (a *generator* parse failure) via its own `validator-parse-failure` code so
+ * the reason distribution separates "the validator emitted an unparseable
+ * response" from genuine content vetoes.
  */
-export const VALIDATOR_PARSE_FAILURE_REASON =
-  'validator parse failure (malformed response)';
+export const VALIDATOR_PARSE_FAILURE_REASON: GenerationReason = {
+  code: GenerationReasonCode.ValidatorParseFailure,
+};
 
 /**
  * Builds the terminal outcome for an ordinal whose first validation (from the

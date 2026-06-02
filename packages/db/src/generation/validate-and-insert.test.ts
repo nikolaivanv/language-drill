@@ -17,7 +17,12 @@
  */
 
 import type Anthropic from '@anthropic-ai/sdk';
-import { CefrLevel, ExerciseType, Language } from '@language-drill/shared';
+import {
+  CefrLevel,
+  ExerciseType,
+  GenerationReasonCode,
+  Language,
+} from '@language-drill/shared';
 import type {
   ClaudeUsageBreakdown,
   ExerciseDraft,
@@ -458,9 +463,13 @@ describe('validateAndInsertWithRetry — deterministic Turkish gate', () => {
     expect(outcome.terminalStatus).toBe('inserted-flagged');
     expect(outcome.terminalReviewStatus).toBe('flagged');
     expect(capture.exercise?.reviewStatus).toBe('flagged');
-    expect(capture.exercise?.flaggedReasons).toContain(
-      'suspected malformed surface form (deterministic): domeşler',
-    );
+    // The deterministic reason is persisted as a coded `{ code, detail }`
+    // object (the reconstructed surface form lives in `detail`, never baked
+    // into the code key).
+    expect(capture.exercise?.flaggedReasons).toContainEqual({
+      code: GenerationReasonCode.MalformedSurfaceForm,
+      detail: 'domeşler',
+    });
     expect(mockGenerateBatch).not.toHaveBeenCalled();
   });
 
@@ -481,6 +490,8 @@ describe('validateAndInsertWithRetry — deterministic Turkish gate', () => {
 
     expect(outcome.terminalStatus).toBe('inserted-approved');
     expect(capture.exercise?.reviewStatus).toBe('auto-approved');
+    // No reasons → `flagged_reasons` is persisted as `null`, not an empty array.
+    expect(capture.exercise?.flaggedReasons).toBeNull();
   });
 });
 
@@ -595,9 +606,10 @@ describe('validateAndInsertWithRetry — rejectionReasons capture', () => {
 
     expect(outcome.terminalStatus).toBe('rejected');
     // routeValidationResult order: low-quality first, then context-spoils.
+    // Both are predicate-only codes (no detail).
     expect(outcome.rejectionReasons).toEqual([
-      'low quality score (<0.5)',
-      'context spoils answer',
+      { code: GenerationReasonCode.LowQualityReject },
+      { code: GenerationReasonCode.ContextSpoilsAnswer },
     ]);
     // No retry: a non-deduped first-attempt rejection terminates immediately.
     expect(mockGenerateBatch).not.toHaveBeenCalled();
@@ -619,9 +631,12 @@ describe('validateAndInsertWithRetry — rejectionReasons capture', () => {
     });
 
     expect(outcome.terminalStatus).toBe('rejected');
-    expect(outcome.rejectionReasons?.[0]).toMatch(
-      /^wrong vowel-harmony allomorph \(deterministic\)/,
+    // Deterministic reason is prepended as a coded object; the interpolated
+    // allomorph values land in `detail`, never in the code key.
+    expect(outcome.rejectionReasons?.[0].code).toBe(
+      GenerationReasonCode.VowelHarmonyAllomorph,
     );
+    expect(outcome.rejectionReasons?.[0].detail).toMatch(/^expected .+, got /);
   });
 
   it('uses the synthetic PARSER_FAILURE_REASON when retries exhaust on parser failures', async () => {
