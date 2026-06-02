@@ -24,6 +24,20 @@ import {
   type GenerationSpec,
 } from "./generate.js";
 
+// Wrap `buildGenerationSystemPrompt` in a call-through spy so the
+// `systemPromptOverride` seam test can assert it is NOT invoked on the
+// override path (Req 2.1) while leaving every other export — and the
+// function's real behavior — untouched for the rest of the suite (Req 2.2).
+vi.mock("./generation-prompts.js", async (importActual) => {
+  const actual =
+    await importActual<typeof import("./generation-prompts.js")>();
+  return {
+    ...actual,
+    buildGenerationSystemPrompt: vi.fn(actual.buildGenerationSystemPrompt),
+  };
+});
+import { buildGenerationSystemPrompt } from "./generation-prompts.js";
+
 // ---------------------------------------------------------------------------
 // Fixtures
 // ---------------------------------------------------------------------------
@@ -716,5 +730,73 @@ describe("generateBatch", () => {
     const { tokenUsage } = await generateBatch(mockClient, baseSpec);
     expect(tokenUsage.cacheCreationInputTokens).toBe(0);
     expect(tokenUsage.cacheReadInputTokens).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// systemPromptOverride seam (eval-harness) — Req 2.1, 2.2
+// ---------------------------------------------------------------------------
+
+describe("generateBatch systemPromptOverride", () => {
+  const mockCreate = vi.fn();
+  const mockClient = {
+    messages: { create: mockCreate },
+  } as unknown as ReturnType<typeof createClaudeClient>;
+  const buildSpy = vi.mocked(buildGenerationSystemPrompt);
+
+  beforeEach(() => {
+    mockCreate.mockReset();
+    buildSpy.mockClear();
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_override",
+          name: TOOL_NAME_BY_TYPE.cloze,
+          input: validClozeInput,
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: baseUsage,
+    });
+  });
+
+  it("uses the override body verbatim as the cached system block and skips buildGenerationSystemPrompt", async () => {
+    const override =
+      "VERBATIM OVERRIDE SYSTEM PROMPT — must not fetch from Langfuse.";
+
+    await generateBatch(mockClient, {
+      ...baseSpec,
+      systemPromptOverride: override,
+    });
+
+    // (a) the request's system[0].text is the override verbatim, still wrapped
+    // with the same ephemeral cache_control the no-override path uses.
+    const callArgs = mockCreate.mock.calls[0][0];
+    expect(callArgs.system).toEqual([
+      {
+        type: "text",
+        text: override,
+        cache_control: { type: "ephemeral" },
+      },
+    ]);
+    // and the internal builder (Langfuse fetch) was never invoked.
+    expect(buildSpy).not.toHaveBeenCalled();
+  });
+
+  it("falls through to buildGenerationSystemPrompt when no override is set (unchanged behavior)", async () => {
+    await generateBatch(mockClient, baseSpec);
+
+    // (b) without an override the builder runs and its (fallback) text is used.
+    expect(buildSpy).toHaveBeenCalledTimes(1);
+    const callArgs = mockCreate.mock.calls[0][0];
+    expect(callArgs.system).toEqual([
+      {
+        type: "text",
+        text: expect.any(String),
+        cache_control: { type: "ephemeral" },
+      },
+    ]);
+    expect(callArgs.system[0].text).not.toBe("");
   });
 });

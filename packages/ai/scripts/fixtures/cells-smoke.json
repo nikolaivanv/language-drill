@@ -1,0 +1,26 @@
+[
+  {
+    "language": "TR",
+    "cefrLevel": "A1",
+    "exerciseType": "cloze",
+    "grammarPointKey": "tr-a1-locative"
+  },
+  {
+    "language": "TR",
+    "cefrLevel": "A1",
+    "exerciseType": "vocab_recall",
+    "grammarPointKey": "tr-a1-present-continuous"
+  },
+  {
+    "language": "ES",
+    "cefrLevel": "B1",
+    "exerciseType": "cloze",
+    "grammarPointKey": "es-b1-conditional"
+  },
+  {
+    "language": "ES",
+    "cefrLevel": "B1",
+    "exerciseType": "vocab_recall",
+    "grammarPointKey": "es-b1-environment-vocab"
+  }
+]

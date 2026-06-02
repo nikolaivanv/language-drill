@@ -15,11 +15,16 @@
  *   - Phase 6's new exercise types extend `enumerateCurriculumCells`'s
  *     compatibility matrix; no barrel change required.
  *
- * Internal helpers (`routing.ts`, the private `failClosed` in
- * `run-one-cell.ts`, etc.) are NOT re-exported — they're implementation
- * details. Consumers that need routing today reach for the existing
- * `packages/db/scripts/generate-exercises-validate.ts` re-export; that file
- * is Phase 3's published surface for the routing helper.
+ * Other internal helpers (the private `failClosed` in `run-one-cell.ts`,
+ * etc.) are NOT re-exported — they're implementation details.
+ *
+ * `routeValidationResult` IS re-exported here: the generation-eval harness
+ * (`packages/ai/scripts/eval-gen-run.ts`) routes validator verdicts to the
+ * same `(reviewStatus, flaggedReasons)` the writer applies, so it needs the
+ * canonical routing helper through the package barrel rather than the
+ * scripts-dir `packages/db/scripts/generate-exercises-validate.ts` re-export
+ * (Phase 3's published surface, kept for back-compat) which a cross-package
+ * consumer cannot reach.
  */
 
 export {
@@ -39,3 +44,10 @@ export {
   validateAndInsertWithRetry,
   type DraftOutcome,
 } from './validate-and-insert';
+
+export {
+  routeValidationResult,
+  VALIDATION_THRESHOLDS,
+  type ReviewStatus,
+  type RoutingDecision,
+} from './routing';

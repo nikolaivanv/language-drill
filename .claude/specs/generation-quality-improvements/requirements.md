@@ -15,7 +15,7 @@ This is **purely generator-behavior and cell-allocation work**. It makes **no ch
 
 ## Assumptions
 
-- The "vocabulary band" (R2) and "safety topic" (R3) constraints are **model-judgment guardrails validated by `pnpm eval`**, not by unit tests — there is no in-repo frequency cutoff a test can assert against.
+- The "vocabulary band" (R2) and "safety topic" (R3) constraints are **model-judgment guardrails validated by `pnpm eval:gen`** (the real generation-quality gate, not the answer-evaluation `pnpm eval`), not by unit tests — there is no in-repo frequency cutoff a test can assert against.
 - The cloze-suitability flag (R1) is added to the `GrammarPoint` type at its real definition site, **`packages/shared/src/curriculum-types.ts`** (re-exported through `packages/db`), mirroring the existing optional `targetOverride`.
 - The four targeted Turkish A2 grammar-point keys (`tr-a2-converbs`, `tr-a2-correlative-conjunctions`, `tr-a2-nominalization`, `tr-a2-relative-an`) exist unchanged in the curriculum (their text was audited in PR #220; only a flag is added here).
 
@@ -82,7 +82,7 @@ Supports `product.md`/`tech.md` §7 (**Content & AI Strategy** — "pre-generate
 
 ### Performance / Cost
 - Prompt additions SHALL preserve the **Anthropic prompt-cache prefix byte-identity** across drafts within a cell (the system prompt is the cached prefix per `tech.md` §7 prompt caching); no interpolation that varies per draft may enter the cached prefix.
-- The net effect SHALL be a **higher first-pass approval rate** (fewer Claude calls per usable exercise); changes SHALL be validated via `pnpm eval` against a Langfuse dataset and SHALL NOT regress approval/quality before shipping.
+- The net effect SHALL be a **higher first-pass approval rate** (fewer Claude calls per usable exercise); changes SHALL be validated via `pnpm eval:gen` against a cell dataset and SHALL NOT regress approval/quality before shipping.
 - **Success metrics** (validated on a post-merge eval/run, not unit-tested): the four re-allocated points (R1) show yield routed to `translation` instead of a near-zero `cloze` cell; safety-reason rejections (R3) and "level mismatch" / "ambiguous" flags (R2/R4) drop versus the 2026-05-30 baseline.
 
 ### Security
