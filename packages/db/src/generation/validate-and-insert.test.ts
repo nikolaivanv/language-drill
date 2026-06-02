@@ -23,6 +23,7 @@ import type {
   ExerciseDraft,
   GenerateBatchResult,
   GenerationSpec,
+  LlmTraceContext,
   ValidateDraftResult,
 } from '@language-drill/ai';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -31,6 +32,12 @@ import type { Db } from '../client';
 
 import type { Cell } from './cells';
 
+// `withLlmTrace` / `getCurrentLlmTraceContext` are intentionally NOT mocked
+// (the `...actual` spread keeps the real ALS-backed implementations). They
+// share the module-singleton `AsyncLocalStorage` with `validate-and-insert.ts`,
+// so a real outer `withLlmTrace` scope here is observed by the production code's
+// nested scope — letting the trace-context tests assert true end-to-end ALS
+// behavior rather than a stubbed call count.
 vi.mock('@language-drill/ai', async () => {
   const actual = await vi.importActual<typeof import('@language-drill/ai')>(
     '@language-drill/ai',
@@ -42,7 +49,12 @@ vi.mock('@language-drill/ai', async () => {
   };
 });
 
-import { generateBatch, validateDraft } from '@language-drill/ai';
+import {
+  generateBatch,
+  getCurrentLlmTraceContext,
+  validateDraft,
+  withLlmTrace,
+} from '@language-drill/ai';
 
 import {
   PARSER_FAILURE_REASON,
@@ -791,5 +803,133 @@ describe('validateAndInsertWithRetry — R6 vocab per-word cap', () => {
 
     expect(outcome.terminalStatus).toBe('inserted-approved');
     expect(mockGenerateBatch).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// R8 / tech-debt "Langfuse `validate` traces missing `exerciseId` metadata":
+// `validateAndInsertWithRetry` opens a per-ordinal `withLlmTrace` scope that
+// inherits the cell-level parent context and contributes `exerciseId`, so every
+// validator (and retry-generator) call this ordinal emits shares the draft id as
+// a Langfuse join key. These tests drive the REAL ALS — `withLlmTrace` /
+// `getCurrentLlmTraceContext` are unmocked — and capture the context observed at
+// each `validateDraft` call.
+// ---------------------------------------------------------------------------
+
+/** A representative cell-level parent scope, mirroring the one opened in
+ *  `infra/lambda/src/generation/handler.ts` around each SQS record. */
+const parentCellCtx: LlmTraceContext = {
+  feature: 'generate',
+  env: 'dev',
+  promptVersion: 'generate@2026-06-02',
+  requestId: 'req-test-0001',
+  jobId: 'job-abc',
+  cellKey: cell.cellKey,
+  language: Language.ES,
+  cefrLevel: CefrLevel.B1,
+  exerciseType: ExerciseType.CLOZE,
+};
+
+describe('validateAndInsertWithRetry — per-ordinal exerciseId trace scope', () => {
+  it('tags the validate call with exerciseId=draft.id and inherits the parent cell scope', async () => {
+    const seen: Array<LlmTraceContext | undefined> = [];
+    mockValidateDraft.mockImplementation(async () => {
+      seen.push(getCurrentLlmTraceContext());
+      return PASSING_VALIDATION;
+    });
+    const capture: { exercise?: Record<string, unknown> } = {};
+
+    // Run inside a real outer (cell-level) scope, as the generation Lambda does.
+    const outcome = await withLlmTrace(parentCellCtx, () =>
+      validateAndInsertWithRetry({
+        db: makeInsertSucceedsDb(capture),
+        client: mockClient,
+        spec,
+        draft: makeDraft(),
+        ordinal: 0,
+        cell,
+        args,
+        generatedAt,
+      }),
+    );
+
+    expect(outcome.terminalStatus).toBe('inserted-approved');
+    expect(seen).toHaveLength(1);
+    // The nested scope carries the draft id as `exerciseId` …
+    expect(seen[0]?.exerciseId).toBe('draft-0');
+    // … while inheriting the parent cell context (feature/jobId/cellKey/etc.).
+    expect(seen[0]?.feature).toBe('generate');
+    expect(seen[0]?.jobId).toBe('job-abc');
+    expect(seen[0]?.cellKey).toBe(cell.cellKey);
+    expect(seen[0]?.promptVersion).toBe('generate@2026-06-02');
+  });
+
+  it('reuses the same exerciseId across every dedup-retry validation', async () => {
+    const seen: Array<LlmTraceContext | undefined> = [];
+    mockValidateDraft.mockImplementation(async () => {
+      seen.push(getCurrentLlmTraceContext());
+      return PASSING_VALIDATION;
+    });
+    // Each retry returns a parseable draft with a DIFFERENT id, so the loop
+    // re-validates a fresh `currentDraft` on every attempt. The scope, opened
+    // once with the ORIGINAL draft id, must still tag each of those calls.
+    let retryN = 0;
+    mockGenerateBatch.mockImplementation(async () => {
+      retryN += 1;
+      const d = makeDraft();
+      d.id = `draft-retry-${retryN}`;
+      return {
+        drafts: [d],
+        malformedDrafts: [],
+        tokenUsage: PARSER_FAIL_USAGE,
+      } satisfies GenerateBatchResult;
+    });
+
+    const outcome = await withLlmTrace(parentCellCtx, () =>
+      validateAndInsertWithRetry({
+        db: makeDedupAlwaysCollidesDb(), // every insert dedups → drives the retry loop
+        client: mockClient,
+        spec,
+        draft: makeDraft(), // id 'draft-0'
+        ordinal: 0,
+        cell,
+        args,
+        generatedAt,
+      }),
+    );
+
+    // Loop exhausts all retry slots: attempt 0 + MAX_DEDUP_RETRIES re-validations.
+    expect(outcome.terminalStatus).toBe('dedup-given-up');
+    expect(seen.length).toBeGreaterThanOrEqual(2);
+    // Stable across retries: the join key is the ORIGINAL draft id throughout,
+    // even though `currentDraft` was replaced by `draft-retry-N` mid-loop.
+    expect(seen.every((c) => c?.exerciseId === 'draft-0')).toBe(true);
+  });
+
+  it('does not fabricate a trace scope on the CLI path (no parent context)', async () => {
+    // CLI runs (`generate-exercises.ts`) call in without an outer `withLlmTrace`;
+    // the function must skip the wrap rather than invent a context with missing
+    // required fields — so the validate call observes no ALS scope.
+    const seen: Array<LlmTraceContext | undefined> = [];
+    mockValidateDraft.mockImplementation(async () => {
+      seen.push(getCurrentLlmTraceContext());
+      return PASSING_VALIDATION;
+    });
+    const capture: { exercise?: Record<string, unknown> } = {};
+
+    const outcome = await validateAndInsertWithRetry({
+      db: makeInsertSucceedsDb(capture),
+      client: mockClient,
+      spec,
+      draft: makeDraft(),
+      ordinal: 0,
+      cell,
+      args,
+      generatedAt,
+    });
+
+    expect(outcome.terminalStatus).toBe('inserted-approved');
+    expect(seen).toHaveLength(1);
+    expect(seen[0]).toBeUndefined();
   });
 });
