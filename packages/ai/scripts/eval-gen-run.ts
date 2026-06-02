@@ -206,8 +206,9 @@ export type DraftBucket =
   | "parser-failure";
 
 /**
- * One classified draft. `reasons` are the routed reason/flag strings from
- * `routeValidationResult`; a malformed draft carries `["parser-failure"]`.
+ * One classified draft. `reasons` are the canonical `GenerationReasonCode`
+ * strings from `routeValidationResult` (the bounded `code`, not the free-form
+ * `detail`); a malformed draft carries `["parser-failure"]`.
  */
 export type DraftOutcome = {
   bucket: DraftBucket;
@@ -484,7 +485,10 @@ export function makeRealArmExecutor(client: Anthropic): GenCellArmExecutor {
       const { reviewStatus, flaggedReasons } = routeValidationResult(result);
       outcomes.push({
         bucket: bucketForReviewStatus(reviewStatus),
-        reasons: flaggedReasons,
+        // Key the distribution on the canonical `code` only — never the
+        // free-form `detail` — so reason/flag buckets stay bounded-cardinality
+        // (the whole point of the GenerationReason reason-codes refactor).
+        reasons: flaggedReasons.map((r) => r.code),
       });
     }
 

@@ -16,7 +16,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { readFileSync } from "node:fs";
 
-import { CefrLevel, ExerciseType, Language } from "@language-drill/shared";
+import {
+  CefrLevel,
+  ExerciseType,
+  GenerationReasonCode,
+  Language,
+} from "@language-drill/shared";
 import { getGrammarPoint } from "@language-drill/db";
 
 import {
@@ -606,9 +611,13 @@ describe("makeRealArmExecutor — classification + cost folding", () => {
       "rejected",
       "parser-failure",
     ]);
+    // Reasons are the canonical `GenerationReasonCode` strings (bounded keys),
+    // not the free-form prose.
     const byBucket = (b: string) => arm.outcomes.find((o) => o.bucket === b)!;
-    expect(byBucket("flagged").reasons).toEqual(["ambiguous"]);
-    expect(byBucket("rejected").reasons).toEqual(["low quality score (<0.5)"]);
+    expect(byBucket("flagged").reasons).toEqual([GenerationReasonCode.Ambiguous]);
+    expect(byBucket("rejected").reasons).toEqual([
+      GenerationReasonCode.LowQualityReject,
+    ]);
     expect(byBucket("parser-failure").reasons).toEqual(["parser-failure"]);
 
     // --- Spec passed to generateBatch carries the override + cell config.
@@ -642,9 +651,12 @@ describe("makeRealArmExecutor — classification + cost folding", () => {
 const AO: DraftOutcome = { bucket: "auto-approved", reasons: [] };
 const REJ: DraftOutcome = {
   bucket: "rejected",
-  reasons: ["low quality score (<0.5)"],
+  reasons: [GenerationReasonCode.LowQualityReject],
 };
-const FL: DraftOutcome = { bucket: "flagged", reasons: ["ambiguous"] };
+const FL: DraftOutcome = {
+  bucket: "flagged",
+  reasons: [GenerationReasonCode.Ambiguous],
+};
 const PF: DraftOutcome = { bucket: "parser-failure", reasons: ["parser-failure"] };
 
 const armOf = (
@@ -703,8 +715,8 @@ describe("computeGenDiff", () => {
       rejected: 1,
       parserFailure: 0,
       approvalRate: 0.5,
-      rejectionReasonCounts: { "low quality score (<0.5)": 1 },
-      flagTagCounts: { ambiguous: 1 },
+      rejectionReasonCounts: { [GenerationReasonCode.LowQualityReject]: 1 },
+      flagTagCounts: { [GenerationReasonCode.Ambiguous]: 1 },
     });
 
     // Candidate arm
@@ -722,10 +734,10 @@ describe("computeGenDiff", () => {
     // Deltas
     expect(summary.approvalRateDelta).toBeCloseTo(0.25, 10);
     expect(summary.reasonDeltas).toEqual({
-      "low quality score (<0.5)": { baseline: 1, candidate: 0 },
+      [GenerationReasonCode.LowQualityReject]: { baseline: 1, candidate: 0 },
     });
     expect(summary.flagDeltas).toEqual({
-      ambiguous: { baseline: 1, candidate: 0 },
+      [GenerationReasonCode.Ambiguous]: { baseline: 1, candidate: 0 },
       "parser-failure": { baseline: 0, candidate: 1 },
     });
 
@@ -759,9 +771,9 @@ describe("renderMarkdownSummary", () => {
     expect(md).toMatch(/\| approval rate \| 50\.0% \| 75\.0% \| \+25pp \|/);
     expect(md).toContain("| parser-failure | 0 | 1 |");
 
-    // Reason + flag delta tables
+    // Reason + flag delta tables (keyed by canonical GenerationReasonCode)
     expect(md).toContain("## Rejection reasons");
-    expect(md).toContain("| low quality score (<0.5) | 1 | 0 |");
+    expect(md).toContain("| low-quality-reject | 1 | 0 |");
     expect(md).toContain("## Flag tags");
     expect(md).toContain("| ambiguous | 1 | 0 |");
 
