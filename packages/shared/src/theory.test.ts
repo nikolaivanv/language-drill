@@ -82,6 +82,55 @@ describe("parseTheoryTopicJson — defensive sections-as-string decode", () => {
   });
 });
 
+describe("parseTheoryTopicJson — best-effort repair of malformed stringified sections (Req 1.7)", () => {
+  // R1.7 (a) native array unchanged → "happy paths" block above.
+  // R1.7 (b) valid stringified decoded → "accepts sections as a JSON-encoded
+  //          string" above.
+  // R1.7 (d) unrecoverable garbage throws → "still rejects an unparseable
+  //          string" above. This block adds (c) and (c2).
+
+  // (c) A stringified `sections` array whose `text` value carries an inner
+  // quoted token (`"var"`) with unescaped quotes — the recoverable subset that
+  // jsonrepair fixes deterministically without a Claude re-roll.
+  const recoverableSections =
+    '[{"id":"only","title":"t","body":[{"kind":"paragraph","text":[{"kind":"text","text":"the word "var" means there is"}]}]}]';
+
+  it("(c) recovers a malformed stringified sections via best-effort repair", () => {
+    const topic = { ...cloneMinimal(), sections: recoverableSections };
+    const parsed = parseTheoryTopicJson(topic);
+    expect(parsed.sections).toHaveLength(1);
+    const body0 = parsed.sections[0].body[0];
+    if (body0.kind !== "paragraph") throw new Error("expected paragraph");
+    const inline0 = body0.text[0];
+    if (inline0.kind !== "text") throw new Error("expected text inline");
+    expect(inline0.text).toContain("var");
+  });
+
+  it("(c) repair is deterministic — same input yields identical output", () => {
+    const a = parseTheoryTopicJson({
+      ...cloneMinimal(),
+      sections: recoverableSections,
+    });
+    const b = parseTheoryTopicJson({
+      ...cloneMinimal(),
+      sections: recoverableSections,
+    });
+    expect(a).toEqual(b);
+  });
+
+  // (c2) The captured 2026-06-01 shape: MULTIPLE unescaped inner quotes
+  // adjacent to `(` `)` `/`, which defeats jsonrepair's delimiter heuristic.
+  // The parser must NOT silently mangle it — it falls through to a clear throw
+  // so the generator's regenerate retry (the guaranteed recovery) kicks in.
+  const capturedShapeSections =
+    '[{"id":"only","title":"t","body":[{"kind":"paragraph","text":[{"kind":"text","text":"Turkish uses "var" ("there is / exists") and "yok" ("there is not")."}]}]}]';
+
+  it("(c2) throws a clear error on the captured multi-quote shape (repair cannot fix it)", () => {
+    const topic = { ...cloneMinimal(), sections: capturedShapeSections };
+    expect(() => parseTheoryTopicJson(topic)).toThrow(/sections.*non-empty/);
+  });
+});
+
 describe("parseTheoryTopicJson — top-level rejection", () => {
   it("rejects a number", () => {
     expect(() => parseTheoryTopicJson(42)).toThrow(

@@ -477,6 +477,55 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
     );
 
     // -----------------------------------------------------------------------
+    // Req 2.2 / 2.3 / 2.5 — failed cell records the tokens every attempt
+    // burned, summed across the regenerate retries, instead of NULL/$0.
+    // -----------------------------------------------------------------------
+
+    it(
+      'records non-zero summed token usage on a malformed-draft failure (Req 2.2, 2.3, 2.5)',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        const malformed = {
+          id: 'x',
+          title: 't',
+          subtitle: 's',
+          cefr: 'B1',
+          sections: [],
+        };
+        const cell = buildTestCell();
+        // The mock replays `malformed` on every call, so the generator
+        // exhausts its retry budget (initial + THEORY_GENERATION_MAX_RETRIES=2
+        // = 3 generator calls at 1500 input / 800 output each). The validator
+        // is never reached. Usage must be the sum across all three attempts.
+        const { client, create } = makeMockClient({ generatorInput: malformed });
+        const jobId = randomUUID();
+
+        const result = await runOneTheoryCell({
+          db,
+          client,
+          cell,
+          args: { batchSeed: 'test', maxCostUsd: 1.0 },
+          jobId,
+          trigger: 'cli',
+        });
+
+        expect(result.status).toBe('failed');
+        expect(create).toHaveBeenCalledTimes(3); // initial + 2 retries
+
+        const jobRows = await db
+          .select()
+          .from(theoryGenerationJobs)
+          .where(eq(theoryGenerationJobs.id, jobId));
+        expect(jobRows).toHaveLength(1);
+        expect(jobRows[0].status).toBe('failed');
+        // Summed across the three generator attempts — NOT ZERO_USAGE.
+        expect(jobRows[0].inputTokensUsed).toBe(4500); // 3 × 1500
+        expect(jobRows[0].outputTokensUsed).toBe(2400); // 3 × 800
+        expect(Number(jobRows[0].costUsdEstimate ?? 0)).toBeGreaterThan(0);
+      },
+    );
+
+    // -----------------------------------------------------------------------
     // Req 8.5.e — SIGINT precheck (signal pre-aborted)
     // -----------------------------------------------------------------------
 

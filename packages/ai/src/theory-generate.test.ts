@@ -3,7 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type Anthropic from "@anthropic-ai/sdk";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { esCurriculum } from "@language-drill/db";
 import { type GrammarPoint, Language } from "@language-drill/shared";
@@ -17,6 +17,7 @@ import {
   deriveTheoryTopicId,
   generateTheoryTopic,
   theoryDraftId,
+  TheoryDraftMalformedError,
 } from "./theory-generate.js";
 
 // ---------------------------------------------------------------------------
@@ -118,6 +119,51 @@ function makeNoToolUseStubClient(): Anthropic {
       }),
     },
   } as unknown as Anthropic;
+}
+
+/**
+ * A stub whose `messages.create` returns a different tool_use input per call,
+ * cycling on the last entry once the list is exhausted (so an all-malformed
+ * run keeps returning the same malformed input). Tracks the call count so the
+ * retry loop's attempt count can be asserted. Each call reports the same
+ * fixed usage (1500 input / 800 output) so summed-usage math is predictable.
+ */
+function makeSequenceStubClient(inputs: unknown[]): {
+  client: Anthropic;
+  callCount: () => number;
+} {
+  let calls = 0;
+  const client = {
+    messages: {
+      create: async () => {
+        const input = inputs[Math.min(calls, inputs.length - 1)];
+        calls += 1;
+        return {
+          content: [
+            {
+              type: "tool_use",
+              name: THEORY_TOOL_NAME,
+              input,
+              id: "toolu_test",
+            },
+          ],
+          usage: {
+            input_tokens: 1500,
+            cache_creation_input_tokens: 0,
+            cache_read_input_tokens: 0,
+            output_tokens: 800,
+          },
+          stop_reason: "tool_use",
+          id: "msg_test",
+          type: "message",
+          role: "assistant",
+          model: "claude-sonnet-4-6",
+          stop_sequence: null,
+        };
+      },
+    },
+  } as unknown as Anthropic;
+  return { client, callCount: () => calls };
 }
 
 // ===========================================================================
@@ -277,6 +323,87 @@ describe("theory-generate / generateTheoryTopic", () => {
     const message = (caught as Error).message;
     expect(message).toMatch(/^Theory draft malformed: Invalid/);
     expect(message).toMatch(/Invalid title.*must be present/);
+  });
+
+  // -------------------------------------------------------------------------
+  // Regenerate-on-malformed retry loop (Req 1.3, 1.4, 1.9, 2.3, 2.5)
+  // -------------------------------------------------------------------------
+
+  const expectedCellKey =
+    `${baseSpec.language}:${baseSpec.cefrLevel}:${baseSpec.grammarPoint.key}`.toLowerCase();
+
+  it("regenerates a malformed draft and succeeds on a later attempt, summing usage (Req 1.3, 2.3)", async () => {
+    // Attempt 0 returns a malformed input ({ id: 'x' } fails the parser);
+    // attempt 1 returns the valid fixture. This is the captured-shape recovery
+    // exercised at the pipeline level (repair can't fix it; the retry does).
+    const { client, callCount } = makeSequenceStubClient([
+      { id: "x" },
+      subjunctiveFixture,
+    ]);
+    const { draft, tokenUsage } = await generateTheoryTopic(client, baseSpec);
+
+    expect(callCount()).toBe(2);
+    expect(draft.contentJson).toEqual(subjunctiveFixture);
+    // Summed across both attempts (1500 + 1500 input, 800 + 800 output).
+    expect(tokenUsage.inputTokens).toBe(3000);
+    expect(tokenUsage.outputTokens).toBe(1600);
+    // draft.metadata describes only the winning attempt.
+    expect(draft.metadata.inputTokens).toBe(1500);
+    expect(draft.metadata.outputTokens).toBe(800);
+  });
+
+  it("throws TheoryDraftMalformedError with summed non-zero usage after exhausting retries (Req 1.9, 2.3, 2.5)", async () => {
+    const { client, callCount } = makeSequenceStubClient([{ id: "x" }]);
+    let caught: unknown;
+    try {
+      await generateTheoryTopic(client, baseSpec, { maxRetries: 2 });
+    } catch (err) {
+      caught = err;
+    }
+    expect(caught).toBeInstanceOf(TheoryDraftMalformedError);
+    expect(callCount()).toBe(3); // initial attempt + 2 retries
+    const usage = (caught as TheoryDraftMalformedError).tokenUsage;
+    expect(usage.inputTokens).toBe(4500); // 3 attempts × 1500
+    expect(usage.outputTokens).toBe(2400); // 3 attempts × 800
+  });
+
+  it("emits exactly one warn log line per retry, carrying the cell key (Req 1.4)", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      const { client } = makeSequenceStubClient([{ id: "x" }, subjunctiveFixture]);
+      await generateTheoryTopic(client, baseSpec);
+
+      const warnLines = logSpy.mock.calls
+        .map((c) => {
+          try {
+            return JSON.parse(c[0] as string) as Record<string, unknown>;
+          } catch {
+            return null;
+          }
+        })
+        .filter(
+          (o) => o?.message === "theory draft malformed — regenerating",
+        );
+
+      expect(warnLines).toHaveLength(1); // one retry → one line
+      expect(warnLines[0]!.level).toBe("warn");
+      expect(warnLines[0]!.attempt).toBe(0);
+      expect(warnLines[0]!.cellKey).toBe(expectedCellKey);
+    } finally {
+      logSpy.mockRestore();
+    }
+  });
+
+  it("does not call Claude for the EN top guard — no usage, no retry (Req 1.3)", async () => {
+    const { client, callCount } = makeSequenceStubClient([subjunctiveFixture]);
+    const enSpec = {
+      ...baseSpec,
+      language: Language.EN as unknown as typeof baseSpec.language,
+    };
+    await expect(generateTheoryTopic(client, enSpec)).rejects.toThrow(
+      /resolved decision #5/,
+    );
+    expect(callCount()).toBe(0);
   });
 });
 

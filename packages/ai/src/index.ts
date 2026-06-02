@@ -143,10 +143,12 @@ export {
   THEORY_GENERATION_MODEL,
   THEORY_GENERATION_TEMPERATURE,
   THEORY_GENERATION_MAX_TOKENS,
+  THEORY_GENERATION_MAX_RETRIES,
   THEORY_GENERATION_TOOL,
   generateTheoryTopic,
   theoryDraftId,
   deriveTheoryTopicId,
+  TheoryDraftMalformedError,
 } from "./theory-generate.js";
 export type {
   TheoryGenerationSpec,
