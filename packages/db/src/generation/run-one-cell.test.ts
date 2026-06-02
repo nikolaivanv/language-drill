@@ -28,7 +28,9 @@ import {
 import {
   CefrLevel,
   ExerciseType,
+  GenerationReasonCode,
   Language,
+  REJECTED_BRANCH_CODES,
   type LearningLanguage,
 } from '@language-drill/shared';
 import { and, eq } from 'drizzle-orm';
@@ -185,6 +187,27 @@ async function invokeRunOneCell(
 }
 
 /**
+ * Bounded-cardinality guard for `rejection_reason_counts` (Req 5.1, 3.3, 3.4):
+ * every key must be a canonical reject-branch reason *code*, never free-form
+ * prose or a value-interpolated string.
+ *
+ * - Primary: set-membership in `REJECTED_BRANCH_CODES` — the only codes that
+ *   can ever terminate an ordinal `rejected` and thus key this map.
+ * - Secondary shape guard: a code never carries a `:` separator (those mark
+ *   `formatReason` detail joins, e.g. `cultural issue: <prose>`) and is never
+ *   sentence-length, so a regression that leaked `detail` into the key would
+ *   trip even if the leaked string happened to collide with a code name.
+ */
+const REJECTED_CODES = new Set<string>(REJECTED_BRANCH_CODES);
+function assertBoundedReasonKeys(counts: Record<string, number>): void {
+  for (const key of Object.keys(counts)) {
+    expect(REJECTED_CODES.has(key)).toBe(true);
+    expect(key).not.toContain(':');
+    expect(key.length).toBeLessThan(40);
+  }
+}
+
+/**
  * Wraps `createMockAnthropicClient` so the test can count generator vs.
  * validator calls by inspecting `args.tool_choice.name`. Used by the Phase A
  * (validator-parallelization) assertions to prove (a) no double-validation
@@ -318,6 +341,7 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
       delete process.env['MOCK_VALIDATION_THROW_ORDINAL'];
       delete process.env['MOCK_VALIDATION_MALFORM_ORDINAL'];
       delete process.env['MOCK_CLAUDE_FIXTURES_DIR'];
+      delete process.env['MOCK_CLAUDE_VALIDATION_FIXTURES_DIR'];
       process.exitCode = 0;
     });
 
@@ -375,14 +399,19 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
         expect(Number(job.costUsdEstimate ?? 0)).toBeGreaterThan(0);
 
         // Rejection-reason distribution: ordinal 2's fixture is sub-0.5
-        // quality, so the routed reason is captured both on the CellResult and
-        // persisted to the audit row.
+        // quality, so the routed reason is captured (keyed on the canonical
+        // `code`) both on the CellResult and persisted to the audit row.
         expect(result.rejectionReasonCounts).toEqual({
-          'low quality score (<0.5)': 1,
+          [GenerationReasonCode.LowQualityReject]: 1,
         });
         expect(job.rejectionReasonCounts).toEqual({
-          'low quality score (<0.5)': 1,
+          [GenerationReasonCode.LowQualityReject]: 1,
         });
+        // Every key is a bounded reject-branch code (Req 5.1).
+        assertBoundedReasonKeys(result.rejectionReasonCounts);
+        assertBoundedReasonKeys(
+          job.rejectionReasonCounts as Record<string, number>,
+        );
 
         // Token regression guard. Mock token shape:
         //   1 generator call (cache-write):   input=1500 cacheRead=0    output=400
@@ -631,12 +660,15 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
         // The other two ordinals survived validation and were inserted.
         expect(result.insertedCount).toBe(2);
 
-        // The synthetic reason is folded into the rejection distribution.
+        // The synthetic reason is folded into the rejection distribution,
+        // keyed on its canonical code.
         expect(
           result.rejectionReasonCounts[
-            'validator parse failure (malformed response)'
+            GenerationReasonCode.ValidatorParseFailure
           ],
         ).toBe(1);
+        // Bounded-cardinality guard: the synthetic code is a reject-branch code.
+        assertBoundedReasonKeys(result.rejectionReasonCounts);
 
         const jobs = await db
           .select()
@@ -645,6 +677,60 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
         expect(jobs).toHaveLength(1);
         expect(jobs[0].status).toBe('succeeded');
         expect(jobs[0].rejectedCount).toBeGreaterThanOrEqual(1);
+      },
+    );
+
+    it(
+      'collapses same-code-different-detail reasons into one summed bucket',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        // A single rejected ordinal whose validation surfaces TWO distinct
+        // cultural issues. Routing emits two `{ code: cultural-issue, detail }`
+        // reasons with different prose; because the frequency map keys on
+        // `code` only, both must collapse into a single `cultural-issue: 2`
+        // bucket rather than two free-form buckets (the unbounded-cardinality
+        // bug this feature fixes — Req 3.3, 3.4, 5.1).
+        const tmpValidationDir = mkdtempSync(
+          join(tmpdir(), 'reason-collapse-validation-'),
+        );
+        try {
+          writeFileSync(
+            join(tmpValidationDir, 'cloze-rejected.json'),
+            JSON.stringify({
+              qualityScore: 0.8, // >= floor: NOT a low-quality reject…
+              ambiguous: false,
+              contextSpoilsAnswer: false,
+              levelMatch: true,
+              grammarPointMatch: true,
+              // …two distinct cultural issues are the sole veto, so both
+              // reasons share the `cultural-issue` code with different detail.
+              culturalIssues: [
+                'Assumes familiarity with a regional festival not taught at B1.',
+                'References a dated brand name unfamiliar to many learners.',
+              ],
+              flaggedReasons: [],
+            }),
+          );
+          process.env['MOCK_CLAUDE_VALIDATION_FIXTURES_DIR'] = tmpValidationDir;
+          process.env['MOCK_VALIDATION_OUTCOMES'] = JSON.stringify({
+            '0': 'rejected',
+          });
+
+          const result = await invokeRunOneCell(
+            db,
+            1,
+            'phase-4-test-reason-collapse',
+          );
+
+          expect(result.rejectedCount).toBe(1);
+          // Two different details, ONE summed bucket keyed on the code.
+          expect(result.rejectionReasonCounts).toEqual({
+            [GenerationReasonCode.CulturalIssue]: 2,
+          });
+          assertBoundedReasonKeys(result.rejectionReasonCounts);
+        } finally {
+          rmSync(tmpValidationDir, { recursive: true, force: true });
+        }
       },
     );
 

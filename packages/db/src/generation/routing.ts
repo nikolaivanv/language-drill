@@ -13,6 +13,10 @@
  */
 
 import type { ValidationResult } from '@language-drill/ai';
+import {
+  type GenerationReason,
+  GenerationReasonCode,
+} from '@language-drill/shared';
 
 // ---------------------------------------------------------------------------
 // Frozen thresholds — tunable at the policy layer, not in test or production
@@ -39,7 +43,13 @@ export type ReviewStatus =
 
 export type RoutingDecision = {
   reviewStatus: ReviewStatus;
-  flaggedReasons: string[];
+  /**
+   * Reasons carried as `{ code, detail? }` (canonical code + free-form prose).
+   * Field name retained from the original `string[]` shape to minimize churn
+   * across the writer (`exercises.flagged_reasons`), the rejected-ordinal fold
+   * (`rejection_reason_counts`), and the revalidation CLI.
+   */
+  flaggedReasons: GenerationReason[];
 };
 
 // ---------------------------------------------------------------------------
@@ -50,21 +60,24 @@ export type RoutingDecision = {
  * Route a `ValidationResult` to the `(reviewStatus, flaggedReasons)` pair the
  * writer applies to a draft.
  *
+ * Each reason is a `{ code, detail? }` (`GenerationReason`); free-form validator
+ * prose / cultural-issue text is carried in `detail`, never in `code`.
+ *
  * Reasons-ordering rules (matching the JSDoc on the public design):
  *
  *   REJECTED branch (qualityScore < 0.5 OR culturalIssues non-empty OR contextSpoilsAnswer):
- *     1. 'low quality score (<0.5)'  (only when qualityScore < 0.5)
- *     2. 'context spoils answer'     (only when result.contextSpoilsAnswer)
- *     3. ...result.culturalIssues    (in original order)
+ *     1. { code: LowQualityReject }                  (only when qualityScore < 0.5)
+ *     2. { code: ContextSpoilsAnswer }               (only when result.contextSpoilsAnswer)
+ *     3. ...{ code: CulturalIssue, detail: <issue> } (one per result.culturalIssues, original order)
  *
  *   AUTO-APPROVED branch (all conjuncts hold): flaggedReasons is always [].
  *
  *   FLAGGED branch (otherwise):
- *     1. 'low quality score (<0.7)'      (only when 0.5 <= qualityScore < 0.7)
- *     2. 'ambiguous'                     (only when result.ambiguous)
- *     3. 'level mismatch'                (only when !result.levelMatch)
- *     4. 'grammar point mismatch'        (only when !result.grammarPointMatch)
- *     5. ...result.flaggedReasons        (in original order)
+ *     1. { code: LowQualityFlag }                    (only when 0.5 <= qualityScore < 0.7)
+ *     2. { code: Ambiguous }                         (only when result.ambiguous)
+ *     3. { code: LevelMismatch }                     (only when !result.levelMatch)
+ *     4. { code: GrammarPointMismatch }              (only when !result.grammarPointMatch)
+ *     5. ...{ code: ValidatorNote, detail: <reason> }(one per result.flaggedReasons, original order)
  *
  * 'manual-approved' is NEVER returned here — it is set only by the review
  * CLI's UPDATE path (`tryApprove`).
@@ -82,15 +95,15 @@ export function routeValidationResult(
     result.contextSpoilsAnswer ||
     result.culturalIssues.length > 0
   ) {
-    const reasons: string[] = [];
+    const reasons: GenerationReason[] = [];
     if (result.qualityScore < VALIDATION_THRESHOLDS.flagQualityFloor) {
-      reasons.push('low quality score (<0.5)');
+      reasons.push({ code: GenerationReasonCode.LowQualityReject });
     }
     if (result.contextSpoilsAnswer) {
-      reasons.push('context spoils answer');
+      reasons.push({ code: GenerationReasonCode.ContextSpoilsAnswer });
     }
     for (const issue of result.culturalIssues) {
-      reasons.push(issue);
+      reasons.push({ code: GenerationReasonCode.CulturalIssue, detail: issue });
     }
     return { reviewStatus: 'rejected', flaggedReasons: reasons };
   }
@@ -109,21 +122,21 @@ export function routeValidationResult(
   }
 
   // -- Flagged branch: collect every failed condition in deterministic order. --
-  const reasons: string[] = [];
+  const reasons: GenerationReason[] = [];
   if (result.qualityScore < VALIDATION_THRESHOLDS.approveQualityFloor) {
-    reasons.push('low quality score (<0.7)');
+    reasons.push({ code: GenerationReasonCode.LowQualityFlag });
   }
   if (result.ambiguous) {
-    reasons.push('ambiguous');
+    reasons.push({ code: GenerationReasonCode.Ambiguous });
   }
   if (!result.levelMatch) {
-    reasons.push('level mismatch');
+    reasons.push({ code: GenerationReasonCode.LevelMismatch });
   }
   if (!result.grammarPointMatch) {
-    reasons.push('grammar point mismatch');
+    reasons.push({ code: GenerationReasonCode.GrammarPointMismatch });
   }
   for (const reason of result.flaggedReasons) {
-    reasons.push(reason);
+    reasons.push({ code: GenerationReasonCode.ValidatorNote, detail: reason });
   }
   return { reviewStatus: 'flagged', flaggedReasons: reasons };
 }

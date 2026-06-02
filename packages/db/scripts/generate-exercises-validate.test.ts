@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { ValidationResult } from "@language-drill/ai";
+import { GenerationReasonCode } from "@language-drill/shared";
 
 import {
   routeValidationResult,
@@ -47,7 +48,9 @@ describe("routeValidationResult — rejected branch", () => {
   it("rejects when qualityScore < 0.5", () => {
     const decision = routeValidationResult(withResult({ qualityScore: 0.4 }));
     expect(decision.reviewStatus).toBe("rejected");
-    expect(decision.flaggedReasons).toEqual(["low quality score (<0.5)"]);
+    expect(decision.flaggedReasons).toEqual([
+      { code: GenerationReasonCode.LowQualityReject },
+    ]);
   });
 
   it("rejects on cultural issues alone, even when qualityScore is high (intentional hard veto)", () => {
@@ -61,7 +64,10 @@ describe("routeValidationResult — rejected branch", () => {
     // No 'low quality score' reason — score is fine; the cultural issue is the
     // sole reason. This proves the "regardless of qualityScore" intent.
     expect(decision.flaggedReasons).toEqual([
-      "stereotyping middle-eastern characters",
+      {
+        code: GenerationReasonCode.CulturalIssue,
+        detail: "stereotyping middle-eastern characters",
+      },
     ]);
   });
 
@@ -74,9 +80,9 @@ describe("routeValidationResult — rejected branch", () => {
     );
     expect(decision.reviewStatus).toBe("rejected");
     expect(decision.flaggedReasons).toEqual([
-      "low quality score (<0.5)",
-      "issue A",
-      "issue B",
+      { code: GenerationReasonCode.LowQualityReject },
+      { code: GenerationReasonCode.CulturalIssue, detail: "issue A" },
+      { code: GenerationReasonCode.CulturalIssue, detail: "issue B" },
     ]);
   });
 
@@ -101,7 +107,9 @@ describe("routeValidationResult — rejected branch", () => {
       }),
     );
     expect(decision.reviewStatus).toBe("rejected");
-    expect(decision.flaggedReasons).toEqual(["context spoils answer"]);
+    expect(decision.flaggedReasons).toEqual([
+      { code: GenerationReasonCode.ContextSpoilsAnswer },
+    ]);
   });
 
   it("orders 'context spoils answer' before cultural issues when both fire", () => {
@@ -114,9 +122,9 @@ describe("routeValidationResult — rejected branch", () => {
     );
     expect(decision.reviewStatus).toBe("rejected");
     expect(decision.flaggedReasons).toEqual([
-      "low quality score (<0.5)",
-      "context spoils answer",
-      "sensitive content",
+      { code: GenerationReasonCode.LowQualityReject },
+      { code: GenerationReasonCode.ContextSpoilsAnswer },
+      { code: GenerationReasonCode.CulturalIssue, detail: "sensitive content" },
     ]);
   });
 });
@@ -146,19 +154,25 @@ describe("routeValidationResult — flagged branch (single failures)", () => {
   it("flags when 0.5 <= qualityScore < 0.7", () => {
     const decision = routeValidationResult(withResult({ qualityScore: 0.6 }));
     expect(decision.reviewStatus).toBe("flagged");
-    expect(decision.flaggedReasons).toEqual(["low quality score (<0.7)"]);
+    expect(decision.flaggedReasons).toEqual([
+      { code: GenerationReasonCode.LowQualityFlag },
+    ]);
   });
 
   it("flags when ambiguous = true (score still >= 0.7)", () => {
     const decision = routeValidationResult(withResult({ ambiguous: true }));
     expect(decision.reviewStatus).toBe("flagged");
-    expect(decision.flaggedReasons).toEqual(["ambiguous"]);
+    expect(decision.flaggedReasons).toEqual([
+      { code: GenerationReasonCode.Ambiguous },
+    ]);
   });
 
   it("flags when levelMatch = false", () => {
     const decision = routeValidationResult(withResult({ levelMatch: false }));
     expect(decision.reviewStatus).toBe("flagged");
-    expect(decision.flaggedReasons).toEqual(["level mismatch"]);
+    expect(decision.flaggedReasons).toEqual([
+      { code: GenerationReasonCode.LevelMismatch },
+    ]);
   });
 
   it("flags when grammarPointMatch = false", () => {
@@ -166,7 +180,9 @@ describe("routeValidationResult — flagged branch (single failures)", () => {
       withResult({ grammarPointMatch: false }),
     );
     expect(decision.reviewStatus).toBe("flagged");
-    expect(decision.flaggedReasons).toEqual(["grammar point mismatch"]);
+    expect(decision.flaggedReasons).toEqual([
+      { code: GenerationReasonCode.GrammarPointMismatch },
+    ]);
   });
 });
 
@@ -187,11 +203,11 @@ describe("routeValidationResult — flagged branch (combinations)", () => {
     );
     expect(decision.reviewStatus).toBe("flagged");
     expect(decision.flaggedReasons).toEqual([
-      "low quality score (<0.7)",
-      "ambiguous",
-      "level mismatch",
-      "grammar point mismatch",
-      "extra reason",
+      { code: GenerationReasonCode.LowQualityFlag },
+      { code: GenerationReasonCode.Ambiguous },
+      { code: GenerationReasonCode.LevelMismatch },
+      { code: GenerationReasonCode.GrammarPointMismatch },
+      { code: GenerationReasonCode.ValidatorNote, detail: "extra reason" },
     ]);
   });
 
@@ -204,9 +220,9 @@ describe("routeValidationResult — flagged branch (combinations)", () => {
     );
     expect(decision.reviewStatus).toBe("flagged");
     expect(decision.flaggedReasons).toEqual([
-      "low quality score (<0.7)",
-      "x",
-      "y",
+      { code: GenerationReasonCode.LowQualityFlag },
+      { code: GenerationReasonCode.ValidatorNote, detail: "x" },
+      { code: GenerationReasonCode.ValidatorNote, detail: "y" },
     ]);
   });
 
@@ -215,7 +231,9 @@ describe("routeValidationResult — flagged branch (combinations)", () => {
       withResult({ qualityScore: 0.7, ambiguous: true }),
     );
     expect(decision.reviewStatus).toBe("flagged");
-    expect(decision.flaggedReasons).toEqual(["ambiguous"]);
+    expect(decision.flaggedReasons).toEqual([
+      { code: GenerationReasonCode.Ambiguous },
+    ]);
   });
 });
 

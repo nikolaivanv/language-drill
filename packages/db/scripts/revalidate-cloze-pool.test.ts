@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   CefrLevel,
   ExerciseType,
+  GenerationReasonCode,
   Language,
 } from '@language-drill/shared';
 import type { ValidationResult } from '@language-drill/ai';
@@ -212,7 +213,9 @@ describe('decideDemotion', () => {
     expect(action.kind).toBe('demote');
     if (action.kind !== 'demote') return;
     expect(action.to).toBe('rejected');
-    expect(action.reasons).toContain('context spoils answer');
+    expect(action.reasons).toContainEqual({
+      code: GenerationReasonCode.ContextSpoilsAnswer,
+    });
   });
 
   it('demotes auto-approved → flagged when new validator marks ambiguous', () => {
@@ -225,7 +228,9 @@ describe('decideDemotion', () => {
     expect(action.kind).toBe('demote');
     if (action.kind !== 'demote') return;
     expect(action.to).toBe('flagged');
-    expect(action.reasons).toContain('ambiguous');
+    expect(action.reasons).toContainEqual({
+      code: GenerationReasonCode.Ambiguous,
+    });
   });
 
   it('demotes flagged → rejected when new validator says contextSpoilsAnswer', () => {
@@ -289,7 +294,9 @@ describe('decideDemotion', () => {
     expect(action.kind).toBe('demote');
     if (action.kind !== 'demote') return;
     expect(action.to).toBe('rejected');
-    expect(action.reasons).toContain('context spoils answer');
+    expect(action.reasons).toContainEqual({
+      code: GenerationReasonCode.ContextSpoilsAnswer,
+    });
   });
 
   it('R3.B regression: ambiguous-fill demote with qualityScore=0.65 routes auto-approved → flagged', () => {
@@ -306,8 +313,12 @@ describe('decideDemotion', () => {
     expect(action.kind).toBe('demote');
     if (action.kind !== 'demote') return;
     expect(action.to).toBe('flagged');
-    expect(action.reasons).toContain('ambiguous');
-    expect(action.reasons).toContain('low quality score (<0.7)');
+    expect(action.reasons).toContainEqual({
+      code: GenerationReasonCode.Ambiguous,
+    });
+    expect(action.reasons).toContainEqual({
+      code: GenerationReasonCode.LowQualityFlag,
+    });
   });
 
   it('R7.2/R7.3 regression: buffer-consonant ambiguous blank demotes auto-approved → flagged with reason carried through', () => {
@@ -329,8 +340,15 @@ describe('decideDemotion', () => {
     expect(action.kind).toBe('demote');
     if (action.kind !== 'demote') return;
     expect(action.to).toBe('flagged');
-    expect(action.reasons).toContain('ambiguous');
-    expect(action.reasons).toContain('buffer-consonant ambiguous blank');
+    expect(action.reasons).toContainEqual({
+      code: GenerationReasonCode.Ambiguous,
+    });
+    // The validator's free-form note is carried through under the
+    // `validator-note` code with the prose preserved in `detail`.
+    expect(action.reasons).toContainEqual({
+      code: GenerationReasonCode.ValidatorNote,
+      detail: 'buffer-consonant ambiguous blank',
+    });
   });
 
   // -------------------------------------------------------------------------
@@ -358,9 +376,12 @@ describe('decideDemotion', () => {
     expect(action.kind).toBe('demote');
     if (action.kind !== 'demote') return;
     expect(action.to).toBe('rejected');
-    expect(action.reasons[0]).toBe(
-      'wrong vowel-harmony allomorph (deterministic): expected lar, got ler',
-    );
+    // Deterministic reason is prepended; the interpolated allomorph values
+    // live in `detail`, never in the code key.
+    expect(action.reasons[0]).toEqual({
+      code: GenerationReasonCode.VowelHarmonyAllomorph,
+      detail: 'expected lar, got ler',
+    });
   });
 
   it('deterministic: demotes auto-approved → flagged for a non-word stem', () => {
@@ -373,9 +394,10 @@ describe('decideDemotion', () => {
     expect(action.kind).toBe('demote');
     if (action.kind !== 'demote') return;
     expect(action.to).toBe('flagged');
-    expect(action.reasons).toContain(
-      'suspected malformed surface form (deterministic): domeşler',
-    );
+    expect(action.reasons).toContainEqual({
+      code: GenerationReasonCode.MalformedSurfaceForm,
+      detail: 'domeşler',
+    });
   });
 
   it('deterministic: no-change for a clean Turkish cloze (ev + ler)', () => {

@@ -18,6 +18,7 @@
 
 import {
   type ExerciseContent,
+  GenerationReasonCode,
   isClozeContent,
   Language,
 } from '@language-drill/shared';
@@ -53,16 +54,26 @@ export function applyDeterministicChecks(
       return decision;
 
     case 'wrong-harmony':
+      // Interpolated allomorph values go in `detail`, never in the code key,
+      // so the rejection-reason map keys on the bounded `vowel-harmony-allomorph`
+      // code rather than a distinct string per token.
       return {
         reviewStatus: 'rejected',
         flaggedReasons: [
-          `wrong vowel-harmony allomorph (deterministic): expected ${verdict.expected}, got ${verdict.actual}`,
+          {
+            code: GenerationReasonCode.VowelHarmonyAllomorph,
+            detail: `expected ${verdict.expected}, got ${verdict.actual}`,
+          },
           ...decision.flaggedReasons,
         ],
       };
 
     case 'non-word-stem': {
-      const reason = `suspected malformed surface form (deterministic): ${verdict.reconstructed}`;
+      // Reconstructed surface form goes in `detail`, not the code key.
+      const reason = {
+        code: GenerationReasonCode.MalformedSurfaceForm,
+        detail: verdict.reconstructed,
+      };
       // Downgrade only; never upgrade an already-flagged/rejected decision.
       const reviewStatus: ReviewStatus =
         decision.reviewStatus === 'auto-approved'

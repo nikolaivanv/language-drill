@@ -548,10 +548,13 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
         case 'rejected':
           rejectedCount += 1;
           // Fold this discarded ordinal's reasons into the per-cell frequency
-          // map. Always set for a 'rejected' terminal (validator veto reasons,
-          // or [PARSER_FAILURE_REASON]); the `?? []` is a defensive no-op.
+          // map, keyed on the bounded `code` only (never the free-form
+          // `detail`), so the map's cardinality stays bounded by the enum.
+          // Always set for a 'rejected' terminal (validator veto reasons, or
+          // [PARSER_FAILURE_REASON]); the `?? []` is a defensive no-op.
           for (const reason of outcome.rejectionReasons ?? []) {
-            rejectionReasonCounts[reason] = (rejectionReasonCounts[reason] ?? 0) + 1;
+            rejectionReasonCounts[reason.code] =
+              (rejectionReasonCounts[reason.code] ?? 0) + 1;
           }
           break;
         case 'first-attempt-dedup-then-success':
