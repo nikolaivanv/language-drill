@@ -7,7 +7,7 @@ Four coupled, low-risk changes to the **generation path** that raise first-pass 
 - **R1 — cell-type re-allocation:** add one optional boolean to the `GrammarPoint` model (`clozeUnsuitable`), have the canonical cell enumerator drop the `cloze` cell (keep `translation`) for flagged points, and flag the four Turkish A2 clause-linking points.
 - **R2/R3/R4 — generation system-prompt guardrails:** add static text to `GENERATION_SYSTEM_PROMPT_TEMPLATE` for a CEFR vocabulary band, a content-safety/topic guard, and stronger answer-disambiguation (in-sentence definiteness forcing + `acceptableAnswers` enumeration), then bump `GENERATION_PROMPT_VERSION` once.
 
-All four are **additive**: existing un-flagged points and the prompt's existing rules behave unchanged; the prompt edits introduce no new `{{var}}`, so the byte-parity contract and the Anthropic prompt-cache prefix are preserved automatically. Validation is via `pnpm eval` pre-merge and `pnpm push-prompts` Langfuse sync post-merge.
+All four are **additive**: existing un-flagged points and the prompt's existing rules behave unchanged; the prompt edits introduce no new `{{var}}`, so the byte-parity contract and the Anthropic prompt-cache prefix are preserved automatically. Validation is via `pnpm eval:gen` pre-merge and `pnpm push-prompts` Langfuse sync post-merge.
 
 ## Steering Document Alignment
 
@@ -138,7 +138,7 @@ vocab umbrella                -> [vocab_recall]          (unchanged)
 
 ### Integration Testing
 - Root `pnpm lint` + `pnpm typecheck` + `pnpm test` green (curriculum gate, cells, cell-targets, prompt parity, seed-exercises).
-- **`pnpm eval`** (manual, pre-merge): run the new generation prompt against a Langfuse dataset of representative TR cloze/translation items; confirm no regression in quality/approval and a qualitative drop in level-mismatch / ambiguity / safety reasons. This is the gate for the model-judgment guardrails (R2/R3 and the R4 forcing), which are not unit-testable.
+- **`pnpm eval:gen`** (manual, pre-merge): run the new generation prompt against a cell dataset of representative TR cloze/translation items; confirm no regression in quality/approval and a qualitative drop in level-mismatch / ambiguity / safety reasons. This is the **real generation-quality gate** (the generation-side harness in `packages/ai/scripts/eval-gen-run.ts` — distinct from `pnpm eval`, which only exercises the answer-evaluation prompt) and the gate for the model-judgment guardrails (R2/R3 and the R4 forcing), which are not unit-testable.
 
 ### End-to-End Testing
 - None required (no UI/API surface change). **Post-merge** verification (out of band): `push-prompts` sync + `bootstrap-prompts --check` clean; on the next scheduled run, the four points show `translation`-only generation and the run's `rejection_reason_counts` / flagged-tag distribution improve versus the 2026-05-30 baseline.

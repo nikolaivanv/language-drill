@@ -11,6 +11,8 @@
     "push-prompts": "tsx scripts/push-prompts.ts",
     "eval:export": "tsx scripts/eval-export.ts",
     "eval": "tsx scripts/eval-run.ts",
+    "eval:gen:export": "tsx scripts/eval-gen-export.ts",
+    "eval:gen": "tsx scripts/eval-gen-run.ts",
     "dev": "tsc --watch",
     "lint": "eslint src/**/*.ts",
     "typecheck": "tsc --noEmit",

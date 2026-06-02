@@ -8,7 +8,7 @@ Two independent workstreams, each landing test-green before the other:
 - **R2–R4 (Tasks 7–11) — generation-prompt guardrails:** edit `GENERATION_SYSTEM_PROMPT_TEMPLATE` (vocab band, content safety, accusative forcing, `acceptableAnswers`), bump `GENERATION_PROMPT_VERSION` once, and pin the changes with tests. All static text → byte-parity preserved.
 - **Task 12 — pre-push verification.**
 
-**Out of scope as checkbox tasks** (manual / post-merge, not coding): `pnpm eval` validation of the prompt change against a Langfuse dataset (the gate for the model-judgment guardrails), and the post-merge `pnpm push-prompts` Langfuse sync + `bootstrap-prompts --check`. These are called out in the design's Testing Strategy and must run before/after merge respectively.
+**Out of scope as checkbox tasks** (manual / post-merge, not coding): `pnpm eval:gen` validation of the prompt change against a cell dataset (the real generation-quality gate — not `pnpm eval`, which only covers the answer-evaluation prompt; it is the gate for the model-judgment guardrails), and the post-merge `pnpm push-prompts` Langfuse sync + `bootstrap-prompts --check`. These are called out in the design's Testing Strategy and must run before/after merge respectively.
 
 ## Steering Document Compliance
 

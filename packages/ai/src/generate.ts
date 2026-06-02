@@ -243,6 +243,15 @@ export type GenerationSpec = {
   /** Default `'phase-2-default'` from the CLI. Bump to add 50 more drafts to a cell. */
   batchSeed: string;
   /**
+   * Eval-harness only: an explicit, already-rendered system-prompt body used
+   * verbatim as the cached system block in `generateOneDraft`, bypassing the
+   * Langfuse fetch (and its in-repo fallback) entirely. Production never sets
+   * this — when undefined, generation behaves byte-identically to today. Lets
+   * `pnpm eval:gen` drive a candidate generation prompt without mutating the
+   * live Langfuse prompt or relying on the module-scope prompt cache.
+   */
+  systemPromptOverride?: string;
+  /**
    * Surfaces already persisted in this cell, fed into the generator's system
    * prompt so Claude stops proposing what `exercises_dedup_idx` would reject
    * on insert. Populated by `runOneCell` for `vocab_recall` cells; left
@@ -603,7 +612,14 @@ export async function generateOneDraft(
   // `exercises_dedup_idx` rejects cross-batch collisions at INSERT time, and
   // `runRetryGeneration` (sequential, sees prior drafts via dedup-index
   // collision) handles retries.
-  const systemText = await buildGenerationSystemPrompt(promptInputs, []);
+  //
+  // `systemPromptOverride` (eval-harness only) is used verbatim when present,
+  // bypassing the Langfuse fetch + in-repo fallback in
+  // `buildGenerationSystemPrompt`. Production never sets it, so the no-override
+  // path is byte-identical to before.
+  const systemText =
+    spec.systemPromptOverride ??
+    (await buildGenerationSystemPrompt(promptInputs, []));
   const userText = buildGenerationUserPrompt(
     promptInputs,
     ordinal,

@@ -60,7 +60,8 @@ Separate the canonical reason **code** from the free-text **detail**:
 
 ## No generation-quality eval harness (`pnpm eval` only covers the evaluation prompt)
 
-- **Status:** open
+- **Status:** resolved 2026-06-02 (the `eval-gen` harness landed via the `generation-eval-harness` spec — see Resolution below). All acceptance criteria met.
+- **Status (original):** open
 - **Discovered:** 2026-05-30 (post-merge of PR #227, generation-quality-improvements — the spec named `pnpm eval` as the pre-merge gate for its generation-prompt guardrails; on inspection the tool can't do that)
 - **Scope:** `packages/ai/scripts/eval-run.ts` (+ `eval-export.ts`); the `pnpm eval` / `pnpm eval:export` root scripts
 - **Severity:** medium — no correctness risk, but generation-prompt PRs ship without a quantitative pre-merge quality signal, and a spec/runbook actively points operators at a gate that returns zero signal (and spends real Anthropic budget doing so)
@@ -97,6 +98,20 @@ The `generation-quality-improvements` design/requirements (Testing Strategy → 
 - `.claude/specs/generation-quality-improvements/design.md` Testing Strategy + `requirements.md` NFR Performance/Cost — the mistaken "`pnpm eval` is the generation gate" assumption.
 - `packages/ai/scripts/eval-run.ts` — the evaluation-only harness to mirror.
 - `packages/ai/src/generation-prompts.ts` (`buildGenerationSystemPrompt`) + `packages/ai/src/validate.ts` (`validateDraft`) — the builders/validator a generation eval would drive.
+
+**Resolution (2026-06-02, `generation-eval-harness` spec):**
+Built `pnpm eval:gen` (`packages/ai/scripts/eval-gen-run.ts`) — the generation-side analogue of `eval-run.ts`. Given a cell dataset (`--dataset-file`) and two prompt sources (`--baseline` / `--candidate`, each `repo` | `file:<path>` | `langfuse:<name>@<label>`), it renders each prompt per cell, generates `--drafts-per-cell` drafts under each via `generateBatch`, validates every draft with `validateDraft`, routes each verdict through `routeValidationResult`, and writes approval-rate / rejection-reason / flag-tag deltas (markdown to stdout + full JSON to `./eval-runs/<runName>.json`). All acceptance criteria met:
+- **Generation gate exists** — `pnpm eval:gen` reports approval-rate and rejection-reason/flag-tag deltas between two prompt sources, with a JSON summary mirroring `eval-run.ts`.
+- **Specs reference the real gate** — `generation-quality-improvements` `{design,requirements,tasks}.md` now point at `pnpm eval:gen` (not `pnpm eval`); the CLAUDE.md command table documents both `eval:gen` and `eval:gen:export`.
+- **Stubbed-executor unit tests** — `packages/ai/scripts/eval-gen-run.test.ts` mirrors `eval-run.test.ts`'s injectable-port pattern (stub `GenCellArmExecutor` for orchestration; `vi.mock` of `generateBatch`/`validateDraft` with the real `routeValidationResult` for classification).
+
+Implementation notes / deltas from the remediation sketch above:
+- **Additive generator seam** rather than calling `buildGenerationSystemPrompt` twice: a `systemPromptOverride?: string` field on `GenerationSpec` lets the harness drive `generateBatch` with an explicit (rendered) system body, bypassing the Langfuse fetch. The no-override production path is byte-for-byte unchanged.
+- **One new public export edge** — `routeValidationResult` (+ `ReviewStatus`, `RoutingDecision`) is now surfaced through the `@language-drill/db` barrel (previously internal to `generation/routing.ts`); no new dependency edge (`@language-drill/db` was already a `packages/ai` dependency).
+- **Guard rails reused + extended** — `assertNotProdWithoutAllow` (prod requires `--allow-prod`) and a `--max-cost-usd` cap evaluated at the **cell boundary** (after both arms) so a cost-capped partial summary never holds a half-compared cell.
+- **Export companion** — `pnpm eval:gen:export` (`eval-gen-export.ts`) builds a failure-prone cell dataset by sampling the lowest-approval cells from `generation_jobs`; `fixtures/cells-smoke.json` unblocks manual runs and loader tests without it.
+
+**Implemented in:** `packages/ai/scripts/eval-gen-run.ts`, `eval-gen-export.ts`, `eval-gen-run.test.ts`, `eval-gen-export.test.ts`, `fixtures/cells-smoke.json`; `packages/ai/src/generate.ts` (`systemPromptOverride`); `packages/db/src/generation/index.ts` + `packages/db/src/index.ts` (barrel re-export). Committed on the `generation-eval-harness` spec branch.
 
 ---
 
