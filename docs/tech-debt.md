@@ -4,9 +4,87 @@ A living log of known issues to address. Add new entries at the top; mark as res
 
 ---
 
-## `rejection_reason_counts` / `flagged_reasons` mix canonical tags with free-form model prose (no canonical reason code)
+## Generator leaks the target form into the `context` field for "form-named" grammar points (`contextSpoilsAnswer`)
 
 - **Status:** open
+- **Discovered:** 2026-06-03 (analysing the daily scheduled TR A2 run — `tr-a2-converb-temporal` auto-approved only 1 of 9 drafts; 3 rejected as `context-spoils-answer`)
+- **Scope:** `packages/ai/src/generation-prompts.ts:175` (the *Spoiled blank* hard constraint the model violates), `:183` (anti-leak clause), `:149-153` (`{{grammarPointName}}` / `{{grammarPointDescription}}` injection); `packages/db/src/generation/deterministic-checks.ts:40-77` (where a deterministic guard would live); the grammar-point definitions whose `name` **is** the literal target suffix (`packages/db/src/curriculum/…` — e.g. `tr-a2-converb-temporal`, `tr-a1-vowel-harmony`, the TR case cells)
+- **Severity:** medium — no bad data ships (the validator's `contextSpoilsAnswer` veto catches it), but it burns generation budget, suppresses yield on affected cells, and inflates the `context-spoils-answer` bucket
+
+**Root cause:**
+The per-exercise `context` field is **model-generated** — the generation *user* prompt passes no `context` value (verified in Langfuse: the user message is only *"Produce exercise #1 … build around '<word>'"*). The system prompt *explicitly forbids* naming the target form in `context` (Hard constraints → **Spoiled blank**: *"may name the grammar category … but MUST NOT state the rule's outcome, name the required suffix/form"*; reinforced by the anti-leak clause, which calls itself *"the generator-side guard for the validator's `contextSpoilsAnswer` veto"*). The model violates it anyway: for grammar points whose **name is the literal target form** — `{{grammarPointName}}` = "Temporal converbs **-mAdAn önce / -DIktAn sonra**" — it echoes that name straight into `context`. Naming one suffix (or, worse, the wrong one) gives the answer away.
+
+**Evidence (2026-06-03 prod scheduled run, `tr:a2:cloze:tr-a2-converb-temporal`):**
+- 9 drafts → 1 auto-approved / 4 flagged / 4 rejected. `rejection_reason_counts`: `{ context-spoils-answer: 3, low-quality-reject: 2 }`.
+- **8 of 9** drafts wrote the suffix(es) into `context` (`"-mAdAn önce / -DIktAn sonra"`, `"-DIktAn sonra (after doing)"`). Validator vetoes (from Langfuse `validate` traces):
+  - `Evi ___ önce…` / ctx `"-mAdAn önce"` → *"directly names the required suffix… learner can mechanically apply it. Hard veto."*
+  - `Telefona ___ önce…` (answer `bağlanmadan`, a `-mAdAn önce` form) / ctx `"-DIktAn sonra"` → *"the context names the **wrong** converb type… actively misdirects the learner"* (qs 0.35).
+- **Contrast:** the "category-named" `tr-a2-reported-speech` cells had **0** context-spoils across 15 drafts (their `context` reads "Reported speech with diye" — a category, which the prompt permits). So the leak correlates specifically with form-named grammar points.
+
+**Remediation:**
+Don't rely on LLM compliance with a buried prompt rule. Add a **deterministic post-generation guard** (same spirit as the Turkish harmony gate in `deterministic-checks.ts`):
+
+1. For a cell whose grammar point's target form is a known suffix/form string, if the produced `context` (or `instructions`) contains that string, **strip `context`** (preferred — the field is optional and adds little for these cells) **or** route the draft to `flagged`/regenerate.
+2. Equivalently, **omit the `context` field entirely** for form-named grammar-point cells at generation time — the sentence plus the parenthetical citation hint already carry the task.
+3. Optionally tighten the prompt: for grammar points whose name contains the target form, instruct that `context` describe the *situation*, never restate the construction — but treat this as secondary to the deterministic guard (the prompt already forbids it and is ignored).
+
+**Acceptance criteria for the fix:**
+- A post-generation check rejects/strips a `context` that contains the cell's target form; covered by a unit test in `deterministic-checks.test.ts` (form-named cell with a leaking context → stripped/flagged; category-named cell unaffected).
+- A re-run of `tr-a2-converb-temporal` produces 0 `context-spoils-answer` rejections attributable to the `context` field.
+
+**Why we can't ignore it:**
+- It's the entire `context-spoils-answer` population on form-named cells — the "amendable" rejections from the 2026-06-03 analysis. converb-temporal auto-approved only 1/9, largely because of this.
+- The prompt already forbids it and the model ignores it; the same leak affects every grammar point whose name is a concrete suffix (vowel-harmony, cases), so the blast radius grows with curriculum coverage.
+
+**Owner:** unassigned
+**Tracking:** none yet — open a GitHub issue when prioritizing
+**References:**
+- 2026-06-03 prod run analysis (Langfuse `generate`/`validate` traces, cellKey `tr:a2:cloze:tr-a2-converb-temporal`).
+- `packages/ai/src/generation-prompts.ts:175,183` — the *Spoiled blank* / anti-leak constraints the model violates; `:149-153` — `{{grammarPointName}}`/`{{grammarPointDescription}}` injection.
+- `packages/db/src/generation/deterministic-checks.ts:40-77` — where the spoil-guard would live (mirrors the harmony gate).
+- `packages/db/src/generation/routing.ts` — the `contextSpoilsAnswer` reject branch this guard would pre-empt.
+
+---
+
+## Generator ships a lone `correctAnswer` for multi-form constructions (reported speech) → `ambiguous` rejections
+
+- **Status:** open
+- **Discovered:** 2026-06-03 (same run analysis — both `tr-a2-reported-speech` cells low-yield: cloze 6/10 approved with 2 rejects; translation 1/5 approved with 3 rejects)
+- **Scope:** `packages/ai/src/generation-prompts.ts` (the **Ambiguous blank** / *One correct fill, or enumerate them* constraints — under-applied for multi-form constructions); the `tr-a2-reported-speech` cloze + translation cells (`packages/db/src/curriculum/…`)
+- **Severity:** medium — no bad data ships; low approval yield wastes generation budget and starves these cells of approved exercises
+
+**Root cause:**
+Turkish reported speech admits **several equally valid renderings** of one source meaning — direct quote + `dedi`, integrated `-mAsını söyledi`, or `diye` + reporting verb. The generator ships a single `correctAnswer` without enumerating the alternatives in `acceptableAnswers`, so the validator flags `ambiguous`. The prompt already requires enumeration (Hard constraints → *Ambiguous blank* / *One correct fill, or enumerate them*), but it's under-applied for this construction. This is **distinct from the `context`-spoil entry above** — these cells name the *category* ("reported speech") safely; they fail on ambiguity, plus some A2 level/quality drift (blanks placed inside the quoted clause; convoluted sentences).
+
+**Evidence (2026-06-03 prod run):**
+- `tr:a2:cloze:tr-a2-reported-speech` — 0/10 context-spoils; several `ambiguous` flags (qs 0.62) and 2 `low-quality-reject` (qs 0.2): `Komşum beni rahatsız etmeyi bırakmasını ___ söyledi` (convoluted) and a blank placed *inside* the quote (`Doktor, "Telefona çok ___ oluyorsunuz" diye uyardı`).
+- `tr:a2:translation:tr-a2-reported-speech` — `ambiguous` on *"She said, 'Don't bother me!'"* (qs 0.45) and *"My mother told me to go to bed"* (qs 0.62) — both map to multiple valid Turkish reported-speech forms; no `acceptableAnswers` enumeration.
+
+**Remediation:**
+1. For multi-form constructions (reported speech, and any cell where one meaning maps to >1 valid surface form), the generator MUST enumerate every valid form in `acceptableAnswers` — reinforce the existing rule with a construction-specific instruction, and/or add a generation-quality check that rejects a lone `correctAnswer` for these grammar points.
+2. Constrain A2 complexity: forbid placing a cloze blank *inside* the quoted clause for reported-speech cloze, and keep sentence structure within A2.
+3. For translation cells, prefer source sentences whose reported-speech rendering is dominant, or ensure the validator's `ambiguous` bar matches the evaluation path's existing tolerance for minor variants.
+
+**Acceptance criteria for the fix:**
+- Reported-speech drafts that admit multiple valid forms carry `acceptableAnswers` listing them; a re-run reduces `ambiguous` flags/rejections on both cells.
+- No cloze blank is placed inside the quoted clause for reported-speech cloze.
+
+**Why we can't ignore it:**
+- Both reported-speech cells are low-yield (translation approved 1/5), so the daily refill under-stocks them while spending budget.
+- The fix generalizes to any future multi-form grammar point — it's the same `acceptableAnswers` discipline the prompt already mandates but doesn't enforce.
+
+**Owner:** unassigned
+**Tracking:** none yet — open a GitHub issue when prioritizing
+**References:**
+- 2026-06-03 prod run analysis (Langfuse `validate` traces, cellKeys `tr:a2:cloze:tr-a2-reported-speech`, `tr:a2:translation:tr-a2-reported-speech`).
+- `packages/ai/src/generation-prompts.ts` — *Ambiguous blank* / *One correct fill, or enumerate them* constraints.
+- Related: the `context`-spoil entry above (same run analysis; the two cells fail for different reasons).
+
+---
+
+## `rejection_reason_counts` / `flagged_reasons` mix canonical tags with free-form model prose (no canonical reason code)
+
+- **Status:** resolved 2026-06-03 (PR #242 — canonical `GenerationReasonCode`; verified on the 2026-06-03 prod run)
 - **Discovered:** 2026-06-01 (analysing the daily scheduled TR generation run — `generation_jobs.rejection_reason_counts` contained a 200-char paragraph as a single map key)
 - **Scope:** `packages/db/src/generation/routing.ts:49-129` (where reasons are assembled), `packages/ai/src/validate.ts:96-145` (`ValidationResult.flaggedReasons` / `culturalIssues` — free-form `string[]`), `packages/ai/src/validation-prompts.ts:108-119` (prompt instructs free-text reasons), `packages/db/src/generation/run-one-cell.ts:410,548-556,599-617` (the `rejection_reason_counts` frequency map), `packages/db/src/generation/validate-and-insert.ts:440-443` (`exercises.flagged_reasons` persist), `packages/db/src/generation/deterministic-checks.ts:39-77` (Turkish reason strings that interpolate values)
 - **Severity:** medium — no correctness or runtime risk, but it corrupts the exact analytics signal `rejection_reason_counts` was added to provide (migration `0012`), so the planned data-gated validator→generator repair loop can't aggregate over it
@@ -55,6 +133,11 @@ Separate the canonical reason **code** from the free-text **detail**:
 - `packages/ai/src/validation-prompts.ts:108-119` — prompt instructing free-text reasons.
 - `packages/db/src/generation/run-one-cell.ts:548-556` — the `reason`-as-key fold.
 - `packages/db/src/generation/deterministic-checks.ts:39-77` — value-interpolated reason strings.
+
+**Resolution (2026-06-03):**
+Shipped in **PR #242**. A canonical `GenerationReasonCode` enum + `GenerationReason { code, detail? }` now live in `packages/shared/src/generation-reasons.ts` (re-exported from the barrel, with `REASON_LABELS`, `REJECTED_BRANCH_CODES`, `formatReason`, and a throw-free `normalizeFlaggedReasons` for legacy rows). The emitters (`routing.ts`, `deterministic-checks.ts`, `validate-and-insert.ts`) emit `{ code, detail? }`; `run-one-cell.ts` keys `rejection_reason_counts` on `code` only; `exercises.flagged_reasons` is persisted as `GenerationReason[]` (`$type`-annotated — no migration, the column was already `jsonb`); the CLIs render via `formatReason` / `REASON_LABELS` and read legacy `string[]` rows back through `normalizeFlaggedReasons`. Bounded cardinality is locked by tests (`run-one-cell.test.ts` asserts every map key ∈ `REJECTED_BRANCH_CODES`, contains no `:`, and is not sentence-length).
+
+**Verified in prod (2026-06-03 scheduled TR A2 run):** the aggregated `rejection_reason_counts` was exactly `{ low-quality-reject, context-spoils-answer }` — distinct keys = 2, keys containing a space or `:` = **0** (vs. the unbounded free-form keys this entry documented). `flagged_reasons` on the day's rows were likewise all coded (`validator-note`, `ambiguous`, `low-quality-flag`, `level-mismatch`). `SELECT key, sum(value) FROM generation_jobs, LATERAL jsonb_each_text(rejection_reason_counts) GROUP BY key` now returns a bounded, stable set — the acceptance criteria above are met.
 
 ---
 
