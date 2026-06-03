@@ -56,3 +56,6 @@ playwright-report/
 test-results/
 **/e2e/.auth/
 .clerk/
+
+# direnv — per-project env (loads LANGFUSE_MCP_AUTH for the Langfuse MCP server)
+.envrc
