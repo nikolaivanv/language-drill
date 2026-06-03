@@ -84,7 +84,7 @@ Turkish reported speech admits **several equally valid renderings** of one sourc
 
 ## `rejection_reason_counts` / `flagged_reasons` mix canonical tags with free-form model prose (no canonical reason code)
 
-- **Status:** open
+- **Status:** resolved 2026-06-03 (PR #242 — canonical `GenerationReasonCode`; verified on the 2026-06-03 prod run)
 - **Discovered:** 2026-06-01 (analysing the daily scheduled TR generation run — `generation_jobs.rejection_reason_counts` contained a 200-char paragraph as a single map key)
 - **Scope:** `packages/db/src/generation/routing.ts:49-129` (where reasons are assembled), `packages/ai/src/validate.ts:96-145` (`ValidationResult.flaggedReasons` / `culturalIssues` — free-form `string[]`), `packages/ai/src/validation-prompts.ts:108-119` (prompt instructs free-text reasons), `packages/db/src/generation/run-one-cell.ts:410,548-556,599-617` (the `rejection_reason_counts` frequency map), `packages/db/src/generation/validate-and-insert.ts:440-443` (`exercises.flagged_reasons` persist), `packages/db/src/generation/deterministic-checks.ts:39-77` (Turkish reason strings that interpolate values)
 - **Severity:** medium — no correctness or runtime risk, but it corrupts the exact analytics signal `rejection_reason_counts` was added to provide (migration `0012`), so the planned data-gated validator→generator repair loop can't aggregate over it
@@ -133,6 +133,11 @@ Separate the canonical reason **code** from the free-text **detail**:
 - `packages/ai/src/validation-prompts.ts:108-119` — prompt instructing free-text reasons.
 - `packages/db/src/generation/run-one-cell.ts:548-556` — the `reason`-as-key fold.
 - `packages/db/src/generation/deterministic-checks.ts:39-77` — value-interpolated reason strings.
+
+**Resolution (2026-06-03):**
+Shipped in **PR #242**. A canonical `GenerationReasonCode` enum + `GenerationReason { code, detail? }` now live in `packages/shared/src/generation-reasons.ts` (re-exported from the barrel, with `REASON_LABELS`, `REJECTED_BRANCH_CODES`, `formatReason`, and a throw-free `normalizeFlaggedReasons` for legacy rows). The emitters (`routing.ts`, `deterministic-checks.ts`, `validate-and-insert.ts`) emit `{ code, detail? }`; `run-one-cell.ts` keys `rejection_reason_counts` on `code` only; `exercises.flagged_reasons` is persisted as `GenerationReason[]` (`$type`-annotated — no migration, the column was already `jsonb`); the CLIs render via `formatReason` / `REASON_LABELS` and read legacy `string[]` rows back through `normalizeFlaggedReasons`. Bounded cardinality is locked by tests (`run-one-cell.test.ts` asserts every map key ∈ `REJECTED_BRANCH_CODES`, contains no `:`, and is not sentence-length).
+
+**Verified in prod (2026-06-03 scheduled TR A2 run):** the aggregated `rejection_reason_counts` was exactly `{ low-quality-reject, context-spoils-answer }` — distinct keys = 2, keys containing a space or `:` = **0** (vs. the unbounded free-form keys this entry documented). `flagged_reasons` on the day's rows were likewise all coded (`validator-note`, `ambiguous`, `low-quality-flag`, `level-mismatch`). `SELECT key, sum(value) FROM generation_jobs, LATERAL jsonb_each_text(rejection_reason_counts) GROUP BY key` now returns a bounded, stable set — the acceptance criteria above are met.
 
 ---
 
