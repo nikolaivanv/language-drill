@@ -96,10 +96,23 @@ vi.mock("@language-drill/ai", () => {
   };
 });
 
+// Tier resolution + global brake (Task 7). `limitFor` is the REAL module so the
+// tier-aware cap (free 150 / boosted 1500) is exercised end to end; only the
+// plan resolver and the global brake are stubbed.
+vi.mock("../usage/plan", () => ({
+  getEffectivePlan: vi.fn(async () => "free"),
+  isAdmin: vi.fn(() => false),
+}));
+vi.mock("../usage/global-capacity", () => ({
+  checkGlobalCapacity: vi.fn(async () => "ok"),
+}));
+
 import { runDeepSpanPreModel, handleDeepSpan } from "./deep-flow";
 import type { HandleDeepSpanArgs } from "./deep-flow";
 import { CefrLevel, Language } from "@language-drill/shared";
 import { ReadSpanStreamMaxTokensError } from "@language-drill/ai";
+import { getEffectivePlan } from "../usage/plan";
+import { checkGlobalCapacity } from "../usage/global-capacity";
 import type { ResponseStream, SseWriter } from "./sse";
 
 // ---------------------------------------------------------------------------
@@ -181,6 +194,8 @@ beforeEach(() => {
   dbResults.length = 0;
   dbUpdates.length = 0;
   dbInserts.length = 0;
+  vi.mocked(getEffectivePlan).mockReset().mockResolvedValue("free");
+  vi.mocked(checkGlobalCapacity).mockReset().mockResolvedValue("ok");
 });
 
 /** An async generator yielding scripted `field` events then a terminal `done`. */
@@ -281,8 +296,8 @@ describe("runDeepSpanPreModel — cache hit (Req 2.1, 2.6)", () => {
 });
 
 describe("runDeepSpanPreModel — rate-limit (Req 2.3)", () => {
-  it("returns 429 RATE_LIMIT_EXCEEDED at the dedicated 150 cap and does NOT query the profile", async () => {
-    dbResults.push([{ count: 150 }]); // rate-limit at the cap
+  it("returns 429 RATE_LIMIT_EXCEEDED at the free-tier limitFor cap (150) and does NOT query the profile", async () => {
+    dbResults.push([{ count: 150 }]); // rate-limit at the free cap
     dbResults.push([{ proficiencyLevel: "B2" }]); // profile — must NOT be consumed
 
     const { writer, calls } = makeWriter();
@@ -296,12 +311,38 @@ describe("runDeepSpanPreModel — rate-limit (Req 2.3)", () => {
     expect(dbResults).toEqual([[{ proficiencyLevel: "B2" }]]);
   });
 
-  it("proceeds when the count is just under the cap (149)", async () => {
+  it("proceeds when the count is just under the free cap (149)", async () => {
     dbResults.push([{ count: 149 }]);
     dbResults.push([{ proficiencyLevel: "B1" }]);
 
     const result = await runDeepSpanPreModel(buildArgs({}));
     expect(result.proceed).toBe(true);
+  });
+
+  it("boosted user passes the free 150 cap (count 200 → proceeds, < boosted 1500)", async () => {
+    vi.mocked(getEffectivePlan).mockResolvedValueOnce("boosted");
+    dbResults.push([{ count: 200 }]); // > free 150, < boosted 1500
+    dbResults.push([{ proficiencyLevel: "B1" }]); // profile
+
+    const result = await runDeepSpanPreModel(buildArgs({}));
+    expect(result.proceed).toBe(true);
+  });
+
+  it("global capacity 'capped' → 503 GLOBAL_CAPACITY before the count query", async () => {
+    vi.mocked(checkGlobalCapacity).mockResolvedValueOnce("capped");
+    // Queue rows the rate-limit + profile queries would consume — they must NOT run.
+    dbResults.push([{ count: 0 }]);
+    dbResults.push([{ proficiencyLevel: "B1" }]);
+
+    const { writer, calls } = makeWriter();
+    const result = await runDeepSpanPreModel(buildArgs({}, writer));
+
+    expect(result.proceed).toBe(false);
+    expect(calls.errorJson).toHaveLength(1);
+    expect(calls.errorJson[0].status).toBe(503);
+    expect(calls.errorJson[0].body).toMatchObject({ code: "GLOBAL_CAPACITY" });
+    // Guard runs BEFORE the per-user count query: both rows are still queued.
+    expect(dbResults).toEqual([[{ count: 0 }], [{ proficiencyLevel: "B1" }]]);
   });
 });
 
