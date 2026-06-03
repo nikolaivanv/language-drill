@@ -14,6 +14,7 @@ import progress from './routes/progress';
 import read from './routes/read';
 import review from './routes/review';
 import invites from './routes/invites';
+import me from './routes/me';
 import admin from './routes/admin';
 import webhooks from './routes/webhooks/clerk';
 
@@ -78,6 +79,7 @@ app.route('/', progress);
 app.route('/', read);
 app.route('/', review);
 app.route('/', invites);
+app.route('/', me);
 app.route('/', admin);
 app.route('/', webhooks);
 
