@@ -20,7 +20,7 @@
 // handling logic runs.
 import { loadFrequency } from "@language-drill/ai";
 
-import { and, count, eq, gte, inArray } from "drizzle-orm";
+import { and, count, eq, gte } from "drizzle-orm";
 import { z } from "zod";
 import type { LambdaFunctionURLEvent } from "aws-lambda";
 
@@ -40,6 +40,9 @@ import {
 } from "@language-drill/ai";
 
 import { db } from "../db";
+import { limitFor } from "../usage/limits";
+import { getEffectivePlan, isAdmin } from "../usage/plan";
+import { checkGlobalCapacity } from "../usage/global-capacity";
 import { verifyClerkJwt } from "./jwt";
 import { buildCandidateList } from "./pipeline";
 import { createSseWriter } from "./sse";
@@ -57,7 +60,6 @@ void loadFrequency;
 // ---------------------------------------------------------------------------
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY ?? "";
-const DAILY_EVAL_LIMIT = 50;
 
 // `language` is parsed as the full `Language` enum (incl. EN) so the handler
 // can distinguish "shape error" from "EN is source-only" — the latter has
@@ -138,7 +140,17 @@ export const handler = awslambda.streamifyResponse<
     const { learningLanguage, userId } = gate;
     const { text } = gate.data;
 
-    // ---- Gate 6: rate-limit (rolling 24h, shared with ai_evaluation) ----
+    // ---- Gate 6: tier + global brake + per-user skim cap (own bucket) ----
+    const plan = await getEffectivePlan(userId);
+    const capacity = await checkGlobalCapacity({ plan, admin: isAdmin(userId) });
+    if (capacity !== "ok") {
+      await writer.errorJson(503, {
+        code: "GLOBAL_CAPACITY",
+        message: "AI temporarily at capacity",
+      });
+      return;
+    }
+
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const usageRows = await db
       .select({ count: count() })
@@ -146,14 +158,14 @@ export const handler = awslambda.streamifyResponse<
       .where(
         and(
           eq(usageEvents.userId, userId),
-          inArray(usageEvents.eventType, ["ai_evaluation", "read_annotation"]),
+          eq(usageEvents.eventType, "read_annotation"),
           gte(usageEvents.createdAt, oneDayAgo),
         ),
       );
-    if (Number(usageRows[0]?.count ?? 0) >= DAILY_EVAL_LIMIT) {
+    if (Number(usageRows[0]?.count ?? 0) >= limitFor("read_annotation", plan)) {
       await writer.errorJson(429, {
         code: "RATE_LIMIT_EXCEEDED",
-        message: "Daily evaluation limit exceeded",
+        message: "Daily annotation limit exceeded",
       });
       return;
     }
