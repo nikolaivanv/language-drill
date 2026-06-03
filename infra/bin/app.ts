@@ -33,6 +33,8 @@ new LanguageDrillStack(app, "LanguageDrillStack", {
   ],
   enableScheduledJobs: true,
   adminUserIds: process.env.ADMIN_USER_IDS,
+  aiKillSwitch: process.env.AI_KILL_SWITCH,
+  aiGlobalDailyCap: process.env.AI_GLOBAL_DAILY_CAP,
 });
 
 new LanguageDrillStack(app, "LanguageDrillStack-dev", {
@@ -46,4 +48,6 @@ new LanguageDrillStack(app, "LanguageDrillStack-dev", {
   allowedOrigins: ["https://*.vercel.app", "http://localhost:3000"],
   enableScheduledJobs: false,
   adminUserIds: process.env.ADMIN_USER_IDS_DEV,
+  aiKillSwitch: process.env.AI_KILL_SWITCH_DEV,
+  aiGlobalDailyCap: process.env.AI_GLOBAL_DAILY_CAP_DEV,
 });
