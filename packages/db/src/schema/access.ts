@@ -10,6 +10,8 @@ export const invitations = pgTable(
     usedBy: text('used_by'), // nullable — Clerk user ID
     usedAt: timestamp('used_at'), // nullable
     expiresAt: timestamp('expires_at'), // nullable
+    note: text('note'), // nullable — free-text label, e.g. who the code is for
+    revokedAt: timestamp('revoked_at'), // nullable — set when an admin revokes
     createdAt: timestamp('created_at').defaultNow(),
   },
   (table) => ({
