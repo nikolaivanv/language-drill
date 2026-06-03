@@ -1,9 +1,8 @@
 import { Hono } from 'hono';
 import { Webhook } from 'svix';
-import { eq, isNull } from 'drizzle-orm';
 
 import { db } from '../../db';
-import { users, invitations } from '@language-drill/db';
+import { users } from '@language-drill/db';
 
 interface ClerkUserCreatedEvent {
   type: 'user.created';
@@ -53,7 +52,10 @@ webhooks.post('/webhooks/clerk', async (c) => {
       return c.json({ error: 'No email address in event' }, 400);
     }
 
-    // Upsert user row
+    // Upsert user row. New users default to the 'free' plan (the
+    // `users.plan` column default handles this — no explicit set needed).
+    // Invites are no longer auto-claimed here; they are redeemed explicitly
+    // via POST /invites/redeem to upgrade the user's plan.
     await db
       .insert(users)
       .values({ id: userId, email })
@@ -61,22 +63,6 @@ webhooks.post('/webhooks/clerk', async (c) => {
         target: users.id,
         set: { email, updatedAt: new Date() },
       });
-
-    // Find first unused invitation and mark it as claimed by this user.
-    // Clerk's invitation metadata links the signup to a specific invite code;
-    // here we find any unclaimed invite and assign it to the new user.
-    const [unusedInvite] = await db
-      .select({ id: invitations.id })
-      .from(invitations)
-      .where(isNull(invitations.usedBy))
-      .limit(1);
-
-    if (unusedInvite) {
-      await db
-        .update(invitations)
-        .set({ usedBy: userId, usedAt: new Date() })
-        .where(eq(invitations.id, unusedInvite.id));
-    }
   }
 
   return c.json({ received: true }, 200);
