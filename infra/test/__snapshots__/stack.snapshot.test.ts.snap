@@ -73,6 +73,8 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
         },
         "Environment": {
           "Variables": {
+            "AI_GLOBAL_DAILY_CAP": "",
+            "AI_KILL_SWITCH": "",
             "ANTHROPIC_API_KEY": {
               "Fn::Join": [
                 "",
@@ -1217,6 +1219,8 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
         "Environment": {
           "Variables": {
             "ADMIN_USER_IDS": "",
+            "AI_GLOBAL_DAILY_CAP": "",
+            "AI_KILL_SWITCH": "",
             "ALLOWED_ORIGINS": "https://*.vercel.app,https://langdrill.app,https://www.langdrill.app",
             "ANTHROPIC_API_KEY": {
               "Fn::Join": [
