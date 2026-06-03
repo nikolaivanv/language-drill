@@ -4,7 +4,7 @@
 
 A serverless, AI-powered language learning app focused on **active production practice** for intermediate+ learners. The primary user is the author (learning EN/ES/TR/DE at varying levels); designed to be portfolio-quality and shareable.
 
-Full docs: `docs/architecture.md`, `docs/progress-tracking.md`.
+Full docs: `docs/architecture.md`, `docs/progress-tracking.md`. Deeper context: `docs/product.md` (positioning, competitive landscape, scope), `docs/tech.md` (full tech-stack rationale).
 
 ---
 
