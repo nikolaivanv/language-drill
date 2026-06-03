@@ -180,6 +180,32 @@ export {
   type UseDeleteVocabularyCardOptions,
 } from './hooks/useVocabularyMutations';
 export { createAuthenticatedFetch, type AuthenticatedFetch } from './fetchClient';
+export { MeResponseSchema, type MeResponse } from './schemas/me';
+export {
+  RedeemResponseSchema,
+  type RedeemResponse,
+  AdminInviteSchema,
+  AdminInvitesResponseSchema,
+  type AdminInvite,
+  CreateInvitesResponseSchema,
+  type CreateInvitesResponse,
+} from './schemas/invites';
+export { useMe, type UseMeParams } from './hooks/useMe';
+export {
+  useRedeemInvite,
+  RedeemError,
+  type RedeemErrorKind,
+  type UseRedeemInviteParams,
+} from './hooks/useRedeemInvite';
+export {
+  useAdminInvites,
+  useCreateInvites,
+  useRevokeInvite,
+  type UseAdminInvitesParams,
+  type UseCreateInvitesParams,
+  type CreateInvitesArgs,
+  type UseRevokeInviteParams,
+} from './hooks/useAdminInvites';
 export {
   PoolStatusItemSchema,
   type PoolStatusItem,
