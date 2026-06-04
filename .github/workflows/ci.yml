@@ -150,6 +150,15 @@ jobs:
       - name: Build workspace packages
         run: pnpm turbo build --filter='./packages/*'
 
+      # The E2E database is the long-lived shared dev branch (E2E_DATABASE_URL),
+      # NOT the per-PR ephemeral branch that `neon-migrate` migrates — so it must
+      # be brought up to the current schema here before `auth.setup` upserts the
+      # test user, or a newly-added column (e.g. `users.plan`) makes the insert
+      # fail. Migrations are forward-only and idempotent (Drizzle's journal skips
+      # already-applied ones), so running this every PR is safe.
+      - name: Migrate the E2E database
+        run: pnpm --filter @language-drill/db db:migrate
+
       - name: Install Playwright Chromium + system deps
         run: pnpm --filter @language-drill/web exec playwright install --with-deps chromium
 
