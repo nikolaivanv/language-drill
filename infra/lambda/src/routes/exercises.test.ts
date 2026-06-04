@@ -6,6 +6,8 @@ import {
   EVAL_MAX_RETRIES,
 } from '@language-drill/ai';
 import { ExerciseQuerySchema, SubmitAnswerSchema } from './exercises';
+import { getEffectivePlan } from '../usage/plan';
+import { checkGlobalCapacity } from '../usage/global-capacity';
 
 // ---------------------------------------------------------------------------
 // Mock the db module before importing the router
@@ -85,6 +87,14 @@ vi.mock('@language-drill/ai', () => ({
 const mockRandomUUID = vi.fn(() => '00000000-0000-0000-0000-000000000000');
 vi.mock('node:crypto', () => ({
   randomUUID: () => mockRandomUUID(),
+}));
+
+vi.mock('../usage/plan', () => ({
+  getEffectivePlan: vi.fn(async () => 'free'),
+  isAdmin: vi.fn(() => false),
+}));
+vi.mock('../usage/global-capacity', () => ({
+  checkGlobalCapacity: vi.fn(async () => 'ok'),
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -506,6 +516,80 @@ describe('POST /exercises/:id/submit', () => {
     expect(mockEvaluateAnswer).not.toHaveBeenCalled();
     // Only the auth middleware user upsert — no history/usage inserts
     expect(mockInsert).toHaveBeenCalledTimes(1);
+  });
+
+  it('boosted user passes the free 50 cap (count 60 → proceeds to eval)', async () => {
+    // Boosted plan raises the ai_evaluation cap from 50 to 500, so a count of
+    // 60 is under the limit and the request proceeds to Claude.
+    vi.mocked(getEffectivePlan).mockResolvedValueOnce('boosted');
+
+    // exercise lookup → usage count (no session)
+    mockLimit.mockResolvedValueOnce([sampleExercise]);
+    mockWhere
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }))
+      .mockResolvedValueOnce([{ count: 60 }] as never);
+    mockEvaluateAnswer.mockResolvedValueOnce(sampleEvaluation);
+
+    const res = await app.request(
+      '/exercises/abc-123/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'I went to the store' }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as AnyJson;
+    expect(body.score).toBe(0.85);
+    expect(mockEvaluateAnswer).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns 503 GLOBAL_CAPACITY when the global guard trips', async () => {
+    vi.mocked(checkGlobalCapacity).mockResolvedValueOnce('capped');
+
+    // The guard runs before the usage-count query, so only the exercise
+    // lookup needs seeding.
+    mockLimit.mockResolvedValueOnce([sampleExercise]);
+
+    const res = await app.request(
+      '/exercises/abc-123/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'test answer' }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(503);
+    const body = await res.json() as AnyJson;
+    expect(body.code).toBe('GLOBAL_CAPACITY');
+    expect(mockEvaluateAnswer).not.toHaveBeenCalled();
+    // Only the auth middleware user upsert — no history/usage inserts
+    expect(mockInsert).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns 503 GLOBAL_CAPACITY when the kill switch trips', async () => {
+    vi.mocked(checkGlobalCapacity).mockResolvedValueOnce('killed');
+
+    mockLimit.mockResolvedValueOnce([sampleExercise]);
+
+    const res = await app.request(
+      '/exercises/abc-123/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'test answer' }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(503);
+    const body = await res.json() as AnyJson;
+    expect(body.code).toBe('GLOBAL_CAPACITY');
+    expect(mockEvaluateAnswer).not.toHaveBeenCalled();
   });
 
   it('returns 400 for invalid request body', async () => {

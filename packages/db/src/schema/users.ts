@@ -5,6 +5,11 @@ import type { DailyMinutes, GoalId, LearningLanguage } from '@language-drill/sha
 export const users = pgTable('users', {
   id: text('id').primaryKey(), // Clerk user ID
   email: text('email').notNull().unique(),
+  // Usage tier. 'free' = base daily limits; 'boosted' = 10x (granted by an
+  // invite code). Admin users (ADMIN_USER_IDS) are boosted dynamically at
+  // request time and are NOT required to carry 'boosted' here. Reserve 'pro'
+  // for a future Stripe tier (treated as boosted).
+  plan: text('plan').$type<'free' | 'boosted'>().notNull().default('free'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at'),
 });

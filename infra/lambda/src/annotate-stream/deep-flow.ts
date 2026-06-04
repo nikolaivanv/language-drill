@@ -17,10 +17,10 @@
  *      `done` — with NO model call and NO metering (Req 2.1, 2.6). Unsaved
  *      passages carry no `entryId`, so within-session repeats rely on client
  *      state; there is no server cache for them.
- *   4. Rate-limit on the DEDICATED `read_span_annotation` bucket
- *      (`READ_SPAN_DAILY_LIMIT = 150`) — a SEPARATE budget from the skim
- *      flow's shared 50/day `ai_evaluation`/`read_annotation` bucket
- *      (Req 2.3).
+ *   4. Tier + global capacity brake, then a rate-limit on the DEDICATED
+ *      `read_span_annotation` bucket (tier-aware via `limitFor`) — a SEPARATE
+ *      budget from the skim flow's shared `ai_evaluation`/`read_annotation`
+ *      bucket (Req 2.3).
  *   5. Resolve the learner's CEFR level (B1 fallback) for the model call.
  *
  * Step 1–5 live in {@link runDeepSpanPreModel}. The model stream + post-success
@@ -42,6 +42,9 @@ import type { SpanType } from "@language-drill/ai";
 import { readEntries, usageEvents, userLanguageProfiles } from "@language-drill/db";
 
 import { db } from "../db";
+import { limitFor } from "../usage/limits";
+import { getEffectivePlan, isAdmin } from "../usage/plan";
+import { checkGlobalCapacity } from "../usage/global-capacity";
 import { resolveSpanType } from "../routes/read-span-utils";
 import type { ResponseStream, SseWriter } from "./sse";
 import type { AnnotateSpanStreamRequest } from "./handler";
@@ -54,13 +57,6 @@ const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY ?? "";
 // terminal `error` before the runtime SIGKILLs us — otherwise the client sees
 // the body close with no terminal event (Req 1.7).
 const SOFT_DEADLINE_MS = 25_000;
-
-// Per-user daily cap for on-demand deep span annotations (Req 2.3). A SEPARATE
-// budget from the skim flow's shared `ai_evaluation`/`read_annotation` 50/day
-// bucket — counted off its own `read_span_annotation` event type — because a
-// single reading session can fire many cheap span taps and must not starve the
-// answer-evaluation budget. Carried over verbatim from the removed Hono route.
-const READ_SPAN_DAILY_LIMIT = 150;
 
 // CEFR fallback for the deep call when the user has no profile row for this
 // language — the same default `annotate-stream/pipeline.ts` applies.
@@ -153,8 +149,17 @@ export async function runDeepSpanPreModel(
     }
   }
 
-  // 4. Rate-limit against the DEDICATED `read_span_annotation` budget — a
-  //    SEPARATE bucket from the skim flow's shared 50/day cap (Req 2.3).
+  // 4. Tier + global brake, then the DEDICATED read_span_annotation per-user cap.
+  const plan = await getEffectivePlan(userId);
+  const capacity = await checkGlobalCapacity({ plan, admin: isAdmin(userId) });
+  if (capacity !== "ok") {
+    await writer.errorJson(503, {
+      code: "GLOBAL_CAPACITY",
+      message: "AI temporarily at capacity",
+    });
+    return { proceed: false };
+  }
+
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const usageRows = await db
     .select({ count: count() })
@@ -166,7 +171,7 @@ export async function runDeepSpanPreModel(
         gte(usageEvents.createdAt, oneDayAgo),
       ),
     );
-  if (Number(usageRows[0]?.count ?? 0) >= READ_SPAN_DAILY_LIMIT) {
+  if (Number(usageRows[0]?.count ?? 0) >= limitFor("read_span_annotation", plan)) {
     await writer.errorJson(429, {
       code: "RATE_LIMIT_EXCEEDED",
       message: "Daily span-annotation limit exceeded",

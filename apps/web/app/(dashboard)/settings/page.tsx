@@ -1,12 +1,10 @@
-import { Card } from '../../../components/ui';
+import { PlanAndLimits } from '../../../components/settings/plan-and-limits';
 
-export default function SettingsPlaceholder() {
+export default function SettingsPage() {
   return (
     <div>
       <h1 className="t-display-l mb-s-4">settings</h1>
-      <Card padding="lg">
-        <p className="t-body-l">coming soon.</p>
-      </Card>
+      <PlanAndLimits />
     </div>
   );
 }

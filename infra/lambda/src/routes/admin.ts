@@ -1,6 +1,7 @@
+import { randomInt } from 'node:crypto';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { and, eq, gte, isNotNull, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, isNotNull, sql } from 'drizzle-orm';
 import {
   ALL_CURRICULA,
   buildCellKey,
@@ -8,6 +9,7 @@ import {
   enumerateCurriculumCells,
   exercises,
   generationJobs,
+  invitations,
   targetCellSize,
   theoryTopics,
   userExerciseHistory,
@@ -417,6 +419,109 @@ admin.get('/admin/theory/coverage', async (c) => {
   }
 
   return c.json({ rows });
+});
+
+// ---------------------------------------------------------------------------
+// Invite code management — generate, list, revoke
+// ---------------------------------------------------------------------------
+
+const CODE_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+const CODE_LENGTH = 8;
+
+function generateInviteCode(): string {
+  let code = '';
+  for (let i = 0; i < CODE_LENGTH; i++) {
+    code += CODE_ALPHABET[randomInt(CODE_ALPHABET.length)];
+  }
+  return code;
+}
+
+const CreateInvitesSchema = z.object({
+  count: z.number().int().min(1).max(50).default(1),
+  expiresInDays: z.number().int().min(1).max(365).optional(),
+  note: z.string().trim().max(200).optional(),
+});
+
+admin.post('/admin/invites', async (c) => {
+  const parsed = CreateInvitesSchema.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success) {
+    return c.json(
+      { error: 'Invalid body', code: 'VALIDATION_ERROR', details: parsed.error.flatten() },
+      400,
+    );
+  }
+  const { count: n, expiresInDays, note } = parsed.data;
+  const expiresAt = expiresInDays
+    ? new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000)
+    : null;
+  // 36^8 ≈ 2.8e12 codes vs a batch of ≤50 — collision is negligible. If one
+  // does occur the unique constraint rejects the whole insert (caller retries).
+  // Do NOT add onConflictDoNothing here: it would silently insert fewer than
+  // `count` codes.
+  const rows = Array.from({ length: n }, () => ({
+    code: generateInviteCode(),
+    expiresAt,
+    note: note ?? null,
+  }));
+  const inserted = await db
+    .insert(invitations)
+    .values(rows)
+    .returning({
+      id: invitations.id,
+      code: invitations.code,
+      expiresAt: invitations.expiresAt,
+      note: invitations.note,
+    });
+  return c.json({ codes: inserted });
+});
+
+admin.get('/admin/invites', async (c) => {
+  const rows = await db
+    .select({
+      id: invitations.id,
+      code: invitations.code,
+      usedBy: invitations.usedBy,
+      usedAt: invitations.usedAt,
+      expiresAt: invitations.expiresAt,
+      revokedAt: invitations.revokedAt,
+      note: invitations.note,
+      createdAt: invitations.createdAt,
+    })
+    .from(invitations)
+    .orderBy(desc(invitations.createdAt));
+  const now = Date.now();
+  const items = rows.map((r) => ({
+    ...r,
+    status: r.revokedAt
+      ? 'revoked'
+      : r.usedBy
+        ? 'redeemed'
+        : r.expiresAt && r.expiresAt.getTime() < now
+          ? 'expired'
+          : 'unused',
+  }));
+  return c.json({ items });
+});
+
+admin.post('/admin/invites/:id/revoke', async (c) => {
+  const id = c.req.param('id');
+  const [row] = await db
+    .select({
+      id: invitations.id,
+      usedBy: invitations.usedBy,
+      revokedAt: invitations.revokedAt,
+    })
+    .from(invitations)
+    .where(eq(invitations.id, id))
+    .limit(1);
+  if (!row) return c.json({ error: 'Not found', code: 'NOT_FOUND' }, 404);
+  if (row.usedBy) return c.json({ error: 'Already used', code: 'INVITE_USED' }, 409);
+  if (row.revokedAt) return c.json({ ok: true }, 200);
+  await db
+    .update(invitations)
+    .set({ revokedAt: new Date() })
+    .where(eq(invitations.id, id));
+  return c.json({ ok: true }, 200);
 });
 
 export default admin;

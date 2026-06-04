@@ -19,6 +19,7 @@ const {
   mockUsageInsertValues,
   mockFlushObservability,
   mockWithLlmTrace,
+  mockSelectWhereArgs,
   streamAnnotationImpl,
 } = vi.hoisted(() => {
   // The impl optionally receives the same (client, input) the real
@@ -35,6 +36,10 @@ const {
     mockBuildCandidateList: vi.fn(),
     mockUsageCount: vi.fn(),
     mockUsageInsertValues: vi.fn(),
+    // Records the args passed to each `.where(...)` so the bucket-split test can
+    // assert the skim count query filters on `read_annotation` only. It's an
+    // array (one entry per `.where()` call); tests inspect `.at(-1)`.
+    mockSelectWhereArgs: [] as unknown[],
     mockFlushObservability: vi.fn<() => Promise<void>>(() => Promise.resolve()),
     // Transparent passthrough by default — Langfuse is disabled in vitest,
     // so this matches production no-op behaviour. Tests can `.mock.calls`
@@ -161,11 +166,14 @@ vi.mock("../db", () => {
     dbSelectQueue.length
       ? Promise.resolve(dbSelectQueue.shift())
       : Promise.resolve(mockUsageCount());
-  const selectWhere = () => ({
-    limit: () => nextSelectRows(),
-    then: (resolve: (v: unknown) => void, reject: (e: unknown) => void) =>
-      nextSelectRows().then(resolve, reject),
-  });
+  const selectWhere = (...whereArgs: unknown[]) => {
+    mockSelectWhereArgs.push(whereArgs);
+    return {
+      limit: () => nextSelectRows(),
+      then: (resolve: (v: unknown) => void, reject: (e: unknown) => void) =>
+        nextSelectRows().then(resolve, reject),
+    };
+  };
   return {
     db: {
       select: () => ({ from: () => ({ where: selectWhere }) }),
@@ -194,6 +202,17 @@ vi.mock("drizzle-orm", () => ({
   gte: (...args: unknown[]) => args,
   inArray: (...args: unknown[]) => args,
   sql: (strings: TemplateStringsArray, ...exprs: unknown[]) => ({ strings, exprs }),
+}));
+
+// Tier resolution + global brake (Task 6). `limitFor` is the REAL module so
+// the per-bucket caps (read_annotation: 50 free / 500 boosted) are exercised
+// for real; only the plan lookup and global-capacity verdict are stubbed.
+vi.mock("../usage/plan", () => ({
+  getEffectivePlan: vi.fn(async () => "free"),
+  isAdmin: vi.fn(() => false),
+}));
+vi.mock("../usage/global-capacity", () => ({
+  checkGlobalCapacity: vi.fn(async () => "ok"),
 }));
 
 // ---------------------------------------------------------------------------
@@ -248,6 +267,8 @@ function resetHarness(): void {
 // Import the SUT AFTER `vi.hoisted` has installed the global.
 import { handler, AnnotateSpanStreamRequest } from "./handler";
 import type { LambdaFunctionURLEvent } from "aws-lambda";
+import { getEffectivePlan } from "../usage/plan";
+import { checkGlobalCapacity } from "../usage/global-capacity";
 
 // ---------------------------------------------------------------------------
 // Per-test setup
@@ -327,6 +348,7 @@ beforeEach(() => {
   mockUsageInsertValues.mockReset();
   mockReadEntriesUpdate.mockReset();
   mockStreamSpan.mockReset();
+  mockSelectWhereArgs.length = 0;
   dbSelectQueue.length = 0;
   // Default: any unexpected streamSpan call fails loudly. Tests that exercise a
   // real deep call override this via `streamSpanImpl.set(...)`.
@@ -341,6 +363,10 @@ beforeEach(() => {
       <T>(_ctx: unknown, fn: () => T | Promise<T>): Promise<T> =>
         Promise.resolve(fn()),
     );
+  // Re-pin the tier/capacity stubs to their permissive defaults; individual
+  // tests override with `.mockResolvedValueOnce(...)` to exercise the gate.
+  vi.mocked(getEffectivePlan).mockReset().mockResolvedValue("free");
+  vi.mocked(checkGlobalCapacity).mockReset().mockResolvedValue("ok");
 });
 
 afterEach(() => {
@@ -464,7 +490,7 @@ describe("annotate-stream handler — empty candidates (Req 1.6 / 2.5)", () => {
 });
 
 describe("annotate-stream handler — pre-stream gates", () => {
-  it("rate-limit (429) returns JSON, not SSE", async () => {
+  it("rate-limit (429) returns JSON, not SSE — free read_annotation bucket at 50", async () => {
     mockUsageCount.mockResolvedValueOnce([{ count: 50 }]);
 
     await handler(
@@ -480,9 +506,65 @@ describe("annotate-stream handler — pre-stream gates", () => {
     );
     expect(JSON.parse(harness.writes[0])).toEqual({
       code: "RATE_LIMIT_EXCEEDED",
-      message: "Daily evaluation limit exceeded",
+      message: "Daily annotation limit exceeded",
     });
     expect(mockBuildCandidateList).not.toHaveBeenCalled();
+
+    // The bucket split: the rolling count query must filter on
+    // `read_annotation` ONLY now — `ai_evaluation` no longer counts toward
+    // the skim cap. The drizzle-orm mock returns `eq()` args verbatim, so the
+    // where-clause `and(...)` carries the eventType `eq` tuple.
+    const whereArgs = mockSelectWhereArgs.at(-1) as unknown[];
+    const flat = JSON.stringify(whereArgs);
+    expect(flat).toContain("read_annotation");
+    expect(flat).not.toContain("ai_evaluation");
+  });
+
+  it("boosted user passes the free 50 cap (read_annotation count 60 → proceeds)", async () => {
+    vi.mocked(getEffectivePlan).mockResolvedValueOnce("boosted");
+    mockUsageCount.mockResolvedValueOnce([{ count: 60 }]); // > free 50, < boosted 500
+    mockBuildCandidateList.mockResolvedValueOnce({
+      candidates: [{ matchedForm: "aldea", lemma: "aldea" }],
+      calibration: { cefr: "B1", top: 3000 },
+    });
+    streamAnnotationImpl.set(async function* () {
+      yield { kind: "flag", flag: ALDEA_FLAG };
+      yield { kind: "done", flaggedCount: 1 };
+    });
+
+    await handler(
+      buildPostEvent({ text: PASSAGE, language: "ES" }),
+      makeResponseStream(),
+      {} as never,
+    );
+
+    // Not rate-limited: the SSE stream opened (200) and reached `done`.
+    expect(harness.fromCalls[0].statusCode).toBe(200);
+    expect(parseSseFrames().at(-1)?.event).toBe("done");
+    expect(mockBuildCandidateList).toHaveBeenCalledTimes(1);
+  });
+
+  it("global capacity 'capped' → 503 GLOBAL_CAPACITY before the count query", async () => {
+    vi.mocked(checkGlobalCapacity).mockResolvedValueOnce("capped");
+
+    await handler(
+      buildPostEvent({ text: PASSAGE, language: "ES" }),
+      makeResponseStream(),
+      {} as never,
+    );
+
+    expect(harness.fromCalls).toHaveLength(1);
+    expect(harness.fromCalls[0].statusCode).toBe(503);
+    expect(harness.fromCalls[0].headers?.["content-type"]).toBe(
+      "application/json",
+    );
+    expect(JSON.parse(harness.writes[0])).toEqual({
+      code: "GLOBAL_CAPACITY",
+      message: "AI temporarily at capacity",
+    });
+    // Guard runs BEFORE the per-user count query and the pipeline.
+    expect(mockBuildCandidateList).not.toHaveBeenCalled();
+    expect(mockUsageCount).not.toHaveBeenCalled();
   });
 
   it("invalid JWT returns JSON 401", async () => {

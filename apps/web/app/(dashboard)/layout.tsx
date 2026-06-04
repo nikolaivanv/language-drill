@@ -9,6 +9,7 @@ import {
 } from "@language-drill/api-client";
 import type { LanguageProfile } from "@language-drill/shared";
 import { ActiveLanguageProvider, AppShell } from "../../components/shell";
+import { PostSignupRedeem } from "../../components/invite/post-signup-redeem";
 
 export default function DashboardLayout({
   children,
@@ -69,7 +70,10 @@ export default function DashboardLayout({
   const profiles: LanguageProfile[] = data?.profiles ?? [];
   return (
     <ActiveLanguageProvider profiles={profiles}>
-      <AppShell profiles={profiles}>{children}</AppShell>
+      <AppShell profiles={profiles}>
+        <PostSignupRedeem />
+        {children}
+      </AppShell>
     </ActiveLanguageProvider>
   );
 }

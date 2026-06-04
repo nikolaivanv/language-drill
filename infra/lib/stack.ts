@@ -30,6 +30,11 @@ export interface LanguageDrillStackProps extends StackProps {
   // (Phase 5). Plain env var, not a Secrets Manager secret — values are user
   // IDs, not credentials.
   adminUserIds?: string;
+  // Global AI cost brakes. Both plain env vars (not secrets). AI_KILL_SWITCH='on'
+  // hard-stops AI for non-admins; AI_GLOBAL_DAILY_CAP caps free-tier usage by the
+  // trailing-24h global event count. Omit/empty to disable.
+  aiKillSwitch?: string;
+  aiGlobalDailyCap?: string;
 }
 
 export class LanguageDrillStack extends Stack {
@@ -42,6 +47,8 @@ export class LanguageDrillStack extends Stack {
         ALLOWED_ORIGINS: props.allowedOrigins.join(","),
         ENV_NAME: props.envName,
         ADMIN_USER_IDS: props.adminUserIds ?? "",
+        AI_KILL_SWITCH: props.aiKillSwitch ?? "",
+        AI_GLOBAL_DAILY_CAP: props.aiGlobalDailyCap ?? "",
       },
     });
 
@@ -88,7 +95,13 @@ export class LanguageDrillStack extends Stack {
     const annotateStream = new AnnotateStreamLambdaConstruct(
       this,
       "AnnotateStream",
-      { secretsPrefix: props.secretsPrefix },
+      {
+        secretsPrefix: props.secretsPrefix,
+        additionalEnv: {
+          AI_KILL_SWITCH: props.aiKillSwitch ?? "",
+          AI_GLOBAL_DAILY_CAP: props.aiGlobalDailyCap ?? "",
+        },
+      },
     );
 
     // Phase 4 (theory) — parallel theory generation pipeline. Independent

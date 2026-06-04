@@ -22,9 +22,11 @@ import { db } from '../db';
 import { approvedStatusFilter } from '../lib/exercise-filters';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
+import { limitFor } from '../usage/limits';
+import { getEffectivePlan, isAdmin } from '../usage/plan';
+import { checkGlobalCapacity } from '../usage/global-capacity';
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY ?? '';
-const DAILY_EVAL_LIMIT = 50;
 
 // ---------------------------------------------------------------------------
 // Validation schemas
@@ -178,7 +180,20 @@ exercises.post('/exercises/:id/submit', async (c) => {
     }
   }
 
-  // 3. Check daily usage limit
+  // 3. Resolve tier, run the global brake, then the per-user daily cap.
+  const plan = await getEffectivePlan(userId);
+
+  const capacity = await checkGlobalCapacity({ plan, admin: isAdmin(userId) });
+  if (capacity !== 'ok') {
+    return c.json(
+      {
+        error: 'AI temporarily at capacity',
+        code: 'GLOBAL_CAPACITY',
+      },
+      503,
+    );
+  }
+
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const [{ count: todayCount }] = await db
     .select({ count: count() })
@@ -191,7 +206,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
       ),
     );
 
-  if (Number(todayCount) >= DAILY_EVAL_LIMIT) {
+  if (Number(todayCount) >= limitFor('ai_evaluation', plan)) {
     return c.json(
       { error: 'Daily evaluation limit exceeded', code: 'RATE_LIMIT_EXCEEDED' },
       429,

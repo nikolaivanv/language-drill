@@ -50,7 +50,9 @@ function parseArgs(argv: string[]): { count: number; expiresDays: number | null 
 // Generate a random 8-character alphanumeric code
 // ---------------------------------------------------------------------------
 
-const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+// Uppercase-only so codes are canonical: the redeem endpoint uppercases input
+// before an exact match, and the admin generator emits the same alphabet.
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
 function generateCode(): string {
   let code = '';

@@ -245,9 +245,40 @@ The core differentiator. Full design: `docs/progress-tracking.md`.
 
 ## Access Control & Monetization
 
-- Early stage: invite codes (Clerk metadata) + daily AI usage caps (Upstash counters)
-- Later: Stripe subscriptions; tiers: Free (limited AI evals/day) / Pro (unlimited)
-- Bot protection: Clerk at signup, Upstash token bucket per user on API
+Invite codes are a **usage perk, not a gate**: anyone can sign up free, and an
+invite code (or admin status) unlocks a 10× daily limit. This is the stand-in
+for paid subscriptions until billing is possible; a future Stripe `'pro'` tier
+maps to the same boosted limits.
+
+- **Tiers** — stored on `users.plan` (`'free'` / `'boosted'`). Effective plan is
+  resolved at request time as `isAdmin(userId) || users.plan === 'boosted'`, so
+  admins (listed in the `ADMIN_USER_IDS` env var) are always boosted without a DB
+  write. Redeeming a code (`POST /invites/redeem`) sets `plan = 'boosted'`.
+- **Per-bucket daily limits** (single source of truth: `infra/lambda/src/usage/limits.ts`).
+  Each AI feature meters a **separate** bucket; boosted = 10× each:
+
+  | Bucket (`usage_events.event_type`) | Endpoint | Free | Boosted |
+  |---|---|---|---|
+  | `ai_evaluation` | `POST /exercises/:id/submit` | 50/day | 500/day |
+  | `read_annotation` (skim) | `POST /read/annotate` | 50/day | 500/day |
+  | `read_span_annotation` (deep) | `POST /read/annotate-span` | 150/day | 1500/day |
+
+- **Global AI cost brakes** (`infra/lambda/src/usage/global-capacity.ts`, env-driven,
+  checked before the per-user cap; both default off):
+  - `AI_KILL_SWITCH=on` — hard-stops AI for all non-admins (emergency brake; you keep working).
+  - `AI_GLOBAL_DAILY_CAP=<int>` — soft cap: once total AI events in the trailing 24h
+    reach it, **free** users get `503 GLOBAL_CAPACITY` while boosted/admin keep going.
+  Wired into the API + annotate-stream Lambdas via CDK (`aiKillSwitch` / `aiGlobalDailyCap` stack props).
+- **Admin** — generate / list / revoke codes via `POST|GET /admin/invites` (+ `/:id/revoke`),
+  gated by `ADMIN_USER_IDS`; the web admin page is at `/admin/invites`. Codes are
+  canonical uppercase 8-char alphanumeric. `GET /me` returns the caller's plan,
+  limits, and today's usage.
+- **Later:** Stripe subscriptions add a paid `'pro'` tier (same boosted limits) for
+  users without an invite.
+- Bot protection: Clerk at signup; per-user daily caps on the AI endpoints.
+
+> Note: the gate-era `infra/lambda/src/middleware/invite.ts` (`403 NO_INVITE`) is
+> dead code — it was never mounted. The Clerk webhook no longer auto-claims invites.
 
 ---
 
