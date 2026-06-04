@@ -14,6 +14,11 @@ cdk.out/
 .env
 .env.local
 .env.*.local
+.env.bak.*
+.vercel.preview.env
+
+# Vercel (pulled env + linked project metadata)
+.vercel/
 
 # Turbo
 .turbo/
