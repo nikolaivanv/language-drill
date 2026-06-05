@@ -422,6 +422,89 @@ Every exercise must pass the **production test**: does the learner construct lan
 
 ---
 
+### 12. Picture Description
+
+**Status:** Not yet implemented (Phase 3 written variant; Phase 6 spoken variant)
+
+> Promotes the "Describe the image" speaking sub-type (Exercise 8) to a first-class type and adds a **written** variant. The pedagogy fits cleanly; the open question is the **image asset pipeline**, which is a new asset class the rest of the catalogue doesn't need.
+
+**What it targets:**
+- Vocabulary depth (primary) — concrete nouns, and *circumlocution* when the exact word is missing
+- Grammar accuracy/range — spatial prepositions, continuous tenses, existential constructions ("there is/are")
+- Discourse/coherence — organizing a description (general → specific, foreground → background)
+
+**Why it fits the plateau:** when an intermediate learner doesn't know the word for something in the image, they're forced to describe it with vocabulary they *do* have. Building that fluid workaround skill is exactly what breaks the freeze. And unlike a debate prompt, a picture carries **zero brainstorming load** — the learner spends all cognitive budget on language, not on inventing content. Images can be chosen to *elicit specific targets* (a busy kitchen scene forces prepositions of place and continuous tenses).
+
+**How it works:**
+- An image is shown; the learner produces a description
+  - **Written variant (Phase 3):** type a 50–100-word description in a multi-line field. Reuses the free-writing UI.
+  - **Spoken variant (Phase 6):** describe the image aloud in 30–60s → Transcribe → evaluate (the existing Exercise 8 sub-type).
+- Difficulty scales by image complexity and by constraint ("describe only the foreground", "use the present continuous", "include three prepositions of place"), not by simplifying the UI.
+- **Information-gap variant (harder):** Claude describes a *slightly different* version of the image via text/audio; the learner compares it to their picture and produces the differences. This hardens the production test — the learner must generate language tied to specific observed content rather than reciting a memorized template.
+
+**Grading:**
+- Returns the standard `EvaluationResult` (lexical resource, grammatical accuracy, task achievement), plus a description-specific check on spatial-preposition use and coverage of salient objects.
+- **Open decision — how does Claude grade a picture it can't see?**
+  - **(a) Reference-tag grading (cheaper, default):** at generation time, store a Claude-authored reference description + an object/preposition tag list alongside each image. Eval stays text-only and cheap, but may under-credit valid observations the reference didn't enumerate.
+  - **(b) Vision grading (richer, costlier):** send the image to Claude vision (`claude-sonnet-4-6` is multimodal) at eval time. More forgiving of valid-but-unlisted observations, but every submission now carries an image in the prompt — higher token cost, different eval-call shape.
+  - Recommendation: ship the written variant with **(a)** first; consider **(b)** only if reference-tag grading proves too strict in practice.
+
+**Progress impact:**
+- Strong signal for vocabulary depth (concrete lexis + circumlocution) and for spatial grammar that other exercises rarely exercise.
+- Spoken variant feeds the Speaking macro-skill; written variant feeds Writing.
+
+**Content strategy:** Pre-generated, but with a **new asset class — the images themselves.** This is the real cost, and it is not in the current stack (text + Polly audio only). S3 + CloudFront already cover *hosting*; *sourcing* is unsolved:
+- **AI-generated images** (recommended) — a generation model lets us design scenes that elicit specific grammar/vocabulary targets and sidesteps stock-photo licensing, but adds a new pipeline, a new model dependency, and per-image cost.
+- **Licensed stock photos** — no generation pipeline, but licensing cost, curation effort, and weaker control over elicitation targets.
+- Either way, the image + its reference description/tags are generated once and reused across all users (same amortization as the rest of the pool). Text evaluation remains real-time Claude.
+
+**Getting unstuck:**
+1. "Vocabulary boost" button: 8–10 useful words for the objects/actions in the scene at the learner's level
+2. "What should I cover?" hint: names a region of the image to describe (foreground / the people / the setting) without giving sentences
+3. After submission: model description shown side-by-side, with missed salient objects and any preposition errors highlighted
+
+---
+
+### 13. Task-Based Role-Play (Goal-Oriented Dialogue)
+
+**Status:** Not yet implemented (Phase 4+, own milestone)
+
+> The deepest expression of the tagline — _"what you do between italki sessions."_ It upgrades Dialogue Completion (Exercise 9) from a static fill-the-blank shell into a **dynamic, multi-turn simulation**. It is also the **one exercise type that legitimately reopens a closed decision** ("pre-generate content pool rather than generate-on-demand"), because the interaction *is* the product and cannot be pre-baked. We honor cost discipline through **metering and turn caps**, not pre-generation.
+
+**What it targets:**
+- Pragmatics (primary) — register, politeness, turn-taking under live pressure
+- Task achievement (heavily weighted) — did the learner actually accomplish the goal (buy the correct ticket, get the directions, resolve the work request)?
+- Grammar accuracy + vocabulary depth — in spontaneous conversational context
+
+**Why it fits the plateau:** real-world problem-solving — a service encounter, asking for missing information, navigating a workplace task — is precisely where intermediate learners freeze. This gives them a safe sandbox to fail and retry, simulating the exact situations that immersion throws at expats and professionals.
+
+**How it works:**
+- The learner is given a **goal** and a **scenario** ("You're at the station. Buy a return ticket to Munich, second class, and ask whether you need to reserve a seat."), plus the relationship/register.
+- One or more virtual characters (NPCs) respond over multiple turns; the learner must extract missing information or persuade/transact to reach the goal.
+- The dialogue ends when the goal is reached, the learner gives up, or a **hard turn cap** is hit (e.g. 6–8 learner turns).
+
+**The architectural tension (and how we resolve it):** every turn needs a live LLM response, which breaks the pre-generated pool. Two ways to contain it:
+- **Finite-state branching (rejected as the primary model):** pre-generate NPC turns as a branch tree; Claude only *classifies* the learner's input into branch A/B. Keeps every call cheap — but branch trees explode combinatorially, real conversations don't branch cleanly, and forcing a state machine constrains naturalness, which **partly defeats the point** (a free sandbox). Usable for tightly scripted A1–A2 transactional scenarios; too rigid above that.
+- **Metered live generation (recommended):** treat role-play as the deliberate **real-time exception**, bounded by a hard turn cap and a dedicated usage bucket, served by the metering infra that already exists (Upstash counters, per-bucket daily limits, boosted-tier 10×). To keep NPCs from hallucinating or breaking character, constrain them with a tight system prompt (persona + goal-state + allowed information), not with a pre-baked tree.
+  - New usage bucket (per `infra/lambda/src/usage/limits.ts`): e.g. `ai_roleplay`, capped low on the free tier because each *session* spends several calls. Each NPC turn + the final evaluation count against it. Tune the free/boosted caps against observed per-session cost.
+
+**Grading:**
+- Evaluated at the **conversation level**, not per turn: Claude scores task achievement (was the goal met?), pragmatic appropriateness/register across the whole exchange, and grammatical accuracy + vocabulary from the learner's turns.
+- This is a **richer evaluation than anything currently built** — it must track goal state and register over multiple turns, not score a single utterance.
+
+**Progress impact:**
+- Primary signal for pragmatics *and* task achievement under live conditions — closer to real communicative competence than any other exercise.
+- Updates grammar/vocabulary mastery as secondary signals (weaker per-turn, like Speaking, since spontaneous speech uses simpler structures).
+
+**Content strategy:** **Scenario + goal + NPC persona** are pre-generated and reusable across users (tagged by register and situation type — service, social, professional, bureaucratic). The **dialogue itself is real-time, metered** (see above). Evaluation is real-time Claude.
+
+**Getting unstuck:**
+1. "What do I need to find out?" hint: restates the goal and the still-missing information
+2. "Suggest a phrase" hint: offers one register-appropriate opener for the current turn (not a full line)
+3. After the session: a transcript with register notes per turn, a "did you reach the goal?" verdict, and a model run of the same scenario
+
+---
+
 ## Summary Table
 
 | # | Exercise | Skill Target | Input Mode | Audio? | CEFR Range | Content | Eval |
@@ -437,6 +520,8 @@ Every exercise must pass the **production test**: does the learner construct lan
 | 9 | Dialogue Completion | Pragmatics, register | Text (sentence) | No | B1–C2 | Pre-gen | Claude |
 | 10 | Contextual Paraphrase | Vocab depth, grammar range | Text (sentence) | No | B1–C2 | Pre-gen | Claude |
 | 11 | Mini-Essay & Argument | Discourse, coherence | Text (long) | No | B2–C2 | Pre-gen topics | Claude |
+| 12 | Picture Description | Vocab depth, spatial grammar | Text (long) / Voice | Image (+ Record for spoken) | A2–C2 | Pre-gen images + tags | Claude (text or vision) |
+| 13 | Task-Based Role-Play | Pragmatics, task achievement | Text (multi-turn) | No | A2–C2 | Pre-gen scenario; **live metered** dialogue | Claude (conversation-level) |
 
 ---
 
@@ -497,16 +582,19 @@ These three cover grammar accuracy, grammar range, and vocabulary — the founda
 ### Phase 3 — Extended writing
 3. **Paragraph / Free Writing** — the highest-value exercise for intermediate+ learners, but requires a richer evaluation UI (inline error markup, side-by-side comparison). The evaluation prompt is more complex.
 4. **Contextual Paraphrase** — builds vocabulary range and grammar flexibility. Simple UI, moderate evaluation complexity.
+5. **Picture Description (written variant)** — reuses the free-writing UI and evaluation, so the *exercise* logic is cheap. The gating work is the **image asset pipeline** (sourcing/generating images + reference-tag grading), a new asset class not needed elsewhere. Sequence it after free writing so the eval UI already exists; resolve the image-sourcing decision before committing.
 
 ### Phase 4 — Pragmatics & discourse
-5. **Dialogue Completion** — introduces pragmatics (register, politeness, turn-taking). Requires a conversation-display UI but no new infrastructure.
-6. **Mini-Essay & Argument** — for B2+ learners preparing for exams. Extends the free writing evaluation with discourse/argumentation criteria.
+6. **Dialogue Completion** — introduces pragmatics (register, politeness, turn-taking). Requires a conversation-display UI but no new infrastructure.
+7. **Mini-Essay & Argument** — for B2+ learners preparing for exams. Extends the free writing evaluation with discourse/argumentation criteria.
+8. **Task-Based Role-Play** — *own milestone, heavier than the rest of Phase 4.* The only type that reopens the pre-generation decision: it needs a **new metered usage bucket** (`ai_roleplay`, turn-capped) and **conversation-level evaluation** (goal-state + register over multiple turns). Build it on top of the Dialogue Completion UI, but treat it as a distinct, metered feature rather than folding it in. Defer until the metering model and per-session cost are validated.
 
 ### Phase 5 — Audio (listening)
-7. **Listening Comprehension** — requires AWS Polly integration, S3 storage for audio files, audio player UI, and a background Lambda for batch audio generation. Technically the biggest lift so far, but listening is a core macro-skill that has been entirely untested until this point.
+9. **Listening Comprehension** — requires AWS Polly integration, S3 storage for audio files, audio player UI, and a background Lambda for batch audio generation. Technically the biggest lift so far, but listening is a core macro-skill that has been entirely untested until this point.
 
 ### Phase 6 — Audio (speaking)
-8. **Speaking** — requires MediaRecorder API, AWS Transcribe integration, and a pipeline to send audio → transcribe → evaluate. The most technically complex exercise type. Deferred because it adds the most infrastructure but the evaluation quality depends on Transcribe accuracy, which varies by language and accent.
+10. **Speaking** — requires MediaRecorder API, AWS Transcribe integration, and a pipeline to send audio → transcribe → evaluate. The most technically complex exercise type. Deferred because it adds the most infrastructure but the evaluation quality depends on Transcribe accuracy, which varies by language and accent.
+11. **Picture Description (spoken variant)** — once the speaking pipeline exists, the written Picture Description (#12) gains a spoken mode at near-zero marginal cost: same images, same reference-tag grading, audio → Transcribe → evaluate. This is the existing "Describe the image" sub-type of Speaking, now backed by a real image pool.
 
 ---
 
