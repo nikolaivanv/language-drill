@@ -188,6 +188,14 @@ export {
   THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE,
 } from "./theory-validation-prompts.js";
 
+export {
+  READING_GENERATION_PROMPT_VERSION,
+  READING_GENERATION_SYSTEM_PROMPT,
+  buildReadingGenerationSystemPrompt,
+  buildReadingGenerationUserPrompt,
+  type ReadingGenerationPromptInputs,
+} from "./reading-generation-prompts.js";
+
 /**
  * Creates an Anthropic client instance configured with the provided API key.
  */
