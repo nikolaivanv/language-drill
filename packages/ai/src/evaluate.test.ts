@@ -8,6 +8,7 @@ import type {
   ClozeContent,
   TranslationContent,
   VocabRecallContent,
+  SentenceConstructionContent,
 } from "@language-drill/shared";
 import {
   buildUserPrompt,
@@ -673,6 +674,34 @@ describe("evaluateAnswer + prompts-registry", () => {
       const ctx = getCurrentLlmTraceContext();
       expect(ctx?.promptFallback).toBe(false);
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buildUserPrompt — sentence construction
+// ---------------------------------------------------------------------------
+
+describe("buildUserPrompt — sentence construction", () => {
+  const content: SentenceConstructionContent = {
+    type: ExerciseType.SENTENCE_CONSTRUCTION,
+    instructions: "Write one sentence in Spanish.",
+    promptMode: "keywords",
+    prompt: "Use these words: ayer, biblioteca, libro.",
+    keywords: ["ayer", "biblioteca", "libro"],
+    register: "neutral",
+    modelAnswers: ["Ayer olvidé un libro en la biblioteca.", "Ayer dejé el libro en la biblioteca."],
+  };
+
+  it("includes the prompt, mode, keywords, register and the user's answer", () => {
+    const msg = buildUserPrompt(content, "Ayer fui a la biblioteca y cogí un libro.", Language.ES, CefrLevel.B1);
+    expect(msg).toContain("Sentence Construction");
+    expect(msg).toContain("Use these words: ayer, biblioteca, libro.");
+    expect(msg).toContain("ayer, biblioteca, libro");
+    expect(msg).toContain("keywords");
+    expect(msg).toContain("Ayer fui a la biblioteca");
+    expect(msg).toContain("neutral");
+    expect(msg).toMatch(/do NOT require a match/i);
+    expect(msg).toContain(content.modelAnswers[0]);
   });
 });
 

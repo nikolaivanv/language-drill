@@ -10,6 +10,7 @@ import {
   type ClozeContent,
   type TranslationContent,
   type VocabRecallContent,
+  type SentenceConstructionContent,
   type CefrLevel,
   type Language,
   ExerciseType,
@@ -160,6 +161,37 @@ function buildVocabRecallUserPrompt(
 Evaluate the user's answer. Check if they produced the expected word or a valid synonym. Consider spelling accuracy.`;
 }
 
+function buildSentenceConstructionUserPrompt(
+  content: SentenceConstructionContent,
+  userAnswer: string,
+  language: Language,
+  difficulty: CefrLevel,
+): string {
+  const keywordsLine =
+    content.promptMode === "keywords" && content.keywords && content.keywords.length > 0
+      ? `**Keywords (all must be used):** ${content.keywords.join(", ")}`
+      : "";
+  const structureLine = content.targetStructure
+    ? `**Target structure:** ${content.targetStructure}`
+    : "";
+  const registerLine = content.register ? `**Required register:** ${content.register}` : "";
+  return `## Exercise Type: Sentence Construction
+**Language:** ${language}
+**Target CEFR Level:** ${difficulty}
+**Prompt mode:** ${content.promptMode}
+
+**Instructions:** ${content.instructions}
+**Prompt:** ${content.prompt}
+${keywordsLine}
+${structureLine}
+${registerLine}
+**Example valid answers (for your reference — many other answers are also valid; do NOT require a match):** ${content.modelAnswers.join(" | ")}
+
+**User's Answer:** ${userAnswer}
+
+Evaluate the user's sentence. Judge grammatical accuracy and naturalness; fold into **Task Achievement** whether the prompt was satisfied — for keywords mode every keyword is used, for situation mode the communicative goal is met, for grammar_target mode the target structure is used. Reward complexity beyond the minimum. Flag errors outside the target structure too (do not ignore a wrong article because the target was the subjunctive).`;
+}
+
 /**
  * Builds the user message for Claude evaluation based on exercise type.
  */
@@ -176,6 +208,8 @@ export function buildUserPrompt(
       return buildTranslationUserPrompt(exercise, userAnswer, language, difficulty);
     case ExerciseType.VOCAB_RECALL:
       return buildVocabRecallUserPrompt(exercise, userAnswer, language, difficulty);
+    case ExerciseType.SENTENCE_CONSTRUCTION:
+      return buildSentenceConstructionUserPrompt(exercise, userAnswer, language, difficulty);
     default: {
       const _exhaustive: never = exercise;
       throw new Error(`Unknown exercise type: ${(_exhaustive as ExerciseContent).type}`);
