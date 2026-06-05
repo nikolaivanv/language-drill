@@ -196,6 +196,9 @@ export {
 } from "./reading-generation-prompts.js";
 export type { ReadingGenerationPromptInputs } from "./reading-generation-prompts.js";
 
+export { scoreTextLevel } from "./reading-level-check.js";
+export type { ScoreTextLevelInput, TextLevelScore } from "./reading-level-check.js";
+
 /**
  * Creates an Anthropic client instance configured with the provided API key.
  */
