@@ -290,7 +290,7 @@ describe('OnboardingPage', () => {
     });
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/');
+      expect(mockPush).toHaveBeenCalledWith('/home');
     });
   });
 
@@ -507,7 +507,7 @@ describe('OnboardingPage', () => {
     render(<OnboardingPage />);
 
     await waitFor(() => {
-      expect(mockReplace).toHaveBeenCalledWith('/');
+      expect(mockReplace).toHaveBeenCalledWith('/home');
     });
 
     // The wizard's Step 1 markup is NOT in the DOM — the page returns null

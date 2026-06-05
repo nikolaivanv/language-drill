@@ -28,7 +28,7 @@ import type { OnboardingState } from "../../components/onboarding";
 //   - hydrates language profiles (always) and preferences (edit mode only)
 //   - shows a spinner card while either query is loading
 //   - shows a paper-card error with retry when hydration fails in edit mode
-//   - redirects returning users with profiles to `/` when not in edit mode
+//   - redirects returning users with profiles to `/home` when not in edit mode
 //   - mounts the wizard inside an `OnboardingProvider` so `OnboardingPageBody`
 //     can read state + dispatch and orchestrate the final submit
 //
@@ -92,7 +92,7 @@ function OnboardingPageContent() {
   // so the screen stays clean during the navigation tick.
   useEffect(() => {
     if (shouldRedirect) {
-      router.replace("/");
+      router.replace("/home");
     }
   }, [shouldRedirect, router]);
 
@@ -159,7 +159,7 @@ function OnboardingPageContent() {
 //   2. `mutateAsync(buildSaveArgs(state))` — throws on non-2xx (status code
 //      attached to the Error by `createAuthenticatedFetch`).
 //   3. On resolve: dispatch `submitSuccess` and navigate.
-//      - new mode  → `router.push('/')`.
+//      - new mode  → `router.push('/home')`.
 //      - edit mode → same-origin referrer if any, else `/settings`. The
 //        same-origin guard prevents an open-redirect via a crafted referrer.
 //   4. On reject: classify the error (4xx / 5xx / network) and dispatch
@@ -183,7 +183,7 @@ function OnboardingPageBody({ mode, fetchFn }: OnboardingPageBodyProps) {
       await saveMutation.mutateAsync(args);
       dispatch({ type: "submitSuccess" });
       if (mode === "new") {
-        router.push("/");
+        router.push("/home");
       } else {
         router.push(sameOriginReferrer() ?? "/settings");
       }

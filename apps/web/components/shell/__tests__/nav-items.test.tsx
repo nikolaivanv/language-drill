@@ -29,7 +29,7 @@ vi.mock('next/link', () => ({
 describe('NavItems', () => {
   it('exposes the primary destinations in order (review + theory between read and progress)', () => {
     expect(NAV_DESTINATIONS.map((d) => d.href)).toEqual([
-      '/',
+      '/home',
       '/drill',
       '/read',
       '/review',

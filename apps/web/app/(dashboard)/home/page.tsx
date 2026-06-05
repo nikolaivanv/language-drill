@@ -22,13 +22,13 @@ import {
   useProgressRadar,
   useTodayPlan,
 } from '@language-drill/api-client';
-import { useActiveLanguage } from '../../components/shell/active-language-provider';
-import { useIsMobile } from '../../lib/responsive';
-import { DashboardHeader } from './_components/dashboard-header';
-import { NextUpCard } from './_components/next-up-card';
-import { ReadCollectCard } from './_components/read-collect-card';
-import { SkillSnapshotGrid } from './_components/skill-snapshot-grid';
-import { TodayTimeline } from './_components/today-timeline';
+import { useActiveLanguage } from '../../../components/shell/active-language-provider';
+import { useIsMobile } from '../../../lib/responsive';
+import { DashboardHeader } from '../_components/dashboard-header';
+import { NextUpCard } from '../_components/next-up-card';
+import { ReadCollectCard } from '../_components/read-collect-card';
+import { SkillSnapshotGrid } from '../_components/skill-snapshot-grid';
+import { TodayTimeline } from '../_components/today-timeline';
 
 export default function DashboardPage() {
   const { activeLanguage } = useActiveLanguage();
