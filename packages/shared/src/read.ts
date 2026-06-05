@@ -199,14 +199,11 @@ export enum ReadingTextLength {
 export const READING_GEN_TOPIC_MAX_CHARS = 200;
 
 /** Target word-count window per length tier, included verbatim in the prompt. */
-export const READING_LENGTH_WORD_TARGETS: Record<
-  ReadingTextLength,
-  { min: number; max: number }
-> = {
+export const READING_LENGTH_WORD_TARGETS = {
   [ReadingTextLength.SHORT]: { min: 60, max: 100 },
   [ReadingTextLength.MEDIUM]: { min: 130, max: 190 },
   [ReadingTextLength.LONG]: { min: 230, max: 320 },
-};
+} as const satisfies Record<ReadingTextLength, { min: number; max: number }>;
 
 /**
  * If more than this fraction of content words sit above the target CEFR band,
