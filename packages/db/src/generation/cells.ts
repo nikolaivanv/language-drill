@@ -62,7 +62,12 @@ function compatibleTypes(entry: GrammarPoint): ReadonlyArray<ExerciseType> {
   // `clozeUnsuitable` grammar points drop the cloze cell (the blank's answer is
   // leaked by the other half of the construction, or near-synonym alternants
   // both fit) and keep only `translation`.
-  return entry.clozeUnsuitable ? GRAMMAR_CLOZE_UNSUITABLE_TYPES : GRAMMAR_KIND_TYPES;
+  const base = entry.clozeUnsuitable ? GRAMMAR_CLOZE_UNSUITABLE_TYPES : GRAMMAR_KIND_TYPES;
+  // `sentenceConstructionSuitable` appends a sentence_construction cell to whatever
+  // the base set is (cloze+translation or translation-only).
+  return entry.sentenceConstructionSuitable
+    ? [...base, ExerciseType.SENTENCE_CONSTRUCTION]
+    : base;
 }
 
 // ---------------------------------------------------------------------------

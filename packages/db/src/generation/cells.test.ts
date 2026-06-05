@@ -135,3 +135,39 @@ describe('enumerateCurriculumCells — clozeUnsuitable flag', () => {
     expect(enumerateCurriculumCells([flagged])).toHaveLength(1);
   });
 });
+
+describe('enumerateCurriculumCells — sentenceConstructionSuitable flag', () => {
+  it('adds a sentence_construction cell for a flagged grammar point', () => {
+    const point = makeGrammarPoint({
+      key: 'tr-a2-synthetic-sc',
+      kind: 'grammar',
+      sentenceConstructionSuitable: true,
+    });
+    const cells = enumerateCurriculumCells([point]);
+    expect(cells.map((c) => c.exerciseType)).toEqual([
+      ExerciseType.CLOZE,
+      ExerciseType.TRANSLATION,
+      ExerciseType.SENTENCE_CONSTRUCTION,
+    ]);
+  });
+
+  it('omits the sentence_construction cell when not flagged', () => {
+    const point = makeGrammarPoint({ key: 'tr-a2-synthetic-nosc', kind: 'grammar' });
+    const cells = enumerateCurriculumCells([point]);
+    expect(cells.some((c) => c.exerciseType === ExerciseType.SENTENCE_CONSTRUCTION)).toBe(false);
+  });
+
+  it('combines with clozeUnsuitable: translation + sentence_construction only', () => {
+    const point = makeGrammarPoint({
+      key: 'tr-a2-synthetic-both',
+      kind: 'grammar',
+      clozeUnsuitable: true,
+      sentenceConstructionSuitable: true,
+    });
+    const cells = enumerateCurriculumCells([point]);
+    expect(cells.map((c) => c.exerciseType)).toEqual([
+      ExerciseType.TRANSLATION,
+      ExerciseType.SENTENCE_CONSTRUCTION,
+    ]);
+  });
+});

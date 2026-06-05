@@ -75,4 +75,12 @@ export type GrammarPoint = Readonly<{
    * Absent/`false` ⇒ today's behavior (grammar → `cloze` + `translation`).
    */
   clozeUnsuitable?: boolean;
+  /**
+   * Optional opt-in that ADDS a `sentence_construction` cell for this grammar
+   * point in `enumerateCurriculumCells`. Absent/`false` ⇒ no sentence-
+   * construction cell (today's behaviour). Set this for points where free
+   * production of the structure is pedagogically apt. Only valid on
+   * `kind: 'grammar'` entries (enforced by the curriculum invariant).
+   */
+  sentenceConstructionSuitable?: boolean;
 }>;
