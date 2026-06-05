@@ -80,6 +80,10 @@ export function SentenceConstructionExercise({
     <div className="flex flex-col gap-s-4">
       <p className="t-micro text-ink-mute">sentence construction · {language}</p>
 
+      {content.instructions && (
+        <p className="t-small text-ink-mute">{content.instructions}</p>
+      )}
+
       <p className="t-display-s">{content.prompt}</p>
 
       {content.promptMode === 'keywords' &&

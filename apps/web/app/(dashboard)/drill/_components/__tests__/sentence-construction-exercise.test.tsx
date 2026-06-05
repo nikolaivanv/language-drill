@@ -53,6 +53,13 @@ function renderEx(overrides: Partial<SentenceConstructionExerciseProps> = {}) {
 
 describe('SentenceConstructionExercise', () => {
   describe('idle rendering', () => {
+    it('renders the instructions text', () => {
+      renderEx();
+      expect(
+        screen.getByText('Write one sentence in Spanish.'),
+      ).toBeInTheDocument();
+    });
+
     it('renders the prompt text', () => {
       renderEx();
       expect(
@@ -164,7 +171,7 @@ describe('SentenceConstructionExercise', () => {
     });
   });
 
-  describe('lock state on evaluated', () => {
+  describe('lock state', () => {
     it('marks the textarea as readOnly, disabled, and dimmed once evaluated', () => {
       const { container } = renderEx({ submission: evaluatedSubmission });
       const textarea = container.querySelector(
@@ -176,7 +183,7 @@ describe('SentenceConstructionExercise', () => {
       expect(textarea).toHaveClass('opacity-60');
     });
 
-    it('disables the "show an example" button when locked', () => {
+    it('disables the "show an example" button while submitting', () => {
       const { submission } = {
         submission: { kind: 'submitting' } as SubmissionState,
       };
