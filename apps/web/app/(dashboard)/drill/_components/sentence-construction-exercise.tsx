@@ -73,7 +73,6 @@ export function SentenceConstructionExercise({
       loading: submission.kind === 'submitting',
     });
     // handleSubmit closes over answer/exampleShown — both listed.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, setPrimaryAction, submission.kind, canSubmit, isLocked, answer, exampleShown]);
 
   return (
