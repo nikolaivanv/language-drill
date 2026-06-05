@@ -1,6 +1,7 @@
 {
   "qualityScore": 0.6,
   "ambiguous": true,
+  "contextSpoilsAnswer": false,
   "levelMatch": true,
   "grammarPointMatch": true,
   "culturalIssues": [],
