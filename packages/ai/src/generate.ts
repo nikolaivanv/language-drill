@@ -58,6 +58,7 @@ export const TOOL_NAME_BY_TYPE: Readonly<Record<ExerciseType, string>> =
     cloze: "submit_cloze_exercise",
     translation: "submit_translation_exercise",
     vocab_recall: "submit_vocab_recall_exercise",
+    sentence_construction: "submit_sentence_construction_exercise",
   });
 
 // ---------------------------------------------------------------------------
@@ -218,12 +219,68 @@ export const VOCAB_RECALL_GENERATION_TOOL: Anthropic.Tool = {
   },
 };
 
+export const SENTENCE_CONSTRUCTION_GENERATION_TOOL: Anthropic.Tool = {
+  name: TOOL_NAME_BY_TYPE.sentence_construction,
+  description:
+    "Submit a single sentence-construction exercise: a prompt that asks the learner to write one full sentence exercising the configured grammar point, plus 2–3 model answers.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      instructions: {
+        type: "string",
+        description:
+          "Short imperative telling the learner to write one sentence in the target language (e.g. 'Write one sentence in Spanish.').",
+      },
+      promptMode: {
+        type: "string",
+        enum: ["keywords", "situation", "grammar_target"],
+        description:
+          "The framing of this prompt. 'keywords': the learner must use a given set of words. 'situation': a real-life communicative goal (apologise, ask, describe). 'grammar_target': an explicit instruction to use the target structure. Set this to the mode named in the user message.",
+      },
+      prompt: {
+        type: "string",
+        description:
+          "The task statement shown to the learner. For keywords mode, name the words to use. For situation mode, describe the scenario and goal. For grammar_target mode, state the structure to use. The prompt MUST be solvable only by exercising the configured grammar point.",
+      },
+      keywords: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "REQUIRED and non-empty when promptMode is 'keywords' (3–4 everyday words the learner must use). Omit for other modes.",
+      },
+      targetStructure: {
+        type: "string",
+        description:
+          "Human-readable label of the grammar structure the learner must use (e.g. 'present subjunctive'). REQUIRED for grammar_target mode; optional otherwise.",
+      },
+      register: {
+        type: "string",
+        enum: ["informal", "neutral", "formal"],
+        description:
+          "Optional register constraint the learner's sentence must respect.",
+      },
+      modelAnswers: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "2 or 3 distinct, natural example sentences that satisfy the prompt AND exercise the target grammar point at the target CEFR level. These demonstrate that the prompt is solvable and seed the learner's 'show an example' hint.",
+      },
+      topicHint: {
+        type: "string",
+        description: "Optional topic theme (e.g. 'travel', 'work', 'family').",
+      },
+    },
+    required: ["instructions", "promptMode", "prompt", "modelAnswers"],
+  },
+};
+
 export const GENERATION_TOOL_BY_TYPE: Readonly<
   Record<ExerciseType, Anthropic.Tool>
 > = Object.freeze({
   cloze: CLOZE_GENERATION_TOOL,
   translation: TRANSLATION_GENERATION_TOOL,
   vocab_recall: VOCAB_RECALL_GENERATION_TOOL,
+  sentence_construction: SENTENCE_CONSTRUCTION_GENERATION_TOOL,
 });
 
 // ---------------------------------------------------------------------------

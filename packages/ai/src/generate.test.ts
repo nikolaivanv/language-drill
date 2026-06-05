@@ -15,6 +15,8 @@ import {
   CLOZE_GENERATION_TOOL,
   GENERATION_MODEL,
   GENERATION_TEMPERATURE,
+  GENERATION_TOOL_BY_TYPE,
+  SENTENCE_CONSTRUCTION_GENERATION_TOOL,
   TOOL_NAME_BY_TYPE,
   TRANSLATION_GENERATION_TOOL,
   VOCAB_RECALL_GENERATION_TOOL,
@@ -387,7 +389,7 @@ describe("generateBatch", () => {
   it("rejects unsupported exerciseType before any Claude call", async () => {
     const unsupported = {
       ...baseSpec,
-      exerciseType: "sentence_construction" as ExerciseType,
+      exerciseType: "listening" as unknown as ExerciseType,
     };
     await expect(generateBatch(mockClient, unsupported)).rejects.toThrow(
       /Unsupported exerciseType/,
@@ -798,5 +800,34 @@ describe("generateBatch systemPromptOverride", () => {
       },
     ]);
     expect(callArgs.system[0].text).not.toBe("");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// sentence-construction generation tool
+// ---------------------------------------------------------------------------
+
+describe("sentence-construction generation tool", () => {
+  it("registers the tool name", () => {
+    expect(TOOL_NAME_BY_TYPE[ExerciseType.SENTENCE_CONSTRUCTION]).toBe(
+      "submit_sentence_construction_exercise",
+    );
+  });
+  it("maps the type to its tool, named consistently", () => {
+    const tool = GENERATION_TOOL_BY_TYPE[ExerciseType.SENTENCE_CONSTRUCTION];
+    expect(tool).toBe(SENTENCE_CONSTRUCTION_GENERATION_TOOL);
+    expect(tool.name).toBe(TOOL_NAME_BY_TYPE[ExerciseType.SENTENCE_CONSTRUCTION]);
+  });
+  it("requires the core fields and declares promptMode/modelAnswers", () => {
+    const schema = SENTENCE_CONSTRUCTION_GENERATION_TOOL.input_schema as {
+      properties: Record<string, unknown>;
+      required: string[];
+    };
+    expect(schema.required).toEqual(
+      expect.arrayContaining(["instructions", "promptMode", "prompt", "modelAnswers"]),
+    );
+    expect(schema.properties).toHaveProperty("keywords");
+    expect(schema.properties).toHaveProperty("register");
+    expect(schema.properties).toHaveProperty("targetStructure");
   });
 });
