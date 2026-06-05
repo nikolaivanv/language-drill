@@ -7,8 +7,14 @@
 // field of `GenerateState` plus the `isLoading` / `errorBody` / `rateLimited`
 // status flags; this component is fully driven by props and never holds local
 // state. The user picks/enters a topic (optionally via a suggestion chip),
-// chooses a length, optionally overrides the CEFR band, switches language, and
-// hits Generate. While generating it surfaces a `role="status"` loader.
+// chooses a length, and optionally overrides the CEFR band, then hits
+// Generate. While generating it surfaces a `role="status"` loader.
+//
+// Language is NOT editable here: the whole annotate/save/bank pipeline on the
+// page is bound to the shell's `activeLanguage`, so the generation language is
+// shown as a read-only indicator (changing it is done via the app's language
+// switcher). This is the single source of truth that prevents generating text
+// in one language but scoring/saving it under another.
 //
 // The topic input has no `maxLength`: the counter flips to `--accent` and
 // disables the CTA at length > READING_GEN_TOPIC_MAX_CHARS, matching the
@@ -36,7 +42,7 @@ export type GenerateState = {
 type Props = {
   state: GenerateState;
   chips: readonly string[];
-  onChange: <K extends keyof GenerateState>(
+  onChange: <K extends 'topic' | 'length' | 'cefr'>(
     field: K,
     value: GenerateState[K]
   ) => void;
@@ -72,7 +78,6 @@ const LANGUAGE_LABELS: Record<GenerateLanguage, string> = {
   DE: 'German',
   TR: 'Turkish',
 };
-const LANGUAGES: GenerateLanguage[] = ['ES', 'DE', 'TR'];
 
 const selectClasses =
   'w-full px-[14px] py-[12px] border border-rule rounded-r-md bg-card text-[14px] text-ink outline-none transition-[border-color,box-shadow] duration-150 focus:border-ink focus:shadow-[0_0_0_3px_rgba(26,22,18,0.08)] disabled:opacity-50 disabled:cursor-not-allowed';
@@ -210,27 +215,17 @@ export function GenerateView({
         </div>
 
         <div>
-          <label
-            htmlFor="read-generate-language"
-            className="t-small block mb-[6px]"
+          <span className="t-small block mb-[6px]">language</span>
+          <div
+            className="flex items-center gap-[8px] px-[14px] py-[12px] border border-rule rounded-r-md bg-paper-2 text-[14px] text-ink"
+            title="generation follows the app's language — change it with the language switcher"
           >
-            language
-          </label>
-          <select
-            id="read-generate-language"
-            value={state.language}
-            onChange={(e) =>
-              onChange('language', e.target.value as GenerateLanguage)
-            }
-            disabled={isLoading}
-            className={selectClasses}
-          >
-            {LANGUAGES.map((lang) => (
-              <option key={lang} value={lang}>
-                {LANGUAGE_LABELS[lang]}
-              </option>
-            ))}
-          </select>
+            <Chip variant="default">{state.language}</Chip>
+            <span className="t-small text-ink-mute">
+              {LANGUAGE_LABELS[state.language]} · set via the app&apos;s language
+              switcher
+            </span>
+          </div>
         </div>
       </div>
 

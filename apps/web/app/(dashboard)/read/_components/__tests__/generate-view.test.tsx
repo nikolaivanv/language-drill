@@ -101,14 +101,22 @@ describe('GenerateView — selectors', () => {
     });
     expect(onChange).toHaveBeenCalledWith('cefr', CefrLevel.C1);
   });
+});
 
-  it('calls onChange("language", value) when the language select changes', () => {
-    const onChange = vi.fn();
-    render(<GenerateView {...defaultProps} onChange={onChange} />);
-    fireEvent.change(screen.getByLabelText(/language/i), {
-      target: { value: 'DE' },
-    });
-    expect(onChange).toHaveBeenCalledWith('language', 'DE');
+describe('GenerateView — read-only language indicator', () => {
+  it('renders the current language as a read-only indicator (no editable control)', () => {
+    render(
+      <GenerateView {...defaultProps} state={{ ...baseState, language: 'DE' }} />,
+    );
+    // The language code is shown read-only…
+    expect(screen.getByText('DE')).toBeInTheDocument();
+    // …with the human-readable label + switcher hint…
+    expect(screen.getByText(/German/)).toBeInTheDocument();
+    expect(screen.getByText(/language switcher/i)).toBeInTheDocument();
+    // …and there is no editable language combobox to diverge from activeLanguage.
+    expect(
+      screen.queryByRole('combobox', { name: /language/i }),
+    ).not.toBeInTheDocument();
   });
 });
 

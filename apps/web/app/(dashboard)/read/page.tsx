@@ -39,7 +39,6 @@ import {
 } from '@language-drill/api-client';
 import {
   CefrLevel,
-  Language,
   READING_CHIPS_BY_LANGUAGE,
   type DeepCard,
 } from '@language-drill/shared';
@@ -501,10 +500,13 @@ export default function ReadPage() {
   const handleGenerate = () => {
     generateMutation.mutate(
       {
-        // The reducer stores the language as a plain string literal
-        // ('ES'|'DE'|'TR'); the wire request wants the matching `Language`
-        // enum member. The values are identical, so map through the enum.
-        language: Language[state.generate.language],
+        // Single source of truth: the request language is the shell's
+        // `activeLanguage`, NOT a separate in-form picker. This guarantees the
+        // generated text is in the same language the annotate/save/bank pipeline
+        // (which all read `activeLanguage`) will score and persist it under.
+        // `activeLanguage` is a `LearningLanguage` ('ES'|'DE'|'TR'), exactly
+        // what the request schema expects.
+        language: activeLanguage,
         cefr: state.generate.cefr,
         length: state.generate.length,
         topic: state.generate.topic,
@@ -843,7 +845,7 @@ export default function ReadPage() {
     body = (
       <GenerateView
         state={state.generate}
-        chips={READING_CHIPS_BY_LANGUAGE[state.generate.language]}
+        chips={READING_CHIPS_BY_LANGUAGE[activeLanguage]}
         onChange={(field, value) =>
           dispatch({ type: 'GENERATE_FIELD', field, value: String(value) })
         }
