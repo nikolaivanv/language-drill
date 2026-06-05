@@ -23,6 +23,7 @@ import {
   exerciseDraftId,
   generateBatch,
   parseGeneratedClozeDraft,
+  parseGeneratedSentenceConstructionDraft,
   type GenerationSpec,
 } from "./generate.js";
 
@@ -829,5 +830,90 @@ describe("sentence-construction generation tool", () => {
     expect(schema.properties).toHaveProperty("keywords");
     expect(schema.properties).toHaveProperty("register");
     expect(schema.properties).toHaveProperty("targetStructure");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseGeneratedSentenceConstructionDraft
+// ---------------------------------------------------------------------------
+
+describe("parseGeneratedSentenceConstructionDraft", () => {
+  const spec: GenerationSpec = {
+    ...baseSpec,
+    exerciseType: ExerciseType.SENTENCE_CONSTRUCTION,
+  };
+
+  it("parses a valid grammar_target draft", () => {
+    const out = parseGeneratedSentenceConstructionDraft(
+      {
+        instructions: "Write one sentence in Spanish.",
+        promptMode: "grammar_target",
+        prompt: "Write a sentence using the present subjunctive to express a wish.",
+        targetStructure: "present subjunctive",
+        modelAnswers: ["Espero que vengas.", "Ojalá llueva."],
+      },
+      spec,
+    );
+    expect(out.type).toBe(ExerciseType.SENTENCE_CONSTRUCTION);
+    expect(out.promptMode).toBe("grammar_target");
+    expect(out.modelAnswers).toHaveLength(2);
+  });
+
+  it("parses keywords mode with a non-empty keyword list", () => {
+    const out = parseGeneratedSentenceConstructionDraft(
+      {
+        instructions: "Write one sentence.",
+        promptMode: "keywords",
+        prompt: "Use these words: ayer, biblioteca, libro.",
+        keywords: ["ayer", "biblioteca", "libro"],
+        modelAnswers: ["Ayer olvidé un libro en la biblioteca.", "Ayer fui a la biblioteca por un libro."],
+      },
+      spec,
+    );
+    expect(out.keywords).toEqual(["ayer", "biblioteca", "libro"]);
+  });
+
+  it("rejects keywords mode with no keywords", () => {
+    expect(() =>
+      parseGeneratedSentenceConstructionDraft(
+        { instructions: "x", promptMode: "keywords", prompt: "p", modelAnswers: ["a", "b"] },
+        spec,
+      ),
+    ).toThrow(/keywords/);
+  });
+
+  it("rejects an unknown promptMode", () => {
+    expect(() =>
+      parseGeneratedSentenceConstructionDraft(
+        { instructions: "x", promptMode: "freeform", prompt: "p", modelAnswers: ["a", "b"] },
+        spec,
+      ),
+    ).toThrow(/promptMode/);
+  });
+
+  it("rejects fewer than 2 or more than 3 model answers", () => {
+    expect(() =>
+      parseGeneratedSentenceConstructionDraft(
+        { instructions: "x", promptMode: "situation", prompt: "p", modelAnswers: ["only one"] },
+        spec,
+      ),
+    ).toThrow(/modelAnswers/);
+  });
+
+  it("rejects more than 3 model answers", () => {
+    expect(() =>
+      parseGeneratedSentenceConstructionDraft(
+        { instructions: "x", promptMode: "situation", prompt: "p", modelAnswers: ["a", "b", "c", "d"] },
+        spec,
+      ),
+    ).toThrow(/modelAnswers/);
+  });
+
+  it("drops keywords supplied outside keywords mode", () => {
+    const out = parseGeneratedSentenceConstructionDraft(
+      { instructions: "x", promptMode: "situation", prompt: "p", keywords: ["stray"], modelAnswers: ["a", "b"] },
+      spec,
+    );
+    expect(out.keywords).toBeUndefined();
   });
 });

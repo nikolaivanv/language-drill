@@ -21,6 +21,7 @@ import {
   Language,
   deterministicUuid,
   type GrammarPoint,
+  type SentenceConstructionContent,
   type TranslationContent,
   type VocabRecallContent,
 } from "@language-drill/shared";
@@ -591,6 +592,82 @@ export function parseGeneratedVocabRecallDraft(
   };
 }
 
+const PROMPT_MODES: ReadonlySet<string> = new Set([
+  "keywords",
+  "situation",
+  "grammar_target",
+]);
+const REGISTERS: ReadonlySet<string> = new Set(["informal", "neutral", "formal"]);
+
+export function parseGeneratedSentenceConstructionDraft(
+  input: unknown,
+  _spec: GenerationSpec,
+): SentenceConstructionContent {
+  const ctx = "sentence_construction draft";
+  if (!isObject(input)) {
+    throw new Error(`${ctx}: must be an object, got ${typeof input}`);
+  }
+
+  const instructions = requireString(input, "instructions", ctx);
+  const promptMode = requireString(input, "promptMode", ctx);
+  const prompt = requireString(input, "prompt", ctx);
+  const keywords = optionalStringArray(input, "keywords", ctx);
+  const targetStructure = optionalString(input, "targetStructure", ctx);
+  const register = optionalString(input, "register", ctx);
+  const modelAnswers = requireStringArray(input, "modelAnswers", ctx);
+  const topicHint = optionalString(input, "topicHint", ctx);
+
+  if (!PROMPT_MODES.has(promptMode)) {
+    throw new Error(
+      `${ctx}: invalid promptMode: must be one of keywords|situation|grammar_target, got ${JSON.stringify(promptMode)}`,
+    );
+  }
+  if (prompt.trim().length === 0) {
+    throw new Error(`${ctx}: invalid prompt: must contain non-whitespace characters`);
+  }
+  if (promptMode === "keywords" && (!keywords || keywords.length === 0)) {
+    throw new Error(
+      `${ctx}: invalid keywords: promptMode 'keywords' requires a non-empty keywords array`,
+    );
+  }
+  if (modelAnswers.length < 2 || modelAnswers.length > 3) {
+    throw new Error(
+      `${ctx}: invalid modelAnswers: expected 2–3 entries, got ${modelAnswers.length}`,
+    );
+  }
+  for (let i = 0; i < modelAnswers.length; i++) {
+    if (modelAnswers[i].trim().length === 0) {
+      throw new Error(
+        `${ctx}: invalid modelAnswers[${i}]: must contain non-whitespace characters`,
+      );
+    }
+  }
+  if (register !== undefined && !REGISTERS.has(register)) {
+    throw new Error(
+      `${ctx}: invalid register: must be one of informal|neutral|formal, got ${JSON.stringify(register)}`,
+    );
+  }
+
+  // `keywords` is meaningful only in keywords mode; drop any stray array the
+  // model emits in situation/grammar_target mode.
+  const emitKeywords =
+    promptMode === "keywords" && keywords !== undefined && keywords.length > 0;
+
+  return {
+    type: ExerciseType.SENTENCE_CONSTRUCTION,
+    instructions,
+    promptMode: promptMode as SentenceConstructionContent["promptMode"],
+    prompt,
+    ...(emitKeywords ? { keywords } : {}),
+    ...(targetStructure !== undefined ? { targetStructure } : {}),
+    ...(register !== undefined
+      ? { register: register as SentenceConstructionContent["register"] }
+      : {}),
+    modelAnswers,
+    ...(topicHint !== undefined ? { topicHint } : {}),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Deterministic ID derivation
 // ---------------------------------------------------------------------------
@@ -841,11 +918,7 @@ function parseToolInput(
       return parseGeneratedTranslationDraft(input, spec);
     case ExerciseType.VOCAB_RECALL:
       return parseGeneratedVocabRecallDraft(input, spec);
-    default: {
-      const _exhaustive: never = spec.exerciseType;
-      throw new Error(
-        `parseToolInput: unsupported exerciseType ${(_exhaustive as ExerciseType)}`,
-      );
-    }
+    case ExerciseType.SENTENCE_CONSTRUCTION:
+      return parseGeneratedSentenceConstructionDraft(input, spec);
   }
 }
