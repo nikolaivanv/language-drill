@@ -31,6 +31,7 @@ export type { Cell };
 const GRAMMAR_KIND_TYPES: ReadonlyArray<ExerciseType> = [
   ExerciseType.CLOZE,
   ExerciseType.TRANSLATION,
+  ExerciseType.SENTENCE_CONSTRUCTION,
 ];
 const VOCAB_KIND_TYPES: ReadonlyArray<ExerciseType> = [ExerciseType.VOCAB_RECALL];
 

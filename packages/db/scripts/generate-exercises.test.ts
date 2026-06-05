@@ -204,7 +204,7 @@ describe('resolveCells', () => {
       if (cell.grammarPoint.kind === 'vocab') {
         expect(cell.exerciseType).toBe(ExerciseType.VOCAB_RECALL);
       } else {
-        expect([ExerciseType.CLOZE, ExerciseType.TRANSLATION]).toContain(cell.exerciseType);
+        expect([ExerciseType.CLOZE, ExerciseType.TRANSLATION, ExerciseType.SENTENCE_CONSTRUCTION]).toContain(cell.exerciseType);
       }
     }
   });
