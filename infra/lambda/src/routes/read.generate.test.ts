@@ -93,6 +93,18 @@ vi.mock('@language-drill/ai', () => ({
 // Deterministic plan resolution; the cap logic is exercised via `usageCount`.
 vi.mock('../usage/plan', () => ({
   getEffectivePlan: vi.fn(() => Promise.resolve('free')),
+  isAdmin: vi.fn(() => false),
+}));
+
+// Global cost brake. `capacityVerdict` configures the scenario; beforeEach
+// resets it to 'ok' so the existing tests reach the generate/return paths.
+let capacityVerdict: 'ok' | 'killed' | 'capped' = 'ok';
+const mockCheckGlobalCapacity = vi.fn(
+  (_args: { plan: string; admin: boolean }) => Promise.resolve(capacityVerdict),
+);
+vi.mock('../usage/global-capacity', () => ({
+  checkGlobalCapacity: (args: { plan: string; admin: boolean }) =>
+    mockCheckGlobalCapacity(args),
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -132,6 +144,7 @@ describe('POST /read/generate', () => {
     vi.clearAllMocks();
     cacheRow = undefined;
     usageCount = 0;
+    capacityVerdict = 'ok';
     insertValuesCalls.length = 0;
     // ANTHROPIC_API_KEY is read at module scope from process.env; set it before
     // the dynamic import so the generate path is reachable.
@@ -219,6 +232,32 @@ describe('POST /read/generate', () => {
     expect(mockGenerateReadingText).not.toHaveBeenCalled();
     // hit_count bumped, nothing metered.
     expect(mockUpdate).toHaveBeenCalledTimes(1);
+    const usageInsert = insertValuesCalls.find(
+      (r) => r.eventType === 'text_generation',
+    );
+    expect(usageInsert).toBeUndefined();
+    // A cache HIT is free — the global brake must never be consulted.
+    expect(mockCheckGlobalCapacity).not.toHaveBeenCalled();
+  });
+
+  it('global capacity denied on a miss → 503 GLOBAL_CAPACITY, no generation, no usage insert', async () => {
+    cacheRow = undefined;
+    usageCount = 0;
+    // Below the per-user cap (free limit is 20) so the denial is attributable
+    // to the global brake, not the per-user cap.
+    capacityVerdict = 'killed';
+
+    const res = await buildRequest(app, validBody);
+    expect(res.status).toBe(503);
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBe('GLOBAL_CAPACITY');
+
+    // The brake ran before the per-user cap with the resolved plan + admin flag.
+    expect(mockCheckGlobalCapacity).toHaveBeenCalledWith({
+      plan: 'free',
+      admin: false,
+    });
+    expect(mockGenerateReadingText).not.toHaveBeenCalled();
     const usageInsert = insertValuesCalls.find(
       (r) => r.eventType === 'text_generation',
     );

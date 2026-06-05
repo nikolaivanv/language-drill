@@ -27,7 +27,8 @@ import {
 import { createClaudeClient, generateReadingText } from '@language-drill/ai';
 import { db } from '../db';
 import { limitFor } from '../usage/limits';
-import { getEffectivePlan } from '../usage/plan';
+import { getEffectivePlan, isAdmin } from '../usage/plan';
+import { checkGlobalCapacity } from '../usage/global-capacity';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
 
@@ -759,8 +760,24 @@ read.post('/read/generate', async (c) => {
     });
   }
 
-  // 2. MISS — enforce the per-user daily text_generation cap.
+  // 2. MISS — resolve tier, run the global brake, then the per-user daily cap.
+  // The global brake mirrors the answer-eval submit route: a cache HIT is free
+  // and must never be blocked, so this check lives on the miss path only and is
+  // evaluated before the per-user cap (CLAUDE.md: "checked before the per-user
+  // cap"). Admins/boosted are encoded in the helper.
   const plan = await getEffectivePlan(userId);
+
+  const capacity = await checkGlobalCapacity({ plan, admin: isAdmin(userId) });
+  if (capacity !== 'ok') {
+    return c.json(
+      {
+        error: 'AI temporarily at capacity',
+        code: 'GLOBAL_CAPACITY',
+      },
+      503,
+    );
+  }
+
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const [{ count: todayCount }] = await db
     .select({ count: count() })
