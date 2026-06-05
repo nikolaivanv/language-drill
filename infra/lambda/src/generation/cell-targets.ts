@@ -42,6 +42,7 @@ export const CELL_TARGET_DEFAULTS: Record<
   // 50; B1/B2 are unset → they fall through to TARGET_PER_CELL.
   [ExerciseType.CLOZE]: { A1: 20, A2: 30 },
   [ExerciseType.TRANSLATION]: { A1: 20, A2: 30 },
+  [ExerciseType.SENTENCE_CONSTRUCTION]: { A1: 20, A2: 30 },
   // N×distinctWords surface space (R6.6) → above the global default everywhere.
   [ExerciseType.VOCAB_RECALL]: { A1: 60, A2: 60, B1: 75, B2: 75 },
 };
