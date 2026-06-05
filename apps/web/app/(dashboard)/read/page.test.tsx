@@ -34,6 +34,7 @@ const mockUseUpdateReadBank = vi.fn();
 const mockUseReadAnnotateSpanStream = vi.fn();
 const mockUseSaveVocabularyCard = vi.fn();
 const mockUseDeleteVocabularyCard = vi.fn();
+const mockUseGenerateReadingText = vi.fn();
 
 vi.mock('@language-drill/api-client', () => ({
   useLanguageProfiles: (...args: unknown[]) => mockUseLanguageProfiles(...args),
@@ -49,6 +50,8 @@ vi.mock('@language-drill/api-client', () => ({
     mockUseSaveVocabularyCard(...args),
   useDeleteVocabularyCard: (...args: unknown[]) =>
     mockUseDeleteVocabularyCard(...args),
+  useGenerateReadingText: (...args: unknown[]) =>
+    mockUseGenerateReadingText(...args),
   // Under-review highlight source (Req 13.2) — default to no active lemmas so
   // existing reader assertions are unaffected.
   useActiveReviewLemmas: () => ({ data: { lemmas: [], surfaces: [] } }),
@@ -287,6 +290,7 @@ let saveMutate: ReturnType<typeof vi.fn>;
 let updateBankMutate: ReturnType<typeof vi.fn>;
 let saveVocabMutate: ReturnType<typeof vi.fn>;
 let deleteVocabMutate: ReturnType<typeof vi.fn>;
+let generateMutate: ReturnType<typeof vi.fn>;
 
 type MutateImpl = (
   vars: unknown,
@@ -331,6 +335,18 @@ function setVocabMutations(
     reset: vi.fn(),
     isPending: false,
     error: null,
+  });
+}
+
+function setGenerate(
+  opts: { mutateImpl?: MutateImpl; isPending?: boolean; error?: Error | null } = {},
+) {
+  generateMutate = vi.fn(opts.mutateImpl ?? (() => {}));
+  mockUseGenerateReadingText.mockReturnValue({
+    mutate: generateMutate,
+    reset: vi.fn(),
+    isPending: opts.isPending ?? false,
+    error: opts.error ?? null,
   });
 }
 
@@ -398,6 +414,7 @@ beforeEach(() => {
   setUpdateBank();
   resetSpanMock();
   setVocabMutations();
+  setGenerate();
 });
 
 afterEach(() => {
@@ -487,6 +504,66 @@ describe('ReadPage — paste view counter behavior', () => {
     ).toBeDisabled();
     const counter = screen.getByText(/2,001 \/ 2,000 · too long/);
     expect(counter.className).toContain('text-accent');
+  });
+});
+
+describe('ReadPage — generate flow', () => {
+  it('clicking "generate a text" from the EmptyView opens the GenerateView', () => {
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: /generate a text/i }));
+    expect(screen.getByText('generate a passage')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /generate →/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('a successful generation feeds the text into the annotate pipeline', () => {
+    // The generate mutation immediately resolves onSuccess with a passage; the
+    // page mirrors it into paste state and fires the streaming annotate hook.
+    setGenerate({
+      mutateImpl: (_vars, opts) => {
+        opts?.onSuccess?.({
+          title: 'El gato',
+          text: 'un gato pequeño',
+          cefr: CefrLevel.A2,
+          difficultyScore: 0.1,
+          fromCache: false,
+          runsHard: false,
+        });
+      },
+    });
+    annotateStart.mockImplementation(() => {
+      setAnnotateState({
+        phase: 'streaming',
+        candidateCount: 0,
+        flaggedMap: {},
+        flaggedCount: 0,
+        calibration: { cefr: 'A2', top: 0 },
+      });
+    });
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: /generate a text/i }));
+    fireEvent.change(screen.getByLabelText(/topic/i), {
+      target: { value: 'a cat' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /generate →/i }));
+    // Mutation fired with the form's selections.
+    expect(generateMutate).toHaveBeenCalledTimes(1);
+    expect(generateMutate.mock.calls[0][0]).toMatchObject({ topic: 'a cat' });
+    // Annotate started against the GENERATED text (not stale paste state).
+    expect(annotateStart).toHaveBeenCalledWith({
+      language: Language.ES,
+      text: 'un gato pequeño',
+    });
+    // The annotated reader shows the generated text.
+    expect(screen.getByTestId('rd-text')).toHaveTextContent('un gato pequeño');
+  });
+
+  it('surfaces the generation error body in the GenerateView', () => {
+    setGenerate({ error: new Error('the model is busy') });
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: /generate a text/i }));
+    expect(screen.getByText('the model is busy')).toBeInTheDocument();
   });
 });
 

@@ -14,11 +14,13 @@ import { Button } from '../../../../components/ui/button';
 
 type Props = {
   onPaste: () => void;
+  /** Open the generate-a-passage launchpad. */
+  onGenerate: () => void;
   /** User's CEFR for the active language; `null` when no profile row exists yet. */
   cefrToken: CefrLevel | null;
 };
 
-export function EmptyView({ onPaste, cefrToken }: Props) {
+export function EmptyView({ onPaste, onGenerate, cefrToken }: Props) {
   const step2 =
     cefrToken === null
       ? 'i highlight words rarer than your current band.'
@@ -34,9 +36,12 @@ export function EmptyView({ onPaste, cefrToken }: Props) {
         a paragraph from a book, an article, a conversation. i&apos;ll mark the
         words above your level and surface them in your next sessions.
       </p>
-      <div className="mt-[32px]">
+      <div className="mt-[32px] flex items-center justify-center gap-[12px] mobile:flex-col">
         <Button variant="primary" size="lg" onClick={onPaste}>
           paste a text →
+        </Button>
+        <Button variant="ghost" size="lg" onClick={onGenerate}>
+          generate a text →
         </Button>
       </div>
       <div className="mt-[48px] rounded-r-lg border border-dashed border-rule bg-paper-2 p-s-6 text-left">

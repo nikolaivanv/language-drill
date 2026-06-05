@@ -10,29 +10,36 @@ import { EmptyView } from '../empty-view';
 describe('EmptyView — CTA', () => {
   it('calls onPaste when the primary CTA is clicked', () => {
     const onPaste = vi.fn();
-    render(<EmptyView onPaste={onPaste} cefrToken={CefrLevel.B1} />);
+    render(<EmptyView onPaste={onPaste} onGenerate={() => {}} cefrToken={CefrLevel.B1} />);
     fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
     expect(onPaste).toHaveBeenCalledTimes(1);
+  });
+
+  it('calls onGenerate when the generate CTA is clicked', () => {
+    const onGenerate = vi.fn();
+    render(<EmptyView onPaste={() => {}} onGenerate={onGenerate} cefrToken={CefrLevel.B1} />);
+    fireEvent.click(screen.getByRole('button', { name: /generate a text/i }));
+    expect(onGenerate).toHaveBeenCalledTimes(1);
   });
 });
 
 describe('EmptyView — step 2 CEFR token', () => {
   it('renders the "~B1+" parenthetical when a CEFR level is provided', () => {
-    render(<EmptyView onPaste={() => {}} cefrToken={CefrLevel.B1} />);
+    render(<EmptyView onPaste={() => {}} onGenerate={() => {}} cefrToken={CefrLevel.B1} />);
     expect(
       screen.getByText(/i highlight words rarer than your current band \(~B1\+\)\./),
     ).toBeInTheDocument();
   });
 
   it('renders the "~A2+" parenthetical for an A2 user', () => {
-    render(<EmptyView onPaste={() => {}} cefrToken={CefrLevel.A2} />);
+    render(<EmptyView onPaste={() => {}} onGenerate={() => {}} cefrToken={CefrLevel.A2} />);
     expect(
       screen.getByText(/\(~A2\+\)/),
     ).toBeInTheDocument();
   });
 
   it('falls back to the bare "your current band" copy when cefrToken is null', () => {
-    render(<EmptyView onPaste={() => {}} cefrToken={null} />);
+    render(<EmptyView onPaste={() => {}} onGenerate={() => {}} cefrToken={null} />);
     expect(
       screen.getByText('i highlight words rarer than your current band.'),
     ).toBeInTheDocument();
@@ -44,7 +51,7 @@ describe('EmptyView — step 2 CEFR token', () => {
 describe('EmptyView — mobile reflow', () => {
   it('drops the desktop max-width cap so the column goes full-width on mobile (Req 8.5)', () => {
     const { container } = render(
-      <EmptyView onPaste={() => {}} cefrToken={CefrLevel.B1} />,
+      <EmptyView onPaste={() => {}} onGenerate={() => {}} cefrToken={CefrLevel.B1} />,
     );
     expect(container.firstChild).toHaveClass('mobile:max-w-none', 'mobile:mt-[32px]');
     // Desktop cap is preserved.
@@ -54,7 +61,7 @@ describe('EmptyView — mobile reflow', () => {
 
 describe('EmptyView — header copy invariants', () => {
   it('renders the Caveat eyebrow, hero title, and body paragraph', () => {
-    render(<EmptyView onPaste={() => {}} cefrToken={CefrLevel.B1} />);
+    render(<EmptyView onPaste={() => {}} onGenerate={() => {}} cefrToken={CefrLevel.B1} />);
     expect(screen.getByText('read in the wild')).toBeInTheDocument();
     expect(
       screen.getByText("paste anything you're reading."),
@@ -65,7 +72,7 @@ describe('EmptyView — header copy invariants', () => {
   });
 
   it('renders the "how it works" heading and all four ordered steps', () => {
-    render(<EmptyView onPaste={() => {}} cefrToken={CefrLevel.B1} />);
+    render(<EmptyView onPaste={() => {}} onGenerate={() => {}} cefrToken={CefrLevel.B1} />);
     expect(screen.getByText('how it works')).toBeInTheDocument();
     const items = screen.getAllByRole('listitem');
     expect(items).toHaveLength(4);

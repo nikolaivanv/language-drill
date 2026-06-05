@@ -26,6 +26,9 @@ function activeButton(view: View): 'current' | 'history' | 'paste' {
   switch (view) {
     case 'annotated':
     case 'empty':
+    // The generate launchpad is reached from the empty/current slot, so it
+    // keeps the "current text" button raised.
+    case 'generating':
       return 'current';
     case 'history':
       return 'history';

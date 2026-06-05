@@ -210,3 +210,10 @@ export const READING_LENGTH_WORD_TARGETS = {
  * the text is considered "too hard" and regenerated once. 0.15 = 15%.
  */
 export const READING_TOO_HARD_THRESHOLD = 0.15;
+
+/** Seed topic chips shown on the generate launchpad, per reading language. */
+export const READING_CHIPS_BY_LANGUAGE: Record<"ES" | "DE" | "TR", readonly string[]> = {
+  ES: ["a short café dialogue", "news: a city festival", "a short story about a cat", "an email to a friend"],
+  DE: ["a short café dialogue", "news: a city festival", "a short story about a cat", "an email to a friend"],
+  TR: ["a short café dialogue", "news: a city festival", "a short story about a cat", "an email to a friend"],
+};
