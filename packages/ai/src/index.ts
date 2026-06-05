@@ -199,6 +199,18 @@ export type { ReadingGenerationPromptInputs } from "./reading-generation-prompts
 export { scoreTextLevel } from "./reading-level-check.js";
 export type { ScoreTextLevelInput, TextLevelScore } from "./reading-level-check.js";
 
+export {
+  READING_GENERATION_MODEL,
+  READING_GENERATION_MAX_TOKENS,
+  READING_GENERATION_TEMPERATURE,
+  SUBMIT_READING_TEXT_TOOL,
+  generateReadingText,
+} from "./reading-generate.js";
+export type {
+  GenerateReadingTextInput,
+  GenerateReadingTextResult,
+} from "./reading-generate.js";
+
 /**
  * Creates an Anthropic client instance configured with the provided API key.
  */
