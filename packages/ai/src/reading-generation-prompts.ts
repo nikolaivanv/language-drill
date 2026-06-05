@@ -3,7 +3,7 @@ import {
   CefrLevel,
   ReadingTextLength,
   READING_LENGTH_WORD_TARGETS,
-} from '@language-drill/shared';
+} from "@language-drill/shared";
 
 /** Bump to today's date when editing the template below (CLAUDE.md convention). */
 export const READING_GENERATION_PROMPT_VERSION = 'reading-generate@2026-06-05';
@@ -39,7 +39,7 @@ export function buildReadingGenerationUserPrompt(
   inputs: ReadingGenerationPromptInputs,
 ): string {
   const { language, cefr, length, topic, stricter } = inputs;
-  const window = READING_LENGTH_WORD_TARGETS[length];
+  const wordTarget = READING_LENGTH_WORD_TARGETS[length];
   const langName = LANGUAGE_NAME[language];
 
   const stricterLine = stricter
@@ -51,7 +51,7 @@ export function buildReadingGenerationUserPrompt(
   return (
     `Write a ${langName} reading text at CEFR ${cefr}.\n` +
     `Topic: ${topic}\n` +
-    `Length: between ${window.min} and ${window.max} words.\n` +
+    `Length: between ${wordTarget.min} and ${wordTarget.max} words.\n` +
     `Give it a short, natural title in ${langName}.` +
     stricterLine
   );
