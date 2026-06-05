@@ -18,7 +18,7 @@ The generator must produce exercises that:
 6. **Are reproducible** — given the same curriculum row + batch seed, the generator produces the same exercise IDs (idempotency).
 7. **Have a human-in-the-loop fallback** — every generated exercise is automatically validated by a second Claude pass, and anything flagged is queued for manual review before it reaches users.
 
-Non-goals for this plan: audio (Polly), speaking prompts, listening passages, and personal-word-bank exercises. Those have separate generation paths and are explicitly out of scope until the pre-gen pool for text exercises is solid.
+Non-goals for this plan: audio (Polly), speaking prompts, listening passages, and personal-word-bank exercises. Those have separate generation paths and are explicitly out of scope until the pre-gen pool for text exercises is solid. Two newer strategy-doc types are also partial non-goals here and are detailed in Phase 6: **picture description** needs an *image asset* sub-pipeline that this text generator does not cover, and **task-based role-play** is mostly *not* pre-generated at all — only its scenario scaffold is pool content; the live dialogue is metered at runtime.
 
 ---
 
@@ -523,6 +523,12 @@ When `docs/exercise-strategy.md` Phases 2+ ship, each new exercise type adds:
 4. Optional: new metadata columns if the type needs them (e.g. `audio_s3_key` already exists for listening).
 
 Order matches the strategy doc: sentence construction → error correction → paragraph → contextual paraphrase → dialogue → mini-essay → listening → speaking. Each is roughly 0.5–1d of generator work given the framework from Phases 1–4.
+
+**Two types do not fit the text-only framework cleanly** and need explicit handling beyond the four steps above:
+
+- **Picture Description (strategy §12).** The text half fits — the `ExerciseContent` shape carries a Claude-authored *reference description* + object/preposition *tag list*, and a generation prompt + validator user-prompt slot in normally. What does **not** fit is the **image asset itself**, a new asset class this generator has never produced (we only emit text into `contentJson`). It needs a sibling sub-pipeline, analogous to the Polly path for listening: source or generate the image (AI-generated images recommended, so scenes can be designed to elicit the target grammar/vocabulary — see the strategy doc's open decision), store it in S3, and reference it by key (reuse the existing `audio_s3_key` pattern with an `image_s3_key` column). The image + reference description/tags are generated once and reused like the rest of the pool; **only the learner's answer is evaluated live.** Reference-tag grading (vs. vision grading) is the strategy-doc decision that determines whether the validator/eval call stays text-only. Budget this as more than 0.5–1d because of the image sub-pipeline; sequence it after the curriculum-driven cells, since image generation is a distinct cost line not covered by §5's model.
+
+- **Task-Based Role-Play (strategy §13).** This is the one type that mostly **bypasses the pre-generated pool**. Only the **scenario scaffold** — goal + setting + NPC persona(s), tagged by register/situation — is pool content, and that part fits the framework as a small `ExerciseContent` shape with its own generation + validator prompts. The **dialogue itself is generated live and metered at runtime** (new `ai_roleplay` usage bucket, turn-capped — see strategy §13 and `infra/lambda/src/usage/limits.ts`), and the evaluation is **conversation-level**, not the per-draft validation this plan is built around. So this generator's responsibility ends at the scenario scaffold; the live-dialogue runtime and its conversation grader are a separate workstream tracked in the strategy doc, **not** in this generation plan, and their token spend belongs in the live-AI metering budget, not §5's pool cost model.
 
 ---
 
