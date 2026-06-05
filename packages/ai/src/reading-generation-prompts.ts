@@ -5,7 +5,7 @@ import {
   READING_LENGTH_WORD_TARGETS,
 } from "@language-drill/shared";
 
-import { getPromptWithVarsOrFallback } from "./prompts-registry.js";
+import { getPromptOrFallback } from "./prompts-registry.js";
 
 /** Bump to today's date when editing the template below (CLAUDE.md convention). */
 export const READING_GENERATION_PROMPT_VERSION = 'reading-generate@2026-06-05';
@@ -62,20 +62,19 @@ export function buildReadingGenerationUserPrompt(
 /**
  * Builds the reading-generation system prompt, fetching the live body from
  * Langfuse (label `production`) and falling back to
- * `READING_GENERATION_SYSTEM_PROMPT` on outage / unset keys / compile
- * mismatch — mirroring `buildGenerationSystemPrompt`.
+ * `READING_GENERATION_SYSTEM_PROMPT` on outage / unset keys / timeout —
+ * using the static-prompt resolver `getPromptOrFallback` (same as the
+ * read-span, evaluate, and annotate builders).
  *
- * The prompt carries no template variables, so the var map is empty.
  * Async because the Langfuse fetch is async (cached in-process for 5 min
  * so warm Lambdas pay zero per-request cost). The single caller
  * (`callOnce` in `reading-generate.ts`) is already `async`.
  */
 export async function buildReadingGenerationSystemPrompt(): Promise<string> {
-  const { text } = await getPromptWithVarsOrFallback(
+  const { text } = await getPromptOrFallback(
     "reading-generation-system-prompt",
     READING_GENERATION_SYSTEM_PROMPT,
     READING_GENERATION_PROMPT_VERSION,
-    {},
   );
   return text;
 }
