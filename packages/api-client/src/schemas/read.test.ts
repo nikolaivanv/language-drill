@@ -17,6 +17,8 @@ import {
   AnnotateSpanRequestSchema,
   AnnotateSpanResponseSchema,
   DeleteVocabularyCardResponseSchema,
+  GenerateReadingTextRequestSchema,
+  GenerateReadingTextResponseSchema,
   ReadEntriesResponseSchema,
   ReadEntryResponseSchema,
   ReadEntrySummarySchema,
@@ -838,5 +840,43 @@ describe('DeleteVocabularyCardResponseSchema', () => {
     expect(
       DeleteVocabularyCardResponseSchema.safeParse({ id: 'not-a-uuid' }).success,
     ).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GenerateReadingText schemas
+// ---------------------------------------------------------------------------
+
+describe('GenerateReadingText schemas', () => {
+  it('accepts a valid request', () => {
+    const parsed = GenerateReadingTextRequestSchema.parse({
+      language: 'TR',
+      cefr: 'A2',
+      length: 'short',
+      topic: 'a cat at the market',
+    });
+    expect(parsed.length).toBe('short');
+  });
+
+  it('rejects an over-long topic', () => {
+    const result = GenerateReadingTextRequestSchema.safeParse({
+      language: 'TR',
+      cefr: 'A2',
+      length: 'short',
+      topic: 'x'.repeat(5000),
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts a valid response', () => {
+    const parsed = GenerateReadingTextResponseSchema.parse({
+      title: 'Kedi',
+      text: 'Kedi pazarda.',
+      cefr: 'A2',
+      difficultyScore: 0.1,
+      fromCache: false,
+      runsHard: false,
+    });
+    expect(parsed.fromCache).toBe(false);
   });
 });
