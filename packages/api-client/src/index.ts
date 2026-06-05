@@ -170,6 +170,10 @@ export {
   type UpdateReadBankParams,
 } from './hooks/useReadEntryMutations';
 export {
+  useGenerateReadingText,
+  type UseGenerateReadingTextOptions,
+} from './hooks/useGenerateReadingText';
+export {
   useReadAnnotateSpanStream,
   type UseReadAnnotateSpanStreamOptions,
   type UseReadAnnotateSpanStreamReturn,
