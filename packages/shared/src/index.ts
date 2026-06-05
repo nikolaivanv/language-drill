@@ -61,6 +61,7 @@ export enum ExerciseType {
   CLOZE = "cloze",
   TRANSLATION = "translation",
   VOCAB_RECALL = "vocab_recall",
+  SENTENCE_CONSTRUCTION = "sentence_construction",
 }
 
 export type ClozeContent = {
@@ -113,7 +114,29 @@ export type VocabRecallContent = {
   topicHint?: string;
 };
 
-export type ExerciseContent = ClozeContent | TranslationContent | VocabRecallContent;
+export type SentenceConstructionContent = {
+  type: ExerciseType.SENTENCE_CONSTRUCTION;
+  instructions: string;
+  /** Which framing the prompt uses. Drives generation variety, not pooling. */
+  promptMode: "keywords" | "situation" | "grammar_target";
+  /** The rendered task shown to the learner. */
+  prompt: string;
+  /** The words the learner must use; required & non-empty when promptMode is "keywords" (enforced when the generated draft is parsed). */
+  keywords?: string[];
+  /** Human label of the target structure; present for grammar_target mode. */
+  targetStructure?: string;
+  /** Optional register constraint. */
+  register?: "informal" | "neutral" | "formal";
+  /** Valid example sentences (2–3, enforced when the generated draft is parsed). Used by the validator and the "show an example" hint. */
+  modelAnswers: string[];
+  topicHint?: string;
+};
+
+export type ExerciseContent =
+  | ClozeContent
+  | TranslationContent
+  | VocabRecallContent
+  | SentenceConstructionContent;
 
 export type Exercise = {
   id: string;
@@ -137,6 +160,12 @@ export function isTranslationContent(content: ExerciseContent): content is Trans
 
 export function isVocabRecallContent(content: ExerciseContent): content is VocabRecallContent {
   return content.type === ExerciseType.VOCAB_RECALL;
+}
+
+export function isSentenceConstructionContent(
+  content: ExerciseContent,
+): content is SentenceConstructionContent {
+  return content.type === ExerciseType.SENTENCE_CONSTRUCTION;
 }
 
 // ---------------------------------------------------------------------------

@@ -6,6 +6,7 @@ import {
   isClozeContent,
   isTranslationContent,
   isVocabRecallContent,
+  isSentenceConstructionContent,
 } from "./index";
 import type {
   ApiError,
@@ -16,6 +17,7 @@ import type {
   Exercise,
   EvaluationError,
   EvaluationResult,
+  SentenceConstructionContent,
 } from "./index";
 
 describe("Language enum", () => {
@@ -70,15 +72,16 @@ describe("ApiError type", () => {
 // ---------------------------------------------------------------------------
 
 describe("ExerciseType enum", () => {
-  it("has exactly 3 values", () => {
+  it("has exactly 4 values", () => {
     const values = Object.values(ExerciseType);
-    expect(values).toHaveLength(3);
+    expect(values).toHaveLength(4);
   });
 
-  it("contains CLOZE, TRANSLATION, VOCAB_RECALL", () => {
+  it("contains CLOZE, TRANSLATION, VOCAB_RECALL, SENTENCE_CONSTRUCTION", () => {
     expect(ExerciseType.CLOZE).toBe("cloze");
     expect(ExerciseType.TRANSLATION).toBe("translation");
     expect(ExerciseType.VOCAB_RECALL).toBe("vocab_recall");
+    expect(ExerciseType.SENTENCE_CONSTRUCTION).toBe("sentence_construction");
   });
 });
 
@@ -113,6 +116,15 @@ const vocabRecallContent: VocabRecallContent = {
   exampleSentence: "I returned my books to the library.",
 };
 
+const sentenceConstructionContent: SentenceConstructionContent = {
+  type: ExerciseType.SENTENCE_CONSTRUCTION,
+  instructions: "Write one sentence in Spanish.",
+  promptMode: "grammar_target",
+  prompt: "Write a sentence using the present subjunctive to express a wish.",
+  targetStructure: "present subjunctive",
+  modelAnswers: ["Espero que tengas un buen día.", "Ojalá llueva mañana."],
+};
+
 // ---------------------------------------------------------------------------
 // Type guard tests
 // ---------------------------------------------------------------------------
@@ -128,6 +140,10 @@ describe("isClozeContent", () => {
 
   it("returns false for vocab_recall content", () => {
     expect(isClozeContent(vocabRecallContent)).toBe(false);
+  });
+
+  it("returns false for sentence-construction content", () => {
+    expect(isClozeContent(sentenceConstructionContent)).toBe(false);
   });
 });
 
@@ -256,7 +272,12 @@ describe("EvaluationResult type", () => {
 
 describe("ExerciseContent discriminated union", () => {
   it("can be narrowed via switch on type field", () => {
-    const contents: ExerciseContent[] = [clozeContent, translationContent, vocabRecallContent];
+    const contents: ExerciseContent[] = [
+      clozeContent,
+      translationContent,
+      vocabRecallContent,
+      sentenceConstructionContent,
+    ];
     const types: string[] = [];
 
     for (const content of contents) {
@@ -270,9 +291,30 @@ describe("ExerciseContent discriminated union", () => {
         case ExerciseType.VOCAB_RECALL:
           types.push("vocab_recall");
           break;
+        case ExerciseType.SENTENCE_CONSTRUCTION:
+          types.push("sentence_construction");
+          break;
       }
     }
 
-    expect(types).toEqual(["cloze", "translation", "vocab_recall"]);
+    expect(types).toEqual(["cloze", "translation", "vocab_recall", "sentence_construction"]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// isSentenceConstructionContent type guard
+// ---------------------------------------------------------------------------
+
+describe("isSentenceConstructionContent", () => {
+  it("returns true for sentence-construction content", () => {
+    expect(isSentenceConstructionContent(sentenceConstructionContent)).toBe(true);
+  });
+
+  it("returns false for cloze content", () => {
+    expect(isSentenceConstructionContent(clozeContent)).toBe(false);
+  });
+
+  it("returns false for vocab_recall content", () => {
+    expect(isSentenceConstructionContent(vocabRecallContent)).toBe(false);
   });
 });
