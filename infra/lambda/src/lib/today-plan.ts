@@ -27,6 +27,7 @@ export const ESTIMATED_MINUTES_BY_TYPE: Record<ExerciseType, number> = {
   [ExerciseType.CLOZE]: 2,
   [ExerciseType.TRANSLATION]: 4,
   [ExerciseType.VOCAB_RECALL]: 2,
+  [ExerciseType.SENTENCE_CONSTRUCTION]: 3,
 };
 
 // ---------------------------------------------------------------------------
@@ -41,6 +42,7 @@ export const ITEM_COUNT_BY_TYPE: Record<ExerciseType, number> = {
   [ExerciseType.CLOZE]: 4,
   [ExerciseType.TRANSLATION]: 1,
   [ExerciseType.VOCAB_RECALL]: 6,
+  [ExerciseType.SENTENCE_CONSTRUCTION]: 3,
 };
 
 // ---------------------------------------------------------------------------
