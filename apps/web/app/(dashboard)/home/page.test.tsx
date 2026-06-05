@@ -38,13 +38,13 @@ vi.mock('@clerk/nextjs', () => ({
 const mockUseActiveLanguage = vi.fn<
   () => { activeLanguage: LearningLanguage; setActiveLanguage: () => void }
 >();
-vi.mock('../../components/shell/active-language-provider', () => ({
+vi.mock('../../../components/shell/active-language-provider', () => ({
   useActiveLanguage: () => mockUseActiveLanguage(),
 }));
 
 // Default to desktop so the existing assertions hold; the mobile test flips it.
 const mockIsMobile = vi.fn(() => false);
-vi.mock('../../lib/responsive', () => ({
+vi.mock('../../../lib/responsive', () => ({
   useIsMobile: () => mockIsMobile(),
 }));
 

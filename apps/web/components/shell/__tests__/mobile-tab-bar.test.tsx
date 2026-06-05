@@ -63,8 +63,8 @@ describe('MobileTabBar', () => {
     );
   });
 
-  it('marks today active only on the exact root path', () => {
-    mockUsePathname.mockReturnValue('/');
+  it('marks today active on the dashboard route', () => {
+    mockUsePathname.mockReturnValue('/home');
     render(<MobileTabBar />);
     expect(screen.getByRole('link', { name: 'today' })).toHaveAttribute(
       'aria-current',

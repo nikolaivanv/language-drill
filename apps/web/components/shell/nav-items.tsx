@@ -21,7 +21,7 @@ export interface NavDestination {
 // mobile tab-bar. `review` (spaced practice) and `theory` (reference) sit
 // between `read` and `progress` — the surfaces you reach between drills.
 export const NAV_DESTINATIONS: NavDestination[] = [
-  { href: '/', label: 'today', icon: <TodayIcon /> },
+  { href: '/home', label: 'today', icon: <TodayIcon /> },
   { href: '/drill', label: 'drill', icon: <DrillIcon /> },
   { href: '/read', label: 'read', icon: <ReadIcon /> },
   { href: '/review', label: 'review', icon: <ReviewIcon /> },

@@ -9,6 +9,7 @@ import {
   type LearningLanguage,
 } from '../../lib/active-language';
 import { cn } from '../../lib/cn';
+import { BrandMark } from './brand-mark';
 import { useActiveLanguage } from './active-language-provider';
 import { Flagdot } from './flagdot';
 import { LanguageSheet } from './language-sheet';
@@ -126,13 +127,11 @@ export function MobileTopBar({ profiles }: MobileTopBarProps) {
   return (
     <header className="sticky top-0 z-40 flex h-[52px] flex-none items-center justify-between border-b border-rule bg-paper px-[18px]">
       <Link
-        href="/"
+        href="/home"
         aria-label="drill — home"
         className={cn('flex items-center gap-s-2 rounded-r-sm', focusRing)}
       >
-        <span className="flex h-[28px] w-[28px] items-center justify-center rounded-[7px] bg-ink font-display font-semibold text-paper">
-          d
-        </span>
+        <BrandMark size={28} />
         <span className="font-display text-[18px] font-semibold tracking-[-0.4px] text-ink">
           drill
         </span>

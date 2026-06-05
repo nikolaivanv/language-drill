@@ -75,7 +75,7 @@ describe('MobileTopBar', () => {
 
     expect(screen.getByRole('link', { name: /drill/i })).toHaveAttribute(
       'href',
-      '/',
+      '/home',
     );
     expect(screen.getByRole('button', { name: /spanish/i })).toBeInTheDocument();
     expect(

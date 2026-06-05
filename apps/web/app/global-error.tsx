@@ -34,7 +34,7 @@ export default function GlobalError({
               <Button variant="primary" onClick={reset}>
                 Try again
               </Button>
-              <Button variant="default" href="/">
+              <Button variant="default" href="/home">
                 Go to dashboard
               </Button>
             </div>

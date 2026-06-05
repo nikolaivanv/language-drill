@@ -1,0 +1,203 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   Dark marketing landing ("Drill Floor"). Ported from the design handoff
+   (landing/landing.css, the `.df` section). Everything is scoped under `.df`.
+
+   The design CSS references short token names (--accent, --t-display, --r-md…).
+   Those don't exist in this app — Tailwind v4's @theme emits --color-*, --font-*,
+   and --radius-* instead. The alias block below maps the design names onto the
+   app tokens so the ported rules and inline styles resolve unchanged.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.df {
+  /* alias design token names → app (Tailwind v4 @theme) tokens */
+  --accent: var(--color-accent);
+  --accent-2: var(--color-accent-2);
+  --accent-soft: var(--color-accent-soft);
+  --ok: var(--color-ok);
+  --paper: var(--color-paper);
+  --ink: var(--color-ink);
+  --rule: var(--color-rule);
+  --hilite-soft: var(--color-hilite-soft);
+  --card: var(--color-card);
+  --t-display: var(--font-display);
+  --t-ui: var(--font-ui);
+  --t-mono: var(--font-mono);
+  --t-hand: var(--font-hand);
+  --r-sm: var(--radius-r-sm);
+  --r-md: var(--radius-r-md);
+  --r-lg: var(--radius-r-lg);
+  --r-xl: var(--radius-r-xl);
+
+  /* dark-landing-only palette */
+  --df-bg: #16130f;
+  --df-panel: #211c16;
+  --df-line: #352d24;
+  --df-ink: #f3ece0;
+  --df-ink2: #c4b9a8;
+  --df-mute: #8c8475;
+
+  min-height: 100vh;
+  background: var(--df-bg);
+  color: var(--df-ink);
+  font-family: var(--t-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+.df *,
+.df *::before,
+.df *::after { box-sizing: border-box; }
+
+.df-wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+.df-top {
+  position: sticky; top: 0; z-index: 30; backdrop-filter: blur(10px);
+  background: color-mix(in oklab, #16130f 80%, transparent);
+  border-bottom: 1px solid var(--df-line);
+}
+.df-top-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+.df-brand-name { font-family: var(--t-display); font-size: 22px; font-weight: 600; letter-spacing: -0.5px; color: var(--df-ink); }
+
+/* language pills */
+.df .lang-rail {
+  display: inline-flex; gap: 4px; padding: 4px; background: #1b1610;
+  border: 1px solid var(--df-line); border-radius: 999px;
+}
+.df .lang-pill {
+  border: none; background: transparent; color: var(--df-mute); cursor: pointer;
+  padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 500; font-family: var(--t-ui);
+  display: inline-flex; align-items: center; gap: 6px; transition: all .15s; white-space: nowrap;
+}
+.df .lang-pill:hover { color: var(--df-ink); }
+.df .lang-pill.on { background: var(--df-panel); color: var(--df-ink); border: 1px solid var(--df-line); }
+.df .lang-pill .tag { font-family: var(--t-mono); font-size: 10px; opacity: .6; }
+
+/* hero */
+.df-hero { display: grid; grid-template-columns: minmax(0,1.05fr) minmax(0,1fr); gap: 56px; align-items: center; }
+@media (max-width: 1000px) { .df-hero { grid-template-columns: 1fr; gap: 36px; } }
+.df-h1 {
+  font-family: var(--t-display); font-weight: 500; letter-spacing: -1.4px; line-height: 1.02;
+  font-size: clamp(40px, 6.6vw, 76px); margin: 0; color: var(--df-ink); text-wrap: balance;
+}
+.df-eyebrow { font-family: var(--t-mono); font-size: 11px; letter-spacing: 2.4px; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+.df-sub { color: var(--df-ink2); font-size: 18px; line-height: 1.6; max-width: 460px; }
+
+/* the live drill card */
+.drill-card {
+  background: var(--df-panel); border: 1px solid var(--df-line); border-radius: var(--r-xl);
+  box-shadow: 0 24px 80px rgba(0,0,0,.45); padding: 26px;
+}
+.df-hero .drill-card { width: 100%; }
+.drill-stage {
+  font-family: var(--t-display); font-weight: 400; font-size: clamp(22px, 3vw, 30px);
+  line-height: 1.5; color: var(--df-ink);
+}
+.drill-blank {
+  display: inline-block; min-width: 96px; text-align: center; padding: 2px 12px; margin: 0 2px;
+  border-radius: 8px; font-family: var(--t-mono); font-size: .88em; font-weight: 600;
+  border: 2px solid var(--accent); color: var(--accent); background: color-mix(in oklab, var(--accent) 12%, transparent);
+}
+.drill-blank.filled { border-color: var(--df-ink); color: var(--df-ink); background: transparent; }
+.drill-blank.ok { border-color: var(--ok); color: #a8d6a0; background: color-mix(in oklab, var(--ok) 16%, transparent); }
+.drill-blank.no { border-color: var(--accent); color: #f0a78c; background: color-mix(in oklab, var(--accent) 16%, transparent); }
+.drill-blank.type { min-width: 120px; text-align: left; }
+
+.df-caret {
+  display: inline-block; width: 2px; height: 1em; margin-left: 1px; vertical-align: -2px;
+  background: var(--accent); animation: dfblink 1s step-end infinite;
+}
+@keyframes dfblink { 50% { opacity: 0; } }
+.df-typedot {
+  display: inline-flex; align-items: center; gap: 5px; font-family: var(--t-mono); font-size: 11px;
+  color: var(--df-mute); letter-spacing: .4px;
+}
+.df-typedot b { width: 6px; height: 6px; border-radius: 6px; background: var(--accent); display: inline-block; }
+
+/* sections */
+.df-section { padding: 96px 0; border-top: 1px solid var(--df-line); }
+.df-card { background: var(--df-panel); border: 1px solid var(--df-line); border-radius: var(--r-lg); padding: 26px; }
+.df-eyebrow2 { font-family: var(--t-mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--df-mute); font-weight: 500; }
+.df-h2 {
+  font-family: var(--t-display); font-weight: 500; letter-spacing: -0.8px; line-height: 1.06;
+  font-size: clamp(30px, 4.4vw, 48px); margin: 0; color: var(--df-ink); text-wrap: balance;
+}
+.df-coach {
+  display: flex; gap: 12px; align-items: flex-start; padding: 16px 18px; border-radius: var(--r-md);
+  background: #1b1610; border: 1px solid var(--df-line);
+}
+.df-coach-dot {
+  width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: #fff;
+  display: flex; align-items: center; justify-content: center; font-family: var(--t-display); font-weight: 600; font-size: 15px; flex-shrink: 0;
+}
+.df-mono-num { font-family: var(--t-mono); font-weight: 600; color: var(--accent); }
+
+.loop-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 820px) { .loop-grid { grid-template-columns: 1fr 1fr !important; } }
+@media (max-width: 460px) { .loop-grid { grid-template-columns: 1fr !important; } }
+
+/* dark reading passage + annotation */
+.df-read-grid { display: grid; grid-template-columns: minmax(0,1fr) 360px; gap: 36px; align-items: start; }
+@media (max-width: 940px) { .df-read-grid { grid-template-columns: 1fr; gap: 22px; } }
+.df-passage {
+  font-family: var(--t-display); font-weight: 400; font-size: clamp(22px, 2.5vw, 28px);
+  line-height: 1.66; color: var(--df-ink); letter-spacing: -0.2px; text-wrap: pretty; margin: 0;
+}
+.df-word {
+  display: inline; cursor: pointer; border: none; background: transparent; padding: 0 1px;
+  font: inherit; color: inherit; position: relative; transition: background .15s, color .15s;
+  text-decoration: underline; text-decoration-style: dotted; text-decoration-thickness: 2px;
+  text-underline-offset: 5px; text-decoration-color: color-mix(in oklab, var(--accent) 55%, transparent);
+}
+.df-word:hover { background: color-mix(in oklab, var(--accent) 14%, transparent); text-decoration-color: var(--accent); }
+.df-word.on {
+  background: color-mix(in oklab, var(--accent) 18%, transparent); color: var(--df-ink);
+  text-decoration-color: var(--accent); box-shadow: 0 2px 0 var(--accent);
+}
+.df-note {
+  background: var(--df-panel); border: 1px solid var(--df-line); border-radius: var(--r-lg);
+  box-shadow: 0 18px 50px rgba(0,0,0,.4); padding: 22px 22px 18px;
+}
+.df-rail { position: sticky; top: 92px; }
+.df-hint { border: 1.5px dashed var(--df-line); border-radius: var(--r-lg); padding: 26px 22px; background: #1b1610; text-align: center; }
+.df-chip-dark {
+  display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px;
+  font-size: 11px; font-weight: 500; border: 1px solid var(--df-line); background: #1b1610; color: var(--df-ink2);
+}
+
+/* vocabulary review cards */
+.vocab-card {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center;
+  background: var(--df-panel); border: 1px solid var(--df-line); border-radius: var(--r-lg); padding: 16px 18px;
+}
+.vocab-flag {
+  width: 36px; height: 36px; border-radius: 9px; background: #1b1610; border: 1px solid var(--df-line);
+  display: flex; align-items: center; justify-content: center; font-family: var(--t-mono); font-size: 12px;
+  font-weight: 600; color: var(--df-ink2); flex-shrink: 0;
+}
+.vocab-grade { display: inline-flex; gap: 6px; }
+.vocab-grade button {
+  font-family: var(--t-mono); font-size: 12px; padding: 7px 12px; border-radius: 8px;
+  border: 1px solid var(--df-line); background: #1b1610; color: var(--df-ink2); cursor: pointer; transition: all .14s;
+}
+.vocab-grade button:hover { color: var(--df-ink); border-color: var(--df-ink); }
+.vocab-grade button.again:hover { border-color: var(--accent); color: #f0a78c; }
+.vocab-grade button.easy:hover { border-color: var(--ok); color: #b6e0ad; }
+.vocab-new { border-color: color-mix(in oklab, var(--accent) 55%, var(--df-line)); }
+
+/* buttons sized for the landing */
+.df .btn-xl {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 15px 28px; border-radius: var(--r-md); font-size: 15px; font-weight: 600; font-family: var(--t-ui);
+  border: 1px solid var(--accent); background: var(--accent); color: #fff; cursor: pointer; transition: all .15s;
+}
+.df a.btn-xl { text-decoration: none; }
+.df .btn-xl:hover { background: var(--accent-2); border-color: var(--accent-2); transform: translateY(-1px); }
+.df .btn-xl.ghost-light { background: transparent; border-color: rgba(255,255,255,.32); color: var(--paper); }
+.df .btn-xl.ghost-light:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.55); transform: none; }
+
+/* entrance animations are enhancement only — base state is fully visible */
+@media (prefers-reduced-motion: no-preference) {
+  .df .lift { animation: liftin .4s cubic-bezier(.2,.7,.3,1); }
+  .df .swap { animation: swapin .32s ease; }
+}
+@keyframes liftin { from { transform: translateY(10px); } to { transform: none; } }
+@keyframes swapin { from { transform: translateY(6px); } to { transform: none; } }
