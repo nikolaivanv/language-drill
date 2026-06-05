@@ -1,5 +1,19 @@
 import { describe, it, expect, vi } from "vitest";
 import { Language, CefrLevel, ReadingTextLength } from "@language-drill/shared";
+
+// Stub `buildReadingGenerationSystemPrompt` so the generator never reaches
+// for Langfuse during the test (it would fall back gracefully, but the
+// network round-trip adds latency/flakiness). Mirrors how `generate.test.ts`
+// wraps `buildGenerationSystemPrompt` — keep every other export real.
+vi.mock("./reading-generation-prompts.js", async (importActual) => {
+  const actual =
+    await importActual<typeof import("./reading-generation-prompts.js")>();
+  return {
+    ...actual,
+    buildReadingGenerationSystemPrompt: vi.fn(async () => "SYSTEM PROMPT"),
+  };
+});
+
 import {
   generateReadingText,
   SUBMIT_READING_TEXT_TOOL,

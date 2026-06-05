@@ -60,6 +60,7 @@ async function callOnce(
   stricter: boolean,
   signal?: AbortSignal,
 ): Promise<Draft> {
+  const systemText = await buildReadingGenerationSystemPrompt();
   const response = await client.messages.create(
     {
       model: READING_GENERATION_MODEL,
@@ -67,7 +68,7 @@ async function callOnce(
       system: [
         {
           type: "text" as const,
-          text: buildReadingGenerationSystemPrompt(),
+          text: systemText,
           cache_control: { type: "ephemeral" as const },
         },
       ],
