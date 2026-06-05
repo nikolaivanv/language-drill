@@ -1,5 +1,4 @@
 import {
-  Language,
   CefrLevel,
   READ_CEFR_TOP_RANK,
   READING_TOO_HARD_THRESHOLD,
@@ -9,7 +8,7 @@ import type { LearningLanguage } from "@language-drill/shared";
 import { loadFrequency } from "./frequency/index.js";
 
 export type ScoreTextLevelInput = {
-  language: Language;
+  language: LearningLanguage;
   cefr: CefrLevel;
   text: string;
 };
@@ -31,7 +30,7 @@ export type TextLevelScore = {
 export function scoreTextLevel(input: ScoreTextLevelInput): TextLevelScore {
   const { language, cefr, text } = input;
   const topRank = READ_CEFR_TOP_RANK[cefr];
-  const freq = loadFrequency(language as LearningLanguage);
+  const freq = loadFrequency(language);
 
   let contentWordCount = 0;
   let aboveLevel = 0;
