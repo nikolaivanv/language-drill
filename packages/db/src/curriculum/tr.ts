@@ -752,6 +752,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Dropping copular -(y)mIş on nominal / adjectival predicates when reporting (hastaymış, not hastaydı).',
     ],
     prerequisiteKeys: ['tr-a1-dili-past'],
+    sentenceConstructionSuitable: true,
   },
   {
     key: 'tr-a2-aorist',
@@ -779,6 +780,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Using regular endings in the 1sg/1pl negative instead of the irregular -mAm / -mAyIz (*içmezim → içmem).',
     ],
     prerequisiteKeys: ['tr-a1-vowel-harmony'],
+    sentenceConstructionSuitable: true,
   },
   {
     key: 'tr-a2-ability-necessity',
@@ -866,6 +868,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Thinking önce is obligatory after -mAdAn: -mAdAn on its own can already mean "before" (uyumadan = before sleeping).',
     ],
     prerequisiteKeys: ['tr-a1-dili-past'],
+    sentenceConstructionSuitable: true,
   },
   {
     key: 'tr-a2-nominalization',
@@ -1107,6 +1110,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Forgetting the accusative on the reported command: *gelmem istedi instead of gelmemi istedi (gel-me-m-i).',
     ],
     prerequisiteKeys: ['tr-a1-dili-past'],
+    sentenceConstructionSuitable: true,
   },
 
   /*

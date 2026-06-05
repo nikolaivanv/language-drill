@@ -106,6 +106,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Mixing -er and -ir endings in the third person plural.',
     ],
     prerequisiteKeys: ['es-a1-present-indicative-regular'],
+    sentenceConstructionSuitable: true,
   },
   {
     key: 'es-a2-preterite-irregular',
@@ -193,6 +194,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     ],
     // Restore when es-a1-present-indicative-regular is uncommented:
     // prerequisiteKeys: ['es-a1-present-indicative-regular'],
+    sentenceConstructionSuitable: true,
   },
   {
     key: 'es-b1-conditional',
@@ -208,6 +210,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Substituting the future tense for the conditional in hypothetical statements.',
       'Forgetting the irregular stems shared with the future (tendría, haría, podría).',
     ],
+    sentenceConstructionSuitable: true,
   },
   {
     key: 'es-b1-llevar-time-expressions',
@@ -296,6 +299,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Pairing a counterfactual conditional with the indicative in the if-clause.',
     ],
     prerequisiteKeys: ['es-b1-present-subjunctive'],
+    sentenceConstructionSuitable: true,
   },
   {
     key: 'es-b2-compound-tenses',
