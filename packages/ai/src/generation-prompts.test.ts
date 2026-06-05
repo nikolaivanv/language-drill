@@ -7,6 +7,7 @@ import {
   type TranslationContent,
   type VocabRecallContent,
 } from "@language-drill/shared";
+// SentenceConstructionContent is used implicitly via ExerciseType.SENTENCE_CONSTRUCTION
 import { getGrammarPoint } from "@language-drill/db";
 
 import { CEFR_LEVEL_DESCRIPTORS, EVALUATION_SYSTEM_PROMPT } from "./prompts.js";
@@ -20,6 +21,7 @@ import {
   canonicalSurface,
   capPriorPoolSurfaces,
   computeGenerationPromptVars,
+  sentenceConstructionModeForOrdinal,
   tailRecentStems,
   type GenerationPromptInputs,
 } from "./generation-prompts.js";
@@ -604,6 +606,63 @@ describe("canonicalSurface", () => {
       referenceTranslation: "Espero que llegues a tiempo.",
     };
     expect(canonicalSurface(content)).toBe("i hope you arrive on time.");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// canonicalSurface — sentence_construction
+// ---------------------------------------------------------------------------
+
+describe("canonicalSurface — sentence_construction", () => {
+  it("keys on the normalised prompt text", () => {
+    expect(
+      canonicalSurface({
+        type: ExerciseType.SENTENCE_CONSTRUCTION,
+        instructions: "x",
+        promptMode: "grammar_target",
+        prompt: "  Usá  el  Subjuntivo.  ",
+        modelAnswers: ["a", "b"],
+      }),
+    ).toBe("usa el subjuntivo.");
+  });
+});
+
+describe("sentenceConstructionModeForOrdinal", () => {
+  it("cycles keywords → situation → grammar_target by ordinal", () => {
+    expect(sentenceConstructionModeForOrdinal(0)).toBe("keywords");
+    expect(sentenceConstructionModeForOrdinal(1)).toBe("situation");
+    expect(sentenceConstructionModeForOrdinal(2)).toBe("grammar_target");
+    expect(sentenceConstructionModeForOrdinal(3)).toBe("keywords");
+  });
+});
+
+describe("buildGenerationUserPrompt — sentence_construction", () => {
+  const inputs = {
+    language: "ES",
+    cefrLevel: "B1",
+    exerciseType: ExerciseType.SENTENCE_CONSTRUCTION,
+    grammarPoint: {
+      key: "es-b1-present-subjunctive",
+      kind: "grammar",
+      name: "Present subjunctive",
+      description: "d",
+      cefrLevel: "B1",
+      language: "es",
+      examplesPositive: ["a", "b"],
+      examplesNegative: ["*c"],
+      commonErrors: ["e"],
+    },
+  } as const;
+
+  it("names the ordinal's mode in the message", () => {
+    const msg = buildGenerationUserPrompt(inputs as never, 0, null);
+    expect(msg).toContain("prompt mode: keywords");
+  });
+
+  it("does not add a mode line for other types", () => {
+    const cloze = { ...inputs, exerciseType: ExerciseType.CLOZE };
+    const msg = buildGenerationUserPrompt(cloze as never, 0, null);
+    expect(msg).not.toContain("prompt mode:");
   });
 });
 
