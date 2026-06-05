@@ -183,3 +183,33 @@ export type DeepCard = z.infer<typeof DeepCardSchema>;
 export const SpanAnnotationsSchema = z.record(z.string().min(1), DeepCardSchema);
 
 export type SpanAnnotations = z.infer<typeof SpanAnnotationsSchema>;
+
+// ---------------------------------------------------------------------------
+// Reading text generation
+// ---------------------------------------------------------------------------
+
+/** Length tiers a user can request for a generated reading text. */
+export enum ReadingTextLength {
+  SHORT = "short",
+  MEDIUM = "medium",
+  LONG = "long",
+}
+
+/** Max characters accepted for a free-form topic prompt. */
+export const READING_GEN_TOPIC_MAX_CHARS = 200;
+
+/** Target word-count window per length tier, included verbatim in the prompt. */
+export const READING_LENGTH_WORD_TARGETS: Record<
+  ReadingTextLength,
+  { min: number; max: number }
+> = {
+  [ReadingTextLength.SHORT]: { min: 60, max: 100 },
+  [ReadingTextLength.MEDIUM]: { min: 130, max: 190 },
+  [ReadingTextLength.LONG]: { min: 230, max: 320 },
+};
+
+/**
+ * If more than this fraction of content words sit above the target CEFR band,
+ * the text is considered "too hard" and regenerated once. 0.15 = 15%.
+ */
+export const READING_TOO_HARD_THRESHOLD = 0.15;

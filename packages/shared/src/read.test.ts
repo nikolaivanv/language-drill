@@ -10,6 +10,10 @@ import {
   DeepSentenceCardSchema,
   DeepCardSchema,
   SpanAnnotationsSchema,
+  ReadingTextLength,
+  READING_GEN_TOPIC_MAX_CHARS,
+  READING_LENGTH_WORD_TARGETS,
+  READING_TOO_HARD_THRESHOLD,
 } from "./index";
 import type {
   WordFlag,
@@ -285,5 +289,28 @@ describe("SpanAnnotationsSchema", () => {
   it("rejects an entry whose value is not a valid DeepCard", () => {
     const input = { "0:5": { type: "word", surface: "x" } };
     expect(SpanAnnotationsSchema.safeParse(input).success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Reading generation constants
+// ---------------------------------------------------------------------------
+
+describe("reading generation constants", () => {
+  it("defines three length tiers", () => {
+    expect(Object.values(ReadingTextLength)).toEqual(["short", "medium", "long"]);
+  });
+
+  it("has an ascending word target per length", () => {
+    const { short, medium, long } = READING_LENGTH_WORD_TARGETS;
+    expect(short.max).toBeLessThanOrEqual(medium.min);
+    expect(medium.max).toBeLessThanOrEqual(long.min);
+    expect(short.min).toBeGreaterThan(0);
+  });
+
+  it("caps the topic length and sets a sane too-hard threshold", () => {
+    expect(READING_GEN_TOPIC_MAX_CHARS).toBeGreaterThan(0);
+    expect(READING_TOO_HARD_THRESHOLD).toBeGreaterThan(0);
+    expect(READING_TOO_HARD_THRESHOLD).toBeLessThan(1);
   });
 });
