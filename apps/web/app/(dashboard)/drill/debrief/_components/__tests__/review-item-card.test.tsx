@@ -463,3 +463,115 @@ describe('ReviewItemCard — vocab body', () => {
     expect(container.textContent).not.toContain('Pongo el aceite');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Sentence construction body fixtures + tests (Req 5.10)
+// ---------------------------------------------------------------------------
+
+function sentenceConstructionItem(overrides: Partial<DebriefItem> = {}): DebriefItem {
+  return {
+    exerciseId: '44444444-4444-4444-8444-444444444444',
+    type: ExerciseType.SENTENCE_CONSTRUCTION,
+    grammarPointKey: null,
+    contentJson: {
+      type: ExerciseType.SENTENCE_CONSTRUCTION,
+      instructions: 'Write a sentence using the given words',
+      promptMode: 'keywords',
+      prompt: 'Use: correr, parque, mañana',
+      keywords: ['correr', 'parque', 'mañana'],
+      modelAnswers: [
+        'Voy a correr en el parque mañana.',
+        'Mañana correré en el parque.',
+      ],
+      topicHint: 'future tense',
+    },
+    status: 'incorrect',
+    userAnswer: 'Yo correr en parque mañana.',
+    score: 0.4,
+    evaluation: {
+      ...sampleEvaluation,
+      feedback: 'Use the conjugated verb form, not the infinitive.',
+    },
+    ...overrides,
+  };
+}
+
+describe('ReviewItemCard — sentence construction body', () => {
+  it('renders the prompt as an italic line', () => {
+    render(<ReviewItemCard index={0} item={sentenceConstructionItem()} />);
+    expect(screen.getByText(/Use: correr, parque, mañana/)).toBeDefined();
+  });
+
+  it('renders the "your sentence" cell with the user\'s answer', () => {
+    render(<ReviewItemCard index={0} item={sentenceConstructionItem()} />);
+    expect(screen.getByText('your sentence')).toBeDefined();
+    expect(screen.getByText('Yo correr en parque mañana.')).toBeDefined();
+  });
+
+  it('renders the first model answer in the reference cell on incorrect', () => {
+    render(<ReviewItemCard index={0} item={sentenceConstructionItem()} />);
+    expect(screen.getByText('reference')).toBeDefined();
+    expect(screen.getByText('Voy a correr en el parque mañana.')).toBeDefined();
+  });
+
+  it('renders additional model answers in the "e.g. …" muted line', () => {
+    const { container } = render(
+      <ReviewItemCard index={0} item={sentenceConstructionItem()} />,
+    );
+    expect(container.textContent).toContain('e.g. Mañana correré en el parque.');
+  });
+
+  it('renders "one accepted form" label on correct instead of "reference"', () => {
+    const correct = sentenceConstructionItem({
+      status: 'correct',
+      userAnswer: 'Voy a correr en el parque mañana.',
+      score: 0.95,
+    });
+    render(<ReviewItemCard index={0} item={correct} />);
+    fireEvent.click(screen.getByRole('button')); // expand (correct collapses by default)
+    expect(screen.getByText('one accepted form')).toBeDefined();
+    expect(screen.queryByText('reference')).toBeNull();
+  });
+
+  it('renders Claude evaluation feedback below the cells when incorrect', () => {
+    render(<ReviewItemCard index={0} item={sentenceConstructionItem()} />);
+    expect(
+      screen.getByText('Use the conjugated verb form, not the infinitive.'),
+    ).toBeDefined();
+  });
+
+  it('user sentence is strike-through on incorrect', () => {
+    const { container } = render(
+      <ReviewItemCard index={0} item={sentenceConstructionItem()} />,
+    );
+    const struck = container.querySelectorAll('div[style*="line-through"]');
+    expect(struck.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('user sentence has no strike-through on correct (when expanded)', () => {
+    const correct = sentenceConstructionItem({
+      status: 'correct',
+      userAnswer: 'Voy a correr en el parque mañana.',
+      score: 0.95,
+    });
+    const { container } = render(<ReviewItemCard index={0} item={correct} />);
+    fireEvent.click(screen.getByRole('button')); // expand
+    const struck = container.querySelectorAll('div[style*="line-through"]');
+    expect(struck.length).toBe(0);
+  });
+
+  it('omits the "e.g." line when there is only one model answer', () => {
+    const item = sentenceConstructionItem({
+      contentJson: {
+        type: ExerciseType.SENTENCE_CONSTRUCTION,
+        instructions: 'Write a sentence',
+        promptMode: 'keywords',
+        prompt: 'Use: correr, parque',
+        keywords: ['correr', 'parque'],
+        modelAnswers: ['Corro en el parque.'],
+      },
+    });
+    const { container } = render(<ReviewItemCard index={0} item={item} />);
+    expect(container.textContent).not.toContain('e.g.');
+  });
+});

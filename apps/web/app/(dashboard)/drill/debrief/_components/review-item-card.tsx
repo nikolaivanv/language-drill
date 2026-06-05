@@ -3,10 +3,12 @@
 import * as React from 'react';
 import {
   isClozeContent,
+  isSentenceConstructionContent,
   isTranslationContent,
   isVocabRecallContent,
   type ClozeContent,
   type ExerciseContent,
+  type SentenceConstructionContent,
   type TranslationContent,
   type VocabRecallContent,
 } from '@language-drill/shared';
@@ -65,6 +67,8 @@ export function ReviewItemCard({ index, item }: ReviewItemCardProps) {
             <TranslationBody item={item} content={content} />
           ) : isVocabRecallContent(content) ? (
             <VocabBody item={item} content={content} />
+          ) : isSentenceConstructionContent(content) ? (
+            <SentenceConstructionBody item={item} content={content} />
           ) : null}
         </div>
       )}
@@ -343,6 +347,70 @@ function VocabBody({ item, content }: VocabBodyProps) {
           </div>
           {content.exampleSentence.length > 0 && (
             <p className="t-small mt-s-2">{content.exampleSentence}</p>
+          )}
+        </div>
+      </div>
+      {item.evaluation?.feedback && (
+        <p className="t-small mt-s-3">{item.evaluation.feedback}</p>
+      )}
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Sentence construction body — prompt + "your sentence" cell + model answers (Req 5.10)
+// ---------------------------------------------------------------------------
+
+interface SentenceConstructionBodyProps {
+  item: DebriefItem;
+  content: SentenceConstructionContent;
+}
+
+function SentenceConstructionBody({ item, content }: SentenceConstructionBodyProps) {
+  const isCorrect = item.status === 'correct';
+  return (
+    <>
+      <p className="t-small italic mb-s-2">"{content.prompt}"</p>
+      <div className="grid grid-cols-2 mobile:grid-cols-1 gap-s-3">
+        <div className="rounded-r-md p-s-3 bg-paper-2">
+          <div className="t-micro">your sentence</div>
+          <div
+            className="mt-s-2"
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 16,
+              lineHeight: 1.4,
+              textDecoration: isCorrect ? 'none' : 'line-through',
+              color: isCorrect ? 'var(--color-ok)' : 'var(--color-accent-2)',
+            }}
+          >
+            {item.userAnswer ?? ''}
+          </div>
+        </div>
+        <div
+          className="rounded-r-md p-s-3"
+          style={{
+            background: isCorrect ? 'transparent' : 'var(--color-ok-soft)',
+            border: isCorrect ? '1px dashed var(--color-rule)' : 'none',
+          }}
+        >
+          <div className="t-micro">
+            {isCorrect ? 'one accepted form' : 'reference'}
+          </div>
+          <div
+            className="mt-s-2"
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 16,
+              lineHeight: 1.4,
+            }}
+          >
+            {content.modelAnswers[0] ?? ''}
+          </div>
+          {content.modelAnswers.length > 1 && (
+            <p className="t-small mt-s-2 text-ink-mute">
+              e.g. {content.modelAnswers.slice(1).join(' / ')}
+            </p>
           )}
         </div>
       </div>
