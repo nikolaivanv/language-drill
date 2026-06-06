@@ -80,6 +80,14 @@ export function resolveCells(
         `--grammar-point '${args.grammarPoint}' (kind: ${entry.kind}) is not compatible with --type ${args.type}`,
       );
     }
+    if (
+      args.type === ExerciseType.SENTENCE_CONSTRUCTION &&
+      !entry.sentenceConstructionSuitable
+    ) {
+      throw new Error(
+        `grammar point '${args.grammarPoint}' is not flagged sentenceConstructionSuitable; add the flag in the curriculum to generate sentence_construction exercises for it`,
+      );
+    }
 
     // The (grammarPoint, type) pair is valid → it must exist in the universe.
     const cell = universe.find(

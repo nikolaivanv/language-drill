@@ -20,7 +20,7 @@ const { B1, B2 } = CefrLevel;
  * "saturated-dedup" or "low-yield" suppression on that cell clears, on the
  * assumption that the curriculum edit may have unblocked the search space.
  */
-export const CURRICULUM_VERSION_ES = '2026-05-23';
+export const CURRICULUM_VERSION_ES = '2026-06-06';
 
 const esCurriculum: readonly GrammarPoint[] = [
   /*
@@ -106,7 +106,6 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Mixing -er and -ir endings in the third person plural.',
     ],
     prerequisiteKeys: ['es-a1-present-indicative-regular'],
-    sentenceConstructionSuitable: true,
   },
   {
     key: 'es-a2-preterite-irregular',
@@ -248,6 +247,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Using "cual" without an article in restrictive relative clauses.',
       'Choosing "quien" for inanimate antecedents.',
     ],
+    sentenceConstructionSuitable: true,
   },
   {
     key: 'es-b1-passive-se',

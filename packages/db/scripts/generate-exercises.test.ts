@@ -221,6 +221,25 @@ describe('resolveCells', () => {
       ),
     ).toThrow(/not in curriculum/);
   });
+
+  it('throws a clear error when --type sentence_construction is used with a non-flagged grammar point', () => {
+    // es-b1-passive-se is an active grammar entry but does NOT have
+    // sentenceConstructionSuitable: true, so it should produce the friendly
+    // guard error rather than the confusing "internal: enumerateCurriculumCells
+    // did not produce a cell" message.
+    expect(() =>
+      resolveCells(
+        {
+          ...baseArgs,
+          lang: Language.ES,
+          level: CefrLevel.B1,
+          type: ExerciseType.SENTENCE_CONSTRUCTION,
+          grammarPoint: 'es-b1-passive-se',
+        },
+        ALL_CURRICULA,
+      ),
+    ).toThrow(/not flagged sentenceConstructionSuitable/);
+  });
 });
 
 // ---------------------------------------------------------------------------
