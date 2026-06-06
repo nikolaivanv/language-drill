@@ -235,13 +235,13 @@ describe('per-language counts', () => {
     expect(vocab).toBe(0);
   });
 
-  it('Turkish is at full Yedi İklim A1 + A2 parity (B1/B2 disabled) and has 1 vocab umbrella', () => {
+  it('Turkish is at full Yedi İklim A1 + A2 parity (B1/B2 disabled) and has 2 vocab umbrellas', () => {
     const { grammar, vocab } = countsFor(trCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(26);
     expect(grammar.A2).toBeGreaterThanOrEqual(14);
     expect(grammar.B1).toBe(0);
     expect(grammar.B2).toBe(0);
-    expect(vocab).toBe(1);
+    expect(vocab).toBe(2);
   });
 });
 

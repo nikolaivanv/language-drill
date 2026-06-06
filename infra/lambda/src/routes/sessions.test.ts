@@ -707,19 +707,13 @@ describe('GET /sessions/today', () => {
     expect(body.totalEstimatedMinutes).toBe(12);
   });
 
-  it('Path B: pool returns < 5 draws → items: [], code: INSUFFICIENT_POOL, status 200', async () => {
+  it('Path B: pool returns no draws → items: [], code: INSUFFICIENT_POOL, status 200', async () => {
     mockLimit
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
 
-    // Only 3 draws — translation and the cool-down cloze were missing.
-    mockExecute.mockResolvedValueOnce({
-      rows: [
-        { id: 'p1', type: 'cloze', topic_hint: 'pronouns', difficulty: 'B1' },
-        { id: 'p2', type: 'cloze', topic_hint: 'subjunctive', difficulty: 'B1' },
-        { id: 'p4', type: 'vocab_recall', topic_hint: 'food', difficulty: 'B1' },
-      ],
-    });
+    // Empty pool — no approved exercise of any type at this level.
+    mockExecute.mockResolvedValueOnce({ rows: [] });
 
     const res = await app.request(
       '/sessions/today?language=ES',
@@ -733,6 +727,39 @@ describe('GET /sessions/today', () => {
     expect(body.code).toBe('INSUFFICIENT_POOL');
     expect(body.summary).toBeNull();
     expect(body.totalEstimatedMinutes).toBe(0);
+  });
+
+  it('Path B: a type missing from the pool is backfilled so the plan stays at 5 items', async () => {
+    mockLimit
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ proficiencyLevel: 'A1' }]);
+
+    // A1-Turkish shape: cloze + translation present, zero vocab_recall. The
+    // sample over-fetches per type, so the vocab slot is backfilled with a
+    // distinct cloze rather than emptying the whole plan.
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        { id: 'c1', type: 'cloze', topic_hint: null, difficulty: 'A1' },
+        { id: 'c2', type: 'cloze', topic_hint: null, difficulty: 'A1' },
+        { id: 'c3', type: 'cloze', topic_hint: null, difficulty: 'A1' },
+        { id: 'c4', type: 'cloze', topic_hint: null, difficulty: 'A1' },
+        { id: 't1', type: 'translation', topic_hint: null, difficulty: 'A1' },
+      ],
+    });
+
+    const res = await app.request(
+      '/sessions/today?language=ES',
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBeNull();
+    expect(body.items).toHaveLength(5);
+    expect(body.items.map((it: AnyJson) => it.index)).toEqual([1, 2, 3, 4, 5]);
+    // Slot 4 (normally vocab_recall) is served as a cloze via backfill.
+    expect(body.items[3].type).toBe('cloze');
   });
 
   it('Path B: defaults to B1 when the user has no language profile row', async () => {

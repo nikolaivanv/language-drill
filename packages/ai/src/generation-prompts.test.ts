@@ -200,14 +200,19 @@ describe("buildGenerationSystemPrompt", () => {
     // R1.7 / R2.6 / R7.4 — the coordinated prompt edit must ship a
     // `generate@YYYY-MM-DD` version so Langfuse cohorts old vs new traces.
     expect(GENERATION_PROMPT_VERSION).toMatch(/^generate@\d{4}-\d{2}-\d{2}$/);
-    // Task 10: the single bump covering the Task 7–9 generation-prompt guardrails.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-05-30");
+    // Bumped for the vocab_recall hints anti-leak rule (eval:gen showed the
+    // hints field was the dominant contextSpoilsAnswer trigger for vocab).
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-06-07");
     // Tasks 7–9: pin the new guardrail phrases in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "every content word MUST be high-frequency everyday vocabulary at or below CEFR {{cefrLevel}}",
     );
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain("Safe, neutral topics");
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain("dalgayı");
+    // vocab_recall hints anti-leak rule.
+    expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
+      "vocab_recall hints MUST NOT reveal the target word",
+    );
   });
 
   it("instructs Claude to use the matching tool name", async () => {
