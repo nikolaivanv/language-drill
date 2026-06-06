@@ -21,6 +21,7 @@ import {
   Language,
   deterministicUuid,
   type GrammarPoint,
+  type SentenceConstructionContent,
   type TranslationContent,
   type VocabRecallContent,
 } from "@language-drill/shared";
@@ -58,6 +59,7 @@ export const TOOL_NAME_BY_TYPE: Readonly<Record<ExerciseType, string>> =
     cloze: "submit_cloze_exercise",
     translation: "submit_translation_exercise",
     vocab_recall: "submit_vocab_recall_exercise",
+    sentence_construction: "submit_sentence_construction_exercise",
   });
 
 // ---------------------------------------------------------------------------
@@ -218,12 +220,68 @@ export const VOCAB_RECALL_GENERATION_TOOL: Anthropic.Tool = {
   },
 };
 
+export const SENTENCE_CONSTRUCTION_GENERATION_TOOL: Anthropic.Tool = {
+  name: TOOL_NAME_BY_TYPE.sentence_construction,
+  description:
+    "Submit a single sentence-construction exercise: a prompt that asks the learner to write one full sentence exercising the configured grammar point, plus 2–3 model answers.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      instructions: {
+        type: "string",
+        description:
+          "Short imperative telling the learner to write one sentence in the target language (e.g. 'Write one sentence in Spanish.').",
+      },
+      promptMode: {
+        type: "string",
+        enum: ["keywords", "situation", "grammar_target"],
+        description:
+          "The framing of this prompt. 'keywords': the learner must use a given set of words. 'situation': a real-life communicative goal (apologise, ask, describe). 'grammar_target': an explicit instruction to use the target structure. Set this to the mode named in the user message.",
+      },
+      prompt: {
+        type: "string",
+        description:
+          "The task statement shown to the learner. For keywords mode, name the words to use. For situation mode, describe the scenario and goal. For grammar_target mode, state the structure to use. The prompt MUST be solvable only by exercising the configured grammar point.",
+      },
+      keywords: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "REQUIRED and non-empty when promptMode is 'keywords' (3–4 everyday words the learner must use). Omit for other modes.",
+      },
+      targetStructure: {
+        type: "string",
+        description:
+          "Human-readable label of the grammar structure the learner must use (e.g. 'present subjunctive'). REQUIRED for grammar_target mode; optional otherwise.",
+      },
+      register: {
+        type: "string",
+        enum: ["informal", "neutral", "formal"],
+        description:
+          "Optional register constraint the learner's sentence must respect.",
+      },
+      modelAnswers: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "2 or 3 distinct, natural example sentences that satisfy the prompt AND exercise the target grammar point at the target CEFR level. These demonstrate that the prompt is solvable and seed the learner's 'show an example' hint.",
+      },
+      topicHint: {
+        type: "string",
+        description: "Optional topic theme (e.g. 'travel', 'work', 'family').",
+      },
+    },
+    required: ["instructions", "promptMode", "prompt", "modelAnswers"],
+  },
+};
+
 export const GENERATION_TOOL_BY_TYPE: Readonly<
   Record<ExerciseType, Anthropic.Tool>
 > = Object.freeze({
   cloze: CLOZE_GENERATION_TOOL,
   translation: TRANSLATION_GENERATION_TOOL,
   vocab_recall: VOCAB_RECALL_GENERATION_TOOL,
+  sentence_construction: SENTENCE_CONSTRUCTION_GENERATION_TOOL,
 });
 
 // ---------------------------------------------------------------------------
@@ -534,6 +592,82 @@ export function parseGeneratedVocabRecallDraft(
   };
 }
 
+const PROMPT_MODES: ReadonlySet<string> = new Set([
+  "keywords",
+  "situation",
+  "grammar_target",
+]);
+const REGISTERS: ReadonlySet<string> = new Set(["informal", "neutral", "formal"]);
+
+export function parseGeneratedSentenceConstructionDraft(
+  input: unknown,
+  _spec: GenerationSpec,
+): SentenceConstructionContent {
+  const ctx = "sentence_construction draft";
+  if (!isObject(input)) {
+    throw new Error(`${ctx}: must be an object, got ${typeof input}`);
+  }
+
+  const instructions = requireString(input, "instructions", ctx);
+  const promptMode = requireString(input, "promptMode", ctx);
+  const prompt = requireString(input, "prompt", ctx);
+  const keywords = optionalStringArray(input, "keywords", ctx);
+  const targetStructure = optionalString(input, "targetStructure", ctx);
+  const register = optionalString(input, "register", ctx);
+  const modelAnswers = requireStringArray(input, "modelAnswers", ctx);
+  const topicHint = optionalString(input, "topicHint", ctx);
+
+  if (!PROMPT_MODES.has(promptMode)) {
+    throw new Error(
+      `${ctx}: invalid promptMode: must be one of keywords|situation|grammar_target, got ${JSON.stringify(promptMode)}`,
+    );
+  }
+  if (prompt.trim().length === 0) {
+    throw new Error(`${ctx}: invalid prompt: must contain non-whitespace characters`);
+  }
+  if (promptMode === "keywords" && (!keywords || keywords.length === 0)) {
+    throw new Error(
+      `${ctx}: invalid keywords: promptMode 'keywords' requires a non-empty keywords array`,
+    );
+  }
+  if (modelAnswers.length < 2 || modelAnswers.length > 3) {
+    throw new Error(
+      `${ctx}: invalid modelAnswers: expected 2–3 entries, got ${modelAnswers.length}`,
+    );
+  }
+  for (let i = 0; i < modelAnswers.length; i++) {
+    if (modelAnswers[i].trim().length === 0) {
+      throw new Error(
+        `${ctx}: invalid modelAnswers[${i}]: must contain non-whitespace characters`,
+      );
+    }
+  }
+  if (register !== undefined && !REGISTERS.has(register)) {
+    throw new Error(
+      `${ctx}: invalid register: must be one of informal|neutral|formal, got ${JSON.stringify(register)}`,
+    );
+  }
+
+  // `keywords` is meaningful only in keywords mode; drop any stray array the
+  // model emits in situation/grammar_target mode.
+  const emitKeywords =
+    promptMode === "keywords" && keywords !== undefined && keywords.length > 0;
+
+  return {
+    type: ExerciseType.SENTENCE_CONSTRUCTION,
+    instructions,
+    promptMode: promptMode as SentenceConstructionContent["promptMode"],
+    prompt,
+    ...(emitKeywords ? { keywords } : {}),
+    ...(targetStructure !== undefined ? { targetStructure } : {}),
+    ...(register !== undefined
+      ? { register: register as SentenceConstructionContent["register"] }
+      : {}),
+    modelAnswers,
+    ...(topicHint !== undefined ? { topicHint } : {}),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Deterministic ID derivation
 // ---------------------------------------------------------------------------
@@ -784,11 +918,7 @@ function parseToolInput(
       return parseGeneratedTranslationDraft(input, spec);
     case ExerciseType.VOCAB_RECALL:
       return parseGeneratedVocabRecallDraft(input, spec);
-    default: {
-      const _exhaustive: never = spec.exerciseType;
-      throw new Error(
-        `parseToolInput: unsupported exerciseType ${(_exhaustive as ExerciseType)}`,
-      );
-    }
+    case ExerciseType.SENTENCE_CONSTRUCTION:
+      return parseGeneratedSentenceConstructionDraft(input, spec);
   }
 }

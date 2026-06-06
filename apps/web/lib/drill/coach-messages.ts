@@ -15,6 +15,8 @@ function idleMessage(type: ExerciseType): string {
       return "translate the meaning, not every word";
     case ExerciseType.VOCAB_RECALL:
       return "say it from memory";
+    case ExerciseType.SENTENCE_CONSTRUCTION:
+      return "build a full sentence · use the prompt";
     default: {
       const _exhaustive: never = type;
       throw new Error(`unknown ExerciseType: ${String(_exhaustive)}`);
@@ -66,6 +68,18 @@ function evaluatedMessage(type: ExerciseType, score: number): string {
           return "you reached for something close · the meaning was nearby";
         case "reset":
           return "this word didn't surface yet · we'll see it again soon";
+      }
+      break;
+    case ExerciseType.SENTENCE_CONSTRUCTION:
+      switch (tier) {
+        case "praise":
+          return "natural and on target · nice construction";
+        case "light":
+          return "solid · one small tweak and it's clean";
+        case "encourage":
+          return "the idea's there · tighten the structure";
+        case "reset":
+          return "tricky structure · let's build it back up";
       }
       break;
     default: {

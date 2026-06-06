@@ -31,6 +31,7 @@ export type { Cell };
 const GRAMMAR_KIND_TYPES: ReadonlyArray<ExerciseType> = [
   ExerciseType.CLOZE,
   ExerciseType.TRANSLATION,
+  ExerciseType.SENTENCE_CONSTRUCTION,
 ];
 const VOCAB_KIND_TYPES: ReadonlyArray<ExerciseType> = [ExerciseType.VOCAB_RECALL];
 
@@ -77,6 +78,14 @@ export function resolveCells(
     if (!isCompatible(entry.kind, args.type)) {
       throw new Error(
         `--grammar-point '${args.grammarPoint}' (kind: ${entry.kind}) is not compatible with --type ${args.type}`,
+      );
+    }
+    if (
+      args.type === ExerciseType.SENTENCE_CONSTRUCTION &&
+      !entry.sentenceConstructionSuitable
+    ) {
+      throw new Error(
+        `grammar point '${args.grammarPoint}' is not flagged sentenceConstructionSuitable; add the flag in the curriculum to generate sentence_construction exercises for it`,
       );
     }
 

@@ -107,6 +107,7 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Putting the past participle in the middle of the clause instead of the final position.',
     ],
     prerequisiteKeys: ['de-a1-present-indicative'],
+    sentenceConstructionSuitable: true,
   },
   {
     key: 'de-a2-perfekt-with-sein',
@@ -226,6 +227,7 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Using the Perfekt with modals where Präteritum is more idiomatic.',
       'Forgetting that the umlaut drops in the simple past (können → konnte, not "*könnte" outside Konjunktiv II).',
     ],
+    sentenceConstructionSuitable: true,
   },
   {
     key: 'de-b1-two-way-prepositions',
@@ -281,6 +283,7 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Keeping V2 order after weil and obwohl.',
       'Confusing als (a one-off past event) with wenn (repeated or future).',
     ],
+    sentenceConstructionSuitable: true,
   },
 
   // ---------------------------------------------------------------------------
@@ -304,6 +307,7 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Overusing würde + infinitive where umlauted strong-verb forms (käme, ginge) are more idiomatic.',
     ],
     prerequisiteKeys: ['de-b1-modal-verbs-past'],
+    sentenceConstructionSuitable: true,
   },
   {
     key: 'de-b2-genitive-prepositions',

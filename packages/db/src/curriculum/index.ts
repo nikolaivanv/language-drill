@@ -189,6 +189,13 @@ export function assertCurriculumInvariants(
         `Curriculum invariant violated: '${entry.key}' is clozeUnsuitable but not kind 'grammar'`,
       );
     }
+
+    // 9c. sentenceConstructionSuitable is only meaningful on grammar points.
+    if (entry.sentenceConstructionSuitable && entry.kind !== 'grammar') {
+      throw new Error(
+        `Curriculum invariant violated: '${entry.key}' is sentenceConstructionSuitable but not kind 'grammar'`,
+      );
+    }
   }
 
   // 10. Per-language grammar counts

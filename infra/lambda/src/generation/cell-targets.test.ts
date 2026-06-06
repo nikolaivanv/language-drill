@@ -82,4 +82,9 @@ describe('resolveCellTarget', () => {
       resolveCellTarget(makeCell(ExerciseType.VOCAB_RECALL, CefrLevel.B1)),
     ).toBeGreaterThan(TARGET_PER_CELL);
   });
+
+  it('uses the constrained A1/A2 defaults for sentence_construction', () => {
+    expect(resolveCellTarget(makeCell(ExerciseType.SENTENCE_CONSTRUCTION, CefrLevel.A2))).toBe(30);
+    expect(resolveCellTarget(makeCell(ExerciseType.SENTENCE_CONSTRUCTION, CefrLevel.B1))).toBe(TARGET_PER_CELL);
+  });
 });

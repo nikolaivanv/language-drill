@@ -1,0 +1,15 @@
+[
+  {
+    "type": "sentence_construction",
+    "instructions": "Write one sentence in Spanish.",
+    "promptMode": "grammar_target",
+    "prompt": "Write a sentence using the present subjunctive to express a wish for a friend.",
+    "targetStructure": "present subjunctive",
+    "register": "neutral",
+    "modelAnswers": [
+      "Espero que tengas un buen viaje.",
+      "Ojalá apruebes el examen."
+    ],
+    "topicHint": "social"
+  }
+]

@@ -204,7 +204,7 @@ describe('resolveCells', () => {
       if (cell.grammarPoint.kind === 'vocab') {
         expect(cell.exerciseType).toBe(ExerciseType.VOCAB_RECALL);
       } else {
-        expect([ExerciseType.CLOZE, ExerciseType.TRANSLATION]).toContain(cell.exerciseType);
+        expect([ExerciseType.CLOZE, ExerciseType.TRANSLATION, ExerciseType.SENTENCE_CONSTRUCTION]).toContain(cell.exerciseType);
       }
     }
   });
@@ -220,6 +220,25 @@ describe('resolveCells', () => {
         ALL_CURRICULA,
       ),
     ).toThrow(/not in curriculum/);
+  });
+
+  it('throws a clear error when --type sentence_construction is used with a non-flagged grammar point', () => {
+    // es-b1-passive-se is an active grammar entry but does NOT have
+    // sentenceConstructionSuitable: true, so it should produce the friendly
+    // guard error rather than the confusing "internal: enumerateCurriculumCells
+    // did not produce a cell" message.
+    expect(() =>
+      resolveCells(
+        {
+          ...baseArgs,
+          lang: Language.ES,
+          level: CefrLevel.B1,
+          type: ExerciseType.SENTENCE_CONSTRUCTION,
+          grammarPoint: 'es-b1-passive-se',
+        },
+        ALL_CURRICULA,
+      ),
+    ).toThrow(/not flagged sentenceConstructionSuitable/);
   });
 });
 
@@ -484,6 +503,82 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])('main + DB writes (MOCK_CLAUD
       delete process.env['NODE_ENV'];
     }
   });
+
+  // ---------------------------------------------------------------------------
+  // Task 18: sentence_construction smoke
+  // ---------------------------------------------------------------------------
+
+  const SC_GRAMMAR_POINT_KEY = 'es-b1-present-subjunctive';
+  const SC_CELL_KEY = `es:b1:sentence_construction:${SC_GRAMMAR_POINT_KEY}`;
+  const SC_ARGV = [
+    '--lang', 'es',
+    '--level', 'B1',
+    '--type', 'sentence_construction',
+    '--grammar-point', SC_GRAMMAR_POINT_KEY,
+    '--count', '2',
+  ];
+
+  async function cleanSentenceConstructionRows(db: Db): Promise<void> {
+    await db.delete(generationJobs).where(eq(generationJobs.cellKey, SC_CELL_KEY));
+    const generated = await db
+      .select({ id: exercises.id })
+      .from(exercises)
+      .where(
+        and(
+          eq(exercises.generationSource, 'claude-realtime'),
+          eq(exercises.grammarPointKey, SC_GRAMMAR_POINT_KEY),
+          eq(exercises.type, ExerciseType.SENTENCE_CONSTRUCTION),
+        ),
+      );
+    if (generated.length > 0) {
+      const ids = generated.map((r) => r.id);
+      await db.delete(exerciseTags).where(inArray(exerciseTags.exerciseId, ids));
+      await db.delete(exercises).where(inArray(exercises.id, ids));
+    }
+  }
+
+  it(
+    'sentence_construction: produces and approves drafts via mock client',
+    { timeout: DB_TEST_TIMEOUT_MS },
+    async () => {
+      await cleanSentenceConstructionRows(db);
+
+      await main(SC_ARGV);
+
+      const exerciseRows = await db
+        .select()
+        .from(exercises)
+        .where(
+          and(
+            eq(exercises.generationSource, 'claude-realtime'),
+            eq(exercises.grammarPointKey, SC_GRAMMAR_POINT_KEY),
+            eq(exercises.type, ExerciseType.SENTENCE_CONSTRUCTION),
+          ),
+        );
+
+      expect(exerciseRows.length).toBeGreaterThanOrEqual(1);
+      for (const row of exerciseRows) {
+        expect(row.language).toBe(Language.ES);
+        expect(row.difficulty).toBe('B1');
+        expect(row.type).toBe(ExerciseType.SENTENCE_CONSTRUCTION);
+        expect(row.reviewStatus).toBe('auto-approved');
+        const contentJson = row.contentJson as { type: string };
+        expect(contentJson.type).toBe(ExerciseType.SENTENCE_CONSTRUCTION);
+      }
+
+      const jobRows = await db
+        .select()
+        .from(generationJobs)
+        .where(eq(generationJobs.cellKey, SC_CELL_KEY));
+      expect(jobRows).toHaveLength(1);
+      const job = jobRows[0];
+      expect(job.status).toBe('succeeded');
+      expect(job.approvedCount).toBeGreaterThanOrEqual(1);
+      expect(job.rejectedCount).toBe(0);
+
+      await cleanSentenceConstructionRows(db);
+    },
+  );
 
   // Touch CellResult so the import is not dropped — printSummary's row shape
   // is asserted indirectly via the audit-row + insert-row contents above.

@@ -281,3 +281,23 @@ describe('coachMessage — sessionComplete', () => {
     );
   });
 });
+
+// ---------------------------------------------------------------------------
+// SENTENCE_CONSTRUCTION coverage
+// ---------------------------------------------------------------------------
+
+describe('coachMessage — SENTENCE_CONSTRUCTION', () => {
+  it('returns an idle message for sentence_construction', () => {
+    const msg = coachMessage({ kind: 'idle', type: ExerciseType.SENTENCE_CONSTRUCTION });
+    expect(typeof msg).toBe('string');
+    expect(msg.length).toBeGreaterThan(0);
+  });
+
+  it('returns an evaluated message for sentence_construction at each tier', () => {
+    for (const score of [0.97, 0.8, 0.5, 0.2]) {
+      const msg = coachMessage({ kind: 'evaluated', type: ExerciseType.SENTENCE_CONSTRUCTION, score });
+      expect(typeof msg).toBe('string');
+      expect(msg.length).toBeGreaterThan(0);
+    }
+  });
+});

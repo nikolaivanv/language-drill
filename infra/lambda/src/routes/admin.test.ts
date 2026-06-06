@@ -203,7 +203,7 @@ describe('GET /admin/pool-status', () => {
       expect([20, 30, 50, 60, 75]).toContain(item.generationTarget);
       expect(['ES', 'DE', 'TR']).toContain(item.language);
       expect(['A1', 'A2', 'B1', 'B2']).toContain(item.level);
-      expect(['cloze', 'translation', 'vocab_recall']).toContain(item.type);
+      expect(['cloze', 'translation', 'vocab_recall', 'sentence_construction']).toContain(item.type);
     }
   });
 

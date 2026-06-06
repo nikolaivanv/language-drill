@@ -135,7 +135,30 @@ describe('curriculum clozeUnsuitable flag', () => {
       "'tr-a2-synthetic-vocab-umbrella' is clozeUnsuitable but not kind 'grammar'",
     );
   });
+});
 
+describe('curriculum sentenceConstructionSuitable flag', () => {
+  it('throws when a vocab umbrella is flagged sentenceConstructionSuitable', () => {
+    expect(() =>
+      assertCurriculumInvariants([
+        {
+          key: 'tr-a2-synthetic-vocab-sc',
+          kind: 'vocab',
+          name: 'Synthetic vocab',
+          description: 'Synthetic vocab entry for sentenceConstructionSuitable invariant testing.',
+          cefrLevel: 'A2',
+          language: Language.TR,
+          examplesPositive: ['a', 'b'],
+          examplesNegative: ['*c'],
+          commonErrors: ['e'],
+          sentenceConstructionSuitable: true,
+        },
+      ]),
+    ).toThrow(/sentenceConstructionSuitable but not kind 'grammar'/);
+  });
+});
+
+describe('curriculum clozeUnsuitable flag — specific entries', () => {
   it('flags exactly the four bipartite TR-A2 grammar points', () => {
     const flaggedKeys = [
       'tr-a2-converbs',

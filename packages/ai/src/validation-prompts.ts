@@ -18,6 +18,7 @@ import {
   type CefrLevel,
   type ClozeContent,
   ExerciseType,
+  type SentenceConstructionContent,
   type TranslationContent,
   type VocabRecallContent,
 } from "@language-drill/shared";
@@ -230,6 +231,32 @@ function buildVocabRecallValidationUserPrompt(
 Score the dimensions in the system prompt and submit via the tool.`;
 }
 
+function buildSentenceConstructionValidationUserPrompt(
+  content: SentenceConstructionContent,
+  spec: GenerationSpec,
+): string {
+  const keywordsLine =
+    content.keywords && content.keywords.length > 0
+      ? `**Keywords:** ${content.keywords.join(", ")}`
+      : "";
+  const structureLine = content.targetStructure
+    ? `**Target structure:** ${content.targetStructure}`
+    : "";
+  const registerLine = content.register ? `**Register:** ${content.register}` : "";
+  return `## Validate this Sentence Construction exercise
+
+**Spec:** language=${spec.language}, cefrLevel=${spec.cefrLevel}, grammar point=${spec.grammarPoint.key}
+**Prompt mode:** ${content.promptMode}
+**Instructions:** ${content.instructions}
+**Prompt:** ${content.prompt}
+${keywordsLine}
+${structureLine}
+${registerLine}
+**Model answers:** ${content.modelAnswers.join(" | ")}
+
+Score the dimensions in the system prompt. Treat the exercise as well-formed only if the prompt is unambiguous and solvable at the target level, AND every model answer genuinely satisfies the prompt (keywords used / goal met / target structure used) at the target CEFR level. If a model answer does not exercise the grammar point, set grammarPointMatch=false. Submit via the tool.`;
+}
+
 /**
  * Pure: builds the per-draft user message. Two calls with the same
  * (draft, spec) return byte-identical strings.
@@ -252,6 +279,8 @@ export function buildValidationUserPrompt(
       return buildTranslationValidationUserPrompt(content, spec);
     case ExerciseType.VOCAB_RECALL:
       return buildVocabRecallValidationUserPrompt(content, spec);
+    case ExerciseType.SENTENCE_CONSTRUCTION:
+      return buildSentenceConstructionValidationUserPrompt(content, spec);
     default: {
       const _exhaustive: never = content;
       throw new Error(

@@ -35,6 +35,17 @@ function fullPool(): PoolDraw[] {
 }
 
 // ---------------------------------------------------------------------------
+// Static lookup tables
+// ---------------------------------------------------------------------------
+
+describe('ESTIMATED_MINUTES_BY_TYPE / ITEM_COUNT_BY_TYPE', () => {
+  it('exposes minute/count estimates for sentence_construction', () => {
+    expect(ESTIMATED_MINUTES_BY_TYPE[ExerciseType.SENTENCE_CONSTRUCTION]).toBe(3);
+    expect(ITEM_COUNT_BY_TYPE[ExerciseType.SENTENCE_CONSTRUCTION]).toBe(3);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // startOfUtcDay
 // ---------------------------------------------------------------------------
 

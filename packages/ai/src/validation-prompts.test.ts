@@ -7,6 +7,7 @@ import {
   type ClozeContent,
   type TranslationContent,
   type VocabRecallContent,
+  type SentenceConstructionContent,
 } from "@language-drill/shared";
 import { getGrammarPoint } from "@language-drill/db";
 
@@ -344,5 +345,21 @@ describe("buildValidationUserPrompt", () => {
     const a = buildValidationUserPrompt(draft, baseSpec);
     const b = buildValidationUserPrompt(draft, baseSpec);
     expect(a).toBe(b);
+  });
+
+  it("builds a sentence-construction validation prompt naming the model answers", () => {
+    const content: SentenceConstructionContent = {
+      type: ExerciseType.SENTENCE_CONSTRUCTION,
+      instructions: "Write one sentence in Spanish.",
+      promptMode: "grammar_target",
+      prompt: "Write a sentence using the present subjunctive to express a wish.",
+      targetStructure: "present subjunctive",
+      modelAnswers: ["Espero que vengas.", "Ojalá llueva."],
+    };
+    const spec = { ...baseSpec, exerciseType: ExerciseType.SENTENCE_CONSTRUCTION };
+    const msg = buildValidationUserPrompt(makeDraft(content), spec);
+    expect(msg).toContain("Validate this Sentence Construction exercise");
+    expect(msg).toContain("present subjunctive");
+    expect(msg).toContain("Espero que vengas.");
   });
 });

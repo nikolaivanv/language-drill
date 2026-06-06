@@ -250,6 +250,23 @@ export async function buildGenerationSystemPrompt(
 }
 
 // ---------------------------------------------------------------------------
+// Sentence-construction mode rotation
+// ---------------------------------------------------------------------------
+
+const SENTENCE_CONSTRUCTION_MODES = [
+  "keywords",
+  "situation",
+  "grammar_target",
+] as const;
+
+/** Deterministic mode rotation so a batch covers all three framings. */
+export function sentenceConstructionModeForOrdinal(
+  ordinal: number,
+): (typeof SENTENCE_CONSTRUCTION_MODES)[number] {
+  return SENTENCE_CONSTRUCTION_MODES[ordinal % SENTENCE_CONSTRUCTION_MODES.length];
+}
+
+// ---------------------------------------------------------------------------
 // User prompt — short per-draft message; the system prompt is the heavy lift.
 // ---------------------------------------------------------------------------
 
@@ -272,11 +289,15 @@ export function buildGenerationUserPrompt(
     seedWord && seedWord.length > 0
       ? `Build this exercise around the word "${seedWord}". If "${seedWord}" does not fit ${inputs.grammarPoint.name} naturally, choose a related content word of similar frequency instead.\n\n`
       : "";
+  const modeBlock =
+    inputs.exerciseType === ExerciseType.SENTENCE_CONSTRUCTION
+      ? `Use prompt mode: ${sentenceConstructionModeForOrdinal(ordinal)}.\n\n`
+      : "";
   return `Produce exercise #${ordinal + 1}.
 
 Topic domain: ${domain}
 
-${seedBlock}Use the ${toolName} tool.`;
+${modeBlock}${seedBlock}Use the ${toolName} tool.`;
 }
 
 // ---------------------------------------------------------------------------
@@ -305,6 +326,8 @@ export function canonicalSurface(content: ExerciseContent): string {
       // identical (word, cue) pair collapses to the same key and is blocked
       // as an exact duplicate.
       return `${normaliseSurface(content.expectedWord)}::${normaliseSurface(content.prompt)}`;
+    case ExerciseType.SENTENCE_CONSTRUCTION:
+      return normaliseSurface(content.prompt);
     default: {
       const _exhaustive: never = content;
       throw new Error(

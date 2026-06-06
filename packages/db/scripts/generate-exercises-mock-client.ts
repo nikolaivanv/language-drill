@@ -63,6 +63,7 @@ const FIXTURE_FILENAME_BY_TYPE: Readonly<Record<ExerciseType, string>> =
     [ExerciseType.CLOZE]: 'cloze.json',
     [ExerciseType.TRANSLATION]: 'translation.json',
     [ExerciseType.VOCAB_RECALL]: 'vocab_recall.json',
+    [ExerciseType.SENTENCE_CONSTRUCTION]: 'sentence_construction.json',
   });
 
 function defaultFixturesDir(): string {
@@ -147,6 +148,7 @@ const VALIDATION_HEADER_BY_TYPE: Readonly<Record<ExerciseType, string>> =
     [ExerciseType.CLOZE]: '## Validate this Cloze exercise',
     [ExerciseType.TRANSLATION]: '## Validate this Translation exercise',
     [ExerciseType.VOCAB_RECALL]: '## Validate this Vocabulary Recall exercise',
+    [ExerciseType.SENTENCE_CONSTRUCTION]: '## Validate this Sentence Construction exercise',
   });
 
 function detectExerciseTypeFromUserMessage(content: string): ExerciseType {
@@ -230,6 +232,7 @@ export function createMockAnthropicClient(): Anthropic {
     [ExerciseType.CLOZE]: 0,
     [ExerciseType.TRANSLATION]: 0,
     [ExerciseType.VOCAB_RECALL]: 0,
+    [ExerciseType.SENTENCE_CONSTRUCTION]: 0,
   };
   let generatorTotalCalls = 0;
 

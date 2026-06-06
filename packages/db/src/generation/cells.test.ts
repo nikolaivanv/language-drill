@@ -39,13 +39,14 @@ describe('enumerateCurriculumCells', () => {
     expect(cells.length).toBeGreaterThan(0);
   });
 
-  it('produces 2 cells per grammar entry (cloze + translation) and 1 per vocab entry (vocab_recall), minus one per clozeUnsuitable point', () => {
+  it('produces 2 cells per grammar entry (cloze + translation) and 1 per vocab entry (vocab_recall), minus one per clozeUnsuitable point, plus one per sentenceConstructionSuitable point', () => {
     const grammarCount = ALL_CURRICULA.filter((g) => g.kind === 'grammar').length;
     const vocabCount = ALL_CURRICULA.filter((g) => g.kind === 'vocab').length;
     // A clozeUnsuitable grammar point yields 1 cell (translation) instead of 2,
     // so each flagged point drops the total by exactly one.
     const flaggedCount = ALL_CURRICULA.filter((g) => g.clozeUnsuitable === true).length;
-    expect(cells).toHaveLength(grammarCount * 2 + vocabCount - flaggedCount);
+    const scCount = ALL_CURRICULA.filter((g) => g.sentenceConstructionSuitable === true).length;
+    expect(cells).toHaveLength(grammarCount * 2 + vocabCount - flaggedCount + scCount);
   });
 
   it('pairs vocab umbrellas only with vocab_recall', () => {
@@ -56,10 +57,10 @@ describe('enumerateCurriculumCells', () => {
     }
   });
 
-  it('pairs grammar points only with cloze or translation (never vocab_recall)', () => {
+  it('pairs grammar points only with cloze, translation, or sentence_construction (never vocab_recall)', () => {
     for (const cell of cells) {
       if (cell.grammarPoint.kind === 'grammar') {
-        expect([ExerciseType.CLOZE, ExerciseType.TRANSLATION]).toContain(
+        expect([ExerciseType.CLOZE, ExerciseType.TRANSLATION, ExerciseType.SENTENCE_CONSTRUCTION]).toContain(
           cell.exerciseType,
         );
       }
@@ -133,5 +134,41 @@ describe('enumerateCurriculumCells — clozeUnsuitable flag', () => {
     });
     expect(enumerateCurriculumCells([unflagged])).toHaveLength(2);
     expect(enumerateCurriculumCells([flagged])).toHaveLength(1);
+  });
+});
+
+describe('enumerateCurriculumCells — sentenceConstructionSuitable flag', () => {
+  it('adds a sentence_construction cell for a flagged grammar point', () => {
+    const point = makeGrammarPoint({
+      key: 'tr-a2-synthetic-sc',
+      kind: 'grammar',
+      sentenceConstructionSuitable: true,
+    });
+    const cells = enumerateCurriculumCells([point]);
+    expect(cells.map((c) => c.exerciseType)).toEqual([
+      ExerciseType.CLOZE,
+      ExerciseType.TRANSLATION,
+      ExerciseType.SENTENCE_CONSTRUCTION,
+    ]);
+  });
+
+  it('omits the sentence_construction cell when not flagged', () => {
+    const point = makeGrammarPoint({ key: 'tr-a2-synthetic-nosc', kind: 'grammar' });
+    const cells = enumerateCurriculumCells([point]);
+    expect(cells.some((c) => c.exerciseType === ExerciseType.SENTENCE_CONSTRUCTION)).toBe(false);
+  });
+
+  it('combines with clozeUnsuitable: translation + sentence_construction only', () => {
+    const point = makeGrammarPoint({
+      key: 'tr-a2-synthetic-both',
+      kind: 'grammar',
+      clozeUnsuitable: true,
+      sentenceConstructionSuitable: true,
+    });
+    const cells = enumerateCurriculumCells([point]);
+    expect(cells.map((c) => c.exerciseType)).toEqual([
+      ExerciseType.TRANSLATION,
+      ExerciseType.SENTENCE_CONSTRUCTION,
+    ]);
   });
 });

@@ -34,6 +34,12 @@ describe('assertValidCellKey', () => {
     const broken = 'es:b1:listening:es-b1-present-subjunctive';
     expect(() => assertValidCellKey(broken)).toThrow(/cell_key/);
   });
+
+  it('accepts a sentence_construction cell key', () => {
+    expect(() =>
+      assertValidCellKey('es:b1:sentence_construction:es-b1-present-subjunctive'),
+    ).not.toThrow();
+  });
 });
 
 describe('buildCellKey', () => {
