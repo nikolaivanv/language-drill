@@ -21,7 +21,7 @@ revalidate the existing exercise pool. For a generation/validation fix that also
 needs a re-pass over stored exercises, follow
 `docs/runbooks/prompt-update-and-revalidate.md` (§4) after this.
 
-The six prompts and their version constants:
+The eight prompts and their version constants:
 
 | Prompt file (`packages/ai/src/`) | Version constant |
 |---|---|
@@ -31,6 +31,8 @@ The six prompts and their version constants:
 | `validation-prompts.ts` | `VALIDATION_PROMPT_VERSION` |
 | `theory-prompts.ts` | `THEORY_GENERATION_PROMPT_VERSION` |
 | `theory-validation-prompts.ts` | `THEORY_VALIDATION_PROMPT_VERSION` |
+| `read-span.ts` | `READ_SPAN_PROMPT_VERSION` |
+| `reading-generation-prompts.ts` | `READING_GENERATION_PROMPT_VERSION` |
 
 ## Instructions
 
@@ -62,7 +64,7 @@ Before touching Langfuse, confirm:
    missing bump collapses old and new populations. Do not push until this is
    fixed.
 
-Report which of the six prompts the user changed (or note that the sync will
+Report which of the eight prompts the user changed (or note that the sync will
 simply push whatever has drifted).
 
 ### 2. Fetch Langfuse credentials for the target env
