@@ -3,8 +3,8 @@ import { CefrLevel, Language } from '@language-drill/shared';
 import type { GrammarPoint } from './types';
 
 // TR curriculum aligned to full Yedi İklim A1+A2 parity (2026-05-28): 26 A1
-// + 14 A2 grammar entries + 1 A2 vocab umbrella. B1 + B2 grammar entries and
-// B1/B2 vocab umbrellas remain commented out so the prod scheduler does not
+// + 14 A2 grammar entries + 2 vocab umbrellas (A1 + A2). B1 + B2 grammar
+// entries and B1/B2 vocab umbrellas remain commented out so the prod scheduler does not
 // generate them. To re-enable B1/B2: uncomment the B1/B2 sections below,
 // restore B1/B2 in the destructure, raise TR's B1/B2 floors in
 // PER_LANGUAGE_GRAMMAR_MIN (curriculum/index.ts), restore TR B1/B2 entries in
@@ -26,7 +26,7 @@ const { A1, A2 } = CefrLevel;
  * grammar points; the Yedi İklim A1+A2 *parity* (the 26 A1 + 14 A2 count noted
  * in the header above) was aligned earlier, on 2026-05-28.
  */
-export const CURRICULUM_VERSION_TR = '2026-05-30';
+export const CURRICULUM_VERSION_TR = '2026-06-06';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -1258,6 +1258,21 @@ const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   // Vocab umbrellas — kind: 'vocab'
   // ---------------------------------------------------------------------------
+  {
+    key: 'tr-a1-everyday-vocab',
+    kind: 'vocab',
+    name: 'Everyday vocabulary (A1)',
+    description:
+      'Core high-frequency Turkish vocabulary for A1: numbers, days, family, food and drink, greetings, and basic everyday objects.',
+    cefrLevel: A1,
+    language: TR,
+    examplesPositive: ['su (water)', 'ev (house)', 'anne (mother)'],
+    examplesNegative: ['*ev de', '*su lar'],
+    commonErrors: [
+      'Detaching case or plural suffixes from the noun (evde, not *ev de).',
+      'Vowel-harmony slips on common suffixes (evde, not *evda).',
+    ],
+  },
   {
     key: 'tr-a2-everyday-vocab',
     kind: 'vocab',

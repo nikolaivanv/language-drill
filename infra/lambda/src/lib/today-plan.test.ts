@@ -84,9 +84,44 @@ describe('composeFreshPlan', () => {
     expect(result.items.every((it) => it.status === 'queued')).toBe(true);
   });
 
-  it('returns { items: [], insufficient: true } when fewer than 5 draws are supplied', () => {
-    const result = composeFreshPlan(fullPool().slice(0, 4));
-    expect(result).toEqual({ items: [], insufficient: true });
+  it('returns { items: [], insufficient: true } only when the pool is empty', () => {
+    expect(composeFreshPlan([])).toEqual({ items: [], insufficient: true });
+  });
+
+  it('backfills a missing type so a pool lacking vocab_recall still yields 5 distinct items', () => {
+    // A1-Turkish shape: plenty of cloze + translation, zero vocab_recall.
+    // Distinct topicHints let us assert no exercise is reused across slots.
+    const candidates: PoolDraw[] = [
+      ...Array.from({ length: 5 }, (_, i) =>
+        draw(ExerciseType.CLOZE, { id: `cloze-${i}`, topicHint: `cloze-${i}` }),
+      ),
+      ...Array.from({ length: 5 }, (_, i) =>
+        draw(ExerciseType.TRANSLATION, { id: `tr-${i}`, topicHint: `tr-${i}` }),
+      ),
+    ];
+
+    const { items, insufficient } = composeFreshPlan(candidates);
+
+    expect(insufficient).toBe(false);
+    expect(items).toHaveLength(5);
+    // The vocab_recall slot (index 4) is backfilled with a cloze.
+    expect(items[3].type).toBe(ExerciseType.CLOZE);
+    expect(items.map((it) => it.index)).toEqual([1, 2, 3, 4, 5]);
+    // Every served exercise is distinct (no candidate reused across slots).
+    expect(new Set(items.map((it) => it.topicHint)).size).toBe(5);
+  });
+
+  it('serves a shorter plan (no insufficient) when the pool cannot reach 5', () => {
+    const candidates: PoolDraw[] = [
+      draw(ExerciseType.CLOZE, { id: 'c1' }),
+      draw(ExerciseType.TRANSLATION, { id: 't1' }),
+    ];
+
+    const { items, insufficient } = composeFreshPlan(candidates);
+
+    expect(insufficient).toBe(false);
+    expect(items).toHaveLength(2);
+    expect(items.map((it) => it.index)).toEqual([1, 2]);
   });
 
   it('hydrates estimatedMinutes and itemCount from the static lookup tables', () => {

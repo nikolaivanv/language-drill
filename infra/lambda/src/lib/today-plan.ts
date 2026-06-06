@@ -120,10 +120,10 @@ export function startOfUtcDay(now: Date): Date {
 // ---------------------------------------------------------------------------
 
 /**
- * One row from the pool-sample query, in the order the UNION-ALL emitted it.
- * The route guarantees `draws[i]` aligns with `V1_PLAN_SHAPE[i]` by issuing
- * five `LIMIT 1` selects partitioned by slot type — see Design §"Query 2
- * (Path B) — pool sample".
+ * One candidate exercise from the pool sample. The sample over-fetches several
+ * distinct rows per exercise type (not one-per-slot), so `composeFreshPlan` can
+ * backfill a slot whose native type is missing with a distinct exercise of
+ * another available type — see Design §"Query 2 (Path B) — pool sample".
  */
 export type PoolDraw = {
   id: string;
@@ -138,38 +138,88 @@ export type ComposeFreshPlanResult = {
 };
 
 /**
+ * Fallback type order when a slot's native exercise type is exhausted. A missing
+ * type (e.g. no vocab_recall in the pool at this level) no longer empties the
+ * whole plan: the slot is backfilled with a distinct exercise of the first
+ * available type in this order, keeping the plan at five items.
+ */
+const BACKFILL_TYPE_PRIORITY: readonly ExerciseType[] = [
+  ExerciseType.CLOZE,
+  ExerciseType.TRANSLATION,
+  ExerciseType.VOCAB_RECALL,
+];
+
+/** Projects a single draw into the in-memory PlanItem shape at the given index. */
+function toPlanItem(index: number, draw: PoolDraw): PlanItem {
+  return {
+    index,
+    type: draw.type,
+    topicHint: draw.topicHint,
+    difficulty: draw.difficulty,
+    itemCount: ITEM_COUNT_BY_TYPE[draw.type],
+    estimatedMinutes: ESTIMATED_MINUTES_BY_TYPE[draw.type],
+    status: 'queued',
+  };
+}
+
+/**
  * Composes the fresh-plan branch (Path B) deterministically from a pool sample.
  *
- * `draws.length < 5` → `{ items: [], insufficient: true }` so the route can
- * return `INSUFFICIENT_POOL` without further work. Otherwise the function
- * walks `V1_PLAN_SHAPE` in order and maps each slot to the corresponding
- * draw, projecting the in-memory `PlanItem` shape.
+ * Two passes over `V1_PLAN_SHAPE`:
+ *   1. Assign each slot a distinct exercise of its native type (FIFO from the
+ *      per-type candidate queue).
+ *   2. Backfill any slot left empty (its native type ran out) with a distinct
+ *      exercise of another type, following `BACKFILL_TYPE_PRIORITY`. A
+ *      substituted slot keeps its position but takes the substitute's type, so
+ *      itemCount / estimatedMinutes / topicHint reflect the exercise actually
+ *      served.
+ *
+ * The plan is only `insufficient` when the pool is genuinely empty (no
+ * candidate of any type) — a pool merely missing one type still yields a full
+ * five-item plan. Surviving items are re-indexed 1..n so the client's
+ * index-derived labels stay contiguous.
  *
  * The unused `_radarSnapshot` parameter is the deferred adaptive swap point
  * (Design §"Adaptive swap point") — v1 ignores it.
  */
 export function composeFreshPlan(
-  draws: readonly PoolDraw[],
+  candidates: readonly PoolDraw[],
   _radarSnapshot?: unknown,
 ): ComposeFreshPlanResult {
-  if (draws.length < V1_PLAN_SHAPE.length) {
-    return { items: [], insufficient: true };
+  // Per-type FIFO queues. Mutated by `take`; ordering within a type is the
+  // pool sample's random order, so each shift is an independent random pick.
+  const byType = new Map<ExerciseType, PoolDraw[]>();
+  for (const candidate of candidates) {
+    const queue = byType.get(candidate.type);
+    if (queue) queue.push(candidate);
+    else byType.set(candidate.type, [candidate]);
   }
+  const take = (type: ExerciseType): PoolDraw | undefined =>
+    byType.get(type)?.shift();
 
-  const items: PlanItem[] = V1_PLAN_SHAPE.map((slot, i) => {
-    const draw = draws[i];
-    return {
-      index: slot.index,
-      type: draw.type,
-      topicHint: draw.topicHint,
-      difficulty: draw.difficulty,
-      itemCount: ITEM_COUNT_BY_TYPE[draw.type],
-      estimatedMinutes: ESTIMATED_MINUTES_BY_TYPE[draw.type],
-      status: 'queued',
-    };
+  // Pass 1 — native assignment.
+  const slots: (PlanItem | null)[] = V1_PLAN_SHAPE.map((slot) => {
+    const native = take(slot.type);
+    return native ? toPlanItem(slot.index, native) : null;
   });
 
-  return { items, insufficient: false };
+  // Pass 2 — backfill empties with a distinct exercise of another type.
+  for (let i = 0; i < slots.length; i++) {
+    if (slots[i] !== null) continue;
+    for (const type of BACKFILL_TYPE_PRIORITY) {
+      const sub = take(type);
+      if (sub) {
+        slots[i] = toPlanItem(V1_PLAN_SHAPE[i].index, sub);
+        break;
+      }
+    }
+  }
+
+  const items = slots
+    .filter((slot): slot is PlanItem => slot !== null)
+    .map((item, i) => ({ ...item, index: i + 1 }));
+
+  return { items, insufficient: items.length === 0 };
 }
 
 // ---------------------------------------------------------------------------
