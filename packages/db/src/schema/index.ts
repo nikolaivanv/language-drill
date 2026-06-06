@@ -35,6 +35,7 @@ export {
   vocabularyReviewState,
   vocabularyReviewSessions,
   vocabularyReviewLog,
+  generatedReadingTexts,
 } from './read';
 export { playlists, playlistItems } from './playlists';
 export { invitations, usageEvents } from './access';

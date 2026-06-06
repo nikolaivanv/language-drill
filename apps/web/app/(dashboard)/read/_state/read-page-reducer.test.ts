@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { CefrLevel, ReadingTextLength } from '@language-drill/shared';
 import type { DeepCard, FlaggedMap, WordFlag } from '@language-drill/shared';
 import {
   initialState,
@@ -38,6 +39,7 @@ describe('initialState', () => {
       annotateStream: { phase: 'idle' },
       deepCard: { status: 'idle' },
       spanAnnotations: {},
+      generate: { topic: '', length: ReadingTextLength.SHORT, cefr: CefrLevel.A2, language: 'TR' },
     });
   });
 });
@@ -89,6 +91,20 @@ describe('PASTE_FIELD', () => {
       value: 'NYT',
     });
     expect(after.paste).toEqual({ title: 'NYT', source: 'bbc.com', text: 'antes' });
+  });
+});
+
+describe('GENERATE slice', () => {
+  it('switches to the generating view and edits generate fields', () => {
+    let s = readPageReducer(initialState, { type: 'SET_VIEW', view: 'generating' });
+    expect(s.view).toBe('generating');
+    s = readPageReducer(s, { type: 'GENERATE_FIELD', field: 'topic', value: 'a cat' });
+    expect(s.generate.topic).toBe('a cat');
+  });
+  it('resets generate state', () => {
+    let s = readPageReducer(initialState, { type: 'GENERATE_FIELD', field: 'topic', value: 'x' });
+    s = readPageReducer(s, { type: 'GENERATE_RESET' });
+    expect(s.generate.topic).toBe('');
   });
 });
 

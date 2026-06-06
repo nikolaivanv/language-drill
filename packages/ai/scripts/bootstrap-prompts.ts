@@ -45,6 +45,8 @@ import {
   GENERATION_PROMPT_VERSION,
   GENERATION_SYSTEM_PROMPT_TEMPLATE,
   PROMPT_LABEL_PRODUCTION,
+  READING_GENERATION_PROMPT_VERSION,
+  READING_GENERATION_SYSTEM_PROMPT,
   READ_SPAN_PROMPT_VERSION,
   READ_SPAN_SYSTEM_PROMPT,
   THEORY_GENERATION_PROMPT_VERSION,
@@ -121,6 +123,12 @@ export const PROMPTS: readonly PromptManifestEntry[] = [
     text: READ_SPAN_SYSTEM_PROMPT,
     version: READ_SPAN_PROMPT_VERSION,
     surface: "read-span",
+  },
+  {
+    name: "reading-generation-system-prompt",
+    text: READING_GENERATION_SYSTEM_PROMPT,
+    version: READING_GENERATION_PROMPT_VERSION,
+    surface: "reading-generate",
   },
 ];
 

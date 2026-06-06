@@ -5,7 +5,8 @@
 export type MeteredEventType =
   | 'ai_evaluation'
   | 'read_annotation'
-  | 'read_span_annotation';
+  | 'read_span_annotation'
+  | 'text_generation';
 
 export type Plan = 'free' | 'boosted';
 
@@ -13,6 +14,7 @@ export const BASE_DAILY_LIMITS: Record<MeteredEventType, number> = {
   ai_evaluation: 50,
   read_annotation: 50,
   read_span_annotation: 150,
+  text_generation: 20,
 };
 
 export const BOOST_MULTIPLIER = 10;

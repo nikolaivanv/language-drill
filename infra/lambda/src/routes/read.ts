@@ -1,6 +1,7 @@
+import { createHash } from 'node:crypto';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { and, asc, count, desc, eq, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, sql } from 'drizzle-orm';
 import {
   CefrLevel,
   DeepCardSchema,
@@ -11,16 +12,30 @@ import {
   READ_SOURCE_MAX_CHARS,
   READ_TEXT_MAX_CHARS,
   READ_TITLE_MAX_CHARS,
+  READING_GEN_TOPIC_MAX_CHARS,
+  READING_TOO_HARD_THRESHOLD,
+  ReadingTextLength,
 } from '@language-drill/shared';
 import type { DeepCard, LearningLanguage } from '@language-drill/shared';
 import {
+  generatedReadingTexts,
   readEntries,
+  usageEvents,
   userVocabulary,
   vocabularyReviewState,
 } from '@language-drill/db';
+import { createClaudeClient, generateReadingText } from '@language-drill/ai';
 import { db } from '../db';
+import { limitFor } from '../usage/limits';
+import { getEffectivePlan, isAdmin } from '../usage/plan';
+import { checkGlobalCapacity } from '../usage/global-capacity';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
+
+// Mirrors the answer-eval submit route: read the key once at module scope and
+// fall back to '' so a missing key surfaces as a 502 at call time rather than
+// crashing at import.
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY ?? '';
 
 // ---------------------------------------------------------------------------
 // Validation schemas
@@ -66,6 +81,34 @@ const SaveVocabularyBodySchema = z.object({
   card: DeepCardSchema,
   sourceReadEntryId: z.string().uuid().optional(),
 });
+
+// POST /read/generate body. `topic` is a free-form prompt capped at the shared
+// max; length/cefr are the closed enums the generator and cache key rely on.
+const GenerateBodySchema = z.object({
+  language: LearningLanguageEnum,
+  cefr: z.nativeEnum(CefrLevel),
+  length: z.nativeEnum(ReadingTextLength),
+  topic: z.string().min(1).max(READING_GEN_TOPIC_MAX_CHARS),
+});
+
+// Normalize topics so superficially-different prompts share a cache entry:
+// trim, lowercase, and collapse internal whitespace runs to a single space.
+function normalizeTopic(topic: string): string {
+  return topic.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+// Deterministic cache key over the generation inputs. The same (language, cefr,
+// length, normalized topic) always hashes to the same hex digest, which is the
+// UNIQUE column on `generated_reading_texts`.
+function readingCacheKey(
+  language: string,
+  cefr: string,
+  length: string,
+  topic: string,
+): string {
+  const basis = `${language}|${cefr}|${length}|${normalizeTopic(topic)}`;
+  return createHash('sha256').update(basis).digest('hex');
+}
 
 // ---------------------------------------------------------------------------
 // Router
@@ -657,6 +700,160 @@ read.delete('/read/vocabulary/:id', async (c) => {
   }
 
   return c.json({ id: result.id });
+});
+
+// ---------------------------------------------------------------------------
+// POST /read/generate — generate (or cache-serve) a reading passage
+// ---------------------------------------------------------------------------
+// A durable, cross-user cache fronts the Claude generator. A cache HIT serves
+// the stored passage verbatim, bumps `hit_count`, and is NEVER metered. A MISS
+// enforces the per-user `text_generation` daily cap, calls Claude, persists the
+// result (onConflictDoNothing so a concurrent writer doesn't error), and meters
+// one `text_generation` usage event. `runsHard` reflects whether the final text
+// still sits above the too-hard threshold so the client can warn the learner.
+// ---------------------------------------------------------------------------
+read.post('/read/generate', async (c) => {
+  const bodyResult = GenerateBodySchema.safeParse(
+    await c.req.json().catch(() => ({})),
+  );
+  if (!bodyResult.success) {
+    return c.json(
+      {
+        error: 'Invalid request body',
+        code: 'VALIDATION_ERROR',
+        details: bodyResult.error.flatten(),
+      },
+      400,
+    );
+  }
+  const { language, cefr, length, topic } = bodyResult.data;
+  const userId = c.get('userId');
+
+  const cacheKey = readingCacheKey(language, cefr, length, topic);
+
+  // 1. Cache lookup. On HIT, bump hit_count and return without metering.
+  const cachedRows = await db
+    .select({
+      title: generatedReadingTexts.title,
+      text: generatedReadingTexts.text,
+      cefr: generatedReadingTexts.cefr,
+      difficultyScore: generatedReadingTexts.difficultyScore,
+    })
+    .from(generatedReadingTexts)
+    .where(eq(generatedReadingTexts.cacheKey, cacheKey))
+    .limit(1);
+
+  const cached = cachedRows[0];
+  if (cached) {
+    await db
+      .update(generatedReadingTexts)
+      .set({ hitCount: sql`${generatedReadingTexts.hitCount} + 1` })
+      .where(eq(generatedReadingTexts.cacheKey, cacheKey));
+
+    return c.json({
+      title: cached.title,
+      text: cached.text,
+      cefr: cached.cefr,
+      difficultyScore: cached.difficultyScore,
+      fromCache: true,
+      runsHard: cached.difficultyScore > READING_TOO_HARD_THRESHOLD,
+    });
+  }
+
+  // 2. MISS — resolve tier, run the global brake, then the per-user daily cap.
+  // The global brake mirrors the answer-eval submit route: a cache HIT is free
+  // and must never be blocked, so this check lives on the miss path only and is
+  // evaluated before the per-user cap (CLAUDE.md: "checked before the per-user
+  // cap"). Admins/boosted are encoded in the helper.
+  const plan = await getEffectivePlan(userId);
+
+  const capacity = await checkGlobalCapacity({ plan, admin: isAdmin(userId) });
+  if (capacity !== 'ok') {
+    return c.json(
+      {
+        error: 'AI temporarily at capacity',
+        code: 'GLOBAL_CAPACITY',
+      },
+      503,
+    );
+  }
+
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const [{ count: todayCount }] = await db
+    .select({ count: count() })
+    .from(usageEvents)
+    .where(
+      and(
+        eq(usageEvents.userId, userId),
+        eq(usageEvents.eventType, 'text_generation'),
+        gte(usageEvents.createdAt, oneDayAgo),
+      ),
+    );
+
+  if (Number(todayCount) >= limitFor('text_generation', plan)) {
+    return c.json(
+      {
+        error: 'Daily text-generation limit exceeded',
+        code: 'RATE_LIMIT_EXCEEDED',
+      },
+      429,
+    );
+  }
+
+  // 3. Require the Anthropic key — mirrors the submit route's 502 posture.
+  if (!ANTHROPIC_API_KEY) {
+    return c.json(
+      { error: 'Text generation temporarily unavailable', code: 'AI_UNAVAILABLE' },
+      502,
+    );
+  }
+
+  // 4. Generate.
+  let generated;
+  try {
+    generated = await generateReadingText(createClaudeClient(ANTHROPIC_API_KEY), {
+      language,
+      cefr,
+      length,
+      topic,
+    });
+  } catch (err) {
+    console.error('[POST /read/generate] Reading generation failed:', err);
+    return c.json(
+      { error: 'Text generation temporarily unavailable', code: 'AI_UNAVAILABLE' },
+      502,
+    );
+  }
+
+  // 5. Persist the passage (idempotent on cacheKey) and meter the event.
+  await db
+    .insert(generatedReadingTexts)
+    .values({
+      cacheKey,
+      language: language as LearningLanguage,
+      cefr,
+      length,
+      prompt: topic,
+      title: generated.title,
+      text: generated.text,
+      difficultyScore: generated.difficultyScore,
+    })
+    .onConflictDoNothing({ target: generatedReadingTexts.cacheKey });
+
+  await db.insert(usageEvents).values({
+    userId,
+    eventType: 'text_generation',
+    metadata: { language, cefr, length },
+  });
+
+  return c.json({
+    title: generated.title,
+    text: generated.text,
+    cefr,
+    difficultyScore: generated.difficultyScore,
+    fromCache: false,
+    runsHard: generated.runsHard,
+  });
 });
 
 export default read;

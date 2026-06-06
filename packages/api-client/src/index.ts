@@ -79,6 +79,8 @@ export {
   SaveVocabularyCardRequestSchema,
   SaveVocabularyCardResponseSchema,
   DeleteVocabularyCardResponseSchema,
+  GenerateReadingTextRequestSchema,
+  GenerateReadingTextResponseSchema,
   WordFlagSchema,
   FlaggedMapSchema,
   DeepCardSchema,
@@ -100,6 +102,8 @@ export {
   type SaveVocabularyCardRequest,
   type SaveVocabularyCardResponse,
   type DeleteVocabularyCardResponse,
+  type GenerateReadingTextRequest,
+  type GenerateReadingTextResponse,
   type WordFlag,
   type FlaggedMap,
   type DeepCard,
@@ -165,6 +169,10 @@ export {
   type UseUpdateReadBankOptions,
   type UpdateReadBankParams,
 } from './hooks/useReadEntryMutations';
+export {
+  useGenerateReadingText,
+  type UseGenerateReadingTextOptions,
+} from './hooks/useGenerateReadingText';
 export {
   useReadAnnotateSpanStream,
   type UseReadAnnotateSpanStreamOptions,

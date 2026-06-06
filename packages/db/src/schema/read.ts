@@ -213,3 +213,28 @@ export const vocabularyReviewLog = pgTable(
     ),
   }),
 );
+
+/**
+ * Shared, cross-user cache of generated reading texts. Keyed by a hash of
+ * (language, cefr, length, normalizedPrompt). A cache hit serves an existing
+ * text for free; only a miss triggers an LLM call and meters the user.
+ */
+export const generatedReadingTexts = pgTable(
+  'generated_reading_texts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    cacheKey: text('cache_key').notNull(),
+    language: text('language').$type<LearningLanguage>().notNull(),
+    cefr: text('cefr').$type<CefrLevel>().notNull(),
+    length: text('length').notNull(),
+    prompt: text('prompt').notNull(),
+    title: text('title').notNull().default(''),
+    text: text('text').notNull(),
+    difficultyScore: real('difficulty_score').notNull(),
+    hitCount: integer('hit_count').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    cacheKeyUq: unique('generated_reading_texts_cache_key_uq').on(t.cacheKey),
+  }),
+);

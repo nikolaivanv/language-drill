@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { limitFor, BASE_DAILY_LIMITS, BOOST_MULTIPLIER } from './limits';
 
+
 describe('limitFor', () => {
   it('returns base limits for the free plan', () => {
     expect(limitFor('ai_evaluation', 'free')).toBe(50);
@@ -17,5 +18,16 @@ describe('limitFor', () => {
   it('exposes the base table and multiplier', () => {
     expect(BASE_DAILY_LIMITS.ai_evaluation).toBe(50);
     expect(BOOST_MULTIPLIER).toBe(10);
+  });
+});
+
+describe('text_generation bucket', () => {
+  it('has a free base limit of 20', () => {
+    expect(BASE_DAILY_LIMITS.text_generation).toBe(20);
+  });
+
+  it('boosts to 10x for boosted plans', () => {
+    expect(limitFor('text_generation', 'free')).toBe(20);
+    expect(limitFor('text_generation', 'boosted')).toBe(200);
   });
 });

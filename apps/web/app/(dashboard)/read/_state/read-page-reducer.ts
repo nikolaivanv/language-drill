@@ -13,6 +13,7 @@
 // vertical slice.
 // ---------------------------------------------------------------------------
 
+import { CefrLevel, ReadingTextLength } from '@language-drill/shared';
 import type {
   DeepCard,
   FlaggedMap,
@@ -20,7 +21,7 @@ import type {
   WordFlag,
 } from '@language-drill/shared';
 
-export type View = 'empty' | 'pasting' | 'annotated' | 'history';
+export type View = 'empty' | 'pasting' | 'generating' | 'annotated' | 'history';
 
 export type Intensity = 'subtle' | 'assertive';
 
@@ -116,6 +117,13 @@ export type AnnotateStreamSlice =
 export type ReadPageState = {
   view: View;
   paste: { title: string; source: string; text: string };
+  /** Generate-launchpad form fields (reading text generation). */
+  generate: {
+    topic: string;
+    length: ReadingTextLength;
+    cefr: CefrLevel;
+    language: 'ES' | 'DE' | 'TR';
+  };
   /** `null` while the most-recent entry is still being resolved from the entries query. */
   activeEntryId: string | null;
   /** Local bank — diverges from the saved entry between explicit save events. */
@@ -139,6 +147,8 @@ export type Action =
   | { type: 'SET_VIEW'; view: View }
   | { type: 'PASTE_FIELD'; field: 'title' | 'source' | 'text'; value: string }
   | { type: 'PASTE_RESET' }
+  | { type: 'GENERATE_FIELD'; field: 'topic' | 'length' | 'cefr' | 'language'; value: string }
+  | { type: 'GENERATE_RESET' }
   | { type: 'OPEN_POPOVER'; word: string; x: number; y: number }
   | { type: 'CLOSE_POPOVER' }
   | { type: 'SET_INTENSITY'; intensity: Intensity }
@@ -167,6 +177,7 @@ export type Action =
 export const initialState: ReadPageState = {
   view: 'empty',
   paste: { title: '', source: '', text: '' },
+  generate: { topic: '', length: ReadingTextLength.SHORT, cefr: CefrLevel.A2, language: 'TR' },
   activeEntryId: null,
   bank: [],
   activeWord: null,
@@ -204,6 +215,17 @@ export function readPageReducer(state: ReadPageState, action: Action): ReadPageS
         ...state,
         paste: { title: '', source: '', text: '' },
       };
+
+    case 'GENERATE_FIELD':
+      // `value` arrives as a string from the form; the enum-typed fields
+      // (length/cefr/language) carry string values, so the cast is safe.
+      return {
+        ...state,
+        generate: { ...state.generate, [action.field]: action.value },
+      };
+
+    case 'GENERATE_RESET':
+      return { ...state, generate: initialState.generate };
 
     case 'OPEN_POPOVER':
       return {

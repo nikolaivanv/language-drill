@@ -6,6 +6,8 @@ import {
   READ_SOURCE_MAX_CHARS,
   READ_TEXT_MAX_CHARS,
   READ_TITLE_MAX_CHARS,
+  READING_GEN_TOPIC_MAX_CHARS,
+  ReadingTextLength,
   SpanAnnotationsSchema,
   WordFlagSchema,
 } from '@language-drill/shared';
@@ -287,3 +289,31 @@ export type DeleteVocabularyCardResponse = z.infer<
 // reaching back into `@language-drill/shared`.
 export { WordFlagSchema, FlaggedMapSchema, DeepCardSchema };
 export type { WordFlag, FlaggedMap, DeepCard } from '@language-drill/shared';
+
+// ---------------------------------------------------------------------------
+// POST /read/generate
+// ---------------------------------------------------------------------------
+
+export const GenerateReadingTextRequestSchema = z.object({
+  language: LearningLanguageEnum,
+  cefr: z.nativeEnum(CefrLevel),
+  length: z.nativeEnum(ReadingTextLength),
+  topic: z.string().min(1).max(READING_GEN_TOPIC_MAX_CHARS),
+});
+
+export type GenerateReadingTextRequest = z.infer<
+  typeof GenerateReadingTextRequestSchema
+>;
+
+export const GenerateReadingTextResponseSchema = z.object({
+  title: z.string(),
+  text: z.string().min(1),
+  cefr: z.nativeEnum(CefrLevel),
+  difficultyScore: z.number().min(0).max(1),
+  fromCache: z.boolean(),
+  runsHard: z.boolean(),
+});
+
+export type GenerateReadingTextResponse = z.infer<
+  typeof GenerateReadingTextResponseSchema
+>;

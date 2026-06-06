@@ -28,6 +28,7 @@ import {
   useLanguageProfiles,
   useReadAnnotateSpanStream,
   useReadAnnotateStream,
+  useGenerateReadingText,
   useReadEntries,
   useReadEntry,
   useSaveReadEntry,
@@ -36,7 +37,11 @@ import {
   type ReadEntryResponse,
   type SavedVocabItem,
 } from '@language-drill/api-client';
-import { CefrLevel, type DeepCard } from '@language-drill/shared';
+import {
+  CefrLevel,
+  READING_CHIPS_BY_LANGUAGE,
+  type DeepCard,
+} from '@language-drill/shared';
 import { useActiveLanguage } from '../../../components/shell/active-language-provider';
 import { calibrationCopy } from './_lib/calibration-copy';
 import {
@@ -55,6 +60,7 @@ import {
 import { AnnotatedSkeleton } from './_components/annotated-skeleton';
 import { AnnotatedView } from './_components/annotated-view';
 import { EmptyView } from './_components/empty-view';
+import { GenerateView } from './_components/generate-view';
 import { HistoryEmptyState } from './_components/history-empty-state';
 import { HistoryView } from './_components/history-view';
 import { InlineErrorToast } from './_components/inline-error-toast';
@@ -157,6 +163,7 @@ export default function ReadPage() {
   });
   const saveEntry = useSaveReadEntry({ fetchFn });
   const updateBank = useUpdateReadBank({ fetchFn });
+  const generateMutation = useGenerateReadingText({ fetchFn });
   // On-demand deep annotation — now streamed field-by-field (Req 1.1, 1.2). The
   // hook owns its own state machine; the effect below mirrors that into the
   // reducer's `deepCard` slice (DEEP_CARD_FIELD/RESOLVED/ERROR) so the annotated
@@ -448,7 +455,16 @@ export default function ReadPage() {
     }
   };
 
-  const handleAnnotate = () => {
+  // Shared annotation kickoff for both the paste form and a freshly generated
+  // text. Takes the text/title EXPLICITLY (rather than reading `state.paste`)
+  // so callers that set the paste fields in the same tick — the generate
+  // onSuccess does — start the stream against the new text, not the stale
+  // pre-dispatch snapshot. The pasted/generated text is mirrored into
+  // `state.paste` so the ephemeral entry renders it and the later save/bank
+  // paths (which read `state.paste.title`/`.text`) stay consistent.
+  const startAnnotation = (text: string, title: string) => {
+    dispatch({ type: 'PASTE_FIELD', field: 'title', value: title });
+    dispatch({ type: 'PASTE_FIELD', field: 'text', value: text });
     // Req 5.1: switch to the annotated view IMMEDIATELY with the raw text
     // before any network response. Compose existing reducer actions instead of
     // adding a single `PASTE_SUBMIT` action — the visible effects we need are
@@ -459,7 +475,48 @@ export default function ReadPage() {
     // consumer (selectFlaggedMap, etc.); runtime rendering reads from
     // `annotate.state` directly so this dispatch is presently advisory.
     dispatch({ type: 'ANNOTATE_START' });
-    annotate.start({ language: activeLanguage, text: state.paste.text });
+    annotate.start({ language: activeLanguage, text });
+  };
+
+  const handleAnnotate = () => {
+    startAnnotation(state.paste.text, state.paste.title);
+  };
+
+  // Open the generate launchpad from the empty view. Pre-fill the form's CEFR
+  // and language from the user's tracked level + the shell's active language so
+  // the defaults match what the rest of the page is already bound to (the
+  // annotate/save pipeline runs against `activeLanguage`).
+  const handleOpenGenerate = () => {
+    if (proficiencyLevel !== null) {
+      dispatch({ type: 'GENERATE_FIELD', field: 'cefr', value: proficiencyLevel });
+    }
+    dispatch({ type: 'GENERATE_FIELD', field: 'language', value: activeLanguage });
+    dispatch({ type: 'SET_VIEW', view: 'generating' });
+  };
+
+  // Generate a passage, then feed it into the SAME annotate pipeline the paste
+  // "Annotate" button uses: `startAnnotation` mirrors the text/title into
+  // `state.paste` and fires the streaming annotate against `activeLanguage`.
+  const handleGenerate = () => {
+    generateMutation.mutate(
+      {
+        // Single source of truth: the request language is the shell's
+        // `activeLanguage`, NOT a separate in-form picker. This guarantees the
+        // generated text is in the same language the annotate/save/bank pipeline
+        // (which all read `activeLanguage`) will score and persist it under.
+        // `activeLanguage` is a `LearningLanguage` ('ES'|'DE'|'TR'), exactly
+        // what the request schema expects.
+        language: activeLanguage,
+        cefr: state.generate.cefr,
+        length: state.generate.length,
+        topic: state.generate.topic,
+      },
+      {
+        onSuccess: (data) => {
+          startAnnotation(data.text, data.title);
+        },
+      },
+    );
   };
 
   const handleIntensityChange = (intensity: 'subtle' | 'assertive') => {
@@ -780,7 +837,28 @@ export default function ReadPage() {
     body = (
       <EmptyView
         onPaste={handlePasteNew}
+        onGenerate={handleOpenGenerate}
         cefrToken={proficiencyLevel}
+      />
+    );
+  } else if (state.view === 'generating') {
+    const generateRateLimited =
+      (generateMutation.error as { status?: number } | null)?.status === 429;
+    body = (
+      <GenerateView
+        state={state.generate}
+        chips={READING_CHIPS_BY_LANGUAGE[activeLanguage]}
+        onChange={(field, value) =>
+          dispatch({ type: 'GENERATE_FIELD', field, value: String(value) })
+        }
+        onChipPick={(topic) =>
+          dispatch({ type: 'GENERATE_FIELD', field: 'topic', value: topic })
+        }
+        onGenerate={handleGenerate}
+        onCancel={() => dispatch({ type: 'SET_VIEW', view: 'empty' })}
+        isLoading={generateMutation.isPending}
+        errorBody={generateRateLimited ? null : (generateMutation.error?.message ?? null)}
+        rateLimited={generateRateLimited}
       />
     );
   } else if (state.view === 'pasting') {
