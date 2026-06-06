@@ -31,6 +31,15 @@ describe('ReadTopBar — clicks', () => {
     fireEvent.click(screen.getByRole('button', { name: /paste new/i }));
     expect(onChange).toHaveBeenCalledWith('pasting');
   });
+
+  it('fires onChange("generating") when "+ generate" is clicked', () => {
+    const onChange = vi.fn();
+    render(
+      <ReadTopBar view="annotated" onChange={onChange} historyCount={3} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: /generate/i }));
+    expect(onChange).toHaveBeenCalledWith('generating');
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -77,6 +86,17 @@ describe('ReadTopBar — aria-current', () => {
       'aria-current',
       'page',
     );
+  });
+
+  it('marks "+ generate" as aria-current="page" when view is generating', () => {
+    render(<ReadTopBar view="generating" onChange={() => {}} historyCount={3} />);
+    expect(screen.getByRole('button', { name: /generate/i })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    expect(
+      screen.getByRole('button', { name: /current text/i }),
+    ).not.toHaveAttribute('aria-current');
   });
 });
 

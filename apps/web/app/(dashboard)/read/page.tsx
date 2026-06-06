@@ -433,6 +433,17 @@ export default function ReadPage() {
       dispatch({ type: 'SET_VIEW', view: target });
       return;
     }
+    if (view === 'generating') {
+      // Drop any in-flight stream, then pre-fill the launchpad with the user's
+      // tracked level + active language before opening it.
+      annotate.abort();
+      if (proficiencyLevel !== null) {
+        dispatch({ type: 'GENERATE_FIELD', field: 'cefr', value: proficiencyLevel });
+      }
+      dispatch({ type: 'GENERATE_FIELD', field: 'language', value: activeLanguage });
+      dispatch({ type: 'SET_VIEW', view: 'generating' });
+      return;
+    }
     // history / empty — also drop any in-flight stream (Req 5.7).
     annotate.abort();
     dispatch({ type: 'SET_VIEW', view });
@@ -486,13 +497,9 @@ export default function ReadPage() {
   // and language from the user's tracked level + the shell's active language so
   // the defaults match what the rest of the page is already bound to (the
   // annotate/save pipeline runs against `activeLanguage`).
-  const handleOpenGenerate = () => {
-    if (proficiencyLevel !== null) {
-      dispatch({ type: 'GENERATE_FIELD', field: 'cefr', value: proficiencyLevel });
-    }
-    dispatch({ type: 'GENERATE_FIELD', field: 'language', value: activeLanguage });
-    dispatch({ type: 'SET_VIEW', view: 'generating' });
-  };
+  // Both the empty-state CTA and the top-bar "+ generate" button route here via
+  // handleViewChange('generating'), which applies the level/language defaults.
+  const handleOpenGenerate = () => handleViewChange('generating');
 
   // Generate a passage, then feed it into the SAME annotate pipeline the paste
   // "Annotate" button uses: `startAnnotation` mirrors the text/title into

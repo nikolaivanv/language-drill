@@ -3,9 +3,9 @@
 // ---------------------------------------------------------------------------
 // ReadTopBar — header above every /read view
 // ---------------------------------------------------------------------------
-// Three view-switcher buttons on the right (current text · history N ·
-// + paste new), with the active button raised to `primary` and marked
-// `aria-current="page"` (Requirements 2.1, 2.5, 14.6). The bottom rule
+// Four view-switcher buttons on the right (current text · history N ·
+// + generate · + paste new), with the active button raised to `primary` and
+// marked `aria-current="page"` (Requirements 2.1, 2.5, 14.6). The bottom rule
 // matches the prototype: a 1px `--rule` border with 14px breathing room.
 // ---------------------------------------------------------------------------
 
@@ -22,16 +22,15 @@ type Props = {
 // Each view "owns" exactly one top-bar button. `empty` re-uses the
 // "current text" slot since it is the entries-empty fallback for that view
 // (Requirement 2.2).
-function activeButton(view: View): 'current' | 'history' | 'paste' {
+function activeButton(view: View): 'current' | 'history' | 'generate' | 'paste' {
   switch (view) {
     case 'annotated':
     case 'empty':
-    // The generate launchpad is reached from the empty/current slot, so it
-    // keeps the "current text" button raised.
-    case 'generating':
       return 'current';
     case 'history':
       return 'history';
+    case 'generating':
+      return 'generate';
     case 'pasting':
       return 'paste';
   }
@@ -65,6 +64,14 @@ export function ReadTopBar({ view, onChange, historyCount }: Props) {
           <span className="t-mono ml-[4px] text-[10px] opacity-70">
             {historyCount ?? '—'}
           </span>
+        </Button>
+        <Button
+          size="sm"
+          variant={active === 'generate' ? 'primary' : 'ghost'}
+          aria-current={active === 'generate' ? 'page' : undefined}
+          onClick={() => onChange('generating')}
+        >
+          + generate
         </Button>
         <Button
           size="sm"
