@@ -842,6 +842,8 @@ export default function ReadPage() {
       />
     );
   } else if (state.view === 'generating') {
+    const generateRateLimited =
+      (generateMutation.error as { status?: number } | null)?.status === 429;
     body = (
       <GenerateView
         state={state.generate}
@@ -855,10 +857,8 @@ export default function ReadPage() {
         onGenerate={handleGenerate}
         onCancel={() => dispatch({ type: 'SET_VIEW', view: 'empty' })}
         isLoading={generateMutation.isPending}
-        errorBody={generateMutation.error?.message ?? null}
-        rateLimited={
-          (generateMutation.error as { status?: number } | null)?.status === 429
-        }
+        errorBody={generateRateLimited ? null : (generateMutation.error?.message ?? null)}
+        rateLimited={generateRateLimited}
       />
     );
   } else if (state.view === 'pasting') {
