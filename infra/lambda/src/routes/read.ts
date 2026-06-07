@@ -84,11 +84,14 @@ const SaveVocabularyBodySchema = z.object({
 
 // POST /read/generate body. `topic` is a free-form prompt capped at the shared
 // max; length/cefr are the closed enums the generator and cache key rely on.
+// `noCache` bypasses the cache read and overwrites the stored row so the user
+// can force a fresh variation (rewrite flow).
 const GenerateBodySchema = z.object({
   language: LearningLanguageEnum,
   cefr: z.nativeEnum(CefrLevel),
   length: z.nativeEnum(ReadingTextLength),
   topic: z.string().min(1).max(READING_GEN_TOPIC_MAX_CHARS),
+  noCache: z.boolean().optional(),
 });
 
 // Normalize topics so superficially-different prompts share a cache entry:
@@ -726,38 +729,41 @@ read.post('/read/generate', async (c) => {
       400,
     );
   }
-  const { language, cefr, length, topic } = bodyResult.data;
+  const { language, cefr, length, topic, noCache } = bodyResult.data;
   const userId = c.get('userId');
 
   const cacheKey = readingCacheKey(language, cefr, length, topic);
 
   // 1. Cache lookup. On HIT, bump hit_count and return without metering.
-  const cachedRows = await db
-    .select({
-      title: generatedReadingTexts.title,
-      text: generatedReadingTexts.text,
-      cefr: generatedReadingTexts.cefr,
-      difficultyScore: generatedReadingTexts.difficultyScore,
-    })
-    .from(generatedReadingTexts)
-    .where(eq(generatedReadingTexts.cacheKey, cacheKey))
-    .limit(1);
+  // Skipped when `noCache` is true so the user can force a fresh variation.
+  if (!noCache) {
+    const cachedRows = await db
+      .select({
+        title: generatedReadingTexts.title,
+        text: generatedReadingTexts.text,
+        cefr: generatedReadingTexts.cefr,
+        difficultyScore: generatedReadingTexts.difficultyScore,
+      })
+      .from(generatedReadingTexts)
+      .where(eq(generatedReadingTexts.cacheKey, cacheKey))
+      .limit(1);
 
-  const cached = cachedRows[0];
-  if (cached) {
-    await db
-      .update(generatedReadingTexts)
-      .set({ hitCount: sql`${generatedReadingTexts.hitCount} + 1` })
-      .where(eq(generatedReadingTexts.cacheKey, cacheKey));
+    const cached = cachedRows[0];
+    if (cached) {
+      await db
+        .update(generatedReadingTexts)
+        .set({ hitCount: sql`${generatedReadingTexts.hitCount} + 1` })
+        .where(eq(generatedReadingTexts.cacheKey, cacheKey));
 
-    return c.json({
-      title: cached.title,
-      text: cached.text,
-      cefr: cached.cefr,
-      difficultyScore: cached.difficultyScore,
-      fromCache: true,
-      runsHard: cached.difficultyScore > READING_TOO_HARD_THRESHOLD,
-    });
+      return c.json({
+        title: cached.title,
+        text: cached.text,
+        cefr: cached.cefr,
+        difficultyScore: cached.difficultyScore,
+        fromCache: true,
+        runsHard: cached.difficultyScore > READING_TOO_HARD_THRESHOLD,
+      });
+    }
   }
 
   // 2. MISS — resolve tier, run the global brake, then the per-user daily cap.
@@ -825,7 +831,10 @@ read.post('/read/generate', async (c) => {
     );
   }
 
-  // 5. Persist the passage (idempotent on cacheKey) and meter the event.
+  // 5. Persist the passage and meter the event. `onConflictDoUpdate` so a
+  // forced rewrite (noCache) overwrites the stored variation; a normal miss
+  // also upserts (identical behaviour to the old onConflictDoNothing for new
+  // rows, but now the title/text/difficultyScore are refreshed on a rewrite).
   await db
     .insert(generatedReadingTexts)
     .values({
@@ -838,7 +847,14 @@ read.post('/read/generate', async (c) => {
       text: generated.text,
       difficultyScore: generated.difficultyScore,
     })
-    .onConflictDoNothing({ target: generatedReadingTexts.cacheKey });
+    .onConflictDoUpdate({
+      target: generatedReadingTexts.cacheKey,
+      set: {
+        title: generated.title,
+        text: generated.text,
+        difficultyScore: generated.difficultyScore,
+      },
+    });
 
   await db.insert(usageEvents).values({
     userId,
