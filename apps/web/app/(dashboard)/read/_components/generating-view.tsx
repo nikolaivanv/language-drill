@@ -12,8 +12,7 @@
 // without interrupting ongoing speech.
 // ---------------------------------------------------------------------------
 
-import type { CefrLevel, ReadingTextLength } from '@language-drill/shared';
-import { ReadingCategory } from '@language-drill/shared';
+import type { CefrLevel, ReadingCategory, ReadingTextLength } from '@language-drill/shared';
 
 type Provenance = {
   category: ReadingCategory | null;
@@ -27,15 +26,8 @@ type Props = {
   provenance: Provenance;
 };
 
-const LENGTH_NAME: Record<ReadingTextLength, string> = {
-  short: 'short',
-  medium: 'medium',
-  long: 'long',
-};
-
 export function GeneratingView({ languageLabel, provenance }: Props) {
   const { category, cefr, length } = provenance;
-  const lengthName = LENGTH_NAME[length] ?? length;
   const categoryLabel = category ?? 'passage';
 
   return (
@@ -54,7 +46,7 @@ export function GeneratingView({ languageLabel, provenance }: Props) {
 
       {/* Subline */}
       <p className="t-small text-ink-soft mt-[10px] mb-[32px]">
-        tuning a {lengthName} {categoryLabel} to {cefr} in {languageLabel},
+        tuning a {length} {categoryLabel} to {cefr} in {languageLabel},
         then calibrating the words worth collecting.
       </p>
 
