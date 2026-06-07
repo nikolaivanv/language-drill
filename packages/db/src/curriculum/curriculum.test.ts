@@ -159,7 +159,7 @@ describe('curriculum sentenceConstructionSuitable flag', () => {
 });
 
 describe('curriculum clozeUnsuitable flag — specific entries', () => {
-  it('flags exactly the four bipartite TR-A2 grammar points', () => {
+  it('flags the four bipartite TR-A2 grammar points', () => {
     const flaggedKeys = [
       'tr-a2-converbs',
       'tr-a2-correlative-conjunctions',
@@ -169,6 +169,33 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
     for (const key of flaggedKeys) {
       expect(getGrammarPoint(key)?.clozeUnsuitable).toBe(true);
     }
+  });
+
+  it('flags the two ambiguity-driven TR-A1 grammar points', () => {
+    // -A göre / bence: a single L2 sentence cannot fix the opinion-holder, so
+    // the slot accepts every person. -DEn beri / -DIr: near-synonym alternants
+    // both fit. Both are unsolvable as a single-blank cloze without spoiling;
+    // they keep only the translation cell. See investigation 2026-06-07.
+    for (const key of ['tr-a1-gore-bence', 'tr-a1-beri-dir']) {
+      expect(getGrammarPoint(key)?.clozeUnsuitable).toBe(true);
+    }
+  });
+
+  it('the full TR clozeUnsuitable set is exactly these six points', () => {
+    const flagged = trCurriculum
+      .filter((g) => g.clozeUnsuitable === true)
+      .map((g) => g.key)
+      .sort();
+    expect(flagged).toEqual(
+      [
+        'tr-a1-beri-dir',
+        'tr-a1-gore-bence',
+        'tr-a2-converbs',
+        'tr-a2-correlative-conjunctions',
+        'tr-a2-nominalization',
+        'tr-a2-relative-an',
+      ].sort(),
+    );
   });
 });
 
