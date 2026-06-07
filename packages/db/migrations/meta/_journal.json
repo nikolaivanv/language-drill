@@ -134,6 +134,13 @@
       "when": 1780693309077,
       "tag": "0018_worried_venus",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1780820975383,
+      "tag": "0019_steep_cerebro",
+      "breakpoints": true
     }
   ]
 }

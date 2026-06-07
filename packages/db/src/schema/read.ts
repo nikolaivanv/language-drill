@@ -15,6 +15,8 @@ import type {
   CefrLevel,
   DeepCard,
   LearningLanguage,
+  ReadingCategory,
+  ReadingTextLength,
   ReviewItemType,
   ReviewOutcome,
   SpanAnnotations,
@@ -39,6 +41,13 @@ export const readEntries = pgTable(
     // (Req 11.1). Written incrementally via a jsonb merge, never re-saving the
     // whole entry.
     spanAnnotations: jsonb('span_annotations').$type<SpanAnnotations>(),
+    // Generation provenance (null for pasted entries). Persisted so library
+    // cards are rich and "adjust" works after reopening a generated text.
+    kind: text('kind').$type<'generated' | 'pasted'>().notNull().default('pasted'),
+    category: text('category').$type<ReadingCategory>(),
+    cefr: text('cefr').$type<CefrLevel>(),
+    length: text('length').$type<ReadingTextLength>(),
+    prompt: text('prompt'),
     pastedAt: timestamp('pasted_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({

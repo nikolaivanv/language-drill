@@ -2,13 +2,18 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import {
   CefrLevel,
+  ReadingCategory,
   ReadingTextLength,
+  READING_IDEAS,
   READING_GEN_TOPIC_MAX_CHARS,
 } from '@language-drill/shared';
-import { GenerateView, type GenerateState } from '../generate-view';
+import { GenerateView } from '../generate-view';
+import type { GenerateState } from '../../_state/read-page-reducer';
 
 // ---------------------------------------------------------------------------
-// GenerateView — chips, topic gating, CTA callbacks, loader, rate limit.
+// GenerateView — composer: topic textarea, idea chips, length/level controls,
+// "you'll get" summary, generate gating, loader, rate-limit messaging.
+// No language field/select anywhere.
 // ---------------------------------------------------------------------------
 
 const baseState: GenerateState = {
@@ -16,119 +21,138 @@ const baseState: GenerateState = {
   length: ReadingTextLength.SHORT,
   cefr: CefrLevel.B1,
   language: 'ES',
+  category: null,
 };
 
 const defaultProps = {
   state: baseState,
-  chips: ['a day at the beach', 'a job interview', 'climate change'] as const,
+  ideas: READING_IDEAS,
+  languageLabel: 'español',
+  yourLevel: null,
   onChange: () => {},
-  onChipPick: () => {},
+  onPickIdea: () => {},
   onGenerate: () => {},
   onCancel: () => {},
   isLoading: false,
   errorBody: null,
 } as const;
 
-describe('GenerateView — chips', () => {
-  it('renders every suggestion chip', () => {
+describe('GenerateView — copy + header', () => {
+  it('renders the eyebrow, title, and language-aware subtitle', () => {
     render(<GenerateView {...defaultProps} />);
-    for (const chip of defaultProps.chips) {
-      expect(screen.getByText(chip)).toBeInTheDocument();
-    }
+    expect(screen.getByText(/new text/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /generate a passage/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/I'll write it in español/i),
+    ).toBeInTheDocument();
   });
 
-  it('calls onChipPick with the chip text when a chip is clicked', () => {
-    const onChipPick = vi.fn();
-    render(<GenerateView {...defaultProps} onChipPick={onChipPick} />);
-    fireEvent.click(screen.getByText('a job interview'));
-    expect(onChipPick).toHaveBeenCalledWith('a job interview');
-  });
-
-  it('disables chips while loading', () => {
-    render(
-      <GenerateView
-        {...defaultProps}
-        state={{ ...baseState, topic: 'something' }}
-        isLoading={true}
-      />,
-    );
-    // Each chip text lives inside a <button>; that button should be disabled.
-    const chipButton = screen.getByText('climate change').closest('button');
-    expect(chipButton).toBeDisabled();
+  it('has no language select/combobox', () => {
+    render(<GenerateView {...defaultProps} />);
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/language switcher/i),
+    ).not.toBeInTheDocument();
   });
 });
 
-describe('GenerateView — topic input', () => {
-  it('calls onChange("topic", value) when typing into the topic input', () => {
+describe('GenerateView — topic textarea', () => {
+  it('calls onChange("topic", value) when typing into the textarea', () => {
     const onChange = vi.fn();
     render(<GenerateView {...defaultProps} onChange={onChange} />);
-    fireEvent.change(screen.getByLabelText(/topic/i), {
+    fireEvent.change(screen.getByLabelText(/what to read about/i), {
       target: { value: 'el clima' },
     });
     expect(onChange).toHaveBeenCalledWith('topic', 'el clima');
   });
 
-  it('flips the counter to accent + " · too long" past the max', () => {
+  it('shows the character counter and flips to accent past 200', () => {
+    render(
+      <GenerateView
+        {...defaultProps}
+        state={{ ...baseState, topic: 'a'.repeat(201) }}
+      />,
+    );
+    const counter = screen.getByText('201 / 200');
+    expect(counter.className).toContain('text-accent');
+  });
+});
+
+describe('GenerateView — idea chips', () => {
+  it('renders every idea prompt', () => {
+    render(<GenerateView {...defaultProps} />);
+    for (const idea of READING_IDEAS) {
+      expect(screen.getByText(idea.prompt)).toBeInTheDocument();
+    }
+  });
+
+  it('calls onPickIdea with the idea when a chip is clicked', () => {
+    const onPickIdea = vi.fn();
+    render(<GenerateView {...defaultProps} onPickIdea={onPickIdea} />);
+    const idea = READING_IDEAS[2];
+    fireEvent.click(screen.getByText(idea.prompt));
+    expect(onPickIdea).toHaveBeenCalledWith(idea);
+  });
+});
+
+describe('GenerateView — length + level controls', () => {
+  it('calls onChange("length", value) when a length is picked', () => {
+    const onChange = vi.fn();
+    render(<GenerateView {...defaultProps} onChange={onChange} />);
+    fireEvent.click(screen.getByRole('button', { name: /long/i }));
+    expect(onChange).toHaveBeenCalledWith('length', ReadingTextLength.LONG);
+  });
+
+  it('calls onChange("cefr", value) when a level is picked', () => {
+    const onChange = vi.fn();
+    render(<GenerateView {...defaultProps} onChange={onChange} />);
+    fireEvent.click(screen.getByRole('button', { name: /^C1$/ }));
+    expect(onChange).toHaveBeenCalledWith('cefr', CefrLevel.C1);
+  });
+});
+
+describe('GenerateView — "you\'ll get" summary', () => {
+  it('reflects length, category, level, and language from state', () => {
     render(
       <GenerateView
         {...defaultProps}
         state={{
           ...baseState,
-          topic: 'a'.repeat(READING_GEN_TOPIC_MAX_CHARS + 1),
+          length: ReadingTextLength.LONG,
+          cefr: CefrLevel.B2,
+          category: ReadingCategory.STORY,
         }}
       />,
     );
-    const counter = screen.getByText(/· too long/);
-    expect(counter.className).toContain('text-accent');
-  });
-});
-
-describe('GenerateView — selectors', () => {
-  it('calls onChange("length", value) when the length select changes', () => {
-    const onChange = vi.fn();
-    render(<GenerateView {...defaultProps} onChange={onChange} />);
-    fireEvent.change(screen.getByLabelText(/length/i), {
-      target: { value: ReadingTextLength.LONG },
-    });
-    expect(onChange).toHaveBeenCalledWith('length', ReadingTextLength.LONG);
-  });
-
-  it('calls onChange("cefr", value) when the level select changes', () => {
-    const onChange = vi.fn();
-    render(<GenerateView {...defaultProps} onChange={onChange} />);
-    fireEvent.change(screen.getByLabelText(/level/i), {
-      target: { value: CefrLevel.C1 },
-    });
-    expect(onChange).toHaveBeenCalledWith('cefr', CefrLevel.C1);
-  });
-});
-
-describe('GenerateView — read-only language indicator', () => {
-  it('renders the current language as a read-only indicator (no editable control)', () => {
-    render(
-      <GenerateView {...defaultProps} state={{ ...baseState, language: 'DE' }} />,
+    const summary = screen.getByText(/you'll get/i);
+    expect(summary).toHaveTextContent(
+      /you'll get a long \(~320 word\) story at B2 in español\./i,
     );
-    // The language code is shown read-only…
-    expect(screen.getByText('DE')).toBeInTheDocument();
-    // …with the human-readable label + switcher hint…
-    expect(screen.getByText(/German/)).toBeInTheDocument();
-    expect(screen.getByText(/language switcher/i)).toBeInTheDocument();
-    // …and there is no editable language combobox to diverge from activeLanguage.
-    expect(
-      screen.queryByRole('combobox', { name: /language/i }),
-    ).not.toBeInTheDocument();
+  });
+
+  it('falls back to "passage" when no category is selected', () => {
+    render(
+      <GenerateView
+        {...defaultProps}
+        state={{ ...baseState, length: ReadingTextLength.SHORT, category: null }}
+      />,
+    );
+    const summary = screen.getByText(/you'll get/i);
+    expect(summary).toHaveTextContent(/~80 word\) passage at B1 in español\./i);
   });
 });
 
 describe('GenerateView — generate gating + callbacks', () => {
-  it('disables "generate →" when the topic is empty', () => {
+  it('disables "generate a passage →" when the topic is empty', () => {
     render(<GenerateView {...defaultProps} />);
     expect(
-      screen.getByRole('button', { name: /generate →/i }),
+      screen.getByRole('button', { name: /generate a passage →/i }),
     ).toBeDisabled();
   });
 
-  it('disables "generate →" when the topic is whitespace-only', () => {
+  it('disables when the topic is whitespace-only', () => {
     render(
       <GenerateView
         {...defaultProps}
@@ -136,11 +160,23 @@ describe('GenerateView — generate gating + callbacks', () => {
       />,
     );
     expect(
-      screen.getByRole('button', { name: /generate →/i }),
+      screen.getByRole('button', { name: /generate a passage →/i }),
     ).toBeDisabled();
   });
 
-  it('enables "generate →" with a non-empty topic and calls onGenerate', () => {
+  it('disables when the topic is over the limit', () => {
+    render(
+      <GenerateView
+        {...defaultProps}
+        state={{ ...baseState, topic: 'a'.repeat(READING_GEN_TOPIC_MAX_CHARS + 1) }}
+      />,
+    );
+    expect(
+      screen.getByRole('button', { name: /generate a passage →/i }),
+    ).toBeDisabled();
+  });
+
+  it('enables with a valid topic and fires onGenerate', () => {
     const onGenerate = vi.fn();
     render(
       <GenerateView
@@ -149,13 +185,13 @@ describe('GenerateView — generate gating + callbacks', () => {
         onGenerate={onGenerate}
       />,
     );
-    const cta = screen.getByRole('button', { name: /generate →/i });
+    const cta = screen.getByRole('button', { name: /generate a passage →/i });
     expect(cta).not.toBeDisabled();
     fireEvent.click(cta);
     expect(onGenerate).toHaveBeenCalledTimes(1);
   });
 
-  it('calls onCancel when "cancel" is clicked', () => {
+  it('fires onCancel when "cancel" is clicked', () => {
     const onCancel = vi.fn();
     render(<GenerateView {...defaultProps} onCancel={onCancel} />);
     fireEvent.click(screen.getByRole('button', { name: /^cancel$/i }));
@@ -164,7 +200,7 @@ describe('GenerateView — generate gating + callbacks', () => {
 });
 
 describe('GenerateView — loading state', () => {
-  it('shows a role="status" loader with "generating your text…" while loading', () => {
+  it('shows "generating…" on the CTA and disables it while loading', () => {
     render(
       <GenerateView
         {...defaultProps}
@@ -172,43 +208,14 @@ describe('GenerateView — loading state', () => {
         isLoading={true}
       />,
     );
-    const status = screen.getByRole('status');
-    expect(status).toHaveTextContent(/generating your text…/i);
-  });
-
-  it('disables both action buttons while loading', () => {
-    render(
-      <GenerateView
-        {...defaultProps}
-        state={{ ...baseState, topic: 'a day at the beach' }}
-        isLoading={true}
-      />,
-    );
-    expect(screen.getByRole('button', { name: /^cancel$/i })).toBeDisabled();
     expect(
       screen.getByRole('button', { name: /generating…/i }),
     ).toBeDisabled();
   });
 });
 
-describe('GenerateView — rate limited', () => {
-  it('disables "generate →" and shows a rate-limit message when rateLimited', () => {
-    render(
-      <GenerateView
-        {...defaultProps}
-        state={{ ...baseState, topic: 'a day at the beach' }}
-        rateLimited={true}
-      />,
-    );
-    expect(
-      screen.getByRole('button', { name: /generate →/i }),
-    ).toBeDisabled();
-    expect(screen.getByText(/daily limit reached/i)).toBeInTheDocument();
-  });
-});
-
-describe('GenerateView — errorBody card', () => {
-  it('renders the inline error card when errorBody is non-null', () => {
+describe('GenerateView — error + rate-limit messaging', () => {
+  it('renders the error body in a role="alert" when set', () => {
     render(
       <GenerateView
         {...defaultProps}
@@ -216,11 +223,22 @@ describe('GenerateView — errorBody card', () => {
       />,
     );
     const alert = screen.getByRole('alert');
-    expect(alert).toHaveTextContent("couldn't generate this");
     expect(alert).toHaveTextContent(/generation temporarily unavailable/);
   });
 
-  it('hides the error card when errorBody is null and not rate limited', () => {
+  it('shows a rate-limit alert when rateLimited', () => {
+    render(
+      <GenerateView
+        {...defaultProps}
+        state={{ ...baseState, topic: 'a day at the beach' }}
+        rateLimited={true}
+      />,
+    );
+    const alert = screen.getByRole('alert');
+    expect(alert).toHaveTextContent(/daily generation limit reached/i);
+  });
+
+  it('renders no alert when there is no error and not rate limited', () => {
     render(<GenerateView {...defaultProps} />);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });

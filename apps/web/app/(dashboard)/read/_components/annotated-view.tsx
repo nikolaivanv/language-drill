@@ -17,12 +17,21 @@
 // ---------------------------------------------------------------------------
 
 import * as React from 'react';
-import type { DeepCard, FlaggedMap } from '@language-drill/shared';
+import type {
+  CefrLevel,
+  DeepCard,
+  FlaggedMap,
+  ReadingCategory,
+  ReadingTextLength,
+} from '@language-drill/shared';
 import type { SavedVocabItem } from '@language-drill/api-client';
+import { AdjustBar } from './adjust-bar';
 import { AnnotatedText, type SpanSelection } from './annotated-text';
 import { ZeroFlaggedStrip } from './annotated-footer';
 import { CalibrationStrip } from './calibration-strip';
+import { CollectBar } from './collect-bar';
 import { IntensityToggle } from './intensity-toggle';
+import { ProvenanceHeader } from './provenance-header';
 import { WordBankRail } from './word-bank-rail';
 import { WordBankSheet } from './word-bank-sheet';
 import { WordPopover } from './word-popover';
@@ -40,6 +49,19 @@ type AnnotatedEntry = {
   title: string;
   source: string;
   flaggedWords: FlaggedMap;
+};
+
+/** Adjust-bar action kinds (mirrors `AdjustBar`'s internal union). */
+type AdjustKind = 'easier' | 'harder' | 'longer' | 'rewrite';
+
+/** Generation provenance for the open passage — drives the result chrome. */
+type ProvenanceInfo = {
+  kind: 'generated' | 'pasted';
+  category: ReadingCategory | null;
+  cefr: CefrLevel;
+  length: ReadingTextLength;
+  prompt: string;
+  language: 'ES' | 'DE' | 'TR';
 };
 
 type Props = {
@@ -100,6 +122,28 @@ type Props = {
   underReview?: { lemmas: Set<string>; surfaces: Set<string> };
   onBankToggle: (word: string) => void;
   onPasteNew: () => void;
+  /**
+   * Generation provenance. When `kind === 'generated'`, the reader mounts the
+   * provenance header + adjust bar above the passage. `null`/`pasted` ⇒ lean
+   * reader with no provenance chrome. Optional so non-generate callers (tests)
+   * can omit it.
+   */
+  provenance?: ProvenanceInfo | null;
+  /** Make-easier/harder/longer/rewrite (regenerates from provenance). */
+  onAdjust?: (kind: AdjustKind) => void;
+  /** True while an adjust/rewrite generation is in flight. */
+  adjustBusy?: boolean;
+  /** Counts for the bottom collect bar. */
+  flaggedCount: number;
+  savedCount: number;
+  /** Save the open passage (with current bank) to the library. */
+  onSaveToLibrary?: () => void;
+  /** Save the passage AND push its banked words into the vocabulary. */
+  onAddToVocabulary?: () => void;
+  /** True while a library/vocabulary save is in flight. */
+  saving?: boolean;
+  /** Native language name for the provenance subline + tags. */
+  languageLabel: string;
 };
 
 export function AnnotatedView({
@@ -125,6 +169,15 @@ export function AnnotatedView({
   underReview,
   onBankToggle,
   onPasteNew,
+  provenance,
+  onAdjust,
+  adjustBusy,
+  flaggedCount,
+  savedCount,
+  onSaveToLibrary,
+  onAddToVocabulary,
+  saving,
+  languageLabel,
 }: Props) {
   const flaggedKeys = Object.keys(entry.flaggedWords);
   const hasFlagged = flaggedKeys.length > 0;
@@ -140,6 +193,52 @@ export function AnnotatedView({
   const showZeroFlaggedState = !hasFlagged && !isStreaming;
 
   const bankSet = React.useMemo(() => new Set(bank), [bank]);
+
+  // Provenance chrome (generated texts only): the header + adjust bar above the
+  // passage, plus a "~N min" reading-time subline. Word count drives the
+  // estimate at ~200 wpm.
+  const isGenerated = provenance?.kind === 'generated';
+  const wordCount = React.useMemo(
+    () => entry.text.split(/\s+/).filter(Boolean).length,
+    [entry.text],
+  );
+  const readingMinutes = Math.max(1, Math.round(wordCount / 200));
+
+  const provenanceChrome =
+    isGenerated && provenance ? (
+      <div className="mb-[18px] space-y-[12px]">
+        <ProvenanceHeader
+          prompt={provenance.prompt}
+          category={provenance.category}
+          cefr={provenance.cefr}
+          length={provenance.length}
+          languageLabel={languageLabel}
+          onRewrite={() => onAdjust?.('rewrite')}
+          rewriting={adjustBusy}
+        />
+        <AdjustBar
+          cefr={provenance.cefr}
+          length={provenance.length}
+          onAdjust={(kind) => onAdjust?.(kind)}
+          busy={adjustBusy}
+        />
+        <div className="t-micro text-ink-mute">
+          generated · {languageLabel} · {provenance.cefr} · ~{readingMinutes} min
+        </div>
+      </div>
+    ) : null;
+
+  const collectBar = (
+    <div className="mt-[22px]">
+      <CollectBar
+        flaggedCount={flaggedCount}
+        savedCount={savedCount}
+        onSaveToLibrary={() => onSaveToLibrary?.()}
+        onAddToVocabulary={() => onAddToVocabulary?.()}
+        saving={saving}
+      />
+    </div>
+  );
 
   // Mobile (≤760px) swaps the sticky rail + anchored popover for bottom sheets:
   // a toolbar chip opens the bank sheet, a word tap opens the word sheet. The
@@ -283,6 +382,9 @@ export function AnnotatedView({
           />
         </div>
 
+        {/* Provenance + adjust (generated texts only) */}
+        {provenanceChrome}
+
         {/* Reader text — the word sheet replaces the click-anchored popover */}
         <div
           ref={containerRef}
@@ -314,6 +416,9 @@ export function AnnotatedView({
         {!hasFlagged && showZeroFlaggedState ? (
           <ZeroFlaggedStrip onPasteNew={onPasteNew} />
         ) : null}
+
+        {/* Collect bar — flagged/saved counts + save-to-library / add-to-vocab */}
+        {collectBar}
 
         {/* Bottom sheets (portaled) */}
         <WordSheet
@@ -376,6 +481,9 @@ export function AnnotatedView({
           />
         </div>
 
+        {/* Provenance + adjust (generated texts only) */}
+        {provenanceChrome}
+
         {/* Reader text */}
         <div
           ref={containerRef}
@@ -422,6 +530,9 @@ export function AnnotatedView({
         {!hasFlagged && showZeroFlaggedState ? (
           <ZeroFlaggedStrip onPasteNew={onPasteNew} />
         ) : null}
+
+        {/* Collect bar — flagged/saved counts + save-to-library / add-to-vocab */}
+        {collectBar}
       </div>
 
       {showRail && (

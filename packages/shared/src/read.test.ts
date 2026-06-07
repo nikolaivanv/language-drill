@@ -14,7 +14,6 @@ import {
   READING_GEN_TOPIC_MAX_CHARS,
   READING_LENGTH_WORD_TARGETS,
   READING_TOO_HARD_THRESHOLD,
-  READING_CHIPS_BY_LANGUAGE,
 } from "./index";
 import type {
   WordFlag,
@@ -316,10 +315,36 @@ describe("reading generation constants", () => {
   });
 });
 
-describe("READING_CHIPS_BY_LANGUAGE", () => {
-  it("provides at least three chips for each reading language", () => {
-    for (const lang of ["ES", "DE", "TR"] as const) {
-      expect(READING_CHIPS_BY_LANGUAGE[lang].length).toBeGreaterThanOrEqual(3);
+import {
+  ReadingCategory,
+  READING_IDEAS,
+  READING_LENGTH_APPROX,
+  LANGUAGE_NATIVE_NAME,
+  Language,
+} from './index';
+
+describe('reading ideas + categories', () => {
+  it('has six categories', () => {
+    expect(Object.values(ReadingCategory)).toEqual([
+      'story', 'news', 'dialogue', 'email', 'how-to', 'daily',
+    ]);
+  });
+  it('has six ideas each with a valid category, prompt, descriptor', () => {
+    expect(READING_IDEAS).toHaveLength(6);
+    for (const idea of READING_IDEAS) {
+      expect(Object.values(ReadingCategory)).toContain(idea.category);
+      expect(idea.prompt.length).toBeGreaterThan(0);
+      expect(idea.descriptor.length).toBeGreaterThan(0);
     }
+  });
+  it('maps each length to an approx word count', () => {
+    expect(READING_LENGTH_APPROX[ReadingTextLength.SHORT]).toBe(80);
+    expect(READING_LENGTH_APPROX[ReadingTextLength.MEDIUM]).toBe(160);
+    expect(READING_LENGTH_APPROX[ReadingTextLength.LONG]).toBe(320);
+  });
+  it('gives a native name per language', () => {
+    expect(LANGUAGE_NATIVE_NAME[Language.ES]).toBe('español');
+    expect(LANGUAGE_NATIVE_NAME[Language.DE]).toBe('Deutsch');
+    expect(LANGUAGE_NATIVE_NAME[Language.TR]).toBe('Türkçe');
   });
 });

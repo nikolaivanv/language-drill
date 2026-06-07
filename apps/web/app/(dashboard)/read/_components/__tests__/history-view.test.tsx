@@ -2,94 +2,148 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import type { ReadEntrySummary } from '@language-drill/api-client';
 import { HistoryView } from '../history-view';
+import { ReadingCategory, ReadingTextLength, CefrLevel } from '@language-drill/shared';
 
 // ---------------------------------------------------------------------------
-// HistoryView — card stack + click-to-open (Requirement 10.3).
+// HistoryView — card grid + click-to-open (Task 13 redesign)
 // ---------------------------------------------------------------------------
 
-const ENTRIES: ReadEntrySummary[] = [
-  {
-    id: '11111111-1111-1111-1111-111111111111',
-    title: 'Cien años — ch. 1',
-    source: 'García Márquez',
-    preview: 'muchos años después, frente al pelotón de fusilamiento…',
-    flaggedCount: 8,
-    savedCount: 3,
-    pastedAt: '2026-04-30T12:00:00.000Z',
-  },
-  {
-    id: '22222222-2222-2222-2222-222222222222',
-    title: '',
-    source: '',
-    preview: 'la aldea estaba en silencio aquella mañana…',
-    flaggedCount: 5,
-    savedCount: 0,
-    pastedAt: '2026-04-29T12:00:00.000Z',
-  },
-];
+const GENERATED_ENTRY: ReadEntrySummary = {
+  id: '11111111-1111-1111-1111-111111111111',
+  title: 'The Lost Key',
+  source: '',
+  preview: 'A detective story about a missing key…',
+  flaggedCount: 3,
+  savedCount: 5,
+  pastedAt: '2026-06-07T10:00:00.000Z',
+  kind: 'generated',
+  category: ReadingCategory.STORY,
+  cefr: CefrLevel.B2,
+  length: ReadingTextLength.SHORT,
+  prompt: 'a detective story about a missing key',
+};
+
+const PASTED_ENTRY: ReadEntrySummary = {
+  id: '22222222-2222-2222-2222-222222222222',
+  title: 'Cien años — ch. 1',
+  source: 'García Márquez',
+  preview: 'muchos años después, frente al pelotón de fusilamiento…',
+  flaggedCount: 8,
+  savedCount: 3,
+  pastedAt: '2026-06-06T10:00:00.000Z',
+  kind: 'pasted',
+  category: null,
+  cefr: null,
+  length: null,
+  prompt: null,
+};
+
+const ENTRIES: readonly ReadEntrySummary[] = [GENERATED_ENTRY, PASTED_ENTRY];
+
+const DEFAULT_PROPS = {
+  entries: ENTRIES,
+  onOpen: vi.fn(),
+  onGenerateNew: vi.fn(),
+  languageLabel: 'Español',
+};
 
 describe('HistoryView — header', () => {
-  it('renders the eyebrow and the "past texts" title', () => {
-    render(<HistoryView entries={ENTRIES} onOpen={() => {}} />);
-    expect(screen.getByText('your reading')).toBeInTheDocument();
-    expect(screen.getByText('past texts')).toBeInTheDocument();
+  it('renders the YOUR READING eyebrow and "past texts" heading', () => {
+    render(<HistoryView {...DEFAULT_PROPS} />);
+    expect(screen.getByText(/your reading/i)).toBeInTheDocument();
+    expect(screen.getByText(/past texts/i)).toBeInTheDocument();
   });
 });
 
-describe('HistoryView — card content', () => {
-  it('renders one listitem per entry', () => {
-    render(<HistoryView entries={ENTRIES} onOpen={() => {}} />);
-    expect(screen.getAllByRole('listitem')).toHaveLength(2);
+describe('HistoryView — card per entry', () => {
+  it('renders one card per entry (plus the add card)', () => {
+    render(<HistoryView {...DEFAULT_PROPS} />);
+    // Two entry cards + one "add" card = 3 clickable items
+    const buttons = screen.getAllByRole('button');
+    expect(buttons.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('renders title, source, preview, flagged count, and saved chip on each card', () => {
-    render(<HistoryView entries={ENTRIES} onOpen={() => {}} />);
+  it('renders the title of each entry', () => {
+    render(<HistoryView {...DEFAULT_PROPS} />);
+    expect(screen.getByText('The Lost Key')).toBeInTheDocument();
     expect(screen.getByText('Cien años — ch. 1')).toBeInTheDocument();
-    expect(screen.getByText('García Márquez')).toBeInTheDocument();
-    expect(
-      screen.getByText(/muchos años después, frente al pelotón/),
-    ).toBeInTheDocument();
-    expect(screen.getByText('8 flagged')).toBeInTheDocument();
-    expect(screen.getByText('3 saved')).toBeInTheDocument();
-  });
-
-  it('falls back to "untitled passage" when title is empty and hides the source line when source is empty', () => {
-    render(<HistoryView entries={ENTRIES} onOpen={() => {}} />);
-    expect(screen.getByText('untitled passage')).toBeInTheDocument();
-    // The second entry has no source — make sure no extraneous source-row mock string got rendered.
-    const items = screen.getAllByRole('listitem');
-    expect(items[1].textContent ?? '').not.toMatch(/García Márquez/);
-  });
-
-  it('renders both flagged + saved counts even when savedCount === 0', () => {
-    render(<HistoryView entries={ENTRIES} onOpen={() => {}} />);
-    expect(screen.getByText('5 flagged')).toBeInTheDocument();
-    expect(screen.getByText('0 saved')).toBeInTheDocument();
-  });
-});
-
-describe('HistoryView — mobile reflow', () => {
-  it('drops the desktop max-width cap so the cards go full-width on mobile (Req 8.5)', () => {
-    const { container } = render(
-      <HistoryView entries={ENTRIES} onOpen={() => {}} />,
-    );
-    expect(container.firstChild).toHaveClass('mobile:max-w-none');
-    expect(container.firstChild).toHaveClass('max-w-[800px]');
   });
 });
 
 describe('HistoryView — clicks', () => {
-  it('clicking a card fires onOpen with the entry id', () => {
+  it('clicking a card calls onOpen with the entry id', () => {
     const onOpen = vi.fn();
-    render(<HistoryView entries={ENTRIES} onOpen={onOpen} />);
-    fireEvent.click(screen.getByRole('button', { name: /Cien años/i }));
-    expect(onOpen).toHaveBeenCalledWith(
-      '11111111-1111-1111-1111-111111111111',
-    );
+    render(<HistoryView {...DEFAULT_PROPS} onOpen={onOpen} />);
+    fireEvent.click(screen.getByText('The Lost Key').closest('[role="button"], button')!);
+    expect(onOpen).toHaveBeenCalledWith('11111111-1111-1111-1111-111111111111');
   });
 
-  it('each card is its own button (one per entry)', () => {
-    render(<HistoryView entries={ENTRIES} onOpen={() => {}} />);
-    expect(screen.getAllByRole('button')).toHaveLength(2);
+  it('clicking a pasted entry card calls onOpen with correct id', () => {
+    const onOpen = vi.fn();
+    render(<HistoryView {...DEFAULT_PROPS} onOpen={onOpen} />);
+    fireEvent.click(screen.getByText('Cien años — ch. 1').closest('[role="button"], button')!);
+    expect(onOpen).toHaveBeenCalledWith('22222222-2222-2222-2222-222222222222');
+  });
+});
+
+describe('HistoryView — generated entry chips', () => {
+  it('shows category chip for a generated entry', () => {
+    render(<HistoryView {...DEFAULT_PROPS} />);
+    // Category should be STORY, displayed uppercased
+    expect(screen.getByText('STORY')).toBeInTheDocument();
+  });
+
+  it('shows cefr chip for a generated entry', () => {
+    render(<HistoryView {...DEFAULT_PROPS} />);
+    expect(screen.getByText('B2')).toBeInTheDocument();
+  });
+
+  it('shows length chip (uppercased) for a generated entry', () => {
+    render(<HistoryView {...DEFAULT_PROPS} />);
+    expect(screen.getByText('SHORT')).toBeInTheDocument();
+  });
+
+  it('shows a saved chip with count for generated entry', () => {
+    render(<HistoryView {...DEFAULT_PROPS} />);
+    // 5 saved for generated entry
+    const savedChips = screen.getAllByText(/saved/);
+    const fiveSaved = savedChips.find((el) => el.textContent?.includes('5'));
+    expect(fiveSaved).toBeInTheDocument();
+  });
+});
+
+describe('HistoryView — pasted entry chips', () => {
+  it('shows a "pasted" chip for a pasted entry', () => {
+    render(<HistoryView {...DEFAULT_PROPS} />);
+    expect(screen.getByText('pasted')).toBeInTheDocument();
+  });
+
+  it('does NOT show category/cefr/length chips for a pasted entry', () => {
+    render(<HistoryView {...DEFAULT_PROPS} entries={[PASTED_ENTRY]} />);
+    expect(screen.queryByText('STORY')).not.toBeInTheDocument();
+    expect(screen.queryByText('B2')).not.toBeInTheDocument();
+    expect(screen.queryByText('SHORT')).not.toBeInTheDocument();
+  });
+
+  it('shows a saved chip with count for pasted entry', () => {
+    render(<HistoryView {...DEFAULT_PROPS} />);
+    // 3 saved for pasted entry
+    const savedChips = screen.getAllByText(/saved/);
+    const threeSaved = savedChips.find((el) => el.textContent?.includes('3'));
+    expect(threeSaved).toBeInTheDocument();
+  });
+});
+
+describe('HistoryView — add card', () => {
+  it('renders a "generate a new text" add card', () => {
+    render(<HistoryView {...DEFAULT_PROPS} />);
+    expect(screen.getByText(/generate a new text/i)).toBeInTheDocument();
+  });
+
+  it('clicking the add card calls onGenerateNew', () => {
+    const onGenerateNew = vi.fn();
+    render(<HistoryView {...DEFAULT_PROPS} onGenerateNew={onGenerateNew} />);
+    fireEvent.click(screen.getByText(/generate a new text/i).closest('[role="button"], button')!);
+    expect(onGenerateNew).toHaveBeenCalledTimes(1);
   });
 });

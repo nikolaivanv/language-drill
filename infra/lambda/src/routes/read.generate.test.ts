@@ -8,7 +8,7 @@ import { Hono } from 'hono';
 //   - db.select().from(generatedReadingTexts).where().limit()   (cache lookup)
 //   - db.update().set().where()                                 (hit_count bump, HIT only)
 //   - db.select({count}).from(usageEvents).where()              (24h usage count, MISS only)
-//   - db.insert(generatedReadingTexts).values().onConflictDoNothing()  (MISS only)
+//   - db.insert(generatedReadingTexts).values().onConflictDoUpdate()   (MISS only)
 //   - db.insert(usageEvents).values()                           (MISS only)
 //
 // We distinguish the two SELECT shapes by call order: the FIRST select is the
@@ -42,13 +42,16 @@ const mockUpdate = vi.fn(() => ({ set: mockSet }));
 const mockOnConflictDoNothing = vi.fn(() => Promise.resolve());
 // `db.insert(...).values(...)` is awaited directly (usageEvents) AND chained
 // into `.onConflictDoNothing()` (generatedReadingTexts). Expose both.
+// The noCache path uses `.onConflictDoUpdate()` on the same chain.
 const insertValuesCalls: Array<Record<string, unknown>> = [];
 const mockValues = vi.fn((row: Record<string, unknown>) => {
   insertValuesCalls.push(row);
   const p = Promise.resolve() as Promise<void> & {
     onConflictDoNothing: typeof mockOnConflictDoNothing;
+    onConflictDoUpdate: typeof mockOnConflictDoUpdate;
   };
   p.onConflictDoNothing = mockOnConflictDoNothing;
+  p.onConflictDoUpdate = mockOnConflictDoUpdate;
   return p;
 });
 const mockInsert = vi.fn(() => ({ values: mockValues }));
@@ -107,6 +110,8 @@ vi.mock('../usage/global-capacity', () => ({
     mockCheckGlobalCapacity(args),
 }));
 
+// For noCache tests: expose a chained `.onConflictDoUpdate` mock.
+const mockOnConflictDoUpdate = vi.fn(() => Promise.resolve());
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyJson = Record<string, any>;
 
@@ -203,9 +208,10 @@ describe('POST /read/generate', () => {
       difficultyScore: 0.08,
       prompt: 'A day at the market',
     });
-    // onConflictDoNothing is used by both the auth user-upsert and the passage
-    // insert; the passage write must be one of them.
+    // Auth middleware still uses onConflictDoNothing for the user upsert;
+    // the passage insert now uses onConflictDoUpdate (idempotent on cacheKey).
     expect(mockOnConflictDoNothing).toHaveBeenCalled();
+    expect(mockOnConflictDoUpdate).toHaveBeenCalledTimes(1);
   });
 
   it('cache HIT → 200, fromCache true, no generation, no usage insert', async () => {
@@ -279,6 +285,61 @@ describe('POST /read/generate', () => {
       (r) => r.eventType === 'text_generation',
     );
     expect(usageInsert).toBeUndefined();
+  });
+
+  it('forces a fresh generation when noCache is true (ignores cache)', async () => {
+    // Arrange: cache lookup would return a row, but noCache must skip it.
+    cacheRow = {
+      title: 'Cached title',
+      text: 'Cached body text.',
+      cefr: 'A2',
+      difficultyScore: 0.05,
+    };
+    usageCount = 0;
+    mockGenerateReadingText.mockResolvedValue({
+      title: 'Fresh title',
+      text: 'Brand new text.',
+      difficultyScore: 0.07,
+      regenerated: true,
+      runsHard: false,
+    });
+
+    const res = await buildRequest(app, {
+      language: 'TR',
+      cefr: 'A2',
+      length: 'short',
+      topic: 'a cat',
+      noCache: true,
+    });
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    // Must return fresh generation, not cached values.
+    expect(body).toMatchObject({
+      title: 'Fresh title',
+      text: 'Brand new text.',
+      fromCache: false,
+      difficultyScore: 0.07,
+    });
+
+    // Generation ran despite the cache row being present.
+    expect(mockGenerateReadingText).toHaveBeenCalledTimes(1);
+
+    // A usageEvents insert with eventType text_generation occurred.
+    const usageInsert = insertValuesCalls.find(
+      (r) => r.eventType === 'text_generation',
+    );
+    expect(usageInsert).toBeDefined();
+    expect(usageInsert).toMatchObject({
+      userId: 'user_123',
+      eventType: 'text_generation',
+    });
+
+    // The passage was upserted (onConflictDoUpdate called, not onConflictDoNothing only).
+    expect(mockOnConflictDoUpdate).toHaveBeenCalledTimes(1);
+
+    // Global-capacity check must run on the noCache path (it's a miss that generates).
+    expect(mockCheckGlobalCapacity).toHaveBeenCalled();
   });
 
   it('over-long topic → 400 VALIDATION_ERROR, no db or AI calls', async () => {

@@ -5,6 +5,14 @@ export enum Language {
   TR = "TR",
 }
 
+/** Native (endonym) display name per language — used in Read copy + tags. */
+export const LANGUAGE_NATIVE_NAME: Record<Language, string> = {
+  [Language.EN]: "English",
+  [Language.ES]: "español",
+  [Language.DE]: "Deutsch",
+  [Language.TR]: "Türkçe",
+};
+
 export enum CefrLevel {
   A1 = "A1",
   A2 = "A2",

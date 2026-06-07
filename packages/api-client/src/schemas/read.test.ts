@@ -880,3 +880,37 @@ describe('GenerateReadingText schemas', () => {
     expect(parsed.fromCache).toBe(false);
   });
 });
+
+// ---------------------------------------------------------------------------
+// generate noCache + save metadata (Task 3)
+// ---------------------------------------------------------------------------
+
+describe('generate noCache + save metadata', () => {
+  it('accepts an optional noCache flag on generate', () => {
+    const parsed = GenerateReadingTextRequestSchema.parse({
+      language: 'TR', cefr: 'A2', length: 'short', topic: 'a cat', noCache: true,
+    });
+    expect(parsed.noCache).toBe(true);
+  });
+  it('allows an empty bank when saving to library', () => {
+    const r = SaveReadEntryRequestSchema.safeParse({
+      language: 'TR', title: '', source: '', text: 'hola', flagged: {}, bank: [],
+    });
+    expect(r.success).toBe(true);
+  });
+  it('accepts generation metadata on save', () => {
+    const r = SaveReadEntryRequestSchema.safeParse({
+      language: 'ES', title: 'X', source: '', text: 'hola', flagged: {}, bank: [],
+      kind: 'generated', category: 'story', cefr: 'B2', length: 'long', prompt: 'a cat',
+    });
+    expect(r.success).toBe(true);
+  });
+  it('surfaces metadata on a history summary', () => {
+    const s = ReadEntrySummarySchema.parse({
+      id: '00000000-0000-0000-0000-000000000000', title: 'X', source: '',
+      preview: 'p', flaggedCount: 1, savedCount: 0, pastedAt: new Date(0).toISOString(),
+      kind: 'generated', category: 'story', cefr: 'B2', length: 'long', prompt: 'a cat',
+    });
+    expect(s.kind).toBe('generated');
+  });
+});

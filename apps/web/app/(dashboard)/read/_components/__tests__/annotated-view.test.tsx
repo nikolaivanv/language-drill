@@ -57,6 +57,9 @@ const baseProps = {
   onUnsaveVocab: () => {},
   onBankToggle: () => {},
   onPasteNew: () => {},
+  flaggedCount: 0,
+  savedCount: 0,
+  languageLabel: 'español',
 };
 
 describe('AnnotatedView — flagged ≥ 1', () => {
@@ -66,13 +69,16 @@ describe('AnnotatedView — flagged ≥ 1', () => {
     expect(screen.getByText('García Márquez')).toBeInTheDocument();
     expect(screen.getByText('~B1+ calibration')).toBeInTheDocument();
     expect(screen.getByText('word bank')).toBeInTheDocument();
-    // The footer "N flagged · M saved · K skipped" tally and "save N to bank
-    // →" button are gone — bank saves persist immediately, so the explicit
-    // save action was redundant and the tally added little signal.
-    expect(screen.queryByText(/flagged ·/)).not.toBeInTheDocument();
+    // The legacy footer "save N to bank →" button is gone — bank saves persist
+    // immediately, so the explicit save action was redundant. The redesigned
+    // CollectBar now renders the flagged/saved tally + library/vocab actions.
     expect(
       screen.queryByRole('button', { name: /save \d+ to bank/i }),
     ).not.toBeInTheDocument();
+    expect(screen.getByText(/flagged ·/)).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /save to library/i }),
+    ).toBeInTheDocument();
   });
 
   it('hides the source line when entry.source is empty', () => {

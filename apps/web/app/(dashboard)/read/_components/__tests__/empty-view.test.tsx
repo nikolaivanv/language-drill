@@ -1,83 +1,76 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { CefrLevel } from '@language-drill/shared';
+import { READING_IDEAS } from '@language-drill/shared';
 import { EmptyView } from '../empty-view';
 
 // ---------------------------------------------------------------------------
-// EmptyView — CTA wiring + CEFR-band fallback (Requirements 3.1–3.4).
+// EmptyView (redesigned) — title + body; onGenerate; onPaste; onPickIdea
 // ---------------------------------------------------------------------------
 
-describe('EmptyView — CTA', () => {
-  it('calls onPaste when the primary CTA is clicked', () => {
-    const onPaste = vi.fn();
-    render(<EmptyView onPaste={onPaste} onGenerate={() => {}} cefrToken={CefrLevel.B1} />);
-    fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
-    expect(onPaste).toHaveBeenCalledTimes(1);
+const defaultProps = {
+  onGenerate: () => {},
+  onPaste: () => {},
+  onPickIdea: () => {},
+  languageLabel: 'español',
+};
+
+describe('EmptyView — copy and language label', () => {
+  it('renders the eyebrow, title, and body paragraph with languageLabel', () => {
+    render(<EmptyView {...defaultProps} languageLabel="español" />);
+    expect(screen.getByText('read at your level')).toBeInTheDocument();
+    expect(screen.getByText('nothing to read yet.')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /I'll write a passage in español at just the right difficulty/,
+      ),
+    ).toBeInTheDocument();
   });
 
-  it('calls onGenerate when the generate CTA is clicked', () => {
+  it('interpolates languageLabel into the body for German', () => {
+    render(<EmptyView {...defaultProps} languageLabel="Deutsch" />);
+    expect(
+      screen.getByText(/I'll write a passage in Deutsch at just the right difficulty/),
+    ).toBeInTheDocument();
+  });
+});
+
+describe('EmptyView — CTAs', () => {
+  it('calls onGenerate when the primary CTA is clicked', () => {
     const onGenerate = vi.fn();
-    render(<EmptyView onPaste={() => {}} onGenerate={onGenerate} cefrToken={CefrLevel.B1} />);
-    fireEvent.click(screen.getByRole('button', { name: /generate a text/i }));
+    render(<EmptyView {...defaultProps} onGenerate={onGenerate} />);
+    fireEvent.click(screen.getByRole('button', { name: /generate a passage/i }));
     expect(onGenerate).toHaveBeenCalledTimes(1);
   });
-});
 
-describe('EmptyView — step 2 CEFR token', () => {
-  it('renders the "~B1+" parenthetical when a CEFR level is provided', () => {
-    render(<EmptyView onPaste={() => {}} onGenerate={() => {}} cefrToken={CefrLevel.B1} />);
-    expect(
-      screen.getByText(/i highlight words rarer than your current band \(~B1\+\)\./),
-    ).toBeInTheDocument();
-  });
-
-  it('renders the "~A2+" parenthetical for an A2 user', () => {
-    render(<EmptyView onPaste={() => {}} onGenerate={() => {}} cefrToken={CefrLevel.A2} />);
-    expect(
-      screen.getByText(/\(~A2\+\)/),
-    ).toBeInTheDocument();
-  });
-
-  it('falls back to the bare "your current band" copy when cefrToken is null', () => {
-    render(<EmptyView onPaste={() => {}} onGenerate={() => {}} cefrToken={null} />);
-    expect(
-      screen.getByText('i highlight words rarer than your current band.'),
-    ).toBeInTheDocument();
-    // Make sure the parenthetical is NOT rendered.
-    expect(screen.queryByText(/~[A-C][12]\+/)).not.toBeInTheDocument();
+  it('calls onPaste when the "or paste your own" link is clicked', () => {
+    const onPaste = vi.fn();
+    render(<EmptyView {...defaultProps} onPaste={onPaste} />);
+    fireEvent.click(screen.getByRole('button', { name: /or paste your own/i }));
+    expect(onPaste).toHaveBeenCalledTimes(1);
   });
 });
 
-describe('EmptyView — mobile reflow', () => {
-  it('drops the desktop max-width cap so the column goes full-width on mobile (Req 8.5)', () => {
-    const { container } = render(
-      <EmptyView onPaste={() => {}} onGenerate={() => {}} cefrToken={CefrLevel.B1} />,
-    );
-    expect(container.firstChild).toHaveClass('mobile:max-w-none', 'mobile:mt-[32px]');
-    // Desktop cap is preserved.
-    expect(container.firstChild).toHaveClass('max-w-[640px]');
-  });
-});
-
-describe('EmptyView — header copy invariants', () => {
-  it('renders the Caveat eyebrow, hero title, and body paragraph', () => {
-    render(<EmptyView onPaste={() => {}} onGenerate={() => {}} cefrToken={CefrLevel.B1} />);
-    expect(screen.getByText('read in the wild')).toBeInTheDocument();
-    expect(
-      screen.getByText("paste anything you're reading."),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/a paragraph from a book/i),
-    ).toBeInTheDocument();
+describe('EmptyView — popular starts', () => {
+  it('renders the POPULAR STARTS section label', () => {
+    render(<EmptyView {...defaultProps} />);
+    expect(screen.getByText('POPULAR STARTS')).toBeInTheDocument();
   });
 
-  it('renders the "how it works" heading and all four ordered steps', () => {
-    render(<EmptyView onPaste={() => {}} onGenerate={() => {}} cefrToken={CefrLevel.B1} />);
-    expect(screen.getByText('how it works')).toBeInTheDocument();
-    const items = screen.getAllByRole('listitem');
-    expect(items).toHaveLength(4);
-    expect(items[0].textContent).toMatch(/paste a paragraph/i);
-    expect(items[2].textContent).toMatch(/tap a word/i);
-    expect(items[3].textContent).toMatch(/from your reading/i);
+  it('calls onPickIdea with the correct idea when a popular start is clicked', () => {
+    const onPickIdea = vi.fn();
+    render(<EmptyView {...defaultProps} onPickIdea={onPickIdea} />);
+    // Click the first idea
+    const firstIdea = READING_IDEAS[0];
+    fireEvent.click(screen.getByText(firstIdea.prompt));
+    expect(onPickIdea).toHaveBeenCalledTimes(1);
+    expect(onPickIdea).toHaveBeenCalledWith(firstIdea);
+  });
+
+  it('renders all 6 popular starts via IdeaCards', () => {
+    render(<EmptyView {...defaultProps} />);
+    // All 6 READING_IDEAS prompts should be present
+    for (const idea of READING_IDEAS) {
+      expect(screen.getByText(idea.prompt)).toBeInTheDocument();
+    }
   });
 });

@@ -1,69 +1,97 @@
 'use client';
 
 // ---------------------------------------------------------------------------
-// HistoryView — vertical stack of past-passage cards (Requirement 10.3)
+// HistoryView — library card grid (Task 13)
 // ---------------------------------------------------------------------------
-// Each card: title (Fraunces 18/500) + source line + Fraunces-italic preview
-// on the left; mono "N flagged" tally + ok-variant "N saved" chip on the
-// right. The whole card is the click target; clicking dispatches
-// `onOpen(entryId)` and the page lifts the entry into the annotated view.
+// Displays past reading entries as a 2-column card grid with generated vs
+// pasted provenance metadata, relative timestamps, and a dashed "add" card
+// to trigger new text generation.
 // ---------------------------------------------------------------------------
 
 import type { ReadEntrySummary } from '@language-drill/api-client';
 import { Chip } from '../../../../components/ui/chip';
+import { relativeTime } from '../_lib/relative-time';
 
 type Props = {
   entries: readonly ReadEntrySummary[];
   onOpen: (entryId: string) => void;
+  onGenerateNew: () => void;
 };
 
-export function HistoryView({ entries, onOpen }: Props) {
+export function HistoryView({ entries, onOpen, onGenerateNew }: Props) {
   return (
     <div className="max-w-[800px] mobile:max-w-none">
-      <div className="t-micro mb-[6px]">your reading</div>
+      <div className="t-micro mb-[6px]">YOUR READING</div>
       <h2 className="t-display-m mt-[4px] mb-[22px]">past texts</h2>
-      <ul className="flex flex-col gap-[10px]">
-        {entries.map((entry) => (
-          <li key={entry.id}>
+
+      <div className="grid grid-cols-2 gap-[16px] mobile:grid-cols-1">
+        {entries.map((entry) => {
+          const isGenerated = entry.kind === 'generated';
+          const subtitle = isGenerated ? entry.prompt : entry.source;
+
+          return (
             <button
+              key={entry.id}
               type="button"
+              role="button"
               onClick={() => onOpen(entry.id)}
-              className="grid w-full grid-cols-[1fr_auto] items-center gap-[16px] rounded-r-md border border-rule bg-card px-[20px] py-[16px] text-left transition-colors hover:border-ink hover:bg-paper-2"
+              className="bg-card border border-rule rounded-r-md p-s-4 cursor-pointer text-left transition-colors hover:border-ink hover:bg-paper-2 flex flex-col gap-[8px]"
             >
-              <div className="min-w-0">
-                <div
-                  style={{
-                    fontFamily: 'var(--font-display)',
-                    fontSize: 18,
-                    fontWeight: 500,
-                  }}
-                >
+              {/* Title row + relative time */}
+              <div className="flex items-start justify-between gap-[8px]">
+                <div className="t-display-s min-w-0 flex-1">
                   {entry.title || 'untitled passage'}
                 </div>
-                {entry.source && (
-                  <div className="t-small text-ink-soft">{entry.source}</div>
-                )}
-                <div
-                  className="text-ink-2 mt-[4px]"
-                  style={{
-                    fontFamily: 'var(--font-display)',
-                    fontStyle: 'italic',
-                    fontSize: 14,
-                  }}
-                >
-                  {entry.preview}
-                </div>
-              </div>
-              <div className="flex flex-col items-end gap-[4px]">
-                <span className="t-mono text-[11px] text-ink-mute">
-                  {entry.flaggedCount} flagged
+                <span className="t-mono text-ink-mute text-[11px] shrink-0 whitespace-nowrap">
+                  {relativeTime(entry.pastedAt, Date.now())}
                 </span>
+              </div>
+
+              {/* Prompt / source in italic quotes */}
+              {subtitle ? (
+                <div className="t-small text-ink-soft italic">
+                  &ldquo;{subtitle}&rdquo;
+                </div>
+              ) : null}
+
+              {/* Tag row */}
+              <div className="flex flex-wrap gap-[4px]">
+                {isGenerated ? (
+                  <>
+                    {entry.category && (
+                      <Chip variant="accent">
+                        {entry.category.toUpperCase()}
+                      </Chip>
+                    )}
+                    {entry.cefr && (
+                      <Chip variant="default">{entry.cefr}</Chip>
+                    )}
+                    {entry.length && (
+                      <Chip variant="default">
+                        {entry.length.toUpperCase()}
+                      </Chip>
+                    )}
+                  </>
+                ) : (
+                  <Chip variant="default">pasted</Chip>
+                )}
                 <Chip variant="ok">{entry.savedCount} saved</Chip>
               </div>
             </button>
-          </li>
-        ))}
-      </ul>
+          );
+        })}
+
+        {/* Dashed "add" card */}
+        <button
+          type="button"
+          role="button"
+          onClick={onGenerateNew}
+          className="border-2 border-dashed border-rule rounded-r-md p-s-4 cursor-pointer text-left transition-colors hover:border-ink flex flex-col items-center justify-center gap-[8px] min-h-[100px]"
+        >
+          <span className="t-display-m text-ink-mute">+</span>
+          <span className="t-small text-ink-mute">generate a new text</span>
+        </button>
+      </div>
     </div>
   );
 }
