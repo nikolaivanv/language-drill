@@ -15,6 +15,37 @@ const defaultProps = {
   errorBody: null,
 } as const;
 
+describe('PasteView — static copy', () => {
+  it('renders the eyebrow "NEW TEXT"', () => {
+    render(<PasteView {...defaultProps} />);
+    expect(screen.getByText('NEW TEXT')).toBeInTheDocument();
+  });
+
+  it('renders the title "paste a passage"', () => {
+    render(<PasteView {...defaultProps} />);
+    expect(
+      screen.getByRole('heading', { name: /paste a passage/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('renders the subtitle describing the paste flow', () => {
+    render(<PasteView {...defaultProps} />);
+    expect(
+      screen.getByText(/Bring something you're already reading/i),
+    ).toBeInTheDocument();
+  });
+
+  it('renders the heads-up callout with privacy + drill copy', () => {
+    render(<PasteView {...defaultProps} />);
+    expect(
+      screen.getByText(/annotation runs on your text only/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/words you save flow into your drills/i),
+    ).toBeInTheDocument();
+  });
+});
+
 describe('PasteView — counter + annotate gating', () => {
   it('disables "annotate →" when text is empty', () => {
     render(<PasteView {...defaultProps} />);
@@ -66,6 +97,17 @@ describe('PasteView — counter + annotate gating', () => {
     const counter = screen.getByText(/0 \/ 2,000/);
     expect(counter).toHaveAttribute('aria-live', 'polite');
   });
+
+  it('disables "annotate →" when rateLimited is true even with valid text', () => {
+    render(
+      <PasteView
+        {...defaultProps}
+        paste={{ title: '', source: '', text: 'valid text here' }}
+        rateLimited={true}
+      />,
+    );
+    expect(screen.getByRole('button', { name: /annotate →/i })).toBeDisabled();
+  });
 });
 
 describe('PasteView — callbacks', () => {
@@ -97,12 +139,12 @@ describe('PasteView — callbacks', () => {
     expect(onChange).toHaveBeenCalledWith('text', 'nuevo');
   });
 
-  it('calls onChange("title", value) when the title input is typed into', () => {
+  it('calls onChange("source", value) when the source/title input is typed into', () => {
     const onChange = vi.fn();
     render(<PasteView {...defaultProps} onChange={onChange} />);
     const input = screen.getByLabelText(/title or source/i);
-    fireEvent.change(input, { target: { value: 'BBC News' } });
-    expect(onChange).toHaveBeenCalledWith('title', 'BBC News');
+    fireEvent.change(input, { target: { value: 'El País' } });
+    expect(onChange).toHaveBeenCalledWith('source', 'El País');
   });
 });
 

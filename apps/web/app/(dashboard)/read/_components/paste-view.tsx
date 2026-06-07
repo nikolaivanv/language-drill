@@ -1,25 +1,19 @@
 'use client';
 
 // ---------------------------------------------------------------------------
-// PasteView — title + passage form for /read
+// PasteView — title + passage form for /read (redesigned)
 // ---------------------------------------------------------------------------
-// Controlled by the page-level reducer: the parent owns `paste.title` /
-// `paste.text` and the `isLoading` / `errorBody` fields. v1 collapses the
-// prototype's separate title/source inputs into a single "title or source"
-// field — the reducer's `paste.source` slot is always `''` and the save
-// mutation sends `{ title: paste.title, source: '' }`. See task 24's
-// "Title/source decision (v1)" note.
+// The single "TITLE OR SOURCE" field binds to `paste.source`. The `title`
+// field in PasteState is kept for API compatibility but not rendered here —
+// the page layer can use `source` as the display title when `title` is empty.
 //
-// The textarea has no `maxLength`: the counter flips to `--accent` and
+// The textarea has no `maxLength`: the counter flips to `text-accent` and
 // disables the CTA at length > READ_TEXT_MAX_CHARS, matching the prototype's
-// "soft" enforcement. Server-side validation in `routes/read.ts` is the
-// hard gate.
+// "soft" enforcement. Server-side validation in `routes/read.ts` is the hard
+// gate.
 // ---------------------------------------------------------------------------
 
-import {
-  READ_TEXT_MAX_CHARS,
-  READ_TITLE_MAX_CHARS,
-} from '@language-drill/shared';
+import { READ_TEXT_MAX_CHARS } from '@language-drill/shared';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Textarea } from '../../../../components/ui/textarea';
@@ -58,8 +52,13 @@ export function PasteView({
 
   return (
     <div className="mx-auto max-w-[720px] mobile:max-w-none">
-      <div className="t-micro">new text</div>
-      <h2 className="t-display-m mt-[4px] mb-[22px]">paste a passage</h2>
+      <div className="t-micro">NEW TEXT</div>
+      <h2 className="t-display-m mt-[4px] mb-[8px]">paste a passage</h2>
+      <p className="t-body text-ink-soft mb-[24px]">
+        Bring something you&apos;re already reading — an article, a chapter, a
+        message. I&apos;ll flag the words above your level, just like a
+        generated text.
+      </p>
 
       {errorBody !== null && (
         <div
@@ -72,29 +71,36 @@ export function PasteView({
       )}
 
       <label
-        htmlFor="read-paste-title"
-        className="t-small block mb-[6px]"
+        htmlFor="read-paste-source"
+        className="t-micro block mb-[6px]"
       >
-        title or source{' '}
-        <span className="text-ink-mute">(optional)</span>
+        TITLE OR SOURCE{' '}
+        <span className="text-ink-mute">· optional</span>
       </label>
       <Input
-        id="read-paste-title"
+        id="read-paste-source"
         className="mb-[18px]"
-        placeholder="e.g. Cien años de soledad — ch. 1"
-        maxLength={READ_TITLE_MAX_CHARS}
-        value={paste.title}
-        onChange={(e) => onChange('title', e.target.value)}
+        placeholder="e.g. El País — opinión"
+        value={paste.source}
+        onChange={(e) => onChange('source', e.target.value)}
         disabled={isLoading}
       />
 
-      <label htmlFor="read-paste-text" className="t-small block mb-[6px]">
-        passage
-      </label>
+      <div className="flex items-baseline justify-between mb-[6px]">
+        <label htmlFor="read-paste-text" className="t-micro">
+          PASSAGE
+        </label>
+        <div
+          aria-live="polite"
+          className={`t-mono text-[11px] ${tooLong ? 'text-accent' : 'text-ink-mute'}`}
+        >
+          {len.toLocaleString('en-US')} / 2,000{tooLong ? ' · too long' : ''}
+        </div>
+      </div>
       <Textarea
         id="read-paste-text"
         rows={12}
-        placeholder="paste a paragraph here. just one or two — quality over quantity. i'll work better with prose than with code or lists."
+        placeholder="paste a paragraph or two here — prose works better than lists or code."
         value={paste.text}
         onChange={(e) => onChange('text', e.target.value)}
         disabled={isLoading}
@@ -102,33 +108,25 @@ export function PasteView({
         style={{ fontFamily: 'var(--font-display)' }}
       />
 
-      <div className="flex items-center justify-between mt-[8px]">
-        <div
-          aria-live="polite"
-          className={`t-mono text-[11px] ${tooLong ? 'text-accent' : 'text-ink-mute'}`}
-        >
-          {len.toLocaleString('en-US')} / 2,000{tooLong ? ' · too long' : ''}
-        </div>
-        <div className="flex gap-[8px]">
-          <Button variant="ghost" onClick={onCancel} disabled={isLoading}>
-            cancel
-          </Button>
-          <Button
-            variant="primary"
-            onClick={onAnnotate}
-            disabled={cannotAnnotate}
-          >
-            {isLoading ? 'annotating…' : 'annotate →'}
-          </Button>
-        </div>
+      <div className="mt-[16px] rounded-r-md bg-paper-2 p-s-4 mb-[16px]">
+        <div className="t-micro mb-[4px]">HEADS UP</div>
+        <p className="t-small text-ink-soft">
+          annotation runs on your text only — nothing is shared. words you save
+          flow into your drills.
+        </p>
       </div>
 
-      <div className="mt-[18px] flex items-center gap-[10px] rounded-r-md bg-paper-2 p-[12px]">
-        <span className="t-hand text-[17px] text-ink-soft">tip</span>
-        <span className="t-small flex-1">
-          your text is stored only in your account — never shared with other
-          users.
-        </span>
+      <div className="flex items-center justify-end gap-[8px]">
+        <Button variant="ghost" onClick={onCancel} disabled={isLoading}>
+          cancel
+        </Button>
+        <Button
+          variant="primary"
+          onClick={onAnnotate}
+          disabled={cannotAnnotate}
+        >
+          {isLoading ? 'annotating…' : 'annotate →'}
+        </Button>
       </div>
     </div>
   );
