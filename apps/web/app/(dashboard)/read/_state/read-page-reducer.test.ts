@@ -39,7 +39,13 @@ describe('initialState', () => {
       annotateStream: { phase: 'idle' },
       deepCard: { status: 'idle' },
       spanAnnotations: {},
-      generate: { topic: '', length: ReadingTextLength.SHORT, cefr: CefrLevel.A2, language: 'TR' },
+      generate: {
+        topic: '',
+        length: ReadingTextLength.SHORT,
+        cefr: CefrLevel.A2,
+        language: 'TR',
+        category: null,
+      },
     });
   });
 });

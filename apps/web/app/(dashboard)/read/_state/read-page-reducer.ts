@@ -17,6 +17,7 @@ import { CefrLevel, ReadingTextLength } from '@language-drill/shared';
 import type {
   DeepCard,
   FlaggedMap,
+  ReadingCategory,
   SpanAnnotations,
   WordFlag,
 } from '@language-drill/shared';
@@ -123,6 +124,8 @@ export type ReadPageState = {
     length: ReadingTextLength;
     cefr: CefrLevel;
     language: 'ES' | 'DE' | 'TR';
+    /** Category from a picked idea; `null` for free-text topics. */
+    category: ReadingCategory | null;
   };
   /** `null` while the most-recent entry is still being resolved from the entries query. */
   activeEntryId: string | null;
@@ -143,11 +146,18 @@ export type ReadPageState = {
   spanAnnotations: SpanAnnotations;
 };
 
+/** Generate-launchpad form slice — consumed by the composer (`GenerateView`). */
+export type GenerateState = ReadPageState['generate'];
+
 export type Action =
   | { type: 'SET_VIEW'; view: View }
   | { type: 'PASTE_FIELD'; field: 'title' | 'source' | 'text'; value: string }
   | { type: 'PASTE_RESET' }
-  | { type: 'GENERATE_FIELD'; field: 'topic' | 'length' | 'cefr' | 'language'; value: string }
+  | {
+      type: 'GENERATE_FIELD';
+      field: 'topic' | 'length' | 'cefr' | 'language' | 'category';
+      value: string;
+    }
   | { type: 'GENERATE_RESET' }
   | { type: 'OPEN_POPOVER'; word: string; x: number; y: number }
   | { type: 'CLOSE_POPOVER' }
@@ -177,7 +187,13 @@ export type Action =
 export const initialState: ReadPageState = {
   view: 'empty',
   paste: { title: '', source: '', text: '' },
-  generate: { topic: '', length: ReadingTextLength.SHORT, cefr: CefrLevel.A2, language: 'TR' },
+  generate: {
+    topic: '',
+    length: ReadingTextLength.SHORT,
+    cefr: CefrLevel.A2,
+    language: 'TR',
+    category: null,
+  },
   activeEntryId: null,
   bank: [],
   activeWord: null,
