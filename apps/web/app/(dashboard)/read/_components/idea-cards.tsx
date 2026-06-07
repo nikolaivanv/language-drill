@@ -75,7 +75,7 @@ export function IdeaCards({ ideas, selectedPrompt, onPick, variant, disabled }: 
             <div className="t-micro text-accent mb-[4px]">
               {idea.category.toUpperCase()}
             </div>
-            <div className={cn('t-body', isSelected ? 'text-paper' : 'text-ink')}>
+            <div className={cn('t-display-s', isSelected ? 'text-paper' : 'text-ink')}>
               {idea.prompt}
             </div>
             <div className={cn('t-mono mt-[4px] text-[12px]', isSelected ? 'text-paper/70' : 'text-ink-mute')}>
