@@ -201,6 +201,11 @@ vi.mock('@language-drill/db', () => ({
     flaggedWords: 'flagged_words',
     bank: 'bank',
     spanAnnotations: 'span_annotations',
+    kind: 'kind',
+    category: 'category',
+    cefr: 'cefr',
+    length: 'length',
+    prompt: 'prompt',
     pastedAt: 'pasted_at',
   },
   userVocabulary: {
@@ -403,7 +408,11 @@ describe('POST /read/entries', () => {
     expect(txCapture.vocabInsertRows[0][0].language).toBe('DE');
   });
 
-  it('returns 400 VALIDATION_ERROR when bank is empty', async () => {
+  it('saves an entry with an empty bank and skips vocab insert', async () => {
+    txCapture.entryReturning.push([
+      { id: 'entry-empty-bank', pastedAt: new Date('2026-05-04T08:00:00.000Z') },
+    ]);
+
     const res = await app.request(
       '/read/entries',
       {
@@ -414,10 +423,54 @@ describe('POST /read/entries', () => {
       authEnv,
     );
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(201);
     const body = (await res.json()) as AnyJson;
-    expect(body.code).toBe('VALIDATION_ERROR');
-    expect(mockTransaction).not.toHaveBeenCalled();
+    expect(body.id).toBe('entry-empty-bank');
+
+    // The entry was inserted.
+    expect(mockTransaction).toHaveBeenCalledTimes(1);
+    expect(txCapture.entryInsertValues).toHaveLength(1);
+
+    // CRITICAL: no userVocabulary insert should have occurred (empty bank).
+    expect(txCapture.vocabInsertRows).toHaveLength(0);
+    expect(txCapture.vocabUpsertSets).toHaveLength(0);
+  });
+
+  it('persists generation metadata on save', async () => {
+    txCapture.entryReturning.push([
+      { id: 'entry-generated', pastedAt: new Date('2026-05-04T08:00:00.000Z') },
+    ]);
+
+    const res = await app.request(
+      '/read/entries',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...validBody,
+          bank: [],
+          kind: 'generated',
+          category: 'story',
+          cefr: 'B2',
+          length: 'long',
+          prompt: 'a cat that came back',
+        }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(201);
+    expect(mockTransaction).toHaveBeenCalledTimes(1);
+    expect(txCapture.entryInsertValues).toHaveLength(1);
+    expect(txCapture.entryInsertValues[0]).toMatchObject({
+      kind: 'generated',
+      category: 'story',
+      cefr: 'B2',
+      length: 'long',
+      prompt: 'a cat that came back',
+    });
+    // No vocab insert for empty bank.
+    expect(txCapture.vocabInsertRows).toHaveLength(0);
   });
 
   it('returns 400 VALIDATION_ERROR when a bank entry is not a key of flagged', async () => {
@@ -518,7 +571,7 @@ describe('GET /read/entries', () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as AnyJson;
     expect(body.entries).toHaveLength(2);
-    expect(body.entries[0]).toEqual({
+    expect(body.entries[0]).toMatchObject({
       id: 'entry-1',
       title: 'most recent',
       source: '',
@@ -548,6 +601,64 @@ describe('GET /read/entries', () => {
     await app.request('/read/entries?language=ES', { method: 'GET' }, authEnv);
 
     expect(mockOrderBy).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns generation metadata (kind/category/cefr/length/prompt) per row', async () => {
+    const pastedAt = new Date('2026-06-07T12:00:00.000Z');
+    mockLimit.mockResolvedValueOnce([
+      {
+        id: 'entry-gen-1',
+        title: 'A cat story',
+        source: '',
+        pastedAt,
+        kind: 'generated',
+        category: 'story',
+        cefr: 'B2',
+        length: 'long',
+        prompt: 'a cat that came back',
+        preview: 'Once upon a time...',
+        savedCount: 3,
+        flaggedCount: 7,
+      },
+      {
+        id: 'entry-pasted-1',
+        title: 'Article',
+        source: 'BBC',
+        pastedAt,
+        kind: 'pasted',
+        category: null,
+        cefr: null,
+        length: null,
+        prompt: null,
+        preview: 'Some news...',
+        savedCount: 1,
+        flaggedCount: 2,
+      },
+    ]);
+
+    const res = await app.request(
+      '/read/entries?language=ES',
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.entries).toHaveLength(2);
+
+    const genEntry = body.entries[0];
+    expect(genEntry.kind).toBe('generated');
+    expect(genEntry.category).toBe('story');
+    expect(genEntry.cefr).toBe('B2');
+    expect(genEntry.length).toBe('long');
+    expect(genEntry.prompt).toBe('a cat that came back');
+
+    const pastedEntry = body.entries[1];
+    expect(pastedEntry.kind).toBe('pasted');
+    expect(pastedEntry.category).toBeNull();
+    expect(pastedEntry.cefr).toBeNull();
+    expect(pastedEntry.length).toBeNull();
+    expect(pastedEntry.prompt).toBeNull();
   });
 
   it('returns 400 VALIDATION_ERROR when language query param is missing', async () => {
@@ -625,7 +736,7 @@ describe('GET /read/entries/:id', () => {
 
     expect(res.status).toBe(200);
     const body = (await res.json()) as AnyJson;
-    expect(body).toEqual({
+    expect(body).toMatchObject({
       id: validUuid,
       language: 'ES',
       title: 'aldea',
@@ -638,6 +749,12 @@ describe('GET /read/entries/:id', () => {
         { id: 'v2', word: 'echar de menos', lemma: 'echar de menos', gloss: 'to miss', type: 'phrase', cefr: null },
       ],
       pastedAt: pastedAt.toISOString(),
+      // Provenance fields default to 'pasted' / null when absent from DB row.
+      kind: 'pasted',
+      category: null,
+      cefr: null,
+      length: null,
+      prompt: null,
     });
   });
 

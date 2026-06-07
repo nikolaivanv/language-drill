@@ -14,6 +14,7 @@ import {
   READ_TITLE_MAX_CHARS,
   READING_GEN_TOPIC_MAX_CHARS,
   READING_TOO_HARD_THRESHOLD,
+  ReadingCategory,
   ReadingTextLength,
 } from '@language-drill/shared';
 import type { DeepCard, LearningLanguage } from '@language-drill/shared';
@@ -59,15 +60,22 @@ const UpdateBankBodySchema = z.object({
   bank: z.array(z.string().min(1)),
 });
 
-// `bank.length >= 1` is enforced server-side per Requirement 8.1: an empty-bank
-// save has no v1 use case, and the UI gates the save action on the same rule.
+// `bank` is now allowed to be empty so the user can save a generated entry to
+// the library without having collected any words (Task 5 / "save to library"
+// path). The UI still gates the "add to vocabulary" action on bank length.
 const SaveEntryBodySchema = z.object({
   language: LearningLanguageEnum,
   title: z.string().max(READ_TITLE_MAX_CHARS),
   source: z.string().max(READ_SOURCE_MAX_CHARS),
   text: z.string().min(1).max(READ_TEXT_MAX_CHARS),
   flagged: FlaggedMapSchema,
-  bank: z.array(z.string().min(1)).min(1),
+  bank: z.array(z.string().min(1)), // empty allowed
+  // Generation provenance (omit for pasted entries).
+  kind: z.enum(['generated', 'pasted']).optional(),
+  category: z.nativeEnum(ReadingCategory).nullable().optional(),
+  cefr: z.nativeEnum(CefrLevel).nullable().optional(),
+  length: z.nativeEnum(ReadingTextLength).nullable().optional(),
+  prompt: z.string().nullable().optional(),
 });
 
 // Save a deep card to the personal vocabulary bank (Req 8). The resolved
@@ -145,7 +153,7 @@ read.post('/read/entries', async (c) => {
       400,
     );
   }
-  const { language, title, source, text, flagged, bank } = bodyResult.data;
+  const { language, title, source, text, flagged, bank, kind, category, cefr: entryCefr, length, prompt } = bodyResult.data;
 
   // Cross-field invariant: every bank entry must be a key of `flagged`.
   // Zod cannot express this naturally, so it lives here.
@@ -175,45 +183,52 @@ read.post('/read/entries', async (c) => {
         text,
         flaggedWords: flagged,
         bank,
+        kind: kind ?? 'pasted',
+        category: category ?? null,
+        cefr: entryCefr ?? null,
+        length: length ?? null,
+        prompt: prompt ?? null,
       })
       .returning({ id: readEntries.id, pastedAt: readEntries.pastedAt });
 
-    const vocabRows = bank.map((word) => {
-      const flag = flagged[word];
-      return {
-        userId,
-        language: language as LearningLanguage,
-        word,
-        lemma: flag.lemma,
-        source: 'reading',
-        sourceReadEntryId: entry.id,
-        pos: flag.pos,
-        gloss: flag.gloss,
-        // `example` is now optional on the skim WordFlag (the slim pass omits
-        // it); fall back to empty for this NOT NULL column.
-        exampleSentence: flag.example ?? '',
-        frequencyRank: flag.freq,
-        cefrBand: flag.cefr as CefrLevel,
-      };
-    });
-
-    await tx
-      .insert(userVocabulary)
-      .values(vocabRows)
-      .onConflictDoUpdate({
-        target: [userVocabulary.userId, userVocabulary.language, userVocabulary.word],
-        set: {
-          lemma: sql`excluded.lemma`,
-          source: sql`excluded.source`,
-          sourceReadEntryId: sql`excluded.source_read_entry_id`,
-          pos: sql`excluded.pos`,
-          gloss: sql`excluded.gloss`,
-          exampleSentence: sql`excluded.example_sentence`,
-          frequencyRank: sql`excluded.frequency_rank`,
-          cefrBand: sql`excluded.cefr_band`,
-          addedAt: sql`now()`,
-        },
+    if (bank.length > 0) {
+      const vocabRows = bank.map((word) => {
+        const flag = flagged[word];
+        return {
+          userId,
+          language: language as LearningLanguage,
+          word,
+          lemma: flag.lemma,
+          source: 'reading',
+          sourceReadEntryId: entry.id,
+          pos: flag.pos,
+          gloss: flag.gloss,
+          // `example` is now optional on the skim WordFlag (the slim pass omits
+          // it); fall back to empty for this NOT NULL column.
+          exampleSentence: flag.example ?? '',
+          frequencyRank: flag.freq,
+          cefrBand: flag.cefr as CefrLevel,
+        };
       });
+
+      await tx
+        .insert(userVocabulary)
+        .values(vocabRows)
+        .onConflictDoUpdate({
+          target: [userVocabulary.userId, userVocabulary.language, userVocabulary.word],
+          set: {
+            lemma: sql`excluded.lemma`,
+            source: sql`excluded.source`,
+            sourceReadEntryId: sql`excluded.source_read_entry_id`,
+            pos: sql`excluded.pos`,
+            gloss: sql`excluded.gloss`,
+            exampleSentence: sql`excluded.example_sentence`,
+            frequencyRank: sql`excluded.frequency_rank`,
+            cefrBand: sql`excluded.cefr_band`,
+            addedAt: sql`now()`,
+          },
+        });
+    }
 
     return entry;
   });
@@ -259,6 +274,11 @@ read.get('/read/entries', async (c) => {
       title: readEntries.title,
       source: readEntries.source,
       pastedAt: readEntries.pastedAt,
+      kind: readEntries.kind,
+      category: readEntries.category,
+      cefr: readEntries.cefr,
+      length: readEntries.length,
+      prompt: readEntries.prompt,
       preview: sql<string>`substring(${readEntries.text} from 1 for ${READ_PREVIEW_CHARS})`,
       savedCount: sql<number>`jsonb_array_length(${readEntries.bank})`,
       flaggedCount: sql<number>`(select count(*)::int from jsonb_each(${readEntries.flaggedWords}))`,
@@ -282,6 +302,11 @@ read.get('/read/entries', async (c) => {
       flaggedCount: Number(row.flaggedCount),
       savedCount: Number(row.savedCount),
       pastedAt: (row.pastedAt as Date).toISOString(),
+      kind: row.kind ?? 'pasted',
+      category: row.category ?? null,
+      cefr: row.cefr ?? null,
+      length: row.length ?? null,
+      prompt: row.prompt ?? null,
     })),
   });
 });
@@ -316,6 +341,11 @@ read.get('/read/entries/:id', async (c) => {
       flaggedWords: readEntries.flaggedWords,
       bank: readEntries.bank,
       pastedAt: readEntries.pastedAt,
+      kind: readEntries.kind,
+      category: readEntries.category,
+      cefr: readEntries.cefr,
+      length: readEntries.length,
+      prompt: readEntries.prompt,
     })
     .from(readEntries)
     .where(
@@ -381,6 +411,11 @@ read.get('/read/entries/:id', async (c) => {
     bank: row.bank,
     savedVocab,
     pastedAt: (row.pastedAt as Date).toISOString(),
+    kind: row.kind ?? 'pasted',
+    category: row.category ?? null,
+    cefr: row.cefr ?? null,
+    length: row.length ?? null,
+    prompt: row.prompt ?? null,
   });
 });
 
