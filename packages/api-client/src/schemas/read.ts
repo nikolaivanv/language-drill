@@ -7,6 +7,7 @@ import {
   READ_TEXT_MAX_CHARS,
   READ_TITLE_MAX_CHARS,
   READING_GEN_TOPIC_MAX_CHARS,
+  ReadingCategory,
   ReadingTextLength,
   SpanAnnotationsSchema,
   WordFlagSchema,
@@ -86,6 +87,21 @@ export const AnnotateErrorEventSchema = z.object({
 export type AnnotateErrorEvent = z.infer<typeof AnnotateErrorEventSchema>;
 
 // ---------------------------------------------------------------------------
+// Generation provenance — shared by save request, summary, and full entry.
+// ---------------------------------------------------------------------------
+
+// Object literal (not z.object) so it can be spread into multiple z.object()
+// calls without creating a wrapper layer. All fields are optional/nullable to
+// accommodate pasted entries (where they are absent) and forward-compat.
+const ReadEntryMetaSchema = {
+  kind: z.enum(['generated', 'pasted']).optional(),
+  category: z.nativeEnum(ReadingCategory).nullable().optional(),
+  cefr: z.nativeEnum(CefrLevel).nullable().optional(),
+  length: z.nativeEnum(ReadingTextLength).nullable().optional(),
+  prompt: z.string().nullable().optional(),
+};
+
+// ---------------------------------------------------------------------------
 // POST /read/entries
 // ---------------------------------------------------------------------------
 // `bank` permits an empty array on the wire schema so the same shape can be
@@ -99,7 +115,8 @@ export const SaveReadEntryRequestSchema = z.object({
   source: z.string().max(READ_SOURCE_MAX_CHARS),
   text: z.string().min(1).max(READ_TEXT_MAX_CHARS),
   flagged: FlaggedMapSchema,
-  bank: z.array(z.string().min(1)),
+  bank: z.array(z.string().min(1)), // empty allowed (save-to-library with 0 collected)
+  ...ReadEntryMetaSchema,
 });
 
 export type SaveReadEntryRequest = z.infer<typeof SaveReadEntryRequestSchema>;
@@ -140,6 +157,7 @@ export const ReadEntrySummarySchema = z.object({
   flaggedCount: z.number().int().nonnegative(),
   savedCount: z.number().int().nonnegative(),
   pastedAt: z.string().datetime(),
+  ...ReadEntryMetaSchema,
 });
 
 export type ReadEntrySummary = z.infer<typeof ReadEntrySummarySchema>;
@@ -187,6 +205,7 @@ export const ReadEntryResponseSchema = z.object({
   // it to render persisted annotations on open (Req 11.3).
   spanAnnotations: SpanAnnotationsSchema.optional(),
   pastedAt: z.string().datetime(),
+  ...ReadEntryMetaSchema,
 });
 
 export type ReadEntryResponse = z.infer<typeof ReadEntryResponseSchema>;
@@ -299,6 +318,7 @@ export const GenerateReadingTextRequestSchema = z.object({
   cefr: z.nativeEnum(CefrLevel),
   length: z.nativeEnum(ReadingTextLength),
   topic: z.string().min(1).max(READING_GEN_TOPIC_MAX_CHARS),
+  noCache: z.boolean().optional(),
 });
 
 export type GenerateReadingTextRequest = z.infer<
