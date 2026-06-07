@@ -33,7 +33,7 @@ interface Step extends Frame {
   dur: number;
 }
 
-interface BankWord {
+export interface BankWord {
   w: string;
   lang: string;
   gloss: string;
@@ -41,7 +41,7 @@ interface BankWord {
 
 /* ───────────────────────── chrome ───────────────────────── */
 
-function DBrand() {
+export function DBrand() {
   return (
     <Link href="/" style={{ textDecoration: 'none' }} aria-label="drill — home">
       <span
@@ -81,7 +81,7 @@ function DBrand() {
   );
 }
 
-function DLangRail({
+export function DLangRail({
   lang,
   setLang,
   full,
@@ -126,7 +126,7 @@ function buildTimeline(item: ClozeItem): Step[] {
   return s;
 }
 
-function ProductionDemo({ defaultLang }: { defaultLang: string }) {
+export function ProductionDemo({ defaultLang }: { defaultLang: string }) {
   const order = ['es', 'de', 'tr'];
   const startIx = Math.max(0, order.indexOf(defaultLang));
   const [li, setLi] = useState(startIx);
@@ -437,7 +437,7 @@ function LoopStrip() {
 
 /* ───────────── reading: deep annotation (dark) ───────────── */
 
-function ReadingNote({
+export function ReadingNote({
   tok,
   onSave,
   saved,

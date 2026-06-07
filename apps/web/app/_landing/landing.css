@@ -201,3 +201,144 @@
 }
 @keyframes liftin { from { transform: translateY(10px); } to { transform: none; } }
 @keyframes swapin { from { transform: translateY(6px); } to { transform: none; } }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Mobile Web reflow (.dfm). Ported from the design handoff
+   (landing/landing-mobile.css). The dark "read · save · review · produce"
+   landing reflowed for a ~390px phone, rendered by drill-landing-mobile.tsx.
+   The mobile tree carries `.df` too (so the --df-* tokens + card atoms from
+   above apply) plus `.dfm` for the phone-specific layout. These rules are
+   always-on for the `.dfm` tree; which tree is shown is decided by the
+   .landing-desktop / .landing-mobile display toggle at the very bottom.
+   ─────────────────────────────────────────────────────────────────────────── */
+.dfm {
+  min-height: 100vh; background: var(--df-bg); color: var(--df-ink);
+  font-family: var(--t-ui); -webkit-font-smoothing: antialiased; position: relative;
+}
+.dfm a { text-decoration: none; }
+.dfm-wrap { padding: 0 18px; }
+
+/* sticky site bar */
+.dfm-top {
+  position: sticky; top: 0; z-index: 30;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 54px; padding: 0 16px;
+  background: color-mix(in oklab, #16130f 86%, transparent);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--df-line);
+}
+.dfm-top .dfm-actions { display: flex; align-items: center; gap: 10px; }
+.dfm-signin { border: none; background: transparent; color: var(--df-ink2);
+  font-size: 13px; font-family: var(--t-ui); cursor: pointer; padding: 8px 4px; }
+.dfm-signup { padding: 9px 16px; font-size: 13px; border-radius: var(--r-md);
+  font-weight: 600; font-family: var(--t-ui); border: 1px solid var(--accent);
+  background: var(--accent); color: #fff; cursor: pointer; white-space: nowrap; }
+
+/* hero */
+.dfm-hero { padding: 24px 0 32px; }
+.dfm-eyebrow { font-family: var(--t-mono); font-size: 10.5px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--accent); font-weight: 600; }
+.dfm-h1 { font-family: var(--t-display); font-weight: 500; letter-spacing: -1.1px;
+  line-height: 1.04; font-size: 37px; margin: 14px 0 0; color: var(--df-ink); text-wrap: balance; }
+.dfm-sub { color: var(--df-ink2); font-size: 16px; line-height: 1.55; margin: 16px 0 0; }
+.dfm-cta-col { display: flex; flex-direction: column; gap: 10px; margin-top: 22px; }
+.dfm-btn { width: 100%; display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px; padding: 15px 22px; border-radius: var(--r-md); font-size: 15.5px; font-weight: 600;
+  font-family: var(--t-ui); border: 1px solid var(--accent); background: var(--accent);
+  color: #fff; cursor: pointer; transition: filter .15s; }
+.dfm-btn:active { filter: brightness(.94); }
+.dfm-btn.ghost { background: transparent; border-color: rgba(255,255,255,.26); color: var(--df-ink); }
+.dfm-demo-hint { display: flex; align-items: center; gap: 8px; justify-content: center;
+  font-family: var(--t-mono); font-size: 10.5px; color: var(--df-mute); letter-spacing: .3px;
+  margin-top: 20px; text-align: center; }
+.dfm-demo-hint .ln { flex: 1; height: 1px; background: var(--df-line); }
+
+/* typed-production demo card (reuses .drill-card / .drill-blank.type / .df-caret / .df-coach) */
+.dfm .drill-card { padding: 17px; border-radius: 20px; box-shadow: 0 18px 50px rgba(0,0,0,.5); margin-top: 16px; }
+.dfm .drill-stage { font-size: 21px; line-height: 1.5; }
+.dfm .drill-blank.type { min-width: 92px; font-size: .82em; }
+.dfm .btn-xl { padding: 10px 18px !important; font-size: 13px; }
+/* keep the two header rows' badges on one line (sentence + footer meta still wrap) */
+.dfm .drill-card > div:first-child span,
+.dfm .drill-card > div:nth-child(2) span { white-space: nowrap; }
+
+/* lang rail (dark) */
+.dfm .lang-rail { background: #1b1610; border-color: var(--df-line); padding: 3px; gap: 3px; flex-wrap: nowrap; flex-shrink: 0; }
+.dfm .lang-pill { color: var(--df-mute); padding: 6px 11px; font-size: 12px; white-space: nowrap; }
+.dfm .lang-pill:hover { color: var(--df-ink); }
+.dfm .lang-pill.on { background: var(--df-panel); color: var(--df-ink); box-shadow: none; border: 1px solid var(--df-line); }
+.dfm .lang-pill .tag { font-family: var(--t-mono); font-size: 10px; opacity: .6; margin-left: 5px; }
+.dfm .df-chip-dark { white-space: nowrap; }
+
+/* content sections */
+.dfm-section { padding: 38px 0; border-top: 1px solid var(--df-line); }
+.dfm-eyebrow2 { font-family: var(--t-mono); font-size: 10.5px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--df-mute); font-weight: 500; }
+.dfm-h2 { font-family: var(--t-display); font-weight: 500; letter-spacing: -0.6px;
+  line-height: 1.08; font-size: 26px; margin: 12px 0 0; color: var(--df-ink); text-wrap: balance; }
+.dfm-lead { color: var(--df-ink2); font-size: 15px; line-height: 1.6; margin: 14px 0 0; }
+.dfm-card { background: var(--df-panel); border: 1px solid var(--df-line);
+  border-radius: var(--r-lg); padding: 18px; }
+.dfm-stack { display: flex; flex-direction: column; gap: 12px; margin-top: 22px; }
+.dfm-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 22px; }
+
+/* loop as numbered rows */
+.dfm-loop-row { display: grid; grid-template-columns: 36px 1fr; gap: 14px; align-items: start;
+  padding: 16px; background: var(--df-panel); border: 1px solid var(--df-line); border-radius: var(--r-lg); }
+.dfm-loop-n { width: 36px; height: 36px; border-radius: 10px; background: #1b1610;
+  border: 1px solid var(--df-line); display: flex; align-items: center; justify-content: center;
+  font-family: var(--t-mono); font-size: 14px; font-weight: 600; color: var(--accent); }
+
+/* reading section */
+.dfm-read-meta { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 14px; }
+.dfm-read-meta .ttl { font-family: var(--t-mono); font-size: 10.5px; letter-spacing: 1.2px;
+  text-transform: uppercase; color: var(--df-mute); white-space: nowrap; }
+.dfm-read-meta .src { font-size: 12px; color: var(--df-mute); white-space: nowrap; }
+.dfm-passage { border-left: 2px solid color-mix(in oklab, var(--accent) 40%, var(--df-line)); padding-left: 16px; }
+.dfm .df-passage { font-size: 20px; line-height: 1.62; margin: 0; }
+.dfm-read-foot { margin-top: 16px; display: flex; align-items: center; gap: 8px;
+  font-size: 11.5px; color: var(--df-mute); }
+.dfm-read-foot .dash { width: 16px; border-bottom: 2px dotted var(--accent); display: inline-block; }
+.dfm-note-wrap { margin-top: 16px; }
+
+/* vocabulary review (mobile cards) */
+.dfm-vocab { background: var(--df-panel); border: 1px solid var(--df-line);
+  border-radius: var(--r-lg); padding: 14px; }
+.dfm-vocab.is-new { border-color: color-mix(in oklab, var(--accent) 55%, var(--df-line)); }
+.dfm-vocab-head { display: flex; align-items: flex-start; gap: 12px; }
+.dfm-vocab-flag { width: 34px; height: 34px; border-radius: 9px; background: #1b1610;
+  border: 1px solid var(--df-line); display: flex; align-items: center; justify-content: center;
+  font-family: var(--t-mono); font-size: 11px; font-weight: 600; color: var(--df-ink2); flex-shrink: 0; }
+.dfm-vocab-grade { display: flex; gap: 8px; margin-top: 13px; }
+.dfm-vocab-grade button { flex: 1; font-family: var(--t-mono); font-size: 12px; padding: 10px 8px;
+  border-radius: 9px; border: 1px solid var(--df-line); background: #1b1610; color: var(--df-ink2); cursor: pointer; transition: all .14s; }
+.dfm-vocab-grade button:active { transform: scale(.97); }
+.dfm-vocab-grade button.again { border-color: color-mix(in oklab, var(--accent) 40%, var(--df-line)); color: #f0a78c; }
+.dfm-vocab-grade button.easy { border-color: color-mix(in oklab, var(--ok) 40%, var(--df-line)); color: #b6e0ad; }
+
+/* languages */
+.dfm-soon { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+.dfm-soon .lbl { font-family: var(--t-mono); font-size: 10px; letter-spacing: 1.4px;
+  text-transform: uppercase; color: var(--df-mute); }
+
+/* CTA band */
+.dfm-ctaband { background: var(--accent); border-radius: var(--r-xl); padding: 38px 22px;
+  text-align: center; }
+.dfm-ctaband h2 { font-family: var(--t-display); font-weight: 500; font-size: 31px;
+  letter-spacing: -0.7px; margin: 0; color: #fff; line-height: 1.05; }
+.dfm-ctaband p { color: rgba(255,255,255,.88); font-size: 15px; margin: 12px 0 0; line-height: 1.5; }
+
+/* footer */
+.dfm-footer { border-top: 1px solid var(--df-line); padding: 26px 18px 8px;
+  display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.dfm-footer .meta { font-size: 12px; color: var(--df-mute); }
+.dfm-footer a { font-size: 12px; color: var(--accent); }
+
+/* ── desktop / mobile tree toggle (mirrors MOBILE_MAX_WIDTH in lib/responsive.ts) ──
+   Both trees are server-rendered; CSS picks one so first paint is correct on
+   either viewport with no hydration flash. */
+.landing-mobile { display: none; }
+@media (max-width: 760px) {
+  .landing-desktop { display: none; }
+  .landing-mobile { display: block; }
+}
