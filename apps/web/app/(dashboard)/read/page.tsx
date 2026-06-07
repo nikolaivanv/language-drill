@@ -1074,7 +1074,6 @@ export default function ReadPage() {
           entries={entries}
           onOpen={handleHistoryOpen}
           onGenerateNew={handleOpenGenerate}
-          languageLabel={languageLabel}
         />
       );
   } else {

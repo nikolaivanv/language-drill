@@ -104,10 +104,9 @@ const ReadEntryMetaSchema = {
 // ---------------------------------------------------------------------------
 // POST /read/entries
 // ---------------------------------------------------------------------------
-// `bank` permits an empty array on the wire schema so the same shape can be
-// reused for unit-test fixtures and forward-compat scenarios. The server
-// independently enforces `bank.length >= 1` per Requirement 8.1, and the UI
-// gates the save action on the same rule.
+// `bank` permits an empty array — save-to-library with 0 collected words is
+// allowed. The wire schema reuses the same shape for unit-test fixtures and
+// forward-compat scenarios; the server no longer enforces bank.length >= 1.
 
 export const SaveReadEntryRequestSchema = z.object({
   language: LearningLanguageEnum,

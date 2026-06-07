@@ -16,7 +16,6 @@ type Props = {
   entries: readonly ReadEntrySummary[];
   onOpen: (entryId: string) => void;
   onGenerateNew: () => void;
-  languageLabel: string;
 };
 
 export function HistoryView({ entries, onOpen, onGenerateNew }: Props) {
