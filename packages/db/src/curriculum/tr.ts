@@ -26,7 +26,7 @@ const { A1, A2 } = CefrLevel;
  * grammar points; the Yedi İklim A1+A2 *parity* (the 26 A1 + 14 A2 count noted
  * in the header above) was aligned earlier, on 2026-05-28.
  */
-export const CURRICULUM_VERSION_TR = '2026-06-06';
+export const CURRICULUM_VERSION_TR = '2026-06-07';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -672,6 +672,13 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Confusing göre\'s senses: besides "according to", göre means "suited to / right for" (Bu bana göre = this suits me).',
     ],
     prerequisiteKeys: ['tr-a1-ablative-dative'],
+    // A sentence-initial opinion slot accepts ANY opinion-holder
+    // (bence/sence/bizce/sizce/bana göre/ona göre…); a single L2 sentence
+    // cannot force one person, so cloze drafts are irreducibly ambiguous
+    // (lifetime cloze approval ~14% vs ~35% for translation). Drill via
+    // translation, where the L1 prompt fixes the person. See
+    // docs investigation 2026-06-07.
+    clozeUnsuitable: true,
   },
   {
     key: 'tr-a1-beri-dir',
@@ -698,6 +705,13 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Using "için" for an elapsed duration ("iki saat için bekliyorum") — an elapsed duration takes -DIr or -DEn beri (iki saattir / iki saatten beri bekliyorum).',
     ],
     prerequisiteKeys: ['tr-a1-ablative-dative'],
+    // -DEn beri and -DIr are near-synonymous "since/for" alternants that
+    // both fit almost any sentence (iki saattir ≈ iki saatten beri), so a
+    // cloze is ambiguous unless the context names the target form — which
+    // spoils the answer. The canonical clozeUnsuitable case ("near-synonym
+    // alternants both fit"); lifetime cloze approval ~6%. Drill via
+    // translation. See docs investigation 2026-06-07.
+    clozeUnsuitable: true,
   },
   {
     key: 'tr-a1-comparative-superlative',
