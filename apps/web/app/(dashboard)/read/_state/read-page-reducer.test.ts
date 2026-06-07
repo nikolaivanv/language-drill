@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CefrLevel, ReadingTextLength } from '@language-drill/shared';
+import { CefrLevel, ReadingCategory, ReadingTextLength } from '@language-drill/shared';
 import type { DeepCard, FlaggedMap, WordFlag } from '@language-drill/shared';
 import {
   initialState,
@@ -32,6 +32,7 @@ describe('initialState', () => {
       paste: { title: '', source: '', text: '' },
       activeEntryId: null,
       bank: [],
+      provenance: null,
       activeWord: null,
       intensity: 'subtle',
       saveToast: null,
@@ -940,5 +941,44 @@ describe('deep-card reset on new passage', () => {
     const state = readPageReducer(dirty, { type: 'ANNOTATE_START' });
     expect(state.deepCard).toEqual({ status: 'idle' });
     expect(state.spanAnnotations).toEqual({});
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GENERATE_FIELD category + provenance
+// ---------------------------------------------------------------------------
+
+describe('generate category + provenance', () => {
+  it('sets generate.category and writes free-text topic', () => {
+    let s = readPageReducer(initialState, {
+      type: 'GENERATE_FIELD',
+      field: 'category',
+      value: 'story',
+    });
+    expect(s.generate.category).toBe('story');
+    s = readPageReducer(s, {
+      type: 'GENERATE_FIELD',
+      field: 'topic',
+      value: 'free text',
+    });
+    // topic edits do not auto-clear category in the reducer; the page clears it.
+    expect(s.generate.topic).toBe('free text');
+  });
+
+  it('stores and clears provenance', () => {
+    let s = readPageReducer(initialState, {
+      type: 'SET_PROVENANCE',
+      provenance: {
+        kind: 'generated',
+        category: ReadingCategory.STORY,
+        cefr: CefrLevel.B2,
+        length: ReadingTextLength.LONG,
+        prompt: 'a cat',
+        language: 'ES',
+      },
+    });
+    expect(s.provenance?.kind).toBe('generated');
+    s = readPageReducer(s, { type: 'SET_PROVENANCE', provenance: null });
+    expect(s.provenance).toBeNull();
   });
 });

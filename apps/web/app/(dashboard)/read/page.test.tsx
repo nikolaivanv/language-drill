@@ -429,10 +429,12 @@ afterEach(() => {
 describe('ReadPage — initial mount', () => {
   it('mount with 0 entries renders the EmptyView', () => {
     renderPage();
-    expect(screen.getByText('read in the wild')).toBeInTheDocument();
-    expect(screen.getByText("paste anything you're reading.")).toBeInTheDocument();
+    expect(screen.getByText('nothing to read yet.')).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /paste a text/i }),
+      screen.getByRole('button', { name: /generate a passage/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /or paste your own/i }),
     ).toBeInTheDocument();
   });
 
@@ -454,7 +456,7 @@ describe('ReadPage — top-bar view switching', () => {
     setEntries(ENTRIES_3);
     setEntry(FULL_ENTRY);
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: /\+ paste new/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\+ paste/i }));
     expect(screen.getByText('paste a passage')).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /annotate →/i }),
@@ -467,7 +469,10 @@ describe('ReadPage — top-bar view switching', () => {
     renderPage();
     fireEvent.click(screen.getByRole('button', { name: /^history/i }));
     expect(screen.getByText('past texts')).toBeInTheDocument();
-    expect(screen.getAllByRole('listitem').length).toBeGreaterThan(0);
+    // The redesigned library renders each entry as a clickable card button.
+    expect(
+      screen.getByRole('button', { name: /Cien años — ch\. 1/i }),
+    ).toBeInTheDocument();
   });
 
   it('clicking "history" with no entries shows the HistoryEmptyState', () => {
@@ -483,7 +488,7 @@ describe('ReadPage — top-bar view switching', () => {
 describe('ReadPage — paste view counter behavior', () => {
   it('typing 1,500 chars enables the CTA and shows the muted counter', () => {
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\+ paste/i }));
     const ta = screen.getByLabelText(/passage/i);
     fireEvent.change(ta, { target: { value: 'a'.repeat(1500) } });
     expect(
@@ -496,7 +501,7 @@ describe('ReadPage — paste view counter behavior', () => {
 
   it('typing 2,001 chars disables the CTA and flips the counter to accent', () => {
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\+ paste/i }));
     const ta = screen.getByLabelText(/passage/i);
     fireEvent.change(ta, { target: { value: 'a'.repeat(2001) } });
     expect(
@@ -510,10 +515,10 @@ describe('ReadPage — paste view counter behavior', () => {
 describe('ReadPage — generate flow', () => {
   it('clicking "generate a text" from the EmptyView opens the GenerateView', () => {
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: /generate a text/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\+ generate/i }));
     expect(screen.getByText('generate a passage')).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /generate →/i }),
+      screen.getByRole('button', { name: /generate a passage/i }),
     ).toBeInTheDocument();
   });
 
@@ -542,11 +547,11 @@ describe('ReadPage — generate flow', () => {
       });
     });
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: /generate a text/i }));
-    fireEvent.change(screen.getByLabelText(/topic/i), {
+    fireEvent.click(screen.getByRole('button', { name: /\+ generate/i }));
+    fireEvent.change(screen.getByLabelText(/what to read about/i), {
       target: { value: 'a cat' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /generate →/i }));
+    fireEvent.click(screen.getByRole('button', { name: /generate a passage/i }));
     // Mutation fired with the form's selections.
     expect(generateMutate).toHaveBeenCalledTimes(1);
     expect(generateMutate.mock.calls[0][0]).toMatchObject({ topic: 'a cat' });
@@ -562,7 +567,7 @@ describe('ReadPage — generate flow', () => {
   it('surfaces the generation error body in the GenerateView', () => {
     setGenerate({ error: new Error('the model is busy') });
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: /generate a text/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\+ generate/i }));
     expect(screen.getByText('the model is busy')).toBeInTheDocument();
   });
 });
@@ -576,7 +581,7 @@ describe('ReadPage — streaming annotate flow', () => {
     // (no annotatedEntry yet) — see the "shows raw text DURING streaming"
     // case below for the post-START render path.
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\+ paste/i }));
     fireEvent.change(screen.getByLabelText(/passage/i), {
       target: { value: 'había una vez' },
     });
@@ -601,7 +606,7 @@ describe('ReadPage — streaming annotate flow', () => {
       });
     });
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\+ paste/i }));
     fireEvent.change(screen.getByLabelText(/passage/i), {
       target: { value: 'aldea grande' },
     });
@@ -629,7 +634,7 @@ describe('ReadPage — streaming annotate flow', () => {
       });
     });
     const { rerender } = renderPage();
-    fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\+ paste/i }));
     fireEvent.change(screen.getByLabelText(/passage/i), {
       target: { value: 'aldea grande' },
     });
@@ -680,7 +685,7 @@ describe('ReadPage — streaming annotate flow', () => {
       });
     });
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\+ paste/i }));
     fireEvent.change(screen.getByLabelText(/passage/i), {
       target: { value: 'aldea grande' },
     });
@@ -704,7 +709,7 @@ describe('ReadPage — streaming annotate flow', () => {
       });
     });
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\+ paste/i }));
     fireEvent.change(screen.getByLabelText(/passage/i), {
       target: { value: 'aldea grande' },
     });
@@ -729,7 +734,7 @@ describe('ReadPage — streaming annotate flow', () => {
       });
     });
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\+ paste/i }));
     fireEvent.change(screen.getByLabelText(/passage/i), {
       target: { value: 'aldea grande' },
     });
@@ -759,7 +764,7 @@ describe('ReadPage — streaming annotate flow', () => {
       });
     });
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\+ paste/i }));
     fireEvent.change(screen.getByLabelText(/passage/i), {
       target: { value: 'foo bar baz' },
     });
@@ -784,7 +789,7 @@ describe('ReadPage — streaming annotate flow', () => {
       });
     });
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\+ paste/i }));
     fireEvent.change(screen.getByLabelText(/passage/i), {
       target: { value: 'aldea grande' },
     });
@@ -792,7 +797,7 @@ describe('ReadPage — streaming annotate flow', () => {
     // Sanity: streaming + flagged word visible.
     expect(screen.getByText(/annotating · 1 \/ 5/)).toBeInTheDocument();
     // Click "+ paste new" — should abort and reset.
-    fireEvent.click(screen.getByRole('button', { name: /\+ paste new/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\+ paste/i }));
     expect(annotateAbort).toHaveBeenCalled();
     expect(annotateResetMock).toHaveBeenCalled();
   });
@@ -812,7 +817,7 @@ describe('ReadPage — streaming annotate flow', () => {
       });
     });
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\+ paste/i }));
     fireEvent.change(screen.getByLabelText(/passage/i), {
       target: { value: 'había una vez' },
     });
@@ -1097,7 +1102,7 @@ describe('ReadPage — deep annotation flow (Req 3, 9.4, 11)', () => {
     stubSpanCompleteOnStart(DEEP_ALDEA);
     setVocabMutations({ saveImpl: (_vars, opts) => opts?.onSuccess?.({ id: VOCAB_ID }) });
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\+ paste/i }));
     fireEvent.change(screen.getByLabelText(/passage/i), {
       target: { value: 'aldea grande' },
     });
@@ -1130,7 +1135,7 @@ describe('ReadPage — lazy entry save + toast', () => {
         opts?.onSuccess?.({ id: ENTRY_ID, pastedAt: '2026-05-05T00:00:00.000Z' }),
     });
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\+ paste/i }));
     fireEvent.change(screen.getByLabelText(/passage/i), {
       target: { value: 'aldea grande' },
     });
@@ -1162,7 +1167,7 @@ describe('ReadPage — lazy entry save + toast', () => {
         opts?.onSuccess?.({ id: ENTRY_ID, pastedAt: '2026-05-05T00:00:00.000Z' }),
     });
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\+ paste/i }));
     fireEvent.change(screen.getByLabelText(/passage/i), {
       target: { value: 'aldea grande' },
     });
@@ -1185,7 +1190,7 @@ describe('ReadPage — lazy entry save + toast', () => {
         opts?.onSuccess?.({ id: ENTRY_ID, pastedAt: '2026-05-05T00:00:00.000Z' }),
     });
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: /paste a text/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\+ paste/i }));
     fireEvent.change(screen.getByLabelText(/passage/i), {
       target: { value: 'aldea grande' },
     });

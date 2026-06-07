@@ -39,8 +39,13 @@ import {
 } from '@language-drill/api-client';
 import {
   CefrLevel,
-  READING_CHIPS_BY_LANGUAGE,
+  LANGUAGE_NATIVE_NAME,
+  READING_IDEAS,
+  ReadingTextLength,
   type DeepCard,
+  type Language,
+  type LearningLanguage,
+  type ReadingIdea,
 } from '@language-drill/shared';
 import { useActiveLanguage } from '../../../components/shell/active-language-provider';
 import { calibrationCopy } from './_lib/calibration-copy';
@@ -61,6 +66,7 @@ import { AnnotatedSkeleton } from './_components/annotated-skeleton';
 import { AnnotatedView } from './_components/annotated-view';
 import { EmptyView } from './_components/empty-view';
 import { GenerateView } from './_components/generate-view';
+import { GeneratingView } from './_components/generating-view';
 import { HistoryEmptyState } from './_components/history-empty-state';
 import { HistoryView } from './_components/history-view';
 import { InlineErrorToast } from './_components/inline-error-toast';
@@ -125,6 +131,11 @@ export default function ReadPage() {
   // -------------------------------------------------------------------------
   // Network state
   // -------------------------------------------------------------------------
+
+  // Native display name for the active language — shown in generate/result copy
+  // and persisted-text tags ("…in español…"). `activeLanguage` is a learning
+  // language ('ES'|'DE'|'TR'), all present in the native-name map.
+  const languageLabel = LANGUAGE_NATIVE_NAME[activeLanguage as Language];
 
   const profiles = useLanguageProfiles({ fetchFn });
   const proficiencyLevel =
@@ -318,6 +329,30 @@ export default function ReadPage() {
     });
   }, [entryQuery.data]);
 
+  // Re-hydrate generation provenance when a saved entry loads, so reopening a
+  // generated text restores the provenance header + adjust bar (adjust-from-
+  // history). A generated entry carries `kind/category/cefr/length/prompt`;
+  // pasted entries clear provenance to `null` (lean reader).
+  useEffect(() => {
+    const data = entryQuery.data;
+    if (!data) return;
+    if (data.kind === 'generated' && data.cefr && data.length) {
+      dispatch({
+        type: 'SET_PROVENANCE',
+        provenance: {
+          kind: 'generated',
+          category: data.category ?? null,
+          cefr: data.cefr,
+          length: data.length,
+          prompt: data.prompt ?? '',
+          language: data.language,
+        },
+      });
+    } else {
+      dispatch({ type: 'SET_PROVENANCE', provenance: null });
+    }
+  }, [entryQuery.data]);
+
   // Mirror the deep-span stream hook's state into the reducer's `deepCard`
   // slice. `streaming` → DEEP_CARD_FIELD per completed field (the reducer
   // merges, so re-dispatching the full partial is idempotent); `complete` →
@@ -501,10 +536,35 @@ export default function ReadPage() {
   // handleViewChange('generating'), which applies the level/language defaults.
   const handleOpenGenerate = () => handleViewChange('generating');
 
+  // Generation metadata persisted alongside a saved entry. Sourced from the
+  // open passage's provenance: generated texts carry the full record so library
+  // cards are rich + "adjust" works after reopening; pasted texts leave the
+  // generation fields null (lean cards). Spread into every save payload.
+  const provenanceMeta = () => ({
+    kind: state.provenance?.kind ?? ('pasted' as const),
+    category: state.provenance?.category ?? null,
+    cefr: state.provenance?.cefr ?? null,
+    length: state.provenance?.length ?? null,
+    prompt: state.provenance?.prompt ?? null,
+  });
+
+  // Pick a popular-start / composer idea: prefill the composer's topic +
+  // category, then open the launchpad (defaults CEFR + language). Works from
+  // both the empty state and the composer's idea chips.
+  const handlePickIdea = (idea: ReadingIdea) => {
+    dispatch({ type: 'GENERATE_FIELD', field: 'topic', value: idea.prompt });
+    dispatch({ type: 'GENERATE_FIELD', field: 'category', value: idea.category });
+    handleViewChange('generating');
+  };
+
   // Generate a passage, then feed it into the SAME annotate pipeline the paste
   // "Annotate" button uses: `startAnnotation` mirrors the text/title into
   // `state.paste` and fires the streaming annotate against `activeLanguage`.
   const handleGenerate = () => {
+    const cefr = state.generate.cefr;
+    const length = state.generate.length;
+    const topic = state.generate.topic;
+    const category = state.generate.category;
     generateMutation.mutate(
       {
         // Single source of truth: the request language is the shell's
@@ -514,12 +574,76 @@ export default function ReadPage() {
         // `activeLanguage` is a `LearningLanguage` ('ES'|'DE'|'TR'), exactly
         // what the request schema expects.
         language: activeLanguage,
-        cefr: state.generate.cefr,
-        length: state.generate.length,
-        topic: state.generate.topic,
+        cefr,
+        length,
+        topic,
       },
       {
         onSuccess: (data) => {
+          // Record provenance so the reader mounts the provenance header +
+          // adjust bar and a later save persists the generation metadata.
+          dispatch({
+            type: 'SET_PROVENANCE',
+            provenance: {
+              kind: 'generated',
+              category,
+              cefr,
+              length,
+              prompt: topic,
+              language: activeLanguage,
+            },
+          });
+          startAnnotation(data.text, data.title);
+        },
+      },
+    );
+  };
+
+  // Adjust the open generated passage without retyping: regenerate from the
+  // stored provenance with a tweaked parameter, then re-annotate. `easier` /
+  // `harder` step the CEFR ±1 (clamped at A1/C2); `longer` steps the length +1
+  // (clamped at LONG); `rewrite` keeps the same params but forces a fresh
+  // variation via `noCache`. No-op when there's no generated provenance.
+  const handleAdjust = (kind: 'easier' | 'harder' | 'longer' | 'rewrite') => {
+    const prov = state.provenance;
+    if (!prov || prov.kind !== 'generated') return;
+
+    const cefrValues = Object.values(CefrLevel);
+    const lengthValues = Object.values(ReadingTextLength);
+    const cefrIdx = cefrValues.indexOf(prov.cefr);
+    const lengthIdx = lengthValues.indexOf(prov.length);
+
+    let nextCefr = prov.cefr;
+    let nextLength = prov.length;
+    if (kind === 'easier') {
+      nextCefr = cefrValues[Math.max(0, cefrIdx - 1)];
+    } else if (kind === 'harder') {
+      nextCefr = cefrValues[Math.min(cefrValues.length - 1, cefrIdx + 1)];
+    } else if (kind === 'longer') {
+      nextLength = lengthValues[Math.min(lengthValues.length - 1, lengthIdx + 1)];
+    }
+
+    generateMutation.mutate(
+      {
+        // `prov.language` is a `'ES'|'DE'|'TR'` literal union (reducer slice);
+        // the request schema's `language` is the nominal `LearningLanguage`
+        // enum. The underlying string values are identical.
+        language: prov.language as LearningLanguage,
+        cefr: nextCefr,
+        length: nextLength,
+        topic: prov.prompt,
+        noCache: kind === 'rewrite',
+      },
+      {
+        onSuccess: (data) => {
+          dispatch({
+            type: 'SET_PROVENANCE',
+            provenance: {
+              ...prov,
+              cefr: nextCefr,
+              length: nextLength,
+            },
+          });
           startAnnotation(data.text, data.title);
         },
       },
@@ -657,6 +781,7 @@ export default function ReadPage() {
         text: state.paste.text,
         flagged: annotate.state.flaggedMap,
         bank: bankableWord !== null ? [...state.bank, bankableWord] : state.bank,
+        ...provenanceMeta(),
       },
       {
         onSuccess: (data) => {
@@ -805,6 +930,7 @@ export default function ReadPage() {
         text: state.paste.text,
         flagged: annotate.state.flaggedMap,
         bank: newBank,
+        ...provenanceMeta(),
       },
       {
         onSuccess: (data) => {
@@ -815,6 +941,43 @@ export default function ReadPage() {
         },
       },
     );
+  };
+
+  // Save the open (unsaved) passage to the library, even with an empty bank —
+  // the redesigned collect bar exposes an explicit "save to library" that no
+  // longer requires collecting a word first. When the entry already exists this
+  // is a no-op (it's already in history). Persists provenance metadata so the
+  // library card is rich for generated texts.
+  const handleSaveToLibrary = () => {
+    if (state.activeEntryId !== null) return;
+    if (saveEntry.isPending) return;
+    if (annotate.state.phase !== 'complete') return;
+    saveEntry.mutate(
+      {
+        language: activeLanguage,
+        title: state.paste.title,
+        source: '',
+        text: state.paste.text,
+        flagged: annotate.state.flaggedMap,
+        bank: state.bank,
+        ...provenanceMeta(),
+      },
+      {
+        onSuccess: (data) => {
+          dispatch({ type: 'ENTRY_PERSISTED', entryId: data.id });
+        },
+        onError: () => {
+          dispatch({ type: 'SHOW_INLINE_ERROR', kind: 'save' });
+        },
+      },
+    );
+  };
+
+  // "Add N to vocabulary" — the same save path; the banked words are already in
+  // `state.bank`, so persisting the entry pushes them into the vocabulary
+  // pipeline (the server materializes vocab rows from the bank on save).
+  const handleAddToVocabulary = () => {
+    handleSaveToLibrary();
   };
 
   const handleHistoryOpen = (entryId: string) => {
@@ -845,22 +1008,44 @@ export default function ReadPage() {
       <EmptyView
         onPaste={handlePasteNew}
         onGenerate={handleOpenGenerate}
-        cefrToken={proficiencyLevel}
+        onPickIdea={handlePickIdea}
+        languageLabel={languageLabel}
       />
     );
   } else if (state.view === 'generating') {
     const generateRateLimited =
       (generateMutation.error as { status?: number } | null)?.status === 429;
-    body = (
+    // While the generation POST is in flight, swap the composer for the calm
+    // "calibrating" loader; otherwise render the composer.
+    body = generateMutation.isPending ? (
+      <GeneratingView
+        languageLabel={languageLabel}
+        provenance={{
+          category: state.generate.category,
+          cefr: state.generate.cefr,
+          length: state.generate.length,
+          prompt: state.generate.topic,
+        }}
+      />
+    ) : (
       <GenerateView
         state={state.generate}
-        chips={READING_CHIPS_BY_LANGUAGE[activeLanguage]}
-        onChange={(field, value) =>
-          dispatch({ type: 'GENERATE_FIELD', field, value: String(value) })
-        }
-        onChipPick={(topic) =>
-          dispatch({ type: 'GENERATE_FIELD', field: 'topic', value: topic })
-        }
+        ideas={READING_IDEAS}
+        languageLabel={languageLabel}
+        yourLevel={proficiencyLevel}
+        onChange={(field, value) => {
+          dispatch({
+            type: 'GENERATE_FIELD',
+            field,
+            value: String(value),
+          });
+          // Free-text edits drop any picked-idea category (no category for
+          // hand-written topics); idea picks set both via `handlePickIdea`.
+          if (field === 'topic') {
+            dispatch({ type: 'GENERATE_FIELD', field: 'category', value: '' });
+          }
+        }}
+        onPickIdea={handlePickIdea}
         onGenerate={handleGenerate}
         onCancel={() => dispatch({ type: 'SET_VIEW', view: 'empty' })}
         isLoading={generateMutation.isPending}
@@ -885,7 +1070,12 @@ export default function ReadPage() {
       entries.length === 0 ? (
         <HistoryEmptyState onPasteNew={handlePasteNew} />
       ) : (
-        <HistoryView entries={entries} onOpen={handleHistoryOpen} />
+        <HistoryView
+          entries={entries}
+          onOpen={handleHistoryOpen}
+          onGenerateNew={handleOpenGenerate}
+          languageLabel={languageLabel}
+        />
       );
   } else {
     // 'annotated'
@@ -957,6 +1147,15 @@ export default function ReadPage() {
           underReview={underReview}
           onBankToggle={handleBankToggle}
           onPasteNew={handlePasteNew}
+          provenance={state.provenance}
+          onAdjust={handleAdjust}
+          adjustBusy={generateMutation.isPending}
+          flaggedCount={Object.keys(annotatedEntry.flaggedWords).length}
+          savedCount={savedVocab.length}
+          onSaveToLibrary={handleSaveToLibrary}
+          onAddToVocabulary={handleAddToVocabulary}
+          saving={saveEntry.isPending}
+          languageLabel={languageLabel}
         />
       );
     } else {

@@ -136,6 +136,20 @@ export type ReadPageState = {
   saveToast: { count: number } | null;
   inlineError: { kind: 'save' | 'bank' } | null;
   annotateStream: AnnotateStreamSlice;
+  /**
+   * Provenance of the open passage. Set after a successful generation (or when
+   * reopening a generated history entry) so the reader can mount the provenance
+   * header + adjust bar and a later save can persist the generation metadata.
+   * `null` for pasted text (and before anything is generated).
+   */
+  provenance: {
+    kind: 'generated' | 'pasted';
+    category: ReadingCategory | null;
+    cefr: CefrLevel;
+    length: ReadingTextLength;
+    prompt: string;
+    language: 'ES' | 'DE' | 'TR';
+  } | null;
   /** On-demand deep-annotation card state machine (Req 9.3, 9.4). */
   deepCard: DeepCardSlice;
   /**
@@ -159,6 +173,7 @@ export type Action =
       value: string;
     }
   | { type: 'GENERATE_RESET' }
+  | { type: 'SET_PROVENANCE'; provenance: ReadPageState['provenance'] }
   | { type: 'OPEN_POPOVER'; word: string; x: number; y: number }
   | { type: 'CLOSE_POPOVER' }
   | { type: 'SET_INTENSITY'; intensity: Intensity }
@@ -196,6 +211,7 @@ export const initialState: ReadPageState = {
   },
   activeEntryId: null,
   bank: [],
+  provenance: null,
   activeWord: null,
   intensity: 'subtle',
   saveToast: null,
@@ -232,16 +248,26 @@ export function readPageReducer(state: ReadPageState, action: Action): ReadPageS
         paste: { title: '', source: '', text: '' },
       };
 
-    case 'GENERATE_FIELD':
+    case 'GENERATE_FIELD': {
       // `value` arrives as a string from the form; the enum-typed fields
       // (length/cefr/language) carry string values, so the cast is safe.
+      // `category` is nullable: an empty string clears it (free-text topics
+      // have no category), any other value is a `ReadingCategory`.
+      const value =
+        action.field === 'category' && action.value === ''
+          ? null
+          : action.value;
       return {
         ...state,
-        generate: { ...state.generate, [action.field]: action.value },
+        generate: { ...state.generate, [action.field]: value },
       };
+    }
 
     case 'GENERATE_RESET':
       return { ...state, generate: initialState.generate };
+
+    case 'SET_PROVENANCE':
+      return { ...state, provenance: action.provenance };
 
     case 'OPEN_POPOVER':
       return {
