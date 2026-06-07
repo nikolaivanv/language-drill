@@ -3,10 +3,11 @@
 // ---------------------------------------------------------------------------
 // ReadTopBar — header above every /read view
 // ---------------------------------------------------------------------------
-// Four view-switcher buttons on the right (current text · history N ·
-// + generate · + paste new), with the active button raised to `primary` and
-// marked `aria-current="page"` (Requirements 2.1, 2.5, 14.6). The bottom rule
-// matches the prototype: a 1px `--rule` border with 14px breathing room.
+// Left: "reading" eyebrow (t-micro text-ink-mute) over "read & collect"
+// (t-display-m, the & wrapped in text-accent).
+// Right: current text · history N · + paste · + generate (visually dominant).
+// Active tab → aria-current="page" + primary variant.
+// On mobile: the actions wrap into a flex-wrap row.
 // ---------------------------------------------------------------------------
 
 import { Button } from '../../../../components/ui/button';
@@ -20,8 +21,7 @@ type Props = {
 };
 
 // Each view "owns" exactly one top-bar button. `empty` re-uses the
-// "current text" slot since it is the entries-empty fallback for that view
-// (Requirement 2.2).
+// "current text" slot since it is the entries-empty fallback for that view.
 function activeButton(view: View): 'current' | 'history' | 'generate' | 'paste' {
   switch (view) {
     case 'annotated':
@@ -40,19 +40,22 @@ export function ReadTopBar({ view, onChange, historyCount }: Props) {
   const active = activeButton(view);
 
   return (
-    <div className="flex items-center justify-between border-b border-rule pb-[14px]">
+    <div className="flex items-start justify-between gap-[12px] border-b border-rule pb-[14px] mobile:flex-col">
       <div>
-        <div className="t-micro">reading</div>
-        <h1 className="t-display-m mt-[4px]">read &amp; collect</h1>
+        <div className="t-micro text-ink-mute">reading</div>
+        <h1 className="t-display-m mt-[4px]">
+          read <span className="text-accent">&amp;</span> collect
+        </h1>
       </div>
-      <div className="flex gap-[6px]">
+      <div className="flex items-center gap-[6px] mobile:w-full mobile:flex-wrap">
         <Button
           size="sm"
           variant={active === 'current' ? 'primary' : 'ghost'}
           aria-current={active === 'current' ? 'page' : undefined}
           onClick={() => onChange('annotated')}
         >
-          current text
+          <span className="mobile:hidden">current text</span>
+          <span className="hidden mobile:inline">current</span>
         </Button>
         <Button
           size="sm"
@@ -67,19 +70,19 @@ export function ReadTopBar({ view, onChange, historyCount }: Props) {
         </Button>
         <Button
           size="sm"
-          variant={active === 'generate' ? 'primary' : 'ghost'}
-          aria-current={active === 'generate' ? 'page' : undefined}
-          onClick={() => onChange('generating')}
-        >
-          + generate
-        </Button>
-        <Button
-          size="sm"
           variant={active === 'paste' ? 'primary' : 'ghost'}
           aria-current={active === 'paste' ? 'page' : undefined}
           onClick={() => onChange('pasting')}
         >
-          + paste new
+          + paste
+        </Button>
+        <Button
+          size="sm"
+          variant={active === 'generate' ? 'primary' : 'default'}
+          aria-current={active === 'generate' ? 'page' : undefined}
+          onClick={() => onChange('generating')}
+        >
+          + generate
         </Button>
       </div>
     </div>

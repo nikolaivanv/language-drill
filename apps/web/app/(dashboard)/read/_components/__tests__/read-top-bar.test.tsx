@@ -7,10 +7,10 @@ import { ReadTopBar } from '../read-top-bar';
 // ---------------------------------------------------------------------------
 
 describe('ReadTopBar — clicks', () => {
-  it('fires onChange("annotated") when "current text" is clicked', () => {
+  it('fires onChange("annotated") when "current" is clicked', () => {
     const onChange = vi.fn();
     render(<ReadTopBar view="history" onChange={onChange} historyCount={3} />);
-    fireEvent.click(screen.getByRole('button', { name: /current text/i }));
+    fireEvent.click(screen.getByRole('button', { name: /current/i }));
     expect(onChange).toHaveBeenCalledWith('annotated');
   });
 
@@ -23,12 +23,12 @@ describe('ReadTopBar — clicks', () => {
     expect(onChange).toHaveBeenCalledWith('history');
   });
 
-  it('fires onChange("pasting") when "+ paste new" is clicked', () => {
+  it('fires onChange("pasting") when "+ paste" is clicked', () => {
     const onChange = vi.fn();
     render(
       <ReadTopBar view="annotated" onChange={onChange} historyCount={3} />,
     );
-    fireEvent.click(screen.getByRole('button', { name: /paste new/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\+ paste/i }));
     expect(onChange).toHaveBeenCalledWith('pasting');
   });
 
@@ -37,7 +37,7 @@ describe('ReadTopBar — clicks', () => {
     render(
       <ReadTopBar view="annotated" onChange={onChange} historyCount={3} />,
     );
-    fireEvent.click(screen.getByRole('button', { name: /generate/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\+ generate/i }));
     expect(onChange).toHaveBeenCalledWith('generating');
   });
 });
@@ -47,9 +47,9 @@ describe('ReadTopBar — clicks', () => {
 // ---------------------------------------------------------------------------
 
 describe('ReadTopBar — aria-current', () => {
-  it('marks "current text" as aria-current="page" when view is annotated', () => {
+  it('marks "current" as aria-current="page" when view is annotated', () => {
     render(<ReadTopBar view="annotated" onChange={() => {}} historyCount={3} />);
-    expect(screen.getByRole('button', { name: /current text/i })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: /current/i })).toHaveAttribute(
       'aria-current',
       'page',
     );
@@ -57,13 +57,13 @@ describe('ReadTopBar — aria-current', () => {
       screen.getByRole('button', { name: /history/i }),
     ).not.toHaveAttribute('aria-current');
     expect(
-      screen.getByRole('button', { name: /paste new/i }),
+      screen.getByRole('button', { name: /\+ paste/i }),
     ).not.toHaveAttribute('aria-current');
   });
 
-  it('marks "current text" as aria-current="page" when view is empty (fallback owner)', () => {
+  it('marks "current" as aria-current="page" when view is empty (fallback owner)', () => {
     render(<ReadTopBar view="empty" onChange={() => {}} historyCount={0} />);
-    expect(screen.getByRole('button', { name: /current text/i })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: /current/i })).toHaveAttribute(
       'aria-current',
       'page',
     );
@@ -76,13 +76,13 @@ describe('ReadTopBar — aria-current', () => {
       'page',
     );
     expect(
-      screen.getByRole('button', { name: /current text/i }),
+      screen.getByRole('button', { name: /current/i }),
     ).not.toHaveAttribute('aria-current');
   });
 
-  it('marks "+ paste new" as aria-current="page" when view is pasting', () => {
+  it('marks "+ paste" as aria-current="page" when view is pasting', () => {
     render(<ReadTopBar view="pasting" onChange={() => {}} historyCount={3} />);
-    expect(screen.getByRole('button', { name: /paste new/i })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: /\+ paste/i })).toHaveAttribute(
       'aria-current',
       'page',
     );
@@ -90,12 +90,12 @@ describe('ReadTopBar — aria-current', () => {
 
   it('marks "+ generate" as aria-current="page" when view is generating', () => {
     render(<ReadTopBar view="generating" onChange={() => {}} historyCount={3} />);
-    expect(screen.getByRole('button', { name: /generate/i })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: /\+ generate/i })).toHaveAttribute(
       'aria-current',
       'page',
     );
     expect(
-      screen.getByRole('button', { name: /current text/i }),
+      screen.getByRole('button', { name: /current/i }),
     ).not.toHaveAttribute('aria-current');
   });
 });
@@ -135,6 +135,7 @@ describe('ReadTopBar — header copy', () => {
   it('renders the "reading" eyebrow and "read & collect" title', () => {
     render(<ReadTopBar view="annotated" onChange={() => {}} historyCount={3} />);
     expect(screen.getByText('reading')).toBeInTheDocument();
-    expect(screen.getByText('read & collect')).toBeInTheDocument();
+    // The & is wrapped in a <span> for accent styling; match by heading role
+    expect(screen.getByRole('heading', { name: /read.*collect/i })).toBeInTheDocument();
   });
 });
