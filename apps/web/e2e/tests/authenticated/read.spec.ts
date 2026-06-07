@@ -410,10 +410,13 @@ test('a sentence drag-select renders a sentence card with no save action (Req 5.
   await last.hover();
   await page.mouse.up();
 
-  // The sentence card rendered — translation visible, no save button.
+  // The sentence card rendered — translation visible, no save-to-vocabulary
+  // action (sentences aren't collectable). Scope to the deep-card save label
+  // ("+ save to vocabulary") so it doesn't match the reader's passage-level
+  // "save to library" collect action, which is always present.
   await expect(page.getByText('The village was quiet.')).toBeVisible();
   await expect(
-    page.getByRole('button', { name: /save/i }),
+    page.getByRole('button', { name: /save to vocabulary/i }),
   ).toHaveCount(0);
 });
 
