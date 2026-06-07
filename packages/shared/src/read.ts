@@ -217,3 +217,42 @@ export const READING_CHIPS_BY_LANGUAGE: Record<"ES" | "DE" | "TR", readonly stri
   DE: ["a short café dialogue", "news: a city festival", "a short story about a cat", "an email to a friend"],
   TR: ["a short café dialogue", "news: a city festival", "a short story about a cat", "an email to a friend"],
 };
+
+// ---------------------------------------------------------------------------
+// Reading ideas / categories (generate composer + library tags)
+// ---------------------------------------------------------------------------
+
+/** Genre of a generated reading text — drives the colored category tag. */
+export enum ReadingCategory {
+  STORY = "story",
+  NEWS = "news",
+  DIALOGUE = "dialogue",
+  EMAIL = "email",
+  HOWTO = "how-to",
+  DAILY = "daily",
+}
+
+export type ReadingIdea = {
+  category: ReadingCategory;
+  /** The prompt text inserted into the composer. */
+  prompt: string;
+  /** Short descriptor shown under the prompt on a card. */
+  descriptor: string;
+};
+
+/** Fixed idea set shown as composer chips and empty-state "popular starts". */
+export const READING_IDEAS: readonly ReadingIdea[] = [
+  { category: ReadingCategory.DIALOGUE, prompt: "a short café conversation", descriptor: "two friends, present tense" },
+  { category: ReadingCategory.NEWS, prompt: "news: a small-town light festival", descriptor: "reportage, past tense" },
+  { category: ReadingCategory.STORY, prompt: "a short story about a cat that came back", descriptor: "narrative, past tenses" },
+  { category: ReadingCategory.EMAIL, prompt: "an email to a friend about a trip", descriptor: "informal register" },
+  { category: ReadingCategory.HOWTO, prompt: "a simple recipe from Madrid", descriptor: "imperatives, sequencing" },
+  { category: ReadingCategory.DAILY, prompt: "a morning at the neighborhood market", descriptor: "describing a routine" },
+];
+
+/** Approx word count shown on the segmented length control. */
+export const READING_LENGTH_APPROX = {
+  [ReadingTextLength.SHORT]: 80,
+  [ReadingTextLength.MEDIUM]: 160,
+  [ReadingTextLength.LONG]: 320,
+} as const satisfies Record<ReadingTextLength, number>;
