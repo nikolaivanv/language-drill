@@ -110,6 +110,11 @@ function renderRecentStems(recentStems: readonly string[]): string {
 // prompt (this file's `buildGenerationSystemPrompt`). Drives the Langfuse
 // trace `promptVersion` tag — dashboards cohort old vs. new prompt traces
 // by this string.
+//
+// NOTE: already `2026-06-07` from the earlier same-day vocab_recall hints edit;
+// the sentence-construction section added later the same day shares this cohort
+// tag (the format is date-only). Use the `eval:gen` baseline/candidate arms —
+// not promptVersion — to A/B the SC fix.
 export const GENERATION_PROMPT_VERSION = "generate@2026-06-07";
 
 /**
@@ -130,6 +135,44 @@ function renderPriorPoolSection(
       ? "## Already in the pool — do NOT propose any of these target words"
       : "## Already in the pool — do NOT propose any exercise whose surface matches these";
   return `${heading}\n\n${bullets}\n\n`;
+}
+
+/**
+ * Sentence-construction-only guidance block. Returns "" for every other type so
+ * cloze/translation/vocab prompts stay byte-identical to the pre-2026-06-07
+ * template (preserving their Anthropic cache prefix and Langfuse cohort). For a
+ * sentence_construction cell it returns a section ending in `\n\n` so the
+ * template's `{{sentenceConstructionSection}}## Output` splices cleanly.
+ *
+ * Added 2026-06-07 to fix three failure modes seen in the first production SC
+ * run: (1) `grammar_target` mode produced open-ended "write a sentence using X"
+ * prompts the validator flagged `ambiguous` (55% approval vs ~85% for the other
+ * modes); (2) model answers propagated the exact `commonErrors` the point warns
+ * against (e.g. TR `diye söyledi`, a non-reporting verb after `diye`); (3)
+ * instructions spoiled the answer. The values are baked in here (not left as
+ * `{{vars}}`) because this whole string is itself one flat template var — see
+ * `renderPriorPoolSection` for the same pattern.
+ */
+function renderSentenceConstructionSection(
+  exerciseType: ExerciseType,
+  language: string,
+  cefrLevel: string,
+  grammarPointName: string,
+): string {
+  if (exerciseType !== ExerciseType.SENTENCE_CONSTRUCTION) return "";
+  return `## Sentence-construction specifics (this exercise type)
+
+This is a sentence_construction exercise: there is NO blank — the learner writes one complete ${language} sentence from a prompt. The blank-granularity, \`glossEn\`, \`correctAnswer\`, and \`acceptableAnswers\` rules above are cloze-only and do not apply here; the **Ambiguous**, **anti-leak**, **Stay on target**, vocabulary-band, and **Safe, neutral topics** rules DO apply, adapted as follows:
+
+- **Constrain the answer space — no open "write a sentence using X".** A bare invitation like "Write a sentence using ${grammarPointName}" admits unboundedly many correct answers and cannot be scored — the validator flags it \`ambiguous\`. The \`prompt\` MUST pin the task down so a competent learner lands in a small, predictable set of sentences: require specific keywords, give a concrete one-line scenario to react to, or specify a target structure *together with* a situation. If the only constraint is "use ${grammarPointName}", the draft is too open — add a scenario or required words before submitting.
+- **Model answers must be correct, natural, and error-free.** Every entry in \`modelAnswers\` (provide 2–3) MUST be fully grammatical ${language} at CEFR ${cefrLevel}, genuinely exercise ${grammarPointName}, satisfy the prompt's own constraints (use every required keyword / fit the scenario / use the named structure), and MUST NOT exhibit any of the **Common learner errors** listed above. A model answer is the target the learner aims at — never ship one that models the very mistake the grammar point warns against. If you cannot write 2–3 clean answers, simplify the \`prompt\` until you can.
+- **Do not spoil the answer.** \`instructions\` and \`prompt\` may name the structure being practiced and may cite an example auxiliary/reporting word, but MUST NOT hand the learner a finished, ready-to-copy inflected form of the target. Naming the rule type is fine; writing out the conjugated answer is not.
+- **Per-mode framing** (the user message selects one mode per draft):
+  - \`keywords\`: put 3–4 everyday content words at or below CEFR ${cefrLevel} in \`keywords\`; the learner must use ALL of them in one sentence and the combination must force ${grammarPointName}. Every model answer must actually use every keyword.
+  - \`situation\`: give a concrete one-line scenario in \`prompt\` (something said, a problem to react to) so the natural response exercises ${grammarPointName}; leave \`keywords\` empty.
+  - \`grammar_target\`: name the structure in \`targetStructure\` AND give a concrete mini-scenario or seed content in \`prompt\`. The structure label alone is NOT enough to constrain the answer — this mode is the most prone to over-open prompts, so always anchor it to a situation.
+
+`;
 }
 
 /**
@@ -192,7 +235,7 @@ export const GENERATION_SYSTEM_PROMPT_TEMPLATE = `You are an expert language exe
 - One exercise per tool call. Do not batch multiple inside one tool call.
 - You MUST use the provided tool. Do not return plain text.
 
-## Output
+{{sentenceConstructionSection}}## Output
 
 Use the {{toolName}} tool with all required fields populated.`;
 
@@ -220,6 +263,12 @@ export function computeGenerationPromptVars(
     commonErrorsBullets: renderBulletList(grammarPoint.commonErrors),
     cefrDescriptors: CEFR_DESCRIPTOR_BULLETS,
     priorPoolSection: renderPriorPoolSection(exerciseType, priorPoolSurfaces),
+    sentenceConstructionSection: renderSentenceConstructionSection(
+      exerciseType,
+      language,
+      cefrLevel,
+      grammarPoint.name,
+    ),
     recentStemsBlock: renderRecentStems(recentStems),
     toolName: TOOL_NAME_BY_TYPE[exerciseType],
   };
