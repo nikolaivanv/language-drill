@@ -617,14 +617,16 @@ export const SEED_KEY_TO_GRAMMAR_POINT: Readonly<Record<string, string>> = {
   // 'de-vocab-a2-1': 'de-a2-housing-vocab',
   // 'de-vocab-b1-1': 'de-b1-environment-vocab',
   // 'de-vocab-b2-1': 'de-b2-academic-noun-vocab',
-  // Turkish — di'li past + questions relocated to A1 (2026-05-28); vocab umbrella stays at A2
+  // Turkish — di'li past + questions relocated to A1 (2026-05-28). The A2 vocab
+  // seed (kütüphane = library) maps to the city-shopping themed umbrella after
+  // the 2026-06-07 everyday-vocab split.
   'tr-cloze-a1-1': 'tr-a1-dili-past',
   // 'tr-cloze-b1-1': 'tr-b1-causal-conjunctions',
   // 'tr-cloze-b2-1': 'tr-b2-passive-with-nominalization',
   'tr-translation-a1-1': 'tr-a1-questions',
   // 'tr-translation-b1-1': 'tr-b1-keske-optative',
   // 'tr-translation-b2-1': 'tr-b2-relative-clause-participles',
-  'tr-vocab-a2-1': 'tr-a2-everyday-vocab',
+  'tr-vocab-a2-1': 'tr-a2-vocab-city-shopping',
   // 'tr-vocab-b1-1': 'tr-b1-abstract-noun-vocab',
   // 'tr-vocab-b2-1': 'tr-b2-academic-noun-vocab',
 };
