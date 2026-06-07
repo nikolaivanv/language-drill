@@ -55,7 +55,7 @@ describe('resolveCellTarget', () => {
     expect(resolveCellTarget(makeCell(ExerciseType.CLOZE, CefrLevel.A1))).toBe(20);
     expect(resolveCellTarget(makeCell(ExerciseType.CLOZE, CefrLevel.A2))).toBe(30);
     expect(resolveCellTarget(makeCell(ExerciseType.TRANSLATION, CefrLevel.A1))).toBe(20);
-    expect(resolveCellTarget(makeCell(ExerciseType.VOCAB_RECALL, CefrLevel.A1))).toBe(60);
+    expect(resolveCellTarget(makeCell(ExerciseType.VOCAB_RECALL, CefrLevel.A1))).toBe(10);
   });
 
   it('falls back to TARGET_PER_CELL when the table leaves a (type, level) unset', () => {
@@ -81,10 +81,11 @@ describe('resolveCellTarget', () => {
     ).toBeLessThan(TARGET_PER_CELL);
   });
 
-  it('sets vocab_recall above the global default to reflect N×distinctWords (R6.6)', () => {
-    expect(
-      resolveCellTarget(makeCell(ExerciseType.VOCAB_RECALL, CefrLevel.B1)),
-    ).toBeGreaterThan(TARGET_PER_CELL);
+  it('caps vocab_recall low (10) at every level — token-efficiency over a single-umbrella surface ceiling', () => {
+    expect(resolveCellTarget(makeCell(ExerciseType.VOCAB_RECALL, CefrLevel.A1))).toBe(10);
+    expect(resolveCellTarget(makeCell(ExerciseType.VOCAB_RECALL, CefrLevel.A2))).toBe(10);
+    expect(resolveCellTarget(makeCell(ExerciseType.VOCAB_RECALL, CefrLevel.B1))).toBe(10);
+    expect(resolveCellTarget(makeCell(ExerciseType.VOCAB_RECALL, CefrLevel.B2))).toBe(10);
   });
 
   it('caps every active sentence_construction level at the pilot brake (2026-06-07)', () => {

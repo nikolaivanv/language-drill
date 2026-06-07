@@ -198,11 +198,11 @@ describe('GET /admin/pool-status', () => {
       // Idle cells (0 depletion) floor at the demand tier of 50...
       expect(item.targetSize).toBe(50);
       // ...but the generation target is the per-cell R3 value (cloze/translation
-      // 20/30 at A1/A2 → 50 at B1/B2; vocab_recall 60/75; sentence_construction
-      // throttled to the 25 pilot brake at A2/B1/B2 per 2026-06-07), never the
-      // flat 50 unless the table falls through. Assert it resolved to a known
-      // target.
-      expect([20, 25, 30, 50, 60, 75]).toContain(item.generationTarget);
+      // 20/30 at A1/A2 → 50 at B1/B2; vocab_recall capped at 10 every level;
+      // sentence_construction throttled to the 25 pilot brake at A2/B1/B2 per
+      // 2026-06-07), never the flat 50 unless the table falls through. Assert it
+      // resolved to a known target.
+      expect([10, 20, 25, 30, 50]).toContain(item.generationTarget);
       expect(['ES', 'DE', 'TR']).toContain(item.language);
       expect(['A1', 'A2', 'B1', 'B2']).toContain(item.level);
       expect(['cloze', 'translation', 'vocab_recall', 'sentence_construction']).toContain(item.type);
@@ -399,7 +399,7 @@ describe('GET /admin/generation-stats', () => {
           // 7 approved + 0 flagged + 13 rejected (10 of which were dedup).
           // Old formula: 7 / (7+0+13) = 0.35
           // New formula (dedup backed out): 7 / (7+0+3) = 0.7
-          cellKey: 'tr:a2:vocab_recall:tr-a2-everyday-vocab',
+          cellKey: 'tr:a2:vocab_recall:tr-a2-vocab-city-shopping',
           approved: 7,
           flagged: 0,
           rejected: 13,

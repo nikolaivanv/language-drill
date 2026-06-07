@@ -220,8 +220,9 @@ function cellsWithGlobalTarget(): Cell[] {
  * target** (R3 — so each is `skip-target-reached`), EXCEPT the cells whose
  * `cellKey` is in `undertargetKeys`, which get `approved=currentForUndertarget`.
  * Filling to `resolveCellTarget(cell)` (not a flat 50) is required now that
- * targets vary by `(exerciseType, cefrLevel)` — a flat 50 would leave
- * vocab_recall cells (target 60–75) under their target and spuriously enqueued.
+ * targets vary by `(exerciseType, cefrLevel)` — a flat 50 would leave some
+ * cells off their resolved target and spuriously enqueue them (or, for
+ * vocab_recall at target 10, fill them past it).
  *
  * Row shape MUST match `buildCellKeyFromRow` byte-for-byte: that helper feeds
  * `language` / `difficulty` / `type` / `grammarPointKey` straight through

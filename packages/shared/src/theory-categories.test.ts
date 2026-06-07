@@ -107,6 +107,6 @@ describe("resolveTheoryCategory — key mapping", () => {
 
   it("returns 'other' for a vocab-kind key (intentionally unmapped)", () => {
     expect(resolveTheoryCategory("es-b1-environment-vocab")).toBe("other");
-    expect(resolveTheoryCategory("tr-a2-everyday-vocab")).toBe("other");
+    expect(resolveTheoryCategory("tr-a2-vocab-city-shopping")).toBe("other");
   });
 });

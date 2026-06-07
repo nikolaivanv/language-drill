@@ -238,7 +238,7 @@ describe('per-language counts', () => {
   // currently-active curriculum subset. Restore the original ≥4/≥5/≥6/≥5
   // assertions and vocab.toBe(3) for ES/DE when their A1/A2 entries are
   // uncommented. TR (2026-05-28) is now at full Yedi İklim A1+A2 parity
-  // (26 A1 + 14 A2 grammar + 1 vocab umbrella); B1/B2 remain disabled.
+  // (26 A1 + 14 A2 grammar + 10 themed vocab umbrellas); B1/B2 remain disabled.
 
   it('Spanish meets minimums (B1 + B2 only while A1/A2 are disabled) and has 2 vocab umbrellas', () => {
     const { grammar, vocab } = countsFor(esCurriculum);
@@ -258,13 +258,14 @@ describe('per-language counts', () => {
     expect(vocab).toBe(0);
   });
 
-  it('Turkish is at full Yedi İklim A1 + A2 parity (B1/B2 disabled) and has 2 vocab umbrellas', () => {
+  it('Turkish is at full Yedi İklim A1 + A2 parity (B1/B2 disabled) and has 10 themed vocab umbrellas', () => {
     const { grammar, vocab } = countsFor(trCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(26);
     expect(grammar.A2).toBeGreaterThanOrEqual(14);
     expect(grammar.B1).toBe(0);
     expect(grammar.B2).toBe(0);
-    expect(vocab).toBe(2);
+    // 5 themed A1 + 5 themed A2 umbrellas (2026-06-07 everyday-vocab split).
+    expect(vocab).toBe(10);
   });
 });
 

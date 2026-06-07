@@ -3,7 +3,8 @@ import { CefrLevel, Language } from '@language-drill/shared';
 import type { GrammarPoint } from './types';
 
 // TR curriculum aligned to full Yedi İklim A1+A2 parity (2026-05-28): 26 A1
-// + 14 A2 grammar entries + 2 vocab umbrellas (A1 + A2). B1 + B2 grammar
+// + 14 A2 grammar entries + 10 themed vocab umbrellas (5 A1 + 5 A2; 2026-06-07
+// split of the former single A1/A2 everyday-vocab cells). B1 + B2 grammar
 // entries and B1/B2 vocab umbrellas remain commented out so the prod scheduler does not
 // generate them. To re-enable B1/B2: uncomment the B1/B2 sections below,
 // restore B1/B2 in the destructure, raise TR's B1/B2 floors in
@@ -26,7 +27,7 @@ const { A1, A2 } = CefrLevel;
  * grammar points; the Yedi İklim A1+A2 *parity* (the 26 A1 + 14 A2 count noted
  * in the header above) was aligned earlier, on 2026-05-28.
  */
-export const CURRICULUM_VERSION_TR = '2026-06-06';
+export const CURRICULUM_VERSION_TR = '2026-06-07';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -1258,34 +1259,160 @@ const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   // Vocab umbrellas — kind: 'vocab'
   // ---------------------------------------------------------------------------
+  // Themed A1/A2 umbrellas (2026-06-07). Replaced the single
+  // tr-a1/a2-everyday-vocab cells, which exhausted their realistic distinct-word
+  // surface fast (high dedup-give-up). Splitting one broad cell into ~5 narrow
+  // topics per level gives the generator a fresh semantic slice per cell, so
+  // each fills its (now low, 10) target with little dedup. A1 = concrete
+  // beginner basics; A2 = broader everyday domains.
   {
-    key: 'tr-a1-everyday-vocab',
+    key: 'tr-a1-vocab-family-people',
     kind: 'vocab',
-    name: 'Everyday vocabulary (A1)',
+    name: 'Family & people vocabulary (A1)',
     description:
-      'Core high-frequency Turkish vocabulary for A1: numbers, days, family, food and drink, greetings, and basic everyday objects.',
+      'High-frequency A1 Turkish vocabulary for family members and people: parents, siblings, relatives, and friends.',
     cefrLevel: A1,
     language: TR,
-    examplesPositive: ['su (water)', 'ev (house)', 'anne (mother)'],
-    examplesNegative: ['*ev de', '*su lar'],
+    examplesPositive: ['anne (mother)', 'kardeş (sibling)', 'arkadaş (friend)'],
+    examplesNegative: ['*anne m'],
     commonErrors: [
-      'Detaching case or plural suffixes from the noun (evde, not *ev de).',
-      'Vowel-harmony slips on common suffixes (evde, not *evda).',
+      'Detaching possessive/case suffixes from the noun (annem, not *anne m).',
+      'Confusing kardeş (sibling) with akraba (relative).',
     ],
   },
   {
-    key: 'tr-a2-everyday-vocab',
+    key: 'tr-a1-vocab-food-drink',
     kind: 'vocab',
-    name: 'Everyday vocabulary (A2)',
+    name: 'Food & drink vocabulary (A1)',
     description:
-      'High-frequency Turkish vocabulary covering family, food, daily routines, weather, transport, and basic shopping.',
+      'High-frequency A1 Turkish food and drink vocabulary: staple foods, fruit, vegetables, and everyday drinks.',
+    cefrLevel: A1,
+    language: TR,
+    examplesPositive: ['ekmek (bread)', 'su (water)', 'çay (tea)'],
+    examplesNegative: ['*su yu'],
+    commonErrors: [
+      'Splitting suffixes from the noun (suyu, not *su yu).',
+      'Forgetting the buffer -y- on vowel-final stems (suyu, not *suu).',
+    ],
+  },
+  {
+    key: 'tr-a1-vocab-home-objects',
+    kind: 'vocab',
+    name: 'Home & furniture vocabulary (A1)',
+    description:
+      'High-frequency A1 Turkish vocabulary for the home: rooms, furniture, and common household objects.',
+    cefrLevel: A1,
+    language: TR,
+    examplesPositive: ['ev (house)', 'masa (table)', 'kapı (door)'],
+    examplesNegative: ['*masa da'],
+    commonErrors: [
+      'Detaching the locative suffix (masada, not *masa da).',
+      'Vowel-harmony slips on suffixes (kapıda, not *kapide).',
+    ],
+  },
+  {
+    key: 'tr-a1-vocab-transport-places',
+    kind: 'vocab',
+    name: 'Transport & places vocabulary (A1)',
+    description:
+      'High-frequency A1 Turkish vocabulary for transport and everyday places: vehicles, stops, and common destinations.',
+    cefrLevel: A1,
+    language: TR,
+    examplesPositive: ['otobüs (bus)', 'okul (school)', 'durak (stop)'],
+    examplesNegative: ['*okul a'],
+    commonErrors: [
+      'Detaching the dative suffix (okula, not *okul a).',
+      'Confusing durak (stop) with durmak (to stop).',
+    ],
+  },
+  {
+    key: 'tr-a1-vocab-weather-clothing',
+    kind: 'vocab',
+    name: 'Weather & clothing vocabulary (A1)',
+    description:
+      'High-frequency A1 Turkish vocabulary for weather, seasons, and clothing items.',
+    cefrLevel: A1,
+    language: TR,
+    examplesPositive: ['yağmur (rain)', 'kar (snow)', 'şapka (hat)'],
+    examplesNegative: ['*yağmur lu'],
+    commonErrors: [
+      'Detaching derivational suffixes (yağmurlu, not *yağmur lu).',
+      'Confusing kar (snow) with kâr (profit).',
+    ],
+  },
+  {
+    key: 'tr-a2-vocab-work-school',
+    kind: 'vocab',
+    name: 'Work & school vocabulary (A2)',
+    description:
+      'A2 Turkish vocabulary for work, study, and professions: jobs, workplaces, school subjects, and study activities.',
     cefrLevel: A2,
     language: TR,
-    examplesPositive: ['kahvaltı (breakfast)', 'durak (stop)'],
-    examplesNegative: ['*kahve altı'],
+    examplesPositive: ['iş (work)', 'öğretmen (teacher)', 'toplantı (meeting)'],
+    examplesNegative: ['*iş çi'],
     commonErrors: [
-      'Splitting compound nouns into separate words.',
-      'Confusing aile (family) with akraba (relatives).',
+      'Detaching the -CI agentive suffix (işçi, not *iş çi).',
+      'Confusing iş (work/job) with meslek (profession).',
+    ],
+  },
+  {
+    key: 'tr-a2-vocab-city-shopping',
+    kind: 'vocab',
+    name: 'City & shopping vocabulary (A2)',
+    description:
+      'A2 Turkish vocabulary for the city and shopping: public buildings, services, money, and shopping activities.',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: ['market (market)', 'banka (bank)', 'kütüphane (library)'],
+    examplesNegative: ['*market ten'],
+    commonErrors: [
+      'Detaching the ablative suffix (marketten, not *market ten).',
+      'Confusing fiyat (price) with ücret (fee).',
+    ],
+  },
+  {
+    key: 'tr-a2-vocab-health-body',
+    kind: 'vocab',
+    name: 'Health & body vocabulary (A2)',
+    description:
+      'A2 Turkish vocabulary for the body, health, and feelings: body parts, symptoms, and common physical states.',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: ['sağlık (health)', 'hasta (sick)', 'yorgun (tired)'],
+    examplesNegative: ['*hasta yım'],
+    commonErrors: [
+      'Detaching the copular suffix (hastayım, not *hasta yım).',
+      'Forgetting the buffer -y- after vowel-final stems (hastayım, not *hastaım).',
+    ],
+  },
+  {
+    key: 'tr-a2-vocab-travel-nature',
+    kind: 'vocab',
+    name: 'Travel & nature vocabulary (A2)',
+    description:
+      'A2 Turkish vocabulary for travel, geography, and nature: landscapes, the outdoors, and journey words.',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: ['deniz (sea)', 'dağ (mountain)', 'yolculuk (journey)'],
+    examplesNegative: ['*deniz e'],
+    commonErrors: [
+      'Detaching the dative suffix (denize, not *deniz e).',
+      'Confusing yol (road) with yolculuk (journey).',
+    ],
+  },
+  {
+    key: 'tr-a2-vocab-time-daily-routine',
+    kind: 'vocab',
+    name: 'Time & daily routine vocabulary (A2)',
+    description:
+      'A2 Turkish vocabulary for time and daily routine: parts of the day, days and weeks, and frequency words.',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: ['sabah (morning)', 'hafta (week)', 'genellikle (usually)'],
+    examplesNegative: ['*sabah ları'],
+    commonErrors: [
+      'Detaching plural/case suffixes (sabahları, not *sabah ları).',
+      'Confusing saat (hour/clock) with zaman (time).',
     ],
   },
   /*
