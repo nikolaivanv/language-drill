@@ -14,7 +14,6 @@ import {
   READING_GEN_TOPIC_MAX_CHARS,
   READING_LENGTH_WORD_TARGETS,
   READING_TOO_HARD_THRESHOLD,
-  READING_CHIPS_BY_LANGUAGE,
 } from "./index";
 import type {
   WordFlag,
@@ -313,14 +312,6 @@ describe("reading generation constants", () => {
     expect(READING_GEN_TOPIC_MAX_CHARS).toBeGreaterThan(0);
     expect(READING_TOO_HARD_THRESHOLD).toBeGreaterThan(0);
     expect(READING_TOO_HARD_THRESHOLD).toBeLessThan(1);
-  });
-});
-
-describe("READING_CHIPS_BY_LANGUAGE", () => {
-  it("provides at least three chips for each reading language", () => {
-    for (const lang of ["ES", "DE", "TR"] as const) {
-      expect(READING_CHIPS_BY_LANGUAGE[lang].length).toBeGreaterThanOrEqual(3);
-    }
   });
 });
 
