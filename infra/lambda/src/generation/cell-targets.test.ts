@@ -9,7 +9,11 @@ import { CefrLevel, ExerciseType, Language } from '@language-drill/shared';
 import { describe, expect, it } from 'vitest';
 import type { Cell, CurriculumCefrLevel } from '@language-drill/db';
 
-import { CELL_TARGET_DEFAULTS, resolveCellTarget } from './cell-targets';
+import {
+  CELL_TARGET_DEFAULTS,
+  SENTENCE_CONSTRUCTION_PILOT_TARGET,
+  resolveCellTarget,
+} from './cell-targets';
 import { TARGET_PER_CELL } from './scheduler-decision';
 
 function makeCell(
@@ -83,8 +87,24 @@ describe('resolveCellTarget', () => {
     ).toBeGreaterThan(TARGET_PER_CELL);
   });
 
-  it('uses the constrained A1/A2 defaults for sentence_construction', () => {
-    expect(resolveCellTarget(makeCell(ExerciseType.SENTENCE_CONSTRUCTION, CefrLevel.A2))).toBe(30);
-    expect(resolveCellTarget(makeCell(ExerciseType.SENTENCE_CONSTRUCTION, CefrLevel.B1))).toBe(TARGET_PER_CELL);
+  it('caps every active sentence_construction level at the pilot brake (2026-06-07)', () => {
+    // TEMPORARY: the SC prompt fix is unconfirmed, so A2/B1/B2 are throttled to
+    // SENTENCE_CONSTRUCTION_PILOT_TARGET instead of 30 (A2) / 50 (B1/B2 fallback).
+    // When the fix is validated via eval:gen and the brake is lifted, this test
+    // reverts to A2=30 and B1=TARGET_PER_CELL.
+    expect(SENTENCE_CONSTRUCTION_PILOT_TARGET).toBeLessThan(TARGET_PER_CELL);
+    expect(
+      resolveCellTarget(makeCell(ExerciseType.SENTENCE_CONSTRUCTION, CefrLevel.A2)),
+    ).toBe(SENTENCE_CONSTRUCTION_PILOT_TARGET);
+    expect(
+      resolveCellTarget(makeCell(ExerciseType.SENTENCE_CONSTRUCTION, CefrLevel.B1)),
+    ).toBe(SENTENCE_CONSTRUCTION_PILOT_TARGET);
+    expect(
+      resolveCellTarget(makeCell(ExerciseType.SENTENCE_CONSTRUCTION, CefrLevel.B2)),
+    ).toBe(SENTENCE_CONSTRUCTION_PILOT_TARGET);
+    // A1 SC (no active cells today) keeps its narrow default.
+    expect(
+      resolveCellTarget(makeCell(ExerciseType.SENTENCE_CONSTRUCTION, CefrLevel.A1)),
+    ).toBe(20);
   });
 });

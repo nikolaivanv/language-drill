@@ -217,6 +217,42 @@ describe("buildGenerationSystemPrompt", () => {
     );
   });
 
+  it("adds the sentence-construction section ONLY for sentence_construction, with the anti-open / model-answer / per-mode rules", async () => {
+    // 2026-06-07 fix for the first production SC run: open `grammar_target`
+    // prompts (ambiguous), model answers propagating commonErrors, spoiled
+    // instructions. The section must (a) appear for SC, (b) carry each of the
+    // three guardrails, and (c) be absent for every other type so their cache
+    // prefix / Langfuse cohort is unchanged.
+    const sc = await buildGenerationSystemPrompt(
+      { ...baseInputs, exerciseType: ExerciseType.SENTENCE_CONSTRUCTION },
+      [],
+    );
+    expect(sc).toContain("## Sentence-construction specifics");
+    expect(sc).toContain('no open "write a sentence using X"');
+    expect(sc).toContain("Model answers must be correct, natural, and error-free");
+    expect(sc).toContain("MUST NOT exhibit any of the **Common learner errors**");
+    expect(sc).toContain("Do not spoil the answer");
+    // grammar_target — the worst-performing mode — must be told to anchor to a
+    // scenario, not ship the structure label alone.
+    expect(sc).toContain("`grammar_target`");
+    expect(sc).toContain("structure label alone is NOT enough");
+    // The grammar-point name is baked in (it is itself one flat template var).
+    expect(sc).toContain(grammarPoint.name);
+
+    // Absent for the other three types.
+    for (const type of [
+      ExerciseType.CLOZE,
+      ExerciseType.TRANSLATION,
+      ExerciseType.VOCAB_RECALL,
+    ]) {
+      const other = await buildGenerationSystemPrompt(
+        { ...baseInputs, exerciseType: type },
+        [],
+      );
+      expect(other).not.toContain("## Sentence-construction specifics");
+    }
+  });
+
   it("instructs Claude to use the matching tool name", async () => {
     const cloze = await buildGenerationSystemPrompt(baseInputs, []);
     expect(cloze).toContain("submit_cloze_exercise");
@@ -408,6 +444,15 @@ describe("GENERATION_SYSTEM_PROMPT_TEMPLATE byte parity", () => {
     await assertParity(
       { ...baseInputs, exerciseType: ExerciseType.VOCAB_RECALL },
       ["one stem"],
+    );
+  });
+
+  it("sentence_construction (the SC-specific section is spliced before ## Output)", async () => {
+    // Locks byte parity through the non-empty `{{sentenceConstructionSection}}`
+    // branch so the template and the in-code builder cannot diverge on SC cells.
+    await assertParity(
+      { ...baseInputs, exerciseType: ExerciseType.SENTENCE_CONSTRUCTION },
+      ["primera frase"],
     );
   });
 });
