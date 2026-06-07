@@ -8,7 +8,7 @@ import { Hono } from 'hono';
 //   - db.select().from(generatedReadingTexts).where().limit()   (cache lookup)
 //   - db.update().set().where()                                 (hit_count bump, HIT only)
 //   - db.select({count}).from(usageEvents).where()              (24h usage count, MISS only)
-//   - db.insert(generatedReadingTexts).values().onConflictDoNothing()  (MISS only)
+//   - db.insert(generatedReadingTexts).values().onConflictDoUpdate()   (MISS only)
 //   - db.insert(usageEvents).values()                           (MISS only)
 //
 // We distinguish the two SELECT shapes by call order: the FIRST select is the
@@ -208,9 +208,10 @@ describe('POST /read/generate', () => {
       difficultyScore: 0.08,
       prompt: 'A day at the market',
     });
-    // onConflictDoNothing is used by both the auth user-upsert and the passage
-    // insert; the passage write must be one of them.
+    // Auth middleware still uses onConflictDoNothing for the user upsert;
+    // the passage insert now uses onConflictDoUpdate (idempotent on cacheKey).
     expect(mockOnConflictDoNothing).toHaveBeenCalled();
+    expect(mockOnConflictDoUpdate).toHaveBeenCalledTimes(1);
   });
 
   it('cache HIT → 200, fromCache true, no generation, no usage insert', async () => {
@@ -336,6 +337,9 @@ describe('POST /read/generate', () => {
 
     // The passage was upserted (onConflictDoUpdate called, not onConflictDoNothing only).
     expect(mockOnConflictDoUpdate).toHaveBeenCalledTimes(1);
+
+    // Global-capacity check must run on the noCache path (it's a miss that generates).
+    expect(mockCheckGlobalCapacity).toHaveBeenCalled();
   });
 
   it('over-long topic → 400 VALIDATION_ERROR, no db or AI calls', async () => {
