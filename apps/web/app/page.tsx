@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { auth } from '@clerk/nextjs/server';
 import { DrillLanding } from './_landing/drill-landing';
+import { DrillLandingMobile } from './_landing/drill-landing-mobile';
 
 export const metadata: Metadata = {
   title: 'drill — read, save, produce',
@@ -14,5 +15,17 @@ export const metadata: Metadata = {
 export default async function LandingPage() {
   const { userId } = await auth();
   if (userId) redirect('/home');
-  return <DrillLanding />;
+  // Both trees are server-rendered; landing.css's .landing-desktop/.landing-mobile
+  // display toggle (at 760px) shows exactly one, so first paint is correct on
+  // either viewport without a hydration flash.
+  return (
+    <>
+      <div className="landing-desktop">
+        <DrillLanding />
+      </div>
+      <div className="landing-mobile">
+        <DrillLandingMobile />
+      </div>
+    </>
+  );
 }
