@@ -12,7 +12,7 @@ import {
   type ExerciseContent,
   ExerciseType,
   type GrammarPoint,
-  type Language,
+  Language,
 } from "@language-drill/shared";
 
 import { CEFR_LEVEL_DESCRIPTORS } from "./prompts.js";
@@ -111,11 +111,11 @@ function renderRecentStems(recentStems: readonly string[]): string {
 // trace `promptVersion` tag — dashboards cohort old vs. new prompt traces
 // by this string.
 //
-// NOTE: already `2026-06-07` from the earlier same-day vocab_recall hints edit;
-// the sentence-construction section added later the same day shares this cohort
-// tag (the format is date-only). Use the `eval:gen` baseline/candidate arms —
-// not promptVersion — to A/B the SC fix.
-export const GENERATION_PROMPT_VERSION = "generate@2026-06-07";
+// NOTE: 2026-06-12 bump covers the grammatical-person rotation added to the
+// per-draft USER prompt (`renderPersonBlock`) — the registered system-prompt
+// template is byte-identical to generate@2026-06-07, so no Langfuse push is
+// needed; the bump only separates trace cohorts before/after rotation.
+export const GENERATION_PROMPT_VERSION = "generate@2026-06-12";
 
 /**
  * Wording differs per type so Claude reads it the way the cell is constrained:
@@ -301,6 +301,86 @@ export async function buildGenerationSystemPrompt(
 }
 
 // ---------------------------------------------------------------------------
+// Grammatical-person rotation (R: person coverage, 2026-06-12)
+// ---------------------------------------------------------------------------
+// A 2026-06-12 pool audit found every TR tense cell ≥90% third-person
+// singular (negation/aorist/mış: 100%), so the "plus personal endings" half
+// of those grammar points was never tested — 3sg is the unmarked, suffix-light
+// form the model defaults to. For grammar points flagged
+// `personRotation: true` in the curriculum, each draft's USER prompt pins a
+// target person, rotated deterministically by ordinal so a batch covers the
+// paradigm. User-prompt-only by design: the cached system prompt stays
+// byte-identical across the batch (same rationale as `seedWord`, R5.4).
+
+/**
+ * Per-language person rotation lists. The label is injected verbatim into the
+ * user prompt; the parenthesised pronouns anchor the model to the right cell
+ * of the paradigm.
+ *
+ * ES deliberately omits `vosotros`: the pool targets pan-American Spanish
+ * (2pl is rendered by `ustedes`, morphologically identical to 3pl). Add a
+ * sixth entry here if a peninsular-Spanish track ever ships.
+ */
+export const PERSON_ROTATION_BY_LANGUAGE: Record<
+  Exclude<Language, Language.EN>,
+  readonly string[]
+> = {
+  [Language.TR]: [
+    "1sg (ben)",
+    "2sg (sen)",
+    "3sg (o)",
+    "1pl (biz)",
+    "2pl (siz)",
+    "3pl (onlar)",
+  ],
+  [Language.ES]: [
+    "1sg (yo)",
+    "2sg (tú)",
+    "3sg (él/ella/usted)",
+    "1pl (nosotros/nosotras)",
+    "3pl (ellos/ellas/ustedes)",
+  ],
+  [Language.DE]: [
+    "1sg (ich)",
+    "2sg (du)",
+    "3sg (er/sie/es)",
+    "1pl (wir)",
+    "2pl (ihr)",
+    "3pl (sie/Sie)",
+  ],
+};
+
+/** Deterministic person rotation so a batch covers the whole paradigm. */
+export function personForOrdinal(
+  language: Exclude<Language, Language.EN>,
+  ordinal: number,
+): string {
+  const persons = PERSON_ROTATION_BY_LANGUAGE[language];
+  return persons[ordinal % persons.length];
+}
+
+/**
+ * Person directive for the per-draft user prompt. Empty string when the
+ * grammar point is not flagged for rotation. Like the seed-word block, the
+ * constraint is LOOSE at the edges (escape hatch for person/point conflicts)
+ * so rotation doesn't trade 3sg over-concentration for quality rejections —
+ * but unlike the seed word, the fallback is the *nearest* person, not a free
+ * choice, so the batch-level distribution survives.
+ */
+function renderPersonBlock(
+  inputs: GenerationPromptInputs,
+  ordinal: number,
+): string {
+  if (!inputs.grammarPoint.personRotation) return "";
+  const person = personForOrdinal(inputs.language, ordinal);
+  return (
+    `Target grammatical person for this draft: ${person}. ` +
+    `The form the learner must produce MUST be marked for this person, and the visible sentence/context MUST make the person unambiguously recoverable (overt subject pronoun, possessor, vocative, or unambiguous context) WITHOUT revealing the conjugated form itself. ` +
+    `If ${inputs.grammarPoint.name} cannot naturally express this person, use the closest natural person instead.\n\n`
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Sentence-construction mode rotation
 // ---------------------------------------------------------------------------
 
@@ -344,11 +424,12 @@ export function buildGenerationUserPrompt(
     inputs.exerciseType === ExerciseType.SENTENCE_CONSTRUCTION
       ? `Use prompt mode: ${sentenceConstructionModeForOrdinal(ordinal)}.\n\n`
       : "";
+  const personBlock = renderPersonBlock(inputs, ordinal);
   return `Produce exercise #${ordinal + 1}.
 
 Topic domain: ${domain}
 
-${modeBlock}${seedBlock}Use the ${toolName} tool.`;
+${modeBlock}${personBlock}${seedBlock}Use the ${toolName} tool.`;
 }
 
 // ---------------------------------------------------------------------------

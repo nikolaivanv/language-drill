@@ -83,4 +83,16 @@ export type GrammarPoint = Readonly<{
    * `kind: 'grammar'` entries (enforced by the curriculum invariant).
    */
   sentenceConstructionSuitable?: boolean;
+  /**
+   * Optional opt-in that rotates the targeted grammatical person across the
+   * drafts of a generation batch (1sg → 2sg → 3sg → 1pl → …, per-language
+   * list in `packages/ai/src/generation-prompts.ts`). Set this on points
+   * whose paradigm is person-marked (finite tenses, copular/possessive
+   * person suffixes): without it the generator collapses onto third-person
+   * singular — a 2026-06-12 pool audit found ≥90% 3sg answers in every TR
+   * tense cell, leaving personal endings untested. The rotation directive is
+   * injected into the per-draft USER prompt only (cache-safe). Only valid on
+   * `kind: 'grammar'` entries (enforced by the curriculum invariant).
+   */
+  personRotation?: boolean;
 }>;

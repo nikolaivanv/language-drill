@@ -65,6 +65,7 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-personal-suffixes',
+    personRotation: true,
     kind: 'grammar',
     name: 'Personal (copular) suffixes',
     description:
@@ -147,6 +148,7 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-present-continuous',
+    personRotation: true,
     kind: 'grammar',
     name: 'Present continuous -(I)yor',
     description:
@@ -174,6 +176,7 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-negation',
+    personRotation: true,
     kind: 'grammar',
     name: 'Verbal negation -mA',
     description:
@@ -195,6 +198,7 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-dili-past',
+    personRotation: true,
     kind: 'grammar',
     name: 'Definite past -DI ("dili" past)',
     description:
@@ -221,6 +225,7 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-future',
+    personRotation: true,
     kind: 'grammar',
     name: 'Future -(y)AcAk',
     description:
@@ -304,6 +309,7 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-degil',
+    personRotation: true,
     kind: 'grammar',
     name: 'Nominal negation (değil)',
     description:
@@ -515,6 +521,7 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-possessive-suffixes',
+    personRotation: true,
     kind: 'grammar',
     name: 'Possessive suffixes (İyelik ekleri)',
     description:
@@ -747,6 +754,7 @@ const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   {
     key: 'tr-a2-mis-evidential',
+    personRotation: true,
     kind: 'grammar',
     name: 'Evidential past -mIş',
     description:
@@ -771,6 +779,7 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a2-aorist',
+    personRotation: true,
     kind: 'grammar',
     name: 'Aorist -(I/A)r',
     description:
@@ -799,6 +808,7 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a2-ability-necessity',
+    personRotation: true,
     kind: 'grammar',
     name: 'Ability -(y)Abil and necessity -mAlI',
     description:
@@ -1136,6 +1146,7 @@ const trCurriculum: readonly GrammarPoint[] = [
   // relocated to A2 / A1; do not restore them here.
   {
     key: 'tr-b1-conditionals-sa',
+    personRotation: true,
     kind: 'grammar',
     name: 'Conditional -sA',
     description:
@@ -1151,6 +1162,7 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-b1-keske-optative',
+    personRotation: true,
     kind: 'grammar',
     name: '"Keşke" + past for regret and wish',
     description:

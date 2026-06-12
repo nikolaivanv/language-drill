@@ -18,6 +18,8 @@ import {
   MAX_RECENT_STEMS_IN_PROMPT,
   buildGenerationSystemPrompt,
   buildGenerationUserPrompt,
+  PERSON_ROTATION_BY_LANGUAGE,
+  personForOrdinal,
   canonicalSurface,
   capPriorPoolSurfaces,
   computeGenerationPromptVars,
@@ -202,9 +204,10 @@ describe("buildGenerationSystemPrompt", () => {
     // R1.7 / R2.6 / R7.4 — the coordinated prompt edit must ship a
     // `generate@YYYY-MM-DD` version so Langfuse cohorts old vs new traces.
     expect(GENERATION_PROMPT_VERSION).toMatch(/^generate@\d{4}-\d{2}-\d{2}$/);
-    // Bumped for the vocab_recall hints anti-leak rule (eval:gen showed the
-    // hints field was the dominant contextSpoilsAnswer trigger for vocab).
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-06-07");
+    // Bumped for the grammatical-person rotation in the per-draft user
+    // prompt (pool audit: TR tense cells were ≥90% 3sg). The cached system
+    // template is byte-identical to generate@2026-06-07 — no Langfuse push.
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-06-12");
     // Tasks 7–9: pin the new guardrail phrases in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "every content word MUST be high-frequency everyday vocabulary at or below CEFR {{cefrLevel}}",
@@ -713,6 +716,78 @@ describe("buildGenerationUserPrompt — sentence_construction", () => {
     const cloze = { ...inputs, exerciseType: ExerciseType.CLOZE };
     const msg = buildGenerationUserPrompt(cloze as never, 0, null);
     expect(msg).not.toContain("prompt mode:");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Grammatical-person rotation
+// ---------------------------------------------------------------------------
+
+describe("personForOrdinal", () => {
+  it("cycles the TR six-person paradigm and wraps", () => {
+    expect(personForOrdinal(Language.TR, 0)).toBe("1sg (ben)");
+    expect(personForOrdinal(Language.TR, 1)).toBe("2sg (sen)");
+    expect(personForOrdinal(Language.TR, 5)).toBe("3pl (onlar)");
+    expect(personForOrdinal(Language.TR, 6)).toBe("1sg (ben)");
+  });
+
+  it("ES list omits vosotros (pan-American 2pl = ustedes)", () => {
+    const es = PERSON_ROTATION_BY_LANGUAGE[Language.ES];
+    expect(es).toHaveLength(5);
+    expect(es.join(" ")).not.toContain("vosotros");
+    expect(es).toContain("3pl (ellos/ellas/ustedes)");
+  });
+
+  it("a full cycle covers every person exactly once per language", () => {
+    for (const language of [Language.TR, Language.ES, Language.DE] as const) {
+      const persons = PERSON_ROTATION_BY_LANGUAGE[language];
+      const cycle = persons.map((_, i) => personForOrdinal(language, i));
+      expect(new Set(cycle).size).toBe(persons.length);
+    }
+  });
+});
+
+describe("buildGenerationUserPrompt — person rotation", () => {
+  // baseInputs targets es-b1-present-subjunctive, which is flagged
+  // `personRotation: true` in the curriculum.
+  it("pins the ordinal's person for a flagged grammar point", () => {
+    const msg = buildGenerationUserPrompt(baseInputs, 0, null);
+    expect(msg).toContain("Target grammatical person for this draft: 1sg (yo)");
+  });
+
+  it("rotates the person across ordinals", () => {
+    const msg = buildGenerationUserPrompt(baseInputs, 1, null);
+    expect(msg).toContain("Target grammatical person for this draft: 2sg (tú)");
+  });
+
+  it("is deterministic — same ordinal yields identical bytes", () => {
+    expect(buildGenerationUserPrompt(baseInputs, 3, null)).toBe(
+      buildGenerationUserPrompt(baseInputs, 3, null),
+    );
+  });
+
+  it("adds no person line for an unflagged grammar point", () => {
+    const unflagged = getGrammarPoint("es-b1-relative-clauses");
+    if (!unflagged) throw new Error("fixture missing: es-b1-relative-clauses");
+    expect(unflagged.personRotation).toBeUndefined();
+    const msg = buildGenerationUserPrompt(
+      { ...baseInputs, grammarPoint: unflagged },
+      0,
+      null,
+    );
+    expect(msg).not.toContain("Target grammatical person");
+  });
+
+  it("composes with the SC mode block and seed word", () => {
+    const msg = buildGenerationUserPrompt(
+      { ...baseInputs, exerciseType: ExerciseType.SENTENCE_CONSTRUCTION },
+      0,
+      "travel",
+      "viajar",
+    );
+    expect(msg).toContain("prompt mode: keywords");
+    expect(msg).toContain("Target grammatical person for this draft: 1sg (yo)");
+    expect(msg).toContain('Build this exercise around the word "viajar"');
   });
 });
 

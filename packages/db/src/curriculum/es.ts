@@ -29,6 +29,7 @@ const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   {
     key: 'es-a1-present-indicative-regular',
+    personRotation: true,
     kind: 'grammar',
     name: 'Present indicative — regular verbs',
     description:
@@ -44,6 +45,7 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a1-ser-estar-basic',
+    personRotation: true,
     kind: 'grammar',
     name: 'ser vs. estar — basic uses',
     description:
@@ -93,6 +95,7 @@ const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   {
     key: 'es-a2-preterite-regular',
+    personRotation: true,
     kind: 'grammar',
     name: 'Preterite — regular verbs',
     description:
@@ -109,6 +112,7 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-preterite-irregular',
+    personRotation: true,
     kind: 'grammar',
     name: 'Preterite — irregular verbs',
     description:
@@ -126,6 +130,7 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-imperfect',
+    personRotation: true,
     kind: 'grammar',
     name: 'Imperfect tense',
     description:
@@ -142,6 +147,7 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-gustar-type-verbs',
+    personRotation: true,
     kind: 'grammar',
     name: 'gustar-type verbs',
     description:
@@ -158,6 +164,7 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-reflexive-verbs',
+    personRotation: true,
     kind: 'grammar',
     name: 'Reflexive verbs',
     description:
@@ -178,6 +185,7 @@ const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   {
     key: 'es-b1-present-subjunctive',
+    personRotation: true,
     kind: 'grammar',
     name: 'Present subjunctive',
     description:
@@ -197,6 +205,7 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b1-conditional',
+    personRotation: true,
     kind: 'grammar',
     name: 'Conditional simple',
     description:
@@ -285,6 +294,7 @@ const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   {
     key: 'es-b2-past-subjunctive',
+    personRotation: true,
     kind: 'grammar',
     name: 'Past (imperfect) subjunctive',
     description:
@@ -303,6 +313,7 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b2-compound-tenses',
+    personRotation: true,
     kind: 'grammar',
     name: 'Compound tenses with haber',
     description:
@@ -318,6 +329,7 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b2-conditional-perfect',
+    personRotation: true,
     kind: 'grammar',
     name: 'Conditional perfect',
     description:
@@ -337,6 +349,7 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b2-complex-conditionals',
+    personRotation: true,
     kind: 'grammar',
     name: 'Complex conditional sentences',
     description:
