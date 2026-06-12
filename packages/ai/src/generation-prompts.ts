@@ -350,13 +350,39 @@ export const PERSON_ROTATION_BY_LANGUAGE: Record<
   ],
 };
 
+/**
+ * Deterministic per-batch rotation phase, derived from `batchSeed` (djb2
+ * hash). Ordinals restart at 0 for every top-up batch, so without a phase a
+ * cell that tops up by 2–3 drafts per night would generate 1sg/2sg/3sg
+ * forever and starve the paradigm tail (1pl/2pl/3pl). The nightly scheduler's
+ * `batchSeed = scheduled-${YYYY-MM-DD}` varies per run, so the start person
+ * shifts night to night and small batches cover the full cycle in
+ * expectation — while staying deterministic for a given batch (same
+ * batchSeed + ordinal → same person, matching the pipeline's idempotent
+ * draft-ID design). `null`/absent → phase 0 (byte-identical to pre-phase
+ * behaviour for callers that don't thread a seed).
+ */
+export function personRotationPhase(
+  batchSeed: string | null | undefined,
+  cycleLength: number,
+): number {
+  if (!batchSeed || cycleLength <= 0) return 0;
+  let hash = 5381;
+  for (let i = 0; i < batchSeed.length; i++) {
+    hash = ((hash << 5) + hash + batchSeed.charCodeAt(i)) >>> 0;
+  }
+  return hash % cycleLength;
+}
+
 /** Deterministic person rotation so a batch covers the whole paradigm. */
 export function personForOrdinal(
   language: Exclude<Language, Language.EN>,
   ordinal: number,
+  batchSeed: string | null = null,
 ): string {
   const persons = PERSON_ROTATION_BY_LANGUAGE[language];
-  return persons[ordinal % persons.length];
+  const phase = personRotationPhase(batchSeed, persons.length);
+  return persons[(phase + ordinal) % persons.length];
 }
 
 /**
@@ -370,9 +396,10 @@ export function personForOrdinal(
 function renderPersonBlock(
   inputs: GenerationPromptInputs,
   ordinal: number,
+  batchSeed: string | null,
 ): string {
   if (!inputs.grammarPoint.personRotation) return "";
-  const person = personForOrdinal(inputs.language, ordinal);
+  const person = personForOrdinal(inputs.language, ordinal, batchSeed);
   return (
     `Target grammatical person for this draft: ${person}. ` +
     `The form the learner must produce MUST be marked for this person, and the visible sentence/context MUST make the person unambiguously recoverable (overt subject pronoun, possessor, vocative, or unambiguous context) WITHOUT revealing the conjugated form itself. ` +
@@ -410,6 +437,10 @@ export function buildGenerationUserPrompt(
   // across the batch. `null`/absent → unseeded (byte-identical to the prior
   // output, preserving back-compat for existing callers).
   seedWord: string | null = null,
+  // Rotation-phase source for `renderPersonBlock` (see `personRotationPhase`).
+  // Threaded by `generateOneDraft` from `spec.batchSeed`; `null`/absent →
+  // phase 0, byte-identical to the unphased output for existing callers.
+  batchSeed: string | null = null,
 ): string {
   const toolName = TOOL_NAME_BY_TYPE[inputs.exerciseType];
   const domain = topicDomain ?? "mixed";
@@ -424,7 +455,7 @@ export function buildGenerationUserPrompt(
     inputs.exerciseType === ExerciseType.SENTENCE_CONSTRUCTION
       ? `Use prompt mode: ${sentenceConstructionModeForOrdinal(ordinal)}.\n\n`
       : "";
-  const personBlock = renderPersonBlock(inputs, ordinal);
+  const personBlock = renderPersonBlock(inputs, ordinal, batchSeed);
   return `Produce exercise #${ordinal + 1}.
 
 Topic domain: ${domain}

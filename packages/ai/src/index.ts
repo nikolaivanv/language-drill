@@ -94,6 +94,7 @@ export {
   MAX_RECENT_STEMS_IN_PROMPT,
   PERSON_ROTATION_BY_LANGUAGE,
   personForOrdinal,
+  personRotationPhase,
 } from "./generation-prompts.js";
 export type { GenerationPromptInputs } from "./generation-prompts.js";
 

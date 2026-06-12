@@ -200,9 +200,10 @@ describe('GET /admin/pool-status', () => {
       // ...but the generation target is the per-cell R3 value (cloze/translation
       // 20/30 at A1/A2 → 50 at B1/B2; vocab_recall capped at 10 every level;
       // sentence_construction throttled to the 25 pilot brake at A2/B1/B2 per
-      // 2026-06-07), never the flat 50 unless the table falls through. Assert it
-      // resolved to a known target.
-      expect([10, 20, 25, 30, 50]).toContain(item.generationTarget);
+      // 2026-06-07; personRotation cloze/translation cells raised 1.5× per
+      // 2026-06-12 → 30/45 at A1/A2, 75 at B1/B2), never the flat 50 unless
+      // the table falls through. Assert it resolved to a known target.
+      expect([10, 20, 25, 30, 45, 50, 75]).toContain(item.generationTarget);
       expect(['ES', 'DE', 'TR']).toContain(item.language);
       expect(['A1', 'A2', 'B1', 'B2']).toContain(item.level);
       expect(['cloze', 'translation', 'vocab_recall', 'sentence_construction']).toContain(item.type);

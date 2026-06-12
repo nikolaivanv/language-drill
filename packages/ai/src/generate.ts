@@ -759,6 +759,7 @@ export async function generateOneDraft(
     ordinal,
     spec.topicDomain,
     spec.seedWords?.[ordinal] ?? null,
+    spec.batchSeed,
   );
   const tool = GENERATION_TOOL_BY_TYPE[spec.exerciseType];
 

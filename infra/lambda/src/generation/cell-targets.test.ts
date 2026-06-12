@@ -11,6 +11,7 @@ import type { Cell, CurriculumCefrLevel } from '@language-drill/db';
 
 import {
   CELL_TARGET_DEFAULTS,
+  PERSON_ROTATION_TARGET_MULTIPLIER,
   SENTENCE_CONSTRUCTION_PILOT_TARGET,
   resolveCellTarget,
 } from './cell-targets';
@@ -20,6 +21,7 @@ function makeCell(
   exerciseType: ExerciseType,
   cefrLevel: CurriculumCefrLevel,
   targetOverride?: number,
+  personRotation?: boolean,
 ): Cell {
   const grammarPoint = {
     key: 'es-test',
@@ -28,6 +30,7 @@ function makeCell(
     title: 'test',
     summary: 'test',
     ...(targetOverride !== undefined ? { targetOverride } : {}),
+    ...(personRotation !== undefined ? { personRotation } : {}),
   } as unknown as Cell['grammarPoint'];
   return {
     language: Language.ES,
@@ -106,6 +109,42 @@ describe('resolveCellTarget', () => {
     // A1 SC (no active cells today) keeps its narrow default.
     expect(
       resolveCellTarget(makeCell(ExerciseType.SENTENCE_CONSTRUCTION, CefrLevel.A1)),
+    ).toBe(20);
+  });
+
+  it('raises cloze/translation targets 1.5× for personRotation points (2026-06-12)', () => {
+    // Audit-skewed cells were at/near target → skip-target-reached → the
+    // rotation fix never reaches the pool without headroom.
+    expect(PERSON_ROTATION_TARGET_MULTIPLIER).toBe(1.5);
+    expect(
+      resolveCellTarget(makeCell(ExerciseType.CLOZE, CefrLevel.A1, undefined, true)),
+    ).toBe(30); // 20 × 1.5
+    expect(
+      resolveCellTarget(makeCell(ExerciseType.CLOZE, CefrLevel.A2, undefined, true)),
+    ).toBe(45); // 30 × 1.5
+    expect(
+      resolveCellTarget(makeCell(ExerciseType.TRANSLATION, CefrLevel.A1, undefined, true)),
+    ).toBe(30);
+    // Fallback-resolved levels are raised too (50 → 75).
+    expect(
+      resolveCellTarget(makeCell(ExerciseType.CLOZE, CefrLevel.B1, undefined, true)),
+    ).toBe(Math.ceil(TARGET_PER_CELL * PERSON_ROTATION_TARGET_MULTIPLIER));
+  });
+
+  it('does not raise sentence_construction (pilot brake) or override-resolved targets', () => {
+    // SC keeps the 2026-06-07 pilot brake even on a flagged point.
+    expect(
+      resolveCellTarget(
+        makeCell(ExerciseType.SENTENCE_CONSTRUCTION, CefrLevel.A2, undefined, true),
+      ),
+    ).toBe(SENTENCE_CONSTRUCTION_PILOT_TARGET);
+    // An explicit targetOverride marks a supply-limited point — respected as-is.
+    expect(
+      resolveCellTarget(makeCell(ExerciseType.CLOZE, CefrLevel.A1, 12, true)),
+    ).toBe(12);
+    // Unflagged cells are untouched.
+    expect(
+      resolveCellTarget(makeCell(ExerciseType.CLOZE, CefrLevel.A1, undefined, false)),
     ).toBe(20);
   });
 });

@@ -20,6 +20,7 @@ import {
   buildGenerationUserPrompt,
   PERSON_ROTATION_BY_LANGUAGE,
   personForOrdinal,
+  personRotationPhase,
   canonicalSurface,
   capPriorPoolSurfaces,
   computeGenerationPromptVars,
@@ -744,6 +745,58 @@ describe("personForOrdinal", () => {
       const cycle = persons.map((_, i) => personForOrdinal(language, i));
       expect(new Set(cycle).size).toBe(persons.length);
     }
+  });
+});
+
+describe("personRotationPhase", () => {
+  it("is deterministic and in range for date-stamped scheduler seeds", () => {
+    for (const seed of [
+      "scheduled-2026-06-12",
+      "scheduled-2026-06-13",
+      "phase-2-default",
+    ]) {
+      const phase = personRotationPhase(seed, 6);
+      expect(phase).toBe(personRotationPhase(seed, 6));
+      expect(phase).toBeGreaterThanOrEqual(0);
+      expect(phase).toBeLessThan(6);
+    }
+  });
+
+  it("varies across nightly seeds so small top-ups cover the cycle tail", () => {
+    // A week of scheduler seeds must not all hash to the same phase —
+    // otherwise a cell topping up by 1–2 drafts/night would still starve
+    // the tail persons.
+    const phases = new Set(
+      Array.from({ length: 7 }, (_, day) =>
+        personRotationPhase(`scheduled-2026-06-${String(10 + day)}`, 6),
+      ),
+    );
+    expect(phases.size).toBeGreaterThan(1);
+  });
+
+  it("returns phase 0 for null/absent seed (back-compat path)", () => {
+    expect(personRotationPhase(null, 6)).toBe(0);
+    expect(personRotationPhase(undefined, 6)).toBe(0);
+    expect(personRotationPhase("", 6)).toBe(0);
+  });
+
+  it("offsets personForOrdinal while preserving full-cycle coverage", () => {
+    const seed = "scheduled-2026-06-12";
+    const phase = personRotationPhase(seed, 6);
+    expect(personForOrdinal(Language.TR, 0, seed)).toBe(
+      PERSON_ROTATION_BY_LANGUAGE[Language.TR][phase],
+    );
+    const cycle = PERSON_ROTATION_BY_LANGUAGE[Language.TR].map((_, i) =>
+      personForOrdinal(Language.TR, i, seed),
+    );
+    expect(new Set(cycle).size).toBe(6);
+  });
+
+  it("threads batchSeed through buildGenerationUserPrompt", () => {
+    const seed = "scheduled-2026-06-12";
+    const expected = personForOrdinal(Language.ES, 0, seed);
+    const msg = buildGenerationUserPrompt(baseInputs, 0, null, null, seed);
+    expect(msg).toContain(`Target grammatical person for this draft: ${expected}`);
   });
 });
 
