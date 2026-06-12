@@ -183,6 +183,20 @@ export async function buildValidationSystemPrompt(
 // pass. Token cost is ~30 per draft; the latency benefit of not having to
 // cross-reference message blocks justifies the duplication.
 
+// Per-cell scoring guidance lives in the (uncached, per-draft) user prompt —
+// NOT the global system prompt — so a single grammar point's rubric note costs
+// tokens only on its own drafts and never inflates every other cell's
+// validation. `tr-a1-possessive-suffixes` needs this because the generation
+// prompt mandates an overt possessor pronoun to disambiguate the person, but
+// the default rubric otherwise dings that same pronoun as "over-scaffolding",
+// capping clean drafts at ~0.62 (FLAGGED) instead of auto-approving them.
+function clozeCellScoringNote(grammarPointKey: string): string {
+  if (grammarPointKey !== "tr-a1-possessive-suffixes") return "";
+  return `
+
+**Scoring note for this possessive-suffix (İyelik) cell:** an overt genitive possessor pronoun (benim/senin/onun/bizim/sizin/onların) in the sentence is the INTENDED person-disambiguator — it is what makes the blank unambiguous (the same sentence without it would admit every person). Do NOT lower qualityScore for that pronoun as "over-scaffolding", "telegraphing the person/number", "redundant", or "too mechanical", and do NOT suggest blanking only the suffix (the whole-word blank is by design). The learner must still produce the correctly harmonised WHOLE form, including the 3sg -s- buffer and the dropped buffer vowel after vowel-final stems. Score on naturalness, A1 vocabulary, and whether the stem actually exercises the suffix — a clean draft of this kind (e.g. "Onun ___ çok güzel. (araba)" → arabası) is 0.8+, not 0.62.`;
+}
+
 function buildClozeValidationUserPrompt(
   content: ClozeContent,
   spec: GenerationSpec,
@@ -195,7 +209,7 @@ function buildClozeValidationUserPrompt(
 **Correct Answer:** ${content.correctAnswer}
 ${content.acceptableAnswers && content.acceptableAnswers.length > 0 ? `**Acceptable Answers (also accepted):** ${content.acceptableAnswers.join(", ")}` : "**Acceptable Answers (also accepted):** (none declared — `correctAnswer` must be the only plausible fill)"}
 ${content.options ? `**Options:** ${content.options.join(", ")}` : ""}
-${content.context ? `**Context:** ${content.context}` : ""}
+${content.context ? `**Context:** ${content.context}` : ""}${clozeCellScoringNote(spec.grammarPoint.key)}
 
 Score the dimensions in the system prompt and submit via the tool.`;
 }

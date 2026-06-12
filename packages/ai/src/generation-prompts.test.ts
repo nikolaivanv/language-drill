@@ -205,9 +205,12 @@ describe("buildGenerationSystemPrompt", () => {
     // R1.7 / R2.6 / R7.4 — the coordinated prompt edit must ship a
     // `generate@YYYY-MM-DD` version so Langfuse cohorts old vs new traces.
     expect(GENERATION_PROMPT_VERSION).toMatch(/^generate@\d{4}-\d{2}-\d{2}$/);
-    // Bumped for the grammatical-person rotation in the per-draft user
-    // prompt (pool audit: TR tense cells were ≥90% 3sg). The cached system
-    // template is byte-identical to generate@2026-06-07 — no Langfuse push.
+    // Bumped 2026-06-12 for two same-day edits sharing the cohort: the
+    // possessive-suffix cloze diversity tweak in the system template (rotate
+    // persons, prefer vowel-final stems) and the curriculum-wide grammatical-
+    // person rotation in the per-draft user prompt (pool audit: TR tense
+    // cells were ≥90% 3sg). Prior 2026-06-07 cohort covered the vocab_recall
+    // hints anti-leak rule + the possessive-pronoun bullet.
     expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-06-12");
     // Tasks 7–9: pin the new guardrail phrases in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(

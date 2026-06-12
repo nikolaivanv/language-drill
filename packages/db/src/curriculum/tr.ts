@@ -1139,7 +1139,12 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Forgetting the accusative on the reported command: *gelmem istedi instead of gelmemi istedi (gel-me-m-i).',
     ],
     prerequisiteKeys: ['tr-a1-dili-past'],
-    sentenceConstructionSuitable: true,
+    // sentenceConstructionSuitable intentionally OFF: reported speech admits
+    // multiple valid constructions (diye + direct quote vs. integrated
+    // -DIğInI söyledi), so every free-production prompt is structurally
+    // ambiguous — the validator flagged ~19/20 across the 2026-06-07 and
+    // 2026-06-08 runs even after the constrained-prompt fix. Covered by its
+    // cloze/translation cells instead.
   },
 
   /*

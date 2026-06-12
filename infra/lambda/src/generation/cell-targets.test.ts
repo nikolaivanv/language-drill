@@ -12,7 +12,6 @@ import type { Cell, CurriculumCefrLevel } from '@language-drill/db';
 import {
   CELL_TARGET_DEFAULTS,
   PERSON_ROTATION_TARGET_MULTIPLIER,
-  SENTENCE_CONSTRUCTION_PILOT_TARGET,
   resolveCellTarget,
 } from './cell-targets';
 import { TARGET_PER_CELL } from './scheduler-decision';
@@ -91,25 +90,12 @@ describe('resolveCellTarget', () => {
     expect(resolveCellTarget(makeCell(ExerciseType.VOCAB_RECALL, CefrLevel.B2))).toBe(10);
   });
 
-  it('caps every active sentence_construction level at the pilot brake (2026-06-07)', () => {
-    // TEMPORARY: the SC prompt fix is unconfirmed, so A2/B1/B2 are throttled to
-    // SENTENCE_CONSTRUCTION_PILOT_TARGET instead of 30 (A2) / 50 (B1/B2 fallback).
-    // When the fix is validated via eval:gen and the brake is lifted, this test
-    // reverts to A2=30 and B1=TARGET_PER_CELL.
-    expect(SENTENCE_CONSTRUCTION_PILOT_TARGET).toBeLessThan(TARGET_PER_CELL);
-    expect(
-      resolveCellTarget(makeCell(ExerciseType.SENTENCE_CONSTRUCTION, CefrLevel.A2)),
-    ).toBe(SENTENCE_CONSTRUCTION_PILOT_TARGET);
-    expect(
-      resolveCellTarget(makeCell(ExerciseType.SENTENCE_CONSTRUCTION, CefrLevel.B1)),
-    ).toBe(SENTENCE_CONSTRUCTION_PILOT_TARGET);
-    expect(
-      resolveCellTarget(makeCell(ExerciseType.SENTENCE_CONSTRUCTION, CefrLevel.B2)),
-    ).toBe(SENTENCE_CONSTRUCTION_PILOT_TARGET);
-    // A1 SC (no active cells today) keeps its narrow default.
-    expect(
-      resolveCellTarget(makeCell(ExerciseType.SENTENCE_CONSTRUCTION, CefrLevel.A1)),
-    ).toBe(20);
+  it('uses the constrained A1/A2 defaults for sentence_construction', () => {
+    // Pilot brake lifted 2026-06-08 (the constrained-prompt fix is validated for
+    // single-construction points). SC resolves like cloze/translation again:
+    // 20/30 at A1/A2, fall through to TARGET_PER_CELL at B1/B2.
+    expect(resolveCellTarget(makeCell(ExerciseType.SENTENCE_CONSTRUCTION, CefrLevel.A2))).toBe(30);
+    expect(resolveCellTarget(makeCell(ExerciseType.SENTENCE_CONSTRUCTION, CefrLevel.B1))).toBe(TARGET_PER_CELL);
   });
 
   it('raises cloze/translation targets 1.5× for personRotation points (2026-06-12)', () => {
@@ -131,13 +117,16 @@ describe('resolveCellTarget', () => {
     ).toBe(Math.ceil(TARGET_PER_CELL * PERSON_ROTATION_TARGET_MULTIPLIER));
   });
 
-  it('does not raise sentence_construction (pilot brake) or override-resolved targets', () => {
-    // SC keeps the 2026-06-07 pilot brake even on a flagged point.
+  it('does not raise sentence_construction or override-resolved targets', () => {
+    // The raise exists to flush the audited 3sg skew out of cloze/translation
+    // pools; SC already gained headroom when the pilot brake lifted (25 → 30
+    // at A2, 50 at B1/B2), so a flagged point resolves SC at the plain table
+    // value.
     expect(
       resolveCellTarget(
         makeCell(ExerciseType.SENTENCE_CONSTRUCTION, CefrLevel.A2, undefined, true),
       ),
-    ).toBe(SENTENCE_CONSTRUCTION_PILOT_TARGET);
+    ).toBe(30);
     // An explicit targetOverride marks a supply-limited point — respected as-is.
     expect(
       resolveCellTarget(makeCell(ExerciseType.CLOZE, CefrLevel.A1, 12, true)),
