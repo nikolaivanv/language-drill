@@ -285,6 +285,31 @@ describe("buildValidationUserPrompt", () => {
     expect(prompt).not.toContain("**Context:**");
   });
 
+  it("adds the possessive-suffix scoring note ONLY for the tr-a1-possessive-suffixes cell", () => {
+    const possessive = getGrammarPoint("tr-a1-possessive-suffixes");
+    if (!possessive) throw new Error("tr-a1-possessive-suffixes missing from curriculum");
+    const content: ClozeContent = {
+      type: ExerciseType.CLOZE,
+      instructions: "Fill in the blank with the correct possessive form.",
+      sentence: "Onun ___ çok güzel. (araba)",
+      correctAnswer: "arabası",
+    };
+    const possessiveSpec: GenerationSpec = {
+      ...baseSpec,
+      language: Language.TR,
+      cefrLevel: CefrLevel.A1,
+      grammarPoint: possessive,
+    };
+
+    const withNote = buildValidationUserPrompt(makeDraft(content), possessiveSpec);
+    expect(withNote).toContain("Scoring note for this possessive-suffix");
+    expect(withNote).toContain("INTENDED person-disambiguator");
+
+    // The note is scoped: a different cloze cell must NOT receive it.
+    const withoutNote = buildValidationUserPrompt(makeDraft(content), baseSpec);
+    expect(withoutNote).not.toContain("Scoring note for this possessive-suffix");
+  });
+
   it("renders a translation draft with every documented field + Spec preamble", () => {
     const content: TranslationContent = {
       type: ExerciseType.TRANSLATION,
