@@ -27,28 +27,6 @@ import type { Cell, CurriculumCefrLevel } from '@language-drill/db';
 import { TARGET_PER_CELL } from './scheduler-decision';
 
 /**
- * TEMPORARY pilot brake on `sentence_construction` (added 2026-06-07).
- *
- * The first production SC run auto-approved 222 drafts across 8 cells but the
- * prompt had three systematic faults (open `grammar_target` prompts → `ambiguous`
- * flags; model answers propagating `commonErrors`; spoiled instructions). The
- * generation-prompt fix shipping alongside this constant should fix them, but it
- * is UNCONFIRMED. Capping every SC level at this value keeps the nightly cron
- * from chasing 30–50 approvals/cell with an unproven prompt and burning tokens:
- *   - cells already at/above 25 approved (the ES B1/B2 cells, ~38–40) resolve to
- *     `skip-target-reached` → zero spend;
- *   - the under-filled TR A2 cells (16–22, and reported-speech at 5) still top up
- *     by a small `need`, each bounded by the scheduler's $0.50/cell cost cap — so
- *     we get a real, cheap production sample of the fix to inspect.
- *
- * Validate the fix with `pnpm eval:gen` (offline, cost-capped) BEFORE restoring
- * full targets. To restore: delete this constant and revert the
- * SENTENCE_CONSTRUCTION row below to `{ A1: 20, A2: 30 }` (B1/B2 fall back to
- * TARGET_PER_CELL = 50).
- */
-export const SENTENCE_CONSTRUCTION_PILOT_TARGET = 25;
-
-/**
  * Default per-cell targets keyed by `(exerciseType, cefrLevel)`. `Partial` on
  * the level axis: an unset level falls through to `TARGET_PER_CELL` in
  * `resolveCellTarget`. Design-tunable — the exact numbers are a design-phase
@@ -65,16 +43,7 @@ export const CELL_TARGET_DEFAULTS: Record<
   // 50; B1/B2 are unset → they fall through to TARGET_PER_CELL.
   [ExerciseType.CLOZE]: { A1: 20, A2: 30 },
   [ExerciseType.TRANSLATION]: { A1: 20, A2: 30 },
-  // TEMPORARY pilot brake (2026-06-07): every active SC level capped at the
-  // pilot target pending eval:gen confirmation of the prompt fix. B1/B2 are set
-  // explicitly here (lower than the global 50 fallback) so the brake covers the
-  // ES B1/B2 cells too. See SENTENCE_CONSTRUCTION_PILOT_TARGET above to restore.
-  [ExerciseType.SENTENCE_CONSTRUCTION]: {
-    A1: 20,
-    A2: SENTENCE_CONSTRUCTION_PILOT_TARGET,
-    B1: SENTENCE_CONSTRUCTION_PILOT_TARGET,
-    B2: SENTENCE_CONSTRUCTION_PILOT_TARGET,
-  },
+  [ExerciseType.SENTENCE_CONSTRUCTION]: { A1: 20, A2: 30 },
   // Capped low across every level (2026-06-07): vocab cells are the worst
   // token-efficiency offenders — a single "everyday" umbrella exhausts its
   // realistic distinct-word surface fast (high dedup-give-up), so chasing the
