@@ -158,6 +158,57 @@ describe('curriculum sentenceConstructionSuitable flag', () => {
   });
 });
 
+describe('curriculum personRotation flag', () => {
+  it('throws when a vocab umbrella is flagged personRotation', () => {
+    expect(() =>
+      assertCurriculumInvariants([
+        {
+          key: 'tr-a2-synthetic-vocab-pr',
+          kind: 'vocab',
+          name: 'Synthetic vocab',
+          description: 'Synthetic vocab entry for personRotation invariant testing.',
+          cefrLevel: 'A2',
+          language: Language.TR,
+          examplesPositive: ['a', 'b'],
+          examplesNegative: ['*c'],
+          commonErrors: ['e'],
+          personRotation: true,
+        },
+      ]),
+    ).toThrow(/personRotation but not kind 'grammar'/);
+  });
+
+  it('flags the person-marked TR tense/copular points', () => {
+    const flaggedKeys = [
+      'tr-a1-present-continuous',
+      'tr-a1-dili-past',
+      'tr-a1-future',
+      'tr-a1-negation',
+      'tr-a1-personal-suffixes',
+      'tr-a2-aorist',
+    ];
+    for (const key of flaggedKeys) {
+      expect(getGrammarPoint(key)?.personRotation, key).toBe(true);
+    }
+  });
+
+  it('does not flag person-less points or the eval-excluded weak cells', () => {
+    // mis-evidential / ability-necessity: rotation eval (2026-06-12) showed
+    // both chronically weak cells degrade further under rotation — excluded
+    // pending cell-specific fixes (see comments in tr.ts).
+    const excluded = [
+      'tr-a1-var-yok',
+      'tr-a1-locative',
+      'es-b1-passive-se',
+      'tr-a2-mis-evidential',
+      'tr-a2-ability-necessity',
+    ];
+    for (const key of excluded) {
+      expect(getGrammarPoint(key)?.personRotation, key).toBeUndefined();
+    }
+  });
+});
+
 describe('curriculum clozeUnsuitable flag — specific entries', () => {
   it('flags the four bipartite TR-A2 grammar points', () => {
     const flaggedKeys = [

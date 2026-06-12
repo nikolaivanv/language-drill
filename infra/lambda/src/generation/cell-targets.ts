@@ -55,12 +55,46 @@ export const CELL_TARGET_DEFAULTS: Record<
 };
 
 /**
+ * Target raise for `personRotation` cells (2026-06-12). The person-rotation
+ * fix only affects FUTURE drafts, but the skewed cells (audit: ≥90% 3sg in
+ * every TR tense cell) were already at/near their targets and resolved to
+ * `skip-target-reached` — so without a raise the rotation never materialises
+ * in the pool. 1.5× gives each flagged cloze/translation cell headroom for
+ * roughly one-to-two full person cycles of new drafts on top of the existing
+ * (3sg-heavy) inventory.
+ *
+ * Scope guards:
+ *   - cloze/translation ONLY — the audited 3sg skew lives in those pools, and
+ *     `sentence_construction` already gained fresh headroom when its pilot
+ *     brake lifted (2026-06-08: 25 → 30 at A2, 50 at B1/B2), so rotated SC
+ *     drafts flow without a further raise; vocab umbrellas can't carry the
+ *     flag (curriculum invariant).
+ *   - an explicit `targetOverride` is respected as-is: overrides mark
+ *     supply-limited points, and multiplying them would grind dedup waste —
+ *     set the override with rotation in mind instead.
+ */
+export const PERSON_ROTATION_TARGET_MULTIPLIER = 1.5;
+
+const PERSON_ROTATION_RAISED_TYPES: ReadonlySet<ExerciseType> = new Set([
+  ExerciseType.CLOZE,
+  ExerciseType.TRANSLATION,
+]);
+
+/**
  * Resolve the generation target for a cell. Pure; see the module doc for the
- * `override → table → fallback` order.
+ * `override → table → fallback` order, plus the person-rotation raise above
+ * (applied to the table/fallback value, never to an explicit override).
  */
 export function resolveCellTarget(cell: Cell): number {
   const override = cell.grammarPoint.targetOverride;
   if (override !== undefined) return override;
   const fromTable = CELL_TARGET_DEFAULTS[cell.exerciseType][cell.cefrLevel];
-  return fromTable ?? TARGET_PER_CELL;
+  const base = fromTable ?? TARGET_PER_CELL;
+  if (
+    cell.grammarPoint.personRotation &&
+    PERSON_ROTATION_RAISED_TYPES.has(cell.exerciseType)
+  ) {
+    return Math.ceil(base * PERSON_ROTATION_TARGET_MULTIPLIER);
+  }
+  return base;
 }

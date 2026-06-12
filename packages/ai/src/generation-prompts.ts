@@ -12,7 +12,7 @@ import {
   type ExerciseContent,
   ExerciseType,
   type GrammarPoint,
-  type Language,
+  Language,
 } from "@language-drill/shared";
 
 import { CEFR_LEVEL_DESCRIPTORS } from "./prompts.js";
@@ -111,10 +111,12 @@ function renderRecentStems(recentStems: readonly string[]): string {
 // trace `promptVersion` tag — dashboards cohort old vs. new prompt traces
 // by this string.
 //
-// NOTE: the date-only tag collapses same-day edits into one cohort — `2026-06-07`
-// already covered the vocab_recall-hints, sentence-construction, and
-// possessive-suffix-cloze edits. Bumped to `2026-06-12` for the possessive-cloze
-// diversity tweak (rotate persons, prefer vowel-final stems). Use the `eval:gen`
+// NOTE: the date-only tag collapses same-day edits into one cohort — the
+// `2026-06-12` bump covers BOTH the possessive-cloze diversity tweak in the
+// system template (rotate persons, prefer vowel-final stems — that edit DID
+// change the registered template, so it needed a Langfuse push) AND the
+// curriculum-wide grammatical-person rotation in the per-draft USER prompt
+// (`renderPersonBlock`, no Langfuse push needed). Use the `eval:gen`
 // baseline/candidate arms — not promptVersion — to A/B within a day.
 export const GENERATION_PROMPT_VERSION = "generate@2026-06-12";
 
@@ -302,6 +304,113 @@ export async function buildGenerationSystemPrompt(
 }
 
 // ---------------------------------------------------------------------------
+// Grammatical-person rotation (R: person coverage, 2026-06-12)
+// ---------------------------------------------------------------------------
+// A 2026-06-12 pool audit found every TR tense cell ≥90% third-person
+// singular (negation/aorist/mış: 100%), so the "plus personal endings" half
+// of those grammar points was never tested — 3sg is the unmarked, suffix-light
+// form the model defaults to. For grammar points flagged
+// `personRotation: true` in the curriculum, each draft's USER prompt pins a
+// target person, rotated deterministically by ordinal so a batch covers the
+// paradigm. User-prompt-only by design: the cached system prompt stays
+// byte-identical across the batch (same rationale as `seedWord`, R5.4).
+
+/**
+ * Per-language person rotation lists. The label is injected verbatim into the
+ * user prompt; the parenthesised pronouns anchor the model to the right cell
+ * of the paradigm.
+ *
+ * ES deliberately omits `vosotros`: the pool targets pan-American Spanish
+ * (2pl is rendered by `ustedes`, morphologically identical to 3pl). Add a
+ * sixth entry here if a peninsular-Spanish track ever ships.
+ */
+export const PERSON_ROTATION_BY_LANGUAGE: Record<
+  Exclude<Language, Language.EN>,
+  readonly string[]
+> = {
+  [Language.TR]: [
+    "1sg (ben)",
+    "2sg (sen)",
+    "3sg (o)",
+    "1pl (biz)",
+    "2pl (siz)",
+    "3pl (onlar)",
+  ],
+  [Language.ES]: [
+    "1sg (yo)",
+    "2sg (tú)",
+    "3sg (él/ella/usted)",
+    "1pl (nosotros/nosotras)",
+    "3pl (ellos/ellas/ustedes)",
+  ],
+  [Language.DE]: [
+    "1sg (ich)",
+    "2sg (du)",
+    "3sg (er/sie/es)",
+    "1pl (wir)",
+    "2pl (ihr)",
+    "3pl (sie/Sie)",
+  ],
+};
+
+/**
+ * Deterministic per-batch rotation phase, derived from `batchSeed` (djb2
+ * hash). Ordinals restart at 0 for every top-up batch, so without a phase a
+ * cell that tops up by 2–3 drafts per night would generate 1sg/2sg/3sg
+ * forever and starve the paradigm tail (1pl/2pl/3pl). The nightly scheduler's
+ * `batchSeed = scheduled-${YYYY-MM-DD}` varies per run, so the start person
+ * shifts night to night and small batches cover the full cycle in
+ * expectation — while staying deterministic for a given batch (same
+ * batchSeed + ordinal → same person, matching the pipeline's idempotent
+ * draft-ID design). `null`/absent → phase 0 (byte-identical to pre-phase
+ * behaviour for callers that don't thread a seed).
+ */
+export function personRotationPhase(
+  batchSeed: string | null | undefined,
+  cycleLength: number,
+): number {
+  if (!batchSeed || cycleLength <= 0) return 0;
+  let hash = 5381;
+  for (let i = 0; i < batchSeed.length; i++) {
+    hash = ((hash << 5) + hash + batchSeed.charCodeAt(i)) >>> 0;
+  }
+  return hash % cycleLength;
+}
+
+/** Deterministic person rotation so a batch covers the whole paradigm. */
+export function personForOrdinal(
+  language: Exclude<Language, Language.EN>,
+  ordinal: number,
+  batchSeed: string | null = null,
+): string {
+  const persons = PERSON_ROTATION_BY_LANGUAGE[language];
+  const phase = personRotationPhase(batchSeed, persons.length);
+  return persons[(phase + ordinal) % persons.length];
+}
+
+/**
+ * Person directive for the per-draft user prompt. Empty string when the
+ * grammar point is not flagged for rotation. Like the seed-word block, the
+ * constraint is LOOSE at the edges (escape hatch for person/point conflicts)
+ * so rotation doesn't trade 3sg over-concentration for quality rejections —
+ * but unlike the seed word, the fallback is the *nearest* person, not a free
+ * choice, so the batch-level distribution survives.
+ */
+function renderPersonBlock(
+  inputs: GenerationPromptInputs,
+  ordinal: number,
+  batchSeed: string | null,
+): string {
+  if (!inputs.grammarPoint.personRotation) return "";
+  const person = personForOrdinal(inputs.language, ordinal, batchSeed);
+  return (
+    `Target grammatical person for this draft: ${person}. ` +
+    `The form the learner must produce MUST be marked for this person, and the visible sentence/context MUST make the person unambiguously recoverable (overt subject pronoun, possessor, vocative, or unambiguous context) WITHOUT revealing the conjugated form itself. ` +
+    `If ${inputs.grammarPoint.name} cannot naturally express this person, use the closest natural person instead.\n\n`
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Sentence-construction mode rotation
 // ---------------------------------------------------------------------------
 
@@ -331,6 +440,10 @@ export function buildGenerationUserPrompt(
   // across the batch. `null`/absent → unseeded (byte-identical to the prior
   // output, preserving back-compat for existing callers).
   seedWord: string | null = null,
+  // Rotation-phase source for `renderPersonBlock` (see `personRotationPhase`).
+  // Threaded by `generateOneDraft` from `spec.batchSeed`; `null`/absent →
+  // phase 0, byte-identical to the unphased output for existing callers.
+  batchSeed: string | null = null,
 ): string {
   const toolName = TOOL_NAME_BY_TYPE[inputs.exerciseType];
   const domain = topicDomain ?? "mixed";
@@ -345,11 +458,12 @@ export function buildGenerationUserPrompt(
     inputs.exerciseType === ExerciseType.SENTENCE_CONSTRUCTION
       ? `Use prompt mode: ${sentenceConstructionModeForOrdinal(ordinal)}.\n\n`
       : "";
+  const personBlock = renderPersonBlock(inputs, ordinal, batchSeed);
   return `Produce exercise #${ordinal + 1}.
 
 Topic domain: ${domain}
 
-${modeBlock}${seedBlock}Use the ${toolName} tool.`;
+${modeBlock}${personBlock}${seedBlock}Use the ${toolName} tool.`;
 }
 
 // ---------------------------------------------------------------------------

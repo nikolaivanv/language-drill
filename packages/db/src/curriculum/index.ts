@@ -196,6 +196,14 @@ export function assertCurriculumInvariants(
         `Curriculum invariant violated: '${entry.key}' is sentenceConstructionSuitable but not kind 'grammar'`,
       );
     }
+
+    // 9d. personRotation is only meaningful on grammar points — a vocab
+    //     umbrella has no person-marked paradigm to rotate.
+    if (entry.personRotation && entry.kind !== 'grammar') {
+      throw new Error(
+        `Curriculum invariant violated: '${entry.key}' is personRotation but not kind 'grammar'`,
+      );
+    }
   }
 
   // 10. Per-language grammar counts

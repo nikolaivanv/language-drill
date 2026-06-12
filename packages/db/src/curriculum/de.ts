@@ -30,6 +30,7 @@ const deCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   {
     key: 'de-a1-present-indicative',
+    personRotation: true,
     kind: 'grammar',
     name: 'Present indicative',
     description:
@@ -94,6 +95,7 @@ const deCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   {
     key: 'de-a2-perfekt-with-haben',
+    personRotation: true,
     kind: 'grammar',
     name: 'Perfekt with haben',
     description:
@@ -111,6 +113,7 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a2-perfekt-with-sein',
+    personRotation: true,
     kind: 'grammar',
     name: 'Perfekt with sein',
     description:
@@ -157,6 +160,7 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a2-separable-prefix-verbs',
+    personRotation: true,
     kind: 'grammar',
     name: 'Separable-prefix verbs',
     description:
@@ -215,6 +219,7 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-b1-modal-verbs-past',
+    personRotation: true,
     kind: 'grammar',
     name: 'Modal verbs in the Präteritum',
     description:
@@ -291,6 +296,7 @@ const deCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   {
     key: 'de-b2-konjunktiv-ii',
+    personRotation: true,
     kind: 'grammar',
     name: 'Konjunktiv II',
     description:

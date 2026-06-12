@@ -9,13 +9,18 @@ import { CefrLevel, ExerciseType, Language } from '@language-drill/shared';
 import { describe, expect, it } from 'vitest';
 import type { Cell, CurriculumCefrLevel } from '@language-drill/db';
 
-import { CELL_TARGET_DEFAULTS, resolveCellTarget } from './cell-targets';
+import {
+  CELL_TARGET_DEFAULTS,
+  PERSON_ROTATION_TARGET_MULTIPLIER,
+  resolveCellTarget,
+} from './cell-targets';
 import { TARGET_PER_CELL } from './scheduler-decision';
 
 function makeCell(
   exerciseType: ExerciseType,
   cefrLevel: CurriculumCefrLevel,
   targetOverride?: number,
+  personRotation?: boolean,
 ): Cell {
   const grammarPoint = {
     key: 'es-test',
@@ -24,6 +29,7 @@ function makeCell(
     title: 'test',
     summary: 'test',
     ...(targetOverride !== undefined ? { targetOverride } : {}),
+    ...(personRotation !== undefined ? { personRotation } : {}),
   } as unknown as Cell['grammarPoint'];
   return {
     language: Language.ES,
@@ -90,5 +96,44 @@ describe('resolveCellTarget', () => {
     // 20/30 at A1/A2, fall through to TARGET_PER_CELL at B1/B2.
     expect(resolveCellTarget(makeCell(ExerciseType.SENTENCE_CONSTRUCTION, CefrLevel.A2))).toBe(30);
     expect(resolveCellTarget(makeCell(ExerciseType.SENTENCE_CONSTRUCTION, CefrLevel.B1))).toBe(TARGET_PER_CELL);
+  });
+
+  it('raises cloze/translation targets 1.5× for personRotation points (2026-06-12)', () => {
+    // Audit-skewed cells were at/near target → skip-target-reached → the
+    // rotation fix never reaches the pool without headroom.
+    expect(PERSON_ROTATION_TARGET_MULTIPLIER).toBe(1.5);
+    expect(
+      resolveCellTarget(makeCell(ExerciseType.CLOZE, CefrLevel.A1, undefined, true)),
+    ).toBe(30); // 20 × 1.5
+    expect(
+      resolveCellTarget(makeCell(ExerciseType.CLOZE, CefrLevel.A2, undefined, true)),
+    ).toBe(45); // 30 × 1.5
+    expect(
+      resolveCellTarget(makeCell(ExerciseType.TRANSLATION, CefrLevel.A1, undefined, true)),
+    ).toBe(30);
+    // Fallback-resolved levels are raised too (50 → 75).
+    expect(
+      resolveCellTarget(makeCell(ExerciseType.CLOZE, CefrLevel.B1, undefined, true)),
+    ).toBe(Math.ceil(TARGET_PER_CELL * PERSON_ROTATION_TARGET_MULTIPLIER));
+  });
+
+  it('does not raise sentence_construction or override-resolved targets', () => {
+    // The raise exists to flush the audited 3sg skew out of cloze/translation
+    // pools; SC already gained headroom when the pilot brake lifted (25 → 30
+    // at A2, 50 at B1/B2), so a flagged point resolves SC at the plain table
+    // value.
+    expect(
+      resolveCellTarget(
+        makeCell(ExerciseType.SENTENCE_CONSTRUCTION, CefrLevel.A2, undefined, true),
+      ),
+    ).toBe(30);
+    // An explicit targetOverride marks a supply-limited point — respected as-is.
+    expect(
+      resolveCellTarget(makeCell(ExerciseType.CLOZE, CefrLevel.A1, 12, true)),
+    ).toBe(12);
+    // Unflagged cells are untouched.
+    expect(
+      resolveCellTarget(makeCell(ExerciseType.CLOZE, CefrLevel.A1, undefined, false)),
+    ).toBe(20);
   });
 });
