@@ -186,16 +186,24 @@ describe('curriculum personRotation flag', () => {
       'tr-a1-negation',
       'tr-a1-personal-suffixes',
       'tr-a2-aorist',
-      'tr-a2-mis-evidential',
-      'tr-a2-ability-necessity',
     ];
     for (const key of flaggedKeys) {
       expect(getGrammarPoint(key)?.personRotation, key).toBe(true);
     }
   });
 
-  it('does not flag person-less points', () => {
-    for (const key of ['tr-a1-var-yok', 'tr-a1-locative', 'es-b1-passive-se']) {
+  it('does not flag person-less points or the eval-excluded weak cells', () => {
+    // mis-evidential / ability-necessity: rotation eval (2026-06-12) showed
+    // both chronically weak cells degrade further under rotation — excluded
+    // pending cell-specific fixes (see comments in tr.ts).
+    const excluded = [
+      'tr-a1-var-yok',
+      'tr-a1-locative',
+      'es-b1-passive-se',
+      'tr-a2-mis-evidential',
+      'tr-a2-ability-necessity',
+    ];
+    for (const key of excluded) {
       expect(getGrammarPoint(key)?.personRotation, key).toBeUndefined();
     }
   });

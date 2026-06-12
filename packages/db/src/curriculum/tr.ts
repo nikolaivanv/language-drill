@@ -754,7 +754,9 @@ const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   {
     key: 'tr-a2-mis-evidential',
-    personRotation: true,
+    // personRotation deliberately ABSENT (2026-06-12): the rotation eval
+    // collapsed this chronically weak cell further (2/12 -> 0/12 approved,
+    // 4 low-quality rejects) - non-3sg evidentials need their own treatment.
     kind: 'grammar',
     name: 'Evidential past -mIş',
     description:
@@ -808,7 +810,9 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a2-ability-necessity',
-    personRotation: true,
+    // personRotation deliberately ABSENT (2026-06-12): rotation amplified this
+    // cell's pre-existing spoil trap (3 -> 9 context-spoils-answer rejects,
+    // 4/12 -> 0/12 approved in the eval) - fix the spoil issue first.
     kind: 'grammar',
     name: 'Ability -(y)Abil and necessity -mAlI',
     description:
