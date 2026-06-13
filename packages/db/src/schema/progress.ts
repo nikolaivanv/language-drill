@@ -1,4 +1,4 @@
-import { index, integer, jsonb, pgTable, real, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, index, integer, jsonb, pgTable, real, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 import { exercises } from './exercises';
 import { practiceSessions } from './sessions';
@@ -49,5 +49,25 @@ export const spacedRepetitionCards = pgTable(
       table.userId,
       table.dueAt,
     ),
+  }),
+);
+
+export const fluencyAttempts = pgTable(
+  'fluency_attempts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: text('user_id').notNull().references(() => users.id),
+    exerciseId: uuid('exercise_id').notNull().references(() => exercises.id),
+    language: text('language'), // denormalized for cheap stats queries
+    grammarPointKey: text('grammar_point_key'), // denormalized; nullable
+    correct: boolean('correct').notNull(),
+    latencyMs: integer('latency_ms').notNull(), // client-reported, server-clamped
+    attemptedAt: timestamp('attempted_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    // Stats query: filter by user + language, order/bucket by recency.
+    userIdLanguageAttemptedAtIdx: index(
+      'fluency_attempts_user_id_language_attempted_at_idx',
+    ).on(table.userId, table.language, table.attemptedAt),
   }),
 );
