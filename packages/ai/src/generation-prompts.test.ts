@@ -4,6 +4,7 @@ import {
   ExerciseType,
   Language,
   type ClozeContent,
+  type PersonCode,
   type TranslationContent,
   type VocabRecallContent,
 } from "@language-drill/shared";
@@ -19,6 +20,8 @@ import {
   buildGenerationSystemPrompt,
   buildGenerationUserPrompt,
   PERSON_ROTATION_BY_LANGUAGE,
+  personCodesForLanguage,
+  personDisplayForCode,
   personForOrdinal,
   personRotationPhase,
   canonicalSurface,
@@ -867,5 +870,38 @@ describe("tailRecentStems", () => {
 
   it("returns an empty array when input is empty", () => {
     expect(tailRecentStems([])).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// personCodesForLanguage
+// ---------------------------------------------------------------------------
+
+describe("personCodesForLanguage", () => {
+  it("derives canonical codes from the rotation labels", () => {
+    expect(personCodesForLanguage(Language.TR)).toEqual([
+      "1sg", "2sg", "3sg", "1pl", "2pl", "3pl",
+    ]);
+  });
+  it("omits vosotros for Spanish (5 persons, no 2pl)", () => {
+    expect(personCodesForLanguage(Language.ES)).toEqual([
+      "1sg", "2sg", "3sg", "1pl", "3pl",
+    ]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// personDisplayForCode
+// ---------------------------------------------------------------------------
+
+describe("personDisplayForCode", () => {
+  it("maps a code back to the language-specific label", () => {
+    expect(personDisplayForCode(Language.TR, "2pl")).toBe("2pl (siz)");
+    expect(personDisplayForCode(Language.ES, "1pl")).toBe(
+      "1pl (nosotros/nosotras)",
+    );
+  });
+  it("falls back to the bare code when the language lacks it", () => {
+    expect(personDisplayForCode(Language.ES, "2pl")).toBe("2pl");
   });
 });

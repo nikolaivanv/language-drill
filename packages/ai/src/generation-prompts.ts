@@ -13,6 +13,7 @@ import {
   ExerciseType,
   type GrammarPoint,
   Language,
+  type PersonCode,
 } from "@language-drill/shared";
 
 import { CEFR_LEVEL_DESCRIPTORS } from "./prompts.js";
@@ -352,6 +353,29 @@ export const PERSON_ROTATION_BY_LANGUAGE: Record<
     "3pl (sie/Sie)",
   ],
 };
+
+/** Canonical `PersonCode` list for a language, derived from the rotation labels
+ *  (the leading token of each entry). ES yields 5 codes (no `2pl`); TR/DE 6. */
+export function personCodesForLanguage(
+  language: Exclude<Language, Language.EN>,
+): PersonCode[] {
+  return PERSON_ROTATION_BY_LANGUAGE[language].map(
+    (label) => label.split(" ")[0] as PersonCode,
+  );
+}
+
+/** Maps a `PersonCode` back to the language's display label for the prompt
+ *  directive (e.g. `"2pl"` → `"2pl (siz)"`). Falls back to the bare code if the
+ *  language has no such person (defensive; the controller never emits one). */
+export function personDisplayForCode(
+  language: Exclude<Language, Language.EN>,
+  code: PersonCode,
+): string {
+  const match = PERSON_ROTATION_BY_LANGUAGE[language].find(
+    (label) => label.split(" ")[0] === code,
+  );
+  return match ?? code;
+}
 
 /**
  * Deterministic per-batch rotation phase, derived from `batchSeed` (djb2
