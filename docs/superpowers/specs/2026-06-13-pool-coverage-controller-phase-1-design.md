@@ -79,7 +79,6 @@ Drizzle, no env reads** — pure inputs → pure output, unit-tested in isolatio
 ```ts
 type CoverageDecisionInput = {
   language: Exclude<Language, Language.EN>;
-  target: number;          // resolveCellTarget(cell) — the cell's approved target
   need: number;            // decideEnqueue's scalar need (= target − approvedInPool)
   approvedByPerson: Partial<Record<PersonCode, number>>; // measured approved pool
   recentOutcome: PersonOutcome | null; // most-recent job's per-bucket outcome,
@@ -99,32 +98,38 @@ type CoverageDecision = {
 };
 ```
 
-An **empty** `personTargets` means "no targetable deficit" — the caller omits
-`spec.personTargets` and the generator uses blind ordinal rotation, so the cell
-still tops up to target (no regression).
+An **empty** `personTargets` means "no targetable person" (every person
+suppressed, or `need <= 0`) — the caller omits `spec.personTargets` and the
+generator uses blind ordinal rotation, so the cell still tops up (no regression).
 
-### Algorithm
+### Algorithm — greedy water-fill toward balance
 
-1. `persons = PERSON_ROTATION_BY_LANGUAGE[language]` → derive the canonical
-   `PersonCode` set (the code is the leading token of each entry, e.g.
-   `"2pl (siz)"` → `"2pl"`); `N = persons.length`.
-2. `floor = Math.ceil(target / N)`.
-3. For each person `p`: `deficit[p] = max(0, floor − (approvedByPerson[p] ?? 0))`.
-4. **Suppress** any `p` where `recentOutcome[p]` exists with
-   `requested >= GIVE_UP_MIN_ATTEMPTS` and `approved === 0`; drop it from the
-   deficit set. (When `recentOutcome` is `null` — no recent job, or a curriculum
-   bump cleared it — nothing is suppressed.)
-5. Let `D = Σ deficit[p]` over non-suppressed buckets. Water-fill
-   `min(need, D)` drafts across those buckets, **largest-deficit-first** via the
-   largest-remainder method, so the allocation sums exactly to `min(need, D)` and
-   favours the most-starved persons.
-6. If `need > D`, append `need − D` drafts using blind ordinal rotation
-   (`personForOrdinal`) so the batch still reaches `need` total and the cell tops
-   up to target.
-7. Return `personTargets` (length `need`) and the `suppressed` list.
+The uniform-floor model (`floor = ceil(target / N)`) is realized exactly by
+water-filling each draft into the person currently **lowest** in the approved
+pool. This needs no explicit floor/`target` term and has no remainder edge case:
+filling `need` drafts toward equal per-person counts *is* topping each person up
+toward `floor` when the cell reaches target.
 
-If steps 3–4 leave **no** targetable deficit bucket (`D === 0`), `personTargets`
-is `[]` → blind rotation for the whole batch.
+1. `persons = personCodesForLanguage(language)` → the language's `PersonCode`
+   list (the leading token of each `PERSON_ROTATION_BY_LANGUAGE` entry, e.g.
+   `"2pl (siz)"` → `"2pl"`; ES = 5 codes, TR/DE = 6).
+2. If `need <= 0` → return `{ personTargets: [], suppressed: [] }`.
+3. **Suppress** any `p` where `recentOutcome[p]` exists with
+   `requested >= GIVE_UP_MIN_ATTEMPTS` and `approved === 0`. (When
+   `recentOutcome` is `null` — no recent job, or a curriculum bump cleared it —
+   nothing is suppressed.) `eligible = persons \ suppressed`.
+4. If `eligible` is empty → return `{ personTargets: [], suppressed }` (blind
+   fallback; cell-level low-yield/saturated-dedup is the backstop for a cell
+   whose every person is hard).
+5. Seed a running count per eligible person from `approvedByPerson[p] ?? 0`.
+   Repeat `need` times: pick the eligible person with the **smallest** running
+   count (ties broken by paradigm order — first in `persons`), push its code to
+   `personTargets`, increment its running count.
+6. Return `{ personTargets, suppressed }` — `personTargets.length === need`.
+
+This greedily targets the most-starved persons first (the deficit case) and, once
+all eligible persons are level, distributes the rest evenly (the top-up case) —
+both regimes in one loop, always emitting `PersonCode`s (never display strings).
 
 ### Give-up threshold
 
@@ -319,8 +324,11 @@ next run:
   (already exist); add a `PersonOutcome` type if it belongs in shared, else colocate
   in `infra/lambda/src/generation`.
 - `packages/ai/src/generation-prompts.ts` — `renderPersonBlock` signature +
-  `personTargets` path; `PersonCode → display string` lookup; thread through
-  `buildGenerationUserPrompt`.
+  `personTargets` path; `personCodesForLanguage` + `PersonCode → display string`
+  helpers (derived from `PERSON_ROTATION_BY_LANGUAGE`); thread through
+  `buildGenerationUserPrompt`. Add `personTargets?` to `GenerationSpec`
+  (`generate.ts`) and pass `spec.personTargets` into `buildGenerationUserPrompt`
+  from `generateOneDraft`.
 - `infra/lambda/src/generation/coverage-decision.ts` — **new** pure module +
   test.
 - `infra/lambda/src/generation/scheduler.ts` — per-person aggregate, recent-job
