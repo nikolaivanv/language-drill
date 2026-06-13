@@ -126,6 +126,35 @@ function parseValidationMalformOrdinal(): number | null {
   return parsed;
 }
 
+/**
+ * Optional `MOCK_VALIDATION_PERSONS` env var (Phase 1 coverage controller).
+ * Maps a SUBSTRING of the validator's user prompt (e.g. the draft's
+ * `correctAnswer`) to a `PersonCode`, injected as `coverage.person` into that
+ * draft's returned validation fixture. Keyed on draft content — NOT call
+ * ordinal — so the realized person is stable regardless of the parallel
+ * validator pool's non-deterministic dispatch order (the same property that
+ * makes ordinal-keyed coupling unreliable). Lets a test drive a distinct
+ * realized person per draft so `run-one-cell`'s per-person `coverage_outcome`
+ * tally can be exercised end-to-end. Coverage is non-load-bearing, so values
+ * pass through verbatim — `coerceCoverage` (validate.ts) drops anything not in
+ * the person enum.
+ */
+function parseValidationPersons(): Record<string, string> {
+  const raw = process.env['MOCK_VALIDATION_PERSONS'];
+  if (raw === undefined || raw === '') return {};
+  const parsed = JSON.parse(raw) as Record<string, unknown>;
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(parsed)) {
+    if (typeof value !== 'string') {
+      throw new Error(
+        `MOCK_VALIDATION_PERSONS['${key}']: must be a string PersonCode, got ${JSON.stringify(value)}`,
+      );
+    }
+    out[key] = value;
+  }
+  return out;
+}
+
 function parseValidationOutcomes(): Record<string, ValidationOutcome> {
   const raw = process.env['MOCK_VALIDATION_OUTCOMES'];
   if (raw === undefined || raw === '') return {};
@@ -320,10 +349,31 @@ export function createMockAnthropicClient(): Anthropic {
 
       const outcomes = parseValidationOutcomes();
       const outcome = outcomes[String(validatorCallOrdinal)] ?? 'approved';
+      // Person is keyed on a substring of THIS draft's user prompt (content),
+      // so it tracks the draft regardless of the pool's dispatch order.
+      const persons = parseValidationPersons();
+      const person = Object.entries(persons).find(([needle]) =>
+        userMessage.includes(needle),
+      )?.[1];
       const ordinal = validatorCallOrdinal;
       validatorCallOrdinal += 1;
 
-      const fixture = loadValidationFixture(exerciseType, outcome);
+      const baseFixture = loadValidationFixture(exerciseType, outcome);
+      // Per-ordinal realized-person injection (Phase 1). Copy so the cached
+      // fixture object is never mutated; merge `coverage.person` only when the
+      // env var supplies one for this ordinal.
+      const fixture =
+        person !== undefined
+          ? {
+              ...baseFixture,
+              coverage: {
+                ...(baseFixture['coverage'] as
+                  | Record<string, unknown>
+                  | undefined),
+                person,
+              },
+            }
+          : baseFixture;
 
       validatorTotalCalls += 1;
       const usage = makeUsage(validatorTotalCalls === 1);

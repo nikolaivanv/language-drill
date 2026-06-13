@@ -184,6 +184,7 @@ function cellResultBase(): CellResult {
     validatorParseFailedCount: 0,
     rejectionReasonCounts: {},
     earlyBailed: false,
+    coverageOutcome: null,
   };
 }
 
