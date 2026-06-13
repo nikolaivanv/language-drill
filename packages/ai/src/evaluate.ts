@@ -19,6 +19,7 @@ import {
   EVALUATION_SYSTEM_PROMPT,
   EVALUATION_SYSTEM_PROMPT_VERSION,
   buildUserPrompt,
+  type GrammarGuidance,
 } from "./prompts.js";
 import { getPromptOrFallback, sha8 } from "./prompts-registry.js";
 
@@ -121,6 +122,14 @@ export type EvaluateAnswerInput = {
   userAnswer: string;
   language: Language;
   difficulty: CefrLevel;
+  /**
+   * Authoritative curriculum grounding for the exercise's grammar point,
+   * resolved by the caller from `exercises.grammarPointKey`. When present it is
+   * appended to the user prompt so the (Haiku) evaluator grounds its feedback
+   * in the curriculum rather than confabulating a rule. Omitted when the
+   * exercise has no `grammarPointKey` or the key is unknown.
+   */
+  grammarGuidance?: GrammarGuidance;
   /**
    * Phase-2: bypass the Langfuse registry and use this verbatim as the
    * system prompt. Used by `pnpm eval` (the eval runner) to evaluate
@@ -263,10 +272,22 @@ export async function evaluateAnswer(
   client: Anthropic,
   input: EvaluateAnswerInput,
 ): Promise<EvaluationResult> {
-  const { exercise, userAnswer, language, difficulty, systemPromptOverride } =
-    input;
+  const {
+    exercise,
+    userAnswer,
+    language,
+    difficulty,
+    grammarGuidance,
+    systemPromptOverride,
+  } = input;
 
-  const userPrompt = buildUserPrompt(exercise, userAnswer, language, difficulty);
+  const userPrompt = buildUserPrompt(
+    exercise,
+    userAnswer,
+    language,
+    difficulty,
+    grammarGuidance,
+  );
 
   // Resolve the system prompt. Three paths:
   //   - override (eval runner): use verbatim, stamp `override:<sha8>` cohort.
