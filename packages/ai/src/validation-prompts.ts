@@ -17,6 +17,8 @@
 import {
   type CefrLevel,
   type ClozeContent,
+  coverageAxesFor,
+  type CoverageAxis,
   ExerciseType,
   type SentenceConstructionContent,
   type TranslationContent,
@@ -62,7 +64,7 @@ function renderBulletList(items: readonly string[]): string {
 // VALIDATION_SYSTEM_PROMPT_TEMPLATE. Drives the Langfuse trace
 // `promptVersion` tag — dashboards cohort old vs. new prompt traces by
 // this string.
-export const VALIDATION_PROMPT_VERSION = "validate@2026-05-23";
+export const VALIDATION_PROMPT_VERSION = "validate@2026-06-13";
 
 export const VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language exercises for {{language}} learners at CEFR {{cefrLevel}}. Your job is to validate one already-generated exercise that targets the grammar point: {{grammarPointName}}.
 
@@ -271,6 +273,31 @@ ${registerLine}
 Score the dimensions in the system prompt. Treat the exercise as well-formed only if the prompt is unambiguous and solvable at the target level, AND every model answer genuinely satisfies the prompt (keywords used / goal met / target structure used) at the target CEFR level. If a model answer does not exercise the grammar point, set grammarPointMatch=false. Submit via the tool.`;
 }
 
+// Per-axis instruction copy for the realized-coverage tags. Appended to the
+// (uncached, per-draft) user prompt only for the axes applicable to the cell —
+// so non-applicable cells pay zero tokens and the CACHED system prompt stays
+// byte-identical. The tool field that receives these is `coverage` (validate.ts).
+const COVERAGE_AXIS_DIRECTIVE: Record<CoverageAxis, string> = {
+  person:
+    "- `coverage.person`: the grammatical person/number the target answer realizes (1sg/2sg/3sg/1pl/2pl/3pl). Report what the draft ACTUALLY produced, not what was requested.",
+  wordClass:
+    "- `coverage.wordClass`: the part of speech of the target word (noun/verb/adjective/adverb/other).",
+  polarity:
+    "- `coverage.polarity`: whether the target sentence is affirmative or negative.",
+  sentenceType:
+    "- `coverage.sentenceType`: the clause type of the target sentence (declarative/interrogative/imperative).",
+};
+
+function renderCoverageDirective(spec: GenerationSpec): string {
+  const axes = coverageAxesFor(
+    spec.exerciseType,
+    spec.grammarPoint.personRotation === true,
+  );
+  if (axes.length === 0) return "";
+  const lines = axes.map((axis) => COVERAGE_AXIS_DIRECTIVE[axis]).join("\n");
+  return `\n\n**Coverage tags (descriptive only — do NOT change qualityScore based on these):** also fill the \`coverage\` object with the realized value(s) for this draft:\n${lines}`;
+}
+
 /**
  * Pure: builds the per-draft user message. Two calls with the same
  * (draft, spec) return byte-identical strings.
@@ -286,15 +313,20 @@ export function buildValidationUserPrompt(
   spec: GenerationSpec,
 ): string {
   const content = draft.contentJson;
+  let base: string;
   switch (content.type) {
     case ExerciseType.CLOZE:
-      return buildClozeValidationUserPrompt(content, spec);
+      base = buildClozeValidationUserPrompt(content, spec);
+      break;
     case ExerciseType.TRANSLATION:
-      return buildTranslationValidationUserPrompt(content, spec);
+      base = buildTranslationValidationUserPrompt(content, spec);
+      break;
     case ExerciseType.VOCAB_RECALL:
-      return buildVocabRecallValidationUserPrompt(content, spec);
+      base = buildVocabRecallValidationUserPrompt(content, spec);
+      break;
     case ExerciseType.SENTENCE_CONSTRUCTION:
-      return buildSentenceConstructionValidationUserPrompt(content, spec);
+      base = buildSentenceConstructionValidationUserPrompt(content, spec);
+      break;
     default: {
       const _exhaustive: never = content;
       throw new Error(
@@ -302,5 +334,6 @@ export function buildValidationUserPrompt(
       );
     }
   }
+  return base + renderCoverageDirective(spec);
 }
 

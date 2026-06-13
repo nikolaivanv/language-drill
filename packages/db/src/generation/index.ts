@@ -51,3 +51,5 @@ export {
   type ReviewStatus,
   type RoutingDecision,
 } from './routing';
+
+export { applicableCoverageTags } from './coverage-tags';

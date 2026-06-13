@@ -55,10 +55,12 @@ admin.get('/admin/pool-status', async (c) => {
 
   const { language, level } = parsed.data;
 
-  // Three aggregating queries in parallel — the in-memory cell list filters
+  // Four aggregating queries in parallel — the in-memory cell list filters
   // the response shape, so each query stays a single index-friendly aggregate
-  // rather than per-cell round-trips.
-  const [countRows, lastRefilledRows, depletionRows] = await Promise.all([
+  // rather than per-cell round-trips. The fourth (coverage) uses a raw
+  // db.execute with a LATERAL unnest that the Drizzle query builder cannot
+  // express; it runs alongside the three builder queries rather than serially.
+  const [countRows, lastRefilledRows, depletionRows, coverageResult] = await Promise.all([
     db
       .select({
         language: exercises.language,
@@ -112,7 +114,31 @@ admin.get('/admin/pool-status', async (c) => {
         exercises.type,
         exercises.grammarPointKey,
       ),
+    db.execute(sql`
+      SELECT
+        language,
+        difficulty,
+        type,
+        grammar_point_key AS "grammarPointKey",
+        tag.key   AS axis,
+        tag.value AS value,
+        COUNT(*)::int AS n
+      FROM exercises
+      CROSS JOIN LATERAL jsonb_each_text(coverage_tags) AS tag
+      WHERE review_status IN ('auto-approved', 'manual-approved')
+        AND coverage_tags IS NOT NULL
+      GROUP BY language, difficulty, type, grammar_point_key, tag.key, tag.value
+    `),
   ]);
+  const coverageRows = coverageResult.rows as unknown as Array<{
+    language: string;
+    difficulty: string;
+    type: string;
+    grammarPointKey: string;
+    axis: string;
+    value: string;
+    n: number;
+  }>;
 
   // Build O(1) lookup maps keyed by canonical cell key.
   const countByCell = new Map<
@@ -142,6 +168,21 @@ admin.get('/admin/pool-status', async (c) => {
   const consumedByCell = new Map<string, number>();
   for (const row of depletionRows) {
     consumedByCell.set(buildCellKeyFromRow(row), row.consumed7d);
+  }
+
+  // Build a nested map: cellKey → axis → value → count. Only cells with at
+  // least one tagged approved exercise appear; all others resolve to null below.
+  const coverageByCell = new Map<
+    string,
+    Record<string, Record<string, number>>
+  >();
+  for (const row of coverageRows) {
+    const cellKey = buildCellKeyFromRow(row);
+    const dist = coverageByCell.get(cellKey) ?? {};
+    const axisMap = dist[row.axis] ?? {};
+    axisMap[row.value] = row.n;
+    dist[row.axis] = axisMap;
+    coverageByCell.set(cellKey, dist);
   }
 
   // Enumerate the full cell universe, filter by requested params, and merge
@@ -185,6 +226,7 @@ admin.get('/admin/pool-status', async (c) => {
       // targetSize flags a cell whose target may need raising.
       targetSize: targetCellSize(depletionRate7d),
       generationTarget: resolveCellTarget(cell),
+      coverageDistribution: coverageByCell.get(cellKey) ?? null,
     };
   });
 

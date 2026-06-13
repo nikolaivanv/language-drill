@@ -70,6 +70,8 @@ vi.mock('../db', () => ({
     select: () => makeChain(),
     insert: (table: unknown) => dbInsert(table as AnyJson),
     update: (table: unknown) => dbUpdate(table),
+    execute: () =>
+      Promise.resolve({ rows: queryQueue.shift() ?? [] }),
   },
 }));
 
@@ -182,7 +184,7 @@ describe('GET /admin/pool-status', () => {
   });
 
   it('returns 200 with all-zero counts for every curriculum cell on an empty DB', async () => {
-    queryQueue.push([], [], []); // counts, lastRefilled, depletion all empty
+    queryQueue.push([], [], [], []); // coverage (db.execute shifts first), counts, lastRefilled, depletion — all empty
 
     const res = await app.request('/admin/pool-status', undefined, adminEnv);
     expect(res.status).toBe(200);
@@ -206,11 +208,12 @@ describe('GET /admin/pool-status', () => {
       expect(['ES', 'DE', 'TR']).toContain(item.language);
       expect(['A1', 'A2', 'B1', 'B2']).toContain(item.level);
       expect(['cloze', 'translation', 'vocab_recall', 'sentence_construction']).toContain(item.type);
+      expect(item.coverageDistribution).toBeNull();
     }
   });
 
   it('filters to only ES cells when ?language=ES', async () => {
-    queryQueue.push([], [], []);
+    queryQueue.push([], [], [], []); // coverage (db.execute), counts, lastRefilled, depletion
 
     const res = await app.request(
       '/admin/pool-status?language=ES',
@@ -245,15 +248,18 @@ describe('GET /admin/pool-status', () => {
     // query); this test pushes a Date to confirm the consumption path
     // surfaces it as an ISO string in the response.
     const refilledAt = new Date('2026-05-12T04:01:17.491Z');
+    // db.execute (coverage) shifts synchronously when Promise.all is built, so
+    // coverage comes first in the queue; the three selects drain in array order.
     queryQueue.push(
-      [],
-      [
+      [],   // Q4 coverage (db.execute — shifts first, synchronously)
+      [],   // Q1 counts
+      [     // Q2 lastRefilled
         {
           cellKey: 'es:b1:cloze:es-b1-present-subjunctive',
           lastRefilledAt: refilledAt,
         },
       ],
-      [],
+      [],   // Q3 depletion
     );
 
     const res = await app.request('/admin/pool-status', undefined, adminEnv);
@@ -284,8 +290,10 @@ describe('GET /admin/pool-status', () => {
   it('includes cells with zero approved exercises (the urgent-refill set)', async () => {
     // DB returns counts for ONE arbitrary cell only — every other cell must
     // still appear in the response with zeroed counts.
+    // db.execute (coverage) shifts synchronously first; selects drain in array order.
     queryQueue.push(
-      [
+      [],   // Q4 coverage (db.execute — shifts first, synchronously)
+      [     // Q1 counts
         {
           language: 'ES',
           difficulty: 'A1',
@@ -296,8 +304,8 @@ describe('GET /admin/pool-status', () => {
           rejected: 0,
         },
       ],
-      [],
-      [],
+      [],   // Q2 lastRefilled
+      [],   // Q3 depletion
     );
 
     const res = await app.request('/admin/pool-status', undefined, adminEnv);
@@ -306,6 +314,53 @@ describe('GET /admin/pool-status', () => {
     const body = (await res.json()) as AnyJson[];
     const zeroApprovedItems = body.filter((item) => item.approved === 0);
     expect(zeroApprovedItems.length).toBeGreaterThan(0);
+  });
+
+  it('returns per-cell coverageDistribution for approved tagged rows', async () => {
+    // Grammar point: tr-a1-personal-suffixes (TR A1, personRotation: true,
+    // kind: grammar, no clozeUnsuitable) → produces a cloze cell in the
+    // curriculum cross-product.
+    const GRAMMAR_KEY = 'tr-a1-personal-suffixes';
+
+    // db.execute (coverage) shifts synchronously when Promise.all is built, before
+    // any select chains' .then() fires — so coverage rows go first in the queue.
+    // The mock rows simulate the SQL aggregate output (the SQL itself is not run
+    // against Postgres in this mocked test).
+    //
+    // Two tagged approved exercises for the same cell produce 3 aggregate rows:
+    //   exercise 1: person=3sg, polarity=affirmative
+    //   exercise 2: person=3sg, polarity=negative
+    // → {axis: "person",   value: "3sg",         n: 2}
+    //   {axis: "polarity", value: "affirmative",  n: 1}
+    //   {axis: "polarity", value: "negative",     n: 1}
+    queryQueue.push(
+      [   // Q4 coverage (db.execute — shifts first, synchronously)
+        { language: 'TR', difficulty: 'A1', type: 'cloze', grammarPointKey: GRAMMAR_KEY, axis: 'person',   value: '3sg',         n: 2 },
+        { language: 'TR', difficulty: 'A1', type: 'cloze', grammarPointKey: GRAMMAR_KEY, axis: 'polarity', value: 'affirmative',  n: 1 },
+        { language: 'TR', difficulty: 'A1', type: 'cloze', grammarPointKey: GRAMMAR_KEY, axis: 'polarity', value: 'negative',     n: 1 },
+      ],
+      [], // Q1 counts
+      [], // Q2 lastRefilled
+      [], // Q3 depletion
+    );
+
+    const res = await app.request('/admin/pool-status?language=TR&level=A1', undefined, adminEnv);
+    expect(res.status).toBe(200);
+
+    const body = (await res.json()) as AnyJson[];
+    const item = body.find(
+      (i: AnyJson) => i.grammarPointKey === GRAMMAR_KEY && i.type === 'cloze',
+    );
+    expect(item, `cloze cell for ${GRAMMAR_KEY} not found in response`).toBeDefined();
+    expect(item!.coverageDistribution).toEqual({
+      person:   { '3sg': 2 },
+      polarity: { affirmative: 1, negative: 1 },
+    });
+
+    // Only the seeded cell should have non-null distribution.
+    expect(
+      body.filter((i: AnyJson) => i.coverageDistribution !== null),
+    ).toHaveLength(1);
   });
 });
 

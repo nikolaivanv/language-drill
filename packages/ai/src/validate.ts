@@ -15,6 +15,12 @@
 
 import type Anthropic from "@anthropic-ai/sdk";
 
+import {
+  COVERAGE_AXIS_VALUES,
+  type CoverageAxis,
+  type CoverageTags,
+} from "@language-drill/shared";
+
 import type { ClaudeUsageBreakdown } from "./cost-model.js";
 import {
   TOOL_NAME_BY_TYPE,
@@ -99,6 +105,37 @@ export const VALIDATION_TOOL: Anthropic.Tool = {
         description:
           'Free-text reasons that go into exercises.flagged_reasons when the draft routes to "flagged". Add anything that future-you would want to see when reviewing manually.',
       },
+      coverage: {
+        type: "object",
+        description:
+          "Realized coverage values for this draft, on the axes the user prompt asks about. Fill ONLY the sub-fields requested for this exercise; omit the rest. These are descriptive tags for pool-diversity monitoring — they never affect approval.",
+        properties: {
+          person: {
+            type: "string",
+            enum: [...COVERAGE_AXIS_VALUES.person],
+            description:
+              "Grammatical person/number realized by the target answer (the form the learner must produce).",
+          },
+          wordClass: {
+            type: "string",
+            enum: [...COVERAGE_AXIS_VALUES.wordClass],
+            description:
+              "Part of speech of the target word (vocab_recall `expectedWord`).",
+          },
+          polarity: {
+            type: "string",
+            enum: [...COVERAGE_AXIS_VALUES.polarity],
+            description:
+              "Whether the target sentence is affirmative or negative.",
+          },
+          sentenceType: {
+            type: "string",
+            enum: [...COVERAGE_AXIS_VALUES.sentenceType],
+            description:
+              "Clause type of the target sentence: declarative, interrogative, or imperative.",
+          },
+        },
+      },
     },
     required: [
       "qualityScore",
@@ -142,6 +179,13 @@ export type ValidationResult = {
   culturalIssues: string[];
   /** Free-text reasons the writer denormalizes into `exercises.flagged_reasons`. */
   flaggedReasons: string[];
+  /**
+   * Realized coverage values for pool-diversity monitoring (Phase 0). Strictly
+   * non-load-bearing: `routeValidationResult` ignores it, and
+   * `parseValidationResult` coerces anything malformed to `{}`. Only axis
+   * values present in `COVERAGE_AXIS_VALUES` survive parsing.
+   */
+  coverage: CoverageTags;
 };
 
 export type ValidateDraftResult = {
@@ -202,6 +246,26 @@ function coerceStringArray(
   return v.filter((item): item is string => typeof item === "string");
 }
 
+/**
+ * Lenient reader for the non-load-bearing `coverage` object. A missing or
+ * non-object value yields `{}`; for each known axis, the value is kept only
+ * when it is a string member of that axis's enum, otherwise dropped. Never
+ * throws — coverage never gates routing, so a malformed value must not cost
+ * the draft.
+ */
+function coerceCoverage(raw: Record<string, unknown>): CoverageTags {
+  const v = raw.coverage;
+  if (!isObject(v)) return {};
+  const out: Record<string, string> = {};
+  for (const axis of Object.keys(COVERAGE_AXIS_VALUES) as CoverageAxis[]) {
+    const val = v[axis];
+    if (typeof val === "string" && COVERAGE_AXIS_VALUES[axis].includes(val)) {
+      out[axis] = val;
+    }
+  }
+  return out as CoverageTags;
+}
+
 export function parseValidationResult(input: unknown): ValidationResult {
   if (!isObject(input)) {
     throw new ValidationParseError("Validation result must be an object");
@@ -236,6 +300,9 @@ export function parseValidationResult(input: unknown): ValidationResult {
   const culturalIssues = coerceStringArray(raw, "culturalIssues");
   const flaggedReasons = coerceStringArray(raw, "flaggedReasons");
 
+  // Non-load-bearing coverage object — coerced leniently, never throws.
+  const coverage = coerceCoverage(raw);
+
   return {
     qualityScore,
     ambiguous: raw.ambiguous as boolean,
@@ -244,6 +311,7 @@ export function parseValidationResult(input: unknown): ValidationResult {
     grammarPointMatch: raw.grammarPointMatch as boolean,
     culturalIssues,
     flaggedReasons,
+    coverage,
   };
 }
 

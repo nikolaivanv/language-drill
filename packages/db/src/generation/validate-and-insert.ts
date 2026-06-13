@@ -49,6 +49,7 @@ import { deterministicUuid } from '../lib/deterministic-uuid';
 import { exerciseTags, exercises } from '../schema/index';
 
 import type { Cell } from './cells';
+import { applicableCoverageTags } from './coverage-tags';
 import { applyDeterministicChecks } from './deterministic-checks';
 import { routeValidationResult } from './routing';
 
@@ -450,6 +451,7 @@ export async function validateAndInsertWithRetry(
               decision.flaggedReasons.length > 0
                 ? decision.flaggedReasons
                 : null,
+            coverageTags: applicableCoverageTags(opts.cell, result.coverage),
             generatedAt: opts.generatedAt,
           })
           .onConflictDoNothing()

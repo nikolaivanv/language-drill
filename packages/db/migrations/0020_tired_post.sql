@@ -1,0 +1,1 @@
+ALTER TABLE "exercises" ADD COLUMN "coverage_tags" jsonb;

@@ -75,6 +75,7 @@ const validValidationInput: ValidationResult = {
   grammarPointMatch: true,
   culturalIssues: [],
   flaggedReasons: [],
+  coverage: {},
 };
 
 // ---------------------------------------------------------------------------
@@ -438,5 +439,50 @@ describe("validateDraft", () => {
 
     expect(draft).toEqual(draftBefore);
     expect(baseSpec).toEqual(specBefore);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseValidationResult — coverage
+// ---------------------------------------------------------------------------
+
+describe("parseValidationResult — coverage", () => {
+  const base = {
+    qualityScore: 0.9,
+    ambiguous: false,
+    contextSpoilsAnswer: false,
+    levelMatch: true,
+    grammarPointMatch: true,
+    culturalIssues: [],
+    flaggedReasons: [],
+  };
+
+  it("keeps valid axis values", () => {
+    const r = parseValidationResult({
+      ...base,
+      coverage: { person: "2pl", polarity: "negative" },
+    });
+    expect(r.coverage).toEqual({ person: "2pl", polarity: "negative" });
+  });
+
+  it("drops values not in the axis enum", () => {
+    const r = parseValidationResult({
+      ...base,
+      coverage: { person: "4sg", wordClass: "noun", bogus: "x" },
+    });
+    expect(r.coverage).toEqual({ wordClass: "noun" });
+  });
+
+  it("missing or non-object coverage → empty object", () => {
+    expect(parseValidationResult(base).coverage).toEqual({});
+    expect(
+      parseValidationResult({ ...base, coverage: "nope" }).coverage,
+    ).toEqual({});
+  });
+
+  it("a malformed coverage never affects routing fields", () => {
+    const r = parseValidationResult({ ...base, coverage: 42 });
+    expect(r.qualityScore).toBe(0.9);
+    expect(r.grammarPointMatch).toBe(true);
   });
 });

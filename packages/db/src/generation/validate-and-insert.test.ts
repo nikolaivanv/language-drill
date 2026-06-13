@@ -119,6 +119,7 @@ const PASSING_VALIDATION: ValidateDraftResult = {
     grammarPointMatch: true,
     culturalIssues: [],
     flaggedReasons: [],
+    coverage: {},
   },
   tokenUsage: {
     inputTokens: 10,
@@ -139,6 +140,7 @@ const REJECTING_VALIDATION: ValidateDraftResult = {
     grammarPointMatch: true,
     culturalIssues: [],
     flaggedReasons: [],
+    coverage: {},
   },
   tokenUsage: {
     inputTokens: 10,

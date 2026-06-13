@@ -388,3 +388,91 @@ describe("buildValidationUserPrompt", () => {
     expect(msg).toContain("Espero que vengas.");
   });
 });
+
+// ---------------------------------------------------------------------------
+// buildValidationUserPrompt — coverage directive (Task 3)
+// ---------------------------------------------------------------------------
+
+function coverageGrammarPoint(personRotation: boolean): GenerationSpec["grammarPoint"] {
+  return {
+    key: "tr-a1-test",
+    kind: "grammar" as const,
+    name: "Test point",
+    description: "desc",
+    cefr: CefrLevel.A1,
+    cefrLevel: CefrLevel.A1 as GenerationSpec["grammarPoint"]["cefrLevel"],
+    language: Language.TR as GenerationSpec["grammarPoint"]["language"],
+    examplesPositive: [],
+    examplesNegative: [],
+    commonErrors: [],
+    ...(personRotation ? { personRotation: true } : {}),
+  };
+}
+
+function specFor(
+  exerciseType: ExerciseType,
+  personRotation: boolean,
+): GenerationSpec {
+  return {
+    language: Language.TR,
+    cefrLevel: CefrLevel.A1,
+    exerciseType,
+    grammarPoint: coverageGrammarPoint(personRotation),
+    topicDomain: null,
+    count: 1,
+    batchSeed: "test",
+  };
+}
+
+const clozeDraftForCoverage: ExerciseDraft = {
+  id: "00000000-0000-0000-0000-000000000001",
+  contentJson: {
+    type: ExerciseType.CLOZE,
+    instructions: "Fill the blank",
+    sentence: "Ben ___ (gitmek).",
+    correctAnswer: "giderim",
+  } as ClozeContent,
+  metadata: {
+    grammarPointKey: "tr-a1-test",
+    topicDomain: null,
+    modelId: "claude-sonnet-4-6",
+    inputTokens: 0,
+    outputTokens: 0,
+    cacheCreationInputTokens: 0,
+    cacheReadInputTokens: 0,
+    inBatchDuplicate: false,
+  },
+};
+
+const vocabDraftForCoverage: ExerciseDraft = {
+  ...clozeDraftForCoverage,
+  contentJson: {
+    type: ExerciseType.VOCAB_RECALL,
+    instructions: "Recall the word",
+    prompt: "water",
+    expectedWord: "su",
+    hints: [],
+    exampleSentence: "Su içiyorum.",
+  } as VocabRecallContent,
+};
+
+describe("buildValidationUserPrompt — coverage directive", () => {
+  it("grammar cloze without personRotation asks polarity + sentenceType, not person", () => {
+    const p = buildValidationUserPrompt(clozeDraftForCoverage, specFor(ExerciseType.CLOZE, false));
+    expect(p).toContain("polarity");
+    expect(p).toContain("sentenceType");
+    expect(p).not.toContain("grammatical person");
+  });
+
+  it("grammar cloze with personRotation also asks person", () => {
+    const p = buildValidationUserPrompt(clozeDraftForCoverage, specFor(ExerciseType.CLOZE, true));
+    expect(p).toContain("grammatical person");
+    expect(p).toContain("polarity");
+  });
+
+  it("vocab_recall asks wordClass only", () => {
+    const p = buildValidationUserPrompt(vocabDraftForCoverage, specFor(ExerciseType.VOCAB_RECALL, false));
+    expect(p).toContain("part of speech");
+    expect(p).not.toContain("polarity");
+  });
+});
