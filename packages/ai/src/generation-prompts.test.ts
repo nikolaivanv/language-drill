@@ -913,3 +913,49 @@ describe("personDisplayForCode", () => {
     expect(personDisplayForCode(Language.DE, "2pl")).toBe("2pl (ihr)");
   });
 });
+
+// ---------------------------------------------------------------------------
+// buildGenerationUserPrompt — explicit personTargets
+// ---------------------------------------------------------------------------
+
+describe("buildGenerationUserPrompt — explicit personTargets", () => {
+  const inputs = {
+    language: Language.TR,
+    cefrLevel: "A2",
+    exerciseType: ExerciseType.CLOZE,
+    grammarPoint: { name: "Aorist tense", personRotation: true },
+  } as unknown as GenerationPromptInputs;
+
+  it("pins the explicit target's label for the ordinal", () => {
+    const msg = buildGenerationUserPrompt(
+      inputs, 0, null, null, "scheduled-2026-06-13", ["2pl", "1pl"],
+    );
+    expect(msg).toContain("Target grammatical person for this draft: 2pl (siz)");
+  });
+
+  it("uses personTargets[ordinal], not ordinal rotation", () => {
+    const msg = buildGenerationUserPrompt(
+      inputs, 1, null, null, "scheduled-2026-06-13", ["2pl", "1pl"],
+    );
+    expect(msg).toContain("Target grammatical person for this draft: 1pl (biz)");
+  });
+
+  it("falls back to ordinal rotation when personTargets is absent", () => {
+    const withTargets = buildGenerationUserPrompt(
+      inputs, 0, null, null, "seed-x", ["2pl"],
+    );
+    const blind = buildGenerationUserPrompt(inputs, 0, null, null, "seed-x");
+    expect(withTargets).not.toBe(blind);
+    expect(blind).toContain("Target grammatical person for this draft:");
+  });
+
+  it("emits no person block when personRotation is false", () => {
+    const noRotation = {
+      ...inputs,
+      grammarPoint: { name: "X", personRotation: false },
+    } as unknown as GenerationPromptInputs;
+    expect(
+      buildGenerationUserPrompt(noRotation, 0, null, null, "s", ["2pl"]),
+    ).not.toContain("Target grammatical person");
+  });
+});
