@@ -125,6 +125,7 @@ import { handler } from './scheduler';
 import { parseGenerationJobMessage } from './job-message';
 import { resolveCellTarget } from './cell-targets';
 import { TARGET_PER_CELL } from './scheduler-decision';
+import { personCodesForLanguage } from '@language-drill/ai';
 
 // ---------------------------------------------------------------------------
 // Lifecycle
@@ -249,6 +250,37 @@ function rowsToFillAllCellsExcept(
     });
   }
   return rows;
+}
+
+/**
+ * First Round-1 cloze cell whose grammar point is `personRotation` AND whose
+ * language has the full six-person paradigm (TR/DE — ES drops `2pl`). Picking a
+ * six-person language lets the coverage assertions reference `2pl` directly.
+ */
+function firstPersonRotationClozeCell(): Cell {
+  const cell = allRoundOneCells().find(
+    (c) =>
+      c.exerciseType === 'cloze' &&
+      c.grammarPoint.personRotation === true &&
+      personCodesForLanguage(
+        c.language as Exclude<LearningLanguage, never>,
+      ).includes('2pl'),
+  );
+  if (cell === undefined) {
+    throw new Error('no six-person personRotation cloze cell in curriculum');
+  }
+  return cell;
+}
+
+/** First Round-1 cloze cell whose grammar point is NOT `personRotation`. */
+function firstNonPersonRotationClozeCell(): Cell {
+  const cell = allRoundOneCells().find(
+    (c) => c.exerciseType === 'cloze' && c.grammarPoint.personRotation !== true,
+  );
+  if (cell === undefined) {
+    throw new Error('no non-personRotation cloze cell in curriculum');
+  }
+  return cell;
 }
 
 // ---------------------------------------------------------------------------
@@ -583,5 +615,91 @@ describe('scheduler handler', () => {
     expect(msg.spec.grammarPointKey).toBe(subject.grammarPoint.key);
     // TARGET_PER_CELL=50 minus approvedInPool=48 = 2.
     expect(msg.spec.count).toBe(2);
+  });
+
+  // -------------------------------------------------------------------------
+  // Phase 1 — coverage controller (person axis)
+  // -------------------------------------------------------------------------
+
+  it('Phase 1: personRotation cell under target gets weighted personTargets favoring starved persons', async () => {
+    const subject = firstPersonRotationClozeCell();
+    const subjectKeys = new Set([subject.cellKey]);
+    // Subject under target; everything else at its resolved target.
+    mockGroupBy.mockResolvedValueOnce(
+      rowsToFillAllCellsExcept(subjectKeys, 0),
+    );
+
+    // 1st execute = recent succeeded jobs (none → no coverage_outcome, no
+    // suppression). 2nd execute = approved-pool person distribution: the pool
+    // is heavily skewed toward 3sg, with 2pl starved (absent).
+    mockExecute.mockResolvedValueOnce({ rows: [] });
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        {
+          language: subject.language,
+          difficulty: subject.cefrLevel,
+          type: subject.exerciseType,
+          grammar_point_key: subject.grammarPoint.key,
+          person: '3sg',
+          n: 40,
+        },
+        {
+          language: subject.language,
+          difficulty: subject.cefrLevel,
+          type: subject.exerciseType,
+          grammar_point_key: subject.grammarPoint.key,
+          person: '1sg',
+          n: 5,
+        },
+      ],
+    });
+
+    await handler();
+
+    const messages = capturedBatches()
+      .flatMap(decodeBatch)
+      .map((m) => parseGenerationJobMessage(m));
+    const subjectMsg = messages.find(
+      (m) =>
+        m.spec.grammarPointKey === subject.grammarPoint.key &&
+        m.spec.cefrLevel === subject.cefrLevel &&
+        m.spec.language === subject.language &&
+        m.spec.exerciseType === subject.exerciseType,
+    );
+    expect(subjectMsg).toBeDefined();
+
+    // personTargets present and length-matched to count (validated by parse too).
+    expect(subjectMsg!.spec.personTargets).toBeDefined();
+    expect(subjectMsg!.spec.personTargets).toHaveLength(subjectMsg!.spec.count);
+
+    // The starved 2pl bucket (absent from the pool) is targeted; the heavily
+    // over-represented 3sg bucket is not, given the strong skew.
+    expect(subjectMsg!.spec.personTargets).toContain('2pl');
+    expect(subjectMsg!.spec.personTargets).not.toContain('3sg');
+  });
+
+  it('Phase 1: non-personRotation cell gets no personTargets', async () => {
+    const subject = firstNonPersonRotationClozeCell();
+    const subjectKeys = new Set([subject.cellKey]);
+    mockGroupBy.mockResolvedValueOnce(
+      rowsToFillAllCellsExcept(subjectKeys, 0),
+    );
+    // Recent jobs empty; person distribution empty (default) — irrelevant here.
+    mockExecute.mockResolvedValueOnce({ rows: [] });
+
+    await handler();
+
+    const messages = capturedBatches()
+      .flatMap(decodeBatch)
+      .map((m) => parseGenerationJobMessage(m));
+    const subjectMsg = messages.find(
+      (m) =>
+        m.spec.grammarPointKey === subject.grammarPoint.key &&
+        m.spec.cefrLevel === subject.cefrLevel &&
+        m.spec.language === subject.language &&
+        m.spec.exerciseType === subject.exerciseType,
+    );
+    expect(subjectMsg).toBeDefined();
+    expect(subjectMsg!.spec.personTargets).toBeUndefined();
   });
 });
