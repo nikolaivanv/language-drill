@@ -149,7 +149,7 @@ never as a controller.
 
 ## Staged rollout
 
-### Phase 0 — coverage tags + monitoring (recommended next step)
+### Phase 0 — coverage tags + monitoring ✅ implemented
 
 Validator emits the realized person tag; persist it; surface the per-cell
 distribution on the existing `GET /admin/pool-status` endpoint. This alone turns

@@ -14,6 +14,7 @@ describe('PoolStatusItemSchema', () => {
     depletionRate7d: 0.3,
     targetSize: 50,
     generationTarget: 20,
+    coverageDistribution: null,
   };
 
   it('parses a valid PoolStatusItem with lastRefilledAt: null', () => {
@@ -38,6 +39,31 @@ describe('PoolStatusItemSchema', () => {
   it('rejects a PoolStatusItem missing the generationTarget field', () => {
     const { generationTarget: _omitted, ...withoutTarget } = baseItem;
     const result = PoolStatusItemSchema.safeParse(withoutTarget);
+    expect(result.success).toBe(false);
+  });
+
+  it('parses a populated coverageDistribution (axis → value → count)', () => {
+    const result = PoolStatusItemSchema.safeParse({
+      ...baseItem,
+      coverageDistribution: {
+        person: { '3sg': 12, '2pl': 2 },
+        polarity: { affirmative: 13, negative: 1 },
+      },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects a coverageDistribution whose counts are not numbers', () => {
+    const result = PoolStatusItemSchema.safeParse({
+      ...baseItem,
+      coverageDistribution: { person: { '3sg': 'lots' } },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a PoolStatusItem missing the coverageDistribution field', () => {
+    const { coverageDistribution: _omitted, ...withoutDist } = baseItem;
+    const result = PoolStatusItemSchema.safeParse(withoutDist);
     expect(result.success).toBe(false);
   });
 });
