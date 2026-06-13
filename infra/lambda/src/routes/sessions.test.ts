@@ -710,7 +710,7 @@ describe('GET /sessions/today', () => {
     expect(body.totalEstimatedMinutes).toBe(12);
   });
 
-  it('Path B: UNION-ALL SQL selects grammar_point_key and uses exposure ordering (nulls first)', async () => {
+  it('Path B: UNION-ALL SQL selects grammar_point_key and uses exposure ordering (freshFirstOrderBy)', async () => {
     // Verify the generated SQL structure: it should select grammar_point_key
     // and use freshFirstOrderBy (which produces "nulls first" in its ORDER BY).
     mockLimit
@@ -747,6 +747,8 @@ describe('GET /sessions/today', () => {
 
     // grammar_point_key must be projected in every subquery
     expect(staticText).toContain('grammar_point_key');
+    const occurrences = (staticText.match(/grammar_point_key/g) ?? []).length;
+    expect(occurrences).toBe(3); // once per distinct plan type (cloze, translation, vocab_recall)
     // The ORDER BY clause must reference the exposure-ordering fragment
     // (not bare random()). The fragment itself is mocked, but the ORDER BY
     // placeholder must be present and the mock must have been called.

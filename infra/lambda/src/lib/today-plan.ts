@@ -130,7 +130,7 @@ export type PoolDraw = {
   type: ExerciseType;
   topicHint: string | null;
   difficulty: CefrLevel;
-  /** Curriculum grammar point this exercise targets; null for unmapped items. */
+  /** Curriculum grammar point this exercise targets (null for unmapped items). Carried on PoolDraw so mastery-aware ranking can prioritise draws before composeFreshPlan; intentionally not surfaced on PlanItem. */
   grammarPointKey: string | null;
 };
 
