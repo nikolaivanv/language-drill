@@ -585,6 +585,59 @@ describe('validateAndInsertWithRetry — seed persistence', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Phase 1 coverage controller — realizedPerson on inserted DraftOutcome.
+// The validator's `coverage.person` is surfaced on the outcome so the per-
+// person tally in `run-one-cell` can credit the right bucket without re-
+// reading from the DB. Set ONLY on the inserted-* / dedup-then-success
+// return paths; absent on rejected / dedup-given-up.
+// ---------------------------------------------------------------------------
+
+describe('validateAndInsertWithRetry — realizedPerson on inserted outcome', () => {
+  it('carries realizedPerson from coverage.person on an inserted-approved outcome', async () => {
+    // Validator approves with a person tag; the outcome must surface it.
+    mockValidateDraft.mockResolvedValue({
+      ...PASSING_VALIDATION,
+      result: { ...PASSING_VALIDATION.result, coverage: { person: '2pl' } },
+    });
+    const capture: { exercise?: Record<string, unknown> } = {};
+
+    const outcome = await validateAndInsertWithRetry({
+      db: makeInsertSucceedsDb(capture),
+      client: mockClient,
+      spec: trSpec,
+      draft: makeTrDraft('Sokakta ev___ var.', 'ler'),
+      ordinal: 0,
+      cell: trCell,
+      args,
+      generatedAt,
+    });
+
+    expect(outcome.terminalStatus).toBe('inserted-approved');
+    expect(outcome.realizedPerson).toBe('2pl');
+  });
+
+  it('leaves realizedPerson undefined when coverage has no person', async () => {
+    // PASSING_VALIDATION already has coverage: {} (no person).
+    mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
+    const capture: { exercise?: Record<string, unknown> } = {};
+
+    const outcome = await validateAndInsertWithRetry({
+      db: makeInsertSucceedsDb(capture),
+      client: mockClient,
+      spec: trSpec,
+      draft: makeTrDraft('Sokakta ev___ var.', 'ler'),
+      ordinal: 0,
+      cell: trCell,
+      args,
+      generatedAt,
+    });
+
+    expect(outcome.terminalStatus).toBe('inserted-approved');
+    expect(outcome.realizedPerson).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Rejection-reason capture — the discarded ordinal carries its reasons out via
 // `DraftOutcome.rejectionReasons` so `runOneCell` can aggregate the
 // distribution. Insert behavior is unchanged; this only surfaces what was
