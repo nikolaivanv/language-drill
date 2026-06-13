@@ -65,7 +65,7 @@ vi.mock('@language-drill/db', () => ({
     evidenceCount: 'evidence_count',
     lastPracticedAt: 'last_practiced_at',
   },
-  updateMastery: (...args: unknown[]) => mockUpdateMastery(...args),
+  updateMastery: (prev: unknown, obs: unknown) => mockUpdateMastery(prev, obs),
   getGrammarPoint: vi.fn(() => undefined),
 }));
 
