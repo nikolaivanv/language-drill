@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   CefrLevel,
   LANGUAGE_NAMES,
@@ -282,6 +283,10 @@ export default function PracticePage() {
     <>
       {/* Mobile: the coach rail collapses into a card at the top of content. */}
       {isMobile && currentItem && <CoachCard message={coachMsg} />}
+
+      <Link href="/fluency" className="t-small underline text-ink-mute hover:text-ink self-start">
+        try fluency mode — timed drills on what you already know →
+      </Link>
 
       {selectors}
 
