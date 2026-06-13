@@ -10,6 +10,8 @@ import {
   userExerciseHistory,
   usageEvents,
   getGrammarPoint,
+  userGrammarMastery,
+  updateMastery,
 } from '@language-drill/db';
 import {
   createObservedClaudeClient,
@@ -293,6 +295,61 @@ exercises.post('/exercises/:id/submit', async (c) => {
       eventType: 'ai_evaluation',
       metadata: { exerciseId: id, language: exercise.language, difficulty: exercise.difficulty },
     });
+
+    // Best-effort per-grammar-point mastery update. A failure here must never
+    // fail the submission — the authoritative signal is the history row above.
+    if (exercise.grammarPointKey) {
+      try {
+        const at = new Date();
+        const existing = await db
+          .select({
+            masteryScore: userGrammarMastery.masteryScore,
+            confidence: userGrammarMastery.confidence,
+            evidenceCount: userGrammarMastery.evidenceCount,
+            lastPracticedAt: userGrammarMastery.lastPracticedAt,
+          })
+          .from(userGrammarMastery)
+          .where(
+            and(
+              eq(userGrammarMastery.userId, userId),
+              eq(userGrammarMastery.grammarPointKey, exercise.grammarPointKey),
+            ),
+          )
+          .limit(1);
+
+        const next = updateMastery(existing[0] ?? null, {
+          score: result.score,
+          difficulty: exercise.difficulty as CefrLevel,
+          at,
+        });
+
+        await db
+          .insert(userGrammarMastery)
+          .values({
+            userId,
+            language: exercise.language as Language,
+            grammarPointKey: exercise.grammarPointKey,
+            masteryScore: next.masteryScore,
+            confidence: next.confidence,
+            evidenceCount: next.evidenceCount,
+            lastPracticedAt: next.lastPracticedAt,
+            updatedAt: at,
+          })
+          .onConflictDoUpdate({
+            target: [userGrammarMastery.userId, userGrammarMastery.grammarPointKey],
+            set: {
+              masteryScore: next.masteryScore,
+              confidence: next.confidence,
+              evidenceCount: next.evidenceCount,
+              lastPracticedAt: next.lastPracticedAt,
+              updatedAt: at,
+              language: exercise.language as Language,
+            },
+          });
+      } catch (masteryErr) {
+        console.error('[submit] mastery update failed (non-fatal):', masteryErr);
+      }
+    }
 
     return c.json(result);
   } catch (err) {
