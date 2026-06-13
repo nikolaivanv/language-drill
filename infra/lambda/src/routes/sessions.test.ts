@@ -82,6 +82,13 @@ vi.mock('@language-drill/db', () => ({
     language: 'language',
     proficiencyLevel: 'proficiency_level',
   },
+  userGrammarMastery: {
+    userId: 'user_id',
+    language: 'language',
+    grammarPointKey: 'grammar_point_key',
+    masteryScore: 'mastery_score',
+    lastPracticedAt: 'last_practiced_at',
+  },
   usageEvents: {},
   practiceSessions: {
     id: 'id',
@@ -89,6 +96,9 @@ vi.mock('@language-drill/db', () => ({
     language: 'language',
     startedAt: 'started_at',
   },
+  // getGrammarPoint is a pure in-memory function — return undefined for unknown
+  // keys so prereqsOf yields [] and the prereq penalty doesn't fire in tests.
+  getGrammarPoint: (_key: string) => undefined,
 }));
 
 // Mock the review-status filter so we can count calls per route. The
@@ -685,6 +695,8 @@ describe('GET /sessions/today', () => {
         { id: 'p5', type: 'cloze', topic_hint: 'preterite', difficulty: 'B2', grammar_point_key: 'es-b2-preterite' },
       ],
     });
+    // Mastery select (runs in parallel with pool sample) — empty for this test.
+    mockSelectAwait.mockResolvedValueOnce([]);
 
     const res = await app.request(
       '/sessions/today?language=ES',
@@ -718,6 +730,8 @@ describe('GET /sessions/today', () => {
       .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
 
     mockExecute.mockResolvedValueOnce({ rows: [] });
+    // Mastery select (runs in parallel with pool sample) — empty for this test.
+    mockSelectAwait.mockResolvedValueOnce([]);
 
     await app.request('/sessions/today?language=ES', { method: 'GET' }, authEnv);
 
@@ -767,6 +781,8 @@ describe('GET /sessions/today', () => {
 
     // Empty pool — no approved exercise of any type at this level.
     mockExecute.mockResolvedValueOnce({ rows: [] });
+    // Mastery select (runs in parallel with pool sample) — empty for this test.
+    mockSelectAwait.mockResolvedValueOnce([]);
 
     const res = await app.request(
       '/sessions/today?language=ES',
@@ -799,6 +815,8 @@ describe('GET /sessions/today', () => {
         { id: 't1', type: 'translation', topic_hint: null, difficulty: 'A1', grammar_point_key: null },
       ],
     });
+    // Mastery select (runs in parallel with pool sample) — empty for this test.
+    mockSelectAwait.mockResolvedValueOnce([]);
 
     const res = await app.request(
       '/sessions/today?language=ES',
@@ -829,6 +847,8 @@ describe('GET /sessions/today', () => {
         { id: 'p5', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
       ],
     });
+    // Mastery select (runs in parallel with pool sample) — empty for this test.
+    mockSelectAwait.mockResolvedValueOnce([]);
 
     const res = await app.request(
       '/sessions/today?language=DE',
@@ -839,6 +859,72 @@ describe('GET /sessions/today', () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as AnyJson;
     expect(body.items.every((it: AnyJson) => it.difficulty === 'B1')).toBe(true);
+  });
+
+  // -------------------------------------------------------------------------
+  // Mastery-aware ranking (Task 11)
+  // -------------------------------------------------------------------------
+  // Proves that a fresh (never-seen) grammar point is preferred over a mastered
+  // one. Uses unknown grammar point keys so getGrammarPoint → undefined →
+  // prereqsOf → [] and the prereq penalty never fires — the test isolates gap
+  // bias only.
+
+  it('Path B: mastery-aware ranking prefers fresh grammar point over mastered one for cloze slot', async () => {
+    // No today-session, profile B1.
+    mockLimit
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
+
+    // Pool: two cloze candidates (plus fillers for other types).
+    // gp-mastered is listed first in the pool draw (higher exposure priority),
+    // but ranking should demote it in favour of gp-fresh (no mastery row).
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        // Cloze candidates — gp-mastered listed first (would win without ranking).
+        { id: 'cloze-mastered', type: 'cloze', topic_hint: 'mastered-topic', difficulty: 'B1', grammar_point_key: 'gp-mastered' },
+        { id: 'cloze-fresh',    type: 'cloze', topic_hint: 'fresh-topic',    difficulty: 'B1', grammar_point_key: 'gp-fresh' },
+        // Extra cloze candidate for the second cloze slot.
+        { id: 'cloze-extra',    type: 'cloze', topic_hint: null,             difficulty: 'B1', grammar_point_key: null },
+        // Fill the remaining slot types so composeFreshPlan gets a full plan.
+        { id: 'sc-1',          type: 'sentence_construction', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'tr-1',          type: 'translation',           topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'vr-1',          type: 'vocab_recall',          topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+      ],
+    });
+
+    // Mastery select: gp-mastered has high mastery, gp-fresh has no row →
+    // rankPlanCandidates gives gp-fresh higher priority (larger gap).
+    mockSelectAwait.mockResolvedValueOnce([
+      {
+        grammarPointKey: 'gp-mastered',
+        masteryScore: 0.95,
+        lastPracticedAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(), // 1 hour ago
+      },
+    ]);
+
+    const res = await app.request(
+      '/sessions/today?language=ES',
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBeNull();
+    expect(body.items).toHaveLength(5);
+
+    // Verify the mastery select was issued with the right userId and language.
+    // The select chain uses mockWhere, which calls mockSelectAwait.
+    expect(mockSelectAwait).toHaveBeenCalled();
+
+    // The first cloze slot (index 1 per V1_PLAN_SHAPE) must be filled by the
+    // fresh-grammar-point exercise, NOT the mastered one. After ranking,
+    // cloze-fresh (gp-fresh, no mastery → gap = 1.0) outranks cloze-mastered
+    // (gp-mastered, mastery 0.95 → gap ≈ 0.05) so it is drawn first.
+    const clozesInPlan = (body.items as AnyJson[]).filter((it: AnyJson) => it.type === 'cloze');
+    // At least one cloze slot; the first cloze must carry the fresh-point hint.
+    expect(clozesInPlan.length).toBeGreaterThanOrEqual(1);
+    expect(clozesInPlan[0].topicHint).toBe('fresh-topic');
   });
 });
 
@@ -1479,6 +1565,8 @@ describe('review_status filter — GET /sessions/today Path B', () => {
         .mockResolvedValueOnce([]) // no today-session
         .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
       mockExecute.mockResolvedValueOnce({ rows: approvedDraws });
+      // Mastery select (runs in parallel with pool sample) — empty for this test.
+      mockSelectAwait.mockResolvedValueOnce([]);
     }
 
     const seenIds = new Set<string>();

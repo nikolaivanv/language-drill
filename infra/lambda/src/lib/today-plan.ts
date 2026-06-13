@@ -64,9 +64,7 @@ export type PlanCompositionSlot = {
 
 /**
  * The fixed v1 slot mix. Five items: warm-up cloze + core sentence construction
- * + production translation + core vocab + cool-down cloze. Adaptive weighting
- * by the user's weakest axis is explicitly deferred — see `composeFreshPlan`'s
- * unused `_radarSnapshot` parameter (lands in a later phase).
+ * + production translation + core vocab + cool-down cloze.
  */
 export const V1_PLAN_SHAPE: readonly PlanCompositionSlot[] = [
   { index: 1, prefix: 'warm-up', type: ExerciseType.CLOZE },
@@ -182,12 +180,12 @@ function toPlanItem(index: number, draw: PoolDraw): PlanItem {
  * five-item plan. Surviving items are re-indexed 1..n so the client's
  * index-derived labels stay contiguous.
  *
- * The unused `_radarSnapshot` parameter is the deferred adaptive swap point
- * (Design §"Adaptive swap point") — v1 ignores it.
+ * Candidates are consumed in the order given — the caller pre-ranks them
+ * (exposure + mastery) so slot assignment picks the highest-priority item per
+ * type.
  */
 export function composeFreshPlan(
   candidates: readonly PoolDraw[],
-  _radarSnapshot?: unknown,
 ): ComposeFreshPlanResult {
   // Per-type FIFO queues. Mutated by `take`; ordering within a type is the
   // pool sample's random order, so each shift is an independent random pick.

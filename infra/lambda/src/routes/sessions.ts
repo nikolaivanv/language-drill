@@ -7,7 +7,10 @@ import {
   practiceSessions,
   userExerciseHistory,
   userLanguageProfiles,
+  userGrammarMastery,
+  getGrammarPoint,
 } from '@language-drill/db';
+import { rankPlanCandidates, type PointMastery } from '../lib/mastery/rank';
 import { db } from '../db';
 import { approvedStatusFilter, freshFirstOrderBy } from '../lib/exercise-filters';
 import { authMiddleware } from '../middleware/auth';
@@ -339,8 +342,41 @@ sessions.get('/sessions/today', async (c) => {
   // -------------------------------------------------------------------------
   // The sample over-fetches distinct candidates per type so composeFreshPlan
   // can backfill a slot whose native type is missing (see its doc comment).
-  const draws = await sampleFreshPool({ language, difficulty: proficiencyLevel, userId });
-  const { items, insufficient } = composeFreshPlan(draws);
+  // Path B — compose a fresh 5-item plan from the pool.
+  // Fetch the pool sample and the user's per-point mastery in parallel, then
+  // rank candidates (exposure order is preserved as the tiebreak) before
+  // composing — so each slot picks the highest-priority item of its type.
+  const [draws, masteryRows] = await Promise.all([
+    sampleFreshPool({ language, difficulty: proficiencyLevel, userId }),
+    db
+      .select({
+        grammarPointKey: userGrammarMastery.grammarPointKey,
+        masteryScore: userGrammarMastery.masteryScore,
+        lastPracticedAt: userGrammarMastery.lastPracticedAt,
+      })
+      .from(userGrammarMastery)
+      .where(
+        and(
+          eq(userGrammarMastery.userId, userId),
+          eq(userGrammarMastery.language, language),
+        ),
+      ),
+  ]);
+
+  const masteryByPoint = new Map<string, PointMastery>(
+    masteryRows.map((r) => [
+      r.grammarPointKey,
+      { masteryScore: r.masteryScore, lastPracticedAt: new Date(r.lastPracticedAt) },
+    ]),
+  );
+
+  const ranked = rankPlanCandidates(draws, {
+    masteryByPoint,
+    prereqsOf: (key) => getGrammarPoint(key)?.prerequisiteKeys ?? [],
+    now: new Date(),
+  });
+
+  const { items, insufficient } = composeFreshPlan(ranked);
 
   const generatedAt = new Date().toISOString();
 
