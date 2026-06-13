@@ -947,6 +947,7 @@ describe("buildGenerationUserPrompt — explicit personTargets", () => {
     const blind = buildGenerationUserPrompt(inputs, 0, null, null, "seed-x");
     expect(withTargets).not.toBe(blind);
     expect(blind).toContain("Target grammatical person for this draft:");
+    expect(withTargets).toContain("Target grammatical person for this draft: 2pl (siz)");
   });
 
   it("emits no person block when personRotation is false", () => {
