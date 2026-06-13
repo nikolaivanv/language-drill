@@ -9,7 +9,7 @@ import {
   userLanguageProfiles,
 } from '@language-drill/db';
 import { db } from '../db';
-import { approvedStatusFilter } from '../lib/exercise-filters';
+import { approvedStatusFilter, freshFirstOrderBy } from '../lib/exercise-filters';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
 import {
@@ -75,8 +75,9 @@ sessions.post('/sessions', async (c) => {
   const { language, difficulty, exerciseCount } = bodyResult.data;
   const userId = c.get('userId');
 
-  // Pull a random manifest of N exercises for this (language, difficulty).
-  // Insufficient post-filter draws fall through to INSUFFICIENT_EXERCISES.
+  // Pull a manifest of N exercises for this (language, difficulty), ordered so
+  // never-attempted exercises come first (exposure control); falls through to
+  // INSUFFICIENT_EXERCISES if the pool is too small.
   const rows = await db
     .select()
     .from(exercisesTable)
@@ -87,7 +88,7 @@ sessions.post('/sessions', async (c) => {
         approvedStatusFilter(exercisesTable),
       ),
     )
-    .orderBy(sql`random()`)
+    .orderBy(freshFirstOrderBy(userId))
     .limit(exerciseCount);
 
   if (rows.length < exerciseCount) {
