@@ -357,6 +357,75 @@ describe('POST /fluency/attempts', () => {
 });
 
 // ---------------------------------------------------------------------------
+// regression: fluency stays off the accuracy radar
+// ---------------------------------------------------------------------------
+//
+// Design guarantee: POST /fluency/attempts writes ONLY to `fluencyAttempts`.
+// It must never write to `userExerciseHistory` (what the skill radar reads) or
+// `usageEvents` (the AI rate-limit bucket), and it must never call Claude.
+//
+// This guarantee is structural: routes/fluency.ts imports neither
+// `userExerciseHistory`, `usageEvents`, nor `@language-drill/ai`, so those
+// side-effects cannot occur. This test guards against a future edit that
+// accidentally reintroduces any of them: if `mockInsert` is called more than
+// once, a second table has been written; if it is never called, the fluency
+// insert was removed. Exactly one call == exactly one table written.
+
+describe('regression: fluency attempts never reach the accuracy radar', () => {
+  let app: Hono;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const mod = await import('./fluency');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  it('POST /fluency/attempts calls db.insert exactly once (fluencyAttempts only, no history/usage writes)', async () => {
+    // Arrange: exercise lookup returns a cloze with correctAnswer 'está'
+    mockLimit.mockResolvedValueOnce([
+      {
+        id: EXERCISE_UUID,
+        type: ExerciseType.CLOZE,
+        language: 'ES',
+        difficulty: 'B1',
+        grammarPointKey: null,
+        contentJson: {
+          type: ExerciseType.CLOZE,
+          sentence: '___ bien',
+          correctAnswer: 'está',
+          acceptableAnswers: [],
+        },
+      },
+    ]);
+
+    // Act: submit a correct answer
+    const res = await app.request(
+      '/fluency/attempts',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          exerciseId: EXERCISE_UUID,
+          answer: 'está',
+          latencyMs: 1500,
+        }),
+      },
+      authEnv,
+    );
+
+    // Assert: route completed successfully
+    expect(res.status).toBe(200);
+
+    // Assert: db.insert was called exactly once.
+    // routes/fluency.ts only imports `fluencyAttempts` from @language-drill/db,
+    // so one insert == one table. Two or more would mean history/usage was also
+    // written. Zero would mean the fluencyAttempts write was removed.
+    expect(mockInsert).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // GET /fluency/stats
 // ---------------------------------------------------------------------------
 
