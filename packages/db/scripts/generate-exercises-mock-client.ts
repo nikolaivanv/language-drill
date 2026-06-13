@@ -359,9 +359,11 @@ export function createMockAnthropicClient(): Anthropic {
       validatorCallOrdinal += 1;
 
       const baseFixture = loadValidationFixture(exerciseType, outcome);
-      // Per-ordinal realized-person injection (Phase 1). Copy so the cached
-      // fixture object is never mutated; merge `coverage.person` only when the
-      // env var supplies one for this ordinal.
+      // Realized-person injection keyed on a substring of the draft's
+      // correctAnswer (see parseValidationPersons), so it tracks the draft
+      // regardless of the parallel validator pool's dispatch order. Copy so
+      // the cached fixture object is never mutated; merge `coverage.person`
+      // only when the env var supplies a person for this draft.
       const fixture =
         person !== undefined
           ? {

@@ -437,6 +437,11 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       bucket.requested += 1;
     }
   }
+  const creditApproved = (person: PersonCode | undefined): void => {
+    if (!personTargets || !person) return;
+    const bucket = (personOutcome[person] ??= { requested: 0, approved: 0 });
+    bucket.approved += 1;
+  };
   const generatedAt = new Date();
 
   // Built inside the try so any failure in the priors query routes through
@@ -570,10 +575,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
         case 'inserted-approved':
           approvedCount += 1;
           insertedCount += 1;
-          if (personTargets && outcome.realizedPerson) {
-            const b = (personOutcome[outcome.realizedPerson] ??= { requested: 0, approved: 0 });
-            b.approved += 1;
-          }
+          creditApproved(outcome.realizedPerson);
           break;
         case 'inserted-flagged':
           flaggedCount += 1;
@@ -596,10 +598,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
           insertedCount += 1;
           if (outcome.terminalReviewStatus === 'auto-approved') {
             approvedCount += 1;
-            if (personTargets && outcome.realizedPerson) {
-              const b = (personOutcome[outcome.realizedPerson] ??= { requested: 0, approved: 0 });
-              b.approved += 1;
-            }
+            creditApproved(outcome.realizedPerson);
           } else {
             flaggedCount += 1;
           }

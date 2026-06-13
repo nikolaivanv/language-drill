@@ -953,14 +953,14 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
     // -----------------------------------------------------------------------
     // Phase 1 coverage controller — per-person coverage_outcome tally.
     //
-    // `args.personTargets` carries the scheduler's per-ordinal person codes.
+    // `args.personTargets` carries the scheduler's per-person codes.
     // `runOneCell` tallies `{requested, approved}` per person: `requested`
-    // counts every targeted slot (incl. rejected ordinals); `approved` counts
+    // counts every targeted slot (incl. rejected drafts); `approved` counts
     // auto-approved inserts by their REALIZED person (the validator's
     // `coverage.person`, surfaced as `DraftOutcome.realizedPerson`). The
-    // per-ordinal realized person is driven by the mock's `MOCK_VALIDATION_PERSONS`
-    // env var (keyed on validator-call ordinal, which the parallel pool maps to
-    // draft ordinal — same property the `MOCK_VALIDATION_OUTCOMES` tests rely on).
+    // realized person per draft is driven by the mock's `MOCK_VALIDATION_PERSONS`
+    // env var, which is keyed on a substring of the draft's `correctAnswer`
+    // (see parseValidationPersons) — not on validator-call ordinal.
     // -----------------------------------------------------------------------
 
     it(
