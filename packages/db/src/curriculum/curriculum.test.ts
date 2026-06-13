@@ -158,12 +158,12 @@ describe('curriculum sentenceConstructionSuitable flag', () => {
   });
 });
 
-describe('curriculum personRotation flag', () => {
-  // NOTE: the `personRotation` invariant (block 9d) was removed in Task 3 of the
-  // Pool Coverage Controller Phase 2 migration. The field is migrated to
-  // `coverageSpec` in Task 4. These tests verify the data state before migration.
+describe('curriculum personRotation flag (migrated to coverageSpec — Task 4)', () => {
+  // The `personRotation` field has been migrated to `coverageSpec` in Task 4 of
+  // the Pool Coverage Controller Phase 2 migration. Active entries no longer have
+  // `personRotation`; they carry a person-axis `coverageSpec` instead.
 
-  it('flags the person-marked TR tense/copular points', () => {
+  it('person-marked TR tense/copular points have a person-axis coverageSpec (not personRotation)', () => {
     const flaggedKeys = [
       'tr-a1-present-continuous',
       'tr-a1-dili-past',
@@ -173,11 +173,16 @@ describe('curriculum personRotation flag', () => {
       'tr-a2-aorist',
     ];
     for (const key of flaggedKeys) {
-      expect(getGrammarPoint(key)?.personRotation, key).toBe(true);
+      const gp = getGrammarPoint(key);
+      expect(gp?.personRotation, `${key}: personRotation should be gone`).toBeUndefined();
+      expect(
+        gp?.coverageSpec?.axes.some((a) => a.name === 'person'),
+        `${key}: coverageSpec should have a person axis`,
+      ).toBe(true);
     }
   });
 
-  it('does not flag person-less points or the eval-excluded weak cells', () => {
+  it('does not give coverageSpec.person to person-less points or the eval-excluded weak cells', () => {
     // mis-evidential / ability-necessity: rotation eval (2026-06-12) showed
     // both chronically weak cells degrade further under rotation — excluded
     // pending cell-specific fixes (see comments in tr.ts).
@@ -189,7 +194,10 @@ describe('curriculum personRotation flag', () => {
       'tr-a2-ability-necessity',
     ];
     for (const key of excluded) {
-      expect(getGrammarPoint(key)?.personRotation, key).toBeUndefined();
+      const gp = getGrammarPoint(key);
+      expect(gp?.personRotation, `${key}: personRotation should be absent`).toBeUndefined();
+      const hasPersonAxis = gp?.coverageSpec?.axes.some((a) => a.name === 'person') ?? false;
+      expect(hasPersonAxis, `${key}: should have no person axis in coverageSpec`).toBe(false);
     }
   });
 });
