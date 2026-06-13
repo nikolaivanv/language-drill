@@ -70,6 +70,7 @@ export enum ExerciseType {
   TRANSLATION = "translation",
   VOCAB_RECALL = "vocab_recall",
   SENTENCE_CONSTRUCTION = "sentence_construction",
+  FREE_WRITING = "free_writing",
 }
 
 export type ClozeContent = {
@@ -140,11 +141,39 @@ export type SentenceConstructionContent = {
   topicHint?: string;
 };
 
+export type FreeWritingRequiredElement = {
+  /** Stable id used as a React key and as the checklist row id. */
+  id: string;
+  /** What the learner must do, in the target language. */
+  label: string;
+  /** Optional hint on how to satisfy it (e.g. the grammar trigger). */
+  detail?: string;
+};
+
+export type FreeWritingContent = {
+  type: ExerciseType.FREE_WRITING;
+  instructions: string;
+  /** Short headline for the prompt, e.g. "El teletrabajo: ¿avance o aislamiento?". */
+  title: string;
+  /** The task statement shown to the learner. */
+  task: string;
+  /** Topic-domain label, e.g. "opinión · argumentación". */
+  domain: string;
+  register: "informal" | "neutral" | "formal";
+  minWords: number;
+  maxWords: number;
+  /** Countdown length (minutes) for exam-simulation mode. */
+  suggestedMinutes?: number;
+  requiredElements: FreeWritingRequiredElement[];
+  topicHint?: string;
+};
+
 export type ExerciseContent =
   | ClozeContent
   | TranslationContent
   | VocabRecallContent
-  | SentenceConstructionContent;
+  | SentenceConstructionContent
+  | FreeWritingContent;
 
 export type Exercise = {
   id: string;
@@ -176,6 +205,12 @@ export function isSentenceConstructionContent(
   return content.type === ExerciseType.SENTENCE_CONSTRUCTION;
 }
 
+export function isFreeWritingContent(
+  content: ExerciseContent,
+): content is FreeWritingContent {
+  return content.type === ExerciseType.FREE_WRITING;
+}
+
 // ---------------------------------------------------------------------------
 // Evaluation types
 // ---------------------------------------------------------------------------
@@ -196,6 +231,54 @@ export type EvaluationResult = {
   feedback: string;
   errors: EvaluationError[];
   estimatedCefrEvidence: string;
+};
+
+// ---------------------------------------------------------------------------
+// Free Writing evaluation — richer than the flat EvaluationResult above.
+// Claude returns EXACT substrings (error.original, goodSpans, improved.upgrades)
+// so the client can splice highlights into the learner's original text without
+// trusting Claude to reproduce it verbatim. A span that can't be located is
+// dropped, never corrupting the text.
+// ---------------------------------------------------------------------------
+
+export type FreeWritingSeverity = "high" | "med" | "low";
+
+export type FreeWritingCriterionId = "task" | "coherence" | "lexis" | "grammar";
+
+export type FreeWritingCriterion = {
+  id: FreeWritingCriterionId;
+  label: string;
+  score: number; // 0..1
+  cefr: string; // per-criterion CEFR estimate, e.g. "B2", "B1+"
+  note: string;
+};
+
+export type FreeWritingError = {
+  n: number; // 1-based stable index, referenced by the markup
+  severity: FreeWritingSeverity;
+  type: string; // category label, e.g. "Modo verbal"
+  original: string; // EXACT substring of the learner's text
+  correction: string;
+  where?: string; // human locus, e.g. "oración condicional · §3"
+  note: string;
+};
+
+export type FreeWritingImproved = {
+  text: string; // full improved paragraph(s), freshly written
+  upgrades?: string[]; // EXACT substrings within `text` to highlight green
+};
+
+export type FreeWritingEvaluation = {
+  overallScore: number; // 0..1 — stored in user_exercise_history.score
+  overallCefr: string;
+  headline: string;
+  summary: string;
+  criteria: FreeWritingCriterion[]; // exactly 4, task/coherence/lexis/grammar order
+  errors: FreeWritingError[];
+  goodSpans: string[]; // EXACT substrings to highlight as done-well
+  improved: FreeWritingImproved;
+  wordCount: number;
+  improvedWordCount: number;
 };
 
 // ---------------------------------------------------------------------------

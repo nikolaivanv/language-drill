@@ -7,6 +7,7 @@ import {
   isTranslationContent,
   isVocabRecallContent,
   isSentenceConstructionContent,
+  isFreeWritingContent,
 } from "./index";
 import type {
   ApiError,
@@ -18,6 +19,7 @@ import type {
   EvaluationError,
   EvaluationResult,
   SentenceConstructionContent,
+  FreeWritingContent,
 } from "./index";
 
 describe("Language enum", () => {
@@ -72,16 +74,17 @@ describe("ApiError type", () => {
 // ---------------------------------------------------------------------------
 
 describe("ExerciseType enum", () => {
-  it("has exactly 4 values", () => {
+  it("has exactly 5 values", () => {
     const values = Object.values(ExerciseType);
-    expect(values).toHaveLength(4);
+    expect(values).toHaveLength(5);
   });
 
-  it("contains CLOZE, TRANSLATION, VOCAB_RECALL, SENTENCE_CONSTRUCTION", () => {
+  it("contains CLOZE, TRANSLATION, VOCAB_RECALL, SENTENCE_CONSTRUCTION, FREE_WRITING", () => {
     expect(ExerciseType.CLOZE).toBe("cloze");
     expect(ExerciseType.TRANSLATION).toBe("translation");
     expect(ExerciseType.VOCAB_RECALL).toBe("vocab_recall");
     expect(ExerciseType.SENTENCE_CONSTRUCTION).toBe("sentence_construction");
+    expect(ExerciseType.FREE_WRITING).toBe("free_writing");
   });
 });
 
@@ -316,5 +319,33 @@ describe("isSentenceConstructionContent", () => {
 
   it("returns false for vocab_recall content", () => {
     expect(isSentenceConstructionContent(vocabRecallContent)).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// isFreeWritingContent type guard
+// ---------------------------------------------------------------------------
+
+describe("isFreeWritingContent", () => {
+  const content: FreeWritingContent = {
+    type: ExerciseType.FREE_WRITING,
+    instructions: "Write a paragraph.",
+    title: "El teletrabajo",
+    task: "Argue for or against remote work.",
+    domain: "opinión · argumentación",
+    register: "formal",
+    minWords: 150,
+    maxWords: 200,
+    suggestedMinutes: 20,
+    requiredElements: [{ id: "cond", label: "Use two conditionals" }],
+  };
+
+  it("returns true for free_writing content", () => {
+    expect(isFreeWritingContent(content)).toBe(true);
+  });
+
+  it("returns false for another type", () => {
+    const cloze = { type: ExerciseType.CLOZE } as unknown as ExerciseContent;
+    expect(isFreeWritingContent(cloze)).toBe(false);
   });
 });
