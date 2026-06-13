@@ -35,6 +35,7 @@ import {
   getLangfuse,
   setResolvedPromptClient,
   setResolvedPromptVersion,
+  type PromptFallbackReason,
 } from "./observability.js";
 
 // ---------------------------------------------------------------------------
@@ -177,6 +178,10 @@ type CacheEntry = {
   resolved: ResolvedPrompt;
   promptClient: TextPromptClient | null;
   fetchedAt: number;
+  // Set only on fallback rows (`resolved.fromFallback === true`); undefined on
+  // live Langfuse hits. Plumbed to the trace's `promptFallbackReason` so the
+  // benign `keys_unset` case is distinguishable from `timeout` / `fetch_error`.
+  fallbackReason?: PromptFallbackReason;
 };
 
 const cache = new Map<string, CacheEntry>();
@@ -278,6 +283,9 @@ export async function fetchOrFallback(
 ): Promise<CacheEntry> {
   const lf = getLangfuse();
   if (!lf) {
+    // Langfuse keys not configured for this env (or init failed). This is the
+    // EXPECTED fallback in some envs — deliberately NOT warned, so the
+    // metric-filter alarm on the warn line only fires on real emergencies.
     return {
       resolved: {
         text: fallback,
@@ -286,6 +294,7 @@ export async function fetchOrFallback(
       },
       promptClient: null,
       fetchedAt: Date.now(),
+      fallbackReason: "keys_unset",
     };
   }
   try {
@@ -304,10 +313,20 @@ export async function fetchOrFallback(
       fetchedAt: Date.now(),
     };
   } catch (err) {
+    // Langfuse was reachable but the fetch failed — distinguish a timeout
+    // (raceWithTimeout rejects with a "timeout …" message) from any other SDK
+    // / network error. Both are operator emergencies (the prompt may have been
+    // deleted or unlabeled in Langfuse). The warn line carries a stable
+    // `[prompts-registry] prompt fallback` marker + `reason=` so a CloudWatch
+    // metric filter can alarm on it (see infra annotate-stream / api log groups).
+    const reason: PromptFallbackReason =
+      err instanceof Error && err.message.startsWith("timeout ")
+        ? "timeout"
+        : "fetch_error";
     if (!warnedNames.has(name)) {
       warnedNames.add(name);
       console.warn(
-        `[prompts-registry] fetch failed for "${name}@${label}"; using fallback`,
+        `[prompts-registry] prompt fallback (reason=${reason}) for "${name}@${label}"; serving in-repo fallback`,
         err,
       );
     }
@@ -319,6 +338,7 @@ export async function fetchOrFallback(
       },
       promptClient: null,
       fetchedAt: Date.now(),
+      fallbackReason: reason,
     };
   }
 }
@@ -371,7 +391,11 @@ export async function getPromptOrFallback(
   label: string = PROMPT_LABEL_PRODUCTION,
 ): Promise<ResolvedPrompt> {
   const entry = await getCacheEntry(name, fallback, fallbackVersion, label);
-  setResolvedPromptVersion(entry.resolved.version, entry.resolved.fromFallback);
+  setResolvedPromptVersion(
+    entry.resolved.version,
+    entry.resolved.fromFallback,
+    entry.fallbackReason,
+  );
   // `entry.promptClient` is the live `TextPromptClient` on a Langfuse hit
   // and `null` on the fallback path — `setResolvedPromptClient` forwards
   // either to the ALS frame so `startLangfuseGeneration` can decide
@@ -422,7 +446,7 @@ export async function getPromptWithVarsOrFallback(
   // `fetchOrFallback` was called with `fallbackTemplate` as the fallback.
   if (!entry.promptClient) {
     const { text } = applyTemplate(fallbackTemplate, vars);
-    setResolvedPromptVersion(entry.resolved.version, true);
+    setResolvedPromptVersion(entry.resolved.version, true, entry.fallbackReason);
     setResolvedPromptClient(null);
     return { ...entry.resolved, text };
   }
