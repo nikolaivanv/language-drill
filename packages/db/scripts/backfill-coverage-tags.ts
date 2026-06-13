@@ -312,7 +312,9 @@ async function main(): Promise<void> {
 
   let usage: ClaudeUsageBreakdown = ZERO_USAGE;
   let written = 0;
-  let skipped = 0;
+  let skippedUnusable = 0;   // reconstructForValidation returned {ok:false}
+  let skippedNoCoverage = 0; // applicableCoverageTags returned null
+  let failed = 0;            // validateDraft threw (network/rate-limit/malformed response)
   const axisCounts: Record<string, number> = {};
   let stopped = false;
 
@@ -320,23 +322,40 @@ async function main(): Promise<void> {
     candidates.map((row) =>
       limit(async () => {
         if (stopped) return;
-        if (estimateCostUsd(usage) >= args.maxCostUsd) {
-          stopped = true;
-          return;
-        }
 
         const rec = reconstructForValidation(row);
         if (!rec.ok) {
-          skipped++;
+          skippedUnusable++;
           return;
         }
 
-        const { result, tokenUsage } = await validateDraft(client, rec.draft, rec.spec);
+        let result: Awaited<ReturnType<typeof validateDraft>>['result'];
+        let tokenUsage: ClaudeUsageBreakdown;
+        try {
+          const r = await validateDraft(client, rec.draft, rec.spec);
+          result = r.result;
+          tokenUsage = r.tokenUsage;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          console.warn(`[backfill-coverage-tags] row ${row.id} failed: ${message}`);
+          failed++;
+          return;
+        }
+
         usage = addUsage(usage, tokenUsage);
+
+        // Soft cap: up to (concurrency - 1) in-flight tasks may overshoot before
+        // the flag is observed; the accumulated cost figure stays accurate.
+        if (estimateCostUsd(usage) > args.maxCostUsd) {
+          stopped = true;
+          process.stderr.write(
+            `\n[cost-cap] estimated cost ($${estimateCostUsd(usage).toFixed(4)}) > --max-cost-usd ($${args.maxCostUsd.toFixed(2)}); stopping new validator calls.\n`,
+          );
+        }
 
         const tags: CoverageTags | null = applicableCoverageTags(rec.cell, result.coverage);
         if (!tags) {
-          skipped++;
+          skippedNoCoverage++;
           return;
         }
 
@@ -353,7 +372,9 @@ async function main(): Promise<void> {
   );
 
   console.log(
-    `[backfill-coverage-tags] ${args.apply ? 'wrote' : 'would write'} ${written}, skipped ${skipped}` +
+    `[backfill-coverage-tags] ${args.apply ? 'wrote' : 'would write'} ${written},` +
+      ` skipped-unusable ${skippedUnusable}, skipped-no-coverage ${skippedNoCoverage},` +
+      ` failed ${failed}` +
       (stopped ? ' (stopped at cost cap)' : ''),
   );
   console.log(`[backfill-coverage-tags] per-axis: ${JSON.stringify(axisCounts)}`);
