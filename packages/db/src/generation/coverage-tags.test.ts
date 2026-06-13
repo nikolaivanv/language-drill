@@ -1,60 +1,30 @@
 import { describe, expect, it } from "vitest";
-
-import { ExerciseType, Language, CefrLevel } from "@language-drill/shared";
-
+import { ExerciseType } from "@language-drill/shared";
 import { applicableCoverageTags } from "./coverage-tags";
+import type { Cell } from "./cells";
 
-function cell(exerciseType: ExerciseType, personRotation: boolean) {
+function cellWith(spec: Cell["grammarPoint"]["coverageSpec"]): Cell {
   return {
-    language: Language.TR,
-    cefrLevel: CefrLevel.A1,
-    exerciseType,
-    grammarPoint: {
-      key: "tr-a1-test",
-      ...(personRotation ? { personRotation: true } : {}),
-    },
-  } as unknown as Parameters<typeof applicableCoverageTags>[0];
+    cellKey: "tr:a1:cloze:tr-a1-x",
+    language: "TR" as Cell["language"],
+    cefrLevel: "A1",
+    exerciseType: ExerciseType.CLOZE,
+    grammarPoint: { coverageSpec: spec } as Cell["grammarPoint"],
+  } as Cell;
 }
 
 describe("applicableCoverageTags", () => {
-  it("vocab cell keeps only wordClass", () => {
-    expect(
-      applicableCoverageTags(cell(ExerciseType.VOCAB_RECALL, false), {
-        wordClass: "verb",
-        polarity: "negative",
-      }),
-    ).toEqual({ wordClass: "verb" });
-  });
-
-  it("personRotation grammar cell keeps person + polarity + sentenceType", () => {
-    expect(
-      applicableCoverageTags(cell(ExerciseType.CLOZE, true), {
-        person: "2pl",
-        polarity: "affirmative",
-        sentenceType: "interrogative",
-        wordClass: "noun",
-      }),
-    ).toEqual({
-      person: "2pl",
+  it("keeps person when the cell's spec controls it", () => {
+    const cell = cellWith({ axes: [{ name: "person", floors: { "3sg": 5 } }] });
+    expect(applicableCoverageTags(cell, { person: "3sg", polarity: "affirmative" })).toEqual({
+      person: "3sg",
       polarity: "affirmative",
-      sentenceType: "interrogative",
     });
   });
-
-  it("non-personRotation grammar cell drops person", () => {
-    expect(
-      applicableCoverageTags(cell(ExerciseType.CLOZE, false), {
-        person: "2pl",
-        polarity: "negative",
-      }),
-    ).toEqual({ polarity: "negative" });
-  });
-
-  it("returns null when nothing applicable is present", () => {
-    expect(
-      applicableCoverageTags(cell(ExerciseType.CLOZE, true), {
-        wordClass: "noun",
-      }),
-    ).toBeNull();
+  it("drops person when the cell has no spec", () => {
+    const cell = cellWith(undefined);
+    expect(applicableCoverageTags(cell, { person: "3sg", polarity: "affirmative" })).toEqual({
+      polarity: "affirmative",
+    });
   });
 });
