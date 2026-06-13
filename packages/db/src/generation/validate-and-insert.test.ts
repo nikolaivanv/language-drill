@@ -593,16 +593,17 @@ describe('validateAndInsertWithRetry — seed persistence', () => {
 // ---------------------------------------------------------------------------
 
 describe('validateAndInsertWithRetry — realizedPerson on inserted outcome', () => {
+  const throwaway: { exercise?: Record<string, unknown> } = {};
+
   it('carries realizedPerson from coverage.person on an inserted-approved outcome', async () => {
     // Validator approves with a person tag; the outcome must surface it.
     mockValidateDraft.mockResolvedValue({
       ...PASSING_VALIDATION,
       result: { ...PASSING_VALIDATION.result, coverage: { person: '2pl' } },
     });
-    const capture: { exercise?: Record<string, unknown> } = {};
 
     const outcome = await validateAndInsertWithRetry({
-      db: makeInsertSucceedsDb(capture),
+      db: makeInsertSucceedsDb(throwaway),
       client: mockClient,
       spec: trSpec,
       draft: makeTrDraft('Sokakta ev___ var.', 'ler'),
@@ -619,10 +620,9 @@ describe('validateAndInsertWithRetry — realizedPerson on inserted outcome', ()
   it('leaves realizedPerson undefined when coverage has no person', async () => {
     // PASSING_VALIDATION already has coverage: {} (no person).
     mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
-    const capture: { exercise?: Record<string, unknown> } = {};
 
     const outcome = await validateAndInsertWithRetry({
-      db: makeInsertSucceedsDb(capture),
+      db: makeInsertSucceedsDb(throwaway),
       client: mockClient,
       spec: trSpec,
       draft: makeTrDraft('Sokakta ev___ var.', 'ler'),
