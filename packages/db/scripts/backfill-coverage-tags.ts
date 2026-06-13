@@ -41,6 +41,7 @@ import {
   ExerciseType,
   Language,
   type CoverageTags,
+  type CurriculumCefrLevel,
   type ExerciseContent,
 } from '@language-drill/shared';
 
@@ -238,7 +239,7 @@ export function reconstructForValidation(row: CandidateRow): Reconstructed {
   };
   const cell: Cell = {
     language,
-    cefrLevel,
+    cefrLevel: cefrLevel as CurriculumCefrLevel,
     exerciseType,
     grammarPoint,
     cellKey: buildCellKey({
