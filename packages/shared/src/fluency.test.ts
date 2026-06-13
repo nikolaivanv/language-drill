@@ -64,7 +64,7 @@ describe("gradeFluencyAnswer — unsupported type", () => {
         { type: ExerciseType.TRANSLATION } as never,
         "x",
       ),
-    ).toThrow();
+    ).toThrow('unsupported content type "translation"');
   });
 });
 
