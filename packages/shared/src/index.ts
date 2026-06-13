@@ -261,3 +261,9 @@ export { deterministicUuid } from "./deterministic-uuid";
 export type { CurriculumCefrLevel, GrammarPoint } from "./curriculum-types";
 
 export * from "./coverage";
+
+// ---------------------------------------------------------------------------
+// Fluency mode — deterministic grader + locked constants
+// ---------------------------------------------------------------------------
+
+export * from "./fluency";
