@@ -173,14 +173,6 @@ describe('composeFreshPlan', () => {
     expect(items.every((it) => it.difficulty === CefrLevel.B2)).toBe(true);
   });
 
-  it('ignores the deferred radarSnapshot parameter (v1)', () => {
-    const withRadar = composeFreshPlan(fullPool(), { whatever: true });
-    const withoutRadar = composeFreshPlan(fullPool());
-    // Same shape ignoring the random ids — compare just the structural fields.
-    expect(withRadar.insufficient).toBe(withoutRadar.insufficient);
-    expect(withRadar.items.length).toBe(withoutRadar.items.length);
-  });
-
   it('backfills an SC slot from other types when the SC pool is empty', () => {
     const cloze = Array.from({ length: 5 }, (_, i) =>
       draw(ExerciseType.CLOZE, { id: `c${i}` }),

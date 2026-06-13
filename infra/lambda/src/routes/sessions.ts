@@ -338,11 +338,10 @@ sessions.get('/sessions/today', async (c) => {
   }
 
   // -------------------------------------------------------------------------
-  // Path B — compose a fresh 5-item plan from the pool (UNION-ALL one query)
+  // Path B — compose a fresh 5-item plan from the pool.
   // -------------------------------------------------------------------------
   // The sample over-fetches distinct candidates per type so composeFreshPlan
   // can backfill a slot whose native type is missing (see its doc comment).
-  // Path B — compose a fresh 5-item plan from the pool.
   // Fetch the pool sample and the user's per-point mastery in parallel, then
   // rank candidates (exposure order is preserved as the tiebreak) before
   // composing — so each slot picks the highest-priority item of its type.
