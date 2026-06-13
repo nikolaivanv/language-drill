@@ -28,7 +28,7 @@ function draw(
   };
 }
 
-/** Build a 5-draw pool aligned with V1_PLAN_SHAPE (cloze, cloze, translation, vocab_recall, cloze). */
+/** Build a 5-draw pool aligned with V1_PLAN_SHAPE (cloze, sentence_construction, translation, vocab_recall, cloze). */
 function fullPool(): PoolDraw[] {
   return V1_PLAN_SHAPE.map((slot, i) =>
     draw(slot.type, { id: `slot-${i + 1}-${slot.type}` }),
@@ -43,6 +43,22 @@ describe('ESTIMATED_MINUTES_BY_TYPE / ITEM_COUNT_BY_TYPE', () => {
   it('exposes minute/count estimates for sentence_construction', () => {
     expect(ESTIMATED_MINUTES_BY_TYPE[ExerciseType.SENTENCE_CONSTRUCTION]).toBe(3);
     expect(ITEM_COUNT_BY_TYPE[ExerciseType.SENTENCE_CONSTRUCTION]).toBe(3);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// V1_PLAN_SHAPE
+// ---------------------------------------------------------------------------
+
+describe('V1_PLAN_SHAPE', () => {
+  it('places sentence construction in the core slot 2', () => {
+    expect(V1_PLAN_SHAPE.map((s) => s.type)).toEqual([
+      ExerciseType.CLOZE,
+      ExerciseType.SENTENCE_CONSTRUCTION,
+      ExerciseType.TRANSLATION,
+      ExerciseType.VOCAB_RECALL,
+      ExerciseType.CLOZE,
+    ]);
   });
 });
 
@@ -136,9 +152,11 @@ describe('composeFreshPlan', () => {
   });
 
   it('preserves the topicHint and difficulty from each draw', () => {
+    // One draw per slot matching the new V1_PLAN_SHAPE:
+    // cloze / sentence_construction / translation / vocab_recall / cloze
     const draws: PoolDraw[] = [
       draw(ExerciseType.CLOZE, { id: 's1', topicHint: 'subjunctive', difficulty: CefrLevel.B2 }),
-      draw(ExerciseType.CLOZE, { id: 's2', topicHint: 'pronoun-placement', difficulty: CefrLevel.B2 }),
+      draw(ExerciseType.SENTENCE_CONSTRUCTION, { id: 's2', topicHint: 'pronoun-placement', difficulty: CefrLevel.B2 }),
       draw(ExerciseType.TRANSLATION, { id: 's3', topicHint: null, difficulty: CefrLevel.B2 }),
       draw(ExerciseType.VOCAB_RECALL, { id: 's4', topicHint: 'food', difficulty: CefrLevel.B2 }),
       draw(ExerciseType.CLOZE, { id: 's5', topicHint: 'preterite', difficulty: CefrLevel.B2 }),
@@ -161,6 +179,15 @@ describe('composeFreshPlan', () => {
     // Same shape ignoring the random ids — compare just the structural fields.
     expect(withRadar.insufficient).toBe(withoutRadar.insufficient);
     expect(withRadar.items.length).toBe(withoutRadar.items.length);
+  });
+
+  it('backfills an SC slot from other types when the SC pool is empty', () => {
+    const cloze = Array.from({ length: 5 }, (_, i) =>
+      draw(ExerciseType.CLOZE, { id: `c${i}` }),
+    );
+    const { items, insufficient } = composeFreshPlan(cloze);
+    expect(insufficient).toBe(false);
+    expect(items).toHaveLength(5);
   });
 });
 

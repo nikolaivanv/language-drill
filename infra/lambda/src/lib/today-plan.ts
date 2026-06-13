@@ -63,14 +63,14 @@ export type PlanCompositionSlot = {
 };
 
 /**
- * The fixed v1 slot mix. Five items: warm-up cloze + core cloze + production
- * translation + core vocab + cool-down cloze. Adaptive weighting by the
- * user's weakest axis is explicitly deferred — see `composeFreshPlan`'s
- * unused `radarSnapshot` parameter (lands in a later phase).
+ * The fixed v1 slot mix. Five items: warm-up cloze + core sentence construction
+ * + production translation + core vocab + cool-down cloze. Adaptive weighting
+ * by the user's weakest axis is explicitly deferred — see `composeFreshPlan`'s
+ * unused `_radarSnapshot` parameter (lands in a later phase).
  */
 export const V1_PLAN_SHAPE: readonly PlanCompositionSlot[] = [
   { index: 1, prefix: 'warm-up', type: ExerciseType.CLOZE },
-  { index: 2, prefix: 'core', type: ExerciseType.CLOZE },
+  { index: 2, prefix: 'core', type: ExerciseType.SENTENCE_CONSTRUCTION },
   { index: 3, prefix: 'production', type: ExerciseType.TRANSLATION },
   { index: 4, prefix: 'core', type: ExerciseType.VOCAB_RECALL },
   { index: 5, prefix: 'cool-down', type: ExerciseType.CLOZE },
@@ -149,6 +149,7 @@ const BACKFILL_TYPE_PRIORITY: readonly ExerciseType[] = [
   ExerciseType.CLOZE,
   ExerciseType.TRANSLATION,
   ExerciseType.VOCAB_RECALL,
+  ExerciseType.SENTENCE_CONSTRUCTION,
 ];
 
 /** Projects a single draw into the in-memory PlanItem shape at the given index. */

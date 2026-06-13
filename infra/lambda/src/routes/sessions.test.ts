@@ -748,16 +748,16 @@ describe('GET /sessions/today', () => {
     // grammar_point_key must be projected in every subquery
     expect(staticText).toContain('grammar_point_key');
     const occurrences = (staticText.match(/grammar_point_key/g) ?? []).length;
-    expect(occurrences).toBe(3); // once per distinct plan type (cloze, translation, vocab_recall)
+    expect(occurrences).toBe(4); // once per distinct plan type (cloze, sentence_construction, translation, vocab_recall)
     // The ORDER BY clause must reference the exposure-ordering fragment
     // (not bare random()). The fragment itself is mocked, but the ORDER BY
     // placeholder must be present and the mock must have been called.
     expect(staticText).toContain('ORDER BY');
     expect(staticText).not.toMatch(/ORDER BY\s+random\(\)/i);
-    // freshFirstOrderBy is called once per plan type (3 distinct types in V1_PLAN_SHAPE)
+    // freshFirstOrderBy is called once per plan type (4 distinct types in V1_PLAN_SHAPE)
     // and must receive the authenticated userId so per-user exposure is tracked.
     expect(mockFreshFirstOrderBy).toHaveBeenCalledWith('user_123');
-    expect(mockFreshFirstOrderBy).toHaveBeenCalledTimes(3);
+    expect(mockFreshFirstOrderBy).toHaveBeenCalledTimes(4);
   });
 
   it('Path B: pool returns no draws → items: [], code: INSUFFICIENT_POOL, status 200', async () => {
