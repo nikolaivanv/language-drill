@@ -77,6 +77,22 @@ describe('decideCoverageTargets', () => {
     expect(suppressed).toEqual([]);
   });
 
+  it('ignores approvedByPerson/recentOutcome keys not in the language paradigm', () => {
+    // ES has no 2pl. A stale 2pl entry in either input must not appear in the
+    // output and must not cause a spurious suppression.
+    const { personTargets, suppressed } = decideCoverageTargets({
+      language: Language.ES,
+      need: 5,
+      approvedByPerson: { '2pl': 99 },
+      recentOutcome: { '2pl': { requested: 5, approved: 0 } },
+    });
+    expect(personTargets).not.toContain('2pl');
+    expect(suppressed).toEqual([]);
+    expect(new Set(personTargets)).toEqual(
+      new Set(['1sg', '2sg', '3sg', '1pl', '3pl']),
+    );
+  });
+
   it('null recentOutcome suppresses nothing (curriculum bump cleared it)', () => {
     const { suppressed, personTargets } = decideCoverageTargets({
       language: Language.TR, need: 6, approvedByPerson: {}, recentOutcome: null,
