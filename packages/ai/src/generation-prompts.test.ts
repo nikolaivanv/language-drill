@@ -888,6 +888,11 @@ describe("personCodesForLanguage", () => {
       "1sg", "2sg", "3sg", "1pl", "3pl",
     ]);
   });
+  it("returns all six person codes for German", () => {
+    expect(personCodesForLanguage(Language.DE)).toEqual([
+      "1sg", "2sg", "3sg", "1pl", "2pl", "3pl",
+    ]);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -903,5 +908,8 @@ describe("personDisplayForCode", () => {
   });
   it("falls back to the bare code when the language lacks it", () => {
     expect(personDisplayForCode(Language.ES, "2pl")).toBe("2pl");
+  });
+  it("maps 2pl for German to its ihr label", () => {
+    expect(personDisplayForCode(Language.DE, "2pl")).toBe("2pl (ihr)");
   });
 });

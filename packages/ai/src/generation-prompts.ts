@@ -13,6 +13,7 @@ import {
   ExerciseType,
   type GrammarPoint,
   Language,
+  PERSON_CODES,
   type PersonCode,
 } from "@language-drill/shared";
 
@@ -359,9 +360,15 @@ export const PERSON_ROTATION_BY_LANGUAGE: Record<
 export function personCodesForLanguage(
   language: Exclude<Language, Language.EN>,
 ): PersonCode[] {
-  return PERSON_ROTATION_BY_LANGUAGE[language].map(
-    (label) => label.split(" ")[0] as PersonCode,
-  );
+  return PERSON_ROTATION_BY_LANGUAGE[language].map((label) => {
+    const code = label.split(" ")[0];
+    if (!(PERSON_CODES as readonly string[]).includes(code)) {
+      throw new Error(
+        `personCodesForLanguage: rotation label "${label}" for ${language} has no valid leading PersonCode`,
+      );
+    }
+    return code as PersonCode;
+  });
 }
 
 /** Maps a `PersonCode` back to the language's display label for the prompt
