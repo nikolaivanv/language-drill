@@ -903,3 +903,76 @@ describe("getPromptWithVarsOrFallback (real fetch + compile)", () => {
   });
 });
 
+
+// ---------------------------------------------------------------------------
+// Fallback reason (audit §3.2) — distinguish keys_unset / timeout / fetch_error
+// ---------------------------------------------------------------------------
+
+describe("prompt fallback reason", () => {
+  it("tags the trace with reason=keys_unset when Langfuse keys are unset (no warn)", async () => {
+    // beforeEach cleared the keys, so getLangfuse() returns null.
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    await withLlmTrace(makeCtx({ promptVersion: "pending" }), async () => {
+      await getPromptOrFallback("evaluate-system-prompt", "fb", "v1");
+      const ctx = getCurrentLlmTraceContext();
+      expect(ctx?.promptFallback).toBe(true);
+      expect(ctx?.promptFallbackReason).toBe("keys_unset");
+    });
+    // keys_unset is expected in some envs — must NOT warn (else the
+    // metric-filter alarm would fire constantly in keyless envs).
+    expect(warnSpy).not.toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
+  it("tags reason=fetch_error and warns with a stable marker when the SDK throws", async () => {
+    process.env.LANGFUSE_PUBLIC_KEY = "pk-test";
+    process.env.LANGFUSE_SECRET_KEY = "sk-test";
+    vi.mocked(Langfuse).mockImplementationOnce(function (
+      this: {
+        flushAsync: () => Promise<void>;
+        getPrompt: ReturnType<typeof vi.fn>;
+      },
+    ) {
+      this.flushAsync = vi.fn().mockResolvedValue(undefined);
+      this.getPrompt = vi.fn().mockRejectedValue(new Error("LF 503"));
+    });
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    await withLlmTrace(makeCtx({ promptVersion: "pending" }), async () => {
+      await getPromptOrFallback("evaluate-system-prompt", "fb", "v1");
+      expect(getCurrentLlmTraceContext()?.promptFallbackReason).toBe(
+        "fetch_error",
+      );
+    });
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    // Stable marker the CloudWatch metric filter keys on.
+    expect(warnSpy.mock.calls[0][0]).toContain(
+      "[prompts-registry] prompt fallback",
+    );
+    expect(warnSpy.mock.calls[0][0]).toContain("reason=fetch_error");
+    warnSpy.mockRestore();
+  });
+
+  it("tags reason=timeout when the fetch exceeds the timeout budget", async () => {
+    process.env.LANGFUSE_PUBLIC_KEY = "pk-test";
+    process.env.LANGFUSE_SECRET_KEY = "sk-test";
+    process.env.LANGFUSE_PROMPT_FETCH_TIMEOUT_MS = "50";
+    vi.mocked(Langfuse).mockImplementationOnce(function (
+      this: {
+        flushAsync: () => Promise<void>;
+        getPrompt: ReturnType<typeof vi.fn>;
+      },
+    ) {
+      this.flushAsync = vi.fn().mockResolvedValue(undefined);
+      this.getPrompt = vi.fn().mockImplementation(() => new Promise(() => {}));
+    });
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    await withLlmTrace(makeCtx({ promptVersion: "pending" }), async () => {
+      await getPromptOrFallback("evaluate-system-prompt", "fb", "v1");
+      expect(getCurrentLlmTraceContext()?.promptFallbackReason).toBe("timeout");
+    });
+    expect(warnSpy.mock.calls[0][0]).toContain("reason=timeout");
+    warnSpy.mockRestore();
+  });
+});

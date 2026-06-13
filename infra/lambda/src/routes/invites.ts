@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { invitations, users } from '@language-drill/db';
 import { db } from '../db';
 import { authMiddleware } from '../middleware/auth';
@@ -69,19 +69,37 @@ invites.post('/invites/redeem', async (c) => {
     return c.json({ error: 'Invite expired', code: 'INVITE_EXPIRED', kind: 'expired' }, 410);
   }
 
-  // Claim the invite, then boost the user. Two small writes, no transaction: a
-  // race where two users submit the same fresh code is bounded by the per-user
-  // 10x limit, and if the second write fails the invite is consumed without the
-  // plan being set (support can fix manually). Acceptable at this scale (single
-  // inviter, low volume).
-  await db
-    .update(invitations)
-    .set({ usedBy: userId, usedAt: new Date() })
-    .where(eq(invitations.id, invite.id));
-  await db
-    .update(users)
-    .set({ plan: 'boosted', updatedAt: new Date() })
-    .where(eq(users.id, userId));
+  // Claim the invite, then boost the user — atomically. The claim is a
+  // conditional UPDATE … WHERE used_by IS NULL whose affected rows are read
+  // via `.returning()`: if a concurrent redemption won the race between our
+  // SELECT above and this write, the claim matches zero rows and we bail with
+  // 409 instead of boosting on a code we never actually consumed. Wrapping
+  // both writes in one transaction also closes the "invite consumed but plan
+  // not boosted" partial-failure path the previous two-write version had.
+  const claimed = await db.transaction(async (tx) => {
+    const rows = await tx
+      .update(invitations)
+      .set({ usedBy: userId, usedAt: new Date() })
+      .where(and(eq(invitations.id, invite.id), isNull(invitations.usedBy)))
+      .returning({ id: invitations.id });
+
+    if (rows.length === 0) {
+      // Lost the race — another user claimed this code first. Nothing was
+      // written (the conditional UPDATE matched no rows), so there's nothing
+      // to roll back; returning early simply commits an empty transaction.
+      return false;
+    }
+
+    await tx
+      .update(users)
+      .set({ plan: 'boosted', updatedAt: new Date() })
+      .where(eq(users.id, userId));
+    return true;
+  });
+
+  if (!claimed) {
+    return c.json({ error: 'Invite already used', code: 'INVITE_USED', kind: 'used' }, 409);
+  }
 
   return c.json(boostedLimitsPayload(), 200);
 });

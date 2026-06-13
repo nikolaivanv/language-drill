@@ -1,20 +1,36 @@
 import { Construct } from "constructs";
-import { Duration } from "aws-cdk-lib";
+import { Duration, RemovalPolicy } from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda-nodejs";
+import * as logs from "aws-cdk-lib/aws-logs";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
+import * as sns from "aws-cdk-lib/aws-sns";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import * as path from "path";
+
+import { addPromptFallbackAlarm } from "./prompt-fallback-alarm";
 
 export interface LambdaConstructProps {
   secretsPrefix: string;
   additionalEnv?: Record<string, string>;
+  /** Optional SNS topic for the prompt-fallback alarm (audit §3.2). */
+  alarmTopic?: sns.ITopic;
 }
 
 export class LambdaConstruct extends Construct {
   public readonly handler: lambda.NodejsFunction;
+  public readonly logGroup: logs.LogGroup;
 
   constructor(scope: Construct, id: string, props: LambdaConstructProps) {
     super(scope, id);
+
+    // Explicit log group with a finite retention (audit §4.2). Without this the
+    // default log group never expires — unbounded CloudWatch storage cost on
+    // the busiest, CLAUDE.md-designated API error inbox. The handle also backs
+    // the prompt-fallback metric filter below.
+    this.logGroup = new logs.LogGroup(this, "LogGroup", {
+      retention: logs.RetentionDays.ONE_MONTH,
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
 
     const databaseUrl = secretsmanager.Secret.fromSecretNameV2(
       this,
@@ -68,6 +84,7 @@ export class LambdaConstruct extends Construct {
       // exceed 15 s with cold containers + cross-region DB round-trips.
       timeout: Duration.seconds(29),
       memorySize: 512,
+      logGroup: this.logGroup,
       depsLockFilePath: path.join(projectRoot, "pnpm-lock.yaml"),
       bundling: {
         minify: true,
@@ -120,5 +137,14 @@ export class LambdaConstruct extends Construct {
     upstashRedisRestToken.grantRead(this.handler);
     langfusePublicKey.grantRead(this.handler);
     langfuseSecretKey.grantRead(this.handler);
+
+    // Audit §3.2 — alarm when the API runtime serves a non-keys_unset Langfuse
+    // prompt fallback (timeout / fetch_error).
+    addPromptFallbackAlarm(this, "ApiPromptFallbackAlarm", {
+      logGroup: this.logGroup,
+      env: props.secretsPrefix === "language-drill" ? "prod" : "dev",
+      surface: "api",
+      alarmTopic: props.alarmTopic,
+    });
   }
 }
