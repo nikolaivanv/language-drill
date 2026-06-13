@@ -23,6 +23,20 @@ export {
 } from "./evaluate.js";
 export type { EvaluateAnswerInput } from "./evaluate.js";
 export {
+  evaluateFreeWriting,
+  parseFreeWritingEvaluation,
+  FREE_WRITING_EVAL_TOOL,
+  FREE_WRITING_EVAL_TOOL_NAME,
+  FREE_WRITING_EVAL_REQUEST_TIMEOUT_MS,
+  FREE_WRITING_EVAL_MAX_RETRIES,
+} from "./free-writing-evaluate.js";
+export type { EvaluateFreeWritingInput } from "./free-writing-evaluate.js";
+export {
+  FREE_WRITING_EVAL_SYSTEM_PROMPT,
+  FREE_WRITING_EVAL_PROMPT_VERSION,
+  buildFreeWritingUserPrompt,
+} from "./free-writing-prompts.js";
+export {
   ANNOTATE_SYSTEM_PROMPT,
   ANNOTATE_SYSTEM_PROMPT_VERSION,
   ANNOTATE_TOOL,
