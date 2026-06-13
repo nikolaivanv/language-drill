@@ -1,4 +1,4 @@
-import type { GenerationReason } from '@language-drill/shared';
+import type { CoverageTags, GenerationReason } from '@language-drill/shared';
 import { type InferSelectModel, sql } from 'drizzle-orm';
 import { index, jsonb, pgTable, primaryKey, real, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 
@@ -29,6 +29,12 @@ export const exercises = pgTable(
     reviewStatus: text('review_status').notNull().default('auto-approved'),
     flaggedReasons: jsonb('flagged_reasons').$type<GenerationReason[]>(),
     generatedAt: timestamp('generated_at', { withTimezone: true }),
+    // Realized coverage values per axis (person/wordClass/polarity/sentenceType)
+    // for pool-diversity monitoring (Pool Coverage Controller, Phase 0). Written
+    // by the generation insert path from the validator's `coverage` result and
+    // by the `backfill:coverage-tags` CLI for legacy rows. Aggregated generically
+    // by GET /admin/pool-status via LATERAL jsonb_each_text.
+    coverageTags: jsonb('coverage_tags').$type<CoverageTags | null>(),
   },
   (table) => ({
     poolLookupIdx: index('exercises_pool_lookup_idx')
