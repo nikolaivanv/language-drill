@@ -98,10 +98,11 @@ const mockApprovedStatusFilter = vi.fn((table: unknown) => ({
   __mockToken: 'approved-status-filter',
   table,
 }));
+const mockFreshFirstOrderBy = vi.fn((userId: string) => ({ __mockToken: 'fresh-first-order-by', userId }));
 vi.mock('../lib/exercise-filters', () => ({
   APPROVED_STATUSES: ['auto-approved', 'manual-approved'] as const,
   approvedStatusFilter: (table: unknown) => mockApprovedStatusFilter(table),
-  freshFirstOrderBy: (userId: string) => ({ __mockToken: 'fresh-first-order-by', userId }),
+  freshFirstOrderBy: (userId: string) => mockFreshFirstOrderBy(userId),
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -288,6 +289,7 @@ describe('POST /sessions', () => {
       exerciseIds: ['ex-1', 'ex-2', 'ex-3', 'ex-4', 'ex-5'],
     });
     expect(mockReturning).toHaveBeenCalledTimes(1);
+    expect(mockFreshFirstOrderBy).toHaveBeenCalledWith('user_123');
   });
 
   it('returns 401 for unauthenticated requests', async () => {

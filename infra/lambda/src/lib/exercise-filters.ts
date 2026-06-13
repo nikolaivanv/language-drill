@@ -34,8 +34,9 @@ export function approvedStatusFilter(table: typeof exercisesTable) {
  * the `exercises` table. Never-attempted exercises sort first (NULLS FIRST);
  * among attempted ones the least-recently-seen come first; `random()` breaks
  * ties within a group. Correlated on `exercises.id`, so it only works on a query
- * whose FROM is the `exercises` table. Backed by
- * `user_exercise_history_exercise_id_idx (exercise_id, evaluated_at)`.
+ * whose FROM is the `exercises` table. Uses
+ * `user_exercise_history_exercise_id_idx (exercise_id, evaluated_at)` for the
+ * per-exercise scan; user_id is filtered post-scan (not covered).
  */
 export function freshFirstOrderBy(userId: string) {
   return sql`(

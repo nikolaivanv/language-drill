@@ -54,10 +54,11 @@ const mockApprovedStatusFilter = vi.fn((table: unknown) => ({
   __mockToken: 'approved-status-filter',
   table,
 }));
+const mockFreshFirstOrderBy = vi.fn((userId: string) => ({ __mockToken: 'fresh-first-order-by', userId }));
 vi.mock('../lib/exercise-filters', () => ({
   APPROVED_STATUSES: ['auto-approved', 'manual-approved'] as const,
   approvedStatusFilter: (table: unknown) => mockApprovedStatusFilter(table),
-  freshFirstOrderBy: (userId: string) => ({ __mockToken: 'fresh-first-order-by', userId }),
+  freshFirstOrderBy: (userId: string) => mockFreshFirstOrderBy(userId),
 }));
 
 const mockEvaluateAnswer = vi.fn();
@@ -247,6 +248,7 @@ describe('GET /exercises', () => {
       contentJson: sampleExercise.contentJson,
     });
     expect(mockSelect).toHaveBeenCalled();
+    expect(mockFreshFirstOrderBy).toHaveBeenCalledWith('user_123');
   });
 
   it('filters by type when provided', async () => {
