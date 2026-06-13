@@ -15,7 +15,9 @@ import { generationJobs } from '@language-drill/db';
 import {
   ExerciseType,
   Language,
+  PERSON_CODES,
   type LearningLanguage,
+  type PersonCode,
 } from '@language-drill/shared';
 import { eq } from 'drizzle-orm';
 
@@ -52,6 +54,12 @@ export type GenerationJobMessage = {
     /** [1, 200], same range as the CLI's `--count`. */
     count: number;
     batchSeed: string;
+    /**
+     * Phase 1 coverage controller: explicit per-draft person codes. When
+     * present, MUST be an array of known `PersonCode`s of length === `count`.
+     * Absent on CLI/admin and non-personRotation scheduled cells.
+     */
+    personTargets?: PersonCode[];
   };
   /** Cell-level cost cap in USD. (0, 100). */
   maxCostUsd: number;
@@ -99,6 +107,8 @@ const VALID_EXERCISE_TYPES: ReadonlySet<string> = new Set([
   ExerciseType.VOCAB_RECALL,
   ExerciseType.SENTENCE_CONSTRUCTION,
 ]);
+
+const VALID_PERSON_CODES: ReadonlySet<string> = new Set(PERSON_CODES);
 
 const COUNT_MIN = 1;
 const COUNT_MAX = 200;
@@ -150,6 +160,7 @@ export function parseGenerationJobMessage(
     COUNT_MAX,
   );
   const batchSeed = requireBatchSeed(specValue, 'spec.batchSeed');
+  const personTargets = optionalPersonTargets(specValue, count);
 
   const maxCostUsd = requireMaxCostUsd(input, 'maxCostUsd');
 
@@ -166,6 +177,7 @@ export function parseGenerationJobMessage(
       topicDomain,
       count,
       batchSeed,
+      ...(personTargets !== undefined ? { personTargets } : {}),
     },
     maxCostUsd,
   };
@@ -306,6 +318,34 @@ function requireBatchSeed(
     );
   }
   return value;
+}
+
+function optionalPersonTargets(
+  spec: Record<string, unknown>,
+  count: number,
+): PersonCode[] | undefined {
+  const value = spec['personTargets'];
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value)) {
+    throw new Error(
+      `spec.personTargets: expected array or undefined, got ${describe(value)}`,
+    );
+  }
+  if (value.length !== count) {
+    throw new Error(
+      `spec.personTargets: expected length === spec.count (${count}), got ${value.length}`,
+    );
+  }
+  for (const code of value) {
+    if (typeof code !== 'string' || !VALID_PERSON_CODES.has(code)) {
+      throw new Error(
+        `spec.personTargets: expected each to be one of ${JSON.stringify(
+          Array.from(VALID_PERSON_CODES),
+        )}, got ${JSON.stringify(code)}`,
+      );
+    }
+  }
+  return value as PersonCode[];
 }
 
 function requireMaxCostUsd(

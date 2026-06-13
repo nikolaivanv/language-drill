@@ -1,5 +1,6 @@
 import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 import { index, integer, jsonb, numeric, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import type { CoverageOutcome } from '@language-drill/shared';
 
 export const generationJobs = pgTable(
   'generation_jobs',
@@ -57,6 +58,16 @@ export const generationJobs = pgTable(
      * rejected nothing, and on legacy rows pre-migration.
      */
     rejectionReasonCounts: jsonb('rejection_reason_counts').$type<Record<string, number>>(),
+    /**
+     * Per-person generation outcome for this batch (Pool Coverage Controller,
+     * Phase 1): `{ person: { "2pl": { requested, approved }, … } }`. `requested`
+     * counts drafts the scheduler targeted at each person; `approved` counts
+     * approved drafts whose *realized* person (validator coverage) equals it.
+     * The scheduler reads this back to give up on a bucket that was targeted but
+     * yielded nothing. NULL on legacy rows, non-personRotation cells, and cells
+     * that did no person targeting. Written by `run-one-cell`.
+     */
+    coverageOutcome: jsonb('coverage_outcome').$type<CoverageOutcome>(),
   },
   (table) => ({
     cellIdx: index('generation_jobs_cell_idx').on(table.cellKey, table.startedAt.desc()),

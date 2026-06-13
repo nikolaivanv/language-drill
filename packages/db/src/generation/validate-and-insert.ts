@@ -24,6 +24,7 @@ import {
   ExerciseType,
   type GenerationReason,
   GenerationReasonCode,
+  type PersonCode,
 } from '@language-drill/shared';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import {
@@ -125,6 +126,14 @@ export type DraftOutcome = {
     | 'dedup-given-up';
   /** Set when terminalStatus is one of the inserted-* / dedup-then-success cases. */
   terminalReviewStatus?: 'auto-approved' | 'flagged';
+  /**
+   * The validator's realized `coverage.person` for an inserted draft (Phase 1
+   * coverage controller). Set ONLY on the inserted-* / dedup-then-success
+   * branches, from the SAME `result.coverage` written to `exercises.coverageTags`.
+   * `undefined` when the draft has no person coverage or the ordinal was
+   * rejected/given-up. Counted by `run-one-cell` into `coverage_outcome`.
+   */
+  realizedPerson?: PersonCode;
   /** Generator + validator usage from retries (the original generator call's
    *  usage is folded by the caller; the original validator call's usage IS
    *  included here). */
@@ -479,6 +488,7 @@ export async function validateAndInsertWithRetry(
         // (only the review CLI's `tryApprove` sets that). The 'rejected' case
         // is already handled by the early return above.
         terminalReviewStatus: decision.reviewStatus as 'auto-approved' | 'flagged',
+        realizedPerson: result.coverage.person,
         extraUsage,
         extraProduced,
         validatedCount,

@@ -4,6 +4,7 @@ import {
   ExerciseType,
   Language,
   type ClozeContent,
+  type PersonCode,
   type TranslationContent,
   type VocabRecallContent,
 } from "@language-drill/shared";
@@ -19,6 +20,8 @@ import {
   buildGenerationSystemPrompt,
   buildGenerationUserPrompt,
   PERSON_ROTATION_BY_LANGUAGE,
+  personCodesForLanguage,
+  personDisplayForCode,
   personForOrdinal,
   personRotationPhase,
   canonicalSurface,
@@ -867,5 +870,93 @@ describe("tailRecentStems", () => {
 
   it("returns an empty array when input is empty", () => {
     expect(tailRecentStems([])).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// personCodesForLanguage
+// ---------------------------------------------------------------------------
+
+describe("personCodesForLanguage", () => {
+  it("derives canonical codes from the rotation labels", () => {
+    expect(personCodesForLanguage(Language.TR)).toEqual([
+      "1sg", "2sg", "3sg", "1pl", "2pl", "3pl",
+    ]);
+  });
+  it("omits vosotros for Spanish (5 persons, no 2pl)", () => {
+    expect(personCodesForLanguage(Language.ES)).toEqual([
+      "1sg", "2sg", "3sg", "1pl", "3pl",
+    ]);
+  });
+  it("returns all six person codes for German", () => {
+    expect(personCodesForLanguage(Language.DE)).toEqual([
+      "1sg", "2sg", "3sg", "1pl", "2pl", "3pl",
+    ]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// personDisplayForCode
+// ---------------------------------------------------------------------------
+
+describe("personDisplayForCode", () => {
+  it("maps a code back to the language-specific label", () => {
+    expect(personDisplayForCode(Language.TR, "2pl")).toBe("2pl (siz)");
+    expect(personDisplayForCode(Language.ES, "1pl")).toBe(
+      "1pl (nosotros/nosotras)",
+    );
+  });
+  it("falls back to the bare code when the language lacks it", () => {
+    expect(personDisplayForCode(Language.ES, "2pl")).toBe("2pl");
+  });
+  it("maps 2pl for German to its ihr label", () => {
+    expect(personDisplayForCode(Language.DE, "2pl")).toBe("2pl (ihr)");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buildGenerationUserPrompt — explicit personTargets
+// ---------------------------------------------------------------------------
+
+describe("buildGenerationUserPrompt — explicit personTargets", () => {
+  const inputs = {
+    language: Language.TR,
+    cefrLevel: "A2",
+    exerciseType: ExerciseType.CLOZE,
+    grammarPoint: { name: "Aorist tense", personRotation: true },
+  } as unknown as GenerationPromptInputs;
+
+  it("pins the explicit target's label for the ordinal", () => {
+    const msg = buildGenerationUserPrompt(
+      inputs, 0, null, null, "scheduled-2026-06-13", ["2pl", "1pl"],
+    );
+    expect(msg).toContain("Target grammatical person for this draft: 2pl (siz)");
+  });
+
+  it("uses personTargets[ordinal], not ordinal rotation", () => {
+    const msg = buildGenerationUserPrompt(
+      inputs, 1, null, null, "scheduled-2026-06-13", ["2pl", "1pl"],
+    );
+    expect(msg).toContain("Target grammatical person for this draft: 1pl (biz)");
+  });
+
+  it("falls back to ordinal rotation when personTargets is absent", () => {
+    const withTargets = buildGenerationUserPrompt(
+      inputs, 0, null, null, "seed-x", ["2pl"],
+    );
+    const blind = buildGenerationUserPrompt(inputs, 0, null, null, "seed-x");
+    expect(withTargets).not.toBe(blind);
+    expect(blind).toContain("Target grammatical person for this draft:");
+    expect(withTargets).toContain("Target grammatical person for this draft: 2pl (siz)");
+  });
+
+  it("emits no person block when personRotation is false", () => {
+    const noRotation = {
+      ...inputs,
+      grammarPoint: { name: "X", personRotation: false },
+    } as unknown as GenerationPromptInputs;
+    expect(
+      buildGenerationUserPrompt(noRotation, 0, null, null, "s", ["2pl"]),
+    ).not.toContain("Target grammatical person");
   });
 });
