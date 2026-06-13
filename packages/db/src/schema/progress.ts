@@ -64,7 +64,7 @@ export const userGrammarMastery = pgTable(
     confidence: real('confidence').notNull(), // 0.0–1.0
     evidenceCount: integer('evidence_count').notNull(),
     lastPracticedAt: timestamp('last_practiced_at', { withTimezone: true }).notNull(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({
     pk: primaryKey({ columns: [table.userId, table.grammarPointKey] }),

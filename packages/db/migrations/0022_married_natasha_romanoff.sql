@@ -1,0 +1,1 @@
+ALTER TABLE "user_grammar_mastery" ALTER COLUMN "updated_at" SET DEFAULT now();
