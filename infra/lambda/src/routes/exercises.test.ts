@@ -57,6 +57,7 @@ const mockApprovedStatusFilter = vi.fn((table: unknown) => ({
 vi.mock('../lib/exercise-filters', () => ({
   APPROVED_STATUSES: ['auto-approved', 'manual-approved'] as const,
   approvedStatusFilter: (table: unknown) => mockApprovedStatusFilter(table),
+  freshFirstOrderBy: (userId: string) => ({ __mockToken: 'fresh-first-order-by', userId }),
 }));
 
 const mockEvaluateAnswer = vi.fn();

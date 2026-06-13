@@ -20,7 +20,7 @@ import {
   withLlmTrace,
 } from '@language-drill/ai';
 import { db } from '../db';
-import { approvedStatusFilter } from '../lib/exercise-filters';
+import { approvedStatusFilter, freshFirstOrderBy } from '../lib/exercise-filters';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
 import { limitFor } from '../usage/limits';
@@ -68,6 +68,7 @@ exercises.get('/exercises', async (c) => {
   }
 
   const { language, difficulty, type } = parsed.data;
+  const userId = c.get('userId');
 
   const conditions = [
     eq(exercisesTable.language, language),
@@ -83,7 +84,7 @@ exercises.get('/exercises', async (c) => {
     .select()
     .from(exercisesTable)
     .where(and(...conditions))
-    .orderBy(sql`random()`)
+    .orderBy(freshFirstOrderBy(userId))
     .limit(1);
 
   if (rows.length === 0) {
