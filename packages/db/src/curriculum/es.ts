@@ -19,8 +19,19 @@ const { B1, B2 } = CefrLevel;
  * generation_jobs row for each cell — when they differ, any
  * "saturated-dedup" or "low-yield" suppression on that cell clears, on the
  * assumption that the curriculum edit may have unblocked the search space.
+ *
+ * Current value `2026-06-13` was bumped to clear `low-yield` suppression on the
+ * two `personRotation`-flagged ES cloze cells that the 2026-06-12 person-rotation
+ * change (#272) cannot otherwise reach: `es-b1-present-subjunctive` cloze (last
+ * job approved 1 < 3) and `es-b2-compound-tenses` cloze (last job approved 2),
+ * both recorded `2026-06-06` — matching the prior on-disk value, so suppression
+ * never cleared and the rotation + 1.5× target raise never took effect on them.
+ * `decideEnqueue` keys suppression-clearing on the curriculum version, NOT on
+ * `GENERATION_PROMPT_VERSION`, so this off-label bump is the only routine way to
+ * force a fresh attempt. No grammar entries changed in this bump. Prior
+ * `2026-06-06` reflected the earlier ES B1/B2 audit. Mirrors the TR bump in #275.
  */
-export const CURRICULUM_VERSION_ES = '2026-06-06';
+export const CURRICULUM_VERSION_ES = '2026-06-13';
 
 const esCurriculum: readonly GrammarPoint[] = [
   /*
