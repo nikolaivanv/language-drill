@@ -19,6 +19,7 @@
     "review:flagged": "dotenv -e .env -- pnpm --filter @language-drill/db review:flagged",
     "review:flagged-theory": "dotenv -e .env -- pnpm --filter @language-drill/db review:flagged-theory",
     "revalidate:cloze": "dotenv -e .env -- pnpm --filter @language-drill/db revalidate:cloze",
+    "backfill:coverage-tags": "dotenv -e .env -- pnpm --filter @language-drill/db backfill:coverage-tags",
     "bootstrap-prompts": "dotenv -e .env -- pnpm --filter @language-drill/ai bootstrap-prompts",
     "push-prompts": "dotenv -e .env -- pnpm --filter @language-drill/ai push-prompts",
     "eval:export": "dotenv -e .env -- pnpm --filter @language-drill/ai eval:export",
