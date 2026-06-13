@@ -24,6 +24,7 @@ function draw(
     type,
     topicHint: overrides.topicHint ?? null,
     difficulty: overrides.difficulty ?? CefrLevel.B1,
+    grammarPointKey: overrides.grammarPointKey ?? null,
   };
 }
 

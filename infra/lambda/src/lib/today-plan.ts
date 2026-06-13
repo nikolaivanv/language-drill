@@ -130,6 +130,8 @@ export type PoolDraw = {
   type: ExerciseType;
   topicHint: string | null;
   difficulty: CefrLevel;
+  /** Curriculum grammar point this exercise targets; null for unmapped items. */
+  grammarPointKey: string | null;
 };
 
 export type ComposeFreshPlanResult = {
