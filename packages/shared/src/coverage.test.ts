@@ -54,7 +54,11 @@ describe("coverageAxesFor", () => {
   });
 
   it("translation and sentence_construction behave like grammar cells", () => {
-    expect(coverageAxesFor(ExerciseType.TRANSLATION, true)).toContain("person");
+    expect(coverageAxesFor(ExerciseType.TRANSLATION, true)).toEqual([
+      "person",
+      "polarity",
+      "sentenceType",
+    ]);
     expect(coverageAxesFor(ExerciseType.SENTENCE_CONSTRUCTION, false)).toEqual([
       "polarity",
       "sentenceType",

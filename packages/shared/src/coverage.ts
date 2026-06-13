@@ -6,6 +6,10 @@
  * tests, so the value sets cannot drift across them.
  */
 
+// Imported from ./index despite index re-exporting this file (a same-package
+// cycle): safe because ExerciseType is a TS enum (TDZ-immune) and is only
+// referenced inside function bodies here. Keep all ExerciseType uses inside
+// functions — a module-scope use would create a real init-order hazard.
 import { ExerciseType } from "./index";
 
 export const PERSON_CODES = [
@@ -47,7 +51,8 @@ export type CoverageTags = {
 };
 
 /** Allowed string values per axis — drives the validator tool enum AND the
- *  lenient parser (a value not in this set is dropped, never stored). */
+ *  lenient parser (a value not in this set is dropped, never stored). Prefer
+ *  iterating this over the individual *_CODES arrays so callers stay in sync. */
 export const COVERAGE_AXIS_VALUES: Record<CoverageAxis, readonly string[]> = {
   person: PERSON_CODES,
   wordClass: WORD_CLASS_CODES,
@@ -89,10 +94,10 @@ export function pickCoverageTags(
   personRotation: boolean,
 ): CoverageTags | null {
   const axes = coverageAxesFor(exerciseType, personRotation);
-  const out: Record<string, string> = {};
+  const out: CoverageTags = {};
   for (const axis of axes) {
     const v = coverage[axis];
-    if (v !== undefined) out[axis] = v;
+    if (v !== undefined) (out as Record<string, string>)[axis] = v;
   }
-  return Object.keys(out).length > 0 ? (out as CoverageTags) : null;
+  return Object.keys(out).length > 0 ? out : null;
 }
