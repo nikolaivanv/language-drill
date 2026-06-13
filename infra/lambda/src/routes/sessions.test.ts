@@ -674,15 +674,15 @@ describe('GET /sessions/today', () => {
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([{ proficiencyLevel: 'B2' }]);
 
-    // UNION-ALL of 5 LIMIT 1 selects, in slot order:
+    // UNION-ALL of 5 LIMIT 20 selects, in slot order:
     // cloze, cloze, translation, vocab_recall, cloze
     mockExecute.mockResolvedValueOnce({
       rows: [
-        { id: 'p1', type: 'cloze', topic_hint: 'pronouns', difficulty: 'B2' },
-        { id: 'p2', type: 'cloze', topic_hint: 'subjunctive', difficulty: 'B2' },
-        { id: 'p3', type: 'translation', topic_hint: null, difficulty: 'B2' },
-        { id: 'p4', type: 'vocab_recall', topic_hint: 'food', difficulty: 'B2' },
-        { id: 'p5', type: 'cloze', topic_hint: 'preterite', difficulty: 'B2' },
+        { id: 'p1', type: 'cloze', topic_hint: 'pronouns', difficulty: 'B2', grammar_point_key: 'es-b2-pronouns' },
+        { id: 'p2', type: 'cloze', topic_hint: 'subjunctive', difficulty: 'B2', grammar_point_key: null },
+        { id: 'p3', type: 'translation', topic_hint: null, difficulty: 'B2', grammar_point_key: null },
+        { id: 'p4', type: 'vocab_recall', topic_hint: 'food', difficulty: 'B2', grammar_point_key: null },
+        { id: 'p5', type: 'cloze', topic_hint: 'preterite', difficulty: 'B2', grammar_point_key: 'es-b2-preterite' },
       ],
     });
 
@@ -708,6 +708,54 @@ describe('GET /sessions/today', () => {
     expect(body.items.map((it: AnyJson) => it.index)).toEqual([1, 2, 3, 4, 5]);
     // cloze 2 + cloze 2 + translation 4 + vocab_recall 2 + cloze 2 = 12
     expect(body.totalEstimatedMinutes).toBe(12);
+  });
+
+  it('Path B: UNION-ALL SQL selects grammar_point_key and uses exposure ordering (nulls first)', async () => {
+    // Verify the generated SQL structure: it should select grammar_point_key
+    // and use freshFirstOrderBy (which produces "nulls first" in its ORDER BY).
+    mockLimit
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
+
+    mockExecute.mockResolvedValueOnce({ rows: [] });
+
+    await app.request('/sessions/today?language=ES', { method: 'GET' }, authEnv);
+
+    expect(mockExecute).toHaveBeenCalledTimes(1);
+    const sqlExpr = mockExecute.mock.calls[0]?.[0] as {
+      queryChunks: Array<unknown>;
+    };
+
+    // Collect all static-text fragments from the SQL expression recursively.
+    // Chunks can be: string/number scalars (skip), objects with 'value' (static
+    // text fragment), or objects with 'queryChunks' (nested sql fragment).
+    function collectStaticText(expr: { queryChunks: Array<unknown> }): string {
+      let text = '';
+      for (const chunk of expr.queryChunks) {
+        if (!chunk || typeof chunk !== 'object') continue;
+        const c = chunk as Record<string, unknown>;
+        if ('value' in c && Array.isArray(c.value)) {
+          text += (c.value as string[]).join('');
+        } else if ('queryChunks' in c && Array.isArray(c.queryChunks)) {
+          text += collectStaticText(c as { queryChunks: unknown[] });
+        }
+      }
+      return text;
+    }
+
+    const staticText = collectStaticText(sqlExpr);
+
+    // grammar_point_key must be projected in every subquery
+    expect(staticText).toContain('grammar_point_key');
+    // The ORDER BY clause must reference the exposure-ordering fragment
+    // (not bare random()). The fragment itself is mocked, but the ORDER BY
+    // placeholder must be present and the mock must have been called.
+    expect(staticText).toContain('ORDER BY');
+    expect(staticText).not.toMatch(/ORDER BY\s+random\(\)/i);
+    // freshFirstOrderBy is called once per plan type (3 distinct types in V1_PLAN_SHAPE)
+    // and must receive the authenticated userId so per-user exposure is tracked.
+    expect(mockFreshFirstOrderBy).toHaveBeenCalledWith('user_123');
+    expect(mockFreshFirstOrderBy).toHaveBeenCalledTimes(3);
   });
 
   it('Path B: pool returns no draws → items: [], code: INSUFFICIENT_POOL, status 200', async () => {
@@ -742,11 +790,11 @@ describe('GET /sessions/today', () => {
     // distinct cloze rather than emptying the whole plan.
     mockExecute.mockResolvedValueOnce({
       rows: [
-        { id: 'c1', type: 'cloze', topic_hint: null, difficulty: 'A1' },
-        { id: 'c2', type: 'cloze', topic_hint: null, difficulty: 'A1' },
-        { id: 'c3', type: 'cloze', topic_hint: null, difficulty: 'A1' },
-        { id: 'c4', type: 'cloze', topic_hint: null, difficulty: 'A1' },
-        { id: 't1', type: 'translation', topic_hint: null, difficulty: 'A1' },
+        { id: 'c1', type: 'cloze', topic_hint: null, difficulty: 'A1', grammar_point_key: null },
+        { id: 'c2', type: 'cloze', topic_hint: null, difficulty: 'A1', grammar_point_key: null },
+        { id: 'c3', type: 'cloze', topic_hint: null, difficulty: 'A1', grammar_point_key: null },
+        { id: 'c4', type: 'cloze', topic_hint: null, difficulty: 'A1', grammar_point_key: null },
+        { id: 't1', type: 'translation', topic_hint: null, difficulty: 'A1', grammar_point_key: null },
       ],
     });
 
@@ -772,11 +820,11 @@ describe('GET /sessions/today', () => {
 
     mockExecute.mockResolvedValueOnce({
       rows: [
-        { id: 'p1', type: 'cloze', topic_hint: null, difficulty: 'B1' },
-        { id: 'p2', type: 'cloze', topic_hint: null, difficulty: 'B1' },
-        { id: 'p3', type: 'translation', topic_hint: null, difficulty: 'B1' },
-        { id: 'p4', type: 'vocab_recall', topic_hint: null, difficulty: 'B1' },
-        { id: 'p5', type: 'cloze', topic_hint: null, difficulty: 'B1' },
+        { id: 'p1', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'p2', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'p3', type: 'translation', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'p4', type: 'vocab_recall', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'p5', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
       ],
     });
 
@@ -1405,11 +1453,11 @@ describe('review_status filter — GET /sessions/today Path B', () => {
   const FLAGGED_FIXTURE_ID = 'flagged-fixture-uuid';
 
   const approvedDraws = [
-    { id: 'p1', type: 'cloze', topic_hint: null, difficulty: 'B1' },
-    { id: 'p2', type: 'cloze', topic_hint: null, difficulty: 'B1' },
-    { id: 'p3', type: 'translation', topic_hint: null, difficulty: 'B1' },
-    { id: 'p4', type: 'vocab_recall', topic_hint: null, difficulty: 'B1' },
-    { id: 'p5', type: 'cloze', topic_hint: null, difficulty: 'B1' },
+    { id: 'p1', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+    { id: 'p2', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+    { id: 'p3', type: 'translation', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+    { id: 'p4', type: 'vocab_recall', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+    { id: 'p5', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
   ];
 
   beforeEach(async () => {

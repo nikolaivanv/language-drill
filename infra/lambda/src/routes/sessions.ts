@@ -339,7 +339,7 @@ sessions.get('/sessions/today', async (c) => {
   // -------------------------------------------------------------------------
   // The sample over-fetches distinct candidates per type so composeFreshPlan
   // can backfill a slot whose native type is missing (see its doc comment).
-  const draws = await sampleFreshPool({ language, difficulty: proficiencyLevel });
+  const draws = await sampleFreshPool({ language, difficulty: proficiencyLevel, userId });
   const { items, insufficient } = composeFreshPlan(draws);
 
   const generatedAt = new Date().toISOString();
@@ -372,42 +372,48 @@ sessions.get('/sessions/today', async (c) => {
 // Helpers
 // ---------------------------------------------------------------------------
 
+const OVERFETCH_PER_TYPE = 20; // give ranking real choice per type
+
 /**
  * Path B's pool sample: for each distinct exercise type in V1_PLAN_SHAPE, draws
- * up to `V1_PLAN_SHAPE.length` distinct rows via UNION-ALL (one randomised
+ * up to `OVERFETCH_PER_TYPE` distinct rows via UNION-ALL (one exposure-ordered
  * LIMIT-N select per type). Over-fetching lets `composeFreshPlan` backfill a
  * slot whose native type is missing with a distinct exercise of another type;
  * it returns `insufficient: true` only when the pool yields no rows at all.
+ *
+ * Exercises are ordered by `freshFirstOrderBy` (never-attempted first, then
+ * least-recently-seen) so the user is always shown fresh content before repeats.
  */
 async function sampleFreshPool(params: {
   language: string;
   difficulty: CefrLevel;
+  userId: string;
 }): Promise<PoolDraw[]> {
-  const { language, difficulty } = params;
-  // Distinct plan types; a type that fills N slots may also backfill others, so
-  // fetch up to the whole plan length per type (cheap: a few rows each).
+  const { language, difficulty, userId } = params;
   const planTypes = [...new Set(V1_PLAN_SHAPE.map((slot) => slot.type))];
-  const perType = V1_PLAN_SHAPE.length;
-  // Raw-SQL UNION-ALL: must inline the review_status predicate per subquery
-  // (no Drizzle helper here). Mirrors `approvedStatusFilter` in the helper at
-  // lib/exercise-filters.ts; keep both in sync if APPROVED_STATUSES changes.
   const typeQueries = planTypes.map(
     (type) => sql`
-      (SELECT id, type, content_json->>'topicHint' AS topic_hint, difficulty
+      (SELECT id, type, content_json->>'topicHint' AS topic_hint, difficulty, grammar_point_key
        FROM exercises
        WHERE language = ${language}
          AND difficulty = ${difficulty}
          AND type = ${type}
          AND review_status IN ('auto-approved', 'manual-approved')
-       ORDER BY random()
-       LIMIT ${perType})
+       ORDER BY ${freshFirstOrderBy(userId)}
+       LIMIT ${OVERFETCH_PER_TYPE})
     `,
   );
   const unionSql = sql.join(typeQueries, sql` UNION ALL `);
 
   const result = await db.execute(unionSql);
   const rows = (result as unknown as {
-    rows: Array<{ id: string; type: string; topic_hint: string | null; difficulty: string }>;
+    rows: Array<{
+      id: string;
+      type: string;
+      topic_hint: string | null;
+      difficulty: string;
+      grammar_point_key: string | null;
+    }>;
   }).rows;
 
   const draws: PoolDraw[] = [];
@@ -419,6 +425,7 @@ async function sampleFreshPool(params: {
       type: row.type,
       topicHint: row.topic_hint,
       difficulty: row.difficulty,
+      grammarPointKey: row.grammar_point_key,
     });
   }
   return draws;
