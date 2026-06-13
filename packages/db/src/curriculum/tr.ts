@@ -23,11 +23,18 @@ const { A1, A2 } = CefrLevel;
  * "saturated-dedup" or "low-yield" suppression on that cell clears, on the
  * assumption that the curriculum edit may have unblocked the search space.
  *
- * Current value `2026-05-30` reflects the #220 book-grounded audit of all 40
- * grammar points; the Yedi İklim A1+A2 *parity* (the 26 A1 + 14 A2 count noted
- * in the header above) was aligned earlier, on 2026-05-28.
+ * Current value `2026-06-13` was bumped to clear the scheduler's `low-yield`
+ * suppression on `tr-a1-possessive-suffixes` cloze (and any other
+ * low-yield-suppressed TR cell) after the 2026-06-12 generation + validation
+ * prompt fixes (#265 / #269). Those fixes unblocked the cell's approval rate but,
+ * being prompt-only, did not touch this constant — and `decideEnqueue` keys
+ * suppression-clearing on the curriculum version, NOT on the prompt version, so
+ * the scheduler kept skipping the cell (its 06-08 run approved 1 < the low-yield
+ * threshold of 3). Bumping here forces a fresh attempt under the new prompts.
+ * No grammar entries changed in this bump. Prior `2026-06-07` was the #220
+ * book-grounded audit of all 40 grammar points + Yedi İklim A1+A2 parity.
  */
-export const CURRICULUM_VERSION_TR = '2026-06-07';
+export const CURRICULUM_VERSION_TR = '2026-06-13';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
