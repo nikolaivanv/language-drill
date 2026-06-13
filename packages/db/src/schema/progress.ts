@@ -8,7 +8,7 @@ export const userExerciseHistory = pgTable(
   'user_exercise_history',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: text('user_id').references(() => users.id),
+    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
     exerciseId: uuid('exercise_id').references(() => exercises.id),
     sessionId: uuid('session_id').references(() => practiceSessions.id, { onDelete: 'set null' }),
     score: real('score'), // 0.0–1.0
@@ -35,7 +35,7 @@ export const spacedRepetitionCards = pgTable(
   'spaced_repetition_cards',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: text('user_id').references(() => users.id),
+    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
     itemType: text('item_type'), // grammar_point | vocabulary_item
     itemId: text('item_id'),
     dueAt: timestamp('due_at'),

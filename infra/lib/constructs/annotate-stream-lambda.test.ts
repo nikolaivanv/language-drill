@@ -84,4 +84,38 @@ describe("AnnotateStreamLambdaConstruct", () => {
       },
     });
   });
+
+  // Audit §1.2 — bound blast radius of the unauthenticated Function URL.
+  it("caps reserved concurrency (default 10)", () => {
+    template.hasResourceProperties("AWS::Lambda::Function", {
+      ReservedConcurrentExecutions: 10,
+    });
+  });
+
+  // Audit §4.2 — finite log retention on the second-hottest log group.
+  it("creates an explicit log group with 1-month retention", () => {
+    template.hasResourceProperties("AWS::Logs::LogGroup", {
+      RetentionInDays: 30,
+    });
+  });
+
+  // Audit §1.2 — invocation-flood alarm.
+  it("creates an invocation-flood alarm on the Function URL", () => {
+    template.hasResourceProperties("AWS::CloudWatch::Alarm", {
+      MetricName: "Invocations",
+      Namespace: "AWS/Lambda",
+    });
+  });
+
+  // Audit §3.2 — prompt-fallback metric filter + alarm for the annotate runtime.
+  it("creates a prompt-fallback metric filter (annotate surface)", () => {
+    template.hasResourceProperties("AWS::Logs::MetricFilter", {
+      MetricTransformations: Match.arrayWith([
+        Match.objectLike({
+          MetricName: "annotate-prompt-fallback",
+          MetricNamespace: "LanguageDrill/dev",
+        }),
+      ]),
+    });
+  });
 });

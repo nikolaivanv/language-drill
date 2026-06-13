@@ -58,4 +58,29 @@ describe("LambdaConstruct — Langfuse env + IAM (Req 8.1 / 8.2)", () => {
     expect(serialized).toContain("/UPSTASH_REDIS_REST_URL");
     expect(serialized).toContain("/UPSTASH_REDIS_REST_TOKEN");
   });
+
+  // Audit §4.2 — the API log group must have a finite retention (was: never
+  // expire).
+  it("creates an explicit log group with 1-month retention", () => {
+    template.hasResourceProperties("AWS::Logs::LogGroup", {
+      RetentionInDays: 30,
+    });
+  });
+
+  // Audit §3.2 — a metric filter on the non-keys_unset prompt-fallback warn
+  // line, feeding an alarm.
+  it("creates a prompt-fallback metric filter + alarm (env-namespaced)", () => {
+    template.hasResourceProperties("AWS::Logs::MetricFilter", {
+      MetricTransformations: Match.arrayWith([
+        Match.objectLike({
+          MetricName: "api-prompt-fallback",
+          MetricNamespace: "LanguageDrill/dev",
+        }),
+      ]),
+    });
+    template.hasResourceProperties("AWS::CloudWatch::Alarm", {
+      MetricName: "api-prompt-fallback",
+      Namespace: "LanguageDrill/dev",
+    });
+  });
 });

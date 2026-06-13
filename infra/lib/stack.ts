@@ -1,5 +1,6 @@
 import { Stack, StackProps, CfnOutput, Tags } from "aws-cdk-lib";
 import { Construct } from "constructs";
+import { AlertsConstruct } from "./constructs/alerts";
 import { LambdaConstruct } from "./constructs/lambda";
 import { ApiGatewayConstruct } from "./constructs/api-gateway";
 import { StorageConstruct } from "./constructs/storage";
@@ -35,14 +36,33 @@ export interface LanguageDrillStackProps extends StackProps {
   // trailing-24h global event count. Omit/empty to disable.
   aiKillSwitch?: string;
   aiGlobalDailyCap?: string;
+  // Operational alerting (audit §1.2 / §3.2 / §4.1). Email that receives the
+  // new CloudWatch alarm notifications and AWS Budget alerts.
+  alertEmail: string;
+  // Create the account-wide monthly cost budget on this stack. True for exactly
+  // one stack (prod) — budgets track total account spend, so two would
+  // double-count.
+  createBudget: boolean;
+  // Monthly cost-budget ceiling in USD (prod only). Defaults to 50.
+  monthlyBudgetUsd?: number;
 }
 
 export class LanguageDrillStack extends Stack {
   constructor(scope: Construct, id: string, props: LanguageDrillStackProps) {
     super(scope, id, props);
 
+    // Alerting fan-in: SNS topic for the new alarm actions + (prod-only) the
+    // account-wide monthly cost budget.
+    const alerts = new AlertsConstruct(this, "Alerts", {
+      envName: props.envName,
+      alertEmail: props.alertEmail,
+      createBudget: props.createBudget,
+      monthlyBudgetUsd: props.monthlyBudgetUsd,
+    });
+
     const lambda = new LambdaConstruct(this, "Lambda", {
       secretsPrefix: props.secretsPrefix,
+      alarmTopic: alerts.topic,
       additionalEnv: {
         ALLOWED_ORIGINS: props.allowedOrigins.join(","),
         ENV_NAME: props.envName,
@@ -97,6 +117,7 @@ export class LanguageDrillStack extends Stack {
       "AnnotateStream",
       {
         secretsPrefix: props.secretsPrefix,
+        alarmTopic: alerts.topic,
         additionalEnv: {
           AI_KILL_SWITCH: props.aiKillSwitch ?? "",
           AI_GLOBAL_DAILY_CAP: props.aiGlobalDailyCap ?? "",

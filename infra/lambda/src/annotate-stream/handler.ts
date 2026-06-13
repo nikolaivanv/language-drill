@@ -151,6 +151,10 @@ export const handler = awslambda.streamifyResponse<
       return;
     }
 
+    // Check-then-insert daily cap — same accepted boundary-overshoot race as
+    // documented at length in `routes/exercises.ts` (POST submit). The cap is a
+    // cost guardrail, not a billing-grade meter; revisit with an atomic counter
+    // if multi-user load makes the overshoot material.
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const usageRows = await db
       .select({ count: count() })

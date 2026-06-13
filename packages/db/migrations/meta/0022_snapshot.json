@@ -1,6 +1,6 @@
 {
-  "id": "47004144-7f32-479e-80c1-7f365e3f1404",
-  "prevId": "5276e6f6-9846-42d4-97e3-dc3404963063",
+  "id": "82c30b3c-aa4a-46c9-a948-2efe6f245f7e",
+  "prevId": "47004144-7f32-479e-80c1-7f365e3f1404",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -497,6 +497,12 @@
         },
         "rejection_reason_counts": {
           "name": "rejection_reason_counts",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "coverage_outcome": {
+          "name": "coverage_outcome",
           "type": "jsonb",
           "primaryKey": false,
           "notNull": false
