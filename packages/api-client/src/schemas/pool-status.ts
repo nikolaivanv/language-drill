@@ -23,6 +23,15 @@ export const PoolStatusItemSchema = z.object({
    * `targetSize` signals a cell whose target may warrant raising.
    */
   generationTarget: z.number(),
+  /**
+   * Per-axis distribution of the cell's APPROVED exercises, e.g.
+   * `{ person: { "3sg": 12, "2pl": 2 }, polarity: { affirmative: 13 } }`.
+   * `null` when the cell has no tagged approved rows. Axes appear only when
+   * present in the pool (Pool Coverage Controller, Phase 0).
+   */
+  coverageDistribution: z
+    .record(z.string(), z.record(z.string(), z.number()))
+    .nullable(),
 });
 
 export type PoolStatusItem = z.infer<typeof PoolStatusItemSchema>;

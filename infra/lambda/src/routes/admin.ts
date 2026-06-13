@@ -114,6 +114,34 @@ admin.get('/admin/pool-status', async (c) => {
       ),
   ]);
 
+  // Fourth aggregate: per-cell coverage distribution across coverage_tags axes
+  // for APPROVED exercises. Runs after the Promise.all to keep the parallel
+  // block readable; the single extra round-trip is negligible vs. the benefit.
+  const coverageResult = await db.execute(sql`
+    SELECT
+      language,
+      difficulty,
+      type,
+      grammar_point_key AS "grammarPointKey",
+      tag.key   AS axis,
+      tag.value AS value,
+      COUNT(*)::int AS n
+    FROM exercises
+    CROSS JOIN LATERAL jsonb_each_text(coverage_tags) AS tag
+    WHERE review_status IN ('auto-approved', 'manual-approved')
+      AND coverage_tags IS NOT NULL
+    GROUP BY language, difficulty, type, grammar_point_key, tag.key, tag.value
+  `);
+  const coverageRows = coverageResult.rows as unknown as Array<{
+    language: string;
+    difficulty: string;
+    type: string;
+    grammarPointKey: string;
+    axis: string;
+    value: string;
+    n: number;
+  }>;
+
   // Build O(1) lookup maps keyed by canonical cell key.
   const countByCell = new Map<
     string,
@@ -142,6 +170,21 @@ admin.get('/admin/pool-status', async (c) => {
   const consumedByCell = new Map<string, number>();
   for (const row of depletionRows) {
     consumedByCell.set(buildCellKeyFromRow(row), row.consumed7d);
+  }
+
+  // Build a nested map: cellKey → axis → value → count. Only cells with at
+  // least one tagged approved exercise appear; all others resolve to null below.
+  const coverageByCell = new Map<
+    string,
+    Record<string, Record<string, number>>
+  >();
+  for (const row of coverageRows) {
+    const cellKey = buildCellKeyFromRow(row);
+    const dist = coverageByCell.get(cellKey) ?? {};
+    const axisMap = dist[row.axis] ?? {};
+    axisMap[row.value] = row.n;
+    dist[row.axis] = axisMap;
+    coverageByCell.set(cellKey, dist);
   }
 
   // Enumerate the full cell universe, filter by requested params, and merge
@@ -185,6 +228,7 @@ admin.get('/admin/pool-status', async (c) => {
       // targetSize flags a cell whose target may need raising.
       targetSize: targetCellSize(depletionRate7d),
       generationTarget: resolveCellTarget(cell),
+      coverageDistribution: coverageByCell.get(cellKey) ?? null,
     };
   });
 

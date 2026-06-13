@@ -70,6 +70,8 @@ vi.mock('../db', () => ({
     select: () => makeChain(),
     insert: (table: unknown) => dbInsert(table as AnyJson),
     update: (table: unknown) => dbUpdate(table),
+    execute: () =>
+      Promise.resolve({ rows: queryQueue.shift() ?? [] }),
   },
 }));
 
@@ -182,7 +184,7 @@ describe('GET /admin/pool-status', () => {
   });
 
   it('returns 200 with all-zero counts for every curriculum cell on an empty DB', async () => {
-    queryQueue.push([], [], []); // counts, lastRefilled, depletion all empty
+    queryQueue.push([], [], [], []); // counts, lastRefilled, depletion all empty; coverage rows empty
 
     const res = await app.request('/admin/pool-status', undefined, adminEnv);
     expect(res.status).toBe(200);
@@ -206,11 +208,12 @@ describe('GET /admin/pool-status', () => {
       expect(['ES', 'DE', 'TR']).toContain(item.language);
       expect(['A1', 'A2', 'B1', 'B2']).toContain(item.level);
       expect(['cloze', 'translation', 'vocab_recall', 'sentence_construction']).toContain(item.type);
+      expect(item.coverageDistribution).toBeNull();
     }
   });
 
   it('filters to only ES cells when ?language=ES', async () => {
-    queryQueue.push([], [], []);
+    queryQueue.push([], [], [], []);
 
     const res = await app.request(
       '/admin/pool-status?language=ES',
@@ -253,6 +256,7 @@ describe('GET /admin/pool-status', () => {
           lastRefilledAt: refilledAt,
         },
       ],
+      [],
       [],
     );
 
@@ -298,6 +302,7 @@ describe('GET /admin/pool-status', () => {
       ],
       [],
       [],
+      [],
     );
 
     const res = await app.request('/admin/pool-status', undefined, adminEnv);
@@ -306,6 +311,53 @@ describe('GET /admin/pool-status', () => {
     const body = (await res.json()) as AnyJson[];
     const zeroApprovedItems = body.filter((item) => item.approved === 0);
     expect(zeroApprovedItems.length).toBeGreaterThan(0);
+  });
+
+  it('returns per-cell coverageDistribution for approved tagged rows', async () => {
+    // Grammar point: tr-a1-personal-suffixes (TR A1, personRotation: true,
+    // kind: grammar, no clozeUnsuitable) → produces a cloze cell in the
+    // curriculum cross-product.
+    const GRAMMAR_KEY = 'tr-a1-personal-suffixes';
+
+    // Q1 counts, Q2 lastRefilled, Q3 depletion — all empty.
+    // Q4 (db.execute coverage rows): two rows for the same cell with different
+    // axis/value combinations, simulating two tagged approved exercises:
+    //   exercise 1: person=3sg, polarity=affirmative
+    //   exercise 2: person=3sg, polarity=negative
+    // The SQL groups by (cell, axis, value) with COUNT(*), so we get 3 rows:
+    //   {axis: "person",   value: "3sg",         n: 2}
+    //   {axis: "polarity", value: "affirmative",  n: 1}
+    //   {axis: "polarity", value: "negative",     n: 1}
+    queryQueue.push(
+      [], // Q1 counts
+      [], // Q2 lastRefilled
+      [], // Q3 depletion
+      [   // Q4 coverage rows (db.execute result)
+        { language: 'TR', difficulty: 'A1', type: 'cloze', grammarPointKey: GRAMMAR_KEY, axis: 'person',   value: '3sg',         n: 2 },
+        { language: 'TR', difficulty: 'A1', type: 'cloze', grammarPointKey: GRAMMAR_KEY, axis: 'polarity', value: 'affirmative',  n: 1 },
+        { language: 'TR', difficulty: 'A1', type: 'cloze', grammarPointKey: GRAMMAR_KEY, axis: 'polarity', value: 'negative',     n: 1 },
+      ],
+    );
+
+    const res = await app.request('/admin/pool-status?language=TR&level=A1', undefined, adminEnv);
+    expect(res.status).toBe(200);
+
+    const body = (await res.json()) as AnyJson[];
+    const item = body.find(
+      (i: AnyJson) => i.grammarPointKey === GRAMMAR_KEY && i.type === 'cloze',
+    );
+    expect(item, `cloze cell for ${GRAMMAR_KEY} not found in response`).toBeDefined();
+    expect(item!.coverageDistribution).toEqual({
+      person:   { '3sg': 2 },
+      polarity: { affirmative: 1, negative: 1 },
+    });
+
+    // Every other cell in the response (no coverage rows) should be null.
+    const untagged = body.find((i: AnyJson) => i.coverageDistribution !== null);
+    // Only the seeded cell should have non-null distribution.
+    expect(
+      body.filter((i: AnyJson) => i.coverageDistribution !== null),
+    ).toHaveLength(1);
   });
 });
 
