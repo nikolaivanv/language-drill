@@ -31,8 +31,14 @@ const { A1, A2 } = CefrLevel;
  * suppression-clearing on the curriculum version, NOT on the prompt version, so
  * the scheduler kept skipping the cell (its 06-08 run approved 1 < the low-yield
  * threshold of 3). Bumping here forces a fresh attempt under the new prompts.
- * No grammar entries changed in this bump. Prior `2026-06-07` was the #220
- * book-grounded audit of all 40 grammar points + Yedi İklim A1+A2 parity.
+ * A later same-day edit sharpened the `tr-a1-vowel-harmony` commonErrors to name
+ * the soft-l ("ince l") loanword plural exception (meşgul → meşguller); the
+ * version value is unchanged because it is already today's date and the
+ * YYYY-MM-DD format (asserted in curriculum.test.ts) admits no same-day variant.
+ * The generator reads the curriculum live at run time, so its next scheduled run
+ * picks up the new bullet regardless; the version only gates suppression-clearing,
+ * which the (non-suppressed) vowel-harmony cell does not need. Prior `2026-06-07`
+ * was the #220 book-grounded audit of all 40 grammar points + Yedi İklim A1+A2 parity.
  */
 export const CURRICULUM_VERSION_TR = '2026-06-13';
 
@@ -65,7 +71,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     ],
     commonErrors: [
       'Defaulting to one vowel form (-ler) regardless of the stem vowel.',
-      "Forgetting harmony follows the stem's last vowel even in loanwords (otobüs → otobüsler, kitap → kitaplar); and conversely that a few loanwords take front-vowel suffixes despite a back last vowel (saat → saati, gol → golü).",
+      "Forgetting harmony follows the stem's last vowel even in loanwords (otobüs → otobüsler, kitap → kitaplar); and conversely that some loanwords whose final l is a soft, palatalised \"ince l\" take FRONT-vowel suffixes despite a back last vowel — including the plural: meşgul → meşguller (not *meşgullar), rol → roller, hal → haller; the same softening drives the 4-way set too (saat → saati, gol → golü).",
       'Picking the wrong member of the 4-way high-vowel set — e.g. using -ı on a rounded stem where -u is required (okulı vs. okulu), or using -i on a back-vowel stem where -ı is required.',
       'Conflating the 2-way (low-vowel) and 4-way (high-vowel) harmony patterns — applying -lAr/-lEr logic to suffixes that take the 4-way pattern, such as the accusative -(y)I.',
     ],

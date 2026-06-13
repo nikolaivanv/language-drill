@@ -147,6 +147,41 @@ describe("buildUserPrompt", () => {
     expect(prompt).toContain("Hints:** starts with L; has 7 letters");
     expect(prompt).toContain("User's Answer:** library");
   });
+
+  it("appends an authoritative grammar reference block when grammarGuidance is provided", () => {
+    const guidance = {
+      name: "Vowel harmony",
+      description:
+        "Suffix vowels harmonise with the stem's last vowel. 2-way (e/a): plural -lAr.",
+      commonErrors: [
+        "Defaulting to one vowel form regardless of the stem vowel.",
+        "Soft-l loanwords like meşgul take -ler not -lar (meşgul → meşguller).",
+      ],
+    };
+
+    const prompt = buildUserPrompt(
+      translationContent,
+      "Onlar meşgullar.",
+      Language.TR,
+      CefrLevel.A1,
+      guidance,
+    );
+
+    // Names the grammar point being drilled
+    expect(prompt).toContain("Vowel harmony");
+    // Surfaces the authoritative rule + the specific exception bullet
+    expect(prompt).toContain("Suffix vowels harmonise with the stem's last vowel");
+    expect(prompt).toContain("meşgul → meşguller");
+    // Anti-confabulation instruction so the evaluator stops inventing rules
+    expect(prompt.toLowerCase()).toContain("do not invent");
+  });
+
+  it("omits the grammar reference block when grammarGuidance is absent", () => {
+    const prompt = buildUserPrompt(clozeContent, "went", Language.EN, CefrLevel.B1);
+
+    expect(prompt).not.toContain("Grammar Point Reference");
+    expect(prompt.toLowerCase()).not.toContain("do not invent");
+  });
 });
 
 describe("EVALUATION_SYSTEM_PROMPT", () => {

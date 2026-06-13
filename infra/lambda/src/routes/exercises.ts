@@ -9,6 +9,7 @@ import {
   practiceSessions,
   userExerciseHistory,
   usageEvents,
+  getGrammarPoint,
 } from '@language-drill/db';
 import {
   createObservedClaudeClient,
@@ -157,6 +158,23 @@ exercises.post('/exercises/:id/submit', async (c) => {
   const exercise = rows[0];
   const userId = c.get('userId');
 
+  // Resolve curriculum grounding for the evaluator from the exercise's grammar
+  // point. The evaluator runs on Haiku and otherwise sees only the exercise
+  // content, so feeding it the authoritative rule + common errors stops it
+  // confabulating rationales for rule-driven answers (e.g. the soft-l loanword
+  // plural meşgul → meşguller). Best-effort: skipped when the key is absent or
+  // not in the curriculum index.
+  const grammarPoint = exercise.grammarPointKey
+    ? getGrammarPoint(exercise.grammarPointKey)
+    : undefined;
+  const grammarGuidance = grammarPoint
+    ? {
+        name: grammarPoint.name,
+        description: grammarPoint.description,
+        commonErrors: grammarPoint.commonErrors,
+      }
+    : undefined;
+
   // 2b. Validate session linkage BEFORE rate-limit + Claude — no side effects on failure
   if (sessionId !== undefined) {
     const sessionRows = await db
@@ -253,6 +271,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
           userAnswer,
           language: exercise.language as Language,
           difficulty: exercise.difficulty as CefrLevel,
+          grammarGuidance,
         }),
     );
 

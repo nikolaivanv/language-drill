@@ -193,26 +193,74 @@ Evaluate the user's sentence. Judge grammatical accuracy and naturalness; fold i
 }
 
 /**
- * Builds the user message for Claude evaluation based on exercise type.
+ * Authoritative grammar grounding for the evaluator, resolved by the caller
+ * from the exercise's `grammarPointKey` (the curriculum lives in
+ * `@language-drill/db`, which this package must not depend on — so the caller
+ * injects the relevant fields rather than this package looking them up).
+ *
+ * Purpose: the evaluator runs on Haiku and receives only the exercise content,
+ * so when an answer hinges on a rule the item doesn't restate, Haiku has been
+ * observed to confabulate a plausible-but-wrong rationale (e.g. inventing a
+ * "consonant doubling rule" for the soft-l loanword plural meşgul → meşguller).
+ * Feeding it the same curriculum text the generator used grounds the feedback.
+ */
+export type GrammarGuidance = {
+  /** Human-readable grammar point name, e.g. "Vowel harmony". */
+  name: string;
+  /** The curriculum `description` — the authoritative rule statement. */
+  description: string;
+  /** The curriculum `commonErrors` — typical L2 mistakes for this point. */
+  commonErrors: readonly string[];
+};
+
+/**
+ * Renders the grammar-reference block appended to every evaluation user prompt
+ * when guidance is available. Kept type-agnostic so all four exercise types
+ * share it. The anti-confabulation instruction is deliberate: it tells the
+ * evaluator to ground explanations in this text and not invent rules.
+ */
+function buildGrammarGuidanceBlock(guidance: GrammarGuidance): string {
+  const errorBullets = guidance.commonErrors.map((e) => `- ${e}`).join("\n");
+  return `## Grammar Point Reference (authoritative)
+This exercise drills **${guidance.name}**. When you explain a grammar error, ground it in the reference below. Do NOT invent rules that this reference does not support (e.g. a spurious "doubling" rule); if a form is not covered here, describe the established pattern conservatively rather than guessing.
+
+**Rule:** ${guidance.description}
+**Common learner errors to watch for:**
+${errorBullets}`;
+}
+
+/**
+ * Builds the user message for Claude evaluation based on exercise type. When
+ * `grammarGuidance` is supplied, an authoritative grammar-reference block is
+ * appended so the evaluator grounds its feedback in the curriculum.
  */
 export function buildUserPrompt(
   exercise: ExerciseContent,
   userAnswer: string,
   language: Language,
   difficulty: CefrLevel,
+  grammarGuidance?: GrammarGuidance,
 ): string {
+  let base: string;
   switch (exercise.type) {
     case ExerciseType.CLOZE:
-      return buildClozeUserPrompt(exercise, userAnswer, language, difficulty);
+      base = buildClozeUserPrompt(exercise, userAnswer, language, difficulty);
+      break;
     case ExerciseType.TRANSLATION:
-      return buildTranslationUserPrompt(exercise, userAnswer, language, difficulty);
+      base = buildTranslationUserPrompt(exercise, userAnswer, language, difficulty);
+      break;
     case ExerciseType.VOCAB_RECALL:
-      return buildVocabRecallUserPrompt(exercise, userAnswer, language, difficulty);
+      base = buildVocabRecallUserPrompt(exercise, userAnswer, language, difficulty);
+      break;
     case ExerciseType.SENTENCE_CONSTRUCTION:
-      return buildSentenceConstructionUserPrompt(exercise, userAnswer, language, difficulty);
+      base = buildSentenceConstructionUserPrompt(exercise, userAnswer, language, difficulty);
+      break;
     default: {
       const _exhaustive: never = exercise;
       throw new Error(`Unknown exercise type: ${(_exhaustive as ExerciseContent).type}`);
     }
   }
+
+  if (!grammarGuidance) return base;
+  return `${base}\n\n${buildGrammarGuidanceBlock(grammarGuidance)}`;
 }
