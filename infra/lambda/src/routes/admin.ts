@@ -55,10 +55,12 @@ admin.get('/admin/pool-status', async (c) => {
 
   const { language, level } = parsed.data;
 
-  // Three aggregating queries in parallel — the in-memory cell list filters
+  // Four aggregating queries in parallel — the in-memory cell list filters
   // the response shape, so each query stays a single index-friendly aggregate
-  // rather than per-cell round-trips.
-  const [countRows, lastRefilledRows, depletionRows] = await Promise.all([
+  // rather than per-cell round-trips. The fourth (coverage) uses a raw
+  // db.execute with a LATERAL unnest that the Drizzle query builder cannot
+  // express; it runs alongside the three builder queries rather than serially.
+  const [countRows, lastRefilledRows, depletionRows, coverageResult] = await Promise.all([
     db
       .select({
         language: exercises.language,
@@ -112,26 +114,22 @@ admin.get('/admin/pool-status', async (c) => {
         exercises.type,
         exercises.grammarPointKey,
       ),
+    db.execute(sql`
+      SELECT
+        language,
+        difficulty,
+        type,
+        grammar_point_key AS "grammarPointKey",
+        tag.key   AS axis,
+        tag.value AS value,
+        COUNT(*)::int AS n
+      FROM exercises
+      CROSS JOIN LATERAL jsonb_each_text(coverage_tags) AS tag
+      WHERE review_status IN ('auto-approved', 'manual-approved')
+        AND coverage_tags IS NOT NULL
+      GROUP BY language, difficulty, type, grammar_point_key, tag.key, tag.value
+    `),
   ]);
-
-  // Fourth aggregate: per-cell coverage distribution across coverage_tags axes
-  // for APPROVED exercises. Runs after the Promise.all to keep the parallel
-  // block readable; the single extra round-trip is negligible vs. the benefit.
-  const coverageResult = await db.execute(sql`
-    SELECT
-      language,
-      difficulty,
-      type,
-      grammar_point_key AS "grammarPointKey",
-      tag.key   AS axis,
-      tag.value AS value,
-      COUNT(*)::int AS n
-    FROM exercises
-    CROSS JOIN LATERAL jsonb_each_text(coverage_tags) AS tag
-    WHERE review_status IN ('auto-approved', 'manual-approved')
-      AND coverage_tags IS NOT NULL
-    GROUP BY language, difficulty, type, grammar_point_key, tag.key, tag.value
-  `);
   const coverageRows = coverageResult.rows as unknown as Array<{
     language: string;
     difficulty: string;
