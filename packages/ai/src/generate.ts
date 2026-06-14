@@ -54,13 +54,16 @@ export const GENERATION_TEMPERATURE = 0.7;
 // Tool-name map
 // ---------------------------------------------------------------------------
 
-export const TOOL_NAME_BY_TYPE: Readonly<Record<ExerciseType, string>> =
-  Object.freeze({
-    cloze: "submit_cloze_exercise",
-    translation: "submit_translation_exercise",
-    vocab_recall: "submit_vocab_recall_exercise",
-    sentence_construction: "submit_sentence_construction_exercise",
-  });
+// DICTATION is excluded: dictation exercises are not batch-generated and are
+// graded by gradeDictationAnswer, not the generic generation/evaluation path.
+export const TOOL_NAME_BY_TYPE: Readonly<
+  Record<Exclude<ExerciseType, ExerciseType.DICTATION>, string>
+> = Object.freeze({
+  cloze: "submit_cloze_exercise",
+  translation: "submit_translation_exercise",
+  vocab_recall: "submit_vocab_recall_exercise",
+  sentence_construction: "submit_sentence_construction_exercise",
+});
 
 // ---------------------------------------------------------------------------
 // Per-type tool schemas — input_schema mirrors the matching ExerciseContent
@@ -275,8 +278,10 @@ export const SENTENCE_CONSTRUCTION_GENERATION_TOOL: Anthropic.Tool = {
   },
 };
 
+// DICTATION is excluded: dictation exercises are not batch-generated and are
+// graded by gradeDictationAnswer, not the generic generation/evaluation path.
 export const GENERATION_TOOL_BY_TYPE: Readonly<
-  Record<ExerciseType, Anthropic.Tool>
+  Record<Exclude<ExerciseType, ExerciseType.DICTATION>, Anthropic.Tool>
 > = Object.freeze({
   cloze: CLOZE_GENERATION_TOOL,
   translation: TRANSLATION_GENERATION_TOOL,
@@ -761,7 +766,12 @@ export async function generateOneDraft(
     spec.seedWords?.[ordinal] ?? null,
     spec.batchSeed,
   );
-  const tool = GENERATION_TOOL_BY_TYPE[spec.exerciseType];
+  // Safe cast: generateBatch guards against ExerciseType.DICTATION before
+  // reaching this function (!(spec.exerciseType in TOOL_NAME_BY_TYPE) check).
+  const tool =
+    GENERATION_TOOL_BY_TYPE[
+      spec.exerciseType as Exclude<ExerciseType, ExerciseType.DICTATION>
+    ];
 
   // Infrastructure-level failures (network, rate-limit, auth) propagate
   // — they're not per-ordinal data quality issues. Only the parse path
@@ -921,5 +931,9 @@ function parseToolInput(
       return parseGeneratedVocabRecallDraft(input, spec);
     case ExerciseType.SENTENCE_CONSTRUCTION:
       return parseGeneratedSentenceConstructionDraft(input, spec);
+    case ExerciseType.DICTATION:
+      throw new Error(
+        "Dictation exercises are not generated via this path; use gradeDictationAnswer.",
+      );
   }
 }

@@ -255,6 +255,10 @@ export function buildUserPrompt(
     case ExerciseType.SENTENCE_CONSTRUCTION:
       base = buildSentenceConstructionUserPrompt(exercise, userAnswer, language, difficulty);
       break;
+    case ExerciseType.DICTATION:
+      throw new Error(
+        "Dictation exercises are not evaluated via this path; use gradeDictationAnswer.",
+      );
     default: {
       const _exhaustive: never = exercise;
       throw new Error(`Unknown exercise type: ${(_exhaustive as ExerciseContent).type}`);

@@ -274,7 +274,12 @@ export function computeGenerationPromptVars(
       grammarPoint.name,
     ),
     recentStemsBlock: renderRecentStems(recentStems),
-    toolName: TOOL_NAME_BY_TYPE[exerciseType],
+    // Safe cast: this function is only called on the generation path, which
+    // guards against ExerciseType.DICTATION upstream.
+    toolName:
+      TOOL_NAME_BY_TYPE[
+        exerciseType as Exclude<ExerciseType, ExerciseType.DICTATION>
+      ],
   };
 }
 
@@ -445,7 +450,12 @@ export function buildGenerationUserPrompt(
   // phase 0, byte-identical to the unphased output for existing callers.
   batchSeed: string | null = null,
 ): string {
-  const toolName = TOOL_NAME_BY_TYPE[inputs.exerciseType];
+  // Safe cast: this function is only called on the generation path, which
+  // guards against ExerciseType.DICTATION upstream.
+  const toolName =
+    TOOL_NAME_BY_TYPE[
+      inputs.exerciseType as Exclude<ExerciseType, ExerciseType.DICTATION>
+    ];
   const domain = topicDomain ?? "mixed";
   // R5.5: a LOOSE constraint — anchor on the seed, but allow a similar-frequency
   // substitute when it doesn't fit the grammar point, so seeding doesn't trade
@@ -494,6 +504,10 @@ export function canonicalSurface(content: ExerciseContent): string {
       return `${normaliseSurface(content.expectedWord)}::${normaliseSurface(content.prompt)}`;
     case ExerciseType.SENTENCE_CONSTRUCTION:
       return normaliseSurface(content.prompt);
+    case ExerciseType.DICTATION:
+      throw new Error(
+        "Dictation exercises are not generated via this path; use gradeDictationAnswer.",
+      );
     default: {
       const _exhaustive: never = content;
       throw new Error(

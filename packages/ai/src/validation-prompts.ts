@@ -327,6 +327,10 @@ export function buildValidationUserPrompt(
     case ExerciseType.SENTENCE_CONSTRUCTION:
       base = buildSentenceConstructionValidationUserPrompt(content, spec);
       break;
+    case ExerciseType.DICTATION:
+      throw new Error(
+        "Dictation exercises are not validated via this path; use gradeDictationAnswer.",
+      );
     default: {
       const _exhaustive: never = content;
       throw new Error(
