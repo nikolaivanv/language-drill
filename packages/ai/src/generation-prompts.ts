@@ -313,11 +313,11 @@ export async function buildGenerationSystemPrompt(
 // A 2026-06-12 pool audit found every TR tense cell ≥90% third-person
 // singular (negation/aorist/mış: 100%), so the "plus personal endings" half
 // of those grammar points was never tested — 3sg is the unmarked, suffix-light
-// form the model defaults to. For grammar points flagged
-// `personRotation: true` in the curriculum, each draft's USER prompt pins a
-// target person, rotated deterministically by ordinal so a batch covers the
-// paradigm. User-prompt-only by design: the cached system prompt stays
-// byte-identical across the batch (same rationale as `seedWord`, R5.4).
+// form the model defaults to. For grammar points whose `coverageSpec` controls
+// the `person` axis, the scheduler supplies an explicit per-draft `person`
+// target (via `coverageTargets`) and each draft's USER prompt pins it, so a
+// batch covers the paradigm. User-prompt-only by design: the cached system
+// prompt stays byte-identical across the batch (same rationale as `seedWord`, R5.4).
 
 /**
  * Per-language person rotation lists. The label is injected verbatim into the
