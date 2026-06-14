@@ -143,6 +143,9 @@ export async function gradeDictationAnswer(
   client: Anthropic,
   input: GradeDictationInput,
 ): Promise<DictationResult> {
+  // `difficulty` is part of GradeDictationInput for API symmetry with
+  // EvaluateAnswerInput and is reserved for future user-prompt personalisation;
+  // dictation grading is reference-anchored, so it isn't consumed yet.
   const { exercise, userAnswer, language, systemPromptOverride } = input;
   const diff = diffDictation(exercise.referenceText, userAnswer);
 
@@ -206,6 +209,7 @@ export async function gradeDictationAnswer(
 
   const segments: DictationDiffSegment[] = diff.segments.map((s) => {
     if (s.kind === "match") return { kind: "match", text: s.text };
+    // id originates from diff.differences (mapped 1:1 into `differences`) — always present.
     const cls2 = differences.find((d) => d.id === s.id)!;
     if (cls2.kind === "accepted") {
       return { kind: "accepted", id: s.id, got: s.got, expected: s.expected };
