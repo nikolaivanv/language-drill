@@ -31,6 +31,7 @@ import { SONNET_4_5_PRICING } from "./cost-model.js";
 
 export type LlmFeature =
   | "evaluate"
+  | "free-writing-eval"
   | "annotate"
   | "annotate-span"
   | "generate"
@@ -159,6 +160,7 @@ export interface LlmTraceContext {
  */
 export const TOOL_NAME_TO_FEATURE: ReadonlyMap<string, LlmFeature> = new Map([
   ["submit_evaluation", "evaluate"],
+  ["submit_free_writing_evaluation", "free-writing-eval"],
   ["submit_annotated_words", "annotate"],
   ["submit_deep_card", "annotate-span"],
   ["submit_cloze_exercise", "generate"],

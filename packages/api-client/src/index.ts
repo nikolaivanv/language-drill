@@ -6,6 +6,8 @@ export {
   type EvaluationResultResponse,
   ApiErrorSchema,
   type ApiErrorResponse,
+  FreeWritingEvaluationSchema,
+  type FreeWritingEvaluationResponse,
 } from './schemas/exercise';
 export {
   LanguageProfileSchema,
@@ -116,6 +118,11 @@ export {
   type SubmitAnswerParams,
   type UseSubmitAnswerOptions,
 } from './hooks/useExercise';
+export {
+  useSubmitFreeWriting,
+  type SubmitFreeWritingParams,
+  type UseSubmitFreeWritingOptions,
+} from './hooks/useSubmitFreeWriting';
 export {
   useCreateSession,
   useCompleteSession,

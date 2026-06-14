@@ -17,6 +17,8 @@ function idleMessage(type: ExerciseType): string {
       return "say it from memory";
     case ExerciseType.SENTENCE_CONSTRUCTION:
       return "build a full sentence · use the prompt";
+    case ExerciseType.FREE_WRITING:
+      return "write freely · then grade it";
     default: {
       const _exhaustive: never = type;
       throw new Error(`unknown ExerciseType: ${String(_exhaustive)}`);
@@ -82,6 +84,10 @@ function evaluatedMessage(type: ExerciseType, score: number): string {
           return "tricky structure · let's build it back up";
       }
       break;
+    case ExerciseType.FREE_WRITING:
+      return tier === "praise" || tier === "light"
+        ? "strong writing · see what lifted it"
+        : "good effort · the corrections will sharpen it";
     default: {
       const _exhaustive: never = type;
       throw new Error(`unknown ExerciseType: ${String(_exhaustive)}`);

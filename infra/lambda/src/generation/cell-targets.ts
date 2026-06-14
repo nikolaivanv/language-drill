@@ -55,6 +55,10 @@ export const CELL_TARGET_DEFAULTS: Record<
   // now comes from splitting into more themed umbrellas, not a high per-cell
   // target.
   [ExerciseType.VOCAB_RECALL]: { A1: 10, A2: 10, B1: 10, B2: 10 },
+  // Free writing is authored by hand, never produced by the generation
+  // pipeline, so it has no per-cell targets. Present only to satisfy the
+  // exhaustive map type; never read (no free-writing generation cells exist).
+  [ExerciseType.FREE_WRITING]: {},
 };
 
 /**

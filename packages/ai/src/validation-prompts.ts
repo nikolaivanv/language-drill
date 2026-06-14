@@ -327,6 +327,12 @@ export function buildValidationUserPrompt(
     case ExerciseType.SENTENCE_CONSTRUCTION:
       base = buildSentenceConstructionValidationUserPrompt(content, spec);
       break;
+    case ExerciseType.FREE_WRITING:
+      // free_writing is authored by hand, not produced/validated by the pool
+      // generation pipeline.
+      throw new Error(
+        "buildValidationUserPrompt: free_writing is not pool-validated",
+      );
     default: {
       const _exhaustive: never = content;
       throw new Error(

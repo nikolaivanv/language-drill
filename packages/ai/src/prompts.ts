@@ -255,6 +255,12 @@ export function buildUserPrompt(
     case ExerciseType.SENTENCE_CONSTRUCTION:
       base = buildSentenceConstructionUserPrompt(exercise, userAnswer, language, difficulty);
       break;
+    case ExerciseType.FREE_WRITING:
+      // Free writing is graded by `evaluateFreeWriting` (its own rich tool +
+      // prompt), never by this generic single-answer evaluator.
+      throw new Error(
+        "buildUserPrompt: free_writing is evaluated via evaluateFreeWriting, not this generic evaluator",
+      );
     default: {
       const _exhaustive: never = exercise;
       throw new Error(`Unknown exercise type: ${(_exhaustive as ExerciseContent).type}`);

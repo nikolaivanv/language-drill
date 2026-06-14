@@ -102,6 +102,7 @@ vi.mock('../lib/exercise-filters', () => ({
 }));
 
 const mockEvaluateAnswer = vi.fn();
+const mockEvaluateFreeWriting = vi.fn();
 // Spy on `withLlmTrace` so observability tests can inspect the trace
 // context the route assembles. Default behaviour: transparent passthrough
 // (Langfuse is disabled in vitest — no env keys — so this matches the
@@ -114,11 +115,15 @@ vi.mock('@language-drill/ai', () => ({
   createClaudeClient: vi.fn(() => ({})),
   createObservedClaudeClient: vi.fn(() => ({})),
   evaluateAnswer: (...args: unknown[]) => mockEvaluateAnswer(...args),
+  evaluateFreeWriting: (...args: unknown[]) => mockEvaluateFreeWriting(...args),
   withLlmTrace: <T>(ctx: unknown, fn: () => T | Promise<T>) =>
     mockWithLlmTrace(ctx, fn),
   EVALUATION_SYSTEM_PROMPT_VERSION: 'evaluate@test',
   EVAL_REQUEST_TIMEOUT_MS: 18_000,
   EVAL_MAX_RETRIES: 1,
+  FREE_WRITING_EVAL_PROMPT_VERSION: 'free-writing-eval@test',
+  FREE_WRITING_EVAL_REQUEST_TIMEOUT_MS: 45_000,
+  FREE_WRITING_EVAL_MAX_RETRIES: 1,
 }));
 
 // Mock `node:crypto` so observability tests can pin `submissionId` and
@@ -1363,5 +1368,122 @@ describe('POST /exercises/:id/submit — mastery upsert', () => {
     expect(res.status).toBe(200);
     const body = await res.json() as AnyJson;
     expect(body.score).toBe(0.85);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /exercises/:id/submit — free_writing exercises route to evaluateFreeWriting
+// ---------------------------------------------------------------------------
+
+describe('POST /exercises/:id/submit — free_writing branch', () => {
+  let app: Hono;
+
+  const authEnv = {
+    event: {
+      requestContext: {
+        authorizer: { jwt: { claims: { sub: 'user_123' } } },
+        requestId: 'req-fw-001',
+      },
+    },
+  };
+
+  const freeWritingExercise = {
+    id: 'fw-exercise-001',
+    type: 'free_writing',
+    language: 'ES',
+    difficulty: 'B1',
+    grammarPointKey: null,
+    contentJson: {
+      type: 'free_writing',
+      title: 'Una carta formal',
+      task: 'Escribe una carta formal solicitando información sobre un curso.',
+      domain: 'academic',
+      register: 'formal',
+      minWords: 80,
+      maxWords: 150,
+      requiredElements: [],
+      instructions: 'Usa un saludo y una despedida formales.',
+    },
+    audioS3Key: null,
+    createdAt: new Date(),
+  };
+
+  const freeWritingEvaluation = {
+    overallScore: 0.8,
+    overallCefr: 'B1',
+    headline: 'A solid formal letter with minor grammar slips.',
+    summary: 'The letter addresses the task well. Grammar is mostly accurate.',
+    criteria: [
+      { id: 'task', label: 'Task Achievement', score: 0.8, cefr: 'B1', note: 'Good.' },
+      { id: 'coherence', label: 'Coherence & Cohesion', score: 0.75, cefr: 'B1', note: 'Mostly clear.' },
+      { id: 'lexis', label: 'Lexical Resource', score: 0.8, cefr: 'B1', note: 'Appropriate vocabulary.' },
+      { id: 'grammar', label: 'Grammatical Range', score: 0.85, cefr: 'B1', note: 'Minor errors only.' },
+    ],
+    errors: [],
+    goodSpans: [],
+    improved: { text: 'Estimada señora, me dirijo a usted para solicitar información sobre el curso.' },
+    wordCount: 95,
+    improvedWordCount: 98,
+  };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    mockWithLlmTrace.mockImplementation(
+      <T>(_ctx: unknown, fn: () => T | Promise<T>) => Promise.resolve(fn()),
+    );
+    mockRandomUUID.mockImplementation(() => '00000000-0000-0000-0000-000000000000');
+    const mod = await import('./exercises');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('routes free_writing to evaluateFreeWriting, stores overallScore, and returns the rich evaluation', async () => {
+    mockLimit.mockResolvedValueOnce([freeWritingExercise]);
+    mockWhere
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }))
+      .mockResolvedValueOnce([{ count: 0 }] as never);
+    mockEvaluateFreeWriting.mockResolvedValueOnce(freeWritingEvaluation);
+
+    const res = await app.request(
+      '/exercises/fw-exercise-001/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'Mi texto suficientemente largo.' }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as AnyJson;
+
+    // Response must be the rich FreeWritingEvaluation
+    expect(body.overallScore).toBe(0.8);
+
+    // evaluateFreeWriting called once; evaluateAnswer NOT called
+    expect(mockEvaluateFreeWriting).toHaveBeenCalledTimes(1);
+    expect(mockEvaluateAnswer).not.toHaveBeenCalled();
+
+    // userExerciseHistory insert (2nd values call, after auth upsert) must
+    // store overallScore as `score` and the full evaluation in responseJson.
+    expect(mockValues).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        score: 0.8,
+        responseJson: expect.objectContaining({
+          evaluation: freeWritingEvaluation,
+        }),
+      }),
+    );
+
+    // usageEvents insert must meter ai_evaluation (3rd values call)
+    expect(mockValues).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({ eventType: 'ai_evaluation' }),
+    );
   });
 });

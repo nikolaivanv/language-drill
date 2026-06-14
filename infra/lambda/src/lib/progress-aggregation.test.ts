@@ -60,6 +60,10 @@ describe('axisForExerciseType', () => {
     expect(axisForExerciseType('mystery_type')).toBeNull();
     expect(axisForExerciseType('')).toBeNull();
   });
+
+  it('maps free_writing to the writing axis', () => {
+    expect(axisForExerciseType(ExerciseType.FREE_WRITING)).toBe('writing');
+  });
 });
 
 describe('difficultyWeight', () => {
