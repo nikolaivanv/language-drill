@@ -320,8 +320,21 @@ describe('coachMessage — DICTATION', () => {
     for (const msg of messages) {
       expect(typeof msg).toBe('string');
       expect(msg.length).toBeGreaterThan(0);
-      expect(msg).not.toContain('!');
     }
     expect(new Set(messages).size).toBe(4);
+  });
+
+  it('dictation copy passes the same hygiene rules as other types', () => {
+    const all = [
+      coachMessage({ kind: 'idle', type: ExerciseType.DICTATION }),
+      ...[0.97, 0.8, 0.5, 0.2].map((score) =>
+        coachMessage({ kind: 'evaluated', type: ExerciseType.DICTATION, score }),
+      ),
+    ];
+    for (const msg of all) {
+      expect(msg).not.toContain('!');
+      expect(msg).not.toMatch(emojiRegex);
+      expect(msg).not.toMatch(gamificationRegex);
+    }
   });
 });
