@@ -21,6 +21,14 @@ export type DiffSegment =
 
 export type DictationDiff = {
   rawCharAccuracy: number;
+  /**
+   * Fraction of reference words NOT touched by any diff region:
+   * `(refWords - diffRegions) / refWords`. Contiguous errors collapse into a
+   * single region (so `lo cura`→`locura` is one miss, matching the per-flagged-
+   * item model the Claude pass consumes) — this is NOT a traditional WER
+   * complement, and it depends on error adjacency. Use `rawCharAccuracy` for an
+   * adjacency-independent metric.
+   */
   wordAccuracy: number;
   /** Ordered prose segments (match runs + diffs) over the reference, for the UI. */
   segments: DiffSegment[];
@@ -145,8 +153,10 @@ export function diffDictation(reference: string, typed: string): DictationDiff {
   const maxLen = Math.max(normRef.length, normTyped.length);
   const rawCharAccuracy = maxLen === 0 ? 1 : 1 - charLevenshtein(normRef, normTyped) / maxLen;
 
-  const refTokens = tokenize(reference);
-  const hypTokens = tokenize(typed);
+  // Both pipelines start from the same whitespace-normalized strings (tokenize
+  // re-applies normWhitespace internally; pass the normalized form explicitly).
+  const refTokens = tokenize(normRef);
+  const hypTokens = tokenize(normTyped);
   const ops = alignTokens(refTokens, hypTokens);
   const regions = groupRegions(ops);
 
