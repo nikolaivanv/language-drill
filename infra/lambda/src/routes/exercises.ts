@@ -10,6 +10,8 @@ import {
   userExerciseHistory,
   usageEvents,
   getGrammarPoint,
+  userGrammarMastery,
+  updateMastery,
 } from '@language-drill/db';
 import {
   createObservedClaudeClient,
@@ -20,7 +22,7 @@ import {
   withLlmTrace,
 } from '@language-drill/ai';
 import { db } from '../db';
-import { approvedStatusFilter } from '../lib/exercise-filters';
+import { approvedStatusFilter, freshFirstOrderBy } from '../lib/exercise-filters';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
 import { limitFor } from '../usage/limits';
@@ -72,6 +74,7 @@ exercises.get('/exercises', async (c) => {
   }
 
   const { language, difficulty, type } = parsed.data;
+  const userId = c.get('userId');
 
   const conditions = [
     eq(exercisesTable.language, language),
@@ -83,31 +86,22 @@ exercises.get('/exercises', async (c) => {
     conditions.push(eq(exercisesTable.type, type));
   }
 
-  // Sample in two cheap steps instead of `ORDER BY random()`. `random()`
-  // forces a full scan + sort of the matching pool slice on every fetch and
-  // defeats the partial `exercises_pool_lookup_idx` (fine at hundreds of rows,
-  // a cliff at tens of thousands). Step 1 reads just the candidate ids through
-  // the index; step 2 fetches the single chosen row by primary key.
-  const candidates = await db
-    .select({ id: exercisesTable.id })
-    .from(exercisesTable)
-    .where(and(...conditions));
-
-  if (candidates.length === 0) {
-    return c.json({ error: 'No exercises found', code: 'NO_EXERCISES' }, 404);
-  }
-
-  const chosenId = candidates[Math.floor(Math.random() * candidates.length)].id;
-
+  // Exposure control: order the matching pool slice so never-attempted items
+  // come first (NULLS FIRST), then least-recently-seen, with a random tiebreak
+  // within each group — a returning user isn't re-served an item until the
+  // fresh pool for this filter is exhausted. This supersedes the prior
+  // uniform-random-by-id sampling: exposure requires ordering by seen-state, so
+  // a single ordered LIMIT 1 is both correct and simpler than a two-step draw.
+  // freshFirstOrderBy binds userId as a parameter and correlates on
+  // exercises.id (see lib/exercise-filters.ts).
   const rows = await db
     .select()
     .from(exercisesTable)
-    .where(eq(exercisesTable.id, chosenId))
+    .where(and(...conditions))
+    .orderBy(freshFirstOrderBy(userId))
     .limit(1);
 
   if (rows.length === 0) {
-    // Extremely unlikely (pool rows aren't deleted at runtime), but guard the
-    // read-after-read window rather than dereferencing undefined.
     return c.json({ error: 'No exercises found', code: 'NO_EXERCISES' }, 404);
   }
 
@@ -323,6 +317,61 @@ exercises.post('/exercises/:id/submit', async (c) => {
       eventType: 'ai_evaluation',
       metadata: { exerciseId: id, language: exercise.language, difficulty: exercise.difficulty },
     });
+
+    // Best-effort per-grammar-point mastery update. A failure here must never
+    // fail the submission — the authoritative signal is the history row above.
+    if (exercise.grammarPointKey) {
+      try {
+        const at = new Date();
+        const existing = await db
+          .select({
+            masteryScore: userGrammarMastery.masteryScore,
+            confidence: userGrammarMastery.confidence,
+            evidenceCount: userGrammarMastery.evidenceCount,
+            lastPracticedAt: userGrammarMastery.lastPracticedAt,
+          })
+          .from(userGrammarMastery)
+          .where(
+            and(
+              eq(userGrammarMastery.userId, userId),
+              eq(userGrammarMastery.grammarPointKey, exercise.grammarPointKey),
+            ),
+          )
+          .limit(1);
+
+        const next = updateMastery(existing[0] ?? null, {
+          score: result.score,
+          difficulty: exercise.difficulty as CefrLevel,
+          at,
+        });
+
+        await db
+          .insert(userGrammarMastery)
+          .values({
+            userId,
+            language: exercise.language as Language,
+            grammarPointKey: exercise.grammarPointKey,
+            masteryScore: next.masteryScore,
+            confidence: next.confidence,
+            evidenceCount: next.evidenceCount,
+            lastPracticedAt: next.lastPracticedAt,
+            updatedAt: at,
+          })
+          .onConflictDoUpdate({
+            target: [userGrammarMastery.userId, userGrammarMastery.grammarPointKey],
+            set: {
+              masteryScore: next.masteryScore,
+              confidence: next.confidence,
+              evidenceCount: next.evidenceCount,
+              lastPracticedAt: next.lastPracticedAt,
+              updatedAt: at,
+              language: exercise.language as Language,
+            },
+          });
+      } catch (masteryErr) {
+        console.error('[submit] mastery update failed (non-fatal):', masteryErr);
+      }
+    }
 
     return c.json(result);
   } catch (err) {

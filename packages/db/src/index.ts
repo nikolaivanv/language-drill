@@ -72,3 +72,12 @@ export { targetCellSize } from './lib/target-cell-size';
 // and the generation Lambda both import `runOneCell` from here.
 export * from './generation';
 export * from './theory-generation';
+
+// Per-grammar-point mastery — the update rule (used by the submit handler) and
+// the history-replay fold (used by the backfill CLI).
+export { updateMastery, replayHistory } from './mastery/update';
+export type {
+  MasteryState,
+  MasteryObservation,
+  HistoryRow,
+} from './mastery/update';
