@@ -46,6 +46,18 @@ const FLUENCY_ATTEMPT = {
 };
 
 test('fluency mode: run a timed item or show the insufficient-pool state', async ({ page }) => {
+  // The (dashboard) shell gates every authenticated page on /profiles/languages
+  // (there is no live API in the Playwright webServer), so it must be mocked or
+  // the shell renders "failed to load your profile" and the page never mounts.
+  // Mirrors read.spec.ts / review.spec.ts / theory-library.spec.ts.
+  await page.route('**/profiles/languages', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ profiles: [{ language: 'ES', proficiencyLevel: 'B1' }] }),
+    }),
+  );
+
   // Mock POST /fluency/session — return a one-exercise session.
   await page.route('**/fluency/session', (route) => {
     if (route.request().method() !== 'POST') return route.fallback();
