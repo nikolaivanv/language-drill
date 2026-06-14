@@ -125,7 +125,6 @@ import { handler } from './scheduler';
 import { parseGenerationJobMessage } from './job-message';
 import { resolveCellTarget } from './cell-targets';
 import { TARGET_PER_CELL } from './scheduler-decision';
-import { personCodesForLanguage } from '@language-drill/ai';
 
 // ---------------------------------------------------------------------------
 // Lifecycle
@@ -253,32 +252,33 @@ function rowsToFillAllCellsExcept(
 }
 
 /**
- * First Round-1 cloze cell whose grammar point is `personRotation` AND whose
- * language has the full six-person paradigm (TR/DE — ES drops `2pl`). Picking a
- * six-person language lets the coverage assertions reference `2pl` directly.
+ * First Round-1 cloze cell whose grammar point has a `coverageSpec` with a
+ * person axis that includes `2pl` (six-person paradigm). TR cells satisfy this;
+ * ES coverageSpec cells only have five persons (no `2pl`). Picking a six-person
+ * language lets the coverage assertions reference `2pl` directly.
  */
-function firstPersonRotationClozeCell(): Cell {
+function firstCoverageSpecClozeCell(): Cell {
   const cell = allRoundOneCells().find(
     (c) =>
       c.exerciseType === 'cloze' &&
-      c.grammarPoint.personRotation === true &&
-      personCodesForLanguage(
-        c.language as Exclude<LearningLanguage, never>,
-      ).includes('2pl'),
+      c.grammarPoint.coverageSpec !== undefined &&
+      c.grammarPoint.coverageSpec.axes.some(
+        (ax) => ax.name === 'person' && '2pl' in ax.floors,
+      ),
   );
   if (cell === undefined) {
-    throw new Error('no six-person personRotation cloze cell in curriculum');
+    throw new Error('no six-person coverageSpec cloze cell in curriculum');
   }
   return cell;
 }
 
-/** First Round-1 cloze cell whose grammar point is NOT `personRotation`. */
-function firstNonPersonRotationClozeCell(): Cell {
+/** First Round-1 cloze cell whose grammar point has NO `coverageSpec`. */
+function firstNoCoverageSpecClozeCell(): Cell {
   const cell = allRoundOneCells().find(
-    (c) => c.exerciseType === 'cloze' && c.grammarPoint.personRotation !== true,
+    (c) => c.exerciseType === 'cloze' && c.grammarPoint.coverageSpec === undefined,
   );
   if (cell === undefined) {
-    throw new Error('no non-personRotation cloze cell in curriculum');
+    throw new Error('no no-coverageSpec cloze cell in curriculum');
   }
   return cell;
 }
@@ -618,11 +618,11 @@ describe('scheduler handler', () => {
   });
 
   // -------------------------------------------------------------------------
-  // Phase 1 — coverage controller (person axis)
+  // Phase 2 — coverage controller (any axis via coverageSpec)
   // -------------------------------------------------------------------------
 
-  it('Phase 1: personRotation cell under target gets weighted personTargets favoring starved persons', async () => {
-    const subject = firstPersonRotationClozeCell();
+  it('Phase 2: coverageSpec cell under target gets weighted coverageTargets favoring starved persons', async () => {
+    const subject = firstCoverageSpecClozeCell();
     const subjectKeys = new Set([subject.cellKey]);
     // Subject under target; everything else at its resolved target.
     mockGroupBy.mockResolvedValueOnce(
@@ -630,8 +630,8 @@ describe('scheduler handler', () => {
     );
 
     // 1st execute = recent succeeded jobs (none → no coverage_outcome, no
-    // suppression). 2nd execute = approved-pool person distribution: the pool
-    // is heavily skewed toward 3sg, with 2pl starved (absent).
+    // suppression). 2nd execute = approved-pool coverage distribution (unnested
+    // axis rows): the pool is heavily skewed toward 3sg, with 2pl starved (absent).
     mockExecute.mockResolvedValueOnce({ rows: [] });
     mockExecute.mockResolvedValueOnce({
       rows: [
@@ -640,7 +640,8 @@ describe('scheduler handler', () => {
           difficulty: subject.cefrLevel,
           type: subject.exerciseType,
           grammar_point_key: subject.grammarPoint.key,
-          person: '3sg',
+          axis: 'person',
+          value: '3sg',
           n: 40,
         },
         {
@@ -648,7 +649,8 @@ describe('scheduler handler', () => {
           difficulty: subject.cefrLevel,
           type: subject.exerciseType,
           grammar_point_key: subject.grammarPoint.key,
-          person: '1sg',
+          axis: 'person',
+          value: '1sg',
           n: 5,
         },
       ],
@@ -668,25 +670,26 @@ describe('scheduler handler', () => {
     );
     expect(subjectMsg).toBeDefined();
 
-    // personTargets present and length-matched to count (validated by parse too).
-    expect(subjectMsg!.spec.personTargets).toBeDefined();
-    expect(subjectMsg!.spec.personTargets).toHaveLength(subjectMsg!.spec.count);
+    // coverageTargets present and length-matched to count (validated by parse too).
+    expect(subjectMsg!.spec.coverageTargets).toBeDefined();
+    expect(subjectMsg!.spec.coverageTargets).toHaveLength(subjectMsg!.spec.count);
 
     // The starved 2pl bucket (absent from the pool) is targeted; the heavily
     // over-represented 3sg bucket is not, given the strong skew.
-    expect(subjectMsg!.spec.personTargets).toContain('2pl');
-    expect(subjectMsg!.spec.personTargets).not.toContain('3sg');
+    const personValues = subjectMsg!.spec.coverageTargets!.map((t) => t.person);
+    expect(personValues).toContain('2pl');
+    expect(personValues).not.toContain('3sg');
   });
 
-  it('Phase 1: non-personRotation cell gets no personTargets', async () => {
-    const subject = firstNonPersonRotationClozeCell();
+  it('Phase 2: no-coverageSpec cell gets no coverageTargets', async () => {
+    const subject = firstNoCoverageSpecClozeCell();
     const subjectKeys = new Set([subject.cellKey]);
     mockGroupBy.mockResolvedValueOnce(
       rowsToFillAllCellsExcept(subjectKeys, 0),
     );
-    // Recent jobs + person distribution both empty (the beforeEach default
+    // Recent jobs + coverage distribution both empty (the beforeEach default
     // `mockResolvedValue({ rows: [] })` covers both execute calls) — irrelevant
-    // for a non-personRotation cell, which never reaches the controller.
+    // for a no-coverageSpec cell, which never reaches the controller.
 
     await handler();
 
@@ -701,16 +704,15 @@ describe('scheduler handler', () => {
         m.spec.exerciseType === subject.exerciseType,
     );
     expect(subjectMsg).toBeDefined();
-    expect(subjectMsg!.spec.personTargets).toBeUndefined();
+    expect(subjectMsg!.spec.coverageTargets).toBeUndefined();
   });
 
-  it('Phase 1: version-matched give-up suppresses a zero-yield person bucket', async () => {
-    // Headline behavior of commit 7c7bfbc, exercised end-to-end through the
-    // handler: a person bucket that the most-recent succeeded job targeted with
+  it('Phase 2: version-matched give-up suppresses a zero-yield person bucket', async () => {
+    // A person bucket that the most-recent succeeded job targeted with
     // requested >= GIVE_UP_MIN_ATTEMPTS and approved === 0 is given up — but
     // ONLY while that job's curriculum_version still matches the on-disk
     // CURRICULUM_VERSION_<LANG> constant.
-    const subject = firstPersonRotationClozeCell();
+    const subject = firstCoverageSpecClozeCell();
     const subjectKeys = new Set([subject.cellKey]);
     // Subject under target (approved=0 → need === resolveCellTarget(cell));
     // everything else at its resolved target so only the subject enqueues.
@@ -718,8 +720,7 @@ describe('scheduler handler', () => {
 
     // The recent-jobs row's curriculum_version EQUALS the on-disk constant for
     // the subject's language → the give-up gate holds and the coverage_outcome
-    // is fed to decideCoverageTargets. coverage_outcome maps into RecentJob's
-    // `coverageOutcome.person` (column `coverage_outcome`).
+    // is fed to decideCoverageTargets.
     const onDiskVersion =
       CURRICULUM_VERSION_BY_LANGUAGE[subject.language as LearningLanguage];
     mockExecute.mockResolvedValueOnce({
@@ -739,16 +740,18 @@ describe('scheduler handler', () => {
         },
       ],
     });
-    // 2nd execute = approved-pool person distribution. 2pl is the most-starved
-    // (absent ⇒ 0), so absent suppression water-fill WOULD pick it; the others
-    // sit above it. This makes the suppression the *only* reason 2pl is missing.
+    // 2nd execute = approved-pool coverage distribution (unnested axis rows).
+    // 2pl is the most-starved (absent ⇒ 0), so absent suppression water-fill
+    // WOULD pick it; the others sit above it. This makes suppression the *only*
+    // reason 2pl is missing.
     mockExecute.mockResolvedValueOnce({
-      rows: ['1sg', '2sg', '3sg', '1pl', '3pl'].map((person) => ({
+      rows: ['1sg', '2sg', '3sg', '1pl', '3pl'].map((value) => ({
         language: subject.language,
         difficulty: subject.cefrLevel,
         type: subject.exerciseType,
         grammar_point_key: subject.grammarPoint.key,
-        person,
+        axis: 'person',
+        value,
         n: 10,
       })),
     });
@@ -767,28 +770,29 @@ describe('scheduler handler', () => {
     );
     expect(subjectMsg).toBeDefined();
 
-    // personTargets present, length-matched to count, and 2pl is GIVEN UP.
-    expect(subjectMsg!.spec.personTargets).toBeDefined();
-    expect(subjectMsg!.spec.personTargets).toHaveLength(subjectMsg!.spec.count);
-    expect(subjectMsg!.spec.personTargets).not.toContain('2pl');
+    // coverageTargets present, length-matched to count, and 2pl is GIVEN UP.
+    expect(subjectMsg!.spec.coverageTargets).toBeDefined();
+    expect(subjectMsg!.spec.coverageTargets).toHaveLength(subjectMsg!.spec.count);
+    const personValues = subjectMsg!.spec.coverageTargets!.map((t) => t.person);
+    expect(personValues).not.toContain('2pl');
 
-    // The give-up is surfaced in the structured log line.
+    // The give-up is surfaced in the structured log line with axis-keyed suppressed map.
     const giveUpLog = findLogLine(
       (e) =>
         e['cellKey'] === subject.cellKey &&
         typeof e['message'] === 'string' &&
-        (e['message'] as string).includes('person buckets given up'),
+        (e['message'] as string).includes('buckets given up'),
     );
     expect(giveUpLog).toBeDefined();
-    expect(giveUpLog!['suppressed']).toEqual(['2pl']);
+    expect(giveUpLog!['suppressed']).toEqual({ person: ['2pl'] });
   });
 
-  it('Phase 1: a curriculum-version mismatch clears the person-bucket give-up', async () => {
+  it('Phase 2: a curriculum-version mismatch clears the person-bucket give-up', async () => {
     // Identical to the version-matched case EXCEPT the recent job's
-    // curriculum_version is stale. decideEnqueue's gate (mirrored in the
-    // handler) zeroes `recentOutcome`, so the previously-given-up 2pl bucket is
-    // eligible again and the still-starved 2pl is water-filled back in.
-    const subject = firstPersonRotationClozeCell();
+    // curriculum_version is stale. The handler zeroes `recentOutcome`, so the
+    // previously-given-up 2pl bucket is eligible again and the still-starved
+    // 2pl is water-filled back in.
+    const subject = firstCoverageSpecClozeCell();
     const subjectKeys = new Set([subject.cellKey]);
     mockGroupBy.mockResolvedValueOnce(rowsToFillAllCellsExcept(subjectKeys, 0));
 
@@ -806,15 +810,16 @@ describe('scheduler handler', () => {
         },
       ],
     });
-    // Same skewed distribution: 2pl absent (most starved) so once eligible it is
-    // clearly among the water-fill picks.
+    // Same skewed distribution (unnested axis rows): 2pl absent (most starved)
+    // so once eligible it is clearly among the water-fill picks.
     mockExecute.mockResolvedValueOnce({
-      rows: ['1sg', '2sg', '3sg', '1pl', '3pl'].map((person) => ({
+      rows: ['1sg', '2sg', '3sg', '1pl', '3pl'].map((value) => ({
         language: subject.language,
         difficulty: subject.cefrLevel,
         type: subject.exerciseType,
         grammar_point_key: subject.grammarPoint.key,
-        person,
+        axis: 'person',
+        value,
         n: 10,
       })),
     });
@@ -834,8 +839,9 @@ describe('scheduler handler', () => {
     expect(subjectMsg).toBeDefined();
 
     // Suppression cleared → 2pl targeted again.
-    expect(subjectMsg!.spec.personTargets).toBeDefined();
-    expect(subjectMsg!.spec.personTargets).toHaveLength(subjectMsg!.spec.count);
-    expect(subjectMsg!.spec.personTargets).toContain('2pl');
+    expect(subjectMsg!.spec.coverageTargets).toBeDefined();
+    expect(subjectMsg!.spec.coverageTargets).toHaveLength(subjectMsg!.spec.count);
+    const personValues = subjectMsg!.spec.coverageTargets!.map((t) => t.person);
+    expect(personValues).toContain('2pl');
   });
 });

@@ -33,10 +33,11 @@ import {
   type Cell,
   type Db,
 } from '@language-drill/db';
-import type {
-  CoverageOutcome,
-  LearningLanguage,
-  PersonCode,
+import {
+  COVERAGE_AXIS_VALUES,
+  type CoverageAxis,
+  type CoverageOutcome,
+  type LearningLanguage,
 } from '@language-drill/shared';
 import { SendMessageBatchCommand, SQSClient } from '@aws-sdk/client-sqs';
 import { inArray, sql } from 'drizzle-orm';
@@ -126,25 +127,28 @@ async function loadMostRecentSucceededJobPerCell(
 }
 
 // ---------------------------------------------------------------------------
-// loadApprovedPersonCountsPerCell
+// loadApprovedCoverageCountsPerCell
 // ---------------------------------------------------------------------------
 
 /**
- * Phase 1: approved-pool person distribution per cell, for the coverage
- * controller. Mirrors the Phase-0 /admin/pool-status aggregate, scoped to the
- * approved pool. Keyed by `cell_key` → { personCode: count }.
+ * Phase 2: approved-pool coverage distribution per cell, for the coverage
+ * controller. Unnests ALL axes via LATERAL so a single query feeds every
+ * axis in any cell's coverageSpec. Keyed by `cell_key` →
+ * { axis → { value: count } }.
  */
-async function loadApprovedPersonCountsPerCell(
+async function loadApprovedCoverageCountsPerCell(
   db: Db,
-): Promise<Map<string, Partial<Record<PersonCode, number>>>> {
+): Promise<Map<string, Partial<Record<CoverageAxis, Partial<Record<string, number>>>>>> {
   const result = await db.execute(sql`
     SELECT language, difficulty, type, grammar_point_key AS grammar_point_key,
-           coverage_tags->>'person' AS person,
+           tag.key   AS axis,
+           tag.value AS value,
            COUNT(*)::int AS n
     FROM exercises
+    CROSS JOIN LATERAL jsonb_each_text(coverage_tags) AS tag
     WHERE review_status IN ('auto-approved', 'manual-approved')
-      AND coverage_tags->>'person' IS NOT NULL
-    GROUP BY language, difficulty, type, grammar_point_key, coverage_tags->>'person'
+      AND coverage_tags IS NOT NULL
+    GROUP BY language, difficulty, type, grammar_point_key, tag.key, tag.value
   `);
 
   type Row = {
@@ -152,21 +156,26 @@ async function loadApprovedPersonCountsPerCell(
     difficulty: string;
     type: string;
     grammar_point_key: string;
-    person: string;
+    axis: string;
+    value: string;
     n: number;
   };
   const rows = result.rows as unknown as Row[];
-  const map = new Map<string, Partial<Record<PersonCode, number>>>();
+  const validAxes = new Set(Object.keys(COVERAGE_AXIS_VALUES));
+  const map = new Map<string, Partial<Record<CoverageAxis, Partial<Record<string, number>>>>>();
   for (const row of rows) {
+    if (!validAxes.has(row.axis)) continue;
     const key = buildCellKeyFromRow({
       language: row.language,
       difficulty: row.difficulty,
       type: row.type,
       grammarPointKey: row.grammar_point_key,
     });
-    const bucket = map.get(key) ?? {};
-    bucket[row.person as PersonCode] = row.n;
-    map.set(key, bucket);
+    const cellAxes = map.get(key) ?? {};
+    const axisMap = cellAxes[row.axis as CoverageAxis] ?? {};
+    axisMap[row.value] = row.n;
+    cellAxes[row.axis as CoverageAxis] = axisMap;
+    map.set(key, cellAxes);
   }
   return map;
 }
@@ -232,9 +241,10 @@ export async function handler(): Promise<void> {
   //    version-mismatch-clears-suppression). Uses `generation_jobs_cell_idx`.
   const recentJobByCell = await loadMostRecentSucceededJobPerCell(db);
 
-  // 4b. Phase 1 coverage controller: approved-pool person distribution per
-  //     cell. Feeds `decideCoverageTargets` for personRotation cells only.
-  const approvedPersonByCell = await loadApprovedPersonCountsPerCell(db);
+  // 4b. Phase 2 coverage controller: approved-pool coverage distribution per
+  //     cell (all axes via LATERAL unnest). Feeds `decideCoverageTargets` for
+  //     cells that have a `coverageSpec`.
+  const approvedCoverageByCell = await loadApprovedCoverageCountsPerCell(db);
 
   // 5. Decide per cell. `decideEnqueue` is pure — see scheduler-decision.ts
   //    for the precedence rules. Aggregate counters per skip reason so the
@@ -327,8 +337,9 @@ export async function handler(): Promise<void> {
       maxCostUsd: SCHEDULER_PER_CELL_COST_CAP_USD,
     };
 
-    // Phase 1 coverage controller — person axis, personRotation cells only.
-    if (cell.grammarPoint.personRotation !== true) return base;
+    // Phase 2 coverage controller — any axis the cell's coverageSpec controls.
+    const spec = cell.grammarPoint.coverageSpec;
+    if (!spec) return base;
 
     const recentJob = recentJobByCell.get(cell.cellKey) ?? null;
     const curriculumVersionOnDisk =
@@ -337,28 +348,28 @@ export async function handler(): Promise<void> {
     // version still matches on-disk (same gate as decideEnqueue's suppression).
     const recentOutcome =
       recentJob && recentJob.curriculumVersion === curriculumVersionOnDisk
-        ? (recentJob.coverageOutcome?.person ?? null)
+        ? (recentJob.coverageOutcome ?? null)
         : null;
 
-    const { personTargets, suppressed } = decideCoverageTargets({
-      language: cell.language,
+    const { coverageTargets, suppressed } = decideCoverageTargets({
+      spec,
       need,
-      approvedByPerson: approvedPersonByCell.get(cell.cellKey) ?? {},
+      approvedByAxis: approvedCoverageByCell.get(cell.cellKey) ?? {},
       recentOutcome,
     });
 
-    if (suppressed.length > 0) {
+    if (Object.keys(suppressed).length > 0) {
       log({
         level: 'info',
         cellKey: cell.cellKey,
         suppressed,
-        message: 'coverage controller: person buckets given up',
+        message: 'coverage controller: buckets given up',
       });
     }
 
-    if (personTargets.length === 0) return base; // blind fallback
+    if (coverageTargets.length === 0) return base; // nothing targetable
 
-    return { ...base, spec: { ...base.spec, personTargets } };
+    return { ...base, spec: { ...base.spec, coverageTargets } };
   });
 
   // 7. Post in batches of ≤ 10 (SQS hard limit). Aggregated jobIds per batch
