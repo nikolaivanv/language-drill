@@ -33,10 +33,6 @@ export const EvaluationResultSchema = z.object({
   feedback: z.string(),
   errors: z.array(EvaluationErrorSchema),
   estimatedCefrEvidence: z.string(),
-  // Absent on standard evaluation results; present only on DictationResult.
-  // Declared here so `SubmitResultResponse` is a proper discriminated union
-  // and `.kind` is accessible without a type narrowing step.
-  kind: z.undefined().optional(),
 });
 
 export type EvaluationResultResponse = z.infer<typeof EvaluationResultSchema>;

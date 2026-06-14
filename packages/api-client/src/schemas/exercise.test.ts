@@ -132,7 +132,9 @@ describe('DictationResultSchema', () => {
   });
 
   it('parseSubmitResult routes on kind', () => {
-    expect(parseSubmitResult(dict).kind).toBe('dictation');
+    const parsed = parseSubmitResult(dict);
+    // EvaluationResultResponse has no `kind`; narrow before reading it.
+    expect('kind' in parsed && parsed.kind === 'dictation').toBe(true);
     const evalResult = {
       score: 0.8, grammarAccuracy: 0.8, vocabularyRange: 'B1', taskAchievement: 0.8,
       feedback: 'f', errors: [], estimatedCefrEvidence: 'B1',
