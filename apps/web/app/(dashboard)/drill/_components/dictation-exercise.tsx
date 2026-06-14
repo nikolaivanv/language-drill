@@ -79,8 +79,11 @@ export function DictationExercise({
       />
 
       <div className="flex flex-col gap-s-3">
-        <label className="t-small text-ink-mute">type what you hear</label>
+        <label htmlFor="dictation-answer" className="t-small text-ink-mute">
+          type what you hear
+        </label>
         <Textarea
+          id="dictation-answer"
           ref={inputRef}
           rows={3}
           value={answer}
