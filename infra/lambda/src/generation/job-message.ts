@@ -13,11 +13,12 @@
 import type { CurriculumCefrLevel, Db } from '@language-drill/db';
 import { generationJobs } from '@language-drill/db';
 import {
+  COVERAGE_AXIS_VALUES,
   ExerciseType,
   Language,
-  PERSON_CODES,
+  type CoverageAxis,
+  type CoverageTarget,
   type LearningLanguage,
-  type PersonCode,
 } from '@language-drill/shared';
 import { eq } from 'drizzle-orm';
 
@@ -55,11 +56,12 @@ export type GenerationJobMessage = {
     count: number;
     batchSeed: string;
     /**
-     * Phase 1 coverage controller: explicit per-draft person codes. When
-     * present, MUST be an array of known `PersonCode`s of length === `count`.
-     * Absent on CLI/admin and non-personRotation scheduled cells.
+     * Phase 2 coverage controller: explicit per-draft axis targets. When
+     * present, MUST be an array of length === `count`; each element a sparse
+     * `{ axis: value }` map over known coverage axes/values. Absent on CLI/admin
+     * and non-spec scheduled cells.
      */
-    personTargets?: PersonCode[];
+    coverageTargets?: CoverageTarget[];
   };
   /** Cell-level cost cap in USD. (0, 100). */
   maxCostUsd: number;
@@ -107,8 +109,6 @@ const VALID_EXERCISE_TYPES: ReadonlySet<string> = new Set([
   ExerciseType.VOCAB_RECALL,
   ExerciseType.SENTENCE_CONSTRUCTION,
 ]);
-
-const VALID_PERSON_CODES: ReadonlySet<string> = new Set(PERSON_CODES);
 
 const COUNT_MIN = 1;
 const COUNT_MAX = 200;
@@ -160,7 +160,7 @@ export function parseGenerationJobMessage(
     COUNT_MAX,
   );
   const batchSeed = requireBatchSeed(specValue, 'spec.batchSeed');
-  const personTargets = optionalPersonTargets(specValue, count);
+  const coverageTargets = optionalCoverageTargets(specValue, count);
 
   const maxCostUsd = requireMaxCostUsd(input, 'maxCostUsd');
 
@@ -177,7 +177,7 @@ export function parseGenerationJobMessage(
       topicDomain,
       count,
       batchSeed,
-      ...(personTargets !== undefined ? { personTargets } : {}),
+      ...(coverageTargets !== undefined ? { coverageTargets } : {}),
     },
     maxCostUsd,
   };
@@ -320,32 +320,47 @@ function requireBatchSeed(
   return value;
 }
 
-function optionalPersonTargets(
+const VALID_AXES = new Set(Object.keys(COVERAGE_AXIS_VALUES));
+
+function optionalCoverageTargets(
   spec: Record<string, unknown>,
   count: number,
-): PersonCode[] | undefined {
-  const value = spec['personTargets'];
+): CoverageTarget[] | undefined {
+  const value = spec["coverageTargets"];
   if (value === undefined) return undefined;
   if (!Array.isArray(value)) {
     throw new Error(
-      `spec.personTargets: expected array or undefined, got ${describe(value)}`,
+      `spec.coverageTargets: expected array or undefined, got ${describe(value)}`,
     );
   }
   if (value.length !== count) {
     throw new Error(
-      `spec.personTargets: expected length === spec.count (${count}), got ${value.length}`,
+      `spec.coverageTargets: expected length === spec.count (${count}), got ${value.length}`,
     );
   }
-  for (const code of value) {
-    if (typeof code !== 'string' || !VALID_PERSON_CODES.has(code)) {
+  const out: CoverageTarget[] = [];
+  for (const entry of value) {
+    if (!isPlainObject(entry)) {
       throw new Error(
-        `spec.personTargets: expected each to be one of ${JSON.stringify(
-          Array.from(VALID_PERSON_CODES),
-        )}, got ${JSON.stringify(code)}`,
+        `spec.coverageTargets: each element must be an object, got ${describe(entry)}`,
       );
     }
+    const target: CoverageTarget = {};
+    for (const [axis, v] of Object.entries(entry)) {
+      if (!VALID_AXES.has(axis)) {
+        throw new Error(`spec.coverageTargets: unknown axis '${axis}'`);
+      }
+      const legal = COVERAGE_AXIS_VALUES[axis as CoverageAxis];
+      if (typeof v !== "string" || !legal.includes(v)) {
+        throw new Error(
+          `spec.coverageTargets: illegal value ${JSON.stringify(v)} for axis '${axis}'`,
+        );
+      }
+      target[axis as CoverageAxis] = v;
+    }
+    out.push(target);
   }
-  return value as PersonCode[];
+  return out;
 }
 
 function requireMaxCostUsd(
