@@ -28,6 +28,7 @@ export const ESTIMATED_MINUTES_BY_TYPE: Record<ExerciseType, number> = {
   [ExerciseType.TRANSLATION]: 4,
   [ExerciseType.VOCAB_RECALL]: 2,
   [ExerciseType.SENTENCE_CONSTRUCTION]: 3,
+  [ExerciseType.DICTATION]: 3,
 };
 
 // ---------------------------------------------------------------------------
@@ -43,6 +44,8 @@ export const ITEM_COUNT_BY_TYPE: Record<ExerciseType, number> = {
   [ExerciseType.TRANSLATION]: 1,
   [ExerciseType.VOCAB_RECALL]: 6,
   [ExerciseType.SENTENCE_CONSTRUCTION]: 3,
+  // Dictation is a single-clip listening drill — one audio clip = one item.
+  [ExerciseType.DICTATION]: 1,
 };
 
 // ---------------------------------------------------------------------------
