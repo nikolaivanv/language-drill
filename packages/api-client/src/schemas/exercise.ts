@@ -45,3 +45,37 @@ export const ApiErrorSchema = z.object({
 });
 
 export type ApiErrorResponse = z.infer<typeof ApiErrorSchema>;
+
+// Free Writing evaluation from POST /exercises/:id/submit (free_writing type)
+const FreeWritingCriterionSchema = z.object({
+  id: z.enum(['task', 'coherence', 'lexis', 'grammar']),
+  label: z.string(),
+  score: z.number().min(0).max(1),
+  cefr: z.string(),
+  note: z.string(),
+});
+
+const FreeWritingErrorSchema = z.object({
+  n: z.number(),
+  severity: z.enum(['high', 'med', 'low']),
+  type: z.string(),
+  original: z.string(),
+  correction: z.string(),
+  where: z.string().optional(),
+  note: z.string(),
+});
+
+export const FreeWritingEvaluationSchema = z.object({
+  overallScore: z.number().min(0).max(1),
+  overallCefr: z.string(),
+  headline: z.string(),
+  summary: z.string(),
+  criteria: z.array(FreeWritingCriterionSchema),
+  errors: z.array(FreeWritingErrorSchema),
+  goodSpans: z.array(z.string()),
+  improved: z.object({ text: z.string(), upgrades: z.array(z.string()).optional() }),
+  wordCount: z.number(),
+  improvedWordCount: z.number(),
+});
+
+export type FreeWritingEvaluationResponse = z.infer<typeof FreeWritingEvaluationSchema>;
