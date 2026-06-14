@@ -52,3 +52,15 @@ export function vocabVerdict(
     return { tier: 'terracotta', label: 'wrong' };
   }
 }
+
+export function dictationVerdict(score: number): VerdictResult {
+  if (score >= 0.95) {
+    return { tier: 'sage', label: 'oído fino' };
+  } else if (score >= CORRECT_THRESHOLD) {
+    return { tier: 'yellow', label: 'close · a few you missed' };
+  } else if (score >= 0.4) {
+    return { tier: 'yellow', label: 'the gist · boundaries slipped' };
+  } else {
+    return { tier: 'terracotta', label: "hard clip · let's slow down" };
+  }
+}

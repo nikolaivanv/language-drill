@@ -301,3 +301,27 @@ describe('coachMessage — SENTENCE_CONSTRUCTION', () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// DICTATION coverage
+// ---------------------------------------------------------------------------
+
+describe('coachMessage — DICTATION', () => {
+  it('returns an idle message for dictation', () => {
+    const msg = coachMessage({ kind: 'idle', type: ExerciseType.DICTATION });
+    expect(typeof msg).toBe('string');
+    expect(msg.length).toBeGreaterThan(0);
+  });
+
+  it('returns a distinct evaluated message for dictation at each tier', () => {
+    const messages = [0.97, 0.8, 0.5, 0.2].map((score) =>
+      coachMessage({ kind: 'evaluated', type: ExerciseType.DICTATION, score }),
+    );
+    for (const msg of messages) {
+      expect(typeof msg).toBe('string');
+      expect(msg.length).toBeGreaterThan(0);
+      expect(msg).not.toContain('!');
+    }
+    expect(new Set(messages).size).toBe(4);
+  });
+});
