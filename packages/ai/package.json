@@ -13,6 +13,7 @@
     "eval": "tsx scripts/eval-run.ts",
     "eval:gen:export": "tsx scripts/eval-gen-export.ts",
     "eval:gen": "tsx scripts/eval-gen-run.ts",
+    "propose:coverage-spec": "tsx scripts/propose-coverage-spec.ts",
     "dev": "tsc --watch",
     "lint": "eslint src/**/*.ts",
     "typecheck": "tsc --noEmit",
