@@ -72,6 +72,7 @@ function makeRecentJob(overrides: Partial<RecentJob> = {}): RecentJob {
     requestedCount: 50,
     dedupGivenUpCount: 0,
     curriculumVersion: CURRENT_VERSION,
+    coverageOutcome: null,
     finishedAt: new Date('2026-05-22T00:00:00Z'),
     ...overrides,
   };

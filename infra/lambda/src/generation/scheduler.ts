@@ -33,12 +33,18 @@ import {
   type Cell,
   type Db,
 } from '@language-drill/db';
-import type { LearningLanguage } from '@language-drill/shared';
+import {
+  COVERAGE_AXIS_VALUES,
+  type CoverageAxis,
+  type CoverageOutcome,
+  type LearningLanguage,
+} from '@language-drill/shared';
 import { SendMessageBatchCommand, SQSClient } from '@aws-sdk/client-sqs';
 import { inArray, sql } from 'drizzle-orm';
 
 import type { GenerationJobMessage } from './job-message';
 import { resolveCellTarget } from './cell-targets';
+import { decideCoverageTargets } from './coverage-decision';
 import { decideEnqueue, type RecentJob } from './scheduler-decision';
 
 // ---------------------------------------------------------------------------
@@ -86,7 +92,7 @@ async function loadMostRecentSucceededJobPerCell(
   const result = await db.execute(sql`
     SELECT DISTINCT ON (cell_key)
            cell_key, approved_count, requested_count, dedup_given_up_count,
-           curriculum_version, finished_at
+           curriculum_version, coverage_outcome, finished_at
     FROM generation_jobs
     WHERE status = 'succeeded'
     ORDER BY cell_key, started_at DESC
@@ -98,6 +104,7 @@ async function loadMostRecentSucceededJobPerCell(
     requested_count: number;
     dedup_given_up_count: number;
     curriculum_version: string | null;
+    coverage_outcome: CoverageOutcome | null;
     finished_at: Date | string;
   };
 
@@ -109,11 +116,66 @@ async function loadMostRecentSucceededJobPerCell(
       requestedCount: row.requested_count,
       dedupGivenUpCount: row.dedup_given_up_count,
       curriculumVersion: row.curriculum_version,
+      coverageOutcome: row.coverage_outcome,
       finishedAt:
         row.finished_at instanceof Date
           ? row.finished_at
           : new Date(row.finished_at),
     });
+  }
+  return map;
+}
+
+// ---------------------------------------------------------------------------
+// loadApprovedCoverageCountsPerCell
+// ---------------------------------------------------------------------------
+
+/**
+ * Phase 2: approved-pool coverage distribution per cell, for the coverage
+ * controller. Unnests ALL axes via LATERAL so a single query feeds every
+ * axis in any cell's coverageSpec. Keyed by `cell_key` →
+ * { axis → { value: count } }.
+ */
+async function loadApprovedCoverageCountsPerCell(
+  db: Db,
+): Promise<Map<string, Partial<Record<CoverageAxis, Partial<Record<string, number>>>>>> {
+  const result = await db.execute(sql`
+    SELECT language, difficulty, type, grammar_point_key AS grammar_point_key,
+           tag.key   AS axis,
+           tag.value AS value,
+           COUNT(*)::int AS n
+    FROM exercises
+    CROSS JOIN LATERAL jsonb_each_text(coverage_tags) AS tag
+    WHERE review_status IN ('auto-approved', 'manual-approved')
+      AND coverage_tags IS NOT NULL
+    GROUP BY language, difficulty, type, grammar_point_key, tag.key, tag.value
+  `);
+
+  type Row = {
+    language: string;
+    difficulty: string;
+    type: string;
+    grammar_point_key: string;
+    axis: string;
+    value: string;
+    n: number;
+  };
+  const rows = result.rows as unknown as Row[];
+  const validAxes = new Set(Object.keys(COVERAGE_AXIS_VALUES));
+  const map = new Map<string, Partial<Record<CoverageAxis, Partial<Record<string, number>>>>>();
+  for (const row of rows) {
+    if (!validAxes.has(row.axis)) continue;
+    const key = buildCellKeyFromRow({
+      language: row.language,
+      difficulty: row.difficulty,
+      type: row.type,
+      grammarPointKey: row.grammar_point_key,
+    });
+    const cellAxes = map.get(key) ?? {};
+    const axisMap = cellAxes[row.axis as CoverageAxis] ?? {};
+    axisMap[row.value] = row.n;
+    cellAxes[row.axis as CoverageAxis] = axisMap;
+    map.set(key, cellAxes);
   }
   return map;
 }
@@ -178,6 +240,11 @@ export async function handler(): Promise<void> {
   //    R6 suppression checks (saturated-dedup + low-yield + curriculum-
   //    version-mismatch-clears-suppression). Uses `generation_jobs_cell_idx`.
   const recentJobByCell = await loadMostRecentSucceededJobPerCell(db);
+
+  // 4b. Phase 2 coverage controller: approved-pool coverage distribution per
+  //     cell (all axes via LATERAL unnest). Feeds `decideCoverageTargets` for
+  //     cells that have a `coverageSpec`.
+  const approvedCoverageByCell = await loadApprovedCoverageCountsPerCell(db);
 
   // 5. Decide per cell. `decideEnqueue` is pure — see scheduler-decision.ts
   //    for the precedence rules. Aggregate counters per skip reason so the
@@ -254,20 +321,56 @@ export async function handler(): Promise<void> {
 
   // 6. Build messages. `jobId = deterministicUuid(cellKey | batchSeed)` makes
   //    same-day re-fires produce identical IDs (Req 4.4 + Req 4.3.4).
-  const messages: GenerationJobMessage[] = undersized.map(({ cell, need }) => ({
-    jobId: deterministicUuid([cell.cellKey, batchSeed].join('|')),
-    trigger: 'scheduled',
-    spec: {
-      language: cell.language,
-      cefrLevel: cell.cefrLevel,
-      exerciseType: cell.exerciseType,
-      grammarPointKey: cell.grammarPoint.key,
-      topicDomain: null,
-      count: need,
-      batchSeed,
-    },
-    maxCostUsd: SCHEDULER_PER_CELL_COST_CAP_USD,
-  }));
+  const messages: GenerationJobMessage[] = undersized.map(({ cell, need }) => {
+    const base = {
+      jobId: deterministicUuid([cell.cellKey, batchSeed].join('|')),
+      trigger: 'scheduled' as const,
+      spec: {
+        language: cell.language,
+        cefrLevel: cell.cefrLevel,
+        exerciseType: cell.exerciseType,
+        grammarPointKey: cell.grammarPoint.key,
+        topicDomain: null,
+        count: need,
+        batchSeed,
+      },
+      maxCostUsd: SCHEDULER_PER_CELL_COST_CAP_USD,
+    };
+
+    // Phase 2 coverage controller — any axis the cell's coverageSpec controls.
+    const spec = cell.grammarPoint.coverageSpec;
+    if (!spec) return base;
+
+    const recentJob = recentJobByCell.get(cell.cellKey) ?? null;
+    const curriculumVersionOnDisk =
+      CURRICULUM_VERSION_BY_LANGUAGE[cell.language as LearningLanguage];
+    // Give-up clears on a curriculum bump: only feed the recent outcome when its
+    // version still matches on-disk (same gate as decideEnqueue's suppression).
+    const recentOutcome =
+      recentJob && recentJob.curriculumVersion === curriculumVersionOnDisk
+        ? (recentJob.coverageOutcome ?? null)
+        : null;
+
+    const { coverageTargets, suppressed } = decideCoverageTargets({
+      spec,
+      need,
+      approvedByAxis: approvedCoverageByCell.get(cell.cellKey) ?? {},
+      recentOutcome,
+    });
+
+    if (Object.keys(suppressed).length > 0) {
+      log({
+        level: 'info',
+        cellKey: cell.cellKey,
+        suppressed,
+        message: 'coverage controller: buckets given up',
+      });
+    }
+
+    if (coverageTargets.length === 0) return base; // nothing targetable
+
+    return { ...base, spec: { ...base.spec, coverageTargets } };
+  });
 
   // 7. Post in batches of ≤ 10 (SQS hard limit). Aggregated jobIds per batch
   //    in the structured log line per Req 4.3.5.

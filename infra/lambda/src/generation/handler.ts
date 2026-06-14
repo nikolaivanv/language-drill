@@ -241,6 +241,7 @@ export async function handler(
                 batchSeed: parsed.spec.batchSeed,
                 topicDomain: parsed.spec.topicDomain,
                 maxCostUsd: parsed.maxCostUsd,
+                coverageTargets: parsed.spec.coverageTargets,
               },
               jobId: parsed.jobId,
               trigger: parsed.trigger,

@@ -28,6 +28,7 @@
  */
 
 import { ROUND_1_CEFR_LEVELS, type Cell } from '@language-drill/db';
+import type { CoverageOutcome } from '@language-drill/shared';
 
 // ---------------------------------------------------------------------------
 // Constants (exported so callers and tests can reference them)
@@ -82,6 +83,10 @@ export type RecentJob = {
   dedupGivenUpCount: number;
   /** `text` column on `generation_jobs`; NULL on legacy rows pre-migration. */
   curriculumVersion: string | null;
+  /** The most recent job's per-axis coverage outcome (NULL on legacy rows /
+   *  cells with no coverageSpec). Read by the scheduler's coverage controller
+   *  for per-(axis,value) give-up, not by `decideEnqueue`. */
+  coverageOutcome: CoverageOutcome | null;
   finishedAt: Date;
 };
 

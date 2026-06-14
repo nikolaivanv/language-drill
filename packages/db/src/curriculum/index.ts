@@ -1,4 +1,4 @@
-import { Language, type LearningLanguage } from '@language-drill/shared';
+import { COVERAGE_AXIS_VALUES, Language, type LearningLanguage } from '@language-drill/shared';
 
 import deCurriculum, { CURRICULUM_VERSION_DE } from './de';
 import esCurriculum, { CURRICULUM_VERSION_ES } from './es';
@@ -197,12 +197,50 @@ export function assertCurriculumInvariants(
       );
     }
 
-    // 9d. personRotation is only meaningful on grammar points — a vocab
-    //     umbrella has no person-marked paradigm to rotate.
-    if (entry.personRotation && entry.kind !== 'grammar') {
-      throw new Error(
-        `Curriculum invariant violated: '${entry.key}' is personRotation but not kind 'grammar'`,
-      );
+    // 9d. coverageSpec (Phase 2): axis applicability, unique axes, legal floor
+    //     keys, positive-integer floors. `personRotation` is gone; a person axis
+    //     here is the old flag.
+    if (entry.coverageSpec) {
+      const seenAxes = new Set<string>();
+      for (const axis of entry.coverageSpec.axes) {
+        if (seenAxes.has(axis.name)) {
+          throw new Error(
+            `Curriculum invariant violated: '${entry.key}' has duplicate axis '${axis.name}' in coverageSpec`,
+          );
+        }
+        seenAxes.add(axis.name);
+
+        if (axis.name === 'wordClass' && entry.kind !== 'vocab') {
+          throw new Error(
+            `Curriculum invariant violated: '${entry.key}' coverageSpec axis 'wordClass' is only valid on kind 'vocab'`,
+          );
+        }
+        if (axis.name !== 'wordClass' && entry.kind !== 'grammar') {
+          throw new Error(
+            `Curriculum invariant violated: '${entry.key}' coverageSpec axis '${axis.name}' is only valid on kind 'grammar'`,
+          );
+        }
+
+        const legal = COVERAGE_AXIS_VALUES[axis.name];
+        const floorKeys = Object.keys(axis.floors);
+        if (floorKeys.length === 0) {
+          throw new Error(
+            `Curriculum invariant violated: '${entry.key}' coverageSpec axis '${axis.name}' has no floors`,
+          );
+        }
+        for (const [value, floor] of Object.entries(axis.floors)) {
+          if (!legal.includes(value)) {
+            throw new Error(
+              `Curriculum invariant violated: '${entry.key}' coverageSpec axis '${axis.name}' has illegal value '${value}'`,
+            );
+          }
+          if (!Number.isInteger(floor) || (floor as number) <= 0) {
+            throw new Error(
+              `Curriculum invariant violated: '${entry.key}' coverageSpec axis '${axis.name}' floor for '${value}' must be a positive integer`,
+            );
+          }
+        }
+      }
     }
   }
 

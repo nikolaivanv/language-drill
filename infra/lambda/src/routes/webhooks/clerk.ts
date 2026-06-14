@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { eq } from 'drizzle-orm';
 import { Webhook } from 'svix';
 
 import { db } from '../../db';
@@ -12,7 +13,22 @@ interface ClerkUserCreatedEvent {
   };
 }
 
-type ClerkWebhookEvent = ClerkUserCreatedEvent;
+interface ClerkUserDeletedEvent {
+  type: 'user.deleted';
+  data: {
+    // Clerk sends the deleted user's id plus `deleted: true`. `id` can be
+    // absent for some deletion variants (e.g. a never-synced user), so it's
+    // optional here and guarded at the handler.
+    id?: string;
+    deleted?: boolean;
+  };
+}
+
+// Discriminated union of the events we act on. Other event types may arrive if
+// the dashboard subscription is widened; none of the handler branches match, so
+// they're acknowledged with 200 and ignored. (Kept a clean discriminated union
+// — no `{ type: string }` catch-all member, which would defeat narrowing.)
+type ClerkWebhookEvent = ClerkUserCreatedEvent | ClerkUserDeletedEvent;
 
 const webhooks = new Hono();
 
@@ -63,6 +79,18 @@ webhooks.post('/webhooks/clerk', async (c) => {
         target: users.id,
         set: { email, updatedAt: new Date() },
       });
+  } else if (event.type === 'user.deleted') {
+    // Right-to-erasure: delete the user row. The user FKs on playlists,
+    // spaced_repetition_cards, usage_events, user_exercise_history,
+    // user_language_profiles, user_preferences, user_vocabulary, and the
+    // read/review tables are all ON DELETE CASCADE, so this one delete sweeps
+    // every PII-adjacent row for the account (migration 0021 backfilled the
+    // five legacy FKs that predated the cascade convention).
+    const userId = event.data.id;
+    if (!userId) {
+      return c.json({ error: 'No user id in event' }, 400);
+    }
+    await db.delete(users).where(eq(users.id, userId));
   }
 
   return c.json({ received: true }, 200);

@@ -18,6 +18,7 @@
     "review:flagged-theory": "npx tsx scripts/review-flagged-theory.ts",
     "revalidate:cloze": "npx tsx scripts/revalidate-cloze-pool.ts",
     "backfill:coverage-tags": "npx tsx scripts/backfill-coverage-tags.ts",
+    "backfill:mastery": "npx tsx scripts/backfill-mastery.ts",
     "seed:exercises": "npx tsx scripts/seed-exercises.ts",
     "cleanup:zombies": "npx tsx scripts/cleanup-zombie-jobs.ts",
     "test": "vitest run"

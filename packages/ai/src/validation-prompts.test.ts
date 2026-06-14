@@ -8,6 +8,7 @@ import {
   type TranslationContent,
   type VocabRecallContent,
   type SentenceConstructionContent,
+  type CoverageSpec,
 } from "@language-drill/shared";
 import { getGrammarPoint } from "@language-drill/db";
 
@@ -393,7 +394,7 @@ describe("buildValidationUserPrompt", () => {
 // buildValidationUserPrompt — coverage directive (Task 3)
 // ---------------------------------------------------------------------------
 
-function coverageGrammarPoint(personRotation: boolean): GenerationSpec["grammarPoint"] {
+function coverageGrammarPoint(coverageSpec?: CoverageSpec): GenerationSpec["grammarPoint"] {
   return {
     key: "tr-a1-test",
     kind: "grammar" as const,
@@ -405,19 +406,19 @@ function coverageGrammarPoint(personRotation: boolean): GenerationSpec["grammarP
     examplesPositive: [],
     examplesNegative: [],
     commonErrors: [],
-    ...(personRotation ? { personRotation: true } : {}),
+    ...(coverageSpec ? { coverageSpec } : {}),
   };
 }
 
 function specFor(
   exerciseType: ExerciseType,
-  personRotation: boolean,
+  coverageSpec?: CoverageSpec,
 ): GenerationSpec {
   return {
     language: Language.TR,
     cefrLevel: CefrLevel.A1,
     exerciseType,
-    grammarPoint: coverageGrammarPoint(personRotation),
+    grammarPoint: coverageGrammarPoint(coverageSpec),
     topicDomain: null,
     count: 1,
     batchSeed: "test",
@@ -457,21 +458,22 @@ const vocabDraftForCoverage: ExerciseDraft = {
 };
 
 describe("buildValidationUserPrompt — coverage directive", () => {
-  it("grammar cloze without personRotation asks polarity + sentenceType, not person", () => {
-    const p = buildValidationUserPrompt(clozeDraftForCoverage, specFor(ExerciseType.CLOZE, false));
+  it("grammar cloze without coverageSpec asks polarity + sentenceType, not person", () => {
+    const p = buildValidationUserPrompt(clozeDraftForCoverage, specFor(ExerciseType.CLOZE));
     expect(p).toContain("polarity");
     expect(p).toContain("sentenceType");
     expect(p).not.toContain("grammatical person");
   });
 
-  it("grammar cloze with personRotation also asks person", () => {
-    const p = buildValidationUserPrompt(clozeDraftForCoverage, specFor(ExerciseType.CLOZE, true));
+  it("grammar cloze with person coverageSpec also asks person", () => {
+    const personSpec: CoverageSpec = { axes: [{ name: "person", floors: { "3sg": 5 } }] };
+    const p = buildValidationUserPrompt(clozeDraftForCoverage, specFor(ExerciseType.CLOZE, personSpec));
     expect(p).toContain("grammatical person");
     expect(p).toContain("polarity");
   });
 
   it("vocab_recall asks wordClass only", () => {
-    const p = buildValidationUserPrompt(vocabDraftForCoverage, specFor(ExerciseType.VOCAB_RECALL, false));
+    const p = buildValidationUserPrompt(vocabDraftForCoverage, specFor(ExerciseType.VOCAB_RECALL));
     expect(p).toContain("part of speech");
     expect(p).not.toContain("polarity");
   });

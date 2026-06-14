@@ -16,6 +16,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import {
   type CefrLevel,
   type ClozeContent,
+  type CoverageTarget,
   type ExerciseContent,
   ExerciseType,
   Language,
@@ -333,6 +334,12 @@ export type GenerationSpec = {
    * (task 15); `undefined` → every ordinal unseeded.
    */
   seedWords?: readonly (string | null)[];
+  /**
+   * Phase 2 coverage controller: explicit per-ordinal axis targets
+   * (`coverageTargets[ordinal]`) from the scheduler. `undefined` → no coverage
+   * directive (CLI/admin and non-spec cells). Length matches `count` when set.
+   */
+  coverageTargets?: readonly CoverageTarget[];
 };
 
 export type ExerciseDraft = {
@@ -765,7 +772,7 @@ export async function generateOneDraft(
     ordinal,
     spec.topicDomain,
     spec.seedWords?.[ordinal] ?? null,
-    spec.batchSeed,
+    spec.coverageTargets,
   );
   const tool =
     GENERATION_TOOL_BY_TYPE[spec.exerciseType as keyof typeof GENERATION_TOOL_BY_TYPE];

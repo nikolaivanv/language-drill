@@ -50,15 +50,16 @@ export const LANGUAGE_NAMES: Record<Language, string> = {
 // Score >= this counts as correct in session summaries; matches the 'solid' tier in apps/web/lib/drill/verdict-tier.ts
 export const CORRECT_THRESHOLD = 0.7;
 
-// Upper bound (chars) on a submitted exercise answer. The answer is interpolated
-// raw into the evaluation prompt and sent to Claude, so an unbounded answer is a
-// token-cost amplification lever — most acute for free writing, whose evaluator
-// runs on a larger model with a bigger output budget. 4000 chars comfortably
-// covers a ≤500-word paragraph (the longest free-writing band targets ~200
-// words) while capping the per-request blast radius. Enforced server-side in
-// `SubmitAnswerSchema`; the free-writing composer mirrors it as a textarea
-// `maxLength` for client-side feedback.
-export const EXERCISE_ANSWER_MAX_CHARS = 4000;
+// Upper bound on a submitted exercise answer (chars). A free-form answer is
+// interpolated raw into the evaluation prompt and forwarded to Claude, so an
+// unbounded answer is a token-cost amplification lever (a 100 KB answer is
+// ~25k input tokens per evaluation). 2000 chars comfortably covers any
+// legitimate cloze / translation / short-writing answer — including a
+// free-writing paragraph (the longest band targets ~200 words ≈ 1.4k chars) —
+// while capping the blast radius; matches READ_TEXT_MAX_CHARS for the annotate
+// surfaces. Enforced server-side in `SubmitAnswerSchema`; the free-writing
+// composer mirrors it as a textarea `maxLength`.
+export const EXERCISE_ANSWER_MAX_CHARS = 2000;
 
 export type ApiError = {
   error: string;

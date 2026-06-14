@@ -585,6 +585,60 @@ describe('validateAndInsertWithRetry — seed persistence', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Phase 2 coverage controller — realizedCoverage on inserted DraftOutcome.
+// The validator's full `coverage` tags are surfaced on the outcome so the
+// per-axis tally in `run-one-cell` can credit the right buckets without re-
+// reading from the DB. Set ONLY on the inserted-* / dedup-then-success
+// return paths; absent on rejected / dedup-given-up.
+// ---------------------------------------------------------------------------
+
+describe('validateAndInsertWithRetry — realizedCoverage on inserted outcome', () => {
+  const throwaway: { exercise?: Record<string, unknown> } = {};
+
+  it('carries realizedCoverage from the validator coverage on an inserted-approved outcome', async () => {
+    // Validator approves with a person tag; the outcome must surface the tags.
+    mockValidateDraft.mockResolvedValue({
+      ...PASSING_VALIDATION,
+      result: { ...PASSING_VALIDATION.result, coverage: { person: '2pl' } },
+    });
+
+    const outcome = await validateAndInsertWithRetry({
+      db: makeInsertSucceedsDb(throwaway),
+      client: mockClient,
+      spec: trSpec,
+      draft: makeTrDraft('Sokakta ev___ var.', 'ler'),
+      ordinal: 0,
+      cell: trCell,
+      args,
+      generatedAt,
+    });
+
+    expect(outcome.terminalStatus).toBe('inserted-approved');
+    expect(outcome.realizedCoverage).toEqual({ person: '2pl' });
+  });
+
+  it('surfaces empty realizedCoverage when the validator reports no axes', async () => {
+    // PASSING_VALIDATION already has coverage: {} (no axes).
+    mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
+
+    const outcome = await validateAndInsertWithRetry({
+      db: makeInsertSucceedsDb(throwaway),
+      client: mockClient,
+      spec: trSpec,
+      draft: makeTrDraft('Sokakta ev___ var.', 'ler'),
+      ordinal: 0,
+      cell: trCell,
+      args,
+      generatedAt,
+    });
+
+    expect(outcome.terminalStatus).toBe('inserted-approved');
+    expect(outcome.realizedCoverage).toEqual({});
+    expect(outcome.realizedCoverage?.person).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Rejection-reason capture — the discarded ordinal carries its reasons out via
 // `DraftOutcome.rejectionReasons` so `runOneCell` can aggregate the
 // distribution. Insert behavior is unchanged; this only surfaces what was

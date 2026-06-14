@@ -40,7 +40,7 @@ const { A1, A2 } = CefrLevel;
  * which the (non-suppressed) vowel-harmony cell does not need. Prior `2026-06-07`
  * was the #220 book-grounded audit of all 40 grammar points + Yedi İklim A1+A2 parity.
  */
-export const CURRICULUM_VERSION_TR = '2026-06-13';
+export const CURRICULUM_VERSION_TR = '2026-06-14';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -78,7 +78,11 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-personal-suffixes',
-    personRotation: true,
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Personal (copular) suffixes',
     description:
@@ -161,7 +165,14 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-present-continuous',
-    personRotation: true,
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
+        // Present continuous is naturally mostly affirmative; ensure negatives
+        // still appear. Coarse, skewed floors — not uniform-by-default.
+        { name: 'polarity', floors: { affirmative: 18, negative: 12 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Present continuous -(I)yor',
     description:
@@ -189,7 +200,11 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-negation',
-    personRotation: true,
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Verbal negation -mA',
     description:
@@ -211,7 +226,11 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-dili-past',
-    personRotation: true,
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Definite past -DI ("dili" past)',
     description:
@@ -238,7 +257,11 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-future',
-    personRotation: true,
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Future -(y)AcAk',
     description:
@@ -322,7 +345,11 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-degil',
-    personRotation: true,
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Nominal negation (değil)',
     description:
@@ -534,7 +561,11 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-possessive-suffixes',
-    personRotation: true,
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Possessive suffixes (İyelik ekleri)',
     description:
@@ -794,7 +825,11 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a2-aorist',
-    personRotation: true,
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 8, '2sg': 8, '3sg': 8, '1pl': 8, '2pl': 8, '3pl': 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Aorist -(I/A)r',
     description:
@@ -1330,6 +1365,13 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-vocab-food-drink',
+    coverageSpec: {
+      // wordClass diversity: food/drink vocab is noun-dominant, with a few verbs
+      // (eat/drink) and adjectives (tastes). Floors sum to the vocab target (10).
+      axes: [
+        { name: 'wordClass', floors: { noun: 6, verb: 2, adjective: 2 } },
+      ],
+    },
     kind: 'vocab',
     name: 'Food & drink vocabulary (A1)',
     description:

@@ -19,8 +19,8 @@ import {
   buildGenerationSystemPrompt,
   buildGenerationUserPrompt,
   PERSON_ROTATION_BY_LANGUAGE,
-  personForOrdinal,
-  personRotationPhase,
+  personCodesForLanguage,
+  personDisplayForCode,
   canonicalSurface,
   capPriorPoolSurfaces,
   computeGenerationPromptVars,
@@ -724,130 +724,6 @@ describe("buildGenerationUserPrompt — sentence_construction", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Grammatical-person rotation
-// ---------------------------------------------------------------------------
-
-describe("personForOrdinal", () => {
-  it("cycles the TR six-person paradigm and wraps", () => {
-    expect(personForOrdinal(Language.TR, 0)).toBe("1sg (ben)");
-    expect(personForOrdinal(Language.TR, 1)).toBe("2sg (sen)");
-    expect(personForOrdinal(Language.TR, 5)).toBe("3pl (onlar)");
-    expect(personForOrdinal(Language.TR, 6)).toBe("1sg (ben)");
-  });
-
-  it("ES list omits vosotros (pan-American 2pl = ustedes)", () => {
-    const es = PERSON_ROTATION_BY_LANGUAGE[Language.ES];
-    expect(es).toHaveLength(5);
-    expect(es.join(" ")).not.toContain("vosotros");
-    expect(es).toContain("3pl (ellos/ellas/ustedes)");
-  });
-
-  it("a full cycle covers every person exactly once per language", () => {
-    for (const language of [Language.TR, Language.ES, Language.DE] as const) {
-      const persons = PERSON_ROTATION_BY_LANGUAGE[language];
-      const cycle = persons.map((_, i) => personForOrdinal(language, i));
-      expect(new Set(cycle).size).toBe(persons.length);
-    }
-  });
-});
-
-describe("personRotationPhase", () => {
-  it("is deterministic and in range for date-stamped scheduler seeds", () => {
-    for (const seed of [
-      "scheduled-2026-06-12",
-      "scheduled-2026-06-13",
-      "phase-2-default",
-    ]) {
-      const phase = personRotationPhase(seed, 6);
-      expect(phase).toBe(personRotationPhase(seed, 6));
-      expect(phase).toBeGreaterThanOrEqual(0);
-      expect(phase).toBeLessThan(6);
-    }
-  });
-
-  it("varies across nightly seeds so small top-ups cover the cycle tail", () => {
-    // A week of scheduler seeds must not all hash to the same phase —
-    // otherwise a cell topping up by 1–2 drafts/night would still starve
-    // the tail persons.
-    const phases = new Set(
-      Array.from({ length: 7 }, (_, day) =>
-        personRotationPhase(`scheduled-2026-06-${String(10 + day)}`, 6),
-      ),
-    );
-    expect(phases.size).toBeGreaterThan(1);
-  });
-
-  it("returns phase 0 for null/absent seed (back-compat path)", () => {
-    expect(personRotationPhase(null, 6)).toBe(0);
-    expect(personRotationPhase(undefined, 6)).toBe(0);
-    expect(personRotationPhase("", 6)).toBe(0);
-  });
-
-  it("offsets personForOrdinal while preserving full-cycle coverage", () => {
-    const seed = "scheduled-2026-06-12";
-    const phase = personRotationPhase(seed, 6);
-    expect(personForOrdinal(Language.TR, 0, seed)).toBe(
-      PERSON_ROTATION_BY_LANGUAGE[Language.TR][phase],
-    );
-    const cycle = PERSON_ROTATION_BY_LANGUAGE[Language.TR].map((_, i) =>
-      personForOrdinal(Language.TR, i, seed),
-    );
-    expect(new Set(cycle).size).toBe(6);
-  });
-
-  it("threads batchSeed through buildGenerationUserPrompt", () => {
-    const seed = "scheduled-2026-06-12";
-    const expected = personForOrdinal(Language.ES, 0, seed);
-    const msg = buildGenerationUserPrompt(baseInputs, 0, null, null, seed);
-    expect(msg).toContain(`Target grammatical person for this draft: ${expected}`);
-  });
-});
-
-describe("buildGenerationUserPrompt — person rotation", () => {
-  // baseInputs targets es-b1-present-subjunctive, which is flagged
-  // `personRotation: true` in the curriculum.
-  it("pins the ordinal's person for a flagged grammar point", () => {
-    const msg = buildGenerationUserPrompt(baseInputs, 0, null);
-    expect(msg).toContain("Target grammatical person for this draft: 1sg (yo)");
-  });
-
-  it("rotates the person across ordinals", () => {
-    const msg = buildGenerationUserPrompt(baseInputs, 1, null);
-    expect(msg).toContain("Target grammatical person for this draft: 2sg (tú)");
-  });
-
-  it("is deterministic — same ordinal yields identical bytes", () => {
-    expect(buildGenerationUserPrompt(baseInputs, 3, null)).toBe(
-      buildGenerationUserPrompt(baseInputs, 3, null),
-    );
-  });
-
-  it("adds no person line for an unflagged grammar point", () => {
-    const unflagged = getGrammarPoint("es-b1-relative-clauses");
-    if (!unflagged) throw new Error("fixture missing: es-b1-relative-clauses");
-    expect(unflagged.personRotation).toBeUndefined();
-    const msg = buildGenerationUserPrompt(
-      { ...baseInputs, grammarPoint: unflagged },
-      0,
-      null,
-    );
-    expect(msg).not.toContain("Target grammatical person");
-  });
-
-  it("composes with the SC mode block and seed word", () => {
-    const msg = buildGenerationUserPrompt(
-      { ...baseInputs, exerciseType: ExerciseType.SENTENCE_CONSTRUCTION },
-      0,
-      "travel",
-      "viajar",
-    );
-    expect(msg).toContain("prompt mode: keywords");
-    expect(msg).toContain("Target grammatical person for this draft: 1sg (yo)");
-    expect(msg).toContain('Build this exercise around the word "viajar"');
-  });
-});
-
-// ---------------------------------------------------------------------------
 // tailRecentStems
 // ---------------------------------------------------------------------------
 
@@ -867,5 +743,88 @@ describe("tailRecentStems", () => {
 
   it("returns an empty array when input is empty", () => {
     expect(tailRecentStems([])).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// personCodesForLanguage
+// ---------------------------------------------------------------------------
+
+describe("personCodesForLanguage", () => {
+  it("derives canonical codes from the rotation labels", () => {
+    expect(personCodesForLanguage(Language.TR)).toEqual([
+      "1sg", "2sg", "3sg", "1pl", "2pl", "3pl",
+    ]);
+  });
+  it("omits vosotros for Spanish (5 persons, no 2pl)", () => {
+    expect(personCodesForLanguage(Language.ES)).toEqual([
+      "1sg", "2sg", "3sg", "1pl", "3pl",
+    ]);
+  });
+  it("returns all six person codes for German", () => {
+    expect(personCodesForLanguage(Language.DE)).toEqual([
+      "1sg", "2sg", "3sg", "1pl", "2pl", "3pl",
+    ]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// personDisplayForCode
+// ---------------------------------------------------------------------------
+
+describe("personDisplayForCode", () => {
+  it("maps a code back to the language-specific label", () => {
+    expect(personDisplayForCode(Language.TR, "2pl")).toBe("2pl (siz)");
+    expect(personDisplayForCode(Language.ES, "1pl")).toBe(
+      "1pl (nosotros/nosotras)",
+    );
+  });
+  it("falls back to the bare code when the language lacks it", () => {
+    expect(personDisplayForCode(Language.ES, "2pl")).toBe("2pl");
+  });
+  it("maps 2pl for German to its ihr label", () => {
+    expect(personDisplayForCode(Language.DE, "2pl")).toBe("2pl (ihr)");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// renderCoverageBlock (via buildGenerationUserPrompt) — Phase 2
+// ---------------------------------------------------------------------------
+
+function covInputs(over: Record<string, unknown> = {}) {
+  return {
+    language: Language.TR,
+    cefrLevel: CefrLevel.A1,
+    exerciseType: ExerciseType.CLOZE,
+    grammarPoint: getGrammarPoint("tr-a1-present-continuous"),
+    ...over,
+  } as Parameters<typeof buildGenerationUserPrompt>[0];
+}
+
+describe("renderCoverageBlock (via buildGenerationUserPrompt)", () => {
+  it("emits a person directive with the language display label", () => {
+    const out = buildGenerationUserPrompt(covInputs(), 0, null, null, [{ person: "2pl" }]);
+    expect(out).toContain("2pl (siz)");
+  });
+  it("emits one directive per axis when the target is multi-axis", () => {
+    const out = buildGenerationUserPrompt(covInputs(), 0, null, null, [{ person: "1sg", polarity: "negative" }]);
+    expect(out).toContain("1sg (ben)");
+    expect(out).toContain("negative");
+  });
+  it("emits a wordClass directive for vocab", () => {
+    const out = buildGenerationUserPrompt(
+      covInputs({ exerciseType: ExerciseType.VOCAB_RECALL, grammarPoint: getGrammarPoint("tr-a1-vocab-food-drink") }),
+      0,
+      null,
+      null,
+      [{ wordClass: "verb" }],
+    );
+    expect(out).toContain("verb");
+  });
+  it("emits no directive when there is no target for the ordinal", () => {
+    const withTargets = buildGenerationUserPrompt(covInputs(), 0, null, null, [{ person: "1sg" }]);
+    const without = buildGenerationUserPrompt(covInputs(), 0, null, null, undefined);
+    expect(without).not.toContain("Target grammatical person");
+    expect(withTargets).toContain("Target grammatical person");
   });
 });

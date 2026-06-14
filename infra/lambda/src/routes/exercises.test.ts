@@ -5,6 +5,7 @@ import {
   EVAL_REQUEST_TIMEOUT_MS,
   EVAL_MAX_RETRIES,
 } from '@language-drill/ai';
+import { EXERCISE_ANSWER_MAX_CHARS } from '@language-drill/shared';
 import { ExerciseQuerySchema, SubmitAnswerSchema } from './exercises';
 import { getEffectivePlan } from '../usage/plan';
 import { checkGlobalCapacity } from '../usage/global-capacity';
@@ -15,14 +16,36 @@ import { checkGlobalCapacity } from '../usage/global-capacity';
 
 const mockLimit = vi.fn();
 const mockOrderBy = vi.fn(() => ({ limit: mockLimit }));
-const mockWhere = vi.fn(() => ({ orderBy: mockOrderBy, limit: mockLimit }));
+// `GET /exercises` now uses a single query:
+// `db.select().from().where(...).orderBy(...).limit(1)` resolved by `mockLimit`.
+// `mockCandidates` is the default resolution of the thenable that `where()`
+// returns; it is no longer exercised by GET /exercises tests but is kept so
+// the `where()` mock still returns a thenable that carries `.limit`/`.orderBy`
+// for the POST /submit tests that call `db.select(...).from(...).where(...)`.
+const mockCandidates = vi.fn(async () => [{ id: 'abc-123' }]);
+// Return type is loose (`any`) so the POST /submit tests can override `where`
+// with the plain `{ orderBy, limit }` shape via `mockImplementationOnce`, while
+// the default returns a thenable (candidate ids) carrying `.limit`/`.orderBy`.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockWhere = vi.fn((): any => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = mockCandidates() as any;
+  p.limit = mockLimit;
+  p.orderBy = mockOrderBy;
+  return p;
+});
 const mockFrom = vi.fn(() => ({ where: mockWhere }));
 const mockSelect = vi.fn(() => ({ from: mockFrom }));
 
 const mockOnConflictDoNothing = vi.fn(() => Promise.resolve());
+const mockOnConflictDoUpdate = vi.fn(() => Promise.resolve());
 const mockValues = vi.fn(() => {
-  const p = Promise.resolve([]) as Promise<never[]> & { onConflictDoNothing: typeof mockOnConflictDoNothing };
+  const p = Promise.resolve([]) as Promise<never[]> & {
+    onConflictDoNothing: typeof mockOnConflictDoNothing;
+    onConflictDoUpdate: typeof mockOnConflictDoUpdate;
+  };
   p.onConflictDoNothing = mockOnConflictDoNothing;
+  p.onConflictDoUpdate = mockOnConflictDoUpdate;
   return p;
 });
 const mockInsert = vi.fn(() => ({ values: mockValues }));
@@ -32,6 +55,13 @@ vi.mock('../db', () => ({
     select: () => mockSelect(),
     insert: () => mockInsert(),
   },
+}));
+
+const mockUpdateMastery = vi.fn((prev: unknown, _obs: unknown) => ({
+  masteryScore: prev ? 0.6 : 0.4,
+  confidence: 0.5,
+  evidenceCount: prev ? 2 : 1,
+  lastPracticedAt: new Date('2026-01-01'),
 }));
 
 vi.mock('@language-drill/db', () => ({
@@ -45,6 +75,16 @@ vi.mock('@language-drill/db', () => ({
     completedAt: 'completed_at',
     exerciseIds: 'exercise_ids',
   },
+  userGrammarMastery: {
+    userId: 'user_id',
+    grammarPointKey: 'grammar_point_key',
+    masteryScore: 'mastery_score',
+    confidence: 'confidence',
+    evidenceCount: 'evidence_count',
+    lastPracticedAt: 'last_practiced_at',
+  },
+  updateMastery: (prev: unknown, obs: unknown) => mockUpdateMastery(prev, obs),
+  getGrammarPoint: vi.fn(() => undefined),
 }));
 
 // Mock the review-status filter so we can assert the route invokes it.
@@ -54,9 +94,11 @@ const mockApprovedStatusFilter = vi.fn((table: unknown) => ({
   __mockToken: 'approved-status-filter',
   table,
 }));
+const mockFreshFirstOrderBy = vi.fn((userId: string) => ({ __mockToken: 'fresh-first-order-by', userId }));
 vi.mock('../lib/exercise-filters', () => ({
   APPROVED_STATUSES: ['auto-approved', 'manual-approved'] as const,
   approvedStatusFilter: (table: unknown) => mockApprovedStatusFilter(table),
+  freshFirstOrderBy: (userId: string) => mockFreshFirstOrderBy(userId),
 }));
 
 const mockEvaluateAnswer = vi.fn();
@@ -197,6 +239,20 @@ describe('SubmitAnswerSchema', () => {
     const result = SubmitAnswerSchema.safeParse({ answer: 42 });
     expect(result.success).toBe(false);
   });
+
+  it('accepts an answer at the max length boundary', () => {
+    const result = SubmitAnswerSchema.safeParse({
+      answer: 'a'.repeat(EXERCISE_ANSWER_MAX_CHARS),
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects an answer over the max length (token-cost guard)', () => {
+    const result = SubmitAnswerSchema.safeParse({
+      answer: 'a'.repeat(EXERCISE_ANSWER_MAX_CHARS + 1),
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -251,6 +307,22 @@ describe('GET /exercises', () => {
       contentJson: sampleExercise.contentJson,
     });
     expect(mockSelect).toHaveBeenCalled();
+    expect(mockFreshFirstOrderBy).toHaveBeenCalledWith('user_123');
+  });
+
+  it('applies exposure ordering (freshFirstOrderBy) and returns the drawn row', async () => {
+    // The single-query exposure draw uses freshFirstOrderBy(userId) as the
+    // ORDER BY clause so never-seen items surface first; assert the ordering
+    // function is invoked with the authenticated userId and the full row is
+    // returned.
+    mockLimit.mockResolvedValueOnce([sampleExercise]);
+
+    const res = await app.request('/exercises?language=EN&difficulty=B1', undefined, authEnv);
+
+    expect(res.status).toBe(200);
+    expect(mockFreshFirstOrderBy).toHaveBeenCalledWith('user_123');
+    const body = (await res.json()) as AnyJson;
+    expect(body.id).toBe('abc-123');
   });
 
   it('filters by type when provided', async () => {
@@ -267,7 +339,9 @@ describe('GET /exercises', () => {
     expect(body.type).toBe('translation');
   });
 
-  it('returns 404 with NO_EXERCISES code when no matches found', async () => {
+  it('returns 404 with NO_EXERCISES when the pool is empty', async () => {
+    // The single-query draw returns [] when no approved exercise matches the
+    // given filters; the route converts that to a 404.
     mockLimit.mockResolvedValueOnce([]);
 
     const res = await app.request('/exercises?language=TR&difficulty=C2', undefined, authEnv);
@@ -1148,6 +1222,156 @@ describe('POST /exercises/:id/submit — observability', () => {
 });
 
 // ---------------------------------------------------------------------------
+// POST /exercises/:id/submit — mastery upsert (Task 9)
+// ---------------------------------------------------------------------------
+
+describe('POST /exercises/:id/submit — mastery upsert', () => {
+  let app: Hono;
+
+  const authEnv = {
+    event: {
+      requestContext: {
+        authorizer: { jwt: { claims: { sub: 'user_123' } } },
+      },
+    },
+  };
+
+  const exerciseWithGrammarKey = {
+    id: 'abc-123',
+    type: 'cloze',
+    language: 'EN',
+    difficulty: 'B1',
+    contentJson: { sentence: 'I ___ to the store', options: ['go', 'went', 'gone'] },
+    audioS3Key: null,
+    createdAt: new Date(),
+    grammarPointKey: 'en-b1-past-simple',
+  };
+
+  const exerciseWithoutGrammarKey = {
+    id: 'abc-456',
+    type: 'cloze',
+    language: 'EN',
+    difficulty: 'B1',
+    contentJson: { sentence: 'I ___ to the store', options: ['go', 'went', 'gone'] },
+    audioS3Key: null,
+    createdAt: new Date(),
+    grammarPointKey: null,
+  };
+
+  const sampleEvaluation = {
+    score: 0.85,
+    grammarAccuracy: 0.9,
+    vocabularyRange: 'B1',
+    taskAchievement: 0.8,
+    feedback: 'Good job!',
+    errors: [],
+    estimatedCefrEvidence: 'B1',
+  };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const mod = await import('./exercises');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  it('returns 200 and attempts mastery upsert when grammarPointKey is present', async () => {
+    // Exercise fetch → mastery read (first-observation, returns [])
+    mockLimit
+      .mockResolvedValueOnce([exerciseWithGrammarKey]) // exercise fetch
+      .mockResolvedValueOnce([]); // mastery select → no prior row
+    // mockWhere: exercise fetch where chain, then usage count (resolved directly), then mastery where chain
+    mockWhere
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit })) // exercise fetch
+      .mockResolvedValueOnce([{ count: 0 }] as never) // usage count
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit })); // mastery read
+    mockEvaluateAnswer.mockResolvedValueOnce(sampleEvaluation);
+
+    const res = await app.request(
+      '/exercises/abc-123/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'I went to the store' }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as AnyJson;
+    expect(body.score).toBe(0.85);
+
+    // 4 inserts: auth upsert + history + usageEvents + mastery
+    expect(mockInsert).toHaveBeenCalledTimes(4);
+    // The mastery insert is the 4th values call and must use onConflictDoUpdate
+    expect(mockOnConflictDoUpdate).toHaveBeenCalledTimes(1);
+    // Mastery values should include userId, grammarPointKey, language
+    expect(mockValues).toHaveBeenNthCalledWith(
+      4,
+      expect.objectContaining({
+        userId: 'user_123',
+        grammarPointKey: 'en-b1-past-simple',
+        language: 'EN',
+      }),
+    );
+  });
+
+  it('returns 200 and does NOT attempt mastery upsert when grammarPointKey is null', async () => {
+    mockLimit.mockResolvedValueOnce([exerciseWithoutGrammarKey]);
+    mockWhere
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit })) // exercise fetch
+      .mockResolvedValueOnce([{ count: 0 }] as never); // usage count
+    mockEvaluateAnswer.mockResolvedValueOnce(sampleEvaluation);
+
+    const res = await app.request(
+      '/exercises/abc-456/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'I went to the store' }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as AnyJson;
+    expect(body.score).toBe(0.85);
+
+    // 3 inserts only: auth upsert + history + usageEvents (no mastery)
+    expect(mockInsert).toHaveBeenCalledTimes(3);
+    expect(mockOnConflictDoUpdate).not.toHaveBeenCalled();
+  });
+
+  it('still returns 200 even if mastery upsert throws (best-effort)', async () => {
+    mockLimit
+      .mockResolvedValueOnce([exerciseWithGrammarKey]) // exercise fetch
+      .mockResolvedValueOnce([]); // mastery select
+    mockWhere
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit })) // exercise fetch
+      .mockResolvedValueOnce([{ count: 0 }] as never) // usage count
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit })); // mastery read
+    mockEvaluateAnswer.mockResolvedValueOnce(sampleEvaluation);
+    // Simulate mastery insert failure
+    mockOnConflictDoUpdate.mockRejectedValueOnce(new Error('DB constraint error'));
+
+    const res = await app.request(
+      '/exercises/abc-123/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'I went to the store' }),
+      },
+      authEnv,
+    );
+
+    // Submission must still succeed despite mastery failure
+    expect(res.status).toBe(200);
+    const body = await res.json() as AnyJson;
+    expect(body.score).toBe(0.85);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // POST /exercises/:id/submit — free_writing exercises route to evaluateFreeWriting
 // ---------------------------------------------------------------------------
 
@@ -1190,10 +1414,10 @@ describe('POST /exercises/:id/submit — free_writing branch', () => {
     headline: 'A solid formal letter with minor grammar slips.',
     summary: 'The letter addresses the task well. Grammar is mostly accurate.',
     criteria: [
-      { id: 'task', label: 'Task Achievement', score: 0.8, cefrLevel: 'B1', feedback: 'Good.' },
-      { id: 'coherence', label: 'Coherence & Cohesion', score: 0.75, cefrLevel: 'B1', feedback: 'Mostly clear.' },
-      { id: 'lexis', label: 'Lexical Resource', score: 0.8, cefrLevel: 'B1', feedback: 'Appropriate vocabulary.' },
-      { id: 'grammar', label: 'Grammatical Range', score: 0.85, cefrLevel: 'B1', feedback: 'Minor errors only.' },
+      { id: 'task', label: 'Task Achievement', score: 0.8, cefr: 'B1', note: 'Good.' },
+      { id: 'coherence', label: 'Coherence & Cohesion', score: 0.75, cefr: 'B1', note: 'Mostly clear.' },
+      { id: 'lexis', label: 'Lexical Resource', score: 0.8, cefr: 'B1', note: 'Appropriate vocabulary.' },
+      { id: 'grammar', label: 'Grammatical Range', score: 0.85, cefr: 'B1', note: 'Minor errors only.' },
     ],
     errors: [],
     goodSpans: [],

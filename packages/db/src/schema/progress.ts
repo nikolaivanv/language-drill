@@ -1,4 +1,4 @@
-import { index, integer, jsonb, pgTable, real, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { index, integer, jsonb, pgTable, primaryKey, real, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 import { exercises } from './exercises';
 import { practiceSessions } from './sessions';
@@ -8,7 +8,7 @@ export const userExerciseHistory = pgTable(
   'user_exercise_history',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: text('user_id').references(() => users.id),
+    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
     exerciseId: uuid('exercise_id').references(() => exercises.id),
     sessionId: uuid('session_id').references(() => practiceSessions.id, { onDelete: 'set null' }),
     score: real('score'), // 0.0–1.0
@@ -35,7 +35,7 @@ export const spacedRepetitionCards = pgTable(
   'spaced_repetition_cards',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: text('user_id').references(() => users.id),
+    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
     itemType: text('item_type'), // grammar_point | vocabulary_item
     itemId: text('item_id'),
     dueAt: timestamp('due_at'),
@@ -48,6 +48,29 @@ export const spacedRepetitionCards = pgTable(
     userIdDueAtIdx: index('spaced_repetition_cards_user_id_due_at_idx').on(
       table.userId,
       table.dueAt,
+    ),
+  }),
+);
+
+export const userGrammarMastery = pgTable(
+  'user_grammar_mastery',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    language: text('language').notNull(),
+    grammarPointKey: text('grammar_point_key').notNull(),
+    masteryScore: real('mastery_score').notNull(), // 0.0–1.0
+    confidence: real('confidence').notNull(), // 0.0–1.0
+    evidenceCount: integer('evidence_count').notNull(),
+    lastPracticedAt: timestamp('last_practiced_at', { withTimezone: true }).notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.userId, table.grammarPointKey] }),
+    userLanguageIdx: index('user_grammar_mastery_user_language_idx').on(
+      table.userId,
+      table.language,
     ),
   }),
 );

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { eq, and, sql, gte, count } from 'drizzle-orm';
+import { eq, and, gte, count } from 'drizzle-orm';
 import { Language, CefrLevel, ExerciseType, isFreeWritingContent, EXERCISE_ANSWER_MAX_CHARS } from '@language-drill/shared';
 import type { ExerciseContent, FreeWritingContent } from '@language-drill/shared';
 import {
@@ -10,6 +10,8 @@ import {
   userExerciseHistory,
   usageEvents,
   getGrammarPoint,
+  userGrammarMastery,
+  updateMastery,
 } from '@language-drill/db';
 import {
   createObservedClaudeClient,
@@ -24,7 +26,7 @@ import {
   withLlmTrace,
 } from '@language-drill/ai';
 import { db } from '../db';
-import { approvedStatusFilter } from '../lib/exercise-filters';
+import { approvedStatusFilter, freshFirstOrderBy } from '../lib/exercise-filters';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
 import { limitFor } from '../usage/limits';
@@ -48,8 +50,9 @@ export const ExerciseQuerySchema = z.object({
 export const SubmitAnswerSchema = z.object({
   // `.max()` caps token-cost exposure: the answer is interpolated raw into the
   // evaluation prompt and sent to Claude (free writing runs a larger model), so
-  // an unbounded answer is a cost-amplification lever. See
-  // EXERCISE_ANSWER_MAX_CHARS for the rationale.
+  // an unbounded answer is a cost-amplification lever (and very long prompts
+  // push against the eval timeout). See EXERCISE_ANSWER_MAX_CHARS for the
+  // rationale.
   answer: z.string().min(1).max(EXERCISE_ANSWER_MAX_CHARS),
   sessionId: z.string().uuid().optional(),
 });
@@ -76,6 +79,7 @@ exercises.get('/exercises', async (c) => {
   }
 
   const { language, difficulty, type } = parsed.data;
+  const userId = c.get('userId');
 
   const conditions = [
     eq(exercisesTable.language, language),
@@ -87,11 +91,19 @@ exercises.get('/exercises', async (c) => {
     conditions.push(eq(exercisesTable.type, type));
   }
 
+  // Exposure control: order the matching pool slice so never-attempted items
+  // come first (NULLS FIRST), then least-recently-seen, with a random tiebreak
+  // within each group — a returning user isn't re-served an item until the
+  // fresh pool for this filter is exhausted. This supersedes the prior
+  // uniform-random-by-id sampling: exposure requires ordering by seen-state, so
+  // a single ordered LIMIT 1 is both correct and simpler than a two-step draw.
+  // freshFirstOrderBy binds userId as a parameter and correlates on
+  // exercises.id (see lib/exercise-filters.ts).
   const rows = await db
     .select()
     .from(exercisesTable)
     .where(and(...conditions))
-    .orderBy(sql`random()`)
+    .orderBy(freshFirstOrderBy(userId))
     .limit(1);
 
   if (rows.length === 0) {
@@ -220,6 +232,16 @@ exercises.post('/exercises/:id/submit', async (c) => {
     );
   }
 
+  // Per-user daily cap. This is a check-then-insert (SELECT count → … →
+  // INSERT the usage event on success), so two requests racing at the
+  // boundary can both read count = limit-1 and both proceed; a burst can
+  // overshoot the daily cap by roughly the concurrency factor. This is
+  // accepted at current scale (single-user/low-volume) the same way
+  // `usage/global-capacity.ts` accepts its 60s cache drift — the cap is a
+  // cost guardrail, not a billing-grade meter. A hard guarantee would need an
+  // atomic Upstash INCR or an insert-first transaction (the latter also bills
+  // failed Claude calls); revisit if abuse or multi-user load makes the
+  // overshoot material.
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const [{ count: todayCount }] = await db
     .select({ count: count() })
@@ -336,6 +358,61 @@ exercises.post('/exercises/:id/submit', async (c) => {
       eventType: 'ai_evaluation',
       metadata: { exerciseId: id, language: exercise.language, difficulty: exercise.difficulty },
     });
+
+    // Best-effort per-grammar-point mastery update. A failure here must never
+    // fail the submission — the authoritative signal is the history row above.
+    if (exercise.grammarPointKey) {
+      try {
+        const at = new Date();
+        const existing = await db
+          .select({
+            masteryScore: userGrammarMastery.masteryScore,
+            confidence: userGrammarMastery.confidence,
+            evidenceCount: userGrammarMastery.evidenceCount,
+            lastPracticedAt: userGrammarMastery.lastPracticedAt,
+          })
+          .from(userGrammarMastery)
+          .where(
+            and(
+              eq(userGrammarMastery.userId, userId),
+              eq(userGrammarMastery.grammarPointKey, exercise.grammarPointKey),
+            ),
+          )
+          .limit(1);
+
+        const next = updateMastery(existing[0] ?? null, {
+          score: result.score,
+          difficulty: exercise.difficulty as CefrLevel,
+          at,
+        });
+
+        await db
+          .insert(userGrammarMastery)
+          .values({
+            userId,
+            language: exercise.language as Language,
+            grammarPointKey: exercise.grammarPointKey,
+            masteryScore: next.masteryScore,
+            confidence: next.confidence,
+            evidenceCount: next.evidenceCount,
+            lastPracticedAt: next.lastPracticedAt,
+            updatedAt: at,
+          })
+          .onConflictDoUpdate({
+            target: [userGrammarMastery.userId, userGrammarMastery.grammarPointKey],
+            set: {
+              masteryScore: next.masteryScore,
+              confidence: next.confidence,
+              evidenceCount: next.evidenceCount,
+              lastPracticedAt: next.lastPracticedAt,
+              updatedAt: at,
+              language: exercise.language as Language,
+            },
+          });
+      } catch (masteryErr) {
+        console.error('[submit] mastery update failed (non-fatal):', masteryErr);
+      }
+    }
 
     return c.json(result);
   } catch (err) {

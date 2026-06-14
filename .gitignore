@@ -64,3 +64,4 @@ test-results/
 
 # direnv — per-project env (loads LANGFUSE_MCP_AUTH for the Langfuse MCP server)
 .envrc
+.vercel

@@ -1,5 +1,5 @@
-import { exercises } from '@language-drill/db';
-import { inArray } from 'drizzle-orm';
+import { exercises as exercisesTable, userExerciseHistory } from '@language-drill/db';
+import { inArray, sql } from 'drizzle-orm';
 
 /**
  * Review statuses that are eligible to be served via pool-discovery and
@@ -25,6 +25,24 @@ export const APPROVED_STATUSES = ['auto-approved', 'manual-approved'] as const;
  * Pass the `exercises` table reference; intended to compose under `and(...)`
  * alongside language/difficulty/type predicates.
  */
-export function approvedStatusFilter(table: typeof exercises) {
+export function approvedStatusFilter(table: typeof exercisesTable) {
   return inArray(table.reviewStatus, APPROVED_STATUSES);
+}
+
+/**
+ * ORDER BY fragment implementing per-user exposure control for a pool draw over
+ * the `exercises` table. Never-attempted exercises sort first (NULLS FIRST);
+ * among attempted ones the least-recently-seen come first; `random()` breaks
+ * ties within a group. Correlated on `exercises.id`, so it only works on a query
+ * whose FROM is the `exercises` table. Uses
+ * `user_exercise_history_exercise_id_idx (exercise_id, evaluated_at)` for the
+ * per-exercise scan; user_id is filtered post-scan (not covered).
+ */
+export function freshFirstOrderBy(userId: string) {
+  return sql`(
+    select max(${userExerciseHistory.evaluatedAt})
+    from ${userExerciseHistory}
+    where ${userExerciseHistory.exerciseId} = ${exercisesTable.id}
+      and ${userExerciseHistory.userId} = ${userId}
+  ) asc nulls first, random()`;
 }

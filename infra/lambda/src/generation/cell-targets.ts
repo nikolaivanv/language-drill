@@ -6,19 +6,22 @@
  *
  * Pure: no I/O, no env, no AWS SDK — same constraints as `scheduler-decision`.
  *
- * Resolution order (R3.1):
+ * Resolution order:
  *   1. `cell.grammarPoint.targetOverride` — per-point precision knob for a
  *      narrow point whose realistic distinct-exercise supply is well below the
- *      level default (R3.2).
+ *      level default; wins outright (R3.2).
  *   2. `CELL_TARGET_DEFAULTS[exerciseType][cefrLevel]` — the level-appropriate
- *      default. Cloze/translation taper at A1/A2 (limited lexical space at the
- *      lower levels) and leave B1/B2 unset; vocab_recall is capped LOW (10) at
- *      every level for token efficiency — a single "everyday" umbrella exhausts
- *      its realistic distinct-word surface long before the old 60–75, so
- *      chasing it burned tokens on dedup-give-ups. Breadth comes from more
- *      themed umbrellas (more cells), not a high per-cell target.
+ *      default, raised if needed to cover the largest single-axis floor sum in
+ *      the cell's `coverageSpec` (floor-driven target: see `resolveCellTarget`).
+ *      Cloze/translation taper at A1/A2 (limited lexical space at the lower
+ *      levels) and leave B1/B2 unset; vocab_recall is capped LOW (10) at every
+ *      level for token efficiency — a single "everyday" umbrella exhausts its
+ *      realistic distinct-word surface long before the old 60–75, so chasing it
+ *      burned tokens on dedup-give-ups. Breadth comes from more themed umbrellas
+ *      (more cells), not a high per-cell target.
  *   3. `TARGET_PER_CELL` — global fallback for any `(type, level)` the table
- *      leaves unset (e.g. B1/B2 cloze/translation, where 50 stays reachable).
+ *      leaves unset (e.g. B1/B2 cloze/translation, where 50 stays reachable),
+ *      also subject to the floor raise above.
  */
 
 import { ExerciseType } from '@language-drill/shared';
@@ -59,46 +62,37 @@ export const CELL_TARGET_DEFAULTS: Record<
 };
 
 /**
- * Target raise for `personRotation` cells (2026-06-12). The person-rotation
- * fix only affects FUTURE drafts, but the skewed cells (audit: ≥90% 3sg in
- * every TR tense cell) were already at/near their targets and resolved to
- * `skip-target-reached` — so without a raise the rotation never materialises
- * in the pool. 1.5× gives each flagged cloze/translation cell headroom for
- * roughly one-to-two full person cycles of new drafts on top of the existing
- * (3sg-heavy) inventory.
- *
- * Scope guards:
- *   - cloze/translation ONLY — the audited 3sg skew lives in those pools, and
- *     `sentence_construction` already gained fresh headroom when its pilot
- *     brake lifted (2026-06-08: 25 → 30 at A2, 50 at B1/B2), so rotated SC
- *     drafts flow without a further raise; vocab umbrellas can't carry the
- *     flag (curriculum invariant).
- *   - an explicit `targetOverride` is respected as-is: overrides mark
- *     supply-limited points, and multiplying them would grind dedup waste —
- *     set the override with rotation in mind instead.
+ * Phase 1 coverage controller — a person bucket is **given up** (excluded from
+ * the deficit) when its most recent targeted batch asked for it at least this
+ * many times and produced zero approved drafts realizing it. Two honest
+ * attempts before suppression; person buckets are small, so a single-attempt
+ * miss is too noisy. Cleared by a CURRICULUM_VERSION bump (same gate as the
+ * cell-level low-yield / saturated-dedup suppression). Design-tunable.
  */
-export const PERSON_ROTATION_TARGET_MULTIPLIER = 1.5;
-
-const PERSON_ROTATION_RAISED_TYPES: ReadonlySet<ExerciseType> = new Set([
-  ExerciseType.CLOZE,
-  ExerciseType.TRANSLATION,
-]);
+export const GIVE_UP_MIN_ATTEMPTS = 2;
 
 /**
- * Resolve the generation target for a cell. Pure; see the module doc for the
- * `override → table → fallback` order, plus the person-rotation raise above
- * (applied to the table/fallback value, never to an explicit override).
+ * Resolve the generation target for a cell. Pure. Order: an explicit
+ * `targetOverride` wins outright; otherwise the `(type, level)` table value (or
+ * the `TARGET_PER_CELL` fallback) is raised, if needed, to cover the largest
+ * single-axis floor sum in the cell's `coverageSpec`. One approved exercise
+ * realizes one value per axis, so an axis whose floors sum to F needs ≥ F
+ * exercises; taking the MAX over axes (never the product) guarantees headroom
+ * for the tightest axis without multiplying axes together. Replaces the former
+ * person-rotation 1.5× multiplier with exact floor arithmetic.
  */
 export function resolveCellTarget(cell: Cell): number {
   const override = cell.grammarPoint.targetOverride;
   if (override !== undefined) return override;
   const fromTable = CELL_TARGET_DEFAULTS[cell.exerciseType][cell.cefrLevel];
   const base = fromTable ?? TARGET_PER_CELL;
-  if (
-    cell.grammarPoint.personRotation &&
-    PERSON_ROTATION_RAISED_TYPES.has(cell.exerciseType)
-  ) {
-    return Math.ceil(base * PERSON_ROTATION_TARGET_MULTIPLIER);
+  const spec = cell.grammarPoint.coverageSpec;
+  if (!spec) return base;
+  let maxAxisFloorSum = 0;
+  for (const axis of spec.axes) {
+    let sum = 0;
+    for (const floor of Object.values(axis.floors)) sum += (floor as number) ?? 0;
+    if (sum > maxAxisFloorSum) maxAxisFloorSum = sum;
   }
-  return base;
+  return Math.max(base, maxAxisFloorSum);
 }

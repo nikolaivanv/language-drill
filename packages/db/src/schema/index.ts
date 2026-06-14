@@ -27,7 +27,7 @@ export type { UserPreferences, NewUserPreferences } from './users';
 export { skills, skillTopics } from './skills';
 export { exercises, exerciseTags } from './exercises';
 export type { Exercise } from './exercises';
-export { userExerciseHistory, spacedRepetitionCards } from './progress';
+export { userExerciseHistory, spacedRepetitionCards, userGrammarMastery } from './progress';
 export { practiceSessions } from './sessions';
 export {
   readEntries,

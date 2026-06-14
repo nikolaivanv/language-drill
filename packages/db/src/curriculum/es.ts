@@ -31,7 +31,7 @@ const { B1, B2 } = CefrLevel;
  * force a fresh attempt. No grammar entries changed in this bump. Prior
  * `2026-06-06` reflected the earlier ES B1/B2 audit. Mirrors the TR bump in #275.
  */
-export const CURRICULUM_VERSION_ES = '2026-06-13';
+export const CURRICULUM_VERSION_ES = '2026-06-14';
 
 const esCurriculum: readonly GrammarPoint[] = [
   /*
@@ -196,7 +196,11 @@ const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   {
     key: 'es-b1-present-subjunctive',
-    personRotation: true,
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 15, '2sg': 15, '3sg': 15, '1pl': 15, '3pl': 15 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Present subjunctive',
     description:
@@ -216,7 +220,11 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b1-conditional',
-    personRotation: true,
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 15, '2sg': 15, '3sg': 15, '1pl': 15, '3pl': 15 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Conditional simple',
     description:
@@ -305,7 +313,11 @@ const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   {
     key: 'es-b2-past-subjunctive',
-    personRotation: true,
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 15, '2sg': 15, '3sg': 15, '1pl': 15, '3pl': 15 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Past (imperfect) subjunctive',
     description:
@@ -324,7 +336,11 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b2-compound-tenses',
-    personRotation: true,
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 15, '2sg': 15, '3sg': 15, '1pl': 15, '3pl': 15 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Compound tenses with haber',
     description:
@@ -340,7 +356,11 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b2-conditional-perfect',
-    personRotation: true,
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 15, '2sg': 15, '3sg': 15, '1pl': 15, '3pl': 15 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Conditional perfect',
     description:
@@ -360,7 +380,11 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b2-complex-conditionals',
-    personRotation: true,
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 15, '2sg': 15, '3sg': 15, '1pl': 15, '3pl': 15 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Complex conditional sentences',
     description:
