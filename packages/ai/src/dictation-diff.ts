@@ -9,9 +9,9 @@
 
 export type DiffDifference = {
   id: number;
-  /** Lowercased, punctuation-trimmed token the learner produced ("" for a deletion). */
+  /** Raw (original case, original punctuation) token(s) the learner produced ("" for a deletion). */
   got: string;
-  /** Lowercased, punctuation-trimmed reference token ("" for an insertion). */
+  /** Raw (original case, original punctuation) reference token(s) ("" for an insertion). */
   expected: string;
 };
 
@@ -177,11 +177,11 @@ export function diffDictation(reference: string, typed: string): DictationDiff {
     } else {
       const got = region.ops
         .filter((o) => o.hyp !== undefined)
-        .map((o) => normToken(o.hyp!))
+        .map((o) => o.hyp!)
         .join(" ");
       const expected = region.ops
         .filter((o) => o.ref !== undefined)
-        .map((o) => normToken(o.ref!))
+        .map((o) => o.ref!)
         .join(" ");
       const id = nextId++;
       segments.push({ kind: "diff", id, got, expected });

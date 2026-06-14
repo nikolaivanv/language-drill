@@ -58,6 +58,24 @@ describe('gradeDictationAnswer', () => {
     expect(r.errors).toHaveLength(0); // accepted ⇒ not an EvaluationError
   });
 
+  it('accepted diffs reach adjusted 1.0 even with a capitalized reference', async () => {
+    const client = mockClient({
+      headline: 'h', summary: 's', listeningCefr: 'B2',
+      differences: [{ id: 1, kind: 'accepted', category: 'b/v', severity: null, note: 'n' }],
+      criteria: [
+        { id: 'phon', label: 'Phoneme discrimination', score: 0.9, cefr: 'B2', note: 'n' },
+        { id: 'bound', label: 'Word-boundary tracking', score: 0.8, cefr: 'B1', note: 'n' },
+      ],
+    });
+    const r = await gradeDictationAnswer(client, {
+      exercise: { ...content, referenceText: 'Vale la pena', sentences: ['Vale la pena'] },
+      userAnswer: 'bale la pena',
+      language: Language.ES,
+      difficulty: CefrLevel.B2,
+    });
+    expect(r.adjustedCharAccuracy).toBe(1);
+  });
+
   it('keeps genuine errors and maps them to EvaluationError', async () => {
     const client = mockClient({
       headline: 'h',

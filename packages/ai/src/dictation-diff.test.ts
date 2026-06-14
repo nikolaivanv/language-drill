@@ -38,4 +38,12 @@ describe('diffDictation', () => {
     const r = diffDictation('a b c d', 'a x c y');
     expect(r.differences.map((d) => d.id)).toEqual([1, 2]);
   });
+
+  it('preserves original case on difference expected/got (display fidelity)', () => {
+    // "Aún" (reference, accented + capital) vs "Aun" (typed, no accent)
+    const r = diffDictation('Aún', 'Aun');
+    expect(r.differences).toHaveLength(1);
+    expect(r.differences[0].expected).toBe('Aún');
+    expect(r.differences[0].got).toBe('Aun');
+  });
 });
