@@ -5,7 +5,7 @@ import { users } from './users';
 
 export const playlists = pgTable('playlists', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: text('user_id').references(() => users.id), // nullable — null = system playlist
+  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }), // nullable — null = system playlist
   name: text('name'),
   language: text('language'), // EN | ES | DE | TR
   createdAt: timestamp('created_at').defaultNow(),

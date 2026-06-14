@@ -389,7 +389,7 @@ The Clerk production instance must have a **JWT template** named `api` with thes
 
 The frontend requests tokens via `getToken({ template: 'api' })`. API Gateway validates the JWT against Clerk's JWKS endpoint.
 
-A **webhook** must be configured in Clerk pointing to `https://api.langdrill.app/webhooks/clerk` (subscribe to `user.created`). This creates the user row in the database on signup.
+A **webhook** must be configured in Clerk pointing to `https://api.langdrill.app/webhooks/clerk` (subscribe to `user.created` **and** `user.deleted`). `user.created` creates the user row on signup; `user.deleted` deletes it (FK cascades sweep all dependent rows — right-to-erasure).
 
 ---
 

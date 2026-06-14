@@ -338,6 +338,7 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
     afterEach(async () => {
       await cleanCellRows(db);
       delete process.env['MOCK_VALIDATION_OUTCOMES'];
+      delete process.env['MOCK_VALIDATION_PERSONS'];
       delete process.env['MOCK_VALIDATION_THROW_ORDINAL'];
       delete process.env['MOCK_VALIDATION_MALFORM_ORDINAL'];
       delete process.env['MOCK_CLAUDE_FIXTURES_DIR'];
@@ -946,6 +947,132 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
         } finally {
           rmSync(tmpFixturesDir, { recursive: true, force: true });
         }
+      },
+    );
+
+    // -----------------------------------------------------------------------
+    // Phase 1 coverage controller — per-person coverage_outcome tally.
+    //
+    // `args.personTargets` carries the scheduler's per-person codes.
+    // `runOneCell` tallies `{requested, approved}` per person: `requested`
+    // counts every targeted slot (incl. rejected drafts); `approved` counts
+    // auto-approved inserts by their REALIZED person (the validator's
+    // `coverage.person`, surfaced as `DraftOutcome.realizedPerson`). The
+    // realized person per draft is driven by the mock's `MOCK_VALIDATION_PERSONS`
+    // env var, which is keyed on a substring of the draft's `correctAnswer`
+    // (see parseValidationPersons) — not on validator-call ordinal.
+    // -----------------------------------------------------------------------
+
+    it(
+      'tallies coverage_outcome by requested target vs. realized person',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        // Self-contained validation fixtures (the shared __fixtures__ approved
+        // fixture omits the now-required `contextSpoilsAnswer`). `coverage` is
+        // injected per-draft below via MOCK_VALIDATION_PERSONS.
+        const tmpValidationDir = mkdtempSync(
+          join(tmpdir(), 'coverage-tally-validation-'),
+        );
+        try {
+          writeFileSync(
+            join(tmpValidationDir, 'cloze-approved.json'),
+            JSON.stringify({
+              qualityScore: 0.85,
+              ambiguous: false,
+              contextSpoilsAnswer: false,
+              levelMatch: true,
+              grammarPointMatch: true,
+              culturalIssues: [],
+              flaggedReasons: [],
+            }),
+          );
+          writeFileSync(
+            join(tmpValidationDir, 'cloze-rejected.json'),
+            JSON.stringify({
+              qualityScore: 0.3,
+              ambiguous: false,
+              contextSpoilsAnswer: false,
+              levelMatch: false,
+              grammarPointMatch: false,
+              culturalIssues: [],
+              flaggedReasons: [],
+            }),
+          );
+          process.env['MOCK_CLAUDE_VALIDATION_FIXTURES_DIR'] = tmpValidationDir;
+
+          // ordinal 0 → approved, realized '2pl'; ordinal 1 → rejected (no
+          // realized person); ordinal 2 → approved, realized '1pl'.
+          process.env['MOCK_VALIDATION_OUTCOMES'] = JSON.stringify({
+            '0': 'approved',
+            '1': 'rejected',
+            '2': 'approved',
+          });
+          // Person is keyed on each draft's `correctAnswer` (content-stable),
+          // so it tracks the draft regardless of the validator pool's dispatch
+          // order: CLOZE_FIXTURES[0] (`vengas`) → '2pl', [2] (`asistamos`) →
+          // '1pl'. [1] (`tenga`) is the rejected ordinal (no person key).
+          process.env['MOCK_VALIDATION_PERSONS'] = JSON.stringify({
+            vengas: '2pl',
+            asistamos: '1pl',
+          });
+
+          const result = await runOneCell({
+            db,
+            client: createMockAnthropicClient(),
+            cell: buildTestCell(),
+            args: {
+              count: 3,
+              batchSeed: 'phase-1-coverage-tally',
+              topicDomain: null,
+              maxCostUsd: 5,
+              // requested: 2pl twice, 1pl once.
+              personTargets: ['2pl', '2pl', '1pl'],
+            },
+            jobId: randomUUID(),
+            trigger: 'scheduled',
+          });
+
+          expect(result.coverageOutcome).toEqual({
+            person: {
+              '2pl': { requested: 2, approved: 1 },
+              '1pl': { requested: 1, approved: 1 },
+            },
+          });
+
+          // …and the same value is persisted to the audit row.
+          const jobs = await db
+            .select()
+            .from(generationJobs)
+            .where(eq(generationJobs.cellKey, TEST_CELL_KEY));
+          expect(jobs).toHaveLength(1);
+          expect(jobs[0].coverageOutcome).toEqual({
+            person: {
+              '2pl': { requested: 2, approved: 1 },
+              '1pl': { requested: 1, approved: 1 },
+            },
+          });
+        } finally {
+          rmSync(tmpValidationDir, { recursive: true, force: true });
+        }
+      },
+    );
+
+    it(
+      'leaves coverage_outcome null when the batch is not person-targeted',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        // No `args.personTargets` → blind rotation, no tally.
+        const result = await invokeRunOneCell(db, 3, 'phase-1-coverage-untargeted');
+
+        expect(result.status).toBe('succeeded');
+        expect(result.coverageOutcome).toBeNull();
+
+        const jobs = await db
+          .select()
+          .from(generationJobs)
+          .where(eq(generationJobs.cellKey, TEST_CELL_KEY));
+        expect(jobs).toHaveLength(1);
+        expect(jobs[0].coverageOutcome).toBeNull();
       },
     );
 

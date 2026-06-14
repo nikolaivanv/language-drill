@@ -93,6 +93,8 @@ export {
   GENERATION_SYSTEM_PROMPT_TEMPLATE,
   MAX_RECENT_STEMS_IN_PROMPT,
   PERSON_ROTATION_BY_LANGUAGE,
+  personCodesForLanguage,
+  personDisplayForCode,
   personForOrdinal,
   personRotationPhase,
 } from "./generation-prompts.js";

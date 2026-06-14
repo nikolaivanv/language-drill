@@ -33,12 +33,17 @@ import {
   type Cell,
   type Db,
 } from '@language-drill/db';
-import type { LearningLanguage } from '@language-drill/shared';
+import type {
+  CoverageOutcome,
+  LearningLanguage,
+  PersonCode,
+} from '@language-drill/shared';
 import { SendMessageBatchCommand, SQSClient } from '@aws-sdk/client-sqs';
 import { inArray, sql } from 'drizzle-orm';
 
 import type { GenerationJobMessage } from './job-message';
 import { resolveCellTarget } from './cell-targets';
+import { decideCoverageTargets } from './coverage-decision';
 import { decideEnqueue, type RecentJob } from './scheduler-decision';
 
 // ---------------------------------------------------------------------------
@@ -86,7 +91,7 @@ async function loadMostRecentSucceededJobPerCell(
   const result = await db.execute(sql`
     SELECT DISTINCT ON (cell_key)
            cell_key, approved_count, requested_count, dedup_given_up_count,
-           curriculum_version, finished_at
+           curriculum_version, coverage_outcome, finished_at
     FROM generation_jobs
     WHERE status = 'succeeded'
     ORDER BY cell_key, started_at DESC
@@ -98,6 +103,7 @@ async function loadMostRecentSucceededJobPerCell(
     requested_count: number;
     dedup_given_up_count: number;
     curriculum_version: string | null;
+    coverage_outcome: CoverageOutcome | null;
     finished_at: Date | string;
   };
 
@@ -109,11 +115,58 @@ async function loadMostRecentSucceededJobPerCell(
       requestedCount: row.requested_count,
       dedupGivenUpCount: row.dedup_given_up_count,
       curriculumVersion: row.curriculum_version,
+      coverageOutcome: row.coverage_outcome,
       finishedAt:
         row.finished_at instanceof Date
           ? row.finished_at
           : new Date(row.finished_at),
     });
+  }
+  return map;
+}
+
+// ---------------------------------------------------------------------------
+// loadApprovedPersonCountsPerCell
+// ---------------------------------------------------------------------------
+
+/**
+ * Phase 1: approved-pool person distribution per cell, for the coverage
+ * controller. Mirrors the Phase-0 /admin/pool-status aggregate, scoped to the
+ * approved pool. Keyed by `cell_key` → { personCode: count }.
+ */
+async function loadApprovedPersonCountsPerCell(
+  db: Db,
+): Promise<Map<string, Partial<Record<PersonCode, number>>>> {
+  const result = await db.execute(sql`
+    SELECT language, difficulty, type, grammar_point_key AS grammar_point_key,
+           coverage_tags->>'person' AS person,
+           COUNT(*)::int AS n
+    FROM exercises
+    WHERE review_status IN ('auto-approved', 'manual-approved')
+      AND coverage_tags->>'person' IS NOT NULL
+    GROUP BY language, difficulty, type, grammar_point_key, coverage_tags->>'person'
+  `);
+
+  type Row = {
+    language: string;
+    difficulty: string;
+    type: string;
+    grammar_point_key: string;
+    person: string;
+    n: number;
+  };
+  const rows = result.rows as unknown as Row[];
+  const map = new Map<string, Partial<Record<PersonCode, number>>>();
+  for (const row of rows) {
+    const key = buildCellKeyFromRow({
+      language: row.language,
+      difficulty: row.difficulty,
+      type: row.type,
+      grammarPointKey: row.grammar_point_key,
+    });
+    const bucket = map.get(key) ?? {};
+    bucket[row.person as PersonCode] = row.n;
+    map.set(key, bucket);
   }
   return map;
 }
@@ -178,6 +231,10 @@ export async function handler(): Promise<void> {
   //    R6 suppression checks (saturated-dedup + low-yield + curriculum-
   //    version-mismatch-clears-suppression). Uses `generation_jobs_cell_idx`.
   const recentJobByCell = await loadMostRecentSucceededJobPerCell(db);
+
+  // 4b. Phase 1 coverage controller: approved-pool person distribution per
+  //     cell. Feeds `decideCoverageTargets` for personRotation cells only.
+  const approvedPersonByCell = await loadApprovedPersonCountsPerCell(db);
 
   // 5. Decide per cell. `decideEnqueue` is pure — see scheduler-decision.ts
   //    for the precedence rules. Aggregate counters per skip reason so the
@@ -254,20 +311,55 @@ export async function handler(): Promise<void> {
 
   // 6. Build messages. `jobId = deterministicUuid(cellKey | batchSeed)` makes
   //    same-day re-fires produce identical IDs (Req 4.4 + Req 4.3.4).
-  const messages: GenerationJobMessage[] = undersized.map(({ cell, need }) => ({
-    jobId: deterministicUuid([cell.cellKey, batchSeed].join('|')),
-    trigger: 'scheduled',
-    spec: {
+  const messages: GenerationJobMessage[] = undersized.map(({ cell, need }) => {
+    const base = {
+      jobId: deterministicUuid([cell.cellKey, batchSeed].join('|')),
+      trigger: 'scheduled' as const,
+      spec: {
+        language: cell.language,
+        cefrLevel: cell.cefrLevel,
+        exerciseType: cell.exerciseType,
+        grammarPointKey: cell.grammarPoint.key,
+        topicDomain: null,
+        count: need,
+        batchSeed,
+      },
+      maxCostUsd: SCHEDULER_PER_CELL_COST_CAP_USD,
+    };
+
+    // Phase 1 coverage controller — person axis, personRotation cells only.
+    if (cell.grammarPoint.personRotation !== true) return base;
+
+    const recentJob = recentJobByCell.get(cell.cellKey) ?? null;
+    const curriculumVersionOnDisk =
+      CURRICULUM_VERSION_BY_LANGUAGE[cell.language as LearningLanguage];
+    // Give-up clears on a curriculum bump: only feed the recent outcome when its
+    // version still matches on-disk (same gate as decideEnqueue's suppression).
+    const recentOutcome =
+      recentJob && recentJob.curriculumVersion === curriculumVersionOnDisk
+        ? (recentJob.coverageOutcome?.person ?? null)
+        : null;
+
+    const { personTargets, suppressed } = decideCoverageTargets({
       language: cell.language,
-      cefrLevel: cell.cefrLevel,
-      exerciseType: cell.exerciseType,
-      grammarPointKey: cell.grammarPoint.key,
-      topicDomain: null,
-      count: need,
-      batchSeed,
-    },
-    maxCostUsd: SCHEDULER_PER_CELL_COST_CAP_USD,
-  }));
+      need,
+      approvedByPerson: approvedPersonByCell.get(cell.cellKey) ?? {},
+      recentOutcome,
+    });
+
+    if (suppressed.length > 0) {
+      log({
+        level: 'info',
+        cellKey: cell.cellKey,
+        suppressed,
+        message: 'coverage controller: person buckets given up',
+      });
+    }
+
+    if (personTargets.length === 0) return base; // blind fallback
+
+    return { ...base, spec: { ...base.spec, personTargets } };
+  });
 
   // 7. Post in batches of ≤ 10 (SQS hard limit). Aggregated jobIds per batch
   //    in the structured log line per Req 4.3.5.

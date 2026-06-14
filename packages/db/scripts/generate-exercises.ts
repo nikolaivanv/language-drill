@@ -354,6 +354,7 @@ async function mainLocal(args: ParsedArgs): Promise<void> {
         flaggedCount: 0,
         rejectedCount: 0,
         dedupGivenUpCount: 0,
+        coverageOutcome: null,
       };
     }
     if (totalCostUsd >= args.maxCostUsd) {
@@ -371,6 +372,7 @@ async function mainLocal(args: ParsedArgs): Promise<void> {
         flaggedCount: 0,
         rejectedCount: 0,
         dedupGivenUpCount: 0,
+        coverageOutcome: null,
       };
     }
     const result = await runOneCell({

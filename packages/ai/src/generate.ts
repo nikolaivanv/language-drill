@@ -21,6 +21,7 @@ import {
   Language,
   deterministicUuid,
   type GrammarPoint,
+  type PersonCode,
   type SentenceConstructionContent,
   type TranslationContent,
   type VocabRecallContent,
@@ -327,6 +328,12 @@ export type GenerationSpec = {
    * (task 15); `undefined` → every ordinal unseeded.
    */
   seedWords?: readonly (string | null)[];
+  /**
+   * Phase 1 coverage controller: explicit per-ordinal person code
+   * (`personTargets[ordinal]`) from the scheduler. `undefined` → blind ordinal
+   * rotation, byte-identical to pre-Phase-1. Length matches `count` when set.
+   */
+  personTargets?: readonly PersonCode[];
 };
 
 export type ExerciseDraft = {
@@ -760,6 +767,7 @@ export async function generateOneDraft(
     spec.topicDomain,
     spec.seedWords?.[ordinal] ?? null,
     spec.batchSeed,
+    spec.personTargets,
   );
   const tool = GENERATION_TOOL_BY_TYPE[spec.exerciseType];
 
