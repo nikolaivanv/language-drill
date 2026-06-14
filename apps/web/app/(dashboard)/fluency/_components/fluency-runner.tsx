@@ -61,7 +61,14 @@ export function FluencyRunner({ exercises, onSubmitAttempt, onDone }: FluencyRun
       const res = await onSubmitAttempt({ exerciseId: current.id, answer, latencyMs });
       setVerdict({ correct: res.correct, correctAnswer: res.correctAnswer });
     } catch {
-      // Network error — leave item answerable so the user can retry.
+      // Network error — leave the item answerable and restart the timer from
+      // now, so a retry's latency reflects fresh think-time rather than
+      // accumulating the time the frozen timer sat after the failed submit.
+      startRef.current = Date.now();
+      setElapsedMs(0);
+      if (!intervalRef.current) {
+        intervalRef.current = setInterval(() => setElapsedMs(Date.now() - startRef.current), 100);
+      }
     } finally {
       submittingRef.current = false;
     }
