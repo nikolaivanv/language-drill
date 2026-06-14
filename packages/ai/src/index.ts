@@ -257,3 +257,15 @@ export {
   __resetRegistryForTests,
 } from "./prompts-registry.js";
 export type { ResolvedPrompt } from "./prompts-registry.js";
+
+export {
+  buildCoverageSpecProposalUserPrompt,
+  parseCoverageSpecProposal,
+  proposeCoverageSpec,
+  renderCoverageSpecSnippet,
+  COVERAGE_SPEC_PROPOSAL_PROMPT_VERSION,
+  COVERAGE_SPEC_PROPOSAL_SYSTEM_PROMPT_TEMPLATE,
+  PROPOSE_COVERAGE_SPEC_TOOL,
+  PROPOSE_COVERAGE_SPEC_TOOL_NAME,
+} from "./coverage-spec-proposal.js";
+export type { CoverageSpecProposal } from "./coverage-spec-proposal.js";
