@@ -54,8 +54,14 @@ export const GENERATION_TEMPERATURE = 0.7;
 // Tool-name map
 // ---------------------------------------------------------------------------
 
-export const TOOL_NAME_BY_TYPE: Readonly<Record<ExerciseType, string>> =
-  Object.freeze({
+// Free writing is authored by hand (seeded), never produced by this generation
+// pipeline, so the generatable-type maps below exclude it. Indexing these maps
+// with an arbitrary `ExerciseType` therefore casts through their key type
+// (`keyof typeof …`), which is safe because the generation flow is only ever
+// reached for generatable types (guarded in `generateBatch`).
+export const TOOL_NAME_BY_TYPE: Readonly<
+  Record<Exclude<ExerciseType, ExerciseType.FREE_WRITING>, string>
+> = Object.freeze({
     cloze: "submit_cloze_exercise",
     translation: "submit_translation_exercise",
     vocab_recall: "submit_vocab_recall_exercise",
@@ -276,7 +282,7 @@ export const SENTENCE_CONSTRUCTION_GENERATION_TOOL: Anthropic.Tool = {
 };
 
 export const GENERATION_TOOL_BY_TYPE: Readonly<
-  Record<ExerciseType, Anthropic.Tool>
+  Record<Exclude<ExerciseType, ExerciseType.FREE_WRITING>, Anthropic.Tool>
 > = Object.freeze({
   cloze: CLOZE_GENERATION_TOOL,
   translation: TRANSLATION_GENERATION_TOOL,
@@ -761,7 +767,8 @@ export async function generateOneDraft(
     spec.seedWords?.[ordinal] ?? null,
     spec.batchSeed,
   );
-  const tool = GENERATION_TOOL_BY_TYPE[spec.exerciseType];
+  const tool =
+    GENERATION_TOOL_BY_TYPE[spec.exerciseType as keyof typeof GENERATION_TOOL_BY_TYPE];
 
   // Infrastructure-level failures (network, rate-limit, auth) propagate
   // — they're not per-ordinal data quality issues. Only the parse path
@@ -921,5 +928,10 @@ function parseToolInput(
       return parseGeneratedVocabRecallDraft(input, spec);
     case ExerciseType.SENTENCE_CONSTRUCTION:
       return parseGeneratedSentenceConstructionDraft(input, spec);
+    default:
+      // free_writing is authored by hand, not produced by this pipeline.
+      throw new Error(
+        `parseToolInput: unsupported exerciseType for generation: ${spec.exerciseType}`,
+      );
   }
 }

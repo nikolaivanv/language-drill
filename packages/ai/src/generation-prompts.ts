@@ -274,7 +274,7 @@ export function computeGenerationPromptVars(
       grammarPoint.name,
     ),
     recentStemsBlock: renderRecentStems(recentStems),
-    toolName: TOOL_NAME_BY_TYPE[exerciseType],
+    toolName: TOOL_NAME_BY_TYPE[exerciseType as keyof typeof TOOL_NAME_BY_TYPE],
   };
 }
 
@@ -445,7 +445,7 @@ export function buildGenerationUserPrompt(
   // phase 0, byte-identical to the unphased output for existing callers.
   batchSeed: string | null = null,
 ): string {
-  const toolName = TOOL_NAME_BY_TYPE[inputs.exerciseType];
+  const toolName = TOOL_NAME_BY_TYPE[inputs.exerciseType as keyof typeof TOOL_NAME_BY_TYPE];
   const domain = topicDomain ?? "mixed";
   // R5.5: a LOOSE constraint — anchor on the seed, but allow a similar-frequency
   // substitute when it doesn't fit the grammar point, so seeding doesn't trade
@@ -494,6 +494,10 @@ export function canonicalSurface(content: ExerciseContent): string {
       return `${normaliseSurface(content.expectedWord)}::${normaliseSurface(content.prompt)}`;
     case ExerciseType.SENTENCE_CONSTRUCTION:
       return normaliseSurface(content.prompt);
+    case ExerciseType.FREE_WRITING:
+      // free_writing is not produced by the pool pipeline, so it has no
+      // canonical surface for dedup.
+      throw new Error("canonicalSurface: free_writing is not pool-generated");
     default: {
       const _exhaustive: never = content;
       throw new Error(
