@@ -278,6 +278,27 @@ All AI calls cache the system prompt (language profile + exercise format spec). 
 - No user content included in shared pre-generated exercise pool (only system-generated content is shared)
 - CORS restricted to known origins
 
+### Streaming-annotate Function URL — threat model & risk acceptance
+
+The `/read/annotate` (skim) and `/read/annotate-span` (deep) endpoints are served
+by a Lambda **Function URL** with `AuthType: NONE` and `allowedOrigins: ["*"]`,
+*not* API Gateway, because the response is SSE (`InvokeMode: RESPONSE_STREAM`),
+which the API Gateway Lambda integration buffers. Authentication is therefore
+enforced **inside the handler** via `@clerk/backend` JWT verification, and CORS
+is a politeness filter, not an authorization boundary.
+
+- **Accepted:** unauthorized requests are rejected before reaching Claude, but
+  each rejection is still a billed Lambda invocation. Anyone with the URL can
+  drive invocation cost.
+- **Mitigations in place:** the handler verifies the Clerk JWT before any
+  expensive work; per-user daily usage caps gate the AI spend; the function has
+  a **reserved-concurrency cap** (default 10) so a flood can't exhaust the
+  account's unreserved concurrency pool and starve the main API; a CloudWatch
+  **invocation-flood alarm** (>1000 invocations/hour → SNS email) surfaces abuse;
+  and the account-wide **AWS Budget** backstops total cost.
+- **Future hardening:** put CloudFront (with OAC) in front of the Function URL to
+  add WAF / throttling, and move CORS to per-origin matching in the handler.
+
 ---
 
 ## 13. Decisions to Revisit

@@ -22,10 +22,27 @@ export const invitations = pgTable(
   }),
 );
 
-export const usageEvents = pgTable('usage_events', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: text('user_id').references(() => users.id).notNull(),
-  eventType: text('event_type').notNull(), // e.g. "ai_evaluation", "custom_exercise"
-  metadata: jsonb('metadata'),
-  createdAt: timestamp('created_at').defaultNow(),
-});
+export const usageEvents = pgTable(
+  'usage_events',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: text('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
+    eventType: text('event_type').notNull(), // e.g. "ai_evaluation", "custom_exercise"
+    metadata: jsonb('metadata'),
+    createdAt: timestamp('created_at').defaultNow(),
+  },
+  (table) => ({
+    // Hot path: the per-request daily-limit query filters on
+    // (user_id, event_type, created_at >= now-24h) on EVERY AI submission
+    // (exercises submit, read generate, annotate-stream). Without this index
+    // that's a sequential scan of an append-only table that grows with every
+    // AI call. Column order matches the query's equality-then-range predicate.
+    userEventTypeCreatedAtIdx: index('usage_events_user_id_event_type_created_at_idx').on(
+      table.userId,
+      table.eventType,
+      table.createdAt,
+    ),
+  }),
+);

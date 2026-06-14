@@ -13,6 +13,8 @@ import {
   ExerciseType,
   type GrammarPoint,
   Language,
+  PERSON_CODES,
+  type PersonCode,
 } from "@language-drill/shared";
 
 import { CEFR_LEVEL_DESCRIPTORS } from "./prompts.js";
@@ -353,6 +355,35 @@ export const PERSON_ROTATION_BY_LANGUAGE: Record<
   ],
 };
 
+/** Canonical `PersonCode` list for a language, derived from the rotation labels
+ *  (the leading token of each entry). ES yields 5 codes (no `2pl`); TR/DE 6. */
+export function personCodesForLanguage(
+  language: Exclude<Language, Language.EN>,
+): PersonCode[] {
+  return PERSON_ROTATION_BY_LANGUAGE[language].map((label) => {
+    const code = label.split(" ")[0];
+    if (!(PERSON_CODES as readonly string[]).includes(code)) {
+      throw new Error(
+        `personCodesForLanguage: rotation label "${label}" for ${language} has no valid leading PersonCode`,
+      );
+    }
+    return code as PersonCode;
+  });
+}
+
+/** Maps a `PersonCode` back to the language's display label for the prompt
+ *  directive (e.g. `"2pl"` → `"2pl (siz)"`). Falls back to the bare code if the
+ *  language has no such person (defensive; the controller never emits one). */
+export function personDisplayForCode(
+  language: Exclude<Language, Language.EN>,
+  code: PersonCode,
+): string {
+  const match = PERSON_ROTATION_BY_LANGUAGE[language].find(
+    (label) => label.split(" ")[0] === code,
+  );
+  return match ?? code;
+}
+
 /**
  * Deterministic per-batch rotation phase, derived from `batchSeed` (djb2
  * hash). Ordinals restart at 0 for every top-up batch, so without a phase a
@@ -400,9 +431,13 @@ function renderPersonBlock(
   inputs: GenerationPromptInputs,
   ordinal: number,
   batchSeed: string | null,
+  personTargets?: readonly PersonCode[],
 ): string {
   if (!inputs.grammarPoint.personRotation) return "";
-  const person = personForOrdinal(inputs.language, ordinal, batchSeed);
+  const explicit = personTargets?.[ordinal];
+  const person = explicit
+    ? personDisplayForCode(inputs.language, explicit)
+    : personForOrdinal(inputs.language, ordinal, batchSeed);
   return (
     `Target grammatical person for this draft: ${person}. ` +
     `The form the learner must produce MUST be marked for this person, and the visible sentence/context MUST make the person unambiguously recoverable (overt subject pronoun, possessor, vocative, or unambiguous context) WITHOUT revealing the conjugated form itself. ` +
@@ -444,6 +479,11 @@ export function buildGenerationUserPrompt(
   // Threaded by `generateOneDraft` from `spec.batchSeed`; `null`/absent →
   // phase 0, byte-identical to the unphased output for existing callers.
   batchSeed: string | null = null,
+  // Phase 1 coverage controller: explicit per-ordinal person code from the
+  // scheduler. When provided, `personTargets[ordinal]` overrides the blind
+  // ordinal rotation in `renderPersonBlock`. `undefined` → Phase 0 behaviour,
+  // byte-identical to pre-Phase-1 for callers that don't thread targets.
+  personTargets: readonly PersonCode[] | undefined = undefined,
 ): string {
   const toolName = TOOL_NAME_BY_TYPE[inputs.exerciseType];
   const domain = topicDomain ?? "mixed";
@@ -458,7 +498,7 @@ export function buildGenerationUserPrompt(
     inputs.exerciseType === ExerciseType.SENTENCE_CONSTRUCTION
       ? `Use prompt mode: ${sentenceConstructionModeForOrdinal(ordinal)}.\n\n`
       : "";
-  const personBlock = renderPersonBlock(inputs, ordinal, batchSeed);
+  const personBlock = renderPersonBlock(inputs, ordinal, batchSeed, personTargets);
   return `Produce exercise #${ordinal + 1}.
 
 Topic domain: ${domain}

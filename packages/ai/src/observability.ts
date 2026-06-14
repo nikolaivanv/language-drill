@@ -52,6 +52,17 @@ export type LlmEnv = "prod" | "dev";
  *   - `exerciseId`: validate (the draft id under validation)
  *   - `candidateCount`: annotate only
  */
+/**
+ * Phase-2: why the prompt registry served the in-repo fallback instead of the
+ * live Langfuse copy. Surfaced into trace metadata as `promptFallbackReason` so
+ * dashboards (and a CloudWatch metric-filter alarm) can separate the *expected*
+ * `keys_unset` case (Langfuse keys not configured for this env) from the
+ * operator-emergency cases (`timeout` / `fetch_error` — Langfuse reachable but
+ * the prompt fetch failed or the prompt vanished). Alarm on any non-`keys_unset`
+ * fallback in production.
+ */
+export type PromptFallbackReason = 'keys_unset' | 'timeout' | 'fetch_error';
+
 export interface LlmTraceContext {
   feature: LlmFeature;
   env: LlmEnv;
@@ -100,6 +111,13 @@ export interface LlmTraceContext {
    * single filter (`promptFallback = true`).
    */
   promptFallback?: boolean;
+  /**
+   * Phase-2: when `promptFallback` is true, *why* the fallback was taken
+   * (`keys_unset` / `timeout` / `fetch_error`). Set by `prompts-registry`'s
+   * `setResolvedPromptVersion`. Lets dashboards and the metric-filter alarm
+   * ignore the benign `keys_unset` case while catching the emergencies.
+   */
+  promptFallbackReason?: PromptFallbackReason;
   /**
    * Phase-2: live `TextPromptClient` for the resolved Langfuse prompt,
    * set by `prompts-registry`'s `setResolvedPromptClient` after a
@@ -215,11 +233,15 @@ export function getCurrentLlmTraceContext(): LlmTraceContext | undefined {
 export function setResolvedPromptVersion(
   version: string,
   fromFallback: boolean = false,
+  fallbackReason?: PromptFallbackReason,
 ): void {
   const store = als.getStore();
   if (!store) return;
   store.promptVersion = version;
   store.promptFallback = fromFallback;
+  // Only meaningful on the fallback path; clear it otherwise so a later
+  // successful resolution in the same frame doesn't leave a stale reason.
+  store.promptFallbackReason = fromFallback ? fallbackReason : undefined;
 }
 
 /**
@@ -475,6 +497,8 @@ function buildTraceMetadata(
   if (ctx.seedWord !== undefined) m.seedWord = ctx.seedWord;
   if (ctx.seedRank !== undefined) m.seedRank = ctx.seedRank;
   if (ctx.promptFallback !== undefined) m.promptFallback = ctx.promptFallback;
+  if (ctx.promptFallbackReason !== undefined)
+    m.promptFallbackReason = ctx.promptFallbackReason;
   // Dashboard-pivot dimensions: tag-and-metadata so both filter UIs and
   // group-by selectors work. Language is lowercased to match the tag
   // canonicalisation in `buildTraceTags` (Req 3 AC 1: `en` | `es` | …).

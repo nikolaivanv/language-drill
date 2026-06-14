@@ -50,6 +50,27 @@ export type CoverageTags = {
   sentenceType?: SentenceTypeCode;
 };
 
+/**
+ * Per-person generation outcome for one cell's batch (Pool Coverage Controller,
+ * Phase 1). `requested` = drafts the scheduler asked for that person this batch;
+ * `approved` = approved drafts whose *realized* person (validator `coverage`,
+ * the same value written to `coverageTags`) equals it. Counted by realized
+ * person so a draft targeted at `2pl` but rendered as `3sg` via the prompt's
+ * escape hatch does NOT count toward `2pl` — the `2pl` deficit genuinely didn't
+ * close. Drives the per-bucket give-up in `coverage-decision.ts`.
+ */
+export type PersonOutcome = Partial<
+  Record<PersonCode, { requested: number; approved: number }>
+>;
+
+/**
+ * Axis-keyed container persisted to `generation_jobs.coverage_outcome`. Nested
+ * under `person` so a future axis (Phase 2) is a data addition, not a schema
+ * change. NULL on legacy rows, non-`personRotation` cells, and cells that did no
+ * person targeting.
+ */
+export type CoverageOutcome = { person?: PersonOutcome };
+
 /** Allowed string values per axis — drives the validator tool enum AND the
  *  lenient parser (a value not in this set is dropped, never stored). Prefer
  *  iterating this over the individual *_CODES arrays so callers stay in sync. */

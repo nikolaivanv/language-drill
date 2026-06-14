@@ -5,6 +5,7 @@ import {
   EVAL_REQUEST_TIMEOUT_MS,
   EVAL_MAX_RETRIES,
 } from '@language-drill/ai';
+import { EXERCISE_ANSWER_MAX_CHARS } from '@language-drill/shared';
 import { ExerciseQuerySchema, SubmitAnswerSchema } from './exercises';
 import { getEffectivePlan } from '../usage/plan';
 import { checkGlobalCapacity } from '../usage/global-capacity';
@@ -15,7 +16,23 @@ import { checkGlobalCapacity } from '../usage/global-capacity';
 
 const mockLimit = vi.fn();
 const mockOrderBy = vi.fn(() => ({ limit: mockLimit }));
-const mockWhere = vi.fn(() => ({ orderBy: mockOrderBy, limit: mockLimit }));
+// `GET /exercises` now samples in two steps: (1) `await db.select({id}).from().where(...)`
+// for the candidate-id list (resolved by `mockCandidates`), then (2)
+// `db.select().from().where(eq(id)).limit(1)` for the chosen row (resolved by
+// `mockLimit`). So `where()` returns a thenable (candidate ids) that ALSO
+// carries `.limit`/`.orderBy` for the chained row/exercise lookups.
+const mockCandidates = vi.fn(async () => [{ id: 'abc-123' }]);
+// Return type is loose (`any`) so the POST /submit tests can override `where`
+// with the plain `{ orderBy, limit }` shape via `mockImplementationOnce`, while
+// the default returns a thenable (candidate ids) carrying `.limit`/`.orderBy`.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockWhere = vi.fn((): any => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = mockCandidates() as any;
+  p.limit = mockLimit;
+  p.orderBy = mockOrderBy;
+  return p;
+});
 const mockFrom = vi.fn(() => ({ where: mockWhere }));
 const mockSelect = vi.fn(() => ({ from: mockFrom }));
 
@@ -216,6 +233,20 @@ describe('SubmitAnswerSchema', () => {
     const result = SubmitAnswerSchema.safeParse({ answer: 42 });
     expect(result.success).toBe(false);
   });
+
+  it('accepts an answer at the max length boundary', () => {
+    const result = SubmitAnswerSchema.safeParse({
+      answer: 'a'.repeat(EXERCISE_ANSWER_MAX_CHARS),
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects an answer over the max length (token-cost guard)', () => {
+    const result = SubmitAnswerSchema.safeParse({
+      answer: 'a'.repeat(EXERCISE_ANSWER_MAX_CHARS + 1),
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -256,6 +287,7 @@ describe('GET /exercises', () => {
   });
 
   it('returns a random exercise matching language and difficulty', async () => {
+    mockCandidates.mockResolvedValueOnce([{ id: 'abc-123' }]);
     mockLimit.mockResolvedValueOnce([sampleExercise]);
 
     const res = await app.request('/exercises?language=EN&difficulty=B1', undefined, authEnv);
@@ -273,6 +305,22 @@ describe('GET /exercises', () => {
     expect(mockFreshFirstOrderBy).toHaveBeenCalledWith('user_123');
   });
 
+  it('samples via the candidate-id list, then fetches the chosen row by id (no ORDER BY random)', async () => {
+    // Two candidate ids returned by the index-covered id query; the route
+    // picks one in app code and fetches the full row by PK. We assert the
+    // candidate query ran and a full row came back — the SQL-level proof that
+    // ORDER BY random()'s full sort is gone lives in the manual EXPLAIN step.
+    mockCandidates.mockResolvedValueOnce([{ id: 'abc-123' }, { id: 'def-456' }]);
+    mockLimit.mockResolvedValueOnce([sampleExercise]);
+
+    const res = await app.request('/exercises?language=EN&difficulty=B1', undefined, authEnv);
+
+    expect(res.status).toBe(200);
+    expect(mockCandidates).toHaveBeenCalled();
+    const body = (await res.json()) as AnyJson;
+    expect(body.id).toBe('abc-123');
+  });
+
   it('filters by type when provided', async () => {
     mockLimit.mockResolvedValueOnce([{ ...sampleExercise, type: 'translation' }]);
 
@@ -287,8 +335,12 @@ describe('GET /exercises', () => {
     expect(body.type).toBe('translation');
   });
 
-  it('returns 404 with NO_EXERCISES code when no matches found', async () => {
-    mockLimit.mockResolvedValueOnce([]);
+  it('returns 404 with NO_EXERCISES when the candidate-id query is empty', async () => {
+    // The candidate-id query is the gate: empty ⇒ 404. The route returns
+    // before the chosen-row query, so we deliberately queue no `mockLimit`
+    // value here. (This still fails against an ORDER BY random()
+    // implementation, which ignores the candidate list and reads a row.)
+    mockCandidates.mockResolvedValueOnce([]);
 
     const res = await app.request('/exercises?language=TR&difficulty=C2', undefined, authEnv);
 

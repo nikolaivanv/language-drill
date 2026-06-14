@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { eq, and, gte, count } from 'drizzle-orm';
-import { Language, CefrLevel, ExerciseType } from '@language-drill/shared';
+import { Language, CefrLevel, ExerciseType, EXERCISE_ANSWER_MAX_CHARS } from '@language-drill/shared';
 import type { ExerciseContent } from '@language-drill/shared';
 import {
   exercises as exercisesTable,
@@ -44,7 +44,11 @@ export const ExerciseQuerySchema = z.object({
 
 /** Request body for POST /exercises/:id/submit */
 export const SubmitAnswerSchema = z.object({
-  answer: z.string().min(1),
+  // `.max()` caps token-cost exposure: the answer is interpolated raw into the
+  // evaluation prompt and sent to Claude, so an unbounded answer is a
+  // cost-amplification lever (and very long prompts push against the eval
+  // timeout). See EXERCISE_ANSWER_MAX_CHARS for the rationale.
+  answer: z.string().min(1).max(EXERCISE_ANSWER_MAX_CHARS),
   sessionId: z.string().uuid().optional(),
 });
 
@@ -82,6 +86,14 @@ exercises.get('/exercises', async (c) => {
     conditions.push(eq(exercisesTable.type, type));
   }
 
+  // Exposure control: order the matching pool slice so never-attempted items
+  // come first (NULLS FIRST), then least-recently-seen, with a random tiebreak
+  // within each group — a returning user isn't re-served an item until the
+  // fresh pool for this filter is exhausted. This supersedes the prior
+  // uniform-random-by-id sampling: exposure requires ordering by seen-state, so
+  // a single ordered LIMIT 1 is both correct and simpler than a two-step draw.
+  // freshFirstOrderBy binds userId as a parameter and correlates on
+  // exercises.id (see lib/exercise-filters.ts).
   const rows = await db
     .select()
     .from(exercisesTable)
@@ -215,6 +227,16 @@ exercises.post('/exercises/:id/submit', async (c) => {
     );
   }
 
+  // Per-user daily cap. This is a check-then-insert (SELECT count → … →
+  // INSERT the usage event on success), so two requests racing at the
+  // boundary can both read count = limit-1 and both proceed; a burst can
+  // overshoot the daily cap by roughly the concurrency factor. This is
+  // accepted at current scale (single-user/low-volume) the same way
+  // `usage/global-capacity.ts` accepts its 60s cache drift — the cap is a
+  // cost guardrail, not a billing-grade meter. A hard guarantee would need an
+  // atomic Upstash INCR or an insert-first transaction (the latter also bills
+  // failed Claude calls); revisit if abuse or multi-user load makes the
+  // overshoot material.
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const [{ count: todayCount }] = await db
     .select({ count: count() })

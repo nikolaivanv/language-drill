@@ -1,5 +1,5 @@
 {
-  "id": "a602d854-6a37-4324-84ca-d777c2ee19b2",
+  "id": "47004144-7f32-479e-80c1-7f365e3f1404",
   "prevId": "5276e6f6-9846-42d4-97e3-dc3404963063",
   "version": "7",
   "dialect": "postgresql",
@@ -748,7 +748,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -1196,7 +1196,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -1529,7 +1529,35 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "usage_events_user_id_event_type_created_at_idx": {
+          "name": "usage_events_user_id_event_type_created_at_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "event_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "usage_events_user_id_users_id_fk": {
           "name": "usage_events_user_id_users_id_fk",
@@ -1541,7 +1569,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -1669,7 +1697,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "user_exercise_history_exercise_id_exercises_id_fk": {
@@ -1700,111 +1728,6 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.user_grammar_mastery": {
-      "name": "user_grammar_mastery",
-      "schema": "",
-      "columns": {
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "language": {
-          "name": "language",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "grammar_point_key": {
-          "name": "grammar_point_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "mastery_score": {
-          "name": "mastery_score",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "confidence": {
-          "name": "confidence",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "evidence_count": {
-          "name": "evidence_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "last_practiced_at": {
-          "name": "last_practiced_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "user_grammar_mastery_user_language_idx": {
-          "name": "user_grammar_mastery_user_language_idx",
-          "columns": [
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "language",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "user_grammar_mastery_user_id_users_id_fk": {
-          "name": "user_grammar_mastery_user_id_users_id_fk",
-          "tableFrom": "user_grammar_mastery",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "user_grammar_mastery_user_id_grammar_point_key_pk": {
-          "name": "user_grammar_mastery_user_id_grammar_point_key_pk",
-          "columns": [
-            "user_id",
-            "grammar_point_key"
-          ]
-        }
-      },
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
@@ -1858,7 +1781,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },

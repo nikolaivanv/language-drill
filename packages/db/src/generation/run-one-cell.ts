@@ -29,7 +29,13 @@ import {
   type ClaudeUsageBreakdown,
   type GenerationSpec,
 } from '@language-drill/ai';
-import { ExerciseType, type LearningLanguage } from '@language-drill/shared';
+import {
+  ExerciseType,
+  type CoverageOutcome,
+  type LearningLanguage,
+  type PersonCode,
+  type PersonOutcome,
+} from '@language-drill/shared';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 
 import type { Db } from '../client';
@@ -186,6 +192,12 @@ export type CellResult = {
    * the structured log (`summarizeResult`). Always `false` on the failed path.
    */
   earlyBailed: boolean;
+  /**
+   * Per-person `{requested, approved}` tally for a person-targeted batch (Phase
+   * 1). `null` when the cell did no person targeting (no `args.personTargets`).
+   * Persisted to `generation_jobs.coverage_outcome`.
+   */
+  coverageOutcome: CoverageOutcome | null;
 };
 
 /**
@@ -201,6 +213,12 @@ export type RunOneCellInput = {
     batchSeed: string;
     topicDomain: string | null;
     maxCostUsd: number;
+    /**
+     * Phase 1 coverage controller: explicit per-ordinal person codes from the
+     * scheduler (length === count). `undefined` → blind ordinal rotation and no
+     * coverage_outcome tally (CLI/admin and non-personRotation cells).
+     */
+    personTargets?: readonly PersonCode[];
   };
   /** Caller-supplied audit-row id. CLI: `randomUUID()`. Scheduler: `deterministicUuid([cellKey, batchSeed].join('|'))`. */
   jobId: string;
@@ -408,6 +426,22 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
   // success return below.
   let earlyBailed = false;
   const rejectionReasonCounts: Record<string, number> = {};
+  // Phase 1 per-person tally. `requested` counts every targeted ordinal slot;
+  // `approved` counts approved drafts by their REALIZED person (DraftOutcome
+  // .realizedPerson). Only built when the scheduler supplied targets.
+  const personOutcome: PersonOutcome = {};
+  const personTargets = args.personTargets;
+  if (personTargets) {
+    for (const code of personTargets) {
+      const bucket = (personOutcome[code] ??= { requested: 0, approved: 0 });
+      bucket.requested += 1;
+    }
+  }
+  const creditApproved = (person: PersonCode | undefined): void => {
+    if (!personTargets || !person) return;
+    const bucket = (personOutcome[person] ??= { requested: 0, approved: 0 });
+    bucket.approved += 1;
+  };
   const generatedAt = new Date();
 
   // Built inside the try so any failure in the priors query routes through
@@ -453,6 +487,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       batchSeed: args.batchSeed,
       priorPoolSurfaces,
       seedWords,
+      personTargets: args.personTargets,
     };
 
     const batch = await runGeneratorPool({
@@ -540,6 +575,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
         case 'inserted-approved':
           approvedCount += 1;
           insertedCount += 1;
+          creditApproved(outcome.realizedPerson);
           break;
         case 'inserted-flagged':
           flaggedCount += 1;
@@ -562,6 +598,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
           insertedCount += 1;
           if (outcome.terminalReviewStatus === 'auto-approved') {
             approvedCount += 1;
+            creditApproved(outcome.realizedPerson);
           } else {
             flaggedCount += 1;
           }
@@ -589,6 +626,13 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     });
   }
 
+  // NULL (not `{}`) when no person targeting happened, so the column reads as
+  // "not a coverage-targeted batch" rather than an empty object.
+  const coverageOutcome: CoverageOutcome | null =
+    personTargets && Object.keys(personOutcome).length > 0
+      ? { person: personOutcome }
+      : null;
+
   const costUsd = estimateCostUsd(combinedUsage);
   const totalInputTokens =
     combinedUsage.inputTokens +
@@ -613,6 +657,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       // "no rejections" rather than an empty object on inspection.
       rejectionReasonCounts:
         Object.keys(rejectionReasonCounts).length > 0 ? rejectionReasonCounts : null,
+      coverageOutcome,
       inputTokensUsed: totalInputTokens,
       outputTokensUsed: combinedUsage.outputTokens,
       costUsdEstimate: costUsd.toFixed(4),
@@ -638,6 +683,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     validatorParseFailedCount,
     rejectionReasonCounts,
     earlyBailed,
+    coverageOutcome,
   };
 }
 
@@ -692,5 +738,7 @@ async function failClosed(opts: {
     rejectionReasonCounts: {},
     // A failed cell never early-bailed — the bail is a success-path concept.
     earlyBailed: false,
+    // A failed batch records no coverage tally.
+    coverageOutcome: null,
   };
 }

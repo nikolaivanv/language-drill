@@ -75,6 +75,16 @@ export const CELL_TARGET_DEFAULTS: Record<
  */
 export const PERSON_ROTATION_TARGET_MULTIPLIER = 1.5;
 
+/**
+ * Phase 1 coverage controller — a person bucket is **given up** (excluded from
+ * the deficit) when its most recent targeted batch asked for it at least this
+ * many times and produced zero approved drafts realizing it. Two honest
+ * attempts before suppression; person buckets are small, so a single-attempt
+ * miss is too noisy. Cleared by a CURRICULUM_VERSION bump (same gate as the
+ * cell-level low-yield / saturated-dedup suppression). Design-tunable.
+ */
+export const GIVE_UP_MIN_ATTEMPTS = 2;
+
 const PERSON_ROTATION_RAISED_TYPES: ReadonlySet<ExerciseType> = new Set([
   ExerciseType.CLOZE,
   ExerciseType.TRANSLATION,
