@@ -95,8 +95,6 @@ export {
   PERSON_ROTATION_BY_LANGUAGE,
   personCodesForLanguage,
   personDisplayForCode,
-  personForOrdinal,
-  personRotationPhase,
 } from "./generation-prompts.js";
 export type { GenerationPromptInputs } from "./generation-prompts.js";
 

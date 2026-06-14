@@ -9,6 +9,8 @@
 
 import {
   type CefrLevel,
+  type CoverageAxis,
+  type CoverageTarget,
   type ExerciseContent,
   ExerciseType,
   type GrammarPoint,
@@ -384,65 +386,46 @@ export function personDisplayForCode(
   return match ?? code;
 }
 
-/**
- * Deterministic per-batch rotation phase, derived from `batchSeed` (djb2
- * hash). Ordinals restart at 0 for every top-up batch, so without a phase a
- * cell that tops up by 2–3 drafts per night would generate 1sg/2sg/3sg
- * forever and starve the paradigm tail (1pl/2pl/3pl). The nightly scheduler's
- * `batchSeed = scheduled-${YYYY-MM-DD}` varies per run, so the start person
- * shifts night to night and small batches cover the full cycle in
- * expectation — while staying deterministic for a given batch (same
- * batchSeed + ordinal → same person, matching the pipeline's idempotent
- * draft-ID design). `null`/absent → phase 0 (byte-identical to pre-phase
- * behaviour for callers that don't thread a seed).
- */
-export function personRotationPhase(
-  batchSeed: string | null | undefined,
-  cycleLength: number,
-): number {
-  if (!batchSeed || cycleLength <= 0) return 0;
-  let hash = 5381;
-  for (let i = 0; i < batchSeed.length; i++) {
-    hash = ((hash << 5) + hash + batchSeed.charCodeAt(i)) >>> 0;
-  }
-  return hash % cycleLength;
-}
-
-/** Deterministic person rotation so a batch covers the whole paradigm. */
-export function personForOrdinal(
-  language: Exclude<Language, Language.EN>,
-  ordinal: number,
-  batchSeed: string | null = null,
-): string {
-  const persons = PERSON_ROTATION_BY_LANGUAGE[language];
-  const phase = personRotationPhase(batchSeed, persons.length);
-  return persons[(phase + ordinal) % persons.length];
-}
+/** Non-person directive templates. Person is handled separately (it needs the
+ *  per-language display label + the grammar-point escape hatch). */
+const COVERAGE_DIRECTIVE_BY_AXIS: Record<
+  Exclude<CoverageAxis, "person">,
+  (value: string) => string
+> = {
+  polarity: (v) =>
+    `The target sentence MUST be ${v} (${v === "negative" ? "negated" : "a positive statement"}).`,
+  wordClass: (v) => `The target word the learner must produce MUST be a ${v}.`,
+  sentenceType: (v) => `The target sentence MUST be ${v} in clause type.`,
+};
 
 /**
- * Person directive for the per-draft user prompt. Empty string when the
- * grammar point is not flagged for rotation. Like the seed-word block, the
- * constraint is LOOSE at the edges (escape hatch for person/point conflicts)
- * so rotation doesn't trade 3sg over-concentration for quality rejections —
- * but unlike the seed word, the fallback is the *nearest* person, not a free
- * choice, so the batch-level distribution survives.
+ * Render the per-draft coverage directive block (Pool Coverage Controller,
+ * Phase 2). One sentence per axis present in `coverageTargets[ordinal]`. Returns
+ * "" when there is no target for the ordinal — there is no blind fallback; the
+ * scheduler always supplies targets for a spec'd cell. The block lives in the
+ * UNCACHED per-draft user prompt, so the cached system prefix is unchanged.
  */
-function renderPersonBlock(
+function renderCoverageBlock(
   inputs: GenerationPromptInputs,
   ordinal: number,
-  batchSeed: string | null,
-  personTargets?: readonly PersonCode[],
+  coverageTargets?: readonly CoverageTarget[],
 ): string {
-  if (!inputs.grammarPoint.personRotation) return "";
-  const explicit = personTargets?.[ordinal];
-  const person = explicit
-    ? personDisplayForCode(inputs.language, explicit)
-    : personForOrdinal(inputs.language, ordinal, batchSeed);
-  return (
-    `Target grammatical person for this draft: ${person}. ` +
-    `The form the learner must produce MUST be marked for this person, and the visible sentence/context MUST make the person unambiguously recoverable (overt subject pronoun, possessor, vocative, or unambiguous context) WITHOUT revealing the conjugated form itself. ` +
-    `If ${inputs.grammarPoint.name} cannot naturally express this person, use the closest natural person instead.\n\n`
-  );
+  const target = coverageTargets?.[ordinal];
+  if (!target) return "";
+  const parts: string[] = [];
+  if (target.person) {
+    const person = personDisplayForCode(inputs.language, target.person as PersonCode);
+    parts.push(
+      `Target grammatical person for this draft: ${person}. ` +
+        `The form the learner must produce MUST be marked for this person, and the visible sentence/context MUST make the person unambiguously recoverable (overt subject pronoun, possessor, vocative, or unambiguous context) WITHOUT revealing the conjugated form itself. ` +
+        `If ${inputs.grammarPoint.name} cannot naturally express this person, use the closest natural person instead.`,
+    );
+  }
+  for (const axis of ["polarity", "wordClass", "sentenceType"] as const) {
+    const v = target[axis];
+    if (v) parts.push(COVERAGE_DIRECTIVE_BY_AXIS[axis](v));
+  }
+  return parts.length > 0 ? parts.join(" ") + "\n\n" : "";
 }
 
 // ---------------------------------------------------------------------------
@@ -475,15 +458,10 @@ export function buildGenerationUserPrompt(
   // across the batch. `null`/absent → unseeded (byte-identical to the prior
   // output, preserving back-compat for existing callers).
   seedWord: string | null = null,
-  // Rotation-phase source for `renderPersonBlock` (see `personRotationPhase`).
-  // Threaded by `generateOneDraft` from `spec.batchSeed`; `null`/absent →
-  // phase 0, byte-identical to the unphased output for existing callers.
-  batchSeed: string | null = null,
-  // Phase 1 coverage controller: explicit per-ordinal person code from the
-  // scheduler. When provided, `personTargets[ordinal]` overrides the blind
-  // ordinal rotation in `renderPersonBlock`. `undefined` → Phase 0 behaviour,
-  // byte-identical to pre-Phase-1 for callers that don't thread targets.
-  personTargets: readonly PersonCode[] | undefined = undefined,
+  // Phase 2 coverage controller: explicit per-ordinal axis targets
+  // (`coverageTargets[ordinal]`) from the scheduler. `undefined` → no coverage
+  // directive (CLI/admin and non-spec cells). Length matches `count` when set.
+  coverageTargets: readonly CoverageTarget[] | undefined = undefined,
 ): string {
   const toolName = TOOL_NAME_BY_TYPE[inputs.exerciseType];
   const domain = topicDomain ?? "mixed";
@@ -498,12 +476,12 @@ export function buildGenerationUserPrompt(
     inputs.exerciseType === ExerciseType.SENTENCE_CONSTRUCTION
       ? `Use prompt mode: ${sentenceConstructionModeForOrdinal(ordinal)}.\n\n`
       : "";
-  const personBlock = renderPersonBlock(inputs, ordinal, batchSeed, personTargets);
+  const coverageBlock = renderCoverageBlock(inputs, ordinal, coverageTargets);
   return `Produce exercise #${ordinal + 1}.
 
 Topic domain: ${domain}
 
-${modeBlock}${personBlock}${seedBlock}Use the ${toolName} tool.`;
+${modeBlock}${coverageBlock}${seedBlock}Use the ${toolName} tool.`;
 }
 
 // ---------------------------------------------------------------------------

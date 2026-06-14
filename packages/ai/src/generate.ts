@@ -16,12 +16,12 @@ import type Anthropic from "@anthropic-ai/sdk";
 import {
   type CefrLevel,
   type ClozeContent,
+  type CoverageTarget,
   type ExerciseContent,
   ExerciseType,
   Language,
   deterministicUuid,
   type GrammarPoint,
-  type PersonCode,
   type SentenceConstructionContent,
   type TranslationContent,
   type VocabRecallContent,
@@ -329,11 +329,11 @@ export type GenerationSpec = {
    */
   seedWords?: readonly (string | null)[];
   /**
-   * Phase 1 coverage controller: explicit per-ordinal person code
-   * (`personTargets[ordinal]`) from the scheduler. `undefined` → blind ordinal
-   * rotation, byte-identical to pre-Phase-1. Length matches `count` when set.
+   * Phase 2 coverage controller: explicit per-ordinal axis targets
+   * (`coverageTargets[ordinal]`) from the scheduler. `undefined` → no coverage
+   * directive (CLI/admin and non-spec cells). Length matches `count` when set.
    */
-  personTargets?: readonly PersonCode[];
+  coverageTargets?: readonly CoverageTarget[];
 };
 
 export type ExerciseDraft = {
@@ -766,8 +766,7 @@ export async function generateOneDraft(
     ordinal,
     spec.topicDomain,
     spec.seedWords?.[ordinal] ?? null,
-    spec.batchSeed,
-    spec.personTargets,
+    spec.coverageTargets,
   );
   const tool = GENERATION_TOOL_BY_TYPE[spec.exerciseType];
 
