@@ -20,6 +20,7 @@ import { Langfuse } from "langfuse";
 import { CefrLevel, ExerciseType, Language } from "@language-drill/shared";
 import { ANNOTATE_TOOL_NAME } from "./annotate.js";
 import { EVALUATION_TOOL_NAME } from "./evaluate.js";
+import { FREE_WRITING_EVAL_TOOL_NAME } from "./free-writing-evaluate.js";
 import { READ_SPAN_TOOL_NAME } from "./read-span.js";
 import { TOOL_NAME_BY_TYPE } from "./generate.js";
 import { THEORY_TOOL_NAME } from "./theory-generate.js";
@@ -1344,6 +1345,7 @@ describe("TOOL_NAME_TO_FEATURE", () => {
   // — a rename in either place fails loudly.
   const expected: ReadonlyArray<readonly [string, LlmFeature]> = [
     [EVALUATION_TOOL_NAME, "evaluate"],
+    [FREE_WRITING_EVAL_TOOL_NAME, "free-writing-eval"],
     [ANNOTATE_TOOL_NAME, "annotate"],
     [READ_SPAN_TOOL_NAME, "annotate-span"],
     [TOOL_NAME_BY_TYPE.cloze, "generate"],
