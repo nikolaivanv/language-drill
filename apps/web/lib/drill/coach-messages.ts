@@ -17,6 +17,8 @@ function idleMessage(type: ExerciseType): string {
       return "say it from memory";
     case ExerciseType.SENTENCE_CONSTRUCTION:
       return "build a full sentence · use the prompt";
+    case ExerciseType.DICTATION:
+      return "listen carefully · type what you hear";
     default: {
       const _exhaustive: never = type;
       throw new Error(`unknown ExerciseType: ${String(_exhaustive)}`);
@@ -80,6 +82,18 @@ function evaluatedMessage(type: ExerciseType, score: number): string {
           return "the idea's there · tighten the structure";
         case "reset":
           return "tricky structure · let's build it back up";
+      }
+      break;
+    case ExerciseType.DICTATION:
+      switch (tier) {
+        case "praise":
+          return "every word landed · great ear";
+        case "light":
+          return "almost perfect · a small word slipped";
+        case "encourage":
+          return "good effort · listen for the missing parts";
+        case "reset":
+          return "tough passage · let's try it again slowly";
       }
       break;
     default: {

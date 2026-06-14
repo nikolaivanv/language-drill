@@ -33,6 +33,7 @@ const TYPE_LABELS: Record<ExerciseType, string> = {
   [ExerciseType.TRANSLATION]: 'translation',
   [ExerciseType.VOCAB_RECALL]: 'vocabulary recall',
   [ExerciseType.SENTENCE_CONSTRUCTION]: 'sentence construction',
+  [ExerciseType.DICTATION]: 'dictation',
 };
 
 export function typeLabel(type: ExerciseType): string {

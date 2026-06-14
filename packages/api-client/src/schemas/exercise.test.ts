@@ -3,6 +3,8 @@ import {
   ExerciseResponseSchema,
   EvaluationResultSchema,
   ApiErrorSchema,
+  DictationResultSchema,
+  parseSubmitResult,
 } from './exercise';
 
 describe('ExerciseResponseSchema', () => {
@@ -111,6 +113,31 @@ describe('EvaluationResultSchema', () => {
       errors: [{ ...validEvaluation.errors[0], severity: 'critical' }],
     };
     expect(() => EvaluationResultSchema.parse(data)).toThrow();
+  });
+});
+
+describe('DictationResultSchema', () => {
+  const dict = {
+    kind: 'dictation',
+    score: 0.97, grammarAccuracy: 0.97, vocabularyRange: 'B2', taskAchievement: 0.95,
+    feedback: 's', errors: [], estimatedCefrEvidence: 'B2',
+    rawCharAccuracy: 0.94, adjustedCharAccuracy: 0.97, wordAccuracy: 0.95,
+    listeningCefr: 'B2', headline: 'h', summary: 's',
+    diff: [{ kind: 'match', text: 'hola' }],
+    differences: [], criteria: [{ id: 'char', label: 'Character accuracy', score: 0.97, cefr: 'C1', note: 'n' }],
+  };
+
+  it('parses a dictation result', () => {
+    expect(DictationResultSchema.parse(dict).kind).toBe('dictation');
+  });
+
+  it('parseSubmitResult routes on kind', () => {
+    expect(parseSubmitResult(dict).kind).toBe('dictation');
+    const evalResult = {
+      score: 0.8, grammarAccuracy: 0.8, vocabularyRange: 'B1', taskAchievement: 0.8,
+      feedback: 'f', errors: [], estimatedCefrEvidence: 'B1',
+    };
+    expect('kind' in parseSubmitResult(evalResult)).toBe(false);
   });
 });
 
