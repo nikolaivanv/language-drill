@@ -169,6 +169,13 @@
       "when": 1781420469543,
       "tag": "0023_oval_layla_miller",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1781424779151,
+      "tag": "0024_brown_alex_wilder",
+      "breakpoints": true
     }
   ]
 }

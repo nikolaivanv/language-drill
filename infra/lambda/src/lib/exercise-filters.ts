@@ -12,6 +12,9 @@ import { inArray, sql } from 'drizzle-orm';
  *   - routes/sessions.ts:  POST /sessions (pool sample)
  *   - routes/sessions.ts:  GET /sessions/today Path B (raw-SQL UNION-ALL —
  *     adds the predicate inline rather than calling this helper)
+ *   - routes/fluency.ts:   POST /fluency/attempts (exercise lookup)
+ *   - routes/fluency.ts:   POST /fluency/session (raw-SQL eligibility query —
+ *     adds the predicate inline rather than calling this helper)
  *
  * Sites that intentionally do NOT filter:
  *   - routes/sessions.ts:  GET /sessions/today Path A (manifest hydration)

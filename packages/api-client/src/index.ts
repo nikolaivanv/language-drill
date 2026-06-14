@@ -296,3 +296,25 @@ export {
   type UpdateVocabularyWordParams,
   type DeleteVocabularyWordParams,
 } from './hooks/useReviewMutations';
+export {
+  FluencySessionRequestSchema,
+  type FluencySessionRequest,
+  FluencySessionResponseSchema,
+  type FluencySessionResponse,
+  FluencyAttemptRequestSchema,
+  type FluencyAttemptRequest,
+  FluencyAttemptResponseSchema,
+  type FluencyAttemptResponse,
+  FluencyWeekBucketSchema,
+  type FluencyWeekBucket,
+  FluencyStatsResponseSchema,
+  type FluencyStatsResponse,
+} from './schemas/fluency';
+export {
+  useFluencySession,
+  useSubmitFluencyAttempt,
+  useFluencyStats,
+  type UseFluencySessionOptions,
+  type UseSubmitFluencyAttemptOptions,
+  type UseFluencyStatsParams,
+} from './hooks/useFluency';

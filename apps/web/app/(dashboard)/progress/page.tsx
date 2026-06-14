@@ -7,6 +7,7 @@ import {
   useLanguageProfiles,
   useProgressRadar,
   useProgressHeatmap,
+  useFluencyStats,
   type RadarAxis,
 } from '@language-drill/api-client';
 import { useActiveLanguage } from '../../../components/shell/active-language-provider';
@@ -14,6 +15,7 @@ import { ProgressHeader } from './_components/progress-header';
 import { ProgressTabs } from './_components/progress-tabs';
 import { ShapeTab } from './_components/shape-tab';
 import { HeatmapTab } from './_components/heatmap-tab';
+import { FluencyTab } from './_components/fluency-tab';
 import { HistoryTab } from './_components/history-tab';
 import { ProgressEmptyState } from './_components/progress-empty-state';
 import { useTabUrlState } from './_lib/use-tab-url-state';
@@ -28,6 +30,7 @@ export default function ProgressPage() {
   // Both queries fire in parallel on mount so switching tabs is instant.
   const radar = useProgressRadar({ fetchFn, language: activeLanguage });
   const heatmap = useProgressHeatmap({ fetchFn, language: activeLanguage });
+  const fluency = useFluencyStats({ fetchFn, language: activeLanguage });
 
   // Read proficiency level from the language-profiles cache rather than
   // refetching — the dashboard layout already populated it.
@@ -73,6 +76,16 @@ export default function ProgressPage() {
             error={heatmap.error}
             onRetry={() => {
               void heatmap.refetch();
+            }}
+          />
+        )}
+        {tab === 'fluency' && (
+          <FluencyTab
+            data={fluency.data}
+            isLoading={fluency.isLoading}
+            error={fluency.error}
+            onRetry={() => {
+              void fluency.refetch();
             }}
           />
         )}
