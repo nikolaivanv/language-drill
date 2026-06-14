@@ -122,3 +122,13 @@
 .fw-compare .col.improved { border-color: var(--color-ok); }
 .fw-compare .col.improved .head { background: var(--color-ok-soft); }
 .fw-compare .col .body { padding: 20px 22px; }
+
+/* ── Chip (small pill tag) — used by the brief's "feeds" list and the
+   featured entry card. Ported from the prototype's hifi/styles.css. ──── */
+.chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: var(--radius-r-pill);
+  border: 1px solid var(--color-rule); background: var(--color-card);
+  font-size: 11px; font-weight: 500; color: var(--color-ink-soft);
+}
+.chip.accent { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent-2); }
