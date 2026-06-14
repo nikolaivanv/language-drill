@@ -3,7 +3,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { eq, and, sql, gte, count } from 'drizzle-orm';
 import { Language, CefrLevel, ExerciseType } from '@language-drill/shared';
-import type { ExerciseContent } from '@language-drill/shared';
+import type { DictationContent, ExerciseContent } from '@language-drill/shared';
 import {
   exercises as exercisesTable,
   practiceSessions,
@@ -14,7 +14,9 @@ import {
 import {
   createObservedClaudeClient,
   evaluateAnswer,
+  gradeDictationAnswer,
   EVALUATION_SYSTEM_PROMPT_VERSION,
+  DICTATION_EVAL_PROMPT_VERSION,
   EVAL_REQUEST_TIMEOUT_MS,
   EVAL_MAX_RETRIES,
   withLlmTrace,
@@ -253,11 +255,16 @@ exercises.post('/exercises/:id/submit', async (c) => {
       timeout: EVAL_REQUEST_TIMEOUT_MS,
       maxRetries: EVAL_MAX_RETRIES,
     });
+
+    const isDictation = exercise.type === ExerciseType.DICTATION;
+
     const result = await withLlmTrace(
       {
         feature: 'evaluate',
         env: (process.env.LANGFUSE_ENV ?? 'dev') as 'prod' | 'dev',
-        promptVersion: EVALUATION_SYSTEM_PROMPT_VERSION,
+        promptVersion: isDictation
+          ? DICTATION_EVAL_PROMPT_VERSION
+          : EVALUATION_SYSTEM_PROMPT_VERSION,
         requestId,
         userId,
         submissionId,
@@ -269,13 +276,20 @@ exercises.post('/exercises/:id/submit', async (c) => {
         exerciseType: exercise.type as ExerciseType,
       },
       () =>
-        evaluateAnswer(client, {
-          exercise: exercise.contentJson as ExerciseContent,
-          userAnswer,
-          language: exercise.language as Language,
-          difficulty: exercise.difficulty as CefrLevel,
-          grammarGuidance,
-        }),
+        isDictation
+          ? gradeDictationAnswer(client, {
+              exercise: exercise.contentJson as DictationContent,
+              userAnswer,
+              language: exercise.language as Language,
+              difficulty: exercise.difficulty as CefrLevel,
+            })
+          : evaluateAnswer(client, {
+              exercise: exercise.contentJson as ExerciseContent,
+              userAnswer,
+              language: exercise.language as Language,
+              difficulty: exercise.difficulty as CefrLevel,
+              grammarGuidance,
+            }),
     );
 
     // 6. Record history and usage on success — `id: submissionId` makes the

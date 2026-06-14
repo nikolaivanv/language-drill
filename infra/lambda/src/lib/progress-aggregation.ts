@@ -96,6 +96,8 @@ export function axisForExerciseType(type: string): RadarAxisKey | null {
       return 'writing';
     case ExerciseType.VOCAB_RECALL:
       return 'vocabulary';
+    case ExerciseType.DICTATION:
+      return 'listening';
     case RESERVED_LISTENING:
       return 'listening';
     case RESERVED_SPEAKING:
