@@ -766,8 +766,11 @@ export async function generateOneDraft(
     spec.seedWords?.[ordinal] ?? null,
     spec.batchSeed,
   );
-  // Safe cast: generateBatch guards against ExerciseType.DICTATION before
-  // reaching this function (!(spec.exerciseType in TOOL_NAME_BY_TYPE) check).
+  if (spec.exerciseType === ExerciseType.DICTATION) {
+    throw new Error(
+      "Dictation exercises are not batch-generated; generateOneDraft received a dictation spec.",
+    );
+  }
   const tool =
     GENERATION_TOOL_BY_TYPE[
       spec.exerciseType as Exclude<ExerciseType, ExerciseType.DICTATION>

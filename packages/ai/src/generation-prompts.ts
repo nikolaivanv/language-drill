@@ -254,6 +254,11 @@ export function computeGenerationPromptVars(
   inputs: GenerationPromptInputs,
   recentStems: readonly string[],
 ): Record<string, string> {
+  if (inputs.exerciseType === ExerciseType.DICTATION) {
+    throw new Error(
+      "Dictation exercises are not batch-generated; computeGenerationPromptVars received a dictation cell.",
+    );
+  }
   const { language, cefrLevel, exerciseType, grammarPoint, priorPoolSurfaces } =
     inputs;
   return {
@@ -450,8 +455,11 @@ export function buildGenerationUserPrompt(
   // phase 0, byte-identical to the unphased output for existing callers.
   batchSeed: string | null = null,
 ): string {
-  // Safe cast: this function is only called on the generation path, which
-  // guards against ExerciseType.DICTATION upstream.
+  if (inputs.exerciseType === ExerciseType.DICTATION) {
+    throw new Error(
+      "Dictation exercises are not batch-generated; buildGenerationUserPrompt received a dictation cell.",
+    );
+  }
   const toolName =
     TOOL_NAME_BY_TYPE[
       inputs.exerciseType as Exclude<ExerciseType, ExerciseType.DICTATION>
