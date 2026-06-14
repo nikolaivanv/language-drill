@@ -22,6 +22,20 @@ export {
   EVAL_MAX_RETRIES,
 } from "./evaluate.js";
 export type { EvaluateAnswerInput } from "./evaluate.js";
+export { diffDictation } from "./dictation-diff.js";
+export type { DictationDiff } from "./dictation-diff.js";
+export {
+  DICTATION_EVAL_SYSTEM_PROMPT,
+  DICTATION_EVAL_PROMPT_VERSION,
+  buildDictationUserPrompt,
+} from "./dictation-prompts.js";
+export {
+  gradeDictationAnswer,
+  parseDictationClassification,
+  DICTATION_TOOL,
+  DICTATION_TOOL_NAME,
+} from "./dictation-eval.js";
+export type { GradeDictationInput } from "./dictation-eval.js";
 export {
   ANNOTATE_SYSTEM_PROMPT,
   ANNOTATE_SYSTEM_PROMPT_VERSION,
