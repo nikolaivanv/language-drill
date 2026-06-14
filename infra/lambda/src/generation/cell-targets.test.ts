@@ -11,7 +11,6 @@ import type { Cell, CurriculumCefrLevel } from '@language-drill/db';
 
 import {
   CELL_TARGET_DEFAULTS,
-  PERSON_ROTATION_TARGET_MULTIPLIER,
   resolveCellTarget,
 } from './cell-targets';
 import { TARGET_PER_CELL } from './scheduler-decision';
@@ -98,42 +97,64 @@ describe('resolveCellTarget', () => {
     expect(resolveCellTarget(makeCell(ExerciseType.SENTENCE_CONSTRUCTION, CefrLevel.B1))).toBe(TARGET_PER_CELL);
   });
 
-  it('raises cloze/translation targets 1.5× for personRotation points (2026-06-12)', () => {
-    // Audit-skewed cells were at/near target → skip-target-reached → the
-    // rotation fix never reaches the pool without headroom.
-    expect(PERSON_ROTATION_TARGET_MULTIPLIER).toBe(1.5);
+  it('sentence_construction resolves at the plain table value (no raise)', () => {
+    // SC already gained headroom when the pilot brake lifted (25 → 30
+    // at A2, 50 at B1/B2); it resolves at the table value regardless of
+    // any coverage spec.
     expect(
-      resolveCellTarget(makeCell(ExerciseType.CLOZE, CefrLevel.A1, undefined, true)),
-    ).toBe(30); // 20 × 1.5
-    expect(
-      resolveCellTarget(makeCell(ExerciseType.CLOZE, CefrLevel.A2, undefined, true)),
-    ).toBe(45); // 30 × 1.5
-    expect(
-      resolveCellTarget(makeCell(ExerciseType.TRANSLATION, CefrLevel.A1, undefined, true)),
-    ).toBe(30);
-    // Fallback-resolved levels are raised too (50 → 75).
-    expect(
-      resolveCellTarget(makeCell(ExerciseType.CLOZE, CefrLevel.B1, undefined, true)),
-    ).toBe(Math.ceil(TARGET_PER_CELL * PERSON_ROTATION_TARGET_MULTIPLIER));
-  });
-
-  it('does not raise sentence_construction or override-resolved targets', () => {
-    // The raise exists to flush the audited 3sg skew out of cloze/translation
-    // pools; SC already gained headroom when the pilot brake lifted (25 → 30
-    // at A2, 50 at B1/B2), so a flagged point resolves SC at the plain table
-    // value.
-    expect(
-      resolveCellTarget(
-        makeCell(ExerciseType.SENTENCE_CONSTRUCTION, CefrLevel.A2, undefined, true),
-      ),
+      resolveCellTarget(makeCell(ExerciseType.SENTENCE_CONSTRUCTION, CefrLevel.A2)),
     ).toBe(30);
     // An explicit targetOverride marks a supply-limited point — respected as-is.
     expect(
-      resolveCellTarget(makeCell(ExerciseType.CLOZE, CefrLevel.A1, 12, true)),
+      resolveCellTarget(makeCell(ExerciseType.CLOZE, CefrLevel.A1, 12)),
     ).toBe(12);
-    // Unflagged cells are untouched.
-    expect(
-      resolveCellTarget(makeCell(ExerciseType.CLOZE, CefrLevel.A1, undefined, false)),
-    ).toBe(20);
+  });
+});
+
+function cell(over: Partial<Cell> & { grammarPoint?: Partial<Cell['grammarPoint']> }): Cell {
+  return {
+    cellKey: 'k',
+    language: 'ES' as Cell['language'],
+    cefrLevel: 'B1',
+    exerciseType: ExerciseType.CLOZE,
+    grammarPoint: { key: 'es-b1-x', kind: 'grammar', ...(over.grammarPoint ?? {}) },
+    ...over,
+  } as Cell;
+}
+
+describe('resolveCellTarget (floor-driven)', () => {
+  it('no spec → base table value (B1 cloze = 50)', () => {
+    expect(resolveCellTarget(cell({}))).toBe(50);
+  });
+  it('person spec raises target to the floor sum (5×15 = 75 > base 50)', () => {
+    const c = cell({
+      grammarPoint: { key: 'es-b1-x', kind: 'grammar',
+        coverageSpec: { axes: [{ name: 'person', floors: { '1sg': 15, '2sg': 15, '3sg': 15, '1pl': 15, '3pl': 15 } }] } } as Cell['grammarPoint'],
+    });
+    expect(resolveCellTarget(c)).toBe(75);
+  });
+  it('takes the max over axes, not the sum of axes', () => {
+    const c = cell({
+      grammarPoint: { key: 'tr-a1-x', kind: 'grammar',
+        coverageSpec: { axes: [
+          { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
+          { name: 'polarity', floors: { affirmative: 18, negative: 12 } },
+        ] } } as Cell['grammarPoint'],
+      cefrLevel: 'A1',
+    });
+    expect(resolveCellTarget(c)).toBe(30); // max(20 base, max(30, 30))
+  });
+  it('targetOverride wins over base and floor sum', () => {
+    const c = cell({ grammarPoint: { key: 'es-b1-x', kind: 'grammar', targetOverride: 12 } as Cell['grammarPoint'] });
+    expect(resolveCellTarget(c)).toBe(12);
+  });
+  it('floor sum below base → base wins (vocab base 10)', () => {
+    const c = cell({
+      exerciseType: ExerciseType.VOCAB_RECALL,
+      cefrLevel: 'A1',
+      grammarPoint: { key: 'tr-a1-vocab-x', kind: 'vocab',
+        coverageSpec: { axes: [{ name: 'wordClass', floors: { noun: 6, verb: 2, adjective: 2 } }] } } as Cell['grammarPoint'],
+    });
+    expect(resolveCellTarget(c)).toBe(10);
   });
 });
