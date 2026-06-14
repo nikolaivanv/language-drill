@@ -16,11 +16,12 @@ import { checkGlobalCapacity } from '../usage/global-capacity';
 
 const mockLimit = vi.fn();
 const mockOrderBy = vi.fn(() => ({ limit: mockLimit }));
-// `GET /exercises` now samples in two steps: (1) `await db.select({id}).from().where(...)`
-// for the candidate-id list (resolved by `mockCandidates`), then (2)
-// `db.select().from().where(eq(id)).limit(1)` for the chosen row (resolved by
-// `mockLimit`). So `where()` returns a thenable (candidate ids) that ALSO
-// carries `.limit`/`.orderBy` for the chained row/exercise lookups.
+// `GET /exercises` now uses a single query:
+// `db.select().from().where(...).orderBy(...).limit(1)` resolved by `mockLimit`.
+// `mockCandidates` is the default resolution of the thenable that `where()`
+// returns; it is no longer exercised by GET /exercises tests but is kept so
+// the `where()` mock still returns a thenable that carries `.limit`/`.orderBy`
+// for the POST /submit tests that call `db.select(...).from(...).where(...)`.
 const mockCandidates = vi.fn(async () => [{ id: 'abc-123' }]);
 // Return type is loose (`any`) so the POST /submit tests can override `where`
 // with the plain `{ orderBy, limit }` shape via `mockImplementationOnce`, while
@@ -287,7 +288,6 @@ describe('GET /exercises', () => {
   });
 
   it('returns a random exercise matching language and difficulty', async () => {
-    mockCandidates.mockResolvedValueOnce([{ id: 'abc-123' }]);
     mockLimit.mockResolvedValueOnce([sampleExercise]);
 
     const res = await app.request('/exercises?language=EN&difficulty=B1', undefined, authEnv);
@@ -305,18 +305,17 @@ describe('GET /exercises', () => {
     expect(mockFreshFirstOrderBy).toHaveBeenCalledWith('user_123');
   });
 
-  it('samples via the candidate-id list, then fetches the chosen row by id (no ORDER BY random)', async () => {
-    // Two candidate ids returned by the index-covered id query; the route
-    // picks one in app code and fetches the full row by PK. We assert the
-    // candidate query ran and a full row came back — the SQL-level proof that
-    // ORDER BY random()'s full sort is gone lives in the manual EXPLAIN step.
-    mockCandidates.mockResolvedValueOnce([{ id: 'abc-123' }, { id: 'def-456' }]);
+  it('applies exposure ordering (freshFirstOrderBy) and returns the drawn row', async () => {
+    // The single-query exposure draw uses freshFirstOrderBy(userId) as the
+    // ORDER BY clause so never-seen items surface first; assert the ordering
+    // function is invoked with the authenticated userId and the full row is
+    // returned.
     mockLimit.mockResolvedValueOnce([sampleExercise]);
 
     const res = await app.request('/exercises?language=EN&difficulty=B1', undefined, authEnv);
 
     expect(res.status).toBe(200);
-    expect(mockCandidates).toHaveBeenCalled();
+    expect(mockFreshFirstOrderBy).toHaveBeenCalledWith('user_123');
     const body = (await res.json()) as AnyJson;
     expect(body.id).toBe('abc-123');
   });
@@ -335,12 +334,10 @@ describe('GET /exercises', () => {
     expect(body.type).toBe('translation');
   });
 
-  it('returns 404 with NO_EXERCISES when the candidate-id query is empty', async () => {
-    // The candidate-id query is the gate: empty ⇒ 404. The route returns
-    // before the chosen-row query, so we deliberately queue no `mockLimit`
-    // value here. (This still fails against an ORDER BY random()
-    // implementation, which ignores the candidate list and reads a row.)
-    mockCandidates.mockResolvedValueOnce([]);
+  it('returns 404 with NO_EXERCISES when the pool is empty', async () => {
+    // The single-query draw returns [] when no approved exercise matches the
+    // given filters; the route converts that to a 404.
+    mockLimit.mockResolvedValueOnce([]);
 
     const res = await app.request('/exercises?language=TR&difficulty=C2', undefined, authEnv);
 
