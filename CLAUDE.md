@@ -132,6 +132,7 @@ each prompt and are re-exported from `packages/ai/src/index.ts`:
 | `theory-prompts.ts` | `THEORY_GENERATION_PROMPT_VERSION` |
 | `theory-validation-prompts.ts` | `THEORY_VALIDATION_PROMPT_VERSION` |
 | `read-span.ts` | `READ_SPAN_PROMPT_VERSION` |
+| `free-writing-prompts.ts` | `FREE_WRITING_EVAL_PROMPT_VERSION` |
 
 Langfuse is now the live source for these prompts; the in-repo
 `*_SYSTEM_PROMPT` constant is the fallback. Bumping
