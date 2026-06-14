@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { type FreeWritingContent } from '@language-drill/shared';
+import { type FreeWritingContent, EXERCISE_ANSWER_MAX_CHARS } from '@language-drill/shared';
 import { FwIcon, WordCounter, ReqRow } from './fw-atoms';
 
 export interface FwComposerProps {
@@ -112,6 +112,7 @@ export function FwComposer({ content, value, onChange, examMode, submitting, onG
             <textarea
               value={value}
               onChange={(e) => onChange(e.target.value)}
+              maxLength={EXERCISE_ANSWER_MAX_CHARS}
               spellCheck={false}
               style={{
                 width: '100%',

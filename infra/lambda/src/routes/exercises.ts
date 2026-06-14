@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { eq, and, sql, gte, count } from 'drizzle-orm';
-import { Language, CefrLevel, ExerciseType, isFreeWritingContent } from '@language-drill/shared';
+import { Language, CefrLevel, ExerciseType, isFreeWritingContent, EXERCISE_ANSWER_MAX_CHARS } from '@language-drill/shared';
 import type { ExerciseContent, FreeWritingContent } from '@language-drill/shared';
 import {
   exercises as exercisesTable,
@@ -46,7 +46,11 @@ export const ExerciseQuerySchema = z.object({
 
 /** Request body for POST /exercises/:id/submit */
 export const SubmitAnswerSchema = z.object({
-  answer: z.string().min(1),
+  // `.max()` caps token-cost exposure: the answer is interpolated raw into the
+  // evaluation prompt and sent to Claude (free writing runs a larger model), so
+  // an unbounded answer is a cost-amplification lever. See
+  // EXERCISE_ANSWER_MAX_CHARS for the rationale.
+  answer: z.string().min(1).max(EXERCISE_ANSWER_MAX_CHARS),
   sessionId: z.string().uuid().optional(),
 });
 
