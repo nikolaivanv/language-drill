@@ -41,6 +41,8 @@ export class LanguageDrillStack extends Stack {
   constructor(scope: Construct, id: string, props: LanguageDrillStackProps) {
     super(scope, id, props);
 
+    const storage = new StorageConstruct(this, "Storage");
+
     const lambda = new LambdaConstruct(this, "Lambda", {
       secretsPrefix: props.secretsPrefix,
       additionalEnv: {
@@ -49,6 +51,7 @@ export class LanguageDrillStack extends Stack {
         ADMIN_USER_IDS: props.adminUserIds ?? "",
         AI_KILL_SWITCH: props.aiKillSwitch ?? "",
         AI_GLOBAL_DAILY_CAP: props.aiGlobalDailyCap ?? "",
+        CONTENT_BUCKET_NAME: storage.bucket.bucketName,
       },
     });
 
@@ -59,8 +62,6 @@ export class LanguageDrillStack extends Stack {
       clerkIssuerUrl: props.clerkIssuerUrl,
       clerkAudience: props.clerkAudience,
     });
-
-    const storage = new StorageConstruct(this, "Storage");
 
     const queue = new QueueConstruct(this, "Queue");
 
