@@ -10,6 +10,8 @@ import {
 } from '@language-drill/db';
 import { db } from '../db';
 import { approvedStatusFilter } from '../lib/exercise-filters';
+import { presignAudioUrl } from '../lib/audio-url';
+import { withAudioUrl } from '../lib/dictation-content';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
 import {
@@ -113,17 +115,18 @@ sessions.post('/sessions', async (c) => {
     })
     .returning({ id: practiceSessions.id });
 
-  return c.json({
-    id: inserted[0].id,
-    exercises: rows.map((r) => ({
+  const exercisesOut = await Promise.all(
+    rows.map(async (r) => ({
       id: r.id,
       type: r.type,
       language: r.language,
       difficulty: r.difficulty,
       grammarPointKey: r.grammarPointKey,
-      contentJson: r.contentJson,
+      contentJson: withAudioUrl(r.contentJson, await presignAudioUrl(r.audioS3Key)),
     })),
-  });
+  );
+
+  return c.json({ id: inserted[0].id, exercises: exercisesOut });
 });
 
 // ---------------------------------------------------------------------------
