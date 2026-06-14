@@ -478,3 +478,29 @@ describe("buildValidationUserPrompt — coverage directive", () => {
     expect(p).not.toContain("polarity");
   });
 });
+
+// ---------------------------------------------------------------------------
+// Dictation rejection guard
+// ---------------------------------------------------------------------------
+
+describe("buildValidationUserPrompt — dictation guard", () => {
+  it("throws for a dictation draft (not validated via this path)", () => {
+    const dictationDraft: ExerciseDraft = {
+      ...clozeDraftForCoverage,
+      contentJson: {
+        type: ExerciseType.DICTATION,
+        title: "Test clip",
+        referenceText: "Hello world",
+        sentences: ["Hello world"],
+        accent: "EN neutral",
+        voiceId: "Joanna",
+        tested: ["listening"],
+        durationSec: 3,
+        waveform: [0.5, 0.5],
+      } as import("@language-drill/shared").DictationContent,
+    };
+    expect(() =>
+      buildValidationUserPrompt(dictationDraft, specFor(ExerciseType.DICTATION, false)),
+    ).toThrow("Dictation exercises are not validated via this path");
+  });
+});

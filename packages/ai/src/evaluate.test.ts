@@ -182,6 +182,23 @@ describe("buildUserPrompt", () => {
     expect(prompt).not.toContain("Grammar Point Reference");
     expect(prompt.toLowerCase()).not.toContain("do not invent");
   });
+
+  it("throws for a dictation exercise (not evaluated via this path)", () => {
+    const dictationContent = {
+      type: ExerciseType.DICTATION,
+      title: "Test clip",
+      referenceText: "Hello world",
+      sentences: ["Hello world"],
+      accent: "EN neutral",
+      voiceId: "Joanna",
+      tested: ["listening"],
+      durationSec: 3,
+      waveform: [0.5, 0.5],
+    } as import("@language-drill/shared").DictationContent;
+    expect(() =>
+      buildUserPrompt(dictationContent, "hello world", Language.EN, CefrLevel.B1),
+    ).toThrow("Dictation exercises are not evaluated via this path");
+  });
 });
 
 describe("EVALUATION_SYSTEM_PROMPT", () => {

@@ -3,6 +3,7 @@
 import * as React from 'react';
 import {
   isClozeContent,
+  isDictationContent,
   isSentenceConstructionContent,
   isTranslationContent,
   isVocabRecallContent,
@@ -11,6 +12,7 @@ import {
 } from '@language-drill/shared';
 import type { ExerciseResponse } from '@language-drill/api-client';
 import { ClozeExercise } from './cloze-exercise';
+import { DictationExercise } from './dictation-exercise';
 import { SentenceConstructionExercise } from './sentence-construction-exercise';
 import { TranslationExercise } from './translation-exercise';
 import { VocabExercise } from './vocab-exercise';
@@ -90,6 +92,20 @@ export function ExercisePane({
   if (isSentenceConstructionContent(content)) {
     return (
       <SentenceConstructionExercise
+        key={exercise.id}
+        content={content}
+        language={language}
+        submission={submission}
+        onSubmit={onSubmit}
+        onNext={onNext}
+        nextLabel={nextLabel}
+      />
+    );
+  }
+
+  if (isDictationContent(content)) {
+    return (
+      <DictationExercise
         key={exercise.id}
         content={content}
         language={language}

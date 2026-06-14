@@ -1475,6 +1475,9 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
                 ],
               ],
             },
+            "CONTENT_BUCKET_NAME": {
+              "Ref": "StorageContentBucket858D6C32",
+            },
             "DATABASE_URL": {
               "Fn::Join": [
                 "",

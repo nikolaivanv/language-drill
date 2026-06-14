@@ -81,6 +81,7 @@ export enum ExerciseType {
   TRANSLATION = "translation",
   VOCAB_RECALL = "vocab_recall",
   SENTENCE_CONSTRUCTION = "sentence_construction",
+  DICTATION = "dictation",
   FREE_WRITING = "free_writing",
 }
 
@@ -152,6 +153,34 @@ export type SentenceConstructionContent = {
   topicHint?: string;
 };
 
+export type DictationContent = {
+  type: ExerciseType.DICTATION;
+  /** Short title for the clip card, e.g. "El tiempo lo cura todo". */
+  title: string;
+  /** Optional one-line brief shown under the title. */
+  blurb?: string;
+  /** The full transcription target — the grading reference. */
+  referenceText: string;
+  /** Per-sentence reference, for display/segmentation. */
+  sentences: string[];
+  /** Human label of the accent, e.g. "español peninsular · centro". */
+  accent: string;
+  /** Polly voice id used to synthesize the audio (e.g. "Sergio"). */
+  voiceId: string;
+  domain?: string;
+  register?: string;
+  /** "What this tests" chips shown on the brief card. */
+  tested: string[];
+  durationSec: number;
+  /** Decorative amplitude envelope (0..1) for the waveform UI. */
+  waveform: number[];
+  /**
+   * Presigned S3 GET URL for the clip audio. NOT stored in the DB; injected by
+   * the API at response time from `exercises.audioS3Key`. Absent in stored JSON.
+   */
+  audioUrl?: string;
+};
+
 export type FreeWritingRequiredElement = {
   /** Stable id used as a React key and as the checklist row id. */
   id: string;
@@ -184,6 +213,7 @@ export type ExerciseContent =
   | TranslationContent
   | VocabRecallContent
   | SentenceConstructionContent
+  | DictationContent
   | FreeWritingContent;
 
 export type Exercise = {
@@ -216,6 +246,10 @@ export function isSentenceConstructionContent(
   return content.type === ExerciseType.SENTENCE_CONSTRUCTION;
 }
 
+export function isDictationContent(content: ExerciseContent): content is DictationContent {
+  return content.type === ExerciseType.DICTATION;
+}
+
 export function isFreeWritingContent(
   content: ExerciseContent,
 ): content is FreeWritingContent {
@@ -243,6 +277,72 @@ export type EvaluationResult = {
   errors: EvaluationError[];
   estimatedCefrEvidence: string;
 };
+
+// ---------------------------------------------------------------------------
+// Dictation result types
+// ---------------------------------------------------------------------------
+
+/** One ordered segment of the results diff prose. */
+export type DictationDiffSegment =
+  | { kind: "match"; text: string }
+  | { kind: "error"; id: number; got: string; expected: string; severity: "low" | "high" }
+  | { kind: "accepted"; id: number; got: string; expected: string };
+
+/** One flagged difference, classified by Claude. */
+export type DictationDifference = {
+  id: number;
+  kind: "error" | "accepted";
+  /** Short category, e.g. "word boundary", "silent h", "b/v". */
+  category: string;
+  /** Severity for genuine errors; null for accepted differences. */
+  severity: "low" | "high" | null;
+  got: string;
+  expected: string;
+  note: string;
+};
+
+/** One accuracy-criterion row (0–1 + CEFR). */
+export type DictationCriterion = {
+  id: string;
+  label: string;
+  score: number;
+  cefr: string;
+  note: string;
+};
+
+/**
+ * Dictation grading result. A superset of EvaluationResult: it carries every
+ * EvaluationResult field (so `user_exercise_history` storage, the debrief read,
+ * and progress aggregation work unchanged) plus dictation-specific detail.
+ * `kind: "dictation"` discriminates it from a plain EvaluationResult on the wire.
+ */
+export type DictationResult = {
+  kind: "dictation";
+  // EvaluationResult-compatible fields:
+  score: number; // == adjustedCharAccuracy
+  grammarAccuracy: number; // == adjustedCharAccuracy (no grammar axis; shape compat)
+  vocabularyRange: string; // == listeningCefr
+  taskAchievement: number; // == wordAccuracy
+  feedback: string; // == summary
+  errors: EvaluationError[]; // mapped from genuine-error differences
+  estimatedCefrEvidence: string; // == listeningCefr
+  // dictation-specific:
+  rawCharAccuracy: number;
+  adjustedCharAccuracy: number;
+  wordAccuracy: number;
+  listeningCefr: string;
+  headline: string;
+  summary: string;
+  diff: DictationDiffSegment[];
+  differences: DictationDifference[];
+  criteria: DictationCriterion[];
+};
+
+export function isDictationResult(
+  result: EvaluationResult | DictationResult,
+): result is DictationResult {
+  return (result as { kind?: string }).kind === "dictation";
+}
 
 // ---------------------------------------------------------------------------
 // Free Writing evaluation — richer than the flat EvaluationResult above.

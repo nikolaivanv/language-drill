@@ -3,7 +3,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { eq, and, gte, count } from 'drizzle-orm';
 import { Language, CefrLevel, ExerciseType, isFreeWritingContent, EXERCISE_ANSWER_MAX_CHARS } from '@language-drill/shared';
-import type { ExerciseContent, FreeWritingContent } from '@language-drill/shared';
+import type { DictationContent, ExerciseContent, FreeWritingContent } from '@language-drill/shared';
 import {
   exercises as exercisesTable,
   practiceSessions,
@@ -16,8 +16,10 @@ import {
 import {
   createObservedClaudeClient,
   evaluateAnswer,
+  gradeDictationAnswer,
   evaluateFreeWriting,
   EVALUATION_SYSTEM_PROMPT_VERSION,
+  DICTATION_EVAL_PROMPT_VERSION,
   EVAL_REQUEST_TIMEOUT_MS,
   EVAL_MAX_RETRIES,
   FREE_WRITING_EVAL_PROMPT_VERSION,
@@ -27,6 +29,8 @@ import {
 } from '@language-drill/ai';
 import { db } from '../db';
 import { approvedStatusFilter, freshFirstOrderBy } from '../lib/exercise-filters';
+import { presignAudioUrl } from '../lib/audio-url';
+import { withAudioUrl } from '../lib/dictation-content';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
 import { limitFor } from '../usage/limits';
@@ -111,13 +115,14 @@ exercises.get('/exercises', async (c) => {
   }
 
   const row = rows[0];
+  const audioUrl = await presignAudioUrl(row.audioS3Key);
   return c.json({
     id: row.id,
     type: row.type,
     language: row.language,
     difficulty: row.difficulty,
     grammarPointKey: row.grammarPointKey,
-    contentJson: row.contentJson,
+    contentJson: withAudioUrl(row.contentJson, audioUrl),
   });
 });
 
@@ -144,7 +149,7 @@ exercises.get('/exercises/:id', async (c) => {
     language: row.language,
     difficulty: row.difficulty,
     grammarPointKey: row.grammarPointKey,
-    contentJson: row.contentJson,
+    contentJson: withAudioUrl(row.contentJson, await presignAudioUrl(row.audioS3Key)),
   });
 });
 
@@ -284,6 +289,8 @@ exercises.post('/exercises/:id/submit', async (c) => {
       maxRetries: isFreeWriting ? FREE_WRITING_EVAL_MAX_RETRIES : EVAL_MAX_RETRIES,
     });
 
+    const isDictation = exercise.type === ExerciseType.DICTATION;
+
     const traceMeta = {
       env: (process.env.LANGFUSE_ENV ?? 'dev') as 'prod' | 'dev',
       requestId,
@@ -330,15 +337,22 @@ exercises.post('/exercises/:id/submit', async (c) => {
     }
 
     const result = await withLlmTrace(
-      { ...traceMeta, feature: 'evaluate', promptVersion: EVALUATION_SYSTEM_PROMPT_VERSION },
+      { ...traceMeta, feature: 'evaluate', promptVersion: isDictation ? DICTATION_EVAL_PROMPT_VERSION : EVALUATION_SYSTEM_PROMPT_VERSION },
       () =>
-        evaluateAnswer(client, {
-          exercise: content,
-          userAnswer,
-          language: exercise.language as Language,
-          difficulty: exercise.difficulty as CefrLevel,
-          grammarGuidance,
-        }),
+        isDictation
+          ? gradeDictationAnswer(client, {
+              exercise: content as DictationContent,
+              userAnswer,
+              language: exercise.language as Language,
+              difficulty: exercise.difficulty as CefrLevel,
+            })
+          : evaluateAnswer(client, {
+              exercise: content,
+              userAnswer,
+              language: exercise.language as Language,
+              difficulty: exercise.difficulty as CefrLevel,
+              grammarGuidance,
+            }),
     );
 
     // 6. Record history and usage on success — `id: submissionId` makes the

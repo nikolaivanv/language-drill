@@ -4,6 +4,7 @@ import {
   ExerciseType,
   Language,
   type ClozeContent,
+  type DictationContent,
   type TranslationContent,
   type VocabRecallContent,
 } from "@language-drill/shared";
@@ -743,6 +744,52 @@ describe("tailRecentStems", () => {
 
   it("returns an empty array when input is empty", () => {
     expect(tailRecentStems([])).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Dictation rejection guards
+// ---------------------------------------------------------------------------
+
+describe("computeGenerationPromptVars — dictation guard", () => {
+  it("throws when exerciseType is DICTATION", () => {
+    expect(() =>
+      computeGenerationPromptVars(
+        { ...baseInputs, exerciseType: ExerciseType.DICTATION },
+        [],
+      ),
+    ).toThrow("Dictation exercises are not batch-generated");
+  });
+});
+
+describe("buildGenerationUserPrompt — dictation guard", () => {
+  it("throws when exerciseType is DICTATION", () => {
+    expect(() =>
+      buildGenerationUserPrompt(
+        { ...baseInputs, exerciseType: ExerciseType.DICTATION },
+        0,
+        null,
+      ),
+    ).toThrow("Dictation exercises are not batch-generated");
+  });
+});
+
+describe("canonicalSurface — dictation guard", () => {
+  it("throws for a dictation content type", () => {
+    const content: DictationContent = {
+      type: ExerciseType.DICTATION,
+      title: "Test clip",
+      referenceText: "Hello world",
+      sentences: ["Hello world"],
+      accent: "EN neutral",
+      voiceId: "Joanna",
+      tested: ["listening"],
+      durationSec: 3,
+      waveform: [0.5, 0.5],
+    };
+    expect(() => canonicalSurface(content)).toThrow(
+      "Dictation exercises are not generated via this path",
+    );
   });
 });
 

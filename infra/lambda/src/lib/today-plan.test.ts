@@ -44,6 +44,11 @@ describe('ESTIMATED_MINUTES_BY_TYPE / ITEM_COUNT_BY_TYPE', () => {
     expect(ESTIMATED_MINUTES_BY_TYPE[ExerciseType.SENTENCE_CONSTRUCTION]).toBe(3);
     expect(ITEM_COUNT_BY_TYPE[ExerciseType.SENTENCE_CONSTRUCTION]).toBe(3);
   });
+
+  it('exposes positive minute/count estimates for dictation', () => {
+    expect(ESTIMATED_MINUTES_BY_TYPE[ExerciseType.DICTATION]).toBeGreaterThan(0);
+    expect(ITEM_COUNT_BY_TYPE[ExerciseType.DICTATION]).toBeGreaterThan(0);
+  });
 });
 
 // ---------------------------------------------------------------------------

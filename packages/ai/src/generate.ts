@@ -55,19 +55,16 @@ export const GENERATION_TEMPERATURE = 0.7;
 // Tool-name map
 // ---------------------------------------------------------------------------
 
-// Free writing is authored by hand (seeded), never produced by this generation
-// pipeline, so the generatable-type maps below exclude it. Indexing these maps
-// with an arbitrary `ExerciseType` therefore casts through their key type
-// (`keyof typeof …`), which is safe because the generation flow is only ever
-// reached for generatable types (guarded in `generateBatch`).
+// DICTATION and FREE_WRITING are excluded: dictation exercises are not batch-generated and are
+// graded by gradeDictationAnswer; free writing is authored by hand, never produced by this pipeline.
 export const TOOL_NAME_BY_TYPE: Readonly<
-  Record<Exclude<ExerciseType, ExerciseType.FREE_WRITING>, string>
+  Record<Exclude<ExerciseType, ExerciseType.DICTATION | ExerciseType.FREE_WRITING>, string>
 > = Object.freeze({
-    cloze: "submit_cloze_exercise",
-    translation: "submit_translation_exercise",
-    vocab_recall: "submit_vocab_recall_exercise",
-    sentence_construction: "submit_sentence_construction_exercise",
-  });
+  cloze: "submit_cloze_exercise",
+  translation: "submit_translation_exercise",
+  vocab_recall: "submit_vocab_recall_exercise",
+  sentence_construction: "submit_sentence_construction_exercise",
+});
 
 // ---------------------------------------------------------------------------
 // Per-type tool schemas — input_schema mirrors the matching ExerciseContent
@@ -282,8 +279,10 @@ export const SENTENCE_CONSTRUCTION_GENERATION_TOOL: Anthropic.Tool = {
   },
 };
 
+// DICTATION and FREE_WRITING are excluded: dictation exercises are not batch-generated and are
+// graded by gradeDictationAnswer; free writing is authored by hand, never produced by this pipeline.
 export const GENERATION_TOOL_BY_TYPE: Readonly<
-  Record<Exclude<ExerciseType, ExerciseType.FREE_WRITING>, Anthropic.Tool>
+  Record<Exclude<ExerciseType, ExerciseType.DICTATION | ExerciseType.FREE_WRITING>, Anthropic.Tool>
 > = Object.freeze({
   cloze: CLOZE_GENERATION_TOOL,
   translation: TRANSLATION_GENERATION_TOOL,
@@ -774,6 +773,11 @@ export async function generateOneDraft(
     spec.seedWords?.[ordinal] ?? null,
     spec.coverageTargets,
   );
+  if (spec.exerciseType === ExerciseType.DICTATION) {
+    throw new Error(
+      "Dictation exercises are not batch-generated; generateOneDraft received a dictation spec.",
+    );
+  }
   const tool =
     GENERATION_TOOL_BY_TYPE[spec.exerciseType as keyof typeof GENERATION_TOOL_BY_TYPE];
 
@@ -935,6 +939,10 @@ function parseToolInput(
       return parseGeneratedVocabRecallDraft(input, spec);
     case ExerciseType.SENTENCE_CONSTRUCTION:
       return parseGeneratedSentenceConstructionDraft(input, spec);
+    case ExerciseType.DICTATION:
+      throw new Error(
+        "Dictation exercises are not generated via this path; use gradeDictationAnswer.",
+      );
     default:
       // free_writing is authored by hand, not produced by this pipeline.
       throw new Error(

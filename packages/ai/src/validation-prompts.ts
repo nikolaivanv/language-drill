@@ -327,6 +327,10 @@ export function buildValidationUserPrompt(
     case ExerciseType.SENTENCE_CONSTRUCTION:
       base = buildSentenceConstructionValidationUserPrompt(content, spec);
       break;
+    case ExerciseType.DICTATION:
+      throw new Error(
+        "Dictation exercises are not validated via this path; use gradeDictationAnswer.",
+      );
     case ExerciseType.FREE_WRITING:
       // free_writing is authored by hand, not produced/validated by the pool
       // generation pipeline.

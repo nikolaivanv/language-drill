@@ -102,6 +102,7 @@ vi.mock('../lib/exercise-filters', () => ({
 }));
 
 const mockEvaluateAnswer = vi.fn();
+const mockGradeDictationAnswer = vi.fn();
 const mockEvaluateFreeWriting = vi.fn();
 // Spy on `withLlmTrace` so observability tests can inspect the trace
 // context the route assembles. Default behaviour: transparent passthrough
@@ -115,10 +116,12 @@ vi.mock('@language-drill/ai', () => ({
   createClaudeClient: vi.fn(() => ({})),
   createObservedClaudeClient: vi.fn(() => ({})),
   evaluateAnswer: (...args: unknown[]) => mockEvaluateAnswer(...args),
+  gradeDictationAnswer: (...args: unknown[]) => mockGradeDictationAnswer(...args),
   evaluateFreeWriting: (...args: unknown[]) => mockEvaluateFreeWriting(...args),
   withLlmTrace: <T>(ctx: unknown, fn: () => T | Promise<T>) =>
     mockWithLlmTrace(ctx, fn),
   EVALUATION_SYSTEM_PROMPT_VERSION: 'evaluate@test',
+  DICTATION_EVAL_PROMPT_VERSION: 'dictation@test',
   EVAL_REQUEST_TIMEOUT_MS: 18_000,
   EVAL_MAX_RETRIES: 1,
   FREE_WRITING_EVAL_PROMPT_VERSION: 'free-writing-eval@test',
@@ -701,6 +704,88 @@ describe('POST /exercises/:id/submit', () => {
     expect(res.status).toBe(400);
     const body = await res.json() as AnyJson;
     expect(body.code).toBe('VALIDATION_ERROR');
+  });
+
+  // -------------------------------------------------------------------------
+  // Dictation submit branch
+  // -------------------------------------------------------------------------
+
+  it('calls gradeDictationAnswer for dictation exercises and writes history with kind=dictation', async () => {
+    const dictationExercise = {
+      id: 'dict-001',
+      type: 'dictation',
+      language: 'ES',
+      difficulty: 'B2',
+      contentJson: {
+        type: 'dictation',
+        title: 'El tiempo lo cura todo',
+        referenceText: 'El tiempo lo cura todo.',
+        sentences: ['El tiempo lo cura todo.'],
+        accent: 'español peninsular · centro',
+        voiceId: 'Sergio',
+        tested: ['listening'],
+        durationSec: 3,
+        waveform: [0.5, 0.8, 0.6],
+      },
+      audioS3Key: null,
+      createdAt: new Date(),
+    };
+
+    const dictationResult = {
+      kind: 'dictation' as const,
+      score: 0.9,
+      grammarAccuracy: 0.9,
+      vocabularyRange: 'B2',
+      taskAchievement: 0.9,
+      feedback: 's',
+      errors: [],
+      estimatedCefrEvidence: 'B2',
+      rawCharAccuracy: 0.9,
+      adjustedCharAccuracy: 0.9,
+      wordAccuracy: 0.9,
+      listeningCefr: 'B2',
+      headline: 'h',
+      summary: 's',
+      diff: [],
+      differences: [],
+      criteria: [],
+    };
+
+    // exercise fetch → usage count
+    mockLimit.mockResolvedValueOnce([dictationExercise]);
+    mockWhere
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }))
+      .mockResolvedValueOnce([{ count: 0 }] as never);
+    mockGradeDictationAnswer.mockResolvedValueOnce(dictationResult);
+
+    const res = await app.request(
+      '/exercises/dict-001/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'El tiempo lo cura todo.' }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as AnyJson;
+    expect(body.kind).toBe('dictation');
+    expect(body.score).toBe(0.9);
+
+    // gradeDictationAnswer called; evaluateAnswer NOT called
+    expect(mockGradeDictationAnswer).toHaveBeenCalledTimes(1);
+    expect(mockEvaluateAnswer).not.toHaveBeenCalled();
+
+    // userExerciseHistory row (2nd insert) must carry score 0.9
+    expect(mockInsert).toHaveBeenCalledTimes(3);
+    expect(mockValues).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        exerciseId: 'dict-001',
+        score: 0.9,
+      }),
+    );
   });
 
   // -------------------------------------------------------------------------

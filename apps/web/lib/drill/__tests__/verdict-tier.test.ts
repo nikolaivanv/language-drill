@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import type { EvaluationError } from '@language-drill/shared';
 import {
   clozeVerdict,
+  dictationVerdict,
   translationVerdict,
   vocabVerdict,
   type VerdictTier,
@@ -82,6 +83,33 @@ describe('translationVerdict', () => {
 
   it.each(cases)('score $score → label "$label"', ({ score, label }) => {
     expect(translationVerdict(score).label).toBe(label);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// dictationVerdict — score-only bands (sage / yellow×2 / terracotta)
+// ---------------------------------------------------------------------------
+
+describe('dictationVerdict', () => {
+  type Case = { score: number; tier: VerdictTier; label: string };
+
+  const cases: Case[] = [
+    { score: 0.0, tier: 'terracotta', label: "hard clip · let's slow down" },
+    { score: 0.3, tier: 'terracotta', label: "hard clip · let's slow down" },
+    { score: 0.4, tier: 'yellow', label: 'the gist · boundaries slipped' },
+    { score: 0.6, tier: 'yellow', label: 'the gist · boundaries slipped' },
+    { score: 0.7, tier: 'yellow', label: 'close · a few you missed' },
+    { score: 0.8, tier: 'yellow', label: 'close · a few you missed' },
+    { score: 0.95, tier: 'sage', label: 'oído fino' },
+    { score: 1.0, tier: 'sage', label: 'oído fino' },
+  ];
+
+  it.each(cases)('score $score → tier $tier', ({ score, tier }) => {
+    expect(dictationVerdict(score).tier).toBe(tier);
+  });
+
+  it.each(cases)('score $score → label "$label"', ({ score, label }) => {
+    expect(dictationVerdict(score).label).toBe(label);
   });
 });
 

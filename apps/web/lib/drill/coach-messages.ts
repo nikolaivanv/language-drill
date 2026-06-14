@@ -17,6 +17,8 @@ function idleMessage(type: ExerciseType): string {
       return "say it from memory";
     case ExerciseType.SENTENCE_CONSTRUCTION:
       return "build a full sentence · use the prompt";
+    case ExerciseType.DICTATION:
+      return "listen · type exactly what you hear";
     case ExerciseType.FREE_WRITING:
       return "write freely · then grade it";
     default: {
@@ -82,6 +84,18 @@ function evaluatedMessage(type: ExerciseType, score: number): string {
           return "the idea's there · tighten the structure";
         case "reset":
           return "tricky structure · let's build it back up";
+      }
+      break;
+    case ExerciseType.DICTATION:
+      switch (tier) {
+        case "praise":
+          return "clean ear · you caught the linking";
+        case "light":
+          return "almost · a word boundary blurred";
+        case "encourage":
+          return "the shape's there · the fast parts ran together";
+        case "reset":
+          return "tough clip · we'll slow it down next time";
       }
       break;
     case ExerciseType.FREE_WRITING:

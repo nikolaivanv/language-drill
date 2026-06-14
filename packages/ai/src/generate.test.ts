@@ -22,6 +22,7 @@ import {
   VOCAB_RECALL_GENERATION_TOOL,
   exerciseDraftId,
   generateBatch,
+  generateOneDraft,
   parseGeneratedClozeDraft,
   parseGeneratedSentenceConstructionDraft,
   type GenerationSpec,
@@ -915,5 +916,28 @@ describe("parseGeneratedSentenceConstructionDraft", () => {
       spec,
     );
     expect(out.keywords).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// generateOneDraft — dictation rejection guard
+// ---------------------------------------------------------------------------
+
+describe("generateOneDraft — dictation guard", () => {
+  it("throws synchronously before any Claude call when exerciseType is DICTATION", async () => {
+    const mockCreate = vi.fn();
+    const mockClient = {
+      messages: { create: mockCreate },
+    } as unknown as ReturnType<typeof createClaudeClient>;
+
+    const dictationSpec: GenerationSpec = {
+      ...baseSpec,
+      exerciseType: ExerciseType.DICTATION,
+    };
+
+    await expect(generateOneDraft(mockClient, dictationSpec, 0)).rejects.toThrow(
+      "Dictation exercises are not batch-generated",
+    );
+    expect(mockCreate).not.toHaveBeenCalled();
   });
 });

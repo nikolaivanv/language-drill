@@ -3,8 +3,8 @@ import type { Language, CefrLevel, ExerciseType } from '@language-drill/shared';
 import {
   ExerciseResponseSchema,
   type ExerciseResponse,
-  EvaluationResultSchema,
-  type EvaluationResultResponse,
+  parseSubmitResult,
+  type SubmitResultResponse,
 } from '../schemas/exercise';
 import type { AuthenticatedFetch } from '../fetchClient';
 
@@ -57,7 +57,7 @@ export type UseSubmitAnswerOptions = {
 export function useSubmitAnswer({ fetchFn }: UseSubmitAnswerOptions) {
   const queryClient = useQueryClient();
 
-  return useMutation<EvaluationResultResponse, Error, SubmitAnswerParams>({
+  return useMutation<SubmitResultResponse, Error, SubmitAnswerParams>({
     mutationFn: async ({ exerciseId, answer, sessionId }) => {
       const body: { answer: string; sessionId?: string } = { answer };
       if (sessionId !== undefined) body.sessionId = sessionId;
@@ -66,7 +66,7 @@ export function useSubmitAnswer({ fetchFn }: UseSubmitAnswerOptions) {
         body: JSON.stringify(body),
       });
       const json: unknown = await response.json();
-      return EvaluationResultSchema.parse(json);
+      return parseSubmitResult(json);
     },
     onSuccess: () => {
       // Invalidate exercise queries so next fetch gets a fresh exercise.

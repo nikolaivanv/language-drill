@@ -255,6 +255,10 @@ export function buildUserPrompt(
     case ExerciseType.SENTENCE_CONSTRUCTION:
       base = buildSentenceConstructionUserPrompt(exercise, userAnswer, language, difficulty);
       break;
+    case ExerciseType.DICTATION:
+      throw new Error(
+        "Dictation exercises are not evaluated via this path; use gradeDictationAnswer.",
+      );
     case ExerciseType.FREE_WRITING:
       // Free writing is graded by `evaluateFreeWriting` (its own rich tool +
       // prompt), never by this generic single-answer evaluator.

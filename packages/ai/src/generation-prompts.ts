@@ -258,6 +258,11 @@ export function computeGenerationPromptVars(
   inputs: GenerationPromptInputs,
   recentStems: readonly string[],
 ): Record<string, string> {
+  if (inputs.exerciseType === ExerciseType.DICTATION) {
+    throw new Error(
+      "Dictation exercises are not batch-generated; computeGenerationPromptVars received a dictation cell.",
+    );
+  }
   const { language, cefrLevel, exerciseType, grammarPoint, priorPoolSurfaces } =
     inputs;
   return {
@@ -463,6 +468,11 @@ export function buildGenerationUserPrompt(
   // directive (CLI/admin and non-spec cells). Length matches `count` when set.
   coverageTargets: readonly CoverageTarget[] | undefined = undefined,
 ): string {
+  if (inputs.exerciseType === ExerciseType.DICTATION) {
+    throw new Error(
+      "Dictation exercises are not batch-generated; buildGenerationUserPrompt received a dictation cell.",
+    );
+  }
   const toolName = TOOL_NAME_BY_TYPE[inputs.exerciseType as keyof typeof TOOL_NAME_BY_TYPE];
   const domain = topicDomain ?? "mixed";
   // R5.5: a LOOSE constraint — anchor on the seed, but allow a similar-frequency
@@ -512,6 +522,10 @@ export function canonicalSurface(content: ExerciseContent): string {
       return `${normaliseSurface(content.expectedWord)}::${normaliseSurface(content.prompt)}`;
     case ExerciseType.SENTENCE_CONSTRUCTION:
       return normaliseSurface(content.prompt);
+    case ExerciseType.DICTATION:
+      throw new Error(
+        "Dictation exercises are not generated via this path; use gradeDictationAnswer.",
+      );
     case ExerciseType.FREE_WRITING:
       // free_writing is not produced by the pool pipeline, so it has no
       // canonical surface for dedup.

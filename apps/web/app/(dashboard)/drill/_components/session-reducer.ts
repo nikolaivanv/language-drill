@@ -1,9 +1,8 @@
-import type { EvaluationResult } from '@language-drill/shared';
 import type {
   CreateSessionResponse,
   ExerciseResponse,
 } from '@language-drill/api-client';
-import type { SubmissionMeta, SubmissionState } from './types';
+import type { SubmissionMeta, SubmissionResult, SubmissionState } from './types';
 
 interface SessionInProgress {
   session: { id: string };
@@ -25,7 +24,7 @@ export type SessionAction =
   | { type: 'CREATE_SUCCEEDED'; session: CreateSessionResponse }
   | { type: 'CREATE_FAILED'; error: Error }
   | { type: 'ITEM_SUBMITTING' }
-  | { type: 'ITEM_EVALUATED'; result: EvaluationResult; meta: SubmissionMeta }
+  | { type: 'ITEM_EVALUATED'; result: SubmissionResult; meta: SubmissionMeta }
   | { type: 'ITEM_ERROR'; error: Error }
   | { type: 'ITEM_NEXT' }
   | { type: 'ITEM_SKIP' }

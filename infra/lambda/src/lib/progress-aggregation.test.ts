@@ -56,6 +56,11 @@ describe('axisForExerciseType', () => {
     expect(axisForExerciseType('vocab_review_grammar')).toBe('grammar');
   });
 
+  it('maps DICTATION to the listening axis', () => {
+    expect(axisForExerciseType(ExerciseType.DICTATION)).toBe('listening');
+    expect(axisForExerciseType('dictation')).toBe('listening');
+  });
+
   it('returns null for unknown types', () => {
     expect(axisForExerciseType('mystery_type')).toBeNull();
     expect(axisForExerciseType('')).toBeNull();
