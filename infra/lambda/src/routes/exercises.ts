@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { eq, and, sql, gte, count } from 'drizzle-orm';
+import { eq, and, gte, count } from 'drizzle-orm';
 import { Language, CefrLevel, ExerciseType } from '@language-drill/shared';
 import type { ExerciseContent } from '@language-drill/shared';
 import {
