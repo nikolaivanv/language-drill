@@ -5,24 +5,33 @@ const mockOnConflictDoUpdate = vi.fn(() => Promise.resolve());
 const mockValues = vi.fn(() => ({ onConflictDoUpdate: mockOnConflictDoUpdate }));
 const mockInsert = vi.fn(() => ({ values: mockValues }));
 const mockUpdate = vi.fn();
+const mockDeleteWhere = vi.fn(() => Promise.resolve());
+const mockDelete = vi.fn(() => ({ where: mockDeleteWhere }));
 vi.mock('../../db', () => ({
-  db: { insert: () => mockInsert(), update: () => mockUpdate() },
+  db: {
+    insert: () => mockInsert(),
+    update: () => mockUpdate(),
+    delete: () => mockDelete(),
+  },
 }));
 vi.mock('@language-drill/db', () => ({
   users: { id: 'id', email: 'email', plan: 'plan' },
 }));
 
-// svix Webhook.verify returns a user.created event without touching the body.
+// svix Webhook.verify returns whatever event the current test set, without
+// touching the body. The `mock`-prefixed name lets the hoisted vi.mock factory
+// reference it (vitest's hoisting exception).
+let mockEvent: unknown = {
+  type: 'user.created',
+  data: {
+    id: 'user_new',
+    email_addresses: [{ email_address: 'new@example.com' }],
+  },
+};
 vi.mock('svix', () => ({
   Webhook: class {
     verify() {
-      return {
-        type: 'user.created',
-        data: {
-          id: 'user_new',
-          email_addresses: [{ email_address: 'new@example.com' }],
-        },
-      };
+      return mockEvent;
     }
   },
 }));
@@ -32,6 +41,15 @@ describe('POST /webhooks/clerk', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     process.env.CLERK_WEBHOOK_SECRET = 'whsec_test';
+    // Reset to the default created event; tests that need another event type
+    // reassign `mockEvent` before calling `post()`.
+    mockEvent = {
+      type: 'user.created',
+      data: {
+        id: 'user_new',
+        email_addresses: [{ email_address: 'new@example.com' }],
+      },
+    };
     const mod = await import('./clerk');
     app = new Hono();
     app.route('/', mod.default);
@@ -46,7 +64,7 @@ describe('POST /webhooks/clerk', () => {
         'svix-timestamp': '1700000000',
         'svix-signature': 'v1,sig',
       },
-      body: JSON.stringify({ type: 'user.created' }),
+      body: JSON.stringify({ type: 'event' }),
     });
 
   it('upserts the user on user.created', async () => {
@@ -62,5 +80,31 @@ describe('POST /webhooks/clerk', () => {
     expect(res.status).toBe(200);
     // Invites are redeemed explicitly via POST /invites/redeem, never here.
     expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it('deletes the user row on user.deleted (cascades sweep dependent rows)', async () => {
+    mockEvent = { type: 'user.deleted', data: { id: 'user_gone', deleted: true } };
+    const res = await post();
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as { received: boolean }).received).toBe(true);
+    expect(mockDelete).toHaveBeenCalledTimes(1);
+    expect(mockDeleteWhere).toHaveBeenCalledTimes(1);
+    // A delete must never look like an upsert.
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it('400s on user.deleted with no user id', async () => {
+    mockEvent = { type: 'user.deleted', data: {} };
+    const res = await post();
+    expect(res.status).toBe(400);
+    expect(mockDelete).not.toHaveBeenCalled();
+  });
+
+  it('acknowledges an unhandled event type without writing', async () => {
+    mockEvent = { type: 'user.updated', data: { id: 'user_x' } };
+    const res = await post();
+    expect(res.status).toBe(200);
+    expect(mockInsert).not.toHaveBeenCalled();
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 });

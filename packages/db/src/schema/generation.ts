@@ -1,5 +1,6 @@
 import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 import { index, integer, jsonb, numeric, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import type { CoverageOutcome } from '@language-drill/shared';
 
 export const generationJobs = pgTable(
   'generation_jobs',
@@ -57,6 +58,17 @@ export const generationJobs = pgTable(
      * rejected nothing, and on legacy rows pre-migration.
      */
     rejectionReasonCounts: jsonb('rejection_reason_counts').$type<Record<string, number>>(),
+    /**
+     * Axis-keyed generation outcome for this batch (Pool Coverage Controller,
+     * Phase 2): `{ person?: {…}, polarity?: {…}, wordClass?: {…} }`, each axis a
+     * `{ value: { requested, approved } }` map. `requested` = drafts targeted at
+     * each value; `approved` = approved drafts whose *realized* value equals it.
+     * The scheduler reads this back to give up per-(axis,value) bucket. NULL on
+     * legacy rows and cells that did no coverage targeting. Phase-1 rows
+     * (`{ person: … }`) remain valid. Written by `run-one-cell`. Reusing the
+     * existing JSONB column → no migration.
+     */
+    coverageOutcome: jsonb('coverage_outcome').$type<CoverageOutcome>(),
   },
   (table) => ({
     cellIdx: index('generation_jobs_cell_idx').on(table.cellKey, table.startedAt.desc()),

@@ -6,6 +6,7 @@
 //   user_exercise_history(userId, evaluatedAt DESC) — progress queries
 //   user_exercise_history(sessionId)                — session completion correct-count
 //   spaced_repetition_cards(userId, dueAt)          — SM-2 scheduling
+//   fluency_attempts(userId, language, attemptedAt) — fluency stats queries
 //   practice_sessions(userId, startedAt)            — recent-sessions queries
 //   invitations(code)                               — invite lookup at signup
 //   invitations(usedBy)                             — API invite check middleware
@@ -27,7 +28,7 @@ export type { UserPreferences, NewUserPreferences } from './users';
 export { skills, skillTopics } from './skills';
 export { exercises, exerciseTags } from './exercises';
 export type { Exercise } from './exercises';
-export { userExerciseHistory, spacedRepetitionCards } from './progress';
+export { userExerciseHistory, spacedRepetitionCards, fluencyAttempts, userGrammarMastery } from './progress';
 export { practiceSessions } from './sessions';
 export {
   readEntries,

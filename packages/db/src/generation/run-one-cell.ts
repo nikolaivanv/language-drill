@@ -29,7 +29,15 @@ import {
   type ClaudeUsageBreakdown,
   type GenerationSpec,
 } from '@language-drill/ai';
-import { ExerciseType, type LearningLanguage } from '@language-drill/shared';
+import {
+  ExerciseType,
+  type CoverageAxis,
+  type CoverageOutcome,
+  type CoverageSpec,
+  type CoverageTarget,
+  type CoverageTags,
+  type LearningLanguage,
+} from '@language-drill/shared';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 
 import type { Db } from '../client';
@@ -186,6 +194,12 @@ export type CellResult = {
    * the structured log (`summarizeResult`). Always `false` on the failed path.
    */
   earlyBailed: boolean;
+  /**
+   * Per-axis `{requested, approved}` tally for a coverage-targeted batch (Phase
+   * 2). `null` when the cell did no coverage targeting (no `args.coverageTargets`).
+   * Persisted to `generation_jobs.coverage_outcome`.
+   */
+  coverageOutcome: CoverageOutcome | null;
 };
 
 /**
@@ -201,6 +215,12 @@ export type RunOneCellInput = {
     batchSeed: string;
     topicDomain: string | null;
     maxCostUsd: number;
+    /**
+     * Phase 2 coverage controller: explicit per-ordinal axis targets from the
+     * scheduler (length === count). `undefined` → no coverage targeting/tally
+     * (CLI/admin and non-spec cells).
+     */
+    coverageTargets?: readonly CoverageTarget[];
   };
   /** Caller-supplied audit-row id. CLI: `randomUUID()`. Scheduler: `deterministicUuid([cellKey, batchSeed].join('|'))`. */
   jobId: string;
@@ -335,6 +355,44 @@ export function buildSeedWords(
   });
 }
 
+/**
+ * Build the per-axis `coverage_outcome` tally for a batch (Phase 2). `requested`
+ * counts each draft's targeted value per axis; `approved` counts approved drafts
+ * by their REALIZED value per axis (so a draft targeted at `2pl` but realized as
+ * `3sg` via the escape hatch credits `3sg`, not `2pl`). Only the axes the batch
+ * actually targeted (present in the first target) are tallied. Returns `null`
+ * when there were no targets.
+ */
+export function tallyCoverageOutcome(
+  spec: CoverageSpec | undefined,
+  coverageTargets: readonly CoverageTarget[] | undefined,
+  realizedPerApprovedOrdinal: readonly (CoverageTags | undefined)[],
+): CoverageOutcome | null {
+  if (!spec || !coverageTargets || coverageTargets.length === 0) return null;
+  const activeAxes = Object.keys(coverageTargets[0]) as CoverageAxis[];
+  if (activeAxes.length === 0) return null;
+  const acc: CoverageOutcome = {};
+  const bump = (axis: CoverageAxis, value: string, field: 'requested' | 'approved') => {
+    const axisAcc = (acc[axis] ??= {});
+    const bucket = (axisAcc[value] ??= { requested: 0, approved: 0 });
+    bucket[field] += 1;
+  };
+  for (const target of coverageTargets) {
+    for (const axis of activeAxes) {
+      const v = target[axis];
+      if (v) bump(axis, v, 'requested');
+    }
+  }
+  for (const realized of realizedPerApprovedOrdinal) {
+    if (!realized) continue;
+    for (const axis of activeAxes) {
+      const v = realized[axis];
+      if (v) bump(axis, v, 'approved');
+    }
+  }
+  return Object.keys(acc).length > 0 ? acc : null;
+}
+
 // ---------------------------------------------------------------------------
 // runOneCell
 // ---------------------------------------------------------------------------
@@ -408,6 +466,14 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
   // success return below.
   let earlyBailed = false;
   const rejectionReasonCounts: Record<string, number> = {};
+  // Phase 2 per-axis tally: collect the realized coverage of each APPROVED
+  // ordinal, then build the outcome once at the end via `tallyCoverageOutcome`.
+  const coverageTargets = args.coverageTargets;
+  const approvedRealized: (CoverageTags | undefined)[] = [];
+  const creditApproved = (realized: CoverageTags | undefined): void => {
+    if (!coverageTargets) return;
+    approvedRealized.push(realized);
+  };
   const generatedAt = new Date();
 
   // Built inside the try so any failure in the priors query routes through
@@ -453,6 +519,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       batchSeed: args.batchSeed,
       priorPoolSurfaces,
       seedWords,
+      coverageTargets: args.coverageTargets,
     };
 
     const batch = await runGeneratorPool({
@@ -540,6 +607,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
         case 'inserted-approved':
           approvedCount += 1;
           insertedCount += 1;
+          creditApproved(outcome.realizedCoverage);
           break;
         case 'inserted-flagged':
           flaggedCount += 1;
@@ -562,6 +630,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
           insertedCount += 1;
           if (outcome.terminalReviewStatus === 'auto-approved') {
             approvedCount += 1;
+            creditApproved(outcome.realizedCoverage);
           } else {
             flaggedCount += 1;
           }
@@ -589,6 +658,12 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     });
   }
 
+  const coverageOutcome = tallyCoverageOutcome(
+    cell.grammarPoint.coverageSpec,
+    coverageTargets,
+    approvedRealized,
+  );
+
   const costUsd = estimateCostUsd(combinedUsage);
   const totalInputTokens =
     combinedUsage.inputTokens +
@@ -613,6 +688,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       // "no rejections" rather than an empty object on inspection.
       rejectionReasonCounts:
         Object.keys(rejectionReasonCounts).length > 0 ? rejectionReasonCounts : null,
+      coverageOutcome,
       inputTokensUsed: totalInputTokens,
       outputTokensUsed: combinedUsage.outputTokens,
       costUsdEstimate: costUsd.toFixed(4),
@@ -638,6 +714,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     validatorParseFailedCount,
     rejectionReasonCounts,
     earlyBailed,
+    coverageOutcome,
   };
 }
 
@@ -692,5 +769,7 @@ async function failClosed(opts: {
     rejectionReasonCounts: {},
     // A failed cell never early-bailed — the bail is a success-path concept.
     earlyBailed: false,
+    // A failed batch records no coverage tally.
+    coverageOutcome: null,
   };
 }

@@ -13,8 +13,11 @@
 import type { CurriculumCefrLevel, Db } from '@language-drill/db';
 import { generationJobs } from '@language-drill/db';
 import {
+  COVERAGE_AXIS_VALUES,
   ExerciseType,
   Language,
+  type CoverageAxis,
+  type CoverageTarget,
   type LearningLanguage,
 } from '@language-drill/shared';
 import { eq } from 'drizzle-orm';
@@ -52,6 +55,13 @@ export type GenerationJobMessage = {
     /** [1, 200], same range as the CLI's `--count`. */
     count: number;
     batchSeed: string;
+    /**
+     * Phase 2 coverage controller: explicit per-draft axis targets. When
+     * present, MUST be an array of length === `count`; each element a sparse
+     * `{ axis: value }` map over known coverage axes/values. Absent on CLI/admin
+     * and non-spec scheduled cells.
+     */
+    coverageTargets?: CoverageTarget[];
   };
   /** Cell-level cost cap in USD. (0, 100). */
   maxCostUsd: number;
@@ -150,6 +160,7 @@ export function parseGenerationJobMessage(
     COUNT_MAX,
   );
   const batchSeed = requireBatchSeed(specValue, 'spec.batchSeed');
+  const coverageTargets = optionalCoverageTargets(specValue, count);
 
   const maxCostUsd = requireMaxCostUsd(input, 'maxCostUsd');
 
@@ -166,6 +177,7 @@ export function parseGenerationJobMessage(
       topicDomain,
       count,
       batchSeed,
+      ...(coverageTargets !== undefined ? { coverageTargets } : {}),
     },
     maxCostUsd,
   };
@@ -306,6 +318,49 @@ function requireBatchSeed(
     );
   }
   return value;
+}
+
+const VALID_AXES = new Set(Object.keys(COVERAGE_AXIS_VALUES));
+
+function optionalCoverageTargets(
+  spec: Record<string, unknown>,
+  count: number,
+): CoverageTarget[] | undefined {
+  const value = spec["coverageTargets"];
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value)) {
+    throw new Error(
+      `spec.coverageTargets: expected array or undefined, got ${describe(value)}`,
+    );
+  }
+  if (value.length !== count) {
+    throw new Error(
+      `spec.coverageTargets: expected length === spec.count (${count}), got ${value.length}`,
+    );
+  }
+  const out: CoverageTarget[] = [];
+  for (const entry of value) {
+    if (!isPlainObject(entry)) {
+      throw new Error(
+        `spec.coverageTargets: each element must be an object, got ${describe(entry)}`,
+      );
+    }
+    const target: CoverageTarget = {};
+    for (const [axis, v] of Object.entries(entry)) {
+      if (!VALID_AXES.has(axis)) {
+        throw new Error(`spec.coverageTargets: unknown axis '${axis}'`);
+      }
+      const legal = COVERAGE_AXIS_VALUES[axis as CoverageAxis];
+      if (typeof v !== "string" || !legal.includes(v)) {
+        throw new Error(
+          `spec.coverageTargets: illegal value ${JSON.stringify(v)} for axis '${axis}'`,
+        );
+      }
+      target[axis as CoverageAxis] = v;
+    }
+    out.push(target);
+  }
+  return out;
 }
 
 function requireMaxCostUsd(

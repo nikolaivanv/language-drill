@@ -57,7 +57,9 @@ import {
   buildSeedWords,
   fetchPriorVocabRecallSurfaces,
   runOneCell,
+  tallyCoverageOutcome,
 } from './run-one-cell';
+import type { CoverageSpec, CoverageTarget, CoverageTags } from '@language-drill/shared';
 import { VOCAB_MAX_PER_WORD } from './validate-and-insert';
 
 // ---------------------------------------------------------------------------
@@ -338,6 +340,7 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
     afterEach(async () => {
       await cleanCellRows(db);
       delete process.env['MOCK_VALIDATION_OUTCOMES'];
+      delete process.env['MOCK_VALIDATION_PERSONS'];
       delete process.env['MOCK_VALIDATION_THROW_ORDINAL'];
       delete process.env['MOCK_VALIDATION_MALFORM_ORDINAL'];
       delete process.env['MOCK_CLAUDE_FIXTURES_DIR'];
@@ -949,6 +952,136 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
       },
     );
 
+    // -----------------------------------------------------------------------
+    // Phase 2 coverage controller — per-axis coverage_outcome tally.
+    //
+    // `args.coverageTargets` carries the scheduler's per-ordinal axis targets.
+    // `runOneCell` tallies `{requested, approved}` per axis value: `requested`
+    // counts every targeted slot (incl. rejected drafts); `approved` counts
+    // auto-approved inserts by their REALIZED coverage tags (the validator's
+    // `coverage`, surfaced as `DraftOutcome.realizedCoverage`). The realized
+    // person per draft is driven by the mock's `MOCK_VALIDATION_PERSONS` env
+    // var, which is keyed on a substring of the draft's `correctAnswer` (see
+    // parseValidationPersons) — not on validator-call ordinal.
+    // -----------------------------------------------------------------------
+
+    it(
+      'tallies coverage_outcome by requested target vs. realized coverage tags',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        // Self-contained validation fixtures (the shared __fixtures__ approved
+        // fixture omits the now-required `contextSpoilsAnswer`). `coverage` is
+        // injected per-draft below via MOCK_VALIDATION_PERSONS.
+        const tmpValidationDir = mkdtempSync(
+          join(tmpdir(), 'coverage-tally-validation-'),
+        );
+        try {
+          writeFileSync(
+            join(tmpValidationDir, 'cloze-approved.json'),
+            JSON.stringify({
+              qualityScore: 0.85,
+              ambiguous: false,
+              contextSpoilsAnswer: false,
+              levelMatch: true,
+              grammarPointMatch: true,
+              culturalIssues: [],
+              flaggedReasons: [],
+            }),
+          );
+          writeFileSync(
+            join(tmpValidationDir, 'cloze-rejected.json'),
+            JSON.stringify({
+              qualityScore: 0.3,
+              ambiguous: false,
+              contextSpoilsAnswer: false,
+              levelMatch: false,
+              grammarPointMatch: false,
+              culturalIssues: [],
+              flaggedReasons: [],
+            }),
+          );
+          process.env['MOCK_CLAUDE_VALIDATION_FIXTURES_DIR'] = tmpValidationDir;
+
+          // ordinal 0 → approved, realized '2pl'; ordinal 1 → rejected (no
+          // realized person); ordinal 2 → approved, realized '1pl'.
+          process.env['MOCK_VALIDATION_OUTCOMES'] = JSON.stringify({
+            '0': 'approved',
+            '1': 'rejected',
+            '2': 'approved',
+          });
+          // Person is keyed on each draft's `correctAnswer` (content-stable),
+          // so it tracks the draft regardless of the validator pool's dispatch
+          // order: CLOZE_FIXTURES[0] (`vengas`) → '2pl', [2] (`asistamos`) →
+          // '1pl'. [1] (`tenga`) is the rejected ordinal (no person key).
+          process.env['MOCK_VALIDATION_PERSONS'] = JSON.stringify({
+            vengas: '2pl',
+            asistamos: '1pl',
+          });
+
+          const result = await runOneCell({
+            db,
+            client: createMockAnthropicClient(),
+            cell: buildTestCell(),
+            args: {
+              count: 3,
+              batchSeed: 'phase-2-coverage-tally',
+              topicDomain: null,
+              maxCostUsd: 5,
+              // requested: 2pl twice, 1pl once (Phase 2 multi-axis targets).
+              coverageTargets: [
+                { person: '2pl' },
+                { person: '2pl' },
+                { person: '1pl' },
+              ],
+            },
+            jobId: randomUUID(),
+            trigger: 'scheduled',
+          });
+
+          expect(result.coverageOutcome).toEqual({
+            person: {
+              '2pl': { requested: 2, approved: 1 },
+              '1pl': { requested: 1, approved: 1 },
+            },
+          });
+
+          // …and the same value is persisted to the audit row.
+          const jobs = await db
+            .select()
+            .from(generationJobs)
+            .where(eq(generationJobs.cellKey, TEST_CELL_KEY));
+          expect(jobs).toHaveLength(1);
+          expect(jobs[0].coverageOutcome).toEqual({
+            person: {
+              '2pl': { requested: 2, approved: 1 },
+              '1pl': { requested: 1, approved: 1 },
+            },
+          });
+        } finally {
+          rmSync(tmpValidationDir, { recursive: true, force: true });
+        }
+      },
+    );
+
+    it(
+      'leaves coverage_outcome null when the batch is not coverage-targeted',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        // No `args.coverageTargets` → blind rotation, no tally.
+        const result = await invokeRunOneCell(db, 3, 'phase-2-coverage-untargeted');
+
+        expect(result.status).toBe('succeeded');
+        expect(result.coverageOutcome).toBeNull();
+
+        const jobs = await db
+          .select()
+          .from(generationJobs)
+          .where(eq(generationJobs.cellKey, TEST_CELL_KEY));
+        expect(jobs).toHaveLength(1);
+        expect(jobs[0].coverageOutcome).toBeNull();
+      },
+    );
+
   },
 );
 
@@ -1054,3 +1187,41 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
     });
   },
 );
+
+// ---------------------------------------------------------------------------
+// tallyCoverageOutcome — pure per-axis tally helper (Phase 2).
+// ---------------------------------------------------------------------------
+
+describe('tallyCoverageOutcome', () => {
+  const spec: CoverageSpec = {
+    axes: [
+      { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
+      { name: 'polarity', floors: { affirmative: 5, negative: 5 } },
+    ],
+  };
+  it('counts requested by target and approved by realized value, per axis', () => {
+    const targets: CoverageTarget[] = [
+      { person: '2pl', polarity: 'negative' },
+      { person: '1sg', polarity: 'affirmative' },
+    ];
+    const realized: (CoverageTags | undefined)[] = [
+      { person: '3sg', polarity: 'negative' },
+      { person: '1sg', polarity: 'affirmative' },
+    ];
+    const out = tallyCoverageOutcome(spec, targets, realized);
+    expect(out).toEqual({
+      person: {
+        '2pl': { requested: 1, approved: 0 },
+        '1sg': { requested: 1, approved: 1 },
+        '3sg': { requested: 0, approved: 1 },
+      },
+      polarity: {
+        negative: { requested: 1, approved: 1 },
+        affirmative: { requested: 1, approved: 1 },
+      },
+    });
+  });
+  it('returns null when there were no targets', () => {
+    expect(tallyCoverageOutcome(spec, undefined, [])).toBeNull();
+  });
+});

@@ -18,6 +18,10 @@ const env = {
 const parseAudience = (raw: string | undefined, fallback: string): string[] =>
   (raw || fallback).split(",").map((s) => s.trim()).filter(Boolean);
 
+// Operational alert destination (CloudWatch alarms + AWS Budget). Override via
+// ALERT_EMAIL; defaults to the operator's address.
+const alertEmail = process.env.ALERT_EMAIL || "nikolaivanv@gmail.com";
+
 new LanguageDrillStack(app, "LanguageDrillStack", {
   env,
   envName: "prod",
@@ -35,6 +39,10 @@ new LanguageDrillStack(app, "LanguageDrillStack", {
   adminUserIds: process.env.ADMIN_USER_IDS,
   aiKillSwitch: process.env.AI_KILL_SWITCH,
   aiGlobalDailyCap: process.env.AI_GLOBAL_DAILY_CAP,
+  alertEmail,
+  // Account-wide cost budget lives on the prod stack only (avoids two budgets
+  // double-counting the same account spend).
+  createBudget: true,
 });
 
 new LanguageDrillStack(app, "LanguageDrillStack-dev", {
@@ -50,4 +58,7 @@ new LanguageDrillStack(app, "LanguageDrillStack-dev", {
   adminUserIds: process.env.ADMIN_USER_IDS_DEV,
   aiKillSwitch: process.env.AI_KILL_SWITCH_DEV,
   aiGlobalDailyCap: process.env.AI_GLOBAL_DAILY_CAP_DEV,
+  alertEmail,
+  // Budget is account-wide and created on prod only.
+  createBudget: false,
 });

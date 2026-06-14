@@ -83,6 +83,7 @@ Both servers are started from the repo root. They read `DATABASE_URL`, `ANTHROPI
 | `pnpm eval` | Run a candidate prompt against a Langfuse dataset, link each per-item trace to the dataset run, and write a quality/cost/latency summary to `./eval-runs/<runName>.json`. |
 | `pnpm eval:gen` | The **generation-quality** gate (distinct from `pnpm eval`, which only covers the answer-evaluation prompt). Compares two generation-prompt sources (`--baseline` / `--candidate`, each `repo` \| `file:<path>` \| `langfuse:<name>@<label>`) over a cell dataset (`--dataset-file`): generates N drafts per cell per arm, validates each, routes via `routeValidationResult`, and writes approval-rate / rejection-reason / flag-tag deltas to `./eval-runs/<runName>.json`. Supports `--drafts-per-cell` (default 5), `--limit`, `--max-cost-usd`, `--allow-prod`. |
 | `pnpm eval:gen:export` | Build a failure-prone cell dataset for `eval:gen` by sampling the lowest-approval cells from `generation_jobs` (read-only). Supports `--sample`, `--out`, `--language`, `--cefr`, `--allow-prod`. |
+| `pnpm propose:coverage-spec` | LLM-assisted coverage-spec authoring (Pool Coverage Controller, Phase 2). Reads a grammar point (`--grammar-point <key>`), asks Claude to propose the 1–2 coverage axes + absolute per-value floors a diverse pool should vary along, validates the proposal, and prints a paste-ready `coverageSpec` snippet for human review + commit into the curriculum. `--with-pool-stats` grounds the proposal in the current approved distribution (read-only). In-repo prompt (not Langfuse). |
 
 First-time setup:
 
@@ -132,6 +133,7 @@ each prompt and are re-exported from `packages/ai/src/index.ts`:
 | `theory-prompts.ts` | `THEORY_GENERATION_PROMPT_VERSION` |
 | `theory-validation-prompts.ts` | `THEORY_VALIDATION_PROMPT_VERSION` |
 | `read-span.ts` | `READ_SPAN_PROMPT_VERSION` |
+| `free-writing-prompts.ts` | `FREE_WRITING_EVAL_PROMPT_VERSION` |
 
 Langfuse is now the live source for these prompts; the in-repo
 `*_SYSTEM_PROMPT` constant is the fallback. Bumping
@@ -389,7 +391,7 @@ The Clerk production instance must have a **JWT template** named `api` with thes
 
 The frontend requests tokens via `getToken({ template: 'api' })`. API Gateway validates the JWT against Clerk's JWKS endpoint.
 
-A **webhook** must be configured in Clerk pointing to `https://api.langdrill.app/webhooks/clerk` (subscribe to `user.created`). This creates the user row in the database on signup.
+A **webhook** must be configured in Clerk pointing to `https://api.langdrill.app/webhooks/clerk` (subscribe to `user.created` **and** `user.deleted`). `user.created` creates the user row on signup; `user.deleted` deletes it (FK cascades sweep all dependent rows — right-to-erasure).
 
 ---
 

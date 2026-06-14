@@ -16,7 +16,9 @@ export const users = pgTable('users', {
 
 export const userLanguageProfiles = pgTable('user_language_profiles', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: text('user_id').references(() => users.id).notNull(),
+  userId: text('user_id')
+    .references(() => users.id, { onDelete: 'cascade' })
+    .notNull(),
   language: text('language').notNull(),
   proficiencyLevel: text('proficiency_level').notNull(),
   assessedAt: timestamp('assessed_at'),

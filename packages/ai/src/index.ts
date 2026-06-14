@@ -37,6 +37,20 @@ export {
 } from "./dictation-eval.js";
 export type { GradeDictationInput } from "./dictation-eval.js";
 export {
+  evaluateFreeWriting,
+  parseFreeWritingEvaluation,
+  FREE_WRITING_EVAL_TOOL,
+  FREE_WRITING_EVAL_TOOL_NAME,
+  FREE_WRITING_EVAL_REQUEST_TIMEOUT_MS,
+  FREE_WRITING_EVAL_MAX_RETRIES,
+} from "./free-writing-evaluate.js";
+export type { EvaluateFreeWritingInput } from "./free-writing-evaluate.js";
+export {
+  FREE_WRITING_EVAL_SYSTEM_PROMPT,
+  FREE_WRITING_EVAL_PROMPT_VERSION,
+  buildFreeWritingUserPrompt,
+} from "./free-writing-prompts.js";
+export {
   ANNOTATE_SYSTEM_PROMPT,
   ANNOTATE_SYSTEM_PROMPT_VERSION,
   ANNOTATE_TOOL,
@@ -107,8 +121,8 @@ export {
   GENERATION_SYSTEM_PROMPT_TEMPLATE,
   MAX_RECENT_STEMS_IN_PROMPT,
   PERSON_ROTATION_BY_LANGUAGE,
-  personForOrdinal,
-  personRotationPhase,
+  personCodesForLanguage,
+  personDisplayForCode,
 } from "./generation-prompts.js";
 export type { GenerationPromptInputs } from "./generation-prompts.js";
 
@@ -271,3 +285,15 @@ export {
   __resetRegistryForTests,
 } from "./prompts-registry.js";
 export type { ResolvedPrompt } from "./prompts-registry.js";
+
+export {
+  buildCoverageSpecProposalUserPrompt,
+  parseCoverageSpecProposal,
+  proposeCoverageSpec,
+  renderCoverageSpecSnippet,
+  COVERAGE_SPEC_PROPOSAL_PROMPT_VERSION,
+  COVERAGE_SPEC_PROPOSAL_SYSTEM_PROMPT_TEMPLATE,
+  PROPOSE_COVERAGE_SPEC_TOOL,
+  PROPOSE_COVERAGE_SPEC_TOOL_NAME,
+} from "./coverage-spec-proposal.js";
+export type { CoverageSpecProposal } from "./coverage-spec-proposal.js";

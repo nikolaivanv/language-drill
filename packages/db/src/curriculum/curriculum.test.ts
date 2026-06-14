@@ -158,27 +158,12 @@ describe('curriculum sentenceConstructionSuitable flag', () => {
   });
 });
 
-describe('curriculum personRotation flag', () => {
-  it('throws when a vocab umbrella is flagged personRotation', () => {
-    expect(() =>
-      assertCurriculumInvariants([
-        {
-          key: 'tr-a2-synthetic-vocab-pr',
-          kind: 'vocab',
-          name: 'Synthetic vocab',
-          description: 'Synthetic vocab entry for personRotation invariant testing.',
-          cefrLevel: 'A2',
-          language: Language.TR,
-          examplesPositive: ['a', 'b'],
-          examplesNegative: ['*c'],
-          commonErrors: ['e'],
-          personRotation: true,
-        },
-      ]),
-    ).toThrow(/personRotation but not kind 'grammar'/);
-  });
+describe('curriculum personRotation flag (migrated to coverageSpec — Task 4)', () => {
+  // The `personRotation` field has been migrated to `coverageSpec` in Task 4 of
+  // the Pool Coverage Controller Phase 2 migration. Active entries no longer have
+  // `personRotation`; they carry a person-axis `coverageSpec` instead.
 
-  it('flags the person-marked TR tense/copular points', () => {
+  it('person-marked TR tense/copular points have a person-axis coverageSpec (not personRotation)', () => {
     const flaggedKeys = [
       'tr-a1-present-continuous',
       'tr-a1-dili-past',
@@ -188,11 +173,16 @@ describe('curriculum personRotation flag', () => {
       'tr-a2-aorist',
     ];
     for (const key of flaggedKeys) {
-      expect(getGrammarPoint(key)?.personRotation, key).toBe(true);
+      const gp = getGrammarPoint(key);
+      expect(gp?.personRotation, `${key}: personRotation should be gone`).toBeUndefined();
+      expect(
+        gp?.coverageSpec?.axes.some((a) => a.name === 'person'),
+        `${key}: coverageSpec should have a person axis`,
+      ).toBe(true);
     }
   });
 
-  it('does not flag person-less points or the eval-excluded weak cells', () => {
+  it('does not give coverageSpec.person to person-less points or the eval-excluded weak cells', () => {
     // mis-evidential / ability-necessity: rotation eval (2026-06-12) showed
     // both chronically weak cells degrade further under rotation — excluded
     // pending cell-specific fixes (see comments in tr.ts).
@@ -204,7 +194,10 @@ describe('curriculum personRotation flag', () => {
       'tr-a2-ability-necessity',
     ];
     for (const key of excluded) {
-      expect(getGrammarPoint(key)?.personRotation, key).toBeUndefined();
+      const gp = getGrammarPoint(key);
+      expect(gp?.personRotation, `${key}: personRotation should be absent`).toBeUndefined();
+      const hasPersonAxis = gp?.coverageSpec?.axes.some((a) => a.name === 'person') ?? false;
+      expect(hasPersonAxis, `${key}: should have no person axis in coverageSpec`).toBe(false);
     }
   });
 });
@@ -374,5 +367,59 @@ describe('CURRICULUM_VERSION_BY_LANGUAGE', () => {
     expect(CURRICULUM_VERSION_BY_LANGUAGE[Language.ES]).toBe(CURRICULUM_VERSION_ES);
     expect(CURRICULUM_VERSION_BY_LANGUAGE[Language.DE]).toBe(CURRICULUM_VERSION_DE);
     expect(CURRICULUM_VERSION_BY_LANGUAGE[Language.TR]).toBe(CURRICULUM_VERSION_TR);
+  });
+});
+
+function baseGrammar(over: Partial<GrammarPoint>): GrammarPoint {
+  return {
+    key: 'tr-a1-x-test',
+    kind: 'grammar',
+    name: 'test',
+    description: 'd',
+    cefrLevel: 'A1',
+    language: Language.TR as GrammarPoint['language'],
+    examplesPositive: ['a', 'b'],
+    examplesNegative: ['*c'],
+    commonErrors: ['e'],
+    ...over,
+  } as GrammarPoint;
+}
+
+describe('coverageSpec invariants', () => {
+  it('rejects an illegal floor key for the axis', () => {
+    const gp = baseGrammar({ coverageSpec: { axes: [{ name: 'person', floors: { '9sg': 5 } }] } });
+    expect(() => assertCurriculumInvariants([gp])).toThrow(/illegal value '9sg'/);
+  });
+  it('rejects wordClass on a grammar point', () => {
+    const gp = baseGrammar({ coverageSpec: { axes: [{ name: 'wordClass', floors: { noun: 5 } }] } });
+    expect(() => assertCurriculumInvariants([gp])).toThrow(/wordClass.*only valid on kind 'vocab'/);
+  });
+  it('rejects person on a vocab point', () => {
+    const gp = baseGrammar({
+      kind: 'vocab',
+      key: 'tr-a1-vocab-test',
+      coverageSpec: { axes: [{ name: 'person', floors: { '3sg': 5 } }] },
+    });
+    expect(() => assertCurriculumInvariants([gp])).toThrow(/person.*only valid on kind 'grammar'/);
+  });
+  it('rejects a non-positive-integer floor', () => {
+    const gp = baseGrammar({ coverageSpec: { axes: [{ name: 'person', floors: { '3sg': 0 } }] } });
+    expect(() => assertCurriculumInvariants([gp])).toThrow(/floor.*positive integer/);
+  });
+  it('rejects a duplicate axis', () => {
+    const gp = baseGrammar({
+      coverageSpec: { axes: [{ name: 'person', floors: { '3sg': 5 } }, { name: 'person', floors: { '1sg': 5 } }] },
+    });
+    expect(() => assertCurriculumInvariants([gp])).toThrow(/duplicate axis/);
+  });
+  it('accepts a valid person spec on a grammar point', () => {
+    const gp = baseGrammar({ coverageSpec: { axes: [{ name: 'person', floors: { '1sg': 5, '3sg': 5 } }] } });
+    // Invariant 10 (per-language grammar count minimums) may throw for a single-entry
+    // fixture; we only care that no coverageSpec-related error is thrown.
+    try {
+      assertCurriculumInvariants([gp]);
+    } catch (e) {
+      expect((e as Error).message).not.toMatch(/coverageSpec|duplicate axis|illegal value|only valid|positive integer/);
+    }
   });
 });

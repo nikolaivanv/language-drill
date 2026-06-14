@@ -7,6 +7,7 @@ import {
   coverageAxesFor,
   pickCoverageTags,
   type CoverageTags,
+  type CoverageSpec,
 } from "./coverage";
 
 describe("coverage axis constants", () => {
@@ -31,22 +32,24 @@ describe("coverage axis constants", () => {
   });
 });
 
+const personSpec: CoverageSpec = { axes: [{ name: "person", floors: { "3sg": 8 } }] };
+
 describe("coverageAxesFor", () => {
   it("vocab_recall → wordClass only", () => {
-    expect(coverageAxesFor(ExerciseType.VOCAB_RECALL, false)).toEqual([
+    expect(coverageAxesFor(ExerciseType.VOCAB_RECALL, undefined)).toEqual([
       "wordClass",
     ]);
   });
 
-  it("grammar cloze without personRotation → polarity + sentenceType", () => {
-    expect(coverageAxesFor(ExerciseType.CLOZE, false)).toEqual([
+  it("grammar cloze without person spec → polarity + sentenceType", () => {
+    expect(coverageAxesFor(ExerciseType.CLOZE, undefined)).toEqual([
       "polarity",
       "sentenceType",
     ]);
   });
 
-  it("grammar cloze with personRotation → person + polarity + sentenceType", () => {
-    expect(coverageAxesFor(ExerciseType.CLOZE, true)).toEqual([
+  it("grammar cloze with person spec → person + polarity + sentenceType", () => {
+    expect(coverageAxesFor(ExerciseType.CLOZE, personSpec)).toEqual([
       "person",
       "polarity",
       "sentenceType",
@@ -54,12 +57,12 @@ describe("coverageAxesFor", () => {
   });
 
   it("translation and sentence_construction behave like grammar cells", () => {
-    expect(coverageAxesFor(ExerciseType.TRANSLATION, true)).toEqual([
+    expect(coverageAxesFor(ExerciseType.TRANSLATION, personSpec)).toEqual([
       "person",
       "polarity",
       "sentenceType",
     ]);
-    expect(coverageAxesFor(ExerciseType.SENTENCE_CONSTRUCTION, false)).toEqual([
+    expect(coverageAxesFor(ExerciseType.SENTENCE_CONSTRUCTION, undefined)).toEqual([
       "polarity",
       "sentenceType",
     ]);
@@ -73,10 +76,10 @@ describe("pickCoverageTags", () => {
       wordClass: "verb",
       polarity: "negative",
     };
-    expect(pickCoverageTags(coverage, ExerciseType.VOCAB_RECALL, false)).toEqual(
+    expect(pickCoverageTags(coverage, ExerciseType.VOCAB_RECALL, undefined)).toEqual(
       { wordClass: "verb" },
     );
-    expect(pickCoverageTags(coverage, ExerciseType.CLOZE, true)).toEqual({
+    expect(pickCoverageTags(coverage, ExerciseType.CLOZE, personSpec)).toEqual({
       person: "2pl",
       polarity: "negative",
     });
@@ -84,8 +87,50 @@ describe("pickCoverageTags", () => {
 
   it("returns null when no applicable axis is present", () => {
     expect(
-      pickCoverageTags({ wordClass: "noun" }, ExerciseType.CLOZE, true),
+      pickCoverageTags({ wordClass: "noun" }, ExerciseType.CLOZE, personSpec),
     ).toBeNull();
-    expect(pickCoverageTags({}, ExerciseType.VOCAB_RECALL, false)).toBeNull();
+    expect(pickCoverageTags({}, ExerciseType.VOCAB_RECALL, undefined)).toBeNull();
+  });
+});
+
+describe("coverageAxesFor (spec-driven)", () => {
+  const wordClassSpec: CoverageSpec = { axes: [{ name: "wordClass", floors: { noun: 6 } }] };
+
+  it("vocab with no spec → wordClass only", () => {
+    expect(coverageAxesFor(ExerciseType.VOCAB_RECALL, undefined)).toEqual(["wordClass"]);
+  });
+  it("grammar cloze with no spec → polarity + sentenceType (monitoring)", () => {
+    expect(coverageAxesFor(ExerciseType.CLOZE, undefined)).toEqual(["polarity", "sentenceType"]);
+  });
+  it("grammar cloze with person spec → person + polarity + sentenceType (canonical order)", () => {
+    expect(coverageAxesFor(ExerciseType.CLOZE, personSpec)).toEqual([
+      "person",
+      "polarity",
+      "sentenceType",
+    ]);
+  });
+  it("vocab with wordClass spec → wordClass (union is a no-op)", () => {
+    expect(coverageAxesFor(ExerciseType.VOCAB_RECALL, wordClassSpec)).toEqual(["wordClass"]);
+  });
+});
+
+describe("pickCoverageTags (spec-driven)", () => {
+  it("keeps person when the spec controls it", () => {
+    expect(
+      pickCoverageTags(
+        { person: "2pl", polarity: "affirmative", sentenceType: "declarative" },
+        ExerciseType.CLOZE,
+        personSpec,
+      ),
+    ).toEqual({ person: "2pl", polarity: "affirmative", sentenceType: "declarative" });
+  });
+  it("drops person when no spec controls it", () => {
+    expect(
+      pickCoverageTags(
+        { person: "2pl", polarity: "affirmative" },
+        ExerciseType.CLOZE,
+        undefined,
+      ),
+    ).toEqual({ polarity: "affirmative" });
   });
 });

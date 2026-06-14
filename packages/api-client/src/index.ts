@@ -10,6 +10,8 @@ export {
   parseSubmitResult,
   ApiErrorSchema,
   type ApiErrorResponse,
+  FreeWritingEvaluationSchema,
+  type FreeWritingEvaluationResponse,
 } from './schemas/exercise';
 export {
   LanguageProfileSchema,
@@ -120,6 +122,11 @@ export {
   type SubmitAnswerParams,
   type UseSubmitAnswerOptions,
 } from './hooks/useExercise';
+export {
+  useSubmitFreeWriting,
+  type SubmitFreeWritingParams,
+  type UseSubmitFreeWritingOptions,
+} from './hooks/useSubmitFreeWriting';
 export {
   useCreateSession,
   useCompleteSession,
@@ -300,3 +307,25 @@ export {
   type UpdateVocabularyWordParams,
   type DeleteVocabularyWordParams,
 } from './hooks/useReviewMutations';
+export {
+  FluencySessionRequestSchema,
+  type FluencySessionRequest,
+  FluencySessionResponseSchema,
+  type FluencySessionResponse,
+  FluencyAttemptRequestSchema,
+  type FluencyAttemptRequest,
+  FluencyAttemptResponseSchema,
+  type FluencyAttemptResponse,
+  FluencyWeekBucketSchema,
+  type FluencyWeekBucket,
+  FluencyStatsResponseSchema,
+  type FluencyStatsResponse,
+} from './schemas/fluency';
+export {
+  useFluencySession,
+  useSubmitFluencyAttempt,
+  useFluencyStats,
+  type UseFluencySessionOptions,
+  type UseSubmitFluencyAttemptOptions,
+  type UseFluencyStatsParams,
+} from './hooks/useFluency';

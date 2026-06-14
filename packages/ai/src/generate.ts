@@ -16,6 +16,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import {
   type CefrLevel,
   type ClozeContent,
+  type CoverageTarget,
   type ExerciseContent,
   ExerciseType,
   Language,
@@ -54,10 +55,10 @@ export const GENERATION_TEMPERATURE = 0.7;
 // Tool-name map
 // ---------------------------------------------------------------------------
 
-// DICTATION is excluded: dictation exercises are not batch-generated and are
-// graded by gradeDictationAnswer, not the generic generation/evaluation path.
+// DICTATION and FREE_WRITING are excluded: dictation exercises are not batch-generated and are
+// graded by gradeDictationAnswer; free writing is authored by hand, never produced by this pipeline.
 export const TOOL_NAME_BY_TYPE: Readonly<
-  Record<Exclude<ExerciseType, ExerciseType.DICTATION>, string>
+  Record<Exclude<ExerciseType, ExerciseType.DICTATION | ExerciseType.FREE_WRITING>, string>
 > = Object.freeze({
   cloze: "submit_cloze_exercise",
   translation: "submit_translation_exercise",
@@ -278,10 +279,10 @@ export const SENTENCE_CONSTRUCTION_GENERATION_TOOL: Anthropic.Tool = {
   },
 };
 
-// DICTATION is excluded: dictation exercises are not batch-generated and are
-// graded by gradeDictationAnswer, not the generic generation/evaluation path.
+// DICTATION and FREE_WRITING are excluded: dictation exercises are not batch-generated and are
+// graded by gradeDictationAnswer; free writing is authored by hand, never produced by this pipeline.
 export const GENERATION_TOOL_BY_TYPE: Readonly<
-  Record<Exclude<ExerciseType, ExerciseType.DICTATION>, Anthropic.Tool>
+  Record<Exclude<ExerciseType, ExerciseType.DICTATION | ExerciseType.FREE_WRITING>, Anthropic.Tool>
 > = Object.freeze({
   cloze: CLOZE_GENERATION_TOOL,
   translation: TRANSLATION_GENERATION_TOOL,
@@ -332,6 +333,12 @@ export type GenerationSpec = {
    * (task 15); `undefined` → every ordinal unseeded.
    */
   seedWords?: readonly (string | null)[];
+  /**
+   * Phase 2 coverage controller: explicit per-ordinal axis targets
+   * (`coverageTargets[ordinal]`) from the scheduler. `undefined` → no coverage
+   * directive (CLI/admin and non-spec cells). Length matches `count` when set.
+   */
+  coverageTargets?: readonly CoverageTarget[];
 };
 
 export type ExerciseDraft = {
@@ -764,7 +771,7 @@ export async function generateOneDraft(
     ordinal,
     spec.topicDomain,
     spec.seedWords?.[ordinal] ?? null,
-    spec.batchSeed,
+    spec.coverageTargets,
   );
   if (spec.exerciseType === ExerciseType.DICTATION) {
     throw new Error(
@@ -772,9 +779,7 @@ export async function generateOneDraft(
     );
   }
   const tool =
-    GENERATION_TOOL_BY_TYPE[
-      spec.exerciseType as Exclude<ExerciseType, ExerciseType.DICTATION>
-    ];
+    GENERATION_TOOL_BY_TYPE[spec.exerciseType as keyof typeof GENERATION_TOOL_BY_TYPE];
 
   // Infrastructure-level failures (network, rate-limit, auth) propagate
   // — they're not per-ordinal data quality issues. Only the parse path
@@ -937,6 +942,11 @@ function parseToolInput(
     case ExerciseType.DICTATION:
       throw new Error(
         "Dictation exercises are not generated via this path; use gradeDictationAnswer.",
+      );
+    default:
+      // free_writing is authored by hand, not produced by this pipeline.
+      throw new Error(
+        `parseToolInput: unsupported exerciseType for generation: ${spec.exerciseType}`,
       );
   }
 }

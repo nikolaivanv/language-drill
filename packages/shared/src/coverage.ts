@@ -50,6 +50,38 @@ export type CoverageTags = {
   sentenceType?: SentenceTypeCode;
 };
 
+/**
+ * Declarative coverage spec for a grammar point (Pool Coverage Controller,
+ * Phase 2). Lists which axes a diverse approved set should vary along and an
+ * absolute min approved-count `floor` per value. A value omitted from `floors`
+ * is "NA" — never targeted (e.g. ES has no `2pl`, so its person specs omit it).
+ * A low floor (e.g. 2) is the "rare" case. Replaces the `personRotation` flag.
+ */
+export type CoverageAxisSpec = {
+  name: CoverageAxis;
+  floors: Readonly<Partial<Record<string, number>>>;
+};
+export type CoverageSpec = { axes: readonly CoverageAxisSpec[] };
+
+/** One draft's per-axis assignment from the controller; sparse — only the
+ *  cell's controlled (and non-suppressed) axes are present. */
+export type CoverageTarget = Partial<Record<CoverageAxis, string>>;
+
+/** `{requested, approved}` tally for one axis's values in a batch. `requested`
+ *  = drafts the scheduler targeted at each value; `approved` = approved drafts
+ *  whose *realized* value equals it. */
+export type AxisOutcome = Partial<
+  Record<string, { requested: number; approved: number }>
+>;
+
+/**
+ * Axis-keyed generation outcome persisted to `generation_jobs.coverage_outcome`
+ * (Phase 2, generalized from the Phase-1 `{ person?: … }` shape — old rows are
+ * still valid instances). Drives the per-`(axis, value)` give-up in
+ * `coverage-decision.ts`. NULL on legacy rows and cells that did no targeting.
+ */
+export type CoverageOutcome = Partial<Record<CoverageAxis, AxisOutcome>>;
+
 /** Allowed string values per axis — drives the validator tool enum AND the
  *  lenient parser (a value not in this set is dropped, never stored). Prefer
  *  iterating this over the individual *_CODES arrays so callers stay in sync. */
@@ -60,40 +92,51 @@ export const COVERAGE_AXIS_VALUES: Record<CoverageAxis, readonly string[]> = {
   sentenceType: SENTENCE_TYPE_CODES,
 };
 
+/** Canonical axis ordering so `coverageAxesFor` output is stable and matches
+ *  the Phase-1 `[person, polarity, sentenceType]` ordering for person cells. */
+const AXIS_ORDER: readonly CoverageAxis[] = [
+  "person",
+  "wordClass",
+  "polarity",
+  "sentenceType",
+];
+
 /**
- * Which axes are meaningful for a cell. vocab_recall → wordClass; the grammar
- * exercise types (cloze/translation/sentence_construction) → polarity +
- * sentenceType, plus person when the grammar point rotates person. Any other
- * exercise type (listening/speaking) → none.
+ * Which axes to record for a cell: the per-exercise-type *monitoring* axes
+ * UNION the spec's *controlled* axes, returned in canonical order. vocab_recall
+ * → wordClass; grammar cloze/translation/sentence_construction → polarity +
+ * sentenceType; plus any axis the cell's `coverageSpec` controls.
  */
 export function coverageAxesFor(
   exerciseType: ExerciseType,
-  personRotation: boolean,
+  spec: CoverageSpec | undefined,
 ): CoverageAxis[] {
-  if (exerciseType === ExerciseType.VOCAB_RECALL) return ["wordClass"];
-  if (
+  const monitoring = new Set<CoverageAxis>();
+  if (exerciseType === ExerciseType.VOCAB_RECALL) {
+    monitoring.add("wordClass");
+  } else if (
     exerciseType === ExerciseType.CLOZE ||
     exerciseType === ExerciseType.TRANSLATION ||
     exerciseType === ExerciseType.SENTENCE_CONSTRUCTION
   ) {
-    return personRotation
-      ? ["person", "polarity", "sentenceType"]
-      : ["polarity", "sentenceType"];
+    monitoring.add("polarity");
+    monitoring.add("sentenceType");
   }
-  return [];
+  if (spec) for (const axis of spec.axes) monitoring.add(axis.name);
+  return AXIS_ORDER.filter((a) => monitoring.has(a));
 }
 
 /**
  * Filter a raw coverage map down to the axes applicable to the cell. Returns
- * `null` when nothing applicable is present, so callers can write the column
- * as `null` rather than `{}`.
+ * `null` when nothing applicable is present, so callers write the column as
+ * `null` rather than `{}`.
  */
 export function pickCoverageTags(
   coverage: CoverageTags,
   exerciseType: ExerciseType,
-  personRotation: boolean,
+  spec: CoverageSpec | undefined,
 ): CoverageTags | null {
-  const axes = coverageAxesFor(exerciseType, personRotation);
+  const axes = coverageAxesFor(exerciseType, spec);
   const out: CoverageTags = {};
   for (const axis of axes) {
     const v = coverage[axis];

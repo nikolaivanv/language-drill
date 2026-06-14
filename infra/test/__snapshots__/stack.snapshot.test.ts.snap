@@ -61,6 +61,128 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
     },
   },
   "Resources": {
+    "AlertsAlertsTopic96BD0900": {
+      "Properties": {
+        "DisplayName": "language-drill prod alerts",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+      },
+      "Type": "AWS::SNS::Topic",
+    },
+    "AlertsAlertsTopicalertsexamplecomCF445DAA": {
+      "Properties": {
+        "Endpoint": "alerts@example.com",
+        "Protocol": "email",
+        "TopicArn": {
+          "Ref": "AlertsAlertsTopic96BD0900",
+        },
+      },
+      "Type": "AWS::SNS::Subscription",
+    },
+    "AlertsMonthlyCostBudgetF17E382F": {
+      "Properties": {
+        "Budget": {
+          "BudgetLimit": {
+            "Amount": 50,
+            "Unit": "USD",
+          },
+          "BudgetName": "language-drill-prod-monthly",
+          "BudgetType": "COST",
+          "TimeUnit": "MONTHLY",
+        },
+        "NotificationsWithSubscribers": [
+          {
+            "Notification": {
+              "ComparisonOperator": "GREATER_THAN",
+              "NotificationType": "ACTUAL",
+              "Threshold": 80,
+              "ThresholdType": "PERCENTAGE",
+            },
+            "Subscribers": [
+              {
+                "Address": "alerts@example.com",
+                "SubscriptionType": "EMAIL",
+              },
+            ],
+          },
+          {
+            "Notification": {
+              "ComparisonOperator": "GREATER_THAN",
+              "NotificationType": "ACTUAL",
+              "Threshold": 100,
+              "ThresholdType": "PERCENTAGE",
+            },
+            "Subscribers": [
+              {
+                "Address": "alerts@example.com",
+                "SubscriptionType": "EMAIL",
+              },
+            ],
+          },
+          {
+            "Notification": {
+              "ComparisonOperator": "GREATER_THAN",
+              "NotificationType": "FORECASTED",
+              "Threshold": 100,
+              "ThresholdType": "PERCENTAGE",
+            },
+            "Subscribers": [
+              {
+                "Address": "alerts@example.com",
+                "SubscriptionType": "EMAIL",
+              },
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::Budgets::Budget",
+    },
+    "AnnotateStreamAnnotatePromptFallbackAlarmBC9DBD12": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "AlertsAlertsTopic96BD0900",
+          },
+        ],
+        "AlarmDescription": "Langfuse prompt registry served the in-repo fallback for a non-keys_unset reason (timeout / fetch_error) — the live prompt may have vanished or Langfuse is unreachable. See CLAUDE.md §Prompt Editing.",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "EvaluationPeriods": 1,
+        "MetricName": "annotate-prompt-fallback",
+        "Namespace": "LanguageDrill/prod",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "AnnotateStreamAnnotatePromptFallbackAlarmFilterFE3C15DB": {
+      "Properties": {
+        "FilterPattern": ""[prompts-registry] prompt fallback (reason="",
+        "LogGroupName": {
+          "Ref": "AnnotateStreamLogGroup52C6AB1D",
+        },
+        "MetricTransformations": [
+          {
+            "DefaultValue": 0,
+            "MetricName": "annotate-prompt-fallback",
+            "MetricNamespace": "LanguageDrill/prod",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
     "AnnotateStreamHandlerECDF8AEA": {
       "DependsOn": [
         "AnnotateStreamHandlerServiceRoleDefaultPolicy4629907F",
@@ -139,7 +261,13 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
           },
         },
         "Handler": "index.handler",
+        "LoggingConfig": {
+          "LogGroup": {
+            "Ref": "AnnotateStreamLogGroup52C6AB1D",
+          },
+        },
         "MemorySize": 512,
+        "ReservedConcurrentExecutions": 10,
         "Role": {
           "Fn::GetAtt": [
             "AnnotateStreamHandlerServiceRoleF47FEC63",
@@ -332,6 +460,53 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
         "Principal": "*",
       },
       "Type": "AWS::Lambda::Permission",
+    },
+    "AnnotateStreamInvocationFloodAlarmA64D7510": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "AlertsAlertsTopic96BD0900",
+          },
+        ],
+        "AlarmDescription": "Streaming-annotate Function URL invoked >1000 times in an hour — possible flood of the unauthenticated URL (audit §1.2).",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "AnnotateStreamHandlerECDF8AEA",
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "Invocations",
+        "Namespace": "AWS/Lambda",
+        "Period": 3600,
+        "Statistic": "Sum",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Threshold": 1000,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "AnnotateStreamLogGroup52C6AB1D": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "RetentionInDays": 30,
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
     },
     "AnnotateStreamUrl211DD16F": {
       "Properties": {
@@ -1206,6 +1381,48 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
       },
       "Type": "AWS::CloudWatch::Alarm",
     },
+    "LambdaApiPromptFallbackAlarm71D4B2C7": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "AlertsAlertsTopic96BD0900",
+          },
+        ],
+        "AlarmDescription": "Langfuse prompt registry served the in-repo fallback for a non-keys_unset reason (timeout / fetch_error) — the live prompt may have vanished or Langfuse is unreachable. See CLAUDE.md §Prompt Editing.",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "EvaluationPeriods": 1,
+        "MetricName": "api-prompt-fallback",
+        "Namespace": "LanguageDrill/prod",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "LambdaApiPromptFallbackAlarmFilterA51A8F90": {
+      "Properties": {
+        "FilterPattern": ""[prompts-registry] prompt fallback (reason="",
+        "LogGroupName": {
+          "Ref": "LambdaLogGroupB7A19430",
+        },
+        "MetricTransformations": [
+          {
+            "DefaultValue": 0,
+            "MetricName": "api-prompt-fallback",
+            "MetricNamespace": "LanguageDrill/prod",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
     "LambdaHandlerF6372945": {
       "DependsOn": [
         "LambdaHandlerServiceRoleDefaultPolicyBE5FAE6F",
@@ -1326,6 +1543,11 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
           },
         },
         "Handler": "index.handler",
+        "LoggingConfig": {
+          "LogGroup": {
+            "Ref": "LambdaLogGroupB7A19430",
+          },
+        },
         "MemorySize": 512,
         "Role": {
           "Fn::GetAtt": [
@@ -1592,6 +1814,20 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "LambdaLogGroupB7A19430": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "RetentionInDays": 30,
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
     },
     "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A": {
       "DependsOn": [

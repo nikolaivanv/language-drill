@@ -29,6 +29,10 @@ export const ESTIMATED_MINUTES_BY_TYPE: Record<ExerciseType, number> = {
   [ExerciseType.VOCAB_RECALL]: 2,
   [ExerciseType.SENTENCE_CONSTRUCTION]: 3,
   [ExerciseType.DICTATION]: 3,
+  // Free writing is a standalone drill, not drawn into the auto-composed
+  // session plan; this estimate is a sensible default for the rare path that
+  // ever surfaces a free-writing row.
+  [ExerciseType.FREE_WRITING]: 8,
 };
 
 // ---------------------------------------------------------------------------
@@ -46,6 +50,8 @@ export const ITEM_COUNT_BY_TYPE: Record<ExerciseType, number> = {
   [ExerciseType.SENTENCE_CONSTRUCTION]: 3,
   // Dictation is a single-clip listening drill — one audio clip = one item.
   [ExerciseType.DICTATION]: 1,
+  // One piece of writing per free-writing drill.
+  [ExerciseType.FREE_WRITING]: 1,
 };
 
 // ---------------------------------------------------------------------------
@@ -66,14 +72,12 @@ export type PlanCompositionSlot = {
 };
 
 /**
- * The fixed v1 slot mix. Five items: warm-up cloze + core cloze + production
- * translation + core vocab + cool-down cloze. Adaptive weighting by the
- * user's weakest axis is explicitly deferred — see `composeFreshPlan`'s
- * unused `radarSnapshot` parameter (lands in a later phase).
+ * The fixed v1 slot mix. Five items: warm-up cloze + core sentence construction
+ * + production translation + core vocab + cool-down cloze.
  */
 export const V1_PLAN_SHAPE: readonly PlanCompositionSlot[] = [
   { index: 1, prefix: 'warm-up', type: ExerciseType.CLOZE },
-  { index: 2, prefix: 'core', type: ExerciseType.CLOZE },
+  { index: 2, prefix: 'core', type: ExerciseType.SENTENCE_CONSTRUCTION },
   { index: 3, prefix: 'production', type: ExerciseType.TRANSLATION },
   { index: 4, prefix: 'core', type: ExerciseType.VOCAB_RECALL },
   { index: 5, prefix: 'cool-down', type: ExerciseType.CLOZE },
@@ -133,6 +137,8 @@ export type PoolDraw = {
   type: ExerciseType;
   topicHint: string | null;
   difficulty: CefrLevel;
+  /** Curriculum grammar point this exercise targets (null for unmapped items). Carried on PoolDraw so mastery-aware ranking can prioritise draws before composeFreshPlan; intentionally not surfaced on PlanItem. */
+  grammarPointKey: string | null;
 };
 
 export type ComposeFreshPlanResult = {
@@ -150,6 +156,7 @@ const BACKFILL_TYPE_PRIORITY: readonly ExerciseType[] = [
   ExerciseType.CLOZE,
   ExerciseType.TRANSLATION,
   ExerciseType.VOCAB_RECALL,
+  ExerciseType.SENTENCE_CONSTRUCTION,
 ];
 
 /** Projects a single draw into the in-memory PlanItem shape at the given index. */
@@ -182,12 +189,12 @@ function toPlanItem(index: number, draw: PoolDraw): PlanItem {
  * five-item plan. Surviving items are re-indexed 1..n so the client's
  * index-derived labels stay contiguous.
  *
- * The unused `_radarSnapshot` parameter is the deferred adaptive swap point
- * (Design §"Adaptive swap point") — v1 ignores it.
+ * Candidates are consumed in the order given — the caller pre-ranks them
+ * (exposure + mastery) so slot assignment picks the highest-priority item per
+ * type.
  */
 export function composeFreshPlan(
   candidates: readonly PoolDraw[],
-  _radarSnapshot?: unknown,
 ): ComposeFreshPlanResult {
   // Per-type FIFO queues. Mutated by `take`; ordering within a type is the
   // pool sample's random order, so each shift is an independent random pick.

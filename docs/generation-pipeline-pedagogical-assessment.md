@@ -241,23 +241,24 @@ finally earn its keep).
 | QC pipeline (two-stage, routing, human review, deterministic checks) | **Strong** — conservative and measurement-aware; same-family-judge risk noted |
 | Batch-level domain coverage (vowel-harmony distribution rule) | **Strong** — catches distributional failures per-item review can't |
 | Vocabulary review loop (FSRS + maturity→production ladder) | **Excellent** — the model for what serving should become |
-| Adaptive selection / mastery-driven serving | **Missing** — random draw; prerequisite graph unused; difficulty user-declared |
-| Exposure control (repeat prevention) | **Missing** — contaminates future mastery evidence; fix before modeling |
-| Production load of default session | **Weak** — 3/5 cloze, sentence construction absent from plan |
+| Adaptive selection / mastery-driven serving | **Implemented (v1)** (PR #289) — `user_grammar_mastery` table + asymmetric Bayesian update on submit; today-plan biases grammar-point selection toward low/missing-evidence points and soft-deprioritizes points with unmet prerequisites (the graph is now consulted). Difficulty is still user-declared |
+| Exposure control (repeat prevention) | **Implemented** (PR #289) — `freshFirstOrderBy` anti-exposure ordering (never-seen → least-recently-seen → random) on all three pool draws; never starves |
+| Production load of default session | **Improved** (PR #289) — sentence construction now occupies the core slot (cloze · SC · translation · vocab · cloze); 2/5 cloze, down from 3/5 |
 | Empirical difficulty calibration | **Missing** — `levelMatch` asserted once, never checked against outcomes |
 
 ## Recommended actions (priority order)
 
-1. **Per-user exposure control now** — exclude attempted exercises from pool draws
-   (anti-join on `user_exercise_history`); least-recently-seen fallback. Cheap, and
-   a prerequisite for trustworthy mastery evidence later.
-2. **Swap one plan slot to sentence construction** once the SC pilot validates —
-   the single cheapest move toward the production-first thesis.
+1. ~~**Per-user exposure control now**~~ — **done** (PR #289): `freshFirstOrderBy`
+   ordering (never-seen → least-recently-seen → random) on `GET /exercises`,
+   `POST /sessions`, and the today-plan pool sample.
+2. ~~**Swap one plan slot to sentence construction**~~ — **done** (PR #289): the SC
+   pilot brake was already lifted, so SC now occupies the core slot of the daily plan.
 3. **Empirical item statistics** — aggregate per-exercise success rates from
    existing history; auto-flag outliers back into review. Doubles as the missing
    independent check on the validator.
-4. **Minimal mastery-aware serving** — even a v0 (bias the pool draw toward grammar
-   points with low/missing recent evidence, gate points whose prerequisites have no
-   positive evidence) activates the curriculum's prerequisite graph and starts the
-   adaptive loop the strategy doc promises.
+4. ~~**Minimal mastery-aware serving**~~ — **done** (PR #289), beyond the v0 sketch:
+   a materialized `user_grammar_mastery` table (asymmetric Bayesian update on submit,
+   plus a history-replay backfill) drives today-plan grammar-point selection — gap
+   bias toward low/missing-evidence points and a soft prerequisite deprioritize that
+   finally consults the curriculum's `prerequisiteKeys` graph.
 5. **Backfill ES/DE curricula** toward the plateau persona before widening sharing.

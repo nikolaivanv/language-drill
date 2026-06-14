@@ -59,19 +59,20 @@ describe('planSkillTopics', () => {
 });
 
 describe('planSeedTags', () => {
-  it('returns one tag per active mapping plus 9 untagged EN seeds (reduced curriculum)', () => {
+  it('returns one tag per active mapping plus 10 untagged EN seeds (reduced curriculum)', () => {
     // SEED_KEY_TO_GRAMMAR_POINT is temporarily reduced (see seed-exercises.ts).
     // Filter SEED_EXERCISES to only EN seeds and seeds whose mapping is still
     // active so the happy-path assertion remains meaningful. Restore the
-    // unfiltered call (and the original 27 / 9 expectations) when the
-    // commented-out mappings are uncommented.
+    // unfiltered call (and the original 27 / 10 expectations) when the
+    // commented-out mappings are uncommented. Count is 10 (was 9) after adding
+    // the en-free-writing-b1-ideal-weekend seed (EN is source-only — no tag).
     const activeNonEnKeys = new Set(Object.keys(SEED_KEY_TO_GRAMMAR_POINT));
     const activeSeeds = SEED_EXERCISES.filter(
       (s) => s.language === 'EN' || activeNonEnKeys.has(s.key),
     );
     const result = planSeedTags(activeSeeds, SEED_KEY_TO_GRAMMAR_POINT, ALL_CURRICULA);
     expect(result.tags).toHaveLength(activeNonEnKeys.size);
-    expect(result.untaggedEnSeeds).toBe(9);
+    expect(result.untaggedEnSeeds).toBe(10);
   });
 
   it('throws naming the offending seed when a non-EN mapping is missing', () => {

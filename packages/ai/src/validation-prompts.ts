@@ -291,7 +291,7 @@ const COVERAGE_AXIS_DIRECTIVE: Record<CoverageAxis, string> = {
 function renderCoverageDirective(spec: GenerationSpec): string {
   const axes = coverageAxesFor(
     spec.exerciseType,
-    spec.grammarPoint.personRotation === true,
+    spec.grammarPoint.coverageSpec,
   );
   if (axes.length === 0) return "";
   const lines = axes.map((axis) => COVERAGE_AXIS_DIRECTIVE[axis]).join("\n");
@@ -330,6 +330,12 @@ export function buildValidationUserPrompt(
     case ExerciseType.DICTATION:
       throw new Error(
         "Dictation exercises are not validated via this path; use gradeDictationAnswer.",
+      );
+    case ExerciseType.FREE_WRITING:
+      // free_writing is authored by hand, not produced/validated by the pool
+      // generation pipeline.
+      throw new Error(
+        "buildValidationUserPrompt: free_writing is not pool-validated",
       );
     default: {
       const _exhaustive: never = content;

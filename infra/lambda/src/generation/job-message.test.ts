@@ -342,6 +342,58 @@ describe('parseGenerationJobMessage — round-trip and forward-compat', () => {
 });
 
 // ---------------------------------------------------------------------------
+// parseGenerationJobMessage — coverageTargets
+// ---------------------------------------------------------------------------
+
+describe("coverageTargets parsing", () => {
+  function valid(over: Record<string, unknown> = {}): unknown {
+    return {
+      jobId: "11111111-1111-1111-1111-111111111111",
+      trigger: "scheduled",
+      spec: {
+        language: "TR",
+        cefrLevel: "A1",
+        exerciseType: "cloze",
+        grammarPointKey: "tr-a1-x",
+        topicDomain: null,
+        count: 2,
+        batchSeed: "s",
+        ...over,
+      },
+      maxCostUsd: 0.5,
+    };
+  }
+
+  it("round-trips valid per-draft targets of length === count", () => {
+    const msg = parseGenerationJobMessage(
+      valid({ coverageTargets: [{ person: "3sg" }, { person: "2pl", polarity: "negative" }] }),
+    );
+    expect(msg.spec.coverageTargets).toEqual([
+      { person: "3sg" },
+      { person: "2pl", polarity: "negative" },
+    ]);
+  });
+  it("absent → undefined", () => {
+    expect(parseGenerationJobMessage(valid()).spec.coverageTargets).toBeUndefined();
+  });
+  it("rejects length !== count", () => {
+    expect(() => parseGenerationJobMessage(valid({ coverageTargets: [{ person: "3sg" }] }))).toThrow(
+      /length === spec.count/,
+    );
+  });
+  it("rejects an unknown axis", () => {
+    expect(() =>
+      parseGenerationJobMessage(valid({ coverageTargets: [{ tense: "past" }, { person: "1sg" }] })),
+    ).toThrow(/unknown axis/);
+  });
+  it("rejects an illegal value for an axis", () => {
+    expect(() =>
+      parseGenerationJobMessage(valid({ coverageTargets: [{ person: "9sg" }, { person: "1sg" }] })),
+    ).toThrow(/illegal value/);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // checkAuditRowState
 // ---------------------------------------------------------------------------
 

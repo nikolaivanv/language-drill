@@ -1,28 +1,34 @@
 import { randomUUID } from 'node:crypto';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { eq, and, sql, gte, count } from 'drizzle-orm';
-import { Language, CefrLevel, ExerciseType } from '@language-drill/shared';
-import type { DictationContent, ExerciseContent } from '@language-drill/shared';
+import { eq, and, gte, count } from 'drizzle-orm';
+import { Language, CefrLevel, ExerciseType, isFreeWritingContent, EXERCISE_ANSWER_MAX_CHARS } from '@language-drill/shared';
+import type { DictationContent, ExerciseContent, FreeWritingContent } from '@language-drill/shared';
 import {
   exercises as exercisesTable,
   practiceSessions,
   userExerciseHistory,
   usageEvents,
   getGrammarPoint,
+  userGrammarMastery,
+  updateMastery,
 } from '@language-drill/db';
 import {
   createObservedClaudeClient,
   evaluateAnswer,
   gradeDictationAnswer,
+  evaluateFreeWriting,
   EVALUATION_SYSTEM_PROMPT_VERSION,
   DICTATION_EVAL_PROMPT_VERSION,
   EVAL_REQUEST_TIMEOUT_MS,
   EVAL_MAX_RETRIES,
+  FREE_WRITING_EVAL_PROMPT_VERSION,
+  FREE_WRITING_EVAL_REQUEST_TIMEOUT_MS,
+  FREE_WRITING_EVAL_MAX_RETRIES,
   withLlmTrace,
 } from '@language-drill/ai';
 import { db } from '../db';
-import { approvedStatusFilter } from '../lib/exercise-filters';
+import { approvedStatusFilter, freshFirstOrderBy } from '../lib/exercise-filters';
 import { presignAudioUrl } from '../lib/audio-url';
 import { withAudioUrl } from '../lib/dictation-content';
 import { authMiddleware } from '../middleware/auth';
@@ -46,7 +52,12 @@ export const ExerciseQuerySchema = z.object({
 
 /** Request body for POST /exercises/:id/submit */
 export const SubmitAnswerSchema = z.object({
-  answer: z.string().min(1),
+  // `.max()` caps token-cost exposure: the answer is interpolated raw into the
+  // evaluation prompt and sent to Claude (free writing runs a larger model), so
+  // an unbounded answer is a cost-amplification lever (and very long prompts
+  // push against the eval timeout). See EXERCISE_ANSWER_MAX_CHARS for the
+  // rationale.
+  answer: z.string().min(1).max(EXERCISE_ANSWER_MAX_CHARS),
   sessionId: z.string().uuid().optional(),
 });
 
@@ -72,6 +83,7 @@ exercises.get('/exercises', async (c) => {
   }
 
   const { language, difficulty, type } = parsed.data;
+  const userId = c.get('userId');
 
   const conditions = [
     eq(exercisesTable.language, language),
@@ -83,11 +95,19 @@ exercises.get('/exercises', async (c) => {
     conditions.push(eq(exercisesTable.type, type));
   }
 
+  // Exposure control: order the matching pool slice so never-attempted items
+  // come first (NULLS FIRST), then least-recently-seen, with a random tiebreak
+  // within each group — a returning user isn't re-served an item until the
+  // fresh pool for this filter is exhausted. This supersedes the prior
+  // uniform-random-by-id sampling: exposure requires ordering by seen-state, so
+  // a single ordered LIMIT 1 is both correct and simpler than a two-step draw.
+  // freshFirstOrderBy binds userId as a parameter and correlates on
+  // exercises.id (see lib/exercise-filters.ts).
   const rows = await db
     .select()
     .from(exercisesTable)
     .where(and(...conditions))
-    .orderBy(sql`random()`)
+    .orderBy(freshFirstOrderBy(userId))
     .limit(1);
 
   if (rows.length === 0) {
@@ -217,6 +237,16 @@ exercises.post('/exercises/:id/submit', async (c) => {
     );
   }
 
+  // Per-user daily cap. This is a check-then-insert (SELECT count → … →
+  // INSERT the usage event on success), so two requests racing at the
+  // boundary can both read count = limit-1 and both proceed; a burst can
+  // overshoot the daily cap by roughly the concurrency factor. This is
+  // accepted at current scale (single-user/low-volume) the same way
+  // `usage/global-capacity.ts` accepts its 60s cache drift — the cap is a
+  // cost guardrail, not a billing-grade meter. A hard guarantee would need an
+  // atomic Upstash INCR or an insert-first transaction (the latter also bills
+  // failed Claude calls); revisit if abuse or multi-user load makes the
+  // overshoot material.
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const [{ count: todayCount }] = await db
     .select({ count: count() })
@@ -247,44 +277,77 @@ exercises.post('/exercises/:id/submit', async (c) => {
 
   // 5. Call Claude for evaluation
   try {
+    const content = exercise.contentJson as ExerciseContent;
+    const isFreeWriting = isFreeWritingContent(content);
+
     // Eval-specific timeout/retries (Req 4.1): this client is constructed per
     // submit and used only for the evaluation call, so the fail-fast posture
     // is applied at construction (robust against the Langfuse Proxy not
-    // forwarding per-request options).
+    // forwarding per-request options). Free writing uses a larger budget.
     const client = createObservedClaudeClient(ANTHROPIC_API_KEY, {
-      timeout: EVAL_REQUEST_TIMEOUT_MS,
-      maxRetries: EVAL_MAX_RETRIES,
+      timeout: isFreeWriting ? FREE_WRITING_EVAL_REQUEST_TIMEOUT_MS : EVAL_REQUEST_TIMEOUT_MS,
+      maxRetries: isFreeWriting ? FREE_WRITING_EVAL_MAX_RETRIES : EVAL_MAX_RETRIES,
     });
 
     const isDictation = exercise.type === ExerciseType.DICTATION;
 
-    const result = await withLlmTrace(
-      {
-        feature: 'evaluate',
-        env: (process.env.LANGFUSE_ENV ?? 'dev') as 'prod' | 'dev',
-        promptVersion: isDictation
-          ? DICTATION_EVAL_PROMPT_VERSION
-          : EVALUATION_SYSTEM_PROMPT_VERSION,
-        requestId,
+    const traceMeta = {
+      env: (process.env.LANGFUSE_ENV ?? 'dev') as 'prod' | 'dev',
+      requestId,
+      userId,
+      submissionId,
+      // R8: shared Langfuse join key with the generation+validation traces
+      // for this exercise (`exercises.id` PK; same deterministic UUID).
+      exerciseId: id,
+      language: exercise.language as Language,
+      cefrLevel: exercise.difficulty as CefrLevel,
+      exerciseType: exercise.type as ExerciseType,
+    };
+
+    if (isFreeWriting) {
+      const evaluation = await withLlmTrace(
+        { ...traceMeta, feature: 'free-writing-eval', promptVersion: FREE_WRITING_EVAL_PROMPT_VERSION },
+        () =>
+          evaluateFreeWriting(client, {
+            content: content as FreeWritingContent,
+            userAnswer,
+            language: exercise.language as Language,
+            difficulty: exercise.difficulty as CefrLevel,
+          }),
+      );
+
+      // 6. Record history and usage on success.
+      await db.insert(userExerciseHistory).values({
+        id: submissionId,
         userId,
-        submissionId,
-        // R8: shared Langfuse join key with the generation+validation traces
-        // for this exercise (`exercises.id` PK; same deterministic UUID).
         exerciseId: id,
-        language: exercise.language as Language,
-        cefrLevel: exercise.difficulty as CefrLevel,
-        exerciseType: exercise.type as ExerciseType,
-      },
+        sessionId,
+        score: evaluation.overallScore,
+        responseJson: { userAnswer, evaluation },
+        evaluatedAt: new Date(),
+      });
+
+      await db.insert(usageEvents).values({
+        userId,
+        eventType: 'ai_evaluation',
+        metadata: { exerciseId: id, language: exercise.language, difficulty: exercise.difficulty },
+      });
+
+      return c.json(evaluation);
+    }
+
+    const result = await withLlmTrace(
+      { ...traceMeta, feature: 'evaluate', promptVersion: isDictation ? DICTATION_EVAL_PROMPT_VERSION : EVALUATION_SYSTEM_PROMPT_VERSION },
       () =>
         isDictation
           ? gradeDictationAnswer(client, {
-              exercise: exercise.contentJson as DictationContent,
+              exercise: content as DictationContent,
               userAnswer,
               language: exercise.language as Language,
               difficulty: exercise.difficulty as CefrLevel,
             })
           : evaluateAnswer(client, {
-              exercise: exercise.contentJson as ExerciseContent,
+              exercise: content,
               userAnswer,
               language: exercise.language as Language,
               difficulty: exercise.difficulty as CefrLevel,
@@ -309,6 +372,61 @@ exercises.post('/exercises/:id/submit', async (c) => {
       eventType: 'ai_evaluation',
       metadata: { exerciseId: id, language: exercise.language, difficulty: exercise.difficulty },
     });
+
+    // Best-effort per-grammar-point mastery update. A failure here must never
+    // fail the submission — the authoritative signal is the history row above.
+    if (exercise.grammarPointKey) {
+      try {
+        const at = new Date();
+        const existing = await db
+          .select({
+            masteryScore: userGrammarMastery.masteryScore,
+            confidence: userGrammarMastery.confidence,
+            evidenceCount: userGrammarMastery.evidenceCount,
+            lastPracticedAt: userGrammarMastery.lastPracticedAt,
+          })
+          .from(userGrammarMastery)
+          .where(
+            and(
+              eq(userGrammarMastery.userId, userId),
+              eq(userGrammarMastery.grammarPointKey, exercise.grammarPointKey),
+            ),
+          )
+          .limit(1);
+
+        const next = updateMastery(existing[0] ?? null, {
+          score: result.score,
+          difficulty: exercise.difficulty as CefrLevel,
+          at,
+        });
+
+        await db
+          .insert(userGrammarMastery)
+          .values({
+            userId,
+            language: exercise.language as Language,
+            grammarPointKey: exercise.grammarPointKey,
+            masteryScore: next.masteryScore,
+            confidence: next.confidence,
+            evidenceCount: next.evidenceCount,
+            lastPracticedAt: next.lastPracticedAt,
+            updatedAt: at,
+          })
+          .onConflictDoUpdate({
+            target: [userGrammarMastery.userId, userGrammarMastery.grammarPointKey],
+            set: {
+              masteryScore: next.masteryScore,
+              confidence: next.confidence,
+              evidenceCount: next.evidenceCount,
+              lastPracticedAt: next.lastPracticedAt,
+              updatedAt: at,
+              language: exercise.language as Language,
+            },
+          });
+      } catch (masteryErr) {
+        console.error('[submit] mastery update failed (non-fatal):', masteryErr);
+      }
+    }
 
     return c.json(result);
   } catch (err) {
