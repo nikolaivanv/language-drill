@@ -9,14 +9,17 @@ beforeEach(() => {
 });
 
 describe('AudioPlayer', () => {
-  it('renders a disabled play button when no src', () => {
+  // Exact name 'play' (not /play/i) so the query doesn't also match "replay".
+  it('disables all controls when no src', () => {
     render(<AudioPlayer src={undefined} waveform={[0.5, 0.8]} durationSec={5} />);
-    expect(screen.getByRole('button', { name: /play/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'play' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'replay' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /0\.75/ })).toBeDisabled();
   });
 
   it('toggles play when clicked', () => {
     render(<AudioPlayer src="blob:x" waveform={[0.5, 0.8]} durationSec={5} />);
-    fireEvent.click(screen.getByRole('button', { name: /play/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'play' }));
     expect(HTMLMediaElement.prototype.play).toHaveBeenCalled();
   });
 

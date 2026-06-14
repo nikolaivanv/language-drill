@@ -17,11 +17,21 @@ export function AudioPlayer({ src, waveform, durationSec }: AudioPlayerProps) {
 
   const disabled = !src;
 
+  // Re-apply the slow rate whenever the toggle OR the clip changes — a new src
+  // gives a fresh <audio> element at rate 1, so without `src` here the next clip
+  // would ignore an already-on slow toggle.
   React.useEffect(() => {
     const a = audioRef.current;
     if (!a) return;
     a.playbackRate = slow ? 0.75 : 1;
-  }, [slow]);
+  }, [slow, src]);
+
+  // A new clip resets the playhead and play state (guards against a stale
+  // progress/▮▮ flash if the player isn't remounted per clip).
+  React.useEffect(() => {
+    setProgress(0);
+    setPlaying(false);
+  }, [src]);
 
   function togglePlay() {
     const a = audioRef.current;
@@ -90,7 +100,7 @@ export function AudioPlayer({ src, waveform, durationSec }: AudioPlayerProps) {
         </span>
       </div>
       <div className="mt-s-3 flex items-center gap-s-2">
-        <Button variant="ghost" aria-label="restart audio" onClick={replay} disabled={disabled}>
+        <Button variant="ghost" onClick={replay} disabled={disabled}>
           replay
         </Button>
         <button
