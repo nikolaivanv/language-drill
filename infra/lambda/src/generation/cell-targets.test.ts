@@ -129,7 +129,7 @@ describe('resolveCellTarget (floor-driven)', () => {
   it('person spec raises target to the floor sum (5×15 = 75 > base 50)', () => {
     const c = cell({
       grammarPoint: { key: 'es-b1-x', kind: 'grammar',
-        coverageSpec: { axes: [{ name: 'person', floors: { '1sg': 15, '2sg': 15, '3sg': 15, '1pl': 15, '3pl': 15 } }] } } as Cell['grammarPoint'],
+        coverageSpec: { axes: [{ name: 'person', floors: { '1sg': 15, '2sg': 15, '3sg': 15, '1pl': 15, '3pl': 15 } }] } } as unknown as Cell['grammarPoint'],
     });
     expect(resolveCellTarget(c)).toBe(75);
   });
@@ -139,21 +139,21 @@ describe('resolveCellTarget (floor-driven)', () => {
         coverageSpec: { axes: [
           { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
           { name: 'polarity', floors: { affirmative: 18, negative: 12 } },
-        ] } } as Cell['grammarPoint'],
-      cefrLevel: 'A1',
+        ] } } as unknown as Cell['grammarPoint'],
+      cefrLevel: CefrLevel.A1,
     });
     expect(resolveCellTarget(c)).toBe(30); // max(20 base, max(30, 30))
   });
   it('targetOverride wins over base and floor sum', () => {
-    const c = cell({ grammarPoint: { key: 'es-b1-x', kind: 'grammar', targetOverride: 12 } as Cell['grammarPoint'] });
+    const c = cell({ grammarPoint: { key: 'es-b1-x', kind: 'grammar', targetOverride: 12 } as unknown as Cell['grammarPoint'] });
     expect(resolveCellTarget(c)).toBe(12);
   });
   it('floor sum below base → base wins (vocab base 10)', () => {
     const c = cell({
       exerciseType: ExerciseType.VOCAB_RECALL,
-      cefrLevel: 'A1',
+      cefrLevel: CefrLevel.A1,
       grammarPoint: { key: 'tr-a1-vocab-x', kind: 'vocab',
-        coverageSpec: { axes: [{ name: 'wordClass', floors: { noun: 6, verb: 2, adjective: 2 } }] } } as Cell['grammarPoint'],
+        coverageSpec: { axes: [{ name: 'wordClass', floors: { noun: 6, verb: 2, adjective: 2 } }] } } as unknown as Cell['grammarPoint'],
     });
     expect(resolveCellTarget(c)).toBe(10);
   });
