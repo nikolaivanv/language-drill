@@ -83,9 +83,9 @@ export type RecentJob = {
   dedupGivenUpCount: number;
   /** `text` column on `generation_jobs`; NULL on legacy rows pre-migration. */
   curriculumVersion: string | null;
-  /** Phase 1: the most recent job's per-person outcome (NULL on legacy rows /
-   *  non-personRotation cells). Read by the scheduler's coverage controller,
-   *  not by `decideEnqueue`. */
+  /** The most recent job's per-axis coverage outcome (NULL on legacy rows /
+   *  cells with no coverageSpec). Read by the scheduler's coverage controller
+   *  for per-(axis,value) give-up, not by `decideEnqueue`. */
   coverageOutcome: CoverageOutcome | null;
   finishedAt: Date;
 };

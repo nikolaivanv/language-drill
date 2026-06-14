@@ -19,7 +19,6 @@ function makeCell(
   exerciseType: ExerciseType,
   cefrLevel: CurriculumCefrLevel,
   targetOverride?: number,
-  personRotation?: boolean,
 ): Cell {
   const grammarPoint = {
     key: 'es-test',
@@ -28,7 +27,6 @@ function makeCell(
     title: 'test',
     summary: 'test',
     ...(targetOverride !== undefined ? { targetOverride } : {}),
-    ...(personRotation !== undefined ? { personRotation } : {}),
   } as unknown as Cell['grammarPoint'];
   return {
     language: Language.ES,
