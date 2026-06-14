@@ -577,6 +577,99 @@ export const SEED_EXERCISES: SeedExercise[] = [
       exampleSentence: 'Sürdürülebilirlik, günümüzün en önemli kavramlarından biridir.',
     },
   },
+
+  // =========================================================================
+  // FREE WRITING
+  // =========================================================================
+  {
+    key: 'es-free-writing-b2-remote-work',
+    type: 'free_writing',
+    language: 'ES',
+    difficulty: 'B2',
+    contentJson: {
+      type: 'free_writing',
+      instructions: 'Escribe un texto argumentativo siguiendo la consigna.',
+      title: 'El teletrabajo: ¿avance o aislamiento?',
+      task: 'Argumenta a favor o en contra del teletrabajo. Defiende una postura clara y respóndela.',
+      domain: 'opinión · argumentación',
+      register: 'formal',
+      minWords: 150,
+      maxWords: 200,
+      suggestedMinutes: 20,
+      requiredElements: [
+        { id: 'cond', label: 'Usa al menos dos oraciones condicionales', detail: 'si + imperfecto de subjuntivo → condicional' },
+        { id: 'counter', label: 'Incluye y rebate un contraargumento', detail: 'reconoce la otra postura, luego respóndela' },
+        { id: 'connect', label: 'Usa dos conectores de contraste', detail: 'sin embargo · por otro lado · aunque…' },
+      ],
+      topicHint: 'remote work',
+    },
+  },
+  {
+    key: 'en-free-writing-b1-ideal-weekend',
+    type: 'free_writing',
+    language: 'EN',
+    difficulty: 'B1',
+    contentJson: {
+      type: 'free_writing',
+      instructions: 'Write a short descriptive paragraph following the brief.',
+      title: 'Your ideal weekend',
+      task: 'Describe your ideal weekend. What would you do, where, and with whom?',
+      domain: 'description · personal',
+      register: 'informal',
+      minWords: 80,
+      maxWords: 120,
+      suggestedMinutes: 15,
+      requiredElements: [
+        { id: 'cond', label: 'Use at least one conditional sentence', detail: 'If I had a free weekend, I would…' },
+        { id: 'time', label: 'Use three different time expressions', detail: 'in the morning · after lunch · later on' },
+      ],
+      topicHint: 'leisure',
+    },
+  },
+  {
+    key: 'de-free-writing-b1-city-vs-country',
+    type: 'free_writing',
+    language: 'DE',
+    difficulty: 'B1',
+    contentJson: {
+      type: 'free_writing',
+      instructions: 'Schreib einen kurzen Meinungstext zum Thema.',
+      title: 'Stadt oder Land?',
+      task: 'Wo würdest du lieber leben — in der Stadt oder auf dem Land? Begründe deine Meinung.',
+      domain: 'Meinung · Vergleich',
+      register: 'neutral',
+      minWords: 90,
+      maxWords: 130,
+      suggestedMinutes: 15,
+      requiredElements: [
+        { id: 'compare', label: 'Vergleiche beide Optionen', detail: 'einerseits … andererseits' },
+        { id: 'because', label: 'Benutze zwei Kausalsätze', detail: 'weil / denn' },
+      ],
+      topicHint: 'living preferences',
+    },
+  },
+  {
+    key: 'tr-free-writing-b1-technology',
+    type: 'free_writing',
+    language: 'TR',
+    difficulty: 'B1',
+    contentJson: {
+      type: 'free_writing',
+      instructions: 'Konuyla ilgili kısa bir paragraf yaz.',
+      title: 'Teknoloji ve günlük hayat',
+      task: 'Teknoloji günlük hayatını nasıl değiştirdi? Bir örnekle açıkla.',
+      domain: 'görüş · açıklama',
+      register: 'neutral',
+      minWords: 80,
+      maxWords: 120,
+      suggestedMinutes: 15,
+      requiredElements: [
+        { id: 'example', label: 'En az bir örnek ver', detail: 'örneğin / mesela' },
+        { id: 'past', label: 'Geçmiş ve şimdi karşılaştır', detail: 'eskiden … şimdi …' },
+      ],
+      topicHint: 'technology',
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------
