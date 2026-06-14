@@ -40,6 +40,8 @@ import { fileURLToPath } from "node:url";
 import {
   ANNOTATE_SYSTEM_PROMPT,
   ANNOTATE_SYSTEM_PROMPT_VERSION,
+  DICTATION_EVAL_PROMPT_VERSION,
+  DICTATION_EVAL_SYSTEM_PROMPT,
   EVALUATION_SYSTEM_PROMPT,
   EVALUATION_SYSTEM_PROMPT_VERSION,
   GENERATION_PROMPT_VERSION,
@@ -129,6 +131,14 @@ export const PROMPTS: readonly PromptManifestEntry[] = [
     text: READING_GENERATION_SYSTEM_PROMPT,
     version: READING_GENERATION_PROMPT_VERSION,
     surface: "reading-generate",
+  },
+  {
+    // Runtime fetches this via getPromptOrFallback("dictation-eval-system-prompt", …)
+    // in dictation-eval.ts — the name MUST match that registry key.
+    name: "dictation-eval-system-prompt",
+    text: DICTATION_EVAL_SYSTEM_PROMPT,
+    version: DICTATION_EVAL_PROMPT_VERSION,
+    surface: "dictation-eval",
   },
 ];
 
