@@ -60,9 +60,13 @@ export default function FreeWritingPage() {
   const content = exercise.contentJson as FreeWritingContent;
 
   const onGrade = async () => {
-    setSubmittedText(text);
+    const answer = text;
     try {
-      const result = await submit.mutateAsync({ exerciseId: exercise.id, answer: text });
+      const result = await submit.mutateAsync({ exerciseId: exercise.id, answer });
+      // Snapshot the exact submitted text alongside the result so the
+      // corrections/compare surfaces locate error spans in the graded string,
+      // never the still-editable live draft.
+      setSubmittedText(answer);
       setEvaluation(result);
       setStage('results');
     } catch (err) {
