@@ -1,122 +1,124 @@
-import { describe, it, expect } from 'vitest';
-import { Language } from '@language-drill/shared';
-import { decideCoverageTargets, GIVE_UP_MIN_ATTEMPTS } from './coverage-decision';
+import { describe, it, expect } from "vitest";
+import type { CoverageSpec } from "@language-drill/shared";
+import { decideCoverageTargets, GIVE_UP_MIN_ATTEMPTS } from "./coverage-decision";
 
-describe('decideCoverageTargets', () => {
-  it('water-fills the most-starved persons first (TR, 6 persons)', () => {
-    const { personTargets } = decideCoverageTargets({
-      language: Language.TR,
-      need: 8,
-      approvedByPerson: { '1sg': 8, '2sg': 6, '3sg': 9, '1pl': 4, '2pl': 1, '3pl': 2 },
+const personTR: CoverageSpec = {
+  axes: [{ name: "person", floors: { "1sg": 5, "2sg": 5, "3sg": 5, "1pl": 5, "2pl": 5, "3pl": 5 } }],
+};
+const personPolarity: CoverageSpec = {
+  axes: [
+    { name: "person", floors: { "1sg": 5, "2sg": 5, "3sg": 5, "1pl": 5, "2pl": 5, "3pl": 5 } },
+    { name: "polarity", floors: { affirmative: 18, negative: 12 } },
+  ],
+};
+
+describe("decideCoverageTargets (multi-axis)", () => {
+  it("water-fills the most-starved person first", () => {
+    const { coverageTargets } = decideCoverageTargets({
+      spec: personTR,
+      need: 3,
+      approvedByAxis: { person: { "1sg": 8, "2sg": 8, "3sg": 8, "1pl": 8, "2pl": 1, "3pl": 2 } },
       recentOutcome: null,
     });
-    expect(personTargets).toHaveLength(8);
-    const counts = tally(personTargets);
-    expect(counts['2pl']).toBeGreaterThanOrEqual(counts['1pl'] ?? 0);
-    expect(counts['3sg'] ?? 0).toBe(0);
+    const persons = coverageTargets.map((t) => t.person);
+    expect(persons).toContain("2pl");
+    expect(persons).toContain("3pl");
+    expect(coverageTargets).toHaveLength(3);
   });
 
-  it('returns [] when need <= 0', () => {
-    expect(
-      decideCoverageTargets({
-        language: Language.TR, need: 0, approvedByPerson: {}, recentOutcome: null,
-      }).personTargets,
-    ).toEqual([]);
-  });
-
-  it('distributes evenly from an empty pool (== ceil(target/N) floor)', () => {
-    const { personTargets } = decideCoverageTargets({
-      language: Language.TR, need: 6, approvedByPerson: {}, recentOutcome: null,
+  it("targets each axis independently and zips into per-draft targets", () => {
+    const { coverageTargets } = decideCoverageTargets({
+      spec: personPolarity,
+      need: 4,
+      approvedByAxis: {},
+      recentOutcome: null,
     });
-    expect(tally(personTargets)).toEqual({
-      '1sg': 1, '2sg': 1, '3sg': 1, '1pl': 1, '2pl': 1, '3pl': 1,
-    });
+    expect(coverageTargets).toHaveLength(4);
+    for (const t of coverageTargets) {
+      expect(t.person).toBeDefined();
+      expect(["affirmative", "negative"]).toContain(t.polarity);
+    }
+    const pol = coverageTargets.map((t) => t.polarity);
+    expect(pol.filter((p) => p === "affirmative")).toHaveLength(2);
   });
 
-  it('omits 2pl for Spanish (5-person paradigm)', () => {
-    const { personTargets } = decideCoverageTargets({
-      language: Language.ES, need: 5, approvedByPerson: {}, recentOutcome: null,
-    });
-    expect(personTargets).not.toContain('2pl');
-    expect(new Set(personTargets)).toEqual(
-      new Set(['1sg', '2sg', '3sg', '1pl', '3pl']),
-    );
-  });
-
-  it('suppresses a zero-yield bucket and reports it', () => {
-    const { personTargets, suppressed } = decideCoverageTargets({
-      language: Language.TR,
-      need: 6,
-      approvedByPerson: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '3pl': 5 },
-      recentOutcome: { '2pl': { requested: 5, approved: 0 } },
-    });
-    expect(suppressed).toEqual(['2pl']);
-    expect(personTargets).not.toContain('2pl');
-    expect(personTargets).toHaveLength(6);
-  });
-
-  it('does not suppress on a single attempt (< GIVE_UP_MIN_ATTEMPTS)', () => {
-    expect(GIVE_UP_MIN_ATTEMPTS).toBe(2);
-    const { suppressed, personTargets } = decideCoverageTargets({
-      language: Language.TR,
-      need: 6,
-      approvedByPerson: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '3pl': 5 },
-      recentOutcome: { '2pl': { requested: 1, approved: 0 } },
-    });
-    expect(suppressed).toEqual([]);
-    expect(personTargets).toContain('2pl');
-  });
-
-  it('does not suppress a bucket that yielded at least once', () => {
-    const { suppressed } = decideCoverageTargets({
-      language: Language.TR,
-      need: 6,
-      approvedByPerson: {},
-      recentOutcome: { '2pl': { requested: 5, approved: 1 } },
-    });
-    expect(suppressed).toEqual([]);
-  });
-
-  it('ignores approvedByPerson/recentOutcome keys not in the language paradigm', () => {
-    // ES has no 2pl. A stale 2pl entry in either input must not appear in the
-    // output and must not cause a spurious suppression.
-    const { personTargets, suppressed } = decideCoverageTargets({
-      language: Language.ES,
+  it("suppresses a zero-yield (axis,value) bucket and excludes it", () => {
+    const { coverageTargets, suppressed } = decideCoverageTargets({
+      spec: personTR,
       need: 5,
-      approvedByPerson: { '2pl': 99 },
-      recentOutcome: { '2pl': { requested: 5, approved: 0 } },
+      approvedByAxis: { person: { "1sg": 8, "2sg": 8, "3sg": 8, "1pl": 8, "3pl": 8 } },
+      recentOutcome: { person: { "2pl": { requested: GIVE_UP_MIN_ATTEMPTS, approved: 0 } } },
     });
-    expect(personTargets).not.toContain('2pl');
-    expect(suppressed).toEqual([]);
-    expect(new Set(personTargets)).toEqual(
-      new Set(['1sg', '2sg', '3sg', '1pl', '3pl']),
-    );
+    expect(suppressed.person).toEqual(["2pl"]);
+    expect(coverageTargets.map((t) => t.person)).not.toContain("2pl");
   });
 
-  it('null recentOutcome suppresses nothing (curriculum bump cleared it)', () => {
-    const { suppressed, personTargets } = decideCoverageTargets({
-      language: Language.TR, need: 6, approvedByPerson: {}, recentOutcome: null,
+  it("null recentOutcome suppresses nothing", () => {
+    const { suppressed } = decideCoverageTargets({
+      spec: personTR,
+      need: 2,
+      approvedByAxis: {},
+      recentOutcome: null,
     });
-    expect(suppressed).toEqual([]);
-    expect(personTargets).toHaveLength(6);
+    expect(suppressed).toEqual({});
   });
 
-  it('returns [] when every person is suppressed (blind fallback)', () => {
-    const recentOutcome = Object.fromEntries(
-      ['1sg', '2sg', '3sg', '1pl', '2pl', '3pl'].map((p) => [
-        p, { requested: 3, approved: 0 },
-      ]),
-    );
-    const { personTargets, suppressed } = decideCoverageTargets({
-      language: Language.TR, need: 6, approvedByPerson: {}, recentOutcome,
+  it("never targets an NA value (absent from floors)", () => {
+    const esPerson: CoverageSpec = {
+      axes: [{ name: "person", floors: { "1sg": 15, "2sg": 15, "3sg": 15, "1pl": 15, "3pl": 15 } }],
+    };
+    const { coverageTargets } = decideCoverageTargets({
+      spec: esPerson,
+      need: 10,
+      approvedByAxis: {},
+      recentOutcome: null,
     });
-    expect(personTargets).toEqual([]);
-    expect(suppressed).toHaveLength(6);
+    expect(coverageTargets.map((t) => t.person)).not.toContain("2pl");
+  });
+
+  it("need <= 0 → empty targets, still reports suppressed", () => {
+    const { coverageTargets, suppressed } = decideCoverageTargets({
+      spec: personTR,
+      need: 0,
+      approvedByAxis: {},
+      recentOutcome: { person: { "2pl": { requested: 3, approved: 0 } } },
+    });
+    expect(coverageTargets).toEqual([]);
+    expect(suppressed.person).toEqual(["2pl"]);
+  });
+
+  it("an axis with every value suppressed drops out while others still target", () => {
+    const { coverageTargets } = decideCoverageTargets({
+      spec: { axes: [{ name: "polarity", floors: { affirmative: 5, negative: 5 } }, { name: "person", floors: { "3sg": 5 } }] },
+      need: 2,
+      approvedByAxis: {},
+      recentOutcome: { polarity: { affirmative: { requested: 2, approved: 0 }, negative: { requested: 2, approved: 0 } } },
+    });
+    expect(coverageTargets).toHaveLength(2);
+    for (const t of coverageTargets) {
+      expect(t.polarity).toBeUndefined();
+      expect(t.person).toBe("3sg");
+    }
+  });
+
+  it("does NOT suppress a bucket targeted only once (requested < GIVE_UP_MIN_ATTEMPTS)", () => {
+    const { suppressed, coverageTargets } = decideCoverageTargets({
+      spec: personTR,
+      need: 6,
+      approvedByAxis: {},
+      recentOutcome: { person: { "2pl": { requested: 1, approved: 0 } } },
+    });
+    expect(suppressed).toEqual({});
+    expect(coverageTargets.map((t) => t.person)).toContain("2pl");
+  });
+
+  it("does NOT suppress a bucket that yielded at least one approval", () => {
+    const { suppressed } = decideCoverageTargets({
+      spec: personTR,
+      need: 6,
+      approvedByAxis: {},
+      recentOutcome: { person: { "2pl": { requested: 5, approved: 1 } } },
+    });
+    expect(suppressed).toEqual({});
   });
 });
-
-function tally(codes: string[]): Record<string, number> {
-  const out: Record<string, number> = {};
-  for (const c of codes) out[c] = (out[c] ?? 0) + 1;
-  return out;
-}
