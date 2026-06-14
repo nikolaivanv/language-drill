@@ -30,11 +30,13 @@ vi.mock('next/navigation', () => ({
 const mockUseProgressRadar = vi.fn();
 const mockUseProgressHeatmap = vi.fn();
 const mockUseLanguageProfiles = vi.fn();
+const mockUseFluencyStats = vi.fn();
 
 vi.mock('@language-drill/api-client', () => ({
   useProgressRadar: (...args: unknown[]) => mockUseProgressRadar(...args),
   useProgressHeatmap: (...args: unknown[]) => mockUseProgressHeatmap(...args),
   useLanguageProfiles: (...args: unknown[]) => mockUseLanguageProfiles(...args),
+  useFluencyStats: (...args: unknown[]) => mockUseFluencyStats(...args),
   createAuthenticatedFetch: vi.fn(() => vi.fn()),
 }));
 
@@ -118,6 +120,12 @@ beforeEach(() => {
   });
   mockUseProgressHeatmap.mockReturnValue({
     data: heatmapResponse(),
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  });
+  mockUseFluencyStats.mockReturnValue({
+    data: undefined,
     isLoading: false,
     error: null,
     refetch: vi.fn(),
