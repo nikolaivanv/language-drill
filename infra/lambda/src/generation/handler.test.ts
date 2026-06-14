@@ -30,7 +30,6 @@ import {
   ExerciseType,
   Language,
   type LearningLanguage,
-  type PersonCode,
 } from '@language-drill/shared';
 import type { Context, SQSEvent, SQSRecord } from 'aws-lambda';
 import type {
@@ -529,7 +528,7 @@ describe('SQS handler', () => {
     expect(log['errorMessage']).toBe('cost cap reached at $0.50');
   });
 
-  it('spec.personTargets is threaded through to runOneCell args', async () => {
+  it('spec.coverageTargets is threaded through to runOneCell args', async () => {
     mockCheckAuditRowState.mockResolvedValueOnce({ status: 'absent' });
     mockRunOneCell.mockResolvedValueOnce({
       ...cellResultBase(),
@@ -537,15 +536,16 @@ describe('SQS handler', () => {
       insertedCount: 2,
     });
 
-    const personTargets: PersonCode[] = ['2pl', '1pl'];
+    const coverageTargets = [{ person: '2pl' }, { person: '1pl' }];
     const msg = validMessage();
-    // personTargets.length must equal spec.count per the parser contract.
+    // coverageTargets.length must equal spec.count per the parser contract.
     msg.spec.count = 2;
-    (msg.spec as typeof msg.spec & { personTargets: PersonCode[] }).personTargets =
-      personTargets;
+    (
+      msg.spec as typeof msg.spec & { coverageTargets: typeof coverageTargets }
+    ).coverageTargets = coverageTargets;
 
     const event = eventWith([
-      recordWith(JSON.stringify(msg), 'msg-person-targets'),
+      recordWith(JSON.stringify(msg), 'msg-coverage-targets'),
     ]);
     const result = await handler(event, fakeContext());
 
@@ -553,7 +553,9 @@ describe('SQS handler', () => {
     expect(mockRunOneCell).toHaveBeenCalledTimes(1);
     expect(mockRunOneCell).toHaveBeenCalledWith(
       expect.objectContaining({
-        args: expect.objectContaining({ personTargets: ['2pl', '1pl'] }),
+        args: expect.objectContaining({
+          coverageTargets: [{ person: '2pl' }, { person: '1pl' }],
+        }),
       }),
     );
   });

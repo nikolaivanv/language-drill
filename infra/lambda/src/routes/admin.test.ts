@@ -201,10 +201,10 @@ describe('GET /admin/pool-status', () => {
       expect(item.targetSize).toBe(50);
       // ...but the generation target is the per-cell R3 value (cloze/translation
       // /sentence_construction 20/30 at A1/A2 → 50 at B1/B2; vocab_recall capped
-      // at 10 every level; personRotation cloze/translation cells raised 1.5×
-      // per 2026-06-12 → 30/45 at A1/A2, 75 at B1/B2), never the flat 50 unless
-      // the table falls through. Assert it resolved to a known target.
-      expect([10, 20, 30, 45, 50, 75]).toContain(item.generationTarget);
+      // at 10 every level). Cells with a coverageSpec are raised to the largest
+      // single-axis floor sum (Phase 2): TR A1 person = 6×5 = 30, TR A2 person =
+      // 6×8 = 48, ES B1/B2 person = 5×15 = 75. Assert it resolved to a known target.
+      expect([10, 20, 30, 48, 50, 75]).toContain(item.generationTarget);
       expect(['ES', 'DE', 'TR']).toContain(item.language);
       expect(['A1', 'A2', 'B1', 'B2']).toContain(item.level);
       expect(['cloze', 'translation', 'vocab_recall', 'sentence_construction']).toContain(item.type);
@@ -317,7 +317,7 @@ describe('GET /admin/pool-status', () => {
   });
 
   it('returns per-cell coverageDistribution for approved tagged rows', async () => {
-    // Grammar point: tr-a1-personal-suffixes (TR A1, personRotation: true,
+    // Grammar point: tr-a1-personal-suffixes (TR A1, coverageSpec person axis,
     // kind: grammar, no clozeUnsuitable) → produces a cloze cell in the
     // curriculum cross-product.
     const GRAMMAR_KEY = 'tr-a1-personal-suffixes';

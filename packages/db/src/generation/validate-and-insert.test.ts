@@ -585,18 +585,18 @@ describe('validateAndInsertWithRetry — seed persistence', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Phase 1 coverage controller — realizedPerson on inserted DraftOutcome.
-// The validator's `coverage.person` is surfaced on the outcome so the per-
-// person tally in `run-one-cell` can credit the right bucket without re-
+// Phase 2 coverage controller — realizedCoverage on inserted DraftOutcome.
+// The validator's full `coverage` tags are surfaced on the outcome so the
+// per-axis tally in `run-one-cell` can credit the right buckets without re-
 // reading from the DB. Set ONLY on the inserted-* / dedup-then-success
 // return paths; absent on rejected / dedup-given-up.
 // ---------------------------------------------------------------------------
 
-describe('validateAndInsertWithRetry — realizedPerson on inserted outcome', () => {
+describe('validateAndInsertWithRetry — realizedCoverage on inserted outcome', () => {
   const throwaway: { exercise?: Record<string, unknown> } = {};
 
-  it('carries realizedPerson from coverage.person on an inserted-approved outcome', async () => {
-    // Validator approves with a person tag; the outcome must surface it.
+  it('carries realizedCoverage from the validator coverage on an inserted-approved outcome', async () => {
+    // Validator approves with a person tag; the outcome must surface the tags.
     mockValidateDraft.mockResolvedValue({
       ...PASSING_VALIDATION,
       result: { ...PASSING_VALIDATION.result, coverage: { person: '2pl' } },
@@ -614,11 +614,11 @@ describe('validateAndInsertWithRetry — realizedPerson on inserted outcome', ()
     });
 
     expect(outcome.terminalStatus).toBe('inserted-approved');
-    expect(outcome.realizedPerson).toBe('2pl');
+    expect(outcome.realizedCoverage).toEqual({ person: '2pl' });
   });
 
-  it('leaves realizedPerson undefined when coverage has no person', async () => {
-    // PASSING_VALIDATION already has coverage: {} (no person).
+  it('surfaces empty realizedCoverage when the validator reports no axes', async () => {
+    // PASSING_VALIDATION already has coverage: {} (no axes).
     mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
 
     const outcome = await validateAndInsertWithRetry({
@@ -633,7 +633,8 @@ describe('validateAndInsertWithRetry — realizedPerson on inserted outcome', ()
     });
 
     expect(outcome.terminalStatus).toBe('inserted-approved');
-    expect(outcome.realizedPerson).toBeUndefined();
+    expect(outcome.realizedCoverage).toEqual({});
+    expect(outcome.realizedCoverage?.person).toBeUndefined();
   });
 });
 

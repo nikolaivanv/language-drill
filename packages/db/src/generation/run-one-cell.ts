@@ -31,10 +31,12 @@ import {
 } from '@language-drill/ai';
 import {
   ExerciseType,
+  type CoverageAxis,
   type CoverageOutcome,
+  type CoverageSpec,
+  type CoverageTarget,
+  type CoverageTags,
   type LearningLanguage,
-  type PersonCode,
-  type PersonOutcome,
 } from '@language-drill/shared';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 
@@ -193,8 +195,8 @@ export type CellResult = {
    */
   earlyBailed: boolean;
   /**
-   * Per-person `{requested, approved}` tally for a person-targeted batch (Phase
-   * 1). `null` when the cell did no person targeting (no `args.personTargets`).
+   * Per-axis `{requested, approved}` tally for a coverage-targeted batch (Phase
+   * 2). `null` when the cell did no coverage targeting (no `args.coverageTargets`).
    * Persisted to `generation_jobs.coverage_outcome`.
    */
   coverageOutcome: CoverageOutcome | null;
@@ -214,11 +216,11 @@ export type RunOneCellInput = {
     topicDomain: string | null;
     maxCostUsd: number;
     /**
-     * Phase 1 coverage controller: explicit per-ordinal person codes from the
-     * scheduler (length === count). `undefined` → blind ordinal rotation and no
-     * coverage_outcome tally (CLI/admin and non-personRotation cells).
+     * Phase 2 coverage controller: explicit per-ordinal axis targets from the
+     * scheduler (length === count). `undefined` → no coverage targeting/tally
+     * (CLI/admin and non-spec cells).
      */
-    personTargets?: readonly PersonCode[];
+    coverageTargets?: readonly CoverageTarget[];
   };
   /** Caller-supplied audit-row id. CLI: `randomUUID()`. Scheduler: `deterministicUuid([cellKey, batchSeed].join('|'))`. */
   jobId: string;
@@ -353,6 +355,44 @@ export function buildSeedWords(
   });
 }
 
+/**
+ * Build the per-axis `coverage_outcome` tally for a batch (Phase 2). `requested`
+ * counts each draft's targeted value per axis; `approved` counts approved drafts
+ * by their REALIZED value per axis (so a draft targeted at `2pl` but realized as
+ * `3sg` via the escape hatch credits `3sg`, not `2pl`). Only the axes the batch
+ * actually targeted (present in the first target) are tallied. Returns `null`
+ * when there were no targets.
+ */
+export function tallyCoverageOutcome(
+  spec: CoverageSpec | undefined,
+  coverageTargets: readonly CoverageTarget[] | undefined,
+  realizedPerApprovedOrdinal: readonly (CoverageTags | undefined)[],
+): CoverageOutcome | null {
+  if (!spec || !coverageTargets || coverageTargets.length === 0) return null;
+  const activeAxes = Object.keys(coverageTargets[0]) as CoverageAxis[];
+  if (activeAxes.length === 0) return null;
+  const acc: CoverageOutcome = {};
+  const bump = (axis: CoverageAxis, value: string, field: 'requested' | 'approved') => {
+    const axisAcc = (acc[axis] ??= {});
+    const bucket = (axisAcc[value] ??= { requested: 0, approved: 0 });
+    bucket[field] += 1;
+  };
+  for (const target of coverageTargets) {
+    for (const axis of activeAxes) {
+      const v = target[axis];
+      if (v) bump(axis, v, 'requested');
+    }
+  }
+  for (const realized of realizedPerApprovedOrdinal) {
+    if (!realized) continue;
+    for (const axis of activeAxes) {
+      const v = realized[axis];
+      if (v) bump(axis, v, 'approved');
+    }
+  }
+  return Object.keys(acc).length > 0 ? acc : null;
+}
+
 // ---------------------------------------------------------------------------
 // runOneCell
 // ---------------------------------------------------------------------------
@@ -426,21 +466,13 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
   // success return below.
   let earlyBailed = false;
   const rejectionReasonCounts: Record<string, number> = {};
-  // Phase 1 per-person tally. `requested` counts every targeted ordinal slot;
-  // `approved` counts approved drafts by their REALIZED person (DraftOutcome
-  // .realizedPerson). Only built when the scheduler supplied targets.
-  const personOutcome: PersonOutcome = {};
-  const personTargets = args.personTargets;
-  if (personTargets) {
-    for (const code of personTargets) {
-      const bucket = (personOutcome[code] ??= { requested: 0, approved: 0 });
-      bucket.requested += 1;
-    }
-  }
-  const creditApproved = (person: PersonCode | undefined): void => {
-    if (!personTargets || !person) return;
-    const bucket = (personOutcome[person] ??= { requested: 0, approved: 0 });
-    bucket.approved += 1;
+  // Phase 2 per-axis tally: collect the realized coverage of each APPROVED
+  // ordinal, then build the outcome once at the end via `tallyCoverageOutcome`.
+  const coverageTargets = args.coverageTargets;
+  const approvedRealized: (CoverageTags | undefined)[] = [];
+  const creditApproved = (realized: CoverageTags | undefined): void => {
+    if (!coverageTargets) return;
+    approvedRealized.push(realized);
   };
   const generatedAt = new Date();
 
@@ -487,7 +519,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       batchSeed: args.batchSeed,
       priorPoolSurfaces,
       seedWords,
-      personTargets: args.personTargets,
+      coverageTargets: args.coverageTargets,
     };
 
     const batch = await runGeneratorPool({
@@ -575,7 +607,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
         case 'inserted-approved':
           approvedCount += 1;
           insertedCount += 1;
-          creditApproved(outcome.realizedPerson);
+          creditApproved(outcome.realizedCoverage);
           break;
         case 'inserted-flagged':
           flaggedCount += 1;
@@ -598,7 +630,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
           insertedCount += 1;
           if (outcome.terminalReviewStatus === 'auto-approved') {
             approvedCount += 1;
-            creditApproved(outcome.realizedPerson);
+            creditApproved(outcome.realizedCoverage);
           } else {
             flaggedCount += 1;
           }
@@ -626,12 +658,11 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     });
   }
 
-  // NULL (not `{}`) when no person targeting happened, so the column reads as
-  // "not a coverage-targeted batch" rather than an empty object.
-  const coverageOutcome: CoverageOutcome | null =
-    personTargets && Object.keys(personOutcome).length > 0
-      ? { person: personOutcome }
-      : null;
+  const coverageOutcome = tallyCoverageOutcome(
+    cell.grammarPoint.coverageSpec,
+    coverageTargets,
+    approvedRealized,
+  );
 
   const costUsd = estimateCostUsd(combinedUsage);
   const totalInputTokens =

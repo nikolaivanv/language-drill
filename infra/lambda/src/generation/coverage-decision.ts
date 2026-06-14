@@ -1,77 +1,110 @@
 /**
- * Pure coverage-controller decision logic for the **person** axis (Pool Coverage
- * Controller, Phase 1). No `@aws-sdk/*`, no Drizzle, no env reads — pure inputs →
- * pure output, unit-tested in isolation. Mirrors `scheduler-decision.ts`.
- *
- * Turns the scalar `need` from `decideEnqueue` into an explicit per-draft
- * `PersonCode[]` by greedily water-filling each draft into the eligible person
- * currently lowest in the approved pool — which realizes the uniform per-person
- * floor (`ceil(target / N)`) without an explicit floor term, and covers both the
- * deficit regime (starved persons first) and the top-up regime (level persons,
- * spread evenly) in one loop. Buckets that were targeted last batch but yielded
- * nothing are suppressed (excluded), cleared upstream by a CURRICULUM_VERSION
- * bump (the caller passes `recentOutcome: null` in that case).
+ * Pure, axis-agnostic coverage-controller decision logic (Pool Coverage
+ * Controller, Phase 2). No `@aws-sdk/*`, no Drizzle, no env — pure inputs →
+ * pure output, unit-tested in isolation. Generalizes the Phase-1 person-only
+ * water-fill: for each axis in the spec INDEPENDENTLY, greedily fill each draft
+ * into the eligible value currently lowest in the approved pool (realizing the
+ * per-value floors without an explicit floor term), then zip the per-axis
+ * sequences into per-draft `CoverageTarget`s. The cross-product emerges in the
+ * drafts but is never measured or suppressed — give-up is strictly
+ * per-`(axis, value)`. A value absent from `floors` is "NA" (never targeted); a
+ * value targeted >= GIVE_UP_MIN_ATTEMPTS last batch with zero approvals is
+ * suppressed until a CURRICULUM_VERSION bump clears it (caller passes
+ * `recentOutcome: null`).
  */
 
-import type { Language, PersonCode, PersonOutcome } from '@language-drill/shared';
-import { personCodesForLanguage } from '@language-drill/ai';
-import { GIVE_UP_MIN_ATTEMPTS } from './cell-targets';
+import {
+  COVERAGE_AXIS_VALUES,
+  type CoverageAxis,
+  type CoverageOutcome,
+  type CoverageSpec,
+  type CoverageTarget,
+} from "@language-drill/shared";
+import { GIVE_UP_MIN_ATTEMPTS } from "./cell-targets";
 
 export { GIVE_UP_MIN_ATTEMPTS };
 
 export type CoverageDecisionInput = {
-  language: Exclude<Language, Language.EN>;
+  spec: CoverageSpec;
   /** decideEnqueue's scalar need (= target − approvedInPool). */
   need: number;
-  /** Measured approved-pool count per person (from coverage_tags GROUP BY). */
-  approvedByPerson: Partial<Record<PersonCode, number>>;
+  /** Measured approved-pool count per axis/value (from coverage_tags GROUP BY). */
+  approvedByAxis: Partial<Record<CoverageAxis, Partial<Record<string, number>>>>;
   /**
-   * The most-recent succeeded job's per-person outcome — ONLY when that job's
-   * curriculumVersion matches the on-disk constant. `null` clears all give-up
-   * (no recent job, or a curriculum bump invalidated the suppression).
+   * The most-recent succeeded job's outcome — ONLY when that job's
+   * curriculumVersion matches the on-disk constant. `null` clears all give-up.
    */
-  recentOutcome: PersonOutcome | null;
+  recentOutcome: CoverageOutcome | null;
 };
 
 export type CoverageDecision = {
-  /** length === max(0, need); [] ⇒ caller omits spec.personTargets (blind). */
-  personTargets: PersonCode[];
-  /** Buckets excluded as zero-yield — surfaced for the scheduler's log line. */
-  suppressed: PersonCode[];
+  /** length === max(0, need) when any axis is targetable; [] otherwise. */
+  coverageTargets: CoverageTarget[];
+  /** Per-axis values excluded as zero-yield — surfaced for the scheduler log. */
+  suppressed: Partial<Record<CoverageAxis, string[]>>;
 };
+
+/** Floor values in canonical paradigm order (1sg,2sg,… / affirmative,negative,…). */
+function orderedFloorValues(axis: CoverageSpec["axes"][number]): string[] {
+  const order = COVERAGE_AXIS_VALUES[axis.name];
+  return order.filter((v) => v in axis.floors);
+}
+
+function suppressedFor(
+  axis: CoverageSpec["axes"][number],
+  recentOutcome: CoverageOutcome | null,
+): string[] {
+  const out = recentOutcome?.[axis.name];
+  if (!out) return [];
+  return orderedFloorValues(axis).filter((v) => {
+    const o = out[v];
+    return o !== undefined && o.requested >= GIVE_UP_MIN_ATTEMPTS && o.approved === 0;
+  });
+}
 
 export function decideCoverageTargets(
   input: CoverageDecisionInput,
 ): CoverageDecision {
-  const { language, need, approvedByPerson, recentOutcome } = input;
-  const persons = personCodesForLanguage(language);
+  const { spec, need, approvedByAxis, recentOutcome } = input;
 
-  const suppressed = persons.filter((p) => {
-    const o = recentOutcome?.[p];
-    return o !== undefined && o.requested >= GIVE_UP_MIN_ATTEMPTS && o.approved === 0;
-  });
-
-  if (need <= 0) return { personTargets: [], suppressed };
-
-  const eligible = persons.filter((p) => !suppressed.includes(p));
-  if (eligible.length === 0) return { personTargets: [], suppressed };
-
-  // Running projected count per eligible person, seeded from the approved pool.
-  const counts = new Map<PersonCode, number>(
-    eligible.map((p) => [p, approvedByPerson[p] ?? 0]),
-  );
-
-  const personTargets: PersonCode[] = [];
-  for (let i = 0; i < need; i++) {
-    // Pick the eligible person with the smallest projected count; ties broken by
-    // paradigm order (the first such person in `eligible`).
-    let best = eligible[0];
-    for (const p of eligible) {
-      if ((counts.get(p) ?? 0) < (counts.get(best) ?? 0)) best = p;
-    }
-    personTargets.push(best);
-    counts.set(best, (counts.get(best) ?? 0) + 1);
+  const suppressed: Partial<Record<CoverageAxis, string[]>> = {};
+  for (const axis of spec.axes) {
+    const s = suppressedFor(axis, recentOutcome);
+    if (s.length > 0) suppressed[axis.name] = s;
   }
 
-  return { personTargets, suppressed };
+  if (need <= 0) return { coverageTargets: [], suppressed };
+
+  // Build an independent water-filled sequence of length `need` per axis.
+  const perAxisSeq: Partial<Record<CoverageAxis, string[]>> = {};
+  for (const axis of spec.axes) {
+    const eligible = orderedFloorValues(axis).filter(
+      (v) => !(suppressed[axis.name]?.includes(v) ?? false),
+    );
+    if (eligible.length === 0) continue; // axis contributes no constraint
+    const counts = new Map<string, number>(
+      eligible.map((v) => [v, approvedByAxis[axis.name]?.[v] ?? 0]),
+    );
+    const seq: string[] = [];
+    for (let i = 0; i < need; i++) {
+      let best = eligible[0];
+      for (const v of eligible) {
+        if ((counts.get(v) ?? 0) < (counts.get(best) ?? 0)) best = v;
+      }
+      seq.push(best);
+      counts.set(best, (counts.get(best) ?? 0) + 1);
+    }
+    perAxisSeq[axis.name] = seq;
+  }
+
+  const activeAxes = Object.keys(perAxisSeq) as CoverageAxis[];
+  if (activeAxes.length === 0) return { coverageTargets: [], suppressed };
+
+  const coverageTargets: CoverageTarget[] = [];
+  for (let i = 0; i < need; i++) {
+    const target: CoverageTarget = {};
+    for (const axis of activeAxes) target[axis] = perAxisSeq[axis]![i];
+    coverageTargets.push(target);
+  }
+  return { coverageTargets, suppressed };
 }

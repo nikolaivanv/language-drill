@@ -59,13 +59,14 @@ export const generationJobs = pgTable(
      */
     rejectionReasonCounts: jsonb('rejection_reason_counts').$type<Record<string, number>>(),
     /**
-     * Per-person generation outcome for this batch (Pool Coverage Controller,
-     * Phase 1): `{ person: { "2pl": { requested, approved }, … } }`. `requested`
-     * counts drafts the scheduler targeted at each person; `approved` counts
-     * approved drafts whose *realized* person (validator coverage) equals it.
-     * The scheduler reads this back to give up on a bucket that was targeted but
-     * yielded nothing. NULL on legacy rows, non-personRotation cells, and cells
-     * that did no person targeting. Written by `run-one-cell`.
+     * Axis-keyed generation outcome for this batch (Pool Coverage Controller,
+     * Phase 2): `{ person?: {…}, polarity?: {…}, wordClass?: {…} }`, each axis a
+     * `{ value: { requested, approved } }` map. `requested` = drafts targeted at
+     * each value; `approved` = approved drafts whose *realized* value equals it.
+     * The scheduler reads this back to give up per-(axis,value) bucket. NULL on
+     * legacy rows and cells that did no coverage targeting. Phase-1 rows
+     * (`{ person: … }`) remain valid. Written by `run-one-cell`. Reusing the
+     * existing JSONB column → no migration.
      */
     coverageOutcome: jsonb('coverage_outcome').$type<CoverageOutcome>(),
   },

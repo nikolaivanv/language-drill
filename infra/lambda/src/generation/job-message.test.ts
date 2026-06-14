@@ -342,41 +342,54 @@ describe('parseGenerationJobMessage — round-trip and forward-compat', () => {
 });
 
 // ---------------------------------------------------------------------------
-// parseGenerationJobMessage — personTargets
+// parseGenerationJobMessage — coverageTargets
 // ---------------------------------------------------------------------------
 
-describe('parseGenerationJobMessage — personTargets', () => {
-  // Use count: 2 so personTargets length tests are distinct from the default count: 50.
-  function baseWithCount2(): Record<string, unknown> {
-    const msg = cloneAsRecord();
-    (msg.spec as Record<string, unknown>).count = 2;
-    return msg;
+describe("coverageTargets parsing", () => {
+  function valid(over: Record<string, unknown> = {}): unknown {
+    return {
+      jobId: "11111111-1111-1111-1111-111111111111",
+      trigger: "scheduled",
+      spec: {
+        language: "TR",
+        cefrLevel: "A1",
+        exerciseType: "cloze",
+        grammarPointKey: "tr-a1-x",
+        topicDomain: null,
+        count: 2,
+        batchSeed: "s",
+        ...over,
+      },
+      maxCostUsd: 0.5,
+    };
   }
 
-  it('round-trips a valid personTargets array', () => {
-    const msg = baseWithCount2();
-    (msg.spec as Record<string, unknown>).personTargets = ['2pl', '1pl'];
-    const parsed = parseGenerationJobMessage(msg);
-    expect(parsed.spec.personTargets).toEqual(['2pl', '1pl']);
+  it("round-trips valid per-draft targets of length === count", () => {
+    const msg = parseGenerationJobMessage(
+      valid({ coverageTargets: [{ person: "3sg" }, { person: "2pl", polarity: "negative" }] }),
+    );
+    expect(msg.spec.coverageTargets).toEqual([
+      { person: "3sg" },
+      { person: "2pl", polarity: "negative" },
+    ]);
   });
-
-  it('returns undefined for personTargets when field is absent', () => {
-    const msg = baseWithCount2();
-    const parsed = parseGenerationJobMessage(msg);
-    expect(parsed.spec.personTargets).toBeUndefined();
+  it("absent → undefined", () => {
+    expect(parseGenerationJobMessage(valid()).spec.coverageTargets).toBeUndefined();
   });
-
-  it('throws matching /spec\\.personTargets/ for an unknown code', () => {
-    const msg = baseWithCount2();
-    (msg.spec as Record<string, unknown>).personTargets = ['2pl', 'zz'];
-    expect(() => parseGenerationJobMessage(msg)).toThrow(/spec\.personTargets/);
+  it("rejects length !== count", () => {
+    expect(() => parseGenerationJobMessage(valid({ coverageTargets: [{ person: "3sg" }] }))).toThrow(
+      /length === spec.count/,
+    );
   });
-
-  it('throws matching /spec\\.personTargets/ when length !== count', () => {
-    const msg = baseWithCount2();
-    // count is 2 but we only supply 1 element
-    (msg.spec as Record<string, unknown>).personTargets = ['2pl'];
-    expect(() => parseGenerationJobMessage(msg)).toThrow(/spec\.personTargets/);
+  it("rejects an unknown axis", () => {
+    expect(() =>
+      parseGenerationJobMessage(valid({ coverageTargets: [{ tense: "past" }, { person: "1sg" }] })),
+    ).toThrow(/unknown axis/);
+  });
+  it("rejects an illegal value for an axis", () => {
+    expect(() =>
+      parseGenerationJobMessage(valid({ coverageTargets: [{ person: "9sg" }, { person: "1sg" }] })),
+    ).toThrow(/illegal value/);
   });
 });
 

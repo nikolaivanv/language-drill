@@ -16,6 +16,6 @@ export function applicableCoverageTags(
   return pickCoverageTags(
     coverage,
     cell.exerciseType,
-    cell.grammarPoint.personRotation === true,
+    cell.grammarPoint.coverageSpec,
   );
 }

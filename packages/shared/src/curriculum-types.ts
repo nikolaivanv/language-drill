@@ -11,6 +11,7 @@
 
 import type { CefrLevel } from './index';
 import type { LearningLanguage } from './onboarding';
+import type { CoverageSpec } from './coverage';
 
 /**
  * The CEFR levels covered by the round-1 curriculum. C1/C2 are intentionally
@@ -84,15 +85,16 @@ export type GrammarPoint = Readonly<{
    */
   sentenceConstructionSuitable?: boolean;
   /**
-   * Optional opt-in that rotates the targeted grammatical person across the
-   * drafts of a generation batch (1sg → 2sg → 3sg → 1pl → …, per-language
-   * list in `packages/ai/src/generation-prompts.ts`). Set this on points
-   * whose paradigm is person-marked (finite tenses, copular/possessive
-   * person suffixes): without it the generator collapses onto third-person
-   * singular — a 2026-06-12 pool audit found ≥90% 3sg answers in every TR
-   * tense cell, leaving personal endings untested. The rotation directive is
-   * injected into the per-draft USER prompt only (cache-safe). Only valid on
-   * `kind: 'grammar'` entries (enforced by the curriculum invariant).
+   * Declarative coverage spec (Pool Coverage Controller, Phase 2) — which
+   * categorical axes a diverse approved set should vary along, and an absolute
+   * min approved-count floor per value. Replaces the old `personRotation` flag:
+   * a person axis here is exactly the old `personRotation: true`. Drives
+   * (a) which axes get tagged (`coverageAxesFor`), (b) the cell's generation
+   * target (`resolveCellTarget` raises it to cover the floor sums), and (c) the
+   * scheduler's per-draft coverage targeting. Authored by `propose:coverage-spec`
+   * and human-reviewed. Only valid on the relevant `kind`/exercise types
+   * (enforced by curriculum invariants): `wordClass` on vocab points;
+   * `person`/`polarity`/`sentenceType` on grammar points.
    */
-  personRotation?: boolean;
+  coverageSpec?: CoverageSpec;
 }>;

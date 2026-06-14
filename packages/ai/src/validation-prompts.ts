@@ -291,7 +291,7 @@ const COVERAGE_AXIS_DIRECTIVE: Record<CoverageAxis, string> = {
 function renderCoverageDirective(spec: GenerationSpec): string {
   const axes = coverageAxesFor(
     spec.exerciseType,
-    spec.grammarPoint.personRotation === true,
+    spec.grammarPoint.coverageSpec,
   );
   if (axes.length === 0) return "";
   const lines = axes.map((axis) => COVERAGE_AXIS_DIRECTIVE[axis]).join("\n");

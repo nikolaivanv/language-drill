@@ -4,7 +4,6 @@ import {
   ExerciseType,
   Language,
   type ClozeContent,
-  type PersonCode,
   type TranslationContent,
   type VocabRecallContent,
 } from "@language-drill/shared";
@@ -22,8 +21,6 @@ import {
   PERSON_ROTATION_BY_LANGUAGE,
   personCodesForLanguage,
   personDisplayForCode,
-  personForOrdinal,
-  personRotationPhase,
   canonicalSurface,
   capPriorPoolSurfaces,
   computeGenerationPromptVars,
@@ -727,130 +724,6 @@ describe("buildGenerationUserPrompt — sentence_construction", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Grammatical-person rotation
-// ---------------------------------------------------------------------------
-
-describe("personForOrdinal", () => {
-  it("cycles the TR six-person paradigm and wraps", () => {
-    expect(personForOrdinal(Language.TR, 0)).toBe("1sg (ben)");
-    expect(personForOrdinal(Language.TR, 1)).toBe("2sg (sen)");
-    expect(personForOrdinal(Language.TR, 5)).toBe("3pl (onlar)");
-    expect(personForOrdinal(Language.TR, 6)).toBe("1sg (ben)");
-  });
-
-  it("ES list omits vosotros (pan-American 2pl = ustedes)", () => {
-    const es = PERSON_ROTATION_BY_LANGUAGE[Language.ES];
-    expect(es).toHaveLength(5);
-    expect(es.join(" ")).not.toContain("vosotros");
-    expect(es).toContain("3pl (ellos/ellas/ustedes)");
-  });
-
-  it("a full cycle covers every person exactly once per language", () => {
-    for (const language of [Language.TR, Language.ES, Language.DE] as const) {
-      const persons = PERSON_ROTATION_BY_LANGUAGE[language];
-      const cycle = persons.map((_, i) => personForOrdinal(language, i));
-      expect(new Set(cycle).size).toBe(persons.length);
-    }
-  });
-});
-
-describe("personRotationPhase", () => {
-  it("is deterministic and in range for date-stamped scheduler seeds", () => {
-    for (const seed of [
-      "scheduled-2026-06-12",
-      "scheduled-2026-06-13",
-      "phase-2-default",
-    ]) {
-      const phase = personRotationPhase(seed, 6);
-      expect(phase).toBe(personRotationPhase(seed, 6));
-      expect(phase).toBeGreaterThanOrEqual(0);
-      expect(phase).toBeLessThan(6);
-    }
-  });
-
-  it("varies across nightly seeds so small top-ups cover the cycle tail", () => {
-    // A week of scheduler seeds must not all hash to the same phase —
-    // otherwise a cell topping up by 1–2 drafts/night would still starve
-    // the tail persons.
-    const phases = new Set(
-      Array.from({ length: 7 }, (_, day) =>
-        personRotationPhase(`scheduled-2026-06-${String(10 + day)}`, 6),
-      ),
-    );
-    expect(phases.size).toBeGreaterThan(1);
-  });
-
-  it("returns phase 0 for null/absent seed (back-compat path)", () => {
-    expect(personRotationPhase(null, 6)).toBe(0);
-    expect(personRotationPhase(undefined, 6)).toBe(0);
-    expect(personRotationPhase("", 6)).toBe(0);
-  });
-
-  it("offsets personForOrdinal while preserving full-cycle coverage", () => {
-    const seed = "scheduled-2026-06-12";
-    const phase = personRotationPhase(seed, 6);
-    expect(personForOrdinal(Language.TR, 0, seed)).toBe(
-      PERSON_ROTATION_BY_LANGUAGE[Language.TR][phase],
-    );
-    const cycle = PERSON_ROTATION_BY_LANGUAGE[Language.TR].map((_, i) =>
-      personForOrdinal(Language.TR, i, seed),
-    );
-    expect(new Set(cycle).size).toBe(6);
-  });
-
-  it("threads batchSeed through buildGenerationUserPrompt", () => {
-    const seed = "scheduled-2026-06-12";
-    const expected = personForOrdinal(Language.ES, 0, seed);
-    const msg = buildGenerationUserPrompt(baseInputs, 0, null, null, seed);
-    expect(msg).toContain(`Target grammatical person for this draft: ${expected}`);
-  });
-});
-
-describe("buildGenerationUserPrompt — person rotation", () => {
-  // baseInputs targets es-b1-present-subjunctive, which is flagged
-  // `personRotation: true` in the curriculum.
-  it("pins the ordinal's person for a flagged grammar point", () => {
-    const msg = buildGenerationUserPrompt(baseInputs, 0, null);
-    expect(msg).toContain("Target grammatical person for this draft: 1sg (yo)");
-  });
-
-  it("rotates the person across ordinals", () => {
-    const msg = buildGenerationUserPrompt(baseInputs, 1, null);
-    expect(msg).toContain("Target grammatical person for this draft: 2sg (tú)");
-  });
-
-  it("is deterministic — same ordinal yields identical bytes", () => {
-    expect(buildGenerationUserPrompt(baseInputs, 3, null)).toBe(
-      buildGenerationUserPrompt(baseInputs, 3, null),
-    );
-  });
-
-  it("adds no person line for an unflagged grammar point", () => {
-    const unflagged = getGrammarPoint("es-b1-relative-clauses");
-    if (!unflagged) throw new Error("fixture missing: es-b1-relative-clauses");
-    expect(unflagged.personRotation).toBeUndefined();
-    const msg = buildGenerationUserPrompt(
-      { ...baseInputs, grammarPoint: unflagged },
-      0,
-      null,
-    );
-    expect(msg).not.toContain("Target grammatical person");
-  });
-
-  it("composes with the SC mode block and seed word", () => {
-    const msg = buildGenerationUserPrompt(
-      { ...baseInputs, exerciseType: ExerciseType.SENTENCE_CONSTRUCTION },
-      0,
-      "travel",
-      "viajar",
-    );
-    expect(msg).toContain("prompt mode: keywords");
-    expect(msg).toContain("Target grammatical person for this draft: 1sg (yo)");
-    expect(msg).toContain('Build this exercise around the word "viajar"');
-  });
-});
-
-// ---------------------------------------------------------------------------
 // tailRecentStems
 // ---------------------------------------------------------------------------
 
@@ -915,48 +788,43 @@ describe("personDisplayForCode", () => {
 });
 
 // ---------------------------------------------------------------------------
-// buildGenerationUserPrompt — explicit personTargets
+// renderCoverageBlock (via buildGenerationUserPrompt) — Phase 2
 // ---------------------------------------------------------------------------
 
-describe("buildGenerationUserPrompt — explicit personTargets", () => {
-  const inputs = {
+function covInputs(over: Record<string, unknown> = {}) {
+  return {
     language: Language.TR,
-    cefrLevel: "A2",
+    cefrLevel: CefrLevel.A1,
     exerciseType: ExerciseType.CLOZE,
-    grammarPoint: { name: "Aorist tense", personRotation: true },
-  } as unknown as GenerationPromptInputs;
+    grammarPoint: getGrammarPoint("tr-a1-present-continuous"),
+    ...over,
+  } as Parameters<typeof buildGenerationUserPrompt>[0];
+}
 
-  it("pins the explicit target's label for the ordinal", () => {
-    const msg = buildGenerationUserPrompt(
-      inputs, 0, null, null, "scheduled-2026-06-13", ["2pl", "1pl"],
-    );
-    expect(msg).toContain("Target grammatical person for this draft: 2pl (siz)");
+describe("renderCoverageBlock (via buildGenerationUserPrompt)", () => {
+  it("emits a person directive with the language display label", () => {
+    const out = buildGenerationUserPrompt(covInputs(), 0, null, null, [{ person: "2pl" }]);
+    expect(out).toContain("2pl (siz)");
   });
-
-  it("uses personTargets[ordinal], not ordinal rotation", () => {
-    const msg = buildGenerationUserPrompt(
-      inputs, 1, null, null, "scheduled-2026-06-13", ["2pl", "1pl"],
-    );
-    expect(msg).toContain("Target grammatical person for this draft: 1pl (biz)");
+  it("emits one directive per axis when the target is multi-axis", () => {
+    const out = buildGenerationUserPrompt(covInputs(), 0, null, null, [{ person: "1sg", polarity: "negative" }]);
+    expect(out).toContain("1sg (ben)");
+    expect(out).toContain("negative");
   });
-
-  it("falls back to ordinal rotation when personTargets is absent", () => {
-    const withTargets = buildGenerationUserPrompt(
-      inputs, 0, null, null, "seed-x", ["2pl"],
+  it("emits a wordClass directive for vocab", () => {
+    const out = buildGenerationUserPrompt(
+      covInputs({ exerciseType: ExerciseType.VOCAB_RECALL, grammarPoint: getGrammarPoint("tr-a1-vocab-food-drink") }),
+      0,
+      null,
+      null,
+      [{ wordClass: "verb" }],
     );
-    const blind = buildGenerationUserPrompt(inputs, 0, null, null, "seed-x");
-    expect(withTargets).not.toBe(blind);
-    expect(blind).toContain("Target grammatical person for this draft:");
-    expect(withTargets).toContain("Target grammatical person for this draft: 2pl (siz)");
+    expect(out).toContain("verb");
   });
-
-  it("emits no person block when personRotation is false", () => {
-    const noRotation = {
-      ...inputs,
-      grammarPoint: { name: "X", personRotation: false },
-    } as unknown as GenerationPromptInputs;
-    expect(
-      buildGenerationUserPrompt(noRotation, 0, null, null, "s", ["2pl"]),
-    ).not.toContain("Target grammatical person");
+  it("emits no directive when there is no target for the ordinal", () => {
+    const withTargets = buildGenerationUserPrompt(covInputs(), 0, null, null, [{ person: "1sg" }]);
+    const without = buildGenerationUserPrompt(covInputs(), 0, null, null, undefined);
+    expect(without).not.toContain("Target grammatical person");
+    expect(withTargets).toContain("Target grammatical person");
   });
 });
