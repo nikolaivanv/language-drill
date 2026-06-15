@@ -24,6 +24,8 @@ vi.mock('@language-drill/api-client', () => ({
   useSubmitFreeWriting: (...args: unknown[]) => mockUseSubmitFreeWriting(...args),
   useLanguageProfiles: (...args: unknown[]) => mockUseLanguageProfiles(...args),
   createAuthenticatedFetch: vi.fn(() => vi.fn()),
+  useBrainstorm: () => ({ data: undefined, isLoading: false, isFetching: false, isError: false, refetch: vi.fn() }),
+  useVocabBoost: () => ({ data: undefined, isLoading: false, isFetching: false, isError: false, refetch: vi.fn() }),
 }));
 
 // ---------------------------------------------------------------------------
