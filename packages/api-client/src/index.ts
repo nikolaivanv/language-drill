@@ -128,6 +128,14 @@ export {
   type UseSubmitFreeWritingOptions,
 } from './hooks/useSubmitFreeWriting';
 export {
+  BrainstormSchema,
+  type BrainstormResponse,
+  VocabBoostSchema,
+  type VocabBoostResponse,
+} from './schemas/writing-helper';
+export { useBrainstorm, type UseBrainstormOptions } from './hooks/useBrainstorm';
+export { useVocabBoost, type UseVocabBoostOptions } from './hooks/useVocabBoost';
+export {
   useCreateSession,
   useCompleteSession,
   type UseCreateSessionOptions,
