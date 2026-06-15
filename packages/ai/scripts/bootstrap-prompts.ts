@@ -42,6 +42,8 @@ import {
   ANNOTATE_SYSTEM_PROMPT_VERSION,
   EVALUATION_SYSTEM_PROMPT,
   EVALUATION_SYSTEM_PROMPT_VERSION,
+  FREE_WRITING_EVAL_PROMPT_VERSION,
+  FREE_WRITING_EVAL_SYSTEM_PROMPT,
   GENERATION_PROMPT_VERSION,
   GENERATION_SYSTEM_PROMPT_TEMPLATE,
   PROMPT_LABEL_PRODUCTION,
@@ -87,6 +89,12 @@ export const PROMPTS: readonly PromptManifestEntry[] = [
     text: EVALUATION_SYSTEM_PROMPT,
     version: EVALUATION_SYSTEM_PROMPT_VERSION,
     surface: "evaluate",
+  },
+  {
+    name: "free-writing-eval-system-prompt",
+    text: FREE_WRITING_EVAL_SYSTEM_PROMPT,
+    version: FREE_WRITING_EVAL_PROMPT_VERSION,
+    surface: "free-writing-eval",
   },
   {
     name: "annotate-system-prompt",
