@@ -56,6 +56,18 @@ describe('planSkillTopics', () => {
     const b = planSkillTopics(ALL_CURRICULA);
     expect(a).toEqual(b);
   });
+
+  it('plans skill_topics rows for the kind:dictation umbrellas', () => {
+    // The umbrellas are curriculum entries, so the curriculum-driven planner
+    // covers them automatically. runOneCell fails-closed without a skill_topics
+    // row for cell.grammarPoint.key, so the scheduler depends on these rows.
+    const plans = planSkillTopics(ALL_CURRICULA);
+    const byId = new Map(plans.map((p) => [p.id, p] as const));
+    for (const key of ['es-b1-dictation', 'es-b2-dictation'] as const) {
+      const expectedId = deterministicUuid(`skill-topic:${key}`);
+      expect(byId.has(expectedId)).toBe(true);
+    }
+  });
 });
 
 describe('planSeedTags', () => {
