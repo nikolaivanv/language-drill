@@ -96,6 +96,7 @@ export class LanguageDrillStack extends Stack {
     const generationQueue = new GenerationQueueConstruct(
       this,
       "GenerationQueue",
+      { alarmTopic: alerts.topic },
     );
 
     // Phase 2 — dictation audio-synth pipeline (SQS + consumer Lambda). The
@@ -105,12 +106,14 @@ export class LanguageDrillStack extends Stack {
     const dictationAudioQueue = new DictationAudioQueueConstruct(
       this,
       "DictationAudioQueue",
+      { alarmTopic: alerts.topic },
     );
     new DictationAudioLambdaConstruct(this, "DictationAudioLambdaWrap", {
       queue: dictationAudioQueue.queue,
       contentBucket: storage.bucket,
       secretsPrefix: props.secretsPrefix,
       reservedConcurrency: 2,
+      alarmTopic: alerts.topic,
     });
 
     const generationLambda = new GenerationLambdaConstruct(
@@ -121,6 +124,7 @@ export class LanguageDrillStack extends Stack {
         secretsPrefix: props.secretsPrefix,
         envName: props.envName,
         reservedConcurrency: 3,
+        alarmTopic: alerts.topic,
         // The generation handler batches newly-approved dictation ids to this
         // queue (PR 2, Task 6).
         additionalEnv: {
@@ -162,12 +166,14 @@ export class LanguageDrillStack extends Stack {
     const theoryQueue = new TheoryGenerationQueueConstruct(
       this,
       "TheoryGenerationQueue",
+      { alarmTopic: alerts.topic },
     );
     new TheoryGenerationLambdaConstruct(this, "TheoryGenerationLambdaWrap", {
       queue: theoryQueue.queue,
       secretsPrefix: props.secretsPrefix,
       envName: props.envName,
       reservedConcurrency: 2,
+      alarmTopic: alerts.topic,
     });
     new TheorySchedulerLambdaConstruct(this, "TheorySchedulerLambdaWrap", {
       queue: theoryQueue.queue,

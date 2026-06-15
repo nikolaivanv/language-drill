@@ -1,5 +1,6 @@
 import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
+import * as sns from 'aws-cdk-lib/aws-sns';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { describe, beforeAll, expect, it } from 'vitest';
 
@@ -82,6 +83,38 @@ describe('TheoryGenerationLambdaConstruct', () => {
     template.hasResourceProperties('AWS::CloudWatch::Alarm', {
       MetricName: 'Errors',
       Namespace: 'AWS/Lambda',
+    });
+  });
+
+  it('neither alarm has AlarmActions when no alarmTopic is supplied', () => {
+    const alarms = template.findResources('AWS::CloudWatch::Alarm');
+    for (const alarm of Object.values(alarms)) {
+      expect(alarm.Properties.AlarmActions).toBeUndefined();
+    }
+  });
+
+  it('routes BOTH the Errors and CellFailed alarms to the SNS topic when alarmTopic is supplied', () => {
+    const app = new App();
+    const stack = new Stack(app, 'TopicStack');
+    const queue = new sqs.Queue(stack, 'StubQueue');
+    const topic = new sns.Topic(stack, 'T');
+    new TheoryGenerationLambdaConstruct(stack, 'TheoryGenerationLambda', {
+      queue,
+      secretsPrefix: 'language-drill-dev',
+      envName: 'dev',
+      reservedConcurrency: 2,
+      alarmTopic: topic,
+    });
+    const t = Template.fromStack(stack);
+    // Both the Lambda-runtime Errors alarm and the application-level CellFailed
+    // alarm must carry an SNS action.
+    t.hasResourceProperties('AWS::CloudWatch::Alarm', {
+      MetricName: 'Errors',
+      AlarmActions: Match.arrayWith([Match.objectLike({ Ref: Match.anyValue() })]),
+    });
+    t.hasResourceProperties('AWS::CloudWatch::Alarm', {
+      MetricName: 'CellFailed',
+      AlarmActions: Match.arrayWith([Match.objectLike({ Ref: Match.anyValue() })]),
     });
   });
 

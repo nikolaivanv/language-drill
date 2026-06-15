@@ -1,5 +1,6 @@
 import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
+import * as sns from 'aws-cdk-lib/aws-sns';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { describe, beforeAll, expect, it } from 'vitest';
 
@@ -55,6 +56,29 @@ describe('GenerationLambdaConstruct', () => {
       ComparisonOperator: 'GreaterThanThreshold',
       TreatMissingData: 'notBreaching',
       EvaluationPeriods: 1,
+    });
+  });
+
+  it('Errors alarm has no AlarmActions when no alarmTopic is supplied', () => {
+    template.hasResourceProperties('AWS::CloudWatch::Alarm', {
+      AlarmActions: Match.absent(),
+    });
+  });
+
+  it('routes the Errors alarm to the SNS topic when alarmTopic is supplied', () => {
+    const app = new App();
+    const stack = new Stack(app, 'TopicStack');
+    const queue = new sqs.Queue(stack, 'StubQueue');
+    const topic = new sns.Topic(stack, 'T');
+    new GenerationLambdaConstruct(stack, 'GenerationLambda', {
+      queue,
+      secretsPrefix: 'language-drill-dev',
+      envName: 'dev',
+      reservedConcurrency: 3,
+      alarmTopic: topic,
+    });
+    Template.fromStack(stack).hasResourceProperties('AWS::CloudWatch::Alarm', {
+      AlarmActions: Match.arrayWith([Match.objectLike({ Ref: Match.anyValue() })]),
     });
   });
 

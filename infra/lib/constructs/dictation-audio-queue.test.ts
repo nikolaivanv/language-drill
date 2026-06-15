@@ -1,5 +1,6 @@
 import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
+import * as sns from 'aws-cdk-lib/aws-sns';
 import { describe, beforeAll, it } from 'vitest';
 
 import { DictationAudioQueueConstruct } from './dictation-audio-queue';
@@ -52,6 +53,24 @@ describe('DictationAudioQueueConstruct', () => {
       ComparisonOperator: 'GreaterThanOrEqualToThreshold',
       TreatMissingData: 'notBreaching',
       EvaluationPeriods: 1,
+    });
+  });
+
+  it('DLQ-depth alarm has no AlarmActions when no alarmTopic is supplied', () => {
+    template.hasResourceProperties('AWS::CloudWatch::Alarm', {
+      AlarmActions: Match.absent(),
+    });
+  });
+
+  it('routes the DLQ-depth alarm to the SNS topic when alarmTopic is supplied', () => {
+    const app = new App();
+    const stack = new Stack(app, 'TopicStack');
+    const topic = new sns.Topic(stack, 'T');
+    new DictationAudioQueueConstruct(stack, 'DictationAudioQueue', {
+      alarmTopic: topic,
+    });
+    Template.fromStack(stack).hasResourceProperties('AWS::CloudWatch::Alarm', {
+      AlarmActions: Match.arrayWith([Match.objectLike({ Ref: Match.anyValue() })]),
     });
   });
 });

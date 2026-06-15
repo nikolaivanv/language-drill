@@ -1,5 +1,7 @@
 import { Duration } from 'aws-cdk-lib';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as cwactions from 'aws-cdk-lib/aws-cloudwatch-actions';
+import * as sns from 'aws-cdk-lib/aws-sns';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Construct } from 'constructs';
 
@@ -16,15 +18,24 @@ import { Construct } from 'constructs';
  * The DLQ-depth alarm fires when a single message survives every redelivery
  * and lands in the dead-letter queue — surfacing real generation failures
  * (e.g. an Anthropic outage, a malformed message that the Lambda can't parse)
- * within five minutes. No alarm action is wired in Phase 4 (Req 5.4); the
- * alarm is visible in the AWS console and via CloudWatch Insights queries.
+ * within five minutes. When an `alarmTopic` is supplied the alarm routes to
+ * the stack alert topic so the operator is notified, not just the console.
  */
+export interface GenerationQueueConstructProps {
+  /** SNS topic for the DLQ-depth alarm action. */
+  readonly alarmTopic?: sns.ITopic;
+}
+
 export class GenerationQueueConstruct extends Construct {
   public readonly queue: sqs.Queue;
   public readonly deadLetterQueue: sqs.Queue;
   public readonly dlqDepthAlarm: cloudwatch.Alarm;
 
-  constructor(scope: Construct, id: string) {
+  constructor(
+    scope: Construct,
+    id: string,
+    props?: GenerationQueueConstructProps,
+  ) {
     super(scope, id);
 
     this.deadLetterQueue = new sqs.Queue(this, 'GenerationDeadLetterQueue', {
@@ -57,5 +68,11 @@ export class GenerationQueueConstruct extends Construct {
       alarmDescription:
         'Phase 4: a generation message survived every redelivery and landed in the DLQ.',
     });
+
+    if (props?.alarmTopic) {
+      this.dlqDepthAlarm.addAlarmAction(
+        new cwactions.SnsAction(props.alarmTopic),
+      );
+    }
   }
 }

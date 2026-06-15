@@ -2,6 +2,7 @@ import * as path from 'path';
 
 import { Duration } from 'aws-cdk-lib';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as cwactions from 'aws-cdk-lib/aws-cloudwatch-actions';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
@@ -9,6 +10,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as sns from 'aws-cdk-lib/aws-sns';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Construct } from 'constructs';
 
@@ -35,6 +37,8 @@ export interface DictationAudioLambdaConstructProps {
   secretsPrefix: string;
   /** Caps Polly concurrency. 2–3 keeps us well within the SynthesizeSpeech TPS. */
   reservedConcurrency: number;
+  /** SNS topic for the Lambda-errors alarm action. */
+  readonly alarmTopic?: sns.ITopic;
 }
 
 export class DictationAudioLambdaConstruct extends Construct {
@@ -146,5 +150,9 @@ export class DictationAudioLambdaConstruct extends Construct {
           'Phase 2: dictation audio-synth Lambda recorded > 5 errors in a single day.',
       },
     );
+
+    if (props.alarmTopic) {
+      this.errorsAlarm.addAlarmAction(new cwactions.SnsAction(props.alarmTopic));
+    }
   }
 }

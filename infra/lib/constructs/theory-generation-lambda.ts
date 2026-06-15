@@ -2,11 +2,13 @@ import * as path from 'path';
 
 import { Duration } from 'aws-cdk-lib';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as cwactions from 'aws-cdk-lib/aws-cloudwatch-actions';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as lambda from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as sns from 'aws-cdk-lib/aws-sns';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Construct } from 'constructs';
 
@@ -33,6 +35,8 @@ export interface TheoryGenerationLambdaConstructProps {
   /** Caps cell-level parallelism. 2 in both stacks per Phase 4 plan §1.5. */
   reservedConcurrency: number;
   additionalEnv?: Record<string, string>;
+  /** SNS topic for the Lambda-errors + cell-failures alarm actions. */
+  readonly alarmTopic?: sns.ITopic;
 }
 
 export class TheoryGenerationLambdaConstruct extends Construct {
@@ -194,5 +198,11 @@ export class TheoryGenerationLambdaConstruct extends Construct {
           '(malformed/unrecoverable drafts), distinct from the Lambda runtime Errors alarm.',
       },
     );
+
+    if (props.alarmTopic) {
+      const snsAction = new cwactions.SnsAction(props.alarmTopic);
+      this.errorsAlarm.addAlarmAction(snsAction);
+      this.cellFailuresAlarm.addAlarmAction(snsAction);
+    }
   }
 }
