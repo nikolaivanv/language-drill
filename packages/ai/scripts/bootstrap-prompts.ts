@@ -54,6 +54,8 @@ import {
   FREE_WRITING_EVAL_SYSTEM_PROMPT,
   VOCAB_BOOST_SYSTEM_PROMPT,
   VOCAB_BOOST_PROMPT_VERSION,
+  START_MY_PARAGRAPH_SYSTEM_PROMPT,
+  START_MY_PARAGRAPH_PROMPT_VERSION,
   GENERATION_PROMPT_VERSION,
   GENERATION_SYSTEM_PROMPT_TEMPLATE,
   PROMPT_LABEL_PRODUCTION,
@@ -117,6 +119,12 @@ export const PROMPTS: readonly PromptManifestEntry[] = [
     text: VOCAB_BOOST_SYSTEM_PROMPT,
     version: VOCAB_BOOST_PROMPT_VERSION,
     surface: "free-writing-vocab-boost",
+  },
+  {
+    name: "free-writing-start-my-paragraph-system-prompt",
+    text: START_MY_PARAGRAPH_SYSTEM_PROMPT,
+    version: START_MY_PARAGRAPH_PROMPT_VERSION,
+    surface: "free-writing-start-my-paragraph",
   },
   {
     name: "annotate-system-prompt",

@@ -75,9 +75,14 @@ export {
   VOCAB_BOOST_TOOL_NAME,
   WRITING_HELPER_REQUEST_TIMEOUT_MS,
   WRITING_HELPER_MAX_RETRIES,
+  generateStartMyParagraph,
+  parseStartMyParagraph,
+  START_MY_PARAGRAPH_TOOL,
+  START_MY_PARAGRAPH_TOOL_NAME,
   type WritingHelperInput,
   type BrainstormResult,
   type VocabBoostResult,
+  type StartMyParagraphResult,
 } from "./writing-helper.js";
 export {
   BRAINSTORM_SYSTEM_PROMPT,
@@ -86,6 +91,9 @@ export {
   VOCAB_BOOST_PROMPT_VERSION,
   buildBrainstormUserPrompt,
   buildVocabBoostUserPrompt,
+  START_MY_PARAGRAPH_SYSTEM_PROMPT,
+  START_MY_PARAGRAPH_PROMPT_VERSION,
+  buildStartMyParagraphUserPrompt,
 } from "./writing-helper-prompts.js";
 export {
   ANNOTATE_SYSTEM_PROMPT,

@@ -10,6 +10,7 @@ import { type FreeWritingContent, type CefrLevel, type Language } from "@languag
 // Bump in the same commit as any semantic edit below (CLAUDE.md "Prompt Editing").
 export const BRAINSTORM_PROMPT_VERSION = "free-writing-brainstorm@2026-06-15";
 export const VOCAB_BOOST_PROMPT_VERSION = "free-writing-vocab-boost@2026-06-15";
+export const START_MY_PARAGRAPH_PROMPT_VERSION = "free-writing-start-my-paragraph@2026-06-15";
 
 export const BRAINSTORM_SYSTEM_PROMPT = `You are a brainstorming coach inside a language-learning writing app. The learner is about to write a short text for the prompt below and may be stuck for ideas.
 
@@ -20,6 +21,10 @@ Keep bullets short (a few words to one line). Ground them in the specific prompt
 export const VOCAB_BOOST_SYSTEM_PROMPT = `You are a vocabulary coach inside a language-learning writing app. The learner is about to write a short text for the prompt below and wants useful words.
 
 Return 8–10 words or short phrases IN THE TARGET LANGUAGE that would help write about this prompt at the learner's CEFR level and register. For each, give \`term\` (the target-language word/phrase, with article/gender where idiomatic) and \`gloss\` (a short English meaning, at most 6 words). Prefer mid-frequency, topic-relevant, level-appropriate items over generic words the learner already knows. Submit via the tool.`;
+
+export const START_MY_PARAGRAPH_SYSTEM_PROMPT = `You are a writing coach inside a language-learning app. The learner is about to write a short text for the prompt below and is stuck on the blank page.
+
+Return ONE opening sentence IN THE TARGET LANGUAGE, at the learner's CEFR level and register, that gets them moving. The sentence orients the topic but MUST NOT take a side, state a thesis or opinion, or address any of the required elements — those are the learner's own job. It is a runway, not a head start on the task. Keep it natural and idiomatic. Submit via the tool.`;
 
 function contextBlock(content: FreeWritingContent, language: Language, difficulty: CefrLevel): string {
   const required = content.requiredElements.length
@@ -59,4 +64,16 @@ export function buildVocabBoostUserPrompt(
 ${contextBlock(content, language, difficulty)}
 
 Suggest 8–10 target-language words or phrases with short English glosses for this prompt. Submit via the tool.`;
+}
+
+export function buildStartMyParagraphUserPrompt(
+  content: FreeWritingContent,
+  language: Language,
+  difficulty: CefrLevel,
+): string {
+  return `## Opening-sentence request
+
+${contextBlock(content, language, difficulty)}
+
+Write ONE target-language opening sentence that orients this prompt without taking a side or naming any required element. Submit via the tool.`;
 }

@@ -15,6 +15,9 @@ import {
   VOCAB_BOOST_SYSTEM_PROMPT,
   VOCAB_BOOST_PROMPT_VERSION,
   buildVocabBoostUserPrompt,
+  START_MY_PARAGRAPH_SYSTEM_PROMPT,
+  START_MY_PARAGRAPH_PROMPT_VERSION,
+  buildStartMyParagraphUserPrompt,
 } from "./writing-helper-prompts.js";
 
 const MODEL = "claude-sonnet-4-6" as const;
@@ -174,5 +177,42 @@ export async function generateVocabBoost(
     tool: VOCAB_BOOST_TOOL,
     toolName: VOCAB_BOOST_TOOL_NAME,
     parse: parseVocabBoost,
+  });
+}
+
+// ── Start my paragraph ───────────────────────────────────────────────────────
+export const START_MY_PARAGRAPH_TOOL_NAME = "submit_opener";
+export const START_MY_PARAGRAPH_TOOL: Anthropic.Tool = {
+  name: START_MY_PARAGRAPH_TOOL_NAME,
+  description: "Submit one target-language opening sentence the learner can build on.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      opener: { type: "string", description: "One target-language opening sentence." },
+    },
+    required: ["opener"],
+  },
+};
+
+export type StartMyParagraphResult = { opener: string };
+
+export function parseStartMyParagraph(input: unknown): StartMyParagraphResult {
+  if (typeof input !== "object" || input === null) return { opener: "" };
+  const o = (input as Record<string, unknown>).opener;
+  return { opener: typeof o === "string" ? o : "" };
+}
+
+export async function generateStartMyParagraph(
+  client: Anthropic,
+  input: WritingHelperInput,
+): Promise<StartMyParagraphResult> {
+  return runHelperTool(client, {
+    promptName: "free-writing-start-my-paragraph-system-prompt",
+    fallbackPrompt: START_MY_PARAGRAPH_SYSTEM_PROMPT,
+    version: START_MY_PARAGRAPH_PROMPT_VERSION,
+    userPrompt: buildStartMyParagraphUserPrompt(input.content, input.language, input.difficulty),
+    tool: START_MY_PARAGRAPH_TOOL,
+    toolName: START_MY_PARAGRAPH_TOOL_NAME,
+    parse: parseStartMyParagraph,
   });
 }
