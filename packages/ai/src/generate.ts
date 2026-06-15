@@ -17,6 +17,7 @@ import {
   type CefrLevel,
   type ClozeContent,
   type CoverageTarget,
+  type DictationContent,
   type ExerciseContent,
   ExerciseType,
   Language,
@@ -34,6 +35,10 @@ import {
   canonicalSurface,
   type GenerationPromptInputs,
 } from "./generation-prompts.js";
+import {
+  buildDictationGenerationSystemPrompt,
+  buildDictationGenerationUserPrompt,
+} from "./dictation-generation-prompts.js";
 
 // ---------------------------------------------------------------------------
 // Model + sampling constants
@@ -51,19 +56,39 @@ export const GENERATION_MAX_TOKENS = 1024;
 
 export const GENERATION_TEMPERATURE = 0.7;
 
+/**
+ * Polly neural voices used for synthesized dictation clips, keyed by language.
+ * `voiceId`/`accent` are assigned by code (rotated by ordinal) — never by the
+ * model — so a batch varies voice/accent deterministically. PR 2's audio-synth
+ * Lambda reads `voiceId` from the stored content to call Polly.
+ */
+export const DICTATION_VOICE_POOL_BY_LANGUAGE: Readonly<
+  Record<Exclude<Language, Language.EN>, ReadonlyArray<{ voiceId: string; accent: string }>>
+> = Object.freeze({
+  [Language.ES]: [
+    { voiceId: "Sergio", accent: "español peninsular · centro" },
+    { voiceId: "Lucia", accent: "español peninsular · centro" },
+  ],
+  // DE/TR added when those languages enter dictation scope (later milestone).
+  [Language.DE]: [],
+  [Language.TR]: [],
+});
+
 // ---------------------------------------------------------------------------
 // Tool-name map
 // ---------------------------------------------------------------------------
 
-// DICTATION and FREE_WRITING are excluded: dictation exercises are not batch-generated and are
-// graded by gradeDictationAnswer; free writing is authored by hand, never produced by this pipeline.
+// FREE_WRITING is excluded: free writing is authored by hand, never produced by
+// this pipeline. DICTATION IS now batch-generated (clip text drafted + validated
+// here; audio is synthesized separately).
 export const TOOL_NAME_BY_TYPE: Readonly<
-  Record<Exclude<ExerciseType, ExerciseType.DICTATION | ExerciseType.FREE_WRITING>, string>
+  Record<Exclude<ExerciseType, ExerciseType.FREE_WRITING>, string>
 > = Object.freeze({
   cloze: "submit_cloze_exercise",
   translation: "submit_translation_exercise",
   vocab_recall: "submit_vocab_recall_exercise",
   sentence_construction: "submit_sentence_construction_exercise",
+  dictation: "submit_dictation_exercise",
 });
 
 // ---------------------------------------------------------------------------
@@ -279,15 +304,69 @@ export const SENTENCE_CONSTRUCTION_GENERATION_TOOL: Anthropic.Tool = {
   },
 };
 
-// DICTATION and FREE_WRITING are excluded: dictation exercises are not batch-generated and are
-// graded by gradeDictationAnswer; free writing is authored by hand, never produced by this pipeline.
+export const DICTATION_GENERATION_TOOL: Anthropic.Tool = {
+  name: "submit_dictation_exercise",
+  description:
+    "Submit a single dictation listening clip: a short passage of natural, connected speech for the learner to transcribe by ear.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      title: {
+        type: "string",
+        description:
+          "Short title for the clip card (3–6 words), drawn from the clip's theme. Not read aloud.",
+      },
+      blurb: {
+        type: "string",
+        description: "Optional one-line brief shown under the title. Not read aloud.",
+      },
+      referenceText: {
+        type: "string",
+        description:
+          "The full passage to be read aloud and transcribed — the grading reference. Natural connected speech with normal punctuation. No lists, no headings, no metadata.",
+      },
+      sentences: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "The referenceText split into its individual sentences, in order. Concatenated with single spaces they MUST equal referenceText.",
+      },
+      domain: {
+        type: "string",
+        description:
+          "Everyday topical domain (e.g. 'daily routine', 'travel', 'work', 'weather'). Used for variety, not read aloud.",
+      },
+      register: {
+        type: "string",
+        description: "Register of the passage: 'informal', 'neutral', or 'formal'.",
+      },
+      tested: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "1–4 short labels of what the clip exercises (e.g. 'sinalefa', 'silent h', 'preterite vs imperfect'). Shown as chips; descriptive only.",
+      },
+      durationSec: {
+        type: "number",
+        description:
+          "Estimated spoken duration in seconds at a natural pace (typically 6–18s for B1/B2). Approximate; refined when audio is synthesized.",
+      },
+    },
+    required: ["title", "referenceText", "sentences", "tested", "durationSec"],
+  },
+};
+
+// FREE_WRITING is excluded: free writing is authored by hand, never produced by
+// this pipeline. DICTATION IS now batch-generated (clip text drafted + validated
+// here; audio is synthesized separately).
 export const GENERATION_TOOL_BY_TYPE: Readonly<
-  Record<Exclude<ExerciseType, ExerciseType.DICTATION | ExerciseType.FREE_WRITING>, Anthropic.Tool>
+  Record<Exclude<ExerciseType, ExerciseType.FREE_WRITING>, Anthropic.Tool>
 > = Object.freeze({
   cloze: CLOZE_GENERATION_TOOL,
   translation: TRANSLATION_GENERATION_TOOL,
   vocab_recall: VOCAB_RECALL_GENERATION_TOOL,
   sentence_construction: SENTENCE_CONSTRUCTION_GENERATION_TOOL,
+  dictation: DICTATION_GENERATION_TOOL,
 });
 
 // ---------------------------------------------------------------------------
@@ -680,6 +759,84 @@ export function parseGeneratedSentenceConstructionDraft(
   };
 }
 
+const DICTATION_WAVEFORM_BARS = 40;
+
+/** Deterministic decorative envelope (0..1), seeded from a hash of the
+ *  reference text (so two equal-length texts get different envelopes) — the
+ *  same draft always renders the same bars. Real amplitude envelopes are out
+ *  of scope (decorative — see roadmap "smaller items"). */
+function placeholderWaveform(seedText: string): number[] {
+  const bars: number[] = [];
+  let h = 0;
+  for (let i = 0; i < seedText.length; i++) h = (h * 31 + seedText.charCodeAt(i)) >>> 0;
+  for (let i = 0; i < DICTATION_WAVEFORM_BARS; i++) {
+    h = (h * 1103515245 + 12345) >>> 0;
+    bars.push(0.2 + ((h % 1000) / 1000) * 0.8); // 0.2..1.0
+  }
+  return bars;
+}
+
+export function parseGeneratedDictationDraft(
+  input: unknown,
+  spec: GenerationSpec,
+  ordinal: number,
+): DictationContent {
+  const ctx = "dictation draft";
+  if (!isObject(input)) {
+    throw new Error(`${ctx}: must be an object, got ${typeof input}`);
+  }
+  const title = requireString(input, "title", ctx);
+  const blurb = optionalString(input, "blurb", ctx);
+  const referenceText = requireString(input, "referenceText", ctx);
+  const sentences = requireStringArray(input, "sentences", ctx);
+  const domain = optionalString(input, "domain", ctx);
+  const register = optionalString(input, "register", ctx);
+  const tested = requireStringArray(input, "tested", ctx);
+  const durationSecRaw = input["durationSec"];
+
+  if (sentences.length === 0) {
+    throw new Error(`${ctx}: invalid sentences: must be a non-empty array`);
+  }
+  // Sentences must reconstitute the reference text (whitespace-normalized) so
+  // the per-sentence display segmentation can't drift from the grading target.
+  const norm = (s: string) => s.normalize("NFC").replace(/\s+/g, " ").trim();
+  if (norm(sentences.join(" ")) !== norm(referenceText)) {
+    throw new Error(
+      `${ctx}: invalid sentences: joined sentences must equal referenceText`,
+    );
+  }
+  if (tested.length === 0) {
+    throw new Error(`${ctx}: invalid tested: must be a non-empty array`);
+  }
+  if (typeof durationSecRaw !== "number" || !Number.isFinite(durationSecRaw) || durationSecRaw <= 0) {
+    throw new Error(
+      `${ctx}: invalid durationSec: must be a positive number, got ${JSON.stringify(durationSecRaw)}`,
+    );
+  }
+
+  // Voice/accent assigned by code (rotated by ordinal), never by the model.
+  const pool = DICTATION_VOICE_POOL_BY_LANGUAGE[spec.language];
+  if (!pool || pool.length === 0) {
+    throw new Error(`${ctx}: no dictation voice pool configured for ${spec.language}`);
+  }
+  const voice = pool[ordinal % pool.length];
+
+  return {
+    type: ExerciseType.DICTATION,
+    title,
+    ...(blurb !== undefined ? { blurb } : {}),
+    referenceText,
+    sentences,
+    accent: voice.accent,
+    voiceId: voice.voiceId,
+    ...(domain !== undefined ? { domain } : {}),
+    ...(register !== undefined ? { register } : {}),
+    tested,
+    durationSec: durationSecRaw,
+    waveform: placeholderWaveform(referenceText),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Deterministic ID derivation
 // ---------------------------------------------------------------------------
@@ -763,21 +920,24 @@ export async function generateOneDraft(
   // bypassing the Langfuse fetch + in-repo fallback in
   // `buildGenerationSystemPrompt`. Production never sets it, so the no-override
   // path is byte-identical to before.
+  const isDictation = spec.exerciseType === ExerciseType.DICTATION;
+
   const systemText =
     spec.systemPromptOverride ??
-    (await buildGenerationSystemPrompt(promptInputs, []));
-  const userText = buildGenerationUserPrompt(
-    promptInputs,
-    ordinal,
-    spec.topicDomain,
-    spec.seedWords?.[ordinal] ?? null,
-    spec.coverageTargets,
-  );
-  if (spec.exerciseType === ExerciseType.DICTATION) {
-    throw new Error(
-      "Dictation exercises are not batch-generated; generateOneDraft received a dictation spec.",
-    );
-  }
+    (isDictation
+      ? await buildDictationGenerationSystemPrompt(promptInputs)
+      : await buildGenerationSystemPrompt(promptInputs, []));
+
+  const userText = isDictation
+    ? buildDictationGenerationUserPrompt(promptInputs, ordinal, spec.topicDomain)
+    : buildGenerationUserPrompt(
+        promptInputs,
+        ordinal,
+        spec.topicDomain,
+        spec.seedWords?.[ordinal] ?? null,
+        spec.coverageTargets,
+      );
+
   const tool =
     GENERATION_TOOL_BY_TYPE[spec.exerciseType as keyof typeof GENERATION_TOOL_BY_TYPE];
 
@@ -823,7 +983,9 @@ export async function generateOneDraft(
         `expected tool '${tool.name}', got '${toolUseBlock.name}'`,
       );
     }
-    content = parseToolInput(toolUseBlock.input, spec);
+    content = isDictation
+      ? parseGeneratedDictationDraft(toolUseBlock.input, spec, ordinal)
+      : parseToolInput(toolUseBlock.input, spec);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return {
@@ -940,8 +1102,10 @@ function parseToolInput(
     case ExerciseType.SENTENCE_CONSTRUCTION:
       return parseGeneratedSentenceConstructionDraft(input, spec);
     case ExerciseType.DICTATION:
+      // Unreachable: generateOneDraft routes dictation to parseGeneratedDictationDraft
+      // (which needs the ordinal) before reaching parseToolInput. Kept defensive.
       throw new Error(
-        "Dictation exercises are not generated via this path; use gradeDictationAnswer.",
+        "Dictation exercises are parsed via parseGeneratedDictationDraft, not parseToolInput.",
       );
     default:
       // free_writing is authored by hand, not produced by this pipeline.

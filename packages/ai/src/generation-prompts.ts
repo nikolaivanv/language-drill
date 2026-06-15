@@ -523,9 +523,9 @@ export function canonicalSurface(content: ExerciseContent): string {
     case ExerciseType.SENTENCE_CONSTRUCTION:
       return normaliseSurface(content.prompt);
     case ExerciseType.DICTATION:
-      throw new Error(
-        "Dictation exercises are not generated via this path; use gradeDictationAnswer.",
-      );
+      // The reference transcription is the dedup surface (drives `_dedupKey`
+      // and in-batch duplicate detection).
+      return normaliseSurface(content.referenceText);
     case ExerciseType.FREE_WRITING:
       // free_writing is not produced by the pool pipeline, so it has no
       // canonical surface for dedup.

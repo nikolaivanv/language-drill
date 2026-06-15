@@ -67,6 +67,10 @@ describe("coverageAxesFor", () => {
       "sentenceType",
     ]);
   });
+
+  it("dictation has no coverage axes", () => {
+    expect(coverageAxesFor(ExerciseType.DICTATION, undefined)).toEqual([]);
+  });
 });
 
 describe("pickCoverageTags", () => {

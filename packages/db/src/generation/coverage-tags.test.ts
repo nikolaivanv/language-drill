@@ -27,4 +27,19 @@ describe("applicableCoverageTags", () => {
       polarity: "affirmative",
     });
   });
+
+  it("returns null for a dictation cell", () => {
+    const cell = {
+      cellKey: "ES:B1:dictation:es-b1-dictation",
+      language: "ES" as Cell["language"],
+      cefrLevel: "B1",
+      exerciseType: ExerciseType.DICTATION,
+      grammarPoint: {
+        key: "es-b1-dictation",
+        kind: "dictation",
+        coverageSpec: undefined,
+      } as Cell["grammarPoint"],
+    } as Cell;
+    expect(applicableCoverageTags(cell, {})).toBeNull();
+  });
 });

@@ -417,6 +417,57 @@ describe("validateDraft", () => {
     expect(mockCreate).not.toHaveBeenCalled();
   });
 
+  it("uses the dictation validation prompt for a dictation draft", async () => {
+    let capturedSystem: string | undefined;
+    mockCreate.mockImplementation(async (req: { system: { text: string }[] }) => {
+      capturedSystem = req.system[0].text;
+      return {
+        content: [
+          {
+            type: "tool_use",
+            id: "toolu_v_dict",
+            name: VALIDATION_TOOL_NAME,
+            input: validValidationInput,
+          },
+        ],
+        stop_reason: "tool_use",
+        usage: { input_tokens: 5, output_tokens: 5 },
+      };
+    });
+
+    const dictationDraft = {
+      ...makeDraft(clozeContent),
+      contentJson: {
+        type: ExerciseType.DICTATION,
+        title: "El tiempo",
+        referenceText: "El tiempo lo cura.",
+        sentences: ["El tiempo lo cura."],
+        accent: "a",
+        voiceId: "Sergio",
+        tested: ["sinalefa"],
+        durationSec: 6,
+        waveform: [0.5],
+      } as unknown as ExerciseContent,
+    };
+    const dictationSpec: GenerationSpec = {
+      ...baseSpec,
+      exerciseType: ExerciseType.DICTATION,
+    };
+
+    const { result } = await validateDraft(
+      mockClient,
+      dictationDraft,
+      dictationSpec,
+    );
+
+    expect(result.qualityScore).toBe(0.85);
+    // The dictation system prompt is used, not the cloze one.
+    expect(capturedSystem).toContain("dictation");
+    // A cloze-only phrase from VALIDATION_SYSTEM_PROMPT_TEMPLATE — absent from
+    // the dictation system prompt, so this guards against prompt cross-contamination.
+    expect(capturedSystem).not.toContain("buffer-consonant ambiguous blank");
+  });
+
   it("does not mutate draft or spec inputs", async () => {
     mockCreate.mockResolvedValue({
       content: [

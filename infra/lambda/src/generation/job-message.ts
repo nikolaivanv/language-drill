@@ -108,6 +108,7 @@ const VALID_EXERCISE_TYPES: ReadonlySet<string> = new Set([
   ExerciseType.TRANSLATION,
   ExerciseType.VOCAB_RECALL,
   ExerciseType.SENTENCE_CONSTRUCTION,
+  ExerciseType.DICTATION,
 ]);
 
 const COUNT_MIN = 1;

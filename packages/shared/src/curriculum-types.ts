@@ -37,11 +37,16 @@ export type CurriculumCefrLevel = Extract<CefrLevel, 'A1' | 'A2' | 'B1' | 'B2'>;
  *     umbrellas with finer-grained frequency-band rows; until then, the
  *     discriminator — *not* a string-suffix sniff against the `key` — is what
  *     downstream code branches on.
+ *   - `'dictation'` — a synthetic per-(language, level) umbrella that owns the
+ *     dictation generation cell. Carries no real grammar-point semantics; its
+ *     description / examples feed the dictation generation prompt as theme +
+ *     style guidance. Paired only with `ExerciseType.DICTATION` by
+ *     `compatibleTypes()`. No `coverageSpec` (count-only).
  */
 export type GrammarPoint = Readonly<{
   /** Stable identifier; format: `<lang>-<level>-<slug>`, e.g. `'es-b1-present-subjunctive'`. */
   key: string;
-  kind: 'grammar' | 'vocab';
+  kind: 'grammar' | 'vocab' | 'dictation';
   name: string;
   /** ≤ 200 chars; English; injected verbatim into Phase 2 prompts. */
   description: string;

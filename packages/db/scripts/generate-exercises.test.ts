@@ -203,10 +203,44 @@ describe('resolveCells', () => {
     for (const cell of cells) {
       if (cell.grammarPoint.kind === 'vocab') {
         expect(cell.exerciseType).toBe(ExerciseType.VOCAB_RECALL);
+      } else if (cell.grammarPoint.kind === 'dictation') {
+        expect(cell.exerciseType).toBe(ExerciseType.DICTATION);
       } else {
         expect([ExerciseType.CLOZE, ExerciseType.TRANSLATION, ExerciseType.SENTENCE_CONSTRUCTION]).toContain(cell.exerciseType);
       }
     }
+  });
+
+  it('treats a kind:dictation grammar point as compatible with --type dictation but not --type cloze', () => {
+    // es-b1-dictation is a kind: 'dictation' umbrella, so it resolves to the
+    // DICTATION cell only — mirroring compatibleTypes() in src/generation/cells.ts.
+    const cells = resolveCells(
+      {
+        ...baseArgs,
+        lang: Language.ES,
+        level: CefrLevel.B1,
+        type: ExerciseType.DICTATION,
+        grammarPoint: 'es-b1-dictation',
+      },
+      ALL_CURRICULA,
+    );
+    expect(cells).toHaveLength(1);
+    expect(cells[0].grammarPoint.key).toBe('es-b1-dictation');
+    expect(cells[0].exerciseType).toBe(ExerciseType.DICTATION);
+
+    // …and a kind:dictation point is NOT compatible with cloze.
+    expect(() =>
+      resolveCells(
+        {
+          ...baseArgs,
+          lang: Language.ES,
+          level: CefrLevel.B1,
+          type: ExerciseType.CLOZE,
+          grammarPoint: 'es-b1-dictation',
+        },
+        ALL_CURRICULA,
+      ),
+    ).toThrow(/not compatible with --type cloze/);
   });
 
   it('throws when --grammar-point is unknown', () => {

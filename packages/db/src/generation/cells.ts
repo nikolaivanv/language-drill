@@ -56,8 +56,10 @@ const GRAMMAR_CLOZE_UNSUITABLE_TYPES: ReadonlyArray<ExerciseType> = [
   ExerciseType.TRANSLATION,
 ];
 const VOCAB_KIND_TYPES: ReadonlyArray<ExerciseType> = [ExerciseType.VOCAB_RECALL];
+const DICTATION_KIND_TYPES: ReadonlyArray<ExerciseType> = [ExerciseType.DICTATION];
 
 function compatibleTypes(entry: GrammarPoint): ReadonlyArray<ExerciseType> {
+  if (entry.kind === 'dictation') return DICTATION_KIND_TYPES;
   if (entry.kind === 'vocab') return VOCAB_KIND_TYPES;
   // `clozeUnsuitable` grammar points drop the cloze cell (the blank's answer is
   // leaked by the other half of the construction, or near-synonym alternants
@@ -76,7 +78,8 @@ function compatibleTypes(entry: GrammarPoint): ReadonlyArray<ExerciseType> {
 
 /**
  * Enumerate every `(grammarPoint, exerciseType)` cell the curriculum supports.
- * Vocab umbrellas are paired only with `vocab_recall`; grammar points are
+ * Vocab umbrellas are paired only with `vocab_recall`; dictation umbrellas
+ * (`kind: 'dictation'`) are paired only with `dictation`; grammar points are
  * paired with `cloze` and `translation`. Order: curriculum order, then within
  * each entry the kind-compatible types in array order.
  *

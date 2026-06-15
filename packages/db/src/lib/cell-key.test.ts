@@ -40,6 +40,12 @@ describe('assertValidCellKey', () => {
       assertValidCellKey('es:b1:sentence_construction:es-b1-present-subjunctive'),
     ).not.toThrow();
   });
+
+  it('accepts a dictation cell key', () => {
+    expect(() =>
+      assertValidCellKey('es:b1:dictation:es-b1-dictation'),
+    ).not.toThrow();
+  });
 });
 
 describe('buildCellKey', () => {

@@ -437,6 +437,11 @@ async function sampleFreshPool(params: {
          AND difficulty = ${difficulty}
          AND type = ${type}
          AND review_status IN ('auto-approved', 'manual-approved')
+         -- Never draw a dictation row whose audio hasn't been synthesized yet
+         -- (audio_s3_key IS NULL). Non-dictation rows are unaffected. Defensive:
+         -- dictation isn't in V1_PLAN_SHAPE today, but the gate must hold if it
+         -- is ever added. Mirrors lib/exercise-filters.ts audioReadyFilter.
+         AND (type <> 'dictation' OR audio_s3_key IS NOT NULL)
        ORDER BY ${freshFirstOrderBy(userId)}
        LIMIT ${OVERFETCH_PER_TYPE})
     `,

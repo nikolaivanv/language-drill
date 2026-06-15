@@ -37,6 +37,20 @@ export {
 } from "./dictation-eval.js";
 export type { GradeDictationInput } from "./dictation-eval.js";
 export {
+  DICTATION_GENERATION_PROMPT_VERSION,
+  DICTATION_GENERATION_SYSTEM_PROMPT,
+  buildDictationGenerationSystemPrompt,
+  buildDictationGenerationUserPrompt,
+  computeDictationGenerationPromptVars,
+} from "./dictation-generation-prompts.js";
+export {
+  DICTATION_VALIDATION_PROMPT_VERSION,
+  DICTATION_VALIDATION_SYSTEM_PROMPT,
+  buildDictationValidationSystemPrompt,
+  buildDictationValidationUserPrompt,
+  computeDictationValidationPromptVars,
+} from "./dictation-validation-prompts.js";
+export {
   evaluateFreeWriting,
   parseFreeWritingEvaluation,
   FREE_WRITING_EVAL_TOOL,
@@ -119,6 +133,8 @@ export {
   CLOZE_GENERATION_TOOL,
   TRANSLATION_GENERATION_TOOL,
   VOCAB_RECALL_GENERATION_TOOL,
+  DICTATION_GENERATION_TOOL,
+  DICTATION_VOICE_POOL_BY_LANGUAGE,
   generateBatch,
   generateOneDraft,
   populateInBatchDuplicates,
@@ -126,6 +142,7 @@ export {
   parseGeneratedClozeDraft,
   parseGeneratedTranslationDraft,
   parseGeneratedVocabRecallDraft,
+  parseGeneratedDictationDraft,
 } from "./generate.js";
 export type {
   GenerationSpec,

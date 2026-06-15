@@ -137,6 +137,8 @@ describe("PROMPTS manifest", () => {
         "read-span",
         "reading-generate",
         "dictation-eval",
+        "dictation-generate",
+        "dictation-validate",
       ]),
     );
   });

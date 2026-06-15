@@ -13,6 +13,8 @@ import { getGrammarPoint } from "@language-drill/db";
 import { createClaudeClient } from "./index.js";
 import {
   CLOZE_GENERATION_TOOL,
+  DICTATION_GENERATION_TOOL,
+  DICTATION_VOICE_POOL_BY_LANGUAGE,
   GENERATION_MODEL,
   GENERATION_TEMPERATURE,
   GENERATION_TOOL_BY_TYPE,
@@ -24,6 +26,7 @@ import {
   generateBatch,
   generateOneDraft,
   parseGeneratedClozeDraft,
+  parseGeneratedDictationDraft,
   parseGeneratedSentenceConstructionDraft,
   type GenerationSpec,
 } from "./generate.js";
@@ -920,24 +923,144 @@ describe("parseGeneratedSentenceConstructionDraft", () => {
 });
 
 // ---------------------------------------------------------------------------
-// generateOneDraft — dictation rejection guard
+// generateOneDraft — dictation branch
 // ---------------------------------------------------------------------------
 
-describe("generateOneDraft — dictation guard", () => {
-  it("throws synchronously before any Claude call when exerciseType is DICTATION", async () => {
-    const mockCreate = vi.fn();
-    const mockClient = {
-      messages: { create: mockCreate },
-    } as unknown as ReturnType<typeof createClaudeClient>;
+function mockDictationClient() {
+  return {
+    messages: {
+      create: async () => ({
+        stop_reason: "tool_use",
+        content: [
+          {
+            type: "tool_use",
+            name: "submit_dictation_exercise",
+            input: {
+              title: "El tiempo",
+              referenceText: "No te preocupes, el tiempo lo cura todo.",
+              sentences: ["No te preocupes, el tiempo lo cura todo."],
+              tested: ["sinalefa"],
+              durationSec: 7,
+              domain: "daily routine",
+              register: "informal",
+            },
+          },
+        ],
+        usage: { input_tokens: 10, output_tokens: 20 },
+      }),
+    },
+  } as never;
+}
 
-    const dictationSpec: GenerationSpec = {
-      ...baseSpec,
-      exerciseType: ExerciseType.DICTATION,
-    };
+describe("generateOneDraft — dictation branch", () => {
+  it("produces a dictation draft (no veto)", async () => {
+    const res = await generateOneDraft(mockDictationClient(), dictSpec as never, 0);
+    expect(res.kind).toBe("draft");
+    if (res.kind !== "draft") return;
+    expect(res.draft.contentJson.type).toBe(ExerciseType.DICTATION);
+    expect(res.draft.contentJson).toMatchObject({ voiceId: "Sergio" });
+  });
+});
 
-    await expect(generateOneDraft(mockClient, dictationSpec, 0)).rejects.toThrow(
-      "Dictation exercises are not batch-generated",
+describe("dictation generation tool + voice pool", () => {
+  it("registers a dictation generation tool", () => {
+    expect(TOOL_NAME_BY_TYPE[ExerciseType.DICTATION]).toBe("submit_dictation_exercise");
+    expect(GENERATION_TOOL_BY_TYPE[ExerciseType.DICTATION]).toBe(DICTATION_GENERATION_TOOL);
+    expect(DICTATION_GENERATION_TOOL.name).toBe("submit_dictation_exercise");
+    expect(DICTATION_GENERATION_TOOL.input_schema.required).toEqual(
+      expect.arrayContaining(["title", "referenceText", "sentences", "tested", "durationSec"]),
     );
-    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it("has a non-empty ES dictation voice pool", () => {
+    expect(DICTATION_VOICE_POOL_BY_LANGUAGE[Language.ES].length).toBeGreaterThan(0);
+    expect(DICTATION_VOICE_POOL_BY_LANGUAGE[Language.ES][0]).toMatchObject({
+      voiceId: expect.any(String),
+      accent: expect.any(String),
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseGeneratedDictationDraft
+// ---------------------------------------------------------------------------
+
+const dictSpec = {
+  language: Language.ES,
+  cefrLevel: "B1",
+  exerciseType: ExerciseType.DICTATION,
+  grammarPoint: {
+    key: "es-b1-dictation",
+    kind: "dictation",
+    name: "x",
+    description: "x",
+    cefrLevel: "B1",
+    language: Language.ES,
+    examplesPositive: ["a", "b"],
+    examplesNegative: ["*c"],
+    commonErrors: ["d"],
+  },
+  topicDomain: null,
+  count: 1,
+  batchSeed: "test",
+} as const;
+
+describe("parseGeneratedDictationDraft", () => {
+  it("parses a dictation draft and assigns voice/accent/waveform by ordinal", () => {
+    const content = parseGeneratedDictationDraft(
+      {
+        title: "El tiempo",
+        referenceText: "No te preocupes, el tiempo lo cura todo.",
+        sentences: ["No te preocupes, el tiempo lo cura todo."],
+        tested: ["sinalefa"],
+        durationSec: 7,
+        domain: "daily routine",
+        register: "informal",
+      },
+      dictSpec as never,
+      0,
+    );
+    expect(content.type).toBe(ExerciseType.DICTATION);
+    expect(content.referenceText).toContain("el tiempo");
+    expect(content.voiceId).toBe("Sergio"); // ordinal 0 → first ES voice
+    expect(content.accent).toContain("peninsular");
+    expect(Array.isArray(content.waveform)).toBe(true);
+    expect(content.waveform.length).toBeGreaterThan(0);
+    expect(content.audioUrl).toBeUndefined(); // never set at generation time
+  });
+
+  it("rejects a dictation draft whose sentences do not join to referenceText", () => {
+    expect(() =>
+      parseGeneratedDictationDraft(
+        { title: "t", referenceText: "A B C.", sentences: ["A B."], tested: ["x"], durationSec: 5 },
+        dictSpec as never,
+        0,
+      ),
+    ).toThrow(/sentences/);
+  });
+
+  it("accepts NFC-equivalent referenceText and sentences (precomposed vs decomposed accents)", () => {
+    // Same visible text, different Unicode normalization forms:
+    // referenceText uses precomposed é (U+00E9); sentences use decomposed
+    // e + combining acute (U+0301). The integrity check must NFC-normalize so
+    // these compare equal rather than spuriously rejecting the draft.
+    const precomposed = "El café está aquí."; // U+00E9 in "café"
+    const decomposed = "El café está aquí.".normalize("NFD"); // e + combining marks
+    expect(precomposed).not.toBe(decomposed); // byte-different
+    expect(precomposed.normalize("NFC")).toBe(decomposed.normalize("NFC")); // canonically equal
+
+    const content = parseGeneratedDictationDraft(
+      {
+        title: "El café",
+        referenceText: precomposed,
+        sentences: [decomposed],
+        tested: ["acentos"],
+        durationSec: 5,
+      },
+      dictSpec as never,
+      0,
+    );
+    expect(content.type).toBe(ExerciseType.DICTATION);
+    expect(content.referenceText).toBe(precomposed);
   });
 });

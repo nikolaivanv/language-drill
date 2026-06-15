@@ -427,7 +427,13 @@ describe("runGenEval", () => {
 
     // 2 cells × 2 arms = 4 executor calls, all with a rendered override.
     expect(executor).toHaveBeenCalledTimes(4);
-    expect(seen.every((p) => p.systemPromptOverride.length > 0)).toBe(true);
+    expect(
+      seen.every(
+        (p) =>
+          typeof p.systemPromptOverride === "string" &&
+          p.systemPromptOverride.length > 0,
+      ),
+    ).toBe(true);
     expect(seen.every((p) => p.draftsPerCell === 2)).toBe(true);
     expect(result.cells).toHaveLength(2);
     for (const c of result.cells) {
@@ -753,6 +759,78 @@ describe("computeGenDiff", () => {
     // perCell is retained for the JSON file (one entry per compared cell).
     expect(summary.perCell).toHaveLength(2);
     expect(summary.errors).toHaveLength(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Dictation flow — a dictation cell flows through the gate against the repo
+// dictation prompt, NOT the cloze `systemPromptOverride` (Task 11).
+//
+// Limitation (follow-up): `eval:gen` cannot yet A/B the dictation *generation*
+// prompt — `--baseline/--candidate repo` always resolves the cloze
+// `GENERATION_SYSTEM_PROMPT_TEMPLATE`, and `file:`/`langfuse:` sources are still
+// cloze-shaped. For a dictation cell the harness deliberately leaves
+// `systemPromptOverride` UNSET so `generateOneDraft` calls the repo dictation
+// builder; it does not compare two dictation prompt bodies. Full A/B would need
+// a `--surface dictation-generate` switch + dictation-shaped sources.
+// ---------------------------------------------------------------------------
+
+describe("dictation flow (Task 11)", () => {
+  it("resolveCell resolves a dictation cell to a kind:'dictation' grammar point", () => {
+    const resolution = resolveCell({
+      language: "ES",
+      cefrLevel: "B1",
+      exerciseType: "dictation",
+      grammarPointKey: "es-b1-dictation",
+    });
+    expect(isCellResolutionError(resolution)).toBe(false);
+    if (isCellResolutionError(resolution)) throw new Error("unexpected error");
+    expect(resolution.grammarPoint.kind).toBe("dictation");
+    expect(resolution.cell.exerciseType).toBe(ExerciseType.DICTATION);
+  });
+
+  it("leaves systemPromptOverride UNSET for a dictation cell (repo dictation prompt drives generation)", async () => {
+    const seen: GenCellArmExecutorParams[] = [];
+    const executor: GenCellArmExecutor = vi.fn(async (p) => {
+      seen.push(p);
+      return armResult();
+    });
+
+    const result = await runGenEval(
+      runOpts({
+        executor,
+        dataset: [cellEntry("es-b1-dictation", "ES", "B1", "dictation")],
+      }),
+    );
+
+    // The dictation cell ran (both arms) without a render throw — a cloze
+    // `renderSystemPrompt` would have thrown (computeGenerationPromptVars
+    // rejects dictation), surfacing the cell as an error instead.
+    expect(result.errors).toHaveLength(0);
+    expect(result.cells).toHaveLength(1);
+    expect(executor).toHaveBeenCalledTimes(2);
+    // Both arms get NO override → generateOneDraft uses the dictation builder.
+    expect(seen.every((p) => p.systemPromptOverride === undefined)).toBe(true);
+  });
+
+  it("still injects the rendered override for non-dictation (cloze) cells", async () => {
+    const seen: GenCellArmExecutorParams[] = [];
+    const executor: GenCellArmExecutor = vi.fn(async (p) => {
+      seen.push(p);
+      return armResult();
+    });
+
+    await runGenEval(
+      runOpts({ executor, dataset: [cellEntry("tr-a1-locative")] }),
+    );
+
+    expect(
+      seen.every(
+        (p) =>
+          typeof p.systemPromptOverride === "string" &&
+          p.systemPromptOverride.length > 0,
+      ),
+    ).toBe(true);
   });
 });
 

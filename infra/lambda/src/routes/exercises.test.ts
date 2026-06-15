@@ -66,7 +66,7 @@ const mockUpdateMastery = vi.fn((prev: unknown, _obs: unknown) => ({
 
 vi.mock('@language-drill/db', () => ({
   users: { id: 'id' },
-  exercises: { reviewStatus: 'review_status' },
+  exercises: { reviewStatus: 'review_status', type: 'type', audioS3Key: 'audio_s3_key' },
   userExerciseHistory: {},
   usageEvents: {},
   practiceSessions: {
@@ -95,10 +95,15 @@ const mockApprovedStatusFilter = vi.fn((table: unknown) => ({
   table,
 }));
 const mockFreshFirstOrderBy = vi.fn((userId: string) => ({ __mockToken: 'fresh-first-order-by', userId }));
+const mockAudioReadyFilter = vi.fn((table: unknown) => ({
+  __mockToken: 'audio-ready-filter',
+  table,
+}));
 vi.mock('../lib/exercise-filters', () => ({
   APPROVED_STATUSES: ['auto-approved', 'manual-approved'] as const,
   approvedStatusFilter: (table: unknown) => mockApprovedStatusFilter(table),
   freshFirstOrderBy: (userId: string) => mockFreshFirstOrderBy(userId),
+  audioReadyFilter: (table: unknown) => mockAudioReadyFilter(table),
 }));
 
 const mockEvaluateAnswer = vi.fn();
@@ -1101,6 +1106,93 @@ describe('review_status filter', () => {
     expect(body.code).toBe('EXERCISE_NOT_FOUND');
     expect(mockEvaluateAnswer).not.toHaveBeenCalled();
     expect(mockApprovedStatusFilter).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// audio-ready filter (Task 9b) — never serve an audioless dictation row
+// ---------------------------------------------------------------------------
+//
+// Generated dictation text rows are approved before PR-2's audio-synth Lambda
+// attaches audio (`audio_s3_key IS NULL`). The serve paths must hide those
+// transient, unplayable rows. As with the review_status filter above, the SQL
+// behaviour is verified end-to-end elsewhere; here we assert the route composes
+// `audioReadyFilter(exercisesTable)` into every serve query and that, when the
+// filter excludes the null-audio row, only the audio-ready row is ever served.
+describe('audio-ready filter', () => {
+  let app: Hono;
+
+  const authEnv = {
+    event: {
+      requestContext: {
+        authorizer: { jwt: { claims: { sub: 'user_123' } } },
+      },
+    },
+  };
+
+  const audioReadyDictation = {
+    id: 'dictation-with-audio',
+    type: 'dictation',
+    language: 'ES',
+    difficulty: 'B1',
+    contentJson: { referenceText: 'No te preocupes.', sentences: ['No te preocupes.'] },
+    audioS3Key: 'dictation/es/b1/ready.mp3',
+    createdAt: new Date(),
+    reviewStatus: 'auto-approved',
+  };
+
+  const audiolessDictationId = 'dictation-null-audio';
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const mod = await import('./exercises');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  // -- GET /exercises (random pool draw) -----------------------------------
+
+  it('GET /exercises composes the audio-ready filter into the pool query', async () => {
+    mockLimit.mockResolvedValueOnce([audioReadyDictation]);
+
+    const res = await app.request(
+      '/exercises?language=ES&difficulty=B1&type=dictation',
+      undefined,
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    expect(mockAudioReadyFilter).toHaveBeenCalledTimes(1);
+    expect(mockAudioReadyFilter).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'type', audioS3Key: 'audio_s3_key' }),
+    );
+  });
+
+  // -- GET /exercises/:id (direct fetch) -----------------------------------
+
+  it('GET /exercises/:id composes the audio-ready filter into the lookup', async () => {
+    mockLimit.mockResolvedValueOnce([audioReadyDictation]);
+
+    const res = await app.request(`/exercises/${audioReadyDictation.id}`, undefined, authEnv);
+
+    expect(res.status).toBe(200);
+    expect(mockAudioReadyFilter).toHaveBeenCalledTimes(1);
+    expect(mockAudioReadyFilter).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'type', audioS3Key: 'audio_s3_key' }),
+    );
+  });
+
+  it('GET /exercises/:id returns 404 for an audioless dictation UUID', async () => {
+    // SQL filter excludes the null-audio dictation row → empty result reaches
+    // the route, which 404s.
+    mockLimit.mockResolvedValueOnce([]);
+
+    const res = await app.request(`/exercises/${audiolessDictationId}`, undefined, authEnv);
+
+    expect(res.status).toBe(404);
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBe('EXERCISE_NOT_FOUND');
+    expect(mockAudioReadyFilter).toHaveBeenCalledTimes(1);
   });
 });
 

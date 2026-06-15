@@ -19,7 +19,7 @@
  * regex deliberately enumerates the current members so a forgotten update is
  * caught at insert time rather than silently writing an unparseable cell key.
  */
-const CELL_KEY_REGEX = /^(es|de|tr):(a1|a2|b1|b2):(cloze|translation|vocab_recall|sentence_construction):[a-z0-9-]+$/;
+const CELL_KEY_REGEX = /^(es|de|tr):(a1|a2|b1|b2):(cloze|translation|vocab_recall|sentence_construction|dictation):[a-z0-9-]+$/;
 
 export function assertValidCellKey(cellKey: string): void {
   if (!CELL_KEY_REGEX.test(cellKey)) {
