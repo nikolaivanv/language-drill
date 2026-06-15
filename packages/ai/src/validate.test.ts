@@ -463,7 +463,9 @@ describe("validateDraft", () => {
     expect(result.qualityScore).toBe(0.85);
     // The dictation system prompt is used, not the cloze one.
     expect(capturedSystem).toContain("dictation");
-    expect(capturedSystem).not.toContain("Spoiled blank");
+    // A cloze-only phrase from VALIDATION_SYSTEM_PROMPT_TEMPLATE — absent from
+    // the dictation system prompt, so this guards against prompt cross-contamination.
+    expect(capturedSystem).not.toContain("buffer-consonant ambiguous blank");
   });
 
   it("does not mutate draft or spec inputs", async () => {
