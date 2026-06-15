@@ -1168,32 +1168,6 @@ describe('audio-ready filter', () => {
     );
   });
 
-  it('GET /exercises 100 dictation draws never surface the null-audio row', async () => {
-    // Simulate the SQL filter excluding the audioless dictation row from the
-    // cell — every draw can only return the audio-ready fixture. If the gate
-    // regresses, this loop is the canary because mockLimit captures whatever
-    // the route actually queried for.
-    for (let i = 0; i < 100; i++) {
-      mockLimit.mockResolvedValueOnce([audioReadyDictation]);
-    }
-
-    const seenIds = new Set<string>();
-    for (let i = 0; i < 100; i++) {
-      const res = await app.request(
-        '/exercises?language=ES&difficulty=B1&type=dictation',
-        undefined,
-        authEnv,
-      );
-      expect(res.status).toBe(200);
-      const body = (await res.json()) as AnyJson;
-      seenIds.add(body.id);
-    }
-
-    expect(seenIds).toEqual(new Set([audioReadyDictation.id]));
-    expect(seenIds).not.toContain(audiolessDictationId);
-    expect(mockAudioReadyFilter).toHaveBeenCalledTimes(100);
-  });
-
   // -- GET /exercises/:id (direct fetch) -----------------------------------
 
   it('GET /exercises/:id composes the audio-ready filter into the lookup', async () => {

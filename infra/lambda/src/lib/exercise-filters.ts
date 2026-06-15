@@ -39,6 +39,9 @@ export function approvedStatusFilter(table: typeof exercisesTable) {
  * audio; this filter keeps those transient, unplayable rows out of every serve
  * path. Pass the `exercises` table reference; composes under `and(...)`
  * alongside `approvedStatusFilter` and the language/difficulty/type predicates.
+ *
+ * Note: `routes/sessions.ts`'s today-plan UNION-ALL pool draw inlines the
+ * equivalent predicate as raw SQL rather than calling this helper.
  */
 export function audioReadyFilter(table: typeof exercisesTable) {
   return sql`(${table.type} <> 'dictation' OR ${table.audioS3Key} IS NOT NULL)`;

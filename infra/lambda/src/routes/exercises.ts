@@ -178,7 +178,9 @@ exercises.post('/exercises/:id/submit', async (c) => {
   }
   const { answer: userAnswer, sessionId } = bodyResult.data;
 
-  // 2. Fetch exercise by ID
+  // 2. Fetch exercise by ID. Deliberately no `audioReadyFilter` here: grading
+  // needs no audio, and the serve/discovery paths already gate exposure, so an
+  // audioless dictation row can't reach submit anyway.
   const rows = await db
     .select()
     .from(exercisesTable)
