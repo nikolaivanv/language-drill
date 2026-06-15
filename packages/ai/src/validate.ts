@@ -375,11 +375,16 @@ export async function validateDraft(
     : isFreeWriting
       ? await buildFreeWritingValidationSystemPrompt(spec)
       : await buildValidationSystemPrompt(spec);
-  const userText = isDictation
-    ? buildDictationValidationUserPrompt(draft.contentJson, spec)
-    : isFreeWriting
-      ? buildFreeWritingValidationUserPrompt(draft.contentJson, spec)
-      : buildValidationUserPrompt(draft, spec);
+  // The user-prompt builders take the NARROWED content, so the discriminant
+  // must be inlined here — TypeScript cannot narrow a union through a boolean
+  // alias (the `isDictation` / `isFreeWriting` consts above only gate the
+  // spec-only system-prompt builders).
+  const userText =
+    draft.contentJson.type === ExerciseType.DICTATION
+      ? buildDictationValidationUserPrompt(draft.contentJson, spec)
+      : draft.contentJson.type === ExerciseType.FREE_WRITING
+        ? buildFreeWritingValidationUserPrompt(draft.contentJson, spec)
+        : buildValidationUserPrompt(draft, spec);
 
   const response = await client.messages.create(
     {
