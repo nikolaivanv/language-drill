@@ -98,13 +98,13 @@ describe('FwUnstuck', () => {
     expect(screen.getByRole('button', { name: /start my paragraph/i })).toBeDisabled();
   });
 
-  it('shows an error state with a retry that re-runs the mutation', () => {
+  it('shows an error state with a retry that re-runs the mutation', async () => {
     const mutateAsync = vi.fn().mockResolvedValue({ opener: 'AAA' });
     mockUseStartMyParagraph.mockReturnValue(startIdle({ isError: true, mutateAsync }));
     render(<FwUnstuck exerciseId="fw-1" fetchFn={fetchFn} value="" onChange={() => {}} />);
     expect(screen.getByText(/couldn't add an opener/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /try again/i }));
-    expect(mutateAsync).toHaveBeenCalled();
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalled());
   });
 
   // The brainstorm/vocab panel still works alongside the new chip.

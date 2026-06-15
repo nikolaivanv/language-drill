@@ -150,13 +150,13 @@ export function FwUnstuck({ exerciseId, fetchFn, value, onChange }: FwUnstuckPro
           ) : showOpenerError ? (
             <span className="t-small" style={{ color: 'var(--color-accent-2)' }}>
               couldn't add an opener —{' '}
-              <button className="btn ghost sm" onClick={handleStart}>try again</button>
+              <button type="button" className="btn ghost sm" onClick={handleStart}>try again</button>
             </span>
           ) : (
             <span className="t-small" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
               opener added
-              <button className="btn ghost sm" onClick={handleStart}>regenerate</button>
-              <button className="btn ghost sm" onClick={handleRemove}>remove</button>
+              <button type="button" className="btn ghost sm" onClick={handleStart}>regenerate</button>
+              <button type="button" className="btn ghost sm" onClick={handleRemove}>remove</button>
             </span>
           )}
         </div>
