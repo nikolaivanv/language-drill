@@ -40,7 +40,12 @@ import {
 } from '@language-drill/db';
 import { ExerciseType, type DictationContent } from '@language-drill/shared';
 import { eq } from 'drizzle-orm';
-import type { SQSBatchResponse, SQSEvent, SQSRecord } from 'aws-lambda';
+import type {
+  SQSBatchItemFailure,
+  SQSBatchResponse,
+  SQSEvent,
+  SQSRecord,
+} from 'aws-lambda';
 
 // ---------------------------------------------------------------------------
 // Cold-start singletons — reused across warm invocations.
@@ -217,25 +222,40 @@ export async function processRecord(
 }
 
 // ---------------------------------------------------------------------------
+// Batch loop (DI seam)
+// ---------------------------------------------------------------------------
+
+/**
+ * Run `processRecord` over a batch, aggregating the failures into the AWS
+ * partial-batch-failure contract: each record that `processRecord` reports as
+ * failed contributes its `messageId` to `batchItemFailures` (and only those).
+ * Exported (with injected deps) so the aggregation + `itemIdentifier` mapping
+ * are testable without mocking the module-scoped AWS/DB singletons.
+ */
+export async function runRecords(
+  records: SQSRecord[],
+  deps: ProcessDeps,
+): Promise<SQSBatchResponse> {
+  const batchItemFailures: SQSBatchItemFailure[] = [];
+  for (const record of records) {
+    if (await processRecord(record, deps)) {
+      batchItemFailures.push({ itemIdentifier: record.messageId });
+    }
+  }
+  return { batchItemFailures };
+}
+
+// ---------------------------------------------------------------------------
 // Handler
 // ---------------------------------------------------------------------------
 
 export async function handler(event: SQSEvent): Promise<SQSBatchResponse> {
   const bucket = requireEnv('CONTENT_BUCKET_NAME');
-  const batchItemFailures: SQSBatchResponse['batchItemFailures'] = [];
-
-  for (const record of event.Records) {
-    const failed = await processRecord(record, {
-      db,
-      polly,
-      s3,
-      bucket,
-      synth: synthesizeToS3,
-    });
-    if (failed) {
-      batchItemFailures.push({ itemIdentifier: record.messageId });
-    }
-  }
-
-  return { batchItemFailures };
+  return runRecords(event.Records, {
+    db,
+    polly,
+    s3,
+    bucket,
+    synth: synthesizeToS3,
+  });
 }

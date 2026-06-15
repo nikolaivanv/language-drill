@@ -11,6 +11,11 @@
  *   (b) idempotent skip when audioS3Key already set (synth NOT called),
  *   (c) synth throws → record id in batchItemFailures.
  * Plus: missing / non-dictation row is a no-op success (doesn't poison queue).
+ *
+ * The exported `runRecords` seam (the handler's batch loop) is exercised
+ * directly against a MIXED batch with distinct messageIds, asserting the
+ * aggregation + `{ itemIdentifier: record.messageId }` mapping reports exactly
+ * the failing record and not the succeeding one.
  */
 
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
@@ -28,7 +33,7 @@ vi.mock('@language-drill/db', async (importOriginal) => {
   };
 });
 
-import { processRecord, type ProcessDeps } from './handler';
+import { processRecord, runRecords, type ProcessDeps } from './handler';
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -197,15 +202,41 @@ describe('processRecord', () => {
   });
 });
 
-describe('handler (batch shape)', () => {
-  it('aggregates per-record failures into SQSBatchResponse.batchItemFailures', async () => {
-    // Smoke-test the batch loop via the injectable internal. We assemble a
-    // tiny `runBatch`-style expectation by calling processRecord per record;
-    // the real `handler` wires module-scoped clients and is covered by the
-    // unit cases above. Here we just confirm the response shape contract.
+describe('runRecords (batch aggregation)', () => {
+  it('reports EXACTLY the failing record id in batchItemFailures, not the succeeding one', async () => {
+    // Mixed batch: a well-formed dictation record (synthesizes → success) and a
+    // malformed-body record (fails at parse, before any DB read). The single
+    // `fakeDb` row backs the good record; the malformed record never queries it.
+    // Distinct messageIds make the { itemIdentifier: record.messageId } mapping
+    // genuinely verifiable — the loop must skip the success and surface only the
+    // failure.
+    const { db, updateCalls } = fakeDb([dictationRow()]);
+
+    const okRecord = recordWith(EXERCISE_ID, 'msg-ok');
+    const badRecord = {
+      messageId: 'msg-bad',
+      body: 'not-json',
+    } as unknown as SQSRecord;
+
+    const response = await runRecords([okRecord, badRecord], deps(db));
+
+    // Only the malformed record is reported; the success is absent.
+    expect(response.batchItemFailures).toEqual([{ itemIdentifier: 'msg-bad' }]);
+    // The successful record still did its work.
+    expect(synth).toHaveBeenCalledTimes(1);
+    expect(updateCalls).toEqual([
+      { audioS3Key: `dictation/${EXERCISE_ID}.mp3` },
+    ]);
+  });
+
+  it('returns an empty batchItemFailures when every record succeeds', async () => {
     const { db } = fakeDb([dictationRow()]);
-    synth.mockResolvedValueOnce(undefined);
-    const ok = await processRecord(recordWith(EXERCISE_ID, 'ok'), deps(db));
-    expect(ok).toBe(false);
+
+    const response = await runRecords(
+      [recordWith(EXERCISE_ID, 'msg-a'), recordWith(EXERCISE_ID, 'msg-b')],
+      deps(db),
+    );
+
+    expect(response).toEqual({ batchItemFailures: [] });
   });
 });
