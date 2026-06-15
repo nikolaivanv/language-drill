@@ -20,6 +20,8 @@ import {
   type DictationContent,
   type ExerciseContent,
   ExerciseType,
+  type FreeWritingContent,
+  type FreeWritingRequiredElement,
   Language,
   deterministicUuid,
   type GrammarPoint,
@@ -39,6 +41,11 @@ import {
   buildDictationGenerationSystemPrompt,
   buildDictationGenerationUserPrompt,
 } from "./dictation-generation-prompts.js";
+import {
+  buildFreeWritingGenerationSystemPrompt,
+  buildFreeWritingGenerationUserPrompt,
+  freeWritingLengthFor,
+} from "./free-writing-generation-prompts.js";
 
 // ---------------------------------------------------------------------------
 // Model + sampling constants
@@ -78,17 +85,15 @@ export const DICTATION_VOICE_POOL_BY_LANGUAGE: Readonly<
 // Tool-name map
 // ---------------------------------------------------------------------------
 
-// FREE_WRITING is excluded: free writing is authored by hand, never produced by
-// this pipeline. DICTATION IS now batch-generated (clip text drafted + validated
-// here; audio is synthesized separately).
-export const TOOL_NAME_BY_TYPE: Readonly<
-  Record<Exclude<ExerciseType, ExerciseType.FREE_WRITING>, string>
-> = Object.freeze({
+// DICTATION and FREE_WRITING are both batch-generated now. (Free-writing prompts
+// are drafted + validated here; they have no audio step.)
+export const TOOL_NAME_BY_TYPE: Readonly<Record<ExerciseType, string>> = Object.freeze({
   cloze: "submit_cloze_exercise",
   translation: "submit_translation_exercise",
   vocab_recall: "submit_vocab_recall_exercise",
   sentence_construction: "submit_sentence_construction_exercise",
   dictation: "submit_dictation_exercise",
+  free_writing: "submit_free_writing_exercise",
 });
 
 // ---------------------------------------------------------------------------
@@ -356,17 +361,61 @@ export const DICTATION_GENERATION_TOOL: Anthropic.Tool = {
   },
 };
 
-// FREE_WRITING is excluded: free writing is authored by hand, never produced by
-// this pipeline. DICTATION IS now batch-generated (clip text drafted + validated
-// here; audio is synthesized separately).
-export const GENERATION_TOOL_BY_TYPE: Readonly<
-  Record<Exclude<ExerciseType, ExerciseType.FREE_WRITING>, Anthropic.Tool>
-> = Object.freeze({
+export const FREE_WRITING_GENERATION_TOOL: Anthropic.Tool = {
+  name: "submit_free_writing_exercise",
+  description:
+    "Submit a single free-writing prompt: an open-ended writing task the learner answers in one paragraph. Do not set register or word counts — those are fixed by the system.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      instructions: {
+        type: "string",
+        description:
+          "Short imperative telling the learner what to do (e.g. 'Escribe un párrafo respondiendo a la pregunta.').",
+      },
+      title: {
+        type: "string",
+        description: "Short headline for the prompt card (e.g. 'El teletrabajo: ¿avance o aislamiento?').",
+      },
+      task: {
+        type: "string",
+        description:
+          "The task statement shown to the learner: exactly what to write, on the configured topic, answerable in the configured word band.",
+      },
+      domain: {
+        type: "string",
+        description: "Topic-domain label for the card (e.g. 'opinión · argumentación').",
+      },
+      requiredElements: {
+        type: "array",
+        description: "2–4 concrete, checkable things the answer must contain.",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string", description: "Stable slug id (e.g. 'thesis', 'reasons')." },
+            label: { type: "string", description: "What the learner must do, in the target language." },
+            detail: { type: "string", description: "Optional one-line hint on how to satisfy it." },
+          },
+          required: ["id", "label"],
+        },
+      },
+      topicHint: {
+        type: "string",
+        description: "Optional one-word topical theme (e.g. 'trabajo', 'viajes').",
+      },
+    },
+    required: ["instructions", "title", "task", "domain", "requiredElements"],
+  },
+};
+
+// DICTATION and FREE_WRITING are both batch-generated (see TOOL_NAME_BY_TYPE).
+export const GENERATION_TOOL_BY_TYPE: Readonly<Record<ExerciseType, Anthropic.Tool>> = Object.freeze({
   cloze: CLOZE_GENERATION_TOOL,
   translation: TRANSLATION_GENERATION_TOOL,
   vocab_recall: VOCAB_RECALL_GENERATION_TOOL,
   sentence_construction: SENTENCE_CONSTRUCTION_GENERATION_TOOL,
   dictation: DICTATION_GENERATION_TOOL,
+  free_writing: FREE_WRITING_GENERATION_TOOL,
 });
 
 // ---------------------------------------------------------------------------
@@ -837,6 +886,62 @@ export function parseGeneratedDictationDraft(
   };
 }
 
+/** Parses the requiredElements array from a free-writing tool input. */
+function parseRequiredElements(
+  raw: Record<string, unknown>,
+  ctx: string,
+): FreeWritingRequiredElement[] {
+  const v = raw["requiredElements"];
+  if (!Array.isArray(v) || v.length === 0) {
+    throw new Error(`${ctx}: invalid requiredElements: must be a non-empty array`);
+  }
+  return v.map((el, i): FreeWritingRequiredElement => {
+    if (!isObject(el)) {
+      throw new Error(`${ctx}: invalid requiredElements[${i}]: must be an object`);
+    }
+    const id = requireString(el, "id", `${ctx}.requiredElements[${i}]`);
+    const label = requireString(el, "label", `${ctx}.requiredElements[${i}]`);
+    const detail = optionalString(el, "detail", `${ctx}.requiredElements[${i}]`);
+    return { id, label, ...(detail !== undefined ? { detail } : {}) };
+  });
+}
+
+export function parseGeneratedFreeWritingDraft(
+  input: unknown,
+  spec: GenerationSpec,
+): FreeWritingContent {
+  const ctx = "free_writing draft";
+  if (!isObject(input)) {
+    throw new Error(`${ctx}: must be an object, got ${typeof input}`);
+  }
+  const register = spec.grammarPoint.freeWriting?.register;
+  if (!register) {
+    throw new Error(`${ctx}: topic entry ${spec.grammarPoint.key} has no freeWriting.register`);
+  }
+  const band = freeWritingLengthFor(spec.cefrLevel);
+
+  const instructions = requireString(input, "instructions", ctx);
+  const title = requireString(input, "title", ctx);
+  const task = requireString(input, "task", ctx);
+  const domain = requireString(input, "domain", ctx);
+  const requiredElements = parseRequiredElements(input, ctx);
+  const topicHint = optionalString(input, "topicHint", ctx);
+
+  return {
+    type: ExerciseType.FREE_WRITING,
+    instructions,
+    title,
+    task,
+    domain,
+    register,
+    minWords: band.minWords,
+    maxWords: band.maxWords,
+    suggestedMinutes: band.suggestedMinutes,
+    requiredElements,
+    ...(topicHint !== undefined ? { topicHint } : {}),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Deterministic ID derivation
 // ---------------------------------------------------------------------------
@@ -921,22 +1026,27 @@ export async function generateOneDraft(
   // `buildGenerationSystemPrompt`. Production never sets it, so the no-override
   // path is byte-identical to before.
   const isDictation = spec.exerciseType === ExerciseType.DICTATION;
+  const isFreeWriting = spec.exerciseType === ExerciseType.FREE_WRITING;
 
   const systemText =
     spec.systemPromptOverride ??
     (isDictation
       ? await buildDictationGenerationSystemPrompt(promptInputs)
-      : await buildGenerationSystemPrompt(promptInputs, []));
+      : isFreeWriting
+        ? await buildFreeWritingGenerationSystemPrompt(promptInputs)
+        : await buildGenerationSystemPrompt(promptInputs, []));
 
   const userText = isDictation
     ? buildDictationGenerationUserPrompt(promptInputs, ordinal, spec.topicDomain)
-    : buildGenerationUserPrompt(
-        promptInputs,
-        ordinal,
-        spec.topicDomain,
-        spec.seedWords?.[ordinal] ?? null,
-        spec.coverageTargets,
-      );
+    : isFreeWriting
+      ? buildFreeWritingGenerationUserPrompt(promptInputs, ordinal)
+      : buildGenerationUserPrompt(
+          promptInputs,
+          ordinal,
+          spec.topicDomain,
+          spec.seedWords?.[ordinal] ?? null,
+          spec.coverageTargets,
+        );
 
   const tool =
     GENERATION_TOOL_BY_TYPE[spec.exerciseType as keyof typeof GENERATION_TOOL_BY_TYPE];
@@ -985,7 +1095,9 @@ export async function generateOneDraft(
     }
     content = isDictation
       ? parseGeneratedDictationDraft(toolUseBlock.input, spec, ordinal)
-      : parseToolInput(toolUseBlock.input, spec);
+      : isFreeWriting
+        ? parseGeneratedFreeWritingDraft(toolUseBlock.input, spec)
+        : parseToolInput(toolUseBlock.input, spec);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return {
@@ -1107,10 +1219,17 @@ function parseToolInput(
       throw new Error(
         "Dictation exercises are parsed via parseGeneratedDictationDraft, not parseToolInput.",
       );
-    default:
-      // free_writing is authored by hand, not produced by this pipeline.
+    case ExerciseType.FREE_WRITING:
+      // Unreachable: generateOneDraft routes free_writing to
+      // parseGeneratedFreeWritingDraft before reaching parseToolInput. Defensive.
       throw new Error(
-        `parseToolInput: unsupported exerciseType for generation: ${spec.exerciseType}`,
+        "Free-writing exercises are parsed via parseGeneratedFreeWritingDraft, not parseToolInput.",
       );
+    default: {
+      const _exhaustive: never = spec.exerciseType;
+      throw new Error(
+        `parseToolInput: unsupported exerciseType for generation: ${_exhaustive as string}`,
+      );
+    }
   }
 }
