@@ -136,6 +136,48 @@ describe('TodayPlanResponseSchema', () => {
     const result = TodayPlanResponseSchema.safeParse(payload);
     expect(result.success).toBe(false);
   });
+
+  it('defaults freeWriting to null when the field is omitted', () => {
+    const result = TodayPlanResponseSchema.safeParse({
+      language: Language.ES,
+      generatedAt: '2026-05-04T12:00:00.000Z',
+      totalEstimatedMinutes: 12,
+      items: queuedItems,
+      summary: null,
+      code: null,
+    });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.freeWriting).toBeNull();
+  });
+
+  it('parses a populated freeWriting block', () => {
+    const result = TodayPlanResponseSchema.safeParse({
+      language: Language.ES,
+      generatedAt: '2026-05-04T12:00:00.000Z',
+      totalEstimatedMinutes: 12,
+      items: queuedItems,
+      summary: null,
+      code: null,
+      freeWriting: { estimatedMinutes: 8 },
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.freeWriting).toEqual({ estimatedMinutes: 8 });
+    }
+  });
+
+  it('rejects a freeWriting block with a non-positive estimatedMinutes', () => {
+    const result = TodayPlanResponseSchema.safeParse({
+      language: Language.ES,
+      generatedAt: '2026-05-04T12:00:00.000Z',
+      totalEstimatedMinutes: 12,
+      items: queuedItems,
+      summary: null,
+      code: null,
+      freeWriting: { estimatedMinutes: 0 },
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe('TodayPlanItemSchema', () => {
