@@ -1021,4 +1021,29 @@ describe("parseGeneratedDictationDraft", () => {
       ),
     ).toThrow(/sentences/);
   });
+
+  it("accepts NFC-equivalent referenceText and sentences (precomposed vs decomposed accents)", () => {
+    // Same visible text, different Unicode normalization forms:
+    // referenceText uses precomposed é (U+00E9); sentences use decomposed
+    // e + combining acute (U+0301). The integrity check must NFC-normalize so
+    // these compare equal rather than spuriously rejecting the draft.
+    const precomposed = "El café está aquí."; // U+00E9 in "café"
+    const decomposed = "El café está aquí.".normalize("NFD"); // e + combining marks
+    expect(precomposed).not.toBe(decomposed); // byte-different
+    expect(precomposed.normalize("NFC")).toBe(decomposed.normalize("NFC")); // canonically equal
+
+    const content = parseGeneratedDictationDraft(
+      {
+        title: "El café",
+        referenceText: precomposed,
+        sentences: [decomposed],
+        tested: ["acentos"],
+        durationSec: 5,
+      },
+      dictSpec as never,
+      0,
+    );
+    expect(content.type).toBe(ExerciseType.DICTATION);
+    expect(content.referenceText).toBe(precomposed);
+  });
 });

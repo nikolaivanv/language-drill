@@ -757,7 +757,8 @@ export function parseGeneratedSentenceConstructionDraft(
 
 const DICTATION_WAVEFORM_BARS = 40;
 
-/** Deterministic decorative envelope (0..1), seeded from text length so the
+/** Deterministic decorative envelope (0..1), seeded from a hash of the
+ *  reference text (so two equal-length texts get different envelopes) — the
  *  same draft always renders the same bars. Real amplitude envelopes are out
  *  of scope (decorative — see roadmap "smaller items"). */
 function placeholderWaveform(seedText: string): number[] {
@@ -794,7 +795,7 @@ export function parseGeneratedDictationDraft(
   }
   // Sentences must reconstitute the reference text (whitespace-normalized) so
   // the per-sentence display segmentation can't drift from the grading target.
-  const norm = (s: string) => s.replace(/\s+/g, " ").trim();
+  const norm = (s: string) => s.normalize("NFC").replace(/\s+/g, " ").trim();
   if (norm(sentences.join(" ")) !== norm(referenceText)) {
     throw new Error(
       `${ctx}: invalid sentences: joined sentences must equal referenceText`,
