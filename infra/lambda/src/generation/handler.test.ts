@@ -185,6 +185,7 @@ function cellResultBase(): CellResult {
     rejectionReasonCounts: {},
     earlyBailed: false,
     coverageOutcome: null,
+    approvedDictationIds: [],
   };
 }
 
