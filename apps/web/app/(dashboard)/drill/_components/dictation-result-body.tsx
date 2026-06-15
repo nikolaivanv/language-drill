@@ -1,7 +1,13 @@
-import * as React from 'react';
 import { Card, Chip } from '../../../../components/ui';
 import type { DictationResult } from '@language-drill/shared';
 
+/**
+ * Presentational body for a graded dictation result — the accuracy line, the
+ * colored diff prose, the per-difference cards, and the criteria rows. Shared
+ * by the live results view (`DictationResults`, inside its FeedbackShell) and
+ * the post-session debrief renderer (`DictationBody`), so the two surfaces
+ * can't drift. Pure: the only prop is the result.
+ */
 export function DictationResultBody({ result }: { result: DictationResult }) {
   return (
     <div className="flex flex-col gap-s-4">
