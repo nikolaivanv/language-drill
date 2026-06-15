@@ -78,7 +78,8 @@ function compatibleTypes(entry: GrammarPoint): ReadonlyArray<ExerciseType> {
 
 /**
  * Enumerate every `(grammarPoint, exerciseType)` cell the curriculum supports.
- * Vocab umbrellas are paired only with `vocab_recall`; grammar points are
+ * Vocab umbrellas are paired only with `vocab_recall`; dictation umbrellas
+ * (`kind: 'dictation'`) are paired only with `dictation`; grammar points are
  * paired with `cloze` and `translation`. Order: curriculum order, then within
  * each entry the kind-compatible types in array order.
  *
