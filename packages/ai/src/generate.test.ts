@@ -926,22 +926,39 @@ describe("parseGeneratedSentenceConstructionDraft", () => {
 // generateOneDraft — dictation rejection guard
 // ---------------------------------------------------------------------------
 
-describe("generateOneDraft — dictation guard", () => {
-  it("throws synchronously before any Claude call when exerciseType is DICTATION", async () => {
-    const mockCreate = vi.fn();
-    const mockClient = {
-      messages: { create: mockCreate },
-    } as unknown as ReturnType<typeof createClaudeClient>;
+function mockDictationClient() {
+  return {
+    messages: {
+      create: async () => ({
+        stop_reason: "tool_use",
+        content: [
+          {
+            type: "tool_use",
+            name: "submit_dictation_exercise",
+            input: {
+              title: "El tiempo",
+              referenceText: "No te preocupes, el tiempo lo cura todo.",
+              sentences: ["No te preocupes, el tiempo lo cura todo."],
+              tested: ["sinalefa"],
+              durationSec: 7,
+              domain: "daily routine",
+              register: "informal",
+            },
+          },
+        ],
+        usage: { input_tokens: 10, output_tokens: 20 },
+      }),
+    },
+  } as never;
+}
 
-    const dictationSpec: GenerationSpec = {
-      ...baseSpec,
-      exerciseType: ExerciseType.DICTATION,
-    };
-
-    await expect(generateOneDraft(mockClient, dictationSpec, 0)).rejects.toThrow(
-      "Dictation exercises are not batch-generated",
-    );
-    expect(mockCreate).not.toHaveBeenCalled();
+describe("generateOneDraft — dictation branch", () => {
+  it("produces a dictation draft (no veto)", async () => {
+    const res = await generateOneDraft(mockDictationClient(), dictSpec as never, 0);
+    expect(res.kind).toBe("draft");
+    if (res.kind !== "draft") return;
+    expect(res.draft.contentJson.type).toBe(ExerciseType.DICTATION);
+    expect(res.draft.contentJson).toMatchObject({ voiceId: "Sergio" });
   });
 });
 

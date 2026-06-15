@@ -35,6 +35,10 @@ import {
   canonicalSurface,
   type GenerationPromptInputs,
 } from "./generation-prompts.js";
+import {
+  buildDictationGenerationSystemPrompt,
+  buildDictationGenerationUserPrompt,
+} from "./dictation-generation-prompts.js";
 
 // ---------------------------------------------------------------------------
 // Model + sampling constants
@@ -916,21 +920,24 @@ export async function generateOneDraft(
   // bypassing the Langfuse fetch + in-repo fallback in
   // `buildGenerationSystemPrompt`. Production never sets it, so the no-override
   // path is byte-identical to before.
+  const isDictation = spec.exerciseType === ExerciseType.DICTATION;
+
   const systemText =
     spec.systemPromptOverride ??
-    (await buildGenerationSystemPrompt(promptInputs, []));
-  const userText = buildGenerationUserPrompt(
-    promptInputs,
-    ordinal,
-    spec.topicDomain,
-    spec.seedWords?.[ordinal] ?? null,
-    spec.coverageTargets,
-  );
-  if (spec.exerciseType === ExerciseType.DICTATION) {
-    throw new Error(
-      "Dictation exercises are not batch-generated; generateOneDraft received a dictation spec.",
-    );
-  }
+    (isDictation
+      ? await buildDictationGenerationSystemPrompt(promptInputs)
+      : await buildGenerationSystemPrompt(promptInputs, []));
+
+  const userText = isDictation
+    ? buildDictationGenerationUserPrompt(promptInputs, ordinal, spec.topicDomain)
+    : buildGenerationUserPrompt(
+        promptInputs,
+        ordinal,
+        spec.topicDomain,
+        spec.seedWords?.[ordinal] ?? null,
+        spec.coverageTargets,
+      );
+
   const tool =
     GENERATION_TOOL_BY_TYPE[spec.exerciseType as keyof typeof GENERATION_TOOL_BY_TYPE];
 
@@ -976,7 +983,9 @@ export async function generateOneDraft(
         `expected tool '${tool.name}', got '${toolUseBlock.name}'`,
       );
     }
-    content = parseToolInput(toolUseBlock.input, spec);
+    content = isDictation
+      ? parseGeneratedDictationDraft(toolUseBlock.input, spec, ordinal)
+      : parseToolInput(toolUseBlock.input, spec);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return {
