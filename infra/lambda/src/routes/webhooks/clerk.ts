@@ -82,10 +82,11 @@ webhooks.post('/webhooks/clerk', async (c) => {
   } else if (event.type === 'user.deleted') {
     // Right-to-erasure: delete the user row. The user FKs on playlists,
     // spaced_repetition_cards, usage_events, user_exercise_history,
-    // user_language_profiles, user_preferences, user_vocabulary, and the
-    // read/review tables are all ON DELETE CASCADE, so this one delete sweeps
-    // every PII-adjacent row for the account (migration 0021 backfilled the
-    // five legacy FKs that predated the cascade convention).
+    // user_language_profiles, user_preferences, user_vocabulary,
+    // practice_sessions, and the read/review tables are all ON DELETE CASCADE,
+    // so this one delete sweeps every PII-adjacent row for the account
+    // (migration 0021 backfilled five legacy FKs that predated the cascade
+    // convention; 0025 added practice_sessions, which 0021 missed).
     const userId = event.data.id;
     if (!userId) {
       return c.json({ error: 'No user id in event' }, 400);

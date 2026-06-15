@@ -6,7 +6,9 @@ export const practiceSessions = pgTable(
   'practice_sessions',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: text('user_id').references(() => users.id).notNull(),
+    userId: text('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
     language: text('language').notNull(),
     difficulty: text('difficulty').notNull(),
     exerciseCount: smallint('exercise_count').notNull(),
