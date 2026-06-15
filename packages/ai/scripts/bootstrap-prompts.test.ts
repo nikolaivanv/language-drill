@@ -115,10 +115,10 @@ function baseOpts(
 // ---------------------------------------------------------------------------
 
 describe("PROMPTS manifest", () => {
-  it("contains exactly twelve entries — one per registered Langfuse prompt", () => {
+  it("contains exactly fourteen entries — one per registered Langfuse prompt", () => {
     // Bumps here are intentional: adding/removing a prompt should be a
     // PR-level conversation, not silently slip past the test gate.
-    expect(PROMPTS).toHaveLength(12);
+    expect(PROMPTS).toHaveLength(14);
   });
 
   it("registers every surface listed in design Component 4", () => {
