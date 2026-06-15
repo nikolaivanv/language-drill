@@ -46,6 +46,10 @@ describe('assertValidCellKey', () => {
       assertValidCellKey('es:b1:dictation:es-b1-dictation'),
     ).not.toThrow();
   });
+
+  it("accepts a free_writing cell key", () => {
+    expect(() => assertValidCellKey("es:b2:free_writing:es-b2-fw-remote-work")).not.toThrow();
+  });
 });
 
 describe('buildCellKey', () => {

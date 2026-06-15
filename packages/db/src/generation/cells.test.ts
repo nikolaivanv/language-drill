@@ -156,6 +156,26 @@ describe('enumerateCurriculumCells — clozeUnsuitable flag', () => {
   });
 });
 
+describe('enumerateCurriculumCells — kind:free-writing umbrellas', () => {
+  it("pairs a free-writing umbrella with exactly the free_writing cell", () => {
+    const entry = {
+      key: "es-b2-fw-remote-work",
+      kind: "free-writing" as const,
+      name: "x",
+      description: "y",
+      cefrLevel: "B2" as const,
+      language: "ES" as const,
+      examplesPositive: ["a", "b"],
+      examplesNegative: ["*c"],
+      commonErrors: ["d"],
+      freeWriting: { register: "formal" as const },
+    };
+    const cells = enumerateCurriculumCells([entry]);
+    expect(cells.map((c) => c.exerciseType)).toEqual([ExerciseType.FREE_WRITING]);
+    expect(cells[0].cellKey).toBe("es:b2:free_writing:es-b2-fw-remote-work");
+  });
+});
+
 describe('enumerateCurriculumCells — sentenceConstructionSuitable flag', () => {
   it('adds a sentence_construction cell for a flagged grammar point', () => {
     const point = makeGrammarPoint({

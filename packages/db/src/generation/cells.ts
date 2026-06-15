@@ -57,9 +57,11 @@ const GRAMMAR_CLOZE_UNSUITABLE_TYPES: ReadonlyArray<ExerciseType> = [
 ];
 const VOCAB_KIND_TYPES: ReadonlyArray<ExerciseType> = [ExerciseType.VOCAB_RECALL];
 const DICTATION_KIND_TYPES: ReadonlyArray<ExerciseType> = [ExerciseType.DICTATION];
+const FREE_WRITING_KIND_TYPES: ReadonlyArray<ExerciseType> = [ExerciseType.FREE_WRITING];
 
 function compatibleTypes(entry: GrammarPoint): ReadonlyArray<ExerciseType> {
   if (entry.kind === 'dictation') return DICTATION_KIND_TYPES;
+  if (entry.kind === 'free-writing') return FREE_WRITING_KIND_TYPES;
   if (entry.kind === 'vocab') return VOCAB_KIND_TYPES;
   // `clozeUnsuitable` grammar points drop the cloze cell (the blank's answer is
   // leaked by the other half of the construction, or near-synonym alternants
