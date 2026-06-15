@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { Hono } from 'hono';
+import type { Context } from 'hono';
 import { z } from 'zod';
 import { eq, and, gte, count } from 'drizzle-orm';
 import { Language, CefrLevel, ExerciseType, isFreeWritingContent, EXERCISE_ANSWER_MAX_CHARS } from '@language-drill/shared';
@@ -25,6 +26,12 @@ import {
   FREE_WRITING_EVAL_PROMPT_VERSION,
   FREE_WRITING_EVAL_REQUEST_TIMEOUT_MS,
   FREE_WRITING_EVAL_MAX_RETRIES,
+  generateBrainstorm,
+  generateVocabBoost,
+  BRAINSTORM_PROMPT_VERSION,
+  VOCAB_BOOST_PROMPT_VERSION,
+  WRITING_HELPER_REQUEST_TIMEOUT_MS,
+  WRITING_HELPER_MAX_RETRIES,
   withLlmTrace,
 } from '@language-drill/ai';
 import { db } from '../db';
@@ -440,5 +447,129 @@ exercises.post('/exercises/:id/submit', async (c) => {
     );
   }
 });
+
+// ---------------------------------------------------------------------------
+// Getting-unstuck helpers — POST /exercises/:id/brainstorm | /vocab-boost
+// ---------------------------------------------------------------------------
+// Both share one metered gate: load the approved free-writing exercise, run the
+// global brake, enforce the shared `writing_helper` daily cap, call Claude, then
+// meter exactly one `writing_helper` event. No DB persistence of the result.
+type WritingHelperFeature = 'free-writing-brainstorm' | 'free-writing-vocab-boost';
+
+async function runWritingHelper(
+  c: Context<{ Bindings: Bindings; Variables: Variables }>,
+  id: string,
+  opts: {
+    feature: WritingHelperFeature;
+    promptVersion: string;
+    generate: (
+      client: ReturnType<typeof createObservedClaudeClient>,
+      input: { content: FreeWritingContent; language: Language; difficulty: CefrLevel },
+    ) => Promise<unknown>;
+  },
+) {
+  const rows = await db
+    .select()
+    .from(exercisesTable)
+    .where(and(eq(exercisesTable.id, id), approvedStatusFilter(exercisesTable)))
+    .limit(1);
+  if (rows.length === 0) {
+    return c.json({ error: 'Exercise not found', code: 'EXERCISE_NOT_FOUND' }, 404);
+  }
+  const exercise = rows[0];
+  const content = exercise.contentJson as ExerciseContent;
+  if (!isFreeWritingContent(content)) {
+    return c.json(
+      { error: 'Helpers are only available for free-writing exercises', code: 'BAD_EXERCISE_TYPE' },
+      400,
+    );
+  }
+  const userId = c.get('userId');
+
+  const plan = await getEffectivePlan(userId);
+  const capacity = await checkGlobalCapacity({ plan, admin: isAdmin(userId) });
+  if (capacity !== 'ok') {
+    return c.json({ error: 'AI temporarily at capacity', code: 'GLOBAL_CAPACITY' }, 503);
+  }
+
+  // Check-then-insert daily cap — same accepted boundary-overshoot race as the
+  // submit route; the cap is a cost guardrail, not a billing-grade meter.
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const [{ count: todayCount }] = await db
+    .select({ count: count() })
+    .from(usageEvents)
+    .where(
+      and(
+        eq(usageEvents.userId, userId),
+        eq(usageEvents.eventType, 'writing_helper'),
+        gte(usageEvents.createdAt, oneDayAgo),
+      ),
+    );
+  if (Number(todayCount) >= limitFor('writing_helper', plan)) {
+    return c.json({ error: 'Daily writing-helper limit exceeded', code: 'RATE_LIMIT_EXCEEDED' }, 429);
+  }
+
+  if (!ANTHROPIC_API_KEY) {
+    return c.json({ error: 'Writing helpers temporarily unavailable', code: 'AI_UNAVAILABLE' }, 502);
+  }
+
+  const requestId =
+    (c.env?.event as { requestContext?: { requestId?: string } } | undefined)
+      ?.requestContext?.requestId ?? 'local';
+  const client = createObservedClaudeClient(ANTHROPIC_API_KEY, {
+    timeout: WRITING_HELPER_REQUEST_TIMEOUT_MS,
+    maxRetries: WRITING_HELPER_MAX_RETRIES,
+  });
+
+  let result: unknown;
+  try {
+    result = await withLlmTrace(
+      {
+        env: (process.env.LANGFUSE_ENV ?? 'dev') as 'prod' | 'dev',
+        requestId,
+        userId,
+        exerciseId: id,
+        language: exercise.language as Language,
+        cefrLevel: exercise.difficulty as CefrLevel,
+        exerciseType: exercise.type as ExerciseType,
+        feature: opts.feature,
+        promptVersion: opts.promptVersion,
+      },
+      () =>
+        opts.generate(client, {
+          content,
+          language: exercise.language as Language,
+          difficulty: exercise.difficulty as CefrLevel,
+        }),
+    );
+  } catch (err) {
+    console.error(`[${opts.feature}] generation failed:`, err);
+    return c.json({ error: 'Writing helpers temporarily unavailable', code: 'AI_UNAVAILABLE' }, 502);
+  }
+
+  await db.insert(usageEvents).values({
+    userId,
+    eventType: 'writing_helper',
+    metadata: { exerciseId: id, language: exercise.language, difficulty: exercise.difficulty, kind: opts.feature },
+  });
+
+  return c.json(result as Record<string, unknown>);
+}
+
+exercises.post('/exercises/:id/brainstorm', (c) =>
+  runWritingHelper(c, c.req.param('id'), {
+    feature: 'free-writing-brainstorm',
+    promptVersion: BRAINSTORM_PROMPT_VERSION,
+    generate: generateBrainstorm,
+  }),
+);
+
+exercises.post('/exercises/:id/vocab-boost', (c) =>
+  runWritingHelper(c, c.req.param('id'), {
+    feature: 'free-writing-vocab-boost',
+    promptVersion: VOCAB_BOOST_PROMPT_VERSION,
+    generate: generateVocabBoost,
+  }),
+);
 
 export default exercises;
