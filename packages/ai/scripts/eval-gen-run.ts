@@ -404,8 +404,20 @@ export function renderSystemPrompt(
 export type GenCellArmExecutorParams = {
   cell: CellDescriptor;
   grammarPoint: GrammarPoint;
-  /** The system prompt body already rendered for this cell + arm. */
-  systemPromptOverride: string;
+  /**
+   * The system prompt body already rendered for this cell + arm — passed
+   * through to `GenerationSpec.systemPromptOverride` so the resolved prompt
+   * source drives generation without a Langfuse fetch.
+   *
+   * `undefined` ONLY for dictation cells: `eval:gen`'s prompt sources are
+   * cloze-shaped (the `repo` source is the cloze `GENERATION_SYSTEM_PROMPT_TEMPLATE`),
+   * so injecting one would make `generateOneDraft` use the cloze template
+   * verbatim and bypass the dictation builder. Leaving it unset lets
+   * `generateOneDraft` call `buildDictationGenerationSystemPrompt` (the repo
+   * dictation prompt). See the dictation note on `runGenEval` for the A/B
+   * follow-up.
+   */
+  systemPromptOverride: string | undefined;
   draftsPerCell: number;
   batchSeed: string;
   signal?: AbortSignal;
@@ -608,9 +620,36 @@ export async function runGenEval(opts: {
         exerciseType: cell.exerciseType,
         grammarPoint,
       };
+
+      // Dictation cells flow against the in-repo dictation generation prompt,
+      // NOT a rendered cloze `systemPromptOverride`. Both prompt sources
+      // (`repo`/`file:`/`langfuse:`) are cloze-shaped: `repo` is the cloze
+      // `GENERATION_SYSTEM_PROMPT_TEMPLATE`, and `renderSystemPrompt` →
+      // `computeGenerationPromptVars` throws for a dictation cell. So for
+      // dictation we skip rendering and leave `systemPromptOverride` unset; the
+      // executor's `generateBatch` → `generateOneDraft` then calls
+      // `buildDictationGenerationSystemPrompt`. This ONLY gets dictation cells
+      // *flowing* through the gate against the repo dictation prompt — it is NOT
+      // a true A/B of the dictation generation prompt (both arms would run the
+      // same builder). Full A/B is a follow-up: it needs a
+      // `--surface dictation-generate` switch + dictation-shaped `file:`/
+      // `langfuse:` sources.
+      const isDictation = cell.exerciseType === ExerciseType.DICTATION;
+      if (isDictation) {
+        log(
+          `[eval-gen] dictation cell ${cellKey}: ignoring prompt sources ` +
+            `(both cloze-shaped) — flowing against the repo dictation prompt. ` +
+            `A/B of the dictation generation prompt is a follow-up.`,
+        );
+      }
+
       // Render both arms up front — a bad template throws here, before spend.
-      const baselinePrompt = renderSystemPrompt(baseline.templateBody, inputs);
-      const candidatePrompt = renderSystemPrompt(candidate.templateBody, inputs);
+      const baselinePrompt = isDictation
+        ? undefined
+        : renderSystemPrompt(baseline.templateBody, inputs);
+      const candidatePrompt = isDictation
+        ? undefined
+        : renderSystemPrompt(candidate.templateBody, inputs);
 
       const baselineResult = await executor({
         cell,
