@@ -136,6 +136,7 @@ each prompt and are re-exported from `packages/ai/src/index.ts`:
 | `free-writing-prompts.ts` | `FREE_WRITING_EVAL_PROMPT_VERSION` |
 | `writing-helper-prompts.ts` | `BRAINSTORM_PROMPT_VERSION` |
 | `writing-helper-prompts.ts` | `VOCAB_BOOST_PROMPT_VERSION` |
+| `writing-helper-prompts.ts` | `START_MY_PARAGRAPH_PROMPT_VERSION` |
 
 Langfuse is now the live source for these prompts; the in-repo
 `*_SYSTEM_PROMPT` constant is the fallback. Bumping
