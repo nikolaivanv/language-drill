@@ -34,6 +34,7 @@ export type LlmFeature =
   | "free-writing-eval"
   | "free-writing-brainstorm"
   | "free-writing-vocab-boost"
+  | "free-writing-start-my-paragraph"
   | "annotate"
   | "annotate-span"
   | "generate"
@@ -165,6 +166,7 @@ export const TOOL_NAME_TO_FEATURE: ReadonlyMap<string, LlmFeature> = new Map([
   ["submit_free_writing_evaluation", "free-writing-eval"],
   ["submit_brainstorm", "free-writing-brainstorm"],
   ["submit_vocab_boost", "free-writing-vocab-boost"],
+  ["submit_opener", "free-writing-start-my-paragraph"],
   ["submit_annotated_words", "annotate"],
   ["submit_deep_card", "annotate-span"],
   ["submit_cloze_exercise", "generate"],
