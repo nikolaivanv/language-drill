@@ -36,6 +36,10 @@ import {
   buildDictationValidationSystemPrompt,
   buildDictationValidationUserPrompt,
 } from "./dictation-validation-prompts.js";
+import {
+  buildFreeWritingValidationSystemPrompt,
+  buildFreeWritingValidationUserPrompt,
+} from "./free-writing-validation-prompts.js";
 
 // ---------------------------------------------------------------------------
 // Model + sampling constants
@@ -365,12 +369,16 @@ export async function validateDraft(
   }
 
   const isDictation = draft.contentJson.type === ExerciseType.DICTATION;
+  const isFreeWriting = draft.contentJson.type === ExerciseType.FREE_WRITING;
   const systemText = isDictation
     ? await buildDictationValidationSystemPrompt(spec)
-    : await buildValidationSystemPrompt(spec);
-  const userText =
-    draft.contentJson.type === ExerciseType.DICTATION
-      ? buildDictationValidationUserPrompt(draft.contentJson, spec)
+    : isFreeWriting
+      ? await buildFreeWritingValidationSystemPrompt(spec)
+      : await buildValidationSystemPrompt(spec);
+  const userText = isDictation
+    ? buildDictationValidationUserPrompt(draft.contentJson, spec)
+    : isFreeWriting
+      ? buildFreeWritingValidationUserPrompt(draft.contentJson, spec)
       : buildValidationUserPrompt(draft, spec);
 
   const response = await client.messages.create(
