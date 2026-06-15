@@ -456,7 +456,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
 // meter exactly one `writing_helper` event. No DB persistence of the result.
 type WritingHelperFeature = 'free-writing-brainstorm' | 'free-writing-vocab-boost';
 
-async function runWritingHelper(
+async function runWritingHelper<R>(
   c: Context<{ Bindings: Bindings; Variables: Variables }>,
   id: string,
   opts: {
@@ -465,7 +465,7 @@ async function runWritingHelper(
     generate: (
       client: ReturnType<typeof createObservedClaudeClient>,
       input: { content: FreeWritingContent; language: Language; difficulty: CefrLevel },
-    ) => Promise<unknown>;
+    ) => Promise<R>;
   },
 ) {
   const rows = await db
@@ -521,7 +521,7 @@ async function runWritingHelper(
     maxRetries: WRITING_HELPER_MAX_RETRIES,
   });
 
-  let result: unknown;
+  let result: R;
   try {
     result = await withLlmTrace(
       {
@@ -553,7 +553,7 @@ async function runWritingHelper(
     metadata: { exerciseId: id, language: exercise.language, difficulty: exercise.difficulty, kind: opts.feature },
   });
 
-  return c.json(result as Record<string, unknown>);
+  return c.json(result);
 }
 
 exercises.post('/exercises/:id/brainstorm', (c) =>
