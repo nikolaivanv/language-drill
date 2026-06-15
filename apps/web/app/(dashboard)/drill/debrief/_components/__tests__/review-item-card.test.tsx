@@ -575,3 +575,84 @@ describe('ReviewItemCard — sentence construction body', () => {
     expect(container.textContent).not.toContain('e.g.');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Dictation body — clip replay + stored diff / score / criteria
+// ---------------------------------------------------------------------------
+
+describe('ReviewItemCard — dictation body', () => {
+  const dictContent = {
+    type: 'dictation',
+    title: 'El tiempo',
+    referenceText: 'el tiempo lo cura todo',
+    sentences: ['el tiempo lo cura todo'],
+    accent: 'es',
+    voiceId: 'Sergio',
+    tested: ['sinalefa'],
+    durationSec: 6,
+    waveform: [0.5, 0.6],
+    audioUrl: 'https://signed/clip.mp3',
+  };
+  const dictEval = {
+    kind: 'dictation',
+    score: 0.82,
+    grammarAccuracy: 0.82,
+    vocabularyRange: 'B1',
+    taskAchievement: 0.9,
+    feedback: 'f',
+    errors: [],
+    estimatedCefrEvidence: 'B1',
+    rawCharAccuracy: 0.8,
+    adjustedCharAccuracy: 0.82,
+    wordAccuracy: 0.9,
+    listeningCefr: 'B1',
+    headline: 'Casi',
+    summary: 's',
+    diff: [{ kind: 'match', text: 'el tiempo' }],
+    differences: [
+      { id: 1, kind: 'error', category: 'word boundary', severity: 'high', got: 'locura', expected: 'lo cura', note: 'n' },
+    ],
+    criteria: [{ id: 'phon', label: 'Phoneme discrimination', score: 0.8, cefr: 'B1', note: 'n' }],
+  };
+  const dictItem = (over = {}) => ({
+    exerciseId: '11111111-1111-1111-1111-111111111111',
+    type: ExerciseType.DICTATION,
+    grammarPointKey: 'es-b1-dictation',
+    contentJson: dictContent,
+    status: 'incorrect',
+    userAnswer: 'el tiempo locura todo',
+    score: 0.82,
+    evaluation: dictEval,
+    ...over,
+  });
+
+  it('renders the dictation body: diff/criteria + an audio element', () => {
+    const { container } = render(<ReviewItemCard index={0} item={dictItem() as never} />);
+    expect(screen.getByText('word boundary')).toBeInTheDocument();
+    expect(screen.getByText('Phoneme discrimination')).toBeInTheDocument();
+    expect(container.querySelector('audio')).not.toBeNull(); // AudioPlayer rendered
+  });
+
+  it('degrades gracefully when evaluation is null', () => {
+    render(<ReviewItemCard index={0} item={dictItem({ evaluation: null, status: 'incorrect' }) as never} />);
+    expect(screen.getByText(/el tiempo lo cura todo/)).toBeInTheDocument(); // reference text shown
+    expect(screen.getByText(/no result recorded/i)).toBeInTheDocument();
+  });
+
+  it('omits the audio player when audioUrl is absent', () => {
+    const noAudio = { ...dictContent, audioUrl: undefined };
+    const { container } = render(<ReviewItemCard index={0} item={dictItem({ contentJson: noAudio }) as never} />);
+    expect(container.querySelector('audio')).toBeNull();
+    expect(screen.getByText('Phoneme discrimination')).toBeInTheDocument(); // body still renders
+  });
+
+  it('a skipped dictation item still shows the skipped body', () => {
+    render(
+      <ReviewItemCard
+        index={0}
+        item={dictItem({ status: 'skipped', evaluation: null, userAnswer: null, score: null }) as never}
+      />,
+    );
+    expect(screen.getByText(/skipped — no submission/i)).toBeInTheDocument();
+  });
+});
