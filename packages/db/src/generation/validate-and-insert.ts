@@ -134,6 +134,15 @@ export type DraftOutcome = {
    * values. `undefined` for rejected/dedup ordinals.
    */
   realizedCoverage?: CoverageTags;
+  /**
+   * The `exercises.id` of the row inserted on an inserted-approved /
+   * inserted-flagged / first-attempt-dedup-then-success outcome. Used by the
+   * generation handler to enqueue an audio-synth job for newly-approved
+   * dictation rows (PR 2). Equals `opts.draft.id` on a clean first-attempt
+   * insert, or the dedup-retry id after a successful retry. `undefined` on
+   * rejected / dedup-given-up / parser-failed outcomes (nothing was inserted).
+   */
+  insertedExerciseId?: string;
   /** Generator + validator usage from retries (the original generator call's
    *  usage is folded by the caller; the original validator call's usage IS
    *  included here). */
@@ -489,6 +498,10 @@ export async function validateAndInsertWithRetry(
         // is already handled by the early return above.
         terminalReviewStatus: decision.reviewStatus as 'auto-approved' | 'flagged',
         realizedCoverage: result.coverage,
+        // The id just inserted (== opts.draft.id on attempt 0, or the retry id
+        // after a dedup retry). Lets the generation handler enqueue audio synth
+        // for newly-approved dictation rows (PR 2).
+        insertedExerciseId: currentDraft.id,
         extraUsage,
         extraProduced,
         validatedCount,
