@@ -42,6 +42,10 @@ import {
   ANNOTATE_SYSTEM_PROMPT_VERSION,
   DICTATION_EVAL_PROMPT_VERSION,
   DICTATION_EVAL_SYSTEM_PROMPT,
+  DICTATION_GENERATION_PROMPT_VERSION,
+  DICTATION_GENERATION_SYSTEM_PROMPT,
+  DICTATION_VALIDATION_PROMPT_VERSION,
+  DICTATION_VALIDATION_SYSTEM_PROMPT,
   EVALUATION_SYSTEM_PROMPT,
   EVALUATION_SYSTEM_PROMPT_VERSION,
   FREE_WRITING_EVAL_PROMPT_VERSION,
@@ -147,6 +151,22 @@ export const PROMPTS: readonly PromptManifestEntry[] = [
     text: DICTATION_EVAL_SYSTEM_PROMPT,
     version: DICTATION_EVAL_PROMPT_VERSION,
     surface: "dictation-eval",
+  },
+  {
+    // Runtime fetches this via getPromptWithVarsOrFallback("dictation-generate-system-prompt", …)
+    // in dictation-generation-prompts.ts — the name MUST match that registry key.
+    name: "dictation-generate-system-prompt",
+    text: DICTATION_GENERATION_SYSTEM_PROMPT,
+    version: DICTATION_GENERATION_PROMPT_VERSION,
+    surface: "dictation-generate",
+  },
+  {
+    // Runtime fetches this via getPromptWithVarsOrFallback("dictation-validate-system-prompt", …)
+    // in dictation-validation-prompts.ts — the name MUST match that registry key.
+    name: "dictation-validate-system-prompt",
+    text: DICTATION_VALIDATION_SYSTEM_PROMPT,
+    version: DICTATION_VALIDATION_PROMPT_VERSION,
+    surface: "dictation-validate",
   },
 ];
 
