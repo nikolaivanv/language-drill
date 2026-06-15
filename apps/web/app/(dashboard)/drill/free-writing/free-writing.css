@@ -170,38 +170,10 @@
   .fw-brief-grid { grid-template-columns: 1fr !important; }
 }
 
-/* ── Getting-unstuck helper panel — ported from the prototype, remapped to the
-   app's design-token namespace. These rules sit after the `.fw-helpbtn` block
-   above and refine the helper panel + vocab-row markup. ─────────────────────── */
+/* Active (open) state for a helper toggle button. The `.fw-helppanel` and
+   `.fw-vocab-row` rules already exist above (Phase 1 port). */
 .fw-helpbtn.active {
   border-color: var(--color-accent);
   color: var(--color-accent-2);
   background: var(--color-accent-soft);
 }
-
-.fw-helppanel {
-  border: 1px solid var(--color-rule);
-  border-radius: var(--radius-r-md);
-  background: var(--color-paper-2);
-  overflow: hidden;
-}
-.fw-helppanel .head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--color-rule);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-ink-soft);
-}
-.fw-vocab-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 7px 0;
-  border-bottom: 1px dashed var(--color-rule);
-}
-.fw-vocab-row .w { font-weight: 600; font-size: 14px; color: var(--color-ink); }
-.fw-vocab-row .g { font-size: 12px; color: var(--color-ink-mute); }
