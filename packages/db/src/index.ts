@@ -63,6 +63,12 @@ export {
 export { requireEnv } from './lib/env';
 export { chunk } from './lib/chunk';
 
+// Phase 2 (dictation audio) — shared Polly synth helper + the dictation S3 key
+// convention. Consumed by both the seed script (packages/db/scripts) and the
+// audio-synth Lambda (infra/lambda), which imports them via this barrel.
+export { synthesizeToS3, dictationAudioKey } from './lib/polly-synth';
+export type { SynthesizeToS3Args } from './lib/polly-synth';
+
 // Phase 5 — pool target sizing. Consumed by the admin pool-status endpoint
 // (`infra/lambda/src/routes/admin.ts`) which derives a cell's refill target
 // from its observed 7-day depletion rate.

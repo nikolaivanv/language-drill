@@ -13,16 +13,13 @@
  */
 
 import { fileURLToPath } from 'node:url';
-import { HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import {
-  PollyClient,
-  SynthesizeSpeechCommand,
-  type SynthesizeSpeechCommandInput,
-} from '@aws-sdk/client-polly';
+import { HeadObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { PollyClient } from '@aws-sdk/client-polly';
 import { eq } from 'drizzle-orm';
 
 import { createDb, type Db } from '../src/client';
 import { deterministicUuid } from '../src/lib/deterministic-uuid';
+import { dictationAudioKey, synthesizeToS3 } from '../src/lib/polly-synth';
 import { exercises } from '../src/schema/index';
 
 export type DictationClip = {
@@ -181,10 +178,6 @@ export function toDictationContent(clip: DictationClip) {
   };
 }
 
-export function audioKeyFor(exerciseId: string): string {
-  return `dictation/${exerciseId}.mp3`;
-}
-
 async function objectExists(s3: S3Client, bucket: string, key: string): Promise<boolean> {
   try {
     await s3.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
@@ -192,28 +185,6 @@ async function objectExists(s3: S3Client, bucket: string, key: string): Promise<
   } catch {
     return false;
   }
-}
-
-async function synthesizeToS3(
-  polly: PollyClient,
-  s3: S3Client,
-  bucket: string,
-  key: string,
-  text: string,
-  voiceId: string,
-): Promise<void> {
-  const input: SynthesizeSpeechCommandInput = {
-    Engine: 'neural',
-    OutputFormat: 'mp3',
-    Text: text,
-    VoiceId: voiceId as SynthesizeSpeechCommandInput['VoiceId'],
-    LanguageCode: 'es-ES',
-  };
-  const out = await polly.send(new SynthesizeSpeechCommand(input));
-  const bytes = await out.AudioStream!.transformToByteArray();
-  await s3.send(
-    new PutObjectCommand({ Bucket: bucket, Key: key, Body: bytes, ContentType: 'audio/mpeg' }),
-  );
 }
 
 async function seedClip(
@@ -224,11 +195,19 @@ async function seedClip(
   clip: DictationClip,
 ) {
   const id = deterministicUuid(clip.key);
-  const key = audioKeyFor(id);
+  const key = dictationAudioKey(id);
   const content = toDictationContent(clip);
 
   if (!(await objectExists(s3, bucket, key))) {
-    await synthesizeToS3(polly, s3, bucket, key, content.referenceText, clip.voiceId);
+    await synthesizeToS3({
+      polly,
+      s3,
+      bucket,
+      key,
+      text: content.referenceText,
+      voiceId: clip.voiceId,
+      languageCode: 'es-ES',
+    });
   }
 
   const inserted = await db
