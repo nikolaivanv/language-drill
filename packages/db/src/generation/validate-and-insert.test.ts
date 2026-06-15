@@ -494,6 +494,10 @@ describe('validateAndInsertWithRetry — deterministic Turkish gate', () => {
     expect(capture.exercise?.reviewStatus).toBe('auto-approved');
     // No reasons → `flagged_reasons` is persisted as `null`, not an empty array.
     expect(capture.exercise?.flaggedReasons).toBeNull();
+    // The inserted row id is surfaced so the generation handler can enqueue
+    // an audio-synth job for newly-approved dictation rows (PR 2). On a clean
+    // first-attempt insert it equals the original draft id.
+    expect(outcome.insertedExerciseId).toBe('draft-0');
   });
 });
 
@@ -667,6 +671,8 @@ describe('validateAndInsertWithRetry — rejectionReasons capture', () => {
       { code: GenerationReasonCode.LowQualityReject },
       { code: GenerationReasonCode.ContextSpoilsAnswer },
     ]);
+    // A rejected ordinal inserts nothing → no audio-synth id (PR 2).
+    expect(outcome.insertedExerciseId).toBeUndefined();
     // No retry: a non-deduped first-attempt rejection terminates immediately.
     expect(mockGenerateBatch).not.toHaveBeenCalled();
   });
@@ -854,6 +860,8 @@ describe('validateAndInsertWithRetry — R6 vocab per-word cap', () => {
     // The generator WAS asked for a different word (one retry per remaining slot).
     expect(outcome.extraProduced).toBe(3);
     expect(mockGenerateBatch).toHaveBeenCalledTimes(3);
+    // Nothing was inserted, so there is no audio-synth id to surface (PR 2).
+    expect(outcome.insertedExerciseId).toBeUndefined();
   });
 
   it('does not apply the per-word cap to cloze cells', async () => {

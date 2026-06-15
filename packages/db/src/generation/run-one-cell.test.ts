@@ -21,8 +21,10 @@ import { join } from 'node:path';
 import type Anthropic from '@anthropic-ai/sdk';
 import {
   VALIDATION_TOOL_NAME,
+  ZERO_USAGE,
   canonicalSurface,
   exerciseDraftId,
+  type ExerciseDraft,
   type GenerationSpec,
 } from '@language-drill/ai';
 import {
@@ -42,6 +44,7 @@ import {
   describe,
   expect,
   it,
+  vi,
 } from 'vitest';
 
 import { createDb, type Db } from '../client';
@@ -60,7 +63,28 @@ import {
   tallyCoverageOutcome,
 } from './run-one-cell';
 import type { CoverageSpec, CoverageTarget, CoverageTags } from '@language-drill/shared';
-import { VOCAB_MAX_PER_WORD } from './validate-and-insert';
+import { runGeneratorPool } from './generator-pool';
+import { runValidatorPool } from './validator-pool';
+import { runOutcomePool } from './outcome-pool';
+import { VOCAB_MAX_PER_WORD, type DraftOutcome } from './validate-and-insert';
+
+// Partial mocks for the `approvedDictationIds` collection suite below. The
+// factories spread the REAL module and wrap each pool entry-point in a spy
+// that calls through by default — so the `TEST_DATABASE_URL`-gated integration
+// suite (which needs the real pools) is unaffected; only the pool-mocked suite
+// overrides them per-test via `mockResolvedValue`.
+vi.mock('./generator-pool', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./generator-pool')>();
+  return { ...actual, runGeneratorPool: vi.fn(actual.runGeneratorPool) };
+});
+vi.mock('./validator-pool', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./validator-pool')>();
+  return { ...actual, runValidatorPool: vi.fn(actual.runValidatorPool) };
+});
+vi.mock('./outcome-pool', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./outcome-pool')>();
+  return { ...actual, runOutcomePool: vi.fn(actual.runOutcomePool) };
+});
 
 // ---------------------------------------------------------------------------
 // Fixtures and helpers
@@ -1187,6 +1211,168 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
     });
   },
 );
+
+// ---------------------------------------------------------------------------
+// approvedDictationIds — pure (pool-mocked) coverage of the PR 2 collection
+// logic. The three Claude pools are spied with a call-through default (so the
+// integration suite above, gated on TEST_DATABASE_URL and run first in file
+// order, sees the real pools); a hand-rolled mock `Db` satisfies the
+// skill-topic precheck + audit-row insert/update, so this suite runs WITHOUT a
+// live database (dictation generation isn't wired into the fixture mock client
+// yet, so a real-DB integration path for it doesn't exist).
+//
+// Asserts: a DICTATION cell where N drafts terminate on an inserting status
+// surfaces those inserted ids on `CellResult.approvedDictationIds` (length N,
+// covering approved + flagged + dedup-then-success); a CLOZE cell with the
+// same outcomes surfaces `[]`.
+// ---------------------------------------------------------------------------
+
+describe('runOneCell — approvedDictationIds collection (pool-mocked)', () => {
+  /** Minimal chainable `Db` stub: skill-topic precheck returns one row; all
+   *  other selects resolve to that same single-row array (harmless for the
+   *  seed/prior-pool queries, which only run on seedable/vocab cells anyway);
+   *  insert/update are no-op spies. */
+  function makeMockDb(): { db: Db } {
+    const selectResult = Promise.resolve([{ id: 'skill-topic-row' }]);
+    const selectChain = {
+      from: () => selectChain,
+      where: () => selectChain,
+      groupBy: () => selectChain,
+      having: () => selectChain,
+      orderBy: () => selectChain,
+      limit: () => selectResult,
+      then: (...a: Parameters<Promise<unknown[]>['then']>) =>
+        selectResult.then(...a),
+    };
+    const db = {
+      select: () => selectChain,
+      insert: () => ({ values: () => Promise.resolve() }),
+      update: () => ({
+        set: () => ({ where: () => Promise.resolve() }),
+      }),
+    } as unknown as Db;
+    return { db };
+  }
+
+  function buildCell(exerciseType: ExerciseType): Cell {
+    return {
+      language: Language.ES as LearningLanguage,
+      cefrLevel: CefrLevel.B1 as CurriculumCefrLevel,
+      exerciseType,
+      // A bare grammar point — `coverageSpec` is read on the success path and
+      // tolerated as undefined; the cell key just has to pass the regex.
+      grammarPoint: { key: 'es-b1-dictation' } as unknown as Cell['grammarPoint'],
+      cellKey: `es:b1:${exerciseType}:es-b1-dictation`,
+    };
+  }
+
+  function makeDraft(ordinal: number): ExerciseDraft {
+    return {
+      id: `draft-${ordinal}`,
+      contentJson: {} as ExerciseDraft['contentJson'],
+      metadata: {
+        grammarPointKey: 'es-b1-dictation',
+        topicDomain: null,
+        modelId: 'claude-sonnet-4-5',
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheCreationInputTokens: 0,
+        cacheReadInputTokens: 0,
+        inBatchDuplicate: false,
+      },
+    };
+  }
+
+  /** Outcomes spanning all three inserting terminal statuses. */
+  function insertingOutcomes(): Map<number, DraftOutcome> {
+    return new Map<number, DraftOutcome>([
+      [
+        0,
+        {
+          terminalStatus: 'inserted-approved',
+          terminalReviewStatus: 'auto-approved',
+          insertedExerciseId: 'draft-0',
+          extraUsage: ZERO_USAGE,
+          extraProduced: 0,
+          validatedCount: 1,
+        },
+      ],
+      [
+        1,
+        {
+          terminalStatus: 'inserted-flagged',
+          terminalReviewStatus: 'flagged',
+          insertedExerciseId: 'draft-1',
+          extraUsage: ZERO_USAGE,
+          extraProduced: 0,
+          validatedCount: 1,
+        },
+      ],
+      [
+        2,
+        {
+          terminalStatus: 'first-attempt-dedup-then-success',
+          terminalReviewStatus: 'auto-approved',
+          insertedExerciseId: 'draft-2-retry',
+          extraUsage: ZERO_USAGE,
+          extraProduced: 1,
+          validatedCount: 2,
+        },
+      ],
+    ]);
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    const drafts = [makeDraft(0), makeDraft(1), makeDraft(2)];
+    vi.mocked(runGeneratorPool).mockResolvedValue({
+      drafts,
+      malformedDrafts: [],
+      tokenUsage: ZERO_USAGE,
+    });
+    vi.mocked(runValidatorPool).mockResolvedValue(new Map());
+    vi.mocked(runOutcomePool).mockResolvedValue({
+      results: insertingOutcomes(),
+      earlyBailed: false,
+    });
+  });
+
+  it('surfaces every inserted dictation id (approved + flagged + dedup-then-success)', async () => {
+    const { db } = makeMockDb();
+    const result = await runOneCell({
+      db,
+      client: {} as never,
+      cell: buildCell(ExerciseType.DICTATION),
+      args: { count: 3, batchSeed: 'dictation-ids', topicDomain: null, maxCostUsd: 5 },
+      jobId: randomUUID(),
+      trigger: 'scheduled',
+    });
+
+    expect(result.status).toBe('succeeded');
+    expect(result.insertedCount).toBe(3);
+    expect(result.approvedDictationIds).toEqual([
+      'draft-0',
+      'draft-1',
+      'draft-2-retry',
+    ]);
+  });
+
+  it('surfaces [] for a non-dictation (cloze) cell with the same inserting outcomes', async () => {
+    const { db } = makeMockDb();
+    const result = await runOneCell({
+      db,
+      client: {} as never,
+      cell: buildCell(ExerciseType.CLOZE),
+      args: { count: 3, batchSeed: 'cloze-ids', topicDomain: null, maxCostUsd: 5 },
+      jobId: randomUUID(),
+      trigger: 'scheduled',
+    });
+
+    expect(result.status).toBe('succeeded');
+    expect(result.insertedCount).toBe(3);
+    expect(result.approvedDictationIds).toEqual([]);
+  });
+});
 
 // ---------------------------------------------------------------------------
 // tallyCoverageOutcome — pure per-axis tally helper (Phase 2).

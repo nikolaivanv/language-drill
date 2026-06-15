@@ -7,6 +7,8 @@ import { StorageConstruct } from "./constructs/storage";
 import { QueueConstruct } from "./constructs/queue";
 import { GenerationQueueConstruct } from "./constructs/generation-queue";
 import { GenerationLambdaConstruct } from "./constructs/generation-lambda";
+import { DictationAudioQueueConstruct } from "./constructs/dictation-audio-queue";
+import { DictationAudioLambdaConstruct } from "./constructs/dictation-audio-lambda";
 import { SchedulerLambdaConstruct } from "./constructs/scheduler-lambda";
 import { AnnotateStreamLambdaConstruct } from "./constructs/annotate-stream-lambda";
 import { TheoryGenerationQueueConstruct } from "./constructs/theory-generation-queue";
@@ -95,12 +97,39 @@ export class LanguageDrillStack extends Stack {
       this,
       "GenerationQueue",
     );
-    new GenerationLambdaConstruct(this, "GenerationLambdaWrap", {
-      queue: generationQueue.queue,
+
+    // Phase 2 — dictation audio-synth pipeline (SQS + consumer Lambda). The
+    // generation handler enqueues approved dictation ids here; this Lambda
+    // synthesizes the MP3 via Polly, uploads it to the content bucket, and sets
+    // `audio_s3_key` so PR 1's serve gate releases the row to learners.
+    const dictationAudioQueue = new DictationAudioQueueConstruct(
+      this,
+      "DictationAudioQueue",
+    );
+    new DictationAudioLambdaConstruct(this, "DictationAudioLambdaWrap", {
+      queue: dictationAudioQueue.queue,
+      contentBucket: storage.bucket,
       secretsPrefix: props.secretsPrefix,
-      envName: props.envName,
-      reservedConcurrency: 3,
+      reservedConcurrency: 2,
     });
+
+    const generationLambda = new GenerationLambdaConstruct(
+      this,
+      "GenerationLambdaWrap",
+      {
+        queue: generationQueue.queue,
+        secretsPrefix: props.secretsPrefix,
+        envName: props.envName,
+        reservedConcurrency: 3,
+        // The generation handler batches newly-approved dictation ids to this
+        // queue (PR 2, Task 6).
+        additionalEnv: {
+          DICTATION_AUDIO_QUEUE_URL: dictationAudioQueue.queue.queueUrl,
+        },
+      },
+    );
+    // Let the generation Lambda enqueue audio-synth jobs.
+    dictationAudioQueue.queue.grantSendMessages(generationLambda.handler);
     new SchedulerLambdaConstruct(this, "SchedulerLambdaWrap", {
       queue: generationQueue.queue,
       secretsPrefix: props.secretsPrefix,
@@ -159,6 +188,11 @@ export class LanguageDrillStack extends Stack {
       value: annotateStream.functionUrl,
       description:
         "Function URL for the SSE read endpoints: /read/annotate (skim) and /read/annotate-span (deep card)",
+    });
+    new CfnOutput(this, "DictationAudioQueueUrl", {
+      value: dictationAudioQueue.queue.queueUrl,
+      description:
+        "SQS queue URL for dictation audio synthesis (Phase 2). Set DICTATION_AUDIO_QUEUE_URL to this to enqueue audio-synth jobs.",
     });
     new CfnOutput(this, "TheoryGenerationQueueUrl", {
       value: theoryQueue.queue.queueUrl,

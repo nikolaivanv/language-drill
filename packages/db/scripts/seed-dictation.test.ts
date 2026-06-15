@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { DICTATION_CLIPS, toDictationContent, audioKeyFor } from './seed-dictation';
+import { DICTATION_CLIPS, toDictationContent } from './seed-dictation';
+import { dictationAudioKey } from '../src/lib/polly-synth';
 
 describe('dictation seed data', () => {
   it('has at least 6 clips, all ES, mostly B2', () => {
@@ -23,7 +24,7 @@ describe('dictation seed data', () => {
     expect(c.referenceText).toBe(c.sentences.join(' '));
   });
 
-  it('audioKeyFor is deterministic and namespaced', () => {
-    expect(audioKeyFor('abc-id')).toBe('dictation/abc-id.mp3');
+  it('dictationAudioKey is deterministic and namespaced', () => {
+    expect(dictationAudioKey('abc-id')).toBe('dictation/abc-id.mp3');
   });
 });
