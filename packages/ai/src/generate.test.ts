@@ -923,7 +923,7 @@ describe("parseGeneratedSentenceConstructionDraft", () => {
 });
 
 // ---------------------------------------------------------------------------
-// generateOneDraft — dictation rejection guard
+// generateOneDraft — dictation branch
 // ---------------------------------------------------------------------------
 
 function mockDictationClient() {
