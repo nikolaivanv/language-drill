@@ -197,6 +197,18 @@ export function assertCurriculumInvariants(
       );
     }
 
+    // 9e. freeWriting config is present iff the entry is a free-writing umbrella.
+    if (entry.kind === 'free-writing' && !entry.freeWriting) {
+      throw new Error(
+        `Curriculum invariant violated: '${entry.key}' is kind 'free-writing' but has no freeWriting config`,
+      );
+    }
+    if (entry.kind !== 'free-writing' && entry.freeWriting) {
+      throw new Error(
+        `Curriculum invariant violated: '${entry.key}' has freeWriting config but is not kind 'free-writing'`,
+      );
+    }
+
     // 9d. coverageSpec (Phase 2): axis applicability, unique axes, legal floor
     //     keys, positive-integer floors. `personRotation` is gone; a person axis
     //     here is the old flag.
