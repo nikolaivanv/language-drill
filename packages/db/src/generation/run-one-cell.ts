@@ -200,6 +200,12 @@ export type CellResult = {
    * Persisted to `generation_jobs.coverage_outcome`.
    */
   coverageOutcome: CoverageOutcome | null;
+  /**
+   * `exercises.id`s of dictation rows this cell inserted as approved/flagged
+   * (audio not yet synthesized). Empty for non-dictation cells. The generation
+   * handler batches these to the dictation audio-synth queue (PR 2).
+   */
+  approvedDictationIds: string[];
 };
 
 /**
@@ -466,6 +472,9 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
   // success return below.
   let earlyBailed = false;
   const rejectionReasonCounts: Record<string, number> = {};
+  // PR 2 — `exercises.id`s of dictation rows this cell inserted (approved AND
+  // flagged); the generation handler batches these to the audio-synth queue.
+  const approvedDictationIds: string[] = [];
   // Phase 2 per-axis tally: collect the realized coverage of each APPROVED
   // ordinal, then build the outcome once at the end via `tallyCoverageOutcome`.
   const coverageTargets = args.coverageTargets;
@@ -608,10 +617,24 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
           approvedCount += 1;
           insertedCount += 1;
           creditApproved(outcome.realizedCoverage);
+          if (
+            cell.exerciseType === ExerciseType.DICTATION &&
+            outcome.insertedExerciseId
+          ) {
+            approvedDictationIds.push(outcome.insertedExerciseId);
+          }
           break;
         case 'inserted-flagged':
           flaggedCount += 1;
           insertedCount += 1;
+          // Flagged dictation rows also need audio so a reviewer can listen
+          // before approving; PR 1's serve gate still hides them from learners.
+          if (
+            cell.exerciseType === ExerciseType.DICTATION &&
+            outcome.insertedExerciseId
+          ) {
+            approvedDictationIds.push(outcome.insertedExerciseId);
+          }
           break;
         case 'rejected':
           rejectedCount += 1;
@@ -633,6 +656,13 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
             creditApproved(outcome.realizedCoverage);
           } else {
             flaggedCount += 1;
+          }
+          // Both approved and flagged inserts (after a dedup retry) need audio.
+          if (
+            cell.exerciseType === ExerciseType.DICTATION &&
+            outcome.insertedExerciseId
+          ) {
+            approvedDictationIds.push(outcome.insertedExerciseId);
           }
           break;
         case 'dedup-given-up':
@@ -715,6 +745,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     rejectionReasonCounts,
     earlyBailed,
     coverageOutcome,
+    approvedDictationIds,
   };
 }
 
@@ -771,5 +802,7 @@ async function failClosed(opts: {
     earlyBailed: false,
     // A failed batch records no coverage tally.
     coverageOutcome: null,
+    // A failed cell inserted nothing, so no dictation ids to synthesize.
+    approvedDictationIds: [],
   };
 }
