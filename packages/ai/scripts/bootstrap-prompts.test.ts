@@ -134,6 +134,7 @@ describe("PROMPTS manifest", () => {
         "theory-validate",
         "read-span",
         "reading-generate",
+        "dictation-eval",
       ]),
     );
   });
