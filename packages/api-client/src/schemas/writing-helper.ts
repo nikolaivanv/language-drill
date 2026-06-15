@@ -11,3 +11,9 @@ export const VocabBoostSchema = z.object({
   items: z.array(z.object({ term: z.string(), gloss: z.string() })),
 });
 export type VocabBoostResponse = z.infer<typeof VocabBoostSchema>;
+
+// Start-my-paragraph response from POST /exercises/:id/start-my-paragraph
+export const StartMyParagraphSchema = z.object({
+  opener: z.string(),
+});
+export type StartMyParagraphResponse = z.infer<typeof StartMyParagraphSchema>;

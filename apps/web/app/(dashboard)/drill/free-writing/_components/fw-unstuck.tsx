@@ -4,6 +4,7 @@ import React from 'react';
 import {
   useBrainstorm,
   useVocabBoost,
+  useStartMyParagraph,
   type AuthenticatedFetch,
   type BrainstormResponse,
   type VocabBoostResponse,
@@ -15,6 +16,8 @@ type Kind = 'brainstorm' | 'vocab';
 export interface FwUnstuckProps {
   exerciseId: string;
   fetchFn: AuthenticatedFetch;
+  value: string;
+  onChange: (next: string) => void;
 }
 
 function BrainstormView({ groups }: { groups: BrainstormResponse['groups'] }) {
@@ -50,7 +53,7 @@ function VocabView({ items }: { items: VocabBoostResponse['items'] }) {
   );
 }
 
-export function FwUnstuck({ exerciseId, fetchFn }: FwUnstuckProps) {
+export function FwUnstuck({ exerciseId, fetchFn, value, onChange }: FwUnstuckProps) {
   const [openKind, setOpenKind] = React.useState<Kind | null>(null);
 
   const brainstorm = useBrainstorm({ exerciseId, fetchFn, enabled: openKind === 'brainstorm' });
@@ -58,6 +61,48 @@ export function FwUnstuck({ exerciseId, fetchFn }: FwUnstuckProps) {
   const active = openKind === 'brainstorm' ? brainstorm : openKind === 'vocab' ? vocab : null;
 
   const toggle = (k: Kind) => setOpenKind((cur) => (cur === k ? null : k));
+
+  // Start my paragraph — one-click insert of a target-language opener.
+  const startPara = useStartMyParagraph({ exerciseId, fetchFn });
+  const [insertedOpener, setInsertedOpener] = React.useState<string | null>(null);
+  const [addFailed, setAddFailed] = React.useState(false);
+
+  // Strip the currently-inserted opener prefix from `text`, if it is still there.
+  const stripOpener = (text: string): string => {
+    if (!insertedOpener) return text;
+    const withBreak = `${insertedOpener}\n\n`;
+    if (text.startsWith(withBreak)) return text.slice(withBreak.length);
+    if (text.startsWith(insertedOpener)) return text.slice(insertedOpener.length);
+    return text;
+  };
+
+  // Fetch an opener and prepend it. On regenerate, the prior opener is stripped
+  // first so we replace rather than stack. An empty result is treated as an error.
+  const handleStart = async () => {
+    setAddFailed(false);
+    const body = stripOpener(value);
+    try {
+      const res = await startPara.mutateAsync();
+      if (res.opener) {
+        onChange(`${res.opener}\n\n${body}`);
+        setInsertedOpener(res.opener);
+      } else {
+        setAddFailed(true);
+      }
+    } catch {
+      // react-query exposes the rejection via startPara.isError; nothing to insert.
+    }
+  };
+
+  const handleRemove = () => {
+    onChange(stripOpener(value));
+    setInsertedOpener(null);
+    setAddFailed(false);
+    startPara.reset();
+  };
+
+  const showOpenerError = startPara.isError || addFailed;
+  const showChip = startPara.isPending || showOpenerError || insertedOpener !== null;
 
   return (
     <div style={{ marginTop: 16 }}>
@@ -77,15 +122,45 @@ export function FwUnstuck({ exerciseId, fetchFn }: FwUnstuckProps) {
           <span className="ico"><FwIcon kind="book" size={14} /></span>
           vocabulary boost
         </button>
-        <button className="fw-helpbtn" disabled>
+        <button
+          className="fw-helpbtn"
+          onClick={handleStart}
+          disabled={startPara.isPending}
+        >
           <span className="ico"><FwIcon kind="write" size={14} /></span>
           start my paragraph
-          <span className="t-micro" style={{ marginLeft: 4, opacity: 0.5 }}>soon</span>
         </button>
         <span className="t-small" style={{ fontSize: 11, marginLeft: 'auto', color: 'var(--color-ink-mute)' }}>
-          helpers give ideas, not sentences — a provided opener counts less toward your score.
+          helpers give you a nudge — the ideas and words are yours to shape.
         </span>
       </div>
+
+      {showChip && (
+        <div
+          style={{
+            marginTop: 10,
+            padding: '8px 12px',
+            border: '1px solid var(--color-rule)',
+            borderRadius: 'var(--radius-r-md)',
+            background: 'var(--color-paper-2)',
+          }}
+        >
+          {startPara.isPending ? (
+            <span className="t-small">thinking…</span>
+          ) : showOpenerError ? (
+            <span className="t-small" style={{ color: 'var(--color-accent-2)' }}>
+              couldn't add an opener —{' '}
+              <button type="button" className="btn ghost sm" onClick={handleStart}>try again</button>
+            </span>
+          ) : (
+            <span className="t-small" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              opener added
+              <button type="button" className="btn ghost sm" onClick={handleStart}>regenerate</button>
+              <button type="button" className="btn ghost sm" onClick={handleRemove}>remove</button>
+            </span>
+          )}
+        </div>
+      )}
 
       {openKind && active && (
         <div className="fw-helppanel" style={{ marginTop: 12 }}>
@@ -109,7 +184,7 @@ export function FwUnstuck({ exerciseId, fetchFn }: FwUnstuckProps) {
               <div className="t-small">thinking…</div>
             ) : active.isError ? (
               <div className="t-small" style={{ color: 'var(--color-accent-2)' }}>
-                couldn’t load —{' '}
+                couldn't load —{' '}
                 <button className="btn ghost sm" onClick={() => active.refetch()}>try again</button>
               </div>
             ) : openKind === 'brainstorm' && brainstorm.data ? (

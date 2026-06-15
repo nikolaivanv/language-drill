@@ -132,9 +132,12 @@ export {
   type BrainstormResponse,
   VocabBoostSchema,
   type VocabBoostResponse,
+  StartMyParagraphSchema,
+  type StartMyParagraphResponse,
 } from './schemas/writing-helper';
 export { useBrainstorm, type UseBrainstormOptions } from './hooks/useBrainstorm';
 export { useVocabBoost, type UseVocabBoostOptions } from './hooks/useVocabBoost';
+export { useStartMyParagraph, type UseStartMyParagraphOptions } from './hooks/useStartMyParagraph';
 export {
   useCreateSession,
   useCompleteSession,

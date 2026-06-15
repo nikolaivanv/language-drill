@@ -6,6 +6,9 @@ import {
   generateVocabBoost,
   parseVocabBoost,
   VOCAB_BOOST_TOOL_NAME,
+  generateStartMyParagraph,
+  parseStartMyParagraph,
+  START_MY_PARAGRAPH_TOOL_NAME,
 } from "./writing-helper.js";
 import { ExerciseType, type FreeWritingContent, Language, CefrLevel } from "@language-drill/shared";
 
@@ -106,5 +109,49 @@ describe("generateVocabBoost", () => {
       difficulty: CefrLevel.B1,
     });
     expect(result.items).toEqual([{ term: "la flexibilidad", gloss: "flexibility" }]);
+  });
+});
+
+describe("parseStartMyParagraph", () => {
+  it("returns the opener string when present", () => {
+    expect(parseStartMyParagraph({ opener: "Hoy en día el teletrabajo es un tema de debate." })).toEqual({
+      opener: "Hoy en día el teletrabajo es un tema de debate.",
+    });
+  });
+
+  it("returns an empty opener for malformed input", () => {
+    expect(parseStartMyParagraph(null).opener).toBe("");
+    expect(parseStartMyParagraph({ opener: 42 }).opener).toBe("");
+    expect(parseStartMyParagraph({}).opener).toBe("");
+  });
+});
+
+describe("generateStartMyParagraph", () => {
+  it("forces the opener tool and returns the parsed result", async () => {
+    const client = clientReturning(START_MY_PARAGRAPH_TOOL_NAME, {
+      opener: "Hoy en día el teletrabajo se ha vuelto un tema de debate constante.",
+    });
+    const result = await generateStartMyParagraph(client, {
+      content,
+      language: Language.ES,
+      difficulty: CefrLevel.B1,
+    });
+    expect(result.opener).toBe(
+      "Hoy en día el teletrabajo se ha vuelto un tema de debate constante.",
+    );
+
+    const callArgs = (client as unknown as { messages: { create: ReturnType<typeof vi.fn> } })
+      .messages.create.mock.calls[0][0];
+    expect(callArgs.tool_choice).toEqual({ type: "tool", name: START_MY_PARAGRAPH_TOOL_NAME });
+    expect(callArgs.temperature).toBe(0);
+  });
+
+  it("throws if Claude returns no tool_use block", async () => {
+    const client = {
+      messages: { create: vi.fn().mockResolvedValue({ stop_reason: "end_turn", content: [] }) },
+    } as never;
+    await expect(
+      generateStartMyParagraph(client, { content, language: Language.ES, difficulty: CefrLevel.B1 }),
+    ).rejects.toThrow(/tool use block/i);
   });
 });

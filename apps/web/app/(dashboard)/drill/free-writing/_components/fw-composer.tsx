@@ -165,7 +165,7 @@ export function FwComposer({ content, value, onChange, examMode, submitting, onG
           </div>
 
           {/* Getting-unstuck helpers — hidden in exam mode */}
-          {!examMode && <FwUnstuck exerciseId={exerciseId} fetchFn={fetchFn} />}
+          {!examMode && <FwUnstuck exerciseId={exerciseId} fetchFn={fetchFn} value={value} onChange={onChange} />}
         </div>
 
         {/* Right rail — required elements checklist + length counter */}

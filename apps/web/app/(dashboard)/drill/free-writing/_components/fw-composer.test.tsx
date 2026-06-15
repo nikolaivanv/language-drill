@@ -6,6 +6,7 @@ import { ExerciseType, type FreeWritingContent } from '@language-drill/shared';
 vi.mock('@language-drill/api-client', () => ({
   useBrainstorm: () => ({ data: undefined, isLoading: false, isFetching: false, isError: false, refetch: vi.fn() }),
   useVocabBoost: () => ({ data: undefined, isLoading: false, isFetching: false, isError: false, refetch: vi.fn() }),
+  useStartMyParagraph: () => ({ mutateAsync: vi.fn(), isPending: false, isError: false, reset: vi.fn() }),
 }));
 
 const fetchFn = vi.fn();
@@ -26,10 +27,10 @@ describe('FwComposer', () => {
     fireEvent.click(screen.getByRole('button', { name: /grade/i }));
     expect(onGrade).toHaveBeenCalled();
   });
-  it('shows brainstorm + vocab helpers (not exam mode), start-my-paragraph disabled', () => {
+  it('shows brainstorm + vocab helpers (not exam mode), start-my-paragraph enabled', () => {
     render(<FwComposer content={content} value="" onChange={() => {}} examMode={false} submitting={false} onGrade={() => {}} exerciseId="fw-1" fetchFn={fetchFn} />);
     expect(screen.getByRole('button', { name: /brainstorm/i })).toBeEnabled();
-    expect(screen.getByRole('button', { name: /start my paragraph/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /start my paragraph/i })).toBeEnabled();
   });
 
   it('hides the helper area in exam mode', () => {

@@ -21,7 +21,7 @@ import { CefrLevel, ExerciseType, Language } from "@language-drill/shared";
 import { ANNOTATE_TOOL_NAME } from "./annotate.js";
 import { EVALUATION_TOOL_NAME } from "./evaluate.js";
 import { FREE_WRITING_EVAL_TOOL_NAME } from "./free-writing-evaluate.js";
-import { BRAINSTORM_TOOL_NAME, VOCAB_BOOST_TOOL_NAME } from "./writing-helper.js";
+import { BRAINSTORM_TOOL_NAME, START_MY_PARAGRAPH_TOOL_NAME, VOCAB_BOOST_TOOL_NAME } from "./writing-helper.js";
 import { READ_SPAN_TOOL_NAME } from "./read-span.js";
 import { TOOL_NAME_BY_TYPE } from "./generate.js";
 import { THEORY_TOOL_NAME } from "./theory-generate.js";
@@ -1349,6 +1349,7 @@ describe("TOOL_NAME_TO_FEATURE", () => {
     [FREE_WRITING_EVAL_TOOL_NAME, "free-writing-eval"],
     [BRAINSTORM_TOOL_NAME, "free-writing-brainstorm"],
     [VOCAB_BOOST_TOOL_NAME, "free-writing-vocab-boost"],
+    [START_MY_PARAGRAPH_TOOL_NAME, "free-writing-start-my-paragraph"],
     [ANNOTATE_TOOL_NAME, "annotate"],
     [READ_SPAN_TOOL_NAME, "annotate-span"],
     [TOOL_NAME_BY_TYPE.cloze, "generate"],
@@ -1374,5 +1375,11 @@ describe("TOOL_NAME_TO_FEATURE", () => {
       expect(typeof key).toBe("string");
       expect(key.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("TOOL_NAME_TO_FEATURE — start my paragraph", () => {
+  it("maps submit_opener to the start-my-paragraph feature", () => {
+    expect(TOOL_NAME_TO_FEATURE.get("submit_opener")).toBe("free-writing-start-my-paragraph");
   });
 });

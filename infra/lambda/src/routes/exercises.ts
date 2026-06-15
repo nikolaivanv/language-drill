@@ -28,8 +28,10 @@ import {
   FREE_WRITING_EVAL_MAX_RETRIES,
   generateBrainstorm,
   generateVocabBoost,
+  generateStartMyParagraph,
   BRAINSTORM_PROMPT_VERSION,
   VOCAB_BOOST_PROMPT_VERSION,
+  START_MY_PARAGRAPH_PROMPT_VERSION,
   WRITING_HELPER_REQUEST_TIMEOUT_MS,
   WRITING_HELPER_MAX_RETRIES,
   withLlmTrace,
@@ -465,7 +467,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
 // Both share one metered gate: load the approved free-writing exercise, run the
 // global brake, enforce the shared `writing_helper` daily cap, call Claude, then
 // meter exactly one `writing_helper` event. No DB persistence of the result.
-type WritingHelperFeature = 'free-writing-brainstorm' | 'free-writing-vocab-boost';
+type WritingHelperFeature = 'free-writing-brainstorm' | 'free-writing-vocab-boost' | 'free-writing-start-my-paragraph';
 
 async function runWritingHelper<R>(
   c: Context<{ Bindings: Bindings; Variables: Variables }>,
@@ -580,6 +582,14 @@ exercises.post('/exercises/:id/vocab-boost', (c) =>
     feature: 'free-writing-vocab-boost',
     promptVersion: VOCAB_BOOST_PROMPT_VERSION,
     generate: generateVocabBoost,
+  }),
+);
+
+exercises.post('/exercises/:id/start-my-paragraph', (c) =>
+  runWritingHelper(c, c.req.param('id'), {
+    feature: 'free-writing-start-my-paragraph',
+    promptVersion: START_MY_PARAGRAPH_PROMPT_VERSION,
+    generate: generateStartMyParagraph,
   }),
 );
 
