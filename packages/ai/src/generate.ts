@@ -1048,8 +1048,7 @@ export async function generateOneDraft(
           spec.coverageTargets,
         );
 
-  const tool =
-    GENERATION_TOOL_BY_TYPE[spec.exerciseType as keyof typeof GENERATION_TOOL_BY_TYPE];
+  const tool = GENERATION_TOOL_BY_TYPE[spec.exerciseType];
 
   // Infrastructure-level failures (network, rate-limit, auth) propagate
   // — they're not per-ordinal data quality issues. Only the parse path

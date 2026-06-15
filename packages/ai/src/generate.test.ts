@@ -963,6 +963,70 @@ describe("generateOneDraft — dictation branch", () => {
   });
 });
 
+function mockFreeWritingClient() {
+  return {
+    messages: {
+      create: async () => ({
+        stop_reason: "tool_use",
+        content: [
+          {
+            type: "tool_use",
+            name: "submit_free_writing_exercise",
+            input: {
+              instructions: "Escribe un párrafo.",
+              title: "El teletrabajo",
+              task: "Da tu opinión y justifícala.",
+              domain: "opinión · argumentación",
+              requiredElements: [
+                { id: "thesis", label: "Expón tu opinión en la primera frase." },
+                { id: "reasons", label: "Da dos razones." },
+              ],
+              topicHint: "trabajo",
+            },
+          },
+        ],
+        usage: { input_tokens: 10, output_tokens: 20 },
+      }),
+    },
+  } as never;
+}
+
+const fwSpec = {
+  language: Language.ES,
+  cefrLevel: "B2",
+  exerciseType: ExerciseType.FREE_WRITING,
+  grammarPoint: {
+    key: "es-b2-fw-remote-work",
+    kind: "free-writing",
+    name: "El teletrabajo",
+    description: "Opinion essay on remote work.",
+    cefrLevel: "B2",
+    language: Language.ES,
+    examplesPositive: ["a", "b"],
+    examplesNegative: ["*c"],
+    commonErrors: ["d"],
+    freeWriting: { register: "formal" },
+  },
+  topicDomain: null,
+  count: 1,
+  batchSeed: "test",
+};
+
+describe("generateOneDraft — free-writing branch", () => {
+  it("produces a free-writing draft with code-injected register + CEFR band", async () => {
+    const res = await generateOneDraft(mockFreeWritingClient(), fwSpec as never, 0);
+    expect(res.kind).toBe("draft");
+    if (res.kind !== "draft") return;
+    expect(res.draft.contentJson.type).toBe(ExerciseType.FREE_WRITING);
+    expect(res.draft.contentJson).toMatchObject({
+      register: "formal",
+      minWords: 150,
+      maxWords: 200,
+      suggestedMinutes: 25,
+    });
+  });
+});
+
 describe("dictation generation tool + voice pool", () => {
   it("registers a dictation generation tool", () => {
     expect(TOOL_NAME_BY_TYPE[ExerciseType.DICTATION]).toBe("submit_dictation_exercise");
