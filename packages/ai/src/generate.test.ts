@@ -26,6 +26,7 @@ import {
   generateBatch,
   generateOneDraft,
   parseGeneratedClozeDraft,
+  parseGeneratedDictationDraft,
   parseGeneratedSentenceConstructionDraft,
   type GenerationSpec,
 } from "./generate.js";
@@ -960,5 +961,64 @@ describe("dictation generation tool + voice pool", () => {
       voiceId: expect.any(String),
       accent: expect.any(String),
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseGeneratedDictationDraft
+// ---------------------------------------------------------------------------
+
+const dictSpec = {
+  language: Language.ES,
+  cefrLevel: "B1",
+  exerciseType: ExerciseType.DICTATION,
+  grammarPoint: {
+    key: "es-b1-dictation",
+    kind: "dictation",
+    name: "x",
+    description: "x",
+    cefrLevel: "B1",
+    language: Language.ES,
+    examplesPositive: ["a", "b"],
+    examplesNegative: ["*c"],
+    commonErrors: ["d"],
+  },
+  topicDomain: null,
+  count: 1,
+  batchSeed: "test",
+} as const;
+
+describe("parseGeneratedDictationDraft", () => {
+  it("parses a dictation draft and assigns voice/accent/waveform by ordinal", () => {
+    const content = parseGeneratedDictationDraft(
+      {
+        title: "El tiempo",
+        referenceText: "No te preocupes, el tiempo lo cura todo.",
+        sentences: ["No te preocupes, el tiempo lo cura todo."],
+        tested: ["sinalefa"],
+        durationSec: 7,
+        domain: "daily routine",
+        register: "informal",
+      },
+      dictSpec as never,
+      0,
+    );
+    expect(content.type).toBe(ExerciseType.DICTATION);
+    expect(content.referenceText).toContain("el tiempo");
+    expect(content.voiceId).toBe("Sergio"); // ordinal 0 → first ES voice
+    expect(content.accent).toContain("peninsular");
+    expect(Array.isArray(content.waveform)).toBe(true);
+    expect(content.waveform.length).toBeGreaterThan(0);
+    expect(content.audioUrl).toBeUndefined(); // never set at generation time
+  });
+
+  it("rejects a dictation draft whose sentences do not join to referenceText", () => {
+    expect(() =>
+      parseGeneratedDictationDraft(
+        { title: "t", referenceText: "A B C.", sentences: ["A B."], tested: ["x"], durationSec: 5 },
+        dictSpec as never,
+        0,
+      ),
+    ).toThrow(/sentences/);
   });
 });

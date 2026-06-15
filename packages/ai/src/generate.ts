@@ -17,6 +17,7 @@ import {
   type CefrLevel,
   type ClozeContent,
   type CoverageTarget,
+  type DictationContent,
   type ExerciseContent,
   ExerciseType,
   Language,
@@ -751,6 +752,83 @@ export function parseGeneratedSentenceConstructionDraft(
       : {}),
     modelAnswers,
     ...(topicHint !== undefined ? { topicHint } : {}),
+  };
+}
+
+const DICTATION_WAVEFORM_BARS = 40;
+
+/** Deterministic decorative envelope (0..1), seeded from text length so the
+ *  same draft always renders the same bars. Real amplitude envelopes are out
+ *  of scope (decorative — see roadmap "smaller items"). */
+function placeholderWaveform(seedText: string): number[] {
+  const bars: number[] = [];
+  let h = 0;
+  for (let i = 0; i < seedText.length; i++) h = (h * 31 + seedText.charCodeAt(i)) >>> 0;
+  for (let i = 0; i < DICTATION_WAVEFORM_BARS; i++) {
+    h = (h * 1103515245 + 12345) >>> 0;
+    bars.push(0.2 + ((h % 1000) / 1000) * 0.8); // 0.2..1.0
+  }
+  return bars;
+}
+
+export function parseGeneratedDictationDraft(
+  input: unknown,
+  spec: GenerationSpec,
+  ordinal: number,
+): DictationContent {
+  const ctx = "dictation draft";
+  if (!isObject(input)) {
+    throw new Error(`${ctx}: must be an object, got ${typeof input}`);
+  }
+  const title = requireString(input, "title", ctx);
+  const blurb = optionalString(input, "blurb", ctx);
+  const referenceText = requireString(input, "referenceText", ctx);
+  const sentences = requireStringArray(input, "sentences", ctx);
+  const domain = optionalString(input, "domain", ctx);
+  const register = optionalString(input, "register", ctx);
+  const tested = requireStringArray(input, "tested", ctx);
+  const durationSecRaw = input["durationSec"];
+
+  if (sentences.length === 0) {
+    throw new Error(`${ctx}: invalid sentences: must be a non-empty array`);
+  }
+  // Sentences must reconstitute the reference text (whitespace-normalized) so
+  // the per-sentence display segmentation can't drift from the grading target.
+  const norm = (s: string) => s.replace(/\s+/g, " ").trim();
+  if (norm(sentences.join(" ")) !== norm(referenceText)) {
+    throw new Error(
+      `${ctx}: invalid sentences: joined sentences must equal referenceText`,
+    );
+  }
+  if (tested.length === 0) {
+    throw new Error(`${ctx}: invalid tested: must be a non-empty array`);
+  }
+  if (typeof durationSecRaw !== "number" || !Number.isFinite(durationSecRaw) || durationSecRaw <= 0) {
+    throw new Error(
+      `${ctx}: invalid durationSec: must be a positive number, got ${JSON.stringify(durationSecRaw)}`,
+    );
+  }
+
+  // Voice/accent assigned by code (rotated by ordinal), never by the model.
+  const pool = DICTATION_VOICE_POOL_BY_LANGUAGE[spec.language];
+  if (!pool || pool.length === 0) {
+    throw new Error(`${ctx}: no dictation voice pool configured for ${spec.language}`);
+  }
+  const voice = pool[ordinal % pool.length];
+
+  return {
+    type: ExerciseType.DICTATION,
+    title,
+    ...(blurb !== undefined ? { blurb } : {}),
+    referenceText,
+    sentences,
+    accent: voice.accent,
+    voiceId: voice.voiceId,
+    ...(domain !== undefined ? { domain } : {}),
+    ...(register !== undefined ? { register } : {}),
+    tested,
+    durationSec: durationSecRaw,
+    waveform: placeholderWaveform(referenceText),
   };
 }
 

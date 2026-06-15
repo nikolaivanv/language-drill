@@ -685,6 +685,23 @@ describe("canonicalSurface — sentence_construction", () => {
   });
 });
 
+describe("canonicalSurface — dictation", () => {
+  it("canonicalSurface uses referenceText for dictation", () => {
+    const surface = canonicalSurface({
+      type: ExerciseType.DICTATION,
+      title: "t",
+      referenceText: "El Tiempo  lo Cura.",
+      sentences: ["El Tiempo lo Cura."],
+      accent: "a",
+      voiceId: "Sergio",
+      tested: ["x"],
+      durationSec: 5,
+      waveform: [0.5],
+    } as never);
+    expect(surface).toBe("el tiempo lo cura.");
+  });
+});
+
 describe("sentenceConstructionModeForOrdinal", () => {
   it("cycles keywords → situation → grammar_target by ordinal", () => {
     expect(sentenceConstructionModeForOrdinal(0)).toBe("keywords");
@@ -775,7 +792,7 @@ describe("buildGenerationUserPrompt — dictation guard", () => {
 });
 
 describe("canonicalSurface — dictation guard", () => {
-  it("throws for a dictation content type", () => {
+  it("uses the normalised referenceText as the dedup surface", () => {
     const content: DictationContent = {
       type: ExerciseType.DICTATION,
       title: "Test clip",
@@ -787,9 +804,7 @@ describe("canonicalSurface — dictation guard", () => {
       durationSec: 3,
       waveform: [0.5, 0.5],
     };
-    expect(() => canonicalSurface(content)).toThrow(
-      "Dictation exercises are not generated via this path",
-    );
+    expect(canonicalSurface(content)).toBe("hello world");
   });
 });
 
