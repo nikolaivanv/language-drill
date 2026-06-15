@@ -95,6 +95,13 @@ describe('resolveCellTarget', () => {
     expect(resolveCellTarget(makeCell(ExerciseType.SENTENCE_CONSTRUCTION, CefrLevel.B1))).toBe(TARGET_PER_CELL);
   });
 
+  it('resolves dictation B1/B2 targets to 15 (small rotating audio pool)', () => {
+    // Dictation umbrellas carry no coverageSpec, so the floor-raise never
+    // applies — the table value is returned verbatim.
+    expect(resolveCellTarget(makeCell(ExerciseType.DICTATION, CefrLevel.B1))).toBe(15);
+    expect(resolveCellTarget(makeCell(ExerciseType.DICTATION, CefrLevel.B2))).toBe(15);
+  });
+
   it('sentence_construction resolves at the plain table value (no raise)', () => {
     // SC already gained headroom when the pilot brake lifted (25 → 30
     // at A2, 50 at B1/B2); it resolves at the table value regardless of
