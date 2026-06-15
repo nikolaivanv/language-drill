@@ -514,6 +514,7 @@ interface DebriefItemRow {
   type: string;
   grammar_point_key: string | null;
   content_json: unknown;
+  audio_s3_key: string | null;
   score: number | null;
   response_json: unknown;
 }
@@ -605,6 +606,7 @@ sessions.get('/sessions/:id/debrief', async (c) => {
   // `.claude/bugs/debrief-items-query-failure/`.
   const itemsResult = await db.execute(sql`
     SELECT e.id AS exercise_id, e.type, e.grammar_point_key, e.content_json,
+           e.audio_s3_key,
            h.score, h.response_json
     FROM exercises e
     LEFT JOIN (
@@ -627,39 +629,52 @@ sessions.get('/sessions/:id/debrief', async (c) => {
     rowMap.set(row.exercise_id, row);
   }
 
-  const items = exerciseIds
-    .map((exerciseId) => {
-      const row = rowMap.get(exerciseId);
-      if (!row) return null; // exercise rows are immutable; defensive only
-      const hasHistory = row.score !== null && row.score !== undefined;
-      if (!hasHistory) {
+  const items = (
+    await Promise.all(
+      exerciseIds.map(async (exerciseId) => {
+        const row = rowMap.get(exerciseId);
+        if (!row) return null; // exercise rows are immutable; defensive only
+
+        // Dictation items get a presigned audioUrl injected into contentJson so
+        // the debrief can replay the clip (mirrors POST /sessions). Non-dictation
+        // content is returned unchanged. presignAudioUrl returns null when the
+        // key is absent / bucket env unset, and withAudioUrl then leaves audioUrl
+        // absent — never throws.
+        const contentJson =
+          row.type === ExerciseType.DICTATION
+            ? withAudioUrl(row.content_json, await presignAudioUrl(row.audio_s3_key))
+            : row.content_json;
+
+        const hasHistory = row.score !== null && row.score !== undefined;
+        if (!hasHistory) {
+          return {
+            exerciseId,
+            type: row.type as ExerciseType,
+            grammarPointKey: row.grammar_point_key,
+            contentJson,
+            status: 'skipped' as const,
+            userAnswer: null,
+            score: null,
+            evaluation: null,
+          };
+        }
+        const score = Number(row.score);
+        const { userAnswer, evaluation } = parseResponseJson(row.response_json);
+        const status: 'correct' | 'incorrect' =
+          score >= CORRECT_THRESHOLD ? 'correct' : 'incorrect';
         return {
           exerciseId,
           type: row.type as ExerciseType,
           grammarPointKey: row.grammar_point_key,
-          contentJson: row.content_json,
-          status: 'skipped' as const,
-          userAnswer: null,
-          score: null,
-          evaluation: null,
+          contentJson,
+          status,
+          userAnswer,
+          score,
+          evaluation,
         };
-      }
-      const score = Number(row.score);
-      const { userAnswer, evaluation } = parseResponseJson(row.response_json);
-      const status: 'correct' | 'incorrect' =
-        score >= CORRECT_THRESHOLD ? 'correct' : 'incorrect';
-      return {
-        exerciseId,
-        type: row.type as ExerciseType,
-        grammarPointKey: row.grammar_point_key,
-        contentJson: row.content_json,
-        status,
-        userAnswer,
-        score,
-        evaluation,
-      };
-    })
-    .filter((item): item is NonNullable<typeof item> => item !== null);
+      }),
+    )
+  ).filter((item): item is NonNullable<typeof item> => item !== null);
 
   // Counters derived from items so they stay aligned with per-item statuses.
   const attemptedCount = items.filter((i) => i.status !== 'skipped').length;
