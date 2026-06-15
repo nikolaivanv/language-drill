@@ -13,7 +13,7 @@
  * (fallback) and Langfuse `compile(vars)`.
  */
 
-import { ExerciseType, Language } from "@language-drill/shared";
+import { ExerciseType } from "@language-drill/shared";
 
 import { CEFR_LEVEL_DESCRIPTORS } from "./prompts.js";
 import type { GenerationPromptInputs } from "./generation-prompts.js";
