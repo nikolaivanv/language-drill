@@ -1,6 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Hono } from 'hono';
 import { CreateSessionRequestSchema } from './sessions';
+import { Language } from '@language-drill/shared';
+import { isFreeWritingDay, FREE_WRITING_CADENCE_DAYS } from '../lib/today-plan';
 
 // ---------------------------------------------------------------------------
 // Mock the db module before importing the router
@@ -527,6 +529,26 @@ describe('POST /sessions/:id/complete', () => {
 // GET /sessions/today route tests
 // ---------------------------------------------------------------------------
 
+// Frozen "today" shared by every describe that calls GET /sessions/today: a UTC
+// day on which TR — not ES or DE — is the free-writing day. Exactly one of
+// ES/DE/TR is a free-writing day on any given day, so freezing to a TR day
+// keeps the ES/DE today tests off the cadence-gated fw-existence query (which
+// they do not mock). Computed once at module load from the pure helper.
+const FROZEN_TODAY: Date = (() => {
+  const base = Date.UTC(2026, 0, 1);
+  for (let i = 0; i < FREE_WRITING_CADENCE_DAYS; i++) {
+    const d = new Date(base + i * 86_400_000);
+    if (
+      isFreeWritingDay(d, Language.TR) &&
+      !isFreeWritingDay(d, Language.ES) &&
+      !isFreeWritingDay(d, Language.DE)
+    ) {
+      return d;
+    }
+  }
+  throw new Error('no TR-only free-writing day found in range');
+})();
+
 describe('GET /sessions/today', () => {
   let app: Hono;
 
@@ -540,9 +562,15 @@ describe('GET /sessions/today', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(FROZEN_TODAY);
     const mod = await import('./sessions');
     app = new Hono();
     app.route('/', mod.default);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   // -------------------------------------------------------------------------
@@ -925,6 +953,97 @@ describe('GET /sessions/today', () => {
     // At least one cloze slot; the first cloze must carry the fresh-point hint.
     expect(clozesInPlan.length).toBeGreaterThanOrEqual(1);
     expect(clozesInPlan[0].topicHint).toBe('fresh-topic');
+  });
+
+  // -------------------------------------------------------------------------
+  // Free-writing block (Plan 1)
+  // -------------------------------------------------------------------------
+
+  it('includes a freeWriting block on the cadence day when a free-writing exercise exists', async () => {
+    // Path B (no today-session). mockLimit resolves: today → profile → fw-existence.
+    mockLimit
+      .mockResolvedValueOnce([]) // today-session lookup
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]) // proficiency
+      .mockResolvedValueOnce([{ id: 'fw-1' }]); // fw-existence: one approved row
+
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        { id: 'p1', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'p2', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'p3', type: 'translation', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'p4', type: 'vocab_recall', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'p5', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+      ],
+    });
+    mockSelectAwait.mockResolvedValueOnce([]); // mastery
+
+    const res = await app.request(
+      '/sessions/today?language=TR',
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    // ESTIMATED_MINUTES_BY_TYPE[FREE_WRITING] === 8
+    expect(body.freeWriting).toEqual({ estimatedMinutes: 8 });
+  });
+
+  it('returns freeWriting: null on the cadence day when no free-writing exercise exists', async () => {
+    mockLimit
+      .mockResolvedValueOnce([]) // today-session
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]) // proficiency
+      .mockResolvedValueOnce([]); // fw-existence: pool empty for this cell
+
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        { id: 'p1', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'p2', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'p3', type: 'translation', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'p4', type: 'vocab_recall', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'p5', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+      ],
+    });
+    mockSelectAwait.mockResolvedValueOnce([]); // mastery
+
+    const res = await app.request(
+      '/sessions/today?language=TR',
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.freeWriting).toBeNull();
+  });
+
+  it('returns freeWriting: null on a non-cadence day (no fw-existence query runs)', async () => {
+    // ES is not the free-writing language on the frozen (TR) day, so the
+    // cadence gate is false and only the two batch-1 limits resolve.
+    mockLimit
+      .mockResolvedValueOnce([]) // today-session
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]); // proficiency
+
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        { id: 'p1', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'p2', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'p3', type: 'translation', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'p4', type: 'vocab_recall', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'p5', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+      ],
+    });
+    mockSelectAwait.mockResolvedValueOnce([]); // mastery
+
+    const res = await app.request(
+      '/sessions/today?language=ES',
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.freeWriting).toBeNull();
   });
 });
 
@@ -1550,9 +1669,17 @@ describe('review_status filter — GET /sessions/today Path B', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    // Freeze to a TR free-writing day so the ES requests below never trigger
+    // the cadence-gated fw-existence query (unmocked here).
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(FROZEN_TODAY);
     const mod = await import('./sessions');
     app = new Hono();
     app.route('/', mod.default);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('100 fresh-plan composes never include the flagged fixture', async () => {
@@ -1608,9 +1735,17 @@ describe('review_status non-filter — GET /sessions/today Path A', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    // Freeze to a TR free-writing day so the ES request below never triggers
+    // the cadence-gated fw-existence query (unmocked here).
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(FROZEN_TODAY);
     const mod = await import('./sessions');
     app = new Hono();
     app.route('/', mod.default);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('today-session manifest containing a flagged exercise still hydrates Path A', async () => {
