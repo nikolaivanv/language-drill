@@ -5,7 +5,12 @@ import {
 } from '@aws-sdk/client-polly';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
-/** S3 key convention for dictation clips — must match audio-url.ts's reader. */
+/**
+ * S3 key convention for dictation clips. This is the sole writer of the key; it
+ * is stored on `exercises.audio_s3_key` and presigned verbatim at serve time by
+ * `infra/lambda/src/lib/audio-url.ts` (a generic presigner that assumes no
+ * particular key shape).
+ */
 export function dictationAudioKey(exerciseId: string): string {
   return `dictation/${exerciseId}.mp3`;
 }
