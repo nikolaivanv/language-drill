@@ -127,8 +127,9 @@ describe('POST /exercises/:id/brainstorm', () => {
     expect(res.status).toBe(200);
     expect((await res.json()) as AnyJson).toEqual({ groups: [{ label: 'Angle', points: ['idea'] }] });
     expect(mockGenerateBrainstorm).toHaveBeenCalledTimes(1);
-    const ev = insertValuesCalls.find((r) => r.eventType === 'writing_helper');
-    expect(ev).toMatchObject({ userId: 'user_123', eventType: 'writing_helper' });
+    const writingHelperEvents = insertValuesCalls.filter((r) => r.eventType === 'writing_helper');
+    expect(writingHelperEvents).toHaveLength(1);
+    expect(writingHelperEvents[0]).toMatchObject({ userId: 'user_123', eventType: 'writing_helper' });
   });
 
   it('non-free-writing exercise → 400 BAD_EXERCISE_TYPE, no AI, no meter', async () => {
@@ -163,6 +164,27 @@ describe('POST /exercises/:id/brainstorm', () => {
     expect(((await res.json()) as AnyJson).code).toBe('RATE_LIMIT_EXCEEDED');
     expect(mockGenerateBrainstorm).not.toHaveBeenCalled();
   });
+
+  it('generator throws → 502 AI_UNAVAILABLE, no meter', async () => {
+    mockGenerateBrainstorm.mockRejectedValue(new Error('claude exploded'));
+    const res = await post(app, '/exercises/fw-1/brainstorm');
+    expect(res.status).toBe(502);
+    expect(((await res.json()) as AnyJson).code).toBe('AI_UNAVAILABLE');
+    expect(insertValuesCalls.find((r) => r.eventType === 'writing_helper')).toBeUndefined();
+  });
+
+  it('missing ANTHROPIC_API_KEY → 502 AI_UNAVAILABLE, no AI call, no meter', async () => {
+    delete process.env.ANTHROPIC_API_KEY;
+    vi.resetModules();
+    const mod = await import('./exercises');
+    const freshApp = new Hono();
+    freshApp.route('/', mod.default);
+    const res = await post(freshApp, '/exercises/fw-1/brainstorm');
+    expect(res.status).toBe(502);
+    expect(((await res.json()) as AnyJson).code).toBe('AI_UNAVAILABLE');
+    expect(mockGenerateBrainstorm).not.toHaveBeenCalled();
+    expect(insertValuesCalls.find((r) => r.eventType === 'writing_helper')).toBeUndefined();
+  });
 });
 
 describe('POST /exercises/:id/vocab-boost', () => {
@@ -185,7 +207,8 @@ describe('POST /exercises/:id/vocab-boost', () => {
     const res = await post(app, '/exercises/fw-1/vocab-boost');
     expect(res.status).toBe(200);
     expect((await res.json()) as AnyJson).toEqual({ items: [{ term: 'la flexibilidad', gloss: 'flexibility' }] });
-    const ev = insertValuesCalls.find((r) => r.eventType === 'writing_helper');
-    expect(ev).toMatchObject({ eventType: 'writing_helper' });
+    const writingHelperEvents = insertValuesCalls.filter((r) => r.eventType === 'writing_helper');
+    expect(writingHelperEvents).toHaveLength(1);
+    expect(writingHelperEvents[0]).toMatchObject({ eventType: 'writing_helper' });
   });
 });
