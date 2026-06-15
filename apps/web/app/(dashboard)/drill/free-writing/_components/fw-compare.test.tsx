@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { FwCompare } from './fw-compare';
 import type { FreeWritingEvaluationResponse } from '@language-drill/api-client';
 
@@ -19,8 +19,26 @@ const evaluation: FreeWritingEvaluationResponse = {
 
 describe('FwCompare', () => {
   it('shows both columns and the improved text', () => {
-    render(<FwCompare evaluation={evaluation} original="Si yo tendría la oportunidad." />);
+    render(
+      <FwCompare
+        evaluation={evaluation}
+        original="Si yo tendría la oportunidad."
+        onBack={() => {}}
+      />,
+    );
     expect(screen.getByText(/your text/i)).toBeInTheDocument();
     expect(screen.getByText(/improved/i)).toBeInTheDocument();
+  });
+  it('goes back on click', () => {
+    const onBack = vi.fn();
+    render(
+      <FwCompare
+        evaluation={evaluation}
+        original="Si yo tendría la oportunidad."
+        onBack={onBack}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: /back/i }));
+    expect(onBack).toHaveBeenCalled();
   });
 });

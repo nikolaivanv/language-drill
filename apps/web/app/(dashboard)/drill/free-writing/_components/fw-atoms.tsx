@@ -9,10 +9,18 @@ export function CEFRBadge({ level, lg }: { level: string; lg?: boolean }) {
   return <span className={`fw-cefr ${band}${lg ? ' lg' : ''}`}>{level}</span>;
 }
 
+// ── Severity labels ──────────────────────────────────────────────────────────
+// Single source of truth for the English severity labels, shared by SevTag and
+// the corrections counts row so the two can't drift.
+export const SEVERITY_LABELS: Record<'high' | 'med' | 'low', string> = {
+  high: 'high',
+  med: 'medium',
+  low: 'low',
+};
+
 // ── Severity tag (high / med / low) ─────────────────────────────────────────
 export function SevTag({ sev }: { sev: 'high' | 'med' | 'low' }) {
-  const lab = ({ high: 'alta', med: 'media', low: 'baja' } as Record<string, string>)[sev] ?? sev;
-  return <span className={`fw-sev ${sev}`}>{lab}</span>;
+  return <span className={`fw-sev ${sev}`}>{SEVERITY_LABELS[sev]}</span>;
 }
 
 // ── Skill/drill-type icon ────────────────────────────────────────────────────

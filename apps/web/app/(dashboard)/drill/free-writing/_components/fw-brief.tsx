@@ -82,22 +82,22 @@ export function FwBrief({ content, examMode, onToggleExam, onBegin }: FwBriefPro
 
           {/* Spec card */}
           <div className="card" style={{ marginTop: 20, padding: '6px 22px' }}>
-            <SpecRow icon="list" label="tema">
+            <SpecRow icon="list" label="topic">
               {content.domain}
             </SpecRow>
-            <SpecRow icon="write" label="registro">
+            <SpecRow icon="write" label="register">
               <span style={{ textTransform: 'capitalize' }}>{content.register}</span>
               <span className="t-small" style={{ marginLeft: 8 }}>
-                — dirígete a un lector general; evita coloquialismos.
+                — address a general reader; avoid colloquialisms.
               </span>
             </SpecRow>
-            <SpecRow icon="book" label="longitud">
+            <SpecRow icon="book" label="length">
               <span className="t-mono">
                 {content.minWords}–{content.maxWords}
               </span>{' '}
-              palabras
+              words
             </SpecRow>
-            <SpecRow icon="check" label="elementos obligatorios">
+            <SpecRow icon="check" label="required elements">
               <div style={{ marginTop: 2 }}>
                 {content.requiredElements.map((r) => (
                   <div
