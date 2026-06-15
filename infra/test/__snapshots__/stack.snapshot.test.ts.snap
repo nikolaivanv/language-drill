@@ -1014,6 +1014,11 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
     },
     "DictationAudioLambdaWrapDictationAudioErrorsAlarm2817E583": {
       "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "AlertsAlertsTopic96BD0900",
+          },
+        ],
         "AlarmDescription": "Phase 2: dictation audio-synth Lambda recorded > 5 errors in a single day.",
         "ComparisonOperator": "GreaterThanThreshold",
         "Dimensions": [
@@ -1296,6 +1301,11 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
     },
     "DictationAudioQueueDictationAudioDlqDepthAlarm39140EF4": {
       "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "AlertsAlertsTopic96BD0900",
+          },
+        ],
         "AlarmDescription": "A dictation audio-synth message survived every redelivery and landed in the DLQ.",
         "ComparisonOperator": "GreaterThanOrEqualToThreshold",
         "Dimensions": [
@@ -1327,6 +1337,11 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
     },
     "GenerationLambdaWrapGenerationErrorsAlarm3DD6FF6D": {
       "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "AlertsAlertsTopic96BD0900",
+          },
+        ],
         "AlarmDescription": "Phase 4: generation Lambda recorded > 5 errors in a single day.",
         "ComparisonOperator": "GreaterThanThreshold",
         "Dimensions": [
@@ -1688,6 +1703,11 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
     },
     "GenerationQueueGenerationDlqDepthAlarm159A0E71": {
       "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "AlertsAlertsTopic96BD0900",
+          },
+        ],
         "AlarmDescription": "Phase 4: a generation message survived every redelivery and landed in the DLQ.",
         "ComparisonOperator": "GreaterThanOrEqualToThreshold",
         "Dimensions": [
@@ -2795,6 +2815,11 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
     },
     "TheoryGenerationLambdaWrapTheoryGenerationCellFailuresAlarm9E964375": {
       "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "AlertsAlertsTopic96BD0900",
+          },
+        ],
         "AlarmDescription": "Phase 4 (theory): >= 5 theory cells failed at the APPLICATION level in one day (malformed/unrecoverable drafts), distinct from the Lambda runtime Errors alarm.",
         "ComparisonOperator": "GreaterThanOrEqualToThreshold",
         "Dimensions": [
@@ -2821,6 +2846,11 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
     },
     "TheoryGenerationLambdaWrapTheoryGenerationErrorsAlarm109F8424": {
       "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "AlertsAlertsTopic96BD0900",
+          },
+        ],
         "AlarmDescription": "Phase 4 (theory): theory generation Lambda recorded > 5 errors in a single day.",
         "ComparisonOperator": "GreaterThanThreshold",
         "Dimensions": [
@@ -2886,6 +2916,11 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
     },
     "TheoryGenerationQueueTheoryGenerationDlqDepthAlarm3CFA12AE": {
       "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "AlertsAlertsTopic96BD0900",
+          },
+        ],
         "AlarmDescription": "Phase 4 (theory): a theory generation message survived every redelivery and landed in the DLQ.",
         "ComparisonOperator": "GreaterThanOrEqualToThreshold",
         "Dimensions": [

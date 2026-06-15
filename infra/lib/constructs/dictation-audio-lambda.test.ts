@@ -1,6 +1,7 @@
 import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as sns from 'aws-cdk-lib/aws-sns';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { describe, beforeAll, expect, it } from 'vitest';
 
@@ -87,5 +88,29 @@ describe('DictationAudioLambdaConstruct', () => {
     expect(serialized).not.toContain('/LANGFUSE_PUBLIC_KEY');
     expect(serialized).not.toContain('/LANGFUSE_SECRET_KEY');
     expect(serialized).not.toContain('/CLERK_SECRET_KEY');
+  });
+
+  it('Errors alarm has no AlarmActions when no alarmTopic is supplied', () => {
+    template.hasResourceProperties('AWS::CloudWatch::Alarm', {
+      AlarmActions: Match.absent(),
+    });
+  });
+
+  it('routes the Errors alarm to the SNS topic when alarmTopic is supplied', () => {
+    const app = new App();
+    const stack = new Stack(app, 'TopicStack');
+    const queue = new sqs.Queue(stack, 'StubQueue');
+    const bucket = new s3.Bucket(stack, 'StubBucket');
+    const topic = new sns.Topic(stack, 'T');
+    new DictationAudioLambdaConstruct(stack, 'DictationAudioLambda', {
+      queue,
+      contentBucket: bucket,
+      secretsPrefix: 'language-drill-dev',
+      reservedConcurrency: 2,
+      alarmTopic: topic,
+    });
+    Template.fromStack(stack).hasResourceProperties('AWS::CloudWatch::Alarm', {
+      AlarmActions: Match.arrayWith([Match.objectLike({ Ref: Match.anyValue() })]),
+    });
   });
 });

@@ -1,5 +1,7 @@
 import { Duration } from 'aws-cdk-lib';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as cwactions from 'aws-cdk-lib/aws-cloudwatch-actions';
+import * as sns from 'aws-cdk-lib/aws-sns';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Construct } from 'constructs';
 
@@ -9,14 +11,24 @@ import { Construct } from 'constructs';
  * to S3, and sets `audio_s3_key`. A single Polly synth + S3 put is fast (a few
  * seconds), so the visibility timeout is far below the generation queue's 900 s.
  * `maxReceiveCount = 3` gives a transient Polly/S3 error two retries before the
- * message lands in the DLQ.
+ * message lands in the DLQ. When an `alarmTopic` is supplied the alarm routes
+ * to the stack alert topic so the operator is notified, not just the console.
  */
+export interface DictationAudioQueueConstructProps {
+  /** SNS topic for the DLQ-depth alarm action. */
+  readonly alarmTopic?: sns.ITopic;
+}
+
 export class DictationAudioQueueConstruct extends Construct {
   public readonly queue: sqs.Queue;
   public readonly deadLetterQueue: sqs.Queue;
   public readonly dlqDepthAlarm: cloudwatch.Alarm;
 
-  constructor(scope: Construct, id: string) {
+  constructor(
+    scope: Construct,
+    id: string,
+    props?: DictationAudioQueueConstructProps,
+  ) {
     super(scope, id);
 
     this.deadLetterQueue = new sqs.Queue(this, 'DictationAudioDeadLetterQueue', {
@@ -42,5 +54,11 @@ export class DictationAudioQueueConstruct extends Construct {
       alarmDescription:
         'A dictation audio-synth message survived every redelivery and landed in the DLQ.',
     });
+
+    if (props?.alarmTopic) {
+      this.dlqDepthAlarm.addAlarmAction(
+        new cwactions.SnsAction(props.alarmTopic),
+      );
+    }
   }
 }

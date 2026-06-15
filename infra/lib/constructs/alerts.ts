@@ -9,10 +9,15 @@ import * as subscriptions from "aws-cdk-lib/aws-sns-subscriptions";
  * Two responsibilities:
  *
  *  1. **SNS alert topic** (`topic`) — the single destination for the stack's
- *     CloudWatch alarm actions (streaming-Lambda invocation flood §1.2,
- *     prompt-fallback emergency §3.2). An email subscription delivers to the
- *     operator. Alarms that predate this construct (generation errors, DLQ
- *     depth) stay console-only; new alarms route here.
+ *     CloudWatch alarm actions. An email subscription delivers to the
+ *     operator. The streaming-Lambda invocation flood (§1.2) and
+ *     prompt-fallback emergency (§3.2) alarms route here, and so do the
+ *     background-pipeline alarms once console-only: the generation,
+ *     dictation-audio, and theory-generation queue DLQ-depth alarms plus the
+ *     generation / dictation-audio / theory-generation Lambda error alarms
+ *     (and the theory cell-failures alarm). Each construct takes the topic via
+ *     an optional `alarmTopic` prop, so omitting it leaves the alarm
+ *     console-only (the behavior in unit tests that don't pass a topic).
  *
  *  2. **AWS Budget** (§4.1) — AWS-level cost visibility the app-level brakes
  *     (`AI_KILL_SWITCH` / `AI_GLOBAL_DAILY_CAP`) can't provide: they can't stop

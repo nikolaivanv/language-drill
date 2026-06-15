@@ -2,11 +2,13 @@ import * as path from 'path';
 
 import { Duration } from 'aws-cdk-lib';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as cwactions from 'aws-cdk-lib/aws-cloudwatch-actions';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as lambda from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as sns from 'aws-cdk-lib/aws-sns';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Construct } from 'constructs';
 
@@ -31,6 +33,8 @@ export interface GenerationLambdaConstructProps {
   /** Caps cell-level parallelism. 3 in both stacks per Phase 4 resolved decision #6. */
   reservedConcurrency: number;
   additionalEnv?: Record<string, string>;
+  /** SNS topic for the Lambda-errors alarm action. */
+  readonly alarmTopic?: sns.ITopic;
 }
 
 export class GenerationLambdaConstruct extends Construct {
@@ -151,5 +155,9 @@ export class GenerationLambdaConstruct extends Construct {
       alarmDescription:
         'Phase 4: generation Lambda recorded > 5 errors in a single day.',
     });
+
+    if (props.alarmTopic) {
+      this.errorsAlarm.addAlarmAction(new cwactions.SnsAction(props.alarmTopic));
+    }
   }
 }
