@@ -13,6 +13,8 @@ import { getGrammarPoint } from "@language-drill/db";
 import { createClaudeClient } from "./index.js";
 import {
   CLOZE_GENERATION_TOOL,
+  DICTATION_GENERATION_TOOL,
+  DICTATION_VOICE_POOL_BY_LANGUAGE,
   GENERATION_MODEL,
   GENERATION_TEMPERATURE,
   GENERATION_TOOL_BY_TYPE,
@@ -939,5 +941,24 @@ describe("generateOneDraft — dictation guard", () => {
       "Dictation exercises are not batch-generated",
     );
     expect(mockCreate).not.toHaveBeenCalled();
+  });
+});
+
+describe("dictation generation tool + voice pool", () => {
+  it("registers a dictation generation tool", () => {
+    expect(TOOL_NAME_BY_TYPE[ExerciseType.DICTATION]).toBe("submit_dictation_exercise");
+    expect(GENERATION_TOOL_BY_TYPE[ExerciseType.DICTATION]).toBe(DICTATION_GENERATION_TOOL);
+    expect(DICTATION_GENERATION_TOOL.name).toBe("submit_dictation_exercise");
+    expect(DICTATION_GENERATION_TOOL.input_schema.required).toEqual(
+      expect.arrayContaining(["title", "referenceText", "sentences", "tested", "durationSec"]),
+    );
+  });
+
+  it("has a non-empty ES dictation voice pool", () => {
+    expect(DICTATION_VOICE_POOL_BY_LANGUAGE[Language.ES].length).toBeGreaterThan(0);
+    expect(DICTATION_VOICE_POOL_BY_LANGUAGE[Language.ES][0]).toMatchObject({
+      voiceId: expect.any(String),
+      accent: expect.any(String),
+    });
   });
 });

@@ -51,19 +51,39 @@ export const GENERATION_MAX_TOKENS = 1024;
 
 export const GENERATION_TEMPERATURE = 0.7;
 
+/**
+ * Polly neural voices used for synthesized dictation clips, keyed by language.
+ * `voiceId`/`accent` are assigned by code (rotated by ordinal) — never by the
+ * model — so a batch varies voice/accent deterministically. PR 2's audio-synth
+ * Lambda reads `voiceId` from the stored content to call Polly.
+ */
+export const DICTATION_VOICE_POOL_BY_LANGUAGE: Readonly<
+  Record<Exclude<Language, Language.EN>, ReadonlyArray<{ voiceId: string; accent: string }>>
+> = Object.freeze({
+  [Language.ES]: [
+    { voiceId: "Sergio", accent: "español peninsular · centro" },
+    { voiceId: "Lucia", accent: "español peninsular · centro" },
+  ],
+  // DE/TR added when those languages enter dictation scope (later milestone).
+  [Language.DE]: [],
+  [Language.TR]: [],
+});
+
 // ---------------------------------------------------------------------------
 // Tool-name map
 // ---------------------------------------------------------------------------
 
-// DICTATION and FREE_WRITING are excluded: dictation exercises are not batch-generated and are
-// graded by gradeDictationAnswer; free writing is authored by hand, never produced by this pipeline.
+// FREE_WRITING is excluded: free writing is authored by hand, never produced by
+// this pipeline. DICTATION IS now batch-generated (clip text drafted + validated
+// here; audio is synthesized separately).
 export const TOOL_NAME_BY_TYPE: Readonly<
-  Record<Exclude<ExerciseType, ExerciseType.DICTATION | ExerciseType.FREE_WRITING>, string>
+  Record<Exclude<ExerciseType, ExerciseType.FREE_WRITING>, string>
 > = Object.freeze({
   cloze: "submit_cloze_exercise",
   translation: "submit_translation_exercise",
   vocab_recall: "submit_vocab_recall_exercise",
   sentence_construction: "submit_sentence_construction_exercise",
+  dictation: "submit_dictation_exercise",
 });
 
 // ---------------------------------------------------------------------------
@@ -279,15 +299,69 @@ export const SENTENCE_CONSTRUCTION_GENERATION_TOOL: Anthropic.Tool = {
   },
 };
 
-// DICTATION and FREE_WRITING are excluded: dictation exercises are not batch-generated and are
-// graded by gradeDictationAnswer; free writing is authored by hand, never produced by this pipeline.
+export const DICTATION_GENERATION_TOOL: Anthropic.Tool = {
+  name: "submit_dictation_exercise",
+  description:
+    "Submit a single dictation listening clip: a short passage of natural, connected speech for the learner to transcribe by ear.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      title: {
+        type: "string",
+        description:
+          "Short title for the clip card (3–6 words), drawn from the clip's theme. Not read aloud.",
+      },
+      blurb: {
+        type: "string",
+        description: "Optional one-line brief shown under the title. Not read aloud.",
+      },
+      referenceText: {
+        type: "string",
+        description:
+          "The full passage to be read aloud and transcribed — the grading reference. Natural connected speech with normal punctuation. No lists, no headings, no metadata.",
+      },
+      sentences: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "The referenceText split into its individual sentences, in order. Concatenated with single spaces they MUST equal referenceText.",
+      },
+      domain: {
+        type: "string",
+        description:
+          "Everyday topical domain (e.g. 'daily routine', 'travel', 'work', 'weather'). Used for variety, not read aloud.",
+      },
+      register: {
+        type: "string",
+        description: "Register of the passage: 'informal', 'neutral', or 'formal'.",
+      },
+      tested: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "1–4 short labels of what the clip exercises (e.g. 'sinalefa', 'silent h', 'preterite vs imperfect'). Shown as chips; descriptive only.",
+      },
+      durationSec: {
+        type: "number",
+        description:
+          "Estimated spoken duration in seconds at a natural pace (typically 6–18s for B1/B2). Approximate; refined when audio is synthesized.",
+      },
+    },
+    required: ["title", "referenceText", "sentences", "tested", "durationSec"],
+  },
+};
+
+// FREE_WRITING is excluded: free writing is authored by hand, never produced by
+// this pipeline. DICTATION IS now batch-generated (clip text drafted + validated
+// here; audio is synthesized separately).
 export const GENERATION_TOOL_BY_TYPE: Readonly<
-  Record<Exclude<ExerciseType, ExerciseType.DICTATION | ExerciseType.FREE_WRITING>, Anthropic.Tool>
+  Record<Exclude<ExerciseType, ExerciseType.FREE_WRITING>, Anthropic.Tool>
 > = Object.freeze({
   cloze: CLOZE_GENERATION_TOOL,
   translation: TRANSLATION_GENERATION_TOOL,
   vocab_recall: VOCAB_RECALL_GENERATION_TOOL,
   sentence_construction: SENTENCE_CONSTRUCTION_GENERATION_TOOL,
+  dictation: DICTATION_GENERATION_TOOL,
 });
 
 // ---------------------------------------------------------------------------
