@@ -86,6 +86,15 @@ export class DictationAudioLambdaConstruct extends Construct {
             projectRoot,
             'packages/db/src/index.ts',
           ),
+          // The handler imports only @language-drill/db, but the db source
+          // barrel transitively imports @language-drill/ai (run-one-cell /
+          // validate-and-insert). Aliasing db to source means esbuild follows
+          // that edge, so ai must be aliased to source too — otherwise the
+          // bare import is unresolvable when ai's dist isn't built (CI).
+          '--alias:@language-drill/ai': path.join(
+            projectRoot,
+            'packages/ai/src/index.ts',
+          ),
         },
       },
       environment: {
