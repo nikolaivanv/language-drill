@@ -239,6 +239,7 @@ describe('POST /exercises/:id/start-my-paragraph', () => {
     expect(mockGenerateStartMyParagraph).toHaveBeenCalledTimes(1);
     const writingHelperEvents = insertValuesCalls.filter((r) => r.eventType === 'writing_helper');
     expect(writingHelperEvents).toHaveLength(1);
+    expect(writingHelperEvents[0]).toMatchObject({ userId: 'user_123', eventType: 'writing_helper' });
   });
 
   it('non-free-writing exercise → 400 BAD_EXERCISE_TYPE, no AI, no meter', async () => {
@@ -270,5 +271,26 @@ describe('POST /exercises/:id/start-my-paragraph', () => {
     expect(res.status).toBe(429);
     expect(((await res.json()) as AnyJson).code).toBe('RATE_LIMIT_EXCEEDED');
     expect(mockGenerateStartMyParagraph).not.toHaveBeenCalled();
+  });
+
+  it('generator throws → 502 AI_UNAVAILABLE, no meter', async () => {
+    mockGenerateStartMyParagraph.mockRejectedValue(new Error('claude exploded'));
+    const res = await post(app, '/exercises/fw-1/start-my-paragraph');
+    expect(res.status).toBe(502);
+    expect(((await res.json()) as AnyJson).code).toBe('AI_UNAVAILABLE');
+    expect(insertValuesCalls.find((r) => r.eventType === 'writing_helper')).toBeUndefined();
+  });
+
+  it('missing ANTHROPIC_API_KEY → 502 AI_UNAVAILABLE, no AI call, no meter', async () => {
+    delete process.env.ANTHROPIC_API_KEY;
+    vi.resetModules();
+    const mod = await import('./exercises');
+    const freshApp = new Hono();
+    freshApp.route('/', mod.default);
+    const res = await post(freshApp, '/exercises/fw-1/start-my-paragraph');
+    expect(res.status).toBe(502);
+    expect(((await res.json()) as AnyJson).code).toBe('AI_UNAVAILABLE');
+    expect(mockGenerateStartMyParagraph).not.toHaveBeenCalled();
+    expect(insertValuesCalls.find((r) => r.eventType === 'writing_helper')).toBeUndefined();
   });
 });
