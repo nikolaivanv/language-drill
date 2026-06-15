@@ -145,4 +145,13 @@ describe("generateStartMyParagraph", () => {
     expect(callArgs.tool_choice).toEqual({ type: "tool", name: START_MY_PARAGRAPH_TOOL_NAME });
     expect(callArgs.temperature).toBe(0);
   });
+
+  it("throws if Claude returns no tool_use block", async () => {
+    const client = {
+      messages: { create: vi.fn().mockResolvedValue({ stop_reason: "end_turn", content: [] }) },
+    } as never;
+    await expect(
+      generateStartMyParagraph(client, { content, language: Language.ES, difficulty: CefrLevel.B1 }),
+    ).rejects.toThrow(/tool use block/i);
+  });
 });

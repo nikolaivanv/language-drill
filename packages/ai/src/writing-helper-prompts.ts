@@ -1,8 +1,9 @@
 /**
- * packages/ai — Free Writing "getting-unstuck" helper prompts (Brainstorm +
- * Vocabulary boost). Both are cheap, pre-writing helpers grounded in the
- * exercise prompt. Brainstorm returns ENGLISH idea bullets (ideas, not
- * phrasing); Vocab boost returns TARGET-LANGUAGE words with English glosses.
+ * packages/ai — Free Writing "getting-unstuck" helper prompts (Brainstorm,
+ * Vocabulary boost, Start my paragraph). All are cheap, pre-writing helpers
+ * grounded in the exercise prompt. Brainstorm returns ENGLISH idea bullets
+ * (ideas, not phrasing); Vocab boost returns TARGET-LANGUAGE words with English
+ * glosses; Start my paragraph returns ONE TARGET-LANGUAGE opening sentence.
  */
 
 import { type FreeWritingContent, type CefrLevel, type Language } from "@language-drill/shared";
