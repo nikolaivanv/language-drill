@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { BrainstormSchema, VocabBoostSchema } from './writing-helper';
+import { BrainstormSchema, VocabBoostSchema, StartMyParagraphSchema } from './writing-helper';
 
 describe('writing-helper schemas', () => {
   it('parses a valid brainstorm payload', () => {
@@ -18,5 +18,18 @@ describe('writing-helper schemas', () => {
 
   it('rejects a vocab item missing gloss', () => {
     expect(() => VocabBoostSchema.parse({ items: [{ term: 't' }] })).toThrow();
+  });
+
+  it('parses a valid start-my-paragraph payload', () => {
+    const parsed = StartMyParagraphSchema.parse({ opener: 'Hoy en día...' });
+    expect(parsed.opener).toBe('Hoy en día...');
+  });
+
+  it('rejects a start-my-paragraph payload missing opener', () => {
+    expect(() => StartMyParagraphSchema.parse({})).toThrow();
+  });
+
+  it('rejects a non-string opener', () => {
+    expect(() => StartMyParagraphSchema.parse({ opener: 42 })).toThrow();
   });
 });
