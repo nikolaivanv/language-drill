@@ -14,14 +14,17 @@ Phase-1 design (context + the contracts these build on):
 
 ## Quick wins (small, do first)
 
-- **Localize the surface chrome.** `fw-brief.tsx` / `fw-corrections.tsx` hardcode
-  Spanish labels (`tema`, `registro`, `longitud`, `palabras`, severity `alta` /
-  `media` / `baja`), so EN/DE/TR prompts show Spanish UI. Neutralize to the
-  app's English UI language (the evaluator already returns English
-  headline/summary), or localize per `content` language.
-- **Back-navigation on the deep surfaces.** From `corrections`/`compare` there's
-  no way back except browser-back (`results` has "write another"). Add a back
-  control (the page state machine already supports the transitions).
+Both shipped — design + scope:
+[`2026-06-15-free-writing-phase-2-quick-wins-design.md`](2026-06-15-free-writing-phase-2-quick-wins-design.md).
+
+- ~~**Localize the surface chrome.**~~ ✅ Done. Neutralized the hardcoded Spanish
+  labels (`tema`/`registro`/`longitud`/`palabras`, severity `alta`/`media`/`baja`,
+  plus a hardcoded register sentence) to the app's English UI language. Severity
+  labels now flow from a single `SEVERITY_LABELS` constant in `fw-atoms.tsx`.
+- ~~**Back-navigation on the deep surfaces.**~~ ✅ Done. `corrections`/`compare`
+  render a `← back` control backed by a small history stack in `page.tsx`, so back
+  returns to the actual entry point (compare is reachable from both results and
+  corrections).
 
 ---
 

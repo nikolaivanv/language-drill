@@ -9,6 +9,7 @@ import { CEFRBadge } from './fw-atoms';
 export interface FwCompareProps {
   evaluation: FreeWritingEvaluationResponse;
   original: string;
+  onBack: () => void;
 }
 
 // ── ChangeCard ────────────────────────────────────────────────────────────────
@@ -29,7 +30,7 @@ function ChangeCard({ title, items }: { title: string; items: string[] }) {
 }
 
 // ── FwCompare ─────────────────────────────────────────────────────────────────
-export function FwCompare({ evaluation, original }: FwCompareProps) {
+export function FwCompare({ evaluation, original, onBack }: FwCompareProps) {
   const yours = React.useMemo(
     () => reconstructMarked(original, evaluation.errors, evaluation.goodSpans),
     [original, evaluation.errors, evaluation.goodSpans],
@@ -42,6 +43,9 @@ export function FwCompare({ evaluation, original }: FwCompareProps) {
 
   return (
     <div>
+      <button className="btn ghost sm" onClick={onBack} style={{ marginBottom: 10 }}>
+        ← back
+      </button>
       <div className="t-micro" style={{ marginBottom: 4 }}>free writing · compare</div>
       <h1 className="t-display-l" style={{ margin: '2px 0 6px' }}>yours, then better.</h1>
       <p className="t-body" style={{ marginTop: 0, maxWidth: 660 }}>

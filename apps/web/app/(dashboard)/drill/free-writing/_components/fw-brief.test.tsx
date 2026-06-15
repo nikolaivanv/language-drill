@@ -34,4 +34,24 @@ describe('FwBrief', () => {
     fireEvent.click(screen.getByRole('button', { name: /begin/i }));
     expect(onBegin).toHaveBeenCalled();
   });
+
+  it('labels the spec rows in English, not Spanish', () => {
+    render(
+      <FwBrief content={content} examMode={false} onToggleExam={() => {}} onBegin={() => {}} />,
+    );
+    // English chrome present
+    expect(screen.getByText('topic')).toBeInTheDocument();
+    expect(screen.getByText('register')).toBeInTheDocument();
+    expect(screen.getByText('length')).toBeInTheDocument();
+    expect(screen.getByText('required elements')).toBeInTheDocument();
+    expect(screen.getByText(/words/)).toBeInTheDocument();
+    expect(screen.getByText(/address a general reader/i)).toBeInTheDocument();
+    // Spanish gone
+    expect(screen.queryByText('tema')).toBeNull();
+    expect(screen.queryByText('registro')).toBeNull();
+    expect(screen.queryByText('longitud')).toBeNull();
+    expect(screen.queryByText('elementos obligatorios')).toBeNull();
+    expect(screen.queryByText(/palabras/)).toBeNull();
+    expect(screen.queryByText(/dirígete/)).toBeNull();
+  });
 });

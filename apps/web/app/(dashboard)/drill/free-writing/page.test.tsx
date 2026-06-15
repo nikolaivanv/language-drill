@@ -226,6 +226,54 @@ describe('FreeWritingPage', () => {
     });
   });
 
+  describe('step 5: back navigation on deep surfaces', () => {
+    async function renderAtResults() {
+      renderWithProviders(<FreeWritingPage />);
+      fireEvent.click(screen.getByRole('button', { name: /begin writing/i }));
+      fireEvent.change(screen.getByRole('textbox'), {
+        target: {
+          value:
+            'El teletrabajo tiene ventajas claras para los trabajadores modernos que buscan flexibilidad.',
+        },
+      });
+      fireEvent.click(screen.getByRole('button', { name: /grade my writing/i }));
+      await waitFor(() => {
+        expect(
+          screen.getByText('Solid B1 writing with clear argument'),
+        ).toBeInTheDocument();
+      });
+    }
+
+    it('back from corrections returns to results', async () => {
+      await renderAtResults();
+      fireEvent.click(screen.getByRole('button', { name: /see corrections/i }));
+      expect(screen.getByText(/things to fix/i)).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: /back/i }));
+
+      expect(
+        screen.getByText('Solid B1 writing with clear argument'),
+      ).toBeInTheDocument();
+    });
+
+    it('back from compare returns to corrections when reached via corrections', async () => {
+      await renderAtResults();
+      fireEvent.click(screen.getByRole('button', { name: /see corrections/i }));
+      fireEvent.click(
+        screen.getByRole('button', { name: /compare improved version/i }),
+      );
+      expect(screen.getByText(/yours, then better/i)).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: /back/i }));
+
+      // The history stack returns to corrections (its entry point), not results.
+      expect(screen.getByText(/things to fix/i)).toBeInTheDocument();
+      expect(
+        screen.queryByText('Solid B1 writing with clear argument'),
+      ).not.toBeInTheDocument();
+    });
+  });
+
   describe('loading state', () => {
     it('shows loading message when exercise is not yet available', () => {
       mockUseExercise.mockReturnValue({

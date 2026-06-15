@@ -35,6 +35,10 @@ export default function FreeWritingPage() {
     CefrLevel.B1;
 
   const [stage, setStage] = useState<Stage>('brief');
+  // History of surfaces visited within a single graded result, so the deep
+  // surfaces (corrections/compare) can return to wherever they were reached
+  // from — compare is reachable from both results and corrections.
+  const [, setHistory] = useState<Stage[]>([]);
   const [examMode, setExamMode] = useState(false);
   const [text, setText] = useState('');
   const [submittedText, setSubmittedText] = useState('');
@@ -59,6 +63,22 @@ export default function FreeWritingPage() {
 
   const content = exercise.contentJson as FreeWritingContent;
 
+  // Navigate forward to `next`, remembering the current surface so `back` can
+  // return to it.
+  const go = (next: Stage) => {
+    setHistory((h) => [...h, stage]);
+    setStage(next);
+  };
+
+  // Pop back to the previously visited surface.
+  const back = () => {
+    setHistory((h) => {
+      const prev = h[h.length - 1];
+      if (prev) setStage(prev);
+      return h.slice(0, -1);
+    });
+  };
+
   const onGrade = async () => {
     const answer = text;
     try {
@@ -68,6 +88,9 @@ export default function FreeWritingPage() {
       // never the still-editable live draft.
       setSubmittedText(answer);
       setEvaluation(result);
+      // Fresh history per graded result: back from a deep surface must never
+      // land on the already-graded composer.
+      setHistory([]);
       setStage('results');
     } catch (err) {
       // Stay on the composer — the user can try again.
@@ -79,6 +102,7 @@ export default function FreeWritingPage() {
     setText('');
     setSubmittedText('');
     setEvaluation(null);
+    setHistory([]);
     setStage('brief');
   };
 
@@ -107,8 +131,8 @@ export default function FreeWritingPage() {
       return evaluation ? (
         <FwResults
           evaluation={evaluation}
-          onCorrections={() => setStage('corrections')}
-          onCompare={() => setStage('compare')}
+          onCorrections={() => go('corrections')}
+          onCompare={() => go('compare')}
           onAnother={reset}
         />
       ) : null;
@@ -117,12 +141,13 @@ export default function FreeWritingPage() {
         <FwCorrections
           evaluation={evaluation}
           original={submittedText}
-          onCompare={() => setStage('compare')}
+          onCompare={() => go('compare')}
+          onBack={back}
         />
       ) : null;
     case 'compare':
       return evaluation ? (
-        <FwCompare evaluation={evaluation} original={submittedText} />
+        <FwCompare evaluation={evaluation} original={submittedText} onBack={back} />
       ) : null;
   }
 }

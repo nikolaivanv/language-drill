@@ -4,15 +4,16 @@ import React from 'react';
 import type { FreeWritingEvaluationResponse } from '@language-drill/api-client';
 import { reconstructMarked } from '../_lib/reconstruct';
 import { MarkedProse } from './fw-prose';
-import { SevTag } from './fw-atoms';
+import { SevTag, SEVERITY_LABELS } from './fw-atoms';
 
 export interface FwCorrectionsProps {
   evaluation: FreeWritingEvaluationResponse;
   original: string; // the learner's submitted text
   onCompare: () => void;
+  onBack: () => void;
 }
 
-export function FwCorrections({ evaluation, original, onCompare }: FwCorrectionsProps) {
+export function FwCorrections({ evaluation, original, onCompare, onBack }: FwCorrectionsProps) {
   const [active, setActive] = React.useState<number | null>(
     evaluation.errors[0]?.n ?? null,
   );
@@ -31,6 +32,13 @@ export function FwCorrections({ evaluation, original, onCompare }: FwCorrections
 
   return (
     <div>
+      <button
+        className="btn ghost sm"
+        onClick={onBack}
+        style={{ marginBottom: 10 }}
+      >
+        ← back
+      </button>
       <div className="t-micro" style={{ marginBottom: 4 }}>
         free writing · corrections
       </div>
@@ -46,12 +54,14 @@ export function FwCorrections({ evaluation, original, onCompare }: FwCorrections
           {errs.length} things to fix.
         </h1>
         <div style={{ display: 'flex', gap: 8 }}>
-          <span className="fw-sev high">{counts.high} alta</span>
+          <span className="fw-sev high">
+            {counts.high} {SEVERITY_LABELS.high}
+          </span>
           <span className="fw-sev med" style={{ marginLeft: 6 }}>
-            {counts.med} media
+            {counts.med} {SEVERITY_LABELS.med}
           </span>
           <span className="fw-sev low" style={{ marginLeft: 6 }}>
-            {counts.low} baja
+            {counts.low} {SEVERITY_LABELS.low}
           </span>
         </div>
       </div>
