@@ -25,7 +25,7 @@ export function DictationBody({
 
   return (
     <div className="flex flex-col gap-s-3">
-      {content.audioUrl && content.audioUrl.length > 0 && (
+      {content.audioUrl && (
         <AudioPlayer
           src={content.audioUrl}
           waveform={content.waveform}
@@ -33,7 +33,12 @@ export function DictationBody({
         />
       )}
       {result ? (
-        <DictationResultBody result={result} />
+        <>
+          <p className="t-small" style={{ fontFamily: 'var(--font-display)' }}>
+            {result.headline}
+          </p>
+          <DictationResultBody result={result} />
+        </>
       ) : (
         <>
           <p className="t-body">{content.referenceText}</p>

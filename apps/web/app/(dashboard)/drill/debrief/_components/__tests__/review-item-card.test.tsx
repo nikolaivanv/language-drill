@@ -628,6 +628,7 @@ describe('ReviewItemCard — dictation body', () => {
 
   it('renders the dictation body: diff/criteria + an audio element', () => {
     const { container } = render(<ReviewItemCard index={0} item={dictItem() as never} />);
+    expect(screen.getByText('Casi')).toBeInTheDocument(); // result headline surfaced
     expect(screen.getByText('word boundary')).toBeInTheDocument();
     expect(screen.getByText('Phoneme discrimination')).toBeInTheDocument();
     expect(container.querySelector('audio')).not.toBeNull(); // AudioPlayer rendered
