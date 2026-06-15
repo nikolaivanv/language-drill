@@ -144,10 +144,14 @@ export async function buildFreeWritingGenerationSystemPrompt(
   return text;
 }
 
+// `inputs` is unused in the body but kept for signature parity with the other
+// per-draft user-prompt builders (cloze/translation/dictation), so `generateOneDraft`
+// can call them uniformly; the topic framing lives in the cached system prompt.
 export function buildFreeWritingGenerationUserPrompt(
   inputs: GenerationPromptInputs,
   ordinal: number,
 ): string {
+  void inputs;
   return `Produce free-writing prompt #${ordinal + 1}.
 
 Vary the angle, the exact task, and the required-elements checklist from prompt to prompt so a batch on this topic is diverse (different sub-focus, different things the learner must include). Use the submit_free_writing_exercise tool.`;

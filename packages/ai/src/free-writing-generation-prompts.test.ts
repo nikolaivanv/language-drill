@@ -34,6 +34,7 @@ describe("free-writing generation prompt", () => {
   });
 
   it("derives the word band from the CEFR level", () => {
+    expect(FREE_WRITING_LENGTH_BY_CEFR.B1).toEqual({ minWords: 80, maxWords: 120, suggestedMinutes: 15 });
     expect(FREE_WRITING_LENGTH_BY_CEFR.B2).toEqual({ minWords: 150, maxWords: 200, suggestedMinutes: 25 });
   });
 
