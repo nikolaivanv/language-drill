@@ -43,7 +43,7 @@ describe('FwUnstuck', () => {
   });
 
   it('shows a loading state while fetching', () => {
-    mockUseBrainstorm.mockReturnValue({ ...idle, isLoading: true });
+    mockUseBrainstorm.mockReturnValue({ ...idle, isLoading: true, isFetching: true });
     render(<FwUnstuck exerciseId="fw-1" fetchFn={fetchFn} />);
     fireEvent.click(screen.getByRole('button', { name: /brainstorm/i }));
     expect(screen.getByText(/thinking/i)).toBeInTheDocument();

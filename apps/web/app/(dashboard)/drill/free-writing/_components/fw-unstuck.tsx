@@ -20,12 +20,12 @@ export interface FwUnstuckProps {
 function BrainstormView({ groups }: { groups: BrainstormResponse['groups'] }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-      {groups.map((g) => (
-        <div key={g.label}>
+      {groups.map((g, gi) => (
+        <div key={`${g.label}-${gi}`}>
           <div className="rv-h" style={{ marginBottom: 6 }}>{g.label}</div>
           <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 5 }}>
-            {g.points.map((p) => (
-              <li key={p} style={{ fontSize: 13, display: 'flex', gap: 7, alignItems: 'baseline' }}>
+            {g.points.map((p, pi) => (
+              <li key={`${gi}-${pi}`} style={{ fontSize: 13, display: 'flex', gap: 7, alignItems: 'baseline' }}>
                 <span style={{ color: 'var(--color-accent)', flexShrink: 0 }}>•</span>
                 <span>{p}</span>
               </li>
@@ -40,8 +40,8 @@ function BrainstormView({ groups }: { groups: BrainstormResponse['groups'] }) {
 function VocabView({ items }: { items: VocabBoostResponse['items'] }) {
   return (
     <div>
-      {items.map((it) => (
-        <div key={it.term} className="fw-vocab-row">
+      {items.map((it, i) => (
+        <div key={`${it.term}-${i}`} className="fw-vocab-row">
           <span className="w">{it.term}</span>
           <span className="g">{it.gloss}</span>
         </div>
@@ -105,7 +105,7 @@ export function FwUnstuck({ exerciseId, fetchFn }: FwUnstuckProps) {
             </span>
           </div>
           <div style={{ padding: '14px 16px' }}>
-            {active.isLoading || active.isFetching ? (
+            {active.isFetching ? (
               <div className="t-small">thinking…</div>
             ) : active.isError ? (
               <div className="t-small" style={{ color: 'var(--color-accent-2)' }}>
