@@ -51,6 +51,29 @@ export {
   buildFreeWritingUserPrompt,
 } from "./free-writing-prompts.js";
 export {
+  generateBrainstorm,
+  generateVocabBoost,
+  parseBrainstorm,
+  parseVocabBoost,
+  BRAINSTORM_TOOL,
+  BRAINSTORM_TOOL_NAME,
+  VOCAB_BOOST_TOOL,
+  VOCAB_BOOST_TOOL_NAME,
+  WRITING_HELPER_REQUEST_TIMEOUT_MS,
+  WRITING_HELPER_MAX_RETRIES,
+  type WritingHelperInput,
+  type BrainstormResult,
+  type VocabBoostResult,
+} from "./writing-helper.js";
+export {
+  BRAINSTORM_SYSTEM_PROMPT,
+  BRAINSTORM_PROMPT_VERSION,
+  VOCAB_BOOST_SYSTEM_PROMPT,
+  VOCAB_BOOST_PROMPT_VERSION,
+  buildBrainstormUserPrompt,
+  buildVocabBoostUserPrompt,
+} from "./writing-helper-prompts.js";
+export {
   ANNOTATE_SYSTEM_PROMPT,
   ANNOTATE_SYSTEM_PROMPT_VERSION,
   ANNOTATE_TOOL,
