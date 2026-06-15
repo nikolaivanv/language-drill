@@ -26,6 +26,7 @@ vi.mock('@language-drill/api-client', () => ({
   createAuthenticatedFetch: vi.fn(() => vi.fn()),
   useBrainstorm: () => ({ data: undefined, isLoading: false, isFetching: false, isError: false, refetch: vi.fn() }),
   useVocabBoost: () => ({ data: undefined, isLoading: false, isFetching: false, isError: false, refetch: vi.fn() }),
+  useStartMyParagraph: () => ({ mutateAsync: vi.fn(), isPending: false, isError: false, reset: vi.fn() }),
 }));
 
 // ---------------------------------------------------------------------------
