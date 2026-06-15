@@ -125,6 +125,8 @@ export default function FreeWritingPage() {
           examMode={examMode}
           submitting={submit.isPending}
           onGrade={onGrade}
+          exerciseId={exercise.id}
+          fetchFn={fetchFn}
         />
       );
     case 'results':

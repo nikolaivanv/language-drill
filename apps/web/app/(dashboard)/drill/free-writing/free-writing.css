@@ -169,3 +169,11 @@
 @media (max-width: 760px) {
   .fw-brief-grid { grid-template-columns: 1fr !important; }
 }
+
+/* Active (open) state for a helper toggle button. The `.fw-helppanel` and
+   `.fw-vocab-row` rules already exist above (Phase 1 port). */
+.fw-helpbtn.active {
+  border-color: var(--color-accent);
+  color: var(--color-accent-2);
+  background: var(--color-accent-soft);
+}

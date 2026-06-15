@@ -2,7 +2,9 @@
 
 import React from 'react';
 import { type FreeWritingContent, EXERCISE_ANSWER_MAX_CHARS } from '@language-drill/shared';
+import type { AuthenticatedFetch } from '@language-drill/api-client';
 import { FwIcon, WordCounter, ReqRow } from './fw-atoms';
+import { FwUnstuck } from './fw-unstuck';
 
 export interface FwComposerProps {
   content: FreeWritingContent;
@@ -11,6 +13,8 @@ export interface FwComposerProps {
   examMode: boolean;
   submitting: boolean;
   onGrade: () => void;
+  exerciseId: string;
+  fetchFn: AuthenticatedFetch;
 }
 
 function formatTime(seconds: number): string {
@@ -19,7 +23,7 @@ function formatTime(seconds: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-export function FwComposer({ content, value, onChange, examMode, submitting, onGrade }: FwComposerProps) {
+export function FwComposer({ content, value, onChange, examMode, submitting, onGrade, exerciseId, fetchFn }: FwComposerProps) {
   const words = value.trim() ? value.trim().split(/\s+/).length : 0;
   const canGrade = words >= content.minWords && !submitting;
 
@@ -160,31 +164,8 @@ export function FwComposer({ content, value, onChange, examMode, submitting, onG
             </div>
           </div>
 
-          {/* Getting-unstuck helper buttons — Phase 2: visible but disabled */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
-            <span className="t-micro" style={{ marginRight: 2 }}>stuck?</span>
-            <button className="fw-helpbtn" disabled>
-              <span className="ico"><FwIcon kind="list" size={14} /></span>
-              brainstorm
-              <span className="t-micro" style={{ marginLeft: 4, opacity: 0.5 }}>soon</span>
-            </button>
-            <button className="fw-helpbtn" disabled>
-              <span className="ico"><FwIcon kind="book" size={14} /></span>
-              vocabulary boost
-              <span className="t-micro" style={{ marginLeft: 4, opacity: 0.5 }}>soon</span>
-            </button>
-            <button className="fw-helpbtn" disabled>
-              <span className="ico"><FwIcon kind="write" size={14} /></span>
-              start my paragraph
-              <span className="t-micro" style={{ marginLeft: 4, opacity: 0.5 }}>soon</span>
-            </button>
-            <span
-              className="t-small"
-              style={{ fontSize: 11, marginLeft: 'auto', color: 'var(--color-ink-mute)' }}
-            >
-              helpers give ideas, not sentences — a provided opener counts less toward your score.
-            </span>
-          </div>
+          {/* Getting-unstuck helpers — hidden in exam mode */}
+          {!examMode && <FwUnstuck exerciseId={exerciseId} fetchFn={fetchFn} />}
         </div>
 
         {/* Right rail — required elements checklist + length counter */}
