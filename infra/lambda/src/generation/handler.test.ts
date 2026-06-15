@@ -46,6 +46,15 @@ import type {
 
 const mockRunOneCell = vi.fn();
 const mockCheckAuditRowState = vi.fn();
+// Captured SQS send for the dictation audio-enqueue (Task 6). The handler
+// constructs `new SQSClient(...)` as a cold-start singleton at module load,
+// so the stub must exist *before* `import { handler }`. `vi.hoisted` runs it
+// alongside the (also-hoisted) `vi.mock` factory below.
+const { mockSqsSend } = vi.hoisted(() => ({
+  mockSqsSend: vi.fn<(command: unknown) => Promise<unknown>>(() =>
+    Promise.resolve({}),
+  ),
+}));
 // Observability spies — Task 16 asserts per-record flush + per-record trace
 // scope (Req 6.3 / 7.4). Defaults are passthrough/no-op so existing tests
 // keep their behaviour; new observability tests inspect `.mock.calls`.
@@ -57,6 +66,23 @@ const mockWithLlmTrace = vi.fn(
     Promise.resolve(fn()),
 );
 
+// `SQSClient` and `SendMessageBatchCommand` are invoked with `new`, so they
+// must be real constructor functions. `SQSClient.send` delegates to the
+// top-level `mockSqsSend` (resolved lazily — the constructor runs at
+// `import { handler }` time, after the const is initialized).
+vi.mock('@aws-sdk/client-sqs', () => ({
+  SQSClient: function MockSQSClient(this: { send: typeof mockSqsSend }) {
+    this.send = mockSqsSend;
+  },
+  SendMessageBatchCommand: function MockSendMessageBatchCommand(
+    this: { __type: string; input: unknown },
+    input: unknown,
+  ) {
+    this.__type = 'SendMessageBatch';
+    this.input = input;
+  },
+}));
+
 vi.mock('@language-drill/db', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@language-drill/db')>();
   return {
@@ -64,6 +90,8 @@ vi.mock('@language-drill/db', async (importOriginal) => {
     // Cold-start singleton — never used by tests directly. `as never` is the
     // most permissive cast that compiles for the `Db` return type.
     createDb: vi.fn(() => ({}) as never),
+    // Resolve env reads to a recognisable sentinel. The dictation-enqueue
+    // tests assert against `fake-DICTATION_AUDIO_QUEUE_URL`.
     requireEnv: vi.fn((name: string) => `fake-${name}`),
     runOneCell: (...args: unknown[]) => mockRunOneCell(...args),
   };
@@ -185,6 +213,7 @@ function cellResultBase(): CellResult {
     rejectionReasonCounts: {},
     earlyBailed: false,
     coverageOutcome: null,
+    approvedDictationIds: [],
   };
 }
 
@@ -854,5 +883,113 @@ describe('SQS handler — observability flush + trace scope', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Task 6: enqueue approved dictation ids to the audio-synth queue
+// ---------------------------------------------------------------------------
+//
+// After `runOneCell` returns a `CellResult`, the handler batches the cell's
+// `approvedDictationIds` to the dictation audio-synth queue (one message per
+// id, body `{ exerciseId }`). The enqueue is best-effort: a send error is
+// logged but never fails the generation SQS record — the dictation rows are
+// already inserted+approved and PR 1's serve gate keeps them hidden until
+// audio lands, so re-running the whole cell would only waste Claude budget.
+
+/** Decode the captured `SendMessageBatchCommand` instances into their inputs. */
+function capturedBatchInputs(): Array<{
+  QueueUrl: string;
+  Entries: Array<{ Id: string; MessageBody: string }>;
+}> {
+  return mockSqsSend.mock.calls.map(
+    (call) =>
+      (call[0] as { input: unknown }).input as {
+        QueueUrl: string;
+        Entries: Array<{ Id: string; MessageBody: string }>;
+      },
+  );
+}
+
+describe('SQS handler — dictation audio enqueue', () => {
+  it('approvedDictationIds present → SendMessageBatch to the audio queue with one entry per id', async () => {
+    mockCheckAuditRowState.mockResolvedValueOnce({ status: 'absent' });
+    mockRunOneCell.mockResolvedValueOnce({
+      ...cellResultBase(),
+      status: 'succeeded',
+      insertedCount: 2,
+      approvedDictationIds: ['id1', 'id2'],
+    });
+
+    const event = eventWith([
+      recordWith(JSON.stringify(validMessage()), 'msg-dictation'),
+    ]);
+    const result = await handler(event, fakeContext());
+
+    expect(result.batchItemFailures).toEqual([]);
+
+    const batches = capturedBatchInputs();
+    expect(batches).toHaveLength(1);
+    expect(batches[0]!.QueueUrl).toBe('fake-DICTATION_AUDIO_QUEUE_URL');
+    expect(batches[0]!.Entries).toHaveLength(2);
+    const bodies = batches[0]!.Entries.map(
+      (e) => JSON.parse(e.MessageBody) as { exerciseId: string },
+    );
+    expect(bodies).toEqual([
+      { exerciseId: 'id1' },
+      { exerciseId: 'id2' },
+    ]);
+    // Each entry's batch Id must be unique within the batch (SQS contract).
+    const ids = batches[0]!.Entries.map((e) => e.Id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('cloze cell (approvedDictationIds empty) → no audio-queue send', async () => {
+    mockCheckAuditRowState.mockResolvedValueOnce({ status: 'absent' });
+    mockRunOneCell.mockResolvedValueOnce({
+      ...cellResultBase(),
+      status: 'succeeded',
+      insertedCount: 5,
+      approvedDictationIds: [],
+    });
+
+    const event = eventWith([
+      recordWith(JSON.stringify(validMessage()), 'msg-cloze'),
+    ]);
+    const result = await handler(event, fakeContext());
+
+    expect(result.batchItemFailures).toEqual([]);
+    expect(mockSqsSend).not.toHaveBeenCalled();
+  });
+
+  it('audio enqueue throws → generation record NOT failed, warn logged', async () => {
+    mockCheckAuditRowState.mockResolvedValueOnce({ status: 'absent' });
+    mockRunOneCell.mockResolvedValueOnce({
+      ...cellResultBase(),
+      status: 'succeeded',
+      insertedCount: 1,
+      approvedDictationIds: ['id1'],
+    });
+    mockSqsSend.mockRejectedValueOnce(new Error('SQS unavailable'));
+
+    const event = eventWith([
+      recordWith(JSON.stringify(validMessage()), 'msg-enqueue-fail'),
+    ]);
+    const result = await handler(event, fakeContext());
+
+    // Best-effort: the inserted+approved rows are already persisted, so the
+    // generation record stays acknowledged (no redelivery → no wasted Claude
+    // budget). The serve gate hides the audioless rows until a backfill
+    // re-enqueues them.
+    expect(result.batchItemFailures).toEqual([]);
+
+    const log = findLogLine(
+      consoleLogSpy,
+      (e) => e['message'] === 'failed to enqueue dictation audio jobs',
+    );
+    expect(log['level']).toBe('warn');
+    expect(log['jobId']).toBe('job-test-123');
+    expect(log['enqueueCount']).toBe(1);
+    expect(String(log['error'])).toContain('SQS unavailable');
   });
 });

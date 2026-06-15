@@ -20,6 +20,7 @@
 
 import {
   buildCellKey,
+  chunk,
   createDb,
   getGrammarPoint,
   requireEnv,
@@ -28,6 +29,7 @@ import {
   type Cell,
   type CellResult,
 } from '@language-drill/db';
+import { SendMessageBatchCommand, SQSClient } from '@aws-sdk/client-sqs';
 import {
   createObservedClaudeClient,
   flushObservability,
@@ -53,6 +55,14 @@ const db = createDb(requireEnv('DATABASE_URL'));
 // reads ALS per call so trace metadata stays per-record correct even
 // though the client itself is reused (design.md §2c).
 const client = createObservedClaudeClient(requireEnv('ANTHROPIC_API_KEY'));
+// Audio-synth enqueue (Phase 2). After a dictation cell inserts approved rows
+// (audio not yet synthesized), the handler batches their ids to this queue so
+// the audio-synth Lambda can fill `audio_s3_key`. Module-scoped + reused like
+// the other cold-start singletons.
+const sqs = new SQSClient({ region: requireEnv('AWS_REGION') });
+
+/** SQS `SendMessageBatch` hard limit. */
+const MAX_BATCH_SIZE = 10;
 
 // ---------------------------------------------------------------------------
 // Soft-deadline buffer
@@ -73,6 +83,59 @@ const SOFT_DEADLINE_BUFFER_MS = 30_000;
 
 function log(payload: Record<string, unknown>): void {
   console.log(JSON.stringify(payload));
+}
+
+// ---------------------------------------------------------------------------
+// Dictation audio enqueue (best-effort)
+// ---------------------------------------------------------------------------
+
+/**
+ * Enqueue one audio-synth job per newly-approved dictation id (body
+ * `{ exerciseId }`) to the dictation audio queue, in `SendMessageBatch` chunks
+ * of ≤ 10.
+ *
+ * **Best-effort, never fails the generation record.** The dictation rows are
+ * already inserted-and-approved; PR 1's serve gate keeps them hidden from
+ * learners until `audio_s3_key` lands, and a reconcile/backfill can re-enqueue.
+ * Re-running the whole cell (by failing the SQS record) would only burn Claude
+ * budget. On any send error we emit a structured `warn` — a CloudWatch metric
+ * filter can alarm on dropped enqueues — and return.
+ */
+async function enqueueDictationAudio(
+  exerciseIds: readonly string[],
+  jobId: string,
+): Promise<void> {
+  try {
+    const queueUrl = requireEnv('DICTATION_AUDIO_QUEUE_URL');
+    for (const batch of chunk(exerciseIds, MAX_BATCH_SIZE)) {
+      await sqs.send(
+        new SendMessageBatchCommand({
+          QueueUrl: queueUrl,
+          // The exercise id is a UUID — unique within the batch and a valid
+          // SQS batch-entry Id ([A-Za-z0-9_-], ≤ 80 chars).
+          Entries: batch.map((exerciseId) => ({
+            Id: exerciseId,
+            MessageBody: JSON.stringify({ exerciseId }),
+          })),
+        }),
+      );
+    }
+    log({
+      level: 'info',
+      jobId,
+      enqueueCount: exerciseIds.length,
+      message: 'enqueued dictation audio jobs',
+    });
+  } catch (err) {
+    // Swallow: do NOT push to batchItemFailures. See the doc comment above.
+    log({
+      level: 'warn',
+      jobId,
+      enqueueCount: exerciseIds.length,
+      error: errMessage(err),
+      message: 'failed to enqueue dictation audio jobs',
+    });
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -272,6 +335,15 @@ export async function handler(
           ...summarizeResult(result),
           message: 'cell succeeded',
         });
+        // Fire-and-await the audio-synth enqueue for any approved dictation
+        // rows this cell produced (empty for non-dictation cells → no send).
+        // Best-effort: a failure here never fails the generation record.
+        if (result.approvedDictationIds.length > 0) {
+          await enqueueDictationAudio(
+            result.approvedDictationIds,
+            parsed.jobId,
+          );
+        }
         continue;
       }
       // 'failed' or 'skipped-cost-cap'.
