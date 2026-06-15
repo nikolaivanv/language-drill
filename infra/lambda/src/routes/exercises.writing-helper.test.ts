@@ -49,6 +49,7 @@ vi.mock('@language-drill/db', () => ({
 
 const mockGenerateBrainstorm = vi.fn();
 const mockGenerateVocabBoost = vi.fn();
+const mockGenerateStartMyParagraph = vi.fn();
 vi.mock('@language-drill/ai', () => ({
   createObservedClaudeClient: vi.fn(() => ({})),
   evaluateAnswer: vi.fn(),
@@ -56,12 +57,14 @@ vi.mock('@language-drill/ai', () => ({
   evaluateFreeWriting: vi.fn(),
   generateBrainstorm: (...a: unknown[]) => mockGenerateBrainstorm(...a),
   generateVocabBoost: (...a: unknown[]) => mockGenerateVocabBoost(...a),
+  generateStartMyParagraph: (...a: unknown[]) => mockGenerateStartMyParagraph(...a),
   withLlmTrace: (_meta: unknown, fn: () => unknown) => fn(),
   EVALUATION_SYSTEM_PROMPT_VERSION: 'v',
   DICTATION_EVAL_PROMPT_VERSION: 'v',
   FREE_WRITING_EVAL_PROMPT_VERSION: 'v',
   BRAINSTORM_PROMPT_VERSION: 'free-writing-brainstorm@2026-06-15',
   VOCAB_BOOST_PROMPT_VERSION: 'free-writing-vocab-boost@2026-06-15',
+  START_MY_PARAGRAPH_PROMPT_VERSION: 'free-writing-start-my-paragraph@2026-06-15',
   EVAL_REQUEST_TIMEOUT_MS: 1000,
   EVAL_MAX_RETRIES: 1,
   FREE_WRITING_EVAL_REQUEST_TIMEOUT_MS: 1000,
@@ -210,5 +213,62 @@ describe('POST /exercises/:id/vocab-boost', () => {
     const writingHelperEvents = insertValuesCalls.filter((r) => r.eventType === 'writing_helper');
     expect(writingHelperEvents).toHaveLength(1);
     expect(writingHelperEvents[0]).toMatchObject({ eventType: 'writing_helper' });
+  });
+});
+
+describe('POST /exercises/:id/start-my-paragraph', () => {
+  let app: Hono;
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    exerciseRow = FW_ROW;
+    usageCount = 0;
+    capacityVerdict = 'ok';
+    insertValuesCalls.length = 0;
+    process.env.ANTHROPIC_API_KEY = 'test-key';
+    vi.resetModules();
+    const mod = await import('./exercises');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  it('success → 200, returns the opener, meters one writing_helper event', async () => {
+    mockGenerateStartMyParagraph.mockResolvedValue({ opener: 'Hoy en día el teletrabajo es un tema de debate.' });
+    const res = await post(app, '/exercises/fw-1/start-my-paragraph');
+    expect(res.status).toBe(200);
+    expect((await res.json()) as AnyJson).toEqual({ opener: 'Hoy en día el teletrabajo es un tema de debate.' });
+    expect(mockGenerateStartMyParagraph).toHaveBeenCalledTimes(1);
+    const writingHelperEvents = insertValuesCalls.filter((r) => r.eventType === 'writing_helper');
+    expect(writingHelperEvents).toHaveLength(1);
+  });
+
+  it('non-free-writing exercise → 400 BAD_EXERCISE_TYPE, no AI, no meter', async () => {
+    exerciseRow = { ...FW_ROW, type: 'cloze', contentJson: { type: 'cloze' } };
+    const res = await post(app, '/exercises/fw-1/start-my-paragraph');
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as AnyJson).code).toBe('BAD_EXERCISE_TYPE');
+    expect(mockGenerateStartMyParagraph).not.toHaveBeenCalled();
+  });
+
+  it('missing exercise → 404, no AI', async () => {
+    exerciseRow = undefined;
+    const res = await post(app, '/exercises/none/start-my-paragraph');
+    expect(res.status).toBe(404);
+    expect(mockGenerateStartMyParagraph).not.toHaveBeenCalled();
+  });
+
+  it('global brake → 503 GLOBAL_CAPACITY, no AI, no meter', async () => {
+    capacityVerdict = 'killed';
+    const res = await post(app, '/exercises/fw-1/start-my-paragraph');
+    expect(res.status).toBe(503);
+    expect(((await res.json()) as AnyJson).code).toBe('GLOBAL_CAPACITY');
+    expect(mockGenerateStartMyParagraph).not.toHaveBeenCalled();
+  });
+
+  it('daily cap reached → 429 RATE_LIMIT_EXCEEDED, no AI', async () => {
+    usageCount = 50; // free writing_helper limit
+    const res = await post(app, '/exercises/fw-1/start-my-paragraph');
+    expect(res.status).toBe(429);
+    expect(((await res.json()) as AnyJson).code).toBe('RATE_LIMIT_EXCEEDED');
+    expect(mockGenerateStartMyParagraph).not.toHaveBeenCalled();
   });
 });
