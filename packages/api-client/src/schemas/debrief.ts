@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Language, CefrLevel, ExerciseType } from '@language-drill/shared';
-import { EvaluationResultSchema } from './exercise';
+import { DictationResultSchema, EvaluationResultSchema } from './exercise';
 
 // ---------------------------------------------------------------------------
 // DebriefItem — one entry per exercise in the session manifest, in manifest
@@ -30,7 +30,11 @@ export const DebriefItemSchema = z.object({
   status: DebriefItemStatusSchema,
   userAnswer: z.string().nullable(),
   score: z.number().min(0).max(1).nullable(),
-  evaluation: EvaluationResultSchema.nullable(),
+  // DictationResultSchema FIRST: a dictation result matches it (carries
+  // `kind: 'dictation'` + the required diff/differences/criteria); a plain
+  // evaluation result fails it and falls through to EvaluationResultSchema.
+  // Mirrors parseSubmitResult's discrimination (exercise.ts).
+  evaluation: z.union([DictationResultSchema, EvaluationResultSchema]).nullable(),
 });
 
 export type DebriefItem = z.infer<typeof DebriefItemSchema>;
