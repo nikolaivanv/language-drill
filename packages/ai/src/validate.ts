@@ -17,6 +17,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 
 import {
   COVERAGE_AXIS_VALUES,
+  ExerciseType,
   type CoverageAxis,
   type CoverageTags,
 } from "@language-drill/shared";
@@ -31,6 +32,10 @@ import {
   buildValidationSystemPrompt,
   buildValidationUserPrompt,
 } from "./validation-prompts.js";
+import {
+  buildDictationValidationSystemPrompt,
+  buildDictationValidationUserPrompt,
+} from "./dictation-validation-prompts.js";
 
 // ---------------------------------------------------------------------------
 // Model + sampling constants
@@ -359,8 +364,14 @@ export async function validateDraft(
     );
   }
 
-  const systemText = await buildValidationSystemPrompt(spec);
-  const userText = buildValidationUserPrompt(draft, spec);
+  const isDictation = draft.contentJson.type === ExerciseType.DICTATION;
+  const systemText = isDictation
+    ? await buildDictationValidationSystemPrompt(spec)
+    : await buildValidationSystemPrompt(spec);
+  const userText =
+    draft.contentJson.type === ExerciseType.DICTATION
+      ? buildDictationValidationUserPrompt(draft.contentJson, spec)
+      : buildValidationUserPrompt(draft, spec);
 
   const response = await client.messages.create(
     {
