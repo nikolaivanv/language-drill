@@ -123,6 +123,44 @@ export function startOfUtcDay(now: Date): Date {
 }
 
 // ---------------------------------------------------------------------------
+// Free-writing cadence (Plan 1)
+// ---------------------------------------------------------------------------
+// A long, single-focus free-writing block is nudged on a fixed rotation rather
+// than every day. Deterministic and stateless — purely a function of the UTC
+// day and the language's rotation offset. The /drill hub launcher (Plan 2)
+// gives anytime access, so this governs only the nudge.
+// ---------------------------------------------------------------------------
+
+/** Length of the free-writing rotation, in days. */
+export const FREE_WRITING_CADENCE_DAYS = 3;
+
+/**
+ * Per-language offset into the rotation. The three learning languages use
+ * distinct residues (0,1,2) mod FREE_WRITING_CADENCE_DAYS, so exactly one
+ * language surfaces a free-writing block on any given UTC day. Languages absent
+ * from this map default to offset 0 (defensive).
+ */
+const FREE_WRITING_LANGUAGE_OFFSET: Record<string, number> = {
+  ES: 0,
+  DE: 1,
+  TR: 2,
+};
+
+/** Whole UTC days since the Unix epoch for the day containing `now`. */
+function utcDayIndex(now: Date): number {
+  return Math.floor(startOfUtcDay(now).getTime() / 86_400_000);
+}
+
+/**
+ * True when `language` should surface a free-writing block on the UTC day
+ * containing `now`.
+ */
+export function isFreeWritingDay(now: Date, language: string): boolean {
+  const offset = FREE_WRITING_LANGUAGE_OFFSET[language] ?? 0;
+  return (utcDayIndex(now) + offset) % FREE_WRITING_CADENCE_DAYS === 0;
+}
+
+// ---------------------------------------------------------------------------
 // Path B — fresh plan composition
 // ---------------------------------------------------------------------------
 

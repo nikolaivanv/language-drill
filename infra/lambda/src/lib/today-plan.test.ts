@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CefrLevel, ExerciseType } from '@language-drill/shared';
+import { CefrLevel, ExerciseType, Language } from '@language-drill/shared';
 import {
   ESTIMATED_MINUTES_BY_TYPE,
   ITEM_COUNT_BY_TYPE,
@@ -7,6 +7,8 @@ import {
   composeFreshPlan,
   hydrateFromSession,
   startOfUtcDay,
+  isFreeWritingDay,
+  FREE_WRITING_CADENCE_DAYS,
   type PoolDraw,
   type HydrateSessionInput,
 } from './today-plan';
@@ -334,5 +336,45 @@ describe('hydrateFromSession', () => {
     });
 
     expect(result.summary?.durationMinutes).toBe(18);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// isFreeWritingDay
+// ---------------------------------------------------------------------------
+
+describe('isFreeWritingDay', () => {
+  // Deterministic UTC base so the window walk never depends on the wall clock.
+  const base = Date.UTC(2026, 0, 1); // 2026-01-01T00:00:00Z
+  const day = (i: number) => new Date(base + i * 86_400_000);
+
+  it('fires once every FREE_WRITING_CADENCE_DAYS days for a given language', () => {
+    const window = 30; // divisible by the cadence
+    let hits = 0;
+    for (let i = 0; i < window; i++) {
+      if (isFreeWritingDay(day(i), Language.ES)) hits++;
+    }
+    expect(hits).toBe(window / FREE_WRITING_CADENCE_DAYS); // 30 / 3 = 10
+  });
+
+  it('surfaces free writing for exactly one of ES/DE/TR on any given day', () => {
+    for (let i = 0; i < FREE_WRITING_CADENCE_DAYS; i++) {
+      const count = [Language.ES, Language.DE, Language.TR].filter((l) =>
+        isFreeWritingDay(day(i), l),
+      ).length;
+      expect(count).toBe(1);
+    }
+  });
+
+  it('depends only on the UTC day, not the time of day', () => {
+    const morning = new Date('2026-03-10T00:00:00Z');
+    const night = new Date('2026-03-10T23:59:59Z');
+    expect(isFreeWritingDay(morning, Language.ES)).toBe(
+      isFreeWritingDay(night, Language.ES),
+    );
+  });
+
+  it('defaults unknown languages to offset 0 (does not throw)', () => {
+    expect(() => isFreeWritingDay(day(0), 'XX')).not.toThrow();
   });
 });
