@@ -28,7 +28,7 @@ import {
   withLlmTrace,
 } from '@language-drill/ai';
 import { db } from '../db';
-import { approvedStatusFilter, freshFirstOrderBy } from '../lib/exercise-filters';
+import { approvedStatusFilter, audioReadyFilter, freshFirstOrderBy } from '../lib/exercise-filters';
 import { presignAudioUrl } from '../lib/audio-url';
 import { withAudioUrl } from '../lib/dictation-content';
 import { authMiddleware } from '../middleware/auth';
@@ -89,6 +89,8 @@ exercises.get('/exercises', async (c) => {
     eq(exercisesTable.language, language),
     eq(exercisesTable.difficulty, difficulty),
     approvedStatusFilter(exercisesTable),
+    // Never serve a dictation row whose audio hasn't been synthesized yet.
+    audioReadyFilter(exercisesTable),
   ];
 
   if (type) {
@@ -135,7 +137,14 @@ exercises.get('/exercises/:id', async (c) => {
   const rows = await db
     .select()
     .from(exercisesTable)
-    .where(and(eq(exercisesTable.id, id), approvedStatusFilter(exercisesTable)))
+    .where(
+      and(
+        eq(exercisesTable.id, id),
+        approvedStatusFilter(exercisesTable),
+        // Never serve a dictation row whose audio hasn't been synthesized yet.
+        audioReadyFilter(exercisesTable),
+      ),
+    )
     .limit(1);
 
   if (rows.length === 0) {
