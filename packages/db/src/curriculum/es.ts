@@ -28,10 +28,14 @@ const { B1, B2 } = CefrLevel;
  * never cleared and the rotation + 1.5× target raise never took effect on them.
  * `decideEnqueue` keys suppression-clearing on the curriculum version, NOT on
  * `GENERATION_PROMPT_VERSION`, so this off-label bump is the only routine way to
- * force a fresh attempt. No grammar entries changed in this bump. Prior
- * `2026-06-06` reflected the earlier ES B1/B2 audit. Mirrors the TR bump in #275.
+ * force a fresh attempt. Prior `2026-06-06` reflected the earlier ES B1/B2 audit.
+ * Mirrors the TR bump in #275.
+ *
+ * `2026-06-15` adds the two `kind: 'dictation'` umbrellas (`es-b1-dictation`,
+ * `es-b2-dictation`); the bump ensures the scheduler's low-yield / saturated-dedup
+ * suppression cannot pre-empt the brand-new dictation cells.
  */
-export const CURRICULUM_VERSION_ES = '2026-06-14';
+export const CURRICULUM_VERSION_ES = '2026-06-15';
 
 const esCurriculum: readonly GrammarPoint[] = [
   /*
@@ -472,6 +476,46 @@ const esCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Confusing "actualmente" (currently) with "actually" — use "en realidad" or "de hecho" for the latter.',
       'Overusing nominalisations from English ("*la realización" for "the fact that").',
+    ],
+  },
+
+  // ---------------------------------------------------------------------------
+  // Dictation umbrellas — kind: 'dictation' (Phase 2 generation pipeline)
+  // ---------------------------------------------------------------------------
+  {
+    key: 'es-b1-dictation',
+    kind: 'dictation',
+    name: 'Dictation — connected speech (B1)',
+    description:
+      'Natural B1 connected-speech clips (2–4 short sentences) on everyday domains; tests sinalefa, weak-syllable reduction, and common spelling traps.',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'No te preocupes, el tiempo lo cura todo y mañana lo verás de otra manera.',
+      'Quedamos a las ocho en la plaza y de ahí vamos andando al cine.',
+    ],
+    examplesNegative: ['*Clip de una sola palabra o lista inconexa sin oraciones naturales.'],
+    commonErrors: [
+      'Mis-segmenting word boundaries under sinalefa (hearing "lo cura" as "locura").',
+      'Dropping the silent h or confusing b/v in spelling.',
+    ],
+  },
+  {
+    key: 'es-b2-dictation',
+    kind: 'dictation',
+    name: 'Dictation — connected speech (B2)',
+    description:
+      'Natural B2 connected-speech clips (3–5 sentences) with subordinate clauses and richer vocabulary; tests connected-speech tracking and spelling under faster delivery.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Aunque había estudiado mucho, en cuanto vio el examen se quedó en blanco y tuvo que respirar hondo.',
+      'Me dijeron que, si llegábamos antes de las nueve, todavía habría sitio para aparcar cerca.',
+    ],
+    examplesNegative: ['*Texto demasiado largo o con vocabulario muy por encima de B2.'],
+    commonErrors: [
+      'Losing track of clause boundaries in longer sentences.',
+      'Confusing similar-sounding connectors (aunque / a un que).',
     ],
   },
 ];

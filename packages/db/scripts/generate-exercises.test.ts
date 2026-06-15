@@ -203,6 +203,8 @@ describe('resolveCells', () => {
     for (const cell of cells) {
       if (cell.grammarPoint.kind === 'vocab') {
         expect(cell.exerciseType).toBe(ExerciseType.VOCAB_RECALL);
+      } else if (cell.grammarPoint.kind === 'dictation') {
+        expect(cell.exerciseType).toBe(ExerciseType.DICTATION);
       } else {
         expect([ExerciseType.CLOZE, ExerciseType.TRANSLATION, ExerciseType.SENTENCE_CONSTRUCTION]).toContain(cell.exerciseType);
       }

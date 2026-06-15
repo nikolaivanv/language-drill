@@ -34,9 +34,15 @@ const GRAMMAR_KIND_TYPES: ReadonlyArray<ExerciseType> = [
   ExerciseType.SENTENCE_CONSTRUCTION,
 ];
 const VOCAB_KIND_TYPES: ReadonlyArray<ExerciseType> = [ExerciseType.VOCAB_RECALL];
+const DICTATION_KIND_TYPES: ReadonlyArray<ExerciseType> = [ExerciseType.DICTATION];
 
 function isCompatible(kind: GrammarPoint['kind'], exerciseType: ExerciseType): boolean {
-  const compatible = kind === 'vocab' ? VOCAB_KIND_TYPES : GRAMMAR_KIND_TYPES;
+  const compatible =
+    kind === 'dictation'
+      ? DICTATION_KIND_TYPES
+      : kind === 'vocab'
+        ? VOCAB_KIND_TYPES
+        : GRAMMAR_KIND_TYPES;
   return compatible.includes(exerciseType);
 }
 

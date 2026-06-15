@@ -295,14 +295,17 @@ describe('per-language counts', () => {
   function countsFor(curriculum: readonly GrammarPoint[]) {
     const grammar = { A1: 0, A2: 0, B1: 0, B2: 0 } as Record<string, number>;
     let vocab = 0;
+    let dictation = 0;
     for (const entry of curriculum) {
       if (entry.kind === 'grammar') {
         grammar[entry.cefrLevel]++;
-      } else {
+      } else if (entry.kind === 'vocab') {
         vocab++;
+      } else {
+        dictation++;
       }
     }
-    return { grammar, vocab };
+    return { grammar, vocab, dictation };
   }
 
   // ES/DE are TEMPORARILY REDUCED (2026-05-10): assertions match the
@@ -311,32 +314,36 @@ describe('per-language counts', () => {
   // uncommented. TR (2026-05-28) is now at full Yedi İklim A1+A2 parity
   // (26 A1 + 14 A2 grammar + 10 themed vocab umbrellas); B1/B2 remain disabled.
 
-  it('Spanish meets minimums (B1 + B2 only while A1/A2 are disabled) and has 2 vocab umbrellas', () => {
-    const { grammar, vocab } = countsFor(esCurriculum);
+  it('Spanish meets minimums (B1 + B2 only while A1/A2 are disabled), has 2 vocab umbrellas and 2 dictation umbrellas', () => {
+    const { grammar, vocab, dictation } = countsFor(esCurriculum);
     expect(grammar.A1).toBe(0);
     expect(grammar.A2).toBe(0);
     expect(grammar.B1).toBeGreaterThanOrEqual(6);
     expect(grammar.B2).toBeGreaterThanOrEqual(5);
     expect(vocab).toBe(2);
+    // es-b1-dictation + es-b2-dictation (Phase 2 dictation generation pipeline).
+    expect(dictation).toBe(2);
   });
 
-  it('German is fully disabled (no grammar entries, no vocab umbrellas)', () => {
-    const { grammar, vocab } = countsFor(deCurriculum);
+  it('German is fully disabled (no grammar entries, no vocab or dictation umbrellas)', () => {
+    const { grammar, vocab, dictation } = countsFor(deCurriculum);
     expect(grammar.A1).toBe(0);
     expect(grammar.A2).toBe(0);
     expect(grammar.B1).toBe(0);
     expect(grammar.B2).toBe(0);
     expect(vocab).toBe(0);
+    expect(dictation).toBe(0);
   });
 
-  it('Turkish is at full Yedi İklim A1 + A2 parity (B1/B2 disabled) and has 10 themed vocab umbrellas', () => {
-    const { grammar, vocab } = countsFor(trCurriculum);
+  it('Turkish is at full Yedi İklim A1 + A2 parity (B1/B2 disabled), has 10 themed vocab umbrellas and no dictation umbrellas', () => {
+    const { grammar, vocab, dictation } = countsFor(trCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(26);
     expect(grammar.A2).toBeGreaterThanOrEqual(14);
     expect(grammar.B1).toBe(0);
     expect(grammar.B2).toBe(0);
     // 5 themed A1 + 5 themed A2 umbrellas (2026-06-07 everyday-vocab split).
     expect(vocab).toBe(10);
+    expect(dictation).toBe(0);
   });
 });
 

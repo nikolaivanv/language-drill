@@ -1,7 +1,7 @@
 import { ExerciseType } from '@language-drill/shared';
 import { describe, expect, it } from 'vitest';
 
-import { ALL_CURRICULA, type GrammarPoint } from '../curriculum';
+import { ALL_CURRICULA, esCurriculum, type GrammarPoint } from '../curriculum';
 import { assertValidCellKey } from '../lib/cell-key';
 
 import { ROUND_1_CEFR_LEVELS, enumerateCurriculumCells } from './cells';
@@ -39,14 +39,18 @@ describe('enumerateCurriculumCells', () => {
     expect(cells.length).toBeGreaterThan(0);
   });
 
-  it('produces 2 cells per grammar entry (cloze + translation) and 1 per vocab entry (vocab_recall), minus one per clozeUnsuitable point, plus one per sentenceConstructionSuitable point', () => {
+  it('produces 2 cells per grammar entry (cloze + translation), 1 per vocab entry (vocab_recall), and 1 per dictation umbrella (dictation), minus one per clozeUnsuitable point, plus one per sentenceConstructionSuitable point', () => {
     const grammarCount = ALL_CURRICULA.filter((g) => g.kind === 'grammar').length;
     const vocabCount = ALL_CURRICULA.filter((g) => g.kind === 'vocab').length;
+    // A dictation umbrella yields exactly one cell (dictation only).
+    const dictationCount = ALL_CURRICULA.filter((g) => g.kind === 'dictation').length;
     // A clozeUnsuitable grammar point yields 1 cell (translation) instead of 2,
     // so each flagged point drops the total by exactly one.
     const flaggedCount = ALL_CURRICULA.filter((g) => g.clozeUnsuitable === true).length;
     const scCount = ALL_CURRICULA.filter((g) => g.sentenceConstructionSuitable === true).length;
-    expect(cells).toHaveLength(grammarCount * 2 + vocabCount - flaggedCount + scCount);
+    expect(cells).toHaveLength(
+      grammarCount * 2 + vocabCount + dictationCount - flaggedCount + scCount,
+    );
   });
 
   it('pairs vocab umbrellas only with vocab_recall', () => {
@@ -89,6 +93,21 @@ describe('enumerateCurriculumCells', () => {
 
   it('returns an empty array for an empty curriculum', () => {
     expect(enumerateCurriculumCells([])).toEqual([]);
+  });
+});
+
+describe('enumerateCurriculumCells — kind:dictation umbrellas', () => {
+  it('pairs a kind:dictation umbrella with DICTATION only', () => {
+    const dictationCells = enumerateCurriculumCells(esCurriculum).filter(
+      (c) => c.grammarPoint.kind === 'dictation',
+    );
+    expect(dictationCells.length).toBeGreaterThanOrEqual(2);
+    for (const cell of dictationCells) {
+      expect(cell.exerciseType).toBe(ExerciseType.DICTATION);
+    }
+    // es-b1-dictation produces exactly one cell (no cloze/translation pairing)
+    const b1 = dictationCells.filter((c) => c.grammarPoint.key === 'es-b1-dictation');
+    expect(b1).toHaveLength(1);
   });
 });
 
