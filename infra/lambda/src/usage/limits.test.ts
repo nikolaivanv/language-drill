@@ -31,3 +31,14 @@ describe('text_generation bucket', () => {
     expect(limitFor('text_generation', 'boosted')).toBe(200);
   });
 });
+
+describe('writing_helper bucket', () => {
+  it('has a free base limit of 50', () => {
+    expect(BASE_DAILY_LIMITS.writing_helper).toBe(50);
+  });
+
+  it('boosts to 10x for boosted plans', () => {
+    expect(limitFor('writing_helper', 'free')).toBe(50);
+    expect(limitFor('writing_helper', 'boosted')).toBe(500);
+  });
+});
