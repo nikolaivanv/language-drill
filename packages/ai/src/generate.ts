@@ -1102,8 +1102,10 @@ function parseToolInput(
     case ExerciseType.SENTENCE_CONSTRUCTION:
       return parseGeneratedSentenceConstructionDraft(input, spec);
     case ExerciseType.DICTATION:
+      // Unreachable: generateOneDraft routes dictation to parseGeneratedDictationDraft
+      // (which needs the ordinal) before reaching parseToolInput. Kept defensive.
       throw new Error(
-        "Dictation exercises are not generated via this path; use gradeDictationAnswer.",
+        "Dictation exercises are parsed via parseGeneratedDictationDraft, not parseToolInput.",
       );
     default:
       // free_writing is authored by hand, not produced by this pipeline.
