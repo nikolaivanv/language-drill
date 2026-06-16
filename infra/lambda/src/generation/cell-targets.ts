@@ -47,6 +47,9 @@ export const CELL_TARGET_DEFAULTS: Record<
   [ExerciseType.CLOZE]: { A1: 20, A2: 30 },
   [ExerciseType.TRANSLATION]: { A1: 20, A2: 30 },
   [ExerciseType.SENTENCE_CONSTRUCTION]: { A1: 20, A2: 30 },
+  // A1/A2: narrow grammar-point verb-form space mirrors cloze/translation.
+  // B1/B2: unset → fall through to TARGET_PER_CELL (50 remains reachable).
+  [ExerciseType.CONJUGATION]: { A1: 20, A2: 30 },
   // Capped low across every level (2026-06-07): vocab cells are the worst
   // token-efficiency offenders — a single "everyday" umbrella exhausts its
   // realistic distinct-word surface fast (high dedup-give-up), so chasing the

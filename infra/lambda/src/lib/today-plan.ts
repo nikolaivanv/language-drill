@@ -33,6 +33,10 @@ export const ESTIMATED_MINUTES_BY_TYPE: Record<ExerciseType, number> = {
   // session plan; this estimate is a sensible default for the rare path that
   // ever surfaces a free-writing row.
   [ExerciseType.FREE_WRITING]: 8,
+  // Conjugation is an opt-in single-form drill, not auto-composed into the
+  // session plan; 2 min is a sensible default for the rare path that
+  // ever surfaces a conjugation row.
+  [ExerciseType.CONJUGATION]: 2,
 };
 
 // ---------------------------------------------------------------------------
@@ -52,6 +56,8 @@ export const ITEM_COUNT_BY_TYPE: Record<ExerciseType, number> = {
   [ExerciseType.DICTATION]: 1,
   // One piece of writing per free-writing drill.
   [ExerciseType.FREE_WRITING]: 1,
+  // One conjugation prompt per drill (single-form production exercise).
+  [ExerciseType.CONJUGATION]: 1,
 };
 
 // ---------------------------------------------------------------------------

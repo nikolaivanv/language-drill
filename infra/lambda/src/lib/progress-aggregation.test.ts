@@ -69,6 +69,10 @@ describe('axisForExerciseType', () => {
   it('maps free_writing to the writing axis', () => {
     expect(axisForExerciseType(ExerciseType.FREE_WRITING)).toBe('writing');
   });
+
+  it('maps conjugation to the grammar axis', () => {
+    expect(axisForExerciseType(ExerciseType.CONJUGATION)).toBe('grammar');
+  });
 });
 
 describe('difficultyWeight', () => {

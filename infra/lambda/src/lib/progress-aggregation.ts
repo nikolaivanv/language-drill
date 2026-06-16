@@ -92,6 +92,8 @@ export function axisForExerciseType(type: string): RadarAxisKey | null {
   switch (type) {
     case ExerciseType.CLOZE:
       return 'grammar';
+    case ExerciseType.CONJUGATION:
+      return 'grammar';
     case ExerciseType.TRANSLATION:
       return 'writing';
     case ExerciseType.FREE_WRITING:
