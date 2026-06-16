@@ -1,13 +1,19 @@
 'use client';
 
 import React from 'react';
-import { type FreeWritingContent, EXERCISE_ANSWER_MAX_CHARS } from '@language-drill/shared';
+import {
+  type FreeWritingContent,
+  type LearningLanguage,
+  EXERCISE_ANSWER_MAX_CHARS,
+} from '@language-drill/shared';
 import type { AuthenticatedFetch } from '@language-drill/api-client';
+import { AccentPicker } from '../../../../../components/ui';
 import { FwIcon, WordCounter, ReqRow } from './fw-atoms';
 import { FwUnstuck } from './fw-unstuck';
 
 export interface FwComposerProps {
   content: FreeWritingContent;
+  language: LearningLanguage;
   value: string;
   onChange: (next: string) => void;
   examMode: boolean;
@@ -17,13 +23,20 @@ export interface FwComposerProps {
   fetchFn: AuthenticatedFetch;
 }
 
+// Mirrors the quick-drill exercises: only ES/DE/TR have a special-character
+// keyboard; the AccentPicker itself no-ops for any other language.
+function isAccentLanguage(lang: string): lang is 'ES' | 'DE' | 'TR' {
+  return lang === 'ES' || lang === 'DE' || lang === 'TR';
+}
+
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-export function FwComposer({ content, value, onChange, examMode, submitting, onGrade, exerciseId, fetchFn }: FwComposerProps) {
+export function FwComposer({ content, language, value, onChange, examMode, submitting, onGrade, exerciseId, fetchFn }: FwComposerProps) {
+  const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
   const words = value.trim() ? value.trim().split(/\s+/).length : 0;
   const canGrade = words >= content.minWords && !submitting;
 
@@ -114,6 +127,7 @@ export function FwComposer({ content, value, onChange, examMode, submitting, onG
           {/* The editor */}
           <div className="card" style={{ padding: 0, overflow: 'hidden', boxShadow: 'var(--shadow-1)' }}>
             <textarea
+              ref={textareaRef}
               value={value}
               onChange={(e) => onChange(e.target.value)}
               maxLength={EXERCISE_ANSWER_MAX_CHARS}
@@ -132,6 +146,17 @@ export function FwComposer({ content, value, onChange, examMode, submitting, onG
                 color: 'var(--color-ink)',
               }}
             />
+            {isAccentLanguage(language) && (
+              <div
+                style={{
+                  padding: '10px 18px',
+                  borderTop: '1px solid var(--color-rule)',
+                  background: 'var(--color-paper-2)',
+                }}
+              >
+                <AccentPicker language={language} targetRef={textareaRef} />
+              </div>
+            )}
             <div
               style={{
                 display: 'flex',

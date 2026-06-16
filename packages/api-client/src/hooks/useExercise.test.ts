@@ -1,9 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { createElement, type ReactNode } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, focusManager } from '@tanstack/react-query';
+import { CefrLevel, ExerciseType, type Language } from '@language-drill/shared';
 import { ExerciseResponseSchema, EvaluationResultSchema } from '../schemas/exercise';
-import { useSubmitAnswer } from './useExercise';
+import { useExercise, useSubmitAnswer } from './useExercise';
 import type { AuthenticatedFetch } from '../fetchClient';
 
 /**
@@ -158,6 +159,67 @@ describe('useSubmitAnswer — response validation', () => {
 
   it('rejects missing required fields entirely', () => {
     expect(() => EvaluationResultSchema.parse({})).toThrow();
+  });
+});
+
+describe('useExercise — stability against background refetch', () => {
+  const SAMPLE_EXERCISE = {
+    id: 'ex-fw-1',
+    type: 'free_writing',
+    language: 'ES',
+    difficulty: 'B1',
+    grammarPointKey: null,
+    contentJson: { title: 'T', task: 'task' },
+  };
+
+  function jsonResponse(body: unknown): Response {
+    return { ok: true, status: 200, json: async () => body } as unknown as Response;
+  }
+
+  function buildWrapper() {
+    // A default QueryClient: refetchOnWindowFocus is `true` by default in v5,
+    // so if the hook does not opt out, regaining focus would refetch and the
+    // backend would hand back a *different* random exercise mid-session.
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    return function Wrapper({ children }: { children: ReactNode }) {
+      return createElement(QueryClientProvider, { client: queryClient }, children);
+    };
+  }
+
+  it('does not refetch the exercise when the window regains focus', async () => {
+    const fetchFn = vi
+      .fn<AuthenticatedFetch>()
+      .mockResolvedValue(jsonResponse(SAMPLE_EXERCISE));
+
+    const { result } = renderHook(
+      () =>
+        useExercise({
+          language: 'ES' as Language,
+          difficulty: CefrLevel.B1,
+          type: ExerciseType.FREE_WRITING,
+          fetchFn,
+        }),
+      { wrapper: buildWrapper() },
+    );
+
+    await waitFor(() => expect(result.current.data).toBeDefined());
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+
+    // Simulate the user tabbing away and back — the classic focus refetch.
+    act(() => {
+      focusManager.setFocused(false);
+      focusManager.setFocused(true);
+    });
+
+    // Give any (unwanted) refetch a chance to fire, then assert it did not.
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+
+    focusManager.setFocused(undefined);
   });
 });
 
