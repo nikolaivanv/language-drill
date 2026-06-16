@@ -51,6 +51,22 @@ export {
   computeDictationValidationPromptVars,
 } from "./dictation-validation-prompts.js";
 export {
+  FREE_WRITING_GENERATION_PROMPT_VERSION,
+  FREE_WRITING_GENERATION_SYSTEM_PROMPT,
+  FREE_WRITING_LENGTH_BY_CEFR,
+  freeWritingLengthFor,
+  computeFreeWritingGenerationPromptVars,
+  buildFreeWritingGenerationSystemPrompt,
+  buildFreeWritingGenerationUserPrompt,
+} from "./free-writing-generation-prompts.js";
+export {
+  FREE_WRITING_GENERATION_VALIDATION_PROMPT_VERSION,
+  FREE_WRITING_GENERATION_VALIDATION_SYSTEM_PROMPT,
+  computeFreeWritingValidationPromptVars,
+  buildFreeWritingValidationSystemPrompt,
+  buildFreeWritingValidationUserPrompt,
+} from "./free-writing-validation-prompts.js";
+export {
   evaluateFreeWriting,
   parseFreeWritingEvaluation,
   FREE_WRITING_EVAL_TOOL,
@@ -151,6 +167,8 @@ export {
   parseGeneratedTranslationDraft,
   parseGeneratedVocabRecallDraft,
   parseGeneratedDictationDraft,
+  parseGeneratedFreeWritingDraft,
+  FREE_WRITING_GENERATION_TOOL,
 } from "./generate.js";
 export type {
   GenerationSpec,
