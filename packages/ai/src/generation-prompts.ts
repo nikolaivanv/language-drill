@@ -122,7 +122,13 @@ function renderRecentStems(recentStems: readonly string[]): string {
 // curriculum-wide grammatical-person rotation in the per-draft USER prompt
 // (`renderPersonBlock`, no Langfuse push needed). Use the `eval:gen`
 // baseline/candidate arms — not promptVersion — to A/B within a day.
-export const GENERATION_PROMPT_VERSION = "generate@2026-06-12";
+//
+// 2026-06-16: added the "Plain text only — no markdown" rule to the
+// sentence-construction section after the generator leaked `**keyword**`
+// emphasis into the plain-text `prompt` field (rendered verbatim, so it
+// showed literal asterisks). This edit changes the registered template — it
+// needs a Langfuse push per env.
+export const GENERATION_PROMPT_VERSION = "generate@2026-06-16";
 
 /**
  * Wording differs per type so Claude reads it the way the cell is constrained:
@@ -174,6 +180,7 @@ This is a sentence_construction exercise: there is NO blank — the learner writ
 - **Constrain the answer space — no open "write a sentence using X".** A bare invitation like "Write a sentence using ${grammarPointName}" admits unboundedly many correct answers and cannot be scored — the validator flags it \`ambiguous\`. The \`prompt\` MUST pin the task down so a competent learner lands in a small, predictable set of sentences: require specific keywords, give a concrete one-line scenario to react to, or specify a target structure *together with* a situation. If the only constraint is "use ${grammarPointName}", the draft is too open — add a scenario or required words before submitting.
 - **Model answers must be correct, natural, and error-free.** Every entry in \`modelAnswers\` (provide 2–3) MUST be fully grammatical ${language} at CEFR ${cefrLevel}, genuinely exercise ${grammarPointName}, satisfy the prompt's own constraints (use every required keyword / fit the scenario / use the named structure), and MUST NOT exhibit any of the **Common learner errors** listed above. A model answer is the target the learner aims at — never ship one that models the very mistake the grammar point warns against. If you cannot write 2–3 clean answers, simplify the \`prompt\` until you can.
 - **Do not spoil the answer.** \`instructions\` and \`prompt\` may name the structure being practiced and may cite an example auxiliary/reporting word, but MUST NOT hand the learner a finished, ready-to-copy inflected form of the target. Naming the rule type is fine; writing out the conjugated answer is not.
+- **Plain text only — no markdown.** \`instructions\`, \`prompt\`, and \`keywords\` are rendered verbatim as plain text; there is NO markdown renderer. Do NOT use any emphasis markup — no \`**bold**\`, no \`*italics*\`, no backticks. The \`keywords\` already appear to the learner as separate chips below the prompt, so do NOT re-list or bold them inside \`prompt\`; refer to them in plain prose (e.g. "Use all four words below in one sentence.").
 - **Per-mode framing** (the user message selects one mode per draft):
   - \`keywords\`: put 3–4 everyday content words at or below CEFR ${cefrLevel} in \`keywords\`; the learner must use ALL of them in one sentence and the combination must force ${grammarPointName}. Every model answer must actually use every keyword.
   - \`situation\`: give a concrete one-line scenario in \`prompt\` (something said, a problem to react to) so the natural response exercises ${grammarPointName}; leave \`keywords\` empty.
