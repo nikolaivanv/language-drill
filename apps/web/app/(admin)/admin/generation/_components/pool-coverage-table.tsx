@@ -1,7 +1,12 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import type { PoolStatusItem } from '@language-drill/api-client';
+import { Fragment, useMemo, useState } from 'react';
+import { useAuth } from '@clerk/nextjs';
+import {
+  createAuthenticatedFetch,
+  type PoolStatusItem,
+} from '@language-drill/api-client';
+import { PoolCellDetail } from './pool-cell-detail';
 
 type Props = { items: PoolStatusItem[] };
 
@@ -13,8 +18,16 @@ function coverageBgClass(ratio: number): string {
   return 'bg-green-100';
 }
 
+function cellKeyOf(item: PoolStatusItem): string {
+  return `${item.language}:${item.level}:${item.type}:${item.grammarPointKey}`;
+}
+
 export function PoolCoverageTable({ items }: Props) {
   const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  const { getToken } = useAuth();
+  const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
 
   // Coverage is measured against the generation target — the number the
   // scheduler actually tops the cell up to — not the demand-derived
@@ -43,9 +56,7 @@ export function PoolCoverageTable({ items }: Props) {
           <th>
             <button
               type="button"
-              onClick={() =>
-                setSortDir((dir) => (dir === 'asc' ? 'desc' : 'asc'))
-              }
+              onClick={() => setSortDir((dir) => (dir === 'asc' ? 'desc' : 'asc'))}
             >
               Coverage % {sortDir === 'asc' ? '▲' : '▼'}
             </button>
@@ -55,20 +66,36 @@ export function PoolCoverageTable({ items }: Props) {
       <tbody>
         {sortedItems.map((item) => {
           const ratio = item.approved / item.generationTarget;
+          const key = cellKeyOf(item);
+          const isOpen = expanded === key;
           return (
-            <tr
-              key={`${item.language}:${item.level}:${item.type}:${item.grammarPointKey}`}
-              className={coverageBgClass(ratio)}
-            >
-              <td>{item.language}</td>
-              <td>{item.level}</td>
-              <td>{item.type}</td>
-              <td>{item.grammarPointKey}</td>
-              <td>{item.approved}</td>
-              <td>{item.generationTarget}</td>
-              <td>{item.targetSize}</td>
-              <td>{(ratio * 100).toFixed(1)}%</td>
-            </tr>
+            <Fragment key={key}>
+              <tr className={coverageBgClass(ratio)}>
+                <td>{item.language}</td>
+                <td>{item.level}</td>
+                <td>{item.type}</td>
+                <td>
+                  <button
+                    type="button"
+                    aria-expanded={isOpen}
+                    onClick={() => setExpanded((cur) => (cur === key ? null : key))}
+                  >
+                    {item.grammarPointKey} {isOpen ? '▼' : '▶'}
+                  </button>
+                </td>
+                <td>{item.approved}</td>
+                <td>{item.generationTarget}</td>
+                <td>{item.targetSize}</td>
+                <td>{(ratio * 100).toFixed(1)}%</td>
+              </tr>
+              {isOpen ? (
+                <tr>
+                  <td colSpan={8}>
+                    <PoolCellDetail item={item} fetchFn={fetchFn} />
+                  </td>
+                </tr>
+              ) : null}
+            </Fragment>
           );
         })}
       </tbody>
