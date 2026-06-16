@@ -53,8 +53,14 @@ export function DrillLayout({
 
   // Desktop: the coach rail + content grid. The previous 900px breakpoint is
   // reconciled to the canonical 760 seam above (Deliberate Deviation).
+  //
+  // `min-h-screen` makes the grid fill the viewport so the coach rail (a
+  // stretched grid item) spans the full height rather than stopping at content
+  // height. The `-my-[36px]` cancels the AppShell desktop content wrapper's
+  // `py-[36px]` (components/shell/app-shell.tsx) so the rail sits flush against
+  // the top and bottom edges. Keep these two in sync if that padding changes.
   return (
-    <div className="grid grid-cols-[280px_1fr]">
+    <div className="grid min-h-screen grid-cols-[280px_1fr] -my-[36px]">
       <aside className="bg-paper-2 border-r border-rule p-s-6">{rail}</aside>
 
       <div className="flex flex-col">
