@@ -90,6 +90,7 @@ vi.mock('@language-drill/db', async () => {
     generationJobs: { __mock: 'generationJobs' },
     userExerciseHistory: { __mock: 'userExerciseHistory' },
     users: { __mock: 'users' },
+    theoryTopics: { __mock: 'theoryTopics' },
     invitations: {
       __mock: 'invitations',
       id: { __col: 'id' },

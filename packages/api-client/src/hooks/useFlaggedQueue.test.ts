@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { createElement, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useFlaggedExercises, useResolveFlaggedExercise } from './useFlaggedQueue';
+import { useFlaggedExercises, useResolveFlaggedExercise, useFlaggedTheory, useResolveFlaggedTheory } from './useFlaggedQueue';
 import type { AuthenticatedFetch } from '../fetchClient';
 
 function jsonResponse(body: unknown): Response {
@@ -71,6 +71,57 @@ describe('useResolveFlaggedExercise', () => {
 
     expect(outcome).toBe('approved');
     expect(fetchFn.mock.calls[0]?.[0]).toBe('/admin/flagged/exercises/ex-1/approve');
+    expect(fetchFn.mock.calls[0]?.[1]?.method).toBe('POST');
+  });
+});
+
+describe('useFlaggedTheory', () => {
+  let queryClient: QueryClient;
+
+  beforeEach(() => {
+    queryClient = buildQueryClient();
+  });
+
+  it('fetches + parses the list with filters in the query string', async () => {
+    const fetchFn = vi
+      .fn<AuthenticatedFetch>()
+      .mockResolvedValue(jsonResponse({ items: [], total: 0 }));
+
+    const { result } = renderHook(
+      () => useFlaggedTheory({ fetchFn, filters: { language: 'DE' } }),
+      { wrapper: buildWrapper(queryClient) },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual({ items: [], total: 0 });
+    expect(fetchFn.mock.calls[0]?.[0]).toBe('/admin/flagged/theory?language=DE');
+  });
+});
+
+describe('useResolveFlaggedTheory', () => {
+  let queryClient: QueryClient;
+
+  beforeEach(() => {
+    queryClient = buildQueryClient();
+  });
+
+  it('POSTs the action and returns the outcome', async () => {
+    const fetchFn = vi
+      .fn<AuthenticatedFetch>()
+      .mockResolvedValue(jsonResponse({ outcome: 'rejected' }));
+
+    const { result } = renderHook(
+      () => useResolveFlaggedTheory({ fetchFn }),
+      { wrapper: buildWrapper(queryClient) },
+    );
+
+    let outcome: string | undefined;
+    await act(async () => {
+      outcome = await result.current.mutateAsync({ id: 'th-1', action: 'reject' });
+    });
+
+    expect(outcome).toBe('rejected');
+    expect(fetchFn.mock.calls[0]?.[0]).toBe('/admin/flagged/theory/th-1/reject');
     expect(fetchFn.mock.calls[0]?.[1]?.method).toBe('POST');
   });
 });
