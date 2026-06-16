@@ -69,9 +69,10 @@ export const DICTATION_VOICE_POOL_BY_LANGUAGE: Readonly<
     { voiceId: "Sergio", accent: "español peninsular · centro" },
     { voiceId: "Lucia", accent: "español peninsular · centro" },
   ],
-  // DE/TR added when those languages enter dictation scope (later milestone).
+  // The only neural tr-TR Polly voice is Burcu (Filiz is standard-engine only),
+  // so the TR pool is single-voice. DE added when German enters dictation scope.
   [Language.DE]: [],
-  [Language.TR]: [],
+  [Language.TR]: [{ voiceId: "Burcu", accent: "standart Türkçe · İstanbul" }],
 });
 
 // ---------------------------------------------------------------------------
