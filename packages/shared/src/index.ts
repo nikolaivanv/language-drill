@@ -83,6 +83,7 @@ export enum ExerciseType {
   SENTENCE_CONSTRUCTION = "sentence_construction",
   DICTATION = "dictation",
   FREE_WRITING = "free_writing",
+  CONJUGATION = "conjugation",
 }
 
 export type ClozeContent = {
@@ -208,13 +209,43 @@ export type FreeWritingContent = {
   topicHint?: string;
 };
 
+export type ConjugationContent = {
+  type: ExerciseType.CONJUGATION;
+  /** Short imperative, e.g. "Write the correct form." */
+  instructions: string;
+  /** Citation/dictionary form: "ir" / "fahren" / "gitmek". */
+  lemma: string;
+  /** L1 (English) gloss of the lemma: "to go". */
+  lemmaGloss: string;
+  /**
+   * Human-readable feature bundle shown to the learner, e.g.
+   * "condicional · 1ª persona del plural" or
+   * "geniş zaman · olumsuz · 1. çoğul". Tense/mood is fixed by the grammar
+   * point; this names the cell the learner must produce.
+   */
+  featureBundle: string;
+  /** The canonical expected form: "iríamos". */
+  targetForm: string;
+  /** Other fully-correct forms (regional / orthographic variants). Rare. */
+  acceptableForms?: string[];
+  /**
+   * Post-answer teaching: stem + ending (ES/DE) or stem + ordered suffix
+   * gloss (TR). Shown on the result, never before submission.
+   */
+  breakdown: string;
+  /** 1–2 short sentences using the form in context (post-answer teaching). */
+  exampleSentences: string[];
+  topicHint?: string;
+};
+
 export type ExerciseContent =
   | ClozeContent
   | TranslationContent
   | VocabRecallContent
   | SentenceConstructionContent
   | DictationContent
-  | FreeWritingContent;
+  | FreeWritingContent
+  | ConjugationContent;
 
 export type Exercise = {
   id: string;
@@ -254,6 +285,12 @@ export function isFreeWritingContent(
   content: ExerciseContent,
 ): content is FreeWritingContent {
   return content.type === ExerciseType.FREE_WRITING;
+}
+
+export function isConjugationContent(
+  content: ExerciseContent,
+): content is ConjugationContent {
+  return content.type === ExerciseType.CONJUGATION;
 }
 
 // ---------------------------------------------------------------------------
