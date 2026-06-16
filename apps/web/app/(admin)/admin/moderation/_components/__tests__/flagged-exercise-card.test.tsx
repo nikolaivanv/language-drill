@@ -37,4 +37,10 @@ describe('FlaggedExerciseCard', () => {
     render(<FlaggedExerciseCard item={item} onResolve={vi.fn()} pending={false} demoted />);
     expect(screen.getByText(/already exists in this cell/i)).toBeInTheDocument();
   });
+
+  it('disables both buttons when pending is true', () => {
+    render(<FlaggedExerciseCard item={item} onResolve={vi.fn()} pending={true} demoted={false} />);
+    expect(screen.getByRole('button', { name: /approve/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /reject/i })).toBeDisabled();
+  });
 });

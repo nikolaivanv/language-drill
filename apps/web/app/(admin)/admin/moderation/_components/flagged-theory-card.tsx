@@ -1,22 +1,18 @@
-import { parseTheoryTopicJson, REASON_LABELS, type GenerationReasonCode } from '@language-drill/shared';
-import type { LearningLanguage } from '@language-drill/shared';
+import { parseTheoryTopicJson, formatReason, type GenerationReason, type LearningLanguage } from '@language-drill/shared';
 import type { FlaggedTheory } from '@language-drill/api-client';
 import { Button } from '../../../../../components/ui';
 import { renderTheoryTopicJson } from '../../../../../components/theory/render-json';
 import { TheorySections } from '../../../../../components/theory/theory-sections';
 
-function reasonLabel(code: string, detail?: string): string {
-  const label = REASON_LABELS[code as GenerationReasonCode] ?? code;
-  return detail ? `${label}: ${detail}` : label;
-}
-
 function TheoryBody({ content, language }: { content: unknown; language: string }) {
   try {
     const topic = renderTheoryTopicJson(parseTheoryTopicJson(content));
+    const LEARNING_LANGUAGES: readonly string[] = ['ES', 'DE', 'TR'];
+    const lang = (LEARNING_LANGUAGES.includes(language) ? language : 'ES') as LearningLanguage;
     return (
       <TheorySections
         topic={topic}
-        language={language as LearningLanguage}
+        language={lang}
         onSwitchTopic={() => {}}
       />
     );
@@ -49,7 +45,7 @@ export function FlaggedTheoryCard({
       <div className="flex gap-2 flex-wrap">
         {item.flaggedReasons.map((r, i) => (
           <span key={i} className="text-[12px] bg-paper-2 text-ink px-2 py-px rounded-full">
-            ⚠ {reasonLabel(r.code, r.detail)}
+            ⚠ {formatReason(r as GenerationReason)}
           </span>
         ))}
       </div>

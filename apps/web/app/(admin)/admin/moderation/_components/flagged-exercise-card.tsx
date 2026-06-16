@@ -1,12 +1,7 @@
-import { REASON_LABELS, type GenerationReasonCode } from '@language-drill/shared';
+import { formatReason, type GenerationReason } from '@language-drill/shared';
 import type { FlaggedExercise } from '@language-drill/api-client';
 import { Button } from '../../../../../components/ui';
 import { ContentFieldView } from './content-field-view';
-
-function reasonLabel(code: string, detail?: string): string {
-  const label = REASON_LABELS[code as GenerationReasonCode] ?? code;
-  return detail ? `${label}: ${detail}` : label;
-}
 
 export function FlaggedExerciseCard({
   item, onResolve, pending, demoted,
@@ -28,7 +23,7 @@ export function FlaggedExerciseCard({
       <div className="flex gap-2 flex-wrap">
         {item.flaggedReasons.map((r, i) => (
           <span key={i} className="text-[12px] bg-paper-2 text-ink px-2 py-px rounded-full">
-            ⚠ {reasonLabel(r.code, r.detail)}
+            ⚠ {formatReason(r as GenerationReason)}
           </span>
         ))}
       </div>
