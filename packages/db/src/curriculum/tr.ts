@@ -39,8 +39,11 @@ const { A1, A2 } = CefrLevel;
  * picks up the new bullet regardless; the version only gates suppression-clearing,
  * which the (non-suppressed) vowel-harmony cell does not need. Prior `2026-06-07`
  * was the #220 book-grounded audit of all 40 grammar points + Yedi İklim A1+A2 parity.
+ *
+ * 2026-06-16: added the tr-a1/a2-dictation umbrellas (clears suppression so the
+ * scheduler enumerates the new dictation cells).
  */
-export const CURRICULUM_VERSION_TR = '2026-06-14';
+export const CURRICULUM_VERSION_TR = '2026-06-16';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -1503,6 +1506,46 @@ const trCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Detaching plural/case suffixes (sabahları, not *sabah ları).',
       'Confusing saat (hour/clock) with zaman (time).',
+    ],
+  },
+
+  // ---------------------------------------------------------------------------
+  // Dictation umbrellas — kind: 'dictation' (Phase 2 generation pipeline)
+  // ---------------------------------------------------------------------------
+  {
+    key: 'tr-a1-dictation',
+    kind: 'dictation',
+    name: 'Dictation — connected speech (A1)',
+    description:
+      'Short, clearly-articulated A1 Turkish clips (one simple everyday sentence); tests vowel-harmony suffixes and word-final consonant softening by ear.',
+    cefrLevel: A1,
+    language: TR,
+    examplesPositive: [
+      'Bugün hava çok güzel.',
+      'Benim adım Ali ve ben öğretmenim.',
+    ],
+    examplesNegative: ['*Tek kelime ya da bağlantısız bir kelime listesi (cümle değil).'],
+    commonErrors: [
+      'Mishearing vowel-harmony suffixes (evler vs. *evlar).',
+      'Missing word-final consonant softening (kitabı heard/spelled as kitap).',
+    ],
+  },
+  {
+    key: 'tr-a2-dictation',
+    kind: 'dictation',
+    name: 'Dictation — connected speech (A2)',
+    description:
+      'Short A2 Turkish clips (1–2 everyday sentences, light connected speech); tests suffix-heavy word segmentation and tracking across joined clauses.',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: [
+      'Hafta sonu arkadaşlarımla sinemaya gittik ve film çok güzeldi.',
+      'Dün markete gidip biraz ekmek, peynir ve süt aldım.',
+    ],
+    examplesNegative: ['*Çok uzun ya da A2 seviyesinin çok üstünde kelimeler içeren metin.'],
+    commonErrors: [
+      "Losing track across two clauses joined by 've'.",
+      'Mis-segmenting suffix-heavy words (arkadaşlarımla).',
     ],
   },
   /*
