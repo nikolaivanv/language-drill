@@ -1,9 +1,21 @@
 import { describe, it, expect } from 'vitest';
+import { ExerciseType } from '@language-drill/shared';
 import {
   DebriefItemSchema,
   DebriefItemStatusSchema,
   DebriefResponseSchema,
 } from './debrief';
+
+const dictationResult = {
+  kind: 'dictation',
+  score: 0.82, grammarAccuracy: 0.82, vocabularyRange: 'B1',
+  taskAchievement: 0.9, feedback: 'Good ear.', errors: [], estimatedCefrEvidence: 'B1',
+  rawCharAccuracy: 0.8, adjustedCharAccuracy: 0.82, wordAccuracy: 0.9, listeningCefr: 'B1',
+  headline: 'Casi perfecto', summary: 'Solo un desliz.',
+  diff: [{ kind: 'match', text: 'Hola' }],
+  differences: [{ id: 1, kind: 'error', category: 'word boundary', severity: 'low', got: 'a', expected: 'b', note: 'n' }],
+  criteria: [{ id: 'phon', label: 'Phoneme discrimination', score: 0.8, cefr: 'B1', note: 'n' }],
+};
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -166,6 +178,28 @@ describe('DebriefItemSchema', () => {
     expect(() =>
       DebriefItemSchema.parse({ ...validAttemptedItem, contentJson: null }),
     ).not.toThrow();
+  });
+
+  it('preserves dictation-specific fields in evaluation', () => {
+    const item = {
+      exerciseId: '11111111-1111-1111-1111-111111111111',
+      type: ExerciseType.DICTATION, grammarPointKey: 'es-b1-dictation',
+      contentJson: {}, status: 'incorrect', userAnswer: 'Hola',
+      score: 0.82, evaluation: dictationResult,
+    };
+    const parsed = DebriefItemSchema.parse(item);
+    expect(parsed.evaluation).toMatchObject({
+      kind: 'dictation',
+      diff: [{ kind: 'match', text: 'Hola' }],
+      criteria: [{ id: 'phon' }],
+    });
+  });
+
+  it('still accepts a plain EvaluationResult and null', () => {
+    const evalResult = { score: 0.7, grammarAccuracy: 0.7, vocabularyRange: 'B1', taskAchievement: 0.7, feedback: 'ok', errors: [], estimatedCefrEvidence: 'B1' };
+    const base = { exerciseId: '11111111-1111-1111-1111-111111111111', type: ExerciseType.CLOZE, grammarPointKey: null, contentJson: {}, status: 'correct', userAnswer: 'x', score: 0.7 };
+    expect(DebriefItemSchema.parse({ ...base, evaluation: evalResult }).evaluation).toMatchObject({ score: 0.7 });
+    expect(DebriefItemSchema.parse({ ...base, evaluation: null, status: 'skipped', userAnswer: null, score: null }).evaluation).toBeNull();
   });
 });
 

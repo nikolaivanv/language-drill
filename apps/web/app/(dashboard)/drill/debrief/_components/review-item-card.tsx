@@ -3,6 +3,7 @@
 import * as React from 'react';
 import {
   isClozeContent,
+  isDictationContent,
   isSentenceConstructionContent,
   isTranslationContent,
   isVocabRecallContent,
@@ -15,6 +16,7 @@ import {
 import type { DebriefItem } from '@language-drill/api-client';
 import { Card, Chip } from '../../../../../components/ui';
 import { splitClozeSentence } from '../../../../../lib/drill/cloze-blank';
+import { DictationBody } from './dictation-body';
 
 // ---------------------------------------------------------------------------
 // ReviewItemCard — one card per debrief item, in manifest order. Renders a
@@ -69,6 +71,8 @@ export function ReviewItemCard({ index, item }: ReviewItemCardProps) {
             <VocabBody item={item} content={content} />
           ) : isSentenceConstructionContent(content) ? (
             <SentenceConstructionBody item={item} content={content} />
+          ) : isDictationContent(content) ? (
+            <DictationBody item={item} content={content} />
           ) : null}
         </div>
       )}

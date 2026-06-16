@@ -115,6 +115,16 @@ vi.mock('../lib/exercise-filters', () => ({
   freshFirstOrderBy: (userId: string) => mockFreshFirstOrderBy(userId),
 }));
 
+// presignAudioUrl hits the AWS SDK and is env-gated (returns null when
+// CONTENT_BUCKET_NAME is unset). Mock it so dictation tests can assert a
+// deterministic presigned URL is injected, independent of AWS/env.
+// Default: resolve null (no key / no bucket); per-test override via
+// mockPresignAudioUrl.mockResolvedValueOnce(...).
+const mockPresignAudioUrl = vi.fn(async (_key: string | null | undefined) => null as string | null);
+vi.mock('../lib/audio-url', () => ({
+  presignAudioUrl: (key: string | null | undefined) => mockPresignAudioUrl(key),
+}));
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyJson = Record<string, any>;
 
@@ -1435,6 +1445,92 @@ describe('GET /sessions/:id/debrief', () => {
 
     expect(res.status).toBe(200);
     expect(res.headers.get('cache-control')).toBe('private, max-age=300');
+  });
+
+  // -------------------------------------------------------------------------
+  // Dictation items get a presigned audioUrl injected into contentJson so the
+  // debrief can replay the clip (mirrors POST /sessions). Non-dictation items
+  // are returned unchanged, and a null audio_s3_key yields no audioUrl (the
+  // presign mock resolves null → withAudioUrl leaves the field absent).
+  // -------------------------------------------------------------------------
+
+  it('presigns audioUrl on dictation items only; non-dictation + keyless rows are unchanged', async () => {
+    const startedAt = new Date('2026-05-04T10:00:00.000Z');
+    const completedAt = new Date('2026-05-04T10:02:00.000Z');
+    mockLimit.mockResolvedValueOnce([
+      {
+        id: SESSION_ID,
+        userId: 'user_123',
+        language: 'ES',
+        difficulty: 'B1',
+        exerciseCount: 3,
+        correctCount: 1,
+        exerciseIds: [EX_1, EX_2, EX_3], // manifest order
+        startedAt,
+        completedAt,
+      },
+    ]);
+
+    // EX_1: dictation with an audio_s3_key → should get the presigned URL.
+    // EX_2: non-dictation (cloze) → content returned unchanged (no audioUrl).
+    // EX_3: dictation but null audio_s3_key → presign resolves null → no audioUrl.
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        {
+          exercise_id: EX_1,
+          type: 'dictation',
+          content_json: { type: 'dictation', referenceText: 'el tiempo lo cura todo' },
+          audio_s3_key: 'audio/es/clip-1.mp3',
+          score: 0.82,
+          response_json: { userAnswer: 'el tiempo lo cura todo', evaluation: null },
+        },
+        {
+          exercise_id: EX_2,
+          type: 'cloze',
+          content_json: { instructions: 'Fill', sentence: 'Yo ___' },
+          audio_s3_key: null,
+          score: 0.4,
+          response_json: { userAnswer: 'fui', evaluation: sampleEvaluation },
+        },
+        {
+          exercise_id: EX_3,
+          type: 'dictation',
+          content_json: { type: 'dictation', referenceText: 'sin audio' },
+          audio_s3_key: null,
+          score: null,
+          response_json: null,
+        },
+      ],
+    });
+
+    // Only the keyed dictation row should consume a presigned URL.
+    mockPresignAudioUrl.mockResolvedValueOnce('https://signed.example/clip-1.mp3?sig=abc');
+
+    const res = await app.request(
+      `/sessions/${SESSION_ID}/debrief`,
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+
+    // EX_1 (dictation, keyed) → audioUrl injected.
+    expect(body.items[0].exerciseId).toBe(EX_1);
+    expect(body.items[0].contentJson.audioUrl).toBe('https://signed.example/clip-1.mp3?sig=abc');
+
+    // EX_2 (cloze) → never presigned; no audioUrl.
+    expect(body.items[1].exerciseId).toBe(EX_2);
+    expect(body.items[1].contentJson.audioUrl).toBeUndefined();
+
+    // EX_3 (dictation, null key) → presign resolved null; no audioUrl, no throw.
+    expect(body.items[2].exerciseId).toBe(EX_3);
+    expect(body.items[2].contentJson.audioUrl).toBeUndefined();
+
+    // presignAudioUrl is called for dictation rows only — EX_1 with its key and
+    // EX_3 with null — never for the cloze row (so exactly 2 calls).
+    expect(mockPresignAudioUrl).toHaveBeenCalledWith('audio/es/clip-1.mp3');
+    expect(mockPresignAudioUrl).toHaveBeenCalledTimes(2);
   });
 });
 
