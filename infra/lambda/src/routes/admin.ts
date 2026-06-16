@@ -543,7 +543,7 @@ admin.get('/admin/flagged/theory', async (c) => {
   ]);
   const items = rows.map((r) => ({
     id: r.id, language: r.language, level: r.cefrLevel, grammarPointKey: r.grammarPointKey,
-    topicId: r.topicId, contentJson: r.contentJson, qualityScore: r.qualityScore,
+    topicId: r.topicId, contentJson: stripDedupKey(r.contentJson), qualityScore: r.qualityScore,
     flaggedReasons: normalizeFlaggedReasons(r.flaggedReasons),
     generatedAt: r.generatedAt ? r.generatedAt.toISOString() : null,
   }));

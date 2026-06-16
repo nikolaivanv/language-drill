@@ -778,6 +778,13 @@ describe('GET /admin/flagged/theory', () => {
     expect(body.items[0].level).toBe('B1');
     expect(body.items[0].topicId).toBe('de-b1-dative');
   });
+
+  it('returns 400 with VALIDATION_ERROR for an unrecognised language', async () => {
+    const res = await app.request('/admin/flagged/theory?language=FR', undefined, adminEnv);
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBe('VALIDATION_ERROR');
+  });
 });
 
 // ---------------------------------------------------------------------------
