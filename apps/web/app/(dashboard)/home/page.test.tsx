@@ -124,6 +124,7 @@ function planResponse(
     items,
     summary: null,
     code: null,
+    freeWriting: null,
     ...overrides,
   };
 }

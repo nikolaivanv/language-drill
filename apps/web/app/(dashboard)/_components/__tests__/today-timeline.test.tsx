@@ -53,6 +53,7 @@ function makeResponse(
     items,
     summary: null,
     code: null,
+    freeWriting: null,
     ...overrides,
   };
 }
@@ -212,5 +213,59 @@ describe('TodayTimeline — sr-only summary', () => {
     expect(lis[0].textContent).toMatch(/next-up/);
     expect(lis[4].textContent).toMatch(/^5\. /);
     expect(lis[4].textContent).toMatch(/queued/);
+  });
+});
+
+describe('TodayTimeline — free-writing block', () => {
+  it('renders the free-writing block when data.freeWriting is present', () => {
+    const data = makeResponse([makeItem(1, 'queued'), makeItem(2, 'queued')], {
+      freeWriting: { estimatedMinutes: 8 },
+    });
+    render(
+      <TodayTimeline
+        {...baseProps}
+        data={data}
+        isLoading={false}
+        error={null}
+      />,
+    );
+
+    expect(screen.getByText('free writing')).toBeInTheDocument();
+    const links = screen.getAllByRole('link');
+    expect(
+      links.some((a) => a.getAttribute('href') === '/drill/free-writing'),
+    ).toBe(true);
+  });
+
+  it('does not render the free-writing block when data.freeWriting is null', () => {
+    const data = makeResponse([makeItem(1, 'queued')], { freeWriting: null });
+    render(
+      <TodayTimeline
+        {...baseProps}
+        data={data}
+        isLoading={false}
+        error={null}
+      />,
+    );
+
+    expect(screen.queryByText('free writing')).not.toBeInTheDocument();
+  });
+
+  it('renders the free-writing block alongside the all-done card', () => {
+    const doneItems = [makeItem(1, 'done'), makeItem(2, 'done')];
+    const data = makeResponse(doneItems, {
+      summary: { itemCount: 2, correctCount: 2, durationMinutes: 6 },
+      freeWriting: { estimatedMinutes: 8 },
+    });
+    render(
+      <TodayTimeline
+        {...baseProps}
+        data={data}
+        isLoading={false}
+        error={null}
+      />,
+    );
+
+    expect(screen.getByText('free writing')).toBeInTheDocument();
   });
 });
