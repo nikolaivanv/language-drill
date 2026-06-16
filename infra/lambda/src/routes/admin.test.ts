@@ -1052,3 +1052,62 @@ describe('GET /admin/content/theory', () => {
     expect(body.items[0].reviewStatus).toBe('manual-approved');
   });
 });
+
+// ---------------------------------------------------------------------------
+// POST /admin/content/exercises/:id/demote
+// ---------------------------------------------------------------------------
+
+describe('POST /admin/content/exercises/:id/demote', () => {
+  const id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+  it('demotes an approved row (outcome=demoted)', async () => {
+    queryQueue.push([{ id }]);
+    const res = await app.request(`/admin/content/exercises/${id}/demote`, { method: 'POST' }, adminEnv);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ outcome: 'demoted' });
+  });
+  it('already_resolved when 0 rows match but the row exists', async () => {
+    queryQueue.push([]); queryQueue.push([{ reviewStatus: 'flagged' }]);
+    const res = await app.request(`/admin/content/exercises/${id}/demote`, { method: 'POST' }, adminEnv);
+    expect(await res.json()).toEqual({ outcome: 'already_resolved' });
+  });
+  it('not_found when the row does not exist', async () => {
+    queryQueue.push([]); queryQueue.push([]);
+    const res = await app.request(`/admin/content/exercises/${id}/demote`, { method: 'POST' }, adminEnv);
+    expect(await res.json()).toEqual({ outcome: 'not_found' });
+  });
+  it('rejects a non-uuid id with 400', async () => {
+    const res = await app.request('/admin/content/exercises/not-a-uuid/demote', { method: 'POST' }, adminEnv);
+    expect(res.status).toBe(400);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /admin/content/exercises/:id/reject
+// ---------------------------------------------------------------------------
+
+describe('POST /admin/content/exercises/:id/reject', () => {
+  const id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+  it('rejects an approved row (outcome=rejected)', async () => {
+    queryQueue.push([{ id }]);
+    const res = await app.request(`/admin/content/exercises/${id}/reject`, { method: 'POST' }, adminEnv);
+    expect(await res.json()).toEqual({ outcome: 'rejected' });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /admin/content/theory/:id/demote + reject
+// ---------------------------------------------------------------------------
+
+describe('POST /admin/content/theory/:id/demote', () => {
+  const id = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
+  it('demotes an approved theory row', async () => {
+    queryQueue.push([{ id }]);
+    const res = await app.request(`/admin/content/theory/${id}/demote`, { method: 'POST' }, adminEnv);
+    expect(await res.json()).toEqual({ outcome: 'demoted' });
+  });
+  it('rejects an approved theory row', async () => {
+    queryQueue.push([{ id }]);
+    const res = await app.request(`/admin/content/theory/${id}/reject`, { method: 'POST' }, adminEnv);
+    expect(await res.json()).toEqual({ outcome: 'rejected' });
+  });
+});

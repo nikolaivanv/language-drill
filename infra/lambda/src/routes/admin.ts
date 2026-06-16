@@ -558,6 +558,53 @@ admin.get('/admin/content/theory', async (c) => {
 });
 
 // ---------------------------------------------------------------------------
+// POST /admin/content/exercises/:id/demote
+// POST /admin/content/exercises/:id/reject
+// POST /admin/content/theory/:id/demote
+// POST /admin/content/theory/:id/reject
+// ---------------------------------------------------------------------------
+
+type ContentOutcome = 'demoted' | 'rejected' | 'not_found' | 'already_resolved';
+
+async function transitionContentExercise(id: string, toStatus: 'flagged' | 'rejected'): Promise<ContentOutcome> {
+  const updated = await db
+    .update(exercises)
+    .set({ reviewStatus: toStatus })
+    .where(and(eq(exercises.id, id), inArray(exercises.reviewStatus, [...APPROVED_STATUSES])))
+    .returning({ id: exercises.id });
+  if (updated.length > 0) return toStatus === 'flagged' ? 'demoted' : 'rejected';
+  const existing = await db.select({ reviewStatus: exercises.reviewStatus }).from(exercises).where(eq(exercises.id, id)).limit(1);
+  return existing.length > 0 ? 'already_resolved' : 'not_found';
+}
+
+async function transitionContentTheory(id: string, toStatus: 'flagged' | 'rejected'): Promise<ContentOutcome> {
+  const updated = await db
+    .update(theoryTopics)
+    .set({ reviewStatus: toStatus })
+    .where(and(eq(theoryTopics.id, id), inArray(theoryTopics.reviewStatus, [...APPROVED_STATUSES])))
+    .returning({ id: theoryTopics.id });
+  if (updated.length > 0) return toStatus === 'flagged' ? 'demoted' : 'rejected';
+  const existing = await db.select({ reviewStatus: theoryTopics.reviewStatus }).from(theoryTopics).where(eq(theoryTopics.id, id)).limit(1);
+  return existing.length > 0 ? 'already_resolved' : 'not_found';
+}
+
+const ContentIdSchema = z.string().uuid();
+
+for (const action of ['demote', 'reject'] as const) {
+  const toStatus = action === 'demote' ? ('flagged' as const) : ('rejected' as const);
+  admin.post(`/admin/content/exercises/:id/${action}`, async (c) => {
+    const idParsed = ContentIdSchema.safeParse(c.req.param('id'));
+    if (!idParsed.success) return c.json({ error: 'Invalid id', code: 'VALIDATION_ERROR' }, 400);
+    return c.json({ outcome: await transitionContentExercise(idParsed.data, toStatus) });
+  });
+  admin.post(`/admin/content/theory/:id/${action}`, async (c) => {
+    const idParsed = ContentIdSchema.safeParse(c.req.param('id'));
+    if (!idParsed.success) return c.json({ error: 'Invalid id', code: 'VALIDATION_ERROR' }, 400);
+    return c.json({ outcome: await transitionContentTheory(idParsed.data, toStatus) });
+  });
+}
+
+// ---------------------------------------------------------------------------
 // GET /admin/flagged/exercises — list exercises awaiting moderation
 // GET /admin/flagged/theory   — list theory topics awaiting moderation
 // ---------------------------------------------------------------------------
