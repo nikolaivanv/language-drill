@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   CefrLevel,
@@ -27,7 +27,8 @@ import { topicIdForGrammarPointKey } from '../../../lib/theory-topic-map';
 import { useIsMobile } from '../../../lib/responsive';
 import { Card } from '../../../components/ui';
 import { coachMessage } from '../../../lib/drill/coach-messages';
-import { DEFAULT_EXERCISE_COUNT } from '../../../lib/drill/session-config';
+import { DEFAULT_EXERCISE_COUNT, DICTATION_RUN_COUNT } from '../../../lib/drill/session-config';
+import { DrillHub } from './_components/drill-hub';
 import { CoachRail } from './_components/coach-rail';
 import { CoachCard } from './_components/coach-card';
 import { SessionDots } from './_components/session-dots';
@@ -92,9 +93,16 @@ function DrillMetaSync({ current, total }: { current: number; total: number }) {
   return null;
 }
 
-export default function PracticePage() {
+type StartIntent = 'quick' | 'dictation';
+
+function PracticePageContent() {
   const { getToken } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [startIntent, setStartIntent] = useState<StartIntent | null>(() => {
+    const s = searchParams.get('start');
+    return s === 'quick' || s === 'dictation' ? s : null;
+  });
   const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
 
   const { data: profilesData } = useLanguageProfiles({ fetchFn });
@@ -145,6 +153,7 @@ export default function PracticePage() {
   const sessionKickoffRef = useRef(false);
   useEffect(() => {
     if (!initialized) return;
+    if (startIntent === null) return; // no intent → show the hub, don't auto-start
     if (state.kind !== 'idle') {
       sessionKickoffRef.current = false;
       return;
@@ -153,14 +162,24 @@ export default function PracticePage() {
     sessionKickoffRef.current = true;
 
     dispatch({ type: 'CREATE_REQUESTED' });
-    createSession.mutate(
-      { language: activeLanguage, difficulty, exerciseCount: DEFAULT_EXERCISE_COUNT },
-      {
-        onSuccess: (data) => dispatch({ type: 'CREATE_SUCCEEDED', session: data }),
-        onError: (err) => dispatch({ type: 'CREATE_FAILED', error: err as Error }),
-      },
-    );
-  }, [initialized, state.kind, activeLanguage, difficulty, createSession]);
+    const config =
+      startIntent === 'dictation'
+        ? {
+            language: activeLanguage,
+            difficulty,
+            exerciseCount: DICTATION_RUN_COUNT,
+            exerciseType: ExerciseType.DICTATION,
+          }
+        : {
+            language: activeLanguage,
+            difficulty,
+            exerciseCount: DEFAULT_EXERCISE_COUNT,
+          };
+    createSession.mutate(config, {
+      onSuccess: (data) => dispatch({ type: 'CREATE_SUCCEEDED', session: data }),
+      onError: (err) => dispatch({ type: 'CREATE_FAILED', error: err as Error }),
+    });
+  }, [initialized, startIntent, state.kind, activeLanguage, difficulty, createSession]);
 
   function handleSubmit(answer: string, meta: SubmissionMeta) {
     if (state.kind !== 'inSession') return;
@@ -269,6 +288,17 @@ export default function PracticePage() {
         <h1 className="t-display-l mb-s-6">practice</h1>
         {selectors}
       </div>
+    );
+  }
+
+  if (state.kind === 'idle' && startIntent === null) {
+    return (
+      <DrillHub
+        difficulty={difficulty}
+        onDifficultyChange={handleDifficultyChange}
+        onStartQuick={() => setStartIntent('quick')}
+        onStartDictation={() => setStartIntent('dictation')}
+      />
     );
   }
 
@@ -385,5 +415,16 @@ export default function PracticePage() {
         />
       )}
     </DrillActionProvider>
+  );
+}
+
+// `useSearchParams()` forces this client page out of static prerendering;
+// Next.js requires the bailout to sit under a Suspense boundary. The default
+// export is a thin wrapper; PracticePageContent holds the real page.
+export default function PracticePage() {
+  return (
+    <Suspense fallback={<div className="p-s-6" />}>
+      <PracticePageContent />
+    </Suspense>
   );
 }

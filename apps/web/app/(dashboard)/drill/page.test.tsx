@@ -16,8 +16,10 @@ vi.mock('@clerk/nextjs', () => ({
 }));
 
 const mockPush = vi.fn();
+let mockSearchParamsString = 'start=quick'; // existing tests run in auto-start mode
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
+  useSearchParams: () => new URLSearchParams(mockSearchParamsString),
 }));
 
 // Default desktop (false); the mobile suite flips this per-test. Existing
@@ -37,6 +39,7 @@ vi.mock('@language-drill/api-client', () => ({
   useCompleteSession: (...args: unknown[]) => mockUseCompleteSession(...args),
   useSubmitAnswer: (...args: unknown[]) => mockUseSubmitAnswer(...args),
   useLanguageProfiles: (...args: unknown[]) => mockUseLanguageProfiles(...args),
+  useTodayPlan: () => ({ data: undefined, isLoading: false, error: null }),
   createAuthenticatedFetch: vi.fn(() => vi.fn()),
 }));
 
@@ -140,6 +143,7 @@ function setSubmitMock(mutateImpl: (vars: unknown, opts: {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockSearchParamsString = 'start=quick';
   mockIsMobile.mockReturnValue(false);
 
   mockUseLanguageProfiles.mockReturnValue({
@@ -565,5 +569,45 @@ describe('PracticePage', () => {
       expect(screen.getByText(/sentence-1/)).toBeInTheDocument();
       expect(screen.queryByText(/sentence-0/)).not.toBeInTheDocument();
     });
+  });
+});
+
+describe('PracticePage — hub (no start intent)', () => {
+  it('renders the launcher hub instead of auto-starting when there is no ?start', () => {
+    mockSearchParamsString = '';
+    renderWithProviders(<PracticePage />);
+
+    expect(createMutate).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole('button', { name: /quick drill/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /dictation/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('tapping "quick drill" starts a 5-item mixed session', () => {
+    mockSearchParamsString = '';
+    renderWithProviders(<PracticePage />);
+    fireEvent.click(screen.getByRole('button', { name: /quick drill/i }));
+    expect(createMutate).toHaveBeenCalledWith(
+      { language: 'ES', difficulty: 'B1', exerciseCount: 5 },
+      expect.any(Object),
+    );
+  });
+
+  it('tapping "dictation" starts a dictation-only run', () => {
+    mockSearchParamsString = '';
+    renderWithProviders(<PracticePage />);
+    fireEvent.click(screen.getByRole('button', { name: /dictation/i }));
+    expect(createMutate).toHaveBeenCalledWith(
+      {
+        language: 'ES',
+        difficulty: 'B1',
+        exerciseCount: 4,
+        exerciseType: ExerciseType.DICTATION,
+      },
+      expect.any(Object),
+    );
   });
 });
