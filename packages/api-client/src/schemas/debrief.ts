@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Language, CefrLevel, ExerciseType } from '@language-drill/shared';
+import { Language, CefrLevel, ExerciseType, SkillMovementSchema } from '@language-drill/shared';
 import { DictationResultSchema, EvaluationResultSchema } from './exercise';
 
 // ---------------------------------------------------------------------------
@@ -57,6 +57,9 @@ export const DebriefResponseSchema = z.object({
   attemptedCount: z.number().int().nonnegative(),
   skippedCount: z.number().int().nonnegative(),
   items: z.array(DebriefItemSchema),
+  // Banded per-grammar-point mastery movement for the points practiced this
+  // session (design spec 2026-06-16). `.default([])` keeps older payloads valid.
+  skillMovements: z.array(SkillMovementSchema).default([]),
 });
 
 export type DebriefResponse = z.infer<typeof DebriefResponseSchema>;

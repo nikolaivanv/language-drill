@@ -293,3 +293,37 @@ describe('DebriefResponseSchema', () => {
     ).toThrow();
   });
 });
+
+// ---------------------------------------------------------------------------
+// DebriefResponseSchema — skillMovements field
+// ---------------------------------------------------------------------------
+
+const base = {
+  id: '00000000-0000-0000-0000-000000000000',
+  language: 'ES',
+  difficulty: 'B2',
+  startedAt: '2026-06-16T04:00:00.000Z',
+  completedAt: '2026-06-16T04:10:00.000Z',
+  durationSeconds: 600,
+  exerciseCount: 3,
+  correctCount: 2,
+  attemptedCount: 3,
+  skippedCount: 0,
+  items: [],
+};
+
+describe('DebriefResponseSchema skillMovements', () => {
+  it('accepts a response carrying banded skillMovements', () => {
+    const parsed = DebriefResponseSchema.parse({
+      ...base,
+      skillMovements: [
+        { grammarPointKey: 'es-b2-x', label: 'X', band: 'gain', confidence: 'high' },
+      ],
+    });
+    expect(parsed.skillMovements).toHaveLength(1);
+  });
+
+  it('defaults skillMovements to [] when omitted (back-compat)', () => {
+    expect(DebriefResponseSchema.parse(base).skillMovements).toEqual([]);
+  });
+});
