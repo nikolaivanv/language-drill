@@ -3,14 +3,23 @@
 import { ExerciseType } from '@language-drill/shared';
 import { Card } from '../../../../components/ui';
 import { cn } from '../../../../lib/cn';
+import { SessionDots } from './session-dots';
 
 export interface CoachRailProps {
   message: string;
   exerciseType: ExerciseType;
   vocabActiveCount?: number;
+  /** 1-based position of the current item in the session. */
+  sessionCurrent?: number;
+  /** Total number of items in the session. */
+  sessionTotal?: number;
 }
 
-export function CoachRail({ message }: CoachRailProps) {
+export function CoachRail({
+  message,
+  sessionCurrent,
+  sessionTotal,
+}: CoachRailProps) {
   return (
     <div className="flex flex-col gap-s-4">
       {/* Avatar + labels */}
@@ -33,6 +42,15 @@ export function CoachRail({ message }: CoachRailProps) {
       <Card key={message} className="coach-fade-in t-body" padding="md">
         {message}
       </Card>
+
+      {/* Session-position indicator — desktop counterpart of the mobile dots. */}
+      {typeof sessionCurrent === 'number' &&
+        typeof sessionTotal === 'number' && (
+          <div className="flex flex-col gap-s-2">
+            <p className="t-micro">progress</p>
+            <SessionDots current={sessionCurrent} total={sessionTotal} />
+          </div>
+        )}
 
       {/*
         Vocabulary tracker — hidden in v1 per Req 5 AC #6.

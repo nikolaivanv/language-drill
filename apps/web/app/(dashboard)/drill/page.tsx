@@ -47,7 +47,6 @@ import {
   sessionReducer,
 } from './_components/session-reducer';
 import { SubmissionErrorCard } from './_components/submission-error-card';
-import { FreeWritingEntryCard } from './_components/free-writing-entry-card';
 import type { SubmissionMeta } from './_components/types';
 
 interface SelectorsProps {
@@ -312,8 +311,6 @@ function PracticePageContent() {
 
   const main = (
     <>
-      <FreeWritingEntryCard />
-
       {/* Mobile: the coach rail collapses into a card at the top of content. */}
       {isMobile && currentItem && <CoachCard message={coachMsg} />}
 
@@ -391,7 +388,12 @@ function PracticePageContent() {
       <DrillLayout
         rail={
           !isMobile && currentItem ? (
-            <CoachRail message={coachMsg} exerciseType={exerciseTypeForRail} />
+            <CoachRail
+              message={coachMsg}
+              exerciseType={exerciseTypeForRail}
+              sessionCurrent={sessionPosition?.current}
+              sessionTotal={sessionPosition?.total}
+            />
           ) : null
         }
         main={main}

@@ -59,6 +59,27 @@ describe('CoachRail', () => {
     expect(text).not.toMatch(/streak|xp|lesson|days?|points?/i);
   });
 
+  it('renders session-position dots when sessionCurrent/sessionTotal are provided', () => {
+    render(
+      <CoachRail
+        message="anything"
+        exerciseType={ExerciseType.CLOZE}
+        sessionCurrent={2}
+        sessionTotal={5}
+      />,
+    );
+    expect(
+      screen.getByRole('list', { name: 'item 2 of 5' }),
+    ).toBeInTheDocument();
+  });
+
+  it('does not render session-position dots when position props are absent', () => {
+    render(
+      <CoachRail message="anything" exerciseType={ExerciseType.CLOZE} />,
+    );
+    expect(screen.queryByRole('list')).not.toBeInTheDocument();
+  });
+
   it('does not render a vocabulary tracker even when vocabActiveCount is provided', () => {
     render(
       <CoachRail
