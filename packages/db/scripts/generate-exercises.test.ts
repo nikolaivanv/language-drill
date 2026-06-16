@@ -205,6 +205,8 @@ describe('resolveCells', () => {
         expect(cell.exerciseType).toBe(ExerciseType.VOCAB_RECALL);
       } else if (cell.grammarPoint.kind === 'dictation') {
         expect(cell.exerciseType).toBe(ExerciseType.DICTATION);
+      } else if (cell.grammarPoint.kind === 'free-writing') {
+        expect(cell.exerciseType).toBe(ExerciseType.FREE_WRITING);
       } else {
         expect([ExerciseType.CLOZE, ExerciseType.TRANSLATION, ExerciseType.SENTENCE_CONSTRUCTION]).toContain(cell.exerciseType);
       }

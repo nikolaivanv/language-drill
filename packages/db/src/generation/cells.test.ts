@@ -44,12 +44,14 @@ describe('enumerateCurriculumCells', () => {
     const vocabCount = ALL_CURRICULA.filter((g) => g.kind === 'vocab').length;
     // A dictation umbrella yields exactly one cell (dictation only).
     const dictationCount = ALL_CURRICULA.filter((g) => g.kind === 'dictation').length;
+    // A free-writing umbrella yields exactly one cell (free_writing only).
+    const fwCount = ALL_CURRICULA.filter((g) => g.kind === 'free-writing').length;
     // A clozeUnsuitable grammar point yields 1 cell (translation) instead of 2,
     // so each flagged point drops the total by exactly one.
     const flaggedCount = ALL_CURRICULA.filter((g) => g.clozeUnsuitable === true).length;
     const scCount = ALL_CURRICULA.filter((g) => g.sentenceConstructionSuitable === true).length;
     expect(cells).toHaveLength(
-      grammarCount * 2 + vocabCount + dictationCount - flaggedCount + scCount,
+      grammarCount * 2 + vocabCount + dictationCount + fwCount - flaggedCount + scCount,
     );
   });
 
