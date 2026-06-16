@@ -296,16 +296,19 @@ describe('per-language counts', () => {
     const grammar = { A1: 0, A2: 0, B1: 0, B2: 0 } as Record<string, number>;
     let vocab = 0;
     let dictation = 0;
+    let freeWriting = 0;
     for (const entry of curriculum) {
       if (entry.kind === 'grammar') {
         grammar[entry.cefrLevel]++;
       } else if (entry.kind === 'vocab') {
         vocab++;
-      } else {
+      } else if (entry.kind === 'dictation') {
         dictation++;
+      } else {
+        freeWriting++;
       }
     }
-    return { grammar, vocab, dictation };
+    return { grammar, vocab, dictation, freeWriting };
   }
 
   // ES/DE are TEMPORARILY REDUCED (2026-05-10): assertions match the
@@ -314,8 +317,8 @@ describe('per-language counts', () => {
   // uncommented. TR (2026-05-28) is now at full Yedi İklim A1+A2 parity
   // (26 A1 + 14 A2 grammar + 10 themed vocab umbrellas); B1/B2 remain disabled.
 
-  it('Spanish meets minimums (B1 + B2 only while A1/A2 are disabled), has 2 vocab umbrellas and 2 dictation umbrellas', () => {
-    const { grammar, vocab, dictation } = countsFor(esCurriculum);
+  it('Spanish meets minimums (B1 + B2 only while A1/A2 are disabled), has 2 vocab umbrellas, 2 dictation umbrellas, and 12 free-writing umbrellas', () => {
+    const { grammar, vocab, dictation, freeWriting } = countsFor(esCurriculum);
     expect(grammar.A1).toBe(0);
     expect(grammar.A2).toBe(0);
     expect(grammar.B1).toBeGreaterThanOrEqual(6);
@@ -323,6 +326,8 @@ describe('per-language counts', () => {
     expect(vocab).toBe(2);
     // es-b1-dictation + es-b2-dictation (Phase 2 dictation generation pipeline).
     expect(dictation).toBe(2);
+    // 6 × B1 + 6 × B2 free-writing topic umbrellas (Phase 2 free-writing generation).
+    expect(freeWriting).toBe(12);
   });
 
   it('German is fully disabled (no grammar entries, no vocab or dictation umbrellas)', () => {
@@ -347,16 +352,27 @@ describe('per-language counts', () => {
   });
 });
 
+describe('free-writing topic umbrellas', () => {
+  it("has 6 free-writing topic umbrellas per ES B1 and B2", () => {
+    const fw = esCurriculum.filter((e) => e.kind === "free-writing");
+    expect(fw.filter((e) => e.cefrLevel === "B1")).toHaveLength(6);
+    expect(fw.filter((e) => e.cefrLevel === "B2")).toHaveLength(6);
+    for (const e of fw) {
+      expect(e.freeWriting?.register).toBeDefined();
+    }
+  });
+});
+
 describe('CURRICULUM_VERSION_<LANG> constants', () => {
   // CLAUDE.md requires that any curriculum edit bumps the matching
   // CURRICULUM_VERSION_<LANG> in the same commit. Asserting the shape here
   // catches typos (e.g. empty string, '2026-5-23', '2026-05-23-draft') at PR
   // time so we never ship a curriculum_version row that breaks the
   // YYYY-MM-DD invariant downstream consumers rely on.
-  it('every learning language exports a YYYY-MM-DD version constant', () => {
-    expect(CURRICULUM_VERSION_ES).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(CURRICULUM_VERSION_DE).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(CURRICULUM_VERSION_TR).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  it('every learning language exports a YYYY-MM-DD version constant (optional single-letter suffix allowed)', () => {
+    expect(CURRICULUM_VERSION_ES).toMatch(/^\d{4}-\d{2}-\d{2}[a-z]?$/);
+    expect(CURRICULUM_VERSION_DE).toMatch(/^\d{4}-\d{2}-\d{2}[a-z]?$/);
+    expect(CURRICULUM_VERSION_TR).toMatch(/^\d{4}-\d{2}-\d{2}[a-z]?$/);
   });
 });
 

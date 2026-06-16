@@ -59,10 +59,10 @@ export const CELL_TARGET_DEFAULTS: Record<
   // small rotating pool fills the single listening slot per session; B1/B2 only
   // this milestone (A1/A2 dictation is pedagogically out of scope).
   [ExerciseType.DICTATION]: { B1: 15, B2: 15 },
-  // Free writing is authored by hand, never produced by the generation
-  // pipeline, so it has no per-cell targets. Present only to satisfy the
-  // exhaustive map type; never read (no free-writing generation cells exist).
-  [ExerciseType.FREE_WRITING]: {},
+  // Free-writing prompts are batch-generated (Phase 2). A small rotating pool per
+  // (language, level, topic) cell fills the writing slot across sessions; topic
+  // breadth comes from more curated topic umbrellas, not a high per-cell target.
+  [ExerciseType.FREE_WRITING]: { B1: 12, B2: 12 },
 };
 
 /**

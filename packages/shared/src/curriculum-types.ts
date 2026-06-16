@@ -42,11 +42,16 @@ export type CurriculumCefrLevel = Extract<CefrLevel, 'A1' | 'A2' | 'B1' | 'B2'>;
  *     description / examples feed the dictation generation prompt as theme +
  *     style guidance. Paired only with `ExerciseType.DICTATION` by
  *     `compatibleTypes()`. No `coverageSpec` (count-only).
+ *   - `'free-writing'` — a curated `(language, level, topic)` umbrella that owns
+ *     ONE free-writing generation cell. Carries no grammar-point semantics; its
+ *     name/description/examples frame the topic for the generation prompt, and its
+ *     `freeWriting.register` sets the target register. Paired only with
+ *     `ExerciseType.FREE_WRITING` by `compatibleTypes()`. No `coverageSpec`.
  */
 export type GrammarPoint = Readonly<{
   /** Stable identifier; format: `<lang>-<level>-<slug>`, e.g. `'es-b1-present-subjunctive'`. */
   key: string;
-  kind: 'grammar' | 'vocab' | 'dictation';
+  kind: 'grammar' | 'vocab' | 'dictation' | 'free-writing';
   name: string;
   /** ≤ 200 chars; English; injected verbatim into Phase 2 prompts. */
   description: string;
@@ -102,4 +107,14 @@ export type GrammarPoint = Readonly<{
    * `person`/`polarity`/`sentenceType` on grammar points.
    */
   coverageSpec?: CoverageSpec;
+  /**
+   * Free-writing topic config (Phase 2). REQUIRED in practice on every
+   * `kind: 'free-writing'` umbrella and meaningless on any other kind: it carries
+   * the author-declared register the generated prompt must target. The word band
+   * + suggested minutes are NOT stored here — they are derived from the cell's
+   * CEFR level via `FREE_WRITING_LENGTH_BY_CEFR` in
+   * `packages/ai/src/free-writing-generation-prompts.ts`. Enforced by a curriculum
+   * invariant (Task 7): present iff `kind === 'free-writing'`.
+   */
+  freeWriting?: { register: 'informal' | 'neutral' | 'formal' };
 }>;

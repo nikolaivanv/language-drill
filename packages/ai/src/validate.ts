@@ -36,6 +36,10 @@ import {
   buildDictationValidationSystemPrompt,
   buildDictationValidationUserPrompt,
 } from "./dictation-validation-prompts.js";
+import {
+  buildFreeWritingValidationSystemPrompt,
+  buildFreeWritingValidationUserPrompt,
+} from "./free-writing-validation-prompts.js";
 
 // ---------------------------------------------------------------------------
 // Model + sampling constants
@@ -365,13 +369,22 @@ export async function validateDraft(
   }
 
   const isDictation = draft.contentJson.type === ExerciseType.DICTATION;
+  const isFreeWriting = draft.contentJson.type === ExerciseType.FREE_WRITING;
   const systemText = isDictation
     ? await buildDictationValidationSystemPrompt(spec)
-    : await buildValidationSystemPrompt(spec);
+    : isFreeWriting
+      ? await buildFreeWritingValidationSystemPrompt(spec)
+      : await buildValidationSystemPrompt(spec);
+  // The user-prompt builders take the NARROWED content, so the discriminant
+  // must be inlined here — TypeScript cannot narrow a union through a boolean
+  // alias (the `isDictation` / `isFreeWriting` consts above only gate the
+  // spec-only system-prompt builders).
   const userText =
     draft.contentJson.type === ExerciseType.DICTATION
       ? buildDictationValidationUserPrompt(draft.contentJson, spec)
-      : buildValidationUserPrompt(draft, spec);
+      : draft.contentJson.type === ExerciseType.FREE_WRITING
+        ? buildFreeWritingValidationUserPrompt(draft.contentJson, spec)
+        : buildValidationUserPrompt(draft, spec);
 
   const response = await client.messages.create(
     {

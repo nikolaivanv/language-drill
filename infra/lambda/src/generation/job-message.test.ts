@@ -121,6 +121,13 @@ describe('parseGenerationJobMessage — missing required fields', () => {
     expect(() => parseGenerationJobMessage(msg)).toThrow(/spec\.exerciseType/);
   });
 
+  it('accepts spec.exerciseType free_writing', () => {
+    const msg = cloneAsRecord();
+    (msg.spec as Record<string, unknown>).exerciseType = ExerciseType.FREE_WRITING;
+    const parsed = parseGenerationJobMessage(msg);
+    expect(parsed.spec.exerciseType).toBe(ExerciseType.FREE_WRITING);
+  });
+
   it('throws when spec.grammarPointKey is missing', () => {
     const msg = cloneAsRecord();
     delete (msg.spec as Record<string, unknown>).grammarPointKey;

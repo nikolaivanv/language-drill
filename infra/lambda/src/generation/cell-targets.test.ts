@@ -102,6 +102,11 @@ describe('resolveCellTarget', () => {
     expect(resolveCellTarget(makeCell(ExerciseType.DICTATION, CefrLevel.B2))).toBe(15);
   });
 
+  it('resolves the free_writing B1/B2 per-cell target to 12', () => {
+    expect(resolveCellTarget(makeCell(ExerciseType.FREE_WRITING, CefrLevel.B1))).toBe(12);
+    expect(resolveCellTarget(makeCell(ExerciseType.FREE_WRITING, CefrLevel.B2))).toBe(12);
+  });
+
   it('sentence_construction resolves at the plain table value (no raise)', () => {
     // SC already gained headroom when the pilot brake lifted (25 → 30
     // at A2, 50 at B1/B2); it resolves at the table value regardless of

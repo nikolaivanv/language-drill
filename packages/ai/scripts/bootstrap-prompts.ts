@@ -48,6 +48,10 @@ import {
   DICTATION_GENERATION_SYSTEM_PROMPT,
   DICTATION_VALIDATION_PROMPT_VERSION,
   DICTATION_VALIDATION_SYSTEM_PROMPT,
+  FREE_WRITING_GENERATION_SYSTEM_PROMPT,
+  FREE_WRITING_GENERATION_PROMPT_VERSION,
+  FREE_WRITING_GENERATION_VALIDATION_SYSTEM_PROMPT,
+  FREE_WRITING_GENERATION_VALIDATION_PROMPT_VERSION,
   EVALUATION_SYSTEM_PROMPT,
   EVALUATION_SYSTEM_PROMPT_VERSION,
   FREE_WRITING_EVAL_PROMPT_VERSION,
@@ -191,6 +195,22 @@ export const PROMPTS: readonly PromptManifestEntry[] = [
     text: DICTATION_VALIDATION_SYSTEM_PROMPT,
     version: DICTATION_VALIDATION_PROMPT_VERSION,
     surface: "dictation-validate",
+  },
+  {
+    // Runtime fetches this via getPromptWithVarsOrFallback("free-writing-generate-system-prompt", …)
+    // in free-writing-generation-prompts.ts — the name MUST match that registry key.
+    name: "free-writing-generate-system-prompt",
+    text: FREE_WRITING_GENERATION_SYSTEM_PROMPT,
+    version: FREE_WRITING_GENERATION_PROMPT_VERSION,
+    surface: "free-writing-generate",
+  },
+  {
+    // Runtime fetches this via getPromptWithVarsOrFallback("free-writing-validate-system-prompt", …)
+    // in free-writing-validation-prompts.ts — the name MUST match that registry key.
+    name: "free-writing-validate-system-prompt",
+    text: FREE_WRITING_GENERATION_VALIDATION_SYSTEM_PROMPT,
+    version: FREE_WRITING_GENERATION_VALIDATION_PROMPT_VERSION,
+    surface: "free-writing-validate",
   },
 ];
 

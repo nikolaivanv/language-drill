@@ -527,9 +527,9 @@ export function canonicalSurface(content: ExerciseContent): string {
       // and in-batch duplicate detection).
       return normaliseSurface(content.referenceText);
     case ExerciseType.FREE_WRITING:
-      // free_writing is not produced by the pool pipeline, so it has no
-      // canonical surface for dedup.
-      throw new Error("canonicalSurface: free_writing is not pool-generated");
+      // The prompt title is the dedup surface (drives `_dedupKey` and in-batch
+      // duplicate detection) — two prompts on the same topic must differ in title.
+      return normaliseSurface(content.title);
     default: {
       const _exhaustive: never = content;
       throw new Error(
