@@ -208,7 +208,7 @@ describe('resolveCells', () => {
       } else if (cell.grammarPoint.kind === 'free-writing') {
         expect(cell.exerciseType).toBe(ExerciseType.FREE_WRITING);
       } else {
-        expect([ExerciseType.CLOZE, ExerciseType.TRANSLATION, ExerciseType.SENTENCE_CONSTRUCTION]).toContain(cell.exerciseType);
+        expect([ExerciseType.CLOZE, ExerciseType.TRANSLATION, ExerciseType.SENTENCE_CONSTRUCTION, ExerciseType.CONJUGATION]).toContain(cell.exerciseType);
       }
     }
   });

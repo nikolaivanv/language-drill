@@ -39,7 +39,7 @@ describe('enumerateCurriculumCells', () => {
     expect(cells.length).toBeGreaterThan(0);
   });
 
-  it('produces 2 cells per grammar entry (cloze + translation), 1 per vocab entry (vocab_recall), and 1 per dictation umbrella (dictation), minus one per clozeUnsuitable point, plus one per sentenceConstructionSuitable point', () => {
+  it('produces 2 cells per grammar entry (cloze + translation), 1 per vocab entry (vocab_recall), and 1 per dictation umbrella (dictation), minus one per clozeUnsuitable point, plus one per sentenceConstructionSuitable point, plus one per conjugationSuitable point', () => {
     const grammarCount = ALL_CURRICULA.filter((g) => g.kind === 'grammar').length;
     const vocabCount = ALL_CURRICULA.filter((g) => g.kind === 'vocab').length;
     // A dictation umbrella yields exactly one cell (dictation only).
@@ -50,8 +50,9 @@ describe('enumerateCurriculumCells', () => {
     // so each flagged point drops the total by exactly one.
     const flaggedCount = ALL_CURRICULA.filter((g) => g.clozeUnsuitable === true).length;
     const scCount = ALL_CURRICULA.filter((g) => g.sentenceConstructionSuitable === true).length;
+    const conjugationCount = ALL_CURRICULA.filter((g) => g.conjugationSuitable === true).length;
     expect(cells).toHaveLength(
-      grammarCount * 2 + vocabCount + dictationCount + fwCount - flaggedCount + scCount,
+      grammarCount * 2 + vocabCount + dictationCount + fwCount - flaggedCount + scCount + conjugationCount,
     );
   });
 
@@ -63,10 +64,10 @@ describe('enumerateCurriculumCells', () => {
     }
   });
 
-  it('pairs grammar points only with cloze, translation, or sentence_construction (never vocab_recall)', () => {
+  it('pairs grammar points only with cloze, translation, sentence_construction, or conjugation (never vocab_recall)', () => {
     for (const cell of cells) {
       if (cell.grammarPoint.kind === 'grammar') {
-        expect([ExerciseType.CLOZE, ExerciseType.TRANSLATION, ExerciseType.SENTENCE_CONSTRUCTION]).toContain(
+        expect([ExerciseType.CLOZE, ExerciseType.TRANSLATION, ExerciseType.SENTENCE_CONSTRUCTION, ExerciseType.CONJUGATION]).toContain(
           cell.exerciseType,
         );
       }
