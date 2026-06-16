@@ -13,10 +13,12 @@ export interface SkillMovementsPanelProps {
 }
 
 export function SkillMovementsPanel({ movements }: SkillMovementsPanelProps) {
-  if (movements.length === 0) return null;
   const movers = movements.filter((m) => m.band !== 'steady');
   const steadyCount = movements.length - movers.length;
-  if (movers.length === 0 && steadyCount === 0) return null;
+  // Hide the panel unless something actually moved. An all-steady (or empty)
+  // session would otherwise show a "Skills you moved" heading with no movers,
+  // which misreads as movement; the steady count is only a footnote beside movers.
+  if (movers.length === 0) return null;
 
   return (
     <Card padding="md">

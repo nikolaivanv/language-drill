@@ -13,6 +13,15 @@ describe('SkillMovementsPanel', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
+  it('renders nothing when every movement is steady (no real movement)', () => {
+    const { container } = render(
+      <SkillMovementsPanel
+        movements={[m({ grammarPointKey: 'a', band: 'steady' }), m({ grammarPointKey: 'b', band: 'steady' })]}
+      />,
+    );
+    expect(container).toBeEmptyDOMElement();
+  });
+
   it('renders mover rows with band copy and no mastery numbers', () => {
     render(
       <SkillMovementsPanel

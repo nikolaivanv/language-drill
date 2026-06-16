@@ -44,6 +44,22 @@ function makeDebrief(overrides: Partial<DebriefResponse> = {}): DebriefResponse 
 // What's-next routing (Req 4.4)
 // ---------------------------------------------------------------------------
 
+describe('DebriefTab — skill movements wiring', () => {
+  it('renders the skills-you-moved panel when the debrief carries movers', () => {
+    render(
+      <DebriefTab
+        debrief={makeDebrief({
+          skillMovements: [
+            { grammarPointKey: 'es-b1-subjunctive', label: 'Subjuntivo', band: 'strong-gain', confidence: 'high' },
+          ],
+        })}
+      />,
+    );
+    expect(screen.getByText('Subjuntivo')).toBeInTheDocument();
+    expect(screen.getByText(/Strong gain/)).toBeInTheDocument();
+  });
+});
+
 describe('DebriefTab — what\'s-next link', () => {
   it('high-tier renders a link to /progress', () => {
     render(<DebriefTab debrief={makeDebrief({ correctCount: 5, attemptedCount: 5 })} />);
