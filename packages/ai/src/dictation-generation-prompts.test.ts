@@ -27,6 +27,15 @@ it('template renders with no leftover {{vars}}', () => {
   expect(text).toContain('submit_dictation_exercise');
 });
 
+it('the generation prompt gives explicit A1 and A2 length bands', () => {
+  expect(DICTATION_GENERATION_SYSTEM_PROMPT).toContain('A1');
+  expect(DICTATION_GENERATION_SYSTEM_PROMPT).toContain('A2');
+});
+
+it('version is bumped to the A1/A2 edit date', () => {
+  expect(DICTATION_GENERATION_PROMPT_VERSION).toBe('dictation-generate@2026-06-16');
+});
+
 it('user prompt names the ordinal and the domain', () => {
   const u = buildDictationGenerationUserPrompt(inputs as never, 2, 'travel');
   expect(u).toContain('#3');
