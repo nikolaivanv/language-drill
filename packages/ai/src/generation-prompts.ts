@@ -122,7 +122,7 @@ function renderRecentStems(recentStems: readonly string[]): string {
 // curriculum-wide grammatical-person rotation in the per-draft USER prompt
 // (`renderPersonBlock`, no Langfuse push needed). Use the `eval:gen`
 // baseline/candidate arms — not promptVersion — to A/B within a day.
-export const GENERATION_PROMPT_VERSION = "generate@2026-06-12";
+export const GENERATION_PROMPT_VERSION = "generate@2026-06-16";
 
 /**
  * Wording differs per type so Claude reads it the way the cell is constrained:
@@ -178,6 +178,36 @@ This is a sentence_construction exercise: there is NO blank — the learner writ
   - \`keywords\`: put 3–4 everyday content words at or below CEFR ${cefrLevel} in \`keywords\`; the learner must use ALL of them in one sentence and the combination must force ${grammarPointName}. Every model answer must actually use every keyword.
   - \`situation\`: give a concrete one-line scenario in \`prompt\` (something said, a problem to react to) so the natural response exercises ${grammarPointName}; leave \`keywords\` empty.
   - \`grammar_target\`: name the structure in \`targetStructure\` AND give a concrete mini-scenario or seed content in \`prompt\`. The structure label alone is NOT enough to constrain the answer — this mode is the most prone to over-open prompts, so always anchor it to a situation.
+
+`;
+}
+
+/**
+ * Conjugation-only guidance block. Mirrors `renderSentenceConstructionSection`:
+ * returns "" for every other type so non-conjugation prompts stay byte-identical
+ * (preserving their Anthropic cache prefix and Langfuse cohort), and for a
+ * conjugation cell returns a section ending in `\n\n` so the template's
+ * `{{conjugationSection}}## Output` splices cleanly. The values are baked in here
+ * (not left as `{{vars}}`) because this whole string is itself one flat template
+ * var — same pattern as `renderSentenceConstructionSection`.
+ */
+function renderConjugationSection(
+  exerciseType: ExerciseType,
+  language: string,
+  cefrLevel: string,
+  grammarPointName: string,
+): string {
+  if (exerciseType !== ExerciseType.CONJUGATION) return "";
+  return `## Conjugation/inflection specifics (this exercise type)
+
+This is a conjugation drill: there is NO sentence and NO blank. You produce one lemma + one explicit feature bundle, and the single correct inflected form the learner must type. The cloze/sentence rules above do not apply. Follow these:
+
+- **Tense/mood is FIXED by the grammar point (${grammarPointName}).** Do not drift to other tenses. Vary only person/number (and polarity where the point covers it). The combination you pick determines \`targetForm\`.
+- **\`targetForm\` MUST be the exactly-correct ${language} form at CEFR ${cefrLevel}**, including every diacritic. Grading is an exact string match — a wrong accent or a vowel-harmony slip is a wrong stored answer and will mis-grade every learner. Double-check irregular stems.
+- **Enumerate genuine variants in \`acceptableForms\`** (e.g. with/without a clitic pronoun, accepted orthographic variants). Do NOT list near-misses or common-error forms — those must stay wrong.
+- **\`breakdown\` teaches the morphology**: stem + ending for ${language} fusional forms, or stem + ordered suffix gloss for agglutinative forms (e.g. Turkish: root + tense/aspect + person, noting vowel harmony). Keep it one line.
+- **\`featureBundle\` names the cell** in ${language}'s conventional grammar notation; it MUST NOT contain the answer.
+- **\`exampleSentences\` (1–2)** must use \`targetForm\` verbatim, be natural, and sit at or below CEFR ${cefrLevel}.
 
 `;
 }
@@ -243,7 +273,7 @@ export const GENERATION_SYSTEM_PROMPT_TEMPLATE = `You are an expert language exe
 - One exercise per tool call. Do not batch multiple inside one tool call.
 - You MUST use the provided tool. Do not return plain text.
 
-{{sentenceConstructionSection}}## Output
+{{sentenceConstructionSection}}{{conjugationSection}}## Output
 
 Use the {{toolName}} tool with all required fields populated.`;
 
@@ -277,6 +307,12 @@ export function computeGenerationPromptVars(
     cefrDescriptors: CEFR_DESCRIPTOR_BULLETS,
     priorPoolSection: renderPriorPoolSection(exerciseType, priorPoolSurfaces),
     sentenceConstructionSection: renderSentenceConstructionSection(
+      exerciseType,
+      language,
+      cefrLevel,
+      grammarPoint.name,
+    ),
+    conjugationSection: renderConjugationSection(
       exerciseType,
       language,
       cefrLevel,
@@ -530,6 +566,11 @@ export function canonicalSurface(content: ExerciseContent): string {
       // The prompt title is the dedup surface (drives `_dedupKey` and in-batch
       // duplicate detection) — two prompts on the same topic must differ in title.
       return normaliseSurface(content.title);
+    case ExerciseType.CONJUGATION:
+      // Lemma + feature bundle is the dedup surface: the same verb in a
+      // different cell (person/number) is a distinct drill, but an identical
+      // (lemma, featureBundle) pair collapses to one key.
+      return `${normaliseSurface(content.lemma)}::${normaliseSurface(content.featureBundle)}`;
     default: {
       const _exhaustive: never = content;
       throw new Error(

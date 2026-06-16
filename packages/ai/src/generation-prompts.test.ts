@@ -4,6 +4,7 @@ import {
   ExerciseType,
   Language,
   type ClozeContent,
+  type ConjugationContent,
   type DictationContent,
   type FreeWritingContent,
   type TranslationContent,
@@ -213,7 +214,9 @@ describe("buildGenerationSystemPrompt", () => {
     // person rotation in the per-draft user prompt (pool audit: TR tense
     // cells were ≥90% 3sg). Prior 2026-06-07 cohort covered the vocab_recall
     // hints anti-leak rule + the possessive-pronoun bullet.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-06-12");
+    // Bumped 2026-06-16 for the conjugation/inflection drill type: the
+    // `{{conjugationSection}}` guidance block spliced into the cached template.
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-06-16");
     // Tasks 7–9: pin the new guardrail phrases in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "every content word MUST be high-frequency everyday vocabulary at or below CEFR {{cefrLevel}}",
@@ -461,6 +464,15 @@ describe("GENERATION_SYSTEM_PROMPT_TEMPLATE byte parity", () => {
     // branch so the template and the in-code builder cannot diverge on SC cells.
     await assertParity(
       { ...baseInputs, exerciseType: ExerciseType.SENTENCE_CONSTRUCTION },
+      ["primera frase"],
+    );
+  });
+
+  it("conjugation (the conjugation-specific section is spliced before ## Output)", async () => {
+    // Locks byte parity through the non-empty `{{conjugationSection}}` branch so
+    // the template and the in-code builder cannot diverge on conjugation cells.
+    await assertParity(
+      { ...baseInputs, exerciseType: ExerciseType.CONJUGATION },
       ["primera frase"],
     );
   });
@@ -715,6 +727,70 @@ describe("canonicalSurface — dictation", () => {
       waveform: [0.5],
     } as never);
     expect(surface).toBe("el tiempo lo cura.");
+  });
+});
+
+describe("canonicalSurface — conjugation", () => {
+  it("keys on the normalised lemma + featureBundle", () => {
+    const content: ConjugationContent = {
+      type: ExerciseType.CONJUGATION,
+      instructions: "Write the correct form.",
+      lemma: "IR",
+      lemmaGloss: "to go",
+      featureBundle: "Condicional · 1ª persona del plural",
+      targetForm: "iríamos",
+      breakdown: "ir + íamos",
+      exampleSentences: ["Iríamos al cine."],
+    };
+    const surface = canonicalSurface(content);
+    expect(surface).toContain("ir");
+    // normaliseSurface lowercases, NFKD-strips diacritics (ª → a, the middle
+    // dot · is dropped), and collapses whitespace.
+    expect(surface).toBe("ir::condicional 1a persona del plural");
+  });
+
+  it("collapses an identical (lemma, featureBundle) pair to the same key but distinguishes different cells", () => {
+    const base: ConjugationContent = {
+      type: ExerciseType.CONJUGATION,
+      instructions: "x",
+      lemma: "hablar",
+      lemmaGloss: "to speak",
+      featureBundle: "presente · 1sg",
+      targetForm: "hablo",
+      breakdown: "habl + o",
+      exampleSentences: ["Hablo español."],
+    };
+    const dup = { ...base, targetForm: "hablo (variant note)" };
+    const otherCell = { ...base, featureBundle: "presente · 2sg" };
+    expect(canonicalSurface(base)).toBe(canonicalSurface(dup));
+    expect(canonicalSurface(base)).not.toBe(canonicalSurface(otherCell));
+  });
+});
+
+describe("computeGenerationPromptVars — conjugationSection", () => {
+  it("returns conjugationSection === '' for a non-conjugation cell", () => {
+    const vars = computeGenerationPromptVars(baseInputs, []);
+    expect(vars.conjugationSection).toBe("");
+  });
+
+  it("returns the conjugation guidance block for a conjugation cell", () => {
+    const vars = computeGenerationPromptVars(
+      { ...baseInputs, exerciseType: ExerciseType.CONJUGATION },
+      [],
+    );
+    expect(vars.conjugationSection).toContain(
+      "Conjugation/inflection specifics",
+    );
+    // Splices cleanly before `## Output` (trailing blank line).
+    expect(vars.conjugationSection.endsWith("\n\n")).toBe(true);
+  });
+
+  it("leaves sentenceConstructionSection empty for a conjugation cell (mutually exclusive sections)", () => {
+    const vars = computeGenerationPromptVars(
+      { ...baseInputs, exerciseType: ExerciseType.CONJUGATION },
+      [],
+    );
+    expect(vars.sentenceConstructionSection).toBe("");
   });
 });
 
