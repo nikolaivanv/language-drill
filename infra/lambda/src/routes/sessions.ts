@@ -21,7 +21,9 @@ import {
   V1_PLAN_SHAPE,
   composeFreshPlan,
   hydrateFromSession,
+  isFreeWritingDay,
   startOfUtcDay,
+  ESTIMATED_MINUTES_BY_TYPE,
   type PlanItem,
   type PoolDraw,
 } from '../lib/today-plan';
@@ -203,9 +205,10 @@ sessions.post('/sessions/:id/complete', async (c) => {
 //   - Path B (fresh):    no today-session → draw 5 exercises from the pool
 //     using V1_PLAN_SHAPE and return them as queued.
 //
-// Performance budget: ≤ 2 SQL round-trips. Query 1 (today-session lookup) and
-// the proficiency-level fetch are dispatched in parallel via Promise.all so
-// they share one wall-clock RTT; Path B's pool sample is the second RTT.
+// Performance budget: ≤ 2 SQL round-trips on most days. Query 1 (today-session
+// lookup) and the proficiency-level fetch share one RTT via Promise.all; Path
+// B's pool sample is the second. On a language's free-writing cadence day
+// (~1/3 of days) one extra indexed lookup gates the freeWriting block.
 // ---------------------------------------------------------------------------
 sessions.get('/sessions/today', async (c) => {
   const queryResult = TodayQuerySchema.safeParse(c.req.query());
@@ -262,6 +265,36 @@ sessions.get('/sessions/today', async (c) => {
   const proficiencyLevel = isCefrLevel(profileRows[0]?.proficiencyLevel)
     ? profileRows[0].proficiencyLevel
     : DEFAULT_PROFICIENCY_LEVEL;
+
+  // -------------------------------------------------------------------------
+  // Free-writing block (Plan 1)
+  // -------------------------------------------------------------------------
+  // On this language's cadence day, surface a free-writing block — but only if
+  // an approved free-writing exercise exists for (language, level), so the
+  // block never links to a page with no prompt. Runs on ~1/3 of dashboard
+  // loads; one extra indexed lookup, sequential after proficiency since it
+  // depends on the resolved level. Independent of Path A/B — the block reflects
+  // today's nudge whether or not the quick-drill session has been started.
+  let freeWriting: { estimatedMinutes: number } | null = null;
+  if (isFreeWritingDay(new Date(), language)) {
+    const fwRows = await db
+      .select({ id: exercisesTable.id })
+      .from(exercisesTable)
+      .where(
+        and(
+          eq(exercisesTable.language, language),
+          eq(exercisesTable.difficulty, proficiencyLevel),
+          eq(exercisesTable.type, ExerciseType.FREE_WRITING),
+          approvedStatusFilter(exercisesTable),
+        ),
+      )
+      .limit(1);
+    if (fwRows.length > 0) {
+      freeWriting = {
+        estimatedMinutes: ESTIMATED_MINUTES_BY_TYPE[ExerciseType.FREE_WRITING],
+      };
+    }
+  }
 
   // -------------------------------------------------------------------------
   // Path A — hydrate from today's session
@@ -337,6 +370,7 @@ sessions.get('/sessions/today', async (c) => {
       items: items.map(toWireItem),
       summary,
       code: null,
+      freeWriting,
     });
   }
 
@@ -390,6 +424,7 @@ sessions.get('/sessions/today', async (c) => {
       items: [],
       summary: null,
       code: 'INSUFFICIENT_POOL' as const,
+      freeWriting,
     });
   }
 
@@ -403,6 +438,7 @@ sessions.get('/sessions/today', async (c) => {
     items: items.map(toWireItem),
     summary: null,
     code: null,
+    freeWriting,
   });
 });
 

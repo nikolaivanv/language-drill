@@ -49,6 +49,16 @@ export const TodayPlanSummarySchema = z.object({
 
 export type TodayPlanSummary = z.infer<typeof TodayPlanSummarySchema>;
 
+// Free-writing block — present on a language's cadence day when an approved
+// free-writing exercise exists for the user's level. Drives the dashboard's
+// free-writing timeline block. `.default(null)` (below) keeps payloads that
+// omit the field (older API deploys) parseable.
+export const FreeWritingPlanBlockSchema = z.object({
+  estimatedMinutes: z.number().int().min(1),
+});
+
+export type FreeWritingPlanBlock = z.infer<typeof FreeWritingPlanBlockSchema>;
+
 export const TodayPlanResponseSchema = z.object({
   language: LearningLanguageEnum,
   generatedAt: z.string().datetime(),
@@ -59,6 +69,9 @@ export const TodayPlanResponseSchema = z.object({
   summary: TodayPlanSummarySchema.nullable(),
   // Present only when items.length < 5 because the pool is empty/insufficient.
   code: z.literal('INSUFFICIENT_POOL').nullable(),
+  // Present on a language's free-writing cadence day; null otherwise. Defaulted
+  // so a response that omits the key still parses.
+  freeWriting: FreeWritingPlanBlockSchema.nullable().default(null),
 });
 
 export type TodayPlanResponse = z.infer<typeof TodayPlanResponseSchema>;
