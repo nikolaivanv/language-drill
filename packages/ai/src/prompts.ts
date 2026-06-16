@@ -265,6 +265,12 @@ export function buildUserPrompt(
       throw new Error(
         "buildUserPrompt: free_writing is evaluated via evaluateFreeWriting, not this generic evaluator",
       );
+    case ExerciseType.CONJUGATION:
+      // Conjugation exercises are graded deterministically (exact-match + acceptableForms)
+      // and never reach Claude evaluation.
+      throw new Error(
+        "Conjugation exercises are graded deterministically and never reach Claude evaluation.",
+      );
     default: {
       const _exhaustive: never = exercise;
       throw new Error(`Unknown exercise type: ${(_exhaustive as ExerciseContent).type}`);

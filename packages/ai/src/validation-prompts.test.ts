@@ -480,6 +480,35 @@ describe("buildValidationUserPrompt — coverage directive", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Conjugation validation prompt
+// ---------------------------------------------------------------------------
+
+describe("buildValidationUserPrompt — conjugation", () => {
+  it("builds a conjugation validation prompt that asks to verify the form", () => {
+    const conjugationDraft: ExerciseDraft = {
+      ...clozeDraftForCoverage,
+      contentJson: {
+        type: ExerciseType.CONJUGATION,
+        instructions: "Write the correct form.",
+        lemma: "ir",
+        lemmaGloss: "to go",
+        featureBundle: "condicional · 1ª pers. plural",
+        targetForm: "iríamos",
+        breakdown: "ir- + -íamos",
+        exampleSentences: ["Iríamos al cine."],
+      } as import("@language-drill/shared").ConjugationContent,
+    };
+    const conjugationSpec: GenerationSpec = {
+      ...baseSpec,
+      exerciseType: ExerciseType.CONJUGATION,
+    };
+    const prompt = buildValidationUserPrompt(conjugationDraft, conjugationSpec);
+    expect(prompt).toContain("iríamos");
+    expect(prompt).toMatch(/correct form|morpholog/i);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Dictation rejection guard
 // ---------------------------------------------------------------------------
 
