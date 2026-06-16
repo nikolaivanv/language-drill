@@ -17,7 +17,7 @@ import { CEFR_LEVEL_DESCRIPTORS } from "./prompts.js";
 import type { GenerationSpec } from "./generate.js";
 import { getPromptWithVarsOrFallback } from "./prompts-registry.js";
 
-export const DICTATION_VALIDATION_PROMPT_VERSION = "dictation-validate@2026-06-15";
+export const DICTATION_VALIDATION_PROMPT_VERSION = "dictation-validate@2026-06-16";
 
 const CEFR_DESCRIPTOR_BULLETS = (
   Object.entries(CEFR_LEVEL_DESCRIPTORS) as [string, string][]
@@ -45,7 +45,7 @@ Your output is routed by these rules:
 
 1. **qualityScore** (0.0–1.0): overall fitness as a {{cefrLevel}} dictation clip. Judge:
    - **Naturalness** — does it read like real connected speech a native would say? (Stilted / textbook-ish / list-like → lower.)
-   - **Length for level** — B1: 2–4 short sentences; B2: 3–5 with some subordination. Too long to hold in working memory, or trivially short → lower.
+   - **Length for level** — A1: ONE short, clear sentence (a single sentence is CORRECT, not "too short"). A2: 1–2 short sentences. B1: 2–4 short sentences; B2: 3–5 with some subordination. Too long to hold in working memory → lower; but do NOT penalize an A1/A2 clip for being short or simple — at those levels clarity is the goal, not density.
    - **Vocabulary band** — every content word at or below {{cefrLevel}} everyday vocabulary.
    - **Listenability** — the clip must be listenable: NOT a tongue-twister, NOT a dense number/date/proper-noun pile-up, NOT a segmentation trap so ambiguous a native could not transcribe it. One or two natural connected-speech challenges are GOOD; a wall of them is bad.
    Anchors: 0.9 publishable as-is; 0.8 one cosmetic edit; 0.65 borderline (FLAGGED); 0.5 unusable (REJECTED).
