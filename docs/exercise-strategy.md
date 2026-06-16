@@ -505,6 +505,43 @@ Every exercise must pass the **production test**: does the learner construct lan
 
 ---
 
+### 14. Conjugation / Inflection Drill
+
+**Status:** Not yet implemented — **scaffolding / remediation sub-mode, not standalone practice**
+
+> The one type that deliberately fails the standalone production test. A decontextualized paradigm drill is exactly the mechanical work Anki and dedicated conjugation trainers already do well, and it sits *below* the intermediate plateau the app targets. We include it not as top-level practice but as **morphology repair** — surfaced when evaluation shows the learner chose the right structure but *formed* it wrong — mirroring how multiple choice is "used only as scaffolding within harder exercises, never as standalone practice."
+
+**What it targets:**
+- Grammar accuracy (primary, narrow) — **form production** in isolation: the morphological machinery itself, decoupled from when-to-use-it
+- The signal cloze and translation *can't* isolate: they fuse **form selection** (which tense/mood/case does the context demand?) with **form production** (can you build it?). A wrong cloze answer is ambiguous between the two; this drill collapses that ambiguity.
+
+**How it works:**
+- The learner is given a **lemma + an explicit feature bundle** and must produce the inflected wordform — free text, no options.
+- The framing generalizes beyond verb conjugation to **targeted inflection**, because morphology differs sharply across the four languages:
+  - **ES** — verb conjugation: `ir → condicional, 1pl → iríamos`. Irregular stems (preterite, present subjunctive) are the high-value cells.
+  - **DE** — strong / irregular verbs, separable prefixes, and (optionally) noun/adjective case endings: `fahren → Präteritum, 3sg → fuhr`.
+  - **EN** — thin morphology; mostly irregular past / participle: `go → past participle → gone`. Low yield, included for completeness.
+  - **TR** — agglutinative: the form is a stem + an *ordered stack* of suffixes under **vowel harmony**, not a memorized table. The skill is suffix *selection + ordering + harmony*, e.g. `gitmek → geniş zaman (aorist), olumsuz, 1pl → gitmeyiz`. The same drill extends to nominal morphology (case + possessive stacking: `ev → +possessive 1pl + locative → evimizde`), which has no Romance/Germanic analogue.
+- Difficulty scales by paradigm irregularity and (for TR) suffix-stack depth, never by simplifying the UI.
+
+**Grading:**
+- **Deterministic-first:** the target form is computed / stored at generation time and matched exactly, with tolerance for diacritics/accents (`iriamos` ≈ `iríamos`) and obvious typos. No Claude call — the cheapest eval in the catalogue.
+- **Claude fallback only for variant adjudication:** where a cell has more than one accepted form (regional / orthographic variants, TR harmony edge cases), a single cheap call confirms validity. Most cells never need it.
+
+**Progress impact:**
+- Feeds grammar-accuracy mastery with a **clean, attributable signal**: an error here is unambiguously a *formation* failure, a different remediation than a *selection* failure. This sharpens the "weakness amplification" logic — the system can tell "doesn't know the conditional is needed" apart from "knows it's needed but mis-forms it."
+- **Requires finer-grained grammar tags than the curriculum currently carries.** If a botched irregular preterite just rolls up into a coarse "preterite" mastery score, the diagnostic value evaporates. Landing this type means tagging morphological sub-paradigms (irregular -ir preterites, TR aorist negation, German strong-verb classes), not just the grammar point.
+- Weighted as a **weaker signal than contextual production** — an isolated form produced correctly is less evidence of communicative competence than the same form produced spontaneously in translation or free writing.
+
+**Content strategy:** Fully pre-generated and near-zero cost — lemma + feature bundle + the deterministic target form, drawn from each language's conjugation / inflection rules. No reference answer to write and (mostly) no eval call to make, so the pool is the cheapest to build and run. Cells are selected by paradigm irregularity, not random coverage — regular forms teach the plateau learner nothing.
+
+**Getting unstuck:** (it *is* the unstuck step for other exercises, but standalone use still scaffolds)
+1. "Show the pattern" hint: the regular paradigm / suffix template for that feature bundle, leaving the irregular stem to the learner
+2. "Reveal the stem" hint (ES/DE irregulars; TR harmony class): gives the stem or the vowel-harmony class, not the full form
+3. After failure: the form with a morphological breakdown — stem + ending (ES/DE) or stem + ordered suffix gloss (TR) — plus two contextual sentences using it, then the item is scheduled for spaced-repetition review.
+
+---
+
 ## Summary Table
 
 | # | Exercise | Skill Target | Input Mode | Audio? | CEFR Range | Content | Eval |
@@ -522,6 +559,7 @@ Every exercise must pass the **production test**: does the learner construct lan
 | 11 | Mini-Essay & Argument | Discourse, coherence | Text (long) | No | B2–C2 | Pre-gen topics | Claude |
 | 12 | Picture Description | Vocab depth, spatial grammar | Text (long) / Voice | Image (+ Record for spoken) | A2–C2 | Pre-gen images + tags | Claude (text or vision) |
 | 13 | Task-Based Role-Play | Pragmatics, task achievement | Text (multi-turn) | No | A2–C2 | Pre-gen scenario; **live metered** dialogue | Claude (conversation-level) |
+| 14 | Conjugation / Inflection Drill | Grammar accuracy (morphology) | Text (word) | No | A1–C2 | Pre-gen (deterministic) | Deterministic + Claude fallback |
 
 ---
 
@@ -578,6 +616,8 @@ These three cover grammar accuracy, grammar range, and vocabulary — the founda
 ### Phase 2 — Deeper production
 1. **Sentence Construction** — high learning impact, low technical complexity. Reuses the same Claude evaluation pipeline. Bridges the gap between guided (cloze) and free (paragraph) production.
 2. **Error Correction** — high learning impact for grammar accuracy fine-tuning. Technically simple (text in, text out). Particularly valuable for tricky grammar distinctions (ser/estar, cases, aspect).
+
+> **Conjugation / Inflection Drill (#14)** is not phased as a standalone milestone — it ships as the morphology-repair scaffolding for cloze / sentence-construction remediation. The gating work is curriculum tagging (morphological sub-paradigms), not UI or infrastructure; sequence it whenever those tags are added. Deterministic grading means near-zero per-exercise cost.
 
 ### Phase 3 — Extended writing
 3. **Paragraph / Free Writing** — the highest-value exercise for intermediate+ learners, but requires a richer evaluation UI (inline error markup, side-by-side comparison). The evaluation prompt is more complex.
