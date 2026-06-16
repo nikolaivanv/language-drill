@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ExerciseType, type ClozeContent, type VocabRecallContent } from "./index";
+import { ExerciseType, type ClozeContent, type VocabRecallContent, type ConjugationContent } from "./index";
 import {
   gradeFluencyAnswer,
   normalizeFluencyAnswer,
@@ -68,10 +68,43 @@ describe("gradeFluencyAnswer — unsupported type", () => {
   });
 });
 
+const conj = (over: Partial<ConjugationContent> = {}): ConjugationContent => ({
+  type: ExerciseType.CONJUGATION,
+  instructions: "Write the correct form.",
+  lemma: "ir",
+  lemmaGloss: "to go",
+  featureBundle: "condicional · 1ª pers. plural",
+  targetForm: "iríamos",
+  breakdown: "ir- + -íamos",
+  exampleSentences: ["Iríamos al cine si tuviéramos tiempo."],
+  ...over,
+});
+
+describe("conjugation fluency grading", () => {
+  it("is fluency-eligible", () => {
+    expect(isFluencyEligibleType(ExerciseType.CONJUGATION)).toBe(true);
+  });
+  it("accepts the exact target form (case/space-insensitive)", () => {
+    expect(gradeFluencyAnswer(conj(), "  Iríamos ")).toBe(true);
+  });
+  it("accepts a listed variant", () => {
+    expect(
+      gradeFluencyAnswer(conj({ acceptableForms: ["nos iríamos"] }), "nos iríamos"),
+    ).toBe(true);
+  });
+  it("rejects a wrong diacritic (diacritics are meaningful)", () => {
+    expect(gradeFluencyAnswer(conj(), "iriamos")).toBe(false);
+  });
+  it("rejects a wrong form", () => {
+    expect(gradeFluencyAnswer(conj(), "iremos")).toBe(false);
+  });
+});
+
 describe("eligibility helpers + constants", () => {
-  it("recognises the two eligible types only", () => {
+  it("recognises the eligible types", () => {
     expect(isFluencyEligibleType(ExerciseType.CLOZE)).toBe(true);
     expect(isFluencyEligibleType(ExerciseType.VOCAB_RECALL)).toBe(true);
+    expect(isFluencyEligibleType(ExerciseType.CONJUGATION)).toBe(true);
     expect(isFluencyEligibleType(ExerciseType.TRANSLATION)).toBe(false);
     expect(isFluencyEligibleType(ExerciseType.SENTENCE_CONSTRUCTION)).toBe(false);
   });
@@ -80,6 +113,6 @@ describe("eligibility helpers + constants", () => {
     expect(MIN_FLUENCY_POOL).toBe(4);
     expect(LATENCY_CEILING_MS).toBe(60_000);
     expect(DEFAULT_FLUENCY_SESSION_SIZE).toBe(8);
-    expect(FLUENCY_ELIGIBLE_TYPES).toEqual([ExerciseType.CLOZE, ExerciseType.VOCAB_RECALL]);
+    expect(FLUENCY_ELIGIBLE_TYPES).toEqual([ExerciseType.CLOZE, ExerciseType.VOCAB_RECALL, ExerciseType.CONJUGATION]);
   });
 });

@@ -9,6 +9,7 @@ import {
   type ExerciseContent,
   isClozeContent,
   isVocabRecallContent,
+  isConjugationContent,
 } from "./index";
 
 // ---------------------------------------------------------------------------
@@ -34,6 +35,7 @@ export const DEFAULT_FLUENCY_SESSION_SIZE = 8;
 export const FLUENCY_ELIGIBLE_TYPES: readonly ExerciseType[] = [
   "cloze" as ExerciseType,
   "vocab_recall" as ExerciseType,
+  "conjugation" as ExerciseType,
 ];
 
 export function isFluencyEligibleType(type: ExerciseType): boolean {
@@ -67,6 +69,11 @@ export function gradeFluencyAnswer(content: ExerciseContent, answer: string): bo
 
   if (isVocabRecallContent(content)) {
     return normalizeFluencyAnswer(content.expectedWord) === candidate;
+  }
+
+  if (isConjugationContent(content)) {
+    const accepted = [content.targetForm, ...(content.acceptableForms ?? [])];
+    return accepted.some((a) => normalizeFluencyAnswer(a) === candidate);
   }
 
   throw new Error(`gradeFluencyAnswer: unsupported content type "${content.type}"`);
