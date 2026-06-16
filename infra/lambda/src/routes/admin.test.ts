@@ -1133,3 +1133,41 @@ describe('POST /admin/content/theory/:id/demote', () => {
     expect(await res.json()).toEqual({ outcome: 'rejected' });
   });
 });
+
+// ---------------------------------------------------------------------------
+// GET /admin/pool-cell
+// ---------------------------------------------------------------------------
+
+describe('GET /admin/pool-cell', () => {
+  it('returns curriculum floors for a cell that has a coverageSpec', async () => {
+    queryQueue.push([]);
+    const res = await app.request('/admin/pool-cell?language=ES&level=B1&type=cloze&grammarPoint=es-b1-present-subjunctive', undefined, adminEnv);
+    expect(res.status).toBe(200);
+    const body = await res.json() as AnyJson;
+    expect(body.floors).toEqual({ person: { '1sg': 15, '2sg': 15, '3sg': 15, '1pl': 15, '3pl': 15 } });
+    expect(body.rejectionReasonCounts).toEqual({});
+  });
+
+  it('returns empty floors for an unknown grammar point', async () => {
+    queryQueue.push([]);
+    const res = await app.request('/admin/pool-cell?language=ES&level=B1&type=cloze&grammarPoint=does-not-exist', undefined, adminEnv);
+    expect(res.status).toBe(200);
+    expect((await res.json() as AnyJson).floors).toEqual({});
+  });
+
+  it('sums rejectionReasonCounts across the cell\'s jobs', async () => {
+    queryQueue.push([
+      { rejectionReasonCounts: { 'low-quality-reject': 3 } },
+      { rejectionReasonCounts: { 'low-quality-reject': 2, ambiguous: 1 } },
+      { rejectionReasonCounts: null },
+    ]);
+    const res = await app.request('/admin/pool-cell?language=ES&level=B1&type=cloze&grammarPoint=es-b1-present-subjunctive', undefined, adminEnv);
+    expect((await res.json() as AnyJson).rejectionReasonCounts).toEqual({ 'low-quality-reject': 5, ambiguous: 1 });
+  });
+
+  it('rejects a request missing grammarPoint with 400', async () => {
+    const res = await app.request('/admin/pool-cell?language=ES&level=B1&type=cloze', undefined, adminEnv);
+    expect(res.status).toBe(400);
+    expect((await res.json() as AnyJson).code).toBe('VALIDATION_ERROR');
+  });
+});

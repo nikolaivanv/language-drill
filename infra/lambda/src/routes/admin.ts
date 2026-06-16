@@ -244,6 +244,51 @@ admin.get('/admin/pool-status', async (c) => {
 });
 
 // ---------------------------------------------------------------------------
+// GET /admin/pool-cell — per-cell curriculum floors + rejection-reason aggregate
+// ---------------------------------------------------------------------------
+
+const PoolCellQuerySchema = z.object({
+  language: z.enum(['ES', 'DE', 'TR']),
+  level: z.enum(['A1', 'A2', 'B1', 'B2']),
+  type: z.string().min(1),
+  grammarPoint: z.string().min(1),
+});
+
+admin.get('/admin/pool-cell', async (c) => {
+  const parsed = PoolCellQuerySchema.safeParse(c.req.query());
+  if (!parsed.success) {
+    return c.json({ error: 'Invalid query parameters', code: 'VALIDATION_ERROR', details: parsed.error.flatten() }, 400);
+  }
+  const { language, level, type, grammarPoint } = parsed.data;
+  const cellKey = buildCellKey({ language, cefrLevel: level, exerciseType: type, grammarPointKey: grammarPoint });
+
+  const cell = enumerateCurriculumCells(ALL_CURRICULA).find((cc) => cc.cellKey === cellKey);
+  const floors: Record<string, Record<string, number>> = {};
+  for (const axis of cell?.grammarPoint.coverageSpec?.axes ?? []) {
+    const axisFloors: Record<string, number> = {};
+    for (const [value, n] of Object.entries(axis.floors)) {
+      if (typeof n === 'number') axisFloors[value] = n;
+    }
+    floors[axis.name] = axisFloors;
+  }
+
+  const jobRows = await db
+    .select({ rejectionReasonCounts: generationJobs.rejectionReasonCounts })
+    .from(generationJobs)
+    .where(eq(generationJobs.cellKey, cellKey));
+  const rejectionReasonCounts: Record<string, number> = {};
+  for (const row of jobRows) {
+    const counts = row.rejectionReasonCounts as Record<string, number> | null;
+    if (!counts) continue;
+    for (const [code, n] of Object.entries(counts)) {
+      if (typeof n === 'number') rejectionReasonCounts[code] = (rejectionReasonCounts[code] ?? 0) + n;
+    }
+  }
+
+  return c.json({ floors, rejectionReasonCounts });
+});
+
+// ---------------------------------------------------------------------------
 // GET /admin/generation-stats — cost spend, batch outcomes, approval rates
 // ---------------------------------------------------------------------------
 
