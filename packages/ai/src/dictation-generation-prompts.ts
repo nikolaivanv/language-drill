@@ -20,7 +20,7 @@ import type { GenerationPromptInputs } from "./generation-prompts.js";
 import { getPromptWithVarsOrFallback } from "./prompts-registry.js";
 
 // Bump in the same commit as any semantic edit to the template below.
-export const DICTATION_GENERATION_PROMPT_VERSION = "dictation-generate@2026-06-15";
+export const DICTATION_GENERATION_PROMPT_VERSION = "dictation-generate@2026-06-16";
 
 const CEFR_DESCRIPTOR_BULLETS = (
   Object.entries(CEFR_LEVEL_DESCRIPTORS) as [string, string][]
@@ -57,7 +57,7 @@ export const DICTATION_GENERATION_SYSTEM_PROMPT = `You are an expert author of l
 ## Hard constraints
 
 - **Natural connected speech.** Write the way a native speaker actually talks: full sentences with normal punctuation, ordinary contractions and liaison. NOT a word list, NOT headings, NOT bullet points, NOT metadata.
-- **Length for level.** B1: 2–4 short sentences. B2: 3–5 sentences with some subordination. Keep it to one breath-group per sentence — a learner must be able to hold it in working memory.
+- **Length for level.** A1: ONE short, clearly-articulated everyday sentence — high-frequency A1 vocabulary, simple structures, minimal connected-speech reduction (a careful near-beginner should be able to transcribe it). A2: 1–2 short sentences with everyday A2 vocabulary and only light connected speech. B1: 2–4 short sentences. B2: 3–5 sentences with some subordination. Keep it to one breath-group per sentence — a learner must be able to hold it in working memory.
 - **Listenable, not a trap.** Avoid deliberate tongue-twisters, dense number/date sequences, proper-noun pile-ups, and segmentation traps so ambiguous that even a native could not transcribe them. One or two natural connected-speech challenges (sinalefa, a silent letter, a tricky boundary) are good; a wall of them is not.
 - **Vocabulary band.** Every content word at or below CEFR {{cefrLevel}} everyday vocabulary. No above-level or specialist terms.
 - **Safe, neutral topics.** Home, food, daily routine, travel, weather, study/work. Avoid weapons, substances, violence, and culturally sensitive or stereotyping content.

@@ -28,6 +28,15 @@ describe('dictation-validation-prompts', () => {
     expect(text).toContain('listenab');
   });
 
+  it('the validation rubric covers A1 and A2 (short clips are not "too short")', () => {
+    expect(DICTATION_VALIDATION_SYSTEM_PROMPT).toContain('A1');
+    expect(DICTATION_VALIDATION_SYSTEM_PROMPT).toContain('A2');
+  });
+
+  it('version is bumped to the A1/A2 edit date', () => {
+    expect(DICTATION_VALIDATION_PROMPT_VERSION).toBe('dictation-validate@2026-06-16');
+  });
+
   it('user prompt shows the clip text', () => {
     const content = { type: ExerciseType.DICTATION, title: 't', referenceText: 'El tiempo lo cura.',
       sentences: ['El tiempo lo cura.'], accent: 'a', voiceId: 'Sergio', tested: ['sinalefa'],

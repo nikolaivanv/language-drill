@@ -63,7 +63,12 @@ describe('planSkillTopics', () => {
     // row for cell.grammarPoint.key, so the scheduler depends on these rows.
     const plans = planSkillTopics(ALL_CURRICULA);
     const byId = new Map(plans.map((p) => [p.id, p] as const));
-    for (const key of ['es-b1-dictation', 'es-b2-dictation'] as const) {
+    for (const key of [
+      'es-b1-dictation',
+      'es-b2-dictation',
+      'tr-a1-dictation',
+      'tr-a2-dictation',
+    ] as const) {
       const expectedId = deterministicUuid(`skill-topic:${key}`);
       expect(byId.has(expectedId)).toBe(true);
     }

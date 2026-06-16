@@ -1044,6 +1044,12 @@ describe("dictation generation tool + voice pool", () => {
       accent: expect.any(String),
     });
   });
+
+  it("has a Turkish dictation voice pool (Burcu, the only neural tr-TR voice)", () => {
+    const pool = DICTATION_VOICE_POOL_BY_LANGUAGE[Language.TR];
+    expect(pool.length).toBeGreaterThan(0);
+    expect(pool[0].voiceId).toBe("Burcu");
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -1092,6 +1098,40 @@ describe("parseGeneratedDictationDraft", () => {
     expect(Array.isArray(content.waveform)).toBe(true);
     expect(content.waveform.length).toBeGreaterThan(0);
     expect(content.audioUrl).toBeUndefined(); // never set at generation time
+  });
+
+  it("assigns the Turkish voice for a TR spec", () => {
+    const trSpec = {
+      language: Language.TR,
+      cefrLevel: "A1",
+      exerciseType: ExerciseType.DICTATION,
+      grammarPoint: {
+        key: "tr-a1-dictation",
+        kind: "dictation",
+        name: "x",
+        description: "x",
+        cefrLevel: "A1",
+        language: Language.TR,
+        examplesPositive: ["a", "b"],
+        examplesNegative: ["*c"],
+        commonErrors: ["d"],
+      },
+      topicDomain: null,
+      count: 1,
+      batchSeed: "test",
+    } as never;
+    const content = parseGeneratedDictationDraft(
+      {
+        title: "Selam",
+        referenceText: "Bugün hava güzel.",
+        sentences: ["Bugün hava güzel."],
+        tested: ["ünlü uyumu"],
+        durationSec: 4,
+      },
+      trSpec,
+      0,
+    );
+    expect(content.voiceId).toBe("Burcu");
   });
 
   it("rejects a dictation draft whose sentences do not join to referenceText", () => {

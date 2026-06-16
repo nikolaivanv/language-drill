@@ -201,10 +201,10 @@ describe('GET /admin/pool-status', () => {
       expect(item.targetSize).toBe(50);
       // ...but the generation target is the per-cell R3 value (cloze/translation
       // /sentence_construction 20/30 at A1/A2 → 50 at B1/B2; vocab_recall capped
-      // at 10 every level; dictation B1/B2 = 15; free_writing B1/B2 = 12). Cells
-      // with a coverageSpec are raised to the largest single-axis floor sum
-      // (Phase 2): TR A1 person = 6×5 = 30, TR A2 person = 6×8 = 48, ES B1/B2
-      // person = 5×15 = 75. Assert it resolved to a known target.
+      // at 10 every level; dictation A1=10, A2=12, B1/B2 = 15; free_writing
+      // B1/B2 = 12). Cells with a coverageSpec are raised to the largest
+      // single-axis floor sum (Phase 2): TR A1 person = 6×5 = 30, TR A2 person =
+      // 6×8 = 48, ES B1/B2 person = 5×15 = 75. Assert it resolved to a known target.
       expect([10, 12, 15, 20, 30, 48, 50, 75]).toContain(item.generationTarget);
       expect(['ES', 'DE', 'TR']).toContain(item.language);
       expect(['A1', 'A2', 'B1', 'B2']).toContain(item.level);

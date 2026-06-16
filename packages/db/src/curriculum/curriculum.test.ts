@@ -340,7 +340,7 @@ describe('per-language counts', () => {
     expect(dictation).toBe(0);
   });
 
-  it('Turkish is at full Yedi İklim A1 + A2 parity (B1/B2 disabled), has 10 themed vocab umbrellas and no dictation umbrellas', () => {
+  it('Turkish is at full Yedi İklim A1 + A2 parity (B1/B2 disabled), has 10 themed vocab umbrellas and 2 dictation umbrellas', () => {
     const { grammar, vocab, dictation } = countsFor(trCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(26);
     expect(grammar.A2).toBeGreaterThanOrEqual(14);
@@ -348,7 +348,8 @@ describe('per-language counts', () => {
     expect(grammar.B2).toBe(0);
     // 5 themed A1 + 5 themed A2 umbrellas (2026-06-07 everyday-vocab split).
     expect(vocab).toBe(10);
-    expect(dictation).toBe(0);
+    // tr-a1-dictation + tr-a2-dictation (Phase 2 dictation generation pipeline).
+    expect(dictation).toBe(2);
   });
 });
 

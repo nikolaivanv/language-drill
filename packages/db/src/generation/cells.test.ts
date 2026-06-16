@@ -1,7 +1,7 @@
 import { ExerciseType } from '@language-drill/shared';
 import { describe, expect, it } from 'vitest';
 
-import { ALL_CURRICULA, esCurriculum, type GrammarPoint } from '../curriculum';
+import { ALL_CURRICULA, esCurriculum, trCurriculum, type GrammarPoint } from '../curriculum';
 import { assertValidCellKey } from '../lib/cell-key';
 
 import { ROUND_1_CEFR_LEVELS, enumerateCurriculumCells } from './cells';
@@ -110,6 +110,17 @@ describe('enumerateCurriculumCells — kind:dictation umbrellas', () => {
     // es-b1-dictation produces exactly one cell (no cloze/translation pairing)
     const b1 = dictationCells.filter((c) => c.grammarPoint.key === 'es-b1-dictation');
     expect(b1).toHaveLength(1);
+  });
+
+  it('pairs the TR dictation umbrellas with DICTATION only', () => {
+    const cells = enumerateCurriculumCells(trCurriculum).filter(
+      (c) => c.grammarPoint.kind === 'dictation',
+    );
+    const keys = cells.map((c) => c.grammarPoint.key).sort();
+    expect(keys).toEqual(['tr-a1-dictation', 'tr-a2-dictation']);
+    for (const cell of cells) {
+      expect(cell.exerciseType).toBe(ExerciseType.DICTATION);
+    }
   });
 });
 
