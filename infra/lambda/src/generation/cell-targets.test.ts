@@ -112,9 +112,9 @@ describe('resolveCellTarget', () => {
     expect(resolveCellTarget(make('A2'))).toBe(12);
   });
 
-  it('resolves the free_writing B1/B2 per-cell target to 12', () => {
-    expect(resolveCellTarget(makeCell(ExerciseType.FREE_WRITING, CefrLevel.B1))).toBe(12);
-    expect(resolveCellTarget(makeCell(ExerciseType.FREE_WRITING, CefrLevel.B2))).toBe(12);
+  it('resolves the free_writing B1/B2 per-cell target to 8', () => {
+    expect(resolveCellTarget(makeCell(ExerciseType.FREE_WRITING, CefrLevel.B1))).toBe(8);
+    expect(resolveCellTarget(makeCell(ExerciseType.FREE_WRITING, CefrLevel.B2))).toBe(8);
   });
 
   it('sentence_construction resolves at the plain table value (no raise)', () => {

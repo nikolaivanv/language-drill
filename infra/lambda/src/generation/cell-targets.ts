@@ -59,10 +59,12 @@ export const CELL_TARGET_DEFAULTS: Record<
   // surface. A1/A2 dictation is pedagogically apt only for languages whose
   // curriculum lives there (TR); tunable.
   [ExerciseType.DICTATION]: { A1: 10, A2: 12, B1: 15, B2: 15 },
-  // Free-writing prompts are batch-generated (Phase 2). A small rotating pool per
-  // (language, level, topic) cell fills the writing slot across sessions; topic
-  // breadth comes from more curated topic umbrellas, not a high per-cell target.
-  [ExerciseType.FREE_WRITING]: { B1: 12, B2: 12 },
+  // Free-writing prompts are batch-generated (Phase 2). Capped LOW (8): a single
+  // (language, level, topic) cell has a small distinct-title space — the dedup
+  // surface is the title — so the 2026-06-16 run hit heavy dedup-give-up chasing
+  // 12 (title convergence on the topic name). 8 is reachable per topic; breadth
+  // comes from more curated topic umbrellas, not a high per-cell target.
+  [ExerciseType.FREE_WRITING]: { B1: 8, B2: 8 },
 };
 
 /**

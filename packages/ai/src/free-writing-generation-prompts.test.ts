@@ -3,8 +3,10 @@ import { CefrLevel, ExerciseType, Language, type GrammarPoint } from "@language-
 import {
   FREE_WRITING_GENERATION_PROMPT_VERSION,
   FREE_WRITING_LENGTH_BY_CEFR,
+  FREE_WRITING_ANGLES,
   computeFreeWritingGenerationPromptVars,
   buildFreeWritingGenerationUserPrompt,
+  freeWritingAngleForOrdinal,
 } from "./free-writing-generation-prompts.js";
 import type { GenerationPromptInputs } from "./generation-prompts.js";
 
@@ -62,5 +64,30 @@ describe("free-writing generation prompt", () => {
     const p = buildFreeWritingGenerationUserPrompt(INPUTS, 2);
     expect(p).toContain("#3");
     expect(p).toContain("submit_free_writing_exercise");
+  });
+
+  it("omits the prior-titles section when there are no prior titles", () => {
+    expect(computeFreeWritingGenerationPromptVars(INPUTS).priorTitlesSection).toBe("");
+  });
+
+  it("renders prior titles as an avoid-list when present", () => {
+    const vars = computeFreeWritingGenerationPromptVars({
+      ...INPUTS,
+      priorPoolSurfaces: ["el teletrabajo: ¿avance o aislamiento?", "teletrabajo y soledad"],
+    });
+    expect(vars.priorTitlesSection).toContain("do NOT reuse");
+    expect(vars.priorTitlesSection).toContain("teletrabajo y soledad");
+  });
+
+  it("rotates a distinct angle per ordinal and pins it into the user prompt", () => {
+    // Each ordinal in a full batch (< angle-list length) gets a unique angle.
+    const seen = new Set(
+      Array.from({ length: FREE_WRITING_ANGLES.length }, (_, i) => freeWritingAngleForOrdinal(i)),
+    );
+    expect(seen.size).toBe(FREE_WRITING_ANGLES.length);
+    expect(freeWritingAngleForOrdinal(FREE_WRITING_ANGLES.length)).toBe(FREE_WRITING_ANGLES[0]);
+    const p = buildFreeWritingGenerationUserPrompt(INPUTS, 0);
+    expect(p).toContain(FREE_WRITING_ANGLES[0]);
+    expect(p).toMatch(/do NOT reuse the bare topic name/i);
   });
 });
