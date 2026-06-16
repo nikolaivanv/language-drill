@@ -67,6 +67,35 @@ describe('SentenceConstructionExercise', () => {
       ).toBeInTheDocument();
     });
 
+    it('strips leaked markdown emphasis from the prompt (renders plain text)', () => {
+      renderEx({
+        content: {
+          ...baseContent,
+          prompt:
+            'Use all four of these words in one sentence: **tú**, **poder**, **ayudar**, **mañana**.',
+        },
+      });
+      expect(
+        screen.getByText(
+          'Use all four of these words in one sentence: tú, poder, ayudar, mañana.',
+        ),
+      ).toBeInTheDocument();
+      // The raw asterisks must not survive into the DOM.
+      expect(screen.queryByText(/\*\*/)).not.toBeInTheDocument();
+    });
+
+    it('strips leaked markdown emphasis from the instructions', () => {
+      renderEx({
+        content: {
+          ...baseContent,
+          instructions: 'Write **one** sentence in Spanish.',
+        },
+      });
+      expect(
+        screen.getByText('Write one sentence in Spanish.'),
+      ).toBeInTheDocument();
+    });
+
     it('renders keyword chips when promptMode is keywords', () => {
       renderEx();
       expect(screen.getByText('ayer')).toBeInTheDocument();
