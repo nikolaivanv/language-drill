@@ -5,15 +5,7 @@ import {
   ContentExercisesResponseSchema, ContentTheoryResponseSchema,
   type ContentExerciseParams, type ContentTheoryParams,
 } from '../schemas/content';
-
-function queryString(params: Record<string, string | number | undefined>): string {
-  const sp = new URLSearchParams();
-  for (const [k, v] of Object.entries(params)) {
-    if (v !== undefined && v !== '') sp.set(k, String(v));
-  }
-  const s = sp.toString();
-  return s ? `?${s}` : '';
-}
+import { buildQueryString } from '../lib/build-query-string';
 
 export function useContentExercises({
   fetchFn, params = {}, enabled = true,
@@ -21,7 +13,7 @@ export function useContentExercises({
   return useQuery({
     queryKey: ['admin', 'content', 'exercises', params],
     queryFn: async () => {
-      const res = await fetchFn(`/admin/content/exercises${queryString(params)}`);
+      const res = await fetchFn(`/admin/content/exercises${buildQueryString(params)}`);
       const json: unknown = await res.json();
       return ContentExercisesResponseSchema.parse(json);
     },
@@ -35,7 +27,7 @@ export function useContentTheory({
   return useQuery({
     queryKey: ['admin', 'content', 'theory', params],
     queryFn: async () => {
-      const res = await fetchFn(`/admin/content/theory${queryString(params)}`);
+      const res = await fetchFn(`/admin/content/theory${buildQueryString(params)}`);
       const json: unknown = await res.json();
       return ContentTheoryResponseSchema.parse(json);
     },
