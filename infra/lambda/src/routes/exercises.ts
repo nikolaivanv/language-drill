@@ -3,8 +3,8 @@ import { Hono } from 'hono';
 import type { Context } from 'hono';
 import { z } from 'zod';
 import { eq, and, gte, count } from 'drizzle-orm';
-import { Language, CefrLevel, ExerciseType, isFreeWritingContent, EXERCISE_ANSWER_MAX_CHARS } from '@language-drill/shared';
-import type { DictationContent, ExerciseContent, FreeWritingContent } from '@language-drill/shared';
+import { Language, CefrLevel, ExerciseType, isFreeWritingContent, isConjugationContent, gradeFluencyAnswer, EXERCISE_ANSWER_MAX_CHARS } from '@language-drill/shared';
+import type { DictationContent, ExerciseContent, FreeWritingContent, EvaluationResult } from '@language-drill/shared';
 import {
   exercises as exercisesTable,
   practiceSessions,
@@ -309,6 +309,62 @@ exercises.post('/exercises/:id/submit', async (c) => {
     ) {
       return c.json({ error: 'Invalid session', code: 'INVALID_SESSION' }, 400);
     }
+  }
+
+  // Deterministic, zero-Claude grading for conjugation drills.
+  // No ai_evaluation bucket spend, no capacity/daily-cap gate, no Claude call.
+  if (exercise.type === ExerciseType.CONJUGATION) {
+    const content = exercise.contentJson as ExerciseContent;
+    if (!isConjugationContent(content)) {
+      return c.json(
+        { error: 'Malformed conjugation exercise', code: 'EXERCISE_NOT_FOUND' },
+        404,
+      );
+    }
+    const correct = gradeFluencyAnswer(content, userAnswer);
+    const score = correct ? 1 : 0;
+    const result: EvaluationResult = {
+      score,
+      grammarAccuracy: score,
+      vocabularyRange: exercise.difficulty ?? '',
+      taskAchievement: score,
+      feedback: correct
+        ? `Correct — ${content.targetForm}. ${content.breakdown}`
+        : `Not quite. The correct form is ${content.targetForm}. ${content.breakdown}`,
+      errors: correct
+        ? []
+        : [
+            {
+              type: 'grammar',
+              severity: 'major',
+              text: userAnswer,
+              correction: content.targetForm,
+              explanation: content.breakdown,
+            },
+          ],
+      estimatedCefrEvidence: exercise.difficulty ?? '',
+    };
+
+    const submissionId = randomUUID();
+    await db.insert(userExerciseHistory).values({
+      id: submissionId,
+      userId,
+      exerciseId: id,
+      sessionId,
+      score,
+      responseJson: { userAnswer, evaluation: result },
+      evaluatedAt: new Date(),
+    });
+
+    await applyGrammarMastery({
+      userId,
+      language: exercise.language as Language,
+      grammarPointKey: exercise.grammarPointKey,
+      difficulty: exercise.difficulty as CefrLevel,
+      score,
+    });
+
+    return c.json(result);
   }
 
   // 3. Resolve tier, run the global brake, then the per-user daily cap.

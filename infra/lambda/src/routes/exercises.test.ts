@@ -1664,3 +1664,115 @@ describe('POST /exercises/:id/submit — free_writing branch', () => {
     );
   });
 });
+
+// ---------------------------------------------------------------------------
+// POST /exercises/:id/submit — conjugation deterministic grading (zero-Claude)
+// ---------------------------------------------------------------------------
+
+describe('POST /exercises/:id/submit — conjugation branch', () => {
+  let app: Hono;
+
+  const authEnv = {
+    event: {
+      requestContext: {
+        authorizer: { jwt: { claims: { sub: 'user_123' } } },
+      },
+    },
+  };
+
+  const conjugationExercise = {
+    id: 'conj-es-001',
+    type: 'conjugation',
+    language: 'es',
+    difficulty: 'B1',
+    grammarPointKey: 'es-b1-conditional',
+    contentJson: {
+      type: 'conjugation',
+      instructions: 'Write the correct form.',
+      lemma: 'ir',
+      lemmaGloss: 'to go',
+      featureBundle: 'condicional · 1pl',
+      targetForm: 'iríamos',
+      breakdown: 'ir- + -íamos',
+      exampleSentences: ['Iríamos al cine.'],
+    },
+    audioS3Key: null,
+    createdAt: new Date(),
+  };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    mockWithLlmTrace.mockImplementation(
+      <T>(_ctx: unknown, fn: () => T | Promise<T>) => Promise.resolve(fn()),
+    );
+    mockRandomUUID.mockImplementation(() => '00000000-0000-0000-0000-000000000000');
+    const mod = await import('./exercises');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  it('correct answer: score=1, feedback contains breakdown, no ai_evaluation usage event', async () => {
+    // exercise fetch
+    mockLimit.mockResolvedValueOnce([conjugationExercise]);
+    mockWhere.mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }));
+    // mastery read (no prior row)
+    mockLimit.mockResolvedValueOnce([]);
+    mockWhere.mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }));
+
+    const res = await app.request(
+      '/exercises/conj-es-001/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'iríamos' }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as AnyJson;
+
+    expect(body.score).toBe(1);
+    expect(body.feedback).toContain('ir-');
+
+    expect(mockEvaluateAnswer).not.toHaveBeenCalled();
+    expect(mockEvaluateFreeWriting).not.toHaveBeenCalled();
+    expect(mockGradeDictationAnswer).not.toHaveBeenCalled();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const allValuesCalls = (mockValues.mock.calls as any[]).map((c: any[]) => c[0] as AnyJson);
+    const hasAiEvalEvent = allValuesCalls.some(
+      (v) => v && v.eventType === 'ai_evaluation',
+    );
+    expect(hasAiEvalEvent).toBe(false);
+  });
+
+  it('wrong answer: score=0, feedback contains targetForm and one grammar error', async () => {
+    // exercise fetch
+    mockLimit.mockResolvedValueOnce([conjugationExercise]);
+    mockWhere.mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }));
+    // mastery read (no prior row)
+    mockLimit.mockResolvedValueOnce([]);
+    mockWhere.mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }));
+
+    const res = await app.request(
+      '/exercises/conj-es-001/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'iríamo' }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as AnyJson;
+
+    expect(body.score).toBe(0);
+    expect(body.feedback).toContain('iríamos');
+    expect(body.errors).toHaveLength(1);
+    expect(body.errors[0].correction).toBe('iríamos');
+
+    expect(mockEvaluateAnswer).not.toHaveBeenCalled();
+  });
+});
