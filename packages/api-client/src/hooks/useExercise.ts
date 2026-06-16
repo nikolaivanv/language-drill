@@ -37,6 +37,14 @@ export function useExercise({
       return ExerciseResponseSchema.parse(json);
     },
     enabled,
+    // The backend returns a *random* exercise from the pool on every call, so an
+    // automatic background refetch would swap the task out from under a user who
+    // is mid-answer (most visibly in free writing, where composing takes
+    // minutes). Hold the fetched exercise stable for the session; advancing to a
+    // new exercise happens through explicit invalidation (see useSubmitAnswer).
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 }
 

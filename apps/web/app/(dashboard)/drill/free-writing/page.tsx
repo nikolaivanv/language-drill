@@ -120,6 +120,7 @@ export default function FreeWritingPage() {
       return (
         <FwComposer
           content={content}
+          language={activeLanguage}
           value={text}
           onChange={setText}
           examMode={examMode}
