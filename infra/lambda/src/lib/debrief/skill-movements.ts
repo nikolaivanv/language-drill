@@ -57,6 +57,12 @@ export function computeSkillMovements(params: {
   labels: ReadonlyMap<string, string>;
 }): SkillMovement[] {
   const { rows, sessionRowIds, labels } = params;
+  // `before` = the cell's mastery folding only its pre-session rows; `after` =
+  // the same plus this session's rows. The band is the marginal effect of the
+  // session. Note: `replayHistory` folds to each row's own `evaluatedAt` (it does
+  // NOT decay to "now"), so the band is stable when the debrief is re-viewed
+  // later rather than drifting under recency decay — deliberate, and it also
+  // avoids a windowed replay ever mis-banding a long-known point as "new".
   const afterMap = replayHistory(rows.map(toHistoryRow));
   const beforeMap = replayHistory(rows.filter((r) => !sessionRowIds.has(r.id)).map(toHistoryRow));
 
