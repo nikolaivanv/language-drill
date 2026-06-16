@@ -117,7 +117,8 @@ export function coverageAxesFor(
   } else if (
     exerciseType === ExerciseType.CLOZE ||
     exerciseType === ExerciseType.TRANSLATION ||
-    exerciseType === ExerciseType.SENTENCE_CONSTRUCTION
+    exerciseType === ExerciseType.SENTENCE_CONSTRUCTION ||
+    exerciseType === ExerciseType.CONJUGATION
   ) {
     monitoring.add("polarity");
     monitoring.add("sentenceType");
