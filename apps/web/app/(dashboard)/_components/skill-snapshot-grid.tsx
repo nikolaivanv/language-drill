@@ -68,7 +68,7 @@ export function SkillSnapshotGrid({
 
 type EmptyProps = { language: LearningLanguage };
 
-export function EmptySnapshotCard({ language }: EmptyProps) {
+export function EmptySnapshotCard({ language: _language }: EmptyProps) {
   return (
     <Card padding="lg">
       <div className="space-y-s-4">
@@ -78,7 +78,7 @@ export function EmptySnapshotCard({ language }: EmptyProps) {
         <Button
           variant="primary"
           size="md"
-          href={`/drill?language=${language}`}
+          href="/drill?start=quick"
         >
           start a session →
         </Button>

@@ -51,18 +51,18 @@ describe('NextUpCard', () => {
     render(<NextUpCard data={data} language={Language.ES} />);
 
     const link = screen.getByRole('link', { name: /next up/i });
-    expect(link).toHaveAttribute('href', '/drill?language=ES');
+    expect(link).toHaveAttribute('href', '/drill?start=quick');
     // Title from composeTitle(2, CLOZE) = "core · cloze"; meta from the subtitle.
     expect(screen.getByText('core · cloze')).toBeInTheDocument();
     expect(screen.getByText(/subjunctive · 5 items · 4 min/)).toBeInTheDocument();
   });
 
-  it('respects the active language in the drill route', () => {
+  it('routes to the quick-launch hub regardless of active language', () => {
     const data = planResponse([makeItem(1, 'queued')]);
     render(<NextUpCard data={data} language={Language.DE} />);
     expect(screen.getByRole('link', { name: /next up/i })).toHaveAttribute(
       'href',
-      '/drill?language=DE',
+      '/drill?start=quick',
     );
   });
 

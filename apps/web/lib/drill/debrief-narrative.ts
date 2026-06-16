@@ -5,14 +5,14 @@
 //
 // What's-next routing (Req 4.4):
 //   high → /progress (review what moved)
-//   else → /drill (try another session)
+//   else → /drill?start=quick (auto-start another session — bare /drill is the hub)
 
 import { LANGUAGE_NAMES, type Language } from '@language-drill/shared';
 import type { AccuracyTier } from './accuracy-tier';
 
 export interface Narrative {
   paragraphs: [string] | [string, string];
-  whatsNextHref: '/drill' | '/progress';
+  whatsNextHref: '/drill?start=quick' | '/progress';
   whatsNextLabel: string;
 }
 
@@ -33,7 +33,7 @@ export function debriefNarrative(input: NarrativeInput): Narrative {
   const whatsNext: Pick<Narrative, 'whatsNextHref' | 'whatsNextLabel'> =
     tier === 'high'
       ? { whatsNextHref: '/progress', whatsNextLabel: 'see what moved →' }
-      : { whatsNextHref: '/drill', whatsNextLabel: 'another short session →' };
+      : { whatsNextHref: '/drill?start=quick', whatsNextLabel: 'another short session →' };
 
   // Special case: zero attempts (e.g., session ended early via rate-limit).
   // Falls into the low tier per accuracy-tier.ts but needs different copy

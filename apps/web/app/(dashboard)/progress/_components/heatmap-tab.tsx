@@ -69,7 +69,7 @@ export function HeatmapTab({
             your last 30 days once you have at least three topics in play.
           </p>
           <div className="mt-s-3">
-            <Button href="/drill" variant="primary" size="sm">
+            <Button href="/drill?start=quick" variant="primary" size="sm">
               start a drill →
             </Button>
           </div>

@@ -25,7 +25,7 @@ export function ProgressEmptyState({ language }: ProgressEmptyStateProps) {
         spent or lessons completed. one drill is enough to start the picture.
       </p>
       <div className="mt-s-4">
-        <Button href="/drill" variant="primary" size="md">
+        <Button href="/drill?start=quick" variant="primary" size="md">
           start a drill →
         </Button>
       </div>

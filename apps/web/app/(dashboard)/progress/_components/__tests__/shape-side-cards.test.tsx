@@ -114,7 +114,7 @@ describe('RecommendedDrillCard', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('picks the lowest-mastery axis below 0.5 and links to /drill?focus=<key>', () => {
+  it('picks the lowest-mastery axis below 0.5 and links to /drill?start=quick', () => {
     render(
       <RecommendedDrillCard
         axes={[
@@ -177,17 +177,17 @@ describe('RecommendedDrillCard', () => {
     expect(screen.getByText('writing')).toBeDefined();
     expect(screen.queryByText('speaking')).toBeNull();
     const link = screen.getByRole('link', { name: /start drill/i });
-    expect(link.getAttribute('href')).toBe('/drill?focus=writing');
+    expect(link.getAttribute('href')).toBe('/drill?start=quick');
     // 14 days between 2026-04-16 and 2026-04-30
     expect(screen.getByText(/last practised 14 days ago/)).toBeDefined();
   });
 });
 
 describe('NotEnoughDataCard', () => {
-  it('renders the not-enough-data placeholder with a link to /drill', () => {
+  it('renders the not-enough-data placeholder with a link to /drill?start=quick', () => {
     render(<NotEnoughDataCard />);
     expect(screen.getByText('not enough data yet')).toBeDefined();
     const link = screen.getByRole('link', { name: /start a drill/i });
-    expect(link.getAttribute('href')).toBe('/drill');
+    expect(link.getAttribute('href')).toBe('/drill?start=quick');
   });
 });

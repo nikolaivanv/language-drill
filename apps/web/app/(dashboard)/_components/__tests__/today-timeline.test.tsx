@@ -134,7 +134,7 @@ describe('TodayTimeline — all done', () => {
     expect(screen.getByText("you're done for today.")).toBeInTheDocument();
     expect(screen.getByText('5 of 5 · 18 minutes')).toBeInTheDocument();
     const link = screen.getByRole('link', { name: /start a fresh session/ });
-    expect(link).toHaveAttribute('href', '/drill?language=ES');
+    expect(link).toHaveAttribute('href', '/drill?start=quick');
   });
 });
 
@@ -156,7 +156,7 @@ describe('TodayTimeline — next-up assignment', () => {
     // Exactly one "next up" chip and one start link.
     expect(screen.getAllByText('next up').length).toBe(1);
     const link = screen.getByRole('link', { name: /start/ });
-    expect(link).toHaveAttribute('href', '/drill?language=ES');
+    expect(link).toHaveAttribute('href', '/drill?start=quick');
     // No `done` chips on a fresh plan.
     expect(screen.queryAllByText('done').length).toBe(0);
   });

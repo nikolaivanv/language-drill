@@ -72,7 +72,8 @@ export function TodayTimeline({
     );
   }
 
-  const drillHref = `/drill?language=${language}`;
+  // Spine CTA: keep one-tap launch now that bare /drill is the hub.
+  const drillHref = `/drill?start=quick`;
   const allDone =
     data.items.length > 0 && data.items.every((item) => item.status === 'done');
 
