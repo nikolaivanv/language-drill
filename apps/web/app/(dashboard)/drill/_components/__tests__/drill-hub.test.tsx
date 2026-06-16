@@ -16,6 +16,7 @@ function setup(overrides: Partial<React.ComponentProps<typeof DrillHub>> = {}) {
   render(
     <DrillHub
       difficulty={CefrLevel.B1}
+      baseline={CefrLevel.B1}
       onDifficultyChange={onDifficultyChange}
       onStartQuick={onStartQuick}
       onStartDictation={onStartDictation}
@@ -44,9 +45,9 @@ describe('DrillHub', () => {
     expect(onStartDictation).toHaveBeenCalledTimes(1);
   });
 
-  it('fires onDifficultyChange when the difficulty select changes', () => {
+  it('fires onDifficultyChange when the drill-level select changes', () => {
     const { onDifficultyChange } = setup();
-    fireEvent.change(screen.getByLabelText(/difficulty/i), {
+    fireEvent.change(screen.getByLabelText(/drill level/i), {
       target: { value: 'A2' },
     });
     expect(onDifficultyChange).toHaveBeenCalledWith('A2');

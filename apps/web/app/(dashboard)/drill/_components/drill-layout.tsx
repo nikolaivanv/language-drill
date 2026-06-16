@@ -59,7 +59,11 @@ export function DrillLayout({
 
       <div className="flex flex-col">
         {progressStrip}
-        <div className="p-s-6">{isLoading ? <LoadingSkeleton /> : main}</div>
+        {/* Content column caps at 760px and centers — text never runs
+            full-bleed on wide screens (DRILL-UI-GUIDELINES §3). */}
+        <div className="mx-auto w-full max-w-[760px] p-s-6">
+          {isLoading ? <LoadingSkeleton /> : main}
+        </div>
       </div>
     </div>
   );

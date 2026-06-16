@@ -54,6 +54,7 @@ export function DictationExercise({
     setPrimaryAction({
       label: 'check',
       onClick: handleSubmit,
+      variant: 'accent',
       disabled: !canSubmit || isLocked,
       loading: submission.kind === 'submitting',
     });
@@ -102,7 +103,7 @@ export function DictationExercise({
 
       {!active && (
         <Button
-          variant="primary"
+          variant="accent"
           onClick={handleSubmit}
           disabled={!canSubmit || isLocked}
           loading={submission.kind === 'submitting'}

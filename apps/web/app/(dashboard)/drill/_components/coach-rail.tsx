@@ -3,6 +3,7 @@
 import { ExerciseType } from '@language-drill/shared';
 import { Card } from '../../../../components/ui';
 import { cn } from '../../../../lib/cn';
+import { FluencyPromo } from './fluency-promo';
 import { SessionDots } from './session-dots';
 
 export interface CoachRailProps {
@@ -21,7 +22,7 @@ export function CoachRail({
   sessionTotal,
 }: CoachRailProps) {
   return (
-    <div className="flex flex-col gap-s-4">
+    <div className="flex h-full flex-col gap-s-4">
       {/* Avatar + labels */}
       <div className="flex flex-col gap-s-2">
         <div
@@ -57,6 +58,9 @@ export function CoachRail({
         A future phase will surface vocabActiveCount here when the /history
         endpoint exists. Prop is accepted now so callers can already wire it.
       */}
+
+      {/* Cross-sell demoted out of the task flow into the rail. */}
+      <FluencyPromo className="mt-auto" />
     </div>
   );
 }
