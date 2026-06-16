@@ -3,11 +3,13 @@
 import * as React from 'react';
 import {
   isClozeContent,
+  isConjugationContent,
   isDictationContent,
   isSentenceConstructionContent,
   isTranslationContent,
   isVocabRecallContent,
   type ClozeContent,
+  type ConjugationContent,
   type ExerciseContent,
   type SentenceConstructionContent,
   type TranslationContent,
@@ -73,6 +75,8 @@ export function ReviewItemCard({ index, item }: ReviewItemCardProps) {
             <SentenceConstructionBody item={item} content={content} />
           ) : isDictationContent(content) ? (
             <DictationBody item={item} content={content} />
+          ) : isConjugationContent(content) ? (
+            <ConjugationBody item={item} content={content} />
           ) : null}
         </div>
       )}
@@ -351,6 +355,69 @@ function VocabBody({ item, content }: VocabBodyProps) {
           </div>
           {content.exampleSentence.length > 0 && (
             <p className="t-small mt-s-2">{content.exampleSentence}</p>
+          )}
+        </div>
+      </div>
+      {item.evaluation?.feedback && (
+        <p className="t-small mt-s-3">{item.evaluation.feedback}</p>
+      )}
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Conjugation body — lemma + feature bundle header, "your form" + "target form" (Req 5.11)
+// ---------------------------------------------------------------------------
+
+interface ConjugationBodyProps {
+  item: DebriefItem;
+  content: ConjugationContent;
+}
+
+function ConjugationBody({ item, content }: ConjugationBodyProps) {
+  const isCorrect = item.status === 'correct';
+  return (
+    <>
+      <p className="t-small italic mb-s-2">
+        {content.lemma} ({content.lemmaGloss}) — {content.featureBundle}
+      </p>
+      <div className="grid grid-cols-2 mobile:grid-cols-1 gap-s-3">
+        <div className="rounded-r-md p-s-3 bg-paper-2">
+          <div className="t-micro">your form</div>
+          <div
+            className="mt-s-2"
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 18,
+              lineHeight: 1.4,
+              textDecoration: isCorrect ? 'none' : 'line-through',
+              color: isCorrect ? 'var(--color-ok)' : 'var(--color-accent-2)',
+            }}
+          >
+            {item.userAnswer ?? ''}
+          </div>
+        </div>
+        <div
+          className="rounded-r-md p-s-3"
+          style={{
+            background: isCorrect ? 'transparent' : 'var(--color-ok-soft)',
+            border: isCorrect ? '1px dashed var(--color-rule)' : 'none',
+          }}
+        >
+          <div className="t-micro">target form</div>
+          <div
+            className="mt-s-2"
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 18,
+              lineHeight: 1.4,
+              fontWeight: 500,
+            }}
+          >
+            {content.targetForm}
+          </div>
+          {content.breakdown.length > 0 && (
+            <p className="t-small mt-s-2 text-ink-mute">{content.breakdown}</p>
           )}
         </div>
       </div>
