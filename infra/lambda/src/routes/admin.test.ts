@@ -43,6 +43,7 @@ function makeChain() {
       reject?: (reason: unknown) => unknown,
     ) => {
       const next = queryQueue.shift() ?? [];
+      if (next instanceof Error) return Promise.reject(next).then(resolve, reject);
       return Promise.resolve(next).then(resolve, reject);
     },
   };
@@ -841,5 +842,118 @@ describe('POST /admin/invites/:id/revoke', () => {
     );
     expect(res.status).toBe(404);
     expect(dbUpdate).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /admin/flagged/exercises/:id/approve
+// ---------------------------------------------------------------------------
+
+const VALID_UUID = '00000000-0000-4000-8000-000000000001';
+
+describe('POST /admin/flagged/exercises/:id/approve', () => {
+  it('returns { outcome: "approved" } when the UPDATE returns a row', async () => {
+    queryQueue.push([{ id: VALID_UUID }]); // UPDATE...returning → 1 row
+
+    const res = await app.request(
+      `/admin/flagged/exercises/${VALID_UUID}/approve`,
+      { method: 'POST' },
+      adminEnv,
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.outcome).toBe('approved');
+  });
+
+  it('demotes on unique violation (23505) and returns { outcome: "demoted" }', async () => {
+    const err = Object.assign(new Error('dup'), { code: '23505' });
+    queryQueue.push(err);           // UPDATE throws unique-violation
+    queryQueue.push([{ id: VALID_UUID }]); // fallback demote UPDATE
+
+    const res = await app.request(
+      `/admin/flagged/exercises/${VALID_UUID}/approve`,
+      { method: 'POST' },
+      adminEnv,
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.outcome).toBe('demoted');
+  });
+
+  it('returns { outcome: "already_resolved" } when UPDATE returns 0 rows and row exists', async () => {
+    queryQueue.push([]);                              // UPDATE → 0 rows
+    queryQueue.push([{ reviewStatus: 'manual-approved' }]); // re-read → exists
+
+    const res = await app.request(
+      `/admin/flagged/exercises/${VALID_UUID}/approve`,
+      { method: 'POST' },
+      adminEnv,
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.outcome).toBe('already_resolved');
+  });
+
+  it('returns { outcome: "not_found" } when UPDATE returns 0 rows and no row exists', async () => {
+    queryQueue.push([]); // UPDATE → 0 rows
+    queryQueue.push([]); // re-read → no row
+
+    const res = await app.request(
+      `/admin/flagged/exercises/${VALID_UUID}/approve`,
+      { method: 'POST' },
+      adminEnv,
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.outcome).toBe('not_found');
+  });
+
+  it('returns 400 for a non-uuid id', async () => {
+    const res = await app.request(
+      '/admin/flagged/exercises/not-a-uuid/approve',
+      { method: 'POST' },
+      adminEnv,
+    );
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBe('VALIDATION_ERROR');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /admin/flagged/exercises/:id/reject
+// ---------------------------------------------------------------------------
+
+describe('POST /admin/flagged/exercises/:id/reject', () => {
+  it('returns { outcome: "rejected" } when the UPDATE returns a row', async () => {
+    queryQueue.push([{ id: VALID_UUID }]); // UPDATE...returning → 1 row
+
+    const res = await app.request(
+      `/admin/flagged/exercises/${VALID_UUID}/reject`,
+      { method: 'POST' },
+      adminEnv,
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.outcome).toBe('rejected');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /admin/flagged/theory/:id/approve
+// ---------------------------------------------------------------------------
+
+describe('POST /admin/flagged/theory/:id/approve', () => {
+  it('returns { outcome: "approved" } when the UPDATE returns a row', async () => {
+    queryQueue.push([{ id: VALID_UUID }]); // UPDATE...returning → 1 row
+
+    const res = await app.request(
+      `/admin/flagged/theory/${VALID_UUID}/approve`,
+      { method: 'POST' },
+      adminEnv,
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.outcome).toBe('approved');
   });
 });

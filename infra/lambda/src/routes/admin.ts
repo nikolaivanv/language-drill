@@ -551,6 +551,115 @@ admin.get('/admin/flagged/theory', async (c) => {
 });
 
 // ---------------------------------------------------------------------------
+// POST /admin/flagged/exercises/:id/approve  — approve or demote-on-conflict
+// POST /admin/flagged/exercises/:id/reject   — reject (preserves flaggedReasons)
+// POST /admin/flagged/theory/:id/approve
+// POST /admin/flagged/theory/:id/reject
+// ---------------------------------------------------------------------------
+
+// Postgres unique-violation detector — mirrors packages/db/scripts/review-flagged.ts
+// `isUniqueViolation` (walks `.cause` since the driver wraps the SQLSTATE). Re-implemented
+// here because that helper lives in a CLI script not importable from the Lambda bundle.
+function isUniqueViolation(err: unknown): boolean {
+  let current: unknown = err;
+  for (let depth = 0; depth < 8; depth++) {
+    if (current instanceof Error && 'code' in current && (current as { code: unknown }).code === '23505') {
+      return true;
+    }
+    if (current instanceof Error && current.cause !== undefined) {
+      current = current.cause;
+      continue;
+    }
+    return false;
+  }
+  return false;
+}
+
+type ResolveOutcome = 'approved' | 'rejected' | 'demoted' | 'not_found' | 'already_resolved';
+
+async function resolveExerciseFlagged(
+  id: string,
+  action: 'approve' | 'reject',
+): Promise<ResolveOutcome> {
+  const setValues = action === 'approve'
+    ? { reviewStatus: 'manual-approved' as const, flaggedReasons: null }
+    : { reviewStatus: 'rejected' as const };
+  try {
+    const updated = await db
+      .update(exercises)
+      .set(setValues)
+      .where(and(eq(exercises.id, id), eq(exercises.reviewStatus, 'flagged')))
+      .returning({ id: exercises.id });
+    if (updated.length > 0) return action === 'approve' ? 'approved' : 'rejected';
+  } catch (err) {
+    if (action === 'approve' && isUniqueViolation(err)) {
+      await db
+        .update(exercises)
+        .set({ reviewStatus: 'rejected' as const })
+        .where(and(eq(exercises.id, id), eq(exercises.reviewStatus, 'flagged')));
+      return 'demoted';
+    }
+    throw err;
+  }
+  const existing = await db
+    .select({ reviewStatus: exercises.reviewStatus })
+    .from(exercises)
+    .where(eq(exercises.id, id))
+    .limit(1);
+  return existing.length > 0 ? 'already_resolved' : 'not_found';
+}
+
+async function resolveTheoryFlagged(
+  id: string,
+  action: 'approve' | 'reject',
+): Promise<ResolveOutcome> {
+  const setValues = action === 'approve'
+    ? { reviewStatus: 'manual-approved' as const, flaggedReasons: null }
+    : { reviewStatus: 'rejected' as const };
+  try {
+    const updated = await db
+      .update(theoryTopics)
+      .set(setValues)
+      .where(and(eq(theoryTopics.id, id), eq(theoryTopics.reviewStatus, 'flagged')))
+      .returning({ id: theoryTopics.id });
+    if (updated.length > 0) return action === 'approve' ? 'approved' : 'rejected';
+  } catch (err) {
+    if (action === 'approve' && isUniqueViolation(err)) {
+      await db
+        .update(theoryTopics)
+        .set({ reviewStatus: 'rejected' as const })
+        .where(and(eq(theoryTopics.id, id), eq(theoryTopics.reviewStatus, 'flagged')));
+      return 'demoted';
+    }
+    throw err;
+  }
+  const existing = await db
+    .select({ reviewStatus: theoryTopics.reviewStatus })
+    .from(theoryTopics)
+    .where(eq(theoryTopics.id, id))
+    .limit(1);
+  return existing.length > 0 ? 'already_resolved' : 'not_found';
+}
+
+const FlaggedIdSchema = z.string().uuid();
+
+for (const [kind, resolve] of [
+  ['exercises', resolveExerciseFlagged],
+  ['theory', resolveTheoryFlagged],
+] as const) {
+  for (const action of ['approve', 'reject'] as const) {
+    admin.post(`/admin/flagged/${kind}/:id/${action}`, async (c) => {
+      const idParsed = FlaggedIdSchema.safeParse(c.req.param('id'));
+      if (!idParsed.success) {
+        return c.json({ error: 'Invalid id', code: 'VALIDATION_ERROR' }, 400);
+      }
+      const outcome = await resolve(idParsed.data, action);
+      return c.json({ outcome });
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Invite code management — generate, list, revoke
 // ---------------------------------------------------------------------------
 
