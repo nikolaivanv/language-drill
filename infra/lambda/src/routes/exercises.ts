@@ -317,8 +317,8 @@ exercises.post('/exercises/:id/submit', async (c) => {
     const content = exercise.contentJson as ExerciseContent;
     if (!isConjugationContent(content)) {
       return c.json(
-        { error: 'Malformed conjugation exercise', code: 'EXERCISE_NOT_FOUND' },
-        404,
+        { error: 'Conjugation exercise content is malformed', code: 'EXERCISE_CONTENT_INVALID' },
+        500,
       );
     }
     const correct = gradeFluencyAnswer(content, userAnswer);
@@ -326,6 +326,9 @@ exercises.post('/exercises/:id/submit', async (c) => {
     const result: EvaluationResult = {
       score,
       grammarAccuracy: score,
+      // No vocabulary axis for a conjugation drill (it maps to the grammar
+      // radar axis). We echo the exercise difficulty as a neutral placeholder
+      // rather than a learner-derived vocabulary estimate.
       vocabularyRange: exercise.difficulty ?? '',
       taskAchievement: score,
       feedback: correct

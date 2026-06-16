@@ -1774,5 +1774,7 @@ describe('POST /exercises/:id/submit — conjugation branch', () => {
     expect(body.errors[0].correction).toBe('iríamos');
 
     expect(mockEvaluateAnswer).not.toHaveBeenCalled();
+    expect(mockEvaluateFreeWriting).not.toHaveBeenCalled();
+    expect(mockGradeDictationAnswer).not.toHaveBeenCalled();
   });
 });
