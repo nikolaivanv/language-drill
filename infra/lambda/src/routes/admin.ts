@@ -550,7 +550,7 @@ admin.get('/admin/content/theory', async (c) => {
   ]);
   const items = rows.map((r) => ({
     id: r.id, language: r.language, level: r.cefrLevel, grammarPointKey: r.grammarPointKey,
-    topicId: r.topicId, contentJson: r.contentJson, qualityScore: r.qualityScore,
+    topicId: r.topicId, contentJson: stripDedupKey(r.contentJson), qualityScore: r.qualityScore,
     generationSource: r.generationSource, modelId: r.modelId, reviewStatus: r.reviewStatus,
     generatedAt: r.generatedAt ? r.generatedAt.toISOString() : null,
   }));

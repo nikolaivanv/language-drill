@@ -1051,6 +1051,28 @@ describe('GET /admin/content/theory', () => {
     expect(body.items[0].topicId).toBe('de-b1-dative');
     expect(body.items[0].reviewStatus).toBe('manual-approved');
   });
+
+  it('accepts q + pagination params and returns correct total and item level', async () => {
+    queryQueue.push([
+      {
+        id: 'th-2', language: 'DE', cefrLevel: 'B1', grammarPointKey: 'dative', topicId: 'de-b1-dative',
+        contentJson: { id: 't', title: 'Der Dativ', subtitle: 's', cefr: 'B1', sections: [] },
+        qualityScore: 0.75, generationSource: 'claude-batch', modelId: 'claude-sonnet-4-6',
+        reviewStatus: 'auto-approved', generatedAt: new Date('2026-06-03T00:00:00Z'),
+      },
+    ]); // items
+    queryQueue.push([{ count: 7 }]); // total
+    const res = await app.request(
+      '/admin/content/theory?language=DE&q=dativ&limit=10&offset=10',
+      undefined,
+      adminEnv,
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.total).toBe(7);
+    expect(body.items).toHaveLength(1);
+    expect(body.items[0].level).toBe('B1');
+  });
 });
 
 // ---------------------------------------------------------------------------
