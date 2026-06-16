@@ -115,8 +115,8 @@ export function ConjugationExercise({
                 <p className="t-body-l text-ink-mute">{content.breakdown}</p>
                 {content.exampleSentences.length > 0 && (
                   <ul className="flex flex-col gap-s-2">
-                    {content.exampleSentences.map((sentence, idx) => (
-                      <li key={idx} className="t-body">
+                    {content.exampleSentences.map((sentence) => (
+                      <li key={sentence} className="t-body">
                         {sentence}
                       </li>
                     ))}

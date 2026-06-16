@@ -338,3 +338,40 @@ describe('coachMessage — DICTATION', () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// CONJUGATION coverage
+// ---------------------------------------------------------------------------
+
+describe('coachMessage — CONJUGATION', () => {
+  it('returns an idle message for conjugation', () => {
+    const msg = coachMessage({ kind: 'idle', type: ExerciseType.CONJUGATION });
+    expect(typeof msg).toBe('string');
+    expect(msg.length).toBeGreaterThan(0);
+  });
+
+  it('returns a distinct evaluated message for conjugation at each tier', () => {
+    const messages = [0.97, 0.8, 0.5, 0.2].map((score) =>
+      coachMessage({ kind: 'evaluated', type: ExerciseType.CONJUGATION, score }),
+    );
+    for (const msg of messages) {
+      expect(typeof msg).toBe('string');
+      expect(msg.length).toBeGreaterThan(0);
+    }
+    expect(new Set(messages).size).toBe(4);
+  });
+
+  it('conjugation copy passes the same hygiene rules as other types', () => {
+    const all = [
+      coachMessage({ kind: 'idle', type: ExerciseType.CONJUGATION }),
+      ...[0.97, 0.8, 0.5, 0.2].map((score) =>
+        coachMessage({ kind: 'evaluated', type: ExerciseType.CONJUGATION, score }),
+      ),
+    ];
+    for (const msg of all) {
+      expect(msg).not.toContain('!');
+      expect(msg).not.toMatch(emojiRegex);
+      expect(msg).not.toMatch(gamificationRegex);
+    }
+  });
+});

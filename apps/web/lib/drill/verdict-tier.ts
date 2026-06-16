@@ -58,6 +58,8 @@ export function conjugationVerdict(score: number): VerdictResult {
     return { tier: 'sage', label: 'exact' };
   } else if (score >= CORRECT_THRESHOLD) {
     return { tier: 'yellow', label: 'close · check the form' };
+  } else if (score >= 0.4) {
+    return { tier: 'yellow', label: 'off — check the paradigm' };
   } else {
     return { tier: 'terracotta', label: 'wrong form' };
   }
