@@ -70,6 +70,7 @@ export function SentenceConstructionExercise({
     setPrimaryAction({
       label: 'submit',
       onClick: handleSubmit,
+      variant: 'accent',
       disabled: !canSubmit || isLocked,
       loading: submission.kind === 'submitting',
     });
@@ -149,7 +150,7 @@ export function SentenceConstructionExercise({
         )}
         {!active && (
           <Button
-            variant="primary"
+            variant="accent"
             onClick={handleSubmit}
             disabled={!canSubmit || isLocked}
             loading={submission.kind === 'submitting'}

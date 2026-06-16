@@ -14,9 +14,11 @@
 import Link from 'next/link';
 import { CefrLevel } from '@language-drill/shared';
 import { DrillTodayStatus } from './drill-today-status';
+import { DrillMeta } from './drill-meta';
 
 type Props = {
   difficulty: CefrLevel;
+  baseline: CefrLevel | null;
   onDifficultyChange: (level: CefrLevel) => void;
   onStartQuick: () => void;
   onStartDictation: () => void;
@@ -24,6 +26,7 @@ type Props = {
 
 export function DrillHub({
   difficulty,
+  baseline,
   onDifficultyChange,
   onStartQuick,
   onStartDictation,
@@ -34,20 +37,13 @@ export function DrillHub({
 
       <DrillTodayStatus />
 
-      <label className="mb-s-6 flex w-fit flex-col gap-1 text-sm font-medium text-gray-700">
-        Difficulty
-        <select
-          value={difficulty}
-          onChange={(e) => onDifficultyChange(e.target.value as CefrLevel)}
-          className="rounded border border-gray-300 bg-white px-3 py-2"
-        >
-          {Object.values(CefrLevel).map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="mb-s-6">
+        <DrillMeta
+          level={difficulty}
+          baseline={baseline}
+          onLevelChange={onDifficultyChange}
+        />
+      </div>
 
       <div className="flex flex-col gap-s-4">
         <button
