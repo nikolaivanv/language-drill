@@ -5,6 +5,7 @@ import {
   ExerciseType,
   Language,
   type ClozeContent,
+  type ConjugationContent,
   type TranslationContent,
   type VocabRecallContent,
   type SentenceConstructionContent,
@@ -496,7 +497,7 @@ describe("buildValidationUserPrompt — conjugation", () => {
         targetForm: "iríamos",
         breakdown: "ir- + -íamos",
         exampleSentences: ["Iríamos al cine."],
-      } as import("@language-drill/shared").ConjugationContent,
+      } as ConjugationContent,
     };
     const conjugationSpec: GenerationSpec = {
       ...baseSpec,
@@ -504,7 +505,7 @@ describe("buildValidationUserPrompt — conjugation", () => {
     };
     const prompt = buildValidationUserPrompt(conjugationDraft, conjugationSpec);
     expect(prompt).toContain("iríamos");
-    expect(prompt).toMatch(/correct form|morpholog/i);
+    expect(prompt).toContain("EXACTLY correct");
   });
 });
 
