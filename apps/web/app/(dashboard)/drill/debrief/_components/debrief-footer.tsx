@@ -21,8 +21,8 @@ export function DebriefFooter(_props: DebriefFooterProps) {
 
   return (
     // Desktop: a right-aligned action row at the end of the page. Mobile
-    // (≤760px): a sticky bottom action bar — the primary "another session"
-    // CTA plus the two secondary actions, each ≥44px tall (Req 7.5, 11.1).
+    // (≤760px): a sticky bottom action bar — the primary "practice more" CTA
+    // (the /drill hub) plus the two secondary actions, each ≥44px tall (Req 7.5, 11.1).
     <div className="mt-s-7 pt-s-5 border-t border-rule flex justify-between items-center mobile:sticky mobile:bottom-0 mobile:z-40 mobile:mt-0 mobile:flex-col mobile:items-stretch mobile:gap-[8px] mobile:bg-paper mobile:py-[12px]">
       <Button
         variant="ghost"
@@ -42,9 +42,9 @@ export function DebriefFooter(_props: DebriefFooterProps) {
         <Button
           variant="primary"
           className="mobile:min-h-[44px] mobile:flex-1"
-          onClick={() => router.push('/drill?start=quick')}
+          onClick={() => router.push('/drill')}
         >
-          another session
+          practice more
         </Button>
       </div>
     </div>

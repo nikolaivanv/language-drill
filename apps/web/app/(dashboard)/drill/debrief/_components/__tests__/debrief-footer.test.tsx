@@ -24,9 +24,9 @@ beforeEach(() => {
 // ---------------------------------------------------------------------------
 
 describe('DebriefFooter — button labels', () => {
-  it('renders "another session" primary button', () => {
+  it('renders "practice more" primary button', () => {
     render(<DebriefFooter tier="high" />);
-    expect(screen.getByRole('button', { name: 'another session' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'practice more' })).toBeDefined();
   });
 
   it('renders "see your progress →" ghost button', () => {
@@ -52,10 +52,10 @@ describe('DebriefFooter — button labels', () => {
 // ---------------------------------------------------------------------------
 
 describe('DebriefFooter — router push targets', () => {
-  it('clicking "another session" pushes /drill?start=quick (Req 6.2)', () => {
+  it('clicking "practice more" pushes /drill hub (Req 6.2)', () => {
     render(<DebriefFooter tier="high" />);
-    fireEvent.click(screen.getByRole('button', { name: 'another session' }));
-    expect(pushMock).toHaveBeenCalledExactlyOnceWith('/drill?start=quick');
+    fireEvent.click(screen.getByRole('button', { name: 'practice more' }));
+    expect(pushMock).toHaveBeenCalledExactlyOnceWith('/drill');
   });
 
   it('clicking "see your progress" pushes /progress (Req 6.3)', () => {
@@ -96,7 +96,7 @@ describe('DebriefFooter — mobile sticky action bar', () => {
 
   it('gives each control a ≥44px mobile tap target', () => {
     render(<DebriefFooter tier="high" />);
-    for (const name of [/see your progress/, 'done', 'another session']) {
+    for (const name of [/see your progress/, 'done', 'practice more']) {
       expect(screen.getByRole('button', { name })).toHaveClass('mobile:min-h-[44px]');
     }
   });
@@ -105,19 +105,19 @@ describe('DebriefFooter — mobile sticky action bar', () => {
 describe('DebriefFooter — tier prop accepted', () => {
   it('accepts tier="high" without throwing or changing route targets', () => {
     render(<DebriefFooter tier="high" />);
-    fireEvent.click(screen.getByRole('button', { name: 'another session' }));
-    expect(pushMock).toHaveBeenCalledWith('/drill?start=quick');
+    fireEvent.click(screen.getByRole('button', { name: 'practice more' }));
+    expect(pushMock).toHaveBeenCalledWith('/drill');
   });
 
   it('accepts tier="mid" without throwing or changing route targets', () => {
     render(<DebriefFooter tier="mid" />);
-    fireEvent.click(screen.getByRole('button', { name: 'another session' }));
-    expect(pushMock).toHaveBeenCalledWith('/drill?start=quick');
+    fireEvent.click(screen.getByRole('button', { name: 'practice more' }));
+    expect(pushMock).toHaveBeenCalledWith('/drill');
   });
 
   it('accepts tier="low" without throwing or changing route targets', () => {
     render(<DebriefFooter tier="low" />);
-    fireEvent.click(screen.getByRole('button', { name: 'another session' }));
-    expect(pushMock).toHaveBeenCalledWith('/drill?start=quick');
+    fireEvent.click(screen.getByRole('button', { name: 'practice more' }));
+    expect(pushMock).toHaveBeenCalledWith('/drill');
   });
 });

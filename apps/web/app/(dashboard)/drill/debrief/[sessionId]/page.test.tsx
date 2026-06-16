@@ -165,7 +165,7 @@ describe('DebriefPage', () => {
 
       // Footer buttons
       expect(
-        screen.getByRole('button', { name: 'another session' }),
+        screen.getByRole('button', { name: 'practice more' }),
       ).toBeInTheDocument();
       expect(
         screen.getByRole('button', { name: /see your progress/ }),
@@ -234,7 +234,7 @@ describe('DebriefPage', () => {
       ).not.toBeInTheDocument();
       expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
       expect(
-        screen.queryByRole('button', { name: 'another session' }),
+        screen.queryByRole('button', { name: 'practice more' }),
       ).not.toBeInTheDocument();
     });
   });
@@ -264,7 +264,7 @@ describe('DebriefPage', () => {
       // No tabs, no debrief footer.
       expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
       expect(
-        screen.queryByRole('button', { name: 'another session' }),
+        screen.queryByRole('button', { name: 'practice more' }),
       ).not.toBeInTheDocument();
     });
 
@@ -334,11 +334,11 @@ describe('DebriefPage', () => {
       });
     });
 
-    it('clicking "another session" calls router.push("/drill?start=quick")', async () => {
+    it('clicking "practice more" calls router.push("/drill")', async () => {
       renderPage();
-      const button = await screen.findByRole('button', { name: 'another session' });
+      const button = await screen.findByRole('button', { name: 'practice more' });
       fireEvent.click(button);
-      expect(mockPush).toHaveBeenCalledWith('/drill?start=quick');
+      expect(mockPush).toHaveBeenCalledWith('/drill');
     });
 
     it('clicking "see your progress →" calls router.push("/progress")', async () => {
