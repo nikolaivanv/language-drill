@@ -77,6 +77,7 @@ vi.mock('@language-drill/db', () => ({
     difficulty: 'difficulty',
     language: 'language',
     reviewStatus: 'review_status',
+    audioS3Key: 'audio_s3_key',
   },
   userExerciseHistory: { id: 'id', exerciseId: 'exerciseId', sessionId: 'sessionId' },
   userLanguageProfiles: {
@@ -110,10 +111,15 @@ const mockApprovedStatusFilter = vi.fn((table: unknown) => ({
   __mockToken: 'approved-status-filter',
   table,
 }));
+const mockAudioReadyFilter = vi.fn((table: unknown) => ({
+  __mockToken: 'audio-ready-filter',
+  table,
+}));
 const mockFreshFirstOrderBy = vi.fn((userId: string) => ({ __mockToken: 'fresh-first-order-by', userId }));
 vi.mock('../lib/exercise-filters', () => ({
   APPROVED_STATUSES: ['auto-approved', 'manual-approved'] as const,
   approvedStatusFilter: (table: unknown) => mockApprovedStatusFilter(table),
+  audioReadyFilter: (table: unknown) => mockAudioReadyFilter(table),
   freshFirstOrderBy: (userId: string) => mockFreshFirstOrderBy(userId),
 }));
 
@@ -186,6 +192,26 @@ describe('CreateSessionRequestSchema', () => {
       language: 'EN',
       difficulty: 'B1',
       exerciseCount: 5.5,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts an optional exerciseType', () => {
+    const result = CreateSessionRequestSchema.safeParse({
+      language: 'ES',
+      difficulty: 'B1',
+      exerciseCount: 4,
+      exerciseType: 'dictation',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects an invalid exerciseType', () => {
+    const result = CreateSessionRequestSchema.safeParse({
+      language: 'ES',
+      difficulty: 'B1',
+      exerciseCount: 4,
+      exerciseType: 'bogus',
     });
     expect(result.success).toBe(false);
   });
@@ -382,6 +408,60 @@ describe('POST /sessions', () => {
     // chain on every authed request, so mockInsert/mockValues fire there;
     // the practice_sessions insert is the only one that calls `.returning(...)`.
     expect(mockReturning).not.toHaveBeenCalled();
+  });
+
+  it('dictation-only request: returns a manifest of the dictation rows the pool yields', async () => {
+    const dictationRows = [
+      {
+        id: 'd-1',
+        type: 'dictation',
+        language: 'ES',
+        difficulty: 'B1',
+        contentJson: { title: 'clip 1' },
+        audioS3Key: 'audio/d-1.mp3',
+        createdAt: new Date(),
+      },
+      {
+        id: 'd-2',
+        type: 'dictation',
+        language: 'ES',
+        difficulty: 'B1',
+        contentJson: { title: 'clip 2' },
+        audioS3Key: 'audio/d-2.mp3',
+        createdAt: new Date(),
+      },
+    ];
+    mockLimit.mockResolvedValueOnce(dictationRows);
+    mockReturning.mockResolvedValueOnce([{ id: 'session-dictation-1' }]);
+
+    const res = await app.request(
+      '/sessions',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          language: 'ES',
+          difficulty: 'B1',
+          exerciseCount: 2,
+          exerciseType: 'dictation',
+        }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.id).toBe('session-dictation-1');
+    expect(body.exercises.map((e: AnyJson) => e.type)).toEqual([
+      'dictation',
+      'dictation',
+    ]);
+    expect(mockValues).toHaveBeenCalledWith(
+      expect.objectContaining({
+        exerciseCount: 2,
+        exerciseIds: ['d-1', 'd-2'],
+      }),
+    );
   });
 });
 
