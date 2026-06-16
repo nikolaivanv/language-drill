@@ -69,9 +69,14 @@ function compatibleTypes(entry: GrammarPoint): ReadonlyArray<ExerciseType> {
   const base = entry.clozeUnsuitable ? GRAMMAR_CLOZE_UNSUITABLE_TYPES : GRAMMAR_KIND_TYPES;
   // `sentenceConstructionSuitable` appends a sentence_construction cell to whatever
   // the base set is (cloze+translation or translation-only).
-  return entry.sentenceConstructionSuitable
+  const withSc = entry.sentenceConstructionSuitable
     ? [...base, ExerciseType.SENTENCE_CONSTRUCTION]
     : base;
+  // `conjugationSuitable` appends a conjugation cell after sentence-construction
+  // handling (verb-paradigm points that benefit from a dedicated inflection drill).
+  return entry.conjugationSuitable
+    ? [...withSc, ExerciseType.CONJUGATION]
+    : withSc;
 }
 
 // ---------------------------------------------------------------------------

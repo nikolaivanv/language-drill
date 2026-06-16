@@ -189,6 +189,58 @@ describe('enumerateCurriculumCells — kind:free-writing umbrellas', () => {
   });
 });
 
+describe('enumerateCurriculumCells — conjugationSuitable flag', () => {
+  it('adds a conjugation cell for a flagged grammar point (also keeps cloze + translation)', () => {
+    const point = makeGrammarPoint({
+      key: 'tr-a2-synthetic-conj',
+      kind: 'grammar',
+      conjugationSuitable: true,
+    });
+    const cells = enumerateCurriculumCells([point]);
+    const types = cells.map((c) => c.exerciseType);
+    expect(types).toContain(ExerciseType.CONJUGATION);
+    expect(types).toEqual(
+      expect.arrayContaining([ExerciseType.CLOZE, ExerciseType.TRANSLATION]),
+    );
+  });
+
+  it('omits the conjugation cell when the flag is absent', () => {
+    const point = makeGrammarPoint({ key: 'tr-a2-synthetic-noconj', kind: 'grammar' });
+    const cells = enumerateCurriculumCells([point]);
+    expect(cells.some((c) => c.exerciseType === ExerciseType.CONJUGATION)).toBe(false);
+  });
+
+  it('combines with clozeUnsuitable: translation + conjugation only', () => {
+    const point = makeGrammarPoint({
+      key: 'tr-a2-synthetic-cloze-conj',
+      kind: 'grammar',
+      clozeUnsuitable: true,
+      conjugationSuitable: true,
+    });
+    const cells = enumerateCurriculumCells([point]);
+    expect(cells.map((c) => c.exerciseType)).toEqual([
+      ExerciseType.TRANSLATION,
+      ExerciseType.CONJUGATION,
+    ]);
+  });
+
+  it('combines with sentenceConstructionSuitable: cloze + translation + sentence_construction + conjugation', () => {
+    const point = makeGrammarPoint({
+      key: 'tr-a2-synthetic-sc-conj',
+      kind: 'grammar',
+      sentenceConstructionSuitable: true,
+      conjugationSuitable: true,
+    });
+    const cells = enumerateCurriculumCells([point]);
+    expect(cells.map((c) => c.exerciseType)).toEqual([
+      ExerciseType.CLOZE,
+      ExerciseType.TRANSLATION,
+      ExerciseType.SENTENCE_CONSTRUCTION,
+      ExerciseType.CONJUGATION,
+    ]);
+  });
+});
+
 describe('enumerateCurriculumCells — sentenceConstructionSuitable flag', () => {
   it('adds a sentence_construction cell for a flagged grammar point', () => {
     const point = makeGrammarPoint({
