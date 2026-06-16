@@ -53,4 +53,10 @@ describe('PoolCellDetail', () => {
     render(<PoolCellDetail item={item} fetchFn={fetchFn} />);
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
   });
+
+  it('shows an error state', () => {
+    mockUsePoolCell.mockReturnValue({ isLoading: false, isError: true, data: undefined });
+    render(<PoolCellDetail item={item} fetchFn={fetchFn} />);
+    expect(screen.getByText(/failed to load/i)).toBeInTheDocument();
+  });
 });
