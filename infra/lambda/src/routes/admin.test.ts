@@ -867,8 +867,8 @@ describe('POST /admin/flagged/exercises/:id/approve', () => {
 
   it('demotes on unique violation (23505) and returns { outcome: "demoted" }', async () => {
     const err = Object.assign(new Error('dup'), { code: '23505' });
-    queryQueue.push(err);           // UPDATE throws unique-violation
-    queryQueue.push([{ id: VALID_UUID }]); // fallback demote UPDATE
+    queryQueue.push(err);  // UPDATE throws unique-violation
+    queryQueue.push([]);   // fallback demote UPDATE has no .returning(); value is just drained
 
     const res = await app.request(
       `/admin/flagged/exercises/${VALID_UUID}/approve`,
@@ -955,5 +955,39 @@ describe('POST /admin/flagged/theory/:id/approve', () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as AnyJson;
     expect(body.outcome).toBe('approved');
+  });
+
+  it('demotes on unique violation (23505) and returns { outcome: "demoted" }', async () => {
+    const err = Object.assign(new Error('dup'), { code: '23505' });
+    queryQueue.push(err);  // UPDATE throws unique-violation
+    queryQueue.push([]);   // fallback demote UPDATE has no .returning(); value is just drained
+
+    const res = await app.request(
+      `/admin/flagged/theory/${VALID_UUID}/approve`,
+      { method: 'POST' },
+      adminEnv,
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.outcome).toBe('demoted');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /admin/flagged/theory/:id/reject
+// ---------------------------------------------------------------------------
+
+describe('POST /admin/flagged/theory/:id/reject', () => {
+  it('returns { outcome: "rejected" } when the UPDATE returns a row', async () => {
+    queryQueue.push([{ id: VALID_UUID }]); // UPDATE...returning → 1 row
+
+    const res = await app.request(
+      `/admin/flagged/theory/${VALID_UUID}/reject`,
+      { method: 'POST' },
+      adminEnv,
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.outcome).toBe('rejected');
   });
 });
