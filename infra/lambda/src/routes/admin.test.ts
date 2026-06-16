@@ -707,6 +707,83 @@ describe('GET /admin/invites', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// GET /admin/flagged/exercises
+// ---------------------------------------------------------------------------
+
+describe('GET /admin/flagged/exercises', () => {
+  it('returns flagged exercises with total, strips _dedupKey, normalises flaggedReasons', async () => {
+    queryQueue.push([
+      {
+        id: 'ex-1',
+        language: 'ES',
+        difficulty: 'A2',
+        type: 'cloze',
+        grammarPointKey: 'obj-pronoun',
+        contentJson: { type: 'cloze', sentence: 'Maria ___ lo dio.', correctAnswer: 'se', _dedupKey: 'k1' },
+        qualityScore: 0.62,
+        flaggedReasons: [{ code: 'ambiguous' }],
+        generatedAt: new Date('2026-06-01T00:00:00Z'),
+      },
+    ]);
+    queryQueue.push([{ count: 5 }]);
+
+    const res = await app.request('/admin/flagged/exercises?language=ES', undefined, adminEnv);
+    expect(res.status).toBe(200);
+
+    const body = (await res.json()) as AnyJson;
+    expect(body.total).toBe(5);
+    expect(body.items).toHaveLength(1);
+    expect(body.items[0].level).toBe('A2');
+    expect(body.items[0].contentJson._dedupKey).toBeUndefined();
+    expect(body.items[0].flaggedReasons).toEqual([{ code: 'ambiguous' }]);
+    expect(body.items[0].generatedAt).toBe('2026-06-01T00:00:00.000Z');
+  });
+
+  it('returns 400 with VALIDATION_ERROR for an unrecognised language', async () => {
+    const res = await app.request('/admin/flagged/exercises?language=FR', undefined, adminEnv);
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBe('VALIDATION_ERROR');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /admin/flagged/theory
+// ---------------------------------------------------------------------------
+
+describe('GET /admin/flagged/theory', () => {
+  it('returns flagged theory items with total, level, and topicId', async () => {
+    queryQueue.push([
+      {
+        id: 'th-1',
+        language: 'DE',
+        cefrLevel: 'B1',
+        grammarPointKey: 'dative',
+        topicId: 'de-b1-dative',
+        contentJson: { id: 't', title: 'Dative', subtitle: 's', cefr: 'B1', sections: [] },
+        qualityScore: 0.55,
+        flaggedReasons: [{ code: 'level-mismatch' }],
+        generatedAt: new Date('2026-06-02T00:00:00Z'),
+      },
+    ]);
+    queryQueue.push([{ count: 1 }]);
+
+    const res = await app.request('/admin/flagged/theory', undefined, adminEnv);
+    expect(res.status).toBe(200);
+
+    const body = (await res.json()) as AnyJson;
+    expect(body.total).toBe(1);
+    expect(body.items).toHaveLength(1);
+    expect(body.items[0].level).toBe('B1');
+    expect(body.items[0].topicId).toBe('de-b1-dative');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /admin/invites/:id/revoke
+// ---------------------------------------------------------------------------
+
 describe('POST /admin/invites/:id/revoke', () => {
   it('revokes an unused code (200, db.update called)', async () => {
     queryQueue.push([{ id: 'i1', usedBy: null, revokedAt: null }]); // lookup
