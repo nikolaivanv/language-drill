@@ -55,10 +55,10 @@ export const CELL_TARGET_DEFAULTS: Record<
   // now comes from splitting into more themed umbrellas, not a high per-cell
   // target.
   [ExerciseType.VOCAB_RECALL]: { A1: 10, A2: 10, B1: 10, B2: 10 },
-  // Connected-speech clips are expensive (Polly synth + audio storage) and a
-  // small rotating pool fills the single listening slot per session; B1/B2 only
-  // this milestone (A1/A2 dictation is pedagogically out of scope).
-  [ExerciseType.DICTATION]: { B1: 15, B2: 15 },
+  // B1/B2: 15 (ES). A1/A2 (TR): lower — short clips with a smaller distinct-clip
+  // surface. A1/A2 dictation is pedagogically apt only for languages whose
+  // curriculum lives there (TR); tunable.
+  [ExerciseType.DICTATION]: { A1: 10, A2: 12, B1: 15, B2: 15 },
   // Free writing is authored by hand, never produced by the generation
   // pipeline, so it has no per-cell targets. Present only to satisfy the
   // exhaustive map type; never read (no free-writing generation cells exist).

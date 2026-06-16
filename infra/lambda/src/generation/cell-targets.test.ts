@@ -102,6 +102,16 @@ describe('resolveCellTarget', () => {
     expect(resolveCellTarget(makeCell(ExerciseType.DICTATION, CefrLevel.B2))).toBe(15);
   });
 
+  it('resolves TR dictation A1/A2 targets to 10/12', () => {
+    const make = (cefrLevel: 'A1' | 'A2') => ({
+      language: 'TR', cefrLevel, exerciseType: ExerciseType.DICTATION,
+      grammarPoint: { key: `tr-${cefrLevel.toLowerCase()}-dictation`, kind: 'dictation' },
+      cellKey: `TR:${cefrLevel}:dictation:tr-${cefrLevel.toLowerCase()}-dictation`,
+    } as never);
+    expect(resolveCellTarget(make('A1'))).toBe(10);
+    expect(resolveCellTarget(make('A2'))).toBe(12);
+  });
+
   it('sentence_construction resolves at the plain table value (no raise)', () => {
     // SC already gained headroom when the pilot brake lifted (25 → 30
     // at A2, 50 at B1/B2); it resolves at the table value regardless of
