@@ -1,7 +1,7 @@
 import { randomInt } from 'node:crypto';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { and, asc, count, desc, eq, gte, isNotNull, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, inArray, isNotNull, sql } from 'drizzle-orm';
 import {
   ALL_CURRICULA,
   buildCellKey,
@@ -462,6 +462,99 @@ admin.get('/admin/theory/coverage', async (c) => {
   }
 
   return c.json({ rows });
+});
+
+// ---------------------------------------------------------------------------
+// GET /admin/content/exercises — list approved exercises (filters + search + pagination)
+// GET /admin/content/theory   — list approved theory topics (filters + search + pagination)
+// ---------------------------------------------------------------------------
+
+const APPROVED_STATUSES = ['auto-approved', 'manual-approved'] as const;
+
+const ContentExercisesQuerySchema = z.object({
+  language: z.enum(['ES', 'DE', 'TR']).optional(),
+  level: z.enum(['A1', 'A2', 'B1', 'B2']).optional(),
+  type: z.string().optional(),
+  grammarPoint: z.string().optional(),
+  q: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+});
+const ContentTheoryQuerySchema = z.object({
+  language: z.enum(['ES', 'DE', 'TR']).optional(),
+  level: z.enum(['A1', 'A2', 'B1', 'B2']).optional(),
+  grammarPoint: z.string().optional(),
+  q: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+});
+
+admin.get('/admin/content/exercises', async (c) => {
+  const parsed = ContentExercisesQuerySchema.safeParse(c.req.query());
+  if (!parsed.success) {
+    return c.json({ error: 'Invalid query parameters', code: 'VALIDATION_ERROR', details: parsed.error.flatten() }, 400);
+  }
+  const { language, level, type, grammarPoint, q, limit, offset } = parsed.data;
+  const conds = [inArray(exercises.reviewStatus, [...APPROVED_STATUSES])];
+  if (language) conds.push(eq(exercises.language, language));
+  if (level) conds.push(eq(exercises.difficulty, level));
+  if (type) conds.push(eq(exercises.type, type));
+  if (grammarPoint) conds.push(eq(exercises.grammarPointKey, grammarPoint));
+  if (q) conds.push(sql`${exercises.contentJson}::text ILIKE ${'%' + q + '%'}`);
+  const where = and(...conds);
+  const [rows, totalRows] = await Promise.all([
+    db.select({
+      id: exercises.id, language: exercises.language, difficulty: exercises.difficulty,
+      type: exercises.type, grammarPointKey: exercises.grammarPointKey,
+      contentJson: exercises.contentJson, coverageTags: exercises.coverageTags,
+      qualityScore: exercises.qualityScore, generationSource: exercises.generationSource,
+      modelId: exercises.modelId, reviewStatus: exercises.reviewStatus, generatedAt: exercises.generatedAt,
+    }).from(exercises).where(where)
+      .orderBy(sql`${exercises.generatedAt} DESC NULLS LAST`)
+      .limit(limit ?? 25).offset(offset ?? 0),
+    db.select({ count: count() }).from(exercises).where(where),
+  ]);
+  const items = rows.map((r) => ({
+    id: r.id, language: r.language, level: r.difficulty, type: r.type,
+    grammarPointKey: r.grammarPointKey, contentJson: stripDedupKey(r.contentJson),
+    coverageTags: r.coverageTags, qualityScore: r.qualityScore,
+    generationSource: r.generationSource, modelId: r.modelId, reviewStatus: r.reviewStatus,
+    generatedAt: r.generatedAt ? r.generatedAt.toISOString() : null,
+  }));
+  return c.json({ items, total: Number(totalRows[0]?.count ?? 0) });
+});
+
+admin.get('/admin/content/theory', async (c) => {
+  const parsed = ContentTheoryQuerySchema.safeParse(c.req.query());
+  if (!parsed.success) {
+    return c.json({ error: 'Invalid query parameters', code: 'VALIDATION_ERROR', details: parsed.error.flatten() }, 400);
+  }
+  const { language, level, grammarPoint, q, limit, offset } = parsed.data;
+  const conds = [inArray(theoryTopics.reviewStatus, [...APPROVED_STATUSES])];
+  if (language) conds.push(eq(theoryTopics.language, language));
+  if (level) conds.push(eq(theoryTopics.cefrLevel, level));
+  if (grammarPoint) conds.push(eq(theoryTopics.grammarPointKey, grammarPoint));
+  if (q) conds.push(sql`${theoryTopics.contentJson}::text ILIKE ${'%' + q + '%'}`);
+  const where = and(...conds);
+  const [rows, totalRows] = await Promise.all([
+    db.select({
+      id: theoryTopics.id, language: theoryTopics.language, cefrLevel: theoryTopics.cefrLevel,
+      grammarPointKey: theoryTopics.grammarPointKey, topicId: theoryTopics.topicId,
+      contentJson: theoryTopics.contentJson, qualityScore: theoryTopics.qualityScore,
+      generationSource: theoryTopics.generationSource, modelId: theoryTopics.modelId,
+      reviewStatus: theoryTopics.reviewStatus, generatedAt: theoryTopics.generatedAt,
+    }).from(theoryTopics).where(where)
+      .orderBy(sql`${theoryTopics.generatedAt} DESC NULLS LAST`)
+      .limit(limit ?? 25).offset(offset ?? 0),
+    db.select({ count: count() }).from(theoryTopics).where(where),
+  ]);
+  const items = rows.map((r) => ({
+    id: r.id, language: r.language, level: r.cefrLevel, grammarPointKey: r.grammarPointKey,
+    topicId: r.topicId, contentJson: r.contentJson, qualityScore: r.qualityScore,
+    generationSource: r.generationSource, modelId: r.modelId, reviewStatus: r.reviewStatus,
+    generatedAt: r.generatedAt ? r.generatedAt.toISOString() : null,
+  }));
+  return c.json({ items, total: Number(totalRows[0]?.count ?? 0) });
 });
 
 // ---------------------------------------------------------------------------

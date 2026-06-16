@@ -35,6 +35,7 @@ function makeChain() {
     groupBy: vi.fn(() => chain),
     orderBy: vi.fn(() => chain),
     limit: vi.fn(() => chain),
+    offset: vi.fn(() => chain),
     values: vi.fn(() => chain),
     returning: vi.fn(() => chain),
     set: vi.fn(() => chain),
@@ -990,5 +991,64 @@ describe('POST /admin/flagged/theory/:id/reject', () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as AnyJson;
     expect(body.outcome).toBe('rejected');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /admin/content/exercises
+// ---------------------------------------------------------------------------
+
+describe('GET /admin/content/exercises', () => {
+  it('returns approved items (metadata + _dedupKey stripped) + total', async () => {
+    queryQueue.push([
+      {
+        id: 'ex-1', language: 'ES', difficulty: 'A2', type: 'cloze', grammarPointKey: 'obj-pronoun',
+        contentJson: { type: 'cloze', sentence: 'Maria ___ lo dio.', correctAnswer: 'se', _dedupKey: 'k1' },
+        coverageTags: { person: '3sg' }, qualityScore: 0.91, generationSource: 'claude-batch',
+        modelId: 'claude-sonnet-4-6', reviewStatus: 'auto-approved', generatedAt: new Date('2026-06-01T00:00:00Z'),
+      },
+    ]); // items
+    queryQueue.push([{ count: 42 }]); // total
+    const res = await app.request('/admin/content/exercises?language=ES&q=lo&limit=10&offset=0', undefined, adminEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.total).toBe(42);
+    expect(body.items[0].level).toBe('A2');
+    expect(body.items[0].contentJson._dedupKey).toBeUndefined();
+    expect(body.items[0].generationSource).toBe('claude-batch');
+    expect(body.items[0].reviewStatus).toBe('auto-approved');
+    expect(body.items[0].coverageTags).toEqual({ person: '3sg' });
+    expect(body.items[0].generatedAt).toBe('2026-06-01T00:00:00.000Z');
+  });
+
+  it('rejects an invalid language with 400', async () => {
+    const res = await app.request('/admin/content/exercises?language=FR', undefined, adminEnv);
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as AnyJson).code).toBe('VALIDATION_ERROR');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /admin/content/theory
+// ---------------------------------------------------------------------------
+
+describe('GET /admin/content/theory', () => {
+  it('returns approved theory items + total (no type/coverageTags)', async () => {
+    queryQueue.push([
+      {
+        id: 'th-1', language: 'DE', cefrLevel: 'B1', grammarPointKey: 'dative', topicId: 'de-b1-dative',
+        contentJson: { id: 't', title: 'Dative', subtitle: 's', cefr: 'B1', sections: [] },
+        qualityScore: 0.8, generationSource: 'claude-batch', modelId: 'claude-sonnet-4-6',
+        reviewStatus: 'manual-approved', generatedAt: new Date('2026-06-02T00:00:00Z'),
+      },
+    ]);
+    queryQueue.push([{ count: 3 }]);
+    const res = await app.request('/admin/content/theory', undefined, adminEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.total).toBe(3);
+    expect(body.items[0].level).toBe('B1');
+    expect(body.items[0].topicId).toBe('de-b1-dative');
+    expect(body.items[0].reviewStatus).toBe('manual-approved');
   });
 });
