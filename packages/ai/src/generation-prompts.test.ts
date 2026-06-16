@@ -265,6 +265,27 @@ describe("buildGenerationSystemPrompt", () => {
     }
   });
 
+  it("adds the conjugation section ONLY for conjugation, absent for other types", async () => {
+    const conj = await buildGenerationSystemPrompt(
+      { ...baseInputs, exerciseType: ExerciseType.CONJUGATION },
+      [],
+    );
+    expect(conj).toContain("## Conjugation/inflection specifics");
+
+    for (const type of [
+      ExerciseType.CLOZE,
+      ExerciseType.TRANSLATION,
+      ExerciseType.VOCAB_RECALL,
+      ExerciseType.SENTENCE_CONSTRUCTION,
+    ]) {
+      const other = await buildGenerationSystemPrompt(
+        { ...baseInputs, exerciseType: type },
+        [],
+      );
+      expect(other).not.toContain("## Conjugation/inflection specifics");
+    }
+  });
+
   it("instructs Claude to use the matching tool name", async () => {
     const cloze = await buildGenerationSystemPrompt(baseInputs, []);
     expect(cloze).toContain("submit_cloze_exercise");
@@ -744,8 +765,7 @@ describe("canonicalSurface — conjugation", () => {
     };
     const surface = canonicalSurface(content);
     expect(surface).toContain("ir");
-    // normaliseSurface lowercases, NFKD-strips diacritics (ª → a, the middle
-    // dot · is dropped), and collapses whitespace.
+    // normaliseSurface lowercases, strips Unicode Diacritic-property chars (incl. ª→a and the middle dot ·), and collapses whitespace.
     expect(surface).toBe("ir::condicional 1a persona del plural");
   });
 
