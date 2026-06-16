@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Language, CefrLevel } from '@language-drill/shared';
+import { Language, CefrLevel, ExerciseType } from '@language-drill/shared';
 import { ExerciseResponseSchema } from './exercise';
 
 // Request body for POST /sessions
@@ -7,6 +7,9 @@ export const CreateSessionRequestSchema = z.object({
   language: z.nativeEnum(Language),
   difficulty: z.nativeEnum(CefrLevel),
   exerciseCount: z.number().int().min(1).max(20),
+  // Optional single-type filter. Omitted → a mixed pull (quick drill); set to a
+  // type (e.g. dictation) → a single-type run (dictation-only launcher).
+  exerciseType: z.nativeEnum(ExerciseType).optional(),
 });
 
 export type CreateSessionRequest = z.infer<typeof CreateSessionRequestSchema>;
