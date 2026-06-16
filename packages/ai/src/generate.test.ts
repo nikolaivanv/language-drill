@@ -26,6 +26,7 @@ import {
   generateBatch,
   generateOneDraft,
   parseGeneratedClozeDraft,
+  parseGeneratedConjugationDraft,
   parseGeneratedDictationDraft,
   parseGeneratedFreeWritingDraft,
   parseGeneratedSentenceConstructionDraft,
@@ -1235,5 +1236,54 @@ describe("parseGeneratedFreeWritingDraft", () => {
   it("throws when the topic entry has no register", () => {
     const noReg = { ...spec, grammarPoint: { ...TOPIC, freeWriting: undefined } };
     expect(() => parseGeneratedFreeWritingDraft(validInput, noReg)).toThrow(/register/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseGeneratedConjugationDraft
+// ---------------------------------------------------------------------------
+
+describe("parseGeneratedConjugationDraft", () => {
+  it("parses a conjugation draft (trims targetForm)", () => {
+    const out = parseGeneratedConjugationDraft(
+      {
+        instructions: "Write the correct form.",
+        lemma: "ir",
+        lemmaGloss: "to go",
+        featureBundle: "condicional · 1ª pers. plural",
+        targetForm: " iríamos ",
+        acceptableForms: ["nos iríamos"],
+        breakdown: "ir- + -íamos",
+        exampleSentences: ["Iríamos al cine."],
+      },
+      {} as never,
+    );
+    expect(out.type).toBe(ExerciseType.CONJUGATION);
+    expect(out.targetForm).toBe("iríamos");
+    expect(out.lemma).toBe("ir");
+    expect(out.acceptableForms).toEqual(["nos iríamos"]);
+  });
+
+  it("rejects an empty target form", () => {
+    expect(() =>
+      parseGeneratedConjugationDraft(
+        { instructions: "x", lemma: "ir", lemmaGloss: "to go", featureBundle: "y", targetForm: "  ", breakdown: "z", exampleSentences: ["a"] },
+        {} as never,
+      ),
+    ).toThrow(/targetForm/);
+  });
+
+  it("rejects empty exampleSentences", () => {
+    expect(() =>
+      parseGeneratedConjugationDraft(
+        { instructions: "x", lemma: "ir", lemmaGloss: "to go", featureBundle: "y", targetForm: "iríamos", breakdown: "z", exampleSentences: [] },
+        {} as never,
+      ),
+    ).toThrow(/exampleSentences/);
+  });
+
+  it("registers conjugation in the tool maps", () => {
+    expect(TOOL_NAME_BY_TYPE[ExerciseType.CONJUGATION]).toBe("submit_conjugation_exercise");
+    expect(GENERATION_TOOL_BY_TYPE[ExerciseType.CONJUGATION].name).toBe("submit_conjugation_exercise");
   });
 });

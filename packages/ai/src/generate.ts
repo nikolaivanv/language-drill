@@ -16,6 +16,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import {
   type CefrLevel,
   type ClozeContent,
+  type ConjugationContent,
   type CoverageTarget,
   type DictationContent,
   type ExerciseContent,
@@ -95,6 +96,7 @@ export const TOOL_NAME_BY_TYPE: Readonly<Record<ExerciseType, string>> = Object.
   sentence_construction: "submit_sentence_construction_exercise",
   dictation: "submit_dictation_exercise",
   free_writing: "submit_free_writing_exercise",
+  conjugation: "submit_conjugation_exercise",
 });
 
 // ---------------------------------------------------------------------------
@@ -252,6 +254,35 @@ export const VOCAB_RECALL_GENERATION_TOOL: Anthropic.Tool = {
       "hints",
       "exampleSentence",
     ],
+  },
+};
+
+export const CONJUGATION_GENERATION_TOOL: Anthropic.Tool = {
+  name: TOOL_NAME_BY_TYPE.conjugation,
+  description:
+    "Submit a single conjugation/inflection drill: a lemma + an explicit feature bundle whose single correct inflected form the learner must produce.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      instructions: { type: "string", description: "Short imperative, e.g. 'Write the correct form.'" },
+      lemma: { type: "string", description: "Citation/dictionary form of the word, e.g. 'ir', 'fahren', 'gitmek'." },
+      lemmaGloss: { type: "string", description: "Short English gloss of the lemma, e.g. 'to go'." },
+      featureBundle: {
+        type: "string",
+        description:
+          "Human-readable feature bundle naming the exact cell to produce. Tense/mood is fixed by the grammar point; specify person/number (and polarity where relevant) in the target language's conventional notation, e.g. 'condicional · 1ª persona del plural' or 'geniş zaman · olumsuz · 1. çoğul'.",
+      },
+      targetForm: { type: "string", description: "The single canonical correct inflected form, e.g. 'iríamos'. Must be exactly correct including diacritics." },
+      acceptableForms: {
+        type: "array",
+        items: { type: "string" },
+        description: "Other fully-correct forms (regional/orthographic variants, or with/without a clitic pronoun). Omit or pass [] when the form is unambiguous.",
+      },
+      breakdown: { type: "string", description: "Morphological breakdown for post-answer teaching: stem + ending (ES/DE) or stem + ordered suffix gloss (TR)." },
+      exampleSentences: { type: "array", items: { type: "string" }, description: "1-2 short, natural sentences using the target form in context." },
+      topicHint: { type: "string", description: "Optional topic theme." },
+    },
+    required: ["instructions", "lemma", "lemmaGloss", "featureBundle", "targetForm", "breakdown", "exampleSentences"],
   },
 };
 
@@ -417,6 +448,7 @@ export const GENERATION_TOOL_BY_TYPE: Readonly<Record<ExerciseType, Anthropic.To
   sentence_construction: SENTENCE_CONSTRUCTION_GENERATION_TOOL,
   dictation: DICTATION_GENERATION_TOOL,
   free_writing: FREE_WRITING_GENERATION_TOOL,
+  conjugation: CONJUGATION_GENERATION_TOOL,
 });
 
 // ---------------------------------------------------------------------------
@@ -729,6 +761,45 @@ export function parseGeneratedVocabRecallDraft(
     expectedWord,
     hints,
     exampleSentence,
+    ...(topicHint !== undefined ? { topicHint } : {}),
+  };
+}
+
+export function parseGeneratedConjugationDraft(
+  input: unknown,
+  _spec: GenerationSpec,
+): ConjugationContent {
+  const ctx = "conjugation draft";
+  if (!isObject(input)) throw new Error(`${ctx}: must be an object, got ${typeof input}`);
+
+  const instructions = requireString(input, "instructions", ctx);
+  const lemma = requireString(input, "lemma", ctx).trim();
+  const lemmaGloss = requireString(input, "lemmaGloss", ctx);
+  const featureBundle = requireString(input, "featureBundle", ctx);
+  const targetForm = requireString(input, "targetForm", ctx).trim().replace(/\s+/g, " ");
+  const breakdown = requireString(input, "breakdown", ctx);
+  const exampleSentences = requireStringArray(input, "exampleSentences", ctx);
+  const topicHint = optionalString(input, "topicHint", ctx);
+  const acceptableFormsRaw = optionalStringArray(input, "acceptableForms", ctx);
+  const acceptableForms = acceptableFormsRaw?.map((s) => s.trim()).filter((s) => s.length > 0);
+
+  if (targetForm.length === 0) {
+    throw new Error(`${ctx}: invalid targetForm: must contain non-whitespace characters`);
+  }
+  if (exampleSentences.length === 0) {
+    throw new Error(`${ctx}: exampleSentences must be non-empty`);
+  }
+
+  return {
+    type: ExerciseType.CONJUGATION,
+    instructions,
+    lemma,
+    lemmaGloss,
+    featureBundle,
+    targetForm,
+    breakdown,
+    exampleSentences,
+    ...(acceptableForms && acceptableForms.length > 0 ? { acceptableForms } : {}),
     ...(topicHint !== undefined ? { topicHint } : {}),
   };
 }
@@ -1213,6 +1284,8 @@ function parseToolInput(
       return parseGeneratedVocabRecallDraft(input, spec);
     case ExerciseType.SENTENCE_CONSTRUCTION:
       return parseGeneratedSentenceConstructionDraft(input, spec);
+    case ExerciseType.CONJUGATION:
+      return parseGeneratedConjugationDraft(input, spec);
     case ExerciseType.DICTATION:
       // Unreachable: generateOneDraft routes dictation to parseGeneratedDictationDraft
       // (which needs the ordinal) before reaching parseToolInput. Kept defensive.
