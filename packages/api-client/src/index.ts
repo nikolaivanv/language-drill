@@ -342,3 +342,17 @@ export {
   type UseSubmitFluencyAttemptOptions,
   type UseFluencyStatsParams,
 } from './hooks/useFluency';
+export {
+  FlaggedReasonSchema,
+  FlaggedExerciseSchema, FlaggedExercisesResponseSchema,
+  FlaggedTheorySchema, FlaggedTheoryResponseSchema,
+  ResolveOutcomeSchema, ResolveResponseSchema,
+  type FlaggedReason,
+  type FlaggedExercise, type FlaggedTheory,
+  type FlaggedExerciseFilters, type FlaggedTheoryFilters,
+  type ResolveOutcome,
+} from './schemas/flagged';
+export {
+  useFlaggedExercises, useFlaggedTheory,
+  useResolveFlaggedExercise, useResolveFlaggedTheory,
+} from './hooks/useFlaggedQueue';

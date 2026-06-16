@@ -24,13 +24,19 @@ vi.mock('next/link', () => ({
 }));
 
 describe('AdminNav', () => {
-  it('exposes Pool/Theory/Invites destinations in order', () => {
+  it('exposes Moderation/Pool/Theory/Invites destinations in order', () => {
     expect(ADMIN_NAV.map((d) => d.href)).toEqual([
+      '/admin/moderation',
       '/admin/generation',
       '/admin/theory',
       '/admin/invites',
     ]);
-    expect(ADMIN_NAV.map((d) => d.label)).toEqual(['Pool', 'Theory', 'Invites']);
+    expect(ADMIN_NAV.map((d) => d.label)).toEqual([
+      'Moderation',
+      'Pool',
+      'Theory',
+      'Invites',
+    ]);
   });
 
   it('renders every destination as a link to its href', () => {
