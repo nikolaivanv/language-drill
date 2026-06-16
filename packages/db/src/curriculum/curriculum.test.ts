@@ -177,6 +177,16 @@ describe('curriculum conjugationSuitable flag', () => {
       ]),
     ).toThrow(/conjugationSuitable/);
   });
+
+  it('flagged conjugation points each have a person coverage axis', () => {
+    const flagged = ALL_CURRICULA.filter((p) => p.conjugationSuitable);
+    expect(flagged.length).toBeGreaterThan(0);
+    for (const p of flagged) {
+      expect(p.kind).toBe('grammar');
+      const names = (p.coverageSpec?.axes ?? []).map((a) => a.name);
+      expect(names).toContain('person');
+    }
+  });
 });
 
 describe('curriculum personRotation flag (migrated to coverageSpec — Task 4)', () => {

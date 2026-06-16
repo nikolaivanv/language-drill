@@ -38,8 +38,12 @@ const { B1, B2 } = CefrLevel;
  * `2026-06-15b` adds the twelve `kind: 'free-writing'` topic umbrellas (six each
  * for B1/B2); the bump clears any low-yield / saturated-dedup suppression so the
  * brand-new free-writing cells run on the next scheduler tick.
+ *
+ * `2026-06-16` flags two verb-conjugation points (`es-b1-present-subjunctive`,
+ * `es-b1-conditional`) with `conjugationSuitable: true`; the bump clears any
+ * low-yield / saturated-dedup suppression so the new CONJUGATION cells run.
  */
-export const CURRICULUM_VERSION_ES = '2026-06-15b';
+export const CURRICULUM_VERSION_ES = '2026-06-16';
 
 const esCurriculum: readonly GrammarPoint[] = [
   /*
@@ -225,6 +229,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     // Restore when es-a1-present-indicative-regular is uncommented:
     // prerequisiteKeys: ['es-a1-present-indicative-regular'],
     sentenceConstructionSuitable: true,
+    conjugationSuitable: true,
   },
   {
     key: 'es-b1-conditional',
@@ -246,6 +251,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Forgetting the irregular stems shared with the future (tendría, haría, podría).',
     ],
     sentenceConstructionSuitable: true,
+    conjugationSuitable: true,
   },
   {
     key: 'es-b1-llevar-time-expressions',
