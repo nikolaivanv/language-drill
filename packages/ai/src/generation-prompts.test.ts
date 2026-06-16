@@ -5,6 +5,7 @@ import {
   Language,
   type ClozeContent,
   type DictationContent,
+  type FreeWritingContent,
   type TranslationContent,
   type VocabRecallContent,
 } from "@language-drill/shared";
@@ -573,6 +574,21 @@ describe("canonicalSurface", () => {
       correctAnswer: "x",
     };
     expect(canonicalSurface(content)).toBe("yo hablo espanol.");
+  });
+
+  it("uses the title (lowercased, diacritic-stripped) for free-writing content", () => {
+    const content: FreeWritingContent = {
+      type: ExerciseType.FREE_WRITING,
+      instructions: "x",
+      title: "El Teletrabajo: ¿Avance o Aislamiento?",
+      task: "x",
+      domain: "x",
+      register: "formal",
+      minWords: 150,
+      maxWords: 200,
+      requiredElements: [],
+    };
+    expect(canonicalSurface(content)).toBe("el teletrabajo: ¿avance o aislamiento?");
   });
 
   it("uses sourceText for translation content", () => {
