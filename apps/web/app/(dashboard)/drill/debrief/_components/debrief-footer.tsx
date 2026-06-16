@@ -42,7 +42,7 @@ export function DebriefFooter(_props: DebriefFooterProps) {
         <Button
           variant="primary"
           className="mobile:min-h-[44px] mobile:flex-1"
-          onClick={() => router.push('/drill')}
+          onClick={() => router.push('/drill?start=quick')}
         >
           another session
         </Button>

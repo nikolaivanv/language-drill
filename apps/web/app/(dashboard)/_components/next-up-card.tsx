@@ -5,7 +5,7 @@
 // ---------------------------------------------------------------------------
 // Surfaces the first not-yet-done plan item as a single prominent, tappable
 // card directly under the greeting so a phone user can start practising in one
-// tap. Reuses the timeline-label composers and the same `/drill?language=…`
+// tap. Reuses the timeline-label composers and the same `/drill?start=quick`
 // route the timeline's next-up row links to. Renders nothing when there is no
 // actionable item (no plan, insufficient pool, or every item done). The page
 // gates this behind `useIsMobile()`.
@@ -21,12 +21,12 @@ type Props = {
   language: LearningLanguage;
 };
 
-export function NextUpCard({ data, language }: Props) {
+export function NextUpCard({ data, language: _language }: Props) {
   if (!data || data.code === 'INSUFFICIENT_POOL') return null;
   const next = data.items.find((item) => item.status === 'queued');
   if (!next) return null;
 
-  const drillHref = `/drill?language=${language}`;
+  const drillHref = `/drill?start=quick`;
   const title = composeTitle(next.index, next.type);
   const subtitle = composeSubtitle(next.topicHint, next.type, next.itemCount);
 

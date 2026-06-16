@@ -25,13 +25,13 @@ describe('debriefNarrative — what\'s-next routing (Req 4.4)', () => {
 
   it('mid tier links to /drill', () => {
     const result = debriefNarrative(makeInput({ tier: 'mid' }));
-    expect(result.whatsNextHref).toBe('/drill');
+    expect(result.whatsNextHref).toBe('/drill?start=quick');
     expect(result.whatsNextLabel).toBe('another short session →');
   });
 
   it('low tier links to /drill', () => {
     const result = debriefNarrative(makeInput({ tier: 'low', correctCount: 1 }));
-    expect(result.whatsNextHref).toBe('/drill');
+    expect(result.whatsNextHref).toBe('/drill?start=quick');
     expect(result.whatsNextLabel).toBe('another short session →');
   });
 });
@@ -106,7 +106,7 @@ describe('debriefNarrative — all-skipped fallback', () => {
         skippedCount: 5,
       }),
     );
-    expect(result.whatsNextHref).toBe('/drill');
+    expect(result.whatsNextHref).toBe('/drill?start=quick');
   });
 
   it('attemptedCount === 0 returns 1–2 paragraphs', () => {

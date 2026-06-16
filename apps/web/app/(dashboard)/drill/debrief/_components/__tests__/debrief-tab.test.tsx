@@ -50,19 +50,19 @@ describe('DebriefTab — what\'s-next link', () => {
     expect(link.getAttribute('href')).toBe('/progress');
   });
 
-  it('mid-tier renders a link to /drill', () => {
+  it('mid-tier renders a link to /drill?start=quick', () => {
     render(<DebriefTab debrief={makeDebrief({ correctCount: 3, attemptedCount: 5 })} />);
     const link = screen.getByRole('link', { name: /another short session/ });
-    expect(link.getAttribute('href')).toBe('/drill');
+    expect(link.getAttribute('href')).toBe('/drill?start=quick');
   });
 
-  it('low-tier renders a link to /drill', () => {
+  it('low-tier renders a link to /drill?start=quick', () => {
     render(<DebriefTab debrief={makeDebrief({ correctCount: 1, attemptedCount: 5 })} />);
     const link = screen.getByRole('link', { name: /another short session/ });
-    expect(link.getAttribute('href')).toBe('/drill');
+    expect(link.getAttribute('href')).toBe('/drill?start=quick');
   });
 
-  it('all-skipped (attemptedCount === 0) renders a link to /drill', () => {
+  it('all-skipped (attemptedCount === 0) renders a link to /drill?start=quick', () => {
     render(
       <DebriefTab
         debrief={makeDebrief({
@@ -73,7 +73,7 @@ describe('DebriefTab — what\'s-next link', () => {
       />,
     );
     const link = screen.getByRole('link', { name: /another short session/ });
-    expect(link.getAttribute('href')).toBe('/drill');
+    expect(link.getAttribute('href')).toBe('/drill?start=quick');
   });
 
   it('renders the "what\'s next" eyebrow above the link', () => {

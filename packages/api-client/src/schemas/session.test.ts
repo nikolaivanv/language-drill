@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { ExerciseType, Language, CefrLevel } from '@language-drill/shared';
 import {
   CreateSessionRequestSchema,
   CreateSessionResponseSchema,
@@ -127,5 +128,36 @@ describe('CompleteSessionResponseSchema', () => {
         durationSeconds: 240.5,
       }),
     ).toThrow();
+  });
+});
+
+describe('CreateSessionRequestSchema — exerciseType', () => {
+  const base = {
+    language: Language.ES,
+    difficulty: CefrLevel.B1,
+    exerciseCount: 4,
+  };
+
+  it('accepts a request without exerciseType (omitted → undefined)', () => {
+    const r = CreateSessionRequestSchema.safeParse(base);
+    expect(r.success).toBe(true);
+    if (r.success) expect(r.data.exerciseType).toBeUndefined();
+  });
+
+  it('accepts a request with a valid exerciseType', () => {
+    const r = CreateSessionRequestSchema.safeParse({
+      ...base,
+      exerciseType: ExerciseType.DICTATION,
+    });
+    expect(r.success).toBe(true);
+    if (r.success) expect(r.data.exerciseType).toBe(ExerciseType.DICTATION);
+  });
+
+  it('rejects an invalid exerciseType', () => {
+    const r = CreateSessionRequestSchema.safeParse({
+      ...base,
+      exerciseType: 'not_a_type',
+    });
+    expect(r.success).toBe(false);
   });
 });

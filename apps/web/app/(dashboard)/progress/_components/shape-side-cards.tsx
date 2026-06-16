@@ -138,7 +138,7 @@ export function RecommendedDrillCard({ axes, now }: RecommendedDrillCardProps) {
         .
       </div>
       <div style={{ marginTop: 10 }}>
-        <Button href={`/drill?focus=${weakest.key}`} variant="primary" size="sm">
+        <Button href="/drill?start=quick" variant="primary" size="sm">
           start drill →
         </Button>
       </div>
@@ -162,7 +162,7 @@ export function NotEnoughDataCard() {
         the radar starts to mean something after ~5 graded attempts.
       </div>
       <div style={{ marginTop: 10 }}>
-        <Button href="/drill" variant="primary" size="sm">
+        <Button href="/drill?start=quick" variant="primary" size="sm">
           start a drill →
         </Button>
       </div>

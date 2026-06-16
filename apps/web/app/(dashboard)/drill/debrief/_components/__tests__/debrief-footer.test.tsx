@@ -52,10 +52,10 @@ describe('DebriefFooter — button labels', () => {
 // ---------------------------------------------------------------------------
 
 describe('DebriefFooter — router push targets', () => {
-  it('clicking "another session" pushes /drill (Req 6.2)', () => {
+  it('clicking "another session" pushes /drill?start=quick (Req 6.2)', () => {
     render(<DebriefFooter tier="high" />);
     fireEvent.click(screen.getByRole('button', { name: 'another session' }));
-    expect(pushMock).toHaveBeenCalledExactlyOnceWith('/drill');
+    expect(pushMock).toHaveBeenCalledExactlyOnceWith('/drill?start=quick');
   });
 
   it('clicking "see your progress" pushes /progress (Req 6.3)', () => {
@@ -106,18 +106,18 @@ describe('DebriefFooter — tier prop accepted', () => {
   it('accepts tier="high" without throwing or changing route targets', () => {
     render(<DebriefFooter tier="high" />);
     fireEvent.click(screen.getByRole('button', { name: 'another session' }));
-    expect(pushMock).toHaveBeenCalledWith('/drill');
+    expect(pushMock).toHaveBeenCalledWith('/drill?start=quick');
   });
 
   it('accepts tier="mid" without throwing or changing route targets', () => {
     render(<DebriefFooter tier="mid" />);
     fireEvent.click(screen.getByRole('button', { name: 'another session' }));
-    expect(pushMock).toHaveBeenCalledWith('/drill');
+    expect(pushMock).toHaveBeenCalledWith('/drill?start=quick');
   });
 
   it('accepts tier="low" without throwing or changing route targets', () => {
     render(<DebriefFooter tier="low" />);
     fireEvent.click(screen.getByRole('button', { name: 'another session' }));
-    expect(pushMock).toHaveBeenCalledWith('/drill');
+    expect(pushMock).toHaveBeenCalledWith('/drill?start=quick');
   });
 });

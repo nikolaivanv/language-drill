@@ -334,11 +334,11 @@ describe('DebriefPage', () => {
       });
     });
 
-    it('clicking "another session" calls router.push("/drill")', async () => {
+    it('clicking "another session" calls router.push("/drill?start=quick")', async () => {
       renderPage();
       const button = await screen.findByRole('button', { name: 'another session' });
       fireEvent.click(button);
-      expect(mockPush).toHaveBeenCalledWith('/drill');
+      expect(mockPush).toHaveBeenCalledWith('/drill?start=quick');
     });
 
     it('clicking "see your progress →" calls router.push("/progress")', async () => {

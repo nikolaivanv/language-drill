@@ -214,7 +214,7 @@ describe('DashboardPage — mobile "next up" CTA (Req 4.2)', () => {
     mockIsMobile.mockReturnValue(true);
     render(<DashboardPage />);
     const cta = screen.getByRole('link', { name: /next up/i });
-    expect(cta).toHaveAttribute('href', '/drill?language=ES');
+    expect(cta).toHaveAttribute('href', '/drill?start=quick');
   });
 
   it('does not render the NextUpCard on desktop', () => {
@@ -325,7 +325,7 @@ describe('DashboardPage — empty radar', () => {
       ),
     ).toBeInTheDocument();
     const link = screen.getByRole('link', { name: /start a session/ });
-    expect(link).toHaveAttribute('href', '/drill?language=ES');
+    expect(link).toHaveAttribute('href', '/drill?start=quick');
   });
 });
 

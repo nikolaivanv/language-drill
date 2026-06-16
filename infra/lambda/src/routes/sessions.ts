@@ -12,7 +12,7 @@ import {
 } from '@language-drill/db';
 import { rankPlanCandidates, type PointMastery } from '../lib/mastery/rank';
 import { db } from '../db';
-import { approvedStatusFilter, freshFirstOrderBy } from '../lib/exercise-filters';
+import { approvedStatusFilter, audioReadyFilter, freshFirstOrderBy } from '../lib/exercise-filters';
 import { presignAudioUrl } from '../lib/audio-url';
 import { withAudioUrl } from '../lib/dictation-content';
 import { authMiddleware } from '../middleware/auth';
@@ -50,6 +50,7 @@ export const CreateSessionRequestSchema = z.object({
   language: z.nativeEnum(Language),
   difficulty: z.nativeEnum(CefrLevel),
   exerciseCount: z.number().int().min(1).max(20),
+  exerciseType: z.nativeEnum(ExerciseType).optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -79,12 +80,15 @@ sessions.post('/sessions', async (c) => {
     );
   }
 
-  const { language, difficulty, exerciseCount } = bodyResult.data;
+  const { language, difficulty, exerciseCount, exerciseType } = bodyResult.data;
   const userId = c.get('userId');
 
   // Pull a manifest of N exercises for this (language, difficulty), ordered so
   // never-attempted exercises come first (exposure control); falls through to
-  // INSUFFICIENT_EXERCISES if the pool is too small.
+  // INSUFFICIENT_EXERCISES if the pool is too small. `audioReadyFilter` keeps
+  // un-synthesized dictation rows out of every pull (no-op for non-dictation
+  // rows); `exerciseType`, when set, restricts to a single type (e.g. the
+  // dictation-only launcher).
   const rows = await db
     .select()
     .from(exercisesTable)
@@ -93,6 +97,8 @@ sessions.post('/sessions', async (c) => {
         eq(exercisesTable.language, language),
         eq(exercisesTable.difficulty, difficulty),
         approvedStatusFilter(exercisesTable),
+        audioReadyFilter(exercisesTable),
+        ...(exerciseType ? [eq(exercisesTable.type, exerciseType)] : []),
       ),
     )
     .orderBy(freshFirstOrderBy(userId))

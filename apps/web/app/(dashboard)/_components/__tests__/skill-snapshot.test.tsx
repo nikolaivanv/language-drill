@@ -181,7 +181,7 @@ describe('SkillSnapshotGrid — empty state', () => {
       ),
     ).toBeInTheDocument();
     const link = screen.getByRole('link', { name: /start a session/ });
-    expect(link).toHaveAttribute('href', '/drill?language=ES');
+    expect(link).toHaveAttribute('href', '/drill?start=quick');
   });
 });
 

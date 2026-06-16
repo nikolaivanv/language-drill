@@ -65,7 +65,7 @@ describe('HeatmapTab', () => {
     );
     expect(screen.getByText('build a topic history first')).toBeDefined();
     const link = screen.getByRole('link', { name: /start a drill/i });
-    expect(link.getAttribute('href')).toBe('/drill');
+    expect(link.getAttribute('href')).toBe('/drill?start=quick');
   });
 
   it('renders the grid + hot/cold summary when topics.length ≥ 3', () => {
