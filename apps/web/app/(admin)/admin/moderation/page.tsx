@@ -21,6 +21,7 @@ export default function ModerationPage() {
   const [tab, setTab] = useState<Tab>('exercises');
   const [filters, setFilters] = useState<FlaggedExerciseFilters>({});
   const [demotedId, setDemotedId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const exercises = useFlaggedExercises({ fetchFn, filters, enabled: tab === 'exercises' });
   const theory = useFlaggedTheory({
@@ -34,23 +35,34 @@ export default function ModerationPage() {
   const setFilter = (key: keyof FlaggedExerciseFilters, value: string) =>
     setFilters((f) => ({ ...f, [key]: value || undefined }));
 
+  const switchTab = (next: Tab) => {
+    setTab(next);
+    setDemotedId(null);
+    setError(null);
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <h1 className="font-display text-[24px] font-semibold text-ink">Moderation</h1>
+      {error ? <p role="alert" className="text-[13px] text-red-600">{error}</p> : null}
 
       <div className="flex gap-2" role="tablist">
         <button
+          id="tab-exercises"
           role="tab"
           aria-selected={tab === 'exercises'}
-          onClick={() => setTab('exercises')}
+          aria-controls="moderation-panel"
+          onClick={() => switchTab('exercises')}
           className={tab === 'exercises' ? 'font-semibold text-ink' : 'text-ink-soft'}
         >
           Exercises{exercises.data ? ` (${exercises.data.total})` : ''}
         </button>
         <button
+          id="tab-theory"
           role="tab"
           aria-selected={tab === 'theory'}
-          onClick={() => setTab('theory')}
+          aria-controls="moderation-panel"
+          onClick={() => switchTab('theory')}
           className={tab === 'theory' ? 'font-semibold text-ink' : 'text-ink-soft'}
         >
           Theory{theory.data ? ` (${theory.data.total})` : ''}
@@ -87,47 +99,59 @@ export default function ModerationPage() {
         />
       </div>
 
-      {tab === 'exercises' ? (
-        <Section
-          loading={exercises.isLoading}
-          error={exercises.isError}
-          count={exercises.data?.items.length ?? 0}
-          total={exercises.data?.total ?? 0}
-        >
-          {exercises.data?.items.map((item) => (
-            <FlaggedExerciseCard
-              key={item.id}
-              item={item}
-              pending={resolveExercise.isPending}
-              demoted={demotedId === item.id}
-              onResolve={async (action) => {
-                const outcome = await resolveExercise.mutateAsync({ id: item.id, action });
-                setDemotedId(outcome === 'demoted' ? item.id : null);
-              }}
-            />
-          ))}
-        </Section>
-      ) : (
-        <Section
-          loading={theory.isLoading}
-          error={theory.isError}
-          count={theory.data?.items.length ?? 0}
-          total={theory.data?.total ?? 0}
-        >
-          {theory.data?.items.map((item) => (
-            <FlaggedTheoryCard
-              key={item.id}
-              item={item}
-              pending={resolveTheory.isPending}
-              demoted={demotedId === item.id}
-              onResolve={async (action) => {
-                const outcome = await resolveTheory.mutateAsync({ id: item.id, action });
-                setDemotedId(outcome === 'demoted' ? item.id : null);
-              }}
-            />
-          ))}
-        </Section>
-      )}
+      <div id="moderation-panel" role="tabpanel" aria-labelledby={tab === 'exercises' ? 'tab-exercises' : 'tab-theory'}>
+        {tab === 'exercises' ? (
+          <Section
+            loading={exercises.isLoading}
+            error={exercises.isError}
+            count={exercises.data?.items.length ?? 0}
+            total={exercises.data?.total ?? 0}
+          >
+            {exercises.data?.items.map((item) => (
+              <FlaggedExerciseCard
+                key={item.id}
+                item={item}
+                pending={resolveExercise.isPending}
+                demoted={demotedId === item.id}
+                onResolve={async (action) => {
+                  try {
+                    const outcome = await resolveExercise.mutateAsync({ id: item.id, action });
+                    setDemotedId(outcome === 'demoted' ? item.id : null);
+                    setError(null);
+                  } catch {
+                    setError('Failed to resolve item. Please try again.');
+                  }
+                }}
+              />
+            ))}
+          </Section>
+        ) : (
+          <Section
+            loading={theory.isLoading}
+            error={theory.isError}
+            count={theory.data?.items.length ?? 0}
+            total={theory.data?.total ?? 0}
+          >
+            {theory.data?.items.map((item) => (
+              <FlaggedTheoryCard
+                key={item.id}
+                item={item}
+                pending={resolveTheory.isPending}
+                demoted={demotedId === item.id}
+                onResolve={async (action) => {
+                  try {
+                    const outcome = await resolveTheory.mutateAsync({ id: item.id, action });
+                    setDemotedId(outcome === 'demoted' ? item.id : null);
+                    setError(null);
+                  } catch {
+                    setError('Failed to resolve item. Please try again.');
+                  }
+                }}
+              />
+            ))}
+          </Section>
+        )}
+      </div>
     </div>
   );
 }
