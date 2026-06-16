@@ -132,6 +132,24 @@ describe("buildUserPrompt", () => {
     expect(prompt).toContain("User's Translation:** El gato esta en la mesa.");
   });
 
+  it("instructs the evaluator not to anchor on the reference translation", () => {
+    // Regression: Haiku was rewriting a valid different-word answer to match the
+    // reference's morphology (e.g. valid `marketler` flagged as `marketlar`
+    // because the reference used `pazarlar`). The translation prompt must tell
+    // the evaluator the reference is one acceptable answer and to judge the
+    // user's own word on its own merits.
+    const prompt = buildUserPrompt(
+      translationContent,
+      "El gato esta en la mesa.",
+      Language.ES,
+      CefrLevel.A2,
+    );
+
+    expect(prompt).toContain("ONE acceptable answer");
+    expect(prompt.toLowerCase()).toContain("never rewrite the user's word");
+    expect(prompt).toContain("user's own sentence is itself incorrect");
+  });
+
   it("builds a vocab recall prompt with all fields", () => {
     const prompt = buildUserPrompt(
       vocabRecallContent,
