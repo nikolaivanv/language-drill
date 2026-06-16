@@ -147,9 +147,9 @@ vi.mock('../lib/audio-url', () => ({
 // computeSkillMovements is a pure helper; banding logic is covered by Task 2
 // unit tests. Mock it here so the route test is a wiring-only contract.
 // Default: return []; per-test override via mockComputeSkillMovements.mockReturnValueOnce(...).
-const mockComputeSkillMovements = vi.fn((): Record<string, unknown>[] => []);
+const mockComputeSkillMovements = vi.fn((_args: unknown): Record<string, unknown>[] => []);
 vi.mock('../lib/debrief/skill-movements.js', () => ({
-  computeSkillMovements: (_args: unknown) => mockComputeSkillMovements(),
+  computeSkillMovements: (args: unknown) => mockComputeSkillMovements(args),
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1816,6 +1816,27 @@ describe('GET /sessions/:id/debrief', () => {
 
     // skillMovements must be an array.
     expect(Array.isArray(body.skillMovements)).toBe(true);
+
+    // Wiring contract: the route called the helper with the affected point's
+    // history rows, the session row marked for exclusion, and the label map.
+    expect(mockComputeSkillMovements).toHaveBeenCalledTimes(1);
+    expect(mockComputeSkillMovements).toHaveBeenCalledWith(
+      expect.objectContaining({
+        rows: expect.arrayContaining([
+          expect.objectContaining({ id: 'hist-prior-1', grammarPointKey: 'es-b1-subjunctive' }),
+          expect.objectContaining({ id: 'hist-session-1' }),
+        ]),
+        sessionRowIds: expect.any(Set),
+        labels: expect.any(Map),
+      }),
+    );
+    const callArg = mockComputeSkillMovements.mock.calls[0][0] as {
+      sessionRowIds: Set<string>;
+      labels: Map<string, string>;
+    };
+    expect(callArg.sessionRowIds.has('hist-session-1')).toBe(true);
+    expect(callArg.sessionRowIds.has('hist-prior-1')).toBe(false);
+    expect(callArg.labels.get('es-b1-subjunctive')).toBeDefined();
 
     // No-numbers contract: every value in every movement is a string, not a number.
     // Also 'from'/'to' raw scores must NOT appear (only banded strings leak out).
