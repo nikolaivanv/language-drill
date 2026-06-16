@@ -7,7 +7,8 @@ export type ResolveOutcome = z.infer<typeof ResolveOutcomeSchema>;
 
 export const ResolveResponseSchema = z.object({ outcome: ResolveOutcomeSchema });
 
-const FlaggedReasonSchema = z.object({ code: z.string(), detail: z.string().optional() });
+export const FlaggedReasonSchema = z.object({ code: z.string(), detail: z.string().optional() });
+export type FlaggedReason = z.infer<typeof FlaggedReasonSchema>;
 
 export const FlaggedExerciseSchema = z.object({
   id: z.string(),

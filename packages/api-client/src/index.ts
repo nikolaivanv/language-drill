@@ -343,9 +343,11 @@ export {
   type UseFluencyStatsParams,
 } from './hooks/useFluency';
 export {
+  FlaggedReasonSchema,
   FlaggedExerciseSchema, FlaggedExercisesResponseSchema,
   FlaggedTheorySchema, FlaggedTheoryResponseSchema,
   ResolveOutcomeSchema, ResolveResponseSchema,
+  type FlaggedReason,
   type FlaggedExercise, type FlaggedTheory,
   type FlaggedExerciseFilters, type FlaggedTheoryFilters,
   type ResolveOutcome,

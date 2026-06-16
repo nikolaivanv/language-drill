@@ -11,7 +11,9 @@ import {
 
 function queryString(filters: Record<string, string | undefined>): string {
   const params = new URLSearchParams();
-  for (const [k, v] of Object.entries(filters)) { if (v) params.set(k, v); }
+  for (const [k, v] of Object.entries(filters)) {
+    if (v) params.set(k, v);
+  }
   const s = params.toString();
   return s ? `?${s}` : '';
 }
