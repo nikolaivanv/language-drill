@@ -1273,6 +1273,15 @@ describe("parseGeneratedConjugationDraft", () => {
     ).toThrow(/targetForm/);
   });
 
+  it("rejects a whitespace-only lemma", () => {
+    expect(() =>
+      parseGeneratedConjugationDraft(
+        { instructions: "x", lemma: "   ", lemmaGloss: "to go", featureBundle: "y", targetForm: "iríamos", breakdown: "z", exampleSentences: ["a"] },
+        {} as never,
+      ),
+    ).toThrow(/lemma/);
+  });
+
   it("rejects empty exampleSentences", () => {
     expect(() =>
       parseGeneratedConjugationDraft(

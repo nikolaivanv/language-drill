@@ -770,7 +770,9 @@ export function parseGeneratedConjugationDraft(
   _spec: GenerationSpec,
 ): ConjugationContent {
   const ctx = "conjugation draft";
-  if (!isObject(input)) throw new Error(`${ctx}: must be an object, got ${typeof input}`);
+  if (!isObject(input)) {
+    throw new Error(`${ctx}: must be an object, got ${typeof input}`);
+  }
 
   const instructions = requireString(input, "instructions", ctx);
   const lemma = requireString(input, "lemma", ctx).trim();
@@ -783,11 +785,14 @@ export function parseGeneratedConjugationDraft(
   const acceptableFormsRaw = optionalStringArray(input, "acceptableForms", ctx);
   const acceptableForms = acceptableFormsRaw?.map((s) => s.trim()).filter((s) => s.length > 0);
 
+  if (lemma.length === 0) {
+    throw new Error(`${ctx}: invalid lemma: must contain non-whitespace characters`);
+  }
   if (targetForm.length === 0) {
     throw new Error(`${ctx}: invalid targetForm: must contain non-whitespace characters`);
   }
   if (exampleSentences.length === 0) {
-    throw new Error(`${ctx}: exampleSentences must be non-empty`);
+    throw new Error(`${ctx}: invalid exampleSentences: must be non-empty`);
   }
 
   return {
