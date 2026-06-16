@@ -299,6 +299,43 @@ export async function fetchPriorVocabRecallSurfaces(
 }
 
 /**
+ * Distinct free_writing titles already approved/flagged in this cell, fed into
+ * the generation prompt as an avoid-list (cross-run dedup). The dedup surface
+ * for free_writing is the title, so without this the generator re-proposes the
+ * topic name every run and `exercises_dedup_idx` rejects it. Distinct titles,
+ * deterministically ordered, capped so the prompt stays bounded. Returns `[]`
+ * (not undefined) when the cell is empty so the renderer omits the section.
+ */
+export async function fetchPriorFreeWritingTitles(
+  db: Db,
+  cell: Cell,
+): Promise<readonly string[]> {
+  const rows = await db
+    .select({ title: sql<string>`content_json->>'title'` })
+    .from(exercises)
+    .where(
+      and(
+        eq(exercises.language, cell.language),
+        eq(exercises.difficulty, cell.cefrLevel),
+        eq(exercises.type, cell.exerciseType),
+        eq(exercises.grammarPointKey, cell.grammarPoint.key),
+        inArray(exercises.reviewStatus, [
+          'auto-approved',
+          'manual-approved',
+          'flagged',
+        ]),
+        sql`content_json ? 'title'`,
+      ),
+    )
+    .groupBy(sql`content_json->>'title'`)
+    .orderBy(sql`content_json->>'title'`)
+    .limit(60);
+  return rows
+    .map((r) => r.title)
+    .filter((s): s is string => typeof s === 'string' && s.length > 0);
+}
+
+/**
  * Pulls the frequency seeds already anchored in this cell's live pool (R5.3),
  * read from the writer-only `content_json.seedWord` field that
  * `validateAndInsertWithRetry` persisted (task 14). Scoped to the same cell +
@@ -500,7 +537,9 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     const priorPoolSurfaces =
       cell.exerciseType === ExerciseType.VOCAB_RECALL
         ? await fetchPriorVocabRecallSurfaces(db, cell)
-        : undefined;
+        : cell.exerciseType === ExerciseType.FREE_WRITING
+          ? await fetchPriorFreeWritingTitles(db, cell)
+          : undefined;
 
     // R5: anchor each cloze/translation ordinal on a distinct frequency-band
     // word, excluding seeds already used in this cell's pool (cross-run dedup).
