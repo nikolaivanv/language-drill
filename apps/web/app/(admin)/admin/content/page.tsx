@@ -7,6 +7,7 @@ import {
   useContentExercises, useContentTheory,
   useResolveContentExercise, useResolveContentTheory,
   type ContentExerciseParams,
+  type ContentTheoryParams,
 } from '@language-drill/api-client';
 import { ContentExerciseCard } from './_components/content-exercise-card';
 import { ContentTheoryCard } from './_components/content-theory-card';
@@ -25,7 +26,7 @@ export default function ContentPage() {
   const [error, setError] = useState<string | null>(null);
 
   const exerciseParams: ContentExerciseParams = { ...filters, q: q || undefined, limit: PAGE_SIZE, offset };
-  const theoryParams = { language: filters.language, level: filters.level, grammarPoint: filters.grammarPoint, q: q || undefined, limit: PAGE_SIZE, offset };
+  const theoryParams: ContentTheoryParams = { language: filters.language, level: filters.level, grammarPoint: filters.grammarPoint, q: q || undefined, limit: PAGE_SIZE, offset };
 
   const exercises = useContentExercises({ fetchFn, params: exerciseParams, enabled: tab === 'exercises' });
   const theory = useContentTheory({ fetchFn, params: theoryParams, enabled: tab === 'theory' });
