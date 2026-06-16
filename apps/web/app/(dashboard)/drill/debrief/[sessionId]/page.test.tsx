@@ -98,6 +98,7 @@ function makeDebriefResponse(
     attemptedCount: 5,
     skippedCount: 0,
     items: [0, 1, 2, 3, 4].map((i) => makeClozeItem(i)) as DebriefResponse['items'],
+    skillMovements: [],
     ...overrides,
   };
 }

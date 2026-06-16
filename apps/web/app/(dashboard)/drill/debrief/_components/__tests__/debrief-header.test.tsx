@@ -20,6 +20,7 @@ function makeDebrief(overrides: Partial<DebriefResponse> = {}): DebriefResponse 
     attemptedCount: 5,
     skippedCount: 0,
     items: [],
+    skillMovements: [],
     ...overrides,
   };
 }

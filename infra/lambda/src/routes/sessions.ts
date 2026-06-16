@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { eq, and, sql, isNull, isNotNull, gte, desc, inArray } from 'drizzle-orm';
-import { Language, CefrLevel, CORRECT_THRESHOLD, ExerciseType } from '@language-drill/shared';
+import { Language, CefrLevel, CORRECT_THRESHOLD, ExerciseType, type SkillMovement } from '@language-drill/shared';
 import {
   exercises as exercisesTable,
   practiceSessions,
@@ -11,6 +11,7 @@ import {
   getGrammarPoint,
 } from '@language-drill/db';
 import { rankPlanCandidates, type PointMastery } from '../lib/mastery/rank';
+import { computeSkillMovements, type SkillHistoryRow } from '../lib/debrief/skill-movements.js';
 import { db } from '../db';
 import { approvedStatusFilter, audioReadyFilter, freshFirstOrderBy } from '../lib/exercise-filters';
 import { presignAudioUrl } from '../lib/audio-url';
@@ -730,6 +731,48 @@ sessions.get('/sessions/:id/debrief', async (c) => {
     Math.floor((completedAt.getTime() - startedAt.getTime()) / 1000),
   );
 
+  // --- Skill movements (design spec 2026-06-16) ---------------------------
+  // Affected points = grammar points the session graded (non-skipped, keyed).
+  const affectedLabels = new Map<string, string>();
+  for (const it of items) {
+    if (it.status !== 'skipped' && it.grammarPointKey) {
+      affectedLabels.set(it.grammarPointKey, getGrammarPoint(it.grammarPointKey)?.name ?? it.grammarPointKey);
+    }
+  }
+  let skillMovements: SkillMovement[] = [];
+  if (affectedLabels.size > 0) {
+    const histRows = await db
+      .select({
+        id: userExerciseHistory.id,
+        sessionId: userExerciseHistory.sessionId,
+        grammarPointKey: exercisesTable.grammarPointKey,
+        difficulty: exercisesTable.difficulty,
+        score: userExerciseHistory.score,
+        evaluatedAt: userExerciseHistory.evaluatedAt,
+      })
+      .from(userExerciseHistory)
+      .innerJoin(exercisesTable, eq(userExerciseHistory.exerciseId, exercisesTable.id))
+      .where(
+        and(
+          eq(userExerciseHistory.userId, userId),
+          eq(exercisesTable.language, session.language),
+          inArray(exercisesTable.grammarPointKey, [...affectedLabels.keys()]),
+          isNotNull(userExerciseHistory.score),
+          isNotNull(userExerciseHistory.evaluatedAt),
+          isNotNull(exercisesTable.difficulty),
+        ),
+      );
+    const rows: SkillHistoryRow[] = histRows.map((r) => ({
+      id: r.id,
+      grammarPointKey: r.grammarPointKey as string,
+      score: r.score as number,
+      difficulty: r.difficulty as CefrLevel,
+      evaluatedAt: r.evaluatedAt as Date,
+    }));
+    const sessionRowIds = new Set(histRows.filter((r) => r.sessionId === session.id).map((r) => r.id));
+    skillMovements = computeSkillMovements({ rows, sessionRowIds, labels: affectedLabels });
+  }
+
   c.header('Cache-Control', 'private, max-age=300');
   return c.json({
     id: session.id,
@@ -743,6 +786,7 @@ sessions.get('/sessions/:id/debrief', async (c) => {
     attemptedCount,
     skippedCount,
     items,
+    skillMovements,
   });
 });
 
