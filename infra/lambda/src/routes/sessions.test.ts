@@ -28,7 +28,10 @@ const mockWhere = vi.fn(() => {
 // leftJoin chains back to `where`, which is already thenable — used by
 // GET /sessions/today's Path A items query (no .limit / no .orderBy).
 const mockLeftJoin = vi.fn(() => ({ where: mockWhere }));
-const mockFrom = vi.fn(() => ({ where: mockWhere, leftJoin: mockLeftJoin }));
+// innerJoin chains back to `where` — used by the skill-movements history query
+// in GET /sessions/:id/debrief.
+const mockInnerJoin = vi.fn(() => ({ where: mockWhere }));
+const mockFrom = vi.fn(() => ({ where: mockWhere, leftJoin: mockLeftJoin, innerJoin: mockInnerJoin }));
 const mockSelect = vi.fn(() => ({ from: mockFrom }));
 
 // db.execute(sql`...`) — used by GET /sessions/today's Path B UNION-ALL.
@@ -78,8 +81,16 @@ vi.mock('@language-drill/db', () => ({
     language: 'language',
     reviewStatus: 'review_status',
     audioS3Key: 'audio_s3_key',
+    grammarPointKey: 'grammar_point_key',
   },
-  userExerciseHistory: { id: 'id', exerciseId: 'exerciseId', sessionId: 'sessionId' },
+  userExerciseHistory: {
+    id: 'id',
+    exerciseId: 'exerciseId',
+    sessionId: 'sessionId',
+    userId: 'user_id',
+    score: 'score',
+    evaluatedAt: 'evaluated_at',
+  },
   userLanguageProfiles: {
     userId: 'user_id',
     language: 'language',
@@ -131,6 +142,14 @@ vi.mock('../lib/exercise-filters', () => ({
 const mockPresignAudioUrl = vi.fn(async (_key: string | null | undefined) => null as string | null);
 vi.mock('../lib/audio-url', () => ({
   presignAudioUrl: (key: string | null | undefined) => mockPresignAudioUrl(key),
+}));
+
+// computeSkillMovements is a pure helper; banding logic is covered by Task 2
+// unit tests. Mock it here so the route test is a wiring-only contract.
+// Default: return []; per-test override via mockComputeSkillMovements.mockReturnValueOnce(...).
+const mockComputeSkillMovements = vi.fn((): Record<string, unknown>[] => []);
+vi.mock('../lib/debrief/skill-movements.js', () => ({
+  computeSkillMovements: (_args: unknown) => mockComputeSkillMovements(),
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1730,6 +1749,82 @@ describe('GET /sessions/:id/debrief', () => {
     // EX_3 with null — never for the cloze row (so exactly 2 calls).
     expect(mockPresignAudioUrl).toHaveBeenCalledWith('audio/es/clip-1.mp3');
     expect(mockPresignAudioUrl).toHaveBeenCalledTimes(2);
+  });
+
+  it('attaches skillMovements to the debrief payload — wiring + no-numbers contract', async () => {
+    // 1. Session row with a grammar-point-keyed exercise.
+    const startedAt = new Date('2026-06-16T10:00:00.000Z');
+    const completedAt = new Date('2026-06-16T10:05:00.000Z');
+    mockLimit.mockResolvedValueOnce([
+      {
+        id: SESSION_ID,
+        userId: 'user_123',
+        language: 'ES',
+        difficulty: 'B1',
+        exerciseCount: 1,
+        correctCount: 1,
+        exerciseIds: [EX_1],
+        startedAt,
+        completedAt,
+      },
+    ]);
+
+    // 2. Items query — one correct item with a grammar point key.
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        {
+          exercise_id: EX_1,
+          type: 'cloze',
+          grammar_point_key: 'es-b1-subjunctive',
+          content_json: { instructions: 'Fill', sentence: 'Quiero que ___ aquí' },
+          audio_s3_key: null,
+          score: 0.9,
+          response_json: { userAnswer: 'estés', evaluation: sampleEvaluation },
+        },
+      ],
+    });
+
+    // 3. History query — one prior row + one session row for the grammar point.
+    //    Resolves via mockSelectAwait (the thenable branch of mockWhere).
+    const priorRow = {
+      id: 'hist-prior-1',
+      sessionId: 'session-prior',
+      grammarPointKey: 'es-b1-subjunctive',
+      difficulty: 'B1',
+      score: 0.6,
+      evaluatedAt: new Date('2026-06-15T09:00:00.000Z'),
+    };
+    const sessionRow = {
+      id: 'hist-session-1',
+      sessionId: SESSION_ID,
+      grammarPointKey: 'es-b1-subjunctive',
+      difficulty: 'B1',
+      score: 0.9,
+      evaluatedAt: new Date('2026-06-16T10:03:00.000Z'),
+    };
+    mockSelectAwait.mockResolvedValueOnce([priorRow, sessionRow]);
+
+    // 4. Override computeSkillMovements to return a controlled movement so the
+    //    test can assert the no-numbers contract without depending on banding math.
+    mockComputeSkillMovements.mockReturnValueOnce([
+      { grammarPointKey: 'es-b1-subjunctive', label: 'Subjunctive mood', band: 'gain', confidence: 'high' },
+    ]);
+
+    const res = await app.request(`/sessions/${SESSION_ID}/debrief`, { method: 'GET' }, authEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Record<string, unknown>;
+
+    // skillMovements must be an array.
+    expect(Array.isArray(body.skillMovements)).toBe(true);
+
+    // No-numbers contract: every value in every movement is a string, not a number.
+    // Also 'from'/'to' raw scores must NOT appear (only banded strings leak out).
+    for (const m of body.skillMovements as Array<Record<string, unknown>>) {
+      expect(typeof m.band).toBe('string');
+      expect('from' in m).toBe(false);
+      expect('to' in m).toBe(false);
+      for (const v of Object.values(m)) expect(typeof v).not.toBe('number');
+    }
   });
 });
 
