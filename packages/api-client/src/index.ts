@@ -356,3 +356,13 @@ export {
   useFlaggedExercises, useFlaggedTheory,
   useResolveFlaggedExercise, useResolveFlaggedTheory,
 } from './hooks/useFlaggedQueue';
+export {
+  ContentExerciseSchema, ContentExercisesResponseSchema,
+  ContentTheorySchema, ContentTheoryResponseSchema, ContentReviewStatusSchema,
+  type ContentExercise, type ContentTheory,
+  type ContentExerciseParams, type ContentTheoryParams,
+} from './schemas/content';
+export {
+  useContentExercises, useContentTheory,
+  useResolveContentExercise, useResolveContentTheory,
+} from './hooks/useContentBrowser';

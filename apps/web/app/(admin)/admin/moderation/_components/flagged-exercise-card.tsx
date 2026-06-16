@@ -1,7 +1,7 @@
 import { formatReason, type GenerationReason } from '@language-drill/shared';
 import type { FlaggedExercise } from '@language-drill/api-client';
 import { Button } from '../../../../../components/ui';
-import { ContentFieldView } from './content-field-view';
+import { ContentFieldView } from '../../../../../components/admin/content-field-view';
 
 export function FlaggedExerciseCard({
   item, onResolve, pending, demoted,

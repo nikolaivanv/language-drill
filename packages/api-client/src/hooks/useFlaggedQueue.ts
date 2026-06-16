@@ -8,15 +8,7 @@ import {
   type FlaggedTheoryFilters,
   type ResolveOutcome,
 } from '../schemas/flagged';
-
-function queryString(filters: Record<string, string | undefined>): string {
-  const params = new URLSearchParams();
-  for (const [k, v] of Object.entries(filters)) {
-    if (v) params.set(k, v);
-  }
-  const s = params.toString();
-  return s ? `?${s}` : '';
-}
+import { buildQueryString } from '../lib/build-query-string';
 
 export function useFlaggedExercises({
   fetchFn, filters = {}, enabled = true,
@@ -24,7 +16,7 @@ export function useFlaggedExercises({
   return useQuery({
     queryKey: ['admin', 'flagged', 'exercises', filters],
     queryFn: async () => {
-      const res = await fetchFn(`/admin/flagged/exercises${queryString(filters)}`);
+      const res = await fetchFn(`/admin/flagged/exercises${buildQueryString(filters)}`);
       const json: unknown = await res.json();
       return FlaggedExercisesResponseSchema.parse(json);
     },
@@ -38,7 +30,7 @@ export function useFlaggedTheory({
   return useQuery({
     queryKey: ['admin', 'flagged', 'theory', filters],
     queryFn: async () => {
-      const res = await fetchFn(`/admin/flagged/theory${queryString(filters)}`);
+      const res = await fetchFn(`/admin/flagged/theory${buildQueryString(filters)}`);
       const json: unknown = await res.json();
       return FlaggedTheoryResponseSchema.parse(json);
     },
