@@ -1038,7 +1038,7 @@ export async function generateOneDraft(
         : await buildGenerationSystemPrompt(promptInputs, []));
 
   const userText = isDictation
-    ? buildDictationGenerationUserPrompt(promptInputs, ordinal, spec.topicDomain)
+    ? buildDictationGenerationUserPrompt(promptInputs, ordinal, spec.topicDomain, spec.batchSeed)
     : isFreeWriting
       ? buildFreeWritingGenerationUserPrompt(promptInputs, ordinal)
       : buildGenerationUserPrompt(

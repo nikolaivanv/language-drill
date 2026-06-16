@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
+  DICTATION_DOMAINS,
+  dictationDomainForOrdinal,
   DICTATION_GENERATION_PROMPT_VERSION,
   DICTATION_GENERATION_SYSTEM_PROMPT,
   computeDictationGenerationPromptVars,
@@ -37,8 +39,44 @@ it('version is bumped to the A1/A2 edit date', () => {
 });
 
 it('user prompt names the ordinal and the domain', () => {
-  const u = buildDictationGenerationUserPrompt(inputs as never, 2, 'travel');
+  const u = buildDictationGenerationUserPrompt(inputs as never, 2, 'travel', 'batch-1');
   expect(u).toContain('#3');
   expect(u).toContain('travel');
   expect(u).toContain('submit_dictation_exercise');
+});
+
+const rotationInputs = {
+  language: Language.TR, cefrLevel: 'A1', exerciseType: ExerciseType.DICTATION,
+  grammarPoint: { key: 'tr-a1-dictation', kind: 'dictation', name: 'x', description: 'x',
+    cefrLevel: 'A1', language: Language.TR, examplesPositive: ['a', 'b'], examplesNegative: ['*c'], commonErrors: ['d'] },
+} as never;
+
+it('rotates to a distinct domain on consecutive ordinals', () => {
+  const seed = 'batch-1';
+  expect(dictationDomainForOrdinal(0, seed)).not.toBe(dictationDomainForOrdinal(1, seed));
+  // The first full cycle is all-distinct (one domain per ordinal).
+  const cycle = Array.from({ length: DICTATION_DOMAINS.length }, (_, i) => dictationDomainForOrdinal(i, seed));
+  expect(new Set(cycle).size).toBe(DICTATION_DOMAINS.length);
+});
+
+it('shifts the starting domain with the batch seed (cross-tick variety)', () => {
+  const a = dictationDomainForOrdinal(0, 'scheduled-2026-06-17');
+  const b = dictationDomainForOrdinal(0, 'scheduled-2026-06-18');
+  expect(a).not.toBe(b);
+});
+
+it('user prompt pins a per-ordinal domain when topicDomain is null', () => {
+  const p0 = buildDictationGenerationUserPrompt(rotationInputs, 0, null, 'batch-1');
+  const p1 = buildDictationGenerationUserPrompt(rotationInputs, 1, null, 'batch-1');
+  expect(p0).toContain(`Topic domain: ${dictationDomainForOrdinal(0, 'batch-1')}`);
+  expect(p1).toContain(`Topic domain: ${dictationDomainForOrdinal(1, 'batch-1')}`);
+  expect(p0).not.toBe(p1);
+  expect(p0).toContain('submit_dictation_exercise');
+});
+
+it('an explicit topicDomain overrides the rotation for all ordinals', () => {
+  const p0 = buildDictationGenerationUserPrompt(rotationInputs, 0, 'travel', 'batch-1');
+  const p1 = buildDictationGenerationUserPrompt(rotationInputs, 1, 'travel', 'batch-1');
+  expect(p0).toContain('Topic domain: travel');
+  expect(p1).toContain('Topic domain: travel');
 });
