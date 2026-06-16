@@ -4,12 +4,13 @@ import { Card } from '../../../../../components/ui';
 import { accuracyTier } from '../../../../../lib/drill/accuracy-tier';
 import { debriefNarrative } from '../../../../../lib/drill/debrief-narrative';
 import { coachMessage } from '../../../../../lib/drill/coach-messages';
+import { SkillMovementsPanel } from './skill-movements-panel';
 
 // ---------------------------------------------------------------------------
 // DebriefTab — default panel content for the post-session debrief screen.
 //   Coach card (avatar + speech bubble with 1–2 templated paragraphs) +
+//   skills-you-moved panel (SkillMovementsPanel) +
 //   "what's next" callout linking to /progress (high tier) or /drill (else).
-//   No skill-delta section in v1 (Req 4.5).
 // ---------------------------------------------------------------------------
 
 export interface DebriefTabProps {
@@ -67,6 +68,8 @@ export function DebriefTab({ debrief }: DebriefTabProps) {
           ))}
         </Card>
       </div>
+
+      <SkillMovementsPanel movements={debrief.skillMovements} />
 
       {/* What's-next callout */}
       <Card padding="md" className="bg-paper-2">
