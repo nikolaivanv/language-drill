@@ -5,7 +5,7 @@
  * No raw scores leak out: only a band + confidence (see the design spec).
  */
 import { replayHistory, type HistoryRow } from '@language-drill/db';
-import { CefrLevel, type SkillMovement, type SkillMovementBand } from '@language-drill/shared';
+import { type CefrLevel, type SkillMovement, type SkillMovementBand } from '@language-drill/shared';
 
 /** A history row plus its primary-key id, so session rows can be excluded. */
 export type SkillHistoryRow = {

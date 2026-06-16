@@ -44,7 +44,17 @@ describe('computeSkillMovements', () => {
     const out = computeSkillMovements({ rows, sessionRowIds: new Set(['s1']), labels: new Map([['gp-a', 'Point A']]) });
     expect(out).toHaveLength(1);
     expect(out[0]).toMatchObject({ grammarPointKey: 'gp-a', label: 'Point A', band: 'new' });
-    expect(out[0].confidence === 'high' || out[0].confidence === 'low').toBe(true);
+    // One evidence row → confidenceFor(1) ≈ 0.18 < 0.6 → low.
+    expect(out[0].confidence).toBe('low');
+  });
+
+  it('bands a point that dropped this session as a slip (via replay)', () => {
+    const rows: SkillHistoryRow[] = [
+      { id: 'p1', grammarPointKey: 'gp-a', score: 0.9, difficulty: CefrLevel.B2, evaluatedAt: at('2026-06-10T04:00:00Z') },
+      { id: 's1', grammarPointKey: 'gp-a', score: 0.1, difficulty: CefrLevel.B2, evaluatedAt: at('2026-06-16T04:00:00Z') },
+    ];
+    const out = computeSkillMovements({ rows, sessionRowIds: new Set(['s1']), labels: new Map([['gp-a', 'Point A']]) });
+    expect(out[0].band).toBe('slip');
   });
 
   it('excludes the session rows when computing the "from" baseline (a prior point gains)', () => {
