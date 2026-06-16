@@ -42,8 +42,10 @@ const { A1, A2 } = CefrLevel;
  *
  * 2026-06-16: added the tr-a1/a2-dictation umbrellas (clears suppression so the
  * scheduler enumerates the new dictation cells).
+ * 2026-06-16b: clears the saturated-dedup suppression on tr-a1-dictation after the
+ * generation-diversity fix (domain rotation + lower targets); curriculum entries unchanged.
  */
-export const CURRICULUM_VERSION_TR = '2026-06-16';
+export const CURRICULUM_VERSION_TR = '2026-06-16b';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------

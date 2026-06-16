@@ -32,6 +32,45 @@ function renderBulletList(items: readonly string[]): string {
   return items.map((item) => `- ${item}`).join("\n");
 }
 
+/**
+ * Curated everyday topic domains for dictation clips. A1-expressible (a learner
+ * can hear a simple sentence on any of these). The generator gets a DISTINCT
+ * domain per ordinal (see `dictationDomainForOrdinal`) so a batch spreads across
+ * topics instead of collapsing on one scene — the dedup index (`_dedupKey` =
+ * normalized referenceText) otherwise rejects the near-duplicates, starving the
+ * pool at A1/A2 where the per-domain sentence space is small.
+ */
+export const DICTATION_DOMAINS: readonly string[] = [
+  "home and family",
+  "food and meals",
+  "daily routine",
+  "weather and seasons",
+  "school and study",
+  "shopping and the market",
+  "free time and the weekend",
+  "work and jobs",
+  "travel and transport",
+  "health and the body",
+];
+
+/**
+ * Distinct topic domain for a draft. Rotates `DICTATION_DOMAINS` by `ordinal`,
+ * offset by a deterministic hash of `batchSeed` so different batches (ticks)
+ * start at a different domain — giving both in-batch spread and cross-tick
+ * variety without any cross-batch DB lookup. Pure; mirrors
+ * `sentenceConstructionModeForOrdinal`.
+ */
+export function dictationDomainForOrdinal(
+  ordinal: number,
+  batchSeed: string,
+): string {
+  let offset = 0;
+  for (let i = 0; i < batchSeed.length; i++) {
+    offset = (offset + batchSeed.charCodeAt(i)) % DICTATION_DOMAINS.length;
+  }
+  return DICTATION_DOMAINS[(ordinal + offset) % DICTATION_DOMAINS.length];
+}
+
 export const DICTATION_GENERATION_SYSTEM_PROMPT = `You are an expert author of listening-dictation clips for {{language}} learners at CEFR {{cefrLevel}}. Produce ONE short passage of natural, connected speech that a learner will hear once and transcribe by ear.
 
 ## What this clip should test
@@ -107,11 +146,15 @@ export function buildDictationGenerationUserPrompt(
   inputs: GenerationPromptInputs,
   ordinal: number,
   topicDomain: string | null,
+  batchSeed: string,
 ): string {
-  const domain = topicDomain ?? "mixed everyday topics";
+  // A caller-supplied topicDomain (CLI passthrough) pins all ordinals to one
+  // domain; scheduled runs (null) get a distinct domain per ordinal so the batch
+  // spreads across topics.
+  const domain = topicDomain ?? dictationDomainForOrdinal(ordinal, batchSeed);
   return `Produce dictation clip #${ordinal + 1}.
 
 Topic domain: ${domain}
 
-Vary the domain, sentence shapes, and vocabulary from clip to clip so a batch is diverse. Use the submit_dictation_exercise tool.`;
+Build the clip around this topic domain; vary the specific scene, sentence shapes, and vocabulary so it does not resemble other clips. Use the submit_dictation_exercise tool.`;
 }

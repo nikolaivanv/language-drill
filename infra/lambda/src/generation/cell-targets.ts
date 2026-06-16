@@ -55,10 +55,10 @@ export const CELL_TARGET_DEFAULTS: Record<
   // now comes from splitting into more themed umbrellas, not a high per-cell
   // target.
   [ExerciseType.VOCAB_RECALL]: { A1: 10, A2: 10, B1: 10, B2: 10 },
-  // B1/B2: 15 (ES). A1/A2 (TR): lower — short clips with a smaller distinct-clip
-  // surface. A1/A2 dictation is pedagogically apt only for languages whose
-  // curriculum lives there (TR); tunable.
-  [ExerciseType.DICTATION]: { A1: 10, A2: 12, B1: 15, B2: 15 },
+  // B1/B2: 15. A1/A2: 6/10 — the distinct-clip surface is small at low levels
+  // (short clips), so a high target just grinds the dedup index; the per-ordinal
+  // domain rotation (dictation-generation-prompts.ts) makes these reachable.
+  [ExerciseType.DICTATION]: { A1: 6, A2: 10, B1: 15, B2: 15 },
   // Free-writing prompts are batch-generated (Phase 2). Capped LOW (8): a single
   // (language, level, topic) cell has a small distinct-title space — the dedup
   // surface is the title — so the 2026-06-16 run hit heavy dedup-give-up chasing
