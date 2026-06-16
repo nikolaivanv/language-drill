@@ -21,8 +21,8 @@ export default async function AdminLayout({
   }
   if (!res.ok) redirect('/');
 
-  const me = MeResponseSchema.parse(await res.json());
-  if (!me.isAdmin) redirect('/');
+  const parsed = MeResponseSchema.safeParse(await res.json());
+  if (!parsed.success || !parsed.data.isAdmin) redirect('/');
 
   return <AdminShell>{children}</AdminShell>;
 }

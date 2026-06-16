@@ -75,4 +75,12 @@ describe('AdminLayout', () => {
     );
     expect(mockRedirect).toHaveBeenCalledWith('/');
   });
+
+  it('redirects to / when /me returns 200 with a malformed body', async () => {
+    mockApiFetch.mockResolvedValueOnce(jsonResponse({ unexpected: 'shape' }));
+    await expect(AdminLayout({ children: <p>nope</p> })).rejects.toThrow(
+      'redirect:/',
+    );
+    expect(mockRedirect).toHaveBeenCalledWith('/');
+  });
 });
