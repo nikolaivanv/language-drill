@@ -26,6 +26,7 @@ import {
   TimelineItem,
   type TimelineItemStatus,
 } from './timeline-item';
+import { FreeWritingBlock } from './free-writing-block';
 
 type Props = {
   data: TodayPlanResponse | undefined;
@@ -56,8 +57,19 @@ export function TodayTimeline({
     return <TimelineSkeleton />;
   }
 
+  // data is present from here on. The free-writing block is independent of the
+  // quick-drill rail's state — it renders in every data-present branch.
+  const freeWritingBlock = data.freeWriting ? (
+    <FreeWritingBlock estimatedMinutes={data.freeWriting.estimatedMinutes} />
+  ) : null;
+
   if (data.code === 'INSUFFICIENT_POOL') {
-    return <PoolNotReadyCard language={language} />;
+    return (
+      <>
+        <PoolNotReadyCard language={language} />
+        {freeWritingBlock}
+      </>
+    );
   }
 
   const drillHref = `/drill?language=${language}`;
@@ -65,7 +77,12 @@ export function TodayTimeline({
     data.items.length > 0 && data.items.every((item) => item.status === 'done');
 
   if (allDone && data.summary) {
-    return <AllDoneCard summary={data.summary} href={drillHref} />;
+    return (
+      <>
+        <AllDoneCard summary={data.summary} href={drillHref} />
+        {freeWritingBlock}
+      </>
+    );
   }
 
   // Default render: the vertical rail. The first non-`done` item is the
@@ -110,6 +127,7 @@ export function TodayTimeline({
           </li>
         ))}
       </ol>
+      {freeWritingBlock}
     </>
   );
 }

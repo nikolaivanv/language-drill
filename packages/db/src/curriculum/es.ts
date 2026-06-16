@@ -34,8 +34,12 @@ const { B1, B2 } = CefrLevel;
  * `2026-06-15` adds the two `kind: 'dictation'` umbrellas (`es-b1-dictation`,
  * `es-b2-dictation`); the bump ensures the scheduler's low-yield / saturated-dedup
  * suppression cannot pre-empt the brand-new dictation cells.
+ *
+ * `2026-06-15b` adds the twelve `kind: 'free-writing'` topic umbrellas (six each
+ * for B1/B2); the bump clears any low-yield / saturated-dedup suppression so the
+ * brand-new free-writing cells run on the next scheduler tick.
  */
-export const CURRICULUM_VERSION_ES = '2026-06-15';
+export const CURRICULUM_VERSION_ES = '2026-06-15b';
 
 const esCurriculum: readonly GrammarPoint[] = [
   /*
@@ -517,6 +521,192 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Losing track of clause boundaries in longer sentences.',
       'Confusing similar-sounding connectors (aunque / a un que).',
     ],
+  },
+
+  // ---------------------------------------------------------------------------
+  // Free-writing topic umbrellas — kind: 'free-writing' (Phase 2 generation)
+  // One cell per (language, level, topic); register is author-declared, the word
+  // band is CEFR-derived (FREE_WRITING_LENGTH_BY_CEFR in packages/ai).
+  // ---------------------------------------------------------------------------
+  {
+    key: 'es-b1-fw-ideal-weekend',
+    kind: 'free-writing',
+    name: 'Mi fin de semana ideal',
+    description: 'A friendly, informal prompt to describe an ideal weekend and why it appeals.',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Asks the learner to describe plans and give one reason for each.',
+      'Requires a closing sentence about how they would feel.',
+    ],
+    examplesNegative: ['*Write whatever you want about weekends.'],
+    commonErrors: ['Prompt too open to score; no concrete checklist.'],
+    freeWriting: { register: 'informal' },
+  },
+  {
+    key: 'es-b1-fw-my-town',
+    kind: 'free-writing',
+    name: 'Mi ciudad',
+    description: 'A neutral prompt to describe your town and what there is to do there.',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Asks for two places and what you can do in each.',
+      'Requires a recommendation for a visitor.',
+    ],
+    examplesNegative: ['*Describe a city (any city, anything).'],
+    commonErrors: ['Conflating "describe" with an unscoped free dump.'],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'es-b1-fw-daily-routine',
+    kind: 'free-writing',
+    name: 'Un día normal',
+    description: 'A neutral prompt to narrate a typical day from morning to night.',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Asks for at least three moments of the day in order.',
+      'Requires one thing they would like to change.',
+    ],
+    examplesNegative: ['*Tell me about your life.'],
+    commonErrors: ['Scope too broad (whole life instead of one day).'],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'es-b1-fw-favorite-meal',
+    kind: 'free-writing',
+    name: 'Mi comida favorita',
+    description: 'An informal prompt to describe a favourite dish and when the learner eats it.',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Asks what the dish is and why they like it.',
+      'Requires naming who they usually eat it with.',
+    ],
+    examplesNegative: ['*Write about food.'],
+    commonErrors: ['Listing ingredients instead of a connected paragraph.'],
+    freeWriting: { register: 'informal' },
+  },
+  {
+    key: 'es-b1-fw-a-trip',
+    kind: 'free-writing',
+    name: 'Un viaje que recuerdo',
+    description: 'A neutral prompt to narrate a memorable trip and one thing that happened.',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Asks where and when, plus one memorable event.',
+      'Requires a closing sentence on whether they would return.',
+    ],
+    examplesNegative: ['*Describe travelling in general.'],
+    commonErrors: ['Generic travel essay with no specific trip.'],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'es-b1-fw-free-time',
+    kind: 'free-writing',
+    name: 'Mi tiempo libre',
+    description: 'An informal prompt to describe what the learner does for fun and why.',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Asks for two activities and how often they do them.',
+      'Requires one activity they would like to try.',
+    ],
+    examplesNegative: ['*Hobbies.'],
+    commonErrors: ['One-word answers instead of a paragraph.'],
+    freeWriting: { register: 'informal' },
+  },
+  {
+    key: 'es-b2-fw-remote-work',
+    kind: 'free-writing',
+    name: 'El teletrabajo: ¿avance o aislamiento?',
+    description: 'A formal opinion prompt weighing the benefits and drawbacks of remote work.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Asks for a clear thesis plus one supporting and one opposing argument.',
+      'Requires a concluding sentence that restates the position.',
+    ],
+    examplesNegative: ['*Write your opinion about work.'],
+    commonErrors: ['Prompt too open to score; no required structure.'],
+    freeWriting: { register: 'formal' },
+  },
+  {
+    key: 'es-b2-fw-environment',
+    kind: 'free-writing',
+    name: 'El medio ambiente y las decisiones individuales',
+    description: 'A formal prompt arguing whether individual choices can affect the environment.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Asks for a position plus two concrete examples.',
+      'Requires one counter-argument and a response to it.',
+    ],
+    examplesNegative: ['*Talk about the environment.'],
+    commonErrors: ['Listing facts with no argued position.'],
+    freeWriting: { register: 'formal' },
+  },
+  {
+    key: 'es-b2-fw-technology-relationships',
+    kind: 'free-writing',
+    name: 'La tecnología y las relaciones humanas',
+    description: 'A formal prompt on whether technology brings people closer or pushes them apart.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Asks for a thesis plus two reasons with examples.',
+      'Requires a concessive paragraph acknowledging the other view.',
+    ],
+    examplesNegative: ['*Is technology good or bad?'],
+    commonErrors: ['Yes/no framing with no developed argument.'],
+    freeWriting: { register: 'formal' },
+  },
+  {
+    key: 'es-b2-fw-study-abroad',
+    kind: 'free-writing',
+    name: '¿Estudiar en casa o en el extranjero?',
+    description: 'A neutral prompt comparing studying at home versus abroad and recommending one.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Asks for two advantages of each option.',
+      'Requires a justified recommendation at the end.',
+    ],
+    examplesNegative: ['*Studying abroad.'],
+    commonErrors: ['Describing only one side; no comparison.'],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'es-b2-fw-social-media',
+    kind: 'free-writing',
+    name: 'Las redes sociales en la vida diaria',
+    description: 'A formal prompt arguing how social media shapes everyday life, for better or worse.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Asks for a position plus two effects with examples.',
+      'Requires a suggestion for healthier use.',
+    ],
+    examplesNegative: ['*Social media is bad. Discuss.'],
+    commonErrors: ['One-sided rant with no nuance or examples.'],
+    freeWriting: { register: 'formal' },
+  },
+  {
+    key: 'es-b2-fw-work-life-balance',
+    kind: 'free-writing',
+    name: 'Trabajo y vida personal',
+    description: 'A neutral prompt on how to balance work and personal life and why it matters.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Asks for two strategies and why each helps.',
+      'Requires one obstacle and how to handle it.',
+    ],
+    examplesNegative: ['*Work-life balance.'],
+    commonErrors: ['Abstract platitudes with no concrete strategies.'],
+    freeWriting: { register: 'neutral' },
   },
 ];
 

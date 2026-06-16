@@ -44,12 +44,14 @@ describe('enumerateCurriculumCells', () => {
     const vocabCount = ALL_CURRICULA.filter((g) => g.kind === 'vocab').length;
     // A dictation umbrella yields exactly one cell (dictation only).
     const dictationCount = ALL_CURRICULA.filter((g) => g.kind === 'dictation').length;
+    // A free-writing umbrella yields exactly one cell (free_writing only).
+    const fwCount = ALL_CURRICULA.filter((g) => g.kind === 'free-writing').length;
     // A clozeUnsuitable grammar point yields 1 cell (translation) instead of 2,
     // so each flagged point drops the total by exactly one.
     const flaggedCount = ALL_CURRICULA.filter((g) => g.clozeUnsuitable === true).length;
     const scCount = ALL_CURRICULA.filter((g) => g.sentenceConstructionSuitable === true).length;
     expect(cells).toHaveLength(
-      grammarCount * 2 + vocabCount + dictationCount - flaggedCount + scCount,
+      grammarCount * 2 + vocabCount + dictationCount + fwCount - flaggedCount + scCount,
     );
   });
 
@@ -164,6 +166,26 @@ describe('enumerateCurriculumCells — clozeUnsuitable flag', () => {
     });
     expect(enumerateCurriculumCells([unflagged])).toHaveLength(2);
     expect(enumerateCurriculumCells([flagged])).toHaveLength(1);
+  });
+});
+
+describe('enumerateCurriculumCells — kind:free-writing umbrellas', () => {
+  it("pairs a free-writing umbrella with exactly the free_writing cell", () => {
+    const entry = {
+      key: "es-b2-fw-remote-work",
+      kind: "free-writing" as const,
+      name: "x",
+      description: "y",
+      cefrLevel: "B2" as const,
+      language: "ES" as const,
+      examplesPositive: ["a", "b"],
+      examplesNegative: ["*c"],
+      commonErrors: ["d"],
+      freeWriting: { register: "formal" as const },
+    };
+    const cells = enumerateCurriculumCells([entry]);
+    expect(cells.map((c) => c.exerciseType)).toEqual([ExerciseType.FREE_WRITING]);
+    expect(cells[0].cellKey).toBe("es:b2:free_writing:es-b2-fw-remote-work");
   });
 });
 

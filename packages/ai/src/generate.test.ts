@@ -27,6 +27,7 @@ import {
   generateOneDraft,
   parseGeneratedClozeDraft,
   parseGeneratedDictationDraft,
+  parseGeneratedFreeWritingDraft,
   parseGeneratedSentenceConstructionDraft,
   type GenerationSpec,
 } from "./generate.js";
@@ -962,6 +963,70 @@ describe("generateOneDraft — dictation branch", () => {
   });
 });
 
+function mockFreeWritingClient() {
+  return {
+    messages: {
+      create: async () => ({
+        stop_reason: "tool_use",
+        content: [
+          {
+            type: "tool_use",
+            name: "submit_free_writing_exercise",
+            input: {
+              instructions: "Escribe un párrafo.",
+              title: "El teletrabajo",
+              task: "Da tu opinión y justifícala.",
+              domain: "opinión · argumentación",
+              requiredElements: [
+                { id: "thesis", label: "Expón tu opinión en la primera frase." },
+                { id: "reasons", label: "Da dos razones." },
+              ],
+              topicHint: "trabajo",
+            },
+          },
+        ],
+        usage: { input_tokens: 10, output_tokens: 20 },
+      }),
+    },
+  } as never;
+}
+
+const fwSpec = {
+  language: Language.ES,
+  cefrLevel: "B2",
+  exerciseType: ExerciseType.FREE_WRITING,
+  grammarPoint: {
+    key: "es-b2-fw-remote-work",
+    kind: "free-writing",
+    name: "El teletrabajo",
+    description: "Opinion essay on remote work.",
+    cefrLevel: "B2",
+    language: Language.ES,
+    examplesPositive: ["a", "b"],
+    examplesNegative: ["*c"],
+    commonErrors: ["d"],
+    freeWriting: { register: "formal" },
+  },
+  topicDomain: null,
+  count: 1,
+  batchSeed: "test",
+};
+
+describe("generateOneDraft — free-writing branch", () => {
+  it("produces a free-writing draft with code-injected register + CEFR band", async () => {
+    const res = await generateOneDraft(mockFreeWritingClient(), fwSpec as never, 0);
+    expect(res.kind).toBe("draft");
+    if (res.kind !== "draft") return;
+    expect(res.draft.contentJson.type).toBe(ExerciseType.FREE_WRITING);
+    expect(res.draft.contentJson).toMatchObject({
+      register: "formal",
+      minWords: 150,
+      maxWords: 200,
+      suggestedMinutes: 25,
+    });
+  });
+});
+
 describe("dictation generation tool + voice pool", () => {
   it("registers a dictation generation tool", () => {
     expect(TOOL_NAME_BY_TYPE[ExerciseType.DICTATION]).toBe("submit_dictation_exercise");
@@ -1102,5 +1167,73 @@ describe("parseGeneratedDictationDraft", () => {
     );
     expect(content.type).toBe(ExerciseType.DICTATION);
     expect(content.referenceText).toBe(precomposed);
+  });
+});
+
+describe("parseGeneratedFreeWritingDraft", () => {
+  const TOPIC = {
+    key: "es-b2-fw-remote-work",
+    kind: "free-writing" as const,
+    name: "El teletrabajo",
+    description: "Opinion essay on remote work.",
+    cefrLevel: CefrLevel.B2,
+    language: Language.ES,
+    examplesPositive: ["a", "b"],
+    examplesNegative: ["*c"],
+    commonErrors: ["d"],
+    freeWriting: { register: "formal" as const },
+  };
+  const spec: GenerationSpec = {
+    language: Language.ES,
+    cefrLevel: CefrLevel.B2,
+    exerciseType: ExerciseType.FREE_WRITING,
+    grammarPoint: TOPIC,
+    topicDomain: null,
+    count: 1,
+    batchSeed: "test",
+  };
+  const validInput = {
+    instructions: "Escribe un párrafo.",
+    title: "El teletrabajo: ¿avance o aislamiento?",
+    task: "Da tu opinión sobre el teletrabajo y justifícala con dos razones.",
+    domain: "opinión · argumentación",
+    requiredElements: [
+      { id: "thesis", label: "Expón tu opinión en la primera frase." },
+      { id: "reasons", label: "Da dos razones.", detail: "una a favor, una en contra" },
+    ],
+    topicHint: "trabajo",
+  };
+
+  it("injects register + CEFR band and keeps model-authored fields", () => {
+    const content = parseGeneratedFreeWritingDraft(validInput, spec);
+    expect(content.type).toBe(ExerciseType.FREE_WRITING);
+    expect(content.register).toBe("formal");
+    expect(content.minWords).toBe(150);
+    expect(content.maxWords).toBe(200);
+    expect(content.suggestedMinutes).toBe(25);
+    expect(content.title).toBe(validInput.title);
+    expect(content.requiredElements).toHaveLength(2);
+    expect(content.requiredElements[1].detail).toBe("una a favor, una en contra");
+    expect(content.topicHint).toBe("trabajo");
+  });
+
+  it("rejects an empty requiredElements list", () => {
+    expect(() =>
+      parseGeneratedFreeWritingDraft({ ...validInput, requiredElements: [] }, spec),
+    ).toThrow(/requiredElements/);
+  });
+
+  it("rejects a required element missing its label", () => {
+    expect(() =>
+      parseGeneratedFreeWritingDraft(
+        { ...validInput, requiredElements: [{ id: "x" }] },
+        spec,
+      ),
+    ).toThrow(/label/);
+  });
+
+  it("throws when the topic entry has no register", () => {
+    const noReg = { ...spec, grammarPoint: { ...TOPIC, freeWriting: undefined } };
+    expect(() => parseGeneratedFreeWritingDraft(validInput, noReg)).toThrow(/register/);
   });
 });

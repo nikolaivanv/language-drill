@@ -491,6 +491,88 @@ describe("validateDraft", () => {
     expect(draft).toEqual(draftBefore);
     expect(baseSpec).toEqual(specBefore);
   });
+
+  it("routes a free-writing draft to the free-writing validation prompt", async () => {
+    let capturedSystem = "";
+    const fakeClient = {
+      messages: {
+        create: async (params: { system: { text: string }[] }) => {
+          capturedSystem = params.system[0].text;
+          return {
+            stop_reason: "tool_use",
+            content: [
+              {
+                type: "tool_use",
+                name: VALIDATION_TOOL_NAME,
+                id: "toolu_fw_test",
+                input: {
+                  qualityScore: 0.9,
+                  ambiguous: false,
+                  contextSpoilsAnswer: false,
+                  levelMatch: true,
+                  grammarPointMatch: true,
+                  culturalIssues: [],
+                  flaggedReasons: [],
+                },
+              },
+            ],
+            usage: { input_tokens: 1, output_tokens: 1 },
+          };
+        },
+      },
+    };
+
+    const fwContent = {
+      type: ExerciseType.FREE_WRITING,
+      instructions: "Escribe un párrafo.",
+      title: "El teletrabajo",
+      task: "Da tu opinión.",
+      domain: "opinión",
+      register: "formal",
+      minWords: 150,
+      maxWords: 200,
+      suggestedMinutes: 25,
+      requiredElements: [{ id: "thesis", label: "Expón tu opinión." }],
+    };
+    const draft = {
+      id: "00000000-0000-0000-0000-000000000000",
+      contentJson: fwContent,
+      metadata: {
+        grammarPointKey: "es-b2-fw-remote-work",
+        topicDomain: null,
+        modelId: "claude-sonnet-4-6",
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheCreationInputTokens: 0,
+        cacheReadInputTokens: 0,
+        inBatchDuplicate: false,
+      },
+    };
+    const spec = {
+      language: Language.ES,
+      cefrLevel: CefrLevel.B2,
+      exerciseType: ExerciseType.FREE_WRITING,
+      grammarPoint: {
+        key: "es-b2-fw-remote-work",
+        kind: "free-writing",
+        name: "El teletrabajo",
+        description: "Opinion essay.",
+        cefrLevel: CefrLevel.B2,
+        language: Language.ES,
+        examplesPositive: ["a", "b"],
+        examplesNegative: ["*c"],
+        commonErrors: ["d"],
+        freeWriting: { register: "formal" },
+      },
+      topicDomain: null,
+      count: 1,
+      batchSeed: "t",
+    };
+
+    const result = await validateDraft(fakeClient as never, draft as never, spec as never);
+    expect(capturedSystem).toContain("free-writing PROMPTS");
+    expect(result.result.qualityScore).toBe(0.9);
+  });
 });
 
 // ---------------------------------------------------------------------------

@@ -61,10 +61,12 @@ export {
   TodayPlanItemSchema,
   TodayPlanSummarySchema,
   TodayPlanResponseSchema,
+  FreeWritingPlanBlockSchema,
   type TodayPlanItemStatus,
   type TodayPlanItem,
   type TodayPlanSummary,
   type TodayPlanResponse,
+  type FreeWritingPlanBlock,
 } from './schemas/today';
 export {
   AnnotateRequestSchema,
