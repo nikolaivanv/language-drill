@@ -79,6 +79,19 @@ export { targetCellSize } from './lib/target-cell-size';
 export * from './generation';
 export * from './theory-generation';
 
+// Pool revalidation helpers — pure row→(draft, spec) reconstruction +
+// demote-only review-status policy. Shared by the `revalidate:cloze` CLI and
+// the UI-triggered revalidation endpoint (admin Lambda).
+export {
+  reconstructDraftAndSpec,
+  decideDemotion,
+  type CandidateRow,
+  type SkipReason,
+  type Reconstructed,
+  type ReconstructFailure,
+  type DemotionAction,
+} from './generation/revalidation';
+
 // Per-grammar-point mastery — the update rule (used by the submit handler) and
 // the history-replay fold (used by the backfill CLI).
 export { updateMastery, replayHistory } from './mastery/update';
