@@ -23,6 +23,7 @@ import { parseGenerationJobMessage, type GenerationJobMessage } from '../generat
 import { authMiddleware } from '../middleware/auth';
 import { adminMiddleware } from '../middleware/admin';
 import type { Bindings, Variables } from '../middleware/auth';
+import { recordAdminAction } from '../lib/admin-audit';
 
 // ---------------------------------------------------------------------------
 // Validation schemas
@@ -638,17 +639,28 @@ async function transitionContentTheory(id: string, toStatus: 'flagged' | 'reject
 
 const ContentIdSchema = z.string().uuid();
 
+const EFFECTIVE_CONTENT = new Set<ContentOutcome>(['demoted', 'rejected']);
+
 for (const action of ['demote', 'reject'] as const) {
   const toStatus = action === 'demote' ? ('flagged' as const) : ('rejected' as const);
+  const auditAction = action === 'demote' ? ('content.demote' as const) : ('content.reject' as const);
   admin.post(`/admin/content/exercises/:id/${action}`, async (c) => {
     const idParsed = ContentIdSchema.safeParse(c.req.param('id'));
     if (!idParsed.success) return c.json({ error: 'Invalid id', code: 'VALIDATION_ERROR' }, 400);
-    return c.json({ outcome: await transitionContentExercise(idParsed.data, toStatus) });
+    const outcome = await transitionContentExercise(idParsed.data, toStatus);
+    if (EFFECTIVE_CONTENT.has(outcome)) {
+      await recordAdminAction(db, { adminUserId: c.get('userId'), action: auditAction, targetType: 'exercise', targetId: idParsed.data, metadata: { outcome } });
+    }
+    return c.json({ outcome });
   });
   admin.post(`/admin/content/theory/:id/${action}`, async (c) => {
     const idParsed = ContentIdSchema.safeParse(c.req.param('id'));
     if (!idParsed.success) return c.json({ error: 'Invalid id', code: 'VALIDATION_ERROR' }, 400);
-    return c.json({ outcome: await transitionContentTheory(idParsed.data, toStatus) });
+    const outcome = await transitionContentTheory(idParsed.data, toStatus);
+    if (EFFECTIVE_CONTENT.has(outcome)) {
+      await recordAdminAction(db, { adminUserId: c.get('userId'), action: auditAction, targetType: 'theory_topic', targetId: idParsed.data, metadata: { outcome } });
+    }
+    return c.json({ outcome });
   });
 }
 
@@ -831,10 +843,13 @@ async function resolveTheoryFlagged(
 
 const FlaggedIdSchema = z.string().uuid();
 
+const EFFECTIVE_FLAGGED = new Set<ResolveOutcome>(['approved', 'rejected', 'demoted']);
+
 for (const [kind, resolve] of [
   ['exercises', resolveExerciseFlagged],
   ['theory', resolveTheoryFlagged],
 ] as const) {
+  const targetType = kind === 'exercises' ? ('exercise' as const) : ('theory_topic' as const);
   for (const action of ['approve', 'reject'] as const) {
     admin.post(`/admin/flagged/${kind}/:id/${action}`, async (c) => {
       const idParsed = FlaggedIdSchema.safeParse(c.req.param('id'));
@@ -842,6 +857,15 @@ for (const [kind, resolve] of [
         return c.json({ error: 'Invalid id', code: 'VALIDATION_ERROR' }, 400);
       }
       const outcome = await resolve(idParsed.data, action);
+      if (EFFECTIVE_FLAGGED.has(outcome)) {
+        await recordAdminAction(db, {
+          adminUserId: c.get('userId'),
+          action: action === 'approve' ? 'flagged.approve' : 'flagged.reject',
+          targetType,
+          targetId: idParsed.data,
+          metadata: { outcome },
+        });
+      }
       return c.json({ outcome });
     });
   }
@@ -915,6 +939,14 @@ admin.post('/admin/generate', async (c) => {
     new SendMessageCommand({ QueueUrl: requireEnv('GENERATION_QUEUE_URL'), MessageBody: JSON.stringify(message) }),
   );
 
+  await recordAdminAction(db, {
+    adminUserId: c.get('userId'),
+    action: 'generation.trigger',
+    targetType: 'cell',
+    targetId: cellKey,
+    metadata: { count, jobId },
+  });
+
   return c.json({ jobId, status: 'queued' });
 });
 
@@ -969,6 +1001,15 @@ admin.post('/admin/invites', async (c) => {
       expiresAt: invitations.expiresAt,
       note: invitations.note,
     });
+
+  await recordAdminAction(db, {
+    adminUserId: c.get('userId'),
+    action: 'invite.create',
+    targetType: 'invite',
+    targetId: null,
+    metadata: { count: n },
+  });
+
   return c.json({ codes: inserted });
 });
 
@@ -1018,6 +1059,15 @@ admin.post('/admin/invites/:id/revoke', async (c) => {
     .update(invitations)
     .set({ revokedAt: new Date() })
     .where(eq(invitations.id, id));
+
+  await recordAdminAction(db, {
+    adminUserId: c.get('userId'),
+    action: 'invite.revoke',
+    targetType: 'invite',
+    targetId: id,
+    metadata: {},
+  });
+
   return c.json({ ok: true }, 200);
 });
 

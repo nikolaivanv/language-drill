@@ -183,6 +183,13 @@
       "when": 1781559452750,
       "tag": "0025_real_starhawk",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1781697599484,
+      "tag": "0026_zippy_xavin",
+      "breakpoints": true
     }
   ]
 }

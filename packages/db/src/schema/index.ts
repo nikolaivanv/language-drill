@@ -49,3 +49,4 @@ export type {
   TheoryGenerationJob,
   NewTheoryGenerationJob,
 } from './theory';
+export { adminAuditLog } from './audit';
