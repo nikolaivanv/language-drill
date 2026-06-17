@@ -190,6 +190,13 @@
       "when": 1781697599484,
       "tag": "0026_zippy_xavin",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1781737990198,
+      "tag": "0027_bizarre_cannonball",
+      "breakpoints": true
     }
   ]
 }
