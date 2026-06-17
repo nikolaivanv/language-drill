@@ -12,10 +12,35 @@ export interface AccentPickerProps {
   disabled?: boolean;
 }
 
-const ACCENT_CHARS: Partial<Record<AccentLanguage, string[]>> = {
-  ES: ['á', 'é', 'í', 'ó', 'ú', 'ñ', '¿', '¡'],
-  DE: ['ä', 'ö', 'ü', 'ß'],
-  TR: ['ç', 'ğ', 'ı', 'ö', 'ş', 'ü'],
+// [lower, upper] pairs. Upper forms are explicit (not derived via
+// `toUpperCase()`) because a few characters have no sensible single-key capital:
+// Spanish punctuation (¿ ¡) and German ß map to themselves, and Turkish ı
+// uppercases to the dotless I.
+const ACCENT_CHARS: Partial<Record<AccentLanguage, [string, string][]>> = {
+  ES: [
+    ['á', 'Á'],
+    ['é', 'É'],
+    ['í', 'Í'],
+    ['ó', 'Ó'],
+    ['ú', 'Ú'],
+    ['ñ', 'Ñ'],
+    ['¿', '¿'],
+    ['¡', '¡'],
+  ],
+  DE: [
+    ['ä', 'Ä'],
+    ['ö', 'Ö'],
+    ['ü', 'Ü'],
+    ['ß', 'ß'],
+  ],
+  TR: [
+    ['ç', 'Ç'],
+    ['ğ', 'Ğ'],
+    ['ı', 'I'],
+    ['ö', 'Ö'],
+    ['ş', 'Ş'],
+    ['ü', 'Ü'],
+  ],
 };
 
 function getNativeValueSetter(
@@ -74,9 +99,36 @@ export function AccentPicker({
     setHasTarget(targetRef.current != null);
   });
 
+  // Uppercase mode: latched via the ⇧ toggle (touch) OR the physical Shift key
+  // held down (desktop). Either source flips the panel to capital glyphs.
+  const [latched, setLatched] = React.useState(false);
+  const [shiftHeld, setShiftHeld] = React.useState(false);
+
+  React.useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') setShiftHeld(true);
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') setShiftHeld(false);
+    };
+    // Releasing Shift can be missed if focus leaves the window mid-hold; reset
+    // so it can't get stuck "on".
+    const onBlur = () => setShiftHeld(false);
+
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    window.addEventListener('blur', onBlur);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('blur', onBlur);
+    };
+  }, []);
+
   if (!chars) return null;
 
   const isDisabled = !hasTarget || disabled === true;
+  const isUpper = latched || shiftHeld;
 
   const handleClick = (char: string) => {
     const el = targetRef.current;
@@ -86,18 +138,31 @@ export function AccentPicker({
 
   return (
     <div className={cn('flex flex-wrap gap-s-1', className)}>
-      {chars.map((char) => (
-        <button
-          key={char}
-          type="button"
-          onClick={() => handleClick(char)}
-          disabled={isDisabled}
-          className={buttonClasses}
-          aria-label={`insert ${char}`}
-        >
-          {char}
-        </button>
-      ))}
+      <button
+        type="button"
+        onClick={() => setLatched((v) => !v)}
+        disabled={isDisabled}
+        className={cn(buttonClasses, latched && 'bg-ink text-card border-ink')}
+        aria-label="uppercase"
+        aria-pressed={latched}
+      >
+        ⇧
+      </button>
+      {chars.map(([lower, upper]) => {
+        const char = isUpper ? upper : lower;
+        return (
+          <button
+            key={lower}
+            type="button"
+            onClick={() => handleClick(char)}
+            disabled={isDisabled}
+            className={buttonClasses}
+            aria-label={`insert ${char}`}
+          >
+            {char}
+          </button>
+        );
+      })}
     </div>
   );
 }
