@@ -47,8 +47,10 @@ const { A1, A2 } = CefrLevel;
  * 2026-06-16c: flags two verb-morphology points (`tr-a1-dili-past`, `tr-a2-aorist`)
  * with `conjugationSuitable: true` + a merged `polarity` axis; the bump clears any
  * low-yield / saturated-dedup suppression so the new CONJUGATION cells run.
+ * 2026-06-17: added 3 A1 + 3 A2 free-writing topic umbrellas (kind 'free-writing');
+ * bump enumerates the new free-writing cells.
  */
-export const CURRICULUM_VERSION_TR = '2026-06-16c';
+export const CURRICULUM_VERSION_TR = '2026-06-17';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -1559,6 +1561,124 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Mis-segmenting suffix-heavy words (arkadaşlarımla).',
     ],
   },
+  // Free-writing topic umbrellas — kind: 'free-writing' (Phase 2 generation).
+  // Added 2026-06-17. Concrete, level-appropriate topics; the per-draft angle
+  // rotation uses the A1/A2 concrete pool (free-writing-generation-prompts.ts).
+  {
+    key: 'tr-a1-fw-my-day',
+    kind: 'free-writing',
+    name: 'Bir günüm',
+    description:
+      'An informal prompt to describe a typical day using simple present-tense routine verbs and times of day.',
+    cefrLevel: A1,
+    language: TR,
+    examplesPositive: [
+      'Asks what they do in the morning, afternoon, and evening.',
+      'Requires at least one time expression (e.g. saat yedide).',
+    ],
+    examplesNegative: ['*Write an essay about the meaning of daily life.'],
+    commonErrors: [
+      'Verbs with no time expressions (saat yedide, öğleden sonra).',
+      'Drifting into past-tense storytelling instead of a typical day.',
+    ],
+    freeWriting: { register: 'informal' },
+  },
+  {
+    key: 'tr-a1-fw-my-family',
+    kind: 'free-writing',
+    name: 'Ailem',
+    description:
+      'An informal prompt to introduce family members, who they are, and one simple detail about each.',
+    cefrLevel: A1,
+    language: TR,
+    examplesPositive: [
+      'Asks for at least two family members and their jobs or ages.',
+      'Requires one sentence about something a family member likes.',
+    ],
+    examplesNegative: ['*Discuss the role of family in society.'],
+    commonErrors: [
+      'Naming people with no detail at all.',
+      'Possessive-suffix errors (annem vs. *anne benim).',
+    ],
+    freeWriting: { register: 'informal' },
+  },
+  {
+    key: 'tr-a1-fw-my-weekend',
+    kind: 'free-writing',
+    name: 'Hafta sonum',
+    description:
+      'An informal prompt to describe what the learner usually does on the weekend, with simple activities and places.',
+    cefrLevel: A1,
+    language: TR,
+    examplesPositive: [
+      'Asks for two or three weekend activities.',
+      'Requires saying who they do one activity with.',
+    ],
+    examplesNegative: ['*Compare weekends and weekdays in detail.'],
+    commonErrors: [
+      'A single activity with no places or people.',
+      'Mixing in complex past-tense narration.',
+    ],
+    freeWriting: { register: 'informal' },
+  },
+  {
+    key: 'tr-a2-fw-a-trip',
+    kind: 'free-writing',
+    name: 'Unutamadığım bir gezi',
+    description:
+      'A neutral prompt to narrate a memorable trip: where, when, and one thing that happened, using past tense.',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: [
+      'Asks where and when the trip was, plus one memorable event.',
+      'Requires a closing sentence on how they felt about it.',
+    ],
+    examplesNegative: ['*Describe travelling in general.'],
+    commonErrors: [
+      'Generic travel description with no specific trip.',
+      'Staying in present tense instead of narrating the past.',
+    ],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'tr-a2-fw-free-time',
+    kind: 'free-writing',
+    name: 'Boş zamanlarım',
+    description:
+      'A neutral prompt to describe free-time activities and hobbies, how often, and why the learner enjoys them.',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: [
+      'Asks for two hobbies and how often they do them.',
+      'Requires one reason why they like one of the hobbies.',
+    ],
+    examplesNegative: ['*List every hobby that exists.'],
+    commonErrors: [
+      'Frequency adverbs missing or misplaced.',
+      'Listing hobbies with no reason or detail.',
+    ],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'tr-a2-fw-my-city',
+    kind: 'free-writing',
+    name: 'Yaşadığım şehir',
+    description:
+      'A neutral prompt to describe the city the learner lives in: what it is like and one thing they like or would change.',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: [
+      'Asks what the city is like and names one place in it.',
+      'Requires one thing they like and one they would change.',
+    ],
+    examplesNegative: ['*Write a tourist guide to a famous city.'],
+    commonErrors: [
+      'Listing places with no description.',
+      'Locative/ablative case errors with place names.',
+    ],
+    freeWriting: { register: 'neutral' },
+  },
+
   /*
   {
     key: 'tr-b1-abstract-noun-vocab',
