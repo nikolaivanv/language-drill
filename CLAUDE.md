@@ -378,6 +378,7 @@ DNS is managed in **Cloudflare** (registrar + DNS). All records are **DNS-only**
 | `SENTRY_AUTH_TOKEN` | server-only; from Sentry → Settings → Auth Tokens (scopes: `project:releases`, `project:write`) | same token |
 | `SENTRY_ORG` | Sentry org slug | same |
 | `SENTRY_PROJECT` | Sentry project slug | same |
+| `NEXT_PUBLIC_LANGFUSE_TRACE_URL_TEMPLATE` | prod Langfuse traces-URL template with `{cellKey}` placeholder (admin deep-link; unset → link hidden) | dev Langfuse traces-URL template with `{cellKey}` placeholder |
 
 ### Observability boundaries
 
