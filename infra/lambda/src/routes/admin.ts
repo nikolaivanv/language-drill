@@ -4,9 +4,11 @@ import { z } from 'zod';
 import { and, asc, count, desc, eq, gte, inArray, isNotNull, sql, type SQL } from 'drizzle-orm';
 import {
   ALL_CURRICULA,
+  CURRICULUM_VERSION_BY_LANGUAGE,
   adminAuditLog,
   buildCellKey,
   buildCellKeyFromRow,
+  curriculumOrderOf,
   enumerateCurriculumCells,
   exercises,
   generationJobs,
@@ -513,6 +515,82 @@ admin.get('/admin/theory/coverage', async (c) => {
   }
 
   return c.json({ rows });
+});
+
+// ---------------------------------------------------------------------------
+// GET /admin/curriculum — read-only in-code curriculum reference (no DB read)
+// ---------------------------------------------------------------------------
+
+const CurriculumQuerySchema = z.object({
+  language: z.enum(['ES', 'DE', 'TR']).optional(),
+  level: z.enum(['A1', 'A2', 'B1', 'B2']).optional(),
+  kind: z.enum(['grammar', 'vocab', 'dictation', 'free-writing']).optional(),
+});
+
+admin.get('/admin/curriculum', async (c) => {
+  const parsed = CurriculumQuerySchema.safeParse(c.req.query());
+  if (!parsed.success) {
+    return c.json({ error: 'VALIDATION_ERROR', details: parsed.error.flatten() }, 400);
+  }
+  const { language, level, kind } = parsed.data;
+
+  // Exercise types each point drives — built once from the FULL curriculum.
+  const exerciseTypesByKey = new Map<string, string[]>();
+  for (const cell of enumerateCurriculumCells(ALL_CURRICULA)) {
+    const list = exerciseTypesByKey.get(cell.grammarPoint.key) ?? [];
+    list.push(cell.exerciseType);
+    exerciseTypesByKey.set(cell.grammarPoint.key, list);
+  }
+
+  const LANGUAGE_ORDER = ['ES', 'DE', 'TR'];
+
+  const items = ALL_CURRICULA.filter(
+    (e) =>
+      (!language || e.language === language) &&
+      (!level || e.cefrLevel === level) &&
+      (!kind || e.kind === kind),
+  )
+    .map((e) => ({
+      key: e.key,
+      kind: e.kind,
+      name: e.name,
+      description: e.description,
+      cefrLevel: e.cefrLevel,
+      language: e.language,
+      examplesPositive: [...e.examplesPositive],
+      examplesNegative: [...e.examplesNegative],
+      commonErrors: [...e.commonErrors],
+      prerequisiteKeys: e.prerequisiteKeys ? [...e.prerequisiteKeys] : [],
+      targetOverride: e.targetOverride ?? null,
+      clozeUnsuitable: !!e.clozeUnsuitable,
+      sentenceConstructionSuitable: !!e.sentenceConstructionSuitable,
+      conjugationSuitable: !!e.conjugationSuitable,
+      coverageSpec: e.coverageSpec
+        ? {
+            axes: e.coverageSpec.axes.map((a) => ({
+              name: a.name,
+              floors: { ...a.floors },
+            })),
+          }
+        : null,
+      freeWritingRegister: e.freeWriting?.register ?? null,
+      exerciseTypes: [...(exerciseTypesByKey.get(e.key) ?? [])].sort(),
+    }))
+    .sort((a, b) => {
+      const la = LANGUAGE_ORDER.indexOf(a.language);
+      const lb = LANGUAGE_ORDER.indexOf(b.language);
+      if (la !== lb) return la - lb;
+      return (
+        (curriculumOrderOf(a.key) ?? Number.MAX_SAFE_INTEGER) -
+        (curriculumOrderOf(b.key) ?? Number.MAX_SAFE_INTEGER)
+      );
+    });
+
+  return c.json({
+    items,
+    total: items.length,
+    curriculumVersionByLanguage: CURRICULUM_VERSION_BY_LANGUAGE,
+  });
 });
 
 // ---------------------------------------------------------------------------
