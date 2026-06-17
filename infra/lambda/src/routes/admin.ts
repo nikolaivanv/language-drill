@@ -1,7 +1,7 @@
 import { randomInt, randomUUID } from 'node:crypto';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { and, asc, count, desc, eq, gte, inArray, isNotNull, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, inArray, isNotNull, sql, type SQL } from 'drizzle-orm';
 import {
   ALL_CURRICULA,
   adminAuditLog,
@@ -1090,7 +1090,7 @@ admin.get('/admin/audit', async (c) => {
     return c.json({ error: 'Invalid query parameters', code: 'VALIDATION_ERROR', details: parsed.error.flatten() }, 400);
   }
   const { action, targetType, adminUserId, limit, offset } = parsed.data;
-  const conds: ReturnType<typeof eq>[] = [];
+  const conds: SQL[] = [];
   if (action) conds.push(eq(adminAuditLog.action, action));
   if (targetType) conds.push(eq(adminAuditLog.targetType, targetType));
   if (adminUserId) conds.push(eq(adminAuditLog.adminUserId, adminUserId));

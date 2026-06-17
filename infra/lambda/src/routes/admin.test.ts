@@ -1433,4 +1433,10 @@ describe('GET /admin/audit', () => {
     expect(res.status).toBe(200);
     expect((await res.json()) as AnyJson).toEqual({ items: [], total: 0 });
   });
+
+  it('rejects a negative offset with 400', async () => {
+    const res = await app.request('/admin/audit?offset=-1', undefined, adminEnv);
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as AnyJson).code).toBe('VALIDATION_ERROR');
+  });
 });
