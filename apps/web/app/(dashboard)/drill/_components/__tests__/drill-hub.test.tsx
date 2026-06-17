@@ -48,6 +48,15 @@ describe('DrillHub', () => {
     expect(onStartDictation).toHaveBeenCalledTimes(1);
   });
 
+  it('gives the free-writing launcher a resting rule border with accent only on hover', () => {
+    setup();
+    const fw = screen.getByRole('link', { name: /free writing/i });
+    // Resting state matches the other launchers — no permanently-on accent
+    // border (which previously made the card look stuck-highlighted).
+    expect(fw.className).toContain('border-rule');
+    expect(fw.className).toContain('hover:border-accent');
+  });
+
   it('fires onDifficultyChange when the drill-level select changes', () => {
     const { onDifficultyChange } = setup();
     fireEvent.change(screen.getByLabelText(/drill level/i), {
