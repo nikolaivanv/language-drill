@@ -1503,3 +1503,69 @@ describe('GET /admin/capacity', () => {
     expect(((await res.json()) as AnyJson).topConsumers).toHaveLength(10);
   });
 });
+
+describe('GET /admin/curriculum', () => {
+  it('rejects a bad enum with 400 VALIDATION_ERROR', async () => {
+    const res = await app.request('/admin/curriculum?language=FR', undefined, adminEnv);
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as AnyJson).code).toBe('VALIDATION_ERROR');
+  });
+
+  it('returns the full curriculum with versions when unfiltered', async () => {
+    const res = await app.request('/admin/curriculum', undefined, adminEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.total).toBe(ALL_CURRICULA.length);
+    expect(body.items).toHaveLength(ALL_CURRICULA.length);
+    expect(body.curriculumVersionByLanguage).toHaveProperty('ES');
+    expect(body.curriculumVersionByLanguage).toHaveProperty('DE');
+    expect(body.curriculumVersionByLanguage).toHaveProperty('TR');
+  });
+
+  it('filters by language', async () => {
+    const res = await app.request('/admin/curriculum?language=TR', undefined, adminEnv);
+    const body = (await res.json()) as AnyJson;
+    expect(body.total).toBe(ALL_CURRICULA.filter((e) => e.language === 'TR').length);
+    expect(body.items.every((i: AnyJson) => i.language === 'TR')).toBe(true);
+  });
+
+  it('filters by kind', async () => {
+    const res = await app.request('/admin/curriculum?kind=grammar', undefined, adminEnv);
+    const body = (await res.json()) as AnyJson;
+    expect(body.items.every((i: AnyJson) => i.kind === 'grammar')).toBe(true);
+    expect(body.total).toBe(ALL_CURRICULA.filter((e) => e.kind === 'grammar').length);
+  });
+
+  it('sorts ES then DE then TR', async () => {
+    const res = await app.request('/admin/curriculum', undefined, adminEnv);
+    const langs: string[] = ((await res.json()) as AnyJson).items.map((i: AnyJson) => i.language);
+    const order = { ES: 0, DE: 1, TR: 2 } as Record<string, number>;
+    for (let i = 1; i < langs.length; i++) {
+      expect(order[langs[i]]).toBeGreaterThanOrEqual(order[langs[i - 1]]);
+    }
+  });
+
+  it('serializes the full entry shape with normalized flags and derived exerciseTypes', async () => {
+    const res = await app.request('/admin/curriculum?kind=grammar', undefined, adminEnv);
+    const item = ((await res.json()) as AnyJson).items[0];
+    expect(typeof item.clozeUnsuitable).toBe('boolean');
+    expect(typeof item.sentenceConstructionSuitable).toBe('boolean');
+    expect(typeof item.conjugationSuitable).toBe('boolean');
+    expect(Array.isArray(item.prerequisiteKeys)).toBe(true);
+    expect(item.targetOverride === null || typeof item.targetOverride === 'number').toBe(true);
+    expect(item.coverageSpec === null || Array.isArray(item.coverageSpec.axes)).toBe(true);
+    const expectedTypes = [
+      ...new Set(
+        enumerateCurriculumCells(ALL_CURRICULA)
+          .filter((cc) => cc.grammarPoint.key === item.key)
+          .map((cc) => cc.exerciseType),
+      ),
+    ].sort();
+    expect([...item.exerciseTypes].sort()).toEqual(expectedTypes);
+  });
+
+  it('requires admin (non-admin is rejected)', async () => {
+    const res = await app.request('/admin/curriculum', undefined, nonAdminEnv);
+    expect(res.status).toBe(403);
+  });
+});
