@@ -33,7 +33,7 @@ export async function recordAdminAction(db: Db, entry: AdminAuditEntry): Promise
       metadata: entry.metadata ?? null,
     });
   } catch (err) {
-    console.warn('admin audit log insert failed', {
+    console.error('[admin-audit] insert failed (non-fatal)', {
       action: entry.action,
       targetType: entry.targetType,
       targetId: entry.targetId,

@@ -22,14 +22,17 @@ describe('recordAdminAction', () => {
     });
   });
 
-  it('swallows insert errors and warns (never throws)', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  it('swallows insert errors and logs (never throws)', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const db = fakeDb(async () => { throw new Error('db down'); });
     await expect(
       recordAdminAction(db, { adminUserId: 'a', action: 'invite.revoke', targetType: 'invite', targetId: 'i1' }),
     ).resolves.toBeUndefined();
-    expect(warn).toHaveBeenCalled();
-    warn.mockRestore();
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[admin-audit]'),
+      expect.objectContaining({ action: 'invite.revoke', err: expect.any(Error) }),
+    );
+    errorSpy.mockRestore();
   });
 
   it('defaults metadata to null when omitted', async () => {
