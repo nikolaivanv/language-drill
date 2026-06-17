@@ -379,3 +379,5 @@ export {
 export { useGenerateCell } from './hooks/useGenerateCell';
 export { AuditEntrySchema, AuditLogResponseSchema, type AuditEntry, type AuditQuery } from './schemas/audit';
 export { useAuditLog } from './hooks/useAuditLog';
+export { CapacityResponseSchema, type CapacityResponse } from './schemas/capacity';
+export { useCapacity } from './hooks/useCapacity';
