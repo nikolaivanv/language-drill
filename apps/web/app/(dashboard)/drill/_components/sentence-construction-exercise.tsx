@@ -13,6 +13,7 @@ import {
   Textarea,
 } from '../../../../components/ui';
 import { translationVerdict } from '../../../../lib/drill/verdict-tier';
+import { stripInlineMarkdown } from '../../../../lib/drill/strip-inline-markdown';
 import { useDrillAction } from './drill-action-context';
 import { FeedbackShell } from './feedback-shell';
 import type { SubmissionMeta, SubmissionState } from './types';
@@ -69,6 +70,7 @@ export function SentenceConstructionExercise({
     setPrimaryAction({
       label: 'submit',
       onClick: handleSubmit,
+      variant: 'accent',
       disabled: !canSubmit || isLocked,
       loading: submission.kind === 'submitting',
     });
@@ -80,10 +82,12 @@ export function SentenceConstructionExercise({
       <p className="t-micro text-ink-mute">sentence construction · {language}</p>
 
       {content.instructions && (
-        <p className="t-small text-ink-mute">{content.instructions}</p>
+        <p className="t-small text-ink-mute">
+          {stripInlineMarkdown(content.instructions)}
+        </p>
       )}
 
-      <p className="t-display-s">{content.prompt}</p>
+      <p className="t-display-s">{stripInlineMarkdown(content.prompt)}</p>
 
       {content.promptMode === 'keywords' &&
         content.keywords &&
@@ -146,7 +150,7 @@ export function SentenceConstructionExercise({
         )}
         {!active && (
           <Button
-            variant="primary"
+            variant="accent"
             onClick={handleSubmit}
             disabled={!canSubmit || isLocked}
             loading={submission.kind === 'submitting'}

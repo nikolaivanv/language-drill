@@ -208,14 +208,13 @@ describe("buildGenerationSystemPrompt", () => {
     // R1.7 / R2.6 / R7.4 — the coordinated prompt edit must ship a
     // `generate@YYYY-MM-DD` version so Langfuse cohorts old vs new traces.
     expect(GENERATION_PROMPT_VERSION).toMatch(/^generate@\d{4}-\d{2}-\d{2}$/);
-    // Bumped 2026-06-12 for two same-day edits sharing the cohort: the
-    // possessive-suffix cloze diversity tweak in the system template (rotate
-    // persons, prefer vowel-final stems) and the curriculum-wide grammatical-
-    // person rotation in the per-draft user prompt (pool audit: TR tense
-    // cells were ≥90% 3sg). Prior 2026-06-07 cohort covered the vocab_recall
-    // hints anti-leak rule + the possessive-pronoun bullet.
-    // Bumped 2026-06-16 for the conjugation/inflection drill type: the
+    // Bumped 2026-06-16 — two same-day edits share this cohort: (1) the
+    // sentence-construction "Plain text only — no markdown" rule (the generator
+    // leaked `**keyword**` emphasis into the plain-text `prompt` field, rendered
+    // verbatim as literal asterisks); (2) the conjugation/inflection drill type's
     // `{{conjugationSection}}` guidance block spliced into the cached template.
+    // Prior 2026-06-12 cohort covered the possessive-cloze diversity tweak + the
+    // curriculum-wide grammatical-person rotation.
     expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-06-16");
     // Tasks 7–9: pin the new guardrail phrases in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
@@ -244,6 +243,9 @@ describe("buildGenerationSystemPrompt", () => {
     expect(sc).toContain("Model answers must be correct, natural, and error-free");
     expect(sc).toContain("MUST NOT exhibit any of the **Common learner errors**");
     expect(sc).toContain("Do not spoil the answer");
+    // Plain-text rule: the prompt field renders verbatim, so the generator
+    // must not leak markdown emphasis (the `**keyword**` literal-asterisk bug).
+    expect(sc).toContain("Plain text only — no markdown");
     // grammar_target — the worst-performing mode — must be told to anchor to a
     // scenario, not ship the structure label alone.
     expect(sc).toContain("`grammar_target`");

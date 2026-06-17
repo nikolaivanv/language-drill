@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import {
   CefrLevel,
   LANGUAGE_NAMES,
@@ -31,6 +30,8 @@ import { DEFAULT_EXERCISE_COUNT, DICTATION_RUN_COUNT } from '../../../lib/drill/
 import { DrillHub } from './_components/drill-hub';
 import { CoachRail } from './_components/coach-rail';
 import { CoachCard } from './_components/coach-card';
+import { DrillMeta } from './_components/drill-meta';
+import { FluencyPromo } from './_components/fluency-promo';
 import { SessionDots } from './_components/session-dots';
 import { DrillLayout } from './_components/drill-layout';
 import {
@@ -47,34 +48,7 @@ import {
   sessionReducer,
 } from './_components/session-reducer';
 import { SubmissionErrorCard } from './_components/submission-error-card';
-import { FreeWritingEntryCard } from './_components/free-writing-entry-card';
 import type { SubmissionMeta } from './_components/types';
-
-interface SelectorsProps {
-  difficulty: CefrLevel;
-  onDifficultyChange: (level: CefrLevel) => void;
-}
-
-function Selectors(p: SelectorsProps) {
-  return (
-    <div className="mb-s-6 flex gap-s-4">
-      <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-        Difficulty
-        <select
-          value={p.difficulty}
-          onChange={(e) => p.onDifficultyChange(e.target.value as CefrLevel)}
-          className="rounded border border-gray-300 bg-white px-3 py-2"
-        >
-          {Object.values(CefrLevel).map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-      </label>
-    </div>
-  );
-}
 
 function isInsufficientExercises(err: Error): boolean {
   const status = (err as Error & { status?: number }).status;
@@ -274,19 +248,24 @@ function PracticePageContent() {
         })
       : coachMessage({ kind: 'idle', type: exerciseTypeForRail });
 
-  const selectors = (
-    <Selectors
-      difficulty={difficulty}
-      onDifficultyChange={handleDifficultyChange}
-    />
-  );
+  // The learner's recorded baseline for the active language — the identity that
+  // the session level can drift from. Null when the active language has no
+  // profile yet (drift signal then stays hidden). See DRILL-UI-GUIDELINES §4.
+  const baseline =
+    (profiles.find((p) => p.language === activeLanguage)?.proficiencyLevel as
+      | CefrLevel
+      | undefined) ?? null;
 
   // Zero-profiles placeholder (unchanged from prior page)
   if (profiles.length === 0) {
     return (
       <div className="p-s-6">
         <h1 className="t-display-l mb-s-6">practice</h1>
-        {selectors}
+        <DrillMeta
+          level={difficulty}
+          baseline={null}
+          onLevelChange={handleDifficultyChange}
+        />
       </div>
     );
   }
@@ -295,6 +274,7 @@ function PracticePageContent() {
     return (
       <DrillHub
         difficulty={difficulty}
+        baseline={baseline}
         onDifficultyChange={handleDifficultyChange}
         onStartQuick={() => setStartIntent('quick')}
         onStartDictation={() => setStartIntent('dictation')}
@@ -310,21 +290,41 @@ function PracticePageContent() {
       ? { current: state.index + 1, total: state.items.length }
       : null;
 
+  // The theory topic sits on the meta baseline (in-session only). TheoryTrigger
+  // self-hides when the topic isn't mapped/loaded, so DrillMeta tolerates null.
+  const topicTrigger =
+    state.kind === 'inSession' && currentItem && theoryTopicId ? (
+      <TheoryTrigger
+        topicId={theoryTopicId}
+        language={activeLanguage}
+        onOpen={(id, el) => {
+          setOpenTopicId(id);
+          setTriggerEl(el);
+        }}
+        fetchFn={fetchFn}
+      />
+    ) : null;
+
   const main = (
     <>
-      <FreeWritingEntryCard />
-
       {/* Mobile: the coach rail collapses into a card at the top of content. */}
-      {isMobile && currentItem && <CoachCard message={coachMsg} />}
+      {isMobile && currentItem && (
+        <div className="mb-s-4">
+          <CoachCard message={coachMsg} />
+        </div>
+      )}
 
-      <Link href="/fluency" className="t-small underline text-ink-mute hover:text-ink self-start">
-        try fluency mode — timed drills on what you already know →
-      </Link>
-
-      {selectors}
+      {/* One aligned meta row: the writable level pill (+ drift/reset) and the
+          read-only topic, grouped tight on a single baseline. */}
+      <DrillMeta
+        level={difficulty}
+        baseline={baseline}
+        onLevelChange={handleDifficultyChange}
+        topic={topicTrigger}
+      />
 
       {insufficient && (
-        <Card padding="lg" className="bg-paper-2">
+        <Card padding="lg" className="mt-s-6 bg-paper-2">
           <p className="t-body">
             no exercises available for {LANGUAGE_NAMES[activeLanguage] ?? activeLanguage} at {difficulty}
           </p>
@@ -333,32 +333,22 @@ function PracticePageContent() {
       )}
 
       {state.kind === 'createError' && !insufficient && (
-        <Card padding="lg" className="bg-[var(--color-accent-soft)]">
+        <Card padding="lg" className="mt-s-6 bg-[var(--color-accent-soft)]">
           <p className="t-body">{state.error.message}</p>
         </Card>
       )}
 
       {state.kind === 'inSession' && currentItem && (
-        <>
+        // A real break before the prompt — the meta row is context, the prompt
+        // is the focal point. (DRILL-UI-GUIDELINES §3: tighten the meta, open
+        // up before the title.)
+        <div className="mt-s-8 mobile:mt-s-5">
           {/* Mobile: horizontal session-position dots above the prompt. */}
           {isMobile && sessionPosition && (
-            <div className="mb-s-3">
+            <div className="mb-s-4">
               <SessionDots
                 current={sessionPosition.current}
                 total={sessionPosition.total}
-              />
-            </div>
-          )}
-          {theoryTopicId && (
-            <div className="mb-s-3 flex justify-end">
-              <TheoryTrigger
-                topicId={theoryTopicId}
-                language={activeLanguage}
-                onOpen={(id, el) => {
-                  setOpenTopicId(id);
-                  setTriggerEl(el);
-                }}
-                fetchFn={fetchFn}
               />
             </div>
           )}
@@ -380,9 +370,12 @@ function PracticePageContent() {
               />
             </div>
           )}
-        </>
+        </div>
       )}
 
+      {/* Mobile: promo demoted to the bottom of the scroll, out of the task
+          flow (it lives in the coach rail on desktop). */}
+      {isMobile && currentItem && <FluencyPromo className="mt-s-7" />}
     </>
   );
 
@@ -391,7 +384,12 @@ function PracticePageContent() {
       <DrillLayout
         rail={
           !isMobile && currentItem ? (
-            <CoachRail message={coachMsg} exerciseType={exerciseTypeForRail} />
+            <CoachRail
+              message={coachMsg}
+              exerciseType={exerciseTypeForRail}
+              sessionCurrent={sessionPosition?.current}
+              sessionTotal={sessionPosition?.total}
+            />
           ) : null
         }
         main={main}

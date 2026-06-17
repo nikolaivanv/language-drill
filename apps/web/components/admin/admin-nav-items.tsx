@@ -8,6 +8,8 @@ export interface AdminNavDestination {
 // (Moderation, Ops, Users — see docs/admin-panel.md) are appended here as
 // they're built.
 export const ADMIN_NAV: AdminNavDestination[] = [
+  { href: '/admin/moderation', label: 'Moderation' },
+  { href: '/admin/content', label: 'Content' },
   { href: '/admin/generation', label: 'Pool' },
   { href: '/admin/theory', label: 'Theory' },
   { href: '/admin/invites', label: 'Invites' },

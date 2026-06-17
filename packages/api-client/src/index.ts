@@ -342,3 +342,32 @@ export {
   type UseSubmitFluencyAttemptOptions,
   type UseFluencyStatsParams,
 } from './hooks/useFluency';
+export {
+  FlaggedReasonSchema,
+  FlaggedExerciseSchema, FlaggedExercisesResponseSchema,
+  FlaggedTheorySchema, FlaggedTheoryResponseSchema,
+  ResolveOutcomeSchema, ResolveResponseSchema,
+  type FlaggedReason,
+  type FlaggedExercise, type FlaggedTheory,
+  type FlaggedExerciseFilters, type FlaggedTheoryFilters,
+  type ResolveOutcome,
+} from './schemas/flagged';
+export {
+  useFlaggedExercises, useFlaggedTheory,
+  useResolveFlaggedExercise, useResolveFlaggedTheory,
+} from './hooks/useFlaggedQueue';
+export {
+  ContentExerciseSchema, ContentExercisesResponseSchema,
+  ContentTheorySchema, ContentTheoryResponseSchema, ContentReviewStatusSchema,
+  type ContentExercise, type ContentTheory,
+  type ContentExerciseParams, type ContentTheoryParams,
+} from './schemas/content';
+export {
+  useContentExercises, useContentTheory,
+  useResolveContentExercise, useResolveContentTheory,
+} from './hooks/useContentBrowser';
+export {
+  PoolCellDetailSchema,
+  type PoolCellDetail, type PoolCellQuery,
+} from './schemas/pool-cell';
+export { usePoolCell } from './hooks/usePoolCell';

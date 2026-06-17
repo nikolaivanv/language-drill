@@ -282,7 +282,7 @@ describe('PracticePage', () => {
       );
       const callsBefore = createMutate.mock.calls.length;
 
-      fireEvent.change(screen.getByLabelText(/Difficulty/), {
+      fireEvent.change(screen.getByLabelText(/drill level/i), {
         target: { value: 'A2' },
       });
 

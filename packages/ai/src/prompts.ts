@@ -137,7 +137,9 @@ function buildTranslationUserPrompt(
 
 **User's Translation:** ${userAnswer}
 
-Evaluate the user's translation. Multiple valid translations may exist — do not penalize for stylistic differences. Focus on accuracy of meaning, grammar, and natural phrasing in the target language.`;
+Evaluate the user's translation. Multiple valid translations may exist — do not penalize for stylistic differences. Focus on accuracy of meaning, grammar, and natural phrasing in the target language.
+
+The Reference Translation is ONE acceptable answer, not the required wording. When the user picks a different word, synonym, or phrasing, judge it on its OWN merits — do NOT record an error (not even a stylistic one) merely for differing from the reference, and never rewrite the user's word to match the reference's spelling or morphology. Before flagging any inflection or suffix as an error, first restate the user's OWN stem and confirm the form is genuinely wrong for THAT stem (e.g. for vowel harmony, name the user's stem and its actual last vowel) — not merely different from the reference's stem. Only list an error when the user's own sentence is itself incorrect.`;
 }
 
 function buildVocabRecallUserPrompt(
