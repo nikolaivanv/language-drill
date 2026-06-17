@@ -13,4 +13,5 @@ export const ADMIN_NAV: AdminNavDestination[] = [
   { href: '/admin/generation', label: 'Pool' },
   { href: '/admin/theory', label: 'Theory' },
   { href: '/admin/invites', label: 'Invites' },
+  { href: '/admin/audit', label: 'Audit' },
 ];
