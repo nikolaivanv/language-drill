@@ -13,6 +13,19 @@ vi.mock('@aws-sdk/client-sqs', () => ({
   SendMessageCommand: vi.fn(function (this: any, input: unknown) { this.input = input; }),
 }));
 
+// `validateDraft` is the only AI call the revalidate endpoint makes — stub it
+// per-test via `mockValidateDraft`. The pure cost helpers (estimateCostUsd,
+// addUsage, ZERO_USAGE) stay REAL so the endpoint's cost accounting is exercised.
+const mockValidateDraft = vi.fn();
+vi.mock('@language-drill/ai', async () => {
+  const actual = await vi.importActual<typeof import('@language-drill/ai')>('@language-drill/ai');
+  return {
+    ...actual,
+    createClaudeClient: vi.fn(() => ({})),
+    validateDraft: (...args: unknown[]) => mockValidateDraft(...args),
+  };
+});
+
 // ---------------------------------------------------------------------------
 // DB chain mock
 // ---------------------------------------------------------------------------
@@ -1253,6 +1266,180 @@ describe('POST /admin/generate', () => {
     expect(res.status).toBe(409);
     expect((await res.json() as AnyJson).code).toBe('GENERATION_IN_PROGRESS');
     expect(sqsSend).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /admin/revalidate
+// ---------------------------------------------------------------------------
+
+describe('POST /admin/revalidate', () => {
+  let prevApiKey: string | undefined;
+  beforeAll(() => {
+    prevApiKey = process.env.ANTHROPIC_API_KEY;
+    process.env.ANTHROPIC_API_KEY = 'sk-test';
+  });
+  afterAll(() => {
+    if (prevApiKey === undefined) delete process.env.ANTHROPIC_API_KEY;
+    else process.env.ANTHROPIC_API_KEY = prevApiKey;
+  });
+
+  // Real cloze cell resolvable in ALL_CURRICULA (TR A1, no clozeUnsuitable).
+  const CELL = {
+    language: 'TR' as const,
+    level: 'A1' as const,
+    type: 'cloze' as const,
+    grammarPoint: 'tr-a1-vowel-harmony',
+  };
+
+  // Valid cloze content for a candidate row. The blank stands alone (no
+  // suffixal stem), so the deterministic Turkish checker returns
+  // `not-applicable` and routing is driven purely by the LLM verdict below.
+  function clozeContent() {
+    return {
+      type: 'cloze',
+      instructions: 'Boşluğu doldurun.',
+      sentence: 'Sınıfta sekiz ___ var.',
+      correctAnswer: 'öğrenci',
+    };
+  }
+
+  function candidateRow(id: string, reviewStatus: string) {
+    return {
+      id,
+      type: 'cloze',
+      language: 'TR',
+      difficulty: 'A1',
+      contentJson: clozeContent(),
+      grammarPointKey: 'tr-a1-vowel-harmony',
+      topicDomain: null,
+      modelId: 'claude-sonnet-4-6',
+      reviewStatus,
+    };
+  }
+
+  // ValidationResult fixtures (read routeValidationResult thresholds):
+  //   auto-approved: high score, all booleans clean.
+  //   flagged: clean score band but ambiguous=true → routes to 'flagged'.
+  const AUTO_APPROVED_RESULT = {
+    qualityScore: 0.95,
+    ambiguous: false,
+    contextSpoilsAnswer: false,
+    levelMatch: true,
+    grammarPointMatch: true,
+    culturalIssues: [],
+    flaggedReasons: [],
+    coverage: {},
+  };
+  const FLAGGED_RESULT = {
+    qualityScore: 0.95,
+    ambiguous: true,
+    contextSpoilsAnswer: false,
+    levelMatch: true,
+    grammarPointMatch: true,
+    culturalIssues: [],
+    flaggedReasons: [],
+    coverage: {},
+  };
+
+  const ZERO_TOKENS = {
+    inputTokens: 0,
+    outputTokens: 0,
+    cacheCreationInputTokens: 0,
+    cacheReadInputTokens: 0,
+  };
+
+  function body(apply: boolean, overrides: Record<string, unknown> = {}) {
+    return JSON.stringify({ ...CELL, apply, ...overrides });
+  }
+
+  function post(payload: string) {
+    return app.request(
+      '/admin/revalidate',
+      { method: 'POST', headers: { 'content-type': 'application/json' }, body: payload },
+      adminEnv,
+    );
+  }
+
+  it('returns 400 VALIDATION_ERROR on an invalid body', async () => {
+    const res = await post(JSON.stringify({ language: 'TR' })); // missing fields
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as AnyJson).code).toBe('VALIDATION_ERROR');
+  });
+
+  it('returns 400 INVALID_CELL for an unknown cell', async () => {
+    const res = await post(body(false, { grammarPoint: 'tr-a1-nonexistent' }));
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as AnyJson).code).toBe('INVALID_CELL');
+  });
+
+  it('dry-run: demotes an auto-approved row to flagged without writing or auditing', async () => {
+    delete insertedValuesByTable.adminAuditLog;
+    mockValidateDraft.mockResolvedValue({ result: FLAGGED_RESULT, tokenUsage: ZERO_TOKENS });
+    // (1) count, (2) candidate rows — no update/insert in dry-run.
+    queryQueue.push([{ count: 1 }]);
+    queryQueue.push([candidateRow('row-1', 'auto-approved')]);
+
+    const res = await post(body(false));
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as AnyJson;
+    expect(json.apply).toBe(false);
+    expect(json.scanned).toBe(1);
+    expect(json.demotedToFlagged).toBe(1);
+    expect(json.demotions[0]).toMatchObject({ from: 'auto-approved', to: 'flagged' });
+    // No write, no audit.
+    expect(dbUpdate).not.toHaveBeenCalled();
+    expect(insertedValuesByTable.adminAuditLog).toBeUndefined();
+  });
+
+  it('apply: writes one update and records a revalidate.apply audit row', async () => {
+    delete insertedValuesByTable.adminAuditLog;
+    mockValidateDraft.mockResolvedValue({ result: FLAGGED_RESULT, tokenUsage: ZERO_TOKENS });
+    // (1) count, (2) candidates, (3) update, (4) audit insert.
+    queryQueue.push([{ count: 1 }]);
+    queryQueue.push([candidateRow('row-1', 'auto-approved')]);
+    queryQueue.push([]); // update
+    queryQueue.push([]); // audit insert
+
+    const res = await post(body(true));
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as AnyJson;
+    expect(json.apply).toBe(true);
+    expect(json.demotedToFlagged).toBe(1);
+    expect(dbUpdate).toHaveBeenCalledTimes(1);
+    expect(insertedValuesByTable.adminAuditLog).toMatchObject({
+      action: 'revalidate.apply',
+      targetType: 'cell',
+    });
+  });
+
+  it('truncated: caps the scan at 25 and reports the full candidate count', async () => {
+    mockValidateDraft.mockResolvedValue({ result: AUTO_APPROVED_RESULT, tokenUsage: ZERO_TOKENS });
+    queryQueue.push([{ count: 99 }]);
+    queryQueue.push(
+      Array.from({ length: 25 }, (_, i) => candidateRow(`row-${i}`, 'auto-approved')),
+    );
+
+    const res = await post(body(false));
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as AnyJson;
+    expect(json.truncated).toBe(true);
+    expect(json.totalCandidates).toBe(99);
+    expect(json.scanned).toBe(25);
+  });
+
+  it('never promotes: a flagged row with an auto-approved verdict is a no-change, no audit', async () => {
+    delete insertedValuesByTable.adminAuditLog;
+    mockValidateDraft.mockResolvedValue({ result: AUTO_APPROVED_RESULT, tokenUsage: ZERO_TOKENS });
+    queryQueue.push([{ count: 1 }]);
+    queryQueue.push([candidateRow('row-1', 'flagged')]);
+
+    const res = await post(body(true));
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as AnyJson;
+    expect(json.noChange).toBe(1);
+    expect(json.demotedToFlagged + json.demotedToRejected).toBe(0);
+    expect(insertedValuesByTable.adminAuditLog).toBeUndefined();
   });
 });
 

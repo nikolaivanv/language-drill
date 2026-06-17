@@ -6,6 +6,7 @@ export type AdminAuditAction =
   | 'content.demote'
   | 'content.reject'
   | 'generation.trigger'
+  | 'revalidate.apply'
   | 'invite.create'
   | 'invite.revoke';
 

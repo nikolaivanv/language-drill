@@ -9,17 +9,29 @@ import {
   buildCellKey,
   buildCellKeyFromRow,
   curriculumOrderOf,
+  decideDemotion,
   enumerateCurriculumCells,
   exercises,
   generationJobs,
   invitations,
+  reconstructDraftAndSpec,
   requireEnv,
   targetCellSize,
   theoryTopics,
   usageEvents,
   userExerciseHistory,
+  type CandidateRow,
+  type ReviewStatus,
 } from '@language-drill/db';
-import { normalizeFlaggedReasons } from '@language-drill/shared';
+import {
+  ZERO_USAGE,
+  addUsage,
+  createClaudeClient,
+  estimateCostUsd,
+  validateDraft,
+  type ClaudeUsageBreakdown,
+} from '@language-drill/ai';
+import { formatReason, normalizeFlaggedReasons } from '@language-drill/shared';
 import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
 import { db } from '../db';
 import { resolveCellTarget } from '../generation/cell-targets';
@@ -1028,6 +1040,161 @@ admin.post('/admin/generate', async (c) => {
   });
 
   return c.json({ jobId, status: 'queued' });
+});
+
+// ---------------------------------------------------------------------------
+// POST /admin/revalidate — synchronous, bounded dry-run/apply re-validation
+// ---------------------------------------------------------------------------
+//
+// Re-runs the validator over a cell's `auto-approved` + `flagged` exercises and
+// applies the demote-only policy (`decideDemotion`). `apply:false` (dry-run)
+// computes the demotions but writes nothing and records no audit row;
+// `apply:true` writes one UPDATE per demotion and records a single
+// `revalidate.apply` audit row. The scan is capped at REVALIDATE_MAX_EXERCISES
+// and the cost is capped at REVALIDATE_MAX_COST_USD; both bound the synchronous
+// request so it fits inside the Lambda/API-Gateway timeout.
+
+const REVALIDATE_MAX_EXERCISES = 25;
+const REVALIDATE_MAX_COST_USD = 2.0;
+
+const RevalidateBodySchema = z.object({
+  language: z.enum(['ES', 'DE', 'TR']),
+  level: z.enum(['A1', 'A2', 'B1', 'B2']),
+  type: z.string().min(1),
+  grammarPoint: z.string().min(1),
+  apply: z.boolean(),
+});
+
+admin.post('/admin/revalidate', async (c) => {
+  const raw = await c.req.json().catch(() => null);
+  const parsed = RevalidateBodySchema.safeParse(raw);
+  if (!parsed.success) {
+    return c.json({ error: 'Invalid request body', code: 'VALIDATION_ERROR', details: parsed.error.flatten() }, 400);
+  }
+  const { language, level, type, grammarPoint, apply } = parsed.data;
+
+  const cellKey = buildCellKey({ language, cefrLevel: level, exerciseType: type, grammarPointKey: grammarPoint });
+  const cell = enumerateCurriculumCells(ALL_CURRICULA).find((cc) => cc.cellKey === cellKey);
+  if (!cell) {
+    return c.json({ error: 'Unknown cell', code: 'INVALID_CELL' }, 400);
+  }
+
+  const filter = and(
+    eq(exercises.type, cell.exerciseType),
+    eq(exercises.language, cell.language),
+    eq(exercises.difficulty, cell.cefrLevel),
+    eq(exercises.grammarPointKey, cell.grammarPoint.key),
+    inArray(exercises.reviewStatus, ['auto-approved', 'flagged']),
+  );
+
+  const totalRows = await db.select({ count: count() }).from(exercises).where(filter);
+  const totalCandidates = Number(totalRows[0]?.count ?? 0);
+
+  const candidates = await db
+    .select({
+      id: exercises.id,
+      type: exercises.type,
+      language: exercises.language,
+      difficulty: exercises.difficulty,
+      contentJson: exercises.contentJson,
+      grammarPointKey: exercises.grammarPointKey,
+      topicDomain: exercises.topicDomain,
+      modelId: exercises.modelId,
+      reviewStatus: exercises.reviewStatus,
+    })
+    .from(exercises)
+    .where(filter)
+    .orderBy(exercises.id)
+    .limit(REVALIDATE_MAX_EXERCISES);
+  const truncated = totalCandidates > REVALIDATE_MAX_EXERCISES;
+
+  const client = createClaudeClient(requireEnv('ANTHROPIC_API_KEY'));
+  let usage: ClaudeUsageBreakdown = ZERO_USAGE;
+  let costStopped = false;
+  const demotions: { id: string; from: string; to: string; reasons: string[] }[] = [];
+  let noChange = 0;
+  let skipped = 0;
+  const skipReasons: Record<string, number> = {};
+  const bump = (r: string) => {
+    skipReasons[r] = (skipReasons[r] ?? 0) + 1;
+    skipped++;
+  };
+
+  // Sequential by design: the per-request cap bounds the loop to ≤25 calls, and
+  // serial execution keeps the cost-stop guard and result ordering deterministic
+  // (which the tests rely on). No concurrency benefit worth the nondeterminism.
+  for (const row of candidates) {
+    if (costStopped) {
+      bump('cost-cap');
+      continue;
+    }
+    const recon = reconstructDraftAndSpec(row as CandidateRow, cell.exerciseType);
+    if (!recon.ok) {
+      bump(recon.reason);
+      continue;
+    }
+    let result;
+    let callUsage;
+    try {
+      const r = await validateDraft(client, recon.draft, recon.spec);
+      result = r.result;
+      callUsage = r.tokenUsage;
+    } catch {
+      bump('validator-error');
+      continue;
+    }
+    usage = addUsage(usage, callUsage);
+    if (estimateCostUsd(usage) > REVALIDATE_MAX_COST_USD) costStopped = true;
+
+    const action = decideDemotion(
+      row.reviewStatus as ReviewStatus,
+      result,
+      recon.draft.contentJson,
+      cell.language,
+    );
+    if (action.kind === 'skip') {
+      bump(action.reason);
+      continue;
+    }
+    if (action.kind === 'no-change') {
+      noChange++;
+      continue;
+    }
+    if (apply) {
+      await db
+        .update(exercises)
+        .set({ reviewStatus: action.to, flaggedReasons: action.reasons, qualityScore: result.qualityScore })
+        .where(eq(exercises.id, row.id));
+    }
+    demotions.push({ id: row.id, from: action.from, to: action.to, reasons: action.reasons.map(formatReason) });
+  }
+
+  const demotedToFlagged = demotions.filter((d) => d.to === 'flagged').length;
+  const demotedToRejected = demotions.filter((d) => d.to === 'rejected').length;
+
+  if (apply && demotions.length > 0) {
+    await recordAdminAction(db, {
+      adminUserId: c.get('userId'),
+      action: 'revalidate.apply',
+      targetType: 'cell',
+      targetId: cellKey,
+      metadata: { scanned: candidates.length, demotedToFlagged, demotedToRejected, skipped, estCostUsd: estimateCostUsd(usage) },
+    });
+  }
+
+  return c.json({
+    apply,
+    scanned: candidates.length,
+    noChange,
+    demotedToFlagged,
+    demotedToRejected,
+    skipped,
+    skipReasons,
+    estCostUsd: estimateCostUsd(usage),
+    truncated,
+    totalCandidates,
+    demotions,
+  });
 });
 
 // ---------------------------------------------------------------------------

@@ -51,8 +51,6 @@ import {
   estimateCostUsd,
   validateDraft,
   type ClaudeUsageBreakdown,
-  type ExerciseDraft,
-  type GenerationSpec,
   type ValidationResult,
 } from '@language-drill/ai';
 import {
@@ -60,20 +58,18 @@ import {
   ExerciseType,
   Language,
   formatReason,
-  isClozeContent,
-  type ClozeContent,
-  type ExerciseContent,
-  type GenerationReason,
 } from '@language-drill/shared';
 
 import { createDb, type Db } from '../src/client';
-import { getGrammarPoint } from '../src/curriculum';
 import { exercises } from '../src/schema';
-import { applyDeterministicChecks } from '../src/generation/deterministic-checks';
+import type { ReviewStatus } from '../src/generation/routing';
 import {
-  routeValidationResult,
-  type ReviewStatus,
-} from '../src/generation/routing';
+  decideDemotion,
+  reconstructDraftAndSpec,
+  type CandidateRow,
+  type DemotionAction,
+  type SkipReason,
+} from '../src/generation/revalidation';
 
 import { pLimit } from './p-limit';
 
@@ -83,7 +79,6 @@ import { pLimit } from './p-limit';
 
 const DEFAULT_CONCURRENCY = 4;
 const DEFAULT_MAX_COST_USD = 5.0;
-const ZERO_UUID = '00000000-0000-0000-0000-000000000000';
 
 // ---------------------------------------------------------------------------
 // Args
@@ -169,197 +164,6 @@ export function parseRevalidateArgs(argv: readonly string[]): RevalidateArgs {
   }
 
   return { apply, language, cefrLevel, limit, concurrency, maxCostUsd };
-}
-
-// ---------------------------------------------------------------------------
-// Row → draft / spec reconstruction
-// ---------------------------------------------------------------------------
-
-export type CandidateRow = {
-  id: string;
-  type: string | null;
-  language: string | null;
-  difficulty: string | null;
-  contentJson: unknown;
-  grammarPointKey: string | null;
-  topicDomain: string | null;
-  modelId: string | null;
-  reviewStatus: string;
-};
-
-export type SkipReason =
-  | 'unknown-grammar-point'
-  | 'malformed-content-json'
-  | 'mismatched-language'
-  | 'mismatched-cefr'
-  | 'missing-grammar-point-key';
-
-export type Reconstructed = {
-  ok: true;
-  draft: ExerciseDraft;
-  spec: GenerationSpec;
-};
-
-export type ReconstructFailure = {
-  ok: false;
-  reason: SkipReason;
-  detail: string;
-};
-
-/**
- * Pure helper: take a DB row and produce the (draft, spec) tuple that
- * `validateDraft` expects. Returns a structured failure for rows the
- * validator cannot meaningfully score (e.g. seed rows with no grammar-point
- * key) — the caller logs and moves on.
- *
- * `draft.metadata.{inputTokens, outputTokens, ...}` are zeros because we are
- * not re-running generation; only the validator reads these fields and it
- * ignores them. `inBatchDuplicate=false` for the same reason.
- */
-export function reconstructDraftAndSpec(
-  row: CandidateRow,
-): Reconstructed | ReconstructFailure {
-  if (!row.grammarPointKey) {
-    return {
-      ok: false,
-      reason: 'missing-grammar-point-key',
-      detail: `row ${row.id} has no grammar_point_key (likely a seed row)`,
-    };
-  }
-  const grammarPoint = getGrammarPoint(row.grammarPointKey);
-  if (!grammarPoint) {
-    return {
-      ok: false,
-      reason: 'unknown-grammar-point',
-      detail: `row ${row.id} references unknown grammar_point_key '${row.grammarPointKey}'`,
-    };
-  }
-
-  if (!row.language || !LANGUAGE_VALUES.has(row.language as Language)) {
-    return {
-      ok: false,
-      reason: 'mismatched-language',
-      detail: `row ${row.id} has invalid language '${String(row.language)}'`,
-    };
-  }
-  if (!row.difficulty || !CEFR_VALUES.has(row.difficulty as CefrLevel)) {
-    return {
-      ok: false,
-      reason: 'mismatched-cefr',
-      detail: `row ${row.id} has invalid difficulty '${String(row.difficulty)}'`,
-    };
-  }
-
-  // `contentJson` has the discriminated-union shape; the type guard handles
-  // both well-formed cloze content and any historic shape drift in one pass.
-  const content = row.contentJson as { type?: unknown } | null;
-  if (
-    !content ||
-    typeof content !== 'object' ||
-    content.type !== ExerciseType.CLOZE
-  ) {
-    return {
-      ok: false,
-      reason: 'malformed-content-json',
-      detail: `row ${row.id} content_json is not a cloze exercise`,
-    };
-  }
-  // Narrow via the project's type guard so downstream code sees a real
-  // ClozeContent, not an `unknown` cast.
-  if (!isClozeContent(content as ClozeContent)) {
-    return {
-      ok: false,
-      reason: 'malformed-content-json',
-      detail: `row ${row.id} content_json fails isClozeContent`,
-    };
-  }
-  const clozeContent: ClozeContent = content as ClozeContent;
-
-  const language = row.language as Exclude<Language, Language.EN>;
-  const cefrLevel = row.difficulty as CefrLevel;
-  if (language === Language.EN) {
-    return {
-      ok: false,
-      reason: 'mismatched-language',
-      detail: `row ${row.id} language is EN — cloze exercises target a learner language`,
-    };
-  }
-
-  const draft: ExerciseDraft = {
-    id: row.id,
-    contentJson: clozeContent,
-    metadata: {
-      grammarPointKey: row.grammarPointKey,
-      topicDomain: row.topicDomain,
-      modelId: row.modelId ?? 'unknown',
-      inputTokens: 0,
-      outputTokens: 0,
-      cacheCreationInputTokens: 0,
-      cacheReadInputTokens: 0,
-      inBatchDuplicate: false,
-    },
-  };
-  const spec: GenerationSpec = {
-    language,
-    cefrLevel,
-    exerciseType: ExerciseType.CLOZE,
-    grammarPoint,
-    topicDomain: row.topicDomain,
-    // `count` and `batchSeed` are unused by the validator (they only shape
-    // the generator's prompt). Keep them present for type-completeness.
-    count: 1,
-    batchSeed: ZERO_UUID,
-  };
-  return { ok: true, draft, spec };
-}
-
-// ---------------------------------------------------------------------------
-// Demotion policy
-// ---------------------------------------------------------------------------
-
-export type DemotionAction =
-  | { kind: 'no-change'; from: ReviewStatus; to: ReviewStatus }
-  | { kind: 'demote'; from: ReviewStatus; to: ReviewStatus; reasons: GenerationReason[] }
-  | { kind: 'skip'; from: ReviewStatus; reason: 'manual-approved' | 'rejected' };
-
-export function decideDemotion(
-  currentStatus: ReviewStatus,
-  result: ValidationResult,
-  content?: ExerciseContent,
-  language?: Language,
-): DemotionAction {
-  if (currentStatus === 'manual-approved') {
-    return { kind: 'skip', from: currentStatus, reason: 'manual-approved' };
-  }
-  if (currentStatus === 'rejected') {
-    return { kind: 'skip', from: currentStatus, reason: 'rejected' };
-  }
-
-  // Same deterministic gate the live generation path uses (R3.1
-  // single-source-of-truth). Optional content/language keep the bare
-  // 2-arg callers (older tests) working — they get pure LLM routing.
-  const routed =
-    content && language
-      ? applyDeterministicChecks(routeValidationResult(result), content, language)
-      : routeValidationResult(result);
-
-  // Demote-only ranking: rejected < flagged < auto-approved.
-  const rank: Record<ReviewStatus, number> = {
-    rejected: 0,
-    flagged: 1,
-    'auto-approved': 2,
-    'manual-approved': 3,
-  };
-  const newStatus = routed.reviewStatus;
-  if (rank[newStatus] < rank[currentStatus]) {
-    return {
-      kind: 'demote',
-      from: currentStatus,
-      to: newStatus,
-      reasons: routed.flaggedReasons,
-    };
-  }
-  return { kind: 'no-change', from: currentStatus, to: currentStatus };
 }
 
 // ---------------------------------------------------------------------------
@@ -522,7 +326,7 @@ async function main(): Promise<void> {
           return;
         }
 
-        const recon = reconstructDraftAndSpec(row);
+        const recon = reconstructDraftAndSpec(row, ExerciseType.CLOZE);
         if (!recon.ok) {
           outcomes[idx] = { kind: 'skip', row, reason: recon.reason, detail: recon.detail };
           return;
