@@ -530,7 +530,7 @@ const CurriculumQuerySchema = z.object({
 admin.get('/admin/curriculum', async (c) => {
   const parsed = CurriculumQuerySchema.safeParse(c.req.query());
   if (!parsed.success) {
-    return c.json({ error: 'VALIDATION_ERROR', details: parsed.error.flatten() }, 400);
+    return c.json({ error: 'Invalid query parameters', code: 'VALIDATION_ERROR', details: parsed.error.flatten() }, 400);
   }
   const { language, level, kind } = parsed.data;
 

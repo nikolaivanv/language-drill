@@ -1508,7 +1508,7 @@ describe('GET /admin/curriculum', () => {
   it('rejects a bad enum with 400 VALIDATION_ERROR', async () => {
     const res = await app.request('/admin/curriculum?language=FR', undefined, adminEnv);
     expect(res.status).toBe(400);
-    expect(((await res.json()) as AnyJson).error).toBe('VALIDATION_ERROR');
+    expect(((await res.json()) as AnyJson).code).toBe('VALIDATION_ERROR');
   });
 
   it('returns the full curriculum with versions when unfiltered', async () => {
