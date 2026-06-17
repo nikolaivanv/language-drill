@@ -179,7 +179,7 @@ export function PoolCellDetail({ item, fetchFn }: { item: PoolStatusItem; fetchF
           <p className="text-[12px] text-ink-soft">
             scanned {revalSummary.scanned} · {revalSummary.apply ? 'demoted' : 'would demote'} → flagged{' '}
             {revalSummary.demotedToFlagged} · → rejected {revalSummary.demotedToRejected} · skipped{' '}
-            {revalSummary.skipped} · est ${revalSummary.estCostUsd}
+            {revalSummary.skipped} · est ${revalSummary.estCostUsd.toFixed(4)}
           </p>
         ) : null}
         {revalSummary?.truncated ? (
