@@ -114,11 +114,15 @@ export function coverageAxesFor(
   const monitoring = new Set<CoverageAxis>();
   if (exerciseType === ExerciseType.VOCAB_RECALL) {
     monitoring.add("wordClass");
+  } else if (exerciseType === ExerciseType.CONJUGATION) {
+    // A conjugation drill produces a single inflected wordform — there is no
+    // sentence, so sentenceType (declarative/interrogative/imperative) is
+    // meaningless. Monitor polarity only; person comes from the cell's spec.
+    monitoring.add("polarity");
   } else if (
     exerciseType === ExerciseType.CLOZE ||
     exerciseType === ExerciseType.TRANSLATION ||
-    exerciseType === ExerciseType.SENTENCE_CONSTRUCTION ||
-    exerciseType === ExerciseType.CONJUGATION
+    exerciseType === ExerciseType.SENTENCE_CONSTRUCTION
   ) {
     monitoring.add("polarity");
     monitoring.add("sentenceType");
