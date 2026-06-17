@@ -12,7 +12,10 @@ import { FlagExerciseControl } from '../flag-exercise-control';
 
 const fetchFn = vi.fn();
 
-beforeEach(() => { mockMutate.mockReset(); });
+beforeEach(() => {
+  mockMutate.mockReset();
+  mockUseFlagExercise.mockClear();
+});
 
 describe('FlagExerciseControl', () => {
   it('opens the dialog and submits a category + note', () => {

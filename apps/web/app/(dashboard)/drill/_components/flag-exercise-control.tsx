@@ -46,6 +46,7 @@ export function FlagExerciseControl({ exerciseId, submissionId, fetchFn }: FlagE
     <div className="mt-s-3 rounded-lg bg-paper-2 p-s-4">
       <p className="t-small font-medium">What&apos;s wrong with this exercise?</p>
       <fieldset className="mt-s-3 flex flex-col gap-s-2">
+        <legend className="sr-only">What&apos;s wrong with this exercise?</legend>
         {CATEGORIES.map((cat) => (
           <label key={cat.value} className="t-small flex items-center gap-s-2">
             <input
