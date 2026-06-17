@@ -394,6 +394,7 @@ export {
   FlagExerciseResponseSchema, type FlagExerciseResponse,
   UserFlagQueueItemSchema, type UserFlagQueueItem,
   UserFlagsResponseSchema, type UserFlagsResponse,
+  ResolveUserFlagOutcomeSchema,
   ResolveUserFlagResponseSchema, type ResolveUserFlagOutcome,
 } from './schemas/user-flags';
 export {
