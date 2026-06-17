@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, beforeAll, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll, afterAll, afterEach } from 'vitest';
 import { Hono } from 'hono';
 import {
   ALL_CURRICULA,
@@ -1186,9 +1186,17 @@ describe('GET /admin/pool-cell', () => {
 // ---------------------------------------------------------------------------
 
 describe('POST /admin/generate', () => {
+  let prevRegion: string | undefined;
+  let prevQueueUrl: string | undefined;
   beforeAll(() => {
+    prevRegion = process.env.AWS_REGION;
+    prevQueueUrl = process.env.GENERATION_QUEUE_URL;
     process.env.AWS_REGION = 'us-east-1';
     process.env.GENERATION_QUEUE_URL = 'https://sqs.test/queue';
+  });
+  afterAll(() => {
+    if (prevRegion === undefined) delete process.env.AWS_REGION; else process.env.AWS_REGION = prevRegion;
+    if (prevQueueUrl === undefined) delete process.env.GENERATION_QUEUE_URL; else process.env.GENERATION_QUEUE_URL = prevQueueUrl;
   });
 
   it('enqueues an admin generation job for a valid cell', async () => {

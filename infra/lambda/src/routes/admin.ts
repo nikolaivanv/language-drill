@@ -881,6 +881,10 @@ admin.post('/admin/generate', async (c) => {
     return c.json({ error: 'Unknown cell', code: 'INVALID_CELL' }, 400);
   }
 
+  // Best-effort in-flight guard: the consumer inserts the generation_jobs row only after it
+  // dequeues, so two near-simultaneous admin requests for the same cell can both pass this
+  // check. The UI's pending-disable covers that sub-second window; checkAuditRowState in the
+  // consumer is the idempotency backstop. Accepted for a single-admin tool.
   const inFlight = await db
     .select({ id: generationJobs.id })
     .from(generationJobs)
