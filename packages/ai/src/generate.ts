@@ -486,6 +486,14 @@ export type GenerationSpec = {
    */
   priorPoolSurfaces?: readonly string[];
   /**
+   * Grammar points at or below this cell's CEFR level — the learner's "level
+   * scope", resolved by the caller via `grammarPointsAtOrBelow` (the curriculum
+   * lives in `@language-drill/db`, which this package must not depend on) and
+   * threaded through to both the generation and validation prompts. Formatted
+   * by `renderLevelScopeSection` for grammar-anchored types only.
+   */
+  levelScopePoints?: readonly GrammarPoint[];
+  /**
    * Per-ordinal frequency seed (R5): `seedWords[ordinal]` is a content-word
    * lemma the generator should build the draft around, or `null` for an
    * unseeded ordinal. Injected into the per-draft USER prompt only (never the
@@ -1089,6 +1097,7 @@ export async function generateOneDraft(
     exerciseType: spec.exerciseType,
     grammarPoint: spec.grammarPoint,
     priorPoolSurfaces: spec.priorPoolSurfaces,
+    levelScopePoints: spec.levelScopePoints,
   };
 
   // Empty `recentStems` — intra-batch diversity feedback was dropped when the

@@ -12,6 +12,7 @@ import {
   deCurriculum,
   esCurriculum,
   getGrammarPoint,
+  grammarPointsAtOrBelow,
   trCurriculum,
 } from './index';
 import type { GrammarPoint } from './types';
@@ -487,5 +488,37 @@ describe('coverageSpec invariants', () => {
     } catch (e) {
       expect((e as Error).message).not.toMatch(/coverageSpec|duplicate axis|illegal value|only valid|positive integer/);
     }
+  });
+});
+
+describe('grammarPointsAtOrBelow', () => {
+  it('returns TR A1+A2 grammar points (only) for TR at A2', () => {
+    const pts = grammarPointsAtOrBelow('TR', 'A2');
+    expect(pts.length).toBeGreaterThanOrEqual(40); // 26 A1 + 14 A2
+    expect(pts.every((p) => p.kind === 'grammar')).toBe(true);
+    expect(pts.every((p) => p.language === 'TR')).toBe(true);
+    expect(pts.every((p) => p.cefrLevel === 'A1' || p.cefrLevel === 'A2')).toBe(true);
+    expect(pts.some((p) => p.key.includes('-vocab-') || p.key.includes('-dictation') || p.key.includes('-fw-'))).toBe(false);
+  });
+
+  it('is inclusive of the target level and excludes higher levels', () => {
+    const a1 = grammarPointsAtOrBelow('TR', 'A1');
+    expect(a1.every((p) => p.cefrLevel === 'A1')).toBe(true);
+    expect(a1.some((p) => p.cefrLevel === 'A2')).toBe(false);
+    const a2 = grammarPointsAtOrBelow('TR', 'A2');
+    expect(a2.length).toBeGreaterThan(a1.length);
+  });
+
+  it('returns [] for an out-of-round level', () => {
+    expect(grammarPointsAtOrBelow('TR', 'C1')).toEqual([]);
+    expect(grammarPointsAtOrBelow('TR', 'C2')).toEqual([]);
+  });
+
+  it('scopes by language', () => {
+    const tr = grammarPointsAtOrBelow('TR', 'B2');
+    expect(tr.length).toBeGreaterThan(0);
+    expect(tr.every((p) => p.language === 'TR')).toBe(true);
+    // None of TR's scope leaks from ES/DE.
+    expect(tr.some((p) => p.language === 'ES' || p.language === 'DE')).toBe(false);
   });
 });
