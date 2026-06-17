@@ -1,9 +1,10 @@
 import { randomInt, randomUUID } from 'node:crypto';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { and, asc, count, desc, eq, gte, inArray, isNotNull, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, inArray, isNotNull, sql, type SQL } from 'drizzle-orm';
 import {
   ALL_CURRICULA,
+  adminAuditLog,
   buildCellKey,
   buildCellKeyFromRow,
   enumerateCurriculumCells,
@@ -1069,6 +1070,57 @@ admin.post('/admin/invites/:id/revoke', async (c) => {
   });
 
   return c.json({ ok: true }, 200);
+});
+
+// ---------------------------------------------------------------------------
+// GET /admin/audit — paginated, filterable read-only audit log
+// ---------------------------------------------------------------------------
+
+const AuditQuerySchema = z.object({
+  action: z.string().optional(),
+  targetType: z.string().optional(),
+  adminUserId: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(200).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+});
+
+admin.get('/admin/audit', async (c) => {
+  const parsed = AuditQuerySchema.safeParse(c.req.query());
+  if (!parsed.success) {
+    return c.json({ error: 'Invalid query parameters', code: 'VALIDATION_ERROR', details: parsed.error.flatten() }, 400);
+  }
+  const { action, targetType, adminUserId, limit, offset } = parsed.data;
+  const conds: SQL[] = [];
+  if (action) conds.push(eq(adminAuditLog.action, action));
+  if (targetType) conds.push(eq(adminAuditLog.targetType, targetType));
+  if (adminUserId) conds.push(eq(adminAuditLog.adminUserId, adminUserId));
+  const where = conds.length > 0 ? and(...conds) : undefined;
+
+  const [rows, totalRows] = await Promise.all([
+    db.select({
+      id: adminAuditLog.id,
+      adminUserId: adminAuditLog.adminUserId,
+      action: adminAuditLog.action,
+      targetType: adminAuditLog.targetType,
+      targetId: adminAuditLog.targetId,
+      metadata: adminAuditLog.metadata,
+      createdAt: adminAuditLog.createdAt,
+    }).from(adminAuditLog).where(where)
+      .orderBy(desc(adminAuditLog.createdAt))
+      .limit(limit ?? 50).offset(offset ?? 0),
+    db.select({ count: count() }).from(adminAuditLog).where(where),
+  ]);
+
+  const items = rows.map((r) => ({
+    id: r.id,
+    adminUserId: r.adminUserId,
+    action: r.action,
+    targetType: r.targetType,
+    targetId: r.targetId,
+    metadata: r.metadata,
+    createdAt: r.createdAt ? r.createdAt.toISOString() : null,
+  }));
+  return c.json({ items, total: Number(totalRows[0]?.count ?? 0) });
 });
 
 export default admin;
