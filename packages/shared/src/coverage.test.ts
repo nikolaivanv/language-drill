@@ -71,6 +71,18 @@ describe("coverageAxesFor", () => {
   it("dictation has no coverage axes", () => {
     expect(coverageAxesFor(ExerciseType.DICTATION, undefined)).toEqual([]);
   });
+
+  it("conjugation monitors polarity (no sentenceType) and picks up the spec person axis", () => {
+    const spec = { axes: [{ name: "person" as const, floors: { "1pl": 5 } }] };
+    expect(coverageAxesFor(ExerciseType.CONJUGATION, spec)).toEqual([
+      "person",
+      "polarity",
+    ]);
+  });
+
+  it("conjugation with no spec → polarity only", () => {
+    expect(coverageAxesFor(ExerciseType.CONJUGATION, undefined)).toEqual(["polarity"]);
+  });
 });
 
 describe("pickCoverageTags", () => {

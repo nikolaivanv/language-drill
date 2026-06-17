@@ -27,7 +27,7 @@ function setup(overrides: Partial<React.ComponentProps<typeof DrillHub>> = {}) {
 }
 
 describe('DrillHub', () => {
-  it('renders the today-status strip and three launchers', () => {
+  it('renders the today-status strip and the launchers', () => {
     setup();
     expect(screen.getByTestId('today-status')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /quick drill/i })).toBeInTheDocument();
@@ -35,6 +35,9 @@ describe('DrillHub', () => {
     // Free writing is a link to the standalone flow.
     const fw = screen.getByRole('link', { name: /free writing/i });
     expect(fw).toHaveAttribute('href', '/drill/free-writing');
+    // Conjugation is an opt-in standalone warm-up.
+    const conj = screen.getByRole('link', { name: /conjugation/i });
+    expect(conj).toHaveAttribute('href', '/drill/conjugation');
   });
 
   it('fires onStartQuick / onStartDictation when the launchers are clicked', () => {

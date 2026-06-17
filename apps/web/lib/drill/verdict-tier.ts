@@ -53,6 +53,18 @@ export function vocabVerdict(
   }
 }
 
+export function conjugationVerdict(score: number): VerdictResult {
+  if (score === 1.0) {
+    return { tier: 'sage', label: 'exact' };
+  } else if (score >= CORRECT_THRESHOLD) {
+    return { tier: 'yellow', label: 'close · check the form' };
+  } else if (score >= 0.4) {
+    return { tier: 'yellow', label: 'off — check the paradigm' };
+  } else {
+    return { tier: 'terracotta', label: 'wrong form' };
+  }
+}
+
 export function dictationVerdict(score: number): VerdictResult {
   if (score >= 0.95) {
     return { tier: 'sage', label: 'oído fino' };

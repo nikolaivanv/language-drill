@@ -50,6 +50,12 @@ describe('assertValidCellKey', () => {
   it("accepts a free_writing cell key", () => {
     expect(() => assertValidCellKey("es:b2:free_writing:es-b2-fw-remote-work")).not.toThrow();
   });
+
+  it('accepts a conjugation cell key', () => {
+    expect(() =>
+      assertValidCellKey('tr:a2:conjugation:tr-a2-to-be-buffer-verbs'),
+    ).not.toThrow();
+  });
 });
 
 describe('buildCellKey', () => {

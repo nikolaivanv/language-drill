@@ -3,8 +3,8 @@ import { Hono } from 'hono';
 import type { Context } from 'hono';
 import { z } from 'zod';
 import { eq, and, gte, count } from 'drizzle-orm';
-import { Language, CefrLevel, ExerciseType, isFreeWritingContent, EXERCISE_ANSWER_MAX_CHARS } from '@language-drill/shared';
-import type { DictationContent, ExerciseContent, FreeWritingContent } from '@language-drill/shared';
+import { Language, CefrLevel, ExerciseType, isFreeWritingContent, isConjugationContent, gradeFluencyAnswer, EXERCISE_ANSWER_MAX_CHARS } from '@language-drill/shared';
+import type { DictationContent, ExerciseContent, FreeWritingContent, EvaluationResult } from '@language-drill/shared';
 import {
   exercises as exercisesTable,
   practiceSessions,
@@ -77,6 +77,74 @@ export const SubmitAnswerSchema = z.object({
 const exercises = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 exercises.use('/exercises/*', authMiddleware);
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Best-effort per-grammar-point Bayesian mastery update.
+ * A failure here must never fail the caller — errors are swallowed after logging.
+ */
+async function applyGrammarMastery(opts: {
+  userId: string;
+  language: Language;
+  grammarPointKey: string | null;
+  difficulty: CefrLevel;
+  score: number;
+}): Promise<void> {
+  if (!opts.grammarPointKey) return;
+  try {
+    const at = new Date();
+    const existing = await db
+      .select({
+        masteryScore: userGrammarMastery.masteryScore,
+        confidence: userGrammarMastery.confidence,
+        evidenceCount: userGrammarMastery.evidenceCount,
+        lastPracticedAt: userGrammarMastery.lastPracticedAt,
+      })
+      .from(userGrammarMastery)
+      .where(
+        and(
+          eq(userGrammarMastery.userId, opts.userId),
+          eq(userGrammarMastery.grammarPointKey, opts.grammarPointKey),
+        ),
+      )
+      .limit(1);
+
+    const next = updateMastery(existing[0] ?? null, {
+      score: opts.score,
+      difficulty: opts.difficulty,
+      at,
+    });
+
+    await db
+      .insert(userGrammarMastery)
+      .values({
+        userId: opts.userId,
+        language: opts.language,
+        grammarPointKey: opts.grammarPointKey,
+        masteryScore: next.masteryScore,
+        confidence: next.confidence,
+        evidenceCount: next.evidenceCount,
+        lastPracticedAt: next.lastPracticedAt,
+        updatedAt: at,
+      })
+      .onConflictDoUpdate({
+        target: [userGrammarMastery.userId, userGrammarMastery.grammarPointKey],
+        set: {
+          masteryScore: next.masteryScore,
+          confidence: next.confidence,
+          evidenceCount: next.evidenceCount,
+          lastPracticedAt: next.lastPracticedAt,
+          updatedAt: at,
+          language: opts.language,
+        },
+      });
+  } catch (masteryErr) {
+    console.error('[submit] mastery update failed (non-fatal):', masteryErr);
+  }
+}
 
 // ---------------------------------------------------------------------------
 // GET /exercises — return a random exercise matching the given filters
@@ -243,6 +311,65 @@ exercises.post('/exercises/:id/submit', async (c) => {
     }
   }
 
+  // Deterministic, zero-Claude grading for conjugation drills.
+  // No ai_evaluation bucket spend, no capacity/daily-cap gate, no Claude call.
+  if (exercise.type === ExerciseType.CONJUGATION) {
+    const content = exercise.contentJson as ExerciseContent;
+    if (!isConjugationContent(content)) {
+      return c.json(
+        { error: 'Conjugation exercise content is malformed', code: 'EXERCISE_CONTENT_INVALID' },
+        500,
+      );
+    }
+    const correct = gradeFluencyAnswer(content, userAnswer);
+    const score = correct ? 1 : 0;
+    const result: EvaluationResult = {
+      score,
+      grammarAccuracy: score,
+      // No vocabulary axis for a conjugation drill (it maps to the grammar
+      // radar axis). We echo the exercise difficulty as a neutral placeholder
+      // rather than a learner-derived vocabulary estimate.
+      vocabularyRange: exercise.difficulty ?? '',
+      taskAchievement: score,
+      feedback: correct
+        ? `Correct — ${content.targetForm}. ${content.breakdown}`
+        : `Not quite. The correct form is ${content.targetForm}. ${content.breakdown}`,
+      errors: correct
+        ? []
+        : [
+            {
+              type: 'grammar',
+              severity: 'major',
+              text: userAnswer,
+              correction: content.targetForm,
+              explanation: content.breakdown,
+            },
+          ],
+      estimatedCefrEvidence: exercise.difficulty ?? '',
+    };
+
+    const submissionId = randomUUID();
+    await db.insert(userExerciseHistory).values({
+      id: submissionId,
+      userId,
+      exerciseId: id,
+      sessionId,
+      score,
+      responseJson: { userAnswer, evaluation: result },
+      evaluatedAt: new Date(),
+    });
+
+    await applyGrammarMastery({
+      userId,
+      language: exercise.language as Language,
+      grammarPointKey: exercise.grammarPointKey,
+      difficulty: exercise.difficulty as CefrLevel,
+      score,
+    });
+
+    return c.json(result);
+  }
+
   // 3. Resolve tier, run the global brake, then the per-user daily cap.
   const plan = await getEffectivePlan(userId);
 
@@ -395,58 +522,13 @@ exercises.post('/exercises/:id/submit', async (c) => {
 
     // Best-effort per-grammar-point mastery update. A failure here must never
     // fail the submission — the authoritative signal is the history row above.
-    if (exercise.grammarPointKey) {
-      try {
-        const at = new Date();
-        const existing = await db
-          .select({
-            masteryScore: userGrammarMastery.masteryScore,
-            confidence: userGrammarMastery.confidence,
-            evidenceCount: userGrammarMastery.evidenceCount,
-            lastPracticedAt: userGrammarMastery.lastPracticedAt,
-          })
-          .from(userGrammarMastery)
-          .where(
-            and(
-              eq(userGrammarMastery.userId, userId),
-              eq(userGrammarMastery.grammarPointKey, exercise.grammarPointKey),
-            ),
-          )
-          .limit(1);
-
-        const next = updateMastery(existing[0] ?? null, {
-          score: result.score,
-          difficulty: exercise.difficulty as CefrLevel,
-          at,
-        });
-
-        await db
-          .insert(userGrammarMastery)
-          .values({
-            userId,
-            language: exercise.language as Language,
-            grammarPointKey: exercise.grammarPointKey,
-            masteryScore: next.masteryScore,
-            confidence: next.confidence,
-            evidenceCount: next.evidenceCount,
-            lastPracticedAt: next.lastPracticedAt,
-            updatedAt: at,
-          })
-          .onConflictDoUpdate({
-            target: [userGrammarMastery.userId, userGrammarMastery.grammarPointKey],
-            set: {
-              masteryScore: next.masteryScore,
-              confidence: next.confidence,
-              evidenceCount: next.evidenceCount,
-              lastPracticedAt: next.lastPracticedAt,
-              updatedAt: at,
-              language: exercise.language as Language,
-            },
-          });
-      } catch (masteryErr) {
-        console.error('[submit] mastery update failed (non-fatal):', masteryErr);
-      }
-    }
+    await applyGrammarMastery({
+      userId,
+      language: exercise.language as Language,
+      grammarPointKey: exercise.grammarPointKey,
+      difficulty: exercise.difficulty as CefrLevel,
+      score: result.score,
+    });
 
     return c.json(result);
   } catch (err) {

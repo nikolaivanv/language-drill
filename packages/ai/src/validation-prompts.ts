@@ -17,6 +17,7 @@
 import {
   type CefrLevel,
   type ClozeContent,
+  type ConjugationContent,
   coverageAxesFor,
   type CoverageAxis,
   ExerciseType,
@@ -64,7 +65,7 @@ function renderBulletList(items: readonly string[]): string {
 // VALIDATION_SYSTEM_PROMPT_TEMPLATE. Drives the Langfuse trace
 // `promptVersion` tag — dashboards cohort old vs. new prompt traces by
 // this string.
-export const VALIDATION_PROMPT_VERSION = "validate@2026-06-13";
+export const VALIDATION_PROMPT_VERSION = "validate@2026-06-17";
 
 export const VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language exercises for {{language}} learners at CEFR {{cefrLevel}}. Your job is to validate one already-generated exercise that targets the grammar point: {{grammarPointName}}.
 
@@ -273,6 +274,31 @@ ${registerLine}
 Score the dimensions in the system prompt. Treat the exercise as well-formed only if the prompt is unambiguous and solvable at the target level, AND every model answer genuinely satisfies the prompt (keywords used / goal met / target structure used) at the target CEFR level. If a model answer does not exercise the grammar point, set grammarPointMatch=false. Submit via the tool.`;
 }
 
+function buildConjugationValidationUserPrompt(
+  content: ConjugationContent,
+  spec: GenerationSpec,
+): string {
+  return `## Validate this Conjugation/Inflection exercise
+
+**Spec:** language=${spec.language}, cefrLevel=${spec.cefrLevel}, grammar point=${spec.grammarPoint.key}
+**Instructions:** ${content.instructions}
+**Lemma:** ${content.lemma} (${content.lemmaGloss})
+**Feature bundle:** ${content.featureBundle}
+**Proposed correct form:** ${content.targetForm}
+**Acceptable variants:** ${(content.acceptableForms ?? []).join(", ") || "(none)"}
+**Breakdown shown to the learner:** ${content.breakdown}
+**Example sentences:** ${content.exampleSentences.join(" / ")}
+
+Check, and reject (low quality) if any fails:
+1. Is "${content.targetForm}" the EXACTLY correct ${spec.language} form for that lemma + feature bundle, including all diacritics? An incorrect stored form mis-grades every learner.
+2. Does the feature bundle correspond to the grammar point's tense/mood (it must not drift to a different tense)?
+3. Are all "acceptable variants" genuinely fully-correct alternatives (not near-misses or common errors)?
+4. Does the feature bundle avoid leaking the answer, and do the example sentences use the form correctly and naturally at this level?
+5. Is the breakdown accurate?
+
+Score the dimensions in the system prompt and submit via the tool.`;
+}
+
 // Per-axis instruction copy for the realized-coverage tags. Appended to the
 // (uncached, per-draft) user prompt only for the axes applicable to the cell —
 // so non-applicable cells pay zero tokens and the CACHED system prompt stays
@@ -326,6 +352,9 @@ export function buildValidationUserPrompt(
       break;
     case ExerciseType.SENTENCE_CONSTRUCTION:
       base = buildSentenceConstructionValidationUserPrompt(content, spec);
+      break;
+    case ExerciseType.CONJUGATION:
+      base = buildConjugationValidationUserPrompt(content, spec);
       break;
     case ExerciseType.DICTATION:
       throw new Error(

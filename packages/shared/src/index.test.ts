@@ -74,18 +74,19 @@ describe("ApiError type", () => {
 // ---------------------------------------------------------------------------
 
 describe("ExerciseType enum", () => {
-  it("has exactly 6 values", () => {
+  it("has exactly 7 values", () => {
     const values = Object.values(ExerciseType);
-    expect(values).toHaveLength(6);
+    expect(values).toHaveLength(7);
   });
 
-  it("contains CLOZE, TRANSLATION, VOCAB_RECALL, SENTENCE_CONSTRUCTION, DICTATION, FREE_WRITING", () => {
+  it("contains CLOZE, TRANSLATION, VOCAB_RECALL, SENTENCE_CONSTRUCTION, DICTATION, FREE_WRITING, CONJUGATION", () => {
     expect(ExerciseType.CLOZE).toBe("cloze");
     expect(ExerciseType.TRANSLATION).toBe("translation");
     expect(ExerciseType.VOCAB_RECALL).toBe("vocab_recall");
     expect(ExerciseType.SENTENCE_CONSTRUCTION).toBe("sentence_construction");
     expect(ExerciseType.DICTATION).toBe("dictation");
     expect(ExerciseType.FREE_WRITING).toBe("free_writing");
+    expect(ExerciseType.CONJUGATION).toBe("conjugation");
   });
 });
 

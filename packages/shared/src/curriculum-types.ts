@@ -95,6 +95,16 @@ export type GrammarPoint = Readonly<{
    */
   sentenceConstructionSuitable?: boolean;
   /**
+   * Optional opt-in that ADDS a `conjugation` cell for this grammar point in
+   * `enumerateCurriculumCells`. Absent/`false` ⇒ no conjugation cell (today's
+   * behaviour). Set this for morphology-heavy points whose forms are worth
+   * drilling in isolation (irregular paradigms, agglutinative suffix stacks).
+   * Pair with a `coverageSpec` person axis so the drill varies person/number.
+   * Only valid on `kind: 'grammar'` entries (enforced by the curriculum
+   * invariant in `assertCurriculumInvariants`).
+   */
+  conjugationSuitable?: boolean;
+  /**
    * Declarative coverage spec (Pool Coverage Controller, Phase 2) — which
    * categorical axes a diverse approved set should vary along, and an absolute
    * min approved-count floor per value. Replaces the old `personRotation` flag:

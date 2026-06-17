@@ -197,6 +197,13 @@ export function assertCurriculumInvariants(
       );
     }
 
+    // 9f. conjugationSuitable is only meaningful on real grammar points.
+    if (entry.conjugationSuitable && entry.kind !== 'grammar') {
+      throw new Error(
+        `Curriculum invariant violated: conjugationSuitable set on non-grammar kind '${entry.kind}' ('${entry.key}')`,
+      );
+    }
+
     // 9e. freeWriting config is present iff the entry is a free-writing umbrella.
     if (entry.kind === 'free-writing' && !entry.freeWriting) {
       throw new Error(

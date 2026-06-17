@@ -39,7 +39,7 @@ describe('enumerateCurriculumCells', () => {
     expect(cells.length).toBeGreaterThan(0);
   });
 
-  it('produces 2 cells per grammar entry (cloze + translation), 1 per vocab entry (vocab_recall), and 1 per dictation umbrella (dictation), minus one per clozeUnsuitable point, plus one per sentenceConstructionSuitable point', () => {
+  it('produces 2 cells per grammar entry (cloze + translation), 1 per vocab entry (vocab_recall), and 1 per dictation umbrella (dictation), minus one per clozeUnsuitable point, plus one per sentenceConstructionSuitable point, plus one per conjugationSuitable point', () => {
     const grammarCount = ALL_CURRICULA.filter((g) => g.kind === 'grammar').length;
     const vocabCount = ALL_CURRICULA.filter((g) => g.kind === 'vocab').length;
     // A dictation umbrella yields exactly one cell (dictation only).
@@ -50,8 +50,9 @@ describe('enumerateCurriculumCells', () => {
     // so each flagged point drops the total by exactly one.
     const flaggedCount = ALL_CURRICULA.filter((g) => g.clozeUnsuitable === true).length;
     const scCount = ALL_CURRICULA.filter((g) => g.sentenceConstructionSuitable === true).length;
+    const conjugationCount = ALL_CURRICULA.filter((g) => g.conjugationSuitable === true).length;
     expect(cells).toHaveLength(
-      grammarCount * 2 + vocabCount + dictationCount + fwCount - flaggedCount + scCount,
+      grammarCount * 2 + vocabCount + dictationCount + fwCount - flaggedCount + scCount + conjugationCount,
     );
   });
 
@@ -63,10 +64,10 @@ describe('enumerateCurriculumCells', () => {
     }
   });
 
-  it('pairs grammar points only with cloze, translation, or sentence_construction (never vocab_recall)', () => {
+  it('pairs grammar points only with cloze, translation, sentence_construction, or conjugation (never vocab_recall)', () => {
     for (const cell of cells) {
       if (cell.grammarPoint.kind === 'grammar') {
-        expect([ExerciseType.CLOZE, ExerciseType.TRANSLATION, ExerciseType.SENTENCE_CONSTRUCTION]).toContain(
+        expect([ExerciseType.CLOZE, ExerciseType.TRANSLATION, ExerciseType.SENTENCE_CONSTRUCTION, ExerciseType.CONJUGATION]).toContain(
           cell.exerciseType,
         );
       }
@@ -186,6 +187,58 @@ describe('enumerateCurriculumCells — kind:free-writing umbrellas', () => {
     const cells = enumerateCurriculumCells([entry]);
     expect(cells.map((c) => c.exerciseType)).toEqual([ExerciseType.FREE_WRITING]);
     expect(cells[0].cellKey).toBe("es:b2:free_writing:es-b2-fw-remote-work");
+  });
+});
+
+describe('enumerateCurriculumCells — conjugationSuitable flag', () => {
+  it('adds a conjugation cell for a flagged grammar point (also keeps cloze + translation)', () => {
+    const point = makeGrammarPoint({
+      key: 'tr-a2-synthetic-conj',
+      kind: 'grammar',
+      conjugationSuitable: true,
+    });
+    const cells = enumerateCurriculumCells([point]);
+    const types = cells.map((c) => c.exerciseType);
+    expect(types).toContain(ExerciseType.CONJUGATION);
+    expect(types).toEqual(
+      expect.arrayContaining([ExerciseType.CLOZE, ExerciseType.TRANSLATION]),
+    );
+  });
+
+  it('omits the conjugation cell when the flag is absent', () => {
+    const point = makeGrammarPoint({ key: 'tr-a2-synthetic-noconj', kind: 'grammar' });
+    const cells = enumerateCurriculumCells([point]);
+    expect(cells.some((c) => c.exerciseType === ExerciseType.CONJUGATION)).toBe(false);
+  });
+
+  it('combines with clozeUnsuitable: translation + conjugation only', () => {
+    const point = makeGrammarPoint({
+      key: 'tr-a2-synthetic-cloze-conj',
+      kind: 'grammar',
+      clozeUnsuitable: true,
+      conjugationSuitable: true,
+    });
+    const cells = enumerateCurriculumCells([point]);
+    expect(cells.map((c) => c.exerciseType)).toEqual([
+      ExerciseType.TRANSLATION,
+      ExerciseType.CONJUGATION,
+    ]);
+  });
+
+  it('combines with sentenceConstructionSuitable: cloze + translation + sentence_construction + conjugation', () => {
+    const point = makeGrammarPoint({
+      key: 'tr-a2-synthetic-sc-conj',
+      kind: 'grammar',
+      sentenceConstructionSuitable: true,
+      conjugationSuitable: true,
+    });
+    const cells = enumerateCurriculumCells([point]);
+    expect(cells.map((c) => c.exerciseType)).toEqual([
+      ExerciseType.CLOZE,
+      ExerciseType.TRANSLATION,
+      ExerciseType.SENTENCE_CONSTRUCTION,
+      ExerciseType.CONJUGATION,
+    ]);
   });
 });
 

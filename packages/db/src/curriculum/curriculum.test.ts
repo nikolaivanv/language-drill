@@ -158,6 +158,37 @@ describe('curriculum sentenceConstructionSuitable flag', () => {
   });
 });
 
+describe('curriculum conjugationSuitable flag', () => {
+  it('throws when a vocab umbrella is flagged conjugationSuitable', () => {
+    expect(() =>
+      assertCurriculumInvariants([
+        {
+          key: 'tr-a2-synthetic-vocab-conj',
+          kind: 'vocab',
+          name: 'Synthetic vocab',
+          description: 'Synthetic vocab entry for conjugationSuitable invariant testing.',
+          cefrLevel: 'A2',
+          language: Language.TR,
+          examplesPositive: ['a', 'b'],
+          examplesNegative: ['*c'],
+          commonErrors: ['e'],
+          conjugationSuitable: true,
+        },
+      ]),
+    ).toThrow(/conjugationSuitable/);
+  });
+
+  it('flagged conjugation points each have a person coverage axis', () => {
+    const flagged = ALL_CURRICULA.filter((p) => p.conjugationSuitable);
+    expect(flagged.length).toBeGreaterThan(0);
+    for (const p of flagged) {
+      expect(p.kind).toBe('grammar');
+      const names = (p.coverageSpec?.axes ?? []).map((a) => a.name);
+      expect(names).toContain('person');
+    }
+  });
+});
+
 describe('curriculum personRotation flag (migrated to coverageSpec — Task 4)', () => {
   // The `personRotation` field has been migrated to `coverageSpec` in Task 4 of
   // the Pool Coverage Controller Phase 2 migration. Active entries no longer have

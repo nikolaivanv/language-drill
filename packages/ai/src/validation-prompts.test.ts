@@ -5,6 +5,7 @@ import {
   ExerciseType,
   Language,
   type ClozeContent,
+  type ConjugationContent,
   type TranslationContent,
   type VocabRecallContent,
   type SentenceConstructionContent,
@@ -476,6 +477,35 @@ describe("buildValidationUserPrompt — coverage directive", () => {
     const p = buildValidationUserPrompt(vocabDraftForCoverage, specFor(ExerciseType.VOCAB_RECALL));
     expect(p).toContain("part of speech");
     expect(p).not.toContain("polarity");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Conjugation validation prompt
+// ---------------------------------------------------------------------------
+
+describe("buildValidationUserPrompt — conjugation", () => {
+  it("builds a conjugation validation prompt that asks to verify the form", () => {
+    const conjugationDraft: ExerciseDraft = {
+      ...clozeDraftForCoverage,
+      contentJson: {
+        type: ExerciseType.CONJUGATION,
+        instructions: "Write the correct form.",
+        lemma: "ir",
+        lemmaGloss: "to go",
+        featureBundle: "condicional · 1ª pers. plural",
+        targetForm: "iríamos",
+        breakdown: "ir- + -íamos",
+        exampleSentences: ["Iríamos al cine."],
+      } as ConjugationContent,
+    };
+    const conjugationSpec: GenerationSpec = {
+      ...baseSpec,
+      exerciseType: ExerciseType.CONJUGATION,
+    };
+    const prompt = buildValidationUserPrompt(conjugationDraft, conjugationSpec);
+    expect(prompt).toContain("iríamos");
+    expect(prompt).toContain("EXACTLY correct");
   });
 });
 

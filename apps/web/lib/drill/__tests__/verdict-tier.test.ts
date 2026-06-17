@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import type { EvaluationError } from '@language-drill/shared';
 import {
   clozeVerdict,
+  conjugationVerdict,
   dictationVerdict,
   translationVerdict,
   vocabVerdict,
@@ -308,5 +309,34 @@ describe('vocabVerdict', () => {
 
   it.each(allCases)('$name (label)', ({ score, errors, label }) => {
     expect(vocabVerdict(score, errors).label).toBe(label);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// conjugationVerdict — deterministic 0/1 scoring; all four bands covered
+// ---------------------------------------------------------------------------
+
+describe('conjugationVerdict', () => {
+  type Case = { score: number; tier: VerdictTier; label: string };
+
+  // The two values that actually occur in production (deterministic grading):
+  //   1.0 → sage, 0.0 → terracotta
+  // Plus the band boundaries (0.7 → yellow-close, 0.4 → yellow-paradigm):
+  const cases: Case[] = [
+    { score: 0.0, tier: 'terracotta', label: 'wrong form' },
+    { score: 0.3, tier: 'terracotta', label: 'wrong form' },
+    { score: 0.4, tier: 'yellow', label: 'off — check the paradigm' },
+    { score: 0.6, tier: 'yellow', label: 'off — check the paradigm' },
+    { score: 0.7, tier: 'yellow', label: 'close · check the form' },
+    { score: 0.9, tier: 'yellow', label: 'close · check the form' },
+    { score: 1.0, tier: 'sage', label: 'exact' },
+  ];
+
+  it.each(cases)('score $score → tier $tier', ({ score, tier }) => {
+    expect(conjugationVerdict(score).tier).toBe(tier);
+  });
+
+  it.each(cases)('score $score → label "$label"', ({ score, label }) => {
+    expect(conjugationVerdict(score).label).toBe(label);
   });
 });

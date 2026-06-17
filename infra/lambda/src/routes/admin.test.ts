@@ -211,7 +211,7 @@ describe('GET /admin/pool-status', () => {
       expect([6, 8, 10, 15, 20, 30, 48, 50, 75]).toContain(item.generationTarget);
       expect(['ES', 'DE', 'TR']).toContain(item.language);
       expect(['A1', 'A2', 'B1', 'B2']).toContain(item.level);
-      expect(['cloze', 'translation', 'vocab_recall', 'sentence_construction', 'dictation', 'free_writing']).toContain(item.type);
+      expect(['cloze', 'translation', 'vocab_recall', 'sentence_construction', 'dictation', 'free_writing', 'conjugation']).toContain(item.type);
       expect(item.coverageDistribution).toBeNull();
     }
   });

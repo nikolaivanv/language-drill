@@ -4,6 +4,7 @@ import {
   ExerciseType,
   Language,
   type ClozeContent,
+  type ConjugationContent,
   type DictationContent,
   type FreeWritingContent,
   type TranslationContent,
@@ -207,11 +208,13 @@ describe("buildGenerationSystemPrompt", () => {
     // R1.7 / R2.6 / R7.4 — the coordinated prompt edit must ship a
     // `generate@YYYY-MM-DD` version so Langfuse cohorts old vs new traces.
     expect(GENERATION_PROMPT_VERSION).toMatch(/^generate@\d{4}-\d{2}-\d{2}$/);
-    // Bumped 2026-06-16 for the sentence-construction "Plain text only — no
-    // markdown" rule (the generator was leaking `**keyword**` emphasis into the
-    // plain-text `prompt` field, which renders verbatim as literal asterisks).
-    // Prior 2026-06-12 cohort covered the possessive-cloze diversity tweak +
-    // the curriculum-wide grammatical-person rotation.
+    // Bumped 2026-06-16 — two same-day edits share this cohort: (1) the
+    // sentence-construction "Plain text only — no markdown" rule (the generator
+    // leaked `**keyword**` emphasis into the plain-text `prompt` field, rendered
+    // verbatim as literal asterisks); (2) the conjugation/inflection drill type's
+    // `{{conjugationSection}}` guidance block spliced into the cached template.
+    // Prior 2026-06-12 cohort covered the possessive-cloze diversity tweak + the
+    // curriculum-wide grammatical-person rotation.
     expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-06-16");
     // Tasks 7–9: pin the new guardrail phrases in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
@@ -261,6 +264,27 @@ describe("buildGenerationSystemPrompt", () => {
         [],
       );
       expect(other).not.toContain("## Sentence-construction specifics");
+    }
+  });
+
+  it("adds the conjugation section ONLY for conjugation, absent for other types", async () => {
+    const conj = await buildGenerationSystemPrompt(
+      { ...baseInputs, exerciseType: ExerciseType.CONJUGATION },
+      [],
+    );
+    expect(conj).toContain("## Conjugation/inflection specifics");
+
+    for (const type of [
+      ExerciseType.CLOZE,
+      ExerciseType.TRANSLATION,
+      ExerciseType.VOCAB_RECALL,
+      ExerciseType.SENTENCE_CONSTRUCTION,
+    ]) {
+      const other = await buildGenerationSystemPrompt(
+        { ...baseInputs, exerciseType: type },
+        [],
+      );
+      expect(other).not.toContain("## Conjugation/inflection specifics");
     }
   });
 
@@ -463,6 +487,15 @@ describe("GENERATION_SYSTEM_PROMPT_TEMPLATE byte parity", () => {
     // branch so the template and the in-code builder cannot diverge on SC cells.
     await assertParity(
       { ...baseInputs, exerciseType: ExerciseType.SENTENCE_CONSTRUCTION },
+      ["primera frase"],
+    );
+  });
+
+  it("conjugation (the conjugation-specific section is spliced before ## Output)", async () => {
+    // Locks byte parity through the non-empty `{{conjugationSection}}` branch so
+    // the template and the in-code builder cannot diverge on conjugation cells.
+    await assertParity(
+      { ...baseInputs, exerciseType: ExerciseType.CONJUGATION },
       ["primera frase"],
     );
   });
@@ -717,6 +750,69 @@ describe("canonicalSurface — dictation", () => {
       waveform: [0.5],
     } as never);
     expect(surface).toBe("el tiempo lo cura.");
+  });
+});
+
+describe("canonicalSurface — conjugation", () => {
+  it("keys on the normalised lemma + featureBundle", () => {
+    const content: ConjugationContent = {
+      type: ExerciseType.CONJUGATION,
+      instructions: "Write the correct form.",
+      lemma: "IR",
+      lemmaGloss: "to go",
+      featureBundle: "Condicional · 1ª persona del plural",
+      targetForm: "iríamos",
+      breakdown: "ir + íamos",
+      exampleSentences: ["Iríamos al cine."],
+    };
+    const surface = canonicalSurface(content);
+    expect(surface).toContain("ir");
+    // normaliseSurface lowercases, strips Unicode Diacritic-property chars (incl. ª→a and the middle dot ·), and collapses whitespace.
+    expect(surface).toBe("ir::condicional 1a persona del plural");
+  });
+
+  it("collapses an identical (lemma, featureBundle) pair to the same key but distinguishes different cells", () => {
+    const base: ConjugationContent = {
+      type: ExerciseType.CONJUGATION,
+      instructions: "x",
+      lemma: "hablar",
+      lemmaGloss: "to speak",
+      featureBundle: "presente · 1sg",
+      targetForm: "hablo",
+      breakdown: "habl + o",
+      exampleSentences: ["Hablo español."],
+    };
+    const dup = { ...base, targetForm: "hablo (variant note)" };
+    const otherCell = { ...base, featureBundle: "presente · 2sg" };
+    expect(canonicalSurface(base)).toBe(canonicalSurface(dup));
+    expect(canonicalSurface(base)).not.toBe(canonicalSurface(otherCell));
+  });
+});
+
+describe("computeGenerationPromptVars — conjugationSection", () => {
+  it("returns conjugationSection === '' for a non-conjugation cell", () => {
+    const vars = computeGenerationPromptVars(baseInputs, []);
+    expect(vars.conjugationSection).toBe("");
+  });
+
+  it("returns the conjugation guidance block for a conjugation cell", () => {
+    const vars = computeGenerationPromptVars(
+      { ...baseInputs, exerciseType: ExerciseType.CONJUGATION },
+      [],
+    );
+    expect(vars.conjugationSection).toContain(
+      "Conjugation/inflection specifics",
+    );
+    // Splices cleanly before `## Output` (trailing blank line).
+    expect(vars.conjugationSection.endsWith("\n\n")).toBe(true);
+  });
+
+  it("leaves sentenceConstructionSection empty for a conjugation cell (mutually exclusive sections)", () => {
+    const vars = computeGenerationPromptVars(
+      { ...baseInputs, exerciseType: ExerciseType.CONJUGATION },
+      [],
+    );
+    expect(vars.sentenceConstructionSection).toBe("");
   });
 });
 

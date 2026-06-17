@@ -44,8 +44,11 @@ const { A1, A2 } = CefrLevel;
  * scheduler enumerates the new dictation cells).
  * 2026-06-16b: clears the saturated-dedup suppression on tr-a1-dictation after the
  * generation-diversity fix (domain rotation + lower targets); curriculum entries unchanged.
+ * 2026-06-16c: flags two verb-morphology points (`tr-a1-dili-past`, `tr-a2-aorist`)
+ * with `conjugationSuitable: true` + a merged `polarity` axis; the bump clears any
+ * low-yield / saturated-dedup suppression so the new CONJUGATION cells run.
  */
-export const CURRICULUM_VERSION_TR = '2026-06-16b';
+export const CURRICULUM_VERSION_TR = '2026-06-16c';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -231,9 +234,12 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-dili-past',
+    conjugationSuitable: true,
     coverageSpec: {
       axes: [
         { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
+        // Negative past (-medi/-madı) is the high-value drill — ensure it appears.
+        { name: 'polarity', floors: { affirmative: 6, negative: 6 } },
       ],
     },
     kind: 'grammar',
@@ -830,9 +836,12 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a2-aorist',
+    conjugationSuitable: true,
     coverageSpec: {
       axes: [
         { name: 'person', floors: { '1sg': 8, '2sg': 8, '3sg': 8, '1pl': 8, '2pl': 8, '3pl': 8 } },
+        // Negative aorist (-mAz, irregular -mAm/-mAyIz) is the high-value drill.
+        { name: 'polarity', floors: { affirmative: 6, negative: 6 } },
       ],
     },
     kind: 'grammar',
