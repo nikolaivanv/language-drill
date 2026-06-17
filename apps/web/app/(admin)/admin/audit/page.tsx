@@ -7,7 +7,7 @@ import { createAuthenticatedFetch, useAuditLog, type AuditQuery } from '@languag
 const PAGE_SIZE = 50;
 const ACTIONS = [
   'flagged.approve', 'flagged.reject', 'content.demote', 'content.reject',
-  'generation.trigger', 'invite.create', 'invite.revoke',
+  'generation.trigger', 'revalidate.apply', 'invite.create', 'invite.revoke',
 ];
 const TARGET_TYPES = ['exercise', 'theory_topic', 'cell', 'invite'];
 
