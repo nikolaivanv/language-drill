@@ -62,12 +62,14 @@ export const CELL_TARGET_DEFAULTS: Record<
   // (short clips), so a high target just grinds the dedup index; the per-ordinal
   // domain rotation (dictation-generation-prompts.ts) makes these reachable.
   [ExerciseType.DICTATION]: { A1: 6, A2: 10, B1: 15, B2: 15 },
-  // Free-writing prompts are batch-generated (Phase 2). Capped LOW (8): a single
-  // (language, level, topic) cell has a small distinct-title space — the dedup
-  // surface is the title — so the 2026-06-16 run hit heavy dedup-give-up chasing
-  // 12 (title convergence on the topic name). 8 is reachable per topic; breadth
-  // comes from more curated topic umbrellas, not a high per-cell target.
-  [ExerciseType.FREE_WRITING]: { B1: 8, B2: 8 },
+  // Free-writing prompts are batch-generated (Phase 2). Capped LOW (5) at every
+  // level: a single (language, level, topic) cell has a tiny distinct-title space
+  // — the dedup surface is the title — so even with the prior-title avoid-list and
+  // angle rotation, narrow topics hit heavy dedup-give-up above ~5 (the 2026-06-16
+  // run stalled at 3 on es-b1-fw-my-town / es-b2-fw-remote-work chasing 8). 5 is
+  // reachable per topic; breadth comes from more curated topic umbrellas. A1/A2
+  // are set for TR free-writing (2026-06-17).
+  [ExerciseType.FREE_WRITING]: { A1: 5, A2: 5, B1: 5, B2: 5 },
 };
 
 /**
