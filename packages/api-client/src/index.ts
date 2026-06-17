@@ -366,3 +366,8 @@ export {
   useContentExercises, useContentTheory,
   useResolveContentExercise, useResolveContentTheory,
 } from './hooks/useContentBrowser';
+export {
+  PoolCellDetailSchema,
+  type PoolCellDetail, type PoolCellQuery,
+} from './schemas/pool-cell';
+export { usePoolCell } from './hooks/usePoolCell';

@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
+import { useSearchParams } from 'next/navigation';
 import {
   createAuthenticatedFetch,
   useContentExercises, useContentTheory,
@@ -15,12 +16,18 @@ import { ContentTheoryCard } from './_components/content-theory-card';
 type Tab = 'exercises' | 'theory';
 const PAGE_SIZE = 25;
 
-export default function ContentPage() {
+function ContentPageInner() {
   const { getToken } = useAuth();
   const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
   const [tab, setTab] = useState<Tab>('exercises');
-  const [filters, setFilters] = useState<{ language?: string; level?: string; type?: string; grammarPoint?: string }>({});
-  const [q, setQ] = useState('');
+  const searchParams = useSearchParams();
+  const [filters, setFilters] = useState<{ language?: string; level?: string; type?: string; grammarPoint?: string }>(() => ({
+    language: searchParams.get('language') ?? undefined,
+    level: searchParams.get('level') ?? undefined,
+    type: searchParams.get('type') ?? undefined,
+    grammarPoint: searchParams.get('grammarPoint') ?? undefined,
+  }));
+  const [q, setQ] = useState(() => searchParams.get('q') ?? '');
   const [offset, setOffset] = useState(0);
   const [demotedId, setDemotedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -107,5 +114,13 @@ export default function ContentPage() {
           )}
       </div>
     </div>
+  );
+}
+
+export default function ContentPage() {
+  return (
+    <Suspense fallback={<div className="p-s-6" />}>
+      <ContentPageInner />
+    </Suspense>
   );
 }
