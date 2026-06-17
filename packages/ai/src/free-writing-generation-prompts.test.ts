@@ -3,7 +3,8 @@ import { CefrLevel, ExerciseType, Language, type GrammarPoint } from "@language-
 import {
   FREE_WRITING_GENERATION_PROMPT_VERSION,
   FREE_WRITING_LENGTH_BY_CEFR,
-  FREE_WRITING_ANGLES,
+  CONCRETE_FREE_WRITING_ANGLES,
+  FULL_FREE_WRITING_ANGLES,
   computeFreeWritingGenerationPromptVars,
   buildFreeWritingGenerationUserPrompt,
   freeWritingAngleForOrdinal,
@@ -36,6 +37,8 @@ describe("free-writing generation prompt", () => {
   });
 
   it("derives the word band from the CEFR level", () => {
+    expect(FREE_WRITING_LENGTH_BY_CEFR.A1).toEqual({ minWords: 30, maxWords: 60, suggestedMinutes: 10 });
+    expect(FREE_WRITING_LENGTH_BY_CEFR.A2).toEqual({ minWords: 60, maxWords: 100, suggestedMinutes: 15 });
     expect(FREE_WRITING_LENGTH_BY_CEFR.B1).toEqual({ minWords: 80, maxWords: 120, suggestedMinutes: 15 });
     expect(FREE_WRITING_LENGTH_BY_CEFR.B2).toEqual({ minWords: 150, maxWords: 200, suggestedMinutes: 25 });
   });
@@ -79,15 +82,30 @@ describe("free-writing generation prompt", () => {
     expect(vars.priorTitlesSection).toContain("teletrabajo y soledad");
   });
 
-  it("rotates a distinct angle per ordinal and pins it into the user prompt", () => {
-    // Each ordinal in a full batch (< angle-list length) gets a unique angle.
+  it("rotates B1/B2 ordinals through the full analytical angle pool", () => {
+    // INPUTS is B2 → full pool. Each ordinal in a batch < pool length is unique.
     const seen = new Set(
-      Array.from({ length: FREE_WRITING_ANGLES.length }, (_, i) => freeWritingAngleForOrdinal(i)),
+      Array.from({ length: FULL_FREE_WRITING_ANGLES.length }, (_, i) =>
+        freeWritingAngleForOrdinal(i, "B2"),
+      ),
     );
-    expect(seen.size).toBe(FREE_WRITING_ANGLES.length);
-    expect(freeWritingAngleForOrdinal(FREE_WRITING_ANGLES.length)).toBe(FREE_WRITING_ANGLES[0]);
+    expect(seen.size).toBe(FULL_FREE_WRITING_ANGLES.length);
+    expect(freeWritingAngleForOrdinal(FULL_FREE_WRITING_ANGLES.length, "B2")).toBe(
+      FULL_FREE_WRITING_ANGLES[0],
+    );
     const p = buildFreeWritingGenerationUserPrompt(INPUTS, 0);
-    expect(p).toContain(FREE_WRITING_ANGLES[0]);
+    expect(p).toContain(FULL_FREE_WRITING_ANGLES[0]);
     expect(p).toMatch(/do NOT reuse the bare topic name/i);
+  });
+
+  it("rotates A1/A2 ordinals through the concrete (non-analytical) angle pool", () => {
+    // A1/A2 must avoid argumentative angles (opposing positions, recommendation).
+    const a1Inputs = { ...INPUTS, cefrLevel: CefrLevel.A1 };
+    const angle = freeWritingAngleForOrdinal(0, "A1");
+    expect(CONCRETE_FREE_WRITING_ANGLES).toContain(angle);
+    // The concrete pool must exclude argumentative angles that are too hard at A1/A2.
+    expect(CONCRETE_FREE_WRITING_ANGLES).not.toContain("weighing two clearly opposing positions");
+    const p = buildFreeWritingGenerationUserPrompt(a1Inputs, 0);
+    expect(p).toContain(CONCRETE_FREE_WRITING_ANGLES[0]);
   });
 });

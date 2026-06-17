@@ -26,7 +26,7 @@ import type { GenerationPromptInputs } from "./generation-prompts.js";
 import { getPromptWithVarsOrFallback } from "./prompts-registry.js";
 
 // Bump in the same commit as any semantic edit to the template below.
-export const FREE_WRITING_GENERATION_PROMPT_VERSION = "free-writing-generate@2026-06-16";
+export const FREE_WRITING_GENERATION_PROMPT_VERSION = "free-writing-generate@2026-06-17";
 
 /**
  * Cap on how many already-used titles appear in the system prompt's avoid-list.
@@ -40,12 +40,15 @@ export const MAX_PRIOR_FW_TITLES_IN_PROMPT = 60;
 /**
  * CEFR → word band + suggested minutes for a free-writing prompt. Single source
  * for both the prompt text and the band injected into the stored
- * FreeWritingContent. Only B1/B2 are in scope this milestone; an out-of-scope
- * level throws in `freeWritingLengthFor`.
+ * FreeWritingContent. A1/A2 (added 2026-06-17 for TR) keep the band short — a
+ * low-level learner writes a few simple sentences. An out-of-scope level throws
+ * in `freeWritingLengthFor`.
  */
 export const FREE_WRITING_LENGTH_BY_CEFR: Readonly<
   Partial<Record<CurriculumCefrLevel, { minWords: number; maxWords: number; suggestedMinutes: number }>>
 > = Object.freeze({
+  A1: { minWords: 30, maxWords: 60, suggestedMinutes: 10 },
+  A2: { minWords: 60, maxWords: 100, suggestedMinutes: 15 },
   B1: { minWords: 80, maxWords: 120, suggestedMinutes: 15 },
   B2: { minWords: 150, maxWords: 200, suggestedMinutes: 25 },
 });
@@ -56,7 +59,7 @@ export function freeWritingLengthFor(
   const band = FREE_WRITING_LENGTH_BY_CEFR[cefrLevel as CurriculumCefrLevel];
   if (!band) {
     throw new Error(
-      `free-writing: no length band configured for CEFR level ${JSON.stringify(cefrLevel)} (B1/B2 only this milestone)`,
+      `free-writing: no length band configured for CEFR level ${JSON.stringify(cefrLevel)} (A1/A2/B1/B2 supported)`,
     );
   }
   return band;
@@ -96,8 +99,23 @@ function renderPriorTitlesSection(
  * titles apart on a fresh cell, the same way `sentence_construction` rotates its
  * prompt modes. Lives in the per-draft USER prompt (uncached), so it never
  * perturbs the cached system-prompt prefix.
+ *
+ * Two pools, picked by level (2026-06-17): the analytical angles (opposing
+ * positions, causes/consequences, recommendation) are appropriate at B1/B2 but
+ * too hard for A1/A2, where a learner narrates concrete, everyday content. A1/A2
+ * draw only from the concrete pool; B1/B2 keep the original full pool unchanged
+ * (no behavior change for existing ES cells).
  */
-export const FREE_WRITING_ANGLES: readonly string[] = [
+export const CONCRETE_FREE_WRITING_ANGLES: readonly string[] = [
+  "the personal, individual side of the topic",
+  "a concrete everyday scenario that brings the topic to life",
+  "a specific memory or a single moment tied to the topic",
+  "a typical day or routine connected to the topic",
+  "describing a specific place or person central to the topic",
+  "how things have changed over time around the topic",
+];
+
+export const FULL_FREE_WRITING_ANGLES: readonly string[] = [
   "the personal, individual side of the topic",
   "the social or collective side of the topic",
   "a concrete everyday scenario that brings the topic to life",
@@ -108,8 +126,12 @@ export const FREE_WRITING_ANGLES: readonly string[] = [
   "a recommendation, a solution, or advice",
 ];
 
-export function freeWritingAngleForOrdinal(ordinal: number): string {
-  return FREE_WRITING_ANGLES[ordinal % FREE_WRITING_ANGLES.length];
+export function freeWritingAngleForOrdinal(ordinal: number, cefrLevel: string): string {
+  const pool =
+    cefrLevel === "A1" || cefrLevel === "A2"
+      ? CONCRETE_FREE_WRITING_ANGLES
+      : FULL_FREE_WRITING_ANGLES;
+  return pool[ordinal % pool.length];
 }
 
 export const FREE_WRITING_GENERATION_SYSTEM_PROMPT = `You are an expert author of free-writing prompts for {{language}} learners at CEFR {{cefrLevel}}. Produce ONE open-ended writing prompt the learner answers in a single paragraph of {{minWords}}–{{maxWords}} {{language}} words. The target register is {{register}}.
@@ -197,16 +219,17 @@ export async function buildFreeWritingGenerationSystemPrompt(
   return text;
 }
 
-// `inputs` is unused in the body but kept for signature parity with the other
-// per-draft user-prompt builders (cloze/translation/dictation), so `generateOneDraft`
-// can call them uniformly; the topic framing lives in the cached system prompt.
+// The per-draft angle is level-aware (A1/A2 get concrete angles only), so the
+// builder reads `inputs.cefrLevel`. Signature parity with the other per-draft
+// user-prompt builders (cloze/translation/dictation) is preserved so
+// `generateOneDraft` can call them uniformly; the topic framing lives in the
+// cached system prompt.
 export function buildFreeWritingGenerationUserPrompt(
   inputs: GenerationPromptInputs,
   ordinal: number,
 ): string {
-  void inputs;
-  const angle = freeWritingAngleForOrdinal(ordinal);
+  const angle = freeWritingAngleForOrdinal(ordinal, inputs.cefrLevel);
   return `Produce free-writing prompt #${ordinal + 1}.
 
-For THIS prompt, build the task around: ${angle}. Give it a specific, distinctive title that reflects this angle — do NOT reuse the bare topic name as the title. Vary the exact task and the required-elements checklist from prompt to prompt so a batch on this topic is diverse. Use the submit_free_writing_exercise tool.`;
+For THIS prompt, build the task around: ${angle}. Commit to ONE concrete sub-facet of the topic — not a near-paraphrase of the topic name. Give it a specific, distinctive title that reflects this angle — do NOT reuse the bare topic name as the title. Vary the exact task and the required-elements checklist from prompt to prompt so a batch on this topic is diverse. Use the submit_free_writing_exercise tool.`;
 }

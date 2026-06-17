@@ -42,8 +42,11 @@ const { B1, B2 } = CefrLevel;
  * `2026-06-16` flags two verb-conjugation points (`es-b1-present-subjunctive`,
  * `es-b1-conditional`) with `conjugationSuitable: true`; the bump clears any
  * low-yield / saturated-dedup suppression so the new CONJUGATION cells run.
+ *
+ * `2026-06-17` clears saturated-dedup suppression on the stuck free-writing
+ * cells so they re-evaluate under the lowered target.
  */
-export const CURRICULUM_VERSION_ES = '2026-06-16';
+export const CURRICULUM_VERSION_ES = '2026-06-17';
 
 const esCurriculum: readonly GrammarPoint[] = [
   /*

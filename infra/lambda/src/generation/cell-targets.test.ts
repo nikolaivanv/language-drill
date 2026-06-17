@@ -112,9 +112,14 @@ describe('resolveCellTarget', () => {
     expect(resolveCellTarget(make('A2'))).toBe(10);
   });
 
-  it('resolves the free_writing B1/B2 per-cell target to 8', () => {
-    expect(resolveCellTarget(makeCell(ExerciseType.FREE_WRITING, CefrLevel.B1))).toBe(8);
-    expect(resolveCellTarget(makeCell(ExerciseType.FREE_WRITING, CefrLevel.B2))).toBe(8);
+  it('resolves the free_writing per-cell target to 5 at every level', () => {
+    // A small (language, level, topic) cell has a tiny distinct-title space (the
+    // dedup surface is the title); 5 is reachable per topic, breadth comes from
+    // more curated topic umbrellas. Applies to A1/A2 (TR) and B1/B2 (ES) alike.
+    expect(resolveCellTarget(makeCell(ExerciseType.FREE_WRITING, CefrLevel.A1))).toBe(5);
+    expect(resolveCellTarget(makeCell(ExerciseType.FREE_WRITING, CefrLevel.A2))).toBe(5);
+    expect(resolveCellTarget(makeCell(ExerciseType.FREE_WRITING, CefrLevel.B1))).toBe(5);
+    expect(resolveCellTarget(makeCell(ExerciseType.FREE_WRITING, CefrLevel.B2))).toBe(5);
   });
 
   it('sentence_construction resolves at the plain table value (no raise)', () => {
