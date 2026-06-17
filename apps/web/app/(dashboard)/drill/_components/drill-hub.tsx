@@ -76,7 +76,7 @@ export function DrillHub({
 
         <Link
           href="/drill/free-writing"
-          className="flex items-center justify-between gap-s-4 rounded-r-lg border border-accent bg-card p-s-5 no-underline"
+          className="flex items-center justify-between gap-s-4 rounded-r-lg border border-rule bg-card p-s-5 no-underline hover:border-accent"
         >
           <span className="min-w-0">
             <span className="t-display-s block">free writing</span>
