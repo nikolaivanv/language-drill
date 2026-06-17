@@ -1388,3 +1388,49 @@ describe('audit log — generate + invites', () => {
     expect(insertedValuesByTable.adminAuditLog).toBeUndefined();
   });
 });
+
+// ---------------------------------------------------------------------------
+// GET /admin/audit
+// ---------------------------------------------------------------------------
+
+describe('GET /admin/audit', () => {
+  it('returns mapped items + total, newest-first', async () => {
+    queryQueue.push([
+      {
+        id: 'a1', adminUserId: 'admin-1', action: 'flagged.approve', targetType: 'exercise',
+        targetId: 'ex-1', metadata: { outcome: 'approved' }, createdAt: new Date('2026-06-17T00:00:00Z'),
+      },
+    ]);
+    queryQueue.push([{ count: 12 }]);
+    const res = await app.request('/admin/audit?limit=50&offset=0', undefined, adminEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.total).toBe(12);
+    expect(body.items[0]).toMatchObject({
+      id: 'a1', adminUserId: 'admin-1', action: 'flagged.approve', targetType: 'exercise',
+      targetId: 'ex-1', metadata: { outcome: 'approved' }, createdAt: '2026-06-17T00:00:00.000Z',
+    });
+  });
+
+  it('accepts action/targetType/adminUserId filters', async () => {
+    queryQueue.push([]);
+    queryQueue.push([{ count: 0 }]);
+    const res = await app.request('/admin/audit?action=invite.revoke&targetType=invite&adminUserId=admin-1', undefined, adminEnv);
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as AnyJson).items).toEqual([]);
+  });
+
+  it('rejects limit over 200 with 400', async () => {
+    const res = await app.request('/admin/audit?limit=201', undefined, adminEnv);
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as AnyJson).code).toBe('VALIDATION_ERROR');
+  });
+
+  it('returns empty result on an empty log', async () => {
+    queryQueue.push([]);
+    queryQueue.push([{ count: 0 }]);
+    const res = await app.request('/admin/audit', undefined, adminEnv);
+    expect(res.status).toBe(200);
+    expect((await res.json()) as AnyJson).toEqual({ items: [], total: 0 });
+  });
+});
