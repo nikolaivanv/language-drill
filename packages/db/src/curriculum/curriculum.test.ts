@@ -371,8 +371,8 @@ describe('per-language counts', () => {
     expect(dictation).toBe(0);
   });
 
-  it('Turkish is at full Yedi İklim A1 + A2 parity (B1/B2 disabled), has 10 themed vocab umbrellas and 2 dictation umbrellas', () => {
-    const { grammar, vocab, dictation } = countsFor(trCurriculum);
+  it('Turkish is at full Yedi İklim A1 + A2 parity (B1/B2 disabled), has 10 themed vocab umbrellas, 2 dictation umbrellas, and 6 free-writing umbrellas', () => {
+    const { grammar, vocab, dictation, freeWriting } = countsFor(trCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(26);
     expect(grammar.A2).toBeGreaterThanOrEqual(14);
     expect(grammar.B1).toBe(0);
@@ -381,6 +381,8 @@ describe('per-language counts', () => {
     expect(vocab).toBe(10);
     // tr-a1-dictation + tr-a2-dictation (Phase 2 dictation generation pipeline).
     expect(dictation).toBe(2);
+    // 3 A1 + 3 A2 free-writing topic umbrellas (2026-06-17).
+    expect(freeWriting).toBe(6);
   });
 });
 
@@ -389,6 +391,15 @@ describe('free-writing topic umbrellas', () => {
     const fw = esCurriculum.filter((e) => e.kind === "free-writing");
     expect(fw.filter((e) => e.cefrLevel === "B1")).toHaveLength(6);
     expect(fw.filter((e) => e.cefrLevel === "B2")).toHaveLength(6);
+    for (const e of fw) {
+      expect(e.freeWriting?.register).toBeDefined();
+    }
+  });
+
+  it("has 3 free-writing topic umbrellas per TR A1 and A2", () => {
+    const fw = trCurriculum.filter((e) => e.kind === "free-writing");
+    expect(fw.filter((e) => e.cefrLevel === "A1")).toHaveLength(3);
+    expect(fw.filter((e) => e.cefrLevel === "A2")).toHaveLength(3);
     for (const e of fw) {
       expect(e.freeWriting?.register).toBeDefined();
     }
