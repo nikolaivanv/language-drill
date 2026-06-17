@@ -98,6 +98,10 @@ export class LanguageDrillStack extends Stack {
       "GenerationQueue",
       { alarmTopic: alerts.topic },
     );
+    // On-demand admin generation: the API Lambda enqueues trigger:'admin' jobs onto the
+    // generation queue (POST /admin/generate). addEnvironment avoids reordering construct creation.
+    generationQueue.queue.grantSendMessages(lambda.handler);
+    lambda.handler.addEnvironment("GENERATION_QUEUE_URL", generationQueue.queue.queueUrl);
 
     // Phase 2 — dictation audio-synth pipeline (SQS + consumer Lambda). The
     // generation handler enqueues approved dictation ids here; this Lambda

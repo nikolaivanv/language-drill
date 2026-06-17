@@ -1847,6 +1847,9 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
               ],
             },
             "ENV_NAME": "prod",
+            "GENERATION_QUEUE_URL": {
+              "Ref": "GenerationQueueB318CF3E",
+            },
             "LANGFUSE_ENV": "prod",
             "LANGFUSE_PUBLIC_KEY": {
               "Fn::Join": [
@@ -2155,6 +2158,20 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
               "Resource": {
                 "Fn::GetAtt": [
                   "QueueJobsQueue16F00CB9",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "GenerationQueueB318CF3E",
                   "Arn",
                 ],
               },

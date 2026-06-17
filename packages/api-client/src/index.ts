@@ -371,3 +371,9 @@ export {
   type PoolCellDetail, type PoolCellQuery,
 } from './schemas/pool-cell';
 export { usePoolCell } from './hooks/usePoolCell';
+export {
+  GenerateCellResponseSchema,
+  type GenerateCellRequest,
+  type GenerateCellResponse,
+} from './schemas/generate';
+export { useGenerateCell } from './hooks/useGenerateCell';

@@ -1,4 +1,4 @@
-import { randomInt } from 'node:crypto';
+import { randomInt, randomUUID } from 'node:crypto';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { and, asc, count, desc, eq, gte, inArray, isNotNull, sql } from 'drizzle-orm';
@@ -10,13 +10,16 @@ import {
   exercises,
   generationJobs,
   invitations,
+  requireEnv,
   targetCellSize,
   theoryTopics,
   userExerciseHistory,
 } from '@language-drill/db';
 import { normalizeFlaggedReasons } from '@language-drill/shared';
+import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
 import { db } from '../db';
 import { resolveCellTarget } from '../generation/cell-targets';
+import { parseGenerationJobMessage, type GenerationJobMessage } from '../generation/job-message';
 import { authMiddleware } from '../middleware/auth';
 import { adminMiddleware } from '../middleware/admin';
 import type { Bindings, Variables } from '../middleware/auth';
@@ -843,6 +846,77 @@ for (const [kind, resolve] of [
     });
   }
 }
+
+// ---------------------------------------------------------------------------
+// POST /admin/generate — enqueue an admin-triggered generation job
+// ---------------------------------------------------------------------------
+
+const ADMIN_PER_CELL_COST_CAP_USD = 2.0;
+
+let sqsClient: SQSClient | null = null;
+function getSqsClient(): SQSClient {
+  if (!sqsClient) sqsClient = new SQSClient({ region: requireEnv('AWS_REGION') });
+  return sqsClient;
+}
+
+const GenerateBodySchema = z.object({
+  language: z.enum(['ES', 'DE', 'TR']),
+  level: z.enum(['A1', 'A2', 'B1', 'B2']),
+  type: z.string().min(1),
+  grammarPoint: z.string().min(1),
+  count: z.coerce.number().int().min(1).max(50),
+});
+
+admin.post('/admin/generate', async (c) => {
+  const raw = await c.req.json().catch(() => null);
+  const parsed = GenerateBodySchema.safeParse(raw);
+  if (!parsed.success) {
+    return c.json({ error: 'Invalid request body', code: 'VALIDATION_ERROR', details: parsed.error.flatten() }, 400);
+  }
+  const { language, level, type, grammarPoint, count } = parsed.data;
+
+  const cellKey = buildCellKey({ language, cefrLevel: level, exerciseType: type, grammarPointKey: grammarPoint });
+  const cell = enumerateCurriculumCells(ALL_CURRICULA).find((cc) => cc.cellKey === cellKey);
+  if (!cell) {
+    return c.json({ error: 'Unknown cell', code: 'INVALID_CELL' }, 400);
+  }
+
+  // Best-effort in-flight guard: the consumer inserts the generation_jobs row only after it
+  // dequeues, so two near-simultaneous admin requests for the same cell can both pass this
+  // check. The UI's pending-disable covers that sub-second window; checkAuditRowState in the
+  // consumer is the idempotency backstop. Accepted for a single-admin tool.
+  const inFlight = await db
+    .select({ id: generationJobs.id })
+    .from(generationJobs)
+    .where(and(eq(generationJobs.cellKey, cellKey), inArray(generationJobs.status, ['queued', 'running'])))
+    .limit(1);
+  if (inFlight.length > 0) {
+    return c.json({ error: 'A generation job for this cell is already in progress', code: 'GENERATION_IN_PROGRESS' }, 409);
+  }
+
+  const jobId = randomUUID();
+  const message: GenerationJobMessage = {
+    jobId,
+    trigger: 'admin',
+    spec: {
+      language: cell.language,
+      cefrLevel: cell.cefrLevel,
+      exerciseType: cell.exerciseType,
+      grammarPointKey: cell.grammarPoint.key,
+      topicDomain: null,
+      count,
+      batchSeed: `admin-${jobId}`,
+    },
+    maxCostUsd: ADMIN_PER_CELL_COST_CAP_USD,
+  };
+  parseGenerationJobMessage(message);
+
+  await getSqsClient().send(
+    new SendMessageCommand({ QueueUrl: requireEnv('GENERATION_QUEUE_URL'), MessageBody: JSON.stringify(message) }),
+  );
+
+  return c.json({ jobId, status: 'queued' });
+});
 
 // ---------------------------------------------------------------------------
 // Invite code management — generate, list, revoke

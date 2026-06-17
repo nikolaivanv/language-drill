@@ -1,9 +1,17 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll, afterAll, afterEach } from 'vitest';
 import { Hono } from 'hono';
 import {
   ALL_CURRICULA,
   enumerateCurriculumCells,
 } from '@language-drill/db';
+
+const sqsSend = vi.fn().mockResolvedValue({});
+vi.mock('@aws-sdk/client-sqs', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  SQSClient: vi.fn(function (this: any) { this.send = sqsSend; }),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  SendMessageCommand: vi.fn(function (this: any, input: unknown) { this.input = input; }),
+}));
 
 // ---------------------------------------------------------------------------
 // DB chain mock
@@ -145,6 +153,7 @@ const previousAdminUserIds = process.env.ADMIN_USER_IDS;
 
 beforeEach(async () => {
   vi.clearAllMocks();
+  sqsSend.mockClear();
   queryQueue.length = 0;
   for (const k of Object.keys(insertedValuesByTable)) {
     delete insertedValuesByTable[k];
@@ -1169,5 +1178,79 @@ describe('GET /admin/pool-cell', () => {
     const res = await app.request('/admin/pool-cell?language=ES&level=B1&type=cloze', undefined, adminEnv);
     expect(res.status).toBe(400);
     expect((await res.json() as AnyJson).code).toBe('VALIDATION_ERROR');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /admin/generate
+// ---------------------------------------------------------------------------
+
+describe('POST /admin/generate', () => {
+  let prevRegion: string | undefined;
+  let prevQueueUrl: string | undefined;
+  beforeAll(() => {
+    prevRegion = process.env.AWS_REGION;
+    prevQueueUrl = process.env.GENERATION_QUEUE_URL;
+    process.env.AWS_REGION = 'us-east-1';
+    process.env.GENERATION_QUEUE_URL = 'https://sqs.test/queue';
+  });
+  afterAll(() => {
+    if (prevRegion === undefined) delete process.env.AWS_REGION; else process.env.AWS_REGION = prevRegion;
+    if (prevQueueUrl === undefined) delete process.env.GENERATION_QUEUE_URL; else process.env.GENERATION_QUEUE_URL = prevQueueUrl;
+  });
+
+  it('enqueues an admin generation job for a valid cell', async () => {
+    queryQueue.push([]); // in-flight check: no queued/running job
+    const res = await app.request('/admin/generate', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ language: 'ES', level: 'B1', type: 'cloze', grammarPoint: 'es-b1-present-subjunctive', count: 18 }),
+    }, adminEnv);
+    expect(res.status).toBe(200);
+    const body = await res.json() as AnyJson;
+    expect(body.status).toBe('queued');
+    expect(typeof body.jobId).toBe('string');
+    expect(sqsSend).toHaveBeenCalledTimes(1);
+    const sent = JSON.parse(sqsSend.mock.calls[0][0].input.MessageBody);
+    expect(sent.trigger).toBe('admin');
+    expect(sent.spec.count).toBe(18);
+    expect(sent.spec.exerciseType).toBe('cloze');
+    expect(sent.spec.grammarPointKey).toBe('es-b1-present-subjunctive');
+    expect(sent.spec.batchSeed).toMatch(/^admin-/);
+    expect(sent.maxCostUsd).toBe(2.0);
+    expect(sent.jobId).toBe(body.jobId);
+  });
+
+  it('rejects count over 50 with 400', async () => {
+    const res = await app.request('/admin/generate', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ language: 'ES', level: 'B1', type: 'cloze', grammarPoint: 'es-b1-present-subjunctive', count: 51 }),
+    }, adminEnv);
+    expect(res.status).toBe(400);
+    expect(sqsSend).not.toHaveBeenCalled();
+  });
+
+  it('rejects an unknown cell with 400 INVALID_CELL', async () => {
+    const res = await app.request('/admin/generate', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ language: 'ES', level: 'B1', type: 'cloze', grammarPoint: 'does-not-exist', count: 5 }),
+    }, adminEnv);
+    expect(res.status).toBe(400);
+    expect((await res.json() as AnyJson).code).toBe('INVALID_CELL');
+    expect(sqsSend).not.toHaveBeenCalled();
+  });
+
+  it('returns 409 when a job for the cell is already queued/running', async () => {
+    queryQueue.push([{ id: 'existing-job' }]);
+    const res = await app.request('/admin/generate', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ language: 'ES', level: 'B1', type: 'cloze', grammarPoint: 'es-b1-present-subjunctive', count: 5 }),
+    }, adminEnv);
+    expect(res.status).toBe(409);
+    expect((await res.json() as AnyJson).code).toBe('GENERATION_IN_PROGRESS');
+    expect(sqsSend).not.toHaveBeenCalled();
   });
 });
