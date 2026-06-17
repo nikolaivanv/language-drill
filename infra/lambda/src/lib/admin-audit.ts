@@ -7,9 +7,11 @@ export type AdminAuditAction =
   | 'content.reject'
   | 'generation.trigger'
   | 'invite.create'
-  | 'invite.revoke';
+  | 'invite.revoke'
+  | 'user_flag.reject'
+  | 'user_flag.dismiss';
 
-export type AdminAuditTargetType = 'exercise' | 'theory_topic' | 'cell' | 'invite';
+export type AdminAuditTargetType = 'exercise' | 'theory_topic' | 'cell' | 'invite' | 'exercise_flag';
 
 export type AdminAuditEntry = {
   adminUserId: string;
