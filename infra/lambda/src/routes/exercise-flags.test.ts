@@ -95,6 +95,13 @@ vi.mock('@language-drill/db', async () => {
 const userEnv = { event: { requestContext: { authorizer: { jwt: { claims: { sub: 'user_1' } } } } } };
 const otherUserEnv = { event: { requestContext: { authorizer: { jwt: { claims: { sub: 'user_2' } } } } } };
 
+// Admin fixtures (mirrored from admin.test.ts)
+const ADMIN_USER_ID = 'admin_user_001';
+const NON_ADMIN_USER_ID = 'user_999';
+const adminEnv = { event: { requestContext: { authorizer: { jwt: { claims: { sub: ADMIN_USER_ID } } } } } };
+const nonAdminEnv = { event: { requestContext: { authorizer: { jwt: { claims: { sub: NON_ADMIN_USER_ID } } } } } };
+const previousAdminUserIds = process.env.ADMIN_USER_IDS;
+
 // ---------------------------------------------------------------------------
 // Test harness
 // ---------------------------------------------------------------------------
@@ -107,9 +114,18 @@ beforeEach(async () => {
   for (const k of Object.keys(insertedValuesByTable)) {
     delete insertedValuesByTable[k];
   }
+  process.env.ADMIN_USER_IDS = ADMIN_USER_ID;
   const mod = await import('./exercise-flags');
   app = new Hono();
   app.route('/', mod.default);
+});
+
+afterEach(() => {
+  if (previousAdminUserIds === undefined) {
+    delete process.env.ADMIN_USER_IDS;
+  } else {
+    process.env.ADMIN_USER_IDS = previousAdminUserIds;
+  }
 });
 
 
@@ -161,5 +177,66 @@ describe('POST /exercises/:exerciseId/flag', () => {
     }, userEnv);
     expect(res.status).toBe(409);
     expect(((await res.json()) as { code?: string }).code).toBe('ALREADY_FLAGGED');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Admin routes
+// ---------------------------------------------------------------------------
+
+describe('GET /admin/flags', () => {
+  it('403s for a non-admin', async () => {
+    const res = await app.request('/admin/flags', undefined, nonAdminEnv);
+    expect(res.status).toBe(403);
+  });
+
+  it('returns open flags joined to exercise + attempt', async () => {
+    // list query (join) then count query, in Promise.all order
+    queryQueue.push([{
+      id: 'f1', status: 'open', category: 'wrong_answer', note: 'bad', createdAt: new Date('2026-06-18T00:00:00Z'), resolvedAt: null,
+      exerciseId: 'ex1', submissionId: 'h1',
+      exLanguage: 'ES', exLevel: 'B1', exType: 'cloze', exGrammar: 'es-b1-x', exReviewStatus: 'auto-approved', exContent: { type: 'cloze' },
+      responseJson: { userAnswer: 'mi respuesta', evaluation: { score: 1, feedback: 'ok' } },
+    }]);
+    queryQueue.push([{ count: 1 }]);
+    const res = await app.request('/admin/flags', undefined, adminEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { items: Array<Record<string, unknown>>; total: number };
+    expect(body.total).toBe(1);
+    expect(body.items[0]).toMatchObject({ id: 'f1', userAnswer: 'mi respuesta', exerciseId: 'ex1' });
+    expect((body.items[0].exercise as Record<string, unknown>).reviewStatus).toBe('auto-approved');
+  });
+});
+
+describe('POST /admin/flags/:id/reject', () => {
+  it('rejects the exercise and resolves the flag', async () => {
+    // flag lookup → returns the open flag with its exerciseId
+    queryQueue.push([{ id: 'f1', exerciseId: 'ex1', status: 'open' }]);
+    // exercise reject update returns 1 row; flag resolve update returns 1 row
+    // (dbUpdate chains pull from queryQueue via .returning() → then)
+    queryQueue.push([{ id: 'ex1' }]);
+    queryQueue.push([{ id: 'f1' }]);
+    const res = await app.request('/admin/flags/f1/reject', { method: 'POST' }, adminEnv);
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as { outcome: string }).outcome).toBe('rejected');
+  });
+
+  it('returns not_found for an unknown flag', async () => {
+    queryQueue.push([]); // flag lookup empty
+    const res = await app.request('/admin/flags/missing/reject', { method: 'POST' }, adminEnv);
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as { outcome: string }).outcome).toBe('not_found');
+  });
+});
+
+describe('POST /admin/flags/:id/dismiss', () => {
+  it('resolves the flag without touching the exercise', async () => {
+    queryQueue.push([{ id: 'f1', exerciseId: 'ex1', status: 'open' }]); // flag lookup
+    queryQueue.push([{ id: 'f1' }]); // flag resolve update
+    const res = await app.request('/admin/flags/f1/dismiss', { method: 'POST' }, adminEnv);
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as { outcome: string }).outcome).toBe('dismissed');
+    // exercises table must not be updated on dismiss
+    expect(dbUpdate).not.toHaveBeenCalledWith(expect.objectContaining({ __mock: 'exercises' }));
   });
 });
