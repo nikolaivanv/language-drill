@@ -4,6 +4,20 @@
 **Status:** Approved (design)
 **Worktree/branch:** `worktree-feat+validator-level-scope`
 
+> **Correction (2026-06-18, post-CI):** §1–§2 below originally specified computing
+> the level scope *inside* `packages/ai`'s prompt-var functions by importing
+> `grammarPointsAtOrBelow` from `@language-drill/db`. That violates a hard
+> architectural boundary — **`packages/ai` source must not depend on
+> `@language-drill/db`** (the curriculum lives in db; the caller injects the data;
+> see `packages/ai/src/prompts.ts`). It compiled locally (db/dist pre-built) but
+> failed CI from a clean checkout with `TS2307`. The implemented design instead
+> mirrors `priorPoolSurfaces`: the db-side orchestrator (`run-one-cell.ts`)
+> resolves the points via `grammarPointsAtOrBelow` and injects them as
+> `levelScopePoints` on the `GenerationSpec`; `renderLevelScopeSection` is a pure
+> formatter taking `points: readonly GrammarPoint[]` (typed from
+> `@language-drill/shared`), and ai stays db-free. Everything else (gating, prompt
+> text, `levelMatch` reword, version bumps) is unchanged.
+
 ## Problem
 
 The exercise generator and validator both judge CEFR level-appropriateness from

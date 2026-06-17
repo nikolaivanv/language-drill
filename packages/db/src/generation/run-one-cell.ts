@@ -41,7 +41,10 @@ import {
 import { and, eq, inArray, sql } from 'drizzle-orm';
 
 import type { Db } from '../client';
-import { CURRICULUM_VERSION_BY_LANGUAGE } from '../curriculum';
+import {
+  CURRICULUM_VERSION_BY_LANGUAGE,
+  grammarPointsAtOrBelow,
+} from '../curriculum';
 import { assertValidCellKey } from '../lib/cell-key';
 import { deterministicUuid } from '../lib/deterministic-uuid';
 import {
@@ -566,6 +569,14 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       count: args.count,
       batchSeed: args.batchSeed,
       priorPoolSurfaces,
+      // Level scope: the grammar points a learner at/below this cell's level
+      // has studied. Resolved here (db owns the curriculum) and injected into
+      // the spec so both the generation and validation prompts judge
+      // level-appropriateness against the real curriculum. `@language-drill/ai`
+      // must not import the curriculum itself, so the caller injects it (same
+      // pattern as priorPoolSurfaces). The ai-side formatter gates by exercise
+      // type, so passing it for every cell is harmless.
+      levelScopePoints: grammarPointsAtOrBelow(cell.language, cell.cefrLevel),
       seedWords,
       coverageTargets: args.coverageTargets,
     };

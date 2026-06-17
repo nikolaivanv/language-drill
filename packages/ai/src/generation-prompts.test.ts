@@ -11,7 +11,7 @@ import {
   type VocabRecallContent,
 } from "@language-drill/shared";
 // SentenceConstructionContent is used implicitly via ExerciseType.SENTENCE_CONSTRUCTION
-import { getGrammarPoint } from "@language-drill/db";
+import { getGrammarPoint, grammarPointsAtOrBelow } from "@language-drill/db";
 
 import { CEFR_LEVEL_DESCRIPTORS, EVALUATION_SYSTEM_PROMPT } from "./prompts.js";
 import {
@@ -61,6 +61,7 @@ const trClozeInputs: GenerationPromptInputs = {
   cefrLevel: CefrLevel.A2,
   exerciseType: ExerciseType.CLOZE,
   grammarPoint: trA2Grammar,
+  levelScopePoints: grammarPointsAtOrBelow(Language.TR, CefrLevel.A2),
 };
 
 // ---------------------------------------------------------------------------

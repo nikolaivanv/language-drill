@@ -11,7 +11,7 @@ import {
   type SentenceConstructionContent,
   type CoverageSpec,
 } from "@language-drill/shared";
-import { getGrammarPoint } from "@language-drill/db";
+import { getGrammarPoint, grammarPointsAtOrBelow } from "@language-drill/db";
 
 import { CEFR_LEVEL_DESCRIPTORS, EVALUATION_SYSTEM_PROMPT } from "./prompts.js";
 import type { ExerciseDraft, GenerationSpec } from "./generate.js";
@@ -57,6 +57,7 @@ const trClozeSpec: GenerationSpec = {
   topicDomain: null,
   count: 1,
   batchSeed: "test-seed",
+  levelScopePoints: grammarPointsAtOrBelow(Language.TR, CefrLevel.A2),
 };
 
 function makeDraft(content: ExerciseContent): ExerciseDraft {

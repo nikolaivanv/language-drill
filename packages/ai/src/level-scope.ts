@@ -5,22 +5,28 @@
  * from only the single target grammar point + generic one-line CEFR descriptors,
  * so `levelMatch` drifted to the model's own sense of the level and produced
  * spurious rejections. This block lists the grammar points a learner at or below
- * the target level has actually studied (from the curriculum), giving both
- * prompts a shared ground truth.
+ * the target level has actually studied, giving both prompts a shared ground
+ * truth.
+ *
+ * The curriculum lives in `@language-drill/db`, which this package MUST NOT
+ * depend on (see `prompts.ts`). So the caller (the db-side generation
+ * orchestrator) resolves the points via `grammarPointsAtOrBelow` and injects
+ * them as `levelScopePoints` on the spec/inputs; this module only formats them
+ * — exactly the caller-injection pattern used for `priorPoolSurfaces`.
  *
  * Gated to the four grammar-anchored exercise types — cloze, translation,
  * sentence_construction, conjugation. For every other type (e.g. vocab_recall,
  * which shares the generation template) it returns "", so the `{{levelScopeSection}}`
  * placeholder collapses and the cached prompt prefix is unchanged. Pure +
- * deterministic (curriculum is static), preserving prompt-cache parity.
+ * deterministic, preserving prompt-cache parity.
  */
 
 import {
   type CefrLevel,
   ExerciseType,
+  type GrammarPoint,
   type LearningLanguage,
 } from "@language-drill/shared";
-import { grammarPointsAtOrBelow } from "@language-drill/db";
 
 const LEVEL_SCOPE_TYPES: ReadonlySet<ExerciseType> = new Set([
   ExerciseType.CLOZE,
@@ -36,10 +42,10 @@ export function renderLevelScopeSection(
   exerciseType: ExerciseType,
   language: LearningLanguage,
   cefrLevel: CefrLevel,
+  points: readonly GrammarPoint[] | undefined,
 ): string {
   if (!LEVEL_SCOPE_TYPES.has(exerciseType)) return "";
-  const points = grammarPointsAtOrBelow(language, cefrLevel);
-  if (points.length === 0) return "";
+  if (!points || points.length === 0) return "";
 
   const byLevel = new Map<string, string[]>();
   for (const p of points) {

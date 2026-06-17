@@ -84,6 +84,15 @@ export type GenerationPromptInputs = {
    * section is omitted entirely.
    */
   priorPoolSurfaces?: readonly string[];
+  /**
+   * Grammar points at or below this cell's CEFR level — the learner's "level
+   * scope". Resolved by the caller via `grammarPointsAtOrBelow` (the curriculum
+   * lives in `@language-drill/db`, which this package must not depend on) and
+   * injected here, mirroring `priorPoolSurfaces`. `renderLevelScopeSection`
+   * formats them into `{{levelScopeSection}}` for grammar-anchored types only;
+   * empty/undefined → the section is omitted.
+   */
+  levelScopePoints?: readonly GrammarPoint[];
 };
 
 // ---------------------------------------------------------------------------
@@ -312,8 +321,14 @@ export function computeGenerationPromptVars(
       "Dictation exercises are not batch-generated; computeGenerationPromptVars received a dictation cell.",
     );
   }
-  const { language, cefrLevel, exerciseType, grammarPoint, priorPoolSurfaces } =
-    inputs;
+  const {
+    language,
+    cefrLevel,
+    exerciseType,
+    grammarPoint,
+    priorPoolSurfaces,
+    levelScopePoints,
+  } = inputs;
   return {
     language,
     cefrLevel,
@@ -324,7 +339,12 @@ export function computeGenerationPromptVars(
     negativeExamplesBullets: renderBulletList(grammarPoint.examplesNegative),
     commonErrorsBullets: renderBulletList(grammarPoint.commonErrors),
     cefrDescriptors: CEFR_DESCRIPTOR_BULLETS,
-    levelScopeSection: renderLevelScopeSection(exerciseType, language, cefrLevel),
+    levelScopeSection: renderLevelScopeSection(
+      exerciseType,
+      language,
+      cefrLevel,
+      levelScopePoints,
+    ),
     priorPoolSection: renderPriorPoolSection(exerciseType, priorPoolSurfaces),
     sentenceConstructionSection: renderSentenceConstructionSection(
       exerciseType,

@@ -158,6 +158,7 @@ export function computeValidationPromptVars(
       spec.exerciseType,
       spec.language,
       spec.cefrLevel,
+      spec.levelScopePoints,
     ),
   };
 }
