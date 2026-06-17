@@ -381,3 +381,10 @@ export { AuditEntrySchema, AuditLogResponseSchema, type AuditEntry, type AuditQu
 export { useAuditLog } from './hooks/useAuditLog';
 export { CapacityResponseSchema, type CapacityResponse } from './schemas/capacity';
 export { useCapacity } from './hooks/useCapacity';
+export {
+  CurriculumEntrySchema,
+  CurriculumResponseSchema,
+  type CurriculumEntry,
+  type CurriculumResponse,
+} from './schemas/curriculum';
+export { useCurriculum, type CurriculumParams } from './hooks/useCurriculum';
