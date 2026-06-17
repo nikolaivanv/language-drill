@@ -388,3 +388,14 @@ export {
   type CurriculumResponse,
 } from './schemas/curriculum';
 export { useCurriculum, type CurriculumParams } from './hooks/useCurriculum';
+export {
+  FlagCategoryEnum, type FlagCategory,
+  FlagExerciseRequestSchema, type FlagExerciseRequest,
+  FlagExerciseResponseSchema, type FlagExerciseResponse,
+  UserFlagQueueItemSchema, type UserFlagQueueItem,
+  UserFlagsResponseSchema, type UserFlagsResponse,
+  ResolveUserFlagResponseSchema, type ResolveUserFlagOutcome,
+} from './schemas/user-flags';
+export {
+  useFlagExercise, useUserFlagsQueue, useResolveUserFlag, type UserFlagStatus,
+} from './hooks/useUserFlags';
