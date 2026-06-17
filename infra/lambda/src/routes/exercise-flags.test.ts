@@ -50,11 +50,19 @@ const dbInsert = vi.fn((table: AnyJson) => {
 });
 const dbUpdate = vi.fn((_table: unknown) => makeChain());
 
+// transaction mock: calls the callback with a tx object that re-uses the same
+// dbUpdate spy so that `expect(dbUpdate).not.toHaveBeenCalled()` assertions
+// work uniformly whether the handler uses db.update() or a tx.update().
+const dbTransaction = vi.fn(async (fn: (tx: { update: typeof dbUpdate }) => unknown) =>
+  fn({ update: dbUpdate }),
+);
+
 vi.mock('../db', () => ({
   db: {
     select: () => makeChain(),
     insert: (table: unknown) => dbInsert(table as AnyJson),
     update: (table: unknown) => dbUpdate(table),
+    transaction: (fn: never) => dbTransaction(fn),
     execute: () =>
       Promise.resolve({ rows: queryQueue.shift() ?? [] }),
   },
@@ -227,6 +235,16 @@ describe('POST /admin/flags/:id/reject', () => {
     expect(res.status).toBe(200);
     expect(((await res.json()) as { outcome: string }).outcome).toBe('not_found');
   });
+
+  it('returns already_resolved for a non-open flag without writing', async () => {
+    // flag lookup returns a resolved flag → guard short-circuits before any writes
+    queryQueue.push([{ id: 'f1', exerciseId: 'ex1', status: 'resolved_rejected' }]);
+    const res = await app.request('/admin/flags/f1/reject', { method: 'POST' }, adminEnv);
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as { outcome: string }).outcome).toBe('already_resolved');
+    // guard must short-circuit before the update writes
+    expect(dbUpdate).not.toHaveBeenCalled();
+  });
 });
 
 describe('POST /admin/flags/:id/dismiss', () => {
@@ -238,5 +256,22 @@ describe('POST /admin/flags/:id/dismiss', () => {
     expect(((await res.json()) as { outcome: string }).outcome).toBe('dismissed');
     // exercises table must not be updated on dismiss
     expect(dbUpdate).not.toHaveBeenCalledWith(expect.objectContaining({ __mock: 'exercises' }));
+  });
+
+  it('returns already_resolved for a non-open flag without writing', async () => {
+    // flag lookup returns a resolved flag → guard short-circuits before any writes
+    queryQueue.push([{ id: 'f1', exerciseId: 'ex1', status: 'resolved_dismissed' }]);
+    const res = await app.request('/admin/flags/f1/dismiss', { method: 'POST' }, adminEnv);
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as { outcome: string }).outcome).toBe('already_resolved');
+    expect(dbUpdate).not.toHaveBeenCalled();
+  });
+
+  it('returns not_found for a missing flag without writing', async () => {
+    queryQueue.push([]); // flag lookup empty
+    const res = await app.request('/admin/flags/missing/dismiss', { method: 'POST' }, adminEnv);
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as { outcome: string }).outcome).toBe('not_found');
+    expect(dbUpdate).not.toHaveBeenCalled();
   });
 });

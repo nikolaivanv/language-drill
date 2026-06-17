@@ -102,7 +102,10 @@ app.get('/admin/flags', async (c) => {
     .from(exerciseFlags)
     .innerJoin(userExerciseHistory, eq(userExerciseHistory.id, exerciseFlags.historyId))
     .innerJoin(exercises, eq(exercises.id, exerciseFlags.exerciseId));
-  const countChain = db.select({ count: sql<number>`count(*)` }).from(exerciseFlags);
+  const countChain = db.select({ count: sql<number>`count(*)` })
+    .from(exerciseFlags)
+    .innerJoin(userExerciseHistory, eq(userExerciseHistory.id, exerciseFlags.historyId))
+    .innerJoin(exercises, eq(exercises.id, exerciseFlags.exerciseId));
 
   const [rows, totalRows] = await Promise.all([
     (where ? listChain.where(where) : listChain).orderBy(desc(exerciseFlags.createdAt)).limit(limit),
@@ -138,10 +141,13 @@ app.post('/admin/flags/:id/reject', async (c) => {
   const id = c.req.param('id');
   const flag = await loadOpenFlag(id);
   if (flag === 'not_found' || flag === 'already_resolved') return c.json({ outcome: flag });
-  // Terminal reject: pull from pool (from any non-rejected status).
-  await db.update(exercises).set({ reviewStatus: 'rejected' }).where(eq(exercises.id, flag.exerciseId)).returning({ id: exercises.id });
-  await db.update(exerciseFlags).set({ status: 'resolved_rejected', resolvedBy: c.get('userId'), resolvedAt: new Date() })
-    .where(eq(exerciseFlags.id, id)).returning({ id: exerciseFlags.id });
+  // Wrap the two writes in a transaction: exercise rejection + flag resolution must both land
+  // or neither, so the pool and flag state stay consistent.
+  await db.transaction(async (tx) => {
+    await tx.update(exercises).set({ reviewStatus: 'rejected' }).where(eq(exercises.id, flag.exerciseId)).returning({ id: exercises.id });
+    await tx.update(exerciseFlags).set({ status: 'resolved_rejected', resolvedBy: c.get('userId'), resolvedAt: new Date() })
+      .where(eq(exerciseFlags.id, id)).returning({ id: exerciseFlags.id });
+  });
   await recordAdminAction(db, { adminUserId: c.get('userId'), action: 'user_flag.reject', targetType: 'exercise', targetId: flag.exerciseId, metadata: { flagId: id } });
   return c.json({ outcome: 'rejected' as FlagResolveOutcome });
 });
