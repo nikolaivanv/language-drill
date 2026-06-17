@@ -45,6 +45,37 @@ export function getGrammarPoint(key: string): GrammarPoint | undefined {
   return GRAMMAR_POINT_INDEX.get(key);
 }
 
+// CEFR rank for "at or below" comparisons. Mirrors ROUND_1_CEFR_LEVELS
+// (generation/cells.ts) without importing across the curriculum→generation
+// boundary. C1/C2 are intentionally absent — out-of-round levels rank as
+// "unknown" and yield an empty scope.
+const CEFR_RANK: Readonly<Record<string, number>> = { A1: 0, A2: 1, B1: 2, B2: 3 };
+
+/**
+ * All `kind: 'grammar'` points for `language` at or below `level`, in that
+ * language's curriculum order. The "level scope" a learner at `level` has
+ * plausibly studied — fed into the generation/validation prompts so they judge
+ * level-appropriateness against the real curriculum instead of the model's own
+ * sense of the CEFR band. Returns `[]` for an unknown/out-of-round level (C1/C2)
+ * and excludes vocab/dictation/free-writing umbrellas (not grammar).
+ *
+ * `level` is typed `string` so callers can pass the broader `CefrLevel` enum
+ * (which includes C1/C2) without a cast; unknown ranks fall through to `[]`.
+ */
+export function grammarPointsAtOrBelow(
+  language: LearningLanguage,
+  level: string,
+): readonly GrammarPoint[] {
+  const maxRank = CEFR_RANK[level];
+  if (maxRank === undefined) return [];
+  return ALL_CURRICULA.filter(
+    (entry) =>
+      entry.kind === 'grammar' &&
+      entry.language === language &&
+      (CEFR_RANK[entry.cefrLevel] ?? Number.POSITIVE_INFINITY) <= maxRank,
+  );
+}
+
 /**
  * Curriculum sequence number for the theory library's "curriculum order"
  * sort: a grammar point's 0-based position within its OWN language's
