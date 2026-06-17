@@ -11,12 +11,6 @@ const ACTIONS = [
 ];
 const TARGET_TYPES = ['exercise', 'theory_topic', 'cell', 'invite'];
 
-/** Human-readable label for a dotted action key, e.g. "flagged.approve" → "flagged: approve" */
-function actionLabel(action: string): string {
-  const [ns, ...rest] = action.split('.');
-  return rest.length > 0 ? `${ns}: ${rest.join('.')}` : action;
-}
-
 export default function AuditPage() {
   const { getToken } = useAuth();
   const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
@@ -40,7 +34,7 @@ export default function AuditPage() {
       <div className="flex gap-2 flex-wrap text-[13px]">
         <select aria-label="action" value={filters.action ?? ''} onChange={(e) => setFilter('action', e.target.value)}>
           <option value="">All actions</option>
-          {ACTIONS.map((a) => <option key={a} value={a}>{actionLabel(a)}</option>)}
+          {ACTIONS.map((a) => <option key={a} value={a}>{a}</option>)}
         </select>
         <select aria-label="target type" value={filters.targetType ?? ''} onChange={(e) => setFilter('targetType', e.target.value)}>
           <option value="">All targets</option>
