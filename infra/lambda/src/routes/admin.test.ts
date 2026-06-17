@@ -111,6 +111,7 @@ vi.mock('@language-drill/db', async () => {
       note: { __col: 'note' },
       createdAt: { __col: 'createdAt' },
     },
+    adminAuditLog: { __mock: 'adminAuditLog' },
   };
 });
 
@@ -1252,5 +1253,40 @@ describe('POST /admin/generate', () => {
     expect(res.status).toBe(409);
     expect((await res.json() as AnyJson).code).toBe('GENERATION_IN_PROGRESS');
     expect(sqsSend).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Audit log — flagged + content
+// ---------------------------------------------------------------------------
+
+describe('audit log — flagged + content', () => {
+  it('records flagged.approve on an effective approve (exercise)', async () => {
+    delete insertedValuesByTable.adminAuditLog;
+    queryQueue.push([{ id: 'ex-1' }]); // UPDATE ... returning → approved
+    const id = '11111111-1111-1111-1111-111111111111';
+    await app.request(`/admin/flagged/exercises/${id}/approve`, { method: 'POST' }, adminEnv);
+    expect(insertedValuesByTable.adminAuditLog).toMatchObject({
+      action: 'flagged.approve', targetType: 'exercise', targetId: id, metadata: { outcome: 'approved' },
+    });
+  });
+
+  it('does NOT record when the flagged approve is already_resolved', async () => {
+    delete insertedValuesByTable.adminAuditLog;
+    queryQueue.push([]); // UPDATE → 0 rows
+    queryQueue.push([{ reviewStatus: 'manual-approved' }]); // re-read
+    const id = '22222222-2222-2222-2222-222222222222';
+    await app.request(`/admin/flagged/exercises/${id}/approve`, { method: 'POST' }, adminEnv);
+    expect(insertedValuesByTable.adminAuditLog).toBeUndefined();
+  });
+
+  it('records content.demote on an effective demote (theory)', async () => {
+    delete insertedValuesByTable.adminAuditLog;
+    queryQueue.push([{ id: 'th-1' }]); // UPDATE → demoted
+    const id = '33333333-3333-3333-3333-333333333333';
+    await app.request(`/admin/content/theory/${id}/demote`, { method: 'POST' }, adminEnv);
+    expect(insertedValuesByTable.adminAuditLog).toMatchObject({
+      action: 'content.demote', targetType: 'theory_topic', targetId: id, metadata: { outcome: 'demoted' },
+    });
   });
 });
