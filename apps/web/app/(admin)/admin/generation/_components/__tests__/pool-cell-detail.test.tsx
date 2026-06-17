@@ -108,4 +108,12 @@ describe('PoolCellDetail — refill', () => {
     fireEvent.click(screen.getByRole('button', { name: /refill/i }));
     expect(await screen.findByText(/already in progress/i)).toBeInTheDocument();
   });
+
+  it('shows a generic failure message on a non-409 error', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    mockGenerateMutateAsync.mockRejectedValue(Object.assign(new Error('boom'), { status: 500 }));
+    render(<PoolCellDetail item={item} fetchFn={fetchFn} />);
+    fireEvent.click(screen.getByRole('button', { name: /refill/i }));
+    expect(await screen.findByText(/failed to queue generation/i)).toBeInTheDocument();
+  });
 });

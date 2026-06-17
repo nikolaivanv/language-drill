@@ -18,6 +18,7 @@ export function PoolCellDetail({ item, fetchFn }: { item: PoolStatusItem; fetchF
   const [genMessage, setGenMessage] = useState<string | null>(null);
   const onRefill = async () => {
     if (!window.confirm(`Generate ~${refillCount} exercises for this cell?`)) return;
+    setGenMessage(null);
     try {
       const res = await generate.mutateAsync({
         language: item.language, level: item.level, type: item.type,
