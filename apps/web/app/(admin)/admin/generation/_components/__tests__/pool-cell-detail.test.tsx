@@ -1,11 +1,17 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { PoolStatusItem } from '@language-drill/api-client';
 
 const mockUsePoolCell = vi.fn();
+const mockGenerateMutateAsync = vi.fn();
+const mockUseGenerateCell = vi.fn((_args?: unknown) => ({ mutateAsync: mockGenerateMutateAsync, isPending: false }));
 vi.mock('@language-drill/api-client', async () => {
   const actual = await vi.importActual<typeof import('@language-drill/api-client')>('@language-drill/api-client');
-  return { ...actual, usePoolCell: (args: unknown) => mockUsePoolCell(args) };
+  return {
+    ...actual,
+    usePoolCell: (args: unknown) => mockUsePoolCell(args),
+    useGenerateCell: (args: unknown) => mockUseGenerateCell(args),
+  };
 });
 
 import { PoolCellDetail } from '../pool-cell-detail';
@@ -19,6 +25,10 @@ const item: PoolStatusItem = {
 const fetchFn = vi.fn();
 
 describe('PoolCellDetail', () => {
+  beforeEach(() => {
+    mockUseGenerateCell.mockReturnValue({ mutateAsync: mockGenerateMutateAsync, isPending: false });
+  });
+
   it('renders diversity vs floors, flagging below-floor values', () => {
     mockUsePoolCell.mockReturnValue({
       isLoading: false, isError: false,
@@ -58,5 +68,44 @@ describe('PoolCellDetail', () => {
     mockUsePoolCell.mockReturnValue({ isLoading: false, isError: true, data: undefined });
     render(<PoolCellDetail item={item} fetchFn={fetchFn} />);
     expect(screen.getByText(/failed to load/i)).toBeInTheDocument();
+  });
+});
+
+describe('PoolCellDetail — refill', () => {
+  beforeEach(() => {
+    mockUsePoolCell.mockReturnValue({ isLoading: false, isError: false, data: { floors: {}, rejectionReasonCounts: {} } });
+    mockGenerateMutateAsync.mockReset();
+    mockUseGenerateCell.mockReturnValue({ mutateAsync: mockGenerateMutateAsync, isPending: false });
+  });
+
+  it('defaults the count to the gap (generationTarget - approved)', () => {
+    render(<PoolCellDetail item={item} fetchFn={fetchFn} />);
+    expect((screen.getByLabelText(/refill count/i) as HTMLInputElement).value).toBe('18');
+  });
+
+  it('does not generate when the confirm is cancelled', () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+    render(<PoolCellDetail item={item} fetchFn={fetchFn} />);
+    fireEvent.click(screen.getByRole('button', { name: /refill/i }));
+    expect(mockGenerateMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('queues a job and shows the queued message on success', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    mockGenerateMutateAsync.mockResolvedValue({ jobId: 'abcdef12-3456', status: 'queued' });
+    render(<PoolCellDetail item={item} fetchFn={fetchFn} />);
+    fireEvent.click(screen.getByRole('button', { name: /refill/i }));
+    expect(mockGenerateMutateAsync).toHaveBeenCalledWith({
+      language: 'ES', level: 'B1', type: 'cloze', grammarPoint: 'es-b1-present-subjunctive', count: 18,
+    });
+    expect(await screen.findByText(/queued \(job abcdef12\)/i)).toBeInTheDocument();
+  });
+
+  it('shows the in-progress message on a 409', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    mockGenerateMutateAsync.mockRejectedValue(Object.assign(new Error('x'), { status: 409 }));
+    render(<PoolCellDetail item={item} fetchFn={fetchFn} />);
+    fireEvent.click(screen.getByRole('button', { name: /refill/i }));
+    expect(await screen.findByText(/already in progress/i)).toBeInTheDocument();
   });
 });
