@@ -14,6 +14,7 @@ import {
   requireEnv,
   targetCellSize,
   theoryTopics,
+  usageEvents,
   userExerciseHistory,
 } from '@language-drill/db';
 import { normalizeFlaggedReasons } from '@language-drill/shared';
@@ -1121,6 +1122,41 @@ admin.get('/admin/audit', async (c) => {
     createdAt: r.createdAt ? r.createdAt.toISOString() : null,
   }));
   return c.json({ items, total: Number(totalRows[0]?.count ?? 0) });
+});
+
+// ---------------------------------------------------------------------------
+// GET /admin/capacity — AI capacity-control state + trailing-24h usage
+// ---------------------------------------------------------------------------
+admin.get('/admin/capacity', async (c) => {
+  const killSwitch = (process.env.AI_KILL_SWITCH ?? '').toLowerCase() === 'on';
+  const capRaw = Number.parseInt(process.env.AI_GLOBAL_DAILY_CAP ?? '', 10);
+  const globalDailyCap = capRaw > 0 ? capRaw : null;
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+  const [byTypeRows, consumerRows] = await Promise.all([
+    db
+      .select({ eventType: usageEvents.eventType, count: count() })
+      .from(usageEvents)
+      .where(gte(usageEvents.createdAt, since))
+      .groupBy(usageEvents.eventType),
+    db
+      .select({ userId: usageEvents.userId, count: count() })
+      .from(usageEvents)
+      .where(gte(usageEvents.createdAt, since))
+      .groupBy(usageEvents.userId),
+  ]);
+
+  // Sort + cap in JS (result sets are tiny; avoids orderBy-aggregate portability concerns).
+  const byEventType = byTypeRows
+    .map((r) => ({ eventType: r.eventType, count: Number(r.count) }))
+    .sort((a, b) => b.count - a.count);
+  const total = byEventType.reduce((sum, e) => sum + e.count, 0);
+  const topConsumers = consumerRows
+    .map((r) => ({ userId: r.userId, count: Number(r.count) }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+
+  return c.json({ killSwitch, globalDailyCap, usage24h: { total, byEventType }, topConsumers });
 });
 
 export default admin;

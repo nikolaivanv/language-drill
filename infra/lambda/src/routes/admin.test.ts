@@ -1440,3 +1440,66 @@ describe('GET /admin/audit', () => {
     expect(((await res.json()) as AnyJson).code).toBe('VALIDATION_ERROR');
   });
 });
+
+// ---------------------------------------------------------------------------
+// GET /admin/capacity
+// ---------------------------------------------------------------------------
+
+describe('GET /admin/capacity', () => {
+  let prevKill: string | undefined;
+  let prevCap: string | undefined;
+  beforeAll(() => { prevKill = process.env.AI_KILL_SWITCH; prevCap = process.env.AI_GLOBAL_DAILY_CAP; });
+  afterAll(() => {
+    if (prevKill === undefined) delete process.env.AI_KILL_SWITCH; else process.env.AI_KILL_SWITCH = prevKill;
+    if (prevCap === undefined) delete process.env.AI_GLOBAL_DAILY_CAP; else process.env.AI_GLOBAL_DAILY_CAP = prevCap;
+  });
+
+  it('reports kill-switch on + cap + 24h usage breakdown + top consumers', async () => {
+    process.env.AI_KILL_SWITCH = 'on';
+    process.env.AI_GLOBAL_DAILY_CAP = '5000';
+    queryQueue.push([
+      { eventType: 'read_annotation', count: 380 },
+      { eventType: 'ai_evaluation', count: 612 },
+    ]); // byEventType (unsorted)
+    queryQueue.push([
+      { userId: 'u2', count: 95 },
+      { userId: 'u1', count: 210 },
+    ]); // topConsumers (unsorted)
+    const res = await app.request('/admin/capacity', undefined, adminEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.killSwitch).toBe(true);
+    expect(body.globalDailyCap).toBe(5000);
+    expect(body.usage24h.total).toBe(992);
+    expect(body.usage24h.byEventType[0]).toEqual({ eventType: 'ai_evaluation', count: 612 }); // sorted desc
+    expect(body.topConsumers[0]).toEqual({ userId: 'u1', count: 210 }); // sorted desc
+  });
+
+  it('reports kill-switch off + no cap when env is unset', async () => {
+    delete process.env.AI_KILL_SWITCH;
+    delete process.env.AI_GLOBAL_DAILY_CAP;
+    queryQueue.push([]); // byEventType
+    queryQueue.push([]); // topConsumers
+    const res = await app.request('/admin/capacity', undefined, adminEnv);
+    const body = (await res.json()) as AnyJson;
+    expect(body.killSwitch).toBe(false);
+    expect(body.globalDailyCap).toBeNull();
+    expect(body.usage24h).toEqual({ total: 0, byEventType: [] });
+    expect(body.topConsumers).toEqual([]);
+  });
+
+  it('treats a non-positive cap as no cap', async () => {
+    process.env.AI_GLOBAL_DAILY_CAP = '0';
+    queryQueue.push([]); queryQueue.push([]);
+    const res = await app.request('/admin/capacity', undefined, adminEnv);
+    expect(((await res.json()) as AnyJson).globalDailyCap).toBeNull();
+  });
+
+  it('caps top consumers at 10', async () => {
+    delete process.env.AI_GLOBAL_DAILY_CAP;
+    queryQueue.push([]); // byEventType
+    queryQueue.push(Array.from({ length: 15 }, (_, i) => ({ userId: `u${i}`, count: i }))); // 15 consumers
+    const res = await app.request('/admin/capacity', undefined, adminEnv);
+    expect(((await res.json()) as AnyJson).topConsumers).toHaveLength(10);
+  });
+});
