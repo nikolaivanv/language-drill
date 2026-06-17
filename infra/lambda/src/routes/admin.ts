@@ -939,6 +939,14 @@ admin.post('/admin/generate', async (c) => {
     new SendMessageCommand({ QueueUrl: requireEnv('GENERATION_QUEUE_URL'), MessageBody: JSON.stringify(message) }),
   );
 
+  await recordAdminAction(db, {
+    adminUserId: c.get('userId'),
+    action: 'generation.trigger',
+    targetType: 'cell',
+    targetId: cellKey,
+    metadata: { count, jobId },
+  });
+
   return c.json({ jobId, status: 'queued' });
 });
 
@@ -993,6 +1001,15 @@ admin.post('/admin/invites', async (c) => {
       expiresAt: invitations.expiresAt,
       note: invitations.note,
     });
+
+  await recordAdminAction(db, {
+    adminUserId: c.get('userId'),
+    action: 'invite.create',
+    targetType: 'invite',
+    targetId: null,
+    metadata: { count: n },
+  });
+
   return c.json({ codes: inserted });
 });
 
@@ -1042,6 +1059,15 @@ admin.post('/admin/invites/:id/revoke', async (c) => {
     .update(invitations)
     .set({ revokedAt: new Date() })
     .where(eq(invitations.id, id));
+
+  await recordAdminAction(db, {
+    adminUserId: c.get('userId'),
+    action: 'invite.revoke',
+    targetType: 'invite',
+    targetId: id,
+    metadata: {},
+  });
+
   return c.json({ ok: true }, 200);
 });
 

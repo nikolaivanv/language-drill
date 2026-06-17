@@ -1319,3 +1319,72 @@ describe('audit log — flagged + content', () => {
     expect(insertedValuesByTable.adminAuditLog).toBeUndefined();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Audit log — generate + invites
+// ---------------------------------------------------------------------------
+
+describe('audit log — generate + invites', () => {
+  let prevRegion: string | undefined;
+  let prevQueueUrl: string | undefined;
+  beforeAll(() => {
+    prevRegion = process.env.AWS_REGION;
+    prevQueueUrl = process.env.GENERATION_QUEUE_URL;
+    process.env.AWS_REGION = 'us-east-1';
+    process.env.GENERATION_QUEUE_URL = 'https://sqs.test/queue';
+  });
+  afterAll(() => {
+    if (prevRegion === undefined) delete process.env.AWS_REGION; else process.env.AWS_REGION = prevRegion;
+    if (prevQueueUrl === undefined) delete process.env.GENERATION_QUEUE_URL; else process.env.GENERATION_QUEUE_URL = prevQueueUrl;
+  });
+
+  it('records generation.trigger after a successful enqueue', async () => {
+    delete insertedValuesByTable.adminAuditLog;
+    queryQueue.push([]); // in-flight check → none
+    const res = await app.request('/admin/generate', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ language: 'ES', level: 'B1', type: 'cloze', grammarPoint: 'es-b1-present-subjunctive', count: 7 }),
+    }, adminEnv);
+    const body = await res.json() as AnyJson;
+    expect(insertedValuesByTable.adminAuditLog).toMatchObject({
+      action: 'generation.trigger', targetType: 'cell', metadata: { count: 7, jobId: body.jobId },
+    });
+  });
+
+  it('does NOT record generation.trigger on a 409 in-flight', async () => {
+    delete insertedValuesByTable.adminAuditLog;
+    queryQueue.push([{ id: 'existing' }]); // in-flight → 409
+    await app.request('/admin/generate', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ language: 'ES', level: 'B1', type: 'cloze', grammarPoint: 'es-b1-present-subjunctive', count: 5 }),
+    }, adminEnv);
+    expect(insertedValuesByTable.adminAuditLog).toBeUndefined();
+  });
+
+  it('records invite.create after generating codes', async () => {
+    delete insertedValuesByTable.adminAuditLog;
+    queryQueue.push([{ id: 'i1', code: 'AAAAAAAA', expiresAt: null, note: null }]); // invites insert .returning
+    await app.request('/admin/invites', {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ count: 1 }),
+    }, adminEnv);
+    expect(insertedValuesByTable.adminAuditLog).toMatchObject({
+      action: 'invite.create', targetType: 'invite', targetId: null, metadata: { count: 1 },
+    });
+  });
+
+  it('records invite.revoke only when actually revoked', async () => {
+    delete insertedValuesByTable.adminAuditLog;
+    queryQueue.push([{ id: 'inv-1', usedBy: null, revokedAt: null }]); // select → revocable
+    await app.request('/admin/invites/inv-1/revoke', { method: 'POST' }, adminEnv);
+    expect(insertedValuesByTable.adminAuditLog).toMatchObject({
+      action: 'invite.revoke', targetType: 'invite', targetId: 'inv-1',
+    });
+  });
+
+  it('does NOT record invite.revoke when already used (409)', async () => {
+    delete insertedValuesByTable.adminAuditLog;
+    queryQueue.push([{ id: 'inv-2', usedBy: 'user-x', revokedAt: null }]); // select → used
+    await app.request('/admin/invites/inv-2/revoke', { method: 'POST' }, adminEnv);
+    expect(insertedValuesByTable.adminAuditLog).toBeUndefined();
+  });
+});
