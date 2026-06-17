@@ -51,6 +51,18 @@ const baseInputs: GenerationPromptInputs = {
   grammarPoint,
 };
 
+const trA2Grammar = getGrammarPoint("tr-a2-aorist");
+if (!trA2Grammar) throw new Error("test fixture missing: tr-a2-aorist");
+const trA1ScopePoint = getGrammarPoint("tr-a1-locative");
+if (!trA1ScopePoint) throw new Error("test fixture missing: tr-a1-locative");
+
+const trClozeInputs: GenerationPromptInputs = {
+  language: Language.TR,
+  cefrLevel: CefrLevel.A2,
+  exerciseType: ExerciseType.CLOZE,
+  grammarPoint: trA2Grammar,
+};
+
 // ---------------------------------------------------------------------------
 // buildGenerationSystemPrompt
 // ---------------------------------------------------------------------------
@@ -215,7 +227,7 @@ describe("buildGenerationSystemPrompt", () => {
     // `{{conjugationSection}}` guidance block spliced into the cached template.
     // Prior 2026-06-12 cohort covered the possessive-cloze diversity tweak + the
     // curriculum-wide grammatical-person rotation.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-06-16");
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-06-17");
     // Tasks 7–9: pin the new guardrail phrases in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "every content word MUST be high-frequency everyday vocabulary at or below CEFR {{cefrLevel}}",
@@ -402,6 +414,33 @@ describe("buildGenerationSystemPrompt", () => {
       buildGenerationSystemPrompt(inputs, ["x"]),
     ]);
     expect(a).toBe(b);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// level scope in the generation prompt
+// ---------------------------------------------------------------------------
+
+describe("level scope in the generation prompt", () => {
+  it("includes the at/below-level grammar scope for a grammar-anchored cell", async () => {
+    const prompt = await buildGenerationSystemPrompt(trClozeInputs, []);
+    expect(prompt).toContain("Grammar in this learner's scope");
+    expect(prompt).toContain(trA1ScopePoint.name); // A1 point in an A2 cell's scope
+  });
+
+  it("omits the scope block for vocab_recall (gate)", async () => {
+    const vocab = getGrammarPoint("tr-a1-vocab-food-drink");
+    if (!vocab) throw new Error("test fixture missing: tr-a1-vocab-food-drink");
+    const prompt = await buildGenerationSystemPrompt(
+      { language: Language.TR, cefrLevel: CefrLevel.A1, exerciseType: ExerciseType.VOCAB_RECALL, grammarPoint: vocab },
+      [],
+    );
+    expect(prompt).not.toContain("Grammar in this learner's scope");
+  });
+
+  it("exposes levelScopeSection via computeGenerationPromptVars", () => {
+    const vars = computeGenerationPromptVars(trClozeInputs, []);
+    expect(vars.levelScopeSection).toContain("learner's scope");
   });
 });
 
