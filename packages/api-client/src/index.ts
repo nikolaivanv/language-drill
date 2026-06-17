@@ -377,3 +377,5 @@ export {
   type GenerateCellResponse,
 } from './schemas/generate';
 export { useGenerateCell } from './hooks/useGenerateCell';
+export { AuditEntrySchema, AuditLogResponseSchema, type AuditEntry, type AuditQuery } from './schemas/audit';
+export { useAuditLog } from './hooks/useAuditLog';
