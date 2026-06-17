@@ -639,7 +639,7 @@ async function transitionContentTheory(id: string, toStatus: 'flagged' | 'reject
 
 const ContentIdSchema = z.string().uuid();
 
-const EFFECTIVE_CONTENT = new Set(['demoted', 'rejected']);
+const EFFECTIVE_CONTENT = new Set<ContentOutcome>(['demoted', 'rejected']);
 
 for (const action of ['demote', 'reject'] as const) {
   const toStatus = action === 'demote' ? ('flagged' as const) : ('rejected' as const);
@@ -843,7 +843,7 @@ async function resolveTheoryFlagged(
 
 const FlaggedIdSchema = z.string().uuid();
 
-const EFFECTIVE_FLAGGED = new Set(['approved', 'rejected', 'demoted']);
+const EFFECTIVE_FLAGGED = new Set<ResolveOutcome>(['approved', 'rejected', 'demoted']);
 
 for (const [kind, resolve] of [
   ['exercises', resolveExerciseFlagged],

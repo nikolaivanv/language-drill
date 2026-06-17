@@ -1289,4 +1289,33 @@ describe('audit log — flagged + content', () => {
       action: 'content.demote', targetType: 'theory_topic', targetId: id, metadata: { outcome: 'demoted' },
     });
   });
+
+  it('records flagged.reject on an effective reject (exercise)', async () => {
+    delete insertedValuesByTable.adminAuditLog;
+    queryQueue.push([{ id: 'ex-9' }]); // UPDATE...returning → rejected
+    const id = '44444444-4444-4444-4444-444444444444';
+    await app.request(`/admin/flagged/exercises/${id}/reject`, { method: 'POST' }, adminEnv);
+    expect(insertedValuesByTable.adminAuditLog).toMatchObject({
+      action: 'flagged.reject', targetType: 'exercise', targetId: id, metadata: { outcome: 'rejected' },
+    });
+  });
+
+  it('records content.reject on an effective reject (exercise)', async () => {
+    delete insertedValuesByTable.adminAuditLog;
+    queryQueue.push([{ id: 'ex-9' }]); // UPDATE...returning → rejected
+    const id = '55555555-5555-5555-5555-555555555555';
+    await app.request(`/admin/content/exercises/${id}/reject`, { method: 'POST' }, adminEnv);
+    expect(insertedValuesByTable.adminAuditLog).toMatchObject({
+      action: 'content.reject', targetType: 'exercise', targetId: id, metadata: { outcome: 'rejected' },
+    });
+  });
+
+  it('does NOT record content.demote when outcome is not_found (exercise)', async () => {
+    delete insertedValuesByTable.adminAuditLog;
+    queryQueue.push([]); // UPDATE → 0 rows matched
+    queryQueue.push([]); // re-read → no row → not_found
+    const id = '66666666-6666-6666-6666-666666666666';
+    await app.request(`/admin/content/exercises/${id}/demote`, { method: 'POST' }, adminEnv);
+    expect(insertedValuesByTable.adminAuditLog).toBeUndefined();
+  });
 });
