@@ -1,8 +1,28 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ExerciseType } from '@language-drill/shared';
 import type { DebriefItem } from '@language-drill/api-client';
+
+const mockMutate = vi.fn();
+const mockUseFlagExercise = vi.fn((_args?: unknown) => ({
+  mutate: mockMutate,
+  isPending: false,
+  isSuccess: false,
+  isError: false,
+}));
+vi.mock('@language-drill/api-client', async () => {
+  const actual = await vi.importActual<typeof import('@language-drill/api-client')>('@language-drill/api-client');
+  return { ...actual, useFlagExercise: (args: unknown) => mockUseFlagExercise(args) };
+});
+
 import { ReviewItemCard } from '../review-item-card';
+
+const fetchFn = vi.fn();
+
+beforeEach(() => {
+  mockMutate.mockReset();
+  mockUseFlagExercise.mockClear();
+});
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -21,6 +41,7 @@ const sampleEvaluation = {
 function clozeItem(overrides: Partial<DebriefItem> = {}): DebriefItem {
   return {
     exerciseId: '11111111-1111-4111-8111-111111111111',
+    submissionId: '99999999-1111-4111-8111-111111111111',
     type: ExerciseType.CLOZE,
     grammarPointKey: null,
     contentJson: {
@@ -50,6 +71,7 @@ function correctClozeItem(overrides: Partial<DebriefItem> = {}): DebriefItem {
 function skippedClozeItem(overrides: Partial<DebriefItem> = {}): DebriefItem {
   return clozeItem({
     status: 'skipped',
+    submissionId: null,
     userAnswer: null,
     score: null,
     evaluation: null,
@@ -316,6 +338,7 @@ describe('ReviewItemCard — diff grid uses the canonical breakpoint', () => {
 function translationItem(overrides: Partial<DebriefItem> = {}): DebriefItem {
   return {
     exerciseId: '22222222-2222-4222-8222-222222222222',
+    submissionId: '22222222-2222-4222-8222-aaaaaaaaaaaa',
     type: ExerciseType.TRANSLATION,
     grammarPointKey: null,
     contentJson: {
@@ -388,6 +411,7 @@ describe('ReviewItemCard — translation body', () => {
 function vocabItem(overrides: Partial<DebriefItem> = {}): DebriefItem {
   return {
     exerciseId: '33333333-3333-4333-8333-333333333333',
+    submissionId: '33333333-3333-4333-8333-aaaaaaaaaaaa',
     type: ExerciseType.VOCAB_RECALL,
     grammarPointKey: null,
     contentJson: {
@@ -471,6 +495,7 @@ describe('ReviewItemCard — vocab body', () => {
 function sentenceConstructionItem(overrides: Partial<DebriefItem> = {}): DebriefItem {
   return {
     exerciseId: '44444444-4444-4444-8444-444444444444',
+    submissionId: '44444444-4444-4444-8444-aaaaaaaaaaaa',
     type: ExerciseType.SENTENCE_CONSTRUCTION,
     grammarPointKey: null,
     contentJson: {
@@ -655,5 +680,60 @@ describe('ReviewItemCard — dictation body', () => {
       />,
     );
     expect(screen.getByText(/skipped — no submission/i)).toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Flag control — lets the user flag a reviewed exercise (mirrors /drill)
+// ---------------------------------------------------------------------------
+
+describe('ReviewItemCard — flag control', () => {
+  it('renders a flag control for an attempted item when fetchFn is provided', () => {
+    // clozeItem() is incorrect → expanded by default, so the body (and the
+    // flag control) is visible without clicking.
+    render(<ReviewItemCard index={0} item={clozeItem()} fetchFn={fetchFn} />);
+    expect(
+      screen.getByRole('button', { name: /flag this exercise/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('does not render a flag control for a skipped item (no submission to flag)', () => {
+    render(<ReviewItemCard index={0} item={skippedClozeItem()} fetchFn={fetchFn} />);
+    expect(
+      screen.queryByRole('button', { name: /flag this exercise/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('does not render a flag control when no fetchFn is provided', () => {
+    render(<ReviewItemCard index={0} item={clozeItem()} />);
+    expect(
+      screen.queryByRole('button', { name: /flag this exercise/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('hides the flag control behind the collapsed body for a correct item until expanded', () => {
+    render(<ReviewItemCard index={0} item={correctClozeItem()} fetchFn={fetchFn} />);
+    // Correct items collapse by default → no body, no flag control.
+    expect(
+      screen.queryByRole('button', { name: /flag this exercise/i }),
+    ).not.toBeInTheDocument();
+    // Expand via the header toggle.
+    fireEvent.click(screen.getByRole('button', { name: /#1/ }));
+    expect(
+      screen.getByRole('button', { name: /flag this exercise/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('passes exerciseId + submissionId through to the flag mutation', () => {
+    render(<ReviewItemCard index={0} item={clozeItem()} fetchFn={fetchFn} />);
+    fireEvent.click(screen.getByRole('button', { name: /flag this exercise/i }));
+    fireEvent.click(screen.getByRole('button', { name: /submit flag/i }));
+    expect(mockMutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        exerciseId: '11111111-1111-4111-8111-111111111111',
+        submissionId: '99999999-1111-4111-8111-111111111111',
+      }),
+      expect.anything(),
+    );
   });
 });

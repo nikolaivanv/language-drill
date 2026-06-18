@@ -73,6 +73,7 @@ const SAMPLE_RESPONSE = {
   items: [
     {
       exerciseId: 'aaaaaaaa-1111-4111-8111-111111111111',
+      submissionId: 'cccccccc-1111-4111-8111-111111111111',
       type: 'cloze',
       grammarPointKey: 'es-b1-conditional',
       contentJson: { instructions: 'Fill in', sentence: 'Yo ___ libros' },
@@ -83,6 +84,7 @@ const SAMPLE_RESPONSE = {
     },
     {
       exerciseId: 'bbbbbbbb-2222-4222-8222-222222222222',
+      submissionId: null,
       type: 'translation',
       grammarPointKey: null,
       contentJson: {

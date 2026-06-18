@@ -15,9 +15,10 @@ import {
   type TranslationContent,
   type VocabRecallContent,
 } from '@language-drill/shared';
-import type { DebriefItem } from '@language-drill/api-client';
+import type { AuthenticatedFetch, DebriefItem } from '@language-drill/api-client';
 import { Card, Chip } from '../../../../../components/ui';
 import { splitClozeSentence } from '../../../../../lib/drill/cloze-blank';
+import { FlagExerciseControl } from '../../_components/flag-exercise-control';
 import { DictationBody } from './dictation-body';
 
 // ---------------------------------------------------------------------------
@@ -31,9 +32,13 @@ import { DictationBody } from './dictation-body';
 export interface ReviewItemCardProps {
   index: number;
   item: DebriefItem;
+  // When provided (and the item has a submission to flag), the expanded body
+  // gains a "Flag this exercise" control — mirrors the /drill page. Omitted in
+  // contexts without an authenticated fetcher, where the control is hidden.
+  fetchFn?: AuthenticatedFetch;
 }
 
-export function ReviewItemCard({ index, item }: ReviewItemCardProps) {
+export function ReviewItemCard({ index, item, fetchFn }: ReviewItemCardProps) {
   const [expanded, setExpanded] = React.useState(item.status !== 'correct');
 
   const content = item.contentJson as ExerciseContent;
@@ -78,6 +83,13 @@ export function ReviewItemCard({ index, item }: ReviewItemCardProps) {
           ) : isConjugationContent(content) ? (
             <ConjugationBody item={item} content={content} />
           ) : null}
+          {fetchFn && item.submissionId !== null && (
+            <FlagExerciseControl
+              exerciseId={item.exerciseId}
+              submissionId={item.submissionId}
+              fetchFn={fetchFn}
+            />
+          )}
         </div>
       )}
     </Card>

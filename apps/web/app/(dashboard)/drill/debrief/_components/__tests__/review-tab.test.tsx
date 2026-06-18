@@ -1,8 +1,19 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ExerciseType } from '@language-drill/shared';
 import type { DebriefItem } from '@language-drill/api-client';
+
+vi.mock('@language-drill/api-client', async () => {
+  const actual = await vi.importActual<typeof import('@language-drill/api-client')>('@language-drill/api-client');
+  return {
+    ...actual,
+    useFlagExercise: () => ({ mutate: vi.fn(), isPending: false, isSuccess: false, isError: false }),
+  };
+});
+
 import { ReviewTab } from '../review-tab';
+
+const fetchFn = vi.fn();
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -25,6 +36,7 @@ function clozeItem(
 ): DebriefItem {
   return {
     exerciseId: id,
+    submissionId: status === 'skipped' ? null : 'aaaaaaaa-1111-4111-8111-111111111111',
     type: ExerciseType.CLOZE,
     grammarPointKey: null,
     contentJson: {
@@ -52,7 +64,7 @@ describe('ReviewTab', () => {
       clozeItem('22222222-2222-4222-8222-222222222222', 'incorrect', 'topic-b'),
       clozeItem('33333333-3333-4333-8333-333333333333', 'skipped', 'topic-c'),
     ];
-    render(<ReviewTab items={items} />);
+    render(<ReviewTab items={items} fetchFn={fetchFn} />);
     // Each card emits a status chip — count them as a proxy for card count.
     expect(screen.getByText('✓ correct')).toBeDefined();
     expect(screen.getByText('✗ missed')).toBeDefined();
@@ -67,7 +79,7 @@ describe('ReviewTab', () => {
       clozeItem('11111111-1111-4111-8111-111111111111', 'incorrect', 'alpha'),
       clozeItem('55555555-5555-4555-8555-555555555555', 'incorrect', 'kappa'),
     ];
-    render(<ReviewTab items={items} />);
+    render(<ReviewTab items={items} fetchFn={fetchFn} />);
 
     // Index labels are #1, #2, #3 in the order ReviewItemCard receives them.
     // Topic chips use the same string per-item, so we can use them to verify
@@ -85,7 +97,7 @@ describe('ReviewTab', () => {
   });
 
   it('renders an empty wrapper when items is empty (defensive)', () => {
-    const { container } = render(<ReviewTab items={[]} />);
+    const { container } = render(<ReviewTab items={[]} fetchFn={fetchFn} />);
     // The wrapper div is rendered but has no card children.
     expect(container.querySelectorAll('[role="button"]').length).toBe(0);
   });
@@ -101,7 +113,7 @@ describe('ReviewTab', () => {
         `t${i}`,
       ),
     );
-    render(<ReviewTab items={items} />);
+    render(<ReviewTab items={items} fetchFn={fetchFn} />);
     const indexLabels = screen.getAllByText(/^#\d+$/);
     expect(indexLabels).toHaveLength(5);
   });
