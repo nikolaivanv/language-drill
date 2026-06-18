@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { createElement, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { CefrLevel, Language } from '@language-drill/shared';
-import { useCreateSession, useCompleteSession } from './useSession';
+import { useCreateSession, useCompleteSession, useResumeSession } from './useSession';
 import type { CreateSessionRequest } from '../schemas/session';
 import type { AuthenticatedFetch } from '../fetchClient';
 
@@ -353,5 +353,39 @@ describe('useCompleteSession — error propagation', () => {
       result.current.mutateAsync({ sessionId: 'abc-uuid' }),
     ).rejects.toThrow('Session is not active');
     expect(fetchFn).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// useResumeSession
+// ---------------------------------------------------------------------------
+
+describe('useResumeSession', () => {
+  let queryClient: QueryClient;
+  let wrapper: ReturnType<typeof buildWrapper>;
+
+  beforeEach(() => {
+    queryClient = buildQueryClient();
+    wrapper = buildWrapper(queryClient);
+  });
+
+  it('useResumeSession GETs /sessions/:id and returns the parsed payload', async () => {
+    const fetchFn = vi.fn(async () => ({
+      json: async () => ({
+        id: '11111111-1111-1111-1111-111111111111',
+        exercises: [{ id: 'e1', type: 'cloze', language: 'EN', difficulty: 'B1', grammarPointKey: null, contentJson: {} }],
+        attemptedExerciseIds: [],
+        completedAt: null,
+      }),
+    })) as unknown as AuthenticatedFetch;
+
+    const { result } = renderHook(
+      () => useResumeSession({ sessionId: '11111111-1111-1111-1111-111111111111', fetchFn }),
+      { wrapper },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(fetchFn).toHaveBeenCalledWith('/sessions/11111111-1111-1111-1111-111111111111');
+    expect(result.current.data?.exercises[0].id).toBe('e1');
   });
 });

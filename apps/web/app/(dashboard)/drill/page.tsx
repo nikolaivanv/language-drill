@@ -13,6 +13,7 @@ import {
 import {
   useCreateSession,
   useCompleteSession,
+  useResumeSession,
   useSubmitAnswer,
   useLanguageProfiles,
   createAuthenticatedFetch,
@@ -42,6 +43,7 @@ import { DrillActionBar } from './_components/drill-action-bar';
 import { ExercisePane } from './_components/exercise-pane';
 import { FlagExerciseControl } from './_components/flag-exercise-control';
 import {
+  firstUnattemptedIndex,
   initialSessionState,
   selectCurrentItem,
   selectIsLastItem,
@@ -78,6 +80,10 @@ function PracticePageContent() {
     const s = searchParams.get('start');
     return s === 'quick' || s === 'dictation' ? s : null;
   });
+  const [resumeId] = useState<string | null>(() => {
+    const r = searchParams.get('resume');
+    return r && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(r) ? r : null;
+  });
   const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
 
   const { data: profilesData } = useLanguageProfiles({ fetchFn });
@@ -110,6 +116,11 @@ function PracticePageContent() {
   const createSession = useCreateSession({ fetchFn });
   const submitMutation = useSubmitAnswer({ fetchFn });
   const completeSession = useCompleteSession({ fetchFn });
+  const resumeQuery = useResumeSession({
+    sessionId: resumeId ?? '',
+    fetchFn,
+    enabled: resumeId !== null && (state.kind === 'idle' || state.kind === 'creating'),
+  });
 
   function fireCompleteSession(sessionId: string) {
     completeSession.mutate(
@@ -155,6 +166,47 @@ function PracticePageContent() {
       onError: (err) => dispatch({ type: 'CREATE_FAILED', error: err as Error }),
     });
   }, [initialized, startIntent, state.kind, activeLanguage, difficulty, createSession]);
+
+  const resumeKickoffRef = useRef(false);
+  useEffect(() => {
+    if (resumeId === null) return;
+    // Show the loading ('creating') UI immediately, before the fetch resolves.
+    if (state.kind === 'idle') {
+      dispatch({ type: 'CREATE_REQUESTED' });
+      return;
+    }
+    if (state.kind !== 'creating') return;
+    if (resumeQuery.isError) {
+      dispatch({ type: 'CREATE_FAILED', error: resumeQuery.error as Error });
+      return;
+    }
+    const data = resumeQuery.data;
+    if (!data) return;
+    if (resumeKickoffRef.current) return;
+    resumeKickoffRef.current = true;
+
+    // Already finalized → straight to the debrief.
+    if (data.completedAt !== null) {
+      router.push(`/drill/debrief/${data.id}`);
+      return;
+    }
+    const startIndex = firstUnattemptedIndex(
+      data.exercises,
+      new Set(data.attemptedExerciseIds),
+    );
+    // Every exercise attempted but not finalized → complete it, then debrief.
+    if (startIndex === -1) {
+      completeSession.mutate(
+        { sessionId: data.id },
+        {
+          onSuccess: () => router.push(`/drill/debrief/${data.id}`),
+          onError: (err) => dispatch({ type: 'CREATE_FAILED', error: err as Error }),
+        },
+      );
+      return;
+    }
+    dispatch({ type: 'RESUME_SUCCEEDED', session: data, startIndex });
+  }, [resumeId, state.kind, resumeQuery.data, resumeQuery.isError, resumeQuery.error, router, completeSession]);
 
   function handleSubmit(answer: string, meta: SubmissionMeta) {
     if (state.kind !== 'inSession') return;
@@ -272,7 +324,7 @@ function PracticePageContent() {
     );
   }
 
-  if (state.kind === 'idle' && startIntent === null) {
+  if (state.kind === 'idle' && startIntent === null && resumeId === null) {
     return (
       <DrillHub
         difficulty={difficulty}

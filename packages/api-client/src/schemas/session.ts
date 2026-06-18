@@ -33,3 +33,13 @@ export const CompleteSessionResponseSchema = z.object({
 });
 
 export type CompleteSessionResponse = z.infer<typeof CompleteSessionResponseSchema>;
+
+// Response body for GET /sessions/:id — used to resume an in-progress session.
+export const ResumeSessionResponseSchema = z.object({
+  id: z.string().uuid(),
+  exercises: z.array(ExerciseResponseSchema),
+  attemptedExerciseIds: z.array(z.string()),
+  completedAt: z.string().datetime().nullable(),
+});
+
+export type ResumeSessionResponse = z.infer<typeof ResumeSessionResponseSchema>;

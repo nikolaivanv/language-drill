@@ -4,6 +4,7 @@ import {
   CreateSessionRequestSchema,
   CreateSessionResponseSchema,
   CompleteSessionResponseSchema,
+  ResumeSessionResponseSchema,
 } from './session';
 
 describe('CreateSessionRequestSchema', () => {
@@ -129,6 +130,20 @@ describe('CompleteSessionResponseSchema', () => {
       }),
     ).toThrow();
   });
+});
+
+it('parses a resume-session response', () => {
+  const parsed = ResumeSessionResponseSchema.parse({
+    id: '11111111-1111-1111-1111-111111111111',
+    exercises: [
+      { id: 'e2', type: 'cloze', language: 'EN', difficulty: 'B1', grammarPointKey: null, contentJson: {} },
+    ],
+    attemptedExerciseIds: ['e2'],
+    completedAt: null,
+  });
+  expect(parsed.exercises[0].id).toBe('e2');
+  expect(parsed.attemptedExerciseIds).toEqual(['e2']);
+  expect(parsed.completedAt).toBeNull();
 });
 
 describe('CreateSessionRequestSchema — exerciseType', () => {

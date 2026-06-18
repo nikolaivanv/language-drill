@@ -5,6 +5,7 @@ import type {
   ExerciseResponse,
 } from '@language-drill/api-client';
 import {
+  firstUnattemptedIndex,
   initialSessionState,
   selectCurrentItem,
   selectIsLastItem,
@@ -41,6 +42,13 @@ const sampleItems: ExerciseResponse[] = [
 const sampleCreateResponse: CreateSessionResponse = {
   id: '11111111-1111-1111-1111-111111111111',
   exercises: sampleItems,
+};
+
+const sampleResumeResponse = {
+  id: sampleCreateResponse.id,
+  exercises: sampleItems,
+  attemptedExerciseIds: ['ex-0'],
+  completedAt: null,
 };
 
 const sampleEvaluation: EvaluationResult = {
@@ -563,6 +571,47 @@ describe('selectIsLastItem', () => {
     },
   ])('returns false when state is $name', ({ state }) => {
     expect(selectIsLastItem(state)).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// firstUnattemptedIndex
+// ---------------------------------------------------------------------------
+
+describe('firstUnattemptedIndex', () => {
+  it('firstUnattemptedIndex returns the first item not in the attempted set', () => {
+    expect(firstUnattemptedIndex(sampleItems, new Set(['ex-0']))).toBe(1);
+    expect(firstUnattemptedIndex(sampleItems, new Set())).toBe(0);
+    expect(firstUnattemptedIndex(sampleItems, new Set(['ex-0', 'ex-1']))).toBe(-1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// RESUME_SUCCEEDED
+// ---------------------------------------------------------------------------
+
+describe('sessionReducer / RESUME_SUCCEEDED', () => {
+  it('enters inSession at the given startIndex from creating', () => {
+    const creating: SessionState = { kind: 'creating' };
+    const next = sessionReducer(creating, {
+      type: 'RESUME_SUCCEEDED',
+      session: sampleResumeResponse,
+      startIndex: 1,
+    });
+    expect(next.kind).toBe('inSession');
+    if (next.kind !== 'inSession') throw new Error('expected inSession');
+    expect(next.index).toBe(1);
+    expect(next.items).toEqual(sampleItems);
+    expect(next.session.id).toBe(sampleResumeResponse.id);
+  });
+
+  it('is ignored when not in creating', () => {
+    const next = sessionReducer(inSessionState, {
+      type: 'RESUME_SUCCEEDED',
+      session: sampleResumeResponse,
+      startIndex: 1,
+    });
+    expect(next).toBe(inSessionState);
   });
 });
 

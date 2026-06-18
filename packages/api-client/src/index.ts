@@ -33,6 +33,8 @@ export {
   type CreateSessionResponse,
   CompleteSessionResponseSchema,
   type CompleteSessionResponse,
+  ResumeSessionResponseSchema,
+  type ResumeSessionResponse,
 } from './schemas/session';
 export {
   DebriefItemStatusSchema,
@@ -143,9 +145,11 @@ export { useStartMyParagraph, type UseStartMyParagraphOptions } from './hooks/us
 export {
   useCreateSession,
   useCompleteSession,
+  useResumeSession,
   type UseCreateSessionOptions,
   type UseCompleteSessionOptions,
   type CompleteSessionParams,
+  type UseResumeSessionOptions,
 } from './hooks/useSession';
 export {
   useSessionDebrief,
