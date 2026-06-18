@@ -15,6 +15,7 @@ import {
 } from "aws-cdk-lib/aws-lambda";
 import * as path from "path";
 
+import { addAiFailureAlarm } from "./ai-failure-alarm";
 import { addPromptFallbackAlarm } from "./prompt-fallback-alarm";
 
 /**
@@ -203,6 +204,27 @@ export class AnnotateStreamLambdaConstruct extends Construct {
       logGroup: this.logGroup,
       env: props.secretsPrefix === "language-drill" ? "prod" : "dev",
       surface: "annotate",
+      alarmTopic: props.alarmTopic,
+    });
+
+    // Alarm on sustained caught Claude streaming failures. Matches ONLY the
+    // genuine-failure lines (logged at error level after the handler has
+    // already branched out deadline-aborts and max-tokens truncations, which
+    // log at warn) so normal SSE disconnects / timeouts never alarm. Like the
+    // API alarm, these degrade gracefully so the runtime Errors metric is blind.
+    addAiFailureAlarm(this, "AnnotateAiFailureAlarm", {
+      logGroup: this.logGroup,
+      env: props.secretsPrefix === "language-drill" ? "prod" : "dev",
+      surface: "annotate",
+      patterns: [
+        "[annotate-stream] streamAnnotation threw",
+        "[annotate-span] streamSpan threw",
+      ],
+      alarmDescription:
+        "Annotate-stream Lambda: >= 5 caught Claude streaming failures (skim / " +
+        "deep-span) in 5 minutes — Anthropic outage or a systemic error. " +
+        "Deadline-aborts and max-tokens truncations log at warn and are excluded. " +
+        "These do not move the Lambda Errors metric.",
       alarmTopic: props.alarmTopic,
     });
   }

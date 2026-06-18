@@ -147,6 +147,65 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
       },
       "Type": "AWS::Budgets::Budget",
     },
+    "AnnotateStreamAnnotateAiFailureAlarm9C6649E8": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "AlertsAlertsTopic96BD0900",
+          },
+        ],
+        "AlarmDescription": "Annotate-stream Lambda: >= 5 caught Claude streaming failures (skim / deep-span) in 5 minutes — Anthropic outage or a systemic error. Deadline-aborts and max-tokens truncations log at warn and are excluded. These do not move the Lambda Errors metric.",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "EvaluationPeriods": 1,
+        "MetricName": "annotate-ai-failure",
+        "Namespace": "LanguageDrill/prod",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Threshold": 5,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "AnnotateStreamAnnotateAiFailureAlarmFilter099F42643": {
+      "Properties": {
+        "FilterPattern": ""[annotate-stream] streamAnnotation threw"",
+        "LogGroupName": {
+          "Ref": "AnnotateStreamLogGroup52C6AB1D",
+        },
+        "MetricTransformations": [
+          {
+            "DefaultValue": 0,
+            "MetricName": "annotate-ai-failure",
+            "MetricNamespace": "LanguageDrill/prod",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
+    "AnnotateStreamAnnotateAiFailureAlarmFilter10B4CA323": {
+      "Properties": {
+        "FilterPattern": ""[annotate-span] streamSpan threw"",
+        "LogGroupName": {
+          "Ref": "AnnotateStreamLogGroup52C6AB1D",
+        },
+        "MetricTransformations": [
+          {
+            "DefaultValue": 0,
+            "MetricName": "annotate-ai-failure",
+            "MetricNamespace": "LanguageDrill/prod",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
     "AnnotateStreamAnnotatePromptFallbackAlarmBC9DBD12": {
       "Properties": {
         "AlarmActions": [
