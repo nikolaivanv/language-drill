@@ -29,7 +29,7 @@ describe('AdminNav', () => {
       '/admin/moderation', '/admin/flags', '/admin/content', '/admin/pool', '/admin/invites', '/admin/audit', '/admin/capacity', '/admin/curriculum',
     ]);
     expect(ADMIN_NAV.map((d) => d.label)).toEqual([
-      'Moderation', 'User flags', 'Content', 'Pool', 'Invites', 'Audit', 'Capacity', 'Curriculum',
+      'Moderation', 'User flags', 'Content', 'Pool', 'Invites', 'Audit', 'Usage & cost', 'Curriculum',
     ]);
   });
 
