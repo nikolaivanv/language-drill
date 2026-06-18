@@ -1154,6 +1154,62 @@ describe('GET /sessions/today', () => {
     const body = (await res.json()) as AnyJson;
     expect(body.freeWriting).toBeNull();
   });
+
+  // -------------------------------------------------------------------------
+  // resumeSessionId (Task 1)
+  // -------------------------------------------------------------------------
+
+  it('returns resumeSessionId for an incomplete today-session (Path A)', async () => {
+    const startedAt = new Date('2026-05-04T08:00:00Z');
+
+    // Query 1 (parallel): today's session row + proficiency level
+    mockLimit
+      .mockResolvedValueOnce([
+        {
+          sessionId: 'sess-1',
+          exerciseIds: ['e1', 'e2'],
+          exerciseCount: 2,
+          correctCount: 0,
+          startedAt,
+          completedAt: null,
+        },
+      ])
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
+
+    // Query 2 (Path A): leftJoin exercises × user_exercise_history
+    // e1 attempted, e2 not
+    mockSelectAwait.mockResolvedValueOnce([
+      { exerciseId: 'e1', type: 'cloze', topicHint: null, difficulty: 'B1', historyId: 'h1' },
+      { exerciseId: 'e2', type: 'translation', topicHint: null, difficulty: 'B1', historyId: null },
+    ]);
+
+    const res = await app.request('/sessions/today?language=ES', { method: 'GET' }, authEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.resumeSessionId).toBe('sess-1');
+  });
+
+  it('returns null resumeSessionId when no today-session exists (Path B)', async () => {
+    // No today-session row + proficiency level B1.
+    mockLimit
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
+
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        { id: 'p1', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'p2', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'p3', type: 'translation', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'p4', type: 'vocab_recall', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'p5', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+      ],
+    });
+    mockSelectAwait.mockResolvedValueOnce([]); // mastery
+
+    const res = await app.request('/sessions/today?language=ES', { method: 'GET' }, authEnv);
+    const body = (await res.json()) as AnyJson;
+    expect(body.resumeSessionId).toBeNull();
+  });
 });
 
 // ---------------------------------------------------------------------------

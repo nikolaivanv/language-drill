@@ -377,6 +377,7 @@ sessions.get('/sessions/today', async (c) => {
       items: items.map(toWireItem),
       summary,
       code: null,
+      resumeSessionId: session.completedAt === null ? session.sessionId : null,
       freeWriting,
     });
   }
@@ -431,6 +432,7 @@ sessions.get('/sessions/today', async (c) => {
       items: [],
       summary: null,
       code: 'INSUFFICIENT_POOL' as const,
+      resumeSessionId: null,
       freeWriting,
     });
   }
@@ -445,6 +447,7 @@ sessions.get('/sessions/today', async (c) => {
     items: items.map(toWireItem),
     summary: null,
     code: null,
+    resumeSessionId: null,
     freeWriting,
   });
 });
