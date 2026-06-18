@@ -7,6 +7,7 @@ import {
   type PoolStatusItem,
 } from '@language-drill/api-client';
 import { PoolCellDetail } from './pool-cell-detail';
+import { DataTable, Th, Td } from '../../../../../components/admin/data-table';
 
 type Props = { items: PoolStatusItem[] };
 
@@ -43,24 +44,25 @@ export function PoolCoverageTable({ items }: Props) {
   );
 
   return (
-    <table className="text-[13px]">
+    <DataTable>
       <thead>
         <tr>
-          <th>Language</th>
-          <th>Level</th>
-          <th>Type</th>
-          <th>Grammar Point</th>
-          <th>Approved</th>
-          <th>Gen Target</th>
-          <th>Demand</th>
-          <th>
+          <Th>Language</Th>
+          <Th>Level</Th>
+          <Th>Type</Th>
+          <Th>Grammar Point</Th>
+          <Th align="right">Approved</Th>
+          <Th align="right">Gen Target</Th>
+          <Th align="right">Demand</Th>
+          <Th align="right">
             <button
               type="button"
+              className="inline-flex items-center gap-1 hover:text-ink"
               onClick={() => setSortDir((dir) => (dir === 'asc' ? 'desc' : 'asc'))}
             >
               Coverage % {sortDir === 'asc' ? '▲' : '▼'}
             </button>
-          </th>
+          </Th>
         </tr>
       </thead>
       <tbody>
@@ -71,26 +73,27 @@ export function PoolCoverageTable({ items }: Props) {
           return (
             <Fragment key={key}>
               <tr className={coverageBgClass(ratio)}>
-                <td>{item.language}</td>
-                <td>{item.level}</td>
-                <td>{item.type}</td>
-                <td>
+                <Td>{item.language}</Td>
+                <Td>{item.level}</Td>
+                <Td>{item.type}</Td>
+                <Td>
                   <button
                     type="button"
                     aria-expanded={isOpen}
+                    className="inline-flex items-center gap-1 font-medium text-ink hover:text-accent-2"
                     onClick={() => setExpanded((cur) => (cur === key ? null : key))}
                   >
-                    {item.grammarPointKey} {isOpen ? '▼' : '▶'}
+                    <span className="t-mono">{item.grammarPointKey}</span> {isOpen ? '▼' : '▶'}
                   </button>
-                </td>
-                <td>{item.approved}</td>
-                <td>{item.generationTarget}</td>
-                <td>{item.targetSize}</td>
-                <td>{(ratio * 100).toFixed(1)}%</td>
+                </Td>
+                <Td align="right">{item.approved}</Td>
+                <Td align="right">{item.generationTarget}</Td>
+                <Td align="right">{item.targetSize}</Td>
+                <Td align="right" className="font-medium">{(ratio * 100).toFixed(1)}%</Td>
               </tr>
               {isOpen ? (
                 <tr>
-                  <td colSpan={8}>
+                  <td colSpan={8} className="border-b border-rule bg-paper p-0">
                     <PoolCellDetail item={item} fetchFn={fetchFn} />
                   </td>
                 </tr>
@@ -99,6 +102,6 @@ export function PoolCoverageTable({ items }: Props) {
           );
         })}
       </tbody>
-    </table>
+    </DataTable>
   );
 }
