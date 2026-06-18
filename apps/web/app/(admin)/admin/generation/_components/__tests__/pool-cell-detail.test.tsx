@@ -27,6 +27,8 @@ const item: PoolStatusItem = {
 };
 const fetchFn = vi.fn();
 
+afterEach(() => vi.unstubAllEnvs());
+
 describe('PoolCellDetail', () => {
   beforeEach(() => {
     mockUseGenerateCell.mockReturnValue({ mutateAsync: mockGenerateMutateAsync, isPending: false });
@@ -68,7 +70,6 @@ describe('PoolCellDetail', () => {
     render(<PoolCellDetail item={item} fetchFn={fetchFn} />);
     expect(screen.getByRole('link', { name: /traces in langfuse/i }))
       .toHaveAttribute('href', 'https://lf/traces?q=es%3Ab1%3Acloze%3Aes-b1-present-subjunctive');
-    vi.unstubAllEnvs();
   });
 
   it('omits the Langfuse link when the template env is unset', () => {
@@ -76,7 +77,6 @@ describe('PoolCellDetail', () => {
     mockUsePoolCell.mockReturnValue({ isLoading: false, isError: false, data: { floors: {}, rejectionReasonCounts: {} } });
     render(<PoolCellDetail item={item} fetchFn={fetchFn} />);
     expect(screen.queryByRole('link', { name: /traces in langfuse/i })).not.toBeInTheDocument();
-    vi.unstubAllEnvs();
   });
 
   it('shows a loading state', () => {
