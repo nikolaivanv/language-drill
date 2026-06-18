@@ -453,6 +453,78 @@ sessions.get('/sessions/today', async (c) => {
 });
 
 // ---------------------------------------------------------------------------
+// GET /sessions/:id — fetch a session's manifest + attempt state for resume
+// ---------------------------------------------------------------------------
+sessions.get('/sessions/:id', async (c) => {
+  const id = c.req.param('id');
+  const userId = c.get('userId');
+
+  const idResult = z.string().uuid().safeParse(id);
+  if (!idResult.success) {
+    c.header('Cache-Control', 'no-store');
+    return c.json(
+      { error: 'Invalid session id', code: 'VALIDATION_ERROR', details: idResult.error.flatten() },
+      400,
+    );
+  }
+
+  // Ownership in the predicate: cross-user / unknown both collapse to 404.
+  const sessionRows = await db
+    .select({
+      id: practiceSessions.id,
+      exerciseIds: practiceSessions.exerciseIds,
+      completedAt: practiceSessions.completedAt,
+    })
+    .from(practiceSessions)
+    .where(and(eq(practiceSessions.id, id), eq(practiceSessions.userId, userId)))
+    .limit(1);
+
+  if (sessionRows.length === 0) {
+    c.header('Cache-Control', 'no-store');
+    return c.json({ error: 'Session not found', code: 'SESSION_NOT_FOUND' }, 404);
+  }
+
+  const session = sessionRows[0];
+  const exerciseIds = (session.exerciseIds ?? []) as string[];
+
+  // Manifest rows (no review_status filter — see Path A rationale) + attempted set.
+  const [rows, historyRows] = await Promise.all([
+    db
+      .select()
+      .from(exercisesTable)
+      .where(inArray(exercisesTable.id, exerciseIds)),
+    db
+      .selectDistinct({ exerciseId: userExerciseHistory.exerciseId })
+      .from(userExerciseHistory)
+      .where(eq(userExerciseHistory.sessionId, id)),
+  ]);
+
+  const rowMap = new Map(rows.map((r) => [r.id, r]));
+  const exercises = await Promise.all(
+    exerciseIds
+      .map((eid) => rowMap.get(eid))
+      .filter((r): r is NonNullable<typeof r> => r != null) // drop deleted exercises
+      .map(async (r) => ({
+        id: r.id,
+        type: r.type,
+        language: r.language,
+        difficulty: r.difficulty,
+        grammarPointKey: r.grammarPointKey,
+        contentJson: withAudioUrl(r.contentJson, await presignAudioUrl(r.audioS3Key)),
+      })),
+  );
+
+  const attemptedExerciseIds = historyRows.map((h) => h.exerciseId);
+
+  return c.json({
+    id: session.id,
+    exercises,
+    attemptedExerciseIds,
+    completedAt: session.completedAt ? new Date(session.completedAt as Date).toISOString() : null,
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 

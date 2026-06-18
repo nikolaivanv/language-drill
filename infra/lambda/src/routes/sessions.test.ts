@@ -65,6 +65,10 @@ const mockUpdate = vi.fn((_table?: unknown) => ({ set: mockSet }));
 vi.mock('../db', () => ({
   db: {
     select: () => mockSelect(),
+    // selectDistinct uses the same chain shape as select — routes through the
+    // same mockFrom → mockWhere → mockSelectAwait path so per-test sequence
+    // ordering via mockSelectAwait.mockResolvedValueOnce works identically.
+    selectDistinct: () => mockSelect(),
     insert: () => mockInsert(),
     update: (table: unknown) => mockUpdate(table),
     execute: (sqlExpr: unknown) => mockExecute(sqlExpr),
@@ -1902,6 +1906,102 @@ describe('GET /sessions/:id/debrief', () => {
       expect('to' in m).toBe(false);
       for (const v of Object.values(m)) expect(typeof v).not.toBe('number');
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /sessions/:id — resume payload
+// ---------------------------------------------------------------------------
+
+describe('GET /sessions/:id', () => {
+  let app: Hono;
+
+  const authEnv = {
+    event: {
+      requestContext: {
+        authorizer: { jwt: { claims: { sub: 'user_123' } } },
+      },
+    },
+  };
+
+  // Real UUID strings (handler validates UUIDs).
+  const SESSION_ID = 'aaaaaaaa-bbbb-4bbb-8bbb-cccccccccccc';
+  const EX_1 = 'ex-id-0001-0000-0000-000000000001';
+  const EX_2 = 'ex-id-0002-0000-0000-000000000002';
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const mod = await import('./sessions');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  it('returns ordered exercises + attemptedExerciseIds for the owner', async () => {
+    // 1. Session row select (id + userId predicate) → found.
+    //    exerciseIds = ['e2','e1'] — order matters for the response.
+    mockLimit.mockResolvedValueOnce([
+      {
+        id: SESSION_ID,
+        exerciseIds: [EX_2, EX_1],
+        completedAt: null,
+      },
+    ]);
+
+    // 2. Promise.all: exercise rows + distinct history ids.
+    //    Both use .where() as a thenable → mockSelectAwait, called in sequence.
+    //    db.select().from(exercisesTable).where(inArray(...)) → exercise rows.
+    mockSelectAwait.mockResolvedValueOnce([
+      {
+        id: EX_1,
+        type: 'cloze',
+        language: 'ES',
+        difficulty: 'B1',
+        grammarPointKey: 'es-b1-subjunctive',
+        contentJson: { sentence: 'Yo ___' },
+        audioS3Key: null,
+      },
+      {
+        id: EX_2,
+        type: 'translation',
+        language: 'ES',
+        difficulty: 'B1',
+        grammarPointKey: null,
+        contentJson: { sourceText: 'hello' },
+        audioS3Key: null,
+      },
+    ]);
+    //    db.selectDistinct({ exerciseId }).from(userExerciseHistory).where(...) → history.
+    //    Only EX_2 was attempted.
+    mockSelectAwait.mockResolvedValueOnce([{ exerciseId: EX_2 }]);
+
+    const res = await app.request(`/sessions/${SESSION_ID}`, {}, authEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.id).toBe(SESSION_ID);
+    // Order follows exerciseIds ([EX_2, EX_1]), not the exercises-table return order.
+    expect(body.exercises.map((e: { id: string }) => e.id)).toEqual([EX_2, EX_1]);
+    expect(body.attemptedExerciseIds).toEqual([EX_2]);
+    expect(body.completedAt).toBeNull();
+    // Shape spot-check on one exercise item.
+    expect(body.exercises[0]).toMatchObject({
+      id: EX_2,
+      type: 'translation',
+      language: 'ES',
+      difficulty: 'B1',
+    });
+  });
+
+  it('404s for a session the caller does not own', async () => {
+    // select(session by id+userId) → [] (ownership predicate yields no row).
+    mockLimit.mockResolvedValueOnce([]);
+
+    const res = await app.request(`/sessions/${SESSION_ID}`, {}, authEnv);
+    expect(res.status).toBe(404);
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBe('SESSION_NOT_FOUND');
+    // No exercise or history queries fired for a non-owned session.
+    // Both exercise-rows select and selectDistinct-history go through mockSelectAwait.
+    expect(mockSelectAwait).not.toHaveBeenCalled();
   });
 });
 
