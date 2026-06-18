@@ -121,8 +121,7 @@ test('navigates from the nav item through the list to a topic detail and back (R
   await expect(toc.getByRole('button', { name: 'formation' })).toBeVisible();
 
   // Back-to-library returns to the index (Req 6.6). The header back link's name
-  // contains "theory library"; the footer CTA reads "back to library" — either
-  // returns to /theory, but the header link is always in view.
+  // contains "theory library" and is always in view.
   await page.getByRole('link', { name: /theory library/i }).click();
   await expect(page).toHaveURL(/\/theory$/);
   await expect(

@@ -105,14 +105,6 @@ export function TheoryDetail({ topicId, language, fetchFn }: TheoryDetailProps) 
               onSwitchTopic={goToTopic}
             />
             <div style={{ height: 40 }} aria-hidden="true" />
-            <div className="theory-footer-cta">
-              <Link
-                href="/theory"
-                className="inline-flex items-center gap-1 rounded-r-md border border-rule bg-card px-3 py-2 text-[13px] text-ink no-underline hover:bg-paper-2"
-              >
-                ← back to library
-              </Link>
-            </div>
           </div>
         </div>
       ) : isLoading ? (

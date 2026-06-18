@@ -360,6 +360,34 @@
   color: var(--color-ink);
   background: var(--color-paper-3);
 }
+/* Compact filter input for a long "other topics" list — sits between the
+   header and the rows inside the 240px sidebar. */
+.theory-topic-filter {
+  appearance: none;
+  width: 100%;
+  margin: 4px 0 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: var(--color-ink);
+  background: var(--color-card);
+  border: 1px solid var(--color-rule);
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.theory-topic-filter:focus {
+  border-color: var(--color-ink);
+  box-shadow: 0 0 0 3px rgba(26, 22, 18, 0.08);
+}
+.theory-otherbtn-hit {
+  background: transparent;
+  color: var(--color-ink);
+  font-weight: 600;
+}
+.theory-other-empty {
+  padding: 6px 10px;
+  color: var(--color-ink-soft);
+}
 
 /* ─── Theory: mobile reflow (≤760px, mirrors MOBILE_MAX_WIDTH) ─── */
 /* Right slide-over → full-screen bottom sheet; TOC sidebar → horizontal strip.
