@@ -2003,6 +2003,22 @@ describe('GET /sessions/:id', () => {
     // Both exercise-rows select and selectDistinct-history go through mockSelectAwait.
     expect(mockSelectAwait).not.toHaveBeenCalled();
   });
+
+  it('returns 400 VALIDATION_ERROR for a non-uuid id', async () => {
+    const res = await app.request(
+      '/sessions/not-a-uuid',
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(400);
+    expect(res.headers.get('cache-control')).toBe('no-store');
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBe('VALIDATION_ERROR');
+    // No DB calls dispatched for a malformed id (validation short-circuits before any DB query).
+    expect(mockLimit).not.toHaveBeenCalled();
+    expect(mockSelectAwait).not.toHaveBeenCalled();
+  });
 });
 
 // ---------------------------------------------------------------------------
