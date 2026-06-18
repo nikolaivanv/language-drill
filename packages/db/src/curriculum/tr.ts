@@ -1435,6 +1435,91 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Wrong case on birbiri (birbirine / birbiriyle / birbirini).',
     ],
   },
+  // G&K §26.3 (adverbial clauses: time/simultaneity), §8.5.2.2 (converb suffixes)
+  {
+    key: 'tr-b1-converb-while-yken',
+    clozeUnsuitable: true,
+    sentenceConstructionSuitable: true,
+    kind: 'grammar',
+    name: 'Converb -(y)ken ("while / when")',
+    description:
+      '-ken attaches to an aorist/imperfective verb base or a nominal for simultaneity or background: gelirken, çocukken, konuşurken. The clause subject may differ from the main clause.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Eve gelirken ekmek aldım. (I bought bread while coming home.)',
+      'Ben çocukken burası bir bahçeydi. (When I was a child, this was a garden.)',
+      'O konuşurken herkes sustu. (While he was speaking, everyone fell silent.)',
+      'Sen uyurken telefon çaldı. (The phone rang while you were sleeping.)',
+    ],
+    examplesNegative: [
+      '*Geldiyken ekmek aldım. (wrong — -ken attaches to the aorist/imperfective base, not -DI past: gelirken)',
+      '*Çocuktuken burası bahçeydi. (wrong — nominal -ken: çocukken)',
+    ],
+    commonErrors: [
+      'Attaching -ken to the -DI past stem.',
+      'Choosing the wrong base aspect (gelirken vs geliyorken).',
+      'Marking the converb-clause subject incorrectly.',
+    ],
+    prerequisiteKeys: ['tr-a2-converbs'],
+  },
+  // G&K §26.3 (adverbial clauses: time/"since"), §8.5.2.2. Verbal "since",
+  // distinct from nominal -DEn beri (tr-a1-beri-dir).
+  {
+    key: 'tr-b1-since-converb',
+    clozeUnsuitable: true,
+    sentenceConstructionSuitable: true,
+    kind: 'grammar',
+    name: 'Converb "since doing" -(y)AlI / -DIğIndAn beri',
+    description:
+      'Verbal "since": -(y)AlI (geleli "since coming") and -DIğIndAn beri (geldiğinden beri) count elapsed time from an event. Distinct from nominal -DEn beri (A1), which attaches to nouns/time points.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Buraya geleli üç ay oldu. (It has been three months since I came here.)',
+      'Onu gördüğümden beri çok düşündüm. (Since I saw him, I have thought a lot.)',
+      "Türkiye'ye taşınalı Türkçe öğreniyorum. (Since moving to Turkey, I have been learning Turkish.)",
+    ],
+    examplesNegative: [
+      '*Geldiden beri üç ay oldu. (wrong — needs the -DIK nominal + possessive: geldiğimden beri)',
+      '*Gelmekten beri çok düşündüm. (wrong — not -mAk; use -(y)AlI or -DIğIndAn beri)',
+    ],
+    commonErrors: [
+      'Using nominal -DEn beri directly on a bare verb.',
+      'Wrong possessive agreement on -DIğIndAn beri.',
+      'Confusing -(y)AlI with the optative.',
+    ],
+    prerequisiteKeys: ['tr-a1-beri-dir'],
+  },
+  // G&K Ch 25 (§25.1.1 participle suffixes, §25.4 tense/aspect in RCs).
+  // Non-subject relatives; the subject relative -(y)An is at A2.
+  {
+    key: 'tr-b1-participles-dik-acak',
+    clozeUnsuitable: true,
+    sentenceConstructionSuitable: true,
+    kind: 'grammar',
+    name: 'Non-subject relative -DIK / -(y)AcAK + possessive',
+    description:
+      'Object/oblique relatives: -DIK (non-future) and -(y)AcAK (prospective) + a possessive agreeing with the clause subject: okuduğum kitap, gideceğimiz şehir. Contrast subject relative -(y)An (A2).',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Okuduğum kitap çok güzeldi. (The book I read was very good.)',
+      "Yarın gideceğimiz şehir Bursa. (The city we will go to tomorrow is Bursa.)",
+      'Annemin yaptığı yemek (the food my mother made)',
+      'Oturduğun sandalye kırık. (The chair you are sitting on is broken.)',
+    ],
+    examplesNegative: [
+      '*Benim okuyan kitap (wrong — subject relative -(y)An cannot encode "the book I read"; needs -DIK + possessive: okuduğum kitap)',
+      '*okuduk kitap (wrong — needs possessive agreement: okuduğum / okuduğun …)',
+    ],
+    commonErrors: [
+      'Using -(y)An for a non-subject relative.',
+      'Dropping the possessive suffix on -DIK / -(y)AcAK.',
+      'Forgetting the genitive on the relative-clause subject (benim okuduğum).',
+    ],
+    prerequisiteKeys: ['tr-a2-relative-an'],
+  },
 
   // ---------------------------------------------------------------------------
   // Vocab umbrellas — kind: 'vocab'
