@@ -30,6 +30,7 @@ export {
   deCurriculum,
   trCurriculum,
   getGrammarPoint,
+  grammarPointsAtOrBelow,
   curriculumOrderOf,
   assertCurriculumInvariants,
   CURRICULUM_VERSION_ES,
@@ -78,6 +79,19 @@ export { targetCellSize } from './lib/target-cell-size';
 // and the generation Lambda both import `runOneCell` from here.
 export * from './generation';
 export * from './theory-generation';
+
+// Pool revalidation helpers — pure row→(draft, spec) reconstruction +
+// demote-only review-status policy. Shared by the `revalidate:cloze` CLI and
+// the UI-triggered revalidation endpoint (admin Lambda).
+export {
+  reconstructDraftAndSpec,
+  decideDemotion,
+  type CandidateRow,
+  type SkipReason,
+  type Reconstructed,
+  type ReconstructFailure,
+  type DemotionAction,
+} from './generation/revalidation';
 
 // Per-grammar-point mastery — the update rule (used by the submit handler) and
 // the history-replay fold (used by the backfill CLI).

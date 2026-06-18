@@ -29,6 +29,7 @@ import {
 import { CEFR_LEVEL_DESCRIPTORS } from "./prompts.js";
 import type { ExerciseDraft, GenerationSpec } from "./generate.js";
 import { getPromptWithVarsOrFallback } from "./prompts-registry.js";
+import { renderLevelScopeSection } from "./level-scope.js";
 
 // ---------------------------------------------------------------------------
 // CEFR descriptor block — built once at module load, reused on every call so
@@ -65,7 +66,11 @@ function renderBulletList(items: readonly string[]): string {
 // VALIDATION_SYSTEM_PROMPT_TEMPLATE. Drives the Langfuse trace
 // `promptVersion` tag — dashboards cohort old vs. new prompt traces by
 // this string.
-export const VALIDATION_PROMPT_VERSION = "validate@2026-06-17";
+// 2026-06-18: added the level-scope block ({{levelScopeSection}}) and reworded
+// the levelMatch dimension to judge against the curriculum scope (ground truth)
+// instead of the model's own sense of the level. Changes the registered
+// template — needs a Langfuse push per env.
+export const VALIDATION_PROMPT_VERSION = "validate@2026-06-18";
 
 export const VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language exercises for {{language}} learners at CEFR {{cefrLevel}}. Your job is to validate one already-generated exercise that targets the grammar point: {{grammarPointName}}.
 
@@ -98,7 +103,7 @@ Score conservatively — a flagged draft costs a human ~30 seconds of review; an
 
 {{cefrDescriptors}}
 
-## Dimensions to score (one-to-one with the tool's required fields)
+{{levelScopeSection}}## Dimensions to score (one-to-one with the tool's required fields)
 
 1. **qualityScore** (0.0–1.0): overall fitness. Anchor to one of the values below; interpolate only when a draft sits cleanly between two anchors. Do NOT default to 0.7/0.75 as a "looks OK" floor.
    - **1.0** — exceptional; could anchor a published textbook unit.
@@ -115,7 +120,7 @@ Score conservatively — a flagged draft costs a human ~30 seconds of review; an
    - "Vowel harmony: stem 'çocuk' (u = back, unrounded → -lar)" / blank "lar" — context derives the answer from the stem.
    - "Use -da/-de after voiced consonants, -ta/-te after voiceless" / blank one of "-da/-de/-ta/-te" — closed set exhaustively enumerated.
    - "Vowel harmony: front vowel stems take -ler suffix" above "Odada pencere___" / blank "ler" — rule's outcome stated for the exact stem class.
-4. **levelMatch** (boolean): does the difficulty match {{cefrLevel}}?
+4. **levelMatch** (boolean): If a grammar-scope list is provided above, use it as the ground truth for what a {{cefrLevel}} learner has studied; if no list is provided, judge against your general knowledge of {{cefrLevel}} expectations. Set \`false\` only if the exercise REQUIRES a grammatical construction clearly ABOVE the learner's level, or is trivially below {{cefrLevel}}. Do NOT set \`false\` merely because a construction is within or below the learner's scope but is not the target point — anything within or below the learner's scope is fair game. Obligatory morphology inherent to {{language}} is part of the language at every level and is never "above level".
 5. **grammarPointMatch** (boolean): does this actually test {{grammarPointName}}?
    - Set \`false\` when the blank's construction is a different grammar-point key from the cell's declared point, **even when grammatically related**. Example: \`correctAnswer: "da"\` in a \`tr-a1-vowel-harmony\` cell tests locative \`-DA\` (belongs in \`tr-a1-locative\`) — the suffix incidentally obeys vowel harmony but the blank tests locative selection. The grammar-point-key boundary is the rule, not the broader grammar family.
 6. **culturalIssues** (array of strings): stereotyping, sensitive content, exclusion. Empty array when none.
@@ -149,6 +154,12 @@ export function computeValidationPromptVars(
     positiveExamplesBullets: renderBulletList(grammarPoint.examplesPositive),
     commonErrorsBullets: renderBulletList(grammarPoint.commonErrors),
     cefrDescriptors: CEFR_DESCRIPTOR_BULLETS,
+    levelScopeSection: renderLevelScopeSection(
+      spec.exerciseType,
+      spec.language,
+      spec.cefrLevel,
+      spec.levelScopePoints,
+    ),
   };
 }
 

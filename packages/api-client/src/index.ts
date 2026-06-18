@@ -377,6 +377,12 @@ export {
   type GenerateCellResponse,
 } from './schemas/generate';
 export { useGenerateCell } from './hooks/useGenerateCell';
+export {
+  RevalidateResponseSchema,
+  type RevalidateRequest,
+  type RevalidateResponse,
+} from './schemas/revalidate';
+export { useRevalidateCell } from './hooks/useRevalidateCell';
 export { AuditEntrySchema, AuditLogResponseSchema, type AuditEntry, type AuditQuery } from './schemas/audit';
 export { useAuditLog } from './hooks/useAuditLog';
 export { CapacityResponseSchema, type CapacityResponse } from './schemas/capacity';

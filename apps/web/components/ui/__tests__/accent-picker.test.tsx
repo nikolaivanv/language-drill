@@ -133,4 +133,101 @@ describe('AccentPicker', () => {
     const btn = screen.getByRole('button', { name: 'insert ñ' });
     expect(btn.className).toContain('font-mono');
   });
+
+  describe('uppercase', () => {
+    it('latches uppercase via the shift toggle: swaps glyphs and inserts the capital', () => {
+      render(<ControlledHarness language="TR" initialValue="" />);
+      const target = screen.getByTestId('target') as HTMLInputElement;
+      target.focus();
+
+      // Lowercase by default
+      expect(screen.getByRole('button', { name: 'insert ş' })).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'uppercase' }));
+
+      // Glyph + label swap to uppercase
+      const upperBtn = screen.getByRole('button', { name: 'insert Ş' });
+      expect(upperBtn).toBeInTheDocument();
+      expect(upperBtn).toHaveTextContent('Ş');
+      expect(
+        screen.queryByRole('button', { name: 'insert ş' })
+      ).not.toBeInTheDocument();
+
+      fireEvent.click(upperBtn);
+      expect(target.value).toBe('Ş');
+    });
+
+    it('reflects latch state via aria-pressed and toggles back off', () => {
+      render(<ControlledHarness language="TR" />);
+      const toggle = screen.getByRole('button', { name: 'uppercase' });
+      expect(toggle).toHaveAttribute('aria-pressed', 'false');
+
+      fireEvent.click(toggle);
+      expect(toggle).toHaveAttribute('aria-pressed', 'true');
+
+      fireEvent.click(toggle);
+      expect(toggle).toHaveAttribute('aria-pressed', 'false');
+      expect(screen.getByRole('button', { name: 'insert ş' })).toBeInTheDocument();
+    });
+
+    it('uppercases while the physical Shift key is held and reverts on release', () => {
+      render(<ControlledHarness language="TR" />);
+      expect(screen.getByRole('button', { name: 'insert ş' })).toBeInTheDocument();
+
+      fireEvent.keyDown(window, { key: 'Shift' });
+      expect(screen.getByRole('button', { name: 'insert Ş' })).toBeInTheDocument();
+
+      fireEvent.keyUp(window, { key: 'Shift' });
+      expect(screen.getByRole('button', { name: 'insert ş' })).toBeInTheDocument();
+    });
+
+    it('resets held Shift when the window loses focus', () => {
+      render(<ControlledHarness language="TR" />);
+      fireEvent.keyDown(window, { key: 'Shift' });
+      expect(screen.getByRole('button', { name: 'insert Ş' })).toBeInTheDocument();
+
+      fireEvent.blur(window);
+      expect(screen.getByRole('button', { name: 'insert ş' })).toBeInTheDocument();
+    });
+
+    it('maps Turkish dotless ı to capital I', () => {
+      render(<ControlledHarness language="TR" initialValue="" />);
+      const target = screen.getByTestId('target') as HTMLInputElement;
+      target.focus();
+
+      fireEvent.click(screen.getByRole('button', { name: 'uppercase' }));
+      fireEvent.click(screen.getByRole('button', { name: 'insert I' }));
+
+      expect(target.value).toBe('I');
+    });
+
+    it('leaves characters with no capital form unchanged under Shift (German ß)', () => {
+      render(<ControlledHarness language="DE" initialValue="" />);
+      const target = screen.getByTestId('target') as HTMLInputElement;
+      target.focus();
+
+      fireEvent.click(screen.getByRole('button', { name: 'uppercase' }));
+      // ß has no distinct single-key capital — still labelled / inserts ß
+      const btn = screen.getByRole('button', { name: 'insert ß' });
+      fireEvent.click(btn);
+
+      expect(target.value).toBe('ß');
+    });
+
+    it('leaves Spanish punctuation unchanged under Shift', () => {
+      render(<ControlledHarness language="ES" initialValue="" />);
+      const target = screen.getByTestId('target') as HTMLInputElement;
+      target.focus();
+
+      fireEvent.click(screen.getByRole('button', { name: 'uppercase' }));
+      fireEvent.click(screen.getByRole('button', { name: 'insert ¿' }));
+
+      expect(target.value).toBe('¿');
+    });
+
+    it('disables the shift toggle along with the character buttons when there is no target', () => {
+      render(<NoTargetHarness language="TR" />);
+      expect(screen.getByRole('button', { name: 'uppercase' })).toBeDisabled();
+    });
+  });
 });

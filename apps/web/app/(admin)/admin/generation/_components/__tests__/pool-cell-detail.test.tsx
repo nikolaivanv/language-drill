@@ -5,12 +5,15 @@ import type { PoolStatusItem } from '@language-drill/api-client';
 const mockUsePoolCell = vi.fn();
 const mockGenerateMutateAsync = vi.fn();
 const mockUseGenerateCell = vi.fn((_args?: unknown) => ({ mutateAsync: mockGenerateMutateAsync, isPending: false }));
+const mockRevalidateMutateAsync = vi.fn();
+const mockUseRevalidateCell = vi.fn((_args?: unknown) => ({ mutateAsync: mockRevalidateMutateAsync, isPending: false }));
 vi.mock('@language-drill/api-client', async () => {
   const actual = await vi.importActual<typeof import('@language-drill/api-client')>('@language-drill/api-client');
   return {
     ...actual,
     usePoolCell: (args: unknown) => mockUsePoolCell(args),
     useGenerateCell: (args: unknown) => mockUseGenerateCell(args),
+    useRevalidateCell: (args: unknown) => mockUseRevalidateCell(args),
   };
 });
 
@@ -27,6 +30,7 @@ const fetchFn = vi.fn();
 describe('PoolCellDetail', () => {
   beforeEach(() => {
     mockUseGenerateCell.mockReturnValue({ mutateAsync: mockGenerateMutateAsync, isPending: false });
+    mockUseRevalidateCell.mockReturnValue({ mutateAsync: mockRevalidateMutateAsync, isPending: false });
   });
 
   it('renders diversity vs floors, flagging below-floor values', () => {
@@ -115,5 +119,66 @@ describe('PoolCellDetail — refill', () => {
     render(<PoolCellDetail item={item} fetchFn={fetchFn} />);
     fireEvent.click(screen.getByRole('button', { name: /refill/i }));
     expect(await screen.findByText(/failed to queue generation/i)).toBeInTheDocument();
+  });
+});
+
+const previewSummary = {
+  apply: false, scanned: 3, noChange: 2, demotedToFlagged: 1, demotedToRejected: 0,
+  skipped: 0, skipReasons: {}, estCostUsd: 0.02, truncated: false, totalCandidates: 3,
+  demotions: [{ id: 'e1', from: 'auto-approved', to: 'flagged', reasons: ['Ambiguous'] }],
+};
+
+describe('PoolCellDetail — revalidate', () => {
+  beforeEach(() => {
+    mockUsePoolCell.mockReturnValue({ isLoading: false, isError: false, data: { floors: {}, rejectionReasonCounts: {} } });
+    mockGenerateMutateAsync.mockReset();
+    mockRevalidateMutateAsync.mockReset();
+    mockUseGenerateCell.mockReturnValue({ mutateAsync: mockGenerateMutateAsync, isPending: false });
+    mockUseRevalidateCell.mockReturnValue({ mutateAsync: mockRevalidateMutateAsync, isPending: false });
+  });
+
+  it('previews (apply:false) and renders the dry-run summary', async () => {
+    mockRevalidateMutateAsync.mockResolvedValue(previewSummary);
+    render(<PoolCellDetail item={item} fetchFn={fetchFn} />);
+    fireEvent.click(screen.getByRole('button', { name: /^preview$/i }));
+    expect(mockRevalidateMutateAsync).toHaveBeenCalledWith({
+      language: 'ES', level: 'B1', type: 'cloze', grammarPoint: 'es-b1-present-subjunctive', apply: false,
+    });
+    const summary = await screen.findByText(/would demote/i);
+    expect(summary.textContent).toMatch(/scanned 3/);
+    expect(summary.textContent).toMatch(/flagged 1/);
+    expect(summary.textContent).toMatch(/0\.02/);
+  });
+
+  it('disables Apply until a preview with demotions, then enables it', async () => {
+    mockRevalidateMutateAsync.mockResolvedValue(previewSummary);
+    render(<PoolCellDetail item={item} fetchFn={fetchFn} />);
+    expect(screen.getByRole('button', { name: /^apply$/i })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: /^preview$/i }));
+    await screen.findByText(/would demote/i);
+    expect(screen.getByRole('button', { name: /^apply$/i })).toBeEnabled();
+  });
+
+  it('applies (apply:true) after confirm and shows the applied summary', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    mockRevalidateMutateAsync.mockResolvedValueOnce(previewSummary);
+    render(<PoolCellDetail item={item} fetchFn={fetchFn} />);
+    fireEvent.click(screen.getByRole('button', { name: /^preview$/i }));
+    await screen.findByText(/would demote/i);
+
+    mockRevalidateMutateAsync.mockResolvedValueOnce({ ...previewSummary, apply: true });
+    fireEvent.click(screen.getByRole('button', { name: /^apply$/i }));
+    expect(mockRevalidateMutateAsync).toHaveBeenLastCalledWith({
+      language: 'ES', level: 'B1', type: 'cloze', grammarPoint: 'es-b1-present-subjunctive', apply: true,
+    });
+    expect(await screen.findByText(/applied:/i)).toBeInTheDocument();
+  });
+
+  it('shows a truncation note mentioning revalidate:cloze and the total', async () => {
+    mockRevalidateMutateAsync.mockResolvedValue({ ...previewSummary, truncated: true, totalCandidates: 120 });
+    render(<PoolCellDetail item={item} fetchFn={fetchFn} />);
+    fireEvent.click(screen.getByRole('button', { name: /^preview$/i }));
+    const note = await screen.findByText(/revalidate:cloze/i);
+    expect(note.textContent).toMatch(/120/);
   });
 });

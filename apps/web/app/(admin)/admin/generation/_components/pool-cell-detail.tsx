@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { AuthenticatedFetch, PoolStatusItem } from '@language-drill/api-client';
-import { usePoolCell, useGenerateCell } from '@language-drill/api-client';
+import { usePoolCell, useGenerateCell, useRevalidateCell, type RevalidateResponse } from '@language-drill/api-client';
 import { REASON_LABELS, type GenerationReasonCode } from '@language-drill/shared';
 
 export function PoolCellDetail({ item, fetchFn }: { item: PoolStatusItem; fetchFn: AuthenticatedFetch }) {
@@ -30,6 +30,36 @@ export function PoolCellDetail({ item, fetchFn }: { item: PoolStatusItem; fetchF
       setGenMessage(status === 409 ? 'A job for this cell is already in progress.' : 'Failed to queue generation.');
     }
   };
+
+  const revalidate = useRevalidateCell({ fetchFn });
+  const [revalSummary, setRevalSummary] = useState<RevalidateResponse | null>(null);
+  const [revalMessage, setRevalMessage] = useState<string | null>(null);
+  const cellArgs = { language: item.language, level: item.level, type: item.type, grammarPoint: item.grammarPointKey };
+
+  const onPreview = async () => {
+    setRevalMessage(null);
+    try {
+      const s = await revalidate.mutateAsync({ ...cellArgs, apply: false });
+      setRevalSummary(s);
+    } catch {
+      setRevalSummary(null);
+      setRevalMessage('Preview failed.');
+    }
+  };
+  const onApply = async () => {
+    const n = (revalSummary?.demotedToFlagged ?? 0) + (revalSummary?.demotedToRejected ?? 0);
+    if (!window.confirm(`Demote ${n} exercise(s) in this cell?`)) return;
+    setRevalMessage(null);
+    try {
+      const s = await revalidate.mutateAsync({ ...cellArgs, apply: true });
+      setRevalSummary(s);
+      setRevalMessage(`Applied: ${s.demotedToFlagged} → flagged, ${s.demotedToRejected} → rejected.`);
+    } catch {
+      setRevalMessage('Apply failed.');
+    }
+  };
+  const canApply =
+    !revalSummary?.apply && (revalSummary?.demotedToFlagged ?? 0) + (revalSummary?.demotedToRejected ?? 0) > 0;
 
   if (detail.isLoading) return <p className="text-[12px] text-ink-soft p-3">Loading…</p>;
   if (detail.isError || !detail.data) return <p className="text-[12px] text-ink-soft p-3">Failed to load cell detail.</p>;
@@ -123,6 +153,41 @@ export function PoolCellDetail({ item, fetchFn }: { item: PoolStatusItem; fetchF
           </button>
         </div>
         {genMessage ? <p className="text-[12px] text-ink-soft">{genMessage}</p> : null}
+      </section>
+
+      <section className="flex flex-col gap-1">
+        <h4 className="text-ink-soft text-[12px] mb-1">Revalidate</h4>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onPreview}
+            disabled={revalidate.isPending}
+            className="text-[13px] text-ink underline disabled:opacity-40"
+          >
+            Preview
+          </button>
+          <button
+            type="button"
+            onClick={onApply}
+            disabled={revalidate.isPending || !canApply}
+            className="text-[13px] text-ink underline disabled:opacity-40"
+          >
+            Apply
+          </button>
+        </div>
+        {revalSummary ? (
+          <p className="text-[12px] text-ink-soft">
+            scanned {revalSummary.scanned} · {revalSummary.apply ? 'demoted' : 'would demote'} → flagged{' '}
+            {revalSummary.demotedToFlagged} · → rejected {revalSummary.demotedToRejected} · skipped{' '}
+            {revalSummary.skipped} · est ${revalSummary.estCostUsd.toFixed(4)}
+          </p>
+        ) : null}
+        {revalSummary?.truncated ? (
+          <p className="text-[12px] text-ink-soft">
+            Showing first 25 of {revalSummary.totalCandidates}; use pnpm revalidate:cloze for the full pass.
+          </p>
+        ) : null}
+        {revalMessage ? <p className="text-[12px] text-ink-soft">{revalMessage}</p> : null}
       </section>
 
       <a href={contentHref} className="text-[13px] text-ink underline">

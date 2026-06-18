@@ -22,6 +22,7 @@ import {
 import { CEFR_LEVEL_DESCRIPTORS } from "./prompts.js";
 import { TOOL_NAME_BY_TYPE } from "./generate.js";
 import { getPromptWithVarsOrFallback } from "./prompts-registry.js";
+import { renderLevelScopeSection } from "./level-scope.js";
 
 // The TOOL_NAME_BY_TYPE import comes from generate.ts. The two modules form
 // a circular import on paper — generate.ts will import from this file in
@@ -83,6 +84,15 @@ export type GenerationPromptInputs = {
    * section is omitted entirely.
    */
   priorPoolSurfaces?: readonly string[];
+  /**
+   * Grammar points at or below this cell's CEFR level — the learner's "level
+   * scope". Resolved by the caller via `grammarPointsAtOrBelow` (the curriculum
+   * lives in `@language-drill/db`, which this package must not depend on) and
+   * injected here, mirroring `priorPoolSurfaces`. `renderLevelScopeSection`
+   * formats them into `{{levelScopeSection}}` for grammar-anchored types only;
+   * empty/undefined → the section is omitted.
+   */
+  levelScopePoints?: readonly GrammarPoint[];
 };
 
 // ---------------------------------------------------------------------------
@@ -132,7 +142,14 @@ function renderRecentStems(recentStems: readonly string[]): string {
 // 2026-06-16: added the conjugation guidance section ({{conjugationSection}})
 // for the new conjugation/inflection ExerciseType. Also changes the registered
 // template — needs a Langfuse push per env.
-export const GENERATION_PROMPT_VERSION = "generate@2026-06-16";
+//
+// 2026-06-17: added the level-scope block ({{levelScopeSection}}) — a
+// curriculum-grounded list of grammar points at or below the target CEFR
+// level, spliced between the CEFR descriptors and the prior-pool section.
+// Gated to grammar-anchored types (cloze, translation, sentence_construction,
+// conjugation). Also changes the registered template — needs a Langfuse push
+// per env.
+export const GENERATION_PROMPT_VERSION = "generate@2026-06-17";
 
 /**
  * Wording differs per type so Claude reads it the way the cell is constrained:
@@ -259,7 +276,7 @@ export const GENERATION_SYSTEM_PROMPT_TEMPLATE = `You are an expert language exe
 
 {{cefrDescriptors}}
 
-{{priorPoolSection}}## Hard constraints
+{{levelScopeSection}}{{priorPoolSection}}## Hard constraints
 
 - **The learner must produce the answer themselves.** Two failure modes are forbidden:
   - **Ambiguous blank.** For a cloze, the answer must be uniquely produced. Either (a) the surrounding sentence constrains the blank so only one specific lexeme/form plausibly fits — every other candidate is ruled out by something explicit in the sentence — OR (b) for grammar-shape clozes where many lexemes satisfy the rule, you populate \`acceptableAnswers\` with every lexeme that fits. Sentences like "Sınıfta sekiz ___ var" ("There are eight ___ in the classroom") are forbidden without \`acceptableAnswers\`, because chair, student, book, pencil, and many other nouns all satisfy the rule equally. Likewise "Evde yeni ___ var. Onlar çok güzel." is forbidden with \`correctAnswer: "perdeler"\` alone — curtains, books, lamps, flowers all satisfy "plural, positive descriptor" equally; the "Onlar çok güzel" follow-on signals plurality but not which lexeme. Either constrain the sentence ("Evde yeni ___ var. Onları yıkamayı unutma." — "don't forget to wash them" picks out "perdeler") or list every plausible lexeme in \`acceptableAnswers\`. For translation, the reference translation must be the dominant rendering — minor variants are accepted at evaluation time, but the source text must not admit two structurally different correct translations. For vocab_recall, the prompt/definition must pick out exactly one headword.
@@ -304,8 +321,14 @@ export function computeGenerationPromptVars(
       "Dictation exercises are not batch-generated; computeGenerationPromptVars received a dictation cell.",
     );
   }
-  const { language, cefrLevel, exerciseType, grammarPoint, priorPoolSurfaces } =
-    inputs;
+  const {
+    language,
+    cefrLevel,
+    exerciseType,
+    grammarPoint,
+    priorPoolSurfaces,
+    levelScopePoints,
+  } = inputs;
   return {
     language,
     cefrLevel,
@@ -316,6 +339,12 @@ export function computeGenerationPromptVars(
     negativeExamplesBullets: renderBulletList(grammarPoint.examplesNegative),
     commonErrorsBullets: renderBulletList(grammarPoint.commonErrors),
     cefrDescriptors: CEFR_DESCRIPTOR_BULLETS,
+    levelScopeSection: renderLevelScopeSection(
+      exerciseType,
+      language,
+      cefrLevel,
+      levelScopePoints,
+    ),
     priorPoolSection: renderPriorPoolSection(exerciseType, priorPoolSurfaces),
     sentenceConstructionSection: renderSentenceConstructionSection(
       exerciseType,

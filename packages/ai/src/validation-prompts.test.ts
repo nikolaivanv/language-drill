@@ -11,7 +11,7 @@ import {
   type SentenceConstructionContent,
   type CoverageSpec,
 } from "@language-drill/shared";
-import { getGrammarPoint } from "@language-drill/db";
+import { getGrammarPoint, grammarPointsAtOrBelow } from "@language-drill/db";
 
 import { CEFR_LEVEL_DESCRIPTORS, EVALUATION_SYSTEM_PROMPT } from "./prompts.js";
 import type { ExerciseDraft, GenerationSpec } from "./generate.js";
@@ -42,6 +42,22 @@ const baseSpec: GenerationSpec = {
   topicDomain: null,
   count: 1,
   batchSeed: "test-seed",
+};
+
+const trA2Grammar = getGrammarPoint("tr-a2-aorist");
+if (!trA2Grammar) throw new Error("test fixture missing: tr-a2-aorist");
+const trA1ScopePoint = getGrammarPoint("tr-a1-locative");
+if (!trA1ScopePoint) throw new Error("test fixture missing: tr-a1-locative");
+
+const trClozeSpec: GenerationSpec = {
+  language: Language.TR,
+  cefrLevel: CefrLevel.A2,
+  exerciseType: ExerciseType.CLOZE,
+  grammarPoint: trA2Grammar,
+  topicDomain: null,
+  count: 1,
+  batchSeed: "test-seed",
+  levelScopePoints: grammarPointsAtOrBelow(Language.TR, CefrLevel.A2),
 };
 
 function makeDraft(content: ExerciseContent): ExerciseDraft {
@@ -91,7 +107,7 @@ describe("buildValidationSystemPrompt", () => {
   it("interpolates language and CEFR level into the header and the dimension descriptions", async () => {
     const prompt = await buildValidationSystemPrompt(baseSpec);
     expect(prompt).toContain("ES learners at CEFR B1");
-    expect(prompt).toContain("does the difficulty match B1?");
+    expect(prompt).toContain("trivially below B1");
     expect(prompt).toContain(`does this actually test ${grammarPoint.name}?`);
   });
 
@@ -175,7 +191,13 @@ describe("buildValidationSystemPrompt", () => {
     // The NFR caps billed cost at +15 %, but the underlying raw-size
     // budget that produces that result with the existing ≥0.8 cache-hit
     // rate is +44 % (~415 tokens / ~1,680 bytes added to the original
-    // 3,805-byte template). 5,500 is the rounded ceiling.
+    // 3,805-byte template). 5,500 was the original rounded ceiling.
+    //
+    // Task 4 (validator level-scope wiring) extended the template by adding
+    // the {{levelScopeSection}} placeholder and rewriting the levelMatch
+    // dimension (~570 bytes net). The ceiling is raised to 6,100 to
+    // accommodate this intentional behavioural addition while still
+    // guarding against unintentional future bloat.
     //
     // We assert on the TEMPLATE literal, not the rendered output, because:
     //   - The template is what Langfuse stores and what Anthropic's
@@ -184,9 +206,33 @@ describe("buildValidationSystemPrompt", () => {
     //     (descriptions, examples, common errors, CEFR descriptors) which
     //     varies by language/level and is not what the NFR budgets — those
     //     substitutions are already counted against the API per-call.
-    //   - The math `3,805 + ~44 % = 5,500` lines up exactly with the
-    //     template raw size, not with any rendered fixture.
-    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(5500);
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(6100);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// level scope in the validation prompt
+// ---------------------------------------------------------------------------
+
+describe("level scope in the validation prompt", () => {
+  it("includes the at/below-level grammar scope for a grammar-anchored cell", async () => {
+    const prompt = await buildValidationSystemPrompt(trClozeSpec);
+    expect(prompt).toContain("Grammar in this learner's scope");
+    expect(prompt).toContain(trA1ScopePoint.name);
+  });
+
+  it("rewords levelMatch to use the scope as ground truth, with the morphology carve-out", async () => {
+    const prompt = await buildValidationSystemPrompt(trClozeSpec);
+    expect(prompt).toContain("within or below the learner's scope");
+    expect(prompt).toMatch(/never\s+"above level"/i);
+    expect(prompt).toContain("not the target point");
+  });
+
+  it("omits the scope block for vocab_recall (gate)", async () => {
+    const vocab = getGrammarPoint("tr-a1-vocab-food-drink");
+    if (!vocab) throw new Error("test fixture missing: tr-a1-vocab-food-drink");
+    const prompt = await buildValidationSystemPrompt({ ...trClozeSpec, exerciseType: ExerciseType.VOCAB_RECALL, grammarPoint: vocab, cefrLevel: CefrLevel.A1 });
+    expect(prompt).not.toContain("Grammar in this learner's scope");
   });
 });
 
