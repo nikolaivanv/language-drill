@@ -1,4 +1,8 @@
-import { Language, type LearningLanguage } from '@language-drill/shared';
+import {
+  Language,
+  resolveTheoryCategory,
+  type LearningLanguage,
+} from '@language-drill/shared';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -524,5 +528,26 @@ describe('grammarPointsAtOrBelow', () => {
     expect(tr.every((p) => p.language === 'TR')).toBe(true);
     // None of TR's scope leaks from ES/DE.
     expect(tr.some((p) => p.language === 'ES' || p.language === 'DE')).toBe(false);
+  });
+});
+
+describe('theory category coverage', () => {
+  // The theory library buckets each topic via resolveTheoryCategory(grammarPointKey).
+  // The TR curriculum is live end-to-end (A1+A2+B1), so every TR grammar point
+  // must map to a real category — anything falling through to 'other' is a stale
+  // or missing KEY_TO_CATEGORY entry (the bug that dumped present-continuous /
+  // negation / dili-past into 'other' after the A2→A1 re-numbering).
+  it('maps every live TR grammar point to a non-other category', () => {
+    const unmapped = trCurriculum
+      .filter((p) => p.kind === 'grammar')
+      .filter((p) => resolveTheoryCategory(p.key) === 'other')
+      .map((p) => p.key);
+    expect(unmapped).toEqual([]);
+  });
+
+  it('leaves non-grammar TR umbrellas in other', () => {
+    const nonGrammar = trCurriculum.filter((p) => p.kind !== 'grammar');
+    expect(nonGrammar.length).toBeGreaterThan(0);
+    expect(nonGrammar.every((p) => resolveTheoryCategory(p.key) === 'other')).toBe(true);
   });
 });
