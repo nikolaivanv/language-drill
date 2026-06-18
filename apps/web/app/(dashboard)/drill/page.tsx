@@ -208,15 +208,24 @@ function PracticePageContent() {
     dispatch({ type: 'RESUME_SUCCEEDED', session: data, startIndex });
   }, [resumeId, state.kind, resumeQuery.data, resumeQuery.isError, resumeQuery.error, router, completeSession]);
 
+  // Remembers the last answer+meta submitted for the current item so "try
+  // again" can re-fire the same submission without the user re-typing or
+  // re-clicking Submit.
+  const lastSubmissionRef = useRef<{ answer: string; meta: SubmissionMeta } | null>(
+    null,
+  );
+
   function handleSubmit(answer: string, meta: SubmissionMeta) {
     if (state.kind !== 'inSession') return;
     const item = selectCurrentItem(state);
-    if (!item || !answer.trim()) return;
+    const trimmed = answer.trim();
+    if (!item || !trimmed) return;
+    lastSubmissionRef.current = { answer: trimmed, meta };
     dispatch({ type: 'ITEM_SUBMITTING' });
     submitMutation.mutate(
       {
         exerciseId: item.id,
-        answer: answer.trim(),
+        answer: trimmed,
         sessionId: state.session.id,
       },
       {
@@ -247,6 +256,14 @@ function PracticePageContent() {
   }
 
   function handleRetry() {
+    // Re-fire the same submission directly — the user shouldn't have to
+    // re-type and re-click Submit. Falls back to clearing the error if we
+    // somehow have no captured answer.
+    const last = lastSubmissionRef.current;
+    if (last) {
+      handleSubmit(last.answer, last.meta);
+      return;
+    }
     submitMutation.reset();
     dispatch({ type: 'ITEM_RETRY' });
   }
@@ -257,6 +274,15 @@ function PracticePageContent() {
     setOpenTopicId(null);
     setTriggerEl(null);
     submitMutation.reset();
+    // Skipping the last item must finalize the session — advancing past the
+    // end would leave currentItem null and strand the user on a blank screen
+    // (the in-session view only renders when currentItem is present).
+    if (selectIsLastItem(state)) {
+      const sessionId = state.session.id;
+      dispatch({ type: 'COMPLETE_REQUESTED' });
+      fireCompleteSession(sessionId);
+      return;
+    }
     dispatch({ type: 'ITEM_SKIP' });
   }
 
