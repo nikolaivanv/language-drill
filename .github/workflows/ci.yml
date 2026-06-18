@@ -16,6 +16,11 @@ jobs:
   lint-typecheck:
     name: Lint & Typecheck
     runs-on: ubuntu-latest
+    # Turbo remote cache (Vercel) — shared with the other PR jobs and the
+    # deploy.yml `verify` gate, so tasks run once and replay everywhere.
+    env:
+      TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
     steps:
       # Full history so turbo `--affected` can diff against the PR base commit.
       - uses: actions/checkout@v5
@@ -44,6 +49,9 @@ jobs:
   test:
     name: Unit Tests
     runs-on: ubuntu-latest
+    env:
+      TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -147,6 +155,10 @@ jobs:
     # pointing at the shared dev Neon branch is safe even across parallel PRs.
     needs: [lint-typecheck, test]
     env:
+      # Turbo remote cache (Vercel) — shared with the other jobs so the
+      # `turbo build` of the workspace packages replays instead of rebuilding.
+      TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       # Dev Neon branch connection string — a DEDICATED secret, NOT the prod
       # `DATABASE_URL`. E2E only writes the idempotent test user + a default
       # language profile here.
