@@ -43,6 +43,7 @@ import {
   parseGenerationJobMessage,
 } from './job-message';
 import { errMessage, summarizeResult } from './log';
+import { emitCellOutcomeMetric } from './metrics';
 
 // ---------------------------------------------------------------------------
 // Cold-start singletons
@@ -324,6 +325,11 @@ export async function handler(
       } finally {
         clearTimeout(timer);
       }
+
+      // Application-failure signal (distinct from the runtime Errors metric):
+      // emit one CellFailed point per terminal outcome. 'skipped-cost-cap'
+      // self-suppresses inside the emitter.
+      emitCellOutcomeMetric(result.status, process.env.LANGFUSE_ENV ?? 'dev');
 
       // Result dispatch. Req 2.4 amendment: terminal failures (audit row
       // already has the verdict) are NOT pushed to batchItemFailures —

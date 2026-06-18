@@ -83,4 +83,21 @@ describe("LambdaConstruct — Langfuse env + IAM (Req 8.1 / 8.2)", () => {
       Namespace: "LanguageDrill/dev",
     });
   });
+
+  it("creates an AI-failure metric filter + alarm (env-namespaced, threshold 5)", () => {
+    template.hasResourceProperties("AWS::Logs::MetricFilter", {
+      MetricTransformations: Match.arrayWith([
+        Match.objectLike({
+          MetricName: "api-ai-failure",
+          MetricNamespace: "LanguageDrill/dev",
+        }),
+      ]),
+    });
+    template.hasResourceProperties("AWS::CloudWatch::Alarm", {
+      MetricName: "api-ai-failure",
+      Namespace: "LanguageDrill/dev",
+      Threshold: 5,
+      ComparisonOperator: "GreaterThanOrEqualToThreshold",
+    });
+  });
 });

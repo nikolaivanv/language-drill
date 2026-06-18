@@ -557,6 +557,26 @@ describe('SQS handler', () => {
     expect(log['errorMessage']).toBe('cost cap reached at $0.50');
   });
 
+  it('emits a CellFailed EMF metric for a terminal failed cell', async () => {
+    mockCheckAuditRowState.mockResolvedValueOnce({ status: 'absent' });
+    mockRunOneCell.mockResolvedValueOnce({
+      ...cellResultBase(),
+      status: 'failed',
+      errorMessage: 'generation failed',
+    });
+
+    const event = eventWith([
+      recordWith(JSON.stringify(validMessage()), 'msg-emf-failed'),
+    ]);
+    await handler(event, fakeContext());
+
+    const emitted = consoleLogSpy.mock.calls
+      .map((c) => String(c[0]))
+      .filter((s) => s.includes('"CellFailed"'));
+    expect(emitted).toHaveLength(1);
+    expect(emitted[0]).toContain('"CellFailed":1');
+  });
+
   it('spec.coverageTargets is threaded through to runOneCell args', async () => {
     mockCheckAuditRowState.mockResolvedValueOnce({ status: 'absent' });
     mockRunOneCell.mockResolvedValueOnce({

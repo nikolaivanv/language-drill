@@ -8,6 +8,7 @@ import { Runtime } from "aws-cdk-lib/aws-lambda";
 import * as path from "path";
 
 import { addPromptFallbackAlarm } from "./prompt-fallback-alarm";
+import { addAiFailureAlarm } from "./ai-failure-alarm";
 
 export interface LambdaConstructProps {
   secretsPrefix: string;
@@ -144,6 +145,15 @@ export class LambdaConstruct extends Construct {
       logGroup: this.logGroup,
       env: props.secretsPrefix === "language-drill" ? "prod" : "dev",
       surface: "api",
+      alarmTopic: props.alarmTopic,
+    });
+
+    // Alarm on sustained caught AI-call failures (eval / reading / writing
+    // helpers) — these return 502 but the invocation succeeds, so the runtime
+    // Errors metric never sees them.
+    addAiFailureAlarm(this, "ApiAiFailureAlarm", {
+      logGroup: this.logGroup,
+      env: props.secretsPrefix === "language-drill" ? "prod" : "dev",
       alarmTopic: props.alarmTopic,
     });
   }

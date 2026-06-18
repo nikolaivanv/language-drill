@@ -1335,6 +1335,37 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
       },
       "Type": "AWS::CloudWatch::Alarm",
     },
+    "GenerationLambdaWrapGenerationCellFailuresAlarm2ECCA199": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "AlertsAlertsTopic96BD0900",
+          },
+        ],
+        "AlarmDescription": "Phase 4 (exercise gen): >= 5 cells failed at the APPLICATION level in one day (terminal status=failed, e.g. Anthropic usage-limit), distinct from the Lambda runtime Errors alarm.",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Dimensions": [
+          {
+            "Name": "env",
+            "Value": "prod",
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "CellFailed",
+        "Namespace": "LanguageDrill/Generation",
+        "Period": 86400,
+        "Statistic": "Sum",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Threshold": 5,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
     "GenerationLambdaWrapGenerationErrorsAlarm3DD6FF6D": {
       "Properties": {
         "AlarmActions": [
@@ -1736,6 +1767,65 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
         "TreatMissingData": "notBreaching",
       },
       "Type": "AWS::CloudWatch::Alarm",
+    },
+    "LambdaApiAiFailureAlarm15494646": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "AlertsAlertsTopic96BD0900",
+          },
+        ],
+        "AlarmDescription": "API Lambda: >= 5 caught AI-call failures (eval / reading / writing-helper 502 AI_UNAVAILABLE) in 5 minutes — Anthropic outage, usage-limit, or a systemic prompt/parse bug. These do not move the Lambda Errors metric.",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "EvaluationPeriods": 1,
+        "MetricName": "api-ai-failure",
+        "Namespace": "LanguageDrill/prod",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Threshold": 5,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "LambdaApiAiFailureAlarmFilter0794E6B0F": {
+      "Properties": {
+        "FilterPattern": ""Claude evaluation failed:"",
+        "LogGroupName": {
+          "Ref": "LambdaLogGroupB7A19430",
+        },
+        "MetricTransformations": [
+          {
+            "DefaultValue": 0,
+            "MetricName": "api-ai-failure",
+            "MetricNamespace": "LanguageDrill/prod",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
+    "LambdaApiAiFailureAlarmFilter1A95D323A": {
+      "Properties": {
+        "FilterPattern": "" generation failed:"",
+        "LogGroupName": {
+          "Ref": "LambdaLogGroupB7A19430",
+        },
+        "MetricTransformations": [
+          {
+            "DefaultValue": 0,
+            "MetricName": "api-ai-failure",
+            "MetricNamespace": "LanguageDrill/prod",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
     },
     "LambdaApiPromptFallbackAlarm71D4B2C7": {
       "Properties": {
