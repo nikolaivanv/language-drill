@@ -8,7 +8,7 @@ import {
   useCreateInvites,
   useRevokeInvite,
 } from '@language-drill/api-client';
-import { Button, Card, Input } from '../../../../components/ui';
+import { Button } from '../../../../components/ui';
 
 export default function AdminInvitesPage() {
   const { getToken } = useAuth();
@@ -28,15 +28,15 @@ export default function AdminInvitesPage() {
   };
 
   return (
-    <div className="space-y-s-6">
-      <h1 className="t-display-l">invites</h1>
+    <div className="flex flex-col gap-4">
+      <h1 className="font-display text-[24px] font-semibold text-ink">Invites</h1>
 
-      <Card padding="lg">
-        <h2 className="t-display-s mb-s-3">generate codes</h2>
-        <div className="flex flex-wrap items-end gap-s-3">
-          <div>
-            <label className="mb-s-1 block t-mono text-ink-mute">count</label>
-            <Input
+      <section className="flex flex-col gap-2">
+        <h2 className="text-ink-soft text-[12px]">Generate codes</h2>
+        <div className="flex flex-wrap items-end gap-2 text-[13px]">
+          <label className="flex flex-col gap-1">
+            <span className="text-ink-soft text-[12px]">count</span>
+            <input
               type="number"
               min={1}
               max={50}
@@ -44,52 +44,57 @@ export default function AdminInvitesPage() {
               onChange={(e) =>
                 setCount(Math.max(1, Math.min(50, Number(e.target.value) || 1)))
               }
+              className="w-20"
             />
-          </div>
-          <div className="flex-1">
-            <label className="mb-s-1 block t-mono text-ink-mute">
-              note (optional)
-            </label>
-            <Input
+          </label>
+          <label className="flex flex-1 flex-col gap-1 min-w-[200px]">
+            <span className="text-ink-soft text-[12px]">note (optional)</span>
+            <input
               type="text"
               value={note}
               placeholder="who is this for?"
               onChange={(e) => setNote(e.target.value)}
             />
-          </div>
+          </label>
           <Button
             variant="primary"
+            size="sm"
             loading={create.isPending}
             onClick={() => create.mutate({ count, note: note || undefined })}
           >
             generate
           </Button>
         </div>
-      </Card>
+      </section>
 
-      <Card padding="lg">
-        <h2 className="t-display-s mb-s-3">all codes</h2>
-        {list.isLoading && <p className="t-body text-ink-soft">loading…</p>}
-        {list.data && (
-          <table className="w-full t-body">
+      <section className="flex flex-col gap-2">
+        <h2 className="text-ink-soft text-[12px]">All codes</h2>
+        {list.isLoading ? (
+          <p className="text-ink-soft text-[13px]">Loading…</p>
+        ) : list.isError ? (
+          <p className="text-ink-soft text-[13px]">Failed to load codes.</p>
+        ) : (list.data?.length ?? 0) === 0 ? (
+          <p className="text-ink-soft text-[13px]">No invite codes yet.</p>
+        ) : (
+          <table className="text-[13px]">
             <thead>
-              <tr className="text-ink-mute">
-                <th className="text-left">code</th>
-                <th className="text-left">status</th>
-                <th className="text-left">note</th>
-                <th className="text-right">actions</th>
+              <tr>
+                <th>Code</th>
+                <th>Status</th>
+                <th>Note</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {list.data.map((inv) => (
-                <tr key={inv.id} className="border-t border-rule">
+              {list.data?.map((inv) => (
+                <tr key={inv.id}>
                   <td className="t-mono">{inv.code}</td>
-                  <td>{inv.status}</td>
+                  <td className="text-ink-soft">{inv.status}</td>
                   <td>{inv.note ?? ''}</td>
-                  <td className="text-right">
+                  <td>
                     <button
                       type="button"
-                      className="mr-s-3 text-accent-2"
+                      className="mr-3 text-accent-2"
                       onClick={() => copyLink(inv.code)}
                     >
                       copy link
@@ -109,7 +114,7 @@ export default function AdminInvitesPage() {
             </tbody>
           </table>
         )}
-      </Card>
+      </section>
     </div>
   );
 }
