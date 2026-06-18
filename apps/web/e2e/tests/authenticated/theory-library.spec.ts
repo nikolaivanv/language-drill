@@ -1,4 +1,10 @@
-import { expect, test, type Page, type Route } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+import {
+  LanguageProfilesResponseSchema,
+  TheoryListResponseSchema,
+  parseTheoryTopicJson,
+} from '@language-drill/api-client';
+import { validatedReply } from '../../helpers/mock-reply';
 
 // ---------------------------------------------------------------------------
 // Theory Library · happy-path E2E (Requirements 1.2, 2.1, 6.1, 6.2, 6.6)
@@ -58,29 +64,27 @@ const TOPIC_DETAIL = {
   ],
 };
 
-// JSON-response shorthand for `route.fulfill` (mirrors read.spec.ts).
-type FulfillOptions = Parameters<Route['fulfill']>[0];
-function reply(body: unknown, status = 200): FulfillOptions {
-  return { status, contentType: 'application/json', body: JSON.stringify(body) };
-}
-
 // Registers every API route the library flow may hit. `**/` globs match the
 // front-end's API base regardless of host. The list glob (`/theory/DE`) and the
 // detail glob (`/theory/DE/*`) are disjoint — only the detail URL carries a
 // trailing segment — so registration order is irrelevant.
 async function mockTheoryApi(page: Page): Promise<void> {
   await page.route('**/profiles/languages', (route) =>
-    route.fulfill(reply({ profiles: [{ language: 'DE', proficiencyLevel: 'B1' }] })),
+    route.fulfill(
+      validatedReply(LanguageProfilesResponseSchema, {
+        profiles: [{ language: 'DE', proficiencyLevel: 'B1' }],
+      }),
+    ),
   );
 
   await page.route('**/theory/DE', (route) => {
     if (route.request().method() !== 'GET') return route.fallback();
-    return route.fulfill(reply({ topics: LIST_TOPICS }));
+    return route.fulfill(validatedReply(TheoryListResponseSchema, { topics: LIST_TOPICS }));
   });
 
   await page.route('**/theory/DE/*', (route) => {
     if (route.request().method() !== 'GET') return route.fallback();
-    return route.fulfill(reply(TOPIC_DETAIL));
+    return route.fulfill(validatedReply(parseTheoryTopicJson, TOPIC_DETAIL));
   });
 }
 

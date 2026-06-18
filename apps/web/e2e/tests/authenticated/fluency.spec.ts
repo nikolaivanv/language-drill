@@ -1,4 +1,10 @@
 import { expect, test } from '@playwright/test';
+import {
+  FluencyAttemptResponseSchema,
+  FluencySessionResponseSchema,
+  LanguageProfilesResponseSchema,
+} from '@language-drill/api-client';
+import { validatedReply } from '../../helpers/mock-reply';
 
 // ---------------------------------------------------------------------------
 // Fluency Mode E2E
@@ -51,31 +57,23 @@ test('fluency mode: run a timed item or show the insufficient-pool state', async
   // the shell renders "failed to load your profile" and the page never mounts.
   // Mirrors read.spec.ts / review.spec.ts / theory-library.spec.ts.
   await page.route('**/profiles/languages', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ profiles: [{ language: 'ES', proficiencyLevel: 'B1' }] }),
-    }),
+    route.fulfill(
+      validatedReply(LanguageProfilesResponseSchema, {
+        profiles: [{ language: 'ES', proficiencyLevel: 'B1' }],
+      }),
+    ),
   );
 
   // Mock POST /fluency/session — return a one-exercise session.
   await page.route('**/fluency/session', (route) => {
     if (route.request().method() !== 'POST') return route.fallback();
-    return route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(FLUENCY_SESSION),
-    });
+    return route.fulfill(validatedReply(FluencySessionResponseSchema, FLUENCY_SESSION));
   });
 
   // Mock POST /fluency/attempts — always grade as correct.
   await page.route('**/fluency/attempts', (route) => {
     if (route.request().method() !== 'POST') return route.fallback();
-    return route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(FLUENCY_ATTEMPT),
-    });
+    return route.fulfill(validatedReply(FluencyAttemptResponseSchema, FLUENCY_ATTEMPT));
   });
 
   await page.goto('/fluency');
