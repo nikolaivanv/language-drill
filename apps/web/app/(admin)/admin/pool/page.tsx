@@ -100,10 +100,13 @@ function PoolPageInner() {
         {tab === 'exercises' ? (
           poolStatus.isLoading ? <p className="text-ink-soft text-[13px]">Loading…</p>
           : poolStatus.isError ? <p className="text-ink-soft text-[13px]">Failed to load pool status.</p>
-          : items.length === 0 ? <p className="text-ink-soft text-[13px]">No matching cells.</p>
           : (
             <>
-              <PoolCoverageTable items={items} />
+              {items.length === 0 ? (
+                <p className="text-ink-soft text-[13px]">No matching cells.</p>
+              ) : (
+                <PoolCoverageTable items={items} />
+              )}
               <section className="flex flex-col gap-2">
                 <h2 className="text-ink-soft text-[12px]">Generation quality (30d)</h2>
                 {approvalRates.length === 0 ? (
