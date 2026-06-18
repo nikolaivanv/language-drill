@@ -16,6 +16,12 @@ jobs:
   verify:
     name: Lint, Typecheck & Test
     runs-on: ubuntu-latest
+    # Turbo remote cache (Vercel). PR CI populates it; this gate reads it, so the
+    # merge commit replays the tasks the PR already ran instead of re-running them
+    # (local GHA cache is branch-scoped and can't be shared PR -> main).
+    env:
+      TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -25,12 +31,16 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      # Local fallback cache. restore-keys is scoped to `turbo-verify-` (NOT the
+      # broad `turbo-`) so this gate can only seed from a prior *full* verify run
+      # — never from a partial `turbo-lint-typecheck-*` / `turbo-test-*` cache,
+      # which would silently force every uncovered task to re-run.
       - uses: actions/cache@v4
         with:
           path: .turbo
           key: turbo-verify-${{ github.sha }}
           restore-keys: |
-            turbo-
+            turbo-verify-
       - run: pnpm install --frozen-lockfile
       - run: pnpm turbo lint typecheck test
 
