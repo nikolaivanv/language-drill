@@ -50,3 +50,5 @@ export type {
   NewTheoryGenerationJob,
 } from './theory';
 export { adminAuditLog } from './audit';
+export { exerciseFlags } from './exercise-flags';
+export type { ExerciseFlag, NewExerciseFlag } from './exercise-flags';

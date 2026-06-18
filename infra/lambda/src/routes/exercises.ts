@@ -367,7 +367,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
       score,
     });
 
-    return c.json(result);
+    return c.json({ ...result, submissionId });
   }
 
   // 3. Resolve tier, run the global brake, then the per-user daily cap.
@@ -480,7 +480,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
         metadata: { exerciseId: id, language: exercise.language, difficulty: exercise.difficulty },
       });
 
-      return c.json(evaluation);
+      return c.json({ ...evaluation, submissionId });
     }
 
     const result = await withLlmTrace(
@@ -530,7 +530,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
       score: result.score,
     });
 
-    return c.json(result);
+    return c.json({ ...result, submissionId });
   } catch (err) {
     // 7. Claude failure — do NOT write to history. The Proxy already
     // finalized the Langfuse generation with level=ERROR (Req 5 AC 3)

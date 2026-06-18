@@ -40,6 +40,7 @@ import {
 } from './_components/drill-action-context';
 import { DrillActionBar } from './_components/drill-action-bar';
 import { ExercisePane } from './_components/exercise-pane';
+import { FlagExerciseControl } from './_components/flag-exercise-control';
 import {
   initialSessionState,
   selectCurrentItem,
@@ -172,6 +173,7 @@ function PracticePageContent() {
             type: 'ITEM_EVALUATED',
             result: result as EvaluationResult,
             meta,
+            submissionId: (result as { submissionId?: string }).submissionId,
           }),
         onError: (err) => dispatch({ type: 'ITEM_ERROR', error: err as Error }),
       },
@@ -360,6 +362,14 @@ function PracticePageContent() {
             onNext={handleNext}
             nextLabel={selectIsLastItem(state) ? 'see results' : 'next'}
           />
+          {state.perItemSubmission.kind === 'evaluated' &&
+            state.perItemSubmission.submissionId && (
+              <FlagExerciseControl
+                exerciseId={currentItem.id}
+                submissionId={state.perItemSubmission.submissionId}
+                fetchFn={fetchFn}
+              />
+            )}
           {state.perItemSubmission.kind === 'error' && (
             <div className="mt-s-4">
               <SubmissionErrorCard

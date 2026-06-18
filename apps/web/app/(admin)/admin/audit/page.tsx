@@ -8,8 +8,9 @@ const PAGE_SIZE = 50;
 const ACTIONS = [
   'flagged.approve', 'flagged.reject', 'content.demote', 'content.reject',
   'generation.trigger', 'revalidate.apply', 'invite.create', 'invite.revoke',
+  'user_flag.reject', 'user_flag.dismiss',
 ];
-const TARGET_TYPES = ['exercise', 'theory_topic', 'cell', 'invite'];
+const TARGET_TYPES = ['exercise', 'theory_topic', 'cell', 'invite', 'exercise_flag'];
 
 export default function AuditPage() {
   const { getToken } = useAuth();

@@ -1,0 +1,68 @@
+<h2>How should the "skills you moved" panel read?</h2>
+<p class="subtitle">Same data (per-grammar-point mastery change for the points you practiced this session), three presentations. Each shows a real mix — gains, a slip, and a steady point — because the model is honest (easy mistakes and decay can lower a score). Click the one that feels right.</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="banded" onclick="toggleSelect(this)" style="grid-column: 1 / -1;">
+    <div class="card-body">
+      <h3>A — Directional &amp; banded (recommended)</h3>
+      <p class="subtitle">Arrows + words + a confidence cue. No raw numbers — can't be misread as precise, can't be farmed like XP.</p>
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px 16px;margin-top:10px;font-size:15px;">
+        <div style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;opacity:.6;margin-bottom:10px;">Skills you moved</div>
+        <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+          <span>Presente de subjuntivo</span><span style="color:#4ade80;font-weight:600;">▲▲ Strong gain · high confidence</span></div>
+        <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+          <span>Concordancia de género</span><span style="color:#86efac;font-weight:600;">▲ Gain</span></div>
+        <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+          <span>Conectores concesivos</span><span style="color:#fca5a5;font-weight:600;">▼ Slipped · low confidence</span></div>
+        <div style="display:flex;justify-content:space-between;padding:7px 0;">
+          <span>Artículos definidos</span><span style="opacity:.55;font-weight:600;">— Steady</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="numeric" onclick="toggleSelect(this)" style="grid-column: 1 / -1;">
+    <div class="card-body">
+      <h3>B — Numeric</h3>
+      <p class="subtitle">Exact before → after and signed delta, with a bar. Most transparent — but exposes the model's calibration, so a number that looks "off" can erode trust.</p>
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px 16px;margin-top:10px;font-size:15px;">
+        <div style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;opacity:.6;margin-bottom:10px;">Skills you moved</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+          <span style="flex:1;">Presente de subjuntivo</span>
+          <span style="opacity:.6;font-variant-numeric:tabular-nums;">0.62 → 0.71</span>
+          <span style="color:#4ade80;font-weight:600;width:52px;text-align:right;font-variant-numeric:tabular-nums;">+0.09</span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+          <span style="flex:1;">Concordancia de género</span>
+          <span style="opacity:.6;font-variant-numeric:tabular-nums;">0.70 → 0.74</span>
+          <span style="color:#86efac;font-weight:600;width:52px;text-align:right;font-variant-numeric:tabular-nums;">+0.04</span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:7px 0;">
+          <span style="flex:1;">Conectores concesivos</span>
+          <span style="opacity:.6;font-variant-numeric:tabular-nums;">0.55 → 0.49</span>
+          <span style="color:#fca5a5;font-weight:600;width:52px;text-align:right;font-variant-numeric:tabular-nums;">−0.06</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="hybrid" onclick="toggleSelect(this)" style="grid-column: 1 / -1;">
+    <div class="card-body">
+      <h3>C — Hybrid: bar + arrow, number de-emphasized</h3>
+      <p class="subtitle">A before/after fill bar carries the magnitude; the arrow carries direction; the exact number is present but small/grey (tap to reveal). Balances honesty with "not a scoreboard".</p>
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px 16px;margin-top:10px;font-size:15px;">
+        <div style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;opacity:.6;margin-bottom:10px;">Skills you moved</div>
+        <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+          <div style="display:flex;justify-content:space-between;"><span>Presente de subjuntivo <span style="color:#4ade80;">▲</span></span><span style="opacity:.4;font-size:12px;font-variant-numeric:tabular-nums;">.62→.71</span></div>
+          <div style="height:7px;border-radius:4px;background:rgba(255,255,255,0.08);margin-top:6px;position:relative;overflow:hidden;">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:62%;background:rgba(255,255,255,0.18);"></div>
+            <div style="position:absolute;left:62%;top:0;bottom:0;width:9%;background:#4ade80;"></div></div>
+        </div>
+        <div style="padding:8px 0;">
+          <div style="display:flex;justify-content:space-between;"><span>Conectores concesivos <span style="color:#fca5a5;">▼</span></span><span style="opacity:.4;font-size:12px;font-variant-numeric:tabular-nums;">.55→.49</span></div>
+          <div style="height:7px;border-radius:4px;background:rgba(255,255,255,0.08);margin-top:6px;position:relative;overflow:hidden;">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:49%;background:rgba(255,255,255,0.18);"></div>
+            <div style="position:absolute;left:49%;top:0;bottom:0;width:6%;background:#fca5a5;"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

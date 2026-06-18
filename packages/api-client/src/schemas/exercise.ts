@@ -33,6 +33,7 @@ export const EvaluationResultSchema = z.object({
   feedback: z.string(),
   errors: z.array(EvaluationErrorSchema),
   estimatedCefrEvidence: z.string(),
+  submissionId: z.string().uuid().optional(),
 });
 
 export type EvaluationResultResponse = z.infer<typeof EvaluationResultSchema>;
@@ -80,6 +81,7 @@ export const DictationResultSchema = z.object({
   diff: z.array(DictationDiffSegmentSchema),
   differences: z.array(DictationDifferenceSchema),
   criteria: z.array(DictationCriterionSchema),
+  submissionId: z.string().uuid().optional(),
 });
 
 export type DictationResultResponse = z.infer<typeof DictationResultSchema>;
@@ -133,6 +135,7 @@ export const FreeWritingEvaluationSchema = z.object({
   improved: z.object({ text: z.string(), upgrades: z.array(z.string()).optional() }),
   wordCount: z.number(),
   improvedWordCount: z.number(),
+  submissionId: z.string().uuid().optional(),
 });
 
 export type FreeWritingEvaluationResponse = z.infer<typeof FreeWritingEvaluationSchema>;

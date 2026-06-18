@@ -1287,10 +1287,9 @@ describe('POST /exercises/:id/submit — observability', () => {
     );
 
     expect(res.status).toBe(200);
-    const body = await res.json();
-    // Byte-identical to the pre-spec response: just `result` from
-    // `evaluateAnswer`, no observability-added fields.
-    expect(body).toEqual(sampleEvaluation);
+    const body = await res.json() as AnyJson;
+    // Response contains all evaluation fields plus `submissionId`.
+    expect(body).toEqual({ ...sampleEvaluation, submissionId: '00000000-0000-0000-0000-000000000000' });
 
     // Three inserts: auth user upsert (1), userExerciseHistory (2),
     // usageEvents (3). Identical to pre-spec.
@@ -1776,5 +1775,28 @@ describe('POST /exercises/:id/submit — conjugation branch', () => {
     expect(mockEvaluateAnswer).not.toHaveBeenCalled();
     expect(mockEvaluateFreeWriting).not.toHaveBeenCalled();
     expect(mockGradeDictationAnswer).not.toHaveBeenCalled();
+  });
+
+  it('returns the submissionId so the answer can be flagged', async () => {
+    // exercise fetch
+    mockLimit.mockResolvedValueOnce([conjugationExercise]);
+    mockWhere.mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }));
+    // mastery read (no prior row)
+    mockLimit.mockResolvedValueOnce([]);
+    mockWhere.mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }));
+
+    const res = await app.request(
+      '/exercises/conj-es-001/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'iríamos' }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { submissionId?: string };
+    expect(body.submissionId).toEqual(expect.any(String));
   });
 });

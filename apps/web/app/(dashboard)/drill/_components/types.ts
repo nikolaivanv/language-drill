@@ -17,5 +17,5 @@ export type SubmissionResult = EvaluationResult | DictationResult;
 export type SubmissionState =
   | { kind: 'idle' }
   | { kind: 'submitting' }
-  | { kind: 'evaluated'; result: SubmissionResult; meta: SubmissionMeta }
+  | { kind: 'evaluated'; result: SubmissionResult; meta: SubmissionMeta; submissionId?: string }
   | { kind: 'error'; error: Error };

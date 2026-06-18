@@ -24,7 +24,7 @@ export type SessionAction =
   | { type: 'CREATE_SUCCEEDED'; session: CreateSessionResponse }
   | { type: 'CREATE_FAILED'; error: Error }
   | { type: 'ITEM_SUBMITTING' }
-  | { type: 'ITEM_EVALUATED'; result: SubmissionResult; meta: SubmissionMeta }
+  | { type: 'ITEM_EVALUATED'; result: SubmissionResult; meta: SubmissionMeta; submissionId?: string }
   | { type: 'ITEM_ERROR'; error: Error }
   | { type: 'ITEM_NEXT' }
   | { type: 'ITEM_SKIP' }
@@ -70,6 +70,7 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
           kind: 'evaluated',
           result: action.result,
           meta: action.meta,
+          submissionId: action.submissionId,
         },
       };
 
