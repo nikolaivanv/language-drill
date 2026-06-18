@@ -69,6 +69,10 @@ export const TodayPlanResponseSchema = z.object({
   summary: TodayPlanSummarySchema.nullable(),
   // Present only when items.length < 5 because the pool is empty/insufficient.
   code: z.literal('INSUFFICIENT_POOL').nullable(),
+  // The in-progress today-session id when one exists and is not yet completed —
+  // drives the timeline's "continue" link. Null on a fresh plan or a completed
+  // session. `.default(null)` keeps older payloads (pre-resume API) parseable.
+  resumeSessionId: z.string().nullable().default(null),
   // Present on a language's free-writing cadence day; null otherwise. Defaulted
   // so a response that omits the key still parses.
   freeWriting: FreeWritingPlanBlockSchema.nullable().default(null),
