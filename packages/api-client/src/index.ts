@@ -375,6 +375,9 @@ export {
   type PoolCellDetail, type PoolCellQuery,
 } from './schemas/pool-cell';
 export { usePoolCell } from './hooks/usePoolCell';
+export { usePoolStatus, type PoolStatusParams } from './hooks/usePoolStatus';
+export { useGenerationStats } from './hooks/useGenerationStats';
+export { useTheoryCoverage } from './hooks/useTheoryCoverage';
 export {
   GenerateCellResponseSchema,
   type GenerateCellRequest,
