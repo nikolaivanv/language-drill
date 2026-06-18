@@ -79,8 +79,22 @@ function insertAtCursor(
   el.focus();
 }
 
-const buttonClasses =
-  'inline-flex items-center justify-center min-w-[32px] min-h-[32px] px-s-3 py-[6px] text-[13px] font-mono border border-rule rounded-r-sm bg-card text-ink transition-all duration-150 hover:bg-paper-2 hover:border-ink disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none';
+// Shared sizing/behaviour for every key in the row.
+const keyBase =
+  'inline-flex items-center justify-center min-w-[32px] min-h-[32px] px-s-3 py-[6px] rounded-sm transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none';
+
+// Letter keys: bordered, paper-white — the default "tile" look.
+const charButtonClasses = `${keyBase} text-[13px] font-mono border border-rule bg-card text-ink hover:bg-paper-2 hover:border-ink`;
+
+// The ⇧ key is deliberately set apart from the letter tiles: borderless, a
+// solid tinted fill, a larger glyph, and a gap to its right so it reads as a
+// modifier rather than another character. When active it inverts to a filled
+// dark key (the glyph stays light — note `cn` here is a plain join, so the
+// active and inactive text colors must live in mutually-exclusive branches,
+// never stacked, or the later utility would win and hide the glyph).
+const shiftButtonBase = `${keyBase} mr-s-2 text-[18px] leading-none border border-transparent`;
+const shiftInactive = 'bg-paper-3 text-ink-soft hover:bg-rule hover:text-ink';
+const shiftActive = 'bg-ink text-card hover:bg-ink';
 
 export function AccentPicker({
   language,
@@ -142,7 +156,7 @@ export function AccentPicker({
         type="button"
         onClick={() => setLatched((v) => !v)}
         disabled={isDisabled}
-        className={cn(buttonClasses, latched && 'bg-ink text-card border-ink')}
+        className={cn(shiftButtonBase, isUpper ? shiftActive : shiftInactive)}
         aria-label="uppercase"
         aria-pressed={latched}
       >
@@ -156,7 +170,7 @@ export function AccentPicker({
             type="button"
             onClick={() => handleClick(char)}
             disabled={isDisabled}
-            className={buttonClasses}
+            className={charButtonClasses}
             aria-label={`insert ${char}`}
           >
             {char}
