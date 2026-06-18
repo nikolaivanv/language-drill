@@ -1,4 +1,18 @@
-import { expect, test, type Page, type Route } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+import {
+  ActiveLemmasSchema,
+  BankResponseSchema,
+  HubOverviewSchema,
+  LanguageProfilesResponseSchema,
+  ReadEntriesResponseSchema,
+  ReadEntryResponseSchema,
+  ReviewItemResultSchema,
+  ReviewSummarySchema,
+  StartReviewSessionResponseSchema,
+  UpdateWordResponseSchema,
+  WordDetailSchema,
+} from '@language-drill/api-client';
+import { validatedReply } from '../../helpers/mock-reply';
 
 // ---------------------------------------------------------------------------
 // Vocabulary Review E2E (Part 2 — Req 4, 10, 11, 12, 13)
@@ -144,11 +158,6 @@ const FLAGGED_WORDS = {
   casas: { lemma: 'casa', pos: 'noun', gloss: 'house', freq: 120, cefr: 'A1' as const },
 };
 
-type FulfillOptions = Parameters<Route['fulfill']>[0];
-function reply(body: unknown, status = 200): FulfillOptions {
-  return { status, contentType: 'application/json', body: JSON.stringify(body) };
-}
-
 type ReviewMockOptions = {
   overview?: typeof OVERVIEW;
   items?: Array<Record<string, unknown>>;
@@ -174,12 +183,16 @@ async function mockReviewApi(
   const bankRows = opts.bankRows ?? BANK_ROWS;
 
   await page.route('**/profiles/languages', (route) =>
-    route.fulfill(reply({ profiles: [{ language: 'ES', proficiencyLevel: 'B1' }] })),
+    route.fulfill(
+      validatedReply(LanguageProfilesResponseSchema, {
+        profiles: [{ language: 'ES', proficiencyLevel: 'B1' }],
+      }),
+    ),
   );
 
   // GET /review/overview (hub + nav due badge).
   await page.route('**/review/overview**', (route) =>
-    route.fulfill(reply(opts.overview ?? OVERVIEW)),
+    route.fulfill(validatedReply(HubOverviewSchema, opts.overview ?? OVERVIEW)),
   );
 
   // POST /review/sessions — capture the filter, return the queue.
@@ -190,12 +203,12 @@ async function mockReviewApi(
     } catch {
       captured.sessionFilters.push(undefined);
     }
-    return route.fulfill(reply({ sessionId: SESSION_ID, items }));
+    return route.fulfill(validatedReply(StartReviewSessionResponseSchema, { sessionId: SESSION_ID, items }));
   });
 
   // GET /review/sessions/:id/summary.
   await page.route('**/review/sessions/*/summary', (route) =>
-    route.fulfill(reply(SUMMARY)),
+    route.fulfill(validatedReply(ReviewSummarySchema, SUMMARY)),
   );
 
   // POST /review/items/:stateId/submit — always a clean local grade.
@@ -209,7 +222,7 @@ async function mockReviewApi(
     })();
     captured.submitBodies.push(body);
     return route.fulfill(
-      reply({
+      validatedReply(ReviewItemResultSchema, {
         outcome: 'correct',
         correctAnswer: body?.answer || 'casas',
         schedulerDelta: {
@@ -237,7 +250,7 @@ async function mockReviewApi(
     const url = new URL(route.request().url());
     const status = url.searchParams.get('status');
     const rows = status ? bankRows.filter((r) => r.status === status) : bankRows;
-    return route.fulfill(reply({ rows }));
+    return route.fulfill(validatedReply(BankResponseSchema, { rows }));
   });
 
   // GET /review/words/:id (detail) + PATCH (actions).
@@ -252,16 +265,20 @@ async function mockReviewApi(
       }
       captured.patchActions.push(action);
       return route.fulfill(
-        reply({ stateId: LEECH_STATE_ID, status: 'suspended', dueAt: WORD_DETAIL.fsrs.dueAt }),
+        validatedReply(UpdateWordResponseSchema, {
+          stateId: LEECH_STATE_ID,
+          status: 'suspended',
+          dueAt: WORD_DETAIL.fsrs.dueAt,
+        }),
       );
     }
-    if (method === 'GET') return route.fulfill(reply(WORD_DETAIL));
+    if (method === 'GET') return route.fulfill(validatedReply(WordDetailSchema, WORD_DETAIL));
     return route.fallback();
   });
 
   // GET /review/active-lemmas (reading highlight source).
   await page.route('**/review/active-lemmas**', (route) =>
-    route.fulfill(reply(opts.activeLemmas ?? { lemmas: [], surfaces: [] })),
+    route.fulfill(validatedReply(ActiveLemmasSchema, opts.activeLemmas ?? { lemmas: [], surfaces: [] })),
   );
 
   if (opts.withRead) {
@@ -270,7 +287,7 @@ async function mockReviewApi(
     await page.route(/\/read\/entries(\?|$)/, (route) => {
       if (route.request().method() !== 'GET') return route.fallback();
       return route.fulfill(
-        reply({
+        validatedReply(ReadEntriesResponseSchema, {
           entries: [
             {
               id: ENTRY_ID,
@@ -288,7 +305,7 @@ async function mockReviewApi(
     await page.route(`**/read/entries/${ENTRY_ID}`, (route) => {
       if (route.request().method() !== 'GET') return route.fallback();
       return route.fulfill(
-        reply({
+        validatedReply(ReadEntryResponseSchema, {
           id: ENTRY_ID,
           language: 'ES',
           title: 'Casas passage',

@@ -1,4 +1,10 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
+import {
+  LanguageProfilesResponseSchema,
+  ReadEntriesResponseSchema,
+  ReadEntryResponseSchema,
+} from '@language-drill/api-client';
+import { validatedReply } from '../../helpers/mock-reply';
 
 // ---------------------------------------------------------------------------
 // Read · deep annotation E2E (Reading Part 1 — Req 3, 4, 5, 8, 9, 11)
@@ -149,14 +155,16 @@ async function mockReadApi(
 
   await page.route('**/profiles/languages', (route) =>
     route.fulfill(
-      reply({ profiles: [{ language: 'ES', proficiencyLevel: 'B1' }] }),
+      validatedReply(LanguageProfilesResponseSchema, {
+        profiles: [{ language: 'ES', proficiencyLevel: 'B1' }],
+      }),
     ),
   );
 
   await page.route(/\/read\/entries(\?|$)/, (route) => {
     if (route.request().method() !== 'GET') return route.fallback();
     return route.fulfill(
-      reply({
+      validatedReply(ReadEntriesResponseSchema, {
         entries: [
           {
             id: ENTRY_ID,
@@ -175,7 +183,7 @@ async function mockReadApi(
   await page.route(`**/read/entries/${ENTRY_ID}`, (route) => {
     if (route.request().method() !== 'GET') return route.fallback();
     return route.fulfill(
-      reply({
+      validatedReply(ReadEntryResponseSchema, {
         id: ENTRY_ID,
         language: 'ES',
         title: 'Aldea passage',
