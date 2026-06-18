@@ -25,8 +25,8 @@ const EXERCISE_TYPES = Object.values(ExerciseType);
 function ContentPageInner() {
   const { getToken } = useAuth();
   const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
-  const [tab, setTab] = useState<Tab>('exercises');
   const searchParams = useSearchParams();
+  const [tab, setTab] = useState<Tab>(searchParams.get('tab') === 'theory' ? 'theory' : 'exercises');
   const [filters, setFilters] = useState<{ language?: string; level?: string; type?: string; grammarPoint?: string }>(() => ({
     language: searchParams.get('language') ?? undefined,
     level: searchParams.get('level') ?? undefined,
