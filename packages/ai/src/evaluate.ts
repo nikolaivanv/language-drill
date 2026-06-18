@@ -22,6 +22,7 @@ import {
   type GrammarGuidance,
 } from "./prompts.js";
 import { getPromptOrFallback, sha8 } from "./prompts-registry.js";
+import { ContentRejectedError } from "./content-rejected-error.js";
 
 // ---------------------------------------------------------------------------
 // Tool schema — mirrors EvaluationResult type
@@ -336,6 +337,16 @@ export async function evaluateAnswer(
     },
     temperature: 0,
   });
+
+  // A safety refusal arrives as a 200 with stop_reason "refusal" and no tool
+  // block. Surface it as a distinct, expected outcome (the route maps it to a
+  // user-facing rejection) rather than a generic "no tool block" infra error.
+  if (response.stop_reason === "refusal") {
+    throw new ContentRejectedError(
+      "Claude refused to evaluate this answer.",
+      response.stop_reason,
+    );
+  }
 
   // Extract tool use block from response
   const toolUseBlock = response.content.find(

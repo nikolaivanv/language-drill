@@ -35,6 +35,7 @@ import {
   WRITING_HELPER_REQUEST_TIMEOUT_MS,
   WRITING_HELPER_MAX_RETRIES,
   withLlmTrace,
+  ContentRejectedError,
 } from '@language-drill/ai';
 import { db } from '../db';
 import { approvedStatusFilter, audioReadyFilter, freshFirstOrderBy } from '../lib/exercise-filters';
@@ -532,7 +533,21 @@ exercises.post('/exercises/:id/submit', async (c) => {
 
     return c.json({ ...result, submissionId });
   } catch (err) {
-    // 7. Claude failure — do NOT write to history. The Proxy already
+    // 7a. Safety refusal — the model declined to evaluate this answer (e.g. a
+    // provocative or off-task submission). This is an expected outcome, not an
+    // outage: tell the learner their submission was rejected, and don't log it
+    // as an infra error. No history/usage row is written.
+    if (err instanceof ContentRejectedError) {
+      console.warn('[POST /exercises/:id/submit] answer rejected by safety:', err.message);
+      return c.json(
+        {
+          error: "We couldn't evaluate that submission. Please revise it and try again.",
+          code: 'CONTENT_REJECTED',
+        },
+        422,
+      );
+    }
+    // 7b. Claude failure — do NOT write to history. The Proxy already
     // finalized the Langfuse generation with level=ERROR (Req 5 AC 3)
     // before re-throwing here.
     console.error('[POST /exercises/:id/submit] Claude evaluation failed:', err);
