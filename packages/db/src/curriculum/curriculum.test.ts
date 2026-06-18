@@ -257,7 +257,7 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
     }
   });
 
-  it('the full TR clozeUnsuitable set is exactly these six points', () => {
+  it('the full TR clozeUnsuitable set is exactly these nine points', () => {
     const flagged = trCurriculum
       .filter((g) => g.clozeUnsuitable === true)
       .map((g) => g.key)
@@ -270,6 +270,9 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
         'tr-a2-correlative-conjunctions',
         'tr-a2-nominalization',
         'tr-a2-relative-an',
+        'tr-b1-converb-while-yken',
+        'tr-b1-participles-dik-acak',
+        'tr-b1-since-converb',
       ].sort(),
     );
   });
@@ -372,18 +375,18 @@ describe('per-language counts', () => {
     expect(dictation).toBe(0);
   });
 
-  it('Turkish is at full Yedi İklim A1 + A2 parity (B1/B2 disabled), has 10 themed vocab umbrellas, 2 dictation umbrellas, and 6 free-writing umbrellas', () => {
+  it('Turkish is at full Yedi İklim A1 + A2 + B1 parity (B2 disabled), has 15 vocab umbrellas, 3 dictation umbrellas, and 9 free-writing umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting } = countsFor(trCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(26);
     expect(grammar.A2).toBeGreaterThanOrEqual(14);
-    expect(grammar.B1).toBe(0);
+    expect(grammar.B1).toBe(10);
     expect(grammar.B2).toBe(0);
-    // 5 themed A1 + 5 themed A2 umbrellas (2026-06-07 everyday-vocab split).
-    expect(vocab).toBe(10);
-    // tr-a1-dictation + tr-a2-dictation (Phase 2 dictation generation pipeline).
-    expect(dictation).toBe(2);
-    // 3 A1 + 3 A2 free-writing topic umbrellas (2026-06-17).
-    expect(freeWriting).toBe(6);
+    // 5 A1 + 5 A2 + 5 B1 themed vocab umbrellas.
+    expect(vocab).toBe(15);
+    // tr-a1 + tr-a2 + tr-b1 dictation.
+    expect(dictation).toBe(3);
+    // 3 A1 + 3 A2 + 3 B1 free-writing topic umbrellas.
+    expect(freeWriting).toBe(9);
   });
 });
 
@@ -397,10 +400,11 @@ describe('free-writing topic umbrellas', () => {
     }
   });
 
-  it("has 3 free-writing topic umbrellas per TR A1 and A2", () => {
+  it("has 3 free-writing topic umbrellas per TR A1, A2 and B1", () => {
     const fw = trCurriculum.filter((e) => e.kind === "free-writing");
     expect(fw.filter((e) => e.cefrLevel === "A1")).toHaveLength(3);
     expect(fw.filter((e) => e.cefrLevel === "A2")).toHaveLength(3);
+    expect(fw.filter((e) => e.cefrLevel === "B1")).toHaveLength(3);
     for (const e of fw) {
       expect(e.freeWriting?.register).toBeDefined();
     }
