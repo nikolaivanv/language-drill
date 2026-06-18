@@ -8,21 +8,24 @@ const m = (over: Partial<SkillMovement>): SkillMovement => ({
 });
 
 describe('SkillMovementsPanel', () => {
-  it('renders nothing when there are no movements', () => {
-    const { container } = render(<SkillMovementsPanel movements={[]} />);
-    expect(container).toBeEmptyDOMElement();
+  it('renders the no-movement message when there are no movements', () => {
+    render(<SkillMovementsPanel movements={[]} />);
+    expect(screen.getByText('what moved')).toBeInTheDocument();
+    expect(screen.getByText(/no skill movement recorded/i)).toBeInTheDocument();
   });
 
-  it('renders nothing when every movement is steady (no real movement)', () => {
-    const { container } = render(
+  it('renders the all-steady message when every movement is steady', () => {
+    render(
       <SkillMovementsPanel
         movements={[m({ grammarPointKey: 'a', band: 'steady' }), m({ grammarPointKey: 'b', band: 'steady' })]}
       />,
     );
-    expect(container).toBeEmptyDOMElement();
+    expect(screen.getByText(/nothing shifted much/i)).toBeInTheDocument();
+    expect(screen.getByText(/2 skills held steady/i)).toBeInTheDocument();
+    expect(screen.getByText(/adds signal/i)).toBeInTheDocument();
   });
 
-  it('renders mover rows with band copy and no mastery numbers', () => {
+  it('renders mover rows with reworded band + confidence copy and no mastery numbers', () => {
     render(
       <SkillMovementsPanel
         movements={[
@@ -32,12 +35,27 @@ describe('SkillMovementsPanel', () => {
       />,
     );
     expect(screen.getByText('Subjuntivo')).toBeInTheDocument();
-    expect(screen.getByText(/Strong gain/)).toBeInTheDocument();
-    expect(screen.getByText(/Slipped/)).toBeInTheDocument();
+    expect(screen.getByText(/strong gain · we're confident/)).toBeInTheDocument();
+    expect(screen.getByText(/slipped · early signal/)).toBeInTheDocument();
     expect(document.body.textContent ?? '').not.toMatch(/\d\.\d/);
   });
 
-  it('summarizes steady points instead of listing them', () => {
+  it('sorts movers positive-first (strong-gain → gain → new → slip)', () => {
+    render(
+      <SkillMovementsPanel
+        movements={[
+          m({ grammarPointKey: 'd', label: 'Dslip', band: 'slip' }),
+          m({ grammarPointKey: 'c', label: 'Cnew', band: 'new' }),
+          m({ grammarPointKey: 'b', label: 'Bgain', band: 'gain' }),
+          m({ grammarPointKey: 'a', label: 'Astrong', band: 'strong-gain' }),
+        ]}
+      />,
+    );
+    const labels = screen.getAllByText(/Astrong|Bgain|Cnew|Dslip/).map((el) => el.textContent);
+    expect(labels).toEqual(['Astrong', 'Bgain', 'Cnew', 'Dslip']);
+  });
+
+  it('summarizes steady points beside movers with a pluralized footnote', () => {
     render(
       <SkillMovementsPanel
         movements={[
@@ -48,6 +66,31 @@ describe('SkillMovementsPanel', () => {
       />,
     );
     expect(screen.queryByText('Flat1')).not.toBeInTheDocument();
-    expect(screen.getByText(/2 held steady/)).toBeInTheDocument();
+    expect(screen.getByText(/2 skills held steady/)).toBeInTheDocument();
+  });
+
+  it('uses singular "skill" when exactly one held steady', () => {
+    render(
+      <SkillMovementsPanel
+        movements={[
+          m({ grammarPointKey: 'a', label: 'Gained', band: 'gain' }),
+          m({ grammarPointKey: 'b', label: 'Flat1', band: 'steady' }),
+        ]}
+      />,
+    );
+    expect(screen.getByText(/1 skill held steady/)).toBeInTheDocument();
+  });
+
+  it('preserves input order within the same band (stable sort)', () => {
+    render(
+      <SkillMovementsPanel
+        movements={[
+          m({ grammarPointKey: 'a', label: 'Gfirst', band: 'gain' }),
+          m({ grammarPointKey: 'b', label: 'Gsecond', band: 'gain' }),
+        ]}
+      />,
+    );
+    const labels = screen.getAllByText(/Gfirst|Gsecond/).map((el) => el.textContent);
+    expect(labels).toEqual(['Gfirst', 'Gsecond']);
   });
 });

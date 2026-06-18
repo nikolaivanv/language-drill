@@ -1,26 +1,7 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import type { DebriefResponse } from '@language-drill/api-client';
 import { DebriefTab } from '../debrief-tab';
-
-// next/link in tests just renders an anchor; mock it minimally.
-vi.mock('next/link', () => ({
-  default: ({
-    children,
-    href,
-    ...rest
-  }: {
-    children: React.ReactNode;
-    href: string;
-    [key: string]: unknown;
-  }) => {
-    return (
-      <a href={href} {...rest}>
-        {children}
-      </a>
-    );
-  },
-}));
 
 function makeDebrief(overrides: Partial<DebriefResponse> = {}): DebriefResponse {
   return {
@@ -40,12 +21,8 @@ function makeDebrief(overrides: Partial<DebriefResponse> = {}): DebriefResponse 
   };
 }
 
-// ---------------------------------------------------------------------------
-// What's-next routing (Req 4.4)
-// ---------------------------------------------------------------------------
-
-describe('DebriefTab — skill movements wiring', () => {
-  it('renders the skills-you-moved panel when the debrief carries movers', () => {
+describe('DebriefTab — what moved panel', () => {
+  it('renders mover rows when the debrief carries movers', () => {
     render(
       <DebriefTab
         debrief={makeDebrief({
@@ -56,150 +33,58 @@ describe('DebriefTab — skill movements wiring', () => {
       />,
     );
     expect(screen.getByText('Subjuntivo')).toBeInTheDocument();
-    expect(screen.getByText(/Strong gain/)).toBeInTheDocument();
-  });
-});
-
-describe('DebriefTab — what\'s-next link', () => {
-  it('high-tier renders a link to /progress', () => {
-    render(<DebriefTab debrief={makeDebrief({ correctCount: 5, attemptedCount: 5 })} />);
-    const link = screen.getByRole('link', { name: /see what moved/ });
-    expect(link.getAttribute('href')).toBe('/progress');
+    expect(screen.getByText(/strong gain/)).toBeInTheDocument();
   });
 
-  it('mid-tier renders a link to /drill?start=quick', () => {
-    render(<DebriefTab debrief={makeDebrief({ correctCount: 3, attemptedCount: 5 })} />);
-    const link = screen.getByRole('link', { name: /another short session/ });
-    expect(link.getAttribute('href')).toBe('/drill?start=quick');
-  });
-
-  it('low-tier renders a link to /drill?start=quick', () => {
-    render(<DebriefTab debrief={makeDebrief({ correctCount: 1, attemptedCount: 5 })} />);
-    const link = screen.getByRole('link', { name: /another short session/ });
-    expect(link.getAttribute('href')).toBe('/drill?start=quick');
-  });
-
-  it('all-skipped (attemptedCount === 0) renders a link to /drill?start=quick', () => {
-    render(
-      <DebriefTab
-        debrief={makeDebrief({
-          correctCount: 0,
-          attemptedCount: 0,
-          skippedCount: 5,
-        })}
-      />,
-    );
-    const link = screen.getByRole('link', { name: /another short session/ });
-    expect(link.getAttribute('href')).toBe('/drill?start=quick');
-  });
-
-  it('renders the "what\'s next" eyebrow above the link', () => {
-    const { container } = render(<DebriefTab debrief={makeDebrief()} />);
-    expect(container.textContent).toContain("what's next");
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Narrative paragraphs (Req 4.2, 4.3)
-// ---------------------------------------------------------------------------
-
-describe('DebriefTab — narrative paragraphs', () => {
-  it('renders 1–2 paragraphs in the coach card', () => {
-    const { container } = render(
-      <DebriefTab debrief={makeDebrief({ correctCount: 4, attemptedCount: 5 })} />,
-    );
-    // Coach card paragraphs use t-body-l; the italic quoted-speech line uses
-    // t-body. Count <p> elements with t-body-l class.
-    const bodyParagraphs = container.querySelectorAll('p.t-body-l');
-    expect(bodyParagraphs.length).toBeGreaterThanOrEqual(1);
-    expect(bodyParagraphs.length).toBeLessThanOrEqual(2);
-  });
-
-  it('paragraphs reference the language name (Req 4.3)', () => {
-    const { container } = render(
-      <DebriefTab debrief={makeDebrief({ language: 'ES' as DebriefResponse['language'] })} />,
-    );
-    expect(container.textContent?.toLowerCase()).toContain('spanish');
-  });
-
-  it('paragraphs reference the language name for German (DE)', () => {
-    const { container } = render(
-      <DebriefTab debrief={makeDebrief({ language: 'DE' as DebriefResponse['language'] })} />,
-    );
-    expect(container.textContent?.toLowerCase()).toContain('german');
-  });
-
-  it('paragraphs reference the language name for Turkish (TR)', () => {
-    const { container } = render(
-      <DebriefTab debrief={makeDebrief({ language: 'TR' as DebriefResponse['language'] })} />,
-    );
-    expect(container.textContent?.toLowerCase()).toContain('turkish');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Coach speech-bubble line via coachMessage (design parity)
-// ---------------------------------------------------------------------------
-
-describe('DebriefTab — coach speech-bubble line', () => {
-  it('renders the quoted coachMessage(sessionComplete) line for high accuracy', () => {
-    const { container } = render(
-      <DebriefTab debrief={makeDebrief({ correctCount: 5, attemptedCount: 5 })} />,
-    );
-    // ≥0.9 → "Strong session — that one stuck."
-    expect(container.textContent).toContain('Strong session');
-  });
-
-  it('renders the "Solid session." line for >= 0.7 accuracy', () => {
-    const { container } = render(
-      <DebriefTab debrief={makeDebrief({ correctCount: 7, attemptedCount: 10 })} />,
-    );
-    expect(container.textContent).toContain('Solid session.');
-  });
-
-  it('renders the all-skipped line when attemptedCount === 0', () => {
+  it('renders the all-steady message when nothing moved', () => {
     const { container } = render(
       <DebriefTab
         debrief={makeDebrief({
-          correctCount: 0,
-          attemptedCount: 0,
-          skippedCount: 5,
+          skillMovements: [
+            { grammarPointKey: 'a', label: 'A', band: 'steady', confidence: 'high' },
+            { grammarPointKey: 'b', label: 'B', band: 'steady', confidence: 'high' },
+          ],
         })}
       />,
     );
-    // accuracy === null branch → "Nice work — let's see what landed."
-    expect(container.textContent).toContain("Nice work");
+    expect(container.textContent).toContain('held steady');
+    expect(container.textContent).toContain('adds signal');
+  });
+
+  it('renders the no-movement message when there are no movements', () => {
+    const { container } = render(<DebriefTab debrief={makeDebrief({ skillMovements: [] })} />);
+    expect(container.textContent).toContain('No skill movement recorded');
   });
 });
 
-// ---------------------------------------------------------------------------
-// No skill-delta section (Req 4.5)
-// ---------------------------------------------------------------------------
-
-describe('DebriefTab — no skill deltas in v1', () => {
-  // The skill-delta section from the prototype renders a "skill impact · this
-  // session" header followed by per-topic before/after bars. None of that
-  // should appear in v1 (Req 4.5). We test for the prototype-specific labels
-  // and for the lack of any progress bar (<svg>) inside the panel.
-  it('does not render the prototype "skill impact" subheader or progress bars', () => {
+describe('DebriefTab — consolidation', () => {
+  it('does not render a coach card / coach voice', () => {
     const { container } = render(<DebriefTab debrief={makeDebrief()} />);
-    const text = container.textContent ?? '';
-    expect(text.toLowerCase()).not.toContain('skill impact');
-    expect(text.toLowerCase()).not.toContain('skill delta');
-    // No SVG tile (the prototype's delta arrows + sparkline use SVG).
-    expect(container.querySelector('svg')).toBeNull();
+    expect((container.textContent ?? '').toLowerCase()).not.toContain('coach');
   });
-});
 
-// ---------------------------------------------------------------------------
-// Coach avatar
-// ---------------------------------------------------------------------------
-
-describe('DebriefTab — coach avatar', () => {
-  it('renders the "c" coach avatar with aria-hidden', () => {
+  it('does not render a what\'s-next callout', () => {
     const { container } = render(<DebriefTab debrief={makeDebrief()} />);
-    const avatar = container.querySelector('[aria-hidden="true"]');
-    expect(avatar).not.toBeNull();
-    expect(avatar?.textContent).toBe('c');
+    expect((container.textContent ?? '').toLowerCase()).not.toContain("what's next");
+  });
+
+  it('does not restate the score (no "X of Y" — that lives in the header)', () => {
+    const { container } = render(
+      <DebriefTab
+        debrief={makeDebrief({
+          correctCount: 4,
+          attemptedCount: 5,
+          skillMovements: [
+            { grammarPointKey: 'a', label: 'A', band: 'gain', confidence: 'high' },
+          ],
+        })}
+      />,
+    );
+    expect(container.textContent ?? '').not.toMatch(/\d of \d/);
+  });
+
+  it('does not render any link (forward actions live in the footer)', () => {
+    render(<DebriefTab debrief={makeDebrief()} />);
+    expect(screen.queryByRole('link')).toBeNull();
   });
 });

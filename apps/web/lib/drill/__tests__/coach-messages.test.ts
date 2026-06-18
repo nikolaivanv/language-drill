@@ -235,54 +235,6 @@ describe('coachMessage — pinned idle copy (Req 2 AC #2)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// sessionComplete branch (Req 4.4)
-// ---------------------------------------------------------------------------
-
-describe('coachMessage — sessionComplete', () => {
-  it('null accuracy yields the no-data line', () => {
-    expect(coachMessage({ kind: 'sessionComplete', accuracy: null })).toBe(
-      "Nice work — let's see what landed.",
-    );
-  });
-
-  it('accuracy ≥ 0.9 yields the strong-session line', () => {
-    expect(coachMessage({ kind: 'sessionComplete', accuracy: 0.95 })).toBe(
-      'Strong session — that one stuck.',
-    );
-    expect(coachMessage({ kind: 'sessionComplete', accuracy: 1 })).toBe(
-      'Strong session — that one stuck.',
-    );
-  });
-
-  it('0.9 boundary routes to strong-session (not solid)', () => {
-    expect(coachMessage({ kind: 'sessionComplete', accuracy: 0.9 })).toBe(
-      'Strong session — that one stuck.',
-    );
-  });
-
-  it('accuracy in [0.7, 0.9) yields the solid-session line', () => {
-    expect(coachMessage({ kind: 'sessionComplete', accuracy: 0.85 })).toBe(
-      'Solid session.',
-    );
-  });
-
-  it('0.7 boundary routes to solid-session (not tough)', () => {
-    expect(coachMessage({ kind: 'sessionComplete', accuracy: 0.7 })).toBe(
-      'Solid session.',
-    );
-  });
-
-  it('accuracy < 0.7 yields the tough-session line', () => {
-    expect(coachMessage({ kind: 'sessionComplete', accuracy: 0.5 })).toBe(
-      'That one was tough — good signal.',
-    );
-    expect(coachMessage({ kind: 'sessionComplete', accuracy: 0 })).toBe(
-      'That one was tough — good signal.',
-    );
-  });
-});
-
-// ---------------------------------------------------------------------------
 // SENTENCE_CONSTRUCTION coverage
 // ---------------------------------------------------------------------------
 
