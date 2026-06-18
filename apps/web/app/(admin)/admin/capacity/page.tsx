@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { createAuthenticatedFetch, useCapacity, useGenerationStats } from '@language-drill/api-client';
+import { DataTable, Th, Td } from '../../../../components/admin/data-table';
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
@@ -77,16 +78,18 @@ export default function CapacityPage() {
               {capacity.data.usage24h.byEventType.length === 0 ? (
                 <p className="text-ink-soft text-[13px]">No usage in the last 24h.</p>
               ) : (
-                <table className="text-[13px]">
-                  <thead>
-                    <tr><th>Event type</th><th>24h count</th></tr>
-                  </thead>
-                  <tbody>
-                    {capacity.data.usage24h.byEventType.map((e) => (
-                      <tr key={e.eventType}><td>{e.eventType}</td><td>{e.count}</td></tr>
-                    ))}
-                  </tbody>
-                </table>
+                <div className="max-w-md">
+                  <DataTable>
+                    <thead>
+                      <tr><Th>Event type</Th><Th align="right">24h count</Th></tr>
+                    </thead>
+                    <tbody>
+                      {capacity.data.usage24h.byEventType.map((e) => (
+                        <tr key={e.eventType}><Td className="t-mono">{e.eventType}</Td><Td align="right">{e.count}</Td></tr>
+                      ))}
+                    </tbody>
+                  </DataTable>
+                </div>
               )}
             </div>
 
@@ -95,16 +98,18 @@ export default function CapacityPage() {
               {capacity.data.topConsumers.length === 0 ? (
                 <p className="text-ink-soft text-[13px]">No consumers in the last 24h.</p>
               ) : (
-                <table className="text-[13px]">
-                  <thead>
-                    <tr><th>User</th><th>24h count</th></tr>
-                  </thead>
-                  <tbody>
-                    {capacity.data.topConsumers.map((c) => (
-                      <tr key={c.userId}><td>{c.userId}</td><td>{c.count}</td></tr>
-                    ))}
-                  </tbody>
-                </table>
+                <div className="max-w-xl">
+                  <DataTable>
+                    <thead>
+                      <tr><Th>User</Th><Th align="right">24h count</Th></tr>
+                    </thead>
+                    <tbody>
+                      {capacity.data.topConsumers.map((c) => (
+                        <tr key={c.userId}><Td className="t-mono">{c.userId}</Td><Td align="right">{c.count}</Td></tr>
+                      ))}
+                    </tbody>
+                  </DataTable>
+                </div>
               )}
             </div>
           </section>

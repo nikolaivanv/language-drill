@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { createAuthenticatedFetch, useCurriculum, type CurriculumEntry } from '@language-drill/api-client';
-import { Chip } from '../../../../components/ui';
+import { Chip, Input } from '../../../../components/ui';
+import { FilterSelect } from '../../../../components/admin/filter-select';
 
 const LANGUAGES = ['ES', 'DE', 'TR'];
 const LEVELS = ['A1', 'A2', 'B1', 'B2'];
@@ -38,31 +39,34 @@ export default function CurriculumPage() {
         {curriculumVersionByLanguage.TR}
       </p>
 
-      <div className="flex gap-2 flex-wrap items-center text-[13px]">
-        <select aria-label="language" value={params.language ?? ''} onChange={(e) => setParam('language', e.target.value)}>
+      <div className="flex items-center gap-2 flex-wrap">
+        <FilterSelect aria-label="language" value={params.language ?? ''} onChange={(e) => setParam('language', e.target.value)}>
           <option value="">All languages</option>
           {LANGUAGES.map((l) => (
             <option key={l} value={l}>{l}</option>
           ))}
-        </select>
-        <select aria-label="level" value={params.level ?? ''} onChange={(e) => setParam('level', e.target.value)}>
+        </FilterSelect>
+        <FilterSelect aria-label="level" value={params.level ?? ''} onChange={(e) => setParam('level', e.target.value)}>
           <option value="">All levels</option>
           {LEVELS.map((l) => (
             <option key={l} value={l}>{l}</option>
           ))}
-        </select>
-        <select aria-label="kind" value={params.kind ?? ''} onChange={(e) => setParam('kind', e.target.value)}>
+        </FilterSelect>
+        <FilterSelect aria-label="kind" value={params.kind ?? ''} onChange={(e) => setParam('kind', e.target.value)}>
           <option value="">All kinds</option>
           {KINDS.map((k) => (
             <option key={k} value={k}>{k}</option>
           ))}
-        </select>
-        <input
-          aria-label="filter"
-          placeholder="filter by key or name"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-        />
+        </FilterSelect>
+        <div className="w-[240px]">
+          <Input
+            aria-label="filter"
+            className="rounded-md"
+            placeholder="filter by key or name"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+          />
+        </div>
       </div>
 
       <p className="text-[12px] text-ink-soft">

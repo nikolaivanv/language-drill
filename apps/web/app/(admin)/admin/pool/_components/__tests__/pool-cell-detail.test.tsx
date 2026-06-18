@@ -54,7 +54,9 @@ describe('PoolCellDetail', () => {
     });
     render(<PoolCellDetail item={item} fetchFn={fetchFn} />);
     expect(screen.getByText(/: 6/)).toBeInTheDocument();
-    expect(screen.getByText(/target 30/)).toBeInTheDocument();
+    // Metadata strip: "target" stat label + its generation-target value.
+    expect(screen.getByText('target')).toBeInTheDocument();
+    expect(screen.getByText('30')).toBeInTheDocument();
   });
 
   it('renders the content-browser link with the cell query', () => {
