@@ -22,6 +22,7 @@ export {
   EVAL_MAX_RETRIES,
 } from "./evaluate.js";
 export type { EvaluateAnswerInput } from "./evaluate.js";
+export { ContentRejectedError } from "./content-rejected-error.js";
 export { diffDictation } from "./dictation-diff.js";
 export type { DictationDiff } from "./dictation-diff.js";
 export {

@@ -23,6 +23,7 @@ import {
   buildFreeWritingUserPrompt,
 } from "./free-writing-prompts.js";
 import { getPromptOrFallback, sha8 } from "./prompts-registry.js";
+import { ContentRejectedError } from "./content-rejected-error.js";
 
 export const FREE_WRITING_EVAL_TOOL_NAME = "submit_free_writing_evaluation";
 
@@ -243,6 +244,16 @@ export async function evaluateFreeWriting(
     tool_choice: { type: "tool" as const, name: FREE_WRITING_EVAL_TOOL_NAME },
     temperature: 0,
   });
+
+  // A safety refusal arrives as a 200 with stop_reason "refusal" and no tool
+  // block. Surface it as a distinct, expected outcome (the route maps it to a
+  // user-facing rejection) rather than a generic "no tool block" infra error.
+  if (response.stop_reason === "refusal") {
+    throw new ContentRejectedError(
+      "Claude refused to evaluate this free-writing submission.",
+      response.stop_reason,
+    );
+  }
 
   const toolUseBlock = response.content.find(
     (block): block is Anthropic.ToolUseBlock => block.type === "tool_use",
