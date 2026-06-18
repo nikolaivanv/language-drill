@@ -357,7 +357,7 @@ describe('TheoryToc', () => {
       expect(activeBtn).toHaveClass('active');
     });
 
-    it('folds topic switches into the strip as trailing tabs', () => {
+    it('exposes topic switches as their own strip below the sections', () => {
       const onSwitchTopic = vi.fn();
       render(
         <TheoryToc
@@ -373,6 +373,81 @@ describe('TheoryToc', () => {
         screen.getByRole('button', { name: /pretérito vs\. imperfecto/i }),
       );
       expect(onSwitchTopic).toHaveBeenCalledWith('preterite-imperfect');
+    });
+
+    it('does not render a filter for a short topic strip', () => {
+      // ES = 2 others, below the threshold → no filter chrome on mobile either.
+      render(
+        <TheoryToc
+          topic={mockTopic}
+          activeSectionId="what"
+          onJump={vi.fn()}
+          language={Language.ES}
+          onSwitchTopic={vi.fn()}
+        />,
+        { wrapper: Wrapper },
+      );
+      expect(
+        screen.queryByRole('searchbox', { name: /filter topics/i }),
+      ).toBeNull();
+    });
+
+    it('renders a filter above the strip and narrows it as the user types', async () => {
+      render(
+        <TheoryToc
+          topic={mockTopic}
+          activeSectionId="what"
+          onJump={vi.fn()}
+          language={Language.DE}
+          onSwitchTopic={vi.fn()}
+          fetchFn={listFetch(MANY_TOPICS)}
+        />,
+        { wrapper: Wrapper },
+      );
+      const filter = await screen.findByRole('searchbox', {
+        name: /filter topics/i,
+      });
+      // Section tabs always remain; the strip's topic tabs filter.
+      expect(
+        screen.getByRole('button', { name: 'what is it?' }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /placeholder topic 3/i }),
+      ).toBeInTheDocument();
+
+      fireEvent.change(filter, { target: { value: 'harmony' } });
+
+      expect(
+        screen.getByRole('button', { name: /vowel harmony/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /placeholder topic 3/i }),
+      ).toBeNull();
+      // The section strip is unaffected by the topic filter.
+      expect(
+        screen.getByRole('button', { name: 'what is it?' }),
+      ).toBeInTheDocument();
+    });
+
+    it('still switches topics when a filtered strip tab is clicked', async () => {
+      const onSwitchTopic = vi.fn();
+      render(
+        <TheoryToc
+          topic={mockTopic}
+          activeSectionId="what"
+          onJump={vi.fn()}
+          language={Language.DE}
+          onSwitchTopic={onSwitchTopic}
+          fetchFn={listFetch(MANY_TOPICS)}
+        />,
+        { wrapper: Wrapper },
+      );
+      const filter = await screen.findByRole('searchbox', {
+        name: /filter topics/i,
+      });
+      fireEvent.change(filter, { target: { value: 'harmony' } });
+      fireEvent.click(screen.getByRole('button', { name: /vowel harmony/i }));
+      expect(onSwitchTopic).toHaveBeenCalledWith('vowel-harmony');
     });
   });
 });
