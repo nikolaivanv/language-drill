@@ -2,15 +2,13 @@ import { CefrLevel, Language } from '@language-drill/shared';
 
 import type { GrammarPoint } from './types';
 
-// TR curriculum aligned to full Yedi İklim A1+A2 parity (2026-05-28): 26 A1
-// + 14 A2 grammar entries + 10 themed vocab umbrellas (5 A1 + 5 A2; 2026-06-07
-// split of the former single A1/A2 everyday-vocab cells). B1 + B2 grammar
-// entries and B1/B2 vocab umbrellas remain commented out so the prod scheduler does not
-// generate them. To re-enable B1/B2: uncomment the B1/B2 sections below,
-// restore B1/B2 in the destructure, raise TR's B1/B2 floors in
-// PER_LANGUAGE_GRAMMAR_MIN (curriculum/index.ts), restore TR B1/B2 entries in
-// SEED_KEY_TO_GRAMMAR_POINT (seed-exercises.ts), and update the per-language
-// counts assertions for Turkish (curriculum.test.ts).
+// TR curriculum aligned to Yedi İklim A1+A2 parity (2026-05-28) plus B1
+// (2026-06-19): 26 A1 + 14 A2 + 10 B1 grammar entries, 15 themed vocab
+// umbrellas (5 each A1/A2/B1), 3 dictation, 9 free-writing. B2 grammar/vocab
+// remain out (separate cycle). To enable B2: author the B2 section below, raise
+// TR's B2 floor in PER_LANGUAGE_GRAMMAR_MIN (curriculum/index.ts), restore TR B2
+// entries in SEED_KEY_TO_GRAMMAR_POINT (seed-exercises.ts), and update the
+// per-language counts assertions for Turkish (curriculum.test.ts).
 const TR = Language.TR;
 const { A1, A2, B1 } = CefrLevel;
 
@@ -1218,6 +1216,111 @@ const trCurriculum: readonly GrammarPoint[] = [
   // B1 — authored fresh from Yedi İklim B1, grounded in Göksel & Kerslake.
   // (B2 is a separate later cycle.)
   // ===========================================================================
+
+  // G&K §21.3.1–.2 (imperfective: progressive + habitual), §21.2.1 (past)
+  {
+    key: 'tr-b1-past-continuous-iyordu',
+    conjugationSuitable: true,
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
+        { name: 'polarity', floors: { affirmative: 18, negative: 12 } },
+      ],
+    },
+    kind: 'grammar',
+    name: 'Past continuous -(I)yordu',
+    description:
+      'Past imperfective -(I)yor + copular -DI: an ongoing or habitual past ("was …ing", "used to"). The -(I)yor buffer/voicing rules carry over; -DI takes harmonised personal endings.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Eve geliyordum. (I was coming home.)',
+      'Her sabah erken kalkıyordu. (He used to get up early — habitual.)',
+      'Biz yemek yiyorduk. (We were eating.)',
+      "Sen Ömer'i benden iyi tanıyordun. (You knew Ömer better — stative.)",
+    ],
+    examplesNegative: [
+      '*Geliyordüm. (wrong — the copular past harmonises to -du after o/u: geliyordum)',
+      '*Geldiyordum. (wrong — base is the -(I)yor stem, not the -DI past: geliyordum)',
+    ],
+    commonErrors: [
+      'Using completed -DI where ongoing/habitual -(I)yordu is meant (geldim vs geliyordum).',
+      'Wrong vowel harmony on the -DI copula (geliyordüm instead of geliyordum).',
+      'Stacking two past markers (*geldiyordum).',
+    ],
+    prerequisiteKeys: ['tr-a1-present-continuous', 'tr-a1-dili-past'],
+  },
+  // G&K Ch 27 (§27.1.1 -sA/-(y)sA, §27.2.3 -sA, §27.2.4 -sAydI), wishes §21.4.4.1
+  {
+    key: 'tr-b1-conditional-irrealis',
+    // sentenceConstructionSuitable intentionally OFF: -sA (wish), -sAydI
+    // (counterfactual) and copular -(y)sA (real condition) are three distinct
+    // constructions, so a free-production prompt is structurally ambiguous —
+    // same reasoning as tr-a2-reported-speech. Covered by cloze/translation.
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
+        { name: 'polarity', floors: { affirmative: 18, negative: 12 } },
+      ],
+    },
+    kind: 'grammar',
+    name: 'Conditional & wish -sA / -sAydI / -(y)sA',
+    description:
+      'Verbal -sA (wish/hypothetical), -sAydI (past counterfactual), and copular -(y)sA ("if it is", real condition). "Keşke" + -sA(ydI) marks wishes and regrets.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Keşke burada olsa. (If only he were here — present wish.)',
+      'Vaktim olsaydı, gelirdim. (If I had had time, I would have come — counterfactual.)',
+      'Hava güzelse yürüyelim. (If the weather is nice, let us walk — real condition, copular -(y)sA.)',
+      'Param olsa, bir ev alırdım. (If I had money, I would buy a house.)',
+    ],
+    examplesNegative: [
+      '*Vaktim olsa, geldim. (wrong — counterfactual needs -sAydI + aorist-past main clause: olsaydı, gelirdim)',
+      '*Hava güzel olursa yürüdük. (wrong — a real condition pairs -(y)sA/aorist with a non-past main clause)',
+    ],
+    commonErrors: [
+      'Pairing a -sA wish with the wrong main-clause tense.',
+      'Using real-conditional -(y)sA where past counterfactual -sAydI is required.',
+      'Dropping "keşke" so a regret reads as a neutral condition.',
+    ],
+    prerequisiteKeys: ['tr-a1-dili-past'],
+  },
+  // G&K §21.4.2.2 (necessity/obligation): -mAlI is speaker-felt (A2); the
+  // lexical periphrases below are objective obligation. Note the nominalization
+  // split: zorunda takes -mAk; gerek/lazım/şart take -mA + possessive.
+  {
+    key: 'tr-b1-obligation-periphrases',
+    conjugationSuitable: true,
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
+        { name: 'polarity', floors: { affirmative: 18, negative: 12 } },
+      ],
+    },
+    kind: 'grammar',
+    name: 'Obligation -mAk zorunda / gerek / lazım / şart',
+    description:
+      'Objective obligation by lexical means (vs speaker-felt -mAlI at A2): -mAk zorunda(yım) (compulsion), -mAm gerek/lazım/şart, gerek-iyor. zorunda/şart are stronger; gerek/lazım milder.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      "Ankara'ya gitmek zorundayım. (I have to go to Ankara — external compulsion.)",
+      'Şimdi gitmem lazım. (I need to go now.)',
+      'Bunu bitirmemiz gerekiyor. (We need to finish this.)',
+      'Daha çok çalışman şart. (It is essential that you work more.)',
+    ],
+    examplesNegative: [
+      '*Gitmem zorunda. (wrong — zorunda takes the bare -mAk infinitive: gitmek zorundayım)',
+      '*Gitmek lazım benim. (wrong — gerek/lazım take -mA + possessive: gitmem lazım)',
+    ],
+    commonErrors: [
+      'Using speaker-felt -mAlI where external obligation calls for zorunda.',
+      'Wrong nominalization: -mAk for zorunda vs -mA+possessive for gerek/lazım/şart.',
+      'Dropping the locative/personal ending on zorunda (gitmek zorunda instead of …zorundayım).',
+    ],
+    prerequisiteKeys: ['tr-a2-ability-necessity'],
+  },
 
   // ---------------------------------------------------------------------------
   // Vocab umbrellas — kind: 'vocab'
