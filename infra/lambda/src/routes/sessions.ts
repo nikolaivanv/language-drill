@@ -516,6 +516,10 @@ sessions.get('/sessions/:id', async (c) => {
 
   const attemptedExerciseIds = historyRows.map((h) => h.exerciseId);
 
+  // Resume must always reflect live attempt-state — never let an intermediary
+  // cache a stale manifest (matches the route's error paths and the api-client
+  // hook, which sets no staleTime).
+  c.header('Cache-Control', 'no-store');
   return c.json({
     id: session.id,
     exercises,
