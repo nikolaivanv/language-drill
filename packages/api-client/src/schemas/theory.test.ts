@@ -3,6 +3,7 @@ import {
   TheoryListItemSchema,
   TheoryListResponseSchema,
   TheoryCoverageResponseSchema,
+  PoolStatusTheoryItemSchema,
   type TheoryCoverageRow,
 } from './theory';
 
@@ -142,5 +143,22 @@ describe('TheoryCoverageResponseSchema', () => {
       rows: [buildRow({ approved: 1.5 })],
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe('PoolStatusTheoryItemSchema', () => {
+  const valid = {
+    language: 'ES', level: 'B1', grammarPointKey: 'es-b1-ser-estar', name: 'ser vs estar',
+    hasApprovedPage: true, flaggedCount: 0, lastGeneratedAt: null,
+  };
+  it('parses a valid item', () => {
+    expect(PoolStatusTheoryItemSchema.parse(valid)).toEqual(valid);
+  });
+  it('accepts a timestamp string for lastGeneratedAt', () => {
+    expect(PoolStatusTheoryItemSchema.parse({ ...valid, lastGeneratedAt: '2026-06-01T00:00:00.000Z' }).lastGeneratedAt)
+      .toBe('2026-06-01T00:00:00.000Z');
+  });
+  it('rejects an invalid language', () => {
+    expect(() => PoolStatusTheoryItemSchema.parse({ ...valid, language: 'FR' })).toThrow();
   });
 });

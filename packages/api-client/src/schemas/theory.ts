@@ -48,3 +48,16 @@ export const TheoryCoverageResponseSchema = z.object({
 
 export type TheoryCoverageRow = z.infer<typeof TheoryCoverageRowSchema>;
 export type TheoryCoverageResponse = z.infer<typeof TheoryCoverageResponseSchema>;
+
+// Envelope item for GET /admin/theory/pool-status (one per grammar curriculum point).
+export const PoolStatusTheoryItemSchema = z.object({
+  language: z.enum(['ES', 'DE', 'TR']),
+  level: z.enum(['A1', 'A2', 'B1', 'B2']),
+  grammarPointKey: z.string(),
+  name: z.string(),
+  hasApprovedPage: z.boolean(),
+  flaggedCount: z.number().int().nonnegative(),
+  lastGeneratedAt: z.string().nullable(),
+});
+
+export type PoolStatusTheoryItem = z.infer<typeof PoolStatusTheoryItemSchema>;
