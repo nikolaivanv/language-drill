@@ -178,6 +178,33 @@ describe('TodayPlanResponseSchema', () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it('parses resumeSessionId when present', () => {
+    const parsed = TodayPlanResponseSchema.parse({
+      language: Language.ES,
+      generatedAt: '2026-06-18T10:00:00.000Z',
+      totalEstimatedMinutes: 0,
+      items: [],
+      summary: null,
+      code: null,
+      resumeSessionId: '11111111-1111-1111-1111-111111111111',
+      freeWriting: null,
+    });
+    expect(parsed.resumeSessionId).toBe('11111111-1111-1111-1111-111111111111');
+  });
+
+  it('defaults resumeSessionId to null when omitted', () => {
+    const parsed = TodayPlanResponseSchema.parse({
+      language: Language.ES,
+      generatedAt: '2026-06-18T10:00:00.000Z',
+      totalEstimatedMinutes: 0,
+      items: [],
+      summary: null,
+      code: null,
+      freeWriting: null,
+    });
+    expect(parsed.resumeSessionId).toBeNull();
+  });
 });
 
 describe('TodayPlanItemSchema', () => {
