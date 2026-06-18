@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { AdminNav } from '../admin-nav';
 import { ADMIN_NAV } from '../admin-nav-items';
 
-let mockPath = '/admin/generation';
+let mockPath = '/admin/pool';
 vi.mock('next/navigation', () => ({
   usePathname: () => mockPath,
 }));
@@ -24,17 +24,17 @@ vi.mock('next/link', () => ({
 }));
 
 describe('AdminNav', () => {
-  it('exposes Moderation/Content/Pool/Theory/Invites destinations in order', () => {
+  it('exposes Moderation/Content/Pool/Invites destinations in order', () => {
     expect(ADMIN_NAV.map((d) => d.href)).toEqual([
-      '/admin/moderation', '/admin/flags', '/admin/content', '/admin/generation', '/admin/theory', '/admin/invites', '/admin/audit', '/admin/capacity', '/admin/curriculum',
+      '/admin/moderation', '/admin/flags', '/admin/content', '/admin/pool', '/admin/invites', '/admin/audit', '/admin/capacity', '/admin/curriculum',
     ]);
     expect(ADMIN_NAV.map((d) => d.label)).toEqual([
-      'Moderation', 'User flags', 'Content', 'Pool', 'Theory', 'Invites', 'Audit', 'Capacity', 'Curriculum',
+      'Moderation', 'User flags', 'Content', 'Pool', 'Invites', 'Audit', 'Capacity', 'Curriculum',
     ]);
   });
 
   it('renders every destination as a link to its href', () => {
-    mockPath = '/admin/generation';
+    mockPath = '/admin/pool';
     render(<AdminNav />);
     for (const d of ADMIN_NAV) {
       expect(screen.getByRole('link', { name: d.label })).toHaveAttribute(
@@ -45,13 +45,13 @@ describe('AdminNav', () => {
   });
 
   it('marks the active destination with aria-current=page', () => {
-    mockPath = '/admin/theory';
+    mockPath = '/admin/pool';
     render(<AdminNav />);
-    expect(screen.getByRole('link', { name: 'Theory' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Pool' })).toHaveAttribute(
       'aria-current',
       'page',
     );
-    expect(screen.getByRole('link', { name: 'Pool' })).not.toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Content' })).not.toHaveAttribute(
       'aria-current',
     );
   });
