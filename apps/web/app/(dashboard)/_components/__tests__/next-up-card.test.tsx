@@ -37,6 +37,7 @@ function planResponse(
     summary: null,
     code: null,
     freeWriting: null,
+    resumeSessionId: null,
     ...overrides,
   };
 }

@@ -33,12 +33,14 @@ const mockUseCreateSession = vi.fn();
 const mockUseCompleteSession = vi.fn();
 const mockUseSubmitAnswer = vi.fn();
 const mockUseLanguageProfiles = vi.fn();
+const mockUseResumeSession = vi.fn();
 
 vi.mock('@language-drill/api-client', () => ({
   useCreateSession: (...args: unknown[]) => mockUseCreateSession(...args),
   useCompleteSession: (...args: unknown[]) => mockUseCompleteSession(...args),
   useSubmitAnswer: (...args: unknown[]) => mockUseSubmitAnswer(...args),
   useLanguageProfiles: (...args: unknown[]) => mockUseLanguageProfiles(...args),
+  useResumeSession: (...args: unknown[]) => mockUseResumeSession(...args),
   useTodayPlan: () => ({ data: undefined, isLoading: false, error: null }),
   createAuthenticatedFetch: vi.fn(() => vi.fn()),
 }));
@@ -170,6 +172,14 @@ beforeEach(() => {
     mutate: completeMutate,
     reset: vi.fn(),
     isPending: false,
+    error: null,
+  });
+
+  // Default resume: disabled (no ?resume param in most tests).
+  mockUseResumeSession.mockReturnValue({
+    data: undefined,
+    isLoading: false,
+    isError: false,
     error: null,
   });
 });
