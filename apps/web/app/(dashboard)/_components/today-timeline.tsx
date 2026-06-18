@@ -72,8 +72,11 @@ export function TodayTimeline({
     );
   }
 
-  // Spine CTA: keep one-tap launch now that bare /drill is the hub.
-  const drillHref = `/drill?start=quick`;
+  // Resume the in-progress today-session when one exists; otherwise launch fresh.
+  const drillHref = data.resumeSessionId
+    ? `/drill?resume=${data.resumeSessionId}`
+    : `/drill?start=quick`;
+  const ctaLabel = data.resumeSessionId ? 'continue →' : 'start →';
   const allDone =
     data.items.length > 0 && data.items.every((item) => item.status === 'done');
 
@@ -112,6 +115,7 @@ export function TodayTimeline({
             status={status}
             isLast={idx === itemsWithStatus.length - 1}
             href={status === 'next-up' ? drillHref : null}
+            ctaLabel={status === 'next-up' ? ctaLabel : undefined}
           />
         ))}
       </ol>

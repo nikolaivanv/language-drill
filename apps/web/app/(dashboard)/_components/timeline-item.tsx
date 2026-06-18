@@ -26,6 +26,8 @@ type Props = {
   status: TimelineItemStatus;
   isLast: boolean;
   href: string | null;
+  /** Primary CTA text for the next-up row. Defaults to 'start →'. */
+  ctaLabel?: string;
 };
 
 export function TimelineItem({
@@ -37,6 +39,7 @@ export function TimelineItem({
   status,
   isLast,
   href,
+  ctaLabel = 'start →',
 }: Props) {
   const title = composeTitle(index, type);
   const subtitle = composeSubtitle(topicHint, type, itemCount);
@@ -98,7 +101,7 @@ export function TimelineItem({
             </span>
             {isNextUp && href && (
               <Button variant="primary" size="md" href={href}>
-                start →
+                {ctaLabel}
               </Button>
             )}
           </div>

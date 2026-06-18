@@ -216,6 +216,40 @@ describe('TodayTimeline — sr-only summary', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// Resume session — href + label
+// ---------------------------------------------------------------------------
+
+describe('TodayTimeline — resume session', () => {
+  it('links next-up to ?resume and labels it "continue" when resumeSessionId is set', () => {
+    const items = [makeItem(1, 'done'), makeItem(2, 'queued'), makeItem(3, 'queued')];
+    render(
+      <TodayTimeline
+        {...baseProps}
+        isLoading={false}
+        error={null}
+        data={makeResponse(items, { resumeSessionId: '11111111-1111-1111-1111-111111111111' })}
+      />,
+    );
+    const cta = screen.getByRole('link', { name: /continue/i });
+    expect(cta).toHaveAttribute('href', '/drill?resume=11111111-1111-1111-1111-111111111111');
+  });
+
+  it('links next-up to ?start=quick with "start" when no resumeSessionId', () => {
+    const items = [makeItem(1, 'done'), makeItem(2, 'queued'), makeItem(3, 'queued')];
+    render(
+      <TodayTimeline
+        {...baseProps}
+        isLoading={false}
+        error={null}
+        data={makeResponse(items, { resumeSessionId: null })}
+      />,
+    );
+    const cta = screen.getByRole('link', { name: /start/i });
+    expect(cta).toHaveAttribute('href', '/drill?start=quick');
+  });
+});
+
 describe('TodayTimeline — free-writing block', () => {
   it('renders the free-writing block when data.freeWriting is present', () => {
     const data = makeResponse([makeItem(1, 'queued'), makeItem(2, 'queued')], {
