@@ -327,6 +327,35 @@ describe('PracticePage', () => {
         screen.getByRole('button', { name: 'try again' }),
       ).toBeInTheDocument();
     });
+
+    it('"try again" re-submits the same answer (no second Submit click needed)', () => {
+      // First submit errors; the retry re-fire succeeds.
+      setSubmitMock((_vars, opts) => opts.onSuccess?.(mockEval(0.97)));
+      submitMutate.mockImplementationOnce((_vars, opts) =>
+        opts.onError?.(new Error('Bad gateway 502')),
+      );
+      renderWithProviders(<PracticePage />);
+
+      fireEvent.change(screen.getByRole('textbox'), {
+        target: { value: 'middle' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+
+      // Error card up; one submit so far.
+      expect(submitMutate).toHaveBeenCalledTimes(1);
+
+      fireEvent.click(screen.getByRole('button', { name: 'try again' }));
+
+      // Retry itself re-fires the mutation with the same answer — the user does
+      // NOT have to click Submit again.
+      expect(submitMutate).toHaveBeenCalledTimes(2);
+      expect(submitMutate).toHaveBeenLastCalledWith(
+        expect.objectContaining({ exerciseId: 'ex-0', answer: 'middle', sessionId: SESSION_ID }),
+        expect.any(Object),
+      );
+      // Retry succeeded → verdict shown.
+      expect(screen.getByText('spot on')).toBeInTheDocument();
+    });
   });
 
   // -------------------------------------------------------------------------
@@ -524,6 +553,39 @@ describe('PracticePage', () => {
       fireEvent.click(screen.getByRole('button', { name: /submit/i }));
       fireEvent.click(screen.getByRole('button', { name: 'see results' }));
 
+      expect(mockPush).toHaveBeenCalledWith(`/drill/debrief/${SESSION_ID}`);
+    });
+
+    it('"skip item" on the LAST item completes the session (no stuck blank screen)', () => {
+      setSubmitMock((_vars, opts) => opts.onSuccess?.(mockEval(0.97)));
+      completeMutate.mockImplementation((_vars, opts) =>
+        opts.onSuccess?.(undefined),
+      );
+      renderWithProviders(<PracticePage />);
+
+      // Items 0..3: submit + next, to reach the last item (index 4).
+      for (let i = 0; i < 4; i++) {
+        fireEvent.change(screen.getByRole('textbox'), {
+          target: { value: 'middle' },
+        });
+        fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+        fireEvent.click(screen.getByRole('button', { name: 'next' }));
+      }
+      expect(screen.getByText(/sentence-4/)).toBeInTheDocument();
+
+      // Item 4 (last): submit fails → error card with "skip item".
+      submitMutate.mockImplementationOnce((_vars, opts) =>
+        opts.onError?.(new Error('Bad gateway 502')),
+      );
+      fireEvent.change(screen.getByRole('textbox'), {
+        target: { value: 'middle' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+      fireEvent.click(screen.getByRole('button', { name: 'skip item' }));
+
+      // Skipping the last item must finalize the session and navigate to the
+      // debrief — not advance index out of bounds into a blank screen.
+      expect(completeMutate).toHaveBeenCalledTimes(1);
       expect(mockPush).toHaveBeenCalledWith(`/drill/debrief/${SESSION_ID}`);
     });
   });
