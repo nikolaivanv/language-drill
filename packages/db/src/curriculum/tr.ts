@@ -1322,6 +1322,120 @@ const trCurriculum: readonly GrammarPoint[] = [
     prerequisiteKeys: ['tr-a2-ability-necessity'],
   },
 
+  // G&K §8.2.1.1 (allomorphy), §13.2.1 (causative constructions)
+  {
+    key: 'tr-b1-causative-voice',
+    conjugationSuitable: true,
+    sentenceConstructionSuitable: true,
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
+        { name: 'polarity', floors: { affirmative: 18, negative: 12 } },
+      ],
+    },
+    kind: 'grammar',
+    name: 'Causative -DIr / -t / -Ir / -Ar',
+    description:
+      'Adds a causer. Allomorphy: polysyllabic / vowel-, l-, r-final stems take -t (kapat-, uyut-); ~30 monosyllables take -Ir/-Ar/-It (düşür-, çıkar-, korkut-); elsewhere -DIr (yaptır-, öldür-). Stackable.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Müdür raporu bana yazdırdı. (The manager had me write the report — yaz → yazdır.)',
+      'Çocuğu uyuttum. (I put the child to sleep — uyu → uyut.)',
+      'Suyu kaynattım. (I boiled the water — kayna → kaynat.)',
+      'Onu güldürdün. (You made him laugh — gül → güldür.)',
+    ],
+    examplesNegative: [
+      '*yaztır- (wrong allomorph — consonant-final yaz takes -DIr: yazdır-)',
+      '*uyudur- (wrong — vowel-final uyu takes -t: uyut-)',
+    ],
+    commonErrors: [
+      'Picking -DIr where the stem requires -t / -Ir / -Ar.',
+      'Forgetting the causee marking (-A dative for the demoted agent).',
+      'Over-generating causatives on verbs with suppletive transitives (gir- → sok-, not *girdir-).',
+    ],
+  },
+  // G&K §8.2.1.2 (allomorphy), §13.2.2 (passive + impersonal passives)
+  {
+    key: 'tr-b1-passive-voice',
+    sentenceConstructionSuitable: true,
+    kind: 'grammar',
+    name: 'Passive -Il / -In / -n',
+    description:
+      'Passive demotes the subject. Allomorphy: -Il after consonants (yapıl-, görül-), -In after l-final stems (bilin-), -n after vowels (aran-). Agent via "tarafından"; impersonal passive on intransitives.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      "Bu ev 1950'de yapıldı. (This house was built in 1950.)",
+      'Mektup dün yazıldı. (The letter was written yesterday.)',
+      'Hırsız polis tarafından yakalandı. (The thief was caught by the police.)',
+      'Burada sigara içilmez. (Smoking is not done here — impersonal passive.)',
+    ],
+    examplesNegative: [
+      '*yapınıl- (wrong — consonant-final yap takes -Il: yapıl-)',
+      '*aranıl- for "be searched" (wrong — vowel-final ara takes -n: aran-)',
+    ],
+    commonErrors: [
+      'Wrong allomorph (-Il vs -In vs -n).',
+      'Expressing the agent with -DAn instead of "tarafından".',
+      'Confusing the reflexive/passive homophone (yıkan- = "be washed" or "bathe").',
+    ],
+  },
+  // G&K §8.2.1.3 (reflexive -(I)n is unproductive: closed set), §13.2.3.1,
+  // kendi §18.1.2.2. Productive "self" usually = kendi + plain verb.
+  {
+    key: 'tr-b1-reflexive-voice-kendi',
+    sentenceConstructionSuitable: true,
+    kind: 'grammar',
+    name: 'Reflexive -(I)n & the pronoun "kendi"',
+    description:
+      'Unproductive reflexive -(I)n on a closed set (yıkan- bathe, giyin- get dressed, taran- comb hair, örtün- cover oneself); pronoun "kendi(m/n/si)" for reflexive/emphatic "self" (kendimi gördüm).',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Her sabah yıkanıyorum. (I bathe every morning.)',
+      'Çabuk giyindi. (He got dressed quickly.)',
+      'Kendimi aynada gördüm. (I saw myself in the mirror.)',
+      'Bunu kendin yaptın. (You did this yourself — emphatic.)',
+    ],
+    examplesNegative: [
+      '*Kendimi yıkanıyorum. (wrong — the reflexive verb already means "self"; don’t add kendimi: yıkanıyorum)',
+      '*Elbiseyi giyindim. (wrong — reflexive giyin- is intransitive; "put on a garment" is giy-: elbiseyi giydim)',
+    ],
+    commonErrors: [
+      'Treating -(I)n as productive (most reflexive senses use kendi + plain verb).',
+      'Doubling a reflexive verb with kendi.',
+      'Confusing transitive giy- with intransitive giyin-.',
+    ],
+  },
+  // G&K §8.2.1.4 (reciprocal -(I)ş is unproductive: closed set), §13.2.3.2,
+  // birbir- §18.1.4. Productive reciprocity = birbiri + plain verb.
+  {
+    key: 'tr-b1-reciprocal-voice',
+    sentenceConstructionSuitable: true,
+    kind: 'grammar',
+    name: 'Reciprocal -(I)ş & "birbiri"',
+    description:
+      'Unproductive reciprocal -(I)ş on a closed set (öpüş- kiss each other, görüş- meet, dövüş- fight, selamlaş- greet); "birbiri(ni/yle)" "each other" expresses reciprocity productively.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Kapıda öpüştüler. (They kissed each other at the door.)',
+      'Yarın görüşürüz. (We will see each other tomorrow.)',
+      'Birbirimize yardım ettik. (We helped each other.)',
+      'Mektuplaştılar. (They corresponded with each other.)',
+    ],
+    examplesNegative: [
+      '*Birbirini öpüştüler. (wrong — -(I)ş already encodes "each other"; don’t add birbirini: öpüştüler)',
+      '*Onunla konuştuk birbirimizle. (wrong — konuş- is lexicalized "speak", not a reciprocal of a base verb)',
+    ],
+    commonErrors: [
+      'Treating -(I)ş as productive.',
+      'Doubling a reciprocal verb with birbiri.',
+      'Wrong case on birbiri (birbirine / birbiriyle / birbirini).',
+    ],
+  },
+
   // ---------------------------------------------------------------------------
   // Vocab umbrellas — kind: 'vocab'
   // ---------------------------------------------------------------------------
