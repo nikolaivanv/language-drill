@@ -118,7 +118,7 @@ describe('enumerateCurriculumCells — kind:dictation umbrellas', () => {
       (c) => c.grammarPoint.kind === 'dictation',
     );
     const keys = cells.map((c) => c.grammarPoint.key).sort();
-    expect(keys).toEqual(['tr-a1-dictation', 'tr-a2-dictation']);
+    expect(keys).toEqual(['tr-a1-dictation', 'tr-a2-dictation', 'tr-b1-dictation']);
     for (const cell of cells) {
       expect(cell.exerciseType).toBe(ExerciseType.DICTATION);
     }

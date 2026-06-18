@@ -2,17 +2,15 @@ import { CefrLevel, Language } from '@language-drill/shared';
 
 import type { GrammarPoint } from './types';
 
-// TR curriculum aligned to full Yedi İklim A1+A2 parity (2026-05-28): 26 A1
-// + 14 A2 grammar entries + 10 themed vocab umbrellas (5 A1 + 5 A2; 2026-06-07
-// split of the former single A1/A2 everyday-vocab cells). B1 + B2 grammar
-// entries and B1/B2 vocab umbrellas remain commented out so the prod scheduler does not
-// generate them. To re-enable B1/B2: uncomment the B1/B2 sections below,
-// restore B1/B2 in the destructure, raise TR's B1/B2 floors in
-// PER_LANGUAGE_GRAMMAR_MIN (curriculum/index.ts), restore TR B1/B2 entries in
-// SEED_KEY_TO_GRAMMAR_POINT (seed-exercises.ts), and update the per-language
-// counts assertions for Turkish (curriculum.test.ts).
+// TR curriculum aligned to Yedi İklim A1+A2 parity (2026-05-28) plus B1
+// (2026-06-19): 26 A1 + 14 A2 + 10 B1 grammar entries, 15 themed vocab
+// umbrellas (5 each A1/A2/B1), 3 dictation, 9 free-writing. B2 grammar/vocab
+// remain out (separate cycle). To enable B2: author the B2 section below, raise
+// TR's B2 floor in PER_LANGUAGE_GRAMMAR_MIN (curriculum/index.ts), restore TR B2
+// entries in SEED_KEY_TO_GRAMMAR_POINT (seed-exercises.ts), and update the
+// per-language counts assertions for Turkish (curriculum.test.ts).
 const TR = Language.TR;
-const { A1, A2 } = CefrLevel;
+const { A1, A2, B1 } = CefrLevel;
 
 /**
  * Per-language curriculum version. Bump in the same commit as any edit to
@@ -49,8 +47,10 @@ const { A1, A2 } = CefrLevel;
  * low-yield / saturated-dedup suppression so the new CONJUGATION cells run.
  * 2026-06-17: added 3 A1 + 3 A2 free-writing topic umbrellas (kind 'free-writing');
  * bump enumerates the new free-writing cells.
+ * 2026-06-19: TR B1 enabled — 10 grammar + 5 vocab + dictation + 3 free-writing
+ * (Yedi İklim B1, G&K-grounded). Bump clears low-yield/saturation suppression.
  */
-export const CURRICULUM_VERSION_TR = '2026-06-17';
+export const CURRICULUM_VERSION_TR = '2026-06-19';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -1211,149 +1211,315 @@ const trCurriculum: readonly GrammarPoint[] = [
     // cloze/translation cells instead.
   },
 
-  /*
-  // ---------------------------------------------------------------------------
-  // B1
-  // ---------------------------------------------------------------------------
-  // Note: tr-b1-mis-evidential, tr-b1-aorist, and tr-b1-future have been
-  // relocated to A2 / A1; do not restore them here.
+
+  // ===========================================================================
+  // B1 — authored fresh from Yedi İklim B1, grounded in Göksel & Kerslake.
+  // (B2 is a separate later cycle.)
+  // ===========================================================================
+
+  // G&K §21.3.1–.2 (imperfective: progressive + habitual), §21.2.1 (past)
   {
-    key: 'tr-b1-conditionals-sa',
-    personRotation: true,
+    key: 'tr-b1-past-continuous-iyordu',
+    conjugationSuitable: true,
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
+        { name: 'polarity', floors: { affirmative: 18, negative: 12 } },
+      ],
+    },
     kind: 'grammar',
-    name: 'Conditional -sA',
+    name: 'Past continuous -(I)yordu',
     description:
-      'Conditional/irrealis -sa/-se attaches to verbal stems for "if" clauses, polite requests, and counterfactuals when combined with past tenses.',
-    cefrLevel: B1,
-    language: TR,
-    examplesPositive: ['Vaktim olsa, gelirim.', 'Yağmur yağarsa, evde kalırız.'],
-    examplesNegative: ['*Vaktim olur, gelirim.'],
-    commonErrors: [
-      'Omitting -sA in irrealis conditions.',
-      'Mixing -sA with the wrong main-clause tense for the intended modality.',
-    ],
-  },
-  {
-    key: 'tr-b1-keske-optative',
-    personRotation: true,
-    kind: 'grammar',
-    name: '"Keşke" + past for regret and wish',
-    description:
-      '"Keşke" with -DI past for past regrets ("if only I had…") and with -sA for present-time wishes.',
+      'Past imperfective -(I)yor + copular -DI: an ongoing or habitual past ("was …ing", "used to"). The -(I)yor buffer/voicing rules carry over; -DI takes harmonised personal endings.',
     cefrLevel: B1,
     language: TR,
     examplesPositive: [
-      'Keşke daha çok çalışsaydım.',
-      'Keşke burada olsa.',
+      'Eve geliyordum. (I was coming home.)',
+      'Her sabah erken kalkıyordu. (He used to get up early — habitual.)',
+      'Biz yemek yiyorduk. (We were eating.)',
+      "Sen Ömer'i benden iyi tanıyordun. (You knew Ömer better — stative.)",
     ],
-    examplesNegative: ['*Keşke daha çok çalışırım.'],
+    examplesNegative: [
+      '*Geliyordüm. (wrong — the copular past harmonises to -du after o/u: geliyordum)',
+      '*Geldiyordum. (wrong — base is the -(I)yor stem, not the -DI past: geliyordum)',
+    ],
     commonErrors: [
-      'Using the simple aorist or present after "keşke".',
-      'Mixing -sA and -DI tenses incorrectly between regret and wish meanings.',
+      'Using completed -DI where ongoing/habitual -(I)yordu is meant (geldim vs geliyordum).',
+      'Wrong vowel harmony on the -DI copula (geliyordüm instead of geliyordum).',
+      'Stacking two past markers (*geldiyordum).',
     ],
-    prerequisiteKeys: ['tr-a1-dili-past', 'tr-b1-conditionals-sa'],
+    prerequisiteKeys: ['tr-a1-present-continuous', 'tr-a1-dili-past'],
   },
+  // G&K Ch 27 (§27.1.1 -sA/-(y)sA, §27.2.3 -sA, §27.2.4 -sAydI), wishes §21.4.4.1
   {
-    key: 'tr-b1-causal-conjunctions',
+    key: 'tr-b1-conditional-irrealis',
+    // sentenceConstructionSuitable intentionally OFF: -sA (wish), -sAydI
+    // (counterfactual) and copular -(y)sA (real condition) are three distinct
+    // constructions, so a free-production prompt is structurally ambiguous —
+    // same reasoning as tr-a2-reported-speech. Covered by cloze/translation.
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
+        { name: 'polarity', floors: { affirmative: 18, negative: 12 } },
+      ],
+    },
     kind: 'grammar',
-    name: 'Causal conjunctions and converbs',
+    name: 'Conditional & wish -sA / -sAydI / -(y)sA',
     description:
-      'Expressing cause: "çünkü" (paratactic), "için" / "-dığı için" (because), "yüzünden" / "sayesinde" (negative / positive cause).',
+      'Verbal -sA (wish/hypothetical), -sAydI (past counterfactual), and copular -(y)sA ("if it is", real condition). "Keşke" + -sA(ydI) marks wishes and regrets.',
     cefrLevel: B1,
     language: TR,
     examplesPositive: [
-      'Geç kaldım çünkü trafik vardı.',
-      'Trafik olduğu için geç kaldım.',
+      'Keşke burada olsa. (If only he were here — present wish.)',
+      'Vaktim olsaydı, gelirdim. (If I had had time, I would have come — counterfactual.)',
+      'Hava güzelse yürüyelim. (If the weather is nice, let us walk — real condition, copular -(y)sA.)',
+      'Param olsa, bir ev alırdım. (If I had money, I would buy a house.)',
     ],
-    examplesNegative: ['*Geç kaldım için trafik vardı.'],
+    examplesNegative: [
+      '*Vaktim olsa, geldim. (wrong — counterfactual needs -sAydI + aorist-past main clause: olsaydı, gelirdim)',
+      '*Hava güzel olursa yürüdük. (wrong — a real condition pairs -(y)sA/aorist with a non-past main clause)',
+    ],
     commonErrors: [
-      'Treating "çünkü" and "için" as interchangeable.',
-      'Forgetting to nominalise with -DIğI before "için" in subordinate clauses.',
+      'Pairing a -sA wish with the wrong main-clause tense.',
+      'Using real-conditional -(y)sA where past counterfactual -sAydI is required.',
+      'Dropping "keşke" so a regret reads as a neutral condition.',
     ],
+    prerequisiteKeys: ['tr-a1-dili-past'],
+  },
+  // G&K §21.4.2.2 (necessity/obligation): -mAlI is speaker-felt (A2); the
+  // lexical periphrases below are objective obligation. Note the nominalization
+  // split: zorunda takes -mAk; gerek/lazım/şart take -mA + possessive.
+  {
+    key: 'tr-b1-obligation-periphrases',
+    conjugationSuitable: true,
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
+        { name: 'polarity', floors: { affirmative: 18, negative: 12 } },
+      ],
+    },
+    kind: 'grammar',
+    name: 'Obligation -mAk zorunda / gerek / lazım / şart',
+    description:
+      'Objective obligation by lexical means (vs speaker-felt -mAlI at A2): -mAk zorunda(yım) (compulsion), -mAm gerek/lazım/şart, gerek-iyor. zorunda/şart are stronger; gerek/lazım milder.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      "Ankara'ya gitmek zorundayım. (I have to go to Ankara — external compulsion.)",
+      'Şimdi gitmem lazım. (I need to go now.)',
+      'Bunu bitirmemiz gerekiyor. (We need to finish this.)',
+      'Daha çok çalışman şart. (It is essential that you work more.)',
+    ],
+    examplesNegative: [
+      '*Gitmem zorunda. (wrong — zorunda takes the bare -mAk infinitive: gitmek zorundayım)',
+      '*Gitmek lazım benim. (wrong — gerek/lazım take -mA + possessive: gitmem lazım)',
+    ],
+    commonErrors: [
+      'Using speaker-felt -mAlI where external obligation calls for zorunda.',
+      'Wrong nominalization: -mAk for zorunda vs -mA+possessive for gerek/lazım/şart.',
+      'Dropping the locative/personal ending on zorunda (gitmek zorunda instead of …zorundayım).',
+    ],
+    prerequisiteKeys: ['tr-a2-ability-necessity'],
   },
 
-  // ---------------------------------------------------------------------------
-  // B2
-  // ---------------------------------------------------------------------------
+  // G&K §8.2.1.1 (allomorphy), §13.2.1 (causative constructions)
   {
-    key: 'tr-b2-relative-clause-participles',
+    key: 'tr-b1-causative-voice',
+    conjugationSuitable: true,
+    sentenceConstructionSuitable: true,
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
+        { name: 'polarity', floors: { affirmative: 18, negative: 12 } },
+      ],
+    },
     kind: 'grammar',
-    name: 'Non-subject relative participles -DIK / -(y)AcAK',
+    name: 'Causative -DIr / -t / -Ir / -Ar',
     description:
-      'Non-subject pre-nominal relative clauses with -DIK and -(y)AcAK + possessive suffix, for past/non-past and future. The subject relative -(y)An is at A2.',
-    cefrLevel: B2,
+      'Adds a causer. Allomorphy: polysyllabic / vowel-, l-, r-final stems take -t (kapat-, uyut-); ~30 monosyllables take -Ir/-Ar/-It (düşür-, çıkar-, korkut-); elsewhere -DIr (yaptır-, öldür-). Stackable.',
+    cefrLevel: B1,
     language: TR,
     examplesPositive: [
-      'Okuduğum kitap (the book I am reading)',
-      'Yarın okuyacağım kitap (the book I will read tomorrow)',
+      'Müdür raporu bana yazdırdı. (The manager had me write the report — yaz → yazdır.)',
+      'Çocuğu uyuttum. (I put the child to sleep — uyu → uyut.)',
+      'Suyu kaynattım. (I boiled the water — kayna → kaynat.)',
+      'Onu güldürdün. (You made him laugh — gül → güldür.)',
     ],
-    examplesNegative: ['*Benim okuyan kitap (wrong — subject-relative -(y)An cannot encode "the book I read"; needs -DIK: "benim okuduğum kitap")'],
+    examplesNegative: [
+      '*yaztır- (wrong allomorph — consonant-final yaz takes -DIr: yazdır-)',
+      '*uyudur- (wrong — vowel-final uyu takes -t: uyut-)',
+    ],
     commonErrors: [
-      'Using the A2 subject relative -(y)An for non-subject relatives.',
-      'Forgetting the possessive suffix on -DIK / -(y)AcAK forms.',
+      'Picking -DIr where the stem requires -t / -Ir / -Ar.',
+      'Forgetting the causee marking (-A dative for the demoted agent).',
+      'Over-generating causatives on verbs with suppletive transitives (gir- → sok-, not *girdir-).',
     ],
-    prerequisiteKeys: ['tr-a1-genitive-possessive'],
   },
+  // G&K §8.2.1.2 (allomorphy), §13.2.2 (passive + impersonal passives)
   {
-    key: 'tr-b2-passive-with-nominalization',
+    key: 'tr-b1-passive-voice',
+    sentenceConstructionSuitable: true,
     kind: 'grammar',
-    name: 'Passive plus -DIK nominalisation',
+    name: 'Passive -Il / -In / -n',
     description:
-      'Passive -Il/-In/-n forms combined with -DIğI nominal clauses, often the academic-register subject of impersonal claims ("It is known that…").',
-    cefrLevel: B2,
+      'Passive demotes the subject. Allomorphy: -Il after consonants (yapıl-, görül-), -In after l-final stems (bilin-), -n after vowels (aran-). Agent via "tarafından"; impersonal passive on intransitives.',
+    cefrLevel: B1,
     language: TR,
     examplesPositive: [
-      'Bu kitabın 1980\'de yazıldığı bilinmektedir.',
-      'Sorunun çözüldüğü açıklandı.',
+      "Bu ev 1950'de yapıldı. (This house was built in 1950.)",
+      'Mektup dün yazıldı. (The letter was written yesterday.)',
+      'Hırsız polis tarafından yakalandı. (The thief was caught by the police.)',
+      'Burada sigara içilmez. (Smoking is not done here — impersonal passive.)',
     ],
-    examplesNegative: ['*Bu kitap 1980\'de yazdı bilinmektedir.'],
+    examplesNegative: [
+      '*yapınıl- (wrong — consonant-final yap takes -Il: yapıl-)',
+      '*aranıl- for "be searched" (wrong — vowel-final ara takes -n: aran-)',
+    ],
     commonErrors: [
-      'Using the active form inside a -DIğI clause that requires the passive.',
-      'Forgetting the genitive marker on the embedded subject.',
+      'Wrong allomorph (-Il vs -In vs -n).',
+      'Expressing the agent with -DAn instead of "tarafından".',
+      'Confusing the reflexive/passive homophone (yıkan- = "be washed" or "bathe").',
     ],
-    prerequisiteKeys: ['tr-b2-relative-clause-participles'],
   },
-  // Note: tr-b2-converbs has been relocated to A2; do not restore it here.
-  // The participle-based "when" forms -DIğIndA / -DIğI zaman remain B1+ work
-  // and can be added later as a separate entry if needed.
+  // G&K §8.2.1.3 (reflexive -(I)n is unproductive: closed set), §13.2.3.1,
+  // kendi §18.1.2.2. Productive "self" usually = kendi + plain verb.
   {
-    key: 'tr-b2-causative-reciprocal',
+    key: 'tr-b1-reflexive-voice-kendi',
+    sentenceConstructionSuitable: true,
     kind: 'grammar',
-    name: 'Causative and reciprocal voices',
+    name: 'Reflexive -(I)n & the pronoun "kendi"',
     description:
-      'Causative -DIr/-Ir/-t and reciprocal/cooperative -(I/A)ş; case shifts on participants when the valency changes.',
-    cefrLevel: B2,
+      'Unproductive reflexive -(I)n on a closed set (yıkan- bathe, giyin- get dressed, taran- comb hair, örtün- cover oneself); pronoun "kendi(m/n/si)" for reflexive/emphatic "self" (kendimi gördüm).',
+    cefrLevel: B1,
     language: TR,
     examplesPositive: [
-      'Annem bana mektubu yazdırdı.',
-      'Çocuklar parkta birbirleriyle konuşuştular.',
+      'Her sabah yıkanıyorum. (I bathe every morning.)',
+      'Çabuk giyindi. (He got dressed quickly.)',
+      'Kendimi aynada gördüm. (I saw myself in the mirror.)',
+      'Bunu kendin yaptın. (You did this yourself — emphatic.)',
     ],
-    examplesNegative: ['*Annem ben mektubu yazdırdı.'],
+    examplesNegative: [
+      '*Kendimi yıkanıyorum. (wrong — the reflexive verb already means "self"; don’t add kendimi: yıkanıyorum)',
+      '*Elbiseyi giyindim. (wrong — reflexive giyin- is intransitive; "put on a garment" is giy-: elbiseyi giydim)',
+    ],
     commonErrors: [
-      'Failing to mark the causee with the dative or accusative as required.',
-      'Doubling causative suffixes unnecessarily.',
+      'Treating -(I)n as productive (most reflexive senses use kendi + plain verb).',
+      'Doubling a reflexive verb with kendi.',
+      'Confusing transitive giy- with intransitive giyin-.',
     ],
   },
+  // G&K §8.2.1.4 (reciprocal -(I)ş is unproductive: closed set), §13.2.3.2,
+  // birbir- §18.1.4. Productive reciprocity = birbiri + plain verb.
   {
-    key: 'tr-b2-noun-clauses-dik',
+    key: 'tr-b1-reciprocal-voice',
+    sentenceConstructionSuitable: true,
     kind: 'grammar',
-    name: 'Noun clauses with -DIK / -(y)AcAK',
+    name: 'Reciprocal -(I)ş & "birbiri"',
     description:
-      'Embedded noun clauses with -DIK (past/general) or -(y)AcAK (future) + possessive suffix + case. The simpler -mA / -mAk / -Iş verbal-noun forms are at A2.',
-    cefrLevel: B2,
+      'Unproductive reciprocal -(I)ş on a closed set (öpüş- kiss each other, görüş- meet, dövüş- fight, selamlaş- greet); "birbiri(ni/yle)" "each other" expresses reciprocity productively.',
+    cefrLevel: B1,
     language: TR,
     examplesPositive: [
-      'Yarın yağmur yağacağını söyledi.',
-      'Onun geldiğini bilmiyordum. (I didn\'t know he had come.)',
+      'Kapıda öpüştüler. (They kissed each other at the door.)',
+      'Yarın görüşürüz. (We will see each other tomorrow.)',
+      'Birbirimize yardım ettik. (We helped each other.)',
+      'Mektuplaştılar. (They corresponded with each other.)',
     ],
-    examplesNegative: ['*Onun geldi söyledi. (wrong — a finite past requires a -DIğI noun clause: "Onun geldiğini söyledi.")'],
+    examplesNegative: [
+      '*Birbirini öpüştüler. (wrong — -(I)ş already encodes "each other"; don’t add birbirini: öpüştüler)',
+      '*Onunla konuştuk birbirimizle. (wrong — konuş- is lexicalized "speak", not a reciprocal of a base verb)',
+    ],
     commonErrors: [
-      'Using a finite tensed clause where a -DIK / -(y)AcAK noun clause is required.',
-      'Forgetting the genitive on the embedded subject.',
+      'Treating -(I)ş as productive.',
+      'Doubling a reciprocal verb with birbiri.',
+      'Wrong case on birbiri (birbirine / birbiriyle / birbirini).',
     ],
-    prerequisiteKeys: ['tr-b2-relative-clause-participles'],
   },
-  */
+  // G&K §26.3 (adverbial clauses: time/simultaneity), §8.5.2.2 (converb suffixes)
+  {
+    key: 'tr-b1-converb-while-yken',
+    clozeUnsuitable: true,
+    sentenceConstructionSuitable: true,
+    kind: 'grammar',
+    name: 'Converb -(y)ken ("while / when")',
+    description:
+      '-ken attaches to an aorist/imperfective verb base or a nominal for simultaneity or background: gelirken, çocukken, konuşurken. The clause subject may differ from the main clause.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Eve gelirken ekmek aldım. (I bought bread while coming home.)',
+      'Ben çocukken burası bir bahçeydi. (When I was a child, this was a garden.)',
+      'O konuşurken herkes sustu. (While he was speaking, everyone fell silent.)',
+      'Sen uyurken telefon çaldı. (The phone rang while you were sleeping.)',
+    ],
+    examplesNegative: [
+      '*Geldiyken ekmek aldım. (wrong — -ken attaches to the aorist/imperfective base, not -DI past: gelirken)',
+      '*Çocuktuken burası bahçeydi. (wrong — nominal -ken: çocukken)',
+    ],
+    commonErrors: [
+      'Attaching -ken to the -DI past stem.',
+      'Choosing the wrong base aspect (gelirken vs geliyorken).',
+      'Marking the converb-clause subject incorrectly.',
+    ],
+    prerequisiteKeys: ['tr-a2-converbs'],
+  },
+  // G&K §26.3 (adverbial clauses: time/"since"), §8.5.2.2. Verbal "since",
+  // distinct from nominal -DEn beri (tr-a1-beri-dir).
+  {
+    key: 'tr-b1-since-converb',
+    clozeUnsuitable: true,
+    sentenceConstructionSuitable: true,
+    kind: 'grammar',
+    name: 'Converb "since doing" -(y)AlI / -DIğIndAn beri',
+    description:
+      'Verbal "since": -(y)AlI (geleli "since coming") and -DIğIndAn beri (geldiğinden beri) count elapsed time from an event. Distinct from nominal -DEn beri (A1), which attaches to nouns/time points.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Buraya geleli üç ay oldu. (It has been three months since I came here.)',
+      'Onu gördüğümden beri çok düşündüm. (Since I saw him, I have thought a lot.)',
+      "Türkiye'ye taşınalı Türkçe öğreniyorum. (Since moving to Turkey, I have been learning Turkish.)",
+    ],
+    examplesNegative: [
+      '*Geldiden beri üç ay oldu. (wrong — needs the -DIK nominal + possessive: geldiğimden beri)',
+      '*Gelmekten beri çok düşündüm. (wrong — not -mAk; use -(y)AlI or -DIğIndAn beri)',
+    ],
+    commonErrors: [
+      'Using nominal -DEn beri directly on a bare verb.',
+      'Wrong possessive agreement on -DIğIndAn beri.',
+      'Confusing -(y)AlI with the optative.',
+    ],
+    prerequisiteKeys: ['tr-a1-beri-dir'],
+  },
+  // G&K Ch 25 (§25.1.1 participle suffixes, §25.4 tense/aspect in RCs).
+  // Non-subject relatives; the subject relative -(y)An is at A2.
+  {
+    key: 'tr-b1-participles-dik-acak',
+    clozeUnsuitable: true,
+    sentenceConstructionSuitable: true,
+    kind: 'grammar',
+    name: 'Non-subject relative -DIK / -(y)AcAK + possessive',
+    description:
+      'Object/oblique relatives: -DIK (non-future) and -(y)AcAK (prospective) + a possessive agreeing with the clause subject: okuduğum kitap, gideceğimiz şehir. Contrast subject relative -(y)An (A2).',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Okuduğum kitap çok güzeldi. (The book I read was very good.)',
+      "Yarın gideceğimiz şehir Bursa. (The city we will go to tomorrow is Bursa.)",
+      'Annemin yaptığı yemek (the food my mother made)',
+      'Oturduğun sandalye kırık. (The chair you are sitting on is broken.)',
+    ],
+    examplesNegative: [
+      '*Benim okuyan kitap (wrong — subject relative -(y)An cannot encode "the book I read"; needs -DIK + possessive: okuduğum kitap)',
+      '*okuduk kitap (wrong — needs possessive agreement: okuduğum / okuduğun …)',
+    ],
+    commonErrors: [
+      'Using -(y)An for a non-subject relative.',
+      'Dropping the possessive suffix on -DIK / -(y)AcAK.',
+      'Forgetting the genitive on the relative-clause subject (benim okuduğum).',
+    ],
+    prerequisiteKeys: ['tr-a2-relative-an'],
+  },
 
   // ---------------------------------------------------------------------------
   // Vocab umbrellas — kind: 'vocab'
@@ -1521,6 +1687,81 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Confusing saat (hour/clock) with zaman (time).',
     ],
   },
+  {
+    key: 'tr-b1-vocab-media-news',
+    kind: 'vocab',
+    name: 'Media & news vocabulary (B1)',
+    description:
+      'B1 Turkish vocabulary for news and media: press, broadcasts, headlines, reporting, and current events.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: ['haber (news)', 'gazete (newspaper)', 'yayın (broadcast)'],
+    examplesNegative: ['*haber ci'],
+    commonErrors: [
+      'Detaching the -CI agentive suffix (haberci, not *haber ci).',
+      'Confusing haber (news item) with bilgi (information).',
+    ],
+  },
+  {
+    key: 'tr-b1-vocab-opinions-society',
+    kind: 'vocab',
+    name: 'Opinions & society vocabulary (B1)',
+    description:
+      'B1 Turkish vocabulary for expressing opinions and discussing society: views, agreement/disagreement, social issues, and community.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: ['görüş (opinion)', 'toplum (society)', 'sorun (problem/issue)'],
+    examplesNegative: ['*fikir ler im ce'],
+    commonErrors: [
+      'Confusing görüş (considered opinion) with fikir (idea).',
+      'Mis-segmenting suffix chains (fikrimce, not *fikir im ce).',
+    ],
+  },
+  {
+    key: 'tr-b1-vocab-education-career',
+    kind: 'vocab',
+    name: 'Education & career vocabulary (B1)',
+    description:
+      'B1 Turkish vocabulary for education and working life: studies, qualifications, careers, applications, and the workplace.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: ['eğitim (education)', 'kariyer (career)', 'başvuru (application)'],
+    examplesNegative: ['*eğitim sel li k'],
+    commonErrors: [
+      'Confusing eğitim (education) with öğretim (instruction/teaching).',
+      'Mis-segmenting derived forms (eğitimli, not *eğitim li).',
+    ],
+  },
+  {
+    key: 'tr-b1-vocab-emotions-relationships',
+    kind: 'vocab',
+    name: 'Emotions & relationships vocabulary (B1)',
+    description:
+      'B1 Turkish vocabulary for feelings and relationships: emotions, moods, friendship, family ties, and social interaction.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: ['duygu (emotion)', 'ilişki (relationship)', 'güven (trust)'],
+    examplesNegative: ['*duygu sal lık'],
+    commonErrors: [
+      'Confusing duygu (emotion) with his (sense/feeling).',
+      'Mis-segmenting derived forms (duygusal, not *duygu sal).',
+    ],
+  },
+  {
+    key: 'tr-b1-vocab-abstract-concepts',
+    kind: 'vocab',
+    name: 'Abstract concepts vocabulary (B1)',
+    description:
+      'B1 Turkish abstract nouns and concepts: ideas, values, qualities, and processes used in opinion and discussion (often -lIk / -lInIz derivations).',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: ['özgürlük (freedom)', 'gerçek (truth/reality)', 'amaç (aim/purpose)'],
+    examplesNegative: ['*özgür lük'],
+    commonErrors: [
+      'Detaching the -lIk abstract-noun suffix (özgürlük, not *özgür lük).',
+      'Confusing amaç (purpose) with neden (reason).',
+    ],
+  },
 
   // ---------------------------------------------------------------------------
   // Dictation umbrellas — kind: 'dictation' (Phase 2 generation pipeline)
@@ -1559,6 +1800,24 @@ const trCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       "Losing track across two clauses joined by 've'.",
       'Mis-segmenting suffix-heavy words (arkadaşlarımla).',
+    ],
+  },
+  {
+    key: 'tr-b1-dictation',
+    kind: 'dictation',
+    name: 'Dictation — connected speech (B1)',
+    description:
+      'Short B1 Turkish clips (2–3 sentences, natural connected speech with subordinate clauses); tests tracking across joined and embedded clauses.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Dün akşam haberleri izlerken telefonum çaldı ve bir arkadaşım beni davet etti.',
+      'Bu konuda farklı görüşler var, ama bence en önemli sorun eğitim.',
+    ],
+    examplesNegative: ['*Çok uzun ya da B1 seviyesinin çok üstünde, ağır akademik bir metin.'],
+    commonErrors: [
+      'Losing track across an embedded -(y)ken / -DIK clause.',
+      'Mis-segmenting suffix-heavy words (izlerken, görüşler).',
     ],
   },
   // Free-writing topic umbrellas — kind: 'free-writing' (Phase 2 generation).
@@ -1678,39 +1937,64 @@ const trCurriculum: readonly GrammarPoint[] = [
     ],
     freeWriting: { register: 'neutral' },
   },
-
-  /*
   {
-    key: 'tr-b1-abstract-noun-vocab',
-    kind: 'vocab',
-    name: 'Abstract noun vocabulary (B1)',
+    key: 'tr-b1-fw-an-opinion',
+    kind: 'free-writing',
+    name: 'Bir konudaki görüşüm',
     description:
-      'Vocabulary for opinions, society, environment, and current affairs typical of B1-level discussion.',
+      'A neutral prompt to state and justify an opinion on a familiar topic in a short paragraph, giving at least one reason.',
     cefrLevel: B1,
     language: TR,
-    examplesPositive: ['çevre (environment)', 'iletişim (communication)'],
-    examplesNegative: ['*çevreler dünya geneli'],
-    commonErrors: [
-      'Confusing "çevre" (environment) with "etraf" (surroundings).',
-      'Calquing English compound expressions instead of using a single Turkish nominalisation.',
+    examplesPositive: [
+      'Asks the learner to pick a familiar topic and state their opinion (Bence…).',
+      'Requires at least one supporting reason (çünkü / bu yüzden).',
     ],
+    examplesNegative: ['*Just list facts with no stated opinion.'],
+    commonErrors: [
+      'Listing facts without taking a position.',
+      'Giving an opinion with no supporting reason.',
+    ],
+    freeWriting: { register: 'neutral' },
   },
   {
-    key: 'tr-b2-academic-noun-vocab',
-    kind: 'vocab',
-    name: 'Academic abstract noun vocabulary (B2)',
+    key: 'tr-b1-fw-a-past-experience',
+    kind: 'free-writing',
+    name: 'Unutamadığım bir an',
     description:
-      'Academic-register abstract nouns and Ottoman-derived vocabulary common in essays, reports, and formal news writing.',
-    cefrLevel: B2,
+      'A neutral prompt to narrate a memorable past experience, setting the scene with ongoing background (-(I)yordu) and recounting what happened.',
+    cefrLevel: B1,
     language: TR,
-    examplesPositive: ['sürdürülebilirlik (sustainability)', 'gelişme (development)'],
-    examplesNegative: ['*sürdürebilirlik'],
-    commonErrors: [
-      'Mistakes on -lIk derivational suffix (vowel harmony).',
-      'Mixing Ottoman-derived and Turkic-derived synonyms with mismatched register.',
+    examplesPositive: [
+      'Asks where/when it happened and to set the background scene.',
+      'Requires recounting the key event and how it felt.',
     ],
+    examplesNegative: ['*Describe daily routine in the present tense.'],
+    commonErrors: [
+      'Staying in the present instead of narrating the past.',
+      'No background/scene-setting (no -(I)yordu).',
+    ],
+    freeWriting: { register: 'neutral' },
   },
-  */
+  {
+    key: 'tr-b1-fw-a-plan-or-hope',
+    kind: 'free-writing',
+    name: 'Bir planım ya da hayalim',
+    description:
+      'A neutral prompt to describe a future plan or wish, using future/conditional forms (-(y)AcAK, -sA) and giving a reason.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Asks for one concrete plan or hope and why it matters.',
+      'Requires a future or conditional form (keşke … olsa / yapacağım).',
+    ],
+    examplesNegative: ['*Describe what you did yesterday.'],
+    commonErrors: [
+      'Describing the past instead of a plan/hope.',
+      'No future/conditional form.',
+    ],
+    freeWriting: { register: 'neutral' },
+  },
+
 ];
 
 export { trCurriculum };
