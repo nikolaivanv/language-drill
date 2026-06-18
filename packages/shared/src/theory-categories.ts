@@ -12,11 +12,12 @@
  * buckets rather than collapsing into `other`.
  *
  * `KEY_TO_CATEGORY` covers the curriculum entries that are currently
- * uncommented (live) — the ES B1/B2 grammar points and the TR A1/A2 grammar
- * points. It is expected to grow as more curriculum entries are uncommented:
- * the commented-out ES A1/A2 points and the entire DE curriculum are
- * intentionally absent for now, and `vocab`-kind frequency-band entries are
- * intentionally omitted so they fall through to `other`.
+ * uncommented (live) — the ES B1/B2 grammar points and the full TR A1/A2/B1
+ * grammar set. It is expected to grow as more curriculum entries are
+ * uncommented: the commented-out ES A1/A2 points and the entire DE curriculum
+ * are intentionally absent for now, and non-`grammar` kinds (`vocab`,
+ * `dictation`, `free-writing`) are intentionally omitted so they fall through
+ * to `other`.
  */
 
 /**
@@ -95,16 +96,64 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-b2-complex-conditionals': 'syntax',
   'es-b2-nuanced-ser-estar': 'pairs',
 
-  // --- Turkish (A1/A2 grammar) ---
+  // --- Turkish A1 ---
   'tr-a1-vowel-harmony': 'orthography',
   'tr-a1-personal-suffixes': 'morphology',
-  'tr-a1-plural-suffix': 'articles',
+  'tr-a1-plural-suffix': 'morphology',
   'tr-a1-locative': 'cases',
-  'tr-a2-dili-past': 'tenses',
-  'tr-a2-question-formation': 'syntax',
-  'tr-a2-accusative-definite-object': 'cases',
-  'tr-a2-genitive-possessive': 'cases',
-  'tr-a2-ablative-dative': 'cases',
+  'tr-a1-present-continuous': 'tenses',
+  'tr-a1-negation': 'tenses',
+  'tr-a1-dili-past': 'tenses',
+  'tr-a1-future': 'tenses',
+  'tr-a1-imperative': 'moods',
+  'tr-a1-questions': 'syntax',
+  'tr-a1-degil': 'syntax',
+  'tr-a1-var-yok': 'syntax',
+  'tr-a1-accusative-definite-object': 'cases',
+  'tr-a1-ablative-dative': 'cases',
+  'tr-a1-genitive-possessive': 'cases',
+  'tr-a1-demonstratives': 'pronouns',
+  'tr-a1-personal-pronouns': 'pronouns',
+  'tr-a1-numbers-ordinals': 'morphology',
+  'tr-a1-possessive-suffixes': 'morphology',
+  'tr-a1-instrumental-ile': 'cases',
+  'tr-a1-postpositions-once-sonra': 'syntax',
+  'tr-a1-dan-a-kadar': 'syntax',
+  'tr-a1-ki-relativizer': 'syntax',
+  'tr-a1-gore-bence': 'syntax',
+  'tr-a1-beri-dir': 'syntax',
+  'tr-a1-comparative-superlative': 'syntax',
+
+  // --- Turkish A2 ---
+  'tr-a2-mis-evidential': 'tenses',
+  'tr-a2-aorist': 'tenses',
+  'tr-a2-ability-necessity': 'moods',
+  'tr-a2-converbs': 'syntax',
+  'tr-a2-converb-temporal': 'syntax',
+  'tr-a2-nominalization': 'syntax',
+  'tr-a2-relative-an': 'syntax',
+  'tr-a2-gibi-kadar': 'syntax',
+  'tr-a2-correlative-conjunctions': 'syntax',
+  'tr-a2-causal-connectors': 'syntax',
+  'tr-a2-ca-suffix': 'morphology',
+  'tr-a2-pekistirme': 'morphology',
+  'tr-a2-purpose-icin-uzere': 'syntax',
+  'tr-a2-reported-speech': 'syntax',
+
+  // --- Turkish B1 ---
+  'tr-b1-past-continuous-iyordu': 'tenses',
+  'tr-b1-conditional-irrealis': 'moods',
+  'tr-b1-obligation-periphrases': 'moods',
+  // Verbal voice is derivational morphology on the stem (no dedicated "voice"
+  // bucket), so causative/passive/reflexive/reciprocal group under morphology
+  // rather than the finite-form "verb tenses" bucket.
+  'tr-b1-causative-voice': 'morphology',
+  'tr-b1-passive-voice': 'morphology',
+  'tr-b1-reflexive-voice-kendi': 'morphology',
+  'tr-b1-reciprocal-voice': 'morphology',
+  'tr-b1-converb-while-yken': 'syntax',
+  'tr-b1-since-converb': 'syntax',
+  'tr-b1-participles-dik-acak': 'syntax',
 };
 
 /**
