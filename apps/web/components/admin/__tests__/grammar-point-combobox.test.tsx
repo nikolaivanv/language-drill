@@ -20,6 +20,15 @@ describe('GrammarPointCombobox', () => {
     expect(screen.getByLabelText('grammar point')).toHaveValue('Ser vs. estar');
   });
 
+  // Deep-link case: the value is preset (e.g. from a ?grammarPoint= URL param on
+  // the content page) before the curriculum options have loaded.
+  it('shows the selected name once options arrive after a preset value', () => {
+    const { rerender } = render(<GrammarPointCombobox options={[]} value="es-a2-ser-estar" onChange={vi.fn()} />);
+    expect(screen.getByLabelText('grammar point')).toHaveValue('');
+    rerender(<GrammarPointCombobox options={options} value="es-a2-ser-estar" onChange={vi.fn()} />);
+    expect(screen.getByLabelText('grammar point')).toHaveValue('Ser vs. estar');
+  });
+
   it('filters options by human name when typing', () => {
     render(<GrammarPointCombobox options={options} value="" onChange={vi.fn()} />);
     const input = screen.getByLabelText('grammar point');

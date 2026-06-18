@@ -25,10 +25,12 @@ export function GrammarPointCombobox({
   const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Keep the displayed text in sync when the selection changes externally
-  // (e.g. the language filter changes and clears the grammar point).
+  // (e.g. the language filter clears the grammar point) and when the options
+  // arrive after a preset value (deep-link via ?grammarPoint=), so the resolved
+  // name shows once it becomes available.
   useEffect(() => {
     setQuery(selected?.name ?? '');
-  }, [value]);
+  }, [value, selected?.name]);
 
   const q = query.trim().toLowerCase();
   const matches =
