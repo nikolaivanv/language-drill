@@ -142,7 +142,6 @@ export function TheoryPanel({
               scrollRef={scrollRef}
               language={language}
               onSwitchTopic={setInternalTopicId}
-              onClose={onClose}
             />
           </div>
         ) : isLoading ? (

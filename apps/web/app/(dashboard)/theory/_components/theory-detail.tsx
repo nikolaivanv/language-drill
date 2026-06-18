@@ -22,8 +22,8 @@ type TheoryDetailProps = {
  * Full-page theory topic detail (Requirement 6). Reuses the in-drill panel's
  * internals — `useTheoryTopic`, `useScrollSpy`, `TheoryToc`, `TheorySections`,
  * `TheoryEmpty` — but with page chrome (back-to-library link instead of the
- * modal's close/“back to drill”) and router-based topic switching, and without
- * the dialog portal / focus-trap / scroll-lock.
+ * modal's close affordances) and router-based topic switching, and without the
+ * dialog portal / focus-trap / scroll-lock.
  *
  * Scroll-spy trap (design §Component 10): `useScrollSpy` uses `scrollRef` as
  * its IntersectionObserver root with a -20%/-60% rootMargin, which only works

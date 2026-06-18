@@ -46,10 +46,9 @@ type TheorySectionsProps = {
 
 /**
  * The error-boundary-wrapped list of theory sections — and nothing else. The
- * scroll container, bottom spacer, and surface-specific footer (e.g. the
- * panel's "back to drill" CTA) live in the *consumer* (`TheoryContent` for the
- * panel, `TheoryDetail` for the library page), so each surface supplies its own
- * chrome around this shared body.
+ * scroll container and any surface-specific chrome live in the *consumer*
+ * (`TheoryContent` for the panel, `TheoryDetail` for the library page), so each
+ * surface supplies its own chrome around this shared body.
  */
 export function TheorySections({
   topic,
