@@ -15,6 +15,7 @@ import { ExerciseType } from '@language-drill/shared';
 import { FlaggedExerciseCard } from './_components/flagged-exercise-card';
 import { FlaggedTheoryCard } from './_components/flagged-theory-card';
 import { GrammarPointCombobox } from '../../../../components/admin/grammar-point-combobox';
+import { FilterSelect } from '../../../../components/admin/filter-select';
 
 const EXERCISE_TYPES = Object.values(ExerciseType);
 
@@ -61,6 +62,9 @@ export default function ModerationPage() {
     setError(null);
   };
 
+  const hasFilters = Boolean(filters.language || filters.level || filters.type || filters.grammarPoint);
+  const clearFilters = () => setFilters({});
+
   return (
     <div className="flex flex-col gap-4">
       <h1 className="font-display text-[24px] font-semibold text-ink">Moderation</h1>
@@ -89,27 +93,27 @@ export default function ModerationPage() {
         </button>
       </div>
 
-      <div className="flex gap-2 flex-wrap text-[13px]">
-        <select aria-label="language" value={filters.language ?? ''} onChange={(e) => setFilter('language', e.target.value)}>
+      <div className="flex items-center gap-2 flex-wrap">
+        <FilterSelect aria-label="language" value={filters.language ?? ''} onChange={(e) => setFilter('language', e.target.value)}>
           <option value="">All languages</option>
           <option value="ES">ES</option>
           <option value="DE">DE</option>
           <option value="TR">TR</option>
-        </select>
-        <select aria-label="level" value={filters.level ?? ''} onChange={(e) => setFilter('level', e.target.value)}>
+        </FilterSelect>
+        <FilterSelect aria-label="level" value={filters.level ?? ''} onChange={(e) => setFilter('level', e.target.value)}>
           <option value="">All levels</option>
           <option value="A1">A1</option>
           <option value="A2">A2</option>
           <option value="B1">B1</option>
           <option value="B2">B2</option>
-        </select>
+        </FilterSelect>
         {tab === 'exercises' ? (
-          <select aria-label="type" value={filters.type ?? ''} onChange={(e) => setFilter('type', e.target.value)}>
+          <FilterSelect aria-label="type" value={filters.type ?? ''} onChange={(e) => setFilter('type', e.target.value)}>
             <option value="">All types</option>
             {EXERCISE_TYPES.map((t) => (
               <option key={t} value={t}>{t}</option>
             ))}
-          </select>
+          </FilterSelect>
         ) : null}
         <div className="min-w-[220px]">
           <GrammarPointCombobox
@@ -118,6 +122,9 @@ export default function ModerationPage() {
             onChange={(key) => setFilter('grammarPoint', key)}
           />
         </div>
+        {hasFilters ? (
+          <button type="button" onClick={clearFilters} className="text-[13px] text-ink-soft hover:text-ink">clear filters</button>
+        ) : null}
       </div>
 
       <div id="moderation-panel" role="tabpanel" aria-labelledby={tab === 'exercises' ? 'tab-exercises' : 'tab-theory'}>

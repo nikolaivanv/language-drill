@@ -15,6 +15,8 @@ import { ExerciseType } from '@language-drill/shared';
 import { ContentExerciseCard } from './_components/content-exercise-card';
 import { ContentTheoryCard } from './_components/content-theory-card';
 import { GrammarPointCombobox } from '../../../../components/admin/grammar-point-combobox';
+import { FilterSelect } from '../../../../components/admin/filter-select';
+import { Input } from '../../../../components/ui';
 
 type Tab = 'exercises' | 'theory';
 const PAGE_SIZE = 25;
@@ -66,6 +68,9 @@ function ContentPageInner() {
   };
   const onSearch = (value: string) => { setQ(value); setOffset(0); };
 
+  const hasFilters = Boolean(filters.language || filters.level || filters.type || filters.grammarPoint || q);
+  const clearFilters = () => { setFilters({}); setQ(''); setOffset(0); };
+
   return (
     <div className="flex flex-col gap-4">
       <h1 className="font-display text-[24px] font-semibold text-ink">Content</h1>
@@ -80,20 +85,20 @@ function ContentPageInner() {
           className={tab === 'theory' ? 'font-semibold text-ink' : 'text-ink-soft'}>Theory</button>
       </div>
 
-      <div className="flex gap-2 flex-wrap text-[13px]">
-        <select aria-label="language" value={filters.language ?? ''} onChange={(e) => setFilter('language', e.target.value)}>
+      <div className="flex items-center gap-2 flex-wrap">
+        <FilterSelect aria-label="language" value={filters.language ?? ''} onChange={(e) => setFilter('language', e.target.value)}>
           <option value="">All languages</option><option value="ES">ES</option><option value="DE">DE</option><option value="TR">TR</option>
-        </select>
-        <select aria-label="level" value={filters.level ?? ''} onChange={(e) => setFilter('level', e.target.value)}>
+        </FilterSelect>
+        <FilterSelect aria-label="level" value={filters.level ?? ''} onChange={(e) => setFilter('level', e.target.value)}>
           <option value="">All levels</option><option value="A1">A1</option><option value="A2">A2</option><option value="B1">B1</option><option value="B2">B2</option>
-        </select>
+        </FilterSelect>
         {tab === 'exercises' ? (
-          <select aria-label="type" value={filters.type ?? ''} onChange={(e) => setFilter('type', e.target.value)}>
+          <FilterSelect aria-label="type" value={filters.type ?? ''} onChange={(e) => setFilter('type', e.target.value)}>
             <option value="">All types</option>
             {EXERCISE_TYPES.map((t) => (
               <option key={t} value={t}>{t}</option>
             ))}
-          </select>
+          </FilterSelect>
         ) : null}
         <div className="min-w-[220px]">
           <GrammarPointCombobox
@@ -102,7 +107,12 @@ function ContentPageInner() {
             onChange={(key) => setFilter('grammarPoint', key)}
           />
         </div>
-        <input aria-label="search" placeholder="search text" value={q} onChange={(e) => onSearch(e.target.value)} />
+        <div className="w-[200px]">
+          <Input aria-label="search" className="rounded-md" placeholder="search text" value={q} onChange={(e) => onSearch(e.target.value)} />
+        </div>
+        {hasFilters ? (
+          <button type="button" onClick={clearFilters} className="text-[13px] text-ink-soft hover:text-ink">clear filters</button>
+        ) : null}
       </div>
 
       <div id="content-panel" role="tabpanel" aria-labelledby={tab === 'exercises' ? 'tab-exercises' : 'tab-theory'} className="flex flex-col gap-3">
