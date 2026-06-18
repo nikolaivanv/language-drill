@@ -58,6 +58,7 @@ const SESSION_ID = '11111111-1111-4111-8111-111111111111';
 function makeClozeItem(index: number, overrides: Record<string, unknown> = {}) {
   return {
     exerciseId: `aaaaaaaa-${index}aaa-4aaa-8aaa-aaaaaaaaaaaa`,
+    submissionId: `bbbbbbbb-${index}bbb-4bbb-8bbb-bbbbbbbbbbbb`,
     type: ExerciseType.CLOZE,
     grammarPointKey: null,
     contentJson: {

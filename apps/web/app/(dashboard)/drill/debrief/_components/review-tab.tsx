@@ -1,4 +1,4 @@
-import type { DebriefItem } from '@language-drill/api-client';
+import type { AuthenticatedFetch, DebriefItem } from '@language-drill/api-client';
 import { ReviewItemCard } from './review-item-card';
 
 // ---------------------------------------------------------------------------
@@ -9,13 +9,14 @@ import { ReviewItemCard } from './review-item-card';
 
 export interface ReviewTabProps {
   items: DebriefItem[];
+  fetchFn: AuthenticatedFetch;
 }
 
-export function ReviewTab({ items }: ReviewTabProps) {
+export function ReviewTab({ items, fetchFn }: ReviewTabProps) {
   return (
     <div className="fade-in mt-s-6 flex flex-col gap-s-3">
       {items.map((item, index) => (
-        <ReviewItemCard key={item.exerciseId} index={index} item={item} />
+        <ReviewItemCard key={item.exerciseId} index={index} item={item} fetchFn={fetchFn} />
       ))}
     </div>
   );

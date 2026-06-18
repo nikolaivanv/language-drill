@@ -19,6 +19,10 @@ export type DebriefItemStatus = z.infer<typeof DebriefItemStatusSchema>;
 
 export const DebriefItemSchema = z.object({
   exerciseId: z.string().uuid(),
+  // The most-recent submission (user_exercise_history.id) for this exercise in
+  // the session — the handle needed to flag the attempt. Null for skipped items
+  // (no history row); the review card hides its flag control in that case.
+  submissionId: z.string().uuid().nullable(),
   type: z.nativeEnum(ExerciseType),
   // Nullable: see ExerciseResponseSchema. Used by review-item-card to surface
   // the theory pill in retrospect when the grammar point has an explainer.

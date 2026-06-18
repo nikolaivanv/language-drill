@@ -637,6 +637,7 @@ interface DebriefItemRow {
   grammar_point_key: string | null;
   content_json: unknown;
   audio_s3_key: string | null;
+  history_id: string | null;
   score: number | null;
   response_json: unknown;
 }
@@ -729,11 +730,11 @@ sessions.get('/sessions/:id/debrief', async (c) => {
   const itemsResult = await db.execute(sql`
     SELECT e.id AS exercise_id, e.type, e.grammar_point_key, e.content_json,
            e.audio_s3_key,
-           h.score, h.response_json
+           h.id AS history_id, h.score, h.response_json
     FROM exercises e
     LEFT JOIN (
       SELECT DISTINCT ON (exercise_id)
-             exercise_id, score, response_json, evaluated_at
+             id, exercise_id, score, response_json, evaluated_at
       FROM user_exercise_history
       WHERE session_id = ${id}
       ORDER BY exercise_id, evaluated_at DESC NULLS LAST
@@ -771,6 +772,7 @@ sessions.get('/sessions/:id/debrief', async (c) => {
         if (!hasHistory) {
           return {
             exerciseId,
+            submissionId: null,
             type: row.type as ExerciseType,
             grammarPointKey: row.grammar_point_key,
             contentJson,
@@ -786,6 +788,7 @@ sessions.get('/sessions/:id/debrief', async (c) => {
           score >= CORRECT_THRESHOLD ? 'correct' : 'incorrect';
         return {
           exerciseId,
+          submissionId: row.history_id,
           type: row.type as ExerciseType,
           grammarPointKey: row.grammar_point_key,
           contentJson,

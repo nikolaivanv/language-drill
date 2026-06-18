@@ -1344,6 +1344,61 @@ describe('GET /sessions/:id/debrief', () => {
     expect(body.items[2].evaluation).toBeNull();
   });
 
+  it('includes submissionId (history id) for attempted items and null for skipped items', async () => {
+    const startedAt = new Date('2026-05-04T10:00:00.000Z');
+    const completedAt = new Date('2026-05-04T10:04:38.000Z');
+    mockLimit.mockResolvedValueOnce([
+      {
+        id: SESSION_ID,
+        userId: 'user_123',
+        language: 'ES',
+        difficulty: 'B1',
+        exerciseCount: 2,
+        correctCount: 1,
+        exerciseIds: [EX_1, EX_2], // manifest order
+        startedAt,
+        completedAt,
+      },
+    ]);
+
+    const HISTORY_1 = '99999999-1111-4111-8111-111111111111';
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        {
+          exercise_id: EX_1,
+          type: 'cloze',
+          content_json: { instructions: 'Fill', sentence: 'Yo ___' },
+          history_id: HISTORY_1,
+          score: 0.85,
+          response_json: { userAnswer: 'leo', evaluation: sampleEvaluation },
+        },
+        {
+          // skipped — no history row, so history_id is null.
+          exercise_id: EX_2,
+          type: 'vocab_recall',
+          content_json: { prompt: 'kitchen pan', expectedWord: 'sartén' },
+          history_id: null,
+          score: null,
+          response_json: null,
+        },
+      ],
+    });
+
+    const res = await app.request(
+      `/sessions/${SESSION_ID}/debrief`,
+      { method: 'GET' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.items[0].exerciseId).toBe(EX_1);
+    expect(body.items[0].submissionId).toBe(HISTORY_1);
+    expect(body.items[1].exerciseId).toBe(EX_2);
+    expect(body.items[1].status).toBe('skipped');
+    expect(body.items[1].submissionId).toBeNull();
+  });
+
   it('returns 404 SESSION_NOT_FOUND when the session is owned by a different user, and logs a forensic debrief.not_found event', async () => {
     // The session-row WHERE includes eq(userId), so a foreign session yields 0 rows.
     mockLimit.mockResolvedValueOnce([]);

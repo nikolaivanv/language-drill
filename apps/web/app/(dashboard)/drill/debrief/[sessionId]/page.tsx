@@ -54,7 +54,7 @@ export default function DebriefPage({ params }: DebriefPageProps) {
             {tab === 'debrief' ? (
               <DebriefTab debrief={query.data} />
             ) : (
-              <ReviewTab items={query.data.items} />
+              <ReviewTab items={query.data.items} fetchFn={fetchFn} />
             )}
           </DebriefTabs>
           <DebriefFooter

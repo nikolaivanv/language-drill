@@ -33,6 +33,7 @@ const validEvaluation = {
 
 const validAttemptedItem = {
   exerciseId: '11111111-1111-4111-8111-111111111111',
+  submissionId: '33333333-3333-4333-8333-333333333333',
   type: 'cloze',
   grammarPointKey: 'es-b1-conditional',
   contentJson: { instructions: 'Fill in', sentence: 'Yo ___ libros' },
@@ -44,6 +45,7 @@ const validAttemptedItem = {
 
 const validSkippedItem = {
   exerciseId: '22222222-2222-4222-8222-222222222222',
+  submissionId: null,
   type: 'translation',
   grammarPointKey: null,
   contentJson: {
@@ -101,6 +103,27 @@ describe('DebriefItemSchema', () => {
     expect(result.score).toBe(0.95);
     expect(result.evaluation).not.toBeNull();
     expect(result.grammarPointKey).toBe('es-b1-conditional');
+  });
+
+  it('parses submissionId (history id) on an attempted item', () => {
+    const result = DebriefItemSchema.parse(validAttemptedItem);
+    expect(result.submissionId).toBe('33333333-3333-4333-8333-333333333333');
+  });
+
+  it('accepts a null submissionId on skipped items', () => {
+    const result = DebriefItemSchema.parse(validSkippedItem);
+    expect(result.submissionId).toBeNull();
+  });
+
+  it('requires submissionId field (nullable, not optional)', () => {
+    const { submissionId: _omitted, ...withoutId } = validAttemptedItem;
+    expect(() => DebriefItemSchema.parse(withoutId)).toThrow();
+  });
+
+  it('rejects a non-uuid submissionId', () => {
+    expect(() =>
+      DebriefItemSchema.parse({ ...validAttemptedItem, submissionId: 'not-a-uuid' }),
+    ).toThrow();
   });
 
   it('accepts a null grammarPointKey on grammar-agnostic items', () => {
@@ -183,6 +206,7 @@ describe('DebriefItemSchema', () => {
   it('preserves dictation-specific fields in evaluation', () => {
     const item = {
       exerciseId: '11111111-1111-1111-1111-111111111111',
+      submissionId: '44444444-4444-4444-8444-444444444444',
       type: ExerciseType.DICTATION, grammarPointKey: 'es-b1-dictation',
       contentJson: {}, status: 'incorrect', userAnswer: 'Hola',
       score: 0.82, evaluation: dictationResult,
@@ -197,7 +221,7 @@ describe('DebriefItemSchema', () => {
 
   it('still accepts a plain EvaluationResult and null', () => {
     const evalResult = { score: 0.7, grammarAccuracy: 0.7, vocabularyRange: 'B1', taskAchievement: 0.7, feedback: 'ok', errors: [], estimatedCefrEvidence: 'B1' };
-    const base = { exerciseId: '11111111-1111-1111-1111-111111111111', type: ExerciseType.CLOZE, grammarPointKey: null, contentJson: {}, status: 'correct', userAnswer: 'x', score: 0.7 };
+    const base = { exerciseId: '11111111-1111-1111-1111-111111111111', submissionId: '55555555-5555-4555-8555-555555555555', type: ExerciseType.CLOZE, grammarPointKey: null, contentJson: {}, status: 'correct', userAnswer: 'x', score: 0.7 };
     expect(DebriefItemSchema.parse({ ...base, evaluation: evalResult }).evaluation).toMatchObject({ score: 0.7 });
     expect(DebriefItemSchema.parse({ ...base, evaluation: null, status: 'skipped', userAnswer: null, score: null }).evaluation).toBeNull();
   });
