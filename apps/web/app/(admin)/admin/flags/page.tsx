@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { createAuthenticatedFetch, useUserFlagsQueue, useResolveUserFlag, type UserFlagStatus } from '@language-drill/api-client';
 import { FlagCard } from './_components/flag-card';
+import { FilterSelect } from '../../../../components/admin/filter-select';
 
 const STATUSES: UserFlagStatus[] = ['open', 'resolved_rejected', 'resolved_dismissed', 'all'];
 
@@ -20,10 +21,10 @@ export default function FlagsPage() {
     <div className="flex flex-col gap-4">
       <h1 className="font-display text-[24px] font-semibold text-ink">User flags</h1>
 
-      <div className="flex gap-2 text-[13px]">
-        <select aria-label="status" value={status} onChange={(e) => setStatus(e.target.value as UserFlagStatus)}>
+      <div className="flex items-center gap-2 flex-wrap">
+        <FilterSelect aria-label="status" value={status} onChange={(e) => setStatus(e.target.value as UserFlagStatus)}>
           {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-        </select>
+        </FilterSelect>
       </div>
 
       {queue.isLoading ? <p className="text-ink-soft text-[13px]">Loading…</p>
