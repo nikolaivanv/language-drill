@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import type { FlaggedExercise } from '@language-drill/api-client';
 import { FlaggedExerciseCard } from '../flagged-exercise-card';
 
@@ -16,6 +16,21 @@ const item: FlaggedExercise = {
 };
 
 describe('FlaggedExerciseCard', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it('renders a Langfuse traces link for a complete item when configured', () => {
+    vi.stubEnv('NEXT_PUBLIC_LANGFUSE_TRACE_URL_TEMPLATE', 'https://lf/traces?q={cellKey}');
+    render(<FlaggedExerciseCard item={item} onResolve={vi.fn()} pending={false} demoted={false} />);
+    expect(screen.getByRole('link', { name: /traces in langfuse/i }))
+      .toHaveAttribute('href', 'https://lf/traces?q=es%3Aa2%3Acloze%3Aobj-pronoun');
+  });
+
+  it('omits the Langfuse link when grammarPointKey is missing', () => {
+    vi.stubEnv('NEXT_PUBLIC_LANGFUSE_TRACE_URL_TEMPLATE', 'https://lf/traces?q={cellKey}');
+    render(<FlaggedExerciseCard item={{ ...item, grammarPointKey: null }} onResolve={vi.fn()} pending={false} demoted={false} />);
+    expect(screen.queryByRole('link', { name: /traces in langfuse/i })).not.toBeInTheDocument();
+  });
+
   it('renders header, reason chip, and content', () => {
     render(<FlaggedExerciseCard item={item} onResolve={vi.fn()} pending={false} demoted={false} />);
     expect(screen.getAllByText(/cloze/)[0]).toBeInTheDocument();

@@ -4,6 +4,8 @@ import { useState } from 'react';
 import type { AuthenticatedFetch, PoolStatusItem } from '@language-drill/api-client';
 import { usePoolCell, useGenerateCell, useRevalidateCell, type RevalidateResponse } from '@language-drill/api-client';
 import { REASON_LABELS, type GenerationReasonCode } from '@language-drill/shared';
+import { LangfuseTracesLink } from '../../../../../components/admin/langfuse-traces-link';
+import { cellKeyFor } from '../../../../../lib/admin/langfuse';
 
 export function PoolCellDetail({ item, fetchFn }: { item: PoolStatusItem; fetchFn: AuthenticatedFetch }) {
   const detail = usePoolCell({
@@ -193,6 +195,14 @@ export function PoolCellDetail({ item, fetchFn }: { item: PoolStatusItem; fetchF
       <a href={contentHref} className="text-[13px] text-ink underline">
         View {item.approved} approved exercises →
       </a>
+      <LangfuseTracesLink
+        cellKey={cellKeyFor({
+          language: item.language,
+          level: item.level,
+          type: item.type,
+          grammarPoint: item.grammarPointKey,
+        })}
+      />
     </div>
   );
 }

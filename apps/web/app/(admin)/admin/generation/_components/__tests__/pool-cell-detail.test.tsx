@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { PoolStatusItem } from '@language-drill/api-client';
 
 const mockUsePoolCell = vi.fn();
@@ -26,6 +26,8 @@ const item: PoolStatusItem = {
   coverageDistribution: { person: { '3sg': 8, '2pl': 1 } },
 };
 const fetchFn = vi.fn();
+
+afterEach(() => vi.unstubAllEnvs());
 
 describe('PoolCellDetail', () => {
   beforeEach(() => {
@@ -60,6 +62,21 @@ describe('PoolCellDetail', () => {
     render(<PoolCellDetail item={item} fetchFn={fetchFn} />);
     const link = screen.getByRole('link', { name: /approved exercises/i });
     expect(link).toHaveAttribute('href', '/admin/content?language=ES&level=B1&type=cloze&grammarPoint=es-b1-present-subjunctive');
+  });
+
+  it('renders a Langfuse traces link when the template env is set', () => {
+    vi.stubEnv('NEXT_PUBLIC_LANGFUSE_TRACE_URL_TEMPLATE', 'https://lf/traces?q={cellKey}');
+    mockUsePoolCell.mockReturnValue({ isLoading: false, isError: false, data: { floors: {}, rejectionReasonCounts: {} } });
+    render(<PoolCellDetail item={item} fetchFn={fetchFn} />);
+    expect(screen.getByRole('link', { name: /traces in langfuse/i }))
+      .toHaveAttribute('href', 'https://lf/traces?q=es%3Ab1%3Acloze%3Aes-b1-present-subjunctive');
+  });
+
+  it('omits the Langfuse link when the template env is unset', () => {
+    vi.stubEnv('NEXT_PUBLIC_LANGFUSE_TRACE_URL_TEMPLATE', '');
+    mockUsePoolCell.mockReturnValue({ isLoading: false, isError: false, data: { floors: {}, rejectionReasonCounts: {} } });
+    render(<PoolCellDetail item={item} fetchFn={fetchFn} />);
+    expect(screen.queryByRole('link', { name: /traces in langfuse/i })).not.toBeInTheDocument();
   });
 
   it('shows a loading state', () => {

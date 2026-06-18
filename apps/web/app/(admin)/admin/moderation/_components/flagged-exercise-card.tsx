@@ -2,6 +2,8 @@ import { formatReason, type GenerationReason } from '@language-drill/shared';
 import type { FlaggedExercise } from '@language-drill/api-client';
 import { Button } from '../../../../../components/ui';
 import { ContentFieldView } from '../../../../../components/admin/content-field-view';
+import { LangfuseTracesLink } from '../../../../../components/admin/langfuse-traces-link';
+import { cellKeyFor } from '../../../../../lib/admin/langfuse';
 
 export function FlaggedExerciseCard({
   item, onResolve, pending, demoted,
@@ -27,6 +29,14 @@ export function FlaggedExerciseCard({
           </span>
         ))}
       </div>
+      <LangfuseTracesLink
+        cellKey={cellKeyFor({
+          language: item.language,
+          level: item.level,
+          type: item.type,
+          grammarPoint: item.grammarPointKey,
+        })}
+      />
       <ContentFieldView content={item.contentJson} />
       {demoted ? (
         <p className="text-[12px] text-ink-soft">
