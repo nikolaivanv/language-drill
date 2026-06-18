@@ -1,6 +1,7 @@
 import type {
   CreateSessionResponse,
   ExerciseResponse,
+  ResumeSessionResponse,
 } from '@language-drill/api-client';
 import type { SubmissionMeta, SubmissionResult, SubmissionState } from './types';
 
@@ -29,6 +30,7 @@ export type SessionAction =
   | { type: 'ITEM_NEXT' }
   | { type: 'ITEM_SKIP' }
   | { type: 'ITEM_RETRY' }
+  | { type: 'RESUME_SUCCEEDED'; session: ResumeSessionResponse; startIndex: number }
   | { type: 'COMPLETE_REQUESTED' }
   | { type: 'COMPLETE_FAILED'; error: Error }
   | { type: 'RESET' };
@@ -50,6 +52,17 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
         session: { id: action.session.id },
         items: action.session.exercises,
         index: 0,
+        perItemSubmission: { kind: 'idle' },
+        skippedCount: 0,
+      };
+
+    case 'RESUME_SUCCEEDED':
+      if (state.kind !== 'creating') return state;
+      return {
+        kind: 'inSession',
+        session: { id: action.session.id },
+        items: action.session.exercises,
+        index: action.startIndex,
         perItemSubmission: { kind: 'idle' },
         skippedCount: 0,
       };
@@ -127,6 +140,21 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
     default:
       return state;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Index of the first exercise with no recorded attempt, or -1 if every
+ * exercise has been attempted. Drives where a resumed session re-enters.
+ */
+export function firstUnattemptedIndex(
+  exercises: readonly ExerciseResponse[],
+  attemptedIds: ReadonlySet<string>,
+): number {
+  return exercises.findIndex((e) => !attemptedIds.has(e.id));
 }
 
 // ---------------------------------------------------------------------------
