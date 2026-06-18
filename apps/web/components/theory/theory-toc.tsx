@@ -36,11 +36,43 @@ export function TheoryToc({
   const showFilter = others.length > OTHER_TOPICS_FILTER_THRESHOLD;
   const visibleOthers = showFilter ? filterTopics(others, topicQuery) : others;
   // Desktop → vertical 240px sidebar. Mobile (≤760px) → horizontal, scrollable
-  // tab strip pinned under the sheet header (the strip layout itself is driven
+  // tab strips pinned under the sheet header (the strip layout itself is driven
   // by the `.theory-toc` @media overrides in globals.css). The vertical-only
-  // "jump to" label and the stacked "other topics" block are dropped on mobile;
-  // topic switches fold into the strip as trailing tabs so they stay reachable.
+  // "jump to" label and the stacked "other topics" heading are dropped on
+  // mobile; the section tabs and the topic-switch tabs each get their own
+  // horizontal strip, with the filter row between them when the list is long.
   const isMobile = useIsMobile();
+
+  // Topic label with the active query substring highlighted (shared by the
+  // desktop list and the mobile strip).
+  const topicLabel = (title: string) => {
+    const hit = highlightMatch(title, topicQuery);
+    if (!hit) return title;
+    return (
+      <>
+        {hit.before}
+        <mark className="theory-otherbtn-hit">{hit.match}</mark>
+        {hit.after}
+      </>
+    );
+  };
+
+  const filterInput = (
+    <input
+      type="search"
+      className="theory-topic-filter"
+      value={topicQuery}
+      onChange={(e) => setTopicQuery(e.target.value)}
+      placeholder="filter topics…"
+      aria-label="filter topics"
+    />
+  );
+
+  const emptyHint = (
+    <div className="theory-other-empty t-small">no topics match</div>
+  );
+  const showEmptyHint =
+    showFilter && topicQuery.trim() !== '' && visibleOthers.length === 0;
 
   return (
     <nav
@@ -64,57 +96,43 @@ export function TheoryToc({
             </li>
           );
         })}
-        {isMobile &&
-          others.map((t) => (
-            <li key={t.id}>
-              <button
-                type="button"
-                className="theory-otherbtn"
-                onClick={() => onSwitchTopic(t.id)}
-              >
-                {t.title}
-              </button>
-            </li>
-          ))}
       </ul>
+
+      {isMobile && others.length > 0 && (
+        <>
+          {showFilter && filterInput}
+          <ul className="theory-toc-topics">
+            {visibleOthers.map((t) => (
+              <li key={t.id}>
+                <button
+                  type="button"
+                  className="theory-otherbtn"
+                  onClick={() => onSwitchTopic(t.id)}
+                >
+                  {topicLabel(t.title)}
+                </button>
+              </li>
+            ))}
+          </ul>
+          {showEmptyHint && emptyHint}
+        </>
+      )}
 
       {!isMobile && others.length > 0 && (
         <div className="theory-other">
           <div className="t-micro">other topics</div>
-          {showFilter && (
-            <input
-              type="search"
-              className="theory-topic-filter"
-              value={topicQuery}
-              onChange={(e) => setTopicQuery(e.target.value)}
-              placeholder="filter topics…"
-              aria-label="filter topics"
-            />
-          )}
-          {visibleOthers.map((t) => {
-            const hit = highlightMatch(t.title, topicQuery);
-            return (
-              <button
-                key={t.id}
-                type="button"
-                className="theory-otherbtn"
-                onClick={() => onSwitchTopic(t.id)}
-              >
-                {hit ? (
-                  <>
-                    {hit.before}
-                    <mark className="theory-otherbtn-hit">{hit.match}</mark>
-                    {hit.after}
-                  </>
-                ) : (
-                  t.title
-                )}
-              </button>
-            );
-          })}
-          {showFilter && topicQuery.trim() !== '' && visibleOthers.length === 0 && (
-            <div className="theory-other-empty t-small">no topics match</div>
-          )}
+          {showFilter && filterInput}
+          {visibleOthers.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className="theory-otherbtn"
+              onClick={() => onSwitchTopic(t.id)}
+            >
+              {topicLabel(t.title)}
+            </button>
+          ))}
+          {showEmptyHint && emptyHint}
         </div>
       )}
     </nav>

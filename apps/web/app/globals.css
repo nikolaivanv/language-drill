@@ -410,15 +410,20 @@
     flex-direction: column;
   }
   .theory-toc {
+    /* Stack as a column so the filter row spans full width; each <ul> scrolls
+       horizontally on its own (the nav itself no longer scrolls). */
     width: 100%;
     border-right: 0;
     border-bottom: 1px solid var(--color-rule);
-    overflow-x: auto;
-    overflow-y: visible;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
   }
   .theory-toc ul {
     flex-direction: row;
     margin-top: 0;
+    overflow-x: auto;
   }
   .theory-toc ul button {
     width: auto;
@@ -430,6 +435,16 @@
   .theory-toc ul button.active {
     border-left-color: transparent;
     border-bottom-color: var(--color-accent);
+  }
+  /* The topic-switch strip sits below the section tabs; a hairline separates
+     "where am I in this topic" (sections) from "jump to another topic". */
+  .theory-toc-topics {
+    padding-top: 6px;
+    border-top: 1px dashed var(--color-rule);
+  }
+  /* The column `gap` already spaces the filter row; drop its desktop margin. */
+  .theory-toc-strip .theory-topic-filter {
+    margin: 0;
   }
 }
 @keyframes theory-slide-up {
