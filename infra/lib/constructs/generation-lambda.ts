@@ -40,6 +40,7 @@ export interface GenerationLambdaConstructProps {
 export class GenerationLambdaConstruct extends Construct {
   public readonly handler: lambda.NodejsFunction;
   public readonly errorsAlarm: cloudwatch.Alarm;
+  public readonly cellFailuresAlarm: cloudwatch.Alarm;
 
   constructor(
     scope: Construct,
@@ -156,8 +157,41 @@ export class GenerationLambdaConstruct extends Construct {
         'Phase 4: generation Lambda recorded > 5 errors in a single day.',
     });
 
+    // Application-level failure alarm (mirrors the theory pipeline): catches a
+    // wholesale terminal failure (e.g. Anthropic usage-limit) that resolves
+    // cells as status='failed' WITHOUT throwing — so it never reaches the DLQ
+    // or the runtime Errors metric. The env dimension reuses the same
+    // expression that sets LANGFUSE_ENV, which is exactly what the handler
+    // emits; a mismatch would silently watch nothing.
+    const langfuseEnv =
+      props.secretsPrefix === 'language-drill' ? 'prod' : 'dev';
+    this.cellFailuresAlarm = new cloudwatch.Alarm(
+      this,
+      'GenerationCellFailuresAlarm',
+      {
+        metric: new cloudwatch.Metric({
+          namespace: 'LanguageDrill/Generation',
+          metricName: 'CellFailed',
+          dimensionsMap: { env: langfuseEnv },
+          period: Duration.days(1),
+          statistic: cloudwatch.Stats.SUM,
+        }),
+        threshold: 5,
+        evaluationPeriods: 1,
+        comparisonOperator:
+          cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        alarmDescription:
+          'Phase 4 (exercise gen): >= 5 cells failed at the APPLICATION level ' +
+          'in one day (terminal status=failed, e.g. Anthropic usage-limit), ' +
+          'distinct from the Lambda runtime Errors alarm.',
+      },
+    );
+
     if (props.alarmTopic) {
-      this.errorsAlarm.addAlarmAction(new cwactions.SnsAction(props.alarmTopic));
+      const snsAction = new cwactions.SnsAction(props.alarmTopic);
+      this.errorsAlarm.addAlarmAction(snsAction);
+      this.cellFailuresAlarm.addAlarmAction(snsAction);
     }
   }
 }

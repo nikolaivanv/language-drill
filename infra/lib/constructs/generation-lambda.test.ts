@@ -82,6 +82,18 @@ describe('GenerationLambdaConstruct', () => {
     });
   });
 
+  it('creates the CellFailures alarm (LanguageDrill/Generation CellFailed, env dim, >= 5 / day)', () => {
+    template.hasResourceProperties('AWS::CloudWatch::Alarm', {
+      Namespace: 'LanguageDrill/Generation',
+      MetricName: 'CellFailed',
+      Threshold: 5,
+      ComparisonOperator: 'GreaterThanOrEqualToThreshold',
+      Dimensions: Match.arrayWith([
+        Match.objectLike({ Name: 'env', Value: 'dev' }),
+      ]),
+    });
+  });
+
   it('IAM policies grant access to DATABASE_URL, ANTHROPIC_API_KEY, and the two Langfuse secrets only', () => {
     const policies = template.findResources('AWS::IAM::Policy');
     const serialized = JSON.stringify(policies);
