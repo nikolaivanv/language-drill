@@ -80,4 +80,17 @@ describe('SkillMovementsPanel', () => {
     );
     expect(screen.getByText(/1 skill held steady/)).toBeInTheDocument();
   });
+
+  it('preserves input order within the same band (stable sort)', () => {
+    render(
+      <SkillMovementsPanel
+        movements={[
+          m({ grammarPointKey: 'a', label: 'Gfirst', band: 'gain' }),
+          m({ grammarPointKey: 'b', label: 'Gsecond', band: 'gain' }),
+        ]}
+      />,
+    );
+    const labels = screen.getAllByText(/Gfirst|Gsecond/).map((el) => el.textContent);
+    expect(labels).toEqual(['Gfirst', 'Gsecond']);
+  });
 });

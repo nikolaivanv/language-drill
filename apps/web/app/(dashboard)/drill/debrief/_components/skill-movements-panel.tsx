@@ -1,11 +1,16 @@
 import type { SkillMovement, SkillMovementBand } from '@language-drill/shared';
 import { Card } from '../../../../../components/ui';
 
+type MoverBand = Exclude<SkillMovementBand, 'steady'>;
+
+const isMover = (mv: SkillMovement): mv is SkillMovement & { band: MoverBand } =>
+  mv.band !== 'steady';
+
 // Mover display: glyph + lowercase phrase + color token + sort weight.
 // `sort` orders movers positive-first (strong gain → gain → new → slip) so the
 // panel ends on what to work on next.
 const MOVER_DISPLAY: Record<
-  Exclude<SkillMovementBand, 'steady'>,
+  MoverBand,
   { glyph: string; phrase: string; className: string; sort: number }
 > = {
   'strong-gain': { glyph: '▲▲', phrase: 'strong gain', className: 'text-emerald-600', sort: 0 },
@@ -29,11 +34,11 @@ export interface SkillMovementsPanelProps {
 
 export function SkillMovementsPanel({ movements }: SkillMovementsPanelProps) {
   const movers = movements
-    .filter((mv) => mv.band !== 'steady')
+    .filter(isMover)
     .sort(
       (a, b) =>
-        MOVER_DISPLAY[a.band as Exclude<SkillMovementBand, 'steady'>].sort -
-        MOVER_DISPLAY[b.band as Exclude<SkillMovementBand, 'steady'>].sort,
+        MOVER_DISPLAY[a.band].sort -
+        MOVER_DISPLAY[b.band].sort,
     );
   const steadyCount = movements.length - movers.length;
 
@@ -45,7 +50,7 @@ export function SkillMovementsPanel({ movements }: SkillMovementsPanelProps) {
         <>
           <div className="flex flex-col gap-s-2">
             {movers.map((mv) => {
-              const d = MOVER_DISPLAY[mv.band as Exclude<SkillMovementBand, 'steady'>];
+              const d = MOVER_DISPLAY[mv.band];
               return (
                 <div
                   key={mv.grammarPointKey}
