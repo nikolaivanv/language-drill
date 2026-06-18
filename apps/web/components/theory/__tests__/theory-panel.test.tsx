@@ -127,19 +127,19 @@ describe('TheoryPanel', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('calls onClose when the "back to drill" CTA is clicked', () => {
-    const onClose = vi.fn();
+  it('does not render an in-content "back to drill" CTA', () => {
     render(
       <TheoryPanel
         topicId="subjunctive"
         language={Language.ES}
         triggerEl={null}
-        onClose={onClose}
+        onClose={vi.fn()}
       />,
       { wrapper: Wrapper },
     );
-    fireEvent.click(screen.getByRole('button', { name: /back to drill/i }));
-    expect(onClose).toHaveBeenCalled();
+    expect(
+      screen.queryByRole('button', { name: /back to drill/i }),
+    ).not.toBeInTheDocument();
   });
 
   it('swaps the rendered topic in place when an "other topic" is selected', () => {
