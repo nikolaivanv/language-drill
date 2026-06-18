@@ -1687,6 +1687,81 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Confusing saat (hour/clock) with zaman (time).',
     ],
   },
+  {
+    key: 'tr-b1-vocab-media-news',
+    kind: 'vocab',
+    name: 'Media & news vocabulary (B1)',
+    description:
+      'B1 Turkish vocabulary for news and media: press, broadcasts, headlines, reporting, and current events.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: ['haber (news)', 'gazete (newspaper)', 'yayın (broadcast)'],
+    examplesNegative: ['*haber ci'],
+    commonErrors: [
+      'Detaching the -CI agentive suffix (haberci, not *haber ci).',
+      'Confusing haber (news item) with bilgi (information).',
+    ],
+  },
+  {
+    key: 'tr-b1-vocab-opinions-society',
+    kind: 'vocab',
+    name: 'Opinions & society vocabulary (B1)',
+    description:
+      'B1 Turkish vocabulary for expressing opinions and discussing society: views, agreement/disagreement, social issues, and community.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: ['görüş (opinion)', 'toplum (society)', 'sorun (problem/issue)'],
+    examplesNegative: ['*fikir ler im ce'],
+    commonErrors: [
+      'Confusing görüş (considered opinion) with fikir (idea).',
+      'Mis-segmenting suffix chains (fikrimce, not *fikir im ce).',
+    ],
+  },
+  {
+    key: 'tr-b1-vocab-education-career',
+    kind: 'vocab',
+    name: 'Education & career vocabulary (B1)',
+    description:
+      'B1 Turkish vocabulary for education and working life: studies, qualifications, careers, applications, and the workplace.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: ['eğitim (education)', 'kariyer (career)', 'başvuru (application)'],
+    examplesNegative: ['*eğitim sel li k'],
+    commonErrors: [
+      'Confusing eğitim (education) with öğretim (instruction/teaching).',
+      'Mis-segmenting derived forms (eğitimli, not *eğitim li).',
+    ],
+  },
+  {
+    key: 'tr-b1-vocab-emotions-relationships',
+    kind: 'vocab',
+    name: 'Emotions & relationships vocabulary (B1)',
+    description:
+      'B1 Turkish vocabulary for feelings and relationships: emotions, moods, friendship, family ties, and social interaction.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: ['duygu (emotion)', 'ilişki (relationship)', 'güven (trust)'],
+    examplesNegative: ['*duygu sal lık'],
+    commonErrors: [
+      'Confusing duygu (emotion) with his (sense/feeling).',
+      'Mis-segmenting derived forms (duygusal, not *duygu sal).',
+    ],
+  },
+  {
+    key: 'tr-b1-vocab-abstract-concepts',
+    kind: 'vocab',
+    name: 'Abstract concepts vocabulary (B1)',
+    description:
+      'B1 Turkish abstract nouns and concepts: ideas, values, qualities, and processes used in opinion and discussion (often -lIk / -lInIz derivations).',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: ['özgürlük (freedom)', 'gerçek (truth/reality)', 'amaç (aim/purpose)'],
+    examplesNegative: ['*özgür lük'],
+    commonErrors: [
+      'Detaching the -lIk abstract-noun suffix (özgürlük, not *özgür lük).',
+      'Confusing amaç (purpose) with neden (reason).',
+    ],
+  },
 
   // ---------------------------------------------------------------------------
   // Dictation umbrellas — kind: 'dictation' (Phase 2 generation pipeline)
@@ -1725,6 +1800,24 @@ const trCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       "Losing track across two clauses joined by 've'.",
       'Mis-segmenting suffix-heavy words (arkadaşlarımla).',
+    ],
+  },
+  {
+    key: 'tr-b1-dictation',
+    kind: 'dictation',
+    name: 'Dictation — connected speech (B1)',
+    description:
+      'Short B1 Turkish clips (2–3 sentences, natural connected speech with subordinate clauses); tests tracking across joined and embedded clauses.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Dün akşam haberleri izlerken telefonum çaldı ve bir arkadaşım beni davet etti.',
+      'Bu konuda farklı görüşler var, ama bence en önemli sorun eğitim.',
+    ],
+    examplesNegative: ['*Çok uzun ya da B1 seviyesinin çok üstünde, ağır akademik bir metin.'],
+    commonErrors: [
+      'Losing track across an embedded -(y)ken / -DIK clause.',
+      'Mis-segmenting suffix-heavy words (izlerken, görüşler).',
     ],
   },
   // Free-writing topic umbrellas — kind: 'free-writing' (Phase 2 generation).
@@ -1841,6 +1934,63 @@ const trCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Listing places with no description.',
       'Locative/ablative case errors with place names.',
+    ],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'tr-b1-fw-an-opinion',
+    kind: 'free-writing',
+    name: 'Bir konudaki görüşüm',
+    description:
+      'A neutral prompt to state and justify an opinion on a familiar topic in a short paragraph, giving at least one reason.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Asks the learner to pick a familiar topic and state their opinion (Bence…).',
+      'Requires at least one supporting reason (çünkü / bu yüzden).',
+    ],
+    examplesNegative: ['*Just list facts with no stated opinion.'],
+    commonErrors: [
+      'Listing facts without taking a position.',
+      'Giving an opinion with no supporting reason.',
+    ],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'tr-b1-fw-a-past-experience',
+    kind: 'free-writing',
+    name: 'Unutamadığım bir an',
+    description:
+      'A neutral prompt to narrate a memorable past experience, setting the scene with ongoing background (-(I)yordu) and recounting what happened.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Asks where/when it happened and to set the background scene.',
+      'Requires recounting the key event and how it felt.',
+    ],
+    examplesNegative: ['*Describe daily routine in the present tense.'],
+    commonErrors: [
+      'Staying in the present instead of narrating the past.',
+      'No background/scene-setting (no -(I)yordu).',
+    ],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'tr-b1-fw-a-plan-or-hope',
+    kind: 'free-writing',
+    name: 'Bir planım ya da hayalim',
+    description:
+      'A neutral prompt to describe a future plan or wish, using future/conditional forms (-(y)AcAK, -sA) and giving a reason.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Asks for one concrete plan or hope and why it matters.',
+      'Requires a future or conditional form (keşke … olsa / yapacağım).',
+    ],
+    examplesNegative: ['*Describe what you did yesterday.'],
+    commonErrors: [
+      'Describing the past instead of a plan/hope.',
+      'No future/conditional form.',
     ],
     freeWriting: { register: 'neutral' },
   },
