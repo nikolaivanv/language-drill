@@ -12,7 +12,7 @@ import type { GrammarPoint } from './types';
 // SEED_KEY_TO_GRAMMAR_POINT (seed-exercises.ts), and update the per-language
 // counts assertions for Turkish (curriculum.test.ts).
 const TR = Language.TR;
-const { A1, A2 } = CefrLevel;
+const { A1, A2, B1 } = CefrLevel;
 
 /**
  * Per-language curriculum version. Bump in the same commit as any edit to
@@ -49,8 +49,10 @@ const { A1, A2 } = CefrLevel;
  * low-yield / saturated-dedup suppression so the new CONJUGATION cells run.
  * 2026-06-17: added 3 A1 + 3 A2 free-writing topic umbrellas (kind 'free-writing');
  * bump enumerates the new free-writing cells.
+ * 2026-06-19: TR B1 enabled — 10 grammar + 5 vocab + dictation + 3 free-writing
+ * (Yedi İklim B1, G&K-grounded). Bump clears low-yield/saturation suppression.
  */
-export const CURRICULUM_VERSION_TR = '2026-06-17';
+export const CURRICULUM_VERSION_TR = '2026-06-19';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -1211,149 +1213,11 @@ const trCurriculum: readonly GrammarPoint[] = [
     // cloze/translation cells instead.
   },
 
-  /*
-  // ---------------------------------------------------------------------------
-  // B1
-  // ---------------------------------------------------------------------------
-  // Note: tr-b1-mis-evidential, tr-b1-aorist, and tr-b1-future have been
-  // relocated to A2 / A1; do not restore them here.
-  {
-    key: 'tr-b1-conditionals-sa',
-    personRotation: true,
-    kind: 'grammar',
-    name: 'Conditional -sA',
-    description:
-      'Conditional/irrealis -sa/-se attaches to verbal stems for "if" clauses, polite requests, and counterfactuals when combined with past tenses.',
-    cefrLevel: B1,
-    language: TR,
-    examplesPositive: ['Vaktim olsa, gelirim.', 'Yağmur yağarsa, evde kalırız.'],
-    examplesNegative: ['*Vaktim olur, gelirim.'],
-    commonErrors: [
-      'Omitting -sA in irrealis conditions.',
-      'Mixing -sA with the wrong main-clause tense for the intended modality.',
-    ],
-  },
-  {
-    key: 'tr-b1-keske-optative',
-    personRotation: true,
-    kind: 'grammar',
-    name: '"Keşke" + past for regret and wish',
-    description:
-      '"Keşke" with -DI past for past regrets ("if only I had…") and with -sA for present-time wishes.',
-    cefrLevel: B1,
-    language: TR,
-    examplesPositive: [
-      'Keşke daha çok çalışsaydım.',
-      'Keşke burada olsa.',
-    ],
-    examplesNegative: ['*Keşke daha çok çalışırım.'],
-    commonErrors: [
-      'Using the simple aorist or present after "keşke".',
-      'Mixing -sA and -DI tenses incorrectly between regret and wish meanings.',
-    ],
-    prerequisiteKeys: ['tr-a1-dili-past', 'tr-b1-conditionals-sa'],
-  },
-  {
-    key: 'tr-b1-causal-conjunctions',
-    kind: 'grammar',
-    name: 'Causal conjunctions and converbs',
-    description:
-      'Expressing cause: "çünkü" (paratactic), "için" / "-dığı için" (because), "yüzünden" / "sayesinde" (negative / positive cause).',
-    cefrLevel: B1,
-    language: TR,
-    examplesPositive: [
-      'Geç kaldım çünkü trafik vardı.',
-      'Trafik olduğu için geç kaldım.',
-    ],
-    examplesNegative: ['*Geç kaldım için trafik vardı.'],
-    commonErrors: [
-      'Treating "çünkü" and "için" as interchangeable.',
-      'Forgetting to nominalise with -DIğI before "için" in subordinate clauses.',
-    ],
-  },
 
-  // ---------------------------------------------------------------------------
-  // B2
-  // ---------------------------------------------------------------------------
-  {
-    key: 'tr-b2-relative-clause-participles',
-    kind: 'grammar',
-    name: 'Non-subject relative participles -DIK / -(y)AcAK',
-    description:
-      'Non-subject pre-nominal relative clauses with -DIK and -(y)AcAK + possessive suffix, for past/non-past and future. The subject relative -(y)An is at A2.',
-    cefrLevel: B2,
-    language: TR,
-    examplesPositive: [
-      'Okuduğum kitap (the book I am reading)',
-      'Yarın okuyacağım kitap (the book I will read tomorrow)',
-    ],
-    examplesNegative: ['*Benim okuyan kitap (wrong — subject-relative -(y)An cannot encode "the book I read"; needs -DIK: "benim okuduğum kitap")'],
-    commonErrors: [
-      'Using the A2 subject relative -(y)An for non-subject relatives.',
-      'Forgetting the possessive suffix on -DIK / -(y)AcAK forms.',
-    ],
-    prerequisiteKeys: ['tr-a1-genitive-possessive'],
-  },
-  {
-    key: 'tr-b2-passive-with-nominalization',
-    kind: 'grammar',
-    name: 'Passive plus -DIK nominalisation',
-    description:
-      'Passive -Il/-In/-n forms combined with -DIğI nominal clauses, often the academic-register subject of impersonal claims ("It is known that…").',
-    cefrLevel: B2,
-    language: TR,
-    examplesPositive: [
-      'Bu kitabın 1980\'de yazıldığı bilinmektedir.',
-      'Sorunun çözüldüğü açıklandı.',
-    ],
-    examplesNegative: ['*Bu kitap 1980\'de yazdı bilinmektedir.'],
-    commonErrors: [
-      'Using the active form inside a -DIğI clause that requires the passive.',
-      'Forgetting the genitive marker on the embedded subject.',
-    ],
-    prerequisiteKeys: ['tr-b2-relative-clause-participles'],
-  },
-  // Note: tr-b2-converbs has been relocated to A2; do not restore it here.
-  // The participle-based "when" forms -DIğIndA / -DIğI zaman remain B1+ work
-  // and can be added later as a separate entry if needed.
-  {
-    key: 'tr-b2-causative-reciprocal',
-    kind: 'grammar',
-    name: 'Causative and reciprocal voices',
-    description:
-      'Causative -DIr/-Ir/-t and reciprocal/cooperative -(I/A)ş; case shifts on participants when the valency changes.',
-    cefrLevel: B2,
-    language: TR,
-    examplesPositive: [
-      'Annem bana mektubu yazdırdı.',
-      'Çocuklar parkta birbirleriyle konuşuştular.',
-    ],
-    examplesNegative: ['*Annem ben mektubu yazdırdı.'],
-    commonErrors: [
-      'Failing to mark the causee with the dative or accusative as required.',
-      'Doubling causative suffixes unnecessarily.',
-    ],
-  },
-  {
-    key: 'tr-b2-noun-clauses-dik',
-    kind: 'grammar',
-    name: 'Noun clauses with -DIK / -(y)AcAK',
-    description:
-      'Embedded noun clauses with -DIK (past/general) or -(y)AcAK (future) + possessive suffix + case. The simpler -mA / -mAk / -Iş verbal-noun forms are at A2.',
-    cefrLevel: B2,
-    language: TR,
-    examplesPositive: [
-      'Yarın yağmur yağacağını söyledi.',
-      'Onun geldiğini bilmiyordum. (I didn\'t know he had come.)',
-    ],
-    examplesNegative: ['*Onun geldi söyledi. (wrong — a finite past requires a -DIğI noun clause: "Onun geldiğini söyledi.")'],
-    commonErrors: [
-      'Using a finite tensed clause where a -DIK / -(y)AcAK noun clause is required.',
-      'Forgetting the genitive on the embedded subject.',
-    ],
-    prerequisiteKeys: ['tr-b2-relative-clause-participles'],
-  },
-  */
+  // ===========================================================================
+  // B1 — authored fresh from Yedi İklim B1, grounded in Göksel & Kerslake.
+  // (B2 is a separate later cycle.)
+  // ===========================================================================
 
   // ---------------------------------------------------------------------------
   // Vocab umbrellas — kind: 'vocab'
@@ -1679,38 +1543,6 @@ const trCurriculum: readonly GrammarPoint[] = [
     freeWriting: { register: 'neutral' },
   },
 
-  /*
-  {
-    key: 'tr-b1-abstract-noun-vocab',
-    kind: 'vocab',
-    name: 'Abstract noun vocabulary (B1)',
-    description:
-      'Vocabulary for opinions, society, environment, and current affairs typical of B1-level discussion.',
-    cefrLevel: B1,
-    language: TR,
-    examplesPositive: ['çevre (environment)', 'iletişim (communication)'],
-    examplesNegative: ['*çevreler dünya geneli'],
-    commonErrors: [
-      'Confusing "çevre" (environment) with "etraf" (surroundings).',
-      'Calquing English compound expressions instead of using a single Turkish nominalisation.',
-    ],
-  },
-  {
-    key: 'tr-b2-academic-noun-vocab',
-    kind: 'vocab',
-    name: 'Academic abstract noun vocabulary (B2)',
-    description:
-      'Academic-register abstract nouns and Ottoman-derived vocabulary common in essays, reports, and formal news writing.',
-    cefrLevel: B2,
-    language: TR,
-    examplesPositive: ['sürdürülebilirlik (sustainability)', 'gelişme (development)'],
-    examplesNegative: ['*sürdürebilirlik'],
-    commonErrors: [
-      'Mistakes on -lIk derivational suffix (vowel harmony).',
-      'Mixing Ottoman-derived and Turkic-derived synonyms with mismatched register.',
-    ],
-  },
-  */
 ];
 
 export { trCurriculum };
