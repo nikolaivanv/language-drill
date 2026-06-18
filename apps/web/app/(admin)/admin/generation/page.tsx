@@ -6,7 +6,7 @@ import {
   type PoolStatusItem,
 } from '@language-drill/api-client';
 import { apiFetch } from '../../../../lib/api-server';
-import { PoolCoverageTable } from './_components/pool-coverage-table';
+import { PoolCoverageTable } from '../pool/_components/pool-coverage-table';
 
 type PanelResult<T> =
   | { ok: true; data: T }

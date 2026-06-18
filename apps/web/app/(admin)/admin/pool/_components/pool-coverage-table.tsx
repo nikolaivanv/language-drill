@@ -43,7 +43,7 @@ export function PoolCoverageTable({ items }: Props) {
   );
 
   return (
-    <table>
+    <table className="text-[13px]">
       <thead>
         <tr>
           <th>Language</th>
