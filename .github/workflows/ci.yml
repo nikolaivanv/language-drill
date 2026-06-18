@@ -3,13 +3,18 @@ name: PR CI
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  # Run the full lint/typecheck/test suite on main as the source-of-truth
+  # backstop for the `--affected` PR runs (deploy.yml has no test gate), and to
+  # seed the default-branch turbo cache that PR runs restore from.
+  push:
+    branches: [main]
 
 permissions:
   contents: read
   pull-requests: write
 
 concurrency:
-  group: ci-${{ github.event.number }}
+  group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -17,31 +22,61 @@ jobs:
     name: Lint & Typecheck
     runs-on: ubuntu-latest
     steps:
+      # Full history so turbo `--affected` can diff against the PR base commit.
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - uses: pnpm/action-setup@v5
       - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
+      # Persist turbo's task cache across runs. PR runs fall back to main's
+      # cache via restore-keys, so unchanged packages replay instead of rerun.
+      - uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-lint-typecheck-${{ github.sha }}
+          restore-keys: |
+            turbo-lint-typecheck-
       - run: pnpm install --frozen-lockfile
-      - run: pnpm turbo lint typecheck
+      # PRs: only the packages changed since the base (+ dependents). main: all.
+      - run: pnpm turbo lint typecheck ${{ github.event_name == 'pull_request' && '--affected' || '' }}
+        env:
+          TURBO_SCM_BASE: ${{ github.event.pull_request.base.sha }}
 
   test:
     name: Unit Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - uses: pnpm/action-setup@v5
       - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
+      - uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-test-${{ github.sha }}
+          restore-keys: |
+            turbo-test-
       - run: pnpm install --frozen-lockfile
-      - run: pnpm turbo test
+      # PRs: only test packages affected since the base (+ their dependents).
+      # main: the full suite — the backstop for `--affected` pruning, since
+      # deploy.yml ships on push to main with no test gate of its own.
+      - run: pnpm turbo test ${{ github.event_name == 'pull_request' && '--affected' || '' }}
+        env:
+          TURBO_SCM_BASE: ${{ github.event.pull_request.base.sha }}
 
   neon-migrate:
     name: Neon Branch & Migrate
     runs-on: ubuntu-latest
+    # PR-preview infra only — must not run on the main push backstop (it would
+    # create a junk `pr-` Neon branch).
+    if: github.event_name == 'pull_request'
     needs: [lint-typecheck, test]
     steps:
       - uses: actions/checkout@v5
@@ -83,6 +118,7 @@ jobs:
   preview:
     name: Vercel Preview Deploy
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     needs: [neon-migrate]
     steps:
       - uses: actions/checkout@v5
@@ -114,6 +150,9 @@ jobs:
   e2e:
     name: E2E (Playwright)
     runs-on: ubuntu-latest
+    # PR-only — the main push backstop covers unit/lint/typecheck; E2E always
+    # runs in full on PRs (it isn't pruned by `--affected`).
+    if: github.event_name == 'pull_request'
     # Self-contained — the web specs mock every API call, so this only needs the
     # dev Clerk instance + a migrated DB for `createTestUser`. The canonical
     # `+clerk_test` user is upserted idempotently (onConflictDoNothing), so
