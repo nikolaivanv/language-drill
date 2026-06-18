@@ -6,15 +6,19 @@ import { useSearchParams } from 'next/navigation';
 import {
   createAuthenticatedFetch,
   useContentExercises, useContentTheory,
+  useCurriculum,
   useResolveContentExercise, useResolveContentTheory,
   type ContentExerciseParams,
   type ContentTheoryParams,
 } from '@language-drill/api-client';
+import { ExerciseType } from '@language-drill/shared';
 import { ContentExerciseCard } from './_components/content-exercise-card';
 import { ContentTheoryCard } from './_components/content-theory-card';
+import { GrammarPointCombobox } from '../../../../components/admin/grammar-point-combobox';
 
 type Tab = 'exercises' | 'theory';
 const PAGE_SIZE = 25;
+const EXERCISE_TYPES = Object.values(ExerciseType);
 
 function ContentPageInner() {
   const { getToken } = useAuth();
@@ -40,12 +44,24 @@ function ContentPageInner() {
   const resolveExercise = useResolveContentExercise({ fetchFn });
   const resolveTheory = useResolveContentTheory({ fetchFn });
 
+  // Grammar-point options scoped to the selected language/level.
+  const curriculum = useCurriculum({ fetchFn, params: { language: filters.language, level: filters.level } });
+  const grammarOptions = useMemo(
+    () => (curriculum.data?.items ?? []).map((e) => ({ key: e.key, name: e.name })),
+    [curriculum.data],
+  );
+
   const active = tab === 'exercises' ? exercises : theory;
   const total = active.data?.total ?? 0;
 
   const switchTab = (next: Tab) => { setTab(next); setOffset(0); setDemotedId(null); setError(null); };
   const setFilter = (key: keyof typeof filters, value: string) => {
-    setFilters((f) => ({ ...f, [key]: value || undefined }));
+    setFilters((f) => {
+      const next = { ...f, [key]: value || undefined };
+      // The selected grammar point may not belong to the new language/level.
+      if (key === 'language' || key === 'level') next.grammarPoint = undefined;
+      return next;
+    });
     setOffset(0);
   };
   const onSearch = (value: string) => { setQ(value); setOffset(0); };
@@ -72,9 +88,20 @@ function ContentPageInner() {
           <option value="">All levels</option><option value="A1">A1</option><option value="A2">A2</option><option value="B1">B1</option><option value="B2">B2</option>
         </select>
         {tab === 'exercises' ? (
-          <input aria-label="type" placeholder="type (e.g. cloze)" value={filters.type ?? ''} onChange={(e) => setFilter('type', e.target.value)} />
+          <select aria-label="type" value={filters.type ?? ''} onChange={(e) => setFilter('type', e.target.value)}>
+            <option value="">All types</option>
+            {EXERCISE_TYPES.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
         ) : null}
-        <input aria-label="grammar point" placeholder="grammar point" value={filters.grammarPoint ?? ''} onChange={(e) => setFilter('grammarPoint', e.target.value)} />
+        <div className="min-w-[220px]">
+          <GrammarPointCombobox
+            options={grammarOptions}
+            value={filters.grammarPoint ?? ''}
+            onChange={(key) => setFilter('grammarPoint', key)}
+          />
+        </div>
         <input aria-label="search" placeholder="search text" value={q} onChange={(e) => onSearch(e.target.value)} />
       </div>
 

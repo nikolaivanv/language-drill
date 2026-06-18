@@ -4,14 +4,19 @@ import { useMemo, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import {
   createAuthenticatedFetch,
+  useCurriculum,
   useFlaggedExercises,
   useFlaggedTheory,
   useResolveFlaggedExercise,
   useResolveFlaggedTheory,
   type FlaggedExerciseFilters,
 } from '@language-drill/api-client';
+import { ExerciseType } from '@language-drill/shared';
 import { FlaggedExerciseCard } from './_components/flagged-exercise-card';
 import { FlaggedTheoryCard } from './_components/flagged-theory-card';
+import { GrammarPointCombobox } from '../../../../components/admin/grammar-point-combobox';
+
+const EXERCISE_TYPES = Object.values(ExerciseType);
 
 type Tab = 'exercises' | 'theory';
 
@@ -32,8 +37,23 @@ export default function ModerationPage() {
   const resolveExercise = useResolveFlaggedExercise({ fetchFn });
   const resolveTheory = useResolveFlaggedTheory({ fetchFn });
 
+  // Grammar-point options scoped to the selected language/level.
+  const curriculum = useCurriculum({
+    fetchFn,
+    params: { language: filters.language, level: filters.level },
+  });
+  const grammarOptions = useMemo(
+    () => (curriculum.data?.items ?? []).map((e) => ({ key: e.key, name: e.name })),
+    [curriculum.data],
+  );
+
   const setFilter = (key: keyof FlaggedExerciseFilters, value: string) =>
-    setFilters((f) => ({ ...f, [key]: value || undefined }));
+    setFilters((f) => {
+      const next = { ...f, [key]: value || undefined };
+      // The selected grammar point may not belong to the new language/level.
+      if (key === 'language' || key === 'level') next.grammarPoint = undefined;
+      return next;
+    });
 
   const switchTab = (next: Tab) => {
     setTab(next);
@@ -84,19 +104,20 @@ export default function ModerationPage() {
           <option value="B2">B2</option>
         </select>
         {tab === 'exercises' ? (
-          <input
-            aria-label="type"
-            placeholder="type (e.g. cloze)"
-            value={filters.type ?? ''}
-            onChange={(e) => setFilter('type', e.target.value)}
-          />
+          <select aria-label="type" value={filters.type ?? ''} onChange={(e) => setFilter('type', e.target.value)}>
+            <option value="">All types</option>
+            {EXERCISE_TYPES.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
         ) : null}
-        <input
-          aria-label="grammar point"
-          placeholder="grammar point"
-          value={filters.grammarPoint ?? ''}
-          onChange={(e) => setFilter('grammarPoint', e.target.value)}
-        />
+        <div className="min-w-[220px]">
+          <GrammarPointCombobox
+            options={grammarOptions}
+            value={filters.grammarPoint ?? ''}
+            onChange={(key) => setFilter('grammarPoint', key)}
+          />
+        </div>
       </div>
 
       <div id="moderation-panel" role="tabpanel" aria-labelledby={tab === 'exercises' ? 'tab-exercises' : 'tab-theory'}>
