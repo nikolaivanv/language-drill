@@ -529,6 +529,52 @@ admin.get('/admin/theory/coverage', async (c) => {
   return c.json({ rows });
 });
 
+// Per-grammar-point theory fill status: one row per grammar-kind curriculum
+// point (so points with no page yet show as "missing"), left-joined to an
+// aggregate over theory_topics. Approved = auto/manual-approved; flagged is
+// surfaced separately; rejected rows are ignored (mirrors theory/coverage).
+admin.get('/admin/theory/pool-status', async (c) => {
+  const language = c.req.query('language');
+  const level = c.req.query('level');
+
+  const aggRows = await db
+    .select({
+      language: theoryTopics.language,
+      grammarPointKey: theoryTopics.grammarPointKey,
+      hasApproved: sql<boolean>`bool_or(${theoryTopics.reviewStatus} IN ('auto-approved', 'manual-approved'))`,
+      flaggedCount: sql<number>`COUNT(*) FILTER (WHERE ${theoryTopics.reviewStatus} = 'flagged')::int`,
+      lastGeneratedAt: sql<string | null>`MAX(${theoryTopics.generatedAt})`,
+    })
+    .from(theoryTopics)
+    .groupBy(theoryTopics.language, theoryTopics.grammarPointKey);
+
+  const byKey = new Map<string, { hasApproved: boolean; flaggedCount: number; lastGeneratedAt: string | null }>();
+  for (const r of aggRows) {
+    byKey.set(`${r.language}:${r.grammarPointKey}`, {
+      hasApproved: Boolean(r.hasApproved),
+      flaggedCount: r.flaggedCount,
+      lastGeneratedAt: r.lastGeneratedAt ?? null,
+    });
+  }
+
+  const items = ALL_CURRICULA.filter((gp) => gp.kind === 'grammar')
+    .filter((gp) => (!language || gp.language === language) && (!level || gp.cefrLevel === level))
+    .map((gp) => {
+      const agg = byKey.get(`${gp.language}:${gp.key}`);
+      return {
+        language: gp.language,
+        level: gp.cefrLevel,
+        grammarPointKey: gp.key,
+        name: gp.name,
+        hasApprovedPage: agg?.hasApproved ?? false,
+        flaggedCount: agg?.flaggedCount ?? 0,
+        lastGeneratedAt: agg?.lastGeneratedAt ?? null,
+      };
+    });
+
+  return c.json(items);
+});
+
 // ---------------------------------------------------------------------------
 // GET /admin/curriculum — read-only in-code curriculum reference (no DB read)
 // ---------------------------------------------------------------------------

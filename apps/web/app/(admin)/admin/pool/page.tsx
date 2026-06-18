@@ -9,7 +9,9 @@ import {
   useGenerationStats,
   usePoolStatus,
   useTheoryCoverage,
+  useTheoryPoolStatus,
 } from '@language-drill/api-client';
+import type { PoolStatusTheoryItem } from '@language-drill/api-client';
 import { ExerciseType } from '@language-drill/shared';
 import { PoolCoverageTable } from './_components/pool-coverage-table';
 import { GrammarPointCombobox } from '../../../../components/admin/grammar-point-combobox';
@@ -19,6 +21,30 @@ type Tab = 'exercises' | 'theory';
 const EXERCISE_TYPES = Object.values(ExerciseType);
 const THEORY_LANGUAGES = ['ES', 'DE', 'TR'] as const;
 const THEORY_LEVELS = ['A1', 'A2', 'B1', 'B2'] as const;
+
+function theoryStatusRank(i: PoolStatusTheoryItem): number {
+  if (!i.hasApprovedPage && i.flaggedCount === 0) return 0; // missing
+  if (i.flaggedCount > 0) return 1; // flagged (incl. approved-with-flags)
+  return 2; // approved, clean
+}
+
+function theoryContentHref(i: PoolStatusTheoryItem): string {
+  return `/admin/content?tab=theory&language=${encodeURIComponent(i.language)}&level=${encodeURIComponent(i.level)}&grammarPoint=${encodeURIComponent(i.grammarPointKey)}`;
+}
+
+function TheoryStatusBadge({ item }: { item: PoolStatusTheoryItem }) {
+  if (item.hasApprovedPage) {
+    return (
+      <span className="text-[12px] text-ink-soft">
+        ✓ approved{item.flaggedCount > 0 ? ` · ⚠ ${item.flaggedCount} flagged` : ''}
+      </span>
+    );
+  }
+  if (item.flaggedCount > 0) {
+    return <span className="text-[12px] text-amber-700">⚠ {item.flaggedCount} flagged</span>;
+  }
+  return <span className="text-[12px] text-red-700">✗ missing</span>;
+}
 
 function PoolPageInner() {
   const { getToken } = useAuth();
@@ -30,11 +56,23 @@ function PoolPageInner() {
   const poolStatus = usePoolStatus({ fetchFn, params: { language: filters.language, level: filters.level }, enabled: tab === 'exercises' });
   const stats = useGenerationStats({ fetchFn, enabled: tab === 'exercises' });
   const theory = useTheoryCoverage({ fetchFn, enabled: tab === 'theory' });
+  const theoryPool = useTheoryPoolStatus({
+    fetchFn,
+    params: { language: filters.language, level: filters.level },
+    enabled: tab === 'theory',
+  });
   const curriculum = useCurriculum({ fetchFn, params: { language: filters.language, level: filters.level } });
   const grammarOptions = useMemo(
     () => (curriculum.data?.items ?? []).map((e: { key: string; name: string }) => ({ key: e.key, name: e.name })),
     [curriculum.data],
   );
+  const theoryItems = useMemo(() => {
+    const filtered = (theoryPool.data ?? []).filter(
+      (i) => !filters.grammarPoint || i.grammarPointKey === filters.grammarPoint,
+    );
+    // Surface gaps first: missing → flagged → approved, then by key.
+    return [...filtered].sort((a, b) => theoryStatusRank(a) - theoryStatusRank(b) || a.grammarPointKey.localeCompare(b.grammarPointKey));
+  }, [theoryPool.data, filters.grammarPoint]);
 
   const setFilter = (key: keyof typeof filters, value: string) => {
     setFilters((f) => {
@@ -133,34 +171,56 @@ function PoolPageInner() {
             </>
           )
         ) : (
-          theory.isLoading ? <p className="text-ink-soft text-[13px]">Loading…</p>
-          : theory.isError ? <p className="text-ink-soft text-[13px]">Failed to load theory coverage.</p>
-          : (
-            <table className="text-[13px]">
-              <thead>
-                <tr><th>Language</th>{THEORY_LEVELS.map((l) => <th key={l}>{l}</th>)}</tr>
-              </thead>
-              <tbody>
-                {THEORY_LANGUAGES.map((language) => (
-                  <tr key={language}>
-                    <td>{language}</td>
-                    {THEORY_LEVELS.map((level) => {
-                      const row = byKey.get(`${language}:${level}`);
-                      if (!row || row.total === 0) return <td key={level}>—</td>;
-                      const badge = row.approved === row.total ? '✓' : row.approved > 0 ? '⚠' : '✗';
-                      const bg = row.approved === row.total ? 'bg-green-100' : row.approved > 0 ? 'bg-amber-100' : 'bg-red-100';
-                      return (
-                        <td key={level} className={bg}>
-                          {row.approved}/{row.total} {badge}
-                          {row.flagged > 0 && <span className="t-micro"> +{row.flagged} flagged</span>}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )
+          <div className="flex flex-col gap-4">
+            {theory.isLoading ? <p className="text-ink-soft text-[13px]">Loading…</p>
+              : theory.isError ? <p className="text-ink-soft text-[13px]">Failed to load theory coverage.</p>
+              : (
+                <table className="text-[13px]">
+                  <thead>
+                    <tr><th>Language</th>{THEORY_LEVELS.map((l) => <th key={l}>{l}</th>)}</tr>
+                  </thead>
+                  <tbody>
+                    {THEORY_LANGUAGES.map((language) => (
+                      <tr key={language}>
+                        <td>{language}</td>
+                        {THEORY_LEVELS.map((level) => {
+                          const row = byKey.get(`${language}:${level}`);
+                          if (!row || row.total === 0) return <td key={level}>—</td>;
+                          const badge = row.approved === row.total ? '✓' : row.approved > 0 ? '⚠' : '✗';
+                          const bg = row.approved === row.total ? 'bg-green-100' : row.approved > 0 ? 'bg-amber-100' : 'bg-red-100';
+                          return (
+                            <td key={level} className={bg}>
+                              {row.approved}/{row.total} {badge}
+                              {row.flagged > 0 && <span className="t-micro"> +{row.flagged} flagged</span>}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            <section className="flex flex-col gap-2">
+              <h2 className="text-ink-soft text-[12px]">Grammar points</h2>
+              {theoryPool.isLoading ? <p className="text-ink-soft text-[13px]">Loading…</p>
+                : theoryPool.isError ? <p className="text-ink-soft text-[13px]">Failed to load theory pool status.</p>
+                : theoryItems.length === 0 ? <p className="text-ink-soft text-[13px]">No matching grammar points.</p>
+                : (
+                  <ul className="flex flex-col gap-1">
+                    {theoryItems.map((i) => (
+                      <li key={`${i.language}:${i.grammarPointKey}`} className="flex items-center gap-2 flex-wrap border-b border-rule py-1 text-[13px]">
+                        <span className="font-mono text-ink">{i.grammarPointKey}</span>
+                        <span className="text-ink-soft">{i.name}</span>
+                        <TheoryStatusBadge item={i} />
+                        {(i.hasApprovedPage || i.flaggedCount > 0) ? (
+                          <a className="text-accent-2 underline" href={theoryContentHref(i)}>view →</a>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+            </section>
+          </div>
         )}
       </div>
     </div>

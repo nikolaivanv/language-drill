@@ -10,6 +10,7 @@ const mockPoolStatus = vi.fn();
 const mockGenStats = vi.fn();
 const mockTheoryCoverage = vi.fn();
 const mockCurriculum = vi.fn();
+const mockTheoryPool = vi.fn();
 vi.mock('@language-drill/api-client', async () => {
   const actual = await vi.importActual<typeof import('@language-drill/api-client')>('@language-drill/api-client');
   return {
@@ -19,6 +20,7 @@ vi.mock('@language-drill/api-client', async () => {
     useGenerationStats: (a: unknown) => mockGenStats(a),
     useTheoryCoverage: (a: unknown) => mockTheoryCoverage(a),
     useCurriculum: (a: unknown) => mockCurriculum(a),
+    useTheoryPoolStatus: (a: unknown) => mockTheoryPool(a),
   };
 });
 // Render the rich cell detail as a stub so the test focuses on the page shell.
@@ -48,6 +50,12 @@ const genStats = {
 beforeEach(() => {
   mockPoolStatus.mockReset(); mockGenStats.mockReset();
   mockTheoryCoverage.mockReset(); mockCurriculum.mockReset();
+  mockTheoryPool.mockReset();
+  mockTheoryPool.mockReturnValue({ isLoading: false, isError: false, data: [
+    { language: 'TR', level: 'A1', grammarPointKey: 'tr-a1-approved', name: 'approved pt', hasApprovedPage: true, flaggedCount: 0, lastGeneratedAt: null },
+    { language: 'TR', level: 'A1', grammarPointKey: 'tr-a1-flagged', name: 'flagged pt', hasApprovedPage: false, flaggedCount: 3, lastGeneratedAt: null },
+    { language: 'TR', level: 'A1', grammarPointKey: 'tr-a1-missing', name: 'missing pt', hasApprovedPage: false, flaggedCount: 0, lastGeneratedAt: null },
+  ] });
   mockPoolStatus.mockReturnValue({ isLoading: false, isError: false, data: poolItems });
   mockGenStats.mockReturnValue({ isLoading: false, isError: false, data: genStats });
   mockTheoryCoverage.mockReturnValue({ isLoading: false, isError: false, data: { rows: [
@@ -81,5 +89,25 @@ describe('PoolPage', () => {
     fireEvent.click(screen.getByRole('tab', { name: /theory/i }));
     // Matrix renders a TR row with the 26/26 cell
     expect(screen.getByText(/26\/26/)).toBeInTheDocument();
+  });
+
+  it('Theory tab lists grammar points with status badges and deeplinks', () => {
+    render(<PoolPage />);
+    fireEvent.click(screen.getByRole('tab', { name: /theory/i }));
+
+    // Missing point shows a missing badge, no view link.
+    expect(screen.getByText('tr-a1-missing')).toBeInTheDocument();
+    expect(screen.getByText(/✗ missing/i)).toBeInTheDocument();
+
+    // Approved point has a deeplink into the content theory tab.
+    const links = screen.getAllByRole('link', { name: /view/i });
+    const approved = links.find((l) => l.getAttribute('href')?.includes('tr-a1-approved'));
+    expect(approved).toHaveAttribute(
+      'href',
+      '/admin/content?tab=theory&language=TR&level=A1&grammarPoint=tr-a1-approved',
+    );
+
+    // Flagged point shows its flagged count.
+    expect(screen.getByText(/3 flagged/i)).toBeInTheDocument();
   });
 });

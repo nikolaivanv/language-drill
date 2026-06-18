@@ -253,10 +253,12 @@ export {
   TheoryListResponseSchema,
   TheoryCoverageRowSchema,
   TheoryCoverageResponseSchema,
+  PoolStatusTheoryItemSchema,
   type TheoryListItem,
   type TheoryListResponse,
   type TheoryCoverageRow,
   type TheoryCoverageResponse,
+  type PoolStatusTheoryItem,
 } from './schemas/theory';
 export {
   parseTheoryTopicJson,
@@ -378,6 +380,7 @@ export { usePoolCell } from './hooks/usePoolCell';
 export { usePoolStatus, type PoolStatusParams } from './hooks/usePoolStatus';
 export { useGenerationStats } from './hooks/useGenerationStats';
 export { useTheoryCoverage } from './hooks/useTheoryCoverage';
+export { useTheoryPoolStatus, type TheoryPoolStatusParams } from './hooks/useTheoryPoolStatus';
 export {
   GenerateCellResponseSchema,
   type GenerateCellRequest,

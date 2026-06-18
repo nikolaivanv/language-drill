@@ -1756,3 +1756,52 @@ describe('GET /admin/curriculum', () => {
     expect(res.status).toBe(403);
   });
 });
+
+// ---------------------------------------------------------------------------
+// GET /admin/theory/pool-status
+// ---------------------------------------------------------------------------
+
+describe('GET /admin/theory/pool-status', () => {
+  it('returns one row per grammar curriculum point, marking missing/flagged/approved', async () => {
+    const grammarPoints = ALL_CURRICULA.filter((gp) => gp.kind === 'grammar');
+    const approvedPt = grammarPoints[0];
+    const flaggedPt = grammarPoints[1];
+
+    // One aggregated query: per (language, grammarPointKey) → hasApproved + flaggedCount + lastGeneratedAt.
+    queryQueue.push([
+      { language: approvedPt.language, grammarPointKey: approvedPt.key, hasApproved: true, flaggedCount: 0, lastGeneratedAt: '2026-06-01T00:00:00.000Z' },
+      { language: flaggedPt.language, grammarPointKey: flaggedPt.key, hasApproved: false, flaggedCount: 2, lastGeneratedAt: null },
+    ]);
+
+    const res = await app.request('/admin/theory/pool-status', undefined, adminEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Array<{
+      language: string; level: string; grammarPointKey: string; name: string;
+      hasApprovedPage: boolean; flaggedCount: number; lastGeneratedAt: string | null;
+    }>;
+
+    // Every grammar-kind curriculum point appears exactly once.
+    expect(body).toHaveLength(grammarPoints.length);
+
+    const byKey = new Map(body.map((r) => [`${r.language}:${r.grammarPointKey}`, r]));
+    expect(byKey.get(`${approvedPt.language}:${approvedPt.key}`)?.hasApprovedPage).toBe(true);
+    expect(byKey.get(`${flaggedPt.language}:${flaggedPt.key}`)?.hasApprovedPage).toBe(false);
+    expect(byKey.get(`${flaggedPt.language}:${flaggedPt.key}`)?.flaggedCount).toBe(2);
+
+    // A point with no DB row is "missing": not approved, zero flagged, name from the curriculum.
+    const missing = grammarPoints.find((gp) => gp.key !== approvedPt.key && gp.key !== flaggedPt.key)!;
+    const missingRow = byKey.get(`${missing.language}:${missing.key}`);
+    expect(missingRow?.hasApprovedPage).toBe(false);
+    expect(missingRow?.flaggedCount).toBe(0);
+    expect(missingRow?.name).toBe(missing.name);
+  });
+
+  it('filters by language', async () => {
+    queryQueue.push([]);
+    const res = await app.request('/admin/theory/pool-status?language=ES', undefined, adminEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Array<{ language: string }>;
+    expect(body.length).toBeGreaterThan(0);
+    expect(body.every((r) => r.language === 'ES')).toBe(true);
+  });
+});
