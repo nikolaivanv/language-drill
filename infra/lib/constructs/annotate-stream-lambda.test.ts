@@ -118,4 +118,21 @@ describe("AnnotateStreamLambdaConstruct", () => {
       ]),
     });
   });
+
+  it("creates an AI-failure metric filter + alarm (annotate surface, threshold 5)", () => {
+    template.hasResourceProperties("AWS::Logs::MetricFilter", {
+      MetricTransformations: Match.arrayWith([
+        Match.objectLike({
+          MetricName: "annotate-ai-failure",
+          MetricNamespace: "LanguageDrill/dev",
+        }),
+      ]),
+    });
+    template.hasResourceProperties("AWS::CloudWatch::Alarm", {
+      MetricName: "annotate-ai-failure",
+      Namespace: "LanguageDrill/dev",
+      Threshold: 5,
+      ComparisonOperator: "GreaterThanOrEqualToThreshold",
+    });
+  });
 });

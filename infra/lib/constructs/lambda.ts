@@ -151,9 +151,20 @@ export class LambdaConstruct extends Construct {
     // Alarm on sustained caught AI-call failures (eval / reading / writing
     // helpers) — these return 502 but the invocation succeeds, so the runtime
     // Errors metric never sees them.
+    // Two NON-OVERLAPPING substrings cover all four caught AI-call failure
+    // lines without double-counting: "Claude evaluation failed:" (submit/eval)
+    // and " generation failed:" (reading `Reading generation failed:` + the
+    // writing-helper trio `[brainstorm]/[vocab-boost]/[start-my-paragraph]
+    // generation failed:`).
     addAiFailureAlarm(this, "ApiAiFailureAlarm", {
       logGroup: this.logGroup,
       env: props.secretsPrefix === "language-drill" ? "prod" : "dev",
+      surface: "api",
+      patterns: ["Claude evaluation failed:", " generation failed:"],
+      alarmDescription:
+        "API Lambda: >= 5 caught AI-call failures (eval / reading / writing-helper " +
+        "502 AI_UNAVAILABLE) in 5 minutes — Anthropic outage, usage-limit, or a " +
+        "systemic prompt/parse bug. These do not move the Lambda Errors metric.",
       alarmTopic: props.alarmTopic,
     });
   }
