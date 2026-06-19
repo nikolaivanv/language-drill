@@ -32,20 +32,21 @@ const sampleEvaluation = {
 function clozeItem(
   id: string,
   status: DebriefItem['status'],
-  topicHint: string,
+  label: string,
 ): DebriefItem {
   return {
     exerciseId: id,
     submissionId: status === 'skipped' ? null : 'aaaaaaaa-1111-4111-8111-111111111111',
     type: ExerciseType.CLOZE,
-    grammarPointKey: null,
-    grammarPointName: null,
+    grammarPointKey: `gp-${label}`,
+    // The card now renders the grammar point (not the topic); use the label
+    // here so order assertions can target the rendered chip.
+    grammarPointName: label,
     contentJson: {
       type: ExerciseType.CLOZE,
       instructions: 'Fill in',
-      sentence: `${topicHint} ___ test`,
+      sentence: `${label} ___ test`,
       correctAnswer: 'foo',
-      topicHint,
     },
     status,
     userAnswer: status === 'skipped' ? null : 'foo',
@@ -83,14 +84,14 @@ describe('ReviewTab', () => {
     render(<ReviewTab items={items} fetchFn={fetchFn} />);
 
     // Index labels are #1, #2, #3 in the order ReviewItemCard receives them.
-    // Topic chips use the same string per-item, so we can use them to verify
-    // visual order corresponds to the array order.
+    // Each card renders its grammar-point chip (one distinct label per item),
+    // so we can use them to verify visual order corresponds to the array order.
     const indices = screen.getAllByText(/^#\d+$/).map((el) => el.textContent);
     expect(indices).toEqual(['#1', '#2', '#3']);
 
-    // The first card has the "zeta" topic chip
-    const topicElements = screen.getAllByText(/^(zeta|alpha|kappa)$/);
-    expect(topicElements.map((el) => el.textContent)).toEqual([
+    // The first card has the "zeta" grammar-point chip
+    const labelElements = screen.getAllByText(/^(zeta|alpha|kappa)$/);
+    expect(labelElements.map((el) => el.textContent)).toEqual([
       'zeta',
       'alpha',
       'kappa',
