@@ -58,8 +58,10 @@ function pct(n: number): number {
   return Math.round(n * 100);
 }
 
-// "What moved" pill: one grammar point's before→after, displayed as percentages
-// with a direction arrow. Sourced from emitted evidence (Req 9.4).
+// "What moved" box: one grammar point's before→after, displayed as percentages
+// with a direction arrow. Sourced from emitted evidence (Req 9.4). A card-radius
+// box (not a full-radius pill) because labels can be long, multi-line grammar
+// descriptions that would otherwise become an oversized capsule.
 function DeltaPill({
   label,
   from,
@@ -71,7 +73,7 @@ function DeltaPill({
 }) {
   const down = to < from;
   return (
-    <span className="inline-flex items-center gap-s-2 px-s-3 py-[5px] rounded-r-pill border border-rule bg-card text-[12px]">
+    <span className="inline-flex items-start gap-s-2 px-s-3 py-[5px] rounded-r-md border border-rule bg-card text-[12px]">
       <span>{label}</span>
       <span className="t-mono text-ink-mute text-[11px]">{pct(from)}%</span>
       <span className={down ? 'text-accent' : 'text-ok'}>{down ? '↓' : '↑'}</span>

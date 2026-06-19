@@ -126,6 +126,15 @@ describe('ReviewFeedback "what moved"', () => {
     renderFeedback({ result: incorrectResult });
     expect(screen.queryByText(/also moved/)).not.toBeInTheDocument();
   });
+
+  it('renders each delta as a rounded box, not a full-radius pill', () => {
+    // Grammar-point labels can be long, multi-line descriptions; a 999px pill
+    // radius turns those into an oversized capsule that breaks the design feel.
+    renderFeedback();
+    const box = screen.getByText('ablative case').parentElement;
+    expect(box?.className).toContain('rounded-r-md');
+    expect(box?.className).not.toContain('rounded-r-pill');
+  });
 });
 
 // ---------------------------------------------------------------------------
