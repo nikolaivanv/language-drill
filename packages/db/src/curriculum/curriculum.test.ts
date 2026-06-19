@@ -614,8 +614,8 @@ describe('TR nominal-inflection conjugation cells (Task 6)', () => {
     const point = trCurriculum.find((p) => p.key === 'tr-a1-possessive-suffixes');
     const caseAxis = point?.coverageSpec?.axes.find((a) => a.name === 'case');
     expect(caseAxis).toBeDefined();
-    expect(Object.keys(caseAxis!.floors)).toEqual(
-      expect.arrayContaining(['accusative', 'dative', 'ablative']),
+    expect(Object.keys(caseAxis!.floors).sort()).toEqual(
+      ['ablative', 'accusative', 'dative', 'locative', 'nominative'],
     );
   });
 });

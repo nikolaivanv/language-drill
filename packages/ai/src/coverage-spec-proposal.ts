@@ -23,7 +23,7 @@ const PROPOSAL_TEMPERATURE = 0.2;
 
 /** Which axes are legal to propose for a grammar point of each `kind`. */
 function legalAxesFor(kind: GrammarPoint["kind"]): CoverageAxis[] {
-  return kind === "vocab" ? ["wordClass"] : ["person", "polarity", "sentenceType"];
+  return kind === "vocab" ? ["wordClass"] : ["person", "polarity", "sentenceType", "number", "case"];
 }
 
 export const COVERAGE_SPEC_PROPOSAL_SYSTEM_PROMPT_TEMPLATE = `You design coverage specs for a language-exercise generator.

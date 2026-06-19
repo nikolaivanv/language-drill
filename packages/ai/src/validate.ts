@@ -143,6 +143,18 @@ export const VALIDATION_TOOL: Anthropic.Tool = {
             description:
               "Clause type of the target sentence: declarative, interrogative, or imperative.",
           },
+          number: {
+            type: "string",
+            enum: [...COVERAGE_AXIS_VALUES.number],
+            description:
+              "Grammatical number realized by the target form (singular/plural).",
+          },
+          case: {
+            type: "string",
+            enum: [...COVERAGE_AXIS_VALUES.case],
+            description:
+              "Grammatical case realized by the target form (nominative/accusative/dative/locative/ablative/genitive).",
+          },
         },
       },
     },

@@ -116,6 +116,18 @@ describe("VALIDATION_TOOL", () => {
     expect(required).toContain("culturalIssues");
     expect(required).toContain("flaggedReasons");
   });
+
+  it("coverage properties include case and number axes", () => {
+    const coverageProps = (
+      VALIDATION_TOOL.input_schema as {
+        properties: {
+          coverage: { properties: Record<string, unknown> };
+        };
+      }
+    ).properties.coverage.properties;
+    expect(coverageProps).toHaveProperty("case");
+    expect(coverageProps).toHaveProperty("number");
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -617,5 +629,13 @@ describe("parseValidationResult — coverage", () => {
     const r = parseValidationResult({ ...base, coverage: 42 });
     expect(r.qualityScore).toBe(0.9);
     expect(r.grammarPointMatch).toBe(true);
+  });
+
+  it("coerces case and number coverage axes through to r.coverage", () => {
+    const r = parseValidationResult({
+      ...base,
+      coverage: { case: "dative", number: "plural" },
+    });
+    expect(r.coverage).toEqual({ case: "dative", number: "plural" });
   });
 });

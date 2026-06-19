@@ -44,6 +44,8 @@ describe("buildCoverageSpecProposalUserPrompt", () => {
     const prompt = buildCoverageSpecProposalUserPrompt(gp, null);
     expect(prompt).toContain(gp.name);
     expect(prompt).toContain("person");
+    expect(prompt).toContain("case");
+    expect(prompt).toContain("number");
     expect(COVERAGE_SPEC_PROPOSAL_PROMPT_VERSION).toMatch(/^coverage-spec@\d{4}-\d{2}-\d{2}$/);
   });
 });

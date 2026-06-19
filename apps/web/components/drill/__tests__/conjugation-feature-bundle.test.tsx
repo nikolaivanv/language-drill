@@ -71,5 +71,7 @@ describe('ConjugationFeatureBundle', () => {
     );
     expect(screen.getByText("bulunma")).toBeInTheDocument(); // chip rendered
     expect(screen.getByText("locative")).toBeInTheDocument();
+    // No pronoun badge should be rendered for a subjectless (nominal) cell.
+    expect(screen.queryByText("o")).toBeNull();
   });
 });
