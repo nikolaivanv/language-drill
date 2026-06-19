@@ -344,6 +344,7 @@ function translationItem(overrides: Partial<DebriefItem> = {}): DebriefItem {
     submissionId: '22222222-2222-4222-8222-aaaaaaaaaaaa',
     type: ExerciseType.TRANSLATION,
     grammarPointKey: null,
+    grammarPointName: null,
     contentJson: {
       type: ExerciseType.TRANSLATION,
       instructions: 'Translate to Spanish',
@@ -417,6 +418,7 @@ function vocabItem(overrides: Partial<DebriefItem> = {}): DebriefItem {
     submissionId: '33333333-3333-4333-8333-aaaaaaaaaaaa',
     type: ExerciseType.VOCAB_RECALL,
     grammarPointKey: null,
+    grammarPointName: null,
     contentJson: {
       type: ExerciseType.VOCAB_RECALL,
       instructions: 'Recall the Spanish word',
@@ -501,6 +503,7 @@ function sentenceConstructionItem(overrides: Partial<DebriefItem> = {}): Debrief
     submissionId: '44444444-4444-4444-8444-aaaaaaaaaaaa',
     type: ExerciseType.SENTENCE_CONSTRUCTION,
     grammarPointKey: null,
+    grammarPointName: null,
     contentJson: {
       type: ExerciseType.SENTENCE_CONSTRUCTION,
       instructions: 'Write a sentence using the given words',
@@ -614,6 +617,7 @@ function conjugationItem(acceptableForms?: string[]): DebriefItem {
     submissionId: '66666666-6666-4666-8666-aaaaaaaaaaaa',
     type: ExerciseType.CONJUGATION,
     grammarPointKey: null,
+    grammarPointName: null,
     contentJson: {
       type: ExerciseType.CONJUGATION,
       instructions: 'Write the correct form.',
@@ -661,6 +665,7 @@ function structuredConjugationItem(overrides: Partial<DebriefItem> = {}): Debrie
     submissionId: '55555555-5555-4555-8555-bbbbbbbbbbbb',
     type: ExerciseType.CONJUGATION,
     grammarPointKey: 'tr-b1-past-simple',
+    grammarPointName: null,
     contentJson: {
       type: ExerciseType.CONJUGATION,
       instructions: 'Write the correct form.',

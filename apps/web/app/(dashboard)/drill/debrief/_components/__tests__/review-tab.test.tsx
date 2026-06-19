@@ -39,6 +39,7 @@ function clozeItem(
     submissionId: status === 'skipped' ? null : 'aaaaaaaa-1111-4111-8111-111111111111',
     type: ExerciseType.CLOZE,
     grammarPointKey: null,
+    grammarPointName: null,
     contentJson: {
       type: ExerciseType.CLOZE,
       instructions: 'Fill in',
