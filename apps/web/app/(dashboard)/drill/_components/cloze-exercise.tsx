@@ -2,10 +2,10 @@
 
 import * as React from 'react';
 import type { ClozeContent, LearningLanguage } from '@language-drill/shared';
-import { AccentPicker, Button, Input } from '../../../../components/ui';
+import { AccentPicker, Button } from '../../../../components/ui';
 import { cn } from '../../../../lib/cn';
-import { splitClozeSentence } from '../../../../lib/drill/cloze-blank';
 import { clozeVerdict } from '../../../../lib/drill/verdict-tier';
+import { ClozePrompt, type BlankState } from '../../../../components/drill/cloze-prompt';
 import { useDrillAction } from './drill-action-context';
 import { FeedbackShell } from './feedback-shell';
 import type { SubmissionMeta, SubmissionState } from './types';
@@ -24,19 +24,6 @@ export interface ClozeExerciseProps {
 function isAccentLanguage(lang: string): lang is 'ES' | 'DE' | 'TR' {
   return lang === 'ES' || lang === 'DE' || lang === 'TR';
 }
-
-type BlankState = 'idle' | 'filled' | 'correct' | 'wrong';
-
-// Inline-blank colour by state. Empty reads terracotta (an open prompt), filled
-// goes ink, and a graded blank fills green / terracotta in place.
-const BLANK_STATE_CLASS: Record<BlankState, string> = {
-  idle: 'border-[var(--color-accent)] text-ink',
-  filled: 'border-ink text-ink',
-  correct:
-    'border-[var(--color-ok)] text-[var(--color-ok)] bg-[var(--color-ok-soft)] rounded-t-sm',
-  wrong:
-    'border-[var(--color-accent)] text-[var(--color-accent-2)] bg-[var(--color-accent-soft)] rounded-t-sm',
-};
 
 export function ClozeExercise({
   content,
@@ -59,7 +46,6 @@ export function ClozeExercise({
     Array.isArray(content.options) && content.options.length >= 2;
   const isLocked = submission.kind !== 'idle';
   const showAccentPicker = isAccentLanguage(language);
-  const { before, after, hasBlank } = splitClozeSentence(content.sentence);
 
   const canSubmit = answer.trim().length > 0;
 
@@ -106,84 +92,18 @@ export function ClozeExercise({
         ? 'filled'
         : 'idle';
 
-  // The blank is the input. It lives inline in the sentence and grows with what
-  // the learner types; the accent keys and option chips both write into it.
-  const blankInput = (
-    <input
-      ref={inputRef}
-      type="text"
-      autoComplete="off"
-      autoCorrect="off"
-      spellCheck={false}
-      aria-label="fill the blank"
-      data-state={blankState}
-      value={answer}
-      onChange={(e) => setAnswer(e.target.value)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          handleSubmit();
-        }
-      }}
-      disabled={isLocked}
-      style={{ font: 'inherit', fontWeight: 600, width: `${Math.max(answer.length, 4)}ch` }}
-      className={cn(
-        'inline-block text-center align-baseline bg-transparent outline-none',
-        'border-b-[3px] px-s-1 caret-[var(--color-accent)] disabled:cursor-default',
-        BLANK_STATE_CLASS[blankState],
-      )}
-    />
-  );
-
   return (
     <div className="flex flex-col gap-s-4">
-      {/* level 1 — grammar point as a quiet eyebrow tag */}
-      {content.context && content.context.length > 0 && (
-        <span className="inline-flex items-center gap-s-2">
-          <span
-            aria-hidden="true"
-            className="inline-block h-[5px] w-[5px] rounded-full bg-[var(--color-accent)]"
-          />
-          <span className="t-micro text-ink-mute">{content.context}</span>
-        </span>
-      )}
-
-      {/* level 2 (hero) — the sentence; the blank is the live input */}
-      <p className="t-display-m">
-        {hasBlank ? (
-          <>
-            {before}
-            {blankInput}
-            {after}
-          </>
-        ) : (
-          content.sentence
-        )}
-      </p>
-
-      {hasBlank && !showOptions && !isLocked && (
-        <p className="t-small text-ink-mute">type straight into the gap</p>
-      )}
-
-      {/* level 3 — meaning gloss, clearly secondary */}
-      {content.glossEn && content.glossEn.length > 0 && (
-        <p className="t-body text-ink-soft">
-          <span className="t-micro text-ink-mute mr-s-2">meaning</span>
-          {content.glossEn}
-        </p>
-      )}
-
-      {/* Non-blank fallback: keep a standalone field for sentences with no gap. */}
-      {!hasBlank && (
-        <Input
-          ref={inputRef}
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-          readOnly={isLocked}
-          disabled={isLocked}
-          className={isLocked ? 'opacity-60' : undefined}
-        />
-      )}
+      <ClozePrompt
+        content={content}
+        answer={answer}
+        onAnswerChange={setAnswer}
+        blankState={blankState}
+        disabled={isLocked}
+        onEnterSubmit={handleSubmit}
+        inputRef={inputRef}
+        showHelper={!showOptions && !isLocked}
+      />
 
       <div className="flex flex-col gap-s-3">
         {showAccentPicker && (
