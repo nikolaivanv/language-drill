@@ -98,6 +98,18 @@ describe("conjugation fluency grading", () => {
   it("rejects a wrong form", () => {
     expect(gradeFluencyAnswer(conj(), "iremos")).toBe(false);
   });
+  it("grades a stacked Turkish nominal form (possessive + ablative)", () => {
+    const c = conj({
+      lemma: "ev",
+      lemmaGloss: "house",
+      featureBundle: "1. çoğul iyelik · çıkma · çoğul",
+      targetForm: "evlerimizden",
+      breakdown: "ev + -ler + -imiz + -den",
+      exampleSentences: ["Evlerimizden çıktık."],
+    });
+    expect(gradeFluencyAnswer(c, "Evlerimizden")).toBe(true);
+    expect(gradeFluencyAnswer(c, "evlerimizdan")).toBe(false); // wrong harmony: -dan vs -den
+  });
 });
 
 describe("eligibility helpers + constants", () => {
