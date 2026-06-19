@@ -9,6 +9,8 @@ import {
 } from '@language-drill/api-client';
 import { useActiveLanguage } from '../../../components/shell';
 import { FluencyRunner, type FluencyExercise } from './_components/fluency-runner';
+import { FluencyDebrief } from './_components/fluency-debrief';
+import type { FluencyItemResult } from './_components/fluency-metrics';
 
 export default function FluencyPage() {
   const { activeLanguage } = useActiveLanguage();
@@ -17,13 +19,13 @@ export default function FluencyPage() {
 
   const session = useFluencySession({ fetchFn });
   const submitAttempt = useSubmitFluencyAttempt({ fetchFn });
-  const [done, setDone] = useState(false);
+  const [results, setResults] = useState<FluencyItemResult[] | null>(null);
 
   // Start a session on mount / language change. `session.mutate` is stable
   // across renders (TanStack Query guarantee), so omitting it from deps is safe.
   const sessionMutate = session.mutate;
   useEffect(() => {
-    setDone(false);
+    setResults(null);
     sessionMutate({ language: activeLanguage });
   }, [activeLanguage, sessionMutate]);
 
@@ -44,12 +46,15 @@ export default function FluencyPage() {
     );
   }
 
-  if (done) {
+  if (results) {
     return (
-      <div className="flex flex-col gap-s-3">
-        <h1 className="t-display-s">nice — that was fast</h1>
-        <p className="t-body text-ink-mute">Your latency trend is on the progress page → fluency tab.</p>
-      </div>
+      <FluencyDebrief
+        results={results}
+        onRestart={() => {
+          setResults(null);
+          sessionMutate({ language: activeLanguage });
+        }}
+      />
     );
   }
 
@@ -61,7 +66,7 @@ export default function FluencyPage() {
       <FluencyRunner
         exercises={exercises}
         onSubmitAttempt={(input) => submitAttempt.mutateAsync(input)}
-        onDone={() => setDone(true)}
+        onDone={(r) => setResults(r)}
       />
     </div>
   );

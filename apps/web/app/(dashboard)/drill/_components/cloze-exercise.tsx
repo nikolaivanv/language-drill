@@ -2,9 +2,11 @@
 
 import * as React from 'react';
 import type { ClozeContent, LearningLanguage } from '@language-drill/shared';
-import { AccentPicker, Button, Choice, Input } from '../../../../components/ui';
-import { splitClozeSentence } from '../../../../lib/drill/cloze-blank';
+import { AccentPicker, Button } from '../../../../components/ui';
+import { cn } from '../../../../lib/cn';
+import { useAnswerDraft } from '../../../../lib/drill/use-answer-draft';
 import { clozeVerdict } from '../../../../lib/drill/verdict-tier';
+import { ClozePrompt, type BlankState } from '../../../../components/drill/cloze-prompt';
 import { useDrillAction } from './drill-action-context';
 import { FeedbackShell } from './feedback-shell';
 import type { SubmissionMeta, SubmissionState } from './types';
@@ -18,6 +20,9 @@ export interface ClozeExerciseProps {
   onSubmit: (answer: string, meta: SubmissionMeta) => void;
   onNext: () => void;
   nextLabel?: string;
+  /** When set, the typed answer is drafted in sessionStorage so it survives a
+   *  full page reload. Omitted in tests/contexts that don't need persistence. */
+  exerciseId?: string;
 }
 
 function isAccentLanguage(lang: string): lang is 'ES' | 'DE' | 'TR' {
@@ -31,13 +36,11 @@ export function ClozeExercise({
   onSubmit,
   onNext,
   nextLabel,
+  exerciseId,
 }: ClozeExerciseProps) {
-  const [mode, setMode] = React.useState<'type' | 'mc'>('type');
+  const [answer, setAnswer, clearDraft] = useAnswerDraft(exerciseId);
   const [usedMc, setUsedMc] = React.useState(false);
-  const [answer, setAnswer] = React.useState('');
-  const [selectedOption, setSelectedOption] = React.useState<string | null>(
-    null,
-  );
+  const [showOptions, setShowOptions] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
 
   React.useEffect(() => {
@@ -49,21 +52,26 @@ export function ClozeExercise({
   const isLocked = submission.kind !== 'idle';
   const showAccentPicker = isAccentLanguage(language);
 
-  function handleToggleMode() {
-    setMode((prev) => {
-      const next = prev === 'type' ? 'mc' : 'type';
-      if (next === 'mc') setUsedMc(true);
-      return next;
-    });
-  }
-
-  const canSubmit =
-    mode === 'type' ? answer.trim().length > 0 : selectedOption !== null;
+  const canSubmit = answer.trim().length > 0;
 
   function handleSubmit() {
-    const value = mode === 'mc' ? (selectedOption ?? '') : answer;
-    if (!value.trim()) return;
-    onSubmit(value, { usedMc });
+    if (!answer.trim() || isLocked) return;
+    onSubmit(answer, { usedMc });
+    clearDraft();
+  }
+
+  // Revealing the option set is itself the scaffold — seeing the candidate
+  // answers lowers the production demand, so we flag usedMc the moment they
+  // open (whether or not a chip is ultimately clicked).
+  function revealOptions() {
+    setShowOptions(true);
+    setUsedMc(true);
+  }
+
+  function pickOption(opt: string) {
+    setAnswer(opt);
+    setUsedMc(true);
+    inputRef.current?.focus();
   }
 
   // On mobile, publish the submit CTA to the sticky action bar instead of
@@ -78,104 +86,72 @@ export function ClozeExercise({
       disabled: !canSubmit || isLocked,
       loading: submission.kind === 'submitting',
     });
-    // handleSubmit closes over mode/answer/selectedOption/usedMc — all listed.
-  }, [
-    active,
-    setPrimaryAction,
-    submission.kind,
-    canSubmit,
-    isLocked,
-    mode,
-    answer,
-    selectedOption,
-    usedMc,
-  ]);
+    // handleSubmit closes over answer/usedMc — both listed.
+  }, [active, setPrimaryAction, submission.kind, canSubmit, isLocked, answer, usedMc]);
 
-  const { before, after, hasBlank } = splitClozeSentence(content.sentence);
+  const blankState: BlankState =
+    submission.kind === 'evaluated'
+      ? submission.result.score >= 0.5
+        ? 'correct'
+        : 'wrong'
+      : answer.trim().length > 0
+        ? 'filled'
+        : 'idle';
 
   return (
     <div className="flex flex-col gap-s-4">
-      {content.context && content.context.length > 0 && (
-        <p className="t-small text-ink-mute">{content.context}</p>
-      )}
+      <ClozePrompt
+        content={content}
+        answer={answer}
+        onAnswerChange={setAnswer}
+        blankState={blankState}
+        disabled={isLocked}
+        onEnterSubmit={handleSubmit}
+        inputRef={inputRef}
+        showHelper={!showOptions && !isLocked}
+      />
 
-      {/* Optional L1 (English) disambiguation gloss — A1–A2 case clozes. Italic
-          to read as a meaning hint, visually distinct from the `context` line. */}
-      {content.glossEn && content.glossEn.length > 0 && (
-        <p className="t-small italic text-ink-mute">{content.glossEn}</p>
-      )}
-
-      <p className="t-display-s">
-        {hasBlank ? (
-          <>
-            {before}
-            <span className="inline-block min-w-[2rem] border-b border-ink mx-1 px-1">
-              ?
-            </span>
-            {after}
-          </>
-        ) : (
-          content.sentence
-        )}
-      </p>
-
-      {hasOptions && (
-        <button
-          type="button"
-          className="t-small underline text-ink-mute hover:text-ink self-start"
-          onClick={handleToggleMode}
-        >
-          {mode === 'type'
-            ? 'show options · reduces progress signal'
-            : 'type it · keeps full progress signal'}
-        </button>
-      )}
-
-      {mode === 'type' ? (
-        <div className="flex flex-col gap-s-3">
-          <Input
-            ref={inputRef}
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            readOnly={isLocked}
+      <div className="flex flex-col gap-s-3">
+        {showAccentPicker && (
+          <AccentPicker
+            language={language}
+            targetRef={inputRef}
             disabled={isLocked}
-            className={isLocked ? 'opacity-60' : undefined}
           />
-          {showAccentPicker && (
-            <AccentPicker
-              language={language}
-              targetRef={inputRef}
-              disabled={isLocked}
-            />
-          )}
-        </div>
-      ) : (
-        <div className="flex flex-wrap gap-s-2 mobile:flex-col">
-          {content.options?.map((opt) => {
-            const pill = (
-              <Choice
-                mode="radio"
-                selected={selectedOption === opt}
-                onSelect={() => setSelectedOption(opt)}
+        )}
+
+        {hasOptions && showOptions && !isLocked && (
+          <div className="flex flex-wrap gap-s-2 mobile:flex-col">
+            {content.options?.map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => pickOption(opt)}
+                className={cn(
+                  'rounded-full border px-s-4 py-s-2 font-mono text-ink transition-colors',
+                  answer === opt
+                    ? 'border-ink bg-paper-2'
+                    : 'border-rule bg-card hover:border-ink',
+                )}
               >
                 {opt}
-              </Choice>
-            );
-            return isLocked ? (
-              <div
-                key={opt}
-                style={{ opacity: 0.6, pointerEvents: 'none' }}
-              >
-                {pill}
-              </div>
-            ) : (
-              <React.Fragment key={opt}>{pill}</React.Fragment>
-            );
-          })}
-        </div>
-      )}
+              </button>
+            ))}
+          </div>
+        )}
 
-      {!active && (
+        {hasOptions && !isLocked && (
+          <button
+            type="button"
+            className="t-small self-start text-ink-mute underline underline-offset-2 hover:text-ink"
+            onClick={() => (showOptions ? setShowOptions(false) : revealOptions())}
+          >
+            {showOptions ? 'hide options' : 'show options · easier'}
+          </button>
+        )}
+      </div>
+
+      {!active && submission.kind !== 'evaluated' && (
         <Button
           variant="accent"
           onClick={handleSubmit}
@@ -189,6 +165,11 @@ export function ClozeExercise({
       {submission.kind === 'evaluated' &&
         (() => {
           const verdict = clozeVerdict(submission.result.score);
+          const alsoAccepted = (content.acceptableAnswers ?? []).filter(
+            (a) =>
+              a.trim().toLowerCase() !==
+              content.correctAnswer.trim().toLowerCase(),
+          );
           return (
             <FeedbackShell
               tier={verdict.tier}
@@ -198,7 +179,18 @@ export function ClozeExercise({
               onNext={onNext}
               nextLabel={nextLabel}
             >
-              <p className="t-body">{submission.result.feedback}</p>
+              <div className="flex flex-col gap-s-4">
+                <div className="flex flex-col gap-s-1">
+                  <p className="t-micro text-ink-mute">correct answer</p>
+                  <p className="t-display-m">{content.correctAnswer}</p>
+                  {alsoAccepted.length > 0 && (
+                    <p className="t-small text-ink-mute">
+                      also accepted: {alsoAccepted.join(', ')}
+                    </p>
+                  )}
+                </div>
+                <p className="t-body">{submission.result.feedback}</p>
+              </div>
             </FeedbackShell>
           );
         })()}

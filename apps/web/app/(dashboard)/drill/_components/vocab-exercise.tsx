@@ -2,8 +2,10 @@
 
 import * as React from 'react';
 import type { LearningLanguage, VocabRecallContent } from '@language-drill/shared';
-import { AccentPicker, Button, Card, Input } from '../../../../components/ui';
+import { AccentPicker, Button, Input } from '../../../../components/ui';
+import { VocabPromptCard } from '../../../../components/drill/vocab-prompt';
 import { parseConfusions } from '../../../../lib/drill/parse-confusions';
+import { useAnswerDraft } from '../../../../lib/drill/use-answer-draft';
 import { vocabVerdict } from '../../../../lib/drill/verdict-tier';
 import { useDrillAction } from './drill-action-context';
 import { FeedbackShell } from './feedback-shell';
@@ -19,6 +21,9 @@ export interface VocabExerciseProps {
   onSubmit: (answer: string, meta: SubmissionMeta) => void;
   onNext: () => void;
   nextLabel?: string;
+  /** When set, the typed answer is drafted in sessionStorage so it survives a
+   *  full page reload. Omitted in tests/contexts that don't need persistence. */
+  exerciseId?: string;
 }
 
 function isAccentLanguage(lang: string): lang is 'ES' | 'DE' | 'TR' {
@@ -32,8 +37,9 @@ export function VocabExercise({
   onSubmit,
   onNext,
   nextLabel,
+  exerciseId,
 }: VocabExerciseProps) {
-  const [answer, setAnswer] = React.useState('');
+  const [answer, setAnswer, clearDraft] = useAnswerDraft(exerciseId);
   const [hintLevel, setHintLevel] = React.useState<0 | 1 | 2 | 3>(0);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
 
@@ -54,6 +60,7 @@ export function VocabExercise({
   function handleSubmit() {
     if (!answer.trim() || isLocked) return;
     onSubmit(answer, { hintLevel });
+    clearDraft();
   }
 
   const canSubmit = answer.trim().length > 0;
@@ -75,9 +82,7 @@ export function VocabExercise({
 
   return (
     <div className="flex flex-col gap-s-4">
-      <Card padding="lg">
-        <p className="t-display-s">{content.prompt}</p>
-      </Card>
+      <VocabPromptCard content={content} />
 
       <div className="flex flex-col gap-s-3">
         <Input
@@ -135,6 +140,9 @@ export function VocabExercise({
                 <p className="t-display-m">{content.expectedWord}</p>
                 {content.exampleSentence && (
                   <p className="t-body-l">{content.exampleSentence}</p>
+                )}
+                {submission.result.feedback && (
+                  <p className="t-body">{submission.result.feedback}</p>
                 )}
                 {confusions.length > 0 && (
                   <div className="flex flex-col gap-s-2">

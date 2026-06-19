@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ExerciseType, type ConjugationContent } from '@language-drill/shared';
-import { ConjugationFeatureBundle } from './conjugation-feature-bundle';
+import { ConjugationFeatureBundle } from '../conjugation-feature-bundle';
 
 const BASE: ConjugationContent = {
   type: ExerciseType.CONJUGATION,

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import {
   ExerciseType,
@@ -50,6 +50,15 @@ function renderEx(overrides: Partial<SentenceConstructionExerciseProps> = {}) {
   };
   return { props, ...render(<SentenceConstructionExercise {...props} />) };
 }
+
+describe('SentenceConstructionExercise — answer draft', () => {
+  beforeEach(() => window.sessionStorage.clear());
+  it('restores a saved draft for its exercise id', () => {
+    window.sessionStorage.setItem('drill:draft:ex-9', 'mi frase');
+    renderEx({ exerciseId: 'ex-9' });
+    expect(screen.getByRole('textbox')).toHaveValue('mi frase');
+  });
+});
 
 describe('SentenceConstructionExercise', () => {
   describe('idle rendering', () => {
@@ -232,6 +241,11 @@ describe('SentenceConstructionExercise', () => {
       expect(
         screen.getByText('Ayer olvidé un libro en la biblioteca.'),
       ).toBeInTheDocument();
+    });
+
+    it("renders the evaluator's feedback prose", () => {
+      renderEx({ submission: evaluatedSubmission });
+      expect(screen.getByText('good sentence')).toBeInTheDocument();
     });
   });
 

@@ -12,6 +12,7 @@ import {
   Card,
   Textarea,
 } from '../../../../components/ui';
+import { useAnswerDraft } from '../../../../lib/drill/use-answer-draft';
 import { translationVerdict } from '../../../../lib/drill/verdict-tier';
 import { lookupGloss } from '../../../../lib/translation/gloss-en';
 import { useDrillAction } from './drill-action-context';
@@ -28,6 +29,9 @@ export interface TranslationExerciseProps {
   onSubmit: (answer: string, meta: SubmissionMeta) => void;
   onNext: () => void;
   nextLabel?: string;
+  /** When set, the typed answer is drafted in sessionStorage so it survives a
+   *  full page reload. Omitted in tests/contexts that don't need persistence. */
+  exerciseId?: string;
 }
 
 function isAccentLanguage(lang: string): lang is 'ES' | 'DE' | 'TR' {
@@ -82,8 +86,9 @@ export function TranslationExercise({
   onSubmit,
   onNext,
   nextLabel,
+  exerciseId,
 }: TranslationExerciseProps) {
-  const [answer, setAnswer] = React.useState('');
+  const [answer, setAnswer, clearDraft] = useAnswerDraft(exerciseId);
   const [hintCount, setHintCount] = React.useState<0 | 1 | 2 | 3>(0);
   const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
 
@@ -113,6 +118,7 @@ export function TranslationExercise({
   function handleSubmit() {
     if (!answer.trim() || isLocked) return;
     onSubmit(answer, { hintCount });
+    clearDraft();
   }
 
   const canSubmit = answer.trim().length > 0;
@@ -134,10 +140,29 @@ export function TranslationExercise({
 
   return (
     <div className="flex flex-col gap-s-4">
-      <p className="t-micro text-ink-mute">EN &rarr; {language}</p>
+      {/* level 1 — direction + topic as a quiet eyebrow tag */}
+      <span className="inline-flex items-center gap-s-2">
+        <span
+          aria-hidden="true"
+          className="inline-block h-[5px] w-[5px] rounded-full bg-[var(--color-accent)]"
+        />
+        <span className="t-micro text-ink-mute">
+          EN &rarr; {language}
+          {content.topicHint && content.topicHint.length > 0
+            ? ` · ${content.topicHint}`
+            : ''}
+        </span>
+      </span>
 
-      <p className="t-display-s">
+      {/* level 2 (hero) — the source sentence */}
+      <p className="t-display-m">
         <GlossedText text={content.sourceText} />
+      </p>
+
+      {/* level 3 — goal gloss, clearly secondary */}
+      <p className="t-body text-ink-soft">
+        <span className="t-micro text-ink-mute mr-s-2">goal</span>
+        translate the meaning, not every word.
       </p>
 
       <div className="flex flex-col gap-s-3">
@@ -212,6 +237,9 @@ export function TranslationExercise({
               nextLabel={nextLabel}
             >
               <div className="flex flex-col gap-s-4">
+                {submission.result.feedback && (
+                  <p className="t-body">{submission.result.feedback}</p>
+                )}
                 {errors.length > 0 && (
                   <ul className="flex flex-col gap-s-3">
                     {errors.map((err, idx) => {

@@ -2,10 +2,11 @@
 
 import * as React from 'react';
 import type { ConjugationContent, LearningLanguage } from '@language-drill/shared';
-import { AccentPicker, Button, Card, Input } from '../../../../components/ui';
+import { AccentPicker, Button, Input } from '../../../../components/ui';
+import { ConjugationPromptCard } from '../../../../components/drill/conjugation-prompt';
+import { useAnswerDraft } from '../../../../lib/drill/use-answer-draft';
 import { conjugationVerdict } from '../../../../lib/drill/verdict-tier';
 import { useDrillAction } from './drill-action-context';
-import { ConjugationFeatureBundle } from './conjugation-feature-bundle';
 import { FeedbackShell } from './feedback-shell';
 import type { SubmissionMeta, SubmissionState } from './types';
 
@@ -18,6 +19,9 @@ export interface ConjugationExerciseProps {
   onSubmit: (answer: string, meta: SubmissionMeta) => void;
   onNext: () => void;
   nextLabel?: string;
+  /** When set, the typed answer is drafted in sessionStorage so it survives a
+   *  full page reload. Omitted in tests/contexts that don't need persistence. */
+  exerciseId?: string;
 }
 
 function isAccentLanguage(lang: string): lang is 'ES' | 'DE' | 'TR' {
@@ -31,8 +35,9 @@ export function ConjugationExercise({
   onSubmit,
   onNext,
   nextLabel,
+  exerciseId,
 }: ConjugationExerciseProps) {
-  const [answer, setAnswer] = React.useState('');
+  const [answer, setAnswer, clearDraft] = useAnswerDraft(exerciseId);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
 
   React.useEffect(() => {
@@ -45,6 +50,7 @@ export function ConjugationExercise({
   function handleSubmit() {
     if (!answer.trim() || isLocked) return;
     onSubmit(answer, {});
+    clearDraft();
   }
 
   const canSubmit = answer.trim().length > 0;
@@ -65,11 +71,7 @@ export function ConjugationExercise({
 
   return (
     <div className="flex flex-col gap-s-4">
-      <Card padding="lg">
-        <p className="t-display-s">{content.lemma}</p>
-        <p className="t-body-l text-ink-mute">{content.lemmaGloss}</p>
-        <ConjugationFeatureBundle content={content} />
-      </Card>
+      <ConjugationPromptCard content={content} />
 
       <div className="flex flex-col gap-s-3">
         <Input
@@ -103,6 +105,10 @@ export function ConjugationExercise({
       {submission.kind === 'evaluated' &&
         (() => {
           const verdict = conjugationVerdict(submission.result.score);
+          const alsoAccepted = (content.acceptableForms ?? []).filter(
+            (f) =>
+              f.trim().toLowerCase() !== content.targetForm.trim().toLowerCase(),
+          );
           return (
             <FeedbackShell
               tier={verdict.tier}
@@ -113,6 +119,14 @@ export function ConjugationExercise({
             >
               <div className="flex flex-col gap-s-4">
                 <p className="t-display-m">{content.targetForm}</p>
+                {alsoAccepted.length > 0 && (
+                  <p className="t-small text-ink-mute">
+                    also accepted: {alsoAccepted.join(', ')}
+                  </p>
+                )}
+                {submission.result.feedback && (
+                  <p className="t-body">{submission.result.feedback}</p>
+                )}
                 <p className="t-body-l text-ink-mute">{content.breakdown}</p>
                 {content.exampleSentences.length > 0 && (
                   <ul className="flex flex-col gap-s-2">

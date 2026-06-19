@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import {
   ExerciseType,
@@ -58,6 +58,15 @@ function renderVocab(overrides: Partial<VocabExerciseProps> = {}) {
   };
   return { props, ...render(<VocabExercise {...props} />) };
 }
+
+describe('VocabExercise — answer draft', () => {
+  beforeEach(() => window.sessionStorage.clear());
+  it('restores a saved draft for its exercise id', () => {
+    window.sessionStorage.setItem('drill:draft:ex-9', 'mi palabra');
+    renderVocab({ exerciseId: 'ex-9' });
+    expect(screen.getByRole('textbox')).toHaveValue('mi palabra');
+  });
+});
 
 describe('VocabExercise', () => {
   describe('idle rendering (Req 5.1)', () => {
@@ -177,6 +186,15 @@ describe('VocabExercise', () => {
       // No <ul> in the FeedbackShell body — the only list comes from the
       // confusions block, which is omitted entirely when empty.
       expect(container.querySelector('ul')).toBeNull();
+    });
+  });
+
+  describe('evaluated state — feedback prose', () => {
+    it("renders the evaluator's feedback even when no confusions parse", () => {
+      renderVocab({
+        submission: evaluatedAt(1.0, { feedback: 'Nice try, keep going.' }),
+      });
+      expect(screen.getByText('Nice try, keep going.')).toBeInTheDocument();
     });
   });
 

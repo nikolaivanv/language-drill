@@ -162,7 +162,15 @@ function PracticePageContent() {
             exerciseCount: DEFAULT_EXERCISE_COUNT,
           };
     createSession.mutate(config, {
-      onSuccess: (data) => dispatch({ type: 'CREATE_SUCCEEDED', session: data }),
+      onSuccess: (data) => {
+        dispatch({ type: 'CREATE_SUCCEEDED', session: data });
+        // Reflect the live session in the URL so a full page reload (e.g.
+        // toggling Chrome device emulation, an accidental refresh) resumes it
+        // via the existing ?resume flow instead of dropping back to the hub.
+        // `resumeId`/`startIntent` are read once at mount, so this replace does
+        // not disturb the current session — it only matters on the next load.
+        router.replace(`/drill?resume=${data.id}`, { scroll: false });
+      },
       onError: (err) => dispatch({ type: 'CREATE_FAILED', error: err as Error }),
     });
   }, [initialized, startIntent, state.kind, activeLanguage, difficulty, createSession]);

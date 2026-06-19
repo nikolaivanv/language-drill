@@ -265,11 +265,15 @@ describe('ReviewItemCard — cloze correct body', () => {
     expect(struckFills.length).toBe(0);
   });
 
-  it('shows "why it works" label instead of "corrected"', () => {
+  it('omits the second cell on a correct answer (no empty "corrected"/"why it works" box)', () => {
     render(<ReviewItemCard index={0} item={correctClozeItem()} />);
     fireEvent.click(screen.getByRole('button')); // expand
-    expect(screen.getByText('why it works')).toBeDefined();
     expect(screen.queryByText('corrected')).toBeNull();
+    expect(screen.queryByText('why it works')).toBeNull();
+    // The explanation still appears as the evaluator's feedback prose below.
+    expect(
+      screen.getByText('Past hypothetical takes imperfect subjunctive.'),
+    ).toBeInTheDocument();
   });
 });
 
@@ -602,13 +606,60 @@ describe('ReviewItemCard — sentence construction body', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Conjugation body — target form + acceptable variants
+// ---------------------------------------------------------------------------
+
+function conjugationItem(acceptableForms?: string[]): DebriefItem {
+  return {
+    exerciseId: '55555555-5555-4555-8555-aaaaaaaaaaaa',
+    submissionId: '66666666-6666-4666-8666-aaaaaaaaaaaa',
+    type: ExerciseType.CONJUGATION,
+    grammarPointKey: null,
+    contentJson: {
+      type: ExerciseType.CONJUGATION,
+      instructions: 'Write the correct form.',
+      lemma: 'ir',
+      lemmaGloss: 'to go',
+      featureBundle: 'condicional · 1ª persona del plural',
+      targetForm: 'iríamos',
+      breakdown: 'ir → iría- + -mos',
+      exampleSentences: ['Iríamos al cine.'],
+      ...(acceptableForms ? { acceptableForms } : {}),
+    },
+    status: 'incorrect',
+    userAnswer: 'iría',
+    score: 0,
+    evaluation: sampleEvaluation,
+  };
+}
+
+describe('ReviewItemCard — conjugation body', () => {
+  it('lists acceptable variants (excluding the target form) when present', () => {
+    render(
+      <ReviewItemCard
+        index={0}
+        item={conjugationItem(['iríamos', 'iriamos'])}
+      />,
+    );
+    expect(screen.getByText(/also accepted:/i)).toHaveTextContent(
+      'also accepted: iriamos',
+    );
+  });
+
+  it('omits the also-accepted line when there are no distinct variants', () => {
+    render(<ReviewItemCard index={0} item={conjugationItem(['iríamos'])} />);
+    expect(screen.queryByText(/also accepted:/i)).not.toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Conjugation body — inline structured feature bundle (Task 6)
 // ---------------------------------------------------------------------------
 
-function conjugationItem(overrides: Partial<DebriefItem> = {}): DebriefItem {
+function structuredConjugationItem(overrides: Partial<DebriefItem> = {}): DebriefItem {
   return {
     exerciseId: '55555555-5555-4555-8555-555555555555',
-    submissionId: '55555555-5555-4555-8555-aaaaaaaaaaaa',
+    submissionId: '55555555-5555-4555-8555-bbbbbbbbbbbb',
     type: ExerciseType.CONJUGATION,
     grammarPointKey: 'tr-b1-past-simple',
     contentJson: {
@@ -639,7 +690,7 @@ function conjugationItem(overrides: Partial<DebriefItem> = {}): DebriefItem {
 
 describe('ReviewItemCard — conjugation body (inline feature bundle)', () => {
   it('renders the inline glossed string with pronoun and features', () => {
-    render(<ReviewItemCard index={0} item={conjugationItem()} />);
+    render(<ReviewItemCard index={0} item={structuredConjugationItem()} />);
     // The ConjugationFeatureBundle inline variant renders: "o (he / she / it) · geçmiş zaman (past) · …"
     expect(
       screen.getByText(/o \(he \/ she \/ it\) · geçmiş zaman \(past\)/),

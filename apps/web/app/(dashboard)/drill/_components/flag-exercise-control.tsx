@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useFlagExercise } from '@language-drill/api-client';
 import type { AuthenticatedFetch } from '@language-drill/api-client';
-import { Button } from '../../../../components/ui';
+import { Button, Textarea } from '../../../../components/ui';
 
 const CATEGORIES: { value: 'wrong_answer' | 'misleading_explanation' | 'confusing_prompt' | 'other'; label: string }[] = [
   { value: 'wrong_answer', label: 'The accepted answer is wrong' },
@@ -62,8 +62,8 @@ export function FlagExerciseControl({ exerciseId, submissionId, fetchFn }: FlagE
       </fieldset>
       <label className="t-small mt-s-3 block">
         Note (optional)
-        <textarea
-          className="mt-s-1 w-full rounded-md bg-paper-1 p-s-2 t-small"
+        <Textarea
+          className="mt-s-1 t-small"
           rows={2}
           maxLength={1000}
           value={note}

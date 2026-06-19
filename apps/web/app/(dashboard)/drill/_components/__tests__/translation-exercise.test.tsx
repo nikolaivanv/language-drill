@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import {
   ExerciseType,
@@ -54,6 +54,15 @@ function renderTranslation(overrides: Partial<TranslationExerciseProps> = {}) {
   return { props, ...render(<TranslationExercise {...props} />) };
 }
 
+describe('TranslationExercise — answer draft', () => {
+  beforeEach(() => window.sessionStorage.clear());
+  it('restores a saved draft for its exercise id', () => {
+    window.sessionStorage.setItem('drill:draft:ex-9', 'mi borrador');
+    renderTranslation({ exerciseId: 'ex-9' });
+    expect(screen.getByRole('textbox')).toHaveValue('mi borrador');
+  });
+});
+
 describe('TranslationExercise', () => {
   describe('idle rendering', () => {
     it('renders the eyebrow with EN -> {language} for ES', () => {
@@ -63,16 +72,30 @@ describe('TranslationExercise', () => {
       expect(screen.getByText(/EN\s*→\s*ES/)).toBeInTheDocument();
     });
 
-    it('renders the source text content', () => {
+    it('renders the source text as the hero line', () => {
       const { container } = renderTranslation();
       // GlossedText splits on whitespace and emits a mix of plain text and
       // <span class="gloss"> elements; check the visible aggregate text on
-      // the source paragraph.
-      const sourceParagraph = container.querySelector('p.t-display-s');
+      // the source paragraph, now promoted to the hero display scale.
+      const sourceParagraph = container.querySelector('p.t-display-m');
       expect(sourceParagraph).not.toBeNull();
       expect(sourceParagraph?.textContent).toContain('I can');
       expect(sourceParagraph?.textContent).toContain('barely');
       expect(sourceParagraph?.textContent).toContain('afford');
+    });
+
+    it('appends the topic to the direction eyebrow when topicHint is present', () => {
+      renderTranslation({
+        content: { ...baseContent, topicHint: 'Numbers and ordinals' },
+      });
+      expect(screen.getByText(/Numbers and ordinals/)).toBeInTheDocument();
+      expect(screen.getByText(/EN\s*→\s*ES/)).toBeInTheDocument();
+    });
+
+    it('renders a labelled goal gloss', () => {
+      renderTranslation();
+      expect(screen.getByText('goal')).toBeInTheDocument();
+      expect(screen.getByText(/translate the meaning/i)).toBeInTheDocument();
     });
 
     it('renders the source token "barely" inside a .gloss span (gloss path active for fixture)', () => {
@@ -207,6 +230,11 @@ describe('TranslationExercise', () => {
       expect(
         screen.getByText('Apenas puedo permitírmelo ahora mismo.'),
       ).toBeInTheDocument();
+    });
+
+    it("renders the evaluator's feedback prose", () => {
+      renderTranslation({ submission: evaluatedSubmission });
+      expect(screen.getByText('small issues only')).toBeInTheDocument();
     });
   });
 
