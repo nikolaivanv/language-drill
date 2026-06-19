@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import type { Language, CefrLevel, ExerciseType } from '@language-drill/shared';
 import {
   ExerciseResponseSchema,
@@ -63,8 +63,6 @@ export type UseSubmitAnswerOptions = {
 };
 
 export function useSubmitAnswer({ fetchFn }: UseSubmitAnswerOptions) {
-  const queryClient = useQueryClient();
-
   return useMutation<SubmitResultResponse, Error, SubmitAnswerParams>({
     mutationFn: async ({ exerciseId, answer, sessionId }) => {
       const body: { answer: string; sessionId?: string } = { answer };
@@ -76,11 +74,13 @@ export function useSubmitAnswer({ fetchFn }: UseSubmitAnswerOptions) {
       const json: unknown = await response.json();
       return parseSubmitResult(json);
     },
-    onSuccess: () => {
-      // Invalidate exercise queries so next fetch gets a fresh exercise.
-      // No-op for session-driven flows (page reads from manifest, not the cache);
-      // kept for backward compatibility with single-exercise callers (mobile).
-      queryClient.invalidateQueries({ queryKey: ['exercise'] });
-    },
+    // Deliberately NO query invalidation here. The single-exercise pages
+    // (conjugation warm-up) render the fetched task live, so invalidating
+    // ['exercise'] on submit would override `staleTime: Infinity` and refetch a
+    // fresh random exercise the instant feedback appears — swapping the prompt
+    // out from under the user's just-graded answer. Advancing to the next
+    // exercise is an explicit caller action (`refetch()` on "next"), never a
+    // submit side effect. Session-driven flows read from the manifest, not this
+    // query, so they are unaffected either way.
   });
 }
