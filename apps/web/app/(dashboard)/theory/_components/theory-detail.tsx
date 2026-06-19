@@ -1,16 +1,23 @@
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { LearningLanguage } from '@language-drill/shared';
 import type { AuthenticatedFetch } from '@language-drill/api-client';
 import { useTheoryTopic } from '../../../../lib/hooks/use-theory-topic';
+import { useTheoryTopics } from '../../../../lib/hooks/use-theory-topics';
 import { useScrollSpy } from '../../../../lib/hooks/use-scroll-spy';
+import { useIsMobile } from '../../../../lib/responsive';
 import { Chip } from '../../../../components/ui/chip';
 import { TheoryToc } from '../../../../components/theory/theory-toc';
 import { TheorySections } from '../../../../components/theory/theory-sections';
 import { TheoryEmpty } from '../../../../components/theory/theory-empty';
+import { TheoryTitleSwitch } from '../../../../components/theory/theory-title-switch';
+import {
+  TheoryBrowseAllButton,
+  TopicSwitcherSheet,
+} from '../../../../components/theory/topic-switcher-sheet';
 
 type TheoryDetailProps = {
   topicId: string;
@@ -34,12 +41,17 @@ type TheoryDetailProps = {
 export function TheoryDetail({ topicId, language, fetchFn }: TheoryDetailProps) {
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [switcherOpen, setSwitcherOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const { topic, isLoading, isError } = useTheoryTopic({
     language,
     topicId,
     fetchFn,
   });
+  // Count for the "browse all topics" affordance (shares the react-query cache
+  // with the switcher sheet, so no extra fetch).
+  const { topics: allTopics } = useTheoryTopics({ language, fetchFn });
 
   const sectionIds = topic ? topic.sections.map((s) => s.id) : [];
   // Hook called unconditionally (empty ids until the topic loads).
@@ -56,6 +68,7 @@ export function TheoryDetail({ topicId, language, fetchFn }: TheoryDetailProps) 
 
   const goToTopic = useCallback(
     (nextTopicId: string) => {
+      setSwitcherOpen(false);
       router.push(`/theory/${nextTopicId}`);
     },
     [router],
@@ -76,10 +89,20 @@ export function TheoryDetail({ topicId, language, fetchFn }: TheoryDetailProps) 
           theory · reference
         </div>
         <div className="theory-detail-title-row" style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 4 }}>
-          <h1 className="t-display-l" style={{ margin: 0 }}>
-            {topic ? topic.title : 'theory'}
-          </h1>
-          {topic && <Chip>{topic.cefr}</Chip>}
+          {topic && isMobile ? (
+            <TheoryTitleSwitch
+              title={topic.title}
+              cefr={topic.cefr}
+              onOpen={() => setSwitcherOpen(true)}
+            />
+          ) : (
+            <>
+              <h1 className="t-display-l" style={{ margin: 0 }}>
+                {topic ? topic.title : 'theory'}
+              </h1>
+              {topic && <Chip>{topic.cefr}</Chip>}
+            </>
+          )}
         </div>
         {topic && (
           <div className="t-small" style={{ marginTop: 4 }}>
@@ -104,6 +127,12 @@ export function TheoryDetail({ topicId, language, fetchFn }: TheoryDetailProps) 
               language={language}
               onSwitchTopic={goToTopic}
             />
+            {isMobile && (
+              <TheoryBrowseAllButton
+                count={allTopics.length}
+                onClick={() => setSwitcherOpen(true)}
+              />
+            )}
             <div style={{ height: 40 }} aria-hidden="true" />
           </div>
         </div>
@@ -122,6 +151,16 @@ export function TheoryDetail({ topicId, language, fetchFn }: TheoryDetailProps) 
           attemptedTopicId={topicId}
           language={language}
           onSwitchTopic={goToTopic}
+          fetchFn={fetchFn}
+        />
+      )}
+
+      {topic && switcherOpen && (
+        <TopicSwitcherSheet
+          language={language}
+          currentTopicId={topic.id}
+          onPick={goToTopic}
+          onClose={() => setSwitcherOpen(false)}
           fetchFn={fetchFn}
         />
       )}

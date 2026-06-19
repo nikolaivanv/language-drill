@@ -6,6 +6,14 @@ import { Language } from '@language-drill/shared';
 import { TheoryPanel } from '../theory-panel';
 import { mockIntersectionObserverInstances } from '../../../vitest.setup';
 
+// The panel branches on `useIsMobile()` for the title-switcher. Default to
+// desktop so the existing sidebar-based assertions hold; the mobile suite
+// flips it on.
+const mockIsMobile = vi.fn(() => false);
+vi.mock('../../../lib/responsive', () => ({
+  useIsMobile: () => mockIsMobile(),
+}));
+
 // TheoryPanel consumes `useTheoryTopic` (TanStack Query) — provider required
 // in scope. Tests omit `fetchFn`, so the hook degrades to static-only and
 // `useQuery` stays `enabled: false`.
@@ -18,6 +26,7 @@ function Wrapper({ children }: { children: ReactNode }) {
 
 beforeEach(() => {
   mockIntersectionObserverInstances.length = 0;
+  mockIsMobile.mockReturnValue(false);
   document.body.style.overflow = '';
   document.documentElement.style.overflow = '';
 });
@@ -189,5 +198,101 @@ describe('TheoryPanel', () => {
     expect(
       screen.getByText(/coming soon/i),
     ).toBeInTheDocument();
+  });
+
+  describe('mobile (≤760px)', () => {
+    beforeEach(() => {
+      mockIsMobile.mockReturnValue(true);
+    });
+
+    it('renders the title as a topic-switcher control (no second ribbon)', () => {
+      render(
+        <TheoryPanel
+          topicId="subjunctive"
+          language={Language.ES}
+          triggerEl={null}
+          onClose={vi.fn()}
+        />,
+        { wrapper: Wrapper },
+      );
+      // The title is now a button that opens the switcher…
+      expect(
+        screen.getByRole('button', { name: /switch topic.*el subjuntivo/i }),
+      ).toBeInTheDocument();
+      // …and the old in-TOC "other topics" ribbon button is gone.
+      expect(
+        screen.queryByRole('button', { name: /pretérito vs\. imperfecto/i }),
+      ).toBeNull();
+    });
+
+    it('opens the switcher sheet when the title is tapped', () => {
+      render(
+        <TheoryPanel
+          topicId="subjunctive"
+          language={Language.ES}
+          triggerEl={null}
+          onClose={vi.fn()}
+        />,
+        { wrapper: Wrapper },
+      );
+      expect(
+        screen.queryByRole('searchbox', { name: /search all topics/i }),
+      ).toBeNull();
+      fireEvent.click(
+        screen.getByRole('button', { name: /switch topic.*el subjuntivo/i }),
+      );
+      expect(
+        screen.getByRole('searchbox', { name: /search all topics/i }),
+      ).toBeInTheDocument();
+    });
+
+    it('swaps the topic when a sheet row is picked', () => {
+      render(
+        <TheoryPanel
+          topicId="subjunctive"
+          language={Language.ES}
+          triggerEl={null}
+          onClose={vi.fn()}
+        />,
+        { wrapper: Wrapper },
+      );
+      fireEvent.click(
+        screen.getByRole('button', { name: /switch topic.*el subjuntivo/i }),
+      );
+      fireEvent.click(
+        screen.getByRole('button', { name: /pretérito vs\. imperfecto/i }),
+      );
+      // Sheet closed and the title now reflects the new topic.
+      expect(
+        screen.queryByRole('searchbox', { name: /search all topics/i }),
+      ).toBeNull();
+      expect(
+        screen.getByRole('button', {
+          name: /switch topic.*pretérito vs\. imperfecto/i,
+        }),
+      ).toBeInTheDocument();
+    });
+
+    it('Escape closes the switcher sheet without closing the panel', () => {
+      const onClose = vi.fn();
+      render(
+        <TheoryPanel
+          topicId="subjunctive"
+          language={Language.ES}
+          triggerEl={null}
+          onClose={onClose}
+        />,
+        { wrapper: Wrapper },
+      );
+      fireEvent.click(
+        screen.getByRole('button', { name: /switch topic.*el subjuntivo/i }),
+      );
+      fireEvent.keyDown(document, { key: 'Escape' });
+      // Sheet gone, panel still open (its onClose not called).
+      expect(
+        screen.queryByRole('searchbox', { name: /search all topics/i }),
+      ).toBeNull();
+      expect(onClose).not.toHaveBeenCalled();
+    });
   });
 });
