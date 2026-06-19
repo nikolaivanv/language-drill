@@ -2,7 +2,8 @@
 
 import * as React from 'react';
 import type { ConjugationContent, LearningLanguage } from '@language-drill/shared';
-import { AccentPicker, Button, Card, Input } from '../../../../components/ui';
+import { AccentPicker, Button, Input } from '../../../../components/ui';
+import { ConjugationPromptCard } from '../../../../components/drill/conjugation-prompt';
 import { conjugationVerdict } from '../../../../lib/drill/verdict-tier';
 import { useDrillAction } from './drill-action-context';
 import { FeedbackShell } from './feedback-shell';
@@ -64,11 +65,7 @@ export function ConjugationExercise({
 
   return (
     <div className="flex flex-col gap-s-4">
-      <Card padding="lg">
-        <p className="t-display-s">{content.lemma}</p>
-        <p className="t-body-l text-ink-mute">{content.lemmaGloss}</p>
-        <p className="t-body text-ink-mute mt-s-2">{content.featureBundle}</p>
-      </Card>
+      <ConjugationPromptCard content={content} />
 
       <div className="flex flex-col gap-s-3">
         <Input
