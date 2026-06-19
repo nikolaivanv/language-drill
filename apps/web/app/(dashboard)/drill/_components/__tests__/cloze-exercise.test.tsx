@@ -41,6 +41,20 @@ const evaluatedSubmission: SubmissionState = {
   meta: {},
 };
 
+const wrongSubmission: SubmissionState = {
+  kind: 'evaluated',
+  result: {
+    score: 0,
+    grammarAccuracy: 0,
+    vocabularyRange: 'A2',
+    taskAchievement: 0,
+    feedback: 'not quite',
+    errors: [],
+    estimatedCefrEvidence: 'A2',
+  },
+  meta: {},
+};
+
 function renderCloze(overrides: Partial<ClozeExerciseProps> = {}) {
   const props: ClozeExerciseProps = {
     content: baseContent,
@@ -53,9 +67,14 @@ function renderCloze(overrides: Partial<ClozeExerciseProps> = {}) {
   return { props, ...render(<ClozeExercise {...props} />) };
 }
 
+// The typeable blank is the sole text input in the idle prompt; query it by role.
+function blank(): HTMLInputElement {
+  return screen.getByRole('textbox') as HTMLInputElement;
+}
+
 describe('ClozeExercise', () => {
-  describe('rendering', () => {
-    it('renders the optional context line when provided', () => {
+  describe('prompt hierarchy', () => {
+    it('renders the grammar point (context) as an eyebrow tag', () => {
       renderCloze({
         content: { ...baseContent, context: 'Present-tense regular verbs' },
       });
@@ -64,7 +83,7 @@ describe('ClozeExercise', () => {
       ).toBeInTheDocument();
     });
 
-    it('does not render a context line when context is undefined', () => {
+    it('omits the grammar eyebrow when context is absent', () => {
       const { context: _ignored, ...noContext } = baseContent;
       void _ignored;
       renderCloze({ content: noContext });
@@ -73,115 +92,46 @@ describe('ClozeExercise', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('renders the optional L1 gloss when glossEn is provided (R2.4)', () => {
+    it('renders the meaning gloss with a labelled eyebrow', () => {
       renderCloze({
-        content: { ...baseContent, glossEn: 'My mother is drinking the coffee.' },
+        content: { ...baseContent, glossEn: 'I eat bread every day.' },
       });
-      expect(
-        screen.getByText('My mother is drinking the coffee.'),
-      ).toBeInTheDocument();
+      expect(screen.getByText('meaning')).toBeInTheDocument();
+      expect(screen.getByText('I eat bread every day.')).toBeInTheDocument();
     });
 
-    it('does not render a gloss line when glossEn is undefined', () => {
-      // baseContent carries no glossEn, so the default render must omit it.
+    it('omits the meaning gloss and its label when glossEn is absent', () => {
       renderCloze();
-      expect(
-        screen.queryByText('My mother is drinking the coffee.'),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByText('meaning')).not.toBeInTheDocument();
     });
 
-    it('renders the sentence with the blank as a span containing ?', () => {
+    it('renders the sentence text around the blank', () => {
       const { container } = renderCloze();
-      // The blank span is rendered inline; query by text content "?"
-      const spans = container.querySelectorAll('span');
-      const blankSpan = Array.from(spans).find((s) => s.textContent === '?');
-      expect(blankSpan).toBeDefined();
-    });
-
-    it('renders the sentence as-is when there is no ___ marker', () => {
-      renderCloze({
-        content: { ...baseContent, sentence: 'Hola amigo.' },
-      });
-      expect(screen.getByText('Hola amigo.')).toBeInTheDocument();
+      expect(container.textContent).toContain('Yo');
+      expect(container.textContent).toContain('pan todos los días.');
     });
   });
 
-  describe('MC toggle visibility', () => {
-    it('shows the toggle when options.length >= 2 with reduces progress signal text', () => {
+  describe('typeable blank', () => {
+    it('renders an inline text input as the blank', () => {
       renderCloze();
-      expect(
-        screen.getByText(/reduces progress signal/i),
-      ).toBeInTheDocument();
+      expect(blank()).toBeInTheDocument();
     });
 
-    it('hides the toggle when options is undefined', () => {
-      const { options: _ignored, ...noOptions } = baseContent;
-      void _ignored;
-      renderCloze({ content: noOptions });
-      expect(
-        screen.queryByText(/reduces progress signal/i),
-      ).not.toBeInTheDocument();
-    });
-
-    it('hides the toggle when options is an empty array', () => {
-      renderCloze({ content: { ...baseContent, options: [] } });
-      expect(
-        screen.queryByText(/reduces progress signal/i),
-      ).not.toBeInTheDocument();
-    });
-
-    it('hides the toggle when options.length === 1', () => {
-      renderCloze({ content: { ...baseContent, options: ['como'] } });
-      expect(
-        screen.queryByText(/reduces progress signal/i),
-      ).not.toBeInTheDocument();
-    });
-  });
-
-  describe('mode toggle behavior', () => {
-    it('switches to MC mode — input hidden, option pills visible', () => {
-      const { container } = renderCloze();
-      fireEvent.click(screen.getByText(/reduces progress signal/i));
-      // Input should no longer be present
-      expect(container.querySelector('input')).toBeNull();
-      // Each option becomes a radio role
-      const radios = screen.getAllByRole('radio');
-      expect(radios).toHaveLength(3);
-    });
-
-    it('stages the clicked option (aria-checked=true)', () => {
+    it('autofocuses the blank on mount', () => {
       renderCloze();
-      fireEvent.click(screen.getByText(/reduces progress signal/i));
-      const radios = screen.getAllByRole('radio');
-      // Click the first one
-      fireEvent.click(radios[0]);
-      expect(radios[0]).toHaveAttribute('aria-checked', 'true');
+      expect(blank()).toHaveFocus();
     });
 
-    it('toggles back to type mode but keeps usedMc sticky (verified via test 14)', () => {
-      // Toggle to MC and back
-      const { container } = renderCloze();
-      fireEvent.click(screen.getByText(/reduces progress signal/i));
-      // Now in MC mode — toggle text changes
-      fireEvent.click(screen.getByText(/keeps full progress signal/i));
-      // Input is back
-      expect(container.querySelector('input')).not.toBeNull();
-      // sticky behavior verified in test 14 below
-    });
-  });
-
-  describe('submission', () => {
-    it('disables submit when answer is empty in type mode', () => {
+    it('disables submit until the blank has input', () => {
       renderCloze();
-      const submitBtn = screen.getByRole('button', { name: /submit/i });
-      expect(submitBtn).toBeDisabled();
+      expect(screen.getByRole('button', { name: /submit/i })).toBeDisabled();
     });
 
-    it('calls onSubmit with answer and { usedMc: false } after typing', () => {
+    it('submits the typed value with usedMc:false', () => {
       const onSubmit = vi.fn();
-      const { container } = renderCloze({ onSubmit });
-      const input = container.querySelector('input') as HTMLInputElement;
-      fireEvent.change(input, { target: { value: 'como' } });
+      renderCloze({ onSubmit });
+      fireEvent.change(blank(), { target: { value: 'como' } });
       const submitBtn = screen.getByRole('button', { name: /submit/i });
       expect(submitBtn).not.toBeDisabled();
       fireEvent.click(submitBtn);
@@ -192,55 +142,101 @@ describe('ClozeExercise', () => {
       );
     });
 
-    it('passes usedMc: true after MC selection — sticky even after toggling back', () => {
+    it('submits when Enter is pressed in the blank', () => {
       const onSubmit = vi.fn();
-      const { container } = renderCloze({ onSubmit });
-      // Toggle to MC
-      fireEvent.click(screen.getByText(/reduces progress signal/i));
-      // Pick an option
-      const radios = screen.getAllByRole('radio');
-      fireEvent.click(radios[1]);
-      // Submit from MC — should be usedMc:true with the selected option
+      renderCloze({ onSubmit });
+      const el = blank();
+      fireEvent.change(el, { target: { value: 'como' } });
+      fireEvent.keyDown(el, { key: 'Enter' });
+      expect(onSubmit).toHaveBeenCalledWith(
+        'como',
+        expect.objectContaining({ usedMc: false }),
+      );
+    });
+
+    it('does not submit on Enter when the blank is empty', () => {
+      const onSubmit = vi.fn();
+      renderCloze({ onSubmit });
+      fireEvent.keyDown(blank(), { key: 'Enter' });
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it('inserts an accent character into the blank', () => {
+      renderCloze({ language: Language.ES });
+      const el = blank();
+      fireEvent.change(el, { target: { value: 'com' } });
+      fireEvent.click(
+        screen.getByRole('button', { name: /insert á/i }),
+      );
+      expect(el.value).toContain('á');
+    });
+  });
+
+  describe('options scaffold', () => {
+    it('shows the options toggle when options.length >= 2', () => {
+      renderCloze();
+      expect(screen.getByText(/show options/i)).toBeInTheDocument();
+    });
+
+    it('hides the toggle when options is undefined', () => {
+      const { options: _ignored, ...noOptions } = baseContent;
+      void _ignored;
+      renderCloze({ content: noOptions });
+      expect(screen.queryByText(/show options/i)).not.toBeInTheDocument();
+    });
+
+    it('hides the toggle when options is an empty array', () => {
+      renderCloze({ content: { ...baseContent, options: [] } });
+      expect(screen.queryByText(/show options/i)).not.toBeInTheDocument();
+    });
+
+    it('hides the toggle when options.length === 1', () => {
+      renderCloze({ content: { ...baseContent, options: ['como'] } });
+      expect(screen.queryByText(/show options/i)).not.toBeInTheDocument();
+    });
+
+    it('reveals option chips when "show options" is clicked', () => {
+      renderCloze();
+      // No option chips before reveal.
+      expect(
+        screen.queryByRole('button', { name: 'comes' }),
+      ).not.toBeInTheDocument();
+      fireEvent.click(screen.getByText(/show options/i));
+      expect(
+        screen.getByRole('button', { name: 'comes' }),
+      ).toBeInTheDocument();
+    });
+
+    it('fills the blank with the chosen chip and marks usedMc', () => {
+      const onSubmit = vi.fn();
+      renderCloze({ onSubmit });
+      fireEvent.click(screen.getByText(/show options/i));
+      fireEvent.click(screen.getByRole('button', { name: 'comes' }));
+      // The blank now holds the chosen word.
+      expect(blank().value).toBe('comes');
       fireEvent.click(screen.getByRole('button', { name: /submit/i }));
       expect(onSubmit).toHaveBeenCalledWith(
         'comes',
         expect.objectContaining({ usedMc: true }),
       );
+    });
 
-      // Now flip back to type mode and type a different answer; usedMc must stay true
-      onSubmit.mockClear();
-      // We need a fresh component because submitting locked further interactions only
-      // when submission state changes — but our submission stayed `idle`, so we can
-      // toggle back. The toggle text is now "keeps full progress signal".
-      fireEvent.click(screen.getByText(/keeps full progress signal/i));
-      const input = container.querySelector('input') as HTMLInputElement;
-      fireEvent.change(input, { target: { value: 'como' } });
+    it('keeps usedMc true if the learner reveals options then types their own answer', () => {
+      const onSubmit = vi.fn();
+      renderCloze({ onSubmit });
+      fireEvent.click(screen.getByText(/show options/i));
+      fireEvent.change(blank(), { target: { value: 'como' } });
       fireEvent.click(screen.getByRole('button', { name: /submit/i }));
       expect(onSubmit).toHaveBeenCalledWith(
         'como',
         expect.objectContaining({ usedMc: true }),
       );
     });
-
-    it('disables submit and shows loading state when submission.kind === "submitting"', () => {
-      const submitting: SubmissionState = { kind: 'submitting' };
-      const { container } = renderCloze({ submission: submitting });
-      // The button text is replaced by a spinner when loading. Locate it via aria-busy.
-      const buttons = container.querySelectorAll('button');
-      const submitBtn = Array.from(buttons).find(
-        (b) => b.getAttribute('aria-busy') === 'true',
-      ) as HTMLButtonElement | undefined;
-      expect(submitBtn).toBeDefined();
-      expect(submitBtn).toBeDisabled();
-      // Spinner is rendered (svg with animate-spin class)
-      expect(submitBtn?.querySelector('svg.animate-spin')).not.toBeNull();
-    });
   });
 
   describe('evaluated state', () => {
     it('renders the FeedbackShell with verdict label, score chip, and feedback body', () => {
       renderCloze({ submission: evaluatedSubmission });
-      // clozeVerdict(0.94) -> { tier: 'yellow', label: 'close' }
       expect(screen.getByText('close')).toBeInTheDocument();
       expect(screen.getByText('94%')).toBeInTheDocument();
       expect(screen.getByText('almost there')).toBeInTheDocument();
@@ -274,31 +270,43 @@ describe('ClozeExercise', () => {
       expect(screen.queryByText(/also accepted:/i)).not.toBeInTheDocument();
     });
 
-    it('renders the scaffolded chip when the user used MC mode before evaluation', () => {
-      // Render idle, toggle to MC, then rerender with the same component instance
-      // transitioning to evaluated. Local `usedMc` state persists across rerenders.
+    it('renders the scaffolded chip when the learner revealed options before evaluation', () => {
       const { rerender, props } = renderCloze();
-      fireEvent.click(screen.getByText(/reduces progress signal/i));
-      // Now switch to evaluated — usedMc should still be true
+      fireEvent.click(screen.getByText(/show options/i));
       rerender(<ClozeExercise {...props} submission={evaluatedSubmission} />);
       expect(screen.getByText('scaffolded')).toBeInTheDocument();
     });
 
-    it('renders input as readOnly, disabled, and dimmed when evaluated (Req 6.5)', () => {
-      const { container } = renderCloze({ submission: evaluatedSubmission });
-      const input = container.querySelector('input') as HTMLInputElement;
-      expect(input).toHaveAttribute('readonly');
-      expect(input).toBeDisabled();
-      expect(input).toHaveClass('opacity-60');
+    it('disables the blank once evaluated', () => {
+      renderCloze({ submission: evaluatedSubmission });
+      expect(blank()).toBeDisabled();
     });
 
-    it('disables every accent picker chip when evaluated (Req 7.4)', () => {
+    it('marks the blank correct when the score is high', () => {
+      renderCloze({ submission: evaluatedSubmission });
+      expect(blank()).toHaveAttribute('data-state', 'correct');
+    });
+
+    it('marks the blank wrong when the score is low', () => {
+      renderCloze({ submission: wrongSubmission });
+      expect(blank()).toHaveAttribute('data-state', 'wrong');
+    });
+
+    it('disables every accent picker chip when evaluated', () => {
       renderCloze({ submission: evaluatedSubmission });
       const chips = screen
         .getAllByRole('button')
         .filter((b) => b.getAttribute('aria-label')?.startsWith('insert '));
       expect(chips.length).toBeGreaterThan(0);
       chips.forEach((chip) => expect(chip).toBeDisabled());
+    });
+  });
+
+  describe('non-blank fallback', () => {
+    it('renders a standalone input when the sentence has no ___ marker', () => {
+      renderCloze({ content: { ...baseContent, sentence: 'Hola amigo.' } });
+      expect(screen.getByText('Hola amigo.')).toBeInTheDocument();
+      expect(screen.getByRole('textbox')).toBeInTheDocument();
     });
   });
 
@@ -318,13 +326,6 @@ describe('ClozeExercise', () => {
         ).toBeInTheDocument();
       },
     );
-  });
-
-  describe('language fallback (Req 7.3)', () => {
-    // LearningLanguage is constrained to ES/DE/TR by the type — runtime
-    // fallback can't be tested at the component level without bypassing
-    // types. The `isAccentLanguage` guard exists for forward compatibility.
-    it.skip('falls back gracefully for non-accent languages', () => {});
   });
 
   describe('mobile action publishing', () => {
@@ -357,9 +358,8 @@ describe('ClozeExercise', () => {
     });
 
     it('publishes an enabled submit action once a valid answer is typed', () => {
-      const { onSubmit, getCaptured, container } = renderActive();
-      const input = container.querySelector('input') as HTMLInputElement;
-      fireEvent.change(input, { target: { value: 'como' } });
+      const { onSubmit, getCaptured } = renderActive();
+      fireEvent.change(blank(), { target: { value: 'como' } });
 
       const action = getCaptured();
       expect(action?.label).toBe('submit');
@@ -370,13 +370,6 @@ describe('ClozeExercise', () => {
         'como',
         expect.objectContaining({ usedMc: false }),
       );
-    });
-
-    it('keeps MC options stacked in a single column (mobile:flex-col)', () => {
-      const { container } = renderActive();
-      fireEvent.click(screen.getByText(/reduces progress signal/i));
-      const optionsRow = container.querySelector('.mobile\\:flex-col');
-      expect(optionsRow).not.toBeNull();
     });
   });
 });
