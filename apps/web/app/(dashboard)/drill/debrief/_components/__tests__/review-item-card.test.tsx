@@ -44,6 +44,7 @@ function clozeItem(overrides: Partial<DebriefItem> = {}): DebriefItem {
     submissionId: '99999999-1111-4111-8111-111111111111',
     type: ExerciseType.CLOZE,
     grammarPointKey: null,
+    grammarPointName: null,
     contentJson: {
       type: ExerciseType.CLOZE,
       instructions: 'Fill in the blank',
@@ -89,22 +90,20 @@ describe('ReviewItemCard — header chrome', () => {
     expect(screen.getByText('#5')).toBeDefined();
   });
 
-  it('renders the topic chip when topicHint is present', () => {
-    render(<ReviewItemCard index={0} item={clozeItem()} />);
-    expect(screen.getByText('subjunctive')).toBeDefined();
-  });
-
-  it('omits the topic chip when topicHint is missing', () => {
-    const item = clozeItem({
-      contentJson: {
-        type: ExerciseType.CLOZE,
-        instructions: 'Fill in',
-        sentence: 'a ___ b',
-        correctAnswer: 'foo',
-      },
-    });
-    render(<ReviewItemCard index={0} item={item} />);
-    expect(screen.queryByText('subjunctive')).toBeNull();
+  it('renders the grammar point chip and not the topic', () => {
+    render(
+      <ReviewItemCard
+        index={0}
+        item={clozeItem({
+          grammarPointKey: 'tr-a1-locative',
+          grammarPointName: 'Locative case',
+          contentJson: { topicHint: 'shopping' },
+        })}
+        fetchFn={fetchFn}
+      />,
+    );
+    expect(screen.getByText('Locative case')).toBeInTheDocument();
+    expect(screen.queryByText('shopping')).not.toBeInTheDocument();
   });
 });
 

@@ -43,10 +43,6 @@ export function ReviewItemCard({ index, item, fetchFn }: ReviewItemCardProps) {
   const [expanded, setExpanded] = React.useState(item.status !== 'correct');
 
   const content = item.contentJson as ExerciseContent;
-  const topic =
-    content && typeof content === 'object' && 'topicHint' in content
-      ? content.topicHint
-      : undefined;
 
   return (
     <Card padding="md">
@@ -60,9 +56,10 @@ export function ReviewItemCard({ index, item, fetchFn }: ReviewItemCardProps) {
           <span className="t-mono text-ink-mute" style={{ fontSize: 11 }}>
             #{index + 1}
           </span>
-          {topic !== undefined && topic.length > 0 && (
-            <Chip variant="default">{topic}</Chip>
-          )}
+          {(() => {
+            const grammar = item.grammarPointName ?? item.grammarPointKey;
+            return grammar ? <Chip variant="default">{grammar}</Chip> : null;
+          })()}
           <StatusChip status={item.status} />
         </div>
       </button>
