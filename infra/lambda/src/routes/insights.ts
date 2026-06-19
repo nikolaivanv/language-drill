@@ -12,8 +12,10 @@ const insights = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 insights.use('/insights/*', authMiddleware);
 
+// EN is a source/native language used only as a translation target, not a
+// learning target — exclude it the same way sibling routes in progress.ts do.
 const QuerySchema = z.object({
-  language: z.nativeEnum(Language),
+  language: z.enum([Language.ES, Language.DE, Language.TR]),
 });
 
 const WINDOW_MS = 60 * 86_400_000; // trailing 60 days

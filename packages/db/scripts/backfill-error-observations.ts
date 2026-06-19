@@ -78,7 +78,7 @@ async function main() {
 
   console.log(
     `Scanned ${rows.length} history rows → ${toInsert.length} new observations` +
-      ` (${observed.size} history rows already observed).`,
+      ` (${observed.size} history rows already have observations).`,
   );
 
   if (!apply) {
@@ -91,4 +91,10 @@ async function main() {
   console.log(`Inserted ${toInsert.length} rows.`);
 }
 
-main().then(() => process.exit(0));
+main().then(
+  () => process.exit(0),
+  (err) => {
+    console.error(err);
+    process.exit(1);
+  },
+);

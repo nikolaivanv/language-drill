@@ -82,5 +82,6 @@ describe('backfillRowsFor', () => {
   it('returns [] when response_json has no errors array', () => {
     expect(backfillRowsFor({ ...histRow, responseJson: { userAnswer: 'x' } }, new Set())).toEqual([]);
     expect(backfillRowsFor({ ...histRow, responseJson: null }, new Set())).toEqual([]);
+    expect(backfillRowsFor({ ...histRow, responseJson: { evaluation: { errors: 'oops' } } }, new Set())).toEqual([]);
   });
 });
