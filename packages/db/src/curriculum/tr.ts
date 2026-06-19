@@ -50,7 +50,7 @@ const { A1, A2, B1 } = CefrLevel;
  * 2026-06-19: TR B1 enabled — 10 grammar + 5 vocab + dictation + 3 free-writing
  * (Yedi İklim B1, G&K-grounded). Bump clears low-yield/saturation suppression.
  */
-export const CURRICULUM_VERSION_TR = '2026-06-19';
+export const CURRICULUM_VERSION_TR = '2026-06-19a';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -1291,6 +1291,12 @@ const trCurriculum: readonly GrammarPoint[] = [
   // split: zorunda takes -mAk; gerek/lazım/şart take -mA + possessive.
   {
     key: 'tr-b1-obligation-periphrases',
+    // clozeUnsuitable: obligation periphrases (zorunda/gerek/lazım/şart) require
+    // a nominalization slot (-mAk vs -mA+poss) plus the periphrastic head — a
+    // single whole-word blank cannot constrain which form or which lexeme the
+    // validator should expect → flags `ambiguous` (2026-06-19 run, 54% approval).
+    // Keeps conjugation. See docs/analysis/generation-run-2026-06-19.md.
+    clozeUnsuitable: true,
     conjugationSuitable: true,
     coverageSpec: {
       axes: [
@@ -1325,6 +1331,12 @@ const trCurriculum: readonly GrammarPoint[] = [
   // G&K §8.2.1.1 (allomorphy), §13.2.1 (causative constructions)
   {
     key: 'tr-b1-causative-voice',
+    // clozeUnsuitable: a single whole-word blank conflates the causative
+    // morpheme with free tense/polarity/person the carrier can't constrain →
+    // validator flags `ambiguous` (2026-06-19 run, 12% approval). Keeps
+    // translation + sentence_construction + conjugation. See
+    // docs/analysis/generation-run-2026-06-19.md.
+    clozeUnsuitable: true,
     conjugationSuitable: true,
     sentenceConstructionSuitable: true,
     coverageSpec: {
@@ -1358,6 +1370,11 @@ const trCurriculum: readonly GrammarPoint[] = [
   // G&K §8.2.1.2 (allomorphy), §13.2.2 (passive + impersonal passives)
   {
     key: 'tr-b1-passive-voice',
+    // clozeUnsuitable: passive allomorphy (-Il/-In/-n) + free tense/polarity
+    // means a single blank is under-constrained → validator flags `ambiguous`
+    // (2026-06-19 run, 23% approval). Keeps sentence_construction.
+    // See docs/analysis/generation-run-2026-06-19.md.
+    clozeUnsuitable: true,
     sentenceConstructionSuitable: true,
     kind: 'grammar',
     name: 'Passive -Il / -In / -n',
@@ -1385,6 +1402,11 @@ const trCurriculum: readonly GrammarPoint[] = [
   // kendi §18.1.2.2. Productive "self" usually = kendi + plain verb.
   {
     key: 'tr-b1-reflexive-voice-kendi',
+    // clozeUnsuitable: closed-set -(I)n vs kendi+plain split makes the blank
+    // under-constrained → validator flags `ambiguous` (2026-06-19 run, 38%
+    // approval). Keeps sentence_construction.
+    // See docs/analysis/generation-run-2026-06-19.md.
+    clozeUnsuitable: true,
     sentenceConstructionSuitable: true,
     kind: 'grammar',
     name: 'Reflexive -(I)n & the pronoun "kendi"',
@@ -1412,6 +1434,11 @@ const trCurriculum: readonly GrammarPoint[] = [
   // birbir- §18.1.4. Productive reciprocity = birbiri + plain verb.
   {
     key: 'tr-b1-reciprocal-voice',
+    // clozeUnsuitable: closed-set -(I)ş vs birbiri+plain split makes the blank
+    // under-constrained → validator flags `ambiguous` (2026-06-19 run, 31%
+    // approval). Keeps sentence_construction.
+    // See docs/analysis/generation-run-2026-06-19.md.
+    clozeUnsuitable: true,
     sentenceConstructionSuitable: true,
     kind: 'grammar',
     name: 'Reciprocal -(I)ş & "birbiri"',
