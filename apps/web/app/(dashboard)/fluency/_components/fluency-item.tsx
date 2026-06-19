@@ -43,10 +43,19 @@ export function FluencyItem({
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const locked = verdict !== null;
 
+  // Clear the field for each new item.
   React.useEffect(() => {
     setAnswer('');
-    inputRef.current?.focus();
   }, [content]);
+
+  // Focus the input when a fresh item is ready. Unlike the standard drill (which
+  // remounts per exercise), this component is reused across items, so on advance
+  // it first re-renders with the new content while the OLD verdict still locks
+  // the input — focusing then is a no-op on a disabled field. Depending on
+  // `locked` re-runs the focus once the input re-enables.
+  React.useEffect(() => {
+    if (!locked) inputRef.current?.focus();
+  }, [content, locked]);
 
   const submit = React.useCallback(() => {
     if (answer.trim() && !locked) onSubmit(answer);

@@ -93,3 +93,80 @@ describe('FluencyItem', () => {
     expect(screen.getByRole('button', { name: 'finish' })).toBeInTheDocument();
   });
 });
+
+describe('FluencyItem — autofocus', () => {
+  it('focuses the input when a fresh item is shown', () => {
+    render(
+      <FluencyItem
+        content={cloze}
+        language="TR"
+        elapsedMs={0}
+        verdict={null}
+        onSubmit={noop}
+        onNext={noop}
+        isLast={false}
+      />,
+    );
+    expect(screen.getByRole('textbox', { name: 'fill the blank' })).toHaveFocus();
+  });
+
+  it('focuses the next item once it unlocks, even though the verdict lags by a render', () => {
+    const cloze2 = {
+      ...cloze,
+      sentence: 'Bu film çok ___.',
+      correctAnswer: 'uzun',
+      context: 'sıfat',
+    } as ExerciseContent;
+    const correctVerdict = { correct: true, correctAnswer: 'erken' };
+
+    const { rerender } = render(
+      <FluencyItem
+        content={cloze}
+        language="TR"
+        elapsedMs={0}
+        verdict={null}
+        onSubmit={noop}
+        onNext={noop}
+        isLast={false}
+      />,
+    );
+    // Verdict for item 1.
+    rerender(
+      <FluencyItem
+        content={cloze}
+        language="TR"
+        elapsedMs={1000}
+        verdict={correctVerdict}
+        onSubmit={noop}
+        onNext={noop}
+        isLast={false}
+      />,
+    );
+    // Advance: item 2's content arrives while the old verdict still locks the
+    // input (the runner clears the verdict one render later).
+    rerender(
+      <FluencyItem
+        content={cloze2}
+        language="TR"
+        elapsedMs={1000}
+        verdict={correctVerdict}
+        onSubmit={noop}
+        onNext={noop}
+        isLast={false}
+      />,
+    );
+    // Verdict clears; the input re-enables and should now receive focus.
+    rerender(
+      <FluencyItem
+        content={cloze2}
+        language="TR"
+        elapsedMs={0}
+        verdict={null}
+        onSubmit={noop}
+        onNext={noop}
+        isLast={false}
+      />,
+    );
+    expect(screen.getByRole('textbox', { name: 'fill the blank' })).toHaveFocus();
+  });
+});
