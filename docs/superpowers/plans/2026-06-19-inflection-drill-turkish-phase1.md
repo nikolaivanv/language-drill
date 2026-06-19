@@ -4,7 +4,9 @@
 
 **Goal:** Make the existing `conjugation` exercise generate and grade Turkish nominal morphology — noun cases, the personal copula, possessives, and possessive+case suffix **stacking** — without adding a new `ExerciseType`.
 
-**Architecture:** The conjugation drill is already a generic "produce one inflected form from a lemma + a named feature bundle" exercise; "verb" lives only in prompt wording, the (Spanish-only) seed picker, and the tense/mood axis. Phase 1 adds two coverage axes (`case`, `number`), generalizes the generation/validation prompt wording away from verb/tense assumptions, and flags five Turkish A1 grammar points as `conjugationSuitable` with coverage specs that drive case/number/stacking variation. Turkish conjugation already generates **unseeded** (`verbBand()` is Spanish-only), so no noun/adjective frequency lists are needed.
+**Architecture:** The conjugation drill is already a generic "produce one inflected form from a lemma + a named feature bundle" exercise; "verb" lives only in prompt wording, the (Spanish-only) seed picker, and the tense/mood axis. Phase 1 adds two coverage axes (`case`, `number`), generalizes the generation/validation prompt wording away from verb/tense assumptions, extends PR #386's structured `features`/`subject` model to nominals (making `subject` optional), and flags five Turkish A1 grammar points as `conjugationSuitable` with coverage specs that drive case/number/stacking variation. Turkish conjugation already generates **unseeded** (`verbBand()` is Spanish-only), so no noun/adjective frequency lists are needed.
+
+**Built on PR #386** (merged, `f9b8bbb`): it added glossed `features[]` + a `subject{pronoun,gloss}` badge to the conjugation drill, both *required* and verb-shaped. This plan rebases onto it and relaxes `subject` so subjectless nominal forms (`ev → evde`) can generate. #386's pool-regen (verb cells) and this plan's new nominal cells target disjoint cell sets and don't conflict.
 
 **Tech Stack:** TypeScript monorepo (pnpm + Turborepo). Packages touched: `@language-drill/shared` (coverage types), `@language-drill/ai` (generation + validation prompts), `@language-drill/db` (curriculum). Vitest for tests.
 
@@ -232,7 +234,11 @@ git commit -m "test(db): lock in case/number axes on conjugationSuitable grammar
 
 **Interfaces:**
 - Consumes: nothing new.
-- Produces: `renderConjugationSection` is `export`ed; its text no longer asserts the target is a verb or that only tense/mood is fixed.
+- Produces: `renderConjugationSection` is `export`ed; its text no longer assumes the target is a verb / that only tense/mood is fixed, and #386's `features`/`subject` bullets are generalized to nominals (subject is the person cue **when one exists**; omitted for pure case/number forms).
+
+> **Post-#386 note:** `renderConjugationSection` now also contains three bullets
+> for `features`/`subject` (`generation-prompts.ts:244-246`). The rewrite below
+> **keeps generalized versions of them** — do not delete them.
 
 - [ ] **Step 1: Export the function and write the failing test**
 
@@ -264,17 +270,24 @@ describe("renderConjugationSection", () => {
     // Must not hard-assert 'Tense/mood is FIXED' as the only fixed category.
     expect(section()).toMatch(/inflectional category|case\/number|tense\/mood for verbs/i);
   });
+
+  it("still documents features and subject, with subject made optional for case forms", () => {
+    expect(section()).toMatch(/`features`/);
+    expect(section()).toMatch(/`subject`/);
+    // The verb-shaped 'subject is the person/number cue' must become conditional.
+    expect(section()).toMatch(/omit `subject`|when the form agrees with a person|possessor/i);
+  });
 });
 ```
 
 - [ ] **Step 2: Run the test to verify it fails**
 
 Run: `pnpm --filter @language-drill/ai test -- generation-prompts`
-Expected: FAIL — current text contains "Use the verb you are given" and "Tense/mood is FIXED".
+Expected: FAIL — current text contains "Use the verb you are given", "Tense/mood is FIXED", and the verb-shaped subject bullet ("`subject` is the person/number cue").
 
-- [ ] **Step 3: Generalize the wording**
+- [ ] **Step 3: Generalize the wording (preserving #386's features/subject bullets)**
 
-In `renderConjugationSection` (lines 228-250), replace the verb/tense-specific bullets. The returned template becomes:
+In `renderConjugationSection` (lines 228-252), replace the bullet list. The returned template becomes:
 
 ```typescript
   return `## Conjugation/inflection specifics (this exercise type)
@@ -286,6 +299,9 @@ This is an inflection drill: there is NO sentence and NO blank. You produce one 
 - **Enumerate genuine variants in \`acceptableForms\`** (e.g. accepted orthographic variants). Do NOT list near-misses or common-error forms — those must stay wrong.
 - **\`breakdown\` teaches the morphology**: stem + ending for ${language} fusional forms, or stem + ordered suffix gloss for agglutinative forms (e.g. Turkish: root + (plural) + (possessive) + case/person, noting vowel harmony). Keep it one line.
 - **\`featureBundle\` names the cell** in ${language}'s conventional grammar notation; it MUST NOT contain the answer.
+- **\`features\` decomposes the cell for display.** List the inflectional dimensions OTHER than the subject cue — for verbs the tense/mood (and polarity where ${language} marks it); for nominals the case and/or number — in order. Each entry pairs the ${language} term in conventional notation (\`term\`) with a 1–2 word English gloss (\`gloss\`), e.g. {term: "geçmiş zaman", gloss: "past"} or {term: "bulunma", gloss: "locative"}. Do NOT put the subject cue in \`features\`.
+- **\`subject\` is the person cue — only when the form agrees with a person.** For verbs and the copula, give the representative ${language} subject pronoun (\`pronoun\`, e.g. "o", "ich") and its English \`gloss\` ("he / she / it"). For possessives, the possessor is the person cue (\`arabam\` → {pronoun: "benim", gloss: "my"}). **OMIT \`subject\` entirely for pure case/number forms that have no person** (\`ev → evde\`). It is shown prominently when present.
+- **\`features\` + \`subject\` describe the SAME cell as \`featureBundle\`** — they are its structured, glossed form, not extra constraints. They MUST NOT contain the answer.
 - **Use the lemma you are given in the user prompt — do NOT choose your own.** When a word is provided, inflect exactly that word.
 - **\`instructions\` must contain ONLY the directive the learner reads** — one clean sentence telling them which form to produce. Never include your own reasoning, alternative phrasings, abandoned attempts, or meta-text (no "Actually…", "Wait…", "let's keep it simple", or arrows). Any carrier/context sentence must use the target lemma.
 - **\`exampleSentences\` (1–2)** must use \`targetForm\` verbatim, be natural, and sit at or below CEFR ${cefrLevel}.
@@ -312,7 +328,192 @@ git commit -m "feat(ai): generalize conjugation generation prompt to nominal mor
 
 ---
 
-### Task 4: Generalize the validation prompt + bump its version
+### Task 4: Make `subject` optional so nominal cells parse (extend #386's structured model)
+
+**Background:** #386 made the structured `subject` field **required** in the
+parser (`requireConjugationSubject`, `generate.ts:666`) and the tool-schema
+`required` array (`generate.ts:307`). A pure Turkish case form (`ev → evde`) has
+no subject pronoun, so generation of nominal cells would **throw**. This task
+relaxes `subject` to optional end-to-end (`features` stays required). The
+`ConjugationContent` type already declares `subject?` optional — no type change.
+
+**Files:**
+- Modify: `packages/ai/src/generate.ts` (parser + tool schema)
+- Modify: `apps/web/components/drill/conjugation-feature-bundle.tsx` (render chips without a subject badge)
+- Test: `packages/ai/src/generate.test.ts`, `apps/web/components/drill/__tests__/conjugation-feature-bundle.test.tsx`
+
+**Interfaces:**
+- Consumes: `parseGeneratedConjugationDraft` (`generate.ts:838`), `CONJUGATION_GENERATION_TOOL` (`generate.ts:260`), `ConjugationFeatureBundle` (`conjugation-feature-bundle.tsx`).
+- Produces: a conjugation draft with `features` but **no** `subject` parses successfully (`subject` omitted from the result); the tool schema no longer requires `subject`; the UI renders feature chips when `features.length > 0` even if `subject` is undefined.
+
+- [ ] **Step 1: Write the failing parser test**
+
+Append to the `describe("parseGeneratedConjugationDraft", …)` block in `packages/ai/src/generate.test.ts` (reuse the existing `VALID` fixture at ~line 1250, which already has `features` + `subject`):
+
+```typescript
+it("accepts a subjectless nominal draft (case form, no person)", () => {
+  const { subject: _omit, ...noSubject } = VALID;
+  const out = parseGeneratedConjugationDraft(
+    {
+      ...noSubject,
+      lemma: "ev",
+      lemmaGloss: "house",
+      featureBundle: "bulunma · tekil",
+      features: [
+        { term: "bulunma", gloss: "locative" },
+        { term: "tekil", gloss: "singular" },
+      ],
+      targetForm: "evde",
+      breakdown: "ev + -de (locative)",
+      exampleSentences: ["Ali evde."],
+    },
+    {} as never,
+  );
+  expect(out.subject).toBeUndefined();
+  expect(out.features).toHaveLength(2);
+});
+```
+
+- [ ] **Step 2: Run to verify it fails**
+
+Run: `pnpm --filter @language-drill/ai test -- generate`
+Expected: FAIL — `requireConjugationSubject` throws `invalid subject: must be an object`.
+
+- [ ] **Step 3: Relax the parser**
+
+In `packages/ai/src/generate.ts`, replace `requireConjugationSubject` (lines 666-677) with an optional variant:
+
+```typescript
+function optionalConjugationSubject(
+  raw: Record<string, unknown>,
+  ctx: string,
+): { pronoun: string; gloss: string } | undefined {
+  const v = raw["subject"];
+  if (v === undefined || v === null) return undefined;
+  if (!isObject(v)) {
+    throw new Error(`${ctx}: invalid subject: must be an object, got ${JSON.stringify(v)}`);
+  }
+  const pronoun = requireString(v, "pronoun", `${ctx} subject`).trim();
+  const gloss = requireString(v, "gloss", `${ctx} subject`).trim();
+  return { pronoun, gloss };
+}
+```
+
+In `parseGeneratedConjugationDraft`, change the call (line 851) and the return spread (line 870):
+
+```typescript
+  const subject = optionalConjugationSubject(input, ctx);
+```
+
+```typescript
+    featureBundle,
+    features,
+    ...(subject !== undefined ? { subject } : {}),
+    targetForm,
+```
+
+(`features` keeps `requireConjugationFeatures` — every cell has ≥1 display dimension.)
+
+- [ ] **Step 4: Remove `subject` from the tool-schema required array**
+
+In `CONJUGATION_GENERATION_TOOL.input_schema.required` (`generate.ts:307`), drop `"subject"` (keep `"features"`):
+
+```typescript
+    required: ["instructions", "lemma", "lemmaGloss", "featureBundle", "features", "targetForm", "breakdown", "exampleSentences"],
+```
+
+Also soften the `subject` property description (lines ~290) to note it is omitted for forms with no person:
+
+```typescript
+      subject: {
+        type: "object",
+        description: "The person cue, surfaced prominently — only for forms that agree with a person (verb/copula subject, or the possessor for possessives, e.g. {pronoun:'benim',gloss:'my'}). OMIT for pure case/number forms with no person.",
+        properties: {
+          pronoun: { type: "string", description: "Representative target-language person pronoun for the cell, e.g. 'o', 'nosotros', 'ich', or the possessor 'benim'." },
+          gloss: { type: "string", description: "English gloss, e.g. 'he / she / it', 'we', 'I', 'my'." },
+        },
+        required: ["pronoun", "gloss"],
+      },
+```
+
+- [ ] **Step 5: Run the parser test to verify it passes**
+
+Run: `pnpm --filter @language-drill/ai test -- generate`
+Expected: PASS (subjectless draft parses; existing draft-with-subject tests still green).
+
+- [ ] **Step 6: Write the failing UI test**
+
+Append to `apps/web/components/drill/__tests__/conjugation-feature-bundle.test.tsx` (mirror the existing render-test style in that file):
+
+```typescript
+it("renders feature chips with no pronoun badge when subject is absent", () => {
+  render(
+    <ConjugationFeatureBundle
+      content={{
+        type: ExerciseType.CONJUGATION,
+        instructions: "Write the correct form.",
+        lemma: "ev",
+        lemmaGloss: "house",
+        featureBundle: "bulunma · tekil",
+        features: [{ term: "bulunma", gloss: "locative" }],
+        targetForm: "evde",
+        breakdown: "ev + -de",
+        exampleSentences: ["Ali evde."],
+      } as never}
+    />,
+  );
+  expect(screen.getByText("bulunma")).toBeInTheDocument(); // chip rendered
+  expect(screen.getByText("locative")).toBeInTheDocument();
+});
+```
+
+(Confirm `render`, `screen`, `ExerciseType`, and `ConjugationFeatureBundle` imports match the file's existing ones.)
+
+- [ ] **Step 7: Run to verify it fails**
+
+Run: `pnpm --filter @language-drill/web test -- conjugation-feature-bundle`
+Expected: FAIL — current gate `structured = subject !== undefined && features.length > 0` falls back to the flat string, so the chip text isn't rendered.
+
+- [ ] **Step 8: Make the subject badge conditional**
+
+In `apps/web/components/drill/conjugation-feature-bundle.tsx`, change the structured gate (line 17) and render the badge only when `subject` is present:
+
+```typescript
+  const structured = features.length > 0;
+
+  if (!structured) {
+    if (variant === 'inline') return <>{content.featureBundle}</>;
+    return <p className="t-body text-ink-mute mt-s-2">{content.featureBundle}</p>;
+  }
+
+  if (variant === 'inline') {
+    const parts = [
+      ...(subject ? [`${subject.pronoun} (${subject.gloss})`] : []),
+      ...features.map((f) => `${f.term} (${f.gloss})`),
+    ];
+    return <>{parts.join(' · ')}</>;
+  }
+```
+
+In the `card` JSX, wrap the pronoun-badge `<div>` in `{subject && ( … )}` so it only renders when present; the feature chips `.map` stays unchanged.
+
+- [ ] **Step 9: Run the UI test to verify it passes**
+
+Run: `pnpm --filter @language-drill/web test -- conjugation-feature-bundle`
+Expected: PASS (chips render; existing badge+chips test for cells *with* a subject still green).
+
+- [ ] **Step 10: Commit**
+
+```bash
+git add packages/ai/src/generate.ts packages/ai/src/generate.test.ts \
+  apps/web/components/drill/conjugation-feature-bundle.tsx \
+  apps/web/components/drill/__tests__/conjugation-feature-bundle.test.tsx
+git commit -m "feat: make conjugation subject optional for nominal (subjectless) cells"
+```
+
+---
+
+### Task 5: Generalize the validation prompt + bump its version
 
 **Files:**
 - Modify: `packages/ai/src/validation-prompts.ts` (edit `buildConjugationValidationUserPrompt`; bump `VALIDATION_PROMPT_VERSION` to `validate@2026-06-19`)
@@ -397,7 +598,7 @@ git commit -m "feat(ai): generalize conjugation validation prompt + bump validat
 
 ---
 
-### Task 5: Flag Turkish points `conjugationSuitable` with case/number specs (incl. stacking)
+### Task 6: Flag Turkish points `conjugationSuitable` with case/number specs (incl. stacking)
 
 **Files:**
 - Modify: `packages/db/src/curriculum/tr.ts` (5 grammar points + `CURRICULUM_VERSION_TR`)
@@ -534,7 +735,7 @@ git commit -m "feat(db): conjugation cells for TR cases, copula, possessive+case
 
 ---
 
-### Task 6: Lock in fluency grading for stacked Turkish forms + full-suite gate
+### Task 7: Lock in fluency grading for stacked Turkish forms + full-suite gate
 
 **Files:**
 - Test: `packages/shared/src/fluency.test.ts` (extend; no production change — `gradeFluencyAnswer`'s conjugation branch already exact-matches `targetForm`/`acceptableForms`)
@@ -583,12 +784,12 @@ git commit -m "test(shared): fluency grading for stacked Turkish nominal forms"
 
 ---
 
-### Task 7: Post-merge — sync prompts to Langfuse and verify generation
+### Task 8: Post-merge — sync prompts to Langfuse and verify generation
 
 **Files:** none (operational; runs after the PR merges, per CLAUDE.md). Do NOT run against prod before merge.
 
 **Interfaces:**
-- Consumes: merged generation/validation prompt edits (Tasks 3-4) and curriculum bump (Task 5).
+- Consumes: merged generation/validation prompt edits (Tasks 3-5) and curriculum bump (Task 6).
 - Produces: Langfuse `production`-labelled prompts updated in dev + prod; a confirmed Turkish nominal conjugation draft.
 
 - [ ] **Step 1: Push the drifted prompts to each Langfuse env**
@@ -625,13 +826,15 @@ The scheduler converges new cells at ~04:00 UTC over ~2 days after the curriculu
 - Type model (reuse `conjugation`) → honored; no new `ExerciseType` (Global Constraints). ✓
 - `case`/`number` coverage axes → Task 1. ✓
 - Curriculum invariant accepts them → Task 2 (no prod change needed; guarded). ✓
-- Generation prompt generalized → Task 3. Validation prompt generalized + version bump → Task 4. ✓
-- Turkish curriculum: cases, copula, possessive, possessive+case stacking, `CURRICULUM_VERSION_TR` bump → Task 5. ✓
-- Fluency grading for stacked forms → Task 6 (already works; guarded). ✓
-- Dedup correctness for multi-feature bundles → resolved during design: `canonicalSurface` keys on `lemma::featureBundle` (`generation-prompts.ts:602`), which serializes the full cell. No code change needed; noted here so it isn't re-investigated. ✓
-- Langfuse sync + generation verification → Task 7. ✓
+- Generation prompt generalized (incl. generalized #386 `features`/`subject` bullets) → Task 3. ✓
+- #386 interaction — `subject` made optional so subjectless nominal cells parse (parser + tool-schema + UI) → Task 4. ✓
+- Validation prompt generalized + version bump → Task 5. ✓
+- Turkish curriculum: cases, copula, possessive, possessive+case stacking, `CURRICULUM_VERSION_TR` bump → Task 6. ✓
+- Fluency grading for stacked forms → Task 7 (already works; guarded). ✓
+- Dedup correctness for multi-feature bundles → resolved during design: `canonicalSurface` keys on `lemma::featureBundle` (`generation-prompts.ts:602`), which serializes the full cell (unchanged by #386). No code change needed; noted here so it isn't re-investigated. ✓
+- Langfuse sync + generation verification → Task 8. ✓
 - **Deviation from spec (flagged):** `carrierPhrase` field + UI and `wordClass` field are moved from Phase 1 to Phase 2, because Turkish never populates them — they'd be dead code now and are pure-additive later. German declension, `gender`/`definiteness` axes remain Phase 2/3 as in the spec.
 
-**Placeholder scan:** No "TBD"/"handle edge cases"/"similar to Task N". Test code is concrete. The two soft spots — the `makeGrammarPoint`/`trCurriculum` symbol names — are explicitly instructed to be matched to the file's existing imports, with the fallback (inline a minimal valid point) spelled out.
+**Placeholder scan:** No "TBD"/"handle edge cases"/"similar to Task N". Test code is concrete. Soft spots — the `makeGrammarPoint`/`trCurriculum` symbol names (Tasks 2, 6), the `VALID` fixture / `render`/`screen` imports (Task 4) — are each explicitly instructed to be matched to the target file's existing imports, with a spelled-out fallback.
 
-**Type consistency:** `CASE_CODES`/`NUMBER_CODES`/`CaseCode`/`NumberCode`/`CoverageAxis` names match across Tasks 1-2-5. `renderConjugationSection` and `buildConjugationValidationUserPrompt` are exported in the same task that tests them. `gradeFluencyAnswer`/`conj()` reused from the existing fluency test. Axis values used in curriculum floors (Task 5) are all members of `CASE_CODES`/`NUMBER_CODES` (Task 1), so the floor-key invariant passes.
+**Type consistency:** `CASE_CODES`/`NUMBER_CODES`/`CaseCode`/`NumberCode`/`CoverageAxis` names match across Tasks 1-2-6. `renderConjugationSection` (Task 3) and `buildConjugationValidationUserPrompt` (Task 5) are exported in the same task that tests them. Task 4's `optionalConjugationSubject` replaces `requireConjugationSubject` at its sole call site (`parseGeneratedConjugationDraft`) and the tool-schema `required` array drops `"subject"` in the same task — no other reference to those symbols exists. `gradeFluencyAnswer`/`conj()` reused from the existing fluency test. Axis values used in curriculum floors (Task 6) are all members of `CASE_CODES`/`NUMBER_CODES` (Task 1), so the floor-key invariant passes.
