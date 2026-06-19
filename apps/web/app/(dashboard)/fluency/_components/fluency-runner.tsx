@@ -87,6 +87,7 @@ export function FluencyRunner({ exercises, onSubmitAttempt, onDone }: FluencyRun
   return (
     <FluencyItem
       content={current.contentJson}
+      language={current.language}
       elapsedMs={elapsedMs}
       verdict={verdict}
       onSubmit={handleSubmit}
