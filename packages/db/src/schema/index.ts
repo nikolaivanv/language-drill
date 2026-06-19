@@ -28,7 +28,14 @@ export type { UserPreferences, NewUserPreferences } from './users';
 export { skills, skillTopics } from './skills';
 export { exercises, exerciseTags } from './exercises';
 export type { Exercise } from './exercises';
-export { userExerciseHistory, spacedRepetitionCards, fluencyAttempts, userGrammarMastery } from './progress';
+export {
+  userExerciseHistory,
+  spacedRepetitionCards,
+  fluencyAttempts,
+  userGrammarMastery,
+  errorObservations,
+} from './progress';
+export type { ErrorObservation, NewErrorObservation } from './progress';
 export { practiceSessions } from './sessions';
 export {
   readEntries,

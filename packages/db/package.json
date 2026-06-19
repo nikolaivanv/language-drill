@@ -19,6 +19,7 @@
     "revalidate:cloze": "npx tsx scripts/revalidate-cloze-pool.ts",
     "backfill:coverage-tags": "npx tsx scripts/backfill-coverage-tags.ts",
     "backfill:mastery": "npx tsx scripts/backfill-mastery.ts",
+    "backfill:error-observations": "npx tsx scripts/backfill-error-observations.ts",
     "seed:exercises": "npx tsx scripts/seed-exercises.ts",
     "seed:dictation": "npx tsx scripts/seed-dictation.ts",
     "cleanup:zombies": "npx tsx scripts/cleanup-zombie-jobs.ts",

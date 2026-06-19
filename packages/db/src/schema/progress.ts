@@ -98,3 +98,54 @@ export const userGrammarMastery = pgTable(
     ),
   }),
 );
+
+export const errorObservations = pgTable(
+  'error_observations',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    language: text('language').notNull(), // denormalized, uppercase (TR/ES/DE)
+    exerciseId: uuid('exercise_id')
+      .notNull()
+      .references(() => exercises.id),
+    sessionId: uuid('session_id').references(() => practiceSessions.id, {
+      onDelete: 'set null',
+    }),
+    // The history row this error was extracted from. Cascade so re-deriving or
+    // erasing history sweeps the derived observations with it.
+    exerciseHistoryId: uuid('exercise_history_id')
+      .notNull()
+      .references(() => userExerciseHistory.id, { onDelete: 'cascade' }),
+    exerciseType: text('exercise_type').notNull(), // where it happened
+    // The exercise's PRIMARY grammar point (always available today).
+    hostGrammarPointKey: text('host_grammar_point_key'),
+    // The point this specific error is ABOUT. Null until Phase 3 fills it via
+    // per-error prompt attribution; consumers fall back to host_grammar_point_key.
+    errorGrammarPointKey: text('error_grammar_point_key'),
+    errorType: text('error_type').notNull(), // grammar | vocabulary | spelling | pragmatics
+    severity: text('severity').notNull(), // minor | major
+    wrongText: text('wrong_text').notNull(),
+    correction: text('correction').notNull(),
+    occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull(),
+  },
+  (table) => ({
+    // Coach / history windowed scan: filter by user+language, order by recency.
+    userLanguageOccurredAtIdx: index('error_observations_user_language_occurred_at_idx').on(
+      table.userId,
+      table.language,
+      table.occurredAt,
+    ),
+    // Growth-zone / per-point lookups (Phase 2/3 consumers).
+    userErrorPointIdx: index('error_observations_user_error_point_idx').on(
+      table.userId,
+      table.errorGrammarPointKey,
+    ),
+    // Backfill idempotency: "already observed this history row?" check.
+    historyIdIdx: index('error_observations_history_id_idx').on(table.exerciseHistoryId),
+  }),
+);
+
+export type ErrorObservation = typeof errorObservations.$inferSelect;
+export type NewErrorObservation = typeof errorObservations.$inferInsert;
