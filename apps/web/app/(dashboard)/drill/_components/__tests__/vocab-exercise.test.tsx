@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import {
   ExerciseType,
@@ -58,6 +58,15 @@ function renderVocab(overrides: Partial<VocabExerciseProps> = {}) {
   };
   return { props, ...render(<VocabExercise {...props} />) };
 }
+
+describe('VocabExercise — answer draft', () => {
+  beforeEach(() => window.sessionStorage.clear());
+  it('restores a saved draft for its exercise id', () => {
+    window.sessionStorage.setItem('drill:draft:ex-9', 'mi palabra');
+    renderVocab({ exerciseId: 'ex-9' });
+    expect(screen.getByRole('textbox')).toHaveValue('mi palabra');
+  });
+});
 
 describe('VocabExercise', () => {
   describe('idle rendering (Req 5.1)', () => {

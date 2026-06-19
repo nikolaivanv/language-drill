@@ -12,6 +12,7 @@ import {
   Card,
   Textarea,
 } from '../../../../components/ui';
+import { useAnswerDraft } from '../../../../lib/drill/use-answer-draft';
 import { translationVerdict } from '../../../../lib/drill/verdict-tier';
 import { lookupGloss } from '../../../../lib/translation/gloss-en';
 import { useDrillAction } from './drill-action-context';
@@ -28,6 +29,9 @@ export interface TranslationExerciseProps {
   onSubmit: (answer: string, meta: SubmissionMeta) => void;
   onNext: () => void;
   nextLabel?: string;
+  /** When set, the typed answer is drafted in sessionStorage so it survives a
+   *  full page reload. Omitted in tests/contexts that don't need persistence. */
+  exerciseId?: string;
 }
 
 function isAccentLanguage(lang: string): lang is 'ES' | 'DE' | 'TR' {
@@ -82,8 +86,9 @@ export function TranslationExercise({
   onSubmit,
   onNext,
   nextLabel,
+  exerciseId,
 }: TranslationExerciseProps) {
-  const [answer, setAnswer] = React.useState('');
+  const [answer, setAnswer, clearDraft] = useAnswerDraft(exerciseId);
   const [hintCount, setHintCount] = React.useState<0 | 1 | 2 | 3>(0);
   const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
 
@@ -113,6 +118,7 @@ export function TranslationExercise({
   function handleSubmit() {
     if (!answer.trim() || isLocked) return;
     onSubmit(answer, { hintCount });
+    clearDraft();
   }
 
   const canSubmit = answer.trim().length > 0;

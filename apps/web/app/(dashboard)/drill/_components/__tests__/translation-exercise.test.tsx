@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import {
   ExerciseType,
@@ -53,6 +53,15 @@ function renderTranslation(overrides: Partial<TranslationExerciseProps> = {}) {
   };
   return { props, ...render(<TranslationExercise {...props} />) };
 }
+
+describe('TranslationExercise — answer draft', () => {
+  beforeEach(() => window.sessionStorage.clear());
+  it('restores a saved draft for its exercise id', () => {
+    window.sessionStorage.setItem('drill:draft:ex-9', 'mi borrador');
+    renderTranslation({ exerciseId: 'ex-9' });
+    expect(screen.getByRole('textbox')).toHaveValue('mi borrador');
+  });
+});
 
 describe('TranslationExercise', () => {
   describe('idle rendering', () => {

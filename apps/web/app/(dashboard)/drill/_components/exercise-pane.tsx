@@ -59,6 +59,7 @@ export function ExercisePane({
         onSubmit={onSubmit}
         onNext={onNext}
         nextLabel={nextLabel}
+        exerciseId={exercise.id}
       />
     );
   }
@@ -73,6 +74,7 @@ export function ExercisePane({
         onSubmit={onSubmit}
         onNext={onNext}
         nextLabel={nextLabel}
+        exerciseId={exercise.id}
       />
     );
   }
@@ -87,6 +89,7 @@ export function ExercisePane({
         onSubmit={onSubmit}
         onNext={onNext}
         nextLabel={nextLabel}
+        exerciseId={exercise.id}
       />
     );
   }
@@ -101,6 +104,7 @@ export function ExercisePane({
         onSubmit={onSubmit}
         onNext={onNext}
         nextLabel={nextLabel}
+        exerciseId={exercise.id}
       />
     );
   }
@@ -115,6 +119,7 @@ export function ExercisePane({
         onSubmit={onSubmit}
         onNext={onNext}
         nextLabel={nextLabel}
+        exerciseId={exercise.id}
       />
     );
   }

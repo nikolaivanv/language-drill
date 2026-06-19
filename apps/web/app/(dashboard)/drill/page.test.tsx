@@ -16,9 +16,10 @@ vi.mock('@clerk/nextjs', () => ({
 }));
 
 const mockPush = vi.fn();
+const mockReplace = vi.fn();
 let mockSearchParamsString = 'start=quick'; // existing tests run in auto-start mode
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: mockPush }),
+  useRouter: () => ({ push: mockPush, replace: mockReplace }),
   useSearchParams: () => new URLSearchParams(mockSearchParamsString),
 }));
 
@@ -213,6 +214,14 @@ describe('PracticePage', () => {
     it('shows manifest item 0 once create-session resolves', () => {
       renderWithProviders(<PracticePage />);
       expect(screen.getByText(/sentence-0/)).toBeInTheDocument();
+    });
+
+    it('reflects the new session id in the URL so a reload resumes it', () => {
+      renderWithProviders(<PracticePage />);
+      expect(mockReplace).toHaveBeenCalledWith(
+        `/drill?resume=${SESSION_ID}`,
+        { scroll: false },
+      );
     });
 
     it('progress bar starts at 0 (idle, item 0)', () => {

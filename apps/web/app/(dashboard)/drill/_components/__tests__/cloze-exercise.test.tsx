@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import {
   ExerciseType,
@@ -326,6 +326,29 @@ describe('ClozeExercise', () => {
         ).toBeInTheDocument();
       },
     );
+  });
+
+  describe('answer draft persistence', () => {
+    beforeEach(() => window.sessionStorage.clear());
+
+    it('restores a saved draft for its exercise id', () => {
+      window.sessionStorage.setItem('drill:draft:ex-9', 'borrowed');
+      renderCloze({ exerciseId: 'ex-9' });
+      expect(blank()).toHaveValue('borrowed');
+    });
+
+    it('persists typing to sessionStorage under the exercise id', () => {
+      renderCloze({ exerciseId: 'ex-9' });
+      fireEvent.change(blank(), { target: { value: 'como' } });
+      expect(window.sessionStorage.getItem('drill:draft:ex-9')).toBe('como');
+    });
+
+    it('clears the stored draft on submit', () => {
+      renderCloze({ exerciseId: 'ex-9' });
+      fireEvent.change(blank(), { target: { value: 'como' } });
+      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+      expect(window.sessionStorage.getItem('drill:draft:ex-9')).toBeNull();
+    });
   });
 
   describe('mobile action publishing', () => {
