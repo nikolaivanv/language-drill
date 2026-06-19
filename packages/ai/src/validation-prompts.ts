@@ -70,7 +70,7 @@ function renderBulletList(items: readonly string[]): string {
 // the levelMatch dimension to judge against the curriculum scope (ground truth)
 // instead of the model's own sense of the level. Changes the registered
 // template — needs a Langfuse push per env.
-export const VALIDATION_PROMPT_VERSION = "validate@2026-06-18";
+export const VALIDATION_PROMPT_VERSION = "validate@2026-06-19";
 
 export const VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language exercises for {{language}} learners at CEFR {{cefrLevel}}. Your job is to validate one already-generated exercise that targets the grammar point: {{grammarPointName}}.
 
@@ -285,7 +285,7 @@ ${registerLine}
 Score the dimensions in the system prompt. Treat the exercise as well-formed only if the prompt is unambiguous and solvable at the target level, AND every model answer genuinely satisfies the prompt (keywords used / goal met / target structure used) at the target CEFR level. If a model answer does not exercise the grammar point, set grammarPointMatch=false. Submit via the tool.`;
 }
 
-function buildConjugationValidationUserPrompt(
+export function buildConjugationValidationUserPrompt(
   content: ConjugationContent,
   spec: GenerationSpec,
 ): string {
@@ -302,7 +302,7 @@ function buildConjugationValidationUserPrompt(
 
 Check, and reject (low quality) if any fails:
 1. Is "${content.targetForm}" the EXACTLY correct ${spec.language} form for that lemma + feature bundle, including all diacritics? An incorrect stored form mis-grades every learner.
-2. Does the feature bundle correspond to the grammar point's tense/mood (it must not drift to a different tense)?
+2. Does the feature bundle correspond to the grammar point's inflectional category (tense/mood for verbs; case/number/possessive for nominals) — it must not drift to a different category?
 3. Are all "acceptable variants" genuinely fully-correct alternatives (not near-misses or common errors)?
 4. Does the feature bundle avoid leaking the answer, and do the example sentences use the form correctly and naturally at this level?
 5. Is the breakdown accurate?

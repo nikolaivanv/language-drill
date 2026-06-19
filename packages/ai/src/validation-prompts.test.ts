@@ -556,6 +556,40 @@ describe("buildValidationUserPrompt — conjugation", () => {
 });
 
 // ---------------------------------------------------------------------------
+// buildConjugationValidationUserPrompt — generalized check #2 (Task 5)
+// ---------------------------------------------------------------------------
+
+import { buildConjugationValidationUserPrompt } from "./validation-prompts.js";
+
+const nominalContent = {
+  type: ExerciseType.CONJUGATION,
+  instructions: "Write the correct form.",
+  lemma: "ev",
+  lemmaGloss: "house",
+  featureBundle: "bulunma · tekil",
+  targetForm: "evde",
+  breakdown: "ev + -de (locative)",
+  exampleSentences: ["Ali evde."],
+} as const;
+
+const nominalSpec = {
+  language: "TR",
+  cefrLevel: "A1",
+  grammarPoint: { key: "tr-a1-locative" },
+} as never;
+
+describe("buildConjugationValidationUserPrompt", () => {
+  it("checks the grammar point's inflectional category generically", () => {
+    const out = buildConjugationValidationUserPrompt(
+      nominalContent as never,
+      nominalSpec,
+    );
+    expect(out).toMatch(/inflectional category|case\/number/i);
+    expect(out).toContain("evde");
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Dictation rejection guard
 // ---------------------------------------------------------------------------
 
