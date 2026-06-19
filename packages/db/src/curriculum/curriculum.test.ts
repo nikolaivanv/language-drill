@@ -502,6 +502,34 @@ describe('coverageSpec invariants', () => {
       expect((e as Error).message).not.toMatch(/coverageSpec|duplicate axis|illegal value|only valid|positive integer/);
     }
   });
+
+  it('allows a case+number axis and conjugationSuitable on a grammar point', () => {
+    const point = baseGrammar({
+      key: 'tr-a1-test-case-axis',
+      conjugationSuitable: true,
+      coverageSpec: {
+        axes: [
+          { name: 'case', floors: { dative: 3, ablative: 3 } },
+          { name: 'number', floors: { singular: 4, plural: 4 } },
+        ],
+      },
+    });
+    // Invariant 10 (per-language grammar count minimums) may throw for a single-entry
+    // fixture; we only care that no coverageSpec-related error is thrown.
+    try {
+      assertCurriculumInvariants([point]);
+    } catch (e) {
+      expect((e as Error).message).not.toMatch(/coverageSpec|duplicate axis|illegal value|only valid|positive integer/);
+    }
+  });
+
+  it('still rejects a wordClass axis on a grammar point', () => {
+    const point = baseGrammar({
+      key: 'tr-a1-test-bad-axis',
+      coverageSpec: { axes: [{ name: 'wordClass', floors: { noun: 3 } }] },
+    });
+    expect(() => assertCurriculumInvariants([point])).toThrow(/wordClass/);
+  });
 });
 
 describe('grammarPointsAtOrBelow', () => {
