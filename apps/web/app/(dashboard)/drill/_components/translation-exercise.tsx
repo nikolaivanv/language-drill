@@ -134,10 +134,29 @@ export function TranslationExercise({
 
   return (
     <div className="flex flex-col gap-s-4">
-      <p className="t-micro text-ink-mute">EN &rarr; {language}</p>
+      {/* level 1 — direction + topic as a quiet eyebrow tag */}
+      <span className="inline-flex items-center gap-s-2">
+        <span
+          aria-hidden="true"
+          className="inline-block h-[5px] w-[5px] rounded-full bg-[var(--color-accent)]"
+        />
+        <span className="t-micro text-ink-mute">
+          EN &rarr; {language}
+          {content.topicHint && content.topicHint.length > 0
+            ? ` · ${content.topicHint}`
+            : ''}
+        </span>
+      </span>
 
-      <p className="t-display-s">
+      {/* level 2 (hero) — the source sentence */}
+      <p className="t-display-m">
         <GlossedText text={content.sourceText} />
+      </p>
+
+      {/* level 3 — goal gloss, clearly secondary */}
+      <p className="t-body text-ink-soft">
+        <span className="t-micro text-ink-mute mr-s-2">goal</span>
+        translate the meaning, not every word.
       </p>
 
       <div className="flex flex-col gap-s-3">
