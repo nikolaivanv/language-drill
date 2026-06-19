@@ -1411,3 +1411,31 @@ describe('tallyCoverageOutcome', () => {
     expect(tallyCoverageOutcome(spec, undefined, [])).toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// buildSeedWords — conjugation
+// ---------------------------------------------------------------------------
+
+// Minimal Cell factory — mirror the existing test helpers in this file.
+const conjCell = (language: Language) => ({
+  language,
+  cefrLevel: CefrLevel.B1,
+  exerciseType: ExerciseType.CONJUGATION,
+  grammarPoint: { key: "es-b1-conditional" },
+  cellKey: `${language}:b1:conjugation:es-b1-conditional`,
+} as unknown as Parameters<typeof buildSeedWords>[0]);
+
+describe("buildSeedWords — conjugation", () => {
+  const targets = [{ person: "1sg" }, { person: "2sg" }, { person: "3sg" }];
+
+  it("seeds ES conjugation cells with verbs coordinated to the person targets", () => {
+    const seeds = buildSeedWords(conjCell(Language.ES), 3, "b", new Set(), targets);
+    expect(seeds).toBeDefined();
+    expect(seeds!.filter((s) => typeof s === "string").length).toBeGreaterThan(0);
+  });
+
+  it("leaves non-ES conjugation cells unseeded (current behavior)", () => {
+    expect(buildSeedWords(conjCell(Language.TR), 3, "b", new Set(), targets)).toBeUndefined();
+    expect(buildSeedWords(conjCell(Language.DE), 3, "b", new Set(), targets)).toBeUndefined();
+  });
+});

@@ -17,7 +17,7 @@
  */
 
 import { type CefrLevel, type LearningLanguage } from '@language-drill/shared';
-import { cefrRankWindow, frequencyBand } from '@language-drill/ai';
+import { cefrRankWindow, frequencyBand, verbBand } from '@language-drill/ai';
 
 import { deterministicUuid } from '../lib/deterministic-uuid';
 
@@ -84,6 +84,66 @@ export function pickSeeds(opts: PickSeedsOptions): (string | null)[] {
       if (excludeLc.has(lemma) || chosen.has(lemma)) continue;
       pick = lemma;
       chosen.add(lemma);
+      break;
+    }
+    result.push(pick);
+  }
+
+  return result;
+}
+
+export type PickConjugationSeedsOptions = {
+  language: LearningLanguage;
+  cefrLevel: CefrLevel;
+  batchSeed: string;
+  count: number;
+  /** Per-ordinal grammatical-person target (`coverageTargets[ordinal].person`), or null. */
+  persons: readonly (string | null)[];
+  /** Prior `${lemma}|${person}` keys already in the cell's pool — never re-proposed. */
+  exclude: ReadonlySet<string>;
+};
+
+/**
+ * Conjugation seed picker. Like `pickSeeds`, but draws VERBS and keys
+ * distinctness/exclusion on `(lemma, person)` — the same verb in a different
+ * person is a legitimately distinct drill (it matches the `lemma+featureBundle`
+ * dedup surface). Conjugation drills any at-or-below-level verb (the grammar
+ * point sets the difficulty, not the verb), so the band is CUMULATIVE from rank
+ * 1 up to the cell level's ceiling — broader than cloze/translation's at-level
+ * window, which also keeps the band large enough to avoid early exhaustion.
+ *
+ * Deterministic: identical options produce identical output.
+ */
+export function pickConjugationSeeds(opts: PickConjugationSeedsOptions): (string | null)[] {
+  const { language, cefrLevel, batchSeed, count, persons, exclude } = opts;
+
+  const { rankMax } = cefrRankWindow(cefrLevel);
+  const band = verbBand(language, 1, rankMax);
+
+  const result: (string | null)[] = [];
+  if (band.length === 0) {
+    for (let ordinal = 0; ordinal < count; ordinal++) result.push(null);
+    return result;
+  }
+
+  const excludeLc = new Set<string>();
+  for (const key of exclude) excludeLc.add(key.toLowerCase());
+
+  const chosen = new Set<string>(); // `${lemma}|${person}` chosen this batch
+  for (let ordinal = 0; ordinal < count; ordinal++) {
+    const person = persons[ordinal] ?? null;
+    if (person === null) {
+      result.push(null);
+      continue;
+    }
+    const start = hashIndex(`${batchSeed}|${ordinal}`) % band.length;
+    let pick: string | null = null;
+    for (let step = 0; step < band.length; step++) {
+      const lemma = band[(start + step) % band.length];
+      const key = `${lemma}|${person}`.toLowerCase();
+      if (excludeLc.has(key) || chosen.has(key)) continue;
+      pick = lemma;
+      chosen.add(key);
       break;
     }
     result.push(pick);

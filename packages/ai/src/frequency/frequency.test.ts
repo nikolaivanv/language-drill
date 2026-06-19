@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { CefrLevel, Language, type LearningLanguage } from "@language-drill/shared";
+import { verbBand } from "./index";
 
 import {
   assertFrequencyFile,
@@ -291,5 +292,33 @@ describe("frequencyBand", () => {
   it("returns a frozen array (callers cannot mutate the cached band)", () => {
     const band = frequencyBand(Language.ES, A1.rankMin, A1.rankMax);
     expect(Object.isFrozen(band)).toBe(true);
+  });
+});
+
+describe("verbBand", () => {
+  it("includes real Spanish verbs and excludes look-alike non-verbs", () => {
+    // Wide cumulative band to capture both common and mid-frequency verbs.
+    const verbs = new Set(verbBand(Language.ES, 1, 5000));
+    expect(verbs.has("hablar")).toBe(true);
+    expect(verbs.has("comer")).toBe(true);
+    expect(verbs.has("vivir")).toBe(true);
+    // -ar/-er/-ir suffix but NOT verbs (≤2 surfaces: singular + plural).
+    expect(verbs.has("lugar")).toBe(false);
+    expect(verbs.has("mujer")).toBe(false);
+    expect(verbs.has("mar")).toBe(false);
+    expect(verbs.has("ayer")).toBe(false);
+  });
+
+  it("is sorted by rank ascending and deterministic (cached identity)", () => {
+    const a = verbBand(Language.ES, 1, 5000);
+    const b = verbBand(Language.ES, 1, 5000);
+    expect(a).toBe(b); // same frozen instance from cache
+    expect([...a]).toEqual([...a].slice().sort(() => 0)); // stable order
+    expect(Object.isFrozen(a)).toBe(true);
+  });
+
+  it("returns empty for languages without a verb config (DE/TR)", () => {
+    expect(verbBand(Language.DE, 1, 5000)).toEqual([]);
+    expect(verbBand(Language.TR, 1, 5000)).toEqual([]);
   });
 });

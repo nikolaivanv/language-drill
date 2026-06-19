@@ -31,6 +31,7 @@ import {
 } from '@language-drill/ai';
 import {
   ExerciseType,
+  Language,
   type CoverageAxis,
   type CoverageOutcome,
   type CoverageSpec,
@@ -56,7 +57,7 @@ import {
 import type { Cell } from './cells';
 import { runGeneratorPool } from './generator-pool';
 import { runOutcomePool } from './outcome-pool';
-import { pickSeeds } from './seed-picker';
+import { pickConjugationSeeds, pickSeeds } from './seed-picker';
 import { VOCAB_MAX_PER_WORD } from './validate-and-insert';
 import { runValidatorPool } from './validator-pool';
 
@@ -373,6 +374,46 @@ async function fetchPriorSeeds(
 }
 
 /**
+ * Prior `${seedWord}|${person}` keys for a conjugation cell — the cross-run
+ * exclude set for `pickConjugationSeeds`. `seedWord` is the verb lemma we
+ * persisted into content_json; `person` is the realized coverage tag. A verb
+ * may recur across persons, so the key is the pair, matching the
+ * `lemma+featureBundle` dedup surface.
+ */
+async function fetchPriorConjugationSeeds(
+  db: Db,
+  cell: Cell,
+): Promise<ReadonlySet<string>> {
+  const rows = await db
+    .select({
+      seed: sql<string>`content_json->>'seedWord'`,
+      person: sql<string>`coverage_tags->>'person'`,
+    })
+    .from(exercises)
+    .where(
+      and(
+        eq(exercises.language, cell.language),
+        eq(exercises.difficulty, cell.cefrLevel),
+        eq(exercises.type, cell.exerciseType),
+        eq(exercises.grammarPointKey, cell.grammarPoint.key),
+        inArray(exercises.reviewStatus, [
+          'auto-approved',
+          'manual-approved',
+          'flagged',
+        ]),
+        sql`content_json ? 'seedWord'`,
+      ),
+    );
+  const set = new Set<string>();
+  for (const r of rows) {
+    if (typeof r.seed === 'string' && r.seed && typeof r.person === 'string' && r.person) {
+      set.add(`${r.seed}|${r.person}`);
+    }
+  }
+  return set;
+}
+
+/**
  * Builds the per-ordinal frequency-seed list for a cell (R5.1), or `undefined`
  * for cell types that are NOT frequency-seeded. Only `cloze`/`translation`
  * cells are seeded — `vocab_recall` is constrained at the target-word level, so
@@ -385,20 +426,41 @@ export function buildSeedWords(
   count: number,
   batchSeed: string,
   priorSeeds: ReadonlySet<string>,
+  coverageTargets?: readonly CoverageTarget[],
 ): readonly (string | null)[] | undefined {
   if (
-    cell.exerciseType !== ExerciseType.CLOZE &&
-    cell.exerciseType !== ExerciseType.TRANSLATION
+    cell.exerciseType === ExerciseType.CLOZE ||
+    cell.exerciseType === ExerciseType.TRANSLATION
   ) {
-    return undefined;
+    return pickSeeds({
+      language: cell.language,
+      cefrLevel: cell.cefrLevel,
+      batchSeed,
+      count,
+      exclude: priorSeeds,
+    });
   }
-  return pickSeeds({
-    language: cell.language,
-    cefrLevel: cell.cefrLevel,
-    batchSeed,
-    count,
-    exclude: priorSeeds,
-  });
+  // ES conjugation: seed a distinct verb per ordinal, coordinated with the
+  // ordinal's grammatical-person coverage target. Other languages stay
+  // unseeded until they have a verb config (see verbBand).
+  if (
+    cell.exerciseType === ExerciseType.CONJUGATION &&
+    cell.language === Language.ES
+  ) {
+    const persons = Array.from(
+      { length: count },
+      (_, ordinal) => coverageTargets?.[ordinal]?.person ?? null,
+    );
+    return pickConjugationSeeds({
+      language: cell.language,
+      cefrLevel: cell.cefrLevel,
+      batchSeed,
+      count,
+      persons,
+      exclude: priorSeeds,
+    });
+  }
+  return undefined;
 }
 
 /**
@@ -544,20 +606,27 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
           ? await fetchPriorFreeWritingTitles(db, cell)
           : undefined;
 
-    // R5: anchor each cloze/translation ordinal on a distinct frequency-band
-    // word, excluding seeds already used in this cell's pool (cross-run dedup).
-    // `buildSeedWords` returns `undefined` for vocab_recall, leaving it
-    // unseeded. Fetching priors only for seedable types avoids a needless query
-    // on vocab cells.
-    const isSeedableType =
+    // Seed cloze/translation with at-level content words, and ES conjugation
+    // with at-or-below-level verbs (keyed on (lemma, person)). Other types and
+    // non-ES conjugation stay unseeded. Prior-seed exclusion is fetched only
+    // for the seeded types to avoid a needless query.
+    const isClozeOrTranslation =
       cell.exerciseType === ExerciseType.CLOZE ||
       cell.exerciseType === ExerciseType.TRANSLATION;
-    const priorSeeds = isSeedableType ? await fetchPriorSeeds(db, cell) : [];
+    const isEsConjugation =
+      cell.exerciseType === ExerciseType.CONJUGATION &&
+      cell.language === Language.ES;
+    const priorSeeds: ReadonlySet<string> = isClozeOrTranslation
+      ? new Set(await fetchPriorSeeds(db, cell))
+      : isEsConjugation
+        ? await fetchPriorConjugationSeeds(db, cell)
+        : new Set<string>();
     const seedWords = buildSeedWords(
       cell,
       args.count,
       args.batchSeed,
-      new Set(priorSeeds),
+      priorSeeds,
+      args.coverageTargets,
     );
 
     spec = {
