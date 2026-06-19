@@ -24,11 +24,25 @@ describe("coverage axis constants", () => {
 
   it("COVERAGE_AXIS_VALUES lists every axis", () => {
     expect(Object.keys(COVERAGE_AXIS_VALUES).sort()).toEqual([
+      "case",
+      "number",
       "person",
       "polarity",
       "sentenceType",
       "wordClass",
     ]);
+  });
+
+  it("exposes case and number axis values", () => {
+    expect(COVERAGE_AXIS_VALUES.case).toEqual([
+      "nominative",
+      "accusative",
+      "dative",
+      "locative",
+      "ablative",
+      "genitive",
+    ]);
+    expect(COVERAGE_AXIS_VALUES.number).toEqual(["singular", "plural"]);
   });
 });
 
@@ -82,6 +96,22 @@ describe("coverageAxesFor", () => {
 
   it("conjugation with no spec → polarity only", () => {
     expect(coverageAxesFor(ExerciseType.CONJUGATION, undefined)).toEqual(["polarity"]);
+  });
+
+  it("conjugation picks up a spec case axis (plus polarity default)", () => {
+    const spec = { axes: [{ name: "case" as const, floors: { dative: 3 } }] };
+    expect(coverageAxesFor(ExerciseType.CONJUGATION, spec)).toEqual([
+      "case",
+      "polarity",
+    ]);
+  });
+
+  it("conjugation picks up a spec number axis", () => {
+    const spec = { axes: [{ name: "number" as const, floors: { plural: 6 } }] };
+    expect(coverageAxesFor(ExerciseType.CONJUGATION, spec)).toEqual([
+      "number",
+      "polarity",
+    ]);
   });
 });
 

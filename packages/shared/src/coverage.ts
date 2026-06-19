@@ -33,18 +33,37 @@ export const SENTENCE_TYPE_CODES = [
   "interrogative",
   "imperative",
 ] as const;
+export const CASE_CODES = [
+  "nominative",
+  "accusative",
+  "dative",
+  "locative",
+  "ablative",
+  "genitive",
+] as const;
+export const NUMBER_CODES = ["singular", "plural"] as const;
 
 export type PersonCode = (typeof PERSON_CODES)[number];
 export type WordClassCode = (typeof WORD_CLASS_CODES)[number];
 export type PolarityCode = (typeof POLARITY_CODES)[number];
 export type SentenceTypeCode = (typeof SENTENCE_TYPE_CODES)[number];
+export type CaseCode = (typeof CASE_CODES)[number];
+export type NumberCode = (typeof NUMBER_CODES)[number];
 
-export type CoverageAxis = "person" | "wordClass" | "polarity" | "sentenceType";
+export type CoverageAxis =
+  | "person"
+  | "number"
+  | "case"
+  | "wordClass"
+  | "polarity"
+  | "sentenceType";
 
 /** The realized coverage values for one exercise; partial — only applicable
  *  axes are ever set. Stored verbatim in `exercises.coverage_tags`. */
 export type CoverageTags = {
   person?: PersonCode;
+  number?: NumberCode;
+  case?: CaseCode;
   wordClass?: WordClassCode;
   polarity?: PolarityCode;
   sentenceType?: SentenceTypeCode;
@@ -87,6 +106,8 @@ export type CoverageOutcome = Partial<Record<CoverageAxis, AxisOutcome>>;
  *  iterating this over the individual *_CODES arrays so callers stay in sync. */
 export const COVERAGE_AXIS_VALUES: Record<CoverageAxis, readonly string[]> = {
   person: PERSON_CODES,
+  number: NUMBER_CODES,
+  case: CASE_CODES,
   wordClass: WORD_CLASS_CODES,
   polarity: POLARITY_CODES,
   sentenceType: SENTENCE_TYPE_CODES,
@@ -96,6 +117,8 @@ export const COVERAGE_AXIS_VALUES: Record<CoverageAxis, readonly string[]> = {
  *  the Phase-1 `[person, polarity, sentenceType]` ordering for person cells. */
 const AXIS_ORDER: readonly CoverageAxis[] = [
   "person",
+  "number",
+  "case",
   "wordClass",
   "polarity",
   "sentenceType",

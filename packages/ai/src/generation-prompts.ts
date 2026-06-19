@@ -225,7 +225,7 @@ This is a sentence_construction exercise: there is NO blank — the learner writ
  * (not left as `{{vars}}`) because this whole string is itself one flat template
  * var — same pattern as `renderSentenceConstructionSection`.
  */
-function renderConjugationSection(
+export function renderConjugationSection(
   exerciseType: ExerciseType,
   language: string,
   cefrLevel: string,
@@ -234,18 +234,18 @@ function renderConjugationSection(
   if (exerciseType !== ExerciseType.CONJUGATION) return "";
   return `## Conjugation/inflection specifics (this exercise type)
 
-This is a conjugation drill: there is NO sentence and NO blank. You produce one lemma + one explicit feature bundle, and the single correct inflected form the learner must type. The cloze/sentence rules above do not apply. Follow these:
+This is an inflection drill: there is NO sentence and NO blank. You produce one lemma + one explicit feature bundle, and the single correct inflected form the learner must type. The cloze/sentence rules above do not apply. Follow these:
 
-- **Tense/mood is FIXED by the grammar point (${grammarPointName}).** Do not drift to other tenses. Vary only person/number (and polarity where the point covers it). The combination you pick determines \`targetForm\`.
-- **\`targetForm\` MUST be the exactly-correct ${language} form at CEFR ${cefrLevel}**, including every diacritic. Grading is an exact string match — a wrong accent or a vowel-harmony slip is a wrong stored answer and will mis-grade every learner. Double-check irregular stems.
-- **Enumerate genuine variants in \`acceptableForms\`** (e.g. with/without a clitic pronoun, accepted orthographic variants). Do NOT list near-misses or common-error forms — those must stay wrong.
-- **\`breakdown\` teaches the morphology**: stem + ending for ${language} fusional forms, or stem + ordered suffix gloss for agglutinative forms (e.g. Turkish: root + tense/aspect + person, noting vowel harmony). Keep it one line.
+- **The inflectional category is FIXED by the grammar point (${grammarPointName})** — tense/mood for verbs, case/number/possessive for nominals. Do not drift to a different category. Vary only the features the cell names (person/number/case, and polarity where the point covers it). The combination you pick determines \`targetForm\`.
+- **\`targetForm\` MUST be the exactly-correct ${language} form at CEFR ${cefrLevel}**, including every diacritic. Grading is an exact string match — a wrong accent or a vowel-harmony slip is a wrong stored answer and will mis-grade every learner. Double-check irregular stems and consonant softening.
+- **Enumerate genuine variants in \`acceptableForms\`** (e.g. accepted orthographic variants). Do NOT list near-misses or common-error forms — those must stay wrong.
+- **\`breakdown\` teaches the morphology**: stem + ending for ${language} fusional forms, or stem + ordered suffix gloss for agglutinative forms (e.g. Turkish: root + (plural) + (possessive) + case/person, noting vowel harmony). Keep it one line.
 - **\`featureBundle\` names the cell** in ${language}'s conventional grammar notation; it MUST NOT contain the answer.
-- **\`features\` decomposes the cell for display.** List the grammar dimensions OTHER than person/number — the tense/mood, and polarity where ${language} marks it — in order. Each entry pairs the ${language} term in conventional notation (\`term\`) with a 1–2 word English gloss (\`gloss\`), e.g. {term: "geçmiş zaman", gloss: "past"}, {term: "olumlu", gloss: "affirmative"}. Do NOT put person/number in \`features\`.
-- **\`subject\` is the person/number cue.** Give the representative ${language} subject pronoun for the cell (\`pronoun\`, e.g. "o", "nosotros", "ich") and its English gloss (\`gloss\`, e.g. "he / she / it"). It is shown prominently so the learner immediately sees who to conjugate for.
+- **\`features\` decomposes the cell for display.** List the inflectional dimensions OTHER than the subject cue — for verbs the tense/mood (and polarity where ${language} marks it); for nominals the case and/or number — in order. Each entry pairs the ${language} term in conventional notation (\`term\`) with a 1–2 word English gloss (\`gloss\`), e.g. {term: "geçmiş zaman", gloss: "past"} or {term: "bulunma", gloss: "locative"}. Do NOT put the subject cue in \`features\`.
+- **\`subject\` is the person cue — only when the form agrees with a person.** For verbs and the copula, give the representative ${language} subject pronoun (\`pronoun\`, e.g. "o", "ich") and its English \`gloss\` ("he / she / it"). For possessives, the possessor is the person cue (\`arabam\` → {pronoun: "benim", gloss: "my"}). **OMIT \`subject\` entirely for pure case/number forms that have no person** (\`ev → evde\`). It is shown prominently when present.
 - **\`features\` + \`subject\` describe the SAME cell as \`featureBundle\`** — they are its structured, glossed form, not extra constraints. They MUST NOT contain the answer.
-- **Use the verb you are given in the user prompt as the lemma — do NOT choose your own.** When a verb is provided, conjugate exactly that verb.
-- **\`instructions\` must contain ONLY the directive the learner reads** — one clean sentence telling them which form to produce for which person. Never include your own reasoning, alternative phrasings, abandoned attempts, or meta-text (no "Actually…", "Wait…", "let's keep it simple", or arrows). The carrier/context sentence, if any, must use the target verb.
+- **Use the lemma you are given in the user prompt — do NOT choose your own.** When a word is provided, inflect exactly that word.
+- **\`instructions\` must contain ONLY the directive the learner reads** — one clean sentence telling them which form to produce. Never include your own reasoning, alternative phrasings, abandoned attempts, or meta-text (no "Actually…", "Wait…", "let's keep it simple", or arrows). Any carrier/context sentence must use the target lemma.
 - **\`exampleSentences\` (1–2)** must use \`targetForm\` verbatim, be natural, and sit at or below CEFR ${cefrLevel}.
 
 `;
@@ -484,6 +484,10 @@ const COVERAGE_DIRECTIVE_BY_AXIS: Record<
   Exclude<CoverageAxis, "person">,
   (value: string) => string
 > = {
+  number: (v) =>
+    `The target word form MUST be ${v} (grammatical number).`,
+  case: (v) =>
+    `The target word form MUST carry the ${v} case.`,
   polarity: (v) =>
     `The target sentence MUST be ${v} (${v === "negative" ? "negated" : "a positive statement"}).`,
   wordClass: (v) => `The target word the learner must produce MUST be a ${v}.`,
@@ -513,7 +517,7 @@ function renderCoverageBlock(
         `If ${inputs.grammarPoint.name} cannot naturally express this person, use the closest natural person instead.`,
     );
   }
-  for (const axis of ["polarity", "wordClass", "sentenceType"] as const) {
+  for (const axis of ["number", "case", "polarity", "wordClass", "sentenceType"] as const) {
     const v = target[axis];
     if (v) parts.push(COVERAGE_DIRECTIVE_BY_AXIS[axis](v));
   }

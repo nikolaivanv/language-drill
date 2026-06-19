@@ -49,8 +49,12 @@ const { A1, A2, B1 } = CefrLevel;
  * bump enumerates the new free-writing cells.
  * 2026-06-19: TR B1 enabled — 10 grammar + 5 vocab + dictation + 3 free-writing
  * (Yedi İklim B1, G&K-grounded). Bump clears low-yield/saturation suppression.
+ * 2026-06-19b: five TR A1 nominal-inflection points flagged conjugationSuitable
+ * with case/number/stacking coverage specs (personal-suffixes copula, possessive
+ * +case stacking, locative, accusative-definite-object, ablative-dative); clears
+ * suppression so the new CONJUGATION cells are enqueued.
  */
-export const CURRICULUM_VERSION_TR = '2026-06-19a';
+export const CURRICULUM_VERSION_TR = '2026-06-19b';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -88,6 +92,7 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-personal-suffixes',
+    conjugationSuitable: true,
     coverageSpec: {
       axes: [
         { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
@@ -151,6 +156,8 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-locative',
+    conjugationSuitable: true,
+    coverageSpec: { axes: [{ name: 'number', floors: { singular: 6, plural: 6 } }] },
     kind: 'grammar',
     name: 'Locative case -DA',
     description:
@@ -414,6 +421,8 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-accusative-definite-object',
+    conjugationSuitable: true,
+    coverageSpec: { axes: [{ name: 'number', floors: { singular: 6, plural: 6 } }] },
     kind: 'grammar',
     name: 'Accusative -(y)I for definite objects',
     description:
@@ -440,6 +449,8 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-ablative-dative',
+    conjugationSuitable: true,
+    coverageSpec: { axes: [{ name: 'case', floors: { ablative: 6, dative: 6 } }] },
     kind: 'grammar',
     name: 'Ablative -DAn and dative -(y)A',
     description:
@@ -574,9 +585,11 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-possessive-suffixes',
+    conjugationSuitable: true,
     coverageSpec: {
       axes: [
-        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
+        { name: 'person', floors: { '1sg': 3, '2sg': 3, '3sg': 3, '1pl': 3, '2pl': 3, '3pl': 3 } },
+        { name: 'case', floors: { nominative: 3, accusative: 3, dative: 3, ablative: 3, locative: 3 } },
       ],
     },
     kind: 'grammar',

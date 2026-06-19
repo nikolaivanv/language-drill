@@ -1088,4 +1088,45 @@ describe("renderCoverageBlock (via buildGenerationUserPrompt)", () => {
     expect(without).not.toContain("Target grammatical person");
     expect(withTargets).toContain("Target grammatical person");
   });
+  it("emits number and case directives for nominal inflection targets", () => {
+    const out = buildGenerationUserPrompt(covInputs(), 0, null, null, [
+      { case: "dative", number: "plural" },
+    ]);
+    expect(out).toContain("dative");
+    expect(out).toContain("plural");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// renderConjugationSection
+// ---------------------------------------------------------------------------
+
+import { renderConjugationSection } from "./generation-prompts.js";
+
+describe("renderConjugationSection", () => {
+  const section = () =>
+    renderConjugationSection(ExerciseType.CONJUGATION, "Turkish", "A1", "Locative case -DA");
+
+  it("returns empty for non-conjugation types", () => {
+    expect(
+      renderConjugationSection(ExerciseType.CLOZE, "Turkish", "A1", "x"),
+    ).toBe("");
+  });
+
+  it("does not assume the lemma is a verb", () => {
+    expect(section()).not.toMatch(/Use the verb you are given/);
+    expect(section()).toMatch(/lemma|word/i);
+  });
+
+  it("treats the fixed inflectional category generically (not tense-only)", () => {
+    // Must not hard-assert 'Tense/mood is FIXED' as the only fixed category.
+    expect(section()).toMatch(/inflectional category|case\/number|tense\/mood for verbs/i);
+  });
+
+  it("still documents features and subject, with subject made optional for case forms", () => {
+    expect(section()).toMatch(/`features`/);
+    expect(section()).toMatch(/`subject`/);
+    // The verb-shaped 'subject is the person/number cue' must become conditional.
+    expect(section()).toMatch(/omit `subject`|when the form agrees with a person|possessor/i);
+  });
 });

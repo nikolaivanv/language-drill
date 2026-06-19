@@ -287,10 +287,10 @@ export const CONJUGATION_GENERATION_TOOL: Anthropic.Tool = {
       },
       subject: {
         type: "object",
-        description: "The person/number cue, surfaced prominently to the learner.",
+        description: "The person cue, surfaced prominently — only for forms that agree with a person (verb/copula subject, or the possessor for possessives, e.g. {pronoun:'benim',gloss:'my'}). OMIT for pure case/number forms with no person.",
         properties: {
-          pronoun: { type: "string", description: "Representative target-language subject pronoun for the cell, e.g. 'o', 'nosotros', 'ich'." },
-          gloss: { type: "string", description: "English gloss of the pronoun, e.g. 'he / she / it', 'we', 'I'." },
+          pronoun: { type: "string", description: "Representative target-language person pronoun for the cell, e.g. 'o', 'nosotros', 'ich', or the possessor 'benim'." },
+          gloss: { type: "string", description: "English gloss, e.g. 'he / she / it', 'we', 'I', 'my'." },
         },
         required: ["pronoun", "gloss"],
       },
@@ -304,7 +304,7 @@ export const CONJUGATION_GENERATION_TOOL: Anthropic.Tool = {
       exampleSentences: { type: "array", items: { type: "string" }, description: "1-2 short, natural sentences using the target form in context." },
       topicHint: { type: "string", description: "Optional topic theme." },
     },
-    required: ["instructions", "lemma", "lemmaGloss", "featureBundle", "features", "subject", "targetForm", "breakdown", "exampleSentences"],
+    required: ["instructions", "lemma", "lemmaGloss", "featureBundle", "features", "targetForm", "breakdown", "exampleSentences"],
   },
 };
 
@@ -663,11 +663,12 @@ function requireConjugationFeatures(
   });
 }
 
-function requireConjugationSubject(
+function optionalConjugationSubject(
   raw: Record<string, unknown>,
   ctx: string,
-): { pronoun: string; gloss: string } {
+): { pronoun: string; gloss: string } | undefined {
   const v = raw["subject"];
+  if (v === undefined || v === null) return undefined;
   if (!isObject(v)) {
     throw new Error(`${ctx}: invalid subject: must be an object, got ${JSON.stringify(v)}`);
   }
@@ -848,7 +849,7 @@ export function parseGeneratedConjugationDraft(
   const acceptableFormsRaw = optionalStringArray(input, "acceptableForms", ctx);
   const acceptableForms = acceptableFormsRaw?.map((s) => s.trim()).filter((s) => s.length > 0);
   const features = requireConjugationFeatures(input, ctx);
-  const subject = requireConjugationSubject(input, ctx);
+  const subject = optionalConjugationSubject(input, ctx);
 
   if (lemma.length === 0) {
     throw new Error(`${ctx}: invalid lemma: must contain non-whitespace characters`);
@@ -867,7 +868,7 @@ export function parseGeneratedConjugationDraft(
     lemmaGloss,
     featureBundle,
     features,
-    subject,
+    ...(subject !== undefined ? { subject } : {}),
     targetForm,
     breakdown,
     exampleSentences,

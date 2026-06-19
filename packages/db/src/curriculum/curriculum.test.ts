@@ -1,9 +1,12 @@
 import {
+  ExerciseType,
   Language,
   resolveTheoryCategory,
   type LearningLanguage,
 } from '@language-drill/shared';
 import { describe, expect, it } from 'vitest';
+
+import { enumerateCurriculumCells } from '../generation/cells';
 
 import {
   ALL_CURRICULA,
@@ -183,13 +186,16 @@ describe('curriculum conjugationSuitable flag', () => {
     ).toThrow(/conjugationSuitable/);
   });
 
-  it('flagged conjugation points each have a person coverage axis', () => {
+  it('flagged conjugation points each have at least one coverage axis (person, case, or number)', () => {
+    // Verb-inflection points carry a person axis; nominal-inflection points
+    // (cases, possessive+case stacking) carry case or number axes instead.
     const flagged = ALL_CURRICULA.filter((p) => p.conjugationSuitable);
     expect(flagged.length).toBeGreaterThan(0);
     for (const p of flagged) {
       expect(p.kind).toBe('grammar');
       const names = (p.coverageSpec?.axes ?? []).map((a) => a.name);
-      expect(names).toContain('person');
+      const hasRelevantAxis = names.some((n) => n === 'person' || n === 'case' || n === 'number');
+      expect(hasRelevantAxis, `${p.key}: conjugationSuitable point must have person, case, or number axis`).toBe(true);
     }
   });
 });
@@ -502,6 +508,34 @@ describe('coverageSpec invariants', () => {
       expect((e as Error).message).not.toMatch(/coverageSpec|duplicate axis|illegal value|only valid|positive integer/);
     }
   });
+
+  it('allows a case+number axis and conjugationSuitable on a grammar point', () => {
+    const point = baseGrammar({
+      key: 'tr-a1-test-case-axis',
+      conjugationSuitable: true,
+      coverageSpec: {
+        axes: [
+          { name: 'case', floors: { dative: 3, ablative: 3 } },
+          { name: 'number', floors: { singular: 4, plural: 4 } },
+        ],
+      },
+    });
+    // Invariant 10 (per-language grammar count minimums) may throw for a single-entry
+    // fixture; we only care that no coverageSpec-related error is thrown.
+    try {
+      assertCurriculumInvariants([point]);
+    } catch (e) {
+      expect((e as Error).message).not.toMatch(/coverageSpec|duplicate axis|illegal value|only valid|positive integer/);
+    }
+  });
+
+  it('still rejects a wordClass axis on a grammar point', () => {
+    const point = baseGrammar({
+      key: 'tr-a1-test-bad-axis',
+      coverageSpec: { axes: [{ name: 'wordClass', floors: { noun: 3 } }] },
+    });
+    expect(() => assertCurriculumInvariants([point])).toThrow(/wordClass/);
+  });
 });
 
 describe('grammarPointsAtOrBelow', () => {
@@ -554,5 +588,34 @@ describe('theory category coverage', () => {
     const nonGrammar = trCurriculum.filter((p) => p.kind !== 'grammar');
     expect(nonGrammar.length).toBeGreaterThan(0);
     expect(nonGrammar.every((p) => resolveTheoryCategory(p.key) === 'other')).toBe(true);
+  });
+});
+
+describe('TR nominal-inflection conjugation cells (Task 6)', () => {
+  const CONJ_POINTS = [
+    'tr-a1-personal-suffixes',
+    'tr-a1-possessive-suffixes',
+    'tr-a1-locative',
+    'tr-a1-accusative-definite-object',
+    'tr-a1-ablative-dative',
+  ];
+
+  it('emits a conjugation cell for each flagged Turkish nominal point', () => {
+    const cells = enumerateCurriculumCells(trCurriculum);
+    for (const key of CONJ_POINTS) {
+      const hasConj = cells.some(
+        (c) => c.grammarPoint.key === key && c.exerciseType === ExerciseType.CONJUGATION,
+      );
+      expect(hasConj, `${key} should have a conjugation cell`).toBe(true);
+    }
+  });
+
+  it('possessive-suffixes drives possessive+case stacking via a case axis', () => {
+    const point = trCurriculum.find((p) => p.key === 'tr-a1-possessive-suffixes');
+    const caseAxis = point?.coverageSpec?.axes.find((a) => a.name === 'case');
+    expect(caseAxis).toBeDefined();
+    expect(Object.keys(caseAxis!.floors).sort()).toEqual(
+      ['ablative', 'accusative', 'dative', 'locative', 'nominative'],
+    );
   });
 });

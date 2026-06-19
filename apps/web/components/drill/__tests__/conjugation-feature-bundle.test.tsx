@@ -52,4 +52,26 @@ describe('ConjugationFeatureBundle', () => {
     render(<ConjugationFeatureBundle content={BASE} variant="inline" />);
     expect(screen.getByText(BASE.featureBundle)).toBeInTheDocument();
   });
+
+  it('renders feature chips with no pronoun badge when subject is absent', () => {
+    render(
+      <ConjugationFeatureBundle
+        content={{
+          type: ExerciseType.CONJUGATION,
+          instructions: "Write the correct form.",
+          lemma: "ev",
+          lemmaGloss: "house",
+          featureBundle: "bulunma · tekil",
+          features: [{ term: "bulunma", gloss: "locative" }],
+          targetForm: "evde",
+          breakdown: "ev + -de",
+          exampleSentences: ["Ali evde."],
+        } as never}
+      />,
+    );
+    expect(screen.getByText("bulunma")).toBeInTheDocument(); // chip rendered
+    expect(screen.getByText("locative")).toBeInTheDocument();
+    // No pronoun badge should be rendered for a subjectless (nominal) cell.
+    expect(screen.queryByText("o")).toBeNull();
+  });
 });
