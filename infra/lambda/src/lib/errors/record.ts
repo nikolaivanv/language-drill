@@ -1,4 +1,4 @@
-import type { EvaluationError } from '@language-drill/shared';
+import type { EvaluationError, FreeWritingError } from '@language-drill/shared';
 import { errorObservations, errorObservationsFromEvaluation } from '@language-drill/db';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -14,6 +14,30 @@ export interface RecordArgs {
   exerciseType: string;
   hostGrammarPointKey: string | null;
   occurredAt: Date;
+}
+
+/**
+ * Map FreeWritingError[] (from the free-writing evaluator) to the canonical
+ * EvaluationError[] shape used by the error_observations spine.
+ *
+ * Field mapping:
+ *   original  → text        (exact learner substring)
+ *   note      → explanation (fallback '' when absent)
+ *   correction → correction (direct)
+ *   severity: 'high' → 'major', 'med'|'low' → 'minor'
+ *   type: cast from string to EvaluationError['type'] (category label)
+ */
+export function freeWritingErrorsToEvaluationErrors(
+  errors: readonly FreeWritingError[] | undefined,
+): EvaluationError[] {
+  if (!errors || errors.length === 0) return [];
+  return errors.map((e) => ({
+    type: e.type as EvaluationError['type'],
+    severity: e.severity === 'high' ? 'major' : 'minor',
+    text: e.original,
+    correction: e.correction,
+    explanation: e.note ?? '',
+  }));
 }
 
 /**

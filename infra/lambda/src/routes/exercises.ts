@@ -39,7 +39,7 @@ import {
 } from '@language-drill/ai';
 import { db } from '../db';
 import { approvedStatusFilter, audioReadyFilter, freshFirstOrderBy } from '../lib/exercise-filters';
-import { recordErrorObservations } from '../lib/errors/record';
+import { recordErrorObservations, freeWritingErrorsToEvaluationErrors } from '../lib/errors/record';
 import { presignAudioUrl } from '../lib/audio-url';
 import { withAudioUrl } from '../lib/dictation-content';
 import { authMiddleware } from '../middleware/auth';
@@ -476,11 +476,8 @@ exercises.post('/exercises/:id/submit', async (c) => {
         evaluatedAt: new Date(),
       });
 
-      // Free-writing errors (FreeWritingError[]) have a different shape from
-      // EvaluationError[] and cannot be persisted as error_observations — pass
-      // undefined so the helper no-ops rather than inserting malformed rows.
       await recordErrorObservations(db, {
-        errors: undefined,
+        errors: freeWritingErrorsToEvaluationErrors(evaluation.errors),
         userId,
         language: exercise.language as string,
         exerciseId: id,
