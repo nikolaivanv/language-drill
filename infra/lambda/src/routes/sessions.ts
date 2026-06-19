@@ -775,6 +775,9 @@ sessions.get('/sessions/:id/debrief', async (c) => {
             submissionId: null,
             type: row.type as ExerciseType,
             grammarPointKey: row.grammar_point_key,
+            grammarPointName: row.grammar_point_key
+              ? (getGrammarPoint(row.grammar_point_key)?.name ?? null)
+              : null,
             contentJson,
             status: 'skipped' as const,
             userAnswer: null,
@@ -791,6 +794,9 @@ sessions.get('/sessions/:id/debrief', async (c) => {
           submissionId: row.history_id,
           type: row.type as ExerciseType,
           grammarPointKey: row.grammar_point_key,
+          grammarPointName: row.grammar_point_key
+            ? (getGrammarPoint(row.grammar_point_key)?.name ?? null)
+            : null,
           contentJson,
           status,
           userAnswer,

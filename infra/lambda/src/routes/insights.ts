@@ -2,11 +2,11 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { and, eq, gte } from 'drizzle-orm';
 import { Language } from '@language-drill/shared';
-import { errorObservations } from '@language-drill/db';
+import { errorObservations, getGrammarPoint } from '@language-drill/db';
 import { db } from '../db';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
-import { rankRecurringErrors, type RecurringErrorInput } from '../lib/errors/recurring';
+import { rankRecurringErrors, attachGrammarPointNames, type RecurringErrorInput } from '../lib/errors/recurring';
 
 const insights = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
@@ -62,7 +62,11 @@ insights.get('/insights/errors', async (c) => {
     occurredAt: new Date(r.occurredAt),
   }));
 
-  const themes = rankRecurringErrors(inputs, now).map((t) => ({
+  const ranked = attachGrammarPointNames(
+    rankRecurringErrors(inputs, now),
+    (key) => (key ? (getGrammarPoint(key)?.name ?? null) : null),
+  );
+  const themes = ranked.map((t) => ({
     ...t,
     lastOccurredAt: t.lastOccurredAt.toISOString(),
   }));

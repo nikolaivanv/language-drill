@@ -16,6 +16,7 @@ export interface RecurringErrorTheme {
   lastOccurredAt: Date;
   sample: { wrongText: string; correction: string };
   score: number;
+  grammarPointName?: string | null;
 }
 
 const DEFAULT_HALF_LIFE_DAYS = 14;
@@ -67,4 +68,16 @@ export function rankRecurringErrors(
   return [...groups.values()]
     .sort((a, b) => b.score - a.score || b.majorCount - a.majorCount)
     .slice(0, limit);
+}
+
+/**
+ * Pure: attach a resolved display name to each theme using the injected
+ * resolver (the route passes a getGrammarPoint-based resolver). Returns new
+ * objects; does not mutate the input.
+ */
+export function attachGrammarPointNames(
+  themes: RecurringErrorTheme[],
+  resolve: (key: string | null) => string | null,
+): RecurringErrorTheme[] {
+  return themes.map((t) => ({ ...t, grammarPointName: resolve(t.grammarPointKey) }));
 }
