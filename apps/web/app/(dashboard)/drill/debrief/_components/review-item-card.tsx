@@ -24,7 +24,7 @@ import { DictationBody } from './dictation-body';
 
 // ---------------------------------------------------------------------------
 // ReviewItemCard — one card per debrief item, in manifest order. Renders a
-// header chrome (index + topic + status chip) that toggles an expanded body.
+// header chrome (index + grammar-point chip + status chip) that toggles an expanded body.
 // Correct items collapse by default; incorrect / skipped expand by default
 // (Req 5.9). The body switches by exercise type — this file ships the cloze
 // branch (Req 5.5); translation + vocab branches land in task 12.

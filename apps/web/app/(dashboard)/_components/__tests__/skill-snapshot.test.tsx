@@ -212,6 +212,8 @@ describe('SkillSnapshotGrid — trained vs not-started', () => {
     expect(notStartedEl.textContent).toMatch(/reading/i);
     // a trained axis still shows its percentage
     expect(screen.getByText('84%')).toBeInTheDocument();
+    // the zero-evidence axis must NOT appear as a 0% weakest-first row
+    expect(screen.queryByText('0%')).not.toBeInTheDocument();
   });
 });
 

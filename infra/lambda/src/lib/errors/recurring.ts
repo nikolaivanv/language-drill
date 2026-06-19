@@ -16,7 +16,7 @@ export interface RecurringErrorTheme {
   lastOccurredAt: Date;
   sample: { wrongText: string; correction: string };
   score: number;
-  grammarPointName?: string | null;
+  grammarPointName: string | null;
 }
 
 const DEFAULT_HALF_LIFE_DAYS = 14;
@@ -53,6 +53,7 @@ export function rankRecurringErrors(
         lastOccurredAt: r.occurredAt,
         sample: { wrongText: r.wrongText, correction: r.correction },
         score: weight,
+        grammarPointName: null,
       });
       continue;
     }

@@ -148,11 +148,3 @@ function isEmpty(data: ProgressRadarResponse): boolean {
   return data.axes.every((a) => a.evidenceCount === 0);
 }
 
-function sortAxes(data: ProgressRadarResponse) {
-  return data.axes
-    .slice()
-    .sort(
-      (a, b) =>
-        a.currentMastery - b.currentMastery || a.key.localeCompare(b.key),
-    );
-}

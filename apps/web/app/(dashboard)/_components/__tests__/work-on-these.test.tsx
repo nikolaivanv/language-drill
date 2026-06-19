@@ -31,7 +31,12 @@ describe('WorkOnThese', () => {
 
   it('falls back to the error type when grammar point name is null', () => {
     render(<WorkOnThese themes={[theme({ grammarPointKey: null, grammarPointName: null })]} />);
-    expect(screen.getByText(/grammar/i)).toBeInTheDocument();
+    expect(screen.getByText('grammar errors')).toBeInTheDocument();
+  });
+
+  it('falls back to the grammar point key when name is null', () => {
+    render(<WorkOnThese themes={[theme({ grammarPointName: null })]} />);
+    expect(screen.getByText('tr-a1-locative')).toBeInTheDocument();
   });
 
   it('caps the list at three themes', () => {

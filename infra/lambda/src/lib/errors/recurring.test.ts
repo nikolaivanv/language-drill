@@ -72,6 +72,7 @@ describe('attachGrammarPointNames', () => {
     lastOccurredAt: new Date('2026-06-19T00:00:00Z'),
     sample: { wrongText: 'pazarda', correction: 'pazara' },
     score: 1,
+    grammarPointName: null,
     ...over,
   });
 
@@ -88,8 +89,8 @@ describe('attachGrammarPointNames', () => {
   });
 
   it('does not mutate the input themes', () => {
-    const input = [theme()];
+    const input = [theme({ grammarPointName: null })];
     attachGrammarPointNames(input, () => 'Name');
-    expect(input[0]).not.toHaveProperty('grammarPointName');
+    expect(input[0].grammarPointName).toBeNull();
   });
 });
