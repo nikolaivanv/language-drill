@@ -261,6 +261,82 @@ describe('URL parameter construction', () => {
   });
 });
 
+describe('useSubmitAnswer — does not swap the live exercise', () => {
+  const SAMPLE_EXERCISE = {
+    id: 'conj-1',
+    type: 'conjugation',
+    language: 'TR',
+    difficulty: 'A1',
+    grammarPointKey: 'tr-a1-past',
+    contentJson: { lemma: 'gelmek', targetForm: 'geldiler' },
+  };
+
+  const SAMPLE_EVALUATION = {
+    score: 0,
+    grammarAccuracy: 0,
+    vocabularyRange: 'n/a',
+    taskAchievement: 0,
+    feedback: 'wrong form',
+    errors: [],
+    estimatedCefrEvidence: 'A1',
+  };
+
+  function jsonResponse(body: unknown): Response {
+    return { ok: true, status: 200, json: async () => body } as unknown as Response;
+  }
+
+  // A single shared QueryClient so an invalidation fired by the mutation can
+  // reach the active exercise query — exactly the production wiring on the
+  // conjugation warm-up page.
+  function buildWrapper() {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    return function Wrapper({ children }: { children: ReactNode }) {
+      return createElement(QueryClientProvider, { client: queryClient }, children);
+    };
+  }
+
+  it('does not refetch the active exercise query on submit success', async () => {
+    const exerciseFetch = vi
+      .fn<AuthenticatedFetch>()
+      .mockResolvedValue(jsonResponse(SAMPLE_EXERCISE));
+    const submitFetch = vi
+      .fn<AuthenticatedFetch>()
+      .mockResolvedValue(jsonResponse(SAMPLE_EVALUATION));
+
+    const { result } = renderHook(
+      () => ({
+        exercise: useExercise({
+          language: 'TR' as Language,
+          difficulty: CefrLevel.A1,
+          type: ExerciseType.CONJUGATION,
+          fetchFn: exerciseFetch,
+        }),
+        submit: useSubmitAnswer({ fetchFn: submitFetch }),
+      }),
+      { wrapper: buildWrapper() },
+    );
+
+    await waitFor(() => expect(result.current.exercise.data).toBeDefined());
+    expect(exerciseFetch).toHaveBeenCalledTimes(1);
+
+    // Submit an answer. The mutation must NOT yank the displayed task out from
+    // under the feedback by refetching a fresh random exercise — advancing is
+    // an explicit caller action (refetch on "next"), not a submit side effect.
+    await act(async () => {
+      await result.current.submit.mutateAsync({ exerciseId: 'conj-1', answer: 'geldiler' });
+    });
+
+    // Flush any invalidation-triggered refetch the mutation might have queued.
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(exerciseFetch).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('useSubmitAnswer — sessionId threading', () => {
   function jsonResponse(body: unknown): Response {
     return { ok: true, status: 200, json: async () => body } as unknown as Response;

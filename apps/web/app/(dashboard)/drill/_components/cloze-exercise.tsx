@@ -4,6 +4,7 @@ import * as React from 'react';
 import type { ClozeContent, LearningLanguage } from '@language-drill/shared';
 import { AccentPicker, Button } from '../../../../components/ui';
 import { cn } from '../../../../lib/cn';
+import { useAnswerDraft } from '../../../../lib/drill/use-answer-draft';
 import { clozeVerdict } from '../../../../lib/drill/verdict-tier';
 import { ClozePrompt, type BlankState } from '../../../../components/drill/cloze-prompt';
 import { useDrillAction } from './drill-action-context';
@@ -19,6 +20,9 @@ export interface ClozeExerciseProps {
   onSubmit: (answer: string, meta: SubmissionMeta) => void;
   onNext: () => void;
   nextLabel?: string;
+  /** When set, the typed answer is drafted in sessionStorage so it survives a
+   *  full page reload. Omitted in tests/contexts that don't need persistence. */
+  exerciseId?: string;
 }
 
 function isAccentLanguage(lang: string): lang is 'ES' | 'DE' | 'TR' {
@@ -32,8 +36,9 @@ export function ClozeExercise({
   onSubmit,
   onNext,
   nextLabel,
+  exerciseId,
 }: ClozeExerciseProps) {
-  const [answer, setAnswer] = React.useState('');
+  const [answer, setAnswer, clearDraft] = useAnswerDraft(exerciseId);
   const [usedMc, setUsedMc] = React.useState(false);
   const [showOptions, setShowOptions] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
@@ -52,6 +57,7 @@ export function ClozeExercise({
   function handleSubmit() {
     if (!answer.trim() || isLocked) return;
     onSubmit(answer, { usedMc });
+    clearDraft();
   }
 
   // Revealing the option set is itself the scaffold — seeing the candidate

@@ -4,6 +4,7 @@ import * as React from 'react';
 import type { ConjugationContent, LearningLanguage } from '@language-drill/shared';
 import { AccentPicker, Button, Input } from '../../../../components/ui';
 import { ConjugationPromptCard } from '../../../../components/drill/conjugation-prompt';
+import { useAnswerDraft } from '../../../../lib/drill/use-answer-draft';
 import { conjugationVerdict } from '../../../../lib/drill/verdict-tier';
 import { useDrillAction } from './drill-action-context';
 import { FeedbackShell } from './feedback-shell';
@@ -18,6 +19,9 @@ export interface ConjugationExerciseProps {
   onSubmit: (answer: string, meta: SubmissionMeta) => void;
   onNext: () => void;
   nextLabel?: string;
+  /** When set, the typed answer is drafted in sessionStorage so it survives a
+   *  full page reload. Omitted in tests/contexts that don't need persistence. */
+  exerciseId?: string;
 }
 
 function isAccentLanguage(lang: string): lang is 'ES' | 'DE' | 'TR' {
@@ -31,8 +35,9 @@ export function ConjugationExercise({
   onSubmit,
   onNext,
   nextLabel,
+  exerciseId,
 }: ConjugationExerciseProps) {
-  const [answer, setAnswer] = React.useState('');
+  const [answer, setAnswer, clearDraft] = useAnswerDraft(exerciseId);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
 
   React.useEffect(() => {
@@ -45,6 +50,7 @@ export function ConjugationExercise({
   function handleSubmit() {
     if (!answer.trim() || isLocked) return;
     onSubmit(answer, {});
+    clearDraft();
   }
 
   const canSubmit = answer.trim().length > 0;
