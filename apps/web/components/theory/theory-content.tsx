@@ -1,4 +1,4 @@
-import { type RefObject } from 'react';
+import { type ReactNode, type RefObject } from 'react';
 import type { LearningLanguage } from '@language-drill/shared';
 import { TheorySections } from './theory-sections';
 import type { TheoryTopic } from './types';
@@ -18,6 +18,12 @@ type TheoryContentProps = {
   scrollRef: RefObject<HTMLDivElement | null>;
   language: LearningLanguage;
   onSwitchTopic: (topicId: string) => void;
+  /**
+   * Optional chrome rendered after the sections, inside the scroll area — used
+   * on mobile for the "browse all topics" affordance that opens the topic
+   * switcher once the reader reaches the end of a topic.
+   */
+  footer?: ReactNode;
 };
 
 export function TheoryContent({
@@ -25,6 +31,7 @@ export function TheoryContent({
   scrollRef,
   language,
   onSwitchTopic,
+  footer,
 }: TheoryContentProps) {
   return (
     <div ref={scrollRef} className="theory-scroll">
@@ -33,6 +40,7 @@ export function TheoryContent({
         language={language}
         onSwitchTopic={onSwitchTopic}
       />
+      {footer}
     </div>
   );
 }

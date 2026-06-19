@@ -35,12 +35,12 @@ export function TheoryToc({
   const [topicQuery, setTopicQuery] = useState('');
   const showFilter = others.length > OTHER_TOPICS_FILTER_THRESHOLD;
   const visibleOthers = showFilter ? filterTopics(others, topicQuery) : others;
-  // Desktop → vertical 240px sidebar. Mobile (≤760px) → horizontal, scrollable
-  // tab strips pinned under the sheet header (the strip layout itself is driven
-  // by the `.theory-toc` @media overrides in globals.css). The vertical-only
-  // "jump to" label and the stacked "other topics" heading are dropped on
-  // mobile; the section tabs and the topic-switch tabs each get their own
-  // horizontal strip, with the filter row between them when the list is long.
+  // Desktop → vertical 240px sidebar with section tabs *and* an "other topics"
+  // list. Mobile (≤760px) → a single horizontal scroll-spy strip of in-page
+  // sections (driven by the `.theory-toc` @media overrides in globals.css), and
+  // nothing else: cross-topic switching moves to the title-tap `TopicSwitcherSheet`
+  // (owned by the panel / detail page), so the confusing second look-alike
+  // ribbon is gone. The vertical-only "jump to" label is also dropped on mobile.
   const isMobile = useIsMobile();
 
   // Topic label with the active query substring highlighted (shared by the
@@ -97,26 +97,6 @@ export function TheoryToc({
           );
         })}
       </ul>
-
-      {isMobile && others.length > 0 && (
-        <>
-          {showFilter && filterInput}
-          <ul className="theory-toc-topics">
-            {visibleOthers.map((t) => (
-              <li key={t.id}>
-                <button
-                  type="button"
-                  className="theory-otherbtn"
-                  onClick={() => onSwitchTopic(t.id)}
-                >
-                  {topicLabel(t.title)}
-                </button>
-              </li>
-            ))}
-          </ul>
-          {showEmptyHint && emptyHint}
-        </>
-      )}
 
       {!isMobile && others.length > 0 && (
         <div className="theory-other">
