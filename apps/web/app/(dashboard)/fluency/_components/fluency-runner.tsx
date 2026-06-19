@@ -7,6 +7,7 @@ import type {
   FluencyAttemptResponse,
 } from '@language-drill/api-client';
 import { FluencyItem, type FluencyVerdict } from './fluency-item';
+import { promptLabelFor, type FluencyItemResult } from './fluency-metrics';
 
 export type FluencyExercise = {
   id: string;
@@ -20,7 +21,7 @@ export type FluencyExercise = {
 export interface FluencyRunnerProps {
   exercises: FluencyExercise[];
   onSubmitAttempt: (input: FluencyAttemptRequest) => Promise<FluencyAttemptResponse>;
-  onDone: () => void;
+  onDone: (results: FluencyItemResult[]) => void;
 }
 
 export function FluencyRunner({ exercises, onSubmitAttempt, onDone }: FluencyRunnerProps) {
@@ -30,6 +31,7 @@ export function FluencyRunner({ exercises, onSubmitAttempt, onDone }: FluencyRun
   const startRef = React.useRef<number>(Date.now());
   const submittingRef = React.useRef(false);
   const intervalRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
+  const resultsRef = React.useRef<FluencyItemResult[]>([]);
 
   const current = exercises[index];
 
@@ -60,6 +62,15 @@ export function FluencyRunner({ exercises, onSubmitAttempt, onDone }: FluencyRun
     try {
       const res = await onSubmitAttempt({ exerciseId: current.id, answer, latencyMs });
       setVerdict({ correct: res.correct, correctAnswer: res.correctAnswer });
+      resultsRef.current.push({
+        index,
+        type: current.type,
+        promptLabel: promptLabelFor(current.contentJson),
+        userAnswer: answer,
+        correct: res.correct,
+        correctAnswer: res.correctAnswer,
+        latencyMs: res.latencyMs,
+      });
     } catch {
       // Network error — leave the item answerable and restart the timer from
       // now, so a retry's latency reflects fresh think-time rather than
@@ -76,7 +87,7 @@ export function FluencyRunner({ exercises, onSubmitAttempt, onDone }: FluencyRun
 
   function handleNext() {
     if (index + 1 >= exercises.length) {
-      onDone();
+      onDone(resultsRef.current);
       return;
     }
     setIndex((i) => i + 1);

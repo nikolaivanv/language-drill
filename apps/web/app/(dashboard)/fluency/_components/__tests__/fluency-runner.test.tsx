@@ -19,8 +19,8 @@ describe('FluencyRunner', () => {
     await screen.findByRole('status'); // verdict shown
     fireEvent.click(screen.getByRole('button', { name: 'next' }));
 
-    // second item now visible
-    await screen.findByText('La casa ___');
+    // second item now visible — the sentence renders with the blank split out
+    await screen.findByText(/La casa/);
   });
 
   it('calls onDone after the last item', async () => {
@@ -31,7 +31,10 @@ describe('FluencyRunner', () => {
     fireEvent.click(screen.getByRole('button', { name: 'submit' }));
     await screen.findByRole('button', { name: 'finish' });
     fireEvent.click(screen.getByRole('button', { name: 'finish' }));
-    await waitFor(() => expect(onDone).toHaveBeenCalled());
+    await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
+    const results = onDone.mock.calls[0][0];
+    expect(results).toHaveLength(1);
+    expect(results[0]).toMatchObject({ correct: true, correctAnswer: 'x', userAnswer: 'está' });
   });
 
   it('ignores a second submit click while the first is in flight', async () => {
