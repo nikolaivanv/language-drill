@@ -7,7 +7,7 @@ const result = {
   score: 0.82, grammarAccuracy: 0.82, vocabularyRange: 'B1', taskAchievement: 0.9,
   feedback: 'f', errors: [], estimatedCefrEvidence: 'B1',
   rawCharAccuracy: 0.8, adjustedCharAccuracy: 0.82, wordAccuracy: 0.9, listeningCefr: 'B1',
-  headline: 'Casi', summary: 's',
+  headline: 'Casi', summary: 'You mis-segmented one word.',
   diff: [
     { kind: 'match' as const, text: 'el tiempo' },
     { kind: 'error' as const, id: 1, got: 'locura', expected: 'lo cura', severity: 'high' as const },
@@ -23,6 +23,7 @@ const result = {
 
 it('renders the accuracy line, a difference card, and criteria rows', () => {
   render(<DictationResultBody result={result} />);
+  expect(screen.getByText('You mis-segmented one word.')).toBeInTheDocument();
   expect(screen.getByText(/words/)).toBeInTheDocument();
   expect(screen.getByText('word boundary')).toBeInTheDocument();
   expect(screen.getByText('Mis-segmented.')).toBeInTheDocument();

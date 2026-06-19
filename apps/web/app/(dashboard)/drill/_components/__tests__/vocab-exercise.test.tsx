@@ -180,6 +180,15 @@ describe('VocabExercise', () => {
     });
   });
 
+  describe('evaluated state — feedback prose', () => {
+    it("renders the evaluator's feedback even when no confusions parse", () => {
+      renderVocab({
+        submission: evaluatedAt(1.0, { feedback: 'Nice try, keep going.' }),
+      });
+      expect(screen.getByText('Nice try, keep going.')).toBeInTheDocument();
+    });
+  });
+
   describe('lock state on evaluated (Req 6.5 + Req 7.4)', () => {
     it('marks the input as readOnly, disabled, and dimmed once submission is no longer idle', () => {
       const { container } = renderVocab({ submission: evaluatedAt(1.0) });

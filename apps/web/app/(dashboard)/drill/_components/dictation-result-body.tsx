@@ -11,6 +11,7 @@ import type { DictationResult } from '@language-drill/shared';
 export function DictationResultBody({ result }: { result: DictationResult }) {
   return (
     <div className="flex flex-col gap-s-4">
+      {result.summary && <p className="t-body">{result.summary}</p>}
       <p className="t-small text-ink-mute">
         raw {Math.round(result.rawCharAccuracy * 100)}% → adjusted{' '}
         {Math.round(result.adjustedCharAccuracy * 100)}% ·{' '}

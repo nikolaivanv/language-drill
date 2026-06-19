@@ -136,6 +136,9 @@ export function VocabExercise({
                 {content.exampleSentence && (
                   <p className="t-body-l">{content.exampleSentence}</p>
                 )}
+                {submission.result.feedback && (
+                  <p className="t-body">{submission.result.feedback}</p>
+                )}
                 {confusions.length > 0 && (
                   <div className="flex flex-col gap-s-2">
                     <p className="t-micro text-ink-mute">common confusions</p>

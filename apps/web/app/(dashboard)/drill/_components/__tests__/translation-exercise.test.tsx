@@ -208,6 +208,11 @@ describe('TranslationExercise', () => {
         screen.getByText('Apenas puedo permitírmelo ahora mismo.'),
       ).toBeInTheDocument();
     });
+
+    it("renders the evaluator's feedback prose", () => {
+      renderTranslation({ submission: evaluatedSubmission });
+      expect(screen.getByText('small issues only')).toBeInTheDocument();
+    });
   });
 
   describe('evaluated state — malformed errors row (NFR Reliability)', () => {
