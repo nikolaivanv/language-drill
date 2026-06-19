@@ -272,6 +272,28 @@ export const CONJUGATION_GENERATION_TOOL: Anthropic.Tool = {
         description:
           "Human-readable feature bundle naming the exact cell to produce. Tense/mood is fixed by the grammar point; specify person/number (and polarity where relevant) in the target language's conventional notation, e.g. 'condicional · 1ª persona del plural' or 'geniş zaman · olumsuz · 1. çoğul'.",
       },
+      features: {
+        type: "array",
+        description:
+          "Ordered grammar dimensions OTHER than person/number — tense/mood, and polarity where the language marks it. Each item pairs the target-language term (conventional notation) with a 1–2 word English gloss. Do NOT include person/number here (that goes in `subject`).",
+        items: {
+          type: "object",
+          properties: {
+            term: { type: "string", description: "Target-language grammar term, e.g. 'geçmiş zaman', 'condicional', 'olumsuz'." },
+            gloss: { type: "string", description: "Short English gloss, 1–2 words, e.g. 'past', 'conditional', 'negative'." },
+          },
+          required: ["term", "gloss"],
+        },
+      },
+      subject: {
+        type: "object",
+        description: "The person/number cue, surfaced prominently to the learner.",
+        properties: {
+          pronoun: { type: "string", description: "Representative target-language subject pronoun for the cell, e.g. 'o', 'nosotros', 'ich'." },
+          gloss: { type: "string", description: "English gloss of the pronoun, e.g. 'he / she / it', 'we', 'I'." },
+        },
+        required: ["pronoun", "gloss"],
+      },
       targetForm: { type: "string", description: "The single canonical correct inflected form, e.g. 'iríamos'. Must be exactly correct including diacritics." },
       acceptableForms: {
         type: "array",
@@ -282,7 +304,7 @@ export const CONJUGATION_GENERATION_TOOL: Anthropic.Tool = {
       exampleSentences: { type: "array", items: { type: "string" }, description: "1-2 short, natural sentences using the target form in context." },
       topicHint: { type: "string", description: "Optional topic theme." },
     },
-    required: ["instructions", "lemma", "lemmaGloss", "featureBundle", "targetForm", "breakdown", "exampleSentences"],
+    required: ["instructions", "lemma", "lemmaGloss", "featureBundle", "features", "subject", "targetForm", "breakdown", "exampleSentences"],
   },
 };
 
@@ -621,6 +643,39 @@ function optionalStringArray(
   return requireStringArray(raw, field, ctx);
 }
 
+function requireConjugationFeatures(
+  raw: Record<string, unknown>,
+  ctx: string,
+): Array<{ term: string; gloss: string }> {
+  const v = raw["features"];
+  if (!Array.isArray(v) || v.length === 0) {
+    throw new Error(
+      `${ctx}: invalid features: must be a non-empty array, got ${JSON.stringify(v)}`,
+    );
+  }
+  return v.map((item, i) => {
+    if (!isObject(item)) {
+      throw new Error(`${ctx}: invalid features[${i}]: must be an object, got ${JSON.stringify(item)}`);
+    }
+    const term = requireString(item, "term", `${ctx} features[${i}]`).trim();
+    const gloss = requireString(item, "gloss", `${ctx} features[${i}]`).trim();
+    return { term, gloss };
+  });
+}
+
+function requireConjugationSubject(
+  raw: Record<string, unknown>,
+  ctx: string,
+): { pronoun: string; gloss: string } {
+  const v = raw["subject"];
+  if (!isObject(v)) {
+    throw new Error(`${ctx}: invalid subject: must be an object, got ${JSON.stringify(v)}`);
+  }
+  const pronoun = requireString(v, "pronoun", `${ctx} subject`).trim();
+  const gloss = requireString(v, "gloss", `${ctx} subject`).trim();
+  return { pronoun, gloss };
+}
+
 const ALL_LANGUAGE_CODES: ReadonlySet<string> = new Set(
   Object.values(Language),
 );
@@ -792,6 +847,8 @@ export function parseGeneratedConjugationDraft(
   const topicHint = optionalString(input, "topicHint", ctx);
   const acceptableFormsRaw = optionalStringArray(input, "acceptableForms", ctx);
   const acceptableForms = acceptableFormsRaw?.map((s) => s.trim()).filter((s) => s.length > 0);
+  const features = requireConjugationFeatures(input, ctx);
+  const subject = requireConjugationSubject(input, ctx);
 
   if (lemma.length === 0) {
     throw new Error(`${ctx}: invalid lemma: must contain non-whitespace characters`);
@@ -809,6 +866,8 @@ export function parseGeneratedConjugationDraft(
     lemma,
     lemmaGloss,
     featureBundle,
+    features,
+    subject,
     targetForm,
     breakdown,
     exampleSentences,
