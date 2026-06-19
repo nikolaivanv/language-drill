@@ -2,7 +2,8 @@
 
 import * as React from 'react';
 import type { LearningLanguage, VocabRecallContent } from '@language-drill/shared';
-import { AccentPicker, Button, Card, Input } from '../../../../components/ui';
+import { AccentPicker, Button, Input } from '../../../../components/ui';
+import { VocabPromptCard } from '../../../../components/drill/vocab-prompt';
 import { parseConfusions } from '../../../../lib/drill/parse-confusions';
 import { vocabVerdict } from '../../../../lib/drill/verdict-tier';
 import { useDrillAction } from './drill-action-context';
@@ -75,9 +76,7 @@ export function VocabExercise({
 
   return (
     <div className="flex flex-col gap-s-4">
-      <Card padding="lg">
-        <p className="t-display-s">{content.prompt}</p>
-      </Card>
+      <VocabPromptCard content={content} />
 
       <div className="flex flex-col gap-s-3">
         <Input
