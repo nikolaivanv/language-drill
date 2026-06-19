@@ -1332,4 +1332,26 @@ describe("parseGeneratedConjugationDraft", () => {
     expect(TOOL_NAME_BY_TYPE[ExerciseType.CONJUGATION]).toBe("submit_conjugation_exercise");
     expect(GENERATION_TOOL_BY_TYPE[ExerciseType.CONJUGATION].name).toBe("submit_conjugation_exercise");
   });
+
+  it("accepts a subjectless nominal draft (case form, no person)", () => {
+    const { subject: _omit, ...noSubject } = VALID;
+    const out = parseGeneratedConjugationDraft(
+      {
+        ...noSubject,
+        lemma: "ev",
+        lemmaGloss: "house",
+        featureBundle: "bulunma · tekil",
+        features: [
+          { term: "bulunma", gloss: "locative" },
+          { term: "tekil", gloss: "singular" },
+        ],
+        targetForm: "evde",
+        breakdown: "ev + -de (locative)",
+        exampleSentences: ["Ali evde."],
+      },
+      {} as never,
+    );
+    expect(out.subject).toBeUndefined();
+    expect(out.features).toHaveLength(2);
+  });
 });

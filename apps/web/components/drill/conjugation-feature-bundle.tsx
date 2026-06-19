@@ -14,7 +14,7 @@ export function ConjugationFeatureBundle({
 }: ConjugationFeatureBundleProps) {
   const features = content.features ?? [];
   const subject = content.subject;
-  const structured = subject !== undefined && features.length > 0;
+  const structured = features.length > 0;
 
   if (!structured) {
     if (variant === 'inline') return <>{content.featureBundle}</>;
@@ -23,7 +23,7 @@ export function ConjugationFeatureBundle({
 
   if (variant === 'inline') {
     const parts = [
-      `${subject.pronoun} (${subject.gloss})`,
+      ...(subject ? [`${subject.pronoun} (${subject.gloss})`] : []),
       ...features.map((f) => `${f.term} (${f.gloss})`),
     ];
     return <>{parts.join(' · ')}</>;
@@ -31,17 +31,19 @@ export function ConjugationFeatureBundle({
 
   return (
     <div className="mt-s-3 flex flex-wrap items-stretch gap-s-2">
-      <div
-        className="flex flex-col justify-center rounded-lg px-s-3 py-s-2 text-center"
-        style={{ background: 'var(--color-accent)' }}
-      >
-        <span className="t-display-s leading-none" style={{ color: 'var(--color-paper)' }}>
-          {subject.pronoun}
-        </span>
-        <span className="t-micro mt-s-1" style={{ color: 'var(--color-accent-soft)' }}>
-          {subject.gloss}
-        </span>
-      </div>
+      {subject && (
+        <div
+          className="flex flex-col justify-center rounded-lg px-s-3 py-s-2 text-center"
+          style={{ background: 'var(--color-accent)' }}
+        >
+          <span className="t-display-s leading-none" style={{ color: 'var(--color-paper)' }}>
+            {subject.pronoun}
+          </span>
+          <span className="t-micro mt-s-1" style={{ color: 'var(--color-accent-soft)' }}>
+            {subject.gloss}
+          </span>
+        </div>
+      )}
       {features.map((f) => (
         <div
           key={`${f.term}|${f.gloss}`}
