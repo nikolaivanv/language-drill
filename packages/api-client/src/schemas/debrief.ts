@@ -27,6 +27,7 @@ export const DebriefItemSchema = z.object({
   // Nullable: see ExerciseResponseSchema. Used by review-item-card to surface
   // the theory pill in retrospect when the grammar point has an explainer.
   grammarPointKey: z.string().nullable(),
+  grammarPointName: z.string().nullable(),
   // contentJson is type-discriminated by `type`; consumers narrow via
   // isClozeContent / isTranslationContent / isVocabRecallContent type guards
   // from @language-drill/shared.
