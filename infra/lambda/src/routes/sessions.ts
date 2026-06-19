@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { eq, and, sql, isNull, isNotNull, gte, desc, inArray } from 'drizzle-orm';
+import { eq, and, sql, isNull, isNotNull, gte, desc, inArray, notInArray } from 'drizzle-orm';
 import { Language, CefrLevel, CORRECT_THRESHOLD, ExerciseType, type SkillMovement } from '@language-drill/shared';
 import {
   exercises as exercisesTable,
@@ -14,6 +14,7 @@ import { rankPlanCandidates, type PointMastery } from '../lib/mastery/rank';
 import { computeSkillMovements, type SkillHistoryRow } from '../lib/debrief/skill-movements.js';
 import { db } from '../db';
 import { approvedStatusFilter, audioReadyFilter, freshFirstOrderBy } from '../lib/exercise-filters';
+import { mergeSessionRows } from '../lib/session-selection';
 import { presignAudioUrl } from '../lib/audio-url';
 import { withAudioUrl } from '../lib/dictation-content';
 import { authMiddleware } from '../middleware/auth';
@@ -52,6 +53,7 @@ export const CreateSessionRequestSchema = z.object({
   difficulty: z.nativeEnum(CefrLevel),
   exerciseCount: z.number().int().min(1).max(20),
   exerciseType: z.nativeEnum(ExerciseType).optional(),
+  grammarPointKey: z.string().min(1).optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -81,7 +83,7 @@ sessions.post('/sessions', async (c) => {
     );
   }
 
-  const { language, difficulty, exerciseCount, exerciseType } = bodyResult.data;
+  const { language, difficulty, exerciseCount, exerciseType, grammarPointKey } = bodyResult.data;
   const userId = c.get('userId');
 
   // Pull a manifest of N exercises for this (language, difficulty), ordered so
@@ -89,21 +91,49 @@ sessions.post('/sessions', async (c) => {
   // INSUFFICIENT_EXERCISES if the pool is too small. `audioReadyFilter` keeps
   // un-synthesized dictation rows out of every pull (no-op for non-dictation
   // rows); `exerciseType`, when set, restricts to a single type (e.g. the
-  // dictation-only launcher).
-  const rows = await db
-    .select()
-    .from(exercisesTable)
-    .where(
-      and(
-        eq(exercisesTable.language, language),
-        eq(exercisesTable.difficulty, difficulty),
-        approvedStatusFilter(exercisesTable),
-        audioReadyFilter(exercisesTable),
-        ...(exerciseType ? [eq(exercisesTable.type, exerciseType)] : []),
-      ),
-    )
-    .orderBy(freshFirstOrderBy(userId))
-    .limit(exerciseCount);
+  // dictation-only launcher). When `grammarPointKey` is set, the targeted
+  // grammar-point exercises are pulled first; any shortfall is filled from the
+  // broader pool (same filters, excluding already-picked ids).
+  const baseWhere = [
+    eq(exercisesTable.language, language),
+    eq(exercisesTable.difficulty, difficulty),
+    approvedStatusFilter(exercisesTable),
+    audioReadyFilter(exercisesTable),
+    ...(exerciseType ? [eq(exercisesTable.type, exerciseType)] : []),
+  ];
+
+  let rows;
+  if (grammarPointKey) {
+    const targeted = await db
+      .select()
+      .from(exercisesTable)
+      .where(and(...baseWhere, eq(exercisesTable.grammarPointKey, grammarPointKey)))
+      .orderBy(freshFirstOrderBy(userId))
+      .limit(exerciseCount);
+
+    if (targeted.length >= exerciseCount) {
+      rows = targeted;
+    } else {
+      const targetedIds = targeted.map((r) => r.id);
+      const topUpWhere = targetedIds.length
+        ? [...baseWhere, notInArray(exercisesTable.id, targetedIds)]
+        : baseWhere;
+      const topUp = await db
+        .select()
+        .from(exercisesTable)
+        .where(and(...topUpWhere))
+        .orderBy(freshFirstOrderBy(userId))
+        .limit(exerciseCount - targeted.length);
+      rows = mergeSessionRows(targeted, topUp, exerciseCount);
+    }
+  } else {
+    rows = await db
+      .select()
+      .from(exercisesTable)
+      .where(and(...baseWhere))
+      .orderBy(freshFirstOrderBy(userId))
+      .limit(exerciseCount);
+  }
 
   if (rows.length < exerciseCount) {
     return c.json(
