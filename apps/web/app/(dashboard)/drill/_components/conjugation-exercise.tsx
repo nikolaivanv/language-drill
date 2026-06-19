@@ -5,6 +5,7 @@ import type { ConjugationContent, LearningLanguage } from '@language-drill/share
 import { AccentPicker, Button, Card, Input } from '../../../../components/ui';
 import { conjugationVerdict } from '../../../../lib/drill/verdict-tier';
 import { useDrillAction } from './drill-action-context';
+import { ConjugationFeatureBundle } from './conjugation-feature-bundle';
 import { FeedbackShell } from './feedback-shell';
 import type { SubmissionMeta, SubmissionState } from './types';
 
@@ -67,7 +68,7 @@ export function ConjugationExercise({
       <Card padding="lg">
         <p className="t-display-s">{content.lemma}</p>
         <p className="t-body-l text-ink-mute">{content.lemmaGloss}</p>
-        <p className="t-body text-ink-mute mt-s-2">{content.featureBundle}</p>
+        <ConjugationFeatureBundle content={content} />
       </Card>
 
       <div className="flex flex-col gap-s-3">
