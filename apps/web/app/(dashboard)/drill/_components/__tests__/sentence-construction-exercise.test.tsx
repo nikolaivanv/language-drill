@@ -233,6 +233,11 @@ describe('SentenceConstructionExercise', () => {
         screen.getByText('Ayer olvidé un libro en la biblioteca.'),
       ).toBeInTheDocument();
     });
+
+    it("renders the evaluator's feedback prose", () => {
+      renderEx({ submission: evaluatedSubmission });
+      expect(screen.getByText('good sentence')).toBeInTheDocument();
+    });
   });
 
   describe('accent picker', () => {

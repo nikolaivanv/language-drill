@@ -174,6 +174,9 @@ export function SentenceConstructionExercise({
               nextLabel={nextLabel}
             >
               <div className="flex flex-col gap-s-4">
+                {submission.result.feedback && (
+                  <p className="t-body">{submission.result.feedback}</p>
+                )}
                 {errors.length > 0 && (
                   <ul className="flex flex-col gap-s-3">
                     {errors.map((err, idx) => {

@@ -152,7 +152,9 @@ function readPrompt(content: ExerciseContent | undefined): string | null {
 }
 
 // ---------------------------------------------------------------------------
-// Cloze body — two cells: "your answer" + "corrected" / "why it works" (Req 5.5)
+// Cloze body — "your answer" cell, plus a "corrected" cell when wrong. On a
+// correct answer the second cell is omitted (it would only repeat the token);
+// the evaluator's "why it works" prose below carries the explanation (Req 5.5)
 // ---------------------------------------------------------------------------
 
 interface ClozeBodyProps {
@@ -214,7 +216,9 @@ function ClozeBody({ item, content }: ClozeBodyProps) {
 
   return (
     <>
-      <div className="grid grid-cols-2 mobile:grid-cols-1 gap-s-3">
+      <div
+        className={`grid ${isCorrect ? 'grid-cols-1' : 'grid-cols-2'} mobile:grid-cols-1 gap-s-3`}
+      >
         <div className="rounded-r-md p-s-3 bg-paper-2">
           <div className="t-micro">your answer</div>
           <div
@@ -228,15 +232,13 @@ function ClozeBody({ item, content }: ClozeBodyProps) {
             {renderSentence(userToken)}
           </div>
         </div>
-        <div
-          className="rounded-r-md p-s-3"
-          style={{
-            background: isCorrect ? 'transparent' : 'var(--color-ok-soft)',
-            border: isCorrect ? '1px dashed var(--color-rule)' : 'none',
-          }}
-        >
-          <div className="t-micro">{isCorrect ? 'why it works' : 'corrected'}</div>
-          {!isCorrect && (
+        {/* On a correct answer the user's token IS the reference, so a second
+            cell would just repeat it (or sit empty). The "why it works" prose
+            below carries the explanation. Only show the corrected cell when the
+            answer was wrong. */}
+        {!isCorrect && (
+          <div className="rounded-r-md p-s-3 bg-[var(--color-ok-soft)]">
+            <div className="t-micro">corrected</div>
             <div
               className="mt-s-2"
               style={{
@@ -247,8 +249,8 @@ function ClozeBody({ item, content }: ClozeBodyProps) {
             >
               {renderSentence(referenceToken)}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
       {item.evaluation?.feedback && (
         <p className="t-small mt-s-3">{item.evaluation.feedback}</p>
@@ -388,6 +390,9 @@ interface ConjugationBodyProps {
 
 function ConjugationBody({ item, content }: ConjugationBodyProps) {
   const isCorrect = item.status === 'correct';
+  const alsoAccepted = (content.acceptableForms ?? []).filter(
+    (f) => f.trim().toLowerCase() !== content.targetForm.trim().toLowerCase(),
+  );
   return (
     <>
       <p className="t-small italic mb-s-2">
@@ -428,6 +433,11 @@ function ConjugationBody({ item, content }: ConjugationBodyProps) {
           >
             {content.targetForm}
           </div>
+          {alsoAccepted.length > 0 && (
+            <p className="t-small mt-s-2 text-ink-mute">
+              also accepted: {alsoAccepted.join(', ')}
+            </p>
+          )}
           {content.breakdown.length > 0 && (
             <p className="t-small mt-s-2 text-ink-mute">{content.breakdown}</p>
           )}

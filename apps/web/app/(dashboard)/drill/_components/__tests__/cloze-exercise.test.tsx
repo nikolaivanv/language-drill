@@ -246,6 +246,34 @@ describe('ClozeExercise', () => {
       expect(screen.getByText('almost there')).toBeInTheDocument();
     });
 
+    it('reveals the correct answer regardless of the user score', () => {
+      renderCloze({ submission: evaluatedSubmission });
+      expect(screen.getByText('correct answer')).toBeInTheDocument();
+      expect(screen.getByText('como')).toBeInTheDocument();
+    });
+
+    it('lists acceptable alternatives (excluding the correct answer) when present', () => {
+      renderCloze({
+        content: {
+          ...baseContent,
+          correctAnswer: 'como',
+          acceptableAnswers: ['como', 'tomo'],
+        },
+        submission: evaluatedSubmission,
+      });
+      expect(screen.getByText(/also accepted:/i)).toHaveTextContent(
+        'also accepted: tomo',
+      );
+    });
+
+    it('omits the also-accepted line when there are no distinct alternatives', () => {
+      renderCloze({
+        content: { ...baseContent, acceptableAnswers: ['como'] },
+        submission: evaluatedSubmission,
+      });
+      expect(screen.queryByText(/also accepted:/i)).not.toBeInTheDocument();
+    });
+
     it('renders the scaffolded chip when the user used MC mode before evaluation', () => {
       // Render idle, toggle to MC, then rerender with the same component instance
       // transitioning to evaluated. Local `usedMc` state persists across rerenders.

@@ -189,6 +189,11 @@ export function ClozeExercise({
       {submission.kind === 'evaluated' &&
         (() => {
           const verdict = clozeVerdict(submission.result.score);
+          const alsoAccepted = (content.acceptableAnswers ?? []).filter(
+            (a) =>
+              a.trim().toLowerCase() !==
+              content.correctAnswer.trim().toLowerCase(),
+          );
           return (
             <FeedbackShell
               tier={verdict.tier}
@@ -198,7 +203,18 @@ export function ClozeExercise({
               onNext={onNext}
               nextLabel={nextLabel}
             >
-              <p className="t-body">{submission.result.feedback}</p>
+              <div className="flex flex-col gap-s-4">
+                <div className="flex flex-col gap-s-1">
+                  <p className="t-micro text-ink-mute">correct answer</p>
+                  <p className="t-display-m">{content.correctAnswer}</p>
+                  {alsoAccepted.length > 0 && (
+                    <p className="t-small text-ink-mute">
+                      also accepted: {alsoAccepted.join(', ')}
+                    </p>
+                  )}
+                </div>
+                <p className="t-body">{submission.result.feedback}</p>
+              </div>
             </FeedbackShell>
           );
         })()}

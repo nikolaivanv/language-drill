@@ -102,6 +102,10 @@ export function ConjugationExercise({
       {submission.kind === 'evaluated' &&
         (() => {
           const verdict = conjugationVerdict(submission.result.score);
+          const alsoAccepted = (content.acceptableForms ?? []).filter(
+            (f) =>
+              f.trim().toLowerCase() !== content.targetForm.trim().toLowerCase(),
+          );
           return (
             <FeedbackShell
               tier={verdict.tier}
@@ -112,6 +116,14 @@ export function ConjugationExercise({
             >
               <div className="flex flex-col gap-s-4">
                 <p className="t-display-m">{content.targetForm}</p>
+                {alsoAccepted.length > 0 && (
+                  <p className="t-small text-ink-mute">
+                    also accepted: {alsoAccepted.join(', ')}
+                  </p>
+                )}
+                {submission.result.feedback && (
+                  <p className="t-body">{submission.result.feedback}</p>
+                )}
                 <p className="t-body-l text-ink-mute">{content.breakdown}</p>
                 {content.exampleSentences.length > 0 && (
                   <ul className="flex flex-col gap-s-2">
