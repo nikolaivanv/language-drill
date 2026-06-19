@@ -229,12 +229,12 @@ git commit -m "test(db): lock in case/number axes on conjugationSuitable grammar
 ### Task 3: Generalize the generation prompt away from verb/tense assumptions
 
 **Files:**
-- Modify: `packages/ai/src/generation-prompts.ts` (export + edit `renderConjugationSection`; bump `GENERATION_PROMPT_VERSION` only if its date is not already today)
-- Test: `packages/ai/src/generation-prompts.test.ts` (create if absent)
+- Modify: `packages/ai/src/generation-prompts.ts` (export + edit `renderConjugationSection`; wire `renderCoverageBlock` to emit `number`/`case`; bump `GENERATION_PROMPT_VERSION` only if its date is not already today)
+- Test: `packages/ai/src/generation-prompts.test.ts` (exists — append)
 
 **Interfaces:**
-- Consumes: nothing new.
-- Produces: `renderConjugationSection` is `export`ed; its text no longer assumes the target is a verb / that only tense/mood is fixed, and #386's `features`/`subject` bullets are generalized to nominals (subject is the person cue **when one exists**; omitted for pure case/number forms).
+- Consumes: the `case`/`number` `COVERAGE_DIRECTIVE_BY_AXIS` entries added in Task 1 (`generation-prompts.ts:487-490`).
+- Produces: `renderConjugationSection` is `export`ed; its text no longer assumes the target is a verb / that only tense/mood is fixed, and #386's `features`/`subject` bullets are generalized to nominals (subject is the person cue **when one exists**; omitted for pure case/number forms). `renderCoverageBlock` now emits the `number`/`case` per-draft directives so the Task-1 directive entries actually steer generation (closes the gap the Task-1 review flagged).
 
 > **Post-#386 note:** `renderConjugationSection` now also contains three bullets
 > for `features`/`subject` (`generation-prompts.ts:244-246`). The rewrite below
@@ -319,11 +319,50 @@ Expected: `generate@2026-06-19`. If the date is already today, leave it (the ver
 Run: `pnpm --filter @language-drill/ai test -- generation-prompts`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 6: Write the failing test for the coverage-directive wiring**
+
+Task 1 added `number`/`case` entries to `COVERAGE_DIRECTIVE_BY_AXIS` (`generation-prompts.ts:487-490`), but `renderCoverageBlock` only iterates `["polarity", "wordClass", "sentenceType"]` (`generation-prompts.ts:520`), so a coverage target carrying `case`/`number` is silently dropped and never steers generation. Append to the existing `describe("renderCoverageBlock (via buildGenerationUserPrompt)", …)` block in `packages/ai/src/generation-prompts.test.ts` (after the existing cases at ~line 1090):
+
+```typescript
+  it("emits number and case directives for nominal inflection targets", () => {
+    const out = buildGenerationUserPrompt(covInputs(), 0, null, null, [
+      { case: "dative", number: "plural" },
+    ]);
+    expect(out).toContain("dative");
+    expect(out).toContain("plural");
+  });
+```
+
+(`covInputs` and the `buildGenerationUserPrompt(inputs, ordinal, null, null, coverageTargets)` call shape are already used by the sibling tests in that block — reuse them.)
+
+- [ ] **Step 7: Run to verify it fails**
+
+Run: `pnpm --filter @language-drill/ai test -- generation-prompts`
+Expected: FAIL — the `case`/`number` directive sentences ("MUST carry the dative case", "MUST be plural") are absent because the loop skips those axes.
+
+- [ ] **Step 8: Add `number` and `case` to the directive loop**
+
+In `renderCoverageBlock` (`generation-prompts.ts:520`), extend the axis loop:
+
+```typescript
+  for (const axis of ["number", "case", "polarity", "wordClass", "sentenceType"] as const) {
+    const v = target[axis];
+    if (v) parts.push(COVERAGE_DIRECTIVE_BY_AXIS[axis](v));
+  }
+```
+
+(`number`/`case` lead so a nominal directive reads "…MUST be plural. …MUST carry the dative case." before any polarity clause. `target.number`/`target.case` are valid because Task 1 added them to `CoverageTags`/`CoverageTarget`.)
+
+- [ ] **Step 9: Run to verify it passes**
+
+Run: `pnpm --filter @language-drill/ai test -- generation-prompts`
+Expected: PASS (new wiring test + the renderConjugationSection tests + all sibling coverage-block tests green).
+
+- [ ] **Step 10: Commit**
 
 ```bash
 git add packages/ai/src/generation-prompts.ts packages/ai/src/generation-prompts.test.ts
-git commit -m "feat(ai): generalize conjugation generation prompt to nominal morphology"
+git commit -m "feat(ai): generalize conjugation generation prompt + wire number/case coverage directives"
 ```
 
 ---
