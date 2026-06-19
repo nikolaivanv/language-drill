@@ -19,6 +19,7 @@ import { useMemo } from 'react';
 import { useAuth, useUser } from '@clerk/nextjs';
 import {
   createAuthenticatedFetch,
+  useInsightsErrors,
   useProgressRadar,
   useTodayPlan,
 } from '@language-drill/api-client';
@@ -29,6 +30,7 @@ import { NextUpCard } from '../_components/next-up-card';
 import { ReadCollectCard } from '../_components/read-collect-card';
 import { SkillSnapshotGrid } from '../_components/skill-snapshot-grid';
 import { TodayTimeline } from '../_components/today-timeline';
+import { WorkOnThese } from '../_components/work-on-these';
 
 export default function DashboardPage() {
   const { activeLanguage } = useActiveLanguage();
@@ -42,6 +44,7 @@ export default function DashboardPage() {
   // Both queries fire in parallel on mount via TanStack Query.
   const todayPlan = useTodayPlan({ fetchFn, language: activeLanguage });
   const radar = useProgressRadar({ fetchFn, language: activeLanguage });
+  const insights = useInsightsErrors({ fetchFn, language: activeLanguage });
 
   const isMobile = useIsMobile();
 
@@ -67,6 +70,7 @@ export default function DashboardPage() {
         language={activeLanguage}
       />
       <hr className="border-rule" />
+      <WorkOnThese themes={insights.data?.themes ?? []} />
       <SkillSnapshotGrid
         data={radar.data}
         isLoading={radar.isLoading}

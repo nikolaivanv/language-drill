@@ -36,6 +36,7 @@ const validAttemptedItem = {
   submissionId: '33333333-3333-4333-8333-333333333333',
   type: 'cloze',
   grammarPointKey: 'es-b1-conditional',
+  grammarPointName: 'Conditional tense',
   contentJson: { instructions: 'Fill in', sentence: 'Yo ___ libros' },
   status: 'correct',
   userAnswer: 'leo',
@@ -48,6 +49,7 @@ const validSkippedItem = {
   submissionId: null,
   type: 'translation',
   grammarPointKey: null,
+  grammarPointName: null,
   contentJson: {
     instructions: 'Translate',
     sourceText: 'I am hungry',
@@ -207,7 +209,7 @@ describe('DebriefItemSchema', () => {
     const item = {
       exerciseId: '11111111-1111-1111-1111-111111111111',
       submissionId: '44444444-4444-4444-8444-444444444444',
-      type: ExerciseType.DICTATION, grammarPointKey: 'es-b1-dictation',
+      type: ExerciseType.DICTATION, grammarPointKey: 'es-b1-dictation', grammarPointName: null,
       contentJson: {}, status: 'incorrect', userAnswer: 'Hola',
       score: 0.82, evaluation: dictationResult,
     };
@@ -221,7 +223,7 @@ describe('DebriefItemSchema', () => {
 
   it('still accepts a plain EvaluationResult and null', () => {
     const evalResult = { score: 0.7, grammarAccuracy: 0.7, vocabularyRange: 'B1', taskAchievement: 0.7, feedback: 'ok', errors: [], estimatedCefrEvidence: 'B1' };
-    const base = { exerciseId: '11111111-1111-1111-1111-111111111111', submissionId: '55555555-5555-4555-8555-555555555555', type: ExerciseType.CLOZE, grammarPointKey: null, contentJson: {}, status: 'correct', userAnswer: 'x', score: 0.7 };
+    const base = { exerciseId: '11111111-1111-1111-1111-111111111111', submissionId: '55555555-5555-4555-8555-555555555555', type: ExerciseType.CLOZE, grammarPointKey: null, grammarPointName: null, contentJson: {}, status: 'correct', userAnswer: 'x', score: 0.7 };
     expect(DebriefItemSchema.parse({ ...base, evaluation: evalResult }).evaluation).toMatchObject({ score: 0.7 });
     expect(DebriefItemSchema.parse({ ...base, evaluation: null, status: 'skipped', userAnswer: null, score: null }).evaluation).toBeNull();
   });

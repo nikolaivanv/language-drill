@@ -76,6 +76,7 @@ const SAMPLE_RESPONSE = {
       submissionId: 'cccccccc-1111-4111-8111-111111111111',
       type: 'cloze',
       grammarPointKey: 'es-b1-conditional',
+      grammarPointName: 'Conditional tense',
       contentJson: { instructions: 'Fill in', sentence: 'Yo ___ libros' },
       status: 'correct',
       userAnswer: 'leo',
@@ -87,6 +88,7 @@ const SAMPLE_RESPONSE = {
       submissionId: null,
       type: 'translation',
       grammarPointKey: null,
+      grammarPointName: null,
       contentJson: {
         instructions: 'Translate',
         sourceText: 'I am hungry',

@@ -50,10 +50,12 @@ vi.mock('../../../lib/responsive', () => ({
 
 const mockUseTodayPlan = vi.fn();
 const mockUseProgressRadar = vi.fn();
+const mockUseInsightsErrors = vi.fn();
 
 vi.mock('@language-drill/api-client', () => ({
   useTodayPlan: (...args: unknown[]) => mockUseTodayPlan(...args),
   useProgressRadar: (...args: unknown[]) => mockUseProgressRadar(...args),
+  useInsightsErrors: (...args: unknown[]) => mockUseInsightsErrors(...args),
   createAuthenticatedFetch: vi.fn(() => vi.fn()),
 }));
 
@@ -136,6 +138,9 @@ function planResponse(
 
 beforeEach(() => {
   mockIsMobile.mockReturnValue(false);
+  // WorkOnThese self-hides when there are no themes; default to empty so the
+  // existing assertions (which predate the block) are unaffected.
+  mockUseInsightsErrors.mockReturnValue({ data: { themes: [] } });
   mockUseActiveLanguage.mockReturnValue({
     activeLanguage: Language.ES,
     setActiveLanguage: () => {},

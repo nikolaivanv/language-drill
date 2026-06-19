@@ -24,7 +24,7 @@ import { DictationBody } from './dictation-body';
 
 // ---------------------------------------------------------------------------
 // ReviewItemCard — one card per debrief item, in manifest order. Renders a
-// header chrome (index + topic + status chip) that toggles an expanded body.
+// header chrome (index + grammar-point chip + status chip) that toggles an expanded body.
 // Correct items collapse by default; incorrect / skipped expand by default
 // (Req 5.9). The body switches by exercise type — this file ships the cloze
 // branch (Req 5.5); translation + vocab branches land in task 12.
@@ -43,10 +43,6 @@ export function ReviewItemCard({ index, item, fetchFn }: ReviewItemCardProps) {
   const [expanded, setExpanded] = React.useState(item.status !== 'correct');
 
   const content = item.contentJson as ExerciseContent;
-  const topic =
-    content && typeof content === 'object' && 'topicHint' in content
-      ? content.topicHint
-      : undefined;
 
   return (
     <Card padding="md">
@@ -60,9 +56,10 @@ export function ReviewItemCard({ index, item, fetchFn }: ReviewItemCardProps) {
           <span className="t-mono text-ink-mute" style={{ fontSize: 11 }}>
             #{index + 1}
           </span>
-          {topic !== undefined && topic.length > 0 && (
-            <Chip variant="default">{topic}</Chip>
-          )}
+          {(() => {
+            const grammar = item.grammarPointName ?? item.grammarPointKey;
+            return grammar ? <Chip variant="default">{grammar}</Chip> : null;
+          })()}
           <StatusChip status={item.status} />
         </div>
       </button>

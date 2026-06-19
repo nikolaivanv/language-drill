@@ -45,6 +45,12 @@ export {
   type DebriefResponse,
 } from './schemas/debrief';
 export {
+  InsightsErrorThemeSchema,
+  InsightsErrorsResponseSchema,
+  type InsightsErrorTheme,
+  type InsightsErrorsResponse,
+} from './schemas/insights';
+export {
   RadarAxisKeyEnum,
   RadarAxisSchema,
   ProgressRadarResponseSchema,
@@ -173,6 +179,7 @@ export {
   type UseProgressRadarParams,
   type UseProgressHeatmapParams,
 } from './hooks/useProgress';
+export { useInsightsErrors, type UseInsightsErrorsParams } from './hooks/useInsights';
 export {
   useTodayPlan,
   type UseTodayPlanParams,
