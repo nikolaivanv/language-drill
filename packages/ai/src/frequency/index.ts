@@ -204,3 +204,105 @@ export function frequencyBand(
   BAND_CACHE.set(cacheKey, band);
   return band;
 }
+
+// ---------------------------------------------------------------------------
+// Verb detection (TEMPORARY — see
+// docs/superpowers/specs/2026-06-19-es-conjugation-verb-seeding-design.md).
+// The frequency files carry no part-of-speech, so verbs are inferred from
+// surface morphology: an infinitive-suffix match PLUS an inflection-count
+// floor (verbs inflect across person/tense/mood → many surface forms; nouns
+// have ~2: singular + plural). Collapses to a `pos === 'verb'` filter once the
+// vocab file gains a `pos` field. ES-only for now.
+// ---------------------------------------------------------------------------
+
+const VERB_SUFFIXES_BY_LANGUAGE: Partial<Record<LearningLanguage, readonly string[]>> = {
+  [Language.ES]: ["ar", "er", "ir"],
+};
+
+// A lemma must map to at least this many distinct surface forms (of length ≥ 4)
+// to count as a verb. Tuned against es.json: nouns top out at ~2 (sg+pl);
+// verbs have many. The ≥ 4-char length gate filters corpus noise — foreign words
+// and very short accidentals that the lemmatiser wrongly collapses under a
+// 3-letter lemma (e.g. "mar": surfaces include "man", "mars" which aren't Spanish
+// verb conjugations). Final value: 4.
+const MIN_VERB_SURFACES = 4;
+// Minimum character length a surface must have to be counted towards
+// MIN_VERB_SURFACES. Filters corpus noise without discarding real conjugations.
+const MIN_SURFACE_LEN = 4;
+
+type VerbStat = { minRank: number; surfaces: number };
+
+// lemma -> { minRank, surface count } over the WHOLE file. A verb's surfaces
+// span many ranks (most fall outside any one band), so this scan is global,
+// not windowed; the band filter below uses `minRank`. Cached per language.
+const VERB_STATS_CACHE: Partial<Record<LearningLanguage, ReadonlyMap<string, VerbStat>>> = {};
+
+function verbStats(language: LearningLanguage): ReadonlyMap<string, VerbStat> {
+  const cached = VERB_STATS_CACHE[language];
+  if (cached !== undefined) return cached;
+
+  const freqMap = FREQUENCY_BY_LANGUAGE[language];
+  const acc = new Map<string, { minRank: number; surfaces: Set<string> }>();
+  for (const [surface, entry] of Object.entries(freqMap)) {
+    const cur = acc.get(entry.lemma);
+    if (cur === undefined) {
+      acc.set(entry.lemma, {
+        minRank: entry.rank,
+        surfaces: surface.length >= MIN_SURFACE_LEN ? new Set([surface]) : new Set(),
+      });
+    } else {
+      if (surface.length >= MIN_SURFACE_LEN) cur.surfaces.add(surface);
+      if (entry.rank < cur.minRank) cur.minRank = entry.rank;
+    }
+  }
+  const out = new Map<string, VerbStat>();
+  for (const [lemma, s] of acc) out.set(lemma, { minRank: s.minRank, surfaces: s.surfaces.size });
+  VERB_STATS_CACHE[language] = out;
+  return out;
+}
+
+const VERB_BAND_CACHE = new Map<string, readonly string[]>();
+const EMPTY_BAND: readonly string[] = Object.freeze([]);
+
+/**
+ * Verb lemmas whose minimum frequency rank falls in `[rankMin, rankMax]`
+ * (inclusive), sorted by rank asc with lemma tie-break, cached per
+ * `(language, band)`. A lemma qualifies as a verb when its infinitive suffix
+ * matches the language AND it has at least `MIN_VERB_SURFACES` distinct surface
+ * forms. Returns the empty band for languages without a verb config.
+ */
+export function verbBand(
+  language: LearningLanguage,
+  rankMin: number,
+  rankMax: number,
+): readonly string[] {
+  const suffixes = VERB_SUFFIXES_BY_LANGUAGE[language];
+  if (suffixes === undefined) return EMPTY_BAND;
+
+  const cacheKey = `${language}:${rankMin}:${rankMax}`;
+  const cached = VERB_BAND_CACHE.get(cacheKey);
+  if (cached !== undefined) return cached;
+
+  const stopwordSet = STOPWORDS_BY_LANGUAGE[language];
+  const stats = verbStats(language);
+
+  const picked: { lemma: string; rank: number }[] = [];
+  for (const [lemma, s] of stats) {
+    if (s.minRank < rankMin || s.minRank > rankMax) continue;
+    if (s.surfaces < MIN_VERB_SURFACES) continue;
+    if (stopwordSet.has(lemma)) continue;
+    if (!suffixes.some((suf) => lemma.endsWith(suf))) continue;
+    picked.push({ lemma, rank: s.minRank });
+  }
+
+  const band = Object.freeze(
+    picked
+      .sort((a, b) =>
+        a.rank !== b.rank ? a.rank - b.rank : a.lemma < b.lemma ? -1 : a.lemma > b.lemma ? 1 : 0,
+      )
+      .map((p) => p.lemma),
+  );
+
+  VERB_BAND_CACHE.set(cacheKey, band);
+  return band;
+}
