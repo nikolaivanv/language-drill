@@ -92,3 +92,48 @@ describe('pickSeeds', () => {
     expect(seeds).toEqual([null, null, null, null]);
   });
 });
+
+import { pickConjugationSeeds } from "./seed-picker";
+
+describe("pickConjugationSeeds", () => {
+  const base = {
+    language: Language.ES,
+    cefrLevel: CefrLevel.B1,
+    batchSeed: "seed-abc",
+    exclude: new Set<string>(),
+  };
+
+  it("assigns a distinct (lemma, person) pair per ordinal and is deterministic", () => {
+    const persons = ["1sg", "2sg", "3sg", "1pl", "3pl"];
+    const a = pickConjugationSeeds({ ...base, count: 5, persons });
+    const b = pickConjugationSeeds({ ...base, count: 5, persons });
+    expect(a).toEqual(b); // deterministic
+    const pairs = a.map((lemma, i) => `${lemma}|${persons[i]}`);
+    expect(new Set(pairs).size).toBe(pairs.length); // all distinct
+    expect(a.every((l) => typeof l === "string")).toBe(true);
+  });
+
+  it("may reuse the same verb across different persons but not within one person", () => {
+    // Two ordinals, same person → must be different verbs.
+    const samePerson = pickConjugationSeeds({ ...base, count: 2, persons: ["1sg", "1sg"] });
+    expect(samePerson[0]).not.toBe(samePerson[1]);
+  });
+
+  it("respects the exclude set of prior (lemma, person) keys", () => {
+    const persons = ["1sg"];
+    const first = pickConjugationSeeds({ ...base, count: 1, persons })[0]!;
+    const excluded = pickConjugationSeeds({
+      ...base,
+      count: 1,
+      persons,
+      exclude: new Set([`${first}|1sg`]),
+    })[0];
+    expect(excluded).not.toBe(first);
+  });
+
+  it("returns null for ordinals with no person target", () => {
+    const out = pickConjugationSeeds({ ...base, count: 2, persons: [null, "3sg"] });
+    expect(out[0]).toBeNull();
+    expect(typeof out[1]).toBe("string");
+  });
+});
