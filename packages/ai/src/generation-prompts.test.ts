@@ -228,7 +228,10 @@ describe("buildGenerationSystemPrompt", () => {
     // `{{conjugationSection}}` guidance block spliced into the cached template.
     // Prior 2026-06-12 cohort covered the possessive-cloze diversity tweak + the
     // curriculum-wide grammatical-person rotation.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-06-17");
+    // Bumped 2026-06-19 — conjugate-the-seed strict directive (no substitution
+    // escape hatch for conjugation type) + instruction-discipline bullets in
+    // renderConjugationSection (forbid reasoning/meta-text in `instructions`).
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-06-19");
     // Tasks 7–9: pin the new guardrail phrases in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "every content word MUST be high-frequency everyday vocabulary at or below CEFR {{cefrLevel}}",
@@ -299,6 +302,19 @@ describe("buildGenerationSystemPrompt", () => {
       );
       expect(other).not.toContain("## Conjugation/inflection specifics");
     }
+  });
+
+  it("conjugation guidance forbids reasoning leaking into instructions", async () => {
+    // 2026-06-19 instruction-discipline rule: the `instructions` field must
+    // contain ONLY the learner directive — no reasoning, meta-text, or
+    // abandoned attempts. Assert the discipline bullet is present in the
+    // conjugation section (via the system prompt for a conjugation cell).
+    const conj = await buildGenerationSystemPrompt(
+      { ...baseInputs, exerciseType: ExerciseType.CONJUGATION },
+      [],
+    );
+    expect(conj).toContain("do NOT choose your own");
+    expect(conj).toContain("abandoned attempts");
   });
 
   it("instructs Claude to use the matching tool name", async () => {
@@ -633,6 +649,24 @@ describe("buildGenerationUserPrompt", () => {
     const system = await buildGenerationSystemPrompt(baseInputs, []);
     expect(system).not.toContain("viajar");
     expect(system).not.toContain("Build this exercise around");
+  });
+
+  it("renders conjugation seeds as a strict conjugate-this-verb directive", () => {
+    // 2026-06-19: conjugation cells use a STRICT seed directive — no
+    // substitution escape hatch, because the picker already guarantees a
+    // conjugatable verb and substitution re-opens the dedup-collapse we fixed.
+    const conjugationInputs: GenerationPromptInputs = {
+      ...baseInputs,
+      exerciseType: ExerciseType.CONJUGATION,
+    };
+    const prompt = buildGenerationUserPrompt(
+      conjugationInputs,
+      0,
+      null,
+      "cantar",
+    );
+    expect(prompt).toContain('The verb to conjugate is "cantar"');
+    expect(prompt).not.toContain("choose a related content word"); // no substitution escape hatch
   });
 });
 

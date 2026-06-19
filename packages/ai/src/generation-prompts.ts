@@ -149,7 +149,13 @@ function renderRecentStems(recentStems: readonly string[]): string {
 // Gated to grammar-anchored types (cloze, translation, sentence_construction,
 // conjugation). Also changes the registered template — needs a Langfuse push
 // per env.
-export const GENERATION_PROMPT_VERSION = "generate@2026-06-17";
+//
+// 2026-06-19: verb-seeded ES conjugation — the user-prompt seed block now
+// uses a strict "conjugate this verb" directive for ExerciseType.CONJUGATION
+// (no substitution escape hatch). Added two instruction-discipline bullets to
+// renderConjugationSection: use the given verb as lemma; `instructions` must
+// contain ONLY the learner directive, no reasoning/meta-text.
+export const GENERATION_PROMPT_VERSION = "generate@2026-06-19";
 
 /**
  * Wording differs per type so Claude reads it the way the cell is constrained:
@@ -235,6 +241,8 @@ This is a conjugation drill: there is NO sentence and NO blank. You produce one 
 - **Enumerate genuine variants in \`acceptableForms\`** (e.g. with/without a clitic pronoun, accepted orthographic variants). Do NOT list near-misses or common-error forms — those must stay wrong.
 - **\`breakdown\` teaches the morphology**: stem + ending for ${language} fusional forms, or stem + ordered suffix gloss for agglutinative forms (e.g. Turkish: root + tense/aspect + person, noting vowel harmony). Keep it one line.
 - **\`featureBundle\` names the cell** in ${language}'s conventional grammar notation; it MUST NOT contain the answer.
+- **Use the verb you are given in the user prompt as the lemma — do NOT choose your own.** When a verb is provided, conjugate exactly that verb.
+- **\`instructions\` must contain ONLY the directive the learner reads** — one clean sentence telling them which form to produce for which person. Never include your own reasoning, alternative phrasings, abandoned attempts, or meta-text (no "Actually…", "Wait…", "let's keep it simple", or arrows). The carrier/context sentence, if any, must use the target verb.
 - **\`exampleSentences\` (1–2)** must use \`targetForm\` verbatim, be natural, and sit at or below CEFR ${cefrLevel}.
 
 `;
@@ -551,12 +559,19 @@ export function buildGenerationUserPrompt(
   }
   const toolName = TOOL_NAME_BY_TYPE[inputs.exerciseType as keyof typeof TOOL_NAME_BY_TYPE];
   const domain = topicDomain ?? "mixed";
-  // R5.5: a LOOSE constraint — anchor on the seed, but allow a similar-frequency
-  // substitute when it doesn't fit the grammar point, so seeding doesn't trade
-  // dedup rejections for quality rejections.
+  // R5.5: branch on exercise type — conjugation uses a STRICT directive (no
+  // substitution escape hatch) because the verb picker already guarantees a
+  // conjugatable verb and substitution re-opens the dedup-collapse we fixed.
+  // All other types keep the LOOSE constraint: anchor on the seed but allow a
+  // similar-frequency substitute when it doesn't fit the grammar point.
   const seedBlock =
     seedWord && seedWord.length > 0
-      ? `Build this exercise around the word "${seedWord}". If "${seedWord}" does not fit ${inputs.grammarPoint.name} naturally, choose a related content word of similar frequency instead.\n\n`
+      ? inputs.exerciseType === ExerciseType.CONJUGATION
+        ? // Strict: the seed IS the verb to conjugate. No substitution escape
+          // hatch — the picker already guarantees a conjugatable verb, and
+          // substitution would re-open the dedup-collapse we are fixing.
+          `The verb to conjugate is "${seedWord}". Use exactly this verb — do not substitute another.\n\n`
+        : `Build this exercise around the word "${seedWord}". If "${seedWord}" does not fit ${inputs.grammarPoint.name} naturally, choose a related content word of similar frequency instead.\n\n`
       : "";
   const modeBlock =
     inputs.exerciseType === ExerciseType.SENTENCE_CONSTRUCTION
