@@ -259,3 +259,16 @@ describe('SentenceConstructionExercise', () => {
     });
   });
 });
+
+describe('SentenceConstructionExercise — Cmd/Ctrl+Enter submits', () => {
+  it('keeps plain Enter as a newline, but submits on Ctrl+Enter', () => {
+    const onSubmit = vi.fn();
+    renderEx({ onSubmit, submission: { kind: 'idle' } });
+    const box = screen.getByRole('textbox');
+    fireEvent.change(box, { target: { value: 'mi frase nueva' } });
+    fireEvent.keyDown(box, { key: 'Enter' });
+    expect(onSubmit).not.toHaveBeenCalled();
+    fireEvent.keyDown(box, { key: 'Enter', ctrlKey: true });
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+});

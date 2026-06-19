@@ -5,6 +5,7 @@ import type { ConjugationContent, LearningLanguage } from '@language-drill/share
 import { AccentPicker, Button, Input } from '../../../../components/ui';
 import { ConjugationPromptCard } from '../../../../components/drill/conjugation-prompt';
 import { useAnswerDraft } from '../../../../lib/drill/use-answer-draft';
+import { submitOnEnter } from '../../../../lib/drill/keyboard';
 import { conjugationVerdict } from '../../../../lib/drill/verdict-tier';
 import { useDrillAction } from './drill-action-context';
 import { FeedbackShell } from './feedback-shell';
@@ -78,6 +79,7 @@ export function ConjugationExercise({
           ref={inputRef}
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
+          onKeyDown={submitOnEnter(handleSubmit)}
           readOnly={isLocked}
           disabled={isLocked}
           className={isLocked ? 'opacity-60' : undefined}

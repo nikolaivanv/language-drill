@@ -6,6 +6,7 @@ import { AccentPicker, Button, Input } from '../../../../components/ui';
 import { VocabPromptCard } from '../../../../components/drill/vocab-prompt';
 import { parseConfusions } from '../../../../lib/drill/parse-confusions';
 import { useAnswerDraft } from '../../../../lib/drill/use-answer-draft';
+import { submitOnEnter } from '../../../../lib/drill/keyboard';
 import { vocabVerdict } from '../../../../lib/drill/verdict-tier';
 import { useDrillAction } from './drill-action-context';
 import { FeedbackShell } from './feedback-shell';
@@ -89,6 +90,7 @@ export function VocabExercise({
           ref={inputRef}
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
+          onKeyDown={submitOnEnter(handleSubmit)}
           readOnly={isLocked}
           disabled={isLocked}
           className={isLocked ? 'opacity-60' : undefined}

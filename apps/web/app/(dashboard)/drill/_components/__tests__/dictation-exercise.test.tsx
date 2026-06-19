@@ -95,3 +95,15 @@ describe('DictationExercise', () => {
     expect(screen.getByText(/la sinalefa borró el límite/)).toBeInTheDocument();
   });
 });
+
+describe('DictationExercise — Cmd/Ctrl+Enter submits', () => {
+  it('keeps plain Enter as a newline, but submits on Cmd+Enter', () => {
+    const { onSubmit } = renderEx({ kind: 'idle' });
+    const box = screen.getByRole('textbox');
+    fireEvent.change(box, { target: { value: 'el tiempo lo cura todo' } });
+    fireEvent.keyDown(box, { key: 'Enter' });
+    expect(onSubmit).not.toHaveBeenCalled();
+    fireEvent.keyDown(box, { key: 'Enter', metaKey: true });
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+});

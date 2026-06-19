@@ -13,6 +13,7 @@ import {
   Textarea,
 } from '../../../../components/ui';
 import { useAnswerDraft } from '../../../../lib/drill/use-answer-draft';
+import { submitOnModEnter } from '../../../../lib/drill/keyboard';
 import { translationVerdict } from '../../../../lib/drill/verdict-tier';
 import { lookupGloss } from '../../../../lib/translation/gloss-en';
 import { useDrillAction } from './drill-action-context';
@@ -170,6 +171,7 @@ export function TranslationExercise({
           ref={textareaRef}
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
+          onKeyDown={submitOnModEnter(handleSubmit)}
           readOnly={isLocked}
           disabled={isLocked}
           className={isLocked ? 'opacity-60' : undefined}

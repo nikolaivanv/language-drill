@@ -13,6 +13,7 @@ import {
   Textarea,
 } from '../../../../components/ui';
 import { useAnswerDraft } from '../../../../lib/drill/use-answer-draft';
+import { submitOnModEnter } from '../../../../lib/drill/keyboard';
 import { translationVerdict } from '../../../../lib/drill/verdict-tier';
 import { stripInlineMarkdown } from '../../../../lib/drill/strip-inline-markdown';
 import { useDrillAction } from './drill-action-context';
@@ -125,6 +126,7 @@ export function SentenceConstructionExercise({
           ref={textareaRef}
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
+          onKeyDown={submitOnModEnter(handleSubmit)}
           readOnly={isLocked}
           disabled={isLocked}
           className={isLocked ? 'opacity-60' : undefined}

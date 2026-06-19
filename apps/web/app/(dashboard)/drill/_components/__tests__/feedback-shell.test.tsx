@@ -116,6 +116,22 @@ describe('FeedbackShell', () => {
     });
   });
 
+  describe('advance on Enter', () => {
+    it('calls onNext when the learner presses plain Enter', () => {
+      const onNext = vi.fn();
+      renderShell({ onNext });
+      fireEvent.keyDown(document.body, { key: 'Enter' });
+      expect(onNext).toHaveBeenCalledTimes(1);
+    });
+
+    it('ignores a held Enter (auto-repeat) so it does not skip the verdict', () => {
+      const onNext = vi.fn();
+      renderShell({ onNext });
+      fireEvent.keyDown(document.body, { key: 'Enter', repeat: true });
+      expect(onNext).not.toHaveBeenCalled();
+    });
+  });
+
   describe('mobile action publishing', () => {
     it('publishes the next action and omits the inline button when active', () => {
       const onNext = vi.fn();

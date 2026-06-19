@@ -8,6 +8,7 @@ import {
   type LearningLanguage,
 } from '@language-drill/shared';
 import { AccentPicker, Button, Chip, Textarea } from '../../../../components/ui';
+import { submitOnModEnter } from '../../../../lib/drill/keyboard';
 import { dictationVerdict } from '../../../../lib/drill/verdict-tier';
 import { AudioPlayer } from './audio-player';
 import { DictationResultBody } from './dictation-result-body';
@@ -93,6 +94,7 @@ export function DictationExercise({
           readOnly={isLocked}
           disabled={isLocked}
           onChange={(e) => setAnswer(e.target.value)}
+          onKeyDown={submitOnModEnter(handleSubmit)}
           placeholder="escribe la frase tal y como la oyes…"
           className={isLocked ? 'opacity-60' : undefined}
         />

@@ -285,3 +285,15 @@ describe('VocabExercise', () => {
     });
   });
 });
+
+describe('VocabExercise — Enter submits', () => {
+  it('submits on plain Enter in the input', () => {
+    const onSubmit = vi.fn();
+    renderVocab({ onSubmit, submission: { kind: 'idle' } });
+    const input = screen.getByRole('textbox');
+    fireEvent.change(input, { target: { value: 'aprovechar' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(onSubmit).toHaveBeenCalledWith('aprovechar', expect.anything());
+  });
+});

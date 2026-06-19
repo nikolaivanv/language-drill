@@ -386,3 +386,16 @@ describe('TranslationExercise', () => {
     });
   });
 });
+
+describe('TranslationExercise — Cmd/Ctrl+Enter submits', () => {
+  it('keeps plain Enter as a newline, but submits on Cmd+Enter', () => {
+    const onSubmit = vi.fn();
+    renderTranslation({ onSubmit, submission: { kind: 'idle' } });
+    const box = screen.getByRole('textbox');
+    fireEvent.change(box, { target: { value: 'apenas puedo permitírmelo' } });
+    fireEvent.keyDown(box, { key: 'Enter' });
+    expect(onSubmit).not.toHaveBeenCalled();
+    fireEvent.keyDown(box, { key: 'Enter', metaKey: true });
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+});

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import {
   ExerciseType,
   Language,
@@ -84,5 +84,17 @@ describe('ConjugationExercise — evaluated reveal', () => {
       content: { ...baseContent, acceptableForms: ['iríamos'] },
     });
     expect(screen.queryByText(/also accepted:/i)).not.toBeInTheDocument();
+  });
+});
+
+describe('ConjugationExercise — Enter submits', () => {
+  it('submits on plain Enter in the input', () => {
+    const onSubmit = vi.fn();
+    renderConj({ onSubmit, submission: { kind: 'idle' } });
+    const input = screen.getByRole('textbox');
+    fireEvent.change(input, { target: { value: 'iríamos' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(onSubmit).toHaveBeenCalledWith('iríamos', expect.anything());
   });
 });

@@ -4,6 +4,7 @@ import * as React from 'react';
 import { Button, Card, Chip } from '../../../../components/ui';
 import { cn } from '../../../../lib/cn';
 import type { VerdictTier } from '../../../../lib/drill/verdict-tier';
+import { useAdvanceOnEnter } from '../../../../lib/drill/keyboard';
 import { useDrillAction } from './drill-action-context';
 
 export interface FeedbackShellProps {
@@ -41,6 +42,10 @@ export function FeedbackShell({
     setPrimaryAction({ label: nextLabel, onClick: onNext, variant: 'accent' });
     return () => setPrimaryAction(null);
   }, [active, nextLabel, onNext, setPrimaryAction]);
+
+  // The feedback is the post-answer surface, so while it's shown plain Enter
+  // advances to the next item — keyboard-only drilling on every viewport.
+  useAdvanceOnEnter(onNext);
 
   return (
     <Card padding="lg" className={cn(TIER_BG[tier])}>
