@@ -81,7 +81,13 @@ and render via fallback. No new `ExerciseType` member, so no exhaustive-switch /
   - `subject` carries the representative target-language pronoun for the cell's
     person/number plus its English gloss.
   - `featureBundle` continues to name the full cell as today (unchanged role).
-- Bump `GENERATION_PROMPT_VERSION` to `<surface>@2026-06-19` per CLAUDE.md.
+- The conjugation guidance lives in `renderConjugationSection`, whose output is
+  substituted into the Langfuse template's `{{conjugationSection}}` flat var at
+  runtime. Editing it therefore ships with the **code deploy** — **no
+  `push-prompts` / Langfuse sync is required** for this block (per the "Langfuse
+  registers the template, not the rendered body" rule).
+- `GENERATION_PROMPT_VERSION` is already `generate@2026-06-19` (today). The
+  date-stamped convention is satisfied; no bump needed unless the date changes.
 - `VALIDATION_PROMPT_VERSION` is **not** bumped — the validation prompt reads
   `featureBundle`, which is unchanged.
 
@@ -104,11 +110,9 @@ and render via fallback. No new `ExerciseType` member, so no exhaustive-switch /
 
 Regenerate (user's choice). Sequence:
 
-1. Merge code (schema + generation + UI + fallback).
-2. Push the updated generation prompt to Langfuse (prod **and** dev) per
-   `docs/runbooks/prompt-update-and-revalidate.md` / the CLAUDE.md push-prompts
-   flow.
-3. Demote the existing approved conjugation exercises and re-run generation so the
+1. Merge + deploy code (schema + generation + UI + fallback). The prompt change
+   rides the code deploy — no separate Langfuse push (see Generation, above).
+2. Demote the existing approved conjugation exercises and re-run generation so the
    repopulated pool carries `features` + `subject` (same pattern as the theory-pool
    regen).
 
