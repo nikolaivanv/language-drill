@@ -1,3 +1,4 @@
+import { StrictMode } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { CefrLevel, Language } from '@language-drill/shared';
@@ -136,6 +137,32 @@ describe('ReviewSessionPage start', () => {
     expect(mockStartMutate.mock.calls[0][0]).toMatchObject({
       filter: { readEntryId: 'entry-9' },
     });
+  });
+
+  it('still starts when the first mount-effect pass is abandoned (StrictMode double-invoke)', () => {
+    // Reproduces the `next dev` failure: under StrictMode the mount effect runs,
+    // is cleaned up, then runs again. A mutation fired in the *first* pass is
+    // torn down and its onSuccess never fires — only a later pass's call lands
+    // on the live observer. Model that by dropping the first mutate's callbacks
+    // and honouring the second. With the once-guard removed the effect re-fires
+    // on remount and the session starts; a re-introduced guard would leave the
+    // page stuck on the loading skeleton.
+    let calls = 0;
+    mockStartMutate.mockImplementation((_params, opts) => {
+      calls += 1;
+      if (calls >= 2) opts.onSuccess(sessionResponse);
+    });
+    render(
+      <StrictMode>
+        <ActiveLanguageProvider
+          profiles={[{ language: Language.ES, proficiencyLevel: CefrLevel.B1 }]}
+        >
+          <ReviewSessionPage />
+        </ActiveLanguageProvider>
+      </StrictMode>,
+    );
+    expect(calls).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText('type the form that fits.')).toBeInTheDocument();
   });
 });
 

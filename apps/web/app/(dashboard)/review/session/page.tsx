@@ -14,7 +14,7 @@
 // and free — no metering.
 // ---------------------------------------------------------------------------
 
-import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useReducer } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { LearningLanguage } from '@language-drill/shared';
@@ -78,25 +78,31 @@ export default function ReviewSessionPage() {
 
   const [state, dispatch] = useReducer(reviewSessionReducer, initialReviewSessionState);
 
-  // Start exactly once (a ref guards React strict-mode's double effect).
-  const startedRef = useRef(false);
+  // `mutate` is referentially stable across renders (TanStack v5), so the
+  // start callback only changes when the session parameters do.
+  const { mutate: startMutate } = startMutation;
   const startSession = useCallback(() => {
     dispatch({ type: 'CREATE_REQUESTED' });
-    startMutation.mutate(
+    startMutate(
       { language: activeLanguage, filter },
       {
         onSuccess: (session) => dispatch({ type: 'CREATE_SUCCEEDED', session }),
         onError: (error) => dispatch({ type: 'CREATE_FAILED', error }),
       },
     );
-  }, [activeLanguage, filter, startMutation]);
+  }, [activeLanguage, filter, startMutate]);
 
+  // Start on mount. No once-guard: `next dev` runs React in StrictMode, which
+  // mounts → unmounts → remounts. A mutation fired in the *first* pass is torn
+  // down by the cleanup, and its result (plus the per-call onSuccess) is
+  // abandoned — the surviving observer would sit on `pending` forever. Letting
+  // the effect re-fire on the remount means the live observer owns the
+  // in-flight mutation, so its onSuccess actually dispatches. `startSession` is
+  // stable across ordinary re-renders (deps are the session params only), so
+  // this fires once per real mount in production and twice only under
+  // StrictMode's intentional double-invoke.
   useEffect(() => {
-    if (startedRef.current) return;
-    startedRef.current = true;
     startSession();
-    // Intentionally start once on mount; we never restart on active-language
-    // changes mid-session. `startedRef` guards strict-mode's double effect.
   }, [startSession]);
 
   const currentItem = selectCurrentReviewItem(state);
