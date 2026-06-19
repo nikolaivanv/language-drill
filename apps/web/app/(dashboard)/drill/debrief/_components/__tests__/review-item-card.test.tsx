@@ -602,6 +602,52 @@ describe('ReviewItemCard — sentence construction body', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Conjugation body — inline structured feature bundle (Task 6)
+// ---------------------------------------------------------------------------
+
+function conjugationItem(overrides: Partial<DebriefItem> = {}): DebriefItem {
+  return {
+    exerciseId: '55555555-5555-4555-8555-555555555555',
+    submissionId: '55555555-5555-4555-8555-aaaaaaaaaaaa',
+    type: ExerciseType.CONJUGATION,
+    grammarPointKey: 'tr-b1-past-simple',
+    contentJson: {
+      type: ExerciseType.CONJUGATION,
+      instructions: 'Write the correct form.',
+      lemma: 'içmek',
+      lemmaGloss: 'to drink',
+      featureBundle: 'geçmiş zaman · olumlu · o',
+      features: [
+        { term: 'geçmiş zaman', gloss: 'past' },
+        { term: 'olumlu', gloss: 'affirmative' },
+      ],
+      subject: { pronoun: 'o', gloss: 'he / she / it' },
+      targetForm: 'içti',
+      breakdown: 'iç + ti',
+      exampleSentences: ['O su içti.'],
+    },
+    status: 'incorrect',
+    userAnswer: 'içdi',
+    score: 0.3,
+    evaluation: {
+      ...sampleEvaluation,
+      feedback: 'The past tense suffix is -ti after voiceless consonants.',
+    },
+    ...overrides,
+  };
+}
+
+describe('ReviewItemCard — conjugation body (inline feature bundle)', () => {
+  it('renders the inline glossed string with pronoun and features', () => {
+    render(<ReviewItemCard index={0} item={conjugationItem()} />);
+    // The ConjugationFeatureBundle inline variant renders: "o (he / she / it) · geçmiş zaman (past) · …"
+    expect(
+      screen.getByText(/o \(he \/ she \/ it\) · geçmiş zaman \(past\)/),
+    ).toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Dictation body — clip replay + stored diff / score / criteria
 // ---------------------------------------------------------------------------
 
