@@ -14,6 +14,7 @@ import { cn } from '../../../lib/cn';
 
 const MINUS = '−'; // U+2212 MINUS SIGN — wider than ASCII '-'
 const EM_DASH = '—'; // U+2014 — used when delta rounds to zero
+const THIN_EVIDENCE_THRESHOLD = 5;
 
 type Props = {
   axis: RadarAxis;
@@ -32,13 +33,21 @@ export function SkillRow({ axis }: Props) {
           <span className="text-[13px] font-medium">
             {axis.label.toLowerCase()}
           </span>
-          <span
-            className={cn(
-              't-mono text-[12px]',
-              isWeak ? 'text-accent' : 'text-ink-soft',
-            )}
-          >
-            {pct}%
+          <span className="flex items-baseline gap-s-1">
+            <span
+              className={cn(
+                't-mono text-[12px]',
+                isWeak ? 'text-accent' : 'text-ink-soft',
+              )}
+            >
+              {pct}%
+            </span>
+            {axis.evidenceCount > 0 &&
+              axis.evidenceCount < THIN_EVIDENCE_THRESHOLD && (
+                <span className="t-mono text-[11px] text-ink-soft">
+                  thin · {axis.evidenceCount}
+                </span>
+              )}
           </span>
         </div>
         <Bar value={pct} color={isWeak ? 'accent' : 'ink'} />

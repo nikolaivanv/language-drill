@@ -102,9 +102,10 @@ describe('SkillSnapshotGrid — sort order', () => {
         error={null}
       />,
     );
-    // grab the visible label text in DOM order
+    // grab the visible label text in DOM order (select by the label class to avoid
+    // matching the thin-cue spans that are first-child of the pct wrapper span)
     const labels = Array.from(
-      container.querySelectorAll('.flex-1 > div span:first-child'),
+      container.querySelectorAll('.flex-1 span.text-\\[13px\\]'),
     ).map((el) => el.textContent);
     // Expected: grammar (0.31), reading (0.5, ties → 'reading' < 'writing'),
     // writing (0.5), listening (0.6), speaking (0.71), vocabulary (0.92)
@@ -182,6 +183,51 @@ describe('SkillSnapshotGrid — empty state', () => {
     ).toBeInTheDocument();
     const link = screen.getByRole('link', { name: /start a session/ });
     expect(link).toHaveAttribute('href', '/drill?start=quick');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// SkillSnapshotGrid — trained vs not-started partition
+// ---------------------------------------------------------------------------
+
+describe('SkillSnapshotGrid — trained vs not-started', () => {
+  it('excludes zero-evidence axes from the weakest-first list and shows them as not started', () => {
+    const data = radar([
+      axis('reading', 0, 0, 0),
+      axis('grammar', 0.84, 0.84, 47),
+      axis('writing', 0.85, 0.85, 38),
+    ]);
+    render(
+      <SkillSnapshotGrid
+        {...baseGridProps}
+        data={data}
+        isLoading={false}
+        error={null}
+      />,
+    );
+    // 'reading' is presented as not started, not as a 0% weakest row
+    const notStartedEl = screen.getByText(/not started/i);
+    expect(notStartedEl).toBeInTheDocument();
+    // the not-started label text contains 'reading'
+    expect(notStartedEl.textContent).toMatch(/reading/i);
+    // a trained axis still shows its percentage
+    expect(screen.getByText('84%')).toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// SkillRow — thin evidence cue
+// ---------------------------------------------------------------------------
+
+describe('SkillRow — thin evidence', () => {
+  it('marks a trained-but-thin axis (evidenceCount < 5)', () => {
+    render(<SkillRow axis={axis('listening', 0.97, 0.97, 4)} />);
+    expect(screen.getByText(/thin/i)).toBeInTheDocument();
+  });
+
+  it('does not mark a well-evidenced axis', () => {
+    render(<SkillRow axis={axis('grammar', 0.84, 0.84, 47)} />);
+    expect(screen.queryByText(/thin/i)).not.toBeInTheDocument();
   });
 });
 

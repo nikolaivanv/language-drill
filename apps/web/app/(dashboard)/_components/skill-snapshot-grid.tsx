@@ -53,9 +53,29 @@ export function SkillSnapshotGrid({
 
       {!isLoading && !error && data && !isEmpty(data) && (
         <div className="grid grid-cols-2 mobile:grid-cols-1 gap-x-s-7 gap-y-s-4">
-          {sortAxes(data).map((axis) => (
-            <SkillRow key={axis.key} axis={axis} />
-          ))}
+          {(() => {
+            const trained = data.axes
+              .filter((a) => a.evidenceCount > 0)
+              .sort(
+                (a, b) =>
+                  a.currentMastery - b.currentMastery ||
+                  a.key.localeCompare(b.key),
+              );
+            const notStarted = data.axes.filter((a) => a.evidenceCount === 0);
+            return (
+              <>
+                {trained.map((a) => (
+                  <SkillRow key={a.key} axis={a} />
+                ))}
+                {notStarted.length > 0 && (
+                  <p className="t-micro text-ink-soft mt-s-2 col-span-2 mobile:col-span-1">
+                    not started yet ·{' '}
+                    {notStarted.map((a) => a.label.toLowerCase()).join(' · ')}
+                  </p>
+                )}
+              </>
+            );
+          })()}
         </div>
       )}
     </section>
