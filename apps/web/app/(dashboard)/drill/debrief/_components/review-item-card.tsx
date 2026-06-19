@@ -19,6 +19,7 @@ import type { AuthenticatedFetch, DebriefItem } from '@language-drill/api-client
 import { Card, Chip } from '../../../../../components/ui';
 import { splitClozeSentence } from '../../../../../lib/drill/cloze-blank';
 import { FlagExerciseControl } from '../../_components/flag-exercise-control';
+import { ConjugationFeatureBundle } from '../../../../../components/drill/conjugation-feature-bundle';
 import { DictationBody } from './dictation-body';
 
 // ---------------------------------------------------------------------------
@@ -396,7 +397,7 @@ function ConjugationBody({ item, content }: ConjugationBodyProps) {
   return (
     <>
       <p className="t-small italic mb-s-2">
-        {content.lemma} ({content.lemmaGloss}) — {content.featureBundle}
+        {content.lemma} ({content.lemmaGloss}) — <ConjugationFeatureBundle content={content} variant="inline" />
       </p>
       <div className="grid grid-cols-2 mobile:grid-cols-1 gap-s-3">
         <div className="rounded-r-md p-s-3 bg-paper-2">

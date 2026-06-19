@@ -224,6 +224,21 @@ export type ConjugationContent = {
    * point; this names the cell the learner must produce.
    */
   featureBundle: string;
+  /**
+   * Ordered grammar dimensions OTHER than person/number — tense/mood, and
+   * polarity where the language marks it — each as a target-language term plus
+   * a short English gloss. Optional: only new (regenerated) rows carry it; older
+   * rows fall back to `featureBundle`.
+   * e.g. [{ term: "geçmiş zaman", gloss: "past" }, { term: "olumlu", gloss: "affirmative" }]
+   */
+  features?: Array<{ term: string; gloss: string }>;
+  /**
+   * Person/number cue, surfaced prominently. `pronoun` is the representative
+   * target-language subject pronoun; `gloss` is its English. Optional for the
+   * same backward-compatibility reason as `features`.
+   * e.g. { pronoun: "o", gloss: "he / she / it" }
+   */
+  subject?: { pronoun: string; gloss: string };
   /** The canonical expected form: "iríamos". */
   targetForm: string;
   /** Other fully-correct forms (regional / orthographic variants). Rare. */

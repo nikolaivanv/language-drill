@@ -1244,18 +1244,21 @@ describe("parseGeneratedFreeWritingDraft", () => {
 // ---------------------------------------------------------------------------
 
 describe("parseGeneratedConjugationDraft", () => {
+  const VALID = {
+    instructions: "Write the correct form.",
+    lemma: "ir",
+    lemmaGloss: "to go",
+    featureBundle: "condicional · 1ª pers. plural",
+    features: [{ term: "condicional", gloss: "conditional" }],
+    subject: { pronoun: "nosotros", gloss: "we" },
+    targetForm: "iríamos",
+    breakdown: "ir- + -íamos",
+    exampleSentences: ["Iríamos al cine."],
+  };
+
   it("parses a conjugation draft (trims targetForm)", () => {
     const out = parseGeneratedConjugationDraft(
-      {
-        instructions: "Write the correct form.",
-        lemma: "ir",
-        lemmaGloss: "to go",
-        featureBundle: "condicional · 1ª pers. plural",
-        targetForm: " iríamos ",
-        acceptableForms: ["nos iríamos"],
-        breakdown: "ir- + -íamos",
-        exampleSentences: ["Iríamos al cine."],
-      },
+      { ...VALID, targetForm: " iríamos ", acceptableForms: ["nos iríamos"] },
       {} as never,
     );
     expect(out.type).toBe(ExerciseType.CONJUGATION);
@@ -1264,31 +1267,65 @@ describe("parseGeneratedConjugationDraft", () => {
     expect(out.acceptableForms).toEqual(["nos iríamos"]);
   });
 
+  it("parses features and subject", () => {
+    const out = parseGeneratedConjugationDraft(
+      {
+        ...VALID,
+        features: [
+          { term: "geçmiş zaman", gloss: "past" },
+          { term: "olumlu", gloss: "affirmative" },
+        ],
+        subject: { pronoun: "o", gloss: "he / she / it" },
+      },
+      {} as never,
+    );
+    expect(out.features).toEqual([
+      { term: "geçmiş zaman", gloss: "past" },
+      { term: "olumlu", gloss: "affirmative" },
+    ]);
+    expect(out.subject).toEqual({ pronoun: "o", gloss: "he / she / it" });
+  });
+
   it("rejects an empty target form", () => {
     expect(() =>
-      parseGeneratedConjugationDraft(
-        { instructions: "x", lemma: "ir", lemmaGloss: "to go", featureBundle: "y", targetForm: "  ", breakdown: "z", exampleSentences: ["a"] },
-        {} as never,
-      ),
+      parseGeneratedConjugationDraft({ ...VALID, targetForm: "  " }, {} as never),
     ).toThrow(/targetForm/);
   });
 
   it("rejects a whitespace-only lemma", () => {
     expect(() =>
-      parseGeneratedConjugationDraft(
-        { instructions: "x", lemma: "   ", lemmaGloss: "to go", featureBundle: "y", targetForm: "iríamos", breakdown: "z", exampleSentences: ["a"] },
-        {} as never,
-      ),
+      parseGeneratedConjugationDraft({ ...VALID, lemma: "   " }, {} as never),
     ).toThrow(/lemma/);
   });
 
   it("rejects empty exampleSentences", () => {
     expect(() =>
+      parseGeneratedConjugationDraft({ ...VALID, exampleSentences: [] }, {} as never),
+    ).toThrow(/exampleSentences/);
+  });
+
+  it("rejects an empty features array", () => {
+    expect(() =>
+      parseGeneratedConjugationDraft({ ...VALID, features: [] }, {} as never),
+    ).toThrow(/features/);
+  });
+
+  it("rejects a feature missing its gloss", () => {
+    expect(() =>
       parseGeneratedConjugationDraft(
-        { instructions: "x", lemma: "ir", lemmaGloss: "to go", featureBundle: "y", targetForm: "iríamos", breakdown: "z", exampleSentences: [] },
+        { ...VALID, features: [{ term: "condicional" }] },
         {} as never,
       ),
-    ).toThrow(/exampleSentences/);
+    ).toThrow(/features/);
+  });
+
+  it("rejects a subject missing its pronoun", () => {
+    expect(() =>
+      parseGeneratedConjugationDraft(
+        { ...VALID, subject: { gloss: "we" } },
+        {} as never,
+      ),
+    ).toThrow(/subject/);
   });
 
   it("registers conjugation in the tool maps", () => {

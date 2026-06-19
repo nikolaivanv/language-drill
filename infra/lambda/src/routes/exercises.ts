@@ -39,6 +39,7 @@ import {
 } from '@language-drill/ai';
 import { db } from '../db';
 import { approvedStatusFilter, audioReadyFilter, freshFirstOrderBy } from '../lib/exercise-filters';
+import { recordErrorObservations, freeWritingErrorsToEvaluationErrors } from '../lib/errors/record';
 import { presignAudioUrl } from '../lib/audio-url';
 import { withAudioUrl } from '../lib/dictation-content';
 import { authMiddleware } from '../middleware/auth';
@@ -475,6 +476,18 @@ exercises.post('/exercises/:id/submit', async (c) => {
         evaluatedAt: new Date(),
       });
 
+      await recordErrorObservations(db, {
+        errors: freeWritingErrorsToEvaluationErrors(evaluation.errors),
+        userId,
+        language: exercise.language as string,
+        exerciseId: id,
+        sessionId: sessionId ?? null,
+        exerciseHistoryId: submissionId,
+        exerciseType: exercise.type as string,
+        hostGrammarPointKey: exercise.grammarPointKey,
+        occurredAt: new Date(),
+      });
+
       await db.insert(usageEvents).values({
         userId,
         eventType: 'ai_evaluation',
@@ -513,6 +526,18 @@ exercises.post('/exercises/:id/submit', async (c) => {
       score: result.score,
       responseJson: { userAnswer, evaluation: result },
       evaluatedAt: new Date(),
+    });
+
+    await recordErrorObservations(db, {
+      errors: result.errors,
+      userId,
+      language: exercise.language as string,
+      exerciseId: id,
+      sessionId: sessionId ?? null,
+      exerciseHistoryId: submissionId,
+      exerciseType: exercise.type as string,
+      hostGrammarPointKey: exercise.grammarPointKey,
+      occurredAt: new Date(),
     });
 
     await db.insert(usageEvents).values({

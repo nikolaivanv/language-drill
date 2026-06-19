@@ -101,3 +101,8 @@ export type {
   MasteryObservation,
   HistoryRow,
 } from './mastery/update';
+
+// Error observations — pure mapping from evaluation errors to insert rows,
+// plus a backfill row-builder. Used by the Lambda write path and the
+// backfill CLI (both import these pure functions from the barrel).
+export * from './errors/observations';

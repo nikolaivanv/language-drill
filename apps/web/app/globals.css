@@ -217,6 +217,7 @@
   animation: theory-fade-in 0.18s ease both;
 }
 .theory-panel {
+  position: relative; /* anchors the topic-switcher sheet (mobile) */
   width: min(960px, 92vw);
   height: 100vh;
   background: var(--color-paper);
@@ -224,6 +225,7 @@
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow-3);
+  overflow: hidden; /* keep the slide-up sheet clipped to the panel */
   animation: theory-slide-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 @keyframes theory-fade-in {
@@ -621,12 +623,261 @@
   gap: 2px;
 }
 
+/* ─── Theory: mobile title-switcher control ─── */
+/* On mobile the topic title becomes a tappable control that opens the topic
+   switcher sheet (desktop keeps the plain heading + 240px sidebar). */
+.theory-title-switch {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: var(--color-ink);
+  font-family: inherit;
+}
+.theory-title-text {
+  min-width: 0;
+}
+.theory-switch-cue {
+  margin-left: auto;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--color-rule);
+  background: var(--color-card);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-ink-soft);
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.theory-title-switch:hover .theory-switch-cue {
+  border-color: var(--color-ink);
+  color: var(--color-ink);
+  background: var(--color-paper-2);
+}
+.theory-title-switch:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-r-sm);
+}
+
+/* ─── Theory: "browse all topics" footer (mobile) ─── */
+.theory-browse-all-wrap {
+  margin-top: var(--spacing-s-5);
+}
+.theory-browse-all {
+  appearance: none;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px 15px;
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-r-md);
+  background: var(--color-card);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-ink);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.theory-browse-all:hover {
+  border-color: var(--color-ink);
+  background: var(--color-paper-2);
+}
+.theory-browse-all-count {
+  font-size: 11px;
+  color: var(--color-ink-mute);
+}
+
+/* ─── Theory: topic switcher sheet (mobile) ─── */
+/* A searchable, grouped bottom sheet that replaces the old flat "other topics"
+   ribbon. Anchored to its host (.theory-panel / .theory-detail, both
+   position:relative) so it overlays just that surface. */
+.theory-switcher {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+}
+.theory-switcher-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(26, 22, 18, 0.46);
+  animation: theory-fade-in 0.18s ease both;
+}
+.theory-switcher-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 82%;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-paper);
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  box-shadow: 0 -12px 44px rgba(26, 22, 18, 0.22);
+  animation: theory-slide-up 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.theory-switcher-grab {
+  width: 38px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-rule-strong);
+  margin: 9px auto 2px;
+  flex-shrink: 0;
+}
+.theory-switcher-head {
+  flex-shrink: 0;
+  padding: 6px 18px 12px;
+  border-bottom: 1px solid var(--color-rule);
+}
+.theory-switcher-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.theory-switcher-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--color-card);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-r-md);
+  color: var(--color-ink-mute);
+  box-shadow: var(--shadow-1);
+}
+.theory-switcher-search:focus-within {
+  border-color: var(--color-ink);
+  box-shadow: 0 0 0 3px rgba(26, 22, 18, 0.08);
+}
+.theory-switcher-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--color-ink);
+}
+.theory-switcher-clear {
+  appearance: none;
+  border: 0;
+  background: none;
+  color: var(--color-ink-mute);
+  font-size: 19px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+.theory-switcher-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 22px;
+}
+.theory-switcher-empty {
+  padding: 40px 18px;
+  text-align: center;
+  color: var(--color-ink-mute);
+}
+.theory-switcher-group-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 9px 18px 7px;
+  background: var(--color-paper);
+  border-bottom: 1px solid var(--color-rule);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-ink-soft);
+}
+.theory-switcher-group-head .t-mono {
+  font-size: 10px;
+  color: var(--color-ink-mute);
+}
+.theory-switcher-row {
+  appearance: none;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 18px;
+  border: 0;
+  border-bottom: 1px solid var(--color-rule);
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  color: var(--color-ink);
+}
+.theory-switcher-row:hover {
+  background: var(--color-paper-2);
+}
+.theory-switcher-row.is-current {
+  background: var(--color-accent-soft);
+}
+.theory-switcher-row-main {
+  flex: 1;
+  min-width: 0;
+}
+.theory-switcher-row-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13.5px;
+  font-weight: 500;
+}
+.theory-switcher-here {
+  font-size: 9px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-accent-2);
+  background: var(--color-card);
+  border: 1px solid var(--color-accent-soft);
+  border-radius: var(--radius-r-pill);
+  padding: 1px 6px;
+}
+.theory-switcher-level {
+  flex-shrink: 0;
+}
+.theory-switcher-go {
+  flex-shrink: 0;
+  color: var(--color-ink-mute);
+  font-size: 15px;
+}
+.theory-switcher-mark {
+  background: var(--color-hilite-soft);
+  color: var(--color-ink);
+  padding: 0;
+}
+
 /* ─── Reduced-motion preference (FR-9.7) ─── */
 @media (prefers-reduced-motion: reduce) {
   .theory-overlay,
   .theory-panel,
   .sheet-scrim,
-  .sheet-panel {
+  .sheet-panel,
+  .theory-switcher-scrim,
+  .theory-switcher-sheet {
     animation: none;
   }
   .theory-scroll {
@@ -670,6 +921,7 @@
    can't track sections (design §"Scroll-spy root"). Desktop <main> content is
    padded py-[36px] (72px total); the page fills the remaining viewport. */
 .theory-detail {
+  position: relative; /* anchors the topic-switcher sheet (mobile) */
   display: flex;
   flex-direction: column;
   height: calc(100dvh - 72px);
