@@ -317,6 +317,10 @@ Score the dimensions in the system prompt and submit via the tool.`;
 const COVERAGE_AXIS_DIRECTIVE: Record<CoverageAxis, string> = {
   person:
     "- `coverage.person`: the grammatical person/number the target answer realizes (1sg/2sg/3sg/1pl/2pl/3pl). Report what the draft ACTUALLY produced, not what was requested.",
+  number:
+    "- `coverage.number`: the grammatical number of the target form (singular/plural). Report what the draft ACTUALLY produced, not what was requested.",
+  case:
+    "- `coverage.case`: the grammatical case of the target form (nominative/accusative/dative/locative/ablative/genitive). Report what the draft ACTUALLY produced, not what was requested.",
   wordClass:
     "- `coverage.wordClass`: the part of speech of the target word (noun/verb/adjective/adverb/other).",
   polarity:

@@ -484,6 +484,10 @@ const COVERAGE_DIRECTIVE_BY_AXIS: Record<
   Exclude<CoverageAxis, "person">,
   (value: string) => string
 > = {
+  number: (v) =>
+    `The target word form MUST be ${v} (grammatical number).`,
+  case: (v) =>
+    `The target word form MUST carry the ${v} case.`,
   polarity: (v) =>
     `The target sentence MUST be ${v} (${v === "negative" ? "negated" : "a positive statement"}).`,
   wordClass: (v) => `The target word the learner must produce MUST be a ${v}.`,
