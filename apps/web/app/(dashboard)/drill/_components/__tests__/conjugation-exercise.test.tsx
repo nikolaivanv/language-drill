@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import {
   ExerciseType,
@@ -47,6 +47,15 @@ function renderConj(overrides: Partial<ConjugationExerciseProps> = {}) {
   };
   return { props, ...render(<ConjugationExercise {...props} />) };
 }
+
+describe('ConjugationExercise — answer draft', () => {
+  beforeEach(() => window.sessionStorage.clear());
+  it('restores a saved draft for its exercise id', () => {
+    window.sessionStorage.setItem('drill:draft:ex-9', 'iríamos');
+    renderConj({ exerciseId: 'ex-9', submission: { kind: 'idle' } });
+    expect(screen.getByRole('textbox')).toHaveValue('iríamos');
+  });
+});
 
 describe('ConjugationExercise — evaluated reveal', () => {
   it('reveals the target form and the evaluator feedback regardless of score', () => {

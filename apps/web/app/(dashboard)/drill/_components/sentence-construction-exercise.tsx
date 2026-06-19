@@ -12,6 +12,7 @@ import {
   Card,
   Textarea,
 } from '../../../../components/ui';
+import { useAnswerDraft } from '../../../../lib/drill/use-answer-draft';
 import { translationVerdict } from '../../../../lib/drill/verdict-tier';
 import { stripInlineMarkdown } from '../../../../lib/drill/strip-inline-markdown';
 import { useDrillAction } from './drill-action-context';
@@ -27,6 +28,9 @@ export interface SentenceConstructionExerciseProps {
   onSubmit: (answer: string, meta: SubmissionMeta) => void;
   onNext: () => void;
   nextLabel?: string;
+  /** When set, the typed answer is drafted in sessionStorage so it survives a
+   *  full page reload. Omitted in tests/contexts that don't need persistence. */
+  exerciseId?: string;
 }
 
 function isAccentLanguage(lang: string): lang is 'ES' | 'DE' | 'TR' {
@@ -45,8 +49,9 @@ export function SentenceConstructionExercise({
   onSubmit,
   onNext,
   nextLabel,
+  exerciseId,
 }: SentenceConstructionExerciseProps) {
-  const [answer, setAnswer] = React.useState('');
+  const [answer, setAnswer, clearDraft] = useAnswerDraft(exerciseId);
   const [exampleShown, setExampleShown] = React.useState(false);
   const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
 
@@ -62,6 +67,7 @@ export function SentenceConstructionExercise({
     if (!canSubmit || isLocked) return;
     // Count the example reveal as one hint for honest progress weighting.
     onSubmit(answer, { hintCount: exampleShown ? 1 : 0 });
+    clearDraft();
   }
 
   const { active, setPrimaryAction } = useDrillAction();
