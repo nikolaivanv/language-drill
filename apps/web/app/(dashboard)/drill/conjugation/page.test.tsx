@@ -42,6 +42,8 @@ const CONJUGATION_EXERCISE = {
     lemma: 'ir',
     lemmaGloss: 'to go',
     featureBundle: 'condicional · 1ª persona del plural',
+    features: [{ term: 'condicional', gloss: 'conditional' }],
+    subject: { pronoun: 'nosotros', gloss: 'we' },
     targetForm: 'iríamos',
     breakdown: 'ir + íamos',
     exampleSentences: ['Iríamos al cine si tuviéramos tiempo.'],
@@ -115,9 +117,14 @@ describe('ConjugationPage', () => {
     renderWithProviders(<ConjugationPage />);
     expect(screen.getByText(/conjugation warm-up/i)).toBeInTheDocument();
     expect(screen.getByText('ir')).toBeInTheDocument();
-    expect(
-      screen.getByText('condicional · 1ª persona del plural'),
-    ).toBeInTheDocument();
+  });
+
+  it('renders the pronoun badge and feature chips with glosses', () => {
+    renderWithProviders(<ConjugationPage />);
+    expect(screen.getByText('nosotros')).toBeInTheDocument();
+    expect(screen.getByText('we')).toBeInTheDocument();
+    expect(screen.getByText('condicional')).toBeInTheDocument();
+    expect(screen.getByText('conditional')).toBeInTheDocument();
   });
 
   it('submits the typed answer WITHOUT a sessionId and shows feedback', async () => {

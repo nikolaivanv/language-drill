@@ -317,6 +317,17 @@ describe("buildGenerationSystemPrompt", () => {
     expect(conj).toContain("abandoned attempts");
   });
 
+  it("conjugation guidance instructs the model to author features and subject", async () => {
+    // Build the conjugation system prompt the same way the sibling test does.
+    const conj = await buildGenerationSystemPrompt(
+      { ...baseInputs, exerciseType: ExerciseType.CONJUGATION },
+      [],
+    );
+    expect(conj).toContain("`features`");
+    expect(conj).toContain("`subject`");
+    expect(conj).toContain("person/number");
+  });
+
   it("instructs Claude to use the matching tool name", async () => {
     const cloze = await buildGenerationSystemPrompt(baseInputs, []);
     expect(cloze).toContain("submit_cloze_exercise");
