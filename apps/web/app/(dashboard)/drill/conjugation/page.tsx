@@ -74,9 +74,10 @@ export default function ConjugationPage() {
   };
 
   const onNext = () => {
-    // Reset feedback, then pull a fresh exercise. `useSubmitAnswer` already
-    // invalidates the `['exercise']` query on success, but an explicit refetch
-    // makes the advance deterministic regardless of cache state.
+    // Reset feedback, then pull a fresh exercise. Advancing is an explicit
+    // refetch — submitting deliberately does NOT swap the task (see
+    // useSubmitAnswer), so the graded prompt + answer stay put under the
+    // feedback until the user chooses to move on.
     setSubmission({ kind: 'idle' });
     void refetch();
   };
