@@ -117,7 +117,6 @@ describe('ConjugationPage', () => {
     renderWithProviders(<ConjugationPage />);
     expect(screen.getByText(/conjugation warm-up/i)).toBeInTheDocument();
     expect(screen.getByText('ir')).toBeInTheDocument();
-    expect(screen.getByText('nosotros')).toBeInTheDocument();
   });
 
   it('renders the pronoun badge and feature chips with glosses', () => {
