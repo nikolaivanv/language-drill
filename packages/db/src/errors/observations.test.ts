@@ -53,6 +53,15 @@ describe('errorObservationsFromEvaluation', () => {
     expect(rows[1].errorType).toBe('spelling');
     expect(rows[1].severity).toBe('minor');
   });
+
+  it('carries a per-error grammarPointKey into errorGrammarPointKey', () => {
+    const rows = errorObservationsFromEvaluation(
+      [err({ grammarPointKey: 'tr-a1-vowel-harmony' }), err()],
+      ctx,
+    );
+    expect(rows[0].errorGrammarPointKey).toBe('tr-a1-vowel-harmony');
+    expect(rows[1].errorGrammarPointKey).toBeNull(); // absent → null
+  });
 });
 
 describe('backfillRowsFor', () => {
