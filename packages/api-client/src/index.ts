@@ -54,15 +54,9 @@ export {
   RadarAxisKeyEnum,
   RadarAxisSchema,
   ProgressRadarResponseSchema,
-  HeatmapTopicSchema,
-  ShadeThresholdsSchema,
-  ProgressHeatmapResponseSchema,
   type RadarAxisKey,
   type RadarAxis,
   type ProgressRadarResponse,
-  type HeatmapTopic,
-  type ShadeThresholds,
-  type ProgressHeatmapResponse,
 } from './schemas/progress';
 export {
   TodayPlanItemStatusEnum,
@@ -175,9 +169,7 @@ export {
 } from './hooks/usePreferences';
 export {
   useProgressRadar,
-  useProgressHeatmap,
   type UseProgressRadarParams,
-  type UseProgressHeatmapParams,
 } from './hooks/useProgress';
 export { useInsightsErrors, type UseInsightsErrorsParams } from './hooks/useInsights';
 export {
