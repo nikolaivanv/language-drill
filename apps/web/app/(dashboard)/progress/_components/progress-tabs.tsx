@@ -21,7 +21,6 @@ import {
 
 const TAB_LABELS: Record<ProgressTabId, string> = {
   shape: 'shape',
-  heatmap: 'practice heatmap',
   fluency: 'fluency',
   history: 'history',
 };
@@ -35,7 +34,6 @@ export type ProgressTabsProps = {
 export function ProgressTabs({ active, onChange, children }: ProgressTabsProps) {
   const buttonRefs = useRef<Record<ProgressTabId, HTMLButtonElement | null>>({
     shape: null,
-    heatmap: null,
     fluency: null,
     history: null,
   });

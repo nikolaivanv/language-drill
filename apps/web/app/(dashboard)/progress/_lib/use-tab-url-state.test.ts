@@ -25,10 +25,10 @@ describe('useTabUrlState', () => {
     expect(result.current.tab).toBe('shape');
   });
 
-  it("returns 'heatmap' when ?tab=heatmap", () => {
-    mockSearchParams = new URLSearchParams('tab=heatmap');
+  it("returns 'fluency' when ?tab=fluency", () => {
+    mockSearchParams = new URLSearchParams('tab=fluency');
     const { result } = renderHook(() => useTabUrlState());
-    expect(result.current.tab).toBe('heatmap');
+    expect(result.current.tab).toBe('fluency');
   });
 
   it("returns 'history' when ?tab=history", () => {
@@ -37,8 +37,14 @@ describe('useTabUrlState', () => {
     expect(result.current.tab).toBe('history');
   });
 
-  it("falls back to 'shape' on an unknown ?tab value", () => {
+  it("falls back to 'shape' on an unknown ?tab value (including legacy 'heatmap')", () => {
     mockSearchParams = new URLSearchParams('tab=garbage');
+    const { result } = renderHook(() => useTabUrlState());
+    expect(result.current.tab).toBe('shape');
+  });
+
+  it("falls back to 'shape' when ?tab=heatmap (stale URL)", () => {
+    mockSearchParams = new URLSearchParams('tab=heatmap');
     const { result } = renderHook(() => useTabUrlState());
     expect(result.current.tab).toBe('shape');
   });
@@ -47,10 +53,10 @@ describe('useTabUrlState', () => {
     const { result } = renderHook(() => useTabUrlState());
 
     act(() => {
-      result.current.setTab('heatmap');
+      result.current.setTab('fluency');
     });
     expect(mockReplace).toHaveBeenCalledTimes(1);
-    expect(mockReplace).toHaveBeenCalledWith('?tab=heatmap', { scroll: false });
+    expect(mockReplace).toHaveBeenCalledWith('?tab=fluency', { scroll: false });
 
     act(() => {
       result.current.setTab('history');

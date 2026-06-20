@@ -4,7 +4,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { CefrLevel, Language } from '@language-drill/shared';
 import type {
   ProgressRadarResponse,
-  ProgressHeatmapResponse,
   RadarAxis,
   RadarAxisKey,
 } from '@language-drill/api-client';
@@ -28,13 +27,11 @@ vi.mock('next/navigation', () => ({
 }));
 
 const mockUseProgressRadar = vi.fn();
-const mockUseProgressHeatmap = vi.fn();
 const mockUseLanguageProfiles = vi.fn();
 const mockUseFluencyStats = vi.fn();
 
 vi.mock('@language-drill/api-client', () => ({
   useProgressRadar: (...args: unknown[]) => mockUseProgressRadar(...args),
-  useProgressHeatmap: (...args: unknown[]) => mockUseProgressHeatmap(...args),
   useLanguageProfiles: (...args: unknown[]) => mockUseLanguageProfiles(...args),
   useFluencyStats: (...args: unknown[]) => mockUseFluencyStats(...args),
   createAuthenticatedFetch: vi.fn(() => vi.fn()),
@@ -73,15 +70,6 @@ function radarResponse(axes: RadarAxis[]): ProgressRadarResponse {
   return { language: Language.ES, axes };
 }
 
-function heatmapResponse(): ProgressHeatmapResponse {
-  return {
-    language: Language.ES,
-    days: 30,
-    topics: [],
-    shadeThresholds: { paper2: 1, accentSoft: 2, accent: 4 },
-  };
-}
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -114,12 +102,6 @@ beforeEach(() => {
   // Sensible defaults — individual tests override.
   mockUseProgressRadar.mockReturnValue({
     data: radarResponse(buildAxes({ grammar: { mastery: 0.6, evidence: 6 } })),
-    isLoading: false,
-    error: null,
-    refetch: vi.fn(),
-  });
-  mockUseProgressHeatmap.mockReturnValue({
-    data: heatmapResponse(),
     isLoading: false,
     error: null,
     refetch: vi.fn(),
@@ -168,23 +150,8 @@ describe('ProgressPage', () => {
     expect(shapeTab.getAttribute('aria-selected')).toBe('true');
     // Shape panel renders side cards (legend always shows when totalEvidence ≥ 5)
     expect(screen.getByText('compare to')).toBeDefined();
-    expect(screen.queryByText(/topic × recency/i)).toBeNull();
-  });
-
-  it('clicking the Heatmap tab calls router.replace with ?tab=heatmap', () => {
-    renderPage();
-
-    fireEvent.click(screen.getByRole('tab', { name: 'practice heatmap' }));
-    expect(mockReplace).toHaveBeenCalledWith('?tab=heatmap', { scroll: false });
-  });
-
-  it('renders the Heatmap panel when ?tab=heatmap is set in the URL', () => {
-    mockSearchParams = new URLSearchParams('tab=heatmap');
-    renderPage();
-    // Heatmap empty placeholder is shown because topics: [] (< 3).
-    expect(screen.getByText('build a topic history first')).toBeDefined();
-    // Shape side cards are NOT rendered (only the active panel mounts).
-    expect(screen.queryByText('compare to')).toBeNull();
+    // Heatmap tab no longer exists.
+    expect(screen.queryByRole('tab', { name: 'practice heatmap' })).toBeNull();
   });
 
   it('renders the Shape error state when the radar query fails', () => {
@@ -197,26 +164,18 @@ describe('ProgressPage', () => {
 
     renderPage();
 
-    expect(screen.getByText(/couldn['’]t load your shape/i)).toBeDefined();
+    expect(screen.getByText(/couldn['']t load your shape/i)).toBeDefined();
     // Tablist still renders so the user can switch to a working tab.
     expect(screen.getByRole('tablist')).toBeDefined();
   });
 
-  it('Heatmap tab is unaffected when the radar query fails (per-tab error boundary)', () => {
-    mockUseProgressRadar.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      error: new Error('radar offline'),
-      refetch: vi.fn(),
-    });
+  it('stale ?tab=heatmap URL falls back to the shape tab', () => {
     mockSearchParams = new URLSearchParams('tab=heatmap');
-
     renderPage();
-
-    // Heatmap panel renders normally — even though the radar errored.
-    expect(screen.getByText('build a topic history first')).toBeDefined();
-    // The Shape error card does NOT render (only the active panel mounts).
-    expect(screen.queryByText(/couldn['’]t load your shape/i)).toBeNull();
+    // Falls back to shape — the heatmap tab no longer exists.
+    const shapeTab = screen.getByRole('tab', { name: 'shape' });
+    expect(shapeTab.getAttribute('aria-selected')).toBe('true');
+    expect(screen.queryByRole('tab', { name: 'practice heatmap' })).toBeNull();
   });
 
   it('does not render any streak / XP-counter / lesson-count indicators (CLAUDE.md hard rule)', () => {
