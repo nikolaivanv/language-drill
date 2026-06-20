@@ -52,7 +52,7 @@ export type PreferencesResponse = z.infer<typeof PreferencesResponseSchema>;
 // All fields are required (R7.1).
 // ---------------------------------------------------------------------------
 
-const LearningProfileSchema = z.object({
+export const LearningProfileSchema = z.object({
   language: LearningLanguageEnum,
   proficiencyLevel: z.nativeEnum(CefrLevel),
 });
@@ -81,3 +81,53 @@ export const SavePreferencesInputSchema = z
   );
 
 export type SavePreferencesInput = z.infer<typeof SavePreferencesInputSchema>;
+
+// ---------------------------------------------------------------------------
+// PUT /profiles/languages — slimmed request + response
+// ---------------------------------------------------------------------------
+
+export const UpdateLanguagesInputSchema = z
+  .object({
+    profiles: z.array(LearningProfileSchema).min(1).max(3),
+    primaryLanguage: LearningLanguageEnum,
+  })
+  .refine(
+    (input) => input.profiles.some((p) => p.language === input.primaryLanguage),
+    {
+      message:
+        'primaryLanguage must be one of the submitted profiles.languages',
+      path: ['primaryLanguage'],
+    },
+  );
+
+export type UpdateLanguagesInput = z.infer<typeof UpdateLanguagesInputSchema>;
+
+export const UpdateLanguagesResponseSchema = z.object({
+  profiles: z.array(LearningProfileSchema),
+  primaryLanguage: LearningLanguageEnum,
+});
+
+export type UpdateLanguagesResponse = z.infer<
+  typeof UpdateLanguagesResponseSchema
+>;
+
+// ---------------------------------------------------------------------------
+// PATCH /profiles/preferences — partial request
+// ---------------------------------------------------------------------------
+
+export const UpdatePreferencesInputSchema = z
+  .object({
+    goals: z.array(z.enum(GOAL_IDS)).optional(),
+    dailyMinutes: z
+      .union([z.literal(5), z.literal(10), z.literal(20), z.literal(30)])
+      .optional(),
+    gentleNudges: z.boolean().optional(),
+    notes: z.string().max(NOTES_MAX_LENGTH).optional(),
+  })
+  .refine((input) => Object.keys(input).length > 0, {
+    message: 'At least one field must be provided',
+  });
+
+export type UpdatePreferencesInput = z.infer<
+  typeof UpdatePreferencesInputSchema
+>;

@@ -9,6 +9,8 @@ import { CefrLevel, Language } from '@language-drill/shared';
 import {
   useGetPreferences,
   useSavePreferences,
+  useUpdateLanguages,
+  useUpdatePreferences,
   type SavePreferencesArgs,
 } from './usePreferences';
 import type { AuthenticatedFetch } from '../fetchClient';
@@ -426,5 +428,76 @@ describe('useGetPreferences — enabled flag', () => {
     expect(fetchFn).toHaveBeenCalledTimes(1);
     expect(fetchFn.mock.calls[0]?.[0]).toBe('/profiles/preferences');
     expect(result.current.data).toEqual(responseBody);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// useUpdateLanguages
+// ---------------------------------------------------------------------------
+
+describe('useUpdateLanguages', () => {
+  it('PUTs the profiles array + primaryLanguage and invalidates caches', async () => {
+    const queryClient = buildQueryClient();
+    const spy = vi.spyOn(queryClient, 'invalidateQueries');
+    const fetchFn = vi.fn<AuthenticatedFetch>().mockResolvedValue(
+      jsonResponse({
+        profiles: [{ language: 'ES', proficiencyLevel: 'B2' }],
+        primaryLanguage: 'ES',
+      }),
+    );
+
+    const { result } = renderHook(() => useUpdateLanguages({ fetchFn }), {
+      wrapper: buildWrapper(queryClient),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        profiles: [{ language: Language.ES, proficiencyLevel: CefrLevel.B2 }],
+        primaryLanguage: Language.ES,
+      });
+    });
+
+    expect(fetchFn.mock.calls[0]?.[0]).toBe('/profiles/languages');
+    const init = fetchFn.mock.calls[0]?.[1] as RequestInit;
+    expect(init.method).toBe('PUT');
+    expect(spy).toHaveBeenCalledWith({ queryKey: ['languageProfiles'] });
+    expect(spy).toHaveBeenCalledWith({ queryKey: ['preferences'] });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// useUpdatePreferences
+// ---------------------------------------------------------------------------
+
+describe('useUpdatePreferences', () => {
+  it('PATCHes only the provided fields and invalidates preferences', async () => {
+    const queryClient = buildQueryClient();
+    const spy = vi.spyOn(queryClient, 'invalidateQueries');
+    const fetchFn = vi.fn<AuthenticatedFetch>().mockResolvedValue(
+      jsonResponse({
+        primaryLanguage: 'ES',
+        goals: ['vocab'],
+        dailyMinutes: 30,
+        gentleNudges: true,
+        notes: '',
+      }),
+    );
+
+    const { result } = renderHook(() => useUpdatePreferences({ fetchFn }), {
+      wrapper: buildWrapper(queryClient),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({ dailyMinutes: 30, goals: ['vocab'] });
+    });
+
+    const init = fetchFn.mock.calls[0]?.[1] as RequestInit;
+    expect(fetchFn.mock.calls[0]?.[0]).toBe('/profiles/preferences');
+    expect(init.method).toBe('PATCH');
+    expect(JSON.parse(init.body as string)).toEqual({
+      dailyMinutes: 30,
+      goals: ['vocab'],
+    });
+    expect(spy).toHaveBeenCalledWith({ queryKey: ['preferences'] });
   });
 });

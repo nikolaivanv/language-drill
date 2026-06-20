@@ -21,10 +21,17 @@ export {
 } from './schemas/profile';
 export {
   LearningLanguageEnum,
+  LearningProfileSchema,
   PreferencesResponseSchema,
   type PreferencesResponse,
   SavePreferencesInputSchema,
   type SavePreferencesInput,
+  UpdateLanguagesInputSchema,
+  UpdateLanguagesResponseSchema,
+  type UpdateLanguagesInput,
+  type UpdateLanguagesResponse,
+  UpdatePreferencesInputSchema,
+  type UpdatePreferencesInput,
 } from './schemas/preferences';
 export {
   CreateSessionRequestSchema,
@@ -162,10 +169,14 @@ export {
 export {
   useGetPreferences,
   useSavePreferences,
+  useUpdateLanguages,
+  useUpdatePreferences,
   type UseGetPreferencesParams,
   type UseSavePreferencesParams,
   type SavePreferencesArgs,
   type SavePreferencesResponse,
+  type UpdateLanguagesArgs,
+  type UpdatePreferencesArgs,
 } from './hooks/usePreferences';
 export {
   useProgressRadar,
