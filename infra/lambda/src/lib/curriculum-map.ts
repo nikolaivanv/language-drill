@@ -25,6 +25,8 @@ export type CurriculumFact = {
   order: number;
   prereqKeys: string[];
   prereqNames: string[];
+  compatibleTypes: string[];
+  hasTheory: boolean;
 };
 
 export type MasteryRow = {
@@ -49,6 +51,9 @@ export type MapPoint = {
   prereqKeys: string[];
   prereqNames: string[];
   prereqUnmet: boolean;
+  compatibleTypes: string[];
+  hasTheory: boolean;
+  errorSample: { wrongText: string; correction: string } | null;
 };
 
 export type MapLevel = {
@@ -66,6 +71,7 @@ export type BuildInput = {
   previewPoints: readonly CurriculumFact[];
   masteryByKey: ReadonlyMap<string, MasteryRow>;
   errorCountByKey: ReadonlyMap<string, number>;
+  errorSampleByKey: ReadonlyMap<string, { wrongText: string; correction: string }>;
   now: Date;
 };
 
@@ -83,6 +89,7 @@ function toPoint(
   f: CurriculumFact,
   masteryByKey: ReadonlyMap<string, MasteryRow>,
   errorCountByKey: ReadonlyMap<string, number>,
+  errorSampleByKey: ReadonlyMap<string, { wrongText: string; correction: string }>,
 ): MapPoint {
   const m = masteryByKey.get(f.key);
   const state = classify(m);
@@ -102,6 +109,9 @@ function toPoint(
     prereqKeys: f.prereqKeys,
     prereqNames: f.prereqNames,
     prereqUnmet: f.prereqKeys.some((pk) => !isSolid(pk, masteryByKey)),
+    compatibleTypes: f.compatibleTypes,
+    hasTheory: f.hasTheory,
+    errorSample: errorSampleByKey.get(f.key) ?? null,
   };
 }
 
@@ -110,11 +120,12 @@ function buildLevel(
   facts: readonly CurriculumFact[],
   masteryByKey: ReadonlyMap<string, MasteryRow>,
   errorCountByKey: ReadonlyMap<string, number>,
+  errorSampleByKey: ReadonlyMap<string, { wrongText: string; correction: string }>,
   isPreview: boolean,
 ): MapLevel {
   const points = [...facts]
     .sort((a, b) => a.order - b.order)
-    .map((f) => toPoint(f, masteryByKey, errorCountByKey));
+    .map((f) => toPoint(f, masteryByKey, errorCountByKey, errorSampleByKey));
   const solidCount = points.filter((p) => p.state === 'solid').length;
   const total = points.length;
   return {
@@ -128,13 +139,13 @@ function buildLevel(
 }
 
 export function buildCurriculumMap(input: BuildInput): { activeLevel: string; levels: MapLevel[] } {
-  const { activeLevel, activePoints, previewPoints, masteryByKey, errorCountByKey } = input;
+  const { activeLevel, activePoints, previewPoints, masteryByKey, errorCountByKey, errorSampleByKey } = input;
   const levels: MapLevel[] = [
-    buildLevel(activeLevel, activePoints, masteryByKey, errorCountByKey, false),
+    buildLevel(activeLevel, activePoints, masteryByKey, errorCountByKey, errorSampleByKey, false),
   ];
   if (previewPoints.length > 0) {
     const previewLevel = previewPoints[0].cefrLevel;
-    levels.push(buildLevel(previewLevel, previewPoints, masteryByKey, errorCountByKey, true));
+    levels.push(buildLevel(previewLevel, previewPoints, masteryByKey, errorCountByKey, errorSampleByKey, true));
   }
   return { activeLevel, levels };
 }

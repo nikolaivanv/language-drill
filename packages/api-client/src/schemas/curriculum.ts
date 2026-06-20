@@ -56,6 +56,9 @@ export const CurriculumMapPointSchema = z.object({
   prereqKeys: z.array(z.string()),
   prereqNames: z.array(z.string()),
   prereqUnmet: z.boolean(),
+  compatibleTypes: z.array(z.string()),
+  hasTheory: z.boolean(),
+  errorSample: z.object({ wrongText: z.string(), correction: z.string() }).nullable(),
 });
 export type CurriculumMapPoint = z.infer<typeof CurriculumMapPointSchema>;
 

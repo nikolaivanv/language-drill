@@ -80,6 +80,10 @@ export { targetCellSize } from './lib/target-cell-size';
 export * from './generation';
 export * from './theory-generation';
 
+// Phase 2 (curriculum map) — export compatibleTypes so the curriculum endpoint
+// can tell the web which drill modes a grammar point supports.
+export { compatibleTypes } from './generation/cells';
+
 // Pool revalidation helpers — pure row→(draft, spec) reconstruction +
 // demote-only review-status policy. Shared by the `revalidate:cloze` CLI and
 // the UI-triggered revalidation endpoint (admin Lambda).

@@ -717,6 +717,31 @@ describe('PracticePage — targeted quick drill', () => {
   });
 });
 
+describe('PracticePage — exerciseType targeting', () => {
+  it('?grammarPoint=tr-a1-locative&start=quick&exerciseType=cloze passes BOTH grammarPointKey and exerciseType into the create-session mutation', () => {
+    mockSearchParamsString = 'start=quick&grammarPoint=tr-a1-locative&exerciseType=cloze';
+    renderWithProviders(<PracticePage />);
+
+    expect(createMutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        grammarPointKey: 'tr-a1-locative',
+        exerciseType: ExerciseType.CLOZE,
+      }),
+      expect.anything(),
+    );
+  });
+
+  it('?exerciseType=bogus (invalid) is ignored — no exerciseType key in the config', () => {
+    mockSearchParamsString = 'start=quick&exerciseType=bogus';
+    renderWithProviders(<PracticePage />);
+
+    expect(createMutate).toHaveBeenCalledWith(
+      expect.not.objectContaining({ exerciseType: expect.anything() }),
+      expect.anything(),
+    );
+  });
+});
+
 describe('PracticePage — hub (no start intent)', () => {
   it('renders the launcher hub instead of auto-starting when there is no ?start', () => {
     mockSearchParamsString = '';

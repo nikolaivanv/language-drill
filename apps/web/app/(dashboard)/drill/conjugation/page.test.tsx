@@ -15,6 +15,11 @@ vi.mock('@clerk/nextjs', () => ({
   useAuth: () => ({ getToken: mockGetToken }),
 }));
 
+let mockSearchParamsString = '';
+vi.mock('next/navigation', () => ({
+  useSearchParams: () => new URLSearchParams(mockSearchParamsString),
+}));
+
 const mockUseExercise = vi.fn();
 const mockUseSubmitAnswer = vi.fn();
 const mockUseLanguageProfiles = vi.fn();
@@ -108,6 +113,7 @@ let refetch: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockSearchParamsString = '';
 
   mockUseLanguageProfiles.mockReturnValue({
     data: { profiles: [{ language: Language.ES, proficiencyLevel: CefrLevel.B1 }] },
@@ -281,5 +287,25 @@ describe('ConjugationPage', () => {
 
     const link = screen.getByRole('link', { name: /drill these fast/i });
     expect(link).toHaveAttribute('href', '/fluency?type=conjugation');
+  });
+});
+
+describe('ConjugationPage — grammarPoint targeting', () => {
+  it('?grammarPoint=tr-a1-dili-past is passed to useExercise as grammarPointKey', () => {
+    mockSearchParamsString = 'grammarPoint=tr-a1-dili-past';
+    renderWithProviders(<ConjugationPage />);
+
+    expect(mockUseExercise).toHaveBeenCalledWith(
+      expect.objectContaining({ grammarPointKey: 'tr-a1-dili-past' }),
+    );
+  });
+
+  it('no ?grammarPoint → useExercise is called WITHOUT grammarPointKey', () => {
+    mockSearchParamsString = '';
+    renderWithProviders(<ConjugationPage />);
+
+    expect(mockUseExercise).toHaveBeenCalledWith(
+      expect.not.objectContaining({ grammarPointKey: expect.anything() }),
+    );
   });
 });

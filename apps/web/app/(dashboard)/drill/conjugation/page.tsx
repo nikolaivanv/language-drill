@@ -1,8 +1,9 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
+import { useSearchParams } from 'next/navigation';
 import { CefrLevel, ExerciseType } from '@language-drill/shared';
 import {
   useExercise,
@@ -30,10 +31,15 @@ import type { SubmissionMeta, SubmissionState } from '../_components/types';
 // difficulty/fetchFn resolution but is simpler (no multi-stage navigation).
 // ---------------------------------------------------------------------------
 
-export default function ConjugationPage() {
+function ConjugationPageContent() {
   const { getToken } = useAuth();
+  const searchParams = useSearchParams();
   const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
   const { activeLanguage } = useActiveLanguage();
+  const [grammarPointKey] = useState<string | null>(() => {
+    const g = searchParams.get('grammarPoint');
+    return g && g.length > 0 ? g : null;
+  });
 
   // Resolve difficulty from the user's profile for the active language,
   // defaulting to B1 — mirrors drill/page.tsx + free-writing/page.tsx exactly.
@@ -63,6 +69,7 @@ export default function ConjugationPage() {
     difficulty,
     type: ExerciseType.CONJUGATION,
     fetchFn,
+    ...(grammarPointKey ? { grammarPointKey } : {}),
   });
 
   const submit = useSubmitAnswer({ fetchFn });
@@ -148,5 +155,15 @@ export default function ConjugationPage() {
         nextLabel="next"
       />
     </div>
+  );
+}
+
+// `useSearchParams()` forces this client page out of static prerendering;
+// Next.js requires the bailout to sit under a Suspense boundary.
+export default function ConjugationPage() {
+  return (
+    <Suspense fallback={<div className="t-body" style={{ padding: 24 }}>loading…</div>}>
+      <ConjugationPageContent />
+    </Suspense>
   );
 }

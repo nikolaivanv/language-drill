@@ -5,7 +5,8 @@ const point = (over = {}) => ({
   key: 'tr-a1-vowel-harmony', name: 'Vowel harmony', cefrLevel: 'A1', order: 1,
   state: 'solid', errorProne: false, mastery: 0.9, confidence: 0.8, evidenceCount: 5,
   lastPracticedAt: '2026-06-10T00:00:00.000Z', recentErrorCount: 0,
-  prereqKeys: [], prereqNames: [], prereqUnmet: false, ...over,
+  prereqKeys: [], prereqNames: [], prereqUnmet: false,
+  compatibleTypes: [], hasTheory: false, errorSample: null, ...over,
 });
 
 describe('CurriculumMapResponseSchema', () => {
@@ -28,6 +29,30 @@ describe('CurriculumMapResponseSchema', () => {
     const r = CurriculumMapResponseSchema.safeParse({
       language: 'TR', activeLevel: 'A1',
       levels: [{ level: 'A1', solidCount: 0, total: 1, readyToAdvance: false, isPreview: false, points: [point({ state: 'mastered' })] }],
+    });
+    expect(r.success).toBe(false);
+  });
+  it('parses a point with compatibleTypes, hasTheory, and errorSample', () => {
+    const r = CurriculumMapResponseSchema.safeParse({
+      language: 'TR', activeLevel: 'A1',
+      levels: [{ level: 'A1', solidCount: 1, total: 1, readyToAdvance: true, isPreview: false,
+        points: [point({ compatibleTypes: ['cloze', 'translation'], hasTheory: true, errorSample: { wrongText: 'x', correction: 'y' } })] }],
+    });
+    expect(r.success).toBe(true);
+  });
+  it('parses a point with null errorSample', () => {
+    const r = CurriculumMapResponseSchema.safeParse({
+      language: 'TR', activeLevel: 'A1',
+      levels: [{ level: 'A1', solidCount: 0, total: 1, readyToAdvance: false, isPreview: false,
+        points: [point({ compatibleTypes: [], hasTheory: false, errorSample: null })] }],
+    });
+    expect(r.success).toBe(true);
+  });
+  it('rejects an errorSample missing correction field', () => {
+    const r = CurriculumMapResponseSchema.safeParse({
+      language: 'TR', activeLevel: 'A1',
+      levels: [{ level: 'A1', solidCount: 0, total: 1, readyToAdvance: false, isPreview: false,
+        points: [point({ errorSample: { wrongText: 'x' } })] }],
     });
     expect(r.success).toBe(false);
   });

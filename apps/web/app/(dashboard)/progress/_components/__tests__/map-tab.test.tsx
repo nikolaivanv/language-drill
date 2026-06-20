@@ -1,8 +1,26 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import React from 'react';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { Language } from '@language-drill/shared';
 import type { CurriculumMapResponse, CurriculumMapPoint } from '@language-drill/api-client';
 import { MapTab } from '../map-tab';
+
+// next/link renders as <a> in jsdom
+vi.mock('next/link', () => ({
+  default: ({
+    children,
+    href,
+    ...rest
+  }: {
+    children: React.ReactNode;
+    href: string;
+    [key: string]: unknown;
+  }) => (
+    <a href={href} {...(rest as Record<string, unknown>)}>
+      {children}
+    </a>
+  ),
+}));
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -32,6 +50,9 @@ function pt(
     prereqKeys: [],
     prereqNames: [],
     prereqUnmet: false,
+    compatibleTypes: [],
+    hasTheory: false,
+    errorSample: null,
     ...opts,
   };
 }
@@ -208,5 +229,24 @@ describe('MapTab', () => {
     );
     expect(getByText(/couldn't load the curriculum map/i)).toBeDefined();
     expect(getByRole('button', { name: /retry/i })).toBeDefined();
+  });
+
+  it('clicking a point row opens the detail sheet with the point name', () => {
+    render(
+      <MapTab
+        data={buildFixture()}
+        isLoading={false}
+        error={null}
+        onRetry={noop}
+        errorThemes={[]}
+      />,
+    );
+    // Click the "Vowel Harmony" point row body (it's a button)
+    fireEvent.click(screen.getByText('Vowel Harmony'));
+    // The detail sheet should now be visible as a dialog containing the point name
+    expect(screen.getByRole('dialog')).toBeDefined();
+    // The dialog should contain the point name in its aria-label or content
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.getAttribute('aria-label')).toBe('Vowel Harmony');
   });
 });

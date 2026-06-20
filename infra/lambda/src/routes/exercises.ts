@@ -62,6 +62,7 @@ export const ExerciseQuerySchema = z.object({
   language: z.nativeEnum(Language),
   difficulty: z.nativeEnum(CefrLevel),
   type: z.nativeEnum(ExerciseType).optional(),
+  grammarPoint: z.string().min(1).optional(),
 });
 
 /** Request body for POST /exercises/:id/submit */
@@ -164,7 +165,7 @@ exercises.get('/exercises', async (c) => {
     );
   }
 
-  const { language, difficulty, type } = parsed.data;
+  const { language, difficulty, type, grammarPoint: grammarPointKey } = parsed.data;
   const userId = c.get('userId');
 
   const conditions = [
@@ -177,6 +178,10 @@ exercises.get('/exercises', async (c) => {
 
   if (type) {
     conditions.push(eq(exercisesTable.type, type));
+  }
+
+  if (grammarPointKey) {
+    conditions.push(eq(exercisesTable.grammarPointKey, grammarPointKey));
   }
 
   // Exposure control: order the matching pool slice so never-attempted items
