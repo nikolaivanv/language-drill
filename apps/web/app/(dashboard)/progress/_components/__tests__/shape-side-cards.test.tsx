@@ -87,6 +87,12 @@ describe('LegendCard', () => {
     render(<LegendCard />);
     expect(screen.queryByText(/avg learner/i)).toBeNull();
   });
+
+  it('legend explains the thin-evidence and not-started markers', () => {
+    render(<LegendCard />);
+    expect(screen.getByText(/thin evidence/i)).toBeInTheDocument();
+    expect(screen.getByText(/not started/i)).toBeInTheDocument();
+  });
 });
 
 describe('RecommendedDrillCard', () => {
