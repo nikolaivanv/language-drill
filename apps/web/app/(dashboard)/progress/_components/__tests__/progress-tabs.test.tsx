@@ -3,34 +3,33 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { ProgressTabs } from '../progress-tabs';
 
 describe('ProgressTabs', () => {
-  it('renders four tabs with the right labels and roles', () => {
+  it('renders three tabs with the right labels and roles', () => {
     render(
       <ProgressTabs active="shape" onChange={() => {}}>
         <div>panel</div>
       </ProgressTabs>,
     );
     const tabs = screen.getAllByRole('tab');
-    expect(tabs).toHaveLength(4);
+    expect(tabs).toHaveLength(3);
     expect(tabs[0]).toHaveProperty('textContent', 'shape');
-    expect(tabs[1]).toHaveProperty('textContent', 'practice heatmap');
-    expect(tabs[2]).toHaveProperty('textContent', 'fluency');
-    expect(tabs[3]).toHaveProperty('textContent', 'history');
+    expect(tabs[1]).toHaveProperty('textContent', 'fluency');
+    expect(tabs[2]).toHaveProperty('textContent', 'history');
   });
 
   it('marks the active tab via aria-selected and exposes a tabpanel', () => {
     render(
-      <ProgressTabs active="heatmap" onChange={() => {}}>
-        <div>heatmap content</div>
+      <ProgressTabs active="fluency" onChange={() => {}}>
+        <div>fluency content</div>
       </ProgressTabs>,
     );
-    const heatmapTab = screen.getByRole('tab', { name: 'practice heatmap' });
-    expect(heatmapTab.getAttribute('aria-selected')).toBe('true');
-    expect(heatmapTab.getAttribute('aria-controls')).toBe('progress-panel-heatmap');
+    const fluencyTab = screen.getByRole('tab', { name: 'fluency' });
+    expect(fluencyTab.getAttribute('aria-selected')).toBe('true');
+    expect(fluencyTab.getAttribute('aria-controls')).toBe('progress-panel-fluency');
 
     const panel = screen.getByRole('tabpanel');
-    expect(panel.getAttribute('id')).toBe('progress-panel-heatmap');
-    expect(panel.getAttribute('aria-labelledby')).toBe('progress-tab-heatmap');
-    expect(panel.textContent).toContain('heatmap content');
+    expect(panel.getAttribute('id')).toBe('progress-panel-fluency');
+    expect(panel.getAttribute('aria-labelledby')).toBe('progress-tab-fluency');
+    expect(panel.textContent).toContain('fluency content');
   });
 
   it('calls onChange with the clicked tab id', () => {
@@ -54,7 +53,7 @@ describe('ProgressTabs', () => {
     fireEvent.keyDown(screen.getByRole('tab', { name: 'shape' }), {
       key: 'ArrowRight',
     });
-    expect(onChange).toHaveBeenCalledWith('heatmap');
+    expect(onChange).toHaveBeenCalledWith('fluency');
 
     onChange.mockClear();
     render(
@@ -71,11 +70,11 @@ describe('ProgressTabs', () => {
   it('moves activation left on ArrowLeft and wraps before the first tab', () => {
     const onChange = vi.fn();
     render(
-      <ProgressTabs active="heatmap" onChange={onChange}>
+      <ProgressTabs active="fluency" onChange={onChange}>
         <div>panel</div>
       </ProgressTabs>,
     );
-    fireEvent.keyDown(screen.getByRole('tab', { name: 'practice heatmap' }), {
+    fireEvent.keyDown(screen.getByRole('tab', { name: 'fluency' }), {
       key: 'ArrowLeft',
     });
     expect(onChange).toHaveBeenCalledWith('shape');
@@ -95,16 +94,16 @@ describe('ProgressTabs', () => {
   it('Home jumps to the first tab and End jumps to the last', () => {
     const onChange = vi.fn();
     render(
-      <ProgressTabs active="heatmap" onChange={onChange}>
+      <ProgressTabs active="fluency" onChange={onChange}>
         <div>panel</div>
       </ProgressTabs>,
     );
-    fireEvent.keyDown(screen.getByRole('tab', { name: 'practice heatmap' }), {
+    fireEvent.keyDown(screen.getByRole('tab', { name: 'fluency' }), {
       key: 'Home',
     });
     expect(onChange).toHaveBeenCalledWith('shape');
 
-    fireEvent.keyDown(screen.getByRole('tab', { name: 'practice heatmap' }), {
+    fireEvent.keyDown(screen.getByRole('tab', { name: 'fluency' }), {
       key: 'End',
     });
     expect(onChange).toHaveBeenCalledWith('history');
@@ -118,11 +117,6 @@ describe('ProgressTabs', () => {
     );
     expect(
       screen.getByRole('tab', { name: 'shape' }).getAttribute('tabindex'),
-    ).toBe('-1');
-    expect(
-      screen
-        .getByRole('tab', { name: 'practice heatmap' })
-        .getAttribute('tabindex'),
     ).toBe('-1');
     expect(
       screen.getByRole('tab', { name: 'fluency' }).getAttribute('tabindex'),

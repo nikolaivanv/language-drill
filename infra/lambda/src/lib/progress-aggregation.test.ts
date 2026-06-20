@@ -7,9 +7,6 @@ import {
   recencyWeight,
   aggregateAxisMastery,
   aggregateRadar,
-  pivotCells,
-  aggregateTopicMastery,
-  DEFAULT_SHADE_THRESHOLDS,
   type ContributingRow,
 } from './progress-aggregation';
 
@@ -209,67 +206,3 @@ describe('aggregateRadar', () => {
   });
 });
 
-describe('pivotCells', () => {
-  it('returns a fixed-length array of 30 zeros for empty input', () => {
-    const cells = pivotCells([], NOW);
-    expect(cells).toHaveLength(30);
-    expect(cells.every((c) => c === 0)).toBe(true);
-  });
-
-  it("places today's attempts at the last index", () => {
-    const cells = pivotCells([{ evaluatedAt: NOW }], NOW);
-    expect(cells[29]).toBe(1);
-    expect(cells.slice(0, 29).every((c) => c === 0)).toBe(true);
-  });
-
-  it('counts two attempts on the same UTC day as 2', () => {
-    const cells = pivotCells(
-      [
-        { evaluatedAt: new Date('2026-04-01T01:00:00Z') },
-        { evaluatedAt: new Date('2026-04-01T22:00:00Z') },
-      ],
-      NOW,
-    );
-    expect(cells[29]).toBe(2);
-  });
-
-  it('places yesterday at index 28 and a 29-day-old attempt at index 0', () => {
-    const yesterday = new Date(NOW.getTime() - DAY);
-    const oldest = new Date(NOW.getTime() - 29 * DAY);
-    const cells = pivotCells(
-      [{ evaluatedAt: yesterday }, { evaluatedAt: oldest }],
-      NOW,
-    );
-    expect(cells[28]).toBe(1);
-    expect(cells[0]).toBe(1);
-  });
-
-  it('drops attempts outside the window', () => {
-    const tooOld = new Date(NOW.getTime() - 30 * DAY);
-    const future = new Date(NOW.getTime() + DAY);
-    const cells = pivotCells(
-      [{ evaluatedAt: tooOld }, { evaluatedAt: future }],
-      NOW,
-    );
-    expect(cells.every((c) => c === 0)).toBe(true);
-  });
-});
-
-describe('aggregateTopicMastery', () => {
-  it('matches aggregateAxisMastery for the same input', () => {
-    const rows = rowsAt([0, 5, 10], { score: 0.7 });
-    expect(aggregateTopicMastery(rows, NOW)).toBe(
-      aggregateAxisMastery(rows, NOW),
-    );
-  });
-});
-
-describe('DEFAULT_SHADE_THRESHOLDS', () => {
-  it('matches the prototype bucketing', () => {
-    expect(DEFAULT_SHADE_THRESHOLDS).toEqual({
-      paper2: 1,
-      accentSoft: 2,
-      accent: 4,
-    });
-  });
-});

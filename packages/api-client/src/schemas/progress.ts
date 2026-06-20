@@ -39,34 +39,3 @@ export const ProgressRadarResponseSchema = z.object({
 
 export type ProgressRadarResponse = z.infer<typeof ProgressRadarResponseSchema>;
 
-// ---------------------------------------------------------------------------
-// GET /progress/heatmap response
-// ---------------------------------------------------------------------------
-
-export const HeatmapTopicSchema = z.object({
-  topicId: z.string().min(1),
-  name: z.string().min(1),
-  mastery: z.number().min(0).max(1),
-  cells: z.array(z.number().int().min(0)).length(30),
-});
-
-export type HeatmapTopic = z.infer<typeof HeatmapTopicSchema>;
-
-export const ShadeThresholdsSchema = z.object({
-  paper2: z.number().int().min(1),
-  accentSoft: z.number().int().min(1),
-  accent: z.number().int().min(1),
-});
-
-export type ShadeThresholds = z.infer<typeof ShadeThresholdsSchema>;
-
-export const ProgressHeatmapResponseSchema = z.object({
-  language: LearningLanguageEnum,
-  days: z.literal(30),
-  topics: z.array(HeatmapTopicSchema).max(8),
-  shadeThresholds: ShadeThresholdsSchema,
-});
-
-export type ProgressHeatmapResponse = z.infer<
-  typeof ProgressHeatmapResponseSchema
->;

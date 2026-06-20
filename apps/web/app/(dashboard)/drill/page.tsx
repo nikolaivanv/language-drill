@@ -84,6 +84,10 @@ function PracticePageContent() {
     const r = searchParams.get('resume');
     return r && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(r) ? r : null;
   });
+  const [grammarPointKey] = useState<string | null>(() => {
+    const g = searchParams.get('grammarPoint');
+    return g && g.length > 0 ? g : null;
+  });
   const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
 
   const { data: profilesData } = useLanguageProfiles({ fetchFn });
@@ -160,6 +164,7 @@ function PracticePageContent() {
             language: activeLanguage,
             difficulty,
             exerciseCount: DEFAULT_EXERCISE_COUNT,
+            ...(grammarPointKey ? { grammarPointKey } : {}),
           };
     createSession.mutate(config, {
       onSuccess: (data) => {

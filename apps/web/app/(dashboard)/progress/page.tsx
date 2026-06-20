@@ -6,7 +6,6 @@ import {
   createAuthenticatedFetch,
   useLanguageProfiles,
   useProgressRadar,
-  useProgressHeatmap,
   useFluencyStats,
   type RadarAxis,
 } from '@language-drill/api-client';
@@ -14,7 +13,6 @@ import { useActiveLanguage } from '../../../components/shell/active-language-pro
 import { ProgressHeader } from './_components/progress-header';
 import { ProgressTabs } from './_components/progress-tabs';
 import { ShapeTab } from './_components/shape-tab';
-import { HeatmapTab } from './_components/heatmap-tab';
 import { FluencyTab } from './_components/fluency-tab';
 import { HistoryTab } from './_components/history-tab';
 import { ProgressEmptyState } from './_components/progress-empty-state';
@@ -29,7 +27,6 @@ export default function ProgressPage() {
 
   // Both queries fire in parallel on mount so switching tabs is instant.
   const radar = useProgressRadar({ fetchFn, language: activeLanguage });
-  const heatmap = useProgressHeatmap({ fetchFn, language: activeLanguage });
   const fluency = useFluencyStats({ fetchFn, language: activeLanguage });
 
   // Read proficiency level from the language-profiles cache rather than
@@ -66,16 +63,6 @@ export default function ProgressPage() {
             totalEvidence={totalEvidence}
             onRetry={() => {
               void radar.refetch();
-            }}
-          />
-        )}
-        {tab === 'heatmap' && (
-          <HeatmapTab
-            data={heatmap.data}
-            isLoading={heatmap.isLoading}
-            error={heatmap.error}
-            onRetry={() => {
-              void heatmap.refetch();
             }}
           />
         )}

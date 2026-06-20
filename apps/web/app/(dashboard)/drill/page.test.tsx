@@ -653,6 +653,28 @@ describe('PracticePage', () => {
   });
 });
 
+describe('PracticePage — targeted quick drill', () => {
+  it('?start=quick&grammarPoint=tr-a1-locative passes grammarPointKey into the create-session mutation', () => {
+    mockSearchParamsString = 'start=quick&grammarPoint=tr-a1-locative';
+    renderWithProviders(<PracticePage />);
+
+    expect(createMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ grammarPointKey: 'tr-a1-locative' }),
+      expect.anything(),
+    );
+  });
+
+  it('?start=quick without grammarPoint does NOT include grammarPointKey', () => {
+    mockSearchParamsString = 'start=quick';
+    renderWithProviders(<PracticePage />);
+
+    expect(createMutate).toHaveBeenCalledWith(
+      expect.not.objectContaining({ grammarPointKey: expect.anything() }),
+      expect.anything(),
+    );
+  });
+});
+
 describe('PracticePage — hub (no start intent)', () => {
   it('renders the launcher hub instead of auto-starting when there is no ?start', () => {
     mockSearchParamsString = '';

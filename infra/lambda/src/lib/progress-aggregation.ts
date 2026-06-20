@@ -2,8 +2,8 @@
 // Progress aggregation — core types and exercise-type → axis mapping
 // ---------------------------------------------------------------------------
 // The progress page reduces the user's exercise history into six fixed skill
-// axes. This module is the single source of truth for that mapping; both the
-// /progress/radar route and the heatmap route consume it.
+// axes. This module is the single source of truth for that mapping; the
+// /progress/radar route consumes it.
 //
 // Design reference: .claude/specs/progress-page/design.md
 //   §"Exercise type → axis mapping (v1)"
@@ -241,53 +241,3 @@ export function aggregateRadar(
   });
 }
 
-// ---------------------------------------------------------------------------
-// Heatmap helpers
-// ---------------------------------------------------------------------------
-// `pivotCells` buckets attempts into UTC-day columns; `today` lives at the
-// last index. Timezone-awareness is deferred (Requirements §"Out of scope").
-// ---------------------------------------------------------------------------
-
-const DEFAULT_HEATMAP_DAYS = 30;
-
-/** Whole-day UTC index (days since the Unix epoch). */
-function utcDayIndex(date: Date): number {
-  return Math.floor(
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()) /
-      MS_PER_DAY,
-  );
-}
-
-export function pivotCells(
-  rows: readonly { evaluatedAt: Date }[],
-  now: Date,
-  days = DEFAULT_HEATMAP_DAYS,
-): number[] {
-  const cells = new Array<number>(days).fill(0);
-  const todayIndex = utcDayIndex(now);
-
-  for (const row of rows) {
-    const offset = todayIndex - utcDayIndex(row.evaluatedAt);
-    if (offset < 0 || offset >= days) continue;
-    cells[days - 1 - offset] += 1;
-  }
-
-  return cells;
-}
-
-/**
- * Per-topic mastery uses the same formula as per-axis mastery; exported
- * under a separate name so heatmap call-sites read clearly.
- */
-export function aggregateTopicMastery(
-  rows: readonly ContributingRow[],
-  now: Date,
-): number {
-  return aggregateAxisMastery(rows, now);
-}
-
-export const DEFAULT_SHADE_THRESHOLDS = {
-  paper2: 1,
-  accentSoft: 2,
-  accent: 4,
-} as const;

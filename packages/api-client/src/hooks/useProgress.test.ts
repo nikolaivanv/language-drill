@@ -6,7 +6,7 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query';
 import { Language } from '@language-drill/shared';
-import { useProgressRadar, useProgressHeatmap } from './useProgress';
+import { useProgressRadar } from './useProgress';
 import type { AuthenticatedFetch } from '../fetchClient';
 
 // ---------------------------------------------------------------------------
@@ -93,20 +93,6 @@ const RADAR_OK_PAYLOAD = {
       evidenceCount: 0,
     },
   ],
-};
-
-const HEATMAP_OK_PAYLOAD = {
-  language: 'ES',
-  days: 30,
-  topics: [
-    {
-      topicId: 'subjunctive',
-      name: 'subjunctive',
-      mastery: 0.71,
-      cells: new Array(30).fill(0),
-    },
-  ],
-  shadeThresholds: { paper2: 1, accentSoft: 2, accent: 4 },
 };
 
 // ---------------------------------------------------------------------------
@@ -196,77 +182,3 @@ describe('useProgressRadar', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// useProgressHeatmap
-// ---------------------------------------------------------------------------
-
-describe('useProgressHeatmap', () => {
-  let queryClient: QueryClient;
-  let fetchFn: Mock<AuthenticatedFetch>;
-
-  beforeEach(() => {
-    queryClient = buildQueryClient();
-    fetchFn = vi.fn() as Mock<AuthenticatedFetch>;
-  });
-
-  it('GETs /progress/heatmap with the language query param and returns parsed data', async () => {
-    fetchFn.mockResolvedValueOnce(jsonResponse(HEATMAP_OK_PAYLOAD));
-
-    const { result } = renderHook(
-      () => useProgressHeatmap({ fetchFn, language: Language.ES }),
-      { wrapper: buildWrapper(queryClient) },
-    );
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-
-    expect(fetchFn).toHaveBeenCalledTimes(1);
-    expect(fetchFn).toHaveBeenCalledWith('/progress/heatmap?language=ES');
-    expect(result.current.data?.days).toBe(30);
-    expect(result.current.data?.topics).toHaveLength(1);
-    expect(result.current.data?.shadeThresholds).toEqual({
-      paper2: 1,
-      accentSoft: 2,
-      accent: 4,
-    });
-  });
-
-  it('does not fire when enabled is false', () => {
-    renderHook(
-      () =>
-        useProgressHeatmap({
-          fetchFn,
-          language: Language.ES,
-          enabled: false,
-        }),
-      { wrapper: buildWrapper(queryClient) },
-    );
-    expect(fetchFn).not.toHaveBeenCalled();
-  });
-
-  it('uses a language-scoped query key so switching languages refetches', async () => {
-    fetchFn
-      .mockResolvedValueOnce(
-        jsonResponse({ ...HEATMAP_OK_PAYLOAD, language: 'ES' }),
-      )
-      .mockResolvedValueOnce(
-        jsonResponse({ ...HEATMAP_OK_PAYLOAD, language: 'TR' }),
-      );
-
-    const { result, rerender } = renderHook(
-      ({ language }: { language: Language.ES | Language.TR }) =>
-        useProgressHeatmap({ fetchFn, language }),
-      {
-        wrapper: buildWrapper(queryClient),
-        initialProps: { language: Language.ES },
-      },
-    );
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-
-    rerender({ language: Language.TR });
-    await waitFor(() => expect(result.current.data?.language).toBe('TR'));
-
-    expect(fetchFn).toHaveBeenCalledTimes(2);
-    expect(fetchFn).toHaveBeenNthCalledWith(1, '/progress/heatmap?language=ES');
-    expect(fetchFn).toHaveBeenNthCalledWith(2, '/progress/heatmap?language=TR');
-  });
-});
