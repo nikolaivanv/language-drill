@@ -88,8 +88,13 @@ describe('assertCurriculumInvariants', () => {
   });
 
   it('throws on an over-long description', () => {
-    const broken = mutateAt(FIRST_ES_INDEX, { description: 'x'.repeat(201) });
-    expect(() => assertCurriculumInvariants(broken)).toThrow(/exceeds 200 characters/);
+    const broken = mutateAt(FIRST_ES_INDEX, { description: 'x'.repeat(301) });
+    expect(() => assertCurriculumInvariants(broken)).toThrow(/exceeds 300 characters/);
+  });
+
+  it('allows a description between the old and new caps', () => {
+    const ok = mutateAt(FIRST_ES_INDEX, { description: 'x'.repeat(250) });
+    expect(() => assertCurriculumInvariants(ok)).not.toThrow();
   });
 
   it('throws on a dangling prerequisite key', () => {
