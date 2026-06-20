@@ -135,6 +135,7 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'tr-a2-gibi-kadar': 'syntax',
   'tr-a2-correlative-conjunctions': 'syntax',
   'tr-a2-causal-connectors': 'syntax',
+  'tr-a2-possessive-case-stacking': 'morphology',
   'tr-a2-ca-suffix': 'morphology',
   'tr-a2-pekistirme': 'morphology',
   'tr-a2-purpose-icin-uzere': 'syntax',
