@@ -29,6 +29,12 @@ export const TodayPlanItemSchema = z.object({
   // Topic from exercises.content_json->>'topicHint' — null when the seed row
   // doesn't carry one (the timeline falls back to the type label).
   topicHint: z.string().nullable(),
+  // Curriculum grammar point this item drills, and its display name resolved
+  // server-side. The timeline subtitle prefers grammarPointName over the
+  // free-text topicHint (decision D5). `.default(null)` keeps payloads from an
+  // older API deploy (which omits these fields) parseable.
+  grammarPointKey: z.string().nullable().default(null),
+  grammarPointName: z.string().nullable().default(null),
   difficulty: z.nativeEnum(CefrLevel),
   // Size of the underlying drill (e.g. cloze=4 items). Always ≥ 1.
   itemCount: z.number().int().min(1),

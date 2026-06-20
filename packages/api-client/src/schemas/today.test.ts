@@ -12,6 +12,8 @@ const validItem = (overrides: Partial<TodayPlanItem> = {}): TodayPlanItem => ({
   index: 1,
   type: ExerciseType.CLOZE,
   topicHint: 'subjunctive',
+  grammarPointKey: null,
+  grammarPointName: null,
   difficulty: CefrLevel.B1,
   itemCount: 4,
   estimatedMinutes: 2,
@@ -148,6 +150,44 @@ describe('TodayPlanResponseSchema', () => {
     });
     expect(result.success).toBe(true);
     if (result.success) expect(result.data.freeWriting).toBeNull();
+  });
+
+  it('defaults grammarPointKey/grammarPointName to null on an item that omits them (older API deploy)', () => {
+    // A payload from an API deploy predating D5 carries no grammar-point fields.
+    const legacyItem = {
+      index: 1,
+      type: ExerciseType.CLOZE,
+      topicHint: 'subjunctive',
+      difficulty: CefrLevel.B1,
+      itemCount: 4,
+      estimatedMinutes: 2,
+      status: 'queued' as const,
+    };
+    const result = TodayPlanItemSchema.safeParse(legacyItem);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.grammarPointKey).toBeNull();
+      expect(result.data.grammarPointName).toBeNull();
+    }
+  });
+
+  it('parses an item carrying a grammar point + resolved name', () => {
+    const result = TodayPlanItemSchema.safeParse({
+      index: 1,
+      type: ExerciseType.CLOZE,
+      topicHint: 'transport',
+      grammarPointKey: 'tr-a1-locative',
+      grammarPointName: 'Locative case -DA',
+      difficulty: CefrLevel.A1,
+      itemCount: 4,
+      estimatedMinutes: 2,
+      status: 'queued' as const,
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.grammarPointKey).toBe('tr-a1-locative');
+      expect(result.data.grammarPointName).toBe('Locative case -DA');
+    }
   });
 
   it('parses a populated freeWriting block', () => {

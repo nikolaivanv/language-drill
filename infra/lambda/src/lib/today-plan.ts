@@ -103,6 +103,8 @@ export type PlanItem = {
   index: number;
   type: ExerciseType;
   topicHint: string | null;
+  /** Curriculum grammar point this item drills (null for unmapped exercises). The route resolves its display name for the timeline subtitle. */
+  grammarPointKey: string | null;
   difficulty: CefrLevel;
   itemCount: number;
   estimatedMinutes: number;
@@ -181,7 +183,7 @@ export type PoolDraw = {
   type: ExerciseType;
   topicHint: string | null;
   difficulty: CefrLevel;
-  /** Curriculum grammar point this exercise targets (null for unmapped items). Carried on PoolDraw so mastery-aware ranking can prioritise draws before composeFreshPlan; intentionally not surfaced on PlanItem. */
+  /** Curriculum grammar point this exercise targets (null for unmapped items). Used for mastery-aware ranking and carried through to the PlanItem for the timeline subtitle. */
   grammarPointKey: string | null;
 };
 
@@ -209,6 +211,7 @@ function toPlanItem(index: number, draw: PoolDraw): PlanItem {
     index,
     type: draw.type,
     topicHint: draw.topicHint,
+    grammarPointKey: draw.grammarPointKey,
     difficulty: draw.difficulty,
     itemCount: ITEM_COUNT_BY_TYPE[draw.type],
     estimatedMinutes: ESTIMATED_MINUTES_BY_TYPE[draw.type],
@@ -294,7 +297,10 @@ export type HydrateSessionInput = {
    * Missing entries are dropped silently — defensive for an exercise that's
    * been deleted between session creation and dashboard load.
    */
-  exercises: Map<string, { type: ExerciseType; topicHint: string | null; difficulty: CefrLevel }>;
+  exercises: Map<
+    string,
+    { type: ExerciseType; topicHint: string | null; grammarPointKey: string | null; difficulty: CefrLevel }
+  >;
   /**
    * Exercise ids the user has already submitted in this session (history rows
    * exist for them). The route builds this set from a left-join of
@@ -343,6 +349,7 @@ export function hydrateFromSession(
       index: nextIndex++,
       type: exercise.type,
       topicHint: exercise.topicHint,
+      grammarPointKey: exercise.grammarPointKey,
       difficulty: exercise.difficulty,
       itemCount: ITEM_COUNT_BY_TYPE[exercise.type],
       estimatedMinutes: ESTIMATED_MINUTES_BY_TYPE[exercise.type],

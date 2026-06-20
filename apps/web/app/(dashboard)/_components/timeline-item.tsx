@@ -21,6 +21,7 @@ type Props = {
   index: number;
   type: ExerciseType;
   topicHint: string | null;
+  grammarPointName: string | null;
   itemCount: number;
   estimatedMinutes: number;
   status: TimelineItemStatus;
@@ -34,6 +35,7 @@ export function TimelineItem({
   index,
   type,
   topicHint,
+  grammarPointName,
   itemCount,
   estimatedMinutes,
   status,
@@ -42,7 +44,7 @@ export function TimelineItem({
   ctaLabel = 'start →',
 }: Props) {
   const title = composeTitle(index, type);
-  const subtitle = composeSubtitle(topicHint, type, itemCount);
+  const subtitle = composeSubtitle(grammarPointName, topicHint, type, itemCount);
   const isDone = status === 'done';
   const isNextUp = status === 'next-up';
   const numberLabel = String(index).padStart(2, '0');

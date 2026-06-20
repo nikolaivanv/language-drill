@@ -180,6 +180,25 @@ describe('composeFreshPlan', () => {
     expect(items.every((it) => it.difficulty === CefrLevel.B2)).toBe(true);
   });
 
+  it('preserves the grammarPointKey from each draw (incl. null)', () => {
+    const draws: PoolDraw[] = [
+      draw(ExerciseType.CLOZE, { id: 's1', grammarPointKey: 'tr-a1-locative' }),
+      draw(ExerciseType.SENTENCE_CONSTRUCTION, { id: 's2', grammarPointKey: null }),
+      draw(ExerciseType.TRANSLATION, { id: 's3', grammarPointKey: 'tr-a1-accusative-definite-object' }),
+      draw(ExerciseType.VOCAB_RECALL, { id: 's4', grammarPointKey: 'tr-a1-food' }),
+      draw(ExerciseType.CLOZE, { id: 's5', grammarPointKey: 'tr-a1-plural-suffix' }),
+    ];
+
+    const { items } = composeFreshPlan(draws);
+    expect(items.map((it) => it.grammarPointKey)).toEqual([
+      'tr-a1-locative',
+      null,
+      'tr-a1-accusative-definite-object',
+      'tr-a1-food',
+      'tr-a1-plural-suffix',
+    ]);
+  });
+
   it('backfills an SC slot from other types when the SC pool is empty', () => {
     const cloze = Array.from({ length: 5 }, (_, i) =>
       draw(ExerciseType.CLOZE, { id: `c${i}` }),
@@ -197,14 +216,17 @@ describe('composeFreshPlan', () => {
 const SESSION_STARTED_AT = new Date('2026-05-04T08:00:00Z');
 const SESSION_COMPLETED_AT = new Date('2026-05-04T08:18:00Z'); // +18 minutes
 
-function buildExercisesMap(entries: Array<[string, ExerciseType]>) {
+function buildExercisesMap(
+  entries: Array<[string, ExerciseType, (string | null)?]>,
+) {
   return new Map(
-    entries.map(([id, type]) => [
+    entries.map(([id, type, grammarPointKey = null]) => [
       id,
       {
         type,
         topicHint: 'subjunctive',
         difficulty: CefrLevel.B1,
+        grammarPointKey,
       },
     ]),
   );
@@ -323,6 +345,30 @@ describe('hydrateFromSession', () => {
       ExerciseType.TRANSLATION, // e5
       ExerciseType.TRANSLATION, // e2
       ExerciseType.CLOZE, // e4
+    ]);
+  });
+
+  it('carries grammarPointKey from the exercises map onto each item', () => {
+    const exercises = buildExercisesMap([
+      ['e1', ExerciseType.CLOZE, 'tr-a1-locative'],
+      ['e2', ExerciseType.CLOZE, null],
+      ['e3', ExerciseType.TRANSLATION, 'tr-a1-accusative-definite-object'],
+      ['e4', ExerciseType.VOCAB_RECALL, 'tr-a1-food'],
+      ['e5', ExerciseType.CLOZE, 'tr-a1-plural-suffix'],
+    ]);
+
+    const result = hydrateFromSession({
+      session: baseSession(),
+      exercises,
+      attemptedIds: new Set(),
+    });
+
+    expect(result.items.map((it) => it.grammarPointKey)).toEqual([
+      'tr-a1-locative',
+      null,
+      'tr-a1-accusative-definite-object',
+      'tr-a1-food',
+      'tr-a1-plural-suffix',
     ]);
   });
 

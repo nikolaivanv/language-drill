@@ -353,6 +353,7 @@ sessions.get('/sessions/today', async (c) => {
         exerciseId: exercisesTable.id,
         type: exercisesTable.type,
         topicHint: sql<string | null>`${exercisesTable.contentJson}->>'topicHint'`,
+        grammarPointKey: exercisesTable.grammarPointKey,
         difficulty: exercisesTable.difficulty,
         historyId: userExerciseHistory.id,
       })
@@ -368,7 +369,7 @@ sessions.get('/sessions/today', async (c) => {
 
     const exercisesMap = new Map<
       string,
-      { type: ExerciseType; topicHint: string | null; difficulty: CefrLevel }
+      { type: ExerciseType; topicHint: string | null; grammarPointKey: string | null; difficulty: CefrLevel }
     >();
     const attemptedIds = new Set<string>();
     for (const row of itemRows) {
@@ -377,6 +378,7 @@ sessions.get('/sessions/today', async (c) => {
       exercisesMap.set(row.exerciseId, {
         type: row.type,
         topicHint: row.topicHint,
+        grammarPointKey: row.grammarPointKey,
         difficulty: row.difficulty,
       });
       if (row.historyId !== null) attemptedIds.add(row.exerciseId);
@@ -632,6 +634,13 @@ function toWireItem(item: PlanItem) {
     index: item.index,
     type: item.type,
     topicHint: item.topicHint,
+    grammarPointKey: item.grammarPointKey,
+    // Resolve the curriculum display name server-side (same pattern as the
+    // debrief route) so the web bundle never imports the curriculum. The
+    // timeline subtitle prefers this over the free-text topicHint (decision D5).
+    grammarPointName: item.grammarPointKey
+      ? (getGrammarPoint(item.grammarPointKey)?.name ?? null)
+      : null,
     difficulty: item.difficulty,
     itemCount: item.itemCount,
     estimatedMinutes: item.estimatedMinutes,
