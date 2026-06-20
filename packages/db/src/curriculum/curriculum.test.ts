@@ -267,7 +267,7 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
     }
   });
 
-  it('the full TR clozeUnsuitable set is exactly these fourteen points', () => {
+  it('the full TR clozeUnsuitable set is exactly these fifteen points', () => {
     const flagged = trCurriculum
       .filter((g) => g.clozeUnsuitable === true)
       .map((g) => g.key)
@@ -279,6 +279,7 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
         'tr-a2-converbs',
         'tr-a2-correlative-conjunctions',
         'tr-a2-nominalization',
+        'tr-a2-possessive-case-stacking',
         'tr-a2-relative-an',
         'tr-b1-converb-while-yken',
         'tr-b1-participles-dik-acak',
@@ -610,12 +611,34 @@ describe('TR nominal-inflection conjugation cells (Task 6)', () => {
     }
   });
 
-  it('possessive-suffixes drives possessive+case stacking via a case axis', () => {
+  it('A1 possessive-suffixes is person-only (stacking moved to its own A2 point)', () => {
+    // 2026-06-20: a `case` axis here made the validator flag every stacked form
+    // (grammar-point-mismatch + level-mismatch). Stacking now lives on
+    // tr-a2-possessive-case-stacking; the A1 point keeps only nominative forms.
     const point = trCurriculum.find((p) => p.key === 'tr-a1-possessive-suffixes');
-    const caseAxis = point?.coverageSpec?.axes.find((a) => a.name === 'case');
+    const axes = (point?.coverageSpec?.axes ?? []).map((a) => a.name);
+    expect(axes).toEqual(['person']);
+  });
+
+  it('tr-a2-possessive-case-stacking drills possessive×case at A2 via conjugation, not cloze', () => {
+    const point = trCurriculum.find((p) => p.key === 'tr-a2-possessive-case-stacking');
+    expect(point).toBeDefined();
+    expect(point!.cefrLevel).toBe('A2');
+    expect(point!.conjugationSuitable).toBe(true);
+    expect(point!.clozeUnsuitable).toBe(true);
+
+    const caseAxis = point!.coverageSpec?.axes.find((a) => a.name === 'case');
     expect(caseAxis).toBeDefined();
     expect(Object.keys(caseAxis!.floors).sort()).toEqual(
-      ['ablative', 'accusative', 'dative', 'locative', 'nominative'],
+      ['ablative', 'accusative', 'dative', 'locative'],
     );
+    expect(point!.coverageSpec?.axes.some((a) => a.name === 'person')).toBe(true);
+
+    const types = enumerateCurriculumCells(trCurriculum)
+      .filter((c) => c.grammarPoint.key === 'tr-a2-possessive-case-stacking')
+      .map((c) => c.exerciseType);
+    expect(types).toContain(ExerciseType.CONJUGATION);
+    expect(types).toContain(ExerciseType.TRANSLATION);
+    expect(types).not.toContain(ExerciseType.CLOZE);
   });
 });

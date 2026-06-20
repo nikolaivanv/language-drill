@@ -155,7 +155,7 @@ function renderRecentStems(recentStems: readonly string[]): string {
 // (no substitution escape hatch). Added two instruction-discipline bullets to
 // renderConjugationSection: use the given verb as lemma; `instructions` must
 // contain ONLY the learner directive, no reasoning/meta-text.
-export const GENERATION_PROMPT_VERSION = "generate@2026-06-19";
+export const GENERATION_PROMPT_VERSION = "generate@2026-06-20";
 
 /**
  * Wording differs per type so Claude reads it the way the cell is constrained:
@@ -240,7 +240,7 @@ This is an inflection drill: there is NO sentence and NO blank. You produce one 
 - **\`targetForm\` MUST be the exactly-correct ${language} form at CEFR ${cefrLevel}**, including every diacritic. Grading is an exact string match — a wrong accent or a vowel-harmony slip is a wrong stored answer and will mis-grade every learner. Double-check irregular stems and consonant softening.
 - **Enumerate genuine variants in \`acceptableForms\`** (e.g. accepted orthographic variants). Do NOT list near-misses or common-error forms — those must stay wrong.
 - **\`breakdown\` teaches the morphology**: stem + ending for ${language} fusional forms, or stem + ordered suffix gloss for agglutinative forms (e.g. Turkish: root + (plural) + (possessive) + case/person, noting vowel harmony). Keep it one line.
-- **\`featureBundle\` names the cell** in ${language}'s conventional grammar notation; it MUST NOT contain the answer.
+- **\`featureBundle\` names the cell** in ${language}'s conventional grammar notation, using grammatical-feature terms ONLY (person/case/number/tense). It MUST NOT contain \`targetForm\`, nor any inflected form of the lemma, nor a worked example in parentheses — e.g. for target "çantama" write "iyelik · 1. tekil · yönelme hâli", never "… (benim çantama)". Naming the answer-word anywhere in the bundle spoils the exercise.
 - **\`features\` decomposes the cell for display.** List the inflectional dimensions OTHER than the subject cue — for verbs the tense/mood (and polarity where ${language} marks it); for nominals the case and/or number — in order. Each entry pairs the ${language} term in conventional notation (\`term\`) with a 1–2 word English gloss (\`gloss\`), e.g. {term: "geçmiş zaman", gloss: "past"} or {term: "bulunma", gloss: "locative"}. Do NOT put the subject cue in \`features\`.
 - **\`subject\` is the person cue — only when the form agrees with a person.** For verbs and the copula, give the representative ${language} subject pronoun (\`pronoun\`, e.g. "o", "ich") and its English \`gloss\` ("he / she / it"). For possessives, the possessor is the person cue (\`arabam\` → {pronoun: "benim", gloss: "my"}). **OMIT \`subject\` entirely for pure case/number forms that have no person** (\`ev → evde\`). It is shown prominently when present.
 - **\`features\` + \`subject\` describe the SAME cell as \`featureBundle\`** — they are its structured, glossed form, not extra constraints. They MUST NOT contain the answer.

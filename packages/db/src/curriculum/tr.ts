@@ -54,7 +54,7 @@ const { A1, A2, B1 } = CefrLevel;
  * +case stacking, locative, accusative-definite-object, ablative-dative); clears
  * suppression so the new CONJUGATION cells are enqueued.
  */
-export const CURRICULUM_VERSION_TR = '2026-06-19b';
+export const CURRICULUM_VERSION_TR = '2026-06-20';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -588,8 +588,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     conjugationSuitable: true,
     coverageSpec: {
       axes: [
-        { name: 'person', floors: { '1sg': 3, '2sg': 3, '3sg': 3, '1pl': 3, '2pl': 3, '3pl': 3 } },
-        { name: 'case', floors: { nominative: 3, accusative: 3, dative: 3, ablative: 3, locative: 3 } },
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
       ],
     },
     kind: 'grammar',
@@ -822,6 +821,55 @@ const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   // A2
   // ---------------------------------------------------------------------------
+  {
+    key: 'tr-a2-possessive-case-stacking',
+    // Dedicated home for possessive+case suffix STACKING. Bolting a `case` axis
+    // onto the A1 `tr-a1-possessive-suffixes` point (2026-06-19b) made the
+    // validator flag every stacked form: grammar-point-mismatch (the case suffix
+    // reads as a second grammar point) + level-mismatch (stacking is above A1).
+    // An explicit A2 point whose description/examples teach possessive+case
+    // clears both checks. cloze is suppressed (same under-constrained-blank trap
+    // as the voice points); conjugation + translation are the right surfaces.
+    conjugationSuitable: true,
+    clozeUnsuitable: true,
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 3, '2sg': 3, '3sg': 3, '1pl': 3, '2pl': 3, '3pl': 3 } },
+        { name: 'case', floors: { accusative: 4, dative: 4, locative: 4, ablative: 4 } },
+      ],
+    },
+    kind: 'grammar',
+    name: 'Possessive + case stacking',
+    description:
+      'Possessive then case, stacked in that order (evimizden = ev-imiz-den). 3sg/3pl insert a buffer -n- before the case suffix (odası → odasına); 1sg/2sg do not (çantam → çantamı).',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: [
+      'çantamı (my bag, accusative — çanta-m-ı, no buffer -n-)',
+      'evimizden (from our house — ev-imiz-den, ablative)',
+      'arabanızda (in your(pl) car — araba-nız-da, locative)',
+      'kitabını (his/her book, accusative — 3sg buffer -n-: kitab-ı-n-ı)',
+      'odasına (to his/her room — 3sg buffer -n-: oda-sı-n-a)',
+      'evlerinde (in their house — 3pl buffer -n-: ev-leri-n-de)',
+    ],
+    examplesNegative: [
+      '*evdenimiz (case before possessive — order must be possessive then case: evimizden)',
+      '*kitabıı (3sg accusative missing the buffer -n-: should be kitabını)',
+      '*odasıa (3sg dative missing the buffer -n-: should be odasına)',
+    ],
+    commonErrors: [
+      'Reversing the order — case before possessive (*ev-den-imiz instead of ev-imiz-den).',
+      'Dropping the buffer -n- before the case suffix on 3sg/3pl possessives (*kitabıı → kitabını, *odasıa → odasına).',
+      'Over-applying the buffer -n- to 1sg/2sg/1pl/2pl, which do not take it (*çantamnı → çantamı).',
+      'Vowel-harmony or consonant-softening slips across the longer suffix chain.',
+    ],
+    prerequisiteKeys: [
+      'tr-a1-possessive-suffixes',
+      'tr-a1-accusative-definite-object',
+      'tr-a1-ablative-dative',
+      'tr-a1-locative',
+    ],
+  },
   {
     key: 'tr-a2-mis-evidential',
     // personRotation deliberately ABSENT (2026-06-12): the rotation eval

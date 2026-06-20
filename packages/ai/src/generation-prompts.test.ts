@@ -228,10 +228,11 @@ describe("buildGenerationSystemPrompt", () => {
     // `{{conjugationSection}}` guidance block spliced into the cached template.
     // Prior 2026-06-12 cohort covered the possessive-cloze diversity tweak + the
     // curriculum-wide grammatical-person rotation.
-    // Bumped 2026-06-19 — conjugate-the-seed strict directive (no substitution
-    // escape hatch for conjugation type) + instruction-discipline bullets in
-    // renderConjugationSection (forbid reasoning/meta-text in `instructions`).
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-06-19");
+    // Bumped 2026-06-20 — featureBundle no-leak hardening (must not embed
+    // targetForm / an inflected lemma / a worked example), after the possessive-
+    // stacking flag wave. (2026-06-19: strict conjugate-the-seed directive +
+    // instruction-discipline bullets in renderConjugationSection.)
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-06-20");
     // Tasks 7–9: pin the new guardrail phrases in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "every content word MUST be high-frequency everyday vocabulary at or below CEFR {{cefrLevel}}",
@@ -1128,5 +1129,12 @@ describe("renderConjugationSection", () => {
     expect(section()).toMatch(/`subject`/);
     // The verb-shaped 'subject is the person/number cue' must become conditional.
     expect(section()).toMatch(/omit `subject`|when the form agrees with a person|possessor/i);
+  });
+
+  it("forbids leaking the answer (or a worked example) in the featureBundle", () => {
+    // Hardening after the 2026-06-20 possessive-stacking flag wave, where
+    // bundles like "yönelme hâli (benim çantama)" embedded the targetForm.
+    expect(section()).toMatch(/MUST NOT contain `targetForm`/);
+    expect(section()).toMatch(/inflected form of the lemma|worked example/i);
   });
 });
