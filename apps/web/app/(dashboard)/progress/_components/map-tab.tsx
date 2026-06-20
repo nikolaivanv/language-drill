@@ -7,7 +7,8 @@ import { Card } from '../../../../components/ui/card';
 import { Button } from '../../../../components/ui/button';
 import { WorkOnThese } from '../../_components/work-on-these';
 import { collapseSolidRuns, type MapEntry } from '../_lib/collapse-solid-runs';
-import { PointDetailSheet, formatAgo } from './point-detail-sheet';
+import { PointDetailSheet } from './point-detail-sheet';
+import { formatAgo } from '../_lib/format-ago';
 
 // ---------------------------------------------------------------------------
 // MapTab — read-only curriculum spine for /progress.
@@ -199,7 +200,7 @@ function SpineRow({
       {/* Body — tappable button that opens the detail sheet */}
       <button
         type="button"
-        className="flex-1 pb-[22px] text-left"
+        className="flex-1 text-left"
         style={{
           opacity: bodyOpacity,
           background: 'none',
@@ -673,6 +674,3 @@ export function MapTab({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Helpers — formatAgo is re-exported from point-detail-sheet.tsx (shared)
-// ---------------------------------------------------------------------------

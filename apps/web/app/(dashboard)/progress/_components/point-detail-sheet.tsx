@@ -7,6 +7,7 @@ import { ExerciseType } from '@language-drill/shared';
 import { Button } from '../../../../components/ui/button';
 import { typeLabel } from '../../_lib/timeline-labels';
 import { topicIdForGrammarPointKey } from '../../../../lib/theory-topic-map';
+import { formatAgo } from '../_lib/format-ago';
 
 // ---------------------------------------------------------------------------
 // PointDetailSheet — right-side sheet that opens when a map cell is tapped.
@@ -19,20 +20,6 @@ export type PointDetailSheetProps = {
   language: LearningLanguage;
   onClose: () => void;
 };
-
-// Derives a relative "last practiced" label from an ISO date string.
-// Exported so map-tab.tsx can import and reuse it (single source of truth).
-export function formatAgo(isoDate: string): string {
-  const ms = Date.now() - new Date(isoDate).getTime();
-  const days = Math.floor(ms / 86_400_000);
-  if (days === 0) return 'today';
-  if (days === 1) return 'yesterday';
-  if (days < 7) return `${days}d ago`;
-  const weeks = Math.floor(days / 7);
-  if (weeks < 5) return `${weeks}w ago`;
-  const months = Math.floor(days / 30);
-  return `${months}mo ago`;
-}
 
 export function PointDetailSheet({ point, language, onClose }: PointDetailSheetProps) {
   const {
