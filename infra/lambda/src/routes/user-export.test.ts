@@ -82,6 +82,7 @@ describe('GET /me/export', () => {
     ]) {
       expect(body).toHaveProperty(key);
     }
+    expect(selectCalls).toBe(18);
   });
 
   it('sets a download attachment header', async () => {

@@ -45,7 +45,7 @@ export async function collectUserExport(
   db: typeof DbType,
   userId: string,
 ): Promise<Record<string, unknown>> {
-  const out: Record<string, unknown> = { exportedAt: new Date().toISOString() };
+  const out: Record<string, unknown> = {};
 
   // The account row (keyed by id, not user_id).
   const userRows = await db.select().from(users).where(eq(users.id, userId));
@@ -64,5 +64,6 @@ export async function collectUserExport(
     .innerJoin(playlists, eq(playlistItems.playlistId, playlists.id))
     .where(eq(playlists.userId, userId));
 
+  out.exportedAt = new Date().toISOString();
   return out;
 }
