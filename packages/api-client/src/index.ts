@@ -173,6 +173,13 @@ export {
 } from './hooks/useProgress';
 export { useInsightsErrors, type UseInsightsErrorsParams } from './hooks/useInsights';
 export {
+  ErrorTrendThemeSchema,
+  ErrorTrendsResponseSchema,
+  type ErrorTrendTheme,
+  type ErrorTrendsResponse,
+} from './schemas/error-trends';
+export { useErrorTrends, type UseErrorTrendsParams } from './hooks/useErrorTrends';
+export {
   useTodayPlan,
   type UseTodayPlanParams,
 } from './hooks/useTodayPlan';
