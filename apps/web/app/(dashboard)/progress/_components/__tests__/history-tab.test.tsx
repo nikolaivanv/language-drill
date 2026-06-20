@@ -30,9 +30,14 @@ describe('HistoryTab', () => {
     expect(screen.getByText(/12%/)).toBeInTheDocument();
   });
 
-  it('renders the quiet status', () => {
+  it('renders the quiet status with pluralized weeks', () => {
     render(<HistoryTab data={resp([theme({ status: 'quiet', quietWeeks: 3 })])} isLoading={false} error={null} onRetry={noop} />);
-    expect(screen.getByText(/quiet/i)).toBeInTheDocument();
+    expect(screen.getByText(/quiet · no slips in 3 weeks/i)).toBeInTheDocument();
+  });
+
+  it('uses the singular "week" for a 1-week quiet streak', () => {
+    render(<HistoryTab data={resp([theme({ status: 'quiet', quietWeeks: 1 })])} isLoading={false} error={null} onRetry={noop} />);
+    expect(screen.getByText(/no slips in 1 week\b/i)).toBeInTheDocument();
   });
 
   it('shows an empty state when there are no themes', () => {
