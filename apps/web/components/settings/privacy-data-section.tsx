@@ -28,7 +28,7 @@ export function PrivacyDataSection() {
   };
 
   return (
-    <Section id="privacy" title="privacy &amp; data" sub="your data, your rights.">
+    <Section id="privacy" title="privacy & data" sub="your data, your rights.">
       <Row label="download my data" hint="a JSON copy of everything tied to your account.">
         <button type="button" className="btn" onClick={onDownload} disabled={busy}>
           {busy ? 'preparing…' : 'download my data'}

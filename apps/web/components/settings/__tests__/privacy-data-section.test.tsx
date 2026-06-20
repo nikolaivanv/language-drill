@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
+
+const { openPreferencesSpy } = vi.hoisted(() => ({ openPreferencesSpy: vi.fn() }));
 
 vi.mock('@clerk/nextjs', () => ({
   useAuth: () => ({ getToken: vi.fn(async () => 'tok') }),
@@ -8,13 +10,16 @@ vi.mock('@language-drill/api-client', () => ({
   createAuthenticatedFetch: () => vi.fn(),
 }));
 vi.mock('../../consent/consent-provider', () => ({
-  useConsent: () => ({ openPreferences: vi.fn() }),
+  useConsent: () => ({ openPreferences: openPreferencesSpy }),
 }));
 
 import { PrivacyDataSection } from '../privacy-data-section';
 
 describe('PrivacyDataSection', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    openPreferencesSpy.mockClear();
+  });
 
   it('renders the download button and policy links', () => {
     render(<PrivacyDataSection />);
@@ -28,5 +33,11 @@ describe('PrivacyDataSection', () => {
     render(<PrivacyDataSection />);
     expect(screen.getByText(/delete your account/i)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^delete account$/i })).not.toBeInTheDocument();
+  });
+
+  it('cookie preferences button calls openPreferences', () => {
+    render(<PrivacyDataSection />);
+    fireEvent.click(screen.getByRole('button', { name: /cookie preferences/i }));
+    expect(openPreferencesSpy).toHaveBeenCalledTimes(1);
   });
 });
