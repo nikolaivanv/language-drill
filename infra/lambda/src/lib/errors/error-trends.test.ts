@@ -32,6 +32,12 @@ describe('resolveErrorTrend', () => {
     expect(r.status).toBe('recurring');
     expect(r.lastSeenDaysAgo).toBe(2);
   });
+  it('recurring (not improving) when the earlier window has no attempts — honesty rate-guard', () => {
+    // No earlier baseline to compare against: a null earlier rate must NOT be
+    // read as "improving". Recent: 6 errors / 20 attempts; earlier: 0/0 → null.
+    const r = resolveErrorTrend([0, 0, 0, 0, 0, 0, 3, 3], [0, 0, 0, 0, 0, 0, 10, 10], daysAgo(1), NOW);
+    expect(r.status).toBe('recurring');
+  });
 });
 
 describe('buildErrorTrends', () => {
@@ -58,10 +64,33 @@ describe('buildErrorTrends', () => {
     expect(buildErrorTrends([err({})], [att('tr-a1-locative', 2)], NOW)).toEqual([]);
   });
 
-  it('orders recurring before improving before quiet', () => {
-    const recurring = [err({ grammarPointKey: 'rec', occurredAt: daysAgo(2) }), err({ grammarPointKey: 'rec', occurredAt: daysAgo(1) })];
-    const quiet = [err({ grammarPointKey: 'qui', occurredAt: daysAgo(30) }), err({ grammarPointKey: 'qui', occurredAt: daysAgo(28) })];
-    const themes = buildErrorTrends([...quiet, ...recurring], [att('rec', 2), att('rec', 1)], NOW);
-    expect(themes[0].grammarPointKey).toBe('rec');
+  it('orders recurring → improving → quiet', () => {
+    const rec = [err({ grammarPointKey: 'rec', occurredAt: daysAgo(2) }), err({ grammarPointKey: 'rec', occurredAt: daysAgo(1) })];
+    const imp = [
+      err({ grammarPointKey: 'imp', occurredAt: daysAgo(21) }),
+      err({ grammarPointKey: 'imp', occurredAt: daysAgo(21) }),
+      err({ grammarPointKey: 'imp', occurredAt: daysAgo(21) }),
+      err({ grammarPointKey: 'imp', occurredAt: daysAgo(3) }),
+    ];
+    const qui = [err({ grammarPointKey: 'qui', occurredAt: daysAgo(40) }), err({ grammarPointKey: 'qui', occurredAt: daysAgo(38) })];
+    const attempts = [
+      att('rec', 2),
+      att('rec', 1),
+      ...Array.from({ length: 6 }, () => att('imp', 21)), // earlier window
+      ...Array.from({ length: 6 }, () => att('imp', 3)), // recent window
+    ];
+    const themes = buildErrorTrends([...qui, ...imp, ...rec], attempts, NOW);
+    expect(themes.map((t) => t.grammarPointKey)).toEqual(['rec', 'imp', 'qui']);
+    expect(themes.map((t) => t.status)).toEqual(['recurring', 'improving', 'quiet']);
+  });
+
+  it('handles a null grammar point (groups under the no-point sentinel)', () => {
+    const themes = buildErrorTrends(
+      [err({ grammarPointKey: null, occurredAt: daysAgo(2) }), err({ grammarPointKey: null, occurredAt: daysAgo(1) })],
+      [],
+      NOW,
+    );
+    expect(themes).toHaveLength(1);
+    expect(themes[0].grammarPointKey).toBeNull();
   });
 });
