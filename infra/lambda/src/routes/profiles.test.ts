@@ -622,7 +622,10 @@ describe('PATCH /profiles/preferences', () => {
     expect(json.goals).toEqual(['vocab']);
     // The .set() call must contain only the provided keys + updatedAt, not
     // fields that were not sent (e.g. gentleNudges, notes).
-    const setArg = mockUpdateSet.mock.calls[0][0] as Record<string, unknown>;
+    const setArg = (mockUpdateSet.mock.calls as unknown[][])[0][0] as Record<
+      string,
+      unknown
+    >;
     expect(setArg).toHaveProperty('dailyMinutes', 30);
     expect(setArg).toHaveProperty('goals', ['vocab']);
     expect(setArg).toHaveProperty('updatedAt');
