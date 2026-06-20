@@ -50,12 +50,13 @@ export function GeneratingView({ languageLabel, provenance }: Props) {
         then calibrating the words worth collecting.
       </p>
 
-      {/* Indeterminate pulsing progress bar — mirrors the CalibrationStrip bar style */}
+      {/* Indeterminate progress bar — a short accent segment sweeps across the
+          track so the wait reads as active work, not a stalled page. */}
       <div
         aria-label="generating"
-        className="h-[2px] bg-rule rounded-full overflow-hidden"
+        className="h-[3px] bg-rule rounded-full overflow-hidden"
       >
-        <div className="h-full bg-accent rounded-full animate-pulse w-full" />
+        <div className="indeterminate-bar h-full bg-accent rounded-full" />
       </div>
     </div>
   );

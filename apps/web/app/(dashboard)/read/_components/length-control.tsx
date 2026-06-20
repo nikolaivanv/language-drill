@@ -46,7 +46,16 @@ export function LengthControl({ value, onChange, disabled }: Props) {
               disabled && 'cursor-not-allowed opacity-50',
             )}
           >
-            <span className="t-body font-serif capitalize">{length}</span>
+            {/* `.t-body` hard-codes `color: var(--color-ink-2)` as an unlayered
+                rule, which outranks the `text-paper` utility on the button. On
+                the selected (ink-filled) card that left dark text on a near-black
+                fill, so force the paper colour inline when selected. */}
+            <span
+              className="t-body font-serif capitalize"
+              style={isSelected ? { color: 'var(--color-paper)' } : undefined}
+            >
+              {length}
+            </span>
             <span className={cn('t-mono text-[11px]', isSelected ? 'text-paper/70' : 'text-ink-mute')}>
               ≈ {READING_LENGTH_APPROX[length]} words
             </span>
