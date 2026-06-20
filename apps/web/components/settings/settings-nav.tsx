@@ -5,6 +5,7 @@ export const SETTINGS_SECTIONS = [
   { id: 'goals', label: 'goals' },
   { id: 'plan', label: 'plan & limits' },
   { id: 'account', label: 'account' },
+  { id: 'privacy', label: 'privacy & data' },
 ] as const;
 
 export function SettingsNav({

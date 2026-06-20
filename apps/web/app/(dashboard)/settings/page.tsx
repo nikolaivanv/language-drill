@@ -6,6 +6,7 @@ import { LanguagesSection } from '../../../components/settings/languages-section
 import { GoalsSection } from '../../../components/settings/goals-section';
 import { PlanAndLimits } from '../../../components/settings/plan-and-limits';
 import { AccountSection } from '../../../components/settings/account-section';
+import { PrivacyDataSection } from '../../../components/settings/privacy-data-section';
 
 export default function SettingsPage() {
   const [active, setActive] = useState<string>(SETTINGS_SECTIONS[0].id);
@@ -42,6 +43,7 @@ export default function SettingsPage() {
         <GoalsSection />
         <PlanAndLimits />
         <AccountSection />
+        <PrivacyDataSection />
       </div>
     </div>
   );
