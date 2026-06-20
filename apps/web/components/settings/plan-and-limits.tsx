@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { createAuthenticatedFetch, useMe } from '@language-drill/api-client';
-import { Card } from '../ui';
+import { Section } from './section';
 import { RedeemCodeBox } from '../invite/redeem-code-box';
 
 const BUCKETS = [
@@ -21,8 +21,7 @@ export function PlanAndLimits() {
   const me = useMe({ fetchFn });
 
   return (
-    <Card padding="lg">
-      <h2 className="t-display-s mb-s-3">plan &amp; limits</h2>
+    <Section id="plan" title="plan & limits" sub="your tier and today's usage.">
       {me.isLoading && <p className="t-body text-ink-soft">loading…</p>}
       {me.error && (
         <p role="alert" className="t-body text-accent-2">
@@ -52,6 +51,6 @@ export function PlanAndLimits() {
           {me.data.plan === 'free' && <RedeemCodeBox />}
         </>
       )}
-    </Card>
+    </Section>
   );
 }
