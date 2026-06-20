@@ -20,6 +20,7 @@ import {
   parseEvaluationResult,
   EVALUATION_TOOL_NAME,
   EVALUATION_TOOL,
+  buildEvaluationTool,
 } from "./evaluate.js";
 import { createClaudeClient } from "./index.js";
 import { ContentRejectedError } from "./content-rejected-error.js";
@@ -253,7 +254,7 @@ describe("EVALUATION_SYSTEM_PROMPT", () => {
   });
 
   it("bumps EVALUATION_SYSTEM_PROMPT_VERSION for the grounded prompt (R4.3)", () => {
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-06-18");
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-06-20");
   });
 });
 
@@ -803,5 +804,88 @@ describe("createClaudeClient", () => {
     const client = createClaudeClient("test-api-key");
     expect(client).toBeDefined();
     expect(client.messages).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buildEvaluationTool — closed-key attribution (Task A2)
+// ---------------------------------------------------------------------------
+
+describe("buildEvaluationTool — closed-key attribution", () => {
+  it("omits grammarPointKey from the error schema when no keys are supplied", () => {
+    const tool = buildEvaluationTool();
+    const errorItems = (tool.input_schema as any).properties.errors.items;
+    expect(errorItems.properties.grammarPointKey).toBeUndefined();
+  });
+
+  it("adds an optional grammarPointKey enum constrained to the supplied keys", () => {
+    const tool = buildEvaluationTool([
+      { key: "tr-a1-vowel-harmony", name: "Vowel harmony" },
+      { key: "tr-a1-plural-suffix", name: "Plural suffix" },
+    ]);
+    const errorItems = (tool.input_schema as any).properties.errors.items;
+    expect(errorItems.properties.grammarPointKey.enum).toEqual([
+      "tr-a1-vowel-harmony",
+      "tr-a1-plural-suffix",
+    ]);
+    // optional: NOT added to the error item's `required`
+    expect(errorItems.required).not.toContain("grammarPointKey");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseEvaluationResult — attribution coercion (Task A2)
+// ---------------------------------------------------------------------------
+
+describe("parseEvaluationResult — attribution coercion", () => {
+  const base = {
+    score: 0.5,
+    grammarAccuracy: 0.5,
+    vocabularyRange: "A1",
+    taskAchievement: 0.5,
+    feedback: "ok",
+    estimatedCefrEvidence: "A1",
+  };
+
+  it("keeps a grammarPointKey that is in the valid set", () => {
+    const out = parseEvaluationResult(
+      {
+        ...base,
+        errors: [
+          { type: "grammar", severity: "major", text: "x", correction: "y", explanation: "z", grammarPointKey: "tr-a1-locative" },
+        ],
+      },
+      new Set(["tr-a1-locative"]),
+    );
+    expect(out.errors[0].grammarPointKey).toBe("tr-a1-locative");
+  });
+
+  it("coerces an out-of-set grammarPointKey to null", () => {
+    const out = parseEvaluationResult(
+      {
+        ...base,
+        errors: [
+          { type: "grammar", severity: "major", text: "x", correction: "y", explanation: "z", grammarPointKey: "tr-a1-not-real" },
+        ],
+      },
+      new Set(["tr-a1-locative"]),
+    );
+    expect(out.errors[0].grammarPointKey).toBeNull();
+  });
+
+  it("defaults grammarPointKey to null when absent", () => {
+    const out = parseEvaluationResult(
+      { ...base, errors: [{ type: "grammar", severity: "major", text: "x", correction: "y", explanation: "z" }] },
+      new Set(["tr-a1-locative"]),
+    );
+    expect(out.errors[0].grammarPointKey).toBeNull();
+  });
+
+  it("sets grammarPointKey null for every error when no valid set is passed", () => {
+    const out = parseEvaluationResult({
+      ...base,
+      errors: [{ type: "grammar", severity: "major", text: "x", correction: "y", explanation: "z", grammarPointKey: "tr-a1-locative" }],
+    });
+    expect(out.errors[0].grammarPointKey).toBeNull();
   });
 });

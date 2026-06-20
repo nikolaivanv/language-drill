@@ -43,7 +43,7 @@ const CEFR_DESCRIPTOR_BULLETS = (
 // Bump in the same commit as any semantic edit to EVALUATION_SYSTEM_PROMPT.
 // Drives the Langfuse trace `promptVersion` tag — dashboards cohort old vs.
 // new prompt traces by this string.
-export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-06-18";
+export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-06-20";
 
 export const EVALUATION_SYSTEM_PROMPT = `You are an expert language evaluator for a language-learning application. Your role is to evaluate user answers to language exercises with precision and pedagogical insight.
 
@@ -56,7 +56,7 @@ You must evaluate every answer across these dimensions:
 3. **Vocabulary Range** (CEFR level string, e.g. "A1"–"C2"): The sophistication level of vocabulary used.
 4. **Task Achievement** (0.0–1.0): How well the answer fulfills the exercise requirements.
 5. **Feedback**: A concise, encouraging explanation in English of what was good and what needs improvement.
-6. **Errors**: An array of specific errors found, each with type, severity, the erroneous text, correction, and explanation.
+6. **Errors**: An array of specific errors found, each with type, severity, the erroneous text, correction, and explanation. When the user message includes a **Grammar points in scope** block and a grammar/morphology error violates one of those listed points, set that error's optional **grammarPointKey** to the exact key shown for it (e.g. a wrong plural vowel → the vowel-harmony key; a missing accusative ending on a definite object → the accusative key). Use **only** keys from that list, attribute at most one point per error, and omit grammarPointKey when the error violates none of the listed points or is a vocabulary/spelling slip.
 7. **Estimated CEFR Evidence**: The CEFR level this answer provides evidence for (e.g. "B1").
 
 ## CEFR Level Descriptors
@@ -217,6 +217,14 @@ export type GrammarGuidance = {
   commonErrors: readonly string[];
 };
 
+/** A curriculum grammar point the evaluator may attribute an error to. */
+export type AttributionKey = {
+  /** Curriculum key, e.g. "tr-a1-vowel-harmony". */
+  key: string;
+  /** Human-readable name, e.g. "Vowel harmony" — shown to the model so it can pick. */
+  name: string;
+};
+
 /**
  * Renders the grammar-reference block appended to every evaluation user prompt
  * when guidance is available. Kept type-agnostic so all four exercise types
@@ -236,7 +244,9 @@ ${errorBullets}`;
 /**
  * Builds the user message for Claude evaluation based on exercise type. When
  * `grammarGuidance` is supplied, an authoritative grammar-reference block is
- * appended so the evaluator grounds its feedback in the curriculum.
+ * appended so the evaluator grounds its feedback in the curriculum. When
+ * `attributionKeys` is supplied, a 'Grammar points in scope' block is appended
+ * so the evaluator can attribute each error to a closed set of curriculum keys.
  */
 export function buildUserPrompt(
   exercise: ExerciseContent,
@@ -244,6 +254,7 @@ export function buildUserPrompt(
   language: Language,
   difficulty: CefrLevel,
   grammarGuidance?: GrammarGuidance,
+  attributionKeys?: readonly AttributionKey[],
 ): string {
   let base: string;
   switch (exercise.type) {
@@ -281,6 +292,10 @@ export function buildUserPrompt(
     }
   }
 
-  if (!grammarGuidance) return base;
-  return `${base}\n\n${buildGrammarGuidanceBlock(grammarGuidance)}`;
+  let out = grammarGuidance ? `${base}\n\n${buildGrammarGuidanceBlock(grammarGuidance)}` : base;
+  if (attributionKeys && attributionKeys.length > 0) {
+    const lines = attributionKeys.map((k) => `- ${k.key} — ${k.name}`).join("\n");
+    out += `\n\n## Grammar points in scope\nWhen an error violates one of these points, set that error's grammarPointKey to its key:\n${lines}`;
+  }
+  return out;
 }

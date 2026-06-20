@@ -65,11 +65,14 @@ const mockUpdateMastery = vi.fn((prev: unknown, _obs: unknown) => ({
   lastPracticedAt: new Date('2026-01-01'),
 }));
 
+const mockGrammarPointsAtOrBelow = vi.fn(() => [] as { key: string; name: string }[]);
+
 vi.mock('@language-drill/db', () => ({
   users: { id: 'id' },
   exercises: { reviewStatus: 'review_status', type: 'type', audioS3Key: 'audio_s3_key' },
   userExerciseHistory: {},
   usageEvents: {},
+  errorObservations: { exerciseHistoryId: 'exercise_history_id' },
   practiceSessions: {
     id: 'id',
     userId: 'user_id',
@@ -86,6 +89,29 @@ vi.mock('@language-drill/db', () => ({
   },
   updateMastery: (prev: unknown, obs: unknown) => mockUpdateMastery(prev, obs),
   getGrammarPoint: vi.fn(() => undefined),
+  grammarPointsAtOrBelow: (...args: Parameters<typeof mockGrammarPointsAtOrBelow>) => mockGrammarPointsAtOrBelow(...args),
+  // Real mapping used by lib/errors/record via @language-drill/db import
+  errorObservationsFromEvaluation: (
+    errors: Array<{ type: string; severity: string; text: string; correction: string; grammarPointKey?: string | null }> | undefined,
+    ctx: { userId: string; language: string; exerciseId: string; sessionId: string | null; exerciseHistoryId: string; exerciseType: string; hostGrammarPointKey: string | null; occurredAt: Date },
+  ) => {
+    if (!errors || errors.length === 0) return [];
+    return errors.map((e) => ({
+      userId: ctx.userId,
+      language: ctx.language,
+      exerciseId: ctx.exerciseId,
+      sessionId: ctx.sessionId,
+      exerciseHistoryId: ctx.exerciseHistoryId,
+      exerciseType: ctx.exerciseType,
+      hostGrammarPointKey: ctx.hostGrammarPointKey,
+      errorGrammarPointKey: e.grammarPointKey ?? null,
+      errorType: e.type,
+      severity: e.severity,
+      wrongText: e.text,
+      correction: e.correction,
+      occurredAt: ctx.occurredAt,
+    }));
+  },
 }));
 
 // Mock the review-status filter so we can assert the route invokes it.
@@ -1837,5 +1863,265 @@ describe('POST /exercises/:id/submit — conjugation branch', () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as { submissionId?: string };
     expect(body.submissionId).toEqual(expect.any(String));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /exercises/:id/submit — error attribution keys (Task A5)
+// ---------------------------------------------------------------------------
+//
+// Verifies that the route resolves in-scope curriculum keys for the learner's
+// (language, level) and passes them to evaluateAnswer so the evaluator can
+// attribute each error to a specific grammar point. The persisted
+// error_observations row must carry:
+//   - errorGrammarPointKey: the key the evaluator attributed
+//   - hostGrammarPointKey: the exercise's primary grammar point
+
+describe('POST /exercises/:id/submit — error attribution keys', () => {
+  let app: Hono;
+
+  const authEnv = {
+    event: {
+      requestContext: {
+        authorizer: { jwt: { claims: { sub: 'user_123' } } },
+      },
+    },
+  };
+
+  const trA1TranslationExercise = {
+    id: 'tr-a1-001',
+    type: 'translation',
+    language: 'TR',
+    difficulty: 'A1',
+    grammarPointKey: 'tr-a1-locative',
+    contentJson: {
+      type: 'translation',
+      source: 'The book is on the table.',
+      targetLanguage: 'tr',
+    },
+    audioS3Key: null,
+    createdAt: new Date(),
+  };
+
+  // The evaluator returns one error attributed to a different grammar point
+  // than the exercise's host point.
+  const evaluationWithAttributedError = {
+    score: 0.5,
+    grammarAccuracy: 0.4,
+    vocabularyRange: 'A1',
+    taskAchievement: 0.6,
+    feedback: 'You forgot the accusative suffix.',
+    errors: [
+      {
+        type: 'grammar',
+        severity: 'major',
+        text: 'kitaplar',
+        correction: 'kitapları',
+        grammarPointKey: 'tr-a1-accusative-definite-object',
+      },
+    ],
+    estimatedCefrEvidence: 'A1',
+  };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    mockWithLlmTrace.mockImplementation(
+      <T>(_ctx: unknown, fn: () => T | Promise<T>) => Promise.resolve(fn()),
+    );
+    mockRandomUUID.mockImplementation(() => 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee');
+    // Provide a TR/A1 curriculum subset — the route resolves these keys and
+    // passes them to evaluateAnswer as attributionKeys; the evaluator then
+    // picks from this closed set for per-error attribution.
+    mockGrammarPointsAtOrBelow.mockReturnValue([
+      { key: 'tr-a1-vowel-harmony', name: 'Vowel Harmony' },
+      { key: 'tr-a1-locative', name: 'Locative Case (-DA)' },
+      { key: 'tr-a1-accusative-definite-object', name: 'Accusative: Definite Object (-(y)I)' },
+    ]);
+    const mod = await import('./exercises');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  it('persists the evaluator-attributed grammarPointKey as errorGrammarPointKey', async () => {
+    // exercise fetch
+    mockLimit.mockResolvedValueOnce([trA1TranslationExercise]);
+    mockWhere
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit })) // exercise fetch
+      .mockResolvedValueOnce([{ count: 0 }] as never); // usage count
+    mockEvaluateAnswer.mockResolvedValueOnce(evaluationWithAttributedError);
+
+    const res = await app.request(
+      '/exercises/tr-a1-001/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'Kitap masada.' }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+
+    // Insert order: 1) auth user upsert, 2) userExerciseHistory,
+    // 3) error_observations (because errors is non-empty), 4) usageEvents.
+    // The error_observations row (4th values call) must carry both keys.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const errorObsCall = (mockValues.mock.calls as any[]).find((args: any[]) => {
+      const rows = args[0];
+      return Array.isArray(rows) && rows.length > 0 && 'errorGrammarPointKey' in rows[0];
+    });
+    expect(errorObsCall).toBeDefined();
+    const row = (errorObsCall[0] as Array<Record<string, unknown>>)[0];
+    expect(row.errorGrammarPointKey).toBe('tr-a1-accusative-definite-object');
+    expect(row.hostGrammarPointKey).toBe('tr-a1-locative');
+  });
+
+  it('passes the resolved attributionKeys into evaluateAnswer', async () => {
+    mockLimit.mockResolvedValueOnce([trA1TranslationExercise]);
+    mockWhere
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }))
+      .mockResolvedValueOnce([{ count: 0 }] as never);
+    mockEvaluateAnswer.mockResolvedValueOnce(evaluationWithAttributedError);
+
+    await app.request(
+      '/exercises/tr-a1-001/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'Kitap masada.' }),
+      },
+      authEnv,
+    );
+
+    expect(mockEvaluateAnswer).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        attributionKeys: expect.arrayContaining([
+          { key: 'tr-a1-accusative-definite-object', name: 'Accusative: Definite Object (-(y)I)' },
+          { key: 'tr-a1-locative', name: 'Locative Case (-DA)' },
+        ]),
+      }),
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /exercises/:id/submit — incidental mastery fold (Task B3)
+// ---------------------------------------------------------------------------
+//
+// When a submission contains an error attributed to a grammar point OTHER than
+// the exercise host point, the route must fold a negative mastery signal into
+// that incidental point via applyGrammarMastery. This test verifies that a
+// userGrammarMastery upsert (.values({...})) occurred for tr-a1-vowel-harmony
+// (the incidental point) with a masteryScore below 0.5.
+
+describe('POST /exercises/:id/submit — incidental mastery fold (B3)', () => {
+  let app: Hono;
+
+  const authEnv = {
+    event: {
+      requestContext: {
+        authorizer: { jwt: { claims: { sub: 'user_123' } } },
+      },
+    },
+  };
+
+  // Exercise hosted on tr-a1-locative
+  const trA1LocativeExercise = {
+    id: 'tr-a1-loc-001',
+    type: 'translation',
+    language: 'TR',
+    difficulty: 'A1',
+    grammarPointKey: 'tr-a1-locative',
+    contentJson: {
+      type: 'translation',
+      source: 'The cat is in the house.',
+      targetLanguage: 'tr',
+    },
+    audioS3Key: null,
+    createdAt: new Date(),
+  };
+
+  // Evaluator returns one MAJOR error attributed to tr-a1-vowel-harmony (incidental — not the host)
+  const evaluationWithIncidentalError = {
+    score: 0.6,
+    grammarAccuracy: 0.5,
+    vocabularyRange: 'A1',
+    taskAchievement: 0.7,
+    feedback: 'You made a vowel harmony error.',
+    errors: [
+      {
+        type: 'grammar',
+        severity: 'major',
+        text: 'evde',
+        correction: 'evde (correct suffix, but internal vowel wrong)',
+        grammarPointKey: 'tr-a1-vowel-harmony',
+      },
+    ],
+    estimatedCefrEvidence: 'A1',
+  };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    mockWithLlmTrace.mockImplementation(
+      <T>(_ctx: unknown, fn: () => T | Promise<T>) => Promise.resolve(fn()),
+    );
+    mockRandomUUID.mockImplementation(() => 'bbbbbbbb-cccc-dddd-eeee-ffffffffffff');
+    // Curriculum subset for TR/A1
+    mockGrammarPointsAtOrBelow.mockReturnValue([
+      { key: 'tr-a1-vowel-harmony', name: 'Vowel Harmony' },
+      { key: 'tr-a1-locative', name: 'Locative Case (-DA)' },
+    ]);
+    // getGrammarPoint must return a point with cefrLevel for tr-a1-vowel-harmony
+    const { getGrammarPoint: mockGetGrammarPoint } = await import('@language-drill/db');
+    (mockGetGrammarPoint as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
+      if (key === 'tr-a1-vowel-harmony') return { key: 'tr-a1-vowel-harmony', cefrLevel: 'A1', name: 'Vowel Harmony' };
+      if (key === 'tr-a1-locative') return { key: 'tr-a1-locative', cefrLevel: 'A1', name: 'Locative Case (-DA)' };
+      return undefined;
+    });
+    const mod = await import('./exercises');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  it('upserts a low-score mastery row for the incidental grammar point', async () => {
+    // exercise fetch — route does db.select().from().where().orderBy().limit()
+    mockWhere.mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }));
+    mockLimit.mockResolvedValueOnce([trA1LocativeExercise]); // exercise row
+    // usage count — db.select().from().where() resolves directly
+    mockWhere.mockResolvedValueOnce([{ count: 0 }] as never);
+    // applyGrammarMastery (host point: tr-a1-locative) — db.select().from().where().limit(1) → []
+    mockLimit.mockResolvedValueOnce([] as never); // host mastery select
+    // applyGrammarMastery (incidental: tr-a1-vowel-harmony) — db.select().from().where().limit(1) → []
+    mockLimit.mockResolvedValueOnce([] as never); // incidental mastery select
+    mockEvaluateAnswer.mockResolvedValueOnce(evaluationWithIncidentalError);
+
+    const res = await app.request(
+      '/exercises/tr-a1-loc-001/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'Kedi evde.' }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+
+    // Find the userGrammarMastery insert for tr-a1-vowel-harmony (the incidental point).
+    // mockValues captures all .values({...}) calls; the upsert row has masteryScore.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const masteryCallForVowelHarmony = (mockValues.mock.calls as any[]).find((args: any[]) => {
+      const row = args[0];
+      return row && typeof row === 'object' && !Array.isArray(row) && row.grammarPointKey === 'tr-a1-vowel-harmony';
+    });
+
+    expect(masteryCallForVowelHarmony).toBeDefined();
+    const row = masteryCallForVowelHarmony[0] as Record<string, unknown>;
+    // mockUpdateMastery returns masteryScore: 0.4 when prev is falsy (first observation)
+    // For a major error score=0, updateMastery is called with score:0, so masteryScore < 0.5
+    expect(typeof row.masteryScore).toBe('number');
+    expect(row.masteryScore as number).toBeLessThan(0.5);
+    expect(row.grammarPointKey).toBe('tr-a1-vowel-harmony');
   });
 });

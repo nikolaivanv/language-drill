@@ -46,7 +46,7 @@ export function errorObservationsFromEvaluation(
     exerciseHistoryId: ctx.exerciseHistoryId,
     exerciseType: ctx.exerciseType,
     hostGrammarPointKey: ctx.hostGrammarPointKey,
-    errorGrammarPointKey: null,
+    errorGrammarPointKey: e.grammarPointKey ?? null,
     errorType: e.type,
     severity: e.severity,
     wrongText: e.text,
