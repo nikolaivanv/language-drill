@@ -185,7 +185,9 @@ fluency.post('/fluency/attempts', async (c) => {
       ? content.correctAnswer
       : content.type === ExerciseType.VOCAB_RECALL
         ? content.expectedWord
-        : ''; // unreachable: isFluencyEligibleType guard above ensures only cloze/vocab_recall reach here
+        : content.type === ExerciseType.CONJUGATION
+          ? content.targetForm
+          : ''; // defensive default; isFluencyEligibleType guard keeps only eligible types here
 
   return c.json({ correct, correctAnswer, latencyMs: clampedLatency });
 });

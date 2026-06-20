@@ -424,6 +424,47 @@ describe('POST /fluency/attempts', () => {
     // No insert should have been made
     expect(mockInsert).not.toHaveBeenCalled();
   });
+
+  it('resolves correctAnswer to targetForm for a conjugation attempt', async () => {
+    mockLimit.mockResolvedValueOnce([
+      {
+        id: EXERCISE_UUID,
+        type: ExerciseType.CONJUGATION,
+        language: 'ES',
+        difficulty: 'B1',
+        grammarPointKey: 'es-b1-conditional',
+        contentJson: {
+          type: ExerciseType.CONJUGATION,
+          instructions: 'Write the correct form.',
+          lemma: 'ir',
+          lemmaGloss: 'to go',
+          featureBundle: 'condicional · 1ª persona del plural',
+          targetForm: 'iríamos',
+          breakdown: 'ir + íamos',
+          exampleSentences: ['Iríamos al cine.'],
+        },
+      },
+    ]);
+
+    const res = await app.request(
+      '/fluency/attempts',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          exerciseId: EXERCISE_UUID,
+          answer: 'irian', // wrong on purpose
+          latencyMs: 1500,
+        }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.correct).toBe(false);
+    expect(body.correctAnswer).toBe('iríamos');
+  });
 });
 
 // ---------------------------------------------------------------------------
