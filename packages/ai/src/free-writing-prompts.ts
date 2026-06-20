@@ -12,11 +12,11 @@ import {
   type CefrLevel,
   type Language,
 } from "@language-drill/shared";
-import { CEFR_LEVEL_DESCRIPTORS } from "./prompts.js";
+import { CEFR_LEVEL_DESCRIPTORS, type AttributionKey } from "./prompts.js";
 
 // Bump in the same commit as any semantic edit below. Drives the Langfuse
 // `promptVersion` cohort tag. (CLAUDE.md "Prompt Editing".)
-export const FREE_WRITING_EVAL_PROMPT_VERSION = "free-writing-eval@2026-06-18";
+export const FREE_WRITING_EVAL_PROMPT_VERSION = "free-writing-eval@2026-06-20";
 
 const CEFR_BULLETS = (Object.entries(CEFR_LEVEL_DESCRIPTORS) as [CefrLevel, string][])
   .map(([level, d]) => `- **${level}**: ${d}`)
@@ -48,6 +48,10 @@ You do NOT re-type the learner's text. Instead you return:
 
 Every \`original\`, every \`goodSpans\` entry, and every \`upgrades\` entry MUST be an exact substring of the relevant text (the learner's answer for the first two; \`improved.text\` for the third). If you cannot copy it verbatim, omit it.
 
+## Attributing an error to a grammar point
+
+When the user message includes a **Grammar points in scope** block and a located grammar/morphology error violates one of those listed points, set that error's optional **grammarPointKey** to the exact key shown for it (e.g. a wrong past-subjunctive form → the subjunctive key; a missing accusative ending on a definite object → the accusative key). Use **only** keys from that list, attribute at most one point per error, and omit grammarPointKey when the error violates none of the listed points or is a purely lexical/spelling slip.
+
 ## Scoring discipline
 
 - \`overallScore\` is your holistic 0.0–1.0 grade; \`overallCefr\` the overall writing level it evidences.
@@ -60,12 +64,20 @@ export function buildFreeWritingUserPrompt(
   userAnswer: string,
   language: Language,
   difficulty: CefrLevel,
+  attributionKeys?: readonly AttributionKey[],
 ): string {
   const required = content.requiredElements.length
     ? content.requiredElements
         .map((r) => `- ${r.label}${r.detail ? ` (${r.detail})` : ""}`)
         .join("\n")
     : "- (none)";
+
+  const scopeBlock =
+    attributionKeys && attributionKeys.length > 0
+      ? `\n\n## Grammar points in scope\nWhen a located error violates one of these points, set that error's grammarPointKey to its key:\n${attributionKeys
+          .map((k) => `- ${k.key} — ${k.name}`)
+          .join("\n")}`
+      : "";
 
   return `## Free Writing submission
 
@@ -85,5 +97,5 @@ ${required}
 ${userAnswer}
 """
 
-Evaluate the four criteria, locate errors and highlights as exact substrings, and write an improved version. Submit via the tool.`;
+Evaluate the four criteria, locate errors and highlights as exact substrings, and write an improved version. Submit via the tool.${scopeBlock}`;
 }

@@ -34,6 +34,10 @@ describe('FREE_WRITING_EVAL_SYSTEM_PROMPT', () => {
   it('instructs the model to return exact substrings', () => {
     expect(FREE_WRITING_EVAL_SYSTEM_PROMPT).toMatch(/exact substring/i);
   });
+  it('instructs per-error grammar-point attribution from the in-scope set', () => {
+    expect(FREE_WRITING_EVAL_SYSTEM_PROMPT).toMatch(/grammarPointKey/);
+    expect(FREE_WRITING_EVAL_SYSTEM_PROMPT).toMatch(/in scope/i);
+  });
 });
 
 describe('buildFreeWritingUserPrompt', () => {
@@ -47,5 +51,20 @@ describe('buildFreeWritingUserPrompt', () => {
     expect(p).toContain('Mi respuesta.');
     expect(p).toContain('ES');
     expect(p).toContain('B2');
+  });
+
+  it('appends a Grammar points in scope block when attribution keys are provided', () => {
+    const p = buildFreeWritingUserPrompt(content, 'Mi respuesta.', Language.ES, CefrLevel.B2, [
+      { key: 'es-b2-subjunctive', name: 'Subjunctive' },
+      { key: 'es-b1-ser-estar', name: 'Ser vs estar' },
+    ]);
+    expect(p).toContain('Grammar points in scope');
+    expect(p).toContain('es-b2-subjunctive — Subjunctive');
+    expect(p).toContain('es-b1-ser-estar — Ser vs estar');
+  });
+
+  it('omits the scope block when no attribution keys are provided', () => {
+    const p = buildFreeWritingUserPrompt(content, 'Mi respuesta.', Language.ES, CefrLevel.B2);
+    expect(p).not.toContain('Grammar points in scope');
   });
 });

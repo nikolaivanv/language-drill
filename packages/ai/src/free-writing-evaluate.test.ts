@@ -3,6 +3,7 @@ import { CefrLevel, Language, ExerciseType, type FreeWritingContent } from '@lan
 import {
   FREE_WRITING_EVAL_TOOL,
   FREE_WRITING_EVAL_TOOL_NAME,
+  buildFreeWritingEvalTool,
   parseFreeWritingEvaluation,
   evaluateFreeWriting,
 } from './free-writing-evaluate';
@@ -52,6 +53,56 @@ describe('FREE_WRITING_EVAL_TOOL', () => {
   });
 });
 
+describe('buildFreeWritingEvalTool — closed-key attribution', () => {
+  const errorItems = (tool: import('@anthropic-ai/sdk').Anthropic.Tool) =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (tool.input_schema as any).properties.errors.items;
+
+  it('omits grammarPointKey from the error schema when no keys are supplied', () => {
+    expect(errorItems(buildFreeWritingEvalTool()).properties.grammarPointKey).toBeUndefined();
+    // back-compat default export is the no-keys tool
+    expect(errorItems(FREE_WRITING_EVAL_TOOL).properties.grammarPointKey).toBeUndefined();
+  });
+
+  it('adds an optional grammarPointKey enum constrained to the supplied keys', () => {
+    const items = errorItems(
+      buildFreeWritingEvalTool([
+        { key: 'es-b2-subjunctive', name: 'Subjunctive' },
+        { key: 'es-b1-ser-estar', name: 'Ser vs estar' },
+      ]),
+    );
+    expect(items.properties.grammarPointKey.enum).toEqual(['es-b2-subjunctive', 'es-b1-ser-estar']);
+    expect(items.required).not.toContain('grammarPointKey');
+  });
+});
+
+describe('parseFreeWritingEvaluation — attribution coercion', () => {
+  const withKey = (grammarPointKey: unknown) => ({
+    ...valid,
+    errors: [{ ...valid.errors[0], grammarPointKey }],
+  });
+
+  it('keeps a grammarPointKey that is in the valid set', () => {
+    const r = parseFreeWritingEvaluation(withKey('es-b2-subjunctive'), new Set(['es-b2-subjunctive']));
+    expect(r.errors[0].grammarPointKey).toBe('es-b2-subjunctive');
+  });
+
+  it('coerces an out-of-set grammarPointKey to null', () => {
+    const r = parseFreeWritingEvaluation(withKey('es-b2-not-real'), new Set(['es-b2-subjunctive']));
+    expect(r.errors[0].grammarPointKey).toBeNull();
+  });
+
+  it('defaults grammarPointKey to null when absent', () => {
+    const r = parseFreeWritingEvaluation(valid, new Set(['es-b2-subjunctive']));
+    expect(r.errors[0].grammarPointKey).toBeNull();
+  });
+
+  it('sets grammarPointKey null for every error when no valid set is passed', () => {
+    const r = parseFreeWritingEvaluation(withKey('es-b2-subjunctive'));
+    expect(r.errors[0].grammarPointKey).toBeNull();
+  });
+});
+
 describe('parseFreeWritingEvaluation', () => {
   it('parses a valid payload', () => {
     const r = parseFreeWritingEvaluation(valid);
@@ -97,6 +148,44 @@ describe('evaluateFreeWriting', () => {
     const args = create.mock.calls[0][0];
     expect(args.tools[0].name).toBe('submit_free_writing_evaluation');
     expect(args.tool_choice).toEqual({ type: 'tool', name: 'submit_free_writing_evaluation' });
+  });
+
+  it('builds the tool with the in-scope key enum and coerces the returned key (attribution)', async () => {
+    const returned = {
+      ...valid,
+      errors: [
+        { ...valid.errors[0], grammarPointKey: 'es-b2-subjunctive' }, // in-scope → kept
+        {
+          n: 2,
+          severity: 'med',
+          type: 'Léxico',
+          original: 'cosa',
+          correction: 'asunto',
+          note: 'n',
+          grammarPointKey: 'es-b2-not-real', // out-of-scope → coerced to null
+        },
+      ],
+    };
+    const create = vi.fn().mockResolvedValue({
+      stop_reason: 'tool_use',
+      content: [{ type: 'tool_use', name: 'submit_free_writing_evaluation', input: returned }],
+    });
+    const client = { messages: { create } } as unknown as import('@anthropic-ai/sdk').default;
+    const r = await evaluateFreeWriting(client, {
+      content,
+      userAnswer: 'Mi texto.',
+      language: Language.ES,
+      difficulty: CefrLevel.B2,
+      attributionKeys: [{ key: 'es-b2-subjunctive', name: 'Subjunctive' }],
+    });
+    // The tool sent to Claude carries the closed enum...
+    const args = create.mock.calls[0][0];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sentItems = (args.tools[0].input_schema as any).properties.errors.items;
+    expect(sentItems.properties.grammarPointKey.enum).toEqual(['es-b2-subjunctive']);
+    // ...and the parser keeps the in-scope key, nulls the out-of-scope one.
+    expect(r.errors[0].grammarPointKey).toBe('es-b2-subjunctive');
+    expect(r.errors[1].grammarPointKey).toBeNull();
   });
 
   it('throws ContentRejectedError when Claude refuses the answer', async () => {

@@ -320,9 +320,10 @@ export type EvaluationError = {
   explanation: string;
   /**
    * The curriculum grammar-point key this specific error violates, when the
-   * evaluator could attribute it to one of the exercise's in-scope points.
-   * Null/absent when no in-scope point applies. Populated only by the generic
-   * evaluator (Phase 3); the free-writing path leaves it unset.
+   * evaluator could attribute it to one of the in-scope points. Null/absent
+   * when no in-scope point applies. Populated by the generic evaluator and the
+   * free-writing evaluator (each from its level's closed key set); the
+   * dictation path leaves it unset.
    */
   grammarPointKey?: string | null;
 };
@@ -431,6 +432,12 @@ export type FreeWritingError = {
   correction: string;
   where?: string; // human locus, e.g. "oración condicional · §3"
   note: string;
+  /**
+   * The curriculum grammar-point key this error violates, when the evaluator
+   * could attribute it to one of the level's in-scope points. Null/absent when
+   * none applies. Constrained to the closed key set the route injects.
+   */
+  grammarPointKey?: string | null;
 };
 
 export type FreeWritingImproved = {

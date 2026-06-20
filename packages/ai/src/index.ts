@@ -73,6 +73,7 @@ export {
   evaluateFreeWriting,
   parseFreeWritingEvaluation,
   FREE_WRITING_EVAL_TOOL,
+  buildFreeWritingEvalTool,
   FREE_WRITING_EVAL_TOOL_NAME,
   FREE_WRITING_EVAL_REQUEST_TIMEOUT_MS,
   FREE_WRITING_EVAL_MAX_RETRIES,

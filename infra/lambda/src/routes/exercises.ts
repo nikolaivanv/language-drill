@@ -476,6 +476,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
             userAnswer,
             language: exercise.language as Language,
             difficulty: exercise.difficulty as CefrLevel,
+            attributionKeys,
           }),
       );
 
