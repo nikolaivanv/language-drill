@@ -16,6 +16,7 @@ import {
   useResumeSession,
   useSubmitAnswer,
   useLanguageProfiles,
+  useInsightsErrors,
   createAuthenticatedFetch,
 } from '@language-drill/api-client';
 import { useActiveLanguage } from '../../../components/shell';
@@ -27,6 +28,7 @@ import { topicIdForGrammarPointKey } from '../../../lib/theory-topic-map';
 import { useIsMobile } from '../../../lib/responsive';
 import { Card } from '../../../components/ui';
 import { coachMessage } from '../../../lib/drill/coach-messages';
+import { coachHeadline } from '../../../lib/drill/coach-headline';
 import { DEFAULT_EXERCISE_COUNT, DICTATION_RUN_COUNT } from '../../../lib/drill/session-config';
 import { DrillHub } from './_components/drill-hub';
 import { CoachRail } from './_components/coach-rail';
@@ -98,6 +100,7 @@ function PracticePageContent() {
   const [state, dispatch] = useReducer(sessionReducer, initialSessionState);
 
   const { activeLanguage } = useActiveLanguage();
+  const insights = useInsightsErrors({ fetchFn, language: activeLanguage });
   const isMobile = useIsMobile();
   const [openTopicId, setOpenTopicId] = useState<string | null>(null);
   const [triggerEl, setTriggerEl] = useState<HTMLElement | null>(null);
@@ -332,7 +335,7 @@ function PracticePageContent() {
       ? state.perItemSubmission
       : ({ kind: 'idle' } as const);
 
-  const coachMsg =
+  const cannedMsg =
     submission.kind === 'evaluated'
       ? coachMessage({
           kind: 'evaluated',
@@ -340,6 +343,9 @@ function PracticePageContent() {
           score: submission.result.score,
         })
       : coachMessage({ kind: 'idle', type: exerciseTypeForRail });
+  const sessionErrors = state.kind === 'inSession' ? state.sessionErrors : [];
+  const coachMsg =
+    coachHeadline({ sessionErrors, themes: insights.data?.themes ?? [] }) ?? cannedMsg;
 
   // The learner's recorded baseline for the active language — the identity that
   // the session level can drift from. Null when the active language has no
