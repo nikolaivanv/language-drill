@@ -204,6 +204,13 @@
       "when": 1781895264172,
       "tag": "0028_yellow_blue_shield",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1781980587856,
+      "tag": "0029_fixed_thing",
+      "breakpoints": true
     }
   ]
 }
