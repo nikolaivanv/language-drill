@@ -1,11 +1,19 @@
 import { z } from 'zod';
 import { LearningLanguageEnum } from './preferences';
 import { ExerciseResponseSchema } from './exercise';
+import { FLUENCY_ELIGIBLE_TYPES } from '@language-drill/shared';
+
+// Eligible-type enum for the optional fluency `types` filter — derived from the
+// shared single source of truth so it stays in lockstep with the backend.
+export const FluencySessionTypeEnum = z.enum(
+  FLUENCY_ELIGIBLE_TYPES as unknown as [string, ...string[]],
+);
 
 // Request body for POST /fluency/session
 export const FluencySessionRequestSchema = z.object({
   language: LearningLanguageEnum,
   count: z.number().int().min(1).max(20).optional(),
+  types: z.array(FluencySessionTypeEnum).nonempty().optional(),
 });
 export type FluencySessionRequest = z.infer<typeof FluencySessionRequestSchema>;
 
