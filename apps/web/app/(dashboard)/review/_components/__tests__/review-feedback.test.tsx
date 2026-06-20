@@ -74,19 +74,16 @@ describe('ReviewFeedback verdict & corrected form', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Scheduler delta (Req 10.2)
+// Scheduler delta — human line (Req 10.2)
 // ---------------------------------------------------------------------------
 
 describe('ReviewFeedback scheduler delta', () => {
-  it('renders interval, stability, and state transition before→after', () => {
+  it('renders the human next-review line instead of raw FSRS numbers', () => {
     renderFeedback();
-    expect(screen.getByText('4d')).toBeInTheDocument();
-    expect(screen.getByText('8d')).toBeInTheDocument();
-    expect(screen.getByText('4.2')).toBeInTheDocument();
-    expect(screen.getByText('7.1')).toBeInTheDocument();
-    expect(screen.getByText('learning')).toBeInTheDocument();
-    // 'mature' appears both in the state chip and the promotion chip.
-    expect(screen.getAllByText('mature').length).toBeGreaterThanOrEqual(1);
+    // correctResult: intervalTo=8, stateTo='mature' → "next review in ~8 days · solid"
+    expect(screen.getByText('next review in ~8 days · solid')).toBeInTheDocument();
+    expect(screen.queryByText('stability')).not.toBeInTheDocument();
+    expect(screen.queryByText(/scheduler delta/i)).not.toBeInTheDocument();
   });
 
   it('shows a promotion chip when the lifecycle state advances', () => {
@@ -99,7 +96,6 @@ describe('ReviewFeedback scheduler delta', () => {
   it('does not show a promotion chip on a lapse', () => {
     renderFeedback({ result: incorrectResult });
     expect(screen.queryByLabelText(/promoted to/)).not.toBeInTheDocument();
-    expect(screen.getByText('leech')).toBeInTheDocument();
   });
 });
 

@@ -4,21 +4,21 @@ import * as React from 'react';
 import type { ReviewItemResult } from '@language-drill/api-client';
 import { Button, Card, Chip } from '../../../../components/ui';
 import { cn } from '../../../../lib/cn';
+import { nextReviewLine } from '../../../../lib/review/schedule-phrase';
 
 // ---------------------------------------------------------------------------
 // In-session feedback panel (Req 9.4, 10.2, 10.3)
 // ---------------------------------------------------------------------------
 // Shown after an item is graded, before advancing. Renders the
-// correct/partial/incorrect verdict + the corrected form, the FSRS scheduler
-// delta (interval / stability / lifecycle state, before→after), and the "what
-// moved" mastery deltas sourced verbatim from the emitted evidence (NOT
-// fabricated) (9.4, 10.2). Supports keyboard advance — Enter fires onNext (10.3)
-// — alongside the inline "next" CTA. The session page (task 45) owns the split
-// layout / mobile sticky bar and decides the nextLabel (last item → finish).
+// correct/partial/incorrect verdict + the corrected form, a human next-review
+// line derived from FSRS output, and the "what moved" mastery
+// deltas sourced verbatim from the emitted evidence (NOT fabricated) (9.4, 10.2).
+// Supports keyboard advance — Enter fires onNext (10.3) — alongside the inline
+// "next" CTA. The session page (task 45) owns the split layout / mobile sticky
+// bar and decides the nextLabel (last item → finish).
 // ---------------------------------------------------------------------------
 
 type ReviewOutcome = ReviewItemResult['outcome'];
-type SchedulerDelta = ReviewItemResult['schedulerDelta'];
 
 export interface ReviewFeedbackProps {
   result: ReviewItemResult;
@@ -49,10 +49,6 @@ const STATE_RANK: Record<string, number> = {
   leech: -1,
   suspended: -1,
 };
-
-function round(n: number): string {
-  return Number.isInteger(n) ? String(n) : n.toFixed(1);
-}
 
 function pct(n: number): number {
   return Math.round(n * 100);
@@ -86,30 +82,6 @@ function DeltaPill({
   );
 }
 
-function SchedulerDeltaGrid({ delta }: { delta: SchedulerDelta }) {
-  const promoted = STATE_RANK[delta.stateTo] > STATE_RANK[delta.stateFrom];
-  const lapsed = STATE_RANK[delta.stateTo] < STATE_RANK[delta.stateFrom];
-  return (
-    <div className="grid grid-cols-[72px_1fr] gap-x-s-3 gap-y-s-1 text-[12px]">
-      <span className="text-ink-mute">interval</span>
-      <span>
-        <span className="t-mono text-ink-mute">{round(delta.intervalFrom)}d</span>{' '}
-        → <strong className="t-mono">{round(delta.intervalTo)}d</strong>
-      </span>
-      <span className="text-ink-mute">stability</span>
-      <span>
-        <span className="t-mono">{round(delta.stabilityFrom)}</span> →{' '}
-        <span className="t-mono text-ok">{round(delta.stabilityTo)}</span>
-      </span>
-      <span className="text-ink-mute">state</span>
-      <span className="inline-flex items-center gap-s-2">
-        <Chip>{delta.stateFrom}</Chip>
-        <span className="text-ink-mute">→</span>
-        <Chip variant={promoted ? 'ok' : lapsed ? 'accent' : 'default'}>{delta.stateTo}</Chip>
-      </span>
-    </div>
-  );
-}
 
 export function ReviewFeedback({ result, onNext, nextLabel = 'next item →' }: ReviewFeedbackProps) {
   const { outcome, correctAnswer, schedulerDelta, masteryDeltas } = result;
@@ -153,11 +125,8 @@ export function ReviewFeedback({ result, onNext, nextLabel = 'next item →' }: 
         )}
       </p>
 
-      {/* Scheduler delta */}
-      <div className="mt-s-4 pt-s-3 border-t border-dashed border-rule">
-        <p className="t-micro text-ink-soft mb-s-2">scheduler delta</p>
-        <SchedulerDeltaGrid delta={schedulerDelta} />
-      </div>
+      {/* Next review line */}
+      <p className="t-body text-ink-2 mt-s-3">{nextReviewLine(schedulerDelta)}</p>
 
       {/* What moved on the radar (Req 9.4) — only when grammar points moved. */}
       {masteryDeltas.length > 0 && (
