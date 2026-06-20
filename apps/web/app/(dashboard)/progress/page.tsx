@@ -7,6 +7,7 @@ import {
   useLanguageProfiles,
   useProgressRadar,
   useFluencyStats,
+  useErrorTrends,
   type RadarAxis,
 } from '@language-drill/api-client';
 import { useActiveLanguage } from '../../../components/shell/active-language-provider';
@@ -25,9 +26,10 @@ export default function ProgressPage() {
   const { getToken } = useAuth();
   const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
 
-  // Both queries fire in parallel on mount so switching tabs is instant.
+  // All queries fire in parallel on mount so switching tabs is instant.
   const radar = useProgressRadar({ fetchFn, language: activeLanguage });
   const fluency = useFluencyStats({ fetchFn, language: activeLanguage });
+  const history = useErrorTrends({ fetchFn, language: activeLanguage });
 
   // Read proficiency level from the language-profiles cache rather than
   // refetching — the dashboard layout already populated it.
@@ -76,7 +78,16 @@ export default function ProgressPage() {
             }}
           />
         )}
-        {tab === 'history' && <HistoryTab />}
+        {tab === 'history' && (
+          <HistoryTab
+            data={history.data}
+            isLoading={history.isLoading}
+            error={history.error}
+            onRetry={() => {
+              void history.refetch();
+            }}
+          />
+        )}
       </ProgressTabs>
     </div>
   );
