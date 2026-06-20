@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { MIN_FLUENCY_POOL } from '@language-drill/shared';
-import { composeFluencySession, type EligibleExercise } from './fluency-session';
+import { MIN_FLUENCY_POOL, ExerciseType, FLUENCY_ELIGIBLE_TYPES } from '@language-drill/shared';
+import { composeFluencySession, type EligibleExercise, resolveFluencyTypes } from './fluency-session';
 
 function eligible(id: string): EligibleExercise {
   return {
@@ -46,5 +46,30 @@ describe('composeFluencySession', () => {
     // exact order pins the swap direction: each i swaps with index 0, leaving
     // [b, c, d, e, a]. A reversed/off-by-one Fisher-Yates would fail this.
     expect(result.items.map((i) => i.id)).toEqual(['b', 'c', 'd', 'e', 'a']);
+  });
+});
+
+describe('resolveFluencyTypes', () => {
+  it('returns all eligible types when nothing is requested', () => {
+    expect(resolveFluencyTypes()).toEqual([...FLUENCY_ELIGIBLE_TYPES]);
+    expect(resolveFluencyTypes([])).toEqual([...FLUENCY_ELIGIBLE_TYPES]);
+  });
+
+  it('includes conjugation among the defaults', () => {
+    expect(resolveFluencyTypes()).toContain(ExerciseType.CONJUGATION);
+  });
+
+  it('filters to the requested eligible subset', () => {
+    expect(resolveFluencyTypes([ExerciseType.CONJUGATION])).toEqual([ExerciseType.CONJUGATION]);
+  });
+
+  it('drops non-eligible requested types', () => {
+    expect(
+      resolveFluencyTypes([ExerciseType.CONJUGATION, ExerciseType.TRANSLATION]),
+    ).toEqual([ExerciseType.CONJUGATION]);
+  });
+
+  it('falls back to all eligible when every requested type is non-eligible', () => {
+    expect(resolveFluencyTypes([ExerciseType.TRANSLATION])).toEqual([...FLUENCY_ELIGIBLE_TYPES]);
   });
 });
