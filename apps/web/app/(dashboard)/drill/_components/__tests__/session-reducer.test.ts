@@ -701,7 +701,7 @@ describe('sessionReducer / sessionErrors', () => {
   it('resets sessionErrors to [] when a new session starts via CREATE_SUCCEEDED', () => {
     // Simulate a session that accumulated errors, then a fresh CREATE_SUCCEEDED from creating
     // (the reducer only transitions from `creating` → `inSession`, so we start from creating)
-    const withErrors: SessionState = {
+    const freshCreating: SessionState = {
       kind: 'creating',
     };
     // First establish a session with errors by running the normal flow
@@ -715,7 +715,7 @@ describe('sessionReducer / sessionErrors', () => {
     expect(s.sessionErrors).toHaveLength(1);
 
     // Now start a fresh session (CREATE_SUCCEEDED from creating)
-    s = sessionReducer(withErrors, {
+    s = sessionReducer(freshCreating, {
       type: 'CREATE_SUCCEEDED',
       session: createResponseWithGrammarKeys,
     });

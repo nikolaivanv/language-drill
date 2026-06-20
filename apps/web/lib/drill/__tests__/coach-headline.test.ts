@@ -52,6 +52,14 @@ describe('withinSessionHeadline', () => {
     expect(out).toContain('pazarda → pazara');
     expect(out).toContain('3×');
   });
+
+  it('breaks an equal-size tie toward the group with more major errors', () => {
+    const major = err({ grammarPointKey: 'x', severity: 'major', text: 'majWrong', correction: 'majRight' });
+    const minor = err({ grammarPointKey: 'y', severity: 'minor', text: 'minWrong', correction: 'minRight' });
+    // minor group inserted first; the major group must still win the tie.
+    const out = withinSessionHeadline([minor, minor, major, major]);
+    expect(out).toBe('watch · majWrong → majRight · slipped 2× this session');
+  });
 });
 
 describe('crossSessionHeadline', () => {

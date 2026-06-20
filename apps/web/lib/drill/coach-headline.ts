@@ -1,3 +1,5 @@
+import type { InsightsErrorTheme } from '@language-drill/api-client';
+
 export interface SessionError {
   grammarPointKey: string | null;
   errorType: string;
@@ -5,8 +7,6 @@ export interface SessionError {
   text: string;
   correction: string;
 }
-
-import type { InsightsErrorTheme } from '@language-drill/api-client';
 
 const MIN_REPEATS = 2;
 
