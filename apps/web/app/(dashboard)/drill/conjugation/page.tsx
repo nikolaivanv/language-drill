@@ -43,6 +43,15 @@ export default function ConjugationPage() {
     CefrLevel.B1;
 
   const [submission, setSubmission] = useState<SubmissionState>({ kind: 'idle' });
+  // Which exercise the current `submission` belongs to. Advancing pulls a fresh
+  // *random* exercise via refetch, and React Query keeps the previous `data` in
+  // place while that refetch is in flight — so resetting submission to idle on
+  // "next" would briefly re-render the OUTGOING exercise as a blank, unanswered
+  // prompt before the new one lands (a visible flash / double-load). Instead we
+  // pin the submission to its exercise id and derive `effectiveSubmission`: when
+  // a different exercise arrives, the feedback falls back to idle in the *same*
+  // render that swaps the prompt — atomic, no intermediate blank flash.
+  const [submittedExerciseId, setSubmittedExerciseId] = useState<string | null>(null);
 
   // useExercise is a TanStack `useQuery`. The backend returns a *random*
   // exercise per call, but the query is pinned (`staleTime: Infinity`,
@@ -59,6 +68,7 @@ export default function ConjugationPage() {
 
   const onSubmit = async (answer: string, _meta: SubmissionMeta) => {
     if (!exercise) return;
+    setSubmittedExerciseId(exercise.id);
     setSubmission({ kind: 'submitting' });
     try {
       // No sessionId — the submit route validates session linkage only when a
@@ -74,13 +84,21 @@ export default function ConjugationPage() {
   };
 
   const onNext = () => {
-    // Reset feedback, then pull a fresh exercise. Advancing is an explicit
-    // refetch — submitting deliberately does NOT swap the task (see
-    // useSubmitAnswer), so the graded prompt + answer stay put under the
-    // feedback until the user chooses to move on.
-    setSubmission({ kind: 'idle' });
+    // Pull a fresh exercise. Deliberately do NOT reset `submission` here: while
+    // the refetch is in flight React Query still returns the current exercise,
+    // so an eager idle-reset would flash the outgoing prompt blank before the
+    // new one lands. The feedback stays pinned (see `effectiveSubmission`) until
+    // a different exercise arrives, then clears in the same render as the swap.
     void refetch();
   };
+
+  // The submission is only meaningful for the exercise it was made against. Once
+  // a different exercise loads, treat it as idle — this is what makes advancing
+  // atomic (new prompt + cleared feedback in one render) instead of a flash.
+  const effectiveSubmission: SubmissionState =
+    exercise && submittedExerciseId === exercise.id
+      ? submission
+      : { kind: 'idle' };
 
   // Empty-pool / 404: the API returns 404 NO_EXERCISES when nothing matches the
   // (language, difficulty, conjugation) filter. createAuthenticatedFetch throws
@@ -115,7 +133,7 @@ export default function ConjugationPage() {
       <ExercisePane
         exercise={exercise}
         language={activeLanguage}
-        submission={submission}
+        submission={effectiveSubmission}
         onSubmit={onSubmit}
         onNext={onNext}
         nextLabel="next"
