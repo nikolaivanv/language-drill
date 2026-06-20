@@ -156,7 +156,7 @@ export function RadarChart({ language, axes }: RadarChartProps) {
               r={4}
               data-tier={tier}
               fill={tier === 'thin' ? 'var(--color-paper)' : 'var(--color-accent)'}
-              stroke="var(--color-accent)"
+              stroke={tier === 'thin' ? 'var(--color-accent)' : '#fff'}
               strokeWidth={tier === 'thin' ? 1.5 : 1}
             />
           );
