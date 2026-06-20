@@ -192,6 +192,58 @@ describe('computeMasteryDeltas', () => {
     );
     expect(deltas.map((d) => d.grammarPoint)).toEqual(['alpha', 'mu', 'zeta']);
   });
+
+  it('excludes no-op deltas (from === to) while keeping real upward and downward moves', async () => {
+    // 'moved-up': only the fresh correct row is in excludeLogIds → from=0, to>0
+    // 'moved-down': existing correct baseline + fresh incorrect → to < from
+    // 'unchanged': has prior evidence + fresh identical outcome so from === to
+    //   (simulate by giving it prior history that is identical to what it would
+    //   be with the new row: we make both rows correct so adding a second identical
+    //   correct row shifts mastery by an infinitesimal amount; instead use a
+    //   pair of rows that produce *exactly* the same aggregated mastery by having
+    //   the excluded row be a duplicate of an existing baseline row — i.e. same
+    //   id in both the row list and the exclude set, ensuring rowsForLabel minus
+    //   excludeSet is empty for "unchanged-point" and the new row score exactly
+    //   matches the singleton result.
+    //   Simplest approach: give 'unchanged-point' only the excluded row and make
+    //   the outcome produce from=0 (no prior) and to=0 (zero score → mastery=0)).
+    const movedUpRow = logRow({
+      id: 'up',
+      outcome: 'correct',
+      grammarPoints: ['moved-up'],
+    });
+    const movedDownBaseline = logRow({
+      id: 'down-base',
+      outcome: 'correct',
+      grammarPoints: ['moved-down'],
+      reviewedAt: new Date('2025-12-20T00:00:00.000Z'),
+    });
+    const movedDownFresh = logRow({
+      id: 'down-fresh',
+      outcome: 'incorrect',
+      grammarPoints: ['moved-down'],
+    });
+    // 'unchanged-point': only the excluded row, with incorrect outcome
+    // → from = aggregateAxisMastery([]) = 0, to = aggregateAxisMastery([incorrect]) = 0
+    // so from === to === 0 → this delta should be dropped.
+    const unchangedRow = logRow({
+      id: 'unchanged',
+      outcome: 'incorrect',
+      grammarPoints: ['unchanged-point'],
+    });
+
+    const deltas = await computeMasteryDeltas(
+      selectDb([movedUpRow, movedDownBaseline, movedDownFresh, unchangedRow]),
+      'user_1',
+      ES,
+      ['up', 'down-fresh', 'unchanged'],
+      NOW,
+    );
+
+    expect(deltas.map((d) => d.grammarPoint)).not.toContain('unchanged-point');
+    expect(deltas.find((d) => d.grammarPoint === 'moved-up')).toBeTruthy();
+    expect(deltas.find((d) => d.grammarPoint === 'moved-down')).toBeTruthy();
+  });
 });
 
 // ---------------------------------------------------------------------------

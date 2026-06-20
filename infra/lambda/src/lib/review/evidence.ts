@@ -220,13 +220,17 @@ export async function computeMasteryDeltas(
   }
 
   // Stable (alphabetical) order so the "what moved" line is deterministic.
-  return [...affectedLabels].sort().map((label) => {
-    const rowsForLabel = rows.filter((r) => r.grammarPoints.includes(label));
-    const to = aggregateAxisMastery(rowsForLabel.map(masteryRow), now);
-    const from = aggregateAxisMastery(
-      rowsForLabel.filter((r) => !excludeSet.has(r.id)).map(masteryRow),
-      now,
-    );
-    return { grammarPoint: label, from, to };
-  });
+  // Drop no-op entries (from === to) — they render as a useless "0% → 0%" row.
+  return [...affectedLabels]
+    .sort()
+    .map((label) => {
+      const rowsForLabel = rows.filter((r) => r.grammarPoints.includes(label));
+      const to = aggregateAxisMastery(rowsForLabel.map(masteryRow), now);
+      const from = aggregateAxisMastery(
+        rowsForLabel.filter((r) => !excludeSet.has(r.id)).map(masteryRow),
+        now,
+      );
+      return { grammarPoint: label, from, to };
+    })
+    .filter((d) => d.from !== d.to);
 }
