@@ -12,7 +12,7 @@ export interface AttemptRow {
   attemptedAt: Date;
 }
 
-export type ErrorTrendStatus = 'recurring' | 'improving' | 'quiet';
+export type ErrorTrendStatus = 'recurring' | 'improving' | 'quiet' | 'dormant';
 
 export interface ErrorTrendTheme {
   grammarPointKey: string | null;
@@ -69,7 +69,9 @@ export function resolveErrorTrend(
       if (weeklyErrors[i] > 0) break;
       quietWeeks += 1;
     }
-    return { status: 'quiet', lastSeenDaysAgo, fromRatePct: null, toRatePct: null, quietWeeks };
+    const recentAttempts = sum(weeklyAttempts.slice(-RECENT_WEEKS));
+    const status = recentAttempts > 0 ? 'quiet' : 'dormant';
+    return { status, lastSeenDaysAgo, fromRatePct: null, toRatePct: null, quietWeeks };
   }
   if (earlierRate !== null && recentRate !== null && recentRate <= IMPROVING_RATIO * earlierRate) {
     return {
@@ -83,7 +85,7 @@ export function resolveErrorTrend(
   return { status: 'recurring', lastSeenDaysAgo, fromRatePct: null, toRatePct: null, quietWeeks: null };
 }
 
-const STATUS_ORDER: Record<ErrorTrendStatus, number> = { recurring: 0, improving: 1, quiet: 2 };
+const STATUS_ORDER: Record<ErrorTrendStatus, number> = { recurring: 0, improving: 1, quiet: 2, dormant: 3 };
 
 export function buildErrorTrends(
   errors: readonly ErrorRow[],

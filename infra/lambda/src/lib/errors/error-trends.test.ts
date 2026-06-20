@@ -38,6 +38,12 @@ describe('resolveErrorTrend', () => {
     const r = resolveErrorTrend([0, 0, 0, 0, 0, 0, 3, 3], [0, 0, 0, 0, 0, 0, 10, 10], daysAgo(1), NOW);
     expect(r.status).toBe('recurring');
   });
+  it('dormant when no errors and no recent attempts', () => {
+    // Old errors + old attempts, but nothing in the last 2 weeks
+    const r = resolveErrorTrend([2, 2, 0, 0, 0, 0, 0, 0], [10, 10, 0, 0, 0, 0, 0, 0], daysAgo(50), NOW);
+    expect(r.status).toBe('dormant');
+    expect(r.quietWeeks).toBeGreaterThanOrEqual(6);
+  });
 });
 
 describe('buildErrorTrends', () => {
@@ -64,7 +70,7 @@ describe('buildErrorTrends', () => {
     expect(buildErrorTrends([err({})], [att('tr-a1-locative', 2)], NOW)).toEqual([]);
   });
 
-  it('orders recurring → improving → quiet', () => {
+  it('orders recurring → improving → quiet → dormant', () => {
     const rec = [err({ grammarPointKey: 'rec', occurredAt: daysAgo(2) }), err({ grammarPointKey: 'rec', occurredAt: daysAgo(1) })];
     const imp = [
       err({ grammarPointKey: 'imp', occurredAt: daysAgo(21) }),
@@ -72,16 +78,22 @@ describe('buildErrorTrends', () => {
       err({ grammarPointKey: 'imp', occurredAt: daysAgo(21) }),
       err({ grammarPointKey: 'imp', occurredAt: daysAgo(3) }),
     ];
+    // qui: old errors, but recent attempts with no errors → quiet
     const qui = [err({ grammarPointKey: 'qui', occurredAt: daysAgo(40) }), err({ grammarPointKey: 'qui', occurredAt: daysAgo(38) })];
+    // dor: old errors, NO attempts ever → dormant
+    const dor = [err({ grammarPointKey: 'dor', occurredAt: daysAgo(50) }), err({ grammarPointKey: 'dor', occurredAt: daysAgo(48) })];
     const attempts = [
       att('rec', 2),
       att('rec', 1),
       ...Array.from({ length: 6 }, () => att('imp', 21)), // earlier window
       ...Array.from({ length: 6 }, () => att('imp', 3)), // recent window
+      // qui gets recent attempts (within last 2 weeks) so recentAttempts > 0 → quiet
+      att('qui', 3),
+      att('qui', 1),
     ];
-    const themes = buildErrorTrends([...qui, ...imp, ...rec], attempts, NOW);
-    expect(themes.map((t) => t.grammarPointKey)).toEqual(['rec', 'imp', 'qui']);
-    expect(themes.map((t) => t.status)).toEqual(['recurring', 'improving', 'quiet']);
+    const themes = buildErrorTrends([...dor, ...qui, ...imp, ...rec], attempts, NOW);
+    expect(themes.map((t) => t.grammarPointKey)).toEqual(['rec', 'imp', 'qui', 'dor']);
+    expect(themes.map((t) => t.status)).toEqual(['recurring', 'improving', 'quiet', 'dormant']);
   });
 
   it('handles a null grammar point (groups under the no-point sentinel)', () => {

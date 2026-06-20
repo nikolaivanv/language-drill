@@ -40,6 +40,11 @@ describe('HistoryTab', () => {
     expect(screen.getByText(/no slips in 1 week\b/i)).toBeInTheDocument();
   });
 
+  it('renders the dormant status with pluralized weeks', () => {
+    render(<HistoryTab data={resp([theme({ status: 'dormant', quietWeeks: 3 })])} isLoading={false} error={null} onRetry={noop} />);
+    expect(screen.getByText(/dormant · not drilled in 3 weeks/i)).toBeInTheDocument();
+  });
+
   it('shows an empty state when there are no themes', () => {
     render(<HistoryTab data={resp([])} isLoading={false} error={null} onRetry={noop} />);
     expect(screen.getByText(/no recurring errors/i)).toBeInTheDocument();

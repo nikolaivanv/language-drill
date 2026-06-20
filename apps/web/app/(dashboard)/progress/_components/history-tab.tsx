@@ -24,6 +24,9 @@ function statusLine(t: ErrorTrendTheme): string {
   if (t.status === 'quiet') {
     return `quiet · no slips in ${t.quietWeeks} week${t.quietWeeks === 1 ? '' : 's'}`;
   }
+  if (t.status === 'dormant') {
+    return `dormant · not drilled in ${t.quietWeeks} week${t.quietWeeks === 1 ? '' : 's'}`;
+  }
   return `still recurring · last seen ${t.lastSeenDaysAgo}d ago`;
 }
 

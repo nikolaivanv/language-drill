@@ -18,6 +18,11 @@ describe('ErrorTrendsResponseSchema', () => {
     const parsed = ErrorTrendsResponseSchema.parse({ themes: [{ ...theme, status: 'improving', fromRatePct: 60, toRatePct: 12 }] });
     expect(parsed.themes[0].toRatePct).toBe(12);
   });
+  it('accepts the dormant variant with quietWeeks', () => {
+    const parsed = ErrorTrendsResponseSchema.parse({ themes: [{ ...theme, status: 'dormant', quietWeeks: 6 }] });
+    expect(parsed.themes[0].status).toBe('dormant');
+    expect(parsed.themes[0].quietWeeks).toBe(6);
+  });
   it('rejects an unknown status', () => {
     expect(() => ErrorTrendsResponseSchema.parse({ themes: [{ ...theme, status: 'nope' }] })).toThrow();
   });

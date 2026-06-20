@@ -9,7 +9,7 @@ export const ErrorTrendThemeSchema = z.object({
   lastSeen: z.string().datetime(),
   totalErrors: z.number().int().min(0),
   weeklyErrors: z.array(z.number().int().min(0)),
-  status: z.enum(['recurring', 'improving', 'quiet']),
+  status: z.enum(['recurring', 'improving', 'quiet', 'dormant']),
   lastSeenDaysAgo: z.number().int().min(0),
   fromRatePct: z.number().nullable(),
   toRatePct: z.number().nullable(),
