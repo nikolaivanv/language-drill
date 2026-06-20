@@ -1,12 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Hono } from 'hono';
-import {
-  CefrLevel,
-  DAILY_MINUTES,
-  GOAL_IDS,
-  Language,
-  NOTES_MAX_LENGTH,
-} from '@language-drill/shared';
+import { CefrLevel, Language } from '@language-drill/shared';
 
 // ---------------------------------------------------------------------------
 // Mock the db module before importing the router
@@ -49,18 +43,11 @@ type CapturedProfileRow = {
 type CapturedPreferences = {
   userId: string;
   primaryLanguage: string;
-  goals: string[];
   dailyMinutes: number;
-  gentleNudges: boolean;
-  notes: string;
 };
 
 type CapturedUpsertSet = {
   primaryLanguage: string;
-  goals: string[];
-  dailyMinutes: number;
-  gentleNudges: boolean;
-  notes: string;
   updatedAt: Date;
 };
 
@@ -71,15 +58,6 @@ type TxCapture = {
   txUpsertSetCalls: CapturedUpsertSet[];
   // What the mocked .returning() should yield for each call (FIFO).
   profileReturningResults: Array<Array<{ language: string; proficiencyLevel: string }>>;
-  preferencesReturningResults: Array<
-    Array<{
-      primaryLanguage: string;
-      goals: string[];
-      dailyMinutes: number;
-      gentleNudges: boolean;
-      notes: string;
-    }>
-  >;
 };
 
 const txCapture: TxCapture = {
@@ -88,7 +66,6 @@ const txCapture: TxCapture = {
   txInsertPreferencesValues: [],
   txUpsertSetCalls: [],
   profileReturningResults: [],
-  preferencesReturningResults: [],
 };
 
 function resetTxCapture(): void {
@@ -97,7 +74,6 @@ function resetTxCapture(): void {
   txCapture.txInsertPreferencesValues = [];
   txCapture.txUpsertSetCalls = [];
   txCapture.profileReturningResults = [];
-  txCapture.preferencesReturningResults = [];
 }
 
 // Distinguish profiles-table vs preferences-table inserts by the `target`
@@ -132,20 +108,7 @@ const mockTransaction = vi.fn(async (cb: (tx: unknown) => unknown) => {
           return {
             onConflictDoUpdate: (args: { set: CapturedUpsertSet }) => {
               txCapture.txUpsertSetCalls.push(args.set);
-              return {
-                returning: () =>
-                  Promise.resolve(
-                    txCapture.preferencesReturningResults.shift() ?? [
-                      {
-                        primaryLanguage: rows.primaryLanguage,
-                        goals: rows.goals,
-                        dailyMinutes: rows.dailyMinutes,
-                        gentleNudges: rows.gentleNudges,
-                        notes: rows.notes,
-                      },
-                    ],
-                  ),
-              };
+              return Promise.resolve();
             },
           };
         },
@@ -203,10 +166,6 @@ const unauthEnv = {
 type ValidBody = {
   profiles: Array<{ language: string; proficiencyLevel: string }>;
   primaryLanguage: string;
-  goals: string[];
-  dailyMinutes: number;
-  gentleNudges: boolean;
-  notes: string;
 };
 
 /**
@@ -222,10 +181,6 @@ function validBody(overrides: Partial<ValidBody> = {}): ValidBody {
       { language: Language.DE, proficiencyLevel: CefrLevel.A1 },
     ],
     primaryLanguage: Language.ES,
-    goals: [],
-    dailyMinutes: 10,
-    gentleNudges: true,
-    notes: '',
     ...overrides,
   };
 }
@@ -313,31 +268,18 @@ describe('PUT /profiles/languages', () => {
   // Happy paths (rewritten to send the new full payload)
   // -------------------------------------------------------------------------
 
-  it('creates profiles for new user and returns 200 with profiles + preferences', async () => {
-    const body = validBody({
+  it('creates profiles for new user and returns 200 with profiles + primaryLanguage', async () => {
+    const res = await putProfiles(app, {
       profiles: [{ language: Language.ES, proficiencyLevel: CefrLevel.B2 }],
       primaryLanguage: Language.ES,
-      goals: ['grammar', 'speaking'],
-      dailyMinutes: 20,
-      gentleNudges: false,
-      notes: 'I keep mixing up preterite vs imperfect.',
     });
-
-    const res = await putProfiles(app, body);
 
     expect(res.status).toBe(200);
     const json = (await res.json()) as AnyJson;
     expect(json).toEqual({
       profiles: [{ language: 'ES', proficiencyLevel: 'B2' }],
-      preferences: {
-        primaryLanguage: 'ES',
-        goals: ['grammar', 'speaking'],
-        dailyMinutes: 20,
-        gentleNudges: false,
-        notes: 'I keep mixing up preterite vs imperfect.',
-      },
+      primaryLanguage: 'ES',
     });
-    // Atomic delete-then-insert pattern.
     expect(mockTransaction).toHaveBeenCalledTimes(1);
     expect(txCapture.txDeleteCalls).toBe(1);
     expect(txCapture.txInsertProfilesValues).toHaveLength(1);
@@ -360,15 +302,8 @@ describe('PUT /profiles/languages', () => {
     }
   });
 
-  it('persists a userPreferences row with all 5 columns', async () => {
-    const body = validBody({
-      goals: ['vocab', 'travel'],
-      dailyMinutes: 30,
-      gentleNudges: false,
-      notes: 'focus on travel phrases',
-    });
-
-    const res = await putProfiles(app, body);
+  it('seeds dailyMinutes default on insert and only touches primaryLanguage on update', async () => {
+    const res = await putProfiles(app, validBody());
 
     expect(res.status).toBe(200);
     expect(txCapture.txInsertPreferencesValues).toHaveLength(1);
@@ -376,11 +311,22 @@ describe('PUT /profiles/languages', () => {
     expect(inserted).toMatchObject({
       userId: 'user_123',
       primaryLanguage: Language.ES,
-      goals: ['vocab', 'travel'],
-      dailyMinutes: 30,
-      gentleNudges: false,
-      notes: 'focus on travel phrases',
+      dailyMinutes: 10,
     });
+    // The insert values must NOT include goals/gentleNudges/notes so the
+    // DB default / PATCH-set values are not overwritten.
+    expect(inserted).not.toHaveProperty('goals');
+    expect(inserted).not.toHaveProperty('gentleNudges');
+    expect(inserted).not.toHaveProperty('notes');
+    // The upsert set must only update primaryLanguage (+ updatedAt).
+    expect(txCapture.txUpsertSetCalls).toHaveLength(1);
+    const upsertSet = txCapture.txUpsertSetCalls[0];
+    expect(upsertSet).toMatchObject({ primaryLanguage: Language.ES });
+    expect(upsertSet).not.toHaveProperty('goals');
+    expect(upsertSet).not.toHaveProperty('dailyMinutes');
+    expect(upsertSet).not.toHaveProperty('gentleNudges');
+    expect(upsertSet).not.toHaveProperty('notes');
+    expect(upsertSet.updatedAt).toBeInstanceOf(Date);
   });
 
   it('replaces existing profiles atomically and upserts the userPreferences row on second call', async () => {
@@ -390,9 +336,6 @@ describe('PUT /profiles/languages', () => {
       validBody({
         profiles: [{ language: Language.ES, proficiencyLevel: CefrLevel.B1 }],
         primaryLanguage: Language.ES,
-        goals: ['grammar'],
-        dailyMinutes: 10,
-        notes: 'first',
       }),
     );
     expect(first.status).toBe(200);
@@ -400,7 +343,7 @@ describe('PUT /profiles/languages', () => {
     vi.clearAllMocks();
     resetTxCapture();
 
-    // Second PUT — replaces atomically, upserts preferences
+    // Second PUT — replaces atomically, upserts primaryLanguage only
     const second = await putProfiles(
       app,
       validBody({
@@ -409,10 +352,6 @@ describe('PUT /profiles/languages', () => {
           { language: Language.TR, proficiencyLevel: CefrLevel.C1 },
         ],
         primaryLanguage: Language.TR,
-        goals: ['speaking', 'listening'],
-        dailyMinutes: 30,
-        gentleNudges: false,
-        notes: 'second',
       }),
     );
 
@@ -423,13 +362,7 @@ describe('PUT /profiles/languages', () => {
         { language: 'DE', proficiencyLevel: 'A1' },
         { language: 'TR', proficiencyLevel: 'C1' },
       ],
-      preferences: {
-        primaryLanguage: 'TR',
-        goals: ['speaking', 'listening'],
-        dailyMinutes: 30,
-        gentleNudges: false,
-        notes: 'second',
-      },
+      primaryLanguage: 'TR',
     });
 
     // Single transaction, single delete, two inserts (profiles + preferences).
@@ -438,16 +371,11 @@ describe('PUT /profiles/languages', () => {
     expect(txCapture.txInsertProfilesValues).toHaveLength(1);
     expect(txCapture.txInsertPreferencesValues).toHaveLength(1);
 
-    // The upsert path was exercised — onConflictDoUpdate.set carries new values.
+    // The upsert path was exercised — onConflictDoUpdate.set carries only
+    // primaryLanguage (goals/dailyMinutes/gentleNudges/notes are NOT touched).
     expect(txCapture.txUpsertSetCalls).toHaveLength(1);
     const upsertSet = txCapture.txUpsertSetCalls[0];
-    expect(upsertSet).toMatchObject({
-      primaryLanguage: 'TR',
-      goals: ['speaking', 'listening'],
-      dailyMinutes: 30,
-      gentleNudges: false,
-      notes: 'second',
-    });
+    expect(upsertSet).toMatchObject({ primaryLanguage: 'TR' });
     expect(upsertSet.updatedAt).toBeInstanceOf(Date);
   });
 
@@ -536,39 +464,6 @@ describe('PUT /profiles/languages', () => {
     expect(res.status).toBe(400);
     const body = (await res.json()) as AnyJson;
     expect(body.code).toBe('VALIDATION_ERROR');
-  });
-
-  it('rejects invalid goal id with 400', async () => {
-    const res = await putProfiles(
-      app,
-      validBody({ goals: ['not-a-real-goal'] }),
-    );
-    expect(res.status).toBe(400);
-    const body = (await res.json()) as AnyJson;
-    expect(body.code).toBe('VALIDATION_ERROR');
-    // Sanity-check the canonical list still includes the expected ids — if a
-    // future change adds 'not-a-real-goal' to GOAL_IDS this test would break
-    // and we'd notice.
-    expect(GOAL_IDS).not.toContain('not-a-real-goal');
-  });
-
-  it('rejects notes longer than 500 characters with 400', async () => {
-    const res = await putProfiles(
-      app,
-      validBody({ notes: 'x'.repeat(NOTES_MAX_LENGTH + 1) }),
-    );
-    expect(res.status).toBe(400);
-    const body = (await res.json()) as AnyJson;
-    expect(body.code).toBe('VALIDATION_ERROR');
-  });
-
-  it('rejects dailyMinutes not in {5, 10, 20, 30} with 400', async () => {
-    const res = await putProfiles(app, validBody({ dailyMinutes: 15 }));
-    expect(res.status).toBe(400);
-    const body = (await res.json()) as AnyJson;
-    expect(body.code).toBe('VALIDATION_ERROR');
-    // Sanity: the canonical set is what we think it is.
-    expect([...DAILY_MINUTES]).toEqual([5, 10, 20, 30]);
   });
 
   it('rejects a missing required field with 400 (representative: omits primaryLanguage)', async () => {
