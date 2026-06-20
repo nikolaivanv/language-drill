@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { SettingsNav, SETTINGS_SECTIONS } from '../../../components/settings/settings-nav';
 import { LanguagesSection } from '../../../components/settings/languages-section';
 import { GoalsSection } from '../../../components/settings/goals-section';
@@ -9,7 +9,6 @@ import { AccountSection } from '../../../components/settings/account-section';
 
 export default function SettingsPage() {
   const [active, setActive] = useState<string>(SETTINGS_SECTIONS[0].id);
-  const scrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const els = SETTINGS_SECTIONS
@@ -34,7 +33,7 @@ export default function SettingsPage() {
   }, []);
 
   return (
-    <div ref={scrollRef} className="mx-auto max-w-[980px] grid grid-cols-[180px_1fr] gap-s-7 mobile:grid-cols-1">
+    <div className="mx-auto max-w-[980px] grid grid-cols-[180px_1fr] gap-s-7 mobile:grid-cols-1">
       <SettingsNav activeId={active} onJump={jumpTo} />
       <div className="min-w-0">
         <h1 className="t-display-l mb-s-1">settings</h1>

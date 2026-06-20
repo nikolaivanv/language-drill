@@ -59,6 +59,12 @@ export const UpdateLanguagesInputSchema = z
     primaryLanguage: LearningLanguageEnum,
   })
   .refine(
+    (input) =>
+      new Set(input.profiles.map((p) => p.language)).size ===
+      input.profiles.length,
+    { message: 'Duplicate languages are not allowed' },
+  )
+  .refine(
     (input) => input.profiles.some((p) => p.language === input.primaryLanguage),
     {
       message:

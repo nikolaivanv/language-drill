@@ -36,7 +36,7 @@ function renderSection(
   {
     profiles,
     primaryLanguage,
-  }: { profiles: Profile[]; primaryLanguage: LearningLanguage },
+  }: { profiles: Profile[]; primaryLanguage: LearningLanguage | null },
   mutate: ReturnType<typeof vi.fn> = vi.fn(),
 ) {
   mockUseLanguageProfiles.mockReturnValue({
@@ -112,6 +112,25 @@ describe('LanguagesSection', () => {
     expect(mutate).toHaveBeenCalledWith({
       profiles: [{ language: Language.DE, proficiencyLevel: CefrLevel.A2 }],
       primaryLanguage: Language.DE,
+    });
+  });
+
+  it('removing a non-primary language with null primaryLanguage sends the first remaining language as primaryLanguage', () => {
+    const mutate = vi.fn();
+    renderSection(
+      {
+        profiles: [
+          { language: Language.ES, proficiencyLevel: CefrLevel.B2 },
+          { language: Language.DE, proficiencyLevel: CefrLevel.A2 },
+        ],
+        primaryLanguage: null,
+      },
+      mutate,
+    );
+    fireEvent.click(screen.getByRole('button', { name: /remove deutsch/i }));
+    expect(mutate).toHaveBeenCalledWith({
+      profiles: [{ language: Language.ES, proficiencyLevel: CefrLevel.B2 }],
+      primaryLanguage: Language.ES,
     });
   });
 

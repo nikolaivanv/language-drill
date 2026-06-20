@@ -129,8 +129,7 @@ export function LanguagesSection() {
   const remove = (language: LearningLanguage) => {
     if (rows.length <= 1) return;
     const nextRows = rows.filter((r) => r.language !== language);
-    const nextPrimary =
-      primary === language ? nextRows[0].language : primary!;
+    const nextPrimary = primary && primary !== language ? primary : nextRows[0].language;
     save(nextRows, nextPrimary);
   };
 

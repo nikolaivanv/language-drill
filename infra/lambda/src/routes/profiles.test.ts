@@ -620,6 +620,14 @@ describe('PATCH /profiles/preferences', () => {
     const json = (await res.json()) as AnyJson;
     expect(json.dailyMinutes).toBe(30);
     expect(json.goals).toEqual(['vocab']);
+    // The .set() call must contain only the provided keys + updatedAt, not
+    // fields that were not sent (e.g. gentleNudges, notes).
+    const setArg = mockUpdateSet.mock.calls[0][0] as Record<string, unknown>;
+    expect(setArg).toHaveProperty('dailyMinutes', 30);
+    expect(setArg).toHaveProperty('goals', ['vocab']);
+    expect(setArg).toHaveProperty('updatedAt');
+    expect(setArg).not.toHaveProperty('gentleNudges');
+    expect(setArg).not.toHaveProperty('notes');
   });
 
   it('rejects an empty body with 400', async () => {
