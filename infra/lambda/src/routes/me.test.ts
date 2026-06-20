@@ -16,7 +16,11 @@ vi.mock('@language-drill/db', () => {
   const col = (name: string) => ({ name });
   const t = () => ({ id: col('id'), userId: col('user_id'), playlistId: col('playlist_id') });
   return {
+    // usageEvents is directly queried by the /me route (userId, eventType, createdAt).
     usageEvents: { userId: 'user_id', eventType: 'event_type', createdAt: 'created_at' },
+    // The remaining tables are imported by user-export.ts (transitively via me.ts).
+    // Vitest's strict mock validation requires every named export referenced in the
+    // module graph to be present, even though .userId is never read at module load.
     users: t(), userLanguageProfiles: t(), userPreferences: t(), userExerciseHistory: t(),
     spacedRepetitionCards: t(), fluencyAttempts: t(), userGrammarMastery: t(), errorObservations: t(),
     practiceSessions: t(), readEntries: t(), userVocabulary: t(), vocabularyReviewState: t(),

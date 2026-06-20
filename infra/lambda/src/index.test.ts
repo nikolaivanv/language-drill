@@ -11,11 +11,29 @@ vi.mock('./db', () => ({
 }));
 
 vi.mock('@language-drill/db', () => ({
+  // Tables used directly by routes mounted in index (exercises, me, etc.)
   users: {},
   exercises: {},
   userExerciseHistory: {},
   usageEvents: {},
   userProfiles: {},
+  // Tables referenced in USER_EXPORT_TABLES (user-export.ts, imported by me.ts).
+  // Only the table objects need to exist; .userId is read at call time, not module load.
+  userLanguageProfiles: {},
+  userPreferences: {},
+  spacedRepetitionCards: {},
+  fluencyAttempts: {},
+  userGrammarMastery: {},
+  errorObservations: {},
+  practiceSessions: {},
+  readEntries: {},
+  userVocabulary: {},
+  vocabularyReviewState: {},
+  vocabularyReviewSessions: {},
+  vocabularyReviewLog: {},
+  playlists: {},
+  playlistItems: {},
+  exerciseFlags: {},
 }));
 
 vi.mock('@language-drill/ai', () => ({

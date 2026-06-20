@@ -22,23 +22,27 @@ import {
 import type { db as DbType } from '../db';
 
 // Every table keyed directly by user_id. Order is stable for predictable output.
+// NOTE: userIdColumn is intentionally NOT read here at module scope — reading .userId
+// off a mocked table object would crash any test that imports this module without
+// providing every table in its @language-drill/db mock. The column is read at call
+// time inside collectUserExport instead.
 export const USER_EXPORT_TABLES = [
-  { key: 'userLanguageProfiles', table: userLanguageProfiles, userIdColumn: userLanguageProfiles.userId },
-  { key: 'userPreferences', table: userPreferences, userIdColumn: userPreferences.userId },
-  { key: 'userExerciseHistory', table: userExerciseHistory, userIdColumn: userExerciseHistory.userId },
-  { key: 'spacedRepetitionCards', table: spacedRepetitionCards, userIdColumn: spacedRepetitionCards.userId },
-  { key: 'fluencyAttempts', table: fluencyAttempts, userIdColumn: fluencyAttempts.userId },
-  { key: 'userGrammarMastery', table: userGrammarMastery, userIdColumn: userGrammarMastery.userId },
-  { key: 'errorObservations', table: errorObservations, userIdColumn: errorObservations.userId },
-  { key: 'practiceSessions', table: practiceSessions, userIdColumn: practiceSessions.userId },
-  { key: 'readEntries', table: readEntries, userIdColumn: readEntries.userId },
-  { key: 'userVocabulary', table: userVocabulary, userIdColumn: userVocabulary.userId },
-  { key: 'vocabularyReviewState', table: vocabularyReviewState, userIdColumn: vocabularyReviewState.userId },
-  { key: 'vocabularyReviewSessions', table: vocabularyReviewSessions, userIdColumn: vocabularyReviewSessions.userId },
-  { key: 'vocabularyReviewLog', table: vocabularyReviewLog, userIdColumn: vocabularyReviewLog.userId },
-  { key: 'playlists', table: playlists, userIdColumn: playlists.userId },
-  { key: 'usageEvents', table: usageEvents, userIdColumn: usageEvents.userId },
-  { key: 'exerciseFlags', table: exerciseFlags, userIdColumn: exerciseFlags.userId },
+  { key: 'userLanguageProfiles', table: userLanguageProfiles },
+  { key: 'userPreferences', table: userPreferences },
+  { key: 'userExerciseHistory', table: userExerciseHistory },
+  { key: 'spacedRepetitionCards', table: spacedRepetitionCards },
+  { key: 'fluencyAttempts', table: fluencyAttempts },
+  { key: 'userGrammarMastery', table: userGrammarMastery },
+  { key: 'errorObservations', table: errorObservations },
+  { key: 'practiceSessions', table: practiceSessions },
+  { key: 'readEntries', table: readEntries },
+  { key: 'userVocabulary', table: userVocabulary },
+  { key: 'vocabularyReviewState', table: vocabularyReviewState },
+  { key: 'vocabularyReviewSessions', table: vocabularyReviewSessions },
+  { key: 'vocabularyReviewLog', table: vocabularyReviewLog },
+  { key: 'playlists', table: playlists },
+  { key: 'usageEvents', table: usageEvents },
+  { key: 'exerciseFlags', table: exerciseFlags },
 ] as const;
 
 export async function collectUserExport(
@@ -52,9 +56,9 @@ export async function collectUserExport(
   out.user = userRows[0] ?? null;
 
   // Every directly user-keyed table.
-  for (const { key, table, userIdColumn } of USER_EXPORT_TABLES) {
+  for (const { key, table } of USER_EXPORT_TABLES) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    out[key] = await db.select().from(table as any).where(eq(userIdColumn as any, userId));
+    out[key] = await db.select().from(table as any).where(eq((table as any).userId, userId));
   }
 
   // Playlist items belong to the user's playlists (no direct user_id).
