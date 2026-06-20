@@ -22,39 +22,55 @@ Deep-links below are `chapters/<file>.md#anchor`.
 cannot capture a meta-ordering rule); its value is the auto-generated theory
 page plus translation practice on multi-suffix words.
 
+## Round 2 (CURRICULUM_VERSION_TR → 2026-06-20c)
+
+Authored: `tr-a2-consonant-doubling` (§2.2), `tr-b1-real-conditional` (open
+-(I)rsA, §27.2.1.1), `tr-a2-reflexive-reciprocal-pronouns` (kendi + birbiri,
+§18.1.2/.4), `tr-a2-distributive` (-(ş)Ar, §15.7.3). Folded into existing
+points: -(y)Iş manner-vs--mIş (→ `tr-a2-nominalization`), headless relatives
+(→ `tr-a2-relative-an`, `tr-b1-participles-dik-acak`), de-/ye- vowel raising
+(→ `tr-a1-future`). The items marked ✅ below were closed in this round.
+
 ## Remaining gaps (not yet authored) — triage list
 
 ### HIGH
 
-- **Consonant doubling / gemination** (hak→hakkı, his→hissi, sır→sırrım) — §2.2
-  (chapters/02-sound-changes-produced-in-the-stem-by-suffixation.md#2-2). A1–A2,
-  ~20–30 lexical items, dictionary-marked. Same family as `tr-a1-stem-changes`;
-  could fold in or stand alone.
-- **Full conditional range** beyond `tr-b1-conditional-irrealis` — open/real
-  conditionals (aorist + -sA, olursa), generic/habitual conditionals — Chapter 27
-  (chapters/27-conditional-sentences.md). B1.
+- ✅ **Consonant doubling / gemination** (hak→hakkı, his→hissi, sır→sırrım) — §2.2
+  (chapters/02-sound-changes-produced-in-the-stem-by-suffixation.md#2-2).
+  **DONE round 2** → `tr-a2-consonant-doubling`.
+- ✅ **Full conditional range** beyond `tr-b1-conditional-irrealis` — open/real
+  conditionals (aorist + -sA, olursa) — Chapter 27
+  (chapters/27-conditional-sentences.md). **DONE round 2** →
+  `tr-b1-real-conditional`. (Generic/habitual conditional subtypes still open.)
 
 ### MEDIUM
 
-- **kendi — adjectival/own use** (kendi şirketim) distinct from the reflexive
-  pronoun — §18.1.2 (chapters/18-pronouns.md#18-1-2). Partially in
-  `tr-b1-reflexive-voice-kendi`. A2–B1.
-- **birbiri "each other"** as a productive pronoun (vs closed-set reciprocal
-  voice) — §18.1.4. A2–B1. Touched in `tr-b1-reciprocal-voice`.
-- **-(y)Iş single-act / manner nominalization** (yürüyüş, gidiş) split out from
-  `tr-a2-nominalization` — §8.5.2.1. A2.
+- ✅ **kendi — adjectival/own + reflexive/emphatic** — §18.1.2
+  (chapters/18-pronouns.md#18-1-2). **DONE round 2** →
+  `tr-a2-reflexive-reciprocal-pronouns`.
+- ✅ **birbiri "each other"** as a productive pronoun — §18.1.4. **DONE round 2**
+  (same point as kendi).
+- ✅ **-(y)Iş single-act / manner nominalization** (yürüyüş, gidiş) — §8.5.2.1.
+  **DONE round 2** — folded into `tr-a2-nominalization` (manner-vs--mIş error).
 - **Short/long vowel alternation** (zaman→zama:nım) — §2.4. A1–A2, lexical.
-- **Vowel raising before -y- suffixes** (de-→diyen, ye-→yiyecek) — §2.6. A2–B1.
+  Deferred: pronunciation-only, no written-production signal.
+- ✅ **Vowel raising before -y- suffixes** (de-→diyen, ye-→yiyecek) — §2.6.
+  **DONE round 2** — folded as a commonError on `tr-a1-future`. (The wider §2.6
+  raising is pronunciation-only and stays out.)
 - **Word order & focus/backgrounding** (preverbal focus, postverbal
   backgrounding) — Chapter 23 (chapters/23-word-order.md). B1, comprehension.
-- **Headless relative clauses** (gelen "the one who came", okuduğum "the one I
-  read") — §25.3. A2–B1, mostly comprehension.
+  Deferred: many valid orders → cloze/translation would flag as ambiguous.
+- ✅ **Headless relative clauses** (gelen "the one who came", okuduğum "the one I
+  read") — §25.3. **DONE round 2** — folded as examples into `tr-a2-relative-an`
+  and `tr-b1-participles-dik-acak`.
 - **Definiteness & specificity as a system** (bir / accusative / plural /
-  possessive interplay) — Chapter 22. B1, currently scattered.
+  possessive interplay) — Chapter 22. B1, currently scattered. Deferred:
+  meta-topic, better as a theory survey than a production cell.
 
 ### LOW (reading comprehension / narrow / B2-leaning)
 
-- **Distributive -şar/-şer** (beşer, birer) — §9.3 / Chapter 8. B1.
+- ✅ **Distributive -şar/-şer** (beşer, birer) — §15.7.3. **DONE round 2** →
+  `tr-a2-distributive`.
 - **Finite relative clauses with `ki`** — §25.6. B1–B2.
 - **Truncated relatives — `olan` omission** — §25.4.1.1. B1–B2.
 - **Case stacking on -ki** (evdekinde) — §8.1.4. B1–B2 (mentioned in

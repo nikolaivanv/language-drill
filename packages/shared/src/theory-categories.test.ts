@@ -58,6 +58,9 @@ const EXPECTED_KEY_CATEGORY: Record<string, TheoryCategoryId> = {
   "tr-a2-suffix-order-buffers": "morphology",
   "tr-a2-optative": "moods",
   "tr-a2-indefinite-pronouns": "pronouns",
+  "tr-a2-consonant-doubling": "orthography",
+  "tr-a2-reflexive-reciprocal-pronouns": "pronouns",
+  "tr-a2-distributive": "morphology",
   "tr-a2-mis-evidential": "tenses",
   "tr-a2-aorist": "tenses",
   "tr-a2-ability-necessity": "moods",
@@ -74,6 +77,7 @@ const EXPECTED_KEY_CATEGORY: Record<string, TheoryCategoryId> = {
   "tr-a2-reported-speech": "syntax",
   // Turkish B1
   "tr-b1-past-continuous-iyordu": "tenses",
+  "tr-b1-real-conditional": "moods",
   "tr-b1-conditional-irrealis": "moods",
   "tr-b1-obligation-periphrases": "moods",
   "tr-b1-causative-voice": "morphology",

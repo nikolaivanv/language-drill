@@ -396,7 +396,7 @@ describe('per-language counts', () => {
     const { grammar, vocab, dictation, freeWriting } = countsFor(trCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(26);
     expect(grammar.A2).toBeGreaterThanOrEqual(14);
-    expect(grammar.B1).toBe(10);
+    expect(grammar.B1).toBe(11);
     expect(grammar.B2).toBe(0);
     // 5 A1 + 5 A2 + 5 B1 themed vocab umbrellas.
     expect(vocab).toBe(15);
