@@ -5,36 +5,35 @@ import { useAuth } from "@clerk/nextjs";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   useLanguageProfiles,
-  useGetPreferences,
-  useSavePreferences,
+  useUpdateLanguages,
+  useUpdatePreferences,
   createAuthenticatedFetch,
   type AuthenticatedFetch,
-  type SavePreferencesArgs,
 } from "@language-drill/api-client";
 import {
   OnboardingProvider,
   OnboardingShell,
-  initialEditState,
   initialNewUserState,
   useOnboarding,
 } from "../../components/onboarding";
-import type { OnboardingState } from "../../components/onboarding";
 
 // ---------------------------------------------------------------------------
 // OnboardingPage — routing/loading/hydration + submit orchestration
 // ---------------------------------------------------------------------------
 // Owns the data plumbing for the onboarding route:
-//   - reads `?edit=1` to decide whether to hydrate preferences
-//   - hydrates language profiles (always) and preferences (edit mode only)
-//   - shows a spinner card while either query is loading
-//   - shows a paper-card error with retry when hydration fails in edit mode
+//   - reads `?edit=1` to decide whether to redirect to /settings (the
+//     canonical editor for returning users)
+//   - hydrates language profiles (always) for the returning-user redirect
+//   - shows a spinner card while profiles query is loading
+//   - shows a paper-card error with retry when profiles hydration fails
 //   - redirects returning users with profiles to `/home` when not in edit mode
+//   - redirects `?edit=1` to `/settings` immediately
 //   - mounts the wizard inside an `OnboardingProvider` so `OnboardingPageBody`
 //     can read state + dispatch and orchestrate the final submit
 //
-// Submit orchestration (task 31c) lives in `OnboardingPageBody` so it can
-// read the wizard's reducer state via `useOnboarding()`. The shell stays
-// stateless and assumes the provider is wrapped above it.
+// Submit orchestration lives in `OnboardingPageBody` so it can read the
+// wizard's reducer state via `useOnboarding()`. The shell stays stateless and
+// assumes the provider is wrapped above it.
 //
 // `useSearchParams()` forces the page out of static prerendering. Next.js
 // requires the bailout to be wrapped in a Suspense boundary, so the default
@@ -69,19 +68,16 @@ function OnboardingPageContent() {
     [getToken],
   );
 
+  // Edit mode no longer runs in the wizard — settings is the canonical editor.
+  useEffect(() => {
+    if (editMode) router.replace("/settings");
+  }, [editMode, router]);
+
   // Profiles always — needed for the returning-user redirect predicate.
   const profilesQuery = useLanguageProfiles({ fetchFn });
 
-  // Preferences only in edit mode — `enabled: false` makes this a no-op
-  // (isLoading=false, isError=false, data=undefined) for new users.
-  const preferencesQuery = useGetPreferences({ fetchFn, enabled: editMode });
-
-  const isLoading = profilesQuery.isLoading || preferencesQuery.isLoading;
-
-  // In edit mode both queries are required; in new-user mode only profiles.
-  const hasError = editMode
-    ? profilesQuery.isError || preferencesQuery.isError
-    : profilesQuery.isError;
+  const isLoading = profilesQuery.isLoading;
+  const hasError = profilesQuery.isError;
 
   const hasProfiles =
     profilesQuery.data !== undefined && profilesQuery.data.profiles.length > 0;
@@ -95,6 +91,11 @@ function OnboardingPageContent() {
       router.replace("/home");
     }
   }, [shouldRedirect, router]);
+
+  // In edit mode, the effect navigates away — render nothing while in flight.
+  if (editMode) {
+    return null;
+  }
 
   if (isLoading) {
     // Mirrors the dashboard layout's loading state (apps/web/app/(dashboard)/layout.tsx).
@@ -114,7 +115,6 @@ function OnboardingPageContent() {
           <button
             onClick={() => {
               void profilesQuery.refetch();
-              if (editMode) void preferencesQuery.refetch();
             }}
             className="mt-s-4 rounded-r-md bg-ink text-paper px-s-4 py-s-2 text-[13px] font-medium transition-all duration-150 hover:bg-accent-2"
           >
@@ -130,22 +130,12 @@ function OnboardingPageContent() {
     return null;
   }
 
-  // All gates have passed — render the wizard with hydrated state.
-  // In edit mode the loading + error gates above guarantee
-  // `preferencesQuery.data` is defined, so the non-null assertion is safe.
-  const initialState = editMode
-    ? initialEditState(
-        profilesQuery.data?.profiles ?? [],
-        preferencesQuery.data!,
-      )
-    : initialNewUserState();
+  // All gates have passed — render the wizard with fresh initial state.
+  const initialState = initialNewUserState();
 
   return (
     <OnboardingProvider initialState={initialState}>
-      <OnboardingPageBody
-        mode={editMode ? "edit" : "new"}
-        fetchFn={fetchFn}
-      />
+      <OnboardingPageBody fetchFn={fetchFn} />
     </OnboardingProvider>
   );
 }
@@ -154,46 +144,58 @@ function OnboardingPageContent() {
 // OnboardingPageBody — submit orchestration + redirect
 // ---------------------------------------------------------------------------
 // Lives inside `OnboardingProvider` so it can `useOnboarding()` to read state
-// + dispatch. Wires `useSavePreferences` and orchestrates the step-4 submit:
+// + dispatch. Wires `useUpdateLanguages` + `useUpdatePreferences` and
+// orchestrates the step-4 submit:
 //   1. `submitStart` → CTA enters loading state.
-//   2. `mutateAsync(buildSaveArgs(state))` — throws on non-2xx (status code
-//      attached to the Error by `createAuthenticatedFetch`).
-//   3. On resolve: dispatch `submitSuccess` and navigate.
-//      - new mode  → `router.push('/home')`.
-//      - edit mode → same-origin referrer if any, else `/settings`. The
-//        same-origin guard prevents an open-redirect via a crafted referrer.
-//   4. On reject: classify the error (4xx / 5xx / network) and dispatch
+//   2. Build `profiles` from `state.languages` × `state.levels` map — throws
+//      defensively if a level is missing (the gate should prevent this).
+//   3. `updateLanguages.mutateAsync({ profiles, primaryLanguage })` — throws
+//      on non-2xx (status code attached to the Error by
+//      `createAuthenticatedFetch`).
+//   4. `updatePreferences.mutateAsync({ goals, dailyMinutes, ... })`.
+//   5. On resolve: dispatch `submitSuccess` and `router.push('/home')`.
+//   6. On reject: classify the error (4xx / 5xx / network) and dispatch
 //      `submitError` so `WizardFooter` can announce it via `role="alert"`.
 // ---------------------------------------------------------------------------
 
-interface OnboardingPageBodyProps {
-  mode: "new" | "edit";
-  fetchFn: AuthenticatedFetch;
-}
-
-function OnboardingPageBody({ mode, fetchFn }: OnboardingPageBodyProps) {
+function OnboardingPageBody({ fetchFn }: { fetchFn: AuthenticatedFetch }) {
   const { state, dispatch } = useOnboarding();
   const router = useRouter();
-  const saveMutation = useSavePreferences({ fetchFn });
+  const updateLanguages = useUpdateLanguages({ fetchFn });
+  const updatePreferences = useUpdatePreferences({ fetchFn });
 
   const handleComplete = useCallback(async () => {
-    const args = buildSaveArgs(state);
     dispatch({ type: "submitStart" });
     try {
-      await saveMutation.mutateAsync(args);
-      dispatch({ type: "submitSuccess" });
-      if (mode === "new") {
-        router.push("/home");
-      } else {
-        router.push(sameOriginReferrer() ?? "/settings");
+      const profiles = state.languages.map((language) => {
+        const proficiencyLevel = state.levels[language];
+        if (!proficiencyLevel) {
+          throw new Error(`missing level for ${language}`);
+        }
+        return { language, proficiencyLevel };
+      });
+      if (state.primaryLanguage === null || state.dailyMinutes === null) {
+        throw new Error("missing primaryLanguage or dailyMinutes");
       }
+      await updateLanguages.mutateAsync({
+        profiles,
+        primaryLanguage: state.primaryLanguage,
+      });
+      await updatePreferences.mutateAsync({
+        goals: state.goals,
+        dailyMinutes: state.dailyMinutes,
+        gentleNudges: state.gentleNudges,
+        notes: state.notes.replace(/\r\n/g, "\n").trim(),
+      });
+      dispatch({ type: "submitSuccess" });
+      router.push("/home");
     } catch (err) {
       const { kind, message } = classifyError(err);
       dispatch({ type: "submitError", kind, message });
     }
-  }, [state, dispatch, saveMutation, router, mode]);
+  }, [state, dispatch, updateLanguages, updatePreferences, router]);
 
-  return <OnboardingShell mode={mode} onComplete={handleComplete} />;
+  return <OnboardingShell mode="new" onComplete={handleComplete} />;
 }
 
 // ---------------------------------------------------------------------------
@@ -201,58 +203,10 @@ function OnboardingPageBody({ mode, fetchFn }: OnboardingPageBodyProps) {
 // ---------------------------------------------------------------------------
 
 /**
- * Build the wire payload for `useSavePreferences` from the wizard's reducer
- * state. The reducer's `selectCanAdvance` gate ensures `primaryLanguage`,
- * `primaryLevel`, and `dailyMinutes` are non-null on Step 4 — but we throw
- * defensively so a bug in the gate manifests as a clear error rather than
- * a silent bad payload.
- */
-function buildSaveArgs(state: OnboardingState): SavePreferencesArgs {
-  if (
-    state.primaryLanguage === null ||
-    state.primaryLevel === null ||
-    state.dailyMinutes === null
-  ) {
-    throw new Error(
-      "cannot submit without primaryLanguage, primaryLevel, and dailyMinutes",
-    );
-  }
-  return {
-    languages: state.languages,
-    primaryLanguage: state.primaryLanguage,
-    primaryLevel: state.primaryLevel,
-    goals: state.goals,
-    notes: state.notes,
-    dailyMinutes: state.dailyMinutes,
-    gentleNudges: state.gentleNudges,
-  };
-}
-
-/**
- * Returns `document.referrer` only when it parses cleanly AND its origin
- * matches the current window's origin. Returns `null` for empty, malformed,
- * or cross-origin referrers — protecting against an open-redirect via a
- * crafted referrer header.
- */
-function sameOriginReferrer(): string | null {
-  if (typeof window === "undefined") return null;
-  if (!document.referrer) return null;
-  try {
-    const ref = new URL(document.referrer);
-    if (ref.origin === window.location.origin) {
-      return document.referrer;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Map a thrown error from `useSavePreferences` to a discriminated `kind` +
- * user-facing message. `createAuthenticatedFetch` attaches `.status` to the
- * Error on non-2xx responses; absent status means the request never reached
- * the server (network error / fetch failure).
+ * Map a thrown error from `useUpdateLanguages` / `useUpdatePreferences` to a
+ * discriminated `kind` + user-facing message. `createAuthenticatedFetch`
+ * attaches `.status` to the Error on non-2xx responses; absent status means
+ * the request never reached the server (network error / fetch failure).
  *
  *   4xx → show server message verbatim (R7.5)
  *   5xx → "something went wrong — try again." (R7.6)

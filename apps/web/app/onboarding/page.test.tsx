@@ -1,12 +1,12 @@
 // ---------------------------------------------------------------------------
-// OnboardingPage integration tests (task 32a)
+// OnboardingPage integration tests (task 32a, updated task-6)
 // ---------------------------------------------------------------------------
 // Locks the page-level happy path + the most common failure modes:
 //   - new mode: 0 profiles → wizard mounts on Step 1 → walk through Steps 1–4
-//     → submit calls `useSavePreferences.mutateAsync` with the expected payload
-//     → `router.push('/')`.
-//   - edit mode: existing profiles + prefs hydrate Steps 1–4 and the final
-//     CTA reads "save changes →".
+//     → submit calls `useUpdateLanguages.mutateAsync` then
+//     `useUpdatePreferences.mutateAsync` with the expected payloads
+//     → `router.push('/home')`.
+//   - ?edit=1: redirects to /settings immediately (wizard never mounts).
 //   - 4xx: the inline error row shows the server's message verbatim and the
 //     primary CTA stays on Step 4 and re-enables.
 //   - 5xx / network: the inline error row reads
@@ -18,15 +18,14 @@
 //     edit mode renders cleanly under JSDOM.
 //   - `@clerk/nextjs` — `useAuth` returning a stub `getToken`.
 //   - `@language-drill/api-client` — `useLanguageProfiles`,
-//     `useGetPreferences`, `useSavePreferences` are mocked while
+//     `useUpdateLanguages`, `useUpdatePreferences` are mocked while
 //     `createAuthenticatedFetch` is preserved from `vi.importActual` so the
 //     page can construct a fetcher without hitting the network.
 //
 // Helpers:
-//   - `setupNewMode()` / `setupEditMode()` configure the hook return values
-//     for each scenario.
-//   - `walkToStep4New()` / `walkToStep4Edit()` drive the wizard through Steps
-//     1–3 by interacting with the rendered tiles, leaving the user on Step 4.
+//   - `setupNewMode()` configures the hook return values for new-user mode.
+//   - `walkToStep4New()` drives the wizard through Steps 1–3 by interacting
+//     with the rendered tiles, leaving the user on Step 4.
 // ---------------------------------------------------------------------------
 
 import { describe, expect, it, vi, beforeEach } from 'vitest';
@@ -40,9 +39,7 @@ import {
 import {
   CefrLevel,
   Language,
-  type LanguageProfile,
 } from '@language-drill/shared';
-import type { PreferencesResponse } from '@language-drill/api-client';
 import OnboardingPage from './page';
 
 // ---------------------------------------------------------------------------
@@ -92,9 +89,10 @@ vi.mock('@clerk/nextjs', () => ({
 // ---------------------------------------------------------------------------
 
 const mockUseLanguageProfiles = vi.fn();
-const mockUseGetPreferences = vi.fn();
-const mockMutateAsync = vi.fn();
-const mockUseSavePreferences = vi.fn();
+const mockUpdateLanguagesMutateAsync = vi.fn();
+const mockUpdatePreferencesMutateAsync = vi.fn();
+const mockUseUpdateLanguages = vi.fn();
+const mockUseUpdatePreferences = vi.fn();
 
 vi.mock('@language-drill/api-client', async () => {
   const actual = await vi.importActual<
@@ -103,8 +101,8 @@ vi.mock('@language-drill/api-client', async () => {
   return {
     ...actual,
     useLanguageProfiles: () => mockUseLanguageProfiles(),
-    useGetPreferences: () => mockUseGetPreferences(),
-    useSavePreferences: () => mockUseSavePreferences(),
+    useUpdateLanguages: () => mockUseUpdateLanguages(),
+    useUpdatePreferences: () => mockUseUpdatePreferences(),
   };
 });
 
@@ -120,38 +118,13 @@ function setupNewMode() {
     isError: false,
     refetch: vi.fn(),
   });
-  mockUseGetPreferences.mockReturnValue({
-    data: undefined,
-    isLoading: false,
-    isError: false,
-    refetch: vi.fn(),
-  });
-  mockUseSavePreferences.mockReturnValue({
-    mutateAsync: mockMutateAsync,
+  mockUseUpdateLanguages.mockReturnValue({
+    mutateAsync: mockUpdateLanguagesMutateAsync,
     isPending: false,
     isError: false,
   });
-}
-
-function setupEditMode(opts: {
-  profiles: LanguageProfile[];
-  prefs: PreferencesResponse;
-}) {
-  mockSearchParams = new URLSearchParams('edit=1');
-  mockUseLanguageProfiles.mockReturnValue({
-    data: { profiles: opts.profiles },
-    isLoading: false,
-    isError: false,
-    refetch: vi.fn(),
-  });
-  mockUseGetPreferences.mockReturnValue({
-    data: opts.prefs,
-    isLoading: false,
-    isError: false,
-    refetch: vi.fn(),
-  });
-  mockUseSavePreferences.mockReturnValue({
-    mutateAsync: mockMutateAsync,
+  mockUseUpdatePreferences.mockReturnValue({
+    mutateAsync: mockUpdatePreferencesMutateAsync,
     isPending: false,
     isError: false,
   });
@@ -174,12 +147,13 @@ async function walkToStep4New() {
   // Continue to Step 2.
   fireEvent.click(screen.getByTestId('wizard-footer-primary'));
 
-  // Step 2: pick CEFR B2 (4th radio in the proficiency-level group; CEFR
-  // order is A1, A2, B1, B2, C1, C2 — see CEFR_LEVELS in step-level.tsx).
+  // Step 2: pick CEFR B2 (4th radio in the CEFR group for ES; CEFR order
+  // is A1, A2, B1, B2, C1, C2 — see CEFR_LEVELS in step-level.tsx).
   // The on-mount setPrimary effect already set ES as the primary because
-  // exactly one language is selected.
+  // exactly one language is selected. The aria-label is "{nativeName} level"
+  // (LANGUAGE_NATIVE_NAMES[ES] = "español").
   const cefrGroup = await screen.findByRole('radiogroup', {
-    name: /proficiency level/i,
+    name: /español level/i,
   });
   const b2 = within(cefrGroup).getAllByRole('radio')[3];
   fireEvent.click(b2);
@@ -195,70 +169,20 @@ async function walkToStep4New() {
   await screen.findByRole('radiogroup', { name: /daily time/i });
 }
 
-/**
- * Drive an edit-mode wizard with pre-filled state from Step 1 → Step 4
- * without touching anything. Each `findBy*` call doubles as an assertion
- * that the corresponding step rendered with hydrated state.
- */
-async function walkToStep4Edit() {
-  // Step 1 is rendered with pre-filled checkboxes — click continue.
-  await screen.findByRole('group', { name: /learning languages/i });
-  fireEvent.click(screen.getByTestId('wizard-footer-primary'));
-
-  // Step 2 — primary already set, level already set; click continue.
-  await screen.findByRole('radiogroup', { name: /proficiency level/i });
-  fireEvent.click(screen.getByTestId('wizard-footer-primary'));
-
-  // Step 3 — goals + notes pre-filled; click continue.
-  await screen.findByRole('group', { name: /goals/i });
-  fireEvent.click(screen.getByTestId('wizard-footer-primary'));
-
-  // Step 4 — daily time pre-filled.
-  await screen.findByRole('radiogroup', { name: /daily time/i });
-}
-
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------
-// document.referrer stubbing
-// ---------------------------------------------------------------------------
-// JSDOM exposes `document.referrer` as a read-only getter. To drive it from
-// tests we override the property descriptor with a custom getter — same shape
-// as `Object.defineProperty(window, 'location', ...)` in
-// `apps/web/components/shell/__tests__/language-switcher.test.tsx`. JSDOM's
-// default `window.location.origin` is `http://localhost:3000` (see vitest's
-// JSDOM env), so we can build same-origin referrers directly off that without
-// stubbing `window.location` at all — keeping the test surface small.
-// ---------------------------------------------------------------------------
-
-function setReferrer(value: string) {
-  Object.defineProperty(document, 'referrer', {
-    configurable: true,
-    get: () => value,
-  });
-}
 
 describe('OnboardingPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSearchParams = new URLSearchParams();
-    setReferrer('');
   });
 
-  it('walks through Steps 1–4 in new mode, submits with the expected payload, and redirects to /', async () => {
+  it('walks through Steps 1–4 in new mode, submits with the expected payloads, and redirects to /home', async () => {
     setupNewMode();
-    mockMutateAsync.mockResolvedValue({
-      profiles: [],
-      preferences: {
-        primaryLanguage: Language.ES,
-        goals: [],
-        dailyMinutes: 10,
-        gentleNudges: true,
-        notes: '',
-      },
-    });
+    mockUpdateLanguagesMutateAsync.mockResolvedValue({});
+    mockUpdatePreferencesMutateAsync.mockResolvedValue({});
 
     render(<OnboardingPage />);
 
@@ -269,24 +193,24 @@ describe('OnboardingPage', () => {
     expect(cta).toBeInTheDocument();
     fireEvent.click(cta);
 
+    // updateLanguages called first with profiles array and primaryLanguage.
     await waitFor(() => {
-      expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+      expect(mockUpdateLanguagesMutateAsync).toHaveBeenCalledTimes(1);
+    });
+    expect(mockUpdateLanguagesMutateAsync).toHaveBeenCalledWith({
+      profiles: [{ language: Language.ES, proficiencyLevel: CefrLevel.B2 }],
+      primaryLanguage: Language.ES,
     });
 
-    // The wire payload mirrors the wizard reducer state at submit time:
-    // 1 selected language (ES), ES as primary, B2 level, no goals, empty
-    // notes, default 10 daily minutes, gentle nudges left at the default
-    // (true). `useSavePreferences` is responsible for expanding `languages`
-    // into the `profiles[]` shape and normalising notes — those concerns
-    // are tested in `packages/api-client/src/hooks/usePreferences.test.ts`.
-    expect(mockMutateAsync).toHaveBeenCalledWith({
-      languages: [Language.ES],
-      primaryLanguage: Language.ES,
-      primaryLevel: CefrLevel.B2,
+    // updatePreferences called second with the preferences payload.
+    await waitFor(() => {
+      expect(mockUpdatePreferencesMutateAsync).toHaveBeenCalledTimes(1);
+    });
+    expect(mockUpdatePreferencesMutateAsync).toHaveBeenCalledWith({
       goals: [],
-      notes: '',
       dailyMinutes: 10,
       gentleNudges: true,
+      notes: '',
     });
 
     await waitFor(() => {
@@ -294,37 +218,42 @@ describe('OnboardingPage', () => {
     });
   });
 
-  it('pre-fills all 4 steps from existing profiles + prefs in edit mode and the final CTA reads "save changes →"', async () => {
-    setupEditMode({
-      profiles: [
-        { language: Language.ES, proficiencyLevel: CefrLevel.B2 },
-        { language: Language.DE, proficiencyLevel: CefrLevel.A1 },
-      ],
-      prefs: {
-        primaryLanguage: Language.ES,
-        goals: ['grammar', 'speaking'],
-        dailyMinutes: 20,
-        gentleNudges: false,
-        notes: 'practice subjunctive',
-      },
+  it('redirects to /settings immediately when ?edit=1 is present and does not render the wizard', async () => {
+    // Set up edit mode search params.
+    mockSearchParams = new URLSearchParams('edit=1');
+    // Profiles still need to be set up (the hook is always called).
+    mockUseLanguageProfiles.mockReturnValue({
+      data: { profiles: [] },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
+    mockUseUpdateLanguages.mockReturnValue({
+      mutateAsync: mockUpdateLanguagesMutateAsync,
+      isPending: false,
+      isError: false,
+    });
+    mockUseUpdatePreferences.mockReturnValue({
+      mutateAsync: mockUpdatePreferencesMutateAsync,
+      isPending: false,
+      isError: false,
     });
 
     render(<OnboardingPage />);
 
-    // Step 1: ES + DE pre-selected, TR not selected.
-    const step1Group = await screen.findByRole('group', {
-      name: /learning languages/i,
+    // Should redirect to /settings via replace.
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith('/settings');
     });
-    const tiles = within(step1Group).getAllByRole('checkbox');
-    expect(tiles[0]).toHaveAttribute('aria-checked', 'true'); // ES
-    expect(tiles[1]).toHaveAttribute('aria-checked', 'true'); // DE
-    expect(tiles[2]).toHaveAttribute('aria-checked', 'false'); // TR
 
-    await walkToStep4Edit();
-
-    // Step 4 CTA in edit mode reads "save changes →" (R1.5).
-    const cta = screen.getByRole('button', { name: /save changes →/ });
-    expect(cta).toBeInTheDocument();
+    // The wizard's Step 1 markup is NOT in the DOM — the page returns null.
+    expect(
+      screen.queryByRole('group', { name: /learning languages/i }),
+    ).not.toBeInTheDocument();
+    // And the WizardFooter's "continue →" CTA never renders either.
+    expect(
+      screen.queryByRole('button', { name: /continue/i }),
+    ).not.toBeInTheDocument();
   });
 
   it('shows the server error message inline and keeps the user on Step 4 when the submission returns 4xx', async () => {
@@ -336,7 +265,7 @@ describe('OnboardingPage', () => {
       new Error('preferences validation failed'),
       { status: 400 },
     );
-    mockMutateAsync.mockRejectedValue(err);
+    mockUpdateLanguagesMutateAsync.mockRejectedValue(err);
 
     render(<OnboardingPage />);
 
@@ -364,7 +293,7 @@ describe('OnboardingPage', () => {
     const err = Object.assign(new Error('Internal Server Error'), {
       status: 500,
     });
-    mockMutateAsync.mockRejectedValue(err);
+    mockUpdateLanguagesMutateAsync.mockRejectedValue(err);
 
     render(<OnboardingPage />);
 
@@ -383,104 +312,7 @@ describe('OnboardingPage', () => {
     expect(mockPush).not.toHaveBeenCalled();
   });
 
-  // -------------------------------------------------------------------------
-  // Redirect cases (task 32b)
-  // -------------------------------------------------------------------------
-  // Locks the open-redirect guard in `sameOriginReferrer()` and the
-  // returning-user redirect that fires from a `useEffect` watching
-  // `profilesQuery.data` + `editMode`. The submit cases reuse
-  // `setupEditMode()` + `walkToStep4Edit()` from the happy-path suite — the
-  // only delta is `document.referrer`. The returning-user case wires the
-  // hooks directly so we can assert the wizard never mounts.
-  // -------------------------------------------------------------------------
-
-  it('redirects to document.referrer in edit mode when the referrer is same-origin', async () => {
-    setupEditMode({
-      profiles: [{ language: Language.ES, proficiencyLevel: CefrLevel.B2 }],
-      prefs: {
-        primaryLanguage: Language.ES,
-        goals: [],
-        dailyMinutes: 10,
-        gentleNudges: true,
-        notes: '',
-      },
-    });
-    mockMutateAsync.mockResolvedValue({ profiles: [], preferences: {} });
-
-    // Same-origin referrer — JSDOM's window.location.origin is
-    // http://localhost:3000, so this is a same-origin URL.
-    const sameOriginReferrer = `${window.location.origin}/dashboard?from=settings`;
-    setReferrer(sameOriginReferrer);
-
-    render(<OnboardingPage />);
-
-    await walkToStep4Edit();
-    fireEvent.click(screen.getByRole('button', { name: /save changes →/ }));
-
-    await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith(sameOriginReferrer);
-    });
-    // Did NOT fall back to /settings.
-    expect(mockPush).not.toHaveBeenCalledWith('/settings');
-  });
-
-  it('falls back to /settings in edit mode when the referrer is cross-origin', async () => {
-    setupEditMode({
-      profiles: [{ language: Language.ES, proficiencyLevel: CefrLevel.B2 }],
-      prefs: {
-        primaryLanguage: Language.ES,
-        goals: [],
-        dailyMinutes: 10,
-        gentleNudges: true,
-        notes: '',
-      },
-    });
-    mockMutateAsync.mockResolvedValue({ profiles: [], preferences: {} });
-
-    // Cross-origin referrer — the open-redirect guard must reject this.
-    const crossOriginReferrer = 'https://evil.example.com/whatever';
-    setReferrer(crossOriginReferrer);
-
-    render(<OnboardingPage />);
-
-    await walkToStep4Edit();
-    fireEvent.click(screen.getByRole('button', { name: /save changes →/ }));
-
-    await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/settings');
-    });
-    // Critical: never redirect to the cross-origin URL.
-    expect(mockPush).not.toHaveBeenCalledWith(crossOriginReferrer);
-  });
-
-  it('falls back to /settings in edit mode when document.referrer is empty', async () => {
-    setupEditMode({
-      profiles: [{ language: Language.ES, proficiencyLevel: CefrLevel.B2 }],
-      prefs: {
-        primaryLanguage: Language.ES,
-        goals: [],
-        dailyMinutes: 10,
-        gentleNudges: true,
-        notes: '',
-      },
-    });
-    mockMutateAsync.mockResolvedValue({ profiles: [], preferences: {} });
-
-    // Explicit empty referrer (also the beforeEach default — explicit here
-    // so the case reads end-to-end without hopping back to the hook).
-    setReferrer('');
-
-    render(<OnboardingPage />);
-
-    await walkToStep4Edit();
-    fireEvent.click(screen.getByRole('button', { name: /save changes →/ }));
-
-    await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/settings');
-    });
-  });
-
-  it('redirects returning users (with profiles, no ?edit=1) via router.replace("/") and does not render the wizard', async () => {
+  it('redirects returning users (with profiles, no ?edit=1) via router.replace("/home") and does not render the wizard', async () => {
     // No ?edit=1 search param — `editMode` is false.
     mockSearchParams = new URLSearchParams();
     // Existing profiles → triggers the returning-user redirect effect.
@@ -492,14 +324,13 @@ describe('OnboardingPage', () => {
       isError: false,
       refetch: vi.fn(),
     });
-    mockUseGetPreferences.mockReturnValue({
-      data: undefined,
-      isLoading: false,
+    mockUseUpdateLanguages.mockReturnValue({
+      mutateAsync: mockUpdateLanguagesMutateAsync,
+      isPending: false,
       isError: false,
-      refetch: vi.fn(),
     });
-    mockUseSavePreferences.mockReturnValue({
-      mutateAsync: mockMutateAsync,
+    mockUseUpdatePreferences.mockReturnValue({
+      mutateAsync: mockUpdatePreferencesMutateAsync,
       isPending: false,
       isError: false,
     });
