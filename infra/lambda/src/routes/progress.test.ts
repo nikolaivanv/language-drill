@@ -164,11 +164,18 @@ vi.mock('@language-drill/db', () => ({
     occurredAt: 'occurred_at',
     errorGrammarPointKey: 'error_grammar_point_key',
     hostGrammarPointKey: 'host_grammar_point_key',
+    wrongText: 'wrong_text',
+    correction: 'correction',
   },
   userLanguageProfiles: {
     userId: 'user_id',
     language: 'language',
     proficiencyLevel: 'proficiency_level',
+  },
+  theoryTopics: {
+    language: 'language',
+    topicId: 'topic_id',
+    reviewStatus: 'review_status',
   },
   // Curriculum helpers — driven by TR_FIXTURES above
   grammarPointsAtOrBelow: (language: string, _level: string) => {
@@ -178,6 +185,8 @@ vi.mock('@language-drill/db', () => ({
   },
   getGrammarPoint: (key: string) => TR_FIXTURE_INDEX.get(key),
   curriculumOrderOf: (key: string) => TR_FIXTURE_ORDER.get(key) ?? 0,
+  // Phase 2: compatibleTypes — stub returns cloze+translation for all fixture points
+  compatibleTypes: (_p: unknown) => ['cloze', 'translation'],
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -459,15 +468,17 @@ describe('GET /progress/radar — review evidence', () => {
 // ---------------------------------------------------------------------------
 // GET /progress/curriculum
 // ---------------------------------------------------------------------------
-// The curriculum handler issues three sequential DB queries (via Promise.all
-// for mastery + errors, and a separate profile query before that):
+// The curriculum handler issues four sequential DB queries (profile + theory
+// are sequential; mastery + errors run in Promise.all):
 //   1. profile: .from(userLanguageProfiles).where(...).limit(1)
-//   2. mastery:  .from(userGrammarMastery).where(...)
-//   3. errors:   .from(errorObservations).where(...).groupBy(...)
+//   2. theory:  .from(theoryTopics).where(...)   ← NEW (Phase 2)
+//   3. mastery: .from(userGrammarMastery).where(...)
+//   4. errors:  .from(errorObservations).where(...).groupBy(...)
 //
 // We drive each via mockImplementationOnce on mockReviewWhere (the plain
-// `.from().where()` terminal). The profile call is sequential; mastery and
-// errors run in Promise.all so they consume the 2nd and 3rd queued impl.
+// `.from().where()` terminal). The profile + theory calls are sequential;
+// mastery and errors run in Promise.all so they consume the 3rd and 4th
+// queued impl.
 // ---------------------------------------------------------------------------
 
 describe('GET /progress/curriculum', () => {
@@ -481,11 +492,15 @@ describe('GET /progress/curriculum', () => {
   });
 
   it('returns level-grouped classified points', async () => {
-    // Profile → A1
+    // 1. Profile → A1
     mockReviewWhere.mockImplementationOnce(() =>
       makeChainResult([{ proficiencyLevel: 'A1' }]),
     );
-    // Mastery → vowel-harmony is solid
+    // 2. Theory → no approved topics
+    mockReviewWhere.mockImplementationOnce(() =>
+      makeChainResult([]),
+    );
+    // 3. Mastery → vowel-harmony is solid
     mockReviewWhere.mockImplementationOnce(() =>
       makeChainResult([
         {
@@ -497,10 +512,10 @@ describe('GET /progress/curriculum', () => {
         },
       ]),
     );
-    // Errors → accusative has ≥2 recent errors
+    // 4. Errors → accusative has ≥2 recent errors
     mockReviewWhere.mockImplementationOnce(() =>
       makeChainResult([
-        { key: 'tr-a1-accusative-definite-object', n: 3 },
+        { key: 'tr-a1-accusative-definite-object', n: 3, wrongText: null, correction: null },
       ]),
     );
 
@@ -534,11 +549,13 @@ describe('GET /progress/curriculum', () => {
   });
 
   it('defaults to B1 when profile is missing and returns a response', async () => {
-    // No profile row
+    // 1. No profile row
     mockReviewWhere.mockImplementationOnce(() => makeChainResult([]));
-    // No mastery
+    // 2. No theory topics
     mockReviewWhere.mockImplementationOnce(() => makeChainResult([]));
-    // No errors
+    // 3. No mastery
+    mockReviewWhere.mockImplementationOnce(() => makeChainResult([]));
+    // 4. No errors
     mockReviewWhere.mockImplementationOnce(() => makeChainResult([]));
 
     const res = await app.request('/progress/curriculum?language=TR', undefined, authEnv);
@@ -559,6 +576,61 @@ describe('GET /progress/curriculum', () => {
     expect(res.status).toBe(401);
     const body = (await res.json()) as AnyJson;
     expect(body.code).toBe('MISSING_SUB');
+  });
+
+  it('exposes compatibleTypes, hasTheory, and errorSample on each point', async () => {
+    // 1. Profile → A1
+    mockReviewWhere.mockImplementationOnce(() =>
+      makeChainResult([{ proficiencyLevel: 'A1' }]),
+    );
+    // 2. Theory → vowel-harmony has an approved topic
+    //    topicId = key.slice('tr-'.length) = 'a1-vowel-harmony'
+    mockReviewWhere.mockImplementationOnce(() =>
+      makeChainResult([{ topicId: 'a1-vowel-harmony' }]),
+    );
+    // 3. Mastery → vowel-harmony is solid
+    mockReviewWhere.mockImplementationOnce(() =>
+      makeChainResult([
+        {
+          grammarPointKey: 'tr-a1-vowel-harmony',
+          masteryScore: 0.9,
+          confidence: 0.8,
+          evidenceCount: 5,
+          lastPracticedAt: new Date(NOW_MS - DAY),
+        },
+      ]),
+    );
+    // 4. Errors → accusative has ≥2 errors + a sample
+    mockReviewWhere.mockImplementationOnce(() =>
+      makeChainResult([
+        {
+          key: 'tr-a1-accusative-definite-object',
+          n: 3,
+          wrongText: 'kitabi',
+          correction: 'kitabı',
+        },
+      ]),
+    );
+
+    const res = await app.request('/progress/curriculum?language=TR', undefined, authEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+
+    const a1 = body.levels.find((l: AnyJson) => l.level === 'A1');
+    const vh = a1.points.find((p: AnyJson) => p.key === 'tr-a1-vowel-harmony');
+    const acc = a1.points.find((p: AnyJson) => p.key === 'tr-a1-accusative-definite-object');
+
+    // compatibleTypes — stub returns ['cloze', 'translation'] for all points
+    expect(vh.compatibleTypes).toEqual(['cloze', 'translation']);
+    expect(acc.compatibleTypes).toEqual(['cloze', 'translation']);
+
+    // hasTheory — only vowel-harmony has a seeded topic
+    expect(vh.hasTheory).toBe(true);
+    expect(acc.hasTheory).toBe(false);
+
+    // errorSample — accusative has a recent error sample; vowel-harmony does not
+    expect(acc.errorSample).toEqual({ wrongText: 'kitabi', correction: 'kitabı' });
+    expect(vh.errorSample).toBeNull();
   });
 });
 

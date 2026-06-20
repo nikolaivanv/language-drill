@@ -1,13 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { buildCurriculumMap, nextCefrLevel } from './curriculum-map';
 
-const fact = (over: Partial<{ key: string; name: string; cefrLevel: string; order: number; prereqKeys: string[]; prereqNames: string[] }> = {}) => ({
+const fact = (over: Partial<{ key: string; name: string; cefrLevel: string; order: number; prereqKeys: string[]; prereqNames: string[]; compatibleTypes: string[]; hasTheory: boolean }> = {}) => ({
   key: 'tr-a1-x',
   name: 'X',
   cefrLevel: 'A1',
   order: 1,
   prereqKeys: [],
   prereqNames: [],
+  compatibleTypes: [] as string[],
+  hasTheory: false,
   ...over,
 });
 const mastery = (over: Partial<{ masteryScore: number; confidence: number; evidenceCount: number; lastPracticedAt: Date }> = {}) => ({
@@ -33,6 +35,7 @@ describe('buildCurriculumMap — state classification', () => {
     activeLevel: 'A1',
     previewPoints: [],
     errorCountByKey: new Map<string, number>(),
+    errorSampleByKey: new Map<string, { wrongText: string; correction: string }>(),
     now,
   };
 
@@ -120,5 +123,39 @@ describe('buildCurriculumMap — state classification', () => {
     });
     const byKey = Object.fromEntries(out.levels[0].points.map((p) => [p.key, p.lastPracticedAt]));
     expect(byKey).toEqual({ a: '2026-06-10T00:00:00.000Z', b: null });
+  });
+
+  it('passes compatibleTypes and hasTheory through from the fact', () => {
+    const out = buildCurriculumMap({
+      ...base,
+      activePoints: [
+        fact({ key: 'a', compatibleTypes: ['cloze', 'translation'], hasTheory: true }),
+        fact({ key: 'b', order: 2, compatibleTypes: [], hasTheory: false }),
+      ],
+      masteryByKey: new Map(),
+    });
+    const pts = out.levels[0].points;
+    const byKey = Object.fromEntries(pts.map((p) => [p.key, p]));
+    expect(byKey.a.compatibleTypes).toEqual(['cloze', 'translation']);
+    expect(byKey.a.hasTheory).toBe(true);
+    expect(byKey.b.compatibleTypes).toEqual([]);
+    expect(byKey.b.hasTheory).toBe(false);
+  });
+
+  it('sets errorSample from errorSampleByKey and null when absent', () => {
+    const sample = { wrongText: 'kitabi', correction: 'kitabı' };
+    const out = buildCurriculumMap({
+      ...base,
+      activePoints: [
+        fact({ key: 'a' }),
+        fact({ key: 'b', order: 2 }),
+      ],
+      masteryByKey: new Map(),
+      errorSampleByKey: new Map([['a', sample]]),
+    });
+    const pts = out.levels[0].points;
+    const byKey = Object.fromEntries(pts.map((p) => [p.key, p]));
+    expect(byKey.a.errorSample).toEqual(sample);
+    expect(byKey.b.errorSample).toBeNull();
   });
 });

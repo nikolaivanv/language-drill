@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { sql } from 'drizzle-orm';
-import { and, eq, gte, isNotNull } from 'drizzle-orm';
+import { and, eq, gte, inArray, isNotNull } from 'drizzle-orm';
 import { CefrLevel, Language } from '@language-drill/shared';
 import {
   exercises,
@@ -9,9 +9,11 @@ import {
   userGrammarMastery,
   errorObservations,
   userLanguageProfiles,
+  theoryTopics,
   grammarPointsAtOrBelow,
   getGrammarPoint,
   curriculumOrderOf,
+  compatibleTypes,
 } from '@language-drill/db';
 import { db } from '../db';
 import { authMiddleware } from '../middleware/auth';
@@ -51,6 +53,7 @@ const MS_PER_DAY = 86_400_000;
 const ROLLING_WINDOW_DAYS = 90;
 const ERROR_WINDOW_DAYS = 30;
 const DEFAULT_PROFICIENCY_LEVEL = CefrLevel.B1;
+const THEORY_APPROVED_STATUSES = ['auto-approved', 'manual-approved'] as const;
 
 // ---------------------------------------------------------------------------
 // Router
@@ -161,7 +164,19 @@ progress.get('/progress/curriculum', async (c) => {
     ? profileRows[0].proficiencyLevel
     : DEFAULT_PROFICIENCY_LEVEL;
 
-  // Mastery rows + recent-error counts (effective point) in parallel
+  // Theory-topic existence set: one distinct topicId per approved topic for this language
+  const theoryRows = await db
+    .select({ topicId: theoryTopics.topicId })
+    .from(theoryTopics)
+    .where(
+      and(
+        eq(theoryTopics.language, language),
+        inArray(theoryTopics.reviewStatus, [...THEORY_APPROVED_STATUSES]),
+      ),
+    );
+  const theorySet = new Set(theoryRows.map((r) => r.topicId));
+
+  // Mastery rows + recent-error counts+samples (effective point) in parallel
   const [masteryRows, errorRows] = await Promise.all([
     db
       .select({
@@ -182,6 +197,8 @@ progress.get('/progress/curriculum', async (c) => {
       .select({
         key: sql<string>`COALESCE(${errorObservations.errorGrammarPointKey}, ${errorObservations.hostGrammarPointKey})`,
         n: sql<number>`COUNT(*)::int`,
+        wrongText: sql<string | null>`(array_agg(${errorObservations.wrongText} ORDER BY ${errorObservations.occurredAt} DESC))[1]`,
+        correction: sql<string | null>`(array_agg(${errorObservations.correction} ORDER BY ${errorObservations.occurredAt} DESC))[1]`,
       })
       .from(errorObservations)
       .where(
@@ -207,18 +224,31 @@ progress.get('/progress/curriculum', async (c) => {
     });
   }
   const errorCountByKey = new Map<string, number>();
-  for (const r of errorRows) if (r.key) errorCountByKey.set(r.key, r.n);
+  const errorSampleByKey = new Map<string, { wrongText: string; correction: string }>();
+  for (const r of errorRows) {
+    if (!r.key) continue;
+    errorCountByKey.set(r.key, r.n);
+    if (r.wrongText != null && r.correction != null) {
+      errorSampleByKey.set(r.key, { wrongText: r.wrongText, correction: r.correction });
+    }
+  }
 
   // Curriculum facts: active-level points + next-level preview (first 5)
   const all = grammarPointsAtOrBelow(language, CefrLevel.B2);
-  const toFact = (p: (typeof all)[number]): CurriculumFact => ({
-    key: p.key,
-    name: p.name,
-    cefrLevel: p.cefrLevel,
-    order: curriculumOrderOf(p.key) ?? 0,
-    prereqKeys: [...(p.prerequisiteKeys ?? [])],
-    prereqNames: (p.prerequisiteKeys ?? []).map((pk) => getGrammarPoint(pk)?.name ?? pk),
-  });
+  const toFact = (p: (typeof all)[number]): CurriculumFact => {
+    // topicId = key without the "<lang>-" prefix (mirrors topicIdForGrammarPointKey)
+    const topicId = p.key.slice(`${language.toLowerCase()}-`.length);
+    return {
+      key: p.key,
+      name: p.name,
+      cefrLevel: p.cefrLevel,
+      order: curriculumOrderOf(p.key) ?? 0,
+      prereqKeys: [...(p.prerequisiteKeys ?? [])],
+      prereqNames: (p.prerequisiteKeys ?? []).map((pk) => getGrammarPoint(pk)?.name ?? pk),
+      compatibleTypes: [...compatibleTypes(p)],
+      hasTheory: theorySet.has(topicId),
+    };
+  };
   const activePoints = all.filter((p) => p.cefrLevel === activeLevel).map(toFact);
   const nl = nextCefrLevel(activeLevel);
   const previewPoints = nl
@@ -235,6 +265,7 @@ progress.get('/progress/curriculum', async (c) => {
     previewPoints,
     masteryByKey,
     errorCountByKey,
+    errorSampleByKey,
     now,
   });
   return c.json({ language, ...result });
