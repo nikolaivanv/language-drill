@@ -11,20 +11,28 @@ import {
   LATENCY_CEILING_MS,
   DEFAULT_FLUENCY_SESSION_SIZE,
   MIN_FLUENCY_POOL,
+  FLUENCY_ELIGIBLE_TYPES,
 } from '@language-drill/shared';
 import { exercises as exercisesTable, fluencyAttempts } from '@language-drill/db';
 import { db } from '../db';
 import { approvedStatusFilter } from '../lib/exercise-filters';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
-import { composeFluencySession, type EligibleExercise } from '../lib/fluency-session';
+import { composeFluencySession, resolveFluencyTypes, type EligibleExercise } from '../lib/fluency-session';
 import { aggregateFluencyStats, type FluencyAttemptRow } from '../lib/fluency-stats';
 
 const LearningLanguageEnum = z.enum([Language.ES, Language.DE, Language.TR]);
 
+// Eligible-type enum for the optional `types` filter. Derived from the single
+// source of truth so it can never drift from gradeFluencyAnswer's support.
+const FluencyTypeEnum = z.enum(
+  FLUENCY_ELIGIBLE_TYPES as unknown as [string, ...string[]],
+);
+
 const SessionBodySchema = z.object({
   language: LearningLanguageEnum,
   count: z.number().int().min(1).max(20).optional(),
+  types: z.array(FluencyTypeEnum).nonempty().optional(),
 });
 
 const AttemptBodySchema = z.object({
@@ -58,6 +66,9 @@ fluency.post('/fluency/session', async (c) => {
   const { language, count = DEFAULT_FLUENCY_SESSION_SIZE } = parsed.data;
   const userId = c.get('userId');
 
+  const typeList = resolveFluencyTypes(parsed.data.types as ExerciseType[] | undefined);
+  const typesInList = sql.join(typeList.map((t) => sql`${t}`), sql`, `);
+
   // Eligible = the user's most-recent score per exercise is >= threshold, the
   // exercise is an eligible (locally-gradable) type, this language, approved.
   // DISTINCT ON collapses retries to the latest submission per exercise; the
@@ -75,7 +86,7 @@ fluency.post('/fluency/session', async (c) => {
       ORDER BY exercise_id, evaluated_at DESC NULLS LAST
     ) h ON h.exercise_id = e.id
     WHERE e.language = ${language}
-      AND e.type IN (${ExerciseType.CLOZE}, ${ExerciseType.VOCAB_RECALL})
+      AND e.type IN (${typesInList})
       AND e.review_status IN ('auto-approved', 'manual-approved')
       AND h.score >= ${FLUENCY_MASTERY_THRESHOLD}
   `);

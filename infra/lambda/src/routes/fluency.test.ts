@@ -97,6 +97,24 @@ const EXERCISE_UUID = '11111111-1111-1111-1111-111111111111';
 // ---------------------------------------------------------------------------
 // Helper to build a pool row for the session endpoint's db.execute result
 // ---------------------------------------------------------------------------
+function makeConjugationRow(id: string) {
+  return makePoolRow({
+    id,
+    type: ExerciseType.CONJUGATION,
+    grammar_point_key: 'es-b1-conditional',
+    content_json: {
+      type: ExerciseType.CONJUGATION,
+      instructions: 'Write the correct form.',
+      lemma: 'ir',
+      lemmaGloss: 'to go',
+      featureBundle: 'condicional · 1ª persona del plural',
+      targetForm: 'iríamos',
+      breakdown: 'ir + íamos',
+      exampleSentences: ['Iríamos al cine.'],
+    },
+  });
+}
+
 function makePoolRow(overrides: Partial<{
   id: string;
   type: string;
@@ -174,6 +192,58 @@ describe('POST /fluency/session', () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as AnyJson;
     expect(body.exercises).toHaveLength(5);
+  });
+
+  it('accepts a conjugation-only types filter and returns 200', async () => {
+    const rows = Array.from({ length: 5 }, (_, i) => makeConjugationRow(`conj-${i + 1}`));
+    mockExecute.mockResolvedValueOnce({ rows });
+
+    const res = await app.request(
+      '/fluency/session',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: 'ES', types: ['conjugation'] }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.exercises.length).toBeGreaterThanOrEqual(4);
+    expect(body.exercises.every((e: AnyJson) => e.type === 'conjugation')).toBe(true);
+  });
+
+  it('returns 400 VALIDATION_ERROR for a non-eligible type', async () => {
+    const res = await app.request(
+      '/fluency/session',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: 'ES', types: ['translation'] }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('returns 400 VALIDATION_ERROR for an empty types array', async () => {
+    const res = await app.request(
+      '/fluency/session',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: 'ES', types: [] }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBe('VALIDATION_ERROR');
   });
 });
 
