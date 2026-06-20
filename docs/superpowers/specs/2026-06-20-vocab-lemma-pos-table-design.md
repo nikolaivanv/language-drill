@@ -149,3 +149,35 @@ re-deriving it.
 With PoS in the DB, verb seeding is language-agnostic, which unblocks turning on
 TR/DE conjugation/inflection cells (curriculum flags + inflection-generation
 validation) in a follow-up.
+
+---
+
+## Addendum: raise the grammar-point description cap (200 → 300)
+
+Independent of the vocab table, but bundled into the same implementation plan.
+
+**Evidence.** The `GrammarPoint.description` cap is 200 chars (enforced at
+`packages/db/src/curriculum/index.ts:193`). Measured across the live curricula:
+
+| Lang | # points | max desc | # ≥180 chars |
+|------|----------|----------|--------------|
+| ES   | 37       | 165      | 0            |
+| DE   | 23       | 168      | 0            |
+| TR   | 83       | 200 (at cap) | 36       |
+
+Turkish is jammed against the ceiling — several descriptions are at exactly
+200/199/198, and 36 of 83 are within 20 chars of the cap. The description is
+injected verbatim into generation prompts, so a too-tight cap directly truncates
+the guidance TR generation gets. ES/DE have ample headroom and are unaffected.
+
+**Change.** Raise the cap to **300** (50% headroom; ~100 extra prompt chars is a
+negligible token cost). Three sites:
+
+- `packages/db/src/curriculum/index.ts:193` — invariant check + error message.
+- `packages/shared/src/curriculum-types.ts:56` — `≤ 200 chars` doc comment.
+- `packages/db/src/curriculum/curriculum.test.ts:90` — over-long-description test
+  threshold.
+
+No existing description needs editing — this only relaxes the ceiling. Existing
+TR descriptions may later be expanded to use the new room, but that is content
+work, not part of this change.
