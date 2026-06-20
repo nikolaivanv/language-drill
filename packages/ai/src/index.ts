@@ -364,3 +364,17 @@ export {
   PROPOSE_COVERAGE_SPEC_TOOL_NAME,
 } from "./coverage-spec-proposal.js";
 export type { CoverageSpecProposal } from "./coverage-spec-proposal.js";
+
+export {
+  parseConjugationStructure,
+  deriveConjugationStructure,
+  buildConjugationBackfillUserPrompt,
+  CONJUGATION_BACKFILL_PROMPT_VERSION,
+  CONJUGATION_BACKFILL_SYSTEM_PROMPT,
+  DERIVE_CONJUGATION_STRUCTURE_TOOL,
+  DERIVE_CONJUGATION_STRUCTURE_TOOL_NAME,
+} from "./conjugation-backfill.js";
+export type {
+  ConjugationCellDescriptor,
+  ConjugationStructure,
+} from "./conjugation-backfill.js";
