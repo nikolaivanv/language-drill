@@ -4,6 +4,7 @@ import type { Context } from 'hono';
 import { z } from 'zod';
 import { eq, and, gte, count } from 'drizzle-orm';
 import { Language, CefrLevel, ExerciseType, isFreeWritingContent, isConjugationContent, gradeFluencyAnswer, EXERCISE_ANSWER_MAX_CHARS } from '@language-drill/shared';
+import type { LearningLanguage } from '@language-drill/shared';
 import type { DictationContent, ExerciseContent, FreeWritingContent, EvaluationResult } from '@language-drill/shared';
 import {
   exercises as exercisesTable,
@@ -11,6 +12,7 @@ import {
   userExerciseHistory,
   usageEvents,
   getGrammarPoint,
+  grammarPointsAtOrBelow,
   userGrammarMastery,
   updateMastery,
 } from '@language-drill/db';
@@ -290,6 +292,17 @@ exercises.post('/exercises/:id/submit', async (c) => {
       }
     : undefined;
 
+  // Closed key set for per-error attribution: the grammar points the learner
+  // at this (language, level) has plausibly studied. EN is source-only (no
+  // curriculum) → empty, which disables attribution for that path.
+  const attributionKeys =
+    exercise.language === Language.EN
+      ? []
+      : grammarPointsAtOrBelow(
+          exercise.language as LearningLanguage,
+          exercise.difficulty as string,
+        ).map((p) => ({ key: p.key, name: p.name }));
+
   // 2b. Validate session linkage BEFORE rate-limit + Claude — no side effects on failure
   if (sessionId !== undefined) {
     const sessionRows = await db
@@ -513,6 +526,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
               language: exercise.language as Language,
               difficulty: exercise.difficulty as CefrLevel,
               grammarGuidance,
+              attributionKeys,
             }),
     );
 

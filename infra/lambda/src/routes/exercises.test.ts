@@ -65,11 +65,14 @@ const mockUpdateMastery = vi.fn((prev: unknown, _obs: unknown) => ({
   lastPracticedAt: new Date('2026-01-01'),
 }));
 
+const mockGrammarPointsAtOrBelow = vi.fn(() => [] as { key: string; name: string }[]);
+
 vi.mock('@language-drill/db', () => ({
   users: { id: 'id' },
   exercises: { reviewStatus: 'review_status', type: 'type', audioS3Key: 'audio_s3_key' },
   userExerciseHistory: {},
   usageEvents: {},
+  errorObservations: { exerciseHistoryId: 'exercise_history_id' },
   practiceSessions: {
     id: 'id',
     userId: 'user_id',
@@ -86,6 +89,29 @@ vi.mock('@language-drill/db', () => ({
   },
   updateMastery: (prev: unknown, obs: unknown) => mockUpdateMastery(prev, obs),
   getGrammarPoint: vi.fn(() => undefined),
+  grammarPointsAtOrBelow: (...args: unknown[]) => mockGrammarPointsAtOrBelow(...args),
+  // Real mapping used by lib/errors/record via @language-drill/db import
+  errorObservationsFromEvaluation: (
+    errors: Array<{ type: string; severity: string; text: string; correction: string; grammarPointKey?: string | null }> | undefined,
+    ctx: { userId: string; language: string; exerciseId: string; sessionId: string | null; exerciseHistoryId: string; exerciseType: string; hostGrammarPointKey: string | null; occurredAt: Date },
+  ) => {
+    if (!errors || errors.length === 0) return [];
+    return errors.map((e) => ({
+      userId: ctx.userId,
+      language: ctx.language,
+      exerciseId: ctx.exerciseId,
+      sessionId: ctx.sessionId,
+      exerciseHistoryId: ctx.exerciseHistoryId,
+      exerciseType: ctx.exerciseType,
+      hostGrammarPointKey: ctx.hostGrammarPointKey,
+      errorGrammarPointKey: e.grammarPointKey ?? null,
+      errorType: e.type,
+      severity: e.severity,
+      wrongText: e.text,
+      correction: e.correction,
+      occurredAt: ctx.occurredAt,
+    }));
+  },
 }));
 
 // Mock the review-status filter so we can assert the route invokes it.
@@ -1837,5 +1863,143 @@ describe('POST /exercises/:id/submit — conjugation branch', () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as { submissionId?: string };
     expect(body.submissionId).toEqual(expect.any(String));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /exercises/:id/submit — error attribution keys (Task A5)
+// ---------------------------------------------------------------------------
+//
+// Verifies that the route resolves in-scope curriculum keys for the learner's
+// (language, level) and passes them to evaluateAnswer so the evaluator can
+// attribute each error to a specific grammar point. The persisted
+// error_observations row must carry:
+//   - errorGrammarPointKey: the key the evaluator attributed
+//   - hostGrammarPointKey: the exercise's primary grammar point
+
+describe('POST /exercises/:id/submit — error attribution keys', () => {
+  let app: Hono;
+
+  const authEnv = {
+    event: {
+      requestContext: {
+        authorizer: { jwt: { claims: { sub: 'user_123' } } },
+      },
+    },
+  };
+
+  const trA1TranslationExercise = {
+    id: 'tr-a1-001',
+    type: 'translation',
+    language: 'TR',
+    difficulty: 'A1',
+    grammarPointKey: 'tr-a1-locative',
+    contentJson: {
+      type: 'translation',
+      source: 'The book is on the table.',
+      targetLanguage: 'tr',
+    },
+    audioS3Key: null,
+    createdAt: new Date(),
+  };
+
+  // The evaluator returns one error attributed to a different grammar point
+  // than the exercise's host point.
+  const evaluationWithAttributedError = {
+    score: 0.5,
+    grammarAccuracy: 0.4,
+    vocabularyRange: 'A1',
+    taskAchievement: 0.6,
+    feedback: 'You forgot the accusative suffix.',
+    errors: [
+      {
+        type: 'grammar',
+        severity: 'major',
+        text: 'kitaplar',
+        correction: 'kitapları',
+        grammarPointKey: 'tr-a1-accusative-definite-object',
+      },
+    ],
+    estimatedCefrEvidence: 'A1',
+  };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    mockWithLlmTrace.mockImplementation(
+      <T>(_ctx: unknown, fn: () => T | Promise<T>) => Promise.resolve(fn()),
+    );
+    mockRandomUUID.mockImplementation(() => 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee');
+    // Provide a TR/A1 curriculum subset — the route resolves these keys and
+    // passes them to evaluateAnswer as attributionKeys; the evaluator then
+    // picks from this closed set for per-error attribution.
+    mockGrammarPointsAtOrBelow.mockReturnValue([
+      { key: 'tr-a1-vowel-harmony', name: 'Vowel Harmony' },
+      { key: 'tr-a1-locative', name: 'Locative Case (-DA)' },
+      { key: 'tr-a1-accusative-definite-object', name: 'Accusative: Definite Object (-(y)I)' },
+    ]);
+    const mod = await import('./exercises');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  it('persists the evaluator-attributed grammarPointKey as errorGrammarPointKey', async () => {
+    // exercise fetch
+    mockLimit.mockResolvedValueOnce([trA1TranslationExercise]);
+    mockWhere
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit })) // exercise fetch
+      .mockResolvedValueOnce([{ count: 0 }] as never); // usage count
+    mockEvaluateAnswer.mockResolvedValueOnce(evaluationWithAttributedError);
+
+    const res = await app.request(
+      '/exercises/tr-a1-001/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'Kitap masada.' }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+
+    // Insert order: 1) auth user upsert, 2) userExerciseHistory,
+    // 3) error_observations (because errors is non-empty), 4) usageEvents.
+    // The error_observations row (4th values call) must carry both keys.
+    const errorObsCall = mockValues.mock.calls.find((args) => {
+      const rows = args[0];
+      return Array.isArray(rows) && rows.length > 0 && 'errorGrammarPointKey' in rows[0];
+    });
+    expect(errorObsCall).toBeDefined();
+    const row = (errorObsCall![0] as Array<Record<string, unknown>>)[0];
+    expect(row.errorGrammarPointKey).toBe('tr-a1-accusative-definite-object');
+    expect(row.hostGrammarPointKey).toBe('tr-a1-locative');
+  });
+
+  it('passes the resolved attributionKeys into evaluateAnswer', async () => {
+    mockLimit.mockResolvedValueOnce([trA1TranslationExercise]);
+    mockWhere
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }))
+      .mockResolvedValueOnce([{ count: 0 }] as never);
+    mockEvaluateAnswer.mockResolvedValueOnce(evaluationWithAttributedError);
+
+    await app.request(
+      '/exercises/tr-a1-001/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'Kitap masada.' }),
+      },
+      authEnv,
+    );
+
+    expect(mockEvaluateAnswer).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        attributionKeys: expect.arrayContaining([
+          { key: 'tr-a1-accusative-definite-object', name: 'Accusative: Definite Object (-(y)I)' },
+          { key: 'tr-a1-locative', name: 'Locative Case (-DA)' },
+        ]),
+      }),
+    );
   });
 });
