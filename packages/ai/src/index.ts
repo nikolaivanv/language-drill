@@ -13,11 +13,13 @@ export {
   buildUserPrompt,
   CEFR_LEVEL_DESCRIPTORS,
 } from "./prompts.js";
+export type { GrammarGuidance, AttributionKey } from "./prompts.js";
 export {
   evaluateAnswer,
   parseEvaluationResult,
   EVALUATION_TOOL,
   EVALUATION_TOOL_NAME,
+  buildEvaluationTool,
   EVAL_REQUEST_TIMEOUT_MS,
   EVAL_MAX_RETRIES,
 } from "./evaluate.js";

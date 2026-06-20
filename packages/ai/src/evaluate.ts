@@ -20,6 +20,7 @@ import {
   EVALUATION_SYSTEM_PROMPT_VERSION,
   buildUserPrompt,
   type GrammarGuidance,
+  type AttributionKey,
 } from "./prompts.js";
 import { getPromptOrFallback, sha8 } from "./prompts-registry.js";
 import { ContentRejectedError } from "./content-rejected-error.js";
@@ -30,89 +31,80 @@ import { ContentRejectedError } from "./content-rejected-error.js";
 
 export const EVALUATION_TOOL_NAME = "submit_evaluation";
 
-export const EVALUATION_TOOL: Anthropic.Tool = {
-  name: EVALUATION_TOOL_NAME,
-  description:
-    "Submit the structured evaluation result for a language exercise answer.",
-  input_schema: {
-    type: "object" as const,
-    properties: {
-      score: {
-        type: "number",
-        description:
-          "Overall score from 0.0 to 1.0 combining all evaluation factors.",
-      },
-      grammarAccuracy: {
-        type: "number",
-        description:
-          "Grammar accuracy score from 0.0 to 1.0. Covers morphology, syntax, agreement, tense, word order.",
-      },
-      vocabularyRange: {
-        type: "string",
-        description:
-          'CEFR level string (A1–C2) representing the sophistication of vocabulary used.',
-      },
-      taskAchievement: {
-        type: "number",
-        description:
-          "Task achievement score from 0.0 to 1.0. How well the answer fulfills the exercise requirements.",
-      },
-      feedback: {
-        type: "string",
-        description:
-          "Concise, encouraging explanation of what was good and what needs improvement.",
-      },
-      errors: {
-        type: "array",
-        description:
-          "Array of specific errors found in the answer.",
-        items: {
-          type: "object",
-          properties: {
-            type: {
-              type: "string",
-              enum: ["grammar", "vocabulary", "spelling", "pragmatics"],
-              description: "Category of the error.",
-            },
-            severity: {
-              type: "string",
-              enum: ["minor", "major"],
-              description:
-                "Severity: minor (does not impede communication) or major (changes meaning or is ungrammatical).",
-            },
-            text: {
-              type: "string",
-              description: "The erroneous text from the user's answer.",
-            },
-            correction: {
-              type: "string",
-              description: "The corrected version of the text.",
-            },
-            explanation: {
-              type: "string",
-              description: "Brief explanation of why this is an error and how to fix it.",
-            },
-          },
-          required: ["type", "severity", "text", "correction", "explanation"],
-        },
-      },
-      estimatedCefrEvidence: {
-        type: "string",
-        description:
-          'The CEFR level this answer provides evidence for (e.g. "B1").',
-      },
+/**
+ * Build the `submit_evaluation` tool. When `attributionKeys` is non-empty,
+ * each error gains an OPTIONAL `grammarPointKey` whose value is constrained to
+ * a closed `enum` of the exercise's in-scope curriculum keys — so the (Haiku)
+ * evaluator can attribute an error to a point but can never invent a key.
+ */
+export function buildEvaluationTool(
+  attributionKeys?: readonly AttributionKey[],
+): Anthropic.Tool {
+  const errorProps: Record<string, unknown> = {
+    type: {
+      type: "string",
+      enum: ["grammar", "vocabulary", "spelling", "pragmatics"],
+      description: "Category of the error.",
     },
-    required: [
-      "score",
-      "grammarAccuracy",
-      "vocabularyRange",
-      "taskAchievement",
-      "feedback",
-      "errors",
-      "estimatedCefrEvidence",
-    ],
-  },
-};
+    severity: {
+      type: "string",
+      enum: ["minor", "major"],
+      description:
+        "Severity: minor (does not impede communication) or major (changes meaning or is ungrammatical).",
+    },
+    text: { type: "string", description: "The erroneous text from the user's answer." },
+    correction: { type: "string", description: "The corrected version of the text." },
+    explanation: {
+      type: "string",
+      description: "Brief explanation of why this is an error and how to fix it.",
+    },
+  };
+
+  if (attributionKeys && attributionKeys.length > 0) {
+    errorProps.grammarPointKey = {
+      type: "string",
+      enum: attributionKeys.map((k) => k.key),
+      description:
+        "OPTIONAL. The curriculum key of the grammar point THIS error violates. " +
+        "Must be one of the keys listed in the user message's 'Grammar points in scope' block. " +
+        "Omit entirely if the error does not violate any listed point (e.g. a vocabulary or spelling slip).",
+    };
+  }
+
+  return {
+    name: EVALUATION_TOOL_NAME,
+    description:
+      "Submit the structured evaluation result for a language exercise answer.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        score: { type: "number", description: "Overall score from 0.0 to 1.0 combining all evaluation factors." },
+        grammarAccuracy: { type: "number", description: "Grammar accuracy score from 0.0 to 1.0. Covers morphology, syntax, agreement, tense, word order." },
+        vocabularyRange: { type: "string", description: 'CEFR level string (A1–C2) representing the sophistication of vocabulary used.' },
+        taskAchievement: { type: "number", description: "Task achievement score from 0.0 to 1.0. How well the answer fulfills the exercise requirements." },
+        feedback: { type: "string", description: "Concise, encouraging explanation of what was good and what needs improvement." },
+        errors: {
+          type: "array",
+          description: "Array of specific errors found in the answer.",
+          items: {
+            type: "object",
+            properties: errorProps,
+            // grammarPointKey is intentionally NOT required (attribution is best-effort).
+            required: ["type", "severity", "text", "correction", "explanation"],
+          },
+        },
+        estimatedCefrEvidence: { type: "string", description: 'The CEFR level this answer provides evidence for (e.g. "B1").' },
+      },
+      required: [
+        "score", "grammarAccuracy", "vocabularyRange", "taskAchievement",
+        "feedback", "errors", "estimatedCefrEvidence",
+      ],
+    },
+  };
+}
+
+/** Back-compat default tool (no attribution field). */
+export const EVALUATION_TOOL: Anthropic.Tool = buildEvaluationTool();
 
 // ---------------------------------------------------------------------------
 // Input type
@@ -131,6 +123,14 @@ export type EvaluateAnswerInput = {
    * exercise has no `grammarPointKey` or the key is unknown.
    */
   grammarGuidance?: GrammarGuidance;
+  /**
+   * The closed set of curriculum grammar-point keys (key + display name) in
+   * scope for this exercise's (language, level). Resolved by the caller from
+   * `grammarPointsAtOrBelow`. When present, the evaluator may attribute each
+   * error to one of these keys (constrained by the tool-schema enum + the
+   * user-prompt list); when absent, attribution is skipped (keys → null).
+   */
+  attributionKeys?: readonly AttributionKey[];
   /**
    * Phase-2: bypass the Langfuse registry and use this verbatim as the
    * system prompt. Used by `pnpm eval` (the eval runner) to evaluate
@@ -151,8 +151,15 @@ const VALID_SEVERITIES = new Set(["minor", "major"]);
 /**
  * Validates and coerces a raw tool-use input into an EvaluationResult.
  * Throws if the structure is invalid.
+ *
+ * @param validKeys When present, each error's `grammarPointKey` is kept only
+ *   if it is in this set; keys absent from the set (or the set itself absent)
+ *   are coerced to null.
  */
-export function parseEvaluationResult(input: unknown): EvaluationResult {
+export function parseEvaluationResult(
+  input: unknown,
+  validKeys?: ReadonlySet<string>,
+): EvaluationResult {
   if (typeof input !== "object" || input === null) {
     throw new Error("Evaluation result must be an object");
   }
@@ -206,12 +213,20 @@ export function parseEvaluationResult(input: unknown): EvaluationResult {
       }
     }
 
+    // Per-error attribution (Phase 3): keep the key only if it is in the
+    // exercise's in-scope set; otherwise null. Null when absent or no set.
+    let grammarPointKey: string | null = null;
+    if (validKeys && typeof e.grammarPointKey === "string" && validKeys.has(e.grammarPointKey)) {
+      grammarPointKey = e.grammarPointKey;
+    }
+
     return {
       type: e.type as "grammar" | "vocabulary" | "spelling" | "pragmatics",
       severity: e.severity as "minor" | "major",
       text: e.text as string,
       correction: e.correction as string,
       explanation: e.explanation as string,
+      grammarPointKey,
     };
   });
 
@@ -279,6 +294,7 @@ export async function evaluateAnswer(
     language,
     difficulty,
     grammarGuidance,
+    attributionKeys,
     systemPromptOverride,
   } = input;
 
@@ -288,6 +304,7 @@ export async function evaluateAnswer(
     language,
     difficulty,
     grammarGuidance,
+    attributionKeys,
   );
 
   // Resolve the system prompt. Three paths:
@@ -330,7 +347,7 @@ export async function evaluateAnswer(
         content: userPrompt,
       },
     ],
-    tools: [EVALUATION_TOOL],
+    tools: [buildEvaluationTool(attributionKeys)],
     tool_choice: {
       type: "tool" as const,
       name: EVALUATION_TOOL_NAME,
@@ -367,5 +384,9 @@ export async function evaluateAnswer(
     );
   }
 
-  return parseEvaluationResult(toolUseBlock.input);
+  const validKeys =
+    attributionKeys && attributionKeys.length > 0
+      ? new Set(attributionKeys.map((k) => k.key))
+      : undefined;
+  return parseEvaluationResult(toolUseBlock.input, validKeys);
 }
