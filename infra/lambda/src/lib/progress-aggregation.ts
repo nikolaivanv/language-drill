@@ -2,8 +2,8 @@
 // Progress aggregation — core types and exercise-type → axis mapping
 // ---------------------------------------------------------------------------
 // The progress page reduces the user's exercise history into six fixed skill
-// axes. This module is the single source of truth for that mapping; both the
-// /progress/radar route and the heatmap route consume it.
+// axes. This module is the single source of truth for that mapping; the
+// /progress/radar route consumes it.
 //
 // Design reference: .claude/specs/progress-page/design.md
 //   §"Exercise type → axis mapping (v1)"
