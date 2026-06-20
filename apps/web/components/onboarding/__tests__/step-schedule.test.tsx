@@ -146,7 +146,7 @@ describe('StepSchedule', () => {
       step: 4,
       languages: [Language.ES],
       primaryLanguage: Language.ES,
-      primaryLevel: CefrLevel.B2,
+      levels: { [Language.ES]: CefrLevel.B2 },
     };
     renderInProvider(
       state,

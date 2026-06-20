@@ -5,9 +5,7 @@
 // ---------------------------------------------------------------------------
 // The "so far" progress checklist inside `CoachPane`. Renders one row per
 // step with a `✓` / `●` / `○` glyph, label, and a summary value once the
-// step has been completed. The "languages" row also surfaces the
-// placeholder-A1 disclosure (R6.6) when ≥1 non-primary language has been
-// selected and the user has reached or passed Step 2.
+// step has been completed.
 //
 // Pure presentational — reads `OnboardingState` from context only.
 // ---------------------------------------------------------------------------
@@ -24,8 +22,6 @@ type ChecklistRow = {
   label: string;
   /** Optional summary value rendered when the row is completed. */
   summary: string | null;
-  /** Optional second line — used for the placeholder-A1 disclosure. */
-  subLine: string | null;
 };
 
 // `·` is U+00B7 (middle dot), matching the prototype copy and R-spec note.
@@ -50,25 +46,16 @@ function rowStatus(rowStep: OnboardingStep, current: OnboardingStep): RowStatus 
 }
 
 function buildRows(state: OnboardingState): ChecklistRow[] {
-  const { languages, primaryLanguage, primaryLevel, goals, dailyMinutes, step } =
-    state;
+  const { languages, primaryLanguage, levels, goals, dailyMinutes } = state;
 
   // languages row -----------------------------------------------------------
   const languagesSummary =
     languages.length >= 1 ? `${languages.length} selected` : null;
 
-  // R6.6: show "level: a1 (adjustable later)" once the user has reached or
-  // passed Step 2 AND has at least one non-primary language selected.
-  const hasNonPrimaryLanguage =
-    primaryLanguage !== null
-      ? languages.some((l) => l !== primaryLanguage)
-      : languages.length >= 1;
-  const showA1SubLine = step >= 2 && hasNonPrimaryLanguage;
-
   // primary + level row -----------------------------------------------------
   const primarySummary =
-    primaryLanguage !== null && primaryLevel !== null
-      ? `${primaryLanguage} ${MIDDLE_DOT} ${primaryLevel}`
+    primaryLanguage !== null && levels[primaryLanguage] !== undefined
+      ? `${primaryLanguage} ${MIDDLE_DOT} ${levels[primaryLanguage]}`
       : null;
 
   // goals row ---------------------------------------------------------------
@@ -83,13 +70,11 @@ function buildRows(state: OnboardingState): ChecklistRow[] {
       step: 1,
       label: 'languages',
       summary: languagesSummary,
-      subLine: showA1SubLine ? 'level: a1 (adjustable later)' : null,
     },
     {
       step: 2,
       label: 'primary + level',
       summary: primarySummary,
-      subLine: null,
     },
     {
       step: 3,
@@ -97,13 +82,11 @@ function buildRows(state: OnboardingState): ChecklistRow[] {
       // Goals are optional, so always render a summary when the row is
       // completed (R6.5: "N picked" or "none" when zero).
       summary: goalsSummary,
-      subLine: null,
     },
     {
       step: 4,
       label: 'schedule',
       summary: scheduleSummary,
-      subLine: null,
     },
   ];
 }
@@ -145,9 +128,6 @@ export function SoFarChecklist() {
                   </>
                 ) : null}
               </span>
-              {row.subLine !== null ? (
-                <span className="t-small text-ink-mute">{row.subLine}</span>
-              ) : null}
             </div>
           </li>
         );

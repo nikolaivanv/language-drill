@@ -95,7 +95,7 @@ describe('StepLanguages', () => {
       mode: 'edit',
       languages: [Language.ES],
       primaryLanguage: Language.ES,
-      primaryLevel: CefrLevel.B2,
+      levels: { [Language.ES]: CefrLevel.B2 },
     };
     renderInProvider(editStateOneLang, <StepLanguages />);
     const [esTile] = screen.getAllByRole('checkbox');
