@@ -89,7 +89,7 @@ describe('LanguagesSection', () => {
       { profiles: [{ language: Language.ES, proficiencyLevel: CefrLevel.B2 }], primaryLanguage: Language.ES },
       mutate,
     );
-    fireEvent.click(screen.getByRole('button', { name: /set ES to C1/i }));
+    fireEvent.click(screen.getByRole('radio', { name: /set ES to C1/i }));
     expect(mutate).toHaveBeenCalledWith({
       profiles: [{ language: Language.ES, proficiencyLevel: CefrLevel.C1 }],
       primaryLanguage: Language.ES,

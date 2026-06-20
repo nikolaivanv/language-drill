@@ -107,7 +107,7 @@ export function LanguagesSection() {
   }, [profilesQuery.data]);
 
   useEffect(() => {
-    if (prefsQuery.data) setPrimary(prefsQuery.data.primaryLanguage as LearningLanguage);
+    if (prefsQuery.data) setPrimary(prefsQuery.data.primaryLanguage);
   }, [prefsQuery.data]);
 
   const save = (nextRows: Profile[], nextPrimary: LearningLanguage) => {
@@ -186,6 +186,7 @@ export function LanguagesSection() {
               </div>
             </div>
             <div
+              role="radiogroup"
               aria-label={`${LANGUAGE_NATIVE_NAMES[r.language]} level`}
               className="flex gap-[6px] flex-wrap"
             >
@@ -195,7 +196,8 @@ export function LanguagesSection() {
                   <button
                     key={lvl}
                     type="button"
-                    aria-pressed={selected}
+                    role="radio"
+                    aria-checked={selected}
                     aria-label={`set ${r.language} to ${lvl}`}
                     onClick={() => setLevel(r.language, lvl)}
                     className={
