@@ -413,8 +413,17 @@ export {
   CurriculumResponseSchema,
   type CurriculumEntry,
   type CurriculumResponse,
+  PointStateEnum,
+  CurriculumMapPointSchema,
+  CurriculumMapLevelSchema,
+  CurriculumMapResponseSchema,
+  type PointState,
+  type CurriculumMapPoint,
+  type CurriculumMapLevel,
+  type CurriculumMapResponse,
 } from './schemas/curriculum';
 export { useCurriculum, type CurriculumParams } from './hooks/useCurriculum';
+export { useCurriculumMap, type UseCurriculumMapParams } from './hooks/useCurriculumMap';
 export {
   FlagCategoryEnum, type FlagCategory,
   FlagExerciseRequestSchema, type FlagExerciseRequest,

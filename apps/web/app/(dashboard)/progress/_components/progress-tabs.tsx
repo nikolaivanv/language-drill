@@ -12,7 +12,7 @@ import {
 
 // ---------------------------------------------------------------------------
 // ProgressTabs — WAI-ARIA tablist for /progress.
-//   role="tablist"  →  three role="tab" buttons (shape / fluency / history)
+//   role="tablist"  →  four role="tab" buttons (map / shape / fluency / history)
 //   left/right arrows cycle, Home/End jump to ends, Enter/Space activate
 //   automatic activation: arrow keys also call onChange (matches the
 //   prototype's simple toggle UX)
@@ -20,6 +20,7 @@ import {
 // ---------------------------------------------------------------------------
 
 const TAB_LABELS: Record<ProgressTabId, string> = {
+  map: 'map',
   shape: 'shape',
   fluency: 'fluency',
   history: 'history',
@@ -33,6 +34,7 @@ export type ProgressTabsProps = {
 
 export function ProgressTabs({ active, onChange, children }: ProgressTabsProps) {
   const buttonRefs = useRef<Record<ProgressTabId, HTMLButtonElement | null>>({
+    map: null,
     shape: null,
     fluency: null,
     history: null,

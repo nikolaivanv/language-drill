@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { LearningLanguageEnum } from './preferences';
 
 export const CoverageAxisSchema = z.object({
   name: z.string(),
@@ -32,3 +33,45 @@ export const CurriculumResponseSchema = z.object({
   curriculumVersionByLanguage: z.object({ ES: z.string(), DE: z.string(), TR: z.string() }),
 });
 export type CurriculumResponse = z.infer<typeof CurriculumResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// GET /progress/curriculum response (curriculum map)
+// ---------------------------------------------------------------------------
+
+export const PointStateEnum = z.enum(['not-started', 'learning', 'solid']);
+export type PointState = z.infer<typeof PointStateEnum>;
+
+export const CurriculumMapPointSchema = z.object({
+  key: z.string(),
+  name: z.string(),
+  cefrLevel: z.string(),
+  order: z.number().int(),
+  state: PointStateEnum,
+  errorProne: z.boolean(),
+  mastery: z.number().min(0).max(1).nullable(),
+  confidence: z.number().min(0).max(1).nullable(),
+  evidenceCount: z.number().int().min(0),
+  lastPracticedAt: z.string().datetime().nullable(),
+  recentErrorCount: z.number().int().min(0),
+  prereqKeys: z.array(z.string()),
+  prereqNames: z.array(z.string()),
+  prereqUnmet: z.boolean(),
+});
+export type CurriculumMapPoint = z.infer<typeof CurriculumMapPointSchema>;
+
+export const CurriculumMapLevelSchema = z.object({
+  level: z.string(),
+  solidCount: z.number().int().min(0),
+  total: z.number().int().min(0),
+  readyToAdvance: z.boolean(),
+  isPreview: z.boolean(),
+  points: z.array(CurriculumMapPointSchema),
+});
+export type CurriculumMapLevel = z.infer<typeof CurriculumMapLevelSchema>;
+
+export const CurriculumMapResponseSchema = z.object({
+  language: LearningLanguageEnum,
+  activeLevel: z.string(),
+  levels: z.array(CurriculumMapLevelSchema),
+});
+export type CurriculumMapResponse = z.infer<typeof CurriculumMapResponseSchema>;
