@@ -31,6 +31,8 @@ function makeItem(
         ? ExerciseType.TRANSLATION
         : ExerciseType.VOCAB_RECALL,
     topicHint: 'pronoun placement',
+    grammarPointKey: null,
+    grammarPointName: null,
     difficulty: CefrLevel.B1,
     itemCount: 4,
     estimatedMinutes: 3,

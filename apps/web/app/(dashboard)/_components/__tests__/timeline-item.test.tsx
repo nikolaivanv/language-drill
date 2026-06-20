@@ -14,6 +14,7 @@ function renderItem(overrides: Partial<Props> = {}) {
     index: 2,
     type: ExerciseType.CLOZE,
     topicHint: 'pronoun placement',
+    grammarPointName: null,
     itemCount: 4,
     estimatedMinutes: 3,
     status: 'queued' as TimelineItemStatus,
@@ -102,6 +103,20 @@ describe('TimelineItem — subtitle fallback (Req 3.5)', () => {
       itemCount: 4,
     });
     expect(screen.getByText('pronoun placement · 4 items')).toBeInTheDocument();
+  });
+
+  it('leads with the grammar-point name over the topic when present (D5)', () => {
+    renderItem({
+      status: 'queued',
+      type: ExerciseType.TRANSLATION,
+      grammarPointName: 'Locative case -DA',
+      topicHint: 'everyday life / transport',
+      itemCount: 1,
+    });
+    expect(screen.getByText('Locative case -DA · 1 items')).toBeInTheDocument();
+    expect(
+      screen.queryByText('everyday life / transport · 1 items'),
+    ).toBeNull();
   });
 });
 

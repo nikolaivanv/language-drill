@@ -47,10 +47,13 @@ export function composeTitle(index: number, type: ExerciseType): string {
 }
 
 export function composeSubtitle(
+  grammarPointName: string | null,
   topicHint: string | null,
   type: ExerciseType,
   itemCount: number,
 ): string {
-  const lead = topicHint ?? typeLabel(type);
+  // Prefer the curriculum grammar-point name over the free-text topic
+  // (decision D5); fall back to the topic, then the exercise-type label.
+  const lead = grammarPointName ?? topicHint ?? typeLabel(type);
   return `${lead} · ${itemCount} items`;
 }

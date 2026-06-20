@@ -110,6 +110,7 @@ export function TodayTimeline({
             index={item.index}
             type={item.type}
             topicHint={item.topicHint}
+            grammarPointName={item.grammarPointName}
             itemCount={item.itemCount}
             estimatedMinutes={item.estimatedMinutes}
             status={status}
@@ -127,7 +128,13 @@ export function TodayTimeline({
         {itemsWithStatus.map(({ item, status }) => (
           <li key={item.index}>
             {item.index}. {composeTitle(item.index, item.type)} —{' '}
-            {composeSubtitle(item.topicHint, item.type, item.itemCount)} ·{' '}
+            {composeSubtitle(
+              item.grammarPointName,
+              item.topicHint,
+              item.type,
+              item.itemCount,
+            )}{' '}
+            ·{' '}
             {item.estimatedMinutes} min · {status}
           </li>
         ))}
