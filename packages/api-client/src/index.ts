@@ -24,8 +24,6 @@ export {
   LearningProfileSchema,
   PreferencesResponseSchema,
   type PreferencesResponse,
-  SavePreferencesInputSchema,
-  type SavePreferencesInput,
   UpdateLanguagesInputSchema,
   UpdateLanguagesResponseSchema,
   type UpdateLanguagesInput,
@@ -168,13 +166,9 @@ export {
 } from './hooks/useLanguageProfiles';
 export {
   useGetPreferences,
-  useSavePreferences,
   useUpdateLanguages,
   useUpdatePreferences,
   type UseGetPreferencesParams,
-  type UseSavePreferencesParams,
-  type SavePreferencesArgs,
-  type SavePreferencesResponse,
   type UpdateLanguagesArgs,
   type UpdatePreferencesArgs,
 } from './hooks/usePreferences';

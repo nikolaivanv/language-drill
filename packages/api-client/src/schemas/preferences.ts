@@ -43,44 +43,11 @@ export type PreferencesResponse = z.infer<typeof PreferencesResponseSchema>;
 // ---------------------------------------------------------------------------
 // PUT /profiles/languages request body
 // ---------------------------------------------------------------------------
-// Canonical wire schema for the full onboarding payload. Enforces:
-//   - profiles[]: 1..3 entries, each with a learning language (ES/DE/TR) and
-//     a CEFR level
-//   - primaryLanguage ∈ profiles[].language (cross-field refinement)
-//   - dailyMinutes is one of {5, 10, 20, 30}
-//   - notes is at most NOTES_MAX_LENGTH chars
-// All fields are required (R7.1).
-// ---------------------------------------------------------------------------
 
 export const LearningProfileSchema = z.object({
   language: LearningLanguageEnum,
   proficiencyLevel: z.nativeEnum(CefrLevel),
 });
-
-export const SavePreferencesInputSchema = z
-  .object({
-    profiles: z.array(LearningProfileSchema).min(1).max(3),
-    primaryLanguage: LearningLanguageEnum,
-    goals: z.array(z.enum(GOAL_IDS)),
-    dailyMinutes: z.union([
-      z.literal(5),
-      z.literal(10),
-      z.literal(20),
-      z.literal(30),
-    ]),
-    gentleNudges: z.boolean(),
-    notes: z.string().max(NOTES_MAX_LENGTH),
-  })
-  .refine(
-    (input) => input.profiles.some((p) => p.language === input.primaryLanguage),
-    {
-      message:
-        'primaryLanguage must be one of the submitted profiles.languages',
-      path: ['primaryLanguage'],
-    },
-  );
-
-export type SavePreferencesInput = z.infer<typeof SavePreferencesInputSchema>;
 
 // ---------------------------------------------------------------------------
 // PUT /profiles/languages — slimmed request + response
