@@ -3,7 +3,8 @@ import { CefrLevel, Language } from '@language-drill/shared';
 import type { GrammarPoint } from './types';
 
 // TR curriculum aligned to Yedi İklim A1+A2 parity (2026-05-28) plus B1
-// (2026-06-19): 26 A1 + 14 A2 + 10 B1 grammar entries, 15 themed vocab
+// (2026-06-19) and two 2026-06-20 G&K reverse-coverage passes:
+// 27 A1 + 22 A2 + 11 B1 grammar entries, 15 themed vocab
 // umbrellas (5 each A1/A2/B1), 3 dictation, 9 free-writing. B2 grammar/vocab
 // remain out (separate cycle). To enable B2: author the B2 section below, raise
 // TR's B2 floor in PER_LANGUAGE_GRAMMAR_MIN (curriculum/index.ts), restore TR B2
@@ -53,8 +54,18 @@ const { A1, A2, B1 } = CefrLevel;
  * with case/number/stacking coverage specs (personal-suffixes copula, possessive
  * +case stacking, locative, accusative-definite-object, ablative-dative); clears
  * suppression so the new CONJUGATION cells are enqueued.
+ * 2026-06-20b: G&K reverse-coverage audit pass — adds 1 A1 + 4 A2 grammar
+ * points that were missing from the Yedi İklim-derived set: tr-a1-stem-changes
+ * (consonant softening + vowel drop), tr-a2-indefinite-compound (belirtisiz
+ * isim tamlaması), tr-a2-suffix-order-buffers (ordering template + y/n/s
+ * buffers + su/ne), tr-a2-optative, tr-a2-indefinite-pronouns. Bump enumerates
+ * the new cells.
+ * 2026-06-20c: G&K audit round 2 — adds tr-a2-consonant-doubling (gemination),
+ * tr-a2-reflexive-reciprocal-pronouns (kendi/birbiri), tr-a2-distributive
+ * (-(ş)Ar), and tr-b1-real-conditional (open -(I)rsA). Folds: -(y)Iş manner,
+ * headless relatives, and the de-/ye- vowel raising into existing points.
  */
-export const CURRICULUM_VERSION_TR = '2026-06-20';
+export const CURRICULUM_VERSION_TR = '2026-06-20c';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -89,6 +100,41 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Picking the wrong member of the 4-way high-vowel set — e.g. using -ı on a rounded stem where -u is required (okulı vs. okulu), or using -i on a back-vowel stem where -ı is required.',
       'Conflating the 2-way (low-vowel) and 4-way (high-vowel) harmony patterns — applying -lAr/-lEr logic to suffixes that take the 4-way pattern, such as the accusative -(y)I.',
     ],
+  },
+  // G&K §2.1 (voiceless/voiced consonant alternation) + §2.3 (vowel/Ø
+  // alternation). Two stem-internal changes triggered by a vowel-initial
+  // suffix; both are LEXICAL (dictionary-marked), not fully predictable, so
+  // the point teaches the patterns + that most words do NOT change.
+  {
+    key: 'tr-a1-stem-changes',
+    kind: 'grammar',
+    name: 'Stem changes: consonant softening & vowel drop',
+    description:
+      'Before a vowel-initial suffix, final p/t/k/ç soften to b/d/ğ/c (kitap→kitabım, ağaç→ağacı), and some disyllables drop their 2nd-syllable high vowel (şehir→şehri, akıl→aklı). Lexical, per word.',
+    cefrLevel: A1,
+    language: TR,
+    examplesPositive: [
+      'kitap → kitabım (my book — final p softens to b before a vowel suffix)',
+      'ağaç → ağacı (its tree — ç softens to c)',
+      'çocuk → çocuğum (my child — vowel+k softens to ğ; this k→ğ is the one general rule)',
+      'renk → renge (to the colour — k after n softens to g, not ğ)',
+      'şehir → şehri (the city, accusative — 2nd-syllable vowel drops: şeh(i)r-i)',
+      'akıl → aklı (his/her mind — vowel drop: ak(ı)l-ı)',
+      'omuz → omzum (my shoulder — vowel drop: om(u)z-um)',
+      'burun → burnu (its nose — vowel drop: bur(u)n-u)',
+    ],
+    examplesNegative: [
+      '*kitapım (wrong — p softens before a vowel suffix: kitabım)',
+      '*akılı (wrong — the 2nd-syllable vowel drops: aklı for "his/her mind")',
+      '*omuzum (wrong — vowel drop gives omzum for "my shoulder")',
+    ],
+    commonErrors: [
+      'Not softening final p/t/k/ç before a vowel-initial suffix (*kitapım, *ağaçı → kitabım, ağacı).',
+      'Forgetting that final k→ğ is the GENERAL rule for nominals ending in vowel+k (çocuk→çocuğu, yaprak→yaprağı), while k after n→g (renk→renge) and recent European loans keep k (bank→bankı).',
+      'Re-inserting the dropped vowel (*akılı, *omuzum, *şehiri [ACC] → aklı, omzum, şehri): these disyllables lose their 2nd-syllable high vowel before a vowel suffix.',
+      'Over-applying either rule — most words do NOT change (saç→saçım, top→topum, bilet→biletim) and verb roots are largely exempt (ak-→akan); both changes are lexical and dictionary-marked.',
+    ],
+    prerequisiteKeys: ['tr-a1-vowel-harmony'],
   },
   {
     key: 'tr-a1-personal-suffixes',
@@ -304,6 +350,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Substituting the present -(I)yor for planned future events when -(y)AcAk is more idiomatic.',
       'Dropping the -y- buffer after a vowel-final stem (*okuacak instead of okuyacak).',
       'Forming the negative without raising/harmonising -mA (*gelmayacak instead of gelmeyecek).',
+      'Forgetting that the verbs ye- "eat" and de- "say" raise their vowel to i before the -y- of this suffix: yiyecek, diyecek (not *yeyecek, *deyecek).',
     ],
     prerequisiteKeys: ['tr-a1-vowel-harmony'],
   },
@@ -821,6 +868,247 @@ const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   // A2
   // ---------------------------------------------------------------------------
+  // G&K §2.2 (single→double consonant alternation). Sibling of the A1
+  // tr-a1-stem-changes point: a small closed set of Arabic-origin nouns whose
+  // final consonant DOUBLES before a vowel-initial suffix. Lexical and
+  // dictionary-marked (sır (-rrı), hat (-ttı)), so placed at A2.
+  {
+    key: 'tr-a2-consonant-doubling',
+    kind: 'grammar',
+    name: 'Consonant doubling (gemination)',
+    description:
+      'A small set of Arabic-origin nouns double the final consonant before a vowel suffix: hak→hakkım, his→hissi, sır→sırrım, hat→hattı. Single before a consonant suffix (histen). Lexical, per word.',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: [
+      'hak → hakkım (my right — kk before the vowel suffix)',
+      'his → hissi (his/her feeling — ss)',
+      'sır → sırrımız (our secret — rr)',
+      'hat → hattı (the line [ACC] — tt)',
+      'zıt → zıddı (its opposite — dd)',
+      'his → histen (from the feeling — single s before a consonant suffix)',
+    ],
+    examplesNegative: [
+      '*hakım (wrong — the consonant doubles before a vowel suffix: hakkım)',
+      '*sırım (wrong — sırrım for "my secret")',
+      '*hissten (wrong — the doubling is only before a VOWEL suffix; before a consonant it stays single: histen)',
+    ],
+    commonErrors: [
+      'Not doubling the final consonant before a vowel-initial suffix (*hakım, *sırım → hakkım, sırrım).',
+      'Over-doubling before a consonant-initial suffix — the geminate only surfaces before a vowel: histen / haklar (single), but hissi / hakkım (double).',
+      'Assuming it is predictable — only a small Arabic-origin set behaves this way (hak, his, sır, hat, hac, zıt, ret…); most nouns never double (at→atım, ev→evim). Dictionary-marked as sır (-rrı), hat (-ttı).',
+    ],
+    prerequisiteKeys: ['tr-a1-stem-changes'],
+  },
+  // G&K §18.1.2 (kendi) + §18.1.4 (birbir- 'each other'). The PRODUCTIVE
+  // reflexive/reciprocal pronouns, distinct from the closed-set derivational
+  // voice suffixes -(I)n / -(I)ş at B1 (tr-b1-reflexive-voice-kendi,
+  // tr-b1-reciprocal-voice). Most "self / each other" senses use these.
+  {
+    key: 'tr-a2-reflexive-reciprocal-pronouns',
+    kind: 'grammar',
+    name: 'Reflexive & reciprocal pronouns (kendi, birbiri)',
+    description:
+      "kendi + possessive = 'self' (kendim, kendin, kendisi…): reflexive (kendimi gördüm), emphatic (kendim yaptım), adjectival 'own' (kendi evim). birbiri = 'each other' (birbirini, birbirine).",
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: [
+      'Kendimi aynada gördüm. (I saw myself in the mirror — reflexive object.)',
+      'Bunu kendim yaptım. (I did this myself — emphatic.)',
+      'Kendi evimde yaşıyorum. (I live in my own house — adjectival "own".)',
+      'Çocuk kendi kendine giyindi. (The child got dressed by him/herself.)',
+      'Birbirimizi yıllardır tanıyoruz. (We have known each other for years — birbiri + accusative.)',
+      'Birbirine yardım ettiler. (They helped each other — birbiri + dative.)',
+    ],
+    examplesNegative: [
+      '*Kendi gördüm. (wrong — the reflexive object needs a possessive + case: "Kendimi gördüm".)',
+      '*Onlar yardım ettiler each other (wrong — "each other" is birbiri with case: "Birbirine yardım ettiler".)',
+      '*kendi evim benim (redundant — adjectival kendi already means "own": "kendi evim".)',
+    ],
+    commonErrors: [
+      'Using bare kendi as a reflexive object without a possessive + case (*kendi gördüm → kendimi gördüm).',
+      'Confusing the adjectival "own" (kendi evim) with the emphatic "myself" (evi kendim aldım).',
+      'Reaching for the closed-set reflexive/reciprocal voice suffixes (-(I)n / -(I)ş) where the productive pronoun is needed — most "self / each other" senses use kendi / birbiri + a plain verb.',
+      'Wrong case on birbiri (birbirini / birbirine / birbiriyle), or pluralising it as *birbirleri instead of agreeing via the possessive (birbirimizi, birbirinizi).',
+    ],
+    prerequisiteKeys: ['tr-a1-possessive-suffixes', 'tr-a1-personal-pronouns'],
+  },
+  // G&K §15.7.3 (distributive numerals) + §7 derivation (-(ş)Ar). Productive
+  // on numerals and kaç; the deletable ş surfaces after a vowel (ikişer) and
+  // drops after a consonant (üçer, beşer, onar). Reduplicated = "X by X".
+  {
+    key: 'tr-a2-distributive',
+    kind: 'grammar',
+    name: 'Distributive numerals -(ş)Ar ("… each")',
+    description:
+      'Distributive -(ş)Ar on numerals = "… each": birer, ikişer, üçer, beşer, onar. The -ş- appears after a vowel (ikişer), drops after a consonant (üçer). Reduplicated = "X by X" (ikişer ikişer).',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: [
+      'Herkese birer elma verdim. (I gave everyone one apple each — bir→birer.)',
+      'Çocuklar ikişer ikişer girdi. (The children came in two by two — reduplicated.)',
+      'Üçer kişilik gruplar kurun. (Form groups of three each — üç→üçer, no -ş-.)',
+      'Beşer lira ödedik. (We each paid five lira — beş→beşer.)',
+      'Onar dakika ara verdik. (We took breaks of ten minutes each — on→onar.)',
+    ],
+    examplesNegative: [
+      '*Herkese bir elma verdim. for "one each" (a plain numeral means a flat count; "one each" is the distributive birer.)',
+      '*ikier (wrong — a vowel-final numeral keeps the -ş-: ikişer)',
+      '*üçşer (wrong — a consonant-final numeral drops the -ş-: üçer)',
+    ],
+    commonErrors: [
+      'Using a plain numeral where the distributive "… each" is meant (bir → birer, iki → ikişer).',
+      'Mishandling the deletable -ş-: it appears after a vowel (ikişer, altışar, yedişer) and drops after a consonant (üçer, beşer, dörder, onar).',
+      'Forgetting that reduplication of the distributive expresses "X by X / in groups of X" (birer birer = one by one).',
+    ],
+    prerequisiteKeys: ['tr-a1-numbers-ordinals'],
+  },
+  // G&K §10.2 (-(s)I compounds), contrast §14.4 genitive-possessive. The
+  // INDEFINITE noun compound (head takes -(s)I, first noun bare) vs the
+  // DEFINITE genitive compound (tr-a1-genitive-possessive: possessor takes
+  // genitive). Case stacks onto the compound head with the -n- buffer because
+  // the -(s)I marker behaves like a 3sg possessive (şehir merkez-i-n-e).
+  {
+    key: 'tr-a2-indefinite-compound',
+    kind: 'grammar',
+    name: 'Indefinite noun compound (belirtisiz isim tamlaması)',
+    description:
+      'Indefinite N+N compound: only the HEAD takes 3sg -(s)I, first noun bare — otobüs bileti, şehir merkezi (vs definite şehrin merkezi). Case stacks after -(s)I via the -n- buffer: merkezine.',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: [
+      'otobüs bileti (a bus ticket — head "bilet" takes -i; "otobüs" stays bare)',
+      'şehir merkezi (the city centre — merkez + -i; no genitive on şehir)',
+      'el çantası (a handbag — vowel-final "çanta" takes the -s- buffer: çanta-sı)',
+      'Türkçe dersi (a Turkish lesson)',
+      'Dün şehir merkezine gittim. (I went to the city centre yesterday — case on the head: merkez-i-n-e.)',
+      'Otobüs biletini kaybettim. (I lost the bus ticket — accusative on the head: bilet-i-n-i.)',
+    ],
+    examplesNegative: [
+      '*şehrin merkezi for the kind "city centre" (that is "the centre OF THE city" — a definite/genitive compound; the bare kind is "şehir merkezi")',
+      '*otobüsün bileti for a generic "bus ticket" (genitive marks one specific bus\'s ticket; the kind is "otobüs bileti")',
+      '*şehir merkez (wrong — the head must take -(s)I: şehir merkezi)',
+      '*şehir merkeze (wrong — case stacks AFTER -(s)I with the -n- buffer: şehir merkezine)',
+    ],
+    commonErrors: [
+      'Marking the first noun with the genitive when no specific possessor is meant: "otobüs bileti" (a kind of ticket), not "*otobüsün bileti" (one specific bus\'s ticket). Genitive ⇒ definite compound (şehrin merkezi); bare first noun ⇒ indefinite compound (şehir merkezi).',
+      'Dropping the -(s)I marker on the head (*şehir merkez → şehir merkezi).',
+      'Forgetting the -s- buffer when the head ends in a vowel (el çanta-sı, not *el çantaı).',
+      'Adding case directly to the head without the -n- buffer (*merkeze → merkezine): the compound -(s)I behaves like a 3sg possessive, so case takes -n- (merkez-i-n-e).',
+    ],
+    prerequisiteKeys: [
+      'tr-a1-possessive-suffixes',
+      'tr-a1-genitive-possessive',
+      'tr-a2-possessive-case-stacking',
+    ],
+  },
+  // Reference/theory anchor for the whole nominal suffix system. G&K §6.3
+  // (order of suffixation), §6.1.3 + §6.2 (buffer consonants y/n + deletable
+  // vowels), §8.1 (nominal inflectional suffixes), §8.1.3 (su/ne irregular
+  // -y-), §8.1.4 (-ki takes -n- before case). clozeUnsuitable: a single
+  // whole-word blank cannot capture a meta-ordering/buffer rule; its value is
+  // the theory page + translation practice on multi-suffix words.
+  {
+    key: 'tr-a2-suffix-order-buffers',
+    clozeUnsuitable: true,
+    kind: 'grammar',
+    name: 'Suffix order & buffer consonants (y / n / s)',
+    description:
+      'Nominal suffix order: root → plural -lAr → possessive → case → -ki → copula (evlerimizdeki). Buffers: -y- joins two vowels (arabaya), -s- on 3sg possessive (kapısı), -n- before case (odasına).',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: [
+      'evlerimizde (in our houses — ev + -ler [plural] + -imiz [possessive] + -de [case], in that fixed order)',
+      'çocuklarına (to your/their children — çocuk-lar-ın-a: possessive before case)',
+      'arabaya (to the car — -y- buffer between the vowel-final stem and the case vowel: araba-y-a)',
+      'kapısı (his/her door — -s- buffer on the 3sg possessive after a vowel: kapı-sı)',
+      'odasına (to his/her room — -n- buffer before case on a 3sg possessive: oda-sı-n-a)',
+      'suyu (the water [ACC] — irregular stem su takes a -y- buffer: su-y-u; likewise ne → neyi)',
+      'evdekinde (in the one at home — -ki itself takes case via the -n- buffer: ev-de-ki-n-de)',
+    ],
+    examplesNegative: [
+      '*evdelerimiz (wrong order — plural and possessive come before case: evlerimizde)',
+      '*kapıı (wrong — the 3sg possessive after a vowel needs the -s- buffer: kapısı)',
+      '*odasıa (wrong — case after a 3sg possessive needs the -n- buffer: odasına)',
+      '*suu / *nei (wrong — su and ne take a -y- buffer before a vowel suffix: suyu, neyi)',
+    ],
+    commonErrors: [
+      'Reversing the template — case before possessive/plural (*ev-de-ler-imiz instead of ev-ler-imiz-de).',
+      'Choosing the wrong buffer: -y- joins two vowels (arabaya), -s- appears only on the 3sg possessive after a vowel (kapısı), and -n- appears before a case suffix on 3sg/3pl possessives, demonstrative/3rd-person pronouns, and -ki (odasına, onu, evdekinde).',
+      'Forgetting that su (water) and ne (what) are irregular — they take a -y- buffer before any vowel-initial suffix (suyu, suya, suyum; neyi, neye), never *suu / *sui / *nee.',
+      'Treating -ki as the end of the word: it can take a further case suffix, and then needs the -n- buffer (evdeki → evdekinde "in the one at home").',
+    ],
+    prerequisiteKeys: [
+      'tr-a1-possessive-suffixes',
+      'tr-a2-possessive-case-stacking',
+      'tr-a1-ki-relativizer',
+    ],
+  },
+  // G&K §21.4.4.3 (optative/volitional) + §8.2.3.1 (the suffix). Only 1sg
+  // -(y)AyIm and 1pl -(y)AlIm are live in modern Turkish; 2nd/3rd persons are
+  // archaic (3rd person uses the imperative -sIn). Drill the suggestion/offer
+  // sense, which our imperative point (A1) does not cover.
+  {
+    key: 'tr-a2-optative',
+    kind: 'grammar',
+    name: 'Optative / volitional -(y)AyIm / -(y)AlIm ("let me / let\'s")',
+    description:
+      "Optative: 1sg -(y)AyIm 'let me / shall I?' (gideyim, yardım edeyim mi?) and 1pl -(y)AlIm 'let's / shall we?' (gidelim, başlayalım). Vowel stems insert -y-; negative -mAyAyIm/-mAyAlIm; often with hadi.",
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: [
+      "Ben gideyim. (Let me go. / I'll get going — 1sg offer to act.)",
+      'Sana yardım edeyim mi? (Shall I help you? — 1sg consultative question.)',
+      "Hadi sinemaya gidelim. (Let's go to the cinema — 1pl suggestion.)",
+      'Biraz dinlenelim mi? (Shall we rest a bit? — 1pl consultative.)',
+      'Başlayayım mı? (Shall I begin? — vowel stem başla- takes the -y- buffer: başla-y-ayım.)',
+      "Geç kalmayalım. (Let's not be late — negative 1pl.)",
+    ],
+    examplesNegative: [
+      '*Ben gidelim. (wrong person — 1sg is "gideyim"; "gidelim" is 1pl "let\'s go".)',
+      '*Başlaayım. (wrong — a vowel-final stem needs the -y- buffer: başlayayım.)',
+      '*Sinemaya gidiyor muyuz? for "shall we go?" (a suggestion uses the optative: "gidelim mi?", not the present tense.)',
+    ],
+    commonErrors: [
+      'Using the present -(I)yor or future -(y)AcAK for a suggestion instead of the optative ("gidiyor muyuz?" instead of "gidelim mi?").',
+      'Confusing 1sg -(y)AyIm with 1pl -(y)AlIm (gideyim = let me go; gidelim = let\'s go).',
+      'Dropping the -y- buffer after a vowel-final stem (*okuayım, *başlaalım → okuyayım, başlayalım).',
+      'Reaching for the optative in the 2nd/3rd person: those forms are archaic — "let him come" is -sIn (gelsin) and a command to "you" is the imperative (gel / gelin), not *gelesin.',
+      'Confusing the optative "let\'s / let me" with necessity -mAlI "must" (gidelim ≠ gitmeliyiz).',
+    ],
+    prerequisiteKeys: ['tr-a1-imperative', 'tr-a1-present-continuous'],
+  },
+  // G&K §18.6 (pronominal quantifiers), §20.5.2–.3 (negative-polarity items
+  // require a negative verb), §12.2.2 (herkes takes singular agreement).
+  {
+    key: 'tr-a2-indefinite-pronouns',
+    kind: 'grammar',
+    name: 'Indefinite & quantifier pronouns (biri / herkes / hiçbir / kimse / hepsi)',
+    description:
+      'Indefinite pronouns: biri(si) someone, herkes everyone (singular verb), hepsi all, bazısı some. Negative-polarity kimse, hiçbiri, hiçbir+N, hiçbir şey REQUIRE a negative verb: Kimse gelmedi.',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: [
+      'Kapıda biri var. (There is someone at the door.)',
+      'Herkes geldi. (Everyone came — herkes takes a SINGULAR verb, not *geldiler.)',
+      'Kimse gelmedi. (No one came — the negative verb is obligatory; literally "anyone came-not".)',
+      'Hiçbir şey görmedim. (I saw nothing / I did not see anything.)',
+      'Hiçbirini beğenmedim. (I did not like any of them — case + -n- buffer: hiçbir-i-n-i.)',
+      'Herkese yardım ettim. (I helped everyone — dative on herkes.)',
+    ],
+    examplesNegative: [
+      '*Kimse geldi. for "nobody came" (wrong — Turkish requires a negative verb: "Kimse gelmedi".)',
+      '*Herkes geldiler. (wrong — herkes is grammatically singular: "Herkes geldi".)',
+      '*Hiçbir şey gördüm. (wrong — needs the negative verb: "Hiçbir şey görmedim".)',
+    ],
+    commonErrors: [
+      'Calquing English "nobody / nothing came" with a positive verb (*Kimse geldi, *Hiçbir şey oldu) — kimse / hiçbiri / hiçbir / hiçbir şey demand a negative verb (-mA), değil, or yok: Kimse gelmedi, Hiçbir şey yok.',
+      'Giving herkes a plural verb (*Herkes geldiler) — it always takes singular agreement (Herkes geldi).',
+      'Dropping case / the -n- buffer on these pronouns: kimseyi, kimseye, hiçbirine, hiçbirini, hepsine, hepsini (not *hiçbiriye, *hepsiye).',
+      'Confusing biri "someone / one of them" with her biri "each one" and hiçbiri "none of them".',
+    ],
+    prerequisiteKeys: ['tr-a1-negation', 'tr-a1-var-yok', 'tr-a1-personal-pronouns'],
+  },
   {
     key: 'tr-a2-possessive-case-stacking',
     // Dedicated home for possessive+case suffix STACKING. Bolting a `case` axis
@@ -1048,6 +1336,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Forgetting the possessive suffix on -mA in embedded clauses ("onun gelme zor" instead of "onun gelmesi zor").',
       'Using -mAk when the embedded subject differs from the main subject: "Onun gelmesini istiyorum" (different subject), not "*Onun gelmek istiyorum" — bare -mAk works only when both subjects are the same.',
       'Picking the wrong harmonised form (*okumek instead of okumak).',
+      'Confusing the -(y)Iş action/manner noun (yürüyüş "a walk", bakış "a look", gülüş "a way of laughing") with the -mIş evidential/perfect verb (yürümüş "s/he has walked"): -(y)Iş names the act or manner; -mIş is a finite verb form.',
     ],
     prerequisiteKeys: ['tr-a1-possessive-suffixes'],
     clozeUnsuitable: true,
@@ -1067,6 +1356,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Burada oturan kadın öğretmen. (The woman sitting here is a teacher.)',
       'Kırmızı olan araba bizim. (The car that is red is ours — olan = ol- + -(y)An relativizes a nominal predicate.)',
       'Hiç çalışmayan öğrenci sınıfta kaldı. (The student who doesn\'t study at all failed — negative -mAyAn.)',
+      'Çalışan kazanır. (The one who works wins — headless: -(y)An stands alone as the noun phrase, no head.)',
     ],
     examplesNegative: [
       '*Ben okuyan kitap. (wrong — -(y)An only marks SUBJECT relatives; non-subject "the book I read" needs the B2 -DIK form: "benim okuduğum kitap".)',
@@ -1278,6 +1568,45 @@ const trCurriculum: readonly GrammarPoint[] = [
   // (B2 is a separate later cycle.)
   // ===========================================================================
 
+  // G&K §27.2.1.1 (open conditionals: aorist + -(y)sA) + §27.2.1.3 (olursa).
+  // The VERBAL real/open conditional, distinct from tr-b1-conditional-irrealis
+  // (which covers the -sA wish, the -sAydI counterfactual, and the copular
+  // -(y)sA on nominals). Here the if-clause is aorist + -sA (gelirse, yağarsa,
+  // olursa) for a real future possibility; main clause = aorist or -(y)AcAK.
+  {
+    key: 'tr-b1-real-conditional',
+    conjugationSuitable: true,
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
+        { name: 'polarity', floors: { affirmative: 18, negative: 12 } },
+      ],
+    },
+    kind: 'grammar',
+    name: 'Open / real conditional -(I)rsA',
+    description:
+      'Real future condition: aorist + -sA on the if-clause (gelirse, yağarsa, olursa), main clause aorist or -(y)AcAK. A genuine possibility — contrast hypothetical -sA / counterfactual -sAydI.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Yağmur yağarsa pikniğe gitmeyiz. (If it rains we will not go to the picnic.)',
+      'Param olursa yeni bir telefon alacağım. (If I have the money I will buy a new phone.)',
+      'Acele edersek yetişiriz. (If we hurry we will make it.)',
+      'Onu görürsen selam söyle. (If you see him, say hello — volitional main clause.)',
+      'Beğenmezsen geri verebilirsin. (If you do not like it you can give it back — negative -mezse.)',
+    ],
+    examplesNegative: [
+      '*Yağmur yağsa pikniğe gitmeyiz. (for a real possibility — hypothetical -sA reads as a wish/unlikely; the open conditional is "yağarsa".)',
+      '*Param olursaydı alırdım. (mixes markers — a real condition is "olursa + non-past"; the counterfactual is "olsaydı, alırdım".)',
+    ],
+    commonErrors: [
+      'Using bare hypothetical -sA (gelse) for a real future possibility instead of the aorist conditional -(I)rsA (gelirse).',
+      'Forming the negative as *gelmese for "if … not" instead of the aorist-negative -mAzsA (gelmezse, beğenmezsen).',
+      'Pairing the open conditional with a past main clause (*yağarsa gitmedik) — its consequence is non-past (aorist or -(y)AcAK).',
+      'Confusing the real conditional (aorist + -sA) with the counterfactual -sAydI (olursa = if it happens; olsaydı = if it had happened).',
+    ],
+    prerequisiteKeys: ['tr-a2-aorist', 'tr-b1-conditional-irrealis'],
+  },
   // G&K §21.3.1–.2 (imperfective: progressive + habitual), §21.2.1 (past)
   {
     key: 'tr-b1-past-continuous-iyordu',
@@ -1596,6 +1925,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       "Yarın gideceğimiz şehir Bursa. (The city we will go to tomorrow is Bursa.)",
       'Annemin yaptığı yemek (the food my mother made)',
       'Oturduğun sandalye kırık. (The chair you are sitting on is broken.)',
+      'Söylediğini duymadım. (I didn\'t hear what you said — headless: -DIK + possessive stands alone as the noun phrase, then takes case.)',
     ],
     examplesNegative: [
       '*Benim okuyan kitap (wrong — subject relative -(y)An cannot encode "the book I read"; needs -DIK + possessive: okuduğum kitap)',
