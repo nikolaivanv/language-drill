@@ -77,7 +77,7 @@ describe('AnnotatedView — flagged ≥ 1', () => {
     ).not.toBeInTheDocument();
     expect(screen.getByText(/flagged ·/)).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /save to library/i }),
+      screen.getByRole('button', { name: /save text/i }),
     ).toBeInTheDocument();
   });
 

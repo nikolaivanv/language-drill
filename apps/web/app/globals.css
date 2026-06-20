@@ -253,6 +253,25 @@
   animation: sheet-slide 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
+/* ─── Indeterminate progress bar ─── */
+/* A short segment that sweeps left→right across the track, reading clearly as
+   "work in progress" (used by the read generating state). Falls back to a
+   static fill under prefers-reduced-motion. */
+@keyframes indeterminate-bar {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+.indeterminate-bar {
+  width: 25%;
+  animation: indeterminate-bar 1.15s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .indeterminate-bar {
+    width: 100%;
+    animation: none;
+  }
+}
+
 /* ─── Theory: header ─── */
 .theory-header {
   display: flex;

@@ -1,19 +1,20 @@
 // ---------------------------------------------------------------------------
-// CalibrationStrip — pure presentational chip + explanation + "adjust"
+// CalibrationStrip — pure presentational chip + explanation
 // ---------------------------------------------------------------------------
-// Both strings are pre-computed by `calibrationCopy(level)` (task 20). The
-// "adjust" button is a no-op visual element in v1 (Requirement 6.11) — the
-// real calibration UI lands in a future phase.
+// Both strings are pre-computed by `calibrationCopy(level)` (task 20).
+//
+// (A v1 "adjust" button used to sit here as a no-op placeholder for a future
+// calibration UI; it was removed rather than ship a dead affordance — highlight
+// intensity lives in the header toggle and difficulty in the AdjustBar.)
 //
 // Streaming state (task 37): when `streaming` is set, the strip swaps to a
 // mono "annotating · M / N" line with a determinate progress bar instead of
-// the eyebrow/explanation/adjust composition. Once annotation completes the
-// caller drops `streaming` back to undefined and the eyebrow returns; if
-// zero words were flagged, the caller passes `noAboveLevelWords` so the
-// explanation slot reads "· no above-level words" (Req §NFR Usability).
+// the eyebrow/explanation composition. Once annotation completes the caller
+// drops `streaming` back to undefined and the eyebrow returns; if zero words
+// were flagged, the caller passes `noAboveLevelWords` so the explanation slot
+// reads "· no above-level words" (Req §NFR Usability).
 // ---------------------------------------------------------------------------
 
-import { Button } from '../../../../components/ui/button';
 import { Chip } from '../../../../components/ui/chip';
 
 type Props = {
@@ -69,9 +70,6 @@ export function CalibrationStrip({
       <span className="t-small text-ink-soft flex-1">
         {noAboveLevelWords ? '· no above-level words' : explanation}
       </span>
-      <Button variant="ghost" size="sm">
-        adjust
-      </Button>
     </div>
   );
 }

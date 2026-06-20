@@ -76,6 +76,23 @@ describe('LengthControl', () => {
     expect(onChange).toHaveBeenCalledWith(ReadingTextLength.LONG);
   });
 
+  it('forces the paper colour on the selected label (overrides .t-body ink)', () => {
+    render(
+      <LengthControl
+        value={ReadingTextLength.SHORT}
+        onChange={() => {}}
+      />,
+    );
+    // The selected card is ink-filled, so its label must not inherit the dark
+    // `.t-body` colour (regression: dark text on a near-black fill).
+    const label = screen.getByText(ReadingTextLength.SHORT);
+    expect(label).toHaveStyle({ color: 'var(--color-paper)' });
+
+    // A non-selected label carries no inline colour override.
+    const other = screen.getByText(ReadingTextLength.LONG);
+    expect(other.getAttribute('style')).toBeFalsy();
+  });
+
   it('does not fire onChange when disabled', () => {
     const onChange = vi.fn();
     render(

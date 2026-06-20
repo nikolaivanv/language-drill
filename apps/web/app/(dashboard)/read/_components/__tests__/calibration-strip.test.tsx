@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { CalibrationStrip } from '../calibration-strip';
 
 // ---------------------------------------------------------------------------
-// CalibrationStrip — pure render of two strings + a no-op "adjust" button
-// (Requirements 6.2, 6.11) plus the streaming/zero-flag variants added in
-// task 37 (Requirements 5.3, 5.5, NFR Usability).
+// CalibrationStrip — pure render of two strings (Requirement 6.2) plus the
+// streaming/zero-flag variants added in task 37 (Requirements 5.3, 5.5, NFR
+// Usability). The v1 no-op "adjust" button was removed.
 // ---------------------------------------------------------------------------
 
 describe('CalibrationStrip', () => {
@@ -37,14 +37,11 @@ describe('CalibrationStrip', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders the "adjust" ghost button as a no-op (no handler attached, no DOM mutation on click)', () => {
-    const { container } = render(
-      <CalibrationStrip eyebrow="x" explanation="y" />,
-    );
-    const adjust = screen.getByRole('button', { name: /adjust/i });
-    const before = container.innerHTML;
-    fireEvent.click(adjust);
-    expect(container.innerHTML).toBe(before);
+  it('renders no "adjust" button (the v1 no-op placeholder was removed)', () => {
+    render(<CalibrationStrip eyebrow="x" explanation="y" />);
+    expect(
+      screen.queryByRole('button', { name: /adjust/i }),
+    ).not.toBeInTheDocument();
   });
 });
 
@@ -58,13 +55,10 @@ describe('CalibrationStrip — streaming state', () => {
       />,
     );
     expect(screen.getByText(/annotating · 2 \/ 5/)).toBeInTheDocument();
-    // Eyebrow + explanation + adjust must be hidden while streaming.
+    // Eyebrow + explanation must be hidden while streaming.
     expect(screen.queryByText('~B1+ calibration')).not.toBeInTheDocument();
     expect(
       screen.queryByText('should-not-render-while-streaming'),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: /adjust/i }),
     ).not.toBeInTheDocument();
 
     const bar = screen.getByRole('progressbar');
@@ -126,9 +120,5 @@ describe('CalibrationStrip — no above-level words suffix', () => {
       />,
     );
     expect(screen.getByText('~B1+ calibration')).toBeInTheDocument();
-    // Adjust button still rendered in the completion state.
-    expect(
-      screen.getByRole('button', { name: /adjust/i }),
-    ).toBeInTheDocument();
   });
 });

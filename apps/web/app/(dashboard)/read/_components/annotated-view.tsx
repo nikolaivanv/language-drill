@@ -138,6 +138,13 @@ type Props = {
   savedCount: number;
   /** Save the open passage (with current bank) to the library. */
   onSaveToLibrary?: () => void;
+  /**
+   * Whether the passage text can still be saved to the library — false once it
+   * already lives there (an opened/persisted entry). Drives the disabled state
+   * of the "save text" button so it isn't a confusing no-op (it saves the TEXT,
+   * not the collected words).
+   */
+  canSaveToLibrary?: boolean;
   /** Save the passage AND push its banked words into the vocabulary. */
   onAddToVocabulary?: () => void;
   /** True while a library/vocabulary save is in flight. */
@@ -175,6 +182,7 @@ export function AnnotatedView({
   flaggedCount,
   savedCount,
   onSaveToLibrary,
+  canSaveToLibrary = true,
   onAddToVocabulary,
   saving,
   languageLabel,
@@ -234,6 +242,7 @@ export function AnnotatedView({
         flaggedCount={flaggedCount}
         savedCount={savedCount}
         onSaveToLibrary={() => onSaveToLibrary?.()}
+        canSaveToLibrary={canSaveToLibrary}
         onAddToVocabulary={() => onAddToVocabulary?.()}
         saving={saving}
       />

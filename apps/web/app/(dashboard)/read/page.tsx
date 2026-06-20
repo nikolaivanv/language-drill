@@ -895,19 +895,58 @@ export default function ReadPage() {
   // worst-case ~200ms — and the user can always re-tap to recover.
   const handleBankToggle = (word: string) => {
     const inBank = state.bank.includes(word);
-    const newBank = inBank
-      ? state.bank.filter((w) => w !== word)
-      : [...state.bank, word];
+    const lower = word.toLowerCase();
+
+    // Un-bank == "unsave from this passage". Banking a flagged word materialises
+    // a `user_vocabulary` row server-side (read.ts), and the word-bank panel is
+    // driven by those rows — so undo it through the SAME delete path the panel's
+    // ✕ uses, keeping the panel, the bank column, and the FSRS queue consistent.
+    if (inBank) {
+      const existing = savedVocab.find((v) => v.word.toLowerCase() === lower);
+      if (existing) {
+        handleUnsaveVocab(existing);
+        return;
+      }
+      // No materialised vocab row to delete yet (e.g. a lazy entry that hasn't
+      // persisted) — just drop the bank membership.
+      dispatch({ type: 'TOGGLE_BANK_WORD', word });
+      if (state.activeEntryId !== null) {
+        updateBank.mutate(
+          {
+            id: state.activeEntryId,
+            language: activeLanguage,
+            bank: state.bank.filter((w) => w !== word),
+          },
+          { onError: () => dispatch({ type: 'SHOW_INLINE_ERROR', kind: 'bank' }) },
+        );
+      }
+      return;
+    }
+
+    // Bank (add) a flagged word.
+    const newBank = [...state.bank, word];
     dispatch({ type: 'TOGGLE_BANK_WORD', word });
 
     if (state.activeEntryId !== null) {
+      const entryId = state.activeEntryId;
       updateBank.mutate(
         {
-          id: state.activeEntryId,
+          id: entryId,
           language: activeLanguage,
           bank: newBank,
         },
         {
+          // The PUT materialises a vocab row for the added word. Refetch the
+          // entry so the word-bank panel surfaces it right away — without this,
+          // flagged saves only appeared after a reload, while non-flagged
+          // on-demand saves (patched optimistically in handleSaveCard) showed at
+          // once. That divergence was the "depends on whether it's underlined"
+          // inconsistency.
+          onSuccess: () => {
+            void queryClient.invalidateQueries({
+              queryKey: ['readEntry', entryId],
+            });
+          },
           onError: () => {
             // The bank-sync effect picks up `setQueryData(previousEntry)` from
             // useUpdateReadBank.onError and rolls the reducer's bank back.
@@ -935,6 +974,12 @@ export default function ReadPage() {
       {
         onSuccess: (data) => {
           dispatch({ type: 'ENTRY_PERSISTED', entryId: data.id });
+          // The POST materialised the banked word's vocab row, but the
+          // write-through cache from useSaveReadEntry carries no `savedVocab`.
+          // Refetch so the panel reflects the freshly-banked word.
+          void queryClient.invalidateQueries({
+            queryKey: ['readEntry', data.id],
+          });
         },
         onError: () => {
           dispatch({ type: 'SHOW_INLINE_ERROR', kind: 'save' });
@@ -944,10 +989,11 @@ export default function ReadPage() {
   };
 
   // Save the open (unsaved) passage to the library, even with an empty bank —
-  // the redesigned collect bar exposes an explicit "save to library" that no
-  // longer requires collecting a word first. When the entry already exists this
-  // is a no-op (it's already in history). Persists provenance metadata so the
-  // library card is rich for generated texts.
+  // the redesigned collect bar exposes an explicit "save text" that no longer
+  // requires collecting a word first. When the entry already exists this is a
+  // no-op (it's already in history) — the button is disabled in that state via
+  // `canSaveToLibrary` so it never looks actionable. Persists provenance
+  // metadata so the library card is rich for generated texts.
   const handleSaveToLibrary = () => {
     if (state.activeEntryId !== null) return;
     if (saveEntry.isPending) return;
@@ -1152,6 +1198,13 @@ export default function ReadPage() {
           flaggedCount={Object.keys(annotatedEntry.flaggedWords).length}
           savedCount={savedVocab.length}
           onSaveToLibrary={handleSaveToLibrary}
+          // The text can only be saved while it's an unsaved paste that's
+          // finished annotating; an opened/persisted entry already lives in the
+          // library, so the button disables instead of silently no-op'ing.
+          canSaveToLibrary={
+            state.activeEntryId === null &&
+            annotate.state.phase === 'complete'
+          }
           onAddToVocabulary={handleAddToVocabulary}
           saving={saveEntry.isPending}
           languageLabel={languageLabel}

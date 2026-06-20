@@ -722,6 +722,69 @@ describe('ReadPage — streaming annotate flow', () => {
     expect(saveMutate).not.toHaveBeenCalled();
   });
 
+  it('banking a flagged word from the skim card refetches the entry so it surfaces in the word bank', () => {
+    // Regression: flagged-word saves go through the bank PUT, which materialises
+    // a vocab row server-side. Without a follow-up refetch the word never
+    // appeared in the (vocab-driven) word-bank panel until reload — while
+    // non-flagged on-demand saves showed at once. We invalidate the entry query
+    // on PUT success so both behave the same.
+    const invalidateSpy = vi.spyOn(QueryClient.prototype, 'invalidateQueries');
+    setEntries(ENTRIES_3);
+    setEntry(FULL_ENTRY);
+    setUpdateBank({
+      mutateImpl: (_vars, opts) => opts?.onSuccess?.({ id: ENTRY_ID, bank: ['aldea'] }),
+    });
+    renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
+    fireEvent.click(screen.getByRole('button', { name: /\+ save to bank/i }));
+
+    expect(updateBankMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ id: ENTRY_ID, bank: ['aldea'] }),
+      expect.anything(),
+    );
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: ['readEntry', ENTRY_ID],
+    });
+    invalidateSpy.mockRestore();
+  });
+
+  it('un-banking a flagged word from the skim card deletes its vocabulary row', () => {
+    // The word-bank panel is vocab-driven, so un-saving a flagged word must drop
+    // the materialised vocab row (the same delete the panel ✕ runs) — not just
+    // the bank membership — or the word would linger in the panel.
+    setEntries(ENTRIES_3);
+    setEntry({
+      ...FULL_ENTRY,
+      bank: ['aldea'],
+      savedVocab: [
+        {
+          id: 'vocab-aldea',
+          word: 'aldea',
+          lemma: 'aldea',
+          gloss: 'a small village',
+          type: 'word',
+          cefr: CefrLevel.B2,
+        },
+      ],
+    });
+    renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
+    // Already banked → the skim card shows the saved/undo affordance.
+    fireEvent.click(screen.getByRole('button', { name: /✓ saved · undo/i }));
+
+    expect(deleteVocabMutate).toHaveBeenCalledWith(
+      'vocab-aldea',
+      expect.anything(),
+    );
+    // And the bank PUT drops the membership too.
+    expect(updateBankMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ id: ENTRY_ID, bank: [] }),
+      expect.anything(),
+    );
+  });
+
   it('error event with partial flags retains the AnnotatedView (and does NOT surface the inline AnnotatedError card) — Req 5.6, 5.10', () => {
     // start flips to error WITH a partial flag already buffered.
     annotateStart.mockImplementation(() => {
