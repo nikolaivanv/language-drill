@@ -27,6 +27,7 @@ const EXPECTED_KEY_CATEGORY: Record<string, TheoryCategoryId> = {
   "es-b2-nuanced-ser-estar": "pairs",
   // Turkish A1
   "tr-a1-vowel-harmony": "orthography",
+  "tr-a1-stem-changes": "orthography",
   "tr-a1-personal-suffixes": "morphology",
   "tr-a1-plural-suffix": "morphology",
   "tr-a1-locative": "cases",
@@ -53,6 +54,10 @@ const EXPECTED_KEY_CATEGORY: Record<string, TheoryCategoryId> = {
   "tr-a1-beri-dir": "syntax",
   "tr-a1-comparative-superlative": "syntax",
   // Turkish A2
+  "tr-a2-indefinite-compound": "morphology",
+  "tr-a2-suffix-order-buffers": "morphology",
+  "tr-a2-optative": "moods",
+  "tr-a2-indefinite-pronouns": "pronouns",
   "tr-a2-mis-evidential": "tenses",
   "tr-a2-aorist": "tenses",
   "tr-a2-ability-necessity": "moods",

@@ -267,7 +267,7 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
     }
   });
 
-  it('the full TR clozeUnsuitable set is exactly these fifteen points', () => {
+  it('the full TR clozeUnsuitable set is exactly these sixteen points', () => {
     const flagged = trCurriculum
       .filter((g) => g.clozeUnsuitable === true)
       .map((g) => g.key)
@@ -280,6 +280,7 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
         'tr-a2-correlative-conjunctions',
         'tr-a2-nominalization',
         'tr-a2-possessive-case-stacking',
+        'tr-a2-suffix-order-buffers',
         'tr-a2-relative-an',
         'tr-b1-converb-while-yken',
         'tr-b1-participles-dik-acak',
