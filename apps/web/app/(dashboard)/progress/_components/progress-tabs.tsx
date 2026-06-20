@@ -12,7 +12,7 @@ import {
 
 // ---------------------------------------------------------------------------
 // ProgressTabs — WAI-ARIA tablist for /progress.
-//   role="tablist"  →  three role="tab" buttons (shape / fluency / history)
+//   role="tablist"  →  four role="tab" buttons (map / shape / fluency / history)
 //   left/right arrows cycle, Home/End jump to ends, Enter/Space activate
 //   automatic activation: arrow keys also call onChange (matches the
 //   prototype's simple toggle UX)

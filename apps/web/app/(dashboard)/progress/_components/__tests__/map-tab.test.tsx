@@ -148,6 +148,41 @@ describe('MapTab', () => {
     expect(screen.getByText(/builds on Verb "to be"/i)).toBeDefined();
   });
 
+  it('renders the mastery bar with correct width for a learning point with mastery', () => {
+    const fixtureWithMastery: CurriculumMapResponse = {
+      language: Language.TR,
+      activeLevel: 'A1',
+      levels: [
+        {
+          level: 'A1',
+          solidCount: 0,
+          total: 1,
+          readyToAdvance: false,
+          isPreview: false,
+          points: [
+            pt('tr-a1-test', 'Test Point', 1, 'learning', {
+              mastery: 0.65,
+              errorProne: false,
+            }),
+          ],
+        },
+      ],
+    };
+
+    render(
+      <MapTab
+        data={fixtureWithMastery}
+        isLoading={false}
+        error={null}
+        onRetry={noop}
+        errorThemes={[]}
+      />,
+    );
+    const masteryBar = screen.getByTestId('mastery-bar');
+    expect(masteryBar).toBeDefined();
+    expect(masteryBar.style.width).toBe('65%');
+  });
+
   it('renders a loading spinner while isLoading is true', () => {
     render(
       <MapTab

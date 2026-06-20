@@ -6,7 +6,6 @@ import { Card } from '../../../../components/ui/card';
 import { Button } from '../../../../components/ui/button';
 import { WorkOnThese } from '../../_components/work-on-these';
 import { collapseSolidRuns, type MapEntry } from '../_lib/collapse-solid-runs';
-import { cn } from '../../../../lib/cn';
 
 // ---------------------------------------------------------------------------
 // MapTab — read-only curriculum spine for /progress.
@@ -125,6 +124,7 @@ function MasteryBar({
       }}
     >
       <div
+        data-testid="mastery-bar"
         style={{
           width: `${Math.round(mastery * 100)}%`,
           height: '100%',
