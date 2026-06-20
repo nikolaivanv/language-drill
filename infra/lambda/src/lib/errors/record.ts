@@ -37,6 +37,7 @@ export function freeWritingErrorsToEvaluationErrors(
     text: e.original,
     correction: e.correction,
     explanation: e.note ?? '',
+    grammarPointKey: e.grammarPointKey ?? null,
   }));
 }
 

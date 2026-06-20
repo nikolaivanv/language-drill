@@ -23,6 +23,7 @@ import {
   buildFreeWritingUserPrompt,
 } from "./free-writing-prompts.js";
 import { getPromptOrFallback, sha8 } from "./prompts-registry.js";
+import type { AttributionKey } from "./prompts.js";
 import { ContentRejectedError } from "./content-rejected-error.js";
 
 export const FREE_WRITING_EVAL_TOOL_NAME = "submit_free_writing_evaluation";
@@ -38,89 +39,126 @@ export const FREE_WRITING_EVAL_MAX_RETRIES = 1;
 const CRITERION_IDS: readonly FreeWritingCriterionId[] = ["task", "coherence", "lexis", "grammar"];
 const SEVERITIES: readonly FreeWritingSeverity[] = ["high", "med", "low"];
 
-export const FREE_WRITING_EVAL_TOOL: Anthropic.Tool = {
-  name: FREE_WRITING_EVAL_TOOL_NAME,
-  description:
-    "Submit the structured free-writing evaluation: four IELTS-style criteria, located errors, highlights, and an improved version.",
-  input_schema: {
-    type: "object" as const,
-    properties: {
-      overallScore: { type: "number", description: "Holistic grade 0.0–1.0." },
-      overallCefr: { type: "string", description: "Overall writing CEFR level, e.g. B2." },
-      headline: { type: "string", description: "One vivid sentence (English)." },
-      summary: { type: "string", description: "2–3 sentence summary (English)." },
-      criteria: {
-        type: "array",
-        description: "Exactly four criteria, in order: task, coherence, lexis, grammar.",
-        items: {
+/**
+ * Build the `submit_free_writing_evaluation` tool. When `attributionKeys` is
+ * non-empty, each located error gains an OPTIONAL `grammarPointKey` constrained
+ * to a closed `enum` of the level's in-scope curriculum keys — so the evaluator
+ * can attribute an error to a point but can never invent a key. Mirrors
+ * `buildEvaluationTool` in evaluate.ts.
+ */
+export function buildFreeWritingEvalTool(
+  attributionKeys?: readonly AttributionKey[],
+): Anthropic.Tool {
+  const errorProps: Record<string, unknown> = {
+    n: { type: "number", description: "1-based index." },
+    severity: { type: "string", enum: ["high", "med", "low"] },
+    type: { type: "string", description: "Short category label in the target language." },
+    original: { type: "string", description: "Exact substring of the learner's text." },
+    correction: { type: "string" },
+    where: { type: "string" },
+    note: { type: "string" },
+  };
+
+  if (attributionKeys && attributionKeys.length > 0) {
+    errorProps.grammarPointKey = {
+      type: "string",
+      enum: attributionKeys.map((k) => k.key),
+      description:
+        "OPTIONAL. The curriculum key of the grammar point THIS error violates. " +
+        "Must be one of the keys listed in the user message's 'Grammar points in scope' block. " +
+        "Omit entirely if the error does not violate any listed point (e.g. a lexical or spelling slip).",
+    };
+  }
+
+  return {
+    name: FREE_WRITING_EVAL_TOOL_NAME,
+    description:
+      "Submit the structured free-writing evaluation: four IELTS-style criteria, located errors, highlights, and an improved version.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        overallScore: { type: "number", description: "Holistic grade 0.0–1.0." },
+        overallCefr: { type: "string", description: "Overall writing CEFR level, e.g. B2." },
+        headline: { type: "string", description: "One vivid sentence (English)." },
+        summary: { type: "string", description: "2–3 sentence summary (English)." },
+        criteria: {
+          type: "array",
+          description: "Exactly four criteria, in order: task, coherence, lexis, grammar.",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string", enum: ["task", "coherence", "lexis", "grammar"] },
+              label: { type: "string" },
+              score: { type: "number", description: "0.0–1.0." },
+              cefr: { type: "string", description: "Per-criterion CEFR estimate, e.g. B1+." },
+              note: { type: "string" },
+            },
+            required: ["id", "label", "score", "cefr", "note"],
+          },
+        },
+        errors: {
+          type: "array",
+          description: "Located errors. `original` MUST be an exact substring of the learner's text.",
+          items: {
+            type: "object",
+            properties: errorProps,
+            // grammarPointKey is intentionally NOT required (attribution is best-effort).
+            required: ["n", "severity", "type", "original", "correction", "note"],
+          },
+        },
+        goodSpans: {
+          type: "array",
+          description: "Exact substrings of the learner's text done well.",
+          items: { type: "string" },
+        },
+        improved: {
           type: "object",
           properties: {
-            id: { type: "string", enum: ["task", "coherence", "lexis", "grammar"] },
-            label: { type: "string" },
-            score: { type: "number", description: "0.0–1.0." },
-            cefr: { type: "string", description: "Per-criterion CEFR estimate, e.g. B1+." },
-            note: { type: "string" },
+            text: { type: "string", description: "Freshly written improved paragraph(s)." },
+            upgrades: {
+              type: "array",
+              description: "Exact substrings within `text` to highlight as upgrades.",
+              items: { type: "string" },
+            },
           },
-          required: ["id", "label", "score", "cefr", "note"],
+          required: ["text"],
         },
+        wordCount: { type: "number" },
+        improvedWordCount: { type: "number" },
       },
-      errors: {
-        type: "array",
-        description: "Located errors. `original` MUST be an exact substring of the learner's text.",
-        items: {
-          type: "object",
-          properties: {
-            n: { type: "number", description: "1-based index." },
-            severity: { type: "string", enum: ["high", "med", "low"] },
-            type: { type: "string", description: "Short category label in the target language." },
-            original: { type: "string", description: "Exact substring of the learner's text." },
-            correction: { type: "string" },
-            where: { type: "string" },
-            note: { type: "string" },
-          },
-          required: ["n", "severity", "type", "original", "correction", "note"],
-        },
-      },
-      goodSpans: {
-        type: "array",
-        description: "Exact substrings of the learner's text done well.",
-        items: { type: "string" },
-      },
-      improved: {
-        type: "object",
-        properties: {
-          text: { type: "string", description: "Freshly written improved paragraph(s)." },
-          upgrades: {
-            type: "array",
-            description: "Exact substrings within `text` to highlight as upgrades.",
-            items: { type: "string" },
-          },
-        },
-        required: ["text"],
-      },
-      wordCount: { type: "number" },
-      improvedWordCount: { type: "number" },
+      required: [
+        "overallScore",
+        "overallCefr",
+        "headline",
+        "summary",
+        "criteria",
+        "errors",
+        "goodSpans",
+        "improved",
+        "wordCount",
+        "improvedWordCount",
+      ],
     },
-    required: [
-      "overallScore",
-      "overallCefr",
-      "headline",
-      "summary",
-      "criteria",
-      "errors",
-      "goodSpans",
-      "improved",
-      "wordCount",
-      "improvedWordCount",
-    ],
-  },
-};
+  };
+}
+
+/** Back-compat default tool (no attribution field). */
+export const FREE_WRITING_EVAL_TOOL: Anthropic.Tool = buildFreeWritingEvalTool();
 
 export type EvaluateFreeWritingInput = {
   content: FreeWritingContent;
   userAnswer: string;
   language: Language;
   difficulty: CefrLevel;
+  /**
+   * The closed set of curriculum grammar-point keys (key + name) in scope for
+   * this level. Resolved by the caller from `grammarPointsAtOrBelow`. When
+   * present, the evaluator may attribute each error to one of these keys
+   * (constrained by the tool-schema enum + the user-prompt list); when absent,
+   * attribution is skipped (keys → null). Unlike the focused evaluator, the FW
+   * set is the whole level's curriculum since free writing isn't tied to one point.
+   */
+  attributionKeys?: readonly AttributionKey[];
   /** Eval-runner escape hatch — verbatim system prompt, stamped override cohort. */
   systemPromptOverride?: string;
 };
@@ -136,7 +174,10 @@ function str(v: unknown, fallback = ""): string {
   return typeof v === "string" ? v : fallback;
 }
 
-export function parseFreeWritingEvaluation(input: unknown): FreeWritingEvaluation {
+export function parseFreeWritingEvaluation(
+  input: unknown,
+  validKeys?: ReadonlySet<string>,
+): FreeWritingEvaluation {
   if (typeof input !== "object" || input === null) {
     throw new Error("Free writing evaluation must be an object");
   }
@@ -167,6 +208,12 @@ export function parseFreeWritingEvaluation(input: unknown): FreeWritingEvaluatio
     const o = e as Record<string, unknown>;
     if (!SEVERITIES.includes(o.severity as FreeWritingSeverity)) return;
     if (typeof o.original !== "string" || typeof o.correction !== "string") return;
+    // Per-error attribution: keep the key only if it is in the level's in-scope
+    // set; otherwise null. Null when absent or when no set was supplied.
+    const grammarPointKey =
+      validKeys && typeof o.grammarPointKey === "string" && validKeys.has(o.grammarPointKey)
+        ? o.grammarPointKey
+        : null;
     errors.push({
       n: typeof o.n === "number" ? o.n : i + 1,
       severity: o.severity as FreeWritingSeverity,
@@ -175,6 +222,7 @@ export function parseFreeWritingEvaluation(input: unknown): FreeWritingEvaluatio
       correction: o.correction,
       where: typeof o.where === "string" ? o.where : undefined,
       note: str(o.note),
+      grammarPointKey,
     });
   });
 
@@ -211,9 +259,15 @@ export async function evaluateFreeWriting(
   client: Anthropic,
   input: EvaluateFreeWritingInput,
 ): Promise<FreeWritingEvaluation> {
-  const { content, userAnswer, language, difficulty, systemPromptOverride } = input;
+  const { content, userAnswer, language, difficulty, attributionKeys, systemPromptOverride } = input;
 
-  const userPrompt = buildFreeWritingUserPrompt(content, userAnswer, language, difficulty);
+  const userPrompt = buildFreeWritingUserPrompt(
+    content,
+    userAnswer,
+    language,
+    difficulty,
+    attributionKeys,
+  );
 
   let systemPromptText: string;
   if (systemPromptOverride !== undefined) {
@@ -240,7 +294,7 @@ export async function evaluateFreeWriting(
       },
     ],
     messages: [{ role: "user" as const, content: userPrompt }],
-    tools: [FREE_WRITING_EVAL_TOOL],
+    tools: [buildFreeWritingEvalTool(attributionKeys)],
     tool_choice: { type: "tool" as const, name: FREE_WRITING_EVAL_TOOL_NAME },
     temperature: 0,
   });
@@ -269,5 +323,9 @@ export async function evaluateFreeWriting(
     );
   }
 
-  return parseFreeWritingEvaluation(toolUseBlock.input);
+  const validKeys =
+    attributionKeys && attributionKeys.length > 0
+      ? new Set(attributionKeys.map((k) => k.key))
+      : undefined;
+  return parseFreeWritingEvaluation(toolUseBlock.input, validKeys);
 }

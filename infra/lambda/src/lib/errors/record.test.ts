@@ -74,6 +74,7 @@ describe('freeWritingErrorsToEvaluationErrors', () => {
       text: 'los niños va',
       correction: 'los niños van',
       explanation: 'Subject-verb agreement error',
+      grammarPointKey: null,
     });
 
     expect(result[1]).toEqual<EvaluationError>({
@@ -82,6 +83,7 @@ describe('freeWritingErrorsToEvaluationErrors', () => {
       text: 'muy bonita',
       correction: 'muy hermosa',
       explanation: '',
+      grammarPointKey: null,
     });
 
     expect(result[2]).toEqual<EvaluationError>({
@@ -90,7 +92,34 @@ describe('freeWritingErrorsToEvaluationErrors', () => {
       text: 'accion',
       correction: 'acción',
       explanation: 'Missing accent mark',
+      grammarPointKey: null,
     });
+  });
+
+  it('carries an attributed grammarPointKey through to the EvaluationError', () => {
+    const fwErrors: FreeWritingError[] = [
+      {
+        n: 1,
+        severity: 'high',
+        type: 'Subjuntivo',
+        original: 'tendría',
+        correction: 'tuviera',
+        note: 'n',
+        grammarPointKey: 'es-b2-subjunctive',
+      },
+      {
+        n: 2,
+        severity: 'low',
+        type: 'Léxico',
+        original: 'cosa',
+        correction: 'asunto',
+        note: 'n',
+        // no grammarPointKey → null
+      },
+    ];
+    const result = freeWritingErrorsToEvaluationErrors(fwErrors);
+    expect(result[0].grammarPointKey).toBe('es-b2-subjunctive');
+    expect(result[1].grammarPointKey).toBeNull();
   });
 });
 
