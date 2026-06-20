@@ -47,4 +47,21 @@ describe('WorkOnThese', () => {
     expect(screen.getByText('Point a')).toBeInTheDocument();
     expect(screen.queryByText('Point d')).not.toBeInTheDocument();
   });
+
+  it('links each row to a drill targeted at its grammar point', () => {
+    render(<WorkOnThese themes={[theme({ grammarPointKey: 'tr-a1-locative', grammarPointName: 'Locative case' })]} />);
+    const link = screen.getByRole('link', { name: /Locative case/i });
+    expect(link).toHaveAttribute('href', '/drill?start=quick&grammarPoint=tr-a1-locative');
+  });
+
+  it('renders a null-grammar-point row as plain text, not a link', () => {
+    render(<WorkOnThese themes={[theme({ grammarPointKey: null, grammarPointName: null })]} />);
+    expect(screen.queryByRole('link', { name: /grammar errors/i })).not.toBeInTheDocument();
+    expect(screen.getByText('grammar errors')).toBeInTheDocument();
+  });
+
+  it('does not render a standalone "practice →" header link', () => {
+    render(<WorkOnThese themes={[theme()]} />);
+    expect(screen.queryByRole('link', { name: /practice/i })).not.toBeInTheDocument();
+  });
 });

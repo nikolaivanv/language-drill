@@ -13,24 +13,33 @@ export function WorkOnThese({ themes }: { themes: InsightsErrorTheme[] }) {
 
   return (
     <section>
-      <div className="flex items-baseline justify-between gap-s-4">
-        <h2 className="t-display-m">work on these</h2>
-        <Link href="/drill" className="t-micro underline">
-          practice →
-        </Link>
-      </div>
+      <h2 className="t-display-m">work on these</h2>
       <ul className="mt-s-3 flex flex-col gap-s-2">
-        {items.map((t) => (
-          <li
-            key={`${t.grammarPointKey ?? '∅'}:${t.errorType}`}
-            className="flex items-baseline justify-between gap-s-3"
-          >
-            <span className="text-[14px] font-medium">{label(t)}</span>
-            <span className="t-mono text-[12px] text-ink-soft">
-              {t.sample.wrongText} → {t.sample.correction} · {t.count}×
+        {items.map((t) => {
+          const inner = (
+            <span className="flex items-baseline justify-between gap-s-3">
+              <span className="text-[14px] font-medium">{label(t)}</span>
+              <span className="t-mono text-[12px] text-ink-soft">
+                {t.sample.wrongText} → {t.sample.correction} · {t.count}×
+              </span>
             </span>
-          </li>
-        ))}
+          );
+          const key = `${t.grammarPointKey ?? '∅'}:${t.errorType}`;
+          return (
+            <li key={key}>
+              {t.grammarPointKey ? (
+                <Link
+                  href={`/drill?start=quick&grammarPoint=${encodeURIComponent(t.grammarPointKey)}`}
+                  className="block hover:text-accent"
+                >
+                  {inner}
+                </Link>
+              ) : (
+                inner
+              )}
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
