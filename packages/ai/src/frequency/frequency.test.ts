@@ -1,17 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { CefrLevel, Language, type LearningLanguage } from "@language-drill/shared";
-import { verbBand } from "./index";
 
 import {
   assertFrequencyFile,
   assertStopwordList,
   cefrRankWindow,
-  frequencyBand,
   loadFrequency,
 } from "./index";
-
-import esFreq from "./es.json";
-import esStopwords from "./stopwords-es.json";
 
 // ---------------------------------------------------------------------------
 // Frequency-lookup contract tests (more-responsive-reading spec Req 1.1, 1.2,
@@ -212,113 +207,3 @@ describe("cefrRankWindow", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Frequency band accessor (R5.1, R5.2): rank-banded, stopword-free, lemma-
-// deduped, rank-sorted seed candidates with per-(language, band) caching.
-// ---------------------------------------------------------------------------
-
-describe("frequencyBand", () => {
-  const A1 = cefrRankWindow(CefrLevel.A1); // { 1, 1000 }
-  const B2 = cefrRankWindow(CefrLevel.B2); // { 5000, 10000 }
-
-  it("excludes closed-class stopwords from the band", () => {
-    const { isStopword } = loadFrequency(Language.ES);
-    const band = frequencyBand(Language.ES, A1.rankMin, A1.rankMax);
-    // Every returned lemma is a content word, never a closed-class stopword.
-    for (const lemma of band) {
-      expect(isStopword(lemma)).toBe(false);
-    }
-    // And a specific known top-rank stopword is absent.
-    expect(band).not.toContain("el");
-  });
-
-  it("dedupes by lemma — no repeated entries", () => {
-    const band = frequencyBand(Language.ES, A1.rankMin, A1.rankMax);
-    expect(new Set(band).size).toBe(band.length);
-  });
-
-  it("restricts candidates to the requested rank window", () => {
-    // A top-frequency content lemma (rank ~74) belongs to A1, not to B2.
-    const casaLemma = loadFrequency(Language.ES).lookup("casa")!.lemma;
-    expect(frequencyBand(Language.ES, A1.rankMin, A1.rankMax)).toContain(casaLemma);
-    expect(frequencyBand(Language.ES, B2.rankMin, B2.rankMax)).not.toContain(
-      casaLemma,
-    );
-  });
-
-  it("is sorted by rank ascending and every lemma is justified in-window", () => {
-    // Reference: lemma → lowest in-window rank, mirroring the production
-    // window-first dedup, derived independently from the raw bundled JSON +
-    // stopword list. Lets us assert window-restriction and sort order without
-    // the band exposing ranks.
-    const freq = esFreq as Record<string, { lemma: string; rank: number }>;
-    const stop = new Set(esStopwords as string[]);
-    const inWindowRank = new Map<string, number>();
-    for (const [surface, e] of Object.entries(freq)) {
-      if (e.rank < A1.rankMin || e.rank > A1.rankMax) continue;
-      if (stop.has(surface) || stop.has(e.lemma)) continue;
-      const existing = inWindowRank.get(e.lemma);
-      if (existing === undefined || e.rank < existing) {
-        inWindowRank.set(e.lemma, e.rank);
-      }
-    }
-
-    const band = frequencyBand(Language.ES, A1.rankMin, A1.rankMax);
-    expect(band.length).toBeGreaterThan(0);
-
-    const ranks = band.map((lemma) => {
-      const r = inWindowRank.get(lemma);
-      // window-restricted: each returned lemma has an in-window justification.
-      expect(r).toBeDefined();
-      expect(r!).toBeGreaterThanOrEqual(A1.rankMin);
-      expect(r!).toBeLessThanOrEqual(A1.rankMax);
-      return r!;
-    });
-
-    // rank-sorted ascending.
-    for (let i = 1; i < ranks.length; i++) {
-      expect(ranks[i]).toBeGreaterThanOrEqual(ranks[i - 1]);
-    }
-  });
-
-  it("returns the same cached instance for the same (language, band)", () => {
-    const a = frequencyBand(Language.TR, 1, 1000);
-    const b = frequencyBand(Language.TR, 1, 1000);
-    expect(a).toBe(b); // identity — repeated calls reuse the cached frozen array
-    // A different band is a different instance.
-    expect(frequencyBand(Language.TR, 2500, 5000)).not.toBe(a);
-  });
-
-  it("returns a frozen array (callers cannot mutate the cached band)", () => {
-    const band = frequencyBand(Language.ES, A1.rankMin, A1.rankMax);
-    expect(Object.isFrozen(band)).toBe(true);
-  });
-});
-
-describe("verbBand", () => {
-  it("includes real Spanish verbs and excludes look-alike non-verbs", () => {
-    // Wide cumulative band to capture both common and mid-frequency verbs.
-    const verbs = new Set(verbBand(Language.ES, 1, 5000));
-    expect(verbs.has("hablar")).toBe(true);
-    expect(verbs.has("comer")).toBe(true);
-    expect(verbs.has("vivir")).toBe(true);
-    // -ar/-er/-ir suffix but NOT verbs (≤2 surfaces: singular + plural).
-    expect(verbs.has("lugar")).toBe(false);
-    expect(verbs.has("mujer")).toBe(false);
-    expect(verbs.has("mar")).toBe(false);
-    expect(verbs.has("ayer")).toBe(false);
-  });
-
-  it("is sorted by rank ascending and deterministic (cached identity)", () => {
-    const a = verbBand(Language.ES, 1, 5000);
-    const b = verbBand(Language.ES, 1, 5000);
-    expect(a).toBe(b); // same frozen instance from cache
-    expect([...a]).toEqual([...a].slice().sort(() => 0)); // stable order
-    expect(Object.isFrozen(a)).toBe(true);
-  });
-
-  it("returns empty for languages without a verb config (DE/TR)", () => {
-    expect(verbBand(Language.DE, 1, 5000)).toEqual([]);
-    expect(verbBand(Language.TR, 1, 5000)).toEqual([]);
-  });
-});

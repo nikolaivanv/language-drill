@@ -1,10 +1,9 @@
 /**
- * DB-backed frequency / verb bands for generation seed selection. Replaces the
- * bundle-scanning `frequencyBand`/`verbBand` in @language-drill/ai with queries
- * against `vocab_lemma` (lemma-level, PoS-bearing). Output contract matches the
- * old bands: deduped-by-lemma (the table is 1-row-per-lemma), stopwords removed,
- * ordered by rank ascending with lemma tie-break. The deterministic
- * `pickSeeds`/`pickConjugationSeeds` consume the returned array.
+ * DB-backed frequency / verb bands for generation seed selection. Queries
+ * `vocab_lemma` (lemma-level, PoS-bearing) and returns deduped-by-lemma
+ * arrays with stopwords removed and rows ordered by rank ascending with lemma
+ * tie-break. The deterministic `pickSeeds`/`pickConjugationSeeds` consume the
+ * returned array.
  */
 
 import { and, asc, eq, gte, lte, sql } from 'drizzle-orm';

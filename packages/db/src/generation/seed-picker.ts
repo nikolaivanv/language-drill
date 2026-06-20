@@ -2,9 +2,11 @@
  * packages/db — Deterministic frequency-seed picker for cloze/translation
  * generation (exercise-generation-quality R5).
  *
- * Each ordinal in a cell is assigned a distinct content-word seed drawn from
- * the bundled per-language frequency dictionary, restricted to a CEFR→rank
- * band. The seed is a pure function of `(batchSeed, ordinal)` (hashed) over the
+ * Each ordinal in a cell is assigned a distinct content-word seed drawn from a
+ * caller-injected, pre-filtered band. The band itself is built by
+ * `loadFrequencyBand`/`loadVerbBand` in `vocab-band.ts` (DB-backed CEFR→rank
+ * mapping); this picker is a pure function over whatever band is handed in.
+ * The seed is a pure function of `(batchSeed, ordinal)` (hashed) over the
  * band, so the same cell+batch reproduces the same seeds — a prerequisite for
  * the same-day idempotent scheduler. The generator receives the seed as a loose
  * "build around this word" hint in the per-draft user prompt (task 13), so the
@@ -49,7 +51,7 @@ function hashIndex(key: string): number {
  * whole band is exhausted for an ordinal — or the band is empty for this
  * `(language, window)` — that slot is `null`, signalling the caller to fall
  * back to unseeded generation for it (R5.6). Stopword/rank-band filtering is
- * handled upstream by `frequencyBand` (R5.2).
+ * handled upstream by `loadFrequencyBand` (R5.2).
  *
  * Deterministic: identical options produce identical output.
  */
