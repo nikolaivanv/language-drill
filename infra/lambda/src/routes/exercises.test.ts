@@ -69,7 +69,7 @@ const mockGrammarPointsAtOrBelow = vi.fn(() => [] as { key: string; name: string
 
 vi.mock('@language-drill/db', () => ({
   users: { id: 'id' },
-  exercises: { reviewStatus: 'review_status', type: 'type', audioS3Key: 'audio_s3_key' },
+  exercises: { reviewStatus: 'review_status', type: 'type', audioS3Key: 'audio_s3_key', grammarPointKey: 'grammar_point_key', language: 'language', difficulty: 'difficulty' },
   userExerciseHistory: {},
   usageEvents: {},
   errorObservations: { exerciseHistoryId: 'exercise_history_id' },
@@ -1258,6 +1258,122 @@ describe('audio-ready filter', () => {
     const body = (await res.json()) as AnyJson;
     expect(body.code).toBe('EXERCISE_NOT_FOUND');
     expect(mockAudioReadyFilter).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// grammarPoint filter — Task 4 (curriculum map phase 2)
+// ---------------------------------------------------------------------------
+//
+// The db mock returns canned rows regardless of WHERE conditions, so we cannot
+// test that "the right exercise is returned" — that is an integration concern.
+// What we CAN test:
+//   (a) the param is accepted without a 400 (schema parsing)
+//   (b) the grammar-point eq condition IS passed to `mockWhere` when the param
+//       is present, and is ABSENT when it is not.
+//
+// The exercises table mock exposes `grammarPointKey: 'grammar_point_key'` so
+// the route's `eq(exercisesTable.grammarPointKey, key)` produces a condition
+// object whose second element is the key value; we assert that object is
+// included in the `and(...conditions)` call received by `mockWhere`.
+
+describe('grammarPoint filter (GET /exercises)', () => {
+  let app: Hono;
+
+  const authEnv = {
+    event: {
+      requestContext: {
+        authorizer: { jwt: { claims: { sub: 'user_123' } } },
+      },
+    },
+  };
+
+  const sampleExercise = {
+    id: 'conj-001',
+    type: 'conjugation',
+    language: 'TR',
+    difficulty: 'A1',
+    grammarPointKey: 'tr-a1-dili-past',
+    contentJson: { lemma: 'gitmek', targetForm: 'gitti' },
+    audioS3Key: null,
+    createdAt: new Date(),
+  };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const mod = await import('./exercises');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  it('(a) ?grammarPoint param is accepted and returns 200', async () => {
+    mockLimit.mockResolvedValueOnce([sampleExercise]);
+
+    const res = await app.request(
+      '/exercises?language=TR&difficulty=A1&grammarPoint=tr-a1-dili-past',
+      undefined,
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+  });
+
+  it('(b) grammar-point eq condition is passed to WHERE when grammarPoint param is present', async () => {
+    mockLimit.mockResolvedValueOnce([sampleExercise]);
+
+    await app.request(
+      '/exercises?language=TR&difficulty=A1&grammarPoint=tr-a1-dili-past',
+      undefined,
+      authEnv,
+    );
+
+    // mockWhere captures the conditions array passed to `and(...conditions)`.
+    // The route calls `and(...conditions)` which spreads the array; Drizzle's
+    // `eq` builder returns a two-element-like object. In the mock environment
+    // `eq` is the real drizzle eq, so inspect the serialized call args for the
+    // grammar-point key value.
+    expect(mockWhere).toHaveBeenCalled();
+    const whereArgs = mockWhere.mock.calls[0];
+    // whereArgs[0] is the result of `and(...conditions)`. Stringify and check
+    // for the grammar-point key appearing in the condition tree.
+    const argsStr = JSON.stringify(whereArgs);
+    expect(argsStr).toContain('tr-a1-dili-past');
+  });
+
+  it('(b-inverse) grammar-point condition is ABSENT from WHERE when param is omitted', async () => {
+    mockLimit.mockResolvedValueOnce([sampleExercise]);
+
+    await app.request(
+      '/exercises?language=TR&difficulty=A1',
+      undefined,
+      authEnv,
+    );
+
+    expect(mockWhere).toHaveBeenCalled();
+    const whereArgs = mockWhere.mock.calls[0];
+    const argsStr = JSON.stringify(whereArgs);
+    expect(argsStr).not.toContain('tr-a1-dili-past');
+  });
+
+  it('(schema) ExerciseQuerySchema accepts grammarPoint', () => {
+    const result = ExerciseQuerySchema.safeParse({
+      language: 'TR',
+      difficulty: 'A1',
+      grammarPoint: 'tr-a1-dili-past',
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect((result.data as Record<string, unknown>).grammarPoint).toBe('tr-a1-dili-past');
+    }
+  });
+
+  it('(schema) ExerciseQuerySchema rejects empty string grammarPoint', () => {
+    const result = ExerciseQuerySchema.safeParse({
+      language: 'TR',
+      difficulty: 'A1',
+      grammarPoint: '',
+    });
+    expect(result.success).toBe(false);
   });
 });
 

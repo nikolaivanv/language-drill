@@ -261,6 +261,77 @@ describe('URL parameter construction', () => {
   });
 });
 
+describe('useExercise — grammarPointKey param threading', () => {
+  const SAMPLE_EXERCISE = {
+    id: 'conj-001',
+    type: 'conjugation',
+    language: 'TR',
+    difficulty: 'A1',
+    grammarPointKey: 'tr-a1-dili-past',
+    contentJson: { lemma: 'gitmek', targetForm: 'gitti' },
+  };
+
+  function jsonResponse(body: unknown): Response {
+    return { ok: true, status: 200, json: async () => body } as unknown as Response;
+  }
+
+  function buildWrapper() {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    return function Wrapper({ children }: { children: ReactNode }) {
+      return createElement(QueryClientProvider, { client: queryClient }, children);
+    };
+  }
+
+  it('appends grammarPoint to the request URL when grammarPointKey is provided', async () => {
+    const fetchFn = vi
+      .fn<AuthenticatedFetch>()
+      .mockResolvedValue(jsonResponse(SAMPLE_EXERCISE));
+
+    const { result } = renderHook(
+      () =>
+        useExercise({
+          language: 'TR' as Language,
+          difficulty: CefrLevel.A1,
+          type: ExerciseType.CONJUGATION,
+          grammarPointKey: 'tr-a1-dili-past',
+          fetchFn,
+        }),
+      { wrapper: buildWrapper() },
+    );
+
+    await waitFor(() => expect(result.current.data).toBeDefined());
+
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    const url = fetchFn.mock.calls[0][0] as string;
+    expect(url).toContain('grammarPoint=tr-a1-dili-past');
+  });
+
+  it('does NOT append grammarPoint to the URL when grammarPointKey is omitted', async () => {
+    const fetchFn = vi
+      .fn<AuthenticatedFetch>()
+      .mockResolvedValue(jsonResponse(SAMPLE_EXERCISE));
+
+    const { result } = renderHook(
+      () =>
+        useExercise({
+          language: 'TR' as Language,
+          difficulty: CefrLevel.A1,
+          type: ExerciseType.CONJUGATION,
+          fetchFn,
+        }),
+      { wrapper: buildWrapper() },
+    );
+
+    await waitFor(() => expect(result.current.data).toBeDefined());
+
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    const url = fetchFn.mock.calls[0][0] as string;
+    expect(url).not.toContain('grammarPoint');
+  });
+});
+
 describe('useSubmitAnswer — does not swap the live exercise', () => {
   const SAMPLE_EXERCISE = {
     id: 'conj-1',

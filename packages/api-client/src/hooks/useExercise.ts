@@ -16,6 +16,7 @@ export type UseExerciseParams = {
   language: Language;
   difficulty: CefrLevel;
   type?: ExerciseType;
+  grammarPointKey?: string;
   fetchFn: AuthenticatedFetch;
   enabled?: boolean;
 };
@@ -24,14 +25,16 @@ export function useExercise({
   language,
   difficulty,
   type,
+  grammarPointKey,
   fetchFn,
   enabled = true,
 }: UseExerciseParams) {
   return useQuery<ExerciseResponse, Error>({
-    queryKey: ['exercise', language, difficulty, type],
+    queryKey: ['exercise', language, difficulty, type, grammarPointKey],
     queryFn: async () => {
       const params = new URLSearchParams({ language, difficulty });
       if (type) params.set('type', type);
+      if (grammarPointKey) params.set('grammarPoint', grammarPointKey);
       const response = await fetchFn(`/exercises?${params.toString()}`);
       const json: unknown = await response.json();
       return ExerciseResponseSchema.parse(json);
