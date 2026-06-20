@@ -8,11 +8,14 @@ import {
   useProgressRadar,
   useFluencyStats,
   useErrorTrends,
+  useCurriculumMap,
+  useInsightsErrors,
   type RadarAxis,
 } from '@language-drill/api-client';
 import { useActiveLanguage } from '../../../components/shell/active-language-provider';
 import { ProgressHeader } from './_components/progress-header';
 import { ProgressTabs } from './_components/progress-tabs';
+import { MapTab } from './_components/map-tab';
 import { ShapeTab } from './_components/shape-tab';
 import { FluencyTab } from './_components/fluency-tab';
 import { HistoryTab } from './_components/history-tab';
@@ -30,6 +33,8 @@ export default function ProgressPage() {
   const radar = useProgressRadar({ fetchFn, language: activeLanguage });
   const fluency = useFluencyStats({ fetchFn, language: activeLanguage });
   const history = useErrorTrends({ fetchFn, language: activeLanguage });
+  const curriculum = useCurriculumMap({ fetchFn, language: activeLanguage });
+  const insights = useInsightsErrors({ fetchFn, language: activeLanguage });
 
   // Read proficiency level from the language-profiles cache rather than
   // refetching — the dashboard layout already populated it.
@@ -56,6 +61,15 @@ export default function ProgressPage() {
         weeksActive={weeksActive}
       />
       <ProgressTabs active={tab} onChange={setTab}>
+        {tab === 'map' && (
+          <MapTab
+            data={curriculum.data}
+            isLoading={curriculum.isLoading}
+            error={curriculum.error}
+            onRetry={() => { void curriculum.refetch(); }}
+            errorThemes={insights.data?.themes ?? []}
+          />
+        )}
         {tab === 'shape' && (
           <ShapeTab
             language={activeLanguage}

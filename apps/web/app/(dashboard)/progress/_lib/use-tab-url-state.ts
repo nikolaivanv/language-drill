@@ -10,10 +10,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 // Design reference: design.md §"Component 3 — ProgressTabs"
 // ---------------------------------------------------------------------------
 
-export const PROGRESS_TAB_IDS = ['shape', 'fluency', 'history'] as const;
+export const PROGRESS_TAB_IDS = ['map', 'shape', 'fluency', 'history'] as const;
 export type ProgressTabId = (typeof PROGRESS_TAB_IDS)[number];
 
-const DEFAULT_TAB: ProgressTabId = 'shape';
+const DEFAULT_TAB: ProgressTabId = 'map';
 
 function isProgressTabId(value: string | null): value is ProgressTabId {
   return value !== null && (PROGRESS_TAB_IDS as readonly string[]).includes(value);

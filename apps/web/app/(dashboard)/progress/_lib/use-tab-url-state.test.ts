@@ -20,9 +20,9 @@ beforeEach(() => {
 });
 
 describe('useTabUrlState', () => {
-  it("defaults to 'shape' when ?tab is absent", () => {
+  it("defaults to 'map' when ?tab is absent", () => {
     const { result } = renderHook(() => useTabUrlState());
-    expect(result.current.tab).toBe('shape');
+    expect(result.current.tab).toBe('map');
   });
 
   it("returns 'fluency' when ?tab=fluency", () => {
@@ -37,16 +37,16 @@ describe('useTabUrlState', () => {
     expect(result.current.tab).toBe('history');
   });
 
-  it("falls back to 'shape' on an unknown ?tab value (including legacy 'heatmap')", () => {
+  it("falls back to 'map' on an unknown ?tab value (including legacy 'heatmap')", () => {
     mockSearchParams = new URLSearchParams('tab=garbage');
     const { result } = renderHook(() => useTabUrlState());
-    expect(result.current.tab).toBe('shape');
+    expect(result.current.tab).toBe('map');
   });
 
-  it("falls back to 'shape' when ?tab=heatmap (stale URL)", () => {
+  it("falls back to 'map' when ?tab=heatmap (stale URL)", () => {
     mockSearchParams = new URLSearchParams('tab=heatmap');
     const { result } = renderHook(() => useTabUrlState());
-    expect(result.current.tab).toBe('shape');
+    expect(result.current.tab).toBe('map');
   });
 
   it('calls router.replace with the new ?tab when setTab is invoked', () => {
