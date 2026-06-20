@@ -1,9 +1,32 @@
 import { describe, it, expect } from 'vitest';
 import {
+  FluencySessionRequestSchema,
   FluencySessionResponseSchema,
   FluencyAttemptResponseSchema,
   FluencyStatsResponseSchema,
 } from './fluency';
+
+describe('FluencySessionRequestSchema', () => {
+  it('accepts a request with no types (mixed pool)', () => {
+    expect(FluencySessionRequestSchema.safeParse({ language: 'ES' }).success).toBe(true);
+  });
+
+  it('accepts a conjugation-only types filter', () => {
+    expect(
+      FluencySessionRequestSchema.safeParse({ language: 'ES', types: ['conjugation'] }).success,
+    ).toBe(true);
+  });
+
+  it('rejects an empty types array', () => {
+    expect(FluencySessionRequestSchema.safeParse({ language: 'ES', types: [] }).success).toBe(false);
+  });
+
+  it('rejects a non-eligible type', () => {
+    expect(
+      FluencySessionRequestSchema.safeParse({ language: 'ES', types: ['translation'] }).success,
+    ).toBe(false);
+  });
+});
 
 describe('fluency schemas', () => {
   it('parses a session response', () => {

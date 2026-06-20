@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
 import { CefrLevel, ExerciseType } from '@language-drill/shared';
 import {
@@ -129,7 +130,15 @@ export default function ConjugationPage() {
 
   return (
     <div className="p-s-6">
-      <h1 className="t-display-l mb-s-6">conjugation warm-up</h1>
+      <div className="mb-s-6 flex items-baseline justify-between gap-s-4">
+        <h1 className="t-display-l">conjugation warm-up</h1>
+        <Link
+          href="/fluency?type=conjugation"
+          className="t-small text-ink-2 no-underline hover:text-accent-2"
+        >
+          drill these fast →
+        </Link>
+      </div>
       <ExercisePane
         exercise={exercise}
         language={activeLanguage}

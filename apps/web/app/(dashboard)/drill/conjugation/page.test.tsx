@@ -275,4 +275,11 @@ describe('ConjugationPage', () => {
 
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
   });
+
+  it('shows a deep-link to conjugation fluency mode', () => {
+    renderWithProviders(<ConjugationPage />);
+
+    const link = screen.getByRole('link', { name: /drill these fast/i });
+    expect(link).toHaveAttribute('href', '/fluency?type=conjugation');
+  });
 });
