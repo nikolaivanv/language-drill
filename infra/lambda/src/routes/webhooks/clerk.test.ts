@@ -4,7 +4,9 @@ import { Hono } from 'hono';
 const mockOnConflictDoUpdate = vi.fn(() => Promise.resolve());
 const mockValues = vi.fn(() => ({ onConflictDoUpdate: mockOnConflictDoUpdate }));
 const mockInsert = vi.fn(() => ({ values: mockValues }));
-const mockUpdate = vi.fn();
+const mockUpdateWhere = vi.fn(() => Promise.resolve());
+const mockUpdateSet = vi.fn(() => ({ where: mockUpdateWhere }));
+const mockUpdate = vi.fn(() => ({ set: mockUpdateSet }));
 const mockDeleteWhere = vi.fn(() => Promise.resolve());
 const mockDelete = vi.fn(() => ({ where: mockDeleteWhere }));
 vi.mock('../../db', () => ({
@@ -16,6 +18,7 @@ vi.mock('../../db', () => ({
 }));
 vi.mock('@language-drill/db', () => ({
   users: { id: 'id', email: 'email', plan: 'plan' },
+  invitations: { usedBy: 'used_by' },
 }));
 
 // svix Webhook.verify returns whatever event the current test set, without
@@ -91,6 +94,19 @@ describe('POST /webhooks/clerk', () => {
     expect(mockDeleteWhere).toHaveBeenCalledTimes(1);
     // A delete must never look like an upsert.
     expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it('nulls invitations.usedBy before deleting user on user.deleted (right-to-erasure)', async () => {
+    mockEvent = { type: 'user.deleted', data: { id: 'user_gone', deleted: true } };
+    const res = await post();
+    expect(res.status).toBe(200);
+    // The handler must update invitations first (no cascade FK — explicit erase)
+    expect(mockUpdate).toHaveBeenCalledTimes(1);
+    expect(mockUpdateSet).toHaveBeenCalledWith({ usedBy: null });
+    expect(mockUpdateWhere).toHaveBeenCalledTimes(1);
+    // Then the user row itself must be deleted
+    expect(mockDelete).toHaveBeenCalledTimes(1);
+    expect(mockDeleteWhere).toHaveBeenCalledTimes(1);
   });
 
   it('400s on user.deleted with no user id', async () => {

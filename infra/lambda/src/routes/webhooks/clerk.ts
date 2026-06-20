@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { Webhook } from 'svix';
 
 import { db } from '../../db';
-import { users } from '@language-drill/db';
+import { users, invitations } from '@language-drill/db';
 
 interface ClerkUserCreatedEvent {
   type: 'user.created';
@@ -87,10 +87,17 @@ webhooks.post('/webhooks/clerk', async (c) => {
     // so this one delete sweeps every PII-adjacent row for the account
     // (migration 0021 backfilled five legacy FKs that predated the cascade
     // convention; 0025 added practice_sessions, which 0021 missed).
+    // invitations.usedBy is a plain nullable text column (no FK, no cascade),
+    // so the redeemer reference must be nulled explicitly before the user
+    // delete to honor the right-to-erasure guarantee.
     const userId = event.data.id;
     if (!userId) {
       return c.json({ error: 'No user id in event' }, 400);
     }
+    await db
+      .update(invitations)
+      .set({ usedBy: null })
+      .where(eq(invitations.usedBy, userId));
     await db.delete(users).where(eq(users.id, userId));
   }
 

@@ -53,8 +53,9 @@ export default function PrivacyPage() {
         <li><strong>Erasure</strong> — delete your account and all associated data from <em>Settings → account → Security → Delete account</em>.</li>
         <li><strong>Rectification &amp; objection</strong> — contact us at <a href={`mailto:${LEGAL.contactEmail}`}>{LEGAL.contactEmail}</a>.</li>
         <li>
-          You may also lodge a complaint with your local supervisory authority — in {LEGAL.basedIn},
-          the Hungarian National Authority for Data Protection and Freedom of Information (NAIH).
+          You may also lodge a complaint with your local data-protection supervisory authority.
+          As the controller is based in {LEGAL.basedIn}, our lead authority is the Hungarian
+          National Authority for Data Protection and Freedom of Information (NAIH).
         </li>
       </ul>
 
