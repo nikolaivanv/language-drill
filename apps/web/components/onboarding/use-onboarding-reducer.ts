@@ -2,8 +2,8 @@
 // Onboarding wizard reducer
 // ---------------------------------------------------------------------------
 // Pure reducer + selectors for the 4-step onboarding wizard. Owns the
-// cross-field invariants (e.g., dropping the current primary language from
-// `languages` resets `primaryLanguage`/`primaryLevel`) so the UI stays a
+// cross-field invariants (e.g., dropping a language from `languages` prunes
+// its entry from `levels`, and dropping the primary resets `primaryLanguage`) so the UI stays a
 // thin shell. Tested independently in
 // `apps/web/components/onboarding/__tests__/use-onboarding-reducer.test.ts`.
 // ---------------------------------------------------------------------------
@@ -43,7 +43,9 @@ export type OnboardingState = {
   /** Selected learning languages, preserved in the order they were toggled. */
   languages: LearningLanguage[];
   primaryLanguage: LearningLanguage | null;
-  primaryLevel: CefrLevel | null;
+  /** CEFR level per selected language. Step 2 requires every selected
+   *  language to have an entry before advancing. */
+  levels: Partial<Record<LearningLanguage, CefrLevel>>;
   /** Toggle-set of goal IDs. */
   goals: GoalId[];
   notes: string;
@@ -61,7 +63,7 @@ export type OnboardingAction =
   | { type: 'goBack' }
   | { type: 'setLanguages'; languages: LearningLanguage[] }
   | { type: 'setPrimary'; language: LearningLanguage }
-  | { type: 'setLevel'; level: CefrLevel }
+  | { type: 'setLevel'; language: LearningLanguage; level: CefrLevel }
   | { type: 'toggleGoal'; goal: GoalId }
   | { type: 'setNotes'; notes: string }
   | { type: 'setDailyMinutes'; minutes: DailyMinutes }
@@ -98,19 +100,23 @@ export function reducer(
         return state;
       }
 
+      // Keep only levels for languages still selected.
+      const levels: Partial<Record<LearningLanguage, CefrLevel>> = {};
+      for (const lang of action.languages) {
+        if (state.levels[lang] !== undefined) levels[lang] = state.levels[lang];
+      }
+
       const next: OnboardingState = {
         ...state,
         languages: action.languages,
+        levels,
       };
 
-      // If the current primary language is no longer in the set, the
-      // primary language and level are no longer meaningful.
       if (
         state.primaryLanguage !== null &&
         !action.languages.includes(state.primaryLanguage)
       ) {
         next.primaryLanguage = null;
-        next.primaryLevel = null;
       }
 
       return next;
@@ -124,7 +130,11 @@ export function reducer(
       return { ...state, primaryLanguage: action.language };
     }
     case 'setLevel': {
-      return { ...state, primaryLevel: action.level };
+      if (!state.languages.includes(action.language)) return state;
+      return {
+        ...state,
+        levels: { ...state.levels, [action.language]: action.level },
+      };
     }
     case 'toggleGoal': {
       const has = state.goals.includes(action.goal);
@@ -180,7 +190,7 @@ export function initialNewUserState(): OnboardingState {
     step: 1,
     languages: [],
     primaryLanguage: null,
-    primaryLevel: null,
+    levels: {},
     goals: [],
     notes: '',
     dailyMinutes: DEFAULT_DAILY_MINUTES,
@@ -206,18 +216,19 @@ export function initialEditState(
 
   const primaryLanguage = prefs.primaryLanguage;
 
-  const primaryProfile =
-    primaryLanguage !== null
-      ? profiles.find((p) => p.language === primaryLanguage)
-      : undefined;
-  const primaryLevel = primaryProfile?.proficiencyLevel ?? null;
+  const levels: Partial<Record<LearningLanguage, CefrLevel>> = {};
+  for (const p of profiles) {
+    if (p.language !== 'EN') {
+      levels[p.language as LearningLanguage] = p.proficiencyLevel;
+    }
+  }
 
   return {
     mode: 'edit',
     step: 1,
     languages,
     primaryLanguage,
-    primaryLevel,
+    levels,
     goals: [...prefs.goals],
     notes: prefs.notes,
     dailyMinutes: prefs.dailyMinutes ?? DEFAULT_DAILY_MINUTES,
@@ -236,7 +247,7 @@ export function initialEditState(
  * disables the CTA — so this is the single source of truth.
  *
  * - Step 1: at least one language selected.
- * - Step 2: primary language + primary level both set.
+ * - Step 2: primary language set AND every selected language has a level.
  * - Step 3: notes within the 500-char limit (Step 3 is otherwise optional).
  * - Step 4: a daily-minutes value is selected.
  */
@@ -245,7 +256,11 @@ export function selectCanAdvance(state: OnboardingState): boolean {
     case 1:
       return state.languages.length >= 1;
     case 2:
-      return state.primaryLanguage !== null && state.primaryLevel !== null;
+      return (
+        state.primaryLanguage !== null &&
+        state.languages.length > 0 &&
+        state.languages.every((l) => state.levels[l] !== undefined)
+      );
     case 3:
       return state.notes.length <= NOTES_MAX_LENGTH;
     case 4:

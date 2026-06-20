@@ -27,50 +27,11 @@
 import {
   GOAL_IDS,
   NOTES_MAX_LENGTH,
-  type GoalId,
 } from '@language-drill/shared';
 import { Choice } from '../../ui/choice';
 import { Textarea } from '../../ui/textarea';
 import { useOnboarding } from '../onboarding-context';
-
-// Verbatim from R4.1. Emoji characters match the requirements doc byte-for-
-// byte (note: 🗣 and ✍️ are presentation forms with no VS-16 selector — keep
-// these exact codepoints if you reformat this file).
-const GOAL_COPY: Record<
-  GoalId,
-  { emoji: string; label: string; description: string }
-> = {
-  grammar: {
-    emoji: '📝',
-    label: 'grammar',
-    description: 'subjunctive, tenses, conjugation',
-  },
-  speaking: {
-    emoji: '🗣',
-    label: 'speaking fluency',
-    description: 'real conversations, less hesitation',
-  },
-  listening: {
-    emoji: '🎧',
-    label: 'understanding fast speech',
-    description: 'podcasts, native speakers, films',
-  },
-  writing: {
-    emoji: '✍️',
-    label: 'writing',
-    description: 'emails, essays, longer texts',
-  },
-  vocab: {
-    emoji: '📚',
-    label: 'vocabulary',
-    description: 'expanding active range',
-  },
-  travel: {
-    emoji: '🎯',
-    label: 'prep for a trip / convo',
-    description: 'specific upcoming need',
-  },
-};
+import { GOAL_COPY } from '../../settings/goal-copy';
 
 // R4.3: placeholder text (verbatim — the trailing character is U+2026
 // HORIZONTAL ELLIPSIS, not three dots).

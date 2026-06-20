@@ -170,42 +170,51 @@ export function StepLevel() {
         </div>
       ) : null}
 
-      <div
-        role="radiogroup"
-        aria-label="proficiency level"
-        className="flex flex-col gap-s-2"
-      >
-        {CEFR_LEVELS.map((level) => {
-          const copy = CEFR_CARD_COPY[level];
-          const selected = state.primaryLevel === level;
-          return (
-            <Choice
-              key={level}
-              mode="radio"
-              selected={selected}
-              onSelect={() => dispatch({ type: 'setLevel', level })}
-            >
-              <span className="flex items-center gap-s-3 w-full">
-                <span
-                  className={
-                    selected
-                      ? 't-mono text-ink w-[38px]'
-                      : 't-mono text-ink-mute w-[38px]'
+      {state.languages.map((language) => (
+        <div key={language} className="flex flex-col gap-s-2">
+          <p className="t-small text-ink-soft">
+            {LANGUAGE_NATIVE_NAMES[language]}
+          </p>
+          <div
+            role="radiogroup"
+            aria-label={`${LANGUAGE_NATIVE_NAMES[language]} level`}
+            className="flex flex-col gap-s-2"
+          >
+            {CEFR_LEVELS.map((level) => {
+              const copy = CEFR_CARD_COPY[level];
+              const selected = state.levels[language] === level;
+              return (
+                <Choice
+                  key={level}
+                  mode="radio"
+                  selected={selected}
+                  onSelect={() =>
+                    dispatch({ type: 'setLevel', language, level })
                   }
                 >
-                  {level}
-                </span>
-                <span className="flex-1 flex flex-col">
-                  <span className="t-body text-ink">{copy.name}</span>
-                  <span className="t-small text-ink-mute">
-                    {copy.description}
+                  <span className="flex items-center gap-s-3 w-full">
+                    <span
+                      className={
+                        selected
+                          ? 't-mono text-ink w-[38px]'
+                          : 't-mono text-ink-mute w-[38px]'
+                      }
+                    >
+                      {level}
+                    </span>
+                    <span className="flex-1 flex flex-col">
+                      <span className="t-body text-ink">{copy.name}</span>
+                      <span className="t-small text-ink-mute">
+                        {copy.description}
+                      </span>
+                    </span>
                   </span>
-                </span>
-              </span>
-            </Choice>
-          );
-        })}
-      </div>
+                </Choice>
+              );
+            })}
+          </div>
+        </div>
+      ))}
 
       <PlacementTestCallout />
     </div>

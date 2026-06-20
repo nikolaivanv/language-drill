@@ -30,12 +30,15 @@ const OnboardingContext = createContext<OnboardingContextValue | null>(null);
 
 export function OnboardingProvider({
   initialState,
+  dispatchOverride,
   children,
 }: {
   initialState: OnboardingState;
+  dispatchOverride?: Dispatch<OnboardingAction>;
   children: ReactNode;
 }) {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [state, realDispatch] = useReducer(reducer, initialState);
+  const dispatch = dispatchOverride ?? realDispatch;
 
   return (
     <OnboardingContext.Provider value={{ state, dispatch }}>

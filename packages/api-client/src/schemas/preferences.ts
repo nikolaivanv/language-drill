@@ -43,34 +43,27 @@ export type PreferencesResponse = z.infer<typeof PreferencesResponseSchema>;
 // ---------------------------------------------------------------------------
 // PUT /profiles/languages request body
 // ---------------------------------------------------------------------------
-// Canonical wire schema for the full onboarding payload. Enforces:
-//   - profiles[]: 1..3 entries, each with a learning language (ES/DE/TR) and
-//     a CEFR level
-//   - primaryLanguage ∈ profiles[].language (cross-field refinement)
-//   - dailyMinutes is one of {5, 10, 20, 30}
-//   - notes is at most NOTES_MAX_LENGTH chars
-// All fields are required (R7.1).
-// ---------------------------------------------------------------------------
 
-const LearningProfileSchema = z.object({
+export const LearningProfileSchema = z.object({
   language: LearningLanguageEnum,
   proficiencyLevel: z.nativeEnum(CefrLevel),
 });
 
-export const SavePreferencesInputSchema = z
+// ---------------------------------------------------------------------------
+// PUT /profiles/languages — slimmed request + response
+// ---------------------------------------------------------------------------
+
+export const UpdateLanguagesInputSchema = z
   .object({
     profiles: z.array(LearningProfileSchema).min(1).max(3),
     primaryLanguage: LearningLanguageEnum,
-    goals: z.array(z.enum(GOAL_IDS)),
-    dailyMinutes: z.union([
-      z.literal(5),
-      z.literal(10),
-      z.literal(20),
-      z.literal(30),
-    ]),
-    gentleNudges: z.boolean(),
-    notes: z.string().max(NOTES_MAX_LENGTH),
   })
+  .refine(
+    (input) =>
+      new Set(input.profiles.map((p) => p.language)).size ===
+      input.profiles.length,
+    { message: 'Duplicate languages are not allowed' },
+  )
   .refine(
     (input) => input.profiles.some((p) => p.language === input.primaryLanguage),
     {
@@ -80,4 +73,34 @@ export const SavePreferencesInputSchema = z
     },
   );
 
-export type SavePreferencesInput = z.infer<typeof SavePreferencesInputSchema>;
+export type UpdateLanguagesInput = z.infer<typeof UpdateLanguagesInputSchema>;
+
+export const UpdateLanguagesResponseSchema = z.object({
+  profiles: z.array(LearningProfileSchema),
+  primaryLanguage: LearningLanguageEnum,
+});
+
+export type UpdateLanguagesResponse = z.infer<
+  typeof UpdateLanguagesResponseSchema
+>;
+
+// ---------------------------------------------------------------------------
+// PATCH /profiles/preferences — partial request
+// ---------------------------------------------------------------------------
+
+export const UpdatePreferencesInputSchema = z
+  .object({
+    goals: z.array(z.enum(GOAL_IDS)).optional(),
+    dailyMinutes: z
+      .union([z.literal(5), z.literal(10), z.literal(20), z.literal(30)])
+      .optional(),
+    gentleNudges: z.boolean().optional(),
+    notes: z.string().max(NOTES_MAX_LENGTH).optional(),
+  })
+  .refine((input) => Object.keys(input).length > 0, {
+    message: 'At least one field must be provided',
+  });
+
+export type UpdatePreferencesInput = z.infer<
+  typeof UpdatePreferencesInputSchema
+>;

@@ -237,11 +237,11 @@ describe('LanguageSwitcher', () => {
     expect(reloadMock).toHaveBeenCalledTimes(1);
   });
 
-  it('"manage languages" link points to /onboarding?edit=1', () => {
+  it('"manage languages" link points to /settings', () => {
     renderWithProvider([PROFILE_ES, PROFILE_DE]);
 
     fireEvent.click(screen.getByRole('button'));
     const link = screen.getByRole('link', { name: /manage languages/i });
-    expect(link).toHaveAttribute('href', '/onboarding?edit=1');
+    expect(link).toHaveAttribute('href', '/settings');
   });
 });

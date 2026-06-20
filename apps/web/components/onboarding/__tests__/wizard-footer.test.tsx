@@ -66,7 +66,7 @@ describe('WizardFooter — CTA label resolution (R1.5)', () => {
         step: 2,
         languages: [Language.ES],
         primaryLanguage: Language.ES,
-        primaryLevel: CefrLevel.B1,
+        levels: { [Language.ES]: CefrLevel.B1 },
       })
     );
     expect(screen.getByTestId('wizard-footer-primary')).toHaveTextContent(
@@ -87,7 +87,7 @@ describe('WizardFooter — CTA label resolution (R1.5)', () => {
         step: 4,
         languages: [Language.ES],
         primaryLanguage: Language.ES,
-        primaryLevel: CefrLevel.B1,
+        levels: { [Language.ES]: CefrLevel.B1 },
         dailyMinutes: 10,
       })
     );
@@ -103,7 +103,7 @@ describe('WizardFooter — CTA label resolution (R1.5)', () => {
         step: 4,
         languages: [Language.ES],
         primaryLanguage: Language.ES,
-        primaryLevel: CefrLevel.B1,
+        levels: { [Language.ES]: CefrLevel.B1 },
         dailyMinutes: 10,
       })
     );
@@ -119,7 +119,7 @@ describe('WizardFooter — CTA label resolution (R1.5)', () => {
         step: 2,
         languages: [Language.ES, Language.DE],
         primaryLanguage: Language.ES,
-        primaryLevel: CefrLevel.B1,
+        levels: { [Language.ES]: CefrLevel.B1, [Language.DE]: CefrLevel.B1 },
       })
     );
     expect(screen.getByTestId('wizard-footer-primary')).toHaveTextContent(
@@ -211,7 +211,7 @@ describe('WizardFooter — CTA disable rules (R7.9)', () => {
         step: 4,
         languages: [Language.ES],
         primaryLanguage: Language.ES,
-        primaryLevel: CefrLevel.B1,
+        levels: { [Language.ES]: CefrLevel.B1 },
         dailyMinutes: 10,
         submission: { status: 'loading' },
       })
@@ -227,7 +227,7 @@ describe('WizardFooter — loading state (R7.7)', () => {
         step: 4,
         languages: [Language.ES],
         primaryLanguage: Language.ES,
-        primaryLevel: CefrLevel.B1,
+        levels: { [Language.ES]: CefrLevel.B1 },
         dailyMinutes: 10,
         submission: { status: 'loading' },
       })
@@ -252,7 +252,7 @@ describe('WizardFooter — error display (R7.8)', () => {
         step: 4,
         languages: [Language.ES],
         primaryLanguage: Language.ES,
-        primaryLevel: CefrLevel.B1,
+        levels: { [Language.ES]: CefrLevel.B1 },
         dailyMinutes: 10,
         submission: {
           status: 'error',
@@ -314,7 +314,7 @@ describe('WizardFooter — primary onClick', () => {
         step: 4,
         languages: [Language.ES],
         primaryLanguage: Language.ES,
-        primaryLevel: CefrLevel.B1,
+        levels: { [Language.ES]: CefrLevel.B1 },
         dailyMinutes: 10,
         submission: { status: 'loading' },
       }),

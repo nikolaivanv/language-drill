@@ -141,7 +141,7 @@ export function LanguageSwitcher({ profiles }: LanguageSwitcherProps) {
             </button>
           ))}
           <Link
-            href="/onboarding?edit=1"
+            href="/settings"
             className={cn(
               'block px-s-3 py-s-2 mt-1 border-t border-rule text-[12px] text-ink-soft hover:bg-paper-2 transition-colors duration-150',
               focusRing

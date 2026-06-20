@@ -102,34 +102,29 @@ describe('reducer — setLanguages', () => {
     expect(next.languages).toEqual([Language.ES, Language.DE]);
   });
 
-  it('resets primaryLanguage and primaryLevel when the primary drops out', () => {
+  it('drops the level for a language removed from the set', () => {
     const before = newState({
       languages: [Language.ES, Language.DE],
       primaryLanguage: Language.ES,
-      primaryLevel: CefrLevel.B2,
+      levels: { ES: CefrLevel.B2, DE: CefrLevel.A2 },
     });
-    const next = apply(before, {
-      type: 'setLanguages',
-      languages: [Language.DE],
-    });
-    expect(next.languages).toEqual([Language.DE]);
-    expect(next.primaryLanguage).toBeNull();
-    expect(next.primaryLevel).toBeNull();
+    const next = apply(before, { type: 'setLanguages', languages: [Language.DE] });
+    expect(next.levels).toEqual({ DE: CefrLevel.A2 });
+    expect(next.primaryLanguage).toBeNull(); // primary ES was removed
   });
 
-  it('preserves primaryLanguage and primaryLevel when the primary stays', () => {
+  it('keeps levels for languages that remain', () => {
     const before = newState({
       languages: [Language.ES, Language.DE],
       primaryLanguage: Language.ES,
-      primaryLevel: CefrLevel.B2,
+      levels: { ES: CefrLevel.B2, DE: CefrLevel.A2 },
     });
     const next = apply(before, {
       type: 'setLanguages',
-      languages: [Language.ES, Language.TR],
+      languages: [Language.ES, Language.DE, Language.TR],
     });
-    expect(next.languages).toEqual([Language.ES, Language.TR]);
+    expect(next.levels).toEqual({ ES: CefrLevel.B2, DE: CefrLevel.A2 });
     expect(next.primaryLanguage).toBe(Language.ES);
-    expect(next.primaryLevel).toBe(CefrLevel.B2);
   });
 });
 
@@ -162,16 +157,27 @@ describe('reducer — setPrimary', () => {
 // ---------------------------------------------------------------------------
 
 describe('reducer — setLevel', () => {
-  it('sets primaryLevel from null to a CEFR level', () => {
-    const before = newState({ primaryLevel: null });
-    const next = apply(before, { type: 'setLevel', level: CefrLevel.B2 });
-    expect(next.primaryLevel).toBe(CefrLevel.B2);
+  it('sets a level for a specific language', () => {
+    const before = newState({ languages: [Language.ES, Language.DE] });
+    const next = apply(before, {
+      type: 'setLevel',
+      language: Language.DE,
+      level: CefrLevel.B1,
+    });
+    expect(next.levels).toEqual({ DE: CefrLevel.B1 });
   });
 
-  it('overwrites an existing primaryLevel', () => {
-    const before = newState({ primaryLevel: CefrLevel.B2 });
-    const next = apply(before, { type: 'setLevel', level: CefrLevel.C1 });
-    expect(next.primaryLevel).toBe(CefrLevel.C1);
+  it('overwrites the level for that language only', () => {
+    const before = newState({
+      languages: [Language.ES, Language.DE],
+      levels: { ES: CefrLevel.B2, DE: CefrLevel.A2 },
+    });
+    const next = apply(before, {
+      type: 'setLevel',
+      language: Language.ES,
+      level: CefrLevel.C1,
+    });
+    expect(next.levels).toEqual({ ES: CefrLevel.C1, DE: CefrLevel.A2 });
   });
 });
 
@@ -280,56 +286,22 @@ describe('selectCanAdvance — Step 1 (languages)', () => {
 });
 
 describe('selectCanAdvance — Step 2 (primary + level)', () => {
-  it('blocks advance when both primary and level are null', () => {
-    expect(
-      selectCanAdvance(
-        newState({
-          step: 2,
-          languages: [Language.ES],
-          primaryLanguage: null,
-          primaryLevel: null,
-        }),
-      ),
-    ).toBe(false);
-  });
+  it('step 2 requires a primary AND a level for every selected language', () => {
+    const incomplete = newState({
+      step: 2,
+      languages: [Language.ES, Language.DE],
+      primaryLanguage: Language.ES,
+      levels: { ES: CefrLevel.B2 }, // DE missing
+    });
+    expect(selectCanAdvance(incomplete)).toBe(false);
 
-  it('blocks advance when only primary is set', () => {
-    expect(
-      selectCanAdvance(
-        newState({
-          step: 2,
-          languages: [Language.ES],
-          primaryLanguage: Language.ES,
-          primaryLevel: null,
-        }),
-      ),
-    ).toBe(false);
-  });
-
-  it('blocks advance when only level is set', () => {
-    expect(
-      selectCanAdvance(
-        newState({
-          step: 2,
-          languages: [Language.ES],
-          primaryLanguage: null,
-          primaryLevel: CefrLevel.B2,
-        }),
-      ),
-    ).toBe(false);
-  });
-
-  it('allows advance when both primary and level are set', () => {
-    expect(
-      selectCanAdvance(
-        newState({
-          step: 2,
-          languages: [Language.ES],
-          primaryLanguage: Language.ES,
-          primaryLevel: CefrLevel.B2,
-        }),
-      ),
-    ).toBe(true);
+    const complete = newState({
+      step: 2,
+      languages: [Language.ES, Language.DE],
+      primaryLanguage: Language.ES,
+      levels: { ES: CefrLevel.B2, DE: CefrLevel.A2 },
+    });
+    expect(selectCanAdvance(complete)).toBe(true);
   });
 });
 
@@ -434,7 +406,7 @@ describe('initialNewUserState', () => {
     expect(state.step).toBe(1);
     expect(state.languages).toEqual([]);
     expect(state.primaryLanguage).toBeNull();
-    expect(state.primaryLevel).toBeNull();
+    expect(state.levels).toEqual({});
     expect(state.goals).toEqual([]);
     expect(state.notes).toBe('');
     expect(state.dailyMinutes).toBe(10);
@@ -483,11 +455,21 @@ describe('initialEditState', () => {
     expect(state.step).toBe(1);
     expect(state.languages).toEqual([Language.ES, Language.DE]);
     expect(state.primaryLanguage).toBe(Language.ES);
-    expect(state.primaryLevel).toBe(CefrLevel.B2);
     expect(state.goals).toEqual(['grammar', 'speaking']);
     expect(state.notes).toBe('meeting next week');
     expect(state.gentleNudges).toBe(false);
     expect(state.submission).toEqual({ status: 'idle' });
+  });
+
+  it('hydrates levels from every profile', () => {
+    const state = initialEditState(
+      [
+        { language: Language.ES, proficiencyLevel: CefrLevel.B2 },
+        { language: Language.DE, proficiencyLevel: CefrLevel.A2 },
+      ],
+      { primaryLanguage: Language.ES, goals: [], dailyMinutes: 10, gentleNudges: true, notes: '' },
+    );
+    expect(state.levels).toEqual({ ES: CefrLevel.B2, DE: CefrLevel.A2 });
   });
 
   it('does not share the goals array reference with the prefs payload', () => {

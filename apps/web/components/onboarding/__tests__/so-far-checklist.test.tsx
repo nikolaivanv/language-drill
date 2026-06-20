@@ -80,7 +80,7 @@ describe('SoFarChecklist — glyph state machine by current step', () => {
         step: 3,
         languages: [Language.ES],
         primaryLanguage: Language.ES,
-        primaryLevel: CefrLevel.B2,
+        levels: { [Language.ES]: CefrLevel.B2 },
       })
     );
     expect(glyphFor(getRow('languages'))).toBe('✓');
@@ -95,7 +95,7 @@ describe('SoFarChecklist — glyph state machine by current step', () => {
         step: 4,
         languages: [Language.ES],
         primaryLanguage: Language.ES,
-        primaryLevel: CefrLevel.B2,
+        levels: { [Language.ES]: CefrLevel.B2 },
         goals: ['grammar', 'speaking'],
       })
     );
@@ -125,7 +125,7 @@ describe('SoFarChecklist — summary formatting (R6.5)', () => {
         step: 3,
         languages: [Language.ES],
         primaryLanguage: Language.ES,
-        primaryLevel: CefrLevel.B2,
+        levels: { [Language.ES]: CefrLevel.B2 },
       })
     );
     const row = getRow('primary + level');
@@ -140,7 +140,7 @@ describe('SoFarChecklist — summary formatting (R6.5)', () => {
         step: 4,
         languages: [Language.ES],
         primaryLanguage: Language.ES,
-        primaryLevel: CefrLevel.B2,
+        levels: { [Language.ES]: CefrLevel.B2 },
         goals: ['grammar', 'speaking'],
       })
     );
@@ -154,7 +154,7 @@ describe('SoFarChecklist — summary formatting (R6.5)', () => {
         step: 4,
         languages: [Language.ES],
         primaryLanguage: Language.ES,
-        primaryLevel: CefrLevel.B2,
+        levels: { [Language.ES]: CefrLevel.B2 },
         goals: [],
       })
     );
@@ -174,7 +174,7 @@ describe('SoFarChecklist — summary formatting (R6.5)', () => {
         step: 4,
         languages: [Language.ES],
         primaryLanguage: Language.ES,
-        primaryLevel: CefrLevel.B2,
+        levels: { [Language.ES]: CefrLevel.B2 },
         dailyMinutes: 10,
       })
     );
@@ -183,46 +183,3 @@ describe('SoFarChecklist — summary formatting (R6.5)', () => {
   });
 });
 
-describe('SoFarChecklist — placeholder-A1 sub-line (R6.6)', () => {
-  const A1_SUB_LINE = 'level: a1 (adjustable later)';
-
-  it('is hidden on step 1 even when multiple languages are selected', () => {
-    renderChecklist(
-      buildState({ step: 1, languages: [Language.ES, Language.DE] })
-    );
-    expect(screen.queryByText(A1_SUB_LINE)).not.toBeInTheDocument();
-  });
-
-  it('is visible on step 2 when ≥1 non-primary language is selected', () => {
-    renderChecklist(
-      buildState({
-        step: 2,
-        languages: [Language.ES, Language.DE],
-        primaryLanguage: Language.ES,
-      })
-    );
-    expect(screen.getByText(A1_SUB_LINE)).toBeInTheDocument();
-  });
-
-  it('is hidden when only the primary language is selected', () => {
-    renderChecklist(
-      buildState({
-        step: 2,
-        languages: [Language.ES],
-        primaryLanguage: Language.ES,
-      })
-    );
-    expect(screen.queryByText(A1_SUB_LINE)).not.toBeInTheDocument();
-  });
-
-  it('is visible on step 2 when languages are selected but no primary is picked yet', () => {
-    renderChecklist(
-      buildState({
-        step: 2,
-        languages: [Language.ES, Language.DE],
-        primaryLanguage: null,
-      })
-    );
-    expect(screen.getByText(A1_SUB_LINE)).toBeInTheDocument();
-  });
-});

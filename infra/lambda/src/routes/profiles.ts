@@ -6,6 +6,7 @@ import {
   GOAL_IDS,
   Language,
   NOTES_MAX_LENGTH,
+  type DailyMinutes,
 } from '@language-drill/shared';
 import { userLanguageProfiles, userPreferences } from '@language-drill/db';
 import { db } from '../db';
@@ -33,19 +34,15 @@ const LearningProfileSchema = z.object({
   proficiencyLevel: z.nativeEnum(CefrLevel),
 });
 
-const UpdateProfilesSchema = z
+// Default seeded into a brand-new user_preferences row when the languages
+// endpoint creates it before the preferences PATCH runs (daily_minutes is
+// NOT NULL with no DB default). Overwritten by PATCH /profiles/preferences.
+const DEFAULT_DAILY_MINUTES: DailyMinutes = 10;
+
+const UpdateLanguagesSchema = z
   .object({
     profiles: z.array(LearningProfileSchema).min(1).max(3),
     primaryLanguage: LearningLanguageEnum,
-    goals: z.array(z.enum(GOAL_IDS)),
-    dailyMinutes: z.union([
-      z.literal(5),
-      z.literal(10),
-      z.literal(20),
-      z.literal(30),
-    ]),
-    gentleNudges: z.boolean(),
-    notes: z.string().max(NOTES_MAX_LENGTH),
   })
   .refine(
     (data) =>
@@ -125,22 +122,21 @@ profiles.get('/profiles/preferences', async (c) => {
 profiles.put('/profiles/languages', async (c) => {
   const userId = c.get('userId');
 
-  const bodyResult = UpdateProfilesSchema.safeParse(await c.req.json().catch(() => ({})));
+  const bodyResult = UpdateLanguagesSchema.safeParse(
+    await c.req.json().catch(() => ({})),
+  );
   if (!bodyResult.success) {
     return c.json(
-      { error: 'Invalid request body', code: 'VALIDATION_ERROR', details: bodyResult.error.flatten() },
+      {
+        error: 'Invalid request body',
+        code: 'VALIDATION_ERROR',
+        details: bodyResult.error.flatten(),
+      },
       400,
     );
   }
 
-  const {
-    profiles: profileData,
-    primaryLanguage,
-    goals,
-    dailyMinutes,
-    gentleNudges,
-    notes,
-  } = bodyResult.data;
+  const { profiles: profileData, primaryLanguage } = bodyResult.data;
 
   const result = await db.transaction(async (tx) => {
     await tx
@@ -162,39 +158,82 @@ profiles.put('/profiles/languages', async (c) => {
         proficiencyLevel: userLanguageProfiles.proficiencyLevel,
       });
 
-    const [upsertedPreferences] = await tx
+    // Upsert the primary-language pointer. On INSERT we must seed
+    // dailyMinutes (NOT NULL, no default); on UPDATE we touch only
+    // primaryLanguage so goals/dailyMinutes/gentleNudges/notes set via
+    // PATCH /profiles/preferences are preserved.
+    await tx
       .insert(userPreferences)
       .values({
         userId,
         primaryLanguage,
-        goals,
-        dailyMinutes,
-        gentleNudges,
-        notes,
+        dailyMinutes: DEFAULT_DAILY_MINUTES,
       })
       .onConflictDoUpdate({
         target: userPreferences.userId,
-        set: {
-          primaryLanguage,
-          goals,
-          dailyMinutes,
-          gentleNudges,
-          notes,
-          updatedAt: new Date(),
-        },
-      })
-      .returning({
-        primaryLanguage: userPreferences.primaryLanguage,
-        goals: userPreferences.goals,
-        dailyMinutes: userPreferences.dailyMinutes,
-        gentleNudges: userPreferences.gentleNudges,
-        notes: userPreferences.notes,
+        set: { primaryLanguage, updatedAt: new Date() },
       });
 
-    return { profiles: insertedProfiles, preferences: upsertedPreferences };
+    return { profiles: insertedProfiles, primaryLanguage };
   });
 
   return c.json(result);
+});
+
+// ---------------------------------------------------------------------------
+// PATCH /profiles/preferences — partial update of onboarding-signal fields
+// ---------------------------------------------------------------------------
+
+const UpdatePreferencesSchema = z
+  .object({
+    goals: z.array(z.enum(GOAL_IDS)).optional(),
+    dailyMinutes: z
+      .union([z.literal(5), z.literal(10), z.literal(20), z.literal(30)])
+      .optional(),
+    gentleNudges: z.boolean().optional(),
+    notes: z.string().max(NOTES_MAX_LENGTH).optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: 'At least one field must be provided',
+  });
+
+profiles.patch('/profiles/preferences', async (c) => {
+  const userId = c.get('userId');
+
+  const bodyResult = UpdatePreferencesSchema.safeParse(
+    await c.req.json().catch(() => ({})),
+  );
+  if (!bodyResult.success) {
+    return c.json(
+      {
+        error: 'Invalid request body',
+        code: 'VALIDATION_ERROR',
+        details: bodyResult.error.flatten(),
+      },
+      400,
+    );
+  }
+
+  const updated = await db
+    .update(userPreferences)
+    .set({ ...bodyResult.data, updatedAt: new Date() })
+    .where(eq(userPreferences.userId, userId))
+    .returning({
+      primaryLanguage: userPreferences.primaryLanguage,
+      goals: userPreferences.goals,
+      dailyMinutes: userPreferences.dailyMinutes,
+      gentleNudges: userPreferences.gentleNudges,
+      notes: userPreferences.notes,
+    });
+
+  if (updated.length === 0) {
+    return c.json(
+      { error: 'No preferences row for user', code: 'PREFERENCES_NOT_FOUND' },
+      404,
+    );
+  }
+
+  return c.json(updated[0]);
 });
 
 export default profiles;
