@@ -27,3 +27,6 @@ export type { AccentPickerProps, AccentLanguage } from './accent-picker';
 
 export { BottomSheet } from './bottom-sheet';
 export type { BottomSheetProps } from './bottom-sheet';
+
+export { Switch } from './switch';
+export type { SwitchProps } from './switch';
