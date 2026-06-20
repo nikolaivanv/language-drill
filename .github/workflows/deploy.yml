@@ -3,6 +3,13 @@ name: Production Deploy
 on:
   push:
     branches: [main]
+    # Docs-only merges change nothing the deploy ships (no Lambda/CDK/Vercel
+    # artifact, no migration, no turbo task graph), so skip the entire prod+dev
+    # pipeline for them. Safe outright: nothing gates on this workflow — it fires
+    # AFTER merge, so a skip has no branch-protection consequence (unlike ci.yml).
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
 
 concurrency:
   group: deploy-production
