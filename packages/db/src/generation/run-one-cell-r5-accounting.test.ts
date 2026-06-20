@@ -159,17 +159,23 @@ function makeApprovedOutcome(): DraftOutcome {
  *
  * The VOCAB_RECALL `fetchPriorVocabRecallSurfaces` path is bypassed by using
  * a CLOZE cell in the fixture.
+ *
+ * `.where().orderBy()` also serves `loadFrequencyBand` (DB-backed band query
+ * introduced on this branch): it must itself be awaitable (resolves to `[]` =
+ * empty band, correct for CLOZE accounting tests) while still carrying
+ * `.limit()` for the vocab-priors chain (`.orderBy().limit()`).
  */
 function makeStubDb(): Db {
   const selectChain = {
     // `where()` is a thenable resolving to `[]` (fetchPriorSeeds awaits it
     // directly) that also carries `.limit()` for the skill-topic precheck and
-    // `.orderBy().limit()` for the vocab-priors query (unused for CLOZE).
+    // `.orderBy()` for both the vocab-priors query (unused for CLOZE, via
+    // `.orderBy().limit()`) and `loadFrequencyBand` (awaited directly → `[]`).
     from: () => ({
       where: () =>
         Object.assign(Promise.resolve([] as unknown[]), {
           limit: () => Promise.resolve([{ id: 'skill-topic-stub' }]),
-          orderBy: () => ({ limit: () => Promise.resolve([]) }),
+          orderBy: () => Object.assign(Promise.resolve([] as unknown[]), { limit: () => Promise.resolve([]) }),
         }),
     }),
   };

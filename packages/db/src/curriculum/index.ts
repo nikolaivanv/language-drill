@@ -189,10 +189,11 @@ export function assertCurriculumInvariants(
       );
     }
 
-    // 8. description.length <= 200
-    if (entry.description.length > 200) {
+    // 8. description.length <= 300 (raised from 200: Turkish points were jammed
+    //    against the old cap; descriptions are injected verbatim into prompts).
+    if (entry.description.length > 300) {
       throw new Error(
-        `Curriculum invariant violated: '${entry.key}' description exceeds 200 characters (got ${entry.description.length})`,
+        `Curriculum invariant violated: '${entry.key}' description exceeds 300 characters (got ${entry.description.length})`,
       );
     }
 

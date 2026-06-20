@@ -1440,6 +1440,13 @@ DATABASE_URL=<env> pnpm --filter @language-drill/db seed:vocab
 
 Until `seed:vocab` runs against an environment, the band loaders return empty bands and generation falls back to unseeded drafts (R5.6) — degraded, not broken.
 
+**OPERATOR NOTE:** Seeding `vocab_lemma` for TR immediately activates verb-seeding
+on the 12 existing live TR conjugation cells (TR already has `conjugationSuitable:
+true` on 12 grammar points; those cells generate today but are unseeded). TR is
+the weak spot for Wiktextract coverage, so before seeding TR, check the build's
+per-language matched/unmatched summary and the `source` distribution (gap-fill
+rate), and spot-check early TR conjugation generations.
+
 ---
 
 ## Self-Review

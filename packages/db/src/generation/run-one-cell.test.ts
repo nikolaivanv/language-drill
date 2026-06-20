@@ -50,7 +50,7 @@ import {
 import { createDb, type Db } from '../client';
 import { ALL_CURRICULA } from '../curriculum';
 import type { CurriculumCefrLevel } from '../curriculum';
-import { exerciseTags, exercises, generationJobs } from '../schema/index';
+import { exerciseTags, exercises, generationJobs, vocabLemma } from '../schema/index';
 // The mock client lives in scripts/ because its fixtures do; cross-boundary
 // import is acceptable for test infrastructure.
 import { createMockAnthropicClient } from '../../scripts/generate-exercises-mock-client';
@@ -60,6 +60,7 @@ import {
   buildSeedWords,
   fetchPriorVocabRecallSurfaces,
   runOneCell,
+  seedKindFor,
   tallyCoverageOutcome,
 } from './run-one-cell';
 import type { CoverageSpec, CoverageTarget, CoverageTags } from '@language-drill/shared';
@@ -286,50 +287,29 @@ async function invokeRunOneCellWithClient(
 }
 
 // ---------------------------------------------------------------------------
-// buildSeedWords — pure seedable-type gate + picker wiring (R5.1). Runs without
-// a database (delegates to the deterministic `pickSeeds` over the bundled
-// frequency dictionary), so it lives outside the DB-gated integration suite.
+// seedKindFor — pure type gate (R5.1). Runs without a database.
 // ---------------------------------------------------------------------------
 
-describe('buildSeedWords', () => {
-  const clozeCell = buildTestCell(); // ES B1 cloze
-
-  it('seeds a cloze cell with one slot per ordinal', () => {
-    const seeds = buildSeedWords(clozeCell, 5, 'seed-batch', new Set());
-    expect(seeds).toBeDefined();
-    expect(seeds).toHaveLength(5);
-    // The ES B1 band is non-empty, so at least some ordinals get a real seed.
-    expect(seeds!.some((s) => s !== null)).toBe(true);
+describe('seedKindFor', () => {
+  const cellOf = (exerciseType: ExerciseType): Cell => ({
+    language: Language.ES as LearningLanguage,
+    cefrLevel: CefrLevel.B1 as CurriculumCefrLevel,
+    exerciseType,
+    grammarPoint: ALL_CURRICULA.find((g) => g.key === TEST_GRAMMAR_POINT_KEY)!,
+    cellKey: 'es:b1:x:es-test',
   });
 
-  it('seeds a translation cell', () => {
-    const translationCell: Cell = {
-      ...clozeCell,
-      exerciseType: ExerciseType.TRANSLATION,
-    };
-    expect(buildSeedWords(translationCell, 3, 'seed-batch', new Set())).toHaveLength(
-      3,
-    );
+  it('returns frequency for cloze and translation', () => {
+    expect(seedKindFor(cellOf(ExerciseType.CLOZE))).toBe('frequency');
+    expect(seedKindFor(cellOf(ExerciseType.TRANSLATION))).toBe('frequency');
   });
 
-  it('does NOT seed a vocab_recall cell (returns undefined)', () => {
-    const vocabCell: Cell = {
-      ...clozeCell,
-      exerciseType: ExerciseType.VOCAB_RECALL,
-    };
-    expect(buildSeedWords(vocabCell, 5, 'seed-batch', new Set())).toBeUndefined();
+  it('returns verb for conjugation', () => {
+    expect(seedKindFor(cellOf(ExerciseType.CONJUGATION))).toBe('verb');
   });
 
-  it('excludes prior seeds (cross-run dedup, R5.3)', () => {
-    const all = buildSeedWords(clozeCell, 10, 'seed-batch', new Set())!;
-    const firstNonNull = all.find((s): s is string => s !== null)!;
-    const reseeded = buildSeedWords(
-      clozeCell,
-      10,
-      'seed-batch',
-      new Set([firstNonNull]),
-    )!;
-    expect(reseeded).not.toContain(firstNonNull);
+  it('returns null for vocab_recall', () => {
+    expect(seedKindFor(cellOf(ExerciseType.VOCAB_RECALL))).toBeNull();
   });
 });
 
@@ -1110,6 +1090,86 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
 );
 
 // ---------------------------------------------------------------------------
+// buildSeedWords — DB-backed band selection (R5.1). Separate suite (no
+// beforeEach/afterEach exercises cleanup) so it's isolated from the FK
+// constraint failures in the main integration suite when running against a
+// production-forked test DB. Seeds vocab_lemma with ES B1 lemmas.
+// ---------------------------------------------------------------------------
+
+describe.skipIf(!process.env['TEST_DATABASE_URL'])(
+  'buildSeedWords — DB-backed band selection',
+  () => {
+    let seedDb: Db;
+
+    beforeAll(async () => {
+      seedDb = createDb(process.env['TEST_DATABASE_URL']!);
+      await seedDb.delete(vocabLemma);
+      await seedDb.insert(vocabLemma).values([
+        { language: 'ES', lemma: 'hablar', rank: 2600, posAll: ['VERB'], source: 'wiktextract' },
+        { language: 'ES', lemma: 'comer', rank: 2700, posAll: ['VERB'], source: 'wiktextract' },
+        { language: 'ES', lemma: 'vivir', rank: 2800, posAll: ['VERB'], source: 'wiktextract' },
+        { language: 'ES', lemma: 'beber', rank: 2900, posAll: ['VERB'], source: 'wiktextract' },
+        { language: 'ES', lemma: 'libro', rank: 2650, posAll: ['NOUN'], source: 'wiktextract' },
+        { language: 'ES', lemma: 'mesa', rank: 2750, posAll: ['NOUN'], source: 'wiktextract' },
+      ]);
+    });
+
+    afterAll(async () => {
+      if (seedDb) await seedDb.delete(vocabLemma);
+    });
+
+    it('seeds a cloze cell with one slot per ordinal from DB band', async () => {
+      const clozeCell = buildTestCell(); // ES B1 cloze
+      const seeds = await buildSeedWords(seedDb, clozeCell, 5, 'seed-batch', new Set());
+      expect(seeds).toBeDefined();
+      expect(seeds).toHaveLength(5);
+      // The seeded band is non-empty, so at least some ordinals get a real seed.
+      expect(seeds!.some((s) => s !== null)).toBe(true);
+    });
+
+    it('seeds a translation cell from DB band', async () => {
+      const clozeCell = buildTestCell();
+      const translationCell: Cell = {
+        ...clozeCell,
+        exerciseType: ExerciseType.TRANSLATION,
+      };
+      const seeds = await buildSeedWords(seedDb, translationCell, 3, 'seed-batch', new Set());
+      expect(seeds).toHaveLength(3);
+    });
+
+    it('does NOT seed a vocab_recall cell (returns undefined)', async () => {
+      const clozeCell = buildTestCell();
+      const vocabCell: Cell = {
+        ...clozeCell,
+        exerciseType: ExerciseType.VOCAB_RECALL,
+      };
+      expect(await buildSeedWords(seedDb, vocabCell, 5, 'seed-batch', new Set())).toBeUndefined();
+    });
+
+    it('excludes prior seeds (cross-run dedup, R5.3)', async () => {
+      const clozeCell = buildTestCell();
+      const all = (await buildSeedWords(seedDb, clozeCell, 10, 'seed-batch', new Set()))!;
+      const firstNonNull = all.find((s): s is string => s !== null)!;
+      const reseeded = (await buildSeedWords(seedDb, clozeCell, 10, 'seed-batch', new Set([firstNonNull])))!;
+      expect(reseeded).not.toContain(firstNonNull);
+    });
+
+    it('seeds conjugation cells (any language) with verbs from DB band', async () => {
+      const clozeCell = buildTestCell();
+      const conjCell: Cell = {
+        ...clozeCell,
+        exerciseType: ExerciseType.CONJUGATION,
+        cellKey: 'es:b1:conjugation:es-b1-present-subjunctive',
+      };
+      const targets = [{ person: '1sg' }, { person: '2sg' }, { person: '3sg' }];
+      const seeds = await buildSeedWords(seedDb, conjCell, 3, 'seed-b', new Set(), targets);
+      expect(seeds).toBeDefined();
+      expect(seeds!.filter((s) => typeof s === 'string').length).toBeGreaterThan(0);
+    });
+  },
+);
+
+// ---------------------------------------------------------------------------
 // fetchPriorVocabRecallSurfaces — R6.5 at-cap avoid-set. Under the `word::cue`
 // dedup key a word may carry up to VOCAB_MAX_PER_WORD exercises, so the
 // generator's avoid-set must contain ONLY words that have reached the cap;
@@ -1412,30 +1472,3 @@ describe('tallyCoverageOutcome', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// buildSeedWords — conjugation
-// ---------------------------------------------------------------------------
-
-// Minimal Cell factory — mirror the existing test helpers in this file.
-const conjCell = (language: Language) => ({
-  language,
-  cefrLevel: CefrLevel.B1,
-  exerciseType: ExerciseType.CONJUGATION,
-  grammarPoint: { key: "es-b1-conditional" },
-  cellKey: `${language}:b1:conjugation:es-b1-conditional`,
-} as unknown as Parameters<typeof buildSeedWords>[0]);
-
-describe("buildSeedWords — conjugation", () => {
-  const targets = [{ person: "1sg" }, { person: "2sg" }, { person: "3sg" }];
-
-  it("seeds ES conjugation cells with verbs coordinated to the person targets", () => {
-    const seeds = buildSeedWords(conjCell(Language.ES), 3, "b", new Set(), targets);
-    expect(seeds).toBeDefined();
-    expect(seeds!.filter((s) => typeof s === "string").length).toBeGreaterThan(0);
-  });
-
-  it("leaves non-ES conjugation cells unseeded (current behavior)", () => {
-    expect(buildSeedWords(conjCell(Language.TR), 3, "b", new Set(), targets)).toBeUndefined();
-    expect(buildSeedWords(conjCell(Language.DE), 3, "b", new Set(), targets)).toBeUndefined();
-  });
-});

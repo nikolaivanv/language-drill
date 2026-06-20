@@ -47,10 +47,15 @@ deferred item is a later nullable-column migration.
 
 ## Out of scope (separate follow-up spec)
 
-Turning on the actual TR/DE conjugation/inflection *cells* — curriculum
-`conjugationSuitable` flags and validating inflection generation for those
-languages. This spec removes the data blocker (language-agnostic verb seeding);
-lighting up specific cells is its own change.
+TR/DE inflection-generation **validation** — the quality gate for TR and DE
+conjugation output. The cells themselves already exist: TR has 12 live
+conjugation cells (`conjugationSuitable: true` in `packages/db/src/curriculum/tr.ts`
+→ `CONJUGATION` cells in `packages/db/src/generation/cells.ts`); DE has 0; ES has
+3. Those 12 TR cells generate today but are unseeded (the old `verbBand` heuristic
+was ES-only). This spec makes verb seeding language-agnostic, so once TR
+`vocab_lemma` is populated the 12 existing cells become verb-seedable automatically.
+The deferred follow-up is not "turn on TR conjugation cells" but rather "validate
+TR/DE inflection-generation quality."
 
 ## Data model
 
@@ -128,12 +133,24 @@ We also **trust the corpus's surface→lemma map**: if the corpus maps surface
 corpus emitted it separately. We inherit that lemmatization rather than
 re-deriving it.
 
+Band ordering tie-breaks on (rank, lemma) using the DB's default collation;
+seed selection is deterministic within a single database (the scheduler's
+requirement), though equal-rank tie-break order may differ across databases with
+different collations — acceptable; revisit with an explicit COLLATE only if
+cross-environment seed reproducibility is ever needed.
+
 ## Risks
 
 - **Turkish Wiktextract coverage** is the weak spot — agglutinative lemmatization
   and dictionary gaps mean the LLM gap-fill share will likely be larger for TR
   than ES/DE. The `source` column lets us measure the gap-fill rate per language;
   if TR match quality is poor, revisit before trusting verb seeding there.
+
+  **OPERATOR NOTE:** Seeding `vocab_lemma` for TR immediately activates
+  verb-seeding on the 12 existing live TR conjugation cells. TR is the weak spot
+  for Wiktextract coverage, so before seeding TR, check the build's per-language
+  matched/unmatched summary and the `source` distribution (gap-fill rate), and
+  spot-check early TR conjugation generations.
 
 ## Testing
 
@@ -146,9 +163,10 @@ re-deriving it.
 
 ## Enabled next (not this spec)
 
-With PoS in the DB, verb seeding is language-agnostic, which unblocks turning on
-TR/DE conjugation/inflection cells (curriculum flags + inflection-generation
-validation) in a follow-up.
+With PoS in the DB, verb seeding is language-agnostic. TR already has 12 live
+conjugation cells (DE has 0, ES has 3); once TR `vocab_lemma` is seeded those
+cells gain verb seeds automatically. The follow-up work is TR/DE
+inflection-generation **validation** (quality), not turning the cells on.
 
 ---
 

@@ -53,7 +53,7 @@ export type GrammarPoint = Readonly<{
   key: string;
   kind: 'grammar' | 'vocab' | 'dictation' | 'free-writing';
   name: string;
-  /** ≤ 200 chars; English; injected verbatim into Phase 2 prompts. */
+  /** ≤ 300 chars; English; injected verbatim into Phase 2 prompts. */
   description: string;
   cefrLevel: CurriculumCefrLevel;
   language: LearningLanguage;
