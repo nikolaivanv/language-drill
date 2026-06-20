@@ -42,6 +42,7 @@ import {
 import { db } from '../db';
 import { approvedStatusFilter, audioReadyFilter, freshFirstOrderBy } from '../lib/exercise-filters';
 import { recordErrorObservations, freeWritingErrorsToEvaluationErrors } from '../lib/errors/record';
+import { incidentalObservations } from '../lib/mastery/incidental-fold';
 import { presignAudioUrl } from '../lib/audio-url';
 import { withAudioUrl } from '../lib/dictation-content';
 import { authMiddleware } from '../middleware/auth';
@@ -553,6 +554,21 @@ exercises.post('/exercises/:id/submit', async (c) => {
       hostGrammarPointKey: exercise.grammarPointKey,
       occurredAt: new Date(),
     });
+
+    // Fold incidental slips into the VIOLATED point's mastery (Phase 3): an error
+    // attributed to a point other than the host gets no signal today, so a point
+    // can read "mastered" while generating the most errors. Best-effort.
+    for (const obs of incidentalObservations(result.errors, exercise.grammarPointKey, new Date())) {
+      const point = getGrammarPoint(obs.grammarPointKey);
+      if (!point) continue;
+      await applyGrammarMastery({
+        userId,
+        language: exercise.language as Language,
+        grammarPointKey: obs.grammarPointKey,
+        difficulty: point.cefrLevel as CefrLevel,
+        score: obs.score,
+      });
+    }
 
     await db.insert(usageEvents).values({
       userId,

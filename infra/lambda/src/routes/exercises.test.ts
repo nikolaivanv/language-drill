@@ -2004,3 +2004,124 @@ describe('POST /exercises/:id/submit — error attribution keys', () => {
     );
   });
 });
+
+// ---------------------------------------------------------------------------
+// POST /exercises/:id/submit — incidental mastery fold (Task B3)
+// ---------------------------------------------------------------------------
+//
+// When a submission contains an error attributed to a grammar point OTHER than
+// the exercise host point, the route must fold a negative mastery signal into
+// that incidental point via applyGrammarMastery. This test verifies that a
+// userGrammarMastery upsert (.values({...})) occurred for tr-a1-vowel-harmony
+// (the incidental point) with a masteryScore below 0.5.
+
+describe('POST /exercises/:id/submit — incidental mastery fold (B3)', () => {
+  let app: Hono;
+
+  const authEnv = {
+    event: {
+      requestContext: {
+        authorizer: { jwt: { claims: { sub: 'user_123' } } },
+      },
+    },
+  };
+
+  // Exercise hosted on tr-a1-locative
+  const trA1LocativeExercise = {
+    id: 'tr-a1-loc-001',
+    type: 'translation',
+    language: 'TR',
+    difficulty: 'A1',
+    grammarPointKey: 'tr-a1-locative',
+    contentJson: {
+      type: 'translation',
+      source: 'The cat is in the house.',
+      targetLanguage: 'tr',
+    },
+    audioS3Key: null,
+    createdAt: new Date(),
+  };
+
+  // Evaluator returns one MAJOR error attributed to tr-a1-vowel-harmony (incidental — not the host)
+  const evaluationWithIncidentalError = {
+    score: 0.6,
+    grammarAccuracy: 0.5,
+    vocabularyRange: 'A1',
+    taskAchievement: 0.7,
+    feedback: 'You made a vowel harmony error.',
+    errors: [
+      {
+        type: 'grammar',
+        severity: 'major',
+        text: 'evde',
+        correction: 'evde (correct suffix, but internal vowel wrong)',
+        grammarPointKey: 'tr-a1-vowel-harmony',
+      },
+    ],
+    estimatedCefrEvidence: 'A1',
+  };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    mockWithLlmTrace.mockImplementation(
+      <T>(_ctx: unknown, fn: () => T | Promise<T>) => Promise.resolve(fn()),
+    );
+    mockRandomUUID.mockImplementation(() => 'bbbbbbbb-cccc-dddd-eeee-ffffffffffff');
+    // Curriculum subset for TR/A1
+    mockGrammarPointsAtOrBelow.mockReturnValue([
+      { key: 'tr-a1-vowel-harmony', name: 'Vowel Harmony' },
+      { key: 'tr-a1-locative', name: 'Locative Case (-DA)' },
+    ]);
+    // getGrammarPoint must return a point with cefrLevel for tr-a1-vowel-harmony
+    const { getGrammarPoint: mockGetGrammarPoint } = await import('@language-drill/db');
+    (mockGetGrammarPoint as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
+      if (key === 'tr-a1-vowel-harmony') return { key: 'tr-a1-vowel-harmony', cefrLevel: 'A1', name: 'Vowel Harmony' };
+      if (key === 'tr-a1-locative') return { key: 'tr-a1-locative', cefrLevel: 'A1', name: 'Locative Case (-DA)' };
+      return undefined;
+    });
+    const mod = await import('./exercises');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  it('upserts a low-score mastery row for the incidental grammar point', async () => {
+    // exercise fetch — route does db.select().from().where().orderBy().limit()
+    mockWhere.mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }));
+    mockLimit.mockResolvedValueOnce([trA1LocativeExercise]); // exercise row
+    // usage count — db.select().from().where() resolves directly
+    mockWhere.mockResolvedValueOnce([{ count: 0 }] as never);
+    // applyGrammarMastery (host point: tr-a1-locative) — db.select().from().where().limit(1) → []
+    mockLimit.mockResolvedValueOnce([] as never); // host mastery select
+    // applyGrammarMastery (incidental: tr-a1-vowel-harmony) — db.select().from().where().limit(1) → []
+    mockLimit.mockResolvedValueOnce([] as never); // incidental mastery select
+    mockEvaluateAnswer.mockResolvedValueOnce(evaluationWithIncidentalError);
+
+    const res = await app.request(
+      '/exercises/tr-a1-loc-001/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'Kedi evde.' }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+
+    // Find the userGrammarMastery insert for tr-a1-vowel-harmony (the incidental point).
+    // mockValues captures all .values({...}) calls; the upsert row has masteryScore.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const masteryCallForVowelHarmony = (mockValues.mock.calls as any[]).find((args: any[]) => {
+      const row = args[0];
+      return row && typeof row === 'object' && !Array.isArray(row) && row.grammarPointKey === 'tr-a1-vowel-harmony';
+    });
+
+    expect(masteryCallForVowelHarmony).toBeDefined();
+    const row = masteryCallForVowelHarmony[0] as Record<string, unknown>;
+    // mockUpdateMastery returns masteryScore: 0.4 when prev is falsy (first observation)
+    // For a major error score=0, updateMastery is called with score:0, so masteryScore < 0.5
+    expect(typeof row.masteryScore).toBe('number');
+    expect(row.masteryScore as number).toBeLessThan(0.5);
+    expect(row.grammarPointKey).toBe('tr-a1-vowel-harmony');
+  });
+});
