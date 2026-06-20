@@ -26,7 +26,7 @@ type OnboardingContextValue = {
   dispatch: Dispatch<OnboardingAction>;
 };
 
-const OnboardingContext = createContext<OnboardingContextValue | null>(null);
+export const OnboardingContext = createContext<OnboardingContextValue | null>(null);
 
 export function OnboardingProvider({
   initialState,

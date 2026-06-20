@@ -4,18 +4,19 @@
 // Locks the contract for the proficiency-level step (R3.1, R3.2, R3.3, R3.5,
 // R3.7): the primary-language radiogroup is suppressed in the single-language
 // fast-path and visible (with roving-focus arrow-key navigation) for ≥2
-// languages, the CEFR cards drive `primaryLevel`, the placement callout is
-// rendered, and `WizardFooter`'s "continue" gate flips on as soon as a level
-// is picked. Always renders inside a real `OnboardingProvider` so we exercise
-// the actual reducer + component wiring rather than mocking dispatch.
+// languages, the CEFR cards drive per-language levels, the placement callout
+// is rendered, and `WizardFooter`'s "continue" gate flips on as soon as a
+// level is picked. Always renders inside a real `OnboardingProvider` so we
+// exercise the actual reducer + component wiring rather than mocking dispatch.
 // ---------------------------------------------------------------------------
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { CefrLevel, Language } from '@language-drill/shared';
-import { OnboardingProvider } from '../onboarding-context';
+import { OnboardingContext, OnboardingProvider } from '../onboarding-context';
 import {
   initialNewUserState,
+  type OnboardingAction,
   type OnboardingState,
 } from '../use-onboarding-reducer';
 import { StepLevel } from '../steps/step-level';
@@ -25,6 +26,34 @@ function renderInProvider(state: OnboardingState, ui: React.ReactNode) {
   return render(
     <OnboardingProvider initialState={state}>{ui}</OnboardingProvider>,
   );
+}
+
+/**
+ * Render StepLevel with an optional custom dispatch spy. When dispatch is
+ * provided, the context is seeded with the given state and the spy captures
+ * all dispatched actions. When omitted, the real OnboardingProvider reducer
+ * is used.
+ */
+function renderStepLevel(
+  stateOverrides: Partial<OnboardingState> & {
+    languages: Language[];
+    primaryLanguage: Language | null;
+  },
+  dispatchSpy?: (action: OnboardingAction) => void,
+) {
+  const state: OnboardingState = {
+    ...initialNewUserState(),
+    step: 2,
+    ...stateOverrides,
+  };
+  if (dispatchSpy) {
+    return render(
+      <OnboardingContext.Provider value={{ state, dispatch: dispatchSpy }}>
+        <StepLevel />
+      </OnboardingContext.Provider>,
+    );
+  }
+  return renderInProvider(state, <StepLevel />);
 }
 
 describe('StepLevel', () => {
@@ -41,10 +70,10 @@ describe('StepLevel', () => {
     expect(
       screen.queryByRole('radiogroup', { name: /primary language/i }),
     ).not.toBeInTheDocument();
-    // The proficiency-level radiogroup IS rendered — the disambiguating
-    // aria-label is the contract.
+    // The proficiency-level radiogroup IS rendered — the aria-label uses the
+    // language's native name.
     expect(
-      screen.getByRole('radiogroup', { name: /proficiency level/i }),
+      screen.getByRole('radiogroup', { name: /español level/i }),
     ).toBeInTheDocument();
   });
 
@@ -101,7 +130,35 @@ describe('StepLevel', () => {
     expect(tiles[1]).toHaveFocus();
   });
 
-  it('selecting a CEFR card sets primaryLevel (and only that card becomes checked)', () => {
+  it('renders one proficiency radiogroup per selected language', () => {
+    renderStepLevel({
+      languages: [Language.ES, Language.DE],
+      primaryLanguage: Language.ES,
+    });
+    expect(
+      screen.getByRole('radiogroup', { name: /español level/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('radiogroup', { name: /deutsch level/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('dispatches setLevel with the language when a card is clicked', () => {
+    const dispatch = vi.fn();
+    renderStepLevel(
+      { languages: [Language.ES, Language.DE], primaryLanguage: Language.ES },
+      dispatch,
+    );
+    const deGroup = screen.getByRole('radiogroup', { name: /deutsch level/i });
+    fireEvent.click(within(deGroup).getByRole('radio', { name: /B1/ }));
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'setLevel',
+      language: Language.DE,
+      level: CefrLevel.B1,
+    });
+  });
+
+  it('selecting a CEFR card sets the level for that language (and only that card becomes checked)', () => {
     const state: OnboardingState = {
       ...initialNewUserState(),
       step: 2,
@@ -110,7 +167,7 @@ describe('StepLevel', () => {
     };
     renderInProvider(state, <StepLevel />);
     const cefrGroup = screen.getByRole('radiogroup', {
-      name: /proficiency level/i,
+      name: /español level/i,
     });
     const cards = within(cefrGroup).getAllByRole('radio');
     expect(cards).toHaveLength(6);
@@ -161,7 +218,7 @@ describe('StepLevel', () => {
     expect(cta).toBeDisabled();
 
     const cefrGroup = screen.getByRole('radiogroup', {
-      name: /proficiency level/i,
+      name: /español level/i,
     });
     const b2 = within(cefrGroup).getAllByRole('radio')[3];
     fireEvent.click(b2);
