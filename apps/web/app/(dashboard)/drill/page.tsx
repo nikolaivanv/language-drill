@@ -90,6 +90,10 @@ function PracticePageContent() {
     const g = searchParams.get('grammarPoint');
     return g && g.length > 0 ? g : null;
   });
+  const [exerciseType] = useState<ExerciseType | null>(() => {
+    const t = searchParams.get('exerciseType');
+    return t && (Object.values(ExerciseType) as string[]).includes(t) ? (t as ExerciseType) : null;
+  });
   const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
 
   const { data: profilesData } = useLanguageProfiles({ fetchFn });
@@ -168,6 +172,7 @@ function PracticePageContent() {
             difficulty,
             exerciseCount: DEFAULT_EXERCISE_COUNT,
             ...(grammarPointKey ? { grammarPointKey } : {}),
+            ...(exerciseType ? { exerciseType } : {}),
           };
     createSession.mutate(config, {
       onSuccess: (data) => {
