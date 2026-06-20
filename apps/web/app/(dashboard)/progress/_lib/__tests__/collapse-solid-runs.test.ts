@@ -19,6 +19,6 @@ describe('collapseSolidRuns', () => {
   it('never collapses an error-prone solid (it must stay visible)', () => {
     const out = collapseSolidRuns([p('a', 'solid'), p('b', 'solid', true), p('c', 'solid'), p('d', 'solid')]);
     // error-prone 'b' breaks the run; remaining are <3 or include the flagged one
-    expect(out.some((e) => e.kind === 'point' && (e as any).point.key === 'b')).toBe(true);
+    expect(out.some((e) => e.kind === 'point' && e.point.key === 'b')).toBe(true);
   });
 });
