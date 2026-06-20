@@ -318,6 +318,13 @@ export type EvaluationError = {
   text: string;
   correction: string;
   explanation: string;
+  /**
+   * The curriculum grammar-point key this specific error violates, when the
+   * evaluator could attribute it to one of the exercise's in-scope points.
+   * Null/absent when no in-scope point applies. Populated only by the generic
+   * evaluator (Phase 3); the free-writing path leaves it unset.
+   */
+  grammarPointKey?: string | null;
 };
 
 export type EvaluationResult = {
