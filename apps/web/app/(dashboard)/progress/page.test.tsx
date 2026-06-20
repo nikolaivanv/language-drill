@@ -30,12 +30,16 @@ const mockUseProgressRadar = vi.fn();
 const mockUseLanguageProfiles = vi.fn();
 const mockUseFluencyStats = vi.fn();
 const mockUseErrorTrends = vi.fn();
+const mockUseCurriculumMap = vi.fn();
+const mockUseInsightsErrors = vi.fn();
 
 vi.mock('@language-drill/api-client', () => ({
   useProgressRadar: (...args: unknown[]) => mockUseProgressRadar(...args),
   useLanguageProfiles: (...args: unknown[]) => mockUseLanguageProfiles(...args),
   useFluencyStats: (...args: unknown[]) => mockUseFluencyStats(...args),
   useErrorTrends: (...args: unknown[]) => mockUseErrorTrends(...args),
+  useCurriculumMap: (...args: unknown[]) => mockUseCurriculumMap(...args),
+  useInsightsErrors: (...args: unknown[]) => mockUseInsightsErrors(...args),
   createAuthenticatedFetch: vi.fn(() => vi.fn()),
 }));
 
@@ -120,6 +124,18 @@ beforeEach(() => {
     error: null,
     refetch: vi.fn(),
   });
+  mockUseCurriculumMap.mockReturnValue({
+    data: undefined,
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  });
+  mockUseInsightsErrors.mockReturnValue({
+    data: { themes: [] },
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -146,7 +162,7 @@ describe('ProgressPage', () => {
     expect(screen.queryByRole('tablist')).toBeNull();
   });
 
-  it('renders the Shape tab by default with header and tablist', () => {
+  it('renders the Map tab by default with header and tablist', () => {
     renderPage();
 
     expect(
@@ -154,15 +170,19 @@ describe('ProgressPage', () => {
     ).toBeDefined();
     const tablist = screen.getByRole('tablist');
     expect(tablist).toBeDefined();
+    // Map is the new default tab (Phase 1 change).
+    const mapTab = screen.getByRole('tab', { name: 'map' });
+    expect(mapTab.getAttribute('aria-selected')).toBe('true');
+    // Shape tab exists but is not selected.
     const shapeTab = screen.getByRole('tab', { name: 'shape' });
-    expect(shapeTab.getAttribute('aria-selected')).toBe('true');
-    // Shape panel renders side cards (legend always shows when totalEvidence ≥ 5)
-    expect(screen.getByText('compare to')).toBeDefined();
+    expect(shapeTab.getAttribute('aria-selected')).toBe('false');
     // Heatmap tab no longer exists.
     expect(screen.queryByRole('tab', { name: 'practice heatmap' })).toBeNull();
   });
 
   it('renders the Shape error state when the radar query fails', () => {
+    // Navigate to the shape tab explicitly (map is now the default).
+    mockSearchParams = new URLSearchParams('tab=shape');
     mockUseProgressRadar.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -177,12 +197,12 @@ describe('ProgressPage', () => {
     expect(screen.getByRole('tablist')).toBeDefined();
   });
 
-  it('stale ?tab=heatmap URL falls back to the shape tab', () => {
+  it('stale ?tab=heatmap URL falls back to the map tab', () => {
     mockSearchParams = new URLSearchParams('tab=heatmap');
     renderPage();
-    // Falls back to shape — the heatmap tab no longer exists.
-    const shapeTab = screen.getByRole('tab', { name: 'shape' });
-    expect(shapeTab.getAttribute('aria-selected')).toBe('true');
+    // Falls back to map — the heatmap tab no longer exists and map is the default.
+    const mapTab = screen.getByRole('tab', { name: 'map' });
+    expect(mapTab.getAttribute('aria-selected')).toBe('true');
     expect(screen.queryByRole('tab', { name: 'practice heatmap' })).toBeNull();
   });
 
