@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import type { CurriculumMapResponse, CurriculumMapPoint, InsightsErrorTheme } from '@language-drill/api-client';
+import type { LearningLanguage } from '@language-drill/shared';
 import { Card } from '../../../../components/ui/card';
 import { Button } from '../../../../components/ui/button';
 import { WorkOnThese } from '../../_components/work-on-these';
 import { collapseSolidRuns, type MapEntry } from '../_lib/collapse-solid-runs';
+import { PointDetailSheet, formatAgo } from './point-detail-sheet';
 
 // ---------------------------------------------------------------------------
 // MapTab — read-only curriculum spine for /progress.
@@ -143,9 +145,11 @@ function MasteryBar({
 function SpineRow({
   point,
   isLast,
+  onSelect,
 }: {
   point: CurriculumMapPoint;
   isLast: boolean;
+  onSelect?: (point: CurriculumMapPoint) => void;
 }) {
   const { state, order, name, mastery, errorProne, recentErrorCount, prereqUnmet, prereqNames, lastPracticedAt } = point;
   const isNotStarted = state === 'not-started';
@@ -192,14 +196,42 @@ function SpineRow({
         )}
       </div>
 
-      {/* Body */}
-      <div
-        className="flex-1 pb-[22px]"
-        style={{ opacity: bodyOpacity }}
+      {/* Body — tappable button that opens the detail sheet */}
+      <button
+        type="button"
+        className="flex-1 pb-[22px] text-left"
+        style={{
+          opacity: bodyOpacity,
+          background: 'none',
+          border: 'none',
+          padding: '0 0 22px 0',
+          cursor: onSelect ? 'pointer' : 'default',
+        }}
+        onClick={onSelect ? () => onSelect(point) : undefined}
+        onKeyDown={
+          onSelect
+            ? (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onSelect(point);
+                }
+              }
+            : undefined
+        }
+        tabIndex={onSelect ? 0 : -1}
       >
         {/* Name row */}
         <div className="flex flex-wrap items-center gap-x-[8px] gap-y-[3px]">
-          <span className="t-display-s">{name}</span>
+          <span
+            className="t-display-s"
+            style={
+              onSelect
+                ? { transition: 'color 0.1s' }
+                : undefined
+            }
+          >
+            {name}
+          </span>
           {errorProne && (
             <span
               style={{
@@ -241,7 +273,7 @@ function SpineRow({
             {cueText}
           </div>
         )}
-      </div>
+      </button>
     </li>
   );
 }
@@ -255,11 +287,13 @@ function CollapsedRunRow({
   isLast,
   expanded,
   onToggle,
+  onSelect,
 }: {
   entry: Extract<MapEntry, { kind: 'run' }>;
   isLast: boolean;
   expanded: boolean;
   onToggle: () => void;
+  onSelect?: (point: CurriculumMapPoint) => void;
 }) {
   if (expanded) {
     return (
@@ -269,6 +303,7 @@ function CollapsedRunRow({
             key={pt.key}
             point={pt}
             isLast={isLast && i === entry.points.length - 1}
+            onSelect={onSelect}
           />
         ))}
         <li>
@@ -467,6 +502,8 @@ export function MapTab({
 }: MapTabProps) {
   // Expanded run indices: Set<runIndex>
   const [expandedRuns, setExpandedRuns] = useState<Set<number>>(new Set());
+  // Selected point for the detail sheet
+  const [selected, setSelected] = useState<CurriculumMapPoint | null>(null);
 
   function toggleRun(idx: number) {
     setExpandedRuns((prev) => {
@@ -555,7 +592,7 @@ export function MapTab({
               const isLast = i === entries.length - 1;
               if (entry.kind === 'point') {
                 return (
-                  <SpineRow key={entry.point.key} point={entry.point} isLast={isLast} />
+                  <SpineRow key={entry.point.key} point={entry.point} isLast={isLast} onSelect={setSelected} />
                 );
               }
               // run entry
@@ -568,6 +605,7 @@ export function MapTab({
                   isLast={isLast}
                   expanded={expandedRuns.has(runIdx)}
                   onToggle={() => { toggleRun(runIdx); }}
+                  onSelect={setSelected}
                 />
               );
             })}
@@ -622,22 +660,19 @@ export function MapTab({
           <WorkOnThese themes={errorThemes} />
         </div>
       )}
+
+      {/* Point detail sheet */}
+      {selected && (
+        <PointDetailSheet
+          point={selected}
+          language={data.language as LearningLanguage}
+          onClose={() => setSelected(null)}
+        />
+      )}
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Helpers
+// Helpers — formatAgo is re-exported from point-detail-sheet.tsx (shared)
 // ---------------------------------------------------------------------------
-
-function formatAgo(isoDate: string): string {
-  const ms = Date.now() - new Date(isoDate).getTime();
-  const days = Math.floor(ms / 86_400_000);
-  if (days === 0) return 'today';
-  if (days === 1) return 'yesterday';
-  if (days < 7) return `${days}d ago`;
-  const weeks = Math.floor(days / 7);
-  if (weeks < 5) return `${weeks}w ago`;
-  const months = Math.floor(days / 30);
-  return `${months}mo ago`;
-}
