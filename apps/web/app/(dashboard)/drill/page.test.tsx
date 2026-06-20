@@ -35,6 +35,7 @@ const mockUseCompleteSession = vi.fn();
 const mockUseSubmitAnswer = vi.fn();
 const mockUseLanguageProfiles = vi.fn();
 const mockUseResumeSession = vi.fn();
+const mockUseInsightsErrors = vi.fn();
 
 vi.mock('@language-drill/api-client', () => ({
   useCreateSession: (...args: unknown[]) => mockUseCreateSession(...args),
@@ -42,6 +43,7 @@ vi.mock('@language-drill/api-client', () => ({
   useSubmitAnswer: (...args: unknown[]) => mockUseSubmitAnswer(...args),
   useLanguageProfiles: (...args: unknown[]) => mockUseLanguageProfiles(...args),
   useResumeSession: (...args: unknown[]) => mockUseResumeSession(...args),
+  useInsightsErrors: (...args: unknown[]) => mockUseInsightsErrors(...args),
   useTodayPlan: () => ({ data: undefined, isLoading: false, error: null }),
   createAuthenticatedFetch: vi.fn(() => vi.fn()),
 }));
@@ -183,6 +185,9 @@ beforeEach(() => {
     isError: false,
     error: null,
   });
+
+  // Default insights: no themes (canned coach message used).
+  mockUseInsightsErrors.mockReturnValue({ data: { themes: [] } });
 });
 
 // ---------------------------------------------------------------------------
@@ -649,6 +654,43 @@ describe('PracticePage', () => {
 
       expect(screen.getByText(/sentence-1/)).toBeInTheDocument();
       expect(screen.queryByText(/sentence-0/)).not.toBeInTheDocument();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  describe('coach headline — cross-session recurring error', () => {
+    it('shows the lately · headline when insights returns a theme with count ≥ 2 and no session errors', () => {
+      mockUseInsightsErrors.mockReturnValue({
+        data: {
+          themes: [
+            {
+              grammarPointKey: 'tr-a1-locative',
+              grammarPointName: 'Locative case',
+              errorType: 'grammar',
+              count: 6,
+              majorCount: 4,
+              lastOccurredAt: '2026-06-19T00:00:00.000Z',
+              sample: { wrongText: 'pazarda', correction: 'pazara' },
+              score: 4,
+            },
+          ],
+        },
+      });
+      renderWithProviders(<PracticePage />);
+      // Page lands in-session (default mocks fire CREATE_SUCCEEDED synchronously)
+      // with no session errors → cross-session headline wins.
+      expect(
+        screen.getByText('lately · Locative case: pazarda → pazara (6×)'),
+      ).toBeInTheDocument();
+    });
+
+    it('shows the canned coach message when insights has no themes', () => {
+      // Default beforeEach already sets mockUseInsightsErrors to { data: { themes: [] } }
+      renderWithProviders(<PracticePage />);
+      // Default in-session idle state → canned "guiding this session" caption visible.
+      expect(screen.getByText('guiding this session')).toBeInTheDocument();
+      // No lately headline.
+      expect(screen.queryByText(/lately ·/)).not.toBeInTheDocument();
     });
   });
 });

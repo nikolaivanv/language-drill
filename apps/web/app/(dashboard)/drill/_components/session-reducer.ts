@@ -4,6 +4,7 @@ import type {
   ResumeSessionResponse,
 } from '@language-drill/api-client';
 import type { SubmissionMeta, SubmissionResult, SubmissionState } from './types';
+import type { SessionError } from '../../../../lib/drill/coach-headline';
 
 interface SessionInProgress {
   session: { id: string };
@@ -11,6 +12,7 @@ interface SessionInProgress {
   index: number;
   perItemSubmission: SubmissionState;
   skippedCount: number;
+  sessionErrors: SessionError[];
 }
 
 export type SessionState =
@@ -54,6 +56,7 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
         index: 0,
         perItemSubmission: { kind: 'idle' },
         skippedCount: 0,
+        sessionErrors: [],
       };
 
     case 'RESUME_SUCCEEDED':
@@ -65,6 +68,7 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
         index: action.startIndex,
         perItemSubmission: { kind: 'idle' },
         skippedCount: 0,
+        sessionErrors: [],
       };
 
     case 'CREATE_FAILED':
@@ -75,8 +79,24 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
       if (state.kind !== 'inSession') return state;
       return { ...state, perItemSubmission: { kind: 'submitting' } };
 
-    case 'ITEM_EVALUATED':
+    case 'ITEM_EVALUATED': {
       if (state.kind !== 'inSession') return state;
+      const result = action.result;
+      const rawErrors =
+        result &&
+        typeof result === 'object' &&
+        'errors' in result &&
+        Array.isArray((result as { errors?: unknown }).errors)
+          ? (result as { errors: Array<{ type: string; severity: string; text: string; correction: string }> }).errors
+          : [];
+      const grammarPointKey = state.items[state.index]?.grammarPointKey ?? null;
+      const newErrors: SessionError[] = rawErrors.map((e) => ({
+        grammarPointKey,
+        errorType: e.type,
+        severity: e.severity,
+        text: e.text,
+        correction: e.correction,
+      }));
       return {
         ...state,
         perItemSubmission: {
@@ -85,7 +105,9 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
           meta: action.meta,
           submissionId: action.submissionId,
         },
+        sessionErrors: [...state.sessionErrors, ...newErrors],
       };
+    }
 
     case 'ITEM_ERROR':
       if (state.kind !== 'inSession') return state;
@@ -133,6 +155,7 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
         index: state.index,
         perItemSubmission: state.perItemSubmission,
         skippedCount: state.skippedCount,
+        sessionErrors: state.sessionErrors,
       };
 
     case 'RESET':

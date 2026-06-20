@@ -15,6 +15,7 @@ import {
   type SessionState,
 } from '../session-reducer';
 import type { SubmissionMeta } from '../types';
+import type { SessionError } from '../../../../../lib/drill/coach-headline';
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -70,6 +71,7 @@ const inSessionState: SessionState = {
   index: 0,
   perItemSubmission: { kind: 'idle' },
   skippedCount: 0,
+  sessionErrors: [],
 };
 
 // ---------------------------------------------------------------------------
@@ -129,6 +131,7 @@ describe('sessionReducer / CREATE_SUCCEEDED', () => {
       index: 0,
       perItemSubmission: { kind: 'idle' },
       skippedCount: 0,
+      sessionErrors: [],
     });
   });
 
@@ -383,6 +386,9 @@ describe('sessionReducer / COMPLETE_SUCCEEDED removal', () => {
 
 describe('sessionReducer / COMPLETE_FAILED', () => {
   it('transitions completing → inSession with prior per-item state preserved', () => {
+    const sampleErrors: SessionError[] = [
+      { grammarPointKey: 'tr-a1-locative', errorType: 'grammar', severity: 'major', text: 'pazarda', correction: 'pazara' },
+    ];
     const start: SessionState = {
       kind: 'completing',
       session: { id: sampleCreateResponse.id },
@@ -394,6 +400,7 @@ describe('sessionReducer / COMPLETE_FAILED', () => {
         result: sampleEvaluation,
         meta: sampleMeta,
       },
+      sessionErrors: sampleErrors,
     };
     const next = sessionReducer(start, {
       type: 'COMPLETE_FAILED',
@@ -410,6 +417,7 @@ describe('sessionReducer / COMPLETE_FAILED', () => {
         result: sampleEvaluation,
         meta: sampleMeta,
       },
+      sessionErrors: sampleErrors,
     });
   });
 
@@ -603,6 +611,7 @@ describe('sessionReducer / RESUME_SUCCEEDED', () => {
     expect(next.index).toBe(1);
     expect(next.items).toEqual(sampleItems);
     expect(next.session.id).toBe(sampleResumeResponse.id);
+    expect(next.sessionErrors).toEqual([]);
   });
 
   it('is ignored when not in creating', () => {
@@ -612,6 +621,148 @@ describe('sessionReducer / RESUME_SUCCEEDED', () => {
       startIndex: 1,
     });
     expect(next).toBe(inSessionState);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// sessionErrors accumulation
+// ---------------------------------------------------------------------------
+
+describe('sessionReducer / sessionErrors', () => {
+  // Items with distinct grammar point keys for tagging assertions.
+  const itemsWithGrammarKeys: ExerciseResponse[] = [
+    { ...sampleItems[0], grammarPointKey: 'tr-a1-locative' },
+    { ...sampleItems[1], grammarPointKey: 'tr-a1-accusative' },
+  ];
+
+  const createResponseWithGrammarKeys: CreateSessionResponse = {
+    id: sampleCreateResponse.id,
+    exercises: itemsWithGrammarKeys,
+  };
+
+  const inSessionWithGrammarKeys: SessionState = {
+    kind: 'inSession',
+    session: { id: sampleCreateResponse.id },
+    items: itemsWithGrammarKeys,
+    index: 0,
+    perItemSubmission: { kind: 'idle' },
+    skippedCount: 0,
+    sessionErrors: [],
+  };
+
+  const evaluationWithErrors: EvaluationResult = {
+    ...sampleEvaluation,
+    errors: [
+      { type: 'grammar', severity: 'major', text: 'pazarda', correction: 'pazara', explanation: 'locative not dative' },
+    ],
+  };
+
+  const evaluationNoErrors: EvaluationResult = { ...sampleEvaluation, errors: [] };
+
+  it('accumulates evaluation errors into sessionErrors tagged with the item grammarPointKey', () => {
+    const next = sessionReducer(inSessionWithGrammarKeys, {
+      type: 'ITEM_EVALUATED',
+      result: evaluationWithErrors,
+      meta: sampleMeta,
+    });
+    expect(next.kind).toBe('inSession');
+    if (next.kind !== 'inSession') throw new Error('expected inSession');
+    expect(next.sessionErrors).toEqual([
+      { grammarPointKey: 'tr-a1-locative', errorType: 'grammar', severity: 'major', text: 'pazarda', correction: 'pazara' },
+    ] satisfies SessionError[]);
+  });
+
+  it('keeps sessionErrors across ITEM_NEXT (errors persist across item advance)', () => {
+    let s: SessionState = sessionReducer(inSessionWithGrammarKeys, {
+      type: 'ITEM_EVALUATED',
+      result: evaluationWithErrors,
+      meta: sampleMeta,
+    });
+    s = sessionReducer(s, { type: 'ITEM_NEXT' });
+    expect(s.kind).toBe('inSession');
+    if (s.kind !== 'inSession') throw new Error('expected inSession');
+    expect(s.sessionErrors).toHaveLength(1);
+    expect(s.sessionErrors[0]).toMatchObject({ grammarPointKey: 'tr-a1-locative' });
+  });
+
+  it('keeps sessionErrors across ITEM_SKIP (errors persist across skip)', () => {
+    // Put the session in an error submission state to allow ITEM_SKIP
+    let s: SessionState = {
+      ...inSessionWithGrammarKeys,
+      sessionErrors: [{ grammarPointKey: 'tr-a1-locative', errorType: 'grammar', severity: 'major', text: 'pazarda', correction: 'pazara' }],
+      perItemSubmission: { kind: 'error', error: new Error('502') },
+    };
+    s = sessionReducer(s, { type: 'ITEM_SKIP' });
+    expect(s.kind).toBe('inSession');
+    if (s.kind !== 'inSession') throw new Error('expected inSession');
+    expect(s.sessionErrors).toHaveLength(1);
+  });
+
+  it('resets sessionErrors to [] when a new session starts via CREATE_SUCCEEDED', () => {
+    // Simulate a session that accumulated errors, then a fresh CREATE_SUCCEEDED from creating
+    // (the reducer only transitions from `creating` → `inSession`, so we start from creating)
+    const freshCreating: SessionState = {
+      kind: 'creating',
+    };
+    // First establish a session with errors by running the normal flow
+    let s: SessionState = sessionReducer(inSessionWithGrammarKeys, {
+      type: 'ITEM_EVALUATED',
+      result: evaluationWithErrors,
+      meta: sampleMeta,
+    });
+    // Verify errors accumulated
+    if (s.kind !== 'inSession') throw new Error('expected inSession');
+    expect(s.sessionErrors).toHaveLength(1);
+
+    // Now start a fresh session (CREATE_SUCCEEDED from creating)
+    s = sessionReducer(freshCreating, {
+      type: 'CREATE_SUCCEEDED',
+      session: createResponseWithGrammarKeys,
+    });
+    if (s.kind !== 'inSession') throw new Error('expected inSession');
+    expect(s.sessionErrors).toEqual([]);
+  });
+
+  it('resets sessionErrors to [] when a session resumes via RESUME_SUCCEEDED', () => {
+    const resumeResponse = { ...sampleResumeResponse, exercises: itemsWithGrammarKeys };
+    const s = sessionReducer({ kind: 'creating' }, {
+      type: 'RESUME_SUCCEEDED',
+      session: resumeResponse,
+      startIndex: 0,
+    });
+    if (s.kind !== 'inSession') throw new Error('expected inSession');
+    expect(s.sessionErrors).toEqual([]);
+  });
+
+  it('does not append to sessionErrors when result has no errors (empty array)', () => {
+    const next = sessionReducer(inSessionWithGrammarKeys, {
+      type: 'ITEM_EVALUATED',
+      result: evaluationNoErrors,
+      meta: sampleMeta,
+    });
+    if (next.kind !== 'inSession') throw new Error('expected inSession');
+    expect(next.sessionErrors).toEqual([]);
+  });
+
+  it('accumulates errors from multiple items with distinct grammarPointKey tags', () => {
+    // Item 0 evaluated with errors
+    let s: SessionState = sessionReducer(inSessionWithGrammarKeys, {
+      type: 'ITEM_EVALUATED',
+      result: evaluationWithErrors,
+      meta: sampleMeta,
+    });
+    // Advance to item 1
+    s = sessionReducer(s, { type: 'ITEM_NEXT' });
+    // Item 1 evaluated with different errors
+    const error2: EvaluationResult = {
+      ...sampleEvaluation,
+      errors: [{ type: 'vocabulary', severity: 'minor', text: 'araba', correction: 'otomobil', explanation: 'register' }],
+    };
+    s = sessionReducer(s, { type: 'ITEM_EVALUATED', result: error2, meta: sampleMeta });
+    if (s.kind !== 'inSession') throw new Error('expected inSession');
+    expect(s.sessionErrors).toHaveLength(2);
+    expect(s.sessionErrors[0].grammarPointKey).toBe('tr-a1-locative');
+    expect(s.sessionErrors[1].grammarPointKey).toBe('tr-a1-accusative');
   });
 });
 
