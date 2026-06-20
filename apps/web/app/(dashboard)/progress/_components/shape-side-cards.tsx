@@ -2,6 +2,7 @@ import type { RadarAxis } from '@language-drill/api-client';
 import { Card } from '../../../../components/ui/card';
 import { Button } from '../../../../components/ui/button';
 import { computeObservation } from '../_lib/observation-rules';
+import { THIN_EVIDENCE_THRESHOLD } from '../../../../lib/progress/evidence-tier';
 
 const RECOMMEND_THRESHOLD = 0.5;
 const MS_PER_DAY = 86_400_000;
@@ -91,6 +92,31 @@ export function LegendCard() {
           />
           you · 30 days ago
         </span>
+      </div>
+
+      {/* Vertex-tier markers */}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 8,
+          marginTop: 14,
+          borderTop: '1px solid var(--color-rule)',
+          paddingTop: 10,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span aria-hidden className="t-mono text-[12px]">●</span>
+          <span className="t-micro">solid · enough evidence</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span aria-hidden className="t-mono text-[12px]">○</span>
+          <span className="t-micro">thin evidence · under {THIN_EVIDENCE_THRESHOLD} attempts</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span aria-hidden className="t-micro" style={{ color: 'var(--color-ink-soft)' }}>aA</span>
+          <span className="t-micro">dimmed label · not started</span>
+        </div>
       </div>
     </Card>
   );

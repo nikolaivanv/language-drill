@@ -143,4 +143,32 @@ describe('RadarChart', () => {
     expect(previous).toBeDefined();
     expect(current).toBeDefined();
   });
+
+  it('renders vertex dots only for trained axes, hollow for thin evidence', () => {
+    const { container } = render(
+      <RadarChart
+        language={Language.ES}
+        axes={buildAxes({ grammar: { mastery: 0.8, evidence: 40 }, listening: { mastery: 0.97, evidence: 4 } })}
+      />,
+    );
+    const robustDot = container.querySelector('circle[data-tier="robust"]');
+    const thinDot = container.querySelector('circle[data-tier="thin"]');
+    // robust = solid accent fill; thin = hollow (paper fill)
+    expect(robustDot?.getAttribute('fill')).toContain('accent');
+    expect(thinDot?.getAttribute('fill')).toBe('var(--color-paper)');
+    // untrained axes (evidence 0) get no vertex dot
+    expect(container.querySelector('circle[data-tier="untrained"]')).toBeNull();
+  });
+
+  it('mutes the labels of untrained axes', () => {
+    const { container } = render(
+      <RadarChart language={Language.ES} axes={buildAxes({ grammar: { mastery: 0.8, evidence: 40 } })} />,
+    );
+    // an untrained axis label carries data-tier="untrained"
+    const untrainedLabel = container.querySelector('text[data-tier="untrained"]');
+    expect(untrainedLabel).not.toBeNull();
+    // trained axis label carries data-tier="robust"
+    const robustLabel = container.querySelector('text[data-tier="robust"]');
+    expect(robustLabel).not.toBeNull();
+  });
 });

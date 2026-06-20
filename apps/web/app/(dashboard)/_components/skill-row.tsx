@@ -11,10 +11,10 @@
 import type { RadarAxis } from '@language-drill/api-client';
 import { Bar } from '../../../components/ui';
 import { cn } from '../../../lib/cn';
+import { THIN_EVIDENCE_THRESHOLD } from '../../../lib/progress/evidence-tier';
 
 const MINUS = '−'; // U+2212 MINUS SIGN — wider than ASCII '-'
 const EM_DASH = '—'; // U+2014 — used when delta rounds to zero
-const THIN_EVIDENCE_THRESHOLD = 5;
 
 type Props = {
   axis: RadarAxis;

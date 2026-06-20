@@ -3,6 +3,7 @@ import {
   type LearningLanguage,
 } from '@language-drill/shared';
 import type { RadarAxis } from '@language-drill/api-client';
+import { evidenceTier } from '../../../../lib/progress/evidence-tier';
 
 // ---------------------------------------------------------------------------
 // RadarChart — pure-SVG 6-axis radar with current + 30-day-ago overlay.
@@ -95,6 +96,7 @@ export function RadarChart({ language, axes }: RadarChartProps) {
           const y = CENTER + Math.sin(angle(i)) * RADIUS;
           const tx = CENTER + Math.cos(angle(i)) * (RADIUS + LABEL_OFFSET);
           const ty = CENTER + Math.sin(angle(i)) * (RADIUS + LABEL_OFFSET);
+          const tier = evidenceTier(axis.evidenceCount);
           return (
             <g key={axis.key}>
               <line
@@ -110,8 +112,9 @@ export function RadarChart({ language, axes }: RadarChartProps) {
                 y={ty + 5}
                 fontFamily="Inter"
                 fontSize={12}
-                fill="var(--color-ink-soft)"
+                fill={tier === 'untrained' ? 'var(--color-ink-soft)' : 'var(--color-ink)'}
                 textAnchor="middle"
+                data-tier={tier}
               >
                 {axis.label}
               </text>
@@ -138,8 +141,10 @@ export function RadarChart({ language, axes }: RadarChartProps) {
           strokeWidth={2}
         />
 
-        {/* Vertex dots on the current polygon */}
+        {/* Vertex dots on the current polygon — gated by evidence tier */}
         {axes.map((axis, i) => {
+          const tier = evidenceTier(axis.evidenceCount);
+          if (tier === 'untrained') return null;
           const v = clamp01(axis.currentMastery);
           const x = CENTER + Math.cos(angle(i)) * RADIUS * v;
           const y = CENTER + Math.sin(angle(i)) * RADIUS * v;
@@ -149,9 +154,10 @@ export function RadarChart({ language, axes }: RadarChartProps) {
               cx={x}
               cy={y}
               r={4}
-              fill="var(--color-accent)"
-              stroke="#fff"
-              strokeWidth={1.5}
+              data-tier={tier}
+              fill={tier === 'thin' ? 'var(--color-paper)' : 'var(--color-accent)'}
+              stroke={tier === 'thin' ? 'var(--color-accent)' : '#fff'}
+              strokeWidth={tier === 'thin' ? 1.5 : 1}
             />
           );
         })}
