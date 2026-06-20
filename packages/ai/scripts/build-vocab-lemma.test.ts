@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { POS_MAP, joinLemmaPos, type CorpusRow, type WiktRow } from './build-vocab-lemma';
+import { POS_MAP, joinLemmaPos, applyGapFill, chunk, type CorpusRow, type WiktRow, type VocabLemmaSeedRow } from './build-vocab-lemma';
 
 describe('POS_MAP', () => {
   it('maps wiktextract pos to UD upos', () => {
@@ -47,5 +47,40 @@ describe('joinLemmaPos', () => {
   it('orders output by rank ascending then lemma', () => {
     const rows = joinLemmaPos(corpus, wikt);
     expect(rows.map((r) => r.lemma)).toEqual(['hablar', 'casa', 'rareword']);
+  });
+});
+
+describe('chunk', () => {
+  it('splits into fixed-size batches', () => {
+    expect(chunk([1, 2, 3, 4, 5], 2)).toEqual([[1, 2], [3, 4], [5]]);
+  });
+});
+
+describe('applyGapFill', () => {
+  const base: VocabLemmaSeedRow[] = [
+    { lemma: 'hablar', rank: 50, posAll: ['VERB'], source: 'wiktextract' },
+    { lemma: 'gizlemek', rank: 900, posAll: [], source: 'unmatched' },
+    { lemma: 'zzz', rank: 9999, posAll: [], source: 'unmatched' },
+  ];
+
+  it('promotes resolved unmatched rows to source=llm with posAll', () => {
+    const resolved = new Map<string, string[]>([['gizlemek', ['VERB']]]);
+    const out = applyGapFill(base, resolved);
+    const g = out.find((r) => r.lemma === 'gizlemek');
+    expect(g?.posAll).toEqual(['VERB']);
+    expect(g?.source).toBe('llm');
+  });
+
+  it('leaves still-unresolved rows untouched', () => {
+    const out = applyGapFill(base, new Map());
+    expect(out.find((r) => r.lemma === 'zzz')?.source).toBe('unmatched');
+  });
+
+  it('never downgrades a wiktextract row', () => {
+    const resolved = new Map<string, string[]>([['hablar', ['NOUN']]]);
+    const out = applyGapFill(base, resolved);
+    const h = out.find((r) => r.lemma === 'hablar');
+    expect(h?.source).toBe('wiktextract');
+    expect(h?.posAll).toEqual(['VERB']);
   });
 });

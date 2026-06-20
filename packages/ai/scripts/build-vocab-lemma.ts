@@ -13,6 +13,7 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import Anthropic from '@anthropic-ai/sdk';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -95,6 +96,61 @@ export function joinLemmaPos(corpus: CorpusRow[], wikt: WiktRow[]): VocabLemmaSe
   return rows;
 }
 
+export function chunk<T>(items: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+}
+
+/**
+ * Rewrites `unmatched` rows whose lemma appears in `resolved` to `source: 'llm'`
+ * with the resolved PoS. `wiktextract` rows are never touched. Returns a new
+ * array; ordering is preserved.
+ */
+export function applyGapFill(
+  rows: VocabLemmaSeedRow[],
+  resolved: Map<string, string[]>,
+): VocabLemmaSeedRow[] {
+  return rows.map((r) => {
+    if (r.source !== 'unmatched') return r;
+    const pos = resolved.get(r.lemma);
+    if (pos === undefined || pos.length === 0) return r;
+    return { ...r, posAll: [...new Set(pos)].sort(), source: 'llm' };
+  });
+}
+
+/**
+ * Asks Claude for the parts of speech of unmatched lemmas, in batches.
+ * Returns lemma -> UD upos[]. Best-effort: any batch that fails to parse is
+ * skipped (those lemmas stay 'unmatched'). Manual/dev-time only.
+ */
+async function gapFillPos(lang: Lang, lemmas: string[]): Promise<Map<string, string[]>> {
+  const out = new Map<string, string[]>();
+  if (lemmas.length === 0) return out;
+  const client = new Anthropic({ apiKey: process.env['ANTHROPIC_API_KEY'] });
+  for (const batch of chunk(lemmas, 100)) {
+    const prompt =
+      `For each ${lang.toUpperCase()} word below, return its parts of speech as UD upos tags ` +
+      `(VERB, NOUN, ADJ, ADV, PROPN, NUM, PRON, ADP, DET, INTJ, CCONJ). ` +
+      `Reply ONLY with JSON: {"word": ["TAG", ...], ...}. Words:\n${batch.join('\n')}`;
+    try {
+      const resp = await client.messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 4096,
+        messages: [{ role: 'user', content: prompt }],
+      });
+      const text = resp.content.filter((b) => b.type === 'text').map((b) => (b as { text: string }).text).join('');
+      const json = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1)) as Record<string, string[]>;
+      for (const [word, tags] of Object.entries(json)) {
+        if (Array.isArray(tags)) out.set(word.toLowerCase(), tags.map((t) => t.toUpperCase()));
+      }
+    } catch {
+      // skip this batch — its lemmas remain 'unmatched'
+    }
+  }
+  return out;
+}
+
 function parseCorpus(raw: string): CorpusRow[] {
   const rows: CorpusRow[] = [];
   for (const line of raw.split('\n')) {
@@ -131,12 +187,22 @@ async function buildLanguage(lang: Lang): Promise<void> {
   const wiktRaw = await fs.readFile(path.join(WIKT_DIR, `${lang}.jsonl`), 'utf-8');
   const rows = joinLemmaPos(parseCorpus(corpusRaw), parseWiktextract(wiktRaw));
 
+  // Gap-fill: recover PoS for unmatched lemmas via Claude (skipped unless
+  // GAP_FILL=1 and ANTHROPIC_API_KEY is set — the join alone is a valid build).
+  let finalRows = rows;
+  if (process.env['GAP_FILL'] === '1') {
+    const unmatched = rows.filter((r) => r.source === 'unmatched').map((r) => r.lemma);
+    const resolved = await gapFillPos(lang, unmatched);
+    finalRows = applyGapFill(rows, resolved);
+    console.log(`[build-vocab-lemma] ${lang}: gap-filled ${resolved.size}/${unmatched.length}`);
+  }
+
   const outPath = path.join(OUTPUT_DIR, `${lang}.json`);
-  await fs.writeFile(outPath, JSON.stringify(rows) + '\n', 'utf-8');
-  const matched = rows.filter((r) => r.source !== 'unmatched').length;
+  await fs.writeFile(outPath, JSON.stringify(finalRows) + '\n', 'utf-8');
+  const matched = finalRows.filter((r) => r.source !== 'unmatched').length;
   console.log(
-    `[build-vocab-lemma] ${lang}: ${rows.length} lemmas, ${matched} matched, ` +
-      `${rows.length - matched} unmatched -> ${path.relative(process.cwd(), outPath)}`,
+    `[build-vocab-lemma] ${lang}: ${finalRows.length} lemmas, ${matched} matched, ` +
+      `${finalRows.length - matched} unmatched -> ${path.relative(process.cwd(), outPath)}`,
   );
 }
 
