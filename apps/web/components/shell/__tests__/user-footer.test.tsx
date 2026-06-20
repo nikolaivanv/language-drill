@@ -32,6 +32,10 @@ vi.mock('@clerk/nextjs', () => ({
   useClerk: () => ({ signOut: mockSignOut }),
 }));
 
+vi.mock('../../consent/consent-provider', () => ({
+  useConsent: () => ({ openPreferences: () => {} }),
+}));
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -69,7 +73,7 @@ describe('UserFooter', () => {
 
     render(<UserFooter />);
 
-    const trigger = screen.getByRole('button');
+    const trigger = screen.getByRole('button', { name: /sam/i });
     expect(within(trigger).getByText('SS')).toBeInTheDocument();
   });
 
@@ -78,7 +82,7 @@ describe('UserFooter', () => {
 
     render(<UserFooter />);
 
-    const trigger = screen.getByRole('button');
+    const trigger = screen.getByRole('button', { name: /sam/i });
     expect(within(trigger).getByText('S')).toBeInTheDocument();
   });
 
@@ -87,7 +91,7 @@ describe('UserFooter', () => {
 
     render(<UserFooter />);
 
-    const trigger = screen.getByRole('button');
+    const trigger = screen.getByRole('button', { name: /you/i });
     expect(within(trigger).getByText('?')).toBeInTheDocument();
   });
 
@@ -96,7 +100,7 @@ describe('UserFooter', () => {
 
     render(<UserFooter />);
 
-    const trigger = screen.getByRole('button');
+    const trigger = screen.getByRole('button', { name: /sam/i });
     expect(within(trigger).getByText('sam')).toBeInTheDocument();
   });
 
@@ -105,7 +109,7 @@ describe('UserFooter', () => {
 
     render(<UserFooter />);
 
-    const trigger = screen.getByRole('button');
+    const trigger = screen.getByRole('button', { name: /you/i });
     expect(within(trigger).getByText('you')).toBeInTheDocument();
   });
 

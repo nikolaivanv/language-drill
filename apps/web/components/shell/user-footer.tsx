@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useClerk, useUser } from '@clerk/nextjs';
+import { LegalLinks } from '../legal/legal-links';
 
 function getInitials(
   firstName?: string | null,
@@ -92,6 +93,7 @@ export function UserFooter() {
           </button>
         </div>
       )}
+      <LegalLinks className="px-s-3 pt-s-2 pb-s-1" />
     </div>
   );
 }

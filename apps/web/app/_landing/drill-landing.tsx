@@ -19,6 +19,7 @@ import {
   type LandingLang,
   type Token,
 } from './landing-data';
+import { LegalLinks } from '../../components/legal/legal-links';
 
 const DEFAULT_LANG = 'es';
 
@@ -1034,6 +1035,9 @@ function DFooter() {
         <Link href="/sign-in" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none' }}>
           Sign in →
         </Link>
+      </div>
+      <div className="df-wrap">
+        <LegalLinks className="mt-s-4" />
       </div>
     </footer>
   );
