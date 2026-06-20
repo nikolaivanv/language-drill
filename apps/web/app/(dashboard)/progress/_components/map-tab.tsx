@@ -151,16 +151,9 @@ function SpineRow({
   const isNotStarted = state === 'not-started';
   const bodyOpacity = prereqUnmet && isNotStarted ? 0.6 : 1;
 
-  // locked refinement 3: error-prone = hottest row — accent-tinted left border + bg
-  const rowStyle: React.CSSProperties = errorProne
-    ? {
-        background: 'var(--color-accent-soft)',
-        borderLeft: '3px solid var(--color-accent)',
-        borderRadius: '0 6px 6px 0',
-        padding: '6px 8px 6px 10px',
-        margin: '-6px -8px -6px 0',
-      }
-    : {};
+  // Error-prone points are surfaced by the ⚠ pill alone (subdued, matching the
+  // prototype) — not a full-row tint, which read as a wall of red on a level
+  // where most points still generate errors.
 
   let cueText = '';
   if (prereqUnmet && isNotStarted && prereqNames.length > 0) {
@@ -201,11 +194,11 @@ function SpineRow({
 
       {/* Body */}
       <div
-        className="flex-1 pb-[14px]"
-        style={{ opacity: bodyOpacity, ...rowStyle }}
+        className="flex-1 pb-[22px]"
+        style={{ opacity: bodyOpacity }}
       >
         {/* Name row */}
-        <div className="flex flex-wrap items-center gap-x-[8px] gap-y-[2px]">
+        <div className="flex flex-wrap items-center gap-x-[8px] gap-y-[3px]">
           <span className="t-display-s">{name}</span>
           {errorProne && (
             <span
@@ -243,7 +236,7 @@ function SpineRow({
         {cueText && (
           <div
             className="t-micro"
-            style={{ color: 'var(--color-ink-mute)', marginTop: 3 }}
+            style={{ color: 'var(--color-ink-mute)', marginTop: 6 }}
           >
             {cueText}
           </div>
