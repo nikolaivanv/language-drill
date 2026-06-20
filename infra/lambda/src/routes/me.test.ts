@@ -12,9 +12,18 @@ const mockWhere = vi.fn(() => ({ groupBy: mockGroupBy }));
 const mockFrom = vi.fn(() => ({ where: mockWhere }));
 const mockSelect = vi.fn(() => ({ from: mockFrom }));
 vi.mock('../db', () => ({ db: { select: () => mockSelect() } }));
-vi.mock('@language-drill/db', () => ({
-  usageEvents: { userId: 'user_id', eventType: 'event_type', createdAt: 'created_at' },
-}));
+vi.mock('@language-drill/db', () => {
+  const col = (name: string) => ({ name });
+  const t = () => ({ id: col('id'), userId: col('user_id'), playlistId: col('playlist_id') });
+  return {
+    usageEvents: { userId: 'user_id', eventType: 'event_type', createdAt: 'created_at' },
+    users: t(), userLanguageProfiles: t(), userPreferences: t(), userExerciseHistory: t(),
+    spacedRepetitionCards: t(), fluencyAttempts: t(), userGrammarMastery: t(), errorObservations: t(),
+    practiceSessions: t(), readEntries: t(), userVocabulary: t(), vocabularyReviewState: t(),
+    vocabularyReviewSessions: t(), vocabularyReviewLog: t(), playlists: t(), playlistItems: t(),
+    exerciseFlags: t(),
+  };
+});
 
 const authEnv = {
   event: { requestContext: { authorizer: { jwt: { claims: { sub: 'user_1' } } } } },

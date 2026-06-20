@@ -6,10 +6,12 @@ import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
 import { limitFor } from '../usage/limits';
 import { getEffectivePlan, isAdmin } from '../usage/plan';
+import { collectUserExport } from './user-export';
 
 const me = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 me.use('/me', authMiddleware);
+me.use('/me/export', authMiddleware);
 
 me.get('/me', async (c) => {
   const userId = c.get('userId');
@@ -39,6 +41,15 @@ me.get('/me', async (c) => {
       deepSpan: used('read_span_annotation'),
     },
   });
+});
+
+me.get('/me/export', async (c) => {
+  const userId = c.get('userId');
+  const data = await collectUserExport(db, userId);
+  const date = new Date().toISOString().slice(0, 10);
+  c.header('Content-Type', 'application/json');
+  c.header('Content-Disposition', `attachment; filename="drill-data-export-${date}.json"`);
+  return c.body(JSON.stringify(data, null, 2));
 });
 
 export default me;
