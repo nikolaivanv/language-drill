@@ -45,6 +45,11 @@ describe('HistoryTab', () => {
     expect(screen.getByText(/dormant · not drilled in 3 weeks/i)).toBeInTheDocument();
   });
 
+  it('uses the singular "week" for a 1-week dormant streak', () => {
+    render(<HistoryTab data={resp([theme({ status: 'dormant', quietWeeks: 1 })])} isLoading={false} error={null} onRetry={noop} />);
+    expect(screen.getByText(/not drilled in 1 week\b/i)).toBeInTheDocument();
+  });
+
   it('shows an empty state when there are no themes', () => {
     render(<HistoryTab data={resp([])} isLoading={false} error={null} onRetry={noop} />);
     expect(screen.getByText(/no recurring errors/i)).toBeInTheDocument();
