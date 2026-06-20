@@ -89,7 +89,7 @@ vi.mock('@language-drill/db', () => ({
   },
   updateMastery: (prev: unknown, obs: unknown) => mockUpdateMastery(prev, obs),
   getGrammarPoint: vi.fn(() => undefined),
-  grammarPointsAtOrBelow: (...args: unknown[]) => mockGrammarPointsAtOrBelow(...args),
+  grammarPointsAtOrBelow: (...args: Parameters<typeof mockGrammarPointsAtOrBelow>) => mockGrammarPointsAtOrBelow(...args),
   // Real mapping used by lib/errors/record via @language-drill/db import
   errorObservationsFromEvaluation: (
     errors: Array<{ type: string; severity: string; text: string; correction: string; grammarPointKey?: string | null }> | undefined,
@@ -1965,12 +1965,13 @@ describe('POST /exercises/:id/submit — error attribution keys', () => {
     // Insert order: 1) auth user upsert, 2) userExerciseHistory,
     // 3) error_observations (because errors is non-empty), 4) usageEvents.
     // The error_observations row (4th values call) must carry both keys.
-    const errorObsCall = mockValues.mock.calls.find((args) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const errorObsCall = (mockValues.mock.calls as any[]).find((args: any[]) => {
       const rows = args[0];
       return Array.isArray(rows) && rows.length > 0 && 'errorGrammarPointKey' in rows[0];
     });
     expect(errorObsCall).toBeDefined();
-    const row = (errorObsCall![0] as Array<Record<string, unknown>>)[0];
+    const row = (errorObsCall[0] as Array<Record<string, unknown>>)[0];
     expect(row.errorGrammarPointKey).toBe('tr-a1-accusative-definite-object');
     expect(row.hostGrammarPointKey).toBe('tr-a1-locative');
   });
