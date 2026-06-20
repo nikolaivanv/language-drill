@@ -15,6 +15,7 @@
     "db:studio": "dotenv -e .env -- pnpm --filter @language-drill/db db:studio",
     "db:seed:exercises": "dotenv -e .env -- pnpm --filter @language-drill/db seed:exercises",
     "db:seed:dictation": "dotenv -e .env -- pnpm --filter @language-drill/db seed:dictation",
+    "db:seed:vocab": "dotenv -e .env -- pnpm --filter @language-drill/db seed:vocab",
     "generate:exercises": "dotenv -e .env -- pnpm --filter @language-drill/db generate:exercises",
     "generate:theory": "dotenv -e .env -- pnpm --filter @language-drill/db generate:theory",
     "review:flagged": "dotenv -e .env -- pnpm --filter @language-drill/db review:flagged",

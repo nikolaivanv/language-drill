@@ -144,8 +144,8 @@ async function gapFillPos(lang: Lang, lemmas: string[]): Promise<Map<string, str
       for (const [word, tags] of Object.entries(json)) {
         if (Array.isArray(tags)) out.set(word.toLowerCase(), tags.map((t) => t.toUpperCase()));
       }
-    } catch {
-      // skip this batch — its lemmas remain 'unmatched'
+    } catch (err) {
+      console.warn(`[build-vocab-lemma] ${lang}: gap-fill batch failed, skipping ${batch.length} lemmas:`, err);
     }
   }
   return out;
