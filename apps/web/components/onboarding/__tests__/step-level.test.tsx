@@ -13,7 +13,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { CefrLevel, Language } from '@language-drill/shared';
-import { OnboardingContext, OnboardingProvider } from '../onboarding-context';
+import { OnboardingProvider } from '../onboarding-context';
 import {
   initialNewUserState,
   type OnboardingAction,
@@ -48,9 +48,9 @@ function renderStepLevel(
   };
   if (dispatchSpy) {
     return render(
-      <OnboardingContext.Provider value={{ state, dispatch: dispatchSpy }}>
+      <OnboardingProvider initialState={state} dispatchOverride={dispatchSpy}>
         <StepLevel />
-      </OnboardingContext.Provider>,
+      </OnboardingProvider>,
     );
   }
   return renderInProvider(state, <StepLevel />);
