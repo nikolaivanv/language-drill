@@ -1,8 +1,18 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
+import { sql } from 'drizzle-orm';
 import { and, eq, gte, isNotNull } from 'drizzle-orm';
 import { CefrLevel, Language } from '@language-drill/shared';
-import { exercises, userExerciseHistory } from '@language-drill/db';
+import {
+  exercises,
+  userExerciseHistory,
+  userGrammarMastery,
+  errorObservations,
+  userLanguageProfiles,
+  grammarPointsAtOrBelow,
+  getGrammarPoint,
+  curriculumOrderOf,
+} from '@language-drill/db';
 import { db } from '../db';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
@@ -11,6 +21,12 @@ import {
   type ContributingRow,
 } from '../lib/progress-aggregation';
 import { reviewContributingRows } from '../lib/review/evidence';
+import {
+  buildCurriculumMap,
+  nextCefrLevel,
+  type CurriculumFact,
+  type MasteryRow,
+} from '../lib/curriculum-map';
 
 // ---------------------------------------------------------------------------
 // Validation schemas
@@ -33,6 +49,8 @@ const RadarQuerySchema = z.object({
 
 const MS_PER_DAY = 86_400_000;
 const ROLLING_WINDOW_DAYS = 90;
+const ERROR_WINDOW_DAYS = 30;
+const DEFAULT_PROFICIENCY_LEVEL = CefrLevel.B1;
 
 // ---------------------------------------------------------------------------
 // Router
@@ -112,5 +130,114 @@ const CEFR_LEVELS = new Set<string>(Object.values(CefrLevel));
 function isCefrLevel(value: string): value is CefrLevel {
   return CEFR_LEVELS.has(value);
 }
+
+// ---------------------------------------------------------------------------
+// GET /progress/curriculum — per-point mastery map + readiness rollup
+// ---------------------------------------------------------------------------
+progress.get('/progress/curriculum', async (c) => {
+  const parsed = RadarQuerySchema.safeParse(c.req.query());
+  if (!parsed.success) {
+    return c.json(
+      {
+        error: 'Invalid query parameters',
+        code: 'VALIDATION_ERROR',
+        details: parsed.error.flatten(),
+      },
+      400,
+    );
+  }
+  const { language } = parsed.data;
+  const userId = c.get('userId');
+  const now = new Date();
+  const errorSince = new Date(now.getTime() - ERROR_WINDOW_DAYS * MS_PER_DAY);
+
+  // Active level — resolved from the user's language profile
+  const profileRows = await db
+    .select({ proficiencyLevel: userLanguageProfiles.proficiencyLevel })
+    .from(userLanguageProfiles)
+    .where(and(eq(userLanguageProfiles.userId, userId), eq(userLanguageProfiles.language, language)))
+    .limit(1);
+  const activeLevel = isCefrLevel(profileRows[0]?.proficiencyLevel)
+    ? profileRows[0].proficiencyLevel
+    : DEFAULT_PROFICIENCY_LEVEL;
+
+  // Mastery rows + recent-error counts (effective point) in parallel
+  const [masteryRows, errorRows] = await Promise.all([
+    db
+      .select({
+        grammarPointKey: userGrammarMastery.grammarPointKey,
+        masteryScore: userGrammarMastery.masteryScore,
+        confidence: userGrammarMastery.confidence,
+        evidenceCount: userGrammarMastery.evidenceCount,
+        lastPracticedAt: userGrammarMastery.lastPracticedAt,
+      })
+      .from(userGrammarMastery)
+      .where(
+        and(
+          eq(userGrammarMastery.userId, userId),
+          eq(userGrammarMastery.language, language),
+        ),
+      ),
+    db
+      .select({
+        key: sql<string>`COALESCE(${errorObservations.errorGrammarPointKey}, ${errorObservations.hostGrammarPointKey})`,
+        n: sql<number>`COUNT(*)::int`,
+      })
+      .from(errorObservations)
+      .where(
+        and(
+          eq(errorObservations.userId, userId),
+          eq(errorObservations.language, language),
+          gte(errorObservations.occurredAt, errorSince),
+        ),
+      )
+      .groupBy(
+        sql`COALESCE(${errorObservations.errorGrammarPointKey}, ${errorObservations.hostGrammarPointKey})`,
+      ),
+  ]);
+
+  const masteryByKey = new Map<string, MasteryRow>();
+  for (const r of masteryRows) {
+    if (r.lastPracticedAt === null) continue;
+    masteryByKey.set(r.grammarPointKey, {
+      masteryScore: r.masteryScore,
+      confidence: r.confidence,
+      evidenceCount: r.evidenceCount,
+      lastPracticedAt: r.lastPracticedAt,
+    });
+  }
+  const errorCountByKey = new Map<string, number>();
+  for (const r of errorRows) if (r.key) errorCountByKey.set(r.key, r.n);
+
+  // Curriculum facts: active-level points + next-level preview (first 5)
+  const all = grammarPointsAtOrBelow(language, CefrLevel.B2);
+  const toFact = (p: (typeof all)[number]): CurriculumFact => ({
+    key: p.key,
+    name: p.name,
+    cefrLevel: p.cefrLevel,
+    order: curriculumOrderOf(p.key) ?? 0,
+    prereqKeys: [...(p.prerequisiteKeys ?? [])],
+    prereqNames: (p.prerequisiteKeys ?? []).map((pk) => getGrammarPoint(pk)?.name ?? pk),
+  });
+  const activePoints = all.filter((p) => p.cefrLevel === activeLevel).map(toFact);
+  const nl = nextCefrLevel(activeLevel);
+  const previewPoints = nl
+    ? all
+        .filter((p) => p.cefrLevel === nl)
+        .map(toFact)
+        .sort((a, b) => a.order - b.order)
+        .slice(0, 5)
+    : [];
+
+  const result = buildCurriculumMap({
+    activeLevel,
+    activePoints,
+    previewPoints,
+    masteryByKey,
+    errorCountByKey,
+    now,
+  });
+  return c.json({ language, ...result });
+});
 
 export default progress;
