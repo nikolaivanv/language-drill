@@ -26,6 +26,24 @@ const mockDeleteWhere = vi.fn(() => Promise.resolve());
 const mockDelete = vi.fn(() => ({ where: mockDeleteWhere }));
 
 // ---------------------------------------------------------------------------
+// Update mock — bare db.update(...).set(...).where(...).returning() chain
+// Default: returns one full preferences row; override per-test for the 404 case.
+// ---------------------------------------------------------------------------
+
+const mockUpdateReturning = vi.fn(() => Promise.resolve([
+  {
+    primaryLanguage: 'ES',
+    goals: ['vocab'],
+    dailyMinutes: 30,
+    gentleNudges: true,
+    notes: '',
+  },
+]));
+const mockUpdateWhere = vi.fn(() => ({ returning: mockUpdateReturning }));
+const mockUpdateSet = vi.fn(() => ({ where: mockUpdateWhere }));
+const mockUpdate = vi.fn(() => ({ set: mockUpdateSet }));
+
+// ---------------------------------------------------------------------------
 // Transaction mock — captures every tx call so DB-level assertions are
 // straightforward. The route does:
 //   tx.delete(userLanguageProfiles).where(...)
@@ -123,6 +141,7 @@ vi.mock('../db', () => ({
     select: () => mockSelect(),
     insert: () => mockInsert(),
     delete: () => mockDelete(),
+    update: () => mockUpdate(),
     transaction: (cb: (tx: unknown) => unknown) => mockTransaction(cb),
   },
 }));
@@ -551,5 +570,77 @@ describe('GET /profiles/preferences', () => {
     expect(res.status).toBe(401);
     const body = (await res.json()) as AnyJson;
     expect(body.code).toBe('MISSING_SUB');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// PATCH /profiles/preferences
+// ---------------------------------------------------------------------------
+
+async function patchPrefs(
+  app: Hono,
+  body: unknown,
+  env: typeof authEnv | typeof unauthEnv = authEnv,
+): Promise<Response> {
+  return app.request(
+    '/profiles/preferences',
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    },
+    env,
+  );
+}
+
+describe('PATCH /profiles/preferences', () => {
+  let app: Hono;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    resetTxCapture();
+    // Re-apply the default update mock after clearAllMocks resets it.
+    mockUpdateReturning.mockResolvedValue([
+      {
+        primaryLanguage: 'ES',
+        goals: ['vocab'],
+        dailyMinutes: 30,
+        gentleNudges: true,
+        notes: '',
+      },
+    ]);
+    const mod = await import('./profiles');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  it('updates only the provided fields and returns the full preferences', async () => {
+    const res = await patchPrefs(app, { dailyMinutes: 30, goals: ['vocab'] });
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as AnyJson;
+    expect(json.dailyMinutes).toBe(30);
+    expect(json.goals).toEqual(['vocab']);
+  });
+
+  it('rejects an empty body with 400', async () => {
+    const res = await patchPrefs(app, {});
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects an invalid dailyMinutes with 400', async () => {
+    const res = await patchPrefs(app, { dailyMinutes: 7 });
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 404 when the user has no preferences row', async () => {
+    // Override the update mock to return [] (no row updated).
+    mockUpdateReturning.mockResolvedValueOnce([]);
+    const res = await patchPrefs(app, { gentleNudges: false });
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 401 when unauthenticated', async () => {
+    const res = await patchPrefs(app, { gentleNudges: false }, unauthEnv);
+    expect(res.status).toBe(401);
   });
 });

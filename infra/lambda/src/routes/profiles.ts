@@ -180,4 +180,60 @@ profiles.put('/profiles/languages', async (c) => {
   return c.json(result);
 });
 
+// ---------------------------------------------------------------------------
+// PATCH /profiles/preferences — partial update of onboarding-signal fields
+// ---------------------------------------------------------------------------
+
+const UpdatePreferencesSchema = z
+  .object({
+    goals: z.array(z.enum(GOAL_IDS)).optional(),
+    dailyMinutes: z
+      .union([z.literal(5), z.literal(10), z.literal(20), z.literal(30)])
+      .optional(),
+    gentleNudges: z.boolean().optional(),
+    notes: z.string().max(NOTES_MAX_LENGTH).optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: 'At least one field must be provided',
+  });
+
+profiles.patch('/profiles/preferences', async (c) => {
+  const userId = c.get('userId');
+
+  const bodyResult = UpdatePreferencesSchema.safeParse(
+    await c.req.json().catch(() => ({})),
+  );
+  if (!bodyResult.success) {
+    return c.json(
+      {
+        error: 'Invalid request body',
+        code: 'VALIDATION_ERROR',
+        details: bodyResult.error.flatten(),
+      },
+      400,
+    );
+  }
+
+  const updated = await db
+    .update(userPreferences)
+    .set({ ...bodyResult.data, updatedAt: new Date() })
+    .where(eq(userPreferences.userId, userId))
+    .returning({
+      primaryLanguage: userPreferences.primaryLanguage,
+      goals: userPreferences.goals,
+      dailyMinutes: userPreferences.dailyMinutes,
+      gentleNudges: userPreferences.gentleNudges,
+      notes: userPreferences.notes,
+    });
+
+  if (updated.length === 0) {
+    return c.json(
+      { error: 'No preferences row for user', code: 'PREFERENCES_NOT_FOUND' },
+      404,
+    );
+  }
+
+  return c.json(updated[0]);
+});
+
 export default profiles;
