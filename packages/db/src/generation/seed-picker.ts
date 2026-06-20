@@ -16,15 +16,11 @@
  * lexical space instead of re-proposing the same anchors.
  */
 
-import { type CefrLevel, type LearningLanguage } from '@language-drill/shared';
-import { cefrRankWindow, frequencyBand, verbBand } from '@language-drill/ai';
-
 import { deterministicUuid } from '../lib/deterministic-uuid';
 
 export type PickSeedsOptions = {
-  language: LearningLanguage;
-  /** Cell CEFR level — selects the frequency rank band (`cefrRankWindow`). */
-  cefrLevel: CefrLevel;
+  /** Candidate lemmas (rank-ordered, stopword-filtered) — see loadFrequencyBand. */
+  band: readonly string[];
   /** Per-cell+batch seed string; combined with the ordinal to index the band. */
   batchSeed: string;
   /** Number of ordinals to assign (one seed slot per ordinal). */
@@ -58,19 +54,14 @@ function hashIndex(key: string): number {
  * Deterministic: identical options produce identical output.
  */
 export function pickSeeds(opts: PickSeedsOptions): (string | null)[] {
-  const { language, cefrLevel, batchSeed, count, exclude } = opts;
+  const { band, batchSeed, count, exclude } = opts;
 
-  const window = cefrRankWindow(cefrLevel);
-  const band = frequencyBand(language, window.rankMin, window.rankMax);
-
-  // Normalise the exclude set to the band's lowercase lemma space.
   const excludeLc = new Set<string>();
   for (const word of exclude) excludeLc.add(word.toLowerCase());
 
   const result: (string | null)[] = [];
 
   if (band.length === 0) {
-    // R5.6 — no eligible candidates for this band → every ordinal unseeded.
     for (let ordinal = 0; ordinal < count; ordinal++) result.push(null);
     return result;
   }
@@ -93,11 +84,11 @@ export function pickSeeds(opts: PickSeedsOptions): (string | null)[] {
 }
 
 export type PickConjugationSeedsOptions = {
-  language: LearningLanguage;
-  cefrLevel: CefrLevel;
+  /** Candidate VERB lemmas (rank-ordered) — see loadVerbBand. */
+  band: readonly string[];
   batchSeed: string;
   count: number;
-  /** Per-ordinal grammatical-person target (`coverageTargets[ordinal].person`), or null. */
+  /** Per-ordinal grammatical-person target, or null. */
   persons: readonly (string | null)[];
   /** Prior `${lemma}|${person}` keys already in the cell's pool — never re-proposed. */
   exclude: ReadonlySet<string>;
@@ -115,10 +106,7 @@ export type PickConjugationSeedsOptions = {
  * Deterministic: identical options produce identical output.
  */
 export function pickConjugationSeeds(opts: PickConjugationSeedsOptions): (string | null)[] {
-  const { language, cefrLevel, batchSeed, count, persons, exclude } = opts;
-
-  const { rankMax } = cefrRankWindow(cefrLevel);
-  const band = verbBand(language, 1, rankMax);
+  const { band, batchSeed, count, persons, exclude } = opts;
 
   const result: (string | null)[] = [];
   if (band.length === 0) {

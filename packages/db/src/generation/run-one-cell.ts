@@ -25,13 +25,13 @@ import type Anthropic from '@anthropic-ai/sdk';
 import {
   ZERO_USAGE,
   addUsage,
+  cefrRankWindow,
   estimateCostUsd,
   type ClaudeUsageBreakdown,
   type GenerationSpec,
 } from '@language-drill/ai';
 import {
   ExerciseType,
-  Language,
   type CoverageAxis,
   type CoverageOutcome,
   type CoverageSpec,
@@ -59,6 +59,7 @@ import { runGeneratorPool } from './generator-pool';
 import { runOutcomePool } from './outcome-pool';
 import { pickConjugationSeeds, pickSeeds } from './seed-picker';
 import { VOCAB_MAX_PER_WORD } from './validate-and-insert';
+import { loadFrequencyBand, loadVerbBand } from './vocab-band';
 import { runValidatorPool } from './validator-pool';
 
 // ---------------------------------------------------------------------------
@@ -414,53 +415,54 @@ async function fetchPriorConjugationSeeds(
 }
 
 /**
- * Builds the per-ordinal frequency-seed list for a cell (R5.1), or `undefined`
- * for cell types that are NOT frequency-seeded. Only `cloze`/`translation`
- * cells are seeded — `vocab_recall` is constrained at the target-word level, so
- * a lexical seed would fight its own dedup. Pure (delegates to the deterministic
- * `pickSeeds`); the DB-backed `exclude` set is supplied by the caller via
- * `fetchPriorSeeds`. Exported for unit testing the seedable-type gate.
+ * Which seed band a cell draws from, or null for non-seeded types. Pure — the
+ * type gate is unit-tested without a DB. cloze/translation seed at-level content
+ * words; conjugation seeds at-or-below-level VERBS (any language now that PoS is
+ * DB-backed — previously ES-only). vocab_recall/free-writing/etc. are unseeded.
  */
-export function buildSeedWords(
+export function seedKindFor(cell: Cell): 'frequency' | 'verb' | null {
+  if (
+    cell.exerciseType === ExerciseType.CLOZE ||
+    cell.exerciseType === ExerciseType.TRANSLATION
+  ) {
+    return 'frequency';
+  }
+  if (cell.exerciseType === ExerciseType.CONJUGATION) return 'verb';
+  return null;
+}
+
+/**
+ * Builds the per-ordinal seed list for a cell (R5.1), or `undefined` for
+ * non-seeded types. Loads the candidate band from `vocab_lemma` (DB-backed),
+ * then delegates to the deterministic pickers. The `exclude` set (live-pool
+ * seeds) is supplied by the caller via `fetchPriorSeeds`/`fetchPriorConjugationSeeds`.
+ */
+export async function buildSeedWords(
+  db: Db,
   cell: Cell,
   count: number,
   batchSeed: string,
   priorSeeds: ReadonlySet<string>,
   coverageTargets?: readonly CoverageTarget[],
-): readonly (string | null)[] | undefined {
-  if (
-    cell.exerciseType === ExerciseType.CLOZE ||
-    cell.exerciseType === ExerciseType.TRANSLATION
-  ) {
-    return pickSeeds({
-      language: cell.language,
-      cefrLevel: cell.cefrLevel,
-      batchSeed,
-      count,
-      exclude: priorSeeds,
-    });
+): Promise<readonly (string | null)[] | undefined> {
+  const kind = seedKindFor(cell);
+  if (kind === null) return undefined;
+
+  const window = cefrRankWindow(cell.cefrLevel);
+
+  if (kind === 'frequency') {
+    const band = await loadFrequencyBand(db, cell.language, window.rankMin, window.rankMax);
+    return pickSeeds({ band, batchSeed, count, exclude: priorSeeds });
   }
-  // ES conjugation: seed a distinct verb per ordinal, coordinated with the
-  // ordinal's grammatical-person coverage target. Other languages stay
-  // unseeded until they have a verb config (see verbBand).
-  if (
-    cell.exerciseType === ExerciseType.CONJUGATION &&
-    cell.language === Language.ES
-  ) {
-    const persons = Array.from(
-      { length: count },
-      (_, ordinal) => coverageTargets?.[ordinal]?.person ?? null,
-    );
-    return pickConjugationSeeds({
-      language: cell.language,
-      cefrLevel: cell.cefrLevel,
-      batchSeed,
-      count,
-      persons,
-      exclude: priorSeeds,
-    });
-  }
-  return undefined;
+
+  // Conjugation: at-or-below-level verbs (CUMULATIVE band from rank 1), keyed on
+  // (lemma, person). Persons come from the ordinal's coverage target.
+  const persons = Array.from(
+    { length: count },
+    (_, ordinal) => coverageTargets?.[ordinal]?.person ?? null,
+  );
+  const band = await loadVerbBand(db, cell.language, 1, window.rankMax);
+  return pickConjugationSeeds({ band, batchSeed, count, persons, exclude: priorSeeds });
 }
 
 /**
@@ -606,22 +608,21 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
           ? await fetchPriorFreeWritingTitles(db, cell)
           : undefined;
 
-    // Seed cloze/translation with at-level content words, and ES conjugation
-    // with at-or-below-level verbs (keyed on (lemma, person)). Other types and
-    // non-ES conjugation stay unseeded. Prior-seed exclusion is fetched only
-    // for the seeded types to avoid a needless query.
+    // Seed cloze/translation with at-level content words, and conjugation
+    // with at-or-below-level verbs (keyed on (lemma, person)). Other types
+    // stay unseeded. Prior-seed exclusion is fetched only for the seeded
+    // types to avoid a needless query.
     const isClozeOrTranslation =
       cell.exerciseType === ExerciseType.CLOZE ||
       cell.exerciseType === ExerciseType.TRANSLATION;
-    const isEsConjugation =
-      cell.exerciseType === ExerciseType.CONJUGATION &&
-      cell.language === Language.ES;
+    const isConjugation = cell.exerciseType === ExerciseType.CONJUGATION;
     const priorSeeds: ReadonlySet<string> = isClozeOrTranslation
       ? new Set(await fetchPriorSeeds(db, cell))
-      : isEsConjugation
+      : isConjugation
         ? await fetchPriorConjugationSeeds(db, cell)
         : new Set<string>();
-    const seedWords = buildSeedWords(
+    const seedWords = await buildSeedWords(
+      db,
       cell,
       args.count,
       args.batchSeed,
