@@ -176,3 +176,17 @@ describe('CreateSessionRequestSchema — exerciseType', () => {
     expect(r.success).toBe(false);
   });
 });
+
+describe('CreateSessionRequestSchema · grammarPointKey', () => {
+  const base = { language: Language.TR, difficulty: CefrLevel.A1, exerciseCount: 5 };
+
+  it('accepts a grammarPointKey', () => {
+    const parsed = CreateSessionRequestSchema.parse({ ...base, grammarPointKey: 'tr-a1-locative' });
+    expect(parsed.grammarPointKey).toBe('tr-a1-locative');
+  });
+
+  it('is optional (valid when omitted)', () => {
+    const parsed = CreateSessionRequestSchema.parse(base);
+    expect(parsed.grammarPointKey).toBeUndefined();
+  });
+});

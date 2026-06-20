@@ -10,6 +10,9 @@ export const CreateSessionRequestSchema = z.object({
   // Optional single-type filter. Omitted → a mixed pull (quick drill); set to a
   // type (e.g. dictation) → a single-type run (dictation-only launcher).
   exerciseType: z.nativeEnum(ExerciseType).optional(),
+  // Optional grammar-point target. Set → the pool prefers exercises for this
+  // grammar point, topping up with the mixed pool when it is thin.
+  grammarPointKey: z.string().min(1).optional(),
 });
 
 export type CreateSessionRequest = z.infer<typeof CreateSessionRequestSchema>;
