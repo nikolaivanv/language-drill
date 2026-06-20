@@ -79,7 +79,7 @@ export function LanguageSheet({ open, onClose, profiles }: LanguageSheetProps) {
         })}
       </ul>
       <Link
-        href="/onboarding?edit=1"
+        href="/settings"
         onClick={onClose}
         className="mt-s-3 block border-t border-rule pt-s-3 text-[13px] text-ink-soft transition-colors duration-150 hover:text-ink"
       >

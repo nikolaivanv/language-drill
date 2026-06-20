@@ -122,9 +122,9 @@ describe('LanguageSheet', () => {
     );
   });
 
-  it('includes the "manage languages" link to /onboarding?edit=1', () => {
+  it('includes the "manage languages" link to /settings', () => {
     renderSheet([PROFILE_ES, PROFILE_DE]);
     const link = screen.getByRole('link', { name: /manage languages/i });
-    expect(link).toHaveAttribute('href', '/onboarding?edit=1');
+    expect(link).toHaveAttribute('href', '/settings');
   });
 });
