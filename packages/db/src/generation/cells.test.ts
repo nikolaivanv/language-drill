@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { ALL_CURRICULA, esCurriculum, trCurriculum, type GrammarPoint } from '../curriculum';
 import { assertValidCellKey } from '../lib/cell-key';
 
-import { ROUND_1_CEFR_LEVELS, enumerateCurriculumCells } from './cells';
+import { ROUND_1_CEFR_LEVELS, compatibleTypes, enumerateCurriculumCells } from './cells';
 
 /**
  * Build a synthetic curriculum entry for enumeration tests. `key` and `kind`
@@ -275,5 +275,39 @@ describe('enumerateCurriculumCells — sentenceConstructionSuitable flag', () =>
       ExerciseType.TRANSLATION,
       ExerciseType.SENTENCE_CONSTRUCTION,
     ]);
+  });
+});
+
+describe('compatibleTypes (exported)', () => {
+  it('grammar → cloze + translation by default', () => {
+    const point = makeGrammarPoint({ key: 'tr-a1-default', kind: 'grammar' });
+    expect(compatibleTypes(point)).toEqual([ExerciseType.CLOZE, ExerciseType.TRANSLATION]);
+  });
+
+  it('drops cloze when clozeUnsuitable; appends SC/conjugation on flags', () => {
+    const pointClozeUnsuitable = makeGrammarPoint({
+      key: 'tr-a2-cloze-unsuitable',
+      kind: 'grammar',
+      clozeUnsuitable: true,
+    });
+    expect(compatibleTypes(pointClozeUnsuitable)).toEqual([ExerciseType.TRANSLATION]);
+
+    const pointWithScAndConjugation = makeGrammarPoint({
+      key: 'tr-a2-sc-conj',
+      kind: 'grammar',
+      sentenceConstructionSuitable: true,
+      conjugationSuitable: true,
+    });
+    expect(compatibleTypes(pointWithScAndConjugation)).toEqual([
+      ExerciseType.CLOZE,
+      ExerciseType.TRANSLATION,
+      ExerciseType.SENTENCE_CONSTRUCTION,
+      ExerciseType.CONJUGATION,
+    ]);
+  });
+
+  it('vocab → vocab_recall', () => {
+    const point = makeGrammarPoint({ key: 'tr-a1-vocab', kind: 'vocab' });
+    expect(compatibleTypes(point)).toEqual([ExerciseType.VOCAB_RECALL]);
   });
 });
