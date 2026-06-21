@@ -105,18 +105,18 @@ describe("LanguageDrillStack-dev", () => {
     const lambdas = devTemplate.findResources("AWS::Lambda::Function");
     const fns = Object.values(lambdas) as LambdaResource[];
 
-    // The dev stack runs seven application Lambdas: API, Generation (consumer),
+    // The dev stack runs nine application Lambdas: API, Generation (consumer),
     // Scheduler (exercise), AnnotateStream (SSE Function URL), TheoryGeneration
-    // (consumer), TheoryScheduler, and DictationAudio (Phase 2 audio-synth
-    // consumer — has DATABASE_URL but no Anthropic/Langfuse secrets). CDK's
-    // logRetention shortcut also synthesizes a maintenance Lambda on the same
-    // runtime; filter by the presence of DATABASE_URL in env so this assertion
-    // tracks application Lambdas only (the LogRetention provider has no app env
-    // vars).
+    // (consumer), TheoryScheduler, DictationAudio (Phase 2 audio-synth
+    // consumer — has DATABASE_URL but no Anthropic/Langfuse secrets),
+    // EmailDispatcher, and EmailSender. CDK's logRetention shortcut also
+    // synthesizes a maintenance Lambda on the same runtime; filter by the
+    // presence of DATABASE_URL in env so this assertion tracks application
+    // Lambdas only (the LogRetention provider has no app env vars).
     const appFns = fns.filter(
       (f) => !!f.Properties.Environment?.Variables?.DATABASE_URL,
     );
-    expect(appFns).toHaveLength(7);
+    expect(appFns).toHaveLength(9);
 
     // The API Lambda is the only one with CLERK_SECRET_KEY in its env — the
     // generation pipeline Lambdas have a strict minimum-privilege secrets set.
@@ -141,7 +141,8 @@ describe("LanguageDrillStack-dev", () => {
 
   // Phase 4 wires two EventBridge rules when enableScheduledJobs=true: the
   // exercise scheduler (daily) and the theory scheduler (weekly Mondays).
-  it("prod stack deploys exactly two EventBridge rules (exercise + theory schedulers)", () => {
-    prodTemplate.resourceCountIs("AWS::Events::Rule", 2);
+  // The email pipeline adds a third: the weekly-summary dispatcher (Mon 08:00 UTC).
+  it("prod stack deploys exactly three EventBridge rules (exercise + theory + email schedulers)", () => {
+    prodTemplate.resourceCountIs("AWS::Events::Rule", 3);
   });
 });
