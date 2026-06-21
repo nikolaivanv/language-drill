@@ -82,3 +82,43 @@ surface_form<TAB>lemma<TAB>rank[<TAB>cefr]
 - **`rank`**: positive integer; lower = more frequent.
 - **`cefr`** (optional): one of `A1`, `A2`, `B1`, `B2`, `C1`, `C2`. Any
   other value is dropped silently. Leave the column blank when unknown.
+
+## Part-of-speech source for `vocab_lemma` (Wiktextract)
+
+The `vocab_lemma` table (lemma-level PoS for generation seed selection) joins the
+per-language frequency corpus above (lemma + rank) with Wiktionary part-of-speech
+data extracted by **Wiktextract**, published at **kaikki.org**.
+
+- **Source**: kaikki.org per-language extracts from the **English Wiktionary**
+  (`https://kaikki.org/dictionary/{Spanish,German,Turkish}/`), file
+  `kaikki.org-dictionary-<Name>.jsonl`. Replacement if those are removed: the raw
+  combined dump at `https://kaikki.org/dictionary/rawdata.html` (filter per language).
+- **License**: Wiktionary content — **CC BY-SA** (dual GFDL). Derived PoS data is
+  redistributable under the same share-alike terms (consistent with the derived-data
+  policy above). The committed `vocab_lemma` artifacts are derived data.
+- **Snapshot date**: 2026-06-21 (kaikki extraction dated 2026-06-15 from the
+  2026-06-01 enwiktionary dump).
+- **Format**: JSONL, one JSON object per line, top-level `word` + `pos`
+  (lowercase `verb`/`noun`/`adj`/…). `build-vocab-lemma.ts` streams the file
+  line-by-line, so the raw multi-GB dumps work without pre-filtering.
+
+### Build recipe
+
+```bash
+# Sources stay local (large, license-encumbered) — same policy as the TSVs.
+# CORPUS_DIR holds <lang>.tsv; WIKTEXTRACT_DIR holds <lang>.jsonl OR the raw
+# kaikki.org-dictionary-<Name>.jsonl (auto-detected).
+CORPUS_DIR=packages/ai/scripts/sources \
+WIKTEXTRACT_DIR=/path/to/wiktextract \
+pnpm --filter @language-drill/ai build:vocab-lemma
+# -> packages/ai/src/frequency/vocab-lemma/{es,de,tr}.json   (committed, derived)
+
+# Optional: GAP_FILL=1 (needs ANTHROPIC_API_KEY) LLM-tags lemmas Wiktionary
+# didn't match, tagging them source='llm'. Low ROI when frequent-verb coverage
+# is already high; use the build's matched% summary to decide.
+```
+
+Baseline match rates (2026-06-21, no gap-fill): ES 59.1%, DE 61.9%, TR 53.1%.
+Unmatched lemmas keep an empty `pos_all` (`source='unmatched'`) — still usable as
+cloze/translation seeds; only verb-band seeding needs the `VERB` tag, and frequent
+verbs match at near-100%.
