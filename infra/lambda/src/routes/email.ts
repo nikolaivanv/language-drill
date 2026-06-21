@@ -81,8 +81,10 @@ email.post('/email/weekly-summary', async (c) => {
   const { html, text } = await renderEmail(ConfirmSubscriptionEmail({ confirmUrl }));
   // Recipient must be the user's real address (the auth middleware guarantees a
   // users row exists).
+  const to = await resolveEmail(userId);
+  if (!to) return c.json({ error: 'User email not found', code: 'NO_EMAIL' }, 500);
   await sendEmail({
-    to: await resolveEmail(userId),
+    to,
     subject: 'Confirm your weekly Language Drill summary',
     html,
     text,
@@ -103,7 +105,7 @@ email.get('/email/confirm', async (c) => {
   if (rows.length === 0) {
     return c.html(htmlPage('Already confirmed', 'This link has already been used, or it has expired. Nothing else to do.'), 200);
   }
-  return c.html(htmlPage('You’re subscribed', 'Your weekly summary is on. You can unsubscribe anytime from any email.'), 200);
+  return c.html(htmlPage('You&rsquo;re subscribed', 'Your weekly summary is on. You can unsubscribe anytime from any email.'), 200);
 });
 
 // --- unsubscribe (public; GET for click, POST for RFC 8058 one-click) -----
@@ -119,7 +121,7 @@ async function doUnsubscribe(token: string | undefined): Promise<boolean> {
 
 email.get('/email/unsubscribe', async (c) => {
   await doUnsubscribe(c.req.query('token'));
-  return c.html(htmlPage('Unsubscribed', 'You won’t receive the weekly summary anymore. You can turn it back on in settings.'), 200);
+  return c.html(htmlPage('Unsubscribed', 'You won&rsquo;t receive the weekly summary anymore. You can turn it back on in settings.'), 200);
 });
 
 email.post('/email/unsubscribe', async (c) => {

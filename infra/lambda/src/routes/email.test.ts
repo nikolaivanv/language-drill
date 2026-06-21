@@ -31,7 +31,7 @@ vi.mock('@language-drill/db', () => ({
     unsubscribeToken: 'unsubscribe_token',
     confirmToken: 'confirm_token',
   },
-  users: { id: 'id' },
+  users: { id: 'id', email: 'email' },
 }));
 
 const sendEmailMock = vi.fn(async () => ({ id: 'eml', delivered: true }));
@@ -62,7 +62,8 @@ describe('email routes', () => {
     expect(await res.json()).toEqual({ weeklySummary: 'off' });
   });
 
-  it('POST /email/weekly-summary { enabled: true } sets pending and sends a confirm email', async () => {
+  it('POST /email/weekly-summary { enabled: true } sets pending and sends a confirm email to the real address', async () => {
+    state.selectRows = [{ email: 'user_1@example.com' }];
     state.upsertRows = [{ weeklySummary: 'pending', confirmToken: 'tok' }];
     const res = await app.request(
       '/email/weekly-summary',
@@ -72,6 +73,7 @@ describe('email routes', () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ weeklySummary: 'pending' });
     expect(sendEmailMock).toHaveBeenCalledOnce();
+    expect(sendEmailMock).toHaveBeenCalledWith(expect.objectContaining({ to: 'user_1@example.com' }));
   });
 
   it('POST /email/weekly-summary { enabled: false } sets off without sending', async () => {
