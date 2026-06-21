@@ -11,9 +11,11 @@
 // ---------------------------------------------------------------------------
 
 import type { ExerciseType } from '@language-drill/shared';
+import type { PlanReason } from '@language-drill/api-client';
 import { Button, Chip } from '../../../components/ui';
 import { cn } from '../../../lib/cn';
 import { composeSubtitle, composeTitle } from '../_lib/timeline-labels';
+import { reasonHint } from '../_lib/reason-hint';
 
 export type TimelineItemStatus = 'done' | 'queued' | 'next-up';
 
@@ -29,6 +31,8 @@ type Props = {
   status: TimelineItemStatus;
   isLast: boolean;
   href: string | null;
+  /** The dominant reason this item was selected. */
+  reason?: PlanReason | null;
   /** Primary CTA text for the next-up row. Defaults to 'start →'. */
   ctaLabel?: string;
 };
@@ -44,10 +48,12 @@ export function TimelineItem({
   status,
   isLast,
   href,
+  reason,
   ctaLabel = 'start →',
 }: Props) {
   const title = composeTitle(index, total, type);
   const subtitle = composeSubtitle(grammarPointName, topicHint, type, itemCount);
+  const hint = reasonHint(reason ?? null);
   const isDone = status === 'done';
   const isNextUp = status === 'next-up';
   const numberLabel = String(index).padStart(2, '0');
@@ -98,6 +104,16 @@ export function TimelineItem({
               {isDone && <Chip variant="ok">done</Chip>}
             </div>
             <p className="t-body mt-s-1">{subtitle}</p>
+            {hint && (
+              <p
+                className={cn(
+                  't-micro mt-s-2 text-ink-mute',
+                  reason === 'error-fix' && 'text-accent-2',
+                )}
+              >
+                {hint}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-shrink-0 items-center gap-s-3">

@@ -164,3 +164,43 @@ describe('TimelineItem — planned-time chip', () => {
     expect(screen.getByText('9 min')).toBeInTheDocument();
   });
 });
+
+describe('TimelineItem — reason hint', () => {
+  it('shows "recent error spot" with accent tint when reason is error-fix', () => {
+    renderItem({ reason: 'error-fix' });
+    const hint = screen.getByText('recent error spot');
+    expect(hint).toBeInTheDocument();
+    expect(hint).toHaveClass('text-accent-2');
+  });
+
+  it('shows "new point" with muted text when reason is new', () => {
+    renderItem({ reason: 'new' });
+    const hint = screen.getByText('new point');
+    expect(hint).toBeInTheDocument();
+    expect(hint).toHaveClass('text-ink-mute');
+  });
+
+  it('shows "reinforcing" with muted text when reason is reinforce', () => {
+    renderItem({ reason: 'reinforce' });
+    const hint = screen.getByText('reinforcing');
+    expect(hint).toBeInTheDocument();
+    expect(hint).toHaveClass('text-ink-mute');
+  });
+
+  it('shows "due for review" with muted text when reason is review', () => {
+    renderItem({ reason: 'review' });
+    const hint = screen.getByText('due for review');
+    expect(hint).toBeInTheDocument();
+    expect(hint).toHaveClass('text-ink-mute');
+  });
+
+  it('does not render a hint when reason is null', () => {
+    renderItem({ reason: null });
+    expect(screen.queryByText(/new point|reinforcing|due for review|recent error spot/)).toBeNull();
+  });
+
+  it('does not render a hint when reason is undefined', () => {
+    renderItem({ reason: undefined });
+    expect(screen.queryByText(/new point|reinforcing|due for review|recent error spot/)).toBeNull();
+  });
+});

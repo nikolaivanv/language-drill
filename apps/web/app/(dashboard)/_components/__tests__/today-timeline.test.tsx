@@ -254,6 +254,42 @@ describe('TodayTimeline — resume session', () => {
   });
 });
 
+describe('TodayTimeline — reason hint', () => {
+  it('renders the reason hint on a row with reason=error-fix', () => {
+    const items = [
+      makeItem(1, 'queued', { reason: 'error-fix' }),
+      makeItem(2, 'queued'),
+    ];
+    render(
+      <TodayTimeline
+        {...baseProps}
+        data={makeResponse(items)}
+        isLoading={false}
+        error={null}
+      />,
+    );
+    expect(screen.getByText('recent error spot')).toBeInTheDocument();
+  });
+
+  it('does not render a hint when reason is null', () => {
+    const items = [
+      makeItem(1, 'queued', { reason: null }),
+      makeItem(2, 'queued', { reason: null }),
+    ];
+    render(
+      <TodayTimeline
+        {...baseProps}
+        data={makeResponse(items)}
+        isLoading={false}
+        error={null}
+      />,
+    );
+    expect(
+      screen.queryByText(/new point|reinforcing|due for review|recent error spot/),
+    ).toBeNull();
+  });
+});
+
 describe('TodayTimeline — free-writing block', () => {
   it('renders the free-writing block when data.freeWriting is present', () => {
     const data = makeResponse([makeItem(1, 'queued'), makeItem(2, 'queued')], {

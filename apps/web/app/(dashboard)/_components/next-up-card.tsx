@@ -14,7 +14,9 @@
 import Link from 'next/link';
 import type { TodayPlanResponse } from '@language-drill/api-client';
 import type { LearningLanguage } from '@language-drill/shared';
+import { cn } from '../../../lib/cn';
 import { composeSubtitle, composeTitle } from '../_lib/timeline-labels';
+import { reasonHint } from '../_lib/reason-hint';
 
 type Props = {
   data: TodayPlanResponse | undefined;
@@ -34,6 +36,7 @@ export function NextUpCard({ data, language: _language }: Props) {
     next.type,
     next.itemCount,
   );
+  const hint = reasonHint(next.reason);
 
   return (
     <Link
@@ -49,6 +52,16 @@ export function NextUpCard({ data, language: _language }: Props) {
         <p className="t-small mt-[2px]">
           {subtitle} · {next.estimatedMinutes} min
         </p>
+        {hint && (
+          <p
+            className={cn(
+              't-micro mt-s-1 text-ink-mute',
+              next.reason === 'error-fix' && 'text-accent-2',
+            )}
+          >
+            {hint}
+          </p>
+        )}
       </div>
       <span
         aria-hidden
