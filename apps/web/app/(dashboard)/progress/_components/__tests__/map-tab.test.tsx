@@ -92,6 +92,44 @@ function buildFixture(): CurriculumMapResponse {
   };
 }
 
+// Fixture: active level readyToAdvance + a preview A2 level
+function buildReadyFixture(): CurriculumMapResponse {
+  return {
+    language: Language.TR,
+    activeLevel: 'A1',
+    levels: [
+      {
+        level: 'A1',
+        solidCount: 6,
+        total: 6,
+        readyToAdvance: true,
+        isPreview: false,
+        points: [
+          pt('tr-a1-vowel-harmony', 'Vowel Harmony', 1, 'solid'),
+          pt('tr-a1-plural', 'Plural suffix', 2, 'solid'),
+          pt('tr-a1-case', 'Accusative case', 3, 'solid'),
+          pt('tr-a1-possessive', 'Possessive suffixes', 4, 'solid'),
+          pt('tr-a1-verb-to-be', 'Verb "to be"', 5, 'solid'),
+          pt('tr-a1-negation', 'Negation', 6, 'solid'),
+        ],
+      },
+      {
+        level: 'A2',
+        solidCount: 0,
+        total: 4,
+        readyToAdvance: false,
+        isPreview: true,
+        points: [
+          pt('tr-a2-dative', 'Dative case', 1, 'not-started'),
+          pt('tr-a2-aorist', 'Aorist tense', 2, 'not-started'),
+          pt('tr-a2-ablative', 'Ablative case', 3, 'not-started'),
+          pt('tr-a2-conditional', 'Conditional', 4, 'not-started'),
+        ],
+      },
+    ],
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -248,5 +286,107 @@ describe('MapTab', () => {
     // The dialog should contain the point name in its aria-label or content
     const dialog = screen.getByRole('dialog');
     expect(dialog.getAttribute('aria-label')).toBe('Vowel Harmony');
+  });
+
+  // ---------------------------------------------------------------------------
+  // Advance action tests
+  // ---------------------------------------------------------------------------
+
+  it('renders "add A2 →" button when readyToAdvance + preview level + onAdvance provided', () => {
+    const onAdvance = vi.fn();
+    render(
+      <MapTab
+        data={buildReadyFixture()}
+        isLoading={false}
+        error={null}
+        onRetry={noop}
+        errorThemes={[]}
+        onAdvance={onAdvance}
+        advancing={false}
+      />,
+    );
+    expect(screen.getByRole('button', { name: /add A2 →/i })).toBeDefined();
+  });
+
+  it('calls onAdvance when the "add A2 →" button is clicked', () => {
+    const onAdvance = vi.fn();
+    render(
+      <MapTab
+        data={buildReadyFixture()}
+        isLoading={false}
+        error={null}
+        onRetry={noop}
+        errorThemes={[]}
+        onAdvance={onAdvance}
+        advancing={false}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: /add A2 →/i }));
+    expect(onAdvance).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows "adding…" label and disables button while advancing', () => {
+    const onAdvance = vi.fn();
+    render(
+      <MapTab
+        data={buildReadyFixture()}
+        isLoading={false}
+        error={null}
+        onRetry={noop}
+        errorThemes={[]}
+        onAdvance={onAdvance}
+        advancing={true}
+      />,
+    );
+    const btn = screen.getByRole('button', { name: /adding…/i });
+    expect(btn).toBeDefined();
+    expect((btn as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('does NOT render the advance button when readyToAdvance is false (no preview level shown)', () => {
+    const onAdvance = vi.fn();
+    render(
+      <MapTab
+        data={buildFixture()}
+        isLoading={false}
+        error={null}
+        onRetry={noop}
+        errorThemes={[]}
+        onAdvance={onAdvance}
+        advancing={false}
+      />,
+    );
+    expect(screen.queryByRole('button', { name: /add .* →/i })).toBeNull();
+  });
+
+  it('does NOT render the advance button when no preview level exists even if readyToAdvance is true', () => {
+    const onAdvance = vi.fn();
+    // Build a fixture that is ready to advance but has no preview level
+    const noPreviewFixture: CurriculumMapResponse = {
+      language: Language.TR,
+      activeLevel: 'A1',
+      levels: [
+        {
+          level: 'A1',
+          solidCount: 6,
+          total: 6,
+          readyToAdvance: true,
+          isPreview: false,
+          points: [pt('tr-a1-vowel-harmony', 'Vowel Harmony', 1, 'solid')],
+        },
+      ],
+    };
+    render(
+      <MapTab
+        data={noPreviewFixture}
+        isLoading={false}
+        error={null}
+        onRetry={noop}
+        errorThemes={[]}
+        onAdvance={onAdvance}
+        advancing={false}
+      />,
+    );
+    expect(screen.queryByRole('button', { name: /add .* →/i })).toBeNull();
   });
 });

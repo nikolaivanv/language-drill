@@ -1,17 +1,22 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   createAuthenticatedFetch,
   useLanguageProfiles,
+  useGetPreferences,
+  useUpdateLanguages,
   useProgressRadar,
   useFluencyStats,
   useErrorTrends,
   useCurriculumMap,
   useInsightsErrors,
   type RadarAxis,
+  type UpdateLanguagesInput,
 } from '@language-drill/api-client';
+import { CefrLevel } from '@language-drill/shared';
 import { useActiveLanguage } from '../../../components/shell/active-language-provider';
 import { ProgressHeader } from './_components/progress-header';
 import { ProgressTabs } from './_components/progress-tabs';
@@ -21,6 +26,7 @@ import { FluencyTab } from './_components/fluency-tab';
 import { HistoryTab } from './_components/history-tab';
 import { ProgressEmptyState } from './_components/progress-empty-state';
 import { useTabUrlState } from './_lib/use-tab-url-state';
+import { withAdvancedLevel } from './_lib/advance-level';
 
 const MS_PER_WEEK = 7 * 86_400_000;
 
@@ -28,6 +34,7 @@ export default function ProgressPage() {
   const { activeLanguage } = useActiveLanguage();
   const { getToken } = useAuth();
   const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
+  const queryClient = useQueryClient();
 
   // All queries fire in parallel on mount so switching tabs is instant.
   const radar = useProgressRadar({ fetchFn, language: activeLanguage });
@@ -38,15 +45,45 @@ export default function ProgressPage() {
 
   // Read proficiency level from the language-profiles cache rather than
   // refetching — the dashboard layout already populated it.
-  const profiles = useLanguageProfiles({ fetchFn });
+  const languageProfiles = useLanguageProfiles({ fetchFn });
+  const prefs = useGetPreferences({ fetchFn });
+  const update = useUpdateLanguages({ fetchFn });
+
   const proficiencyLevel =
-    profiles.data?.profiles.find((p) => p.language === activeLanguage)
+    languageProfiles.data?.profiles.find((p) => p.language === activeLanguage)
       ?.proficiencyLevel ?? null;
 
   const totalEvidence = sumEvidence(radar.data?.axes);
   const weeksActive = computeWeeksActive(radar.data?.axes);
 
   const { tab, setTab } = useTabUrlState();
+
+  const handleAdvance = useCallback(() => {
+    const profiles = languageProfiles.data?.profiles;
+    const primaryLanguage = prefs.data?.primaryLanguage;
+    const nextLevelRaw = curriculum.data?.levels.find((l) => l.isPreview)?.level;
+    if (!profiles || !primaryLanguage || !nextLevelRaw) return;
+    // Validate nextLevel is a valid CefrLevel
+    const validLevels = Object.values(CefrLevel) as string[];
+    if (!validLevels.includes(nextLevelRaw)) return;
+    const nextLevel = nextLevelRaw as CefrLevel;
+    const nextProfiles = withAdvancedLevel(profiles, activeLanguage, nextLevel);
+    update.mutate(
+      { profiles: nextProfiles as UpdateLanguagesInput['profiles'], primaryLanguage },
+      {
+        onSuccess: () => {
+          for (const key of [
+            ['languageProfiles'],
+            ['curriculumMap', activeLanguage],
+            ['todayPlan', activeLanguage],
+            ['progressRadar', activeLanguage],
+          ]) {
+            void queryClient.invalidateQueries({ queryKey: key });
+          }
+        },
+      },
+    );
+  }, [languageProfiles.data, prefs.data, curriculum.data, activeLanguage, update, queryClient]);
 
   // Page-wide empty state: no exercise history at all in the active language.
   if (radar.data && totalEvidence === 0) {
@@ -68,6 +105,8 @@ export default function ProgressPage() {
             error={curriculum.error}
             onRetry={() => { void curriculum.refetch(); }}
             errorThemes={insights.data?.themes ?? []}
+            onAdvance={handleAdvance}
+            advancing={update.isPending}
           />
         )}
         {tab === 'shape' && (
