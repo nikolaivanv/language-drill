@@ -89,6 +89,45 @@ export const V1_PLAN_SHAPE: readonly PlanCompositionSlot[] = [
   { index: 5, prefix: 'cool-down', type: ExerciseType.CLOZE },
 ] as const;
 
+/**
+ * Core type cycle for variable-length skeletons. Used to vary exercise types
+ * in the core section of a dynamically-sized plan.
+ */
+const CORE_TYPE_CYCLE: readonly ExerciseType[] = [
+  ExerciseType.SENTENCE_CONSTRUCTION,
+  ExerciseType.TRANSLATION,
+  ExerciseType.VOCAB_RECALL,
+  ExerciseType.CLOZE,
+];
+
+/**
+ * Generates a warm-up · core×(N-2) · cool-down skeleton of `targetCount` slots.
+ * A single-slot plan is just that slot (no warm-up/cool-down distinction).
+ * A two-slot plan is warm-up then cool-down.
+ * Larger plans cycle through CORE_TYPE_CYCLE for variety in the middle slots.
+ */
+export function planSkeleton(targetCount: number): PlanCompositionSlot[] {
+  const n = Math.max(1, Math.floor(targetCount));
+  const slots: PlanCompositionSlot[] = [];
+  for (let i = 0; i < n; i++) {
+    const index = i + 1;
+    let prefix: PlanSlotPrefix;
+    let type: ExerciseType;
+    if (i === 0 && n > 1) {
+      prefix = 'warm-up';
+      type = ExerciseType.CLOZE;
+    } else if (i === n - 1 && n > 1) {
+      prefix = 'cool-down';
+      type = ExerciseType.CLOZE;
+    } else {
+      prefix = 'core';
+      type = CORE_TYPE_CYCLE[(i - 1 + CORE_TYPE_CYCLE.length) % CORE_TYPE_CYCLE.length];
+    }
+    slots.push({ index, prefix, type });
+  }
+  return slots;
+}
+
 // ---------------------------------------------------------------------------
 // In-memory plan-item shape
 // ---------------------------------------------------------------------------
@@ -222,7 +261,7 @@ function toPlanItem(index: number, draw: PoolDraw): PlanItem {
 /**
  * Composes the fresh-plan branch (Path B) deterministically from a pool sample.
  *
- * Two passes over `V1_PLAN_SHAPE`:
+ * Two passes over the skeleton:
  *   1. Assign each slot a distinct exercise of its native type (FIFO from the
  *      per-type candidate queue).
  *   2. Backfill any slot left empty (its native type ran out) with a distinct
@@ -233,15 +272,19 @@ function toPlanItem(index: number, draw: PoolDraw): PlanItem {
  *
  * The plan is only `insufficient` when the pool is genuinely empty (no
  * candidate of any type) — a pool merely missing one type still yields a full
- * five-item plan. Surviving items are re-indexed 1..n so the client's
- * index-derived labels stay contiguous.
+ * plan matching the skeleton size. Surviving items are re-indexed 1..n so the
+ * client's index-derived labels stay contiguous.
  *
  * Candidates are consumed in the order given — the caller pre-ranks them
  * (exposure + mastery) so slot assignment picks the highest-priority item per
  * type.
+ *
+ * @param candidates Pool of exercises to draw from
+ * @param skeleton Plan shape to fill; defaults to V1_PLAN_SHAPE for back-compat
  */
 export function composeFreshPlan(
   candidates: readonly PoolDraw[],
+  skeleton: readonly PlanCompositionSlot[] = V1_PLAN_SHAPE,
 ): ComposeFreshPlanResult {
   // Per-type FIFO queues. Mutated by `take`; ordering within a type is the
   // pool sample's random order, so each shift is an independent random pick.
@@ -255,7 +298,7 @@ export function composeFreshPlan(
     byType.get(type)?.shift();
 
   // Pass 1 — native assignment.
-  const slots: (PlanItem | null)[] = V1_PLAN_SHAPE.map((slot) => {
+  const slots: (PlanItem | null)[] = skeleton.map((slot) => {
     const native = take(slot.type);
     return native ? toPlanItem(slot.index, native) : null;
   });
@@ -266,7 +309,7 @@ export function composeFreshPlan(
     for (const type of BACKFILL_TYPE_PRIORITY) {
       const sub = take(type);
       if (sub) {
-        slots[i] = toPlanItem(V1_PLAN_SHAPE[i].index, sub);
+        slots[i] = toPlanItem(skeleton[i].index, sub);
         break;
       }
     }
