@@ -86,7 +86,7 @@ function PracticePageContent() {
     const r = searchParams.get('resume');
     return r && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(r) ? r : null;
   });
-  const [grammarPointKey] = useState<string | null>(() => {
+  const [grammarPointKey, setGrammarPointKey] = useState<string | null>(() => {
     const g = searchParams.get('grammarPoint');
     return g && g.length > 0 ? g : null;
   });
@@ -186,7 +186,7 @@ function PracticePageContent() {
       },
       onError: (err) => dispatch({ type: 'CREATE_FAILED', error: err as Error }),
     });
-  }, [initialized, startIntent, state.kind, activeLanguage, difficulty, createSession]);
+  }, [initialized, startIntent, state.kind, activeLanguage, difficulty, grammarPointKey, createSession]);
 
   const resumeKickoffRef = useRef(false);
   useEffect(() => {
@@ -315,6 +315,11 @@ function PracticePageContent() {
     fireCompleteSession(sessionId);
   }
 
+  function handleStartTargeted(key: string) {
+    setGrammarPointKey(key);
+    setStartIntent('quick');
+  }
+
   function handleDifficultyChange(newDifficulty: CefrLevel) {
     setDifficulty(newDifficulty);
     submitMutation.reset();
@@ -383,16 +388,7 @@ function PracticePageContent() {
         onStartQuick={() => setStartIntent('quick')}
         onStartDictation={() => setStartIntent('dictation')}
         themes={insights.data?.themes ?? []}
-        onStartTargeted={(grammarPointKey) => {
-          setStartIntent('quick');
-          // Note: grammarPointKey is passed via useSearchParams in the next render
-          // via the session creation effect. We set it here as an internal state,
-          // but the actual URL query param is set by the effect after startIntent changes.
-          // For now, we'll use a simpler approach: trigger the session start with
-          // the grammarPointKey in the URL by reusing the existing state machine.
-          // The effect will pick it up from setStartIntent and create the session with it.
-          router.push(`/drill?start=quick&grammarPoint=${encodeURIComponent(grammarPointKey)}`);
-        }}
+        onStartTargeted={handleStartTargeted}
       />
     );
   }

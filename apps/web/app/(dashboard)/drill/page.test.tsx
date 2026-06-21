@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { CefrLevel, ExerciseType, Language } from '@language-drill/shared';
 import { ActiveLanguageProvider } from '../../../components/shell';
@@ -778,6 +778,60 @@ describe('PracticePage — hub (no start intent)', () => {
         exerciseType: ExerciseType.DICTATION,
       },
       expect.any(Object),
+    );
+  });
+});
+
+describe('PracticePage — hub onStartTargeted', () => {
+  it('starting a hub weak spot creates a targeted session for that grammar point', async () => {
+    mockSearchParamsString = '';
+    // Seed one theme so WorkOnThese renders a clickable button.
+    mockUseInsightsErrors.mockReturnValue({
+      data: {
+        themes: [
+          {
+            grammarPointKey: 'tr-a1-locative',
+            grammarPointName: 'Locative case',
+            errorType: 'grammar',
+            count: 6,
+            majorCount: 4,
+            lastOccurredAt: '2026-06-19T00:00:00.000Z',
+            sample: { wrongText: 'pazarda', correction: 'pazara' },
+            score: 4,
+          },
+        ],
+      },
+    });
+    // Profiles present so `initialized` becomes true.
+    mockUseLanguageProfiles.mockReturnValue({
+      data: { profiles: [{ language: 'ES', proficiencyLevel: 'B1' }] },
+      isLoading: false,
+      error: null,
+    });
+
+    renderWithProviders(<PracticePage />);
+
+    // Hub is shown (no start intent).
+    expect(createMutate).not.toHaveBeenCalled();
+
+    // Click the weak-spot button — label is the grammarPointName.
+    fireEvent.click(screen.getByRole('button', { name: /locative case/i }));
+
+    // Both setGrammarPointKey + setStartIntent batch into one re-render;
+    // the create-session effect fires with the targeted config.
+    await waitFor(() =>
+      expect(createMutate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          grammarPointKey: 'tr-a1-locative',
+          exerciseCount: 5,
+        }),
+        expect.anything(),
+      ),
+    );
+    // No exerciseType override — this is a targeted but mixed-type session.
+    expect(createMutate).toHaveBeenCalledWith(
+      expect.not.objectContaining({ exerciseType: expect.anything() }),
+      expect.anything(),
     );
   });
 });
