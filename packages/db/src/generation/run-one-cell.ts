@@ -417,8 +417,11 @@ async function fetchPriorConjugationSeeds(
 /**
  * Which seed band a cell draws from, or null for non-seeded types. Pure — the
  * type gate is unit-tested without a DB. cloze/translation seed at-level content
- * words; conjugation seeds at-or-below-level VERBS (any language now that PoS is
- * DB-backed — previously ES-only). vocab_recall/free-writing/etc. are unseeded.
+ * words; verb-morphology conjugation seeds at-or-below-level VERBS (any language
+ * now that PoS is DB-backed — previously ES-only). NOMINAL-inflection points
+ * (`conjugationSeedKind: 'none'` — possessive/case/copula) decline a noun, not a
+ * verb, so their conjugation cell is unseeded. vocab_recall/free-writing/etc.
+ * are unseeded.
  */
 export function seedKindFor(cell: Cell): 'frequency' | 'verb' | null {
   if (
@@ -427,7 +430,9 @@ export function seedKindFor(cell: Cell): 'frequency' | 'verb' | null {
   ) {
     return 'frequency';
   }
-  if (cell.exerciseType === ExerciseType.CONJUGATION) return 'verb';
+  if (cell.exerciseType === ExerciseType.CONJUGATION) {
+    return cell.grammarPoint.conjugationSeedKind === 'none' ? null : 'verb';
+  }
   return null;
 }
 

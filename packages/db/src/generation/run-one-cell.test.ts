@@ -308,6 +308,21 @@ describe('seedKindFor', () => {
     expect(seedKindFor(cellOf(ExerciseType.CONJUGATION))).toBe('verb');
   });
 
+  it('returns null for a conjugation cell of a nominal point (conjugationSeedKind: none)', () => {
+    // Nominal-inflection points (possessive/case/copula) decline a noun, not a
+    // verb — a verb seed + the strict "use exactly this verb" directive would
+    // contradict the grammar point, so they must generate unseeded.
+    const base = ALL_CURRICULA.find((g) => g.key === TEST_GRAMMAR_POINT_KEY)!;
+    const nominalCell: Cell = {
+      language: Language.ES as LearningLanguage,
+      cefrLevel: CefrLevel.B1 as CurriculumCefrLevel,
+      exerciseType: ExerciseType.CONJUGATION,
+      grammarPoint: { ...base, conjugationSeedKind: 'none' },
+      cellKey: 'es:b1:conjugation:es-test',
+    };
+    expect(seedKindFor(nominalCell)).toBeNull();
+  });
+
   it('returns null for vocab_recall', () => {
     expect(seedKindFor(cellOf(ExerciseType.VOCAB_RECALL))).toBeNull();
   });

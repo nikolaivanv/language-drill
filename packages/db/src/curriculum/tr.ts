@@ -154,6 +154,8 @@ const trCurriculum: readonly GrammarPoint[] = [
   {
     key: 'tr-a1-personal-suffixes',
     conjugationSuitable: true,
+    // Nominal predicate (copula) — no verb to conjugate; generate unseeded.
+    conjugationSeedKind: 'none',
     coverageSpec: {
       axes: [
         { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
@@ -218,6 +220,8 @@ const trCurriculum: readonly GrammarPoint[] = [
   {
     key: 'tr-a1-locative',
     conjugationSuitable: true,
+    // Nominal case inflection — declines a noun, not a verb; generate unseeded.
+    conjugationSeedKind: 'none',
     coverageSpec: { axes: [{ name: 'number', floors: { singular: 6, plural: 6 } }] },
     kind: 'grammar',
     name: 'Locative case -DA',
@@ -484,6 +488,8 @@ const trCurriculum: readonly GrammarPoint[] = [
   {
     key: 'tr-a1-accusative-definite-object',
     conjugationSuitable: true,
+    // Nominal case inflection — declines a noun, not a verb; generate unseeded.
+    conjugationSeedKind: 'none',
     coverageSpec: { axes: [{ name: 'number', floors: { singular: 6, plural: 6 } }] },
     kind: 'grammar',
     name: 'Accusative -(y)I for definite objects',
@@ -512,6 +518,8 @@ const trCurriculum: readonly GrammarPoint[] = [
   {
     key: 'tr-a1-ablative-dative',
     conjugationSuitable: true,
+    // Nominal case inflection — declines a noun, not a verb; generate unseeded.
+    conjugationSeedKind: 'none',
     coverageSpec: { axes: [{ name: 'case', floors: { ablative: 6, dative: 6 } }] },
     kind: 'grammar',
     name: 'Ablative -DAn and dative -(y)A',
@@ -648,6 +656,8 @@ const trCurriculum: readonly GrammarPoint[] = [
   {
     key: 'tr-a1-possessive-suffixes',
     conjugationSuitable: true,
+    // Nominal possessive inflection — declines a noun, not a verb; generate unseeded.
+    conjugationSeedKind: 'none',
     coverageSpec: {
       axes: [
         { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
@@ -1157,6 +1167,8 @@ const trCurriculum: readonly GrammarPoint[] = [
     // as the voice points); conjugation + translation are the right surfaces.
     conjugationSuitable: true,
     clozeUnsuitable: true,
+    // Nominal possessive+case inflection — declines a noun, not a verb; generate unseeded.
+    conjugationSeedKind: 'none',
     coverageSpec: {
       axes: [
         { name: 'person', floors: { '1sg': 3, '2sg': 3, '3sg': 3, '1pl': 3, '2pl': 3, '3pl': 3 } },

@@ -105,6 +105,16 @@ export type GrammarPoint = Readonly<{
    */
   conjugationSuitable?: boolean;
   /**
+   * Word class the CONJUGATION cell's seed picker draws from. Defaults to
+   * `'verb'` (verb-morphology points: tense/mood/voice). Set `'none'` on
+   * NOMINAL-inflection points whose "conjugation" cell declines a noun rather
+   * than conjugating a verb (possessive, case, possessive+case stacking, the
+   * copular personal suffixes). For those, a verb seed + the strict "use
+   * exactly this verb — do not substitute" directive contradicts the grammar
+   * point, so they generate unseeded. Only meaningful with `conjugationSuitable`.
+   */
+  conjugationSeedKind?: 'verb' | 'none';
+  /**
    * Declarative coverage spec (Pool Coverage Controller, Phase 2) — which
    * categorical axes a diverse approved set should vary along, and an absolute
    * min approved-count floor per value. Replaces the old `personRotation` flag:
