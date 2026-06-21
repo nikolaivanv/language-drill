@@ -36,6 +36,11 @@ export const userPreferences = pgTable('user_preferences', {
     .references(() => users.id, { onDelete: 'cascade' }),
   primaryLanguage: text('primary_language').$type<LearningLanguage>().notNull(),
   goals: jsonb('goals').$type<GoalId[]>().notNull().default([]),
+  // DORMANT: plan length is now driven by `dailyGoal` (quick/medium/long); this
+  // legacy column is still written by onboarding but no longer affects behavior.
+  // NOTE: NOT NULL with no default — any new insert must still set it (the
+  // `PUT /profiles/languages` seed does). Removing it + the onboarding step is a
+  // follow-up to the daily-goal redesign.
   dailyMinutes: smallint('daily_minutes').$type<DailyMinutes>().notNull(),
   dailyGoal: text('daily_goal').$type<DailyGoal>().notNull().default('medium'),
   gentleNudges: boolean('gentle_nudges').notNull().default(true),
