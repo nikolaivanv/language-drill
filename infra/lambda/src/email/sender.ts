@@ -48,8 +48,22 @@ async function processOne(msg: WeeklySummaryJobMessage): Promise<void> {
     .onConflictDoNothing()
     .returning({ id: sentEmails.id });
   if (claim.length === 0) {
-    log({ level: 'info', userId: msg.userId, periodKey: msg.periodKey, message: 'already handled — skipping' });
-    return;
+    // A prior delivery attempt claimed the row but may have crashed mid-process,
+    // leaving it 'pending' forever. Re-select to check the actual status:
+    // - 'sent' or 'skipped' → terminal, safe to no-op.
+    // - 'pending' (prior crash) → fall through and retry; markStatus will UPDATE the row.
+    const existing = await db
+      .select({ status: sentEmails.status })
+      .from(sentEmails)
+      .where(and(eq(sentEmails.userId, msg.userId), eq(sentEmails.kind, KIND), eq(sentEmails.periodKey, msg.periodKey)))
+      .limit(1);
+    const existingStatus = existing[0]?.status;
+    if (existingStatus === 'sent' || existingStatus === 'skipped') {
+      log({ level: 'info', userId: msg.userId, periodKey: msg.periodKey, status: existingStatus, message: 'already handled — skipping' });
+      return;
+    }
+    // status is 'pending' (crashed previously) — fall through to retry.
+    log({ level: 'info', userId: msg.userId, periodKey: msg.periodKey, message: 'prior attempt left pending — retrying' });
   }
 
   // 2. Gather + shape.

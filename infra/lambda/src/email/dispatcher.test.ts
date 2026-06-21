@@ -58,4 +58,35 @@ describe('weekly-summary dispatcher', () => {
     await handler();
     expect(sqsSend).not.toHaveBeenCalled();
   });
+
+  it('skips subscribers with a placeholder email and does not enqueue them', async () => {
+    subscriberRows.mockResolvedValue([
+      { userId: 'u1', email: 'pending-webhook@placeholder' }, // placeholder — skip
+      { userId: 'u2', email: 'u2@x.com' },                   // real — enqueue
+    ]);
+    sentRows.mockResolvedValue([]);
+    sqsSend.mockResolvedValue({});
+    const { handler } = await import('./dispatcher');
+    await handler();
+    expect(sqsSend).toHaveBeenCalledOnce();
+    const batch = sqsSend.mock.calls[0][0].input.Entries;
+    expect(batch).toHaveLength(1);
+    expect(JSON.parse(batch[0].MessageBody).userId).toBe('u2');
+  });
+
+  it('skips subscribers with a null/empty email and does not enqueue them', async () => {
+    subscriberRows.mockResolvedValue([
+      { userId: 'u1', email: null },       // null email — skip
+      { userId: 'u2', email: '' },          // empty string — skip
+      { userId: 'u3', email: 'u3@x.com' }, // real — enqueue
+    ]);
+    sentRows.mockResolvedValue([]);
+    sqsSend.mockResolvedValue({});
+    const { handler } = await import('./dispatcher');
+    await handler();
+    expect(sqsSend).toHaveBeenCalledOnce();
+    const batch = sqsSend.mock.calls[0][0].input.Entries;
+    expect(batch).toHaveLength(1);
+    expect(JSON.parse(batch[0].MessageBody).userId).toBe('u3');
+  });
 });

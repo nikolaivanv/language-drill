@@ -52,7 +52,16 @@ export async function handler(): Promise<void> {
     .where(and(eq(sentEmails.kind, KIND), eq(sentEmails.periodKey, periodKey)));
   const sentUserIds = new Set(already.map((r) => r.userId));
 
-  const targets = subscribers.filter((s) => !sentUserIds.has(s.userId));
+  const PLACEHOLDER_EMAIL = 'pending-webhook@placeholder';
+  const validSubscribers = subscribers.filter(
+    (s) => s.email && s.email !== PLACEHOLDER_EMAIL,
+  );
+  const skippedPlaceholder = subscribers.length - validSubscribers.length;
+  if (skippedPlaceholder > 0) {
+    log({ level: 'info', periodKey, skippedPlaceholder, message: 'skipped placeholder-email subscribers' });
+  }
+
+  const targets = validSubscribers.filter((s) => !sentUserIds.has(s.userId));
 
   if (targets.length === 0) {
     log({ level: 'info', periodKey, enqueued: 0, durationMs: Date.now() - startedAt, message: 'nothing to enqueue' });

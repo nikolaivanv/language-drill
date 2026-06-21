@@ -145,4 +145,27 @@ describe("LanguageDrillStack-dev", () => {
   it("prod stack deploys exactly three EventBridge rules (exercise + theory + email schedulers)", () => {
     prodTemplate.resourceCountIs("AWS::Events::Rule", 3);
   });
+
+  // Regression: public email routes must have no JWT authorizer so that
+  // confirm/unsubscribe links work without a Clerk token in the browser.
+  it("GET /email/confirm is a public API Gateway route (no JWT authorizer)", () => {
+    prodTemplate.hasResourceProperties("AWS::ApiGatewayV2::Route", {
+      RouteKey: "GET /email/confirm",
+      AuthorizationType: "NONE",
+    });
+  });
+
+  it("GET /email/unsubscribe is a public API Gateway route (no JWT authorizer)", () => {
+    prodTemplate.hasResourceProperties("AWS::ApiGatewayV2::Route", {
+      RouteKey: "GET /email/unsubscribe",
+      AuthorizationType: "NONE",
+    });
+  });
+
+  it("POST /email/unsubscribe is a public API Gateway route (no JWT authorizer)", () => {
+    prodTemplate.hasResourceProperties("AWS::ApiGatewayV2::Route", {
+      RouteKey: "POST /email/unsubscribe",
+      AuthorizationType: "NONE",
+    });
+  });
 });

@@ -749,6 +749,106 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
       },
       "Type": "AWS::ApiGatewayV2::Stage",
     },
+    "ApiGatewayHttpApiGETemailconfirm78B62948": {
+      "Properties": {
+        "ApiId": {
+          "Ref": "ApiGatewayHttpApi55B01A81",
+        },
+        "AuthorizationType": "NONE",
+        "RouteKey": "GET /email/confirm",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "ApiGatewayHttpApiGETproxyLambdaIntegrationDD4BBDC4",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "ApiGatewayHttpApiGETemailconfirmLambdaIntegrationPermission7BFCD3AF": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "LambdaHandlerF6372945",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:us-east-1:123456789012:",
+              {
+                "Ref": "ApiGatewayHttpApi55B01A81",
+              },
+              "/*/*/email/confirm",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "ApiGatewayHttpApiGETemailunsubscribe6D344F72": {
+      "Properties": {
+        "ApiId": {
+          "Ref": "ApiGatewayHttpApi55B01A81",
+        },
+        "AuthorizationType": "NONE",
+        "RouteKey": "GET /email/unsubscribe",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "ApiGatewayHttpApiGETproxyLambdaIntegrationDD4BBDC4",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "ApiGatewayHttpApiGETemailunsubscribeLambdaIntegrationPermissionEBDC2A81": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "LambdaHandlerF6372945",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:us-east-1:123456789012:",
+              {
+                "Ref": "ApiGatewayHttpApi55B01A81",
+              },
+              "/*/*/email/unsubscribe",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
     "ApiGatewayHttpApiGETproxyCDCF95D7": {
       "Properties": {
         "ApiId": {
@@ -915,6 +1015,56 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
                 "Ref": "ApiGatewayHttpApi55B01A81",
               },
               "/*/*/{proxy+}",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "ApiGatewayHttpApiPOSTemailunsubscribe4A01A341": {
+      "Properties": {
+        "ApiId": {
+          "Ref": "ApiGatewayHttpApi55B01A81",
+        },
+        "AuthorizationType": "NONE",
+        "RouteKey": "POST /email/unsubscribe",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "ApiGatewayHttpApiGETproxyLambdaIntegrationDD4BBDC4",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "ApiGatewayHttpApiPOSTemailunsubscribeLambdaIntegrationPermission378D0535": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "LambdaHandlerF6372945",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:us-east-1:123456789012:",
+              {
+                "Ref": "ApiGatewayHttpApi55B01A81",
+              },
+              "/*/*/email/unsubscribe",
             ],
           ],
         },

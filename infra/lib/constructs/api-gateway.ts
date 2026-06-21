@@ -68,6 +68,20 @@ export class ApiGatewayConstruct extends Construct {
       integration: lambdaIntegration,
     });
 
+    // Public email routes — no JWT authorizer. More-specific paths take
+    // precedence over /{proxy+}, so these are unauthenticated in production.
+    this.httpApi.addRoutes({
+      path: "/email/confirm",
+      methods: [HttpMethod.GET],
+      integration: lambdaIntegration,
+    });
+
+    this.httpApi.addRoutes({
+      path: "/email/unsubscribe",
+      methods: [HttpMethod.GET, HttpMethod.POST],
+      integration: lambdaIntegration,
+    });
+
     if (props.apiDomainName) {
       const certificate = new acm.Certificate(this, "ApiCertificate", {
         domainName: props.apiDomainName,
