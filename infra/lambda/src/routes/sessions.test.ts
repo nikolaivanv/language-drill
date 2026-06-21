@@ -933,7 +933,7 @@ describe('GET /sessions/today', () => {
       body.items.map((_: AnyJson, i: number) => i + 1),
     );
     // All items must carry a reason (non-null for Path B).
-    expect(body.items.every((it: AnyJson) => it.reason !== undefined)).toBe(true);
+    expect(body.items.every((it: AnyJson) => it.reason !== null && it.reason !== undefined)).toBe(true);
   });
 
   it('Path B: UNION-ALL SQL selects grammar_point_key and uses exposure ordering (freshFirstOrderBy)', async () => {

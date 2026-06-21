@@ -43,8 +43,9 @@ export const TodayPlanItemSchema = z.object({
   status: TodayPlanItemStatusEnum,
   // Dominant driver for this item: 'new' (never seen), 'reinforce' (in
   // progress), 'review' (solid mastery but stale), 'error-fix' (≥2 recent
-  // errors on this point). Null on Path A (hydrated items don't re-compute
-  // reason) and on older API deploys (backward compat via .default(null)).
+  // errors on this point). Nullable for backward-compat with older API deploys
+  // (.default(null)); the current API computes a reason on every item (both
+  // fresh and hydrated paths).
   reason: z.enum(['new', 'reinforce', 'review', 'error-fix']).nullable().default(null),
 });
 
