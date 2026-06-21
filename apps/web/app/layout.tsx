@@ -7,6 +7,7 @@ import { fraunces, inter, jetbrainsMono, caveat } from './fonts';
 import { Providers } from './providers';
 import { ConsentProvider } from '../components/consent/consent-provider';
 import { CookieBanner } from '../components/consent/cookie-banner';
+import { PostHogProvider } from '../components/analytics/posthog-provider';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -28,7 +29,9 @@ export default function RootLayout({
         >
         <body>
           <ConsentProvider>
-            <Providers>{children}</Providers>
+            <PostHogProvider>
+              <Providers>{children}</Providers>
+            </PostHogProvider>
             <CookieBanner />
           </ConsentProvider>
         </body>

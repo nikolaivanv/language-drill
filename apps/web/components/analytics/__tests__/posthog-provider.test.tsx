@@ -9,6 +9,8 @@ const analytics = vi.hoisted(() => ({
 vi.mock('../../../lib/analytics/posthog', () => analytics);
 const track = vi.hoisted(() => vi.fn());
 vi.mock('../../../lib/analytics/track', () => ({ track }));
+vi.mock('../use-identify', () => ({ useIdentify: vi.fn() }));
+vi.mock('../use-pageviews', () => ({ usePageviews: vi.fn() }));
 
 import { ConsentProvider, useConsent } from '../../consent/consent-provider';
 import { PostHogProvider } from '../posthog-provider';
