@@ -7,7 +7,13 @@ function label(t: InsightsErrorTheme): string {
   return t.grammarPointName ?? t.grammarPointKey ?? `${t.errorType} errors`;
 }
 
-export function WorkOnThese({ themes }: { themes: InsightsErrorTheme[] }) {
+export function WorkOnThese({
+  themes,
+  onSelect,
+}: {
+  themes: InsightsErrorTheme[];
+  onSelect?: (grammarPointKey: string) => void;
+}) {
   const items = themes.slice(0, MAX_ITEMS);
   if (items.length === 0) return null;
 
@@ -28,12 +34,22 @@ export function WorkOnThese({ themes }: { themes: InsightsErrorTheme[] }) {
           return (
             <li key={key}>
               {t.grammarPointKey ? (
-                <Link
-                  href={`/drill?start=quick&grammarPoint=${encodeURIComponent(t.grammarPointKey)}`}
-                  className="block hover:text-accent"
-                >
-                  {inner}
-                </Link>
+                onSelect ? (
+                  <button
+                    type="button"
+                    onClick={() => onSelect(t.grammarPointKey!)}
+                    className="block w-full text-left hover:text-accent"
+                  >
+                    {inner}
+                  </button>
+                ) : (
+                  <Link
+                    href={`/drill?start=quick&grammarPoint=${encodeURIComponent(t.grammarPointKey)}`}
+                    className="block hover:text-accent"
+                  >
+                    {inner}
+                  </Link>
+                )
               ) : (
                 inner
               )}
