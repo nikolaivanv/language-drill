@@ -1,6 +1,6 @@
 import { pgTable, text, timestamp, uuid, unique, smallint, jsonb, boolean } from 'drizzle-orm/pg-core';
 import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
-import type { DailyMinutes, GoalId, LearningLanguage } from '@language-drill/shared';
+import type { DailyGoal, DailyMinutes, GoalId, LearningLanguage } from '@language-drill/shared';
 
 export const users = pgTable('users', {
   id: text('id').primaryKey(), // Clerk user ID
@@ -37,6 +37,7 @@ export const userPreferences = pgTable('user_preferences', {
   primaryLanguage: text('primary_language').$type<LearningLanguage>().notNull(),
   goals: jsonb('goals').$type<GoalId[]>().notNull().default([]),
   dailyMinutes: smallint('daily_minutes').$type<DailyMinutes>().notNull(),
+  dailyGoal: text('daily_goal').$type<DailyGoal>().notNull().default('medium'),
   gentleNudges: boolean('gentle_nudges').notNull().default(true),
   notes: text('notes').notNull().default(''),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
