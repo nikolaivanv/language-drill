@@ -7,12 +7,12 @@ import { LearningLanguageEnum } from './preferences';
 // ---------------------------------------------------------------------------
 // The dashboard timeline's wire contract. The endpoint is read-only and either
 // hydrates from today's existing practice_sessions row or composes a fresh
-// 5-item plan from the exercise pool. Render branches are decided client-side
+// plan (1..12 items) from the exercise pool. Render branches are decided client-side
 // from the discriminated nullables (`summary`, `code`):
 //
-//   - items.length === 5, every status === 'queued'  → standard timeline
-//   - items.length === 5, mixed                       → first queued is next-up
-//   - items.length === 5, every status === 'done',
+//   - items.length === N, every status === 'queued'  → standard timeline
+//   - items.length === N, mixed                       → first queued is next-up
+//   - items.length === N, every status === 'done',
 //                          summary != null            → AllDoneCard
 //   - items.length === 0, code === 'INSUFFICIENT_POOL' → PoolNotReadyCard
 // ---------------------------------------------------------------------------
@@ -79,7 +79,7 @@ export const TodayPlanResponseSchema = z.object({
   // Present only when every item is `done` AND the session has completed —
   // drives the AllDoneCard.
   summary: TodayPlanSummarySchema.nullable(),
-  // Present only when items.length < 5 because the pool is empty/insufficient.
+  // Present only when items.length < N (the plan length) because the pool is empty/insufficient.
   code: z.literal('INSUFFICIENT_POOL').nullable(),
   // The in-progress today-session id when one exists and is not yet completed —
   // drives the timeline's "continue" link. Null on a fresh plan or a completed
