@@ -57,7 +57,7 @@ export function GoalsSection() {
           {DAILY_GOALS.map((g) => (
             <Choice key={g} mode="radio" selected={dailyGoal === g} onSelect={() => pickGoal(g)}>
               <span className="flex flex-col items-start">
-                <span className="t-display-s capitalize">{g}</span>
+                <span className="t-display-s">{g}</span>
                 <span className="t-micro text-ink-mute whitespace-nowrap">{DAILY_GOAL_HINTS[g]}</span>
               </span>
             </Choice>
