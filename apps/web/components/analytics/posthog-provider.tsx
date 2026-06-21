@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { Suspense, useEffect, useRef } from 'react';
 import { useConsent } from '../consent/consent-provider';
 import { initAnalytics, optInAnalytics, optOutAnalytics } from '../../lib/analytics/posthog';
 import { track } from '../../lib/analytics/track';
@@ -49,7 +49,12 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <AnalyticsEffects />
+      {/* usePageviews (inside AnalyticsEffects) calls useSearchParams, which
+          forces a static-prerender bailout unless it sits under a Suspense
+          boundary. Isolating it here keeps every page statically prerenderable. */}
+      <Suspense fallback={null}>
+        <AnalyticsEffects />
+      </Suspense>
       {children}
     </>
   );
