@@ -1,20 +1,17 @@
 import { describe, it, expect } from 'vitest';
-import { targetItemCount, DAILY_GOAL_MAX_ITEMS } from './daily-goal';
+import { targetItemCount, DAILY_GOAL_MAX_ITEMS, DAILY_GOALS } from './daily-goal';
 
 describe('targetItemCount', () => {
-  it('maps the four dailyMinutes anchors to item counts', () => {
-    expect(targetItemCount(5)).toBe(5);
-    expect(targetItemCount(10)).toBe(8);
-    expect(targetItemCount(20)).toBe(10);
-    expect(targetItemCount(30)).toBe(12);
+  it('maps quick/medium/long to item counts', () => {
+    expect(targetItemCount('quick')).toBe(5);
+    expect(targetItemCount('medium')).toBe(8);
+    expect(targetItemCount('long')).toBe(12);
   });
-  it('defaults to standard (8) for null / unknown values', () => {
+  it('defaults to medium (8) for null', () => {
     expect(targetItemCount(null)).toBe(8);
-    expect(targetItemCount(0)).toBe(8);
-    expect(targetItemCount(15)).toBe(8);
   });
-  it('never exceeds DAILY_GOAL_MAX_ITEMS', () => {
+  it('exposes the goals + the max', () => {
+    expect(DAILY_GOALS).toEqual(['quick', 'medium', 'long']);
     expect(DAILY_GOAL_MAX_ITEMS).toBe(12);
-    expect(targetItemCount(30)).toBeLessThanOrEqual(DAILY_GOAL_MAX_ITEMS);
   });
 });
