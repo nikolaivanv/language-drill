@@ -385,7 +385,13 @@ function PracticePageContent() {
         difficulty={difficulty}
         baseline={baseline}
         onDifficultyChange={handleDifficultyChange}
-        onStartQuick={() => setStartIntent('quick')}
+        onStartQuick={() => {
+          // Clear any grammar-point target so the hub's plain "quick drill" is
+          // always an untargeted mix (defends against a stale key from a prior
+          // weak-spot tap).
+          setGrammarPointKey(null);
+          setStartIntent('quick');
+        }}
         onStartDictation={() => setStartIntent('dictation')}
         themes={insights.data?.themes ?? []}
         onStartTargeted={handleStartTargeted}
