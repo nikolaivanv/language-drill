@@ -300,8 +300,9 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
             <div style={{ marginBottom: 20 }}>
               <Button
                 href={`/theory/${topicId}`}
-                variant="ghost"
+                variant="chip"
                 size="sm"
+                className="border-dashed"
               >
                 read the theory
               </Button>
@@ -334,7 +335,7 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
                     <Button
                       key={type}
                       href={chipHref(type)}
-                      variant="ghost"
+                      variant="chip"
                       size="sm"
                     >
                       {typeLabel(type as ExerciseType)}
