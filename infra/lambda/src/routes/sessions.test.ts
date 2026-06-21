@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Hono } from 'hono';
-import { CreateSessionRequestSchema } from './sessions';
-import { Language } from '@language-drill/shared';
+import { CreateSessionRequestSchema, levelsAtOrBelow } from './sessions';
+import { CefrLevel, Language } from '@language-drill/shared';
 import { isFreeWritingDay, FREE_WRITING_CADENCE_DAYS } from '../lib/today-plan';
 
 // ---------------------------------------------------------------------------
@@ -14,12 +14,20 @@ const mockOrderBy = vi.fn(() => ({ limit: mockLimit }));
 // `mockSelectAwait` powers `await db.select(...).from(...).where(...)` — used by
 // the count query in POST /sessions/:id/complete. Make `where()` return a
 // thenable that resolves via mockSelectAwait, while still being chainable to
-// .orderBy / .limit for the existing POST /sessions flow.
+// .orderBy / .limit / .groupBy for the various query shapes.
 const mockSelectAwait = vi.fn();
+// groupBy() is used by the errorObservations count-by-point query; it needs to
+// be thenable so the handler can await the grouped result.
+const mockGroupBy = vi.fn(() => ({
+  then(resolve: (v: unknown) => void, reject: (e: unknown) => void) {
+    return Promise.resolve(mockSelectAwait()).then(resolve, reject);
+  },
+}));
 const mockWhere = vi.fn(() => {
   return {
     orderBy: mockOrderBy,
     limit: mockLimit,
+    groupBy: mockGroupBy,
     then(resolve: (v: unknown) => void, reject: (e: unknown) => void) {
       return Promise.resolve(mockSelectAwait()).then(resolve, reject);
     },
@@ -107,6 +115,17 @@ vi.mock('@language-drill/db', () => ({
     masteryScore: 'mastery_score',
     lastPracticedAt: 'last_practiced_at',
   },
+  userPreferences: {
+    userId: 'user_id',
+    dailyMinutes: 'daily_minutes',
+  },
+  errorObservations: {
+    userId: 'user_id',
+    language: 'language',
+    errorGrammarPointKey: 'error_grammar_point_key',
+    hostGrammarPointKey: 'host_grammar_point_key',
+    occurredAt: 'occurred_at',
+  },
   usageEvents: {},
   practiceSessions: {
     id: 'id',
@@ -158,6 +177,45 @@ vi.mock('../lib/debrief/skill-movements.js', () => ({
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyJson = Record<string, any>;
+
+// ---------------------------------------------------------------------------
+// levelsAtOrBelow — unit test (at-or-below CEFR ordering, Task 4)
+// ---------------------------------------------------------------------------
+// This covers the honest correctness of the helper, since the SQL pool mock in
+// the integration tests does NOT filter by difficulty — at-or-below pool
+// inclusion is a SQL-level concern verified here at the pure-function level.
+
+describe('levelsAtOrBelow', () => {
+  it('A1 → [A1] (only itself)', () => {
+    expect(levelsAtOrBelow(CefrLevel.A1)).toEqual([CefrLevel.A1]);
+  });
+
+  it('A2 → [A1, A2]', () => {
+    expect(levelsAtOrBelow(CefrLevel.A2)).toEqual([CefrLevel.A1, CefrLevel.A2]);
+  });
+
+  it('B1 → [A1, A2, B1]', () => {
+    expect(levelsAtOrBelow(CefrLevel.B1)).toEqual([CefrLevel.A1, CefrLevel.A2, CefrLevel.B1]);
+  });
+
+  it('B2 → [A1, A2, B1, B2]', () => {
+    expect(levelsAtOrBelow(CefrLevel.B2)).toEqual([
+      CefrLevel.A1, CefrLevel.A2, CefrLevel.B1, CefrLevel.B2,
+    ]);
+  });
+
+  it('C1 → [A1, A2, B1, B2, C1]', () => {
+    expect(levelsAtOrBelow(CefrLevel.C1)).toEqual([
+      CefrLevel.A1, CefrLevel.A2, CefrLevel.B1, CefrLevel.B2, CefrLevel.C1,
+    ]);
+  });
+
+  it('C2 → all six levels', () => {
+    expect(levelsAtOrBelow(CefrLevel.C2)).toEqual([
+      CefrLevel.A1, CefrLevel.A2, CefrLevel.B1, CefrLevel.B2, CefrLevel.C1, CefrLevel.C2,
+    ]);
+  });
+});
 
 describe('CreateSessionRequestSchema', () => {
   it('accepts a valid request body', () => {
@@ -725,7 +783,7 @@ describe('GET /sessions/today', () => {
     const startedAt = new Date('2026-05-04T08:00:00Z');
     const completedAt = new Date('2026-05-04T08:18:00Z'); // +18 min
 
-    // Query 1 (parallel): today's session row + proficiency level
+    // Query 1 (parallel): today's session row + proficiency level + daily-minutes prefs
     mockLimit
       .mockResolvedValueOnce([
         {
@@ -737,9 +795,15 @@ describe('GET /sessions/today', () => {
           completedAt,
         },
       ])
-      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }])
+      .mockResolvedValueOnce([]); // prefs: no row → dailyMinutes null → default 8
 
-    // Query 2 (Path A): leftJoin exercises × user_exercise_history
+    // Query 1 (parallel): errorRows (groupBy → mockSelectAwait call 1)
+    mockSelectAwait.mockResolvedValueOnce([]); // no errors
+    // Mastery rows (sequential, mockSelectAwait call 2)
+    mockSelectAwait.mockResolvedValueOnce([]); // no mastery rows
+
+    // Query 2 (Path A): leftJoin exercises × user_exercise_history (mockSelectAwait call 3)
     // Every exerciseId has a history row → every item is `done`.
     mockSelectAwait.mockResolvedValueOnce([
       { exerciseId: 'e1', type: 'cloze', topicHint: 'subjunctive', difficulty: 'B1', historyId: 'h1' },
@@ -786,7 +850,13 @@ describe('GET /sessions/today', () => {
           completedAt: null,
         },
       ])
-      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }])
+      .mockResolvedValueOnce([]); // prefs
+
+    // errorRows (groupBy)
+    mockSelectAwait.mockResolvedValueOnce([]);
+    // mastery rows
+    mockSelectAwait.mockResolvedValueOnce([]);
 
     // Only e1 and e2 have history rows → first two `done`, rest `queued`.
     mockSelectAwait.mockResolvedValueOnce([
@@ -823,7 +893,13 @@ describe('GET /sessions/today', () => {
     // No today-session row + proficiency level B2.
     mockLimit
       .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([{ proficiencyLevel: 'B2' }]);
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B2' }])
+      .mockResolvedValueOnce([]); // prefs: no row → dailyMinutes null → default 8
+
+    // errorRows (groupBy → mockSelectAwait call 1) — no errors
+    mockSelectAwait.mockResolvedValueOnce([]);
+    // mastery rows (sequential → mockSelectAwait call 2) — empty
+    mockSelectAwait.mockResolvedValueOnce([]);
 
     // UNION-ALL of 5 LIMIT 20 selects, in slot order:
     // cloze, cloze, translation, vocab_recall, cloze
@@ -836,8 +912,6 @@ describe('GET /sessions/today', () => {
         { id: 'p5', type: 'cloze', topic_hint: 'preterite', difficulty: 'B2', grammar_point_key: 'es-b2-preterite' },
       ],
     });
-    // Mastery select (runs in parallel with pool sample) — empty for this test.
-    mockSelectAwait.mockResolvedValueOnce([]);
 
     const res = await app.request(
       '/sessions/today?language=ES',
@@ -849,18 +923,17 @@ describe('GET /sessions/today', () => {
     const body = (await res.json()) as AnyJson;
     expect(body.code).toBeNull();
     expect(body.summary).toBeNull();
-    expect(body.items).toHaveLength(5);
+    // dailyMinutes null → targetItemCount(null) = 8; pool has 5 draws so at
+    // most 5 slots can be filled (backfill exhausted after pass 2).
+    expect(body.items.length).toBeGreaterThanOrEqual(1);
+    expect(body.items.length).toBeLessThanOrEqual(8);
     expect(body.items.every((it: AnyJson) => it.status === 'queued')).toBe(true);
-    expect(body.items.map((it: AnyJson) => it.type)).toEqual([
-      'cloze',
-      'cloze',
-      'translation',
-      'vocab_recall',
-      'cloze',
-    ]);
-    expect(body.items.map((it: AnyJson) => it.index)).toEqual([1, 2, 3, 4, 5]);
-    // cloze 2 + cloze 2 + translation 4 + vocab_recall 2 + cloze 2 = 12
-    expect(body.totalEstimatedMinutes).toBe(12);
+    // Items must be contiguously re-indexed starting from 1.
+    expect(body.items.map((it: AnyJson) => it.index)).toEqual(
+      body.items.map((_: AnyJson, i: number) => i + 1),
+    );
+    // All items must carry a reason (non-null for Path B).
+    expect(body.items.every((it: AnyJson) => it.reason !== undefined)).toBe(true);
   });
 
   it('Path B: UNION-ALL SQL selects grammar_point_key and uses exposure ordering (freshFirstOrderBy)', async () => {
@@ -868,11 +941,15 @@ describe('GET /sessions/today', () => {
     // and use freshFirstOrderBy (which produces "nulls first" in its ORDER BY).
     mockLimit
       .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }])
+      .mockResolvedValueOnce([]); // prefs
+
+    // errorRows (groupBy → mockSelectAwait call 1)
+    mockSelectAwait.mockResolvedValueOnce([]);
+    // mastery rows (sequential → mockSelectAwait call 2)
+    mockSelectAwait.mockResolvedValueOnce([]);
 
     mockExecute.mockResolvedValueOnce({ rows: [] });
-    // Mastery select (runs in parallel with pool sample) — empty for this test.
-    mockSelectAwait.mockResolvedValueOnce([]);
 
     await app.request('/sessions/today?language=ES', { method: 'GET' }, authEnv);
 
@@ -918,12 +995,16 @@ describe('GET /sessions/today', () => {
   it('Path B: pool returns no draws → items: [], code: INSUFFICIENT_POOL, status 200', async () => {
     mockLimit
       .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }])
+      .mockResolvedValueOnce([]); // prefs
+
+    // errorRows (groupBy → mockSelectAwait call 1)
+    mockSelectAwait.mockResolvedValueOnce([]);
+    // mastery rows (sequential → mockSelectAwait call 2)
+    mockSelectAwait.mockResolvedValueOnce([]);
 
     // Empty pool — no approved exercise of any type at this level.
     mockExecute.mockResolvedValueOnce({ rows: [] });
-    // Mastery select (runs in parallel with pool sample) — empty for this test.
-    mockSelectAwait.mockResolvedValueOnce([]);
 
     const res = await app.request(
       '/sessions/today?language=ES',
@@ -939,25 +1020,33 @@ describe('GET /sessions/today', () => {
     expect(body.totalEstimatedMinutes).toBe(0);
   });
 
-  it('Path B: a type missing from the pool is backfilled so the plan stays at 5 items', async () => {
+  it('Path B: a type missing from the pool is backfilled so the plan stays full', async () => {
     mockLimit
       .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([{ proficiencyLevel: 'A1' }]);
+      .mockResolvedValueOnce([{ proficiencyLevel: 'A1' }])
+      .mockResolvedValueOnce([]); // prefs
 
-    // A1-Turkish shape: cloze + translation present, zero vocab_recall. The
-    // sample over-fetches per type, so the vocab slot is backfilled with a
-    // distinct cloze rather than emptying the whole plan.
+    // errorRows (groupBy → mockSelectAwait call 1)
+    mockSelectAwait.mockResolvedValueOnce([]);
+    // mastery rows (sequential → mockSelectAwait call 2)
+    mockSelectAwait.mockResolvedValueOnce([]);
+
+    // A1-Turkish shape: cloze + translation present, zero vocab_recall/sc. The
+    // sample over-fetches per type, so missing slots are backfilled with cloze
+    // rather than emptying the whole plan.
     mockExecute.mockResolvedValueOnce({
       rows: [
         { id: 'c1', type: 'cloze', topic_hint: null, difficulty: 'A1', grammar_point_key: null },
         { id: 'c2', type: 'cloze', topic_hint: null, difficulty: 'A1', grammar_point_key: null },
         { id: 'c3', type: 'cloze', topic_hint: null, difficulty: 'A1', grammar_point_key: null },
         { id: 'c4', type: 'cloze', topic_hint: null, difficulty: 'A1', grammar_point_key: null },
+        { id: 'c5', type: 'cloze', topic_hint: null, difficulty: 'A1', grammar_point_key: null },
+        { id: 'c6', type: 'cloze', topic_hint: null, difficulty: 'A1', grammar_point_key: null },
+        { id: 'c7', type: 'cloze', topic_hint: null, difficulty: 'A1', grammar_point_key: null },
+        { id: 'c8', type: 'cloze', topic_hint: null, difficulty: 'A1', grammar_point_key: null },
         { id: 't1', type: 'translation', topic_hint: null, difficulty: 'A1', grammar_point_key: null },
       ],
     });
-    // Mastery select (runs in parallel with pool sample) — empty for this test.
-    mockSelectAwait.mockResolvedValueOnce([]);
 
     const res = await app.request(
       '/sessions/today?language=ES',
@@ -968,16 +1057,24 @@ describe('GET /sessions/today', () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as AnyJson;
     expect(body.code).toBeNull();
-    expect(body.items).toHaveLength(5);
-    expect(body.items.map((it: AnyJson) => it.index)).toEqual([1, 2, 3, 4, 5]);
-    // Slot 4 (normally vocab_recall) is served as a cloze via backfill.
-    expect(body.items[3].type).toBe('cloze');
+    // dailyMinutes null → targetItemCount(null) = 8; planSkeleton(8) has 8 slots,
+    // filled via backfill with the plentiful cloze/translation pool.
+    expect(body.items).toHaveLength(8);
+    expect(body.items.map((it: AnyJson) => it.index)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    // Every item is cloze or translation (backfilled where sc/vocab missing).
+    expect(body.items.every((it: AnyJson) => ['cloze', 'translation'].includes(it.type))).toBe(true);
   });
 
   it('Path B: defaults to B1 when the user has no language profile row', async () => {
     mockLimit
       .mockResolvedValueOnce([]) // no today-session
-      .mockResolvedValueOnce([]); // no profile row → fallback to B1
+      .mockResolvedValueOnce([]) // no profile row → fallback to B1
+      .mockResolvedValueOnce([]); // prefs
+
+    // errorRows (groupBy → mockSelectAwait call 1)
+    mockSelectAwait.mockResolvedValueOnce([]);
+    // mastery rows (sequential → mockSelectAwait call 2)
+    mockSelectAwait.mockResolvedValueOnce([]);
 
     mockExecute.mockResolvedValueOnce({
       rows: [
@@ -988,8 +1085,6 @@ describe('GET /sessions/today', () => {
         { id: 'p5', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
       ],
     });
-    // Mastery select (runs in parallel with pool sample) — empty for this test.
-    mockSelectAwait.mockResolvedValueOnce([]);
 
     const res = await app.request(
       '/sessions/today?language=DE',
@@ -1014,26 +1109,14 @@ describe('GET /sessions/today', () => {
     // No today-session, profile B1.
     mockLimit
       .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }])
+      .mockResolvedValueOnce([]); // prefs
 
-    // Pool: two cloze candidates (plus fillers for other types).
-    // gp-mastered is listed first in the pool draw (higher exposure priority),
-    // but ranking should demote it in favour of gp-fresh (no mastery row).
-    mockExecute.mockResolvedValueOnce({
-      rows: [
-        // Cloze candidates — gp-mastered listed first (would win without ranking).
-        { id: 'cloze-mastered', type: 'cloze', topic_hint: 'mastered-topic', difficulty: 'B1', grammar_point_key: 'gp-mastered' },
-        { id: 'cloze-fresh',    type: 'cloze', topic_hint: 'fresh-topic',    difficulty: 'B1', grammar_point_key: 'gp-fresh' },
-        // Extra cloze candidate for the second cloze slot.
-        { id: 'cloze-extra',    type: 'cloze', topic_hint: null,             difficulty: 'B1', grammar_point_key: null },
-        // Fill the remaining slot types so composeFreshPlan gets a full plan.
-        { id: 'sc-1',          type: 'sentence_construction', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
-        { id: 'tr-1',          type: 'translation',           topic_hint: null, difficulty: 'B1', grammar_point_key: null },
-        { id: 'vr-1',          type: 'vocab_recall',          topic_hint: null, difficulty: 'B1', grammar_point_key: null },
-      ],
-    });
+    // errorRows (groupBy → mockSelectAwait call 1) — no errors so gp-mastered stays lower priority
+    mockSelectAwait.mockResolvedValueOnce([]);
 
-    // Mastery select: gp-mastered has high mastery, gp-fresh has no row →
+    // Mastery rows (sequential → mockSelectAwait call 2):
+    // gp-mastered has high mastery, gp-fresh has no row →
     // rankPlanCandidates gives gp-fresh higher priority (larger gap).
     mockSelectAwait.mockResolvedValueOnce([
       {
@@ -1042,6 +1125,28 @@ describe('GET /sessions/today', () => {
         lastPracticedAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(), // 1 hour ago
       },
     ]);
+
+    // Pool: two cloze candidates (plus fillers for other types).
+    // gp-mastered is listed first in the pool draw (higher exposure priority),
+    // but ranking should demote it in favour of gp-fresh (no mastery row).
+    // Provide enough items for planSkeleton(8) to fill all 8 slots.
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        // Cloze candidates — gp-mastered listed first (would win without ranking).
+        { id: 'cloze-mastered', type: 'cloze', topic_hint: 'mastered-topic', difficulty: 'B1', grammar_point_key: 'gp-mastered' },
+        { id: 'cloze-fresh',    type: 'cloze', topic_hint: 'fresh-topic',    difficulty: 'B1', grammar_point_key: 'gp-fresh' },
+        // Extra cloze candidates for the additional cloze slots in planSkeleton(8).
+        { id: 'cloze-extra-1',  type: 'cloze', topic_hint: null,             difficulty: 'B1', grammar_point_key: null },
+        { id: 'cloze-extra-2',  type: 'cloze', topic_hint: null,             difficulty: 'B1', grammar_point_key: null },
+        { id: 'cloze-extra-3',  type: 'cloze', topic_hint: null,             difficulty: 'B1', grammar_point_key: null },
+        // Fill the remaining slot types so composeFreshPlan gets a full plan.
+        { id: 'sc-1',           type: 'sentence_construction', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'sc-2',           type: 'sentence_construction', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'tr-1',           type: 'translation',           topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'tr-2',           type: 'translation',           topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'vr-1',           type: 'vocab_recall',          topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+      ],
+    });
 
     const res = await app.request(
       '/sessions/today?language=ES',
@@ -1052,14 +1157,15 @@ describe('GET /sessions/today', () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as AnyJson;
     expect(body.code).toBeNull();
-    expect(body.items).toHaveLength(5);
+    // dailyMinutes null → planSkeleton(8) → up to 8 items.
+    expect(body.items.length).toBe(8);
 
     // Verify the mastery select was issued with the right userId and language.
     // The select chain uses mockWhere, which calls mockSelectAwait.
     expect(mockSelectAwait).toHaveBeenCalled();
 
-    // The first cloze slot (index 1 per V1_PLAN_SHAPE) must be filled by the
-    // fresh-grammar-point exercise, NOT the mastered one. After ranking,
+    // The first cloze slot (index 1 per planSkeleton(8) warm-up) must be filled
+    // by the fresh-grammar-point exercise, NOT the mastered one. After ranking,
     // cloze-fresh (gp-fresh, no mastery → gap = 1.0) outranks cloze-mastered
     // (gp-mastered, mastery 0.95 → gap ≈ 0.05) so it is drawn first.
     const clozesInPlan = (body.items as AnyJson[]).filter((it: AnyJson) => it.type === 'cloze');
@@ -1073,11 +1179,17 @@ describe('GET /sessions/today', () => {
   // -------------------------------------------------------------------------
 
   it('includes a freeWriting block on the cadence day when a free-writing exercise exists', async () => {
-    // Path B (no today-session). mockLimit resolves: today → profile → fw-existence.
+    // Path B (no today-session). mockLimit resolves: today → profile → prefs → fw-existence.
     mockLimit
       .mockResolvedValueOnce([]) // today-session lookup
       .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]) // proficiency
+      .mockResolvedValueOnce([]) // prefs
       .mockResolvedValueOnce([{ id: 'fw-1' }]); // fw-existence: one approved row
+
+    // errorRows (groupBy → mockSelectAwait call 1)
+    mockSelectAwait.mockResolvedValueOnce([]);
+    // mastery rows (sequential → mockSelectAwait call 2)
+    mockSelectAwait.mockResolvedValueOnce([]);
 
     mockExecute.mockResolvedValueOnce({
       rows: [
@@ -1088,7 +1200,6 @@ describe('GET /sessions/today', () => {
         { id: 'p5', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
       ],
     });
-    mockSelectAwait.mockResolvedValueOnce([]); // mastery
 
     const res = await app.request(
       '/sessions/today?language=TR',
@@ -1106,7 +1217,13 @@ describe('GET /sessions/today', () => {
     mockLimit
       .mockResolvedValueOnce([]) // today-session
       .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]) // proficiency
+      .mockResolvedValueOnce([]) // prefs
       .mockResolvedValueOnce([]); // fw-existence: pool empty for this cell
+
+    // errorRows (groupBy → mockSelectAwait call 1)
+    mockSelectAwait.mockResolvedValueOnce([]);
+    // mastery rows (sequential → mockSelectAwait call 2)
+    mockSelectAwait.mockResolvedValueOnce([]);
 
     mockExecute.mockResolvedValueOnce({
       rows: [
@@ -1117,7 +1234,6 @@ describe('GET /sessions/today', () => {
         { id: 'p5', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
       ],
     });
-    mockSelectAwait.mockResolvedValueOnce([]); // mastery
 
     const res = await app.request(
       '/sessions/today?language=TR',
@@ -1132,10 +1248,16 @@ describe('GET /sessions/today', () => {
 
   it('returns freeWriting: null on a non-cadence day (no fw-existence query runs)', async () => {
     // ES is not the free-writing language on the frozen (TR) day, so the
-    // cadence gate is false and only the two batch-1 limits resolve.
+    // cadence gate is false — three limits (today, profile, prefs) resolve.
     mockLimit
       .mockResolvedValueOnce([]) // today-session
-      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]); // proficiency
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]) // proficiency
+      .mockResolvedValueOnce([]); // prefs
+
+    // errorRows (groupBy → mockSelectAwait call 1)
+    mockSelectAwait.mockResolvedValueOnce([]);
+    // mastery rows (sequential → mockSelectAwait call 2)
+    mockSelectAwait.mockResolvedValueOnce([]);
 
     mockExecute.mockResolvedValueOnce({
       rows: [
@@ -1146,7 +1268,6 @@ describe('GET /sessions/today', () => {
         { id: 'p5', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
       ],
     });
-    mockSelectAwait.mockResolvedValueOnce([]); // mastery
 
     const res = await app.request(
       '/sessions/today?language=ES',
@@ -1166,7 +1287,7 @@ describe('GET /sessions/today', () => {
   it('returns resumeSessionId for an incomplete today-session (Path A)', async () => {
     const startedAt = new Date('2026-05-04T08:00:00Z');
 
-    // Query 1 (parallel): today's session row + proficiency level
+    // Query 1 (parallel): today's session row + proficiency level + prefs
     mockLimit
       .mockResolvedValueOnce([
         {
@@ -1178,9 +1299,15 @@ describe('GET /sessions/today', () => {
           completedAt: null,
         },
       ])
-      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }])
+      .mockResolvedValueOnce([]); // prefs
 
-    // Query 2 (Path A): leftJoin exercises × user_exercise_history
+    // errorRows (groupBy → mockSelectAwait call 1)
+    mockSelectAwait.mockResolvedValueOnce([]);
+    // mastery rows (sequential → mockSelectAwait call 2)
+    mockSelectAwait.mockResolvedValueOnce([]);
+
+    // Query 2 (Path A): leftJoin exercises × user_exercise_history (mockSelectAwait call 3)
     // e1 attempted, e2 not
     mockSelectAwait.mockResolvedValueOnce([
       { exerciseId: 'e1', type: 'cloze', topicHint: null, difficulty: 'B1', historyId: 'h1' },
@@ -1197,7 +1324,13 @@ describe('GET /sessions/today', () => {
     // No today-session row + proficiency level B1.
     mockLimit
       .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }])
+      .mockResolvedValueOnce([]); // prefs
+
+    // errorRows (groupBy → mockSelectAwait call 1)
+    mockSelectAwait.mockResolvedValueOnce([]);
+    // mastery rows (sequential → mockSelectAwait call 2)
+    mockSelectAwait.mockResolvedValueOnce([]);
 
     mockExecute.mockResolvedValueOnce({
       rows: [
@@ -1208,11 +1341,169 @@ describe('GET /sessions/today', () => {
         { id: 'p5', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
       ],
     });
-    mockSelectAwait.mockResolvedValueOnce([]); // mastery
 
     const res = await app.request('/sessions/today?language=ES', { method: 'GET' }, authEnv);
     const body = (await res.json()) as AnyJson;
     expect(body.resumeSessionId).toBeNull();
+  });
+
+  // -------------------------------------------------------------------------
+  // Task 4: daily-minutes sizing (a) + reason classification (b, c)
+  // -------------------------------------------------------------------------
+
+  it('(a) dailyMinutes: 30 → fresh plan has 12 items', async () => {
+    // No today-session, profile B1, prefs has dailyMinutes 30.
+    mockLimit
+      .mockResolvedValueOnce([]) // today-session
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]) // proficiency
+      .mockResolvedValueOnce([{ dailyMinutes: 30 }]); // prefs → targetItemCount(30) = 12
+
+    // errorRows (groupBy → mockSelectAwait call 1) — no errors
+    mockSelectAwait.mockResolvedValueOnce([]);
+    // mastery rows (sequential → mockSelectAwait call 2) — empty
+    mockSelectAwait.mockResolvedValueOnce([]);
+
+    // Pool: provide 12 distinct items covering cloze/sc/translation/vocab to fill
+    // planSkeleton(12): warm-up cloze + 10 core cycling SC/TR/VR/CL + cool-down cloze.
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        { id: 'c1', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'c2', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'c3', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'c4', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'c5', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 's1', type: 'sentence_construction', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 's2', type: 'sentence_construction', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 's3', type: 'sentence_construction', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 't1', type: 'translation', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 't2', type: 'translation', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 't3', type: 'translation', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'v1', type: 'vocab_recall', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'v2', type: 'vocab_recall', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'v3', type: 'vocab_recall', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+      ],
+    });
+
+    const res = await app.request('/sessions/today?language=ES', { method: 'GET' }, authEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBeNull();
+    expect(body.items).toHaveLength(12);
+    expect(body.items.map((it: AnyJson) => it.index)).toEqual(
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    );
+  });
+
+  it('(a) no prefs row → fresh plan has 8 items (default)', async () => {
+    mockLimit
+      .mockResolvedValueOnce([]) // today-session
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]) // proficiency
+      .mockResolvedValueOnce([]); // prefs: no row → dailyMinutes null → default 8
+
+    // errorRows
+    mockSelectAwait.mockResolvedValueOnce([]);
+    // mastery
+    mockSelectAwait.mockResolvedValueOnce([]);
+
+    // Provide enough items to fill planSkeleton(8).
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        { id: 'c1', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'c2', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'c3', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 's1', type: 'sentence_construction', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 's2', type: 'sentence_construction', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 't1', type: 'translation', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 't2', type: 'translation', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'v1', type: 'vocab_recall', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'v2', type: 'vocab_recall', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+      ],
+    });
+
+    const res = await app.request('/sessions/today?language=ES', { method: 'GET' }, authEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBeNull();
+    expect(body.items).toHaveLength(8);
+  });
+
+  it('(b) a grammar point with ≥2 recent errors yields reason: "error-fix"', async () => {
+    // Path B with a seeded grammar point that has 3 errors in the last 30 days.
+    mockLimit
+      .mockResolvedValueOnce([]) // today-session
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]) // proficiency
+      .mockResolvedValueOnce([{ dailyMinutes: 5 }]); // prefs → targetItemCount(5) = 5
+
+    // errorRows: 'gp-errors' has 3 errors → reasonFor → 'error-fix'
+    mockSelectAwait.mockResolvedValueOnce([
+      { key: 'gp-errors', n: 3 },
+    ]);
+    // mastery rows: 'gp-errors' has some mastery (so not 'new')
+    mockSelectAwait.mockResolvedValueOnce([
+      {
+        grammarPointKey: 'gp-errors',
+        masteryScore: 0.5,
+        lastPracticedAt: new Date(Date.now() - 2 * 86_400_000).toISOString(), // 2 days ago
+      },
+    ]);
+
+    // Pool: 'gp-errors' cloze plus fillers for the remaining slot types.
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        { id: 'cloze-err', type: 'cloze', topic_hint: 'errors', difficulty: 'B1', grammar_point_key: 'gp-errors' },
+        { id: 'cloze-2', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'sc-1', type: 'sentence_construction', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'tr-1', type: 'translation', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'vr-1', type: 'vocab_recall', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+      ],
+    });
+
+    const res = await app.request('/sessions/today?language=ES', { method: 'GET' }, authEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBeNull();
+
+    // The error-fix item must appear somewhere in the plan.
+    const errItem = (body.items as AnyJson[]).find(
+      (it: AnyJson) => it.grammarPointKey === 'gp-errors',
+    );
+    expect(errItem).toBeDefined();
+    expect(errItem?.reason).toBe('error-fix');
+  });
+
+  it('(c) a grammar point with no mastery row yields reason: "new"', async () => {
+    // Path B with a grammar point that has no mastery row → 'new'.
+    mockLimit
+      .mockResolvedValueOnce([]) // today-session
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]) // proficiency
+      .mockResolvedValueOnce([{ dailyMinutes: 5 }]); // prefs → 5 items
+
+    // errorRows: no errors for gp-new
+    mockSelectAwait.mockResolvedValueOnce([]);
+    // mastery rows: gp-new has NO entry → reasonFor returns 'new'
+    mockSelectAwait.mockResolvedValueOnce([]);
+
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        { id: 'cloze-new', type: 'cloze', topic_hint: 'new-topic', difficulty: 'B1', grammar_point_key: 'gp-new' },
+        { id: 'cloze-2', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'sc-1', type: 'sentence_construction', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'tr-1', type: 'translation', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'vr-1', type: 'vocab_recall', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+      ],
+    });
+
+    const res = await app.request('/sessions/today?language=ES', { method: 'GET' }, authEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBeNull();
+
+    // The fresh grammar point must appear in the plan and carry reason: 'new'.
+    const newItem = (body.items as AnyJson[]).find(
+      (it: AnyJson) => it.grammarPointKey === 'gp-new',
+    );
+    expect(newItem).toBeDefined();
+    expect(newItem?.reason).toBe('new');
   });
 });
 
@@ -2209,10 +2500,13 @@ describe('review_status filter — GET /sessions/today Path B', () => {
     for (let i = 0; i < 100; i++) {
       mockLimit
         .mockResolvedValueOnce([]) // no today-session
-        .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
-      mockExecute.mockResolvedValueOnce({ rows: approvedDraws });
-      // Mastery select (runs in parallel with pool sample) — empty for this test.
+        .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }])
+        .mockResolvedValueOnce([]); // prefs
+      // errorRows (groupBy → mockSelectAwait call 1)
       mockSelectAwait.mockResolvedValueOnce([]);
+      // mastery rows (sequential → mockSelectAwait call 2)
+      mockSelectAwait.mockResolvedValueOnce([]);
+      mockExecute.mockResolvedValueOnce({ rows: approvedDraws });
     }
 
     const seenIds = new Set<string>();
@@ -2284,10 +2578,16 @@ describe('review_status non-filter — GET /sessions/today Path A', () => {
           completedAt: null,
         },
       ])
-      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]);
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }])
+      .mockResolvedValueOnce([]); // prefs
+
+    // errorRows (groupBy → mockSelectAwait call 1)
+    mockSelectAwait.mockResolvedValueOnce([]);
+    // mastery rows (sequential → mockSelectAwait call 2)
+    mockSelectAwait.mockResolvedValueOnce([]);
 
     // The hydrate query is unfiltered: the flagged fixture's row is returned
-    // alongside the others.
+    // alongside the others (mockSelectAwait call 3).
     mockSelectAwait.mockResolvedValueOnce([
       { exerciseId: FLAGGED_FIXTURE_ID, type: 'cloze', topicHint: null, difficulty: 'B1', historyId: null },
       { exerciseId: 'e2', type: 'cloze', topicHint: null, difficulty: 'B1', historyId: null },

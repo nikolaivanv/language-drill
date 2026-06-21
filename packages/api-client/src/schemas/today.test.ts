@@ -18,6 +18,7 @@ const validItem = (overrides: Partial<TodayPlanItem> = {}): TodayPlanItem => ({
   itemCount: 4,
   estimatedMinutes: 2,
   status: 'queued',
+  reason: null,
   ...overrides,
 });
 
@@ -74,12 +75,13 @@ describe('TodayPlanResponseSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('rejects items array longer than 5', () => {
+  it('rejects items array longer than 12', () => {
+    const tooMany = Array.from({ length: 13 }, (_, i) => validItem({ index: i + 1 }));
     const payload = {
       language: Language.ES,
       generatedAt: '2026-05-04T12:00:00.000Z',
-      totalEstimatedMinutes: 14,
-      items: [...queuedItems, validItem({ index: 5 })],
+      totalEstimatedMinutes: 26,
+      items: tooMany,
       summary: null,
       code: null,
     };
@@ -253,9 +255,14 @@ describe('TodayPlanItemSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('rejects index 6 (max 5)', () => {
-    const result = TodayPlanItemSchema.safeParse(validItem({ index: 6 }));
+  it('rejects index 13 (max 12)', () => {
+    const result = TodayPlanItemSchema.safeParse(validItem({ index: 13 }));
     expect(result.success).toBe(false);
+  });
+
+  it('accepts index 12 (DAILY_GOAL_MAX_ITEMS boundary)', () => {
+    const result = TodayPlanItemSchema.safeParse(validItem({ index: 12, reason: 'error-fix' }));
+    expect(result.success).toBe(true);
   });
 
   it('rejects estimatedMinutes 0 (must be ≥ 1)', () => {
@@ -268,5 +275,33 @@ describe('TodayPlanItemSchema', () => {
   it('accepts topicHint: null', () => {
     const result = TodayPlanItemSchema.safeParse(validItem({ topicHint: null }));
     expect(result.success).toBe(true);
+  });
+
+  it('defaults reason to null when the field is omitted (backward compat)', () => {
+    // Older API deploys omit reason; the schema must still parse.
+    const { reason: _omitted, ...itemWithoutReason } = validItem();
+    const result = TodayPlanItemSchema.safeParse(itemWithoutReason);
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.reason).toBeNull();
+  });
+
+  it('parses reason: "error-fix" on an item at index 12', () => {
+    const result = TodayPlanItemSchema.safeParse(validItem({ index: 12, reason: 'error-fix' }));
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.reason).toBe('error-fix');
+  });
+
+  it('parses all valid reason values', () => {
+    for (const reason of ['new', 'reinforce', 'review', 'error-fix'] as const) {
+      const result = TodayPlanItemSchema.safeParse(validItem({ reason }));
+      expect(result.success).toBe(true);
+    }
+  });
+
+  it('rejects an unknown reason value', () => {
+    const result = TodayPlanItemSchema.safeParse(
+      validItem({ reason: 'boost' as never }),
+    );
+    expect(result.success).toBe(false);
   });
 });

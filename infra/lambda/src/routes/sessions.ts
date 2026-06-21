@@ -1,16 +1,18 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { eq, and, sql, isNull, isNotNull, gte, desc, inArray, notInArray } from 'drizzle-orm';
-import { Language, CefrLevel, CORRECT_THRESHOLD, ExerciseType, type SkillMovement } from '@language-drill/shared';
+import { Language, CefrLevel, CORRECT_THRESHOLD, ExerciseType, targetItemCount, type SkillMovement } from '@language-drill/shared';
 import {
   exercises as exercisesTable,
   practiceSessions,
   userExerciseHistory,
   userLanguageProfiles,
   userGrammarMastery,
+  userPreferences,
+  errorObservations,
   getGrammarPoint,
 } from '@language-drill/db';
-import { rankPlanCandidates, type PointMastery } from '../lib/mastery/rank';
+import { rankPlanCandidates, reasonFor, type PointMastery, type RankContext } from '../lib/mastery/rank';
 import { computeSkillMovements, type SkillHistoryRow } from '../lib/debrief/skill-movements.js';
 import { db } from '../db';
 import { approvedStatusFilter, audioReadyFilter, freshFirstOrderBy } from '../lib/exercise-filters';
@@ -25,6 +27,7 @@ import {
   hydrateFromSession,
   isFreeWritingDay,
   startOfUtcDay,
+  planSkeleton,
   ESTIMATED_MINUTES_BY_TYPE,
   type PlanItem,
   type PoolDraw,
@@ -264,10 +267,13 @@ sessions.get('/sessions/today', async (c) => {
   const userId = c.get('userId');
   const dayStart = startOfUtcDay(new Date());
 
+  // Lookback window for per-point error counts — mirrors the progress/curriculum endpoint.
+  const errorSince = new Date(Date.now() - 30 * 86_400_000);
+
   // -------------------------------------------------------------------------
-  // Query 1 (parallel): today's session + proficiency level
+  // Query 1 (parallel): today's session + proficiency level + daily-minutes prefs + error counts
   // -------------------------------------------------------------------------
-  const [todayRows, profileRows] = await Promise.all([
+  const [todayRows, profileRows, prefsRows, errorRows] = await Promise.all([
     db
       .select({
         sessionId: practiceSessions.id,
@@ -297,11 +303,73 @@ sessions.get('/sessions/today', async (c) => {
         ),
       )
       .limit(1),
+    db
+      .select({ dailyMinutes: userPreferences.dailyMinutes })
+      .from(userPreferences)
+      .where(eq(userPreferences.userId, userId))
+      .limit(1),
+    db
+      .select({
+        key: sql<string>`COALESCE(${errorObservations.errorGrammarPointKey}, ${errorObservations.hostGrammarPointKey})`,
+        n: sql<number>`COUNT(*)::int`,
+      })
+      .from(errorObservations)
+      .where(
+        and(
+          eq(errorObservations.userId, userId),
+          eq(errorObservations.language, language),
+          gte(errorObservations.occurredAt, errorSince),
+        ),
+      )
+      .groupBy(
+        sql`COALESCE(${errorObservations.errorGrammarPointKey}, ${errorObservations.hostGrammarPointKey})`,
+      ),
   ]);
 
   const proficiencyLevel = isCefrLevel(profileRows[0]?.proficiencyLevel)
     ? profileRows[0].proficiencyLevel
     : DEFAULT_PROFICIENCY_LEVEL;
+
+  // Daily goal target from the user's preferences (null → default 8 items).
+  const dailyMinutes = prefsRows[0]?.dailyMinutes ?? null;
+
+  // Per-point error count map for the last 30 days — used by both rank and reasonFor.
+  const errorCountByPoint = new Map<string, number>();
+  for (const r of errorRows) {
+    if (r.key) errorCountByPoint.set(r.key, Number(r.n));
+  }
+
+  // -------------------------------------------------------------------------
+  // Mastery rows — fetched early so both Path A and Path B can compute `reason`.
+  // -------------------------------------------------------------------------
+  const masteryRows = await db
+    .select({
+      grammarPointKey: userGrammarMastery.grammarPointKey,
+      masteryScore: userGrammarMastery.masteryScore,
+      lastPracticedAt: userGrammarMastery.lastPracticedAt,
+    })
+    .from(userGrammarMastery)
+    .where(
+      and(
+        eq(userGrammarMastery.userId, userId),
+        eq(userGrammarMastery.language, language),
+      ),
+    );
+
+  const masteryByPoint = new Map<string, PointMastery>(
+    masteryRows.map((r) => [
+      r.grammarPointKey,
+      { masteryScore: r.masteryScore, lastPracticedAt: new Date(r.lastPracticedAt) },
+    ]),
+  );
+
+  // Shared rank context (both paths use it for reasonFor; Path B also uses it for ranking).
+  const rankCtx: RankContext = {
+    masteryByPoint,
+    errorCountByPoint,
+    prereqsOf: (key) => getGrammarPoint(key)?.prerequisiteKeys ?? [],
+    now: new Date(),
+  };
 
   // -------------------------------------------------------------------------
   // Free-writing block (Plan 1)
@@ -406,7 +474,7 @@ sessions.get('/sessions/today', async (c) => {
         (sum, it) => sum + it.estimatedMinutes,
         0,
       ),
-      items: items.map(toWireItem),
+      items: items.map((it) => toWireItem(it, rankCtx)),
       summary,
       code: null,
       resumeSessionId: session.completedAt === null ? session.sessionId : null,
@@ -415,44 +483,19 @@ sessions.get('/sessions/today', async (c) => {
   }
 
   // -------------------------------------------------------------------------
-  // Path B — compose a fresh 5-item plan from the pool.
+  // Path B — compose a fresh plan from the pool, sized by daily-minutes goal.
   // -------------------------------------------------------------------------
   // The sample over-fetches distinct candidates per type so composeFreshPlan
   // can backfill a slot whose native type is missing (see its doc comment).
-  // Fetch the pool sample and the user's per-point mastery in parallel, then
-  // rank candidates (exposure order is preserved as the tiebreak) before
-  // composing — so each slot picks the highest-priority item of its type.
-  const [draws, masteryRows] = await Promise.all([
-    sampleFreshPool({ language, difficulty: proficiencyLevel, userId }),
-    db
-      .select({
-        grammarPointKey: userGrammarMastery.grammarPointKey,
-        masteryScore: userGrammarMastery.masteryScore,
-        lastPracticedAt: userGrammarMastery.lastPracticedAt,
-      })
-      .from(userGrammarMastery)
-      .where(
-        and(
-          eq(userGrammarMastery.userId, userId),
-          eq(userGrammarMastery.language, language),
-        ),
-      ),
-  ]);
+  // Pool draw and mastery rows were already fetched above; rank candidates
+  // (exposure order is preserved as the tiebreak) before composing — so each
+  // slot picks the highest-priority item of its type.
+  const draws = await sampleFreshPool({ language, difficulty: proficiencyLevel, userId });
 
-  const masteryByPoint = new Map<string, PointMastery>(
-    masteryRows.map((r) => [
-      r.grammarPointKey,
-      { masteryScore: r.masteryScore, lastPracticedAt: new Date(r.lastPracticedAt) },
-    ]),
-  );
+  const ranked = rankPlanCandidates(draws, rankCtx);
 
-  const ranked = rankPlanCandidates(draws, {
-    masteryByPoint,
-    prereqsOf: (key) => getGrammarPoint(key)?.prerequisiteKeys ?? [],
-    now: new Date(),
-  });
-
-  const { items, insufficient } = composeFreshPlan(ranked);
+  const size = targetItemCount(dailyMinutes);
+  const { items, insufficient } = composeFreshPlan(ranked, planSkeleton(size));
 
   const generatedAt = new Date().toISOString();
 
@@ -476,7 +519,7 @@ sessions.get('/sessions/today', async (c) => {
       (sum, it) => sum + it.estimatedMinutes,
       0,
     ),
-    items: items.map(toWireItem),
+    items: items.map((it) => toWireItem(it, rankCtx)),
     summary: null,
     code: null,
     resumeSessionId: null,
@@ -582,13 +625,14 @@ async function sampleFreshPool(params: {
   userId: string;
 }): Promise<PoolDraw[]> {
   const { language, difficulty, userId } = params;
+  const levels = levelsAtOrBelow(difficulty);
   const planTypes = [...new Set(V1_PLAN_SHAPE.map((slot) => slot.type))];
   const typeQueries = planTypes.map(
     (type) => sql`
       (SELECT id, type, content_json->>'topicHint' AS topic_hint, difficulty, grammar_point_key
        FROM exercises
        WHERE language = ${language}
-         AND difficulty = ${difficulty}
+         AND difficulty = ANY(ARRAY[${sql.join(levels.map((l) => sql`${l}`), sql`, `)}]::text[])
          AND type = ${type}
          AND review_status IN ('auto-approved', 'manual-approved')
          -- Never draw a dictation row whose audio hasn't been synthesized yet
@@ -629,7 +673,7 @@ async function sampleFreshPool(params: {
 }
 
 /** Maps an in-memory PlanItem to the wire shape consumed by useTodayPlan. */
-function toWireItem(item: PlanItem) {
+function toWireItem(item: PlanItem, ctx: RankContext) {
   return {
     index: item.index,
     type: item.type,
@@ -645,12 +689,37 @@ function toWireItem(item: PlanItem) {
     itemCount: item.itemCount,
     estimatedMinutes: item.estimatedMinutes,
     status: item.status,
+    reason: reasonFor(item.grammarPointKey, ctx),
   };
 }
 
 const CEFR_LEVELS = new Set<string>(Object.values(CefrLevel));
 function isCefrLevel(value: string | null | undefined): value is CefrLevel {
   return typeof value === 'string' && CEFR_LEVELS.has(value);
+}
+
+/**
+ * Returns all CEFR levels at or below the given level (inclusive), in
+ * ascending order. Used by `sampleFreshPool` to include lower-level exercises
+ * that a learner at this level can still benefit from drilling.
+ *
+ * A1→[A1]; A2→[A1,A2]; B1→[A1,A2,B1]; B2→[A1,A2,B1,B2]; etc.
+ *
+ * Exported for unit testing — pure function with no dependencies.
+ */
+export const CEFR_LEVEL_ORDER: readonly CefrLevel[] = [
+  CefrLevel.A1,
+  CefrLevel.A2,
+  CefrLevel.B1,
+  CefrLevel.B2,
+  CefrLevel.C1,
+  CefrLevel.C2,
+];
+
+export function levelsAtOrBelow(level: CefrLevel): CefrLevel[] {
+  const idx = CEFR_LEVEL_ORDER.indexOf(level);
+  if (idx === -1) return [level];
+  return CEFR_LEVEL_ORDER.slice(0, idx + 1) as CefrLevel[];
 }
 
 const EXERCISE_TYPES = new Set<string>(Object.values(ExerciseType));

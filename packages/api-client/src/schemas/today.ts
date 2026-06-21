@@ -22,8 +22,8 @@ export const TodayPlanItemStatusEnum = z.enum(['done', 'queued']);
 export type TodayPlanItemStatus = z.infer<typeof TodayPlanItemStatusEnum>;
 
 export const TodayPlanItemSchema = z.object({
-  // 1-based plan position (1..5).
-  index: z.number().int().min(1).max(5),
+  // 1-based plan position (1..DAILY_GOAL_MAX_ITEMS).
+  index: z.number().int().min(1).max(12),
   // Exercise type used to pick a typed renderer downstream.
   type: z.nativeEnum(ExerciseType),
   // Topic from exercises.content_json->>'topicHint' — null when the seed row
@@ -41,6 +41,11 @@ export const TodayPlanItemSchema = z.object({
   // Static integer estimate from ESTIMATED_MINUTES_BY_TYPE.
   estimatedMinutes: z.number().int().min(1),
   status: TodayPlanItemStatusEnum,
+  // Dominant driver for this item: 'new' (never seen), 'reinforce' (in
+  // progress), 'review' (solid mastery but stale), 'error-fix' (≥2 recent
+  // errors on this point). Null on Path A (hydrated items don't re-compute
+  // reason) and on older API deploys (backward compat via .default(null)).
+  reason: z.enum(['new', 'reinforce', 'review', 'error-fix']).nullable().default(null),
 });
 
 export type TodayPlanItem = z.infer<typeof TodayPlanItemSchema>;
@@ -69,7 +74,7 @@ export const TodayPlanResponseSchema = z.object({
   language: LearningLanguageEnum,
   generatedAt: z.string().datetime(),
   totalEstimatedMinutes: z.number().int().nonnegative(),
-  items: z.array(TodayPlanItemSchema).max(5),
+  items: z.array(TodayPlanItemSchema).max(12),
   // Present only when every item is `done` AND the session has completed —
   // drives the AllDoneCard.
   summary: TodayPlanSummarySchema.nullable(),
