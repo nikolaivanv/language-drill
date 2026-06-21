@@ -429,6 +429,7 @@ describe('initialEditState', () => {
     primaryLanguage: Language.ES,
     goals: ['grammar', 'speaking'],
     dailyMinutes: 20,
+    dailyGoal: 'medium',
     gentleNudges: false,
     notes: 'meeting next week',
   };
@@ -467,7 +468,7 @@ describe('initialEditState', () => {
         { language: Language.ES, proficiencyLevel: CefrLevel.B2 },
         { language: Language.DE, proficiencyLevel: CefrLevel.A2 },
       ],
-      { primaryLanguage: Language.ES, goals: [], dailyMinutes: 10, gentleNudges: true, notes: '' },
+      { primaryLanguage: Language.ES, goals: [], dailyMinutes: 10, dailyGoal: 'medium', gentleNudges: true, notes: '' },
     );
     expect(state.levels).toEqual({ ES: CefrLevel.B2, DE: CefrLevel.A2 });
   });

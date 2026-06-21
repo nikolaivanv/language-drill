@@ -1,19 +1,19 @@
 'use client';
 
 // ---------------------------------------------------------------------------
-// DailyLoadControl — compact segmented control for "today's load" (daily
-// minutes preference). Pure presentational: no hooks, no side effects.
+// DailyLoadControl — compact segmented control for "today's load" (daily goal
+// preference). Pure presentational: no hooks, no side effects.
 // Props: current (selected value or null), onSelect (callback), disabled.
-// Renders a radiogroup with one option per DAILY_MINUTES value (5/10/20/30).
+// Renders a radiogroup with one option per DAILY_GOALS value (quick/medium/long).
 // ---------------------------------------------------------------------------
 
-import { DAILY_MINUTES, type DailyMinutes } from '@language-drill/shared';
+import { DAILY_GOALS, type DailyGoal } from '@language-drill/shared';
 import { cn } from '../../../lib/cn';
 import { Choice } from '../../../components/ui/choice';
 
 export type DailyLoadControlProps = {
-  current: number | null;
-  onSelect: (m: DailyMinutes) => void;
+  current: DailyGoal | null;
+  onSelect: (g: DailyGoal) => void;
   disabled?: boolean;
 };
 
@@ -31,15 +31,15 @@ export function DailyLoadControl({
         aria-disabled={disabled}
         className={cn('flex flex-wrap gap-[6px]', disabled && 'opacity-60 pointer-events-none')}
       >
-        {DAILY_MINUTES.map((m) => (
+        {DAILY_GOALS.map((g) => (
           <Choice
-            key={m}
+            key={g}
             mode="radio"
-            selected={current === m}
-            onSelect={() => !disabled && onSelect(m)}
+            selected={current === g}
+            onSelect={() => !disabled && onSelect(g)}
             className="px-s-3 py-[6px] text-sm min-w-[54px] justify-center"
           >
-            <span className="t-label whitespace-nowrap">{m} min</span>
+            <span className="t-label whitespace-nowrap">{g}</span>
           </Choice>
         ))}
       </div>
