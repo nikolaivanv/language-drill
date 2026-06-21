@@ -17,9 +17,9 @@ export function WorkOnThese({ themes }: { themes: InsightsErrorTheme[] }) {
       <ul className="mt-s-3 flex flex-col gap-s-2">
         {items.map((t) => {
           const inner = (
-            <span className="flex items-baseline justify-between gap-s-3">
-              <span className="text-[14px] font-medium">{label(t)}</span>
-              <span className="t-mono text-[12px] text-ink-soft">
+            <span className="flex items-start justify-between gap-s-3">
+              <span className="min-w-0 text-[14px] font-medium">{label(t)}</span>
+              <span className="t-mono max-w-[48%] shrink-0 text-right text-[12px] text-ink-soft">
                 {t.sample.wrongText} → {t.sample.correction} · {t.count}×
               </span>
             </span>

@@ -2,7 +2,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { cn } from '../../lib/cn';
 
-export type ButtonVariant = 'default' | 'primary' | 'ghost' | 'accent';
+export type ButtonVariant = 'default' | 'primary' | 'ghost' | 'accent' | 'chip';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps
@@ -25,6 +25,10 @@ const variantClasses: Record<ButtonVariant, string> = {
     'border border-transparent text-ink-soft hover:bg-paper-2 hover:text-ink',
   accent:
     'border border-accent bg-accent text-white hover:bg-accent-2 hover:border-accent-2',
+  // Bordered pill on a white card background — reads as a tappable chip at rest
+  // (not a bare text label). Add `border-dashed` via className for the
+  // dashed-outline "theory" treatment.
+  chip: 'border border-rule bg-card text-ink hover:border-ink hover:bg-paper-2',
 };
 
 // `mobile:` floors give every button a ≥44px square tap target at ≤760px

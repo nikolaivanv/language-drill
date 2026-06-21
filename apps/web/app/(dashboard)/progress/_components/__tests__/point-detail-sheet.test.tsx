@@ -69,6 +69,20 @@ describe('PointDetailSheet', () => {
     expect(screen.getByText('3')).toBeDefined();
   });
 
+  it('locks background scroll while open and restores it on close', () => {
+    expect(document.body.style.overflow).toBe('');
+    const { unmount } = render(
+      <PointDetailSheet
+        point={makePoint()}
+        language={Language.TR}
+        onClose={noop}
+      />,
+    );
+    expect(document.body.style.overflow).toBe('hidden');
+    unmount();
+    expect(document.body.style.overflow).toBe('');
+  });
+
   it('renders the error sample (kitaplar → kitapları)', () => {
     render(
       <PointDetailSheet
