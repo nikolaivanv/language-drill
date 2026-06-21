@@ -64,8 +64,16 @@ const { A1, A2, B1 } = CefrLevel;
  * tr-a2-reflexive-reciprocal-pronouns (kendi/birbiri), tr-a2-distributive
  * (-(ş)Ar), and tr-b1-real-conditional (open -(I)rsA). Folds: -(y)Iş manner,
  * headless relatives, and the de-/ye- vowel raising into existing points.
+ * 2026-06-21: flags tr-a1-stem-changes, tr-a2-consonant-doubling, and
+ * tr-a2-reflexive-reciprocal-pronouns as clozeUnsuitable after the 2026-06-21
+ * run showed their single-blank cloze cells emitting ambiguous /
+ * feature-invisible drafts (1/41, 5/57, 9/39 approved); translation + (where
+ * set) conjugation remain. Also adds a person×case coverageSpec to
+ * tr-a2-suffix-order-buffers — its translation cell dedup-gave-up 19/88 (7
+ * approved); the buffers are person/case conditioned, so the spec targets them
+ * with the allowed axes. Bump retires those cloze cells and re-runs survivors.
  */
-export const CURRICULUM_VERSION_TR = '2026-06-20c';
+export const CURRICULUM_VERSION_TR = '2026-06-21';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -107,6 +115,13 @@ const trCurriculum: readonly GrammarPoint[] = [
   // the point teaches the patterns + that most words do NOT change.
   {
     key: 'tr-a1-stem-changes',
+    // clozeUnsuitable (2026-06-21): softening / vowel-drop only surfaces WITH a
+    // vowel-initial (case) suffix, so a single whole-word blank either shows the
+    // bare nominative (no change visible) or forces an accusative — dragging in a
+    // 2nd grammar point and producing ungrammatical subject-slot accusatives.
+    // 2026-06-21 run: 1/41 approved (grammar-point-mismatch + duplicate
+    // distractors). Translation (6/56) is the viable surface.
+    clozeUnsuitable: true,
     kind: 'grammar',
     name: 'Stem changes: consonant softening & vowel drop',
     description:
@@ -874,6 +889,11 @@ const trCurriculum: readonly GrammarPoint[] = [
   // dictionary-marked (sır (-rrı), hat (-ttı)), so placed at A2.
   {
     key: 'tr-a2-consonant-doubling',
+    // clozeUnsuitable (2026-06-21): sibling of tr-a1-stem-changes — gemination
+    // only shows before a vowel suffix, so a whole-word blank is under-constrained.
+    // 2026-06-21 run: 5/57 approved (8 ambiguous + 15 low-quality); translation
+    // (11/78) is healthy.
+    clozeUnsuitable: true,
     kind: 'grammar',
     name: 'Consonant doubling (gemination)',
     description:
@@ -906,6 +926,11 @@ const trCurriculum: readonly GrammarPoint[] = [
   // tr-b1-reciprocal-voice). Most "self / each other" senses use these.
   {
     key: 'tr-a2-reflexive-reciprocal-pronouns',
+    // clozeUnsuitable (2026-06-21): a single blank leaves the case
+    // under-constrained — birbirine / birbirini / birbiriyle all fit with no
+    // acceptableAnswers (same trap as the voice / stacking points). 2026-06-21
+    // run: 9/39 approved, 8 ambiguous flags. Translation is the right surface.
+    clozeUnsuitable: true,
     kind: 'grammar',
     name: 'Reflexive & reciprocal pronouns (kendi, birbiri)',
     description:
@@ -1011,6 +1036,18 @@ const trCurriculum: readonly GrammarPoint[] = [
   {
     key: 'tr-a2-suffix-order-buffers',
     clozeUnsuitable: true,
+    // coverageSpec (2026-06-21): the translation surface dedup-gave-up 19/88 on
+    // the 2026-06-21 run (only 7 approved) — a diversity problem, the drafts
+    // collapse onto a few canonical words. The buffers are person/case
+    // conditioned (3sg/3pl trigger the -s-/-n- buffers; 1sg/2sg don't; -n- sits
+    // before case), so a person×case spec targets them with the allowed axes —
+    // mirroring the proven tr-a2-possessive-case-stacking fix.
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 2, '2sg': 2, '3sg': 4, '3pl': 3 } },
+        { name: 'case', floors: { accusative: 3, dative: 3, locative: 3, ablative: 2 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Suffix order & buffer consonants (y / n / s)',
     description:

@@ -272,7 +272,21 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
     }
   });
 
-  it('the full TR clozeUnsuitable set is exactly these sixteen points', () => {
+  it('flags the three morphology-invisible / ambiguous points retired from cloze (2026-06-21)', () => {
+    // stem-changes & consonant-doubling only surface WITH a vowel suffix, so a
+    // whole-word blank shows no change or forces a 2nd grammar point;
+    // reflexive-reciprocal leaves the case under-constrained (birbirine /
+    // birbirini / birbiriyle). See the 2026-06-21 generation-run analysis.
+    for (const key of [
+      'tr-a1-stem-changes',
+      'tr-a2-consonant-doubling',
+      'tr-a2-reflexive-reciprocal-pronouns',
+    ]) {
+      expect(getGrammarPoint(key)?.clozeUnsuitable).toBe(true);
+    }
+  });
+
+  it('the full TR clozeUnsuitable set is exactly these nineteen points', () => {
     const flagged = trCurriculum
       .filter((g) => g.clozeUnsuitable === true)
       .map((g) => g.key)
@@ -281,10 +295,13 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
       [
         'tr-a1-beri-dir',
         'tr-a1-gore-bence',
+        'tr-a1-stem-changes',
+        'tr-a2-consonant-doubling',
         'tr-a2-converbs',
         'tr-a2-correlative-conjunctions',
         'tr-a2-nominalization',
         'tr-a2-possessive-case-stacking',
+        'tr-a2-reflexive-reciprocal-pronouns',
         'tr-a2-suffix-order-buffers',
         'tr-a2-relative-an',
         'tr-b1-converb-while-yken',
