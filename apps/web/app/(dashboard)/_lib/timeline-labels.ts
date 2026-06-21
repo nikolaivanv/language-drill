@@ -1,31 +1,27 @@
 // ---------------------------------------------------------------------------
 // Timeline label helpers — slot prefix + type-label + title/subtitle composers
 // ---------------------------------------------------------------------------
-// The wire schema doesn't carry the prefix (`warm-up`, `core`, `production`,
-// `cool-down`) — the client derives it deterministically from `index` so we
-// can re-label later without a backend change. See design.md §"V1_PLAN_SHAPE".
+// The wire schema doesn't carry the prefix (`warm-up`, `core`, `cool-down`)
+// — the client derives it deterministically from `(index, total)` so we can
+// re-label later without a backend change. See design.md §"V1_PLAN_SHAPE".
 //
 // Pure functions — no globals, no side effects.
 // ---------------------------------------------------------------------------
 
 import { ExerciseType } from '@language-drill/shared';
 
-type SlotPrefix = 'warm-up' | 'core' | 'production' | 'cool-down';
+type SlotPrefix = 'warm-up' | 'core' | 'cool-down';
 
-const PREFIX_BY_INDEX: Record<number, SlotPrefix> = {
-  1: 'warm-up',
-  2: 'core',
-  3: 'production',
-  4: 'core',
-  5: 'cool-down',
-};
-
-export function slotPrefixForIndex(index: number): SlotPrefix {
-  const prefix = PREFIX_BY_INDEX[index];
-  if (!prefix) {
-    throw new Error(`slotPrefixForIndex: index out of range (got ${index})`);
-  }
-  return prefix;
+/**
+ * Returns the slot prefix for a given `index` within a plan of `total` items.
+ * - index 1            → "warm-up"
+ * - index === total    → "cool-down"
+ * - everything else    → "core"
+ */
+export function slotPrefixForIndex(index: number, total: number): SlotPrefix {
+  if (index === 1) return 'warm-up';
+  if (index === total) return 'cool-down';
+  return 'core';
 }
 
 const TYPE_LABELS: Record<ExerciseType, string> = {
@@ -42,8 +38,8 @@ export function typeLabel(type: ExerciseType): string {
   return TYPE_LABELS[type];
 }
 
-export function composeTitle(index: number, type: ExerciseType): string {
-  return `${slotPrefixForIndex(index)} · ${typeLabel(type)}`;
+export function composeTitle(index: number, total: number, type: ExerciseType): string {
+  return `${slotPrefixForIndex(index, total)} · ${typeLabel(type)}`;
 }
 
 export function composeSubtitle(

@@ -9,6 +9,7 @@ import {
   ExerciseType,
   type ExerciseContent,
   type EvaluationResult,
+  targetItemCount,
 } from '@language-drill/shared';
 import {
   useCreateSession,
@@ -17,6 +18,7 @@ import {
   useSubmitAnswer,
   useLanguageProfiles,
   useInsightsErrors,
+  useGetPreferences,
   createAuthenticatedFetch,
 } from '@language-drill/api-client';
 import { useActiveLanguage } from '../../../components/shell';
@@ -29,7 +31,7 @@ import { useIsMobile } from '../../../lib/responsive';
 import { Card } from '../../../components/ui';
 import { coachMessage } from '../../../lib/drill/coach-messages';
 import { coachHeadline } from '../../../lib/drill/coach-headline';
-import { DEFAULT_EXERCISE_COUNT, DICTATION_RUN_COUNT } from '../../../lib/drill/session-config';
+import { DICTATION_RUN_COUNT } from '../../../lib/drill/session-config';
 import { DrillHub } from './_components/drill-hub';
 import { CoachRail } from './_components/coach-rail';
 import { CoachCard } from './_components/coach-card';
@@ -98,6 +100,8 @@ function PracticePageContent() {
 
   const { data: profilesData } = useLanguageProfiles({ fetchFn });
   const profiles = profilesData?.profiles ?? [];
+
+  const { data: prefsData } = useGetPreferences({ fetchFn });
 
   const [difficulty, setDifficulty] = useState<CefrLevel>(CefrLevel.B1);
   const [initialized, setInitialized] = useState(false);
@@ -170,7 +174,7 @@ function PracticePageContent() {
         : {
             language: activeLanguage,
             difficulty,
-            exerciseCount: DEFAULT_EXERCISE_COUNT,
+            exerciseCount: targetItemCount(prefsData?.dailyMinutes ?? null),
             ...(grammarPointKey ? { grammarPointKey } : {}),
             ...(exerciseType ? { exerciseType } : {}),
           };
@@ -186,7 +190,7 @@ function PracticePageContent() {
       },
       onError: (err) => dispatch({ type: 'CREATE_FAILED', error: err as Error }),
     });
-  }, [initialized, startIntent, state.kind, activeLanguage, difficulty, grammarPointKey, createSession]);
+  }, [initialized, startIntent, state.kind, activeLanguage, difficulty, grammarPointKey, prefsData, createSession]);
 
   const resumeKickoffRef = useRef(false);
   useEffect(() => {

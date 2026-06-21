@@ -19,6 +19,8 @@ export type TimelineItemStatus = 'done' | 'queued' | 'next-up';
 
 type Props = {
   index: number;
+  /** Total number of items in the plan — used to derive the slot prefix. */
+  total: number;
   type: ExerciseType;
   topicHint: string | null;
   grammarPointName: string | null;
@@ -33,6 +35,7 @@ type Props = {
 
 export function TimelineItem({
   index,
+  total,
   type,
   topicHint,
   grammarPointName,
@@ -43,7 +46,7 @@ export function TimelineItem({
   href,
   ctaLabel = 'start →',
 }: Props) {
-  const title = composeTitle(index, type);
+  const title = composeTitle(index, total, type);
   const subtitle = composeSubtitle(grammarPointName, topicHint, type, itemCount);
   const isDone = status === 'done';
   const isNextUp = status === 'next-up';

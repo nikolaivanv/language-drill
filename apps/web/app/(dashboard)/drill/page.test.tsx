@@ -36,6 +36,7 @@ const mockUseSubmitAnswer = vi.fn();
 const mockUseLanguageProfiles = vi.fn();
 const mockUseResumeSession = vi.fn();
 const mockUseInsightsErrors = vi.fn();
+const mockUseGetPreferences = vi.fn();
 
 vi.mock('@language-drill/api-client', () => ({
   useCreateSession: (...args: unknown[]) => mockUseCreateSession(...args),
@@ -44,6 +45,7 @@ vi.mock('@language-drill/api-client', () => ({
   useLanguageProfiles: (...args: unknown[]) => mockUseLanguageProfiles(...args),
   useResumeSession: (...args: unknown[]) => mockUseResumeSession(...args),
   useInsightsErrors: (...args: unknown[]) => mockUseInsightsErrors(...args),
+  useGetPreferences: (...args: unknown[]) => mockUseGetPreferences(...args),
   useTodayPlan: () => ({ data: undefined, isLoading: false, error: null }),
   createAuthenticatedFetch: vi.fn(() => vi.fn()),
 }));
@@ -188,6 +190,9 @@ beforeEach(() => {
 
   // Default insights: no themes (canned coach message used).
   mockUseInsightsErrors.mockReturnValue({ data: { themes: [] } });
+
+  // Default prefs: no dailyMinutes → targetItemCount(null) = 8.
+  mockUseGetPreferences.mockReturnValue({ data: undefined, isLoading: false, error: null });
 });
 
 // ---------------------------------------------------------------------------
@@ -208,7 +213,7 @@ describe('PracticePage', () => {
 
       expect(createMutate).toHaveBeenCalledTimes(1);
       expect(createMutate).toHaveBeenCalledWith(
-        { language: 'ES', difficulty: 'B1', exerciseCount: 5 },
+        { language: 'ES', difficulty: 'B1', exerciseCount: 8 },
         expect.objectContaining({
           onSuccess: expect.any(Function),
           onError: expect.any(Function),
@@ -301,7 +306,7 @@ describe('PracticePage', () => {
 
       // Initial create call uses the active language (ES) from the provider
       expect(createMutate).toHaveBeenCalledWith(
-        { language: 'ES', difficulty: 'B1', exerciseCount: 5 },
+        { language: 'ES', difficulty: 'B1', exerciseCount: 8 },
         expect.any(Object),
       );
       const callsBefore = createMutate.mock.calls.length;
@@ -316,7 +321,7 @@ describe('PracticePage', () => {
       expect(lastCallArgs).toEqual({
         language: 'ES',
         difficulty: 'A2',
-        exerciseCount: 5,
+        exerciseCount: 8,
       });
     });
   });
@@ -695,6 +700,30 @@ describe('PracticePage', () => {
   });
 });
 
+describe('PracticePage — exerciseCount from dailyMinutes', () => {
+  it('dailyMinutes: 30 → exerciseCount: 12', () => {
+    mockUseGetPreferences.mockReturnValue({
+      data: { dailyMinutes: 30 },
+      isLoading: false,
+      error: null,
+    });
+    renderWithProviders(<PracticePage />);
+    expect(createMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ exerciseCount: 12 }),
+      expect.anything(),
+    );
+  });
+
+  it('no prefs data (null) → exerciseCount: 8', () => {
+    mockUseGetPreferences.mockReturnValue({ data: undefined, isLoading: false, error: null });
+    renderWithProviders(<PracticePage />);
+    expect(createMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ exerciseCount: 8 }),
+      expect.anything(),
+    );
+  });
+});
+
 describe('PracticePage — targeted quick drill', () => {
   it('?start=quick&grammarPoint=tr-a1-locative passes grammarPointKey into the create-session mutation', () => {
     mockSearchParamsString = 'start=quick&grammarPoint=tr-a1-locative';
@@ -756,12 +785,12 @@ describe('PracticePage — hub (no start intent)', () => {
     ).toBeInTheDocument();
   });
 
-  it('tapping "quick drill" starts a 5-item mixed session', () => {
+  it('tapping "quick drill" starts an 8-item mixed session by default (no dailyMinutes)', () => {
     mockSearchParamsString = '';
     renderWithProviders(<PracticePage />);
     fireEvent.click(screen.getByRole('button', { name: /quick drill/i }));
     expect(createMutate).toHaveBeenCalledWith(
-      { language: 'ES', difficulty: 'B1', exerciseCount: 5 },
+      { language: 'ES', difficulty: 'B1', exerciseCount: 8 },
       expect.any(Object),
     );
   });
@@ -823,7 +852,7 @@ describe('PracticePage — hub onStartTargeted', () => {
       expect(createMutate).toHaveBeenCalledWith(
         expect.objectContaining({
           grammarPointKey: 'tr-a1-locative',
-          exerciseCount: 5,
+          exerciseCount: 8,
         }),
         expect.anything(),
       ),

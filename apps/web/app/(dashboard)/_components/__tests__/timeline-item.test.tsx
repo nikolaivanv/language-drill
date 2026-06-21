@@ -12,6 +12,7 @@ type Props = React.ComponentProps<typeof TimelineItem>;
 function renderItem(overrides: Partial<Props> = {}) {
   const defaults: Props = {
     index: 2,
+    total: 5,
     type: ExerciseType.CLOZE,
     topicHint: 'pronoun placement',
     grammarPointName: null,
@@ -129,7 +130,7 @@ describe('TimelineItem — accessibility', () => {
       type: ExerciseType.CLOZE,
       topicHint: 'pronoun placement',
     });
-    // composeTitle(2, CLOZE) = "core · cloze"
+    // composeTitle(2, 5, CLOZE) = "core · cloze"
     const li = screen.getByRole('listitem');
     expect(li).toHaveAttribute('aria-label', '2. core · cloze, next-up');
   });

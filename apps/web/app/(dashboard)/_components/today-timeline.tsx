@@ -108,6 +108,7 @@ export function TodayTimeline({
           <TimelineItem
             key={item.index}
             index={item.index}
+            total={data.items.length}
             type={item.type}
             topicHint={item.topicHint}
             grammarPointName={item.grammarPointName}
@@ -127,7 +128,7 @@ export function TodayTimeline({
       <ol aria-label="today's plan summary" className="sr-only">
         {itemsWithStatus.map(({ item, status }) => (
           <li key={item.index}>
-            {item.index}. {composeTitle(item.index, item.type)} —{' '}
+            {item.index}. {composeTitle(item.index, data.items.length, item.type)} —{' '}
             {composeSubtitle(
               item.grammarPointName,
               item.topicHint,

@@ -27,7 +27,7 @@ export function NextUpCard({ data, language: _language }: Props) {
   if (!next) return null;
 
   const drillHref = `/drill?start=quick`;
-  const title = composeTitle(next.index, next.type);
+  const title = composeTitle(next.index, data.items.length, next.type);
   const subtitle = composeSubtitle(
     next.grammarPointName,
     next.topicHint,
