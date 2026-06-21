@@ -17,8 +17,13 @@ export default defineConfig({
     // stack.dev's beforeAll past the hook timeout. Run this package's files
     // sequentially so each synth gets the CPU, and keep a wide hook budget for
     // two back-to-back synths under any residual cross-package load.
+    //
+    // The weekly-summary email pipeline added two more bundled Lambdas
+    // (dispatcher + sender) to every stack synth, so stack.dev's beforeAll
+    // (dev+prod = 4 extra esbuild bundles) needs a wider budget: bumped
+    // 180s → 300s after it tipped past 180s under the full concurrent suite.
     fileParallelism: false,
     testTimeout: 60_000,
-    hookTimeout: 180_000,
+    hookTimeout: 300_000,
   },
 });
