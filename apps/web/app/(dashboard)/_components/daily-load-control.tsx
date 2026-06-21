@@ -8,6 +8,7 @@
 // ---------------------------------------------------------------------------
 
 import { DAILY_MINUTES, type DailyMinutes } from '@language-drill/shared';
+import { cn } from '../../../lib/cn';
 import { Choice } from '../../../components/ui/choice';
 
 export type DailyLoadControlProps = {
@@ -27,7 +28,8 @@ export function DailyLoadControl({
       <div
         role="radiogroup"
         aria-label="today's load"
-        className="flex gap-[6px]"
+        aria-disabled={disabled}
+        className={cn('flex gap-[6px]', disabled && 'opacity-60 pointer-events-none')}
       >
         {DAILY_MINUTES.map((m) => (
           <Choice

@@ -66,4 +66,20 @@ describe('DailyLoadControl', () => {
       screen.getByRole('radiogroup', { name: "today's load" }),
     ).toBeInTheDocument();
   });
+
+  it('sets aria-disabled=true on the radiogroup when disabled', () => {
+    render(
+      <DailyLoadControl current={10} onSelect={vi.fn()} disabled />,
+    );
+    const radiogroup = screen.getByRole('radiogroup', { name: "today's load" });
+    expect(radiogroup).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('sets aria-disabled=false on the radiogroup when not disabled', () => {
+    render(
+      <DailyLoadControl current={10} onSelect={vi.fn()} />,
+    );
+    const radiogroup = screen.getByRole('radiogroup', { name: "today's load" });
+    expect(radiogroup).toHaveAttribute('aria-disabled', 'false');
+  });
 });
