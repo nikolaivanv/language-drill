@@ -32,8 +32,11 @@ describe('analytics/posthog wrapper', () => {
     const [key, opts] = posthog.init.mock.calls[0];
     expect(key).toBe('phc_test');
     expect(opts.api_host).toBe('/ingest');
+    expect(opts.ui_host).toBe('https://eu.posthog.com');
     expect(opts.capture_pageview).toBe(false);
+    expect(opts.autocapture).toBe(true);
     expect(opts.opt_out_capturing_by_default).toBe(true);
+    expect(opts.disable_session_recording).toBe(true);
     expect(opts.session_recording.maskAllInputs).toBe(true);
     expect(m.isReady()).toBe(true);
   });

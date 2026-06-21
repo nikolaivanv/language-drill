@@ -15,6 +15,7 @@ export function initAnalytics(): void {
     capture_pageview: false, // App Router: captured manually in use-pageviews
     autocapture: true,
     opt_out_capturing_by_default: true, // belt-and-suspenders; opt-in happens on consent
+    disable_session_recording: true, // recording started explicitly in optInAnalytics()
     persistence: 'localStorage+cookie',
     session_recording: { maskAllInputs: true, maskTextSelector: '*' },
   });

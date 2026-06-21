@@ -313,7 +313,9 @@ export function AnnotatedView({
   // and no card covering the passage during selection.
   const handleSpanSelect = (sel: SpanSelection) => {
     const { x, y } = containerXY(sel.rect);
-    track('reading_annotation_used', { language: activeLanguage });
+    // handleSpanSelect is only wired to the deep-lookup path (onSpanSelect fires
+    // the deep annotation endpoint); skim popover opens via handleWordClick.
+    track('reading_annotation_used', { language: activeLanguage, mode: 'deep' as const });
     onSpanSelect({ start: sel.start, end: sel.end, type: sel.type, x, y });
   };
 

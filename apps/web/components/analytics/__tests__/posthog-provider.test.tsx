@@ -15,6 +15,10 @@ vi.mock('../use-pageviews', () => ({ usePageviews: vi.fn() }));
 import { ConsentProvider, useConsent } from '../../consent/consent-provider';
 import { PostHogProvider } from '../posthog-provider';
 
+// Storage key + shape used by apps/web/lib/consent/consent.ts
+const CONSENT_KEY = 'drill-cookie-consent';
+const CONSENT_VERSION = 1;
+
 function Grant() {
   const { update } = useConsent();
   return (
@@ -55,6 +59,19 @@ describe('PostHogProvider', () => {
     expect(analytics.initAnalytics).toHaveBeenCalledTimes(1);
     expect(analytics.optInAnalytics).toHaveBeenCalledTimes(1);
     expect(track).toHaveBeenCalledWith('consent_updated', { analytics: true });
+  });
+
+  it('inits + opts in but does NOT emit consent_updated for a returning consented user', async () => {
+    // Pre-seed localStorage as if the user previously granted consent (returning user reload).
+    localStorage.setItem(
+      CONSENT_KEY,
+      JSON.stringify({ analytics: true, version: CONSENT_VERSION, timestamp: new Date().toISOString() }),
+    );
+    await act(async () => { tree(); });
+    expect(analytics.initAnalytics).toHaveBeenCalledTimes(1);
+    expect(analytics.optInAnalytics).toHaveBeenCalledTimes(1);
+    // Must NOT emit — the stored consent is a reload, not an in-session user grant.
+    expect(track).not.toHaveBeenCalledWith('consent_updated', expect.anything());
   });
 
   it('opts out on revoke without emitting an event', async () => {
