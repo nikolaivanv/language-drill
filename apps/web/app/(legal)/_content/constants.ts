@@ -2,7 +2,7 @@ export const LEGAL = {
   controller: 'Ivan Nikola',
   basedIn: 'Hungary',
   contactEmail: 'info@langdrill.app',
-  lastUpdated: '2026-06-20',
+  lastUpdated: '2026-06-21',
   governingLaw: 'Hungary',
   minAge: 16,
   subProcessors: [
@@ -15,5 +15,6 @@ export const LEGAL = {
     { name: 'Sentry', purpose: 'Error monitoring (no cookies; user ID only)' },
     { name: 'Langfuse', purpose: 'LLM-call observability (records your user ID and the text of your answers)' },
     { name: 'Cloudflare', purpose: 'DNS and email forwarding for our contact address' },
+    { name: 'PostHog', purpose: 'Product analytics and session replay (EU region; loads only after you opt in)' },
   ],
 } as const;

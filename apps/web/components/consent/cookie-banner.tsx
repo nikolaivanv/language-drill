@@ -23,7 +23,7 @@ export function CookieBanner() {
               <strong>Strictly necessary</strong> — always on. Required to sign you in and keep drafts.
             </li>
             <li>
-              <strong>Analytics</strong> — optional. Off unless you turn it on. Not active today.
+              <strong>Analytics</strong> — optional. Off unless you turn it on. Powered by PostHog (EU); masks your typed answers.
             </li>
           </ul>
           <div className="flex gap-s-3">
@@ -52,7 +52,7 @@ export function CookieBanner() {
     >
       <div className="mx-auto max-w-[760px] flex flex-col gap-s-3 mobile:items-stretch sm:flex-row sm:items-center sm:justify-between">
         <p className="t-small text-ink-soft m-0">
-          We use only strictly-necessary cookies. We&rsquo;ll ask before enabling any analytics.{' '}
+          We use strictly-necessary cookies, and analytics only if you opt in.{' '}
           <Link href="/cookies" className="underline">Learn more</Link>.
         </p>
         <div className="flex gap-s-3 shrink-0">
