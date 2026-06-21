@@ -118,6 +118,7 @@ vi.mock('@language-drill/db', () => ({
   userPreferences: {
     userId: 'user_id',
     dailyMinutes: 'daily_minutes',
+    dailyGoal: 'daily_goal',
   },
   errorObservations: {
     userId: 'user_id',
@@ -1457,12 +1458,12 @@ describe('GET /sessions/today', () => {
   // Task 4: daily-minutes sizing (a) + reason classification (b, c)
   // -------------------------------------------------------------------------
 
-  it('(a) dailyMinutes: 30 → fresh plan has 12 items', async () => {
-    // No today-session, profile B1, prefs has dailyMinutes 30.
+  it('(a) dailyGoal: long → fresh plan has 12 items', async () => {
+    // No today-session, profile B1, prefs has dailyGoal 'long'.
     mockLimit
       .mockResolvedValueOnce([]) // today-session
       .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]) // proficiency
-      .mockResolvedValueOnce([{ dailyMinutes: 30 }]); // prefs → targetItemCount(30) = 12
+      .mockResolvedValueOnce([{ dailyGoal: 'long' }]); // prefs → targetItemCount('long') = 12
 
     // errorRows (groupBy → mockSelectAwait call 1) — no errors
     mockSelectAwait.mockResolvedValueOnce([]);
@@ -1538,7 +1539,7 @@ describe('GET /sessions/today', () => {
     mockLimit
       .mockResolvedValueOnce([]) // today-session
       .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]) // proficiency
-      .mockResolvedValueOnce([{ dailyMinutes: 5 }]); // prefs → targetItemCount(5) = 5
+      .mockResolvedValueOnce([{ dailyGoal: 'quick' }]); // prefs → targetItemCount('quick') = 5
 
     // errorRows: 'gp-errors' has 3 errors → reasonFor → 'error-fix'
     mockSelectAwait.mockResolvedValueOnce([
@@ -1582,7 +1583,7 @@ describe('GET /sessions/today', () => {
     mockLimit
       .mockResolvedValueOnce([]) // today-session
       .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]) // proficiency
-      .mockResolvedValueOnce([{ dailyMinutes: 5 }]); // prefs → 5 items
+      .mockResolvedValueOnce([{ dailyGoal: 'quick' }]); // prefs → targetItemCount('quick') = 5
 
     // errorRows: no errors for gp-new
     mockSelectAwait.mockResolvedValueOnce([]);
@@ -1610,6 +1611,285 @@ describe('GET /sessions/today', () => {
     );
     expect(newItem).toBeDefined();
     expect(newItem?.reason).toBe('new');
+  });
+
+  // -------------------------------------------------------------------------
+  // Task 4: engagement gate + dailyGoal sizing
+  // -------------------------------------------------------------------------
+
+  it('Task4(a): today-session with 0 attempts (untouched) falls through to Path B → 12-item fresh plan for dailyGoal long', async () => {
+    // Bug-fix assertion: before the engagement gate, this would hydrate the
+    // stored 2-item session. After the fix, the 0-attempt session is ignored
+    // and Path B composes a fresh 12-item plan (dailyGoal: 'long').
+    const startedAt = new Date('2026-05-04T08:00:00Z');
+
+    // Query 1 (parallel): today's session row (exists, untouched) + proficiency + prefs
+    // Query sequence:
+    //   mockLimit call 1: today-session (2 exercises, no completedAt)
+    //   mockLimit call 2: proficiency → B1
+    //   mockLimit call 3: prefs → dailyGoal 'long'
+    mockLimit
+      .mockResolvedValueOnce([
+        {
+          sessionId: 'sess-untouched',
+          exerciseIds: ['e1', 'e2'],
+          exerciseCount: 2,
+          correctCount: 0,
+          startedAt,
+          completedAt: null,
+        },
+      ])
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }])
+      .mockResolvedValueOnce([{ dailyGoal: 'long' }]);
+
+    // errorRows (groupBy → mockSelectAwait call 1)
+    mockSelectAwait.mockResolvedValueOnce([]);
+    // mastery rows (sequential → mockSelectAwait call 2)
+    mockSelectAwait.mockResolvedValueOnce([]);
+
+    // Query 2 (Path A item rows, always fetched to check engagement):
+    // Both e1 and e2 have historyId: null → attemptedIds.size = 0, completedAt = null
+    // → engaged = false → fall through to Path B.
+    // (mockSelectAwait call 3)
+    mockSelectAwait.mockResolvedValueOnce([
+      { exerciseId: 'e1', type: 'cloze', topicHint: null, difficulty: 'B1', historyId: null },
+      { exerciseId: 'e2', type: 'translation', topicHint: null, difficulty: 'B1', historyId: null },
+    ]);
+
+    // Path B: pool sample via UNION-ALL (mockExecute call 1)
+    // Provide 12 distinct items covering the types planSkeleton(12) needs.
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        { id: 'c1',  type: 'cloze',                 topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'c2',  type: 'cloze',                 topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'c3',  type: 'cloze',                 topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'c4',  type: 'cloze',                 topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'c5',  type: 'cloze',                 topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 's1',  type: 'sentence_construction', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 's2',  type: 'sentence_construction', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 's3',  type: 'sentence_construction', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 't1',  type: 'translation',           topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 't2',  type: 'translation',           topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 't3',  type: 'translation',           topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'v1',  type: 'vocab_recall',          topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'v2',  type: 'vocab_recall',          topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'v3',  type: 'vocab_recall',          topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+      ],
+    });
+
+    const res = await app.request('/sessions/today?language=ES', { method: 'GET' }, authEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+
+    // Must be a FRESH plan (Path B), not the stored 2-item session.
+    expect(body.code).toBeNull();
+    expect(body.items).toHaveLength(12);
+    // Confirm none of the plan items are the stored session's exercise IDs.
+    const planIds = (body.items as AnyJson[]).map((it: AnyJson) => it.id);
+    expect(planIds).not.toContain('e1');
+    expect(planIds).not.toContain('e2');
+    // All items queued (fresh plan).
+    expect(body.items.every((it: AnyJson) => it.status === 'queued')).toBe(true);
+    // resumeSessionId must be null (no engaged session).
+    expect(body.resumeSessionId).toBeNull();
+    // Path B was reached, so the pool UNION-ALL query was executed.
+    expect(mockExecute).toHaveBeenCalledTimes(1);
+  });
+
+  it('Task4(b): today-session with ≥1 attempt → Path A (stored items, mixed statuses + resumeSessionId)', async () => {
+    // An engaged session (e1 attempted, e2+e3 queued) must be hydrated via Path A.
+    const startedAt = new Date('2026-05-04T09:00:00Z');
+
+    // Query 1 (parallel):
+    //   mockLimit call 1: today-session (3 exercises, in-progress)
+    //   mockLimit call 2: proficiency → B1
+    //   mockLimit call 3: prefs → dailyGoal 'medium'
+    mockLimit
+      .mockResolvedValueOnce([
+        {
+          sessionId: 'sess-engaged',
+          exerciseIds: ['e1', 'e2', 'e3'],
+          exerciseCount: 3,
+          correctCount: 0,
+          startedAt,
+          completedAt: null,
+        },
+      ])
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }])
+      .mockResolvedValueOnce([{ dailyGoal: 'medium' }]);
+
+    // errorRows (groupBy → mockSelectAwait call 1)
+    mockSelectAwait.mockResolvedValueOnce([]);
+    // mastery rows (sequential → mockSelectAwait call 2)
+    mockSelectAwait.mockResolvedValueOnce([]);
+
+    // Path A item rows (mockSelectAwait call 3):
+    // e1 has historyId → attemptedIds.size = 1 → engaged = true → Path A.
+    mockSelectAwait.mockResolvedValueOnce([
+      { exerciseId: 'e1', type: 'cloze',       topicHint: 'pronouns', difficulty: 'B1', historyId: 'h1' },
+      { exerciseId: 'e2', type: 'translation',  topicHint: null,       difficulty: 'B1', historyId: null },
+      { exerciseId: 'e3', type: 'vocab_recall', topicHint: null,       difficulty: 'B1', historyId: null },
+    ]);
+
+    const res = await app.request('/sessions/today?language=ES', { method: 'GET' }, authEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+
+    // Path A: hydrated from stored session.
+    expect(body.items).toHaveLength(3);
+    expect(body.items[0].status).toBe('done');
+    expect(body.items[1].status).toBe('queued');
+    expect(body.items[2].status).toBe('queued');
+    expect(body.resumeSessionId).toBe('sess-engaged');
+    expect(body.summary).toBeNull(); // not completed
+    // Path B was NOT reached.
+    expect(mockExecute).not.toHaveBeenCalled();
+  });
+
+  it('Task4(c): completed today-session → Path A (summary present)', async () => {
+    // A completed session must always be hydrated via Path A even if it has
+    // zero explicit attempts (edge case — completedAt alone gates engagement).
+    const startedAt  = new Date('2026-05-04T07:00:00Z');
+    const completedAt = new Date('2026-05-04T07:20:00Z');
+
+    // Query 1 (parallel):
+    //   mockLimit call 1: today-session (completed)
+    //   mockLimit call 2: proficiency → B1
+    //   mockLimit call 3: prefs → dailyGoal 'quick'
+    mockLimit
+      .mockResolvedValueOnce([
+        {
+          sessionId: 'sess-done',
+          exerciseIds: ['e1', 'e2', 'e3'],
+          exerciseCount: 3,
+          correctCount: 2,
+          startedAt,
+          completedAt,
+        },
+      ])
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }])
+      .mockResolvedValueOnce([{ dailyGoal: 'quick' }]);
+
+    // errorRows (groupBy → mockSelectAwait call 1)
+    mockSelectAwait.mockResolvedValueOnce([]);
+    // mastery rows (sequential → mockSelectAwait call 2)
+    mockSelectAwait.mockResolvedValueOnce([]);
+
+    // Path A item rows (mockSelectAwait call 3):
+    // All three exercises have history rows → all `done`.
+    // completedAt ≠ null → engaged = true (even without attempt count).
+    mockSelectAwait.mockResolvedValueOnce([
+      { exerciseId: 'e1', type: 'cloze',       topicHint: null, difficulty: 'B1', historyId: 'h1' },
+      { exerciseId: 'e2', type: 'cloze',       topicHint: null, difficulty: 'B1', historyId: 'h2' },
+      { exerciseId: 'e3', type: 'translation',  topicHint: null, difficulty: 'B1', historyId: 'h3' },
+    ]);
+
+    const res = await app.request('/sessions/today?language=ES', { method: 'GET' }, authEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+
+    // Path A: hydrated from stored completed session.
+    expect(body.items).toHaveLength(3);
+    expect(body.items.every((it: AnyJson) => it.status === 'done')).toBe(true);
+    // Summary must be present (completedAt set + all items done).
+    expect(body.summary).toEqual({
+      itemCount: 3,
+      correctCount: 2,
+      durationMinutes: 20,
+    });
+    // resumeSessionId is null for a completed session.
+    expect(body.resumeSessionId).toBeNull();
+    // Path B was NOT reached.
+    expect(mockExecute).not.toHaveBeenCalled();
+  });
+
+  it('Task4(d): fresh plan with dailyGoal quick → 5 items; long → 12 items', async () => {
+    // Sub-test: quick → 5.
+    // No today-session; prefs dailyGoal 'quick' → targetItemCount('quick') = 5.
+
+    // --- quick: 5 items ---
+    {
+      vi.clearAllMocks();
+      const mod = await import('./sessions');
+      app = new Hono();
+      app.route('/', mod.default);
+
+      mockLimit
+        .mockResolvedValueOnce([]) // today-session
+        .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]) // proficiency
+        .mockResolvedValueOnce([{ dailyGoal: 'quick' }]); // prefs → 5
+
+      // errorRows (groupBy → mockSelectAwait call 1)
+      mockSelectAwait.mockResolvedValueOnce([]);
+      // mastery rows (sequential → mockSelectAwait call 2)
+      mockSelectAwait.mockResolvedValueOnce([]);
+
+      // Pool: provide exactly 5 items so planSkeleton(5) is satisfied.
+      mockExecute.mockResolvedValueOnce({
+        rows: [
+          { id: 'c1', type: 'cloze',        topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+          { id: 'c2', type: 'cloze',        topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+          { id: 't1', type: 'translation',   topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+          { id: 'v1', type: 'vocab_recall',  topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+          { id: 's1', type: 'sentence_construction', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        ],
+      });
+
+      const res = await app.request('/sessions/today?language=ES', { method: 'GET' }, authEnv);
+      expect(res.status).toBe(200);
+      const bodyQuick = (await res.json()) as AnyJson;
+      expect(bodyQuick.code).toBeNull();
+      expect(bodyQuick.items).toHaveLength(5);
+      expect(bodyQuick.items.every((it: AnyJson) => it.status === 'queued')).toBe(true);
+    }
+
+    // --- long: 12 items ---
+    {
+      vi.clearAllMocks();
+      const mod = await import('./sessions');
+      app = new Hono();
+      app.route('/', mod.default);
+
+      mockLimit
+        .mockResolvedValueOnce([]) // today-session
+        .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]) // proficiency
+        .mockResolvedValueOnce([{ dailyGoal: 'long' }]); // prefs → 12
+
+      // errorRows (groupBy → mockSelectAwait call 1)
+      mockSelectAwait.mockResolvedValueOnce([]);
+      // mastery rows (sequential → mockSelectAwait call 2)
+      mockSelectAwait.mockResolvedValueOnce([]);
+
+      // Pool: provide 14 distinct items to fill planSkeleton(12).
+      mockExecute.mockResolvedValueOnce({
+        rows: [
+          { id: 'c1',  type: 'cloze',                 topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+          { id: 'c2',  type: 'cloze',                 topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+          { id: 'c3',  type: 'cloze',                 topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+          { id: 'c4',  type: 'cloze',                 topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+          { id: 'c5',  type: 'cloze',                 topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+          { id: 's1',  type: 'sentence_construction', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+          { id: 's2',  type: 'sentence_construction', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+          { id: 's3',  type: 'sentence_construction', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+          { id: 't1',  type: 'translation',           topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+          { id: 't2',  type: 'translation',           topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+          { id: 't3',  type: 'translation',           topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+          { id: 'v1',  type: 'vocab_recall',          topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+          { id: 'v2',  type: 'vocab_recall',          topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+          { id: 'v3',  type: 'vocab_recall',          topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        ],
+      });
+
+      const res = await app.request('/sessions/today?language=ES', { method: 'GET' }, authEnv);
+      expect(res.status).toBe(200);
+      const bodyLong = (await res.json()) as AnyJson;
+      expect(bodyLong.code).toBeNull();
+      expect(bodyLong.items).toHaveLength(12);
+      expect(bodyLong.items.map((it: AnyJson) => it.index)).toEqual(
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      );
+      expect(bodyLong.items.every((it: AnyJson) => it.status === 'queued')).toBe(true);
+    }
   });
 });
 
@@ -2696,10 +2976,11 @@ describe('review_status non-filter — GET /sessions/today Path A', () => {
     mockSelectAwait.mockResolvedValueOnce([]);
 
     // The hydrate query is unfiltered: the flagged fixture's row is returned
-    // alongside the others (mockSelectAwait call 3).
+    // alongside the others (mockSelectAwait call 3). e2 has a history row so
+    // the session is engaged (attemptedIds.size = 1 > 0) → Path A fires.
     mockSelectAwait.mockResolvedValueOnce([
       { exerciseId: FLAGGED_FIXTURE_ID, type: 'cloze', topicHint: null, difficulty: 'B1', historyId: null },
-      { exerciseId: 'e2', type: 'cloze', topicHint: null, difficulty: 'B1', historyId: null },
+      { exerciseId: 'e2', type: 'cloze', topicHint: null, difficulty: 'B1', historyId: 'h2' },
       { exerciseId: 'e3', type: 'translation', topicHint: null, difficulty: 'B1', historyId: null },
       { exerciseId: 'e4', type: 'vocab_recall', topicHint: null, difficulty: 'B1', historyId: null },
       { exerciseId: 'e5', type: 'cloze', topicHint: null, difficulty: 'B1', historyId: null },
