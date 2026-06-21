@@ -268,7 +268,15 @@ async function buildLanguage(lang: Lang): Promise<void> {
 
 async function main(): Promise<void> {
   await fs.mkdir(OUTPUT_DIR, { recursive: true });
-  for (const lang of LANGUAGES) await buildLanguage(lang);
+  // LANGS=tr (or tr,de) limits the build to a subset — e.g. to re-run a single
+  // language's gap-fill without rebuilding the others.
+  const only = process.env['LANGS']
+    ?.split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  const langs =
+    only && only.length ? LANGUAGES.filter((l) => only.includes(l)) : [...LANGUAGES];
+  for (const lang of langs) await buildLanguage(lang);
 }
 
 // Only run when invoked directly, so the test can import the pure helpers.
