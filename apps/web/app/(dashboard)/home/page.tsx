@@ -77,6 +77,7 @@ export default function DashboardPage() {
         firstName={user?.firstName ?? null}
         axes={radar.data?.axes}
         totalEstimatedMinutes={todayPlan.data?.totalEstimatedMinutes ?? null}
+        planItems={todayPlan.data?.items}
       />
       {/* Mobile-only one-tap CTA directly under the greeting (Req 4.2). */}
       {isMobile && (

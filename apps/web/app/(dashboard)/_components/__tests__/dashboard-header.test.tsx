@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import type { RadarAxis, RadarAxisKey } from '@language-drill/api-client';
+import type { PlanReason, RadarAxis, RadarAxisKey } from '@language-drill/api-client';
 import { Language, type LearningLanguage } from '@language-drill/shared';
 import { DashboardHeader } from '../dashboard-header';
 
@@ -142,5 +142,58 @@ describe('DashboardHeader — copy invariants', () => {
       />,
     );
     expect(container.textContent ?? '').not.toMatch(/streak|xp|lesson/i);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Plan-based framing (planItems prop)
+// ---------------------------------------------------------------------------
+
+describe('DashboardHeader — plan-based framing', () => {
+  it('uses plan framing when planItems has an error-fix item', () => {
+    const planItems: { reason: PlanReason | null; grammarPointName: string | null }[] = [
+      { reason: 'error-fix', grammarPointName: 'Accusative -(y)I' },
+      { reason: 'review', grammarPointName: 'Present tense' },
+    ];
+    const axes: RadarAxis[] = [axis('grammar', 0.3, 5, 'grammar')];
+    render(
+      <DashboardHeader
+        {...baseProps}
+        axes={axes}
+        totalEstimatedMinutes={12}
+        planItems={planItems}
+      />,
+    );
+    // Should show plan framing, not radar framing
+    expect(screen.getByText(/Accusative -\(y\)I/)).toBeInTheDocument();
+    expect(screen.getByText(/error spot/)).toBeInTheDocument();
+    // Should NOT fall back to radar paragraph
+    expect(screen.queryByText(/weakest right now/)).not.toBeInTheDocument();
+  });
+
+  it('falls back to radar framing when planItems is undefined', () => {
+    const axes: RadarAxis[] = [axis('grammar', 0.3, 5, 'grammar')];
+    render(
+      <DashboardHeader
+        {...baseProps}
+        axes={axes}
+        totalEstimatedMinutes={12}
+        planItems={undefined}
+      />,
+    );
+    expect(screen.getByText(/weakest right now/)).toBeInTheDocument();
+  });
+
+  it('falls back to radar framing when planItems is empty', () => {
+    const axes: RadarAxis[] = [axis('grammar', 0.3, 5, 'grammar')];
+    render(
+      <DashboardHeader
+        {...baseProps}
+        axes={axes}
+        totalEstimatedMinutes={12}
+        planItems={[]}
+      />,
+    );
+    expect(screen.getByText(/weakest right now/)).toBeInTheDocument();
   });
 });
