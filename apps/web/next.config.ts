@@ -23,4 +23,8 @@ export default withSentryConfig(nextConfig, {
   sourcemaps: { deleteSourcemapsAfterUpload: true },
   release: { name: process.env.VERCEL_GIT_COMMIT_SHA },
   disableLogger: true,
+  // Route Sentry envelopes (errors + replay) through a same-origin tunnel so
+  // ad-blockers can't drop them. `true` generates a randomized route per build
+  // (harder to pattern-match than a fixed path). Runs as a Vercel function.
+  tunnelRoute: true,
 });
