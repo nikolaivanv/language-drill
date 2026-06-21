@@ -17,14 +17,19 @@
 
 import { useMemo } from 'react';
 import { useAuth, useUser } from '@clerk/nextjs';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   createAuthenticatedFetch,
+  useGetPreferences,
   useInsightsErrors,
   useProgressRadar,
   useTodayPlan,
+  useUpdatePreferences,
 } from '@language-drill/api-client';
+import { type DailyMinutes } from '@language-drill/shared';
 import { useActiveLanguage } from '../../../components/shell/active-language-provider';
 import { useIsMobile } from '../../../lib/responsive';
+import { DailyLoadControl } from '../_components/daily-load-control';
 import { DashboardHeader } from '../_components/dashboard-header';
 import { NextUpCard } from '../_components/next-up-card';
 import { ReadCollectCard } from '../_components/read-collect-card';
@@ -40,13 +45,30 @@ export default function DashboardPage() {
     () => createAuthenticatedFetch(getToken),
     [getToken],
   );
+  const queryClient = useQueryClient();
 
   // Both queries fire in parallel on mount via TanStack Query.
   const todayPlan = useTodayPlan({ fetchFn, language: activeLanguage });
   const radar = useProgressRadar({ fetchFn, language: activeLanguage });
   const insights = useInsightsErrors({ fetchFn, language: activeLanguage });
+  const prefs = useGetPreferences({ fetchFn });
+  const updatePrefs = useUpdatePreferences({ fetchFn });
 
   const isMobile = useIsMobile();
+
+  const handleDailyMinutesSelect = (m: DailyMinutes) => {
+    updatePrefs.mutate(
+      { dailyMinutes: m },
+      {
+        onSuccess: () => {
+          // Invalidate the today-plan query so the plan length updates.
+          void queryClient.invalidateQueries({
+            queryKey: ['todayPlan', activeLanguage],
+          });
+        },
+      },
+    );
+  };
 
   return (
     <div className="space-y-s-7">
@@ -60,6 +82,11 @@ export default function DashboardPage() {
       {isMobile && (
         <NextUpCard data={todayPlan.data} language={activeLanguage} />
       )}
+      <DailyLoadControl
+        current={prefs.data?.dailyMinutes ?? null}
+        onSelect={handleDailyMinutesSelect}
+        disabled={updatePrefs.isPending}
+      />
       <TodayTimeline
         data={todayPlan.data}
         isLoading={todayPlan.isLoading}

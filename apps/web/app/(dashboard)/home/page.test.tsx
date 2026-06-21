@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import {
   CefrLevel,
   ExerciseType,
@@ -35,6 +35,15 @@ vi.mock('@clerk/nextjs', () => ({
   useUser: () => ({ user: { firstName: 'juno' } }),
 }));
 
+const mockInvalidateQueries = vi.fn();
+vi.mock('@tanstack/react-query', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tanstack/react-query')>();
+  return {
+    ...actual,
+    useQueryClient: () => ({ invalidateQueries: mockInvalidateQueries }),
+  };
+});
+
 const mockUseActiveLanguage = vi.fn<
   () => { activeLanguage: LearningLanguage; setActiveLanguage: () => void }
 >();
@@ -51,11 +60,15 @@ vi.mock('../../../lib/responsive', () => ({
 const mockUseTodayPlan = vi.fn();
 const mockUseProgressRadar = vi.fn();
 const mockUseInsightsErrors = vi.fn();
+const mockUseGetPreferences = vi.fn();
+const mockUseUpdatePreferences = vi.fn();
 
 vi.mock('@language-drill/api-client', () => ({
   useTodayPlan: (...args: unknown[]) => mockUseTodayPlan(...args),
   useProgressRadar: (...args: unknown[]) => mockUseProgressRadar(...args),
   useInsightsErrors: (...args: unknown[]) => mockUseInsightsErrors(...args),
+  useGetPreferences: (...args: unknown[]) => mockUseGetPreferences(...args),
+  useUpdatePreferences: (...args: unknown[]) => mockUseUpdatePreferences(...args),
   createAuthenticatedFetch: vi.fn(() => vi.fn()),
 }));
 
@@ -153,6 +166,15 @@ beforeEach(() => {
     isLoading: false,
     error: null,
     refetch: vi.fn(),
+  });
+  mockUseGetPreferences.mockReturnValue({
+    data: { dailyMinutes: 10, goals: [], gentleNudges: true },
+    isLoading: false,
+    error: null,
+  });
+  mockUseUpdatePreferences.mockReturnValue({
+    mutate: vi.fn(),
+    isPending: false,
   });
   mockUseProgressRadar.mockReturnValue({
     data: radarResponse(
@@ -383,6 +405,67 @@ describe('DashboardPage — language switching (Req 1.3, 11.2)', () => {
     );
     expect(mockUseProgressRadar).toHaveBeenLastCalledWith(
       expect.objectContaining({ language: Language.DE }),
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DailyLoadControl wiring — preferences mutation + today-plan invalidation
+// ---------------------------------------------------------------------------
+
+describe('DashboardPage — DailyLoadControl wiring', () => {
+  it('renders the DailyLoadControl with current dailyMinutes from preferences', () => {
+    render(<DashboardPage />);
+    // The radiogroup is present
+    expect(
+      screen.getByRole('radiogroup', { name: "today's load" }),
+    ).toBeInTheDocument();
+    // The 10-min option (our mocked prefs.dailyMinutes) is selected
+    const options = screen.getAllByRole('radio');
+    const checked = options.filter(
+      (el) => el.getAttribute('aria-checked') === 'true',
+    );
+    expect(checked).toHaveLength(1);
+    expect(checked[0]).toHaveTextContent('10 min');
+  });
+
+  it('fires useUpdatePreferences.mutate with new dailyMinutes when an option is clicked', () => {
+    const mutateMock = vi.fn();
+    mockUseUpdatePreferences.mockReturnValue({
+      mutate: mutateMock,
+      isPending: false,
+    });
+
+    render(<DashboardPage />);
+    fireEvent.click(screen.getByText('20 min'));
+
+    expect(mutateMock).toHaveBeenCalledWith(
+      { dailyMinutes: 20 },
+      expect.objectContaining({ onSuccess: expect.any(Function) }),
+    );
+  });
+
+  it('invalidates todayPlan query on successful preference update', () => {
+    let capturedOnSuccess: (() => void) | undefined;
+    const mutateMock = vi.fn(
+      (_: unknown, opts: { onSuccess?: () => void }) => {
+        capturedOnSuccess = opts.onSuccess;
+      },
+    );
+    mockUseUpdatePreferences.mockReturnValue({
+      mutate: mutateMock,
+      isPending: false,
+    });
+
+    render(<DashboardPage />);
+    fireEvent.click(screen.getByText('30 min'));
+
+    // Trigger the onSuccess callback
+    expect(capturedOnSuccess).toBeDefined();
+    capturedOnSuccess!();
+
+    expect(mockInvalidateQueries).toHaveBeenCalledWith(
+      expect.objectContaining({ queryKey: ['todayPlan', Language.ES] }),
     );
   });
 });
