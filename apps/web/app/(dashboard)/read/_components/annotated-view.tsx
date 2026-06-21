@@ -302,6 +302,7 @@ export function AnnotatedView({
 
   const handleWordClick = (word: string, rect: DOMRect) => {
     const { x, y } = containerXY(rect);
+    track('reading_annotation_used', { language: activeLanguage, mode: 'skim' as const });
     onPopoverOpen(word, x, y);
   };
 
