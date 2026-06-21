@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
 
 import SentryUserContext from '../components/sentry/sentry-user-context';
+import { ChunkReloadGuard } from '../components/chunk-reload/chunk-reload-guard';
 
 import { fraunces, inter, jetbrainsMono, caveat } from './fonts';
 import { Providers } from './providers';
@@ -28,6 +29,7 @@ export default function RootLayout({
           className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable} ${caveat.variable}`}
         >
         <body>
+          <ChunkReloadGuard />
           <ConsentProvider>
             <PostHogProvider>
               <Providers>{children}</Providers>
