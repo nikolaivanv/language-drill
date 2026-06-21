@@ -700,16 +700,42 @@ describe('PracticePage', () => {
   });
 });
 
-describe('PracticePage — exerciseCount from dailyMinutes', () => {
-  it('dailyMinutes: 30 → exerciseCount: 12', () => {
+describe('PracticePage — exerciseCount from dailyGoal', () => {
+  it('dailyGoal: long → exerciseCount: 12', () => {
     mockUseGetPreferences.mockReturnValue({
-      data: { dailyMinutes: 30 },
+      data: { dailyGoal: 'long' },
       isLoading: false,
       error: null,
     });
     renderWithProviders(<PracticePage />);
     expect(createMutate).toHaveBeenCalledWith(
       expect.objectContaining({ exerciseCount: 12 }),
+      expect.anything(),
+    );
+  });
+
+  it('dailyGoal: quick → exerciseCount: 5', () => {
+    mockUseGetPreferences.mockReturnValue({
+      data: { dailyGoal: 'quick' },
+      isLoading: false,
+      error: null,
+    });
+    renderWithProviders(<PracticePage />);
+    expect(createMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ exerciseCount: 5 }),
+      expect.anything(),
+    );
+  });
+
+  it('dailyGoal: medium → exerciseCount: 8', () => {
+    mockUseGetPreferences.mockReturnValue({
+      data: { dailyGoal: 'medium' },
+      isLoading: false,
+      error: null,
+    });
+    renderWithProviders(<PracticePage />);
+    expect(createMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ exerciseCount: 8 }),
       expect.anything(),
     );
   });

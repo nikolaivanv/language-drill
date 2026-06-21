@@ -20,6 +20,7 @@ export {
   type LanguageProfilesResponse,
 } from './schemas/profile';
 export {
+  DailyGoalEnum,
   LearningLanguageEnum,
   LearningProfileSchema,
   PreferencesResponseSchema,

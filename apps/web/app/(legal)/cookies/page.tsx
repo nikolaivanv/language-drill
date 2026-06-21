@@ -21,9 +21,11 @@ export default function CookiesPage() {
 
       <h2>Analytics</h2>
       <p>
-        We do not run product analytics today. If we add analytics in the future, it will
-        load <strong>only after you opt in</strong> using the cookie banner. You can change
-        your choice at any time via the &ldquo;Cookie preferences&rdquo; link in the footer.
+        We use <strong>PostHog</strong> (EU region) for product analytics and session
+        replay. It loads <strong>only after you opt in</strong> using the cookie banner,
+        sets analytics cookies, and records masked session replays (your typed answers are
+        masked). You can change your choice at any time via the &ldquo;Cookie
+        preferences&rdquo; link in the footer.
       </p>
 
       <h2>Error monitoring</h2>

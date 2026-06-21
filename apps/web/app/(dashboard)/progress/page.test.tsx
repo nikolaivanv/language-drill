@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { CefrLevel, Language } from '@language-drill/shared';
 import type {
   ProgressRadarResponse,
   RadarAxis,
   RadarAxisKey,
+  CurriculumMapResponse,
 } from '@language-drill/api-client';
 import { ActiveLanguageProvider } from '../../../components/shell';
 import ProgressPage from './page';
@@ -32,6 +33,8 @@ const mockUseFluencyStats = vi.fn();
 const mockUseErrorTrends = vi.fn();
 const mockUseCurriculumMap = vi.fn();
 const mockUseInsightsErrors = vi.fn();
+const mockUseGetPreferences = vi.fn();
+const mockUseUpdateLanguages = vi.fn();
 
 vi.mock('@language-drill/api-client', () => ({
   useProgressRadar: (...args: unknown[]) => mockUseProgressRadar(...args),
@@ -40,6 +43,8 @@ vi.mock('@language-drill/api-client', () => ({
   useErrorTrends: (...args: unknown[]) => mockUseErrorTrends(...args),
   useCurriculumMap: (...args: unknown[]) => mockUseCurriculumMap(...args),
   useInsightsErrors: (...args: unknown[]) => mockUseInsightsErrors(...args),
+  useGetPreferences: (...args: unknown[]) => mockUseGetPreferences(...args),
+  useUpdateLanguages: (...args: unknown[]) => mockUseUpdateLanguages(...args),
   createAuthenticatedFetch: vi.fn(() => vi.fn()),
 }));
 
@@ -95,6 +100,72 @@ function renderPage() {
   );
 }
 
+function renderPageTR() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return { queryClient, ...render(
+    <QueryClientProvider client={queryClient}>
+      <ActiveLanguageProvider
+        profiles={[
+          { language: Language.TR, proficiencyLevel: CefrLevel.A1 },
+          { language: Language.ES, proficiencyLevel: CefrLevel.B1 },
+        ]}
+      >
+        <ProgressPage />
+      </ActiveLanguageProvider>
+    </QueryClientProvider>,
+  ) };
+}
+
+function buildCurriculumReadyFixture(): CurriculumMapResponse {
+  const basePoint = {
+    cefrLevel: 'A1' as const,
+    state: 'solid' as const,
+    errorProne: false,
+    mastery: null,
+    confidence: null,
+    evidenceCount: 0,
+    lastPracticedAt: null,
+    recentErrorCount: 0,
+    prereqKeys: [],
+    prereqNames: [],
+    prereqUnmet: false,
+    compatibleTypes: [],
+    hasTheory: false,
+    errorSample: null,
+  };
+  return {
+    language: Language.TR,
+    activeLevel: 'A1',
+    levels: [
+      {
+        level: 'A1',
+        solidCount: 3,
+        total: 3,
+        readyToAdvance: true,
+        isPreview: false,
+        points: [
+          { ...basePoint, key: 'tr-a1-p1', name: 'Point 1', order: 1 },
+          { ...basePoint, key: 'tr-a1-p2', name: 'Point 2', order: 2 },
+          { ...basePoint, key: 'tr-a1-p3', name: 'Point 3', order: 3 },
+        ],
+      },
+      {
+        level: 'A2',
+        solidCount: 0,
+        total: 2,
+        readyToAdvance: false,
+        isPreview: true,
+        points: [
+          { ...basePoint, cefrLevel: 'A2', state: 'not-started', key: 'tr-a2-p1', name: 'A2 Point 1', order: 1 },
+          { ...basePoint, cefrLevel: 'A2', state: 'not-started', key: 'tr-a2-p2', name: 'A2 Point 2', order: 2 },
+        ],
+      },
+    ],
+  };
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   mockSearchParams = new URLSearchParams();
@@ -104,6 +175,15 @@ beforeEach(() => {
     },
     isLoading: false,
     error: null,
+  });
+  mockUseGetPreferences.mockReturnValue({
+    data: { primaryLanguage: Language.ES },
+    isLoading: false,
+    error: null,
+  });
+  mockUseUpdateLanguages.mockReturnValue({
+    mutate: vi.fn(),
+    isPending: false,
   });
   // Sensible defaults — individual tests override.
   mockUseProgressRadar.mockReturnValue({
@@ -215,5 +295,113 @@ describe('ProgressPage', () => {
     expect(text).not.toMatch(/\d+\s+xp\b/);
     expect(text).not.toMatch(/\d+\s+lessons?\s+completed/);
     expect(text).not.toMatch(/🔥\s*streak/);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Advance action: wiring
+  // ---------------------------------------------------------------------------
+
+  it('clicking "add A2 →" calls update.mutate with TR@A2 + correct primaryLanguage', () => {
+    // Arrange: TR as active language, A1 readyToAdvance, A2 preview
+    const mutate = vi.fn();
+    mockUseUpdateLanguages.mockReturnValue({ mutate, isPending: false });
+    mockUseLanguageProfiles.mockReturnValue({
+      data: {
+        profiles: [
+          { language: Language.TR, proficiencyLevel: CefrLevel.A1 },
+          { language: Language.ES, proficiencyLevel: CefrLevel.B1 },
+        ],
+      },
+      isLoading: false,
+      error: null,
+    });
+    mockUseGetPreferences.mockReturnValue({
+      data: { primaryLanguage: Language.TR },
+      isLoading: false,
+      error: null,
+    });
+    mockUseCurriculumMap.mockReturnValue({
+      data: buildCurriculumReadyFixture(),
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+    // Need radar data to pass the empty-state guard
+    mockUseProgressRadar.mockReturnValue({
+      data: radarResponse(buildAxes({ grammar: { mastery: 0.6, evidence: 6 } })),
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    renderPageTR();
+
+    // The advance button should render
+    const btn = screen.getByRole('button', { name: /add A2 →/i });
+    expect(btn).toBeDefined();
+
+    fireEvent.click(btn);
+
+    // mutate should be called once with TR leveled to A2
+    expect(mutate).toHaveBeenCalledTimes(1);
+    const [payload] = mutate.mock.calls[0] as [{ profiles: Array<{ language: Language; proficiencyLevel: CefrLevel }>; primaryLanguage: Language }];
+    expect(payload.primaryLanguage).toBe(Language.TR);
+    // TR should be A2 now
+    const trProfile = payload.profiles.find((p) => p.language === Language.TR);
+    expect(trProfile?.proficiencyLevel).toBe(CefrLevel.A2);
+    // ES should remain unchanged
+    const esProfile = payload.profiles.find((p) => p.language === Language.ES);
+    expect(esProfile?.proficiencyLevel).toBe(CefrLevel.B1);
+  });
+
+  it('onSuccess callback invalidates curriculumMap + languageProfiles + todayPlan + progressRadar', () => {
+    // Arrange: same setup as above
+    let capturedOnSuccess: (() => void) | undefined;
+    const mutate = vi.fn((_payload: unknown, opts?: { onSuccess?: () => void }) => {
+      capturedOnSuccess = opts?.onSuccess;
+    });
+    mockUseUpdateLanguages.mockReturnValue({ mutate, isPending: false });
+    mockUseLanguageProfiles.mockReturnValue({
+      data: {
+        profiles: [
+          { language: Language.TR, proficiencyLevel: CefrLevel.A1 },
+          { language: Language.ES, proficiencyLevel: CefrLevel.B1 },
+        ],
+      },
+      isLoading: false,
+      error: null,
+    });
+    mockUseGetPreferences.mockReturnValue({
+      data: { primaryLanguage: Language.TR },
+      isLoading: false,
+      error: null,
+    });
+    mockUseCurriculumMap.mockReturnValue({
+      data: buildCurriculumReadyFixture(),
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+    mockUseProgressRadar.mockReturnValue({
+      data: radarResponse(buildAxes({ grammar: { mastery: 0.6, evidence: 6 } })),
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    const { queryClient } = renderPageTR();
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    fireEvent.click(screen.getByRole('button', { name: /add A2 →/i }));
+
+    expect(capturedOnSuccess).toBeDefined();
+    capturedOnSuccess!();
+
+    // Should have invalidated all four query keys
+    const keys = invalidateSpy.mock.calls.map((call) => (call[0] as { queryKey: unknown[] }).queryKey);
+    expect(keys).toContainEqual(['languageProfiles']);
+    expect(keys).toContainEqual(['curriculumMap', Language.TR]);
+    expect(keys).toContainEqual(['todayPlan', Language.TR]);
+    expect(keys).toContainEqual(['progressRadar', Language.TR]);
   });
 });

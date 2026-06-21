@@ -16,6 +16,7 @@ import {
   initialNewUserState,
   useOnboarding,
 } from "../../components/onboarding";
+import { track } from "../../lib/analytics/track";
 
 // ---------------------------------------------------------------------------
 // OnboardingPage — routing/loading/hydration + submit orchestration
@@ -187,6 +188,7 @@ function OnboardingPageBody({ fetchFn }: { fetchFn: AuthenticatedFetch }) {
         gentleNudges: state.gentleNudges,
         notes: state.notes.replace(/\r\n/g, "\n").trim(),
       });
+      track('onboarding_step_completed', { step: state.step });
       dispatch({ type: "submitSuccess" });
       router.push("/home");
     } catch (err) {

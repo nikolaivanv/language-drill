@@ -217,7 +217,9 @@ export function AnnotatedText({
     const live = liveRef.current;
     // onWordClick stays flagged-only (the parent's handler is skim-specific).
     if (live.flaggedMap[token.key]) live.onWordClick(token.key, rect);
-    live.onSpanSelect?.({ start: token.start, end: token.end, type: 'word', rect });
+    if (live.onSpanSelect) {
+      live.onSpanSelect({ start: token.start, end: token.end, type: 'word', rect });
+    }
   }, []);
 
   // ---- Selection core (input-agnostic) ------------------------------------
@@ -259,7 +261,9 @@ export function AnnotatedText({
       return;
     }
     const type = resolveSpanType(txt, start, end, toks);
-    emit?.({ start, end, type, rect });
+    if (emit) {
+      emit({ start, end, type, rect });
+    }
 
     // After a press on word A and release on word B (A≠B), browsers fire a
     // synthetic click on the common ancestor — the rd-text container — which

@@ -29,7 +29,7 @@ import {
   useUpdatePreferences,
 } from '@language-drill/api-client';
 import { composePathCue } from '../_lib/path-cue';
-import { type DailyMinutes } from '@language-drill/shared';
+import { type DailyGoal } from '@language-drill/shared';
 import { useActiveLanguage } from '../../../components/shell/active-language-provider';
 import { useIsMobile } from '../../../lib/responsive';
 import { DailyLoadControl } from '../_components/daily-load-control';
@@ -62,9 +62,9 @@ export default function DashboardPage() {
 
   const isMobile = useIsMobile();
 
-  const handleDailyMinutesSelect = (m: DailyMinutes) => {
+  const handleDailyGoalSelect = (g: DailyGoal) => {
     updatePrefs.mutate(
-      { dailyMinutes: m },
+      { dailyGoal: g },
       {
         onSuccess: () => {
           // Invalidate the today-plan query so the plan length updates.
@@ -90,8 +90,8 @@ export default function DashboardPage() {
         <NextUpCard data={todayPlan.data} language={activeLanguage} />
       )}
       <DailyLoadControl
-        current={prefs.data?.dailyMinutes ?? null}
-        onSelect={handleDailyMinutesSelect}
+        current={prefs.data?.dailyGoal ?? null}
+        onSelect={handleDailyGoalSelect}
         disabled={updatePrefs.isPending}
       />
       <TodayTimeline

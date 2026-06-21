@@ -4,14 +4,19 @@
 // artifact consumed by `pnpm --filter @language-drill/db seed:vocab`.
 //
 // Run with `pnpm --filter @language-drill/ai build:vocab-lemma`.
-// Sources are NOT checked in:
-//   packages/ai/scripts/sources/{es,de,tr}.tsv             (surface\tlemma\trank[\tcefr])
-//   packages/ai/scripts/sources/wiktextract/{es,de,tr}.jsonl ({ "word":..., "pos":... } per line)
+// Sources are NOT checked in. Input dirs are overridable via env so the large
+// (uncommitted) sources can live anywhere:
+//   CORPUS_DIR (default scripts/sources)            holds `<lang>.tsv`  (surface\tlemma\trank[\tcefr])
+//   WIKTEXTRACT_DIR (default CORPUS_DIR/wiktextract) holds the wiktextract JSONL,
+//     either `<lang>.jsonl` or the raw kaikki.org per-language file
+//     `kaikki.org-dictionary-<Name>.jsonl` (one JSON object per line w/ `word`+`pos`).
+// The JSONL is streamed line-by-line (handles multi-GB raw kaikki dumps).
 // Output (committed): packages/ai/src/frequency/vocab-lemma/{es,de,tr}.json
 // ---------------------------------------------------------------------------
 
-import { promises as fs } from 'node:fs';
+import { createReadStream, existsSync, promises as fs } from 'node:fs';
 import path from 'node:path';
+import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
 import Anthropic from '@anthropic-ai/sdk';
 
@@ -20,8 +25,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const LANGUAGES = ['es', 'de', 'tr'] as const;
 type Lang = (typeof LANGUAGES)[number];
 
-const SOURCES_DIR = path.join(__dirname, 'sources');
-const WIKT_DIR = path.join(SOURCES_DIR, 'wiktextract');
+// English-Wiktionary kaikki.org per-language filenames — used as a fallback
+// when `<lang>.jsonl` is absent, so the raw downloads work without renaming.
+const KAIKKI_LANG_NAME: Record<Lang, string> = { es: 'Spanish', de: 'German', tr: 'Turkish' };
+
+const SOURCES_DIR = process.env['CORPUS_DIR'] ?? path.join(__dirname, 'sources');
+const WIKT_DIR = process.env['WIKTEXTRACT_DIR'] ?? path.join(SOURCES_DIR, 'wiktextract');
 const OUTPUT_DIR = path.join(__dirname, '..', 'src', 'frequency', 'vocab-lemma');
 
 export type CorpusRow = { lemma: string; rank: number };
@@ -60,8 +69,48 @@ function toUpos(pos: string): string {
  * ascending (lemma tie-break). Unmatched lemmas keep their rank with an empty
  * `posAll` and `source: 'unmatched'`.
  */
+/** lemma -> lowest corpus rank. Lowercased; blank lemmas dropped. */
+function rankByLemmaFromCorpus(corpus: CorpusRow[]): Map<string, number> {
+  const rankByLemma = new Map<string, number>();
+  for (const c of corpus) {
+    const lemma = c.lemma.toLowerCase();
+    if (!lemma) continue;
+    const existing = rankByLemma.get(lemma);
+    if (existing === undefined || c.rank < existing) rankByLemma.set(lemma, c.rank);
+  }
+  return rankByLemma;
+}
+
+/**
+ * Builds the seed rows from the corpus rank map + a lemma->PoS map: attaches
+ * every attested PoS (sorted, deduped), marks lemmas absent from `posByLemma`
+ * as `unmatched` with empty `posAll`, and orders by rank asc (lemma tie-break).
+ */
+function joinFromMaps(
+  rankByLemma: Map<string, number>,
+  posByLemma: Map<string, Set<string>>,
+): VocabLemmaSeedRow[] {
+  const rows: VocabLemmaSeedRow[] = [];
+  for (const [lemma, rank] of rankByLemma) {
+    const pos = posByLemma.get(lemma);
+    if (pos === undefined || pos.size === 0) {
+      rows.push({ lemma, rank, posAll: [], source: 'unmatched' });
+    } else {
+      rows.push({ lemma, rank, posAll: [...pos].sort(), source: 'wiktextract' });
+    }
+  }
+  rows.sort((a, b) =>
+    a.rank !== b.rank ? a.rank - b.rank : a.lemma < b.lemma ? -1 : a.lemma > b.lemma ? 1 : 0,
+  );
+  return rows;
+}
+
+/**
+ * Pure in-memory join (used by unit tests). Dedupes the corpus by lemma
+ * (lowest rank), attaches every attested PoS from the Wiktextract rows, marks
+ * unmatched lemmas `source: 'unmatched'`, orders by rank then lemma.
+ */
 export function joinLemmaPos(corpus: CorpusRow[], wikt: WiktRow[]): VocabLemmaSeedRow[] {
-  // lemma -> sorted, deduped UD upos set
   const posByLemma = new Map<string, Set<string>>();
   for (const w of wikt) {
     const lemma = w.word.toLowerCase();
@@ -70,30 +119,7 @@ export function joinLemmaPos(corpus: CorpusRow[], wikt: WiktRow[]): VocabLemmaSe
     set.add(toUpos(w.pos));
     posByLemma.set(lemma, set);
   }
-
-  // lemma -> lowest rank
-  const rankByLemma = new Map<string, number>();
-  for (const c of corpus) {
-    const lemma = c.lemma.toLowerCase();
-    if (!lemma) continue;
-    const existing = rankByLemma.get(lemma);
-    if (existing === undefined || c.rank < existing) rankByLemma.set(lemma, c.rank);
-  }
-
-  const rows: VocabLemmaSeedRow[] = [];
-  for (const [lemma, rank] of rankByLemma) {
-    const pos = posByLemma.get(lemma);
-    if (pos === undefined) {
-      rows.push({ lemma, rank, posAll: [], source: 'unmatched' });
-    } else {
-      rows.push({ lemma, rank, posAll: [...pos].sort(), source: 'wiktextract' });
-    }
-  }
-
-  rows.sort((a, b) =>
-    a.rank !== b.rank ? a.rank - b.rank : a.lemma < b.lemma ? -1 : a.lemma > b.lemma ? 1 : 0,
-  );
-  return rows;
+  return joinFromMaps(rankByLemmaFromCorpus(corpus), posByLemma);
 }
 
 export function chunk<T>(items: T[], size: number): T[][] {
@@ -165,27 +191,60 @@ function parseCorpus(raw: string): CorpusRow[] {
   return rows;
 }
 
-function parseWiktextract(raw: string): WiktRow[] {
-  const rows: WiktRow[] = [];
-  for (const line of raw.split('\n')) {
-    const trimmed = line.trim();
-    if (trimmed === '') continue;
+/** Resolve the wiktextract file for a language: `<lang>.jsonl` if present, else the raw kaikki name. */
+function resolveWiktPath(lang: Lang): string {
+  const direct = path.join(WIKT_DIR, `${lang}.jsonl`);
+  if (existsSync(direct)) return direct;
+  return path.join(WIKT_DIR, `kaikki.org-dictionary-${KAIKKI_LANG_NAME[lang]}.jsonl`);
+}
+
+/**
+ * Streams a (possibly multi-GB) wiktextract JSONL line-by-line, recording the
+ * attested UD upos tags only for lemmas in `wanted` (the corpus lemma set) so
+ * memory stays bounded regardless of dump size. Malformed lines are skipped.
+ */
+async function streamPosByLemma(
+  filePath: string,
+  wanted: ReadonlySet<string>,
+): Promise<Map<string, Set<string>>> {
+  const posByLemma = new Map<string, Set<string>>();
+  const rl = createInterface({
+    input: createReadStream(filePath, 'utf-8'),
+    crlfDelay: Infinity,
+  });
+  for await (const line of rl) {
+    if (line === '') continue;
+    let obj: { word?: unknown; pos?: unknown };
     try {
-      const obj = JSON.parse(trimmed) as { word?: unknown; pos?: unknown };
-      if (typeof obj.word === 'string' && typeof obj.pos === 'string') {
-        rows.push({ word: obj.word, pos: obj.pos });
-      }
+      obj = JSON.parse(line) as { word?: unknown; pos?: unknown };
     } catch {
-      // skip malformed lines
+      continue; // skip malformed line
     }
+    if (typeof obj.word !== 'string' || typeof obj.pos !== 'string') continue;
+    const lemma = obj.word.toLowerCase();
+    if (!wanted.has(lemma)) continue;
+    const set = posByLemma.get(lemma) ?? new Set<string>();
+    set.add(toUpos(obj.pos));
+    posByLemma.set(lemma, set);
   }
-  return rows;
+  return posByLemma;
 }
 
 async function buildLanguage(lang: Lang): Promise<void> {
   const corpusRaw = await fs.readFile(path.join(SOURCES_DIR, `${lang}.tsv`), 'utf-8');
-  const wiktRaw = await fs.readFile(path.join(WIKT_DIR, `${lang}.jsonl`), 'utf-8');
-  const rows = joinLemmaPos(parseCorpus(corpusRaw), parseWiktextract(wiktRaw));
+  const rankByLemma = rankByLemmaFromCorpus(parseCorpus(corpusRaw));
+  const wanted = new Set(rankByLemma.keys());
+
+  const wiktPath = resolveWiktPath(lang);
+  if (!existsSync(wiktPath)) {
+    throw new Error(
+      `[build-vocab-lemma] ${lang}: wiktextract file not found. Looked for ` +
+        `${path.join(WIKT_DIR, `${lang}.jsonl`)} and ${wiktPath}. ` +
+        `Set WIKTEXTRACT_DIR to the dir containing the kaikki JSONL.`,
+    );
+  }
+  const posByLemma = await streamPosByLemma(wiktPath, wanted);
+  const rows = joinFromMaps(rankByLemma, posByLemma);
 
   // Gap-fill: recover PoS for unmatched lemmas via Claude (skipped unless
   // GAP_FILL=1 and ANTHROPIC_API_KEY is set — the join alone is a valid build).
@@ -200,15 +259,24 @@ async function buildLanguage(lang: Lang): Promise<void> {
   const outPath = path.join(OUTPUT_DIR, `${lang}.json`);
   await fs.writeFile(outPath, JSON.stringify(finalRows) + '\n', 'utf-8');
   const matched = finalRows.filter((r) => r.source !== 'unmatched').length;
+  const pct = finalRows.length === 0 ? '0' : ((matched / finalRows.length) * 100).toFixed(1);
   console.log(
-    `[build-vocab-lemma] ${lang}: ${finalRows.length} lemmas, ${matched} matched, ` +
-      `${finalRows.length - matched} unmatched -> ${path.relative(process.cwd(), outPath)}`,
+    `[build-vocab-lemma] ${lang}: ${finalRows.length} lemmas, ${matched} matched (${pct}%), ` +
+      `${finalRows.length - matched} unmatched [src: ${path.basename(wiktPath)}] -> ${path.relative(process.cwd(), outPath)}`,
   );
 }
 
 async function main(): Promise<void> {
   await fs.mkdir(OUTPUT_DIR, { recursive: true });
-  for (const lang of LANGUAGES) await buildLanguage(lang);
+  // LANGS=tr (or tr,de) limits the build to a subset — e.g. to re-run a single
+  // language's gap-fill without rebuilding the others.
+  const only = process.env['LANGS']
+    ?.split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  const langs =
+    only && only.length ? LANGUAGES.filter((l) => only.includes(l)) : [...LANGUAGES];
+  for (const lang of langs) await buildLanguage(lang);
 }
 
 // Only run when invoked directly, so the test can import the pure helpers.

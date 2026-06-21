@@ -12,6 +12,7 @@
 // The shell does not render the provider itself.
 // ---------------------------------------------------------------------------
 
+import { track } from '../../lib/analytics/track';
 import { CoachPane } from './coach-pane';
 import { MobileCoachHeader } from './mobile-coach-header';
 import { useOnboarding } from './onboarding-context';
@@ -65,7 +66,10 @@ function WizardRightPane({
 
   const onPrimary =
     state.step < 4
-      ? () => dispatch({ type: 'goNext' })
+      ? () => {
+          track('onboarding_step_completed', { step: state.step });
+          dispatch({ type: 'goNext' });
+        }
       : () => onComplete(mode);
 
   return (

@@ -35,6 +35,7 @@ const mockUpdateReturning = vi.fn(() => Promise.resolve([
     primaryLanguage: 'ES',
     goals: ['vocab'],
     dailyMinutes: 30,
+    dailyGoal: 'medium',
     gentleNudges: true,
     notes: '',
   },
@@ -158,6 +159,7 @@ vi.mock('@language-drill/db', () => ({
     primaryLanguage: 'primary_language',
     goals: 'goals',
     dailyMinutes: 'daily_minutes',
+    dailyGoal: 'daily_goal',
     gentleNudges: 'gentle_nudges',
     notes: 'notes',
   },
@@ -533,6 +535,7 @@ describe('GET /profiles/preferences', () => {
       primaryLanguage: null,
       goals: [],
       dailyMinutes: null,
+      dailyGoal: 'medium',
       gentleNudges: true,
       notes: '',
     });
@@ -545,6 +548,7 @@ describe('GET /profiles/preferences', () => {
         primaryLanguage: 'ES',
         goals: ['grammar', 'speaking'],
         dailyMinutes: 10,
+        dailyGoal: 'long',
         gentleNudges: false,
         notes: 'practice subjunctive',
         updatedAt: new Date(),
@@ -559,6 +563,7 @@ describe('GET /profiles/preferences', () => {
       primaryLanguage: 'ES',
       goals: ['grammar', 'speaking'],
       dailyMinutes: 10,
+      dailyGoal: 'long',
       gentleNudges: false,
       notes: 'practice subjunctive',
     });
@@ -605,6 +610,7 @@ describe('PATCH /profiles/preferences', () => {
         primaryLanguage: 'ES',
         goals: ['vocab'],
         dailyMinutes: 30,
+        dailyGoal: 'medium',
         gentleNudges: true,
         notes: '',
       },
@@ -641,6 +647,29 @@ describe('PATCH /profiles/preferences', () => {
   it('rejects an invalid dailyMinutes with 400', async () => {
     const res = await patchPrefs(app, { dailyMinutes: 7 });
     expect(res.status).toBe(400);
+  });
+
+  it('accepts and persists dailyGoal', async () => {
+    mockUpdateReturning.mockResolvedValueOnce([
+      {
+        primaryLanguage: 'ES',
+        goals: ['vocab'],
+        dailyMinutes: 30,
+        dailyGoal: 'long',
+        gentleNudges: true,
+        notes: '',
+      },
+    ]);
+    const res = await patchPrefs(app, { dailyGoal: 'long' });
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as AnyJson;
+    expect(json.dailyGoal).toBe('long');
+    // Verify the .set() call includes dailyGoal
+    const setArg = (mockUpdateSet.mock.calls as unknown[][])[0][0] as Record<
+      string,
+      unknown
+    >;
+    expect(setArg).toHaveProperty('dailyGoal', 'long');
   });
 
   it('returns 404 when the user has no preferences row', async () => {

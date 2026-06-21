@@ -291,15 +291,22 @@ sessions.post('/sessions/:id/complete', async (c) => {
 // ---------------------------------------------------------------------------
 // Two paths:
 //   - Path A (hydrate): a practice_sessions row exists for (userId, language)
-//     started today (UTC) → return its items with `done`/`queued` statuses,
-//     populating `summary` when every kept item is done AND completedAt is set.
-//   - Path B (fresh):    no today-session → draw 5 exercises from the pool
-//     using V1_PLAN_SHAPE and return them as queued.
+//     started today (UTC) AND the session is engaged (completedAt ≠ null OR
+//     ≥1 attempt) → return its items with `done`/`queued` statuses, populating
+//     `summary` when every kept item is done AND completedAt is set.
+//   - Path B (fresh): no today-session, OR a today-session with 0 attempts and
+//     not completed → draw exercises from the pool using V1_PLAN_SHAPE, sized
+//     by the user's `dailyGoal` pref, and return them as queued.
+//
+// The engagement gate (Path A ↔ Path B) fixes the "start → bounce → locked
+// plan" bug: a user who opened the session page but did not answer any
+// exercises no longer sees a stale, potentially wrong-sized plan.
 //
 // Performance budget: ≤ 2 SQL round-trips on most days. Query 1 (today-session
 // lookup) and the proficiency-level fetch share one RTT via Promise.all; Path
-// B's pool sample is the second. On a language's free-writing cadence day
-// (~1/3 of days) one extra indexed lookup gates the freeWriting block.
+// A's items join and Path B's pool sample are the second. On a language's
+// free-writing cadence day (~1/3 of days) one extra indexed lookup gates the
+// freeWriting block.
 // ---------------------------------------------------------------------------
 sessions.get('/sessions/today', async (c) => {
   const queryResult = TodayQuerySchema.safeParse(c.req.query());
@@ -355,7 +362,7 @@ sessions.get('/sessions/today', async (c) => {
       )
       .limit(1),
     db
-      .select({ dailyMinutes: userPreferences.dailyMinutes })
+      .select({ dailyGoal: userPreferences.dailyGoal })
       .from(userPreferences)
       .where(eq(userPreferences.userId, userId))
       .limit(1),
@@ -381,8 +388,8 @@ sessions.get('/sessions/today', async (c) => {
     ? profileRows[0].proficiencyLevel
     : DEFAULT_PROFICIENCY_LEVEL;
 
-  // Daily goal target from the user's preferences (null → default 8 items).
-  const dailyMinutes = prefsRows[0]?.dailyMinutes ?? null;
+  // Daily goal target from the user's preferences (null → default 8 items via targetItemCount).
+  const dailyGoal = prefsRows[0]?.dailyGoal ?? null;
 
   // Per-point error count map for the last 30 days — used by both rank and reasonFor.
   const errorCountByPoint = new Map<string, number>();
@@ -453,8 +460,14 @@ sessions.get('/sessions/today', async (c) => {
   }
 
   // -------------------------------------------------------------------------
-  // Path A — hydrate from today's session
+  // Path A — hydrate from today's session (engagement gate)
   // -------------------------------------------------------------------------
+  // When a today-session exists, fetch its item rows first so we can determine
+  // whether the user has actually engaged. A session that was started but never
+  // touched (0 attempts, not completed) falls through to Path B so the plan can
+  // be resized by the current `dailyGoal` and a fresh ranking can be applied.
+  // Only sessions where `completedAt !== null || attemptedIds.size > 0` are
+  // hydrated (Path A proper). This fixes the "start → bounce → locked plan" bug.
   if (todayRows.length > 0) {
     const session = todayRows[0];
     const exerciseIds = session.exerciseIds ?? [];
@@ -503,38 +516,47 @@ sessions.get('/sessions/today', async (c) => {
       if (row.historyId !== null) attemptedIds.add(row.exerciseId);
     }
 
-    const { items, summary } = hydrateFromSession({
-      session: {
-        id: session.sessionId,
-        exerciseIds,
-        exerciseCount: session.exerciseCount,
-        correctCount: session.correctCount,
-        startedAt: new Date(session.startedAt as Date),
-        completedAt: session.completedAt
-          ? new Date(session.completedAt as Date)
-          : null,
-      },
-      exercises: exercisesMap,
-      attemptedIds,
-    });
+    // Engagement gate: a started-but-untouched session (0 attempts, not
+    // completed) falls through to Path B so the plan preview reflects the
+    // current `dailyGoal` setting and a fresh ranking. A session with ≥1
+    // attempt OR a completed session is always hydrated (Path A).
+    const engaged = session.completedAt !== null || attemptedIds.size > 0;
 
-    return c.json({
-      language,
-      generatedAt: new Date().toISOString(),
-      totalEstimatedMinutes: items.reduce(
-        (sum, it) => sum + it.estimatedMinutes,
-        0,
-      ),
-      items: items.map((it) => toWireItem(it, rankCtx)),
-      summary,
-      code: null,
-      resumeSessionId: session.completedAt === null ? session.sessionId : null,
-      freeWriting,
-    });
+    if (engaged) {
+      const { items, summary } = hydrateFromSession({
+        session: {
+          id: session.sessionId,
+          exerciseIds,
+          exerciseCount: session.exerciseCount,
+          correctCount: session.correctCount,
+          startedAt: new Date(session.startedAt as Date),
+          completedAt: session.completedAt
+            ? new Date(session.completedAt as Date)
+            : null,
+        },
+        exercises: exercisesMap,
+        attemptedIds,
+      });
+
+      return c.json({
+        language,
+        generatedAt: new Date().toISOString(),
+        totalEstimatedMinutes: items.reduce(
+          (sum, it) => sum + it.estimatedMinutes,
+          0,
+        ),
+        items: items.map((it) => toWireItem(it, rankCtx)),
+        summary,
+        code: null,
+        resumeSessionId: session.completedAt === null ? session.sessionId : null,
+        freeWriting,
+      });
+    }
+    // else: not engaged → fall through to Path B (fresh plan, dailyGoal-sized).
   }
 
   // -------------------------------------------------------------------------
-  // Path B — compose a fresh plan from the pool, sized by daily-minutes goal.
+  // Path B — compose a fresh plan from the pool, sized by dailyGoal.
   // -------------------------------------------------------------------------
   // The sample over-fetches distinct candidates per type so composeFreshPlan
   // can backfill a slot whose native type is missing (see its doc comment).
@@ -545,7 +567,7 @@ sessions.get('/sessions/today', async (c) => {
 
   const ranked = rankPlanCandidates(draws, rankCtx);
 
-  const size = targetItemCount(dailyMinutes);
+  const size = targetItemCount(dailyGoal);
   const { items, insufficient } = composeFreshPlan(ranked, planSkeleton(size));
 
   const generatedAt = new Date().toISOString();

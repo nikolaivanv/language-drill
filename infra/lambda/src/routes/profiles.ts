@@ -102,6 +102,7 @@ profiles.get('/profiles/preferences', async (c) => {
       primaryLanguage: null,
       goals: [],
       dailyMinutes: null,
+      dailyGoal: 'medium',
       gentleNudges: true,
       notes: '',
     });
@@ -111,6 +112,7 @@ profiles.get('/profiles/preferences', async (c) => {
     primaryLanguage: row.primaryLanguage,
     goals: row.goals,
     dailyMinutes: row.dailyMinutes,
+    dailyGoal: row.dailyGoal,
     gentleNudges: row.gentleNudges,
     notes: row.notes,
   });
@@ -190,6 +192,7 @@ const UpdatePreferencesSchema = z
     dailyMinutes: z
       .union([z.literal(5), z.literal(10), z.literal(20), z.literal(30)])
       .optional(),
+    dailyGoal: z.enum(['quick', 'medium', 'long']).optional(),
     gentleNudges: z.boolean().optional(),
     notes: z.string().max(NOTES_MAX_LENGTH).optional(),
   })
@@ -222,6 +225,7 @@ profiles.patch('/profiles/preferences', async (c) => {
       primaryLanguage: userPreferences.primaryLanguage,
       goals: userPreferences.goals,
       dailyMinutes: userPreferences.dailyMinutes,
+      dailyGoal: userPreferences.dailyGoal,
       gentleNudges: userPreferences.gentleNudges,
       notes: userPreferences.notes,
     });
