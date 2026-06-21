@@ -11,9 +11,10 @@ import { PointDetailSheet } from './point-detail-sheet';
 import { formatAgo } from '../_lib/format-ago';
 
 // ---------------------------------------------------------------------------
-// MapTab — read-only curriculum spine for /progress.
+// MapTab — the curriculum spine for /progress.
 // Mirrors ShapeTab's loading/error pattern and timeline-item.tsx's rail idiom.
-// Phase 1: display-only (no detail sheet; no functional "add level" button).
+// Cells open a point-detail sheet (Phase 2); the readiness strip carries an
+// opt-in "add {next level}" advance action when the level is solid (Phase 4).
 // ---------------------------------------------------------------------------
 
 export type MapTabProps = {
@@ -22,6 +23,8 @@ export type MapTabProps = {
   error: Error | null;
   onRetry?: () => void;
   errorThemes: InsightsErrorTheme[];
+  onAdvance?: () => void;
+  advancing?: boolean;
 };
 
 // ---------------------------------------------------------------------------
@@ -396,11 +399,17 @@ function ReadinessStrip({
   solidCount,
   total,
   readyToAdvance,
+  nextLevel,
+  onAdvance,
+  advancing,
 }: {
   level: string;
   solidCount: number;
   total: number;
   readyToAdvance: boolean;
+  nextLevel?: string;
+  onAdvance?: () => void;
+  advancing?: boolean;
 }) {
   const pct = total > 0 ? Math.round((solidCount / total) * 100) : 0;
   return (
@@ -444,12 +453,32 @@ function ReadinessStrip({
         />
       </div>
       {readyToAdvance && (
-        <p
-          className="t-body"
-          style={{ marginTop: 10, color: 'var(--color-ink)' }}
-        >
-          you've made {level} solid — adding the next level widens your daily plan.
-        </p>
+        <div style={{ marginTop: 10 }}>
+          <p
+            className="t-body"
+            style={{ color: 'var(--color-ink)', marginBottom: nextLevel && onAdvance ? 12 : 0 }}
+          >
+            you've made {level} solid — adding the next level widens your daily plan.
+          </p>
+          {nextLevel && onAdvance && (
+            <div>
+              <Button
+                onClick={onAdvance}
+                disabled={advancing}
+                size="sm"
+                variant="default"
+              >
+                {advancing ? 'adding…' : `add ${nextLevel} →`}
+              </Button>
+              <p
+                className="t-micro"
+                style={{ color: 'var(--color-ink-mute)', marginTop: 6 }}
+              >
+                you can change this anytime in settings
+              </p>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
@@ -500,6 +529,8 @@ export function MapTab({
   error,
   onRetry,
   errorThemes,
+  onAdvance,
+  advancing,
 }: MapTabProps) {
   // Expanded run indices: Set<runIndex>
   const [expandedRuns, setExpandedRuns] = useState<Set<number>>(new Set());
@@ -561,6 +592,9 @@ export function MapTab({
           solidCount={activeLevel.solidCount}
           total={activeLevel.total}
           readyToAdvance={activeLevel.readyToAdvance}
+          nextLevel={previewLevel?.level}
+          onAdvance={onAdvance}
+          advancing={advancing}
         />
       )}
 
