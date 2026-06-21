@@ -85,6 +85,7 @@ describe('useGetPreferences — enabled flag', () => {
           dailyMinutes: 10,
           gentleNudges: true,
           notes: '',
+          dailyGoal: 'medium',
         }),
       );
 
@@ -109,6 +110,7 @@ describe('useGetPreferences — enabled flag', () => {
       dailyMinutes: 20,
       gentleNudges: false,
       notes: 'taking notes',
+      dailyGoal: 'long',
     };
     const fetchFn = vi
       .fn<AuthenticatedFetch>()
@@ -177,6 +179,7 @@ describe('useUpdatePreferences', () => {
         dailyMinutes: 30,
         gentleNudges: true,
         notes: '',
+        dailyGoal: 'quick',
       }),
     );
 

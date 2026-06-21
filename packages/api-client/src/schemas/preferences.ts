@@ -21,11 +21,18 @@ export const LearningLanguageEnum = z.enum([
 ]);
 
 // ---------------------------------------------------------------------------
+// Daily goal enum
+// ---------------------------------------------------------------------------
+
+export const DailyGoalEnum = z.enum(['quick', 'medium', 'long']);
+
+// ---------------------------------------------------------------------------
 // GET /profiles/preferences response
 // ---------------------------------------------------------------------------
 // `primaryLanguage` and `dailyMinutes` are nullable because a freshly-created
 // user has no `userPreferences` row yet — the server returns documented
 // defaults (R9.2) where these two fields are `null`.
+// `dailyGoal` is non-nullable — the GET always returns one (Task 5).
 // ---------------------------------------------------------------------------
 
 export const PreferencesResponseSchema = z.object({
@@ -36,6 +43,7 @@ export const PreferencesResponseSchema = z.object({
     .nullable(),
   gentleNudges: z.boolean(),
   notes: z.string().max(NOTES_MAX_LENGTH),
+  dailyGoal: DailyGoalEnum,
 });
 
 export type PreferencesResponse = z.infer<typeof PreferencesResponseSchema>;
@@ -96,6 +104,7 @@ export const UpdatePreferencesInputSchema = z
       .optional(),
     gentleNudges: z.boolean().optional(),
     notes: z.string().max(NOTES_MAX_LENGTH).optional(),
+    dailyGoal: DailyGoalEnum.optional(),
   })
   .refine((input) => Object.keys(input).length > 0, {
     message: 'At least one field must be provided',
