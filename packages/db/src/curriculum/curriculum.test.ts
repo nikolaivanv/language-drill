@@ -205,6 +205,43 @@ describe('curriculum conjugationSuitable flag', () => {
   });
 });
 
+describe('curriculum conjugationSeedKind (nominal-inflection points generate unseeded)', () => {
+  // Nominal-inflection points decline a noun, not a verb — a verb seed + the
+  // strict "use exactly this verb" directive would contradict the grammar
+  // point, so they opt out of seeding with conjugationSeedKind: 'none'.
+  it('the full conjugationSeedKind:"none" set is exactly these six TR nominal points', () => {
+    const seedless = ALL_CURRICULA.filter((g) => g.conjugationSeedKind === 'none')
+      .map((g) => g.key)
+      .sort();
+    expect(seedless).toEqual(
+      [
+        'tr-a1-accusative-definite-object',
+        'tr-a1-ablative-dative',
+        'tr-a1-locative',
+        'tr-a1-personal-suffixes',
+        'tr-a1-possessive-suffixes',
+        'tr-a2-possessive-case-stacking',
+      ].sort(),
+    );
+  });
+
+  it('every conjugationSeedKind:"none" point is also conjugationSuitable', () => {
+    for (const g of ALL_CURRICULA.filter((p) => p.conjugationSeedKind === 'none')) {
+      expect(g.conjugationSuitable, g.key).toBe(true);
+    }
+  });
+
+  it('verb-morphology conjugation points keep the default verb seed (no flag)', () => {
+    for (const key of [
+      'tr-a2-aorist',
+      'tr-b1-real-conditional',
+      'es-b1-present-subjunctive',
+    ]) {
+      expect(getGrammarPoint(key)?.conjugationSeedKind).toBeUndefined();
+    }
+  });
+});
+
 describe('curriculum personRotation flag (migrated to coverageSpec — Task 4)', () => {
   // The `personRotation` field has been migrated to `coverageSpec` in Task 4 of
   // the Pool Coverage Controller Phase 2 migration. Active entries no longer have
