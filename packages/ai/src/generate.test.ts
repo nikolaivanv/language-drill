@@ -200,6 +200,47 @@ describe("parseGeneratedClozeDraft glossEn", () => {
 });
 
 // ---------------------------------------------------------------------------
+// parseGeneratedClozeDraft — multiple-choice `options` deduplication
+// ---------------------------------------------------------------------------
+
+describe("parseGeneratedClozeDraft options dedup", () => {
+  it("removes duplicate distractors, preserving first-occurrence order", () => {
+    const content = parseGeneratedClozeDraft(
+      { ...validClozeInput, options: ["lleguen", "llegan", "llegan", "llegaron"] },
+      baseSpec,
+    );
+    expect(content.options).toEqual(["lleguen", "llegan", "llegaron"]);
+  });
+
+  it("collapses a correct answer repeated among the options to one entry", () => {
+    // Observed in prod: "sütü | süti | sütı | sütü" — the answer itself appears
+    // twice, a direct giveaway. Dedup leaves it exactly once.
+    const content = parseGeneratedClozeDraft(
+      { ...validClozeInput, options: ["lleguen", "llegan", "lleguen", "llegaron"] },
+      baseSpec,
+    );
+    expect(content.options).toEqual(["lleguen", "llegan", "llegaron"]);
+  });
+
+  it("leaves already-distinct options untouched", () => {
+    const content = parseGeneratedClozeDraft(
+      { ...validClozeInput, options: ["lleguen", "llegan", "llegaron"] },
+      baseSpec,
+    );
+    expect(content.options).toEqual(["lleguen", "llegan", "llegaron"]);
+  });
+
+  it("omits `options` entirely when dedup leaves fewer than two distinct values", () => {
+    // A 0/1-option multiple choice is degenerate; fall back to free-text cloze.
+    const content = parseGeneratedClozeDraft(
+      { ...validClozeInput, options: ["lleguen", "lleguen"] },
+      baseSpec,
+    );
+    expect("options" in content).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // generateBatch (mocked SDK)
 // ---------------------------------------------------------------------------
 

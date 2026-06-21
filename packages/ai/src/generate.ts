@@ -694,7 +694,19 @@ export function parseGeneratedClozeDraft(
   const sentence = requireString(input, "sentence", ctx);
   const correctAnswer = requireString(input, "correctAnswer", ctx);
   const acceptableAnswers = optionalStringArray(input, "acceptableAnswers", ctx);
-  const options = optionalStringArray(input, "options", ctx);
+  const rawOptions = optionalStringArray(input, "options", ctx);
+  // Dedupe multiple-choice distractors. The generator occasionally repeats a
+  // form — sometimes a distractor, sometimes the correctAnswer itself — which
+  // shrinks the effective choice set or gives the answer away (observed ~3% of
+  // TR cloze, e.g. "sütü | süti | sütı | sütü"). Preserve first-occurrence
+  // order; if fewer than two distinct options remain, drop the field (a 0/1-
+  // option MC is degenerate — fall back to a free-text cloze).
+  const options =
+    rawOptions === undefined
+      ? undefined
+      : ((distinct) => (distinct.length >= 2 ? distinct : undefined))([
+          ...new Set(rawOptions),
+        ]);
   const contextField = optionalString(input, "context", ctx);
   const topicHint = optionalString(input, "topicHint", ctx);
   const glossEn = optionalString(input, "glossEn", ctx);
