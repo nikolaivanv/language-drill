@@ -38,6 +38,7 @@ import { WordPopover } from './word-popover';
 import { WordSheet } from './word-sheet';
 import { track } from '../../../../lib/analytics/track';
 import { useIsMobile } from '../../../../lib/responsive';
+import { useActiveLanguage } from '../../../../components/shell/active-language-provider';
 import type {
   ActiveWord,
   DeepCardSlice,
@@ -188,6 +189,7 @@ export function AnnotatedView({
   saving,
   languageLabel,
 }: Props) {
+  const { activeLanguage } = useActiveLanguage();
   const flaggedKeys = Object.keys(entry.flaggedWords);
   const hasFlagged = flaggedKeys.length > 0;
   // While annotation is still streaming, we don't yet know if there will be
@@ -311,7 +313,7 @@ export function AnnotatedView({
   // and no card covering the passage during selection.
   const handleSpanSelect = (sel: SpanSelection) => {
     const { x, y } = containerXY(sel.rect);
-    track('reading_annotation_used', { language: provenance?.language });
+    track('reading_annotation_used', { language: activeLanguage });
     onSpanSelect({ start: sel.start, end: sel.end, type: sel.type, x, y });
   };
 
