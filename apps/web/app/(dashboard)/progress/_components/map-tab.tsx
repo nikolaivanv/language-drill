@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { CurriculumMapResponse, CurriculumMapPoint, InsightsErrorTheme } from '@language-drill/api-client';
 import type { LearningLanguage } from '@language-drill/shared';
 import { Card } from '../../../../components/ui/card';
+import { track } from '../../../../lib/analytics/track';
 import { Button } from '../../../../components/ui/button';
 import { WorkOnThese } from '../../_components/work-on-these';
 import { collapseSolidRuns, type MapEntry } from '../_lib/collapse-solid-runs';
@@ -536,6 +537,14 @@ export function MapTab({
   const [expandedRuns, setExpandedRuns] = useState<Set<number>>(new Set());
   // Selected point for the detail sheet
   const [selected, setSelected] = useState<CurriculumMapPoint | null>(null);
+
+  const trackedRef = useRef(false);
+  useEffect(() => {
+    if (data && !trackedRef.current) {
+      trackedRef.current = true;
+      track('curriculum_map_opened', { language: data.language });
+    }
+  }, [data]);
 
   function toggleRun(idx: number) {
     setExpandedRuns((prev) => {

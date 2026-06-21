@@ -1,12 +1,13 @@
 'use client';
 
-import { use, useMemo, useState } from 'react';
+import { use, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import {
   createAuthenticatedFetch,
   useSessionDebrief,
 } from '@language-drill/api-client';
 import { accuracyTier } from '../../../../../lib/drill/accuracy-tier';
+import { track } from '../../../../../lib/analytics/track';
 import { DebriefHeader } from '../_components/debrief-header';
 import { DebriefTabs, type DebriefTabId } from '../_components/debrief-tabs';
 import { DebriefTab } from '../_components/debrief-tab';
@@ -36,6 +37,14 @@ export default function DebriefPage({ params }: DebriefPageProps) {
 
   const query = useSessionDebrief({ sessionId, fetchFn });
   const [tab, setTab] = useState<DebriefTabId>('debrief');
+
+  const trackedRef = useRef(false);
+  useEffect(() => {
+    if (query.data && !trackedRef.current) {
+      trackedRef.current = true;
+      track('debrief_viewed', { language: query.data.language });
+    }
+  }, [query.data]);
 
   return (
     <div className="mx-auto max-w-[920px] px-s-6">

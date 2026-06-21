@@ -32,4 +32,9 @@ describe('legal pages', () => {
     expect(text).toContain('Strictly necessary');
     expect(text).toContain('Analytics');
   });
+
+  it('cookies page discloses PostHog under analytics', () => {
+    const { container } = render(<CookiesPage />);
+    expect(container.textContent).toContain('PostHog');
+  });
 });

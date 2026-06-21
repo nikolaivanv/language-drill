@@ -26,6 +26,7 @@ import {
   type ReviewItem,
 } from '@language-drill/api-client';
 import { useActiveLanguage } from '../../../../components/shell';
+import { track } from '../../../../lib/analytics/track';
 import { useIsMobile } from '../../../../lib/responsive';
 import { Button, Card } from '../../../../components/ui';
 import { ClozeItem } from '../_components/cloze-item';
@@ -86,7 +87,10 @@ export default function ReviewSessionPage() {
     startMutate(
       { language: activeLanguage, filter },
       {
-        onSuccess: (session) => dispatch({ type: 'CREATE_SUCCEEDED', session }),
+        onSuccess: (session) => {
+          track('vocab_review_started', { language: activeLanguage });
+          dispatch({ type: 'CREATE_SUCCEEDED', session });
+        },
         onError: (error) => dispatch({ type: 'CREATE_FAILED', error }),
       },
     );

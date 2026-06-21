@@ -5,6 +5,7 @@ import { useAuth } from '@clerk/nextjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   CefrLevel,
+  CORRECT_THRESHOLD,
   LANGUAGE_NAMES,
   ExerciseType,
   type ExerciseContent,
@@ -26,6 +27,7 @@ import {
   TheoryPanel,
   TheoryTrigger,
 } from '../../../components/theory';
+import { track } from '../../../lib/analytics/track';
 import { topicIdForGrammarPointKey } from '../../../lib/theory-topic-map';
 import { useIsMobile } from '../../../lib/responsive';
 import { Card } from '../../../components/ui';
@@ -141,7 +143,10 @@ function PracticePageContent() {
     completeSession.mutate(
       { sessionId },
       {
-        onSuccess: () => router.push(`/drill/debrief/${sessionId}`),
+        onSuccess: () => {
+          track('drill_completed', { language: activeLanguage, cefr: difficulty });
+          router.push(`/drill/debrief/${sessionId}`);
+        },
         onError: (err) =>
           dispatch({ type: 'COMPLETE_FAILED', error: err as Error }),
       },
@@ -180,6 +185,7 @@ function PracticePageContent() {
           };
     createSession.mutate(config, {
       onSuccess: (data) => {
+        track('drill_started', { language: activeLanguage, cefr: difficulty });
         dispatch({ type: 'CREATE_SUCCEEDED', session: data });
         // Reflect the live session in the URL so a full page reload (e.g.
         // toggling Chrome device emulation, an accidental refresh) resumes it
@@ -254,13 +260,22 @@ function PracticePageContent() {
         sessionId: state.session.id,
       },
       {
-        onSuccess: (result) =>
+        onSuccess: (result) => {
+          const evalResult = result as EvaluationResult;
+          const content = item.contentJson as ExerciseContent;
+          track('exercise_submitted', {
+            language: activeLanguage,
+            cefr: difficulty,
+            exerciseType: content.type,
+            correct: evalResult.score >= CORRECT_THRESHOLD,
+          });
           dispatch({
             type: 'ITEM_EVALUATED',
-            result: result as EvaluationResult,
+            result: evalResult,
             meta,
             submissionId: (result as { submissionId?: string }).submissionId,
-          }),
+          });
+        },
         onError: (err) => dispatch({ type: 'ITEM_ERROR', error: err as Error }),
       },
     );

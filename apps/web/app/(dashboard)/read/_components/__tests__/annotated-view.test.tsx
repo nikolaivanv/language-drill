@@ -12,6 +12,12 @@ vi.mock('../../../../../lib/responsive', () => ({
   useIsMobile: () => mockIsMobile(),
 }));
 
+// AnnotatedView calls useActiveLanguage() — mock it so tests don't need
+// to mount the full ActiveLanguageProvider tree.
+vi.mock('../../../../../components/shell/active-language-provider', () => ({
+  useActiveLanguage: () => ({ activeLanguage: 'ES' }),
+}));
+
 beforeEach(() => {
   mockIsMobile.mockReturnValue(false);
 });
