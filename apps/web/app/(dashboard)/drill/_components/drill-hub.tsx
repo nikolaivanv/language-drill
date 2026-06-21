@@ -12,9 +12,11 @@
 // ---------------------------------------------------------------------------
 
 import Link from 'next/link';
+import type { InsightsErrorTheme } from '@language-drill/api-client';
 import { CefrLevel } from '@language-drill/shared';
 import { DrillTodayStatus } from './drill-today-status';
 import { DrillMeta } from './drill-meta';
+import { WorkOnThese } from '../../_components/work-on-these';
 
 type Props = {
   difficulty: CefrLevel;
@@ -22,6 +24,8 @@ type Props = {
   onDifficultyChange: (level: CefrLevel) => void;
   onStartQuick: () => void;
   onStartDictation: () => void;
+  themes: InsightsErrorTheme[];
+  onStartTargeted: (grammarPointKey: string) => void;
 };
 
 export function DrillHub({
@@ -30,6 +34,8 @@ export function DrillHub({
   onDifficultyChange,
   onStartQuick,
   onStartDictation,
+  themes,
+  onStartTargeted,
 }: Props) {
   return (
     <div className="p-s-6">
@@ -44,6 +50,18 @@ export function DrillHub({
           onLevelChange={onDifficultyChange}
         />
       </div>
+
+      {themes.length > 0 && (
+        <div className="mb-s-6">
+          <WorkOnThese themes={themes} onSelect={onStartTargeted} />
+          <Link
+            href="/progress"
+            className="t-mono mt-s-3 inline-block text-[12px] text-ink-soft hover:text-accent"
+          >
+            see your full map →
+          </Link>
+        </div>
+      )}
 
       <div className="flex flex-col gap-s-4">
         <button

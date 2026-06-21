@@ -86,7 +86,7 @@ function PracticePageContent() {
     const r = searchParams.get('resume');
     return r && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(r) ? r : null;
   });
-  const [grammarPointKey] = useState<string | null>(() => {
+  const [grammarPointKey, setGrammarPointKey] = useState<string | null>(() => {
     const g = searchParams.get('grammarPoint');
     return g && g.length > 0 ? g : null;
   });
@@ -186,7 +186,7 @@ function PracticePageContent() {
       },
       onError: (err) => dispatch({ type: 'CREATE_FAILED', error: err as Error }),
     });
-  }, [initialized, startIntent, state.kind, activeLanguage, difficulty, createSession]);
+  }, [initialized, startIntent, state.kind, activeLanguage, difficulty, grammarPointKey, createSession]);
 
   const resumeKickoffRef = useRef(false);
   useEffect(() => {
@@ -315,6 +315,11 @@ function PracticePageContent() {
     fireCompleteSession(sessionId);
   }
 
+  function handleStartTargeted(key: string) {
+    setGrammarPointKey(key);
+    setStartIntent('quick');
+  }
+
   function handleDifficultyChange(newDifficulty: CefrLevel) {
     setDifficulty(newDifficulty);
     submitMutation.reset();
@@ -380,8 +385,16 @@ function PracticePageContent() {
         difficulty={difficulty}
         baseline={baseline}
         onDifficultyChange={handleDifficultyChange}
-        onStartQuick={() => setStartIntent('quick')}
+        onStartQuick={() => {
+          // Clear any grammar-point target so the hub's plain "quick drill" is
+          // always an untargeted mix (defends against a stale key from a prior
+          // weak-spot tap).
+          setGrammarPointKey(null);
+          setStartIntent('quick');
+        }}
         onStartDictation={() => setStartIntent('dictation')}
+        themes={insights.data?.themes ?? []}
+        onStartTargeted={handleStartTargeted}
       />
     );
   }

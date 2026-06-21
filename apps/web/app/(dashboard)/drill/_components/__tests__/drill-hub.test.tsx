@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { CefrLevel } from '@language-drill/shared';
+import type { InsightsErrorTheme } from '@language-drill/api-client';
 
 // DrillTodayStatus pulls today data; stub it so the hub renders in isolation.
 vi.mock('../drill-today-status', () => ({
@@ -9,10 +10,25 @@ vi.mock('../drill-today-status', () => ({
 
 import { DrillHub } from '../drill-hub';
 
+function theme(over: Partial<InsightsErrorTheme> = {}): InsightsErrorTheme {
+  return {
+    grammarPointKey: 'tr-a1-accusative',
+    grammarPointName: 'Accusative -(y)I',
+    errorType: 'morphology',
+    count: 8,
+    majorCount: 3,
+    lastOccurredAt: new Date().toISOString(),
+    score: 0.75,
+    sample: { wrongText: 'bulaşık', correction: 'bulaşıkları' },
+    ...over,
+  };
+}
+
 function setup(overrides: Partial<React.ComponentProps<typeof DrillHub>> = {}) {
   const onStartQuick = vi.fn();
   const onStartDictation = vi.fn();
   const onDifficultyChange = vi.fn();
+  const onStartTargeted = vi.fn();
   render(
     <DrillHub
       difficulty={CefrLevel.B1}
@@ -20,10 +36,12 @@ function setup(overrides: Partial<React.ComponentProps<typeof DrillHub>> = {}) {
       onDifficultyChange={onDifficultyChange}
       onStartQuick={onStartQuick}
       onStartDictation={onStartDictation}
+      themes={[]}
+      onStartTargeted={onStartTargeted}
       {...overrides}
     />,
   );
-  return { onStartQuick, onStartDictation, onDifficultyChange };
+  return { onStartQuick, onStartDictation, onDifficultyChange, onStartTargeted };
 }
 
 describe('DrillHub', () => {
@@ -63,5 +81,25 @@ describe('DrillHub', () => {
       target: { value: 'A2' },
     });
     expect(onDifficultyChange).toHaveBeenCalledWith('A2');
+  });
+
+  it('renders weak spots + a link to /progress, and fires onStartTargeted on tap', () => {
+    const onStartTargeted = vi.fn();
+    setup({ themes: [theme()], onStartTargeted });
+    // the map link
+    expect(screen.getByRole('link', { name: /full map|progress/i }).getAttribute('href')).toBe(
+      '/progress',
+    );
+    // tapping the weak spot starts a targeted drill
+    fireEvent.click(screen.getByRole('button', { name: /Accusative/ }));
+    expect(onStartTargeted).toHaveBeenCalledWith('tr-a1-accusative');
+    // mode launchers still present
+    expect(screen.getByRole('button', { name: /quick drill/i })).toBeInTheDocument();
+  });
+
+  it('hides the weak-spot section + map link when there are no themes', () => {
+    setup({ themes: [], onStartTargeted: vi.fn() });
+    expect(screen.queryByRole('link', { name: /full map|progress/i })).toBeNull();
+    expect(screen.getByRole('button', { name: /quick drill/i })).toBeInTheDocument();
   });
 });

@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 import type { InsightsErrorTheme } from '@language-drill/api-client';
 import { WorkOnThese } from '../work-on-these';
 
@@ -63,5 +63,28 @@ describe('WorkOnThese', () => {
   it('does not render a standalone "practice →" header link', () => {
     render(<WorkOnThese themes={[theme()]} />);
     expect(screen.queryByRole('link', { name: /practice/i })).not.toBeInTheDocument();
+  });
+
+  it('renders a Link when no onSelect is given', () => {
+    render(<WorkOnThese themes={[theme()]} />);
+    const link = screen.getByRole('link', { name: /Locative case/i });
+    expect(link).toHaveAttribute('href', '/drill?start=quick&grammarPoint=tr-a1-locative');
+  });
+
+  it('renders a button calling onSelect(key) when onSelect is given', () => {
+    const onSelect = vi.fn();
+    render(<WorkOnThese themes={[theme()]} onSelect={onSelect} />);
+    expect(screen.queryByRole('link')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /Locative case/i }));
+    expect(onSelect).toHaveBeenCalledWith('tr-a1-locative');
+  });
+
+  it('keeps a keyless theme non-interactive even with onSelect', () => {
+    const onSelect = vi.fn();
+    render(
+      <WorkOnThese themes={[theme({ grammarPointKey: null })]} onSelect={onSelect} />,
+    );
+    expect(screen.queryByRole('button')).toBeNull();
+    expect(screen.queryByRole('link')).toBeNull();
   });
 });
