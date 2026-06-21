@@ -439,3 +439,11 @@ export {
 export {
   useFlagExercise, useUserFlagsQueue, useResolveUserFlag, type UserFlagStatus,
 } from './hooks/useUserFlags';
+export { useEmailPreferences } from './hooks/useEmailPreferences';
+export { useUpdateWeeklySummary } from './hooks/useUpdateWeeklySummary';
+export {
+  EmailPreferencesSchema,
+  UpdateWeeklySummaryInputSchema,
+  type EmailPreferences,
+  type UpdateWeeklySummaryInput,
+} from './schemas/email';

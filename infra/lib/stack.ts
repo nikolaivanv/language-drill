@@ -14,6 +14,9 @@ import { AnnotateStreamLambdaConstruct } from "./constructs/annotate-stream-lamb
 import { TheoryGenerationQueueConstruct } from "./constructs/theory-generation-queue";
 import { TheoryGenerationLambdaConstruct } from "./constructs/theory-generation-lambda";
 import { TheorySchedulerLambdaConstruct } from "./constructs/theory-scheduler-lambda";
+import { EmailQueueConstruct } from "./constructs/email-queue";
+import { EmailDispatcherLambdaConstruct } from "./constructs/email-dispatcher-lambda";
+import { EmailSenderLambdaConstruct } from "./constructs/email-sender-lambda";
 
 export interface LanguageDrillStackProps extends StackProps {
   envName: "prod" | "dev";
@@ -74,6 +77,8 @@ export class LanguageDrillStack extends Stack {
         AI_KILL_SWITCH: props.aiKillSwitch ?? "",
         AI_GLOBAL_DAILY_CAP: props.aiGlobalDailyCap ?? "",
         CONTENT_BUCKET_NAME: storage.bucket.bucketName,
+        EMAIL_LINK_BASE_URL: `https://${props.apiDomainName}`,
+        EMAIL_FROM: "Language Drill <summary@langdrill.app>",
       },
     });
 
@@ -185,6 +190,27 @@ export class LanguageDrillStack extends Stack {
       enableScheduledJobs: props.enableScheduledJobs,
     });
 
+    // Weekly summary email pipeline — independent SQS + dispatcher (weekly
+    // cron) + sender. Cron gated on enableScheduledJobs (prod on, dev off).
+    const emailQueue = new EmailQueueConstruct(this, "EmailQueue", {
+      alarmTopic: alerts.topic,
+    });
+    new EmailDispatcherLambdaConstruct(this, "EmailDispatcherWrap", {
+      queue: emailQueue.queue,
+      secretsPrefix: props.secretsPrefix,
+      enableScheduledJobs: props.enableScheduledJobs,
+    });
+    new EmailSenderLambdaConstruct(this, "EmailSenderWrap", {
+      queue: emailQueue.queue,
+      secretsPrefix: props.secretsPrefix,
+      reservedConcurrency: 2,
+      emailLinkBaseUrl: `https://${props.apiDomainName}`,
+      // Web app the "Practice now" CTA links to. Both envs point at the prod
+      // web app (there is no separate dev web domain); adjust if one is added.
+      emailAppUrl: "https://langdrill.app",
+      alarmTopic: alerts.topic,
+    });
+
     new CfnOutput(this, "ApiUrl", {
       value: apiGateway.httpApi.url ?? "",
       description: "API Gateway endpoint URL",
@@ -208,6 +234,10 @@ export class LanguageDrillStack extends Stack {
       value: theoryQueue.queue.queueUrl,
       description:
         "SQS queue URL for theory generation (Phase 4). Set THEORY_GENERATION_QUEUE_URL to this for `pnpm generate:theory --queue`.",
+    });
+    new CfnOutput(this, "EmailQueueUrl", {
+      value: emailQueue.queue.queueUrl,
+      description: "SQS queue URL for weekly-summary email sends.",
     });
 
     Tags.of(this).add("env", props.envName);

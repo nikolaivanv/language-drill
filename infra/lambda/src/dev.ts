@@ -26,6 +26,7 @@ import progress from './routes/progress';
 import read from './routes/read';
 import theory from './routes/theory';
 import admin from './routes/admin';
+import emailRoutes from './routes/email';
 
 const DEV_USER_ID = process.env['DEV_USER_ID'] ?? 'dev_user_001';
 const DEV_USER_EMAIL = process.env['DEV_USER_EMAIL'] ?? `${DEV_USER_ID}@local.dev`;
@@ -80,6 +81,7 @@ app.route('/', progress);
 app.route('/', read);
 app.route('/', theory);
 app.route('/', admin);
+app.route('/', emailRoutes);
 
 ensureDevUser()
   .then(() => {

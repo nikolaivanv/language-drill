@@ -21,6 +21,7 @@
     "@hono/node-server": "^1.19.14",
     "@language-drill/ai": "workspace:*",
     "@language-drill/db": "workspace:*",
+    "@language-drill/email": "workspace:*",
     "@language-drill/shared": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.12.15",
