@@ -14,9 +14,8 @@ import {
   useCurriculumMap,
   useInsightsErrors,
   type RadarAxis,
-  type UpdateLanguagesInput,
 } from '@language-drill/api-client';
-import { CefrLevel } from '@language-drill/shared';
+import { CefrLevel, Language, type LearningLanguage } from '@language-drill/shared';
 import { useActiveLanguage } from '../../../components/shell/active-language-provider';
 import { ProgressHeader } from './_components/progress-header';
 import { ProgressTabs } from './_components/progress-tabs';
@@ -68,8 +67,13 @@ export default function ProgressPage() {
     if (!validLevels.includes(nextLevelRaw)) return;
     const nextLevel = nextLevelRaw as CefrLevel;
     const nextProfiles = withAdvancedLevel(profiles, activeLanguage, nextLevel);
+    // EN rows can't be advanced (PUT accepts learning languages only); filter them out — matches the settings precedent.
+    const learningProfiles = nextProfiles.filter(
+      (p): p is { language: LearningLanguage; proficiencyLevel: CefrLevel } =>
+        p.language !== Language.EN,
+    );
     update.mutate(
-      { profiles: nextProfiles as UpdateLanguagesInput['profiles'], primaryLanguage },
+      { profiles: learningProfiles, primaryLanguage },
       {
         onSuccess: () => {
           for (const key of [
