@@ -36,6 +36,7 @@ import { WordBankRail } from './word-bank-rail';
 import { WordBankSheet } from './word-bank-sheet';
 import { WordPopover } from './word-popover';
 import { WordSheet } from './word-sheet';
+import { track } from '../../../../lib/analytics/track';
 import { useIsMobile } from '../../../../lib/responsive';
 import type {
   ActiveWord,
@@ -310,6 +311,7 @@ export function AnnotatedView({
   // and no card covering the passage during selection.
   const handleSpanSelect = (sel: SpanSelection) => {
     const { x, y } = containerXY(sel.rect);
+    track('reading_annotation_used', { language: provenance?.language });
     onSpanSelect({ start: sel.start, end: sel.end, type: sel.type, x, y });
   };
 

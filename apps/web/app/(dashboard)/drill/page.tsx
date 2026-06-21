@@ -266,7 +266,7 @@ function PracticePageContent() {
           track('exercise_submitted', {
             language: activeLanguage,
             cefr: difficulty,
-            exerciseType: 'type' in content ? content.type : undefined,
+            exerciseType: content.type,
             correct: evalResult.score >= CORRECT_THRESHOLD,
           });
           dispatch({

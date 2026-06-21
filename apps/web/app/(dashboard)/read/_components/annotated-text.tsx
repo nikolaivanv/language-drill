@@ -42,7 +42,6 @@
 import * as React from 'react';
 import { tokenize, type FlaggedMap } from '@language-drill/shared';
 import { cn } from '../../../../lib/cn';
-import { track } from '../../../../lib/analytics/track';
 import type { Intensity } from '../_state/read-page-reducer';
 import styles from './word-flag-styles.module.css';
 
@@ -219,7 +218,6 @@ export function AnnotatedText({
     // onWordClick stays flagged-only (the parent's handler is skim-specific).
     if (live.flaggedMap[token.key]) live.onWordClick(token.key, rect);
     if (live.onSpanSelect) {
-      track('reading_annotation_used');
       live.onSpanSelect({ start: token.start, end: token.end, type: 'word', rect });
     }
   }, []);
@@ -264,7 +262,6 @@ export function AnnotatedText({
     }
     const type = resolveSpanType(txt, start, end, toks);
     if (emit) {
-      track('reading_annotation_used');
       emit({ start, end, type, rect });
     }
 
