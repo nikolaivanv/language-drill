@@ -23,13 +23,13 @@ export function DailyLoadControl({
   disabled = false,
 }: DailyLoadControlProps) {
   return (
-    <div className="flex items-center gap-s-4">
+    <div className="flex flex-wrap items-center gap-x-s-4 gap-y-s-2">
       <span className="t-micro text-ink-mute whitespace-nowrap">today's load</span>
       <div
         role="radiogroup"
         aria-label="today's load"
         aria-disabled={disabled}
-        className={cn('flex gap-[6px]', disabled && 'opacity-60 pointer-events-none')}
+        className={cn('flex flex-wrap gap-[6px]', disabled && 'opacity-60 pointer-events-none')}
       >
         {DAILY_MINUTES.map((m) => (
           <Choice
