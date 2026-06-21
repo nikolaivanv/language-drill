@@ -23,6 +23,7 @@ function makeItem(
     itemCount: 4,
     estimatedMinutes: 3,
     status,
+    reason: null,
     ...overrides,
   };
 }
@@ -55,7 +56,7 @@ describe('NextUpCard', () => {
 
     const link = screen.getByRole('link', { name: /next up/i });
     expect(link).toHaveAttribute('href', '/drill?start=quick');
-    // Title from composeTitle(2, CLOZE) = "core · cloze"; meta from the subtitle.
+    // Title from composeTitle(2, 3, CLOZE) = "core · cloze"; meta from the subtitle.
     expect(screen.getByText('core · cloze')).toBeInTheDocument();
     expect(screen.getByText(/subjunctive · 5 items · 4 min/)).toBeInTheDocument();
   });

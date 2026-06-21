@@ -21,7 +21,7 @@ describe('composeTitle', () => {
     expect(composeTitle(4, 8, ExerciseType.TRANSLATION)).toBe('core · translation');
   });
 
-  it('index 1 of 1 → cool-down (total wins over warm-up when plan is length 1)', () => {
+  it('index 1 of 1 → warm-up (index 1 wins over cool-down when plan is length 1)', () => {
     // When total=1, index===total takes precedence since we check warm-up first then cool-down.
     // The rule is: 1 → warm-up; === total → cool-down; else core.
     // A single-item plan: index=1, total=1 → warm-up (index 1 wins).

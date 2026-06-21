@@ -111,6 +111,7 @@ function makeItem(
     itemCount: 4,
     estimatedMinutes: 3,
     status,
+    reason: null,
   };
 }
 
