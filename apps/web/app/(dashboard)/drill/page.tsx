@@ -179,7 +179,7 @@ function PracticePageContent() {
         : {
             language: activeLanguage,
             difficulty,
-            exerciseCount: targetItemCount(prefsData?.dailyMinutes ?? null),
+            exerciseCount: targetItemCount(prefsData?.dailyGoal ?? null),
             ...(grammarPointKey ? { grammarPointKey } : {}),
             ...(exerciseType ? { exerciseType } : {}),
           };

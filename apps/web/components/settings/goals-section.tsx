@@ -7,10 +7,16 @@ import {
   useGetPreferences,
   useUpdatePreferences,
 } from '@language-drill/api-client';
-import { DAILY_MINUTES, GOAL_IDS, type GoalId } from '@language-drill/shared';
+import { DAILY_GOALS, GOAL_IDS, type DailyGoal, type GoalId } from '@language-drill/shared';
 import { Section, Row } from './section';
 import { GOAL_COPY } from './goal-copy';
 import { Choice, Checkbox, Switch } from '../ui';
+
+const DAILY_GOAL_HINTS: Record<DailyGoal, string> = {
+  quick: '~5',
+  medium: '~8',
+  long: '~12',
+};
 
 export function GoalsSection() {
   const { getToken } = useAuth();
@@ -19,20 +25,20 @@ export function GoalsSection() {
   const update = useUpdatePreferences({ fetchFn });
 
   const [goals, setGoals] = useState<GoalId[]>([]);
-  const [daily, setDaily] = useState<number | null>(null);
+  const [dailyGoal, setDailyGoal] = useState<DailyGoal | null>(null);
   const [nudges, setNudges] = useState(true);
 
   useEffect(() => {
     if (prefsQuery.data) {
       setGoals(prefsQuery.data.goals);
-      setDaily(prefsQuery.data.dailyMinutes);
+      setDailyGoal(prefsQuery.data.dailyGoal);
       setNudges(prefsQuery.data.gentleNudges);
     }
   }, [prefsQuery.data]);
 
-  const pickDaily = (m: (typeof DAILY_MINUTES)[number]) => {
-    setDaily(m);
-    update.mutate({ dailyMinutes: m });
+  const pickGoal = (g: DailyGoal) => {
+    setDailyGoal(g);
+    update.mutate({ dailyGoal: g });
   };
   const toggleGoal = (id: GoalId) => {
     const next = goals.includes(id) ? goals.filter((g) => g !== id) : [...goals, id];
@@ -47,12 +53,12 @@ export function GoalsSection() {
   return (
     <Section id="goals" title="goals" sub="what you want from this. tweak any time.">
       <Row label="daily target" hint="how much you want to drill each day." align="top">
-        <div role="radiogroup" aria-label="daily target" className="grid grid-cols-4 gap-[12px] max-w-[360px]">
-          {DAILY_MINUTES.map((m) => (
-            <Choice key={m} mode="radio" selected={daily === m} onSelect={() => pickDaily(m)}>
+        <div role="radiogroup" aria-label="daily target" className="grid grid-cols-3 gap-[12px] max-w-[360px]">
+          {DAILY_GOALS.map((g) => (
+            <Choice key={g} mode="radio" selected={dailyGoal === g} onSelect={() => pickGoal(g)}>
               <span className="flex flex-col items-start">
-                <span className="t-display-s">{m}</span>
-                <span className="t-micro text-ink-mute whitespace-nowrap">min</span>
+                <span className="t-display-s">{g}</span>
+                <span className="t-micro text-ink-mute whitespace-nowrap">{DAILY_GOAL_HINTS[g]}</span>
               </span>
             </Choice>
           ))}

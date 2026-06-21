@@ -170,7 +170,7 @@ beforeEach(() => {
     refetch: vi.fn(),
   });
   mockUseGetPreferences.mockReturnValue({
-    data: { dailyMinutes: 10, goals: [], gentleNudges: true },
+    data: { dailyMinutes: 10, dailyGoal: 'medium', goals: [], gentleNudges: true },
     isLoading: false,
     error: null,
   });
@@ -418,22 +418,22 @@ describe('DashboardPage — language switching (Req 1.3, 11.2)', () => {
 // ---------------------------------------------------------------------------
 
 describe('DashboardPage — DailyLoadControl wiring', () => {
-  it('renders the DailyLoadControl with current dailyMinutes from preferences', () => {
+  it('renders the DailyLoadControl with current dailyGoal from preferences', () => {
     render(<DashboardPage />);
     // The radiogroup is present
     expect(
       screen.getByRole('radiogroup', { name: "today's load" }),
     ).toBeInTheDocument();
-    // The 10-min option (our mocked prefs.dailyMinutes) is selected
+    // The "medium" option (our mocked prefs.dailyGoal) is selected
     const options = screen.getAllByRole('radio');
     const checked = options.filter(
       (el) => el.getAttribute('aria-checked') === 'true',
     );
     expect(checked).toHaveLength(1);
-    expect(checked[0]).toHaveTextContent('10 min');
+    expect(checked[0]).toHaveTextContent('medium');
   });
 
-  it('fires useUpdatePreferences.mutate with new dailyMinutes when an option is clicked', () => {
+  it('fires useUpdatePreferences.mutate with new dailyGoal when an option is clicked', () => {
     const mutateMock = vi.fn();
     mockUseUpdatePreferences.mockReturnValue({
       mutate: mutateMock,
@@ -441,10 +441,10 @@ describe('DashboardPage — DailyLoadControl wiring', () => {
     });
 
     render(<DashboardPage />);
-    fireEvent.click(screen.getByText('20 min'));
+    fireEvent.click(screen.getByText('long'));
 
     expect(mutateMock).toHaveBeenCalledWith(
-      { dailyMinutes: 20 },
+      { dailyGoal: 'long' },
       expect.objectContaining({ onSuccess: expect.any(Function) }),
     );
   });
@@ -462,7 +462,7 @@ describe('DashboardPage — DailyLoadControl wiring', () => {
     });
 
     render(<DashboardPage />);
-    fireEvent.click(screen.getByText('30 min'));
+    fireEvent.click(screen.getByText('quick'));
 
     // Trigger the onSuccess callback
     expect(capturedOnSuccess).toBeDefined();

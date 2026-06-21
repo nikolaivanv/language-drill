@@ -54,21 +54,21 @@ beforeEach(() => {
 describe('GoalsSection', () => {
   it('autosaves the chosen daily target', () => {
     const mutate = vi.fn();
-    renderGoals({ goals: ['grammar'], dailyMinutes: 10, gentleNudges: true, notes: '', primaryLanguage: Language.ES }, mutate);
-    fireEvent.click(screen.getByRole('radio', { name: /20/ }));
-    expect(mutate).toHaveBeenCalledWith({ dailyMinutes: 20 });
+    renderGoals({ goals: ['grammar'], dailyMinutes: 10, dailyGoal: 'medium', gentleNudges: true, notes: '', primaryLanguage: Language.ES }, mutate);
+    fireEvent.click(screen.getByRole('radio', { name: /long/i }));
+    expect(mutate).toHaveBeenCalledWith({ dailyGoal: 'long' });
   });
 
   it('toggling a reason autosaves the new goals array', () => {
     const mutate = vi.fn();
-    renderGoals({ goals: ['grammar'], dailyMinutes: 10, gentleNudges: true, notes: '', primaryLanguage: Language.ES }, mutate);
+    renderGoals({ goals: ['grammar'], dailyMinutes: 10, dailyGoal: 'medium', gentleNudges: true, notes: '', primaryLanguage: Language.ES }, mutate);
     fireEvent.click(screen.getByRole('checkbox', { name: /vocabulary/i }));
     expect(mutate).toHaveBeenCalledWith({ goals: ['grammar', 'vocab'] });
   });
 
   it('toggling gentle nudges autosaves', () => {
     const mutate = vi.fn();
-    renderGoals({ goals: [], dailyMinutes: 10, gentleNudges: true, notes: '', primaryLanguage: Language.ES }, mutate);
+    renderGoals({ goals: [], dailyMinutes: 10, dailyGoal: 'quick', gentleNudges: true, notes: '', primaryLanguage: Language.ES }, mutate);
     fireEvent.click(screen.getByRole('switch', { name: /gentle nudges/i }));
     expect(mutate).toHaveBeenCalledWith({ gentleNudges: false });
   });

@@ -3,29 +3,27 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { DailyLoadControl } from '../daily-load-control';
 
 describe('DailyLoadControl', () => {
-  it('renders 4 radio options (5, 10, 20, 30 min)', () => {
+  it('renders 3 radio options (quick, medium, long)', () => {
     render(
-      <DailyLoadControl current={10} onSelect={vi.fn()} />,
+      <DailyLoadControl current="medium" onSelect={vi.fn()} />,
     );
     const options = screen.getAllByRole('radio');
-    expect(options).toHaveLength(4);
-    expect(screen.getByText('5 min')).toBeInTheDocument();
-    expect(screen.getByText('10 min')).toBeInTheDocument();
-    expect(screen.getByText('20 min')).toBeInTheDocument();
-    expect(screen.getByText('30 min')).toBeInTheDocument();
+    expect(options).toHaveLength(3);
+    expect(screen.getByText('quick')).toBeInTheDocument();
+    expect(screen.getByText('medium')).toBeInTheDocument();
+    expect(screen.getByText('long')).toBeInTheDocument();
   });
 
   it('marks the current option as aria-checked=true', () => {
     render(
-      <DailyLoadControl current={10} onSelect={vi.fn()} />,
+      <DailyLoadControl current="medium" onSelect={vi.fn()} />,
     );
     const options = screen.getAllByRole('radio');
-    // Find the "10 min" button — it should be aria-checked
     const checked = options.filter(
       (el) => el.getAttribute('aria-checked') === 'true',
     );
     expect(checked).toHaveLength(1);
-    expect(checked[0]).toHaveTextContent('10 min');
+    expect(checked[0]).toHaveTextContent('medium');
   });
 
   it('marks no option as selected when current is null', () => {
@@ -42,25 +40,25 @@ describe('DailyLoadControl', () => {
   it('calls onSelect with the clicked value', () => {
     const onSelect = vi.fn();
     render(
-      <DailyLoadControl current={10} onSelect={onSelect} />,
+      <DailyLoadControl current="medium" onSelect={onSelect} />,
     );
-    fireEvent.click(screen.getByText('20 min'));
-    expect(onSelect).toHaveBeenCalledWith(20);
+    fireEvent.click(screen.getByText('long'));
+    expect(onSelect).toHaveBeenCalledWith('long');
     expect(onSelect).toHaveBeenCalledTimes(1);
   });
 
   it('does not call onSelect when disabled', () => {
     const onSelect = vi.fn();
     render(
-      <DailyLoadControl current={10} onSelect={onSelect} disabled />,
+      <DailyLoadControl current="medium" onSelect={onSelect} disabled />,
     );
-    fireEvent.click(screen.getByText('20 min'));
+    fireEvent.click(screen.getByText('long'));
     expect(onSelect).not.toHaveBeenCalled();
   });
 
   it('has a radiogroup labelled "today\'s load"', () => {
     render(
-      <DailyLoadControl current={20} onSelect={vi.fn()} />,
+      <DailyLoadControl current="long" onSelect={vi.fn()} />,
     );
     expect(
       screen.getByRole('radiogroup', { name: "today's load" }),
@@ -69,7 +67,7 @@ describe('DailyLoadControl', () => {
 
   it('sets aria-disabled=true on the radiogroup when disabled', () => {
     render(
-      <DailyLoadControl current={10} onSelect={vi.fn()} disabled />,
+      <DailyLoadControl current="medium" onSelect={vi.fn()} disabled />,
     );
     const radiogroup = screen.getByRole('radiogroup', { name: "today's load" });
     expect(radiogroup).toHaveAttribute('aria-disabled', 'true');
@@ -77,7 +75,7 @@ describe('DailyLoadControl', () => {
 
   it('sets aria-disabled=false on the radiogroup when not disabled', () => {
     render(
-      <DailyLoadControl current={10} onSelect={vi.fn()} />,
+      <DailyLoadControl current="medium" onSelect={vi.fn()} />,
     );
     const radiogroup = screen.getByRole('radiogroup', { name: "today's load" });
     expect(radiogroup).toHaveAttribute('aria-disabled', 'false');

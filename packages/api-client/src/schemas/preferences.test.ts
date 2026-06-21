@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { CefrLevel, Language } from '@language-drill/shared';
-import { UpdateLanguagesInputSchema, UpdatePreferencesInputSchema } from './preferences';
+import {
+  PreferencesResponseSchema,
+  UpdateLanguagesInputSchema,
+  UpdatePreferencesInputSchema,
+} from './preferences';
 
 // ---------------------------------------------------------------------------
 // UpdateLanguagesInputSchema
@@ -70,12 +74,74 @@ describe('UpdateLanguagesInputSchema', () => {
 });
 
 // ---------------------------------------------------------------------------
+// PreferencesResponseSchema
+// ---------------------------------------------------------------------------
+
+describe('PreferencesResponseSchema', () => {
+  it('parses a valid full response with dailyGoal: medium', () => {
+    const validPayload = {
+      primaryLanguage: Language.ES,
+      goals: ['speaking'],
+      dailyMinutes: 20,
+      gentleNudges: true,
+      notes: 'Some notes',
+      dailyGoal: 'medium',
+    };
+    const result = PreferencesResponseSchema.safeParse(validPayload);
+    expect(result.success).toBe(true);
+  });
+
+  it('parses a valid response with dailyGoal: quick', () => {
+    const validPayload = {
+      primaryLanguage: Language.DE,
+      goals: ['vocab'],
+      dailyMinutes: 5,
+      gentleNudges: false,
+      notes: '',
+      dailyGoal: 'quick',
+    };
+    const result = PreferencesResponseSchema.safeParse(validPayload);
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects a response missing dailyGoal', () => {
+    const invalidPayload = {
+      primaryLanguage: Language.ES,
+      goals: ['speaking'],
+      dailyMinutes: 20,
+      gentleNudges: true,
+      notes: 'Some notes',
+    };
+    const result = PreferencesResponseSchema.safeParse(invalidPayload);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a response with invalid dailyGoal', () => {
+    const invalidPayload = {
+      primaryLanguage: Language.ES,
+      goals: ['speaking'],
+      dailyMinutes: 20,
+      gentleNudges: true,
+      notes: 'Some notes',
+      dailyGoal: 'huge',
+    };
+    const result = PreferencesResponseSchema.safeParse(invalidPayload);
+    expect(result.success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // UpdatePreferencesInputSchema
 // ---------------------------------------------------------------------------
 
 describe('UpdatePreferencesInputSchema', () => {
   it('accepts a single-field partial update', () => {
     const result = UpdatePreferencesInputSchema.safeParse({ dailyMinutes: 20 });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts dailyGoal: long as a single-field update', () => {
+    const result = UpdatePreferencesInputSchema.safeParse({ dailyGoal: 'long' });
     expect(result.success).toBe(true);
   });
 
@@ -89,6 +155,11 @@ describe('UpdatePreferencesInputSchema', () => {
 
   it('rejects an invalid dailyMinutes value', () => {
     const result = UpdatePreferencesInputSchema.safeParse({ dailyMinutes: 7 });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects an invalid dailyGoal value', () => {
+    const result = UpdatePreferencesInputSchema.safeParse({ dailyGoal: 'huge' });
     expect(result.success).toBe(false);
   });
 });

@@ -1,0 +1,1 @@
+ALTER TABLE "user_preferences" ADD COLUMN "daily_goal" text DEFAULT 'medium' NOT NULL;

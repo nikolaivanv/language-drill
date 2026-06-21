@@ -211,6 +211,13 @@
       "when": 1781980587856,
       "tag": "0029_fixed_thing",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1782062238108,
+      "tag": "0030_fluffy_jack_murdock",
+      "breakpoints": true
     }
   ]
 }
