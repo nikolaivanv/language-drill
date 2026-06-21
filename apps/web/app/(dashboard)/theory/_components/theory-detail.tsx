@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { track } from '../../../../lib/analytics/track';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { LearningLanguage } from '@language-drill/shared';
@@ -49,6 +50,14 @@ export function TheoryDetail({ topicId, language, fetchFn }: TheoryDetailProps) 
     topicId,
     fetchFn,
   });
+
+  const trackedTopicId = useRef<string | null>(null);
+  useEffect(() => {
+    if (topic && trackedTopicId.current !== topic.id) {
+      trackedTopicId.current = topic.id;
+      track('theory_page_opened', { language, cefr: topic.cefr });
+    }
+  }, [topic, language]);
   // Count for the "browse all topics" affordance (shares the react-query cache
   // with the switcher sheet, so no extra fetch).
   const { topics: allTopics } = useTheoryTopics({ language, fetchFn });

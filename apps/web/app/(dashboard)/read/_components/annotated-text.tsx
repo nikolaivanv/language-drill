@@ -42,6 +42,7 @@
 import * as React from 'react';
 import { tokenize, type FlaggedMap } from '@language-drill/shared';
 import { cn } from '../../../../lib/cn';
+import { track } from '../../../../lib/analytics/track';
 import type { Intensity } from '../_state/read-page-reducer';
 import styles from './word-flag-styles.module.css';
 
@@ -217,7 +218,10 @@ export function AnnotatedText({
     const live = liveRef.current;
     // onWordClick stays flagged-only (the parent's handler is skim-specific).
     if (live.flaggedMap[token.key]) live.onWordClick(token.key, rect);
-    live.onSpanSelect?.({ start: token.start, end: token.end, type: 'word', rect });
+    if (live.onSpanSelect) {
+      track('reading_annotation_used');
+      live.onSpanSelect({ start: token.start, end: token.end, type: 'word', rect });
+    }
   }, []);
 
   // ---- Selection core (input-agnostic) ------------------------------------
@@ -259,7 +263,10 @@ export function AnnotatedText({
       return;
     }
     const type = resolveSpanType(txt, start, end, toks);
-    emit?.({ start, end, type, rect });
+    if (emit) {
+      track('reading_annotation_used');
+      emit({ start, end, type, rect });
+    }
 
     // After a press on word A and release on word B (A≠B), browsers fire a
     // synthetic click on the common ancestor — the rd-text container — which
