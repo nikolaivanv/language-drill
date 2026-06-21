@@ -12,16 +12,6 @@ vi.mock('@aws-sdk/client-sqs', () => ({
 const subscriberRows = vi.fn();
 const sentRows = vi.fn();
 vi.mock('@language-drill/db', () => {
-  const sel = () => {
-    const c: any = {};
-    c.from = () => c;
-    c.innerJoin = () => c;
-    c.where = () => c;
-    // first select = subscribers; second = sent ledger. Distinguish by a flag.
-    c.then = undefined;
-    c.__exec = null;
-    return c;
-  };
   return {
     createDb: vi.fn(() => ({
       // We model two sequential awaited selects via mockResolvedValueOnce.

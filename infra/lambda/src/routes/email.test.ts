@@ -2,9 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Hono } from 'hono';
 
 // --- db mock: a chainable builder whose terminal calls we control per test ---
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const state: Record<string, any> = {};
 vi.mock('../db', () => {
   const chain = () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const c: any = {};
     c.from = () => c;
     c.where = () => c;

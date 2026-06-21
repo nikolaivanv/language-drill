@@ -61,6 +61,7 @@ function evt() {
         }),
       },
     ],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any;
 }
 
