@@ -62,6 +62,7 @@ const mockUseProgressRadar = vi.fn();
 const mockUseInsightsErrors = vi.fn();
 const mockUseGetPreferences = vi.fn();
 const mockUseUpdatePreferences = vi.fn();
+const mockUseCurriculumMap = vi.fn();
 
 vi.mock('@language-drill/api-client', () => ({
   useTodayPlan: (...args: unknown[]) => mockUseTodayPlan(...args),
@@ -69,6 +70,7 @@ vi.mock('@language-drill/api-client', () => ({
   useInsightsErrors: (...args: unknown[]) => mockUseInsightsErrors(...args),
   useGetPreferences: (...args: unknown[]) => mockUseGetPreferences(...args),
   useUpdatePreferences: (...args: unknown[]) => mockUseUpdatePreferences(...args),
+  useCurriculumMap: (...args: unknown[]) => mockUseCurriculumMap(...args),
   createAuthenticatedFetch: vi.fn(() => vi.fn()),
 }));
 
@@ -191,6 +193,8 @@ beforeEach(() => {
     error: null,
     refetch: vi.fn(),
   });
+  // Default: no curriculum data → cue is hidden so existing tests are unaffected.
+  mockUseCurriculumMap.mockReturnValue({ data: undefined, isLoading: false, error: null });
 });
 
 // ---------------------------------------------------------------------------
@@ -467,5 +471,80 @@ describe('DashboardPage — DailyLoadControl wiring', () => {
     expect(mockInvalidateQueries).toHaveBeenCalledWith(
       expect.objectContaining({ queryKey: ['todayPlan', Language.ES] }),
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DashboardPage — linear-path cue wiring
+// ---------------------------------------------------------------------------
+
+function makeCurriculumMapData() {
+  return {
+    language: Language.ES,
+    activeLevel: 'A1',
+    levels: [
+      {
+        level: 'A1',
+        solidCount: 3,
+        total: 9,
+        readyToAdvance: false,
+        isPreview: false,
+        points: [
+          { key: 'p1', name: 'Present tense', cefrLevel: 'A1', order: 1, state: 'solid' as const, errorProne: false, mastery: null, confidence: null, evidenceCount: 0, lastPracticedAt: null, recentErrorCount: 0, prereqKeys: [], prereqNames: [], prereqUnmet: false, compatibleTypes: [], hasTheory: false, errorSample: null },
+          { key: 'p2', name: 'Ser vs Estar', cefrLevel: 'A1', order: 2, state: 'solid' as const, errorProne: false, mastery: null, confidence: null, evidenceCount: 0, lastPracticedAt: null, recentErrorCount: 0, prereqKeys: [], prereqNames: [], prereqUnmet: false, compatibleTypes: [], hasTheory: false, errorSample: null },
+          { key: 'p3', name: 'Articles', cefrLevel: 'A1', order: 3, state: 'learning' as const, errorProne: false, mastery: null, confidence: null, evidenceCount: 0, lastPracticedAt: null, recentErrorCount: 0, prereqKeys: [], prereqNames: [], prereqUnmet: false, compatibleTypes: [], hasTheory: false, errorSample: null },
+          { key: 'p4', name: 'Plural formation', cefrLevel: 'A1', order: 4, state: 'not-started' as const, errorProne: false, mastery: null, confidence: null, evidenceCount: 0, lastPracticedAt: null, recentErrorCount: 0, prereqKeys: [], prereqNames: [], prereqUnmet: false, compatibleTypes: [], hasTheory: false, errorSample: null },
+          { key: 'p5', name: 'Gender agreement', cefrLevel: 'A1', order: 5, state: 'not-started' as const, errorProne: false, mastery: null, confidence: null, evidenceCount: 0, lastPracticedAt: null, recentErrorCount: 0, prereqKeys: [], prereqNames: [], prereqUnmet: false, compatibleTypes: [], hasTheory: false, errorSample: null },
+        ],
+      },
+    ],
+  };
+}
+
+describe('DashboardPage — linear-path cue', () => {
+  it('renders the position label, next point name, and a /progress link', () => {
+    mockUseCurriculumMap.mockReturnValue({
+      data: makeCurriculumMapData(),
+      isLoading: false,
+      error: null,
+    });
+    render(<DashboardPage />);
+
+    // "point 3 of A1" — 3 touched points (solid: 2, learning: 1)
+    expect(screen.getByText(/point 3 of A1/)).toBeInTheDocument();
+    // "next: Plural formation" — lowest-order not-started
+    expect(screen.getByText(/Plural formation/)).toBeInTheDocument();
+    // "see the map →" link → /progress
+    const mapLink = screen.getByRole('link', { name: /see the map/ });
+    expect(mapLink).toHaveAttribute('href', '/progress');
+  });
+
+  it('hides the cue entirely when useCurriculumMap returns no data', () => {
+    mockUseCurriculumMap.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      error: null,
+    });
+    render(<DashboardPage />);
+    expect(screen.queryByText(/you're around/)).toBeNull();
+    expect(screen.queryByRole('link', { name: /see the map/ })).toBeNull();
+  });
+
+  it('omits the "next:" clause when all points are touched', () => {
+    const allTouched = makeCurriculumMapData();
+    allTouched.levels[0].points = allTouched.levels[0].points.map((p) => ({
+      ...p,
+      state: 'solid' as const,
+    }));
+    mockUseCurriculumMap.mockReturnValue({
+      data: allTouched,
+      isLoading: false,
+      error: null,
+    });
+    render(<DashboardPage />);
+    expect(screen.getByText(/point 5 of A1/)).toBeInTheDocument();
+    expect(screen.queryByText(/next:/)).toBeNull();
+    // "see the map →" link is still present
+    expect(screen.getByRole('link', { name: /see the map/ })).toBeInTheDocument();
   });
 });

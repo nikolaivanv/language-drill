@@ -16,16 +16,19 @@
 // ---------------------------------------------------------------------------
 
 import { useMemo } from 'react';
+import Link from 'next/link';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   createAuthenticatedFetch,
+  useCurriculumMap,
   useGetPreferences,
   useInsightsErrors,
   useProgressRadar,
   useTodayPlan,
   useUpdatePreferences,
 } from '@language-drill/api-client';
+import { composePathCue } from '../_lib/path-cue';
 import { type DailyMinutes } from '@language-drill/shared';
 import { useActiveLanguage } from '../../../components/shell/active-language-provider';
 import { useIsMobile } from '../../../lib/responsive';
@@ -47,12 +50,15 @@ export default function DashboardPage() {
   );
   const queryClient = useQueryClient();
 
-  // Both queries fire in parallel on mount via TanStack Query.
+  // All queries fire in parallel on mount via TanStack Query.
   const todayPlan = useTodayPlan({ fetchFn, language: activeLanguage });
   const radar = useProgressRadar({ fetchFn, language: activeLanguage });
   const insights = useInsightsErrors({ fetchFn, language: activeLanguage });
   const prefs = useGetPreferences({ fetchFn });
   const updatePrefs = useUpdatePreferences({ fetchFn });
+  const curriculum = useCurriculumMap({ fetchFn, language: activeLanguage });
+
+  const pathCue = composePathCue(curriculum.data);
 
   const isMobile = useIsMobile();
 
@@ -97,6 +103,22 @@ export default function DashboardPage() {
         }}
         language={activeLanguage}
       />
+      {pathCue && (
+        <p className="t-micro text-ink-mute">
+          {"you're around "}
+          <span className="font-medium">{pathCue.positionLabel}</span>
+          {pathCue.nextName && (
+            <>
+              {' · next: '}
+              <span className="font-medium">{pathCue.nextName}</span>
+            </>
+          )}
+          {' · '}
+          <Link href="/progress" className="underline underline-offset-2">
+            see the map →
+          </Link>
+        </p>
+      )}
       <hr className="border-rule" />
       <WorkOnThese themes={insights.data?.themes ?? []} />
       <SkillSnapshotGrid
