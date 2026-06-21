@@ -110,6 +110,14 @@ export class LambdaConstruct extends Construct {
             projectRoot,
             "packages/ai/src/index.ts"
           ),
+          // The API Lambda imports the email package (routes/email.ts sends the
+          // opt-in confirmation email). Alias to src like the others so esbuild
+          // never needs a built packages/email/dist (which doesn't exist on the
+          // CDK-deploy CI runner — only a local build produces it).
+          "--alias:@language-drill/email": path.join(
+            projectRoot,
+            "packages/email/src/index.ts"
+          ),
         },
       },
       // additionalEnv is spread first so secret-derived vars below cannot be overridden by callers.
