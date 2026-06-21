@@ -181,6 +181,9 @@ importers:
       '@language-drill/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@language-drill/email':
+        specifier: workspace:*
+        version: link:../../packages/email
       '@language-drill/shared':
         specifier: workspace:*
         version: link:../../packages/shared
