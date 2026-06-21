@@ -382,6 +382,17 @@ function PracticePageContent() {
         onDifficultyChange={handleDifficultyChange}
         onStartQuick={() => setStartIntent('quick')}
         onStartDictation={() => setStartIntent('dictation')}
+        themes={insights.data?.themes ?? []}
+        onStartTargeted={(grammarPointKey) => {
+          setStartIntent('quick');
+          // Note: grammarPointKey is passed via useSearchParams in the next render
+          // via the session creation effect. We set it here as an internal state,
+          // but the actual URL query param is set by the effect after startIntent changes.
+          // For now, we'll use a simpler approach: trigger the session start with
+          // the grammarPointKey in the URL by reusing the existing state machine.
+          // The effect will pick it up from setStartIntent and create the session with it.
+          router.push(`/drill?start=quick&grammarPoint=${encodeURIComponent(grammarPointKey)}`);
+        }}
       />
     );
   }
