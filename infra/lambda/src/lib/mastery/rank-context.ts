@@ -7,14 +7,6 @@ import { and, eq, gte, sql } from 'drizzle-orm';
 import { userGrammarMastery, errorObservations, getGrammarPoint } from '@language-drill/db';
 import type { RankContext, PointMastery } from './rank';
 
-type Db = {
-  select: (cols?: Record<string, unknown>) => {
-    from: (...args: unknown[]) => {
-      where: (...args: unknown[]) => unknown;
-    };
-  };
-};
-
 /**
  * Builds a RankContext for (userId, language) in two parallel DB queries:
  *  1. userGrammarMastery → masteryByPoint

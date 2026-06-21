@@ -126,17 +126,22 @@ sessions.post('/sessions', async (c) => {
     if (targeted.length >= exerciseCount) {
       candidateRows = targeted;
     } else {
-      const targetedIds = targeted.map((r: { id: string }) => r.id);
-      const topUpWhere = targetedIds.length
-        ? [...baseWhere, notInArray(exercisesTable.id, targetedIds)]
-        : baseWhere;
-      const topUp = await db
-        .select()
-        .from(exercisesTable)
-        .where(and(...topUpWhere))
-        .orderBy(freshFirstOrderBy(userId))
-        .limit(OVERFETCH - targeted.length);
-      candidateRows = mergeSessionRows(targeted, topUp, OVERFETCH);
+      // Only topup if there's headroom; skip the fetch if targeted has filled OVERFETCH.
+      if (targeted.length < OVERFETCH) {
+        const targetedIds = targeted.map((r: { id: string }) => r.id);
+        const topUpWhere = targetedIds.length
+          ? [...baseWhere, notInArray(exercisesTable.id, targetedIds)]
+          : baseWhere;
+        const topUp = await db
+          .select()
+          .from(exercisesTable)
+          .where(and(...topUpWhere))
+          .orderBy(freshFirstOrderBy(userId))
+          .limit(OVERFETCH - targeted.length);
+        candidateRows = mergeSessionRows(targeted, topUp, OVERFETCH);
+      } else {
+        candidateRows = targeted;
+      }
     }
   } else {
     candidateRows = await db
@@ -180,6 +185,20 @@ sessions.post('/sessions', async (c) => {
   const rows = ranked
     .filter((d) => topIds.has(d.id))
     .map((d) => rowById.get(d.id)!);
+
+  // Guard after filtering: ensure the final selection has at least exerciseCount rows.
+  // The .filter((r) => r.type && r.difficulty) above can shrink the draws set below
+  // exerciseCount, and rankPlanCandidates cannot select more rows than it receives.
+  if (rows.length < exerciseCount) {
+    return c.json(
+      {
+        error: 'Not enough exercises in the pool for this filter',
+        code: 'INSUFFICIENT_EXERCISES',
+        details: { available: rows.length, requested: exerciseCount },
+      },
+      422,
+    );
+  }
 
   // Insert the session row with the chosen exercise IDs
   const inserted = await db
