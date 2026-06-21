@@ -52,7 +52,7 @@ export function GoalsSection() {
             <Choice key={m} mode="radio" selected={daily === m} onSelect={() => pickDaily(m)}>
               <span className="flex flex-col items-start">
                 <span className="t-display-s">{m}</span>
-                <span className="t-micro text-ink-mute">min / day</span>
+                <span className="t-micro text-ink-mute whitespace-nowrap">min</span>
               </span>
             </Choice>
           ))}

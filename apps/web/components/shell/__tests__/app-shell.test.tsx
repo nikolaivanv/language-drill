@@ -18,6 +18,9 @@ vi.mock('../mobile-top-bar', () => ({
 vi.mock('../mobile-tab-bar', () => ({
   MobileTabBar: () => <div data-testid="mobile-tab-bar" />,
 }));
+vi.mock('../app-footer', () => ({
+  AppFooter: () => <div data-testid="app-footer" />,
+}));
 
 describe('AppShell', () => {
   beforeEach(() => {

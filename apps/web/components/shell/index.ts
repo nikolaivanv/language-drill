@@ -8,6 +8,7 @@ export { NavItems, NAV_DESTINATIONS } from './nav-items';
 export type { NavDestination } from './nav-items';
 export { NavItem } from './nav-item';
 export { UserFooter } from './user-footer';
+export { AppFooter } from './app-footer';
 export { TodayIcon, DrillIcon, ReadIcon, ProgressIcon } from './nav-icons';
 export { MobileTopBar } from './mobile-top-bar';
 export { MobileTabBar } from './mobile-tab-bar';

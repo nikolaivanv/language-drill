@@ -5,6 +5,7 @@ import { useIsMobile } from '../../lib/responsive';
 import { Nav } from './nav';
 import { MobileTopBar } from './mobile-top-bar';
 import { MobileTabBar } from './mobile-tab-bar';
+import { AppFooter } from './app-footer';
 
 interface AppShellProps {
   profiles: LanguageProfile[];
@@ -23,6 +24,7 @@ export function AppShell({ profiles, children }: AppShellProps) {
         <MobileTopBar profiles={profiles} />
         <main className="min-w-0 flex-1 bg-paper px-[18px] pt-[18px] pb-[calc(64px+env(safe-area-inset-bottom)+18px)]">
           {children}
+          <AppFooter />
         </main>
         <MobileTabBar />
       </div>
@@ -35,6 +37,7 @@ export function AppShell({ profiles, children }: AppShellProps) {
       <main className="flex-1 min-w-0 min-h-0 overflow-y-auto bg-paper">
         <div className="max-w-max-content mx-auto w-full py-[36px] px-[48px]">
           {children}
+          <AppFooter />
         </div>
       </main>
     </div>
