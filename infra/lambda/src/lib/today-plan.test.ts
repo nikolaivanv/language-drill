@@ -9,6 +9,7 @@ import {
   startOfUtcDay,
   isFreeWritingDay,
   FREE_WRITING_CADENCE_DAYS,
+  planSkeleton,
   type PoolDraw,
   type HydrateSessionInput,
 } from './today-plan';
@@ -91,10 +92,43 @@ describe('startOfUtcDay', () => {
 });
 
 // ---------------------------------------------------------------------------
+// planSkeleton
+// ---------------------------------------------------------------------------
+
+describe('planSkeleton', () => {
+  it('produces warm-up first, cool-down last, core in between, sized to targetCount', () => {
+    const s = planSkeleton(8);
+    expect(s).toHaveLength(8);
+    expect(s[0].prefix).toBe('warm-up');
+    expect(s[7].prefix).toBe('cool-down');
+    expect(s.slice(1, 7).every((x) => x.prefix === 'core')).toBe(true);
+    expect(s.map((x) => x.index)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+  });
+  it('handles small counts gracefully (1, 2)', () => {
+    expect(planSkeleton(1)).toHaveLength(1);
+    expect(planSkeleton(2)).toHaveLength(2);
+  });
+  it('varies core types across the block (not all one type)', () => {
+    const types = new Set(planSkeleton(8).map((x) => x.type));
+    expect(types.size).toBeGreaterThan(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // composeFreshPlan
 // ---------------------------------------------------------------------------
 
 describe('composeFreshPlan', () => {
+  it('fills an 8-slot skeleton to 8 items from a rich pool', () => {
+    const candidates = Array.from({ length: 40 }, (_, i) => ({
+      id: `e${i}`, type: [ExerciseType.CLOZE, ExerciseType.TRANSLATION, ExerciseType.VOCAB_RECALL, ExerciseType.SENTENCE_CONSTRUCTION][i % 4],
+      topicHint: null, difficulty: CefrLevel.A1, grammarPointKey: `p${i}`,
+    }));
+    const { items } = composeFreshPlan(candidates, planSkeleton(8));
+    expect(items).toHaveLength(8);
+    expect(items.map((it) => it.index)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+  });
+
   it('returns 5 items in V1_PLAN_SHAPE order, all queued, when given a full pool', () => {
     const result = composeFreshPlan(fullPool());
 

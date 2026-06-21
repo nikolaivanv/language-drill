@@ -10,6 +10,7 @@ export type PointMastery = {
 
 export type RankContext = {
   masteryByPoint: ReadonlyMap<string, PointMastery>;
+  errorCountByPoint: ReadonlyMap<string, number>;
   /** Prerequisite keys for a grammar point (empty if none/unknown). */
   prereqsOf: (grammarPointKey: string) => readonly string[];
   now: Date;
@@ -23,6 +24,10 @@ const GROWTH_HI = 0.7;
 const GROWTH_BOOST = 0.15;
 const PREREQ_THRESHOLD = 0.3; // mastery at/above this counts as positive evidence
 const PREREQ_PENALTY = 0.5; // multiplicative, per unmet prerequisite
+const ERROR_WEIGHT = 0.15;
+const ERROR_CAP = 5;
+const ERROR_FIX_MIN = 2;
+const SOLID_MASTERY = 0.8;
 
 function hasPositiveEvidence(
   key: string,
@@ -55,7 +60,9 @@ function priorityOf(c: PoolDraw, ctx: RankContext): number {
     if (!hasPositiveEvidence(pk, ctx.masteryByPoint)) penalty *= PREREQ_PENALTY;
   }
 
-  return gap * penalty;
+  const errorCount = ctx.errorCountByPoint.get(c.grammarPointKey) ?? 0;
+  const errorTerm = ERROR_WEIGHT * Math.min(errorCount, ERROR_CAP);
+  return gap * penalty + errorTerm;
 }
 
 /**
@@ -73,4 +80,20 @@ export function rankPlanCandidates(
     .map((c, i) => ({ c, i, p: priorityOf(c, ctx) }))
     .sort((a, b) => (b.p - a.p) || (a.i - b.i))
     .map((x) => x.c);
+}
+
+export type PlanReason = 'new' | 'reinforce' | 'review' | 'error-fix';
+
+/** Classifies a plan item's dominant driver, from the same context as the ranker. */
+export function reasonFor(grammarPointKey: string | null, ctx: RankContext): PlanReason {
+  if (!grammarPointKey) return 'reinforce';
+  const errorCount = ctx.errorCountByPoint.get(grammarPointKey) ?? 0;
+  if (errorCount >= ERROR_FIX_MIN) return 'error-fix';
+  const m = ctx.masteryByPoint.get(grammarPointKey);
+  if (m == null) return 'new';
+  const days = Math.max(0, (ctx.now.getTime() - m.lastPracticedAt.getTime()) / MS_PER_DAY);
+  const effMastery = m.masteryScore * Math.exp(-days / HALFLIFE_DAYS);
+  // was solid, decayed back below solid → due for review
+  if (m.masteryScore >= SOLID_MASTERY && effMastery < SOLID_MASTERY) return 'review';
+  return 'reinforce';
 }
