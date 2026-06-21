@@ -23,6 +23,10 @@ vi.mock('../../../../components/settings/account-section', () => ({
   AccountSection: () => <section id="set-account">account-section</section>,
 }));
 
+vi.mock('../../../../components/settings/privacy-data-section', () => ({
+  PrivacyDataSection: () => <section id="set-privacy">privacy-data-section</section>,
+}));
+
 // ---------------------------------------------------------------------------
 // SettingsNav is also mocked so it doesn't need Clerk either.
 // We re-export SETTINGS_SECTIONS from a real-ish stub so the page can still
@@ -35,6 +39,7 @@ vi.mock('../../../../components/settings/settings-nav', () => ({
     { id: 'goals', label: 'goals' },
     { id: 'plan', label: 'plan & limits' },
     { id: 'account', label: 'account' },
+    { id: 'privacy', label: 'privacy & data' },
   ],
   SettingsNav: ({
     onJump,
@@ -54,6 +59,9 @@ vi.mock('../../../../components/settings/settings-nav', () => ({
       </button>
       <button type="button" onClick={() => onJump('account')}>
         account
+      </button>
+      <button type="button" onClick={() => onJump('privacy')}>
+        privacy & data
       </button>
     </nav>
   ),

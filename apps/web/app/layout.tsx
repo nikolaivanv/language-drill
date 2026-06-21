@@ -5,6 +5,8 @@ import SentryUserContext from '../components/sentry/sentry-user-context';
 
 import { fraunces, inter, jetbrainsMono, caveat } from './fonts';
 import { Providers } from './providers';
+import { ConsentProvider } from '../components/consent/consent-provider';
+import { CookieBanner } from '../components/consent/cookie-banner';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -25,7 +27,10 @@ export default function RootLayout({
           className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable} ${caveat.variable}`}
         >
         <body>
-          <Providers>{children}</Providers>
+          <ConsentProvider>
+            <Providers>{children}</Providers>
+            <CookieBanner />
+          </ConsentProvider>
         </body>
       </html>
     </ClerkProvider>

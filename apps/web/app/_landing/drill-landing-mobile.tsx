@@ -21,6 +21,7 @@ import {
   type BankWord,
 } from './drill-landing';
 import { D_CLOZE, D_LANGS, D_PASSAGES, D_SEED_VOCAB, D_SOON, type Token } from './landing-data';
+import { LegalLinks } from '../../components/legal/legal-links';
 
 const DEFAULT_LANG = 'es';
 
@@ -448,6 +449,7 @@ function MFooter() {
       <DBrand />
       <div className="meta">© 2026 drill · read, save, produce</div>
       <Link href="/sign-in">Sign in →</Link>
+      <LegalLinks className="mt-s-3" />
     </footer>
   );
 }
