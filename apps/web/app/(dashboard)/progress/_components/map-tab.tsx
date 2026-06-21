@@ -11,9 +11,10 @@ import { PointDetailSheet } from './point-detail-sheet';
 import { formatAgo } from '../_lib/format-ago';
 
 // ---------------------------------------------------------------------------
-// MapTab — read-only curriculum spine for /progress.
+// MapTab — the curriculum spine for /progress.
 // Mirrors ShapeTab's loading/error pattern and timeline-item.tsx's rail idiom.
-// Phase 1: display-only (no detail sheet; no functional "add level" button).
+// Cells open a point-detail sheet (Phase 2); the readiness strip carries an
+// opt-in "add {next level}" advance action when the level is solid (Phase 4).
 // ---------------------------------------------------------------------------
 
 export type MapTabProps = {
