@@ -8,7 +8,7 @@ import {
 } from '../state-cards';
 
 describe('AllDoneCard', () => {
-  it('renders the summary "5 of 5 · 18 minutes" and the fresh-session link', () => {
+  it('renders the summary "5 of 5 · 18 minutes" and the keep-going link', () => {
     render(
       <AllDoneCard
         summary={{ itemCount: 5, correctCount: 4, durationMinutes: 18 }}
@@ -16,8 +16,9 @@ describe('AllDoneCard', () => {
       />,
     );
     expect(screen.getByText('5 of 5 · 18 minutes')).toBeInTheDocument();
-    const link = screen.getByRole('link', { name: /start a fresh session/ });
+    const link = screen.getByRole('link', { name: /keep going/ });
     expect(link).toHaveAttribute('href', '/drill?language=ES');
+    expect(screen.getByText(/tuned to your weak spots/)).toBeInTheDocument();
   });
 
   it('contains no streak / XP / lesson copy', () => {

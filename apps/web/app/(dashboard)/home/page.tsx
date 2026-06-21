@@ -16,15 +16,23 @@
 // ---------------------------------------------------------------------------
 
 import { useMemo } from 'react';
+import Link from 'next/link';
 import { useAuth, useUser } from '@clerk/nextjs';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   createAuthenticatedFetch,
+  useCurriculumMap,
+  useGetPreferences,
   useInsightsErrors,
   useProgressRadar,
   useTodayPlan,
+  useUpdatePreferences,
 } from '@language-drill/api-client';
+import { composePathCue } from '../_lib/path-cue';
+import { type DailyMinutes } from '@language-drill/shared';
 import { useActiveLanguage } from '../../../components/shell/active-language-provider';
 import { useIsMobile } from '../../../lib/responsive';
+import { DailyLoadControl } from '../_components/daily-load-control';
 import { DashboardHeader } from '../_components/dashboard-header';
 import { NextUpCard } from '../_components/next-up-card';
 import { ReadCollectCard } from '../_components/read-collect-card';
@@ -40,13 +48,33 @@ export default function DashboardPage() {
     () => createAuthenticatedFetch(getToken),
     [getToken],
   );
+  const queryClient = useQueryClient();
 
-  // Both queries fire in parallel on mount via TanStack Query.
+  // All queries fire in parallel on mount via TanStack Query.
   const todayPlan = useTodayPlan({ fetchFn, language: activeLanguage });
   const radar = useProgressRadar({ fetchFn, language: activeLanguage });
   const insights = useInsightsErrors({ fetchFn, language: activeLanguage });
+  const prefs = useGetPreferences({ fetchFn });
+  const updatePrefs = useUpdatePreferences({ fetchFn });
+  const curriculum = useCurriculumMap({ fetchFn, language: activeLanguage });
+
+  const pathCue = composePathCue(curriculum.data);
 
   const isMobile = useIsMobile();
+
+  const handleDailyMinutesSelect = (m: DailyMinutes) => {
+    updatePrefs.mutate(
+      { dailyMinutes: m },
+      {
+        onSuccess: () => {
+          // Invalidate the today-plan query so the plan length updates.
+          void queryClient.invalidateQueries({
+            queryKey: ['todayPlan', activeLanguage],
+          });
+        },
+      },
+    );
+  };
 
   return (
     <div className="space-y-s-7">
@@ -55,11 +83,17 @@ export default function DashboardPage() {
         firstName={user?.firstName ?? null}
         axes={radar.data?.axes}
         totalEstimatedMinutes={todayPlan.data?.totalEstimatedMinutes ?? null}
+        planItems={todayPlan.data?.items}
       />
       {/* Mobile-only one-tap CTA directly under the greeting (Req 4.2). */}
       {isMobile && (
         <NextUpCard data={todayPlan.data} language={activeLanguage} />
       )}
+      <DailyLoadControl
+        current={prefs.data?.dailyMinutes ?? null}
+        onSelect={handleDailyMinutesSelect}
+        disabled={updatePrefs.isPending}
+      />
       <TodayTimeline
         data={todayPlan.data}
         isLoading={todayPlan.isLoading}
@@ -69,6 +103,22 @@ export default function DashboardPage() {
         }}
         language={activeLanguage}
       />
+      {pathCue && (
+        <p className="t-micro text-ink-mute">
+          {"you're around "}
+          <span className="font-medium">{pathCue.positionLabel}</span>
+          {pathCue.nextName && (
+            <>
+              {' · next: '}
+              <span className="font-medium">{pathCue.nextName}</span>
+            </>
+          )}
+          {' · '}
+          <Link href="/progress" className="underline underline-offset-2">
+            see the map →
+          </Link>
+        </p>
+      )}
       <hr className="border-rule" />
       <WorkOnThese themes={insights.data?.themes ?? []} />
       <SkillSnapshotGrid

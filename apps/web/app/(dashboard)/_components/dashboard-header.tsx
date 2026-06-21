@@ -13,9 +13,9 @@
 // pre-computed axis through. Functionally equivalent.
 // ---------------------------------------------------------------------------
 
-import type { RadarAxis } from '@language-drill/api-client';
+import type { PlanReason, RadarAxis } from '@language-drill/api-client';
 import type { LearningLanguage } from '@language-drill/shared';
-import { computeFraming } from '../_lib/framing-rules';
+import { computeFraming, composePlanFraming } from '../_lib/framing-rules';
 import { GreetingBlock } from './greeting-block';
 
 type Props = {
@@ -23,6 +23,7 @@ type Props = {
   firstName: string | null;
   axes: RadarAxis[] | undefined;
   totalEstimatedMinutes: number | null;
+  planItems?: { reason: PlanReason | null; grammarPointName: string | null }[];
 };
 
 export function DashboardHeader({
@@ -30,8 +31,12 @@ export function DashboardHeader({
   firstName,
   axes,
   totalEstimatedMinutes,
+  planItems,
 }: Props) {
-  const framing = computeFraming(axes);
+  const framing =
+    planItems && planItems.length > 0
+      ? composePlanFraming(planItems)
+      : computeFraming(axes);
 
   return (
     <header className="space-y-s-4">

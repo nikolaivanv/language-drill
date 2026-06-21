@@ -117,6 +117,7 @@ export function TodayTimeline({
             status={status}
             isLast={idx === itemsWithStatus.length - 1}
             href={status === 'next-up' ? drillHref : null}
+            reason={item.reason}
             ctaLabel={status === 'next-up' ? ctaLabel : undefined}
           />
         ))}

@@ -13,6 +13,7 @@ import {
   getGrammarPoint,
 } from '@language-drill/db';
 import { rankPlanCandidates, reasonFor, type PointMastery, type RankContext } from '../lib/mastery/rank';
+import { buildRankContext } from '../lib/mastery/rank-context';
 import { computeSkillMovements, type SkillHistoryRow } from '../lib/debrief/skill-movements.js';
 import { db } from '../db';
 import { approvedStatusFilter, audioReadyFilter, freshFirstOrderBy } from '../lib/exercise-filters';
@@ -88,6 +89,13 @@ sessions.post('/sessions', async (c) => {
 
   const { language, difficulty, exerciseCount, exerciseType, grammarPointKey } = bodyResult.data;
   const userId = c.get('userId');
+  const now = new Date();
+
+  // Over-fetch factor: pull more candidates than needed so the in-memory ranker
+  // has real choice. freshFirstOrderBy remains the SQL pre-order (exposure
+  // control); the ranker reorders within the over-fetched set by mastery gap +
+  // error weight, then the top exerciseCount rows are taken.
+  const OVERFETCH = Math.max(exerciseCount * 4, 20);
 
   // Pull a manifest of N exercises for this (language, difficulty), ordered so
   // never-attempted exercises come first (exposure control); falls through to
@@ -105,39 +113,82 @@ sessions.post('/sessions', async (c) => {
     ...(exerciseType ? [eq(exercisesTable.type, exerciseType)] : []),
   ];
 
-  let rows;
+  let candidateRows;
   if (grammarPointKey) {
+    // Over-fetch targeted rows; fill any shortfall from the broader pool.
     const targeted = await db
       .select()
       .from(exercisesTable)
       .where(and(...baseWhere, eq(exercisesTable.grammarPointKey, grammarPointKey)))
       .orderBy(freshFirstOrderBy(userId))
-      .limit(exerciseCount);
+      .limit(OVERFETCH);
 
     if (targeted.length >= exerciseCount) {
-      rows = targeted;
+      candidateRows = targeted;
     } else {
-      const targetedIds = targeted.map((r) => r.id);
-      const topUpWhere = targetedIds.length
-        ? [...baseWhere, notInArray(exercisesTable.id, targetedIds)]
-        : baseWhere;
-      const topUp = await db
-        .select()
-        .from(exercisesTable)
-        .where(and(...topUpWhere))
-        .orderBy(freshFirstOrderBy(userId))
-        .limit(exerciseCount - targeted.length);
-      rows = mergeSessionRows(targeted, topUp, exerciseCount);
+      // Only topup if there's headroom; skip the fetch if targeted has filled OVERFETCH.
+      if (targeted.length < OVERFETCH) {
+        const targetedIds = targeted.map((r: { id: string }) => r.id);
+        const topUpWhere = targetedIds.length
+          ? [...baseWhere, notInArray(exercisesTable.id, targetedIds)]
+          : baseWhere;
+        const topUp = await db
+          .select()
+          .from(exercisesTable)
+          .where(and(...topUpWhere))
+          .orderBy(freshFirstOrderBy(userId))
+          .limit(OVERFETCH - targeted.length);
+        candidateRows = mergeSessionRows(targeted, topUp, OVERFETCH);
+      } else {
+        candidateRows = targeted;
+      }
     }
   } else {
-    rows = await db
+    candidateRows = await db
       .select()
       .from(exercisesTable)
       .where(and(...baseWhere))
       .orderBy(freshFirstOrderBy(userId))
-      .limit(exerciseCount);
+      .limit(OVERFETCH);
   }
 
+  if (candidateRows.length < exerciseCount) {
+    return c.json(
+      {
+        error: 'Not enough exercises in the pool for this filter',
+        code: 'INSUFFICIENT_EXERCISES',
+        details: { available: candidateRows.length, requested: exerciseCount },
+      },
+      422,
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // Error-aware ranking: build context (mastery + 30-day error counts) and
+  // reorder the over-fetched candidates. The SQL pre-order (freshFirstOrderBy)
+  // is preserved as the stable tiebreak so equal-priority points honour
+  // exposure control. Take the top exerciseCount items from the ranked list.
+  // -------------------------------------------------------------------------
+  const rankCtx = await buildRankContext(db, userId, language, now);
+  const draws: import('../lib/today-plan').PoolDraw[] = candidateRows
+    .filter((r) => r.type && r.difficulty)
+    .map((r) => ({
+      id: r.id,
+      type: r.type as import('@language-drill/shared').ExerciseType,
+      topicHint: null,
+      difficulty: r.difficulty as import('@language-drill/shared').CefrLevel,
+      grammarPointKey: r.grammarPointKey ?? null,
+    }));
+  const ranked = rankPlanCandidates(draws, rankCtx);
+  const topIds = new Set(ranked.slice(0, exerciseCount).map((d) => d.id));
+  const rowById = new Map(candidateRows.map((r) => [r.id, r]));
+  const rows = ranked
+    .filter((d) => topIds.has(d.id))
+    .map((d) => rowById.get(d.id)!);
+
+  // Guard after filtering: ensure the final selection has at least exerciseCount rows.
+  // The .filter((r) => r.type && r.difficulty) above can shrink the draws set below
+  // exerciseCount, and rankPlanCandidates cannot select more rows than it receives.
   if (rows.length < exerciseCount) {
     return c.json(
       {

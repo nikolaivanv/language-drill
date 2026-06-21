@@ -6,7 +6,7 @@
 // design.md §"Framing rules table" so they're testable as data.
 // ---------------------------------------------------------------------------
 
-import type { RadarAxis } from '@language-drill/api-client';
+import type { PlanReason, RadarAxis } from '@language-drill/api-client';
 
 const GENERIC_PARAGRAPH =
   'a balanced session — production first, then a vocabulary rep.';
@@ -58,4 +58,77 @@ export function computeFraming(
     };
   }
   return { paragraph: MAINTENANCE_PARAGRAPH };
+}
+
+// ---------------------------------------------------------------------------
+// composePlanFraming — plan-based framing (primary; radar is the fallback)
+// ---------------------------------------------------------------------------
+
+type PlanItem = { reason: PlanReason | null; grammarPointName: string | null };
+
+/**
+ * Compose a framing paragraph from the today plan items.
+ *
+ * Priority:
+ *  1. ≥1 `error-fix` items with a named grammar point → lead on those spots.
+ *  2. Majority `new` with ≥1 name → "new ground" framing.
+ *  3. Majority `review` with ≥1 name → "review pass" framing.
+ *  4. Generic reinforce line.
+ *
+ * Returns `{ paragraph, isGeneric: true }` for empty/undefined input so the
+ * caller can decide to fall back to `computeFraming(axes)`.
+ */
+export function composePlanFraming(
+  items: PlanItem[] | undefined,
+): FramingResult {
+  if (!items || items.length === 0) {
+    return { paragraph: GENERIC_PARAGRAPH, isGeneric: true };
+  }
+
+  // Branch 1: error-fix items with named grammar points.
+  const errorFixNames = [
+    ...new Set(
+      items
+        .filter((i) => i.reason === 'error-fix' && i.grammarPointName)
+        .map((i) => i.grammarPointName as string),
+    ),
+  ].slice(0, 2);
+
+  if (errorFixNames.length >= 1) {
+    const nameList =
+      errorFixNames.length === 1
+        ? errorFixNames[0]
+        : `${errorFixNames[0]} and ${errorFixNames[1]}`;
+    const plural = errorFixNames.length > 1 ? 's' : '';
+    return {
+      paragraph: `today leans into ${nameList} — your liveliest error spot${plural}.`,
+    };
+  }
+
+  const total = items.length;
+  const newCount = items.filter((i) => i.reason === 'new').length;
+  const reviewCount = items.filter((i) => i.reason === 'review').length;
+
+  // Branch 2: mostly new.
+  if (newCount > total / 2) {
+    const firstName = items.find(
+      (i) => i.reason === 'new' && i.grammarPointName,
+    )?.grammarPointName;
+    if (firstName) {
+      return { paragraph: `today breaks new ground: ${firstName}.` };
+    }
+  }
+
+  // Branch 3: mostly review.
+  if (reviewCount > total / 2) {
+    const firstName = items.find(
+      (i) => i.reason === 'review' && i.grammarPointName,
+    )?.grammarPointName;
+    if (firstName) {
+      return { paragraph: `today is a review pass — keeping ${firstName} fresh.` };
+    }
+  }
+
+  // Branch 4: generic reinforce.
+  return { paragraph: GENERIC_PARAGRAPH, isGeneric: true };
 }

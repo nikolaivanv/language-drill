@@ -369,8 +369,12 @@ describe('POST /sessions', () => {
   });
 
   it('creates a session and returns the manifest', async () => {
-    // SELECT exercises matching language + difficulty
+    // SELECT exercises matching language + difficulty (over-fetch)
     mockLimit.mockResolvedValueOnce(sampleExercises);
+    // buildRankContext: mastery query (mockWhere → mockSelectAwait call 1)
+    mockSelectAwait.mockResolvedValueOnce([]);
+    // buildRankContext: error query (mockGroupBy → mockSelectAwait call 2)
+    mockSelectAwait.mockResolvedValueOnce([]);
     // INSERT practice_sessions returning { id }
     mockReturning.mockResolvedValueOnce([{ id: 'session-uuid-1' }]);
 
@@ -491,6 +495,104 @@ describe('POST /sessions', () => {
     expect(mockReturning).not.toHaveBeenCalled();
   });
 
+  it('error-aware ranking: high-error-count grammar point is returned first regardless of SQL order', async () => {
+    // Pool has 5 exercises: 'gp-errors' is last in SQL order (fresh-first puts
+    // never-seen rows first, error-aware ranking overrides that). After ranking,
+    // the high-error point gets priority and should appear as exercises[0].
+    const poolRows = [
+      {
+        id: 'ex-a',
+        type: 'cloze',
+        language: 'ES',
+        difficulty: 'B1',
+        contentJson: { sentence: '___ alpha' },
+        audioS3Key: null,
+        grammarPointKey: 'gp-zero-errors',
+        createdAt: new Date(),
+      },
+      {
+        id: 'ex-b',
+        type: 'translation',
+        language: 'ES',
+        difficulty: 'B1',
+        contentJson: { source: 'hello', target: 'hola' },
+        audioS3Key: null,
+        grammarPointKey: 'gp-zero-errors',
+        createdAt: new Date(),
+      },
+      {
+        id: 'ex-c',
+        type: 'vocab_recall',
+        language: 'ES',
+        difficulty: 'B1',
+        contentJson: { word: 'casa' },
+        audioS3Key: null,
+        grammarPointKey: 'gp-zero-errors',
+        createdAt: new Date(),
+      },
+      {
+        id: 'ex-d',
+        type: 'cloze',
+        language: 'ES',
+        difficulty: 'B1',
+        contentJson: { sentence: '___ delta' },
+        audioS3Key: null,
+        grammarPointKey: 'gp-zero-errors',
+        createdAt: new Date(),
+      },
+      // Last in SQL order, but should rank FIRST due to high error count.
+      {
+        id: 'ex-high-error',
+        type: 'cloze',
+        language: 'ES',
+        difficulty: 'B1',
+        contentJson: { sentence: '___ high-error' },
+        audioS3Key: null,
+        grammarPointKey: 'gp-many-errors',
+        createdAt: new Date(),
+      },
+    ];
+
+    // Over-fetch query returns all 5 rows (exerciseCount=3, OVERFETCH=max(12,20)=20).
+    mockLimit.mockResolvedValueOnce(poolRows);
+
+    // buildRankContext query order (both run in Promise.all):
+    // Mastery → awaited directly via mockWhere.then → mockSelectAwait call 1.
+    // Error → awaited via mockGroupBy.then → mockSelectAwait call 2.
+    // No mastery rows → gap=1.0 for all; error rows decide the winner.
+    mockSelectAwait.mockResolvedValueOnce([]); // mastery: no rows → gap=1.0 for all
+    // Error rows: gp-many-errors has 4 recent errors, gp-zero-errors has 0.
+    mockSelectAwait.mockResolvedValueOnce([
+      { key: 'gp-many-errors', n: 4 },
+    ]);
+
+    // INSERT returning
+    mockReturning.mockResolvedValueOnce([{ id: 'session-ranked-1' }]);
+
+    const res = await app.request(
+      '/sessions',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          language: 'ES',
+          difficulty: 'B1',
+          exerciseCount: 3,
+        }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.id).toBe('session-ranked-1');
+    expect(body.exercises).toHaveLength(3);
+    // The high-error exercise must be ranked first despite being last in SQL order.
+    // gap=1.0 for all (no mastery rows), but gp-many-errors gets +ERROR_WEIGHT*min(4,5)=+0.6
+    // so its priority = 1.0 + 0.6 = 1.6 vs. 1.0 for zero-error points.
+    expect(body.exercises[0].id).toBe('ex-high-error');
+  });
+
   it('dictation-only request: returns a manifest of the dictation rows the pool yields', async () => {
     const dictationRows = [
       {
@@ -513,6 +615,10 @@ describe('POST /sessions', () => {
       },
     ];
     mockLimit.mockResolvedValueOnce(dictationRows);
+    // buildRankContext: mastery query (mockSelectAwait call 1)
+    mockSelectAwait.mockResolvedValueOnce([]);
+    // buildRankContext: error query (mockGroupBy → mockSelectAwait call 2)
+    mockSelectAwait.mockResolvedValueOnce([]);
     mockReturning.mockResolvedValueOnce([{ id: 'session-dictation-1' }]);
 
     const res = await app.request(
@@ -2421,6 +2527,9 @@ describe('review_status filter — POST /sessions', () => {
     // approvedStatusFilter, future fixture additions would expose the leak.
     for (let i = 0; i < 100; i++) {
       mockLimit.mockResolvedValueOnce(approvedExercises);
+      // buildRankContext: mastery (mockSelectAwait call 1) + error (mockSelectAwait call 2)
+      mockSelectAwait.mockResolvedValueOnce([]); // mastery: no rows
+      mockSelectAwait.mockResolvedValueOnce([]); // error: no rows
       mockReturning.mockResolvedValueOnce([{ id: `session-${i}` }]);
     }
 

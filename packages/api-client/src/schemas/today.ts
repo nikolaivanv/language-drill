@@ -21,6 +21,10 @@ export const TodayPlanItemStatusEnum = z.enum(['done', 'queued']);
 
 export type TodayPlanItemStatus = z.infer<typeof TodayPlanItemStatusEnum>;
 
+export const PlanReasonEnum = z.enum(['new', 'reinforce', 'review', 'error-fix']);
+
+export type PlanReason = z.infer<typeof PlanReasonEnum>;
+
 export const TodayPlanItemSchema = z.object({
   // 1-based plan position (1..DAILY_GOAL_MAX_ITEMS).
   index: z.number().int().min(1).max(12),
@@ -46,7 +50,7 @@ export const TodayPlanItemSchema = z.object({
   // errors on this point). Nullable for backward-compat with older API deploys
   // (.default(null)); the current API computes a reason on every item (both
   // fresh and hydrated paths).
-  reason: z.enum(['new', 'reinforce', 'review', 'error-fix']).nullable().default(null),
+  reason: PlanReasonEnum.nullable().default(null),
 });
 
 export type TodayPlanItem = z.infer<typeof TodayPlanItemSchema>;

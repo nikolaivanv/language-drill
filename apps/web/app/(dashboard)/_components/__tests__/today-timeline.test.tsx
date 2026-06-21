@@ -137,8 +137,9 @@ describe('TodayTimeline — all done', () => {
     );
     expect(screen.getByText("you're done for today.")).toBeInTheDocument();
     expect(screen.getByText('5 of 5 · 18 minutes')).toBeInTheDocument();
-    const link = screen.getByRole('link', { name: /start a fresh session/ });
+    const link = screen.getByRole('link', { name: /keep going/ });
     expect(link).toHaveAttribute('href', '/drill?start=quick');
+    expect(screen.getByText(/tuned to your weak spots/)).toBeInTheDocument();
   });
 });
 
@@ -251,6 +252,42 @@ describe('TodayTimeline — resume session', () => {
     );
     const cta = screen.getByRole('link', { name: /start/i });
     expect(cta).toHaveAttribute('href', '/drill?start=quick');
+  });
+});
+
+describe('TodayTimeline — reason hint', () => {
+  it('renders the reason hint on a row with reason=error-fix', () => {
+    const items = [
+      makeItem(1, 'queued', { reason: 'error-fix' }),
+      makeItem(2, 'queued'),
+    ];
+    render(
+      <TodayTimeline
+        {...baseProps}
+        data={makeResponse(items)}
+        isLoading={false}
+        error={null}
+      />,
+    );
+    expect(screen.getByText('recent error spot')).toBeInTheDocument();
+  });
+
+  it('does not render a hint when reason is null', () => {
+    const items = [
+      makeItem(1, 'queued', { reason: null }),
+      makeItem(2, 'queued', { reason: null }),
+    ];
+    render(
+      <TodayTimeline
+        {...baseProps}
+        data={makeResponse(items)}
+        isLoading={false}
+        error={null}
+      />,
+    );
+    expect(
+      screen.queryByText(/new point|reinforcing|due for review|recent error spot/),
+    ).toBeNull();
   });
 });
 

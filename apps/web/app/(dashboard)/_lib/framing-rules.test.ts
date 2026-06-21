@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { RadarAxis, RadarAxisKey } from '@language-drill/api-client';
-import { computeFraming, pickWeakestAxis } from './framing-rules';
+import { computeFraming, pickWeakestAxis, composePlanFraming } from './framing-rules';
 
 // ---------------------------------------------------------------------------
 // Fixture builder — keeps each test focused on what it cares about
@@ -137,5 +137,67 @@ describe('computeFraming', () => {
       axis('vocabulary', 0.3, 5, 'vocabulary breadth'),
     ];
     expect(computeFraming(axes).paragraph).toContain('vocabulary breadth');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// composePlanFraming — plan-based framing
+// ---------------------------------------------------------------------------
+
+describe('composePlanFraming', () => {
+  it('names both error-fix grammar points and mentions "error spot"', () => {
+    const items = [
+      { reason: 'error-fix' as const, grammarPointName: 'Accusative -(y)I' },
+      { reason: 'error-fix' as const, grammarPointName: 'Definite past -DI' },
+      { reason: 'review' as const, grammarPointName: 'Present tense' },
+    ];
+    const { paragraph } = composePlanFraming(items);
+    expect(paragraph).toContain('Accusative -(y)I');
+    expect(paragraph).toContain('Definite past -DI');
+    expect(paragraph.toLowerCase()).toContain('error spot');
+  });
+
+  it('frames "new ground" and the first name for an all-new plan', () => {
+    const items = [
+      { reason: 'new' as const, grammarPointName: 'Dative case' },
+      { reason: 'new' as const, grammarPointName: 'Locative case' },
+    ];
+    const { paragraph, isGeneric } = composePlanFraming(items);
+    expect(paragraph.toLowerCase()).toContain('new ground');
+    expect(paragraph).toContain('Dative case');
+    expect(isGeneric).toBeUndefined();
+  });
+
+  it('returns isGeneric true for an empty items list', () => {
+    const result = composePlanFraming([]);
+    expect(result.isGeneric).toBe(true);
+  });
+
+  it('returns isGeneric true for an undefined items list', () => {
+    const result = composePlanFraming(undefined);
+    expect(result.isGeneric).toBe(true);
+  });
+
+  it('frames "review pass" for a mostly-review plan', () => {
+    const items = [
+      { reason: 'review' as const, grammarPointName: 'Past tense' },
+      { reason: 'review' as const, grammarPointName: 'Present tense' },
+      { reason: 'new' as const, grammarPointName: null },
+    ];
+    const { paragraph } = composePlanFraming(items);
+    expect(paragraph.toLowerCase()).toContain('review');
+    expect(paragraph).toContain('Past tense');
+  });
+
+  it('uses only the first two distinct error-fix names', () => {
+    const items = [
+      { reason: 'error-fix' as const, grammarPointName: 'A' },
+      { reason: 'error-fix' as const, grammarPointName: 'B' },
+      { reason: 'error-fix' as const, grammarPointName: 'C' },
+    ];
+    const { paragraph } = composePlanFraming(items);
+    expect(paragraph).toContain('A');
+    expect(paragraph).toContain('B');
+    expect(paragraph).not.toContain(' C');
   });
 });

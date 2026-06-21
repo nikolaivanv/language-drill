@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import {
   CefrLevel,
   ExerciseType,
@@ -35,6 +35,15 @@ vi.mock('@clerk/nextjs', () => ({
   useUser: () => ({ user: { firstName: 'juno' } }),
 }));
 
+const mockInvalidateQueries = vi.fn();
+vi.mock('@tanstack/react-query', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tanstack/react-query')>();
+  return {
+    ...actual,
+    useQueryClient: () => ({ invalidateQueries: mockInvalidateQueries }),
+  };
+});
+
 const mockUseActiveLanguage = vi.fn<
   () => { activeLanguage: LearningLanguage; setActiveLanguage: () => void }
 >();
@@ -51,11 +60,17 @@ vi.mock('../../../lib/responsive', () => ({
 const mockUseTodayPlan = vi.fn();
 const mockUseProgressRadar = vi.fn();
 const mockUseInsightsErrors = vi.fn();
+const mockUseGetPreferences = vi.fn();
+const mockUseUpdatePreferences = vi.fn();
+const mockUseCurriculumMap = vi.fn();
 
 vi.mock('@language-drill/api-client', () => ({
   useTodayPlan: (...args: unknown[]) => mockUseTodayPlan(...args),
   useProgressRadar: (...args: unknown[]) => mockUseProgressRadar(...args),
   useInsightsErrors: (...args: unknown[]) => mockUseInsightsErrors(...args),
+  useGetPreferences: (...args: unknown[]) => mockUseGetPreferences(...args),
+  useUpdatePreferences: (...args: unknown[]) => mockUseUpdatePreferences(...args),
+  useCurriculumMap: (...args: unknown[]) => mockUseCurriculumMap(...args),
   createAuthenticatedFetch: vi.fn(() => vi.fn()),
 }));
 
@@ -154,6 +169,15 @@ beforeEach(() => {
     error: null,
     refetch: vi.fn(),
   });
+  mockUseGetPreferences.mockReturnValue({
+    data: { dailyMinutes: 10, goals: [], gentleNudges: true },
+    isLoading: false,
+    error: null,
+  });
+  mockUseUpdatePreferences.mockReturnValue({
+    mutate: vi.fn(),
+    isPending: false,
+  });
   mockUseProgressRadar.mockReturnValue({
     data: radarResponse(
       buildAxes({
@@ -169,6 +193,8 @@ beforeEach(() => {
     error: null,
     refetch: vi.fn(),
   });
+  // Default: no curriculum data → cue is hidden so existing tests are unaffected.
+  mockUseCurriculumMap.mockReturnValue({ data: undefined, isLoading: false, error: null });
 });
 
 // ---------------------------------------------------------------------------
@@ -384,5 +410,141 @@ describe('DashboardPage — language switching (Req 1.3, 11.2)', () => {
     expect(mockUseProgressRadar).toHaveBeenLastCalledWith(
       expect.objectContaining({ language: Language.DE }),
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DailyLoadControl wiring — preferences mutation + today-plan invalidation
+// ---------------------------------------------------------------------------
+
+describe('DashboardPage — DailyLoadControl wiring', () => {
+  it('renders the DailyLoadControl with current dailyMinutes from preferences', () => {
+    render(<DashboardPage />);
+    // The radiogroup is present
+    expect(
+      screen.getByRole('radiogroup', { name: "today's load" }),
+    ).toBeInTheDocument();
+    // The 10-min option (our mocked prefs.dailyMinutes) is selected
+    const options = screen.getAllByRole('radio');
+    const checked = options.filter(
+      (el) => el.getAttribute('aria-checked') === 'true',
+    );
+    expect(checked).toHaveLength(1);
+    expect(checked[0]).toHaveTextContent('10 min');
+  });
+
+  it('fires useUpdatePreferences.mutate with new dailyMinutes when an option is clicked', () => {
+    const mutateMock = vi.fn();
+    mockUseUpdatePreferences.mockReturnValue({
+      mutate: mutateMock,
+      isPending: false,
+    });
+
+    render(<DashboardPage />);
+    fireEvent.click(screen.getByText('20 min'));
+
+    expect(mutateMock).toHaveBeenCalledWith(
+      { dailyMinutes: 20 },
+      expect.objectContaining({ onSuccess: expect.any(Function) }),
+    );
+  });
+
+  it('invalidates todayPlan query on successful preference update', () => {
+    let capturedOnSuccess: (() => void) | undefined;
+    const mutateMock = vi.fn(
+      (_: unknown, opts: { onSuccess?: () => void }) => {
+        capturedOnSuccess = opts.onSuccess;
+      },
+    );
+    mockUseUpdatePreferences.mockReturnValue({
+      mutate: mutateMock,
+      isPending: false,
+    });
+
+    render(<DashboardPage />);
+    fireEvent.click(screen.getByText('30 min'));
+
+    // Trigger the onSuccess callback
+    expect(capturedOnSuccess).toBeDefined();
+    capturedOnSuccess!();
+
+    expect(mockInvalidateQueries).toHaveBeenCalledWith(
+      expect.objectContaining({ queryKey: ['todayPlan', Language.ES] }),
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DashboardPage — linear-path cue wiring
+// ---------------------------------------------------------------------------
+
+function makeCurriculumMapData() {
+  return {
+    language: Language.ES,
+    activeLevel: 'A1',
+    levels: [
+      {
+        level: 'A1',
+        solidCount: 3,
+        total: 9,
+        readyToAdvance: false,
+        isPreview: false,
+        points: [
+          { key: 'p1', name: 'Present tense', cefrLevel: 'A1', order: 1, state: 'solid' as const, errorProne: false, mastery: null, confidence: null, evidenceCount: 0, lastPracticedAt: null, recentErrorCount: 0, prereqKeys: [], prereqNames: [], prereqUnmet: false, compatibleTypes: [], hasTheory: false, errorSample: null },
+          { key: 'p2', name: 'Ser vs Estar', cefrLevel: 'A1', order: 2, state: 'solid' as const, errorProne: false, mastery: null, confidence: null, evidenceCount: 0, lastPracticedAt: null, recentErrorCount: 0, prereqKeys: [], prereqNames: [], prereqUnmet: false, compatibleTypes: [], hasTheory: false, errorSample: null },
+          { key: 'p3', name: 'Articles', cefrLevel: 'A1', order: 3, state: 'learning' as const, errorProne: false, mastery: null, confidence: null, evidenceCount: 0, lastPracticedAt: null, recentErrorCount: 0, prereqKeys: [], prereqNames: [], prereqUnmet: false, compatibleTypes: [], hasTheory: false, errorSample: null },
+          { key: 'p4', name: 'Plural formation', cefrLevel: 'A1', order: 4, state: 'not-started' as const, errorProne: false, mastery: null, confidence: null, evidenceCount: 0, lastPracticedAt: null, recentErrorCount: 0, prereqKeys: [], prereqNames: [], prereqUnmet: false, compatibleTypes: [], hasTheory: false, errorSample: null },
+          { key: 'p5', name: 'Gender agreement', cefrLevel: 'A1', order: 5, state: 'not-started' as const, errorProne: false, mastery: null, confidence: null, evidenceCount: 0, lastPracticedAt: null, recentErrorCount: 0, prereqKeys: [], prereqNames: [], prereqUnmet: false, compatibleTypes: [], hasTheory: false, errorSample: null },
+        ],
+      },
+    ],
+  };
+}
+
+describe('DashboardPage — linear-path cue', () => {
+  it('renders the position label, next point name, and a /progress link', () => {
+    mockUseCurriculumMap.mockReturnValue({
+      data: makeCurriculumMapData(),
+      isLoading: false,
+      error: null,
+    });
+    render(<DashboardPage />);
+
+    // "point 3 of A1" — 3 touched points (solid: 2, learning: 1)
+    expect(screen.getByText(/point 3 of A1/)).toBeInTheDocument();
+    // "next: Plural formation" — lowest-order not-started
+    expect(screen.getByText(/Plural formation/)).toBeInTheDocument();
+    // "see the map →" link → /progress
+    const mapLink = screen.getByRole('link', { name: /see the map/ });
+    expect(mapLink).toHaveAttribute('href', '/progress');
+  });
+
+  it('hides the cue entirely when useCurriculumMap returns no data', () => {
+    mockUseCurriculumMap.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      error: null,
+    });
+    render(<DashboardPage />);
+    expect(screen.queryByText(/you're around/)).toBeNull();
+    expect(screen.queryByRole('link', { name: /see the map/ })).toBeNull();
+  });
+
+  it('omits the "next:" clause when all points are touched', () => {
+    const allTouched = makeCurriculumMapData();
+    allTouched.levels[0].points = allTouched.levels[0].points.map((p) => ({
+      ...p,
+      state: 'solid' as const,
+    }));
+    mockUseCurriculumMap.mockReturnValue({
+      data: allTouched,
+      isLoading: false,
+      error: null,
+    });
+    render(<DashboardPage />);
+    expect(screen.getByText(/point 5 of A1/)).toBeInTheDocument();
+    expect(screen.queryByText(/next:/)).toBeNull();
+    // "see the map →" link is still present
+    expect(screen.getByRole('link', { name: /see the map/ })).toBeInTheDocument();
   });
 });

@@ -39,9 +39,14 @@ export function AllDoneCard({ summary, href }: AllDoneCardProps) {
           {summary.itemCount} of {summary.itemCount} ·{' '}
           {summary.durationMinutes} minutes
         </p>
-        <Button variant="default" size="md" href={href}>
-          start a fresh session →
-        </Button>
+        <div className="space-y-s-2">
+          <Button variant="default" size="md" href={href}>
+            keep going →
+          </Button>
+          <p className="t-small text-ink-mute">
+            one more round, tuned to your weak spots
+          </p>
+        </div>
       </div>
     </Card>
   );

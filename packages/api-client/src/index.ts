@@ -65,11 +65,13 @@ export {
 } from './schemas/progress';
 export {
   TodayPlanItemStatusEnum,
+  PlanReasonEnum,
   TodayPlanItemSchema,
   TodayPlanSummarySchema,
   TodayPlanResponseSchema,
   FreeWritingPlanBlockSchema,
   type TodayPlanItemStatus,
+  type PlanReason,
   type TodayPlanItem,
   type TodayPlanSummary,
   type TodayPlanResponse,
