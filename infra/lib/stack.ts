@@ -208,6 +208,7 @@ export class LanguageDrillStack extends Stack {
       // Web app the "Practice now" CTA links to. Both envs point at the prod
       // web app (there is no separate dev web domain); adjust if one is added.
       emailAppUrl: "https://langdrill.app",
+      alarmTopic: alerts.topic,
     });
 
     new CfnOutput(this, "ApiUrl", {

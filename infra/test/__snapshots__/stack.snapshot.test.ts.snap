@@ -1676,6 +1676,11 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
     },
     "EmailSenderWrapEmailSenderErrorsAlarm821305DA": {
       "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "AlertsAlertsTopic96BD0900",
+          },
+        ],
         "AlarmDescription": "Weekly-summary sender Lambda recorded > 5 errors in a single day.",
         "ComparisonOperator": "GreaterThanThreshold",
         "Dimensions": [
