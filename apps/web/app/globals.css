@@ -864,6 +864,11 @@
   font-size: 13.5px;
   font-weight: 500;
 }
+/* Single inline flex item holding the (possibly highlight-split) title, so the
+   row's `gap` separates title from badge without splitting the word itself. */
+.theory-switcher-row-text {
+  min-width: 0;
+}
 .theory-switcher-here {
   font-size: 9px;
   letter-spacing: 0.4px;
