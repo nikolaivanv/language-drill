@@ -1627,7 +1627,7 @@ admin.get('/admin/activity/sessions/:id', async (c) => {
       })
       .from(exerciseFlags)
       .innerJoin(userExerciseHistory, eq(exerciseFlags.historyId, userExerciseHistory.id))
-      .where(eq(userExerciseHistory.sessionId, sessionId)),
+      .where(and(eq(userExerciseHistory.sessionId, sessionId), eq(exerciseFlags.status, 'open'))),
   ]);
 
   const historyByExercise = new Map(historyRows.map((h) => [h.exerciseId, h]));
@@ -1732,7 +1732,7 @@ admin.get('/admin/activity/failures', async (c) => {
     .having(sql`COUNT(*) >= ${minAttempts}`)
     .orderBy(desc(sql`COUNT(*) FILTER (WHERE ${userExerciseHistory.score} < 0.5)`))
     .limit(limit)) as Array<{
-      exerciseId: string; language: string; difficulty: string; type: string;
+      exerciseId: string; language: string | null; difficulty: string | null; type: string | null;
       grammarPointKey: string | null; qualityScore: number | null; attempts: number;
       distinctUsers: number; failCount: number; avgScore: number; openFlags: number;
     }>;
@@ -1791,7 +1791,7 @@ admin.get('/admin/activity/roster', async (c) => {
     .from(userExerciseHistory)
     .leftJoin(exercises, eq(userExerciseHistory.exerciseId, exercises.id))
     .groupBy(userExerciseHistory.userId)
-    .orderBy(desc(sql`MAX(${userExerciseHistory.evaluatedAt})`))
+    .orderBy(sql`MAX(${userExerciseHistory.evaluatedAt}) DESC NULLS LAST`)
     .limit(limit)
     .offset(offset)) as Array<{
       userId: string | null; lastActiveAt: Date | string | null; drills7d: number; drills30d: number;

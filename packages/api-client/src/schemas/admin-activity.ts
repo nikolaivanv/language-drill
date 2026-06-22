@@ -55,9 +55,9 @@ export type ActivitySessionDetail = z.infer<typeof ActivitySessionDetailSchema>;
 
 export const ActivityFailureItemSchema = z.object({
   exerciseId: z.string(),
-  language: z.string(),
-  difficulty: z.string(),
-  type: z.string(),
+  language: z.string().nullable(),
+  difficulty: z.string().nullable(),
+  type: z.string().nullable(),
   grammarPointKey: z.string().nullable(),
   attempts: z.number(),
   distinctUsers: z.number(),

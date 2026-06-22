@@ -175,12 +175,41 @@ function SessionDetail({
 function FailuresTab() {
   const { getToken } = useAuth();
   const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
-  const [filters] = useState<{ language?: string; level?: string }>({});
+  const [filters, setFilters] = useState<{ language?: string; level?: string }>({});
   const failures = useActivityFailures({ fetchFn, params: filters });
   const resolve = useResolveContentExercise({ fetchFn });
 
   return (
     <div className="flex flex-col gap-s-3">
+      <div className="flex items-center gap-2">
+        <select
+          aria-label="language"
+          value={filters.language ?? ''}
+          onChange={(e) =>
+            setFilters((prev) => ({ ...prev, language: e.target.value || undefined }))
+          }
+          className="px-s-2 py-s-1 border border-rule rounded-sm text-[13px]"
+        >
+          <option value="">all languages</option>
+          <option value="ES">ES</option>
+          <option value="DE">DE</option>
+          <option value="TR">TR</option>
+        </select>
+        <select
+          aria-label="level"
+          value={filters.level ?? ''}
+          onChange={(e) =>
+            setFilters((prev) => ({ ...prev, level: e.target.value || undefined }))
+          }
+          className="px-s-2 py-s-1 border border-rule rounded-sm text-[13px]"
+        >
+          <option value="">all levels</option>
+          <option value="A1">A1</option>
+          <option value="A2">A2</option>
+          <option value="B1">B1</option>
+          <option value="B2">B2</option>
+        </select>
+      </div>
       {failures.isLoading && (
         <div className="text-ink-soft text-[13px]">Loading…</div>
       )}
@@ -204,9 +233,9 @@ function FailuresTab() {
           {(failures.data ?? []).map((f) => (
             <tr key={f.exerciseId} className="border-t border-rule">
               <td className="py-s-1">
-                <span className="font-mono">{f.grammarPointKey ?? f.type}</span>{' '}
+                <span className="font-mono">{f.grammarPointKey ?? f.type ?? '—'}</span>{' '}
                 <span className="text-ink-soft">
-                  {f.language}·{f.difficulty}
+                  {f.language ?? '—'}·{f.difficulty ?? '—'}
                 </span>
               </td>
               <td>{Math.round(f.failRate * 100)}%</td>

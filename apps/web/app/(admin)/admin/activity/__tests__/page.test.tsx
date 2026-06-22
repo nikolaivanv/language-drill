@@ -74,6 +74,17 @@ describe('ActivityPage — Failures tab', () => {
     fireEvent.click(screen.getByRole('button', { name: /demote/i }));
     expect(resolveMutate).toHaveBeenCalledWith(expect.objectContaining({ id: 'e1', action: 'demote' }));
   });
+
+  it('changing the language select calls the hook with the chosen language', () => {
+    render(<ActivityPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'failures' }));
+    fireEvent.change(screen.getByRole('combobox', { name: /language/i }), {
+      target: { value: 'TR' },
+    });
+    expect(mockFailures).toHaveBeenCalledWith(
+      expect.objectContaining({ params: expect.objectContaining({ language: 'TR' }) }),
+    );
+  });
 });
 
 describe('ActivityPage — Roster tab', () => {
