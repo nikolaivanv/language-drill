@@ -439,3 +439,9 @@ export {
 export {
   useFlagExercise, useUserFlagsQueue, useResolveUserFlag, type UserFlagStatus,
 } from './hooks/useUserFlags';
+export {
+  ActivitySessionListItemSchema, type ActivitySessionListItem,
+  ActivitySessionDetailSchema, type ActivitySessionDetail,
+} from './schemas/admin-activity';
+export { useActivitySessions, type ActivitySessionsParams } from './hooks/useActivitySessions';
+export { useActivitySessionDetail } from './hooks/useActivitySessionDetail';
