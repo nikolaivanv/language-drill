@@ -66,10 +66,10 @@ describe('GoalsSection', () => {
     expect(mutate).toHaveBeenCalledWith({ goals: ['grammar', 'vocab'] });
   });
 
-  it('toggling gentle nudges autosaves', () => {
-    const mutate = vi.fn();
-    renderGoals({ goals: [], dailyMinutes: 10, dailyGoal: 'quick', gentleNudges: true, notes: '', primaryLanguage: Language.ES }, mutate);
-    fireEvent.click(screen.getByRole('switch', { name: /gentle nudges/i }));
-    expect(mutate).toHaveBeenCalledWith({ gentleNudges: false });
+  // Gentle nudges moved to the email-notifications section; it must no longer
+  // render here.
+  it('does not render the gentle nudges toggle (moved to email notifications)', () => {
+    renderGoals({ goals: [], dailyMinutes: 10, dailyGoal: 'quick', gentleNudges: true, notes: '', primaryLanguage: Language.ES });
+    expect(screen.queryByRole('switch', { name: /gentle nudges/i })).toBeNull();
   });
 });

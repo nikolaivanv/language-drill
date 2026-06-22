@@ -155,6 +155,76 @@
   padding: 0 3px;
 }
 
+/* ─── Legal / compliance pages (privacy, terms, cookies) ─── */
+/* Tailwind preflight resets bare h1/h2/ul, so the semantic markup in the
+   (legal) pages renders flat. This restyles those descendants with the
+   design-system type scale so headings read as headings. Scoped to the
+   `prose-legal` wrapper in app/(legal)/layout.tsx. */
+.prose-legal > :first-child {
+  margin-top: 0;
+}
+.prose-legal h1 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 40px;
+  line-height: var(--leading-display);
+  letter-spacing: -1px;
+  color: var(--color-ink);
+  margin-bottom: var(--spacing-s-6);
+}
+.prose-legal h2 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 22px;
+  line-height: 1.25;
+  letter-spacing: -0.2px;
+  color: var(--color-ink);
+  margin-top: var(--spacing-s-7);
+  margin-bottom: var(--spacing-s-3);
+}
+.prose-legal p {
+  font-size: 17px;
+  line-height: var(--leading-body);
+  color: var(--color-ink-2);
+  margin-bottom: var(--spacing-s-4);
+}
+.prose-legal ul {
+  list-style: disc;
+  padding-left: var(--spacing-s-6);
+  margin-bottom: var(--spacing-s-4);
+}
+.prose-legal li {
+  font-size: 17px;
+  line-height: var(--leading-body);
+  color: var(--color-ink-2);
+  margin-bottom: var(--spacing-s-2);
+}
+.prose-legal a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose-legal a:hover {
+  color: var(--color-accent-2);
+}
+.prose-legal strong {
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.prose-legal em {
+  font-style: italic;
+}
+
+@media (max-width: 760px) {
+  .prose-legal h1 {
+    font-size: 32px;
+    line-height: 1.2;
+  }
+  .prose-legal h2 {
+    font-size: 20px;
+  }
+}
+
 /* ─── Mobile type-scale overrides (≤760px, mirrors MOBILE_MAX_WIDTH) ─── */
 /* Shrinks the display sizes for phone width and holds line-height ≥ 1.2 so
    wrapped display headlines never collide. body/small/micro/mono unchanged. */
@@ -863,6 +933,11 @@
   gap: 7px;
   font-size: 13.5px;
   font-weight: 500;
+}
+/* Single inline flex item holding the (possibly highlight-split) title, so the
+   row's `gap` separates title from badge without splitting the word itself. */
+.theory-switcher-row-text {
+  min-width: 0;
 }
 .theory-switcher-here {
   font-size: 9px;

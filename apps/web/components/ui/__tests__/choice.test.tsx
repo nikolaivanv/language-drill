@@ -137,4 +137,19 @@ describe('Choice', () => {
     );
     expect(screen.getByRole('radio').className).toContain('mobile:min-h-[48px]');
   });
+
+  it('omits the indicator dot when hideIndicator is set, keeping role/state', () => {
+    const { container } = render(
+      <Choice selected={true} onSelect={() => {}} mode="radio" hideIndicator>
+        option
+      </Choice>
+    );
+    // No indicator span (neither the outline ring nor the inner dot)...
+    expect(container.querySelector('span.bg-ink.rounded-full')).not.toBeInTheDocument();
+    expect(container.querySelector('span.border-ink.rounded-full')).not.toBeInTheDocument();
+    // ...but the radio role and checked state still convey selection.
+    const el = screen.getByRole('radio');
+    expect(el).toHaveAttribute('aria-checked', 'true');
+    expect(el).toHaveTextContent('option');
+  });
 });

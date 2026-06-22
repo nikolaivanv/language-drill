@@ -14,6 +14,9 @@ import { AnnotateStreamLambdaConstruct } from "./constructs/annotate-stream-lamb
 import { TheoryGenerationQueueConstruct } from "./constructs/theory-generation-queue";
 import { TheoryGenerationLambdaConstruct } from "./constructs/theory-generation-lambda";
 import { TheorySchedulerLambdaConstruct } from "./constructs/theory-scheduler-lambda";
+import { EmailQueueConstruct } from "./constructs/email-queue";
+import { EmailDispatcherLambdaConstruct } from "./constructs/email-dispatcher-lambda";
+import { EmailSenderLambdaConstruct } from "./constructs/email-sender-lambda";
 
 export interface LanguageDrillStackProps extends StackProps {
   envName: "prod" | "dev";
@@ -38,13 +41,16 @@ export interface LanguageDrillStackProps extends StackProps {
   // trailing-24h global event count. Omit/empty to disable.
   aiKillSwitch?: string;
   aiGlobalDailyCap?: string;
-  // Operational alerting (audit §1.2 / §3.2 / §4.1). Email that receives the
-  // new CloudWatch alarm notifications and AWS Budget alerts.
-  alertEmail: string;
-  // Create the account-wide monthly cost budget on this stack. True for exactly
-  // one stack (prod) — budgets track total account spend, so two would
-  // double-count.
-  createBudget: boolean;
+  // Operational alerting (audit §1.2 / §3.2 / §4.1). Emails subscribed to the
+  // SNS topic that receives the CloudWatch alarm notifications.
+  operationalEmails: string[];
+  // Emails for account-wide cost alerts (monthly budget + cost-anomaly
+  // detection). Only used on the stack where createCostMonitoring is true.
+  billingEmails: string[];
+  // Create the account-wide cost monitoring (budget + anomaly detection) on this
+  // stack. True for exactly one stack (prod) — these track total account spend,
+  // so two would double-count.
+  createCostMonitoring: boolean;
   // Monthly cost-budget ceiling in USD (prod only). Defaults to 50.
   monthlyBudgetUsd?: number;
 }
@@ -55,12 +61,13 @@ export class LanguageDrillStack extends Stack {
 
     const storage = new StorageConstruct(this, "Storage");
 
-    // Alerting fan-in: SNS topic for the new alarm actions + (prod-only) the
-    // account-wide monthly cost budget.
+    // Alerting fan-in: SNS topic for the alarm actions + (prod-only) the
+    // account-wide cost monitoring (budget + anomaly detection).
     const alerts = new AlertsConstruct(this, "Alerts", {
       envName: props.envName,
-      alertEmail: props.alertEmail,
-      createBudget: props.createBudget,
+      operationalEmails: props.operationalEmails,
+      billingEmails: props.billingEmails,
+      createCostMonitoring: props.createCostMonitoring,
       monthlyBudgetUsd: props.monthlyBudgetUsd,
     });
 
@@ -74,6 +81,8 @@ export class LanguageDrillStack extends Stack {
         AI_KILL_SWITCH: props.aiKillSwitch ?? "",
         AI_GLOBAL_DAILY_CAP: props.aiGlobalDailyCap ?? "",
         CONTENT_BUCKET_NAME: storage.bucket.bucketName,
+        EMAIL_LINK_BASE_URL: `https://${props.apiDomainName}`,
+        EMAIL_FROM: "Language Drill <summary@langdrill.app>",
       },
     });
 
@@ -185,6 +194,27 @@ export class LanguageDrillStack extends Stack {
       enableScheduledJobs: props.enableScheduledJobs,
     });
 
+    // Weekly summary email pipeline — independent SQS + dispatcher (weekly
+    // cron) + sender. Cron gated on enableScheduledJobs (prod on, dev off).
+    const emailQueue = new EmailQueueConstruct(this, "EmailQueue", {
+      alarmTopic: alerts.topic,
+    });
+    new EmailDispatcherLambdaConstruct(this, "EmailDispatcherWrap", {
+      queue: emailQueue.queue,
+      secretsPrefix: props.secretsPrefix,
+      enableScheduledJobs: props.enableScheduledJobs,
+    });
+    new EmailSenderLambdaConstruct(this, "EmailSenderWrap", {
+      queue: emailQueue.queue,
+      secretsPrefix: props.secretsPrefix,
+      reservedConcurrency: 2,
+      emailLinkBaseUrl: `https://${props.apiDomainName}`,
+      // Web app the "Practice now" CTA links to. Both envs point at the prod
+      // web app (there is no separate dev web domain); adjust if one is added.
+      emailAppUrl: "https://langdrill.app",
+      alarmTopic: alerts.topic,
+    });
+
     new CfnOutput(this, "ApiUrl", {
       value: apiGateway.httpApi.url ?? "",
       description: "API Gateway endpoint URL",
@@ -208,6 +238,10 @@ export class LanguageDrillStack extends Stack {
       value: theoryQueue.queue.queueUrl,
       description:
         "SQS queue URL for theory generation (Phase 4). Set THEORY_GENERATION_QUEUE_URL to this for `pnpm generate:theory --queue`.",
+    });
+    new CfnOutput(this, "EmailQueueUrl", {
+      value: emailQueue.queue.queueUrl,
+      description: "SQS queue URL for weekly-summary email sends.",
     });
 
     Tags.of(this).add("env", props.envName);

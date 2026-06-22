@@ -73,6 +73,13 @@ export class LambdaConstruct extends Construct {
       "LangfuseSecretKey",
       `${props.secretsPrefix}/LANGFUSE_SECRET_KEY`
     );
+    // The API Lambda sends the opt-in confirmation email on toggle-on
+    // (POST /email/preferences), so it needs the Resend API key.
+    const resendApiKey = secretsmanager.Secret.fromSecretNameV2(
+      this,
+      "ResendApiKey",
+      `${props.secretsPrefix}/RESEND_API_KEY`
+    );
 
     const projectRoot = path.join(__dirname, "../../..");
 
@@ -103,6 +110,14 @@ export class LambdaConstruct extends Construct {
             projectRoot,
             "packages/ai/src/index.ts"
           ),
+          // The API Lambda imports the email package (routes/email.ts sends the
+          // opt-in confirmation email). Alias to src like the others so esbuild
+          // never needs a built packages/email/dist (which doesn't exist on the
+          // CDK-deploy CI runner — only a local build produces it).
+          "--alias:@language-drill/email": path.join(
+            projectRoot,
+            "packages/email/src/index.ts"
+          ),
         },
       },
       // additionalEnv is spread first so secret-derived vars below cannot be overridden by callers.
@@ -117,6 +132,7 @@ export class LambdaConstruct extends Construct {
           upstashRedisRestToken.secretValue.unsafeUnwrap(),
         LANGFUSE_PUBLIC_KEY: langfusePublicKey.secretValue.unsafeUnwrap(),
         LANGFUSE_SECRET_KEY: langfuseSecretKey.secretValue.unsafeUnwrap(),
+        RESEND_API_KEY: resendApiKey.secretValue.unsafeUnwrap(),
         // Non-secret derived from `secretsPrefix` — single source of truth
         // for "are we prod or dev?" so trace `env` tags stay consistent
         // without scattering stack-name checks across handlers
@@ -138,6 +154,7 @@ export class LambdaConstruct extends Construct {
     upstashRedisRestToken.grantRead(this.handler);
     langfusePublicKey.grantRead(this.handler);
     langfuseSecretKey.grantRead(this.handler);
+    resendApiKey.grantRead(this.handler);
 
     // Audit §3.2 — alarm when the API runtime serves a non-keys_unset Langfuse
     // prompt fallback (timeout / fetch_error).

@@ -94,6 +94,25 @@ describe('TopicSwitcherSheet', () => {
     expect(screen.queryByRole('button', { name: /past tense/i })).toBeNull();
   });
 
+  it('wraps the highlighted title so the row gap does not split the word', async () => {
+    renderSheet();
+    const search = await screen.findByRole('searchbox', {
+      name: /search all topics/i,
+    });
+    fireEvent.change(search, { target: { value: 'pres' } });
+    const row = await screen.findByRole('button', { name: /present continuous/i });
+
+    const mark = row.querySelector('mark.theory-switcher-mark');
+    expect(mark).not.toBeNull();
+    // The split title (before/<mark>/after) must live inside a single inline
+    // wrapper, NOT directly under the flex row `.theory-switcher-row-title`
+    // (whose `gap` would otherwise render as a visible space inside the word).
+    const wrapper = mark!.parentElement!;
+    expect(wrapper.classList.contains('theory-switcher-row-title')).toBe(false);
+    expect(wrapper).toHaveClass('theory-switcher-row-text');
+    expect(wrapper.textContent).toBe('present continuous');
+  });
+
   it('shows an empty state when nothing matches', async () => {
     renderSheet();
     const search = await screen.findByRole('searchbox', {

@@ -350,6 +350,7 @@ DNS is managed in **Cloudflare** (registrar + DNS). All records are **DNS-only**
 | `language-drill/UPSTASH_REDIS_REST_TOKEN` | Upstash console → REST API tab |
 | `language-drill/LANGFUSE_PUBLIC_KEY` | Langfuse console → Project Settings → API Keys |
 | `language-drill/LANGFUSE_SECRET_KEY` | Langfuse console → Project Settings → API Keys |
+| `language-drill/RESEND_API_KEY` | Resend console → API Keys |
 
 **GitHub Actions secrets** (10 secrets — deploy-time credentials):
 
@@ -382,7 +383,7 @@ DNS is managed in **Cloudflare** (registrar + DNS). All records are **DNS-only**
 
 ### Observability boundaries
 
-Sentry covers browser, React render, and Next.js server-side / edge errors in `apps/web`. **Lambda API errors stay in CloudWatch**; **LLM call traces stay in Langfuse**. The three tools do not overlap — when triaging an incident, pick the inbox that matches the runtime where the error originated.
+Sentry covers browser, React render, and Next.js server-side / edge errors in `apps/web`. **Lambda API errors stay in CloudWatch**; **LLM call traces stay in Langfuse**; **email send failures stay in CloudWatch** (send and dispatcher Lambdas). The tools do not overlap — when triaging an incident, pick the inbox that matches the runtime where the error originated. See `docs/runbooks/email-dns-setup.md` for email setup and troubleshooting.
 
 ### Clerk JWT setup
 

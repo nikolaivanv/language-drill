@@ -100,12 +100,16 @@ export function TopicSwitcherSheet({
   const renderTitle = (title: string) => {
     const hit = highlightMatch(title, query);
     if (!hit) return title;
+    // Wrap the split title in a single inline element. `.theory-switcher-row-title`
+    // is a flex row with `gap` (separating the title from the "viewing" badge), so
+    // returning before/<mark>/after as bare siblings would make each a flex item and
+    // insert that gap *inside* the word (e.g. "Pers onal" instead of "Personal").
     return (
-      <>
+      <span className="theory-switcher-row-text">
         {hit.before}
         <mark className="theory-switcher-mark">{hit.match}</mark>
         {hit.after}
-      </>
+      </span>
     );
   };
 

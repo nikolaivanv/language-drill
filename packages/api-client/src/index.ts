@@ -449,3 +449,11 @@ export { useActivitySessions, type ActivitySessionsParams } from './hooks/useAct
 export { useActivitySessionDetail } from './hooks/useActivitySessionDetail';
 export { useActivityFailures, type ActivityFailuresParams } from './hooks/useActivityFailures';
 export { useActivityRoster, type ActivityRosterParams } from './hooks/useActivityRoster';
+export { useEmailPreferences } from './hooks/useEmailPreferences';
+export { useUpdateWeeklySummary } from './hooks/useUpdateWeeklySummary';
+export {
+  EmailPreferencesSchema,
+  UpdateWeeklySummaryInputSchema,
+  type EmailPreferences,
+  type UpdateWeeklySummaryInput,
+} from './schemas/email';

@@ -18,9 +18,19 @@ const env = {
 const parseAudience = (raw: string | undefined, fallback: string): string[] =>
   (raw || fallback).split(",").map((s) => s.trim()).filter(Boolean);
 
-// Operational alert destination (CloudWatch alarms + AWS Budget). Override via
-// ALERT_EMAIL; defaults to the operator's address.
-const alertEmail = process.env.ALERT_EMAIL || "nikolaivanv@gmail.com";
+// Operational alert recipients (SNS topic for the CloudWatch alarms). Override
+// via ALERT_EMAILS (comma-separated); defaults to the operator + ops alias.
+const operationalEmails = parseAudience(
+  process.env.ALERT_EMAILS,
+  "nikolaivanv@gmail.com,alerts@langdrill.app",
+);
+
+// Cost-alert recipients (monthly budget + anomaly detection, prod only).
+// Override via BILLING_EMAILS (comma-separated).
+const billingEmails = parseAudience(
+  process.env.BILLING_EMAILS,
+  "nikolaivanv@gmail.com,billing@langdrill.app",
+);
 
 new LanguageDrillStack(app, "LanguageDrillStack", {
   env,
@@ -39,10 +49,11 @@ new LanguageDrillStack(app, "LanguageDrillStack", {
   adminUserIds: process.env.ADMIN_USER_IDS,
   aiKillSwitch: process.env.AI_KILL_SWITCH,
   aiGlobalDailyCap: process.env.AI_GLOBAL_DAILY_CAP,
-  alertEmail,
-  // Account-wide cost budget lives on the prod stack only (avoids two budgets
-  // double-counting the same account spend).
-  createBudget: true,
+  operationalEmails,
+  billingEmails,
+  // Account-wide cost monitoring (budget + anomaly detection) lives on the prod
+  // stack only (avoids two copies double-counting the same account spend).
+  createCostMonitoring: true,
 });
 
 new LanguageDrillStack(app, "LanguageDrillStack-dev", {
@@ -58,7 +69,8 @@ new LanguageDrillStack(app, "LanguageDrillStack-dev", {
   adminUserIds: process.env.ADMIN_USER_IDS_DEV,
   aiKillSwitch: process.env.AI_KILL_SWITCH_DEV,
   aiGlobalDailyCap: process.env.AI_GLOBAL_DAILY_CAP_DEV,
-  alertEmail,
-  // Budget is account-wide and created on prod only.
-  createBudget: false,
+  operationalEmails,
+  billingEmails,
+  // Cost monitoring is account-wide and created on prod only.
+  createCostMonitoring: false,
 });

@@ -46,6 +46,12 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
         "Ref": "DictationAudioQueueC3042A55",
       },
     },
+    "EmailQueueUrl": {
+      "Description": "SQS queue URL for weekly-summary email sends.",
+      "Value": {
+        "Ref": "EmailQueue43AF118C",
+      },
+    },
     "GenerationQueueUrl": {
       "Description": "SQS queue for generation jobs (Phase 4). Set GENERATION_QUEUE_URL to this for the CLI --queue flag.",
       "Value": {
@@ -79,15 +85,57 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
       },
       "Type": "AWS::SNS::Topic",
     },
-    "AlertsAlertsTopicalertsexamplecomCF445DAA": {
+    "AlertsAlertsTopicopsexamplecomBF9A5ABF": {
       "Properties": {
-        "Endpoint": "alerts@example.com",
+        "Endpoint": "ops@example.com",
         "Protocol": "email",
         "TopicArn": {
           "Ref": "AlertsAlertsTopic96BD0900",
         },
       },
       "Type": "AWS::SNS::Subscription",
+    },
+    "AlertsCostAnomalyMonitorBAC51574": {
+      "Properties": {
+        "MonitorDimension": "SERVICE",
+        "MonitorName": "language-drill-prod-services",
+        "MonitorType": "DIMENSIONAL",
+        "ResourceTags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+      },
+      "Type": "AWS::CE::AnomalyMonitor",
+    },
+    "AlertsCostAnomalySubscription0D234653": {
+      "Properties": {
+        "Frequency": "DAILY",
+        "MonitorArnList": [
+          {
+            "Fn::GetAtt": [
+              "AlertsCostAnomalyMonitorBAC51574",
+              "MonitorArn",
+            ],
+          },
+        ],
+        "ResourceTags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Subscribers": [
+          {
+            "Address": "billing@example.com",
+            "Type": "EMAIL",
+          },
+        ],
+        "SubscriptionName": "language-drill-prod-anomaly",
+        "ThresholdExpression": "{"Dimensions":{"Key":"ANOMALY_TOTAL_IMPACT_ABSOLUTE","Values":["10"],"MatchOptions":["GREATER_THAN_OR_EQUAL"]}}",
+      },
+      "Type": "AWS::CE::AnomalySubscription",
     },
     "AlertsMonthlyCostBudgetF17E382F": {
       "Properties": {
@@ -110,7 +158,7 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
             },
             "Subscribers": [
               {
-                "Address": "alerts@example.com",
+                "Address": "billing@example.com",
                 "SubscriptionType": "EMAIL",
               },
             ],
@@ -124,7 +172,7 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
             },
             "Subscribers": [
               {
-                "Address": "alerts@example.com",
+                "Address": "billing@example.com",
                 "SubscriptionType": "EMAIL",
               },
             ],
@@ -138,7 +186,7 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
             },
             "Subscribers": [
               {
-                "Address": "alerts@example.com",
+                "Address": "billing@example.com",
                 "SubscriptionType": "EMAIL",
               },
             ],
@@ -743,6 +791,106 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
       },
       "Type": "AWS::ApiGatewayV2::Stage",
     },
+    "ApiGatewayHttpApiGETemailconfirm78B62948": {
+      "Properties": {
+        "ApiId": {
+          "Ref": "ApiGatewayHttpApi55B01A81",
+        },
+        "AuthorizationType": "NONE",
+        "RouteKey": "GET /email/confirm",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "ApiGatewayHttpApiGETproxyLambdaIntegrationDD4BBDC4",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "ApiGatewayHttpApiGETemailconfirmLambdaIntegrationPermission7BFCD3AF": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "LambdaHandlerF6372945",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:us-east-1:123456789012:",
+              {
+                "Ref": "ApiGatewayHttpApi55B01A81",
+              },
+              "/*/*/email/confirm",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "ApiGatewayHttpApiGETemailunsubscribe6D344F72": {
+      "Properties": {
+        "ApiId": {
+          "Ref": "ApiGatewayHttpApi55B01A81",
+        },
+        "AuthorizationType": "NONE",
+        "RouteKey": "GET /email/unsubscribe",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "ApiGatewayHttpApiGETproxyLambdaIntegrationDD4BBDC4",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "ApiGatewayHttpApiGETemailunsubscribeLambdaIntegrationPermissionEBDC2A81": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "LambdaHandlerF6372945",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:us-east-1:123456789012:",
+              {
+                "Ref": "ApiGatewayHttpApi55B01A81",
+              },
+              "/*/*/email/unsubscribe",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
     "ApiGatewayHttpApiGETproxyCDCF95D7": {
       "Properties": {
         "ApiId": {
@@ -909,6 +1057,56 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
                 "Ref": "ApiGatewayHttpApi55B01A81",
               },
               "/*/*/{proxy+}",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "ApiGatewayHttpApiPOSTemailunsubscribe4A01A341": {
+      "Properties": {
+        "ApiId": {
+          "Ref": "ApiGatewayHttpApi55B01A81",
+        },
+        "AuthorizationType": "NONE",
+        "RouteKey": "POST /email/unsubscribe",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "ApiGatewayHttpApiGETproxyLambdaIntegrationDD4BBDC4",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "ApiGatewayHttpApiPOSTemailunsubscribeLambdaIntegrationPermission378D0535": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "LambdaHandlerF6372945",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:us-east-1:123456789012:",
+              {
+                "Ref": "ApiGatewayHttpApi55B01A81",
+              },
+              "/*/*/email/unsubscribe",
             ],
           ],
         },
@@ -1393,6 +1591,530 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
         "TreatMissingData": "notBreaching",
       },
       "Type": "AWS::CloudWatch::Alarm",
+    },
+    "EmailDispatcherWrapEmailDispatcherRule0FEF79B9": {
+      "Properties": {
+        "Description": "Weekly summary email dispatcher — fans out per confirmed subscriber.",
+        "ScheduleExpression": "cron(0 8 ? * MON *)",
+        "State": "ENABLED",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
+                "EmailDispatcherWrapHandler72C0B6D4",
+                "Arn",
+              ],
+            },
+            "Id": "Target0",
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "EmailDispatcherWrapEmailDispatcherRuleAllowEventRuleLanguageDrillStackEmailDispatcherWrapHandler53C8CB684941DF6D": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "EmailDispatcherWrapHandler72C0B6D4",
+            "Arn",
+          ],
+        },
+        "Principal": "events.amazonaws.com",
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "EmailDispatcherWrapEmailDispatcherRule0FEF79B9",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "EmailDispatcherWrapHandler72C0B6D4": {
+      "DependsOn": [
+        "EmailDispatcherWrapHandlerServiceRoleDefaultPolicy2C4F6B69",
+        "EmailDispatcherWrapHandlerServiceRole14D24127",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-123456789012-us-east-1",
+          "S3Key": "<asset-hash>.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "DATABASE_URL": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/DATABASE_URL:SecretString:::}}",
+                ],
+              ],
+            },
+            "EMAIL_QUEUE_URL": {
+              "Ref": "EmailQueue43AF118C",
+            },
+          },
+        },
+        "Handler": "index.handler",
+        "MemorySize": 256,
+        "Role": {
+          "Fn::GetAtt": [
+            "EmailDispatcherWrapHandlerServiceRole14D24127",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Timeout": 60,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "EmailDispatcherWrapHandlerLogRetentionF2E33D70": {
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "EmailDispatcherWrapHandler72C0B6D4",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 30,
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::LogRetention",
+    },
+    "EmailDispatcherWrapHandlerServiceRole14D24127": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "EmailDispatcherWrapHandlerServiceRoleDefaultPolicy2C4F6B69": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/DATABASE_URL-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "EmailQueue43AF118C",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "EmailDispatcherWrapHandlerServiceRoleDefaultPolicy2C4F6B69",
+        "Roles": [
+          {
+            "Ref": "EmailDispatcherWrapHandlerServiceRole14D24127",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "EmailQueue43AF118C": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "EmailQueueEmailDeadLetterQueue6F20E0D7",
+              "Arn",
+            ],
+          },
+          "maxReceiveCount": 3,
+        },
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "VisibilityTimeout": 120,
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "EmailQueueEmailDeadLetterQueue6F20E0D7": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "MessageRetentionPeriod": 1209600,
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+      },
+      "Type": "AWS::SQS::Queue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "EmailQueueEmailDlqDepthAlarm0E8D137B": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "AlertsAlertsTopic96BD0900",
+          },
+        ],
+        "AlarmDescription": "A weekly-summary email message survived every redelivery and landed in the DLQ.",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Dimensions": [
+          {
+            "Name": "QueueName",
+            "Value": {
+              "Fn::GetAtt": [
+                "EmailQueueEmailDeadLetterQueue6F20E0D7",
+                "QueueName",
+              ],
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "ApproximateNumberOfMessagesVisible",
+        "Namespace": "AWS/SQS",
+        "Period": 300,
+        "Statistic": "Maximum",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "EmailSenderWrapEmailSenderErrorsAlarm821305DA": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "AlertsAlertsTopic96BD0900",
+          },
+        ],
+        "AlarmDescription": "Weekly-summary sender Lambda recorded > 5 errors in a single day.",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "EmailSenderWrapHandler6061EBD7",
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "Errors",
+        "Namespace": "AWS/Lambda",
+        "Period": 86400,
+        "Statistic": "Sum",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Threshold": 5,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "EmailSenderWrapHandler6061EBD7": {
+      "DependsOn": [
+        "EmailSenderWrapHandlerServiceRoleDefaultPolicyAFF222A2",
+        "EmailSenderWrapHandlerServiceRoleB33AE78A",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-123456789012-us-east-1",
+          "S3Key": "<asset-hash>.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "DATABASE_URL": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/DATABASE_URL:SecretString:::}}",
+                ],
+              ],
+            },
+            "EMAIL_APP_URL": "https://langdrill.app",
+            "EMAIL_LINK_BASE_URL": "https://api.langdrill.app",
+            "RESEND_API_KEY": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/RESEND_API_KEY:SecretString:::}}",
+                ],
+              ],
+            },
+          },
+        },
+        "Handler": "index.handler",
+        "MemorySize": 512,
+        "ReservedConcurrentExecutions": 2,
+        "Role": {
+          "Fn::GetAtt": [
+            "EmailSenderWrapHandlerServiceRoleB33AE78A",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Timeout": 60,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "EmailSenderWrapHandlerLogRetentionA115C760": {
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "EmailSenderWrapHandler6061EBD7",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 30,
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::LogRetention",
+    },
+    "EmailSenderWrapHandlerServiceRoleB33AE78A": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "EmailSenderWrapHandlerServiceRoleDefaultPolicyAFF222A2": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/DATABASE_URL-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/RESEND_API_KEY-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueUrl",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "EmailQueue43AF118C",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "EmailSenderWrapHandlerServiceRoleDefaultPolicyAFF222A2",
+        "Roles": [
+          {
+            "Ref": "EmailSenderWrapHandlerServiceRoleB33AE78A",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "EmailSenderWrapHandlerSqsEventSourceLanguageDrillStackEmailQueueC256D55542CC0D9B": {
+      "Properties": {
+        "BatchSize": 1,
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "EmailQueue43AF118C",
+            "Arn",
+          ],
+        },
+        "FunctionName": {
+          "Ref": "EmailSenderWrapHandler6061EBD7",
+        },
+        "FunctionResponseTypes": [
+          "ReportBatchItemFailures",
+        ],
+        "ScalingConfig": {
+          "MaximumConcurrency": 2,
+        },
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+      },
+      "Type": "AWS::Lambda::EventSourceMapping",
     },
     "GenerationLambdaWrapGenerationCellFailuresAlarm2ECCA199": {
       "Properties": {
@@ -1995,6 +2717,8 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
                 ],
               ],
             },
+            "EMAIL_FROM": "Language Drill <summary@langdrill.app>",
+            "EMAIL_LINK_BASE_URL": "https://api.langdrill.app",
             "ENV_NAME": "prod",
             "GENERATION_QUEUE_URL": {
               "Ref": "GenerationQueueB318CF3E",
@@ -2021,6 +2745,18 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
                     "Ref": "AWS::Partition",
                   },
                   ":secretsmanager:us-east-1:123456789012:secret:language-drill/LANGFUSE_SECRET_KEY:SecretString:::}}",
+                ],
+              ],
+            },
+            "RESEND_API_KEY": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/RESEND_API_KEY:SecretString:::}}",
                 ],
               ],
             },
@@ -2263,6 +2999,25 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
                       "Ref": "AWS::Partition",
                     },
                     ":secretsmanager:us-east-1:123456789012:secret:language-drill/LANGFUSE_SECRET_KEY-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/RESEND_API_KEY-??????",
                   ],
                 ],
               },

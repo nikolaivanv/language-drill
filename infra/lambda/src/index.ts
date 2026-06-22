@@ -19,6 +19,7 @@ import invites from './routes/invites';
 import me from './routes/me';
 import admin from './routes/admin';
 import exerciseFlags from './routes/exercise-flags';
+import emailRoutes from './routes/email';
 import webhooks from './routes/webhooks/clerk';
 
 const app = new Hono();
@@ -87,6 +88,7 @@ app.route('/', invites);
 app.route('/', me);
 app.route('/', admin);
 app.route('/', exerciseFlags);
+app.route('/', emailRoutes);
 app.route('/', webhooks);
 
 export const handler = handle(app);

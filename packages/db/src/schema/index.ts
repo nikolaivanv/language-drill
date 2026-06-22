@@ -61,3 +61,10 @@ export type {
 export { adminAuditLog } from './audit';
 export { exerciseFlags } from './exercise-flags';
 export type { ExerciseFlag, NewExerciseFlag } from './exercise-flags';
+export { emailPreferences, sentEmails } from './email';
+export type {
+  EmailPreferences,
+  NewEmailPreferences,
+  SentEmail,
+  NewSentEmail,
+} from './email';
