@@ -144,7 +144,6 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
             "Amount": 50,
             "Unit": "USD",
           },
-          "BudgetName": "language-drill-prod-monthly",
           "BudgetType": "COST",
           "TimeUnit": "MONTHLY",
         },
