@@ -65,8 +65,9 @@ describe("LanguageDrillStack (prod) CFN snapshot", () => {
         "https://www.langdrill.app",
       ],
       enableScheduledJobs: true,
-      alertEmail: "alerts@example.com",
-      createBudget: true,
+      operationalEmails: ["ops@example.com"],
+      billingEmails: ["billing@example.com"],
+      createCostMonitoring: true,
     });
 
     const template = scrubAssetHashes(Template.fromStack(stack).toJSON());
