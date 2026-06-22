@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useMemo, useState } from 'react';
+import { Fragment, Suspense, useMemo, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import {
   createAuthenticatedFetch,
@@ -9,7 +9,10 @@ import {
   useActivityFailures,
   useActivityRoster,
   useResolveContentExercise,
+  type ActivityRisk,
+  type ActivitySessionListItem,
 } from '@language-drill/api-client';
+import { DataTable, Th, Td } from '../../../../components/admin/data-table';
 
 type Tab = 'sessions' | 'failures' | 'roster';
 
@@ -22,89 +25,144 @@ function SignalBadge({ signal }: { signal: string }) {
   );
 }
 
-function SessionsTab({
-  userFilter,
-  setUserFilter,
-}: {
-  userFilter: string;
-  setUserFilter: (v: string) => void;
-}) {
+const PAGE_SIZE = 25;
+const RISK_OPTIONS: { value: ActivityRisk; label: string }[] = [
+  { value: 'abandoned', label: 'abandoned' },
+  { value: 'low_score', label: 'low score' },
+  { value: 'flagged', label: 'flagged' },
+];
+
+function displayUser(r: ActivitySessionListItem): string {
+  const name = [r.firstName, r.lastName].filter(Boolean).join(' ').trim();
+  return name || r.email || `${r.userId.slice(0, 12)}…`;
+}
+
+function formatDate(iso: string): string {
+  return iso.replace('T', ' ').slice(0, 16);
+}
+
+function SessionsTab() {
   const { getToken } = useAuth();
   const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
-  const [showAll, setShowAll] = useState(false);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [user, setUser] = useState('');
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const [risk, setRisk] = useState<ActivityRisk[]>([]);
+  const [offset, setOffset] = useState(0);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const sessions = useActivitySessions({
     fetchFn,
-    params: { all: showAll, userId: userFilter || undefined },
+    params: {
+      user: user || undefined,
+      from: from || undefined,
+      to: to || undefined,
+      risk: risk.length ? risk : undefined,
+      limit: PAGE_SIZE,
+      offset,
+    },
   });
-  const detail = useActivitySessionDetail({ fetchFn, sessionId: selected });
+  const detail = useActivitySessionDetail({ fetchFn, sessionId: expandedId });
+
+  const total = sessions.data?.total ?? 0;
+  const items = sessions.data?.items ?? [];
+
+  const toggleRisk = (v: ActivityRisk) => {
+    setOffset(0);
+    setRisk((prev) => (prev.includes(v) ? prev.filter((r) => r !== v) : [...prev, v]));
+  };
+  const onFilter = (set: (v: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setOffset(0);
+    set(e.target.value);
+  };
+
+  const fieldClass = 'px-s-2 py-s-1 border border-rule rounded-sm bg-card text-[13px] text-ink outline-none focus:border-ink';
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2">
-        <label className="flex items-center gap-s-2 text-[13px]">
-          <input
-            type="checkbox"
-            checked={showAll}
-            onChange={(e) => setShowAll(e.target.checked)}
-          />
-          show all recent
+    <div className="flex flex-col gap-s-4">
+      <div className="flex flex-wrap items-center gap-s-3">
+        <input aria-label="user" placeholder="name, email, or id" value={user} onChange={onFilter(setUser)} className={fieldClass} />
+        <label className="flex items-center gap-s-1 text-[12px] text-ink-soft">from
+          <input aria-label="from" type="date" value={from} onChange={onFilter(setFrom)} className={fieldClass} />
         </label>
-        <input
-          aria-label="user id"
-          placeholder="filter by user id"
-          value={userFilter}
-          onChange={(e) => setUserFilter(e.target.value)}
-          className="px-s-2 py-s-1 border border-rule rounded-sm bg-card text-[13px] text-ink outline-none focus:border-ink"
-        />
+        <label className="flex items-center gap-s-1 text-[12px] text-ink-soft">to
+          <input aria-label="to" type="date" value={to} onChange={onFilter(setTo)} className={fieldClass} />
+        </label>
+        <span className="flex gap-s-1">
+          {RISK_OPTIONS.map((o) => (
+            <button
+              key={o.value}
+              onClick={() => toggleRisk(o.value)}
+              aria-pressed={risk.includes(o.value)}
+              className={
+                risk.includes(o.value)
+                  ? 'px-s-2 py-px rounded-sm text-[11px] bg-ink text-paper'
+                  : 'px-s-2 py-px rounded-sm text-[11px] bg-paper-2 text-ink-soft'
+              }
+            >
+              {o.label}
+            </button>
+          ))}
+        </span>
       </div>
 
-      {sessions.isLoading && (
-        <div className="text-ink-soft text-[13px]">Loading…</div>
-      )}
-      {sessions.isError && (
-        <div className="text-red-700 text-[13px]">Failed to load sessions.</div>
-      )}
+      {sessions.isLoading && <div className="text-ink-soft text-[13px]">Loading…</div>}
+      {sessions.isError && <div className="text-red-700 text-[13px]">Failed to load sessions.</div>}
 
-      <ul className="flex flex-col gap-1 list-none p-0 m-0">
-        {(sessions.data ?? []).map((s) => (
-          <li key={s.sessionId}>
-            <button
-              onClick={() => setSelected(s.sessionId)}
-              className="w-full flex items-center gap-s-3 text-left px-s-3 py-s-2 rounded-sm hover:bg-paper-2"
-            >
-              <span className="flex gap-s-1">
-                {s.signals.map((sig) => (
-                  <SignalBadge key={sig} signal={sig} />
-                ))}
-              </span>
-              <span className="font-mono text-[12px] text-ink-soft">
-                {s.userId.slice(0, 12)}…
-              </span>
-              <span className="text-[12px]">
-                {s.language}·{s.difficulty}
-              </span>
-              <span className="text-[12px] text-ink-soft">
-                {s.completedAt
-                  ? `${s.correctCount} / ${s.exerciseCount}`
-                  : 'abandoned'}
-              </span>
-              <span className="ml-auto font-mono text-[11px] text-ink-soft">
-                {s.sessionId.slice(0, 8)}
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
+      <DataTable>
+        <thead>
+          <tr>
+            <Th>Date</Th>
+            <Th>User</Th>
+            <Th>Lang</Th>
+            <Th>Score</Th>
+            <Th>Risk</Th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((s) => {
+            const open = expandedId === s.sessionId;
+            return (
+              <Fragment key={s.sessionId}>
+                <tr>
+                  <Td className="whitespace-nowrap font-mono text-[12px] text-ink-soft">{formatDate(s.startedAt)}</Td>
+                  <Td>
+                    <button
+                      onClick={() => setExpandedId(open ? null : s.sessionId)}
+                      aria-expanded={open}
+                      className="text-left underline-offset-2 hover:underline"
+                    >
+                      {displayUser(s)}
+                    </button>
+                  </Td>
+                  <Td className="text-[12px]">{s.language}·{s.difficulty}</Td>
+                  <Td className="text-[12px] text-ink-soft">
+                    {s.completedAt ? `${s.correctCount} / ${s.exerciseCount}` : 'incomplete'}
+                  </Td>
+                  <Td>
+                    <span className="flex gap-s-1">
+                      {s.signals.map((sig) => <SignalBadge key={sig} signal={sig} />)}
+                    </span>
+                  </Td>
+                </tr>
+                {open && (
+                  <tr>
+                    <td colSpan={5} className="border-b border-rule bg-paper-2 px-3 py-2">
+                      <SessionDetail detail={detail.data} loading={detail.isLoading} error={detail.isError} />
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            );
+          })}
+        </tbody>
+      </DataTable>
 
-      {selected && (
-        <SessionDetail
-          detail={detail.data}
-          loading={detail.isLoading}
-          error={detail.isError}
-        />
-      )}
+      <div className="flex items-center gap-s-3 text-[13px]">
+        <button disabled={offset === 0} onClick={() => setOffset((o) => Math.max(0, o - PAGE_SIZE))} className="text-ink-soft disabled:opacity-40">‹ prev</button>
+        <button disabled={offset + PAGE_SIZE >= total} onClick={() => setOffset((o) => o + PAGE_SIZE)} className="text-ink-soft disabled:opacity-40">next ›</button>
+        <span className="text-[12px] text-ink-soft">{total} session{total === 1 ? '' : 's'} · page {Math.floor(offset / PAGE_SIZE) + 1}/{Math.max(1, Math.ceil(total / PAGE_SIZE))}</span>
+      </div>
     </div>
   );
 }
@@ -270,7 +328,7 @@ function FailuresTab() {
   );
 }
 
-function RosterTab({ onOpenUser }: { onOpenUser: (userId: string) => void }) {
+function RosterTab() {
   const { getToken } = useAuth();
   const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
   const roster = useActivityRoster({ fetchFn });
@@ -300,12 +358,9 @@ function RosterTab({ onOpenUser }: { onOpenUser: (userId: string) => void }) {
           {(roster.data ?? []).map((u) => (
             <tr key={u.userId} className="border-t border-rule">
               <td className="py-s-1">
-                <button
-                  className="font-mono underline"
-                  onClick={() => onOpenUser(u.userId)}
-                >
+                <span className="font-mono">
                   {u.userId.slice(0, 12)}…
-                </button>
+                </span>
               </td>
               <td>{u.lastActiveAt ? u.lastActiveAt.slice(0, 10) : '—'}</td>
               <td>{u.sessions7d}</td>
@@ -325,7 +380,6 @@ function RosterTab({ onOpenUser }: { onOpenUser: (userId: string) => void }) {
 
 function ActivityPageInner() {
   const [tab, setTab] = useState<Tab>('sessions');
-  const [userFilter, setUserFilter] = useState('');
   return (
     <div className="flex flex-col gap-4">
       <h1 className="font-display text-[24px] font-semibold text-ink">
@@ -347,18 +401,9 @@ function ActivityPageInner() {
           </button>
         ))}
       </div>
-      {tab === 'sessions' && (
-        <SessionsTab userFilter={userFilter} setUserFilter={setUserFilter} />
-      )}
+      {tab === 'sessions' && <SessionsTab />}
       {tab === 'failures' && <FailuresTab />}
-      {tab === 'roster' && (
-        <RosterTab
-          onOpenUser={(id) => {
-            setUserFilter(id);
-            setTab('sessions');
-          }}
-        />
-      )}
+      {tab === 'roster' && <RosterTab />}
     </div>
   );
 }
