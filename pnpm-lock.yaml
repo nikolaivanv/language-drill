@@ -307,6 +307,9 @@ importers:
       '@aws-sdk/client-sqs':
         specifier: ^3.1044.0
         version: 3.1044.0
+      '@clerk/backend':
+        specifier: ^3.4.7
+        version: 3.4.13(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@language-drill/ai':
         specifier: workspace:*
         version: link:../ai
