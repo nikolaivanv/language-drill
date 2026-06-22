@@ -385,6 +385,8 @@ DNS is managed in **Cloudflare** (registrar + DNS). All records are **DNS-only**
 
 Sentry covers browser, React render, and Next.js server-side / edge errors in `apps/web`. **Lambda API errors stay in CloudWatch**; **LLM call traces stay in Langfuse**; **email send failures stay in CloudWatch** (send and dispatcher Lambdas). The tools do not overlap — when triaging an incident, pick the inbox that matches the runtime where the error originated. See `docs/runbooks/email-dns-setup.md` for email setup and troubleshooting.
 
+> **Where the API Lambda actually logs.** The Hono API handler (`LambdaConstruct`) writes to an **explicit** CloudWatch log group, **not** the default `/aws/lambda/<function-name>` one. Look in `LanguageDrillStack-LambdaLogGroup*` (prod) / `LanguageDrillStack-dev-LambdaLogGroup*` (dev), e.g. via `aws logs tail "$(aws logs describe-log-groups --query "logGroups[?contains(logGroupName,'LanguageDrillStack-LambdaLogGroup')].logGroupName" --output text)" --since 30m`. The legacy `/aws/lambda/LanguageDrillStack-LambdaHandler*` group is **orphaned** — it stopped receiving events when the explicit group was introduced, so an empty/stale view there does **not** mean logging is broken (it misled a prod incident triage once). Caught handler throws return a 500 via Hono but leave the Lambda `Errors` metric at 0 — confirm an incident from API-Gateway `5xx` + Lambda `Invocations` metrics, then read the explicit log group.
+
 ### Clerk JWT setup
 
 The Clerk production instance must have a **JWT template** named `api` with these claims:
