@@ -7,6 +7,7 @@ import {
   useActivitySessions,
   useActivitySessionDetail,
   useActivityFailures,
+  useActivityRoster,
   useResolveContentExercise,
 } from '@language-drill/api-client';
 
@@ -21,16 +22,21 @@ function SignalBadge({ signal }: { signal: string }) {
   );
 }
 
-function SessionsTab() {
+function SessionsTab({
+  userFilter,
+  setUserFilter,
+}: {
+  userFilter: string;
+  setUserFilter: (v: string) => void;
+}) {
   const { getToken } = useAuth();
   const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
   const [showAll, setShowAll] = useState(false);
-  const [userId, setUserId] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
 
   const sessions = useActivitySessions({
     fetchFn,
-    params: { all: showAll, userId: userId || undefined },
+    params: { all: showAll, userId: userFilter || undefined },
   });
   const detail = useActivitySessionDetail({ fetchFn, sessionId: selected });
 
@@ -48,8 +54,8 @@ function SessionsTab() {
         <input
           aria-label="user id"
           placeholder="filter by user id"
-          value={userId}
-          onChange={(e) => setUserId(e.target.value)}
+          value={userFilter}
+          onChange={(e) => setUserFilter(e.target.value)}
           className="px-s-2 py-s-1 border border-rule rounded-sm text-[13px]"
         />
       </div>
@@ -235,8 +241,62 @@ function FailuresTab() {
   );
 }
 
+function RosterTab({ onOpenUser }: { onOpenUser: (userId: string) => void }) {
+  const { getToken } = useAuth();
+  const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
+  const roster = useActivityRoster({ fetchFn });
+  return (
+    <div className="flex flex-col gap-s-3">
+      {roster.isLoading && (
+        <div className="text-ink-soft text-[13px]">Loading…</div>
+      )}
+      {roster.isError && (
+        <div className="text-red-700 text-[13px]">Failed to load roster.</div>
+      )}
+      <table className="w-full text-[12px] border-collapse">
+        <thead>
+          <tr className="text-left text-ink-soft">
+            <th className="py-s-1">user</th>
+            <th>last active</th>
+            <th>sessions 7d</th>
+            <th>sessions 30d</th>
+            <th>drills 7d</th>
+            <th>drills 30d</th>
+            <th>langs</th>
+            <th>avg 30d</th>
+            <th>ai 7d</th>
+          </tr>
+        </thead>
+        <tbody>
+          {(roster.data ?? []).map((u) => (
+            <tr key={u.userId} className="border-t border-rule">
+              <td className="py-s-1">
+                <button
+                  className="font-mono underline"
+                  onClick={() => onOpenUser(u.userId)}
+                >
+                  {u.userId.slice(0, 12)}…
+                </button>
+              </td>
+              <td>{u.lastActiveAt ? u.lastActiveAt.slice(0, 10) : '—'}</td>
+              <td>{u.sessions7d}</td>
+              <td>{u.sessions30d}</td>
+              <td>{u.drills7d}</td>
+              <td>{u.drills30d}</td>
+              <td>{u.languages.join(', ')}</td>
+              <td>{u.avgScore30d == null ? '—' : u.avgScore30d.toFixed(2)}</td>
+              <td>{u.aiEvents7d}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function ActivityPageInner() {
   const [tab, setTab] = useState<Tab>('sessions');
+  const [userFilter, setUserFilter] = useState('');
   return (
     <div className="flex flex-col gap-4">
       <h1 className="font-display text-[24px] font-semibold text-ink">
@@ -258,12 +318,17 @@ function ActivityPageInner() {
           </button>
         ))}
       </div>
-      {tab === 'sessions' && <SessionsTab />}
+      {tab === 'sessions' && (
+        <SessionsTab userFilter={userFilter} setUserFilter={setUserFilter} />
+      )}
       {tab === 'failures' && <FailuresTab />}
       {tab === 'roster' && (
-        <div className="text-ink-soft text-[13px]">
-          Roster — coming in Task 10.
-        </div>
+        <RosterTab
+          onOpenUser={(id) => {
+            setUserFilter(id);
+            setTab('sessions');
+          }}
+        />
       )}
     </div>
   );

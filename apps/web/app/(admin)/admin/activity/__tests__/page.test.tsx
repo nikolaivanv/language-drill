@@ -8,6 +8,7 @@ vi.mock('next/navigation', () => ({ useSearchParams: () => new URLSearchParams('
 const mockSessions = vi.fn();
 const mockDetail = vi.fn();
 const mockFailures = vi.fn();
+const mockRoster = vi.fn();
 const resolveMutate = vi.fn();
 
 vi.mock('@language-drill/api-client', async () => {
@@ -18,6 +19,7 @@ vi.mock('@language-drill/api-client', async () => {
     useActivitySessions: (a: unknown) => mockSessions(a),
     useActivitySessionDetail: (a: unknown) => mockDetail(a),
     useActivityFailures: (a: unknown) => mockFailures(a),
+    useActivityRoster: (a: unknown) => mockRoster(a),
     useResolveContentExercise: () => ({ mutate: resolveMutate, isPending: false }),
   };
 });
@@ -35,10 +37,16 @@ const failRows = [{
   attempts: 10, distinctUsers: 6, failRate: 0.7, avgScore: 0.31, qualityScore: 0.8, openFlags: 1,
 }];
 
+const rosterRows = [{
+  userId: 'user_bbbbbbbb', lastActiveAt: '2026-06-22T10:00:00Z', sessions7d: 3, sessions30d: 9,
+  drills7d: 20, drills30d: 75, languages: ['TR'], avgScore30d: 0.62, aiEvents7d: 21,
+}];
+
 beforeEach(() => {
   mockSessions.mockReturnValue({ isLoading: false, isError: false, data: feed });
   mockDetail.mockReturnValue({ isLoading: false, isError: false, data: undefined });
   mockFailures.mockReturnValue({ isLoading: false, isError: false, data: failRows });
+  mockRoster.mockReturnValue({ isLoading: false, isError: false, data: rosterRows });
 });
 
 describe('ActivityPage — Sessions tab', () => {
@@ -65,5 +73,14 @@ describe('ActivityPage — Failures tab', () => {
     expect(screen.getByText(/6 users/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /demote/i }));
     expect(resolveMutate).toHaveBeenCalledWith(expect.objectContaining({ id: 'e1', action: 'demote' }));
+  });
+});
+
+describe('ActivityPage — Roster tab', () => {
+  it('lists users with drill counts', () => {
+    render(<ActivityPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'roster' }));
+    expect(screen.getByText(/user_bbbb/i)).toBeInTheDocument();
+    expect(screen.getByText('75')).toBeInTheDocument();
   });
 });
