@@ -53,6 +53,7 @@ function makeChain() {
     from: vi.fn(() => chain),
     where: vi.fn(() => chain),
     innerJoin: vi.fn(() => chain),
+    leftJoin: vi.fn(() => chain),
     groupBy: vi.fn(() => chain),
     having: vi.fn(() => chain),
     orderBy: vi.fn(() => chain),
@@ -1904,6 +1905,30 @@ describe('GET /admin/activity/failures', () => {
 
   it('rejects minAttempts below 1 with 400', async () => {
     const res = await app.request('/admin/activity/failures?minAttempts=0', undefined, adminEnv);
+    expect(res.status).toBe(400);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /admin/activity/roster
+// ---------------------------------------------------------------------------
+
+describe('GET /admin/activity/roster', () => {
+  it('returns per-user activity aggregates ordered by last active', async () => {
+    queryQueue.push([
+      { userId: 'u1', lastActiveAt: '2026-06-22T10:00:00Z', sessions7d: 3, sessions30d: 9,
+        drills7d: 20, drills30d: 75, languages: ['TR', 'ES'], avgScore30d: 0.62, aiEvents7d: 21 },
+    ]);
+    const res = await app.request('/admin/activity/roster', undefined, adminEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Array<{ userId: string; drills7d: number; languages: string[] }>;
+    expect(body[0].userId).toBe('u1');
+    expect(body[0].drills7d).toBe(20);
+    expect(body[0].languages).toEqual(['TR', 'ES']);
+  });
+
+  it('rejects an invalid limit with 400', async () => {
+    const res = await app.request('/admin/activity/roster?limit=0', undefined, adminEnv);
     expect(res.status).toBe(400);
   });
 });

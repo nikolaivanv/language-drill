@@ -1753,4 +1753,65 @@ admin.get('/admin/activity/failures', async (c) => {
   return c.json(items);
 });
 
+// ---------------------------------------------------------------------------
+// GET /admin/activity/roster — per-user activity aggregates (roster)
+// ---------------------------------------------------------------------------
+
+const ActivityRosterQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(500).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+});
+
+admin.get('/admin/activity/roster', async (c) => {
+  const parsed = ActivityRosterQuerySchema.safeParse(c.req.query());
+  if (!parsed.success) {
+    return c.json(
+      { error: 'Invalid query parameters', code: 'VALIDATION_ERROR', details: parsed.error.flatten() },
+      400,
+    );
+  }
+  const { limit = 100, offset = 0 } = parsed.data;
+
+  const sessions7d = sql<number>`(SELECT COUNT(*)::int FROM ${practiceSessions} ps WHERE ps.user_id = ${userExerciseHistory.userId} AND ps.started_at >= NOW() - INTERVAL '7 days')`;
+  const sessions30d = sql<number>`(SELECT COUNT(*)::int FROM ${practiceSessions} ps WHERE ps.user_id = ${userExerciseHistory.userId} AND ps.started_at >= NOW() - INTERVAL '30 days')`;
+  const aiEvents7d = sql<number>`(SELECT COUNT(*)::int FROM ${usageEvents} ue WHERE ue.user_id = ${userExerciseHistory.userId} AND ue.created_at >= NOW() - INTERVAL '7 days')`;
+
+  const rows = (await db
+    .select({
+      userId: userExerciseHistory.userId,
+      lastActiveAt: sql<Date | null>`MAX(${userExerciseHistory.evaluatedAt})`,
+      drills7d: sql<number>`COUNT(*) FILTER (WHERE ${userExerciseHistory.evaluatedAt} >= NOW() - INTERVAL '7 days')::int`,
+      drills30d: sql<number>`COUNT(*) FILTER (WHERE ${userExerciseHistory.evaluatedAt} >= NOW() - INTERVAL '30 days')::int`,
+      avgScore30d: sql<number | null>`AVG(${userExerciseHistory.score}) FILTER (WHERE ${userExerciseHistory.evaluatedAt} >= NOW() - INTERVAL '30 days')`,
+      languages: sql<string[]>`COALESCE(ARRAY_AGG(DISTINCT ${exercises.language}) FILTER (WHERE ${exercises.language} IS NOT NULL), ARRAY[]::text[])`,
+      sessions7d,
+      sessions30d,
+      aiEvents7d,
+    })
+    .from(userExerciseHistory)
+    .leftJoin(exercises, eq(userExerciseHistory.exerciseId, exercises.id))
+    .groupBy(userExerciseHistory.userId)
+    .orderBy(desc(sql`MAX(${userExerciseHistory.evaluatedAt})`))
+    .limit(limit)
+    .offset(offset)) as Array<{
+      userId: string | null; lastActiveAt: Date | string | null; drills7d: number; drills30d: number;
+      avgScore30d: number | null; languages: string[]; sessions7d: number; sessions30d: number; aiEvents7d: number;
+    }>;
+
+  const items = rows
+    .filter((r) => r.userId != null)
+    .map((r) => ({
+      userId: r.userId as string,
+      lastActiveAt: toIso(r.lastActiveAt),
+      sessions7d: r.sessions7d,
+      sessions30d: r.sessions30d,
+      drills7d: r.drills7d,
+      drills30d: r.drills30d,
+      languages: r.languages,
+      avgScore30d: r.avgScore30d ?? null,
+      aiEvents7d: r.aiEvents7d,
+    }));
+  return c.json(items);
+});
+
 export default admin;
