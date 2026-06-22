@@ -9,6 +9,14 @@ export interface ChoiceProps {
   mode?: ChoiceMode;
   children: React.ReactNode;
   className?: string;
+  /**
+   * Hide the leading radio/checkbox dot and let the content fill the tile.
+   * Selection is then conveyed purely by the highlighted border/background
+   * (and `aria-checked`), which gives short word labels the full tile width
+   * — used by the daily-target quick/medium/long picker so "medium" doesn't
+   * get squeezed past the tile edge.
+   */
+  hideIndicator?: boolean;
 }
 
 // `mobile:min-h-[48px]` gives choice cards a ≥48px tap target at ≤760px
@@ -67,6 +75,7 @@ export function Choice({
   mode = 'radio',
   children,
   className,
+  hideIndicator = false,
 }: ChoiceProps) {
   const stateClasses = selected
     ? 'border-ink bg-hilite-soft'
@@ -80,12 +89,13 @@ export function Choice({
       onClick={onSelect}
       className={cn(shared, 'border', stateClasses, className)}
     >
-      {mode === 'radio' ? (
-        <RadioIndicator selected={selected} />
-      ) : (
-        <CheckboxIndicator selected={selected} />
-      )}
-      <span className="flex-1">{children}</span>
+      {!hideIndicator &&
+        (mode === 'radio' ? (
+          <RadioIndicator selected={selected} />
+        ) : (
+          <CheckboxIndicator selected={selected} />
+        ))}
+      <span className="flex-1 min-w-0">{children}</span>
     </button>
   );
 }

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import type { EmailPreferences } from '@language-drill/api-client';
+import type { EmailPreferences, PreferencesResponse } from '@language-drill/api-client';
+import { Language } from '@language-drill/shared';
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -13,12 +14,25 @@ vi.mock('@clerk/nextjs', () => ({
 
 const mockUseEmailPreferences = vi.fn();
 const mockUseUpdateWeeklySummary = vi.fn();
+const mockUseGetPreferences = vi.fn();
+const mockUseUpdatePreferences = vi.fn();
 
 vi.mock('@language-drill/api-client', () => ({
   useEmailPreferences: (...args: unknown[]) => mockUseEmailPreferences(...args),
   useUpdateWeeklySummary: (...args: unknown[]) => mockUseUpdateWeeklySummary(...args),
+  useGetPreferences: (...args: unknown[]) => mockUseGetPreferences(...args),
+  useUpdatePreferences: (...args: unknown[]) => mockUseUpdatePreferences(...args),
   createAuthenticatedFetch: vi.fn(() => vi.fn()),
 }));
+
+const PREFS: PreferencesResponse = {
+  goals: [],
+  dailyMinutes: 10,
+  dailyGoal: 'quick',
+  gentleNudges: true,
+  notes: '',
+  primaryLanguage: Language.ES,
+};
 
 // Static import after vi.mock (hoisting handles order)
 import { EmailSection } from '../email-section';
@@ -48,6 +62,12 @@ function renderEmail(
 beforeEach(() => {
   mockUseEmailPreferences.mockReset();
   mockUseUpdateWeeklySummary.mockReset();
+  mockUseGetPreferences.mockReset();
+  mockUseUpdatePreferences.mockReset();
+  // Sensible defaults so the gentle-nudges wiring never crashes the weekly
+  // summary tests; the dedicated nudges test overrides the mutate.
+  mockUseGetPreferences.mockReturnValue({ data: PREFS, isLoading: false, error: null });
+  mockUseUpdatePreferences.mockReturnValue({ mutate: vi.fn() });
 });
 
 describe('EmailSection', () => {
@@ -109,5 +129,19 @@ describe('EmailSection', () => {
     render(<EmailSection />);
     fireEvent.click(screen.getByRole('switch', { name: /weekly summary/i }));
     expect(mutate).not.toHaveBeenCalled();
+  });
+
+  it('renders the gentle nudges toggle reflecting preferences', () => {
+    renderEmail({ weeklySummary: 'off' });
+    const sw = screen.getByRole('switch', { name: /gentle nudges/i });
+    expect(sw).toHaveAttribute('aria-checked', 'true');
+  });
+
+  it('autosaves gentle nudges via updatePreferences', () => {
+    const mutate = vi.fn();
+    mockUseUpdatePreferences.mockReturnValue({ mutate });
+    renderEmail({ weeklySummary: 'off' });
+    fireEvent.click(screen.getByRole('switch', { name: /gentle nudges/i }));
+    expect(mutate).toHaveBeenCalledWith({ gentleNudges: false });
   });
 });

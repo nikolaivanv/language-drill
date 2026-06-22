@@ -1,10 +1,12 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import {
   createAuthenticatedFetch,
   useEmailPreferences,
+  useGetPreferences,
+  useUpdatePreferences,
   useUpdateWeeklySummary,
 } from '@language-drill/api-client';
 import { Section, Row } from './section';
@@ -16,6 +18,19 @@ export function EmailSection() {
   const prefs = useEmailPreferences({ fetchFn });
   const update = useUpdateWeeklySummary({ fetchFn });
 
+  // Gentle nudges live on the general preferences record (not the email-prefs
+  // endpoint), but they're a notification, so we surface them here.
+  const prefsQuery = useGetPreferences({ fetchFn });
+  const updatePrefs = useUpdatePreferences({ fetchFn });
+  const [nudges, setNudges] = useState(true);
+  useEffect(() => {
+    if (prefsQuery.data) setNudges(prefsQuery.data.gentleNudges);
+  }, [prefsQuery.data]);
+  const toggleNudges = (next: boolean) => {
+    setNudges(next);
+    updatePrefs.mutate({ gentleNudges: next });
+  };
+
   const status = prefs.data?.weeklySummary ?? 'off';
   const checked = status === 'pending' || status === 'confirmed';
   const disabled = prefs.isLoading || update.isPending;
@@ -26,7 +41,7 @@ export function EmailSection() {
       : 'a short recap of your week, every monday. skipped on weeks you don\'t practice.';
 
   return (
-    <Section id="email" title="email">
+    <Section id="email" title="email notifications">
       <Row label="weekly summary" hint={hint}>
         <Switch
           checked={checked}
@@ -35,6 +50,10 @@ export function EmailSection() {
           }}
           aria-label="weekly summary"
         />
+      </Row>
+
+      <Row label="gentle nudges" hint="one calm note if you've missed two days, never more.">
+        <Switch checked={nudges} onChange={toggleNudges} aria-label="gentle nudges" />
       </Row>
     </Section>
   );
