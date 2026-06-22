@@ -1,7 +1,7 @@
 import { randomInt, randomUUID } from 'node:crypto';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { and, asc, count, desc, eq, gte, inArray, isNotNull, lt, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, inArray, isNotNull, or, sql, type SQL } from 'drizzle-orm';
 import {
   ALL_CURRICULA,
   CURRICULUM_VERSION_BY_LANGUAGE,
@@ -1493,7 +1493,7 @@ admin.get('/admin/activity/sessions', async (c) => {
   }
   const { language, userId, all, limit = 25, offset = 0 } = parsed.data;
 
-  // Computed per-session signal flags. `correctCount::float / NULLIF(exerciseCount,0)` guards /0.
+  // Computed per-session signal flags. low-score: completed sessions whose correct/total ratio < 0.5; exerciseCount > 0 guards /0.
   const hasOpenFlag = sql<boolean>`EXISTS (
     SELECT 1 FROM ${exerciseFlags} ef
     JOIN ${userExerciseHistory} ueh ON ueh.id = ef.history_id
@@ -1547,7 +1547,7 @@ admin.get('/admin/activity/sessions', async (c) => {
       completedAt: toIso(r.completedAt),
       startedAt: toIso(r.startedAt)!,
       signals,
-      primarySignal: signals[0],
+      primarySignal: signals[0] ?? null,
     };
   });
   return c.json(items);
