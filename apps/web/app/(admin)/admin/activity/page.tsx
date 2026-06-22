@@ -1,0 +1,211 @@
+'use client';
+
+import { Suspense, useMemo, useState } from 'react';
+import { useAuth } from '@clerk/nextjs';
+import {
+  createAuthenticatedFetch,
+  useActivitySessions,
+  useActivitySessionDetail,
+} from '@language-drill/api-client';
+
+type Tab = 'sessions' | 'failures' | 'roster';
+
+function SignalBadge({ signal }: { signal: string }) {
+  const label = signal === 'low_score' ? 'low score' : signal;
+  return (
+    <span className="inline-block px-s-2 py-px rounded-sm text-[11px] bg-paper-2 text-ink-soft">
+      {label}
+    </span>
+  );
+}
+
+function SessionsTab() {
+  const { getToken } = useAuth();
+  const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
+  const [showAll, setShowAll] = useState(false);
+  const [userId, setUserId] = useState('');
+  const [selected, setSelected] = useState<string | null>(null);
+
+  const sessions = useActivitySessions({
+    fetchFn,
+    params: { all: showAll, userId: userId || undefined },
+  });
+  const detail = useActivitySessionDetail({ fetchFn, sessionId: selected });
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-2">
+        <label className="flex items-center gap-s-2 text-[13px]">
+          <input
+            type="checkbox"
+            checked={showAll}
+            onChange={(e) => setShowAll(e.target.checked)}
+          />
+          show all recent
+        </label>
+        <input
+          aria-label="user id"
+          placeholder="filter by user id"
+          value={userId}
+          onChange={(e) => setUserId(e.target.value)}
+          className="px-s-2 py-s-1 border border-rule rounded-sm text-[13px]"
+        />
+      </div>
+
+      {sessions.isLoading && (
+        <div className="text-ink-soft text-[13px]">Loading…</div>
+      )}
+      {sessions.isError && (
+        <div className="text-red-700 text-[13px]">Failed to load sessions.</div>
+      )}
+
+      <ul className="flex flex-col gap-1 list-none p-0 m-0">
+        {(sessions.data ?? []).map((s) => (
+          <li key={s.sessionId}>
+            <button
+              onClick={() => setSelected(s.sessionId)}
+              className="w-full flex items-center gap-s-3 text-left px-s-3 py-s-2 rounded-sm hover:bg-paper-2"
+            >
+              <span className="flex gap-s-1">
+                {s.signals.map((sig) => (
+                  <SignalBadge key={sig} signal={sig} />
+                ))}
+              </span>
+              <span className="font-mono text-[12px] text-ink-soft">
+                {s.userId.slice(0, 12)}…
+              </span>
+              <span className="text-[12px]">
+                {s.language}·{s.difficulty}
+              </span>
+              <span className="text-[12px] text-ink-soft">
+                {s.completedAt
+                  ? `${s.correctCount} / ${s.exerciseCount}`
+                  : 'abandoned'}
+              </span>
+              <span className="ml-auto font-mono text-[11px] text-ink-soft">
+                {s.sessionId.slice(0, 8)}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      {selected && (
+        <SessionDetail
+          detail={detail.data}
+          loading={detail.isLoading}
+          error={detail.isError}
+        />
+      )}
+    </div>
+  );
+}
+
+function SessionDetail({
+  detail,
+  loading,
+  error,
+}: {
+  detail: ReturnType<typeof useActivitySessionDetail>['data'];
+  loading: boolean;
+  error: boolean;
+}) {
+  const template = process.env.NEXT_PUBLIC_LANGFUSE_TRACE_URL_TEMPLATE;
+  if (loading)
+    return <div className="text-ink-soft text-[13px]">Loading session…</div>;
+  if (error)
+    return (
+      <div className="text-red-700 text-[13px]">Failed to load session.</div>
+    );
+  if (!detail) return null;
+  return (
+    <div className="flex flex-col gap-s-3 border-t border-rule pt-s-3">
+      {detail.exercises.map((ex) => (
+        <div
+          key={ex.exerciseId}
+          className="flex flex-col gap-s-1 border border-rule rounded-sm p-s-3"
+        >
+          <div className="flex items-center gap-s-2 text-[12px]">
+            <span className="font-mono text-ink-soft">#{ex.order + 1}</span>
+            <span>{ex.type}</span>
+            <span className="text-ink-soft">score: {ex.score ?? '—'}</span>
+            {ex.flag && <SignalBadge signal="flagged" />}
+            {template && (
+              <a
+                className="ml-auto text-[11px] underline"
+                href={template.replace('{cellKey}', ex.exerciseId)}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Langfuse
+              </a>
+            )}
+          </div>
+          <pre className="text-[11px] bg-paper-2 rounded-sm p-s-2 overflow-x-auto">
+            {JSON.stringify(ex.response, null, 2)}
+          </pre>
+          {ex.errors.length > 0 && (
+            <ul className="text-[11px] list-none p-0 m-0">
+              {ex.errors.map((e, i) => (
+                <li key={i}>
+                  <span className="text-red-700">{e.wrongText}</span> →{' '}
+                  <span className="text-ok">{e.correction}</span>
+                  <span className="text-ink-soft">
+                    {' '}
+                    ({e.errorType}/{e.severity})
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ActivityPageInner() {
+  const [tab, setTab] = useState<Tab>('sessions');
+  return (
+    <div className="flex flex-col gap-4">
+      <h1 className="font-display text-[24px] font-semibold text-ink">
+        Activity
+      </h1>
+      <div className="flex gap-2" role="tablist">
+        {(['sessions', 'failures', 'roster'] as Tab[]).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            aria-current={tab === t ? 'page' : undefined}
+            className={
+              tab === t
+                ? 'font-semibold text-ink'
+                : 'text-ink-soft'
+            }
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+      {tab === 'sessions' && <SessionsTab />}
+      {tab === 'failures' && (
+        <div className="text-ink-soft text-[13px]">
+          Failures — coming in Task 7.
+        </div>
+      )}
+      {tab === 'roster' && (
+        <div className="text-ink-soft text-[13px]">
+          Roster — coming in Task 10.
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function ActivityPage() {
+  return (
+    <Suspense fallback={<div className="p-s-6" />}>
+      <ActivityPageInner />
+    </Suspense>
+  );
+}
