@@ -52,3 +52,18 @@ export const ActivitySessionDetailSchema = z.object({
   exercises: SessionDetailExerciseSchema.array(),
 });
 export type ActivitySessionDetail = z.infer<typeof ActivitySessionDetailSchema>;
+
+export const ActivityFailureItemSchema = z.object({
+  exerciseId: z.string(),
+  language: z.string(),
+  difficulty: z.string(),
+  type: z.string(),
+  grammarPointKey: z.string().nullable(),
+  attempts: z.number(),
+  distinctUsers: z.number(),
+  failRate: z.number(),
+  avgScore: z.number(),
+  qualityScore: z.number().nullable(),
+  openFlags: z.number(),
+});
+export type ActivityFailureItem = z.infer<typeof ActivityFailureItemSchema>;

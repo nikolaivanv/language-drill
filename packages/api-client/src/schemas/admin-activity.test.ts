@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ActivitySessionListItemSchema, ActivitySessionDetailSchema } from './admin-activity';
+import { ActivitySessionListItemSchema, ActivitySessionDetailSchema, ActivityFailureItemSchema } from './admin-activity';
 
 describe('ActivitySessionListItemSchema', () => {
   it('parses a feed row', () => {
@@ -23,5 +23,15 @@ describe('ActivitySessionDetailSchema', () => {
         flag: null }],
     });
     expect(parsed.exercises[0].response).toEqual({ anything: true });
+  });
+});
+
+describe('ActivityFailureItemSchema', () => {
+  it('parses a failure row', () => {
+    const parsed = ActivityFailureItemSchema.parse({
+      exerciseId: 'e1', language: 'TR', difficulty: 'A2', type: 'cloze', grammarPointKey: 'tr-a2-x',
+      attempts: 10, distinctUsers: 6, failRate: 0.7, avgScore: 0.31, qualityScore: 0.8, openFlags: 1,
+    });
+    expect(parsed.failRate).toBeCloseTo(0.7);
   });
 });
