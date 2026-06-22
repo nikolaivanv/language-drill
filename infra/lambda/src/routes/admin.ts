@@ -1495,10 +1495,15 @@ admin.get('/admin/activity/sessions', async (c) => {
   const { language, userId, all, limit = 25, offset = 0 } = parsed.data;
 
   // Computed per-session signal flags. low-score: completed sessions whose correct/total ratio < 0.5; exerciseCount > 0 guards /0.
+  // The outer correlation MUST be written as a qualified literal
+  // (`practice_sessions.id`), not `${practiceSessions.id}`: Drizzle renders an
+  // interpolated column object UNQUALIFIED inside a SELECT-projection subquery,
+  // and a bare `id` is ambiguous here (both exercise_flags and
+  // user_exercise_history have an `id`) → "column reference id is ambiguous".
   const hasOpenFlag = sql<boolean>`EXISTS (
     SELECT 1 FROM ${exerciseFlags} ef
     JOIN ${userExerciseHistory} ueh ON ueh.id = ef.history_id
-    WHERE ueh.session_id = ${practiceSessions.id} AND ef.status = 'open'
+    WHERE ueh.session_id = practice_sessions.id AND ef.status = 'open'
   )`;
   const isAbandoned = sql<boolean>`${practiceSessions.completedAt} IS NULL AND ${practiceSessions.startedAt} < NOW() - INTERVAL '30 minutes'`;
   const isLowScore = sql<boolean>`${practiceSessions.completedAt} IS NOT NULL AND ${practiceSessions.exerciseCount} > 0 AND (${practiceSessions.correctCount}::float / ${practiceSessions.exerciseCount}) < 0.5`;
@@ -1708,7 +1713,7 @@ admin.get('/admin/activity/failures', async (c) => {
 
   const openFlagsSubquery = sql<number>`(
     SELECT COUNT(*)::int FROM ${exerciseFlags} ef
-    WHERE ef.exercise_id = ${exercises.id} AND ef.status = 'open'
+    WHERE ef.exercise_id = exercises.id AND ef.status = 'open'
   )`;
 
   const rows = (await db
@@ -1772,9 +1777,14 @@ admin.get('/admin/activity/roster', async (c) => {
   }
   const { limit = 100, offset = 0 } = parsed.data;
 
-  const sessions7d = sql<number>`(SELECT COUNT(*)::int FROM ${practiceSessions} ps WHERE ps.user_id = ${userExerciseHistory.userId} AND ps.started_at >= NOW() - INTERVAL '7 days')`;
-  const sessions30d = sql<number>`(SELECT COUNT(*)::int FROM ${practiceSessions} ps WHERE ps.user_id = ${userExerciseHistory.userId} AND ps.started_at >= NOW() - INTERVAL '30 days')`;
-  const aiEvents7d = sql<number>`(SELECT COUNT(*)::int FROM ${usageEvents} ue WHERE ue.user_id = ${userExerciseHistory.userId} AND ue.created_at >= NOW() - INTERVAL '7 days')`;
+  // Outer correlation written as a qualified literal (`user_exercise_history.user_id`),
+  // not `${userExerciseHistory.userId}`: Drizzle renders the interpolated column
+  // unqualified inside these SELECT-projection subqueries, where a bare `user_id`
+  // binds to the inner `ps`/`ue` table instead of the outer row — yielding global
+  // (not per-user) counts. See hasOpenFlag above for the same gotcha.
+  const sessions7d = sql<number>`(SELECT COUNT(*)::int FROM ${practiceSessions} ps WHERE ps.user_id = user_exercise_history.user_id AND ps.started_at >= NOW() - INTERVAL '7 days')`;
+  const sessions30d = sql<number>`(SELECT COUNT(*)::int FROM ${practiceSessions} ps WHERE ps.user_id = user_exercise_history.user_id AND ps.started_at >= NOW() - INTERVAL '30 days')`;
+  const aiEvents7d = sql<number>`(SELECT COUNT(*)::int FROM ${usageEvents} ue WHERE ue.user_id = user_exercise_history.user_id AND ue.created_at >= NOW() - INTERVAL '7 days')`;
 
   const rows = (await db
     .select({

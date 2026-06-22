@@ -1932,3 +1932,45 @@ describe('GET /admin/activity/roster', () => {
     expect(res.status).toBe(400);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Regression: correlated subqueries in the /admin/activity/* SELECT projections
+// must reference the OUTER row with a QUALIFIED literal (e.g. `practice_sessions.id`),
+// NOT an interpolated `${table.column}`. Drizzle renders an interpolated column
+// object UNQUALIFIED inside a SELECT-projection subquery, so a bare `"id"` /
+// `"user_id"` binds to (or collides with) the subquery's own table — which either
+// throws "column reference ... is ambiguous" (sessions) or returns silently-wrong
+// counts (failures/roster). This shipped to prod and 500'd the sessions feed.
+// These fragments MIRROR the ones in admin.ts — keep them in sync.
+// ---------------------------------------------------------------------------
+describe('activity correlated-subquery qualification (regression)', () => {
+  it('renders qualified, unambiguous outer correlations in the projection', async () => {
+    const { QueryBuilder } = await import('drizzle-orm/pg-core');
+    const { sql } = await import('drizzle-orm');
+    const { practiceSessions, exerciseFlags, userExerciseHistory, exercises } =
+      await import('@language-drill/db');
+    const qb = new QueryBuilder();
+
+    // sessions: open-flag EXISTS correlates on practice_sessions.id
+    const hasOpenFlag = sql`EXISTS (SELECT 1 FROM ${exerciseFlags} ef JOIN ${userExerciseHistory} ueh ON ueh.id = ef.history_id WHERE ueh.session_id = practice_sessions.id AND ef.status = 'open')`;
+    const sProj = qb.select({ x: hasOpenFlag }).from(practiceSessions).toSQL().sql;
+    expect(sProj).toContain('practice_sessions.id');
+    expect(sProj).not.toMatch(/session_id = "id"/);
+
+    // failures: open-flag count correlates on exercises.id
+    const openFlags = sql`(SELECT COUNT(*)::int FROM ${exerciseFlags} ef WHERE ef.exercise_id = exercises.id AND ef.status = 'open')`;
+    const fProj = qb.select({ x: openFlags }).from(exercises).toSQL().sql;
+    expect(fProj).toContain('exercises.id');
+    expect(fProj).not.toMatch(/exercise_id = "id"/);
+
+    // roster: per-user session count correlates on user_exercise_history.user_id
+    const sessions7d = sql`(SELECT COUNT(*)::int FROM ${practiceSessions} ps WHERE ps.user_id = user_exercise_history.user_id AND ps.started_at >= NOW() - INTERVAL '7 days')`;
+    const rProj = qb.select({ x: sessions7d }).from(userExerciseHistory).toSQL().sql;
+    expect(rProj).toContain('user_exercise_history.user_id');
+    expect(rProj).not.toMatch(/user_id = "user_id"/);
+
+    // guard the guard: the interpolated anti-pattern DOES render unqualified
+    const broken = sql`EXISTS (SELECT 1 FROM ${exerciseFlags} ef JOIN ${userExerciseHistory} ueh ON ueh.id = ef.history_id WHERE ueh.session_id = ${practiceSessions.id} AND ef.status = 'open')`;
+    expect(qb.select({ x: broken }).from(practiceSessions).toSQL().sql).toMatch(/session_id = "id"/);
+  });
+});
