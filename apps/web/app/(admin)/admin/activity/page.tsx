@@ -6,6 +6,8 @@ import {
   createAuthenticatedFetch,
   useActivitySessions,
   useActivitySessionDetail,
+  useActivityFailures,
+  useResolveContentExercise,
 } from '@language-drill/api-client';
 
 type Tab = 'sessions' | 'failures' | 'roster';
@@ -164,6 +166,75 @@ function SessionDetail({
   );
 }
 
+function FailuresTab() {
+  const { getToken } = useAuth();
+  const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
+  const [filters] = useState<{ language?: string; level?: string }>({});
+  const failures = useActivityFailures({ fetchFn, params: filters });
+  const resolve = useResolveContentExercise({ fetchFn });
+
+  return (
+    <div className="flex flex-col gap-s-3">
+      {failures.isLoading && (
+        <div className="text-ink-soft text-[13px]">Loading…</div>
+      )}
+      {failures.isError && (
+        <div className="text-red-700 text-[13px]">Failed to load failures.</div>
+      )}
+      <table className="w-full text-[12px] border-collapse">
+        <thead>
+          <tr className="text-left text-ink-soft">
+            <th className="py-s-1">exercise</th>
+            <th>fail rate</th>
+            <th>attempts</th>
+            <th>users</th>
+            <th>avg</th>
+            <th>quality</th>
+            <th>flags</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {(failures.data ?? []).map((f) => (
+            <tr key={f.exerciseId} className="border-t border-rule">
+              <td className="py-s-1">
+                <span className="font-mono">{f.grammarPointKey ?? f.type}</span>{' '}
+                <span className="text-ink-soft">
+                  {f.language}·{f.difficulty}
+                </span>
+              </td>
+              <td>{Math.round(f.failRate * 100)}%</td>
+              <td>{f.attempts}</td>
+              <td>{f.distinctUsers} users</td>
+              <td>{f.avgScore.toFixed(2)}</td>
+              <td>{f.qualityScore == null ? '—' : f.qualityScore.toFixed(2)}</td>
+              <td>{f.openFlags}</td>
+              <td className="flex gap-s-1">
+                <button
+                  onClick={() =>
+                    resolve.mutate({ id: f.exerciseId, action: 'demote' })
+                  }
+                  className="px-s-2 py-px rounded-sm bg-paper-2 hover:bg-paper-2"
+                >
+                  demote
+                </button>
+                <button
+                  onClick={() =>
+                    resolve.mutate({ id: f.exerciseId, action: 'reject' })
+                  }
+                  className="px-s-2 py-px rounded-sm bg-paper-2 hover:bg-paper-2"
+                >
+                  reject
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function ActivityPageInner() {
   const [tab, setTab] = useState<Tab>('sessions');
   return (
@@ -188,11 +259,7 @@ function ActivityPageInner() {
         ))}
       </div>
       {tab === 'sessions' && <SessionsTab />}
-      {tab === 'failures' && (
-        <div className="text-ink-soft text-[13px]">
-          Failures — coming in Task 7.
-        </div>
-      )}
+      {tab === 'failures' && <FailuresTab />}
       {tab === 'roster' && (
         <div className="text-ink-soft text-[13px]">
           Roster — coming in Task 10.
