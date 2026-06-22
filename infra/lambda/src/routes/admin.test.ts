@@ -1805,3 +1805,42 @@ describe('GET /admin/theory/pool-status', () => {
     expect(body.every((r) => r.language === 'ES')).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// GET /admin/activity/sessions
+// ---------------------------------------------------------------------------
+
+describe('GET /admin/activity/sessions', () => {
+  it('returns problematic sessions ordered flagged > abandoned > low_score', async () => {
+    // Single query result: rows already carry computed signal flags from SQL.
+    queryQueue.push([
+      { sessionId: 's-low', userId: 'u1', language: 'TR', difficulty: 'A2',
+        exerciseCount: 8, correctCount: 2, completedAt: '2026-06-22T10:00:00Z',
+        startedAt: '2026-06-22T09:50:00Z', hasOpenFlag: false, isAbandoned: false, isLowScore: true },
+      { sessionId: 's-flag', userId: 'u2', language: 'ES', difficulty: 'B1',
+        exerciseCount: 5, correctCount: 4, completedAt: '2026-06-22T11:00:00Z',
+        startedAt: '2026-06-22T10:55:00Z', hasOpenFlag: true, isAbandoned: false, isLowScore: false },
+      { sessionId: 's-aband', userId: 'u3', language: 'DE', difficulty: 'A2',
+        exerciseCount: 6, correctCount: 1, completedAt: null,
+        startedAt: '2026-06-22T08:00:00Z', hasOpenFlag: false, isAbandoned: true, isLowScore: false },
+    ]);
+    const res = await app.request('/admin/activity/sessions', undefined, adminEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Array<{ sessionId: string; primarySignal: string; signals: string[] }>;
+    expect(body.map((r) => r.sessionId)).toEqual(['s-flag', 's-aband', 's-low']);
+    expect(body[0].primarySignal).toBe('flagged');
+    expect(body[2].signals).toContain('low_score');
+  });
+
+  it('rejects an invalid language filter with 400', async () => {
+    const res = await app.request('/admin/activity/sessions?language=FR', undefined, adminEnv);
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as { code: string }).code).toBe('VALIDATION_ERROR');
+  });
+
+  it('returns 403 for a non-admin', async () => {
+    const res = await app.request('/admin/activity/sessions', undefined,
+      { event: { requestContext: { authorizer: { jwt: { claims: { sub: 'nope' } } } } } });
+    expect(res.status).toBe(403);
+  });
+});

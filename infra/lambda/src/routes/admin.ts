@@ -1,7 +1,7 @@
 import { randomInt, randomUUID } from 'node:crypto';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { and, asc, count, desc, eq, gte, inArray, isNotNull, sql, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, inArray, isNotNull, lt, or, sql, type SQL } from 'drizzle-orm';
 import {
   ALL_CURRICULA,
   CURRICULUM_VERSION_BY_LANGUAGE,
@@ -11,9 +11,11 @@ import {
   curriculumOrderOf,
   decideDemotion,
   enumerateCurriculumCells,
+  exerciseFlags,
   exercises,
   generationJobs,
   invitations,
+  practiceSessions,
   reconstructDraftAndSpec,
   requireEnv,
   targetCellSize,
@@ -57,6 +59,10 @@ const PoolStatusQuerySchema = z.object({
 const admin = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 admin.use('/admin/*', authMiddleware, adminMiddleware);
+
+// Tolerates both Date (production Drizzle) and string (test mock) date values.
+const toIso = (v: Date | string | null): string | null =>
+  v == null ? null : typeof v === 'string' ? v : v.toISOString();
 
 // ---------------------------------------------------------------------------
 // GET /admin/pool-status — per-cell exercise counts, last refill, depletion
@@ -1448,6 +1454,103 @@ admin.get('/admin/capacity', async (c) => {
     .slice(0, 10);
 
   return c.json({ killSwitch, globalDailyCap, usage24h: { total, byEventType }, topConsumers });
+});
+
+// ---------------------------------------------------------------------------
+// GET /admin/activity/sessions — problematic session feed
+// ---------------------------------------------------------------------------
+//
+// "Problematic" = open exercise flag OR abandoned (started > 30m ago and still
+// open) OR low-score (completed with <50% correct). Results are windowed with
+// default limit 25, ordered flagged > abandoned > low_score then newest-first.
+
+const ActivitySessionsQuerySchema = z.object({
+  language: z.enum(['ES', 'DE', 'TR']).optional(),
+  userId: z.string().min(1).optional(),
+  all: z.enum(['true', 'false']).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+});
+
+type ActivitySessionRow = {
+  sessionId: string;
+  userId: string;
+  language: string;
+  difficulty: string;
+  exerciseCount: number;
+  correctCount: number;
+  completedAt: Date | string | null;
+  startedAt: Date | string;
+  hasOpenFlag: boolean;
+  isAbandoned: boolean;
+  isLowScore: boolean;
+};
+
+admin.get('/admin/activity/sessions', async (c) => {
+  const parsed = ActivitySessionsQuerySchema.safeParse(c.req.query());
+  if (!parsed.success) {
+    return c.json({ error: 'Invalid query parameters', code: 'VALIDATION_ERROR', details: parsed.error.flatten() }, 400);
+  }
+  const { language, userId, all, limit = 25, offset = 0 } = parsed.data;
+
+  // Computed per-session signal flags. `correctCount::float / NULLIF(exerciseCount,0)` guards /0.
+  const hasOpenFlag = sql<boolean>`EXISTS (
+    SELECT 1 FROM ${exerciseFlags} ef
+    JOIN ${userExerciseHistory} ueh ON ueh.id = ef.history_id
+    WHERE ueh.session_id = ${practiceSessions.id} AND ef.status = 'open'
+  )`;
+  const isAbandoned = sql<boolean>`${practiceSessions.completedAt} IS NULL AND ${practiceSessions.startedAt} < NOW() - INTERVAL '30 minutes'`;
+  const isLowScore = sql<boolean>`${practiceSessions.completedAt} IS NOT NULL AND ${practiceSessions.exerciseCount} > 0 AND (${practiceSessions.correctCount}::float / ${practiceSessions.exerciseCount}) < 0.5`;
+
+  const conditions: SQL[] = [];
+  if (language) conditions.push(eq(practiceSessions.language, language));
+  if (userId) conditions.push(eq(practiceSessions.userId, userId));
+  const problematic = or(hasOpenFlag, isAbandoned, isLowScore)!;
+  if (all !== 'true') conditions.push(problematic);
+
+  const rows = (await db
+    .select({
+      sessionId: practiceSessions.id,
+      userId: practiceSessions.userId,
+      language: practiceSessions.language,
+      difficulty: practiceSessions.difficulty,
+      exerciseCount: practiceSessions.exerciseCount,
+      correctCount: practiceSessions.correctCount,
+      completedAt: practiceSessions.completedAt,
+      startedAt: practiceSessions.startedAt,
+      hasOpenFlag,
+      isAbandoned,
+      isLowScore,
+    })
+    .from(practiceSessions)
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(desc(practiceSessions.startedAt))
+    .limit(limit)
+    .offset(offset)) as ActivitySessionRow[];
+
+  // Rank: flagged(0) > abandoned(1) > low_score(2), then newest-first (already sorted by query).
+  const rank = (r: ActivitySessionRow) => (r.hasOpenFlag ? 0 : r.isAbandoned ? 1 : 2);
+  const ranked = [...rows].sort((a, b) => rank(a) - rank(b) || (b.startedAt > a.startedAt ? 1 : -1));
+
+  const items = ranked.map((r) => {
+    const signals: ('flagged' | 'abandoned' | 'low_score')[] = [];
+    if (r.hasOpenFlag) signals.push('flagged');
+    if (r.isAbandoned) signals.push('abandoned');
+    if (r.isLowScore) signals.push('low_score');
+    return {
+      sessionId: r.sessionId,
+      userId: r.userId,
+      language: r.language,
+      difficulty: r.difficulty,
+      exerciseCount: r.exerciseCount,
+      correctCount: r.correctCount,
+      completedAt: toIso(r.completedAt),
+      startedAt: toIso(r.startedAt)!,
+      signals,
+      primarySignal: signals[0],
+    };
+  });
+  return c.json(items);
 });
 
 export default admin;
