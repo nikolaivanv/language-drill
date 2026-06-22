@@ -1810,35 +1810,28 @@ describe('GET /admin/theory/pool-status', () => {
 });
 
 // ---------------------------------------------------------------------------
-// GET /admin/activity/sessions
+// GET /admin/activity/sessions (legacy tests — kept for regression coverage)
 // ---------------------------------------------------------------------------
 
-describe('GET /admin/activity/sessions', () => {
-  it('returns problematic sessions ordered flagged > abandoned > low_score', async () => {
-    // Single query result: rows already carry computed signal flags from SQL.
+describe('GET /admin/activity/sessions (legacy)', () => {
+  it('returns { items, total } with signals derived from flags', async () => {
+    // Two queries via Promise.all: rows then count.
     queryQueue.push([
-      { sessionId: 's-low', userId: 'u1', language: 'TR', difficulty: 'A2',
+      { sessionId: 's-low', userId: 'u1', firstName: null, lastName: null, email: null,
+        language: 'TR', difficulty: 'A2',
         exerciseCount: 8, correctCount: 2, completedAt: '2026-06-22T10:00:00Z',
         startedAt: '2026-06-22T09:50:00Z', hasOpenFlag: false, isAbandoned: false, isLowScore: true },
-      { sessionId: 's-flag', userId: 'u2', language: 'ES', difficulty: 'B1',
+      { sessionId: 's-flag', userId: 'u2', firstName: null, lastName: null, email: null,
+        language: 'ES', difficulty: 'B1',
         exerciseCount: 5, correctCount: 4, completedAt: '2026-06-22T11:00:00Z',
         startedAt: '2026-06-22T10:55:00Z', hasOpenFlag: true, isAbandoned: false, isLowScore: false },
-      { sessionId: 's-aband', userId: 'u3', language: 'DE', difficulty: 'A2',
-        exerciseCount: 6, correctCount: 1, completedAt: null,
-        startedAt: '2026-06-22T08:00:00Z', hasOpenFlag: false, isAbandoned: true, isLowScore: false },
-    ]);
+    ], [{ total: 2 }]);
     const res = await app.request('/admin/activity/sessions', undefined, adminEnv);
     expect(res.status).toBe(200);
-    const body = (await res.json()) as Array<{ sessionId: string; primarySignal: string; signals: string[] }>;
-    expect(body.map((r) => r.sessionId)).toEqual(['s-flag', 's-aband', 's-low']);
-    expect(body[0].primarySignal).toBe('flagged');
-    expect(body[2].signals).toContain('low_score');
-  });
-
-  it('rejects an invalid language filter with 400', async () => {
-    const res = await app.request('/admin/activity/sessions?language=FR', undefined, adminEnv);
-    expect(res.status).toBe(400);
-    expect(((await res.json()) as { code: string }).code).toBe('VALIDATION_ERROR');
+    const body = (await res.json()) as { items: Array<{ sessionId: string; signals: string[] }>; total: number };
+    expect(body.total).toBe(2);
+    expect(body.items[0].signals).toContain('low_score');
+    expect(body.items[1].signals).toContain('flagged');
   });
 
   it('returns 403 for a non-admin', async () => {
@@ -1962,5 +1955,48 @@ describe('activity correlated-subquery qualification (regression)', () => {
     // guard the guard: the interpolated anti-pattern DOES render unqualified
     const broken = sql`EXISTS (SELECT 1 FROM ${exerciseFlags} ef JOIN ${userExerciseHistory} ueh ON ueh.id = ef.history_id WHERE ueh.session_id = ${practiceSessions.id} AND ef.status = 'open')`;
     expect(qb.select({ x: broken }).from(practiceSessions).toSQL().sql).toMatch(/session_id = "id"/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /admin/activity/sessions — new paginated DataTable endpoint (Task 3)
+// ---------------------------------------------------------------------------
+
+describe('GET /admin/activity/sessions', () => {
+  const sessionRow = {
+    sessionId: 's1', userId: 'user_aaaa', firstName: 'Ada', lastName: 'Lovelace', email: 'ada@x.com',
+    language: 'TR', difficulty: 'A2', exerciseCount: 8, correctCount: 2,
+    completedAt: '2026-06-22T10:00:00Z', startedAt: '2026-06-22T09:50:00Z',
+    hasOpenFlag: false, isAbandoned: false, isLowScore: true,
+  };
+
+  it('returns { items, total } with names and signals', async () => {
+    queryQueue.push([sessionRow], [{ total: 1 }]);
+    const res = await app.request('/admin/activity/sessions', undefined, adminEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { items: Array<{ sessionId: string; firstName: string; signals: string[] }>; total: number };
+    expect(body.total).toBe(1);
+    expect(body.items[0].sessionId).toBe('s1');
+    expect(body.items[0].firstName).toBe('Ada');
+    expect(body.items[0].signals).toContain('low_score');
+  });
+
+  it('accepts risk + date + user filters', async () => {
+    queryQueue.push([], [{ total: 0 }]);
+    const res = await app.request('/admin/activity/sessions?risk=abandoned&risk=flagged&from=2026-06-01&to=2026-06-22&user=ada', undefined, adminEnv);
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as { total: number }).total).toBe(0);
+  });
+
+  it('rejects an invalid risk value with 400', async () => {
+    const res = await app.request('/admin/activity/sessions?risk=nope', undefined, adminEnv);
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as { code: string }).code).toBe('VALIDATION_ERROR');
+  });
+
+  it('returns 403 for a non-admin', async () => {
+    const res = await app.request('/admin/activity/sessions', undefined,
+      { event: { requestContext: { authorizer: { jwt: { claims: { sub: 'nope' } } } } } });
+    expect(res.status).toBe(403);
   });
 });

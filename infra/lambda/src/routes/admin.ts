@@ -23,6 +23,7 @@ import {
   theoryTopics,
   usageEvents,
   userExerciseHistory,
+  users,
   type CandidateRow,
   type ReviewStatus,
 } from '@language-drill/db';
@@ -1458,17 +1459,17 @@ admin.get('/admin/capacity', async (c) => {
 });
 
 // ---------------------------------------------------------------------------
-// GET /admin/activity/sessions — problematic session feed
+// GET /admin/activity/sessions — all sessions (paginated) with user/date/risk
+// filters, users join for names, { items, total } response.
 // ---------------------------------------------------------------------------
-//
-// "Problematic" = open exercise flag OR abandoned (started > 30m ago and still
-// open) OR low-score (completed with <50% correct). Results are windowed with
-// default limit 25, ordered flagged > abandoned > low_score then newest-first.
+
+const RISK_VALUES = ['abandoned', 'low_score', 'flagged'] as const;
+type RiskValue = (typeof RISK_VALUES)[number];
 
 const ActivitySessionsQuerySchema = z.object({
-  language: z.enum(['ES', 'DE', 'TR']).optional(),
-  userId: z.string().min(1).optional(),
-  all: z.enum(['true', 'false']).optional(),
+  user: z.string().min(1).optional(),
+  from: z.string().min(1).optional(),
+  to: z.string().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(100).optional(),
   offset: z.coerce.number().int().min(0).optional(),
 });
@@ -1476,6 +1477,9 @@ const ActivitySessionsQuerySchema = z.object({
 type ActivitySessionRow = {
   sessionId: string;
   userId: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
   language: string;
   difficulty: string;
   exerciseCount: number;
@@ -1492,14 +1496,20 @@ admin.get('/admin/activity/sessions', async (c) => {
   if (!parsed.success) {
     return c.json({ error: 'Invalid query parameters', code: 'VALIDATION_ERROR', details: parsed.error.flatten() }, 400);
   }
-  const { language, userId, all, limit = 25, offset = 0 } = parsed.data;
+  // `risk` is a repeatable param — read all values, validate against the enum.
+  const riskRaw = c.req.queries('risk') ?? [];
+  if (!riskRaw.every((r): r is RiskValue => (RISK_VALUES as readonly string[]).includes(r))) {
+    return c.json({ error: 'Invalid risk value', code: 'VALIDATION_ERROR' }, 400);
+  }
+  const risk = riskRaw as RiskValue[];
+  const { user, from, to, limit = 25, offset = 0 } = parsed.data;
 
-  // Computed per-session signal flags. low-score: completed sessions whose correct/total ratio < 0.5; exerciseCount > 0 guards /0.
-  // The outer correlation MUST be written as a qualified literal
-  // (`practice_sessions.id`), not `${practiceSessions.id}`: Drizzle renders an
-  // interpolated column object UNQUALIFIED inside a SELECT-projection subquery,
-  // and a bare `id` is ambiguous here (both exercise_flags and
-  // user_exercise_history have an `id`) → "column reference id is ambiguous".
+  // Computed per-session signal flags. The outer correlation MUST be written as
+  // a qualified literal (`practice_sessions.id`), not `${practiceSessions.id}`:
+  // Drizzle renders an interpolated column object UNQUALIFIED inside a
+  // SELECT-projection subquery, and a bare `id` is ambiguous here (both
+  // exercise_flags and user_exercise_history have an `id`) →
+  // "column reference id is ambiguous" (prod incident).
   const hasOpenFlag = sql<boolean>`EXISTS (
     SELECT 1 FROM ${exerciseFlags} ef
     JOIN ${userExerciseHistory} ueh ON ueh.id = ef.history_id
@@ -1509,15 +1519,31 @@ admin.get('/admin/activity/sessions', async (c) => {
   const isLowScore = sql<boolean>`${practiceSessions.completedAt} IS NOT NULL AND ${practiceSessions.exerciseCount} > 0 AND (${practiceSessions.correctCount}::float / ${practiceSessions.exerciseCount}) < 0.5`;
 
   const conditions: SQL[] = [];
-  if (language) conditions.push(eq(practiceSessions.language, language));
-  if (userId) conditions.push(eq(practiceSessions.userId, userId));
-  const problematic = or(hasOpenFlag, isAbandoned, isLowScore)!;
-  if (all !== 'true') conditions.push(problematic);
+  if (user) {
+    const pat = `%${user}%`;
+    conditions.push(sql`(
+      ${users.firstName} ILIKE ${pat} OR ${users.lastName} ILIKE ${pat}
+      OR ${users.email} ILIKE ${pat} OR ${practiceSessions.userId} ILIKE ${pat}
+    )`);
+  }
+  if (from) conditions.push(sql`${practiceSessions.startedAt} >= ${from}::date`);
+  if (to) conditions.push(sql`${practiceSessions.startedAt} < (${to}::date + 1)`);
+  if (risk.length > 0) {
+    const riskExprs: SQL[] = [];
+    if (risk.includes('flagged')) riskExprs.push(hasOpenFlag);
+    if (risk.includes('abandoned')) riskExprs.push(isAbandoned);
+    if (risk.includes('low_score')) riskExprs.push(isLowScore);
+    conditions.push(or(...riskExprs)!);
+  }
+  const whereClause = conditions.length ? and(...conditions) : undefined;
 
-  const rows = (await db
+  const rowQuery = db
     .select({
       sessionId: practiceSessions.id,
       userId: practiceSessions.userId,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      email: users.email,
       language: practiceSessions.language,
       difficulty: practiceSessions.difficulty,
       exerciseCount: practiceSessions.exerciseCount,
@@ -1529,23 +1555,34 @@ admin.get('/admin/activity/sessions', async (c) => {
       isLowScore,
     })
     .from(practiceSessions)
-    .where(conditions.length ? and(...conditions) : undefined)
+    .leftJoin(users, eq(users.id, practiceSessions.userId))
+    .where(whereClause)
     .orderBy(desc(practiceSessions.startedAt))
     .limit(limit)
-    .offset(offset)) as ActivitySessionRow[];
+    .offset(offset);
 
-  // Rank: flagged(0) > abandoned(1) > low_score(2), then newest-first (already sorted by query).
-  const rank = (r: ActivitySessionRow) => (r.hasOpenFlag ? 0 : r.isAbandoned ? 1 : 2);
-  const ranked = [...rows].sort((a, b) => rank(a) - rank(b) || (b.startedAt > a.startedAt ? 1 : -1));
+  const countQuery = db
+    .select({ total: count() })
+    .from(practiceSessions)
+    .leftJoin(users, eq(users.id, practiceSessions.userId))
+    .where(whereClause);
 
-  const items = ranked.map((r) => {
-    const signals: ('flagged' | 'abandoned' | 'low_score')[] = [];
+  const [rows, totalRows] = (await Promise.all([rowQuery, countQuery])) as [
+    ActivitySessionRow[],
+    Array<{ total: number }>,
+  ];
+
+  const items = rows.map((r) => {
+    const signals: RiskValue[] = [];
     if (r.hasOpenFlag) signals.push('flagged');
     if (r.isAbandoned) signals.push('abandoned');
     if (r.isLowScore) signals.push('low_score');
     return {
       sessionId: r.sessionId,
       userId: r.userId,
+      firstName: r.firstName,
+      lastName: r.lastName,
+      email: r.email,
       language: r.language,
       difficulty: r.difficulty,
       exerciseCount: r.exerciseCount,
@@ -1553,10 +1590,9 @@ admin.get('/admin/activity/sessions', async (c) => {
       completedAt: toIso(r.completedAt),
       startedAt: toIso(r.startedAt)!,
       signals,
-      primarySignal: signals[0] ?? null,
     };
   });
-  return c.json(items);
+  return c.json({ items, total: totalRows[0]?.total ?? 0 });
 });
 
 // ---------------------------------------------------------------------------
