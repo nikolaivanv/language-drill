@@ -94,9 +94,15 @@ export class AlertsConstruct extends Construct {
       subscriptionType: "EMAIL",
       address,
     }));
+    // Deliberately NO `budgetName` — let CloudFormation auto-generate one.
+    // `AWS::Budgets::Budget` treats a NotificationsWithSubscribers change as a
+    // REPLACEMENT, and CFN create-before-delete a budget with the same fixed
+    // name collides ("a budget with the same name but a different internalId
+    // already exists"), failing every prod deploy. A generated name differs on
+    // each replacement, so subscriber/threshold edits deploy cleanly. (PR #436
+    // shipped a fixed name and broke prod until the budget was hand-deleted.)
     new budgets.CfnBudget(this, "MonthlyCostBudget", {
       budget: {
-        budgetName: `language-drill-${props.envName}-monthly`,
         budgetType: "COST",
         timeUnit: "MONTHLY",
         budgetLimit: { amount, unit: "USD" },
