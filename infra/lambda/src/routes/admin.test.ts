@@ -1844,3 +1844,41 @@ describe('GET /admin/activity/sessions', () => {
     expect(res.status).toBe(403);
   });
 });
+
+// ---------------------------------------------------------------------------
+// GET /admin/activity/sessions/:id
+// ---------------------------------------------------------------------------
+
+describe('GET /admin/activity/sessions/:id', () => {
+  const SID = '11111111-1111-1111-1111-111111111111';
+  it('assembles ordered exercises with errors and flags', async () => {
+    queryQueue.push(
+      [{ sessionId: SID, userId: 'u1', language: 'TR', difficulty: 'A2', exerciseCount: 2,
+         correctCount: 1, startedAt: '2026-06-22T09:00:00Z', completedAt: '2026-06-22T09:10:00Z',
+         exerciseIds: ['ex-b', 'ex-a'] }],                       // (1) session
+      [{ exerciseId: 'ex-a', type: 'cloze', content: { p: 'a' }, score: 0.2,
+         response: { answer: 'x' }, evaluatedAt: '2026-06-22T09:05:00Z' },
+       { exerciseId: 'ex-b', type: 'cloze', content: { p: 'b' }, score: 1,
+         response: { answer: 'y' }, evaluatedAt: '2026-06-22T09:02:00Z',
+         historyId: 'h-b' }],                                     // (2) history
+      [{ exerciseId: 'ex-a', errorType: 'grammar', severity: 'major',
+         wrongText: 'x', correction: 'X', errorGrammarPointKey: null }], // (3) errors
+      [{ exerciseId: 'ex-b', category: 'wrong_answer', note: null,
+         status: 'open', createdAt: '2026-06-22T09:03:00Z' }],    // (4) flags
+    );
+    const res = await app.request(`/admin/activity/sessions/${SID}`, undefined, adminEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { exercises: Array<{ exerciseId: string; errors: unknown[]; flag: unknown }> };
+    // exerciseIds order is ['ex-b','ex-a'] → preserved
+    expect(body.exercises.map((e) => e.exerciseId)).toEqual(['ex-b', 'ex-a']);
+    expect(body.exercises[0].flag).not.toBeNull();      // ex-b has the flag
+    expect(body.exercises[1].errors).toHaveLength(1);   // ex-a has the error
+  });
+
+  it('returns 404 for an unknown session', async () => {
+    queryQueue.push([]); // (1) session → empty
+    const res = await app.request(`/admin/activity/sessions/${SID}`, undefined, adminEnv);
+    expect(res.status).toBe(404);
+    expect(((await res.json()) as { code: string }).code).toBe('NOT_FOUND');
+  });
+});

@@ -11,6 +11,7 @@ import {
   curriculumOrderOf,
   decideDemotion,
   enumerateCurriculumCells,
+  errorObservations,
   exerciseFlags,
   exercises,
   generationJobs,
@@ -1551,6 +1552,129 @@ admin.get('/admin/activity/sessions', async (c) => {
     };
   });
   return c.json(items);
+});
+
+// ---------------------------------------------------------------------------
+// GET /admin/activity/sessions/:id — session drill-down detail
+// ---------------------------------------------------------------------------
+
+const SessionIdSchema = z.string().uuid();
+
+admin.get('/admin/activity/sessions/:id', async (c) => {
+  const idParsed = SessionIdSchema.safeParse(c.req.param('id'));
+  if (!idParsed.success) {
+    return c.json({ error: 'Invalid session id', code: 'VALIDATION_ERROR' }, 400);
+  }
+  const sessionId = idParsed.data;
+
+  const sessionRows = (await db
+    .select({
+      sessionId: practiceSessions.id,
+      userId: practiceSessions.userId,
+      language: practiceSessions.language,
+      difficulty: practiceSessions.difficulty,
+      exerciseCount: practiceSessions.exerciseCount,
+      correctCount: practiceSessions.correctCount,
+      startedAt: practiceSessions.startedAt,
+      completedAt: practiceSessions.completedAt,
+      exerciseIds: practiceSessions.exerciseIds,
+    })
+    .from(practiceSessions)
+    .where(eq(practiceSessions.id, sessionId))
+    .limit(1)) as Array<{
+      sessionId: string; userId: string; language: string; difficulty: string;
+      exerciseCount: number; correctCount: number; startedAt: Date | string;
+      completedAt: Date | string | null; exerciseIds: string[];
+    }>;
+
+  if (sessionRows.length === 0) {
+    return c.json({ error: 'Session not found', code: 'NOT_FOUND' }, 404);
+  }
+  const session = sessionRows[0];
+
+  const [historyRows, errorRows, flagRows] = await Promise.all([
+    db
+      .select({
+        exerciseId: exercises.id,
+        type: exercises.type,
+        content: exercises.contentJson,
+        score: userExerciseHistory.score,
+        response: userExerciseHistory.responseJson,
+        evaluatedAt: userExerciseHistory.evaluatedAt,
+        historyId: userExerciseHistory.id,
+      })
+      .from(userExerciseHistory)
+      .innerJoin(exercises, eq(userExerciseHistory.exerciseId, exercises.id))
+      .where(eq(userExerciseHistory.sessionId, sessionId)),
+    db
+      .select({
+        exerciseId: errorObservations.exerciseId,
+        errorType: errorObservations.errorType,
+        severity: errorObservations.severity,
+        wrongText: errorObservations.wrongText,
+        correction: errorObservations.correction,
+        errorGrammarPointKey: errorObservations.errorGrammarPointKey,
+      })
+      .from(errorObservations)
+      .where(eq(errorObservations.sessionId, sessionId)),
+    db
+      .select({
+        exerciseId: exerciseFlags.exerciseId,
+        category: exerciseFlags.category,
+        note: exerciseFlags.note,
+        status: exerciseFlags.status,
+        createdAt: exerciseFlags.createdAt,
+      })
+      .from(exerciseFlags)
+      .innerJoin(userExerciseHistory, eq(exerciseFlags.historyId, userExerciseHistory.id))
+      .where(eq(userExerciseHistory.sessionId, sessionId)),
+  ]);
+
+  const historyByExercise = new Map(historyRows.map((h) => [h.exerciseId, h]));
+  const errorsByExercise = new Map<string, typeof errorRows>();
+  for (const e of errorRows) {
+    const list = errorsByExercise.get(e.exerciseId) ?? [];
+    list.push(e);
+    errorsByExercise.set(e.exerciseId, list);
+  }
+  const flagByExercise = new Map(flagRows.map((f) => [f.exerciseId, f]));
+
+  // Preserve session.exerciseIds order; fall back to any history rows not in the array.
+  const orderedIds = [
+    ...session.exerciseIds,
+    ...historyRows.map((h) => h.exerciseId).filter((id) => !session.exerciseIds.includes(id)),
+  ];
+
+  const exercisesOut = orderedIds.map((exerciseId, order) => {
+    const h = historyByExercise.get(exerciseId);
+    const flag = flagByExercise.get(exerciseId);
+    return {
+      exerciseId,
+      order,
+      type: h?.type ?? null,
+      content: h?.content ?? null,
+      score: h?.score ?? null,
+      response: h?.response ?? null,
+      evaluatedAt: h ? toIso(h.evaluatedAt as Date | string | null) : null,
+      errors: (errorsByExercise.get(exerciseId) ?? []).map((e) => ({
+        errorType: e.errorType, severity: e.severity, wrongText: e.wrongText,
+        correction: e.correction, errorGrammarPointKey: e.errorGrammarPointKey,
+      })),
+      flag: flag
+        ? { category: flag.category, note: flag.note, status: flag.status, createdAt: toIso(flag.createdAt as Date | string)! }
+        : null,
+    };
+  });
+
+  return c.json({
+    session: {
+      sessionId: session.sessionId, userId: session.userId, language: session.language,
+      difficulty: session.difficulty, exerciseCount: session.exerciseCount,
+      correctCount: session.correctCount, startedAt: toIso(session.startedAt)!,
+      completedAt: toIso(session.completedAt),
+    },
+    exercises: exercisesOut,
+  });
 });
 
 export default admin;
