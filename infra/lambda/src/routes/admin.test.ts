@@ -54,6 +54,7 @@ function makeChain() {
     where: vi.fn(() => chain),
     innerJoin: vi.fn(() => chain),
     groupBy: vi.fn(() => chain),
+    having: vi.fn(() => chain),
     orderBy: vi.fn(() => chain),
     limit: vi.fn(() => chain),
     offset: vi.fn(() => chain),
@@ -1880,5 +1881,29 @@ describe('GET /admin/activity/sessions/:id', () => {
     const res = await app.request(`/admin/activity/sessions/${SID}`, undefined, adminEnv);
     expect(res.status).toBe(404);
     expect(((await res.json()) as { code: string }).code).toBe('NOT_FOUND');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /admin/activity/failures
+// ---------------------------------------------------------------------------
+
+describe('GET /admin/activity/failures', () => {
+  it('returns per-exercise failure aggregates', async () => {
+    queryQueue.push([
+      { exerciseId: 'e1', language: 'TR', difficulty: 'A2', type: 'cloze', grammarPointKey: 'tr-a2-x',
+        attempts: 10, distinctUsers: 6, failCount: 7, avgScore: 0.31, qualityScore: 0.8, openFlags: 1 },
+    ]);
+    const res = await app.request('/admin/activity/failures', undefined, adminEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Array<{ exerciseId: string; failRate: number; distinctUsers: number }>;
+    expect(body[0].exerciseId).toBe('e1');
+    expect(body[0].failRate).toBeCloseTo(0.7);
+    expect(body[0].distinctUsers).toBe(6);
+  });
+
+  it('rejects minAttempts below 1 with 400', async () => {
+    const res = await app.request('/admin/activity/failures?minAttempts=0', undefined, adminEnv);
+    expect(res.status).toBe(400);
   });
 });

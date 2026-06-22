@@ -1677,4 +1677,80 @@ admin.get('/admin/activity/sessions/:id', async (c) => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// GET /admin/activity/failures — per-exercise failure-aggregate (most-failed exercises)
+// ---------------------------------------------------------------------------
+
+const ActivityFailuresQuerySchema = z.object({
+  language: z.enum(['ES', 'DE', 'TR']).optional(),
+  level: z.enum(['A1', 'A2', 'B1', 'B2']).optional(),
+  type: z.string().optional(),
+  grammarPointKey: z.string().optional(),
+  windowDays: z.coerce.number().int().min(1).max(365).optional(),
+  minAttempts: z.coerce.number().int().min(1).max(1000).optional(),
+  limit: z.coerce.number().int().min(1).max(200).optional(),
+});
+
+admin.get('/admin/activity/failures', async (c) => {
+  const parsed = ActivityFailuresQuerySchema.safeParse(c.req.query());
+  if (!parsed.success) {
+    return c.json({ error: 'Invalid query parameters', code: 'VALIDATION_ERROR', details: parsed.error.flatten() }, 400);
+  }
+  const { language, level, type, grammarPointKey, windowDays = 30, minAttempts = 5, limit = 50 } = parsed.data;
+
+  const conditions: SQL[] = [
+    gte(userExerciseHistory.evaluatedAt, sql`NOW() - (${windowDays}::text || ' days')::interval`),
+  ];
+  if (language) conditions.push(eq(exercises.language, language));
+  if (level) conditions.push(eq(exercises.difficulty, level));
+  if (type) conditions.push(eq(exercises.type, type));
+  if (grammarPointKey) conditions.push(eq(exercises.grammarPointKey, grammarPointKey));
+
+  const openFlagsSubquery = sql<number>`(
+    SELECT COUNT(*)::int FROM ${exerciseFlags} ef
+    WHERE ef.exercise_id = ${exercises.id} AND ef.status = 'open'
+  )`;
+
+  const rows = (await db
+    .select({
+      exerciseId: exercises.id,
+      language: exercises.language,
+      difficulty: exercises.difficulty,
+      type: exercises.type,
+      grammarPointKey: exercises.grammarPointKey,
+      qualityScore: exercises.qualityScore,
+      attempts: sql<number>`COUNT(*)::int`,
+      distinctUsers: sql<number>`COUNT(DISTINCT ${userExerciseHistory.userId})::int`,
+      failCount: sql<number>`COUNT(*) FILTER (WHERE ${userExerciseHistory.score} < 0.5)::int`,
+      avgScore: sql<number>`AVG(${userExerciseHistory.score})::float`,
+      openFlags: openFlagsSubquery,
+    })
+    .from(userExerciseHistory)
+    .innerJoin(exercises, eq(userExerciseHistory.exerciseId, exercises.id))
+    .where(and(...conditions))
+    .groupBy(exercises.id)
+    .having(sql`COUNT(*) >= ${minAttempts}`)
+    .orderBy(desc(sql`COUNT(*) FILTER (WHERE ${userExerciseHistory.score} < 0.5)`))
+    .limit(limit)) as Array<{
+      exerciseId: string; language: string; difficulty: string; type: string;
+      grammarPointKey: string | null; qualityScore: number | null; attempts: number;
+      distinctUsers: number; failCount: number; avgScore: number; openFlags: number;
+    }>;
+
+  const items = rows.map((r) => ({
+    exerciseId: r.exerciseId,
+    language: r.language,
+    difficulty: r.difficulty,
+    type: r.type,
+    grammarPointKey: r.grammarPointKey,
+    attempts: r.attempts,
+    distinctUsers: r.distinctUsers,
+    failRate: r.attempts > 0 ? r.failCount / r.attempts : 0,
+    avgScore: r.avgScore ?? 0,
+    qualityScore: r.qualityScore ?? null,
+    openFlags: r.openFlags,
+  }));
+  return c.json(items);
+});
+
 export default admin;
