@@ -27,8 +27,9 @@ function buildDevStack() {
     clerkAudience: ["language-drill"],
     allowedOrigins: ["https://*.vercel.app", "http://localhost:3000"],
     enableScheduledJobs: false,
-    alertEmail: "alerts@example.com",
-    createBudget: false,
+    operationalEmails: ["ops@example.com"],
+    billingEmails: ["billing@example.com"],
+    createCostMonitoring: false,
   });
 }
 
@@ -48,8 +49,9 @@ function buildProdStack() {
       "https://www.langdrill.app",
     ],
     enableScheduledJobs: true,
-    alertEmail: "alerts@example.com",
-    createBudget: true,
+    operationalEmails: ["ops@example.com"],
+    billingEmails: ["billing@example.com"],
+    createCostMonitoring: true,
   });
 }
 

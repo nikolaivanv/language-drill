@@ -41,13 +41,16 @@ export interface LanguageDrillStackProps extends StackProps {
   // trailing-24h global event count. Omit/empty to disable.
   aiKillSwitch?: string;
   aiGlobalDailyCap?: string;
-  // Operational alerting (audit §1.2 / §3.2 / §4.1). Email that receives the
-  // new CloudWatch alarm notifications and AWS Budget alerts.
-  alertEmail: string;
-  // Create the account-wide monthly cost budget on this stack. True for exactly
-  // one stack (prod) — budgets track total account spend, so two would
-  // double-count.
-  createBudget: boolean;
+  // Operational alerting (audit §1.2 / §3.2 / §4.1). Emails subscribed to the
+  // SNS topic that receives the CloudWatch alarm notifications.
+  operationalEmails: string[];
+  // Emails for account-wide cost alerts (monthly budget + cost-anomaly
+  // detection). Only used on the stack where createCostMonitoring is true.
+  billingEmails: string[];
+  // Create the account-wide cost monitoring (budget + anomaly detection) on this
+  // stack. True for exactly one stack (prod) — these track total account spend,
+  // so two would double-count.
+  createCostMonitoring: boolean;
   // Monthly cost-budget ceiling in USD (prod only). Defaults to 50.
   monthlyBudgetUsd?: number;
 }
@@ -58,12 +61,13 @@ export class LanguageDrillStack extends Stack {
 
     const storage = new StorageConstruct(this, "Storage");
 
-    // Alerting fan-in: SNS topic for the new alarm actions + (prod-only) the
-    // account-wide monthly cost budget.
+    // Alerting fan-in: SNS topic for the alarm actions + (prod-only) the
+    // account-wide cost monitoring (budget + anomaly detection).
     const alerts = new AlertsConstruct(this, "Alerts", {
       envName: props.envName,
-      alertEmail: props.alertEmail,
-      createBudget: props.createBudget,
+      operationalEmails: props.operationalEmails,
+      billingEmails: props.billingEmails,
+      createCostMonitoring: props.createCostMonitoring,
       monthlyBudgetUsd: props.monthlyBudgetUsd,
     });
 
