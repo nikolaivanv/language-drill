@@ -10,7 +10,7 @@ import {
 import { DAILY_GOALS, GOAL_IDS, type DailyGoal, type GoalId } from '@language-drill/shared';
 import { Section, Row } from './section';
 import { GOAL_COPY } from './goal-copy';
-import { Choice, Checkbox, Switch } from '../ui';
+import { Choice, Checkbox } from '../ui';
 
 const DAILY_GOAL_HINTS: Record<DailyGoal, string> = {
   quick: '~5',
@@ -26,13 +26,11 @@ export function GoalsSection() {
 
   const [goals, setGoals] = useState<GoalId[]>([]);
   const [dailyGoal, setDailyGoal] = useState<DailyGoal | null>(null);
-  const [nudges, setNudges] = useState(true);
 
   useEffect(() => {
     if (prefsQuery.data) {
       setGoals(prefsQuery.data.goals);
       setDailyGoal(prefsQuery.data.dailyGoal);
-      setNudges(prefsQuery.data.gentleNudges);
     }
   }, [prefsQuery.data]);
 
@@ -45,20 +43,16 @@ export function GoalsSection() {
     setGoals(next);
     update.mutate({ goals: next });
   };
-  const toggleNudges = (next: boolean) => {
-    setNudges(next);
-    update.mutate({ gentleNudges: next });
-  };
 
   return (
     <Section id="goals" title="goals" sub="what you want from this. tweak any time.">
       <Row label="daily target" hint="how much you want to drill each day." align="top">
-        <div role="radiogroup" aria-label="daily target" className="grid grid-cols-3 gap-[12px] max-w-[360px]">
+        <div role="radiogroup" aria-label="daily target" className="grid grid-cols-3 gap-[12px] max-w-[420px]">
           {DAILY_GOALS.map((g) => (
-            <Choice key={g} mode="radio" selected={dailyGoal === g} onSelect={() => pickGoal(g)}>
-              <span className="flex flex-col items-start">
-                <span className="t-display-s">{g}</span>
-                <span className="t-micro text-ink-mute whitespace-nowrap">{DAILY_GOAL_HINTS[g]}</span>
+            <Choice key={g} mode="radio" hideIndicator selected={dailyGoal === g} onSelect={() => pickGoal(g)}>
+              <span className="flex flex-col items-center text-center w-full">
+                <span className="t-display-s leading-none">{g}</span>
+                <span className="t-micro text-ink-mute whitespace-nowrap mt-[5px]">{DAILY_GOAL_HINTS[g]}</span>
               </span>
             </Choice>
           ))}
@@ -78,10 +72,6 @@ export function GoalsSection() {
             );
           })}
         </div>
-      </Row>
-
-      <Row label="gentle nudges" hint="one calm note if you've missed two days, never more.">
-        <Switch checked={nudges} onChange={toggleNudges} aria-label="gentle nudges" />
       </Row>
     </Section>
   );
