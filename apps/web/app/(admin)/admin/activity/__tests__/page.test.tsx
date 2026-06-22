@@ -55,7 +55,8 @@ describe('ActivityPage — Sessions tab', () => {
     expect(screen.getByRole('heading', { name: 'Activity' })).toBeInTheDocument();
     expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
     expect(screen.getByText(/4\s*\/\s*5/)).toBeInTheDocument();
-    expect(screen.getAllByText(/flagged/i).length).toBeGreaterThan(0);
+    // Both the risk filter chip and the row's SignalBadge render "flagged".
+    expect(screen.getAllByText(/flagged/i)).toHaveLength(2);
   });
 
   it('toggling a risk chip re-queries with risk', () => {
