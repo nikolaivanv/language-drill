@@ -10,6 +10,18 @@ interface ClerkUserCreatedEvent {
   data: {
     id: string;
     email_addresses: Array<{ email_address: string }>;
+    first_name?: string | null;
+    last_name?: string | null;
+  };
+}
+
+interface ClerkUserUpdatedEvent {
+  type: 'user.updated';
+  data: {
+    id: string;
+    email_addresses: Array<{ email_address: string }>;
+    first_name?: string | null;
+    last_name?: string | null;
   };
 }
 
@@ -28,7 +40,7 @@ interface ClerkUserDeletedEvent {
 // the dashboard subscription is widened; none of the handler branches match, so
 // they're acknowledged with 200 and ignored. (Kept a clean discriminated union
 // — no `{ type: string }` catch-all member, which would defeat narrowing.)
-type ClerkWebhookEvent = ClerkUserCreatedEvent | ClerkUserDeletedEvent;
+type ClerkWebhookEvent = ClerkUserCreatedEvent | ClerkUserUpdatedEvent | ClerkUserDeletedEvent;
 
 const webhooks = new Hono();
 
@@ -61,7 +73,7 @@ webhooks.post('/webhooks/clerk', async (c) => {
   }
 
   if (event.type === 'user.created') {
-    const { id: userId, email_addresses } = event.data;
+    const { id: userId, email_addresses, first_name, last_name } = event.data;
     const email = email_addresses[0]?.email_address;
 
     if (!email) {
@@ -74,11 +86,23 @@ webhooks.post('/webhooks/clerk', async (c) => {
     // via POST /invites/redeem to upgrade the user's plan.
     await db
       .insert(users)
-      .values({ id: userId, email })
+      .values({ id: userId, email, firstName: first_name ?? null, lastName: last_name ?? null })
       .onConflictDoUpdate({
         target: users.id,
-        set: { email, updatedAt: new Date() },
+        set: { email, firstName: first_name ?? null, lastName: last_name ?? null, updatedAt: new Date() },
       });
+  } else if (event.type === 'user.updated') {
+    const { id: userId, email_addresses, first_name, last_name } = event.data;
+    const email = email_addresses[0]?.email_address;
+    await db
+      .update(users)
+      .set({
+        ...(email ? { email } : {}),
+        firstName: first_name ?? null,
+        lastName: last_name ?? null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
   } else if (event.type === 'user.deleted') {
     // Right-to-erasure: delete the user row. The user FKs on playlists,
     // spaced_repetition_cards, usage_events, user_exercise_history,

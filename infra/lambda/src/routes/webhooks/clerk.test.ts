@@ -17,7 +17,7 @@ vi.mock('../../db', () => ({
   },
 }));
 vi.mock('@language-drill/db', () => ({
-  users: { id: 'id', email: 'email', plan: 'plan' },
+  users: { id: 'id', email: 'email', plan: 'plan', firstName: 'first_name', lastName: 'last_name' },
   invitations: { usedBy: 'used_by' },
 }));
 
@@ -75,7 +75,9 @@ describe('POST /webhooks/clerk', () => {
     expect(res.status).toBe(200);
     expect(((await res.json()) as { received: boolean }).received).toBe(true);
     expect(mockInsert).toHaveBeenCalledTimes(1);
-    expect(mockValues).toHaveBeenCalledWith({ id: 'user_new', email: 'new@example.com' });
+    expect(mockValues).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'user_new', email: 'new@example.com' }),
+    );
   });
 
   it('does NOT auto-claim an invitation on user.created', async () => {
@@ -83,6 +85,41 @@ describe('POST /webhooks/clerk', () => {
     expect(res.status).toBe(200);
     // Invites are redeemed explicitly via POST /invites/redeem, never here.
     expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it('stores first/last name on user.created', async () => {
+    mockEvent = {
+      type: 'user.created',
+      data: {
+        id: 'user_new',
+        email_addresses: [{ email_address: 'new@example.com' }],
+        first_name: 'Ada',
+        last_name: 'Lovelace',
+      },
+    };
+    const res = await post();
+    expect(res.status).toBe(200);
+    expect(mockValues).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'user_new', email: 'new@example.com', firstName: 'Ada', lastName: 'Lovelace' }),
+    );
+  });
+
+  it('updates names on user.updated', async () => {
+    mockEvent = {
+      type: 'user.updated',
+      data: {
+        id: 'user_x',
+        email_addresses: [{ email_address: 'x@example.com' }],
+        first_name: 'Grace',
+        last_name: 'Hopper',
+      },
+    };
+    const res = await post();
+    expect(res.status).toBe(200);
+    expect(mockUpdateSet).toHaveBeenCalledWith(
+      expect.objectContaining({ firstName: 'Grace', lastName: 'Hopper', email: 'x@example.com' }),
+    );
+    expect(mockUpdateWhere).toHaveBeenCalled();
   });
 
   it('deletes the user row on user.deleted (cascades sweep dependent rows)', async () => {
@@ -117,7 +154,7 @@ describe('POST /webhooks/clerk', () => {
   });
 
   it('acknowledges an unhandled event type without writing', async () => {
-    mockEvent = { type: 'user.updated', data: { id: 'user_x' } };
+    mockEvent = { type: 'organization.created', data: { id: 'org_x' } };
     const res = await post();
     expect(res.status).toBe(200);
     expect(mockInsert).not.toHaveBeenCalled();
