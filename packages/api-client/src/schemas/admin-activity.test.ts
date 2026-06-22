@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ActivitySessionListItemSchema, ActivitySessionDetailSchema, ActivityFailureItemSchema } from './admin-activity';
+import { ActivitySessionListItemSchema, ActivitySessionDetailSchema, ActivityFailureItemSchema, ActivityRosterItemSchema } from './admin-activity';
 
 describe('ActivitySessionListItemSchema', () => {
   it('parses a feed row', () => {
@@ -33,5 +33,15 @@ describe('ActivityFailureItemSchema', () => {
       attempts: 10, distinctUsers: 6, failRate: 0.7, avgScore: 0.31, qualityScore: 0.8, openFlags: 1,
     });
     expect(parsed.failRate).toBeCloseTo(0.7);
+  });
+});
+
+describe('ActivityRosterItemSchema', () => {
+  it('parses a roster row', () => {
+    const parsed = ActivityRosterItemSchema.parse({
+      userId: 'u1', lastActiveAt: '2026-06-22T10:00:00Z', sessions7d: 3, sessions30d: 9,
+      drills7d: 20, drills30d: 75, languages: ['TR'], avgScore30d: 0.62, aiEvents7d: 21,
+    });
+    expect(parsed.drills30d).toBe(75);
   });
 });

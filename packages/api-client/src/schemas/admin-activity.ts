@@ -67,3 +67,16 @@ export const ActivityFailureItemSchema = z.object({
   openFlags: z.number(),
 });
 export type ActivityFailureItem = z.infer<typeof ActivityFailureItemSchema>;
+
+export const ActivityRosterItemSchema = z.object({
+  userId: z.string(),
+  lastActiveAt: z.string().nullable(),
+  sessions7d: z.number(),
+  sessions30d: z.number(),
+  drills7d: z.number(),
+  drills30d: z.number(),
+  languages: z.string().array(),
+  avgScore30d: z.number().nullable(),
+  aiEvents7d: z.number(),
+});
+export type ActivityRosterItem = z.infer<typeof ActivityRosterItemSchema>;
