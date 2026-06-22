@@ -56,7 +56,7 @@ function SessionsTab({
           placeholder="filter by user id"
           value={userFilter}
           onChange={(e) => setUserFilter(e.target.value)}
-          className="px-s-2 py-s-1 border border-rule rounded-sm text-[13px]"
+          className="px-s-2 py-s-1 border border-rule rounded-sm bg-card text-[13px] text-ink outline-none focus:border-ink"
         />
       </div>
 
@@ -188,7 +188,7 @@ function FailuresTab() {
           onChange={(e) =>
             setFilters((prev) => ({ ...prev, language: e.target.value || undefined }))
           }
-          className="px-s-2 py-s-1 border border-rule rounded-sm text-[13px]"
+          className="px-s-2 py-s-1 border border-rule rounded-sm bg-card text-[13px] text-ink outline-none focus:border-ink"
         >
           <option value="">all languages</option>
           <option value="ES">ES</option>
@@ -201,7 +201,7 @@ function FailuresTab() {
           onChange={(e) =>
             setFilters((prev) => ({ ...prev, level: e.target.value || undefined }))
           }
-          className="px-s-2 py-s-1 border border-rule rounded-sm text-[13px]"
+          className="px-s-2 py-s-1 border border-rule rounded-sm bg-card text-[13px] text-ink outline-none focus:border-ink"
         >
           <option value="">all levels</option>
           <option value="A1">A1</option>
