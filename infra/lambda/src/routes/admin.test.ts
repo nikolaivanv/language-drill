@@ -53,7 +53,9 @@ function makeChain() {
     from: vi.fn(() => chain),
     where: vi.fn(() => chain),
     innerJoin: vi.fn(() => chain),
+    leftJoin: vi.fn(() => chain),
     groupBy: vi.fn(() => chain),
+    having: vi.fn(() => chain),
     orderBy: vi.fn(() => chain),
     limit: vi.fn(() => chain),
     offset: vi.fn(() => chain),
@@ -1803,5 +1805,130 @@ describe('GET /admin/theory/pool-status', () => {
     const body = (await res.json()) as Array<{ language: string }>;
     expect(body.length).toBeGreaterThan(0);
     expect(body.every((r) => r.language === 'ES')).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /admin/activity/sessions
+// ---------------------------------------------------------------------------
+
+describe('GET /admin/activity/sessions', () => {
+  it('returns problematic sessions ordered flagged > abandoned > low_score', async () => {
+    // Single query result: rows already carry computed signal flags from SQL.
+    queryQueue.push([
+      { sessionId: 's-low', userId: 'u1', language: 'TR', difficulty: 'A2',
+        exerciseCount: 8, correctCount: 2, completedAt: '2026-06-22T10:00:00Z',
+        startedAt: '2026-06-22T09:50:00Z', hasOpenFlag: false, isAbandoned: false, isLowScore: true },
+      { sessionId: 's-flag', userId: 'u2', language: 'ES', difficulty: 'B1',
+        exerciseCount: 5, correctCount: 4, completedAt: '2026-06-22T11:00:00Z',
+        startedAt: '2026-06-22T10:55:00Z', hasOpenFlag: true, isAbandoned: false, isLowScore: false },
+      { sessionId: 's-aband', userId: 'u3', language: 'DE', difficulty: 'A2',
+        exerciseCount: 6, correctCount: 1, completedAt: null,
+        startedAt: '2026-06-22T08:00:00Z', hasOpenFlag: false, isAbandoned: true, isLowScore: false },
+    ]);
+    const res = await app.request('/admin/activity/sessions', undefined, adminEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Array<{ sessionId: string; primarySignal: string; signals: string[] }>;
+    expect(body.map((r) => r.sessionId)).toEqual(['s-flag', 's-aband', 's-low']);
+    expect(body[0].primarySignal).toBe('flagged');
+    expect(body[2].signals).toContain('low_score');
+  });
+
+  it('rejects an invalid language filter with 400', async () => {
+    const res = await app.request('/admin/activity/sessions?language=FR', undefined, adminEnv);
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as { code: string }).code).toBe('VALIDATION_ERROR');
+  });
+
+  it('returns 403 for a non-admin', async () => {
+    const res = await app.request('/admin/activity/sessions', undefined,
+      { event: { requestContext: { authorizer: { jwt: { claims: { sub: 'nope' } } } } } });
+    expect(res.status).toBe(403);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /admin/activity/sessions/:id
+// ---------------------------------------------------------------------------
+
+describe('GET /admin/activity/sessions/:id', () => {
+  const SID = '11111111-1111-1111-1111-111111111111';
+  it('assembles ordered exercises with errors and flags', async () => {
+    queryQueue.push(
+      [{ sessionId: SID, userId: 'u1', language: 'TR', difficulty: 'A2', exerciseCount: 2,
+         correctCount: 1, startedAt: '2026-06-22T09:00:00Z', completedAt: '2026-06-22T09:10:00Z',
+         exerciseIds: ['ex-b', 'ex-a'] }],                       // (1) session
+      [{ exerciseId: 'ex-a', type: 'cloze', content: { p: 'a' }, score: 0.2,
+         response: { answer: 'x' }, evaluatedAt: '2026-06-22T09:05:00Z' },
+       { exerciseId: 'ex-b', type: 'cloze', content: { p: 'b' }, score: 1,
+         response: { answer: 'y' }, evaluatedAt: '2026-06-22T09:02:00Z',
+         historyId: 'h-b' }],                                     // (2) history
+      [{ exerciseId: 'ex-a', errorType: 'grammar', severity: 'major',
+         wrongText: 'x', correction: 'X', errorGrammarPointKey: null }], // (3) errors
+      [{ exerciseId: 'ex-b', category: 'wrong_answer', note: null,
+         status: 'open', createdAt: '2026-06-22T09:03:00Z' }],    // (4) flags
+    );
+    const res = await app.request(`/admin/activity/sessions/${SID}`, undefined, adminEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { exercises: Array<{ exerciseId: string; errors: unknown[]; flag: unknown }> };
+    // exerciseIds order is ['ex-b','ex-a'] → preserved
+    expect(body.exercises.map((e) => e.exerciseId)).toEqual(['ex-b', 'ex-a']);
+    expect(body.exercises[0].flag).not.toBeNull();      // ex-b has the flag
+    expect(body.exercises[1].errors).toHaveLength(1);   // ex-a has the error
+  });
+
+  it('returns 404 for an unknown session', async () => {
+    queryQueue.push([]); // (1) session → empty
+    const res = await app.request(`/admin/activity/sessions/${SID}`, undefined, adminEnv);
+    expect(res.status).toBe(404);
+    expect(((await res.json()) as { code: string }).code).toBe('NOT_FOUND');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /admin/activity/failures
+// ---------------------------------------------------------------------------
+
+describe('GET /admin/activity/failures', () => {
+  it('returns per-exercise failure aggregates', async () => {
+    queryQueue.push([
+      { exerciseId: 'e1', language: 'TR', difficulty: 'A2', type: 'cloze', grammarPointKey: 'tr-a2-x',
+        attempts: 10, distinctUsers: 6, failCount: 7, avgScore: 0.31, qualityScore: 0.8, openFlags: 1 },
+    ]);
+    const res = await app.request('/admin/activity/failures', undefined, adminEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Array<{ exerciseId: string; failRate: number; distinctUsers: number }>;
+    expect(body[0].exerciseId).toBe('e1');
+    expect(body[0].failRate).toBeCloseTo(0.7);
+    expect(body[0].distinctUsers).toBe(6);
+  });
+
+  it('rejects minAttempts below 1 with 400', async () => {
+    const res = await app.request('/admin/activity/failures?minAttempts=0', undefined, adminEnv);
+    expect(res.status).toBe(400);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /admin/activity/roster
+// ---------------------------------------------------------------------------
+
+describe('GET /admin/activity/roster', () => {
+  it('returns per-user activity aggregates ordered by last active', async () => {
+    queryQueue.push([
+      { userId: 'u1', lastActiveAt: '2026-06-22T10:00:00Z', sessions7d: 3, sessions30d: 9,
+        drills7d: 20, drills30d: 75, languages: ['TR', 'ES'], avgScore30d: 0.62, aiEvents7d: 21 },
+    ]);
+    const res = await app.request('/admin/activity/roster', undefined, adminEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Array<{ userId: string; drills7d: number; languages: string[] }>;
+    expect(body[0].userId).toBe('u1');
+    expect(body[0].drills7d).toBe(20);
+    expect(body[0].languages).toEqual(['TR', 'ES']);
+  });
+
+  it('rejects an invalid limit with 400', async () => {
+    const res = await app.request('/admin/activity/roster?limit=0', undefined, adminEnv);
+    expect(res.status).toBe(400);
   });
 });

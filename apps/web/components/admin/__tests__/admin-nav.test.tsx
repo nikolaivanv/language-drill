@@ -26,10 +26,10 @@ vi.mock('next/link', () => ({
 describe('AdminNav', () => {
   it('exposes Moderation/Content/Pool/Invites destinations in order', () => {
     expect(ADMIN_NAV.map((d) => d.href)).toEqual([
-      '/admin/moderation', '/admin/flags', '/admin/content', '/admin/pool', '/admin/invites', '/admin/audit', '/admin/capacity', '/admin/curriculum',
+      '/admin/moderation', '/admin/flags', '/admin/content', '/admin/pool', '/admin/invites', '/admin/audit', '/admin/capacity', '/admin/activity', '/admin/curriculum',
     ]);
     expect(ADMIN_NAV.map((d) => d.label)).toEqual([
-      'Moderation', 'User flags', 'Content', 'Pool', 'Invites', 'Audit', 'Usage & cost', 'Curriculum',
+      'Moderation', 'User flags', 'Content', 'Pool', 'Invites', 'Audit', 'Usage & cost', 'Activity', 'Curriculum',
     ]);
   });
 

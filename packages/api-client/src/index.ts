@@ -439,6 +439,16 @@ export {
 export {
   useFlagExercise, useUserFlagsQueue, useResolveUserFlag, type UserFlagStatus,
 } from './hooks/useUserFlags';
+export {
+  ActivitySessionListItemSchema, type ActivitySessionListItem,
+  ActivitySessionDetailSchema, type ActivitySessionDetail,
+  ActivityFailureItemSchema, type ActivityFailureItem,
+  ActivityRosterItemSchema, type ActivityRosterItem,
+} from './schemas/admin-activity';
+export { useActivitySessions, type ActivitySessionsParams } from './hooks/useActivitySessions';
+export { useActivitySessionDetail } from './hooks/useActivitySessionDetail';
+export { useActivityFailures, type ActivityFailuresParams } from './hooks/useActivityFailures';
+export { useActivityRoster, type ActivityRosterParams } from './hooks/useActivityRoster';
 export { useEmailPreferences } from './hooks/useEmailPreferences';
 export { useUpdateWeeklySummary } from './hooks/useUpdateWeeklySummary';
 export {

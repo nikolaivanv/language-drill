@@ -1,7 +1,7 @@
 import { randomInt, randomUUID } from 'node:crypto';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { and, asc, count, desc, eq, gte, inArray, isNotNull, sql, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, inArray, isNotNull, or, sql, type SQL } from 'drizzle-orm';
 import {
   ALL_CURRICULA,
   CURRICULUM_VERSION_BY_LANGUAGE,
@@ -11,9 +11,12 @@ import {
   curriculumOrderOf,
   decideDemotion,
   enumerateCurriculumCells,
+  errorObservations,
+  exerciseFlags,
   exercises,
   generationJobs,
   invitations,
+  practiceSessions,
   reconstructDraftAndSpec,
   requireEnv,
   targetCellSize,
@@ -57,6 +60,10 @@ const PoolStatusQuerySchema = z.object({
 const admin = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 admin.use('/admin/*', authMiddleware, adminMiddleware);
+
+// Tolerates both Date (production Drizzle) and string (test mock) date values.
+const toIso = (v: Date | string | null): string | null =>
+  v == null ? null : typeof v === 'string' ? v : v.toISOString();
 
 // ---------------------------------------------------------------------------
 // GET /admin/pool-status — per-cell exercise counts, last refill, depletion
@@ -1448,6 +1455,363 @@ admin.get('/admin/capacity', async (c) => {
     .slice(0, 10);
 
   return c.json({ killSwitch, globalDailyCap, usage24h: { total, byEventType }, topConsumers });
+});
+
+// ---------------------------------------------------------------------------
+// GET /admin/activity/sessions — problematic session feed
+// ---------------------------------------------------------------------------
+//
+// "Problematic" = open exercise flag OR abandoned (started > 30m ago and still
+// open) OR low-score (completed with <50% correct). Results are windowed with
+// default limit 25, ordered flagged > abandoned > low_score then newest-first.
+
+const ActivitySessionsQuerySchema = z.object({
+  language: z.enum(['ES', 'DE', 'TR']).optional(),
+  userId: z.string().min(1).optional(),
+  all: z.enum(['true', 'false']).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+});
+
+type ActivitySessionRow = {
+  sessionId: string;
+  userId: string;
+  language: string;
+  difficulty: string;
+  exerciseCount: number;
+  correctCount: number;
+  completedAt: Date | string | null;
+  startedAt: Date | string;
+  hasOpenFlag: boolean;
+  isAbandoned: boolean;
+  isLowScore: boolean;
+};
+
+admin.get('/admin/activity/sessions', async (c) => {
+  const parsed = ActivitySessionsQuerySchema.safeParse(c.req.query());
+  if (!parsed.success) {
+    return c.json({ error: 'Invalid query parameters', code: 'VALIDATION_ERROR', details: parsed.error.flatten() }, 400);
+  }
+  const { language, userId, all, limit = 25, offset = 0 } = parsed.data;
+
+  // Computed per-session signal flags. low-score: completed sessions whose correct/total ratio < 0.5; exerciseCount > 0 guards /0.
+  const hasOpenFlag = sql<boolean>`EXISTS (
+    SELECT 1 FROM ${exerciseFlags} ef
+    JOIN ${userExerciseHistory} ueh ON ueh.id = ef.history_id
+    WHERE ueh.session_id = ${practiceSessions.id} AND ef.status = 'open'
+  )`;
+  const isAbandoned = sql<boolean>`${practiceSessions.completedAt} IS NULL AND ${practiceSessions.startedAt} < NOW() - INTERVAL '30 minutes'`;
+  const isLowScore = sql<boolean>`${practiceSessions.completedAt} IS NOT NULL AND ${practiceSessions.exerciseCount} > 0 AND (${practiceSessions.correctCount}::float / ${practiceSessions.exerciseCount}) < 0.5`;
+
+  const conditions: SQL[] = [];
+  if (language) conditions.push(eq(practiceSessions.language, language));
+  if (userId) conditions.push(eq(practiceSessions.userId, userId));
+  const problematic = or(hasOpenFlag, isAbandoned, isLowScore)!;
+  if (all !== 'true') conditions.push(problematic);
+
+  const rows = (await db
+    .select({
+      sessionId: practiceSessions.id,
+      userId: practiceSessions.userId,
+      language: practiceSessions.language,
+      difficulty: practiceSessions.difficulty,
+      exerciseCount: practiceSessions.exerciseCount,
+      correctCount: practiceSessions.correctCount,
+      completedAt: practiceSessions.completedAt,
+      startedAt: practiceSessions.startedAt,
+      hasOpenFlag,
+      isAbandoned,
+      isLowScore,
+    })
+    .from(practiceSessions)
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(desc(practiceSessions.startedAt))
+    .limit(limit)
+    .offset(offset)) as ActivitySessionRow[];
+
+  // Rank: flagged(0) > abandoned(1) > low_score(2), then newest-first (already sorted by query).
+  const rank = (r: ActivitySessionRow) => (r.hasOpenFlag ? 0 : r.isAbandoned ? 1 : 2);
+  const ranked = [...rows].sort((a, b) => rank(a) - rank(b) || (b.startedAt > a.startedAt ? 1 : -1));
+
+  const items = ranked.map((r) => {
+    const signals: ('flagged' | 'abandoned' | 'low_score')[] = [];
+    if (r.hasOpenFlag) signals.push('flagged');
+    if (r.isAbandoned) signals.push('abandoned');
+    if (r.isLowScore) signals.push('low_score');
+    return {
+      sessionId: r.sessionId,
+      userId: r.userId,
+      language: r.language,
+      difficulty: r.difficulty,
+      exerciseCount: r.exerciseCount,
+      correctCount: r.correctCount,
+      completedAt: toIso(r.completedAt),
+      startedAt: toIso(r.startedAt)!,
+      signals,
+      primarySignal: signals[0] ?? null,
+    };
+  });
+  return c.json(items);
+});
+
+// ---------------------------------------------------------------------------
+// GET /admin/activity/sessions/:id — session drill-down detail
+// ---------------------------------------------------------------------------
+
+const SessionIdSchema = z.string().uuid();
+
+admin.get('/admin/activity/sessions/:id', async (c) => {
+  const idParsed = SessionIdSchema.safeParse(c.req.param('id'));
+  if (!idParsed.success) {
+    return c.json({ error: 'Invalid session id', code: 'VALIDATION_ERROR' }, 400);
+  }
+  const sessionId = idParsed.data;
+
+  const sessionRows = (await db
+    .select({
+      sessionId: practiceSessions.id,
+      userId: practiceSessions.userId,
+      language: practiceSessions.language,
+      difficulty: practiceSessions.difficulty,
+      exerciseCount: practiceSessions.exerciseCount,
+      correctCount: practiceSessions.correctCount,
+      startedAt: practiceSessions.startedAt,
+      completedAt: practiceSessions.completedAt,
+      exerciseIds: practiceSessions.exerciseIds,
+    })
+    .from(practiceSessions)
+    .where(eq(practiceSessions.id, sessionId))
+    .limit(1)) as Array<{
+      sessionId: string; userId: string; language: string; difficulty: string;
+      exerciseCount: number; correctCount: number; startedAt: Date | string;
+      completedAt: Date | string | null; exerciseIds: string[];
+    }>;
+
+  if (sessionRows.length === 0) {
+    return c.json({ error: 'Session not found', code: 'NOT_FOUND' }, 404);
+  }
+  const session = sessionRows[0];
+
+  const [historyRows, errorRows, flagRows] = await Promise.all([
+    db
+      .select({
+        exerciseId: exercises.id,
+        type: exercises.type,
+        content: exercises.contentJson,
+        score: userExerciseHistory.score,
+        response: userExerciseHistory.responseJson,
+        evaluatedAt: userExerciseHistory.evaluatedAt,
+        historyId: userExerciseHistory.id,
+      })
+      .from(userExerciseHistory)
+      .innerJoin(exercises, eq(userExerciseHistory.exerciseId, exercises.id))
+      .where(eq(userExerciseHistory.sessionId, sessionId)),
+    db
+      .select({
+        exerciseId: errorObservations.exerciseId,
+        errorType: errorObservations.errorType,
+        severity: errorObservations.severity,
+        wrongText: errorObservations.wrongText,
+        correction: errorObservations.correction,
+        errorGrammarPointKey: errorObservations.errorGrammarPointKey,
+      })
+      .from(errorObservations)
+      .where(eq(errorObservations.sessionId, sessionId)),
+    db
+      .select({
+        exerciseId: exerciseFlags.exerciseId,
+        category: exerciseFlags.category,
+        note: exerciseFlags.note,
+        status: exerciseFlags.status,
+        createdAt: exerciseFlags.createdAt,
+      })
+      .from(exerciseFlags)
+      .innerJoin(userExerciseHistory, eq(exerciseFlags.historyId, userExerciseHistory.id))
+      .where(and(eq(userExerciseHistory.sessionId, sessionId), eq(exerciseFlags.status, 'open'))),
+  ]);
+
+  const historyByExercise = new Map(historyRows.map((h) => [h.exerciseId, h]));
+  const errorsByExercise = new Map<string, typeof errorRows>();
+  for (const e of errorRows) {
+    const list = errorsByExercise.get(e.exerciseId) ?? [];
+    list.push(e);
+    errorsByExercise.set(e.exerciseId, list);
+  }
+  const flagByExercise = new Map(flagRows.map((f) => [f.exerciseId, f]));
+
+  // Preserve session.exerciseIds order; fall back to any history rows not in the array.
+  const orderedIds = [
+    ...session.exerciseIds,
+    ...historyRows.map((h) => h.exerciseId).filter((id) => !session.exerciseIds.includes(id)),
+  ];
+
+  const exercisesOut = orderedIds.map((exerciseId, order) => {
+    const h = historyByExercise.get(exerciseId);
+    const flag = flagByExercise.get(exerciseId);
+    return {
+      exerciseId,
+      order,
+      type: h?.type ?? null,
+      content: h?.content ?? null,
+      score: h?.score ?? null,
+      response: h?.response ?? null,
+      evaluatedAt: h ? toIso(h.evaluatedAt as Date | string | null) : null,
+      errors: (errorsByExercise.get(exerciseId) ?? []).map((e) => ({
+        errorType: e.errorType, severity: e.severity, wrongText: e.wrongText,
+        correction: e.correction, errorGrammarPointKey: e.errorGrammarPointKey,
+      })),
+      flag: flag
+        ? { category: flag.category, note: flag.note, status: flag.status, createdAt: toIso(flag.createdAt as Date | string)! }
+        : null,
+    };
+  });
+
+  return c.json({
+    session: {
+      sessionId: session.sessionId, userId: session.userId, language: session.language,
+      difficulty: session.difficulty, exerciseCount: session.exerciseCount,
+      correctCount: session.correctCount, startedAt: toIso(session.startedAt)!,
+      completedAt: toIso(session.completedAt),
+    },
+    exercises: exercisesOut,
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /admin/activity/failures — per-exercise failure-aggregate (most-failed exercises)
+// ---------------------------------------------------------------------------
+
+const ActivityFailuresQuerySchema = z.object({
+  language: z.enum(['ES', 'DE', 'TR']).optional(),
+  level: z.enum(['A1', 'A2', 'B1', 'B2']).optional(),
+  type: z.string().optional(),
+  grammarPointKey: z.string().optional(),
+  windowDays: z.coerce.number().int().min(1).max(365).optional(),
+  minAttempts: z.coerce.number().int().min(1).max(1000).optional(),
+  limit: z.coerce.number().int().min(1).max(200).optional(),
+});
+
+admin.get('/admin/activity/failures', async (c) => {
+  const parsed = ActivityFailuresQuerySchema.safeParse(c.req.query());
+  if (!parsed.success) {
+    return c.json({ error: 'Invalid query parameters', code: 'VALIDATION_ERROR', details: parsed.error.flatten() }, 400);
+  }
+  const { language, level, type, grammarPointKey, windowDays = 30, minAttempts = 5, limit = 50 } = parsed.data;
+
+  const conditions: SQL[] = [
+    gte(userExerciseHistory.evaluatedAt, sql`NOW() - (${windowDays}::text || ' days')::interval`),
+  ];
+  if (language) conditions.push(eq(exercises.language, language));
+  if (level) conditions.push(eq(exercises.difficulty, level));
+  if (type) conditions.push(eq(exercises.type, type));
+  if (grammarPointKey) conditions.push(eq(exercises.grammarPointKey, grammarPointKey));
+
+  const openFlagsSubquery = sql<number>`(
+    SELECT COUNT(*)::int FROM ${exerciseFlags} ef
+    WHERE ef.exercise_id = ${exercises.id} AND ef.status = 'open'
+  )`;
+
+  const rows = (await db
+    .select({
+      exerciseId: exercises.id,
+      language: exercises.language,
+      difficulty: exercises.difficulty,
+      type: exercises.type,
+      grammarPointKey: exercises.grammarPointKey,
+      qualityScore: exercises.qualityScore,
+      attempts: sql<number>`COUNT(*)::int`,
+      distinctUsers: sql<number>`COUNT(DISTINCT ${userExerciseHistory.userId})::int`,
+      failCount: sql<number>`COUNT(*) FILTER (WHERE ${userExerciseHistory.score} < 0.5)::int`,
+      avgScore: sql<number>`AVG(${userExerciseHistory.score})::float`,
+      openFlags: openFlagsSubquery,
+    })
+    .from(userExerciseHistory)
+    .innerJoin(exercises, eq(userExerciseHistory.exerciseId, exercises.id))
+    .where(and(...conditions))
+    .groupBy(exercises.id)
+    .having(sql`COUNT(*) >= ${minAttempts}`)
+    .orderBy(desc(sql`COUNT(*) FILTER (WHERE ${userExerciseHistory.score} < 0.5)`))
+    .limit(limit)) as Array<{
+      exerciseId: string; language: string | null; difficulty: string | null; type: string | null;
+      grammarPointKey: string | null; qualityScore: number | null; attempts: number;
+      distinctUsers: number; failCount: number; avgScore: number; openFlags: number;
+    }>;
+
+  const items = rows.map((r) => ({
+    exerciseId: r.exerciseId,
+    language: r.language,
+    difficulty: r.difficulty,
+    type: r.type,
+    grammarPointKey: r.grammarPointKey,
+    attempts: r.attempts,
+    distinctUsers: r.distinctUsers,
+    failRate: r.attempts > 0 ? r.failCount / r.attempts : 0,
+    avgScore: r.avgScore ?? 0,
+    qualityScore: r.qualityScore ?? null,
+    openFlags: r.openFlags,
+  }));
+  return c.json(items);
+});
+
+// ---------------------------------------------------------------------------
+// GET /admin/activity/roster — per-user activity aggregates (roster)
+// ---------------------------------------------------------------------------
+
+const ActivityRosterQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(500).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+});
+
+admin.get('/admin/activity/roster', async (c) => {
+  const parsed = ActivityRosterQuerySchema.safeParse(c.req.query());
+  if (!parsed.success) {
+    return c.json(
+      { error: 'Invalid query parameters', code: 'VALIDATION_ERROR', details: parsed.error.flatten() },
+      400,
+    );
+  }
+  const { limit = 100, offset = 0 } = parsed.data;
+
+  const sessions7d = sql<number>`(SELECT COUNT(*)::int FROM ${practiceSessions} ps WHERE ps.user_id = ${userExerciseHistory.userId} AND ps.started_at >= NOW() - INTERVAL '7 days')`;
+  const sessions30d = sql<number>`(SELECT COUNT(*)::int FROM ${practiceSessions} ps WHERE ps.user_id = ${userExerciseHistory.userId} AND ps.started_at >= NOW() - INTERVAL '30 days')`;
+  const aiEvents7d = sql<number>`(SELECT COUNT(*)::int FROM ${usageEvents} ue WHERE ue.user_id = ${userExerciseHistory.userId} AND ue.created_at >= NOW() - INTERVAL '7 days')`;
+
+  const rows = (await db
+    .select({
+      userId: userExerciseHistory.userId,
+      lastActiveAt: sql<Date | null>`MAX(${userExerciseHistory.evaluatedAt})`,
+      drills7d: sql<number>`COUNT(*) FILTER (WHERE ${userExerciseHistory.evaluatedAt} >= NOW() - INTERVAL '7 days')::int`,
+      drills30d: sql<number>`COUNT(*) FILTER (WHERE ${userExerciseHistory.evaluatedAt} >= NOW() - INTERVAL '30 days')::int`,
+      avgScore30d: sql<number | null>`AVG(${userExerciseHistory.score}) FILTER (WHERE ${userExerciseHistory.evaluatedAt} >= NOW() - INTERVAL '30 days')`,
+      languages: sql<string[]>`COALESCE(ARRAY_AGG(DISTINCT ${exercises.language}) FILTER (WHERE ${exercises.language} IS NOT NULL), ARRAY[]::text[])`,
+      sessions7d,
+      sessions30d,
+      aiEvents7d,
+    })
+    .from(userExerciseHistory)
+    .leftJoin(exercises, eq(userExerciseHistory.exerciseId, exercises.id))
+    .groupBy(userExerciseHistory.userId)
+    .orderBy(sql`MAX(${userExerciseHistory.evaluatedAt}) DESC NULLS LAST`)
+    .limit(limit)
+    .offset(offset)) as Array<{
+      userId: string | null; lastActiveAt: Date | string | null; drills7d: number; drills30d: number;
+      avgScore30d: number | null; languages: string[]; sessions7d: number; sessions30d: number; aiEvents7d: number;
+    }>;
+
+  const items = rows
+    .filter((r) => r.userId != null)
+    .map((r) => ({
+      userId: r.userId as string,
+      lastActiveAt: toIso(r.lastActiveAt),
+      sessions7d: r.sessions7d,
+      sessions30d: r.sessions30d,
+      drills7d: r.drills7d,
+      drills30d: r.drills30d,
+      languages: r.languages,
+      avgScore30d: r.avgScore30d ?? null,
+      aiEvents7d: r.aiEvents7d,
+    }));
+  return c.json(items);
 });
 
 export default admin;
