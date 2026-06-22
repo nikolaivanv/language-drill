@@ -1711,10 +1711,20 @@ admin.get('/admin/activity/failures', async (c) => {
   if (type) conditions.push(eq(exercises.type, type));
   if (grammarPointKey) conditions.push(eq(exercises.grammarPointKey, grammarPointKey));
 
-  const openFlagsSubquery = sql<number>`(
-    SELECT COUNT(*)::int FROM ${exerciseFlags} ef
-    WHERE ef.exercise_id = exercises.id AND ef.status = 'open'
-  )`;
+  // Open-flag counts as a pre-aggregated LEFT JOIN (one row per exercise) instead
+  // of a per-row correlated subquery: avoids the SELECT-projection column-
+  // qualification foot-gun (see the activity-feed comment / the prod incident)
+  // and runs a single grouped scan of exercise_flags rather than one subquery per
+  // result row. COALESCE(MAX(...),0) reads the (constant-per-group) joined count.
+  const flagAgg = db
+    .select({
+      exerciseId: exerciseFlags.exerciseId,
+      openFlags: sql<number>`COUNT(*)::int`.as('open_flags'),
+    })
+    .from(exerciseFlags)
+    .where(eq(exerciseFlags.status, 'open'))
+    .groupBy(exerciseFlags.exerciseId)
+    .as('flag_agg');
 
   const rows = (await db
     .select({
@@ -1728,10 +1738,11 @@ admin.get('/admin/activity/failures', async (c) => {
       distinctUsers: sql<number>`COUNT(DISTINCT ${userExerciseHistory.userId})::int`,
       failCount: sql<number>`COUNT(*) FILTER (WHERE ${userExerciseHistory.score} < 0.5)::int`,
       avgScore: sql<number>`AVG(${userExerciseHistory.score})::float`,
-      openFlags: openFlagsSubquery,
+      openFlags: sql<number>`COALESCE(MAX(${flagAgg.openFlags}), 0)::int`,
     })
     .from(userExerciseHistory)
     .innerJoin(exercises, eq(userExerciseHistory.exerciseId, exercises.id))
+    .leftJoin(flagAgg, eq(flagAgg.exerciseId, exercises.id))
     .where(and(...conditions))
     .groupBy(exercises.id)
     .having(sql`COUNT(*) >= ${minAttempts}`)
@@ -1777,14 +1788,29 @@ admin.get('/admin/activity/roster', async (c) => {
   }
   const { limit = 100, offset = 0 } = parsed.data;
 
-  // Outer correlation written as a qualified literal (`user_exercise_history.user_id`),
-  // not `${userExerciseHistory.userId}`: Drizzle renders the interpolated column
-  // unqualified inside these SELECT-projection subqueries, where a bare `user_id`
-  // binds to the inner `ps`/`ue` table instead of the outer row — yielding global
-  // (not per-user) counts. See hasOpenFlag above for the same gotcha.
-  const sessions7d = sql<number>`(SELECT COUNT(*)::int FROM ${practiceSessions} ps WHERE ps.user_id = user_exercise_history.user_id AND ps.started_at >= NOW() - INTERVAL '7 days')`;
-  const sessions30d = sql<number>`(SELECT COUNT(*)::int FROM ${practiceSessions} ps WHERE ps.user_id = user_exercise_history.user_id AND ps.started_at >= NOW() - INTERVAL '30 days')`;
-  const aiEvents7d = sql<number>`(SELECT COUNT(*)::int FROM ${usageEvents} ue WHERE ue.user_id = user_exercise_history.user_id AND ue.created_at >= NOW() - INTERVAL '7 days')`;
+  // Per-user session / AI-event counts as pre-aggregated LEFT JOINs (one row per
+  // user) instead of per-row correlated subqueries: avoids the SELECT-projection
+  // column-qualification foot-gun (the bug that returned GLOBAL counts before the
+  // qualified-literal fix; see the activity-feed comment) and replaces three
+  // subqueries-per-row with two grouped scans. COALESCE(MAX(...),0) reads the
+  // (constant-per-group) joined count.
+  const sessionAgg = db
+    .select({
+      userId: practiceSessions.userId,
+      sessions7d: sql<number>`COUNT(*) FILTER (WHERE ${practiceSessions.startedAt} >= NOW() - INTERVAL '7 days')::int`.as('sessions_7d'),
+      sessions30d: sql<number>`COUNT(*) FILTER (WHERE ${practiceSessions.startedAt} >= NOW() - INTERVAL '30 days')::int`.as('sessions_30d'),
+    })
+    .from(practiceSessions)
+    .groupBy(practiceSessions.userId)
+    .as('session_agg');
+  const aiEventAgg = db
+    .select({
+      userId: usageEvents.userId,
+      aiEvents7d: sql<number>`COUNT(*) FILTER (WHERE ${usageEvents.createdAt} >= NOW() - INTERVAL '7 days')::int`.as('ai_events_7d'),
+    })
+    .from(usageEvents)
+    .groupBy(usageEvents.userId)
+    .as('ai_event_agg');
 
   const rows = (await db
     .select({
@@ -1794,12 +1820,14 @@ admin.get('/admin/activity/roster', async (c) => {
       drills30d: sql<number>`COUNT(*) FILTER (WHERE ${userExerciseHistory.evaluatedAt} >= NOW() - INTERVAL '30 days')::int`,
       avgScore30d: sql<number | null>`AVG(${userExerciseHistory.score}) FILTER (WHERE ${userExerciseHistory.evaluatedAt} >= NOW() - INTERVAL '30 days')`,
       languages: sql<string[]>`COALESCE(ARRAY_AGG(DISTINCT ${exercises.language}) FILTER (WHERE ${exercises.language} IS NOT NULL), ARRAY[]::text[])`,
-      sessions7d,
-      sessions30d,
-      aiEvents7d,
+      sessions7d: sql<number>`COALESCE(MAX(${sessionAgg.sessions7d}), 0)::int`,
+      sessions30d: sql<number>`COALESCE(MAX(${sessionAgg.sessions30d}), 0)::int`,
+      aiEvents7d: sql<number>`COALESCE(MAX(${aiEventAgg.aiEvents7d}), 0)::int`,
     })
     .from(userExerciseHistory)
     .leftJoin(exercises, eq(userExerciseHistory.exerciseId, exercises.id))
+    .leftJoin(sessionAgg, eq(sessionAgg.userId, userExerciseHistory.userId))
+    .leftJoin(aiEventAgg, eq(aiEventAgg.userId, userExerciseHistory.userId))
     .groupBy(userExerciseHistory.userId)
     .orderBy(sql`MAX(${userExerciseHistory.evaluatedAt}) DESC NULLS LAST`)
     .limit(limit)
