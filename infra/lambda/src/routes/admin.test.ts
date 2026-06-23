@@ -1994,6 +1994,12 @@ describe('GET /admin/activity/sessions', () => {
     expect(((await res.json()) as { code: string }).code).toBe('VALIDATION_ERROR');
   });
 
+  it('rejects a non-date from/to value with 400', async () => {
+    const res = await app.request('/admin/activity/sessions?from=abc', undefined, adminEnv);
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as { code: string }).code).toBe('VALIDATION_ERROR');
+  });
+
   it('returns 403 for a non-admin', async () => {
     const res = await app.request('/admin/activity/sessions', undefined,
       { event: { requestContext: { authorizer: { jwt: { claims: { sub: 'nope' } } } } } });

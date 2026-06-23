@@ -1468,8 +1468,11 @@ type RiskValue = (typeof RISK_VALUES)[number];
 
 const ActivitySessionsQuerySchema = z.object({
   user: z.string().min(1).optional(),
-  from: z.string().min(1).optional(),
-  to: z.string().min(1).optional(),
+  // Must start with a YYYY-MM-DD date so an invalid value 400s here rather than
+  // reaching Postgres as `'abc'::date` and throwing an unhandled 500. The UI
+  // sends <input type="date"> values; a trailing time component is tolerated.
+  from: z.string().regex(/^\d{4}-\d{2}-\d{2}/).optional(),
+  to: z.string().regex(/^\d{4}-\d{2}-\d{2}/).optional(),
   limit: z.coerce.number().int().min(1).max(100).optional(),
   offset: z.coerce.number().int().min(0).optional(),
 });
