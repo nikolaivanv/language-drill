@@ -18,6 +18,8 @@ const items: PoolStatusItem[] = [
     language: 'ES', level: 'B1', type: 'cloze', grammarPointKey: 'es-b1-present-subjunctive',
     approved: 12, flagged: 1, rejected: 4, lastRefilledAt: null, depletionRate7d: 4.1,
     targetSize: 75, generationTarget: 30, coverageDistribution: null,
+    status: 'saturated-dedup',
+    lastJob: { approvedCount: 1, requestedCount: 20, dedupGivenUpCount: 18, curriculumVersion: '2026-06-17' },
   },
 ];
 
@@ -29,5 +31,11 @@ describe('PoolCoverageTable', () => {
     expect(screen.getByTestId('cell-detail')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /es-b1-present-subjunctive/i }));
     expect(screen.queryByTestId('cell-detail')).not.toBeInTheDocument();
+  });
+
+  it('renders a Status column with the human label for the cell status', () => {
+    render(<PoolCoverageTable items={items} />);
+    expect(screen.getByRole('columnheader', { name: /status/i })).toBeInTheDocument();
+    expect(screen.getByText('Saturated')).toBeInTheDocument();
   });
 });

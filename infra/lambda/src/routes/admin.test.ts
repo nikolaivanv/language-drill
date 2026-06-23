@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, beforeAll, afterAll, afterEach } 
 import { Hono } from 'hono';
 import {
   ALL_CURRICULA,
+  CURRICULUM_VERSION_ES,
   enumerateCurriculumCells,
 } from '@language-drill/db';
 
@@ -213,7 +214,10 @@ describe('GET /admin/pool-status', () => {
   });
 
   it('returns 200 with all-zero counts for every curriculum cell on an empty DB', async () => {
-    queryQueue.push([], [], [], []); // coverage (db.execute shifts first), counts, lastRefilled, depletion — all empty
+    // Both db.execute-based queries (recentJobs loader, then coverage) shift
+    // synchronously at Promise.all build; the two selects (counts, depletion)
+    // drain lazily in array order. All empty here, so order is moot.
+    queryQueue.push([], [], [], []); // recentJobs, coverage, counts, depletion — all empty
 
     const res = await app.request('/admin/pool-status', undefined, adminEnv);
     expect(res.status).toBe(200);
@@ -225,6 +229,9 @@ describe('GET /admin/pool-status', () => {
       expect(item.flagged).toBe(0);
       expect(item.rejected).toBe(0);
       expect(item.lastRefilledAt).toBeNull();
+      // No succeeded job → no last-run evidence; scheduler would enqueue.
+      expect(item.lastJob).toBeNull();
+      expect(item.status).toBe('never-run');
       expect(item.depletionRate7d).toBe(0);
       // Idle cells (0 depletion) floor at the demand tier of 50...
       expect(item.targetSize).toBe(50);
@@ -243,7 +250,7 @@ describe('GET /admin/pool-status', () => {
   });
 
   it('filters to only ES cells when ?language=ES', async () => {
-    queryQueue.push([], [], [], []); // coverage (db.execute), counts, lastRefilled, depletion
+    queryQueue.push([], [], [], []); // recentJobs, coverage, counts, depletion
 
     const res = await app.request(
       '/admin/pool-status?language=ES',
@@ -270,26 +277,32 @@ describe('GET /admin/pool-status', () => {
     expect(body.code).toBe('VALIDATION_ERROR');
   });
 
-  it('serialises lastRefilledAt as an ISO string when a cell has a successful job', async () => {
-    // Regression: production crashed with `lastRefilledAt.toISOString is not
-    // a function` once the first successful generation job populated
-    // `finished_at`. The route now relies on Drizzle to decode the
-    // MAX(timestamptz) aggregate to a Date (via `.mapWith(...)` on the
-    // query); this test pushes a Date to confirm the consumption path
-    // surfaces it as an ISO string in the response.
+  it('derives lastRefilledAt, lastJob, and status from the most recent succeeded job', async () => {
+    // `lastRefilledAt` now comes from the shared recent-job loader's
+    // `finished_at` (a Date) rather than a MAX() aggregate; the loader also
+    // feeds `decideEnqueue` so each cell carries its scheduler status + the
+    // last run's metrics. Regression guard: production once crashed with
+    // `lastRefilledAt.toISOString is not a function` — pushing a Date confirms
+    // the consumption path surfaces it as an ISO string.
     const refilledAt = new Date('2026-05-12T04:01:17.491Z');
-    // db.execute (coverage) shifts synchronously when Promise.all is built, so
-    // coverage comes first in the queue; the three selects drain in array order.
+    // Both db.execute queries shift synchronously at Promise.all build, in
+    // array order: recentJobs (loader) first, coverage second. The two selects
+    // (counts, depletion) drain lazily after, in array order.
     queryQueue.push(
-      [],   // Q4 coverage (db.execute — shifts first, synchronously)
-      [],   // Q1 counts
-      [     // Q2 lastRefilled
+      [     // recentJobs (db.execute via loader — shifts first, synchronously)
         {
-          cellKey: 'es:b1:cloze:es-b1-present-subjunctive',
-          lastRefilledAt: refilledAt,
+          cell_key: 'es:b1:cloze:es-b1-present-subjunctive',
+          approved_count: 40,
+          requested_count: 20,
+          dedup_given_up_count: 1,
+          curriculum_version: CURRICULUM_VERSION_ES,
+          coverage_outcome: null,
+          finished_at: refilledAt,
         },
       ],
-      [],   // Q3 depletion
+      [],   // coverage (db.execute — shifts second, synchronously)
+      [],   // counts (select — pool approved stays 0 for this cell)
+      [],   // depletion (select)
     );
 
     const res = await app.request('/admin/pool-status', undefined, adminEnv);
@@ -305,8 +318,17 @@ describe('GET /admin/pool-status', () => {
     );
     expect(match).toBeDefined();
     expect(match?.lastRefilledAt).toBe(refilledAt.toISOString());
+    expect(match?.lastJob).toEqual({
+      approvedCount: 40,
+      requestedCount: 20,
+      dedupGivenUpCount: 1,
+      curriculumVersion: CURRICULUM_VERSION_ES,
+    });
+    // Pool approved=0 < target, recent job productive (40 ≥ 3) + low dedup, and
+    // curriculum version matches → scheduler would enqueue → 'active'.
+    expect(match?.status).toBe('active');
 
-    // Cells without a matching successful job still serialise null.
+    // Cells without a matching successful job: null evidence, never-run.
     const unmatched = body.find(
       (item) =>
         item.language !== 'ES' ||
@@ -315,15 +337,19 @@ describe('GET /admin/pool-status', () => {
         item.grammarPointKey !== 'es-b1-present-subjunctive',
     );
     expect(unmatched?.lastRefilledAt).toBeNull();
+    expect(unmatched?.lastJob).toBeNull();
+    expect(unmatched?.status).toBe('never-run');
   });
 
   it('includes cells with zero approved exercises (the urgent-refill set)', async () => {
     // DB returns counts for ONE arbitrary cell only — every other cell must
     // still appear in the response with zeroed counts.
-    // db.execute (coverage) shifts synchronously first; selects drain in array order.
+    // The two db.execute queries (recentJobs, coverage) shift synchronously
+    // first in array order; the selects drain lazily after.
     queryQueue.push(
-      [],   // Q4 coverage (db.execute — shifts first, synchronously)
-      [     // Q1 counts
+      [],   // recentJobs (db.execute via loader)
+      [],   // coverage (db.execute)
+      [     // counts (select)
         {
           language: 'ES',
           difficulty: 'A1',
@@ -334,8 +360,7 @@ describe('GET /admin/pool-status', () => {
           rejected: 0,
         },
       ],
-      [],   // Q2 lastRefilled
-      [],   // Q3 depletion
+      [],   // depletion (select)
     );
 
     const res = await app.request('/admin/pool-status', undefined, adminEnv);
@@ -352,10 +377,10 @@ describe('GET /admin/pool-status', () => {
     // curriculum cross-product.
     const GRAMMAR_KEY = 'tr-a1-personal-suffixes';
 
-    // db.execute (coverage) shifts synchronously when Promise.all is built, before
-    // any select chains' .then() fires — so coverage rows go first in the queue.
-    // The mock rows simulate the SQL aggregate output (the SQL itself is not run
-    // against Postgres in this mocked test).
+    // The two db.execute queries shift synchronously at Promise.all build, in
+    // array order: recentJobs (loader) first, coverage second — so the coverage
+    // rows are the SECOND queue entry. The mock rows simulate the SQL aggregate
+    // output (the SQL itself is not run against Postgres in this mocked test).
     //
     // Two tagged approved exercises for the same cell produce 3 aggregate rows:
     //   exercise 1: person=3sg, polarity=affirmative
@@ -364,14 +389,14 @@ describe('GET /admin/pool-status', () => {
     //   {axis: "polarity", value: "affirmative",  n: 1}
     //   {axis: "polarity", value: "negative",     n: 1}
     queryQueue.push(
-      [   // Q4 coverage (db.execute — shifts first, synchronously)
+      [], // recentJobs (db.execute via loader — shifts first, synchronously)
+      [   // coverage (db.execute — shifts second, synchronously)
         { language: 'TR', difficulty: 'A1', type: 'cloze', grammarPointKey: GRAMMAR_KEY, axis: 'person',   value: '3sg',         n: 2 },
         { language: 'TR', difficulty: 'A1', type: 'cloze', grammarPointKey: GRAMMAR_KEY, axis: 'polarity', value: 'affirmative',  n: 1 },
         { language: 'TR', difficulty: 'A1', type: 'cloze', grammarPointKey: GRAMMAR_KEY, axis: 'polarity', value: 'negative',     n: 1 },
       ],
-      [], // Q1 counts
-      [], // Q2 lastRefilled
-      [], // Q3 depletion
+      [], // counts (select)
+      [], // depletion (select)
     );
 
     const res = await app.request('/admin/pool-status?language=TR&level=A1', undefined, adminEnv);

@@ -259,6 +259,7 @@ export {
 export {
   PoolStatusItemSchema,
   type PoolStatusItem,
+  type PoolCellStatus,
   GenerationStatsSchema,
   type GenerationStats,
 } from './schemas/pool-status';
