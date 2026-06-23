@@ -37,6 +37,11 @@ Thumbs.db
 # Claude Code local settings (user-specific, may contain account info)
 .claude/settings.local.json
 
+# Git worktrees — canonical location (see CLAUDE.md "Git Worktrees")
+.claude/worktrees/
+# Stray agent base-path debris — never a real worktree location
+.claire/
+
 # IDE
 .vscode/
 .idea/
