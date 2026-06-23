@@ -35,10 +35,13 @@ import {
   validateDraft,
   type ClaudeUsageBreakdown,
 } from '@language-drill/ai';
-import { formatReason, normalizeFlaggedReasons } from '@language-drill/shared';
+import { formatReason, normalizeFlaggedReasons, type LearningLanguage } from '@language-drill/shared';
 import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
 import { db } from '../db';
 import { resolveCellTarget } from '../generation/cell-targets';
+import { decideEnqueue } from '../generation/scheduler-decision';
+import { loadMostRecentSucceededJobPerCell } from '../generation/recent-jobs';
+import { cellStatusFromDecision } from '../generation/cell-status';
 import { parseGenerationJobMessage, type GenerationJobMessage } from '../generation/job-message';
 import { authMiddleware } from '../middleware/auth';
 import { adminMiddleware } from '../middleware/admin';
@@ -89,7 +92,7 @@ admin.get('/admin/pool-status', async (c) => {
   // rather than per-cell round-trips. The fourth (coverage) uses a raw
   // db.execute with a LATERAL unnest that the Drizzle query builder cannot
   // express; it runs alongside the three builder queries rather than serially.
-  const [countRows, lastRefilledRows, depletionRows, coverageResult] = await Promise.all([
+  const [countRows, recentJobByCell, depletionRows, coverageResult] = await Promise.all([
     db
       .select({
         language: exercises.language,
@@ -108,19 +111,11 @@ admin.get('/admin/pool-status', async (c) => {
         exercises.type,
         exercises.grammarPointKey,
       ),
-    db
-      .select({
-        cellKey: generationJobs.cellKey,
-        // `.mapWith(finishedAt)` reuses the column's timestamptz→Date decoder
-        // for the aggregate; the `sql<Date | null>` cast alone is types-only
-        // and the Neon driver returns raw `MAX(timestamptz)` as a string.
-        lastRefilledAt: sql<Date | null>`MAX(${generationJobs.finishedAt})`.mapWith(
-          generationJobs.finishedAt,
-        ),
-      })
-      .from(generationJobs)
-      .where(eq(generationJobs.status, 'succeeded'))
-      .groupBy(generationJobs.cellKey),
+    // Most recent succeeded job per cell — the same loader the scheduler uses.
+    // Feeds `decideEnqueue` (so each cell carries the exact next-tick status)
+    // and supplies `lastRefilledAt` from the job's `finishedAt`, replacing the
+    // standalone MAX(finishedAt) aggregate.
+    loadMostRecentSucceededJobPerCell(db),
     db
       .select({
         language: exercises.language,
@@ -182,18 +177,6 @@ admin.get('/admin/pool-status', async (c) => {
     });
   }
 
-  // Drizzle returns `timestamp(..., { withTimezone: true })` columns as Date
-  // objects; normalize to ISO strings so the wire shape stays stable across
-  // driver versions (rather than relying on JSON.stringify's implicit Date
-  // serialization).
-  const lastRefilledByCell = new Map<string, string | null>();
-  for (const row of lastRefilledRows) {
-    lastRefilledByCell.set(
-      row.cellKey,
-      row.lastRefilledAt ? row.lastRefilledAt.toISOString() : null,
-    );
-  }
-
   const consumedByCell = new Map<string, number>();
   for (const row of depletionRows) {
     consumedByCell.set(buildCellKeyFromRow(row), row.consumed7d);
@@ -237,6 +220,20 @@ admin.get('/admin/pool-status', async (c) => {
     };
     const consumed7d = consumedByCell.get(cellKey) ?? 0;
     const depletionRate7d = Math.round((consumed7d / 7) * 10) / 10;
+    const generationTarget = resolveCellTarget(cell);
+
+    // Mirror the scheduler's next-tick decision for this cell so the dashboard
+    // shows whether it will generate, has reached target, or is suppressed
+    // (and why). Reuses the same pure `decideEnqueue` the scheduler runs.
+    const recentJob = recentJobByCell.get(cellKey) ?? null;
+    const decision = decideEnqueue(
+      cell,
+      counts.approved,
+      generationTarget,
+      recentJob,
+      CURRICULUM_VERSION_BY_LANGUAGE[cell.language as LearningLanguage],
+    );
+
     return {
       language: cell.language,
       level: cell.cefrLevel,
@@ -245,7 +242,7 @@ admin.get('/admin/pool-status', async (c) => {
       approved: counts.approved,
       flagged: counts.flagged,
       rejected: counts.rejected,
-      lastRefilledAt: lastRefilledByCell.get(cellKey) ?? null,
+      lastRefilledAt: recentJob ? toIso(recentJob.finishedAt) : null,
       depletionRate7d,
       // `targetSize` is the demand-derived ideal pool size (depletion tiers,
       // floors at 50 for idle cells). `generationTarget` is what the scheduler
@@ -254,8 +251,19 @@ admin.get('/admin/pool-status', async (c) => {
       // reflects the real generation goal, and a generationTarget below
       // targetSize flags a cell whose target may need raising.
       targetSize: targetCellSize(depletionRate7d),
-      generationTarget: resolveCellTarget(cell),
+      generationTarget,
       coverageDistribution: coverageByCell.get(cellKey) ?? null,
+      // Scheduler status + the evidence behind it (the most recent succeeded
+      // job's counts). `lastJob` is null when the cell has never run.
+      status: cellStatusFromDecision(decision, recentJob),
+      lastJob: recentJob
+        ? {
+            approvedCount: recentJob.approvedCount,
+            requestedCount: recentJob.requestedCount,
+            dedupGivenUpCount: recentJob.dedupGivenUpCount,
+            curriculumVersion: recentJob.curriculumVersion,
+          }
+        : null,
     };
   });
 

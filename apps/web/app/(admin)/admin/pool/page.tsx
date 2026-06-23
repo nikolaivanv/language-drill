@@ -16,6 +16,7 @@ import { ExerciseType } from '@language-drill/shared';
 import { PoolCoverageTable } from './_components/pool-coverage-table';
 import { GrammarPointCombobox } from '../../../../components/admin/grammar-point-combobox';
 import { FilterSelect } from '../../../../components/admin/filter-select';
+import { DataTable, Th, Td } from '../../../../components/admin/data-table';
 
 type Tab = 'exercises' | 'theory';
 const EXERCISE_TYPES = Object.values(ExerciseType);
@@ -146,26 +147,38 @@ function PoolPageInner() {
                 <PoolCoverageTable items={items} />
               )}
               <section className="flex flex-col gap-2">
-                <h2 className="text-ink-soft text-[12px]">Generation quality (30d)</h2>
+                <h2 className="font-display text-[18px] font-semibold text-ink">Generation quality (30d)</h2>
                 {approvalRates.length === 0 ? (
                   <p className="text-ink-soft text-[13px]">No generation jobs in the past 30 days.</p>
                 ) : (
-                  <table className="text-[13px]">
+                  <DataTable>
                     <thead>
-                      <tr><th>Language</th><th>Level</th><th>Type</th><th>Approved</th><th>Flagged</th><th>Rejected</th>
-                        <th title="Slots where all dedup retries collided — already included in Rejected.">Dedup</th>
-                        <th title="approved / (approved + flagged + (rejected − dedup))">Rate %</th></tr>
+                      <tr>
+                        <Th>Language</Th>
+                        <Th>Level</Th>
+                        <Th>Type</Th>
+                        <Th align="right">Approved</Th>
+                        <Th align="right">Flagged</Th>
+                        <Th align="right">Rejected</Th>
+                        <Th align="right" title="Slots where all dedup retries collided — already included in Rejected.">Dedup</Th>
+                        <Th align="right" title="approved / (approved + flagged + (rejected − dedup))">Rate %</Th>
+                      </tr>
                     </thead>
                     <tbody>
                       {approvalRates.map((row) => (
                         <tr key={`${row.language}:${row.level}:${row.type}`}>
-                          <td>{row.language}</td><td>{row.level}</td><td>{row.type}</td>
-                          <td>{row.approvedCount}</td><td>{row.flaggedCount}</td><td>{row.rejectedCount}</td>
-                          <td>{row.dedupGivenUpCount}</td><td>{(row.approvalRate * 100).toFixed(1)}%</td>
+                          <Td>{row.language}</Td>
+                          <Td>{row.level}</Td>
+                          <Td>{row.type}</Td>
+                          <Td align="right">{row.approvedCount}</Td>
+                          <Td align="right">{row.flaggedCount}</Td>
+                          <Td align="right">{row.rejectedCount}</Td>
+                          <Td align="right">{row.dedupGivenUpCount}</Td>
+                          <Td align="right" className="font-medium">{(row.approvalRate * 100).toFixed(1)}%</Td>
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                  </DataTable>
                 )}
               </section>
             </>

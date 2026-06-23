@@ -149,6 +149,26 @@ export function PoolCellDetail({ item, fetchFn }: { item: PoolStatusItem; fetchF
         <Stat label="last refilled" value={item.lastRefilledAt ?? '—'} />
       </dl>
 
+      <section className="flex flex-col gap-1 border-b border-rule pb-3">
+        <h4 className={sectionLabel}>Last generation run</h4>
+        {item.lastJob ? (
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-ink-soft">
+            <span>
+              {item.lastJob.approvedCount} / {item.lastJob.requestedCount} approved
+            </span>
+            <span>dedup given up: {item.lastJob.dedupGivenUpCount}</span>
+            <span>curriculum version: {item.lastJob.curriculumVersion ?? '—'}</span>
+          </div>
+        ) : (
+          <p className="text-[12px] text-ink-soft">No generation run yet.</p>
+        )}
+        {item.status === 'low-yield' || item.status === 'saturated-dedup' ? (
+          <p className="text-[12px] text-ink-soft">
+            Suppressed — re-runs once the curriculum version is bumped.
+          </p>
+        ) : null}
+      </section>
+
       <div className="grid gap-4 md:grid-cols-2">
         <section className="flex flex-col gap-2">
           <h4 className={sectionLabel}>Refill</h4>

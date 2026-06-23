@@ -32,9 +32,43 @@ export const PoolStatusItemSchema = z.object({
   coverageDistribution: z
     .record(z.string(), z.record(z.string(), z.number()))
     .nullable(),
+  /**
+   * The scheduler decision this cell would receive on its next tick, mirrored
+   * from the server's `decideEnqueue` (single source of truth):
+   * - `active` — will generate (under target, last run productive).
+   * - `target-reached` — approved ≥ target; nothing to do.
+   * - `low-yield` — suppressed: last run produced < 3 net-new approvals.
+   * - `saturated-dedup` — suppressed: last run was dedup-heavy.
+   * - `never-run` — no succeeded job yet.
+   * - `out-of-scope` — level outside the Round-1 CEFR set (defensive; not
+   *   reachable for A1–B2).
+   * Suppression (`low-yield` / `saturated-dedup`) clears on a curriculum bump.
+   */
+  status: z.enum([
+    'active',
+    'target-reached',
+    'low-yield',
+    'saturated-dedup',
+    'never-run',
+    'out-of-scope',
+  ]),
+  /**
+   * Metrics from the most recent succeeded generation job — the evidence
+   * behind `status`. `null` when the cell has never run. `curriculumVersion`
+   * is null on legacy rows written before the column existed.
+   */
+  lastJob: z
+    .object({
+      approvedCount: z.number(),
+      requestedCount: z.number(),
+      dedupGivenUpCount: z.number(),
+      curriculumVersion: z.string().nullable(),
+    })
+    .nullable(),
 });
 
 export type PoolStatusItem = z.infer<typeof PoolStatusItemSchema>;
+export type PoolCellStatus = PoolStatusItem['status'];
 
 // ---------------------------------------------------------------------------
 // GET /admin/generation-stats response

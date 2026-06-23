@@ -24,6 +24,8 @@ const item: PoolStatusItem = {
   approved: 12, flagged: 1, rejected: 4, lastRefilledAt: '2026-06-01T00:00:00.000Z',
   depletionRate7d: 4.1, targetSize: 75, generationTarget: 30,
   coverageDistribution: { person: { '3sg': 8, '2pl': 1 } },
+  status: 'saturated-dedup',
+  lastJob: { approvedCount: 1, requestedCount: 20, dedupGivenUpCount: 18, curriculumVersion: '2026-06-17' },
 };
 const fetchFn = vi.fn();
 
@@ -57,6 +59,21 @@ describe('PoolCellDetail', () => {
     // Metadata strip: "target" stat label + its generation-target value.
     expect(screen.getByText('target')).toBeInTheDocument();
     expect(screen.getByText('30')).toBeInTheDocument();
+  });
+
+  it('renders the last generation run metrics from lastJob', () => {
+    mockUsePoolCell.mockReturnValue({ isLoading: false, isError: false, data: { floors: {}, rejectionReasonCounts: {} } });
+    render(<PoolCellDetail item={item} fetchFn={fetchFn} />);
+    expect(screen.getByText(/last generation run/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 \/ 20 approved/i)).toBeInTheDocument();
+    expect(screen.getByText(/dedup given up: 18/i)).toBeInTheDocument();
+    expect(screen.getByText(/curriculum version: 2026-06-17/i)).toBeInTheDocument();
+  });
+
+  it('shows a no-run message when lastJob is null', () => {
+    mockUsePoolCell.mockReturnValue({ isLoading: false, isError: false, data: { floors: {}, rejectionReasonCounts: {} } });
+    render(<PoolCellDetail item={{ ...item, lastJob: null, status: 'never-run' }} fetchFn={fetchFn} />);
+    expect(screen.getByText(/no generation run yet/i)).toBeInTheDocument();
   });
 
   it('renders the content-browser link with the cell query', () => {

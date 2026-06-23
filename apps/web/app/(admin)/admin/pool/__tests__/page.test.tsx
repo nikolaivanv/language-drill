@@ -33,10 +33,12 @@ import PoolPage from '../page';
 const poolItems: PoolStatusItem[] = [
   { language: 'TR', level: 'A1', type: 'cloze', grammarPointKey: 'tr-a1-ki-relativizer',
     approved: 5, flagged: 1, rejected: 2, lastRefilledAt: null, depletionRate7d: 1,
-    targetSize: 50, generationTarget: 20, coverageDistribution: null },
+    targetSize: 50, generationTarget: 20, coverageDistribution: null,
+    status: 'active', lastJob: null },
   { language: 'ES', level: 'B1', type: 'translation', grammarPointKey: 'es-b1-ser-estar',
     approved: 30, flagged: 0, rejected: 1, lastRefilledAt: null, depletionRate7d: 2,
-    targetSize: 75, generationTarget: 30, coverageDistribution: null },
+    targetSize: 75, generationTarget: 30, coverageDistribution: null,
+    status: 'target-reached', lastJob: null },
 ];
 const genStats = {
   costThisWeekUsd: 1, costThisMonthUsd: 2,

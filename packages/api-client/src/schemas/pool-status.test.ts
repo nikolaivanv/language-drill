@@ -15,11 +15,61 @@ describe('PoolStatusItemSchema', () => {
     targetSize: 50,
     generationTarget: 20,
     coverageDistribution: null,
+    status: 'never-run',
+    lastJob: null,
   };
 
   it('parses a valid PoolStatusItem with lastRefilledAt: null', () => {
     const result = PoolStatusItemSchema.safeParse(baseItem);
     expect(result.success).toBe(true);
+  });
+
+  it('parses a populated lastJob with each scheduler status', () => {
+    for (const status of [
+      'active',
+      'target-reached',
+      'low-yield',
+      'saturated-dedup',
+      'never-run',
+      'out-of-scope',
+    ]) {
+      const result = PoolStatusItemSchema.safeParse({
+        ...baseItem,
+        status,
+        lastJob: {
+          approvedCount: 12,
+          requestedCount: 30,
+          dedupGivenUpCount: 4,
+          curriculumVersion: '2026-06-17',
+        },
+      });
+      expect(result.success, `status ${status} should parse`).toBe(true);
+    }
+  });
+
+  it('parses a lastJob whose curriculumVersion is null (legacy row)', () => {
+    const result = PoolStatusItemSchema.safeParse({
+      ...baseItem,
+      status: 'active',
+      lastJob: {
+        approvedCount: 1,
+        requestedCount: 1,
+        dedupGivenUpCount: 0,
+        curriculumVersion: null,
+      },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects an unknown status value', () => {
+    const result = PoolStatusItemSchema.safeParse({ ...baseItem, status: 'paused' });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a PoolStatusItem missing the status field', () => {
+    const { status: _omitted, ...withoutStatus } = baseItem;
+    const result = PoolStatusItemSchema.safeParse(withoutStatus);
+    expect(result.success).toBe(false);
   });
 
   it('parses a valid PoolStatusItem with a lastRefilledAt timestamp', () => {
