@@ -63,6 +63,24 @@ infra/            — AWS CDK stack
 
 ---
 
+## Git Worktrees
+
+**Always create worktrees under `.claude/worktrees/<branch-slug>/`.** This is the
+single canonical location.
+
+- **Never create a worktree in the repo root** (e.g. `./feat-foo`). Root worktrees
+  clutter `ls`, get mistaken for source dirs, and pollute `git status`.
+- **Never write to `.claire/worktrees/`** — that path is debris from a misfiring
+  agent base-path; it is not a real worktree location.
+- `.claude/worktrees/` is gitignored, so worktree contents never get accidentally
+  staged into the main repo.
+
+Removing a worktree (`git worktree remove .claude/worktrees/<slug>`) deletes only
+the working directory — the branch ref survives. Push branches before cleanup so
+nothing is recoverable only from the worktree.
+
+---
+
 ## Running Locally
 
 Both servers are started from the repo root. They read `DATABASE_URL`, `ANTHROPIC_API_KEY`, and Clerk keys from `.env` (see `.env.example`).
