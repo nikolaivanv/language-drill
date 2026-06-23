@@ -369,13 +369,24 @@ describe('POST /sessions', () => {
     app.route('/', mod.default);
   });
 
-  it('creates a session and returns the manifest', async () => {
-    // SELECT exercises matching language + difficulty (over-fetch)
-    mockLimit.mockResolvedValueOnce(sampleExercises);
-    // buildRankContext: mastery query (mockWhere → mockSelectAwait call 1)
+  it('creates an untargeted session in the previewed slot order (warm-up cloze first)', async () => {
+    // sampleFreshPool projection (db.execute UNION-ALL). Mixed types, NO
+    // sentence_construction — exercises the backfill path.
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        { id: 'ex-1', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'ex-2', type: 'translation', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'ex-3', type: 'vocab_recall', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'ex-4', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'ex-5', type: 'translation', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+      ],
+    });
+    // buildRankContext: mastery (call 1) + error (call 2). Both empty → all
+    // candidates share the neutral priority, so input order is preserved.
     mockSelectAwait.mockResolvedValueOnce([]);
-    // buildRankContext: error query (mockGroupBy → mockSelectAwait call 2)
     mockSelectAwait.mockResolvedValueOnce([]);
+    // Full-rows fetch by the selected ids (order-independent; route re-orders).
+    mockSelectAwait.mockResolvedValueOnce(sampleExercises);
     // INSERT practice_sessions returning { id }
     mockReturning.mockResolvedValueOnce([{ id: 'session-uuid-1' }]);
 
@@ -397,12 +408,17 @@ describe('POST /sessions', () => {
     const body = (await res.json()) as AnyJson;
     expect(body.id).toBe('session-uuid-1');
     expect(body.exercises).toHaveLength(5);
+    // planSkeleton(5) = [cloze, SC, translation, vocab, cloze]. No SC in the
+    // pool, so slot 2 backfills with the next translation (ex-5). The warm-up
+    // CLOZE leads — matching the dashboard preview. (Regression: the old flat
+    // rank could open the session on a translation, contradicting the plan.)
+    expect(body.exercises[0].type).toBe('cloze');
     expect(body.exercises.map((e: AnyJson) => e.id)).toEqual([
       'ex-1',
+      'ex-5',
       'ex-2',
       'ex-3',
       'ex-4',
-      'ex-5',
     ]);
     // Each manifest item exposes the canonical exercise shape
     expect(body.exercises[0]).toEqual({
@@ -413,14 +429,14 @@ describe('POST /sessions', () => {
       contentJson: sampleExercises[0].contentJson,
     });
 
-    // Verify the insert payload — userId, filters, exerciseCount, and the exact ordered exerciseIds
+    // The persisted manifest order matches the served order exactly.
     expect(mockInsert).toHaveBeenCalled();
     expect(mockValues).toHaveBeenCalledWith({
       userId: 'user_123',
       language: 'ES',
       difficulty: 'B1',
       exerciseCount: 5,
-      exerciseIds: ['ex-1', 'ex-2', 'ex-3', 'ex-4', 'ex-5'],
+      exerciseIds: ['ex-1', 'ex-5', 'ex-2', 'ex-3', 'ex-4'],
     });
     expect(mockReturning).toHaveBeenCalledTimes(1);
     expect(mockFreshFirstOrderBy).toHaveBeenCalledWith('user_123');
@@ -466,9 +482,12 @@ describe('POST /sessions', () => {
     expect(body.code).toBe('VALIDATION_ERROR');
   });
 
-  it('returns 422 INSUFFICIENT_EXERCISES when the pool is too small and does not insert', async () => {
-    // Pool returns fewer exercises than requested
-    mockLimit.mockResolvedValueOnce(sampleExercises.slice(0, 3));
+  it('untargeted: returns 422 INSUFFICIENT_EXERCISES only when the pool is empty, and does not insert', async () => {
+    // sampleFreshPool yields nothing.
+    mockExecute.mockResolvedValueOnce({ rows: [] });
+    // buildRankContext: mastery + error (both empty).
+    mockSelectAwait.mockResolvedValueOnce([]);
+    mockSelectAwait.mockResolvedValueOnce([]);
 
     const res = await app.request(
       '/sessions',
@@ -487,7 +506,7 @@ describe('POST /sessions', () => {
     expect(res.status).toBe(422);
     const body = (await res.json()) as AnyJson;
     expect(body.code).toBe('INSUFFICIENT_EXERCISES');
-    expect(body.details).toEqual({ available: 3, requested: 5 });
+    expect(body.details).toEqual({ available: 0, requested: 5 });
 
     // Critical: no insert into practice_sessions. The authMiddleware itself
     // does an ensure-user `db.insert(users).values(...).onConflictDoNothing()`
@@ -496,75 +515,62 @@ describe('POST /sessions', () => {
     expect(mockReturning).not.toHaveBeenCalled();
   });
 
-  it('error-aware ranking: high-error-count grammar point is returned first regardless of SQL order', async () => {
-    // Pool has 5 exercises: 'gp-errors' is last in SQL order (fresh-first puts
-    // never-seen rows first, error-aware ranking overrides that). After ranking,
-    // the high-error point gets priority and should appear as exercises[0].
-    const poolRows = [
-      {
-        id: 'ex-a',
-        type: 'cloze',
-        language: 'ES',
-        difficulty: 'B1',
-        contentJson: { sentence: '___ alpha' },
-        audioS3Key: null,
-        grammarPointKey: 'gp-zero-errors',
-        createdAt: new Date(),
-      },
-      {
-        id: 'ex-b',
-        type: 'translation',
-        language: 'ES',
-        difficulty: 'B1',
-        contentJson: { source: 'hello', target: 'hola' },
-        audioS3Key: null,
-        grammarPointKey: 'gp-zero-errors',
-        createdAt: new Date(),
-      },
-      {
-        id: 'ex-c',
-        type: 'vocab_recall',
-        language: 'ES',
-        difficulty: 'B1',
-        contentJson: { word: 'casa' },
-        audioS3Key: null,
-        grammarPointKey: 'gp-zero-errors',
-        createdAt: new Date(),
-      },
-      {
-        id: 'ex-d',
-        type: 'cloze',
-        language: 'ES',
-        difficulty: 'B1',
-        contentJson: { sentence: '___ delta' },
-        audioS3Key: null,
-        grammarPointKey: 'gp-zero-errors',
-        createdAt: new Date(),
-      },
-      // Last in SQL order, but should rank FIRST due to high error count.
-      {
-        id: 'ex-high-error',
-        type: 'cloze',
-        language: 'ES',
-        difficulty: 'B1',
-        contentJson: { sentence: '___ high-error' },
-        audioS3Key: null,
-        grammarPointKey: 'gp-many-errors',
-        createdAt: new Date(),
-      },
-    ];
-
-    // Over-fetch query returns all 5 rows (exerciseCount=3, OVERFETCH=max(12,20)=20).
-    mockLimit.mockResolvedValueOnce(poolRows);
-
-    // buildRankContext query order (both run in Promise.all):
-    // Mastery → awaited directly via mockWhere.then → mockSelectAwait call 1.
-    // Error → awaited via mockGroupBy.then → mockSelectAwait call 2.
-    // No mastery rows → gap=1.0 for all; error rows decide the winner.
-    mockSelectAwait.mockResolvedValueOnce([]); // mastery: no rows → gap=1.0 for all
-    // Error rows: gp-many-errors has 4 recent errors, gp-zero-errors has 0.
+  it('untargeted: a pool missing types yields a shorter session (matches preview tolerance), not 422', async () => {
+    // Only two clozes exist — no translation / vocab / SC to fill later slots.
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        { id: 'c1', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'c2', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+      ],
+    });
+    mockSelectAwait.mockResolvedValueOnce([]); // mastery
+    mockSelectAwait.mockResolvedValueOnce([]); // error
     mockSelectAwait.mockResolvedValueOnce([
-      { key: 'gp-many-errors', n: 4 },
+      { id: 'c1', type: 'cloze', language: 'ES', difficulty: 'B1', contentJson: { sentence: '1' }, audioS3Key: null },
+      { id: 'c2', type: 'cloze', language: 'ES', difficulty: 'B1', contentJson: { sentence: '2' }, audioS3Key: null },
+    ]); // full rows
+    mockReturning.mockResolvedValueOnce([{ id: 'session-short' }]);
+
+    const res = await app.request(
+      '/sessions',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: 'ES', difficulty: 'B1', exerciseCount: 5 }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.exercises.map((e: AnyJson) => e.id)).toEqual(['c1', 'c2']);
+    // exerciseCount is persisted as the ACTUAL manifest length, not the request.
+    expect(mockValues).toHaveBeenCalledWith(
+      expect.objectContaining({ exerciseCount: 2, exerciseIds: ['c1', 'c2'] }),
+    );
+  });
+
+  it('error-aware ranking decides which exercise fills each type slot (high-error cloze leads the warm-up)', async () => {
+    // Two clozes compete for the warm-up slot: the high-error one must win.
+    // sampleFreshPool projection (db.execute), high-error listed LAST in SQL
+    // order — error-aware ranking must override exposure order within the type.
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        { id: 'cloze-low', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: 'gp-zero-errors' },
+        { id: 'tr-1', type: 'translation', topic_hint: null, difficulty: 'B1', grammar_point_key: 'gp-zero-errors' },
+        { id: 'cloze-high', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: 'gp-many-errors' },
+      ],
+    });
+
+    // buildRankContext: mastery (call 1) empty → gap=1.0 for all; error (call 2)
+    // gives gp-many-errors 4 recent errors → +ERROR_WEIGHT*min(4,5)=+0.6.
+    mockSelectAwait.mockResolvedValueOnce([]);
+    mockSelectAwait.mockResolvedValueOnce([{ key: 'gp-many-errors', n: 4 }]);
+    // Full-rows fetch by selected ids.
+    mockSelectAwait.mockResolvedValueOnce([
+      { id: 'cloze-low', type: 'cloze', language: 'ES', difficulty: 'B1', contentJson: { sentence: 'lo' }, audioS3Key: null },
+      { id: 'cloze-high', type: 'cloze', language: 'ES', difficulty: 'B1', contentJson: { sentence: 'hi' }, audioS3Key: null },
+      { id: 'tr-1', type: 'translation', language: 'ES', difficulty: 'B1', contentJson: { source: 'a', target: 'b' }, audioS3Key: null },
     ]);
 
     // INSERT returning
@@ -587,11 +593,11 @@ describe('POST /sessions', () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as AnyJson;
     expect(body.id).toBe('session-ranked-1');
-    expect(body.exercises).toHaveLength(3);
-    // The high-error exercise must be ranked first despite being last in SQL order.
-    // gap=1.0 for all (no mastery rows), but gp-many-errors gets +ERROR_WEIGHT*min(4,5)=+0.6
-    // so its priority = 1.0 + 0.6 = 1.6 vs. 1.0 for zero-error points.
-    expect(body.exercises[0].id).toBe('ex-high-error');
+    // planSkeleton(3) = [warm-up cloze, core SC, cool-down cloze]. The warm-up
+    // slot takes the highest-ranked cloze — the high-error one — even though it
+    // was last in SQL order. Priority 1.6 vs. 1.0 for the zero-error cloze.
+    expect(body.exercises[0].id).toBe('cloze-high');
+    expect(body.exercises[0].type).toBe('cloze');
   });
 
   it('dictation-only request: returns a manifest of the dictation rows the pool yields', async () => {
@@ -650,6 +656,10 @@ describe('POST /sessions', () => {
         exerciseIds: ['d-1', 'd-2'],
       }),
     );
+    // The single-type (and grammar-point) flat path still guards review status
+    // via the approvedStatusFilter helper in baseWhere — the canary for the
+    // untargeted path moved to the UNION-ALL inline predicate.
+    expect(mockApprovedStatusFilter).toHaveBeenCalled();
   });
 });
 
@@ -2800,16 +2810,30 @@ describe('review_status filter — POST /sessions', () => {
     app.route('/', mod.default);
   });
 
-  it('100 random pool draws never include flagged or rejected fixtures', async () => {
+  // Projection shape sampleFreshPool's UNION-ALL returns (db.execute).
+  const approvedDraws = approvedExercises.map((e) => ({
+    id: e.id,
+    type: e.type,
+    topic_hint: null,
+    difficulty: e.difficulty,
+    grammar_point_key: null,
+  }));
+
+  it('100 untargeted pool draws never include flagged or rejected fixtures', async () => {
     // The mock represents the SQL filter excluding the flagged/rejected
     // fixtures from this cell — only approved rows ever reach the route.
-    // This is the regression canary: if the route stops applying
-    // approvedStatusFilter, future fixture additions would expose the leak.
+    // This is the regression canary: an untargeted session now samples the
+    // pool via sampleFreshPool's UNION-ALL (same path as the dashboard
+    // preview), which inlines the review-status predicate. If that predicate
+    // is dropped, future fixture additions would expose the leak.
     for (let i = 0; i < 100; i++) {
-      mockLimit.mockResolvedValueOnce(approvedExercises);
-      // buildRankContext: mastery (mockSelectAwait call 1) + error (mockSelectAwait call 2)
+      // buildRankContext: mastery (call 1) + error (call 2)
       mockSelectAwait.mockResolvedValueOnce([]); // mastery: no rows
       mockSelectAwait.mockResolvedValueOnce([]); // error: no rows
+      // sampleFreshPool UNION-ALL → approved projection only
+      mockExecute.mockResolvedValueOnce({ rows: approvedDraws });
+      // full-rows fetch by selected ids
+      mockSelectAwait.mockResolvedValueOnce(approvedExercises);
       mockReturning.mockResolvedValueOnce([{ id: `session-${i}` }]);
     }
 
@@ -2837,11 +2861,10 @@ describe('review_status filter — POST /sessions', () => {
 
     expect(seenIds).not.toContain(FLAGGED_FIXTURE_ID);
     expect(seenIds).not.toContain(REJECTED_FIXTURE_ID);
-    // Helper invoked once per pool query (one per request).
-    expect(mockApprovedStatusFilter).toHaveBeenCalledTimes(100);
-    expect(mockApprovedStatusFilter).toHaveBeenCalledWith(
-      expect.objectContaining({ reviewStatus: 'review_status' }),
-    );
+    // Untargeted POST inlines the predicate in the UNION-ALL pool sample (like
+    // Path B), not via the approvedStatusFilter helper.
+    expect(mockApprovedStatusFilter).not.toHaveBeenCalled();
+    expect(mockExecute).toHaveBeenCalledTimes(100);
   });
 });
 

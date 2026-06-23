@@ -259,35 +259,35 @@ function toPlanItem(index: number, draw: PoolDraw): PlanItem {
 }
 
 /**
- * Composes the fresh-plan branch (Path B) deterministically from a pool sample.
+ * Selects pool draws into the skeleton's slot order — the single source of truth
+ * for "which exercise fills which slot". Returns the chosen draws in slot order
+ * (the source `PoolDraw`, id intact), so callers that need the exercise ids
+ * (e.g. POST /sessions, which persists a session manifest) and callers that only
+ * need the plan shape (composeFreshPlan, for the dashboard preview) share one
+ * algorithm. This is what keeps the previewed plan and the created session in
+ * agreement — see the divergence bug fixed in sessions.ts POST /sessions.
  *
  * Two passes over the skeleton:
  *   1. Assign each slot a distinct exercise of its native type (FIFO from the
  *      per-type candidate queue).
  *   2. Backfill any slot left empty (its native type ran out) with a distinct
  *      exercise of another type, following `BACKFILL_TYPE_PRIORITY`. A
- *      substituted slot keeps its position but takes the substitute's type, so
- *      itemCount / estimatedMinutes / topicHint reflect the exercise actually
- *      served.
- *
- * The plan is only `insufficient` when the pool is genuinely empty (no
- * candidate of any type) — a pool merely missing one type still yields a full
- * plan matching the skeleton size. Surviving items are re-indexed 1..n so the
- * client's index-derived labels stay contiguous.
+ *      substituted slot keeps its position but takes the substitute's type.
  *
  * Candidates are consumed in the order given — the caller pre-ranks them
  * (exposure + mastery) so slot assignment picks the highest-priority item per
- * type.
+ * type. The result drops empty slots; callers re-index as needed.
  *
  * @param candidates Pool of exercises to draw from
  * @param skeleton Plan shape to fill; defaults to V1_PLAN_SHAPE for back-compat
  */
-export function composeFreshPlan(
+export function selectPlanDraws(
   candidates: readonly PoolDraw[],
   skeleton: readonly PlanCompositionSlot[] = V1_PLAN_SHAPE,
-): ComposeFreshPlanResult {
+): PoolDraw[] {
   // Per-type FIFO queues. Mutated by `take`; ordering within a type is the
-  // pool sample's random order, so each shift is an independent random pick.
+  // caller's pre-ranked order, so each shift is the highest-priority remaining
+  // item of that type.
   const byType = new Map<ExerciseType, PoolDraw[]>();
   for (const candidate of candidates) {
     const queue = byType.get(candidate.type);
@@ -298,10 +298,7 @@ export function composeFreshPlan(
     byType.get(type)?.shift();
 
   // Pass 1 — native assignment.
-  const slots: (PlanItem | null)[] = skeleton.map((slot) => {
-    const native = take(slot.type);
-    return native ? toPlanItem(slot.index, native) : null;
-  });
+  const slots: (PoolDraw | null)[] = skeleton.map((slot) => take(slot.type) ?? null);
 
   // Pass 2 — backfill empties with a distinct exercise of another type.
   for (let i = 0; i < slots.length; i++) {
@@ -309,16 +306,35 @@ export function composeFreshPlan(
     for (const type of BACKFILL_TYPE_PRIORITY) {
       const sub = take(type);
       if (sub) {
-        slots[i] = toPlanItem(skeleton[i].index, sub);
+        slots[i] = sub;
         break;
       }
     }
   }
 
-  const items = slots
-    .filter((slot): slot is PlanItem => slot !== null)
-    .map((item, i) => ({ ...item, index: i + 1 }));
+  return slots.filter((slot): slot is PoolDraw => slot !== null);
+}
 
+/**
+ * Composes the fresh-plan branch (Path B) deterministically from a pool sample.
+ * Thin wrapper over `selectPlanDraws` that projects each selected draw into the
+ * in-memory `PlanItem` shape for the dashboard preview.
+ *
+ * The plan is only `insufficient` when the pool is genuinely empty (no
+ * candidate of any type) — a pool merely missing one type still yields a full
+ * plan matching the skeleton size. Surviving items are re-indexed 1..n so the
+ * client's index-derived labels stay contiguous.
+ *
+ * @param candidates Pool of exercises to draw from
+ * @param skeleton Plan shape to fill; defaults to V1_PLAN_SHAPE for back-compat
+ */
+export function composeFreshPlan(
+  candidates: readonly PoolDraw[],
+  skeleton: readonly PlanCompositionSlot[] = V1_PLAN_SHAPE,
+): ComposeFreshPlanResult {
+  const items = selectPlanDraws(candidates, skeleton).map((draw, i) =>
+    toPlanItem(i + 1, draw),
+  );
   return { items, insufficient: items.length === 0 };
 }
 

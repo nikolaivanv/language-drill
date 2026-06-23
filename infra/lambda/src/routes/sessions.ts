@@ -25,6 +25,7 @@ import type { Bindings, Variables } from '../middleware/auth';
 import {
   V1_PLAN_SHAPE,
   composeFreshPlan,
+  selectPlanDraws,
   hydrateFromSession,
   isFreeWritingDay,
   startOfUtcDay,
@@ -90,6 +91,57 @@ sessions.post('/sessions', async (c) => {
   const { language, difficulty, exerciseCount, exerciseType, grammarPointKey } = bodyResult.data;
   const userId = c.get('userId');
   const now = new Date();
+
+  // Mastery + 30-day error context drives both the structured and the flat
+  // selection below.
+  const rankCtx = await buildRankContext(db, userId, language, now);
+
+  // -------------------------------------------------------------------------
+  // Untargeted quick drill — compose with the SAME slot skeleton the dashboard
+  // preview (GET /sessions/today, Path B) uses: warm-up cloze → core cycle →
+  // cool-down cloze. Both paths now sample the pool per-type, rank, and run
+  // `selectPlanDraws` over `planSkeleton`, so the session that gets created
+  // matches the plan the user saw. Before this, POST flat-ranked the whole pool
+  // and took the top N, so the first item was whatever ranked highest overall
+  // (usually a translation) instead of the previewed warm-up cloze — the
+  // "Today says cloze, drill opens on translation, random each time" bug.
+  //
+  // Targeted (grammarPointKey) and single-type (exerciseType, e.g. dictation)
+  // launches skip this — they have no slot structure to honour and keep the
+  // flat ranking below.
+  // -------------------------------------------------------------------------
+  if (!grammarPointKey && !exerciseType) {
+    const poolDraws = await sampleFreshPool({ language, difficulty, userId });
+    const ranked = rankPlanCandidates(poolDraws, rankCtx);
+    const selected = selectPlanDraws(ranked, planSkeleton(exerciseCount));
+
+    // Mirror the preview's tolerance: a pool merely missing a type still yields
+    // a (possibly shorter) plan; only a genuinely empty pool is insufficient.
+    if (selected.length === 0) {
+      return c.json(
+        {
+          error: 'Not enough exercises in the pool for this filter',
+          code: 'INSUFFICIENT_EXERCISES',
+          details: { available: 0, requested: exerciseCount },
+        },
+        422,
+      );
+    }
+
+    // sampleFreshPool returns a projection (no contentJson/audio); fetch the
+    // full rows for the chosen ids, then re-order them into slot order.
+    const selectedIds = selected.map((d) => d.id);
+    const fullRows = await db
+      .select()
+      .from(exercisesTable)
+      .where(inArray(exercisesTable.id, selectedIds));
+    const fullById = new Map(fullRows.map((r) => [r.id, r]));
+    const rows = selectedIds
+      .map((id) => fullById.get(id))
+      .filter((r): r is NonNullable<typeof r> => r != null);
+
+    return c.json(await insertSessionAndBuildManifest({ userId, language, difficulty, rows }));
+  }
 
   // Over-fetch factor: pull more candidates than needed so the in-memory ranker
   // has real choice. freshFirstOrderBy remains the SQL pre-order (exposure
@@ -164,12 +216,11 @@ sessions.post('/sessions', async (c) => {
   }
 
   // -------------------------------------------------------------------------
-  // Error-aware ranking: build context (mastery + 30-day error counts) and
-  // reorder the over-fetched candidates. The SQL pre-order (freshFirstOrderBy)
-  // is preserved as the stable tiebreak so equal-priority points honour
-  // exposure control. Take the top exerciseCount items from the ranked list.
+  // Error-aware ranking: reorder the over-fetched candidates by mastery gap +
+  // 30-day error counts (rankCtx built above). The SQL pre-order
+  // (freshFirstOrderBy) is preserved as the stable tiebreak so equal-priority
+  // points honour exposure control. Take the top exerciseCount items.
   // -------------------------------------------------------------------------
-  const rankCtx = await buildRankContext(db, userId, language, now);
   const draws: import('../lib/today-plan').PoolDraw[] = candidateRows
     .filter((r) => r.type && r.difficulty)
     .map((r) => ({
@@ -200,19 +251,48 @@ sessions.post('/sessions', async (c) => {
     );
   }
 
-  // Insert the session row with the chosen exercise IDs
+  return c.json(await insertSessionAndBuildManifest({ userId, language, difficulty, rows }));
+});
+
+// ---------------------------------------------------------------------------
+// Shared session-creation tail: insert the practice_sessions row in `rows`
+// order and build the manifest (with presigned audio for dictation). Both the
+// structured (untargeted) and flat (targeted/single-type) POST /sessions paths
+// end here so the persisted manifest order always matches the served order.
+// `exerciseCount` is stored as the actual manifest length so the
+// complete/debrief skipped-count math stays accurate even when the structured
+// path yields a shorter-than-requested plan.
+// ---------------------------------------------------------------------------
+interface ManifestRow {
+  id: string;
+  type: string | null;
+  language: string | null;
+  difficulty: string | null;
+  grammarPointKey: string | null;
+  contentJson: unknown;
+  audioS3Key: string | null;
+}
+
+async function insertSessionAndBuildManifest(params: {
+  userId: string;
+  language: string;
+  difficulty: string;
+  rows: ManifestRow[];
+}) {
+  const { userId, language, difficulty, rows } = params;
+
   const inserted = await db
     .insert(practiceSessions)
     .values({
       userId,
       language,
       difficulty,
-      exerciseCount,
+      exerciseCount: rows.length,
       exerciseIds: rows.map((r) => r.id),
     })
     .returning({ id: practiceSessions.id });
 
-  const exercisesOut = await Promise.all(
+  const exercises = await Promise.all(
     rows.map(async (r) => ({
       id: r.id,
       type: r.type,
@@ -223,8 +303,8 @@ sessions.post('/sessions', async (c) => {
     })),
   );
 
-  return c.json({ id: inserted[0].id, exercises: exercisesOut });
-});
+  return { id: inserted[0].id, exercises };
+}
 
 // ---------------------------------------------------------------------------
 // POST /sessions/:id/complete — finalize a session, return summary stats
