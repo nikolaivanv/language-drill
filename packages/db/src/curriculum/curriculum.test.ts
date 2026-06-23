@@ -323,6 +323,24 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
     }
   });
 
+  it('caps tr-a2-consonant-doubling translation volume via targetOverride (2026-06-23)', () => {
+    // Cloze was retired 2026-06-21; the surviving translation surface yields
+    // poorly (2/27 on the 2026-06-22 run) because gemination is bypassable and
+    // the closed Arabic-origin set is tiny. Cap the per-cell target so the
+    // scheduler stops grinding the A2 default (30) into dedup/ambiguous waste.
+    expect(getGrammarPoint('tr-a2-consonant-doubling')?.targetOverride).toBe(10);
+  });
+
+  it('leaves tr-a2-indefinite-compound uncapped — its translation surface is healthy', () => {
+    // The cloze quality fix lives in the generation prompt (bare-head hint,
+    // nominative answer, no case-stacking). targetOverride is point-wide and
+    // would also clamp the healthy translation surface (13/41 on 2026-06-22),
+    // so it is deliberately NOT set here.
+    expect(
+      getGrammarPoint('tr-a2-indefinite-compound')?.targetOverride,
+    ).toBeUndefined();
+  });
+
   it('the full TR clozeUnsuitable set is exactly these nineteen points', () => {
     const flagged = trCurriculum
       .filter((g) => g.clozeUnsuitable === true)

@@ -72,8 +72,16 @@ const { A1, A2, B1 } = CefrLevel;
  * tr-a2-suffix-order-buffers — its translation cell dedup-gave-up 19/88 (7
  * approved); the buffers are person/case conditioned, so the spec targets them
  * with the allowed axes. Bump retires those cloze cells and re-runs survivors.
+ * 2026-06-23: caps tr-a2-consonant-doubling translation via targetOverride: 10
+ * after the 2026-06-22 run yielded 2/27 — gemination is bypassable in free
+ * translation and the closed Arabic-origin set is tiny, so the A2 default (30)
+ * just ground out dedup/ambiguous waste. Pairs with a generate@2026-06-23
+ * prompt rule (force the vowel suffix + enumerate synonym renderings) and a new
+ * indefinite-noun-compound cloze rule (bare-head hint, nominative answer, no
+ * case-stacking) for tr-a2-indefinite-compound (8/49). Bump clears the
+ * low-yield suppression on consonant-doubling translation so it re-runs.
  */
-export const CURRICULUM_VERSION_TR = '2026-06-21';
+export const CURRICULUM_VERSION_TR = '2026-06-23';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -904,6 +912,14 @@ const trCurriculum: readonly GrammarPoint[] = [
     // 2026-06-21 run: 5/57 approved (8 ambiguous + 15 low-quality); translation
     // (11/78) is healthy.
     clozeUnsuitable: true,
+    // targetOverride (2026-06-23): with cloze retired, translation is the only
+    // surface, and it yielded 2/27 on the 2026-06-22 run — gemination is
+    // bypassable in free translation (Bu sır benim / haklarımı / karşıtı all
+    // dodge the alternation) and the geminating set is a tiny closed class, so
+    // the realistic distinct-item supply sits well below the A2 default (30).
+    // Cap the per-cell target so the scheduler stops grinding dedup/ambiguous
+    // waste; the generate@2026-06-23 prompt rule improves what does get made.
+    targetOverride: 10,
     kind: 'grammar',
     name: 'Consonant doubling (gemination)',
     description:
@@ -1005,6 +1021,13 @@ const trCurriculum: readonly GrammarPoint[] = [
   // the -(s)I marker behaves like a 3sg possessive (şehir merkez-i-n-e).
   {
     key: 'tr-a2-indefinite-compound',
+    // No targetOverride/clozeUnsuitable: the 2026-06-22 cloze yield (8/49) is a
+    // FORMAT problem, not a structural one — MC-option and head-only blanks pass
+    // cleanly; whole-compound blanks, omitted parenthetical heads, and
+    // case-stacked answers are what flag `ambiguous`. The fix is the
+    // generate@2026-06-23 cloze rule (bare-head hint, nominative answer, no
+    // case-stacking), NOT a curriculum cap — targetOverride is point-wide and
+    // would also clamp the healthy translation surface (13/41).
     kind: 'grammar',
     name: 'Indefinite noun compound (belirtisiz isim tamlaması)',
     description:

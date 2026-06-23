@@ -134,6 +134,25 @@ describe("buildGenerationSystemPrompt", () => {
     expect(prompt).toContain("Vowel harmony: front vowel (e) requires -ler suffix");
   });
 
+  it("includes the TR indefinite-noun-compound cloze format rule (2026-06-23)", async () => {
+    // Root-cause fix for tr-a2-indefinite-compound cloze (8/49 on 2026-06-22):
+    // whole-compound blanks + omitted parenthetical head + case-stacking → the
+    // answer isn't pinned to one form, so the validator flags `ambiguous`.
+    const prompt = await buildGenerationSystemPrompt(baseInputs, []);
+    expect(prompt).toContain("indefinite noun compound");
+    expect(prompt).toContain("ONLY the head noun is blanked");
+    expect(prompt).toContain("nominative");
+  });
+
+  it("includes the TR gemination / stem-change translation rule (2026-06-23)", async () => {
+    // Root-cause fix for tr-a2-consonant-doubling translation (2/27 on
+    // 2026-06-22): the source must force a vowel-initial suffix so the
+    // alternation is obligatory, and synonym escapes must be enumerated.
+    const prompt = await buildGenerationSystemPrompt(baseInputs, []);
+    expect(prompt).toContain("gemination");
+    expect(prompt).toContain("vowel-initial");
+  });
+
   it("pins the R2.3 / R3.B.7 hard-constraint bullets added in cluster B", async () => {
     // Independent rules that all live under "Hard constraints" and
     // were added together. Pin each so a future edit can't silently drop
@@ -232,7 +251,9 @@ describe("buildGenerationSystemPrompt", () => {
     // targetForm / an inflected lemma / a worked example), after the possessive-
     // stacking flag wave. (2026-06-19: strict conjugate-the-seed directive +
     // instruction-discipline bullets in renderConjugationSection.)
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-06-20");
+    // Bumped 2026-06-23 — TR indefinite-noun-compound cloze rule + gemination /
+    // stem-change translation rule, after the 2026-06-22 run analysis.
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-06-23");
     // Tasks 7–9: pin the new guardrail phrases in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "every content word MUST be high-frequency everyday vocabulary at or below CEFR {{cefrLevel}}",
