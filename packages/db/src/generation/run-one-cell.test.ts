@@ -304,6 +304,10 @@ describe('seedKindFor', () => {
     expect(seedKindFor(cellOf(ExerciseType.TRANSLATION))).toBe('frequency');
   });
 
+  it('returns frequency for dictation (loose lexical anchor for diversity)', () => {
+    expect(seedKindFor(cellOf(ExerciseType.DICTATION))).toBe('frequency');
+  });
+
   it('returns verb for conjugation', () => {
     expect(seedKindFor(cellOf(ExerciseType.CONJUGATION))).toBe('verb');
   });

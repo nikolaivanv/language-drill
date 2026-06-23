@@ -14,11 +14,16 @@
  * them as `levelScopePoints` on the spec/inputs; this module only formats them
  * — exactly the caller-injection pattern used for `priorPoolSurfaces`.
  *
- * Gated to the four grammar-anchored exercise types — cloze, translation,
- * sentence_construction, conjugation. For every other type (e.g. vocab_recall,
- * which shares the generation template) it returns "", so the `{{levelScopeSection}}`
- * placeholder collapses and the cached prompt prefix is unchanged. Pure +
- * deterministic, preserving prompt-cache parity.
+ * Gated to the grammar-anchored exercise types — cloze, translation,
+ * sentence_construction, conjugation — plus dictation. Dictation is not
+ * grammar-point-targeted, but its clips still must sit at the learner's level,
+ * and the validator was wrongly flagging in-scope A1 morphology (consonant
+ * softening, present-continuous -iyor) as above level because it judged level
+ * from world knowledge alone. Giving it the same curriculum scope as the other
+ * types fixes that. For every other type (e.g. vocab_recall, which shares the
+ * generation template) it returns "", so the `{{levelScopeSection}}` placeholder
+ * collapses and the cached prompt prefix is unchanged. Pure + deterministic,
+ * preserving prompt-cache parity.
  */
 
 import {
@@ -33,6 +38,7 @@ const LEVEL_SCOPE_TYPES: ReadonlySet<ExerciseType> = new Set([
   ExerciseType.TRANSLATION,
   ExerciseType.SENTENCE_CONSTRUCTION,
   ExerciseType.CONJUGATION,
+  ExerciseType.DICTATION,
 ]);
 
 // Mirrors CurriculumCefrLevel (the four in-round levels). Update if the curriculum expands.

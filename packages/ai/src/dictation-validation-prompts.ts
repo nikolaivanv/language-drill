@@ -11,13 +11,14 @@
  * per the dictation rubric.
  */
 
-import { type DictationContent } from "@language-drill/shared";
+import { ExerciseType, type DictationContent } from "@language-drill/shared";
 
 import { CEFR_LEVEL_DESCRIPTORS } from "./prompts.js";
 import type { GenerationSpec } from "./generate.js";
+import { renderLevelScopeSection } from "./level-scope.js";
 import { getPromptWithVarsOrFallback } from "./prompts-registry.js";
 
-export const DICTATION_VALIDATION_PROMPT_VERSION = "dictation-validate@2026-06-16";
+export const DICTATION_VALIDATION_PROMPT_VERSION = "dictation-validate@2026-06-23";
 
 const CEFR_DESCRIPTOR_BULLETS = (
   Object.entries(CEFR_LEVEL_DESCRIPTORS) as [string, string][]
@@ -41,7 +42,7 @@ Your output is routed by these rules:
 
 {{cefrDescriptors}}
 
-## What to score
+{{levelScopeSection}}## What to score
 
 1. **qualityScore** (0.0–1.0): overall fitness as a {{cefrLevel}} dictation clip. Judge:
    - **Naturalness** — does it read like real connected speech a native would say? (Stilted / textbook-ish / list-like → lower.)
@@ -49,7 +50,7 @@ Your output is routed by these rules:
    - **Vocabulary band** — every content word at or below {{cefrLevel}} everyday vocabulary.
    - **Listenability** — the clip must be listenable: NOT a tongue-twister, NOT a dense number/date/proper-noun pile-up, NOT a segmentation trap so ambiguous a native could not transcribe it. One or two natural connected-speech challenges are GOOD; a wall of them is bad.
    Anchors: 0.9 publishable as-is; 0.8 one cosmetic edit; 0.65 borderline (FLAGGED); 0.5 unusable (REJECTED).
-2. **levelMatch** (boolean): does the difficulty sit at {{cefrLevel}}?
+2. **levelMatch** (boolean): does the difficulty sit at {{cefrLevel}}? If a grammar-scope list is provided above, use it as the ground truth for what a {{cefrLevel}} learner has studied — treat any grammar or morphology within or below that scope as level-appropriate, and do NOT flag it as above level. If no list is provided, judge against your general knowledge of {{cefrLevel}} expectations.
 3. **culturalIssues** (array): stereotyping, sensitive or unsafe content. Non-empty → REJECTED.
 4. **flaggedReasons** (array): anything a reviewer should know.
 
@@ -71,6 +72,17 @@ export function computeDictationValidationPromptVars(
     language: spec.language,
     cefrLevel: spec.cefrLevel,
     cefrDescriptors: CEFR_DESCRIPTOR_BULLETS,
+    // Curriculum scope (grammar points at/below this level) so the validator
+    // judges level against the real curriculum instead of its own sense of the
+    // level — which was flagging in-scope A1 morphology (consonant softening,
+    // -iyor) as A2. Injected on the spec by the db-side orchestrator; the
+    // formatter gates by type (dictation now included).
+    levelScopeSection: renderLevelScopeSection(
+      ExerciseType.DICTATION,
+      spec.language,
+      spec.cefrLevel,
+      spec.levelScopePoints,
+    ),
   };
 }
 

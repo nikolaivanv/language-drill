@@ -17,10 +17,11 @@ import { ExerciseType } from "@language-drill/shared";
 
 import { CEFR_LEVEL_DESCRIPTORS } from "./prompts.js";
 import type { GenerationPromptInputs } from "./generation-prompts.js";
+import { renderLevelScopeSection } from "./level-scope.js";
 import { getPromptWithVarsOrFallback } from "./prompts-registry.js";
 
 // Bump in the same commit as any semantic edit to the template below.
-export const DICTATION_GENERATION_PROMPT_VERSION = "dictation-generate@2026-06-16";
+export const DICTATION_GENERATION_PROMPT_VERSION = "dictation-generate@2026-06-23";
 
 const CEFR_DESCRIPTOR_BULLETS = (
   Object.entries(CEFR_LEVEL_DESCRIPTORS) as [string, string][]
@@ -93,7 +94,7 @@ export const DICTATION_GENERATION_SYSTEM_PROMPT = `You are an expert author of l
 
 {{cefrDescriptors}}
 
-## Hard constraints
+{{levelScopeSection}}## Hard constraints
 
 - **Natural connected speech.** Write the way a native speaker actually talks: full sentences with normal punctuation, ordinary contractions and liaison. NOT a word list, NOT headings, NOT bullet points, NOT metadata.
 - **Length for level.** A1: ONE short, clearly-articulated everyday sentence — high-frequency A1 vocabulary, simple structures, minimal connected-speech reduction (a careful near-beginner should be able to transcribe it). A2: 1–2 short sentences with everyday A2 vocabulary and only light connected speech. B1: 2–4 short sentences. B2: 3–5 sentences with some subordination. Keep it to one breath-group per sentence — a learner must be able to hold it in working memory.
@@ -125,6 +126,15 @@ export function computeDictationGenerationPromptVars(
     negativeExamplesBullets: renderBulletList(grammarPoint.examplesNegative),
     commonErrorsBullets: renderBulletList(grammarPoint.commonErrors),
     cefrDescriptors: CEFR_DESCRIPTOR_BULLETS,
+    // Curriculum scope so the generator targets the level's real morphology
+    // (e.g. A1 consonant softening / -iyor are in scope) rather than guessing.
+    // Mirrors the validator; formatter gates by type (dictation now included).
+    levelScopeSection: renderLevelScopeSection(
+      ExerciseType.DICTATION,
+      language,
+      cefrLevel,
+      inputs.levelScopePoints,
+    ),
     toolName: "submit_dictation_exercise",
   };
 }
@@ -147,14 +157,22 @@ export function buildDictationGenerationUserPrompt(
   ordinal: number,
   topicDomain: string | null,
   batchSeed: string,
+  seedWord: string | null = null,
 ): string {
   // A caller-supplied topicDomain (CLI passthrough) pins all ordinals to one
   // domain; scheduled runs (null) get a distinct domain per ordinal so the batch
   // spreads across topics.
   const domain = topicDomain ?? dictationDomainForOrdinal(ordinal, batchSeed);
+  // Per-ordinal frequency seed (R5-style, loose). The lemma is a lexical anchor,
+  // not a hard requirement — the model may swap it for a related word of similar
+  // frequency if it doesn't fit a natural clip. This is the primary diversity
+  // lever; the topic domain is a secondary topical axis. Absent → domain only.
+  const seedLine = seedWord
+    ? `\nAnchor the clip on the word "${seedWord}" (or a closely related word of similar frequency if it does not fit a natural sentence).\n`
+    : "";
   return `Produce dictation clip #${ordinal + 1}.
 
 Topic domain: ${domain}
-
+${seedLine}
 Build the clip around this topic domain; vary the specific scene, sentence shapes, and vocabulary so it does not resemble other clips. Use the submit_dictation_exercise tool.`;
 }
