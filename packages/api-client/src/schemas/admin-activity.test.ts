@@ -1,14 +1,15 @@
 import { describe, it, expect } from 'vitest';
-import { ActivitySessionListItemSchema, ActivitySessionDetailSchema, ActivityFailureItemSchema, ActivityRosterItemSchema } from './admin-activity';
+import { ActivitySessionListItemSchema, ActivitySessionDetailSchema, ActivityFailureItemSchema, ActivityRosterItemSchema, ActivitySessionsPageSchema } from './admin-activity';
 
 describe('ActivitySessionListItemSchema', () => {
   it('parses a feed row', () => {
     const parsed = ActivitySessionListItemSchema.parse({
-      sessionId: 's1', userId: 'u1', language: 'TR', difficulty: 'A2',
+      sessionId: 's1', userId: 'u1', firstName: 'John', lastName: 'Doe', email: 'john@example.com',
+      language: 'TR', difficulty: 'A2',
       exerciseCount: 8, correctCount: 2, completedAt: null, startedAt: '2026-06-22T09:00:00Z',
-      signals: ['abandoned'], primarySignal: 'abandoned',
+      signals: ['abandoned'],
     });
-    expect(parsed.primarySignal).toBe('abandoned');
+    expect(parsed.signals[0]).toBe('abandoned');
   });
 });
 
@@ -43,5 +44,30 @@ describe('ActivityRosterItemSchema', () => {
       drills7d: 20, drills30d: 75, languages: ['TR'], avgScore30d: 0.62, aiEvents7d: 21,
     });
     expect(parsed.drills30d).toBe(75);
+  });
+});
+
+describe('ActivitySessionsPageSchema', () => {
+  it('parses a page with named sessions', () => {
+    const parsed = ActivitySessionsPageSchema.parse({
+      items: [{
+        sessionId: 's1', userId: 'u1', firstName: 'Ada', lastName: 'Lovelace', email: 'a@x.com',
+        language: 'TR', difficulty: 'A2', exerciseCount: 8, correctCount: 2,
+        completedAt: null, startedAt: '2026-06-22T09:00:00Z', signals: ['abandoned'],
+      }],
+      total: 1,
+    });
+    expect(parsed.total).toBe(1);
+    expect(parsed.items[0].firstName).toBe('Ada');
+  });
+
+  it('parses an item with null names', () => {
+    const parsed = ActivitySessionsPageSchema.parse({
+      items: [{ sessionId: 's', userId: 'u', firstName: null, lastName: null, email: null,
+        language: 'ES', difficulty: 'B1', exerciseCount: 1, correctCount: 0,
+        completedAt: null, startedAt: '2026-06-22T09:00:00Z', signals: [] }],
+      total: 1,
+    });
+    expect(parsed.items[0].firstName).toBeNull();
   });
 });

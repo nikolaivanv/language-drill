@@ -5,6 +5,8 @@ import type { DailyGoal, DailyMinutes, GoalId, LearningLanguage } from '@languag
 export const users = pgTable('users', {
   id: text('id').primaryKey(), // Clerk user ID
   email: text('email').notNull().unique(),
+  firstName: text('first_name'),
+  lastName: text('last_name'),
   // Usage tier. 'free' = base daily limits; 'boosted' = 10x (granted by an
   // invite code). Admin users (ADMIN_USER_IDS) are boosted dynamically at
   // request time and are NOT required to carry 'boosted' here. Reserve 'pro'

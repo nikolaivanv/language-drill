@@ -5,6 +5,9 @@ const SignalSchema = z.enum(['flagged', 'abandoned', 'low_score']);
 export const ActivitySessionListItemSchema = z.object({
   sessionId: z.string(),
   userId: z.string(),
+  firstName: z.string().nullable(),
+  lastName: z.string().nullable(),
+  email: z.string().nullable(),
   language: z.string(),
   difficulty: z.string(),
   exerciseCount: z.number(),
@@ -12,9 +15,14 @@ export const ActivitySessionListItemSchema = z.object({
   completedAt: z.string().nullable(),
   startedAt: z.string(),
   signals: SignalSchema.array(),
-  primarySignal: SignalSchema.nullable(),
 });
 export type ActivitySessionListItem = z.infer<typeof ActivitySessionListItemSchema>;
+
+export const ActivitySessionsPageSchema = z.object({
+  items: ActivitySessionListItemSchema.array(),
+  total: z.number(),
+});
+export type ActivitySessionsPage = z.infer<typeof ActivitySessionsPageSchema>;
 
 const SessionDetailExerciseSchema = z.object({
   exerciseId: z.string(),

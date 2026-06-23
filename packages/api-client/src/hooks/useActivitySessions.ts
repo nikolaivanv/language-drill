@@ -1,12 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import type { AuthenticatedFetch } from '../fetchClient';
-import { buildQueryString } from '../lib/build-query-string';
-import { ActivitySessionListItemSchema } from '../schemas/admin-activity';
+import { ActivitySessionsPageSchema } from '../schemas/admin-activity';
+
+export type ActivityRisk = 'abandoned' | 'low_score' | 'flagged';
 
 export type ActivitySessionsParams = {
-  language?: string;
-  userId?: string;
-  all?: boolean;
+  user?: string;
+  from?: string;
+  to?: string;
+  risk?: ActivityRisk[];
   limit?: number;
   offset?: number;
 };
@@ -17,16 +19,18 @@ export function useActivitySessions({
   return useQuery({
     queryKey: ['admin', 'activity', 'sessions', params],
     queryFn: async () => {
-      const qs = buildQueryString({
-        language: params.language,
-        userId: params.userId,
-        all: params.all ? 'true' : undefined,
-        limit: params.limit,
-        offset: params.offset,
-      });
+      // buildQueryString can't emit repeated params, so build manually.
+      const sp = new URLSearchParams();
+      if (params.user) sp.set('user', params.user);
+      if (params.from) sp.set('from', params.from);
+      if (params.to) sp.set('to', params.to);
+      for (const r of params.risk ?? []) sp.append('risk', r);
+      if (params.limit != null) sp.set('limit', String(params.limit));
+      if (params.offset != null) sp.set('offset', String(params.offset));
+      const qs = sp.toString() ? `?${sp.toString()}` : '';
       const res = await fetchFn(`/admin/activity/sessions${qs}`);
       const json: unknown = await res.json();
-      return ActivitySessionListItemSchema.array().parse(json);
+      return ActivitySessionsPageSchema.parse(json);
     },
     enabled,
   });

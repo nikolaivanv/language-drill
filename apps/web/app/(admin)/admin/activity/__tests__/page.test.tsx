@@ -27,9 +27,9 @@ vi.mock('@language-drill/api-client', async () => {
 import ActivityPage from '../page';
 
 const feed: ActivitySessionListItem[] = [
-  { sessionId: 's-flag', userId: 'user_aaaaaaaa', language: 'ES', difficulty: 'B1',
-    exerciseCount: 5, correctCount: 4, completedAt: '2026-06-22T11:00:00Z',
-    startedAt: '2026-06-22T10:55:00Z', signals: ['flagged'], primarySignal: 'flagged' },
+  { sessionId: 's-flag', userId: 'user_aaaaaaaa', firstName: 'Ada', lastName: 'Lovelace', email: 'ada@x.com',
+    language: 'ES', difficulty: 'B1', exerciseCount: 5, correctCount: 4,
+    completedAt: '2026-06-22T11:00:00Z', startedAt: '2026-06-22T10:55:00Z', signals: ['flagged'] },
 ];
 
 const failRows = [{
@@ -43,24 +43,33 @@ const rosterRows = [{
 }];
 
 beforeEach(() => {
-  mockSessions.mockReturnValue({ isLoading: false, isError: false, data: feed });
+  mockSessions.mockReturnValue({ isLoading: false, isError: false, data: { items: feed, total: 1 } });
   mockDetail.mockReturnValue({ isLoading: false, isError: false, data: undefined });
   mockFailures.mockReturnValue({ isLoading: false, isError: false, data: failRows });
   mockRoster.mockReturnValue({ isLoading: false, isError: false, data: rosterRows });
 });
 
 describe('ActivityPage — Sessions tab', () => {
-  it('renders the feed with a problem badge', () => {
+  it('renders a row with the user name, score, and risk badge', () => {
     render(<ActivityPage />);
     expect(screen.getByRole('heading', { name: 'Activity' })).toBeInTheDocument();
-    expect(screen.getByText(/flagged/i)).toBeInTheDocument();
+    expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
     expect(screen.getByText(/4\s*\/\s*5/)).toBeInTheDocument();
+    // Both the risk filter chip and the row's SignalBadge render "flagged".
+    expect(screen.getAllByText(/flagged/i)).toHaveLength(2);
   });
 
-  it('selects a session on row click and requests its detail', () => {
+  it('toggling a risk chip re-queries with risk', () => {
     render(<ActivityPage />);
-    fireEvent.click(screen.getByRole('button', { name: /s-flag/i }));
-    // Detail hook called with the clicked sessionId
+    fireEvent.click(screen.getByRole('button', { name: /^abandoned$/i }));
+    expect(mockSessions).toHaveBeenCalledWith(
+      expect.objectContaining({ params: expect.objectContaining({ risk: ['abandoned'] }) }),
+    );
+  });
+
+  it('expands the session detail inline on row click', () => {
+    render(<ActivityPage />);
+    fireEvent.click(screen.getByRole('button', { name: /Ada Lovelace/i }));
     expect(mockDetail).toHaveBeenCalledWith(expect.objectContaining({ sessionId: 's-flag' }));
   });
 });
