@@ -331,6 +331,14 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
     expect(getGrammarPoint('tr-a2-consonant-doubling')?.targetOverride).toBe(10);
   });
 
+  it('raises tr-a1-dictation target to 15 via targetOverride (2026-06-23b)', () => {
+    // Trial-raise from the dictation A1 default (6), where the pool had stalled
+    // because the validator mis-flagged in-scope A1 morphology as A2. With the
+    // level-scope fix in place, need=15-6=9 lets the cell refill. Point-wide is
+    // safe: a dictation umbrella only feeds the dictation cell.
+    expect(getGrammarPoint('tr-a1-dictation')?.targetOverride).toBe(15);
+  });
+
   it('leaves tr-a2-indefinite-compound uncapped — its translation surface is healthy', () => {
     // The cloze quality fix lives in the generation prompt (bare-head hint,
     // nominative answer, no case-stacking). targetOverride is point-wide and

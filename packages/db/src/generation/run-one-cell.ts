@@ -426,7 +426,12 @@ async function fetchPriorConjugationSeeds(
 export function seedKindFor(cell: Cell): 'frequency' | 'verb' | null {
   if (
     cell.exerciseType === ExerciseType.CLOZE ||
-    cell.exerciseType === ExerciseType.TRANSLATION
+    cell.exerciseType === ExerciseType.TRANSLATION ||
+    // Dictation: a per-ordinal frequency lemma is a loose lexical anchor that
+    // breaks the "everything is about reading a book" collapse. No prior-seed
+    // avoid-list (priorSeeds stays empty for dictation) — diversity comes from
+    // batchSeed rotation over the band, matching cloze/translation.
+    cell.exerciseType === ExerciseType.DICTATION
   ) {
     return 'frequency';
   }

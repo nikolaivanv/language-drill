@@ -34,8 +34,8 @@ it('the generation prompt gives explicit A1 and A2 length bands', () => {
   expect(DICTATION_GENERATION_SYSTEM_PROMPT).toContain('A2');
 });
 
-it('version is bumped to the A1/A2 edit date', () => {
-  expect(DICTATION_GENERATION_PROMPT_VERSION).toBe('dictation-generate@2026-06-16');
+it('version is bumped to the level-scope + seed edit date', () => {
+  expect(DICTATION_GENERATION_PROMPT_VERSION).toBe('dictation-generate@2026-06-23');
 });
 
 it('user prompt names the ordinal and the domain', () => {
@@ -43,6 +43,38 @@ it('user prompt names the ordinal and the domain', () => {
   expect(u).toContain('#3');
   expect(u).toContain('travel');
   expect(u).toContain('submit_dictation_exercise');
+});
+
+it('renders the curriculum level-scope section when levelScopePoints are supplied', () => {
+  const scoped = {
+    ...inputs,
+    levelScopePoints: [
+      { key: 'tr-a1-stem-changes', name: 'Stem changes: consonant softening & vowel drop', cefrLevel: 'A1' },
+      { key: 'tr-a1-present-continuous', name: 'Present continuous -iyor', cefrLevel: 'A1' },
+    ],
+  };
+  const vars = computeDictationGenerationPromptVars(scoped as never);
+  const { text, missingVars } = applyTemplate(DICTATION_GENERATION_SYSTEM_PROMPT, vars);
+  expect(missingVars).toEqual([]);
+  expect(text).toContain("Grammar in this learner's scope");
+  expect(text).toContain('consonant softening');
+  expect(text).toContain('Present continuous -iyor');
+});
+
+it('omits the level-scope section when no levelScopePoints are supplied', () => {
+  const vars = computeDictationGenerationPromptVars(inputs as never);
+  expect(vars.levelScopeSection).toBe('');
+});
+
+it('user prompt anchors on a seed word in loose mode when supplied', () => {
+  const u = buildDictationGenerationUserPrompt(inputs as never, 0, 'travel', 'batch-1', 'maleta');
+  expect(u).toContain('maleta');
+  expect(u).toContain('closely related word');
+});
+
+it('user prompt omits the seed line when no seed word is supplied', () => {
+  const u = buildDictationGenerationUserPrompt(inputs as never, 0, 'travel', 'batch-1');
+  expect(u).not.toContain('Anchor the clip');
 });
 
 const rotationInputs = {

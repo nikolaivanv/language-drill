@@ -80,8 +80,14 @@ const { A1, A2, B1 } = CefrLevel;
  * indefinite-noun-compound cloze rule (bare-head hint, nominative answer, no
  * case-stacking) for tr-a2-indefinite-compound (8/49). Bump clears the
  * low-yield suppression on consonant-doubling translation so it re-runs.
+ * 2026-06-23b: tr-a1-dictation gets targetOverride: 15 (was the level default
+ * 6, where the pool had stalled). Pairs with dictation generate+validate
+ * @2026-06-23 prompts now receiving the curriculum level-scope, so in-scope A1
+ * morphology (consonant softening, present-continuous -iyor) is no longer
+ * mis-flagged as A2, plus a per-ordinal frequency seed for clip diversity.
+ * Bump clears any lingering tr-a1-dictation suppression so need=15-6=9 re-runs.
  */
-export const CURRICULUM_VERSION_TR = '2026-06-23';
+export const CURRICULUM_VERSION_TR = '2026-06-23b';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -2273,6 +2279,13 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Mishearing vowel-harmony suffixes (evler vs. *evlar).',
       'Missing word-final consonant softening (kitabı heard/spelled as kitap).',
     ],
+    // targetOverride (2026-06-23): trial-raise the A1 dictation pool from the
+    // level default of 6 to 15. The pool had stalled at 6 because the validator
+    // was flagging in-scope A1 morphology (softening, -iyor) as A2 — fixed by
+    // giving the dictation prompts the curriculum level-scope. Point-wide, but a
+    // dictation umbrella only feeds the dictation cell, so TR-only and dictation-
+    // only. Raise further / replicate to other languages once this trial lands.
+    targetOverride: 15,
   },
   {
     key: 'tr-a2-dictation',

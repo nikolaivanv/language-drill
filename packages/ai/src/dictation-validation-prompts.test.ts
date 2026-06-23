@@ -33,8 +33,29 @@ describe('dictation-validation-prompts', () => {
     expect(DICTATION_VALIDATION_SYSTEM_PROMPT).toContain('A2');
   });
 
-  it('version is bumped to the A1/A2 edit date', () => {
-    expect(DICTATION_VALIDATION_PROMPT_VERSION).toBe('dictation-validate@2026-06-16');
+  it('version is bumped to the level-scope edit date', () => {
+    expect(DICTATION_VALIDATION_PROMPT_VERSION).toBe('dictation-validate@2026-06-23');
+  });
+
+  it('renders the curriculum level-scope and tells levelMatch to use it as ground truth', () => {
+    const scoped = {
+      ...spec,
+      levelScopePoints: [
+        { key: 'tr-a1-stem-changes', name: 'Stem changes: consonant softening & vowel drop', cefrLevel: 'A1' },
+        { key: 'tr-a1-present-continuous', name: 'Present continuous -iyor', cefrLevel: 'A1' },
+      ],
+    };
+    const { text, missingVars } = applyTemplate(
+      DICTATION_VALIDATION_SYSTEM_PROMPT, computeDictationValidationPromptVars(scoped as never));
+    expect(missingVars).toEqual([]);
+    expect(text).toContain("Grammar in this learner's scope");
+    expect(text).toContain('consonant softening');
+    // The levelMatch rubric must defer to the scope list, not the model's own sense of level.
+    expect(text).toContain('ground truth');
+  });
+
+  it('omits the level-scope section when no levelScopePoints are supplied', () => {
+    expect(computeDictationValidationPromptVars(spec as never).levelScopeSection).toBe('');
   });
 
   it('user prompt shows the clip text', () => {
