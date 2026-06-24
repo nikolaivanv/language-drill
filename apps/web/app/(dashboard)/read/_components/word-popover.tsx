@@ -74,6 +74,23 @@ export function WordPopover({
   const skipRef = React.useRef<HTMLButtonElement>(null);
   const popoverRef = React.useRef<HTMLDivElement>(null);
 
+  // Return focus to whatever was focused when the card opened (e.g. the word a
+  // keyboard user activated) once it closes. Captured in a layout effect, which
+  // React runs before the passive autoFocus effect below — so we record the
+  // opener, not the skip button. Restored on unmount; the card always unmounts
+  // on close (annotated-view gates it on `cardOpen`). Non-modal card → no focus
+  // trap, only this return-focus.
+  const openerRef = React.useRef<HTMLElement | null>(null);
+  React.useLayoutEffect(() => {
+    openerRef.current = document.activeElement as HTMLElement | null;
+    return () => {
+      const opener = openerRef.current;
+      if (opener && opener.isConnected && opener !== document.body) {
+        opener.focus();
+      }
+    };
+  }, []);
+
   React.useEffect(() => {
     if (autoFocus) {
       skipRef.current?.focus();
