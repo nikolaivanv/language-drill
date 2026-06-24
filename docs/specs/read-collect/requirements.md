@@ -4,7 +4,7 @@
 
 Phase J — **Read & Collect** — adds a parallel entry point to the app that bridges the user's external reading material to the drill pipeline. The user pastes a passage (≤ 2,000 chars) from anything they're reading; Claude flags words above their estimated CEFR level; the user picks which to learn; saved words are persisted to a per-user word bank tagged `source = 'reading'`.
 
-The full design is in `design_handoff_language_drill/SCREENS.md §8` and the prototype in `design_handoff_language_drill/prototypes/web/hifi/read.jsx`. The page lives at `/read` and is reachable from the left-nav `read` item and the dashboard `ReadCollectCard` (added in Phase D, currently links to a placeholder page).
+The full design is in `docs/design-archive/design_handoff_language_drill/SCREENS.md §8` and the prototype in `docs/design-archive/design_handoff_language_drill/prototypes/web/hifi/read.jsx`. The page lives at `/read` and is reachable from the left-nav `read` item and the dashboard `ReadCollectCard` (added in Phase D, currently links to a placeholder page).
 
 The screen has four views, switched by top-bar buttons:
 

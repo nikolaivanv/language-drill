@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------------
 // Static; no props. Renders below the skill snapshot. Layout mirrors the
 // prototype reference at:
-//   design_handoff_language_drill/prototypes/web/hifi/dashboard.jsx (lines 117–136)
+//   docs/design-archive/design_handoff_language_drill/prototypes/web/hifi/dashboard.jsx (lines 117–136)
 // ---------------------------------------------------------------------------
 
 import { Button, Card, Chip } from '../../../components/ui';
