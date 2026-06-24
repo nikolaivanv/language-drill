@@ -4,7 +4,7 @@
 // `AnnotatedText` (Phase J read screen) renders the passage by walking these
 // spans: each `word` token may render as a clickable `<button>` if its `key`
 // matches a flagged-word entry, while `sep` tokens render as plain text. The
-// prototype's tokenizer (`design_handoff_language_drill/.../read.jsx:175–198`)
+// prototype's tokenizer (`docs/design-archive/design_handoff_language_drill/.../read.jsx:175–198`)
 // only handled the ES punctuation set — this version covers anything in the
 // Unicode `\p{P}` (Punctuation) class plus whitespace, so the same code works
 // for ES `¿¡`, DE `„ « »`, TR `…` and em-dashes without per-language branches.

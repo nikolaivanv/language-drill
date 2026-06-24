@@ -345,7 +345,7 @@ Each task touches 1–3 files, completes in 15–30 minutes, has a single testab
   - File: `apps/web/app/(dashboard)/_components/read-collect-card.tsx` (new)
   - Static component (no props beyond the implicit `Link` dependency)
   - 44×44 `r-md` icon tile (book SVG inline, `accent-soft` background, `accent-2` foreground), title `reading something this week?` in `t-display-s`, `Chip` `new` (`accent` variant), subtitle `paste a paragraph — i'll mark words above your level and weave them into your next session.` in `t-small`, primary `Button` `open reader →` linking to `/read`
-  - Layout matches the prototype reference at `design_handoff_language_drill/prototypes/web/hifi/dashboard.jsx` lines 117–136
+  - Layout matches the prototype reference at `docs/design-archive/design_handoff_language_drill/prototypes/web/hifi/dashboard.jsx` lines 117–136
   - Purpose: the only promotional element on the page; static and stable
   - _Leverage: apps/web/components/ui (Card, Chip, Button), next/link_
   - _Requirements: 6.1, 6.2, 6.3, 6.4_

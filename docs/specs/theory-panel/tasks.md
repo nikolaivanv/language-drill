@@ -88,10 +88,10 @@ Each task touches **1–3 files maximum**, fits in **15–30 min**, has a **sing
 
 - [x] 6. Author `apps/web/content/theory/es/subjunctive.tsx`
   - File: `apps/web/content/theory/es/subjunctive.tsx` (create)
-  - Default-export a `TheoryTopic` with `id: 'subjunctive'`, `title: 'el subjuntivo'`, `cefr: 'B1–B2'`, and the six sections from the prototype: `what`, `when`, `form-regular`, `form-irregular`, `examples`, `pitfalls` — translate the JSX from `design_handoff_language_drill/prototypes/web/hifi/theory.jsx` lines 5–131 into our `<Callout>` / `<Example>` / `<ConjugationTable>` / `<TheoryList>` / `<Hilite>` / `<Mono>` primitives
+  - Default-export a `TheoryTopic` with `id: 'subjunctive'`, `title: 'el subjuntivo'`, `cefr: 'B1–B2'`, and the six sections from the prototype: `what`, `when`, `form-regular`, `form-irregular`, `examples`, `pitfalls` — translate the JSX from `docs/design-archive/design_handoff_language_drill/prototypes/web/hifi/theory.jsx` lines 5–131 into our `<Callout>` / `<Example>` / `<ConjugationTable>` / `<TheoryList>` / `<Hilite>` / `<Mono>` primitives
   - Then in `apps/web/content/theory/index.ts`: import this file and add `subjunctive` to `theoryRegistry.ES`; add `'subjunctive': 'subjunctive'` and `'present-subjunctive': 'subjunctive'` to `HINT_TO_TOPIC` in `apps/web/lib/theory-topic-map.ts`
   - Purpose: ship the v1 marquee topic; the registry now has its first real entry
-  - _Leverage: `design_handoff_language_drill/prototypes/web/hifi/theory.jsx`, `apps/web/components/theory/primitives.tsx`_
+  - _Leverage: `docs/design-archive/design_handoff_language_drill/prototypes/web/hifi/theory.jsx`, `apps/web/components/theory/primitives.tsx`_
   - _Requirements: FR-4, FR-5, US-1, Assumptions §"v1 ships with content for ES only"_
   - _Verify: `pnpm --filter @language-drill/web typecheck`_
 
@@ -101,7 +101,7 @@ Each task touches **1–3 files maximum**, fits in **15–30 min**, has a **sing
   - The prototype only ships `what` + `examples` + a "stub" placeholder; flesh out `signals` and `formation` from common B1 reference material — keep the writing voice editorial and concise (≤120 words per section)
   - Then in `apps/web/content/theory/index.ts`: import + add to `theoryRegistry.ES`; add `'preterite-vs-imperfect': 'preterite-imperfect'` and `'pret-imp': 'preterite-imperfect'` to `HINT_TO_TOPIC`
   - Purpose: second full topic — proves the panel handles a second TOC entry and the "other topics" list
-  - _Leverage: `design_handoff_language_drill/prototypes/web/hifi/theory.jsx` lines 133–166, `apps/web/components/theory/primitives.tsx`_
+  - _Leverage: `docs/design-archive/design_handoff_language_drill/prototypes/web/hifi/theory.jsx` lines 133–166, `apps/web/components/theory/primitives.tsx`_
   - _Requirements: FR-3.4, FR-4, FR-5_
   - _Verify: `pnpm --filter @language-drill/web typecheck`_
 
@@ -110,7 +110,7 @@ Each task touches **1–3 files maximum**, fits in **15–30 min**, has a **sing
   - Default-export a `TheoryTopic` with `id: 'conditional'`, `title: 'el condicional'`, `subtitle: 'would-statements, polite requests, hypotheticals'`, `cefr: 'B1–B2'`, and a single `overview` section with one paragraph in `<Callout>` saying "more sections coming soon — formation, uses, irregulars, examples"
   - Then in `apps/web/content/theory/index.ts`: import + add to `theoryRegistry.ES`; add `'conditional': 'conditional'` to `HINT_TO_TOPIC`
   - Purpose: provides the third entry needed to verify "other topics" sorting and behavior with a deliberately tiny topic
-  - _Leverage: `design_handoff_language_drill/prototypes/web/hifi/theory.jsx` lines 168–175_
+  - _Leverage: `docs/design-archive/design_handoff_language_drill/prototypes/web/hifi/theory.jsx` lines 168–175_
   - _Requirements: FR-3.4, FR-5_
   - _Verify: `pnpm --filter @language-drill/web typecheck`_
 
@@ -124,7 +124,7 @@ Each task touches **1–3 files maximum**, fits in **15–30 min**, has a **sing
   - Default state: `sectionIds[0] ?? ''`
   - Re-run when `sectionIds` joined string changes (use `sectionIds.join('|')` as a dep proxy)
   - Purpose: TOC active state without per-section scroll listeners
-  - _Leverage: `design_handoff_language_drill/prototypes/web/hifi/theory.jsx` lines 188–202 (same logic, typed)_
+  - _Leverage: `docs/design-archive/design_handoff_language_drill/prototypes/web/hifi/theory.jsx` lines 188–202 (same logic, typed)_
   - _Requirements: FR-3.2, NFR Performance §"single IntersectionObserver"_
   - _Verify: `pnpm --filter @language-drill/web typecheck`_
 

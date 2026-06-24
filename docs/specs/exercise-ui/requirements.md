@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Phase F redesigns the existing cloze, translation, and vocabulary recall exercise UIs at `/drill` to match the high-fidelity prototypes in `design_handoff_language_drill/prototypes/web/hifi/`. The current implementation (`apps/web/app/(dashboard)/drill/page.tsx`, ~560 lines) renders all three exercise types in a single column with raw Tailwind utilities, no coach persona, no progressive scaffolding, and uniform feedback. This phase replaces it with:
+Phase F redesigns the existing cloze, translation, and vocabulary recall exercise UIs at `/drill` to match the high-fidelity prototypes in `docs/design-archive/design_handoff_language_drill/prototypes/web/hifi/`. The current implementation (`apps/web/app/(dashboard)/drill/page.tsx`, ~560 lines) renders all three exercise types in a single column with raw Tailwind utilities, no coach persona, no progressive scaffolding, and uniform feedback. This phase replaces it with:
 
 - A **two-pane layout** — 280px coach rail + main exercise area — with a 3px progress bar.
 - A **coach persona** (avatar + contextual messages) embedded in the rail.

@@ -103,7 +103,7 @@ The product positioning (`product.md` §2) frames Language Drill as **"what you 
 
 1. WHEN the page renders THEN the system SHALL display, below the skill snapshot, a single horizontal card with a 44×44 `r-md` icon tile (book glyph, `accent-soft` background, `accent-2` foreground), a title in `t-display-s` reading `reading something this week?`, a `new` chip in `accent`, a `t-small` subtitle reading `paste a paragraph — i'll mark words above your level and weave them into your next session.`, and a primary `open reader →` button that navigates to `/read`.
 2. WHEN Phase J (Read & Collect) has not yet shipped a working `/read` page THEN the link target SHALL still be `/read` — the existing placeholder route handles the dead-link case. This spec SHALL NOT add a "coming soon" disabled variant.
-3. WHEN the card renders THEN the icon, title, chip, and CTA SHALL be visually consistent with the prototype reference at `design_handoff_language_drill/prototypes/web/hifi/dashboard.jsx` lines 117–136 — same paddings, gaps, and copy.
+3. WHEN the card renders THEN the icon, title, chip, and CTA SHALL be visually consistent with the prototype reference at `docs/design-archive/design_handoff_language_drill/prototypes/web/hifi/dashboard.jsx` lines 117–136 — same paddings, gaps, and copy.
 4. WHEN the card is rendered THEN it SHALL be the **only** non-essential element on the page; no other promotional / banner / nudge cards are added in v1.
 
 ### Requirement 7 — Loading and error states

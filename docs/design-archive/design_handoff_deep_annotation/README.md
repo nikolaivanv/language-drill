@@ -206,7 +206,7 @@ The prototype splits these across `READ_WORDS`, `READ_PHRASES`, `READ_SENTENCES`
 
 ## Design tokens
 
-Use the existing app's design tokens (already documented in `design_handoff_language_drill/tokens.css`). This feature introduces no new colors, type ramps, or radii. Highlight styles map to existing tokens:
+Use the existing app's design tokens (the live source of truth is the Tailwind v4 `@theme` block in `apps/web/app/globals.css`). This feature introduces no new colors, type ramps, or radii. Highlight styles map to existing tokens:
 
 | Style | CSS |
 |---|---|
@@ -230,7 +230,7 @@ Card chrome: see `prototype/read.css` (`.rd-popover`, `.rd-sheet`, `.rd-popover-
 | `read-passage.jsx` | Tokeniser, sentence-range finder, `PassageReader` (mouse drag selection). **Production-shape.** |
 | `read-data.jsx` | Sample passages + word/phrase/sentence dictionaries. **Reference for data shape only.** |
 | `read.css` | All Read-specific styles. **Production-shape**, minus the rail/demo/segment classes — see the [Prototype-only CSS](#prototype-only-css) section below. |
-| `tokens.css` | The app's existing design tokens (copy of `design_handoff_language_drill/tokens.css`). Already in your codebase. |
+| `tokens.css` | A prototype-local snapshot of the app's design tokens. The live source of truth is the `@theme` block in `apps/web/app/globals.css`. |
 
 ### Prototype-only CSS
 

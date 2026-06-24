@@ -18,7 +18,7 @@ The page reuses Phase A design tokens (`globals.css`), Phase A UI primitives (`C
 - **No Claude calls** (`tech.md` §7): the dashboard renders nothing AI-generated. The framing paragraph is generated client-side from the radar data via a deterministic rules table (mirrors the progress-page observation pattern).
 - **Auth** (`tech.md` §12): the new endpoint sits behind the existing `authMiddleware` (Clerk JWT validated by API Gateway in production, dev-injected `userId` locally — see `infra/lambda/src/middleware/auth.ts`). The endpoint is mounted on the existing `/sessions/*` Hono router so it picks up the same middleware automatically.
 - **Validation discipline** (`tech.md` §12): the `language` query param is validated against the existing `LearningLanguageEnum` (ES/DE/TR — matches `packages/api-client/src/schemas/preferences.ts`); EN is rejected with `400`.
-- **No streaks / XP / lesson-count** (`product.md` §2.2, `CLAUDE.md`): hard rule honoured — the prototype's "🔥 12-day streak" card from `design_handoff_language_drill/prototypes/web/hifi/dashboard.jsx` lines 107–113 is **not** ported.
+- **No streaks / XP / lesson-count** (`product.md` §2.2, `CLAUDE.md`): hard rule honoured — the prototype's "🔥 12-day streak" card from `docs/design-archive/design_handoff_language_drill/prototypes/web/hifi/dashboard.jsx` lines 107–113 is **not** ported.
 
 ### Project Structure (structure.md)
 

@@ -6,7 +6,7 @@ A client-only, slide-over reference panel that shows grammar theory inside the d
 
 All content is shipped as TypeScript modules under `apps/web/content/theory/{language}/{topic-id}.tsx`, statically imported into a typed registry. There are no backend changes in v1: no DB, no API, no env vars, no new packages. Topic association on exercises is handled with an additive optional `topicHint?: string` field on `ExerciseContent`, populated in seed data, mapped client-side to a closed enum of theory topic IDs.
 
-The design follows the prototype at `design_handoff_language_drill/prototypes/web/hifi/theory.jsx` and the spec at `design_handoff_language_drill/SCREENS.md §5`, adapted to our stack (Next.js App Router client component, Tailwind v4 CSS-first theming, existing `apps/web/components/ui/*` library, no new deps). The mobile bottom-sheet variant is explicitly out of scope (web-only roadmap).
+The design follows the prototype at `docs/design-archive/design_handoff_language_drill/prototypes/web/hifi/theory.jsx` and the spec at `docs/design-archive/design_handoff_language_drill/SCREENS.md §5`, adapted to our stack (Next.js App Router client component, Tailwind v4 CSS-first theming, existing `apps/web/components/ui/*` library, no new deps). The mobile bottom-sheet variant is explicitly out of scope (web-only roadmap).
 
 ---
 

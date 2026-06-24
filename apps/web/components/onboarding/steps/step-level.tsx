@@ -11,7 +11,7 @@
 //      handled by `Choice`'s own click/Enter/Space behaviour.
 //   2. A vertical stack of 6 CEFR cards (`Choice` `mode="radio"`) showing the
 //      level code, lowercase name, and short description. Copy is verbatim
-//      from the prototype `design_handoff_language_drill/prototypes/web/hifi/
+//      from the prototype `docs/design-archive/design_handoff_language_drill/prototypes/web/hifi/
 //      onboarding.jsx` (lines 138–145), which R3.4 cites as canonical.
 //   3. The `<PlacementTestCallout />` disabled-callout below the cards.
 //

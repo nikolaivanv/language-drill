@@ -9,7 +9,7 @@ This feature splits annotation into two tiers that render into the same card UI:
 1. **Skim pass (automatic, cheap):** a lighter Haiku pass whose only job is to *highlight* words that are probably unknown, with a one-line gloss. Dropping per-word enrichment cost lets it cover far more words and exclude proper nouns.
 2. **Deep annotation (on demand, rich):** the user taps any word — flagged or not — or selects a multi-word span or a whole sentence, and a focused Claude (Sonnet) call returns a rich card: contextual sense, target-language definition, inflection, morphology with a sentence-grounded "why this form," synonyms, collocations, and register. Word and phrase cards can be saved to the user's vocabulary as a lexical-core-plus-context snapshot.
 
-The companion **Part 2 (Vocabulary Review)** — `docs/vocabulary-review-design.md` — consumes the saved cards and is **out of scope here**. Authoritative design inputs: `docs/reading-deep-annotation-design.md` and `design_handoff_deep_annotation/` (UI prototype + README).
+The companion **Part 2 (Vocabulary Review)** — `docs/vocabulary-review-design.md` — consumes the saved cards and is **out of scope here**. Authoritative design inputs: `docs/reading-deep-annotation-design.md` and `docs/design-archive/design_handoff_deep_annotation/` (UI prototype + README).
 
 ## Alignment with Product Vision
 

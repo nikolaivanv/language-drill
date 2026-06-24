@@ -1,6 +1,6 @@
 # Web Implementation Plan
 
-A phased roadmap for implementing the design prototypes in `design_handoff_language_drill/` into the Next.js web app at `apps/web/`. Mobile (Expo) is deferred — we'll return to it after the web is feature-complete.
+A phased roadmap for implementing the design prototypes in `docs/design-archive/design_handoff_language_drill/` into the Next.js web app at `apps/web/`. Mobile (Expo) is deferred — we'll return to it after the web is feature-complete.
 
 Each phase has a kebab-case spec at `.claude/specs/<spec-name>/` with three documents (`requirements.md`, `design.md`, `tasks.md`) and a set of generated slash commands (`/<spec-name>-task-N`) for atomic execution.
 
