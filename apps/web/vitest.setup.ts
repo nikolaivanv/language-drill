@@ -34,3 +34,22 @@ class MockIntersectionObserver {
 export const mockIntersectionObserverInstances: MockIntersectionObserver[] = [];
 
 vi.stubGlobal('IntersectionObserver', MockIntersectionObserver);
+
+// ---------------------------------------------------------------------------
+// Radix UI polyfills
+// ---------------------------------------------------------------------------
+// @radix-ui/react-dropdown-menu (and siblings) call DOM APIs jsdom doesn't
+// implement. Without these, mounting a Radix menu or driving it via
+// user-event throws.
+
+class MockResizeObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+vi.stubGlobal('ResizeObserver', MockResizeObserver);
+
+Element.prototype.scrollIntoView = vi.fn();
+Element.prototype.hasPointerCapture = vi.fn(() => false);
+Element.prototype.setPointerCapture = vi.fn();
+Element.prototype.releasePointerCapture = vi.fn();
