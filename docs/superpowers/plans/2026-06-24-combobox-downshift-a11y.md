@@ -26,7 +26,7 @@
 **Interfaces:**
 - Produces: `downshift` package available to `@language-drill/web`, exporting `useCombobox`.
 
-- [ ] **Step 1: Install**
+- [x] **Step 1: Install**
 
 Run from repo root:
 
@@ -34,7 +34,7 @@ Run from repo root:
 pnpm --filter @language-drill/web add downshift
 ```
 
-- [ ] **Step 2: Verify it resolved to a v9+ stable line**
+- [x] **Step 2: Verify it resolved to a v9+ stable line**
 
 Run:
 
@@ -44,7 +44,7 @@ node -e "console.log(require('./apps/web/node_modules/downshift/package.json').v
 
 Expected: a `9.x.x` (or newer) version prints. If a major newer than 9 installed, that's fine — the `useCombobox` API used here (`getInputProps`/`getMenuProps`/`getItemProps`/`getLabelProps`, controlled `selectedItem`/`inputValue`, `onInputValueChange`/`onSelectedItemChange`, `highlightedIndex`, `isOpen`, `itemToString`) is stable across v7–v9.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/web/package.json pnpm-lock.yaml
@@ -63,7 +63,7 @@ git commit -m "build(web): add downshift for accessible combobox"
 - Consumes: `Input` from `apps/web/components/ui` (forwardRef, spreads props onto `<input>`); `cn` from `apps/web/lib/cn`; `useCombobox` from `downshift`.
 - Produces: unchanged export `GrammarPointCombobox(props)` and type `GrammarPointOption`.
 
-- [ ] **Step 1: Add the two failing keyboard tests**
+- [x] **Step 1: Add the two failing keyboard tests**
 
 Append these to the existing `describe('GrammarPointCombobox', ...)` block in
 `apps/web/components/admin/__tests__/grammar-point-combobox.test.tsx` (keep all 8 existing tests as-is):
@@ -88,7 +88,7 @@ it('closes the menu on Escape', () => {
 });
 ```
 
-- [ ] **Step 2: Run the new tests against the old implementation — verify they FAIL**
+- [x] **Step 2: Run the new tests against the old implementation — verify they FAIL**
 
 Run:
 
@@ -98,7 +98,7 @@ pnpm --filter @language-drill/web test -- grammar-point-combobox
 
 Expected: the two new tests FAIL (the current implementation has no keyboard handling — `ArrowDown`/`Enter` do nothing, so `onChange` is never called and no options render from a keyboard open). The 8 existing tests still PASS.
 
-- [ ] **Step 3: Rewrite the component on downshift**
+- [x] **Step 3: Rewrite the component on downshift**
 
 Replace the entire contents of `apps/web/components/admin/grammar-point-combobox.tsx` with:
 
@@ -211,7 +211,7 @@ Notes for the implementer (do not paste into the file):
 - The `<ul>` from `getMenuProps()` must stay rendered in the DOM (accessibility); we hide it with the `hidden` class when closed and render no `<li>` children, so `getAllByRole('option')` returns none when closed.
 - The `sr-only` label is the accessible name; `getByLabelText('grammar point')` resolves through `getLabelProps`/`getInputProps`'s `aria-labelledby` association. Do not add a separate `aria-label` (it would conflict).
 
-- [ ] **Step 4: Run the full file — all 10 tests PASS**
+- [x] **Step 4: Run the full file — all 10 tests PASS**
 
 Run:
 
@@ -221,7 +221,7 @@ pnpm --filter @language-drill/web test -- grammar-point-combobox
 
 Expected: 10 passed (8 original + 2 new). If the deep-link test (`shows the selected name once options arrive after a preset value`) fails, the `useEffect` syncing `inputValue` to `selectedItem` is the fix point — confirm it is present and depends on `[selectedItem]`.
 
-- [ ] **Step 5: Pre-push gate**
+- [x] **Step 5: Pre-push gate**
 
 Run from repo root:
 
@@ -231,7 +231,7 @@ pnpm lint && pnpm typecheck && pnpm test
 
 Expected: all three pass with zero failures. (If a stale `infra/lambda/dist` or `db/dist` causes unrelated phantom failures, that is a known environment quirk, not this change — but the `@language-drill/web` suite must be green.)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/web/components/admin/grammar-point-combobox.tsx \
