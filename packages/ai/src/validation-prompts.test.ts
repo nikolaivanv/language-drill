@@ -358,6 +358,33 @@ describe("buildValidationUserPrompt", () => {
     expect(withoutNote).not.toContain("Scoring note for this possessive-suffix");
   });
 
+  it("adds the indefinite-compound head-only-blank note ONLY for the tr-a2-indefinite-compound cell", () => {
+    const compound = getGrammarPoint("tr-a2-indefinite-compound");
+    if (!compound) throw new Error("tr-a2-indefinite-compound missing from curriculum");
+    const content: ClozeContent = {
+      type: ExerciseType.CLOZE,
+      instructions: "Fill in the blank with the correct compound head form.",
+      sentence: "Çantamda bir müzik ___ var. (kaset)",
+      correctAnswer: "kaseti",
+    };
+    const compoundSpec: GenerationSpec = {
+      ...baseSpec,
+      language: Language.TR,
+      cefrLevel: CefrLevel.A2,
+      grammarPoint: compound,
+    };
+
+    const withNote = buildValidationUserPrompt(makeDraft(content), compoundSpec);
+    expect(withNote).toContain("indefinite-noun-compound");
+    // Pins the generate↔validate contract: head-only blanking is BY DESIGN, not a mismatch.
+    expect(withNote).toContain("ONLY the head noun is blanked");
+    expect(withNote).toContain("Do NOT set grammarPointMatch=false");
+
+    // The note is scoped: a different cloze cell must NOT receive it.
+    const withoutNote = buildValidationUserPrompt(makeDraft(content), baseSpec);
+    expect(withoutNote).not.toContain("indefinite-noun-compound");
+  });
+
   it("renders a translation draft with every documented field + Spec preamble", () => {
     const content: TranslationContent = {
       type: ExerciseType.TRANSLATION,

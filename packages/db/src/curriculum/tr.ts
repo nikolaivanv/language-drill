@@ -86,8 +86,17 @@ const { A1, A2, B1 } = CefrLevel;
  * morphology (consonant softening, present-continuous -iyor) is no longer
  * mis-flagged as A2, plus a per-ordinal frequency seed for clip diversity.
  * Bump clears any lingering tr-a1-dictation suppression so need=15-6=9 re-runs.
+ * 2026-06-25: clears the low-yield suppression on tr-a2-indefinite-compound
+ * cloze. The 2026-06-24 run produced only 2/19 approved (< LOW_YIELD_THRESHOLD)
+ * because the new head-only-blank generation rule (generate@2026-06-23) was
+ * rejected by the unchanged validator as grammar-point-mismatch — generate and
+ * validate disagreed on the cell's correct shape. Pairs with a per-cell
+ * validation note (validation-prompts.ts clozeCellScoringNote) that accepts the
+ * head-only blank as BY DESIGN, plus a dictation generate@2026-06-25 anti-
+ * stacking constraint + level/safety-subordinate seed line. Bump re-runs the
+ * suppressed cloze cell against the corrected validator.
  */
-export const CURRICULUM_VERSION_TR = '2026-06-23b';
+export const CURRICULUM_VERSION_TR = '2026-06-25';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
