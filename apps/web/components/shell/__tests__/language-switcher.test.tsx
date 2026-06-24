@@ -1,4 +1,5 @@
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, within, act } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { CefrLevel, Language, type LanguageProfile } from '@language-drill/shared';
 import { LanguageSwitcher } from '../language-switcher';
@@ -55,10 +56,6 @@ const PROFILE_DE: LanguageProfile = {
   language: Language.DE,
   proficiencyLevel: CefrLevel.B1,
 };
-const PROFILE_TR: LanguageProfile = {
-  language: Language.TR,
-  proficiencyLevel: CefrLevel.A1,
-};
 const PROFILE_EN: LanguageProfile = {
   language: Language.EN,
   proficiencyLevel: CefrLevel.B2,
@@ -96,28 +93,12 @@ describe('LanguageSwitcher', () => {
     renderWithProvider([PROFILE_ES, PROFILE_DE]);
 
     const trigger = screen.getByRole('button');
-    // The trigger contains the flagdot (with "es" code) + name "spanish" + level
     expect(within(trigger).getByText('es')).toBeInTheDocument();
     expect(within(trigger).getByText('spanish')).toBeInTheDocument();
     expect(within(trigger).getByText('A2')).toBeInTheDocument();
   });
 
-  it('filters EN out of the dropdown', () => {
-    renderWithProvider([PROFILE_EN, PROFILE_ES, PROFILE_DE]);
-
-    fireEvent.click(screen.getByRole('button'));
-    const listbox = screen.getByRole('listbox');
-
-    // ES and DE options should be present
-    expect(within(listbox).getByText('spanish')).toBeInTheDocument();
-    expect(within(listbox).getByText('german')).toBeInTheDocument();
-    // EN-related text should NOT appear (no "english" option)
-    expect(within(listbox).queryByText('english')).not.toBeInTheDocument();
-    // Only 2 options (not 3)
-    expect(within(listbox).getAllByRole('option')).toHaveLength(2);
-  });
-
-  it('disables button and omits aria-haspopup when only one learning profile', () => {
+  it('disables the trigger and omits aria-haspopup when only one learning profile', () => {
     renderWithProvider([PROFILE_ES]);
 
     const trigger = screen.getByRole('button');
@@ -131,117 +112,108 @@ describe('LanguageSwitcher', () => {
     expect(container.querySelector('button')).toBeNull();
   });
 
-  it('opens the dropdown when the trigger is clicked', () => {
+  it('opens the menu when the trigger is clicked', async () => {
+    const user = userEvent.setup();
     renderWithProvider([PROFILE_ES, PROFILE_DE]);
 
     const trigger = screen.getByRole('button');
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
 
-    fireEvent.click(trigger);
+    await user.click(trigger);
 
     expect(trigger).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByRole('listbox')).toBeInTheDocument();
+    expect(screen.getByRole('menu')).toBeInTheDocument();
   });
 
-  it('clicking a different language option calls window.location.reload', () => {
+  it('filters EN out of the menu', async () => {
+    const user = userEvent.setup();
+    renderWithProvider([PROFILE_EN, PROFILE_ES, PROFILE_DE]);
+
+    await user.click(screen.getByRole('button'));
+    const menu = screen.getByRole('menu');
+
+    expect(within(menu).getByText('spanish')).toBeInTheDocument();
+    expect(within(menu).getByText('german')).toBeInTheDocument();
+    expect(within(menu).queryByText('english')).not.toBeInTheDocument();
+    expect(within(menu).getAllByRole('menuitemradio')).toHaveLength(2);
+  });
+
+  it('clicking a different language reloads', async () => {
+    const user = userEvent.setup();
     renderWithProvider([PROFILE_ES, PROFILE_DE]);
 
-    fireEvent.click(screen.getByRole('button'));
-    const listbox = screen.getByRole('listbox');
-    const options = within(listbox).getAllByRole('option');
-    // Active is ES (first profile + no cookie); click DE option
-    const deOption = options.find((o) => o.textContent?.toLowerCase().includes('german'));
-    expect(deOption).toBeDefined();
-    fireEvent.click(deOption!);
+    await user.click(screen.getByRole('button'));
+    const options = within(screen.getByRole('menu')).getAllByRole('menuitemradio');
+    const de = options.find((o) => o.textContent?.toLowerCase().includes('german'));
+    expect(de).toBeDefined();
+    await user.click(de!);
 
     expect(reloadMock).toHaveBeenCalledTimes(1);
   });
 
-  it('clicking the active language closes the dropdown without reloading', () => {
+  it('clicking the active language closes the menu without reloading', async () => {
+    const user = userEvent.setup();
     renderWithProvider([PROFILE_ES, PROFILE_DE]);
 
-    fireEvent.click(screen.getByRole('button'));
-    const listbox = screen.getByRole('listbox');
-    const options = within(listbox).getAllByRole('option');
-    const esOption = options.find((o) => o.textContent?.toLowerCase().includes('spanish'));
-    fireEvent.click(esOption!);
+    await user.click(screen.getByRole('button'));
+    const options = within(screen.getByRole('menu')).getAllByRole('menuitemradio');
+    const es = options.find((o) => o.textContent?.toLowerCase().includes('spanish'));
+    await user.click(es!);
 
     expect(reloadMock).not.toHaveBeenCalled();
-    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
-  it('Escape key closes the dropdown', () => {
+  it('Escape closes the menu', async () => {
+    const user = userEvent.setup();
     renderWithProvider([PROFILE_ES, PROFILE_DE]);
 
-    fireEvent.click(screen.getByRole('button'));
-    expect(screen.getByRole('listbox')).toBeInTheDocument();
+    await user.click(screen.getByRole('button'));
+    expect(screen.getByRole('menu')).toBeInTheDocument();
 
-    fireEvent.keyDown(document, { key: 'Escape' });
+    await user.keyboard('{Escape}');
 
-    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
-  it('clicking outside closes the dropdown', () => {
+  it('clicking outside closes the menu', async () => {
+    // pointerEventsCheck: 0 is needed because Radix's DismissableLayer sets
+    // pointer-events:none on the body in jsdom; the assertion itself is unchanged.
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
     renderWithProvider([PROFILE_ES, PROFILE_DE]);
 
-    fireEvent.click(screen.getByRole('button'));
-    expect(screen.getByRole('listbox')).toBeInTheDocument();
+    await user.click(screen.getByRole('button'));
+    expect(screen.getByRole('menu')).toBeInTheDocument();
 
-    fireEvent.mouseDown(document.body);
+    await user.click(document.body);
 
-    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
-  it('ArrowDown moves focused index forward', () => {
-    renderWithProvider([PROFILE_ES, PROFILE_DE, PROFILE_TR]);
-
-    fireEvent.click(screen.getByRole('button'));
-    const listbox = screen.getByRole('listbox');
-    let options = within(listbox).getAllByRole('option');
-
-    // Initially the first option is focused
-    expect(options[0]).toHaveAttribute('data-focused', 'true');
-    expect(options[1]).toHaveAttribute('data-focused', 'false');
-
-    fireEvent.keyDown(listbox, { key: 'ArrowDown' });
-
-    options = within(screen.getByRole('listbox')).getAllByRole('option');
-    expect(options[0]).toHaveAttribute('data-focused', 'false');
-    expect(options[1]).toHaveAttribute('data-focused', 'true');
-  });
-
-  it('ArrowUp wraps focused index backward from index 0', () => {
-    renderWithProvider([PROFILE_ES, PROFILE_DE, PROFILE_TR]);
-
-    fireEvent.click(screen.getByRole('button'));
-    const listbox = screen.getByRole('listbox');
-
-    fireEvent.keyDown(listbox, { key: 'ArrowUp' });
-
-    const options = within(screen.getByRole('listbox')).getAllByRole('option');
-    // Wrapped to the last option (index 2)
-    expect(options[2]).toHaveAttribute('data-focused', 'true');
-    expect(options[0]).toHaveAttribute('data-focused', 'false');
-  });
-
-  it('Enter on a focused non-active option triggers selection (reload)', () => {
+  it('selects the next language by keyboard (ArrowDown + Enter) and reloads', async () => {
+    // pointerEventsCheck: 0 is needed so the trigger click lands in jsdom;
+    // after the menu opens we manually focus the first menuitemradio because
+    // jsdom doesn't propagate Radix's onOpenAutoFocus through the Portal.
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
     renderWithProvider([PROFILE_ES, PROFILE_DE]);
 
-    fireEvent.click(screen.getByRole('button'));
-    const listbox = screen.getByRole('listbox');
-    // Move focus to DE (index 1)
-    fireEvent.keyDown(listbox, { key: 'ArrowDown' });
-    fireEvent.keyDown(listbox, { key: 'Enter' });
+    await user.click(screen.getByRole('button'));
+    // Ensure focus is inside the menu content so Radix roving-focus can handle keys.
+    const firstItem = screen.getAllByRole('menuitemradio')[0];
+    act(() => { firstItem.focus(); });
+    // Move to DE (second item) and commit.
+    await user.keyboard('{ArrowDown}{Enter}');
 
     expect(reloadMock).toHaveBeenCalledTimes(1);
   });
 
-  it('"manage languages" link points to /settings', () => {
+  it('"manage languages" item links to /settings', async () => {
+    const user = userEvent.setup();
     renderWithProvider([PROFILE_ES, PROFILE_DE]);
 
-    fireEvent.click(screen.getByRole('button'));
-    const link = screen.getByRole('link', { name: /manage languages/i });
+    await user.click(screen.getByRole('button'));
+    const link = screen.getByRole('menuitem', { name: /manage languages/i });
     expect(link).toHaveAttribute('href', '/settings');
   });
 });
