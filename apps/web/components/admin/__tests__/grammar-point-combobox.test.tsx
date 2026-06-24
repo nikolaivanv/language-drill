@@ -68,4 +68,22 @@ describe('GrammarPointCombobox', () => {
     render(<GrammarPointCombobox options={options} value="" onChange={vi.fn()} disabled />);
     expect(screen.getByLabelText('grammar point')).toBeDisabled();
   });
+
+  it('selects an option via keyboard (ArrowDown + Enter)', () => {
+    const onChange = vi.fn();
+    render(<GrammarPointCombobox options={options} value="" onChange={onChange} />);
+    const input = screen.getByLabelText('grammar point');
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(onChange).toHaveBeenCalledWith('es-b1-present-subjunctive');
+  });
+
+  it('closes the menu on Escape', () => {
+    render(<GrammarPointCombobox options={options} value="" onChange={vi.fn()} />);
+    const input = screen.getByLabelText('grammar point');
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    expect(screen.getAllByRole('option').length).toBeGreaterThan(0);
+    fireEvent.keyDown(input, { key: 'Escape' });
+    expect(screen.queryAllByRole('option')).toHaveLength(0);
+  });
 });
