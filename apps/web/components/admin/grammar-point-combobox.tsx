@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useCombobox } from 'downshift';
 import { Input } from '../ui';
+import { cn } from '../../lib/cn';
 
 export type GrammarPointOption = { key: string; name: string };
 
@@ -19,74 +21,78 @@ export function GrammarPointCombobox({
   disabled?: boolean;
   placeholder?: string;
 }) {
-  const selected = options.find((o) => o.key === value) ?? null;
-  const [query, setQuery] = useState(selected?.name ?? '');
-  const [open, setOpen] = useState(false);
-  const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const selectedItem = useMemo(
+    () => options.find((o) => o.key === value) ?? null,
+    [options, value],
+  );
 
-  // Keep the displayed text in sync when the selection changes externally
-  // (e.g. the language filter clears the grammar point) and when the options
-  // arrive after a preset value (deep-link via ?grammarPoint=), so the resolved
-  // name shows once it becomes available.
+  const [inputValue, setInputValue] = useState(selectedItem?.name ?? '');
+
+  // Keep the displayed text in sync when the selection changes externally:
+  // the language filter clearing the grammar point, or a deep-link
+  // (?grammarPoint=) whose name only resolves once options arrive.
   useEffect(() => {
-    setQuery(selected?.name ?? '');
-  }, [value, selected?.name]);
+    setInputValue(selectedItem?.name ?? '');
+  }, [selectedItem]);
 
-  const q = query.trim().toLowerCase();
-  const matches =
-    q && q !== selected?.name.toLowerCase()
-      ? options.filter((o) => o.name.toLowerCase().includes(q) || o.key.toLowerCase().includes(q))
-      : options;
+  const items = useMemo(() => {
+    const q = inputValue.trim().toLowerCase();
+    if (!q || q === selectedItem?.name.toLowerCase()) return options;
+    return options.filter(
+      (o) => o.name.toLowerCase().includes(q) || o.key.toLowerCase().includes(q),
+    );
+  }, [options, inputValue, selectedItem]);
+
+  const {
+    isOpen,
+    highlightedIndex,
+    getInputProps,
+    getMenuProps,
+    getItemProps,
+  } = useCombobox<GrammarPointOption>({
+    items,
+    selectedItem,
+    inputValue,
+    itemToString: (item) => item?.name ?? '',
+    onInputValueChange: ({ inputValue: next }) => {
+      const text = next ?? '';
+      setInputValue(text);
+      if (text === '') onChange('');
+    },
+    onSelectedItemChange: ({ selectedItem: next }) => onChange(next?.key ?? ''),
+  });
+
+  const menuOpen = isOpen && items.length > 0;
 
   return (
     <div className="relative">
       <Input
+        {...getInputProps({ disabled, placeholder, autoComplete: 'off' })}
         aria-label="grammar point"
-        role="combobox"
-        aria-expanded={open}
-        autoComplete="off"
         className="rounded-md"
-        placeholder={placeholder}
-        value={query}
-        disabled={disabled}
-        onFocus={() => setOpen(true)}
-        onChange={(e) => {
-          const text = e.target.value;
-          setQuery(text);
-          setOpen(true);
-          if (text === '') onChange('');
-        }}
-        onBlur={() => {
-          blurTimer.current = setTimeout(() => setOpen(false), 120);
-        }}
       />
-      {open && matches.length > 0 ? (
-        <ul
-          role="listbox"
-          className="absolute z-10 mt-1 max-h-64 w-full overflow-auto rounded-md border border-rule bg-card shadow-md"
-        >
-          {matches.map((o) => (
-            <li key={o.key} role="option" aria-selected={o.key === value}>
-              <button
-                type="button"
-                className="flex w-full flex-col items-start gap-0.5 px-[14px] py-[8px] text-left hover:bg-paper"
-                // Prevent the input's blur from firing (and closing the list)
-                // before the click lands; selection happens in onClick.
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => {
-                  if (blurTimer.current) clearTimeout(blurTimer.current);
-                  onChange(o.key);
-                  setQuery(o.name);
-                  setOpen(false);
-                }}
-              >
-                <span className="text-[13px] text-ink">{o.name}</span>
-                <span className="font-mono text-[11px] text-ink-soft">{o.key}</span>
-              </button>
+      <ul
+        {...getMenuProps()}
+        className={cn(
+          'absolute z-10 mt-1 max-h-64 w-full overflow-auto rounded-md border border-rule bg-card shadow-md',
+          !menuOpen && 'hidden',
+        )}
+      >
+        {menuOpen &&
+          items.map((o, index) => (
+            <li
+              key={o.key}
+              {...getItemProps({ item: o, index })}
+              className={cn(
+                'flex cursor-pointer flex-col items-start gap-0.5 px-[14px] py-[8px] text-left',
+                highlightedIndex === index ? 'bg-paper' : 'bg-card',
+              )}
+            >
+              <span className="text-[13px] text-ink">{o.name}</span>
+              <span className="font-mono text-[11px] text-ink-soft">{o.key}</span>
             </li>
           ))}
-        </ul>
-      ) : null}
+      </ul>
     </div>
   );
 }
