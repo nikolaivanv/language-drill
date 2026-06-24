@@ -28,7 +28,7 @@
 **Interfaces:**
 - Produces: `@radix-ui/react-dropdown-menu` and `@testing-library/user-event` available to `@language-drill/web`; jsdom polyfills (`ResizeObserver`, `scrollIntoView`, pointer-capture) so Radix components can mount and be driven in tests.
 
-- [ ] **Step 1: Install the runtime dep and the dev dep**
+- [x] **Step 1: Install the runtime dep and the dev dep**
 
 Run from repo root:
 
@@ -37,7 +37,7 @@ pnpm --filter @language-drill/web add @radix-ui/react-dropdown-menu
 pnpm --filter @language-drill/web add -D @testing-library/user-event
 ```
 
-- [ ] **Step 2: Append Radix polyfills to the vitest setup**
+- [x] **Step 2: Append Radix polyfills to the vitest setup**
 
 Append to `apps/web/vitest.setup.ts` (after the existing IntersectionObserver block):
 
@@ -62,7 +62,7 @@ Element.prototype.setPointerCapture = vi.fn();
 Element.prototype.releasePointerCapture = vi.fn();
 ```
 
-- [ ] **Step 3: Confirm the existing web suite still passes (polyfills are additive, break nothing)**
+- [x] **Step 3: Confirm the existing web suite still passes (polyfills are additive, break nothing)**
 
 Run:
 
@@ -72,7 +72,7 @@ pnpm --filter @language-drill/web test
 
 Expected: the full web suite passes (same green as before — these are additive global stubs). If anything fails, the polyfills are interfering and must be reconciled before proceeding.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/web/package.json apps/web/vitest.setup.ts pnpm-lock.yaml
@@ -91,7 +91,7 @@ git commit -m "build(web): add @radix-ui/react-dropdown-menu + user-event and Ra
 - Consumes: `useActiveLanguage()` (`{ activeLanguage, setActiveLanguage }`) from `./active-language-provider`; `Flagdot` from `./flagdot`; `LANGUAGE_NAMES`, `LanguageProfile` from `@language-drill/shared`; `LearningLanguage`, `isLearningLanguage` from `../../lib/active-language`; `cn` from `../../lib/cn`; `@radix-ui/react-dropdown-menu` as `DropdownMenu`.
 - Produces: unchanged export `LanguageSwitcher({ profiles })`.
 
-- [ ] **Step 1: Rewrite the test file**
+- [x] **Step 1: Rewrite the test file**
 
 Replace the entire `describe('LanguageSwitcher', ...)` body in
 `apps/web/components/shell/__tests__/language-switcher.test.tsx` with the tests
@@ -247,7 +247,7 @@ describe('LanguageSwitcher', () => {
 });
 ```
 
-- [ ] **Step 2: Run the rewritten tests against the OLD component — verify they FAIL**
+- [x] **Step 2: Run the rewritten tests against the OLD component — verify they FAIL**
 
 Run:
 
@@ -260,7 +260,7 @@ Expected: the menu/menuitemradio tests FAIL — the old component renders
 sync trigger-render / single-disabled / zero-null tests may still pass.) This
 confirms the tests exercise the new contract.
 
-- [ ] **Step 3: Rewrite the component**
+- [x] **Step 3: Rewrite the component**
 
 Replace the entire contents of `apps/web/components/shell/language-switcher.tsx` with:
 
@@ -407,7 +407,7 @@ Notes for the implementer (do not paste into the file):
 - `Item asChild` over the `<Link>` makes the anchor `role="menuitem"` while keeping its `href` — that's why the test queries `getByRole('menuitem', { name: /manage languages/i })`.
 - Selecting any item closes the menu (Radix); the guard in `onValueChange` is what prevents a reload when the active language is re-selected.
 
-- [ ] **Step 4: Run the component's tests — all PASS**
+- [x] **Step 4: Run the component's tests — all PASS**
 
 Run:
 
@@ -419,7 +419,7 @@ Expected: all tests in the file pass. If the keyboard test (`ArrowDown + Enter`)
 is flaky, confirm the polyfills from Task 1 are present and that the menu opened
 (focus must be inside the content for `user.keyboard` to reach Radix's handler).
 
-- [ ] **Step 5: Pre-push gate**
+- [x] **Step 5: Pre-push gate**
 
 Run from repo root:
 
@@ -429,7 +429,7 @@ pnpm lint && pnpm typecheck && pnpm test
 
 Expected: all three pass with zero failures.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/web/components/shell/language-switcher.tsx \
