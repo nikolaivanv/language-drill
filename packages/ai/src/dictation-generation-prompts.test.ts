@@ -34,8 +34,13 @@ it('the generation prompt gives explicit A1 and A2 length bands', () => {
   expect(DICTATION_GENERATION_SYSTEM_PROMPT).toContain('A2');
 });
 
-it('version is bumped to the level-scope + seed edit date', () => {
-  expect(DICTATION_GENERATION_PROMPT_VERSION).toBe('dictation-generate@2026-06-23');
+it('version is bumped to the anti-stacking + seed-subordination edit date', () => {
+  expect(DICTATION_GENERATION_PROMPT_VERSION).toBe('dictation-generate@2026-06-25');
+});
+
+it('the generation prompt forbids stacking multiple heavy constructions into one clip', () => {
+  expect(DICTATION_GENERATION_SYSTEM_PROMPT).toContain('One construction, not a pile-up');
+  expect(DICTATION_GENERATION_SYSTEM_PROMPT).toContain('{{cefrLevel}}');
 });
 
 it('user prompt names the ordinal and the domain', () => {
@@ -66,10 +71,12 @@ it('omits the level-scope section when no levelScopePoints are supplied', () => 
   expect(vars.levelScopeSection).toBe('');
 });
 
-it('user prompt anchors on a seed word in loose mode when supplied', () => {
+it('user prompt anchors on a seed word but subordinates it to the level + safety bands', () => {
   const u = buildDictationGenerationUserPrompt(inputs as never, 0, 'travel', 'batch-1', 'maleta');
   expect(u).toContain('maleta');
-  expect(u).toContain('closely related word');
+  // The seed must yield to the vocabulary band rather than force an above-level word.
+  expect(u).toContain('above this cell');
+  expect(u).toContain('DROP it');
 });
 
 it('user prompt omits the seed line when no seed word is supplied', () => {

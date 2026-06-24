@@ -21,7 +21,7 @@ import { renderLevelScopeSection } from "./level-scope.js";
 import { getPromptWithVarsOrFallback } from "./prompts-registry.js";
 
 // Bump in the same commit as any semantic edit to the template below.
-export const DICTATION_GENERATION_PROMPT_VERSION = "dictation-generate@2026-06-23";
+export const DICTATION_GENERATION_PROMPT_VERSION = "dictation-generate@2026-06-25";
 
 const CEFR_DESCRIPTOR_BULLETS = (
   Object.entries(CEFR_LEVEL_DESCRIPTORS) as [string, string][]
@@ -98,6 +98,7 @@ export const DICTATION_GENERATION_SYSTEM_PROMPT = `You are an expert author of l
 
 - **Natural connected speech.** Write the way a native speaker actually talks: full sentences with normal punctuation, ordinary contractions and liaison. NOT a word list, NOT headings, NOT bullet points, NOT metadata.
 - **Length for level.** A1: ONE short, clearly-articulated everyday sentence — high-frequency A1 vocabulary, simple structures, minimal connected-speech reduction (a careful near-beginner should be able to transcribe it). A2: 1–2 short sentences with everyday A2 vocabulary and only light connected speech. B1: 2–4 short sentences. B2: 3–5 sentences with some subordination. Keep it to one breath-group per sentence — a learner must be able to hold it in working memory.
+- **One construction, not a pile-up.** Exercise the grammar point through a SINGLE simple construction. Do NOT stack several morphologically heavy features into one clip — e.g. a chained genitive-possessive ("kardeşimin kitabı masanın üstünde"), a subordinating correlative ("öyle … ki"), or ability/possibility negation ("-(y)AmA-"). Even when each feature is individually inside the learner's scope, combining them pushes the effective listening difficulty above {{cefrLevel}}. At A1, keep to ONE short main clause carrying the single target feature plus high-frequency, in-scope morphology only.
 - **Listenable, not a trap.** Avoid deliberate tongue-twisters, dense number/date sequences, proper-noun pile-ups, and segmentation traps so ambiguous that even a native could not transcribe them. One or two natural connected-speech challenges (sinalefa, a silent letter, a tricky boundary) are good; a wall of them is not.
 - **Vocabulary band.** Every content word at or below CEFR {{cefrLevel}} everyday vocabulary. No above-level or specialist terms.
 - **Safe, neutral topics.** Home, food, daily routine, travel, weather, study/work. Avoid weapons, substances, violence, and culturally sensitive or stereotyping content.
@@ -164,11 +165,13 @@ export function buildDictationGenerationUserPrompt(
   // spreads across topics.
   const domain = topicDomain ?? dictationDomainForOrdinal(ordinal, batchSeed);
   // Per-ordinal frequency seed (R5-style, loose). The lemma is a lexical anchor,
-  // not a hard requirement — the model may swap it for a related word of similar
-  // frequency if it doesn't fit a natural clip. This is the primary diversity
-  // lever; the topic domain is a secondary topical axis. Absent → domain only.
+  // not a hard requirement — and it is SUBORDINATE to the level + safety bands.
+  // The seed is rotated over the whole frequency list, which includes words well
+  // above the cell's level (e.g. "cinayet" at A1); anchoring on them produced
+  // genuine above-level flags in the 2026-06-24 run. So the seed line explicitly
+  // tells the model to drop the seed when it breaks the band. Absent → domain only.
   const seedLine = seedWord
-    ? `\nAnchor the clip on the word "${seedWord}" (or a closely related word of similar frequency if it does not fit a natural sentence).\n`
+    ? `\nAnchor the clip on the word "${seedWord}" for variety — but the level and safety constraints win. If "${seedWord}" is above this cell's vocabulary band, or is not a neutral everyday topic, DROP it and choose a high-frequency, level-appropriate everyday word instead. Never force an above-level or unsafe seed into the clip.\n`
     : "";
   return `Produce dictation clip #${ordinal + 1}.
 

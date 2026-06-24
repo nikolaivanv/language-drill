@@ -205,10 +205,17 @@ export async function buildValidationSystemPrompt(
 // the default rubric otherwise dings that same pronoun as "over-scaffolding",
 // capping clean drafts at ~0.62 (FLAGGED) instead of auto-approving them.
 function clozeCellScoringNote(grammarPointKey: string): string {
-  if (grammarPointKey !== "tr-a1-possessive-suffixes") return "";
-  return `
+  if (grammarPointKey === "tr-a1-possessive-suffixes") {
+    return `
 
 **Scoring note for this possessive-suffix (İyelik) cell:** an overt genitive possessor pronoun (benim/senin/onun/bizim/sizin/onların) in the sentence is the INTENDED person-disambiguator — it is what makes the blank unambiguous (the same sentence without it would admit every person). Do NOT lower qualityScore for that pronoun as "over-scaffolding", "telegraphing the person/number", "redundant", or "too mechanical", and do NOT suggest blanking only the suffix (the whole-word blank is by design). The learner must still produce the correctly harmonised WHOLE form, including the 3sg -s- buffer and the dropped buffer vowel after vowel-final stems. Score on naturalness, A1 vocabulary, and whether the stem actually exercises the suffix — a clean draft of this kind (e.g. "Onun ___ çok güzel. (araba)" → arabası) is 0.8+, not 0.62.`;
+  }
+  if (grammarPointKey === "tr-a2-indefinite-compound") {
+    return `
+
+**Scoring note for this indefinite-noun-compound (belirtisiz isim tamlaması) cell:** by design the bare modifier noun is GIVEN in the sentence and ONLY the head noun is blanked (e.g. "Çantamda bir müzik ___ var. (kaset)" → kaseti). Producing the head + 3sg -(s)I (the compound marker) in the nominative IS the target skill, and a genitive/case-marked distractor is the intended foil. Do NOT set grammarPointMatch=false merely because "only the head is blanked", "the modifier is already present", or "the -(s)I suffix is tested in isolation / could be read as a plain possessive" — that head-only blank is the correct shape for this point, NOT a grammar-point mismatch. Set grammarPointMatch=false only when the blank genuinely tests a DIFFERENT grammar-point key (e.g. case-stacking → tr-a2-possessive-case-stacking). Keep flagging real defects normally: 'bir' wedged between the modifier and the head ('bir' must precede the WHOLE compound — "bir müzik kaseti", never "bir müzik ___"), above-level vocabulary, or two options both valid. A clean draft of this kind is 0.8+, not flagged.`;
+  }
+  return "";
 }
 
 function buildClozeValidationUserPrompt(
