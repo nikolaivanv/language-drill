@@ -40,7 +40,7 @@ describe('NavItems', () => {
       'today',
       'drill',
       'read',
-      'review',
+      'my vocabulary',
       'theory',
       'progress',
     ]);

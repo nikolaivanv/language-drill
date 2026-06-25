@@ -41,7 +41,7 @@ describe('MobileTabBar', () => {
     const links = screen.getAllByRole('link');
     expect(links).toHaveLength(NAV_DESTINATIONS.length);
     for (const dest of NAV_DESTINATIONS) {
-      const link = screen.getByRole('link', { name: dest.label });
+      const link = screen.getByRole('link', { name: dest.mobileLabel ?? dest.label });
       expect(link).toHaveAttribute('href', dest.href);
     }
   });

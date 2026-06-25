@@ -45,7 +45,7 @@ export function MobileTabBar() {
                 </span>
               ) : null}
             </span>
-            <span>{d.label}</span>
+            <span>{d.mobileLabel ?? d.label}</span>
           </Link>
         );
       })}
