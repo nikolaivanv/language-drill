@@ -67,7 +67,7 @@ describe('Choice', () => {
     );
     const el = screen.getByRole('radio');
     expect(el.className).toContain('border-ink');
-    expect(el.className).toContain('bg-hilite-soft');
+    expect(el.className).toContain('bg-accent-soft');
   });
 
   it('applies default state classes when not selected', () => {

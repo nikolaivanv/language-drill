@@ -27,7 +27,10 @@ export default function InviteLandingPage({ params }: InviteLandingPageProps) {
     } catch {
       // Storage can throw (private mode, quota) — the invite is best-effort.
     }
-    router.push('/sign-in');
+    // Invitees are almost always brand-new — send them straight to sign-up
+    // (the Clerk sign-up surface still links to sign-in for the rare returning
+    // user). The "already on drill?" link below covers them too.
+    router.push('/sign-up');
   };
 
   const continueFree = () => {
@@ -36,7 +39,7 @@ export default function InviteLandingPage({ params }: InviteLandingPageProps) {
     } catch {
       // Ignore — clearing a stale invite is best-effort.
     }
-    router.push('/sign-in');
+    router.push('/sign-up');
   };
 
   return (

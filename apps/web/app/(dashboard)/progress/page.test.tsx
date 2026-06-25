@@ -223,7 +223,7 @@ beforeEach(() => {
 // ---------------------------------------------------------------------------
 
 describe('ProgressPage', () => {
-  it('renders the empty state when every axis has evidenceCount: 0', () => {
+  it('still renders the header, tabs, and Map for a zero-evidence user', () => {
     mockUseProgressRadar.mockReturnValue({
       data: radarResponse(buildAxes({})),
       isLoading: false,
@@ -233,13 +233,19 @@ describe('ProgressPage', () => {
 
     renderPage();
 
-    // Empty state copy is unique to ProgressEmptyState.
+    // No more full-page "do your first drill" short-circuit — the curriculum
+    // Map renders regardless of evidence so new users can see their path.
     expect(
-      screen.getByText('do your first drill to build your shape.'),
+      screen.queryByText('do your first drill to build your shape.'),
+    ).toBeNull();
+    expect(
+      screen.getByRole('heading', { level: 1, name: /your progress/i }),
     ).toBeDefined();
-    // The header / tabs SHOULD NOT render.
-    expect(screen.queryByRole('heading', { name: /your progress/i })).toBeNull();
-    expect(screen.queryByRole('tablist')).toBeNull();
+    const tablist = screen.getByRole('tablist');
+    expect(tablist).toBeDefined();
+    // Map is the default tab and stays selected.
+    const mapTab = screen.getByRole('tab', { name: 'map' });
+    expect(mapTab.getAttribute('aria-selected')).toBe('true');
   });
 
   it('renders the Map tab by default with header and tablist', () => {

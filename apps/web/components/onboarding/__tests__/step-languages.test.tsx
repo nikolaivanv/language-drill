@@ -48,6 +48,14 @@ describe('StepLanguages', () => {
     expect(tiles[2]).toHaveTextContent(LANGUAGE_NATIVE_NAMES[Language.TR]);
   });
 
+  it('renders an optional name field that updates state on input', () => {
+    renderInProvider(initialNewUserState(), <StepLanguages />);
+    const input = screen.getByLabelText(/what should i call you/i);
+    expect(input).toHaveValue('');
+    fireEvent.change(input, { target: { value: 'Nikolai' } });
+    expect(input).toHaveValue('Nikolai');
+  });
+
   it('clicking a tile toggles language selection (select → deselect)', () => {
     renderInProvider(initialNewUserState(), <StepLanguages />);
     const [esTile] = screen.getAllByRole('checkbox');

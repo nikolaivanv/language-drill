@@ -40,6 +40,9 @@ export type SubmissionState =
 export type OnboardingState = {
   mode: OnboardingMode;
   step: OnboardingStep;
+  /** Optional display name. OTP/passwordless signups arrive without one, so we
+   *  collect it here (purely optional) and write it to Clerk on finish. */
+  name: string;
   /** Selected learning languages, preserved in the order they were toggled. */
   languages: LearningLanguage[];
   primaryLanguage: LearningLanguage | null;
@@ -51,6 +54,9 @@ export type OnboardingState = {
   notes: string;
   dailyMinutes: DailyMinutes | null;
   gentleNudges: boolean;
+  /** Opt-in to the weekly summary email. Off by default (double opt-in: a
+   *  confirmation email is sent on finish when this is true). */
+  weeklySummary: boolean;
   submission: SubmissionState;
 };
 
@@ -61,6 +67,7 @@ export type OnboardingState = {
 export type OnboardingAction =
   | { type: 'goNext' }
   | { type: 'goBack' }
+  | { type: 'setName'; name: string }
   | { type: 'setLanguages'; languages: LearningLanguage[] }
   | { type: 'setPrimary'; language: LearningLanguage }
   | { type: 'setLevel'; language: LearningLanguage; level: CefrLevel }
@@ -68,6 +75,7 @@ export type OnboardingAction =
   | { type: 'setNotes'; notes: string }
   | { type: 'setDailyMinutes'; minutes: DailyMinutes }
   | { type: 'setGentleNudges'; on: boolean }
+  | { type: 'setWeeklySummary'; on: boolean }
   | { type: 'submitStart' }
   | { type: 'submitSuccess' }
   | {
@@ -92,6 +100,9 @@ export function reducer(
     case 'goBack': {
       if (state.step <= 1) return state;
       return { ...state, step: (state.step - 1) as OnboardingStep };
+    }
+    case 'setName': {
+      return { ...state, name: action.name };
     }
     case 'setLanguages': {
       // R2.7: at least one language must remain selected in edit mode.
@@ -154,6 +165,9 @@ export function reducer(
     case 'setGentleNudges': {
       return { ...state, gentleNudges: action.on };
     }
+    case 'setWeeklySummary': {
+      return { ...state, weeklySummary: action.on };
+    }
     case 'submitStart': {
       return { ...state, submission: { status: 'loading' } };
     }
@@ -188,6 +202,7 @@ export function initialNewUserState(): OnboardingState {
   return {
     mode: 'new',
     step: 1,
+    name: '',
     languages: [],
     primaryLanguage: null,
     levels: {},
@@ -195,6 +210,7 @@ export function initialNewUserState(): OnboardingState {
     notes: '',
     dailyMinutes: DEFAULT_DAILY_MINUTES,
     gentleNudges: true,
+    weeklySummary: false,
     submission: { status: 'idle' },
   };
 }
@@ -226,6 +242,10 @@ export function initialEditState(
   return {
     mode: 'edit',
     step: 1,
+    // Name + weekly-summary aren't part of the preferences payload and the
+    // wizard isn't the editor for them (settings owns both), so edit mode
+    // starts them neutral.
+    name: '',
     languages,
     primaryLanguage,
     levels,
@@ -233,6 +253,7 @@ export function initialEditState(
     notes: prefs.notes,
     dailyMinutes: prefs.dailyMinutes ?? DEFAULT_DAILY_MINUTES,
     gentleNudges: prefs.gentleNudges,
+    weeklySummary: false,
     submission: { status: 'idle' },
   };
 }

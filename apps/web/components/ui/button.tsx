@@ -14,7 +14,11 @@ export interface ButtonProps
 }
 
 const shared =
-  'inline-flex items-center justify-center gap-[6px] font-medium whitespace-nowrap transition-all duration-150';
+  // `outline-none` drops the UA focus outline (the stray browser-blue ring);
+  // the focus-visible offset shadow is our keyboard ring — a neutral ink ring
+  // with a paper gap so it reads on both light and dark (ink) buttons and
+  // stays within the ink-forward button language (no terracotta on buttons).
+  'inline-flex items-center justify-center gap-[6px] font-medium whitespace-nowrap transition-all duration-150 outline-none focus-visible:shadow-[0_0_0_2px_var(--color-paper),0_0_0_4px_var(--color-ink)]';
 
 const variantClasses: Record<ButtonVariant, string> = {
   // Primary CTA — ink fill, lightens on hover (never terracotta). Desktop shadow lift.

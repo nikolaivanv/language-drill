@@ -24,6 +24,7 @@ import {
   type LearningLanguage,
 } from '@language-drill/shared';
 import { Choice } from '../../ui/choice';
+import { Input } from '../../ui/input';
 import { Flagdot } from '../../shell/flagdot';
 import { useOnboarding } from '../onboarding-context';
 
@@ -80,6 +81,24 @@ export function StepLanguages() {
           yet.
         </p>
       </header>
+
+      <div className="flex flex-col gap-s-2">
+        <label htmlFor="onboarding-name" className="t-small text-ink-soft">
+          what should i call you?{' '}
+          <span className="text-ink-mute">(optional)</span>
+        </label>
+        <Input
+          id="onboarding-name"
+          type="text"
+          autoComplete="given-name"
+          placeholder="your name"
+          value={state.name}
+          onChange={(event) =>
+            dispatch({ type: 'setName', name: event.target.value })
+          }
+          maxLength={80}
+        />
+      </div>
 
       <div
         className="grid grid-cols-2 mobile:grid-cols-1 gap-[12px]"

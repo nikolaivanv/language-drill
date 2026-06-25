@@ -122,6 +122,21 @@ describe('StepSchedule', () => {
     expect(checkbox).toHaveAttribute('aria-checked', 'true');
   });
 
+  it('the weekly-summary checkbox defaults to unchecked and toggles on click', () => {
+    const state: OnboardingState = { ...initialNewUserState(), step: 4 };
+    renderInProvider(state, <StepSchedule />);
+
+    const checkbox = screen.getByRole('checkbox', { name: /weekly summary/i });
+    // Off by default — opt-in, not opt-out.
+    expect(checkbox).toHaveAttribute('aria-checked', 'false');
+
+    fireEvent.click(checkbox);
+    expect(checkbox).toHaveAttribute('aria-checked', 'true');
+
+    fireEvent.click(checkbox);
+    expect(checkbox).toHaveAttribute('aria-checked', 'false');
+  });
+
   it('WizardFooter primary CTA reads "finish setup →" in new mode at step 4', () => {
     const state: OnboardingState = { ...initialNewUserState(), step: 4 };
     renderInProvider(

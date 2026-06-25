@@ -80,8 +80,11 @@ vi.mock('next/link', () => ({
 // @clerk/nextjs mock
 // ---------------------------------------------------------------------------
 
+const mockUseUser = vi.fn(() => ({ user: null }));
+
 vi.mock('@clerk/nextjs', () => ({
   useAuth: () => ({ getToken: vi.fn(async () => 'test-token') }),
+  useUser: () => mockUseUser(),
 }));
 
 // ---------------------------------------------------------------------------
@@ -91,8 +94,10 @@ vi.mock('@clerk/nextjs', () => ({
 const mockUseLanguageProfiles = vi.fn();
 const mockUpdateLanguagesMutateAsync = vi.fn();
 const mockUpdatePreferencesMutateAsync = vi.fn();
+const mockUpdateWeeklySummaryMutateAsync = vi.fn();
 const mockUseUpdateLanguages = vi.fn();
 const mockUseUpdatePreferences = vi.fn();
+const mockUseUpdateWeeklySummary = vi.fn();
 
 vi.mock('@language-drill/api-client', async () => {
   const actual = await vi.importActual<
@@ -103,6 +108,7 @@ vi.mock('@language-drill/api-client', async () => {
     useLanguageProfiles: () => mockUseLanguageProfiles(),
     useUpdateLanguages: () => mockUseUpdateLanguages(),
     useUpdatePreferences: () => mockUseUpdatePreferences(),
+    useUpdateWeeklySummary: () => mockUseUpdateWeeklySummary(),
   };
 });
 
@@ -128,6 +134,12 @@ function setupNewMode() {
     isPending: false,
     isError: false,
   });
+  mockUseUpdateWeeklySummary.mockReturnValue({
+    mutateAsync: mockUpdateWeeklySummaryMutateAsync,
+    isPending: false,
+    isError: false,
+  });
+  mockUseUser.mockReturnValue({ user: null });
 }
 
 /**
@@ -213,6 +225,36 @@ describe('OnboardingPage', () => {
       notes: '',
     });
 
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/home');
+    });
+
+    // Weekly summary left unchecked → no opt-in request fires.
+    expect(mockUpdateWeeklySummaryMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('opts the user into the weekly summary when the Step 4 checkbox is ticked', async () => {
+    setupNewMode();
+    mockUpdateLanguagesMutateAsync.mockResolvedValue({});
+    mockUpdatePreferencesMutateAsync.mockResolvedValue({});
+    mockUpdateWeeklySummaryMutateAsync.mockResolvedValue({});
+
+    render(<OnboardingPage />);
+
+    await walkToStep4New();
+
+    // Tick the weekly-summary checkbox (off by default).
+    const weekly = screen.getByRole('checkbox', { name: /weekly summary/i });
+    expect(weekly).toHaveAttribute('aria-checked', 'false');
+    fireEvent.click(weekly);
+
+    fireEvent.click(screen.getByRole('button', { name: /finish setup →/ }));
+
+    await waitFor(() => {
+      expect(mockUpdateWeeklySummaryMutateAsync).toHaveBeenCalledWith({
+        enabled: true,
+      });
+    });
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith('/home');
     });

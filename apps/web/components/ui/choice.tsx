@@ -77,8 +77,11 @@ export function Choice({
   className,
   hideIndicator = false,
 }: ChoiceProps) {
+  // Selected uses the app's soft-accent fill + ink border. (The yellow
+  // `hilite-soft` is reserved app-wide for "marked / partial" semantics, so
+  // using it for selection read as inconsistent.)
   const stateClasses = selected
-    ? 'border-ink bg-hilite-soft'
+    ? 'border-ink bg-accent-soft'
     : 'border-rule bg-card hover:border-ink hover:bg-paper-2';
 
   return (
