@@ -244,6 +244,10 @@ function SpineRow({
             </span>
             {errorProne && (
               <span
+                className="tip-trigger"
+                aria-label={`still generating errors — ${recentErrorCount} recent ${
+                  recentErrorCount === 1 ? 'slip' : 'slips'
+                } in the last 30 days`}
                 style={{
                   fontSize: 11,
                   fontWeight: 600,
@@ -254,6 +258,10 @@ function SpineRow({
                 }}
               >
                 ⚠ {recentErrorCount}×
+                <span aria-hidden className="gloss-tooltip">
+                  {recentErrorCount} recent{' '}
+                  {recentErrorCount === 1 ? 'slip' : 'slips'} in the last 30 days
+                </span>
               </span>
             )}
             {stateTagLabel && (
