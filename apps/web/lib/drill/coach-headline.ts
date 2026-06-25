@@ -47,6 +47,7 @@ export function crossSessionHeadline(themes: readonly InsightsErrorTheme[]): str
     : `lately · ${pair} (${top.count}×)`;
 }
 
+// DORMANT (2026-06): coachHeadline() is not called by any live component. Parked for reintroduction alongside coach-rail.tsx. (SessionError type above stays live — used by session-reducer.ts.)
 /** Within-session pattern first, else the top cross-session theme, else null. */
 export function coachHeadline(args: {
   sessionErrors: readonly SessionError[];

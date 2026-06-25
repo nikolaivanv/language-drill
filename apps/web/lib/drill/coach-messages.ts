@@ -1,3 +1,4 @@
+// DORMANT (2026-06): coachMessage() is not called by any live component. Parked for reintroduction alongside coach-rail.tsx and coach-card.tsx.
 import { ExerciseType } from "@language-drill/shared";
 
 export type CoachContext =

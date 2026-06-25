@@ -61,7 +61,6 @@ export function NextUpCard({ data, language: _language }: Props) {
         variant="primary"
         size="md"
         href={drillHref}
-        aria-label={`Start: ${title}`}
         className="flex-none after:absolute after:inset-0"
       >
         start →

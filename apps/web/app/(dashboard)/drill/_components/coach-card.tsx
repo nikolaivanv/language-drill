@@ -1,3 +1,4 @@
+// DORMANT (2026-06): not mounted in the live drill session. The active coach nudge now lives in the per-answer feedback card (feedback-shell.tsx). Kept (with its tests) for reintroduction alongside coach-rail.tsx.
 'use client';
 
 import { useState } from 'react';
