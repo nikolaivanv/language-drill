@@ -365,6 +365,33 @@ describe('ClozeExercise', () => {
     });
   });
 
+  describe('desktop submit alignment', () => {
+    it('renders the submit button inside a right-aligned wrapper (justify-end) on desktop', () => {
+      const { container } = renderCloze();
+      const submitBtn = screen.getByRole('button', { name: /submit/i });
+      const wrapper = submitBtn.parentElement;
+      expect(wrapper).toHaveClass('justify-end');
+      expect(wrapper).toHaveClass('flex');
+      // The wrapper should be present in the container
+      expect(container.querySelector('.flex.justify-end')).toBeTruthy();
+    });
+
+    it('does not render the desktop submit wrapper when active (mobile mode)', () => {
+      const { container } = render(
+        <DrillActionProvider active>
+          <ClozeExercise
+            content={baseContent}
+            language={Language.ES}
+            submission={idleSubmission}
+            onSubmit={vi.fn()}
+            onNext={vi.fn()}
+          />
+        </DrillActionProvider>,
+      );
+      expect(container.querySelector('.flex.justify-end')).toBeNull();
+    });
+  });
+
   describe('mobile action publishing', () => {
     function renderActive(overrides: Partial<ClozeExerciseProps> = {}) {
       const onSubmit = vi.fn();

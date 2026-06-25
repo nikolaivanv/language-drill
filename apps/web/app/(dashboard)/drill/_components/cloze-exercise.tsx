@@ -155,14 +155,16 @@ export function ClozeExercise({
       </div>
 
       {!active && submission.kind !== 'evaluated' && (
-        <Button
-          variant="primary"
-          onClick={handleSubmit}
-          disabled={!canSubmit || isLocked}
-          loading={submission.kind === 'submitting'}
-        >
-          submit
-        </Button>
+        <div className="mt-s-6 flex justify-end">
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            disabled={!canSubmit || isLocked}
+            loading={submission.kind === 'submitting'}
+          >
+            submit
+          </Button>
+        </div>
       )}
 
       {submission.kind === 'evaluated' &&

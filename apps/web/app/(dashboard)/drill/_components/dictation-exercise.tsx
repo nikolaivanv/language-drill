@@ -108,14 +108,16 @@ export function DictationExercise({
       </div>
 
       {!active && (
-        <Button
-          variant="primary"
-          onClick={handleSubmit}
-          disabled={!canSubmit || isLocked}
-          loading={submission.kind === 'submitting'}
-        >
-          check
-        </Button>
+        <div className="mt-s-6 flex justify-end">
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            disabled={!canSubmit || isLocked}
+            loading={submission.kind === 'submitting'}
+          >
+            check
+          </Button>
+        </div>
       )}
 
       {submission.kind === 'evaluated' &&

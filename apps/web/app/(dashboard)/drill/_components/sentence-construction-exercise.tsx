@@ -150,17 +150,18 @@ export function SentenceConstructionExercise({
         </p>
       )}
 
-      <div className="flex gap-s-3">
-        {!exampleShown && (
-          <Button
-            variant="ghost"
-            onClick={() => setExampleShown(true)}
-            disabled={isLocked}
-          >
-            show an example
-          </Button>
-        )}
-        {!active && (
+      {!exampleShown && (
+        <Button
+          variant="ghost"
+          onClick={() => setExampleShown(true)}
+          disabled={isLocked}
+        >
+          show an example
+        </Button>
+      )}
+
+      {!active && (
+        <div className="mt-s-6 flex justify-end">
           <Button
             variant="primary"
             onClick={handleSubmit}
@@ -169,8 +170,8 @@ export function SentenceConstructionExercise({
           >
             submit
           </Button>
-        )}
-      </div>
+        </div>
+      )}
 
       {submission.kind === 'evaluated' &&
         (() => {

@@ -207,17 +207,18 @@ export function TranslationExercise({
         </div>
       )}
 
-      <div className="flex gap-s-3">
-        {hintCount < 3 && (
-          <Button
-            variant="ghost"
-            onClick={handleHint}
-            disabled={isLocked}
-          >
-            show me a hint
-          </Button>
-        )}
-        {!active && (
+      {hintCount < 3 && (
+        <Button
+          variant="ghost"
+          onClick={handleHint}
+          disabled={isLocked}
+        >
+          show me a hint
+        </Button>
+      )}
+
+      {!active && (
+        <div className="mt-s-6 flex justify-end">
           <Button
             variant="primary"
             onClick={handleSubmit}
@@ -226,8 +227,8 @@ export function TranslationExercise({
           >
             submit
           </Button>
-        )}
-      </div>
+        </div>
+      )}
 
       {submission.kind === 'evaluated' &&
         (() => {
