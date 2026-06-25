@@ -86,6 +86,21 @@ describe('NextUpCard', () => {
     expect(cta.className).toMatch(/bg-ink/);
   });
 
+  it('whole card is tappable via stretched-link — CTA has after:absolute after:inset-0, outer div has no aria-label', () => {
+    const data = planResponse([makeItem(1, 'queued', { topicHint: 'subjunctive' })]);
+    const { container } = render(<NextUpCard data={data} language={Language.ES} />);
+
+    // Outer card div is position:relative and has NO aria-label (the inert div label was silent).
+    const card = container.firstChild as HTMLElement;
+    expect(card.className).toMatch(/\brelative\b/);
+    expect(card).not.toHaveAttribute('aria-label');
+
+    // The single CTA anchor carries the stretched-link overlay classes.
+    const cta = screen.getByRole('link', { name: /start/i });
+    expect(cta.className).toMatch(/after:absolute/);
+    expect(cta.className).toMatch(/after:inset-0/);
+  });
+
   it('renders nothing when there is no plan data', () => {
     const { container } = render(
       <NextUpCard data={undefined} language={Language.ES} />,

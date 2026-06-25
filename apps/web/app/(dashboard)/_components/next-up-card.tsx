@@ -39,10 +39,7 @@ export function NextUpCard({ data, language: _language }: Props) {
   const hint = reasonHint(next.reason);
 
   return (
-    <div
-      aria-label={`next up: ${title}`}
-      className="flex items-center justify-between gap-s-4 rounded-r-lg border border-rule bg-card px-[18px] py-[16px] shadow-1"
-    >
+    <div className="relative flex items-center justify-between gap-s-4 rounded-r-lg border border-rule bg-card px-[18px] py-[16px] shadow-1">
       <div className="min-w-0">
         <div className="t-micro text-accent-2">next up</div>
         <div className="t-display-s mt-[2px]">{title}</div>
@@ -60,7 +57,13 @@ export function NextUpCard({ data, language: _language }: Props) {
           </p>
         )}
       </div>
-      <Button variant="primary" size="md" href={drillHref} className="flex-none">
+      <Button
+        variant="primary"
+        size="md"
+        href={drillHref}
+        aria-label={`Start: ${title}`}
+        className="flex-none after:absolute after:inset-0"
+      >
         start →
       </Button>
     </div>
