@@ -332,7 +332,26 @@
 .dfm-footer { border-top: 1px solid var(--df-line); padding: 26px 22px 8px;
   display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
 .dfm-footer .meta { font-size: 12px; color: var(--df-mute); }
-.dfm-footer a { font-size: 12px; color: var(--accent); }
+/* Only the direct-child "Sign in →" link is terracotta; the nested LegalLinks
+   anchors are styled by .landing-legal-links below. (DBrand is also a direct
+   <a> but colours its own inner spans, so this rule is a no-op for it.) */
+.dfm-footer > a { font-size: 12px; color: var(--accent); }
+
+/* Landing footer legal links (Privacy / Terms / Cookies / Cookie preferences /
+   email), shared by the desktop and mobile footers. The shared LegalLinks
+   hovers to --color-ink (near-black) — invisible on the dark landing — so
+   restyle for the dark footer: a muted base that brightens to the light ink on
+   hover. Specificity (incl. :hover) beats the Tailwind text-ink-mute /
+   hover:text-ink utilities. Only the separate "Sign in →" link stays terracotta. */
+.landing-legal-links a,
+.landing-legal-links button {
+  color: var(--df-mute);
+  transition: color 0.15s ease;
+}
+.landing-legal-links a:hover,
+.landing-legal-links button:hover {
+  color: var(--df-ink);
+}
 
 /* ── desktop / mobile tree toggle (mirrors MOBILE_MAX_WIDTH in lib/responsive.ts) ──
    Both trees are server-rendered; CSS picks one so first paint is correct on
