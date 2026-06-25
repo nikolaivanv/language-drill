@@ -1,12 +1,13 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   useLanguageProfiles,
   useUpdateLanguages,
   useUpdatePreferences,
+  useUpdateWeeklySummary,
   createAuthenticatedFetch,
   type AuthenticatedFetch,
 } from "@language-drill/api-client";
@@ -162,8 +163,10 @@ function OnboardingPageContent() {
 function OnboardingPageBody({ fetchFn }: { fetchFn: AuthenticatedFetch }) {
   const { state, dispatch } = useOnboarding();
   const router = useRouter();
+  const { user } = useUser();
   const updateLanguages = useUpdateLanguages({ fetchFn });
   const updatePreferences = useUpdatePreferences({ fetchFn });
+  const updateWeeklySummary = useUpdateWeeklySummary({ fetchFn });
 
   const handleComplete = useCallback(async () => {
     dispatch({ type: "submitStart" });
@@ -188,6 +191,19 @@ function OnboardingPageBody({ fetchFn }: { fetchFn: AuthenticatedFetch }) {
         gentleNudges: state.gentleNudges,
         notes: state.notes.replace(/\r\n/g, "\n").trim(),
       });
+
+      // Name + weekly-summary are best-effort side effects: the user has
+      // already committed their core profile, so a failure here must not
+      // block completion or surface a blocking error. We await them (so the
+      // confirmation email is in flight before we navigate) but swallow
+      // failures.
+      await Promise.allSettled([
+        saveDisplayName(user, state.name),
+        state.weeklySummary
+          ? updateWeeklySummary.mutateAsync({ enabled: true })
+          : Promise.resolve(),
+      ]);
+
       track('onboarding_step_completed', { step: state.step });
       dispatch({ type: "submitSuccess" });
       router.push("/home");
@@ -195,9 +211,36 @@ function OnboardingPageBody({ fetchFn }: { fetchFn: AuthenticatedFetch }) {
       const { kind, message } = classifyError(err);
       dispatch({ type: "submitError", kind, message });
     }
-  }, [state, dispatch, updateLanguages, updatePreferences, router]);
+  }, [state, dispatch, updateLanguages, updatePreferences, updateWeeklySummary, user, router]);
 
   return <OnboardingShell mode="new" onComplete={handleComplete} />;
+}
+
+// ---------------------------------------------------------------------------
+// saveDisplayName — write the optional onboarding name to Clerk.
+// ---------------------------------------------------------------------------
+// OTP/passwordless signups arrive with no first/last name (the account menu
+// would otherwise show "?"). When the user fills in the optional name field we
+// split it on the first run of whitespace into first + last and persist it to
+// Clerk. We only write when the field is non-empty AND Clerk currently has no
+// name, so we never clobber a name Clerk already collected (e.g. Google OAuth).
+type ClerkUserLike = {
+  firstName: string | null;
+  lastName: string | null;
+  update: (params: { firstName?: string; lastName?: string }) => Promise<unknown>;
+};
+
+async function saveDisplayName(
+  user: ClerkUserLike | null | undefined,
+  rawName: string,
+): Promise<void> {
+  const name = rawName.trim().replace(/\s+/g, " ");
+  if (!user || name === "") return;
+  if (user.firstName || user.lastName) return;
+  const spaceAt = name.indexOf(" ");
+  const firstName = spaceAt === -1 ? name : name.slice(0, spaceAt);
+  const lastName = spaceAt === -1 ? "" : name.slice(spaceAt + 1);
+  await user.update({ firstName, lastName });
 }
 
 // ---------------------------------------------------------------------------

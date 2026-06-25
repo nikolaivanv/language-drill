@@ -92,14 +92,18 @@ type EmptyProps = { language: LearningLanguage };
 export function EmptySnapshotCard({ language: _language }: EmptyProps) {
   return (
     <Card padding="lg">
-      <div className="space-y-s-4">
-        <p className="t-body-l">
+      {/* Banner layout: copy on the left, CTA pinned right and vertically
+          centred — matching the free-writing / read-collect cards. Stacks on
+          mobile so the long sentence and full-width button don't collide. */}
+      <div className="flex items-center justify-between gap-s-4 mobile:flex-col mobile:items-start">
+        <p className="t-body-l min-w-0 flex-1">
           practice a few exercises and your skill snapshot will appear here.
         </p>
         <Button
           variant="primary"
           size="md"
           href="/drill?start=quick"
+          className="flex-shrink-0 mobile:w-full"
         >
           start a session →
         </Button>

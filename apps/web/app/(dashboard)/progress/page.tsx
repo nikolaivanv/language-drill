@@ -23,7 +23,6 @@ import { MapTab } from './_components/map-tab';
 import { ShapeTab } from './_components/shape-tab';
 import { FluencyTab } from './_components/fluency-tab';
 import { HistoryTab } from './_components/history-tab';
-import { ProgressEmptyState } from './_components/progress-empty-state';
 import { useTabUrlState } from './_lib/use-tab-url-state';
 import { withAdvancedLevel } from './_lib/advance-level';
 
@@ -89,11 +88,11 @@ export default function ProgressPage() {
     );
   }, [languageProfiles.data, prefs.data, curriculum.data, activeLanguage, update, queryClient]);
 
-  // Page-wide empty state: no exercise history at all in the active language.
-  if (radar.data && totalEvidence === 0) {
-    return <ProgressEmptyState language={activeLanguage} />;
-  }
-
+  // A brand-new user with no exercise history still gets the full tabbed page.
+  // The curriculum Map renders from the language's curriculum (every point
+  // simply shows as "not started"), and each evidence-driven tab (Shape /
+  // Fluency / History) owns its own gentle empty state. We no longer
+  // short-circuit the whole page to a single "do your first drill" card.
   return (
     <div>
       <ProgressHeader

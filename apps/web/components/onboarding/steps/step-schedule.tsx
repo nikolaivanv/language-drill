@@ -36,6 +36,12 @@ const GENTLE_NUDGES_LABEL = 'gentle nudges on quiet days';
 const GENTLE_NUDGES_BODY =
   "no streak shaming. one calm note if you've missed two days, never more.";
 
+// Weekly-summary opt-in. Off by default — ticking it triggers the double
+// opt-in confirmation email on finish (see the onboarding submit handler).
+const WEEKLY_SUMMARY_LABEL = 'weekly summary';
+const WEEKLY_SUMMARY_BODY =
+  "a short recap of your week, every monday. skipped on weeks you don't practice.";
+
 // R5.4 verbatim. The accent colour applies only to the literal "p.s." prefix;
 // the rest of the line uses the default ink colour.
 const PS_PREFIX = 'p.s.';
@@ -82,25 +88,46 @@ export function StepSchedule() {
       </div>
 
       <Card padding="md">
-        {/* The Checkbox renders a `<button role="checkbox">`. A wrapping
-            <label> would NOT auto-bind for screen readers (that behaviour is
-            for native form controls only), so we point `aria-labelledby` at
-            the visible label text — that's what makes the accessible name
-            "gentle nudges on quiet days" rather than empty. */}
-        <div className="flex items-start gap-s-3">
-          <Checkbox
-            checked={state.gentleNudges}
-            onChange={(on) =>
-              dispatch({ type: 'setGentleNudges', on })
-            }
-            className="-ml-s-2"
-            aria-labelledby="gentle-nudges-label"
-          />
-          <div className="flex-1 flex flex-col gap-s-1">
-            <span id="gentle-nudges-label" className="t-body text-ink">
-              {GENTLE_NUDGES_LABEL}
-            </span>
-            <span className="t-small text-ink-mute">{GENTLE_NUDGES_BODY}</span>
+        <div className="flex flex-col gap-s-4">
+          {/* The Checkbox renders a `<button role="checkbox">`. A wrapping
+              <label> would NOT auto-bind for screen readers (that behaviour is
+              for native form controls only), so we point `aria-labelledby` at
+              the visible label text — that's what makes the accessible name
+              "gentle nudges on quiet days" rather than empty. */}
+          <div className="flex items-start gap-s-3">
+            <Checkbox
+              checked={state.gentleNudges}
+              onChange={(on) =>
+                dispatch({ type: 'setGentleNudges', on })
+              }
+              className="-ml-s-2"
+              aria-labelledby="gentle-nudges-label"
+            />
+            <div className="flex-1 flex flex-col gap-s-1">
+              <span id="gentle-nudges-label" className="t-body text-ink">
+                {GENTLE_NUDGES_LABEL}
+              </span>
+              <span className="t-small text-ink-mute">{GENTLE_NUDGES_BODY}</span>
+            </div>
+          </div>
+
+          <div className="border-t border-rule" />
+
+          <div className="flex items-start gap-s-3">
+            <Checkbox
+              checked={state.weeklySummary}
+              onChange={(on) =>
+                dispatch({ type: 'setWeeklySummary', on })
+              }
+              className="-ml-s-2"
+              aria-labelledby="weekly-summary-label"
+            />
+            <div className="flex-1 flex flex-col gap-s-1">
+              <span id="weekly-summary-label" className="t-body text-ink">
+                {WEEKLY_SUMMARY_LABEL}
+              </span>
+              <span className="t-small text-ink-mute">{WEEKLY_SUMMARY_BODY}</span>
+            </div>
           </div>
         </div>
       </Card>

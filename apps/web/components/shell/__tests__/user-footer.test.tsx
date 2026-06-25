@@ -37,10 +37,26 @@ vi.mock('@clerk/nextjs', () => ({
 // ---------------------------------------------------------------------------
 
 function setUser(
-  user: { firstName?: string | null; lastName?: string | null } | null,
+  user:
+    | {
+        firstName?: string | null;
+        lastName?: string | null;
+        email?: string | null;
+      }
+    | null,
   isLoaded = true
 ) {
-  mockUseUser.mockReturnValue({ user, isLoaded });
+  const shaped =
+    user === null
+      ? null
+      : {
+          firstName: user.firstName ?? null,
+          lastName: user.lastName ?? null,
+          primaryEmailAddress: user.email
+            ? { emailAddress: user.email }
+            : null,
+        };
+  mockUseUser.mockReturnValue({ user: shaped, isLoaded });
 }
 
 // ---------------------------------------------------------------------------
@@ -82,7 +98,16 @@ describe('UserFooter', () => {
     expect(within(trigger).getByText('S')).toBeInTheDocument();
   });
 
-  it('renders "?" when neither firstName nor lastName is present', () => {
+  it('falls back to the email initial when no name is present ("nikolai@…" -> "N")', () => {
+    setUser({ firstName: null, lastName: null, email: 'nikolai@example.com' });
+
+    render(<UserFooter />);
+
+    const trigger = screen.getByRole('button', { name: /nikolai/i });
+    expect(within(trigger).getByText('N')).toBeInTheDocument();
+  });
+
+  it('renders "?" only when neither name nor email is present', () => {
     setUser({ firstName: null, lastName: null });
 
     render(<UserFooter />);
@@ -100,7 +125,16 @@ describe('UserFooter', () => {
     expect(within(trigger).getByText('sam')).toBeInTheDocument();
   });
 
-  it('falls back to "you" when firstName is null', () => {
+  it('falls back to the email local part as the label when firstName is null', () => {
+    setUser({ firstName: null, lastName: null, email: 'nikolai@example.com' });
+
+    render(<UserFooter />);
+
+    const trigger = screen.getByRole('button', { name: /nikolai/i });
+    expect(within(trigger).getByText('nikolai')).toBeInTheDocument();
+  });
+
+  it('falls back to "you" when neither name nor email is present', () => {
     setUser({ firstName: null, lastName: null });
 
     render(<UserFooter />);

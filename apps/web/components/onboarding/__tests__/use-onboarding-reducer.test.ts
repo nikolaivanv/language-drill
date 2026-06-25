@@ -262,6 +262,38 @@ describe('reducer — setGentleNudges', () => {
 });
 
 // ---------------------------------------------------------------------------
+// setWeeklySummary
+// ---------------------------------------------------------------------------
+
+describe('reducer — setWeeklySummary', () => {
+  it('defaults to off for new users', () => {
+    expect(initialNewUserState().weeklySummary).toBe(false);
+  });
+
+  it('toggles on and back off', () => {
+    const on = apply(newState(), { type: 'setWeeklySummary', on: true });
+    expect(on.weeklySummary).toBe(true);
+    const off = apply(on, { type: 'setWeeklySummary', on: false });
+    expect(off.weeklySummary).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// setName
+// ---------------------------------------------------------------------------
+
+describe('reducer — setName', () => {
+  it('defaults to an empty string', () => {
+    expect(initialNewUserState().name).toBe('');
+  });
+
+  it('stores the provided name verbatim', () => {
+    const next = apply(newState(), { type: 'setName', name: 'Nikolai' });
+    expect(next.name).toBe('Nikolai');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // selectCanAdvance
 // ---------------------------------------------------------------------------
 

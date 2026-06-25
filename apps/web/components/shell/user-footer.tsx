@@ -6,12 +6,17 @@ import { useClerk, useUser } from '@clerk/nextjs';
 
 function getInitials(
   firstName?: string | null,
-  lastName?: string | null
+  lastName?: string | null,
+  email?: string | null
 ): string {
   const f = firstName?.[0];
   const l = lastName?.[0];
   if (f && l) return (f + l).toUpperCase();
   if (f) return f.toUpperCase();
+  // Passwordless / OTP signups have no name — fall back to the first letter
+  // of the email so the avatar never renders a bare "?".
+  const e = email?.trim()[0];
+  if (e) return e.toUpperCase();
   return '?';
 }
 
@@ -46,8 +51,11 @@ export function UserFooter() {
     );
   }
 
-  const initials = getInitials(user?.firstName, user?.lastName);
-  const name = user?.firstName ?? 'you';
+  const email = user?.primaryEmailAddress?.emailAddress ?? null;
+  const initials = getInitials(user?.firstName, user?.lastName, email);
+  // Prefer a real first name; otherwise the email's local part (so the label
+  // matches the avatar letter); finally a friendly default.
+  const name = user?.firstName ?? email?.split('@')[0] ?? 'you';
 
   return (
     <div ref={ref} className="relative mt-auto pt-[18px] border-t border-rule">
