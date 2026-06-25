@@ -28,7 +28,7 @@
 - Consumes: `useConsent()` → `{ state, ready, update, preferencesOpen, openPreferences, closePreferences }` from `./consent-provider` (unchanged); `Link` from `next/link`.
 - Produces: no API change — same `CookieBanner` export, same provider contract.
 
-- [ ] **Step 1: Add the three failing tests**
+- [x] **Step 1: Add the three failing tests**
 
 In `apps/web/components/consent/__tests__/cookie-banner.test.tsx`, change the
 testing-library import to include `fireEvent`:
@@ -70,7 +70,7 @@ Then append these tests inside the existing `describe('CookieBanner', …)` bloc
   });
 ```
 
-- [ ] **Step 2: Run the new tests against the old component — verify they FAIL**
+- [x] **Step 2: Run the new tests against the old component — verify they FAIL**
 
 Run:
 
@@ -83,7 +83,7 @@ Expected: the three new tests FAIL — the current dialog never receives focus
 fails: the dialog stays open so the region query throws), and never returns
 focus (`Close…` fails: Manage isn't focused). The existing three tests still pass.
 
-- [ ] **Step 3: Rewrite the component with focus management**
+- [x] **Step 3: Rewrite the component with focus management**
 
 Replace the entire contents of `apps/web/components/consent/cookie-banner.tsx` with:
 
@@ -191,7 +191,7 @@ What changed vs. the original (for the reviewer's reference, do not paste this l
 - Banner Manage `<button>`: added `ref={manageRef}`.
 - Everything else (copy, classes, structure, the region banner) is byte-for-byte the original.
 
-- [ ] **Step 4: Run the cookie-banner suite — all PASS**
+- [x] **Step 4: Run the cookie-banner suite — all PASS**
 
 Run:
 
@@ -201,7 +201,7 @@ pnpm --filter @language-drill/web test -- cookie-banner
 
 Expected: all six tests pass (the three existing + three new).
 
-- [ ] **Step 5: Pre-push gate**
+- [x] **Step 5: Pre-push gate**
 
 Run from repo root:
 
@@ -213,7 +213,7 @@ Expected: lint and typecheck pass; the web suite passes. (The change is web-only
 the full-monorepo `pnpm test` is large — the web filter is the relevant gate here,
 and lint/typecheck still run repo-wide.)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/web/components/consent/cookie-banner.tsx \
