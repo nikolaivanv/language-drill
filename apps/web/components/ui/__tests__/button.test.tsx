@@ -33,8 +33,8 @@ describe('Button', () => {
     render(<Button>Click me</Button>);
     const button = screen.getByRole('button', { name: 'Click me' });
 
-    // default variant classes
-    expect(button.className).toContain('border-ink');
+    // default variant classes (alias for ghost — bordered transparent)
+    expect(button.className).toContain('border-rule-strong');
     expect(button.className).toContain('bg-transparent');
 
     // md size classes
@@ -54,22 +54,32 @@ describe('Button', () => {
   it('applies correct classes for ghost variant', () => {
     render(<Button variant="ghost">Ghost</Button>);
     const button = screen.getByRole('button', { name: 'Ghost' });
-    expect(button.className).toContain('border-transparent');
-    expect(button.className).toContain('text-ink-soft');
-  });
-
-  it('applies correct classes for accent variant', () => {
-    render(<Button variant="accent">Accent</Button>);
-    const button = screen.getByRole('button', { name: 'Accent' });
-    expect(button.className).toContain('bg-accent');
-    expect(button.className).toContain('text-white');
+    expect(button.className).toContain('border-rule-strong');
+    expect(button.className).toContain('bg-transparent');
   });
 
   it('applies correct classes for default variant', () => {
     render(<Button variant="default">Default</Button>);
     const button = screen.getByRole('button', { name: 'Default' });
     expect(button.className).toContain('bg-transparent');
-    expect(button.className).toContain('text-ink');
+    expect(button.className).toContain('border-rule-strong');
+  });
+
+  // ---- Task 2: ink-hover primary, ghost secondary, no accent ---------------
+
+  it('primary hovers to ink-hover, not terracotta', () => {
+    render(<Button variant="primary">go</Button>);
+    const cls = screen.getByRole('button').className;
+    expect(cls).toContain('bg-ink');
+    expect(cls).toContain('hover:bg-ink-hover');
+    expect(cls).not.toContain('accent');
+  });
+
+  it('ghost is bordered-transparent with no fill', () => {
+    render(<Button variant="ghost">x</Button>);
+    const cls = screen.getByRole('button').className;
+    expect(cls).toContain('border-rule-strong');
+    expect(cls).toContain('bg-transparent');
   });
 
   // ---- Sizes --------------------------------------------------------------

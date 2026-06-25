@@ -39,7 +39,7 @@ export function FeedbackShell({
   const { active, setPrimaryAction } = useDrillAction();
   React.useEffect(() => {
     if (!active) return;
-    setPrimaryAction({ label: nextLabel, onClick: onNext, variant: 'accent' });
+    setPrimaryAction({ label: nextLabel, onClick: onNext, variant: 'primary' });
     return () => setPrimaryAction(null);
   }, [active, nextLabel, onNext, setPrimaryAction]);
 
@@ -67,7 +67,7 @@ export function FeedbackShell({
       <div className="mt-s-4">{children}</div>
       {!active && (
         <div className="mt-s-6 flex justify-end">
-          <Button variant="accent" onClick={onNext}>
+          <Button variant="primary" onClick={onNext}>
             {nextLabel}
           </Button>
         </div>

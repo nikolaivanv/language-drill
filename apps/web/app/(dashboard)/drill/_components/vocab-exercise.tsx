@@ -74,7 +74,7 @@ export function VocabExercise({
     setPrimaryAction({
       label: 'submit',
       onClick: handleSubmit,
-      variant: 'accent',
+      variant: 'primary',
       disabled: !canSubmit || isLocked,
       loading: submission.kind === 'submitting',
     });
@@ -113,7 +113,7 @@ export function VocabExercise({
 
       {!active && (
         <Button
-          variant="accent"
+          variant="primary"
           onClick={handleSubmit}
           disabled={!canSubmit || isLocked}
           loading={submission.kind === 'submitting'}

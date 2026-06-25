@@ -82,7 +82,7 @@ export function ClozeExercise({
     setPrimaryAction({
       label: 'submit',
       onClick: handleSubmit,
-      variant: 'accent',
+      variant: 'primary',
       disabled: !canSubmit || isLocked,
       loading: submission.kind === 'submitting',
     });
@@ -153,7 +153,7 @@ export function ClozeExercise({
 
       {!active && submission.kind !== 'evaluated' && (
         <Button
-          variant="accent"
+          variant="primary"
           onClick={handleSubmit}
           disabled={!canSubmit || isLocked}
           loading={submission.kind === 'submitting'}

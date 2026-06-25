@@ -74,7 +74,7 @@ export function FlagExerciseControl({ exerciseId, submissionId, fetchFn }: FlagE
       <div className="mt-s-3 flex justify-end gap-s-2">
         <Button variant="ghost" onClick={() => setOpen(false)} disabled={flag.isPending}>Cancel</Button>
         <Button
-          variant="accent"
+          variant="primary"
           disabled={flag.isPending}
           onClick={() => flag.mutate({ exerciseId, submissionId, category, note: note.trim() || undefined }, { onSuccess: () => setOpen(false) })}
         >
