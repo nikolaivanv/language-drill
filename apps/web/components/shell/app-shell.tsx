@@ -36,10 +36,17 @@ export function AppShell({ profiles, children }: AppShellProps) {
   // internally when its content is taller than a short window (otherwise it would
   // overflow the fixed-height shell and the whole page would scroll past its
   // bottom edge), and `main` is the primary scroll region.
+  //
+  // `relative` on `main` makes it the containing block for absolutely-positioned
+  // descendants (e.g. the `sr-only` plan summary in TodayTimeline). Without it,
+  // such an element resolves its containing block to <body> and its static
+  // position deep in the content extends the document height — reintroducing the
+  // page-level scroll past the bottom edge. Scoping it to `main` keeps it inside
+  // the internal scroll region instead.
   return (
     <div className="flex h-screen overflow-hidden bg-paper">
       <Nav profiles={profiles} />
-      <main className="flex-1 min-w-0 min-h-0 overflow-y-auto bg-paper">
+      <main className="relative flex-1 min-w-0 min-h-0 overflow-y-auto bg-paper">
         <div className="max-w-max-content mx-auto w-full py-[36px] px-[48px]">
           {children}
           <AppFooter />
