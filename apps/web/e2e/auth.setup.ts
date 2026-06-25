@@ -25,6 +25,7 @@ import { test as setup } from '@playwright/test';
 import { clerkSetup } from '@clerk/testing/playwright';
 
 import { createTestUser, signInProgrammatically } from './helpers/auth';
+import { CONSENT_KEY, CONSENT_VALUE } from './helpers/consent';
 import { assertE2EEnv } from './helpers/env';
 import {
   STORAGE_STATE_PATH,
@@ -54,6 +55,14 @@ setup('authenticate', async ({ page }) => {
     );
 
     await signInProgrammatically(page);
+
+    // Record a cookie-consent choice so the first-visit banner never mounts in
+    // authenticated specs (it would overlap and intercept clicks). The page is
+    // on the app origin (/sign-in) here, so this lands in the saved state.
+    await page.evaluate(
+      ([key, value]) => window.localStorage.setItem(key, value),
+      [CONSENT_KEY, CONSENT_VALUE] as const,
+    );
 
     await page.context().storageState({ path: STORAGE_STATE_PATH });
 
