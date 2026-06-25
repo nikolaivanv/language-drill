@@ -27,7 +27,7 @@
 - Consumes: existing `WordPopover` props (unchanged); `React` (already imported as `import * as React from 'react'`).
 - Produces: no API change — same `WordPopover` export and props.
 
-- [ ] **Step 1: Add the two failing tests**
+- [x] **Step 1: Add the two failing tests**
 
 Append this `describe` block to
 `apps/web/app/(dashboard)/read/_components/__tests__/word-popover.test.tsx`
@@ -66,7 +66,7 @@ describe('WordPopover — return focus on close', () => {
 });
 ```
 
-- [ ] **Step 2: Run the new tests — verify the first FAILS**
+- [x] **Step 2: Run the new tests — verify the first FAILS**
 
 Run:
 
@@ -80,7 +80,7 @@ and `document.activeElement` falls back to `body`, not the opener. The
 `does not force focus onto body…` test PASSES (current code never restores
 focus), and all pre-existing tests still pass.
 
-- [ ] **Step 3: Add the capture/restore layout effect**
+- [x] **Step 3: Add the capture/restore layout effect**
 
 In `apps/web/app/(dashboard)/read/_components/word-popover.tsx`, locate the two
 refs at the top of the component body:
@@ -114,7 +114,7 @@ Insert this block immediately after them (before the existing
 
 Make no other change to the file.
 
-- [ ] **Step 4: Run the word-popover suite — all PASS**
+- [x] **Step 4: Run the word-popover suite — all PASS**
 
 Run:
 
@@ -126,7 +126,7 @@ Expected: every test in the file passes, including the two new ones and the
 unchanged `autoFocus` tests (the layout effect captures the opener before
 autoFocus runs, so autoFocus still focuses the skip/close button).
 
-- [ ] **Step 5: Pre-push gate**
+- [x] **Step 5: Pre-push gate**
 
 Run from repo root:
 
@@ -136,7 +136,7 @@ pnpm lint && pnpm typecheck && pnpm test
 
 Expected: all three pass with zero failures.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/web/app/\(dashboard\)/read/_components/word-popover.tsx \
