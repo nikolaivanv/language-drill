@@ -8,6 +8,7 @@ import { Button } from '../../../../components/ui/button';
 import { typeLabel } from '../../_lib/timeline-labels';
 import { topicIdForGrammarPointKey } from '../../../../lib/theory-topic-map';
 import { formatAgo } from '../_lib/format-ago';
+import { confidenceBand } from './confidence-band';
 
 // ---------------------------------------------------------------------------
 // PointDetailSheet — right-side sheet that opens when a map cell is tapped.
@@ -224,46 +225,52 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
         <div style={{ padding: '24px 30px 40px', flex: 1 }}>
           {/* Mastery readout */}
           {state !== 'not-started' && (
-            <div
-              style={{
-                display: 'flex',
-                gap: 24,
-                marginBottom: 20,
-              }}
-            >
-              <div>
-                <div className="t-micro" style={{ color: 'var(--color-ink-mute)' }}>
-                  mastery
+            <div style={{ marginBottom: 20 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 24,
+                }}
+              >
+                <div>
+                  <div className="t-micro" style={{ color: 'var(--color-ink-mute)' }}>
+                    mastery
+                  </div>
+                  <div
+                    className="t-mono"
+                    style={{ fontSize: 22, marginTop: 2, color: 'var(--color-ink)' }}
+                  >
+                    {mastery !== null ? `${Math.round(mastery * 100)}%` : '—'}
+                  </div>
                 </div>
-                <div
-                  className="t-mono"
-                  style={{ fontSize: 22, marginTop: 2, color: 'var(--color-ink)' }}
-                >
-                  {mastery !== null ? `${Math.round(mastery * 100)}%` : '—'}
+                <div>
+                  <div className="t-micro" style={{ color: 'var(--color-ink-mute)' }}>
+                    confidence
+                  </div>
+                  <div
+                    className="t-mono"
+                    style={{ fontSize: 22, marginTop: 2, color: 'var(--color-ink)' }}
+                  >
+                    {confidence !== null
+                      ? confidenceBand(Math.round(confidence * 100)).label
+                      : '—'}
+                  </div>
+                </div>
+                <div>
+                  <div className="t-micro" style={{ color: 'var(--color-ink-mute)' }}>
+                    evidence
+                  </div>
+                  <div
+                    className="t-mono"
+                    style={{ fontSize: 22, marginTop: 2, color: 'var(--color-ink)' }}
+                  >
+                    {evidenceCount}
+                  </div>
                 </div>
               </div>
-              <div>
-                <div className="t-micro" style={{ color: 'var(--color-ink-mute)' }}>
-                  confidence
-                </div>
-                <div
-                  className="t-mono"
-                  style={{ fontSize: 22, marginTop: 2, color: 'var(--color-ink)' }}
-                >
-                  {confidence !== null ? `${Math.round(confidence * 100)}%` : '—'}
-                </div>
-              </div>
-              <div>
-                <div className="t-micro" style={{ color: 'var(--color-ink-mute)' }}>
-                  evidence
-                </div>
-                <div
-                  className="t-mono"
-                  style={{ fontSize: 22, marginTop: 2, color: 'var(--color-ink)' }}
-                >
-                  {evidenceCount}
-                </div>
-              </div>
+              <p className="t-small text-ink-mute mt-s-2">
+                mastery = your recent accuracy on this point, weighted by difficulty &amp; recency
+              </p>
             </div>
           )}
 
@@ -309,14 +316,9 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
           {/* Theory link */}
           {hasTheory && topicId && (
             <div style={{ marginBottom: 20 }}>
-              <Button
-                href={`/theory/${topicId}`}
-                variant="chip"
-                size="sm"
-                className="border-dashed"
-              >
-                read the theory
-              </Button>
+              <a href={`/theory/${topicId}`} className="link-arrow">
+                read the theory →
+              </a>
             </div>
           )}
 
@@ -329,6 +331,7 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
               href={`/drill?start=quick&grammarPoint=${encodeURIComponent(key)}`}
               variant="primary"
               size="md"
+              className="w-full"
             >
               mixed drill — adapts to your weak spots
             </Button>
@@ -346,7 +349,7 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
                     <Button
                       key={type}
                       href={chipHref(type)}
-                      variant="chip"
+                      variant="ghost"
                       size="sm"
                     >
                       {typeLabel(type as ExerciseType)}

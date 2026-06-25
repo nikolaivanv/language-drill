@@ -7,12 +7,22 @@ import type { VerdictTier } from '../../../../lib/drill/verdict-tier';
 import { useAdvanceOnEnter } from '../../../../lib/drill/keyboard';
 import { useDrillAction } from './drill-action-context';
 
+export interface CoachNudge {
+  /** Short label shown in the accent eyebrow (e.g. grammar-point name or error type). */
+  tag: string;
+  /** One-sentence nudge shown below the tag. */
+  note: string;
+}
+
 export interface FeedbackShellProps {
   tier: VerdictTier;
   label: string;
   scoreChipText: string;
   scaffolded?: boolean;
   hintLevel?: 0 | 1 | 2 | 3;
+  /** When provided, renders a coach nudge block at the bottom of the feedback
+   *  card. Omit (or pass null/undefined) when the current item is not a weak spot. */
+  coach?: CoachNudge | null;
   children: React.ReactNode;
   onNext: () => void;
   nextLabel?: string;
@@ -30,6 +40,7 @@ export function FeedbackShell({
   scoreChipText,
   scaffolded,
   hintLevel,
+  coach,
   children,
   onNext,
   nextLabel = 'next',
@@ -39,7 +50,7 @@ export function FeedbackShell({
   const { active, setPrimaryAction } = useDrillAction();
   React.useEffect(() => {
     if (!active) return;
-    setPrimaryAction({ label: nextLabel, onClick: onNext, variant: 'accent' });
+    setPrimaryAction({ label: nextLabel, onClick: onNext, variant: 'primary' });
     return () => setPrimaryAction(null);
   }, [active, nextLabel, onNext, setPrimaryAction]);
 
@@ -65,9 +76,18 @@ export function FeedbackShell({
         )}
       </div>
       <div className="mt-s-4">{children}</div>
+      {coach && (
+        <div className="mt-s-6 flex items-start gap-s-3 border-t border-rule pt-s-5">
+          <span className="relative mt-[2px] h-[34px] w-[34px] flex-shrink-0 rounded-full bg-ink after:absolute after:bottom-[8px] after:left-1/2 after:h-[3px] after:w-[14px] after:-translate-x-1/2 after:rounded-[2px] after:bg-accent after:content-['']" />
+          <div>
+            <span className="t-micro block text-accent-2">{coach.tag}</span>
+            <p className="mt-1 t-body text-ink-2">{coach.note}</p>
+          </div>
+        </div>
+      )}
       {!active && (
         <div className="mt-s-6 flex justify-end">
-          <Button variant="accent" onClick={onNext}>
+          <Button variant="primary" onClick={onNext}>
             {nextLabel}
           </Button>
         </div>

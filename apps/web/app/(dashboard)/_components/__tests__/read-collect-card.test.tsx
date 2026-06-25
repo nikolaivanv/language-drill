@@ -9,6 +9,18 @@ describe('ReadCollectCard', () => {
     expect(link).toHaveAttribute('href', '/read');
   });
 
+  it('CTA is a primary (ink-filled) button — card has no terracotta fill', () => {
+    const { container } = render(<ReadCollectCard />);
+
+    // The CTA link carries primary button classes (ink fill).
+    const cta = screen.getByRole('link', { name: /open reader/ });
+    expect(cta.className).toMatch(/bg-ink/);
+
+    // No terracotta fill on the card surface (bg-accent-soft is permitted for the icon badge only).
+    const card = container.firstChild as HTMLElement;
+    expect(card.className).not.toMatch(/bg-accent(?!-soft)/);
+  });
+
   it('renders the "new" chip and the prescribed copy', () => {
     render(<ReadCollectCard />);
     expect(screen.getByText('new')).toBeInTheDocument();

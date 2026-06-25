@@ -76,7 +76,7 @@ export default function InviteLandingPage({ params }: InviteLandingPageProps) {
           </tbody>
         </table>
         <Button
-          variant="accent"
+          variant="primary"
           size="lg"
           onClick={accept}
           className="w-full"

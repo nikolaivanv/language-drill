@@ -51,6 +51,22 @@ describe('TimelineItem — next-up', () => {
     renderItem({ status: 'next-up', href: '/drill?language=ES', index: 2 });
     expect(screen.getByText('02')).toBeInTheDocument();
   });
+
+  it('CTA is a primary (ink-filled) button — row body has no terracotta fill', () => {
+    renderItem({
+      status: 'next-up',
+      href: '/drill?language=ES',
+    });
+
+    // The CTA link carries primary button classes (ink fill).
+    const cta = screen.getByRole('link', { name: /start/ });
+    expect(cta.className).toMatch(/bg-ink/);
+
+    // The list item itself must not carry a terracotta background fill class
+    // (the accent circle on the rail node is intentional and lives inside a child).
+    const li = screen.getByRole('listitem');
+    expect(li.className).not.toMatch(/bg-accent/);
+  });
 });
 
 describe('TimelineItem — done', () => {

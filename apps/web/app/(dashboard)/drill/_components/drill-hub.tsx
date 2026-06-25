@@ -117,6 +117,19 @@ export function DrillHub({
           </span>
           <span className="t-mono flex-shrink-0 text-accent-2">start →</span>
         </Link>
+
+        <Link
+          href="/fluency"
+          className="flex items-center justify-between gap-s-4 rounded-r-lg border border-rule bg-card p-s-5 no-underline hover:border-accent"
+        >
+          <span className="min-w-0">
+            <span className="t-display-s block">fluency</span>
+            <span className="t-body block text-ink-2">
+              timed drills on what you already know.
+            </span>
+          </span>
+          <span className="t-mono flex-shrink-0 text-accent-2">start →</span>
+        </Link>
       </div>
     </div>
   );

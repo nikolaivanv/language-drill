@@ -56,6 +56,9 @@ describe('DrillHub', () => {
     // Conjugation is an opt-in standalone warm-up.
     const conj = screen.getByRole('link', { name: /conjugation/i });
     expect(conj).toHaveAttribute('href', '/drill/conjugation');
+    // Fluency is a timed drill hub.
+    const fluency = screen.getByRole('link', { name: /fluency/i });
+    expect(fluency).toHaveAttribute('href', '/fluency');
   });
 
   it('fires onStartQuick / onStartDictation when the launchers are clicked', () => {

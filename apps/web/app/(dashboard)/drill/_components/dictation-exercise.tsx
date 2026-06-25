@@ -13,7 +13,7 @@ import { dictationVerdict } from '../../../../lib/drill/verdict-tier';
 import { AudioPlayer } from './audio-player';
 import { DictationResultBody } from './dictation-result-body';
 import { useDrillAction } from './drill-action-context';
-import { FeedbackShell } from './feedback-shell';
+import { FeedbackShell, type CoachNudge } from './feedback-shell';
 import type { SubmissionMeta, SubmissionState } from './types';
 
 export interface DictationExerciseProps {
@@ -23,6 +23,9 @@ export interface DictationExerciseProps {
   onSubmit: (answer: string, meta: SubmissionMeta) => void;
   onNext: () => void;
   nextLabel?: string;
+  /** Coach nudge shown at the bottom of the feedback card when the current item
+   *  is a known weak spot. Omit when the item is not a weak spot. */
+  coach?: CoachNudge | null;
 }
 
 function isAccentLanguage(lang: string): lang is 'ES' | 'DE' | 'TR' {
@@ -36,6 +39,7 @@ export function DictationExercise({
   onSubmit,
   onNext,
   nextLabel,
+  coach,
 }: DictationExerciseProps) {
   const [answer, setAnswer] = React.useState('');
   const inputRef = React.useRef<HTMLTextAreaElement | null>(null);
@@ -55,7 +59,7 @@ export function DictationExercise({
     setPrimaryAction({
       label: 'check',
       onClick: handleSubmit,
-      variant: 'accent',
+      variant: 'primary',
       disabled: !canSubmit || isLocked,
       loading: submission.kind === 'submitting',
     });
@@ -104,14 +108,16 @@ export function DictationExercise({
       </div>
 
       {!active && (
-        <Button
-          variant="accent"
-          onClick={handleSubmit}
-          disabled={!canSubmit || isLocked}
-          loading={submission.kind === 'submitting'}
-        >
-          check
-        </Button>
+        <div className="mt-s-6 flex justify-end">
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            disabled={!canSubmit || isLocked}
+            loading={submission.kind === 'submitting'}
+          >
+            check
+          </Button>
+        </div>
       )}
 
       {submission.kind === 'evaluated' &&
@@ -120,6 +126,7 @@ export function DictationExercise({
             result={submission.result}
             onNext={onNext}
             nextLabel={nextLabel}
+            coach={coach}
           />
         )}
     </div>
@@ -130,10 +137,12 @@ function DictationResults({
   result,
   onNext,
   nextLabel,
+  coach,
 }: {
   result: DictationResult;
   onNext: () => void;
   nextLabel?: string;
+  coach?: CoachNudge | null;
 }) {
   const verdict = dictationVerdict(result.score);
   return (
@@ -141,6 +150,7 @@ function DictationResults({
       tier={verdict.tier}
       label={result.headline}
       scoreChipText={`${Math.round(result.adjustedCharAccuracy * 100)}%`}
+      coach={coach}
       onNext={onNext}
       nextLabel={nextLabel}
     >

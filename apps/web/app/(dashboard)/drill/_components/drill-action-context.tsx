@@ -10,7 +10,7 @@ export interface DrillPrimaryAction {
   onClick: () => void;
   disabled?: boolean;
   loading?: boolean;
-  variant?: 'primary' | 'accent';
+  variant?: 'primary' | 'ghost';
 }
 
 // Progress meta shown on the left of the action bar ("item N of M").

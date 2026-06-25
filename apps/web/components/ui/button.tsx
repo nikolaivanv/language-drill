@@ -2,7 +2,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { cn } from '../../lib/cn';
 
-export type ButtonVariant = 'default' | 'primary' | 'ghost' | 'accent' | 'chip';
+export type ButtonVariant = 'default' | 'primary' | 'ghost' | 'chip';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps
@@ -17,17 +17,16 @@ const shared =
   'inline-flex items-center justify-center gap-[6px] font-medium whitespace-nowrap transition-all duration-150';
 
 const variantClasses: Record<ButtonVariant, string> = {
-  default:
-    'border border-ink bg-transparent text-ink hover:bg-ink hover:text-paper',
+  // Primary CTA — ink fill, lightens on hover (never terracotta). Desktop shadow lift.
   primary:
-    'border border-ink bg-ink text-paper hover:bg-accent-2 hover:border-accent-2',
+    'border border-ink bg-ink text-paper hover:bg-ink-hover hover:border-ink-hover hover:shadow-2',
+  // Secondary — bordered transparent, no fill. The single ghost/secondary style.
   ghost:
-    'border border-transparent text-ink-soft hover:bg-paper-2 hover:text-ink',
-  accent:
-    'border border-accent bg-accent text-white hover:bg-accent-2 hover:border-accent-2',
-  // Bordered pill on a white card background — reads as a tappable chip at rest
-  // (not a bare text label). Add `border-dashed` via className for the
-  // dashed-outline "theory" treatment.
+    'border border-rule-strong bg-transparent text-ink-2 hover:bg-paper-2 hover:text-ink',
+  // `default` is an alias of the secondary ghost so only two button styles ship.
+  default:
+    'border border-rule-strong bg-transparent text-ink-2 hover:bg-paper-2 hover:text-ink',
+  // Bordered pill control on paper/card — the sole intended bg-card exception.
   chip: 'border border-rule bg-card text-ink hover:border-ink hover:bg-paper-2',
 };
 

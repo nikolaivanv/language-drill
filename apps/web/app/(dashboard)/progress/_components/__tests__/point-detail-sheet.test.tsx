@@ -56,7 +56,7 @@ function makePoint(over: Partial<CurriculumMapPoint> = {}): CurriculumMapPoint {
 // ---------------------------------------------------------------------------
 
 describe('PointDetailSheet', () => {
-  it('renders the mastery readout (40% / 50% / 3) for a learning point', () => {
+  it('renders the mastery readout (40% / building confidence / 3) for a learning point', () => {
     render(
       <PointDetailSheet
         point={makePoint()}
@@ -64,8 +64,12 @@ describe('PointDetailSheet', () => {
         onClose={noop}
       />,
     );
+    // mastery % kept
     expect(screen.getByText('40%')).toBeDefined();
-    expect(screen.getByText('50%')).toBeDefined();
+    // confidence shows band label, not raw %
+    expect(screen.getByText('building confidence')).toBeDefined();
+    expect(screen.queryByText('50%')).toBeNull();
+    // evidence count unchanged
     expect(screen.getByText('3')).toBeDefined();
   });
 
@@ -187,5 +191,68 @@ describe('PointDetailSheet', () => {
       />,
     );
     expect(screen.queryByRole('link', { name: /read the theory/i })).toBeNull();
+  });
+
+  it('mixed drill link has primary variant (bg-ink class)', () => {
+    render(
+      <PointDetailSheet
+        point={makePoint()}
+        language={Language.TR}
+        onClose={noop}
+      />,
+    );
+    const mixedLink = screen.getByRole('link', { name: /mixed drill/i });
+    expect(mixedLink.className).toContain('bg-ink');
+    expect(mixedLink.className).toContain('w-full');
+  });
+
+  it('mode buttons (cloze / translation) have ghost variant (bg-transparent class)', () => {
+    render(
+      <PointDetailSheet
+        point={makePoint()}
+        language={Language.TR}
+        onClose={noop}
+      />,
+    );
+    const clozeLink = screen.getByRole('link', { name: /cloze/i });
+    expect(clozeLink.className).toContain('bg-transparent');
+    const translationLink = screen.getByRole('link', { name: /translation/i });
+    expect(translationLink.className).toContain('bg-transparent');
+  });
+
+  it('theory link uses .link-arrow class', () => {
+    render(
+      <PointDetailSheet
+        point={makePoint()}
+        language={Language.TR}
+        onClose={noop}
+      />,
+    );
+    const theoryLink = screen.getByRole('link', { name: /read the theory/i });
+    expect(theoryLink.className).toContain('link-arrow');
+  });
+
+  it('shows mastery hint text', () => {
+    render(
+      <PointDetailSheet
+        point={makePoint()}
+        language={Language.TR}
+        onClose={noop}
+      />,
+    );
+    expect(
+      screen.getByText(/mastery = your recent accuracy on this point/i),
+    ).toBeDefined();
+  });
+
+  it('shows high confidence label when confidence >= 0.70', () => {
+    render(
+      <PointDetailSheet
+        point={makePoint({ confidence: 0.75 })}
+        language={Language.TR}
+        onClose={noop}
+      />,
+    );
+    expect(screen.getByText('high confidence')).toBeDefined();
   });
 });

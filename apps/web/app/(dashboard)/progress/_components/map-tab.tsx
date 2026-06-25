@@ -204,7 +204,7 @@ function SpineRow({
       {/* Body — tappable button that opens the detail sheet */}
       <button
         type="button"
-        className="flex-1 text-left"
+        className="group flex-1 flex items-start text-left"
         style={{
           opacity: bodyOpacity,
           background: 'none',
@@ -225,59 +225,70 @@ function SpineRow({
         }
         tabIndex={onSelect ? 0 : -1}
       >
-        {/* Name row */}
-        <div className="flex flex-wrap items-center gap-x-[8px] gap-y-[3px]">
-          <span
-            className="t-display-s"
-            style={
-              onSelect
-                ? { transition: 'color 0.1s' }
-                : undefined
-            }
-          >
-            {name}
-          </span>
-          {errorProne && (
+        {/* Content */}
+        <div className="flex-1">
+          {/* Name row */}
+          <div className="flex flex-wrap items-center gap-x-[8px] gap-y-[3px]">
             <span
-              style={{
-                fontSize: 11,
-                fontWeight: 600,
-                color: 'var(--color-accent-2)',
-                background: 'var(--color-accent-soft)',
-                borderRadius: 4,
-                padding: '1px 5px',
-              }}
+              className="t-display-s"
+              style={
+                onSelect
+                  ? { transition: 'color 0.1s' }
+                  : undefined
+              }
             >
-              ⚠ {recentErrorCount}×
+              {name}
             </span>
-          )}
-          {stateTagLabel && (
-            <span
-              style={{
-                fontSize: 10,
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-                color: stateTagColor,
-                fontWeight: 500,
-              }}
+            {errorProne && (
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: 'var(--color-accent-2)',
+                  background: 'var(--color-accent-soft)',
+                  borderRadius: 4,
+                  padding: '1px 5px',
+                }}
+              >
+                ⚠ {recentErrorCount}×
+              </span>
+            )}
+            {stateTagLabel && (
+              <span
+                style={{
+                  fontSize: 10,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  color: stateTagColor,
+                  fontWeight: 500,
+                }}
+              >
+                {stateTagLabel}
+              </span>
+            )}
+          </div>
+
+          {/* Mastery bar (locked refinement 1) */}
+          <MasteryBar mastery={mastery} state={state} />
+
+          {/* Cue */}
+          {cueText && (
+            <div
+              className="t-micro"
+              style={{ color: 'var(--color-ink-mute)', marginTop: 6 }}
             >
-              {stateTagLabel}
-            </span>
+              {cueText}
+            </div>
           )}
         </div>
 
-        {/* Mastery bar (locked refinement 1) */}
-        <MasteryBar mastery={mastery} state={state} />
-
-        {/* Cue */}
-        {cueText && (
-          <div
-            className="t-micro"
-            style={{ color: 'var(--color-ink-mute)', marginTop: 6 }}
-          >
-            {cueText}
-          </div>
-        )}
+        {/* Trailing chevron — decorative tap affordance */}
+        <span
+          aria-hidden
+          className="ml-auto flex-shrink-0 self-start mt-[6px] text-[22px] leading-none text-rule-strong transition-all group-hover:text-ink-mute group-hover:translate-x-[3px]"
+        >
+          ›
+        </span>
       </button>
     </li>
   );

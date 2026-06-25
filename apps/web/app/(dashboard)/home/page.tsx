@@ -17,7 +17,7 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
-import { useAuth, useUser } from '@clerk/nextjs';
+import { useAuth } from '@clerk/nextjs';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   createAuthenticatedFetch,
@@ -43,7 +43,6 @@ import { WorkOnThese } from '../_components/work-on-these';
 export default function DashboardPage() {
   const { activeLanguage } = useActiveLanguage();
   const { getToken } = useAuth();
-  const { user } = useUser();
   const fetchFn = useMemo(
     () => createAuthenticatedFetch(getToken),
     [getToken],
@@ -79,8 +78,6 @@ export default function DashboardPage() {
   return (
     <div className="space-y-s-7">
       <DashboardHeader
-        language={activeLanguage}
-        firstName={user?.firstName ?? null}
         axes={radar.data?.axes}
         totalEstimatedMinutes={todayPlan.data?.totalEstimatedMinutes ?? null}
         planItems={todayPlan.data?.items}
@@ -104,20 +101,21 @@ export default function DashboardPage() {
         language={activeLanguage}
       />
       {pathCue && (
-        <p className="t-micro text-ink-mute">
-          {"you're around "}
-          <span className="font-medium">{pathCue.positionLabel}</span>
-          {pathCue.nextName && (
-            <>
-              {' · next: '}
-              <span className="font-medium">{pathCue.nextName}</span>
-            </>
-          )}
-          {' · '}
-          <Link href="/progress" className="underline underline-offset-2">
+        <div className="flex items-baseline justify-between gap-s-6 mobile:flex-col mobile:items-start mobile:gap-s-2">
+          <p className="t-micro text-ink-mute">
+            {"you're around "}
+            <span className="font-medium">{pathCue.positionLabel}</span>
+            {pathCue.nextName && (
+              <>
+                {' · next: '}
+                <span className="font-medium">{pathCue.nextName}</span>
+              </>
+            )}
+          </p>
+          <Link href="/progress" className="link-arrow">
             see the map →
           </Link>
-        </p>
+        </div>
       )}
       <hr className="border-rule" />
       <WorkOnThese themes={insights.data?.themes ?? []} />

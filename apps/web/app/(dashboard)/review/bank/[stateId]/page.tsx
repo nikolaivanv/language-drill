@@ -155,7 +155,7 @@ export default function WordDetailPage({ params }: DetailPageProps) {
           {confirmDelete ? (
             <>
               <Button
-                variant="accent"
+                variant="primary"
                 size="sm"
                 disabled={busy}
                 loading={deleteMutation.isPending}

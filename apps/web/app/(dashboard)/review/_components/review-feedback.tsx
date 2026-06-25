@@ -149,7 +149,7 @@ export function ReviewFeedback({ result, onNext, nextLabel = 'next item →' }: 
         <p className="t-small text-ink-mute">
           <kbd className="t-mono">↵</kbd> next
         </p>
-        <Button variant="accent" onClick={onNext}>
+        <Button variant="primary" onClick={onNext}>
           {nextLabel}
         </Button>
       </div>

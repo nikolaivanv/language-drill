@@ -139,8 +139,8 @@ beforeEach(() => {
 
 describe('DebriefPage', () => {
   // -------------------------------------------------------------------------
-  describe('success path', () => {
-    it('renders header + tabs + footer; default tab is "debrief"; review content NOT rendered', async () => {
+  describe('success path — single scroll (no tab switcher)', () => {
+    it('renders header, "what moved" card, review list, and action row in one scroll', async () => {
       mockUseSessionDebrief.mockReturnValue({
         data: makeDebriefResponse(),
         isPending: false,
@@ -155,32 +155,20 @@ describe('DebriefPage', () => {
         'nice work.',
       );
 
-      // Tablist + both tab buttons
-      expect(screen.getByRole('tablist')).toBeInTheDocument();
-      expect(screen.getByRole('tab', { name: 'debrief' })).toHaveAttribute(
-        'aria-selected',
-        'true',
-      );
-      expect(screen.getByRole('tab', { name: 'review' })).toHaveAttribute(
-        'aria-selected',
-        'false',
-      );
+      // No tab switcher in the DOM.
+      expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
+      expect(screen.queryByRole('tab')).not.toBeInTheDocument();
 
-      // Footer buttons
-      expect(
-        screen.getByRole('button', { name: 'practice more' }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole('button', { name: /see your progress/ }),
-      ).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'done' })).toBeInTheDocument();
+      // "what moved" card section header is visible.
+      expect(screen.getByText('what moved')).toBeInTheDocument();
 
-      // Review tab content is NOT rendered while debrief tab is active.
-      // ReviewItemCard renders text like "#1", "#2", ... — none should appear.
-      expect(screen.queryByText('#1')).not.toBeInTheDocument();
+      // Review cards — "#1" through "#5" are all visible in one scroll.
+      for (const label of ['#1', '#2', '#3', '#4', '#5']) {
+        expect(screen.getByText(label)).toBeInTheDocument();
+      }
     });
 
-    it('switching to review tab renders review cards in manifest order; debrief content NOT rendered', async () => {
+    it('review cards are rendered in manifest order without any tab interaction', async () => {
       mockUseSessionDebrief.mockReturnValue({
         data: makeDebriefResponse(),
         isPending: false,
@@ -190,12 +178,12 @@ describe('DebriefPage', () => {
 
       renderPage();
 
-      const reviewTab = await screen.findByRole('tab', { name: 'review' });
-      fireEvent.click(reviewTab);
-
-      // Review cards now visible — index "#1" through "#5" in manifest order.
       const indexLabels = ['#1', '#2', '#3', '#4', '#5'];
-      const found = indexLabels.map((label) => screen.getByText(label));
+      const found = await Promise.all(
+        indexLabels.map((label) =>
+          screen.findByText(label),
+        ),
+      );
       // Verify DOM order matches manifest order.
       for (let i = 1; i < found.length; i++) {
         expect(
@@ -203,22 +191,36 @@ describe('DebriefPage', () => {
             Node.DOCUMENT_POSITION_FOLLOWING,
         ).toBeTruthy();
       }
+    });
 
-      // Debrief tab content (the coach "what's next" eyebrow) is gone.
-      expect(screen.queryByText("what's next")).not.toBeInTheDocument();
+    it('renders action row: primary "practice more", ghost "done", link-arrow "see your progress"', async () => {
+      mockUseSessionDebrief.mockReturnValue({
+        data: makeDebriefResponse(),
+        isPending: false,
+        isError: false,
+        error: null,
+      });
 
-      // aria-selected has flipped.
-      expect(reviewTab).toHaveAttribute('aria-selected', 'true');
-      expect(screen.getByRole('tab', { name: 'debrief' })).toHaveAttribute(
-        'aria-selected',
-        'false',
-      );
+      renderPage();
+
+      // Primary practice more button
+      expect(
+        await screen.findByRole('button', { name: 'practice more' }),
+      ).toBeInTheDocument();
+
+      // Ghost done button
+      expect(screen.getByRole('button', { name: 'done' })).toBeInTheDocument();
+
+      // see your progress → is a link (not a button)
+      const progressLink = screen.getByRole('link', { name: /see your progress/ });
+      expect(progressLink).toBeInTheDocument();
+      expect(progressLink).toHaveAttribute('href', '/progress');
     });
   });
 
   // -------------------------------------------------------------------------
   describe('loading state', () => {
-    it('renders skeleton while query is pending; no header/tabs/footer', async () => {
+    it('renders skeleton while query is pending; no header/review/footer', async () => {
       mockUseSessionDebrief.mockReturnValue({
         data: undefined,
         isPending: true,
@@ -231,7 +233,7 @@ describe('DebriefPage', () => {
       // Skeleton renders immediately (synchronous fulfilled-thenable params).
       expect(container.querySelector('.animate-pulse')).toBeInTheDocument();
 
-      // No header, no tabs, no footer in the loading state.
+      // No header, no review cards, no footer in the loading state.
       expect(
         screen.queryByRole('heading', { level: 1 }),
       ).not.toBeInTheDocument();
@@ -344,11 +346,10 @@ describe('DebriefPage', () => {
       expect(mockPush).toHaveBeenCalledWith('/drill');
     });
 
-    it('clicking "see your progress →" calls router.push("/progress")', async () => {
+    it('"see your progress →" link points to /progress', async () => {
       renderPage();
-      const button = await screen.findByRole('button', { name: /see your progress/ });
-      fireEvent.click(button);
-      expect(mockPush).toHaveBeenCalledWith('/progress');
+      const link = await screen.findByRole('link', { name: /see your progress/ });
+      expect(link).toHaveAttribute('href', '/progress');
     });
 
     it('clicking "done" calls router.push("/")', async () => {

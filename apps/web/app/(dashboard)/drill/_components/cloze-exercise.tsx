@@ -8,7 +8,7 @@ import { useAnswerDraft } from '../../../../lib/drill/use-answer-draft';
 import { clozeVerdict } from '../../../../lib/drill/verdict-tier';
 import { ClozePrompt, type BlankState } from '../../../../components/drill/cloze-prompt';
 import { useDrillAction } from './drill-action-context';
-import { FeedbackShell } from './feedback-shell';
+import { FeedbackShell, type CoachNudge } from './feedback-shell';
 import type { SubmissionMeta, SubmissionState } from './types';
 
 export type { SubmissionMeta, SubmissionState } from './types';
@@ -23,6 +23,9 @@ export interface ClozeExerciseProps {
   /** When set, the typed answer is drafted in sessionStorage so it survives a
    *  full page reload. Omitted in tests/contexts that don't need persistence. */
   exerciseId?: string;
+  /** Coach nudge shown at the bottom of the feedback card when the current item
+   *  is a known weak spot. Omit when the item is not a weak spot. */
+  coach?: CoachNudge | null;
 }
 
 function isAccentLanguage(lang: string): lang is 'ES' | 'DE' | 'TR' {
@@ -37,6 +40,7 @@ export function ClozeExercise({
   onNext,
   nextLabel,
   exerciseId,
+  coach,
 }: ClozeExerciseProps) {
   const [answer, setAnswer, clearDraft] = useAnswerDraft(exerciseId);
   const [usedMc, setUsedMc] = React.useState(false);
@@ -82,7 +86,7 @@ export function ClozeExercise({
     setPrimaryAction({
       label: 'submit',
       onClick: handleSubmit,
-      variant: 'accent',
+      variant: 'primary',
       disabled: !canSubmit || isLocked,
       loading: submission.kind === 'submitting',
     });
@@ -108,7 +112,6 @@ export function ClozeExercise({
         disabled={isLocked}
         onEnterSubmit={handleSubmit}
         inputRef={inputRef}
-        showHelper={!showOptions && !isLocked}
       />
 
       <div className="flex flex-col gap-s-3">
@@ -152,14 +155,16 @@ export function ClozeExercise({
       </div>
 
       {!active && submission.kind !== 'evaluated' && (
-        <Button
-          variant="accent"
-          onClick={handleSubmit}
-          disabled={!canSubmit || isLocked}
-          loading={submission.kind === 'submitting'}
-        >
-          submit
-        </Button>
+        <div className="mt-s-6 flex justify-end">
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            disabled={!canSubmit || isLocked}
+            loading={submission.kind === 'submitting'}
+          >
+            submit
+          </Button>
+        </div>
       )}
 
       {submission.kind === 'evaluated' &&
@@ -176,6 +181,7 @@ export function ClozeExercise({
               label={verdict.label}
               scoreChipText={`${Math.round(submission.result.score * 100)}%`}
               scaffolded={usedMc}
+              coach={coach}
               onNext={onNext}
               nextLabel={nextLabel}
             >

@@ -54,7 +54,8 @@ describe('NextUpCard', () => {
     ]);
     render(<NextUpCard data={data} language={Language.ES} />);
 
-    const link = screen.getByRole('link', { name: /next up/i });
+    // Primary CTA is an ink button linking to the drill hub.
+    const link = screen.getByRole('link', { name: /start/i });
     expect(link).toHaveAttribute('href', '/drill?start=quick');
     // Title from composeTitle(2, 3, CLOZE) = "core · cloze"; meta from the subtitle.
     expect(screen.getByText('core · cloze')).toBeInTheDocument();
@@ -64,10 +65,40 @@ describe('NextUpCard', () => {
   it('routes to the quick-launch hub regardless of active language', () => {
     const data = planResponse([makeItem(1, 'queued')]);
     render(<NextUpCard data={data} language={Language.DE} />);
-    expect(screen.getByRole('link', { name: /next up/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /start/i })).toHaveAttribute(
       'href',
       '/drill?start=quick',
     );
+  });
+
+  it('CTA is a primary (ink-filled) button — card is not terracotta-filled', () => {
+    const data = planResponse([makeItem(1, 'queued', { topicHint: 'subjunctive' })]);
+    const { container } = render(<NextUpCard data={data} language={Language.ES} />);
+
+    // The card surface must be neutral (bg-card), not accent-soft.
+    const card = container.firstChild as HTMLElement;
+    expect(card.className).toMatch(/bg-card/);
+    expect(card.className).not.toMatch(/bg-accent(?!-soft)/);
+    expect(card.className).not.toMatch(/bg-accent-soft/);
+
+    // The CTA link carries primary button classes (ink fill).
+    const cta = screen.getByRole('link', { name: /start/i });
+    expect(cta.className).toMatch(/bg-ink/);
+  });
+
+  it('whole card is tappable via stretched-link — CTA has after:absolute after:inset-0, outer div has no aria-label', () => {
+    const data = planResponse([makeItem(1, 'queued', { topicHint: 'subjunctive' })]);
+    const { container } = render(<NextUpCard data={data} language={Language.ES} />);
+
+    // Outer card div is position:relative and has NO aria-label (the inert div label was silent).
+    const card = container.firstChild as HTMLElement;
+    expect(card.className).toMatch(/\brelative\b/);
+    expect(card).not.toHaveAttribute('aria-label');
+
+    // The single CTA anchor carries the stretched-link overlay classes.
+    const cta = screen.getByRole('link', { name: /start/i });
+    expect(cta.className).toMatch(/after:absolute/);
+    expect(cta.className).toMatch(/after:inset-0/);
   });
 
   it('renders nothing when there is no plan data', () => {

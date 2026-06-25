@@ -234,6 +234,43 @@ describe('SkillRow — thin evidence', () => {
 });
 
 // ---------------------------------------------------------------------------
+// SectionHeader — eyebrow copy + progress link (Task 7)
+// ---------------------------------------------------------------------------
+
+describe('SkillSnapshotGrid — section header copy', () => {
+  const axes: RadarAxis[] = [
+    axis('grammar', 0.42),
+    axis('vocabulary', 0.7),
+  ];
+
+  it('eyebrow does not contain "weakest first"', () => {
+    render(
+      <SkillSnapshotGrid
+        {...baseGridProps}
+        data={radar(axes)}
+        isLoading={false}
+        error={null}
+      />,
+    );
+    expect(screen.queryByText(/weakest first/i)).not.toBeInTheDocument();
+  });
+
+  it('"see full progress →" link has class link-arrow', () => {
+    render(
+      <SkillSnapshotGrid
+        {...baseGridProps}
+        data={radar(axes)}
+        isLoading={false}
+        error={null}
+      />,
+    );
+    expect(
+      screen.getByRole('link', { name: /see full progress/i }),
+    ).toHaveClass('link-arrow');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // No-gamification invariant
 // ---------------------------------------------------------------------------
 

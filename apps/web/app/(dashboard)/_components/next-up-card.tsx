@@ -11,9 +11,9 @@
 // gates this behind `useIsMobile()`.
 // ---------------------------------------------------------------------------
 
-import Link from 'next/link';
 import type { TodayPlanResponse } from '@language-drill/api-client';
 import type { LearningLanguage } from '@language-drill/shared';
+import { Button } from '../../../components/ui';
 import { cn } from '../../../lib/cn';
 import { composeSubtitle, composeTitle } from '../_lib/timeline-labels';
 import { reasonHint } from '../_lib/reason-hint';
@@ -39,15 +39,9 @@ export function NextUpCard({ data, language: _language }: Props) {
   const hint = reasonHint(next.reason);
 
   return (
-    <Link
-      href={drillHref}
-      aria-label={`next up: ${title}, start`}
-      className="flex items-center justify-between gap-s-4 rounded-r-md border border-accent bg-accent-soft px-[18px] py-[16px] transition-colors hover:border-accent-2"
-    >
+    <div className="relative flex items-center justify-between gap-s-4 rounded-r-lg border border-rule bg-card px-[18px] py-[16px] shadow-1">
       <div className="min-w-0">
-        <div className="t-micro" style={{ color: 'var(--color-accent-2)' }}>
-          next up
-        </div>
+        <div className="t-micro text-accent-2">next up</div>
         <div className="t-display-s mt-[2px]">{title}</div>
         <p className="t-small mt-[2px]">
           {subtitle} · {next.estimatedMinutes} min
@@ -63,13 +57,14 @@ export function NextUpCard({ data, language: _language }: Props) {
           </p>
         )}
       </div>
-      <span
-        aria-hidden
-        className="t-body flex-none font-medium"
-        style={{ color: 'var(--color-accent-2)' }}
+      <Button
+        variant="primary"
+        size="md"
+        href={drillHref}
+        className="flex-none after:absolute after:inset-0"
       >
         start →
-      </span>
-    </Link>
+      </Button>
+    </div>
   );
 }

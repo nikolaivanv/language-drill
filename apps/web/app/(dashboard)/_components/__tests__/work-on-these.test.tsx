@@ -87,4 +87,37 @@ describe('WorkOnThese', () => {
     expect(screen.queryByRole('button')).toBeNull();
     expect(screen.queryByRole('link')).toBeNull();
   });
+
+  it('renders identical first-3 items regardless of how the component is mounted — determinism test', () => {
+    // This regression guards that WorkOnThese is the single place that limits
+    // output to MAX_ITEMS (3) and preserves insertion order, so all three call
+    // sites (home, drill hub, progress map-tab) that pass the raw
+    // useInsightsErrors themes array always produce the same render.
+    const fiveThemes = ['a', 'b', 'c', 'd', 'e'].map((k) =>
+      theme({ grammarPointKey: k, grammarPointName: `Point ${k}` }),
+    );
+
+    const { unmount } = render(<WorkOnThese themes={fiveThemes} />);
+    const firstLabels = screen
+      .getAllByRole('listitem')
+      .map((li) => li.textContent);
+    unmount();
+
+    render(<WorkOnThese themes={fiveThemes} onSelect={vi.fn()} />);
+    const secondLabels = screen
+      .getAllByRole('listitem')
+      .map((li) => li.textContent);
+
+    // Both renders must show exactly 3 items in the same order.
+    expect(firstLabels).toHaveLength(3);
+    expect(secondLabels).toHaveLength(3);
+    expect(firstLabels).toEqual(secondLabels);
+
+    // The 3 items must be the first 3 from the input — input order is preserved.
+    expect(screen.getByText('Point a')).toBeInTheDocument();
+    expect(screen.getByText('Point b')).toBeInTheDocument();
+    expect(screen.getByText('Point c')).toBeInTheDocument();
+    expect(screen.queryByText('Point d')).not.toBeInTheDocument();
+    expect(screen.queryByText('Point e')).not.toBeInTheDocument();
+  });
 });

@@ -93,7 +93,6 @@ export function FluencyItem({
           disabled={locked}
           onEnterSubmit={submit}
           inputRef={inputRef}
-          showHelper={!locked}
         />
       )}
 

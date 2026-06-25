@@ -31,14 +31,9 @@ import { track } from '../../../lib/analytics/track';
 import { topicIdForGrammarPointKey } from '../../../lib/theory-topic-map';
 import { useIsMobile } from '../../../lib/responsive';
 import { Card } from '../../../components/ui';
-import { coachMessage } from '../../../lib/drill/coach-messages';
-import { coachHeadline } from '../../../lib/drill/coach-headline';
 import { DICTATION_RUN_COUNT } from '../../../lib/drill/session-config';
 import { DrillHub } from './_components/drill-hub';
-import { CoachRail } from './_components/coach-rail';
-import { CoachCard } from './_components/coach-card';
 import { DrillMeta } from './_components/drill-meta';
-import { FluencyPromo } from './_components/fluency-promo';
 import { SessionDots } from './_components/session-dots';
 import { DrillLayout } from './_components/drill-layout';
 import {
@@ -346,35 +341,29 @@ function PracticePageContent() {
   }
 
   const currentItem = selectCurrentItem(state);
-  const exerciseContent = currentItem
-    ? (currentItem.contentJson as ExerciseContent)
-    : null;
+
+  // Derive a coach nudge for the current item when its grammar point is a known
+  // weak spot (i.e. it appears in the cross-session error themes). The tag uses
+  // the grammar-point name if available (more readable), falling back to the
+  // raw key. The note is concise and honest — count-anchored to validate the
+  // signal. Null when the item has no grammar point or no matching theme.
+  const coach = useMemo(() => {
+    const gpKey = currentItem?.grammarPointKey ?? null;
+    if (!gpKey) return null;
+    const themes = insights.data?.themes ?? [];
+    const theme = themes.find(
+      (t) => t.grammarPointKey === gpKey && t.count >= 2,
+    );
+    if (!theme) return null;
+    const tag = theme.grammarPointName ?? gpKey;
+    const note =
+      `you've slipped on this ${theme.count}× lately — steady reps here pay off`;
+    return { tag, note };
+  }, [currentItem?.grammarPointKey, insights.data?.themes]);
   const theoryTopicId = topicIdForGrammarPointKey(
     currentItem?.grammarPointKey ?? null,
     activeLanguage,
   );
-
-  const exerciseTypeForRail: ExerciseType =
-    exerciseContent && 'type' in exerciseContent
-      ? exerciseContent.type
-      : ExerciseType.CLOZE;
-
-  const submission =
-    state.kind === 'inSession'
-      ? state.perItemSubmission
-      : ({ kind: 'idle' } as const);
-
-  const cannedMsg =
-    submission.kind === 'evaluated'
-      ? coachMessage({
-          kind: 'evaluated',
-          type: exerciseTypeForRail,
-          score: submission.result.score,
-        })
-      : coachMessage({ kind: 'idle', type: exerciseTypeForRail });
-  const sessionErrors = state.kind === 'inSession' ? state.sessionErrors : [];
-  const coachMsg =
-    coachHeadline({ sessionErrors, themes: insights.data?.themes ?? [] }) ?? cannedMsg;
 
   // The learner's recorded baseline for the active language — the identity that
   // the session level can drift from. Null when the active language has no
@@ -443,13 +432,6 @@ function PracticePageContent() {
 
   const main = (
     <>
-      {/* Mobile: the coach rail collapses into a card at the top of content. */}
-      {isMobile && currentItem && (
-        <div className="mb-s-4">
-          <CoachCard message={coachMsg} />
-        </div>
-      )}
-
       {/* One aligned meta row: the writable level pill (+ drift/reset) and the
           read-only topic, grouped tight on a single baseline. */}
       <DrillMeta
@@ -479,8 +461,9 @@ function PracticePageContent() {
         // is the focal point. (DRILL-UI-GUIDELINES §3: tighten the meta, open
         // up before the title.)
         <div className="mt-s-8 mobile:mt-s-5">
-          {/* Mobile: horizontal session-position dots above the prompt. */}
-          {isMobile && sessionPosition && (
+          {/* Session-position dots above the prompt — rendered inline for both
+              desktop and mobile now that the coach rail column is removed. */}
+          {sessionPosition && (
             <div className="mb-s-4">
               <SessionDots
                 current={sessionPosition.current}
@@ -495,6 +478,7 @@ function PracticePageContent() {
             onSubmit={handleSubmit}
             onNext={handleNext}
             nextLabel={selectIsLastItem(state) ? 'see results' : 'next'}
+            coach={coach}
           />
           {state.perItemSubmission.kind === 'evaluated' &&
             state.perItemSubmission.submissionId && (
@@ -517,25 +501,12 @@ function PracticePageContent() {
         </div>
       )}
 
-      {/* Mobile: promo demoted to the bottom of the scroll, out of the task
-          flow (it lives in the coach rail on desktop). */}
-      {isMobile && currentItem && <FluencyPromo className="mt-s-7" />}
     </>
   );
 
   return (
     <DrillActionProvider active={isMobile}>
       <DrillLayout
-        rail={
-          !isMobile && currentItem ? (
-            <CoachRail
-              message={coachMsg}
-              exerciseType={exerciseTypeForRail}
-              sessionCurrent={sessionPosition?.current}
-              sessionTotal={sessionPosition?.total}
-            />
-          ) : null
-        }
         main={main}
         actionBar={isMobile ? <DrillActionBar /> : undefined}
         progressFraction={selectProgressFraction(state)}

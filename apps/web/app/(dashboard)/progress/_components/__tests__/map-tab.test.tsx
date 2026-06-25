@@ -359,6 +359,49 @@ describe('MapTab', () => {
     expect(screen.queryByRole('button', { name: /add .* →/i })).toBeNull();
   });
 
+  // ---------------------------------------------------------------------------
+  // Chevron affordance tests
+  // ---------------------------------------------------------------------------
+
+  it('renders a trailing chevron (›) on each visible grammar-point row', () => {
+    render(
+      <MapTab
+        data={buildFixture()}
+        isLoading={false}
+        error={null}
+        onRetry={noop}
+        errorThemes={[]}
+      />,
+    );
+    // The fixture has at least 2 visible SpineRows: "Vowel Harmony" (learning)
+    // and 'Verb "to be"' (error-prone solid, not collapsed).
+    // Each should have an aria-hidden chevron span.
+    const chevrons = document
+      .querySelectorAll('[aria-hidden="true"]');
+    // Filter to only the › chevron spans
+    const chevronSpans = Array.from(chevrons).filter(
+      (el) => el.textContent === '›',
+    );
+    expect(chevronSpans.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('each point row is still clickable (opens the sheet) with the chevron present', () => {
+    render(
+      <MapTab
+        data={buildFixture()}
+        isLoading={false}
+        error={null}
+        onRetry={noop}
+        errorThemes={[]}
+      />,
+    );
+    // Clicking the row text (part of the button) should still open the sheet
+    fireEvent.click(screen.getByText('Vowel Harmony'));
+    expect(screen.getByRole('dialog')).toBeDefined();
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.getAttribute('aria-label')).toBe('Vowel Harmony');
+  });
+
   it('does NOT render the advance button when no preview level exists even if readyToAdvance is true', () => {
     const onAdvance = vi.fn();
     // Build a fixture that is ready to advance but has no preview level

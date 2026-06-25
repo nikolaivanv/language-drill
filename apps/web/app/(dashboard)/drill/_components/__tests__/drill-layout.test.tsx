@@ -2,8 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { DrillLayout } from '../drill-layout';
 
-// Default to desktop (false) so the existing assertions below — which expect
-// the side rail — keep passing. The mobile suite flips this per-test.
+// Default to desktop (false) so the baseline assertions target the desktop path.
 const mockIsMobile = vi.fn(() => false);
 vi.mock('../../../../../lib/responsive', () => ({
   useIsMobile: () => mockIsMobile(),
@@ -20,16 +19,25 @@ beforeEach(() => {
 describe('DrillLayout', () => {
   // ---- Slot rendering -----------------------------------------------------
 
-  it('renders both rail and main slots', () => {
+  it('renders the main slot on desktop', () => {
     render(
       <DrillLayout
-        rail={<div data-testid="rail-slot" />}
         main={<div data-testid="main-slot" />}
       />
     );
 
-    expect(screen.getByTestId('rail-slot')).toBeInTheDocument();
     expect(screen.getByTestId('main-slot')).toBeInTheDocument();
+  });
+
+  it('does not render a separate coach-rail aside on desktop', () => {
+    render(
+      <DrillLayout
+        main={<div data-testid="main-slot" />}
+      />
+    );
+
+    // No <aside> element — the 3-column rail layout is removed.
+    expect(document.querySelector('aside')).not.toBeInTheDocument();
   });
 
   // ---- Progress strip ARIA ------------------------------------------------
@@ -37,7 +45,6 @@ describe('DrillLayout', () => {
   it('sets correct ARIA attributes on the progress strip when fraction is 0', () => {
     render(
       <DrillLayout
-        rail={<div data-testid="rail-slot" />}
         main={<div data-testid="main-slot" />}
         progressFraction={0}
       />
@@ -54,7 +61,6 @@ describe('DrillLayout', () => {
   it('renders fill at 50% width when progressFraction is 0.5', () => {
     render(
       <DrillLayout
-        rail={<div data-testid="rail-slot" />}
         main={<div data-testid="main-slot" />}
         progressFraction={0.5}
       />
@@ -67,7 +73,6 @@ describe('DrillLayout', () => {
   it('renders fill at 100% width when progressFraction is 1', () => {
     render(
       <DrillLayout
-        rail={<div data-testid="rail-slot" />}
         main={<div data-testid="main-slot" />}
         progressFraction={1}
       />
@@ -82,7 +87,6 @@ describe('DrillLayout', () => {
   it('clamps fill width to 100% when progressFraction exceeds 1', () => {
     render(
       <DrillLayout
-        rail={<div data-testid="rail-slot" />}
         main={<div data-testid="main-slot" />}
         progressFraction={2}
       />
@@ -95,7 +99,6 @@ describe('DrillLayout', () => {
   it('clamps fill width to 0% when progressFraction is below 0', () => {
     render(
       <DrillLayout
-        rail={<div data-testid="rail-slot" />}
         main={<div data-testid="main-slot" />}
         progressFraction={-0.5}
       />
@@ -110,7 +113,6 @@ describe('DrillLayout', () => {
   it('defaults progressFraction to 0 when omitted', () => {
     render(
       <DrillLayout
-        rail={<div data-testid="rail-slot" />}
         main={<div data-testid="main-slot" />}
       />
     );
@@ -124,7 +126,6 @@ describe('DrillLayout', () => {
   it('shows the loading skeleton and hides the main slot when isLoading is true', () => {
     const { container } = render(
       <DrillLayout
-        rail={<div data-testid="rail-slot" />}
         main={<div data-testid="main-slot" />}
         isLoading
       />
@@ -135,24 +136,11 @@ describe('DrillLayout', () => {
     expect(screen.queryByTestId('main-slot')).not.toBeInTheDocument();
   });
 
-  it('still renders the rail slot when isLoading is true', () => {
-    render(
-      <DrillLayout
-        rail={<div data-testid="rail-slot" />}
-        main={<div data-testid="main-slot" />}
-        isLoading
-      />
-    );
-
-    expect(screen.getByTestId('rail-slot')).toBeInTheDocument();
-  });
-
   // ---- isLoading default --------------------------------------------------
 
   it('defaults isLoading to false and renders the main slot when omitted', () => {
     render(
       <DrillLayout
-        rail={<div data-testid="rail-slot" />}
         main={<div data-testid="main-slot" />}
       />
     );
@@ -167,10 +155,9 @@ describe('DrillLayout', () => {
       mockIsMobile.mockReturnValue(true);
     });
 
-    it('renders main + the action-bar slot and omits the side rail', () => {
+    it('renders main + the action-bar slot', () => {
       render(
         <DrillLayout
-          rail={<div data-testid="rail-slot" />}
           main={<div data-testid="main-slot" />}
           actionBar={<div data-testid="action-bar-slot" />}
         />
@@ -178,13 +165,11 @@ describe('DrillLayout', () => {
 
       expect(screen.getByTestId('main-slot')).toBeInTheDocument();
       expect(screen.getByTestId('action-bar-slot')).toBeInTheDocument();
-      expect(screen.queryByTestId('rail-slot')).not.toBeInTheDocument();
     });
 
     it('keeps the top progress strip on mobile', () => {
       render(
         <DrillLayout
-          rail={null}
           main={<div data-testid="main-slot" />}
           progressFraction={0.5}
         />
@@ -194,15 +179,14 @@ describe('DrillLayout', () => {
     });
   });
 
-  it('renders the side rail (not the action bar) on desktop', () => {
+  it('renders the main slot (not the action bar) on desktop', () => {
     render(
       <DrillLayout
-        rail={<div data-testid="rail-slot" />}
         main={<div data-testid="main-slot" />}
         actionBar={<div data-testid="action-bar-slot" />}
       />
     );
-    expect(screen.getByTestId('rail-slot')).toBeInTheDocument();
+    expect(screen.getByTestId('main-slot')).toBeInTheDocument();
     expect(screen.queryByTestId('action-bar-slot')).not.toBeInTheDocument();
   });
 });

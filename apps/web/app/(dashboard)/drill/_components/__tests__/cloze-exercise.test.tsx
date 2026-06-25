@@ -292,6 +292,20 @@ describe('ClozeExercise', () => {
       expect(blank()).toHaveAttribute('data-state', 'wrong');
     });
 
+    it('applies the ok underline color class to the wrapper span after a correct submission', () => {
+      renderCloze({ submission: evaluatedSubmission });
+      const wrapper = blank().parentElement;
+      expect(wrapper).toHaveClass('after:bg-ok');
+      expect(wrapper).not.toHaveClass('after:bg-accent-2');
+    });
+
+    it('applies the accent-2 underline color class to the wrapper span after a wrong submission', () => {
+      renderCloze({ submission: wrongSubmission });
+      const wrapper = blank().parentElement;
+      expect(wrapper).toHaveClass('after:bg-accent-2');
+      expect(wrapper).not.toHaveClass('after:bg-ok');
+    });
+
     it('disables every accent picker chip when evaluated', () => {
       renderCloze({ submission: evaluatedSubmission });
       const chips = screen
@@ -348,6 +362,33 @@ describe('ClozeExercise', () => {
       fireEvent.change(blank(), { target: { value: 'como' } });
       fireEvent.click(screen.getByRole('button', { name: /submit/i }));
       expect(window.sessionStorage.getItem('drill:draft:ex-9')).toBeNull();
+    });
+  });
+
+  describe('desktop submit alignment', () => {
+    it('renders the submit button inside a right-aligned wrapper (justify-end) on desktop', () => {
+      const { container } = renderCloze();
+      const submitBtn = screen.getByRole('button', { name: /submit/i });
+      const wrapper = submitBtn.parentElement;
+      expect(wrapper).toHaveClass('justify-end');
+      expect(wrapper).toHaveClass('flex');
+      // The wrapper should be present in the container
+      expect(container.querySelector('.flex.justify-end')).toBeTruthy();
+    });
+
+    it('does not render the desktop submit wrapper when active (mobile mode)', () => {
+      const { container } = render(
+        <DrillActionProvider active>
+          <ClozeExercise
+            content={baseContent}
+            language={Language.ES}
+            submission={idleSubmission}
+            onSubmit={vi.fn()}
+            onNext={vi.fn()}
+          />
+        </DrillActionProvider>,
+      );
+      expect(container.querySelector('.flex.justify-end')).toBeNull();
     });
   });
 

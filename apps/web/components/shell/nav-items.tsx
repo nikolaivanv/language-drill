@@ -14,6 +14,7 @@ import { useReviewDueCount } from './use-review-due-count';
 export interface NavDestination {
   href: string;
   label: string;
+  mobileLabel?: string;
   icon: React.ReactNode;
 }
 
@@ -24,7 +25,7 @@ export const NAV_DESTINATIONS: NavDestination[] = [
   { href: '/home', label: 'today', icon: <TodayIcon /> },
   { href: '/drill', label: 'drill', icon: <DrillIcon /> },
   { href: '/read', label: 'read', icon: <ReadIcon /> },
-  { href: '/review', label: 'review', icon: <ReviewIcon /> },
+  { href: '/review', label: 'my vocabulary', mobileLabel: 'vocab', icon: <ReviewIcon /> },
   { href: '/theory', label: 'theory', icon: <TheoryIcon /> },
   { href: '/progress', label: 'progress', icon: <ProgressIcon /> },
 ];

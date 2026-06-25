@@ -117,7 +117,7 @@ export function PhraseCardBody({
         <Button ref={skipRef} variant="ghost" size="sm" onClick={onSkip}>
           {inBank ? 'close' : 'skip'}
         </Button>
-        <Button variant={inBank ? 'accent' : 'primary'} size="sm" onClick={onSave}>
+        <Button variant={inBank ? 'ghost' : 'primary'} size="sm" onClick={onSave}>
           {inBank ? '✓ saved · undo' : '+ save phrase'}
         </Button>
       </div>

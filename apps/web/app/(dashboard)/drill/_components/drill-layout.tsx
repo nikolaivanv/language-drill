@@ -5,7 +5,12 @@ import { useIsMobile } from '../../../../lib/responsive';
 import { LoadingSkeleton } from './loading-skeleton';
 
 export interface DrillLayoutProps {
-  rail: React.ReactNode;
+  /**
+   * @deprecated The coach rail column has been removed (2026-06). Pass null.
+   * The prop is retained to avoid a breaking change in callers until they are
+   * updated; the value is ignored on desktop.
+   */
+  rail?: React.ReactNode;
   main: React.ReactNode;
   /** Sticky action-bar slot rendered at the bottom on mobile only. */
   actionBar?: React.ReactNode;
@@ -14,7 +19,6 @@ export interface DrillLayoutProps {
 }
 
 export function DrillLayout({
-  rail,
   main,
   actionBar,
   progressFraction = 0,
@@ -39,8 +43,8 @@ export function DrillLayout({
     </div>
   );
 
-  // Mobile: single column, no side rail; the coach card + dots live in `main`
-  // (composed by the page) and the sticky action bar sits at the bottom.
+  // Mobile: single column; the coach card + dots live in `main` (composed by
+  // the page) and the sticky action bar sits at the bottom.
   if (isMobile) {
     return (
       <div className="flex flex-col">
@@ -51,25 +55,15 @@ export function DrillLayout({
     );
   }
 
-  // Desktop: the coach rail + content grid. The previous 900px breakpoint is
-  // reconciled to the canonical 760 seam above (Deliberate Deviation).
-  //
-  // `min-h-screen` makes the grid fill the viewport so the coach rail (a
-  // stretched grid item) spans the full height rather than stopping at content
-  // height. The `-my-[36px]` cancels the AppShell desktop content wrapper's
-  // `py-[36px]` (components/shell/app-shell.tsx) so the rail sits flush against
-  // the top and bottom edges. Keep these two in sync if that padding changes.
+  // Desktop: single content column capped at 1040px and centered. The coach
+  // rail column has been removed (2026-06) — dots now render inline at the top
+  // of the main column (see page.tsx) and the coach nudge will move into the
+  // per-answer feedback card (Task 11).
   return (
-    <div className="grid min-h-screen grid-cols-[280px_1fr] -my-[36px]">
-      <aside className="bg-paper-2 border-r border-rule p-s-6">{rail}</aside>
-
-      <div className="flex flex-col">
-        {progressStrip}
-        {/* Content column caps at 760px and centers — text never runs
-            full-bleed on wide screens (DRILL-UI-GUIDELINES §3). */}
-        <div className="mx-auto w-full max-w-[760px] p-s-6">
-          {isLoading ? <LoadingSkeleton /> : main}
-        </div>
+    <div className="flex flex-col">
+      {progressStrip}
+      <div className="mx-auto w-full max-w-[1040px] p-s-6">
+        {isLoading ? <LoadingSkeleton /> : main}
       </div>
     </div>
   );

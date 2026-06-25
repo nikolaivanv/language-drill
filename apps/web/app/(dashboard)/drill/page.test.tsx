@@ -611,23 +611,29 @@ describe('PracticePage', () => {
 
   // -------------------------------------------------------------------------
   describe('desktop vs mobile chrome', () => {
-    it('renders the coach rail (not a coach card) on desktop', () => {
+    it('does not render a separate coach-rail region on desktop; session dots appear inline', () => {
       renderWithProviders(<PracticePage />);
-      // CoachRail's "guiding this session" caption is unique to the rail.
-      expect(screen.getByText('guiding this session')).toBeInTheDocument();
+      // The dedicated coach rail (with its "guiding this session" caption) is
+      // now dormant — removed from the desktop layout.
+      expect(screen.queryByText('guiding this session')).not.toBeInTheDocument();
+      // No coach toggle button on desktop (that lives in CoachCard, mobile-only).
       expect(
         screen.queryByRole('button', { name: /coach/i }),
       ).not.toBeInTheDocument();
+      // Session dots now render inline in the main column on desktop.
+      expect(
+        screen.getByRole('list', { name: /item 1 of 5/i }),
+      ).toBeInTheDocument();
     });
 
-    it('renders the coach card, session dots, and a sticky action bar on mobile', () => {
+    it('renders session dots and a sticky action bar on mobile (no coach card)', () => {
       mockIsMobile.mockReturnValue(true);
       renderWithProviders(<PracticePage />);
 
-      // Coach rail collapses into a collapsible card (a button) on mobile.
+      // No coach card or rail.
       expect(
-        screen.getByRole('button', { name: /coach/i }),
-      ).toBeInTheDocument();
+        screen.queryByRole('button', { name: /coach/i }),
+      ).not.toBeInTheDocument();
       expect(screen.queryByText('guiding this session')).not.toBeInTheDocument();
 
       // Session dots above the prompt.
@@ -663,8 +669,12 @@ describe('PracticePage', () => {
   });
 
   // -------------------------------------------------------------------------
-  describe('coach headline — cross-session recurring error', () => {
-    it('shows the lately · headline when insights returns a theme with count ≥ 2 and no session errors', () => {
+  describe('passive banners absent from in-session view (Task 9)', () => {
+    // The "lately" recap banner and in-session FluencyPromo have been removed.
+    // The coach nudge will reappear inside the per-answer feedback card (Task 11).
+
+    it('no lately · headline is shown even when insights returns themes', () => {
+      mockIsMobile.mockReturnValue(true);
       mockUseInsightsErrors.mockReturnValue({
         data: {
           themes: [
@@ -682,20 +692,21 @@ describe('PracticePage', () => {
         },
       });
       renderWithProviders(<PracticePage />);
-      // Page lands in-session (default mocks fire CREATE_SUCCEEDED synchronously)
-      // with no session errors → cross-session headline wins.
-      expect(
-        screen.getByText('lately · Locative case: pazarda → pazara (6×)'),
-      ).toBeInTheDocument();
+      expect(screen.queryByText(/lately ·/)).not.toBeInTheDocument();
     });
 
-    it('shows the canned coach message when insights has no themes', () => {
-      // Default beforeEach already sets mockUseInsightsErrors to { data: { themes: [] } }
+    it('no in-session fluency promo on mobile', () => {
+      mockIsMobile.mockReturnValue(true);
       renderWithProviders(<PracticePage />);
-      // Default in-session idle state → canned "guiding this session" caption visible.
-      expect(screen.getByText('guiding this session')).toBeInTheDocument();
-      // No lately headline.
-      expect(screen.queryByText(/lately ·/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/fluency mode/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/try next/i)).not.toBeInTheDocument();
+    });
+
+    it('no in-session fluency promo on desktop', () => {
+      mockIsMobile.mockReturnValue(false);
+      renderWithProviders(<PracticePage />);
+      expect(screen.queryByText(/fluency mode/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/try next/i)).not.toBeInTheDocument();
     });
   });
 });

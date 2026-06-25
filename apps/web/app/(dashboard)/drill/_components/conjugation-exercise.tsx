@@ -8,7 +8,7 @@ import { useAnswerDraft } from '../../../../lib/drill/use-answer-draft';
 import { submitOnEnter } from '../../../../lib/drill/keyboard';
 import { conjugationVerdict } from '../../../../lib/drill/verdict-tier';
 import { useDrillAction } from './drill-action-context';
-import { FeedbackShell } from './feedback-shell';
+import { FeedbackShell, type CoachNudge } from './feedback-shell';
 import type { SubmissionMeta, SubmissionState } from './types';
 
 export type { SubmissionMeta, SubmissionState } from './types';
@@ -23,6 +23,9 @@ export interface ConjugationExerciseProps {
   /** When set, the typed answer is drafted in sessionStorage so it survives a
    *  full page reload. Omitted in tests/contexts that don't need persistence. */
   exerciseId?: string;
+  /** Coach nudge shown at the bottom of the feedback card when the current item
+   *  is a known weak spot. Omit when the item is not a weak spot. */
+  coach?: CoachNudge | null;
 }
 
 function isAccentLanguage(lang: string): lang is 'ES' | 'DE' | 'TR' {
@@ -37,6 +40,7 @@ export function ConjugationExercise({
   onNext,
   nextLabel,
   exerciseId,
+  coach,
 }: ConjugationExerciseProps) {
   const [answer, setAnswer, clearDraft] = useAnswerDraft(exerciseId);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
@@ -94,14 +98,16 @@ export function ConjugationExercise({
       </div>
 
       {!active && (
-        <Button
-          variant="primary"
-          onClick={handleSubmit}
-          disabled={!canSubmit || isLocked}
-          loading={submission.kind === 'submitting'}
-        >
-          submit
-        </Button>
+        <div className="mt-s-6 flex justify-end">
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            disabled={!canSubmit || isLocked}
+            loading={submission.kind === 'submitting'}
+          >
+            submit
+          </Button>
+        </div>
       )}
 
       {submission.kind === 'evaluated' &&
@@ -116,6 +122,7 @@ export function ConjugationExercise({
               tier={verdict.tier}
               label={verdict.label}
               scoreChipText={`${Math.round(submission.result.score * 100)}%`}
+              coach={coach}
               onNext={onNext}
               nextLabel={nextLabel}
             >

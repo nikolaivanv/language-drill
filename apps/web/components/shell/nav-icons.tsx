@@ -45,13 +45,11 @@ export function ReadIcon() {
 }
 
 export function ReviewIcon() {
-  // Repeat/cycle loop — evokes spaced-repetition review.
+  // Stacked cards (flashcards) — matches the "my vocabulary" label.
   return (
     <svg {...SHARED_PROPS} aria-hidden="true">
-      <path d="M3 8a5 5 0 0 1 8.5-3.5L13 6" />
-      <path d="M13 3.5V6h-2.5" />
-      <path d="M13 8a5 5 0 0 1-8.5 3.5L3 10" />
-      <path d="M3 12.5V10h2.5" />
+      <rect x="4" y="5.5" width="9" height="7" rx="1.3" />
+      <path d="M3 8.5V4.2A1.2 1.2 0 0 1 4.2 3h7.3" />
     </svg>
   );
 }
