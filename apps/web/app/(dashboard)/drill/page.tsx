@@ -344,6 +344,25 @@ function PracticePageContent() {
   const exerciseContent = currentItem
     ? (currentItem.contentJson as ExerciseContent)
     : null;
+
+  // Derive a coach nudge for the current item when its grammar point is a known
+  // weak spot (i.e. it appears in the cross-session error themes). The tag uses
+  // the grammar-point name if available (more readable), falling back to the
+  // raw key. The note is concise and honest — count-anchored to validate the
+  // signal. Null when the item has no grammar point or no matching theme.
+  const coach = useMemo(() => {
+    const gpKey = currentItem?.grammarPointKey ?? null;
+    if (!gpKey) return null;
+    const themes = insights.data?.themes ?? [];
+    const theme = themes.find(
+      (t) => t.grammarPointKey === gpKey && t.count >= 2,
+    );
+    if (!theme) return null;
+    const tag = theme.grammarPointName ?? gpKey;
+    const note =
+      `you've slipped on this ${theme.count}× lately — steady reps here pay off`;
+    return { tag, note };
+  }, [currentItem?.grammarPointKey, insights.data?.themes]);
   const theoryTopicId = topicIdForGrammarPointKey(
     currentItem?.grammarPointKey ?? null,
     activeLanguage,
@@ -467,6 +486,7 @@ function PracticePageContent() {
             onSubmit={handleSubmit}
             onNext={handleNext}
             nextLabel={selectIsLastItem(state) ? 'see results' : 'next'}
+            coach={coach}
           />
           {state.perItemSubmission.kind === 'evaluated' &&
             state.perItemSubmission.submissionId && (

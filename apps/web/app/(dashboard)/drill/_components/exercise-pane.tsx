@@ -18,9 +18,11 @@ import { DictationExercise } from './dictation-exercise';
 import { SentenceConstructionExercise } from './sentence-construction-exercise';
 import { TranslationExercise } from './translation-exercise';
 import { VocabExercise } from './vocab-exercise';
+import type { CoachNudge } from './feedback-shell';
 import type { SubmissionMeta, SubmissionState } from './types';
 
 export type { SubmissionMeta, SubmissionState } from './types';
+export type { CoachNudge } from './feedback-shell';
 
 export interface ExercisePaneProps {
   exercise: ExerciseResponse;
@@ -29,6 +31,10 @@ export interface ExercisePaneProps {
   onSubmit: (answer: string, meta: SubmissionMeta) => void;
   onNext: () => void;
   nextLabel?: string;
+  /** Coach nudge shown at the bottom of the feedback card when the current item
+   *  is a known weak spot. Derived from `useInsightsErrors()` themes in the
+   *  parent page. Omit when the item is not a weak spot. */
+  coach?: CoachNudge | null;
 }
 
 export function ExercisePane({
@@ -38,6 +44,7 @@ export function ExercisePane({
   onSubmit,
   onNext,
   nextLabel,
+  coach,
 }: ExercisePaneProps) {
   const content = exercise.contentJson as ExerciseContent;
 
@@ -60,6 +67,7 @@ export function ExercisePane({
         onNext={onNext}
         nextLabel={nextLabel}
         exerciseId={exercise.id}
+        coach={coach}
       />
     );
   }
@@ -75,6 +83,7 @@ export function ExercisePane({
         onNext={onNext}
         nextLabel={nextLabel}
         exerciseId={exercise.id}
+        coach={coach}
       />
     );
   }
@@ -90,6 +99,7 @@ export function ExercisePane({
         onNext={onNext}
         nextLabel={nextLabel}
         exerciseId={exercise.id}
+        coach={coach}
       />
     );
   }
@@ -105,6 +115,7 @@ export function ExercisePane({
         onNext={onNext}
         nextLabel={nextLabel}
         exerciseId={exercise.id}
+        coach={coach}
       />
     );
   }
@@ -120,6 +131,7 @@ export function ExercisePane({
         onNext={onNext}
         nextLabel={nextLabel}
         exerciseId={exercise.id}
+        coach={coach}
       />
     );
   }
@@ -134,6 +146,7 @@ export function ExercisePane({
         onSubmit={onSubmit}
         onNext={onNext}
         nextLabel={nextLabel}
+        coach={coach}
       />
     );
   }

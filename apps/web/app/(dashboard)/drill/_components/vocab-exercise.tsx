@@ -9,7 +9,7 @@ import { useAnswerDraft } from '../../../../lib/drill/use-answer-draft';
 import { submitOnEnter } from '../../../../lib/drill/keyboard';
 import { vocabVerdict } from '../../../../lib/drill/verdict-tier';
 import { useDrillAction } from './drill-action-context';
-import { FeedbackShell } from './feedback-shell';
+import { FeedbackShell, type CoachNudge } from './feedback-shell';
 import { HintRow } from './hint-row';
 import type { SubmissionMeta, SubmissionState } from './types';
 
@@ -25,6 +25,9 @@ export interface VocabExerciseProps {
   /** When set, the typed answer is drafted in sessionStorage so it survives a
    *  full page reload. Omitted in tests/contexts that don't need persistence. */
   exerciseId?: string;
+  /** Coach nudge shown at the bottom of the feedback card when the current item
+   *  is a known weak spot. Omit when the item is not a weak spot. */
+  coach?: CoachNudge | null;
 }
 
 function isAccentLanguage(lang: string): lang is 'ES' | 'DE' | 'TR' {
@@ -39,6 +42,7 @@ export function VocabExercise({
   onNext,
   nextLabel,
   exerciseId,
+  coach,
 }: VocabExerciseProps) {
   const [answer, setAnswer, clearDraft] = useAnswerDraft(exerciseId);
   const [hintLevel, setHintLevel] = React.useState<0 | 1 | 2 | 3>(0);
@@ -135,6 +139,7 @@ export function VocabExercise({
               label={verdict.label}
               scoreChipText={`${Math.round(submission.result.score * 100)}%`}
               hintLevel={hintLevel}
+              coach={coach}
               onNext={onNext}
               nextLabel={nextLabel}
             >

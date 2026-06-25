@@ -17,7 +17,7 @@ import { submitOnModEnter } from '../../../../lib/drill/keyboard';
 import { translationVerdict } from '../../../../lib/drill/verdict-tier';
 import { stripInlineMarkdown } from '../../../../lib/drill/strip-inline-markdown';
 import { useDrillAction } from './drill-action-context';
-import { FeedbackShell } from './feedback-shell';
+import { FeedbackShell, type CoachNudge } from './feedback-shell';
 import type { SubmissionMeta, SubmissionState } from './types';
 
 export type { SubmissionMeta, SubmissionState } from './types';
@@ -32,6 +32,9 @@ export interface SentenceConstructionExerciseProps {
   /** When set, the typed answer is drafted in sessionStorage so it survives a
    *  full page reload. Omitted in tests/contexts that don't need persistence. */
   exerciseId?: string;
+  /** Coach nudge shown at the bottom of the feedback card when the current item
+   *  is a known weak spot. Omit when the item is not a weak spot. */
+  coach?: CoachNudge | null;
 }
 
 function isAccentLanguage(lang: string): lang is 'ES' | 'DE' | 'TR' {
@@ -51,6 +54,7 @@ export function SentenceConstructionExercise({
   onNext,
   nextLabel,
   exerciseId,
+  coach,
 }: SentenceConstructionExerciseProps) {
   const [answer, setAnswer, clearDraft] = useAnswerDraft(exerciseId);
   const [exampleShown, setExampleShown] = React.useState(false);
@@ -178,6 +182,7 @@ export function SentenceConstructionExercise({
               label={verdict.label}
               scoreChipText={`${Math.round(submission.result.score * 100)}%`}
               hintLevel={exampleShown ? 1 : 0}
+              coach={coach}
               onNext={onNext}
               nextLabel={nextLabel}
             >

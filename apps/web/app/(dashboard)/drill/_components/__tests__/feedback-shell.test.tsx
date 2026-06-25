@@ -132,6 +132,36 @@ describe('FeedbackShell', () => {
     });
   });
 
+  describe('coach nudge', () => {
+    it('renders the coach tag and note when coach is provided', () => {
+      renderShell({
+        coach: {
+          tag: 'tr-b1-past-tense',
+          note: "you've slipped on this 4× lately — steady reps here pay off",
+        },
+      });
+      expect(screen.getByText('tr-b1-past-tense')).toBeInTheDocument();
+      expect(
+        screen.getByText("you've slipped on this 4× lately — steady reps here pay off"),
+      ).toBeInTheDocument();
+    });
+
+    it('does not render the coach block when coach is omitted', () => {
+      renderShell();
+      // Neither the separator element nor any coach copy should appear.
+      expect(
+        screen.queryByText(/lately — steady reps/i),
+      ).not.toBeInTheDocument();
+    });
+
+    it('does not render the coach block when coach is null', () => {
+      renderShell({ coach: null });
+      expect(
+        screen.queryByText(/lately — steady reps/i),
+      ).not.toBeInTheDocument();
+    });
+  });
+
   describe('mobile action publishing', () => {
     it('publishes the next action and omits the inline button when active', () => {
       const onNext = vi.fn();

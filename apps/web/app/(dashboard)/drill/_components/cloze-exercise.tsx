@@ -8,7 +8,7 @@ import { useAnswerDraft } from '../../../../lib/drill/use-answer-draft';
 import { clozeVerdict } from '../../../../lib/drill/verdict-tier';
 import { ClozePrompt, type BlankState } from '../../../../components/drill/cloze-prompt';
 import { useDrillAction } from './drill-action-context';
-import { FeedbackShell } from './feedback-shell';
+import { FeedbackShell, type CoachNudge } from './feedback-shell';
 import type { SubmissionMeta, SubmissionState } from './types';
 
 export type { SubmissionMeta, SubmissionState } from './types';
@@ -23,6 +23,9 @@ export interface ClozeExerciseProps {
   /** When set, the typed answer is drafted in sessionStorage so it survives a
    *  full page reload. Omitted in tests/contexts that don't need persistence. */
   exerciseId?: string;
+  /** Coach nudge shown at the bottom of the feedback card when the current item
+   *  is a known weak spot. Omit when the item is not a weak spot. */
+  coach?: CoachNudge | null;
 }
 
 function isAccentLanguage(lang: string): lang is 'ES' | 'DE' | 'TR' {
@@ -37,6 +40,7 @@ export function ClozeExercise({
   onNext,
   nextLabel,
   exerciseId,
+  coach,
 }: ClozeExerciseProps) {
   const [answer, setAnswer, clearDraft] = useAnswerDraft(exerciseId);
   const [usedMc, setUsedMc] = React.useState(false);
@@ -175,6 +179,7 @@ export function ClozeExercise({
               label={verdict.label}
               scoreChipText={`${Math.round(submission.result.score * 100)}%`}
               scaffolded={usedMc}
+              coach={coach}
               onNext={onNext}
               nextLabel={nextLabel}
             >
