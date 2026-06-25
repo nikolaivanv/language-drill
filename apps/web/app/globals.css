@@ -16,6 +16,9 @@
   --color-ink-soft: #5a5148;
   --color-ink-mute: #8a8074;
 
+  /* Primary-button hover: a slight lighten of --color-ink (NOT terracotta). */
+  --color-ink-hover: #322b24;
+
   --color-rule: #d8d0bf;
   --color-rule-strong: #c9bfac;
 
@@ -82,9 +85,9 @@
 .t-display-xl {
   font-family: var(--font-display);
   font-weight: 500;
-  font-size: 56px;
+  font-size: 62px;
   line-height: 1.05;
-  letter-spacing: -1.5px;
+  letter-spacing: -1.2px;
   font-variation-settings: "SOFT" 50, "opsz" 144;
   color: var(--color-ink);
 }
@@ -153,6 +156,28 @@
     transparent 95%
   );
   padding: 0 3px;
+}
+
+/* ─── Tertiary action link (shared "see the map →", "read the theory →" style) ─── */
+.link-arrow {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 15px;
+  color: var(--color-ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--color-rule-strong);
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+.link-arrow:hover {
+  color: var(--color-ink);
+  text-decoration-color: var(--color-ink-mute);
 }
 
 /* ─── Legal / compliance pages (privacy, terms, cookies) ─── */
@@ -230,7 +255,7 @@
    wrapped display headlines never collide. body/small/micro/mono unchanged. */
 @media (max-width: 760px) {
   .t-display-xl {
-    font-size: 34px;
+    font-size: 36px;
     line-height: 1.2;
   }
   .t-display-l {
