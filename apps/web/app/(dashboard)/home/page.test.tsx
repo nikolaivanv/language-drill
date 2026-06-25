@@ -205,11 +205,10 @@ describe('DashboardPage — happy path', () => {
   it('renders header, timeline (5 items), snapshot grid (6 rows), and Read & Collect', () => {
     render(<DashboardPage />);
 
-    // Header — greeting heading is from GreetingBlock (clock locked above)
+    // Header — DashboardHeader renders "today's plan." as the h1 (greeting was removed).
     expect(
-      screen.getByRole('heading', { level: 1, name: 'good morning, juno.' }),
+      screen.getByRole('heading', { level: 1, name: "today's plan." }),
     ).toBeInTheDocument();
-    expect(screen.getByText("here's today's plan.")).toBeInTheDocument();
 
     // Timeline — 5 list items, each has an aria-label starting with its index
     const items = screen.getAllByRole('listitem');
@@ -245,17 +244,30 @@ describe('DashboardPage — happy path', () => {
 });
 
 describe('DashboardPage — mobile "next up" CTA (Req 4.2)', () => {
-  it('renders the NextUpCard under the greeting on mobile, routing to the drill', () => {
+  it('renders the NextUpCard under the header on mobile, routing to the drill', () => {
     mockIsMobile.mockReturnValue(true);
     render(<DashboardPage />);
-    const cta = screen.getByRole('link', { name: /next up/i });
-    expect(cta).toHaveAttribute('href', '/drill?start=quick');
+    // NextUpCard renders a "start →" stretched-link CTA; the card is tappable via
+    // after:absolute after:inset-0. The NextUpCard container has the "next up" label div
+    // and the button also carries "after:absolute after:inset-0" in its className.
+    // Distinguish from the timeline "start →" link by the stretched-link class.
+    const startLinks = screen.getAllByRole('link', { name: /start →/i });
+    const cardCta = startLinks.find((el) =>
+      el.className.includes('after:absolute'),
+    );
+    expect(cardCta).toBeDefined();
+    expect(cardCta).toHaveAttribute('href', '/drill?start=quick');
   });
 
   it('does not render the NextUpCard on desktop', () => {
     mockIsMobile.mockReturnValue(false);
     render(<DashboardPage />);
-    expect(screen.queryByRole('link', { name: /next up/i })).toBeNull();
+    // NextUpCard is gated by useIsMobile(); on desktop no stretched-link "start →" renders.
+    const startLinks = screen.queryAllByRole('link', { name: /start →/i });
+    const cardCta = startLinks.find((el) =>
+      el.className.includes('after:absolute'),
+    );
+    expect(cardCta).toBeUndefined();
   });
 });
 

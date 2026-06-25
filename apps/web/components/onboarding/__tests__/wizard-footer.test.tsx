@@ -148,9 +148,10 @@ describe('WizardFooter — back / cancel slot (R1.6, R8.5)', () => {
     const cancel = screen.getByRole('link', { name: 'cancel' });
     expect(cancel).toBeInTheDocument();
     expect(cancel.getAttribute('href')).toBe('/settings');
-    // The ghost variant carries its border-transparent + ink-soft text.
-    expect(cancel.className).toContain('border-transparent');
-    expect(cancel.className).toContain('text-ink-soft');
+    // The ghost variant is a bordered-transparent secondary: border-rule-strong + text-ink-2.
+    expect(cancel.className).toContain('border-rule-strong');
+    expect(cancel.className).toContain('bg-transparent');
+    expect(cancel.className).toContain('text-ink-2');
     expect(screen.queryByTestId('wizard-footer-back')).not.toBeInTheDocument();
   });
 
