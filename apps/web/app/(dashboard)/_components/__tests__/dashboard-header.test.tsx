@@ -1,21 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import type { PlanReason, RadarAxis, RadarAxisKey } from '@language-drill/api-client';
-import { Language, type LearningLanguage } from '@language-drill/shared';
 import { DashboardHeader } from '../dashboard-header';
-
-// ---------------------------------------------------------------------------
-// Lock the clock so GreetingBlock's post-mount strings are deterministic.
-// ---------------------------------------------------------------------------
-
-beforeEach(() => {
-  vi.useFakeTimers();
-  vi.setSystemTime(new Date(2026, 4, 4, 10, 0, 0));
-});
-
-afterEach(() => {
-  vi.useRealTimers();
-});
 
 // ---------------------------------------------------------------------------
 // Fixture builder
@@ -37,10 +23,45 @@ function axis(
   };
 }
 
-const baseProps: { language: LearningLanguage; firstName: string | null } = {
-  language: Language.ES,
-  firstName: 'juno',
-};
+// ---------------------------------------------------------------------------
+// Promoted heading + minutes — core design-system requirement (Task 4)
+// ---------------------------------------------------------------------------
+
+describe('DashboardHeader — promoted heading', () => {
+  it('shows the promoted plan heading and minutes, no greeting', () => {
+    render(
+      <DashboardHeader
+        axes={undefined}
+        totalEstimatedMinutes={20}
+      />,
+    );
+    expect(screen.getByRole('heading', { name: /today's plan/i })).toBeInTheDocument();
+    expect(screen.getByText(/~20 min planned/)).toBeInTheDocument();
+    expect(screen.queryByText(/good evening|good morning|good afternoon/i)).not.toBeInTheDocument();
+  });
+
+  it('renders "today\'s plan." as an H1 with t-display-xl class', () => {
+    render(
+      <DashboardHeader
+        axes={undefined}
+        totalEstimatedMinutes={10}
+      />,
+    );
+    const heading = screen.getByRole('heading', { name: /today's plan/i });
+    expect(heading.tagName).toBe('H1');
+    expect(heading.className).toContain('t-display-xl');
+  });
+
+  it('renders no first-name or greeting text', () => {
+    const { container } = render(
+      <DashboardHeader
+        axes={undefined}
+        totalEstimatedMinutes={5}
+      />,
+    );
+    expect(container.textContent ?? '').not.toMatch(/good (morning|afternoon|evening)/i);
+  });
+});
 
 // ---------------------------------------------------------------------------
 // Framing paragraph
@@ -54,7 +75,6 @@ describe('DashboardHeader — framing paragraph', () => {
     ];
     render(
       <DashboardHeader
-        {...baseProps}
         axes={axes}
         totalEstimatedMinutes={12}
       />,
@@ -68,7 +88,6 @@ describe('DashboardHeader — framing paragraph', () => {
   it('renders the generic line when axes is undefined (radar in flight)', () => {
     render(
       <DashboardHeader
-        {...baseProps}
         axes={undefined}
         totalEstimatedMinutes={12}
       />,
@@ -89,7 +108,6 @@ describe('DashboardHeader — total minutes', () => {
   it('shows "~12 min planned" when totalEstimatedMinutes is provided', () => {
     render(
       <DashboardHeader
-        {...baseProps}
         axes={undefined}
         totalEstimatedMinutes={12}
       />,
@@ -100,7 +118,6 @@ describe('DashboardHeader — total minutes', () => {
   it('shows a skeleton placeholder when totalEstimatedMinutes is null', () => {
     const { container } = render(
       <DashboardHeader
-        {...baseProps}
         axes={undefined}
         totalEstimatedMinutes={null}
       />,
@@ -114,21 +131,10 @@ describe('DashboardHeader — total minutes', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Subline + non-gamification guarantee
+// Non-gamification guarantee
 // ---------------------------------------------------------------------------
 
 describe('DashboardHeader — copy invariants', () => {
-  it("includes the \"here's today's plan.\" subline", () => {
-    render(
-      <DashboardHeader
-        {...baseProps}
-        axes={undefined}
-        totalEstimatedMinutes={12}
-      />,
-    );
-    expect(screen.getByText("here's today's plan.")).toBeInTheDocument();
-  });
-
   it('renders no streak / XP / lesson-count copy anywhere', () => {
     const axes: RadarAxis[] = [
       axis('grammar', 0.3, 5, 'grammar'),
@@ -136,7 +142,6 @@ describe('DashboardHeader — copy invariants', () => {
     ];
     const { container } = render(
       <DashboardHeader
-        {...baseProps}
         axes={axes}
         totalEstimatedMinutes={12}
       />,
@@ -158,7 +163,6 @@ describe('DashboardHeader — plan-based framing', () => {
     const axes: RadarAxis[] = [axis('grammar', 0.3, 5, 'grammar')];
     render(
       <DashboardHeader
-        {...baseProps}
         axes={axes}
         totalEstimatedMinutes={12}
         planItems={planItems}
@@ -175,7 +179,6 @@ describe('DashboardHeader — plan-based framing', () => {
     const axes: RadarAxis[] = [axis('grammar', 0.3, 5, 'grammar')];
     render(
       <DashboardHeader
-        {...baseProps}
         axes={axes}
         totalEstimatedMinutes={12}
         planItems={undefined}
@@ -188,7 +191,6 @@ describe('DashboardHeader — plan-based framing', () => {
     const axes: RadarAxis[] = [axis('grammar', 0.3, 5, 'grammar')];
     render(
       <DashboardHeader
-        {...baseProps}
         axes={axes}
         totalEstimatedMinutes={12}
         planItems={[]}

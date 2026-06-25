@@ -17,7 +17,7 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
-import { useAuth, useUser } from '@clerk/nextjs';
+import { useAuth } from '@clerk/nextjs';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   createAuthenticatedFetch,
@@ -43,7 +43,6 @@ import { WorkOnThese } from '../_components/work-on-these';
 export default function DashboardPage() {
   const { activeLanguage } = useActiveLanguage();
   const { getToken } = useAuth();
-  const { user } = useUser();
   const fetchFn = useMemo(
     () => createAuthenticatedFetch(getToken),
     [getToken],
@@ -79,8 +78,6 @@ export default function DashboardPage() {
   return (
     <div className="space-y-s-7">
       <DashboardHeader
-        language={activeLanguage}
-        firstName={user?.firstName ?? null}
         axes={radar.data?.axes}
         totalEstimatedMinutes={todayPlan.data?.totalEstimatedMinutes ?? null}
         planItems={todayPlan.data?.items}

@@ -3,32 +3,20 @@
 // ---------------------------------------------------------------------------
 // DashboardHeader — editorial header above the timeline
 // ---------------------------------------------------------------------------
-// Stable text region: the greeting block + "here's today's plan." subline,
-// the framing paragraph derived from the radar axes, and the planned-time
-// total in the top-right.
-//
-// Note: the design originally typed the axes prop as `weakestAxis: RadarAxis
-// | null`. Passing the full `axes` array instead lets the component call
-// `computeFraming(axes)` directly without the page having to thread a
-// pre-computed axis through. Functionally equivalent.
+// Renders the "today's plan." heading with total planned minutes, then a
+// framing paragraph derived from the radar axes or plan items.
 // ---------------------------------------------------------------------------
 
 import type { PlanReason, RadarAxis } from '@language-drill/api-client';
-import type { LearningLanguage } from '@language-drill/shared';
 import { computeFraming, composePlanFraming } from '../_lib/framing-rules';
-import { GreetingBlock } from './greeting-block';
 
 type Props = {
-  language: LearningLanguage;
-  firstName: string | null;
   axes: RadarAxis[] | undefined;
   totalEstimatedMinutes: number | null;
   planItems?: { reason: PlanReason | null; grammarPointName: string | null }[];
 };
 
 export function DashboardHeader({
-  language,
-  firstName,
   axes,
   totalEstimatedMinutes,
   planItems,
@@ -40,23 +28,21 @@ export function DashboardHeader({
 
   return (
     <header className="space-y-s-4">
-      <GreetingBlock language={language} firstName={firstName} />
-
-      <div className="flex items-baseline justify-between gap-s-4">
-        <p className="t-display-l italic">here&apos;s today&apos;s plan.</p>
+      <div className="flex items-baseline justify-between gap-s-6 mobile:flex-col mobile:items-start mobile:gap-s-2">
+        <h1 className="t-display-xl">today&apos;s plan.</h1>
         {totalEstimatedMinutes === null ? (
           <span
             aria-hidden
             className="h-[14px] w-[112px] animate-pulse rounded-sm bg-paper-3"
           />
         ) : (
-          <span className="t-mono text-ink-soft">
+          <span className="t-mono text-ink-mute whitespace-nowrap">
             ~{totalEstimatedMinutes} min planned
           </span>
         )}
       </div>
 
-      <p className="t-body-l">{framing.paragraph}</p>
+      <p className="t-body-l text-ink-2">{framing.paragraph}</p>
     </header>
   );
 }
