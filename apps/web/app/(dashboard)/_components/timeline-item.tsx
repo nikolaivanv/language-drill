@@ -71,7 +71,7 @@ export function TimelineItem({
             isDone && 'border-ok bg-ok text-paper',
             isNextUp &&
               'border-accent bg-accent text-paper shadow-[0_0_0_4px_var(--color-accent-soft)]',
-            !isDone && !isNextUp && 'border-ink bg-paper text-ink',
+            !isDone && !isNextUp && 'border-rule-strong bg-paper text-ink-mute',
           )}
           aria-hidden
         >

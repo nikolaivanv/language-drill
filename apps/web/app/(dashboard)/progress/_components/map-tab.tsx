@@ -84,11 +84,10 @@ function SpineNode({
         fontFamily: 'var(--font-mono, monospace)',
         fontWeight: 600,
         flexShrink: 0,
-        background: isSolid
-          ? 'var(--color-ink)'
-          : isLearning
-            ? 'var(--color-accent-soft)'
-            : 'var(--color-paper-2)',
+        // Only the `solid` node is filled (ink). `learning` / `not-started`
+        // nodes are outline-only on paper — the ring + number carry the state,
+        // matching the prototype's subtler spine (no soft fill behind numbers).
+        background: isSolid ? 'var(--color-ink)' : 'var(--color-paper)',
         color: isSolid
           ? 'var(--color-paper)'
           : isLearning
