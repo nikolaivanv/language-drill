@@ -54,7 +54,8 @@ describe('NextUpCard', () => {
     ]);
     render(<NextUpCard data={data} language={Language.ES} />);
 
-    const link = screen.getByRole('link', { name: /next up/i });
+    // Primary CTA is an ink button linking to the drill hub.
+    const link = screen.getByRole('link', { name: /start/i });
     expect(link).toHaveAttribute('href', '/drill?start=quick');
     // Title from composeTitle(2, 3, CLOZE) = "core · cloze"; meta from the subtitle.
     expect(screen.getByText('core · cloze')).toBeInTheDocument();
@@ -64,10 +65,25 @@ describe('NextUpCard', () => {
   it('routes to the quick-launch hub regardless of active language', () => {
     const data = planResponse([makeItem(1, 'queued')]);
     render(<NextUpCard data={data} language={Language.DE} />);
-    expect(screen.getByRole('link', { name: /next up/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /start/i })).toHaveAttribute(
       'href',
       '/drill?start=quick',
     );
+  });
+
+  it('CTA is a primary (ink-filled) button — card is not terracotta-filled', () => {
+    const data = planResponse([makeItem(1, 'queued', { topicHint: 'subjunctive' })]);
+    const { container } = render(<NextUpCard data={data} language={Language.ES} />);
+
+    // The card surface must be neutral (bg-card), not accent-soft.
+    const card = container.firstChild as HTMLElement;
+    expect(card.className).toMatch(/bg-card/);
+    expect(card.className).not.toMatch(/bg-accent(?!-soft)/);
+    expect(card.className).not.toMatch(/bg-accent-soft/);
+
+    // The CTA link carries primary button classes (ink fill).
+    const cta = screen.getByRole('link', { name: /start/i });
+    expect(cta.className).toMatch(/bg-ink/);
   });
 
   it('renders nothing when there is no plan data', () => {
