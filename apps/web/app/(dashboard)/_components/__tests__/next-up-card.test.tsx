@@ -60,6 +60,11 @@ describe('NextUpCard', () => {
     // Title from composeTitle(2, 3, CLOZE) = "core · cloze"; meta from the subtitle.
     expect(screen.getByText('core · cloze')).toBeInTheDocument();
     expect(screen.getByText(/subjunctive · 5 items · 4 min/)).toBeInTheDocument();
+    // The "next up" eyebrow is the terracotta accent (raw utilities so the
+    // accent colour wins over the muted type-scale class).
+    const eyebrow = screen.getByText('next up');
+    expect(eyebrow.className).toContain('text-accent-2');
+    expect(eyebrow.className).not.toContain('t-micro');
   });
 
   it('routes to the quick-launch hub regardless of active language', () => {

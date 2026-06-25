@@ -1,7 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ExerciseType } from '@language-drill/shared';
+import { useIsMobile } from '../../../../lib/responsive';
 import { TimelineItem, type TimelineItemStatus } from '../timeline-item';
+
+// Default to desktop; individual tests flip to mobile as needed.
+vi.mock('../../../../lib/responsive', () => ({ useIsMobile: vi.fn(() => false) }));
+const mockIsMobile = vi.mocked(useIsMobile);
+beforeEach(() => mockIsMobile.mockReturnValue(false));
 
 // ---------------------------------------------------------------------------
 // Render helper — wraps TimelineItem in an <ol> since it renders an <li>
@@ -45,6 +51,18 @@ describe('TimelineItem — next-up', () => {
   it('does not render the start link when href is null even if status is next-up', () => {
     renderItem({ status: 'next-up', href: null });
     expect(screen.queryByRole('link', { name: /start/ })).toBeNull();
+  });
+
+  it('on mobile, the start button drops to the bottom of the row (not the right)', () => {
+    mockIsMobile.mockReturnValue(true);
+    renderItem({ status: 'next-up', href: '/drill?language=ES' });
+    const link = screen.getByRole('link', { name: /start/ });
+    // The mobile button is wrapped in the bottom `mt-s-4` block inside the
+    // content column — not the right-hand time column (which holds the time).
+    expect(link.parentElement?.className).toContain('mt-s-4');
+    // The time column should not contain the start link on mobile.
+    const timeEl = screen.getByText(/min$/);
+    expect(timeEl.parentElement?.contains(link)).toBe(false);
   });
 
   it('shows the padded index in the rail circle (e.g. "02")', () => {
