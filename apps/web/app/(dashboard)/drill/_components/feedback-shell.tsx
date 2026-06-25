@@ -80,7 +80,11 @@ export function FeedbackShell({
         <div className="mt-s-6 flex items-start gap-s-3 border-t border-rule pt-s-5">
           <span className="relative mt-[2px] h-[34px] w-[34px] flex-shrink-0 rounded-full bg-ink after:absolute after:bottom-[8px] after:left-1/2 after:h-[3px] after:w-[14px] after:-translate-x-1/2 after:rounded-[2px] after:bg-accent after:content-['']" />
           <div>
-            <span className="t-micro block text-accent-2">{coach.tag}</span>
+            {/* Raw micro utilities (not `t-micro`) so text-accent-2 applies —
+                `.t-micro` is unlayered and would otherwise force ink-mute. */}
+            <span className="block text-[11px] font-medium uppercase leading-[1.4] tracking-[1.2px] text-accent-2">
+              {coach.tag}
+            </span>
             <p className="mt-1 t-body text-ink-2">{coach.note}</p>
           </div>
         </div>

@@ -39,9 +39,12 @@ export function NextUpCard({ data, language: _language }: Props) {
   const hint = reasonHint(next.reason);
 
   return (
-    <div className="relative flex items-center justify-between gap-s-4 rounded-r-lg border border-rule bg-card px-[18px] py-[16px] shadow-1">
-      <div className="min-w-0">
-        <div className="t-micro text-accent-2">next up</div>
+    <div className="relative flex flex-col items-start gap-s-3 rounded-r-lg border border-rule bg-card px-[18px] py-[16px] shadow-1">
+      <div className="w-full min-w-0">
+        {/* Raw micro utilities (not `t-micro`) so text-accent-2 applies. */}
+        <div className="text-[11px] font-medium uppercase leading-[1.4] tracking-[1.2px] text-accent-2">
+          next up
+        </div>
         <div className="t-display-s mt-[2px]">{title}</div>
         <p className="t-small mt-[2px]">
           {subtitle} · {next.estimatedMinutes} min

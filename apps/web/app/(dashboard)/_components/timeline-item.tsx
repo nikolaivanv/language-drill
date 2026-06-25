@@ -1,3 +1,5 @@
+'use client';
+
 // ---------------------------------------------------------------------------
 // TimelineItem — one row of the today's-plan vertical rail
 // ---------------------------------------------------------------------------
@@ -14,6 +16,7 @@ import type { ExerciseType } from '@language-drill/shared';
 import type { PlanReason } from '@language-drill/api-client';
 import { Button, Chip } from '../../../components/ui';
 import { cn } from '../../../lib/cn';
+import { useIsMobile } from '../../../lib/responsive';
 import { composeSubtitle, composeTitle } from '../_lib/timeline-labels';
 import { reasonHint } from '../_lib/reason-hint';
 
@@ -57,6 +60,14 @@ export function TimelineItem({
   const isDone = status === 'done';
   const isNextUp = status === 'next-up';
   const numberLabel = String(index).padStart(2, '0');
+  const isMobile = useIsMobile();
+
+  const cta =
+    isNextUp && href ? (
+      <Button variant="primary" size="md" href={href}>
+        {ctaLabel}
+      </Button>
+    ) : null;
 
   return (
     <li
@@ -92,12 +103,15 @@ export function TimelineItem({
         <div
           className={cn(
             'flex justify-between gap-s-4',
-            // Centre the start-button column against the full row on the next-up
-            // item; other rows keep the time top-aligned with the title.
-            isNextUp ? 'items-center' : 'items-start',
+            // Desktop next-up: vertically centre the time + start-button column.
+            // Mobile (and every other row): time stays top-aligned with the
+            // title — and on mobile the start button drops to the bottom of the
+            // row (rendered in the content column) instead of sitting on the
+            // right.
+            !isMobile && isNextUp ? 'items-center' : 'items-start',
           )}
         >
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-s-3">
               <h3
                 className={cn(
@@ -121,17 +135,16 @@ export function TimelineItem({
                 {hint}
               </p>
             )}
+            {/* Mobile: the start button sits at the bottom of the row. */}
+            {isMobile && cta && <div className="mt-s-4">{cta}</div>}
           </div>
 
           <div className="flex flex-shrink-0 items-center gap-s-3">
             <span className="t-mono text-[12px] text-ink-mute">
               {estimatedMinutes} min
             </span>
-            {isNextUp && href && (
-              <Button variant="primary" size="md" href={href}>
-                {ctaLabel}
-              </Button>
-            )}
+            {/* Desktop: the start button stays on the right next to the time. */}
+            {!isMobile && cta}
           </div>
         </div>
       </div>

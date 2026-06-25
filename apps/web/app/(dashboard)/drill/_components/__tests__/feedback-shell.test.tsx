@@ -140,7 +140,12 @@ describe('FeedbackShell', () => {
           note: "you've slipped on this 4× lately — steady reps here pay off",
         },
       });
-      expect(screen.getByText('tr-b1-past-tense')).toBeInTheDocument();
+      const tag = screen.getByText('tr-b1-past-tense');
+      expect(tag).toBeInTheDocument();
+      // The coach tag is the terracotta eyebrow (not muted) — raw utilities so
+      // the accent colour wins over the type-scale class.
+      expect(tag.className).toContain('text-accent-2');
+      expect(tag.className).not.toContain('t-micro');
       expect(
         screen.getByText("you've slipped on this 4× lately — steady reps here pay off"),
       ).toBeInTheDocument();
