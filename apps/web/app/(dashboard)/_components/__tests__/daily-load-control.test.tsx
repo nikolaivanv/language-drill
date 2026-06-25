@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { DailyLoadControl } from '../daily-load-control';
 
 describe('DailyLoadControl', () => {
@@ -79,5 +80,15 @@ describe('DailyLoadControl', () => {
     );
     const radiogroup = screen.getByRole('radiogroup', { name: "today's load" });
     expect(radiogroup).toHaveAttribute('aria-disabled', 'false');
+  });
+
+  it('marks the current goal as checked and calls onSelect', async () => {
+    const onSelect = vi.fn();
+    render(<DailyLoadControl current="medium" onSelect={onSelect} />);
+    const long = screen.getByRole('radio', { name: 'long' });
+    expect(screen.getByRole('radio', { name: 'medium' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('radio', { name: 'medium' }).className).toContain('bg-hilite');
+    await userEvent.click(long);
+    expect(onSelect).toHaveBeenCalledWith('long');
   });
 });

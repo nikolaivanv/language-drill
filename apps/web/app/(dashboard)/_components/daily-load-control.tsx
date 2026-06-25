@@ -9,7 +9,6 @@
 
 import { DAILY_GOALS, type DailyGoal } from '@language-drill/shared';
 import { cn } from '../../../lib/cn';
-import { Choice } from '../../../components/ui/choice';
 
 export type DailyLoadControlProps = {
   current: DailyGoal | null;
@@ -17,11 +16,7 @@ export type DailyLoadControlProps = {
   disabled?: boolean;
 };
 
-export function DailyLoadControl({
-  current,
-  onSelect,
-  disabled = false,
-}: DailyLoadControlProps) {
+export function DailyLoadControl({ current, onSelect, disabled = false }: DailyLoadControlProps) {
   return (
     <div className="flex flex-wrap items-center gap-x-s-4 gap-y-s-2">
       <span className="t-micro text-ink-mute whitespace-nowrap">today's load</span>
@@ -29,19 +24,32 @@ export function DailyLoadControl({
         role="radiogroup"
         aria-label="today's load"
         aria-disabled={disabled}
-        className={cn('flex flex-wrap gap-[6px]', disabled && 'opacity-60 pointer-events-none')}
+        className={cn(
+          'inline-flex gap-1 rounded-r-pill bg-paper-3 p-[5px]',
+          disabled && 'opacity-60 pointer-events-none'
+        )}
       >
-        {DAILY_GOALS.map((g) => (
-          <Choice
-            key={g}
-            mode="radio"
-            selected={current === g}
-            onSelect={() => !disabled && onSelect(g)}
-            className="px-s-3 py-[6px] text-sm min-w-[54px] justify-center"
-          >
-            <span className="t-label whitespace-nowrap">{g}</span>
-          </Choice>
-        ))}
+        {DAILY_GOALS.map((g) => {
+          const selected = current === g;
+          return (
+            <button
+              key={g}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              disabled={disabled}
+              onClick={() => !disabled && onSelect(g)}
+              className={cn(
+                'min-w-[88px] justify-center rounded-r-pill px-s-5 py-[10px] text-[15px] font-semibold transition-all duration-150',
+                selected
+                  ? 'bg-hilite text-ink shadow-1'
+                  : 'bg-transparent text-ink-soft hover:text-ink'
+              )}
+            >
+              {g}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
