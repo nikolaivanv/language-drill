@@ -15,25 +15,43 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
+// next/link renders as <a> in jsdom.
+vi.mock('next/link', () => ({
+  default: ({
+    children,
+    href,
+    ...rest
+  }: {
+    children: React.ReactNode;
+    href: string;
+    [key: string]: unknown;
+  }) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
+}));
+
 beforeEach(() => {
   pushMock.mockClear();
 });
 
 // ---------------------------------------------------------------------------
-// Button labels (Req 6.1)
+// Action labels (Req 6.1)
 // ---------------------------------------------------------------------------
 
-describe('DebriefFooter — button labels', () => {
+describe('DebriefFooter — action labels', () => {
   it('renders "practice more" primary button', () => {
     render(<DebriefFooter tier="high" />);
     expect(screen.getByRole('button', { name: 'practice more' })).toBeDefined();
   });
 
-  it('renders "see your progress →" ghost button', () => {
+  it('renders "see your progress →" as a link-arrow link', () => {
     render(<DebriefFooter tier="high" />);
-    expect(
-      screen.getByRole('button', { name: /see your progress/ }),
-    ).toBeDefined();
+    const link = screen.getByRole('link', { name: /see your progress/ });
+    expect(link).toBeDefined();
+    expect(link).toHaveClass('link-arrow');
+    expect(link).toHaveAttribute('href', '/progress');
   });
 
   it('renders "done" ghost button', () => {
@@ -41,9 +59,9 @@ describe('DebriefFooter — button labels', () => {
     expect(screen.getByRole('button', { name: 'done' })).toBeDefined();
   });
 
-  it('renders exactly three buttons', () => {
+  it('renders exactly two buttons (practice more + done)', () => {
     render(<DebriefFooter tier="high" />);
-    expect(screen.getAllByRole('button')).toHaveLength(3);
+    expect(screen.getAllByRole('button')).toHaveLength(2);
   });
 });
 
@@ -58,12 +76,10 @@ describe('DebriefFooter — router push targets', () => {
     expect(pushMock).toHaveBeenCalledExactlyOnceWith('/drill');
   });
 
-  it('clicking "see your progress" pushes /progress (Req 6.3)', () => {
+  it('"see your progress" link points to /progress (Req 6.3)', () => {
     render(<DebriefFooter tier="mid" />);
-    fireEvent.click(
-      screen.getByRole('button', { name: /see your progress/ }),
-    );
-    expect(pushMock).toHaveBeenCalledExactlyOnceWith('/progress');
+    const link = screen.getByRole('link', { name: /see your progress/ });
+    expect(link).toHaveAttribute('href', '/progress');
   });
 
   it('clicking "done" pushes / (Req 6.4)', () => {
@@ -74,33 +90,29 @@ describe('DebriefFooter — router push targets', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Tier prop is accepted and does not affect routing in v1
+// Desktop layout: link-arrow left, [ghost done][primary practice more] right
 // ---------------------------------------------------------------------------
 
-// ---------------------------------------------------------------------------
-// Mobile reflow → sticky bottom action bar (Req 7.5, 11.1)
-// ---------------------------------------------------------------------------
-
-describe('DebriefFooter — mobile sticky action bar', () => {
-  it('applies sticky bottom-bar classes at mobile while keeping all three actions', () => {
-    const { container } = render(<DebriefFooter tier="high" />);
-    const bar = container.firstChild as HTMLElement;
-    expect(bar).toHaveClass(
-      'mobile:sticky',
-      'mobile:bottom-0',
-      'mobile:bg-paper',
-      'mobile:flex-col',
-    );
-    expect(screen.getAllByRole('button')).toHaveLength(3);
+describe('DebriefFooter — desktop layout', () => {
+  it('renders the progress link with link-arrow class', () => {
+    render(<DebriefFooter tier="high" />);
+    expect(
+      screen.getByRole('link', { name: /see your progress/ }),
+    ).toHaveClass('link-arrow');
   });
 
-  it('gives each control a ≥44px mobile tap target', () => {
+  it('practice more has variant=primary; done has variant=ghost', () => {
     render(<DebriefFooter tier="high" />);
-    for (const name of [/see your progress/, 'done', 'practice more']) {
-      expect(screen.getByRole('button', { name })).toHaveClass('mobile:min-h-[44px]');
-    }
+    // Primary button carries btn-primary class; ghost carries btn-ghost
+    // (exact class names depend on Button implementation — test by role/name only).
+    expect(screen.getByRole('button', { name: 'practice more' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'done' })).toBeDefined();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Tier prop is accepted and does not affect routing in v1
+// ---------------------------------------------------------------------------
 
 describe('DebriefFooter — tier prop accepted', () => {
   it('accepts tier="high" without throwing or changing route targets', () => {

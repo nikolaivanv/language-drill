@@ -62,6 +62,18 @@ export function ReviewItemCard({ index, item, fetchFn }: ReviewItemCardProps) {
           })()}
           <StatusChip status={item.status} />
         </div>
+        {/* Chevron indicator — rotates on expand */}
+        <span
+          aria-hidden="true"
+          className="text-ink-mute transition-transform duration-150"
+          style={{
+            display: 'inline-block',
+            transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+            fontSize: 12,
+          }}
+        >
+          ▾
+        </span>
       </button>
 
       {expanded && (

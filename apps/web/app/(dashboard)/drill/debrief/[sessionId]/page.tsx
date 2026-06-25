@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useMemo, useRef, useState } from 'react';
+import { use, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import {
   createAuthenticatedFetch,
@@ -9,9 +9,8 @@ import {
 import { accuracyTier } from '../../../../../lib/drill/accuracy-tier';
 import { track } from '../../../../../lib/analytics/track';
 import { DebriefHeader } from '../_components/debrief-header';
-import { DebriefTabs, type DebriefTabId } from '../_components/debrief-tabs';
-import { DebriefTab } from '../_components/debrief-tab';
-import { ReviewTab } from '../_components/review-tab';
+import { SkillMovementsPanel } from '../_components/skill-movements-panel';
+import { ReviewItemCard } from '../_components/review-item-card';
 import { DebriefFooter } from '../_components/debrief-footer';
 import { DebriefNotFound } from '../_components/debrief-not-found';
 import { DebriefLoadError } from '../_components/debrief-load-error';
@@ -36,7 +35,6 @@ export default function DebriefPage({ params }: DebriefPageProps) {
   const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
 
   const query = useSessionDebrief({ sessionId, fetchFn });
-  const [tab, setTab] = useState<DebriefTabId>('debrief');
 
   const trackedRef = useRef(false);
   useEffect(() => {
@@ -59,13 +57,24 @@ export default function DebriefPage({ params }: DebriefPageProps) {
       ) : (
         <>
           <DebriefHeader debrief={query.data} />
-          <DebriefTabs active={tab} onChange={setTab}>
-            {tab === 'debrief' ? (
-              <DebriefTab debrief={query.data} />
-            ) : (
-              <ReviewTab items={query.data.items} fetchFn={fetchFn} />
-            )}
-          </DebriefTabs>
+
+          {/* "What moved" card */}
+          <div className="mt-s-6">
+            <SkillMovementsPanel movements={query.data.skillMovements} />
+          </div>
+
+          {/* Review list — one card per item, in manifest order */}
+          <div className="mt-s-6 flex flex-col gap-s-3">
+            {query.data.items.map((item, index) => (
+              <ReviewItemCard
+                key={item.exerciseId}
+                index={index}
+                item={item}
+                fetchFn={fetchFn}
+              />
+            ))}
+          </div>
+
           <DebriefFooter
             tier={accuracyTier(
               query.data.correctCount,
