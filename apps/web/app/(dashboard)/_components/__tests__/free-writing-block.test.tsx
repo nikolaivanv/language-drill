@@ -11,4 +11,11 @@ describe('FreeWritingBlock', () => {
     expect(screen.getByText('free writing')).toBeInTheDocument();
     expect(screen.getByText('8 min')).toBeInTheDocument();
   });
+
+  it('vertically centres the start-button column against the card', () => {
+    render(<FreeWritingBlock estimatedMinutes={8} />);
+    const section = screen.getByRole('region', { name: /free writing/i });
+    expect(section.className).toContain('items-center');
+    expect(section.className).not.toContain('items-start');
+  });
 });

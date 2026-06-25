@@ -17,7 +17,7 @@ export function FreeWritingBlock({ estimatedMinutes }: Props) {
   return (
     <section
       aria-label="free writing"
-      className="mt-s-4 flex items-start justify-between gap-s-4 rounded-r-lg border border-accent bg-card p-s-5"
+      className="mt-s-4 flex items-center justify-between gap-s-4 rounded-r-lg border border-accent bg-card p-s-5"
     >
       <div className="min-w-0 flex-1">
         <h3 className="t-display-s">free writing</h3>
