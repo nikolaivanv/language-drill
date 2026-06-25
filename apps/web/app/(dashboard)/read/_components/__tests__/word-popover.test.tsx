@@ -469,3 +469,33 @@ describe('WordPopover — autoFocus', () => {
     ).not.toHaveFocus();
   });
 });
+
+describe('WordPopover — return focus on close', () => {
+  it('returns focus to the opener element on unmount', () => {
+    const opener = document.createElement('button');
+    opener.textContent = 'word';
+    document.body.appendChild(opener);
+    opener.focus();
+    expect(opener).toHaveFocus();
+
+    const { unmount } = render(<WordPopover {...baseProps} autoFocus />);
+    // autoFocus moved focus into the card (skip button)
+    expect(screen.getByRole('button', { name: /^skip$/i })).toHaveFocus();
+
+    unmount();
+
+    expect(opener).toHaveFocus();
+    document.body.removeChild(opener);
+  });
+
+  it('does not force focus onto body when nothing was focused at open', () => {
+    (document.activeElement as HTMLElement | null)?.blur?.();
+    expect(document.activeElement).toBe(document.body);
+
+    const { unmount } = render(<WordPopover {...baseProps} />);
+    unmount();
+
+    // The cleanup must not throw and must not focus body.
+    expect(document.activeElement).toBe(document.body);
+  });
+});
