@@ -95,8 +95,12 @@ const { A1, A2, B1 } = CefrLevel;
  * head-only blank as BY DESIGN, plus a dictation generate@2026-06-25 anti-
  * stacking constraint + level/safety-subordinate seed line. Bump re-runs the
  * suppressed cloze cell against the corrected validator.
+ * 2026-06-25b: raises the dictation target to 30 for all three TR levels
+ * (tr-a1-dictation 15→30, tr-a2-dictation + tr-b1-dictation default→30) to build
+ * deeper dictation pools. Bump clears any target-reached/low-yield suppression so
+ * each cell re-runs for need = 30 - approved.
  */
-export const CURRICULUM_VERSION_TR = '2026-06-25';
+export const CURRICULUM_VERSION_TR = '2026-06-25b';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -2288,13 +2292,13 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Mishearing vowel-harmony suffixes (evler vs. *evlar).',
       'Missing word-final consonant softening (kitabı heard/spelled as kitap).',
     ],
-    // targetOverride (2026-06-23): trial-raise the A1 dictation pool from the
-    // level default of 6 to 15. The pool had stalled at 6 because the validator
-    // was flagging in-scope A1 morphology (softening, -iyor) as A2 — fixed by
-    // giving the dictation prompts the curriculum level-scope. Point-wide, but a
+    // targetOverride: trial-raised 6→15 (2026-06-23) once the level-scope fix
+    // stopped the validator mis-flagging in-scope A1 morphology (softening,
+    // -iyor) as A2; the trial landed (pool 6→11 on the 2026-06-24 run), so raise
+    // to 30 (2026-06-25) to build a deeper A1 dictation pool. Point-wide, but a
     // dictation umbrella only feeds the dictation cell, so TR-only and dictation-
-    // only. Raise further / replicate to other languages once this trial lands.
-    targetOverride: 15,
+    // only.
+    targetOverride: 30,
   },
   {
     key: 'tr-a2-dictation',
@@ -2313,6 +2317,10 @@ const trCurriculum: readonly GrammarPoint[] = [
       "Losing track across two clauses joined by 've'.",
       'Mis-segmenting suffix-heavy words (arkadaşlarımla).',
     ],
+    // targetOverride (2026-06-25): raise the A2 dictation pool from the level
+    // default to 30, matching the A1 dictation bump. Point-wide is safe — a
+    // dictation umbrella only feeds the dictation cell.
+    targetOverride: 30,
   },
   {
     key: 'tr-b1-dictation',
@@ -2331,6 +2339,10 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Losing track across an embedded -(y)ken / -DIK clause.',
       'Mis-segmenting suffix-heavy words (izlerken, görüşler).',
     ],
+    // targetOverride (2026-06-25): raise the B1 dictation pool from the level
+    // default to 30, matching the A1/A2 dictation bumps. Point-wide is safe — a
+    // dictation umbrella only feeds the dictation cell.
+    targetOverride: 30,
   },
   // Free-writing topic umbrellas — kind: 'free-writing' (Phase 2 generation).
   // Added 2026-06-17. Concrete, level-appropriate topics; the per-draft angle
