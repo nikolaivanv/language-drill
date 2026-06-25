@@ -35,7 +35,6 @@ import { coachMessage } from '../../../lib/drill/coach-messages';
 import { coachHeadline } from '../../../lib/drill/coach-headline';
 import { DICTATION_RUN_COUNT } from '../../../lib/drill/session-config';
 import { DrillHub } from './_components/drill-hub';
-import { CoachRail } from './_components/coach-rail';
 import { CoachCard } from './_components/coach-card';
 import { DrillMeta } from './_components/drill-meta';
 import { FluencyPromo } from './_components/fluency-promo';
@@ -479,8 +478,9 @@ function PracticePageContent() {
         // is the focal point. (DRILL-UI-GUIDELINES §3: tighten the meta, open
         // up before the title.)
         <div className="mt-s-8 mobile:mt-s-5">
-          {/* Mobile: horizontal session-position dots above the prompt. */}
-          {isMobile && sessionPosition && (
+          {/* Session-position dots above the prompt — rendered inline for both
+              desktop and mobile now that the coach rail column is removed. */}
+          {sessionPosition && (
             <div className="mb-s-4">
               <SessionDots
                 current={sessionPosition.current}
@@ -526,16 +526,6 @@ function PracticePageContent() {
   return (
     <DrillActionProvider active={isMobile}>
       <DrillLayout
-        rail={
-          !isMobile && currentItem ? (
-            <CoachRail
-              message={coachMsg}
-              exerciseType={exerciseTypeForRail}
-              sessionCurrent={sessionPosition?.current}
-              sessionTotal={sessionPosition?.total}
-            />
-          ) : null
-        }
         main={main}
         actionBar={isMobile ? <DrillActionBar /> : undefined}
         progressFraction={selectProgressFraction(state)}

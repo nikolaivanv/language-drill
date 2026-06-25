@@ -1,3 +1,6 @@
+// DORMANT (2026-06): the dedicated coach rail is not mounted. The coach nudge
+// now lives inside the per-answer feedback card (feedback-shell.tsx). Kept for
+// reintroduction once the coach gives genuinely useful, item-matched advice.
 'use client';
 
 import { ExerciseType } from '@language-drill/shared';

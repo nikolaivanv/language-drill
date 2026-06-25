@@ -611,13 +611,19 @@ describe('PracticePage', () => {
 
   // -------------------------------------------------------------------------
   describe('desktop vs mobile chrome', () => {
-    it('renders the coach rail (not a coach card) on desktop', () => {
+    it('does not render a separate coach-rail region on desktop; session dots appear inline', () => {
       renderWithProviders(<PracticePage />);
-      // CoachRail's "guiding this session" caption is unique to the rail.
-      expect(screen.getByText('guiding this session')).toBeInTheDocument();
+      // The dedicated coach rail (with its "guiding this session" caption) is
+      // now dormant — removed from the desktop layout.
+      expect(screen.queryByText('guiding this session')).not.toBeInTheDocument();
+      // No coach toggle button on desktop (that lives in CoachCard, mobile-only).
       expect(
         screen.queryByRole('button', { name: /coach/i }),
       ).not.toBeInTheDocument();
+      // Session dots now render inline in the main column on desktop.
+      expect(
+        screen.getByRole('list', { name: /item 1 of 5/i }),
+      ).toBeInTheDocument();
     });
 
     it('renders the coach card, session dots, and a sticky action bar on mobile', () => {
@@ -664,7 +670,12 @@ describe('PracticePage', () => {
 
   // -------------------------------------------------------------------------
   describe('coach headline — cross-session recurring error', () => {
+    // The coach message now renders only on mobile (via CoachCard). The dedicated
+    // desktop rail is dormant; the coach nudge will move into the per-answer
+    // feedback card in Task 11. These tests use mobile to exercise the message path.
+
     it('shows the lately · headline when insights returns a theme with count ≥ 2 and no session errors', () => {
+      mockIsMobile.mockReturnValue(true);
       mockUseInsightsErrors.mockReturnValue({
         data: {
           themes: [
@@ -690,10 +701,14 @@ describe('PracticePage', () => {
     });
 
     it('shows the canned coach message when insights has no themes', () => {
+      mockIsMobile.mockReturnValue(true);
       // Default beforeEach already sets mockUseInsightsErrors to { data: { themes: [] } }
       renderWithProviders(<PracticePage />);
-      // Default in-session idle state → canned "guiding this session" caption visible.
-      expect(screen.getByText('guiding this session')).toBeInTheDocument();
+      // Default in-session idle state → canned message visible in the mobile CoachCard.
+      // The CoachCard renders the message text inside an expanded <p>.
+      // For CLOZE (the default exercise type in SAMPLE_MANIFEST), the idle canned
+      // message from coach-messages.ts is "fill the blank · type it out".
+      expect(screen.getByText('fill the blank · type it out')).toBeInTheDocument();
       // No lately headline.
       expect(screen.queryByText(/lately ·/)).not.toBeInTheDocument();
     });
