@@ -113,7 +113,7 @@ export default function DashboardPage() {
             )}
           </p>
           <Link href="/progress" className="link-arrow">
-            see the map →
+            see the map <span className="lk-arr" aria-hidden="true">→</span>
           </Link>
         </div>
       )}

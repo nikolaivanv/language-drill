@@ -35,9 +35,9 @@ export function DrillTodayStatus() {
       </span>
       <Link
         href="/home"
-        className="whitespace-nowrap text-[18px] text-ink-2 underline decoration-rule-strong underline-offset-4 hover:decoration-ink-mute mobile:text-[15px]"
+        className="whitespace-nowrap text-[18px] text-ink-2 underline decoration-rule-strong underline-offset-4 transition-colors hover:text-ink hover:decoration-ink-mute mobile:text-[15px]"
       >
-        view plan →
+        view plan <span className="lk-arr" aria-hidden="true">→</span>
       </Link>
     </div>
   );

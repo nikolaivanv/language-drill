@@ -123,7 +123,7 @@ function SectionHeader({ language }: { language: LearningLanguage }) {
         <h2 className="t-display-m mt-s-1">skill snapshot</h2>
       </div>
       <Link href="/progress" className="link-arrow">
-        see full progress →
+        see full progress <span className="lk-arr" aria-hidden="true">→</span>
       </Link>
     </div>
   );

@@ -141,9 +141,9 @@ function ConjugationPageContent() {
         <h1 className="t-display-l">conjugation warm-up</h1>
         <Link
           href="/fluency?type=conjugation"
-          className="t-small text-ink-2 no-underline hover:text-accent-2"
+          className="t-small text-ink-2 no-underline transition-colors hover:text-ink"
         >
-          drill these fast →
+          drill these fast <span className="lk-arr" aria-hidden="true">→</span>
         </Link>
       </div>
       <ExercisePane
