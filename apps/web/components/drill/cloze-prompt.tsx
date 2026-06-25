@@ -8,15 +8,21 @@ import { splitClozeSentence } from '../../lib/drill/cloze-blank';
 
 export type BlankState = 'idle' | 'filled' | 'correct' | 'wrong';
 
-// Inline-blank colour by state. Empty reads terracotta (an open prompt), filled
-// goes ink, and a graded blank fills green / terracotta in place.
+// Wrapper span classes for the gap + detached underline per state.
+// The underline is an `after:` pseudo-element offset ~9px below the box.
+export const BLANK_WRAP_CLASS: Record<BlankState, string> = {
+  idle: 'after:bg-accent',
+  filled: 'after:bg-accent',
+  correct: 'after:bg-ok',
+  wrong: 'after:bg-accent-2',
+};
+
+// Input text colour by state.
 export const BLANK_STATE_CLASS: Record<BlankState, string> = {
-  idle: 'border-[var(--color-accent)] text-ink',
-  filled: 'border-ink text-ink',
-  correct:
-    'border-[var(--color-ok)] text-[var(--color-ok)] bg-[var(--color-ok-soft)] rounded-t-sm',
-  wrong:
-    'border-[var(--color-accent)] text-[var(--color-accent-2)] bg-[var(--color-accent-soft)] rounded-t-sm',
+  idle: 'text-ink',
+  filled: 'text-accent-2',
+  correct: 'text-ok',
+  wrong: 'text-accent-2',
 };
 
 export interface ClozePromptProps {
@@ -45,30 +51,39 @@ export function ClozePrompt({
   const { before, after, hasBlank } = splitClozeSentence(content.sentence);
 
   const blankInput = (
-    <input
-      ref={inputRef}
-      type="text"
-      autoComplete="off"
-      autoCorrect="off"
-      spellCheck={false}
-      aria-label="fill the blank"
-      data-state={blankState}
-      value={answer}
-      onChange={(e) => onAnswerChange(e.target.value)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          onEnterSubmit();
-        }
-      }}
-      disabled={disabled}
-      style={{ font: 'inherit', fontWeight: 600, width: `${Math.max(answer.length, 4)}ch` }}
+    <span
       className={cn(
-        'inline-block text-center align-baseline bg-transparent outline-none',
-        'border-b-[3px] px-s-1 caret-[var(--color-accent)] disabled:cursor-default',
-        BLANK_STATE_CLASS[blankState],
+        'relative inline-block align-baseline',
+        // Detached underline: a 2px bar ~9px below the box bottom
+        'after:absolute after:left-0 after:right-0 after:-bottom-[9px] after:h-[2px] after:rounded-[2px] after:content-[\'\']',
+        BLANK_WRAP_CLASS[blankState],
       )}
-    />
+    >
+      <input
+        ref={inputRef}
+        type="text"
+        autoComplete="off"
+        autoCorrect="off"
+        spellCheck={false}
+        aria-label="fill the blank"
+        data-state={blankState}
+        value={answer}
+        onChange={(e) => onAnswerChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            onEnterSubmit();
+          }
+        }}
+        disabled={disabled}
+        style={{ font: 'inherit', fontWeight: 600, width: `${Math.max(answer.length, 4)}ch` }}
+        className={cn(
+          'inline-block text-center align-baseline bg-card border border-rule rounded-r-sm shadow-1',
+          'px-s-1 outline-none caret-[var(--color-accent)] disabled:cursor-default',
+          BLANK_STATE_CLASS[blankState],
+        )}
+      />
+    </span>
   );
 
   return (
