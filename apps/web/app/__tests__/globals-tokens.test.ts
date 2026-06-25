@@ -17,4 +17,10 @@ describe('design-system foundations', () => {
   it('defines the shared tertiary link utility', () => {
     expect(css).toMatch(/\.link-arrow\s*\{/);
   });
+  it('defines the shared arrow-nudge (.lk-arr) that slides on link/button hover', () => {
+    expect(css).toMatch(/\.lk-arr\s*\{/);
+    expect(css).toMatch(
+      /a:hover \.lk-arr,\s*button:hover \.lk-arr\s*\{[^}]*translateX\(3px\)/,
+    );
+  });
 });

@@ -180,6 +180,24 @@
   text-decoration-color: var(--color-ink-mute);
 }
 
+/* Trailing-arrow nudge, shared across every "label →" link (view plan, see the
+   map, read the theory, …). Wrap the arrow in <span class="lk-arr">→</span>;
+   on hover of the enclosing link/button it slides right. Pairs with the
+   text-darken hover above so the whole family behaves identically. */
+.lk-arr {
+  display: inline-block;
+  transition: transform 0.14s ease;
+}
+a:hover .lk-arr,
+button:hover .lk-arr {
+  transform: translateX(3px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lk-arr {
+    transition: none;
+  }
+}
+
 /* ─── Legal / compliance pages (privacy, terms, cookies) ─── */
 /* Tailwind preflight resets bare h1/h2/ul, so the semantic markup in the
    (legal) pages renders flat. This restyles those descendants with the

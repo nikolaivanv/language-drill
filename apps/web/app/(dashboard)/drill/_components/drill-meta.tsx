@@ -70,7 +70,7 @@ export function DrillMeta({
             <button
               type="button"
               onClick={() => onLevelChange(baseline)}
-              className="cursor-pointer border-0 bg-transparent p-0 text-[11px] text-ink-mute underline underline-offset-2 hover:text-ink-soft"
+              className="cursor-pointer border-0 bg-transparent p-0 text-[11px] text-ink-mute underline underline-offset-2 transition-colors hover:text-ink"
             >
               reset
             </button>

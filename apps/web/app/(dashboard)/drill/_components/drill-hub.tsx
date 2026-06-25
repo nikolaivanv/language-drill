@@ -30,9 +30,9 @@ type Props = {
 const CARD_BASE =
   'group flex items-center justify-between gap-s-7 rounded-r-lg border p-s-6 text-left no-underline shadow-1 transition-all hover:-translate-y-px hover:shadow-2 active:shadow-2 mobile:gap-s-4 mobile:p-s-5';
 const CARD_NORMAL =
-  'border-rule bg-card hover:border-rule-strong active:border-rule-strong';
+  'border-rule bg-card hover:border-rule-strong hover:bg-paper active:border-rule-strong active:bg-paper';
 const CARD_FEAT =
-  'border-ink bg-ink hover:border-ink-hover active:border-ink-hover';
+  'border-ink bg-ink hover:border-rule-strong active:border-rule-strong';
 
 // Display title via utilities (not .t-display-m) so the featured card can use
 // text-paper — the .t-display-* classes hard-set their colour and win over
@@ -74,9 +74,11 @@ function CardBody({
       </span>
       <span
         className={cn(
-          't-mono flex-shrink-0 text-[20px] mobile:text-[16px]',
-          // Light terracotta reads as the accent on the dark card; normal cards
-          // use the standard --accent-2.
+          't-mono flex-shrink-0 text-[20px] transition-colors mobile:text-[16px]',
+          // Rest: light terracotta on the dark card, --accent-2 on normal cards.
+          // Hover: both brighten to the full --accent (desktop only; touch uses
+          // the active: press states).
+          'group-hover:text-accent',
           featured ? 'text-[#f0a98c]' : 'text-accent-2',
         )}
       >
@@ -156,7 +158,7 @@ export function DrillHub({
             href="/progress"
             className="t-mono mt-s-3 inline-block text-[13px] text-ink-soft hover:text-ink"
           >
-            see your full map →
+            see your full map <span className="lk-arr" aria-hidden="true">→</span>
           </Link>
         </div>
       )}

@@ -81,6 +81,18 @@ describe('DrillHub', () => {
     expect(fw.className).toContain('border-rule');
     expect(fw.className).toContain('hover:border-rule-strong');
     expect(fw.className).not.toContain('border-accent');
+    // Plain cards also warm their surface to --paper on hover/tap.
+    expect(fw.className).toContain('hover:bg-paper');
+  });
+
+  it('brightens the card start → arrow to the full accent on hover', () => {
+    setup();
+    // Both plain and featured cards share the same hover target (--accent).
+    const arrows = screen.getAllByText('start →');
+    expect(arrows.length).toBeGreaterThan(0);
+    arrows.forEach((a) =>
+      expect(a.className).toContain('group-hover:text-accent'),
+    );
   });
 
   it('renders weak spots + a link to /progress, and fires onStartTargeted on tap', () => {

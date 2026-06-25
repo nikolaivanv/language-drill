@@ -36,7 +36,7 @@ export function DebriefFooter(_props: DebriefFooterProps) {
         href="/progress"
         className="link-arrow mobile:order-last mobile:self-center mobile:pt-s-2"
       >
-        see your progress →
+        see your progress <span className="lk-arr" aria-hidden="true">→</span>
       </Link>
 
       {/* Desktop right: [ghost done] [primary practice more]

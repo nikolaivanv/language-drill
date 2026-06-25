@@ -317,7 +317,10 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
           {hasTheory && topicId && (
             <div style={{ marginBottom: 20 }}>
               <a href={`/theory/${topicId}`} className="link-arrow">
-                read the theory →
+                read the theory{' '}
+                <span className="lk-arr" aria-hidden="true">
+                  →
+                </span>
               </a>
             </div>
           )}
