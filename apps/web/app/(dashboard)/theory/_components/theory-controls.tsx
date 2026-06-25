@@ -97,8 +97,8 @@ function ControlGroup<T extends string>({
               className={cn(
                 'whitespace-nowrap rounded-full px-3 py-[6px] text-[12px] transition-colors duration-150 flex-shrink-0',
                 active
-                  ? 'bg-ink text-paper border border-ink'
-                  : 'bg-card text-ink-soft border border-rule hover:text-ink',
+                  ? 'bg-ink text-paper border border-ink hover:bg-ink-hover hover:border-ink-hover'
+                  : 'bg-card text-ink-soft border border-rule hover:text-ink hover:border-rule-strong',
               )}
             >
               {opt.label}

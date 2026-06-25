@@ -25,6 +25,17 @@ describe('IntensityToggle — aria semantics', () => {
     expect(assertive).toHaveAttribute('aria-checked', 'false');
   });
 
+  it('renders the selected pill with paper text (no t-small override) and a hover state', () => {
+    render(<IntensityToggle value="subtle" onChange={() => {}} />);
+    const subtle = screen.getByRole('radio', { name: /subtle/i });
+    // Contrast fix: the selected pill must use the paper text utility, and must
+    // NOT carry `t-small` (which would hard-set ink-soft and kill the contrast).
+    expect(subtle.className).toContain('text-paper');
+    expect(subtle.className).not.toContain('t-small');
+    // Selected pill now has a hover state (ink → ink-hover).
+    expect(subtle.className).toContain('hover:bg-ink-hover');
+  });
+
   it('reflects aria-checked when the value flips', () => {
     render(<IntensityToggle value="assertive" onChange={() => {}} />);
     const subtle = screen.getByRole('radio', { name: /subtle/i });

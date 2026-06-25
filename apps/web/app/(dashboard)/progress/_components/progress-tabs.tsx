@@ -5,6 +5,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from 'react';
+import { cn } from '../../../../lib/cn';
 import {
   PROGRESS_TAB_IDS,
   type ProgressTabId,
@@ -103,17 +104,12 @@ export function ProgressTabs({ active, onChange, children }: ProgressTabsProps) 
               tabIndex={isActive ? 0 : -1}
               onClick={() => onChange(id)}
               onKeyDown={onKeyDown}
-              style={{
-                padding: '12px 16px',
-                border: 'none',
-                background: 'transparent',
-                borderBottom: `2px solid ${isActive ? 'var(--color-ink)' : 'transparent'}`,
-                color: isActive ? 'var(--color-ink)' : 'var(--color-ink-soft)',
-                fontWeight: isActive ? 500 : 400,
-                fontSize: 14,
-                marginBottom: -1,
-                cursor: 'pointer',
-              }}
+              className={cn(
+                '-mb-px cursor-pointer border-b-2 bg-transparent px-[16px] py-[12px] text-[14px] transition-colors',
+                isActive
+                  ? 'border-b-ink font-medium text-ink'
+                  : 'border-b-transparent font-normal text-ink-soft hover:text-ink',
+              )}
             >
               {TAB_LABELS[id]}
             </button>

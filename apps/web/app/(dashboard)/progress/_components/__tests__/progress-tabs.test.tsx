@@ -34,6 +34,20 @@ describe('ProgressTabs', () => {
     expect(panel.textContent).toContain('fluency content');
   });
 
+  it('underlines the active tab and gives inactive tabs a text-darken hover', () => {
+    render(
+      <ProgressTabs active="map" onChange={() => {}}>
+        <div>map content</div>
+      </ProgressTabs>,
+    );
+    const map = screen.getByRole('tab', { name: 'map' });
+    const shape = screen.getByRole('tab', { name: 'shape' });
+    // Active tab is underlined in ink; inactive tabs darken to ink on hover.
+    expect(map.className).toContain('border-b-ink');
+    expect(shape.className).toContain('border-b-transparent');
+    expect(shape.className).toContain('hover:text-ink');
+  });
+
   it('calls onChange with the clicked tab id', () => {
     const onChange = vi.fn();
     render(
