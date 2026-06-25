@@ -39,22 +39,24 @@ export function DebriefFooter(_props: DebriefFooterProps) {
         see your progress →
       </Link>
 
-      {/* Desktop right / mobile first+second: primary then ghost */}
+      {/* Desktop right: [ghost done] [primary practice more]
+          Mobile: primary first, ghost second (order utilities flip the pair). */}
       <div className="flex gap-s-3 mobile:flex-col mobile:gap-[8px]">
-        {/* On mobile: primary button comes before ghost. Use order utilities. */}
+        {/* Desktop: first in DOM = left of pair. Mobile: order-last pushes it below primary. */}
+        <Button
+          variant="ghost"
+          className="mobile:min-h-[44px] mobile:order-last"
+          onClick={() => router.push('/')}
+        >
+          done
+        </Button>
+        {/* Desktop: second in DOM = right of pair. Mobile: order-first keeps it on top. */}
         <Button
           variant="primary"
           className="mobile:min-h-[44px] mobile:order-first"
           onClick={() => router.push('/drill')}
         >
           practice more
-        </Button>
-        <Button
-          variant="ghost"
-          className="mobile:min-h-[44px]"
-          onClick={() => router.push('/')}
-        >
-          done
         </Button>
       </div>
     </div>

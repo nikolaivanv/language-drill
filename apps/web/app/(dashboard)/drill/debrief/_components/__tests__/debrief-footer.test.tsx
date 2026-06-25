@@ -108,6 +108,23 @@ describe('DebriefFooter — desktop layout', () => {
     expect(screen.getByRole('button', { name: 'practice more' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'done' })).toBeDefined();
   });
+
+  it('desktop DOM order: ghost "done" appears before primary "practice more" in the button group', () => {
+    render(<DebriefFooter tier="high" />);
+    const buttons = screen.getAllByRole('button');
+    // In the DOM, "done" (ghost) must come before "practice more" (primary)
+    // so that on desktop the natural flex order renders [done] [practice more].
+    const doneIdx = buttons.findIndex((b) => b.textContent === 'done');
+    const practiceIdx = buttons.findIndex((b) => b.textContent === 'practice more');
+    expect(doneIdx).toBeLessThan(practiceIdx);
+  });
+
+  it('mobile stacking: primary "practice more" has mobile:order-first class', () => {
+    render(<DebriefFooter tier="high" />);
+    const practiceBtn = screen.getByRole('button', { name: 'practice more' });
+    // mobile:order-first ensures practice more stacks on top on mobile
+    expect(practiceBtn.className).toContain('mobile:order-first');
+  });
 });
 
 // ---------------------------------------------------------------------------
