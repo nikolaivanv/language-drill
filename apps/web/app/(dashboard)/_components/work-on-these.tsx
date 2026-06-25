@@ -4,12 +4,12 @@ import { cn } from '../../../lib/cn';
 
 const MAX_ITEMS = 3;
 
-// Whole-row hover surface, matching the curriculum-map rows + sidebar nav:
-// neutral --paper-2 fill (no terracotta), rounded, with `active:` for mobile
-// touch feedback (no hover on touch). The `-mx-s-3` on the <ul> lets the fill
-// bleed slightly past the text without shifting the text off the section edge.
+// Full-width row separated by hairline rules, with a neutral --paper-2 hover
+// surface (no terracotta) and `active:` for mobile touch feedback (no hover on
+// touch). The `border-b` pairs with the <ul>'s `border-t` to draw a divider
+// above the first row and below every row.
 const ROW_INTERACTIVE =
-  'group block w-full cursor-pointer rounded-r-md px-s-3 py-s-2 text-left transition-colors hover:bg-paper-2 active:bg-paper-2';
+  'group block w-full cursor-pointer border-b border-rule py-s-3 text-left transition-colors hover:bg-paper-2 active:bg-paper-2';
 
 function label(t: InsightsErrorTheme): string {
   return t.grammarPointName ?? t.grammarPointKey ?? `${t.errorType} errors`;
@@ -64,7 +64,7 @@ export function WorkOnThese({
   return (
     <section>
       <h2 className="t-display-m">work on these</h2>
-      <ul className="mt-s-3 -mx-s-3 flex flex-col gap-s-1">
+      <ul className="mt-s-4 flex flex-col border-t border-rule">
         {items.map((t) => {
           const key = `${t.grammarPointKey ?? '∅'}:${t.errorType}`;
           return (
@@ -87,7 +87,7 @@ export function WorkOnThese({
                   </Link>
                 )
               ) : (
-                <div className="px-s-3 py-s-2">
+                <div className="border-b border-rule py-s-3">
                   <RowInner t={t} interactive={false} />
                 </div>
               )}

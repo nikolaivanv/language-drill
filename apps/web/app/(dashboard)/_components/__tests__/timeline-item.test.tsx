@@ -67,6 +67,24 @@ describe('TimelineItem — next-up', () => {
     const li = screen.getByRole('listitem');
     expect(li.className).not.toMatch(/bg-accent/);
   });
+
+  it('vertically centres the start-button column against the row', () => {
+    const { container } = renderItem({
+      status: 'next-up',
+      href: '/drill?language=ES',
+    });
+    const row = container.querySelector('.justify-between');
+    expect(row?.className).toContain('items-center');
+    expect(row?.className).not.toContain('items-start');
+  });
+});
+
+describe('TimelineItem — queued time alignment', () => {
+  it('keeps the planned-time top-aligned with the title (items-start)', () => {
+    const { container } = renderItem({ status: 'queued' });
+    const row = container.querySelector('.justify-between');
+    expect(row?.className).toContain('items-start');
+  });
 });
 
 describe('TimelineItem — done', () => {
