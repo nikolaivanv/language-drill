@@ -72,9 +72,12 @@ export function IntensityToggle({ value, onChange }: Props) {
             onClick={() => onChange(option)}
             onKeyDown={onKeyDown(option)}
             className={cn(
-              't-small rounded-full px-[12px] py-[4px] text-[11px] font-medium transition-colors',
+              // NB: no `t-small` here — that class hard-sets color:ink-soft and
+              // (being unlayered) beats the `text-paper` utility, which left the
+              // selected pill with low-contrast muted text on the ink fill.
+              'rounded-full px-[12px] py-[4px] text-[11px] font-medium transition-colors',
               checked
-                ? 'bg-ink text-paper'
+                ? 'bg-ink text-paper hover:bg-ink-hover'
                 : 'bg-transparent text-ink-soft hover:text-ink',
             )}
           >
