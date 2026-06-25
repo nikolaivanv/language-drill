@@ -108,7 +108,6 @@ export function ClozeExercise({
         disabled={isLocked}
         onEnterSubmit={handleSubmit}
         inputRef={inputRef}
-        showHelper={!showOptions && !isLocked}
       />
 
       <div className="flex flex-col gap-s-3">

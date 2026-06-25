@@ -27,7 +27,6 @@ export interface ClozePromptProps {
   disabled: boolean;
   onEnterSubmit: () => void;
   inputRef: React.RefObject<HTMLInputElement | null>;
-  showHelper?: boolean;
 }
 
 // Pure presentation of a cloze prompt: the grammar-point eyebrow, the hero
@@ -42,7 +41,6 @@ export function ClozePrompt({
   disabled,
   onEnterSubmit,
   inputRef,
-  showHelper = false,
 }: ClozePromptProps) {
   const { before, after, hasBlank } = splitClozeSentence(content.sentence);
 
@@ -98,10 +96,6 @@ export function ClozePrompt({
           content.sentence
         )}
       </p>
-
-      {hasBlank && showHelper && (
-        <p className="t-small text-ink-mute">type straight into the gap</p>
-      )}
 
       {/* level 3 — meaning gloss, clearly secondary */}
       {content.glossEn && content.glossEn.length > 0 && (

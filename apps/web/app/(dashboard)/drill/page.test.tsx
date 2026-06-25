@@ -626,14 +626,14 @@ describe('PracticePage', () => {
       ).toBeInTheDocument();
     });
 
-    it('renders the coach card, session dots, and a sticky action bar on mobile', () => {
+    it('renders session dots and a sticky action bar on mobile (no coach card)', () => {
       mockIsMobile.mockReturnValue(true);
       renderWithProviders(<PracticePage />);
 
-      // Coach rail collapses into a collapsible card (a button) on mobile.
+      // No coach card or rail.
       expect(
-        screen.getByRole('button', { name: /coach/i }),
-      ).toBeInTheDocument();
+        screen.queryByRole('button', { name: /coach/i }),
+      ).not.toBeInTheDocument();
       expect(screen.queryByText('guiding this session')).not.toBeInTheDocument();
 
       // Session dots above the prompt.
@@ -669,12 +669,11 @@ describe('PracticePage', () => {
   });
 
   // -------------------------------------------------------------------------
-  describe('coach headline — cross-session recurring error', () => {
-    // The coach message now renders only on mobile (via CoachCard). The dedicated
-    // desktop rail is dormant; the coach nudge will move into the per-answer
-    // feedback card in Task 11. These tests use mobile to exercise the message path.
+  describe('passive banners absent from in-session view (Task 9)', () => {
+    // The "lately" recap banner and in-session FluencyPromo have been removed.
+    // The coach nudge will reappear inside the per-answer feedback card (Task 11).
 
-    it('shows the lately · headline when insights returns a theme with count ≥ 2 and no session errors', () => {
+    it('no lately · headline is shown even when insights returns themes', () => {
       mockIsMobile.mockReturnValue(true);
       mockUseInsightsErrors.mockReturnValue({
         data: {
@@ -693,24 +692,21 @@ describe('PracticePage', () => {
         },
       });
       renderWithProviders(<PracticePage />);
-      // Page lands in-session (default mocks fire CREATE_SUCCEEDED synchronously)
-      // with no session errors → cross-session headline wins.
-      expect(
-        screen.getByText('lately · Locative case: pazarda → pazara (6×)'),
-      ).toBeInTheDocument();
+      expect(screen.queryByText(/lately ·/)).not.toBeInTheDocument();
     });
 
-    it('shows the canned coach message when insights has no themes', () => {
+    it('no in-session fluency promo on mobile', () => {
       mockIsMobile.mockReturnValue(true);
-      // Default beforeEach already sets mockUseInsightsErrors to { data: { themes: [] } }
       renderWithProviders(<PracticePage />);
-      // Default in-session idle state → canned message visible in the mobile CoachCard.
-      // The CoachCard renders the message text inside an expanded <p>.
-      // For CLOZE (the default exercise type in SAMPLE_MANIFEST), the idle canned
-      // message from coach-messages.ts is "fill the blank · type it out".
-      expect(screen.getByText('fill the blank · type it out')).toBeInTheDocument();
-      // No lately headline.
-      expect(screen.queryByText(/lately ·/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/fluency mode/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/try next/i)).not.toBeInTheDocument();
+    });
+
+    it('no in-session fluency promo on desktop', () => {
+      mockIsMobile.mockReturnValue(false);
+      renderWithProviders(<PracticePage />);
+      expect(screen.queryByText(/fluency mode/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/try next/i)).not.toBeInTheDocument();
     });
   });
 });

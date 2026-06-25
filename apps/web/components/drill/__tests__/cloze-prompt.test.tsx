@@ -25,7 +25,6 @@ function Harness({ content = base }: { content?: ClozeContent }) {
       disabled={false}
       onEnterSubmit={() => {}}
       inputRef={ref}
-      showHelper
     />
   );
 }

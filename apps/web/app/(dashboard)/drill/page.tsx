@@ -31,13 +31,9 @@ import { track } from '../../../lib/analytics/track';
 import { topicIdForGrammarPointKey } from '../../../lib/theory-topic-map';
 import { useIsMobile } from '../../../lib/responsive';
 import { Card } from '../../../components/ui';
-import { coachMessage } from '../../../lib/drill/coach-messages';
-import { coachHeadline } from '../../../lib/drill/coach-headline';
 import { DICTATION_RUN_COUNT } from '../../../lib/drill/session-config';
 import { DrillHub } from './_components/drill-hub';
-import { CoachCard } from './_components/coach-card';
 import { DrillMeta } from './_components/drill-meta';
-import { FluencyPromo } from './_components/fluency-promo';
 import { SessionDots } from './_components/session-dots';
 import { DrillLayout } from './_components/drill-layout';
 import {
@@ -353,27 +349,10 @@ function PracticePageContent() {
     activeLanguage,
   );
 
-  const exerciseTypeForRail: ExerciseType =
-    exerciseContent && 'type' in exerciseContent
-      ? exerciseContent.type
-      : ExerciseType.CLOZE;
-
   const submission =
     state.kind === 'inSession'
       ? state.perItemSubmission
       : ({ kind: 'idle' } as const);
-
-  const cannedMsg =
-    submission.kind === 'evaluated'
-      ? coachMessage({
-          kind: 'evaluated',
-          type: exerciseTypeForRail,
-          score: submission.result.score,
-        })
-      : coachMessage({ kind: 'idle', type: exerciseTypeForRail });
-  const sessionErrors = state.kind === 'inSession' ? state.sessionErrors : [];
-  const coachMsg =
-    coachHeadline({ sessionErrors, themes: insights.data?.themes ?? [] }) ?? cannedMsg;
 
   // The learner's recorded baseline for the active language — the identity that
   // the session level can drift from. Null when the active language has no
@@ -442,13 +421,6 @@ function PracticePageContent() {
 
   const main = (
     <>
-      {/* Mobile: the coach rail collapses into a card at the top of content. */}
-      {isMobile && currentItem && (
-        <div className="mb-s-4">
-          <CoachCard message={coachMsg} />
-        </div>
-      )}
-
       {/* One aligned meta row: the writable level pill (+ drift/reset) and the
           read-only topic, grouped tight on a single baseline. */}
       <DrillMeta
@@ -517,9 +489,6 @@ function PracticePageContent() {
         </div>
       )}
 
-      {/* Mobile: promo demoted to the bottom of the scroll, out of the task
-          flow (it lives in the coach rail on desktop). */}
-      {isMobile && currentItem && <FluencyPromo className="mt-s-7" />}
     </>
   );
 
