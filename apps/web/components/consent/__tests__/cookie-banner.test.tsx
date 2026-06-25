@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import { ConsentProvider } from '../consent-provider';
 import { CookieBanner } from '../cookie-banner';
 import { getConsent } from '../../../lib/consent/consent';
@@ -34,5 +34,33 @@ describe('CookieBanner', () => {
     await act(async () => { btn.click(); });
     expect(getConsent()?.analytics).toBe(false);
     expect(screen.queryByRole('region', { name: /cookie/i })).not.toBeInTheDocument();
+  });
+
+  it('moves focus into the dialog when preferences open', async () => {
+    setup();
+    const manage = await screen.findByRole('button', { name: /manage/i });
+    await act(async () => { manage.click(); });
+    const dialog = screen.getByRole('dialog', { name: /cookie preferences/i });
+    expect(dialog).toHaveFocus();
+  });
+
+  it('Escape closes preferences and returns focus to Manage', async () => {
+    setup();
+    const manage = await screen.findByRole('button', { name: /manage/i });
+    await act(async () => { manage.click(); });
+    const dialog = screen.getByRole('dialog', { name: /cookie preferences/i });
+    await act(async () => { fireEvent.keyDown(dialog, { key: 'Escape' }); });
+    expect(screen.getByRole('region', { name: /cookie/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /manage/i })).toHaveFocus();
+  });
+
+  it('Close button returns focus to Manage', async () => {
+    setup();
+    const manage = await screen.findByRole('button', { name: /manage/i });
+    await act(async () => { manage.click(); });
+    const close = screen.getByRole('button', { name: /^close$/i });
+    await act(async () => { close.click(); });
+    expect(screen.getByRole('region', { name: /cookie/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /manage/i })).toHaveFocus();
   });
 });
