@@ -47,8 +47,13 @@ export function AppShell({ profiles, children }: AppShellProps) {
     <div className="flex h-screen overflow-hidden bg-paper">
       <Nav profiles={profiles} />
       <main className="relative flex-1 min-w-0 min-h-0 overflow-y-auto bg-paper">
-        <div className="max-w-max-content mx-auto w-full py-[36px] px-[48px]">
-          {children}
+        {/* Flex column with the content area growing (`flex-1`) pins the footer
+            to the bottom of the viewport on short pages — so its rule lines up
+            with the Nav's bottom-pinned user-footer rule instead of floating up
+            after the content. `pb-[22px]` matches the Nav's bottom padding so
+            both footer dividers sit at the same offset from the bottom. */}
+        <div className="max-w-max-content mx-auto flex min-h-full w-full flex-col px-[48px] pt-[36px] pb-[22px]">
+          <div className="flex-1">{children}</div>
           <AppFooter />
         </div>
       </main>
