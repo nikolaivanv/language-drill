@@ -144,6 +144,16 @@ describe("buildGenerationSystemPrompt", () => {
     expect(prompt).toContain("nominative");
   });
 
+  it("pins the 2026-06-25 indefinite-compound generation hardening (no bir-hugging, one-word answer, literal modifier)", async () => {
+    // The 2026-06-23 validator note fixed the false-rejects; the 2026-06-25 run
+    // (3/17) showed the residual blockers were generation defects. Pin each new
+    // guardrail so a future edit can't silently drop one.
+    const prompt = await buildGenerationSystemPrompt(baseInputs, []);
+    expect(prompt).toContain("No article hugging the compound");
+    expect(prompt).toContain("One-word answer");
+    expect(prompt).toContain("Modifier is a literal word");
+  });
+
   it("includes the TR gemination / stem-change translation rule (2026-06-23)", async () => {
     // Root-cause fix for tr-a2-consonant-doubling translation (2/27 on
     // 2026-06-22): the source must force a vowel-initial suffix so the
@@ -253,7 +263,10 @@ describe("buildGenerationSystemPrompt", () => {
     // instruction-discipline bullets in renderConjugationSection.)
     // Bumped 2026-06-23 — TR indefinite-noun-compound cloze rule + gemination /
     // stem-change translation rule, after the 2026-06-22 run analysis.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-06-23");
+    // Bumped 2026-06-25 — tightened indefinite-compound cloze generation
+    // (no `bir` hugging the compound, one-word answer, literal modifier, concrete
+    // vocab) after the 2026-06-25 run showed those generation defects.
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-06-25");
     // Tasks 7–9: pin the new guardrail phrases in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "every content word MUST be high-frequency everyday vocabulary at or below CEFR {{cefrLevel}}",
