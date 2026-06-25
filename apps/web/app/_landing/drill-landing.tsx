@@ -362,9 +362,6 @@ function DrillHero() {
             <Link href="/sign-up" className="btn-xl">
               Sign up free
             </Link>
-            <a href="#how" className="btn-xl ghost-light">
-              See how it works
-            </a>
           </div>
           <div
             style={{

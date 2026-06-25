@@ -59,9 +59,6 @@ function MHero() {
         <Link href="/sign-up" className="dfm-btn">
           Sign up free
         </Link>
-        <a href="#how" className="dfm-btn ghost">
-          See how it works
-        </a>
       </div>
       <div className="dfm-demo-hint">
         <span className="ln" /> <span style={{ flexShrink: 0 }}>watch it type, miss & self-correct</span>{' '}

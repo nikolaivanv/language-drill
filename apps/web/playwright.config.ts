@@ -20,6 +20,7 @@ import path from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
 
+import { consentOrigin } from './e2e/helpers/consent';
 import { STORAGE_STATE_PATH } from './e2e/helpers/test-user';
 
 // Load `.env` so CLERK_SECRET_KEY / DATABASE_URL / E2E_CLERK_USER_EMAIL
@@ -30,6 +31,11 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env'), quiet: true });
 
 const baseURL = process.env['PLAYWRIGHT_BASE_URL']?.trim() || 'http://localhost:3000';
 const useWebServer = !process.env['PLAYWRIGHT_BASE_URL'];
+
+// Consent-only storage state for the unauthenticated project: no cookies (keeps
+// the clean Clerk session it requires) but a recorded cookie-consent choice so
+// the first-visit banner never mounts over the sign-in UI.
+const consentOnlyState = { cookies: [], origins: [consentOrigin(baseURL)] };
 
 export default defineConfig({
   testDir: './e2e/tests',
@@ -101,10 +107,11 @@ export default defineConfig({
       // `+clerk_test` reserved pattern suppresses email delivery but does
       // NOT auto-create accounts.
       dependencies: ['setup'],
-      // No storageState — each spec drives the Clerk UI from a clean
-      // session. Serial so the OTP flow isn't racing parallel tabs.
+      // No auth cookies — each spec drives the Clerk UI from a clean session.
+      // Serial so the OTP flow isn't racing parallel tabs. The consent-only
+      // state carries no cookies, just the seeded cookie-consent choice.
       fullyParallel: false,
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'], storageState: consentOnlyState },
     },
   ],
 

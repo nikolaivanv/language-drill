@@ -81,6 +81,15 @@
   }
 }
 
+/* The dark landing adds .landing-dark to <html> (see LandingDarkCanvas) so the
+   document canvas — which paints the top/bottom overscroll rubber-band — matches
+   the landing's --df-bg instead of flashing the light --color-paper. Unlayered
+   so it wins over the @layer base body rule above. */
+html.landing-dark,
+html.landing-dark body {
+  background-color: #16130f;
+}
+
 /* ─── Type scale (utility classes) ─── */
 .t-display-xl {
   font-family: var(--font-display);
