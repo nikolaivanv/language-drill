@@ -446,7 +446,7 @@ function MFooter() {
       <DBrand />
       <div className="meta">© 2026 drill · read, save, produce</div>
       <Link href="/sign-in">Sign in →</Link>
-      <LegalLinks className="mt-s-3" />
+      <LegalLinks className="mt-s-3 landing-legal-links" />
     </footer>
   );
 }

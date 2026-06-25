@@ -1034,7 +1034,7 @@ function DFooter() {
         </Link>
       </div>
       <div className="df-wrap">
-        <LegalLinks className="mt-s-4" />
+        <LegalLinks className="mt-s-4 landing-legal-links" />
       </div>
     </footer>
   );
