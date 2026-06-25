@@ -390,9 +390,6 @@ function PracticePageContent() {
   if (state.kind === 'idle' && startIntent === null && resumeId === null) {
     return (
       <DrillHub
-        difficulty={difficulty}
-        baseline={baseline}
-        onDifficultyChange={handleDifficultyChange}
         onStartQuick={() => {
           // Clear any grammar-point target so the hub's plain "quick drill" is
           // always an untargeted mix (defends against a stale key from a prior

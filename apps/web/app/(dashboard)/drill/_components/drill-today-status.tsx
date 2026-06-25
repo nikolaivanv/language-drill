@@ -26,11 +26,17 @@ export function DrillTodayStatus() {
   const done = todayPlan.data.summary !== null;
 
   return (
-    <div className="mb-s-5 flex items-center justify-between gap-s-4 text-ink-mute">
-      <span className="t-small">
-        today&apos;s quick drill: {done ? 'done ✓' : 'not finished'}
+    <div className="flex items-baseline justify-between gap-s-6 mobile:gap-s-3">
+      <span className="text-[20px] leading-[1.4] text-ink-soft mobile:text-[15px]">
+        today&apos;s quick drill:{' '}
+        <span className="font-medium text-ink-2">
+          {done ? 'done ✓' : 'not finished'}
+        </span>
       </span>
-      <Link href="/home" className="t-small underline hover:text-ink">
+      <Link
+        href="/home"
+        className="whitespace-nowrap text-[18px] text-ink-2 underline decoration-rule-strong underline-offset-4 hover:decoration-ink-mute mobile:text-[15px]"
+      >
         view plan →
       </Link>
     </div>
