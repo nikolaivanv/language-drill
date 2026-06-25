@@ -89,7 +89,14 @@ export function TimelineItem({
           isDone && 'opacity-55',
         )}
       >
-        <div className="flex items-start justify-between gap-s-4">
+        <div
+          className={cn(
+            'flex justify-between gap-s-4',
+            // Centre the start-button column against the full row on the next-up
+            // item; other rows keep the time top-aligned with the title.
+            isNextUp ? 'items-center' : 'items-start',
+          )}
+        >
           <div className="flex-1">
             <div className="flex items-center gap-s-3">
               <h3

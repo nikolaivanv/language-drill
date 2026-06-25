@@ -131,6 +131,14 @@ describe('WorkOnThese', () => {
     expect(row.className).not.toContain('text-accent');
   });
 
+  it('separates items with horizontal divider rules', () => {
+    render(<WorkOnThese themes={[theme()]} />);
+    // The list draws a rule above the first row...
+    expect(screen.getByRole('list').className).toContain('border-t');
+    // ...and below each row.
+    expect(screen.getByRole('link').className).toContain('border-b');
+  });
+
   it('interactive rows carry a decorative "drill →" cross-fade overlay; static rows do not', () => {
     const { rerender } = render(<WorkOnThese themes={[theme()]} />);
     // Present (aria-hidden) for an interactive row, alongside the example·count.
