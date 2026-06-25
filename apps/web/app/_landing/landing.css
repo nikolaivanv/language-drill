@@ -216,13 +216,13 @@
   font-family: var(--t-ui); -webkit-font-smoothing: antialiased; position: relative;
 }
 .dfm a { text-decoration: none; }
-.dfm-wrap { padding: 0 18px; }
+.dfm-wrap { padding: 0 22px; }
 
 /* sticky site bar */
 .dfm-top {
   position: sticky; top: 0; z-index: 30;
   display: flex; align-items: center; justify-content: space-between;
-  height: 54px; padding: 0 16px;
+  height: 54px; padding: 0 22px;
   background: color-mix(in oklab, #16130f 86%, transparent);
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--df-line);
@@ -329,7 +329,7 @@
 .dfm-ctaband p { color: rgba(255,255,255,.88); font-size: 15px; margin: 12px 0 0; line-height: 1.5; }
 
 /* footer */
-.dfm-footer { border-top: 1px solid var(--df-line); padding: 26px 18px 8px;
+.dfm-footer { border-top: 1px solid var(--df-line); padding: 26px 22px 8px;
   display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
 .dfm-footer .meta { font-size: 12px; color: var(--df-mute); }
 .dfm-footer a { font-size: 12px; color: var(--accent); }
