@@ -7,6 +7,7 @@
 // + one of four bodies (skeleton / error card / empty card / 6-row grid).
 // ---------------------------------------------------------------------------
 
+import Link from 'next/link';
 import type { ProgressRadarResponse } from '@language-drill/api-client';
 import {
   LANGUAGE_NAMES,
@@ -118,12 +119,12 @@ function SectionHeader({ language }: { language: LearningLanguage }) {
   return (
     <div className="flex items-baseline justify-between gap-s-4">
       <div>
-        <p className="t-micro">your {languageName} · weakest first</p>
+        <p className="t-micro">your {languageName}</p>
         <h2 className="t-display-m mt-s-1">skill snapshot</h2>
       </div>
-      <Button variant="ghost" size="sm" href="/progress">
+      <Link href="/progress" className="link-arrow">
         see full progress →
-      </Button>
+      </Link>
     </div>
   );
 }
