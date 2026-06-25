@@ -120,4 +120,25 @@ describe('WorkOnThese', () => {
     expect(screen.queryByText('Point d')).not.toBeInTheDocument();
     expect(screen.queryByText('Point e')).not.toBeInTheDocument();
   });
+
+  it('interactive rows use a neutral --paper-2 hover/active surface (no terracotta)', () => {
+    render(<WorkOnThese themes={[theme()]} />);
+    const row = screen.getByRole('link');
+    expect(row.className).toContain('hover:bg-paper-2');
+    expect(row.className).toContain('active:bg-paper-2');
+    expect(row.className).toContain('cursor-pointer');
+    // The old terracotta text-hover is gone — hover is the neutral row surface.
+    expect(row.className).not.toContain('text-accent');
+  });
+
+  it('interactive rows carry a decorative "drill →" cross-fade overlay; static rows do not', () => {
+    const { rerender } = render(<WorkOnThese themes={[theme()]} />);
+    // Present (aria-hidden) for an interactive row, alongside the example·count.
+    expect(screen.getByText('drill →')).toHaveAttribute('aria-hidden');
+    expect(screen.getByText(/pazarda/)).toBeInTheDocument();
+
+    // A non-interactive row (no grammarPointKey, no onSelect) shows no overlay.
+    rerender(<WorkOnThese themes={[theme({ grammarPointKey: null })]} />);
+    expect(screen.queryByText('drill →')).toBeNull();
+  });
 });

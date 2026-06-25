@@ -203,12 +203,16 @@ function SpineRow({
       {/* Body — tappable button that opens the detail sheet */}
       <button
         type="button"
-        className="group flex-1 flex items-start text-left"
+        className="group flex-1 flex items-start text-left rounded-r-md transition-colors hover:bg-paper-2 active:bg-paper-2"
         style={{
           opacity: bodyOpacity,
-          background: 'none',
           border: 'none',
-          padding: '0 0 22px 0',
+          // Horizontal padding + matching negative margin lets the --paper-2
+          // hover fill bleed out to ~the node on the left and the row edge on
+          // the right without shifting the content (nav / user-chip pattern).
+          padding: '6px 12px 22px 12px',
+          marginLeft: -12,
+          marginRight: -12,
           cursor: onSelect ? 'pointer' : 'default',
         }}
         onClick={onSelect ? () => onSelect(point) : undefined}
