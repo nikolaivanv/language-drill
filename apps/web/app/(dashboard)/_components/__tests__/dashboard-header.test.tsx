@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import type { PlanReason, RadarAxis, RadarAxisKey } from '@language-drill/api-client';
 import { DashboardHeader } from '../dashboard-header';

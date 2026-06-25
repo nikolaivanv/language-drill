@@ -341,9 +341,6 @@ function PracticePageContent() {
   }
 
   const currentItem = selectCurrentItem(state);
-  const exerciseContent = currentItem
-    ? (currentItem.contentJson as ExerciseContent)
-    : null;
 
   // Derive a coach nudge for the current item when its grammar point is a known
   // weak spot (i.e. it appears in the cross-session error themes). The tag uses
@@ -367,11 +364,6 @@ function PracticePageContent() {
     currentItem?.grammarPointKey ?? null,
     activeLanguage,
   );
-
-  const submission =
-    state.kind === 'inSession'
-      ? state.perItemSubmission
-      : ({ kind: 'idle' } as const);
 
   // The learner's recorded baseline for the active language — the identity that
   // the session level can drift from. Null when the active language has no
