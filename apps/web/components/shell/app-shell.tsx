@@ -31,8 +31,13 @@ export function AppShell({ profiles, children }: AppShellProps) {
     );
   }
 
+  // `overflow-hidden` clamps the shell to the viewport so nothing escapes into a
+  // document-level scroll. The two columns each own their scroll: the Nav scrolls
+  // internally when its content is taller than a short window (otherwise it would
+  // overflow the fixed-height shell and the whole page would scroll past its
+  // bottom edge), and `main` is the primary scroll region.
   return (
-    <div className="flex h-screen bg-paper">
+    <div className="flex h-screen overflow-hidden bg-paper">
       <Nav profiles={profiles} />
       <main className="flex-1 min-w-0 min-h-0 overflow-y-auto bg-paper">
         <div className="max-w-max-content mx-auto w-full py-[36px] px-[48px]">
