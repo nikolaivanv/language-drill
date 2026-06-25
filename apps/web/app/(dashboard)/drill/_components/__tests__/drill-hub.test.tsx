@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { CefrLevel } from '@language-drill/shared';
 import type { InsightsErrorTheme } from '@language-drill/api-client';
 
 // DrillTodayStatus pulls today data; stub it so the hub renders in isolation.
@@ -27,13 +26,9 @@ function theme(over: Partial<InsightsErrorTheme> = {}): InsightsErrorTheme {
 function setup(overrides: Partial<React.ComponentProps<typeof DrillHub>> = {}) {
   const onStartQuick = vi.fn();
   const onStartDictation = vi.fn();
-  const onDifficultyChange = vi.fn();
   const onStartTargeted = vi.fn();
   render(
     <DrillHub
-      difficulty={CefrLevel.B1}
-      baseline={CefrLevel.B1}
-      onDifficultyChange={onDifficultyChange}
       onStartQuick={onStartQuick}
       onStartDictation={onStartDictation}
       themes={[]}
@@ -41,11 +36,11 @@ function setup(overrides: Partial<React.ComponentProps<typeof DrillHub>> = {}) {
       {...overrides}
     />,
   );
-  return { onStartQuick, onStartDictation, onDifficultyChange, onStartTargeted };
+  return { onStartQuick, onStartDictation, onStartTargeted };
 }
 
 describe('DrillHub', () => {
-  it('renders the today-status strip and the launchers', () => {
+  it('renders the today-status strip and all five drill-type cards', () => {
     setup();
     expect(screen.getByTestId('today-status')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /quick drill/i })).toBeInTheDocument();
@@ -61,7 +56,16 @@ describe('DrillHub', () => {
     expect(fluency).toHaveAttribute('href', '/fluency');
   });
 
-  it('fires onStartQuick / onStartDictation when the launchers are clicked', () => {
+  it('features the quick drill as the dark "today\'s drill" card', () => {
+    setup();
+    const quick = screen.getByRole('button', { name: /quick drill/i });
+    // Featured card is the ink-filled surface...
+    expect(quick.className).toContain('bg-ink');
+    // ...carrying the "today's drill" eyebrow tag.
+    expect(screen.getByText(/today's drill/i)).toBeInTheDocument();
+  });
+
+  it('fires onStartQuick / onStartDictation when those cards are clicked', () => {
     const { onStartQuick, onStartDictation } = setup();
     fireEvent.click(screen.getByRole('button', { name: /quick drill/i }));
     fireEvent.click(screen.getByRole('button', { name: /dictation/i }));
@@ -69,34 +73,27 @@ describe('DrillHub', () => {
     expect(onStartDictation).toHaveBeenCalledTimes(1);
   });
 
-  it('gives the free-writing launcher a resting rule border with accent only on hover', () => {
+  it('gives normal cards a resting rule border that strengthens (no terracotta) on hover', () => {
     setup();
     const fw = screen.getByRole('link', { name: /free writing/i });
-    // Resting state matches the other launchers — no permanently-on accent
-    // border (which previously made the card look stuck-highlighted).
+    // Resting border is the neutral rule; hover strengthens it + lifts the card.
+    // No permanent or hover terracotta border.
     expect(fw.className).toContain('border-rule');
-    expect(fw.className).toContain('hover:border-accent');
-  });
-
-  it('fires onDifficultyChange when the drill-level select changes', () => {
-    const { onDifficultyChange } = setup();
-    fireEvent.change(screen.getByLabelText(/drill level/i), {
-      target: { value: 'A2' },
-    });
-    expect(onDifficultyChange).toHaveBeenCalledWith('A2');
+    expect(fw.className).toContain('hover:border-rule-strong');
+    expect(fw.className).not.toContain('border-accent');
   });
 
   it('renders weak spots + a link to /progress, and fires onStartTargeted on tap', () => {
     const onStartTargeted = vi.fn();
     setup({ themes: [theme()], onStartTargeted });
     // the map link
-    expect(screen.getByRole('link', { name: /full map|progress/i }).getAttribute('href')).toBe(
-      '/progress',
-    );
+    expect(
+      screen.getByRole('link', { name: /full map|progress/i }).getAttribute('href'),
+    ).toBe('/progress');
     // tapping the weak spot starts a targeted drill
     fireEvent.click(screen.getByRole('button', { name: /Accusative/ }));
     expect(onStartTargeted).toHaveBeenCalledWith('tr-a1-accusative');
-    // mode launchers still present
+    // mode cards still present
     expect(screen.getByRole('button', { name: /quick drill/i })).toBeInTheDocument();
   });
 

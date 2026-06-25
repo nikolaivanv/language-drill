@@ -1,37 +1,92 @@
 'use client';
 
 // ---------------------------------------------------------------------------
-// DrillHub — the /drill landing (Plan 2)
+// DrillHub — the /drill landing menu (Drill Menu redesign)
 // ---------------------------------------------------------------------------
-// On-demand launcher surface shown when /drill is opened with no `?start=`
-// intent. A thin today-status strip up top, then a row of launchers:
-//   - Quick drill   → onStartQuick (5-item mixed session)
-//   - Dictation     → onStartDictation (dictation-only run)
-//   - Free writing  → the existing standalone flow at /drill/free-writing
-// Presentational: the page owns difficulty + start intent and passes callbacks.
+// Shown when /drill is opened with no `?start=` intent: the page title, a thin
+// "today's quick drill" status strip, then the drill-type cards (quick drill is
+// the featured dark "today's drill" card), then the "work on these" weak-spot
+// list. The difficulty / CEFR level is set inside the running session
+// (DrillMeta), not on this menu. Presentational: the page owns the start intent
+// and passes the launch callbacks.
 // ---------------------------------------------------------------------------
 
 import Link from 'next/link';
 import type { InsightsErrorTheme } from '@language-drill/api-client';
-import { CefrLevel } from '@language-drill/shared';
+import { cn } from '../../../../lib/cn';
 import { DrillTodayStatus } from './drill-today-status';
-import { DrillMeta } from './drill-meta';
 import { WorkOnThese } from '../../_components/work-on-these';
 
 type Props = {
-  difficulty: CefrLevel;
-  baseline: CefrLevel | null;
-  onDifficultyChange: (level: CefrLevel) => void;
   onStartQuick: () => void;
   onStartDictation: () => void;
   themes: InsightsErrorTheme[];
   onStartTargeted: (grammarPointKey: string) => void;
 };
 
+// Card frame + lift-on-hover (and active: for touch). Border/fill split out per
+// variant so the featured (ink) card and the normal (paper) cards don't fight
+// over a shared hover:border rule.
+const CARD_BASE =
+  'group flex items-center justify-between gap-s-7 rounded-r-lg border p-s-6 text-left no-underline shadow-1 transition-all hover:-translate-y-px hover:shadow-2 active:shadow-2 mobile:gap-s-4 mobile:p-s-5';
+const CARD_NORMAL =
+  'border-rule bg-card hover:border-rule-strong active:border-rule-strong';
+const CARD_FEAT =
+  'border-ink bg-ink hover:border-ink-hover active:border-ink-hover';
+
+// Display title via utilities (not .t-display-m) so the featured card can use
+// text-paper — the .t-display-* classes hard-set their colour and win over
+// utilities (they're unlayered).
+const CARD_TITLE =
+  'block font-display text-[28px] font-medium leading-[1.2] tracking-[-0.4px] mobile:text-[22px]';
+
+function CardBody({
+  featured = false,
+  tag,
+  title,
+  sub,
+}: {
+  featured?: boolean;
+  tag?: string;
+  title: string;
+  sub: string;
+}) {
+  return (
+    <>
+      <span className="min-w-0">
+        {tag && (
+          <span className="mb-s-2 block text-[11px] font-semibold uppercase tracking-[0.12em] text-hilite">
+            {tag}
+          </span>
+        )}
+        <span className={cn(CARD_TITLE, featured ? 'text-paper' : 'text-ink')}>
+          {title}
+        </span>
+        <span
+          className={cn(
+            'mt-s-1 block text-[17px] leading-[1.45]',
+            // On the ink card, --rule-strong reads as the muted body tone.
+            featured ? 'text-rule-strong' : 'text-ink-soft',
+          )}
+        >
+          {sub}
+        </span>
+      </span>
+      <span
+        className={cn(
+          't-mono flex-shrink-0 text-[20px] mobile:text-[16px]',
+          // Light terracotta reads as the accent on the dark card; normal cards
+          // use the standard --accent-2.
+          featured ? 'text-[#f0a98c]' : 'text-accent-2',
+        )}
+      >
+        start →
+      </span>
+    </>
+  );
+}
+
 export function DrillHub({
-  difficulty,
-  baseline,
-  onDifficultyChange,
   onStartQuick,
   onStartDictation,
   themes,
@@ -39,98 +94,72 @@ export function DrillHub({
 }: Props) {
   return (
     <div className="p-s-6">
-      <h1 className="t-display-l mb-s-6">drill</h1>
+      <h1 className="t-display-xl">drill</h1>
 
-      <DrillTodayStatus />
-
-      <div className="mb-s-6">
-        <DrillMeta
-          level={difficulty}
-          baseline={baseline}
-          onLevelChange={onDifficultyChange}
-        />
+      <div className="mt-s-6">
+        <DrillTodayStatus />
       </div>
 
-      {themes.length > 0 && (
-        <div className="mb-s-6">
-          <WorkOnThese themes={themes} onSelect={onStartTargeted} />
-          <Link
-            href="/progress"
-            className="t-mono mt-s-3 inline-block text-[12px] text-ink-soft hover:text-accent"
-          >
-            see your full map →
-          </Link>
-        </div>
-      )}
-
-      <div className="flex flex-col gap-s-4">
+      {/* Drill-type cards */}
+      <div className="mt-s-7 flex flex-col gap-s-4 mobile:mt-s-6">
         <button
           type="button"
           onClick={onStartQuick}
-          className="flex items-center justify-between gap-s-4 rounded-r-lg border border-rule bg-card p-s-5 text-left hover:border-accent"
+          className={cn(CARD_BASE, CARD_FEAT)}
         >
-          <span className="min-w-0">
-            <span className="t-display-s block">quick drill</span>
-            <span className="t-body block text-ink-2">
-              a 5-item mix — cloze, sentence building, translation, vocab.
-            </span>
-          </span>
-          <span className="t-mono flex-shrink-0 text-accent-2">start →</span>
+          <CardBody
+            featured
+            tag="today's drill"
+            title="quick drill"
+            sub="a 5-item mix — cloze, sentence building, translation, vocab."
+          />
         </button>
 
         <button
           type="button"
           onClick={onStartDictation}
-          className="flex items-center justify-between gap-s-4 rounded-r-lg border border-rule bg-card p-s-5 text-left hover:border-accent"
+          className={cn(CARD_BASE, CARD_NORMAL)}
         >
-          <span className="min-w-0">
-            <span className="t-display-s block">dictation</span>
-            <span className="t-body block text-ink-2">
-              listen and transcribe — a short audio-only run.
-            </span>
-          </span>
-          <span className="t-mono flex-shrink-0 text-accent-2">start →</span>
+          <CardBody
+            title="dictation"
+            sub="listen and transcribe — a short audio-only run."
+          />
         </button>
 
-        <Link
-          href="/drill/free-writing"
-          className="flex items-center justify-between gap-s-4 rounded-r-lg border border-rule bg-card p-s-5 no-underline hover:border-accent"
-        >
-          <span className="min-w-0">
-            <span className="t-display-s block">free writing</span>
-            <span className="t-body block text-ink-2">
-              write a paragraph to a prompt, then get IELTS-style feedback.
-            </span>
-          </span>
-          <span className="t-mono flex-shrink-0 text-accent-2">start →</span>
+        <Link href="/drill/free-writing" className={cn(CARD_BASE, CARD_NORMAL)}>
+          <CardBody
+            title="free writing"
+            sub="write a paragraph to a prompt, then get IELTS-style feedback."
+          />
         </Link>
 
-        <Link
-          href="/drill/conjugation"
-          className="flex items-center justify-between gap-s-4 rounded-r-lg border border-rule bg-card p-s-5 no-underline hover:border-accent"
-        >
-          <span className="min-w-0">
-            <span className="t-display-s block">conjugation</span>
-            <span className="t-body block text-ink-2">
-              drill verb forms one at a time — a quick conjugation warm-up.
-            </span>
-          </span>
-          <span className="t-mono flex-shrink-0 text-accent-2">start →</span>
+        <Link href="/drill/conjugation" className={cn(CARD_BASE, CARD_NORMAL)}>
+          <CardBody
+            title="conjugation"
+            sub="drill verb forms one at a time — a quick conjugation warm-up."
+          />
         </Link>
 
-        <Link
-          href="/fluency"
-          className="flex items-center justify-between gap-s-4 rounded-r-lg border border-rule bg-card p-s-5 no-underline hover:border-accent"
-        >
-          <span className="min-w-0">
-            <span className="t-display-s block">fluency</span>
-            <span className="t-body block text-ink-2">
-              timed drills on what you already know.
-            </span>
-          </span>
-          <span className="t-mono flex-shrink-0 text-accent-2">start →</span>
+        <Link href="/fluency" className={cn(CARD_BASE, CARD_NORMAL)}>
+          <CardBody
+            title="fluency"
+            sub="timed drills on what you already know."
+          />
         </Link>
       </div>
+
+      {/* Work on these */}
+      {themes.length > 0 && (
+        <div className="mt-s-8 mobile:mt-s-7">
+          <WorkOnThese themes={themes} onSelect={onStartTargeted} />
+          <Link
+            href="/progress"
+            className="t-mono mt-s-3 inline-block text-[13px] text-ink-soft hover:text-ink"
+          >
+            see your full map →
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
