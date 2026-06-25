@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '@clerk/nextjs/server';
 import { DrillLanding } from './_landing/drill-landing';
 import { DrillLandingMobile } from './_landing/drill-landing-mobile';
+import { LandingDarkCanvas } from './_landing/landing-dark-canvas';
 
 export const metadata: Metadata = {
   title: 'drill — read, save, produce',
@@ -20,6 +21,7 @@ export default async function LandingPage() {
   // either viewport without a hydration flash.
   return (
     <>
+      <LandingDarkCanvas />
       <div className="landing-desktop">
         <DrillLanding />
       </div>
