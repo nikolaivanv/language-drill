@@ -1112,3 +1112,22 @@
 .gloss:focus > .gloss-tooltip {
   opacity: 1;
 }
+
+/* Hover/focus tooltip trigger that reuses .gloss-tooltip styling WITHOUT the
+   .gloss dotted underline — for badges/pills that explain themselves on hover
+   (e.g. the curriculum-map "⚠ N×" recurring-slip badge). The trigger sits
+   inside the row button, so it isn't separately focusable; keyboard/touch users
+   get the same wording in the point-detail sheet. */
+.tip-trigger {
+  position: relative;
+  cursor: help;
+}
+.tip-trigger:hover > .gloss-tooltip,
+.tip-trigger:focus-within > .gloss-tooltip {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gloss-tooltip {
+    transition: none;
+  }
+}

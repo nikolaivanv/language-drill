@@ -194,6 +194,29 @@ describe('MapTab', () => {
     expect(screen.getByText(/⚠.*3×/)).toBeDefined();
   });
 
+  it('explains the ⚠ N× badge with an accessible label and a hover tooltip', () => {
+    render(
+      <MapTab
+        data={buildFixture()}
+        isLoading={false}
+        error={null}
+        onRetry={noop}
+        errorThemes={[]}
+      />,
+    );
+    // The badge carries a self-describing accessible name (read by AT instead
+    // of the bare "⚠ 3×").
+    expect(
+      screen.getByLabelText(
+        /still generating errors — 3 recent slips in the last 30 days/i,
+      ),
+    ).toBeInTheDocument();
+    // ...and a (hover-revealed) tooltip bubble with the same wording.
+    expect(
+      screen.getByText('3 recent slips in the last 30 days'),
+    ).toBeInTheDocument();
+  });
+
   it('renders the "builds on X" cue for a not-started prereq-unmet point', () => {
     render(
       <MapTab
