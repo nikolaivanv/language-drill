@@ -4,6 +4,11 @@
    in lib/responsive.ts — keep the 760px value in sync. */
 @custom-variant mobile (@media (max-width: 760px));
 
+/* Enables `dark:` utilities, keyed off the `.dark` class on <html> (set by the
+   theme system). Lets a few components opt into dark-only treatment beyond the
+   automatic token flip (e.g. the featured drill card going terracotta). */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   /* ─── Colors ─── */
   --color-paper: #faf7f1;
@@ -69,6 +74,78 @@
 
   /* ─── Layout ─── */
   --width-max-content: 1100px;
+}
+
+/* Keyboard focus-ring colour. A faint ink tint on light; a faint cream tint on
+   dark (the ink ring would be invisible on the dark canvas). Referenced via
+   `shadow-[0_0_0_3px_var(--ring-app)]` across the shell + form controls. */
+:root {
+  --ring-app: rgba(26, 22, 18, 0.08);
+}
+
+/* ─── Dark theme ──────────────────────────────────────────────────────────
+   The whole UI is token-driven, so the dark theme is just an override of the
+   @theme `--color-*` tokens (plus shadows) scoped to `html.dark`. The class is
+   set before first paint by THEME_INIT_SCRIPT (app/layout.tsx) and toggled at
+   runtime by the ThemeProvider via the account-menu Appearance control.
+   Palette: the design prototype's "Drill Floor" dark palette. Unlayered + the
+   `html.dark` specificity (0,1,1 > the @theme `:root` 0,1,0) makes it win. */
+html.dark {
+  --color-paper: #16130f;
+  --color-paper-2: #26211a;
+  --color-paper-3: #352e25;
+  --color-card: #26211a;
+
+  --color-ink: #f6efe4;
+  --color-ink-2: #ddd3c3;
+  --color-ink-soft: #c9bfae;
+  --color-ink-mute: #a89d8b;
+  /* Hover for ink-filled (cream in dark) surfaces — a slight darken of cream. */
+  --color-ink-hover: #e4dac8;
+
+  --color-rule: #3b332a;
+  --color-rule-strong: #52473b;
+
+  --color-accent: #c96442;
+  /* Secondary accent lightens (rather than darkens) for legibility on dark. */
+  --color-accent-2: #e89072;
+  --color-accent-soft: #39261d;
+
+  --color-hilite: #f4d35e;
+  --color-hilite-soft: #3a3320;
+
+  --color-ok: #86b97c;
+  --color-ok-soft: #26301f;
+
+  /* Light shadows vanish on a dark canvas — deepen them. */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-2: 0 2px 6px rgba(0, 0, 0, 0.35), 0 14px 40px rgba(0, 0, 0, 0.5);
+  --shadow-3: 0 4px 12px rgba(0, 0, 0, 0.4), 0 24px 60px rgba(0, 0, 0, 0.55);
+
+  --ring-app: rgba(246, 239, 228, 0.22);
+
+  color-scheme: dark;
+  background-color: #16130f;
+}
+/* Match the document canvas (overscroll rubber-band) to the dark paper. */
+html.dark body {
+  background-color: #16130f;
+}
+
+/* The marketing landing (.df, "Drill Floor") is a fixed dark design that aliases
+   a handful of --color-* tokens (see app/_landing/landing.css). Pin those back
+   to their light values inside .df so the app dark theme can never bleed into
+   the landing — it stays pixel-identical regardless of the user's theme. */
+html.dark .df {
+  --color-accent: #c96442;
+  --color-accent-2: #b15535;
+  --color-accent-soft: #f7e2d3;
+  --color-ok: #5b8a5a;
+  --color-paper: #faf7f1;
+  --color-ink: #1a1612;
+  --color-rule: #d8d0bf;
+  --color-hilite-soft: #fbeeb6;
+  --color-card: #ffffff;
 }
 
 @layer base {
@@ -520,7 +597,7 @@ button:hover .lk-arr {
 }
 .theory-topic-filter:focus {
   border-color: var(--color-ink);
-  box-shadow: 0 0 0 3px rgba(26, 22, 18, 0.08);
+  box-shadow: 0 0 0 3px var(--ring-app);
 }
 .theory-otherbtn-hit {
   background: transparent;
@@ -901,7 +978,7 @@ button:hover .lk-arr {
 }
 .theory-switcher-search:focus-within {
   border-color: var(--color-ink);
-  box-shadow: 0 0 0 3px rgba(26, 22, 18, 0.08);
+  box-shadow: 0 0 0 3px var(--ring-app);
 }
 .theory-switcher-search input {
   flex: 1;
