@@ -6,14 +6,14 @@
 // Renders the eyebrow / headline / body copy from R3.x and:
 //   1. (Only when more than one language was selected in Step 1) a primary-
 //      language radiogroup of `Choice` tiles in `mode="radio"`, each tile
-//      showing a `Flagdot` plus the uppercase language code. Arrow keys move
-//      focus among the tiles (WAI-ARIA roving-focus pattern); selection is
-//      handled by `Choice`'s own click/Enter/Space behaviour.
+//      showing a `Flagdot` plus the native language name and a "primary" badge
+//      on the selected tile. Arrow keys move focus among the tiles (WAI-ARIA
+//      roving-focus pattern); selection is handled by `Choice`'s own
+//      click/Enter/Space behaviour.
 //   2. A vertical stack of 6 CEFR cards (`Choice` `mode="radio"`) showing the
 //      level code, lowercase name, and short description. Copy is verbatim
 //      from the prototype `docs/design-archive/design_handoff_language_drill/prototypes/web/hifi/
 //      onboarding.jsx` (lines 138–145), which R3.4 cites as canonical.
-//   3. The `<PlacementTestCallout />` disabled-callout below the cards.
 //
 // Single-language fast-path (R3.1): when exactly one language is selected,
 // the primary-language row is suppressed AND the component auto-dispatches
