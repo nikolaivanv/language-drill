@@ -60,7 +60,19 @@ export function PrivacyDataSection() {
       </Row>
       <Row label="delete your account" hint="permanent erasure of your account and all data." align="top">
         <p className="text-[15px] leading-relaxed text-ink-soft m-0">
-          Go to <strong className="text-ink-2 font-semibold">account → Security → Delete account</strong> above to permanently remove your data.
+          Go to <strong className="text-ink-2 font-semibold">account → Security → Delete account</strong>{' '}
+          <button
+            type="button"
+            onClick={() =>
+              document
+                .getElementById('set-account')
+                ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }
+            className="text-ink-2 font-semibold underline underline-offset-[3px] decoration-rule-strong transition-colors duration-150 hover:text-ink hover:decoration-ink-mute focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_var(--ring-app)] rounded-sm"
+          >
+            above
+          </button>{' '}
+          to permanently remove your data.
         </p>
       </Row>
       <Row label="policies" hint="how we handle your data." align="top">
