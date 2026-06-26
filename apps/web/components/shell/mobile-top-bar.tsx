@@ -76,16 +76,16 @@ function AvatarMenu() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-[calc(100%+6px)] z-50 w-[264px] rounded-[14px] border border-rule bg-card p-s-2 shadow-2"
+          className="absolute right-0 top-[calc(100%+6px)] z-50 w-[228px] rounded-md border border-rule bg-card py-1 shadow-2"
         >
-          <ThemeToggle />
-          <div className="my-[6px] h-px bg-rule" />
+          <ThemeToggle className="px-s-2 pt-s-1 pb-s-2" />
+          <div className="my-1 mx-s-2 h-px bg-rule" />
           <Link
             href="/settings"
             role="menuitem"
             onClick={() => setOpen(false)}
             className={cn(
-              'block px-[12px] py-[11px] rounded-[9px] text-[15px] font-medium text-ink transition-colors duration-150 hover:bg-paper-2',
+              'block px-s-3 py-s-2 text-[13px] text-ink transition-colors duration-150 hover:bg-paper-2',
               focusRing,
             )}
           >
@@ -96,7 +96,7 @@ function AvatarMenu() {
             role="menuitem"
             onClick={() => signOut({ redirectUrl: '/sign-in' })}
             className={cn(
-              'block w-full px-[12px] py-[11px] rounded-[9px] text-left text-[15px] font-medium text-ink transition-colors duration-150 hover:bg-paper-2',
+              'block w-full px-s-3 py-s-2 text-left text-[13px] text-ink transition-colors duration-150 hover:bg-paper-2',
               focusRing,
             )}
           >
