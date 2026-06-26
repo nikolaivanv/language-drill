@@ -133,18 +133,14 @@
   .ckb-btn { width: 100%; min-height: 48px; }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  /* `will-change` keeps a stable compositing layer for the duration of the
-     entrance animation, and the keyframes end on an explicit `translateY(0)`
-     (not `none`). Ending on `none` tore the layer down on a position:fixed
-     subtree, leaving a stale full-width paint band pinned to the viewport
-     bottom that only cleared on the next repaint (resize). */
-  .ckb-card {
-    animation: ckbIn 0.32s cubic-bezier(0.2, 0.7, 0.3, 1);
-    will-change: transform;
-  }
-}
-@keyframes ckbIn {
-  from { transform: translateY(14px); }
-  to { transform: translateY(0); }
-}
+/* No transform entrance animation. The card sits in a position:fixed container
+   flush with the viewport bottom, and its box-shadow extends ~68px below it
+   (only ~20px of clearance). A transform animation (or will-change:transform)
+   promotes the card to its own GPU layer; with the shadow clipped at the
+   viewport edge, Chrome leaves the layer's stale backing-store pixels as a
+   paint band pinned to the bottom of the screen — most visible in fullscreen,
+   where the compositor re-tiles the bottom edge — until the next repaint
+   (e.g. a window resize) clears it. Painting the card in the normal document
+   layer (no compositing trigger) avoids the stale backing entirely.
+   A compositing-safe entrance animation could be re-added later by animating an
+   inner content wrapper that carries no shadow and isn't at the viewport edge. */
