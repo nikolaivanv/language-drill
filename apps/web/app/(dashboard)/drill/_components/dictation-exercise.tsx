@@ -132,7 +132,6 @@ export function DictationExercise({
           disabled={isLocked}
           onChange={(e) => setAnswer(e.target.value)}
           onKeyDown={submitOnModEnter(handleSubmit)}
-          placeholder="escribe la frase tal y como la oyes…"
           // The dictation field is the page's writing surface — set it in the
           // display serif at a larger size (the prototype's transcription look).
           style={{ fontFamily: 'var(--font-display)', fontSize: 22, lineHeight: 1.5 }}

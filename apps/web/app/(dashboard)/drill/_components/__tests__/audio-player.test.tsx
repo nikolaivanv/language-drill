@@ -106,4 +106,33 @@ describe('AudioPlayer', () => {
     fireEvent.keyDown(slider, { key: 'ArrowRight' });
     expect(slider).toHaveAttribute('aria-valuenow', '0');
   });
+
+  // Regression: the seek math used the durationSec PROP while timeupdate read the
+  // real audio.duration. When they disagreed, the playhead jumped and arrow keys
+  // were asymmetric. Both must now follow the loaded audio's true duration.
+  it('adopts the real audio duration once metadata loads (prop is only an estimate)', () => {
+    const durSpy = vi
+      .spyOn(HTMLMediaElement.prototype, 'duration', 'get')
+      .mockReturnValue(20);
+    try {
+      const { container } = render(
+        <AudioPlayer src="blob:x" waveform={[0.5, 0.8]} durationSec={6} />,
+      );
+      const audio = container.querySelector('audio')!;
+      const slider = screen.getByRole('slider', { name: /seek/i });
+      // Before metadata: falls back to the 6s estimate.
+      expect(slider).toHaveAttribute('aria-valuemax', '6');
+      fireEvent.loadedMetadata(audio);
+      // After metadata: the bar reflects the real 20s clip.
+      expect(slider).toHaveAttribute('aria-valuemax', '20');
+      stubWidth(slider, 0, 100);
+      fireEvent.pointerDown(slider, { clientX: 50, pointerId: 1 });
+      // 50% of the REAL 20s clip → 10s (not 3s off the stale 6s estimate).
+      expect(slider).toHaveAttribute('aria-valuenow', '10');
+      // And the seek wrote that real time onto the element.
+      expect(audio.currentTime).toBeCloseTo(10, 1);
+    } finally {
+      durSpy.mockRestore();
+    }
+  });
 });
