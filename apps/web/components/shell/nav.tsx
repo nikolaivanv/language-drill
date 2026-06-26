@@ -15,7 +15,7 @@ export function Nav({ profiles }: NavProps) {
     <nav
       aria-label="primary"
       data-testid="desktop-rail"
-      className="w-[220px] flex-shrink-0 flex flex-col gap-1 min-h-0 overflow-y-auto border-r border-rule bg-paper px-s-4 py-[22px]"
+      className="w-[300px] flex-shrink-0 flex flex-col gap-1 min-h-0 overflow-y-auto border-r border-rule bg-paper px-[22px] pt-[30px] pb-[22px]"
     >
       <Brand />
       <LanguageSwitcher profiles={profiles} />
