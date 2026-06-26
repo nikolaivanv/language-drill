@@ -179,7 +179,7 @@ export function FwComposer({ content, language, value, onChange, examMode, submi
                   ai-graded
                 </span>
                 <button
-                  className="btn accent"
+                  className="btn primary"
                   disabled={!canGrade}
                   onClick={onGrade}
                 >

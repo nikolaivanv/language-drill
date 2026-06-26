@@ -186,7 +186,7 @@ export function FwBrief({ content, examMode, onToggleExam, onBegin }: FwBriefPro
 
           {/* Action row */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 22 }}>
-            <button className="btn accent lg" onClick={onBegin}>
+            <button className="btn primary lg" onClick={onBegin}>
               begin writing →
             </button>
             <span className="t-small" style={{ marginLeft: 'auto' }}>

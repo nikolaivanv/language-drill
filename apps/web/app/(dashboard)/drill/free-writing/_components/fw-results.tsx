@@ -111,20 +111,7 @@ export function FwResults({ evaluation, onCorrections, onCompare, onAnother }: F
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
               {WHAT_THIS_FEEDS.map((label) => (
-                <span
-                  key={label}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    padding: '3px 10px',
-                    borderRadius: 'var(--radius-pill)',
-                    border: '1px solid var(--color-rule)',
-                    background: 'var(--color-card)',
-                    color: 'var(--color-ink-soft)',
-                    fontSize: 11,
-                    fontWeight: 500,
-                  }}
-                >
+                <span key={label} className="chip">
                   {label}
                 </span>
               ))}
