@@ -42,7 +42,11 @@ export function DailyLoadControl({ current, onSelect, disabled = false }: DailyL
               className={cn(
                 'min-w-[88px] justify-center rounded-pill px-s-5 py-[10px] text-[15px] font-semibold transition-all duration-150',
                 selected
-                  ? 'bg-hilite text-ink shadow-1'
+                  // The selected pill sits on the theme-invariant yellow
+                  // (--color-hilite), so its label must stay dark in both
+                  // themes — `text-ink` flips to cream in dark and would wash
+                  // out on yellow. Pin the prototype's near-black ink.
+                  ? 'bg-hilite text-[#1a1612] shadow-1'
                   : 'bg-transparent text-ink-soft hover:text-ink'
               )}
             >
