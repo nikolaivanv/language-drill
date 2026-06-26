@@ -297,7 +297,7 @@ function Burndown({
 }) {
   return (
     <div className="space-y-s-2">
-      <div className="h-[3px] overflow-hidden rounded-r-pill bg-paper-3">
+      <div className="h-[3px] overflow-hidden rounded-pill bg-paper-3">
         <div
           className="h-full bg-accent transition-[width] duration-300"
           style={{ width: `${Math.round(progress * 100)}%` }}

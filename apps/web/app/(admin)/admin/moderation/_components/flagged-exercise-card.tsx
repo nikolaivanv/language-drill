@@ -14,7 +14,7 @@ export function FlaggedExerciseCard({
   demoted: boolean;
 }) {
   return (
-    <div className="border border-rule rounded-r-sm p-4 flex flex-col gap-3 bg-paper">
+    <div className="border border-rule rounded-sm p-4 flex flex-col gap-3 bg-paper">
       <div className="flex items-center gap-2 text-[13px] text-ink-soft flex-wrap">
         <span className="font-medium text-ink">{item.type}</span>
         <span>· {item.language}</span>

@@ -39,9 +39,9 @@ const variantClasses: Record<ButtonVariant, string> = {
 // Desktop sizes are unchanged (the floors sit below the natural md/lg heights
 // and only raise the sm/icon cases on touch).
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: 'px-s-3 py-[6px] text-[12px] rounded-r-sm min-h-[32px] mobile:min-h-[44px] mobile:min-w-[44px]',
-  md: 'px-[18px] py-[10px] text-[13px] rounded-r-md mobile:min-h-[44px] mobile:min-w-[44px]',
-  lg: 'px-s-6 py-[14px] text-[15px] rounded-r-md mobile:min-h-[44px] mobile:min-w-[44px]',
+  sm: 'px-s-3 py-[6px] text-[12px] rounded-sm min-h-[32px] mobile:min-h-[44px] mobile:min-w-[44px]',
+  md: 'px-[18px] py-[10px] text-[13px] rounded-md mobile:min-h-[44px] mobile:min-w-[44px]',
+  lg: 'px-s-6 py-[14px] text-[15px] rounded-md mobile:min-h-[44px] mobile:min-w-[44px]',
 };
 
 const disabledClasses =

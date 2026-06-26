@@ -75,7 +75,7 @@ function AvatarMenu() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-[calc(100%+6px)] z-50 w-[160px] rounded-r-md border border-rule bg-card py-1 shadow-2"
+          className="absolute right-0 top-[calc(100%+6px)] z-50 w-[160px] rounded-md border border-rule bg-card py-1 shadow-2"
         >
           <Link
             href="/settings"
@@ -129,7 +129,7 @@ export function MobileTopBar({ profiles }: MobileTopBarProps) {
       <Link
         href="/home"
         aria-label="drill — home"
-        className={cn('flex items-center gap-s-2 rounded-r-sm', focusRing)}
+        className={cn('flex items-center gap-s-2 rounded-sm', focusRing)}
       >
         <BrandMark size={28} />
         <span className="font-display text-[18px] font-semibold tracking-[-0.4px] text-ink">
@@ -145,7 +145,7 @@ export function MobileTopBar({ profiles }: MobileTopBarProps) {
           aria-haspopup={single ? undefined : 'dialog'}
           aria-expanded={single ? undefined : sheetOpen}
           className={cn(
-            'flex items-center gap-s-2 rounded-r-pill border border-rule py-[6px] pl-[6px] pr-s-3 transition-colors duration-150 enabled:hover:bg-paper-2 disabled:cursor-default',
+            'flex items-center gap-s-2 rounded-pill border border-rule py-[6px] pl-[6px] pr-s-3 transition-colors duration-150 enabled:hover:bg-paper-2 disabled:cursor-default',
             focusRing,
           )}
         >

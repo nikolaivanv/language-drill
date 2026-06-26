@@ -116,7 +116,7 @@ function QueueView({ data }: { data: HubOverview }) {
         <div className="t-small font-medium">item-type mix</div>
         {mixTotal > 0 ? (
           <>
-            <div className="mt-s-2 mb-s-3 flex h-[10px] overflow-hidden rounded-r-pill bg-paper-3">
+            <div className="mt-s-2 mb-s-3 flex h-[10px] overflow-hidden rounded-pill bg-paper-3">
               {mixEntries.map(([k, v]) => (
                 <div
                   key={k}

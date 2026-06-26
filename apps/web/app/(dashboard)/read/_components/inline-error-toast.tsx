@@ -27,7 +27,7 @@ export function InlineErrorToast({ kind, onDismiss }: Props) {
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-[24px] right-[24px] z-50 flex items-center gap-[10px] rounded-r-md border border-accent bg-accent px-[14px] py-[10px] text-white shadow-3"
+      className="fixed bottom-[24px] right-[24px] z-50 flex items-center gap-[10px] rounded-md border border-accent bg-accent px-[14px] py-[10px] text-white shadow-3"
     >
       <span className="t-small">{COPY[kind]}</span>
       <button

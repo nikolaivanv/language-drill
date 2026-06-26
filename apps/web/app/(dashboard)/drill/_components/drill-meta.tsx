@@ -44,7 +44,7 @@ export function DrillMeta({
         <span className="t-micro" id="drill-level-label">
           drill level
         </span>
-        <span className="inline-flex items-center gap-[6px] rounded-r-pill border border-rule bg-card px-[10px] py-[4px] transition-colors hover:border-ink-soft">
+        <span className="inline-flex items-center gap-[6px] rounded-pill border border-rule bg-card px-[10px] py-[4px] transition-colors hover:border-ink-soft">
           <select
             aria-labelledby="drill-level-label"
             value={level}

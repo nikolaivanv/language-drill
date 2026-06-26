@@ -70,7 +70,7 @@ function AddLanguage({
                 onAdd(lang);
                 setOpen(false);
               }}
-              className="flex items-center gap-s-2 px-s-3 py-s-2 rounded-r-sm border border-rule hover:border-ink transition-all"
+              className="flex items-center gap-s-2 px-s-3 py-s-2 rounded-sm border border-rule hover:border-ink transition-all"
             >
               <Flagdot language={lang} />
               <span className="t-body">{LANGUAGE_NATIVE_NAMES[lang]}</span>
@@ -153,7 +153,7 @@ export function LanguagesSection() {
         {rows.map((r) => (
           <div
             key={r.language}
-            className="rounded-r-md border border-rule p-s-4 flex flex-col gap-s-3"
+            className="rounded-md border border-rule p-s-4 flex flex-col gap-s-3"
           >
             <div className="flex items-center gap-s-3">
               <Flagdot language={r.language} />
@@ -200,7 +200,7 @@ export function LanguagesSection() {
                     aria-label={`set ${r.language} to ${lvl}`}
                     onClick={() => setLevel(r.language, lvl)}
                     className={
-                      't-mono text-[12px] px-s-3 py-[8px] rounded-r-sm border transition-all duration-150 ' +
+                      't-mono text-[12px] px-s-3 py-[8px] rounded-sm border transition-all duration-150 ' +
                       (selected
                         ? 'bg-ink text-paper border-ink'
                         : 'bg-card text-ink-soft border-rule hover:border-ink')

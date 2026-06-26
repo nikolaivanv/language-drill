@@ -36,7 +36,7 @@ export function IdeaCards({ ideas, selectedPrompt, onPick, variant, disabled }: 
               disabled={disabled}
               onClick={() => onPick(idea)}
               className={cn(
-                'inline-flex items-center gap-[4px] rounded-r-pill border px-[10px] py-[4px] text-[12px] transition-colors',
+                'inline-flex items-center gap-[4px] rounded-pill border px-[10px] py-[4px] text-[12px] transition-colors',
                 isSelected
                   ? 'border-ink bg-ink text-paper'
                   : 'border-rule bg-transparent text-ink hover:bg-paper-2',
@@ -65,7 +65,7 @@ export function IdeaCards({ ideas, selectedPrompt, onPick, variant, disabled }: 
             disabled={disabled}
             onClick={() => onPick(idea)}
             className={cn(
-              'p-s-4 rounded-r-md border text-left transition-colors',
+              'p-s-4 rounded-md border text-left transition-colors',
               isSelected
                 ? 'border-ink bg-ink text-paper'
                 : 'border-rule bg-card hover:bg-paper-2',

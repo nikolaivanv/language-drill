@@ -63,7 +63,7 @@ export function PasteView({
       {errorBody !== null && (
         <div
           role="alert"
-          className="mb-[16px] rounded-r-md border border-rule bg-paper-2 p-s-4"
+          className="mb-[16px] rounded-md border border-rule bg-paper-2 p-s-4"
         >
           <div className="t-display-s">couldn&apos;t annotate this</div>
           <p className="t-small text-ink-soft mt-[6px]">{errorBody}</p>
@@ -108,7 +108,7 @@ export function PasteView({
         style={{ fontFamily: 'var(--font-display)' }}
       />
 
-      <div className="mt-[16px] rounded-r-md bg-paper-2 p-s-4 mb-[16px]">
+      <div className="mt-[16px] rounded-md bg-paper-2 p-s-4 mb-[16px]">
         <div className="t-micro mb-[4px]">HEADS UP</div>
         <p className="t-small text-ink-soft">
           annotation runs on your text only — nothing is shared. words you save

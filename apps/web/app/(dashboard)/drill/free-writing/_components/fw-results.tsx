@@ -117,7 +117,7 @@ export function FwResults({ evaluation, onCorrections, onCompare, onAnother }: F
                     display: 'inline-flex',
                     alignItems: 'center',
                     padding: '3px 10px',
-                    borderRadius: 'var(--radius-r-pill)',
+                    borderRadius: 'var(--radius-pill)',
                     border: '1px solid var(--color-rule)',
                     background: 'var(--color-card)',
                     color: 'var(--color-ink-soft)',

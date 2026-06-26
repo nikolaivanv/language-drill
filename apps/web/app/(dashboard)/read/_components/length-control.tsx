@@ -39,7 +39,7 @@ export function LengthControl({ value, onChange, disabled }: Props) {
               if (!disabled) onChange(length);
             }}
             className={cn(
-              'flex flex-col items-center justify-center gap-[4px] rounded-r-md border p-[12px] transition-colors',
+              'flex flex-col items-center justify-center gap-[4px] rounded-md border p-[12px] transition-colors',
               isSelected
                 ? 'border-ink bg-ink text-paper'
                 : 'border-rule bg-card text-ink hover:bg-paper-2',

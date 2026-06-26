@@ -134,7 +134,7 @@ export function MeaningItem({ item, isLocked, isSubmitting, onSubmit }: MeaningI
               </div>
             )}
             {hintLevel >= 3 && exampleSentence && (
-              <div className="mt-s-1 p-s-3 rounded-r-md bg-paper-2">
+              <div className="mt-s-1 p-s-3 rounded-md bg-paper-2">
                 <p className="t-micro text-ink-soft mb-s-1">blanked example</p>
                 <p className="t-body">{maskSurface(exampleSentence, occurrence!.surface)}</p>
               </div>

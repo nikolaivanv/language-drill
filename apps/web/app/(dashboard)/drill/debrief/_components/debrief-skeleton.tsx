@@ -24,9 +24,9 @@ export function DebriefSkeleton() {
 
       {/* Three placeholder cards */}
       <div className="mt-s-6 flex flex-col gap-s-3">
-        <div className="h-20 w-full rounded-r-md bg-paper-2" />
-        <div className="h-20 w-full rounded-r-md bg-paper-2" />
-        <div className="h-20 w-full rounded-r-md bg-paper-2" />
+        <div className="h-20 w-full rounded-md bg-paper-2" />
+        <div className="h-20 w-full rounded-md bg-paper-2" />
+        <div className="h-20 w-full rounded-md bg-paper-2" />
       </div>
     </div>
   );

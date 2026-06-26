@@ -72,7 +72,7 @@ export function BottomSheet({
       >
         {/* Drag handle (decorative — close affordances are the scrim/button/Esc). */}
         <div className="flex flex-none justify-center pt-[10px] pb-[6px]" aria-hidden="true">
-          <span className="h-[4px] w-[36px] rounded-r-pill bg-rule-strong" />
+          <span className="h-[4px] w-[36px] rounded-pill bg-rule-strong" />
         </div>
 
         <header className="flex flex-none items-start justify-between gap-s-3 px-[18px] pb-s-3">

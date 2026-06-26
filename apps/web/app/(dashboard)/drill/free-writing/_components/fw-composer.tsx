@@ -109,7 +109,7 @@ export function FwComposer({ content, language, value, onChange, examMode, submi
               padding: '12px 16px',
               background: 'var(--color-paper-2)',
               border: '1px solid var(--color-rule)',
-              borderRadius: 'var(--radius-r-md)',
+              borderRadius: 'var(--radius-md)',
               marginBottom: 16,
             }}
           >

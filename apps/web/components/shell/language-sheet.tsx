@@ -56,7 +56,7 @@ export function LanguageSheet({ open, onClose, profiles }: LanguageSheetProps) {
                 aria-selected={selected}
                 onClick={() => handleSelect(p.language)}
                 className={cn(
-                  'flex min-h-[48px] w-full items-center gap-s-3 rounded-r-md px-s-3 transition-colors duration-150',
+                  'flex min-h-[48px] w-full items-center gap-s-3 rounded-md px-s-3 transition-colors duration-150',
                   selected ? 'bg-paper-2' : 'hover:bg-paper-2',
                 )}
               >

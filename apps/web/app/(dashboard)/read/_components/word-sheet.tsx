@@ -143,7 +143,7 @@ export function WordSheet({
         >
           {/* Drag handle — now a real grabber: drag up to expand, down to
            *  collapse/dismiss. */}
-          <Drawer.Handle className="!mx-auto !my-[10px] !h-[4px] !w-[36px] shrink-0 !rounded-r-pill !bg-rule-strong" />
+          <Drawer.Handle className="!mx-auto !my-[10px] !h-[4px] !w-[36px] shrink-0 !rounded-pill !bg-rule-strong" />
 
           <header className="flex flex-none items-start justify-between gap-s-3 px-[18px] pb-s-3">
             <Drawer.Title className="t-micro min-w-0">{sheetTitle(deepCard)}</Drawer.Title>

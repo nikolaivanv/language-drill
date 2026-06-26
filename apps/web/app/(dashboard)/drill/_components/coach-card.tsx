@@ -22,7 +22,7 @@ export function CoachCard({ message, defaultExpanded = true }: CoachCardProps) {
         aria-expanded={expanded}
         className="flex w-full items-center gap-s-3 text-left"
       >
-        <span className="flex h-8 w-8 flex-none items-center justify-center rounded-r-pill bg-ink">
+        <span className="flex h-8 w-8 flex-none items-center justify-center rounded-pill bg-ink">
           <span className="font-display text-[15px] leading-none text-paper">
             c
           </span>

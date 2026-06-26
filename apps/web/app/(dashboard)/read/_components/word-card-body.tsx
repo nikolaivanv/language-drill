@@ -352,11 +352,11 @@ export function DeepCardSkeleton() {
       <div className="flex items-center gap-[8px]">
         <span
           aria-hidden
-          className="block h-[20px] w-[120px] rounded-r-sm bg-paper-3 animate-pulse"
+          className="block h-[20px] w-[120px] rounded-sm bg-paper-3 animate-pulse"
         />
         <span
           aria-hidden
-          className="ml-auto block h-[12px] w-[28px] rounded-r-sm bg-paper-2 animate-pulse"
+          className="ml-auto block h-[12px] w-[28px] rounded-sm bg-paper-2 animate-pulse"
         />
       </div>
       {/* Body lines */}
@@ -364,7 +364,7 @@ export function DeepCardSkeleton() {
         <span
           key={i}
           aria-hidden
-          className="mt-[10px] block h-[12px] rounded-r-sm bg-paper-3 animate-pulse"
+          className="mt-[10px] block h-[12px] rounded-sm bg-paper-3 animate-pulse"
           style={{ width: w }}
         />
       ))}
@@ -443,7 +443,7 @@ export function DeepCardPartial({ partial }: { partial: Partial<DeepCard> }) {
         ) : (
           <span
             aria-hidden
-            className="block h-[20px] w-[120px] rounded-r-sm bg-paper-3 animate-pulse"
+            className="block h-[20px] w-[120px] rounded-sm bg-paper-3 animate-pulse"
           />
         )}
       </div>
@@ -458,7 +458,7 @@ export function DeepCardPartial({ partial }: { partial: Partial<DeepCard> }) {
         ) : (
           <span
             aria-hidden
-            className="block h-[12px] w-[85%] rounded-r-sm bg-paper-3 animate-pulse"
+            className="block h-[12px] w-[85%] rounded-sm bg-paper-3 animate-pulse"
           />
         )}
 

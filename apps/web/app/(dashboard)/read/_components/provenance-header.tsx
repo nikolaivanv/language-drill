@@ -32,10 +32,10 @@ export function ProvenanceHeader({
   rewriting = false,
 }: Props) {
   return (
-    <div className="bg-paper-2 rounded-r-md p-s-4 flex items-start gap-[12px]">
+    <div className="bg-paper-2 rounded-md p-s-4 flex items-start gap-[12px]">
       {/* Accent-soft glyph square */}
       <div
-        className="bg-accent-soft rounded-r-sm flex items-center justify-center shrink-0"
+        className="bg-accent-soft rounded-sm flex items-center justify-center shrink-0"
         style={{ width: 32, height: 32 }}
         aria-hidden="true"
       >

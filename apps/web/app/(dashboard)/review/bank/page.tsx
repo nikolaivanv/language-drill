@@ -107,7 +107,7 @@ export default function VocabularyBankPage() {
               aria-pressed={active}
               onClick={() => setStatusFilter(f.id)}
               className={[
-                'rounded-r-pill border px-s-3 py-[6px] text-[12px] transition-colors',
+                'rounded-pill border px-s-3 py-[6px] text-[12px] transition-colors',
                 active
                   ? 'border-ink bg-ink text-paper'
                   : f.warn
@@ -126,7 +126,7 @@ export default function VocabularyBankPage() {
           onChange={(e) => setQ(e.target.value)}
           placeholder="search lemmas, glosses…"
           aria-label="search vocabulary"
-          className="w-[240px] rounded-r-md border border-rule bg-card px-[12px] py-[8px] text-[13px] text-ink outline-none focus:border-ink"
+          className="w-[240px] rounded-md border border-rule bg-card px-[12px] py-[8px] text-[13px] text-ink outline-none focus:border-ink"
         />
       </div>
 
@@ -231,9 +231,9 @@ function BankRowItem({ row, isLast }: { row: BankRow; isLast: boolean }) {
       </div>
 
       <div className="hidden items-center gap-s-2 md:flex">
-        <div className="h-[4px] flex-1 rounded-r-pill bg-paper-3">
+        <div className="h-[4px] flex-1 rounded-pill bg-paper-3">
           <div
-            className={`h-full rounded-r-pill ${isLeech ? 'bg-accent' : 'bg-ink'}`}
+            className={`h-full rounded-pill ${isLeech ? 'bg-accent' : 'bg-ink'}`}
             style={{ width: `${stabilityWidth(row.stability)}%` }}
           />
         </div>

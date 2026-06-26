@@ -9,7 +9,7 @@ export interface CardProps {
   className?: string;
 }
 
-const base = 'bg-card border border-rule rounded-r-lg shadow-1';
+const base = 'bg-card border border-rule rounded-lg shadow-1';
 
 const paddingClasses: Record<CardPadding, string> = {
   none: 'p-0',

@@ -29,7 +29,7 @@ export function FluencyModeToggle({
           role="tab"
           aria-selected={m === mode}
           onClick={() => onSelect(m)}
-          className={`t-small rounded-r-md border px-s-3 py-s-1 ${
+          className={`t-small rounded-md border px-s-3 py-s-1 ${
             m === mode ? 'border-accent-2 text-accent-2' : 'border-rule text-ink-2'
           }`}
         >

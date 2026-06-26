@@ -9,7 +9,7 @@ export interface ChipProps extends React.HTMLAttributes<HTMLSpanElement> {
 }
 
 const shared =
-  'inline-flex items-center gap-1 px-[9px] py-[3px] rounded-r-pill text-[11px] font-medium';
+  'inline-flex items-center gap-1 px-[9px] py-[3px] rounded-pill text-[11px] font-medium';
 
 const variantClasses: Record<ChipVariant, string> = {
   default: 'border border-rule bg-paper text-ink-soft',

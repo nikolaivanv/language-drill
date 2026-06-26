@@ -79,7 +79,7 @@ export function PoolCellDetail({ item, fetchFn }: { item: PoolStatusItem; fetchF
     `&type=${encodeURIComponent(item.type)}&grammarPoint=${encodeURIComponent(item.grammarPointKey)}`;
 
   const actionBtn =
-    'rounded-r-sm border border-rule bg-card px-3 py-[6px] text-[12px] font-medium text-ink transition-colors hover:border-ink-soft disabled:cursor-not-allowed disabled:opacity-40';
+    'rounded-sm border border-rule bg-card px-3 py-[6px] text-[12px] font-medium text-ink transition-colors hover:border-ink-soft disabled:cursor-not-allowed disabled:opacity-40';
 
   return (
     <div className="m-2 flex flex-col gap-4 rounded-md border border-rule bg-paper-2 p-4 text-[13px]">
@@ -107,7 +107,7 @@ export function PoolCellDetail({ item, fetchFn }: { item: PoolStatusItem; fetchF
                           key={v}
                           data-testid={`axis-${axis}-${v}`}
                           className={cn(
-                            'inline-flex items-center rounded-r-pill border px-2 py-px text-[12px]',
+                            'inline-flex items-center rounded-pill border px-2 py-px text-[12px]',
                             below
                               ? 'border-red-200 bg-red-50 text-red-700'
                               : floor !== undefined
@@ -182,7 +182,7 @@ export function PoolCellDetail({ item, fetchFn }: { item: PoolStatusItem; fetchF
               max={50}
               value={refillCount}
               onChange={(e) => setRefillCount(Math.min(50, Math.max(1, Number(e.target.value) || 1)))}
-              className="w-16 rounded-r-sm border border-rule bg-card px-2 py-[6px] text-[13px] text-ink outline-none focus:border-ink"
+              className="w-16 rounded-sm border border-rule bg-card px-2 py-[6px] text-[13px] text-ink outline-none focus:border-ink"
             />
             <button
               type="button"

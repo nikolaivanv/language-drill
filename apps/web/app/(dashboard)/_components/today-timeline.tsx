@@ -152,7 +152,7 @@ function TimelineSkeleton() {
       {[0, 1, 2, 3, 4].map((i) => (
         <li
           key={i}
-          className="h-[68px] animate-pulse rounded-r-md bg-paper-2"
+          className="h-[68px] animate-pulse rounded-md bg-paper-2"
         />
       ))}
     </ol>

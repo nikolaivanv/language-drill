@@ -109,7 +109,7 @@ export default function AdminInvitesPage() {
                     <div className="flex items-center justify-end gap-1">
                       <button
                         type="button"
-                        className="rounded-r-sm px-2 py-1 text-[12px] font-medium text-accent-2 hover:bg-accent-soft"
+                        className="rounded-sm px-2 py-1 text-[12px] font-medium text-accent-2 hover:bg-accent-soft"
                         onClick={() => copyLink(inv.code)}
                       >
                         Copy link
@@ -117,7 +117,7 @@ export default function AdminInvitesPage() {
                       {inv.status === 'unused' && (
                         <button
                           type="button"
-                          className="rounded-r-sm px-2 py-1 text-[12px] font-medium text-ink-soft hover:bg-paper-2 hover:text-ink"
+                          className="rounded-sm px-2 py-1 text-[12px] font-medium text-ink-soft hover:bg-paper-2 hover:text-ink"
                           onClick={() => revoke.mutate({ id: inv.id })}
                         >
                           Revoke

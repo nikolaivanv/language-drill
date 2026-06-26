@@ -108,7 +108,7 @@ function OnboardingPageContent() {
     // Paper-card error state matching the dashboard layout's error markup.
     return (
       <div className="flex min-h-screen items-center justify-center bg-paper">
-        <div className="max-w-md rounded-r-lg border border-rule bg-card p-s-6 text-center shadow-1">
+        <div className="max-w-md rounded-lg border border-rule bg-card p-s-6 text-center shadow-1">
           <p className="t-display-s">couldn&apos;t load your settings</p>
           <p className="t-small mt-s-2">
             we couldn&apos;t reach the server. check your connection and try
@@ -118,7 +118,7 @@ function OnboardingPageContent() {
             onClick={() => {
               void profilesQuery.refetch();
             }}
-            className="mt-s-4 rounded-r-md bg-ink text-paper px-s-4 py-s-2 text-[13px] font-medium transition-all duration-150 hover:bg-accent-2"
+            className="mt-s-4 rounded-md bg-ink text-paper px-s-4 py-s-2 text-[13px] font-medium transition-all duration-150 hover:bg-accent-2"
           >
             try again
           </button>

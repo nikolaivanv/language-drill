@@ -23,7 +23,7 @@ export function PlacementTestCallout() {
     <aside
       role="note"
       data-testid="placement-test-callout"
-      className="cursor-default rounded-r-md border border-dashed border-rule bg-paper-2 p-s-4"
+      className="cursor-default rounded-md border border-dashed border-rule bg-paper-2 p-s-4"
     >
       <div className="t-hand text-ink">not sure?</div>
       <p className="t-small text-ink-mute mt-s-1">

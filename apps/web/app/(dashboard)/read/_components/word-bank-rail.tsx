@@ -22,7 +22,7 @@ type Props = {
 export function WordBankRail({ saved, onUnsave }: Props) {
   return (
     <aside
-      className="sticky top-[24px] flex flex-col rounded-r-lg border border-rule bg-card pt-[18px] px-[18px] pb-[12px]"
+      className="sticky top-[24px] flex flex-col rounded-lg border border-rule bg-card pt-[18px] px-[18px] pb-[12px]"
       style={{ maxHeight: 'calc(100vh - 80px)' }}
     >
       <div className="flex items-baseline justify-between mb-[10px]">
@@ -32,7 +32,7 @@ export function WordBankRail({ saved, onUnsave }: Props) {
       <div className="t-small mb-[14px]">saved from this passage</div>
 
       {saved.length === 0 ? (
-        <div className="t-small text-ink-mute rounded-r-md border border-dashed border-rule p-[18px] text-center leading-[1.5]">
+        <div className="t-small text-ink-mute rounded-md border border-dashed border-rule p-[18px] text-center leading-[1.5]">
           tap a word to see its meaning, then save it here.
         </div>
       ) : (
@@ -40,7 +40,7 @@ export function WordBankRail({ saved, onUnsave }: Props) {
           {saved.map((item) => (
             <li
               key={item.id}
-              className="flex items-start gap-[8px] rounded-r-sm bg-paper-2 px-[10px] py-[8px]"
+              className="flex items-start gap-[8px] rounded-sm bg-paper-2 px-[10px] py-[8px]"
             >
               <div className="min-w-0 flex-1">
                 <div

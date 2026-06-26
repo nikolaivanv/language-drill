@@ -17,7 +17,7 @@ export function ReadCollectCard() {
       <div className="flex flex-col gap-s-3 sm:flex-row sm:items-center sm:gap-s-4">
         <div className="flex min-w-0 flex-1 items-center gap-s-3 sm:gap-s-4">
           <div
-            className="flex h-[40px] w-[40px] flex-shrink-0 items-center justify-center rounded-r-md bg-accent-soft text-accent-2 sm:h-[44px] sm:w-[44px]"
+            className="flex h-[40px] w-[40px] flex-shrink-0 items-center justify-center rounded-md bg-accent-soft text-accent-2 sm:h-[44px] sm:w-[44px]"
             aria-hidden
           >
             <svg

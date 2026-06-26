@@ -57,7 +57,7 @@
 .fw-helpbtn:hover:not(:disabled) { border-color: var(--color-ink); color: var(--color-ink); background: var(--color-paper-2); }
 .fw-helpbtn:disabled { opacity: 0.5; cursor: default; }
 .fw-helpbtn .ico { color: var(--color-accent); display: inline-flex; }
-.fw-helppanel { border: 1px solid var(--color-rule); border-radius: var(--radius-r-md); background: var(--color-paper-2); overflow: hidden; }
+.fw-helppanel { border: 1px solid var(--color-rule); border-radius: var(--radius-md); background: var(--color-paper-2); overflow: hidden; }
 .fw-helppanel .head { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--color-rule); background: var(--color-card); }
 .fw-vocab-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px dashed var(--color-rule); }
 .fw-vocab-row:last-child { border-bottom: none; }
@@ -118,7 +118,7 @@
 
 /* ── Compare columns ───────────────────────────────────────────── */
 .fw-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.fw-compare .col { border: 1px solid var(--color-rule); border-radius: var(--radius-r-lg); background: var(--color-card); overflow: hidden; }
+.fw-compare .col { border: 1px solid var(--color-rule); border-radius: var(--radius-lg); background: var(--color-card); overflow: hidden; }
 .fw-compare .col .head { padding: 12px 18px; border-bottom: 1px solid var(--color-rule); display: flex; align-items: center; justify-content: space-between; }
 .fw-compare .col.improved { border-color: var(--color-ok); }
 .fw-compare .col.improved .head { background: var(--color-ok-soft); }
@@ -128,7 +128,7 @@
    featured entry card. Ported from the prototype's hifi/styles.css. ──── */
 .chip {
   display: inline-flex; align-items: center; gap: 5px;
-  padding: 3px 10px; border-radius: var(--radius-r-pill);
+  padding: 3px 10px; border-radius: var(--radius-pill);
   border: 1px solid var(--color-rule); background: var(--color-card);
   font-size: 11px; font-weight: 500; color: var(--color-ink-soft);
 }
@@ -140,12 +140,12 @@
    free-writing route via this route-imported file. ─────────────────────────── */
 .card {
   background: var(--color-card); border: 1px solid var(--color-rule);
-  border-radius: var(--radius-r-lg); box-shadow: var(--shadow-1);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-1);
 }
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  padding: 10px 18px; border-radius: var(--radius-r-md);
+  padding: 10px 18px; border-radius: var(--radius-md);
   border: 1px solid var(--color-ink); background: transparent; color: var(--color-ink);
   font-size: 13px; font-weight: 500; white-space: nowrap; cursor: pointer;
   transition: all .15s;
@@ -158,8 +158,8 @@
 .btn.accent:hover:not(:disabled) { background: var(--color-accent-2); border-color: var(--color-accent-2); }
 .btn.ghost { border-color: transparent; color: var(--color-ink-soft); }
 .btn.ghost:hover:not(:disabled) { background: var(--color-paper-2); color: var(--color-ink); }
-.btn.sm { padding: 6px 12px; font-size: 12px; border-radius: var(--radius-r-sm); }
-.btn.lg { padding: 14px 24px; font-size: 15px; border-radius: var(--radius-r-md); }
+.btn.sm { padding: 6px 12px; font-size: 12px; border-radius: var(--radius-sm); }
+.btn.lg { padding: 14px 24px; font-size: 15px; border-radius: var(--radius-md); }
 
 /* Small uppercase section label. */
 .rv-h { font-size: 11px; color: var(--color-ink-mute); text-transform: uppercase; letter-spacing: 1.2px; font-weight: 500; }
