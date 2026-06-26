@@ -134,9 +134,17 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .ckb-card { animation: ckbIn 0.32s cubic-bezier(0.2, 0.7, 0.3, 1); }
+  /* `will-change` keeps a stable compositing layer for the duration of the
+     entrance animation, and the keyframes end on an explicit `translateY(0)`
+     (not `none`). Ending on `none` tore the layer down on a position:fixed
+     subtree, leaving a stale full-width paint band pinned to the viewport
+     bottom that only cleared on the next repaint (resize). */
+  .ckb-card {
+    animation: ckbIn 0.32s cubic-bezier(0.2, 0.7, 0.3, 1);
+    will-change: transform;
+  }
 }
 @keyframes ckbIn {
   from { transform: translateY(14px); }
-  to { transform: none; }
+  to { transform: translateY(0); }
 }
