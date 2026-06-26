@@ -197,8 +197,8 @@ describe('StepLevel', () => {
     };
     renderInProvider(state, <StepLevel />);
     // Guard on the component testid AND its human-visible signals (role=note +
-    // "not sure?" copy) so the assertion stays meaningful even after the
-    // PlacementTestCallout component is deleted in a later cleanup task.
+    // "not sure?" copy) so the assertion stays meaningful now that the
+    // PlacementTestCallout component has been removed.
     expect(screen.queryByTestId('placement-test-callout')).toBeNull();
     expect(screen.queryByRole('note')).toBeNull();
     expect(screen.queryByText(/not sure\?/i)).toBeNull();
