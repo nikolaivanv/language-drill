@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { eq } from 'drizzle-orm';
+import { and, eq, inArray, ne } from 'drizzle-orm';
 import { Webhook } from 'svix';
 
 import { db } from '../../db';
@@ -42,6 +42,33 @@ interface ClerkUserDeletedEvent {
 // — no `{ type: string }` catch-all member, which would defeat narrowing.)
 type ClerkWebhookEvent = ClerkUserCreatedEvent | ClerkUserUpdatedEvent | ClerkUserDeletedEvent;
 
+/**
+ * Free an email address from any defunct `users` row that still holds it under a
+ * different id, so the incoming (live) user can claim it.
+ *
+ * Clerk enforces primary-email uniqueness among LIVE users, so a row with this
+ * email under a different id is always a deleted-then-recreated account whose
+ * `user.deleted` webhook was missed or raced (common during invite testing).
+ * Left in place, its `NOT NULL UNIQUE` email blocks the new user's email from
+ * ever syncing — every upsert fails with `23505 users_email_unique`, and any
+ * email-sending path then sees the un-synced placeholder. Erase it exactly like
+ * the `user.deleted` branch: null the FK-less `invitations.usedBy`, then delete
+ * (the ON DELETE CASCADE FKs sweep the stale account's dependent rows).
+ */
+async function reclaimEmail(email: string, keepId: string): Promise<void> {
+  const stale = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(and(eq(users.email, email), ne(users.id, keepId)));
+  if (stale.length === 0) return;
+  const staleIds = stale.map((r) => r.id);
+  await db
+    .update(invitations)
+    .set({ usedBy: null, usedAt: null })
+    .where(inArray(invitations.usedBy, staleIds));
+  await db.delete(users).where(inArray(users.id, staleIds));
+}
+
 const webhooks = new Hono();
 
 webhooks.post('/webhooks/clerk', async (c) => {
@@ -80,6 +107,10 @@ webhooks.post('/webhooks/clerk', async (c) => {
       return c.json({ error: 'No email address in event' }, 400);
     }
 
+    // Reclaim the email from any defunct account before upserting, otherwise the
+    // upsert below fails with a unique violation.
+    await reclaimEmail(email, userId);
+
     // Upsert user row. New users default to the 'free' plan (the
     // `users.plan` column default handles this — no explicit set needed).
     // Invites are no longer auto-claimed here; they are redeemed explicitly
@@ -94,6 +125,9 @@ webhooks.post('/webhooks/clerk', async (c) => {
   } else if (event.type === 'user.updated') {
     const { id: userId, email_addresses, first_name, last_name } = event.data;
     const email = email_addresses[0]?.email_address;
+    // Same reclaim as user.created: a re-pointed email may now collide with a
+    // defunct row's address.
+    if (email) await reclaimEmail(email, userId);
     await db
       .update(users)
       .set({
@@ -104,13 +138,13 @@ webhooks.post('/webhooks/clerk', async (c) => {
       })
       .where(eq(users.id, userId));
   } else if (event.type === 'user.deleted') {
-    // Right-to-erasure: delete the user row. The user FKs on playlists,
-    // spaced_repetition_cards, usage_events, user_exercise_history,
-    // user_language_profiles, user_preferences, user_vocabulary,
-    // practice_sessions, and the read/review tables are all ON DELETE CASCADE,
-    // so this one delete sweeps every PII-adjacent row for the account
+    // Right-to-erasure: delete the user row. Every user FK is ON DELETE
+    // CASCADE, so this one delete sweeps every PII-adjacent row for the account
     // (migration 0021 backfilled five legacy FKs that predated the cascade
-    // convention; 0025 added practice_sessions, which 0021 missed).
+    // convention; 0025 added practice_sessions, which 0021 missed; 0033 added
+    // read_entries and user_grammar_mastery, which were still NO ACTION and
+    // would otherwise fail this delete with a FK violation — see the same fix
+    // relied on by reclaimEmail above).
     // invitations.usedBy is a plain nullable text column (no FK, no cascade),
     // so the redeemer reference must be nulled explicitly before the user
     // delete to honor the right-to-erasure guarantee.
@@ -118,9 +152,12 @@ webhooks.post('/webhooks/clerk', async (c) => {
     if (!userId) {
       return c.json({ error: 'No user id in event' }, 400);
     }
+    // Null usedAt too, not just usedBy: a freed code should read as fully
+    // available (a stale usedAt with no usedBy looks "used" in the admin list,
+    // even though the redeem path only gates on usedBy).
     await db
       .update(invitations)
-      .set({ usedBy: null })
+      .set({ usedBy: null, usedAt: null })
       .where(eq(invitations.usedBy, userId));
     await db.delete(users).where(eq(users.id, userId));
   }

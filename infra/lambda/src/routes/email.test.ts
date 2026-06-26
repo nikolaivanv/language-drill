@@ -78,6 +78,41 @@ describe('email routes', () => {
     expect(sendEmailMock).toHaveBeenCalledWith(expect.objectContaining({ to: 'user_1@example.com' }));
   });
 
+  it('POST /email/weekly-summary { enabled: true } refuses to send to an un-synced placeholder email', async () => {
+    // User row still carries the auth-middleware placeholder (Clerk webhook
+    // hasn't landed the real address yet). Resend would reject it with a raw
+    // 500 — the route must short-circuit with a typed, non-5xx error instead.
+    state.selectRows = [{ email: 'pending-webhook@placeholder' }];
+    state.upsertRows = [{ weeklySummary: 'pending', confirmToken: 'tok' }];
+    const res = await app.request(
+      '/email/weekly-summary',
+      { method: 'POST', body: JSON.stringify({ enabled: true }), headers: { 'Content-Type': 'application/json' } },
+      authEnv,
+    );
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({
+      error: expect.any(String),
+      code: 'EMAIL_NOT_READY',
+    });
+    expect(sendEmailMock).not.toHaveBeenCalled();
+  });
+
+  it('POST /email/weekly-summary { enabled: true } returns 502 when the email provider fails', async () => {
+    state.selectRows = [{ email: 'user_1@example.com' }];
+    state.upsertRows = [{ weeklySummary: 'pending', confirmToken: 'tok' }];
+    sendEmailMock.mockRejectedValueOnce(new Error('Invalid `to` field.'));
+    const res = await app.request(
+      '/email/weekly-summary',
+      { method: 'POST', body: JSON.stringify({ enabled: true }), headers: { 'Content-Type': 'application/json' } },
+      authEnv,
+    );
+    expect(res.status).toBe(502);
+    expect(await res.json()).toEqual({
+      error: expect.any(String),
+      code: 'EMAIL_SEND_FAILED',
+    });
+  });
+
   it('POST /email/weekly-summary { enabled: false } sets off without sending', async () => {
     state.upsertRows = [{ weeklySummary: 'off', confirmToken: null }];
     const res = await app.request(

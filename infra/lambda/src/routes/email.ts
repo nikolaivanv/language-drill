@@ -10,6 +10,7 @@ import {
 import { db } from '../db';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
+import { isPlaceholderEmail } from '../lib/placeholder-email';
 
 const email = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
@@ -80,15 +81,34 @@ email.post('/email/weekly-summary', async (c) => {
   const confirmUrl = `${linkBase()}/email/confirm?token=${token}`;
   const { html, text } = await renderEmail(ConfirmSubscriptionEmail({ confirmUrl }));
   // Recipient must be the user's real address (the auth middleware guarantees a
-  // users row exists).
+  // users row exists). Until the Clerk webhook lands the real address the row
+  // carries a placeholder, which is NOT deliverable — sending to it makes Resend
+  // throw "Invalid `to` field" and surfaces as a raw 500. Refuse early with a
+  // typed, retryable error instead.
   const to = await resolveEmail(userId);
-  if (!to) return c.json({ error: 'User email not found', code: 'NO_EMAIL' }, 500);
-  await sendEmail({
-    to,
-    subject: 'Confirm your weekly Language Drill summary',
-    html,
-    text,
-  });
+  if (!to || isPlaceholderEmail(to)) {
+    return c.json(
+      {
+        error: 'Your account email is still syncing. Please try again in a moment.',
+        code: 'EMAIL_NOT_READY',
+      },
+      409,
+    );
+  }
+  try {
+    await sendEmail({
+      to,
+      subject: 'Confirm your weekly Language Drill summary',
+      html,
+      text,
+    });
+  } catch (err) {
+    // A provider failure (invalid recipient, rate limit, outage) must not crash
+    // the toggle as an unhandled 500 — return a typed bad-gateway the client can
+    // surface and retry.
+    console.error('Failed to send weekly-summary confirmation email:', err);
+    return c.json({ error: 'Could not send confirmation email', code: 'EMAIL_SEND_FAILED' }, 502);
+  }
 
   return c.json({ weeklySummary: rows[0]?.weeklySummary ?? 'pending' });
 });
