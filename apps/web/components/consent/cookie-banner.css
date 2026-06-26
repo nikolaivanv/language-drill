@@ -133,14 +133,14 @@
   .ckb-btn { width: 100%; min-height: 48px; }
 }
 
-/* No transform entrance animation. The card sits in a position:fixed container
-   flush with the viewport bottom, and its box-shadow extends ~68px below it
-   (only ~20px of clearance). A transform animation (or will-change:transform)
-   promotes the card to its own GPU layer; with the shadow clipped at the
-   viewport edge, Chrome leaves the layer's stale backing-store pixels as a
-   paint band pinned to the bottom of the screen — most visible in fullscreen,
-   where the compositor re-tiles the bottom edge — until the next repaint
-   (e.g. a window resize) clears it. Painting the card in the normal document
-   layer (no compositing trigger) avoids the stale backing entirely.
-   A compositing-safe entrance animation could be re-added later by animating an
-   inner content wrapper that carries no shadow and isn't at the viewport edge. */
+/* Subtle slide-up entrance. Note: in Chrome fullscreen this composited
+   fixed-position card can leave a faint stale paint band at the very bottom of
+   the screen until the next repaint — a known Chrome/macOS quirk for fixed
+   bottom elements that isn't reliably fixable from app CSS, accepted as minor. */
+@media (prefers-reduced-motion: no-preference) {
+  .ckb-card { animation: ckbIn 0.32s cubic-bezier(0.2, 0.7, 0.3, 1); }
+}
+@keyframes ckbIn {
+  from { transform: translateY(14px); }
+  to { transform: translateY(0); }
+}
