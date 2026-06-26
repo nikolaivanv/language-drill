@@ -51,8 +51,32 @@ describe('reportApiError', () => {
     expect(captureException).toHaveBeenCalledTimes(1);
   });
 
+  it('skips 404 TOPIC_NOT_FOUND (no theory page generated for this slug yet)', () => {
+    reportApiError(apiError(404, 'TOPIC_NOT_FOUND'));
+    expect(captureException).not.toHaveBeenCalled();
+  });
+
+  it('captures a 404 with a different code (a genuinely missing resource)', () => {
+    reportApiError(apiError(404, 'NOT_FOUND'));
+    expect(captureException).toHaveBeenCalledTimes(1);
+  });
+
   it('ignores non-Error values', () => {
     reportApiError('a string');
     expect(captureException).not.toHaveBeenCalled();
   });
+
+  it.each(['used', 'expired', 'invalid'])(
+    'skips a RedeemError (%s) — every invite-redeem outcome is a handled product state',
+    (kind) => {
+      // `useRedeemInvite` throws a fresh `RedeemError` carrying only `name`,
+      // `kind`, and `message` (no status/body), and the redeem UI surfaces all
+      // three kinds as a banner. None is a fault.
+      const e = new Error('Invite already used') as Error & { kind?: string };
+      e.name = 'RedeemError';
+      e.kind = kind;
+      reportApiError(e);
+      expect(captureException).not.toHaveBeenCalled();
+    },
+  );
 });

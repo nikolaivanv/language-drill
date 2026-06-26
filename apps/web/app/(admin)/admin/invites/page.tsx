@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import {
   createAuthenticatedFetch,
@@ -24,8 +24,28 @@ export default function AdminInvitesPage() {
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
-  const copyLink = (code: string) => {
-    void navigator.clipboard?.writeText(`${origin}/invite/${code}`);
+  // The app has no toast library, so the "Copy link" button gives inline
+  // feedback: it flips to "Copied!" for a beat after a successful copy. Keyed
+  // by invite id so only the clicked row reacts.
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (copiedTimer.current) clearTimeout(copiedTimer.current);
+    },
+    [],
+  );
+
+  const copyLink = async (id: string, code: string) => {
+    try {
+      await navigator.clipboard?.writeText(`${origin}/invite/${code}`);
+    } catch {
+      return; // clipboard unavailable / denied — no false "Copied!"
+    }
+    setCopiedId(id);
+    if (copiedTimer.current) clearTimeout(copiedTimer.current);
+    copiedTimer.current = setTimeout(() => setCopiedId(null), 2000);
   };
 
   return (
@@ -110,9 +130,10 @@ export default function AdminInvitesPage() {
                       <button
                         type="button"
                         className="rounded-sm px-2 py-1 text-[12px] font-medium text-accent-2 hover:bg-accent-soft"
-                        onClick={() => copyLink(inv.code)}
+                        onClick={() => void copyLink(inv.id, inv.code)}
+                        aria-live="polite"
                       >
-                        Copy link
+                        {copiedId === inv.id ? 'Copied!' : 'Copy link'}
                       </button>
                       {inv.status === 'unused' && (
                         <button
