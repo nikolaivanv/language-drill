@@ -29,7 +29,7 @@ export function GoalIcon({ id }: { id: GoalId }) {
       strokeWidth={1.7}
       strokeLinecap="round"
       strokeLinejoin="round"
-      // eslint-disable-next-line -- static, in-repo icon geometry
+      // Static, in-repo icon geometry (not user input) — safe to inline.
       dangerouslySetInnerHTML={{ __html: GOAL_ICON_PATHS[id] }}
     />
   );
