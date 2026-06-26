@@ -82,8 +82,12 @@ describe('StepGoals', () => {
     const state: OnboardingState = { ...initialNewUserState(), step: 3 };
     renderInProvider(state, <StepGoals />);
 
-    expect(document.querySelector('[data-testid="goal-icon-grammar"]')).not.toBeNull();
-    expect(document.querySelector('[data-testid="goal-icon-travel"]')).not.toBeNull();
+    for (const id of GOAL_IDS) {
+      expect(
+        document.querySelector(`[data-testid="goal-icon-${id}"]`),
+        `missing icon for ${id}`,
+      ).not.toBeNull();
+    }
   });
 
   it('clicking a goal tile toggles its selection state', () => {
