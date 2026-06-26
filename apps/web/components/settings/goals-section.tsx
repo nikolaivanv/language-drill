@@ -47,7 +47,7 @@ export function GoalsSection() {
   return (
     <Section id="goals" title="goals" sub="what you want from this. tweak any time.">
       <Row label="daily target" hint="how much you want to drill each day." align="top">
-        <div role="radiogroup" aria-label="daily target" className="grid grid-cols-3 gap-[12px] max-w-[420px]">
+        <div role="radiogroup" aria-label="daily target" className="grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-[12px] max-w-[420px]">
           {DAILY_GOALS.map((g) => (
             <Choice key={g} mode="radio" hideIndicator selected={dailyGoal === g} onSelect={() => pickGoal(g)}>
               <span className="flex flex-col items-center text-center w-full">

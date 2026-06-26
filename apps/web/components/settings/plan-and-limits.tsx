@@ -38,7 +38,7 @@ export function PlanAndLimits() {
                 : 'free plan'}
             </strong>
           </p>
-          <div className="mb-s-5 grid grid-cols-3 gap-s-3 mobile:grid-cols-1">
+          <div className="mb-s-5 grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-s-3 mobile:grid-cols-1">
             {BUCKETS.map(([label, key]) => (
               <div key={key} className="rounded-md border border-rule p-s-4">
                 <div className="t-mono text-[24px] text-ink tracking-wide">
