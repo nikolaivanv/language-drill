@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { AdminNav } from './admin-nav';
+import { UserFooter } from '../shell/user-footer';
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   return (
@@ -16,6 +17,19 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           Admin
         </Link>
         <AdminNav />
+        {/* Escape hatch back to the learner-facing app, mirroring the rail's
+            nav-item styling. Sits above the account menu (which UserFooter
+            pins to the bottom via mt-auto). */}
+        <Link
+          href="/home"
+          className="flex items-center gap-s-2 px-s-3 py-s-2 rounded-sm text-[13px] text-ink-soft hover:bg-paper-2 hover:text-ink transition-colors duration-150 focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_var(--ring-app)]"
+        >
+          Open app
+          <span aria-hidden="true">↗</span>
+        </Link>
+        {/* Shared account menu — carries the Light/Dark/System appearance
+            selector (ThemeToggle), settings, and sign-out. */}
+        <UserFooter />
       </nav>
       <main className="flex-1 min-w-0 min-h-0 overflow-y-auto bg-paper">
         <div className="max-w-max-content mx-auto w-full py-[36px] px-[48px]">

@@ -72,6 +72,13 @@ describe('ActivityPage — Sessions tab', () => {
     fireEvent.click(screen.getByRole('button', { name: /Ada Lovelace/i }));
     expect(mockDetail).toHaveBeenCalledWith(expect.objectContaining({ sessionId: 's-flag' }));
   });
+
+  it('expands when clicking anywhere in the row, not just the user name', () => {
+    render(<ActivityPage />);
+    // The date cell carries no button — clicking it must still toggle the row.
+    fireEvent.click(screen.getByText(/2026-06-22 10:55/));
+    expect(mockDetail).toHaveBeenCalledWith(expect.objectContaining({ sessionId: 's-flag' }));
+  });
 });
 
 describe('ActivityPage — Failures tab', () => {

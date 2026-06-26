@@ -4,6 +4,9 @@ import { describe, it, expect, vi } from 'vitest';
 vi.mock('../admin-nav', () => ({
   AdminNav: () => <ul data-testid="admin-nav" />,
 }));
+vi.mock('../../shell/user-footer', () => ({
+  UserFooter: () => <div data-testid="user-footer" />,
+}));
 vi.mock('next/link', () => ({
   default: ({
     href,
@@ -44,5 +47,18 @@ describe('AdminShell', () => {
       'href',
       '/admin',
     );
+  });
+
+  it('offers an escape hatch to the learner app and mounts the account menu', () => {
+    render(
+      <AdminShell>
+        <p>x</p>
+      </AdminShell>,
+    );
+    expect(screen.getByRole('link', { name: /open app/i })).toHaveAttribute(
+      'href',
+      '/home',
+    );
+    expect(screen.getByTestId('user-footer')).toBeInTheDocument();
   });
 });
