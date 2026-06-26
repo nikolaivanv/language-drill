@@ -2,6 +2,7 @@ import type { Context, Next } from 'hono';
 import type { LambdaEvent } from 'hono/aws-lambda';
 import { db } from '../db';
 import { users } from '@language-drill/db';
+import { PLACEHOLDER_EMAIL } from '../lib/placeholder-email';
 
 export type Variables = {
   userId: string;
@@ -44,7 +45,7 @@ export async function authMiddleware(
   try {
     await db
       .insert(users)
-      .values({ id: sub, email: 'pending-webhook@placeholder' })
+      .values({ id: sub, email: PLACEHOLDER_EMAIL })
       .onConflictDoNothing({ target: users.id });
   } catch (err) {
     console.error('Failed to ensure user row:', err);

@@ -10,6 +10,7 @@ import { and, eq } from 'drizzle-orm';
 
 import { weeklyWindow } from './period-key';
 import type { WeeklySummaryJobMessage } from './job-message';
+import { isPlaceholderEmail } from '../lib/placeholder-email';
 
 const KIND = 'weekly_summary';
 const MAX_BATCH_SIZE = 10; // SQS hard limit
@@ -52,9 +53,8 @@ export async function handler(): Promise<void> {
     .where(and(eq(sentEmails.kind, KIND), eq(sentEmails.periodKey, periodKey)));
   const sentUserIds = new Set(already.map((r) => r.userId));
 
-  const PLACEHOLDER_EMAIL = 'pending-webhook@placeholder';
   const validSubscribers = subscribers.filter(
-    (s) => s.email && s.email !== PLACEHOLDER_EMAIL,
+    (s) => s.email && !isPlaceholderEmail(s.email),
   );
   const skippedPlaceholder = subscribers.length - validSubscribers.length;
   if (skippedPlaceholder > 0) {

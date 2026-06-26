@@ -81,7 +81,7 @@ export const userGrammarMastery = pgTable(
   {
     userId: text('user_id')
       .notNull()
-      .references(() => users.id),
+      .references(() => users.id, { onDelete: 'cascade' }),
     language: text('language').notNull(),
     grammarPointKey: text('grammar_point_key').notNull(),
     masteryScore: real('mastery_score').notNull(), // 0.0–1.0

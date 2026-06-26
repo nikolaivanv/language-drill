@@ -232,6 +232,13 @@
       "when": 1782170430491,
       "tag": "0032_nervous_mad_thinker",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1782472083455,
+      "tag": "0033_simple_slapstick",
+      "breakpoints": true
     }
   ]
 }

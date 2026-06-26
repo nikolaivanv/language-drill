@@ -29,7 +29,9 @@ export const readEntries = pgTable(
   'read_entries',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: text('user_id').references(() => users.id).notNull(),
+    userId: text('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
     language: text('language').$type<LearningLanguage>().notNull(),
     title: text('title').notNull().default(''),
     source: text('source').notNull().default(''),
