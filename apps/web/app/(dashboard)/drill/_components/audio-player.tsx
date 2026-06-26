@@ -26,6 +26,11 @@ export function AudioPlayer({ src, waveform, durationSec }: AudioPlayerProps) {
   const [progress, setProgress] = React.useState(0); // 0..1 playhead
   const [dragging, setDragging] = React.useState(false);
   const [hoverFrac, setHoverFrac] = React.useState<number | null>(null);
+  // The clip's true length, used for ALL playhead math + labels. `durationSec`
+  // (clip metadata) is only the estimate shown until the real audio reports its
+  // duration; seeking against a different number than `timeupdate` reads back is
+  // what made click/drag jump and the arrow keys behave asymmetrically.
+  const [dur, setDur] = React.useState(durationSec);
 
   const disabled = !src;
 
@@ -38,12 +43,27 @@ export function AudioPlayer({ src, waveform, durationSec }: AudioPlayerProps) {
     a.playbackRate = slow ? 0.75 : 1;
   }, [slow, src]);
 
-  // A new clip resets the playhead and play state (guards against a stale
-  // progress/▮▮ flash if the player isn't remounted per clip).
+  // A new clip resets the playhead, play state, and falls back to the metadata
+  // estimate until the fresh element reports its own duration.
   React.useEffect(() => {
     setProgress(0);
     setPlaying(false);
-  }, [src]);
+    setDur(durationSec);
+  }, [src, durationSec]);
+
+  // The single source of truth for duration: the loaded audio's real length once
+  // known, else the metadata estimate. Read live inside event handlers so a seek
+  // and the next `timeupdate` always divide/multiply by the same number.
+  function liveDuration(): number {
+    const a = audioRef.current;
+    if (a && Number.isFinite(a.duration) && a.duration > 0) return a.duration;
+    return durationSec;
+  }
+
+  function onLoadedMetadata() {
+    const a = audioRef.current;
+    if (a && Number.isFinite(a.duration) && a.duration > 0) setDur(a.duration);
+  }
 
   function togglePlay() {
     const a = audioRef.current;
@@ -62,10 +82,12 @@ export function AudioPlayer({ src, waveform, durationSec }: AudioPlayerProps) {
 
   function onTimeUpdate() {
     const a = audioRef.current;
-    if (!a || !a.duration) return;
+    if (!a) return;
+    const d = liveDuration();
+    if (!d) return;
     // While the user is actively scrubbing, the drag owns the playhead.
     if (dragging) return;
-    setProgress(a.currentTime / a.duration);
+    setProgress(clamp01(a.currentTime / d));
   }
 
   // Move the playhead to a 0..1 fraction: drive the <audio> element (the real
@@ -74,9 +96,7 @@ export function AudioPlayer({ src, waveform, durationSec }: AudioPlayerProps) {
   function seekToFraction(frac: number) {
     const f = clamp01(frac);
     const a = audioRef.current;
-    if (a && Number.isFinite(durationSec)) {
-      a.currentTime = f * durationSec;
-    }
+    if (a) a.currentTime = f * liveDuration();
     setProgress(f);
   }
 
@@ -119,7 +139,8 @@ export function AudioPlayer({ src, waveform, durationSec }: AudioPlayerProps) {
 
   function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
     if (disabled) return;
-    const cur = progress * durationSec;
+    const d = liveDuration();
+    const cur = progress * d;
     let next: number | null = null;
     switch (e.key) {
       case 'ArrowRight':
@@ -140,18 +161,18 @@ export function AudioPlayer({ src, waveform, durationSec }: AudioPlayerProps) {
         next = 0;
         break;
       case 'End':
-        next = durationSec;
+        next = d;
         break;
       default:
         return;
     }
     e.preventDefault();
-    seekToFraction(durationSec > 0 ? next / durationSec : 0);
+    seekToFraction(d > 0 ? next / d : 0);
   }
 
-  const total = formatTime(durationSec);
-  const elapsed = formatTime(progress * durationSec);
-  const valueNow = Math.round(progress * durationSec);
+  const total = formatTime(dur);
+  const elapsed = formatTime(progress * dur);
+  const valueNow = Math.round(progress * dur);
 
   return (
     <div className="rounded-lg border border-rule bg-paper-2 p-s-4 sm:p-s-5">
@@ -159,6 +180,8 @@ export function AudioPlayer({ src, waveform, durationSec }: AudioPlayerProps) {
         ref={audioRef}
         src={src}
         preload="metadata"
+        onLoadedMetadata={onLoadedMetadata}
+        onDurationChange={onLoadedMetadata}
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
         onEnded={() => setPlaying(false)}
@@ -170,7 +193,10 @@ export function AudioPlayer({ src, waveform, durationSec }: AudioPlayerProps) {
           aria-label={playing ? 'pause' : 'play'}
           onClick={togglePlay}
           disabled={disabled}
-          className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-full bg-ink text-paper shadow-1 transition-transform duration-150 hover:scale-[1.04] active:scale-[0.97] disabled:opacity-40 disabled:hover:scale-100 sm:h-16 sm:w-16"
+          // Lift on hover (scale + shadow); only transform/box-shadow transition
+          // so there's no background-via-token transition that flashed on the
+          // dark-mode first paint.
+          className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-full bg-ink text-paper shadow-1 transition-[transform,box-shadow] duration-150 hover:scale-[1.04] hover:shadow-2 active:scale-[0.97] disabled:opacity-40 disabled:hover:scale-100 disabled:hover:shadow-1 sm:h-16 sm:w-16"
         >
           {playing ? <PauseIcon /> : <PlayIcon />}
         </button>
@@ -180,7 +206,7 @@ export function AudioPlayer({ src, waveform, durationSec }: AudioPlayerProps) {
           role="slider"
           aria-label="seek"
           aria-valuemin={0}
-          aria-valuemax={Math.round(durationSec)}
+          aria-valuemax={Math.round(dur)}
           aria-valuenow={valueNow}
           aria-valuetext={`${elapsed} of ${total}`}
           aria-disabled={disabled || undefined}
@@ -236,7 +262,9 @@ export function AudioPlayer({ src, waveform, durationSec }: AudioPlayerProps) {
           type="button"
           onClick={replay}
           disabled={disabled}
-          className="inline-flex items-center gap-[7px] rounded-md border border-rule bg-card px-s-4 py-s-2 text-[14px] font-medium text-ink-2 transition-colors duration-150 hover:bg-paper-2 disabled:opacity-40 disabled:hover:bg-card"
+          // Base hover/press goes to paper-3 + a stronger border so it's visible
+          // in BOTH themes (card and paper-2 resolve to the same fill in dark).
+          className="inline-flex items-center gap-[7px] rounded-md border border-rule bg-card px-s-4 py-s-2 text-[14px] font-medium text-ink-2 transition-colors duration-150 hover:border-rule-strong hover:bg-paper-3 hover:text-ink active:border-rule-strong active:bg-paper-3 active:text-ink disabled:opacity-40 disabled:hover:border-rule disabled:hover:bg-card disabled:hover:text-ink-2"
         >
           <ReplayIcon />
           replay
@@ -248,8 +276,10 @@ export function AudioPlayer({ src, waveform, durationSec }: AudioPlayerProps) {
           disabled={disabled}
           className={`inline-flex items-center gap-[7px] rounded-md border px-s-4 py-s-2 text-[14px] font-medium transition-colors duration-150 disabled:opacity-40 ${
             slow
-              ? 'border-ink bg-ink text-paper'
-              : 'border-rule bg-card text-ink-2 hover:bg-paper-2 disabled:hover:bg-card'
+              ? // Active toggle keeps a feedback state on hover/press: ink-hover
+                // darkens the ink fill in light and brightens the cream in dark.
+                'border-ink bg-ink text-paper hover:border-ink-hover hover:bg-ink-hover active:border-ink-hover active:bg-ink-hover'
+              : 'border-rule bg-card text-ink-2 hover:border-rule-strong hover:bg-paper-3 hover:text-ink active:border-rule-strong active:bg-paper-3 active:text-ink disabled:hover:border-rule disabled:hover:bg-card disabled:hover:text-ink-2'
           }`}
         >
           0.75× slow
