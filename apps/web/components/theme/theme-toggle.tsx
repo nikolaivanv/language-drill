@@ -46,7 +46,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       <div className="px-s-2 pb-s-1 pt-s-1 text-[11px] font-semibold uppercase tracking-[1.1px] text-ink-mute">
         appearance
       </div>
-      <div role="radiogroup" aria-label="appearance" className="flex gap-[5px]">
+      <div role="radiogroup" aria-label="appearance" className="flex gap-[6px]">
         {OPTIONS.map((opt) => {
           const active = theme === opt.value;
           return (
@@ -58,7 +58,7 @@ export function ThemeToggle({ className }: { className?: string }) {
               aria-label={opt.label}
               onClick={() => setTheme(opt.value)}
               className={cn(
-                'flex min-w-0 flex-1 flex-col items-center justify-center gap-[6px] rounded-[9px] border px-[4px] py-[10px] text-[12px] font-semibold transition-colors duration-150 outline-none focus-visible:shadow-[0_0_0_2px_var(--color-card),0_0_0_4px_var(--color-ink)]',
+                'flex min-w-0 flex-1 flex-col items-center justify-center gap-[5px] rounded-[8px] border px-[4px] py-[9px] text-[11px] font-semibold transition-colors duration-150 outline-none focus-visible:shadow-[0_0_0_2px_var(--color-card),0_0_0_4px_var(--color-ink)]',
                 active
                   ? 'border-ink bg-ink text-paper'
                   : 'border-rule bg-transparent text-ink-soft hover:border-rule-strong hover:text-ink',

@@ -83,7 +83,7 @@ export function UserFooter() {
           role="menu"
           className="absolute bottom-full left-0 right-0 mb-1 z-10 bg-card border border-rule rounded-md shadow-2 py-1"
         >
-          <ThemeToggle className="px-s-2 pt-s-1 pb-s-2" />
+          <ThemeToggle className="px-s-1 pt-s-1 pb-s-2" />
           <div className="my-1 mx-s-2 h-px bg-rule" />
           <Link
             href="/settings"

@@ -78,7 +78,7 @@ function AvatarMenu() {
           role="menu"
           className="absolute right-0 top-[calc(100%+6px)] z-50 w-[228px] rounded-md border border-rule bg-card py-1 shadow-2"
         >
-          <ThemeToggle className="px-s-2 pt-s-1 pb-s-2" />
+          <ThemeToggle className="px-s-1 pt-s-1 pb-s-2" />
           <div className="my-1 mx-s-2 h-px bg-rule" />
           <Link
             href="/settings"

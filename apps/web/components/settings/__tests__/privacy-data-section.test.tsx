@@ -35,6 +35,20 @@ describe('PrivacyDataSection', () => {
     expect(screen.queryByRole('button', { name: /^delete account$/i })).not.toBeInTheDocument();
   });
 
+  it('"above" scrolls to the account section', () => {
+    const account = document.createElement('div');
+    account.id = 'set-account';
+    const scrollIntoView = vi.fn();
+    account.scrollIntoView = scrollIntoView;
+    document.body.appendChild(account);
+
+    render(<PrivacyDataSection />);
+    fireEvent.click(screen.getByRole('button', { name: /^above$/i }));
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+
+    document.body.removeChild(account);
+  });
+
   it('cookie preferences button calls openPreferences', () => {
     render(<PrivacyDataSection />);
     fireEvent.click(screen.getByRole('button', { name: /cookie preferences/i }));
