@@ -37,7 +37,6 @@ import {
 import { Choice } from '../../ui/choice';
 import { Flagdot } from '../../shell/flagdot';
 import { useOnboarding } from '../onboarding-context';
-import { PlacementTestCallout } from '../placement-test-callout';
 
 // Verbatim from the hi-fi prototype (onboarding.jsx:139-144). R3.4 cites the
 // prototype as the source of truth for these descriptions; A1 and B2 also
@@ -161,9 +160,16 @@ export function StepLevel() {
                 dispatch({ type: 'setPrimary', language })
               }
             >
-              <span className="flex items-center gap-s-3">
+              <span className="flex items-center gap-s-3 w-full">
                 <Flagdot language={language} />
-                <span className="t-body text-ink">{language}</span>
+                <span className="flex-1 t-body text-ink">
+                  {LANGUAGE_NATIVE_NAMES[language]}
+                </span>
+                {state.primaryLanguage === language ? (
+                  <span className="t-micro uppercase tracking-[0.4px] text-accent-2 bg-accent-soft border border-accent rounded-pill px-s-2 py-[2px] flex-shrink-0">
+                    primary
+                  </span>
+                ) : null}
               </span>
             </Choice>
           ))}
@@ -216,7 +222,6 @@ export function StepLevel() {
         </div>
       ))}
 
-      <PlacementTestCallout />
     </div>
   );
 }
