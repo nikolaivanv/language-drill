@@ -45,7 +45,7 @@ export default function DashboardLayout({
           <p className="t-small mt-s-2">{error.message}</p>
           <button
             onClick={() => refetch()}
-            className="mt-s-4 rounded-md bg-ink text-paper px-s-4 py-s-2 text-[13px] font-medium transition-all duration-150 hover:bg-accent-2"
+            className="mt-s-4 rounded-md bg-ink text-paper px-s-4 py-s-2 text-[13px] font-medium transition-all duration-150 hover:bg-accent-2 dark:bg-accent dark:text-white dark:hover:bg-[#b15535]"
           >
             retry
           </button>

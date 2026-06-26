@@ -115,7 +115,7 @@ export function VocabExercise({
         onAdvance={handleAdvanceHint}
       />
 
-      {!active && (
+      {!active && submission.kind !== 'evaluated' && (
         <div className="mt-s-6 flex justify-end">
           <Button
             variant="primary"

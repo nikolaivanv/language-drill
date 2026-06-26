@@ -65,14 +65,23 @@ describe('Button', () => {
     expect(button.className).toContain('border-rule-strong');
   });
 
-  // ---- Task 2: ink-hover primary, ghost secondary, no accent ---------------
+  // ---- Primary: ink in light, terracotta in dark --------------------------
 
-  it('primary hovers to ink-hover, not terracotta', () => {
+  it('primary is an ink fill that hovers to ink-hover in the light theme', () => {
     render(<Button variant="primary">go</Button>);
     const cls = screen.getByRole('button').className;
     expect(cls).toContain('bg-ink');
     expect(cls).toContain('hover:bg-ink-hover');
-    expect(cls).not.toContain('accent');
+  });
+
+  it('primary becomes a terracotta (accent) CTA with white text in dark', () => {
+    render(<Button variant="primary">go</Button>);
+    const cls = screen.getByRole('button').className;
+    // Dark theme flips the ink fill to the terracotta accent (matches the
+    // design prototype's dark CTA treatment) with white text + a darker hover.
+    expect(cls).toContain('dark:bg-accent');
+    expect(cls).toContain('dark:text-white');
+    expect(cls).toContain('dark:hover:bg-[#b15535]');
   });
 
   it('ghost is bordered-transparent with no fill', () => {

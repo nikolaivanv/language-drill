@@ -175,33 +175,33 @@ describe('ClozeExercise', () => {
   describe('options scaffold', () => {
     it('shows the options toggle when options.length >= 2', () => {
       renderCloze();
-      expect(screen.getByText(/show options/i)).toBeInTheDocument();
+      expect(screen.getByText(/show answer options/i)).toBeInTheDocument();
     });
 
     it('hides the toggle when options is undefined', () => {
       const { options: _ignored, ...noOptions } = baseContent;
       void _ignored;
       renderCloze({ content: noOptions });
-      expect(screen.queryByText(/show options/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/show answer options/i)).not.toBeInTheDocument();
     });
 
     it('hides the toggle when options is an empty array', () => {
       renderCloze({ content: { ...baseContent, options: [] } });
-      expect(screen.queryByText(/show options/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/show answer options/i)).not.toBeInTheDocument();
     });
 
     it('hides the toggle when options.length === 1', () => {
       renderCloze({ content: { ...baseContent, options: ['como'] } });
-      expect(screen.queryByText(/show options/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/show answer options/i)).not.toBeInTheDocument();
     });
 
-    it('reveals option chips when "show options" is clicked', () => {
+    it('reveals option chips when "show answer options" is clicked', () => {
       renderCloze();
       // No option chips before reveal.
       expect(
         screen.queryByRole('button', { name: 'comes' }),
       ).not.toBeInTheDocument();
-      fireEvent.click(screen.getByText(/show options/i));
+      fireEvent.click(screen.getByText(/show answer options/i));
       expect(
         screen.getByRole('button', { name: 'comes' }),
       ).toBeInTheDocument();
@@ -210,7 +210,7 @@ describe('ClozeExercise', () => {
     it('fills the blank with the chosen chip and marks usedMc', () => {
       const onSubmit = vi.fn();
       renderCloze({ onSubmit });
-      fireEvent.click(screen.getByText(/show options/i));
+      fireEvent.click(screen.getByText(/show answer options/i));
       fireEvent.click(screen.getByRole('button', { name: 'comes' }));
       // The blank now holds the chosen word.
       expect(blank().value).toBe('comes');
@@ -224,7 +224,7 @@ describe('ClozeExercise', () => {
     it('keeps usedMc true if the learner reveals options then types their own answer', () => {
       const onSubmit = vi.fn();
       renderCloze({ onSubmit });
-      fireEvent.click(screen.getByText(/show options/i));
+      fireEvent.click(screen.getByText(/show answer options/i));
       fireEvent.change(blank(), { target: { value: 'como' } });
       fireEvent.click(screen.getByRole('button', { name: /submit/i }));
       expect(onSubmit).toHaveBeenCalledWith(
@@ -272,7 +272,7 @@ describe('ClozeExercise', () => {
 
     it('renders the scaffolded chip when the learner revealed options before evaluation', () => {
       const { rerender, props } = renderCloze();
-      fireEvent.click(screen.getByText(/show options/i));
+      fireEvent.click(screen.getByText(/show answer options/i));
       rerender(<ClozeExercise {...props} submission={evaluatedSubmission} />);
       expect(screen.getByText('scaffolded')).toBeInTheDocument();
     });
