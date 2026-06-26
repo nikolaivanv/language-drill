@@ -34,7 +34,7 @@ export function Row({
   return (
     <div
       className={
-        'grid grid-cols-[220px_1fr] gap-x-[40px] py-s-5 border-b border-rule mobile:grid-cols-1 mobile:gap-x-0 mobile:gap-y-s-3 ' +
+        'grid grid-cols-[200px_1fr] gap-x-[32px] py-s-5 border-b border-rule mobile:grid-cols-1 mobile:gap-x-0 mobile:gap-y-s-3 ' +
         (align === 'top' ? 'items-start' : 'items-center')
       }
     >
@@ -42,7 +42,7 @@ export function Row({
         <div className="text-[15px] font-semibold text-ink leading-snug">{label}</div>
         {hint ? <div className="t-small text-ink-mute mt-[4px] leading-relaxed">{hint}</div> : null}
       </div>
-      <div>{children}</div>
+      <div className="min-w-0">{children}</div>
     </div>
   );
 }
