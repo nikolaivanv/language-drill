@@ -9,6 +9,7 @@ import {
 import { useState } from "react";
 
 import { reportApiError } from "../lib/sentry/report-api-error";
+import { ThemeProvider } from "../components/theme/theme-provider";
 
 /**
  * Builds the app's QueryClient. The cache-level `onError` handlers forward
@@ -33,6 +34,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(createQueryClient);
 
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </ThemeProvider>
   );
 }

@@ -23,7 +23,7 @@ export function FilterSelect({
   return (
     <select
       className={cn(
-        'cursor-pointer appearance-none [field-sizing:content] min-w-[120px] rounded-md border border-rule bg-card py-[12px] pl-[14px] pr-9 text-[14px] text-ink outline-none transition-[border-color,box-shadow] duration-150 focus:border-ink focus:shadow-[0_0_0_3px_rgba(26,22,18,0.08)]',
+        'cursor-pointer appearance-none [field-sizing:content] min-w-[120px] rounded-md border border-rule bg-card py-[12px] pl-[14px] pr-9 text-[14px] text-ink outline-none transition-[border-color,box-shadow] duration-150 focus:border-ink focus:shadow-[0_0_0_3px_var(--ring-app)]',
         className,
       )}
       style={{

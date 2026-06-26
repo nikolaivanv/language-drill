@@ -22,7 +22,7 @@ interface LanguageSwitcherProps {
 type LearningProfile = LanguageProfile & { language: LearningLanguage };
 
 const focusRing =
-  'focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(26,22,18,0.08)]';
+  'focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_var(--ring-app)]';
 
 const triggerClass = cn(
   'w-full flex items-center justify-between gap-s-2 px-s-3 py-[10px] border border-rule rounded-md transition-colors duration-150 enabled:hover:bg-paper-2 disabled:cursor-default',

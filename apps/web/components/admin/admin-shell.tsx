@@ -11,7 +11,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       >
         <Link
           href="/admin"
-          className="px-s-2 pb-[18px] font-display text-[20px] font-semibold tracking-[-0.4px] text-ink focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(26,22,18,0.08)] rounded-sm"
+          className="px-s-2 pb-[18px] font-display text-[20px] font-semibold tracking-[-0.4px] text-ink focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_var(--ring-app)] rounded-sm"
         >
           Admin
         </Link>

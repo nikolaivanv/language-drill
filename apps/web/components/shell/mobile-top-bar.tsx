@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useClerk, useUser } from '@clerk/nextjs';
 import { LANGUAGE_NAMES, type LanguageProfile } from '@language-drill/shared';
+import { ThemeToggle } from '../theme/theme-toggle';
 import {
   isLearningLanguage,
   type LearningLanguage,
@@ -17,7 +18,7 @@ import { LanguageSheet } from './language-sheet';
 type LearningProfile = LanguageProfile & { language: LearningLanguage };
 
 const focusRing =
-  'focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(26,22,18,0.08)]';
+  'focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_var(--ring-app)]';
 
 function getInitials(
   firstName?: string | null,
@@ -75,8 +76,10 @@ function AvatarMenu() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-[calc(100%+6px)] z-50 w-[160px] rounded-md border border-rule bg-card py-1 shadow-2"
+          className="absolute right-0 top-[calc(100%+6px)] z-50 w-[228px] rounded-md border border-rule bg-card py-1 shadow-2"
         >
+          <ThemeToggle className="px-s-2 pt-s-1 pb-s-2" />
+          <div className="my-1 mx-s-2 h-px bg-rule" />
           <Link
             href="/settings"
             role="menuitem"

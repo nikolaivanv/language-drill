@@ -30,7 +30,7 @@ export function NavItem({ href, label, icon, badge }: NavItemProps) {
         href={href}
         aria-current={active ? 'page' : undefined}
         className={cn(
-          'flex items-center gap-s-3 px-s-3 py-s-2 rounded-sm text-[13px] transition-colors duration-150 focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(26,22,18,0.08)]',
+          'flex items-center gap-s-3 px-s-3 py-s-2 rounded-sm text-[13px] transition-colors duration-150 focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_var(--ring-app)]',
           active
             ? 'bg-ink text-paper'
             : 'text-ink-soft hover:bg-paper-2 hover:text-ink'
