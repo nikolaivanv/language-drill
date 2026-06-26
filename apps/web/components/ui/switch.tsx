@@ -26,7 +26,9 @@ export function Switch({
       onClick={() => onChange(!checked)}
       className={cn(
         'relative inline-flex h-[22px] w-[38px] flex-shrink-0 items-center rounded-pill transition-colors duration-150',
-        checked ? 'bg-ink' : 'bg-paper-3',
+        // In dark mode `bg-ink` is cream, which has poor contrast against the
+        // white knob — use the terracotta accent for the on-state there.
+        checked ? 'bg-ink dark:bg-accent' : 'bg-paper-3',
         className,
       )}
     >
