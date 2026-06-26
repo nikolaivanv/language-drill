@@ -125,7 +125,7 @@ export function MobileTopBar({ profiles }: MobileTopBarProps) {
   const single = learningProfiles.length <= 1;
 
   return (
-    <header className="sticky top-0 z-40 flex h-[52px] flex-none items-center justify-between border-b border-rule bg-paper px-[18px]">
+    <header className="sticky top-0 z-40 flex h-[52px] flex-none items-center justify-between border-b border-rule bg-paper px-[22px]">
       <Link
         href="/home"
         aria-label="drill — home"

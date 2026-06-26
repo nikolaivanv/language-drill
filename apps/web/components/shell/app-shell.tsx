@@ -22,7 +22,7 @@ export function AppShell({ profiles, children }: AppShellProps) {
     return (
       <div className="flex min-h-screen flex-col bg-paper">
         <MobileTopBar profiles={profiles} />
-        <main className="min-w-0 flex-1 bg-paper px-[18px] pt-[18px] pb-[calc(64px+env(safe-area-inset-bottom)+18px)]">
+        <main className="min-w-0 flex-1 bg-paper px-[22px] pt-[18px] pb-[calc(64px+env(safe-area-inset-bottom)+18px)]">
           {children}
           <AppFooter />
         </main>
