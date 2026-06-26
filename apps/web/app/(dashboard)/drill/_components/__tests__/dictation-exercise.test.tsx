@@ -96,6 +96,30 @@ describe('DictationExercise', () => {
   });
 });
 
+describe('DictationExercise — progressive hint', () => {
+  it('reveals the reference in steps and carries the hint count on submit', () => {
+    const { onSubmit } = renderEx({ kind: 'idle' });
+    // Level 1 — the first half of the reference, ellipsised.
+    fireEvent.click(screen.getByRole('button', { name: /show me a hint/i }));
+    expect(screen.getByText(/el tiempo lo…/)).toBeInTheDocument();
+    // Level 2 — the full reference; the hint control then retires.
+    fireEvent.click(screen.getByRole('button', { name: /show me a hint/i }));
+    expect(screen.getByText('el tiempo lo cura todo')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /show me a hint/i }),
+    ).toBeNull();
+    // The used hint level rides along in the submission meta.
+    fireEvent.change(screen.getByRole('textbox'), {
+      target: { value: 'el tiempo locura todo' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /check|submit/i }));
+    expect(onSubmit).toHaveBeenCalledWith(
+      'el tiempo locura todo',
+      expect.objectContaining({ hintCount: 2 }),
+    );
+  });
+});
+
 describe('DictationExercise — Cmd/Ctrl+Enter submits', () => {
   it('keeps plain Enter as a newline, but submits on Cmd+Enter', () => {
     const { onSubmit } = renderEx({ kind: 'idle' });
