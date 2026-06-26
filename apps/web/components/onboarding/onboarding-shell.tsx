@@ -4,8 +4,9 @@
 // Onboarding shell
 // ---------------------------------------------------------------------------
 // Top-level layout for the 4-step onboarding wizard. Renders a two-pane
-// layout: a 320px coach rail on the left (hidden below `lg`), the mobile
-// coach header (visible below `lg`), and the wizard right pane.
+// layout: a 300px progress rail on the left (hidden at the `mobile:`
+// breakpoint), the mobile onboarding header (visible at `mobile:`), and the
+// wizard right pane.
 //
 // The shell assumes an `OnboardingProvider` wraps it (the page owns the
 // provider so `handleComplete` can read state and dispatch via the context).
@@ -32,9 +33,9 @@ export interface OnboardingShellProps {
 
 export function OnboardingShell({ mode, onComplete }: OnboardingShellProps) {
   return (
-    // Row on desktop (coach rail + content). At ≤760 the rail is hidden and the
-    // layout stacks so the MobileCoachHeader sits on top and the content fills
-    // the width (Req 10.1).
+    // Row on desktop (progress rail + content). At ≤760 the rail is hidden and
+    // the layout stacks so the MobileOnboardingHeader sits on top and the
+    // content fills the width.
     <div className="flex mobile:flex-col min-h-screen bg-paper">
       <ProgressRail />
       <MobileOnboardingHeader />
