@@ -235,7 +235,10 @@
   background: var(--accent); color: #fff; cursor: pointer; white-space: nowrap; }
 
 /* hero */
-.dfm-hero { padding: 24px 0 32px; }
+/* top/bottom only — horizontal gutter comes from `.dfm-wrap` (padding: 0 22px).
+   Using the `padding` shorthand here would zero out that 22px and the hero
+   would render edge-to-edge. */
+.dfm-hero { padding-top: 24px; padding-bottom: 32px; }
 .dfm-eyebrow { font-family: var(--t-mono); font-size: 10.5px; letter-spacing: 2px;
   text-transform: uppercase; color: var(--accent); font-weight: 600; }
 .dfm-h1 { font-family: var(--t-display); font-weight: 500; letter-spacing: -1.1px;
@@ -271,7 +274,8 @@
 .dfm .df-chip-dark { white-space: nowrap; }
 
 /* content sections */
-.dfm-section { padding: 38px 0; border-top: 1px solid var(--df-line); }
+/* top/bottom only — horizontal gutter comes from `.dfm-wrap` (see hero note). */
+.dfm-section { padding-top: 38px; padding-bottom: 38px; border-top: 1px solid var(--df-line); }
 .dfm-eyebrow2 { font-family: var(--t-mono); font-size: 10.5px; letter-spacing: 2px;
   text-transform: uppercase; color: var(--df-mute); font-weight: 500; }
 .dfm-h2 { font-family: var(--t-display); font-weight: 500; letter-spacing: -0.6px;
