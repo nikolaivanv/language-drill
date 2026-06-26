@@ -35,6 +35,17 @@ const ALL_LEARNING: readonly LearningLanguage[] = [
 
 type Profile = { language: LearningLanguage; proficiencyLevel: CefrLevel };
 
+// Render languages in a fixed canonical order (the order they're declared in
+// ALL_LEARNING) regardless of the order the API returns them in. Without this,
+// a newly-added language is appended to the end optimistically and then snaps
+// to a different slot when the query refetches (the server sorts its rows),
+// producing a visible "jump". Sorting both the optimistic and the refetched
+// state by the same key keeps cards stationary except when added/removed.
+const sortProfiles = (profiles: Profile[]): Profile[] =>
+  [...profiles].sort(
+    (a, b) => ALL_LEARNING.indexOf(a.language) - ALL_LEARNING.indexOf(b.language),
+  );
+
 // ---------------------------------------------------------------------------
 // AddLanguage subcomponent
 // ---------------------------------------------------------------------------
@@ -99,8 +110,10 @@ export function LanguagesSection() {
   useEffect(() => {
     if (profilesQuery.data) {
       setRows(
-        profilesQuery.data.profiles.filter(
-          (p): p is Profile => p.language !== Language.EN,
+        sortProfiles(
+          profilesQuery.data.profiles.filter(
+            (p): p is Profile => p.language !== Language.EN,
+          ),
         ),
       );
     }
@@ -135,7 +148,7 @@ export function LanguagesSection() {
 
   const addLanguage = (language: LearningLanguage) =>
     save(
-      [...rows, { language, proficiencyLevel: CefrLevel.A1 }],
+      sortProfiles([...rows, { language, proficiencyLevel: CefrLevel.A1 }]),
       primary ?? language,
     );
 
@@ -153,11 +166,11 @@ export function LanguagesSection() {
         {rows.map((r) => (
           <div
             key={r.language}
-            className="rounded-md border border-rule p-s-4 flex flex-col gap-s-3"
+            className="rounded-lg border border-rule p-s-5 flex flex-col gap-s-4"
           >
-            <div className="flex items-center gap-s-3">
-              <Flagdot language={r.language} />
-              <span className="t-body text-ink">
+            <div className="flex items-center gap-s-3 flex-wrap">
+              <Flagdot language={r.language} size="md" />
+              <span className="text-[19px] font-medium text-ink">
                 {LANGUAGE_NATIVE_NAMES[r.language]}
               </span>
               {primary === r.language && (
@@ -187,7 +200,7 @@ export function LanguagesSection() {
             <div
               role="radiogroup"
               aria-label={`${LANGUAGE_NATIVE_NAMES[r.language]} level`}
-              className="flex gap-[6px] flex-wrap"
+              className="flex gap-s-2 flex-wrap"
             >
               {CEFR_LEVELS.map((lvl) => {
                 const selected = r.proficiencyLevel === lvl;
@@ -200,10 +213,10 @@ export function LanguagesSection() {
                     aria-label={`set ${r.language} to ${lvl}`}
                     onClick={() => setLevel(r.language, lvl)}
                     className={
-                      't-mono text-[12px] px-s-3 py-[8px] rounded-sm border transition-all duration-150 ' +
+                      't-mono text-[13px] w-[54px] h-[44px] inline-flex items-center justify-center rounded-md border transition-all duration-150 ' +
                       (selected
-                        ? 'bg-ink text-paper border-ink'
-                        : 'bg-card text-ink-soft border-rule hover:border-ink')
+                        ? 'bg-ink text-paper border-ink font-medium'
+                        : 'bg-transparent text-ink-soft border-rule-strong hover:border-ink-mute hover:text-ink-2')
                     }
                   >
                     {lvl}

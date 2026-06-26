@@ -35,17 +35,17 @@ export default function SettingsPage() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-[980px] grid grid-cols-[180px_1fr] gap-s-7 mobile:grid-cols-1">
+    <div className="mx-auto max-w-[1040px] grid grid-cols-[200px_1fr] gap-x-[64px] py-s-4 mobile:grid-cols-1 mobile:gap-x-0 mobile:py-0">
       <SettingsNav activeId={active} onJump={jumpTo} />
       <div className="min-w-0">
-        <h1 className="t-display-l mb-s-1">settings</h1>
-        <p className="t-body-l text-ink-soft mb-s-6">tune the things that make this <em>your</em> drill.</p>
+        <h1 className="t-display-l mb-s-2">settings</h1>
+        <p className="t-body-l text-ink-soft mb-s-8">tune the things that make this <em>your</em> drill.</p>
         <LanguagesSection />
         <GoalsSection />
         <PlanAndLimits />
         <AccountSection />
-        <PrivacyDataSection />
         <EmailSection />
+        <PrivacyDataSection />
       </div>
     </div>
   );

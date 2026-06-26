@@ -30,21 +30,22 @@ export function PlanAndLimits() {
       )}
       {me.data && (
         <>
-          <p className="mb-s-3 text-sm">
+          <p className="mb-s-5 text-[16px] text-ink-2">
             plan:{' '}
-            <strong>
+            <strong className="text-ink font-semibold">
               {me.data.plan === 'boosted'
                 ? `${me.data.isAdmin ? '★ ' : ''}10× plan`
                 : 'free plan'}
             </strong>
           </p>
-          <div className="mb-s-4 grid grid-cols-3 gap-s-3">
+          <div className="mb-s-5 grid grid-cols-3 gap-s-3 mobile:grid-cols-1">
             {BUCKETS.map(([label, key]) => (
-              <div key={key} className="rounded-md border border-rule p-s-3">
-                <div className="t-mono text-lg">
-                  {me.data!.usageToday[key]} / {me.data!.limits[key]}
+              <div key={key} className="rounded-md border border-rule p-s-4">
+                <div className="t-mono text-[24px] text-ink tracking-wide">
+                  {me.data!.usageToday[key]}{' '}
+                  <span className="text-ink-mute">/ {me.data!.limits[key]}</span>
                 </div>
-                <div className="t-micro text-ink-mute">{label} today</div>
+                <div className="t-micro text-ink-mute mt-s-2">{label} today</div>
               </div>
             ))}
           </div>
