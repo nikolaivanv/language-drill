@@ -79,7 +79,7 @@ export function StepSchedule() {
             }
             className="mobile:min-h-[48px]"
           >
-            <span className="flex flex-col items-start">
+            <span className="flex flex-col items-center gap-[3px]">
               <span className="t-display-m text-ink">{minutes}</span>
               <span className="t-small text-ink-mute">min / day</span>
             </span>

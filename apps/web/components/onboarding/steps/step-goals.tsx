@@ -19,7 +19,7 @@
 //      the reducer's `selectCanAdvance` (Step 3) gates the CTA.
 //
 // Step 3 is fully optional (R4.4): zero goals selected + empty notes still
-// allows advancing. Decorative emojis are wrapped in
+// allows advancing. Decorative icons are wrapped in
 // `<span aria-hidden="true">` so screen readers don't announce them — the
 // label is the meaningful text.
 // ---------------------------------------------------------------------------
@@ -32,6 +32,7 @@ import { Choice } from '../../ui/choice';
 import { Textarea } from '../../ui/textarea';
 import { useOnboarding } from '../onboarding-context';
 import { GOAL_COPY } from '../../settings/goal-copy';
+import { GoalIcon } from '../goal-icon';
 
 // R4.3: placeholder text (verbatim — the trailing character is U+2026
 // HORIZONTAL ELLIPSIS, not three dots).
@@ -58,7 +59,7 @@ export function StepGoals() {
         className="grid grid-cols-2 grid-rows-3 gap-[12px] mobile:grid-cols-1 mobile:grid-rows-none"
       >
         {GOAL_IDS.map((id) => {
-          const { emoji, label, description } = GOAL_COPY[id];
+          const { label, description } = GOAL_COPY[id];
           const selected = state.goals.includes(id);
           return (
             <Choice
@@ -69,8 +70,8 @@ export function StepGoals() {
               className="mobile:min-h-[48px]"
             >
               <span className="flex items-start gap-s-3 w-full">
-                <span aria-hidden="true" className="text-[18px] leading-none">
-                  {emoji}
+                <span aria-hidden="true" className={selected ? 'text-accent' : 'text-ink-soft'}>
+                  <GoalIcon id={id} />
                 </span>
                 <span className="flex-1 flex flex-col">
                   <span className="t-body text-ink">{label}</span>

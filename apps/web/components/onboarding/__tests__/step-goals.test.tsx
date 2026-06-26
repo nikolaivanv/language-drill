@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------------
 // Locks the contract for the goals + notes step (R4.1, R4.2, R4.3, R4.4,
 // R4.5): all 6 goal tiles render in the canonical `GOAL_IDS` order with
-// emoji glyphs hidden from assistive tech, toggling a tile flips its
+// line-svg icons hidden from assistive tech, toggling a tile flips its
 // selection, the notes textarea carries `maxLength=NOTES_MAX_LENGTH` as a
 // UA hint, paste-overflow above the cap surfaces the inline counter and
 // disables the WizardFooter CTA via `selectCanAdvance`, and Step 3 is
@@ -39,7 +39,7 @@ describe('StepGoals — mobile single-column (R10.3, 1.6)', () => {
 });
 
 describe('StepGoals', () => {
-  it('renders all 6 goal tiles in the canonical GOAL_IDS order with emojis aria-hidden', () => {
+  it('renders all 6 goal tiles in the canonical GOAL_IDS order', () => {
     const state: OnboardingState = { ...initialNewUserState(), step: 3 };
     renderInProvider(state, <StepGoals />);
 
@@ -73,11 +73,21 @@ describe('StepGoals', () => {
       'travel',
     ]);
 
-    // Decorative emojis must be aria-hidden so screen readers don't
-    // announce them. There is one emoji span per tile; the group should
-    // contain at least 6.
-    const emojiSpans = group.querySelectorAll('span[aria-hidden="true"]');
-    expect(emojiSpans.length).toBeGreaterThanOrEqual(6);
+    // Line-svg icons are rendered per tile; spot-check first and last id.
+    expect(document.querySelector('[data-testid="goal-icon-grammar"]')).not.toBeNull();
+    expect(document.querySelector('[data-testid="goal-icon-travel"]')).not.toBeNull();
+  });
+
+  it('renders a line-svg icon for each goal', () => {
+    const state: OnboardingState = { ...initialNewUserState(), step: 3 };
+    renderInProvider(state, <StepGoals />);
+
+    for (const id of GOAL_IDS) {
+      expect(
+        document.querySelector(`[data-testid="goal-icon-${id}"]`),
+        `missing icon for ${id}`,
+      ).not.toBeNull();
+    }
   });
 
   it('clicking a goal tile toggles its selection state', () => {

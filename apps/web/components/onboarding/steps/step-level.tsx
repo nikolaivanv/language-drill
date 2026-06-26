@@ -6,14 +6,14 @@
 // Renders the eyebrow / headline / body copy from R3.x and:
 //   1. (Only when more than one language was selected in Step 1) a primary-
 //      language radiogroup of `Choice` tiles in `mode="radio"`, each tile
-//      showing a `Flagdot` plus the uppercase language code. Arrow keys move
-//      focus among the tiles (WAI-ARIA roving-focus pattern); selection is
-//      handled by `Choice`'s own click/Enter/Space behaviour.
+//      showing a `Flagdot` plus the native language name and a "primary" badge
+//      on the selected tile. Arrow keys move focus among the tiles (WAI-ARIA
+//      roving-focus pattern); selection is handled by `Choice`'s own
+//      click/Enter/Space behaviour.
 //   2. A vertical stack of 6 CEFR cards (`Choice` `mode="radio"`) showing the
 //      level code, lowercase name, and short description. Copy is verbatim
 //      from the prototype `docs/design-archive/design_handoff_language_drill/prototypes/web/hifi/
 //      onboarding.jsx` (lines 138–145), which R3.4 cites as canonical.
-//   3. The `<PlacementTestCallout />` disabled-callout below the cards.
 //
 // Single-language fast-path (R3.1): when exactly one language is selected,
 // the primary-language row is suppressed AND the component auto-dispatches
@@ -37,7 +37,6 @@ import {
 import { Choice } from '../../ui/choice';
 import { Flagdot } from '../../shell/flagdot';
 import { useOnboarding } from '../onboarding-context';
-import { PlacementTestCallout } from '../placement-test-callout';
 
 // Verbatim from the hi-fi prototype (onboarding.jsx:139-144). R3.4 cites the
 // prototype as the source of truth for these descriptions; A1 and B2 also
@@ -161,9 +160,16 @@ export function StepLevel() {
                 dispatch({ type: 'setPrimary', language })
               }
             >
-              <span className="flex items-center gap-s-3">
+              <span className="flex items-center gap-s-3 w-full">
                 <Flagdot language={language} />
-                <span className="t-body text-ink">{language}</span>
+                <span className="flex-1 t-body text-ink">
+                  {LANGUAGE_NATIVE_NAMES[language]}
+                </span>
+                {state.primaryLanguage === language ? (
+                  <span className="t-micro uppercase tracking-[0.4px] text-accent-2 bg-accent-soft border border-accent rounded-pill px-s-2 py-[2px] flex-shrink-0">
+                    primary
+                  </span>
+                ) : null}
               </span>
             </Choice>
           ))}
@@ -216,7 +222,6 @@ export function StepLevel() {
         </div>
       ))}
 
-      <PlacementTestCallout />
     </div>
   );
 }

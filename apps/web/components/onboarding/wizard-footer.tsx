@@ -123,7 +123,7 @@ export function WizardFooter({ onPrimary }: WizardFooterProps) {
       <div className="flex items-center justify-between gap-s-4">
         <div className="flex min-w-[80px] justify-start">{leftControl}</div>
         <div
-          className="t-mono text-ink-mute"
+          className="mobile:hidden t-mono text-ink-mute"
           data-testid="wizard-footer-counter"
         >
           {state.step} / {STEP_COUNT}

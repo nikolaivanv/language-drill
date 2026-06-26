@@ -90,8 +90,9 @@ describe('StepLevel', () => {
     });
     const tiles = within(primaryGroup).getAllByRole('radio');
     expect(tiles).toHaveLength(2);
-    expect(tiles[0]).toHaveTextContent('ES');
-    expect(tiles[1]).toHaveTextContent('DE');
+    // Tiles now show native language names, not bare codes.
+    expect(tiles[0]).toHaveTextContent('español');
+    expect(tiles[1]).toHaveTextContent('deutsch');
     // ES is the current primary — only the first tile is checked.
     expect(tiles[0]).toHaveAttribute('aria-checked', 'true');
     expect(tiles[1]).toHaveAttribute('aria-checked', 'false');
@@ -187,7 +188,7 @@ describe('StepLevel', () => {
     });
   });
 
-  it('renders the placement-test callout below the cards', () => {
+  it('does not render a placement-test callout', () => {
     const state: OnboardingState = {
       ...initialNewUserState(),
       step: 2,
@@ -195,9 +196,30 @@ describe('StepLevel', () => {
       primaryLanguage: Language.ES,
     };
     renderInProvider(state, <StepLevel />);
-    const callout = screen.getByRole('note');
-    expect(callout).toBeInTheDocument();
-    expect(callout).toHaveTextContent(/not sure\?/i);
+    // Guard on the component testid AND its human-visible signals (role=note +
+    // "not sure?" copy) so the assertion stays meaningful now that the
+    // PlacementTestCallout component has been removed.
+    expect(screen.queryByTestId('placement-test-callout')).toBeNull();
+    expect(screen.queryByRole('note')).toBeNull();
+    expect(screen.queryByText(/not sure\?/i)).toBeNull();
+  });
+
+  it('shows a "primary" badge on the selected primary language tile', () => {
+    const state: OnboardingState = {
+      ...initialNewUserState(),
+      step: 2,
+      languages: [Language.ES, Language.DE],
+      primaryLanguage: Language.ES,
+    };
+    renderInProvider(state, <StepLevel />);
+    expect(screen.getByText('primary')).toBeInTheDocument();
+    // The badge appears only on the primary tile, not on the non-primary tile.
+    const primaryGroup = screen.getByRole('radiogroup', {
+      name: /primary language/i,
+    });
+    const tiles = within(primaryGroup).getAllByRole('radio');
+    expect(within(tiles[0]).getByText('primary')).toBeInTheDocument();
+    expect(within(tiles[1]).queryByText('primary')).toBeNull();
   });
 
   it('WizardFooter continue button is disabled until a CEFR level is picked', () => {
