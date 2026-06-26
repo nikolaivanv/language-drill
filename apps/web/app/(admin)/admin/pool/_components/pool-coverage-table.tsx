@@ -139,7 +139,7 @@ export function PoolCoverageTable({ items }: Props) {
                   <button
                     type="button"
                     aria-expanded={isOpen}
-                    className="inline-flex items-center gap-1 font-medium text-ink hover:text-accent-2"
+                    className="inline-flex items-center gap-1 text-left font-medium text-ink hover:text-accent-2"
                     onClick={() => setExpanded((cur) => (cur === key ? null : key))}
                   >
                     <span className="t-mono">{item.grammarPointKey}</span> {isOpen ? '▼' : '▶'}
