@@ -13,9 +13,9 @@
 // ---------------------------------------------------------------------------
 
 import { track } from '../../lib/analytics/track';
-import { CoachPane } from './coach-pane';
-import { MobileCoachHeader } from './mobile-coach-header';
+import { MobileOnboardingHeader } from './mobile-onboarding-header';
 import { useOnboarding } from './onboarding-context';
+import { ProgressRail } from './progress-rail';
 import { StepGoals } from './steps/step-goals';
 import { StepLanguages } from './steps/step-languages';
 import { StepLevel } from './steps/step-level';
@@ -36,8 +36,8 @@ export function OnboardingShell({ mode, onComplete }: OnboardingShellProps) {
     // layout stacks so the MobileCoachHeader sits on top and the content fills
     // the width (Req 10.1).
     <div className="flex mobile:flex-col min-h-screen bg-paper">
-      <CoachPane />
-      <MobileCoachHeader />
+      <ProgressRail />
+      <MobileOnboardingHeader />
       <WizardRightPane mode={mode} onComplete={onComplete} />
     </div>
   );
@@ -80,7 +80,9 @@ function WizardRightPane({
       {/* Canonical 18px gutter + tighter vertical rhythm at ≤760 so the
           WizardProgress sits near the top of the screen (Req 10.2, 10.4). */}
       <div className="max-w-[760px] mx-auto px-[64px] mobile:px-[18px] py-[56px] mobile:py-[24px] flex flex-col gap-s-7">
-        <WizardProgress />
+        <div className="mobile:hidden">
+          <WizardProgress />
+        </div>
         <ActiveStep />
         <WizardFooter onPrimary={onPrimary} />
       </div>

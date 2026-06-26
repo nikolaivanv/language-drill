@@ -1,10 +1,9 @@
 export { OnboardingShell } from './onboarding-shell';
 export { OnboardingProvider, useOnboarding } from './onboarding-context';
-export { CoachPane } from './coach-pane';
-export { MobileCoachHeader } from './mobile-coach-header';
+export { ProgressRail } from './progress-rail';
+export { MobileOnboardingHeader } from './mobile-onboarding-header';
 export { WizardProgress } from './wizard-progress';
 export { WizardFooter } from './wizard-footer';
-export { PlacementTestCallout } from './placement-test-callout';
 
 export { StepLanguages } from './steps/step-languages';
 export { StepLevel } from './steps/step-level';
