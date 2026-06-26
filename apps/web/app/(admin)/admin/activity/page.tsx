@@ -124,11 +124,20 @@ function SessionsTab() {
             const open = expandedId === s.sessionId;
             return (
               <Fragment key={s.sessionId}>
-                <tr>
+                <tr
+                  onClick={() => setExpandedId(open ? null : s.sessionId)}
+                  className="cursor-pointer hover:bg-paper-2"
+                >
                   <Td className="whitespace-nowrap font-mono text-[12px] text-ink-soft">{formatDate(s.startedAt)}</Td>
                   <Td>
+                    {/* The whole row toggles (above); this button keeps the
+                        expander keyboard-focusable. stopPropagation prevents the
+                        row handler from also firing (which would net cancel). */}
                     <button
-                      onClick={() => setExpandedId(open ? null : s.sessionId)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExpandedId(open ? null : s.sessionId);
+                      }}
                       aria-expanded={open}
                       className="text-left underline-offset-2 hover:underline"
                     >
@@ -191,19 +200,22 @@ function SessionDetail({
           key={ex.exerciseId}
           className="flex flex-col gap-s-1 border border-rule rounded-sm p-s-3"
         >
-          <div className="flex items-center gap-s-2 text-[12px]">
+          <div className="flex flex-wrap items-center gap-s-2 text-[12px]">
             <span className="font-mono text-ink-soft">#{ex.order + 1}</span>
             <span>{ex.type}</span>
             <span className="text-ink-soft">score: {ex.score ?? '—'}</span>
             {ex.flag && <SignalBadge signal="flagged" />}
             {template && (
+              // Inline (not ml-auto): pinning it to the far right pushed it off
+              // the right edge of the wide detail row, so it needed a long
+              // horizontal scroll to find. Keep it next to the metadata.
               <a
-                className="ml-auto text-[11px] underline"
+                className="text-[11px] font-medium text-accent-2 underline underline-offset-2 hover:text-accent"
                 href={template.replace('{cellKey}', ex.exerciseId)}
                 target="_blank"
                 rel="noreferrer"
               >
-                Langfuse
+                Langfuse ↗
               </a>
             )}
           </div>

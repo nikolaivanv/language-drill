@@ -14,10 +14,14 @@ type Props = { items: PoolStatusItem[] };
 
 type SortDir = 'asc' | 'desc';
 
+// Row tint encodes coverage (red <50%, amber 50–80%, green ≥80%). The light
+// pastels don't flip with the token-driven dark theme, so the cream `text-ink`
+// cells become near-invisible on them — pair each with a dark, desaturated tint
+// scoped to `dark:` (enabled via the `.dark` custom variant in globals.css).
 function coverageBgClass(ratio: number): string {
-  if (ratio < 0.5) return 'bg-red-100';
-  if (ratio < 0.8) return 'bg-amber-100';
-  return 'bg-green-100';
+  if (ratio < 0.5) return 'bg-red-100 dark:bg-red-950/60';
+  if (ratio < 0.8) return 'bg-amber-100 dark:bg-amber-950/60';
+  return 'bg-green-100 dark:bg-green-950/55';
 }
 
 // Mirror of the scheduler's next-tick decision: label + chip color, plus a
