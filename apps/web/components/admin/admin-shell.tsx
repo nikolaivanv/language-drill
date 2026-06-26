@@ -8,7 +8,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       <nav
         aria-label="admin"
         data-testid="admin-rail"
-        className="w-[220px] flex-shrink-0 flex flex-col gap-1 border-r border-rule bg-paper px-s-4 py-[22px]"
+        className="w-[300px] flex-shrink-0 flex flex-col gap-1 border-r border-rule bg-paper px-[22px] py-[22px]"
       >
         <Link
           href="/admin"
