@@ -60,4 +60,13 @@ describe('ProgressRail', () => {
     renderRail(build({ step: 1, languages: [Language.ES] }));
     expect(within(row(4) as HTMLElement).queryByText(/min\/day/)).toBeNull();
   });
+
+  it('renders the goals and schedule summaries (completed "none" + current minutes)', () => {
+    // On step 4: step 3 (goals) is completed with zero goals → "none"; step 4
+    // (schedule) is the current row and shows its minutes. Pins the two
+    // buildRows branches inherited from the former SoFarChecklist.
+    renderRail(build({ step: 4, goals: [], dailyMinutes: 10 }));
+    expect(within(row(3) as HTMLElement).getByText('none')).toBeInTheDocument();
+    expect(within(row(4) as HTMLElement).getByText('10 min/day')).toBeInTheDocument();
+  });
 });
