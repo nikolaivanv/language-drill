@@ -210,6 +210,8 @@ export function TranslationExercise({
       {hintCount < 3 && (
         <Button
           variant="ghost"
+          size="sm"
+          className="self-start"
           onClick={handleHint}
           disabled={isLocked}
         >
@@ -217,7 +219,7 @@ export function TranslationExercise({
         </Button>
       )}
 
-      {!active && (
+      {!active && submission.kind !== 'evaluated' && (
         <div className="mt-s-6 flex justify-end">
           <Button
             variant="primary"

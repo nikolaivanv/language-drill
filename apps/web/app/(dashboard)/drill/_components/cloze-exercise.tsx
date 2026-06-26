@@ -144,13 +144,14 @@ export function ClozeExercise({
         )}
 
         {hasOptions && !isLocked && (
-          <button
-            type="button"
-            className="t-small self-start text-ink-mute underline underline-offset-2 hover:text-ink"
+          <Button
+            variant="ghost"
+            size="sm"
+            className="self-start"
             onClick={() => (showOptions ? setShowOptions(false) : revealOptions())}
           >
-            {showOptions ? 'hide options' : 'show options · easier'}
-          </button>
+            {showOptions ? 'hide answer options' : 'show answer options'}
+          </Button>
         )}
       </div>
 

@@ -27,6 +27,11 @@ export function HintRow({
   onAdvance,
 }: HintRowProps) {
   const showL3 = Boolean(exampleSentence);
+  // first letter → letter count → (example sentence, if one exists). A single
+  // "show me a hint" chip escalates one level per click and hides once the
+  // deepest available hint is shown — the same progressive control the
+  // translation exercise uses, so every drill type shares one hint affordance.
+  const maxLevel = showL3 ? 3 : 2;
   const maskedExampleSentence =
     level >= 3 && exampleSentence
       ? maskExampleSentence(exampleSentence, expectedWord)
@@ -34,37 +39,16 @@ export function HintRow({
 
   return (
     <div className="flex flex-col gap-s-3">
-      <div className="flex flex-wrap gap-s-2">
+      {level < maxLevel && (
         <Button
           variant="ghost"
           size="sm"
+          className="self-start"
           onClick={onAdvance}
-          disabled={level !== 0}
-          aria-pressed={level >= 1}
         >
-          first letter
+          show me a hint
         </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onAdvance}
-          disabled={level !== 1}
-          aria-pressed={level >= 2}
-        >
-          letter count
-        </Button>
-        {showL3 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onAdvance}
-            disabled={level !== 2}
-            aria-pressed={level >= 3}
-          >
-            example sentence
-          </Button>
-        )}
-      </div>
+      )}
       {level >= 1 && (
         <p className="t-small">
           first letter:{' '}

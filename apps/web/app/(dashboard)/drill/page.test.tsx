@@ -659,9 +659,9 @@ describe('PracticePage', () => {
       });
       fireEvent.click(screen.getByRole('button', { name: 'submit' }));
 
-      // Verdict shown; the action bar now carries "next".
+      // Verdict shown; the action bar now carries "next" (with a trailing arrow).
       expect(screen.getByText('spot on')).toBeInTheDocument();
-      fireEvent.click(screen.getByRole('button', { name: 'next' }));
+      fireEvent.click(screen.getByRole('button', { name: /^next/ }));
 
       expect(screen.getByText(/sentence-1/)).toBeInTheDocument();
       expect(screen.queryByText(/sentence-0/)).not.toBeInTheDocument();

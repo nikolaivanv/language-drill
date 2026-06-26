@@ -194,9 +194,10 @@ describe('FeedbackShell', () => {
       // No inline next button while active.
       expect(screen.queryByRole('button', { name: 'see results' })).toBeNull();
 
-      // The published action carries the next label + onNext + primary variant.
+      // The published action carries the next label (with a trailing arrow) +
+      // onNext + primary variant.
       const action = getCaptured();
-      expect(action?.label).toBe('see results');
+      expect(action?.label).toBe('see results →');
       expect(action?.variant).toBe('primary');
       action?.onClick();
       expect(onNext).toHaveBeenCalledTimes(1);

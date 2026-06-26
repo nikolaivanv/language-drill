@@ -16,14 +16,18 @@ export interface ButtonProps
 const shared =
   // `outline-none` drops the UA focus outline (the stray browser-blue ring);
   // the focus-visible offset shadow is our keyboard ring — a neutral ink ring
-  // with a paper gap so it reads on both light and dark (ink) buttons and
-  // stays within the ink-forward button language (no terracotta on buttons).
+  // with a paper gap so it reads on every fill (ink in light, terracotta in
+  // dark); the ring itself stays ink, never terracotta, so it never blends
+  // into the dark theme's terracotta primary fill.
   'inline-flex items-center justify-center gap-[6px] font-medium whitespace-nowrap transition-all duration-150 outline-none focus-visible:shadow-[0_0_0_2px_var(--color-paper),0_0_0_4px_var(--color-ink)]';
 
 const variantClasses: Record<ButtonVariant, string> = {
-  // Primary CTA — ink fill, lightens on hover (never terracotta). Desktop shadow lift.
+  // Primary CTA — light: ink fill, lightens on hover. Dark: the ink token flips
+  // to a near-white cream, so the fill goes terracotta (the accent) with white
+  // text and a darker terracotta hover — matching the design prototype's dark
+  // CTA treatment (and the featured drill card's dark hero). Desktop shadow lift.
   primary:
-    'border border-ink bg-ink text-paper hover:bg-ink-hover hover:border-ink-hover hover:shadow-2',
+    'border border-ink bg-ink text-paper hover:bg-ink-hover hover:border-ink-hover hover:shadow-2 dark:border-accent dark:bg-accent dark:text-white dark:hover:border-[#b15535] dark:hover:bg-[#b15535]',
   // Secondary — bordered transparent, no fill. The single ghost/secondary style.
   ghost:
     'border border-rule-strong bg-transparent text-ink-2 hover:bg-paper-2 hover:text-ink',

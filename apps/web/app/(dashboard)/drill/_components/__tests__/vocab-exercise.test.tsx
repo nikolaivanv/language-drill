@@ -86,16 +86,15 @@ describe('VocabExercise', () => {
   });
 
   describe('hint progression (Req 5.2)', () => {
-    it('reveals the first letter and advances hintLevel after clicking the L1 hint', () => {
+    it('reveals the first letter and advances hintLevel after clicking the hint chip', () => {
       const { container } = renderVocab();
 
-      // Before click: no `first letter:` line, L1 button enabled.
+      // Before click: no `first letter:` line yet; the single hint chip shows.
       expect(screen.queryByText(/^first letter:/)).not.toBeInTheDocument();
-      const l1Button = screen.getByRole('button', { name: /^first letter$/i });
-      expect(l1Button).not.toBeDisabled();
+      const hintChip = screen.getByRole('button', { name: 'show me a hint' });
 
-      // Click L1 — parent advances hintLevel from 0 to 1.
-      fireEvent.click(l1Button);
+      // Click — parent advances hintLevel from 0 to 1.
+      fireEvent.click(hintChip);
 
       // The HintRow now renders a `<p>` with `first letter:` followed by a
       // <strong> containing the lowercased first letter of expectedWord.
@@ -105,14 +104,10 @@ describe('VocabExercise', () => {
       expect(strong).not.toBeNull();
       expect(strong?.textContent).toBe('a');
 
-      // After advance, the L1 button itself is disabled (level !== 0).
+      // The same chip stays available to escalate to the next hint level.
       expect(
-        screen.getByRole('button', { name: /^first letter$/i }),
-      ).toBeDisabled();
-      // The L2 button (`letter count`) is now the only enabled hint button.
-      expect(
-        screen.getByRole('button', { name: /^letter count$/i }),
-      ).not.toBeDisabled();
+        screen.getByRole('button', { name: 'show me a hint' }),
+      ).toBeInTheDocument();
     });
   });
 

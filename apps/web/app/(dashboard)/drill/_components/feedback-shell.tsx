@@ -50,7 +50,11 @@ export function FeedbackShell({
   const { active, setPrimaryAction } = useDrillAction();
   React.useEffect(() => {
     if (!active) return;
-    setPrimaryAction({ label: nextLabel, onClick: onNext, variant: 'primary' });
+    setPrimaryAction({
+      label: `${nextLabel} →`,
+      onClick: onNext,
+      variant: 'primary',
+    });
     return () => setPrimaryAction(null);
   }, [active, nextLabel, onNext, setPrimaryAction]);
 
@@ -78,7 +82,25 @@ export function FeedbackShell({
       <div className="mt-s-4">{children}</div>
       {coach && (
         <div className="mt-s-6 flex items-start gap-s-3 border-t border-rule pt-s-5">
-          <span className="relative mt-[2px] h-[34px] w-[34px] flex-shrink-0 rounded-full bg-ink after:absolute after:bottom-[8px] after:left-1/2 after:h-[3px] after:w-[14px] after:-translate-x-1/2 after:rounded-[2px] after:bg-accent after:content-['']" />
+          {/* Coach avatar: a terracotta pencil ("note/correction") in an
+              accent-soft disc — the design system's avatar treatment
+              (accent-soft fill + accent-2 mark), legible on light and dark. */}
+          <span className="mt-[2px] flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent-2">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+              <path d="m15 5 4 4" />
+            </svg>
+          </span>
           <div>
             {/* Raw micro utilities (not `t-micro`) so text-accent-2 applies —
                 `.t-micro` is unlayered and would otherwise force ink-mute. */}
@@ -93,6 +115,7 @@ export function FeedbackShell({
         <div className="mt-s-6 flex justify-end">
           <Button variant="primary" onClick={onNext}>
             {nextLabel}
+            <span aria-hidden="true">→</span>
           </Button>
         </div>
       )}
