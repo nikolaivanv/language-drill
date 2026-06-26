@@ -60,14 +60,14 @@ export function GoalsSection() {
       </Row>
 
       <Row label="why you're learning" hint="we lean drills toward these." align="top">
-        <div className="flex flex-col gap-s-2">
+        <div className="flex flex-col gap-s-3">
           {GOAL_IDS.map((id) => {
             const checked = goals.includes(id);
             const labelId = `goal-${id}`;
             return (
-              <label key={id} className="flex items-center gap-s-3 cursor-pointer">
+              <label key={id} className="flex items-center gap-s-3 cursor-pointer group">
                 <Checkbox checked={checked} onChange={() => toggleGoal(id)} aria-labelledby={labelId} />
-                <span id={labelId} className="t-body text-ink">{GOAL_COPY[id].label}</span>
+                <span id={labelId} className="text-[16px] text-ink-2 group-hover:text-ink transition-colors duration-150">{GOAL_COPY[id].label}</span>
               </label>
             );
           })}

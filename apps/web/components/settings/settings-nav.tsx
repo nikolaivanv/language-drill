@@ -5,8 +5,8 @@ export const SETTINGS_SECTIONS = [
   { id: 'goals', label: 'goals' },
   { id: 'plan', label: 'plan & limits' },
   { id: 'account', label: 'account' },
-  { id: 'privacy', label: 'privacy & data' },
   { id: 'email', label: 'email notifications' },
+  { id: 'privacy', label: 'privacy & data' },
 ] as const;
 
 export function SettingsNav({
@@ -26,10 +26,10 @@ export function SettingsNav({
               type="button"
               onClick={() => onJump(s.id)}
               className={
-                'w-full text-left px-s-3 py-[7px] rounded-sm text-[13px] border-l-2 transition-all duration-150 ' +
+                'w-full text-left px-s-3 py-[8px] rounded-sm text-[14px] border-l-2 transition-all duration-150 ' +
                 (activeId === s.id
                   ? 'text-ink border-accent font-medium'
-                  : 'text-ink-soft border-transparent hover:text-ink')
+                  : 'text-ink-soft border-transparent hover:text-ink hover:bg-paper-2 hover:border-rule-strong')
               }
             >
               {s.label}
