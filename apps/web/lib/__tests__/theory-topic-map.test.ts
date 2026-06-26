@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { Language } from '@language-drill/shared';
-import { topicIdForGrammarPointKey } from '../theory-topic-map';
+import { Language, ExerciseType } from '@language-drill/shared';
+import {
+  topicIdForGrammarPointKey,
+  exerciseTypeHasTheory,
+} from '../theory-topic-map';
 
 describe('topicIdForGrammarPointKey', () => {
   it('strips the language prefix and returns the rest', () => {
@@ -39,5 +42,30 @@ describe('topicIdForGrammarPointKey', () => {
     expect(topicIdForGrammarPointKey('tr-a1-locative', Language.TR)).toBe(
       'a1-locative',
     );
+  });
+});
+
+describe('exerciseTypeHasTheory', () => {
+  it('returns true for grammar-kind exercise types (theory pages may exist)', () => {
+    expect(exerciseTypeHasTheory(ExerciseType.CLOZE)).toBe(true);
+    expect(exerciseTypeHasTheory(ExerciseType.TRANSLATION)).toBe(true);
+    expect(exerciseTypeHasTheory(ExerciseType.SENTENCE_CONSTRUCTION)).toBe(true);
+    expect(exerciseTypeHasTheory(ExerciseType.CONJUGATION)).toBe(true);
+  });
+
+  it('returns false for vocab / dictation / free-writing types (never grammar-kind)', () => {
+    // These three exercise types are produced *exclusively* by non-grammar
+    // curriculum kinds (see `compatibleTypes` in packages/db generation), so a
+    // theory page can never exist for them — a `/theory/...` fetch would always
+    // 404. This is the guaranteed-permanent 404 that flooded Sentry.
+    expect(exerciseTypeHasTheory(ExerciseType.VOCAB_RECALL)).toBe(false);
+    expect(exerciseTypeHasTheory(ExerciseType.DICTATION)).toBe(false);
+    expect(exerciseTypeHasTheory(ExerciseType.FREE_WRITING)).toBe(false);
+  });
+
+  it('defaults to true for an unknown / future type string (safe: 404 still degrades to empty state)', () => {
+    expect(exerciseTypeHasTheory('some_new_type')).toBe(true);
+    expect(exerciseTypeHasTheory(null)).toBe(true);
+    expect(exerciseTypeHasTheory(undefined)).toBe(true);
   });
 });

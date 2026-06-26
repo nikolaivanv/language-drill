@@ -28,7 +28,10 @@ import {
   TheoryTrigger,
 } from '../../../components/theory';
 import { track } from '../../../lib/analytics/track';
-import { topicIdForGrammarPointKey } from '../../../lib/theory-topic-map';
+import {
+  topicIdForGrammarPointKey,
+  exerciseTypeHasTheory,
+} from '../../../lib/theory-topic-map';
 import { useIsMobile } from '../../../lib/responsive';
 import { Card } from '../../../components/ui';
 import { DICTATION_RUN_COUNT } from '../../../lib/drill/session-config';
@@ -360,10 +363,12 @@ function PracticePageContent() {
       `you've slipped on this ${theme.count}× lately — steady reps here pay off`;
     return { tag, note };
   }, [currentItem?.grammarPointKey, insights.data?.themes]);
-  const theoryTopicId = topicIdForGrammarPointKey(
-    currentItem?.grammarPointKey ?? null,
-    activeLanguage,
-  );
+  // Vocab / dictation / free-writing exercises come from non-grammar curriculum
+  // kinds, which never have a theory page — derive a topic id only for grammar
+  // types so we don't fire a `/theory/...` fetch that can only ever 404.
+  const theoryTopicId = exerciseTypeHasTheory(currentItem?.type)
+    ? topicIdForGrammarPointKey(currentItem?.grammarPointKey ?? null, activeLanguage)
+    : null;
 
   // The learner's recorded baseline for the active language — the identity that
   // the session level can drift from. Null when the active language has no
