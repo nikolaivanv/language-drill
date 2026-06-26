@@ -26,19 +26,22 @@ export function Switch({
       onClick={() => onChange(!checked)}
       className={cn(
         'relative inline-flex h-[22px] w-[38px] flex-shrink-0 items-center rounded-pill transition-colors duration-150',
-        // Hover deepens the track: off → ink-mute, on → a slight shift of the
-        // ink fill (matches the prototype's switch hover treatment).
-        checked ? 'bg-ink hover:bg-ink-2' : 'bg-rule-strong hover:bg-ink-mute',
+        // Track colours + hover. Off: a visible rule track that deepens to
+        // ink-mute on hover. On: the ink fill (lightens slightly on hover); in
+        // dark mode `bg-ink` is cream with poor contrast against the white knob,
+        // so the on-state uses the terracotta accent there (darker on hover),
+        // matching the app's dark-CTA treatment.
+        checked
+          ? 'bg-ink hover:bg-ink-2 dark:bg-accent dark:hover:bg-[#b15535]'
+          : 'bg-rule-strong hover:bg-ink-mute',
         className,
       )}
     >
       <span
         aria-hidden="true"
         className={cn(
-          'inline-block h-[18px] w-[18px] rounded-full shadow-1 transition-transform duration-150',
-          // White knob reads on the ink fill in light mode; in dark the ink
-          // token flips to cream, so the on-knob darkens to paper for contrast.
-          checked ? 'bg-white dark:bg-paper' : 'bg-white',
+          // White knob reads on both the ink (light) and terracotta (dark) fills.
+          'inline-block h-[18px] w-[18px] rounded-full bg-white shadow-1 transition-transform duration-150',
           checked ? 'translate-x-[18px]' : 'translate-x-[2px]',
         )}
       />

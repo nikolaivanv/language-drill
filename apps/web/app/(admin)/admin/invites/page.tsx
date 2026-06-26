@@ -127,14 +127,6 @@ export default function AdminInvitesPage() {
                   <Td className="text-ink-soft">{inv.note ?? '—'}</Td>
                   <Td align="right">
                     <div className="flex items-center justify-end gap-1">
-                      <button
-                        type="button"
-                        className="rounded-sm px-2 py-1 text-[12px] font-medium text-accent-2 hover:bg-accent-soft"
-                        onClick={() => void copyLink(inv.id, inv.code)}
-                        aria-live="polite"
-                      >
-                        {copiedId === inv.id ? 'Copied!' : 'Copy link'}
-                      </button>
                       {inv.status === 'unused' && (
                         <button
                           type="button"
@@ -144,6 +136,14 @@ export default function AdminInvitesPage() {
                           Revoke
                         </button>
                       )}
+                      <button
+                        type="button"
+                        className="rounded-sm px-2 py-1 text-[12px] font-medium text-accent-2 hover:bg-accent-soft"
+                        onClick={() => void copyLink(inv.id, inv.code)}
+                        aria-live="polite"
+                      >
+                        {copiedId === inv.id ? 'Copied!' : 'Copy link'}
+                      </button>
                     </div>
                   </Td>
                 </tr>

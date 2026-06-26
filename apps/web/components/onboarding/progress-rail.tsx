@@ -74,7 +74,9 @@ export function ProgressRail() {
   return (
     <aside
       data-testid="onboarding-progress-rail"
-      className="flex mobile:hidden w-[300px] flex-shrink-0 flex-col border-r border-rule bg-paper px-s-6 py-[30px]"
+      // Pinned full-height rail so the footer note stays visible even on tall
+      // steps (the right pane scrolls, the rail does not). Hidden on mobile.
+      className="flex mobile:hidden w-[300px] flex-shrink-0 flex-col self-start sticky top-0 h-screen overflow-y-auto border-r border-rule bg-paper px-s-6 py-[30px]"
     >
       <Brand />
       <p className="t-micro text-ink-mute mt-s-5 mb-s-2 px-s-1">setup</p>
@@ -107,7 +109,11 @@ export function ProgressRail() {
           );
         })}
       </ol>
-      <p className="mt-auto px-s-1 pt-s-5 t-hand text-ink-mute">{FOOTER_NOTE}</p>
+      {/* Fraunces italic per the prototype's .rail-note (not handscript) —
+          larger + higher-contrast ink-soft so it stays legible on dark. */}
+      <p className="mt-auto px-s-1 pt-s-5 font-display italic text-[16px] leading-snug text-ink-soft">
+        {FOOTER_NOTE}
+      </p>
     </aside>
   );
 }
