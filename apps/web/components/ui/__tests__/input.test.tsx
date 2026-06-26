@@ -19,7 +19,7 @@ describe('Input', () => {
     render(<Input data-testid="input" />);
     const el = screen.getByTestId('input');
     expect(el.className).toContain('border-rule');
-    expect(el.className).toContain('rounded-r-md');
+    expect(el.className).toContain('rounded-md');
     expect(el.className).toContain('bg-card');
   });
 

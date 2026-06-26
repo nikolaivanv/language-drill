@@ -229,7 +229,7 @@ function ClozeBody({ item, content }: ClozeBodyProps) {
       <div
         className={`grid ${isCorrect ? 'grid-cols-1' : 'grid-cols-2'} mobile:grid-cols-1 gap-s-3`}
       >
-        <div className="rounded-r-md p-s-3 bg-paper-2">
+        <div className="rounded-md p-s-3 bg-paper-2">
           <div className="t-micro">your answer</div>
           <div
             className="mt-s-2"
@@ -247,7 +247,7 @@ function ClozeBody({ item, content }: ClozeBodyProps) {
             below carries the explanation. Only show the corrected cell when the
             answer was wrong. */}
         {!isCorrect && (
-          <div className="rounded-r-md p-s-3 bg-[var(--color-ok-soft)]">
+          <div className="rounded-md p-s-3 bg-[var(--color-ok-soft)]">
             <div className="t-micro">corrected</div>
             <div
               className="mt-s-2"
@@ -284,7 +284,7 @@ function TranslationBody({ item, content }: TranslationBodyProps) {
     <>
       <p className="t-small italic mb-s-2">"{content.sourceText}"</p>
       <div className="grid grid-cols-2 mobile:grid-cols-1 gap-s-3">
-        <div className="rounded-r-md p-s-3 bg-paper-2">
+        <div className="rounded-md p-s-3 bg-paper-2">
           <div className="t-micro">your translation</div>
           <div
             className="mt-s-2"
@@ -300,7 +300,7 @@ function TranslationBody({ item, content }: TranslationBodyProps) {
           </div>
         </div>
         <div
-          className="rounded-r-md p-s-3"
+          className="rounded-md p-s-3"
           style={{
             background: isCorrect ? 'transparent' : 'var(--color-ok-soft)',
             border: isCorrect ? '1px dashed var(--color-rule)' : 'none',
@@ -343,7 +343,7 @@ function VocabBody({ item, content }: VocabBodyProps) {
     <>
       <p className="t-small italic mb-s-2">"{content.prompt}"</p>
       <div className="grid grid-cols-2 mobile:grid-cols-1 gap-s-3">
-        <div className="rounded-r-md p-s-3 bg-paper-2">
+        <div className="rounded-md p-s-3 bg-paper-2">
           <div className="t-micro">you typed</div>
           <div
             className="mt-s-2"
@@ -359,7 +359,7 @@ function VocabBody({ item, content }: VocabBodyProps) {
           </div>
         </div>
         <div
-          className="rounded-r-md p-s-3"
+          className="rounded-md p-s-3"
           style={{
             background: isCorrect ? 'transparent' : 'var(--color-ok-soft)',
             border: isCorrect ? '1px dashed var(--color-rule)' : 'none',
@@ -409,7 +409,7 @@ function ConjugationBody({ item, content }: ConjugationBodyProps) {
         {content.lemma} ({content.lemmaGloss}) — <ConjugationFeatureBundle content={content} variant="inline" />
       </p>
       <div className="grid grid-cols-2 mobile:grid-cols-1 gap-s-3">
-        <div className="rounded-r-md p-s-3 bg-paper-2">
+        <div className="rounded-md p-s-3 bg-paper-2">
           <div className="t-micro">your form</div>
           <div
             className="mt-s-2"
@@ -425,7 +425,7 @@ function ConjugationBody({ item, content }: ConjugationBodyProps) {
           </div>
         </div>
         <div
-          className="rounded-r-md p-s-3"
+          className="rounded-md p-s-3"
           style={{
             background: isCorrect ? 'transparent' : 'var(--color-ok-soft)',
             border: isCorrect ? '1px dashed var(--color-rule)' : 'none',
@@ -475,7 +475,7 @@ function SentenceConstructionBody({ item, content }: SentenceConstructionBodyPro
     <>
       <p className="t-small italic mb-s-2">"{content.prompt}"</p>
       <div className="grid grid-cols-2 mobile:grid-cols-1 gap-s-3">
-        <div className="rounded-r-md p-s-3 bg-paper-2">
+        <div className="rounded-md p-s-3 bg-paper-2">
           <div className="t-micro">your sentence</div>
           <div
             className="mt-s-2"
@@ -491,7 +491,7 @@ function SentenceConstructionBody({ item, content }: SentenceConstructionBodyPro
           </div>
         </div>
         <div
-          className="rounded-r-md p-s-3"
+          className="rounded-md p-s-3"
           style={{
             background: isCorrect ? 'transparent' : 'var(--color-ok-soft)',
             border: isCorrect ? '1px dashed var(--color-rule)' : 'none',

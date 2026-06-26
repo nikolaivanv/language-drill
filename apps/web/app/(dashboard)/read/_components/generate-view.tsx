@@ -100,7 +100,7 @@ export function GenerateView({
       {(rateLimited || errorBody !== null) && (
         <div
           role="alert"
-          className="mb-[16px] rounded-r-md border border-rule bg-paper-2 p-s-4"
+          className="mb-[16px] rounded-md border border-rule bg-paper-2 p-s-4"
         >
           <p className="t-small text-ink-soft">
             {rateLimited ? 'daily generation limit reached' : errorBody}

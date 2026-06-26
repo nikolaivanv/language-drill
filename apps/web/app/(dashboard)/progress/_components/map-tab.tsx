@@ -203,7 +203,7 @@ function SpineRow({
       {/* Body — tappable button that opens the detail sheet */}
       <button
         type="button"
-        className="group flex-1 flex items-start text-left rounded-r-md transition-colors hover:bg-paper-2 active:bg-paper-2"
+        className="group flex-1 flex items-start text-left rounded-md transition-colors hover:bg-paper-2 active:bg-paper-2"
         style={{
           opacity: bodyOpacity,
           border: 'none',

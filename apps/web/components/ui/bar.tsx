@@ -22,7 +22,7 @@ export function Bar({ value, max = 100, color = 'ink', className }: BarProps) {
   return (
     <div
       className={cn(
-        'h-[6px] bg-paper-3 rounded-r-pill relative overflow-hidden',
+        'h-[6px] bg-paper-3 rounded-pill relative overflow-hidden',
         className
       )}
       role="meter"
@@ -32,7 +32,7 @@ export function Bar({ value, max = 100, color = 'ink', className }: BarProps) {
     >
       <div
         className={cn(
-          'absolute inset-y-0 left-0 rounded-r-pill transition-[width] duration-300',
+          'absolute inset-y-0 left-0 rounded-pill transition-[width] duration-300',
           colorClasses[color]
         )}
         style={{ width: `${pct}%` }}

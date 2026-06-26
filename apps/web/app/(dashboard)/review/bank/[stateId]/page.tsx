@@ -60,8 +60,8 @@ export default function WordDetailPage({ params }: DetailPageProps) {
   if (query.isLoading) {
     return (
       <DetailFrame>
-        <div className="h-[120px] animate-pulse rounded-r-lg bg-paper-3" />
-        <div className="h-[280px] animate-pulse rounded-r-lg bg-paper-3" />
+        <div className="h-[120px] animate-pulse rounded-lg bg-paper-3" />
+        <div className="h-[280px] animate-pulse rounded-lg bg-paper-3" />
       </DetailFrame>
     );
   }
@@ -330,7 +330,7 @@ function OccurrenceCard({ occ }: { occ: Occurrence }) {
       </p>
       {occ.translation && <p className="t-small italic text-ink-mute mt-s-1">{occ.translation}</p>}
       {occ.whyThisForm && (
-        <p className="t-small text-ink-soft mt-s-2 rounded-r-sm bg-paper-2 p-s-2">
+        <p className="t-small text-ink-soft mt-s-2 rounded-sm bg-paper-2 p-s-2">
           <strong className="text-ink">why this form: </strong>
           {occ.whyThisForm}
         </p>

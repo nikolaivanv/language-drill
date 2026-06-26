@@ -34,7 +34,7 @@ describe('Textarea', () => {
     render(<Textarea data-testid="ta" />);
     const el = screen.getByTestId('ta');
     expect(el.className).toContain('border-rule');
-    expect(el.className).toContain('rounded-r-md');
+    expect(el.className).toContain('rounded-md');
     expect(el.className).toContain('bg-card');
   });
 

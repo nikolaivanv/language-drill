@@ -38,7 +38,7 @@ export function WizardProgress() {
             data-filled={isFilled ? 'true' : undefined}
             aria-hidden="true"
             className={[
-              'h-[4px] rounded-r-pill transition-colors duration-150',
+              'h-[4px] rounded-pill transition-colors duration-150',
               isFilled ? 'bg-ink' : 'bg-paper-3',
               isActive ? 'flex-[2]' : 'flex-1',
             ].join(' ')}

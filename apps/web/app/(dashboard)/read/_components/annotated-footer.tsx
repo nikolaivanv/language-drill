@@ -32,7 +32,7 @@ export function AnnotatedFooter({
   const skippedCount = Math.max(0, flaggedCount - savedCount);
   const noBank = savedCount === 0;
   return (
-    <div className="mt-[28px] flex flex-wrap items-center gap-[14px] rounded-r-md bg-paper-2 px-[18px] py-[14px]">
+    <div className="mt-[28px] flex flex-wrap items-center gap-[14px] rounded-md bg-paper-2 px-[18px] py-[14px]">
       <span className="t-mono text-[11px] text-ink-mute">
         {flaggedCount} flagged · {savedCount} saved · {skippedCount} skipped
       </span>
@@ -68,7 +68,7 @@ export function ZeroFlaggedStrip({ onPasteNew }: ZeroFlaggedStripProps) {
   return (
     <div
       role="status"
-      className="mt-[28px] flex items-center gap-[14px] rounded-r-md px-[18px] py-[14px]"
+      className="mt-[28px] flex items-center gap-[14px] rounded-md px-[18px] py-[14px]"
       style={{ background: 'var(--color-ok-soft)' }}
     >
       <span className="t-small text-ink-2 flex-1">

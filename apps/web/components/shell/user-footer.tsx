@@ -64,7 +64,7 @@ export function UserFooter() {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="w-full flex items-center gap-s-3 px-s-3 py-s-2 rounded-r-sm hover:bg-paper-2 transition-colors duration-150 focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(26,22,18,0.08)]"
+        className="w-full flex items-center gap-s-3 px-s-3 py-s-2 rounded-sm hover:bg-paper-2 transition-colors duration-150 focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(26,22,18,0.08)]"
       >
         <span className="w-[30px] h-[30px] rounded-full bg-accent-soft text-accent-2 font-display text-[14px] font-semibold flex items-center justify-center flex-shrink-0">
           {initials}
@@ -80,7 +80,7 @@ export function UserFooter() {
       {open && (
         <div
           role="menu"
-          className="absolute bottom-full left-0 right-0 mb-1 z-10 bg-card border border-rule rounded-r-md shadow-2 py-1"
+          className="absolute bottom-full left-0 right-0 mb-1 z-10 bg-card border border-rule rounded-md shadow-2 py-1"
         >
           <Link
             href="/settings"

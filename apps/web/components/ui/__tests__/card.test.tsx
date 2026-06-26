@@ -13,7 +13,7 @@ describe('Card', () => {
     const el = screen.getByText('content');
     expect(el.className).toContain('bg-card');
     expect(el.className).toContain('border-rule');
-    expect(el.className).toContain('rounded-r-lg');
+    expect(el.className).toContain('rounded-lg');
     expect(el.className).toContain('shadow-1');
   });
 

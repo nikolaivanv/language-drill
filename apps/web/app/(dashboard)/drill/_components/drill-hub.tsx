@@ -28,7 +28,7 @@ type Props = {
 // variant so the featured (ink) card and the normal (paper) cards don't fight
 // over a shared hover:border rule.
 const CARD_BASE =
-  'group flex items-center justify-between gap-s-7 rounded-r-lg border p-s-6 text-left no-underline shadow-1 transition-all hover:-translate-y-px hover:shadow-2 active:shadow-2 mobile:gap-s-4 mobile:p-s-5';
+  'group flex items-center justify-between gap-s-7 rounded-lg border p-s-6 text-left no-underline shadow-1 transition-all hover:-translate-y-px hover:shadow-2 active:shadow-2 mobile:gap-s-4 mobile:p-s-5';
 const CARD_NORMAL =
   'border-rule bg-card hover:border-rule-strong hover:bg-paper active:border-rule-strong active:bg-paper';
 const CARD_FEAT =

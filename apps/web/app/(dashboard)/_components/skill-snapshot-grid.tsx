@@ -142,7 +142,7 @@ function GridSkeleton() {
       {[0, 1, 2, 3, 4, 5].map((i) => (
         <div
           key={i}
-          className="h-[34px] animate-pulse rounded-r-sm bg-paper-2"
+          className="h-[34px] animate-pulse rounded-sm bg-paper-2"
         />
       ))}
     </div>

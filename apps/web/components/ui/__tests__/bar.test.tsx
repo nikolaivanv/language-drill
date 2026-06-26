@@ -63,7 +63,7 @@ describe('Bar', () => {
     render(<Bar value={50} />);
     const track = screen.getByRole('meter');
     expect(track.className).toContain('bg-paper-3');
-    expect(track.className).toContain('rounded-r-pill');
+    expect(track.className).toContain('rounded-pill');
     expect(track.className).toContain('h-[6px]');
   });
 });

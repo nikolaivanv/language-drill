@@ -59,8 +59,8 @@ export default function ReviewSummaryPage({ params }: SummaryPageProps) {
   if (query.isLoading) {
     return (
       <SummaryFrame>
-        <div className="h-[160px] animate-pulse rounded-r-lg bg-paper-3" />
-        <div className="h-[260px] animate-pulse rounded-r-lg bg-paper-3" />
+        <div className="h-[160px] animate-pulse rounded-lg bg-paper-3" />
+        <div className="h-[260px] animate-pulse rounded-lg bg-paper-3" />
       </SummaryFrame>
     );
   }
@@ -326,13 +326,13 @@ function GrammarDeltaBar({ label, from, to }: { label: string; from: number; to:
           {delta})
         </span>
       </div>
-      <div className="relative h-[6px] rounded-r-pill bg-paper-3">
+      <div className="relative h-[6px] rounded-pill bg-paper-3">
         <div
-          className="absolute left-0 top-0 bottom-0 rounded-r-pill bg-ink-mute opacity-40"
+          className="absolute left-0 top-0 bottom-0 rounded-pill bg-ink-mute opacity-40"
           style={{ width: `${fromPct}%` }}
         />
         <div
-          className={`absolute left-0 top-0 bottom-0 rounded-r-pill ${down ? 'bg-accent' : 'bg-ok'}`}
+          className={`absolute left-0 top-0 bottom-0 rounded-pill ${down ? 'bg-accent' : 'bg-ok'}`}
           style={{ width: `${toPct}%` }}
         />
       </div>

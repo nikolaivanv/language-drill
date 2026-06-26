@@ -141,7 +141,7 @@ export function FwUnstuck({ exerciseId, fetchFn, value, onChange }: FwUnstuckPro
             marginTop: 10,
             padding: '8px 12px',
             border: '1px solid var(--color-rule)',
-            borderRadius: 'var(--radius-r-md)',
+            borderRadius: 'var(--radius-md)',
             background: 'var(--color-paper-2)',
           }}
         >

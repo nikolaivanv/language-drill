@@ -30,7 +30,7 @@ export function CoachRail({
         <div
           className={cn(
             'flex items-center justify-center',
-            'w-12 h-12 rounded-r-pill bg-ink'
+            'w-12 h-12 rounded-pill bg-ink'
           )}
         >
           <span className="t-display-s text-paper leading-none">c</span>

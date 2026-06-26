@@ -78,7 +78,7 @@ export function ClozePrompt({
         disabled={disabled}
         style={{ font: 'inherit', fontWeight: 600, width: `${Math.max(answer.length, 4)}ch` }}
         className={cn(
-          'inline-block text-center align-baseline bg-card border border-rule rounded-r-sm shadow-1',
+          'inline-block text-center align-baseline bg-card border border-rule rounded-sm shadow-1',
           'px-s-1 outline-none caret-[var(--color-accent)] disabled:cursor-default',
           BLANK_STATE_CLASS[blankState],
         )}

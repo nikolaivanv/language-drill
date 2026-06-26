@@ -25,7 +25,7 @@ export function Switch({
       aria-labelledby={ariaLabelledBy}
       onClick={() => onChange(!checked)}
       className={cn(
-        'relative inline-flex h-[22px] w-[38px] flex-shrink-0 items-center rounded-r-pill transition-colors duration-150',
+        'relative inline-flex h-[22px] w-[38px] flex-shrink-0 items-center rounded-pill transition-colors duration-150',
         checked ? 'bg-ink' : 'bg-paper-3',
         className,
       )}

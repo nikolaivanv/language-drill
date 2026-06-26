@@ -381,7 +381,7 @@ export function AnnotatedView({
             <button
               type="button"
               onClick={() => setBankSheetOpen(true)}
-              className="t-small inline-flex min-h-[44px] flex-none items-center gap-[6px] rounded-r-pill border border-rule bg-card px-[14px] font-medium text-ink transition-colors hover:border-ink"
+              className="t-small inline-flex min-h-[44px] flex-none items-center gap-[6px] rounded-pill border border-rule bg-card px-[14px] font-medium text-ink transition-colors hover:border-ink"
             >
               word bank · {savedVocab.length}
             </button>

@@ -23,10 +23,10 @@
   --t-ui: var(--font-ui);
   --t-mono: var(--font-mono);
   --t-hand: var(--font-hand);
-  --r-sm: var(--radius-r-sm);
-  --r-md: var(--radius-r-md);
-  --r-lg: var(--radius-r-lg);
-  --r-xl: var(--radius-r-xl);
+  --r-sm: var(--radius-sm);
+  --r-md: var(--radius-md);
+  --r-lg: var(--radius-lg);
+  --r-xl: var(--radius-xl);
 
   /* dark-landing-only palette */
   --df-bg: #16130f;

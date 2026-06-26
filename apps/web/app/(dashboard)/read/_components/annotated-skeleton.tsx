@@ -24,20 +24,20 @@ export function AnnotatedSkeleton() {
       <div className="flex items-baseline gap-[10px] mb-[14px]">
         <span
           aria-hidden
-          className="block h-[24px] w-[200px] rounded-r-sm bg-paper-3 animate-pulse"
+          className="block h-[24px] w-[200px] rounded-sm bg-paper-3 animate-pulse"
         />
         <Chip variant="default">annotating…</Chip>
       </div>
       <span
         aria-hidden
-        className="mb-[24px] block h-[12px] w-[140px] rounded-r-sm bg-paper-2 animate-pulse"
+        className="mb-[24px] block h-[12px] w-[140px] rounded-sm bg-paper-2 animate-pulse"
       />
       <div className="flex flex-wrap gap-[8px] gap-y-[14px]" aria-hidden>
         {Array.from({ length: SHIMMER_COUNT }).map((_, i) => (
           <span
             key={i}
             data-testid="shimmer-span"
-            className="block h-[14px] rounded-r-sm bg-paper-3 animate-pulse"
+            className="block h-[14px] rounded-sm bg-paper-3 animate-pulse"
             style={{ width: `${widthForIndex(i)}px` }}
           />
         ))}

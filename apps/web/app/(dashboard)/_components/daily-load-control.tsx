@@ -25,7 +25,7 @@ export function DailyLoadControl({ current, onSelect, disabled = false }: DailyL
         aria-label="today's load"
         aria-disabled={disabled}
         className={cn(
-          'inline-flex gap-1 rounded-r-pill bg-paper-3 p-[5px]',
+          'inline-flex gap-1 rounded-pill bg-paper-3 p-[5px]',
           disabled && 'opacity-60 pointer-events-none'
         )}
       >
@@ -40,7 +40,7 @@ export function DailyLoadControl({ current, onSelect, disabled = false }: DailyL
               disabled={disabled}
               onClick={() => !disabled && onSelect(g)}
               className={cn(
-                'min-w-[88px] justify-center rounded-r-pill px-s-5 py-[10px] text-[15px] font-semibold transition-all duration-150',
+                'min-w-[88px] justify-center rounded-pill px-s-5 py-[10px] text-[15px] font-semibold transition-all duration-150',
                 selected
                   ? 'bg-hilite text-ink shadow-1'
                   : 'bg-transparent text-ink-soft hover:text-ink'

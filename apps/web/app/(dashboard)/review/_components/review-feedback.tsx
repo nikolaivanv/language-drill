@@ -69,7 +69,7 @@ function DeltaPill({
 }) {
   const down = to < from;
   return (
-    <span className="inline-flex items-start gap-s-2 px-s-3 py-[5px] rounded-r-md border border-rule bg-card text-[12px]">
+    <span className="inline-flex items-start gap-s-2 px-s-3 py-[5px] rounded-md border border-rule bg-card text-[12px]">
       <span>{label}</span>
       <span className="t-mono text-ink-mute text-[11px]">{pct(from)}%</span>
       <span className={down ? 'text-accent' : 'text-ok'}>{down ? '↓' : '↑'}</span>

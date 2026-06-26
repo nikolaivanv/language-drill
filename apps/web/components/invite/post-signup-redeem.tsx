@@ -106,7 +106,7 @@ export function PostSignupRedeem() {
     <div className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-s-4 pt-s-4">
       <div
         role="alert"
-        className={`pointer-events-auto flex max-w-md items-start gap-s-3 rounded-r-md p-s-3 t-small shadow-1 ${
+        className={`pointer-events-auto flex max-w-md items-start gap-s-3 rounded-md p-s-3 t-small shadow-1 ${
           banner.kind === 'ok'
             ? 'bg-ok-soft text-ok'
             : 'bg-accent-soft text-accent-2'
@@ -117,7 +117,7 @@ export function PostSignupRedeem() {
           type="button"
           aria-label="dismiss"
           onClick={() => setBanner(null)}
-          className="-m-s-1 shrink-0 rounded-r-sm p-s-1 leading-none opacity-70 transition-opacity hover:opacity-100"
+          className="-m-s-1 shrink-0 rounded-sm p-s-1 leading-none opacity-70 transition-opacity hover:opacity-100"
         >
           ✕
         </button>

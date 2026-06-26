@@ -73,7 +73,7 @@ export function TheoryGroup({
       </header>
       <div
         className={cn(
-          'overflow-hidden rounded-r-lg border border-rule bg-card',
+          'overflow-hidden rounded-lg border border-rule bg-card',
         )}
       >
         {rows}

@@ -45,7 +45,7 @@ describe('Chip', () => {
   it('applies shared classes', () => {
     render(<Chip>tag</Chip>);
     const el = screen.getByText('tag');
-    expect(el.className).toContain('rounded-r-pill');
+    expect(el.className).toContain('rounded-pill');
     expect(el.className).toContain('text-[11px]');
     expect(el.className).toContain('font-medium');
   });

@@ -40,7 +40,7 @@ export function PlanAndLimits() {
           </p>
           <div className="mb-s-4 grid grid-cols-3 gap-s-3">
             {BUCKETS.map(([label, key]) => (
-              <div key={key} className="rounded-r-md border border-rule p-s-3">
+              <div key={key} className="rounded-md border border-rule p-s-3">
                 <div className="t-mono text-lg">
                   {me.data!.usageToday[key]} / {me.data!.limits[key]}
                 </div>

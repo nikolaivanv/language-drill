@@ -49,11 +49,11 @@
   --spacing-s-8: 40px;
 
   /* ─── Border radius ─── */
-  --radius-r-sm: 6px;
-  --radius-r-md: 10px;
-  --radius-r-lg: 16px;
-  --radius-r-xl: 24px;
-  --radius-r-pill: 999px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
 
   /* ─── Line heights ─── */
   --leading-display-tight: 1.05;
@@ -316,7 +316,7 @@ button:hover .lk-arr {
   color: var(--color-ink-soft);
   background: transparent;
   border: 1px dashed var(--color-rule-strong);
-  border-radius: var(--radius-r-pill);
+  border-radius: var(--radius-pill);
   cursor: pointer;
   transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
@@ -651,7 +651,7 @@ button:hover .lk-arr {
   border-left: 3px solid var(--color-accent);
   padding: var(--spacing-s-3) var(--spacing-s-4);
   margin: var(--spacing-s-4) 0;
-  border-radius: 0 var(--radius-r-sm) var(--radius-r-sm) 0;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   font-size: 14px;
   line-height: 1.55;
   color: var(--color-ink-2);
@@ -664,7 +664,7 @@ button:hover .lk-arr {
 /* ─── Theory: example block ─── */
 .example {
   border: 1px dashed var(--color-rule);
-  border-radius: var(--radius-r-sm);
+  border-radius: var(--radius-sm);
   padding: var(--spacing-s-4);
   margin: var(--spacing-s-3) 0;
   background: var(--color-card);
@@ -806,7 +806,7 @@ button:hover .lk-arr {
 .theory-title-switch:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 3px;
-  border-radius: var(--radius-r-sm);
+  border-radius: var(--radius-sm);
 }
 
 /* ─── Theory: "browse all topics" footer (mobile) ─── */
@@ -822,7 +822,7 @@ button:hover .lk-arr {
   gap: 10px;
   padding: 13px 15px;
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-r-md);
+  border-radius: var(--radius-md);
   background: var(--color-card);
   cursor: pointer;
   font-family: inherit;
@@ -895,7 +895,7 @@ button:hover .lk-arr {
   padding: 10px 12px;
   background: var(--color-card);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-r-md);
+  border-radius: var(--radius-md);
   color: var(--color-ink-mute);
   box-shadow: var(--shadow-1);
 }
@@ -999,7 +999,7 @@ button:hover .lk-arr {
   color: var(--color-accent-2);
   background: var(--color-card);
   border: 1px solid var(--color-accent-soft);
-  border-radius: var(--radius-r-pill);
+  border-radius: var(--radius-pill);
   padding: 1px 6px;
 }
 .theory-switcher-level {

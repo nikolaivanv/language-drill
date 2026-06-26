@@ -128,8 +128,8 @@ describe('ReviewFeedback "what moved"', () => {
     // radius turns those into an oversized capsule that breaks the design feel.
     renderFeedback();
     const box = screen.getByText('ablative case').parentElement;
-    expect(box?.className).toContain('rounded-r-md');
-    expect(box?.className).not.toContain('rounded-r-pill');
+    expect(box?.className).toContain('rounded-md');
+    expect(box?.className).not.toContain('rounded-pill');
   });
 });
 

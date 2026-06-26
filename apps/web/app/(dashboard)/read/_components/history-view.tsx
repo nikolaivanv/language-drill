@@ -35,7 +35,7 @@ export function HistoryView({ entries, onOpen, onGenerateNew }: Props) {
               type="button"
               role="button"
               onClick={() => onOpen(entry.id)}
-              className="bg-card border border-rule rounded-r-md p-s-4 cursor-pointer text-left transition-colors hover:border-ink hover:bg-paper-2 flex flex-col gap-[8px]"
+              className="bg-card border border-rule rounded-md p-s-4 cursor-pointer text-left transition-colors hover:border-ink hover:bg-paper-2 flex flex-col gap-[8px]"
             >
               {/* Title row + relative time */}
               <div className="flex items-start justify-between gap-[8px]">
@@ -86,7 +86,7 @@ export function HistoryView({ entries, onOpen, onGenerateNew }: Props) {
           type="button"
           role="button"
           onClick={onGenerateNew}
-          className="border-2 border-dashed border-rule rounded-r-md p-s-4 cursor-pointer text-left transition-colors hover:border-ink flex flex-col items-center justify-center gap-[8px] min-h-[100px]"
+          className="border-2 border-dashed border-rule rounded-md p-s-4 cursor-pointer text-left transition-colors hover:border-ink flex flex-col items-center justify-center gap-[8px] min-h-[100px]"
         >
           <span className="t-display-m text-ink-mute">+</span>
           <span className="t-small text-ink-mute">generate a new text</span>

@@ -37,7 +37,7 @@ export function CollectBar({
 }: Props) {
   const saveTextLabel = canSaveToLibrary ? 'save text' : 'text saved';
   return (
-    <div className="bg-paper-2 rounded-r-md p-s-4 flex items-center justify-between gap-[12px]">
+    <div className="bg-paper-2 rounded-md p-s-4 flex items-center justify-between gap-[12px]">
       {/* Left: counts */}
       <span className="t-small text-ink-soft shrink-0">
         {flaggedCount} flagged · {savedCount} saved

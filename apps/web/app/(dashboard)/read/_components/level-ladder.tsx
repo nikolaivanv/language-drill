@@ -5,7 +5,7 @@
 // ---------------------------------------------------------------------------
 // Props: value, yourLevel, onChange, disabled
 // Renders A1 → C2 as a segmented horizontal bar.
-// Selected → bg-ink text-paper rounded-r-pill.
+// Selected → bg-ink text-paper rounded-pill.
 // The cell matching `yourLevel` gets:
 //   • data-your-level="true" (test hook)
 //   • a bottom border in accent color to indicate the user's tracked level
@@ -35,7 +35,7 @@ export function LevelLadder({ value, yourLevel, onChange, disabled }: Props) {
       </div>
 
       {/* Segmented bar */}
-      <div className="flex overflow-hidden rounded-r-pill bg-paper-2">
+      <div className="flex overflow-hidden rounded-pill bg-paper-2">
         {CEFR_ORDER.map((level) => {
           const isSelected = value === level;
           const isYourLevel = yourLevel === level;
@@ -52,7 +52,7 @@ export function LevelLadder({ value, yourLevel, onChange, disabled }: Props) {
               className={cn(
                 'flex flex-1 items-center justify-center py-[8px] text-[12px] font-medium transition-colors',
                 isSelected
-                  ? 'rounded-r-pill bg-ink text-paper'
+                  ? 'rounded-pill bg-ink text-paper'
                   : 'text-ink hover:bg-paper-3',
                 isYourLevel && !isSelected && 'border-b-2 border-accent',
                 disabled && 'cursor-not-allowed opacity-50',
