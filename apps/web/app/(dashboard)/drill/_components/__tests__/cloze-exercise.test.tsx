@@ -292,18 +292,18 @@ describe('ClozeExercise', () => {
       expect(blank()).toHaveAttribute('data-state', 'wrong');
     });
 
-    it('applies the ok underline color class to the wrapper span after a correct submission', () => {
+    it('applies the ok underline color class after a correct submission', () => {
       renderCloze({ submission: evaluatedSubmission });
-      const wrapper = blank().parentElement;
-      expect(wrapper).toHaveClass('after:bg-ok');
-      expect(wrapper).not.toHaveClass('after:bg-accent-2');
+      const underline = blank().nextElementSibling;
+      expect(underline).toHaveClass('bg-ok');
+      expect(underline).not.toHaveClass('bg-accent-2');
     });
 
-    it('applies the accent-2 underline color class to the wrapper span after a wrong submission', () => {
+    it('applies the accent-2 underline color class after a wrong submission', () => {
       renderCloze({ submission: wrongSubmission });
-      const wrapper = blank().parentElement;
-      expect(wrapper).toHaveClass('after:bg-accent-2');
-      expect(wrapper).not.toHaveClass('after:bg-ok');
+      const underline = blank().nextElementSibling;
+      expect(underline).toHaveClass('bg-accent-2');
+      expect(underline).not.toHaveClass('bg-ok');
     });
 
     it('disables every accent picker chip when evaluated', () => {

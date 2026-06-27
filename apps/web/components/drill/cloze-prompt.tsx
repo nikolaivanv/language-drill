@@ -8,13 +8,12 @@ import { splitClozeSentence } from '../../lib/drill/cloze-blank';
 
 export type BlankState = 'idle' | 'filled' | 'correct' | 'wrong';
 
-// Wrapper span classes for the gap + detached underline per state.
-// The underline is an `after:` pseudo-element offset ~9px below the box.
+// Underline bar colour per blank state (rendered as an in-flow element below the input).
 export const BLANK_WRAP_CLASS: Record<BlankState, string> = {
-  idle: 'after:bg-accent',
-  filled: 'after:bg-accent',
-  correct: 'after:bg-ok',
-  wrong: 'after:bg-accent-2',
+  idle: 'bg-accent',
+  filled: 'bg-accent',
+  correct: 'bg-ok',
+  wrong: 'bg-accent-2',
 };
 
 // Input text colour by state.
@@ -51,15 +50,7 @@ export function ClozePrompt({
   const { before, after, hasBlank } = splitClozeSentence(content.sentence);
 
   const blankInput = (
-    <span
-      className={cn(
-        'relative inline-block align-baseline pb-[11px]',
-        // Detached underline: a 2px bar ~9px below the box bottom; pb-[11px]
-        // reserves space so the underline doesn't overlap wrapped text below.
-        'after:absolute after:left-0 after:right-0 after:-bottom-[9px] after:h-[2px] after:rounded-[2px] after:content-[\'\']',
-        BLANK_WRAP_CLASS[blankState],
-      )}
-    >
+    <span className="inline-flex flex-col items-stretch gap-[2px] align-baseline">
       <input
         ref={inputRef}
         type="text"
@@ -83,6 +74,10 @@ export function ClozePrompt({
           'px-s-1 outline-none caret-[var(--color-accent)] disabled:cursor-default',
           BLANK_STATE_CLASS[blankState],
         )}
+      />
+      <span
+        aria-hidden="true"
+        className={cn('block h-[2px] rounded-[2px]', BLANK_WRAP_CLASS[blankState])}
       />
     </span>
   );
