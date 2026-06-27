@@ -53,8 +53,9 @@ export function ClozePrompt({
   const blankInput = (
     <span
       className={cn(
-        'relative inline-block align-baseline',
-        // Detached underline: a 2px bar ~9px below the box bottom
+        'relative inline-block align-baseline pb-[11px]',
+        // Detached underline: a 2px bar ~9px below the box bottom; pb-[11px]
+        // reserves space so the underline doesn't overlap wrapped text below.
         'after:absolute after:left-0 after:right-0 after:-bottom-[9px] after:h-[2px] after:rounded-[2px] after:content-[\'\']',
         BLANK_WRAP_CLASS[blankState],
       )}
