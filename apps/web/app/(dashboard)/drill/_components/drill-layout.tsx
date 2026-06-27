@@ -49,7 +49,7 @@ export function DrillLayout({
     return (
       <div className="flex flex-col">
         {progressStrip}
-        <div className="pt-s-4">{isLoading ? <LoadingSkeleton /> : main}</div>
+        <div className="pt-s-4 pb-s-4">{isLoading ? <LoadingSkeleton /> : main}</div>
         {actionBar}
       </div>
     );
