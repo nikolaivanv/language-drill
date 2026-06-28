@@ -99,8 +99,20 @@ const { A1, A2, B1 } = CefrLevel;
  * (tr-a1-dictation 15→30, tr-a2-dictation + tr-b1-dictation default→30) to build
  * deeper dictation pools. Bump clears any target-reached/low-yield suppression so
  * each cell re-runs for need = 30 - approved.
+ * 2026-06-28: flags the two remaining full-paradigm A1 finite TENSE points —
+ * tr-a1-present-continuous (-(I)yor) and tr-a1-future (-(y)AcAk) — with
+ * conjugationSuitable: true (default verb seed). Both already carry a person-axis
+ * coverageSpec, so the new CONJUGATION cells inherit person (and, for present-
+ * continuous, polarity) variety. This brings the conjugation-drill surface to
+ * parity with the already-enabled -DI past + aorist. Other person-marked verb
+ * points are deliberately NOT flagged: mis-evidential / ability-necessity regress
+ * under person rotation (see the eval-excluded set in curriculum.test.ts), and
+ * conditional-irrealis / passive / reflexive- & reciprocal-voice / reported-speech
+ * are multi-construction or closed-set (free per-person production is ambiguous,
+ * which is why their free-production surfaces are already off). Bump enumerates the
+ * two new conjugation cells + clears any suppression on them.
  */
-export const CURRICULUM_VERSION_TR = '2026-06-25b';
+export const CURRICULUM_VERSION_TR = '2026-06-28';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -274,6 +286,7 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-present-continuous',
+    conjugationSuitable: true,
     coverageSpec: {
       axes: [
         { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
@@ -369,6 +382,7 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-future',
+    conjugationSuitable: true,
     coverageSpec: {
       axes: [
         { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
