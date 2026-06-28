@@ -30,16 +30,19 @@ export function ConjugationFeatureBundle({
   }
 
   return (
-    <div className="mt-s-3 flex flex-wrap items-stretch gap-s-2">
+    <div className="mt-s-2 flex flex-wrap items-stretch gap-s-2">
       {subject && (
         <div
-          className="flex flex-col justify-center rounded-lg px-s-3 py-s-2 text-center"
+          className="flex flex-col justify-center rounded-lg px-s-3 py-[5px] text-center"
           style={{ background: 'var(--color-accent)' }}
         >
-          <span className="t-display-s leading-none" style={{ color: 'var(--color-paper)' }}>
+          <span
+            className="leading-none font-display font-semibold"
+            style={{ color: 'var(--color-paper)', fontSize: '18px' }}
+          >
             {subject.pronoun}
           </span>
-          <span className="t-micro mt-s-1" style={{ color: 'var(--color-accent-soft)' }}>
+          <span className="t-micro mt-[2px]" style={{ color: 'var(--color-accent-soft)' }}>
             {subject.gloss}
           </span>
         </div>
@@ -47,10 +50,10 @@ export function ConjugationFeatureBundle({
       {features.map((f) => (
         <div
           key={`${f.term}|${f.gloss}`}
-          className="flex flex-col justify-center rounded-lg border border-rule bg-paper-2 px-s-3 py-s-2"
+          className="flex flex-col justify-center rounded-lg border border-rule bg-paper-2 px-s-3 py-[5px]"
         >
           <span className="t-body font-medium text-ink leading-tight">{f.term}</span>
-          <span className="t-micro text-ink-mute mt-s-1">{f.gloss}</span>
+          <span className="t-micro text-ink-mute mt-[2px]">{f.gloss}</span>
         </div>
       ))}
     </div>

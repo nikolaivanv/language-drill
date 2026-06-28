@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { cn } from '../../lib/cn';
+import { useIsMobile } from '../../lib/responsive';
 
 export type AccentLanguage = 'ES' | 'DE' | 'TR';
 
@@ -139,7 +140,11 @@ export function AccentPicker({
     };
   }, []);
 
-  if (!chars) return null;
+  const isMobile = useIsMobile();
+
+  // Hide on mobile: the device keyboard already provides accented characters
+  // (long-press), so the on-screen row is redundant and steals vertical space.
+  if (!chars || isMobile) return null;
 
   const isDisabled = !hasTarget || disabled === true;
   const isUpper = latched || shiftHeld;

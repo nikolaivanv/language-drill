@@ -23,12 +23,22 @@ vi.mock('next/navigation', () => ({
 const mockUseExercise = vi.fn();
 const mockUseSubmitAnswer = vi.fn();
 const mockUseLanguageProfiles = vi.fn();
+const mockUseFlagExercise = vi.fn();
 
 vi.mock('@language-drill/api-client', () => ({
   useExercise: (...args: unknown[]) => mockUseExercise(...args),
   useSubmitAnswer: (...args: unknown[]) => mockUseSubmitAnswer(...args),
   useLanguageProfiles: (...args: unknown[]) => mockUseLanguageProfiles(...args),
+  useFlagExercise: (...args: unknown[]) => mockUseFlagExercise(...args),
   createAuthenticatedFetch: vi.fn(() => vi.fn()),
+}));
+
+// Stub the theory surface: render a recognizable trigger button, no-op panel.
+vi.mock('../../../../components/theory', () => ({
+  TheoryTrigger: ({ topicId }: { topicId: string }) => (
+    <button type="button">theory · {topicId}</button>
+  ),
+  TheoryPanel: () => null,
 }));
 
 // ---------------------------------------------------------------------------
@@ -79,6 +89,7 @@ const SAMPLE_RESULT = {
   feedback: 'Correct.',
   errors: [],
   estimatedCefrEvidence: 'B1',
+  submissionId: '11111111-1111-4111-8111-111111111111',
 };
 
 // ---------------------------------------------------------------------------
@@ -135,6 +146,13 @@ beforeEach(() => {
     mutateAsync: submitMutateAsync,
     isPending: false,
     error: null,
+  });
+
+  mockUseFlagExercise.mockReturnValue({
+    mutate: vi.fn(),
+    isPending: false,
+    isError: false,
+    isSuccess: false,
   });
 });
 
@@ -287,6 +305,42 @@ describe('ConjugationPage', () => {
 
     const link = screen.getByRole('link', { name: /drill these fast/i });
     expect(link).toHaveAttribute('href', '/fluency?type=conjugation');
+  });
+
+  it('renders the drill-level selector defaulting to the profile baseline', () => {
+    renderWithProviders(<ConjugationPage />);
+    const select = screen.getByRole('combobox') as HTMLSelectElement;
+    expect(select.value).toBe(CefrLevel.B1);
+  });
+
+  it('changing the drill level refetches at the new CEFR level', () => {
+    renderWithProviders(<ConjugationPage />);
+    fireEvent.change(screen.getByRole('combobox'), {
+      target: { value: CefrLevel.B2 },
+    });
+    expect(mockUseExercise).toHaveBeenLastCalledWith(
+      expect.objectContaining({ difficulty: CefrLevel.B2 }),
+    );
+  });
+
+  it('renders a theory link for a grammar point that maps to a topic', () => {
+    renderWithProviders(<ConjugationPage />);
+    // es-b1-conditional → topicId "b1-conditional" (lang prefix stripped).
+    expect(
+      screen.getByRole('button', { name: /theory · b1-conditional/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('shows the flag control after the answer is evaluated', async () => {
+    renderWithProviders(<ConjugationPage />);
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'iríamos' } });
+    fireEvent.click(screen.getByRole('button', { name: /^submit$/i }));
+    await waitFor(() => {
+      expect(screen.getByText('ir + íamos')).toBeInTheDocument();
+    });
+    expect(
+      screen.getByRole('button', { name: /flag this exercise/i }),
+    ).toBeInTheDocument();
   });
 });
 
