@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import type { CurriculumMapPoint } from '@language-drill/api-client';
 import type { LearningLanguage } from '@language-drill/shared';
@@ -55,6 +55,24 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
 
+  // Swipe-to-close: a rightward, mostly-horizontal drag dismisses the drawer
+  // (mobile parity with tapping the scrim). Vertical scrolls are ignored so the
+  // body still scrolls normally.
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  function onTouchStart(e: React.TouchEvent) {
+    const t = e.touches[0];
+    touchStart.current = { x: t.clientX, y: t.clientY };
+  }
+  function onTouchEnd(e: React.TouchEvent) {
+    const start = touchStart.current;
+    touchStart.current = null;
+    if (!start) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    if (dx > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) onClose();
+  }
+
   const lastPracticedLabel = lastPracticedAt
     ? `last practiced ${formatAgo(lastPracticedAt)}`
     : 'never practiced';
@@ -87,6 +105,7 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
 
   return createPortal(
     <div
+      className="point-detail-overlay"
       onClick={onClose}
       style={{
         position: 'fixed',
@@ -99,13 +118,16 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
       }}
     >
       <div
+        className="point-detail-panel"
         role="dialog"
         aria-modal="true"
         aria-label={name}
         onClick={(e) => e.stopPropagation()}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
         style={{
           position: 'relative',
-          width: 'min(520px, 100%)',
+          width: 'min(520px, 90vw)',
           height: '100%',
           background: 'var(--color-paper)',
           borderLeft: '1.5px solid var(--color-rule)',
