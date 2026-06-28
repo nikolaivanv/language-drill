@@ -10,6 +10,8 @@ import { useTheoryTopic } from '../../../../lib/hooks/use-theory-topic';
 import { useTheoryTopics } from '../../../../lib/hooks/use-theory-topics';
 import { useScrollSpy } from '../../../../lib/hooks/use-scroll-spy';
 import { useIsMobile } from '../../../../lib/responsive';
+import { useSuppressShellFooter } from '../../../../components/shell/shell-footer-context';
+import { AppFooter } from '../../../../components/shell/app-footer';
 import { Chip } from '../../../../components/ui/chip';
 import { TheoryToc } from '../../../../components/theory/theory-toc';
 import { TheorySections } from '../../../../components/theory/theory-sections';
@@ -50,6 +52,14 @@ export function TheoryDetail({ topicId, language, fetchFn }: TheoryDetailProps) 
     topicId,
     fetchFn,
   });
+
+  // The loaded article lives in a viewport-tall internal scroller
+  // (`.theory-scroll`), so the shell footer would be parked permanently below
+  // it. Suppress it and render our own footer at the end of that scroller so it
+  // reveals only when the reader reaches the bottom of the article. In the
+  // loading / error / empty states there is no internal scroller, so we leave
+  // the shell footer alone.
+  useSuppressShellFooter(Boolean(topic));
 
   const trackedTopicId = useRef<string | null>(null);
   useEffect(() => {
@@ -143,6 +153,7 @@ export function TheoryDetail({ topicId, language, fetchFn }: TheoryDetailProps) 
               />
             )}
             <div style={{ height: 40 }} aria-hidden="true" />
+            <AppFooter />
           </div>
         </div>
       ) : isLoading ? (
