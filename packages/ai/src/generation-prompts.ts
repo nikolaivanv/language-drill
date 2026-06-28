@@ -650,10 +650,17 @@ export function canonicalSurface(content: ExerciseContent): string {
       // duplicate detection) — two prompts on the same topic must differ in title.
       return normaliseSurface(content.title);
     case ExerciseType.CONJUGATION:
-      // Lemma + feature bundle is the dedup surface: the same verb in a
-      // different cell (person/number) is a distinct drill, but an identical
-      // (lemma, featureBundle) pair collapses to one key.
-      return `${normaliseSurface(content.lemma)}::${normaliseSurface(content.featureBundle)}`;
+      // Stable identity of a conjugation drill: lemma + target form + subject
+      // pronoun — exactly what the learner produces. We deliberately do NOT key
+      // on `featureBundle`: it is free-text grammar notation the model rephrases
+      // run-to-run (e.g. "2. tekil kişi" vs "2. tekil şahıs"), so keying on it
+      // gave the same prompt a different `_dedupKey` every run, bypassing the
+      // dedup unique index and accruing duplicate rows. Person/number is carried
+      // by `subject.pronoun`; tense/mood is fixed by the grammar point (cell),
+      // and any tense/mood difference shows up in `targetForm` — so
+      // lemma+targetForm+pronoun uniquely identifies the item within a cell.
+      // `subject` is optional on legacy rows; fall back to an empty segment.
+      return `${normaliseSurface(content.lemma)}::${normaliseSurface(content.targetForm)}::${normaliseSurface(content.subject?.pronoun ?? "")}`;
     default: {
       const _exhaustive: never = content;
       throw new Error(
