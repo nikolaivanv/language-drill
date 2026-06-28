@@ -6,6 +6,10 @@ import { Nav } from './nav';
 import { MobileTopBar } from './mobile-top-bar';
 import { MobileTabBar } from './mobile-tab-bar';
 import { AppFooter } from './app-footer';
+import {
+  ShellFooterProvider,
+  useShellFooterSuppressed,
+} from './shell-footer-context';
 
 interface AppShellProps {
   profiles: LanguageProfile[];
@@ -13,7 +17,19 @@ interface AppShellProps {
 }
 
 export function AppShell({ profiles, children }: AppShellProps) {
+  // Provider must sit above both `AppShellInner` (which reads the suppression
+  // flag to decide whether to render the footer) and `children` (a page may
+  // suppress the shell footer to render its own at the end of its scroller).
+  return (
+    <ShellFooterProvider>
+      <AppShellInner profiles={profiles}>{children}</AppShellInner>
+    </ShellFooterProvider>
+  );
+}
+
+function AppShellInner({ profiles, children }: AppShellProps) {
   const isMobile = useIsMobile();
+  const footerSuppressed = useShellFooterSuppressed();
 
   // Mobile: top app-bar + scrollable content + bottom tab-bar. `useIsMobile`
   // is false on the server and first client render, so the desktop tree below
@@ -24,7 +40,7 @@ export function AppShell({ profiles, children }: AppShellProps) {
         <MobileTopBar profiles={profiles} />
         <main className="min-w-0 flex-1 bg-paper px-[18px] pt-[18px] pb-[calc(64px+env(safe-area-inset-bottom)+18px)]">
           {children}
-          <AppFooter />
+          {!footerSuppressed && <AppFooter />}
         </main>
         <MobileTabBar />
       </div>
@@ -54,7 +70,7 @@ export function AppShell({ profiles, children }: AppShellProps) {
             both footer dividers sit at the same offset from the bottom. */}
         <div className="max-w-max-content mx-auto flex min-h-full w-full flex-col px-[48px] pt-[36px] pb-[22px]">
           <div className="flex-1">{children}</div>
-          <AppFooter />
+          {!footerSuppressed && <AppFooter />}
         </div>
       </main>
     </div>

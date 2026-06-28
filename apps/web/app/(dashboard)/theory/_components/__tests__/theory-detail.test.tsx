@@ -11,6 +11,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Language } from '@language-drill/shared';
 import type { AuthenticatedFetch } from '@language-drill/api-client';
 import { TheoryDetail } from '../theory-detail';
+import {
+  ShellFooterProvider,
+  useShellFooterSuppressed,
+} from '../../../../../components/shell/shell-footer-context';
+import { ConsentProvider } from '../../../../../components/consent/consent-provider';
 import { mockIntersectionObserverInstances } from '../../../../../vitest.setup';
 
 // findBy waitFor options. The 1s default can expire before the React Query
@@ -115,8 +120,14 @@ function renderDetail(
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, retryDelay: 0 } },
   });
+  // ConsentProvider: the article now renders <AppFooter/> at the end of its
+  // scroller, whose legal links read consent state.
   function Wrapper({ children }: { children: ReactNode }) {
-    return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+    return (
+      <QueryClientProvider client={client}>
+        <ConsentProvider>{children}</ConsentProvider>
+      </QueryClientProvider>
+    );
   }
   return render(
     <TheoryDetail topicId="der-dativ" language={Language.DE} fetchFn={fetchFn} />,
@@ -219,6 +230,74 @@ describe('TheoryDetail', () => {
     expect(
       await screen.findByText(/couldn't load theory/i, undefined, FIND),
     ).toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Footer reveal: the loaded article owns a full-height internal scroller, so
+// the footer must live at the end of THAT scroller (revealing only when the
+// reader reaches the bottom) and the shell footer must be suppressed.
+// ---------------------------------------------------------------------------
+
+const FOOTER_COPY = /© 2026 drill/i;
+
+function SuppressionProbe() {
+  return (
+    <span data-testid="shell-footer-suppressed">
+      {String(useShellFooterSuppressed())}
+    </span>
+  );
+}
+
+// Same as renderDetail, but inside a ShellFooterProvider (+ a probe reading the
+// suppression flag) and a ConsentProvider (AppFooter's legal links need it).
+function renderDetailWithShell(fetchFn: AuthenticatedFetch) {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false, retryDelay: 0 } },
+  });
+  function Wrapper({ children }: { children: ReactNode }) {
+    return (
+      <QueryClientProvider client={client}>
+        <ConsentProvider>
+          <ShellFooterProvider>
+            <SuppressionProbe />
+            {children}
+          </ShellFooterProvider>
+        </ConsentProvider>
+      </QueryClientProvider>
+    );
+  }
+  return render(
+    <TheoryDetail topicId="der-dativ" language={Language.DE} fetchFn={fetchFn} />,
+    { wrapper: Wrapper },
+  );
+}
+
+describe('TheoryDetail footer', () => {
+  it('renders its own footer inside the article scroller and suppresses the shell footer', async () => {
+    renderDetailWithShell(makeFetch());
+    await screen.findByRole('heading', { level: 1, name: 'der dativ' }, FIND);
+
+    // Exactly one footer, and it lives inside `.theory-scroll` — so it reveals
+    // only at the end of the article, not parked permanently below the panel.
+    const footers = document.querySelectorAll('footer');
+    expect(footers).toHaveLength(1);
+    const scroller = document.querySelector('.theory-scroll');
+    expect(scroller).not.toBeNull();
+    expect(scroller!.contains(footers[0])).toBe(true);
+    expect(screen.getByText(FOOTER_COPY)).toBeInTheDocument();
+
+    // Shell footer suppressed while the article is shown.
+    expect(screen.getByTestId('shell-footer-suppressed').textContent).toBe('true');
+  });
+
+  it('leaves the shell footer alone (and renders no own footer) in the error state', async () => {
+    renderDetailWithShell(makeFetch({ topicStatus: 500 }));
+    await screen.findByText(/couldn't load theory/i, undefined, FIND);
+
+    expect(document.querySelector('.theory-scroll')).toBeNull();
+    expect(screen.queryByText(FOOTER_COPY)).not.toBeInTheDocument();
+    expect(screen.getByTestId('shell-footer-suppressed').textContent).toBe('false');
   });
 });
 
