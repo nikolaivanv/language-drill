@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { useRef, useState } from 'react';
 import { AccentPicker, type AccentLanguage } from '../accent-picker';
 
@@ -58,6 +58,27 @@ describe('AccentPicker', () => {
     );
     // The harness still renders the input, but no AccentPicker buttons
     expect(container.querySelectorAll('button').length).toBe(0);
+  });
+
+  it('renders nothing on mobile viewports', () => {
+    const original = window.matchMedia;
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: true,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })) as unknown as typeof window.matchMedia;
+    try {
+      const { container } = render(<ControlledHarness language="ES" />);
+      // The harness still renders its own <input>, but no AccentPicker buttons.
+      expect(container.querySelectorAll('button').length).toBe(0);
+    } finally {
+      window.matchMedia = original;
+    }
   });
 
   it('inserts character at cursor and updates the controlled input', () => {
