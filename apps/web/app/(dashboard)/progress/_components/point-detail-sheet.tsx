@@ -120,6 +120,7 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
           width: 'min(520px, 94vw)',
           background: 'var(--color-paper)',
           borderLeft: '1.5px solid var(--color-rule)',
+          overflowX: 'hidden',
           overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
@@ -229,7 +230,8 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
               <div
                 style={{
                   display: 'flex',
-                  gap: 24,
+                  gap: 20,
+                  justifyContent: 'space-between',
                 }}
               >
                 <div>
@@ -238,7 +240,7 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
                   </div>
                   <div
                     className="t-mono"
-                    style={{ fontSize: 22, marginTop: 2, color: 'var(--color-ink)' }}
+                    style={{ fontSize: 18, marginTop: 2, color: 'var(--color-ink)' }}
                   >
                     {mastery !== null ? `${Math.round(mastery * 100)}%` : '—'}
                   </div>
@@ -249,7 +251,7 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
                   </div>
                   <div
                     className="t-mono"
-                    style={{ fontSize: 22, marginTop: 2, color: 'var(--color-ink)' }}
+                    style={{ fontSize: 18, marginTop: 2, color: 'var(--color-ink)' }}
                   >
                     {confidence !== null
                       ? confidenceBand(Math.round(confidence * 100)).label
@@ -262,7 +264,7 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
                   </div>
                   <div
                     className="t-mono"
-                    style={{ fontSize: 22, marginTop: 2, color: 'var(--color-ink)' }}
+                    style={{ fontSize: 18, marginTop: 2, color: 'var(--color-ink)' }}
                   >
                     {evidenceCount}
                   </div>

@@ -56,7 +56,7 @@ function makePoint(over: Partial<CurriculumMapPoint> = {}): CurriculumMapPoint {
 // ---------------------------------------------------------------------------
 
 describe('PointDetailSheet', () => {
-  it('renders the mastery readout (40% / building confidence / 3) for a learning point', () => {
+  it('renders the mastery readout (40% / building / 3) for a learning point', () => {
     render(
       <PointDetailSheet
         point={makePoint()}
@@ -67,7 +67,7 @@ describe('PointDetailSheet', () => {
     // mastery % kept
     expect(screen.getByText('40%')).toBeDefined();
     // confidence shows band label, not raw %
-    expect(screen.getByText('building confidence')).toBeDefined();
+    expect(screen.getByText('building')).toBeDefined();
     expect(screen.queryByText('50%')).toBeNull();
     // evidence count unchanged
     expect(screen.getByText('3')).toBeDefined();
@@ -253,6 +253,6 @@ describe('PointDetailSheet', () => {
         onClose={noop}
       />,
     );
-    expect(screen.getByText('high confidence')).toBeDefined();
+    expect(screen.getByText('high')).toBeDefined();
   });
 });
