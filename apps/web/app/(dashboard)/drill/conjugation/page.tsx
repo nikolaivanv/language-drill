@@ -4,12 +4,13 @@ import { Suspense, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
 import { useSearchParams } from 'next/navigation';
-import { CefrLevel, ExerciseType } from '@language-drill/shared';
+import { CefrLevel, CORRECT_THRESHOLD, ExerciseType } from '@language-drill/shared';
 import {
   useExercise,
   useSubmitAnswer,
   useLanguageProfiles,
   createAuthenticatedFetch,
+  type DebriefItem,
 } from '@language-drill/api-client';
 // One extra `../` compared to drill/page.tsx because we are one level deeper:
 // (dashboard)/drill/conjugation/page.tsx vs (dashboard)/drill/page.tsx
@@ -19,10 +20,12 @@ import {
   topicIdForGrammarPointKey,
   exerciseTypeHasTheory,
 } from '../../../../lib/theory-topic-map';
+import { Button } from '../../../../components/ui';
 import { ExercisePane } from '../_components/exercise-pane';
 import { DrillMeta } from '../_components/drill-meta';
 import { FlagExerciseControl } from '../_components/flag-exercise-control';
 import type { SubmissionMeta, SubmissionState } from '../_components/types';
+import { ConjugationReview } from './_components/conjugation-review';
 
 // ---------------------------------------------------------------------------
 // /drill/conjugation — opt-in conjugation warm-up (Plan, Task 16)
@@ -77,6 +80,15 @@ function ConjugationPageContent() {
   const [openTopicId, setOpenTopicId] = useState<string | null>(null);
   const [triggerEl, setTriggerEl] = useState<HTMLElement | null>(null);
 
+  // Open-ended session recap: each evaluated answer accumulates as a
+  // DebriefItem so "finish session" can show a quick-drill-style review built
+  // purely client-side (no server session). `finished` swaps the page to the
+  // recap; `sessionStart`/`finishedAt` drive the recap's duration line.
+  const [reviewItems, setReviewItems] = useState<DebriefItem[]>([]);
+  const [finished, setFinished] = useState(false);
+  const [sessionStart, setSessionStart] = useState(() => Date.now());
+  const [finishedAt, setFinishedAt] = useState<number | null>(null);
+
   // useExercise is a TanStack `useQuery`. The backend returns a *random*
   // exercise per call, but the query is pinned (`staleTime: Infinity`,
   // `refetchOnWindowFocus: false`) so the task stays stable mid-answer.
@@ -99,12 +111,26 @@ function ConjugationPageContent() {
       // No sessionId — the submit route validates session linkage only when a
       // sessionId is provided, and conjugation lives outside any drill session.
       const result = await submit.mutateAsync({ exerciseId: exercise.id, answer });
-      setSubmission({
-        kind: 'evaluated',
-        result,
-        meta: {},
-        submissionId: (result as { submissionId?: string }).submissionId,
-      });
+      const submissionId = (result as { submissionId?: string }).submissionId;
+      setSubmission({ kind: 'evaluated', result, meta: {}, submissionId });
+      // Record the attempt for the end-of-session recap.
+      setReviewItems((prev) => [
+        ...prev,
+        {
+          exerciseId: exercise.id,
+          submissionId: submissionId ?? null,
+          type: exercise.type as ExerciseType,
+          grammarPointKey: exercise.grammarPointKey ?? null,
+          // ExerciseResponse carries no grammar-point name; the recap card
+          // tolerates null (it falls back to the key/feature bundle).
+          grammarPointName: null,
+          contentJson: exercise.contentJson,
+          status: result.score >= CORRECT_THRESHOLD ? 'correct' : 'incorrect',
+          userAnswer: answer,
+          score: result.score,
+          evaluation: result,
+        },
+      ]);
     } catch (err) {
       setSubmission({
         kind: 'error',
@@ -119,6 +145,21 @@ function ConjugationPageContent() {
     // so an eager idle-reset would flash the outgoing prompt blank before the
     // new one lands. The feedback stays pinned (see `effectiveSubmission`) until
     // a different exercise arrives, then clears in the same render as the swap.
+    void refetch();
+  };
+
+  const onFinish = () => {
+    setFinishedAt(Date.now());
+    setFinished(true);
+  };
+
+  const onPracticeMore = () => {
+    setReviewItems([]);
+    setFinished(false);
+    setFinishedAt(null);
+    setSessionStart(Date.now());
+    setSubmission({ kind: 'idle' });
+    setSubmittedExerciseId(null);
     void refetch();
   };
 
@@ -149,6 +190,22 @@ function ConjugationPageContent() {
       fetchFn={fetchFn}
     />
   ) : null;
+
+  // Finished: swap the whole surface to the client-built recap.
+  if (finished) {
+    return (
+      <ConjugationReview
+        items={reviewItems}
+        language={activeLanguage}
+        difficulty={difficulty}
+        durationSeconds={
+          finishedAt ? Math.max(0, Math.floor((finishedAt - sessionStart) / 1000)) : 0
+        }
+        fetchFn={fetchFn}
+        onPracticeMore={onPracticeMore}
+      />
+    );
+  }
 
   // Empty-pool / 404: the API returns 404 NO_EXERCISES when nothing matches the
   // (language, difficulty, conjugation) filter. createAuthenticatedFetch throws
@@ -183,21 +240,20 @@ function ConjugationPageContent() {
           it on the baseline (DRILL-UI: open up before the title). */}
       <h1 className="t-display-l mb-s-4">conjugation warm-up</h1>
 
-      {/* One meta row: writable level pill (+ drift/reset) and the read-only
-          theory link, with the rapid-fire deep-link pushed to the far right. */}
-      <div className="mb-s-6 flex flex-wrap items-center gap-s-3">
-        <DrillMeta
-          level={difficulty}
-          baseline={baseline}
-          onLevelChange={setLevel}
-          topic={topicTrigger}
-        />
-        <Link
-          href="/fluency?type=conjugation"
-          className="ml-auto t-small text-ink-2 no-underline transition-colors hover:text-ink"
-        >
-          drill these fast <span className="lk-arr" aria-hidden="true">→</span>
-        </Link>
+      {/* Two stacked meta rows: row 1 = writable level pill (+ drift/reset)
+          with the rapid-fire deep-link pushed right; row 2 = the read-only
+          theory link on its own line. */}
+      <div className="mb-s-6 flex flex-col gap-s-3">
+        <div className="flex flex-wrap items-center gap-s-3">
+          <DrillMeta level={difficulty} baseline={baseline} onLevelChange={setLevel} />
+          <Link
+            href="/fluency?type=conjugation"
+            className="ml-auto t-small text-ink-2 no-underline transition-colors hover:text-ink"
+          >
+            drill these fast <span className="lk-arr" aria-hidden="true">→</span>
+          </Link>
+        </div>
+        {topicTrigger && <div>{topicTrigger}</div>}
       </div>
 
       <ExercisePane
@@ -217,6 +273,15 @@ function ConjugationPageContent() {
             fetchFn={fetchFn}
           />
         )}
+
+      {/* Open-ended loop: end the sitting whenever, once ≥1 item is answered. */}
+      {reviewItems.length > 0 && (
+        <div className="mt-s-6">
+          <Button variant="ghost" onClick={onFinish}>
+            finish session
+          </Button>
+        </div>
+      )}
 
       {openTopicId && (
         <TheoryPanel
