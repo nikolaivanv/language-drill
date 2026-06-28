@@ -38,11 +38,11 @@ export function ConjugationFeatureBundle({
         >
           <span
             className="leading-none font-display font-semibold"
-            style={{ color: 'var(--color-paper)', fontSize: '18px' }}
+            style={{ color: '#fff', fontSize: '18px' }}
           >
             {subject.pronoun}
           </span>
-          <span className="t-micro mt-[2px]" style={{ color: 'var(--color-accent-soft)' }}>
+          <span className="t-micro mt-[2px]" style={{ color: 'rgba(255,255,255,0.78)' }}>
             {subject.gloss}
           </span>
         </div>
