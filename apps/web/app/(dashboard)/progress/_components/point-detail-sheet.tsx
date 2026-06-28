@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { CurriculumMapPoint } from '@language-drill/api-client';
 import type { LearningLanguage } from '@language-drill/shared';
@@ -46,14 +46,40 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
 
   useBodyScrollLock(true);
 
+  // Closing state drives the slide-out animation: a close request flips this on,
+  // then `onClose` (which unmounts us) fires after the animation completes so the
+  // drawer glides out instead of vanishing. Reduced-motion users skip straight
+  // to onClose.
+  const [closing, setClosing] = useState(false);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const requestClose = useCallback(() => {
+    if (closeTimer.current) return;
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+      onClose();
+      return;
+    }
+    setClosing(true);
+    closeTimer.current = setTimeout(onClose, 240);
+  }, [onClose]);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+    };
+  }, []);
+
   // Esc closes
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') requestClose();
     }
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [onClose]);
+  }, [requestClose]);
 
   // Swipe-to-close: a rightward, mostly-horizontal drag dismisses the drawer
   // (mobile parity with tapping the scrim). Vertical scrolls are ignored so the
@@ -70,7 +96,7 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
     const t = e.changedTouches[0];
     const dx = t.clientX - start.x;
     const dy = t.clientY - start.y;
-    if (dx > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) onClose();
+    if (dx > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) requestClose();
   }
 
   const lastPracticedLabel = lastPracticedAt
@@ -105,8 +131,8 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
 
   return createPortal(
     <div
-      className="point-detail-overlay"
-      onClick={onClose}
+      className={`point-detail-overlay${closing ? ' point-detail-overlay-closing' : ''}`}
+      onClick={requestClose}
       style={{
         position: 'fixed',
         inset: 0,
@@ -118,7 +144,7 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
       }}
     >
       <div
-        className="point-detail-panel"
+        className={`point-detail-panel${closing ? ' point-detail-panel-closing' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-label={name}
@@ -200,7 +226,7 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
             <button
               type="button"
               aria-label="close"
-              onClick={onClose}
+              onClick={requestClose}
               style={{
                 marginLeft: 'auto',
                 width: 34,

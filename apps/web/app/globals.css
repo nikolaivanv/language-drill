@@ -464,6 +464,14 @@ button:hover .lk-arr {
   from { transform: translateX(100%); }
   to   { transform: translateX(0); }
 }
+@keyframes point-detail-fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+@keyframes point-detail-slide-out {
+  from { transform: translateX(0); }
+  to   { transform: translateX(100%); }
+}
 .point-detail-overlay {
   animation: point-detail-fade-in 0.2s ease both;
 }
@@ -471,9 +479,18 @@ button:hover .lk-arr {
   animation: point-detail-slide-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   will-change: transform;
 }
+.point-detail-overlay-closing {
+  animation: point-detail-fade-out 0.22s ease both;
+}
+.point-detail-panel-closing {
+  animation: point-detail-slide-out 0.24s cubic-bezier(0.4, 0, 1, 1) both;
+  will-change: transform;
+}
 @media (prefers-reduced-motion: reduce) {
   .point-detail-overlay,
-  .point-detail-panel {
+  .point-detail-panel,
+  .point-detail-overlay-closing,
+  .point-detail-panel-closing {
     animation: none;
   }
 }
