@@ -874,38 +874,64 @@ describe("canonicalSurface — dictation", () => {
 });
 
 describe("canonicalSurface — conjugation", () => {
-  it("keys on the normalised lemma + featureBundle", () => {
+  it("keys on the stable lemma + targetForm + pronoun (not the rephrasable featureBundle)", () => {
     const content: ConjugationContent = {
       type: ExerciseType.CONJUGATION,
       instructions: "Write the correct form.",
-      lemma: "IR",
-      lemmaGloss: "to go",
-      featureBundle: "Condicional · 1ª persona del plural",
-      targetForm: "iríamos",
-      breakdown: "ir + íamos",
-      exampleSentences: ["Iríamos al cine."],
+      lemma: "Öğrenci",
+      lemmaGloss: "student",
+      featureBundle: "kişi eki · 2. tekil kişi (sen)",
+      subject: { pronoun: "sen", gloss: "you" },
+      targetForm: "öğrencisin",
+      breakdown: "x",
+      exampleSentences: ["Sen öğrencisin."],
     };
-    const surface = canonicalSurface(content);
-    expect(surface).toContain("ir");
-    // normaliseSurface lowercases, strips Unicode Diacritic-property chars (incl. ª→a and the middle dot ·), and collapses whitespace.
-    expect(surface).toBe("ir::condicional 1a persona del plural");
+    // normaliseSurface lowercases + strips diacritics (ö→o, ğ→g, ç→c, ş→s, ü→u).
+    expect(canonicalSurface(content)).toBe("ogrenci::ogrencisin::sen");
   });
 
-  it("collapses an identical (lemma, featureBundle) pair to the same key but distinguishes different cells", () => {
+  it("collapses a rephrased featureBundle to the SAME key (the duplicate-accrual root cause)", () => {
     const base: ConjugationContent = {
+      type: ExerciseType.CONJUGATION,
+      instructions: "x",
+      lemma: "öğrenci",
+      lemmaGloss: "student",
+      featureBundle: "kişi eki · 2. tekil kişi (sen)",
+      subject: { pronoun: "sen", gloss: "you" },
+      targetForm: "öğrencisin",
+      breakdown: "x",
+      exampleSentences: ["x"],
+    };
+    // Same prompt, featureBundle reworded by the model on a later run — MUST now
+    // hash to the same key so the dedup unique index catches the re-generation.
+    const rephrased = { ...base, featureBundle: "kişi eki (yüklem) · 2. tekil şahıs" };
+    expect(canonicalSurface(base)).toBe(canonicalSurface(rephrased));
+
+    // A genuinely different answer (different form + pronoun) is a distinct item.
+    const otherCell = {
+      ...base,
+      targetForm: "öğrenciyim",
+      subject: { pronoun: "ben", gloss: "I" },
+    };
+    expect(canonicalSurface(base)).not.toBe(canonicalSurface(otherCell));
+
+    // Same lemma + form but a different pronoun → distinct.
+    const otherPronoun = { ...base, subject: { pronoun: "o", gloss: "he / she" } };
+    expect(canonicalSurface(base)).not.toBe(canonicalSurface(otherPronoun));
+  });
+
+  it("tolerates a missing subject (legacy rows) — empty pronoun segment", () => {
+    const content: ConjugationContent = {
       type: ExerciseType.CONJUGATION,
       instructions: "x",
       lemma: "hablar",
       lemmaGloss: "to speak",
       featureBundle: "presente · 1sg",
       targetForm: "hablo",
-      breakdown: "habl + o",
+      breakdown: "x",
       exampleSentences: ["Hablo español."],
     };
-    const dup = { ...base, targetForm: "hablo (variant note)" };
-    const otherCell = { ...base, featureBundle: "presente · 2sg" };
-    expect(canonicalSurface(base)).toBe(canonicalSurface(dup));
-    expect(canonicalSurface(base)).not.toBe(canonicalSurface(otherCell));
+    expect(canonicalSurface(content)).toBe("hablar::hablo::");
   });
 });
 
