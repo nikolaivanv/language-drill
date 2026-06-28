@@ -63,7 +63,7 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
       return;
     }
     setClosing(true);
-    closeTimer.current = setTimeout(onClose, 240);
+    closeTimer.current = setTimeout(onClose, 280);
   }, [onClose]);
 
   useEffect(() => {
@@ -131,7 +131,7 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
 
   return createPortal(
     <div
-      className={`point-detail-overlay${closing ? ' point-detail-overlay-closing' : ''}`}
+      className="point-detail-overlay"
       onClick={requestClose}
       style={{
         position: 'fixed',
@@ -141,10 +141,15 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
         display: 'flex',
         justifyContent: 'flex-end',
         overflow: 'hidden',
+        // Inline animation overrides the class slide-in so the exit reliably
+        // plays (a second class would tie on specificity).
+        ...(closing
+          ? { animation: 'point-detail-fade-out 0.26s ease both' }
+          : {}),
       }}
     >
       <div
-        className={`point-detail-panel${closing ? ' point-detail-panel-closing' : ''}`}
+        className="point-detail-panel"
         role="dialog"
         aria-modal="true"
         aria-label={name}
@@ -161,6 +166,11 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
           display: 'flex',
           flexDirection: 'column',
           minWidth: 0,
+          // Inline animation overrides the class slide-in so the exit reliably
+          // plays (a second class would tie on specificity).
+          ...(closing
+            ? { animation: 'point-detail-slide-out 0.28s cubic-bezier(0.4, 0, 1, 1) both' }
+            : {}),
         }}
       >
         {/* Head */}

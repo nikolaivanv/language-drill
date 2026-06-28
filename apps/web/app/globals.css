@@ -479,18 +479,9 @@ button:hover .lk-arr {
   animation: point-detail-slide-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   will-change: transform;
 }
-.point-detail-overlay-closing {
-  animation: point-detail-fade-out 0.22s ease both;
-}
-.point-detail-panel-closing {
-  animation: point-detail-slide-out 0.24s cubic-bezier(0.4, 0, 1, 1) both;
-  will-change: transform;
-}
 @media (prefers-reduced-motion: reduce) {
   .point-detail-overlay,
-  .point-detail-panel,
-  .point-detail-overlay-closing,
-  .point-detail-panel-closing {
+  .point-detail-panel {
     animation: none;
   }
 }
