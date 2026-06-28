@@ -14,7 +14,14 @@ import {
 // One extra `../` compared to drill/page.tsx because we are one level deeper:
 // (dashboard)/drill/conjugation/page.tsx vs (dashboard)/drill/page.tsx
 import { useActiveLanguage } from '../../../../components/shell';
+import { TheoryPanel, TheoryTrigger } from '../../../../components/theory';
+import {
+  topicIdForGrammarPointKey,
+  exerciseTypeHasTheory,
+} from '../../../../lib/theory-topic-map';
 import { ExercisePane } from '../_components/exercise-pane';
+import { DrillMeta } from '../_components/drill-meta';
+import { FlagExerciseControl } from '../_components/flag-exercise-control';
 import type { SubmissionMeta, SubmissionState } from '../_components/types';
 
 // ---------------------------------------------------------------------------
@@ -41,13 +48,19 @@ function ConjugationPageContent() {
     return g && g.length > 0 ? g : null;
   });
 
-  // Resolve difficulty from the user's profile for the active language,
-  // defaulting to B1 — mirrors drill/page.tsx + free-writing/page.tsx exactly.
+  // The learner's recorded baseline for the active language (identity), used as
+  // the level default + the DrillMeta drift signal. Null when no profile yet.
   const { data: profilesData } = useLanguageProfiles({ fetchFn });
   const profiles = profilesData?.profiles ?? [];
-  const difficulty =
-    (profiles.find((p) => p.language === activeLanguage)?.proficiencyLevel as CefrLevel) ??
-    CefrLevel.B1;
+  const baseline =
+    (profiles.find((p) => p.language === activeLanguage)?.proficiencyLevel as
+      | CefrLevel
+      | undefined) ?? null;
+
+  // The session-scoped level override. Null until the user picks one, then the
+  // chosen level wins; effective difficulty falls back baseline → B1.
+  const [level, setLevel] = useState<CefrLevel | null>(null);
+  const difficulty = level ?? baseline ?? CefrLevel.B1;
 
   const [submission, setSubmission] = useState<SubmissionState>({ kind: 'idle' });
   // Which exercise the current `submission` belongs to. Advancing pulls a fresh
@@ -59,6 +72,10 @@ function ConjugationPageContent() {
   // a different exercise arrives, the feedback falls back to idle in the *same*
   // render that swaps the prompt — atomic, no intermediate blank flash.
   const [submittedExerciseId, setSubmittedExerciseId] = useState<string | null>(null);
+
+  // Theory panel host (open topic + the trigger element for focus return).
+  const [openTopicId, setOpenTopicId] = useState<string | null>(null);
+  const [triggerEl, setTriggerEl] = useState<HTMLElement | null>(null);
 
   // useExercise is a TanStack `useQuery`. The backend returns a *random*
   // exercise per call, but the query is pinned (`staleTime: Infinity`,
@@ -82,7 +99,12 @@ function ConjugationPageContent() {
       // No sessionId — the submit route validates session linkage only when a
       // sessionId is provided, and conjugation lives outside any drill session.
       const result = await submit.mutateAsync({ exerciseId: exercise.id, answer });
-      setSubmission({ kind: 'evaluated', result, meta: {} });
+      setSubmission({
+        kind: 'evaluated',
+        result,
+        meta: {},
+        submissionId: (result as { submissionId?: string }).submissionId,
+      });
     } catch (err) {
       setSubmission({
         kind: 'error',
@@ -107,6 +129,26 @@ function ConjugationPageContent() {
     exercise && submittedExerciseId === exercise.id
       ? submission
       : { kind: 'idle' };
+
+  // Theory topic for the current exercise's grammar point (null when the type
+  // can't have theory or the key doesn't map). TheoryTrigger self-hides when
+  // the resolved topic has no content, so a non-null id here is safe.
+  const theoryTopicId =
+    exercise && exerciseTypeHasTheory(exercise.type)
+      ? topicIdForGrammarPointKey(exercise.grammarPointKey ?? null, activeLanguage)
+      : null;
+
+  const topicTrigger = theoryTopicId ? (
+    <TheoryTrigger
+      topicId={theoryTopicId}
+      language={activeLanguage}
+      onOpen={(id, el) => {
+        setOpenTopicId(id);
+        setTriggerEl(el);
+      }}
+      fetchFn={fetchFn}
+    />
+  ) : null;
 
   // Empty-pool / 404: the API returns 404 NO_EXERCISES when nothing matches the
   // (language, difficulty, conjugation) filter. createAuthenticatedFetch throws
@@ -137,15 +179,27 @@ function ConjugationPageContent() {
 
   return (
     <div className="p-s-6">
-      <div className="mb-s-6 flex items-baseline justify-between gap-s-4">
-        <h1 className="t-display-l">conjugation warm-up</h1>
+      {/* Title owns its own line so the meta controls below never compete with
+          it on the baseline (DRILL-UI: open up before the title). */}
+      <h1 className="t-display-l mb-s-4">conjugation warm-up</h1>
+
+      {/* One meta row: writable level pill (+ drift/reset) and the read-only
+          theory link, with the rapid-fire deep-link pushed to the far right. */}
+      <div className="mb-s-6 flex flex-wrap items-center gap-s-3">
+        <DrillMeta
+          level={difficulty}
+          baseline={baseline}
+          onLevelChange={setLevel}
+          topic={topicTrigger}
+        />
         <Link
           href="/fluency?type=conjugation"
-          className="t-small text-ink-2 no-underline transition-colors hover:text-ink"
+          className="ml-auto t-small text-ink-2 no-underline transition-colors hover:text-ink"
         >
           drill these fast <span className="lk-arr" aria-hidden="true">→</span>
         </Link>
       </div>
+
       <ExercisePane
         exercise={exercise}
         language={activeLanguage}
@@ -154,6 +208,25 @@ function ConjugationPageContent() {
         onNext={onNext}
         nextLabel="next"
       />
+
+      {effectiveSubmission.kind === 'evaluated' &&
+        effectiveSubmission.submissionId && (
+          <FlagExerciseControl
+            exerciseId={exercise.id}
+            submissionId={effectiveSubmission.submissionId}
+            fetchFn={fetchFn}
+          />
+        )}
+
+      {openTopicId && (
+        <TheoryPanel
+          topicId={openTopicId}
+          language={activeLanguage}
+          triggerEl={triggerEl}
+          onClose={() => setOpenTopicId(null)}
+          fetchFn={fetchFn}
+        />
+      )}
     </div>
   );
 }
