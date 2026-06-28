@@ -1,14 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { useEffect } from 'react';
 import type { CurriculumMapPoint } from '@language-drill/api-client';
 import type { LearningLanguage } from '@language-drill/shared';
 import { ExerciseType } from '@language-drill/shared';
 import { Button } from '../../../../components/ui/button';
 import { typeLabel } from '../../_lib/timeline-labels';
 import { topicIdForGrammarPointKey } from '../../../../lib/theory-topic-map';
-import { useBodyScrollLock } from '../../../../lib/hooks/use-body-scroll-lock';
 import { formatAgo } from '../_lib/format-ago';
 import { confidenceBand } from './confidence-band';
 
@@ -44,60 +42,25 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
     key,
   } = point;
 
-  useBodyScrollLock(true);
-
-  // Closing state drives the slide-out animation: a close request flips this on,
-  // then `onClose` (which unmounts us) fires after the animation completes so the
-  // drawer glides out instead of vanishing. Reduced-motion users skip straight
-  // to onClose.
-  const [closing, setClosing] = useState(false);
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const requestClose = useCallback(() => {
-    if (closeTimer.current) return;
-    const prefersReducedMotion =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) {
-      onClose();
-      return;
-    }
-    setClosing(true);
-    closeTimer.current = setTimeout(onClose, 280);
-  }, [onClose]);
-
-  useEffect(() => {
-    return () => {
-      if (closeTimer.current) clearTimeout(closeTimer.current);
-    };
-  }, []);
-
   // Esc closes
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') requestClose();
+      if (e.key === 'Escape') onClose();
     }
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [requestClose]);
+  }, [onClose]);
 
-  // Swipe-to-close: a rightward, mostly-horizontal drag dismisses the drawer
-  // (mobile parity with tapping the scrim). Vertical scrolls are ignored so the
-  // body still scrolls normally.
-  const touchStart = useRef<{ x: number; y: number } | null>(null);
-  function onTouchStart(e: React.TouchEvent) {
-    const t = e.touches[0];
-    touchStart.current = { x: t.clientX, y: t.clientY };
-  }
-  function onTouchEnd(e: React.TouchEvent) {
-    const start = touchStart.current;
-    touchStart.current = null;
-    if (!start) return;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - start.x;
-    const dy = t.clientY - start.y;
-    if (dx > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) requestClose();
-  }
+  // Lock background scroll while the sheet is open (it only mounts when open),
+  // so the page behind the overlay doesn't scroll. Restore the prior value on
+  // close so we don't clobber any other scroll management.
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
 
   const lastPracticedLabel = lastPracticedAt
     ? `last practiced ${formatAgo(lastPracticedAt)}`
@@ -127,58 +90,46 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
     return `/drill?start=quick&grammarPoint=${encodeURIComponent(key)}&exerciseType=${type}`;
   }
 
-  if (typeof document === 'undefined') return null;
-
-  return createPortal(
-    <div
-      className="point-detail-overlay"
-      onClick={requestClose}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 50,
-        background: 'rgba(26, 22, 18, 0.42)',
-        display: 'flex',
-        justifyContent: 'flex-end',
-        overflow: 'hidden',
-        // Inline animation overrides the class slide-in so the exit reliably
-        // plays (a second class would tie on specificity).
-        ...(closing
-          ? { animation: 'point-detail-fade-out 0.26s ease both' }
-          : {}),
-      }}
-    >
+  return (
+    <>
+      {/* Overlay */}
       <div
-        className="point-detail-panel"
+        aria-hidden="true"
+        onClick={onClose}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 50,
+          background: 'rgba(26, 22, 18, 0.42)',
+          display: 'flex',
+          justifyContent: 'flex-end',
+        }}
+      />
+
+      {/* Sheet */}
+      <div
         role="dialog"
         aria-modal="true"
         aria-label={name}
-        onClick={(e) => e.stopPropagation()}
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
         style={{
-          position: 'relative',
-          width: 'min(520px, 90vw)',
-          height: '100%',
+          position: 'fixed',
+          top: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 51,
+          width: 'min(520px, 94vw)',
           background: 'var(--color-paper)',
           borderLeft: '1.5px solid var(--color-rule)',
-          overflow: 'hidden',
+          overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
-          minWidth: 0,
-          // Inline animation overrides the class slide-in so the exit reliably
-          // plays (a second class would tie on specificity).
-          ...(closing
-            ? { animation: 'point-detail-slide-out 0.28s cubic-bezier(0.4, 0, 1, 1) both' }
-            : {}),
         }}
       >
         {/* Head */}
         <div
           style={{
-            padding: '26px 18px 20px',
+            padding: '26px 30px 20px',
             borderBottom: '1px solid var(--color-rule)',
-            flexShrink: 0,
           }}
         >
           {/* State row */}
@@ -236,7 +187,7 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
             <button
               type="button"
               aria-label="close"
-              onClick={requestClose}
+              onClick={onClose}
               style={{
                 marginLeft: 'auto',
                 width: 34,
@@ -271,27 +222,17 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
         </div>
 
         {/* Body */}
-        <div
-          style={{
-            padding: '24px 18px 40px',
-            flex: 1,
-            minHeight: 0,
-            minWidth: 0,
-            overflowY: 'auto',
-            overflowX: 'hidden',
-          }}
-        >
+        <div style={{ padding: '24px 30px 40px', flex: 1 }}>
           {/* Mastery readout */}
           {state !== 'not-started' && (
             <div style={{ marginBottom: 20 }}>
               <div
                 style={{
                   display: 'flex',
-                  gap: 12,
-                  justifyContent: 'space-between',
+                  gap: 24,
                 }}
               >
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div>
                   <div className="t-micro" style={{ color: 'var(--color-ink-mute)' }}>
                     mastery
                   </div>
@@ -302,7 +243,7 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
                     {mastery !== null ? `${Math.round(mastery * 100)}%` : '—'}
                   </div>
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div>
                   <div className="t-micro" style={{ color: 'var(--color-ink-mute)' }}>
                     confidence
                   </div>
@@ -315,7 +256,7 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
                       : '—'}
                   </div>
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div>
                   <div className="t-micro" style={{ color: 'var(--color-ink-mute)' }}>
                     evidence
                   </div>
@@ -363,7 +304,6 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
                   borderRadius: 6,
                   padding: '12px 16px',
                   fontSize: 14,
-                  overflowWrap: 'anywhere',
                 }}
               >
                 <s style={{ color: 'var(--color-ink-mute)' }}>{errorSample.wrongText}</s>
@@ -430,7 +370,6 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
           </div>
         </div>
       </div>
-    </div>,
-    document.body,
+    </>
   );
 }
