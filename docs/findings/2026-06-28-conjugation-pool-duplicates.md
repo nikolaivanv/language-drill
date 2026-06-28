@@ -1,8 +1,35 @@
 # Finding: conjugation pool holds ~50–60% duplicate-content rows (TR)
 
-**Date:** 2026-06-28
-**Status:** reported, not yet remediated (serve-time fix shipped separately)
+**Date:** 2026-06-28 (root cause confirmed + generation fix 2026-06-29)
+**Status:** generation root cause FIXED; existing-data cleanup still pending
 **Surfaced by:** repeated/low-variety conjugation practice (TR A1 personal copula)
+
+## Update — confirmed root cause + generation fix
+
+The accrual mechanism is now confirmed and fixed at the source. The conjugation
+dedup surface (`canonicalSurface`, `packages/ai/src/generation-prompts.ts`) keyed
+on `lemma::featureBundle`. `featureBundle` is free-text grammar notation the model
+**rephrases every run** ("2. tekil kişi" vs "2. tekil şahıs" vs "… (sen)"), so the
+same prompt computed a *different* `_dedupKey` each scheduler run, slipped past the
+`exercises_dedup_idx` partial unique index (whose `onConflictDoNothing` therefore
+never fired), and inserted a fresh random-UUID row. Confirmed in prod: **all 98**
+duplicate-content groups had both a varying `featureBundle` and a varying
+`_dedupKey`.
+
+**Fix:** key the conjugation dedup surface on the stable identity the learner
+produces — `lemma::targetForm::pronoun` — so re-generations of the same prompt
+collapse to one key and the unique index blocks them. (Same signature the
+serve-time `GET /exercises/set` fix uses.) Forward accrual stops.
+
+### Why the existing-data cleanup still matters (variety, not just repeats)
+
+Duplicate rows **count toward the scheduler's per-cell target** (`cell-targets.ts`,
+e.g. A1 conjugation = 20). `tr-a1-personal-suffixes` has 30 approved rows but only
+~15 distinct — so the scheduler sees 30 ≥ 20 → `skip-target-reached` and **stops
+generating**, which is why the genuine vocabulary never grows. De-duping the
+existing rows drops the approved count below target → the scheduler resumes and
+fills the cell with *new* distinct content. So the cleanup directly fixes the
+"limited vocabulary" half of the complaint, not just leftover repeats.
 
 ## Symptom
 
