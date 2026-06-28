@@ -20,13 +20,13 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(mockSearchParamsString),
 }));
 
-const mockUseExercise = vi.fn();
+const mockUseExerciseSet = vi.fn();
 const mockUseSubmitAnswer = vi.fn();
 const mockUseLanguageProfiles = vi.fn();
 const mockUseFlagExercise = vi.fn();
 
 vi.mock('@language-drill/api-client', () => ({
-  useExercise: (...args: unknown[]) => mockUseExercise(...args),
+  useExerciseSet: (...args: unknown[]) => mockUseExerciseSet(...args),
   useSubmitAnswer: (...args: unknown[]) => mockUseSubmitAnswer(...args),
   useLanguageProfiles: (...args: unknown[]) => mockUseLanguageProfiles(...args),
   useFlagExercise: (...args: unknown[]) => mockUseFlagExercise(...args),
@@ -65,8 +65,8 @@ const CONJUGATION_EXERCISE = {
   },
 };
 
-// A second, distinct exercise — what the backend returns on the *next* random
-// pull. Used to prove the prompt swaps cleanly (different id + content).
+// The second item in the set — distinct id + content, used to prove the page
+// steps to the next loaded prompt on "next" (no refetch).
 const SECOND_EXERCISE = {
   ...CONJUGATION_EXERCISE,
   id: 'conj-exercise-002',
@@ -92,6 +92,21 @@ const SAMPLE_RESULT = {
   submissionId: '11111111-1111-4111-8111-111111111111',
 };
 
+// Build a set-hook return value from a list of exercises.
+function setReturn(
+  exercises: unknown[],
+  overrides: Record<string, unknown> = {},
+) {
+  return {
+    data: { exercises, available: exercises.length },
+    isLoading: false,
+    isError: false,
+    error: null,
+    refetch,
+    ...overrides,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -114,8 +129,6 @@ function providerWrapper() {
 }
 
 function renderWithProviders(ui: React.ReactElement) {
-  // `wrapper` keeps the providers stable across `rerender`, so a test can swap
-  // the mocked `useExercise` return value and re-render the same tree.
   return render(ui, { wrapper: providerWrapper() });
 }
 
@@ -133,13 +146,8 @@ beforeEach(() => {
   });
 
   refetch = vi.fn();
-  mockUseExercise.mockReturnValue({
-    data: CONJUGATION_EXERCISE,
-    isLoading: false,
-    isError: false,
-    error: null,
-    refetch,
-  });
+  // Default: a single-item set.
+  mockUseExerciseSet.mockReturnValue(setReturn([CONJUGATION_EXERCISE]));
 
   submitMutateAsync = vi.fn().mockResolvedValue(SAMPLE_RESULT);
   mockUseSubmitAnswer.mockReturnValue({
@@ -161,7 +169,7 @@ beforeEach(() => {
 // ---------------------------------------------------------------------------
 
 describe('ConjugationPage', () => {
-  it('renders the heading and the exercise prompt on load', () => {
+  it('renders the heading and the first item of the set on load', () => {
     renderWithProviders(<ConjugationPage />);
     expect(screen.getByText(/conjugation warm-up/i)).toBeInTheDocument();
     expect(screen.getByText('ir')).toBeInTheDocument();
@@ -184,7 +192,6 @@ describe('ConjugationPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /submit/i }));
 
     await waitFor(() => {
-      // The post-answer teaching surface shows the target form + breakdown.
       expect(screen.getByText('ir + íamos')).toBeInTheDocument();
     });
 
@@ -192,112 +199,65 @@ describe('ConjugationPage', () => {
       exerciseId: 'conj-exercise-001',
       answer: 'iríamos',
     });
-    // No sessionId key in the submit payload.
     expect(submitMutateAsync.mock.calls[0][0]).not.toHaveProperty('sessionId');
   });
 
-  it('advances to a fresh exercise via refetch on next', async () => {
+  it('steps to the next item in the set on "next" (no refetch)', async () => {
+    mockUseExerciseSet.mockReturnValue(
+      setReturn([CONJUGATION_EXERCISE, SECOND_EXERCISE]),
+    );
     renderWithProviders(<ConjugationPage />);
 
-    fireEvent.change(screen.getByRole('textbox'), {
-      target: { value: 'iríamos' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: /submit/i }));
-
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'iríamos' } });
+    fireEvent.click(screen.getByRole('button', { name: /^submit$/i }));
     await waitFor(() => {
       expect(screen.getByText('ir + íamos')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /next/i }));
-    expect(refetch).toHaveBeenCalledTimes(1);
-  });
+    fireEvent.click(screen.getByRole('button', { name: /^next$/i }));
 
-  it('keeps the feedback pinned to the current exercise while the next one is still loading', async () => {
-    // Regression: advancing reset submission to idle synchronously, but React
-    // Query keeps the previous `data` in place while the refetch is in flight.
-    // That produced a render of the OUTGOING exercise as a blank, unanswered
-    // prompt before the new one arrived — a visible flash / double-load. The
-    // feedback must stay pinned to its exercise until a different one lands.
-    renderWithProviders(<ConjugationPage />);
-
-    fireEvent.change(screen.getByRole('textbox'), {
-      target: { value: 'iríamos' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: /submit/i }));
-    await waitFor(() => {
-      expect(screen.getByText('ir + íamos')).toBeInTheDocument();
-    });
-
-    // Advance. `refetch` (mock) does not change `data`, mirroring the in-flight
-    // window where React Query still returns the old exercise.
-    fireEvent.click(screen.getByRole('button', { name: /next/i }));
-
-    expect(refetch).toHaveBeenCalledTimes(1);
-    // The graded surface must NOT collapse back to a blank prompt.
-    expect(screen.getByText('ir + íamos')).toBeInTheDocument();
-  });
-
-  it('swaps to a clean idle prompt once the next exercise resolves', async () => {
-    const { rerender } = renderWithProviders(<ConjugationPage />);
-
-    fireEvent.change(screen.getByRole('textbox'), {
-      target: { value: 'iríamos' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: /submit/i }));
-    await waitFor(() => {
-      expect(screen.getByText('ir + íamos')).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /next/i }));
-
-    // Refetch resolves with a different random exercise.
-    mockUseExercise.mockReturnValue({
-      data: SECOND_EXERCISE,
-      isLoading: false,
-      isError: false,
-      error: null,
-      refetch,
-    });
-    rerender(<ConjugationPage />);
-
-    // New prompt shown; the old feedback is gone and the field is ready for a
-    // fresh answer — no stale-feedback flash for the new prompt.
+    // Second prompt shown; previous feedback cleared. No refetch — the items
+    // were pre-loaded in the set.
     expect(screen.getByText('hablar')).toBeInTheDocument();
     expect(screen.queryByText('ir + íamos')).not.toBeInTheDocument();
+    expect(refetch).not.toHaveBeenCalled();
   });
 
-  it('shows a friendly empty-pool message on 404 NO_EXERCISES', () => {
-    const err = new Error('No exercises found') as Error & {
-      body?: { code?: string };
-    };
-    err.body = { code: 'NO_EXERCISES' };
-    mockUseExercise.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      isError: true,
-      error: err,
-      refetch: vi.fn(),
-    });
-
+  it('labels the last item of the set "see results"', async () => {
+    // Single-item set → the only item is the last item.
     renderWithProviders(<ConjugationPage />);
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'iríamos' } });
+    fireEvent.click(screen.getByRole('button', { name: /^submit$/i }));
+    await waitFor(() => {
+      expect(screen.getByText('ir + íamos')).toBeInTheDocument();
+    });
+    expect(
+      screen.getByRole('button', { name: /see results/i }),
+    ).toBeInTheDocument();
+  });
 
+  it('shows a friendly empty-pool message when the set is empty', () => {
+    mockUseExerciseSet.mockReturnValue(setReturn([]));
+    renderWithProviders(<ConjugationPage />);
     expect(
       screen.getByText(/no conjugation exercises yet/i),
     ).toBeInTheDocument();
   });
 
-  it('shows a loading message while the exercise is not yet available', () => {
-    mockUseExercise.mockReturnValue({
-      data: undefined,
-      isLoading: true,
-      isError: false,
-      error: null,
-      refetch: vi.fn(),
-    });
-
+  it('shows a loading message while the set is not yet available', () => {
+    mockUseExerciseSet.mockReturnValue(
+      setReturn([], { data: undefined, isLoading: true }),
+    );
     renderWithProviders(<ConjugationPage />);
-
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
+  });
+
+  it('shows an error message when the set fails to load', () => {
+    mockUseExerciseSet.mockReturnValue(
+      setReturn([], { data: undefined, isError: true, error: new Error('boom') }),
+    );
+    renderWithProviders(<ConjugationPage />);
+    expect(screen.getByText(/could not load conjugation exercises/i)).toBeInTheDocument();
   });
 
   it('shows a deep-link to conjugation fluency mode', () => {
@@ -313,12 +273,12 @@ describe('ConjugationPage', () => {
     expect(select.value).toBe(CefrLevel.B1);
   });
 
-  it('changing the drill level refetches at the new CEFR level', () => {
+  it('changing the drill level re-composes the set at the new CEFR level', () => {
     renderWithProviders(<ConjugationPage />);
     fireEvent.change(screen.getByRole('combobox'), {
       target: { value: CefrLevel.B2 },
     });
-    expect(mockUseExercise).toHaveBeenLastCalledWith(
+    expect(mockUseExerciseSet).toHaveBeenLastCalledWith(
       expect.objectContaining({ difficulty: CefrLevel.B2 }),
     );
   });
@@ -380,6 +340,7 @@ describe('ConjugationPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /practice more/i }));
 
     expect(screen.getByRole('textbox')).toBeInTheDocument();
+    expect(refetch).toHaveBeenCalledTimes(1);
     expect(
       screen.queryByRole('button', { name: /finish session/i }),
     ).not.toBeInTheDocument();
@@ -387,20 +348,20 @@ describe('ConjugationPage', () => {
 });
 
 describe('ConjugationPage — grammarPoint targeting', () => {
-  it('?grammarPoint=tr-a1-dili-past is passed to useExercise as grammarPointKey', () => {
+  it('?grammarPoint=tr-a1-dili-past is passed to useExerciseSet as grammarPointKey', () => {
     mockSearchParamsString = 'grammarPoint=tr-a1-dili-past';
     renderWithProviders(<ConjugationPage />);
 
-    expect(mockUseExercise).toHaveBeenCalledWith(
+    expect(mockUseExerciseSet).toHaveBeenCalledWith(
       expect.objectContaining({ grammarPointKey: 'tr-a1-dili-past' }),
     );
   });
 
-  it('no ?grammarPoint → useExercise is called WITHOUT grammarPointKey', () => {
+  it('no ?grammarPoint → useExerciseSet is called WITHOUT grammarPointKey', () => {
     mockSearchParamsString = '';
     renderWithProviders(<ConjugationPage />);
 
-    expect(mockUseExercise).toHaveBeenCalledWith(
+    expect(mockUseExerciseSet).toHaveBeenCalledWith(
       expect.not.objectContaining({ grammarPointKey: expect.anything() }),
     );
   });
