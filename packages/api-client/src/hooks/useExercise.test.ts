@@ -3,8 +3,12 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { createElement, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider, focusManager } from '@tanstack/react-query';
 import { CefrLevel, ExerciseType, type Language } from '@language-drill/shared';
-import { ExerciseResponseSchema, EvaluationResultSchema } from '../schemas/exercise';
-import { useExercise, useSubmitAnswer } from './useExercise';
+import {
+  ExerciseResponseSchema,
+  EvaluationResultSchema,
+  ExerciseSetResponseSchema,
+} from '../schemas/exercise';
+import { useExercise, useExerciseSet, useSubmitAnswer } from './useExercise';
 import type { AuthenticatedFetch } from '../fetchClient';
 
 /**
@@ -82,6 +86,92 @@ describe('useExercise — response validation', () => {
       contentJson: {},
     };
     expect(() => ExerciseResponseSchema.parse(data)).toThrow();
+  });
+});
+
+describe('useExerciseSet — response validation', () => {
+  it('accepts a set response with exercises + available', () => {
+    const data = {
+      exercises: [
+        {
+          id: 'ex-1',
+          type: 'conjugation',
+          language: 'TR',
+          difficulty: 'A1',
+          grammarPointKey: 'tr-a1-personal-suffixes',
+          contentJson: { lemma: 'öğrenci', targetForm: 'öğrencisin' },
+        },
+      ],
+      available: 1,
+    };
+    const result = ExerciseSetResponseSchema.parse(data);
+    expect(result.exercises).toHaveLength(1);
+    expect(result.available).toBe(1);
+  });
+
+  it('accepts an empty set', () => {
+    const result = ExerciseSetResponseSchema.parse({ exercises: [], available: 0 });
+    expect(result.exercises).toEqual([]);
+    expect(result.available).toBe(0);
+  });
+
+  it('rejects a negative available count', () => {
+    expect(() =>
+      ExerciseSetResponseSchema.parse({ exercises: [], available: -1 }),
+    ).toThrow();
+  });
+});
+
+describe('useExerciseSet — request URL', () => {
+  const SET = {
+    exercises: [
+      {
+        id: 'ex-1',
+        type: 'conjugation',
+        language: 'TR',
+        difficulty: 'A1',
+        grammarPointKey: 'tr-a1-personal-suffixes',
+        contentJson: { lemma: 'öğrenci', targetForm: 'öğrencisin' },
+      },
+    ],
+    available: 1,
+  };
+
+  function jsonResponse(body: unknown): Response {
+    return { ok: true, status: 200, json: async () => body } as unknown as Response;
+  }
+
+  function buildWrapper() {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    return function Wrapper({ children }: { children: ReactNode }) {
+      return createElement(QueryClientProvider, { client: queryClient }, children);
+    };
+  }
+
+  it('requests /exercises/set with type, grammarPoint and count', async () => {
+    const fetchFn = vi.fn<AuthenticatedFetch>().mockResolvedValue(jsonResponse(SET));
+
+    const { result } = renderHook(
+      () =>
+        useExerciseSet({
+          language: 'TR' as Language,
+          difficulty: CefrLevel.A1,
+          type: ExerciseType.CONJUGATION,
+          grammarPointKey: 'tr-a1-personal-suffixes',
+          count: 10,
+          fetchFn,
+        }),
+      { wrapper: buildWrapper() },
+    );
+
+    await waitFor(() => expect(result.current.data).toBeDefined());
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    const url = fetchFn.mock.calls[0][0] as string;
+    expect(url).toContain('/exercises/set?');
+    expect(url).toContain('type=conjugation');
+    expect(url).toContain('grammarPoint=tr-a1-personal-suffixes');
+    expect(url).toContain('count=10');
+    expect(result.current.data?.exercises).toHaveLength(1);
   });
 });
 

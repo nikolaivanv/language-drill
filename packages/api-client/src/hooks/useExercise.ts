@@ -3,6 +3,8 @@ import type { Language, CefrLevel, ExerciseType } from '@language-drill/shared';
 import {
   ExerciseResponseSchema,
   type ExerciseResponse,
+  ExerciseSetResponseSchema,
+  type ExerciseSetResponse,
   parseSubmitResult,
   type SubmitResultResponse,
 } from '../schemas/exercise';
@@ -45,6 +47,50 @@ export function useExercise({
     // is mid-answer (most visibly in free writing, where composing takes
     // minutes). Hold the fetched exercise stable for the session; advancing to a
     // new exercise happens through explicit invalidation (see useSubmitAnswer).
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// useExerciseSet — a pre-composed, distinct-by-content set for one sitting
+// ---------------------------------------------------------------------------
+
+export type UseExerciseSetParams = {
+  language: Language;
+  difficulty: CefrLevel;
+  type?: ExerciseType;
+  grammarPointKey?: string;
+  count?: number;
+  fetchFn: AuthenticatedFetch;
+  enabled?: boolean;
+};
+
+export function useExerciseSet({
+  language,
+  difficulty,
+  type,
+  grammarPointKey,
+  count,
+  fetchFn,
+  enabled = true,
+}: UseExerciseSetParams) {
+  return useQuery<ExerciseSetResponse, Error>({
+    queryKey: ['exercise-set', language, difficulty, type, grammarPointKey, count],
+    queryFn: async () => {
+      const params = new URLSearchParams({ language, difficulty });
+      if (type) params.set('type', type);
+      if (grammarPointKey) params.set('grammarPoint', grammarPointKey);
+      if (count) params.set('count', String(count));
+      const response = await fetchFn(`/exercises/set?${params.toString()}`);
+      const json: unknown = await response.json();
+      return ExerciseSetResponseSchema.parse(json);
+    },
+    enabled,
+    // The set is composed server-side per call (distinct, freshness-ordered), so
+    // hold it stable for the sitting. A fresh set ("practice more") is an
+    // explicit refetch(); a background refetch would swap the items mid-session.
     staleTime: Infinity,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,

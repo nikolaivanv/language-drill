@@ -15,6 +15,16 @@ export const ExerciseResponseSchema = z.object({
 
 export type ExerciseResponse = z.infer<typeof ExerciseResponseSchema>;
 
+// Response from GET /exercises/set — a pre-composed, distinct-by-content set of
+// exercises for a single sitting (no in-session repeats). `available` is the
+// number of distinct items returned (≤ requested count).
+export const ExerciseSetResponseSchema = z.object({
+  exercises: z.array(ExerciseResponseSchema),
+  available: z.number().int().nonnegative(),
+});
+
+export type ExerciseSetResponse = z.infer<typeof ExerciseSetResponseSchema>;
+
 // Error in evaluation
 const EvaluationErrorSchema = z.object({
   type: z.enum(['grammar', 'vocabulary', 'spelling', 'pragmatics']),
