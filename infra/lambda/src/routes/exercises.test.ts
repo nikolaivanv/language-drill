@@ -421,6 +421,106 @@ describe('GET /exercises', () => {
 });
 
 // ---------------------------------------------------------------------------
+// GET /exercises/set route tests
+// ---------------------------------------------------------------------------
+
+describe('GET /exercises/set', () => {
+  let app: Hono;
+
+  const authEnv = {
+    event: {
+      requestContext: { authorizer: { jwt: { claims: { sub: 'user_123' } } } },
+    },
+  };
+
+  const conj = (n: number, lemma: string, target: string, pronoun: string) => ({
+    id: `id-${n}`,
+    type: 'conjugation',
+    language: 'TR',
+    difficulty: 'A1',
+    grammarPointKey: 'tr-a1-personal-suffixes',
+    contentJson: { lemma, targetForm: target, subject: { pronoun } },
+    audioS3Key: null,
+    createdAt: new Date(),
+  });
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const mod = await import('./exercises');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  it('de-dupes duplicate-content rows and returns distinct items in order', async () => {
+    // Rows 1 and 2 share lemma+target+pronoun (different ids) — the duplicate
+    // must collapse to a single served item.
+    mockLimit.mockResolvedValueOnce([
+      conj(1, 'öğrenci', 'öğrencisin', 'sen'),
+      conj(2, 'öğrenci', 'öğrencisin', 'sen'),
+      conj(3, 'hazır', 'hazırız', 'biz'),
+    ]);
+
+    const res = await app.request(
+      '/exercises/set?language=TR&difficulty=A1&type=conjugation&grammarPoint=tr-a1-personal-suffixes',
+      undefined,
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.exercises.map((e: AnyJson) => e.id)).toEqual(['id-1', 'id-3']);
+    expect(body.available).toBe(2);
+    expect(mockFreshFirstOrderBy).toHaveBeenCalledWith('user_123');
+  });
+
+  it('caps the set at the requested count', async () => {
+    mockLimit.mockResolvedValueOnce([
+      conj(1, 'a', 'a1', 'ben'),
+      conj(2, 'b', 'b1', 'sen'),
+      conj(3, 'c', 'c1', 'o'),
+    ]);
+
+    const res = await app.request(
+      '/exercises/set?language=TR&difficulty=A1&type=conjugation&count=2',
+      undefined,
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.exercises).toHaveLength(2);
+    expect(body.available).toBe(2);
+  });
+
+  it('returns an empty set (available 0) when the pool is empty', async () => {
+    mockLimit.mockResolvedValueOnce([]);
+
+    const res = await app.request(
+      '/exercises/set?language=TR&difficulty=C2&type=conjugation',
+      undefined,
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.exercises).toEqual([]);
+    expect(body.available).toBe(0);
+  });
+
+  it('rejects an out-of-range count', async () => {
+    const res = await app.request(
+      '/exercises/set?language=TR&difficulty=A1&type=conjugation&count=99',
+      undefined,
+      authEnv,
+    );
+
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBe('VALIDATION_ERROR');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // GET /exercises/:id route tests
 // ---------------------------------------------------------------------------
 

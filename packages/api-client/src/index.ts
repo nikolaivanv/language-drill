@@ -2,6 +2,8 @@ export { HealthResponseSchema, type HealthResponse } from './schemas/health';
 export {
   ExerciseResponseSchema,
   type ExerciseResponse,
+  ExerciseSetResponseSchema,
+  type ExerciseSetResponse,
   EvaluationResultSchema,
   type EvaluationResultResponse,
   DictationResultSchema,
@@ -129,8 +131,10 @@ export {
 export { useHealth } from './hooks/useHealth';
 export {
   useExercise,
+  useExerciseSet,
   useSubmitAnswer,
   type UseExerciseParams,
+  type UseExerciseSetParams,
   type SubmitAnswerParams,
   type UseSubmitAnswerOptions,
 } from './hooks/useExercise';

@@ -41,6 +41,13 @@ import {
 } from '@language-drill/ai';
 import { db } from '../db';
 import { approvedStatusFilter, audioReadyFilter, freshFirstOrderBy } from '../lib/exercise-filters';
+import {
+  conjugationSignature,
+  dedupeBySignature,
+  CONJUGATION_SET_DEFAULT,
+  CONJUGATION_SET_MAX,
+  CONJUGATION_SET_FETCH_CAP,
+} from '../lib/exercise-set';
 import { recordErrorObservations, freeWritingErrorsToEvaluationErrors } from '../lib/errors/record';
 import { incidentalObservations } from '../lib/mastery/incidental-fold';
 import { presignAudioUrl } from '../lib/audio-url';
@@ -213,6 +220,85 @@ exercises.get('/exercises', async (c) => {
     grammarPointKey: row.grammarPointKey,
     contentJson: withAudioUrl(row.contentJson, audioUrl),
   });
+});
+
+// ---------------------------------------------------------------------------
+// GET /exercises/set — return N distinct-by-content exercises for a sitting
+// ---------------------------------------------------------------------------
+// The conjugation pool holds exact-duplicate content rows, so the single-row
+// random draw (GET /exercises) can repeat the same prompt within a session.
+// This endpoint pulls a freshness-ordered window and de-dupes by content
+// signature, so an open-ended conjugation sitting never repeats an item.
+// Registered BEFORE GET /exercises/:id so `/exercises/set` isn't captured as
+// an `:id` of "set".
+const ExerciseSetQuerySchema = z.object({
+  language: z.nativeEnum(Language),
+  difficulty: z.nativeEnum(CefrLevel),
+  type: z.nativeEnum(ExerciseType).optional(),
+  grammarPoint: z.string().min(1).optional(),
+  count: z.coerce.number().int().min(1).max(CONJUGATION_SET_MAX).optional(),
+});
+
+exercises.get('/exercises/set', async (c) => {
+  const parsed = ExerciseSetQuerySchema.safeParse(c.req.query());
+
+  if (!parsed.success) {
+    return c.json(
+      { error: 'Invalid query parameters', code: 'VALIDATION_ERROR', details: parsed.error.flatten() },
+      400,
+    );
+  }
+
+  const { language, difficulty, type, grammarPoint: grammarPointKey, count } = parsed.data;
+  const userId = c.get('userId');
+  const target = count ?? CONJUGATION_SET_DEFAULT;
+
+  const conditions = [
+    eq(exercisesTable.language, language),
+    eq(exercisesTable.difficulty, difficulty),
+    approvedStatusFilter(exercisesTable),
+    audioReadyFilter(exercisesTable),
+  ];
+
+  if (type) {
+    conditions.push(eq(exercisesTable.type, type));
+  }
+
+  if (grammarPointKey) {
+    conditions.push(eq(exercisesTable.grammarPointKey, grammarPointKey));
+  }
+
+  // Pull a freshness-ordered window (never-seen first, random tiebreak), then
+  // de-dupe by content signature and slice to `target` — duplicate-content rows
+  // collapse to one, so the served set carries no in-session repeats.
+  const rows = await db
+    .select()
+    .from(exercisesTable)
+    .where(and(...conditions))
+    .orderBy(freshFirstOrderBy(userId))
+    .limit(CONJUGATION_SET_FETCH_CAP);
+
+  const chosen = dedupeBySignature(
+    rows,
+    target,
+    (row) => `${row.grammarPointKey ?? ''}|${conjugationSignature(row.contentJson)}`,
+  );
+
+  const exercisesOut = await Promise.all(
+    chosen.map(async (row) => {
+      const audioUrl = await presignAudioUrl(row.audioS3Key);
+      return {
+        id: row.id,
+        type: row.type,
+        language: row.language,
+        difficulty: row.difficulty,
+        grammarPointKey: row.grammarPointKey,
+        contentJson: withAudioUrl(row.contentJson, audioUrl),
+      };
+    }),
+  );
+
+  return c.json({ exercises: exercisesOut, available: exercisesOut.length });
 });
 
 // ---------------------------------------------------------------------------
