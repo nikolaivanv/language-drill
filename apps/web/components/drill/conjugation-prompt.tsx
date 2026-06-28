@@ -15,7 +15,7 @@ export interface ConjugationPromptCardProps {
 export function ConjugationPromptCard({ content }: ConjugationPromptCardProps) {
   return (
     <Card padding="lg">
-      <p className="t-display-s">{content.lemma}</p>
+      <p className="t-display-m">{content.lemma}</p>
       <p className="t-body-l text-ink-mute">{content.lemmaGloss}</p>
       <ConjugationFeatureBundle content={content} />
     </Card>

@@ -342,6 +342,48 @@ describe('ConjugationPage', () => {
       screen.getByRole('button', { name: /flag this exercise/i }),
     ).toBeInTheDocument();
   });
+
+  it('hides "finish session" until an answer is recorded', () => {
+    renderWithProviders(<ConjugationPage />);
+    expect(
+      screen.queryByRole('button', { name: /finish session/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('finish session opens the review recap with accuracy + practice-more', async () => {
+    renderWithProviders(<ConjugationPage />);
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'iríamos' } });
+    fireEvent.click(screen.getByRole('button', { name: /^submit$/i }));
+    await waitFor(() => {
+      expect(screen.getByText('ir + íamos')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /finish session/i }));
+
+    // Reuses the real DebriefHeader summary line.
+    expect(screen.getByText(/you got 1 of 1/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /practice more/i }),
+    ).toBeInTheDocument();
+    // The drill prompt is gone while reviewing.
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+  });
+
+  it('practice more returns to the drill from the review recap', async () => {
+    renderWithProviders(<ConjugationPage />);
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'iríamos' } });
+    fireEvent.click(screen.getByRole('button', { name: /^submit$/i }));
+    await waitFor(() => {
+      expect(screen.getByText('ir + íamos')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole('button', { name: /finish session/i }));
+    fireEvent.click(screen.getByRole('button', { name: /practice more/i }));
+
+    expect(screen.getByRole('textbox')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /finish session/i }),
+    ).not.toBeInTheDocument();
+  });
 });
 
 describe('ConjugationPage — grammarPoint targeting', () => {

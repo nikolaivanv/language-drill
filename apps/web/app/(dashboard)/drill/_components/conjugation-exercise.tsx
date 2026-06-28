@@ -3,6 +3,7 @@
 import * as React from 'react';
 import type { ConjugationContent, LearningLanguage } from '@language-drill/shared';
 import { AccentPicker, Button, Input } from '../../../../components/ui';
+import { cn } from '../../../../lib/cn';
 import { ConjugationPromptCard } from '../../../../components/drill/conjugation-prompt';
 import { useAnswerDraft } from '../../../../lib/drill/use-answer-draft';
 import { submitOnEnter } from '../../../../lib/drill/keyboard';
@@ -86,7 +87,12 @@ export function ConjugationExercise({
           onKeyDown={submitOnEnter(handleSubmit)}
           readOnly={isLocked}
           disabled={isLocked}
-          className={isLocked ? 'opacity-60' : undefined}
+          // Larger display-serif answer field — the typed form is the focal
+          // point and must stay readable on a phone (mirrors the prototype's
+          // 22px Fraunces input). Inline fontSize overrides the shared Input's
+          // base text-[14px] reliably (utility source-order is unguaranteed).
+          className={cn('font-display', isLocked && 'opacity-60')}
+          style={{ fontSize: 22, paddingTop: 14, paddingBottom: 14 }}
         />
         {showAccentPicker && (
           <AccentPicker
