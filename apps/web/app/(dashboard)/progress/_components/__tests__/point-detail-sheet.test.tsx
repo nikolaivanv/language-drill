@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { Language } from '@language-drill/shared';
 import type { CurriculumMapPoint } from '@language-drill/api-client';
@@ -55,6 +55,11 @@ function makePoint(over: Partial<CurriculumMapPoint> = {}): CurriculumMapPoint {
 // Tests
 // ---------------------------------------------------------------------------
 
+beforeEach(() => {
+  document.body.style.overflow = '';
+  document.documentElement.style.overflow = '';
+});
+
 describe('PointDetailSheet', () => {
   it('renders the mastery readout (40% / building / 3) for a learning point', () => {
     render(
@@ -73,6 +78,17 @@ describe('PointDetailSheet', () => {
     expect(screen.getByText('3')).toBeDefined();
   });
 
+  it('renders into a portal on document.body', () => {
+    render(
+      <PointDetailSheet
+        point={makePoint()}
+        language={Language.TR}
+        onClose={noop}
+      />,
+    );
+    expect(document.body.querySelector('[role="dialog"]')).not.toBeNull();
+  });
+
   it('locks background scroll while open and restores it on close', () => {
     expect(document.body.style.overflow).toBe('');
     const { unmount } = render(
@@ -83,6 +99,7 @@ describe('PointDetailSheet', () => {
       />,
     );
     expect(document.body.style.overflow).toBe('hidden');
+    expect(document.documentElement.style.overflow).toBe('hidden');
     unmount();
     expect(document.body.style.overflow).toBe('');
   });
