@@ -282,9 +282,11 @@ function ConjugationPageContent() {
         />
       )}
 
-      {/* End the sitting whenever, once ≥1 item is answered. */}
+      {/* End the sitting whenever, once ≥1 item is answered. Right-aligned so it
+          sits under the primary next/results control (easier thumb reach on
+          mobile, and reads as more organized than a lone left-aligned button). */}
       {reviewItems.length > 0 && (
-        <div className="mt-s-6">
+        <div className="mt-s-6 flex justify-end">
           <Button variant="ghost" onClick={onFinish}>
             finish session
           </Button>
