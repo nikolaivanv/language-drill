@@ -205,15 +205,16 @@ describe('curriculum conjugationSuitable flag', () => {
   });
 });
 
-describe('curriculum conjugationSeedKind (nominal-inflection points generate unseeded)', () => {
-  // Nominal-inflection points decline a noun, not a verb — a verb seed + the
-  // strict "use exactly this verb" directive would contradict the grammar
-  // point, so they opt out of seeding with conjugationSeedKind: 'none'.
-  it('the full conjugationSeedKind:"none" set is exactly these six TR nominal points', () => {
-    const seedless = ALL_CURRICULA.filter((g) => g.conjugationSeedKind === 'none')
+describe('curriculum conjugationSeedKind (nominal-inflection points seed from the noun band)', () => {
+  // Nominal-inflection points decline a noun, not a verb. Unseeded they collapsed
+  // onto a couple of nouns and exhausted their identity space, so they now draw
+  // from the noun band with conjugationSeedKind: 'noun' (the strict directive
+  // names "the noun to inflect"). No point currently uses the legacy 'none'.
+  it('the full conjugationSeedKind:"noun" set is exactly these six TR nominal points', () => {
+    const nounSeeded = ALL_CURRICULA.filter((g) => g.conjugationSeedKind === 'noun')
       .map((g) => g.key)
       .sort();
-    expect(seedless).toEqual(
+    expect(nounSeeded).toEqual(
       [
         'tr-a1-accusative-definite-object',
         'tr-a1-ablative-dative',
@@ -225,8 +226,13 @@ describe('curriculum conjugationSeedKind (nominal-inflection points generate uns
     );
   });
 
-  it('every conjugationSeedKind:"none" point is also conjugationSuitable', () => {
-    for (const g of ALL_CURRICULA.filter((p) => p.conjugationSeedKind === 'none')) {
+  it('no point uses the legacy unseeded conjugationSeedKind:"none"', () => {
+    const seedless = ALL_CURRICULA.filter((g) => g.conjugationSeedKind === 'none').map((g) => g.key);
+    expect(seedless).toEqual([]);
+  });
+
+  it('every conjugationSeedKind:"noun" point is also conjugationSuitable', () => {
+    for (const g of ALL_CURRICULA.filter((p) => p.conjugationSeedKind === 'noun')) {
       expect(g.conjugationSuitable, g.key).toBe(true);
     }
   });

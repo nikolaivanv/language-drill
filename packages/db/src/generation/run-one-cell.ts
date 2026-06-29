@@ -59,7 +59,7 @@ import { runGeneratorPool } from './generator-pool';
 import { runOutcomePool } from './outcome-pool';
 import { pickConjugationSeeds, pickSeeds } from './seed-picker';
 import { VOCAB_MAX_PER_WORD } from './validate-and-insert';
-import { loadFrequencyBand, loadVerbBand } from './vocab-band';
+import { loadFrequencyBand, loadNounBand, loadVerbBand } from './vocab-band';
 import { runValidatorPool } from './validator-pool';
 
 // ---------------------------------------------------------------------------
@@ -415,15 +415,51 @@ async function fetchPriorConjugationSeeds(
 }
 
 /**
+ * Prior NOUN seeds for a nominal-inflection conjugation cell (`conjugationSeedKind:
+ * 'noun'`) — the cross-run exclude set for the noun `pickSeeds` call. The noun
+ * picker keys distinctness on the lemma alone (the noun is the diversity axis;
+ * person/case is driven separately by coverage), so this returns bare nouns.
+ * Reads `coalesce(seedWord, lemma)`: future seeded rows carry `seedWord`, while
+ * pre-seeding rows only carry `lemma` (the declined noun) — both must be excluded
+ * so a fresh batch proposes genuinely new nouns instead of re-deriving the handful
+ * already in the pool.
+ */
+async function fetchPriorNounSeeds(
+  db: Db,
+  cell: Cell,
+): Promise<readonly string[]> {
+  const rows = await db
+    .select({ seed: sql<string>`content_json->>'seedWord'`, lemma: sql<string>`content_json->>'lemma'` })
+    .from(exercises)
+    .where(
+      and(
+        eq(exercises.language, cell.language),
+        eq(exercises.difficulty, cell.cefrLevel),
+        eq(exercises.type, cell.exerciseType),
+        eq(exercises.grammarPointKey, cell.grammarPoint.key),
+        inArray(exercises.reviewStatus, [
+          'auto-approved',
+          'manual-approved',
+          'flagged',
+        ]),
+      ),
+    );
+  return rows
+    .map((r) => (typeof r.seed === 'string' && r.seed ? r.seed : r.lemma))
+    .filter((s): s is string => typeof s === 'string' && s.length > 0);
+}
+
+/**
  * Which seed band a cell draws from, or null for non-seeded types. Pure — the
  * type gate is unit-tested without a DB. cloze/translation seed at-level content
  * words; verb-morphology conjugation seeds at-or-below-level VERBS (any language
  * now that PoS is DB-backed — previously ES-only). NOMINAL-inflection points
- * (`conjugationSeedKind: 'none'` — possessive/case/copula) decline a noun, not a
- * verb, so their conjugation cell is unseeded. vocab_recall/free-writing/etc.
- * are unseeded.
+ * (`conjugationSeedKind: 'noun'` — possessive/case/copula) decline a noun, not a
+ * verb, so their conjugation cell seeds from the NOUN band instead. The legacy
+ * `'none'` opts out of seeding entirely. vocab_recall/free-writing/etc. are
+ * unseeded.
  */
-export function seedKindFor(cell: Cell): 'frequency' | 'verb' | null {
+export function seedKindFor(cell: Cell): 'frequency' | 'verb' | 'noun' | null {
   if (
     cell.exerciseType === ExerciseType.CLOZE ||
     cell.exerciseType === ExerciseType.TRANSLATION ||
@@ -436,7 +472,9 @@ export function seedKindFor(cell: Cell): 'frequency' | 'verb' | null {
     return 'frequency';
   }
   if (cell.exerciseType === ExerciseType.CONJUGATION) {
-    return cell.grammarPoint.conjugationSeedKind === 'none' ? null : 'verb';
+    const seedKind = cell.grammarPoint.conjugationSeedKind;
+    if (seedKind === 'none') return null;
+    return seedKind === 'noun' ? 'noun' : 'verb';
   }
   return null;
 }
@@ -465,8 +503,21 @@ export async function buildSeedWords(
     return pickSeeds({ band, batchSeed, count, exclude: priorSeeds });
   }
 
-  // Conjugation: at-or-below-level verbs (CUMULATIVE band from rank 1), keyed on
-  // (lemma, person). Persons come from the ordinal's coverage target.
+  if (kind === 'noun') {
+    // Nominal-inflection conjugation (possessive/case/copula): the diversity
+    // dimension is the NOUN being declined, not the grammatical person, so we
+    // seed each ordinal with a distinct noun keyed on the lemma alone — exactly
+    // like the frequency picker. The grammar axis (person/number/case) is driven
+    // independently by `coverageTargets`. Without this the model converges on a
+    // couple of nouns (e.g. ablative-dative collapsed onto okul/uçak) and the
+    // pool's distinct-identity space exhausts. Band is CUMULATIVE from rank 1 so
+    // an A1 cell still has a wide noun inventory to vary over.
+    const band = await loadNounBand(db, cell.language, 1, window.rankMax);
+    return pickSeeds({ band, batchSeed, count, exclude: priorSeeds });
+  }
+
+  // Verb conjugation: at-or-below-level verbs (CUMULATIVE band from rank 1), keyed
+  // on (lemma, person). Persons come from the ordinal's coverage target.
   const persons = Array.from(
     { length: count },
     (_, ordinal) => coverageTargets?.[ordinal]?.person ?? null,
@@ -618,19 +669,21 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
           ? await fetchPriorFreeWritingTitles(db, cell)
           : undefined;
 
-    // Seed cloze/translation with at-level content words, and conjugation
-    // with at-or-below-level verbs (keyed on (lemma, person)). Other types
-    // stay unseeded. Prior-seed exclusion is fetched only for the seeded
-    // types to avoid a needless query.
-    const isClozeOrTranslation =
-      cell.exerciseType === ExerciseType.CLOZE ||
-      cell.exerciseType === ExerciseType.TRANSLATION;
-    const isConjugation = cell.exerciseType === ExerciseType.CONJUGATION;
-    const priorSeeds: ReadonlySet<string> = isClozeOrTranslation
-      ? new Set(await fetchPriorSeeds(db, cell))
-      : isConjugation
-        ? await fetchPriorConjugationSeeds(db, cell)
-        : new Set<string>();
+    // Seed cloze/translation with at-level content words, verb conjugation with
+    // at-or-below-level verbs (keyed on (lemma, person)), and nominal-inflection
+    // conjugation with at-or-below-level nouns (keyed on lemma alone). Other types
+    // stay unseeded. The prior-seed exclude set is fetched per kind — keyed the same
+    // way the matching picker excludes — and only for the seeded types to avoid a
+    // needless query.
+    const seedKind = seedKindFor(cell);
+    const priorSeeds: ReadonlySet<string> =
+      seedKind === 'frequency'
+        ? new Set(await fetchPriorSeeds(db, cell))
+        : seedKind === 'noun'
+          ? new Set(await fetchPriorNounSeeds(db, cell))
+          : seedKind === 'verb'
+            ? await fetchPriorConjugationSeeds(db, cell)
+            : new Set<string>();
     const seedWords = await buildSeedWords(
       db,
       cell,

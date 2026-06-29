@@ -308,23 +308,35 @@ describe('seedKindFor', () => {
     expect(seedKindFor(cellOf(ExerciseType.DICTATION))).toBe('frequency');
   });
 
-  it('returns verb for conjugation', () => {
+  it('returns verb for conjugation (default — no conjugationSeedKind flag)', () => {
     expect(seedKindFor(cellOf(ExerciseType.CONJUGATION))).toBe('verb');
   });
 
-  it('returns null for a conjugation cell of a nominal point (conjugationSeedKind: none)', () => {
+  it('returns noun for a conjugation cell of a nominal point (conjugationSeedKind: noun)', () => {
     // Nominal-inflection points (possessive/case/copula) decline a noun, not a
-    // verb — a verb seed + the strict "use exactly this verb" directive would
-    // contradict the grammar point, so they must generate unseeded.
+    // verb, so their conjugation cell seeds from the NOUN band — varying the
+    // declined head keeps the pool's distinct-identity space from exhausting.
     const base = ALL_CURRICULA.find((g) => g.key === TEST_GRAMMAR_POINT_KEY)!;
     const nominalCell: Cell = {
+      language: Language.ES as LearningLanguage,
+      cefrLevel: CefrLevel.B1 as CurriculumCefrLevel,
+      exerciseType: ExerciseType.CONJUGATION,
+      grammarPoint: { ...base, conjugationSeedKind: 'noun' },
+      cellKey: 'es:b1:conjugation:es-test',
+    };
+    expect(seedKindFor(nominalCell)).toBe('noun');
+  });
+
+  it('returns null for a conjugation cell that opts out of seeding (legacy conjugationSeedKind: none)', () => {
+    const base = ALL_CURRICULA.find((g) => g.key === TEST_GRAMMAR_POINT_KEY)!;
+    const unseededCell: Cell = {
       language: Language.ES as LearningLanguage,
       cefrLevel: CefrLevel.B1 as CurriculumCefrLevel,
       exerciseType: ExerciseType.CONJUGATION,
       grammarPoint: { ...base, conjugationSeedKind: 'none' },
       cellKey: 'es:b1:conjugation:es-test',
     };
-    expect(seedKindFor(nominalCell)).toBeNull();
+    expect(seedKindFor(unseededCell)).toBeNull();
   });
 
   it('returns null for vocab_recall', () => {
@@ -1184,6 +1196,36 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
       const seeds = await buildSeedWords(seedDb, conjCell, 3, 'seed-b', new Set(), targets);
       expect(seeds).toBeDefined();
       expect(seeds!.filter((s) => typeof s === 'string').length).toBeGreaterThan(0);
+    });
+
+    it('seeds a nominal-inflection conjugation cell (conjugationSeedKind: noun) with NOUNS, keyed on lemma alone', async () => {
+      const clozeCell = buildTestCell();
+      const nounConjCell: Cell = {
+        ...clozeCell,
+        exerciseType: ExerciseType.CONJUGATION,
+        grammarPoint: { ...clozeCell.grammarPoint, conjugationSeedKind: 'noun' },
+        cellKey: 'es:b1:conjugation:es-nominal-test',
+      };
+      // No `person` axis (case/number nominal) — the verb picker would emit no seed
+      // here, but the noun picker keys on the lemma alone and still fills every slot.
+      const seeds = await buildSeedWords(seedDb, nounConjCell, 2, 'seed-n', new Set());
+      expect(seeds).toBeDefined();
+      const chosen = seeds!.filter((s): s is string => typeof s === 'string');
+      expect(chosen.length).toBe(2);
+      // Only nouns from the band — never the verbs.
+      for (const s of chosen) expect(['libro', 'mesa']).toContain(s);
+    });
+
+    it('excludes prior NOUN seeds for a noun-seeded conjugation cell', async () => {
+      const clozeCell = buildTestCell();
+      const nounConjCell: Cell = {
+        ...clozeCell,
+        exerciseType: ExerciseType.CONJUGATION,
+        grammarPoint: { ...clozeCell.grammarPoint, conjugationSeedKind: 'noun' },
+        cellKey: 'es:b1:conjugation:es-nominal-test',
+      };
+      const reseeded = (await buildSeedWords(seedDb, nounConjCell, 2, 'seed-n', new Set(['libro'])))!;
+      expect(reseeded).not.toContain('libro');
     });
   },
 );

@@ -174,7 +174,7 @@ function renderRecentStems(recentStems: readonly string[]): string {
 // toplantısı`), the modifier left only in the parenthetical (`bir ___ (destek)`),
 // and abstract/admin/medical vocab. Adds the no-article-hugging, one-word-answer,
 // literal-modifier, and concrete-vocab rules. Template edit → Langfuse push per env.
-export const GENERATION_PROMPT_VERSION = "generate@2026-06-25";
+export const GENERATION_PROMPT_VERSION = "generate@2026-06-29";
 
 /**
  * Wording differs per type so Claude reads it the way the cell is constrained:
@@ -595,10 +595,14 @@ export function buildGenerationUserPrompt(
   const seedBlock =
     seedWord && seedWord.length > 0
       ? inputs.exerciseType === ExerciseType.CONJUGATION
-        ? // Strict: the seed IS the verb to conjugate. No substitution escape
-          // hatch — the picker already guarantees a conjugatable verb, and
-          // substitution would re-open the dedup-collapse we are fixing.
-          `The verb to conjugate is "${seedWord}". Use exactly this verb — do not substitute another.\n\n`
+        ? // Strict: the seed IS the word to inflect. No substitution escape hatch —
+          // the picker already guarantees an inflectable word, and substitution
+          // would re-open the dedup-collapse we are fixing. Nominal-inflection
+          // points (conjugationSeedKind: 'noun') decline a NOUN, not a verb, so the
+          // directive names the right word class to avoid confusing the author.
+          inputs.grammarPoint.conjugationSeedKind === "noun"
+          ? `The noun to inflect is "${seedWord}". Use exactly this noun — do not substitute another.\n\n`
+          : `The verb to conjugate is "${seedWord}". Use exactly this verb — do not substitute another.\n\n`
         : `Build this exercise around the word "${seedWord}". If "${seedWord}" does not fit ${inputs.grammarPoint.name} naturally, choose a related content word of similar frequency instead.\n\n`
       : "";
   const modeBlock =

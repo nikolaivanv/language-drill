@@ -18,14 +18,14 @@ async function bandQuery(
   language: LearningLanguage,
   rankMin: number,
   rankMax: number,
-  verbsOnly: boolean,
+  pos: 'VERB' | 'NOUN' | null,
 ): Promise<readonly string[]> {
   const conds = [
     eq(vocabLemma.language, language),
     gte(vocabLemma.rank, rankMin),
     lte(vocabLemma.rank, rankMax),
   ];
-  if (verbsOnly) conds.push(sql`'VERB' = ANY(${vocabLemma.posAll})`);
+  if (pos) conds.push(sql`${pos} = ANY(${vocabLemma.posAll})`);
 
   const rows = await db
     .select({ lemma: vocabLemma.lemma })
@@ -43,7 +43,7 @@ export function loadFrequencyBand(
   rankMin: number,
   rankMax: number,
 ): Promise<readonly string[]> {
-  return bandQuery(db, language, rankMin, rankMax, false);
+  return bandQuery(db, language, rankMin, rankMax, null);
 }
 
 export function loadVerbBand(
@@ -52,5 +52,14 @@ export function loadVerbBand(
   rankMin: number,
   rankMax: number,
 ): Promise<readonly string[]> {
-  return bandQuery(db, language, rankMin, rankMax, true);
+  return bandQuery(db, language, rankMin, rankMax, 'VERB');
+}
+
+export function loadNounBand(
+  db: Db,
+  language: LearningLanguage,
+  rankMin: number,
+  rankMax: number,
+): Promise<readonly string[]> {
+  return bandQuery(db, language, rankMin, rankMax, 'NOUN');
 }

@@ -3,7 +3,7 @@ import { Language } from '@language-drill/shared';
 
 import { createDb, type Db } from '../client';
 import { vocabLemma } from '../schema/index';
-import { loadFrequencyBand, loadVerbBand } from './vocab-band';
+import { loadFrequencyBand, loadNounBand, loadVerbBand } from './vocab-band';
 
 const TEST_DB_URL = process.env['TEST_DATABASE_URL'];
 const d = TEST_DB_URL ? describe : describe.skip;
@@ -41,6 +41,13 @@ d('vocab-band loaders', () => {
     const band = await loadVerbBand(db, Language.ES, 1, 1000);
     expect(band).toEqual(['hablar', 'comer']);
     expect(band).not.toContain('casa');
+  });
+
+  it('loadNounBand returns only NOUN-tagged lemmas', async () => {
+    const band = await loadNounBand(db, Language.ES, 1, 1000);
+    expect(band).toEqual(['casa']);
+    expect(band).not.toContain('hablar');
+    expect(band).not.toContain('comer');
   });
 
   it('returns an empty band when nothing matches', async () => {
