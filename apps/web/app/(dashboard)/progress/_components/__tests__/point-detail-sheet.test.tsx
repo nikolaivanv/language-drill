@@ -1,6 +1,6 @@
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { Language } from '@language-drill/shared';
 import type { CurriculumMapPoint } from '@language-drill/api-client';
 import { PointDetailSheet } from '../point-detail-sheet';
@@ -254,5 +254,45 @@ describe('PointDetailSheet', () => {
       />,
     );
     expect(screen.getByText('high')).toBeDefined();
+  });
+
+  // --- Close wiring -------------------------------------------------------
+  // Under reduced motion the close is synchronous (no exit animation to wait
+  // on), which lets us assert the ×-button / scrim / Escape are all wired to
+  // the dismiss path without driving CSS transitions in jsdom.
+  describe('with prefers-reduced-motion', () => {
+    function mockReducedMotion(matches: boolean) {
+      window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+        matches,
+        media: query,
+        onchange: null,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        addListener: () => {},
+        removeListener: () => {},
+        dispatchEvent: () => false,
+      })) as unknown as typeof window.matchMedia;
+    }
+
+    const original = window.matchMedia;
+    afterEach(() => {
+      window.matchMedia = original;
+    });
+
+    it('the × button closes immediately', () => {
+      mockReducedMotion(true);
+      const onClose = vi.fn();
+      render(<PointDetailSheet point={makePoint()} language={Language.TR} onClose={onClose} />);
+      fireEvent.click(screen.getByRole('button', { name: /close/i }));
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('Escape closes immediately', () => {
+      mockReducedMotion(true);
+      const onClose = vi.fn();
+      render(<PointDetailSheet point={makePoint()} language={Language.TR} onClose={onClose} />);
+      fireEvent.keyDown(document, { key: 'Escape' });
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
   });
 });

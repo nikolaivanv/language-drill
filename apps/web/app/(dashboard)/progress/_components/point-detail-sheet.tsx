@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CurriculumMapPoint } from '@language-drill/api-client';
 import type { LearningLanguage } from '@language-drill/shared';
 import { ExerciseType } from '@language-drill/shared';
@@ -13,7 +13,12 @@ import { confidenceBand } from './confidence-band';
 // ---------------------------------------------------------------------------
 // PointDetailSheet — right-side sheet that opens when a map cell is tapped.
 // Props: the selected grammar-point, the active learning language, and a
-// close callback.  Esc + overlay-click + × button all call onClose.
+// close callback.  Esc + scrim-click + × button + swipe-right all dismiss it.
+//
+// Motion: the panel slides in from the right (scrim fades in) on mount and
+// slides back out on close; on touch devices a rightward swipe drags the panel
+// with the finger and dismisses it past a threshold. All motion is skipped
+// under `prefers-reduced-motion` (the close is then immediate).
 // ---------------------------------------------------------------------------
 
 export type PointDetailSheetProps = {
@@ -21,6 +26,12 @@ export type PointDetailSheetProps = {
   language: LearningLanguage;
   onClose: () => void;
 };
+
+// Distance the panel must be dragged before release dismisses it: 40% of the
+// panel width, capped so a long panel doesn't demand an awkwardly long swipe.
+function dismissThreshold(panelWidth: number): number {
+  return Math.min(140, panelWidth * 0.4);
+}
 
 export function PointDetailSheet({ point, language, onClose }: PointDetailSheetProps) {
   const {
@@ -42,14 +53,130 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
     key,
   } = point;
 
-  // Esc closes
+  // Honour the OS "reduce motion" setting (jsdom ships no matchMedia → false).
+  // Stable for the sheet's lifetime; the value can't meaningfully change while
+  // a single sheet is open.
+  const [reduced] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      !!window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
+
+  // `shown` drives the enter/exit transition (false = parked off-screen right).
+  // Under reduced motion it starts visible so there is no animation.
+  const [shown, setShown] = useState(reduced);
+  // Live finger offset while swiping (px, ≥0). null when not dragging.
+  const [drag, setDrag] = useState<number | null>(null);
+
+  const panelRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<number | null>(null); // latest `drag` for touch-end
+  const widthRef = useRef(0); // panel width captured at touch-start
+  const closingRef = useRef(false); // an exit animation is in flight
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const gestureRef = useRef<{
+    x: number;
+    y: number;
+    decided: boolean;
+    dragging: boolean;
+  } | null>(null);
+
+  const setDragValue = useCallback((v: number | null) => {
+    dragRef.current = v;
+    setDrag(v);
+  }, []);
+
+  // Enter animation: park off-screen on first paint, then slide in on the next
+  // frame so the browser has a "from" state to transition from.
+  useEffect(() => {
+    if (reduced) return;
+    const id = requestAnimationFrame(() => setShown(true));
+    return () => cancelAnimationFrame(id);
+  }, [reduced]);
+
+  // Animate out, then call onClose once the slide-out finishes (transitionend),
+  // with a timer fallback. Reduced motion closes immediately.
+  const requestClose = useCallback(() => {
+    if (closingRef.current) return;
+    if (reduced) {
+      onClose();
+      return;
+    }
+    closingRef.current = true;
+    setDragValue(null);
+    setShown(false);
+    closeTimerRef.current = setTimeout(onClose, 360);
+  }, [reduced, onClose, setDragValue]);
+
+  useEffect(
+    () => () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    },
+    [],
+  );
+
+  // Esc closes (animated)
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') requestClose();
     }
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [onClose]);
+  }, [requestClose]);
+
+  // Touch-driven swipe-to-dismiss. `touch-action: pan-y` on the panel reserves
+  // horizontal gestures for us while leaving vertical scrolling to the browser,
+  // so we never need to call preventDefault.
+  function onTouchStart(e: React.TouchEvent) {
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0];
+    widthRef.current = panelRef.current?.offsetWidth ?? 0;
+    gestureRef.current = { x: t.clientX, y: t.clientY, decided: false, dragging: false };
+  }
+
+  function onTouchMove(e: React.TouchEvent) {
+    const g = gestureRef.current;
+    if (!g) return;
+    const t = e.touches[0];
+    const dx = t.clientX - g.x;
+    const dy = t.clientY - g.y;
+    if (!g.decided) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      g.decided = true;
+      // Only a clearly-horizontal, rightward gesture becomes a dismiss drag;
+      // anything else is left to the panel's vertical scroll.
+      g.dragging = Math.abs(dx) > Math.abs(dy) && dx > 0;
+    }
+    if (g.dragging) setDragValue(Math.max(0, dx));
+  }
+
+  function onTouchEnd() {
+    const g = gestureRef.current;
+    gestureRef.current = null;
+    if (!g || !g.dragging) return;
+    const offset = dragRef.current ?? 0;
+    if (offset > dismissThreshold(widthRef.current || 1)) {
+      requestClose();
+    } else {
+      setDragValue(null); // snap back to open
+    }
+  }
+
+  // When the slide-out transform finishes, hand control back to the parent.
+  function onPanelTransitionEnd(e: React.TransitionEvent) {
+    if (
+      e.target === panelRef.current &&
+      e.propertyName === 'transform' &&
+      closingRef.current &&
+      !shown
+    ) {
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = null;
+      }
+      onClose();
+    }
+  }
 
   // Lock background scroll while the sheet is open (it only mounts when open),
   // so the page behind the overlay doesn't scroll. Restore the prior value on
@@ -90,17 +217,32 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
     return `/drill?start=quick&grammarPoint=${encodeURIComponent(key)}&exerciseType=${type}`;
   }
 
+  // Scrim fades with the panel, and dims proportionally as you drag it away.
+  const scrimOpacity =
+    drag !== null && widthRef.current > 0
+      ? Math.max(0, 1 - drag / widthRef.current)
+      : shown
+        ? 1
+        : 0;
+
+  // Panel sits off-screen-right until shown; follows the finger while dragging.
+  const panelTransform =
+    drag !== null ? `translateX(${drag}px)` : shown ? 'translateX(0)' : 'translateX(100%)';
+
   return (
     <>
       {/* Overlay */}
       <div
         aria-hidden="true"
-        onClick={onClose}
+        onClick={requestClose}
         style={{
           position: 'fixed',
           inset: 0,
           zIndex: 50,
           background: 'rgba(26, 22, 18, 0.42)',
+          opacity: scrimOpacity,
+          // Track the finger instantly while dragging; otherwise fade in/out.
+          transition: drag !== null || reduced ? 'none' : 'opacity 0.2s ease',
           display: 'flex',
           justifyContent: 'flex-end',
         }}
@@ -108,9 +250,14 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
 
       {/* Sheet */}
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label={name}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        onTransitionEnd={onPanelTransitionEnd}
         style={{
           position: 'fixed',
           top: 0,
@@ -124,6 +271,13 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
           overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
+          transform: panelTransform,
+          transition:
+            drag !== null || reduced
+              ? 'none'
+              : 'transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1)',
+          touchAction: 'pan-y',
+          willChange: 'transform',
         }}
       >
         {/* Head */}
@@ -188,7 +342,7 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
             <button
               type="button"
               aria-label="close"
-              onClick={onClose}
+              onClick={requestClose}
               style={{
                 marginLeft: 'auto',
                 width: 34,
