@@ -266,7 +266,10 @@ describe("buildGenerationSystemPrompt", () => {
     // Bumped 2026-06-25 — tightened indefinite-compound cloze generation
     // (no `bir` hugging the compound, one-word answer, literal modifier, concrete
     // vocab) after the 2026-06-25 run showed those generation defects.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-06-25");
+    // Bumped 2026-06-29 — nominal-inflection conjugation seeds (conjugationSeedKind:
+    // 'noun') render a strict "noun to inflect" directive instead of "verb to
+    // conjugate", so the six TR nominal points seed from the noun band.
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-06-29");
     // Tasks 7–9: pin the new guardrail phrases in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "every content word MUST be high-frequency everyday vocabulary at or below CEFR {{cefrLevel}}",
@@ -713,6 +716,21 @@ describe("buildGenerationUserPrompt", () => {
     );
     expect(prompt).toContain('The verb to conjugate is "cantar"');
     expect(prompt).not.toContain("choose a related content word"); // no substitution escape hatch
+  });
+
+  it("renders nominal-inflection conjugation seeds as a strict inflect-this-noun directive", () => {
+    // conjugationSeedKind: 'noun' points (possessive/case/copula) decline a NOUN,
+    // not a verb — the strict directive must name the right word class so the
+    // author inflects the seed instead of treating it as a verb to conjugate.
+    const nounConjInputs: GenerationPromptInputs = {
+      ...baseInputs,
+      exerciseType: ExerciseType.CONJUGATION,
+      grammarPoint: { ...baseInputs.grammarPoint, conjugationSeedKind: "noun" },
+    };
+    const prompt = buildGenerationUserPrompt(nounConjInputs, 0, null, "okul");
+    expect(prompt).toContain('The noun to inflect is "okul"');
+    expect(prompt).not.toContain("verb to conjugate");
+    expect(prompt).not.toContain("choose a related content word"); // strict — no escape hatch
   });
 });
 

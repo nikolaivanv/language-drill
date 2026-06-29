@@ -111,8 +111,17 @@ const { A1, A2, B1 } = CefrLevel;
  * are multi-construction or closed-set (free per-person production is ambiguous,
  * which is why their free-production surfaces are already off). Bump enumerates the
  * two new conjugation cells + clears any suppression on them.
+ * 2026-06-29: switches the six nominal-inflection conjugation points (personal-
+ * suffixes, possessive-suffixes, locative, accusative-definite-object, ablative-
+ * dative, possessive-case-stacking) from conjugationSeedKind 'none' (unseeded) to
+ * 'noun' — they now seed each ordinal from the noun band. Unseeded, the model
+ * converged on a couple of nouns (ablative-dative collapsed onto okul/uçak, ~4
+ * distinct identities) and the cells exhausted their identity space, churning
+ * drafts into dedup give-ups for near-zero approvals. Seeding distinct nouns
+ * restores lexical variety so the pools grow. Bump clears the target-reached/
+ * low-yield suppression so each cell re-runs with the noun seed.
  */
-export const CURRICULUM_VERSION_TR = '2026-06-28';
+export const CURRICULUM_VERSION_TR = '2026-06-29';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -193,8 +202,8 @@ const trCurriculum: readonly GrammarPoint[] = [
   {
     key: 'tr-a1-personal-suffixes',
     conjugationSuitable: true,
-    // Nominal predicate (copula) — no verb to conjugate; generate unseeded.
-    conjugationSeedKind: 'none',
+    // Nominal predicate (copula) — declines a noun, not a verb; seed from the noun band.
+    conjugationSeedKind: 'noun',
     coverageSpec: {
       axes: [
         { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
@@ -259,8 +268,8 @@ const trCurriculum: readonly GrammarPoint[] = [
   {
     key: 'tr-a1-locative',
     conjugationSuitable: true,
-    // Nominal case inflection — declines a noun, not a verb; generate unseeded.
-    conjugationSeedKind: 'none',
+    // Nominal case inflection — declines a noun, not a verb; seed from the noun band.
+    conjugationSeedKind: 'noun',
     coverageSpec: { axes: [{ name: 'number', floors: { singular: 6, plural: 6 } }] },
     kind: 'grammar',
     name: 'Locative case -DA',
@@ -529,8 +538,8 @@ const trCurriculum: readonly GrammarPoint[] = [
   {
     key: 'tr-a1-accusative-definite-object',
     conjugationSuitable: true,
-    // Nominal case inflection — declines a noun, not a verb; generate unseeded.
-    conjugationSeedKind: 'none',
+    // Nominal case inflection — declines a noun, not a verb; seed from the noun band.
+    conjugationSeedKind: 'noun',
     coverageSpec: { axes: [{ name: 'number', floors: { singular: 6, plural: 6 } }] },
     kind: 'grammar',
     name: 'Accusative -(y)I for definite objects',
@@ -559,8 +568,8 @@ const trCurriculum: readonly GrammarPoint[] = [
   {
     key: 'tr-a1-ablative-dative',
     conjugationSuitable: true,
-    // Nominal case inflection — declines a noun, not a verb; generate unseeded.
-    conjugationSeedKind: 'none',
+    // Nominal case inflection — declines a noun, not a verb; seed from the noun band.
+    conjugationSeedKind: 'noun',
     coverageSpec: { axes: [{ name: 'case', floors: { ablative: 6, dative: 6 } }] },
     kind: 'grammar',
     name: 'Ablative -DAn and dative -(y)A',
@@ -697,8 +706,8 @@ const trCurriculum: readonly GrammarPoint[] = [
   {
     key: 'tr-a1-possessive-suffixes',
     conjugationSuitable: true,
-    // Nominal possessive inflection — declines a noun, not a verb; generate unseeded.
-    conjugationSeedKind: 'none',
+    // Nominal possessive inflection — declines a noun, not a verb; seed from the noun band.
+    conjugationSeedKind: 'noun',
     coverageSpec: {
       axes: [
         { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
@@ -1223,8 +1232,8 @@ const trCurriculum: readonly GrammarPoint[] = [
     // as the voice points); conjugation + translation are the right surfaces.
     conjugationSuitable: true,
     clozeUnsuitable: true,
-    // Nominal possessive+case inflection — declines a noun, not a verb; generate unseeded.
-    conjugationSeedKind: 'none',
+    // Nominal possessive+case inflection — declines a noun, not a verb; seed from the noun band.
+    conjugationSeedKind: 'noun',
     coverageSpec: {
       axes: [
         { name: 'person', floors: { '1sg': 3, '2sg': 3, '3sg': 3, '1pl': 3, '2pl': 3, '3pl': 3 } },

@@ -106,14 +106,16 @@ export type GrammarPoint = Readonly<{
   conjugationSuitable?: boolean;
   /**
    * Word class the CONJUGATION cell's seed picker draws from. Defaults to
-   * `'verb'` (verb-morphology points: tense/mood/voice). Set `'none'` on
+   * `'verb'` (verb-morphology points: tense/mood/voice). Set `'noun'` on
    * NOMINAL-inflection points whose "conjugation" cell declines a noun rather
    * than conjugating a verb (possessive, case, possessive+case stacking, the
-   * copular personal suffixes). For those, a verb seed + the strict "use
-   * exactly this verb — do not substitute" directive contradicts the grammar
-   * point, so they generate unseeded. Only meaningful with `conjugationSuitable`.
+   * copular personal suffixes): they draw from the noun band and get the
+   * "noun to inflect" directive, so each ordinal varies the lexical head and
+   * the pool no longer collapses onto a handful of unseeded nouns. `'none'`
+   * disables seeding entirely (legacy escape hatch — currently unused). Only
+   * meaningful with `conjugationSuitable`.
    */
-  conjugationSeedKind?: 'verb' | 'none';
+  conjugationSeedKind?: 'verb' | 'noun' | 'none';
   /**
    * Declarative coverage spec (Pool Coverage Controller, Phase 2) — which
    * categorical axes a diverse approved set should vary along, and an absolute
