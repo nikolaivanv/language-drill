@@ -1,8 +1,22 @@
 # Finding: conjugation pool holds ~50–60% duplicate-content rows (TR)
 
-**Date:** 2026-06-28 (root cause confirmed + generation fix 2026-06-29)
-**Status:** generation root cause FIXED; existing-data cleanup still pending
+**Date:** 2026-06-28 (root cause confirmed + generation fix + data cleanup 2026-06-29)
+**Status:** RESOLVED — generation root cause fixed; prod pool de-duplicated
 **Surfaced by:** repeated/low-variety conjugation practice (TR A1 personal copula)
+
+## Resolution (2026-06-29)
+
+Cleaned via `pnpm dedupe:conjugation --apply` (one-off CLI, dry-run default):
+demote-not-delete, keyed on the JS `canonicalSurface` that drives the live dedup
+index. Prod result, verified:
+
+- approved conjugation rows 549 → **322** distinct
+- duplicate-content groups 98 → **0**
+- 227 duplicate rows demoted to `review_status='rejected'` (out of serve +
+  scheduler target + dedup index; history/playlist FKs preserved)
+- 322 survivors re-keyed to the new `_dedupKey` so the scheduler can't re-accrue
+- `tr-a1-personal-suffixes` 30 → **15** (now below its target of 20 → scheduler
+  resumes generating *new* distinct content)
 
 ## Update — confirmed root cause + generation fix
 
