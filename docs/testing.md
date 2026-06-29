@@ -146,3 +146,51 @@ The four Clerk vars come from GitHub Actions secrets that must point at the
 
 Until these five secrets exist, the `e2e` job fails fast with
 `E2E missing env: <NAME>`.
+
+## Verifying UI changes in a browser (`pnpm shoot`)
+
+To verify a styling or animation change on an **authenticated** app screen, use
+the `shoot` harness — do **not** open `localhost:3000` in the connected Chrome:
+Clerk's middleware rewrites `/` to a 404 until a dev-browser handshake completes
+that an automated tab can't reliably finish (the handshake-loop trap). `shoot`
+sidesteps it by reusing the signed-in `storageState` produced by `auth.setup.ts`
+(real dev-Clerk cookies → no handshake), seeding non-empty content via mocks, and
+writing artifacts to `apps/web/e2e/.shots/` (gitignored) that you read back.
+
+Routes are app paths. The dashboard landing is `/` — the app uses a
+`(dashboard)` route GROUP, so there is **no** `/dashboard` URL (it 404s). Common
+content routes: `/`, `/read`, `/review`, `/progress`, `/theory`, `/fluency`,
+`/drill/conjugation`, `/drill/free-writing`, `/settings`.
+
+```bash
+# Still of a route (mocked, non-empty content; no servers/DB needed)
+pnpm --filter @language-drill/web shoot --route /review
+
+# Dark theme, phone width, custom filename
+pnpm --filter @language-drill/web shoot --route /read --theme dark --viewport mobile --out read-dark
+
+# Wait for a specific element before capturing (overrides the default spinner-clear wait)
+pnpm --filter @language-drill/web shoot --route /fluency --wait "role=textbox"
+
+# Animation: capture a timed frame sequence (…-frame-00.png … -frame-07.png)
+pnpm --filter @language-drill/web shoot --route /drill/free-writing --animate
+```
+
+Flags: `--route` (required), `--theme light|dark|system`, `--viewport
+desktop|mobile`, `--wait <selector>`, `--out <basename>`, `--animate`,
+`--full-stack`.
+
+By default the harness waits past the app's loading spinners (`.animate-spin`)
+before capturing — `networkidle` alone catches a spinner because it fires before
+the SPA's data fetches. If a `[shoot] WARNING: … loading spinner still present`
+line appears, the route fetches something `seedAll` doesn't mock: pass `--wait
+<content-selector>`, extend `seedAll`, or use `--full-stack`.
+
+**Real data (rare).** `--full-stack` skips the mocks so the page hits whatever
+the running server's `NEXT_PUBLIC_API_URL` points at. Because Playwright's
+auto-started `next dev` isn't wired to the local Lambda, run your own full stack
+(`pnpm dev`) and point the harness at it: `PLAYWRIGHT_BASE_URL=http://localhost:3000
+pnpm --filter @language-drill/web shoot --route /review --full-stack`.
+
+**Connected Chrome** is the right tool for the **deployed Vercel preview** (your
+real session, real dev backend) — not localhost.
