@@ -1,14 +1,12 @@
 'use client';
 
 import { useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import type { CurriculumMapPoint } from '@language-drill/api-client';
 import type { LearningLanguage } from '@language-drill/shared';
 import { ExerciseType } from '@language-drill/shared';
 import { Button } from '../../../../components/ui/button';
 import { typeLabel } from '../../_lib/timeline-labels';
 import { topicIdForGrammarPointKey } from '../../../../lib/theory-topic-map';
-import { useBodyScrollLock } from '../../../../lib/hooks/use-body-scroll-lock';
 import { formatAgo } from '../_lib/format-ago';
 import { confidenceBand } from './confidence-band';
 
@@ -44,8 +42,6 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
     key,
   } = point;
 
-  useBodyScrollLock(true);
-
   // Esc closes
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -54,6 +50,17 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
+
+  // Lock background scroll while the sheet is open (it only mounts when open),
+  // so the page behind the overlay doesn't scroll. Restore the prior value on
+  // close so we don't clobber any other scroll management.
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
 
   const lastPracticedLabel = lastPracticedAt
     ? `last practiced ${formatAgo(lastPracticedAt)}`
@@ -83,44 +90,47 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
     return `/drill?start=quick&grammarPoint=${encodeURIComponent(key)}&exerciseType=${type}`;
   }
 
-  if (typeof document === 'undefined') return null;
+  return (
+    <>
+      {/* Overlay */}
+      <div
+        aria-hidden="true"
+        onClick={onClose}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 50,
+          background: 'rgba(26, 22, 18, 0.42)',
+          display: 'flex',
+          justifyContent: 'flex-end',
+        }}
+      />
 
-  return createPortal(
-    <div
-      onClick={onClose}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 50,
-        background: 'rgba(26, 22, 18, 0.42)',
-        display: 'flex',
-        justifyContent: 'flex-end',
-        overflow: 'hidden',
-      }}
-    >
+      {/* Sheet */}
       <div
         role="dialog"
         aria-modal="true"
         aria-label={name}
-        onClick={(e) => e.stopPropagation()}
         style={{
-          position: 'relative',
-          width: 'min(520px, 100%)',
-          height: '100%',
+          position: 'fixed',
+          top: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 51,
+          width: 'min(520px, 94vw)',
           background: 'var(--color-paper)',
           borderLeft: '1.5px solid var(--color-rule)',
-          overflow: 'hidden',
+          overflowX: 'hidden',
+          overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
-          minWidth: 0,
         }}
       >
         {/* Head */}
         <div
           style={{
-            padding: '26px 18px 20px',
+            padding: '26px 30px 20px',
             borderBottom: '1px solid var(--color-rule)',
-            flexShrink: 0,
           }}
         >
           {/* State row */}
@@ -213,27 +223,18 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
         </div>
 
         {/* Body */}
-        <div
-          style={{
-            padding: '24px 18px 40px',
-            flex: 1,
-            minHeight: 0,
-            minWidth: 0,
-            overflowY: 'auto',
-            overflowX: 'hidden',
-          }}
-        >
+        <div style={{ padding: '24px 30px 40px', flex: 1 }}>
           {/* Mastery readout */}
           {state !== 'not-started' && (
             <div style={{ marginBottom: 20 }}>
               <div
                 style={{
                   display: 'flex',
-                  gap: 12,
+                  gap: 20,
                   justifyContent: 'space-between',
                 }}
               >
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div>
                   <div className="t-micro" style={{ color: 'var(--color-ink-mute)' }}>
                     mastery
                   </div>
@@ -244,7 +245,7 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
                     {mastery !== null ? `${Math.round(mastery * 100)}%` : '—'}
                   </div>
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div>
                   <div className="t-micro" style={{ color: 'var(--color-ink-mute)' }}>
                     confidence
                   </div>
@@ -257,7 +258,7 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
                       : '—'}
                   </div>
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div>
                   <div className="t-micro" style={{ color: 'var(--color-ink-mute)' }}>
                     evidence
                   </div>
@@ -305,7 +306,6 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
                   borderRadius: 6,
                   padding: '12px 16px',
                   fontSize: 14,
-                  overflowWrap: 'anywhere',
                 }}
               >
                 <s style={{ color: 'var(--color-ink-mute)' }}>{errorSample.wrongText}</s>
@@ -372,7 +372,6 @@ export function PointDetailSheet({ point, language, onClose }: PointDetailSheetP
           </div>
         </div>
       </div>
-    </div>,
-    document.body,
+    </>
   );
 }
