@@ -11,7 +11,11 @@
 // route with its own `page.route(...)` to exercise a specific branch.
 
 import type { Page } from '@playwright/test';
-import { LanguageProfilesResponseSchema } from '@language-drill/api-client';
+import {
+  FluencyAttemptResponseSchema,
+  FluencySessionResponseSchema,
+  LanguageProfilesResponseSchema,
+} from '@language-drill/api-client';
 
 import { reply, validatedReply } from './mock-reply';
 
@@ -83,7 +87,7 @@ export async function seedFluency(page: Page): Promise<void> {
   await page.route('**/fluency/session', (route) =>
     route.request().method() === 'POST'
       ? route.fulfill(
-          reply({
+          validatedReply(FluencySessionResponseSchema, {
             language: 'ES',
             exercises: [
               {
@@ -107,7 +111,13 @@ export async function seedFluency(page: Page): Promise<void> {
   );
   await page.route('**/fluency/attempts', (route) =>
     route.request().method() === 'POST'
-      ? route.fulfill(reply({ correct: true, correctAnswer: 'mucho', latencyMs: 1234 }))
+      ? route.fulfill(
+          validatedReply(FluencyAttemptResponseSchema, {
+            correct: true,
+            correctAnswer: 'mucho',
+            latencyMs: 1234,
+          }),
+        )
       : route.fallback(),
   );
 }
