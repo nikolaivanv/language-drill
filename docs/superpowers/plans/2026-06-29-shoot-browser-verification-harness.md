@@ -342,8 +342,10 @@ Create `apps/web/e2e/shoot-cli.mjs`:
 #!/usr/bin/env node
 // `pnpm shoot` ergonomics: map --flag value onto the SHOOT_* env vars that
 // shoot.spec.ts reads, then run the `shoot` Playwright project. Example:
-//   pnpm shoot --route /dashboard --theme dark --viewport mobile
+//   pnpm shoot --route /review --theme dark --viewport mobile
 //   pnpm shoot --route /read --animate
+// Route is an app path. The dashboard landing is `/` (the app uses a
+// `(dashboard)` route GROUP, so there is no `/dashboard` URL).
 import { spawnSync } from 'node:child_process';
 
 const VALUE_FLAGS = {
@@ -378,7 +380,7 @@ for (let i = 0; i < argv.length; i++) {
 }
 
 if (!env.SHOOT_ROUTE) {
-  console.error('[shoot] --route is required, e.g. `pnpm shoot --route /dashboard`');
+  console.error('[shoot] --route is required, e.g. `pnpm shoot --route /read`');
   process.exit(2);
 }
 
@@ -399,6 +401,8 @@ In `apps/web/package.json`, add to `"scripts"` (after `"test:e2e:install"`):
 ```
 
 - [ ] **Step 3: Extend `shoot.spec.ts` to honor the new env vars**
+
+Also fix the stale example route in the file's header comment: change `SHOOT_ROUTE  (required)  app path to render, e.g. /dashboard or /read` to `… e.g. /read or /review (dashboard landing is /)`. `/dashboard` is a 404 — the app uses a `(dashboard)` route group, so the URL is `/`.
 
 Replace the body of the `test('shoot', …)` block in `apps/web/e2e/shoot.spec.ts` with:
 
@@ -437,12 +441,33 @@ test('shoot', async ({ page }) => {
     await seedAll(page);
   }
 
-  await page.goto(targetRoute, { waitUntil: 'networkidle' });
+  await page.goto(targetRoute, { waitUntil: 'domcontentloaded' });
 
+  // Wait for CONTENT, not network. `networkidle` fires in the quiet window
+  // BEFORE the SPA issues its data fetches, so it captures the loading spinner.
+  // Instead: an explicit --wait selector wins; otherwise let the page settle
+  // (bounded networkidle) and wait for the app's loading spinners (.animate-spin
+  // — used by the (dashboard) shell + page loading states) to detach. All bounded
+  // and best-effort so a genuinely stuck route (e.g. an endpoint seedAll doesn't
+  // mock) still produces a screenshot, with a warning instead of a hang/throw.
   const waitFor = process.env['SHOOT_WAIT']?.trim();
   if (waitFor) {
     await page.locator(waitFor).first().waitFor({ state: 'visible', timeout: 15_000 });
+  } else {
+    await page.waitForLoadState('networkidle', { timeout: 8_000 }).catch(() => {});
+    try {
+      await page.locator('.animate-spin').first().waitFor({ state: 'detached', timeout: 8_000 });
+    } catch {
+      console.warn(
+        `[shoot] WARNING: a loading spinner was still present on ${targetRoute} ` +
+          `after the wait — the screenshot may show a loading state. Pass ` +
+          `--wait <content-selector>, or extend seedAll / use --full-stack if an ` +
+          `endpoint this page fetches is unmocked.`,
+      );
+    }
   }
+  // Brief settle so fonts, layout, and entry animations finish painting.
+  await page.waitForTimeout(300);
 
   const name = process.env['SHOOT_OUT']?.trim() || routeToName(targetRoute);
 
@@ -465,22 +490,28 @@ test('shoot', async ({ page }) => {
 });
 ```
 
-- [ ] **Step 4: Verify `pnpm shoot` with theme + viewport**
+- [ ] **Step 4: Verify content renders on real routes (light + dark)**
 
-Run: `pnpm --filter @language-drill/web shoot --route /fluency --theme dark --viewport mobile --out fluency-dark-mobile`
-Expected: PASS; console prints `[shoot] wrote …/e2e/.shots/fluency-dark-mobile.png`.
+Capture two real, content-bearing routes — `/read` and `/review` (NOT `/dashboard`, which 404s):
 
-Then read the artifact back and confirm it is a dark, phone-width render of the fluency screen:
+Run: `pnpm --filter @language-drill/web shoot --route /read --out read-light`
+Run: `pnpm --filter @language-drill/web shoot --route /review --theme dark --out review-dark`
 
-Run: open / view `apps/web/e2e/.shots/fluency-dark-mobile.png` (Read tool renders the PNG).
-Expected: dark palette, ~402px content width, non-empty fluency content.
+Expected for each: PASS, console prints `[shoot] wrote …`, and **no** `[shoot] WARNING: a loading spinner was still present …` line. The absence of that warning is the signal that the content-aware wait worked (the page rendered past its spinner). If the warning fires for a route, that route fetches an endpoint `seedAll` doesn't mock — report it as DONE_WITH_CONCERNS naming the route and the unmocked request (visible via the page's failed network calls); the controller will extend `seedAll`.
 
-- [ ] **Step 5: Verify `--animate` produces a frame sequence**
+Then read each PNG back (`Read` renders it) and confirm it shows real content, not a centered loading ring:
+- `apps/web/e2e/.shots/read-light.png` — the reader with the seeded "Aldea" entry text, light palette.
+- `apps/web/e2e/.shots/review-dark.png` — the review screen, dark palette (paper-dark background, light text).
 
-Run: `pnpm --filter @language-drill/web shoot --route /fluency --animate --out fluency-anim`
+- [ ] **Step 5: Verify `--viewport mobile` and `--animate`**
+
+Run: `pnpm --filter @language-drill/web shoot --route /read --viewport mobile --out read-mobile`
+Expected: PASS; the PNG is phone-width (402px content) — confirm by reading it back.
+
+Run: `pnpm --filter @language-drill/web shoot --route /read --animate --out read-anim`
 Expected: PASS; console prints `[shoot] wrote 8 frames …`.
 
-Run: `ls apps/web/e2e/.shots/fluency-anim-frame-*.png | wc -l`
+Run: `ls apps/web/e2e/.shots/read-anim-frame-*.png | wc -l`
 Expected: `8`.
 
 - [ ] **Step 6: Commit**
@@ -533,14 +564,19 @@ sidesteps it by reusing the signed-in `storageState` produced by `auth.setup.ts`
 (real dev-Clerk cookies → no handshake), seeding non-empty content via mocks, and
 writing artifacts to `apps/web/e2e/.shots/` (gitignored) that you read back.
 
+Routes are app paths. The dashboard landing is `/` — the app uses a
+`(dashboard)` route GROUP, so there is **no** `/dashboard` URL (it 404s). Common
+content routes: `/`, `/read`, `/review`, `/progress`, `/theory`, `/fluency`,
+`/drill/conjugation`, `/drill/free-writing`, `/settings`.
+
 ```bash
 # Still of a route (mocked, non-empty content; no servers/DB needed)
-pnpm --filter @language-drill/web shoot --route /dashboard
+pnpm --filter @language-drill/web shoot --route /review
 
 # Dark theme, phone width, custom filename
 pnpm --filter @language-drill/web shoot --route /read --theme dark --viewport mobile --out read-dark
 
-# Wait for a specific element before capturing
+# Wait for a specific element before capturing (overrides the default spinner-clear wait)
 pnpm --filter @language-drill/web shoot --route /fluency --wait "role=textbox"
 
 # Animation: capture a timed frame sequence (…-frame-00.png … -frame-07.png)
@@ -551,11 +587,17 @@ Flags: `--route` (required), `--theme light|dark|system`, `--viewport
 desktop|mobile`, `--wait <selector>`, `--out <basename>`, `--animate`,
 `--full-stack`.
 
+By default the harness waits past the app's loading spinners (`.animate-spin`)
+before capturing — `networkidle` alone catches a spinner because it fires before
+the SPA's data fetches. If a `[shoot] WARNING: … loading spinner still present`
+line appears, the route fetches something `seedAll` doesn't mock: pass `--wait
+<content-selector>`, extend `seedAll`, or use `--full-stack`.
+
 **Real data (rare).** `--full-stack` skips the mocks so the page hits whatever
 the running server's `NEXT_PUBLIC_API_URL` points at. Because Playwright's
 auto-started `next dev` isn't wired to the local Lambda, run your own full stack
 (`pnpm dev`) and point the harness at it: `PLAYWRIGHT_BASE_URL=http://localhost:3000
-pnpm --filter @language-drill/web shoot --route /dashboard --full-stack`.
+pnpm --filter @language-drill/web shoot --route /review --full-stack`.
 
 **Connected Chrome** is the right tool for the **deployed Vercel preview** (your
 real session, real dev backend) — not localhost.
