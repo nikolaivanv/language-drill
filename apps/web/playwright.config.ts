@@ -109,6 +109,9 @@ export default defineConfig({
       testDir: './e2e',
       testMatch: /shoot\.spec\.ts$/,
       dependencies: ['setup'],
+      // A cold `next dev` first-compile (5–15 s) plus the bounded 8 s
+      // networkidle + 8 s spinner waits can exceed the default 30 s timeout.
+      timeout: 120_000,
       use: {
         ...devices['Desktop Chrome'],
         storageState: STORAGE_STATE_PATH,

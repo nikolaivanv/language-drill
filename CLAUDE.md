@@ -236,11 +236,12 @@ exercise the Clerk-hosted sign-in surface should use the
 
 Use `pnpm --filter @language-drill/web shoot --route <path>` to render an
 authenticated screen with seeded content and capture a screenshot (or
-`--animate` for a frame sequence) to `apps/web/e2e/.shots/`. This reuses the
-`auth.setup.ts` storageState, so it does **not** hit the Clerk dev-browser
-handshake loop that blocks `localhost:3000` in the connected Chrome. Connected
-Chrome is for the deployed Vercel preview, not localhost. Full guide:
-`docs/testing.md` → "Verifying UI changes in a browser".
+`--animate` for a frame sequence) to `apps/web/e2e/.shots/`. The dashboard
+landing is `/home` (`/` is the public marketing page, which redirects to `/home`
+when signed in). This reuses the `auth.setup.ts` storageState, so it does **not**
+hit the Clerk dev-browser handshake loop that blocks `localhost:3000` in the
+connected Chrome. Connected Chrome is for the deployed Vercel preview, not
+localhost. Full guide: `docs/testing.md` → "Verifying UI changes in a browser".
 
 ---
 

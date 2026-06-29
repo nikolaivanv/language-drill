@@ -3,7 +3,8 @@
 // shoot.spec.ts reads, then run the `shoot` Playwright project. Example:
 //   pnpm shoot --route /review --theme dark --viewport mobile
 //   pnpm shoot --route /read --animate
-// Route is an app path. The dashboard landing is `/` (the app uses a
+// Route is an app path. The dashboard landing is `/home` — `/` is the public
+// marketing landing that redirects to `/home` when signed in (the app uses a
 // `(dashboard)` route GROUP, so there is no `/dashboard` URL).
 import { spawnSync } from 'node:child_process';
 
@@ -48,4 +49,7 @@ const result = spawnSync(
   ['test', '--project=shoot'],
   { stdio: 'inherit', env, shell: process.platform === 'win32' },
 );
+if (result.error) {
+  console.error(`[shoot] failed to launch playwright: ${result.error.message}`);
+}
 process.exit(result.status ?? 1);

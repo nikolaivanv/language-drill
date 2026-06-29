@@ -4,11 +4,13 @@
 // screenshot to e2e/.shots/, so an agent can SEE a UI change instead of guessing.
 // Driven entirely by env vars (set by `pnpm shoot`, see e2e/shoot-cli.mjs):
 //
-//   SHOOT_ROUTE     (required)  app path to render, e.g. /read or /review (dashboard landing is /)
+//   SHOOT_ROUTE     (required)  app path to render, e.g. /read or /review (dashboard landing is /home;
+//                               / is the public marketing landing that redirects to /home when signed in)
 //   SHOOT_OUT       (optional)  output basename; default derived from the route
 //   SHOOT_THEME     (optional)  light | dark | system (default: system)
 //   SHOOT_VIEWPORT  (optional)  desktop | mobile (default: desktop)
-//   SHOOT_WAIT      (optional)  CSS selector or text to wait for before screenshotting
+//   SHOOT_WAIT      (optional)  CSS or Playwright selector to wait for before screenshotting
+//                               (e.g. `text=Heading`, `role=textbox`) — bare prose silently never matches
 //   SHOOT_ANIMATE   (optional)  1 → capture an 8-frame sequence over 180 ms intervals
 //   SHOOT_FULL_STACK (optional) 1 → skip seedAll and hit the real backend instead
 //
@@ -96,13 +98,21 @@ test('shoot', async ({ page }) => {
   const name = process.env['SHOOT_OUT']?.trim() || routeToName(targetRoute);
 
   if (process.env['SHOOT_ANIMATE'] === '1') {
-    // Capture a short frame sequence so a transition is visible across stills.
+    // Capture a short frame sequence so a continuous/in-progress animation is
+    // visible across stills. Note: this captures frames AFTER the page has
+    // settled (spinners cleared), so it shows ongoing animation but CANNOT
+    // replay a one-shot entry/mount transition (already finished by the time
+    // capture starts) or an interaction-triggered animation (no interaction
+    // driver here).
     const FRAMES = 8;
     const INTERVAL_MS = 180;
     for (let i = 0; i < FRAMES; i++) {
+      // Inter-frame delay before all frames except the first.
+      if (i > 0) await page.waitForTimeout(INTERVAL_MS);
       const frame = String(i).padStart(2, '0');
+      // Intentionally viewport-only (not fullPage) so all frames are
+      // comparable — a fullPage shot can vary in height between frames.
       await page.screenshot({ path: path.join(SHOTS_DIR, `${name}-frame-${frame}.png`) });
-      await page.waitForTimeout(INTERVAL_MS);
     }
     console.log(`[shoot] wrote ${FRAMES} frames to ${SHOTS_DIR}/${name}-frame-*.png`);
     return;

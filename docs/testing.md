@@ -157,9 +157,10 @@ sidesteps it by reusing the signed-in `storageState` produced by `auth.setup.ts`
 (real dev-Clerk cookies → no handshake), seeding non-empty content via mocks, and
 writing artifacts to `apps/web/e2e/.shots/` (gitignored) that you read back.
 
-Routes are app paths. The dashboard landing is `/` — the app uses a
-`(dashboard)` route GROUP, so there is **no** `/dashboard` URL (it 404s). Common
-content routes: `/`, `/read`, `/review`, `/progress`, `/theory`, `/fluency`,
+Routes are app paths. The dashboard landing is `/home` — `/` is the public
+marketing landing that redirects to `/home` when signed in (the app uses a
+`(dashboard)` route GROUP, so there is **no** `/dashboard` URL — it 404s). Common
+content routes: `/home`, `/read`, `/review`, `/progress`, `/theory`, `/fluency`,
 `/drill/conjugation`, `/drill/free-writing`, `/settings`.
 
 ```bash
@@ -179,6 +180,14 @@ pnpm --filter @language-drill/web shoot --route /drill/free-writing --animate
 Flags: `--route` (required), `--theme light|dark|system`, `--viewport
 desktop|mobile`, `--wait <selector>`, `--out <basename>`, `--animate`,
 `--full-stack`.
+
+**`--animate` limitation.** `--animate` captures a fixed window of frames
+_after_ the page has settled (spinners cleared), so it captures
+continuous/in-progress animation (e.g. a looping CSS keyframe). It **cannot**
+replay a one-shot entry/mount transition — that transition already finished by
+the time capture starts — or an interaction-triggered animation (there is no
+interaction driver). For those cases, use Connected Chrome with the deployed
+preview where you can trigger the interaction manually.
 
 By default the harness waits past the app's loading spinners (`.animate-spin`)
 before capturing — `networkidle` alone catches a spinner because it fires before
