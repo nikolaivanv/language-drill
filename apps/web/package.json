@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:install": "playwright install --with-deps chromium"
+    "test:e2e:install": "playwright install --with-deps chromium",
+    "shoot": "node e2e/shoot-cli.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.2.8",
