@@ -327,6 +327,24 @@ describe('seedKindFor', () => {
     expect(seedKindFor(nominalCell)).toBe('noun');
   });
 
+  it('returns predicate-nominal for a copular conjugation cell (conjugationSeedKind: predicate-nominal)', () => {
+    // The copula makes a "subject IS <predicate>" sentence, so it seeds from the
+    // curated predicate pool — distinct from the generic noun band.
+    const base = ALL_CURRICULA.find((g) => g.key === TEST_GRAMMAR_POINT_KEY)!;
+    const copularCell: Cell = {
+      language: Language.ES as LearningLanguage,
+      cefrLevel: CefrLevel.B1 as CurriculumCefrLevel,
+      exerciseType: ExerciseType.CONJUGATION,
+      grammarPoint: {
+        ...base,
+        conjugationSeedKind: 'predicate-nominal',
+        conjugationSeedWords: ['doctor', 'cansado'],
+      },
+      cellKey: 'es:b1:conjugation:es-test',
+    };
+    expect(seedKindFor(copularCell)).toBe('predicate-nominal');
+  });
+
   it('returns null for a conjugation cell that opts out of seeding (legacy conjugationSeedKind: none)', () => {
     const base = ALL_CURRICULA.find((g) => g.key === TEST_GRAMMAR_POINT_KEY)!;
     const unseededCell: Cell = {
@@ -1229,6 +1247,54 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
     });
   },
 );
+
+// ---------------------------------------------------------------------------
+// buildSeedWords — predicate-nominal path. UNGATED (no DB): the copular cell
+// seeds from the curated `conjugationSeedWords` pool on the grammar point, so
+// this branch never queries the DB. The stub db throws if touched, which both
+// lets the test run without TEST_DATABASE_URL AND asserts the no-DB-query
+// contract.
+// ---------------------------------------------------------------------------
+
+describe('buildSeedWords — predicate-nominal (curated pool, no DB)', () => {
+  // A Proxy that throws on any access — proves the predicate-nominal path takes
+  // no DB query (it would explode if buildSeedWords tried to `select` from it).
+  const throwingDb = new Proxy(
+    {},
+    {
+      get() {
+        throw new Error('buildSeedWords queried the DB on the predicate-nominal path');
+      },
+    },
+  ) as unknown as Db;
+
+  const copularCell = (): Cell => {
+    const clozeCell = buildTestCell();
+    return {
+      ...clozeCell,
+      exerciseType: ExerciseType.CONJUGATION,
+      grammarPoint: {
+        ...clozeCell.grammarPoint,
+        conjugationSeedKind: 'predicate-nominal',
+        conjugationSeedWords: ['doctor', 'cansado', 'profesor'],
+      },
+      cellKey: 'es:b1:conjugation:es-copular-test',
+    };
+  };
+
+  it('seeds from the curated pool without touching the DB', async () => {
+    const seeds = await buildSeedWords(throwingDb, copularCell(), 3, 'seed-p', new Set());
+    expect(seeds).toBeDefined();
+    const chosen = seeds!.filter((s): s is string => typeof s === 'string');
+    expect(chosen.length).toBe(3);
+    for (const s of chosen) expect(['doctor', 'cansado', 'profesor']).toContain(s);
+  });
+
+  it('excludes prior predicate seeds (lemma-keyed exclude)', async () => {
+    const reseeded = (await buildSeedWords(throwingDb, copularCell(), 3, 'seed-p', new Set(['doctor'])))!;
+    expect(reseeded).not.toContain('doctor');
+  });
+});
 
 // ---------------------------------------------------------------------------
 // fetchPriorVocabRecallSurfaces — R6.5 at-cap avoid-set. Under the `word::cue`

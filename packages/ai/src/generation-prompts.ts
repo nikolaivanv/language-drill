@@ -174,7 +174,17 @@ function renderRecentStems(recentStems: readonly string[]): string {
 // toplantısı`), the modifier left only in the parenthetical (`bir ___ (destek)`),
 // and abstract/admin/medical vocab. Adds the no-article-hugging, one-word-answer,
 // literal-modifier, and concrete-vocab rules. Template edit → Langfuse push per env.
-export const GENERATION_PROMPT_VERSION = "generate@2026-06-29";
+// 2026-06-30: two TR conjugation fixes after the 2026-06-30 run analysis, both
+// in runtime-substituted sections (ship with the code deploy — NOT the
+// registered Langfuse template, so no push-prompts run is needed). (a) New
+// `predicate-nominal` seed kind for the copular personal-suffix point: the
+// per-draft user prompt now renders a "predicate to use" directive (was "noun
+// to inflect"), so the author builds "X is a <profession/adjective>" instead of
+// declining an arbitrary object noun ("you are a cat"). (b) renderConjugationSection
+// `breakdown` rule now forbids model deliberation / self-correction / check
+// marks leaking into the learner-visible breakdown (locative conjugation was
+// shipping breakdowns like "…back vowel i → e… wait: iş has back vowel? No —…✓").
+export const GENERATION_PROMPT_VERSION = "generate@2026-06-30";
 
 /**
  * Wording differs per type so Claude reads it the way the cell is constrained:
@@ -258,7 +268,7 @@ This is an inflection drill: there is NO sentence and NO blank. You produce one 
 - **The inflectional category is FIXED by the grammar point (${grammarPointName})** — tense/mood for verbs, case/number/possessive for nominals. Do not drift to a different category. Vary only the features the cell names (person/number/case, and polarity where the point covers it). The combination you pick determines \`targetForm\`.
 - **\`targetForm\` MUST be the exactly-correct ${language} form at CEFR ${cefrLevel}**, including every diacritic. Grading is an exact string match — a wrong accent or a vowel-harmony slip is a wrong stored answer and will mis-grade every learner. Double-check irregular stems and consonant softening.
 - **Enumerate genuine variants in \`acceptableForms\`** (e.g. accepted orthographic variants). Do NOT list near-misses or common-error forms — those must stay wrong.
-- **\`breakdown\` teaches the morphology**: stem + ending for ${language} fusional forms, or stem + ordered suffix gloss for agglutinative forms (e.g. Turkish: root + (plural) + (possessive) + case/person, noting vowel harmony). Keep it one line.
+- **\`breakdown\` teaches the morphology**: stem + ending for ${language} fusional forms, or stem + ordered suffix gloss for agglutinative forms (e.g. Turkish: root + (plural) + (possessive) + case/person, noting vowel harmony). Keep it to ONE clean line of the SETTLED decomposition. Like \`instructions\`, it is shown verbatim to the learner, so it MUST NOT contain your own reasoning, deliberation, self-correction, or verification — no "wait…", "no —", "actually", "hmm", rhetorical questions, or check/cross marks (✓/✗). Decide the form first, then write only the final morpheme breakdown; never narrate how you got there.
 - **\`featureBundle\` names the cell** in ${language}'s conventional grammar notation, using grammatical-feature terms ONLY (person/case/number/tense). It MUST NOT contain \`targetForm\`, nor any inflected form of the lemma, nor a worked example in parentheses — e.g. for target "çantama" write "iyelik · 1. tekil · yönelme hâli", never "… (benim çantama)". Naming the answer-word anywhere in the bundle spoils the exercise.
 - **\`features\` decomposes the cell for display.** List the inflectional dimensions OTHER than the subject cue — for verbs the tense/mood (and polarity where ${language} marks it); for nominals the case and/or number — in order. Each entry pairs the ${language} term in conventional notation (\`term\`) with a 1–2 word English gloss (\`gloss\`), e.g. {term: "geçmiş zaman", gloss: "past"} or {term: "bulunma", gloss: "locative"}. Do NOT put the subject cue in \`features\`.
 - **\`subject\` is the person cue — only when the form agrees with a person.** For verbs and the copula, give the representative ${language} subject pronoun (\`pronoun\`, e.g. "o", "ich") and its English \`gloss\` ("he / she / it"). For possessives, the possessor is the person cue (\`arabam\` → {pronoun: "benim", gloss: "my"}). **OMIT \`subject\` entirely for pure case/number forms that have no person** (\`ev → evde\`). It is shown prominently when present.
@@ -602,7 +612,13 @@ export function buildGenerationUserPrompt(
           // directive names the right word class to avoid confusing the author.
           inputs.grammarPoint.conjugationSeedKind === "noun"
           ? `The noun to inflect is "${seedWord}". Use exactly this noun — do not substitute another.\n\n`
-          : `The verb to conjugate is "${seedWord}". Use exactly this verb — do not substitute another.\n\n`
+          : // Copular personal-suffix point: the seed is a PREDICATE (profession /
+            // role / nationality / adjective), and the drill makes a "subject IS
+            // <predicate>" sentence. Name the word class so the author treats it as
+            // a predicate nominal rather than an object noun to decline.
+            inputs.grammarPoint.conjugationSeedKind === "predicate-nominal"
+            ? `The predicate is "${seedWord}" (a profession, role, nationality, or adjective). The drill states that the subject IS "${seedWord}": inflect "${seedWord}" with the correct personal/copular suffix for the target person (e.g. "${seedWord}" → 1sg "…${seedWord}+(y)Im"). Use exactly this word — do not substitute another.\n\n`
+            : `The verb to conjugate is "${seedWord}". Use exactly this verb — do not substitute another.\n\n`
         : `Build this exercise around the word "${seedWord}". If "${seedWord}" does not fit ${inputs.grammarPoint.name} naturally, choose a related content word of similar frequency instead.\n\n`
       : "";
   const modeBlock =
