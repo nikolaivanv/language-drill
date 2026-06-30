@@ -108,14 +108,31 @@ export type GrammarPoint = Readonly<{
    * Word class the CONJUGATION cell's seed picker draws from. Defaults to
    * `'verb'` (verb-morphology points: tense/mood/voice). Set `'noun'` on
    * NOMINAL-inflection points whose "conjugation" cell declines a noun rather
-   * than conjugating a verb (possessive, case, possessive+case stacking, the
-   * copular personal suffixes): they draw from the noun band and get the
-   * "noun to inflect" directive, so each ordinal varies the lexical head and
-   * the pool no longer collapses onto a handful of unseeded nouns. `'none'`
-   * disables seeding entirely (legacy escape hatch — currently unused). Only
-   * meaningful with `conjugationSuitable`.
+   * than conjugating a verb (possessive, case, possessive+case stacking): they
+   * draw from the noun band and get the "noun to inflect" directive, so each
+   * ordinal varies the lexical head and the pool no longer collapses onto a
+   * handful of unseeded nouns. Set `'predicate-nominal'` on the COPULAR
+   * personal-suffix point: it makes a copular sentence ("X is a <word>"), so a
+   * generic object noun from the band yields a semantically odd predicate
+   * ("you are a cat / a wave"). It instead draws from the curated
+   * `conjugationSeedWords` pool (professions/roles/nationalities/adjectives) and
+   * gets a "predicate to use" directive. `'none'` disables seeding entirely
+   * (legacy escape hatch — currently unused). Only meaningful with
+   * `conjugationSuitable`.
    */
-  conjugationSeedKind?: 'verb' | 'noun' | 'none';
+  conjugationSeedKind?: 'verb' | 'noun' | 'predicate-nominal' | 'none';
+  /**
+   * Curated predicate pool for a `conjugationSeedKind: 'predicate-nominal'`
+   * cell: professions, roles, nationalities, and predicate adjectives that form
+   * natural copular sentences ("Ben doktorum", "Sen yorgunsun"). Replaces the
+   * generic DB noun band, whose concrete object nouns make nonsensical copular
+   * predicates. REQUIRED (non-empty) iff
+   * `conjugationSeedKind === 'predicate-nominal'`; meaningless on any other kind
+   * (enforced by a curriculum invariant). Each ordinal varies the predicate
+   * (the lexical diversity axis); the grammatical person stays driven by
+   * `coverageSpec`/`coverageTargets`.
+   */
+  conjugationSeedWords?: readonly string[];
   /**
    * Declarative coverage spec (Pool Coverage Controller, Phase 2) — which
    * categorical axes a diverse approved set should vary along, and an absolute

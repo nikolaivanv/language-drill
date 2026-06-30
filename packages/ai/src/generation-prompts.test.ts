@@ -269,7 +269,11 @@ describe("buildGenerationSystemPrompt", () => {
     // Bumped 2026-06-29 — nominal-inflection conjugation seeds (conjugationSeedKind:
     // 'noun') render a strict "noun to inflect" directive instead of "verb to
     // conjugate", so the six TR nominal points seed from the noun band.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-06-29");
+    // Bumped 2026-06-30 — copular point gets a 'predicate-nominal' directive
+    // ("predicate to use" from a curated pool, not "noun to inflect"), and the
+    // renderConjugationSection `breakdown` rule now forbids model deliberation /
+    // self-correction leaking into the learner-visible breakdown.
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-06-30");
     // Tasks 7–9: pin the new guardrail phrases in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "every content word MUST be high-frequency everyday vocabulary at or below CEFR {{cefrLevel}}",
@@ -729,6 +733,25 @@ describe("buildGenerationUserPrompt", () => {
     };
     const prompt = buildGenerationUserPrompt(nounConjInputs, 0, null, "okul");
     expect(prompt).toContain('The noun to inflect is "okul"');
+    expect(prompt).not.toContain("verb to conjugate");
+    expect(prompt).not.toContain("choose a related content word"); // strict — no escape hatch
+  });
+
+  it("renders copular (predicate-nominal) conjugation seeds as a predicate directive", () => {
+    // conjugationSeedKind: 'predicate-nominal' (the copular personal-suffix
+    // point) makes a "subject IS <predicate>" sentence — the directive must
+    // frame the seed as a predicate nominal, not an object noun to decline.
+    const copularInputs: GenerationPromptInputs = {
+      ...baseInputs,
+      exerciseType: ExerciseType.CONJUGATION,
+      grammarPoint: {
+        ...baseInputs.grammarPoint,
+        conjugationSeedKind: "predicate-nominal",
+      },
+    };
+    const prompt = buildGenerationUserPrompt(copularInputs, 0, null, "doktor");
+    expect(prompt).toContain('The predicate is "doktor"');
+    expect(prompt).not.toContain("noun to inflect");
     expect(prompt).not.toContain("verb to conjugate");
     expect(prompt).not.toContain("choose a related content word"); // strict — no escape hatch
   });
@@ -1214,5 +1237,14 @@ describe("renderConjugationSection", () => {
     // bundles like "yönelme hâli (benim çantama)" embedded the targetForm.
     expect(section()).toMatch(/MUST NOT contain `targetForm`/);
     expect(section()).toMatch(/inflected form of the lemma|worked example/i);
+  });
+
+  it("forbids model deliberation / self-correction leaking into the breakdown", () => {
+    // 2026-06-30: locative conjugation shipped breakdowns with embedded
+    // chain-of-thought (".. back vowel i → e… wait: iş has back vowel? No —…✓"),
+    // shown verbatim to the learner — both low-quality and answer-spoiling.
+    expect(section()).toMatch(/`breakdown`/);
+    expect(section()).toMatch(/reasoning|deliberation|self-correction/i);
+    expect(section()).toMatch(/wait/i);
   });
 });

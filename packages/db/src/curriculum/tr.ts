@@ -120,8 +120,15 @@ const { A1, A2, B1 } = CefrLevel;
  * drafts into dedup give-ups for near-zero approvals. Seeding distinct nouns
  * restores lexical variety so the pools grow. Bump clears the target-reached/
  * low-yield suppression so each cell re-runs with the noun seed.
+ * 2026-06-30: re-keys personal-suffixes from conjugationSeedKind 'noun' to
+ * 'predicate-nominal' with a curated predicate pool. The 06-29 noun seeding
+ * fixed the dedup collapse but, on the COPULA, fed object nouns into "subject IS
+ * <noun>" frames — "Sen kedisin / dalgasın" ("you are a cat / a wave") — which
+ * the validator rejected (23% approval). Predicate-nominal seeds professions /
+ * roles / nationalities / adjectives that form natural copular predicates. Bump
+ * clears suppression so the cell re-runs with the predicate seed.
  */
-export const CURRICULUM_VERSION_TR = '2026-06-29';
+export const CURRICULUM_VERSION_TR = '2026-06-30';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -202,8 +209,57 @@ const trCurriculum: readonly GrammarPoint[] = [
   {
     key: 'tr-a1-personal-suffixes',
     conjugationSuitable: true,
-    // Nominal predicate (copula) — declines a noun, not a verb; seed from the noun band.
-    conjugationSeedKind: 'noun',
+    // Copula — the drill makes a "subject IS <predicate>" sentence, so the seed
+    // must be a PREDICATE nominal (profession / role / nationality / adjective),
+    // not an arbitrary object noun. The generic noun band yielded nonsensical
+    // copular predicates ("Sen kedisin / dalgasın" = "you are a cat / a wave")
+    // that the validator (correctly) rejected — 23% approval on 2026-06-30.
+    // Curated A1 predicate pool, sized well above the 30-person-floor target so
+    // the lemma-keyed exclude has room before it exhausts.
+    conjugationSeedKind: 'predicate-nominal',
+    conjugationSeedWords: [
+      // Professions / roles
+      'doktor',
+      'öğretmen',
+      'öğrenci',
+      'mühendis',
+      'hemşire',
+      'aşçı',
+      'şoför',
+      'polis',
+      'asker',
+      'müdür',
+      'avukat',
+      'garson',
+      'ressam',
+      'futbolcu',
+      // Nationalities
+      'Türk',
+      'Alman',
+      'Fransız',
+      'İngiliz',
+      'İspanyol',
+      // Predicate adjectives
+      'mutlu',
+      'yorgun',
+      'hasta',
+      'hazır',
+      'aç',
+      'üzgün',
+      'meşgul',
+      'genç',
+      'zengin',
+      'güzel',
+      'akıllı',
+      'çalışkan',
+      'hızlı',
+      'iyi',
+      'kızgın',
+      'heyecanlı',
+      'yalnız',
+      'tembel',
+      'nazik',
+    ],
     coverageSpec: {
       axes: [
         { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },

@@ -236,6 +236,27 @@ export function assertCurriculumInvariants(
       );
     }
 
+    // 9g. conjugationSeedWords (the curated predicate pool) is present iff the
+    //     point seeds from it (conjugationSeedKind: 'predicate-nominal'). A
+    //     predicate-nominal point with no pool would fall back to an empty band
+    //     and seed nothing; a pool on any other kind is dead config.
+    if (
+      entry.conjugationSeedKind === 'predicate-nominal' &&
+      (!entry.conjugationSeedWords || entry.conjugationSeedWords.length === 0)
+    ) {
+      throw new Error(
+        `Curriculum invariant violated: '${entry.key}' is conjugationSeedKind 'predicate-nominal' but has no conjugationSeedWords`,
+      );
+    }
+    if (
+      entry.conjugationSeedWords &&
+      entry.conjugationSeedKind !== 'predicate-nominal'
+    ) {
+      throw new Error(
+        `Curriculum invariant violated: '${entry.key}' has conjugationSeedWords but conjugationSeedKind is not 'predicate-nominal'`,
+      );
+    }
+
     // 9e. freeWriting config is present iff the entry is a free-writing umbrella.
     if (entry.kind === 'free-writing' && !entry.freeWriting) {
       throw new Error(

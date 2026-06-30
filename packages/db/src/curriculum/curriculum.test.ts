@@ -209,8 +209,11 @@ describe('curriculum conjugationSeedKind (nominal-inflection points seed from th
   // Nominal-inflection points decline a noun, not a verb. Unseeded they collapsed
   // onto a couple of nouns and exhausted their identity space, so they now draw
   // from the noun band with conjugationSeedKind: 'noun' (the strict directive
-  // names "the noun to inflect"). No point currently uses the legacy 'none'.
-  it('the full conjugationSeedKind:"noun" set is exactly these six TR nominal points', () => {
+  // names "the noun to inflect"). The COPULAR point (personal-suffixes) is the
+  // exception — it makes a "subject IS <predicate>" sentence, so it uses
+  // 'predicate-nominal' instead (see the separate describe below). No point
+  // currently uses the legacy 'none'.
+  it('the full conjugationSeedKind:"noun" set is exactly these five TR case/possessive points', () => {
     const nounSeeded = ALL_CURRICULA.filter((g) => g.conjugationSeedKind === 'noun')
       .map((g) => g.key)
       .sort();
@@ -219,7 +222,6 @@ describe('curriculum conjugationSeedKind (nominal-inflection points seed from th
         'tr-a1-accusative-definite-object',
         'tr-a1-ablative-dative',
         'tr-a1-locative',
-        'tr-a1-personal-suffixes',
         'tr-a1-possessive-suffixes',
         'tr-a2-possessive-case-stacking',
       ].sort(),
@@ -235,6 +237,61 @@ describe('curriculum conjugationSeedKind (nominal-inflection points seed from th
     for (const g of ALL_CURRICULA.filter((p) => p.conjugationSeedKind === 'noun')) {
       expect(g.conjugationSuitable, g.key).toBe(true);
     }
+  });
+
+  it('the copular point seeds from a curated predicate pool (conjugationSeedKind:"predicate-nominal")', () => {
+    const predicateSeeded = ALL_CURRICULA.filter(
+      (g) => g.conjugationSeedKind === 'predicate-nominal',
+    );
+    expect(predicateSeeded.map((g) => g.key)).toEqual(['tr-a1-personal-suffixes']);
+    const copular = predicateSeeded[0];
+    // Pool must be present, non-trivial, and sized above the person-floor target
+    // (5 per × 6 persons = 30) so the lemma-keyed exclude has room before it
+    // exhausts.
+    expect((copular.conjugationSeedWords ?? []).length).toBeGreaterThanOrEqual(30);
+    expect(copular.conjugationSuitable).toBe(true);
+  });
+
+  it('throws when a predicate-nominal point has no conjugationSeedWords pool', () => {
+    expect(() =>
+      assertCurriculumInvariants([
+        {
+          key: 'tr-a1-synthetic-copular',
+          kind: 'grammar',
+          name: 'Synthetic copular',
+          description: 'Synthetic entry for predicate-nominal invariant testing.',
+          cefrLevel: 'A1',
+          language: Language.TR,
+          examplesPositive: ['a', 'b'],
+          examplesNegative: ['*c'],
+          commonErrors: ['e'],
+          conjugationSuitable: true,
+          conjugationSeedKind: 'predicate-nominal',
+          // conjugationSeedWords intentionally omitted.
+        },
+      ]),
+    ).toThrow(/conjugationSeedWords/);
+  });
+
+  it('throws when conjugationSeedWords is set without conjugationSeedKind predicate-nominal', () => {
+    expect(() =>
+      assertCurriculumInvariants([
+        {
+          key: 'tr-a1-synthetic-misplaced-pool',
+          kind: 'grammar',
+          name: 'Synthetic misplaced pool',
+          description: 'Synthetic entry for predicate-nominal invariant testing.',
+          cefrLevel: 'A1',
+          language: Language.TR,
+          examplesPositive: ['a', 'b'],
+          examplesNegative: ['*c'],
+          commonErrors: ['e'],
+          conjugationSuitable: true,
+          conjugationSeedKind: 'noun',
+          conjugationSeedWords: ['doktor'],
+        },
+      ]),
+    ).toThrow(/conjugationSeedWords/);
   });
 
   it('verb-morphology conjugation points keep the default verb seed (no flag)', () => {

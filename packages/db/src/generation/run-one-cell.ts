@@ -459,7 +459,9 @@ async function fetchPriorNounSeeds(
  * `'none'` opts out of seeding entirely. vocab_recall/free-writing/etc. are
  * unseeded.
  */
-export function seedKindFor(cell: Cell): 'frequency' | 'verb' | 'noun' | null {
+export function seedKindFor(
+  cell: Cell,
+): 'frequency' | 'verb' | 'noun' | 'predicate-nominal' | null {
   if (
     cell.exerciseType === ExerciseType.CLOZE ||
     cell.exerciseType === ExerciseType.TRANSLATION ||
@@ -474,7 +476,9 @@ export function seedKindFor(cell: Cell): 'frequency' | 'verb' | 'noun' | null {
   if (cell.exerciseType === ExerciseType.CONJUGATION) {
     const seedKind = cell.grammarPoint.conjugationSeedKind;
     if (seedKind === 'none') return null;
-    return seedKind === 'noun' ? 'noun' : 'verb';
+    if (seedKind === 'noun') return 'noun';
+    if (seedKind === 'predicate-nominal') return 'predicate-nominal';
+    return 'verb';
   }
   return null;
 }
@@ -513,6 +517,20 @@ export async function buildSeedWords(
     // pool's distinct-identity space exhausts. Band is CUMULATIVE from rank 1 so
     // an A1 cell still has a wide noun inventory to vary over.
     const band = await loadNounBand(db, cell.language, 1, window.rankMax);
+    return pickSeeds({ band, batchSeed, count, exclude: priorSeeds });
+  }
+
+  if (kind === 'predicate-nominal') {
+    // Copular personal-suffix cell ("X is a <word>"): seed from the curated
+    // predicate pool on the grammar point — professions/roles/nationalities/
+    // adjectives — NOT the generic noun band, whose concrete object nouns make
+    // nonsensical copular predicates ("Sen kedisin" = "you are a cat"). The pool
+    // is the lexical diversity axis; the grammatical person is driven separately
+    // by `coverageTargets`. Distinctness/exclude work exactly like the noun
+    // picker (keyed on the lemma). The curated list is bounded, so once the pool
+    // covers it `pickSeeds` returns nulls and the cell stops — sized in the
+    // curriculum to comfortably exceed the cell's person-floor target.
+    const band = cell.grammarPoint.conjugationSeedWords ?? [];
     return pickSeeds({ band, batchSeed, count, exclude: priorSeeds });
   }
 
@@ -679,7 +697,10 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     const priorSeeds: ReadonlySet<string> =
       seedKind === 'frequency'
         ? new Set(await fetchPriorSeeds(db, cell))
-        : seedKind === 'noun'
+        : // Both noun and predicate-nominal cells key the live-pool exclude on the
+          // bare lemma/seedWord (the noun/predicate is the diversity axis), so they
+          // share `fetchPriorNounSeeds`.
+          seedKind === 'noun' || seedKind === 'predicate-nominal'
           ? new Set(await fetchPriorNounSeeds(db, cell))
           : seedKind === 'verb'
             ? await fetchPriorConjugationSeeds(db, cell)
