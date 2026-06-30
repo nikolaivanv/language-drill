@@ -100,6 +100,24 @@ export default defineConfig({
       },
     },
     {
+      // Non-asserting screenshot/frame-capture harness (see e2e/shoot.spec.ts +
+      // docs/testing.md). Only runs when SHOOT_ROUTE is set — otherwise its one
+      // test self-skips, so a bare `test:e2e` run is unaffected. Reuses the
+      // signed-in storageState (no Clerk handshake) like the authenticated
+      // project; depends on `setup` so that state is fresh.
+      name: 'shoot',
+      testDir: './e2e',
+      testMatch: /shoot\.spec\.ts$/,
+      dependencies: ['setup'],
+      // A cold `next dev` first-compile (5–15 s) plus the bounded 8 s
+      // networkidle + 8 s spinner waits can exceed the default 30 s timeout.
+      timeout: 120_000,
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: STORAGE_STATE_PATH,
+      },
+    },
+    {
       name: 'unauthenticated',
       testDir: './e2e/tests/unauthenticated',
       // Depends on setup so the canonical E2E user is provisioned in

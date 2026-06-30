@@ -1,5 +1,6 @@
 import { devices, expect, test, type Locator, type Page } from '@playwright/test';
 import type { CDPSession } from '@playwright/test';
+import { seedShell } from '../../helpers/seed-mocks';
 
 // ---------------------------------------------------------------------------
 // Read · mobile select-first drag (real touch hit-testing)
@@ -54,9 +55,7 @@ function json(body: unknown, status = 200) {
 async function mockReadApi(page: Page): Promise<{ spans: () => Array<{ start: number; end: number }> }> {
   const spans: Array<{ start: number; end: number }> = [];
 
-  await page.route('**/profiles/languages', (route) =>
-    route.fulfill(json({ profiles: [{ language: 'ES', proficiencyLevel: 'B1' }] })),
-  );
+  await seedShell(page);
   await page.route(/\/read\/entries(\?|$)/, (route) => {
     if (route.request().method() !== 'GET') return route.fallback();
     return route.fulfill(

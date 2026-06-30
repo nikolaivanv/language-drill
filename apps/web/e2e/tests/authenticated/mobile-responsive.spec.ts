@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { seedShell } from '../../helpers/seed-mocks';
 
 // ---------------------------------------------------------------------------
 // Mobile-viewport responsive smoke (Req 12.3, 12.4; NFR Usability)
@@ -36,18 +37,7 @@ function json(body: unknown, status = 200) {
 // live API: the dashboard layout gates on `/profiles/languages`, and the
 // Review tab badge polls `/review/overview`.
 async function mockShell(page: Page): Promise<void> {
-  await page.route('**/profiles/languages', (route) =>
-    route.fulfill(json({ profiles: [{ language: 'ES', proficiencyLevel: 'B1' }] })),
-  );
-  await page.route('**/review/overview**', (route) =>
-    route.fulfill(
-      json({
-        breakdown: { due: 0, new: 0, leech: 0, total: 0, mix: {} },
-        estimatedMinutes: 0,
-        nextDueAt: null,
-      }),
-    ),
-  );
+  await seedShell(page);
 }
 
 const READ_ENTRY_ID = '11111111-1111-1111-1111-111111111111';
