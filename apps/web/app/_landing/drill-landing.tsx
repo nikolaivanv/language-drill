@@ -2,22 +2,24 @@
 
 // Dark marketing landing for "drill". Ported from the design handoff
 // (landing/drill-landing.jsx). The hero plays a TYPED production demo (the real
-// way to practise), then the page walks the loop: Read (deep annotation) →
-// Save → Review (vocabulary) → Produce. The design's dev-only "tweaks" panel is
-// dropped; CTAs route into the Clerk sign-up / sign-in flows.
+// way to practise), then the page walks the loop: Read → Save → Review →
+// Produce, via the five-mode practice carousel and the "why not ChatGPT?"
+// positioning section. The design's dev-only "tweaks" panel is dropped; CTAs
+// route into the Clerk sign-up / sign-in flows.
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import './landing.css';
+import { DBrand, type BankWord } from './landing-chrome';
+import { PracticeCarousel } from './practice-carousel';
+import { ChatGPTCompare } from './chatgpt-compare';
 import {
   D_CLOZE,
   D_LANGS,
-  D_PASSAGES,
   D_SEED_VOCAB,
   D_SOON,
   type ClozeItem,
   type LandingLang,
-  type Token,
 } from './landing-data';
 import { LegalLinks } from '../../components/legal/legal-links';
 
@@ -34,80 +36,9 @@ interface Step extends Frame {
   dur: number;
 }
 
-export interface BankWord {
-  w: string;
-  lang: string;
-  gloss: string;
-}
-
-/* ───────────────────────── chrome ───────────────────────── */
-
-export function DBrand() {
-  return (
-    <Link href="/" style={{ textDecoration: 'none' }} aria-label="drill — home">
-      <span
-        style={{
-          display: 'inline-flex',
-          alignItems: 'flex-end',
-          gap: '0.06em',
-          lineHeight: 1,
-          fontSize: 23,
-        }}
-      >
-        <span
-          style={{
-            fontFamily: 'var(--t-display)',
-            fontWeight: 600,
-            fontSize: '1em',
-            letterSpacing: '-0.025em',
-            lineHeight: 1,
-            color: '#f3ece0',
-            borderBottom: '0.1em solid var(--accent)',
-            paddingBottom: '0.12em',
-          }}
-        >
-          drill
-        </span>
-        <span
-          style={{
-            width: '0.07em',
-            height: '0.62em',
-            background: 'var(--accent)',
-            borderRadius: '0.04em',
-            marginBottom: '0.16em',
-          }}
-        />
-      </span>
-    </Link>
-  );
-}
-
-export function DLangRail({
-  lang,
-  setLang,
-  full,
-}: {
-  lang: string;
-  setLang: (id: string) => void;
-  full?: boolean;
-}) {
-  return (
-    <div className="lang-rail" role="tablist" aria-label="language">
-      {D_LANGS.map((l) => (
-        <button
-          key={l.id}
-          role="tab"
-          aria-selected={lang === l.id}
-          className={'lang-pill' + (lang === l.id ? ' on' : '')}
-          onClick={() => setLang(l.id)}
-        >
-          {full ? l.label : null}
-          <span className={full ? 'tag' : ''}>{l.tag}</span>
-        </button>
-      ))}
-    </div>
-  );
-}
+// DBrand / DLangRail / ReadingNote / BankWord live in landing-chrome.tsx,
+// shared with the carousel, the compare pieces and the mobile reflow.
+export { DBrand, DLangRail, ReadingNote, type BankWord } from './landing-chrome';
 
 /* ─────────────── hero: typed production demo ─────────────── */
 
@@ -427,255 +358,6 @@ function LoopStrip() {
               </p>
             </div>
           ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ───────────── reading: deep annotation (dark) ───────────── */
-
-export function ReadingNote({
-  tok,
-  onSave,
-  saved,
-}: {
-  tok: Token;
-  onSave: () => void;
-  saved: boolean;
-}) {
-  return (
-    <div className="df-note swap" key={tok.w}>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'baseline',
-          justifyContent: 'space-between',
-          gap: 12,
-        }}
-      >
-        <div
-          style={{
-            fontFamily: 'var(--t-display)',
-            fontSize: 28,
-            fontWeight: 500,
-            letterSpacing: '-0.4px',
-            color: 'var(--df-ink)',
-          }}
-        >
-          {tok.w}
-        </div>
-        <span className="df-chip-dark">{tok.pos}</span>
-      </div>
-      {tok.lemma && tok.lemma !== '—' && (
-        <div className="t-mono" style={{ fontSize: 12, color: 'var(--df-mute)', marginTop: 4 }}>
-          {tok.lemma}
-        </div>
-      )}
-      <div style={{ height: 1, background: 'var(--df-line)', margin: '15px 0' }} />
-      <div
-        style={{
-          fontFamily: 'var(--t-display)',
-          fontSize: 20,
-          fontWeight: 500,
-          color: 'var(--df-ink)',
-          letterSpacing: '-0.3px',
-        }}
-      >
-        {tok.gloss}
-      </div>
-      <p
-        style={{
-          marginTop: 9,
-          marginBottom: 0,
-          fontSize: 14,
-          lineHeight: 1.6,
-          color: 'var(--df-ink2)',
-        }}
-      >
-        {tok.note}
-      </p>
-      <button
-        onClick={onSave}
-        disabled={saved}
-        className="btn-xl"
-        style={{
-          width: '100%',
-          marginTop: 18,
-          padding: '11px 12px',
-          opacity: saved ? 0.55 : 1,
-          cursor: saved ? 'default' : 'pointer',
-        }}
-      >
-        {saved ? '✓ saved to vocabulary' : '+ save to vocabulary'}
-      </button>
-    </div>
-  );
-}
-
-function ReadingShowcase({
-  defaultLang,
-  bank,
-  onSave,
-}: {
-  defaultLang: string;
-  bank: BankWord[];
-  onSave: (item: BankWord) => void;
-}) {
-  const [lang, setLang] = useState(D_PASSAGES[defaultLang] ? defaultLang : 'es');
-  const [sel, setSel] = useState<number | null>(null);
-  useEffect(() => {
-    setSel(null);
-  }, [lang]);
-  const passage = D_PASSAGES[lang];
-  const meta = D_LANGS.find((l) => l.id === lang)!;
-  const tokens = passage.tokens;
-  const selTok = sel != null && typeof tokens[sel] === 'object' ? (tokens[sel] as Token) : null;
-  const savedSet = new Set(bank.map((b) => b.w));
-  const annotated = tokens.filter((x) => typeof x === 'object').length;
-
-  return (
-    <section className="df-section">
-      <div className="df-wrap">
-        <div className="df-eyebrow2">Where the words come from</div>
-        <h2 className="df-h2" style={{ marginTop: 14, maxWidth: 720 }}>
-          Read above your level. Tap anything you don’t know.
-        </h2>
-        <p
-          style={{
-            color: 'var(--df-ink2)',
-            fontSize: 17,
-            lineHeight: 1.6,
-            maxWidth: 560,
-            marginTop: 16,
-          }}
-        >
-          No baby sentences. Every underlined word is one tap from a deep note — meaning, grammar,
-          etymology — and one more from your own deck.
-        </p>
-
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 16,
-            flexWrap: 'wrap',
-            margin: '30px 0 26px',
-          }}
-        >
-          <DLangRail lang={lang} setLang={setLang} />
-          <span style={{ fontFamily: 'var(--t-mono)', fontSize: 12, color: 'var(--df-mute)' }}>
-            vocabulary · <strong style={{ color: 'var(--accent)' }}>{bank.length}</strong> saved
-          </span>
-        </div>
-
-        <div className="df-read-grid">
-          <div>
-            <div
-              style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}
-            >
-              <span
-                style={{
-                  fontFamily: 'var(--t-mono)',
-                  fontSize: 11,
-                  letterSpacing: '1.4px',
-                  textTransform: 'uppercase',
-                  color: 'var(--df-mute)',
-                }}
-              >
-                {passage.title}
-              </span>
-              <span
-                style={{ width: 4, height: 4, borderRadius: 4, background: 'var(--df-line)' }}
-              />
-              <span style={{ fontSize: 12, color: 'var(--df-mute)' }}>{passage.source}</span>
-              <span className="df-chip-dark" style={{ marginLeft: 'auto' }}>
-                {meta.cefr}
-              </span>
-            </div>
-            <div
-              style={{
-                borderLeft: '2px solid color-mix(in oklab, var(--accent) 40%, var(--df-line))',
-                paddingLeft: 26,
-              }}
-            >
-              <p className="df-passage swap" key={lang}>
-                {tokens.map((tk, i) =>
-                  typeof tk === 'string' ? (
-                    <span key={lang + i}>{tk}</span>
-                  ) : (
-                    <button
-                      key={lang + i}
-                      className={'df-word' + (sel === i ? ' on' : '')}
-                      onClick={() => setSel(sel === i ? null : i)}
-                    >
-                      {tk.w}
-                    </button>
-                  )
-                )}
-              </p>
-            </div>
-            <div
-              style={{
-                marginTop: 20,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                fontSize: 12,
-                color: 'var(--df-mute)',
-              }}
-            >
-              <span
-                style={{
-                  width: 16,
-                  borderBottom: '2px dotted var(--accent)',
-                  display: 'inline-block',
-                }}
-              />
-              {annotated} words annotated · tap to open
-            </div>
-          </div>
-
-          <aside className="df-rail">
-            {selTok ? (
-              <ReadingNote
-                tok={selTok}
-                saved={savedSet.has(selTok.w)}
-                onSave={() => onSave({ w: selTok.w, lang: meta.tag, gloss: selTok.gloss })}
-              />
-            ) : (
-              <div className="df-hint">
-                <svg
-                  width="32"
-                  height="32"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  style={{ margin: '0 auto 12px', display: 'block' }}
-                >
-                  <path
-                    d="M5 12h11M11 7l6 5-6 5"
-                    stroke="var(--accent)"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                <div
-                  style={{
-                    fontSize: 15,
-                    color: 'var(--df-ink2)',
-                    maxWidth: 230,
-                    margin: '0 auto',
-                    lineHeight: 1.55,
-                  }}
-                >
-                  Tap any{' '}
-                  <span style={{ color: 'var(--accent)', fontWeight: 500 }}>underlined word</span>.
-                  It explains itself right here — then save it with one tap.
-                </div>
-              </div>
-            )}
-          </aside>
         </div>
       </div>
     </section>
@@ -1053,6 +735,9 @@ export function DrillLanding() {
         <div className="df-wrap df-top-inner">
           <DBrand />
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <a href="#vs-chatgpt" className="vs-navlink">
+              Why not ChatGPT?
+            </a>
             <Link
               href="/sign-in"
               style={{
@@ -1072,9 +757,10 @@ export function DrillLanding() {
       </div>
       <DrillHero />
       <LoopStrip />
-      <ReadingShowcase defaultLang={DEFAULT_LANG} bank={bank} onSave={onSave} />
+      <PracticeCarousel defaultLang={DEFAULT_LANG} bank={bank} onSave={onSave} />
       <VocabReview bank={bank} />
       <WhyProduce />
+      <ChatGPTCompare />
       <DLangBand />
       <DCTA />
       <DFooter />

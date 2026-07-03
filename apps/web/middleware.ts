@@ -2,6 +2,7 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
 const isPublicRoute = createRouteMatcher([
   '/', // public marketing landing page (signed-in users are bounced to /home)
+  '/why-not-chatgpt', // standalone marketing comparison page
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/invite(.*)',

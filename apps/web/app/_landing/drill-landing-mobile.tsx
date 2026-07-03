@@ -2,25 +2,34 @@
 
 // drill — canonical landing, Mobile Web reflow. Ported from the design handoff
 // (landing/drill-landing-mobile.jsx). The dark "read · save · review · produce"
-// landing reflowed for a ~390px phone. Reuses the real interactive pieces from
-// drill-landing.tsx (ProductionDemo, DLangRail, ReadingNote, DBrand) plus the
-// shared data, so the typed demo, tap-to-save reading, and review deck behave
-// exactly like desktop. Styling lives in landing.css (the `.dfm` block). State
-// (the saved word bank) is lifted here so saving in Read feeds the Review deck.
+// landing reflowed for a ~390px phone. Reuses the real interactive pieces
+// (ProductionDemo from drill-landing.tsx; DBrand / DLangRail / ReadingNote from
+// landing-chrome.tsx) plus the shared data, so the typed demo, the five-mode
+// practice carousel, and the review deck behave exactly like desktop. Styling
+// lives in landing.css (the `.dfm` block). State (the saved word bank) is
+// lifted here so saving in the carousel's Reading mode feeds the Review deck.
 // CTAs route into the Clerk sign-up / sign-in flows (the design's dev-only
 // "compare directions" footer link is dropped).
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import './landing.css';
+import { ProductionDemo } from './drill-landing';
+import { DBrand, DLangRail, ReadingNote, type BankWord } from './landing-chrome';
+import { MChatGPT } from './chatgpt-compare-mobile';
 import {
-  DBrand,
-  DLangRail,
-  ProductionDemo,
-  ReadingNote,
-  type BankWord,
-} from './drill-landing';
-import { D_CLOZE, D_LANGS, D_PASSAGES, D_SEED_VOCAB, D_SOON, type Token } from './landing-data';
+  D_CLOZE,
+  D_LANGS,
+  D_MODES,
+  D_PASSAGES,
+  D_PRACTICE,
+  D_SEED_VOCAB,
+  D_SOON,
+  type LandingLang,
+  type PracticeMode,
+  type PracticeModeId,
+  type Token,
+} from './landing-data';
 import { LegalLinks } from '../../components/legal/legal-links';
 
 const DEFAULT_LANG = 'es';
@@ -100,57 +109,357 @@ function MLoop() {
   );
 }
 
-/* ── reading: deep annotation, note stacks below passage ── */
-function MReading({
-  defaultLang,
+/* ── practice types: mobile carousel (cloze · translation · dictation · free writing · reading) ── */
+function MModeShell({
+  meta,
+  skill,
+  live,
+  tag,
+  children,
+  foot,
+}: {
+  meta: LandingLang;
+  skill: string;
+  live: string;
+  tag: string;
+  children: ReactNode;
+  foot?: ReactNode;
+}) {
+  return (
+    <div className="dfm-card lift" style={{ padding: 17 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 8,
+          marginBottom: 12,
+        }}
+      >
+        <span className="df-typedot" style={{ fontSize: 10.5 }}>
+          <b />
+          {live}
+        </span>
+        <span
+          style={{
+            fontFamily: 'var(--t-mono)',
+            fontSize: 10,
+            color: 'var(--df-ink2)',
+            padding: '3px 8px',
+            border: '1px solid var(--df-line)',
+            borderRadius: 999,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {tag} · {meta.cefr}
+        </span>
+      </div>
+      <div
+        style={{
+          fontFamily: 'var(--t-mono)',
+          fontSize: 10,
+          letterSpacing: '1px',
+          textTransform: 'uppercase',
+          color: 'var(--df-mute)',
+          marginBottom: 12,
+        }}
+      >
+        {skill}
+      </div>
+      {children}
+      {foot && (
+        <div className="df-coach" style={{ marginTop: 14 }}>
+          <div className="df-coach-dot" style={{ background: 'var(--ok)' }}>
+            c
+          </div>
+          <div style={{ fontSize: 12.5, lineHeight: 1.5, color: 'var(--df-ink2)' }}>{foot}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MModeCloze({ lang, meta, mode }: { lang: string; meta: LandingLang; mode: PracticeMode }) {
+  const item = D_CLOZE[lang];
+  return (
+    <MModeShell
+      meta={meta}
+      skill={item.skill}
+      live="PRODUCTION · TYPED"
+      tag={mode.tag}
+      foot={
+        <>
+          <strong style={{ color: '#a8d6a0' }}>Right.</strong> {item.explainOk}
+        </>
+      }
+    >
+      <div className="drill-stage" style={{ padding: '6px 0', fontSize: 19 }}>
+        {item.pre}
+        <span className="drill-blank type ok">{item.blank}</span>
+        {item.post}
+      </div>
+      <div
+        style={{
+          fontFamily: 'var(--t-ui)',
+          fontSize: 12.5,
+          color: 'var(--df-mute)',
+          marginTop: 8,
+          fontStyle: 'italic',
+        }}
+      >
+        {item.en}
+      </div>
+    </MModeShell>
+  );
+}
+
+function MModeTranslation({ lang, meta, mode }: { lang: string; meta: LandingLang; mode: PracticeMode }) {
+  const item = D_PRACTICE.translation[lang];
+  return (
+    <MModeShell meta={meta} skill={item.skill} live="PRODUCTION · FREE" tag={mode.tag} foot={item.note}>
+      <div
+        style={{
+          fontFamily: 'var(--t-mono)',
+          fontSize: 10,
+          letterSpacing: '.5px',
+          color: 'var(--df-mute)',
+          marginBottom: 7,
+        }}
+      >
+        RENDER IN {meta.label.toUpperCase()}
+      </div>
+      <div
+        style={{
+          fontFamily: 'var(--t-display)',
+          fontSize: 17,
+          color: 'var(--df-ink2)',
+          fontStyle: 'italic',
+          marginBottom: 14,
+        }}
+      >
+        “{item.en}”
+      </div>
+      <div style={{ borderTop: '1px solid var(--df-line)', paddingTop: 14 }}>
+        <div className="drill-stage" style={{ fontSize: 20, lineHeight: 1.5 }}>
+          {item.chunks.map(([txt, hot], i) =>
+            hot ? (
+              <span
+                key={i}
+                style={{ color: 'var(--df-ink)', borderBottom: '2px solid var(--ok)', paddingBottom: 1 }}
+              >
+                {txt}
+              </span>
+            ) : (
+              <span key={i} style={{ color: 'var(--df-ink2)' }}>
+                {txt}
+              </span>
+            )
+          )}
+        </div>
+      </div>
+    </MModeShell>
+  );
+}
+
+function MModeDictation({ lang, meta, mode }: { lang: string; meta: LandingLang; mode: PracticeMode }) {
+  const item = D_PRACTICE.dictation[lang];
+  const bars = [7, 13, 20, 15, 24, 30, 22, 14, 26, 19, 11, 23, 31, 18, 10, 16, 25, 13];
+  return (
+    <MModeShell meta={meta} skill={item.skill} live="DICTATION · AUDIO" tag={mode.tag} foot={item.note}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 11,
+          padding: '11px 13px',
+          background: '#1b1610',
+          border: '1px solid var(--df-line)',
+          borderRadius: 'var(--r-md)',
+          marginBottom: 14,
+        }}
+      >
+        <span
+          style={{
+            width: 34,
+            height: 34,
+            borderRadius: '50%',
+            background: 'var(--accent)',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            fontSize: 13,
+          }}
+        >
+          ▶
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 2.5, flex: 1, height: 30 }}>
+          {bars.map((h, i) => (
+            <span
+              key={i}
+              style={{
+                width: 2.5,
+                height: h,
+                borderRadius: 2,
+                background: i < 9 ? 'var(--accent)' : 'var(--df-line)',
+              }}
+            />
+          ))}
+        </div>
+        <span style={{ fontFamily: 'var(--t-mono)', fontSize: 10, color: 'var(--df-mute)' }}>0:04</span>
+      </div>
+      <div
+        style={{
+          fontFamily: 'var(--t-mono)',
+          fontSize: 10,
+          letterSpacing: '.5px',
+          color: 'var(--df-mute)',
+          marginBottom: 7,
+        }}
+      >
+        YOU TYPED WHAT YOU HEARD
+      </div>
+      <div className="drill-stage" style={{ fontSize: 20, lineHeight: 1.5 }}>
+        <span style={{ borderBottom: '2px solid var(--ok)', paddingBottom: 1 }}>{item.heard}</span>
+      </div>
+      <div
+        style={{
+          fontFamily: 'var(--t-ui)',
+          fontSize: 12.5,
+          color: 'var(--df-mute)',
+          marginTop: 9,
+          fontStyle: 'italic',
+        }}
+      >
+        {item.en}
+      </div>
+    </MModeShell>
+  );
+}
+
+function MModeFreewrite({ lang, meta, mode }: { lang: string; meta: LandingLang; mode: PracticeMode }) {
+  const item = D_PRACTICE.freewrite[lang];
+  const clean = item.fixes[0] && item.fixes[0][0] === item.fixes[0][1];
+  return (
+    <MModeShell meta={meta} skill={item.skill} live="FREE WRITING · OPEN" tag={mode.tag} foot={item.note}>
+      <div
+        style={{
+          fontFamily: 'var(--t-mono)',
+          fontSize: 10,
+          letterSpacing: '.5px',
+          color: 'var(--df-mute)',
+          marginBottom: 8,
+        }}
+      >
+        PROMPT
+      </div>
+      <div style={{ fontFamily: 'var(--t-display)', fontSize: 17, color: 'var(--df-ink)', marginBottom: 13 }}>
+        {item.prompt}
+      </div>
+      <div
+        style={{
+          padding: '12px 13px',
+          background: '#1b1610',
+          border: '1px solid var(--df-line)',
+          borderRadius: 'var(--r-md)',
+          fontFamily: 'var(--t-display)',
+          fontSize: 15.5,
+          lineHeight: 1.6,
+          color: 'var(--df-ink2)',
+        }}
+      >
+        {item.draft}
+        <i className="df-caret" />
+      </div>
+      {item.fixes.map(([from, to, why], i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 9, marginTop: 12 }}>
+          <span
+            style={{
+              fontFamily: 'var(--t-mono)',
+              fontSize: 11,
+              color: clean ? 'var(--ok)' : 'var(--df-mute)',
+              whiteSpace: 'nowrap',
+              paddingTop: 1,
+            }}
+          >
+            {clean ? '✓ clean' : 'fix'}
+          </span>
+          <div style={{ fontSize: 12.5, lineHeight: 1.5, color: 'var(--df-ink2)' }}>
+            {clean ? (
+              why
+            ) : (
+              <>
+                <span style={{ textDecoration: 'line-through', color: '#f0a78c' }}>{from}</span>
+                <span style={{ margin: '0 5px', color: 'var(--df-mute)' }}>→</span>
+                <strong style={{ color: '#a8d6a0' }}>{to}</strong>
+                <span style={{ color: 'var(--df-mute)' }}> — {why}</span>
+              </>
+            )}
+          </div>
+        </div>
+      ))}
+    </MModeShell>
+  );
+}
+
+function MModeReading({
+  lang,
+  meta,
+  mode,
   bank,
   onSave,
 }: {
-  defaultLang: string;
+  lang: string;
+  meta: LandingLang;
+  mode: PracticeMode;
   bank: BankWord[];
   onSave: (item: BankWord) => void;
 }) {
-  const [lang, setLang] = useState(D_PASSAGES[defaultLang] ? defaultLang : 'es');
   const [sel, setSel] = useState<number | null>(null);
   useEffect(() => {
     setSel(null);
   }, [lang]);
   const passage = D_PASSAGES[lang];
-  const meta = D_LANGS.find((l) => l.id === lang)!;
   const tokens = passage.tokens;
   const selTok = sel != null && typeof tokens[sel] === 'object' ? (tokens[sel] as Token) : null;
   const savedSet = new Set(bank.map((b) => b.w));
-  const annotated = tokens.filter((x) => typeof x === 'object').length;
-
   return (
-    <section className="dfm-wrap dfm-section">
-      <div className="dfm-eyebrow2">Where the words come from</div>
-      <h2 className="dfm-h2">Read above your level. Tap anything you don’t know.</h2>
-      <p className="dfm-lead">
-        No baby sentences. Every underlined word is one tap from a deep note — meaning, grammar,
-        etymology — and one more from your own deck.
-      </p>
-
+    <div className="dfm-card lift" style={{ padding: 17 }}>
       <div
-        style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', margin: '22px 0 20px' }}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 8,
+          marginBottom: 12,
+        }}
       >
-        <DLangRail lang={lang} setLang={setLang} />
-        <span style={{ fontFamily: 'var(--t-mono)', fontSize: 12, color: 'var(--df-mute)' }}>
-          vocab · <strong style={{ color: 'var(--accent)' }}>{bank.length}</strong> saved
+        <span className="df-typedot" style={{ fontSize: 10.5 }}>
+          <b />
+          READING · ANNOTATE
+        </span>
+        <span
+          style={{
+            fontFamily: 'var(--t-mono)',
+            fontSize: 10,
+            color: 'var(--df-ink2)',
+            padding: '3px 8px',
+            border: '1px solid var(--df-line)',
+            borderRadius: 999,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {mode.tag} · {meta.cefr}
         </span>
       </div>
-
-      <div className="dfm-read-meta">
+      <div className="dfm-read-meta" style={{ marginBottom: 12 }}>
         <span className="ttl">{passage.title}</span>
         <span style={{ width: 4, height: 4, borderRadius: 4, background: 'var(--df-line)' }} />
         <span className="src">{passage.source}</span>
-        <span className="df-chip-dark" style={{ marginLeft: 'auto' }}>
-          {meta.cefr}
-        </span>
       </div>
-
       <div className="dfm-passage">
-        <p className="df-passage swap" key={lang}>
+        <p className="df-passage swap" key={lang} style={{ fontSize: 18 }}>
           {tokens.map((tk, i) =>
             typeof tk === 'string' ? (
               <span key={lang + i}>{tk}</span>
@@ -166,11 +475,6 @@ function MReading({
           )}
         </p>
       </div>
-
-      <div className="dfm-read-foot">
-        <span className="dash" /> {annotated} words annotated · tap to open
-      </div>
-
       <div className="dfm-note-wrap">
         {selTok ? (
           <ReadingNote
@@ -179,30 +483,90 @@ function MReading({
             onSave={() => onSave({ w: selTok.w, lang: meta.tag, gloss: selTok.gloss })}
           />
         ) : (
-          <div className="df-hint">
-            <svg
-              width="30"
-              height="30"
-              viewBox="0 0 24 24"
-              fill="none"
-              style={{ margin: '0 auto 10px', display: 'block' }}
-            >
-              <path
-                d="M5 12h11M11 7l6 5-6 5"
-                stroke="var(--accent)"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <div
-              style={{ fontSize: 14.5, color: 'var(--df-ink2)', maxWidth: 250, margin: '0 auto', lineHeight: 1.55 }}
-            >
+          <div className="df-hint" style={{ padding: '14px 16px' }}>
+            <div style={{ fontSize: 13.5, color: 'var(--df-ink2)', lineHeight: 1.5 }}>
               Tap any <span style={{ color: 'var(--accent)', fontWeight: 500 }}>underlined word</span>{' '}
-              above. It explains itself right here — then save it with one tap.
+              — it explains itself, then saves to your deck with one tap.
             </div>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function MPractice({
+  defaultLang,
+  bank,
+  onSave,
+}: {
+  defaultLang: string;
+  bank: BankWord[];
+  onSave: (item: BankWord) => void;
+}) {
+  const [mode, setMode] = useState<PracticeModeId>('cloze');
+  const [lang, setLang] = useState(D_PASSAGES[defaultLang] ? defaultLang : 'es');
+  const meta = D_LANGS.find((l) => l.id === lang)!;
+  const modeMeta = D_MODES.find((m) => m.id === mode)!;
+  const idx = D_MODES.findIndex((m) => m.id === mode);
+  const go = (d: number) => setMode(D_MODES[(idx + d + D_MODES.length) % D_MODES.length].id);
+
+  const body =
+    mode === 'cloze' ? (
+      <MModeCloze lang={lang} meta={meta} mode={modeMeta} />
+    ) : mode === 'translation' ? (
+      <MModeTranslation lang={lang} meta={meta} mode={modeMeta} />
+    ) : mode === 'dictation' ? (
+      <MModeDictation lang={lang} meta={meta} mode={modeMeta} />
+    ) : mode === 'freewrite' ? (
+      <MModeFreewrite lang={lang} meta={meta} mode={modeMeta} />
+    ) : (
+      <MModeReading lang={lang} meta={meta} mode={modeMeta} bank={bank} onSave={onSave} />
+    );
+
+  return (
+    <section className="dfm-wrap dfm-section">
+      <div className="dfm-eyebrow2">One engine, five ways to produce</div>
+      <h2 className="dfm-h2">The same structure, whatever you’re drilling.</h2>
+      <p className="dfm-lead">
+        Cloze, translation, dictation, free writing, reading — every mode is tuned to your level,
+        graded the same way, logged to the same record. Variety without the chaos.
+      </p>
+
+      <div className="dfm-mode-rail">
+        {D_MODES.map((m) => (
+          <button
+            key={m.id}
+            className={'dfm-mode-pill' + (mode === m.id ? ' on' : '')}
+            onClick={() => setMode(m.id)}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+      <div style={{ margin: '14px 0 0' }}>
+        <DLangRail lang={lang} setLang={setLang} />
+      </div>
+
+      <div style={{ marginTop: 16 }}>{body}</div>
+
+      <div className="dfm-pnav">
+        <button className="dfm-pn-btn" onClick={() => go(-1)} aria-label="previous">
+          ←
+        </button>
+        <div className="dfm-pn-dots">
+          {D_MODES.map((m) => (
+            <button
+              key={m.id}
+              className={'dfm-pn-dot' + (mode === m.id ? ' on' : '')}
+              onClick={() => setMode(m.id)}
+              aria-label={m.label}
+            />
+          ))}
+        </div>
+        <button className="dfm-pn-btn" onClick={() => go(1)} aria-label="next">
+          →
+        </button>
       </div>
     </section>
   );
@@ -461,9 +825,10 @@ export function DrillLandingMobile() {
       <MTopBar />
       <MHero />
       <MLoop />
-      <MReading defaultLang={DEFAULT_LANG} bank={bank} onSave={onSave} />
+      <MPractice defaultLang={DEFAULT_LANG} bank={bank} onSave={onSave} />
       <MVocab bank={bank} />
       <MWhy />
+      <MChatGPT />
       <MLangBand />
       <MCTA />
       <MFooter />
