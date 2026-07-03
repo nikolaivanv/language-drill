@@ -206,7 +206,7 @@ export function WhyNotPage() {
           <div style={{ fontSize: 12, color: 'var(--df-mute)' }}>
             © 2026 drill · read, save, produce
           </div>
-          <Link href="/" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none' }}>
+          <Link href="/" className="df-footlink">
             ← back to home
           </Link>
         </div>

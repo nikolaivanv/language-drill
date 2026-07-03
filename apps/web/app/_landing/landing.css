@@ -236,6 +236,19 @@
 .vs-navlink { font-size: 13px; color: var(--df-ink2); text-decoration: none; font-family: var(--t-ui); transition: color .14s; }
 .vs-navlink:hover { color: var(--accent); }
 @media (max-width: 620px) { .vs-navlink { display: none; } }
+/* In the top bar, keep the marketing callout link clearly separated from the
+   Sign in / Sign up auth cluster (the flex gap alone reads as one group). */
+.df-top-inner .vs-navlink { margin-right: 18px; }
+
+/* Quiet top-bar text link (Sign in). Brightens to ink on hover like the lang
+   pills and legal links; the accent hover stays exclusive to .vs-navlink. */
+.df-signin { font-size: 13px; color: var(--df-ink2); text-decoration: none; font-family: var(--t-ui); transition: color .14s; }
+.df-signin:hover { color: var(--df-ink); }
+
+/* Accent footer link (Sign in → / ← back to home). Dark surface, so hover
+   lightens toward the light terracotta tone instead of darkening to accent-2. */
+.df-footlink { font-size: 12px; color: var(--accent); text-decoration: none; transition: color .15s ease; }
+.df-footlink:hover { color: #f0a78c; }
 
 /* full comparison table (standalone /why-not-chatgpt page) */
 .wn-table { border: 1px solid var(--df-line); border-radius: var(--r-lg); overflow: hidden; }
@@ -302,7 +315,8 @@
 }
 .dfm-top .dfm-actions { display: flex; align-items: center; gap: 10px; }
 .dfm-signin { border: none; background: transparent; color: var(--df-ink2);
-  font-size: 13px; font-family: var(--t-ui); cursor: pointer; padding: 8px 4px; }
+  font-size: 13px; font-family: var(--t-ui); cursor: pointer; padding: 8px 4px; transition: color .14s; }
+.dfm-signin:hover { color: var(--df-ink); }
 .dfm-signup { padding: 9px 16px; font-size: 13px; border-radius: var(--r-md);
   font-weight: 600; font-family: var(--t-ui); border: 1px solid var(--accent);
   background: var(--accent); color: #fff; cursor: pointer; white-space: nowrap; }
@@ -435,7 +449,8 @@
 /* Only the direct-child "Sign in →" link is terracotta; the nested LegalLinks
    anchors are styled by .landing-legal-links below. (DBrand is also a direct
    <a> but colours its own inner spans, so this rule is a no-op for it.) */
-.dfm-footer > a { font-size: 12px; color: var(--accent); }
+.dfm-footer > a { font-size: 12px; color: var(--accent); transition: color .15s ease; }
+.dfm-footer > a:hover { color: #f0a78c; }
 
 /* Landing footer legal links (Privacy / Terms / Cookies / Cookie preferences /
    email), shared by the desktop and mobile footers. The shared LegalLinks

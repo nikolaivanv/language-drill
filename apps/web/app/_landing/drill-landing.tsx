@@ -711,7 +711,7 @@ function DFooter() {
         <div style={{ fontSize: 12, color: 'var(--df-mute)' }}>
           © 2026 drill · read, save, produce
         </div>
-        <Link href="/sign-in" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none' }}>
+        <Link href="/sign-in" className="df-footlink">
           Sign in →
         </Link>
       </div>
@@ -738,15 +738,7 @@ export function DrillLanding() {
             <a href="#vs-chatgpt" className="vs-navlink">
               Why not ChatGPT?
             </a>
-            <Link
-              href="/sign-in"
-              style={{
-                color: 'var(--df-ink2)',
-                fontSize: 13,
-                fontFamily: 'var(--t-ui)',
-                textDecoration: 'none',
-              }}
-            >
+            <Link href="/sign-in" className="df-signin">
               Sign in
             </Link>
             <Link href="/sign-up" className="btn-xl" style={{ padding: '8px 18px', fontSize: 13 }}>
