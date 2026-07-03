@@ -202,6 +202,79 @@
 @keyframes liftin { from { transform: translateY(10px); } to { transform: none; } }
 @keyframes swapin { from { transform: translateY(6px); } to { transform: none; } }
 
+/* ─────────── practice-types carousel ─────────── */
+.mode-rail { display: inline-flex; gap: 4px; padding: 4px; background: #1b1610;
+  border: 1px solid var(--df-line); border-radius: 999px; flex-wrap: wrap; }
+.mode-pill { border: none; background: transparent; color: var(--df-mute); cursor: pointer;
+  padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 500; font-family: var(--t-ui);
+  display: inline-flex; align-items: baseline; gap: 7px; transition: all .15s; white-space: nowrap; }
+.mode-pill:hover { color: var(--df-ink); }
+.mode-pill.on { background: var(--df-panel); color: var(--df-ink); border: 1px solid var(--df-line); padding: 7px 13px; }
+.mode-tag { font-family: var(--t-mono); font-size: 10px; opacity: .55; }
+@media (max-width: 560px) { .mode-tag { display: none; } }
+
+.practice-frame { margin-top: 22px; }
+.practice-frame .drill-card { max-width: 760px; margin: 0 auto; }
+.practice-nav { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 22px; }
+.pn-btn { width: 40px; height: 40px; border-radius: 999px; border: 1px solid var(--df-line);
+  background: var(--df-panel); color: var(--df-ink); font-size: 16px; cursor: pointer; transition: all .14s; }
+.pn-btn:hover { border-color: var(--df-ink); transform: translateY(-1px); }
+.pn-dots { display: inline-flex; gap: 8px; }
+.pn-dot { width: 8px; height: 8px; padding: 0; border-radius: 999px; border: none; cursor: pointer;
+  background: var(--df-line); transition: all .15s; }
+.pn-dot:hover { background: var(--df-mute); }
+.pn-dot.on { background: var(--accent); width: 22px; }
+
+/* ─────────── ChatGPT compare: split + rows ─────────── */
+.vs-split { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 44px; align-items: start; }
+@media (max-width: 860px) { .vs-split { grid-template-columns: 1fr; } }
+.vs-panel { border: 1px solid var(--df-line); border-radius: var(--r-lg); background: var(--df-panel); overflow: hidden; }
+.vs-panel--drill { border-color: color-mix(in oklab, var(--accent) 45%, var(--df-line));
+  box-shadow: 0 18px 50px rgba(0,0,0,.4); }
+.vs-head { display: flex; align-items: center; gap: 9px; padding: 13px 18px; border-bottom: 1px solid var(--df-line); background: #1b1610; }
+.vs-dot { width: 8px; height: 8px; border-radius: 999px; flex-shrink: 0; }
+.vs-navlink { font-size: 13px; color: var(--df-ink2); text-decoration: none; font-family: var(--t-ui); transition: color .14s; }
+.vs-navlink:hover { color: var(--accent); }
+@media (max-width: 620px) { .vs-navlink { display: none; } }
+
+/* full comparison table (standalone /why-not-chatgpt page) */
+.wn-table { border: 1px solid var(--df-line); border-radius: var(--r-lg); overflow: hidden; }
+.wn-thead { display: grid; grid-template-columns: 200px 1fr 1fr; background: #1b1610;
+  font-family: var(--t-mono); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--df-mute); }
+.wn-thead > div { padding: 14px 22px; }
+.wn-thead > div + div { border-left: 1px solid var(--df-line); }
+.wn-trow { display: grid; grid-template-columns: 200px 1fr 1fr; border-top: 1px solid var(--df-line); }
+.wn-dim { padding: 22px; font-family: var(--t-display); font-size: 19px; font-weight: 500; color: var(--df-ink);
+  display: flex; align-items: center; background: #1b1610; }
+.wn-chat, .wn-drill { padding: 22px; font-size: 14px; line-height: 1.55; border-left: 1px solid var(--df-line); }
+.wn-chat { color: var(--df-mute); }
+.wn-drill { color: var(--df-ink); background: color-mix(in oklab, var(--accent) 6%, transparent); position: relative; }
+.wn-check { color: var(--ok); font-family: var(--t-mono); margin-right: 8px; font-weight: 600; }
+@media (max-width: 860px) {
+  .wn-thead { display: none; }
+  .wn-trow { grid-template-columns: 1fr; }
+  .wn-dim { background: transparent; padding-bottom: 6px; font-size: 21px; }
+  .wn-chat, .wn-drill { border-left: none; border-top: 1px solid var(--df-line); }
+  .wn-chat::before { content: 'ChatGPT'; display: block; font-family: var(--t-mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--df-mute); margin-bottom: 6px; }
+  .wn-drill::before { content: 'drill'; display: block; font-family: var(--t-mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+}
+
+.vs-rows { margin-top: 20px; border: 1px solid var(--df-line); border-radius: var(--r-lg); overflow: hidden; }
+.vs-row { display: grid; grid-template-columns: 190px 1fr 1fr; align-items: stretch; border-top: 1px solid var(--df-line); }
+.vs-row:first-child { border-top: none; }
+.vs-row-label { padding: 20px 22px; font-family: var(--t-display); font-size: 18px; font-weight: 500;
+  color: var(--df-ink); background: #1b1610; display: flex; align-items: center; }
+.vs-row-chat, .vs-row-drill { padding: 20px 22px; font-size: 14px; line-height: 1.55; color: var(--df-ink2);
+  display: flex; flex-direction: column; gap: 8px; }
+.vs-row-drill { color: var(--df-ink); border-left: 1px solid var(--df-line);
+  background: color-mix(in oklab, var(--accent) 6%, transparent); }
+.vs-row-tag { font-family: var(--t-mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; }
+@media (max-width: 820px) {
+  .vs-row { grid-template-columns: 1fr; }
+  .vs-row-label { background: transparent; padding-bottom: 4px; }
+  .vs-row-drill { border-left: none; border-top: 1px solid var(--df-line); }
+}
+
 /* ───────────────────────────────────────────────────────────────────────────
    Mobile Web reflow (.dfm). Ported from the design handoff
    (landing/landing-mobile.css). The dark "read · save · review · produce"
@@ -319,6 +392,29 @@
 .dfm-vocab-grade button:active { transform: scale(.97); }
 .dfm-vocab-grade button.again { border-color: color-mix(in oklab, var(--accent) 40%, var(--df-line)); color: #f0a78c; }
 .dfm-vocab-grade button.easy { border-color: color-mix(in oklab, var(--ok) 40%, var(--df-line)); color: #b6e0ad; }
+
+/* practice-types carousel (mobile) */
+.dfm-mode-rail { display: flex; gap: 6px; overflow-x: auto; margin-top: 22px; padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.dfm-mode-rail::-webkit-scrollbar { display: none; }
+.dfm-mode-pill { flex-shrink: 0; border: 1px solid var(--df-line); background: #1b1610; color: var(--df-mute);
+  padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 500; font-family: var(--t-ui); cursor: pointer; white-space: nowrap; transition: all .14s; }
+.dfm-mode-pill.on { background: var(--df-panel); color: var(--df-ink); border-color: color-mix(in oklab, var(--accent) 45%, var(--df-line)); }
+.dfm-pnav { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 18px; }
+.dfm-pn-btn { width: 40px; height: 40px; border-radius: 999px; border: 1px solid var(--df-line);
+  background: var(--df-panel); color: var(--df-ink); font-size: 16px; cursor: pointer; }
+.dfm-pn-btn:active { transform: scale(.95); }
+.dfm-pn-dots { display: inline-flex; gap: 7px; }
+.dfm-pn-dot { width: 8px; height: 8px; padding: 0; border-radius: 999px; border: none; cursor: pointer;
+  background: var(--df-line); transition: all .15s; }
+.dfm-pn-dot.on { background: var(--accent); width: 22px; }
+
+/* why not ChatGPT (mobile) */
+.dfm-vs-panel { border: 1px solid var(--df-line); border-radius: var(--r-lg); background: var(--df-panel); overflow: hidden; }
+.dfm-vs-drill { border-color: color-mix(in oklab, var(--accent) 45%, var(--df-line)); box-shadow: 0 14px 40px rgba(0,0,0,.4); }
+.dfm-vs-head { display: flex; align-items: center; gap: 8px; padding: 11px 15px; border-bottom: 1px solid var(--df-line);
+  background: #1b1610; font-family: var(--t-mono); font-size: 10.5px; letter-spacing: 1px; color: var(--df-mute); }
+.dfm-vs-head .vs-dot { width: 8px; height: 8px; border-radius: 999px; flex-shrink: 0; }
 
 /* languages */
 .dfm-soon { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
