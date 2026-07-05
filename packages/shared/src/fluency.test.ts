@@ -98,6 +98,51 @@ describe("conjugation fluency grading", () => {
   it("rejects a wrong form", () => {
     expect(gradeFluencyAnswer(conj(), "iremos")).toBe(false);
   });
+  it("accepts Turkish mobile auto-capitalization: İ (TR keyboard) and I (EN keyboard) for a target starting with i", () => {
+    const c = conj({
+      lemma: "istemek",
+      lemmaGloss: "to want",
+      featureBundle: "şimdiki zaman · 1. tekil",
+      targetForm: "istiyorum",
+      breakdown: "iste- + -iyor + -um",
+      exampleSentences: ["Su istiyorum."],
+    });
+    // Turkish keyboard capitalizes i → İ (dotted capital)
+    expect(gradeFluencyAnswer(c, "İstiyorum")).toBe(true);
+    // Non-Turkish keyboard capitalizes i → I (dotless capital)
+    expect(gradeFluencyAnswer(c, "Istiyorum")).toBe(true);
+  });
+  it("accepts Turkish mobile auto-capitalization: I for a target starting with ı", () => {
+    const c = conj({
+      lemma: "ısınmak",
+      lemmaGloss: "to warm up",
+      featureBundle: "şimdiki zaman · 3. tekil",
+      targetForm: "ısınıyor",
+      breakdown: "ısın- + -ıyor",
+      exampleSentences: ["Hava ısınıyor."],
+    });
+    // Turkish keyboard capitalizes ı → I
+    expect(gradeFluencyAnswer(c, "Isınıyor")).toBe(true);
+  });
+  it("ignores trailing sentence punctuation (mobile keyboards auto-insert a period)", () => {
+    const c = conj({
+      lemma: "kalmak",
+      lemmaGloss: "to stay",
+      featureBundle: "şimdiki zaman · 2. çoğul şahıs",
+      targetForm: "kalıyorsunuz",
+      breakdown: "kal- + -ıyor + -sunuz",
+      exampleSentences: ["Siz otelde mi kalıyorsunuz?"],
+    });
+    expect(gradeFluencyAnswer(c, "Kalıyorsunuz.")).toBe(true); // iOS double-space period
+    expect(gradeFluencyAnswer(c, "kalıyorsunuz!")).toBe(true);
+    expect(gradeFluencyAnswer(c, "kalıyorsunuz?")).toBe(true);
+    // punctuation forgiveness must not forgive a wrong form
+    expect(gradeFluencyAnswer(c, "kalıyorsun.")).toBe(false);
+  });
+  it("still rejects a genuinely wrong i/ı vowel (no false accepts from case folding)", () => {
+    expect(gradeFluencyAnswer(conj({ targetForm: "istiyorum" }), "ıstiyorum")).toBe(false);
+    expect(gradeFluencyAnswer(conj({ targetForm: "ısınıyor" }), "isiniyor")).toBe(false);
+  });
   it("grades a stacked Turkish nominal form (possessive + ablative)", () => {
     const c = conj({
       lemma: "ev",
