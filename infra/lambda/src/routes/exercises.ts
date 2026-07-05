@@ -95,6 +95,33 @@ exercises.use('/exercises/*', authMiddleware);
 // Helpers
 // ---------------------------------------------------------------------------
 
+/** Curriculum grounding + closed attribution key set for the evaluator.
+ * Shared by the submit and explain paths so both feed Claude identically. */
+function resolveEvaluationGuidance(exercise: {
+  grammarPointKey: string | null;
+  language: string;
+  difficulty: string | null;
+}) {
+  const grammarPoint = exercise.grammarPointKey
+    ? getGrammarPoint(exercise.grammarPointKey)
+    : undefined;
+  const grammarGuidance = grammarPoint
+    ? {
+        name: grammarPoint.name,
+        description: grammarPoint.description,
+        commonErrors: grammarPoint.commonErrors,
+      }
+    : undefined;
+  const attributionKeys =
+    exercise.language === Language.EN
+      ? []
+      : grammarPointsAtOrBelow(
+          exercise.language as LearningLanguage,
+          exercise.difficulty as string,
+        ).map((p) => ({ key: p.key, name: p.name }));
+  return { grammarGuidance, attributionKeys };
+}
+
 /**
  * Best-effort per-grammar-point Bayesian mastery update.
  * A failure here must never fail the caller — errors are swallowed after logging.
@@ -372,28 +399,11 @@ exercises.post('/exercises/:id/submit', async (c) => {
   // content, so feeding it the authoritative rule + common errors stops it
   // confabulating rationales for rule-driven answers (e.g. the soft-l loanword
   // plural meşgul → meşguller). Best-effort: skipped when the key is absent or
-  // not in the curriculum index.
-  const grammarPoint = exercise.grammarPointKey
-    ? getGrammarPoint(exercise.grammarPointKey)
-    : undefined;
-  const grammarGuidance = grammarPoint
-    ? {
-        name: grammarPoint.name,
-        description: grammarPoint.description,
-        commonErrors: grammarPoint.commonErrors,
-      }
-    : undefined;
-
-  // Closed key set for per-error attribution: the grammar points the learner
-  // at this (language, level) has plausibly studied. EN is source-only (no
-  // curriculum) → empty, which disables attribution for that path.
-  const attributionKeys =
-    exercise.language === Language.EN
-      ? []
-      : grammarPointsAtOrBelow(
-          exercise.language as LearningLanguage,
-          exercise.difficulty as string,
-        ).map((p) => ({ key: p.key, name: p.name }));
+  // not in the curriculum index. Closed key set for per-error attribution: the
+  // grammar points the learner at this (language, level) has plausibly
+  // studied. EN is source-only (no curriculum) → empty, which disables
+  // attribution for that path.
+  const { grammarGuidance, attributionKeys } = resolveEvaluationGuidance(exercise);
 
   // 2b. Validate session linkage BEFORE rate-limit + Claude — no side effects on failure
   if (sessionId !== undefined) {
