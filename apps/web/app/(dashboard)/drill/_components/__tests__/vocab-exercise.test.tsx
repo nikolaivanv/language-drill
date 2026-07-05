@@ -6,6 +6,23 @@ import {
   type EvaluationError,
   type VocabRecallContent,
 } from '@language-drill/shared';
+
+// ExplainWhy (rendered for deterministic results) calls useExplainSubmission,
+// a TanStack mutation that would otherwise need a QueryClientProvider; mock
+// the hook at module level (same idiom as flag-exercise-control.test.tsx).
+const mockExplainMutateAsync = vi.fn();
+vi.mock('@language-drill/api-client', async () => {
+  const actual = await vi.importActual<typeof import('@language-drill/api-client')>('@language-drill/api-client');
+  return {
+    ...actual,
+    useExplainSubmission: () => ({
+      mutateAsync: mockExplainMutateAsync,
+      isPending: false,
+      isError: false,
+    }),
+  };
+});
+
 import {
   VocabExercise,
   type SubmissionState,
@@ -30,7 +47,12 @@ const idleSubmission: SubmissionState = { kind: 'idle' };
 
 function evaluatedAt(
   score: number,
-  opts: { errors?: EvaluationError[]; feedback?: string } = {},
+  opts: {
+    errors?: EvaluationError[];
+    feedback?: string;
+    evaluationSource?: 'deterministic' | 'llm';
+    submissionId?: string;
+  } = {},
 ): SubmissionState {
   return {
     kind: 'evaluated',
@@ -42,8 +64,10 @@ function evaluatedAt(
       feedback: opts.feedback ?? '',
       errors: opts.errors ?? [],
       estimatedCefrEvidence: 'B1',
+      ...(opts.evaluationSource ? { evaluationSource: opts.evaluationSource } : {}),
     },
     meta: {},
+    ...(opts.submissionId ? { submissionId: opts.submissionId } : {}),
   };
 }
 
@@ -190,6 +214,73 @@ describe('VocabExercise', () => {
         submission: evaluatedAt(1.0, { feedback: 'Nice try, keep going.' }),
       });
       expect(screen.getByText('Nice try, keep going.')).toBeInTheDocument();
+    });
+  });
+
+  describe('Explain why gating (deterministic results)', () => {
+    const fetchFn = vi.fn();
+
+    it('renders the Explain why button for a deterministic result with a submissionId', () => {
+      renderVocab({
+        submission: evaluatedAt(1.0, {
+          feedback: 'Correct — aprovechar',
+          evaluationSource: 'deterministic',
+          submissionId: 'sub-1',
+        }),
+        exerciseId: 'ex-1',
+        fetchFn,
+      });
+      expect(
+        screen.getByRole('button', { name: /explain why/i }),
+      ).toBeInTheDocument();
+      // The canned feedback line still shows alongside the button.
+      expect(screen.getByText('Correct — aprovechar')).toBeInTheDocument();
+    });
+
+    it('renders plain feedback (no button) when evaluationSource is llm', () => {
+      renderVocab({
+        submission: evaluatedAt(1.0, {
+          feedback: 'Correct — aprovechar',
+          evaluationSource: 'llm',
+          submissionId: 'sub-1',
+        }),
+        exerciseId: 'ex-1',
+        fetchFn,
+      });
+      expect(
+        screen.queryByRole('button', { name: /explain why/i }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText('Correct — aprovechar')).toBeInTheDocument();
+    });
+
+    it('renders plain feedback (no button) when evaluationSource is absent', () => {
+      renderVocab({
+        submission: evaluatedAt(1.0, {
+          feedback: 'Correct — aprovechar',
+          submissionId: 'sub-1',
+        }),
+        exerciseId: 'ex-1',
+        fetchFn,
+      });
+      expect(
+        screen.queryByRole('button', { name: /explain why/i }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText('Correct — aprovechar')).toBeInTheDocument();
+    });
+
+    it('renders plain feedback (no button) when the submission has no submissionId', () => {
+      renderVocab({
+        submission: evaluatedAt(1.0, {
+          feedback: 'Correct — aprovechar',
+          evaluationSource: 'deterministic',
+        }),
+        exerciseId: 'ex-1',
+        fetchFn,
+      });
+      expect(
+        screen.queryByRole('button', { name: /explain why/i }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText('Correct — aprovechar')).toBeInTheDocument();
     });
   });
 
