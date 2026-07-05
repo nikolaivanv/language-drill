@@ -27,6 +27,10 @@ export type ActivitySessionsPage = z.infer<typeof ActivitySessionsPageSchema>;
 const SessionDetailExerciseSchema = z.object({
   exerciseId: z.string(),
   order: z.number(),
+  // user_exercise_history.id (the evaluation/submission id). Optional so a
+  // client deployed ahead of the API tolerates its absence; null when the
+  // exercise was never attempted.
+  historyId: z.string().nullable().optional(),
   type: z.string().nullable(),
   content: z.unknown(),
   score: z.number().nullable(),
