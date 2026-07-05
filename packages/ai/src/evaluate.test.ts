@@ -152,6 +152,33 @@ describe("buildUserPrompt", () => {
     expect(prompt).toContain("user's own sentence is itself incorrect");
   });
 
+  it("instructs the evaluator that optional elements are never errors in either direction", () => {
+    // Regression: the evaluator ruled inconsistently on grammatically optional
+    // elements by anchoring on whichever choice the reference happened to make —
+    // penalizing "Ben bir film izlemiyorum" (added pronoun + bir) one time,
+    // penalizing "Filmi izlemiyorsunuz" (dropped pronoun) another, and forgiving
+    // the same deviations elsewhere. The translation prompt must state that
+    // pro-drop subject pronouns, suffix-doubled possessives, and Turkish "bir"
+    // are equally correct included or omitted, and that this must not depress
+    // score or taskAchievement (the deductions arrived via taskAchievement even
+    // with an empty errors array).
+    const prompt = buildUserPrompt(
+      translationContent,
+      "El gato esta en la mesa.",
+      Language.ES,
+      CefrLevel.A2,
+    );
+
+    expect(prompt).toContain("optional in BOTH directions");
+    expect(prompt).toContain('indefinite article "bir"');
+    expect(prompt).toContain("score or taskAchievement");
+    expect(prompt).toContain("grammatically required in the source language");
+    // The model would otherwise half-comply: call the omission "entirely
+    // optional" in feedback yet still shave 0.05 off the score.
+    expect(prompt).toContain("ONLY in such optional elements");
+    expect(prompt).toContain("exact match of the reference");
+  });
+
   it("builds a vocab recall prompt with all fields", () => {
     const prompt = buildUserPrompt(
       vocabRecallContent,
@@ -253,8 +280,8 @@ describe("EVALUATION_SYSTEM_PROMPT", () => {
     expect(EVALUATION_SYSTEM_PROMPT).toContain("domates");
   });
 
-  it("bumps EVALUATION_SYSTEM_PROMPT_VERSION for the grounded prompt (R4.3)", () => {
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-06-20");
+  it("bumps EVALUATION_SYSTEM_PROMPT_VERSION for the optional-elements rule", () => {
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-07-05");
   });
 });
 

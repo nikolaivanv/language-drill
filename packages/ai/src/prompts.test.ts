@@ -26,7 +26,7 @@ describe("attribution prompt wiring", () => {
   });
 
   it("version is bumped to today", () => {
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-06-20");
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-07-05");
   });
 
   it("appends a Grammar points in scope block when keys are provided", () => {
