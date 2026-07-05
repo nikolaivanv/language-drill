@@ -13,6 +13,7 @@ import {
   type ActivitySessionListItem,
 } from '@language-drill/api-client';
 import { DataTable, Th, Td } from '../../../../components/admin/data-table';
+import { CopyId } from '../../../../components/admin/copy-id';
 
 type Tab = 'sessions' | 'failures' | 'roster';
 
@@ -48,6 +49,7 @@ function SessionsTab() {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [risk, setRisk] = useState<ActivityRisk[]>([]);
+  const [hasIncorrect, setHasIncorrect] = useState(false);
   const [offset, setOffset] = useState(0);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -58,6 +60,7 @@ function SessionsTab() {
       from: from || undefined,
       to: to || undefined,
       risk: risk.length ? risk : undefined,
+      hasIncorrect: hasIncorrect || undefined,
       limit: PAGE_SIZE,
       offset,
     },
@@ -104,6 +107,22 @@ function SessionsTab() {
             </button>
           ))}
         </span>
+        {/* AND-composed with the risk chips (which OR among themselves), hence
+            visually separated: ≥1 answer scored below 1.0. */}
+        <button
+          onClick={() => {
+            setOffset(0);
+            setHasIncorrect((v) => !v);
+          }}
+          aria-pressed={hasIncorrect}
+          className={
+            hasIncorrect
+              ? 'px-s-2 py-px rounded-sm text-[11px] bg-ink text-paper'
+              : 'px-s-2 py-px rounded-sm text-[11px] bg-paper-2 text-ink-soft'
+          }
+        >
+          has incorrect
+        </button>
       </div>
 
       {sessions.isLoading && <div className="text-ink-soft text-[13px]">Loading…</div>}
@@ -117,6 +136,7 @@ function SessionsTab() {
             <Th>Lang</Th>
             <Th>Score</Th>
             <Th>Risk</Th>
+            <Th>Ids</Th>
           </tr>
         </thead>
         <tbody>
@@ -153,10 +173,16 @@ function SessionsTab() {
                       {s.signals.map((sig) => <SignalBadge key={sig} signal={sig} />)}
                     </span>
                   </Td>
+                  <Td>
+                    <span className="flex gap-s-1">
+                      <CopyId id={s.sessionId} label="session" />
+                      <CopyId id={s.userId} label="user" />
+                    </span>
+                  </Td>
                 </tr>
                 {open && (
                   <tr>
-                    <td colSpan={5} className="border-b border-rule bg-paper-2 px-3 py-2">
+                    <td colSpan={6} className="border-b border-rule bg-paper-2 px-3 py-2">
                       <SessionDetail detail={detail.data} loading={detail.isLoading} error={detail.isError} />
                     </td>
                   </tr>
@@ -204,6 +230,8 @@ function SessionDetail({
             <span className="font-mono text-ink-soft">#{ex.order + 1}</span>
             <span>{ex.type}</span>
             <span className="text-ink-soft">score: {ex.score ?? '—'}</span>
+            <CopyId id={ex.exerciseId} label="exercise" />
+            {ex.historyId && <CopyId id={ex.historyId} label="eval" />}
             {ex.flag && <SignalBadge signal="flagged" />}
             {template && (
               // Inline (not ml-auto): pinning it to the far right pushed it off
@@ -306,7 +334,8 @@ function FailuresTab() {
                 <span className="font-mono">{f.grammarPointKey ?? f.type ?? '—'}</span>{' '}
                 <span className="text-ink-soft">
                   {f.language ?? '—'}·{f.difficulty ?? '—'}
-                </span>
+                </span>{' '}
+                <CopyId id={f.exerciseId} label="exercise" />
               </td>
               <td>{Math.round(f.failRate * 100)}%</td>
               <td>{f.attempts}</td>
@@ -370,9 +399,7 @@ function RosterTab() {
           {(roster.data ?? []).map((u) => (
             <tr key={u.userId} className="border-t border-rule">
               <td className="py-s-1">
-                <span className="font-mono">
-                  {u.userId.slice(0, 12)}…
-                </span>
+                <CopyId id={u.userId} label="user" />
               </td>
               <td>{u.lastActiveAt ? u.lastActiveAt.slice(0, 10) : '—'}</td>
               <td>{u.sessions7d}</td>

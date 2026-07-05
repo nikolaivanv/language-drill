@@ -79,6 +79,41 @@ describe('ActivityPage — Sessions tab', () => {
     fireEvent.click(screen.getByText(/2026-06-22 10:55/));
     expect(mockDetail).toHaveBeenCalledWith(expect.objectContaining({ sessionId: 's-flag' }));
   });
+
+  it('renders copyable session and user id chips per row without toggling the row', () => {
+    // Call history persists across tests in this file (no clearAllMocks);
+    // drop earlier row-click calls so the not-toggled assertion is meaningful.
+    mockDetail.mockClear();
+    render(<ActivityPage />);
+    fireEvent.click(screen.getByRole('button', { name: /copy session id/i }));
+    fireEvent.click(screen.getByRole('button', { name: /copy user id/i }));
+    // Chip clicks must not expand the row.
+    expect(mockDetail).not.toHaveBeenCalledWith(expect.objectContaining({ sessionId: 's-flag' }));
+  });
+
+  it('toggling the has-incorrect chip re-queries with hasIncorrect: true', () => {
+    render(<ActivityPage />);
+    fireEvent.click(screen.getByRole('button', { name: /has incorrect/i }));
+    expect(mockSessions).toHaveBeenCalledWith(
+      expect.objectContaining({ params: expect.objectContaining({ hasIncorrect: true }) }),
+    );
+  });
+
+  it('shows exercise and evaluation id chips in the expanded detail', () => {
+    mockDetail.mockReturnValue({
+      isLoading: false, isError: false,
+      data: {
+        session: { sessionId: 's-flag', userId: 'user_aaaaaaaa', language: 'ES', difficulty: 'B1',
+          exerciseCount: 1, correctCount: 0, startedAt: '2026-06-22T10:55:00Z', completedAt: null },
+        exercises: [{ exerciseId: 'ex-1234', order: 0, historyId: 'hist-5678', type: 'cloze',
+          content: null, score: 0.2, response: { answer: 'x' }, evaluatedAt: null, errors: [], flag: null }],
+      },
+    });
+    render(<ActivityPage />);
+    fireEvent.click(screen.getByRole('button', { name: /Ada Lovelace/i }));
+    expect(screen.getByRole('button', { name: /copy exercise id/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /copy eval id/i })).toBeInTheDocument();
+  });
 });
 
 describe('ActivityPage — Failures tab', () => {
@@ -107,7 +142,20 @@ describe('ActivityPage — Roster tab', () => {
   it('lists users with drill counts', () => {
     render(<ActivityPage />);
     fireEvent.click(screen.getByRole('button', { name: 'roster' }));
-    expect(screen.getByText(/user_bbbb/i)).toBeInTheDocument();
+    // The user id renders as a CopyId chip (8-char prefix, full id in title).
+    expect(screen.getByRole('button', { name: /copy user id/i })).toHaveAttribute(
+      'title',
+      'user_bbbbbbbb',
+    );
     expect(screen.getByText('75')).toBeInTheDocument();
+  });
+
+});
+
+describe('ActivityPage — Failures tab', () => {
+  it('renders a copyable exercise id chip per failure row', () => {
+    render(<ActivityPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'failures' }));
+    expect(screen.getByRole('button', { name: /copy exercise id/i })).toBeInTheDocument();
   });
 });

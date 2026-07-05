@@ -25,6 +25,21 @@ describe('ActivitySessionDetailSchema', () => {
     });
     expect(parsed.exercises[0].response).toEqual({ anything: true });
   });
+
+  it('exposes historyId per exercise, tolerating its absence (older API)', () => {
+    const base = {
+      session: { sessionId: 's1', userId: 'u1', language: 'TR', difficulty: 'A2',
+        exerciseCount: 1, correctCount: 0, startedAt: '2026-06-22T09:00:00Z', completedAt: null },
+    };
+    const exercise = { exerciseId: 'e1', order: 0, type: 'cloze', content: null, score: 1,
+      response: null, evaluatedAt: null, errors: [], flag: null };
+    const withId = ActivitySessionDetailSchema.parse({
+      ...base, exercises: [{ ...exercise, historyId: 'h1' }],
+    });
+    expect(withId.exercises[0].historyId).toBe('h1');
+    const withoutId = ActivitySessionDetailSchema.parse({ ...base, exercises: [exercise] });
+    expect(withoutId.exercises[0].historyId ?? null).toBeNull();
+  });
 });
 
 describe('ActivityFailureItemSchema', () => {

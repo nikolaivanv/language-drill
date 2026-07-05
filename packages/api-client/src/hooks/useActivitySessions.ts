@@ -9,6 +9,8 @@ export type ActivitySessionsParams = {
   from?: string;
   to?: string;
   risk?: ActivityRisk[];
+  /** Only sessions with ≥1 scored-but-imperfect answer (AND-composed with risk). */
+  hasIncorrect?: boolean;
   limit?: number;
   offset?: number;
 };
@@ -25,6 +27,7 @@ export function useActivitySessions({
       if (params.from) sp.set('from', params.from);
       if (params.to) sp.set('to', params.to);
       for (const r of params.risk ?? []) sp.append('risk', r);
+      if (params.hasIncorrect) sp.set('hasIncorrect', 'true');
       if (params.limit != null) sp.set('limit', String(params.limit));
       if (params.offset != null) sp.set('offset', String(params.offset));
       const qs = sp.toString() ? `?${sp.toString()}` : '';
