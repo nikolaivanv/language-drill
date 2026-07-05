@@ -159,6 +159,14 @@ export type EvaluateAnswerInput = {
    * Never set on the production request path.
    */
   modelOverride?: string;
+  /**
+   * Eval-runner escape hatch: run the arm with adaptive thinking at low
+   * effort (and a larger max_tokens so thinking spend can't truncate the
+   * forced tool call). Only meaningful on models that support adaptive
+   * thinking. Used by `pnpm eval --thinking adaptive`. Never set on the
+   * production request path.
+   */
+  thinkingOverride?: "adaptive";
 };
 
 // ---------------------------------------------------------------------------
@@ -290,6 +298,13 @@ const MODEL = "claude-sonnet-4-6" as const;
 const MAX_TOKENS = 2048;
 
 /**
+ * Max tokens when an eval arm runs with adaptive thinking
+ * (`thinkingOverride: "adaptive"`): thinking spend counts against
+ * `max_tokens`, so the plain 2048 tool-call budget would truncate.
+ */
+const ADAPTIVE_MAX_TOKENS = 8192;
+
+/**
  * SDK request timeout for the (non-streaming, user-waiting) evaluation call.
  * The submit→feedback loop is interactive, so we fail fast rather than inherit
  * the SDK's 10-minute default. ~30 s leaves room for a slow-but-real Sonnet
@@ -327,6 +342,7 @@ export async function evaluateAnswer(
     attributionKeys,
     systemPromptOverride,
     modelOverride,
+    thinkingOverride,
   } = input;
 
   const userPrompt = buildUserPrompt(
@@ -362,9 +378,24 @@ export async function evaluateAnswer(
     systemPromptText = resolved.text;
   }
 
-  const response = await client.messages.create({
-    model: modelOverride ?? MODEL,
-    max_tokens: MAX_TOKENS,
+  const effectiveModel = modelOverride ?? MODEL;
+  // Per-model request shaping (matters for eval-runner model arms; the
+  // production MODEL takes the plain temperature-0, no-thinking path):
+  //  - Sonnet 5 / Opus 4.7+ / Fable reject non-default sampling params
+  //    (`temperature: 0` → 400), so temperature is only sent to models that
+  //    accept it.
+  //  - Sonnet 5 (and Fable) run ADAPTIVE thinking when the `thinking` field
+  //    is omitted — send an explicit `disabled` so an arm matches the
+  //    production no-thinking semantics unless adaptive is requested.
+  const rejectsSamplingParams = /sonnet-5|opus-4-[7-9]|fable/.test(
+    effectiveModel,
+  );
+  const omittedThinkingMeansAdaptive = /sonnet-5|fable/.test(effectiveModel);
+
+  const request: Anthropic.MessageCreateParamsNonStreaming = {
+    model: effectiveModel,
+    max_tokens:
+      thinkingOverride === "adaptive" ? ADAPTIVE_MAX_TOKENS : MAX_TOKENS,
     system: [
       {
         type: "text" as const,
@@ -383,8 +414,18 @@ export async function evaluateAnswer(
       type: "tool" as const,
       name: EVALUATION_TOOL_NAME,
     },
-    temperature: 0,
-  });
+  };
+  if (!rejectsSamplingParams) {
+    request.temperature = 0;
+  }
+  if (thinkingOverride === "adaptive") {
+    request.thinking = { type: "adaptive" };
+    request.output_config = { effort: "low" };
+  } else if (omittedThinkingMeansAdaptive) {
+    request.thinking = { type: "disabled" };
+  }
+
+  const response = await client.messages.create(request);
 
   // A safety refusal arrives as a 200 with stop_reason "refusal" and no tool
   // block. Surface it as a distinct, expected outcome (the route maps it to a

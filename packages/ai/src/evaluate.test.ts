@@ -516,6 +516,93 @@ describe("evaluateAnswer", () => {
     expect(mockCreate.mock.calls[0][0].model).toBe(
       "claude-haiku-4-5-20251001",
     );
+    // Models that accept sampling params keep the deterministic temperature.
+    expect(mockCreate.mock.calls[0][0].temperature).toBe(0);
+  });
+
+  it("omits temperature and explicitly disables thinking on claude-sonnet-5", async () => {
+    // Sonnet 5 400s on non-default sampling params, and runs ADAPTIVE thinking
+    // when the `thinking` field is omitted — both must be shaped away so a
+    // `--model claude-sonnet-5` eval arm matches the production no-thinking
+    // request semantics instead of erroring or silently changing behavior.
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_123",
+          name: EVALUATION_TOOL_NAME,
+          input: validEvaluationInput,
+        },
+      ],
+      stop_reason: "tool_use",
+    });
+
+    await evaluateAnswer(mockClient, {
+      exercise: clozeContent,
+      userAnswer: "went",
+      language: Language.EN,
+      difficulty: CefrLevel.B1,
+      modelOverride: "claude-sonnet-5",
+    });
+
+    const callArgs = mockCreate.mock.calls[0][0];
+    expect(callArgs.model).toBe("claude-sonnet-5");
+    expect("temperature" in callArgs).toBe(false);
+    expect(callArgs.thinking).toEqual({ type: "disabled" });
+  });
+
+  it("runs adaptive thinking at low effort with larger max_tokens when thinkingOverride is adaptive", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_123",
+          name: EVALUATION_TOOL_NAME,
+          input: validEvaluationInput,
+        },
+      ],
+      stop_reason: "tool_use",
+    });
+
+    await evaluateAnswer(mockClient, {
+      exercise: clozeContent,
+      userAnswer: "went",
+      language: Language.EN,
+      difficulty: CefrLevel.B1,
+      modelOverride: "claude-sonnet-5",
+      thinkingOverride: "adaptive",
+    });
+
+    const callArgs = mockCreate.mock.calls[0][0];
+    expect(callArgs.thinking).toEqual({ type: "adaptive" });
+    expect(callArgs.output_config).toEqual({ effort: "low" });
+    // Thinking tokens count against max_tokens — the 2048 tool-call budget
+    // would truncate; adaptive arms get headroom.
+    expect(callArgs.max_tokens).toBe(8192);
+    expect("temperature" in callArgs).toBe(false);
+  });
+
+  it("sends no thinking field on the production model", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_123",
+          name: EVALUATION_TOOL_NAME,
+          input: validEvaluationInput,
+        },
+      ],
+      stop_reason: "tool_use",
+    });
+
+    await evaluateAnswer(mockClient, {
+      exercise: clozeContent,
+      userAnswer: "went",
+      language: Language.EN,
+      difficulty: CefrLevel.B1,
+    });
+
+    expect("thinking" in mockCreate.mock.calls[0][0]).toBe(false);
   });
 
   it("throws when Claude returns no tool use block", async () => {
