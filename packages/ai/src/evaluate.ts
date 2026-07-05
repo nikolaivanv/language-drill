@@ -273,8 +273,9 @@ export function parseEvaluationResult(
 // "-do/-dö" forms of -DI), and misattributed a slip to deliberate vocabulary
 // choice ("atışlar"). Verdict quality gates this surface — a missed error
 // corrupts mastery tracking, not just feedback prose. Model changes are gated
-// by the `pnpm eval` Langfuse-dataset harness (see eval-runs/README notes) and
-// reversible by restoring this one constant. NOTE: changing the model is NOT a
+// by the `pnpm eval` harness (`--model` arm vs. the `eval-hard-morphology`
+// dataset seeded by `pnpm eval:seed`) and reversible by restoring this one
+// constant. NOTE: changing the model is NOT a
 // prompt-body edit, so `EVALUATION_SYSTEM_PROMPT_VERSION` is intentionally NOT
 // bumped for the model part of a change — Langfuse records the model natively
 // on each generation (the 2026-07-05 bump reflects the simultaneous prompt
