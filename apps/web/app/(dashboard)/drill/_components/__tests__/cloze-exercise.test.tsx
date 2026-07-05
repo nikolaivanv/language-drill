@@ -5,6 +5,23 @@ import {
   Language,
   type ClozeContent,
 } from '@language-drill/shared';
+
+// ExplainWhy (rendered for deterministic results) calls useExplainSubmission,
+// a TanStack mutation that would otherwise need a QueryClientProvider; mock
+// the hook at module level (same idiom as flag-exercise-control.test.tsx).
+const mockExplainMutateAsync = vi.fn();
+vi.mock('@language-drill/api-client', async () => {
+  const actual = await vi.importActual<typeof import('@language-drill/api-client')>('@language-drill/api-client');
+  return {
+    ...actual,
+    useExplainSubmission: () => ({
+      mutateAsync: mockExplainMutateAsync,
+      isPending: false,
+      isError: false,
+    }),
+  };
+});
+
 import {
   ClozeExercise,
   type ClozeExerciseProps,
@@ -313,6 +330,80 @@ describe('ClozeExercise', () => {
         .filter((b) => b.getAttribute('aria-label')?.startsWith('insert '));
       expect(chips.length).toBeGreaterThan(0);
       chips.forEach((chip) => expect(chip).toBeDisabled());
+    });
+  });
+
+  describe('Explain why gating (deterministic results)', () => {
+    const deterministicSubmission: Extract<SubmissionState, { kind: 'evaluated' }> = {
+      kind: 'evaluated',
+      result: {
+        score: 1,
+        grammarAccuracy: 1,
+        vocabularyRange: 'B1',
+        taskAchievement: 1,
+        feedback: 'Correct — como',
+        errors: [],
+        estimatedCefrEvidence: 'B1',
+        evaluationSource: 'deterministic',
+      },
+      meta: {},
+      submissionId: 'sub-1',
+    };
+    const fetchFn = vi.fn();
+
+    it('renders the Explain why button for a deterministic result with a submissionId', () => {
+      renderCloze({
+        submission: deterministicSubmission,
+        exerciseId: 'ex-1',
+        fetchFn,
+      });
+      expect(
+        screen.getByRole('button', { name: /explain why/i }),
+      ).toBeInTheDocument();
+      // The canned feedback line still shows alongside the button.
+      expect(screen.getByText('Correct — como')).toBeInTheDocument();
+    });
+
+    it('renders plain feedback (no button) when evaluationSource is llm', () => {
+      renderCloze({
+        submission: {
+          ...deterministicSubmission,
+          result: {
+            ...deterministicSubmission.result,
+            evaluationSource: 'llm',
+          },
+        },
+        exerciseId: 'ex-1',
+        fetchFn,
+      });
+      expect(
+        screen.queryByRole('button', { name: /explain why/i }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText('Correct — como')).toBeInTheDocument();
+    });
+
+    it('renders plain feedback (no button) when evaluationSource is absent', () => {
+      renderCloze({
+        submission: evaluatedSubmission,
+        exerciseId: 'ex-1',
+        fetchFn,
+      });
+      expect(
+        screen.queryByRole('button', { name: /explain why/i }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText('almost there')).toBeInTheDocument();
+    });
+
+    it('renders plain feedback (no button) when the submission has no submissionId', () => {
+      renderCloze({
+        submission: { ...deterministicSubmission, submissionId: undefined },
+        exerciseId: 'ex-1',
+        fetchFn,
+      });
+      expect(
+        screen.queryByRole('button', { name: /explain why/i }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText('Correct — como')).toBeInTheDocument();
     });
   });
 

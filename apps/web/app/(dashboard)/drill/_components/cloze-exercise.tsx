@@ -2,12 +2,14 @@
 
 import * as React from 'react';
 import type { ClozeContent, LearningLanguage } from '@language-drill/shared';
+import type { AuthenticatedFetch } from '@language-drill/api-client';
 import { AccentPicker, Button } from '../../../../components/ui';
 import { cn } from '../../../../lib/cn';
 import { useAnswerDraft } from '../../../../lib/drill/use-answer-draft';
 import { clozeVerdict } from '../../../../lib/drill/verdict-tier';
 import { ClozePrompt, type BlankState } from '../../../../components/drill/cloze-prompt';
 import { useDrillAction } from './drill-action-context';
+import { ExplainWhy } from './explain-why';
 import { FeedbackShell, type CoachNudge } from './feedback-shell';
 import type { SubmissionMeta, SubmissionState } from './types';
 
@@ -26,6 +28,10 @@ export interface ClozeExerciseProps {
   /** Coach nudge shown at the bottom of the feedback card when the current item
    *  is a known weak spot. Omit when the item is not a weak spot. */
   coach?: CoachNudge | null;
+  /** Authenticated fetch, threaded down for the "Explain why" on-demand
+   *  explanation of a deterministic (instant-graded) result. Omitted in
+   *  tests/contexts that don't exercise that affordance. */
+  fetchFn?: AuthenticatedFetch;
 }
 
 function isAccentLanguage(lang: string): lang is 'ES' | 'DE' | 'TR' {
@@ -41,6 +47,7 @@ export function ClozeExercise({
   nextLabel,
   exerciseId,
   coach,
+  fetchFn,
 }: ClozeExerciseProps) {
   const [answer, setAnswer, clearDraft] = useAnswerDraft(exerciseId);
   const [usedMc, setUsedMc] = React.useState(false);
@@ -196,7 +203,19 @@ export function ClozeExercise({
                     </p>
                   )}
                 </div>
-                <p className="t-body">{submission.result.feedback}</p>
+                {submission.result.evaluationSource === 'deterministic' &&
+                submission.submissionId &&
+                exerciseId &&
+                fetchFn ? (
+                  <ExplainWhy
+                    exerciseId={exerciseId}
+                    submissionId={submission.submissionId}
+                    fallbackFeedback={submission.result.feedback}
+                    fetchFn={fetchFn}
+                  />
+                ) : (
+                  <p className="t-body">{submission.result.feedback}</p>
+                )}
               </div>
             </FeedbackShell>
           );

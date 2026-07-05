@@ -43,6 +43,7 @@ export const EvaluationResultSchema = z.object({
   feedback: z.string(),
   errors: z.array(EvaluationErrorSchema),
   estimatedCefrEvidence: z.string(),
+  evaluationSource: z.enum(['deterministic', 'llm']).optional(),
   submissionId: z.string().uuid().optional(),
 });
 
@@ -82,6 +83,7 @@ export const DictationResultSchema = z.object({
   feedback: z.string(),
   errors: z.array(EvaluationErrorSchema),
   estimatedCefrEvidence: z.string(),
+  evaluationSource: z.enum(['deterministic', 'llm']).optional(),
   rawCharAccuracy: z.number().min(0).max(1),
   adjustedCharAccuracy: z.number().min(0).max(1),
   wordAccuracy: z.number().min(0).max(1),
@@ -149,3 +151,8 @@ export const FreeWritingEvaluationSchema = z.object({
 });
 
 export type FreeWritingEvaluationResponse = z.infer<typeof FreeWritingEvaluationSchema>;
+
+// Response from POST /exercises/:id/submissions/:submissionId/explain
+export const ExplainResponseSchema = z.object({ explanation: z.string() });
+
+export type ExplainResponse = z.infer<typeof ExplainResponseSchema>;

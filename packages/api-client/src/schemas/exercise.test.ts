@@ -114,6 +114,48 @@ describe('EvaluationResultSchema', () => {
     };
     expect(() => EvaluationResultSchema.parse(data)).toThrow();
   });
+
+  describe('EvaluationResultSchema — evaluationSource', () => {
+    const base = {
+      score: 1,
+      grammarAccuracy: 1,
+      vocabularyRange: 'A1',
+      taskAchievement: 1,
+      feedback: 'Correct — koydu.',
+      errors: [],
+      estimatedCefrEvidence: 'A1',
+    };
+
+    it('accepts evaluationSource: deterministic', () => {
+      const parsed = EvaluationResultSchema.parse({ ...base, evaluationSource: 'deterministic' });
+      expect(parsed.evaluationSource).toBe('deterministic');
+    });
+
+    it('accepts evaluationSource: llm', () => {
+      expect(EvaluationResultSchema.parse({ ...base, evaluationSource: 'llm' }).evaluationSource).toBe('llm');
+    });
+
+    it('accepts absent evaluationSource (historical responses)', () => {
+      expect(EvaluationResultSchema.parse(base).evaluationSource).toBeUndefined();
+    });
+
+    it('rejects unknown evaluationSource values', () => {
+      expect(() => EvaluationResultSchema.parse({ ...base, evaluationSource: 'psychic' })).toThrow();
+    });
+
+    it('DictationResultSchema preserves evaluationSource', () => {
+      const dict = {
+        kind: 'dictation',
+        score: 0.97, grammarAccuracy: 0.97, vocabularyRange: 'B2', taskAchievement: 0.95,
+        feedback: 's', errors: [], estimatedCefrEvidence: 'B2',
+        rawCharAccuracy: 0.94, adjustedCharAccuracy: 0.97, wordAccuracy: 0.95,
+        listeningCefr: 'B2', headline: 'h', summary: 's',
+        diff: [{ kind: 'match', text: 'hola' }],
+        differences: [], criteria: [{ id: 'char', label: 'Character accuracy', score: 0.97, cefr: 'C1', note: 'n' }],
+      };
+      expect(DictationResultSchema.parse({ ...dict, evaluationSource: 'llm' }).evaluationSource).toBe('llm');
+    });
+  });
 });
 
 describe('DictationResultSchema', () => {

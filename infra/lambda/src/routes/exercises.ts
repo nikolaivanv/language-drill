@@ -3,7 +3,7 @@ import { Hono } from 'hono';
 import type { Context } from 'hono';
 import { z } from 'zod';
 import { eq, and, gte, count } from 'drizzle-orm';
-import { Language, CefrLevel, ExerciseType, isFreeWritingContent, isConjugationContent, gradeFluencyAnswer, EXERCISE_ANSWER_MAX_CHARS } from '@language-drill/shared';
+import { Language, CefrLevel, ExerciseType, isFreeWritingContent, isConjugationContent, isClozeContent, isVocabRecallContent, gradeFluencyAnswer, EXERCISE_ANSWER_MAX_CHARS } from '@language-drill/shared';
 import type { LearningLanguage } from '@language-drill/shared';
 import type { DictationContent, ExerciseContent, FreeWritingContent, EvaluationResult } from '@language-drill/shared';
 import {
@@ -94,6 +94,33 @@ exercises.use('/exercises/*', authMiddleware);
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/** Curriculum grounding + closed attribution key set for the evaluator.
+ * Shared by the submit and explain paths so both feed Claude identically. */
+function resolveEvaluationGuidance(exercise: {
+  grammarPointKey: string | null;
+  language: string | null;
+  difficulty: string | null;
+}) {
+  const grammarPoint = exercise.grammarPointKey
+    ? getGrammarPoint(exercise.grammarPointKey)
+    : undefined;
+  const grammarGuidance = grammarPoint
+    ? {
+        name: grammarPoint.name,
+        description: grammarPoint.description,
+        commonErrors: grammarPoint.commonErrors,
+      }
+    : undefined;
+  const attributionKeys =
+    exercise.language === Language.EN
+      ? []
+      : grammarPointsAtOrBelow(
+          exercise.language as LearningLanguage,
+          exercise.difficulty as string,
+        ).map((p) => ({ key: p.key, name: p.name }));
+  return { grammarGuidance, attributionKeys };
+}
 
 /**
  * Best-effort per-grammar-point Bayesian mastery update.
@@ -372,28 +399,11 @@ exercises.post('/exercises/:id/submit', async (c) => {
   // content, so feeding it the authoritative rule + common errors stops it
   // confabulating rationales for rule-driven answers (e.g. the soft-l loanword
   // plural meşgul → meşguller). Best-effort: skipped when the key is absent or
-  // not in the curriculum index.
-  const grammarPoint = exercise.grammarPointKey
-    ? getGrammarPoint(exercise.grammarPointKey)
-    : undefined;
-  const grammarGuidance = grammarPoint
-    ? {
-        name: grammarPoint.name,
-        description: grammarPoint.description,
-        commonErrors: grammarPoint.commonErrors,
-      }
-    : undefined;
-
-  // Closed key set for per-error attribution: the grammar points the learner
-  // at this (language, level) has plausibly studied. EN is source-only (no
-  // curriculum) → empty, which disables attribution for that path.
-  const attributionKeys =
-    exercise.language === Language.EN
-      ? []
-      : grammarPointsAtOrBelow(
-          exercise.language as LearningLanguage,
-          exercise.difficulty as string,
-        ).map((p) => ({ key: p.key, name: p.name }));
+  // not in the curriculum index. Closed key set for per-error attribution: the
+  // grammar points the learner at this (language, level) has plausibly
+  // studied. EN is source-only (no curriculum) → empty, which disables
+  // attribution for that path.
+  const { grammarGuidance, attributionKeys } = resolveEvaluationGuidance(exercise);
 
   // 2b. Validate session linkage BEFORE rate-limit + Claude — no side effects on failure
   if (sessionId !== undefined) {
@@ -453,6 +463,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
             },
           ],
       estimatedCefrEvidence: exercise.difficulty ?? '',
+      evaluationSource: 'deterministic',
     };
 
     const submissionId = randomUUID();
@@ -475,6 +486,59 @@ exercises.post('/exercises/:id/submit', async (c) => {
     });
 
     return c.json({ ...result, submissionId });
+  }
+
+  // Deterministic, zero-Claude short-circuit for exact-match cloze/vocab
+  // answers. The evaluation prompt already mandates score 1.0 with no errors
+  // for these matches, so the LLM call is a latency+cost rubber stamp.
+  // Same policy as the conjugation branch above: no ai_evaluation spend, no
+  // capacity/daily-cap gate, no Claude call, no Langfuse trace. NON-matching
+  // answers fall through to the LLM path — acceptable-answers lists are
+  // non-exhaustive, so an unlisted answer may still be valid.
+  if (
+    exercise.type === ExerciseType.CLOZE ||
+    exercise.type === ExerciseType.VOCAB_RECALL
+  ) {
+    const content = exercise.contentJson as ExerciseContent;
+    if (
+      (isClozeContent(content) || isVocabRecallContent(content)) &&
+      gradeFluencyAnswer(content, userAnswer)
+    ) {
+      const result: EvaluationResult = {
+        score: 1,
+        grammarAccuracy: 1,
+        // Deterministic path has no vocabulary/CEFR judgment; echo the
+        // exercise difficulty (same convention as the conjugation branch).
+        vocabularyRange: exercise.difficulty ?? '',
+        taskAchievement: 1,
+        feedback: `Correct — ${userAnswer.trim()}`,
+        errors: [],
+        estimatedCefrEvidence: exercise.difficulty ?? '',
+        evaluationSource: 'deterministic',
+      };
+
+      const submissionId = randomUUID();
+      await db.insert(userExerciseHistory).values({
+        id: submissionId,
+        userId,
+        exerciseId: id,
+        sessionId,
+        score: 1,
+        responseJson: { userAnswer, evaluation: result },
+        evaluatedAt: new Date(),
+      });
+
+      await applyGrammarMastery({
+        userId,
+        language: exercise.language as Language,
+        grammarPointKey: exercise.grammarPointKey,
+        difficulty: exercise.difficulty as CefrLevel,
+        score: 1,
+      });
+
+      return c.json({ ...result, submissionId });
+    }
+    // fall through to the normal LLM evaluation
   }
 
   // 3. Resolve tier, run the global brake, then the per-user daily cap.
@@ -622,6 +686,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
               attributionKeys,
             }),
     );
+    const stamped = { ...result, evaluationSource: 'llm' as const };
 
     // 6. Record history and usage on success — `id: submissionId` makes the
     // history row id equal to the Langfuse trace tag (see step 4 above).
@@ -631,7 +696,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
       exerciseId: id,
       sessionId,
       score: result.score,
-      responseJson: { userAnswer, evaluation: result },
+      responseJson: { userAnswer, evaluation: stamped },
       evaluatedAt: new Date(),
     });
 
@@ -678,7 +743,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
       score: result.score,
     });
 
-    return c.json({ ...result, submissionId });
+    return c.json({ ...stamped, submissionId });
   } catch (err) {
     // 7a. Safety refusal — the model declined to evaluate this answer (e.g. a
     // provocative or off-task submission). This is an expected outcome, not an
@@ -702,6 +767,154 @@ exercises.post('/exercises/:id/submit', async (c) => {
       { error: 'Evaluation temporarily unavailable', code: 'AI_UNAVAILABLE' },
       502,
     );
+  }
+});
+
+// ---------------------------------------------------------------------------
+// POST /exercises/:id/submissions/:submissionId/explain — on-demand LLM
+// feedback for a deterministic (exact-match) submission. Metered + gated
+// like submit: this IS a real Claude call. The stored verdict is never
+// re-scored — the LLM output is feedback enrichment only, cached into
+// responseJson.explanation so repeat taps are free.
+// ---------------------------------------------------------------------------
+exercises.post('/exercises/:id/submissions/:submissionId/explain', async (c) => {
+  const userId = c.get('userId');
+  const { id, submissionId } = c.req.param();
+
+  const rows = await db
+    .select()
+    .from(userExerciseHistory)
+    .where(
+      and(
+        eq(userExerciseHistory.id, submissionId),
+        eq(userExerciseHistory.userId, userId),
+        eq(userExerciseHistory.exerciseId, id),
+      ),
+    )
+    .limit(1);
+  const submission = rows[0];
+  if (!submission) {
+    return c.json({ error: 'Submission not found', code: 'NOT_FOUND' }, 404);
+  }
+
+  const responseJson = (submission.responseJson ?? {}) as {
+    userAnswer?: string;
+    evaluation?: EvaluationResult;
+    explanation?: string;
+  };
+
+  if (responseJson.evaluation?.evaluationSource !== 'deterministic') {
+    return c.json(
+      { error: 'Only instant-graded submissions can be explained', code: 'NOT_EXPLAINABLE' },
+      400,
+    );
+  }
+  if (typeof responseJson.userAnswer !== 'string') {
+    return c.json({ error: 'Submission has no stored answer', code: 'NOT_EXPLAINABLE' }, 400);
+  }
+
+  // Cached — free, no gates. A schema-legal empty string is still a cache
+  // hit (falsy check would treat it as a miss and re-meter every tap).
+  if (typeof responseJson.explanation === 'string') {
+    return c.json({ explanation: responseJson.explanation });
+  }
+
+  const exerciseRows = await db
+    .select()
+    .from(exercisesTable)
+    .where(eq(exercisesTable.id, id))
+    .limit(1);
+  const exercise = exerciseRows[0];
+  if (!exercise) {
+    return c.json({ error: 'Exercise not found', code: 'NOT_FOUND' }, 404);
+  }
+
+  // Conjugation feedback already carries the pre-authored breakdown — there
+  // is nothing further to explain, and the evaluator prompt-builder throws
+  // for CONJUGATION by design. Cleanly non-explainable, not a 502.
+  if (exercise.type === ExerciseType.CONJUGATION) {
+    return c.json(
+      { error: 'Conjugation feedback already includes the explanation', code: 'NOT_EXPLAINABLE' },
+      400,
+    );
+  }
+
+  // Same gates as submit — this is a real AI call.
+  const plan = await getEffectivePlan(userId);
+  const capacity = await checkGlobalCapacity({ plan, admin: isAdmin(userId) });
+  if (capacity !== 'ok') {
+    return c.json({ error: 'AI temporarily at capacity', code: 'GLOBAL_CAPACITY' }, 503);
+  }
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const [{ count: todayCount }] = await db
+    .select({ count: count() })
+    .from(usageEvents)
+    .where(
+      and(
+        eq(usageEvents.userId, userId),
+        eq(usageEvents.eventType, 'ai_evaluation'),
+        gte(usageEvents.createdAt, oneDayAgo),
+      ),
+    );
+  if (Number(todayCount) >= limitFor('ai_evaluation', plan)) {
+    return c.json({ error: 'Daily evaluation limit exceeded', code: 'RATE_LIMIT_EXCEEDED' }, 429);
+  }
+
+  try {
+    const client = createObservedClaudeClient(ANTHROPIC_API_KEY, {
+      timeout: EVAL_REQUEST_TIMEOUT_MS,
+      maxRetries: EVAL_MAX_RETRIES,
+    });
+    const { grammarGuidance, attributionKeys } = resolveEvaluationGuidance(exercise);
+    const requestId =
+      (c.env?.event as { requestContext?: { requestId?: string } } | undefined)
+        ?.requestContext?.requestId ?? 'local';
+
+    const evaluation = await withLlmTrace(
+      {
+        env: (process.env.LANGFUSE_ENV ?? 'dev') as 'prod' | 'dev',
+        requestId,
+        userId,
+        submissionId,
+        exerciseId: id,
+        language: exercise.language as Language,
+        cefrLevel: exercise.difficulty as CefrLevel,
+        exerciseType: exercise.type as ExerciseType,
+        feature: 'evaluate',
+        promptVersion: EVALUATION_SYSTEM_PROMPT_VERSION,
+      },
+      () =>
+        evaluateAnswer(client, {
+          exercise: exercise.contentJson as ExerciseContent,
+          userAnswer: responseJson.userAnswer as string,
+          language: exercise.language as Language,
+          difficulty: exercise.difficulty as CefrLevel,
+          grammarGuidance,
+          attributionKeys,
+        }),
+    );
+
+    await db
+      .update(userExerciseHistory)
+      .set({ responseJson: { ...responseJson, explanation: evaluation.feedback } })
+      .where(eq(userExerciseHistory.id, submissionId));
+
+    await db.insert(usageEvents).values({
+      userId,
+      eventType: 'ai_evaluation',
+      metadata: { exerciseId: id, explain: true, language: exercise.language, difficulty: exercise.difficulty },
+    });
+
+    return c.json({ explanation: evaluation.feedback });
+  } catch (err) {
+    if (err instanceof ContentRejectedError) {
+      return c.json(
+        { error: "We couldn't explain that submission.", code: 'CONTENT_REJECTED' },
+        422,
+      );
+    }
+    console.error('[POST /exercises/:id/submissions/:submissionId/explain] failed:', err);
+    return c.json({ error: 'Explanation temporarily unavailable', code: 'AI_UNAVAILABLE' }, 502);
   }
 });
 

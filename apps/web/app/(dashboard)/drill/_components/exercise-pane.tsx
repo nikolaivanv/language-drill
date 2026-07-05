@@ -11,7 +11,7 @@ import {
   type ExerciseContent,
   type LearningLanguage,
 } from '@language-drill/shared';
-import type { ExerciseResponse } from '@language-drill/api-client';
+import type { AuthenticatedFetch, ExerciseResponse } from '@language-drill/api-client';
 import { ClozeExercise } from './cloze-exercise';
 import { ConjugationExercise } from './conjugation-exercise';
 import { DictationExercise } from './dictation-exercise';
@@ -35,6 +35,10 @@ export interface ExercisePaneProps {
    *  is a known weak spot. Derived from `useInsightsErrors()` themes in the
    *  parent page. Omit when the item is not a weak spot. */
   coach?: CoachNudge | null;
+  /** Authenticated fetch, threaded to the exercise types that support
+   *  on-demand explanations of deterministic (instant-graded) results
+   *  (cloze, vocab recall). Omitted in tests/contexts that don't need it. */
+  fetchFn?: AuthenticatedFetch;
 }
 
 export function ExercisePane({
@@ -45,6 +49,7 @@ export function ExercisePane({
   onNext,
   nextLabel,
   coach,
+  fetchFn,
 }: ExercisePaneProps) {
   const content = exercise.contentJson as ExerciseContent;
 
@@ -68,6 +73,7 @@ export function ExercisePane({
         nextLabel={nextLabel}
         exerciseId={exercise.id}
         coach={coach}
+        fetchFn={fetchFn}
       />
     );
   }
@@ -100,6 +106,7 @@ export function ExercisePane({
         nextLabel={nextLabel}
         exerciseId={exercise.id}
         coach={coach}
+        fetchFn={fetchFn}
       />
     );
   }

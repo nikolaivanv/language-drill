@@ -336,6 +336,12 @@ export type EvaluationResult = {
   feedback: string;
   errors: EvaluationError[];
   estimatedCefrEvidence: string;
+  /**
+   * How this evaluation was produced. 'deterministic' = exact-match
+   * short-circuit (no LLM ran; eligible for on-demand "Explain why").
+   * Absent on rows written before 2026-07-05 — treat as 'llm'.
+   */
+  evaluationSource?: 'deterministic' | 'llm';
 };
 
 // ---------------------------------------------------------------------------
@@ -386,6 +392,7 @@ export type DictationResult = {
   feedback: string; // == summary
   errors: EvaluationError[]; // mapped from genuine-error differences
   estimatedCefrEvidence: string; // == listeningCefr
+  evaluationSource?: "deterministic" | "llm"; // mirrors EvaluationResult (dictation grading is LLM-sourced)
   // dictation-specific:
   rawCharAccuracy: number;
   adjustedCharAccuracy: number;
