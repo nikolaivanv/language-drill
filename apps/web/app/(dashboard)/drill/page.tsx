@@ -481,6 +481,7 @@ function PracticePageContent() {
             onNext={handleNext}
             nextLabel={selectIsLastItem(state) ? 'see results' : 'next'}
             coach={coach}
+            fetchFn={fetchFn}
           />
           {state.perItemSubmission.kind === 'evaluated' &&
             state.perItemSubmission.submissionId && (

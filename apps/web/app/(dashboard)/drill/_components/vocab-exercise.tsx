@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import type { LearningLanguage, VocabRecallContent } from '@language-drill/shared';
+import type { AuthenticatedFetch } from '@language-drill/api-client';
 import { AccentPicker, Button, Input } from '../../../../components/ui';
 import { VocabPromptCard } from '../../../../components/drill/vocab-prompt';
 import { parseConfusions } from '../../../../lib/drill/parse-confusions';
@@ -9,6 +10,7 @@ import { useAnswerDraft } from '../../../../lib/drill/use-answer-draft';
 import { submitOnEnter } from '../../../../lib/drill/keyboard';
 import { vocabVerdict } from '../../../../lib/drill/verdict-tier';
 import { useDrillAction } from './drill-action-context';
+import { ExplainWhy } from './explain-why';
 import { FeedbackShell, type CoachNudge } from './feedback-shell';
 import { HintRow } from './hint-row';
 import type { SubmissionMeta, SubmissionState } from './types';
@@ -28,6 +30,10 @@ export interface VocabExerciseProps {
   /** Coach nudge shown at the bottom of the feedback card when the current item
    *  is a known weak spot. Omit when the item is not a weak spot. */
   coach?: CoachNudge | null;
+  /** Authenticated fetch, threaded down for the "Explain why" on-demand
+   *  explanation of a deterministic (instant-graded) result. Omitted in
+   *  tests/contexts that don't exercise that affordance. */
+  fetchFn?: AuthenticatedFetch;
 }
 
 function isAccentLanguage(lang: string): lang is 'ES' | 'DE' | 'TR' {
@@ -43,6 +49,7 @@ export function VocabExercise({
   nextLabel,
   exerciseId,
   coach,
+  fetchFn,
 }: VocabExerciseProps) {
   const [answer, setAnswer, clearDraft] = useAnswerDraft(exerciseId);
   const [hintLevel, setHintLevel] = React.useState<0 | 1 | 2 | 3>(0);
@@ -150,9 +157,20 @@ export function VocabExercise({
                 {content.exampleSentence && (
                   <p className="t-body-l">{content.exampleSentence}</p>
                 )}
-                {submission.result.feedback && (
-                  <p className="t-body">{submission.result.feedback}</p>
-                )}
+                {submission.result.feedback &&
+                  (submission.result.evaluationSource === 'deterministic' &&
+                  submission.submissionId &&
+                  exerciseId &&
+                  fetchFn ? (
+                    <ExplainWhy
+                      exerciseId={exerciseId}
+                      submissionId={submission.submissionId}
+                      fallbackFeedback={submission.result.feedback}
+                      fetchFn={fetchFn}
+                    />
+                  ) : (
+                    <p className="t-body">{submission.result.feedback}</p>
+                  ))}
                 {confusions.length > 0 && (
                   <div className="flex flex-col gap-s-2">
                     <p className="t-micro text-ink-mute">common confusions</p>
