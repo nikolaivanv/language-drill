@@ -828,6 +828,16 @@ exercises.post('/exercises/:id/submissions/:submissionId/explain', async (c) => 
     return c.json({ error: 'Exercise not found', code: 'NOT_FOUND' }, 404);
   }
 
+  // Conjugation feedback already carries the pre-authored breakdown — there
+  // is nothing further to explain, and the evaluator prompt-builder throws
+  // for CONJUGATION by design. Cleanly non-explainable, not a 502.
+  if (exercise.type === ExerciseType.CONJUGATION) {
+    return c.json(
+      { error: 'Conjugation feedback already includes the explanation', code: 'NOT_EXPLAINABLE' },
+      400,
+    );
+  }
+
   // Same gates as submit — this is a real AI call.
   const plan = await getEffectivePlan(userId);
   const capacity = await checkGlobalCapacity({ plan, admin: isAdmin(userId) });

@@ -2605,6 +2605,48 @@ describe('POST /exercises/:id/submissions/:submissionId/explain', () => {
     expect(((await res.json()) as AnyJson).code).toBe('NOT_EXPLAINABLE');
   });
 
+  it('400 NOT_EXPLAINABLE for a deterministic CONJUGATION submission (breakdown is the explanation)', async () => {
+    // Conjugation submissions are also stamped evaluationSource 'deterministic',
+    // but their feedback already carries the pre-authored breakdown — and the
+    // evaluator prompt-builder throws for CONJUGATION by design, so falling
+    // through to the cold path would surface as a misleading 502.
+    const conjugationExercise = {
+      id: 'conj-es-001',
+      type: 'conjugation',
+      language: 'es',
+      difficulty: 'B1',
+      grammarPointKey: 'es-b1-conditional',
+      contentJson: {
+        type: 'conjugation',
+        instructions: 'Write the correct form.',
+        lemma: 'ir',
+        lemmaGloss: 'to go',
+        featureBundle: 'condicional · 1pl',
+        targetForm: 'iríamos',
+        breakdown: 'ir- + -íamos',
+        exampleSentences: ['Iríamos al cine.'],
+      },
+      audioS3Key: null,
+      createdAt: new Date(),
+    };
+    queueHistoryAndExercise(
+      {
+        id: 'sub-conj-1',
+        userId: 'user_123',
+        exerciseId: 'conj-es-001',
+        responseJson: {
+          userAnswer: 'iríamos',
+          evaluation: { score: 1, evaluationSource: 'deterministic' },
+        },
+      },
+      conjugationExercise,
+    );
+    const res = await explain('conj-es-001', 'sub-conj-1');
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as AnyJson).code).toBe('NOT_EXPLAINABLE');
+    expect(mockEvaluateAnswer).not.toHaveBeenCalled();
+  });
+
   it('returns the cached explanation without calling Claude or metering', async () => {
     // Same reasoning as above: the cached-explanation branch returns before
     // the exercise select, so the second queue stage must stay unqueued.
