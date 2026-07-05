@@ -463,6 +463,32 @@ describe("evaluateAnswer", () => {
     ]);
   });
 
+  it("uses modelOverride when provided (eval-runner A/B arms)", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_123",
+          name: EVALUATION_TOOL_NAME,
+          input: validEvaluationInput,
+        },
+      ],
+      stop_reason: "tool_use",
+    });
+
+    await evaluateAnswer(mockClient, {
+      exercise: clozeContent,
+      userAnswer: "went",
+      language: Language.EN,
+      difficulty: CefrLevel.B1,
+      modelOverride: "claude-haiku-4-5-20251001",
+    });
+
+    expect(mockCreate.mock.calls[0][0].model).toBe(
+      "claude-haiku-4-5-20251001",
+    );
+  });
+
   it("throws when Claude returns no tool use block", async () => {
     mockCreate.mockResolvedValue({
       content: [{ type: "text", text: "I cannot evaluate this." }],

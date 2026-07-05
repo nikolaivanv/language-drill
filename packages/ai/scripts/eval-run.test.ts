@@ -31,6 +31,7 @@ import {
   computeDiff,
   deltaStats,
   deriveRunName,
+  makeRealItemExecutor,
   parseEvalRunArgs,
   renderMarkdownSummary,
   resolveCandidate,
@@ -93,6 +94,28 @@ describe("parseEvalRunArgs", () => {
     });
   });
 
+  it("parses an optional --model override", () => {
+    const args = parseEvalRunArgs([
+      "--dataset",
+      "eval-smoke",
+      "--candidate",
+      "file:./candidate.txt",
+      "--model",
+      "claude-haiku-4-5-20251001",
+    ]);
+    expect(args.model).toBe("claude-haiku-4-5-20251001");
+  });
+
+  it("leaves model undefined when --model is absent", () => {
+    const args = parseEvalRunArgs([
+      "--dataset",
+      "eval-smoke",
+      "--candidate",
+      "file:./candidate.txt",
+    ]);
+    expect(args.model).toBeUndefined();
+  });
+
   it("throws when --dataset is missing", () => {
     expect(() =>
       parseEvalRunArgs(["--candidate", "file:./candidate.txt"]),
@@ -132,6 +155,84 @@ describe("parseEvalRunArgs", () => {
 // ---------------------------------------------------------------------------
 // resolveCandidate
 // ---------------------------------------------------------------------------
+
+describe("makeRealItemExecutor — model threading", () => {
+  const validToolInput = {
+    reasoning: "koy- last vowel o (back, rounded) → -du; matches.",
+    score: 1,
+    grammarAccuracy: 1,
+    vocabularyRange: "A1",
+    taskAchievement: 1,
+    feedback: "Correct.",
+    errors: [],
+    estimatedCefrEvidence: "A1",
+  };
+  const evaluateInput = {
+    exercise: {
+      type: ExerciseType.CLOZE,
+      instructions: "Fill in the blank.",
+      sentence: "Ali kitabı masanın üzerine ___ .",
+      correctAnswer: "koydu",
+    },
+    userAnswer: "koydu",
+    language: Language.TR,
+    difficulty: CefrLevel.A1,
+  };
+
+  function mockClientWith(create: ReturnType<typeof vi.fn>) {
+    return { messages: { create } } as never;
+  }
+
+  it("passes the --model override through to messages.create", async () => {
+    const create = vi.fn().mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "t1",
+          name: "submit_evaluation",
+          input: validToolInput,
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: { input_tokens: 10, output_tokens: 10 },
+    });
+    const exec = makeRealItemExecutor(
+      mockClientWith(create),
+      "claude-haiku-4-5-20251001",
+    );
+    const out = await exec({
+      itemId: "i1",
+      evaluateInput: evaluateInput as never,
+      candidateText: "CANDIDATE PROMPT",
+      promptSha: "abcd1234",
+    });
+    expect(out.error).toBeUndefined();
+    expect(create.mock.calls[0][0].model).toBe("claude-haiku-4-5-20251001");
+  });
+
+  it("uses the production default model when no override is given", async () => {
+    const create = vi.fn().mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "t1",
+          name: "submit_evaluation",
+          input: validToolInput,
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: { input_tokens: 10, output_tokens: 10 },
+    });
+    const exec = makeRealItemExecutor(mockClientWith(create));
+    await exec({
+      itemId: "i1",
+      evaluateInput: evaluateInput as never,
+      candidateText: "CANDIDATE PROMPT",
+      promptSha: "abcd1234",
+    });
+    expect(create.mock.calls[0][0].model).toBe("claude-sonnet-4-6");
+  });
+});
 
 describe("resolveCandidate", () => {
   it("reads a file: candidate via the injected readFile", async () => {

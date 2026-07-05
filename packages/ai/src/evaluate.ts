@@ -152,6 +152,13 @@ export type EvaluateAnswerInput = {
    * can cohort eval-run traffic separately from production traces.
    */
   systemPromptOverride?: string;
+  /**
+   * Eval-runner escape hatch (sibling of `systemPromptOverride`): run this
+   * evaluation on a different model than the production `MODEL` constant.
+   * Used by `pnpm eval --model <id>` to A/B model arms against a dataset.
+   * Never set on the production request path.
+   */
+  modelOverride?: string;
 };
 
 // ---------------------------------------------------------------------------
@@ -318,6 +325,7 @@ export async function evaluateAnswer(
     grammarGuidance,
     attributionKeys,
     systemPromptOverride,
+    modelOverride,
   } = input;
 
   const userPrompt = buildUserPrompt(
@@ -354,7 +362,7 @@ export async function evaluateAnswer(
   }
 
   const response = await client.messages.create({
-    model: MODEL,
+    model: modelOverride ?? MODEL,
     max_tokens: MAX_TOKENS,
     system: [
       {
