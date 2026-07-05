@@ -278,7 +278,7 @@ export function parseEvaluationResult(
 // constant. NOTE: changing the model is NOT a
 // prompt-body edit, so `EVALUATION_SYSTEM_PROMPT_VERSION` is intentionally NOT
 // bumped for the model part of a change — Langfuse records the model natively
-// on each generation (the 2026-07-05 bump reflects the simultaneous prompt
+// on each generation (the 2026-07-05.1 bump reflects the simultaneous prompt
 // hardening, not the model swap).
 const MODEL = "claude-sonnet-4-6" as const;
 

@@ -12,6 +12,7 @@
 
 import type { Page } from '@playwright/test';
 import {
+  ExerciseSetResponseSchema,
   FluencyAttemptResponseSchema,
   FluencySessionResponseSchema,
   LanguageProfilesResponseSchema,
@@ -122,9 +123,48 @@ export async function seedFluency(page: Page): Promise<void> {
   );
 }
 
+/** Conjugation warm-up: a one-item set with a long + a short feature chip
+ *  (the mobile chip-packing worst case). */
+export async function seedConjugation(page: Page): Promise<void> {
+  await page.route('**/exercises/set**', (route) =>
+    route.request().method() === 'GET'
+      ? route.fulfill(
+          validatedReply(ExerciseSetResponseSchema, {
+            exercises: [
+              {
+                id: 'bbbbbbbb-cccc-dddd-eeee-ffffffffffff',
+                type: 'conjugation',
+                language: 'TR',
+                difficulty: 'A1',
+                grammarPointKey: 'tr-a1-present-continuous',
+                contentJson: {
+                  type: 'conjugation',
+                  instructions: 'Write the correct form.',
+                  lemma: 'saymak',
+                  lemmaGloss: 'to count',
+                  featureBundle: 'şimdiki zaman · olumsuz · 2. tekil şahıs (sen)',
+                  features: [
+                    { term: 'şimdiki zaman', gloss: 'present continuous' },
+                    { term: 'olumsuz', gloss: 'negative' },
+                  ],
+                  subject: { pronoun: 'sen', gloss: 'you (sg.)' },
+                  targetForm: 'saymıyorsun',
+                  breakdown: 'say- + -mıyor + -sun',
+                  exampleSentences: ['Sen paraları saymıyorsun.'],
+                },
+              },
+            ],
+            available: 1,
+          }),
+        )
+      : route.fallback(),
+  );
+}
+
 /** Everything: the shell plus every per-screen seed. Used by the harness. */
 export async function seedAll(page: Page): Promise<void> {
   await seedShell(page);
   await seedRead(page);
   await seedFluency(page);
+  await seedConjugation(page);
 }

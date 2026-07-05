@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import {
   ExerciseType,
@@ -84,6 +84,83 @@ describe('ConjugationExercise — evaluated reveal', () => {
       content: { ...baseContent, acceptableForms: ['iríamos'] },
     });
     expect(screen.queryByText(/also accepted:/i)).not.toBeInTheDocument();
+  });
+});
+
+describe('ConjugationExercise — mobile keyboard scroll anchoring', () => {
+  const scrollIntoView = vi.fn();
+  let vvListeners: Array<{ type: string; fn: () => void }>;
+  const visualViewport = {
+    addEventListener: (type: string, fn: () => void) =>
+      vvListeners.push({ type, fn }),
+    removeEventListener: (type: string, fn: () => void) => {
+      vvListeners = vvListeners.filter((l) => l.fn !== fn);
+    },
+  };
+
+  function stubMobileViewport(matches: boolean) {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn().mockReturnValue({
+        matches,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      } as unknown as MediaQueryList),
+    );
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vvListeners = [];
+    scrollIntoView.mockClear();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    Object.defineProperty(window, 'visualViewport', {
+      value: visualViewport,
+      configurable: true,
+      writable: true,
+    });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  it('scrolls the exercise to the top when the keyboard opens (viewport resize)', () => {
+    stubMobileViewport(true);
+    renderConj({ submission: { kind: 'idle' } });
+    scrollIntoView.mockClear(); // discard any mount-autofocus invocation
+    fireEvent.focus(screen.getByRole('textbox'));
+    const resize = vvListeners.find((l) => l.type === 'resize');
+    expect(resize).toBeDefined();
+    resize!.fn();
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
+    // The resize consumed the one-shot: the fallback timer must not re-fire.
+    scrollIntoView.mockClear();
+    vi.advanceTimersByTime(1000);
+    expect(scrollIntoView).not.toHaveBeenCalled();
+    // And the listener was removed.
+    expect(vvListeners.find((l) => l.type === 'resize')).toBeUndefined();
+  });
+
+  it('falls back to a timer when no viewport resize arrives (keyboard already open)', () => {
+    stubMobileViewport(true);
+    renderConj({ submission: { kind: 'idle' } });
+    scrollIntoView.mockClear();
+    fireEvent.focus(screen.getByRole('textbox'));
+    vi.advanceTimersByTime(350);
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
+    expect(vvListeners.find((l) => l.type === 'resize')).toBeUndefined();
+  });
+
+  it('does nothing on desktop-sized viewports', () => {
+    stubMobileViewport(false);
+    renderConj({ submission: { kind: 'idle' } });
+    scrollIntoView.mockClear();
+    fireEvent.focus(screen.getByRole('textbox'));
+    expect(vvListeners).toHaveLength(0);
+    vi.advanceTimersByTime(1000);
+    expect(scrollIntoView).not.toHaveBeenCalled();
   });
 });
 

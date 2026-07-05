@@ -1896,6 +1896,24 @@ describe('GET /admin/activity/sessions/:id', () => {
     expect(body.exercises[1].errors).toHaveLength(1);   // ex-a has the error
   });
 
+  it('exposes historyId (evaluation id) per exercise, null when unattempted', async () => {
+    queryQueue.push(
+      [{ sessionId: SID, userId: 'u1', language: 'TR', difficulty: 'A2', exerciseCount: 2,
+         correctCount: 1, startedAt: '2026-06-22T09:00:00Z', completedAt: '2026-06-22T09:10:00Z',
+         exerciseIds: ['ex-b', 'ex-unattempted'] }],               // (1) session
+      [{ exerciseId: 'ex-b', type: 'cloze', content: { p: 'b' }, score: 1,
+         response: { answer: 'y' }, evaluatedAt: '2026-06-22T09:02:00Z',
+         historyId: 'h-b' }],                                      // (2) history
+      [],                                                          // (3) errors
+      [],                                                          // (4) flags
+    );
+    const res = await app.request(`/admin/activity/sessions/${SID}`, undefined, adminEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { exercises: Array<{ exerciseId: string; historyId: string | null }> };
+    expect(body.exercises[0].historyId).toBe('h-b');
+    expect(body.exercises[1].historyId).toBeNull();
+  });
+
   it('returns 404 for an unknown session', async () => {
     queryQueue.push([]); // (1) session → empty
     const res = await app.request(`/admin/activity/sessions/${SID}`, undefined, adminEnv);
@@ -1980,6 +1998,13 @@ describe('activity correlated-subquery qualification (regression)', () => {
     // guard the guard: the interpolated anti-pattern DOES render unqualified
     const broken = sql`EXISTS (SELECT 1 FROM ${exerciseFlags} ef JOIN ${userExerciseHistory} ueh ON ueh.id = ef.history_id WHERE ueh.session_id = ${practiceSessions.id} AND ef.status = 'open')`;
     expect(qb.select({ x: broken }).from(practiceSessions).toSQL().sql).toMatch(/session_id = "id"/);
+
+    // hasIncorrect filter: same correlation class (WHERE-clause EXISTS on
+    // user_exercise_history) — MIRRORS admin.ts, keep in sync.
+    const hasIncorrect = sql`EXISTS (SELECT 1 FROM ${userExerciseHistory} ueh WHERE ueh.session_id = practice_sessions.id AND ueh.score IS NOT NULL AND ueh.score < 1.0)`;
+    const hProj = qb.select({ x: hasIncorrect }).from(practiceSessions).toSQL().sql;
+    expect(hProj).toContain('practice_sessions.id');
+    expect(hProj).not.toMatch(/session_id = "id"/);
   });
 });
 
@@ -2015,6 +2040,19 @@ describe('GET /admin/activity/sessions', () => {
 
   it('rejects an invalid risk value with 400', async () => {
     const res = await app.request('/admin/activity/sessions?risk=nope', undefined, adminEnv);
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as { code: string }).code).toBe('VALIDATION_ERROR');
+  });
+
+  it('accepts hasIncorrect=true (AND-composed with other filters)', async () => {
+    queryQueue.push([], [{ total: 0 }]);
+    const res = await app.request('/admin/activity/sessions?hasIncorrect=true&risk=flagged', undefined, adminEnv);
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as { total: number }).total).toBe(0);
+  });
+
+  it('rejects an invalid hasIncorrect value with 400', async () => {
+    const res = await app.request('/admin/activity/sessions?hasIncorrect=nope', undefined, adminEnv);
     expect(res.status).toBe(400);
     expect(((await res.json()) as { code: string }).code).toBe('VALIDATION_ERROR');
   });

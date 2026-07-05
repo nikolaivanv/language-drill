@@ -1481,6 +1481,10 @@ const ActivitySessionsQuerySchema = z.object({
   // sends <input type="date"> values; a trailing time component is tolerated.
   from: z.string().regex(/^\d{4}-\d{2}-\d{2}/).optional(),
   to: z.string().regex(/^\d{4}-\d{2}-\d{2}/).optional(),
+  // AND-composed with the risk chips (which OR among themselves): 'true' keeps
+  // only sessions with ≥1 scored-but-imperfect answer. Distinct from the
+  // low_score risk signal (completed sessions under 50% correct).
+  hasIncorrect: z.enum(['true', 'false']).optional(),
   limit: z.coerce.number().int().min(1).max(100).optional(),
   offset: z.coerce.number().int().min(0).optional(),
 });
@@ -1513,7 +1517,7 @@ admin.get('/admin/activity/sessions', async (c) => {
     return c.json({ error: 'Invalid risk value', code: 'VALIDATION_ERROR' }, 400);
   }
   const risk = riskRaw as RiskValue[];
-  const { user, from, to, limit = 25, offset = 0 } = parsed.data;
+  const { user, from, to, hasIncorrect, limit = 25, offset = 0 } = parsed.data;
 
   // Computed per-session signal flags. The outer correlation MUST be written as
   // a qualified literal (`practice_sessions.id`), not `${practiceSessions.id}`:
@@ -1545,6 +1549,15 @@ admin.get('/admin/activity/sessions', async (c) => {
     if (risk.includes('abandoned')) riskExprs.push(isAbandoned);
     if (risk.includes('low_score')) riskExprs.push(isLowScore);
     conditions.push(or(...riskExprs)!);
+  }
+  if (hasIncorrect === 'true') {
+    // Same qualified-literal rule as hasOpenFlag above: `practice_sessions.id`,
+    // never `${practiceSessions.id}`, inside the correlated EXISTS.
+    conditions.push(sql`EXISTS (
+      SELECT 1 FROM ${userExerciseHistory} ueh
+      WHERE ueh.session_id = practice_sessions.id
+        AND ueh.score IS NOT NULL AND ueh.score < 1.0
+    )`);
   }
   const whereClause = conditions.length ? and(...conditions) : undefined;
 
@@ -1703,6 +1716,9 @@ admin.get('/admin/activity/sessions/:id', async (c) => {
     return {
       exerciseId,
       order,
+      // user_exercise_history.id — the evaluation/submission id (a.k.a.
+      // submissionId elsewhere); null for exercises never attempted.
+      historyId: h?.historyId ?? null,
       type: h?.type ?? null,
       content: h?.content ?? null,
       score: h?.score ?? null,
