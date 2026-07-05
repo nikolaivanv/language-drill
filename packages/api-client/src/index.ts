@@ -14,6 +14,8 @@ export {
   type ApiErrorResponse,
   FreeWritingEvaluationSchema,
   type FreeWritingEvaluationResponse,
+  ExplainResponseSchema,
+  type ExplainResponse,
 } from './schemas/exercise';
 export {
   LanguageProfileSchema,
@@ -143,6 +145,11 @@ export {
   type SubmitFreeWritingParams,
   type UseSubmitFreeWritingOptions,
 } from './hooks/useSubmitFreeWriting';
+export {
+  useExplainSubmission,
+  type ExplainSubmissionParams,
+  type UseExplainSubmissionOptions,
+} from './hooks/useExplainSubmission';
 export {
   BrainstormSchema,
   type BrainstormResponse,

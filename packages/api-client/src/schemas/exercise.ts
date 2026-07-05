@@ -151,3 +151,8 @@ export const FreeWritingEvaluationSchema = z.object({
 });
 
 export type FreeWritingEvaluationResponse = z.infer<typeof FreeWritingEvaluationSchema>;
+
+// Response from POST /exercises/:id/submissions/:submissionId/explain
+export const ExplainResponseSchema = z.object({ explanation: z.string() });
+
+export type ExplainResponse = z.infer<typeof ExplainResponseSchema>;
