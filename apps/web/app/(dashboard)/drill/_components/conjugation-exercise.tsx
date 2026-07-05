@@ -5,6 +5,7 @@ import type { ConjugationContent, LearningLanguage } from '@language-drill/share
 import { AccentPicker, Button, Input } from '../../../../components/ui';
 import { cn } from '../../../../lib/cn';
 import { ConjugationPromptCard } from '../../../../components/drill/conjugation-prompt';
+import { MOBILE_MEDIA_QUERY } from '../../../../lib/responsive';
 import { useAnswerDraft } from '../../../../lib/drill/use-answer-draft';
 import { submitOnEnter } from '../../../../lib/drill/keyboard';
 import { conjugationVerdict } from '../../../../lib/drill/verdict-tier';
@@ -45,10 +46,40 @@ export function ConjugationExercise({
 }: ConjugationExerciseProps) {
   const [answer, setAnswer, clearDraft] = useAnswerDraft(exerciseId);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
+  const rootRef = React.useRef<HTMLDivElement | null>(null);
+  // Pending keyboard-scroll cleanup (timer + visualViewport listener). Reset on
+  // every focus; flushed on unmount.
+  const scrollArmRef = React.useRef<() => void>(() => {});
 
   React.useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
+  React.useEffect(() => () => scrollArmRef.current(), []);
+
+  // On a phone, the browser's scroll-focused-input-into-view leaves the prompt
+  // card cut off above the fold and pulls "finish session" into view. Once the
+  // keyboard settles (visualViewport resize — fires after the browser's own
+  // scroll), re-anchor the exercise top to the viewport top. The timer covers
+  // the keyboard-already-open case (auto-focus on the next item: focus fires,
+  // no resize does).
+  function handleAnswerFocus() {
+    if (typeof window.matchMedia !== 'function') return;
+    if (!window.matchMedia(MOBILE_MEDIA_QUERY).matches) return;
+    scrollArmRef.current();
+    const vv = window.visualViewport ?? null;
+    const fire = () => {
+      scrollArmRef.current();
+      rootRef.current?.scrollIntoView({ block: 'start' });
+    };
+    const timer = window.setTimeout(fire, 350);
+    vv?.addEventListener('resize', fire);
+    scrollArmRef.current = () => {
+      window.clearTimeout(timer);
+      vv?.removeEventListener('resize', fire);
+      scrollArmRef.current = () => {};
+    };
+  }
 
   const isLocked = submission.kind !== 'idle';
   const showAccentPicker = isAccentLanguage(language);
@@ -76,12 +107,13 @@ export function ConjugationExercise({
   }, [active, setPrimaryAction, submission.kind, canSubmit, isLocked, answer]);
 
   return (
-    <div className="flex flex-col gap-s-4">
+    <div ref={rootRef} className="flex flex-col gap-s-4 scroll-mt-s-2">
       <ConjugationPromptCard content={content} />
 
       <div className="flex flex-col gap-s-3">
         <Input
           ref={inputRef}
+          onFocus={handleAnswerFocus}
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
           onKeyDown={submitOnEnter(handleSubmit)}
