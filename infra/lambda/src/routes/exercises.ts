@@ -99,7 +99,7 @@ exercises.use('/exercises/*', authMiddleware);
  * Shared by the submit and explain paths so both feed Claude identically. */
 function resolveEvaluationGuidance(exercise: {
   grammarPointKey: string | null;
-  language: string;
+  language: string | null;
   difficulty: string | null;
 }) {
   const grammarPoint = exercise.grammarPointKey
@@ -767,6 +767,143 @@ exercises.post('/exercises/:id/submit', async (c) => {
       { error: 'Evaluation temporarily unavailable', code: 'AI_UNAVAILABLE' },
       502,
     );
+  }
+});
+
+// ---------------------------------------------------------------------------
+// POST /exercises/:id/submissions/:submissionId/explain — on-demand LLM
+// feedback for a deterministic (exact-match) submission. Metered + gated
+// like submit: this IS a real Claude call. The stored verdict is never
+// re-scored — the LLM output is feedback enrichment only, cached into
+// responseJson.explanation so repeat taps are free.
+// ---------------------------------------------------------------------------
+exercises.post('/exercises/:id/submissions/:submissionId/explain', async (c) => {
+  const userId = c.get('userId');
+  const { id, submissionId } = c.req.param();
+
+  const rows = await db
+    .select()
+    .from(userExerciseHistory)
+    .where(
+      and(
+        eq(userExerciseHistory.id, submissionId),
+        eq(userExerciseHistory.userId, userId),
+        eq(userExerciseHistory.exerciseId, id),
+      ),
+    )
+    .limit(1);
+  const submission = rows[0];
+  if (!submission) {
+    return c.json({ error: 'Submission not found', code: 'NOT_FOUND' }, 404);
+  }
+
+  const responseJson = (submission.responseJson ?? {}) as {
+    userAnswer?: string;
+    evaluation?: EvaluationResult;
+    explanation?: string;
+  };
+
+  if (responseJson.evaluation?.evaluationSource !== 'deterministic') {
+    return c.json(
+      { error: 'Only instant-graded submissions can be explained', code: 'NOT_EXPLAINABLE' },
+      400,
+    );
+  }
+  if (typeof responseJson.userAnswer !== 'string') {
+    return c.json({ error: 'Submission has no stored answer', code: 'NOT_EXPLAINABLE' }, 400);
+  }
+
+  // Cached — free, no gates.
+  if (responseJson.explanation) {
+    return c.json({ explanation: responseJson.explanation });
+  }
+
+  const exerciseRows = await db
+    .select()
+    .from(exercisesTable)
+    .where(eq(exercisesTable.id, id))
+    .limit(1);
+  const exercise = exerciseRows[0];
+  if (!exercise) {
+    return c.json({ error: 'Exercise not found', code: 'NOT_FOUND' }, 404);
+  }
+
+  // Same gates as submit — this is a real AI call.
+  const plan = await getEffectivePlan(userId);
+  const capacity = await checkGlobalCapacity({ plan, admin: isAdmin(userId) });
+  if (capacity !== 'ok') {
+    return c.json({ error: 'AI temporarily at capacity', code: 'GLOBAL_CAPACITY' }, 503);
+  }
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const [{ count: todayCount }] = await db
+    .select({ count: count() })
+    .from(usageEvents)
+    .where(
+      and(
+        eq(usageEvents.userId, userId),
+        eq(usageEvents.eventType, 'ai_evaluation'),
+        gte(usageEvents.createdAt, oneDayAgo),
+      ),
+    );
+  if (Number(todayCount) >= limitFor('ai_evaluation', plan)) {
+    return c.json({ error: 'Daily evaluation limit exceeded', code: 'RATE_LIMIT_EXCEEDED' }, 429);
+  }
+
+  try {
+    const client = createObservedClaudeClient(ANTHROPIC_API_KEY, {
+      timeout: EVAL_REQUEST_TIMEOUT_MS,
+      maxRetries: EVAL_MAX_RETRIES,
+    });
+    const { grammarGuidance, attributionKeys } = resolveEvaluationGuidance(exercise);
+    const requestId =
+      (c.env?.event as { requestContext?: { requestId?: string } } | undefined)
+        ?.requestContext?.requestId ?? 'local';
+
+    const evaluation = await withLlmTrace(
+      {
+        env: (process.env.LANGFUSE_ENV ?? 'dev') as 'prod' | 'dev',
+        requestId,
+        userId,
+        submissionId,
+        exerciseId: id,
+        language: exercise.language as Language,
+        cefrLevel: exercise.difficulty as CefrLevel,
+        exerciseType: exercise.type as ExerciseType,
+        feature: 'evaluate',
+        promptVersion: EVALUATION_SYSTEM_PROMPT_VERSION,
+      },
+      () =>
+        evaluateAnswer(client, {
+          exercise: exercise.contentJson as ExerciseContent,
+          userAnswer: responseJson.userAnswer as string,
+          language: exercise.language as Language,
+          difficulty: exercise.difficulty as CefrLevel,
+          grammarGuidance,
+          attributionKeys,
+        }),
+    );
+
+    await db
+      .update(userExerciseHistory)
+      .set({ responseJson: { ...responseJson, explanation: evaluation.feedback } })
+      .where(eq(userExerciseHistory.id, submissionId));
+
+    await db.insert(usageEvents).values({
+      userId,
+      eventType: 'ai_evaluation',
+      metadata: { exerciseId: id, explain: true, language: exercise.language, difficulty: exercise.difficulty },
+    });
+
+    return c.json({ explanation: evaluation.feedback });
+  } catch (err) {
+    if (err instanceof ContentRejectedError) {
+      return c.json(
+        { error: "We couldn't explain that submission.", code: 'CONTENT_REJECTED' },
+        422,
+      );
+    }
+    console.error('[POST /exercises/:id/submissions/:submissionId/explain] failed:', err);
+    return c.json({ error: 'Explanation temporarily unavailable', code: 'AI_UNAVAILABLE' }, 502);
   }
 });
 

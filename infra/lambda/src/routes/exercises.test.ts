@@ -51,10 +51,17 @@ const mockValues = vi.fn(() => {
 });
 const mockInsert = vi.fn(() => ({ values: mockValues }));
 
+// `db.update(...).set(...).where(...)` chain — used by the explain route to
+// persist a freshly-computed explanation onto the history row.
+const mockUpdateWhere = vi.fn(() => Promise.resolve());
+const mockSet = vi.fn(() => ({ where: mockUpdateWhere }));
+const mockUpdate = vi.fn(() => ({ set: mockSet }));
+
 vi.mock('../db', () => ({
   db: {
     select: () => mockSelect(),
     insert: () => mockInsert(),
+    update: () => mockUpdate(),
   },
 }));
 
@@ -70,7 +77,7 @@ const mockGrammarPointsAtOrBelow = vi.fn(() => [] as { key: string; name: string
 vi.mock('@language-drill/db', () => ({
   users: { id: 'id' },
   exercises: { reviewStatus: 'review_status', type: 'type', audioS3Key: 'audio_s3_key', grammarPointKey: 'grammar_point_key', language: 'language', difficulty: 'difficulty' },
-  userExerciseHistory: {},
+  userExerciseHistory: { id: 'id', userId: 'user_id', exerciseId: 'exercise_id' },
   usageEvents: {},
   errorObservations: { exerciseHistoryId: 'exercise_history_id' },
   practiceSessions: {
@@ -2505,5 +2512,132 @@ describe('POST /exercises/:id/submit — incidental mastery fold (B3)', () => {
     expect(typeof row.masteryScore).toBe('number');
     expect(row.masteryScore as number).toBeLessThan(0.5);
     expect(row.grammarPointKey).toBe('tr-a1-vowel-harmony');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /exercises/:id/submissions/:submissionId/explain
+// ---------------------------------------------------------------------------
+
+describe('POST /exercises/:id/submissions/:submissionId/explain', () => {
+  let app: Hono;
+
+  const authEnv = {
+    event: {
+      requestContext: {
+        authorizer: { jwt: { claims: { sub: 'user_123' } } },
+      },
+    },
+  };
+
+  const clozeExercise = {
+    id: 'cloze-tr-001',
+    type: 'cloze',
+    language: 'TR',
+    difficulty: 'A1',
+    grammarPointKey: 'tr-a1-dili-past',
+    contentJson: {
+      type: 'cloze',
+      instructions: 'Fill in the blank.',
+      sentence: 'Ali kitabı masanın üzerine ___ .',
+      correctAnswer: 'koydu',
+    },
+    audioS3Key: null,
+    createdAt: new Date(),
+  };
+
+  const deterministicRow = {
+    id: 'sub-1',
+    userId: 'user_123',
+    exerciseId: 'cloze-tr-001',
+    responseJson: {
+      userAnswer: 'koydu',
+      evaluation: { score: 1, evaluationSource: 'deterministic' },
+    },
+  };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    mockWithLlmTrace.mockImplementation(
+      <T>(_ctx: unknown, fn: () => T | Promise<T>) => Promise.resolve(fn()),
+    );
+    const mod = await import('./exercises');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  function queueHistoryAndExercise(row: unknown, exercise: unknown) {
+    // history row fetch
+    mockLimit.mockResolvedValueOnce(row ? [row] : []);
+    mockWhere.mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }));
+    if (row && exercise) {
+      // exercise fetch
+      mockLimit.mockResolvedValueOnce([exercise]);
+      mockWhere.mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }));
+    }
+  }
+
+  async function explain(exerciseId: string, submissionId: string) {
+    return app.request(
+      `/exercises/${exerciseId}/submissions/${submissionId}/explain`,
+      { method: 'POST' },
+      authEnv,
+    );
+  }
+
+  it('404 when the submission does not exist or belongs to someone else', async () => {
+    queueHistoryAndExercise(null, null);
+    const res = await explain('cloze-tr-001', 'sub-404');
+    expect(res.status).toBe(404);
+  });
+
+  it('400 NOT_EXPLAINABLE for an LLM-sourced submission', async () => {
+    // Route returns 400 right after the history-row fetch — it never reaches
+    // the exercise select, so don't queue that second stage here (an
+    // unconsumed once-mock would bleed into the next test's first `where()`
+    // call, since `vi.clearAllMocks()` doesn't drain pending once-queues).
+    queueHistoryAndExercise(
+      { ...deterministicRow, responseJson: { userAnswer: 'koydı', evaluation: { score: 0, evaluationSource: 'llm' } } },
+      null,
+    );
+    const res = await explain('cloze-tr-001', 'sub-1');
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as AnyJson).code).toBe('NOT_EXPLAINABLE');
+  });
+
+  it('returns the cached explanation without calling Claude or metering', async () => {
+    // Same reasoning as above: the cached-explanation branch returns before
+    // the exercise select, so the second queue stage must stay unqueued.
+    queueHistoryAndExercise(
+      { ...deterministicRow, responseJson: { ...deterministicRow.responseJson, explanation: 'cached why' } },
+      null,
+    );
+    const res = await explain('cloze-tr-001', 'sub-1');
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as AnyJson).explanation).toBe('cached why');
+    expect(mockEvaluateAnswer).not.toHaveBeenCalled();
+  });
+
+  it('cold call: runs evaluateAnswer, meters ai_evaluation, persists the explanation', async () => {
+    queueHistoryAndExercise(deterministicRow, clozeExercise);
+    // Daily-cap count select on the cold path — same shape as the submit
+    // route's usage-count check (where() resolves directly, no .limit()).
+    mockWhere.mockResolvedValueOnce([{ count: 0 }] as never);
+    mockEvaluateAnswer.mockResolvedValueOnce({
+      score: 1, grammarAccuracy: 1, vocabularyRange: 'A1', taskAchievement: 1,
+      feedback: 'Correct because koy- takes -du (back rounded o).',
+      errors: [], estimatedCefrEvidence: 'A1',
+    });
+    const res = await explain('cloze-tr-001', 'sub-1');
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as AnyJson).explanation).toContain('koy-');
+    expect(mockEvaluateAnswer).toHaveBeenCalledOnce();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const allValuesCalls = (mockValues.mock.calls as any[]).map((c: any[]) => c[0] as AnyJson);
+    expect(allValuesCalls.some((v) => v && v.eventType === 'ai_evaluation')).toBe(true);
+    // explanation persisted via db.update(...).set({ responseJson: ... })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const allSetCalls = (mockSet.mock.calls as any[]).map((c: any[]) => c[0] as AnyJson);
+    expect(allSetCalls.some((v) => v?.responseJson?.explanation)).toBe(true);
   });
 });
