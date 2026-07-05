@@ -3,7 +3,7 @@ import { Hono } from 'hono';
 import type { Context } from 'hono';
 import { z } from 'zod';
 import { eq, and, gte, count } from 'drizzle-orm';
-import { Language, CefrLevel, ExerciseType, isFreeWritingContent, isConjugationContent, gradeFluencyAnswer, EXERCISE_ANSWER_MAX_CHARS } from '@language-drill/shared';
+import { Language, CefrLevel, ExerciseType, isFreeWritingContent, isConjugationContent, isClozeContent, isVocabRecallContent, gradeFluencyAnswer, EXERCISE_ANSWER_MAX_CHARS } from '@language-drill/shared';
 import type { LearningLanguage } from '@language-drill/shared';
 import type { DictationContent, ExerciseContent, FreeWritingContent, EvaluationResult } from '@language-drill/shared';
 import {
@@ -453,6 +453,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
             },
           ],
       estimatedCefrEvidence: exercise.difficulty ?? '',
+      evaluationSource: 'deterministic',
     };
 
     const submissionId = randomUUID();
@@ -475,6 +476,59 @@ exercises.post('/exercises/:id/submit', async (c) => {
     });
 
     return c.json({ ...result, submissionId });
+  }
+
+  // Deterministic, zero-Claude short-circuit for exact-match cloze/vocab
+  // answers. The evaluation prompt already mandates score 1.0 with no errors
+  // for these matches, so the LLM call is a latency+cost rubber stamp.
+  // Same policy as the conjugation branch above: no ai_evaluation spend, no
+  // capacity/daily-cap gate, no Claude call, no Langfuse trace. NON-matching
+  // answers fall through to the LLM path — acceptable-answers lists are
+  // non-exhaustive, so an unlisted answer may still be valid.
+  if (
+    exercise.type === ExerciseType.CLOZE ||
+    exercise.type === ExerciseType.VOCAB_RECALL
+  ) {
+    const content = exercise.contentJson as ExerciseContent;
+    if (
+      (isClozeContent(content) || isVocabRecallContent(content)) &&
+      gradeFluencyAnswer(content, userAnswer)
+    ) {
+      const result: EvaluationResult = {
+        score: 1,
+        grammarAccuracy: 1,
+        // Deterministic path has no vocabulary/CEFR judgment; echo the
+        // exercise difficulty (same convention as the conjugation branch).
+        vocabularyRange: exercise.difficulty ?? '',
+        taskAchievement: 1,
+        feedback: `Correct — ${userAnswer.trim()}`,
+        errors: [],
+        estimatedCefrEvidence: exercise.difficulty ?? '',
+        evaluationSource: 'deterministic',
+      };
+
+      const submissionId = randomUUID();
+      await db.insert(userExerciseHistory).values({
+        id: submissionId,
+        userId,
+        exerciseId: id,
+        sessionId,
+        score: 1,
+        responseJson: { userAnswer, evaluation: result },
+        evaluatedAt: new Date(),
+      });
+
+      await applyGrammarMastery({
+        userId,
+        language: exercise.language as Language,
+        grammarPointKey: exercise.grammarPointKey,
+        difficulty: exercise.difficulty as CefrLevel,
+        score: 1,
+      });
+
+      return c.json({ ...result, submissionId });
+    }
+    // fall through to the normal LLM evaluation
   }
 
   // 3. Resolve tier, run the global brake, then the per-user daily cap.
@@ -622,6 +676,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
               attributionKeys,
             }),
     );
+    const stamped = { ...result, evaluationSource: 'llm' as const };
 
     // 6. Record history and usage on success — `id: submissionId` makes the
     // history row id equal to the Langfuse trace tag (see step 4 above).
@@ -631,7 +686,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
       exerciseId: id,
       sessionId,
       score: result.score,
-      responseJson: { userAnswer, evaluation: result },
+      responseJson: { userAnswer, evaluation: stamped },
       evaluatedAt: new Date(),
     });
 
@@ -678,7 +733,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
       score: result.score,
     });
 
-    return c.json({ ...result, submissionId });
+    return c.json({ ...stamped, submissionId });
   } catch (err) {
     // 7a. Safety refusal — the model declined to evaluate this answer (e.g. a
     // provocative or off-task submission). This is an expected outcome, not an

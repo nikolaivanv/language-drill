@@ -1569,8 +1569,15 @@ describe('POST /exercises/:id/submit — observability', () => {
 
     expect(res.status).toBe(200);
     const body = await res.json() as AnyJson;
-    // Response contains all evaluation fields plus `submissionId`.
-    expect(body).toEqual({ ...sampleEvaluation, submissionId: '00000000-0000-0000-0000-000000000000' });
+    // Response contains all evaluation fields plus `submissionId`, plus the
+    // `evaluationSource: 'llm'` stamp added by Task 2's deterministic-match
+    // short-circuit (this is the LLM path, so it's stamped 'llm' not
+    // 'deterministic') — otherwise byte-identical to the pre-spec response.
+    expect(body).toEqual({
+      ...sampleEvaluation,
+      evaluationSource: 'llm',
+      submissionId: '00000000-0000-0000-0000-000000000000',
+    });
 
     // Three inserts: auth user upsert (1), userExerciseHistory (2),
     // usageEvents (3). Identical to pre-spec.
@@ -1583,7 +1590,7 @@ describe('POST /exercises/:id/submit — observability', () => {
         score: 0.85,
         responseJson: {
           userAnswer: 'I went to the store',
-          evaluation: sampleEvaluation,
+          evaluation: { ...sampleEvaluation, evaluationSource: 'llm' },
         },
       }),
     );
@@ -2079,6 +2086,165 @@ describe('POST /exercises/:id/submit — conjugation branch', () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as { submissionId?: string };
     expect(body.submissionId).toEqual(expect.any(String));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /exercises/:id/submit — deterministic match short-circuit (cloze/vocab)
+// ---------------------------------------------------------------------------
+
+describe('POST /exercises/:id/submit — deterministic match branch', () => {
+  let app: Hono;
+
+  const authEnv = {
+    event: {
+      requestContext: {
+        authorizer: { jwt: { claims: { sub: 'user_123' } } },
+      },
+    },
+  };
+
+  const clozeExercise = {
+    id: 'cloze-tr-001',
+    type: 'cloze',
+    language: 'TR',
+    difficulty: 'A1',
+    grammarPointKey: 'tr-a1-dili-past',
+    contentJson: {
+      type: 'cloze',
+      instructions: 'Fill in the blank.',
+      sentence: 'Ali kitabı masanın üzerine ___ .',
+      correctAnswer: 'koydu',
+      acceptableAnswers: ['koymuştu'],
+    },
+    audioS3Key: null,
+    createdAt: new Date(),
+  };
+
+  const vocabExercise = {
+    id: 'vocab-tr-001',
+    type: 'vocab_recall',
+    language: 'TR',
+    difficulty: 'A1',
+    grammarPointKey: null,
+    contentJson: {
+      type: 'vocab_recall',
+      instructions: 'What is the word?',
+      prompt: 'The animal you ride',
+      expectedWord: 'at',
+    },
+    audioS3Key: null,
+    createdAt: new Date(),
+  };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    mockWithLlmTrace.mockImplementation(
+      <T>(_ctx: unknown, fn: () => T | Promise<T>) => Promise.resolve(fn()),
+    );
+    mockRandomUUID.mockImplementation(() => '00000000-0000-0000-0000-000000000000');
+    const mod = await import('./exercises');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  // Queues the exercise-fetch select and, only when the exercise carries a
+  // grammarPointKey, the mastery-read select that `applyGrammarMastery`
+  // issues (it returns before touching the db when grammarPointKey is
+  // null — see the base `POST /exercises/:id/submit` describe's
+  // grammarPointKey-less `sampleExercise`). Queuing an unconsumed mastery
+  // read here would bleed into the next test's first `mockWhere`/`mockLimit`
+  // call (`vi.clearAllMocks()` clears call history, not queued
+  // `mockResolvedValueOnce` values) and fail it in a way that looks
+  // unrelated to this describe block.
+  function queueExerciseAndMastery(exercise: { grammarPointKey: string | null }) {
+    // exercise fetch
+    mockLimit.mockResolvedValueOnce([exercise]);
+    mockWhere.mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }));
+    if (exercise.grammarPointKey) {
+      // mastery read (no prior row)
+      mockLimit.mockResolvedValueOnce([]);
+      mockWhere.mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }));
+    }
+  }
+
+  async function submit(exerciseId: string, answer: string) {
+    return app.request(
+      `/exercises/${exerciseId}/submit`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer }),
+      },
+      authEnv,
+    );
+  }
+
+  it('cloze exact match: 1.0, deterministic, zero Claude, zero usage event', async () => {
+    queueExerciseAndMastery(clozeExercise);
+    const res = await submit('cloze-tr-001', 'koydu');
+    expect(res.status).toBe(200);
+    const body = await res.json() as AnyJson;
+    expect(body.score).toBe(1);
+    expect(body.grammarAccuracy).toBe(1);
+    expect(body.errors).toEqual([]);
+    expect(body.evaluationSource).toBe('deterministic');
+    expect(body.feedback).toContain('koydu');
+    expect(mockEvaluateAnswer).not.toHaveBeenCalled();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const allValuesCalls = (mockValues.mock.calls as any[]).map((c: any[]) => c[0] as AnyJson);
+    expect(allValuesCalls.some((v) => v && v.eventType === 'ai_evaluation')).toBe(false);
+  });
+
+  it('cloze acceptable-answer match short-circuits too', async () => {
+    queueExerciseAndMastery(clozeExercise);
+    const res = await submit('cloze-tr-001', 'koymuştu');
+    const body = await res.json() as AnyJson;
+    expect(body.score).toBe(1);
+    expect(body.evaluationSource).toBe('deterministic');
+    expect(mockEvaluateAnswer).not.toHaveBeenCalled();
+  });
+
+  it('cloze match survives mobile-keyboard artifacts (TR capital I + trailing period)', async () => {
+    queueExerciseAndMastery(clozeExercise);
+    // Non-TR keyboard auto-capitalization: "Koydu." must match "koydu".
+    const res = await submit('cloze-tr-001', 'Koydu.');
+    const body = await res.json() as AnyJson;
+    expect(body.score).toBe(1);
+    expect(body.evaluationSource).toBe('deterministic');
+  });
+
+  it('vocab expectedWord match short-circuits', async () => {
+    queueExerciseAndMastery(vocabExercise);
+    const res = await submit('vocab-tr-001', 'at');
+    const body = await res.json() as AnyJson;
+    expect(body.score).toBe(1);
+    expect(body.evaluationSource).toBe('deterministic');
+    expect(mockEvaluateAnswer).not.toHaveBeenCalled();
+  });
+
+  it('cloze NON-match falls through to the LLM path and stamps evaluationSource: llm', async () => {
+    // exercise fetch
+    mockLimit.mockResolvedValueOnce([clozeExercise]);
+    mockWhere
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit })) // exercise fetch
+      .mockResolvedValueOnce([{ count: 0 }] as never) // usage count
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit })); // mastery read
+    mockLimit.mockResolvedValueOnce([]); // mastery read: no prior row
+    mockEvaluateAnswer.mockResolvedValueOnce({
+      score: 0,
+      grammarAccuracy: 0,
+      vocabularyRange: 'A1',
+      taskAchievement: 0,
+      feedback: 'Not quite.',
+      errors: [],
+      estimatedCefrEvidence: 'A1',
+    });
+    const res = await submit('cloze-tr-001', 'koydı');
+    expect(res.status).toBe(200);
+    const body = await res.json() as AnyJson;
+    expect(mockEvaluateAnswer).toHaveBeenCalledOnce();
+    expect(body.evaluationSource).toBe('llm');
   });
 });
 
