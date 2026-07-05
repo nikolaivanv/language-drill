@@ -66,6 +66,13 @@ export type EvalRunArgs = {
    * so cost figures for non-Sonnet arms are indicative only.
    */
   model?: string;
+  /**
+   * Optional thinking mode for this arm. `"adaptive"` threads
+   * `thinkingOverride: "adaptive"` to `evaluateAnswer` (adaptive thinking,
+   * effort low, larger max_tokens). Absent → the production no-thinking
+   * request shape.
+   */
+  thinking?: "adaptive";
 };
 
 export function parseEvalRunArgs(
@@ -80,6 +87,7 @@ export function parseEvalRunArgs(
       "allow-prod": { type: "boolean", default: false },
       limit: { type: "string" },
       model: { type: "string" },
+      thinking: { type: "string" },
       help: { type: "boolean", default: false },
     },
     allowPositionals: false,
@@ -117,6 +125,16 @@ export function parseEvalRunArgs(
     limit = parsedLimit;
   }
 
+  let thinking: "adaptive" | undefined;
+  if (parsed.values.thinking !== undefined && parsed.values.thinking !== "") {
+    if (parsed.values.thinking !== "adaptive") {
+      throw new Error(
+        `[eval-run] --thinking must be 'adaptive' (or omitted), got ${parsed.values.thinking}`,
+      );
+    }
+    thinking = "adaptive";
+  }
+
   return {
     dataset: parsed.values.dataset!,
     candidate: parsed.values.candidate!,
@@ -125,6 +143,7 @@ export function parseEvalRunArgs(
     limit,
     model:
       parsed.values.model === "" ? undefined : parsed.values.model,
+    thinking,
   };
 }
 
@@ -144,6 +163,8 @@ function printUsage(): void {
       "  --limit <n>           Cap items processed (useful for fast iteration).",
       "  --model <id>          Anthropic model id for this arm (default: the",
       "                        production evaluator model). Enables model A/Bs.",
+      "  --thinking adaptive   Run the arm with adaptive thinking (effort low,",
+      "                        larger max_tokens). Default: no thinking.",
       "  --help                Show this message.",
     ].join("\n"),
   );
@@ -287,6 +308,7 @@ export type EvalRunItemExecutor = (
 export function makeRealItemExecutor(
   client: Anthropic,
   model?: string,
+  thinking?: "adaptive",
 ): EvalRunItemExecutor {
   return async (params) => {
     const ctx: LlmTraceContext = {
@@ -320,6 +342,7 @@ export function makeRealItemExecutor(
           ...params.evaluateInput,
           systemPromptOverride: params.candidateText,
           modelOverride: model,
+          thinkingOverride: thinking,
         });
       });
     } catch (err) {
@@ -1001,7 +1024,11 @@ async function main(): Promise<void> {
 
   const result = await runEvalRun({
     langfuse: lf,
-    executor: makeRealItemExecutor(createClaudeClient(apiKey), args.model),
+    executor: makeRealItemExecutor(
+      createClaudeClient(apiKey),
+      args.model,
+      args.thinking,
+    ),
     args,
     candidateText: candidate.text,
     candidateSource: candidate.source,

@@ -116,6 +116,31 @@ describe("parseEvalRunArgs", () => {
     expect(args.model).toBeUndefined();
   });
 
+  it("parses an optional --thinking adaptive override", () => {
+    const args = parseEvalRunArgs([
+      "--dataset",
+      "eval-smoke",
+      "--candidate",
+      "file:./candidate.txt",
+      "--thinking",
+      "adaptive",
+    ]);
+    expect(args.thinking).toBe("adaptive");
+  });
+
+  it("rejects unknown --thinking values", () => {
+    expect(() =>
+      parseEvalRunArgs([
+        "--dataset",
+        "eval-smoke",
+        "--candidate",
+        "file:./candidate.txt",
+        "--thinking",
+        "maximum-overdrive",
+      ]),
+    ).toThrow(/--thinking/);
+  });
+
   it("throws when --dataset is missing", () => {
     expect(() =>
       parseEvalRunArgs(["--candidate", "file:./candidate.txt"]),
@@ -210,6 +235,34 @@ describe("makeRealItemExecutor — model threading", () => {
     expect(create.mock.calls[0][0].model).toBe("claude-haiku-4-5-20251001");
   });
 
+  it("threads --thinking adaptive through to the request", async () => {
+    const create = vi.fn().mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "t1",
+          name: "submit_evaluation",
+          input: validToolInput,
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: { input_tokens: 10, output_tokens: 10 },
+    });
+    const exec = makeRealItemExecutor(
+      mockClientWith(create),
+      "claude-sonnet-5",
+      "adaptive",
+    );
+    await exec({
+      itemId: "i1",
+      evaluateInput: evaluateInput as never,
+      candidateText: "CANDIDATE PROMPT",
+      promptSha: "abcd1234",
+    });
+    expect(create.mock.calls[0][0].thinking).toEqual({ type: "adaptive" });
+    expect(create.mock.calls[0][0].output_config).toEqual({ effort: "low" });
+  });
+
   it("uses the production default model when no override is given", async () => {
     const create = vi.fn().mockResolvedValue({
       content: [
@@ -230,7 +283,7 @@ describe("makeRealItemExecutor — model threading", () => {
       candidateText: "CANDIDATE PROMPT",
       promptSha: "abcd1234",
     });
-    expect(create.mock.calls[0][0].model).toBe("claude-sonnet-4-6");
+    expect(create.mock.calls[0][0].model).toBe("claude-sonnet-5");
   });
 });
 

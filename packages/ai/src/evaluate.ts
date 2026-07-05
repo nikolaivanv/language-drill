@@ -159,6 +159,14 @@ export type EvaluateAnswerInput = {
    * Never set on the production request path.
    */
   modelOverride?: string;
+  /**
+   * Eval-runner escape hatch: run the arm with adaptive thinking at low
+   * effort (and a larger max_tokens so thinking spend can't truncate the
+   * forced tool call). Only meaningful on models that support adaptive
+   * thinking. Used by `pnpm eval --thinking adaptive`. Never set on the
+   * production request path.
+   */
+  thinkingOverride?: "adaptive";
 };
 
 // ---------------------------------------------------------------------------
@@ -265,22 +273,26 @@ export function parseEvaluationResult(
 // Main evaluation function
 // ---------------------------------------------------------------------------
 
-// Evaluation runs on Sonnet 4.6. It briefly ran on Haiku 4.5 as a latency
-// optimization ("little reasoning risk" for bounded structured output), but
-// production traffic falsified that assumption on Turkish morphology: Haiku
-// passed a real error as grammatically correct ("çalışmayorum" scored 0.85,
-// grammarAccuracy 1.0), confabulated suffix paradigms in feedback (invented
-// "-do/-dö" forms of -DI), and misattributed a slip to deliberate vocabulary
-// choice ("atışlar"). Verdict quality gates this surface — a missed error
-// corrupts mastery tracking, not just feedback prose. Model changes are gated
-// by the `pnpm eval` harness (`--model` arm vs. the `eval-hard-morphology`
-// dataset seeded by `pnpm eval:seed`) and reversible by restoring this one
-// constant. NOTE: changing the model is NOT a
+// Evaluation runs on Sonnet 5 (no thinking — the request shaping below sends
+// an explicit `thinking: disabled` and omits `temperature`, both required by
+// Sonnet 5's API surface). Model history on this surface:
+//  - Haiku 4.5 (latency optimization) missed a real morphological error
+//    ("çalışmayorum" scored 0.85, grammarAccuracy 1.0), confabulated suffix
+//    paradigms (invented "-do/-dö" forms of -DI), and misattributed a slip to
+//    deliberate vocabulary choice ("atışlar") — reverted 2026-07-05 (#525).
+//    Verdict quality gates this surface: a missed error corrupts mastery
+//    tracking, not just feedback prose.
+//  - Sonnet 4.6 → Sonnet 5 (2026-07-05, day-of-GA): verdict parity at N=38
+//    (35-item prod sample + 3 hard-morphology cases), better p95 latency
+//    (13.3s vs 19.0s), ~33% cheaper under intro pricing, and no duplicate
+//    error entries (4.6 emitted dupes on 2/35 items).
+// Model changes are gated by the `pnpm eval` harness (`--model` arm vs. the
+// `eval-hard-morphology` dataset seeded by `pnpm eval:seed`) and reversible
+// by restoring this one constant. NOTE: changing the model is NOT a
 // prompt-body edit, so `EVALUATION_SYSTEM_PROMPT_VERSION` is intentionally NOT
 // bumped for the model part of a change — Langfuse records the model natively
-// on each generation (the 2026-07-05.1 bump reflects the simultaneous prompt
-// hardening, not the model swap).
-const MODEL = "claude-sonnet-4-6" as const;
+// on each generation.
+const MODEL = "claude-sonnet-5" as const;
 
 /**
  * Max tokens for evaluation responses. Sized for the required `reasoning`
@@ -288,6 +300,13 @@ const MODEL = "claude-sonnet-4-6" as const;
  * pre-reasoning budget and risks truncating the forced tool call mid-JSON.
  */
 const MAX_TOKENS = 2048;
+
+/**
+ * Max tokens when an eval arm runs with adaptive thinking
+ * (`thinkingOverride: "adaptive"`): thinking spend counts against
+ * `max_tokens`, so the plain 2048 tool-call budget would truncate.
+ */
+const ADAPTIVE_MAX_TOKENS = 8192;
 
 /**
  * SDK request timeout for the (non-streaming, user-waiting) evaluation call.
@@ -327,6 +346,7 @@ export async function evaluateAnswer(
     attributionKeys,
     systemPromptOverride,
     modelOverride,
+    thinkingOverride,
   } = input;
 
   const userPrompt = buildUserPrompt(
@@ -362,9 +382,24 @@ export async function evaluateAnswer(
     systemPromptText = resolved.text;
   }
 
-  const response = await client.messages.create({
-    model: modelOverride ?? MODEL,
-    max_tokens: MAX_TOKENS,
+  const effectiveModel = modelOverride ?? MODEL;
+  // Per-model request shaping (matters for eval-runner model arms; the
+  // production MODEL takes the plain temperature-0, no-thinking path):
+  //  - Sonnet 5 / Opus 4.7+ / Fable reject non-default sampling params
+  //    (`temperature: 0` → 400), so temperature is only sent to models that
+  //    accept it.
+  //  - Sonnet 5 (and Fable) run ADAPTIVE thinking when the `thinking` field
+  //    is omitted — send an explicit `disabled` so an arm matches the
+  //    production no-thinking semantics unless adaptive is requested.
+  const rejectsSamplingParams = /sonnet-5|opus-4-[7-9]|fable/.test(
+    effectiveModel,
+  );
+  const omittedThinkingMeansAdaptive = /sonnet-5|fable/.test(effectiveModel);
+
+  const request: Anthropic.MessageCreateParamsNonStreaming = {
+    model: effectiveModel,
+    max_tokens:
+      thinkingOverride === "adaptive" ? ADAPTIVE_MAX_TOKENS : MAX_TOKENS,
     system: [
       {
         type: "text" as const,
@@ -383,8 +418,18 @@ export async function evaluateAnswer(
       type: "tool" as const,
       name: EVALUATION_TOOL_NAME,
     },
-    temperature: 0,
-  });
+  };
+  if (!rejectsSamplingParams) {
+    request.temperature = 0;
+  }
+  if (thinkingOverride === "adaptive") {
+    request.thinking = { type: "adaptive" };
+    request.output_config = { effort: "low" };
+  } else if (omittedThinkingMeansAdaptive) {
+    request.thinking = { type: "disabled" };
+  }
+
+  const response = await client.messages.create(request);
 
   // A safety refusal arrives as a 200 with stop_reason "refusal" and no tool
   // block. Surface it as a distinct, expected outcome (the route maps it to a
