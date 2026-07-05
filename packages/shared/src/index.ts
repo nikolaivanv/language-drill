@@ -392,6 +392,7 @@ export type DictationResult = {
   feedback: string; // == summary
   errors: EvaluationError[]; // mapped from genuine-error differences
   estimatedCefrEvidence: string; // == listeningCefr
+  evaluationSource?: "deterministic" | "llm"; // mirrors EvaluationResult (dictation grading is LLM-sourced)
   // dictation-specific:
   rawCharAccuracy: number;
   adjustedCharAccuracy: number;
