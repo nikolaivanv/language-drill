@@ -468,13 +468,14 @@ describe("evaluateAnswer", () => {
     // Verify the SDK was called correctly
     expect(mockCreate).toHaveBeenCalledOnce();
     const callArgs = mockCreate.mock.calls[0][0];
-    expect(callArgs.model).toBe("claude-sonnet-4-6");
+    expect(callArgs.model).toBe("claude-sonnet-5");
     expect(callArgs.max_tokens).toBe(2048);
     // Timeout/maxRetries are applied at client construction (in the route via
     // createObservedClaudeClient), NOT per-request here — lock that evaluate.ts
     // passes no second request-options arg to messages.create. (Req 4.1)
     expect(mockCreate.mock.calls[0][1]).toBeUndefined();
-    expect(callArgs.temperature).toBe(0);
+    // Sonnet 5 rejects non-default sampling params — temperature must be absent.
+    expect("temperature" in callArgs).toBe(false);
     expect(callArgs.tools).toHaveLength(1);
     expect(callArgs.tools[0].name).toBe(EVALUATION_TOOL_NAME);
     expect(callArgs.tool_choice).toEqual({
@@ -582,7 +583,9 @@ describe("evaluateAnswer", () => {
     expect("temperature" in callArgs).toBe(false);
   });
 
-  it("sends no thinking field on the production model", async () => {
+  it("explicitly disables thinking on the production model", async () => {
+    // Sonnet 5 runs ADAPTIVE thinking when the field is omitted — production
+    // must pin the no-thinking semantics explicitly.
     mockCreate.mockResolvedValue({
       content: [
         {
@@ -602,7 +605,7 @@ describe("evaluateAnswer", () => {
       difficulty: CefrLevel.B1,
     });
 
-    expect("thinking" in mockCreate.mock.calls[0][0]).toBe(false);
+    expect(mockCreate.mock.calls[0][0].thinking).toEqual({ type: "disabled" });
   });
 
   it("throws when Claude returns no tool use block", async () => {

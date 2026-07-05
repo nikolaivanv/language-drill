@@ -273,22 +273,26 @@ export function parseEvaluationResult(
 // Main evaluation function
 // ---------------------------------------------------------------------------
 
-// Evaluation runs on Sonnet 4.6. It briefly ran on Haiku 4.5 as a latency
-// optimization ("little reasoning risk" for bounded structured output), but
-// production traffic falsified that assumption on Turkish morphology: Haiku
-// passed a real error as grammatically correct ("çalışmayorum" scored 0.85,
-// grammarAccuracy 1.0), confabulated suffix paradigms in feedback (invented
-// "-do/-dö" forms of -DI), and misattributed a slip to deliberate vocabulary
-// choice ("atışlar"). Verdict quality gates this surface — a missed error
-// corrupts mastery tracking, not just feedback prose. Model changes are gated
-// by the `pnpm eval` harness (`--model` arm vs. the `eval-hard-morphology`
-// dataset seeded by `pnpm eval:seed`) and reversible by restoring this one
-// constant. NOTE: changing the model is NOT a
+// Evaluation runs on Sonnet 5 (no thinking — the request shaping below sends
+// an explicit `thinking: disabled` and omits `temperature`, both required by
+// Sonnet 5's API surface). Model history on this surface:
+//  - Haiku 4.5 (latency optimization) missed a real morphological error
+//    ("çalışmayorum" scored 0.85, grammarAccuracy 1.0), confabulated suffix
+//    paradigms (invented "-do/-dö" forms of -DI), and misattributed a slip to
+//    deliberate vocabulary choice ("atışlar") — reverted 2026-07-05 (#525).
+//    Verdict quality gates this surface: a missed error corrupts mastery
+//    tracking, not just feedback prose.
+//  - Sonnet 4.6 → Sonnet 5 (2026-07-05, day-of-GA): verdict parity at N=38
+//    (35-item prod sample + 3 hard-morphology cases), better p95 latency
+//    (13.3s vs 19.0s), ~33% cheaper under intro pricing, and no duplicate
+//    error entries (4.6 emitted dupes on 2/35 items).
+// Model changes are gated by the `pnpm eval` harness (`--model` arm vs. the
+// `eval-hard-morphology` dataset seeded by `pnpm eval:seed`) and reversible
+// by restoring this one constant. NOTE: changing the model is NOT a
 // prompt-body edit, so `EVALUATION_SYSTEM_PROMPT_VERSION` is intentionally NOT
 // bumped for the model part of a change — Langfuse records the model natively
-// on each generation (the 2026-07-05.1 bump reflects the simultaneous prompt
-// hardening, not the model swap).
-const MODEL = "claude-sonnet-4-6" as const;
+// on each generation.
+const MODEL = "claude-sonnet-5" as const;
 
 /**
  * Max tokens for evaluation responses. Sized for the required `reasoning`

@@ -283,7 +283,7 @@ describe("makeRealItemExecutor — model threading", () => {
       candidateText: "CANDIDATE PROMPT",
       promptSha: "abcd1234",
     });
-    expect(create.mock.calls[0][0].model).toBe("claude-sonnet-4-6");
+    expect(create.mock.calls[0][0].model).toBe("claude-sonnet-5");
   });
 });
 

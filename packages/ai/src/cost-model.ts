@@ -1,6 +1,10 @@
 /**
- * Sonnet 4.5 list pricing (USD per token), copied 2026-05-05 from
- * https://docs.anthropic.com/en/docs/about-claude/pricing
+ * Sonnet-tier list pricing (USD per token), verified 2026-07-05: Sonnet 4.5,
+ * Sonnet 4.6, and Sonnet 5 all list at $3/$15 per MTok, so these constants
+ * cover the evaluator (Sonnet 5 since 2026-07-05) and the generator
+ * (Sonnet 4.6) alike. NOTE: Sonnet 5 bills at intro pricing ($2/$10) through
+ * 2026-08-31 — estimates here intentionally use the durable list price, so
+ * evaluator costs are overstated ~33% during the intro window.
  *
  * Update path: when the evaluator's MODEL constant in evaluate.ts and the
  * generator's GENERATION_MODEL constant in generate.ts move to a new model,
