@@ -2660,6 +2660,46 @@ describe('POST /exercises/:id/submissions/:submissionId/explain', () => {
     expect(mockEvaluateAnswer).not.toHaveBeenCalled();
   });
 
+  it('treats a stored empty-string explanation as cached (not a miss) and does not re-meter', async () => {
+    // A schema-legal empty-string feedback is a valid cached value — the old
+    // `if (responseJson.explanation)` truthiness check treated '' as a miss
+    // and fell through to the cold path (re-metering every subsequent tap).
+    queueHistoryAndExercise(
+      { ...deterministicRow, responseJson: { ...deterministicRow.responseJson, explanation: '' } },
+      null,
+    );
+    const res = await explain('cloze-tr-001', 'sub-1');
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as AnyJson).explanation).toBe('');
+    expect(mockEvaluateAnswer).not.toHaveBeenCalled();
+  });
+
+  it('returns 503 GLOBAL_CAPACITY when the global guard trips, without calling Claude', async () => {
+    queueHistoryAndExercise(deterministicRow, clozeExercise);
+    vi.mocked(checkGlobalCapacity).mockResolvedValueOnce('capped');
+
+    const res = await explain('cloze-tr-001', 'sub-1');
+    expect(res.status).toBe(503);
+    expect(((await res.json()) as AnyJson).code).toBe('GLOBAL_CAPACITY');
+    expect(mockEvaluateAnswer).not.toHaveBeenCalled();
+    // Only the auth middleware user upsert — no history/usage inserts
+    expect(mockInsert).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns 429 RATE_LIMIT_EXCEEDED when the daily explain-eval cap is exhausted, without calling Claude', async () => {
+    queueHistoryAndExercise(deterministicRow, clozeExercise);
+    // Daily-cap count select on the cold path — same shape as the submit
+    // route's usage-count check (where() resolves directly, no .limit()).
+    mockWhere.mockResolvedValueOnce([{ count: 50 }] as never);
+
+    const res = await explain('cloze-tr-001', 'sub-1');
+    expect(res.status).toBe(429);
+    expect(((await res.json()) as AnyJson).code).toBe('RATE_LIMIT_EXCEEDED');
+    expect(mockEvaluateAnswer).not.toHaveBeenCalled();
+    // Only the auth middleware user upsert — no history/usage inserts
+    expect(mockInsert).toHaveBeenCalledTimes(1);
+  });
+
   it('cold call: runs evaluateAnswer, meters ai_evaluation, persists the explanation', async () => {
     queueHistoryAndExercise(deterministicRow, clozeExercise);
     // Daily-cap count select on the cold path — same shape as the submit

@@ -813,8 +813,9 @@ exercises.post('/exercises/:id/submissions/:submissionId/explain', async (c) => 
     return c.json({ error: 'Submission has no stored answer', code: 'NOT_EXPLAINABLE' }, 400);
   }
 
-  // Cached — free, no gates.
-  if (responseJson.explanation) {
+  // Cached — free, no gates. A schema-legal empty string is still a cache
+  // hit (falsy check would treat it as a miss and re-meter every tap).
+  if (typeof responseJson.explanation === 'string') {
     return c.json({ explanation: responseJson.explanation });
   }
 

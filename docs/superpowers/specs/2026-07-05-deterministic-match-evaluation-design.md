@@ -108,8 +108,9 @@ submit → session guard → type is cloze/vocab → gradeFluencyAnswer → MATC
 
 ## Error handling
 
-- Malformed content on the short-circuit path → same 500
-  `EXERCISE_CONTENT_INVALID` pattern as conjugation.
+- Malformed cloze/vocab content on the short-circuit path falls through to
+  the LLM evaluation (graceful degradation — unlike conjugation, the LLM can
+  grade these types; conjugation keeps its 500 `EXERCISE_CONTENT_INVALID`).
 - Explain endpoint: LLM failure → 502 `AI_UNAVAILABLE` (same mapping as
   submit); cap exhausted → 429 (same as submit); refusal →
   ContentRejectedError mapping as submit.
