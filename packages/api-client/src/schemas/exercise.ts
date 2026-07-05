@@ -43,6 +43,7 @@ export const EvaluationResultSchema = z.object({
   feedback: z.string(),
   errors: z.array(EvaluationErrorSchema),
   estimatedCefrEvidence: z.string(),
+  evaluationSource: z.enum(['deterministic', 'llm']).optional(),
   submissionId: z.string().uuid().optional(),
 });
 

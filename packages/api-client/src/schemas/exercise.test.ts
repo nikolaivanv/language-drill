@@ -114,6 +114,35 @@ describe('EvaluationResultSchema', () => {
     };
     expect(() => EvaluationResultSchema.parse(data)).toThrow();
   });
+
+  describe('EvaluationResultSchema — evaluationSource', () => {
+    const base = {
+      score: 1,
+      grammarAccuracy: 1,
+      vocabularyRange: 'A1',
+      taskAchievement: 1,
+      feedback: 'Correct — koydu.',
+      errors: [],
+      estimatedCefrEvidence: 'A1',
+    };
+
+    it('accepts evaluationSource: deterministic', () => {
+      const parsed = EvaluationResultSchema.parse({ ...base, evaluationSource: 'deterministic' });
+      expect(parsed.evaluationSource).toBe('deterministic');
+    });
+
+    it('accepts evaluationSource: llm', () => {
+      expect(EvaluationResultSchema.parse({ ...base, evaluationSource: 'llm' }).evaluationSource).toBe('llm');
+    });
+
+    it('accepts absent evaluationSource (historical responses)', () => {
+      expect(EvaluationResultSchema.parse(base).evaluationSource).toBeUndefined();
+    });
+
+    it('rejects unknown evaluationSource values', () => {
+      expect(() => EvaluationResultSchema.parse({ ...base, evaluationSource: 'psychic' })).toThrow();
+    });
+  });
 });
 
 describe('DictationResultSchema', () => {

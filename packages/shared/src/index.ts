@@ -336,6 +336,12 @@ export type EvaluationResult = {
   feedback: string;
   errors: EvaluationError[];
   estimatedCefrEvidence: string;
+  /**
+   * How this evaluation was produced. 'deterministic' = exact-match
+   * short-circuit (no LLM ran; eligible for on-demand "Explain why").
+   * Absent on rows written before 2026-07-05 — treat as 'llm'.
+   */
+  evaluationSource?: 'deterministic' | 'llm';
 };
 
 // ---------------------------------------------------------------------------
