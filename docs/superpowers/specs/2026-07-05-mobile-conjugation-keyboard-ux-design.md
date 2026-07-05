@@ -21,8 +21,9 @@ In `apps/web/app/(dashboard)/drill/_components/conjugation-exercise.tsx`:
 
 - Add a ref on the component's root `div` (its first child is the prompt card,
   so aligning the root's top aligns the card's top).
-- On answer-input focus, **only when `matchMedia('(max-width: 639px)')`
-  matches** (phone-sized, matching Tailwind's `sm` breakpoint):
+- On answer-input focus, **only when `matchMedia(MOBILE_MEDIA_QUERY)` matches**
+  (`(max-width: 760px)` from `apps/web/lib/responsive.ts` — the project's
+  single responsive breakpoint, mirrored by the Tailwind `mobile:` variant):
   - Attach a one-shot `window.visualViewport` `resize` listener — it fires when
     the keyboard finishes opening, *after* the browser has done its own
     scroll-input-into-view — and then call
@@ -42,14 +43,16 @@ behavior change. No changes to `page.tsx` layout.
 
 In `apps/web/components/drill/conjugation-feature-bundle.tsx`, `card` variant:
 
-- Keep DOM order semantic (subject → features in stored order) so `≥sm`
-  renders exactly as today.
+- Keep DOM order semantic (subject → features in stored order) so wide
+  viewports render exactly as today.
 - Compute a length rank per feature chip — `max(term.length, gloss.length)`
-  ascending, stable on ties — and assign literal `max-sm:order-1` /
-  `max-sm:order-2` / `max-sm:order-3` (…) classes from a static lookup array
-  (Tailwind-JIT-safe; no dynamic class interpolation). The subject badge gets
-  no order class (order 0), so it stays first.
-- Below `sm`, short chips pack next to the subject badge: e.g. `sen` +
+  ascending, stable on ties — and assign literal `mobile:order-1` /
+  `mobile:order-2` / `mobile:order-3` (…) classes from a static lookup array
+  (Tailwind-JIT-safe; no dynamic class interpolation). The `mobile:` custom
+  variant (`@media (max-width: 760px)`, `app/globals.css`) is the project's
+  canonical responsive prefix. The subject badge gets no order class
+  (order 0), so it stays first.
+- At ≤760px, short chips pack next to the subject badge: e.g. `sen` +
   `olumsuz` on row 1, the long tense chip alone on row 2.
 - Fluency mode shares this component and gets the same fix (desirable — same
   problem there). The `inline` variant and the unstructured fallback are
