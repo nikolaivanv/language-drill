@@ -1,0 +1,100 @@
+{
+  "dataset": "eval-hard-morphology",
+  "description": "Hand-curated TR morphology cases where the production evaluator (Haiku 4.5, 2026-07) returned a wrong or confabulated verdict. expectedOutput is the OBSERVED BAD baseline, not the ideal answer — the eval diff shows movement against the recorded failure. Seeded by scripts/eval-seed.ts; extend by adding items with fresh seedKeys and re-running pnpm eval:seed.",
+  "items": [
+    {
+      "seedKey": "tr-negation-narrowing-missed-error",
+      "note": "MISSED ERROR (worst failure class). 'çalışmayorum' is ungrammatical — negative -mA contracts before -Iyor, giving 'çalışmıyorum'. Baseline scored 0.85 with grammarAccuracy 1.0 and zero errors, and called the answer 'grammatically correct'. A good evaluation reports a major grammar error on 'çalışmayorum' with correction 'çalışmıyorum' and grammarAccuracy well below 1.",
+      "input": {
+        "exercise": {
+          "type": "translation",
+          "instructions": "Translate the sentence into Turkish.",
+          "sourceText": "I am not studying hard.",
+          "sourceLanguage": "EN",
+          "targetLanguage": "TR",
+          "referenceTranslation": "Sıkı çalışmıyorum."
+        },
+        "userAnswer": "Çok çalışmayorum.",
+        "language": "TR",
+        "difficulty": "A1"
+      },
+      "expectedOutput": {
+        "score": 0.85,
+        "errors": [],
+        "feedback": "Your translation is grammatically correct and uses proper Turkish negation with the present continuous tense. The sentence \"Çok çalışmayorum\" (I am not studying a lot) is a valid and natural way to express the meaning. However, it differs slightly in nuance from the reference translation \"Sıkı çalışmıyorum\" (I am not studying hard).",
+        "grammarAccuracy": 1,
+        "taskAchievement": 0.85,
+        "vocabularyRange": "A1",
+        "estimatedCefrEvidence": "A1"
+      }
+    },
+    {
+      "seedKey": "tr-plural-slip-intent-misattribution",
+      "note": "INTENT MISATTRIBUTION + over-harsh zero. Baseline caught 'atışlar' but explained it as a deliberate vocabulary choice ('you used atışlar meaning shootings/firings') and scored the whole 2/3-correct phrase 0.0 on every dimension. A good evaluation describes the error as a deviation from the required form 'atlar' without asserting what the learner meant, and awards partial credit for 'kuşlar ve'.",
+      "input": {
+        "exercise": {
+          "type": "translation",
+          "instructions": "Translate this sentence into Turkish.",
+          "sourceText": "the birds and the horses",
+          "sourceLanguage": "EN",
+          "targetLanguage": "TR",
+          "referenceTranslation": "kuşlar ve atlar"
+        },
+        "userAnswer": "kuşlar ve atışlar",
+        "language": "TR",
+        "difficulty": "A1"
+      },
+      "expectedOutput": {
+        "score": 0,
+        "errors": [
+          {
+            "text": "atışlar",
+            "type": "vocabulary",
+            "severity": "major",
+            "correction": "atlar",
+            "explanation": "You used 'atışlar' (shootings/firings), but the correct word for 'horses' is 'atlar'. 'Atış' is a different word meaning 'shot' or 'firing', which changes the meaning of the entire phrase."
+          }
+        ],
+        "feedback": "Your translation contains a critical vocabulary error. You wrote \"atışlar\" (shootings/firings), but the correct word for \"horses\" is \"atlar\".",
+        "grammarAccuracy": 0,
+        "taskAchievement": 0,
+        "vocabularyRange": "A1",
+        "estimatedCefrEvidence": "A1"
+      }
+    },
+    {
+      "seedKey": "tr-dili-past-paradigm-confabulation",
+      "note": "PARADIGM CONFABULATION. Verdict and correction were right (koydı → koydu), but the feedback recited an invented paradigm — 'back vowels take -dA/-dı/-du/-do forms, front vowels take -de/-di/-dü/-dö forms' (-do/-dö do not exist; -DI has exactly -dı/-di/-du/-dü plus t-variants) — and claimed 'koy-' ends in a vowel (it ends in y). A good evaluation names only the form this answer required (-du, because the last vowel o is back and rounded) without enumerating a paradigm.",
+      "input": {
+        "exercise": {
+          "type": "cloze",
+          "instructions": "Fill in the blank with the correct past tense form of the verb in parentheses.",
+          "sentence": "Ali kitabı masanın üzerine ___ . (koymak)",
+          "correctAnswer": "koydu",
+          "context": "Definite past tense (-DI)"
+        },
+        "userAnswer": "koydı",
+        "language": "TR",
+        "difficulty": "A1"
+      },
+      "expectedOutput": {
+        "score": 0,
+        "errors": [
+          {
+            "text": "koydı",
+            "type": "grammar",
+            "severity": "major",
+            "correction": "koydu",
+            "explanation": "The stem 'koy-' ends in the back vowel 'o', so the definite past suffix must harmonize with that back vowel. The correct form is '-du' (not '-dı').",
+            "grammarPointKey": "tr-a1-dili-past"
+          }
+        ],
+        "feedback": "Your answer \"koydı\" is incorrect. The verb stem \"koy-\" ends in a vowel, so it takes the regular -DI suffix. However, you have applied vowel harmony incorrectly. Remember: -DI suffix harmony depends on the final vowel of the stem — back vowels (a, ı, o, u) take -dA/-dı/-du/-do forms, while front vowels (e, i, ö, ü) take -de/-di/-dü/-dö forms.",
+        "grammarAccuracy": 0,
+        "taskAchievement": 0,
+        "vocabularyRange": "A1",
+        "estimatedCefrEvidence": "A1"
+      }
+    }
+  ]
+}

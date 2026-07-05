@@ -28,6 +28,7 @@
     "bootstrap-prompts": "dotenv -e .env -- pnpm --filter @language-drill/ai bootstrap-prompts",
     "push-prompts": "dotenv -e .env -- pnpm --filter @language-drill/ai push-prompts",
     "eval:export": "dotenv -e .env -- pnpm --filter @language-drill/ai eval:export",
+    "eval:seed": "dotenv -e .env -- pnpm --filter @language-drill/ai eval:seed",
     "eval": "dotenv -e .env -- pnpm --filter @language-drill/ai eval",
     "eval:gen:export": "dotenv -e .env -- pnpm --filter @language-drill/ai eval:gen:export",
     "eval:gen": "dotenv -e .env -- pnpm --filter @language-drill/ai eval:gen"

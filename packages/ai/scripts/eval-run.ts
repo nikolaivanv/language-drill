@@ -58,6 +58,14 @@ export type EvalRunArgs = {
   runName?: string;
   allowProd: boolean;
   limit?: number;
+  /**
+   * Optional Anthropic model id for this arm (threaded to `evaluateAnswer`
+   * as `modelOverride`). Absent → the production `MODEL` constant. Lets a
+   * single dataset compare model arms, not just prompt arms. NOTE: the
+   * per-item cost column always uses Sonnet list pricing (`estimateCostUsd`),
+   * so cost figures for non-Sonnet arms are indicative only.
+   */
+  model?: string;
 };
 
 export function parseEvalRunArgs(
@@ -71,6 +79,7 @@ export function parseEvalRunArgs(
       "run-name": { type: "string" },
       "allow-prod": { type: "boolean", default: false },
       limit: { type: "string" },
+      model: { type: "string" },
       help: { type: "boolean", default: false },
     },
     allowPositionals: false,
@@ -114,6 +123,8 @@ export function parseEvalRunArgs(
     runName: parsed.values["run-name"],
     allowProd: parsed.values["allow-prod"] ?? false,
     limit,
+    model:
+      parsed.values.model === "" ? undefined : parsed.values.model,
   };
 }
 
@@ -121,7 +132,7 @@ function printUsage(): void {
   console.log(
     [
       "Usage: pnpm eval --dataset <name> --candidate <source> [--run-name <name>]",
-      "                [--allow-prod] [--limit <n>]",
+      "                [--allow-prod] [--limit <n>] [--model <id>]",
       "",
       "Runs a candidate prompt against a Langfuse dataset; links each",
       "result trace to a dataset run and prints per-item outcomes.",
@@ -131,6 +142,8 @@ function printUsage(): void {
       "  --run-name <name>     Optional. Defaults to candidate-<sha8>-<iso>.",
       "  --allow-prod          Required if LANGFUSE_ENV=prod (safety guard).",
       "  --limit <n>           Cap items processed (useful for fast iteration).",
+      "  --model <id>          Anthropic model id for this arm (default: the",
+      "                        production evaluator model). Enables model A/Bs.",
       "  --help                Show this message.",
     ].join("\n"),
   );
@@ -273,6 +286,7 @@ export type EvalRunItemExecutor = (
  */
 export function makeRealItemExecutor(
   client: Anthropic,
+  model?: string,
 ): EvalRunItemExecutor {
   return async (params) => {
     const ctx: LlmTraceContext = {
@@ -305,6 +319,7 @@ export function makeRealItemExecutor(
         actual = await evaluateAnswer(wrappedClient, {
           ...params.evaluateInput,
           systemPromptOverride: params.candidateText,
+          modelOverride: model,
         });
       });
     } catch (err) {
@@ -986,7 +1001,7 @@ async function main(): Promise<void> {
 
   const result = await runEvalRun({
     langfuse: lf,
-    executor: makeRealItemExecutor(createClaudeClient(apiKey)),
+    executor: makeRealItemExecutor(createClaudeClient(apiKey), args.model),
     args,
     candidateText: candidate.text,
     candidateSource: candidate.source,

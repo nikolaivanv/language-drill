@@ -280,8 +280,10 @@ describe("EVALUATION_SYSTEM_PROMPT", () => {
     expect(EVALUATION_SYSTEM_PROMPT).toContain("domates");
   });
 
-  it("bumps EVALUATION_SYSTEM_PROMPT_VERSION for the optional-elements rule", () => {
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-07-05");
+  it("bumps EVALUATION_SYSTEM_PROMPT_VERSION for the verification-discipline rules", () => {
+    // `.1` suffix: main's evaluate@2026-07-05 (PR #523 optional-elements rule)
+    // is a different prompt body — same-day bumps must not share a cohort tag.
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-07-05.1");
   });
 });
 
@@ -366,6 +368,14 @@ describe("parseEvaluationResult", () => {
     ).toThrow("Invalid error severity");
   });
 
+  it("does not leak the private reasoning scratchpad into the result", () => {
+    const result = parseEvaluationResult({
+      ...validEvaluationInput,
+      reasoning: "koy- ends in y; last vowel o (back, rounded) → -du.",
+    });
+    expect("reasoning" in result).toBe(false);
+  });
+
   it("throws for non-array errors", () => {
     expect(() =>
       parseEvaluationResult({ ...validEvaluationInput, errors: "none" }),
@@ -389,6 +399,20 @@ describe("parseEvaluationResult", () => {
 describe("EVALUATION_TOOL", () => {
   it("has the correct tool name", () => {
     expect(EVALUATION_TOOL.name).toBe("submit_evaluation");
+  });
+
+  it("declares the private reasoning scratchpad as the FIRST property and requires it", () => {
+    // First position matters: with a forced tool call and no thinking, the
+    // model can only "reason before scoring" if the reasoning field is
+    // generated before the score fields.
+    const props = EVALUATION_TOOL.input_schema.properties as Record<
+      string,
+      unknown
+    >;
+    expect(Object.keys(props)[0]).toBe("reasoning");
+    expect(EVALUATION_TOOL.input_schema.required as string[]).toContain(
+      "reasoning",
+    );
   });
 
   it("has all required fields in the schema", () => {
@@ -444,7 +468,8 @@ describe("evaluateAnswer", () => {
     // Verify the SDK was called correctly
     expect(mockCreate).toHaveBeenCalledOnce();
     const callArgs = mockCreate.mock.calls[0][0];
-    expect(callArgs.model).toBe("claude-haiku-4-5-20251001");
+    expect(callArgs.model).toBe("claude-sonnet-4-6");
+    expect(callArgs.max_tokens).toBe(2048);
     // Timeout/maxRetries are applied at client construction (in the route via
     // createObservedClaudeClient), NOT per-request here — lock that evaluate.ts
     // passes no second request-options arg to messages.create. (Req 4.1)
@@ -465,6 +490,32 @@ describe("evaluateAnswer", () => {
         cache_control: { type: "ephemeral" },
       },
     ]);
+  });
+
+  it("uses modelOverride when provided (eval-runner A/B arms)", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_123",
+          name: EVALUATION_TOOL_NAME,
+          input: validEvaluationInput,
+        },
+      ],
+      stop_reason: "tool_use",
+    });
+
+    await evaluateAnswer(mockClient, {
+      exercise: clozeContent,
+      userAnswer: "went",
+      language: Language.EN,
+      difficulty: CefrLevel.B1,
+      modelOverride: "claude-haiku-4-5-20251001",
+    });
+
+    expect(mockCreate.mock.calls[0][0].model).toBe(
+      "claude-haiku-4-5-20251001",
+    );
   });
 
   it("throws when Claude returns no tool use block", async () => {
