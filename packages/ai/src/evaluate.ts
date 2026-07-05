@@ -77,7 +77,20 @@ export function buildEvaluationTool(
       "Submit the structured evaluation result for a language exercise answer.",
     input_schema: {
       type: "object" as const,
+      // `reasoning` MUST stay the first property: with a forced tool call and
+      // no extended thinking, field order is the only place the model can
+      // verify morphology BEFORE committing to scores. It is private — parsed
+      // out and never returned to the user (see parseEvaluationResult).
       properties: {
+        reasoning: {
+          type: "string",
+          description:
+            "Private verification scratchpad (never shown to the learner). " +
+            "Before scoring: segment the user's answer morpheme by morpheme, " +
+            "compare each form against what the sentence requires, and check " +
+            "every rule you are about to state in feedback against these " +
+            "specific forms. 2-4 short sentences.",
+        },
         score: { type: "number", description: "Overall score from 0.0 to 1.0 combining all evaluation factors." },
         grammarAccuracy: { type: "number", description: "Grammar accuracy score from 0.0 to 1.0. Covers morphology, syntax, agreement, tense, word order." },
         vocabularyRange: { type: "string", description: 'CEFR level string (A1–C2) representing the sophistication of vocabulary used.' },
@@ -96,8 +109,8 @@ export function buildEvaluationTool(
         estimatedCefrEvidence: { type: "string", description: 'The CEFR level this answer provides evidence for (e.g. "B1").' },
       },
       required: [
-        "score", "grammarAccuracy", "vocabularyRange", "taskAchievement",
-        "feedback", "errors", "estimatedCefrEvidence",
+        "reasoning", "score", "grammarAccuracy", "vocabularyRange",
+        "taskAchievement", "feedback", "errors", "estimatedCefrEvidence",
       ],
     },
   };
@@ -118,7 +131,7 @@ export type EvaluateAnswerInput = {
   /**
    * Authoritative curriculum grounding for the exercise's grammar point,
    * resolved by the caller from `exercises.grammarPointKey`. When present it is
-   * appended to the user prompt so the (Haiku) evaluator grounds its feedback
+   * appended to the user prompt so the evaluator grounds its feedback
    * in the curriculum rather than confabulating a rule. Omitted when the
    * exercise has no `grammarPointKey` or the key is unknown.
    */
@@ -245,28 +258,37 @@ export function parseEvaluationResult(
 // Main evaluation function
 // ---------------------------------------------------------------------------
 
-// Evaluation runs on Haiku 4.5 (same precedent as the annotate/skim
-// `STREAM_MODEL`). The evaluation output is small and bounded (a single
-// `submit_evaluation` tool call, ≤1024 tokens), so Haiku's ~2–3× speedup on
-// structured tool-use is a large interactive-latency win with little reasoning
-// risk; the swap is gated by the `pnpm eval` Langfuse-dataset harness and is
+// Evaluation runs on Sonnet 4.6. It briefly ran on Haiku 4.5 as a latency
+// optimization ("little reasoning risk" for bounded structured output), but
+// production traffic falsified that assumption on Turkish morphology: Haiku
+// passed a real error as grammatically correct ("çalışmayorum" scored 0.85,
+// grammarAccuracy 1.0), confabulated suffix paradigms in feedback (invented
+// "-do/-dö" forms of -DI), and misattributed a slip to deliberate vocabulary
+// choice ("atışlar"). Verdict quality gates this surface — a missed error
+// corrupts mastery tracking, not just feedback prose. Model changes are gated
+// by the `pnpm eval` Langfuse-dataset harness (see eval-runs/README notes) and
 // reversible by restoring this one constant. NOTE: changing the model is NOT a
 // prompt-body edit, so `EVALUATION_SYSTEM_PROMPT_VERSION` is intentionally NOT
-// bumped — Langfuse records the model natively on each generation, and bumping
-// the prompt-version cohort for a model-only change would corrupt prompt A/B
-// comparisons (see CLAUDE.md "Prompt Editing").
-const MODEL = "claude-haiku-4-5-20251001" as const;
+// bumped for the model part of a change — Langfuse records the model natively
+// on each generation (the 2026-07-05 bump reflects the simultaneous prompt
+// hardening, not the model swap).
+const MODEL = "claude-sonnet-4-6" as const;
 
-/** Max tokens for evaluation responses */
-const MAX_TOKENS = 1024;
+/**
+ * Max tokens for evaluation responses. Sized for the required `reasoning`
+ * scratchpad (first tool field) plus feedback + errors; 1024 was the
+ * pre-reasoning budget and risks truncating the forced tool call mid-JSON.
+ */
+const MAX_TOKENS = 2048;
 
 /**
  * SDK request timeout for the (non-streaming, user-waiting) evaluation call.
  * The submit→feedback loop is interactive, so we fail fast rather than inherit
- * the SDK's 10-minute default. ~18 s leaves room for a slow-but-real Haiku
- * response while bounding the tail. (Req 4.1)
+ * the SDK's 10-minute default. ~30 s leaves room for a slow-but-real Sonnet
+ * response generating up to MAX_TOKENS (reasoning + feedback) while bounding
+ * the tail; free-writing eval (longer outputs) uses 45 s. (Req 4.1)
  */
-export const EVAL_REQUEST_TIMEOUT_MS = 18_000;
+export const EVAL_REQUEST_TIMEOUT_MS = 30_000;
 
 /**
  * One retry instead of the SDK default of 2. A transient upstream blip gets a

@@ -254,7 +254,7 @@ describe("EVALUATION_SYSTEM_PROMPT", () => {
   });
 
   it("bumps EVALUATION_SYSTEM_PROMPT_VERSION for the grounded prompt (R4.3)", () => {
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-06-20");
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-07-05");
   });
 });
 
@@ -339,6 +339,14 @@ describe("parseEvaluationResult", () => {
     ).toThrow("Invalid error severity");
   });
 
+  it("does not leak the private reasoning scratchpad into the result", () => {
+    const result = parseEvaluationResult({
+      ...validEvaluationInput,
+      reasoning: "koy- ends in y; last vowel o (back, rounded) → -du.",
+    });
+    expect("reasoning" in result).toBe(false);
+  });
+
   it("throws for non-array errors", () => {
     expect(() =>
       parseEvaluationResult({ ...validEvaluationInput, errors: "none" }),
@@ -362,6 +370,20 @@ describe("parseEvaluationResult", () => {
 describe("EVALUATION_TOOL", () => {
   it("has the correct tool name", () => {
     expect(EVALUATION_TOOL.name).toBe("submit_evaluation");
+  });
+
+  it("declares the private reasoning scratchpad as the FIRST property and requires it", () => {
+    // First position matters: with a forced tool call and no thinking, the
+    // model can only "reason before scoring" if the reasoning field is
+    // generated before the score fields.
+    const props = EVALUATION_TOOL.input_schema.properties as Record<
+      string,
+      unknown
+    >;
+    expect(Object.keys(props)[0]).toBe("reasoning");
+    expect(EVALUATION_TOOL.input_schema.required as string[]).toContain(
+      "reasoning",
+    );
   });
 
   it("has all required fields in the schema", () => {
@@ -417,7 +439,8 @@ describe("evaluateAnswer", () => {
     // Verify the SDK was called correctly
     expect(mockCreate).toHaveBeenCalledOnce();
     const callArgs = mockCreate.mock.calls[0][0];
-    expect(callArgs.model).toBe("claude-haiku-4-5-20251001");
+    expect(callArgs.model).toBe("claude-sonnet-4-6");
+    expect(callArgs.max_tokens).toBe(2048);
     // Timeout/maxRetries are applied at client construction (in the route via
     // createObservedClaudeClient), NOT per-request here — lock that evaluate.ts
     // passes no second request-options arg to messages.create. (Req 4.1)

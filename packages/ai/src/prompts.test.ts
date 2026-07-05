@@ -26,7 +26,20 @@ describe("attribution prompt wiring", () => {
   });
 
   it("version is bumped to today", () => {
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-06-20");
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-07-05");
+  });
+
+  it("requires morpheme-level verification before declaring an answer correct", () => {
+    expect(EVALUATION_SYSTEM_PROMPT).toMatch(/morpheme by morpheme/i);
+  });
+
+  it("forbids reciting suffix paradigms in feedback", () => {
+    expect(EVALUATION_SYSTEM_PROMPT).toMatch(/never recite/i);
+    expect(EVALUATION_SYSTEM_PROMPT).toMatch(/paradigm/i);
+  });
+
+  it("forbids guessing learner intent from accidental real words", () => {
+    expect(EVALUATION_SYSTEM_PROMPT).toMatch(/presumed intent|do not assume the learner meant/i);
   });
 
   it("appends a Grammar points in scope block when keys are provided", () => {
