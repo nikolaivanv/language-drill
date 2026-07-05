@@ -142,6 +142,19 @@ describe('EvaluationResultSchema', () => {
     it('rejects unknown evaluationSource values', () => {
       expect(() => EvaluationResultSchema.parse({ ...base, evaluationSource: 'psychic' })).toThrow();
     });
+
+    it('DictationResultSchema preserves evaluationSource', () => {
+      const dict = {
+        kind: 'dictation',
+        score: 0.97, grammarAccuracy: 0.97, vocabularyRange: 'B2', taskAchievement: 0.95,
+        feedback: 's', errors: [], estimatedCefrEvidence: 'B2',
+        rawCharAccuracy: 0.94, adjustedCharAccuracy: 0.97, wordAccuracy: 0.95,
+        listeningCefr: 'B2', headline: 'h', summary: 's',
+        diff: [{ kind: 'match', text: 'hola' }],
+        differences: [], criteria: [{ id: 'char', label: 'Character accuracy', score: 0.97, cefr: 'C1', note: 'n' }],
+      };
+      expect(DictationResultSchema.parse({ ...dict, evaluationSource: 'llm' }).evaluationSource).toBe('llm');
+    });
   });
 });
 

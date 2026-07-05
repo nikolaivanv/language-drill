@@ -83,6 +83,7 @@ export const DictationResultSchema = z.object({
   feedback: z.string(),
   errors: z.array(EvaluationErrorSchema),
   estimatedCefrEvidence: z.string(),
+  evaluationSource: z.enum(['deterministic', 'llm']).optional(),
   rawCharAccuracy: z.number().min(0).max(1),
   adjustedCharAccuracy: z.number().min(0).max(1),
   wordAccuracy: z.number().min(0).max(1),
