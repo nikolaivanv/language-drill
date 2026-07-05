@@ -74,4 +74,45 @@ describe('ConjugationFeatureBundle', () => {
     // No pronoun badge should be rendered for a subjectless (nominal) cell.
     expect(screen.queryByText("o")).toBeNull();
   });
+
+  it('card variant ranks chips shortest-first for mobile packing via mobile:order-N', () => {
+    render(
+      <ConjugationFeatureBundle
+        content={{
+          ...BASE,
+          features: [
+            { term: 'geçmiş zaman (-DI)', gloss: 'definite past' },
+            { term: 'olumsuz', gloss: 'negative' },
+          ],
+          subject: { pronoun: 'onlar', gloss: 'they' },
+        }}
+      />,
+    );
+    // Chip div = parent of the term span. Shorter chip (olumsuz, 8) ranks
+    // before the longer tense chip (18) on mobile; DOM order is untouched.
+    expect(screen.getByText('olumsuz').parentElement).toHaveClass('mobile:order-1');
+    expect(screen.getByText('geçmiş zaman (-DI)').parentElement).toHaveClass(
+      'mobile:order-2',
+    );
+    // The subject badge carries no order class, so it stays first on mobile.
+    expect(screen.getByText('onlar').parentElement?.className).not.toMatch(
+      /mobile:order/,
+    );
+  });
+
+  it('card variant keeps the stored order for equal-length chips (stable rank)', () => {
+    render(
+      <ConjugationFeatureBundle
+        content={{
+          ...BASE,
+          features: [
+            { term: 'aaaa', gloss: 'x' },
+            { term: 'bbbb', gloss: 'y' },
+          ],
+        }}
+      />,
+    );
+    expect(screen.getByText('aaaa').parentElement).toHaveClass('mobile:order-1');
+    expect(screen.getByText('bbbb').parentElement).toHaveClass('mobile:order-2');
+  });
 });
