@@ -185,10 +185,13 @@ full-paradigm finite tenses, per the TR flagging criteria; seed kind `verb`).
   `WHERE … = 'es-b1-comparatives-superlatives'`:
   - `exercises`: `grammar_point_key` → new key, `difficulty` → `A2` (both in
     one UPDATE so the dedup index stays unique);
-  - `user_exercise_history`: `grammar_point_key`, `host_grammar_point_key`,
-    `error_grammar_point_key`;
   - `user_grammar_mastery`: `grammar_point_key` (PK column);
-  - `theory_topics`: `grammar_point_key`.
+  - `theory_topics`: `grammar_point_key`;
+  - `error_observations`: `host_grammar_point_key`, `error_grammar_point_key`;
+  - `fluency_attempts`: `grammar_point_key` (denormalized, nullable);
+  - `spaced_repetition_cards`: `item_id` where `item_type = 'grammar_point'`.
+  (Correction from review: `user_exercise_history` has no grammar-key
+  columns — it references exercises by id only.)
   `generation_jobs` history rows stay untouched: the scheduler derives need
   from approved-pool counts, so the migrated A2 pool suppresses regeneration
   naturally (verify this query path during implementation before merging).
