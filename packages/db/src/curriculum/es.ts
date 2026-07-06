@@ -1133,7 +1133,150 @@ const esCurriculum: readonly GrammarPoint[] = [
 
   // ---------------------------------------------------------------------------
   // Vocab umbrellas — kind: 'vocab'
+  // Themed A1/A2 umbrellas (2026-07-06), mirroring the TR themed vocab split:
+  // narrow topic slices give the generator a fresh semantic surface per cell.
   // ---------------------------------------------------------------------------
+  {
+    key: 'es-a1-vocab-family-people',
+    kind: 'vocab',
+    name: 'Family and people (A1)',
+    description:
+      'Core A1 vocabulary for family members, people, and basic personal descriptions.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['la madre', 'el hermano mayor'],
+    examplesNegative: ['*el madre'],
+    commonErrors: [
+      'Mismatching article gender on family nouns ("*el madre").',
+      'Confusing "padres" (parents) with "parientes" (relatives).',
+    ],
+  },
+  {
+    key: 'es-a1-vocab-food-drink',
+    kind: 'vocab',
+    name: 'Food and drink (A1)',
+    description: 'Core A1 vocabulary for everyday foods, fruit, vegetables, and drinks.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['el pan', 'la manzana roja'],
+    examplesNegative: ['*el agua fría (should be "la agua fría")'],
+    commonErrors: [
+      'Missing the special article rule for stressed-a feminine nouns ("el agua", not "*la agua", but still feminine — "el agua fría").',
+      'Confusing "fruta" (fruit, generic) with "fruto" (fruit of a plant/tree).',
+    ],
+  },
+  {
+    key: 'es-a1-vocab-home-objects',
+    kind: 'vocab',
+    name: 'Home and objects (A1)',
+    description: 'Core A1 vocabulary for rooms, furniture, and everyday household objects.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['la cocina', 'el sofá nuevo'],
+    examplesNegative: ['*la sofá'],
+    commonErrors: [
+      'Mismatching article gender on borrowed nouns ("*la sofá" instead of "el sofá").',
+      'Confusing "cuarto" (room) with "cuarta" (fourth, feminine ordinal).',
+    ],
+  },
+  {
+    key: 'es-a1-vocab-city-places',
+    kind: 'vocab',
+    name: 'City and places (A1)',
+    description: 'Core A1 vocabulary for everyday places in a city and simple directions.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['la plaza', 'el banco cercano'],
+    examplesNegative: ['*el plaza'],
+    commonErrors: [
+      'Mismatching article gender on place nouns ("*el plaza" instead of "la plaza").',
+      'Confusing "banco" (bank/bench) with "banca" (banking, the industry).',
+    ],
+  },
+  {
+    key: 'es-a1-vocab-weather-clothing',
+    kind: 'vocab',
+    name: 'Weather and clothing (A1)',
+    description: 'Core A1 vocabulary for weather conditions, seasons, and clothing items.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['el abrigo', 'la lluvia fuerte'],
+    examplesNegative: ['*la abrigo'],
+    commonErrors: [
+      'Mismatching article gender on clothing nouns ("*la abrigo" instead of "el abrigo").',
+      'Confusing "tiempo" (weather/time) with "hora" (clock time).',
+    ],
+  },
+  {
+    key: 'es-a2-vocab-work-school',
+    kind: 'vocab',
+    name: 'Work and school (A2)',
+    description: 'A2 vocabulary for jobs, workplaces, school subjects, and study activities.',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: ['el trabajo', 'la reunión importante'],
+    examplesNegative: ['*el reunión'],
+    commonErrors: [
+      'Mismatching article gender on -ión nouns ("*el reunión" instead of "la reunión").',
+      'Confusing "trabajo" (job/work) with "obra" (a work, e.g. of art or construction).',
+    ],
+  },
+  {
+    key: 'es-a2-vocab-city-shopping',
+    kind: 'vocab',
+    name: 'City and shopping (A2)',
+    description: 'A2 vocabulary for shops, services, money, and shopping activities.',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: ['la tienda', 'el precio barato'],
+    examplesNegative: ['*la precio'],
+    commonErrors: [
+      'Mismatching article gender on -o nouns ("*la precio" instead of "el precio").',
+      'Confusing "gratis" (free of charge) with "libre" (free/available).',
+    ],
+  },
+  {
+    key: 'es-a2-vocab-health-body',
+    kind: 'vocab',
+    name: 'Health and body (A2)',
+    description: 'A2 vocabulary for body parts, symptoms, and common health complaints.',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: ['la cabeza', 'el dolor de estómago'],
+    examplesNegative: ['*la estómago'],
+    commonErrors: [
+      'Mismatching article gender on -a-ending masculine nouns ("*la estómago" instead of "el estómago").',
+      'Confusing "sentirse mal" (to feel unwell) with "sentir" (to feel/regret, transitive).',
+    ],
+  },
+  {
+    key: 'es-a2-vocab-travel-nature',
+    kind: 'vocab',
+    name: 'Travel and nature (A2)',
+    description: 'A2 vocabulary for travel, landscapes, and the outdoors.',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: ['la montaña', 'el viaje largo'],
+    examplesNegative: ['*el montaña'],
+    commonErrors: [
+      'Mismatching article gender on -a nouns ("*el montaña" instead of "la montaña").',
+      'Confusing "viaje" (trip/journey) with "viajero" (traveller, the person).',
+    ],
+  },
+  {
+    key: 'es-a2-vocab-time-daily-routine',
+    kind: 'vocab',
+    name: 'Time and daily routine (A2)',
+    description: 'A2 vocabulary for parts of the day, the week, and frequency expressions.',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: ['la mañana', 'todos los días'],
+    examplesNegative: ['*el mañana (in the daily-routine sense)'],
+    commonErrors: [
+      'Confusing feminine "la mañana" (morning) with masculine "el mañana" (the future/tomorrow, as a noun).',
+      'Confusing "hora" (clock time) with "vez" (occasion/instance, as in "una vez").',
+    ],
+  },
   {
     key: 'es-b1-environment-vocab',
     kind: 'vocab',
@@ -1168,6 +1311,44 @@ const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   // Dictation umbrellas — kind: 'dictation' (Phase 2 generation pipeline)
   // ---------------------------------------------------------------------------
+  {
+    key: 'es-a1-dictation',
+    kind: 'dictation',
+    name: 'Dictation — connected speech (A1)',
+    description:
+      'Short, slow A1 connected-speech clips (1–2 simple sentences) on everyday topics; tests basic word segmentation, silent h, and b/v spelling traps at beginner pace.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: [
+      'Me llamo Ana y vivo en Madrid.',
+      'Hoy es lunes y tengo clase de español.',
+    ],
+    examplesNegative: ['*Una lista de palabras sueltas sin oración natural.'],
+    commonErrors: [
+      'Adding or dropping the silent h (hoy / *oy).',
+      'Confusing b and v in common words (vivo / *bibo).',
+    ],
+    targetOverride: 30,
+  },
+  {
+    key: 'es-a2-dictation',
+    kind: 'dictation',
+    name: 'Dictation — connected speech (A2)',
+    description:
+      'A2 connected-speech clips (2–3 sentences) that bring in past tenses (pretérito/imperfecto) on familiar topics; tests past-tense verb endings and common spelling traps at a moderate pace.',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Ayer fui al mercado y compré fruta fresca.',
+      'De niño vivía en un pueblo pequeño cerca de la costa.',
+    ],
+    examplesNegative: ['*Un texto sin verbos en pasado y sin conexión entre frases.'],
+    commonErrors: [
+      'Confusing preterite and imperfect endings by ear (compré / *compraba).',
+      'Dropping the accent that marks the preterite first person (compré / *compre).',
+    ],
+    targetOverride: 30,
+  },
   {
     key: 'es-b1-dictation',
     kind: 'dictation',
@@ -1210,6 +1391,98 @@ const esCurriculum: readonly GrammarPoint[] = [
   // One cell per (language, level, topic); register is author-declared, the word
   // band is CEFR-derived (FREE_WRITING_LENGTH_BY_CEFR in packages/ai).
   // ---------------------------------------------------------------------------
+  {
+    key: 'es-a1-fw-my-family',
+    kind: 'free-writing',
+    name: 'Mi familia',
+    description:
+      'An informal prompt to introduce your family: who they are and one detail about each person.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: [
+      'Asks the learner to name two family members and say one thing about each.',
+      'Requires a closing sentence about who they see most often.',
+    ],
+    examplesNegative: ['*Write about family in general.'],
+    commonErrors: ['Unscoped prompt with no concrete checklist.'],
+    freeWriting: { register: 'informal' },
+  },
+  {
+    key: 'es-a1-fw-my-home',
+    kind: 'free-writing',
+    name: 'Mi casa',
+    description: 'A neutral prompt to describe your home: the rooms and one favourite spot.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: [
+      'Asks the learner to name two rooms and describe what is in each.',
+      'Requires a closing sentence about their favourite room and why.',
+    ],
+    examplesNegative: ['*Describe a house.'],
+    commonErrors: ['Listing rooms with no connected description.'],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'es-a1-fw-a-day',
+    kind: 'free-writing',
+    name: 'Un día de mi semana',
+    description: 'A neutral prompt to describe one ordinary day of the week from morning to night.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: [
+      'Asks for at least three activities in the order they happen.',
+      'Requires a closing sentence about what time the day ends.',
+    ],
+    examplesNegative: ['*Tell me about your week.'],
+    commonErrors: ['Scope too broad (a whole week instead of one day).'],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'es-a2-fw-last-vacation',
+    kind: 'free-writing',
+    name: 'Mis últimas vacaciones',
+    description:
+      'A neutral prompt to narrate a past vacation, deliberately eliciting past-tense narration (pretérito/imperfecto).',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Asks where the learner went and one thing they did each day.',
+      'Requires a closing sentence on whether they would go back.',
+    ],
+    examplesNegative: ['*Describe vacations in general.'],
+    commonErrors: ['Present-tense description instead of a past-tense narration.'],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'es-a2-fw-best-friend',
+    kind: 'free-writing',
+    name: 'Mi mejor amigo/a',
+    description: 'An informal prompt to describe your best friend and why the friendship matters.',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Asks for two personality traits and an example of each.',
+      'Requires a closing sentence on how they met.',
+    ],
+    examplesNegative: ['*Write about friendship.'],
+    commonErrors: ['Abstract essay on friendship with no specific person.'],
+    freeWriting: { register: 'informal' },
+  },
+  {
+    key: 'es-a2-fw-my-neighborhood',
+    kind: 'free-writing',
+    name: 'Mi barrio',
+    description: 'A neutral prompt to describe your neighborhood and what there is to do nearby.',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Asks for two nearby places and what the learner does there.',
+      'Requires a recommendation for someone new to the neighborhood.',
+    ],
+    examplesNegative: ['*Describe a neighborhood (any neighborhood).'],
+    commonErrors: ['Conflating "describe" with an unscoped free dump.'],
+    freeWriting: { register: 'neutral' },
+  },
   {
     key: 'es-b1-fw-ideal-weekend',
     kind: 'free-writing',

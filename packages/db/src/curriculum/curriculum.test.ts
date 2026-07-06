@@ -519,17 +519,18 @@ describe('per-language counts', () => {
   // now at full Yedi İklim A1+A2 parity (26 A1 + 14 A2 grammar + 10 themed
   // vocab umbrellas); B1/B2 remain disabled.
 
-  it('Spanish meets minimums (A1/A2 restoration in progress), has 2 vocab umbrellas, 2 dictation umbrellas, and 12 free-writing umbrellas', () => {
+  it('Spanish meets minimums (A1/A2 restoration in progress), has 12 vocab umbrellas, 4 dictation umbrellas, and 18 free-writing umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting } = countsFor(esCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(0);
     expect(grammar.A2).toBeGreaterThanOrEqual(1);
     expect(grammar.B1).toBeGreaterThanOrEqual(5);
     expect(grammar.B2).toBeGreaterThanOrEqual(5);
-    expect(vocab).toBe(2);
-    // es-b1-dictation + es-b2-dictation (Phase 2 dictation generation pipeline).
-    expect(dictation).toBe(2);
-    // 6 × B1 + 6 × B2 free-writing topic umbrellas (Phase 2 free-writing generation).
-    expect(freeWriting).toBe(12);
+    // 5 A1 + 5 A2 themed umbrellas + es-b1-environment-vocab + es-b2-abstract-noun-vocab.
+    expect(vocab).toBe(12);
+    // es-a1-dictation + es-a2-dictation + es-b1-dictation + es-b2-dictation (Phase 2 dictation generation pipeline).
+    expect(dictation).toBe(4);
+    // 3 × A1 + 3 × A2 + 6 × B1 + 6 × B2 free-writing topic umbrellas (Phase 2 free-writing generation).
+    expect(freeWriting).toBe(18);
   });
 
   it('German is fully disabled (no grammar entries, no vocab or dictation umbrellas)', () => {
@@ -558,10 +559,12 @@ describe('per-language counts', () => {
 });
 
 describe('free-writing topic umbrellas', () => {
-  it("has 6 free-writing topic umbrellas per ES B1 and B2", () => {
-    const fw = esCurriculum.filter((e) => e.kind === "free-writing");
-    expect(fw.filter((e) => e.cefrLevel === "B1")).toHaveLength(6);
-    expect(fw.filter((e) => e.cefrLevel === "B2")).toHaveLength(6);
+  it('has 3 free-writing topic umbrellas per ES A1 and A2, and 6 per B1 and B2', () => {
+    const fw = esCurriculum.filter((e) => e.kind === 'free-writing');
+    expect(fw.filter((e) => e.cefrLevel === 'A1')).toHaveLength(3);
+    expect(fw.filter((e) => e.cefrLevel === 'A2')).toHaveLength(3);
+    expect(fw.filter((e) => e.cefrLevel === 'B1')).toHaveLength(6);
+    expect(fw.filter((e) => e.cefrLevel === 'B2')).toHaveLength(6);
     for (const e of fw) {
       expect(e.freeWriting?.register).toBeDefined();
     }
