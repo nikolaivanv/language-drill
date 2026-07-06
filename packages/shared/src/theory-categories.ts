@@ -115,6 +115,12 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-a2-estar-gerundio': 'tenses',
   'es-a2-ir-a-future': 'tenses',
   'es-a2-periphrases-obligation-aspect': 'syntax',
+  'es-a2-direct-object-pronouns': 'pronouns',
+  'es-a2-indirect-object-pronouns-se': 'pronouns',
+  'es-a2-tonic-pronouns-prepositions': 'pronouns',
+  'es-a2-personal-a': 'syntax',
+  'es-a2-reflexive-verbs': 'pronouns',
+  'es-a2-gustar-type-verbs': 'syntax',
   'es-a2-comparatives-superlatives': 'syntax',
 
   // --- Spanish (B1/B2 grammar) ---

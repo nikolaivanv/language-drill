@@ -619,6 +619,128 @@ const esCurriculum: readonly GrammarPoint[] = [
     ],
   },
   {
+    key: 'es-a2-direct-object-pronouns',
+    kind: 'grammar',
+    name: 'Direct object pronouns',
+    description:
+      'Direct object pronouns lo/la/los/las (plus neuter lo for ideas/predicates) agree with the noun replaced; proclisis before a conjugated verb (Lo veo) vs. enclisis on infinitives/gerunds/positive imperatives (verlo, cómpralo), and the periphrastic shift (lo voy a comprar / voy a comprarlo).',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Compré el libro y lo leí en un día.',
+      'Quiero verlo mañana.',
+      'Lo quiero ver mañana.',
+      'Cómpralo si te gusta.',
+    ],
+    examplesNegative: ['*Compré la revista pero no lo leí.', '*Veolo cada día.'],
+    commonErrors: [
+      'Attaching the pronoun to a conjugated (finite) verb form instead of placing it before it, producing "*veolo" instead of "lo veo".',
+      'Mismatching the pronoun\'s gender with the noun it replaces, e.g. "*no lo leí" for la revista (feminine) instead of "no la leí".',
+      'Confusing the neuter lo (referring to a whole idea or clause) with the masculine lo, e.g. hesitating over "¿Sabes que llegó tarde?" "Sí, lo sé", where lo stands for the entire clause, not a masculine noun.',
+    ],
+  },
+  {
+    key: 'es-a2-indirect-object-pronouns-se',
+    kind: 'grammar',
+    name: 'Indirect object pronouns and se',
+    description:
+      'Indirect object pronouns le/les, the obligatory le→se before a third-person direct-object clitic (se lo doy, never *le lo doy), clitic doubling with a named indirect object (le di el libro a Juan), and the dative of possession replacing a possessive adjective (Se le rompió el brazo).',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Le doy el regalo a mi madre.',
+      'Se lo doy a ella.',
+      'Se le cayó el vaso a Juan.',
+    ],
+    examplesNegative: ['*Le lo doy a ella.', '*Les lo dije a mis padres.'],
+    commonErrors: [
+      'Keeping le/les before a third-person direct-object clitic instead of replacing it with se, producing "*le lo doy" or "*les lo dije" instead of "se lo doy" and "se lo dije".',
+      'Confusing le/les (indirect object, gaining or losing) with lo/la/los/las (direct object) when the verb clearly involves someone benefiting or losing something, e.g. treating "le robaron la cartera" as if the person should be lo/la instead of le.',
+      'Omitting the doubled le/les when the indirect object is a proper name or definite noun following the verb, producing the less natural "di el regalo a Juan" instead of the usual "le di el regalo a Juan".',
+    ],
+  },
+  {
+    key: 'es-a2-tonic-pronouns-prepositions',
+    kind: 'grammar',
+    name: 'Tonic pronouns after prepositions',
+    description:
+      'Tonic (prepositional) pronoun forms mí and ti after most prepositions (de mí, para ti), the fused forms conmigo/contigo replacing con + mí/ti, and the a mí/a ti reduplication used for emphasis or contrast alongside an unstressed clitic (A mí me gusta el café, pero a ti no).',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Este regalo es para ti.',
+      '¿Quieres venir conmigo al cine?',
+      'A mí me encanta el chocolate, pero a ti no.',
+    ],
+    examplesNegative: ['*Este regalo es para tú.', '*¿Vienes con mí al cine?'],
+    commonErrors: [
+      'Using the subject pronoun tú instead of the tonic form ti after a preposition, producing "*para tú" instead of "para ti".',
+      'Failing to fuse con with mí/ti, producing "*con mí" and "*con ti" instead of the mandatory conmigo and contigo.',
+      'Dropping the accent on mí, confusing it with the possessive mi ("my"), e.g. writing "de mi" when the prepositional pronoun "de mí" is meant.',
+    ],
+  },
+  {
+    key: 'es-a2-personal-a',
+    kind: 'grammar',
+    name: 'Personal a',
+    description:
+      'Personal a before a direct object naming a specific person or pet (Vi a Juan, Conozco a tu hermana), omitted before unspecified people or non-human objects (Busco un médico, Vi el coche); and emphasizing a pronoun object with a + tonic pronoun still needs the clitic (Lo vi a él, not *Vi a él).',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Vi a Juan en el parque.',
+      'No conozco a tu hermana.',
+      'Necesito un médico esta tarde.',
+    ],
+    examplesNegative: ['*Vi Juan en el parque.', '*Vi a él ayer.'],
+    commonErrors: [
+      'Omitting personal a before a specific human direct object, producing "*vi Juan ayer" instead of "vi a Juan ayer".',
+      'Adding personal a before an indefinite person not yet identified, producing "*busco a un médico" when no particular doctor is meant.',
+      'Treating a + tonic pronoun as a replacement for the clitic rather than an addition to it, producing "*vi a él" instead of "lo vi a él" (or simply "lo vi").',
+    ],
+  },
+  {
+    key: 'es-a2-reflexive-verbs',
+    kind: 'grammar',
+    name: 'Reflexive verbs',
+    description:
+      'Reflexive pronouns me/te/se/nos/os with daily-routine verbs (levantarse, ducharse, vestirse, acostarse), agreeing in person with the subject; placed before a conjugated verb (Me levanto a las siete) or attached to an infinitive, gerund, or positive imperative (levantarme, levantándome, levántate).',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Me levanto a las siete todos los días.',
+      'Ella se ducha antes de desayunar.',
+      '¿A qué hora te acuestas?',
+    ],
+    examplesNegative: ['*Levanto a las siete.', '*Nos levanta muy temprano.'],
+    commonErrors: [
+      'Omitting the reflexive pronoun altogether, producing "*levanto a las siete" instead of "me levanto a las siete".',
+      'Mismatching the pronoun and verb person, producing "*nos levanta" instead of "nos levantamos".',
+      'Attaching the pronoun to a conjugated verb instead of placing it before it, producing "*duchome" instead of "me ducho".',
+    ],
+  },
+  {
+    key: 'es-a2-gustar-type-verbs',
+    kind: 'grammar',
+    name: 'Gustar-type verbs (extended)',
+    description:
+      'Extends the A1 me/te gusta pattern to the full series me/te/le/nos/os/les with encantar, doler, interesar; the verb agrees with the thing liked/hurting, not the person (Le duelen los pies); a + tonic reduplication clarifies or contrasts who is affected (A Juan le interesa la historia, a mí no).',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Le duelen los pies después de correr.',
+      'Nos encanta viajar en verano.',
+      'A mí me interesa la política, pero a ella no le interesa nada.',
+    ],
+    examplesNegative: ['*Me duele los pies.', '*A Juan interesa la historia.'],
+    commonErrors: [
+      'Forgetting to make the verb agree with a plural subject noun, producing "*me duele los pies" instead of "me duelen los pies".',
+      'Dropping the obligatory clitic when the a + tonic phrase is present, producing "*a Juan interesa la historia" instead of "a Juan le interesa la historia".',
+      'Treating the person affected as the grammatical subject, e.g. "*yo encanto viajar" instead of "me encanta viajar" — the same reversal warned about for gustar in A1.',
+    ],
+    prerequisiteKeys: ['es-a1-gustar-basic'],
+  },
+  {
     key: 'es-a2-comparatives-superlatives',
     kind: 'grammar',
     name: 'Comparatives',
