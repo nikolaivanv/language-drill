@@ -91,6 +91,14 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-a1-possessives-atonic': 'pronouns',
   'es-a1-subject-pronouns': 'pronouns',
   'es-a1-interrogatives': 'syntax',
+  'es-a1-present-indicative-regular': 'tenses',
+  'es-a1-present-irregular-core': 'tenses',
+  'es-a1-ser-estar-basic': 'pairs',
+  'es-a1-hay-estar': 'pairs',
+  'es-a1-gustar-basic': 'syntax',
+  'es-a1-querer-poder-infinitive': 'syntax',
+  'es-a1-numbers-ordinals': 'morphology',
+  'es-a1-quantifiers-muy-mucho': 'pairs',
 
   // --- Spanish (B1/B2 grammar) ---
   'es-b1-present-subjunctive': 'moods',

@@ -184,6 +184,140 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Trying to form yes/no questions with a helper verb as in English instead of inversion or rising intonation ("¿Vives aquí?").',
     ],
   },
+  {
+    key: 'es-a1-present-indicative-regular',
+    kind: 'grammar',
+    name: 'Present indicative (regular verbs)',
+    description:
+      'Present indicative of regular -ar, -er, and -ir verbs (hablar, comer, vivir) across all six persons; used for habitual actions, general truths, and near-future scheduled events.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['Todos los días como fruta y bebo agua.', 'Mis amigos viven en Madrid y trabajan en un banco.'],
+    examplesNegative: ['*Nosotros vivemos en Madrid.'],
+    commonErrors: [
+      'Using the -ar ending -as on -er verbs, producing "*tú comas" instead of "tú comes".',
+      'Confusing the nosotros endings of -er and -ir verbs, producing "*vivemos" instead of "vivimos".',
+      'Dropping the second-person -s ending by analogy with the minimal English conjugation, producing "*tú vive" instead of "tú vives".',
+    ],
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '3pl': 5 } },
+      ],
+    },
+    conjugationSuitable: true,
+  },
+  {
+    key: 'es-a1-present-irregular-core',
+    kind: 'grammar',
+    name: 'Present indicative of ser, estar, haber, and ir',
+    description:
+      "Present indicative of the four irregular verbs ser (soy, eres, es...), estar (estoy, estás, está...), haber (only as hay 'there is/are'), and ir (voy, vas, va...); focuses on each verb's irregular yo-form and estar's accented endings.",
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['Yo soy de Perú, pero ahora estoy en Chile.', '¿Adónde vas? Voy al mercado los sábados.'],
+    examplesNegative: ['*Nosotros es de España.'],
+    commonErrors: [
+      'Conjugating ir as if it were regular, producing "*yo io" instead of the irregular "voy".',
+      'Mismatching subject and verb ending in ser, writing "*nosotros es" instead of "nosotros somos".',
+      "Treating hay as a normal verb that must agree in number with its following noun, instead of using the invariable form for both singular and plural (\"hay un libro\" / \"hay dos libros\").",
+    ],
+  },
+  {
+    key: 'es-a1-ser-estar-basic',
+    kind: 'grammar',
+    name: 'Ser and estar (basic contrast)',
+    description:
+      'Basic ser/estar contrast: ser for identity, profession, nationality or origin, and clock time; estar for location and for physical or emotional condition, including bien/mal; ser + adjectives of inherent nature vs. estar + adjectives of temporary state.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['Soy profesora y soy de Colombia.', 'Mi hermano está en el hospital porque está enfermo.'],
+    examplesNegative: ['*Mi hermano es en el hospital.'],
+    commonErrors: [
+      'Using ser for location instead of estar, e.g. "*el banco es cerca de mi casa" instead of "el banco está cerca de mi casa".',
+      'Using estar for identity or profession, e.g. "*yo estoy profesor" instead of "yo soy profesor".',
+      'Answering "¿Cómo estás?" with the wrong copula, saying "*soy bien" instead of "estoy bien".',
+    ],
+  },
+  {
+    key: 'es-a1-hay-estar',
+    kind: 'grammar',
+    name: 'Hay vs. estar',
+    description:
+      'Existential hay (invariable, only third person, no article) for indefinite or unspecified things vs. estar for a definite item already identified by an article, possessive, or demonstrative: hay un libro en la mesa vs. el libro está en la mesa.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['Hay un banco en esta calle.', 'El banco está al lado de la farmacia.'],
+    examplesNegative: ['*Hay el banco en esta calle.'],
+    commonErrors: [
+      'Using hay with a definite article, demonstrative, or possessive, e.g. "*hay el banco" instead of "está el banco" or simply "hay un banco".',
+      'Using estar for an indefinite noun that has not been mentioned before, e.g. "*está una farmacia cerca" instead of "hay una farmacia cerca".',
+      'Trying to pluralize hay to agree with a plural noun, e.g. "*han dos bancos" instead of the invariable "hay dos bancos".',
+    ],
+  },
+  {
+    key: 'es-a1-gustar-basic',
+    kind: 'grammar',
+    name: 'Gustar-type verbs',
+    description:
+      'Gustar-type construction: indirect object pronoun (me/te/le/nos/os/les) + gusta with a singular noun or infinitive subject, or gustan with a plural noun subject; the subject noun takes the definite article: me gusta el chocolate, nos gusta bailar.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['Me gusta el café por la mañana.', 'A mis padres les gustan los libros de historia.'],
+    examplesNegative: ['*Me gustan bailar.'],
+    commonErrors: [
+      'Treating gustar like a regular subject-verb construction, e.g. "*yo gusto el café" instead of "me gusta el café", forgetting that the person who likes something is the indirect object, not the subject.',
+      'Failing to make gustar agree with a plural subject noun, saying "*me gusta los libros" instead of "me gustan los libros".',
+      'Wrongly pluralizing gustar before an infinitive subject, saying "*me gustan bailar" instead of the invariable singular "me gusta bailar".',
+    ],
+  },
+  {
+    key: 'es-a1-querer-poder-infinitive',
+    kind: 'grammar',
+    name: 'Querer and poder with the infinitive',
+    description:
+      'Querer and poder followed directly by an infinitive with no linking preposition (quiero viajar, puedo ayudarte); the infinitive used as a singular masculine subject (viajar es caro); and creer que + indicative to state a belief.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['Quiero aprender español este año.', 'Creo que puedes hacerlo sin problema.'],
+    examplesNegative: ['*Quiero a viajar a México.'],
+    commonErrors: [
+      'Inserting an unnecessary preposition between querer/poder and the infinitive, e.g. "*quiero a viajar" instead of "quiero viajar", by analogy with verbs like ir a or aprender a.',
+      'Using the gerund instead of the infinitive as a subject, e.g. "*viajando es caro" instead of "viajar es caro".',
+      'Following creer que with the subjunctive by analogy with expressions of doubt, e.g. "*creo que sea verdad" instead of the indicative "creo que es verdad".',
+    ],
+  },
+  {
+    key: 'es-a1-numbers-ordinals',
+    kind: 'grammar',
+    name: 'Cardinal and ordinal numbers',
+    description:
+      'Cardinal numbers, including gender agreement of uno and -cientos with the counted noun (doscientas mujeres, veintiún libros); and ordinal numbers primero to décimo, which agree in gender/number and shorten before a masculine singular noun.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['Necesito doscientas sillas para la fiesta.', 'Vivo en el tercer piso.'],
+    examplesNegative: ['*Necesito doscientos sillas para la fiesta.'],
+    commonErrors: [
+      'Leaving -cientos in the masculine regardless of the noun\'s gender, e.g. "*doscientos mujeres" instead of "doscientas mujeres".',
+      'Forgetting to drop the final -o of primero/tercero before a masculine singular noun, e.g. "*el primero piso" instead of "el primer piso".',
+      'Using uno instead of the shortened un before a masculine noun in compound numbers, e.g. "*veintiuno libros" instead of "veintiún libros".',
+    ],
+  },
+  {
+    key: 'es-a1-quantifiers-muy-mucho',
+    kind: 'grammar',
+    name: 'Quantifiers and muy vs. mucho',
+    description:
+      'Quantifiers mucho, poco, and bastante used as adjectives agreeing with the noun they quantify (mucha gente, pocos días); muy as the invariable adverb before adjectives and adverbs, contrasted with mucho used after a verb.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['Tengo mucha hambre y poco tiempo.', 'Este libro es muy interesante y me gusta mucho.'],
+    examplesNegative: ['*Este libro es mucho interesante.'],
+    commonErrors: [
+      'Using mucho instead of muy before an adjective or adverb, e.g. "*mucho interesante" instead of "muy interesante".',
+      'Leaving mucho/poco unagreed with a feminine or plural noun, e.g. "*mucho gente" instead of "mucha gente".',
+      'Using muy before a verb instead of mucho, e.g. "*me gusta muy" instead of "me gusta mucho".',
+    ],
+  },
 
   // ---------------------------------------------------------------------------
   // A2 (PCIC-aligned; Tasks 5–7)
@@ -228,8 +362,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Forgetting the stem changes that carry over from the present indicative.',
       'Failing to switch the e/o stem vowels in the yo form.',
     ],
-    // Restore when es-a1-present-indicative-regular is uncommented:
-    // prerequisiteKeys: ['es-a1-present-indicative-regular'],
+    prerequisiteKeys: ['es-a1-present-indicative-regular'],
     sentenceConstructionSuitable: true,
     conjugationSuitable: true,
   },
@@ -421,8 +554,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Treating ser/estar as interchangeable for adjectives that flip meaning.',
       'Using ser with resultant-state past participles ("*la puerta es cerrada").',
     ],
-    // Restore when es-a1-ser-estar-basic is uncommented:
-    // prerequisiteKeys: ['es-a1-ser-estar-basic'],
+    prerequisiteKeys: ['es-a1-ser-estar-basic'],
   },
 
   // ---------------------------------------------------------------------------
