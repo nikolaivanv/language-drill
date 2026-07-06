@@ -510,18 +510,17 @@ describe('per-language counts', () => {
     return { grammar, vocab, dictation, freeWriting };
   }
 
-  // ES is at full PCIC A1+A2 parity plus the Task 12 B&B reverse-coverage
-  // additions (2026-07-06): 22 A1 + 27 A2 grammar points. DE is still
-  // TEMPORARILY REDUCED (2026-05-10). TR (2026-05-28) is now at full Yedi
-  // İklim A1+A2 parity (26 A1 + 14 A2 grammar + 10 themed vocab umbrellas);
-  // B1/B2 remain disabled.
+  // ES is now at full PCIC A1-B2 parity (2026-07-07): 22 A1 + 27 A2 + 19 B1 +
+  // 23 B2 grammar points. DE is still TEMPORARILY REDUCED (2026-05-10). TR
+  // (2026-05-28) is now at full Yedi İklim A1+A2 parity (26 A1 + 14 A2
+  // grammar + 10 themed vocab umbrellas); B1/B2 remain disabled.
 
-  it('Spanish is at full PCIC A1+A2 parity, has 12 vocab umbrellas, 4 dictation umbrellas, and 18 free-writing umbrellas', () => {
+  it('Spanish is at full PCIC A1–B2 parity, has 12 vocab umbrellas, 4 dictation umbrellas, and 18 free-writing umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting } = countsFor(esCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(22);
     expect(grammar.A2).toBeGreaterThanOrEqual(27);
-    expect(grammar.B1).toBeGreaterThanOrEqual(5);
-    expect(grammar.B2).toBeGreaterThanOrEqual(5);
+    expect(grammar.B1).toBeGreaterThanOrEqual(19);
+    expect(grammar.B2).toBeGreaterThanOrEqual(23);
     // 5 A1 + 5 A2 themed umbrellas + es-b1-environment-vocab + es-b2-abstract-noun-vocab.
     expect(vocab).toBe(12);
     // es-a1-dictation + es-a2-dictation + es-b1-dictation + es-b2-dictation (Phase 2 dictation generation pipeline).
@@ -742,7 +741,7 @@ describe('theory category coverage', () => {
     expect(nonGrammar.every((p) => resolveTheoryCategory(p.key) === 'other')).toBe(true);
   });
 
-  // ES is now live end-to-end (49 A1/A2 + 10 B1/B2 grammar points, all mapped),
+  // ES is now live end-to-end (49 A1/A2 + 42 B1/B2 grammar points, all mapped),
   // so it gets the same non-other guarantee as TR above.
   it('maps every live ES grammar point to a non-other category', () => {
     const unmapped = esCurriculum

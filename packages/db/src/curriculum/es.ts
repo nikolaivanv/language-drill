@@ -49,8 +49,14 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * `es-b1-comparatives-superlatives` re-leveled to `es-a2-comparatives-superlatives`
  * per PCIC 2.5/6.1/15.3.8. Bump enumerates all new cells and clears any
  * suppression left from the 2026-05-10 reduction.
+ *
+ * `2026-07-07`: ES B1/B2 expanded to PCIC B1-B2 parity (14 new B1 + 18 new B2
+ * grammar points; 5 existing points rescoped — pluperfect moved out of
+ * es-b2-compound-tenses to a new B1 point). Bump enumerates the new cells and
+ * clears suppression on the rescoped cells so they re-run under the new
+ * descriptions. See docs/superpowers/specs/2026-07-06-es-b1-b2-pcic-curriculum-design.md.
  */
-export const CURRICULUM_VERSION_ES = '2026-07-06';
+export const CURRICULUM_VERSION_ES = '2026-07-07';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -1023,10 +1029,14 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Present subjunctive',
     description:
-      'Present subjunctive after expressions of wish, doubt, emotion, and impersonal opinion (querer que, espero que, dudar que, es importante que).',
+      'Present subjunctive: forms (incl. inherited stem changes) after wish, doubt, emotion, and impersonal-judgement triggers (querer que, espero que, dudo que, es importante que), and in independent uses with ojalá (que) and quizá / tal vez.',
     cefrLevel: B1,
     language: ES,
-    examplesPositive: ['Espero que estés bien.', 'Quiero que vengas a la fiesta.'],
+    examplesPositive: [
+      'Espero que estés bien.',
+      'Quiero que vengas a la fiesta.',
+      'Ojalá que encuentres trabajo pronto.',
+    ],
     examplesNegative: ['*Espero que estás bien.'],
     commonErrors: [
       'Using the indicative after expressions that require subjunctive (querer que, esperar que).',
@@ -1047,13 +1057,16 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Conditional simple',
     description:
-      'Conditional tense for hypothetical situations, polite requests, and reported speech ("dijo que vendría").',
+      'Conditional simple: regular forms and the irregular stems shared with the future (tendría, haría, podría), used for polite requests (¿Podrías ayudarme?), modest opinions (yo diría que...), and advice (deberías + infinitive).',
     cefrLevel: B1,
     language: ES,
-    examplesPositive: ['Yo iría contigo si pudiera.', '¿Podrías ayudarme, por favor?'],
-    examplesNegative: ['*Yo iré contigo si pudiera.'],
+    examplesPositive: [
+      'Yo diría que deberías consultar a un especialista antes de tomar esa decisión.',
+      '¿Podrías ayudarme, por favor?',
+    ],
+    examplesNegative: ['*Deberías que consultes a un médico.'],
     commonErrors: [
-      'Substituting the future tense for the conditional in hypothetical statements.',
+      'Using the present or future tense instead of the conditional to soften a request (e.g. "¿Puedes ayudarme?" instead of "¿Podrías ayudarme?").',
       'Forgetting the irregular stems shared with the future (tendría, haría, podría).',
     ],
     sentenceConstructionSuitable: true,
@@ -1062,14 +1075,16 @@ const esCurriculum: readonly GrammarPoint[] = [
   {
     key: 'es-b1-llevar-time-expressions',
     kind: 'grammar',
-    name: 'Time expressions with llevar and hace ... que',
+    name: 'Duration and time-span expressions',
     description:
-      '"Llevo + period + gerund" and "hace + period + que + present" to express how long an action has been ongoing.',
+      'Duration and time-span expressions: llevar + period + gerund (Llevo dos años estudiando), hace + period + que + present, tardar + period + en + infinitive (Tardé dos horas en llegar), and dentro de + period for time from now.',
     cefrLevel: B1,
     language: ES,
     examplesPositive: [
       'Llevo dos años estudiando español.',
       'Hace tres meses que vivo aquí.',
+      'Tardamos casi tres horas en montar el armario nuevo.',
+      'Dentro de dos semanas empezará el nuevo semestre.',
     ],
     examplesNegative: ['*He estudiado español por dos años.'],
     commonErrors: [
@@ -1083,17 +1098,22 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Relative clauses',
     description:
-      'Linking clauses with que, quien(es), donde, and lo que; restrictive vs. non-restrictive uses.',
+      'Restrictive relative clauses in the indicative: que vs quien (a quien for human objects: el chico a quien saludaste), donde with an expressed antecedent, and the restriction that proper names and tonic pronouns reject restrictive relatives.',
     cefrLevel: B1,
     language: ES,
     examplesPositive: [
-      'El libro que leí ayer es interesante.',
-      'La mujer con quien hablé es mi vecina.',
+      'El compañero a quien recomendé para el puesto empieza mañana.',
+      'La vecina que me prestó el taladro se mudó la semana pasada.',
+      'Volvimos al café donde nos conocimos hace diez años.',
     ],
-    examplesNegative: ['*El libro cual leí ayer es interesante.'],
+    examplesNegative: [
+      '*Juan que vive aquí es mi vecino.',
+      '*Los hombres quienes dijeron eso mintieron.',
+    ],
     commonErrors: [
-      'Using "cual" without an article in restrictive relative clauses.',
-      'Choosing "quien" for inanimate antecedents.',
+      'Using "quien(es)" in a restrictive clause without a preceding preposition (e.g. "*los hombres quienes dijeron eso" instead of "que dijeron eso").',
+      'Choosing "quien" for inanimate antecedents instead of "que".',
+      'Attaching a restrictive relative clause directly after a proper name or tonic pronoun (e.g. "*Juan que vive aquí").',
     ],
     sentenceConstructionSuitable: true,
   },
@@ -1110,6 +1130,287 @@ const esCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Using the English-style "ser + past participle" passive where "se" is more idiomatic.',
       'Failing to make the verb agree with the plural noun in passive-se ("*se vende coches").',
+    ],
+  },
+  {
+    key: 'es-b1-futuro-simple',
+    kind: 'grammar',
+    name: 'Future simple',
+    description:
+      'Futuro imperfecto: regular endings on the infinitive (hablaré, comerás) and the irregular stems tendr-, saldr-, sabr-, podr-, har-, dir-; absolute future statements and the future of probability (Serán las once).',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: ['Mañana iré al médico a primera hora.', '¿Qué hora es? — Serán las once.'],
+    examplesNegative: ['*Mañana teneré una reunión importante.'],
+    commonErrors: [
+      'Regularising irregular stems ("*teneré", "*saliré" instead of "tendré", "saldré").',
+      'Reaching for ir a + infinitive in formal writing where the simple future is expected.',
+      'Missing the written accent on the endings ("*hablare" instead of "hablaré").',
+    ],
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 15, '2sg': 15, '3sg': 15, '1pl': 15, '3pl': 15 } },
+      ],
+    },
+    conjugationSuitable: true,
+  },
+  {
+    key: 'es-b1-pluperfect',
+    kind: 'grammar',
+    name: 'Pluperfect (past perfect)',
+    description:
+      'Pluperfect: había + past participle for an event completed before another past reference point (Cuando llegamos ya se había ido), contrasted with the simple preterite for the later event.',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Cuando llegamos a la estación, el tren ya había salido.',
+      'Nos dimos cuenta de que ya habíamos visto esa película.',
+    ],
+    examplesNegative: ['*Cuando llegamos a la estación, el tren ya salió antes.'],
+    commonErrors: [
+      'Using the simple preterite for the earlier of two past events instead of the pluperfect ("*el tren ya salió" instead of "ya había salido").',
+      'Forming the pluperfect with "ser" or "estar" instead of "haber".',
+      'Inflecting the past participle for gender or number after haber ("*había salida").',
+    ],
+    prerequisiteKeys: ['es-a2-preterito-perfecto'],
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 15, '2sg': 15, '3sg': 15, '1pl': 15, '3pl': 15 } },
+      ],
+    },
+  },
+  {
+    key: 'es-b1-past-narration',
+    kind: 'grammar',
+    name: 'Past narration: imperfecto/indefinido interplay',
+    description:
+      'Narrating in the past: imperfecto for background and indefinido for foregrounded events (Iba por la calle y me encontré con Ana), conato with iba a + infinitive interrupted by a preterite (Iba a salir cuando sonó el teléfono), and al + infinitivo for "on/when doing X" (Al llegar, lo vi).',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Iba por la calle cuando de repente me encontré con Ana.',
+      'Iba a salir de casa cuando sonó el teléfono.',
+      'Al llegar a la oficina, vi que las luces ya estaban encendidas.',
+    ],
+    examplesNegative: ['*Iba por la calle cuando de repente me encontraba con Ana.'],
+    commonErrors: [
+      'Using the imperfect for a punctual, plot-advancing event instead of the indefinido ("*me encontraba con Ana" instead of "me encontré con Ana").',
+      'Using the preterite of ir a + infinitive instead of the imperfect for an interrupted intention ("*fui a salir cuando sonó" instead of "iba a salir cuando sonó").',
+      'Using a finite clause instead of al + infinitivo when the subjects match ("*cuando llegué, lo vi" instead of the more idiomatic "al llegar, lo vi").',
+    ],
+  },
+  {
+    key: 'es-b1-imperative-negative-pronouns',
+    kind: 'grammar',
+    name: 'Negative imperative and clitic pronoun placement',
+    description:
+      'Negative imperative formed with the present subjunctive plus proclitic pronouns (No te vayas, No me lo digas), contrasted with enclisis on the affirmative imperative, including multi-clitic forms with a written accent (díselo, dámelas).',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: ['No te vayas todavía.', 'Díselo a tu hermana, no se lo ocultes.'],
+    examplesNegative: ['*No vete todavía.'],
+    commonErrors: [
+      'Attaching the pronoun to a negative imperative instead of placing it before the verb ("*no vete" instead of "no te vayas").',
+      'Using the plain affirmative imperative form after "no" instead of switching to the subjunctive ("*no ven" instead of "no vengas").',
+      'Dropping the written accent when two pronouns are added to an affirmative imperative ("*diselo" instead of "díselo").',
+    ],
+    prerequisiteKeys: ['es-a2-imperative-affirmative'],
+  },
+  {
+    key: 'es-b1-subjunctive-adverbial',
+    kind: 'grammar',
+    name: 'Subjunctive in adverbial clauses',
+    description:
+      'Subjunctive in temporal clauses with future reference (cuando llegues, not *cuando llegarás), antes de que and después de que + subjunctive, and purpose clauses with para que + subjunctive.',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: ['Te llamaré cuando llegue a casa.', 'Te lo explico para que lo entiendas.'],
+    examplesNegative: ['*Te llamaré cuando llegaré a casa.'],
+    commonErrors: [
+      'Using the future indicative after "cuando" with future reference instead of the present subjunctive ("*cuando llegaré" instead of "cuando llegue").',
+      'Using the indicative after "antes de que", which always requires the subjunctive.',
+      'Using "para" + infinitive instead of "para que" + subjunctive when the clauses have different subjects.',
+    ],
+    prerequisiteKeys: ['es-b1-present-subjunctive'],
+  },
+  {
+    key: 'es-b1-reported-speech',
+    kind: 'grammar',
+    name: 'Reported speech (present-to-past)',
+    description:
+      'Indirect statements shifting present to imperfect under a past-tense reporting verb (Dijo que tenía sueño; Pensé que estabas cansado), and reported commands with que + present subjunctive (Dice que te sientes).',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: ['Dijo que tenía mucho sueño.', 'El profesor dice que hagamos los deberes.'],
+    examplesNegative: ['*Dijo que tiene mucho sueño.'],
+    commonErrors: [
+      'Keeping the present tense in the reported clause after a past-tense reporting verb ("*dijo que tiene sueño" instead of "dijo que tenía sueño").',
+      'Reporting a command with the infinitive instead of que + present subjunctive ("*dice hacer los deberes" instead of "dice que hagamos los deberes").',
+      'Using the indicative for a reported command instead of switching to the subjunctive ("*dice que vienes" instead of "dice que vengas" when relaying an order).',
+    ],
+  },
+  {
+    key: 'es-b1-deber-obligation-probability',
+    kind: 'grammar',
+    name: 'Deber + infinitivo vs. deber de + infinitivo',
+    description:
+      'The contrast between deber + infinitive for obligation (Debes terminar el informe) and deber de + infinitive for probability or conjecture (Deben de ser las cinco), plus deberías for softened advice.',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: ['Debes terminar el informe antes del viernes.', 'Deben de ser las cinco ya.'],
+    examplesNegative: ['*Debes de terminar el informe antes del viernes.'],
+    commonErrors: [
+      'Using "deber de" for obligation instead of plain "deber" ("*debes de terminar" instead of "debes terminar").',
+      'Treating deber and deber de as freely interchangeable, blurring the obligation/probability distinction the two forms are meant to keep separate.',
+      'Using the plain present of deber for advice instead of the softened conditional deberías ("*debes hacer ejercicio" as advice instead of "deberías hacer ejercicio").',
+    ],
+  },
+  {
+    key: 'es-b1-aspectual-periphrases',
+    kind: 'grammar',
+    name: 'Aspectual periphrases: dejar de, ponerse a, estar a punto de, seguir + gerundio',
+    description:
+      'Aspectual periphrases dejar de + infinitivo (to stop doing), ponerse a + infinitivo (to start doing), estar a punto de + infinitivo (to be about to), and seguir + gerundio (to keep on doing).',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Dejé de fumar hace dos años.',
+      'Se puso a llorar en cuanto se enteró de la noticia.',
+      'Estábamos a punto de salir cuando empezó a llover.',
+      'Sigue trabajando en la misma empresa desde 2010.',
+    ],
+    examplesNegative: ['*Dejé fumar hace dos años.'],
+    commonErrors: [
+      'Dropping the preposition "de" after "dejar" ("*dejé fumar" instead of "dejé de fumar").',
+      'Following "seguir" with the bare infinitive instead of the gerund ("*sigue trabajar" instead of "sigue trabajando").',
+      'Confusing the inceptive "ponerse a + infinitivo" (to start doing) with "volver a + infinitivo" (to do again), producing the wrong aspectual meaning.',
+    ],
+  },
+  {
+    key: 'es-b1-verb-preposition-regime',
+    kind: 'grammar',
+    name: 'Verb + preposition regime',
+    description:
+      'Fixed prepositional regime of common verbs: hablar de, pensar en, soñar con, depender de; double complementation with invitar a + infinitivo (Me invitó a cenar).',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Siempre habla de sus viajes por Sudamérica.',
+      'No dejo de pensar en el examen de mañana.',
+      'Anoche soñé con mi antiguo colegio.',
+      'Me invitó a cenar el sábado.',
+    ],
+    examplesNegative: ['*Pienso de ti todo el día.'],
+    commonErrors: [
+      'Calquing English "think of/about" as "*pensar de" instead of the correct "pensar en".',
+      'Using "de" instead of "con" after "soñar" ("*soñé de mi antiguo colegio" instead of "soñé con mi antiguo colegio").',
+      'Omitting the "a" before the infinitive after "invitar" ("*me invitó cenar" instead of "me invitó a cenar").',
+    ],
+  },
+  {
+    key: 'es-b1-discourse-connectors',
+    kind: 'grammar',
+    name: 'Discourse connectors: sin embargo, o sea que, causal como, por + infinitivo, aunque + indicative',
+    description:
+      'Sin embargo (however); resumptive o sea que / así (es) que (so); fronted causal como (Como no venías, empecé…); causal por + infinitivo (Lo hizo por no molestarte); concessive aunque + indicative for a known fact (Aunque llueve, salgo).',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Estudió mucho; sin embargo, suspendió el examen.',
+      'Como no venías, empecé a cenar sin ti.',
+      'Lo hizo por no molestarte.',
+      'Aunque llueve, vamos a salir igualmente.',
+    ],
+    examplesNegative: ['*Empecé a cenar sin ti como no venías.'],
+    commonErrors: [
+      'Placing causal "como" after the main clause instead of fronting it at the head of the sentence ("*empecé a cenar como no venías" instead of "como no venías, empecé a cenar").',
+      'Using the subjunctive after "aunque" for a known, factual concession instead of the indicative ("*aunque llueva, salimos" when it is already raining, instead of "aunque llueve, salimos").',
+      'Confusing the resumptive "o sea que" ("so"/"in other words") with the causal "porque" ("because"), reversing cause and consequence.',
+    ],
+  },
+  {
+    key: 'es-b1-superlatives-comparisons',
+    kind: 'grammar',
+    name: 'Superlatives and comparisons: el más/menos…de, -ísimo, igual de…que, más/menos de',
+    description:
+      'Relative superlative el más/menos + adjective + de (el restaurante más caro de la ciudad); elative suffix -ísimo (buenísimo, riquísimo); equality igual de + adjective + que; and más/menos de before a quantity (más de cien euros).',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Es el restaurante más caro de la ciudad.',
+      'Esta sopa está riquísima.',
+      'Es igual de alto que su hermano.',
+      'Tiene más de cien libros en casa.',
+    ],
+    examplesNegative: ['*Es el restaurante más caro que la ciudad.'],
+    commonErrors: [
+      'Using "que" instead of "de" after a relative superlative ("*el más caro que la ciudad" instead of "el más caro de la ciudad").',
+      'Forgetting the spelling change that adds "qu" before -ísimo on adjectives ending in -co ("*ricísimo" instead of "riquísimo").',
+      'Using "más/menos que" before a bare quantity instead of "más/menos de" ("*tiene más que cien libros" instead of "tiene más de cien libros").',
+    ],
+  },
+  {
+    key: 'es-b1-que-vs-cual',
+    kind: 'grammar',
+    name: 'Qué vs. cuál/cuáles',
+    description:
+      'Qué asks for a definition or category (¿Qué es la democracia?), while cuál/cuáles selects from a set (¿Cuál prefieres?); in standard European Spanish cuál is not used directly before a noun (¿qué libro…?, not *¿cuál libro…?); prepositions precede the interrogative, and adónde asks where to.',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      '¿Qué es la democracia?',
+      '¿Cuál de estos dos prefieres?',
+      '¿Qué libro estás leyendo?',
+      '¿Con quién vas al cine?',
+      '¿Adónde vamos este verano?',
+    ],
+    examplesNegative: ['*¿Cuál libro estás leyendo?'],
+    commonErrors: [
+      'Using "cuál" directly before a noun in standard European Spanish instead of "qué" ("*¿cuál libro quieres?" instead of "¿qué libro quieres?").',
+      'Stranding the preposition at the end of the question, as in English, instead of fronting it with the interrogative ("*¿Quién vas al cine con?" instead of "¿Con quién vas al cine?").',
+      'Using "cuál" instead of "qué" when asking for the definition of an abstract concept ("*¿Cuál es el amor?" instead of "¿Qué es el amor?").',
+    ],
+  },
+  {
+    key: 'es-b1-ser-estar-uses',
+    kind: 'grammar',
+    name: 'Ser/estar special uses: impersonal time, estar de + occupation, estar a + price/date',
+    description:
+      'Impersonal ser for time of day (Es tarde, Es de noche); estar de + noun for a temporary occupation (Está de camarero); estar a + a fluctuating price or the date (Estamos a quince, Están a tres euros el kilo); and parecer + adjective vs. impersonal parece que + indicative.',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Ya es de noche; deberíamos volver a casa.',
+      'Mi hermano está de camarero este verano.',
+      'Hoy estamos a quince de mayo.',
+      'Parece que va a llover esta tarde.',
+    ],
+    examplesNegative: ['*Está tarde para llamarla.'],
+    commonErrors: [
+      'Using "estar" instead of "ser" for the impersonal time-of-day construction ("*está tarde" instead of "es tarde").',
+      'Omitting "de" after "estar" when naming a temporary job or role ("*está camarero" instead of "está de camarero").',
+      'Using "ser" instead of "estar" to state today\'s date ("*somos a quince" instead of "estamos a quince").',
+    ],
+  },
+  {
+    key: 'es-b1-indirect-questions',
+    kind: 'grammar',
+    name: 'Indirect questions: si, qué, cuándo, dónde + clause or infinitivo',
+    description:
+      'Reported yes/no questions with si (No sé si voy); indirect wh-questions with qué/cuándo/dónde followed by a finite clause or, with same-subject reference, a bare infinitive (No sé qué hacer, Pregúntale dónde está).',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'No sé si ir a la fiesta esta noche.',
+      'No sé qué hacer con tanto tiempo libre.',
+      'Pregúntale dónde está la parada del autobús.',
+      'No sabía cuándo empezaba la película.',
+    ],
+    examplesNegative: ['*No sé hacer qué con tanto tiempo libre.'],
+    commonErrors: [
+      'Putting the interrogative word after the infinitive instead of before it in an indirect question ("*no sé hacer qué" instead of "no sé qué hacer").',
+      'Dropping the written accent on "qué" in an indirect question, which collapses it into the unrelated "tener que" construction ("no sabía que hacer" read as an obligation, instead of the correctly accented "no sabía qué hacer").',
+      'Using "que" instead of "si" to introduce an indirect yes/no question ("*no sé que voy a la fiesta" instead of "no sé si voy a la fiesta").',
     ],
   },
 
@@ -1147,16 +1448,17 @@ const esCurriculum: readonly GrammarPoint[] = [
       ],
     },
     kind: 'grammar',
-    name: 'Compound tenses with haber',
+    name: 'Future perfect',
     description:
-      'Perfect tenses beyond the pretérito perfecto: pluperfect (había terminado), future perfect (habré llegado), and conditional perfect groundwork — all formed with haber + invariable past participle.',
+      'Future perfect: habré + past participle for actions completed before a future reference point (Cuando lleguemos ya se habrá ido) and for probability about the recent past (Habrá tenido problemas).',
     cefrLevel: B2,
     language: ES,
-    examplesPositive: ['Habíamos terminado antes de las ocho.', 'Para mañana habré llegado.'],
-    examplesNegative: ['*Yo soy terminado el trabajo.'],
+    examplesPositive: ['Para mañana habré llegado.', 'Ya habrá llegado a casa a estas horas.'],
+    examplesNegative: ['*Cuando lleguemos, ya se irá.'],
     commonErrors: [
-      'Forming the perfect with "ser" or "estar" instead of "haber".',
-      'Inflecting the past participle for gender or number when used with haber.',
+      'Using the simple future where anteriority to another future event is required (e.g. "*cuando lleguemos, ya se irá" instead of "ya se habrá ido").',
+      'Forming the future perfect with "ser" or "estar" instead of "haber".',
+      'Inflecting the past participle for gender or number when used with haber (e.g. "*habrá llegada").',
     ],
     prerequisiteKeys: ['es-a2-preterito-perfecto'],
   },
@@ -1227,6 +1529,404 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Using ser with resultant-state past participles ("*la puerta es cerrada").',
     ],
     prerequisiteKeys: ['es-a1-ser-estar-basic'],
+  },
+  {
+    key: 'es-b2-relative-clauses-advanced',
+    kind: 'grammar',
+    name: 'Advanced relative clauses',
+    description:
+      'Explicativas set off by commas (mi vecina, que es médica,); el/la/los/las que after a preposition (la casa de la que te hablé); quien(es) with or without an antecedent; donde relatives; lo que; and the indicative/subjunctive contrast (busco un piso que tiene/tenga terraza).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Mi vecina, que es médica, trabaja en el hospital central.',
+      'Esa es la casa de la que te hablé el otro día.',
+      'No conozco a nadie con quien pueda compartir esto.',
+      'No entendí nada de lo que dijeron en la reunión.',
+      'Quiero mudarme a una ciudad donde haya menos tráfico.',
+      'Busco un piso que tenga terraza y esté bien comunicado.',
+    ],
+    examplesNegative: ['*La casa que te hablé es muy bonita.'],
+    commonErrors: [
+      'Stranding the preposition instead of fronting it with the relative pronoun ("*la casa que te hablé" instead of "la casa de la que te hablé"), calquing English relative clauses.',
+      'Using the indicative in a relative clause whose antecedent is not yet identified ("*busco un piso que tiene terraza" instead of "que tenga terraza" when no specific flat is in mind).',
+      'Omitting the comma that marks an explicativa, collapsing it into a restrictive reading and changing the meaning of the sentence.',
+    ],
+  },
+  {
+    key: 'es-b2-subjunctive-compound',
+    kind: 'grammar',
+    name: 'Compound subjunctive: perfect and pluperfect',
+    description:
+      'Perfect subjunctive haya + participle for a completed action viewed with doubt, emotion, or future anteriority (No es verdad que haya escrito eso; cuando se haya marchado); pluperfect subjunctive hubiera/hubiese + participle outside counterfactual si-clauses.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'No es verdad que haya escrito esa carta.',
+      'Te llamaré en cuanto se haya marchado el jefe.',
+      'Ojalá hubiera sabido la verdad antes.',
+    ],
+    examplesNegative: ['*No es verdad que ha escrito esa carta.'],
+    commonErrors: [
+      'Using the indicative present perfect ("ha escrito") instead of the perfect subjunctive ("haya escrito") after a trigger that requires the subjunctive.',
+      'Confusing haya + participle (perfect, anchored to the present or a future point) with hubiera/hubiese + participle (pluperfect, anchored to the past).',
+      'Assuming hubiera/hubiese only occurs in si-clauses and missing its independent uses in wishes, concessions, and negated assertions about the past.',
+    ],
+    prerequisiteKeys: ['es-b1-present-subjunctive', 'es-b2-past-subjunctive'],
+  },
+  {
+    key: 'es-b2-subjunctive-negated-opinion',
+    kind: 'grammar',
+    name: 'Subjunctive after negated opinion and assertion',
+    description:
+      'Negation flips the mood of an opinion or assertion clause: no creo que + subjunctive (vs. creo que + indicative); no es cierto/verdad que + subjunctive; and negated verbs of saying (No me dijo que hubiera venido).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Creo que Marta tiene razón.',
+      'No creo que Marta tenga razón.',
+      'No es verdad que hayan aprobado la ley.',
+      'No me dijo que hubiera venido a la fiesta.',
+    ],
+    examplesNegative: ['*No creo que Marta tiene razón.'],
+    commonErrors: [
+      'Keeping the indicative after "no creo que" by analogy with the affirmative "creo que + indicative", instead of switching to the subjunctive under negation.',
+      'Treating "no es cierto/verdad que" as a plain statement of fact and using the indicative instead of the subjunctive it requires.',
+      'Using the indicative instead of the subjunctive when relaying a negated assertion about a past event ("*no me dijo que había venido" as a denial, instead of "no me dijo que hubiera venido").',
+    ],
+    prerequisiteKeys: ['es-b1-present-subjunctive'],
+  },
+  {
+    key: 'es-b2-subjunctive-temporal-concessive',
+    kind: 'grammar',
+    name: 'Subjunctive in temporal and concessive connectors',
+    description:
+      'En cuanto, tan pronto como, apenas, una vez que, hasta que, mientras take the subjunctive only for future/posteriority (en cuanto llegues) vs. indicative for past/habitual reference (apenas llegué); aunque/a pesar de que + subjunctive for a non-factual concession; por mucho/más que + subjunctive.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'En cuanto termine el informe, te lo envío.',
+      'Apenas llegué a casa, comenzó a llover.',
+      'Aunque no lo creas, es la pura verdad.',
+      'Por mucho que insistas, no voy a cambiar de opinión.',
+    ],
+    examplesNegative: ['*En cuanto llegarás, te lo diré.'],
+    commonErrors: [
+      'Using the future indicative after a temporal connector with future reference instead of the present subjunctive ("*en cuanto llegarás" instead of "en cuanto llegues").',
+      'Overgeneralizing the subjunctive to a habitual or completed past temporal clause, where the indicative is required ("*apenas llegara a casa, comenzó a llover" instead of "apenas llegué a casa").',
+      'Using the indicative after "aunque" for a hypothetical, not-yet-known concession instead of the subjunctive ("*aunque no lo crees, es la verdad" instead of "aunque no lo creas").',
+    ],
+    prerequisiteKeys: ['es-b1-subjunctive-adverbial'],
+  },
+  {
+    key: 'es-b2-conditional-connectors',
+    kind: 'grammar',
+    name: 'Conditional connectors beyond si',
+    description:
+      'Por si (acaso) + indicative ("in case"); siempre que/siempre y cuando/con tal de que/a condición de que + subjunctive ("provided that"); salvo si/excepto si + indicative; a no ser que/salvo que + subjunctive ("unless").',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Llévate el paraguas por si acaso llueve.',
+      'Iré a la fiesta con tal de que tú también vayas.',
+      'Aceptaré el trabajo siempre y cuando el sueldo sea justo.',
+      'Saldremos a la hora prevista, salvo si hay un imprevisto.',
+      'No cambiaré de opinión a no ser que me des una buena razón.',
+    ],
+    examplesNegative: ['*Llévate el paraguas por si acaso llueva.'],
+    commonErrors: [
+      'Using the present subjunctive after "por si (acaso)", which is not permitted — only the indicative, or occasionally the imperfect subjunctive, is used ("*por si acaso llueva" instead of "por si acaso llueve").',
+      'Using the indicative after "con tal de que" or "siempre y cuando" instead of the subjunctive these connectors require ("*con tal de que vienes" instead of "con tal de que vengas").',
+      'Confusing "salvo si" (indicative, like a plain if-clause) with "salvo que" (subjunctive, "unless"), producing the wrong mood for the connector.',
+    ],
+  },
+
+  {
+    key: 'es-b2-passive-voice',
+    kind: 'grammar',
+    name: 'Passive voice: ser vs estar + participle',
+    description:
+      'Ser + past participle for the action passive (Las puertas fueron abiertas a las 10), agreeing in gender/number with the subject, vs estar + participle for the resulting state (Las puertas ya estaban abiertas); bare-noun subjects stay postverbal (Han llegado trenes, Se venden pisos).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'La ciudad fue destruida por un terremoto en 1985.',
+      'Cuando llegamos, la ciudad ya estaba destruida.',
+      'Se venden pisos en esta calle.',
+    ],
+    examplesNegative: ['*Naranjas son vendidas aquí.'],
+    commonErrors: [
+      'Forgetting participle agreement with the subject of ser ("*las puertas fueron abierto" instead of "fueron abiertas").',
+      'Using ser + participle for a resulting state instead of estar ("*la puerta fue abierta" to mean the door was already open, instead of "la puerta estaba abierta").',
+      'Fronting a bare, article-less plural subject before the verb ("*Trenes han llegado" instead of the required postverbal "Han llegado trenes").',
+    ],
+  },
+
+  {
+    key: 'es-b2-verbs-of-change',
+    kind: 'grammar',
+    name: 'Verbs of becoming: ponerse, quedarse, hacerse, volverse, convertirse en, llegar a ser',
+    description:
+      'Choosing ponerse (brief mood/appearance change), quedarse (state left by an event), hacerse (voluntary lasting conversion), volverse (involuntary lasting change), convertirse en (total transformation, + noun), or llegar a ser (hard-won outcome of a slow process).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Cuando se enteró de la noticia, se puso muy triste.',
+      'Se hizo abogado después de diez años de estudio.',
+      'Con la edad, mi padre se ha vuelto muy desconfiado.',
+      'La oruga se convirtió en mariposa.',
+      'Trabajó muchísimo y con el tiempo llegó a ser director general.',
+    ],
+    examplesNegative: ['*Se puso budista después de conocer a un monje tibetano.'],
+    commonErrors: [
+      'Using ponerse for a lasting change of character or belief instead of a temporary mood/state ("*se puso ateo" instead of "se hizo ateo").',
+      'Using hacerse for an involuntary or unwanted change instead of volverse ("*se hizo loco" instead of "se volvió loco").',
+      'Reaching for convertirse en with an adjective instead of a noun phrase ("*se convirtió en triste" instead of "se puso triste").',
+    ],
+  },
+
+  {
+    key: 'es-b2-se-middle-accidental',
+    kind: 'grammar',
+    name: 'Middle se and accidental se (dative of interest)',
+    description:
+      'Middle se for a spontaneous, agentless event (Se abrió la ventana, Se fundió el hielo); accidental se + dative of interest for mishaps (Se me perdió tu dinero, Se le cayeron las llaves), verb agreeing with the thing affected, not the dative; irse (departure) vs ir (destination).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'La ventana se abrió con el viento.',
+      'Se me perdió tu dinero y no sé cómo pasó.',
+      'Se le cayeron las llaves al entrar en el portal.',
+      'Me voy ya, que es tarde.',
+    ],
+    examplesNegative: ['*Se le cayó las llaves.'],
+    commonErrors: [
+      'Making the verb agree with the dative pronoun (person) instead of the thing affected ("*se le cayó las llaves" instead of "se le cayeron las llaves").',
+      'Dropping the dative pronoun and losing the "unintentional/it happened to me" nuance ("se perdió tu dinero" instead of "se me perdió tu dinero").',
+      'Using the ir imperative "ve" to tell someone to leave/go away, instead of the irse imperative "vete" ("*ve ya, es tarde" instead of "vete ya, es tarde").',
+    ],
+  },
+
+  {
+    key: 'es-b2-clitic-advanced',
+    kind: 'grammar',
+    name: 'Advanced clitics: neuter lo, fronted-object doubling, leísmo de persona',
+    description:
+      'Neuter lo echoing the predicate of ser/estar (¿Estás cansada? — Lo estoy); obligatory redundant clitic when a direct object is fronted (Los libros los tiene Juan); accepted leísmo de persona for masculine humans (Le vimos a Luis, alongside Lo vimos), not for feminine referents.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      '¿Estás cansada? — Lo estoy.',
+      'Los libros los tiene Juan.',
+      'A Luis le vimos ayer en la estación.',
+    ],
+    examplesNegative: ['*A Luisa le vimos ayer en la estación.'],
+    commonErrors: [
+      'Dropping the resumptive lo after ser/estar with an adjective predicate ("¿Estás cansada? — Estoy" instead of "Lo estoy").',
+      'Omitting the redundant clitic when the direct object is fronted ("Los libros tiene Juan" instead of "Los libros los tiene Juan").',
+      'Extending leísmo de persona to a feminine direct object ("*le vimos" for Luisa instead of "la vimos").',
+    ],
+  },
+
+  {
+    key: 'es-b2-gerund-participle-constructions',
+    kind: 'grammar',
+    name: 'Adverbial gerund, nada más + infinitive, and predicative participle clauses',
+    description:
+      'Adverbial gerund for method/simultaneous action (Aprende leyendo; Me lo confesó yendo por la calle); nada más + infinitive for same-subject sequence (Nada más llegar, nos pusimos a comer); una vez + participle for a prior event; predicative participle agreeing with the object (tienda cerrada).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Aprende idiomas leyendo novelas en el idioma original.',
+      'Nada más llegar a casa, nos pusimos a preparar la cena.',
+      'Una vez estudiado el problema, propusieron tres soluciones.',
+      'Encontré la tienda cerrada cuando llegué.',
+    ],
+    examplesNegative: ['*Encontré la tienda cerrado.'],
+    commonErrors: [
+      'Leaving the predicative participle unagreed with the object it describes ("*encontré la tienda cerrado" instead of "cerrada").',
+      'Using nada más + infinitive when the following clause has a different subject, instead of switching to nada más que + finite verb ("*nada más llegar yo, tú te fuiste" instead of "nada más llegar yo" or a reformulation with a shared subject).',
+      'Using the gerund instead of the participle to describe a resulting state ("*encontré la tienda cerrando" instead of "encontré la tienda cerrada").',
+    ],
+  },
+
+  {
+    key: 'es-b2-consecutives-intensity',
+    kind: 'grammar',
+    name: 'Consecutive clauses of intensity: tan/tanto…que, de manera que, por lo tanto',
+    description:
+      'tan + adjective/adverb + que and tanto/a/os/as + noun + que (agreeing with the noun, e.g. tantas personas) for consequence; invariable tanto que with verbs (corrió tanto que…); de manera/modo que + indicative for result; formal por lo tanto, por consiguiente (distinct from por eso/entonces).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Hablaba tan rápido que no entendíamos nada.',
+      'Vinieron tantas personas a la boda que no cupimos en la sala.',
+      'Corrió tanto que se quedó sin aliento.',
+      'No teníamos billetes; por lo tanto, decidimos volver a casa.',
+    ],
+    examplesNegative: ['*Está tanto cansada que no puede seguir.'],
+    commonErrors: [
+      'Using "tanto" before an adjective instead of "tan" ("*está tanto cansada" instead of "está tan cansada").',
+      'Leaving "tanto" invariable before a noun instead of agreeing in gender and number ("*tanto personas vinieron" instead of "tantas personas vinieron").',
+      'Confusing this consequence construction with the A2 equality comparison tan/tanto…como, blending the two into ungrammatical hybrids.',
+    ],
+  },
+
+  {
+    key: 'es-b2-sino-adversatives',
+    kind: 'grammar',
+    name: 'Pero vs. sino: correction versus contrast',
+    description:
+      'Sino corrects a negated statement (No es antipático sino tímido) and requires sino que before a finite verb (sino que estoy dispuesto a ayudar); pero contrasts without correcting, even after a negation (No tiene dinero, pero es feliz); no obstante is a literary "nevertheless".',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'No es antipático sino tímido.',
+      'No solo le creo, sino que estoy dispuesto a ayudarlo.',
+      'No tiene dinero, pero es feliz.',
+      'No obstante, decidieron seguir adelante con el proyecto.',
+    ],
+    examplesNegative: ['*No es antipático, pero tímido.'],
+    commonErrors: [
+      'Using pero instead of sino when the first clause is being corrected, not merely qualified ("*no es antipático, pero tímido" instead of "sino tímido").',
+      'Omitting "que" before a finite verb after sino ("*sino estoy dispuesto a ayudarlo" instead of "sino que estoy dispuesto a ayudarlo").',
+      'Using sino outside a negative context, where only pero is possible ("*habla francés, sino mal" instead of "pero mal").',
+    ],
+  },
+
+  {
+    key: 'es-b2-causal-connectors',
+    kind: 'grammar',
+    name: 'Formal causal connectors: ya que, puesto que, debido a que, enunciative porque',
+    description:
+      'Ya que and puesto que mean "since/given that", fronted or after the main clause; debido a que is a formal causal alternative; porque can also justify the speaker\'s assertion about a state rather than explain its cause (Están en casa, porque veo luz encendida).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Puesto que quieres que me quede, me quedo.',
+      'No pudimos salir, ya que llovía sin parar.',
+      'El vuelo se retrasó debido a que había niebla en el aeropuerto.',
+      'Están en casa, porque veo luz encendida en la ventana.',
+    ],
+    examplesNegative: ['*El vuelo se retrasó debido que había niebla en el aeropuerto.'],
+    commonErrors: [
+      'Dropping the "a" in "debido a que" ("*debido que" instead of "debido a que").',
+      'Confusing "porque" (because) with "por qué" (why) in writing.',
+      'Missing the enunciative use of porque to justify the speaker\'s inference rather than the fact itself, and reaching for ya que instead in that context.',
+    ],
+  },
+
+  {
+    key: 'es-b2-lo-nominalizer',
+    kind: 'grammar',
+    name: 'Lo as nominalizer: lo + adjective, lo de, lo que, lo + adj + que',
+    description:
+      'Lo + masculine singular adjective as an abstract noun (lo interesante, lo mejor); lo de + noun phrase for "the business of" (lo de ayer); lo que relative clauses; lo + adjective + que as an intensifier where the adjective agrees with its noun (lo cansada que estaba); el porqué "the reason".',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Lo importante es que digan la verdad.',
+      '¿Le cuento lo de los otros tres novios?',
+      'No sabes lo cansada que estaba después del viaje.',
+      'Nadie conoce el porqué de su decisión.',
+    ],
+    examplesNegative: ['*María estaba agotada; no sabes lo cansado que estaba.'],
+    commonErrors: [
+      'Treating "lo + adjective + que" as invariable instead of agreeing the adjective with the noun it describes ("*no sabes lo cansado que estaba" for a female subject, instead of "lo cansada que estaba").',
+      'Using "lo de" even when a specific gendered referent is meant, instead of "el/la/los/las de".',
+      'Writing "por qué" instead of "el porqué" for the noun meaning "the reason".',
+    ],
+  },
+
+  {
+    key: 'es-b2-comparatives-advanced',
+    kind: 'grammar',
+    name: 'Advanced comparatives: de lo que, superior/inferior a, el doble de, igual que',
+    description:
+      'Más/menos + de lo que (or gendered del/de la que) for clausal comparison (más caro de lo que pensaba); superior/inferior a; el doble de and tres veces más for multiplicative comparison; igual que for equality; bare más N que N pitting two nouns (más libros que revistas).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Es más caro de lo que pensaba.',
+      'Su rendimiento fue superior al de la competencia.',
+      'Esta ciudad tiene el doble de habitantes que la nuestra.',
+      'Aquí llueve tres veces más que en el sur.',
+      'En esta biblioteca hay más revistas que libros.',
+    ],
+    examplesNegative: ['*Es más caro que pensaba.'],
+    commonErrors: [
+      'Using bare "que" before a clause instead of "de lo que" (or gendered del/de la que) when comparing across two different verbs ("*es más caro que pensaba" instead of "es más caro de lo que pensaba").',
+      'Treating "superior/inferior a" like "más/menos que" and inserting "que" instead of "a" ("*superior que la competencia" instead of "superior a la competencia").',
+      'Using "que" instead of "de" before a quantified noun phrase after multiplicatives ("*el doble que habitantes" instead of "el doble de habitantes") — "que" is correct only before a comparison target ("gana el doble que yo").',
+    ],
+  },
+
+  {
+    key: 'es-b2-quantifiers-advanced',
+    kind: 'grammar',
+    name: 'Advanced quantifiers: cualquier(a), partitives, multiplicatives, algo + adjective',
+    description:
+      'Cualquier + noun drops the final -a (cualquier libro), while the standalone pronoun cualquiera keeps it; partitives la mitad de / un tercio de; multiplicative el doble de and the ratio tres de cada cinco; attenuating algo + adjective for "rather/somewhat" (Es algo pesado).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Cualquier libro de esa estantería te servirá.',
+      'Cualquiera podría hacerlo mejor que él.',
+      'La mitad de los invitados llegó tarde.',
+      'Casi un tercio de la población vive en la capital.',
+      'Tres de cada cinco personas prefieren el tren.',
+      'Es algo pesado, pero se puede llevar.',
+    ],
+    examplesNegative: ['*Cualquiera libro de esa estantería te servirá.'],
+    commonErrors: [
+      'Using "cualquiera" before a noun instead of dropping the final -a to "cualquier" ("*cualquiera libro" instead of "cualquier libro").',
+      'Missing the adverbial "rather/somewhat" use of algo before an adjective, reading "es algo pesado" as if algo were the A2 pronoun "something".',
+      'Using "que" instead of "de" before a quantified noun phrase after multiplicatives or fractions ("*el doble que habitantes" instead of "el doble de habitantes") — "que" is correct only before a comparison target ("gana el doble que yo").',
+    ],
+  },
+
+  {
+    key: 'es-b2-cleft-sentences',
+    kind: 'grammar',
+    name: 'Cleft sentences: ser-focus with relator agreement',
+    description:
+      'Ser-focus cleft sentences where the relator matches the focus type: quien/el que for people (Fue Juan quien llamó), donde for place, cuando for time, lo que for a neuter idea (Lo que necesito es dormir); plain que alone in this slot is the classic anglophone error.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Fue Juan quien llamó anoche.',
+      'Es aquí donde nos conocimos.',
+      'Fue entonces cuando lo supe.',
+      'Lo que necesito es dormir.',
+    ],
+    examplesNegative: ['*Fue Juan que llamó anoche.'],
+    commonErrors: [
+      'Using plain "que" instead of the relator matching the focus type ("*fue Juan que llamó" instead of "fue Juan quien/el que llamó").',
+      'Using "donde" for a temporal focus or "cuando" for a place focus, instead of matching the relator to the focus type ("*fue entonces donde lo supe" instead of "fue entonces cuando lo supe").',
+      'Dropping the preposition from the second half of a prepositional cleft in careful register ("*es con ella que tienes que hablar" instead of "es con ella con la que/con quien tienes que hablar").',
+    ],
+  },
+
+  {
+    key: 'es-b2-appreciative-suffixes',
+    kind: 'grammar',
+    name: 'Appreciative suffixes: diminutive -ito, augmentative -ón/-azo, pejorative -ucho',
+    description:
+      'Diminutive -ito, with the -c-/-e- allomorph after words ending in -n/-r (mujercita) or -e/ie-ue (cochecito); affective and lexicalized senses (bolsillo, via -illo); augmentative -ón/-azo (portazo); pejorative -ucho (casucha). Recognition-only: production stays capped at the core -ito/-ón.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Espera un momentito, por favor.',
+      'Compró un cochecito para el bebé.',
+      'Le dio un portazo tremendo al salir.',
+      'Vivían en una casucha en las afueras del pueblo.',
+    ],
+    examplesNegative: ['*Tiene un dormitorito muy grande.'],
+    commonErrors: [
+      'Coining novel diminutives outside the safe -ito/-ón pattern, producing non-words a native speaker would not recognize ("*dormitorito" from dormitorio is not Spanish).',
+      'Overapplying the -c-/-ec- allomorph to words that take a plain -ito/-ita ("*sillacita" instead of "sillita"), instead of reserving it for words ending in -n/-r or in -e/ie-ue.',
+      'Assuming augmentatives like -ón are freely productive and inventing new coinages, rather than sticking to established, recognized forms.',
+    ],
   },
 
   // ---------------------------------------------------------------------------
