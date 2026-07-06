@@ -224,6 +224,23 @@ full-paradigm finite tenses, per the TR flagging criteria; seed kind `verb`).
   shared dev branch — per-PR CI forks inherit dev's schema).
 - `seed-exercises.test.ts` covers the restored seed mappings.
 
+## Addendum (2026-07-06): B&B reverse-coverage additions
+
+A post-implementation reverse-coverage audit of all 44 B&B chapters (mirroring
+the TR G&K audit passes) found five substantively-treated topics missing from
+the PCIC-derived set; all five were added on the same branch, taking ES to
+**22 A1 + 27 A2**:
+
+- `es-a1-prepositions-a-en` — static en vs directional a + a for clock times (B&B §38.2, §38.11)
+- `es-a2-indefinites-double-negation` — algo/nada, alguien/nadie, algún/ningún, siempre/nunca; postverbal negatives require no (B&B §27.3, §27.5, §10.2–10.4)
+- `es-a2-por-para` — the preposition contrast, centered on por's uses (B&B §38.16–38.17)
+- `es-a2-mente-adverbs` — feminine adjective + -mente, accent retention, coordination drop, bien/mal (B&B §35.2)
+- `es-a2-adjective-apocopation` — buen/mal/algún/ningún before masc. sg.; gran before any sg. noun (B&B §5.5)
+
+Considered and rejected for failing the "substantive B&B treatment" bar (lexical,
+not grammatical, per the audit): tener-idioms (tener hambre/años), saber vs
+conocer. Both remain candidates for vocab-side coverage instead.
+
 ## Out of scope
 
 - DE A1/A2 restoration (still TEMPORARILY REDUCED).
