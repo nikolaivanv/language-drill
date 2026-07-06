@@ -105,13 +105,24 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-a1-coordination-basic': 'syntax',
   'es-a1-porque-para': 'syntax',
 
+  // --- Spanish (A2) ---
+  'es-a2-present-irregular-stem-changes': 'tenses',
+  'es-a2-preterite-regular': 'tenses',
+  'es-a2-preterite-irregular': 'tenses',
+  'es-a2-imperfect': 'tenses',
+  'es-a2-preterito-perfecto': 'tenses',
+  'es-a2-imperative-affirmative': 'moods',
+  'es-a2-estar-gerundio': 'tenses',
+  'es-a2-ir-a-future': 'tenses',
+  'es-a2-periphrases-obligation-aspect': 'syntax',
+  'es-a2-comparatives-superlatives': 'syntax',
+
   // --- Spanish (B1/B2 grammar) ---
   'es-b1-present-subjunctive': 'moods',
   'es-b1-conditional': 'moods',
   'es-b1-llevar-time-expressions': 'syntax',
   'es-b1-relative-clauses': 'syntax',
   'es-b1-passive-se': 'syntax',
-  'es-a2-comparatives-superlatives': 'syntax',
   'es-b2-past-subjunctive': 'moods',
   'es-b2-compound-tenses': 'tenses',
   'es-b2-conditional-perfect': 'moods',

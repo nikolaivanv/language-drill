@@ -408,6 +408,217 @@ const esCurriculum: readonly GrammarPoint[] = [
   // A2 (PCIC-aligned; Tasks 5–7)
   // ---------------------------------------------------------------------------
   {
+    key: 'es-a2-present-irregular-stem-changes',
+    kind: 'grammar',
+    name: 'Present indicative — irregular stem changes',
+    description:
+      'Present-tense stem changes e→ie (pensar), o→ue (poder), and e→i (pedir) in all persons except nosotros/vosotros; the irregular yo-forms of saber (sé) and dar (doy); and orthographic yo-form changes before o/a (coger → cojo, seguir → sigo).',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Pienso que tienes razón.',
+      'Ella puede venir mañana, pero yo no puedo.',
+      'Pido un café con leche.',
+      'Yo sé cocinar, pero no sé bailar.',
+      'Te doy mi número de teléfono.',
+    ],
+    examplesNegative: ['*Ella piensa que nosotros piensamos lo mismo.', '*Yo sabo la respuesta.'],
+    commonErrors: [
+      'Overapplying the stem change to the nosotros/vosotros forms, producing "*piensamos" instead of "pensamos".',
+      'Regularizing an irregular yo-form, producing "*yo sabo" or "*yo do" instead of "sé" and "doy".',
+      'Missing the orthographic g→j or gu→g change in the yo-form of -ger/-gir/-guir verbs, producing "*cogo" or "*seguo" instead of "cojo" and "sigo".',
+    ],
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '3pl': 5 } },
+      ],
+    },
+    conjugationSuitable: true,
+  },
+  {
+    key: 'es-a2-preterite-regular',
+    kind: 'grammar',
+    name: 'Preterite — regular verbs',
+    description:
+      'Regular pretérito indefinido endings for -ar/-er/-ir verbs to narrate completed actions at a specific past time (ayer, el sábado). The stressed final vowel distinguishes it from the present (hablo / habló).',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: ['Ayer hablé con mi madre.', 'Comimos en el parque el sábado.'],
+    examplesNegative: ['*Ayer hablo con mi madre.'],
+    commonErrors: [
+      'Dropping the written accent that distinguishes preterite from present (hablo / habló).',
+      'Mixing -er and -ir endings across persons.',
+      'Using the preterite for habitual past actions where the imperfect is required.',
+    ],
+    prerequisiteKeys: ['es-a1-present-indicative-regular'],
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '3pl': 5 } },
+      ],
+    },
+    conjugationSuitable: true,
+  },
+  {
+    key: 'es-a2-preterite-irregular',
+    kind: 'grammar',
+    name: 'Preterite — irregular verbs',
+    description:
+      'Irregular preterite stems tener (tuve), hacer (hice/hizo), and estar (estuve), which take unstressed first- and third-person singular endings; the shared fui/fuiste/fue forms of ser and ir; and the accent-free preterites vi/vio (ver) and di/dio (dar).',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Ayer hice la tarea y tuve que quedarme en casa.',
+      'Ayer fuimos al museo, y la visita fue muy interesante.',
+      'Vi la película y luego le di mi opinión.',
+    ],
+    examplesNegative: ['*Ayer yo hací la tarea.'],
+    commonErrors: [
+      'Regularizing the irregular preterite stems, producing forms like "*hací" or "*tení" instead of "hice" and "tuve".',
+      'Adding an unnecessary written accent to the monosyllabic-looking preterites dio and vio ("*dió", "*vió").',
+      'Grafting the regular -ió ending onto an irregular stem, producing "*tuvió" or "*hizió" instead of "tuvo" and "hizo".',
+    ],
+    prerequisiteKeys: ['es-a2-preterite-regular'],
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '3pl': 5 } },
+      ],
+    },
+    conjugationSuitable: true,
+  },
+  {
+    key: 'es-a2-imperfect',
+    kind: 'grammar',
+    name: 'Imperfect',
+    description:
+      'Imperfect tense for descriptions, background states, and habitual past actions (cuando era niño, íbamos a la playa cada verano); the three irregular imperfects ser (era), ir (iba), and ver (veía); and its contrast with the preterite for a single completed event.',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Cuando era niño, iba a la playa todos los veranos.',
+      'Mientras yo leía, mi hermana veía la televisión.',
+      'Llovía mucho cuando llegamos a casa.',
+    ],
+    examplesNegative: ['*Cuando fui niño, iba a la playa todos los veranos.'],
+    commonErrors: [
+      'Using the preterite instead of the imperfect for a background description or an ongoing state, e.g. "*cuando fui niño" instead of "cuando era niño".',
+      'Regularizing the irregular imperfects, producing "*ia" instead of "iba" or "*veiba" instead of "veía".',
+      'Keeping a one-time interrupting event in the imperfect instead of switching to the preterite, e.g. "*mientras leía, mi hermana entraba" when a single entrance is meant.',
+    ],
+    prerequisiteKeys: ['es-a2-preterite-regular'],
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '3pl': 5 } },
+      ],
+    },
+    conjugationSuitable: true,
+  },
+  {
+    key: 'es-a2-preterito-perfecto',
+    kind: 'grammar',
+    name: 'Pretérito perfecto',
+    description:
+      'Present perfect (pretérito perfecto): haber + past participle for actions within a period that includes now; the irregular participles hecho, escrito, and visto; and the time markers ya, todavía no, and hoy that anchor it to the present.',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Hoy he hecho mucho ejercicio.',
+      'Todavía no he escrito la carta.',
+      '¿Ya has visto la nueva película?',
+    ],
+    examplesNegative: ['*Hoy he escribido la carta.'],
+    commonErrors: [
+      'Regularizing irregular participles: "*hacido" for "hecho", "*escribido" for "escrito", "*veído" for "visto".',
+      'Making the past participle agree in gender/number with the subject when used with haber, e.g. "*he hecha la tarea" instead of "he hecho la tarea".',
+      'Using the simple preterite (hice) instead of the perfect when a marker like ya, todavía no, or hoy signals a period that still includes the present.',
+    ],
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '3pl': 5 } },
+      ],
+    },
+  },
+  {
+    key: 'es-a2-imperative-affirmative',
+    kind: 'grammar',
+    name: 'Affirmative imperative',
+    description:
+      'Affirmative imperative: regular tú (habla, come, vive) and vosotros (hablad, comed, vivid) forms; the eight irregular tú forms di, haz, pon, sal, ten, ven, sé, ve; usted/ustedes forms built on the present subjunctive; and enclitic pronouns (cómpralo, dímelo).',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Habla más despacio, por favor.',
+      'Ven aquí y ponte el abrigo.',
+      'Cómprelo usted en la farmacia.',
+    ],
+    examplesNegative: ['*Comes más despacio, por favor.'],
+    commonErrors: [
+      'Adding the indicative -s ending to the tú imperative by analogy with the present tense, producing "*comes" or "*hablas" instead of "come" and "habla".',
+      'Regularizing the eight irregular tú imperatives, producing "*dice", "*hace", "*pone", or "*sale" instead of "di", "haz", "pon", and "sal".',
+      'Placing the enclitic pronoun before the verb instead of attaching it, producing "*lo compra" instead of "cómpralo".',
+    ],
+  },
+  {
+    key: 'es-a2-estar-gerundio',
+    kind: 'grammar',
+    name: 'Estar + gerundio',
+    description:
+      'Gerund formation (-ando/-iendo, with stem changes like durmiendo/pidiendo and y-insertion like leyendo) combined with estar for the present/past continuous; and enclitic pronouns attached to the gerund (leyéndolo / lo estoy leyendo).',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Estoy leyendo un libro muy interesante.',
+      'Estábamos durmiendo cuando sonó el teléfono.',
+      'Estoy escribiéndola ahora mismo.',
+    ],
+    examplesNegative: ['*Estoy leendo un libro.'],
+    commonErrors: [
+      'Forgetting the y-insertion in gerunds of -er/-ir verbs whose stem ends in a vowel, producing "*leendo" instead of "leyendo".',
+      'Missing the stem change in the gerund of pedir- and dormir-type verbs, producing "*pediendo" or "*dormiendo" instead of "pidiendo" and "durmiendo".',
+      'Dropping the written accent when two pronouns are attached to the gerund, producing "*leyendosela" instead of "leyéndosela".',
+    ],
+  },
+  {
+    key: 'es-a2-ir-a-future',
+    kind: 'grammar',
+    name: 'Ir a + infinitive',
+    description:
+      'The immediate/planned future with ir a + infinitive (voy a estudiar) and the present indicative marked by a future time expression (mañana salgo temprano) — the two everyday ways Spanish expresses future time without the morphological future tense.',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Voy a estudiar español este verano.',
+      'Mañana salgo temprano para el aeropuerto.',
+      '¿Vas a venir a la fiesta?',
+    ],
+    examplesNegative: ['*Voy estudiar español este verano.'],
+    commonErrors: [
+      'Omitting the preposition a between ir and the infinitive, producing "*voy estudiar" instead of "voy a estudiar".',
+      'Failing to conjugate ir irregularly before a, producing "*yo io a estudiar" instead of "voy a estudiar".',
+      'Reaching for the morphological future (estudiaré) instead of the more natural ir a + infinitive or present-plus-marker in everyday speech.',
+    ],
+  },
+  {
+    key: 'es-a2-periphrases-obligation-aspect',
+    kind: 'grammar',
+    name: 'Obligation and aspect periphrases',
+    description:
+      'Modal and aspectual periphrases tener que (obligation), hay que (impersonal necessity), acabar de (to have just done), empezar a (to begin), volver a (to do again), and soler (habit); and the optional clitic shift (verlo / lo + conjugated verb).',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Tengo que devolvértelo mañana.',
+      'Suelo desayunar café con tostadas.',
+      'Volvió a llamarme por la tarde.',
+      'Acabo de terminar la tarea.',
+    ],
+    examplesNegative: ['*Lo hay que hacer.'],
+    commonErrors: [
+      'Shifting the clitic before hay que, producing "*lo hay que hacer" instead of the only correct form, "hay que hacerlo".',
+      'Confusing volver a + infinitive ("to do again") with volver used literally ("to return"), or acabar de + infinitive ("to have just done") with acabar used literally ("to finish").',
+      'Using soler outside the present and imperfect, where it does not occur, instead of rephrasing with normalmente or generalmente.',
+    ],
+  },
+  {
     key: 'es-a2-comparatives-superlatives',
     kind: 'grammar',
     name: 'Comparatives',
@@ -563,7 +774,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Compound tenses with haber',
     description:
-      'Perfect tenses formed with haber + past participle: present perfect, pluperfect, future perfect, conditional perfect.',
+      'Perfect tenses beyond the pretérito perfecto: pluperfect (había terminado), future perfect (habré llegado), and conditional perfect groundwork — all formed with haber + invariable past participle.',
     cefrLevel: B2,
     language: ES,
     examplesPositive: ['Habíamos terminado antes de las ocho.', 'Para mañana habré llegado.'],
@@ -572,6 +783,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Forming the perfect with "ser" or "estar" instead of "haber".',
       'Inflecting the past participle for gender or number when used with haber.',
     ],
+    prerequisiteKeys: ['es-a2-preterito-perfecto'],
   },
   {
     key: 'es-b2-conditional-perfect',
