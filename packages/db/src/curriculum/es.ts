@@ -1857,7 +1857,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Using bare "que" before a clause instead of "de lo que" (or gendered del/de la que) when comparing across two different verbs ("*es más caro que pensaba" instead of "es más caro de lo que pensaba").',
       'Treating "superior/inferior a" like "más/menos que" and inserting "que" instead of "a" ("*superior que la competencia" instead of "superior a la competencia").',
-      'Using "que" instead of "de" after "el doble" when comparing quantities ("*el doble que la nuestra" instead of "el doble de la nuestra").',
+      'Using "que" instead of "de" before a quantified noun phrase after multiplicatives ("*el doble que habitantes" instead of "el doble de habitantes") — "que" is correct only before a comparison target ("gana el doble que yo").',
     ],
   },
 
@@ -1881,7 +1881,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Using "cualquiera" before a noun instead of dropping the final -a to "cualquier" ("*cualquiera libro" instead of "cualquier libro").',
       'Missing the adverbial "rather/somewhat" use of algo before an adjective, reading "es algo pesado" as if algo were the A2 pronoun "something".',
-      'Using "que" instead of "de" after "el doble" or a fraction when comparing quantities ("*el doble que la mitad" instead of "el doble de la mitad").',
+      'Using "que" instead of "de" before a quantified noun phrase after multiplicatives or fractions ("*el doble que habitantes" instead of "el doble de habitantes") — "que" is correct only before a comparison target ("gana el doble que yo").',
     ],
   },
 
