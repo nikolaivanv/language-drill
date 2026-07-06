@@ -1132,6 +1132,139 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Failing to make the verb agree with the plural noun in passive-se ("*se vende coches").',
     ],
   },
+  {
+    key: 'es-b1-futuro-simple',
+    kind: 'grammar',
+    name: 'Future simple',
+    description:
+      'Futuro imperfecto: regular endings on the infinitive (hablaré, comerás) and the irregular stems tendr-, saldr-, sabr-, podr-, har-, dir-; absolute future statements and the future of probability (Serán las once).',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: ['Mañana iré al médico a primera hora.', '¿Qué hora es? — Serán las once.'],
+    examplesNegative: ['*Mañana teneré una reunión importante.'],
+    commonErrors: [
+      'Regularising irregular stems ("*teneré", "*saliré" instead of "tendré", "saldré").',
+      'Reaching for ir a + infinitive in formal writing where the simple future is expected.',
+      'Missing the written accent on the endings ("*hablare" instead of "hablaré").',
+    ],
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 15, '2sg': 15, '3sg': 15, '1pl': 15, '3pl': 15 } },
+      ],
+    },
+    conjugationSuitable: true,
+  },
+  {
+    key: 'es-b1-pluperfect',
+    kind: 'grammar',
+    name: 'Pluperfect (past perfect)',
+    description:
+      'Pluperfect: había + past participle for an event completed before another past reference point (Cuando llegamos ya se había ido), contrasted with the simple preterite for the later event.',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Cuando llegamos a la estación, el tren ya había salido.',
+      'Nos dimos cuenta de que ya habíamos visto esa película.',
+    ],
+    examplesNegative: ['*Cuando llegamos a la estación, el tren ya salió antes.'],
+    commonErrors: [
+      'Using the simple preterite for the earlier of two past events instead of the pluperfect ("*el tren ya salió" instead of "ya había salido").',
+      'Forming the pluperfect with "ser" or "estar" instead of "haber".',
+      'Inflecting the past participle for gender or number after haber ("*había salida").',
+    ],
+    prerequisiteKeys: ['es-a2-preterito-perfecto'],
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 15, '2sg': 15, '3sg': 15, '1pl': 15, '3pl': 15 } },
+      ],
+    },
+  },
+  {
+    key: 'es-b1-past-narration',
+    kind: 'grammar',
+    name: 'Past narration: imperfecto/indefinido interplay',
+    description:
+      'Narrating in the past: imperfecto for background and indefinido for foregrounded events (Iba por la calle y me encontré con Ana), conato with iba a + infinitive interrupted by a preterite (Iba a salir cuando sonó el teléfono), and al + infinitivo for "on/when doing X" (Al llegar, lo vi).',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Iba por la calle cuando de repente me encontré con Ana.',
+      'Iba a salir de casa cuando sonó el teléfono.',
+      'Al llegar a la oficina, vi que las luces ya estaban encendidas.',
+    ],
+    examplesNegative: ['*Iba por la calle cuando de repente me encontraba con Ana.'],
+    commonErrors: [
+      'Using the imperfect for a punctual, plot-advancing event instead of the indefinido ("*me encontraba con Ana" instead of "me encontré con Ana").',
+      'Using the preterite of ir a + infinitive instead of the imperfect for an interrupted intention ("*fui a salir cuando sonó" instead of "iba a salir cuando sonó").',
+      'Using a finite clause instead of al + infinitivo when the subjects match ("*cuando llegué, lo vi" instead of the more idiomatic "al llegar, lo vi").',
+    ],
+  },
+  {
+    key: 'es-b1-imperative-negative-pronouns',
+    kind: 'grammar',
+    name: 'Negative imperative and clitic pronoun placement',
+    description:
+      'Negative imperative formed with the present subjunctive plus proclitic pronouns (No te vayas, No me lo digas), contrasted with enclisis on the affirmative imperative, including multi-clitic forms with a written accent (díselo, dámelas).',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: ['No te vayas todavía.', 'Díselo a tu hermana, no se lo ocultes.'],
+    examplesNegative: ['*No vete todavía.'],
+    commonErrors: [
+      'Attaching the pronoun to a negative imperative instead of placing it before the verb ("*no vete" instead of "no te vayas").',
+      'Using the plain affirmative imperative form after "no" instead of switching to the subjunctive ("*no ven" instead of "no vengas").',
+      'Dropping the written accent when two pronouns are added to an affirmative imperative ("*diselo" instead of "díselo").',
+    ],
+    prerequisiteKeys: ['es-a2-imperative-affirmative'],
+  },
+  {
+    key: 'es-b1-subjunctive-adverbial',
+    kind: 'grammar',
+    name: 'Subjunctive in adverbial clauses',
+    description:
+      'Subjunctive in temporal clauses with future reference (cuando llegues, not *cuando llegarás), antes de que and después de que + subjunctive, and purpose clauses with para que + subjunctive.',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: ['Te llamaré cuando llegue a casa.', 'Te lo explico para que lo entiendas.'],
+    examplesNegative: ['*Te llamaré cuando llegaré a casa.'],
+    commonErrors: [
+      'Using the future indicative after "cuando" with future reference instead of the present subjunctive ("*cuando llegaré" instead of "cuando llegue").',
+      'Using the indicative after "antes de que", which always requires the subjunctive.',
+      'Using "para" + infinitive instead of "para que" + subjunctive when the clauses have different subjects.',
+    ],
+    prerequisiteKeys: ['es-b1-present-subjunctive'],
+  },
+  {
+    key: 'es-b1-reported-speech',
+    kind: 'grammar',
+    name: 'Reported speech (present-to-past)',
+    description:
+      'Indirect statements shifting present to imperfect under a past-tense reporting verb (Dijo que tenía sueño; Pensé que estabas cansado), and reported commands with que + present subjunctive (Dice que te sientes).',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: ['Dijo que tenía mucho sueño.', 'El profesor dice que hagamos los deberes.'],
+    examplesNegative: ['*Dijo que tiene mucho sueño.'],
+    commonErrors: [
+      'Keeping the present tense in the reported clause after a past-tense reporting verb ("*dijo que tiene sueño" instead of "dijo que tenía sueño").',
+      'Reporting a command with the infinitive instead of que + present subjunctive ("*dice hacer los deberes" instead of "dice que hagamos los deberes").',
+      'Using the indicative for a reported command instead of switching to the subjunctive ("*dice que vienes" instead of "dice que vengas" when relaying an order).',
+    ],
+  },
+  {
+    key: 'es-b1-deber-obligation-probability',
+    kind: 'grammar',
+    name: 'Deber + infinitivo vs. deber de + infinitivo',
+    description:
+      'The contrast between deber + infinitive for obligation (Debes terminar el informe) and deber de + infinitive for probability or conjecture (Deben de ser las cinco), plus deberías for softened advice.',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: ['Debes terminar el informe antes del viernes.', 'Deben de ser las cinco ya.'],
+    examplesNegative: ['*Debes de terminar el informe antes del viernes.'],
+    commonErrors: [
+      'Using "deber de" for obligation instead of plain "deber" ("*debes de terminar" instead of "debes terminar").',
+      'Treating deber and deber de as freely interchangeable, blurring the obligation/probability distinction the two forms are meant to keep separate.',
+      'Using the plain present of deber for advice instead of the softened conditional deberías ("*debes hacer ejercicio" as advice instead of "deberías hacer ejercicio").',
+    ],
+  },
 
   // ---------------------------------------------------------------------------
   // B2

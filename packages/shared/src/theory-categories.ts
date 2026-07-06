@@ -147,6 +147,15 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-b2-complex-conditionals': 'syntax',
   'es-b2-nuanced-ser-estar': 'pairs',
 
+  // --- Spanish (B1 additions) ---
+  'es-b1-futuro-simple': 'tenses',
+  'es-b1-pluperfect': 'tenses',
+  'es-b1-past-narration': 'tenses',
+  'es-b1-imperative-negative-pronouns': 'moods',
+  'es-b1-subjunctive-adverbial': 'moods',
+  'es-b1-reported-speech': 'syntax',
+  'es-b1-deber-obligation-probability': 'pairs',
+
   // --- Turkish A1 ---
   'tr-a1-vowel-harmony': 'orthography',
   'tr-a1-stem-changes': 'orthography',
