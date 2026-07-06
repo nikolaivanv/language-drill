@@ -740,6 +740,16 @@ describe('theory category coverage', () => {
     expect(nonGrammar.length).toBeGreaterThan(0);
     expect(nonGrammar.every((p) => resolveTheoryCategory(p.key) === 'other')).toBe(true);
   });
+
+  // ES is now live end-to-end (44 A1/A2 + 10 B1/B2 grammar points, all mapped),
+  // so it gets the same non-other guarantee as TR above.
+  it('maps every live ES grammar point to a non-other category', () => {
+    const unmapped = esCurriculum
+      .filter((p) => p.kind === 'grammar')
+      .filter((p) => resolveTheoryCategory(p.key) === 'other')
+      .map((p) => p.key);
+    expect(unmapped).toEqual([]);
+  });
 });
 
 describe('TR nominal-inflection conjugation cells (Task 6)', () => {
