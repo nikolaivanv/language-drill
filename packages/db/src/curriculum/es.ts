@@ -1750,6 +1750,185 @@ const esCurriculum: readonly GrammarPoint[] = [
     ],
   },
 
+  {
+    key: 'es-b2-consecutives-intensity',
+    kind: 'grammar',
+    name: 'Consecutive clauses of intensity: tan/tanto…que, de manera que, por lo tanto',
+    description:
+      'tan + adjective/adverb + que and tanto/a/os/as + noun + que (agreeing with the noun, e.g. tantas personas) for consequence; invariable tanto que with verbs (corrió tanto que…); de manera/modo que + indicative for result; formal por lo tanto, por consiguiente (distinct from por eso/entonces).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Hablaba tan rápido que no entendíamos nada.',
+      'Vinieron tantas personas a la boda que no cupimos en la sala.',
+      'Corrió tanto que se quedó sin aliento.',
+      'No teníamos billetes; por lo tanto, decidimos volver a casa.',
+    ],
+    examplesNegative: ['*Está tanto cansada que no puede seguir.'],
+    commonErrors: [
+      'Using "tanto" before an adjective instead of "tan" ("*está tanto cansada" instead of "está tan cansada").',
+      'Leaving "tanto" invariable before a noun instead of agreeing in gender and number ("*tanto personas vinieron" instead of "tantas personas vinieron").',
+      'Confusing this consequence construction with the A2 equality comparison tan/tanto…como, blending the two into ungrammatical hybrids.',
+    ],
+  },
+
+  {
+    key: 'es-b2-sino-adversatives',
+    kind: 'grammar',
+    name: 'Pero vs. sino: correction versus contrast',
+    description:
+      'Sino corrects a negated statement (No es antipático sino tímido) and requires sino que before a finite verb (sino que estoy dispuesto a ayudar); pero contrasts without correcting, even after a negation (No tiene dinero, pero es feliz); no obstante is a literary "nevertheless".',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'No es antipático sino tímido.',
+      'No solo le creo, sino que estoy dispuesto a ayudarlo.',
+      'No tiene dinero, pero es feliz.',
+      'No obstante, decidieron seguir adelante con el proyecto.',
+    ],
+    examplesNegative: ['*No es antipático, pero tímido.'],
+    commonErrors: [
+      'Using pero instead of sino when the first clause is being corrected, not merely qualified ("*no es antipático, pero tímido" instead of "sino tímido").',
+      'Omitting "que" before a finite verb after sino ("*sino estoy dispuesto a ayudarlo" instead of "sino que estoy dispuesto a ayudarlo").',
+      'Using sino outside a negative context, where only pero is possible ("*habla francés, sino mal" instead of "pero mal").',
+    ],
+  },
+
+  {
+    key: 'es-b2-causal-connectors',
+    kind: 'grammar',
+    name: 'Formal causal connectors: ya que, puesto que, debido a que, enunciative porque',
+    description:
+      'Ya que and puesto que mean "since/given that", fronted or after the main clause; debido a que is a formal causal alternative; porque can also justify the speaker\'s assertion about a state rather than explain its cause (Están en casa, porque veo luz encendida).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Puesto que quieres que me quede, me quedo.',
+      'No pudimos salir, ya que llovía sin parar.',
+      'El vuelo se retrasó debido a que había niebla en el aeropuerto.',
+      'Están en casa, porque veo luz encendida en la ventana.',
+    ],
+    examplesNegative: ['*El vuelo se retrasó debido que había niebla en el aeropuerto.'],
+    commonErrors: [
+      'Dropping the "a" in "debido a que" ("*debido que" instead of "debido a que").',
+      'Confusing "porque" (because) with "por qué" (why) in writing.',
+      'Missing the enunciative use of porque to justify the speaker\'s inference rather than the fact itself, and reaching for ya que instead in that context.',
+    ],
+  },
+
+  {
+    key: 'es-b2-lo-nominalizer',
+    kind: 'grammar',
+    name: 'Lo as nominalizer: lo + adjective, lo de, lo que, lo + adj + que',
+    description:
+      'Lo + masculine singular adjective as an abstract noun (lo interesante, lo mejor); lo de + noun phrase for "the business of" (lo de ayer); lo que relative clauses; lo + adjective + que as an intensifier where the adjective agrees with its noun (lo cansada que estaba); el porqué "the reason".',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Lo importante es que digan la verdad.',
+      '¿Le cuento lo de los otros tres novios?',
+      'No sabes lo cansada que estaba después del viaje.',
+      'Nadie conoce el porqué de su decisión.',
+    ],
+    examplesNegative: ['*María estaba agotada; no sabes lo cansado que estaba.'],
+    commonErrors: [
+      'Treating "lo + adjective + que" as invariable instead of agreeing the adjective with the noun it describes ("*no sabes lo cansado que estaba" for a female subject, instead of "lo cansada que estaba").',
+      'Using "lo de" even when a specific gendered referent is meant, instead of "el/la/los/las de".',
+      'Writing "por qué" instead of "el porqué" for the noun meaning "the reason".',
+    ],
+  },
+
+  {
+    key: 'es-b2-comparatives-advanced',
+    kind: 'grammar',
+    name: 'Advanced comparatives: de lo que, superior/inferior a, el doble de, igual que',
+    description:
+      'Más/menos + de lo que (or gendered del/de la que) for clausal comparison (más caro de lo que pensaba); superior/inferior a; el doble de and tres veces más for multiplicative comparison; igual que for equality; bare más N que N pitting two nouns (más libros que revistas).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Es más caro de lo que pensaba.',
+      'Su rendimiento fue superior al de la competencia.',
+      'Esta ciudad tiene el doble de habitantes que la nuestra.',
+      'Aquí llueve tres veces más que en el sur.',
+      'En esta biblioteca hay más revistas que libros.',
+    ],
+    examplesNegative: ['*Es más caro que pensaba.'],
+    commonErrors: [
+      'Using bare "que" before a clause instead of "de lo que" (or gendered del/de la que) when comparing across two different verbs ("*es más caro que pensaba" instead of "es más caro de lo que pensaba").',
+      'Treating "superior/inferior a" like "más/menos que" and inserting "que" instead of "a" ("*superior que la competencia" instead of "superior a la competencia").',
+      'Using "que" instead of "de" after "el doble" when comparing quantities ("*el doble que la nuestra" instead of "el doble de la nuestra").',
+    ],
+  },
+
+  {
+    key: 'es-b2-quantifiers-advanced',
+    kind: 'grammar',
+    name: 'Advanced quantifiers: cualquier(a), partitives, multiplicatives, algo + adjective',
+    description:
+      'Cualquier + noun drops the final -a (cualquier libro), while the standalone pronoun cualquiera keeps it; partitives la mitad de / un tercio de; multiplicative el doble de and the ratio tres de cada cinco; attenuating algo + adjective for "rather/somewhat" (Es algo pesado).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Cualquier libro de esa estantería te servirá.',
+      'Cualquiera podría hacerlo mejor que él.',
+      'La mitad de los invitados llegó tarde.',
+      'Casi un tercio de la población vive en la capital.',
+      'Tres de cada cinco personas prefieren el tren.',
+      'Es algo pesado, pero se puede llevar.',
+    ],
+    examplesNegative: ['*Cualquiera libro de esa estantería te servirá.'],
+    commonErrors: [
+      'Using "cualquiera" before a noun instead of dropping the final -a to "cualquier" ("*cualquiera libro" instead of "cualquier libro").',
+      'Missing the adverbial "rather/somewhat" use of algo before an adjective, reading "es algo pesado" as if algo were the A2 pronoun "something".',
+      'Using "que" instead of "de" after "el doble" or a fraction when comparing quantities ("*el doble que la mitad" instead of "el doble de la mitad").',
+    ],
+  },
+
+  {
+    key: 'es-b2-cleft-sentences',
+    kind: 'grammar',
+    name: 'Cleft sentences: ser-focus with relator agreement',
+    description:
+      'Ser-focus cleft sentences where the relator matches the focus type: quien/el que for people (Fue Juan quien llamó), donde for place, cuando for time, lo que for a neuter idea (Lo que necesito es dormir); plain que alone in this slot is the classic anglophone error.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Fue Juan quien llamó anoche.',
+      'Es aquí donde nos conocimos.',
+      'Fue entonces cuando lo supe.',
+      'Lo que necesito es dormir.',
+    ],
+    examplesNegative: ['*Fue Juan que llamó anoche.'],
+    commonErrors: [
+      'Using plain "que" instead of the relator matching the focus type ("*fue Juan que llamó" instead of "fue Juan quien/el que llamó").',
+      'Using "donde" for a temporal focus or "cuando" for a place focus, instead of matching the relator to the focus type ("*fue entonces donde lo supe" instead of "fue entonces cuando lo supe").',
+      'Dropping the preposition from the second half of a prepositional cleft in careful register ("*es con ella que tienes que hablar" instead of "es con ella con la que/con quien tienes que hablar").',
+    ],
+  },
+
+  {
+    key: 'es-b2-appreciative-suffixes',
+    kind: 'grammar',
+    name: 'Appreciative suffixes: diminutive -ito, augmentative -ón/-azo, pejorative -ucho',
+    description:
+      'Diminutive -ito, with the -c-/-e- allomorph after words ending in -n/-r (mujercita) or -e/ie-ue (cochecito); affective and lexicalized senses (bolsillo, via -illo); augmentative -ón/-azo (portazo); pejorative -ucho (casucha). Recognition-only: production stays capped at the core -ito/-ón.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Espera un momentito, por favor.',
+      'Compró un cochecito para el bebé.',
+      'Le dio un portazo tremendo al salir.',
+      'Vivían en una casucha en las afueras del pueblo.',
+    ],
+    examplesNegative: ['*Tiene un dormitorito muy grande.'],
+    commonErrors: [
+      'Coining novel diminutives outside the safe -ito/-ón pattern, producing non-words a native speaker would not recognize ("*dormitorito" from dormitorio is not Spanish).',
+      'Overapplying the -c-/-ec- allomorph to words that take a plain -ito/-ita ("*sillacita" instead of "sillita"), instead of reserving it for words ending in -n/-r or in -e/ie-ue.',
+      'Assuming augmentatives like -ón are freely productive and inventing new coinages, rather than sticking to established, recognized forms.',
+    ],
+  },
+
   // ---------------------------------------------------------------------------
   // Vocab umbrellas — kind: 'vocab'
   // Themed A1/A2 umbrellas (2026-07-06), mirroring the TR themed vocab split:

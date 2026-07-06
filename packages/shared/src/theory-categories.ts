@@ -174,6 +174,14 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-b2-se-middle-accidental': 'pronouns',
   'es-b2-clitic-advanced': 'pronouns',
   'es-b2-gerund-participle-constructions': 'syntax',
+  'es-b2-consecutives-intensity': 'syntax',
+  'es-b2-sino-adversatives': 'pairs',
+  'es-b2-causal-connectors': 'syntax',
+  'es-b2-lo-nominalizer': 'syntax',
+  'es-b2-comparatives-advanced': 'syntax',
+  'es-b2-quantifiers-advanced': 'syntax',
+  'es-b2-cleft-sentences': 'syntax',
+  'es-b2-appreciative-suffixes': 'morphology',
 
   // --- Turkish A1 ---
   'tr-a1-vowel-harmony': 'orthography',
