@@ -77,10 +77,10 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Noun plural',
     description:
-      'Plural formation: add -s after an unstressed vowel, add -es after a consonant or stressed vowel (país → países), and change a final z to c before -es (lápiz → lápices).',
+      'Plural formation: -s after a vowel (mesa → mesas, café → cafés), -es after a consonant (árbol → árboles) — including final -s in stressed syllables (país → países); nouns in stressed -í/-ú usually take -es (jabalí → jabalíes).',
     cefrLevel: A1,
     language: ES,
-    examplesPositive: ['Visité tres países interesantes.', 'Hay muchas ciudades grandes en España.'],
+    examplesPositive: ['Conozco tres países interesantes.', 'Hay muchas ciudades grandes en España.'],
     examplesNegative: ['*Hay muchas ciudads grandes en España.'],
     commonErrors: [
       'Adding only -s to nouns ending in a consonant instead of -es ("*ciudads" for "ciudades").',
