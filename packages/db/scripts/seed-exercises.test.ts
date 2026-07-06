@@ -76,13 +76,12 @@ describe('planSkillTopics', () => {
 });
 
 describe('planSeedTags', () => {
-  it('returns one tag per active mapping plus 10 untagged EN seeds (reduced curriculum)', () => {
-    // SEED_KEY_TO_GRAMMAR_POINT is temporarily reduced (see seed-exercises.ts).
-    // Filter SEED_EXERCISES to only EN seeds and seeds whose mapping is still
-    // active so the happy-path assertion remains meaningful. Restore the
-    // unfiltered call (and the original 27 / 10 expectations) when the
-    // commented-out mappings are uncommented. Count is 10 (was 9) after adding
-    // the en-free-writing-b1-ideal-weekend seed (EN is source-only — no tag).
+  it('returns one tag per active mapping plus 10 untagged EN seeds (DE still reduced)', () => {
+    // SEED_KEY_TO_GRAMMAR_POINT is temporarily reduced for DE only (see
+    // seed-exercises.ts). Filter SEED_EXERCISES to only EN seeds and seeds
+    // whose mapping is still active so the happy-path assertion remains
+    // meaningful. Restore the unfiltered call (and the original 27 / 10
+    // expectations) when the commented-out DE mappings are uncommented.
     const activeNonEnKeys = new Set(Object.keys(SEED_KEY_TO_GRAMMAR_POINT));
     const activeSeeds = SEED_EXERCISES.filter(
       (s) => s.language === 'EN' || activeNonEnKeys.has(s.key),
@@ -96,9 +95,7 @@ describe('planSeedTags', () => {
     // 'es-cloze-b1-1' is an active mapping; deleting it from a clone reproduces
     // the original "missing mapping" error. Filter SEED_EXERCISES to actively-
     // mapped + EN seeds so the throw is triggered by our deletion rather than
-    // by another seed whose mapping is currently disabled. Restore to
-    // 'es-cloze-a2-1' and the unfiltered SEED_EXERCISES when that mapping is
-    // uncommented.
+    // by another seed whose mapping is currently disabled (DE).
     const activeNonEnKeys = new Set(Object.keys(SEED_KEY_TO_GRAMMAR_POINT));
     const activeSeeds = SEED_EXERCISES.filter(
       (s) => s.language === 'EN' || activeNonEnKeys.has(s.key),
@@ -111,7 +108,6 @@ describe('planSeedTags', () => {
   });
 
   it('throws naming the offending seed when a mapping points to an unknown curriculum key', () => {
-    // Same restore note as above — swap back to 'es-cloze-a2-1' when active.
     const activeNonEnKeys = new Set(Object.keys(SEED_KEY_TO_GRAMMAR_POINT));
     const activeSeeds = SEED_EXERCISES.filter(
       (s) => s.language === 'EN' || activeNonEnKeys.has(s.key),
@@ -124,8 +120,8 @@ describe('planSeedTags', () => {
 });
 
 describe('SEED_KEY_TO_GRAMMAR_POINT', () => {
-  it('has exactly 9 active entries (reduced from 27 while curriculum is disabled)', () => {
-    expect(Object.keys(SEED_KEY_TO_GRAMMAR_POINT)).toHaveLength(9);
+  it('has exactly 12 active entries (reduced from 27 while DE curriculum is disabled)', () => {
+    expect(Object.keys(SEED_KEY_TO_GRAMMAR_POINT)).toHaveLength(12);
   });
 
   it('contains no EN keys (EN seeds are intentionally untagged)', () => {

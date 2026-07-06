@@ -114,14 +114,11 @@ describe('assertCurriculumInvariants', () => {
   });
 
   it('throws when a per-language grammar count drops below the minimum', () => {
-    // ES A1 minimum is temporarily 0 (see PER_LANGUAGE_GRAMMAR_MIN), so this
-    // test now drops ES B1 (still required: 5). Restore to ES A1 when the A1
-    // minimum is raised (Task 9).
     const trimmed = ALL_CURRICULA
-      .filter((e) => !(e.language === 'ES' && e.cefrLevel === 'B1'))
+      .filter((e) => !(e.language === 'ES' && e.cefrLevel === 'A1'))
       .map((e) => ({ ...e, prerequisiteKeys: undefined }));
     expect(() => assertCurriculumInvariants(trimmed)).toThrow(
-      /ES B1 grammar count 0 below minimum 5/,
+      /ES A1 grammar count 0 below minimum 21/,
     );
   });
 });
@@ -513,16 +510,15 @@ describe('per-language counts', () => {
     return { grammar, vocab, dictation, freeWriting };
   }
 
-  // ES A1/A2 restoration to PCIC parity is underway (Tasks 2–9): the A1/A2
-  // assertions below are floors, not exact, until Task 9 tightens them to
-  // ≥21/≥23. DE is still TEMPORARILY REDUCED (2026-05-10). TR (2026-05-28) is
+  // ES is at full PCIC A1+A2 parity (2026-07-06): 21 A1 + 23 A2 grammar
+  // points. DE is still TEMPORARILY REDUCED (2026-05-10). TR (2026-05-28) is
   // now at full Yedi İklim A1+A2 parity (26 A1 + 14 A2 grammar + 10 themed
   // vocab umbrellas); B1/B2 remain disabled.
 
-  it('Spanish meets minimums (A1/A2 restoration in progress), has 12 vocab umbrellas, 4 dictation umbrellas, and 18 free-writing umbrellas', () => {
+  it('Spanish is at full PCIC A1+A2 parity, has 12 vocab umbrellas, 4 dictation umbrellas, and 18 free-writing umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting } = countsFor(esCurriculum);
-    expect(grammar.A1).toBeGreaterThanOrEqual(0);
-    expect(grammar.A2).toBeGreaterThanOrEqual(1);
+    expect(grammar.A1).toBeGreaterThanOrEqual(21);
+    expect(grammar.A2).toBeGreaterThanOrEqual(23);
     expect(grammar.B1).toBeGreaterThanOrEqual(5);
     expect(grammar.B2).toBeGreaterThanOrEqual(5);
     // 5 A1 + 5 A2 themed umbrellas + es-b1-environment-vocab + es-b2-abstract-noun-vocab.
