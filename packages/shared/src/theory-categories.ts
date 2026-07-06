@@ -169,6 +169,11 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-b2-subjunctive-negated-opinion': 'moods',
   'es-b2-subjunctive-temporal-concessive': 'moods',
   'es-b2-conditional-connectors': 'moods',
+  'es-b2-passive-voice': 'syntax',
+  'es-b2-verbs-of-change': 'syntax',
+  'es-b2-se-middle-accidental': 'pronouns',
+  'es-b2-clitic-advanced': 'pronouns',
+  'es-b2-gerund-participle-constructions': 'syntax',
 
   // --- Turkish A1 ---
   'tr-a1-vowel-harmony': 'orthography',

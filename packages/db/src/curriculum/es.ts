@@ -1641,6 +1641,115 @@ const esCurriculum: readonly GrammarPoint[] = [
     ],
   },
 
+  {
+    key: 'es-b2-passive-voice',
+    kind: 'grammar',
+    name: 'Passive voice: ser vs estar + participle',
+    description:
+      'Ser + past participle for the action passive (Las puertas fueron abiertas a las 10), agreeing in gender/number with the subject, vs estar + participle for the resulting state (Las puertas ya estaban abiertas); bare-noun subjects stay postverbal (Han llegado trenes, Se venden pisos).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'La ciudad fue destruida por un terremoto en 1985.',
+      'Cuando llegamos, la ciudad ya estaba destruida.',
+      'Se venden pisos en esta calle.',
+    ],
+    examplesNegative: ['*Naranjas son vendidas aquí.'],
+    commonErrors: [
+      'Forgetting participle agreement with the subject of ser ("*las puertas fueron abierto" instead of "fueron abiertas").',
+      'Using ser + participle for a resulting state instead of estar ("*la puerta fue abierta" to mean the door was already open, instead of "la puerta estaba abierta").',
+      'Fronting a bare, article-less plural subject before the verb ("*Trenes han llegado" instead of the required postverbal "Han llegado trenes").',
+    ],
+  },
+
+  {
+    key: 'es-b2-verbs-of-change',
+    kind: 'grammar',
+    name: 'Verbs of becoming: ponerse, quedarse, hacerse, volverse, convertirse en, llegar a ser',
+    description:
+      'Choosing ponerse (brief mood/appearance change), quedarse (state left by an event), hacerse (voluntary lasting conversion), volverse (involuntary lasting change), convertirse en (total transformation, + noun), or llegar a ser (hard-won outcome of a slow process).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Cuando se enteró de la noticia, se puso muy triste.',
+      'Se hizo abogado después de diez años de estudio.',
+      'Con la edad, mi padre se ha vuelto muy desconfiado.',
+      'La oruga se convirtió en mariposa.',
+      'Trabajó muchísimo y con el tiempo llegó a ser director general.',
+    ],
+    examplesNegative: ['*Se puso budista después de conocer a un monje tibetano.'],
+    commonErrors: [
+      'Using ponerse for a lasting change of character or belief instead of a temporary mood/state ("*se puso ateo" instead of "se hizo ateo").',
+      'Using hacerse for an involuntary or unwanted change instead of volverse ("*se hizo loco" instead of "se volvió loco").',
+      'Reaching for convertirse en with an adjective instead of a noun phrase ("*se convirtió en triste" instead of "se puso triste").',
+    ],
+  },
+
+  {
+    key: 'es-b2-se-middle-accidental',
+    kind: 'grammar',
+    name: 'Middle se and accidental se (dative of interest)',
+    description:
+      'Middle se for a spontaneous, agentless event (Se abrió la ventana, Se fundió el hielo); accidental se + dative of interest for mishaps (Se me perdió tu dinero, Se le cayeron las llaves), verb agreeing with the thing affected, not the dative; irse (departure) vs ir (destination).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'La ventana se abrió con el viento.',
+      'Se me perdió tu dinero y no sé cómo pasó.',
+      'Se le cayeron las llaves al entrar en el portal.',
+      'Me voy ya, que es tarde.',
+    ],
+    examplesNegative: ['*Se le cayó las llaves.'],
+    commonErrors: [
+      'Making the verb agree with the dative pronoun (person) instead of the thing affected ("*se le cayó las llaves" instead of "se le cayeron las llaves").',
+      'Dropping the dative pronoun and losing the "unintentional/it happened to me" nuance ("se perdió tu dinero" instead of "se me perdió tu dinero").',
+      'Using the ir imperative "ve" to tell someone to leave/go away, instead of the irse imperative "vete" ("*ve ya, es tarde" instead of "vete ya, es tarde").',
+    ],
+  },
+
+  {
+    key: 'es-b2-clitic-advanced',
+    kind: 'grammar',
+    name: 'Advanced clitics: neuter lo, fronted-object doubling, leísmo de persona',
+    description:
+      'Neuter lo echoing the predicate of ser/estar (¿Estás cansada? — Lo estoy); obligatory redundant clitic when a direct object is fronted (Los libros los tiene Juan); accepted leísmo de persona for masculine humans (Le vimos a Luis, alongside Lo vimos), not for feminine referents.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      '¿Estás cansada? — Lo estoy.',
+      'Los libros los tiene Juan.',
+      'A Luis le vimos ayer en la estación.',
+    ],
+    examplesNegative: ['*A Luisa le vimos ayer en la estación.'],
+    commonErrors: [
+      'Dropping the resumptive lo after ser/estar with an adjective predicate ("¿Estás cansada? — Estoy" instead of "Lo estoy").',
+      'Omitting the redundant clitic when the direct object is fronted ("Los libros tiene Juan" instead of "Los libros los tiene Juan").',
+      'Extending leísmo de persona to a feminine direct object ("*le vimos" for Luisa instead of "la vimos").',
+    ],
+  },
+
+  {
+    key: 'es-b2-gerund-participle-constructions',
+    kind: 'grammar',
+    name: 'Adverbial gerund, nada más + infinitive, and predicative participle clauses',
+    description:
+      'Adverbial gerund for method/simultaneous action (Aprende leyendo; Me lo confesó yendo por la calle); nada más + infinitive for same-subject sequence (Nada más llegar, nos pusimos a comer); una vez + participle for a prior event; predicative participle agreeing with the object (tienda cerrada).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Aprende idiomas leyendo novelas en el idioma original.',
+      'Nada más llegar a casa, nos pusimos a preparar la cena.',
+      'Una vez estudiado el problema, propusieron tres soluciones.',
+      'Encontré la tienda cerrada cuando llegué.',
+    ],
+    examplesNegative: ['*Encontré la tienda cerrado.'],
+    commonErrors: [
+      'Leaving the predicative participle unagreed with the object it describes ("*encontré la tienda cerrado" instead of "cerrada").',
+      'Using nada más + infinitive when the following clause has a different subject, instead of switching to nada más que + finite verb ("*nada más llegar yo, tú te fuiste" instead of "nada más llegar yo" or a reformulation with a shared subject).',
+      'Using the gerund instead of the participle to describe a resulting state ("*encontré la tienda cerrando" instead of "encontré la tienda cerrada").',
+    ],
+  },
+
   // ---------------------------------------------------------------------------
   // Vocab umbrellas — kind: 'vocab'
   // Themed A1/A2 umbrellas (2026-07-06), mirroring the TR themed vocab split:
