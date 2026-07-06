@@ -403,6 +403,22 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Confusing porque and por qué, e.g. "*no sé porque llegas tarde" instead of "no sé por qué llegas tarde" when reporting the reason for something.',
     ],
   },
+  {
+    key: 'es-a1-prepositions-a-en',
+    kind: 'grammar',
+    name: 'Prepositions a vs. en',
+    description:
+      'Static location with en (estoy en casa, el libro está en la mesa) contrasted with motion or direction with a after verbs like ir/llegar (voy a Madrid, llegamos a la escuela); and a fixing a clock time (a las ocho).',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['Estoy en casa.', 'Voy a Madrid mañana.', 'La clase empieza a las ocho.'],
+    examplesNegative: ['*Estoy a casa.', '*Voy en Madrid mañana.'],
+    commonErrors: [
+      'Using a for a static location instead of en, e.g. "*estoy a casa" instead of "estoy en casa".',
+      'Using en for motion or direction instead of a, e.g. "*voy en Madrid" instead of "voy a Madrid".',
+      'Omitting a before a clock time, e.g. "*la clase empieza las ocho" instead of "la clase empieza a las ocho".',
+    ],
+  },
 
   // ---------------------------------------------------------------------------
   // A2 (PCIC-aligned; Tasks 5–7)
@@ -893,6 +909,88 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Failing to change y to e before a word beginning with an /i/ vowel sound ("*Fernando y Ignacio" instead of "Fernando e Ignacio").',
       'Over-applying the e-substitution to words beginning with the diphthong hie-, which keep y ("*agua e hielo" instead of "agua y hielo").',
       'Failing to change o to u before a word beginning with o- or ho- ("*diez o once" instead of "diez u once").',
+    ],
+  },
+  {
+    key: 'es-a2-indefinites-double-negation',
+    kind: 'grammar',
+    name: 'Indefinite/negative pairs and double negation',
+    description:
+      'The indefinite/negative pairs algo/nada, alguien/nadie, alguno/ninguno (apocopated algún/ningún), and siempre/nunca; a negative word placed after the verb requires a preceding no (No veo nada), but one placed before the verb drops it (Nunca voy, Nadie vino).',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'No veo nada interesante en la tele.',
+      'Nunca voy al cine los lunes.',
+      '¿Tienes algún problema? No, no tengo ninguno.',
+    ],
+    examplesNegative: ['*Nadie no vino a la fiesta.'],
+    commonErrors: [
+      'Adding a redundant preceding no before a negative word that already precedes the verb, e.g. "*nadie no vino" instead of "nadie vino" or "no vino nadie".',
+      'Dropping the preceding no when the negative word follows the verb, e.g. "*veo nada" instead of "no veo nada".',
+      'Using the affirmative algo/alguien instead of the negative nada/nadie in a plain negated sentence, e.g. "*no tengo algo" instead of "no tengo nada".',
+    ],
+  },
+  {
+    key: 'es-a2-por-para',
+    kind: 'grammar',
+    name: 'Por vs. para',
+    description:
+      'The por/para contrast: por expresses cause or reason (lo hice por ti), exchange (cambio esto por aquello), duration (por dos años), and movement through a place (paso por el parque); para marks a recipient or a deadline (un regalo para ti, listo para el lunes).',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Lo hice por ti, no por mí.',
+      'Cambié mi coche por uno nuevo.',
+      'Este regalo es para ti; lo necesito para el lunes.',
+      'Caminamos por el parque todos los días.',
+    ],
+    examplesNegative: ['*Cambié mi coche para uno nuevo.'],
+    commonErrors: [
+      'Using para instead of por to express exchange or substitution, e.g. "*cambié mi coche para uno nuevo" instead of "cambié mi coche por uno nuevo".',
+      'Using para instead of por to express the cause or reason behind an action, e.g. "*estoy triste para la noticia" instead of "estoy triste por la noticia".',
+      'Using por instead of para to mark who something is intended for, e.g. "*este regalo es por ti" instead of "este regalo es para ti".',
+    ],
+  },
+  {
+    key: 'es-a2-mente-adverbs',
+    kind: 'grammar',
+    name: 'Adverbs in -mente',
+    description:
+      'Adverb formation: -mente added to the feminine adjective form (rápida → rápidamente) or invariable form (fácil → fácilmente, keeping any written accent); -mente drops from all but the last of coordinated adverbs (lenta y claramente); and the suppletive adverbs bien/mal.',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Habla lenta y claramente.',
+      'Explicó el problema fácilmente.',
+      'Canta muy bien, pero baila mal.',
+    ],
+    examplesNegative: ['*Canta muy bueno.', '*Habla rápidomente.'],
+    commonErrors: [
+      'In careful written Spanish, keeping -mente on every coordinated adverb instead of dropping it from all but the last, e.g. writing "lentamente y claramente" instead of the preferred "lenta y claramente".',
+      'Adding -mente to the masculine adjective form instead of the feminine, e.g. "*rápidomente" instead of "rápidamente".',
+      'Using the adjective bueno/malo instead of the suppletive adverb bien/mal after a verb, e.g. "*canta muy bueno" instead of "canta muy bien".',
+    ],
+  },
+  {
+    key: 'es-a2-adjective-apocopation',
+    kind: 'grammar',
+    name: 'Adjective apocopation (buen, gran, algún...)',
+    description:
+      'Adjectives losing their final vowel before a masculine singular noun: bueno→buen, malo→mal, alguno→algún, ninguno→ningún (un buen cocinero, algún día); grande→gran before ANY singular noun regardless of gender (una gran ciudad); full forms are used elsewhere (el libro es bueno).',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Es un buen cocinero, pero un mal conductor.',
+      'Vivimos en una gran ciudad.',
+      '¿Tienes algún libro sobre historia? No, no tengo ninguno.',
+    ],
+    examplesNegative: ['*Es un bueno cocinero.', '*Vivimos en una grande ciudad.'],
+    commonErrors: [
+      'Failing to shorten grande before a feminine singular noun, unlike bueno/malo which only shorten before masculine nouns, e.g. "*una grande ciudad" instead of "una gran ciudad".',
+      'Leaving bueno/malo/alguno/ninguno unshortened before a masculine singular noun, e.g. "*un bueno cocinero" instead of "un buen cocinero".',
+      'Shortening ninguno when it is used as a pronoun rather than as an adjective before a noun, e.g. "*no tengo ningún" instead of "no tengo ninguno".',
+      'Confusing this pattern with the separately-taught shortening of primero/tercero (see cardinal/ordinal numbers) — a distinct set of words that follows the same apocopation rule.',
     ],
   },
   {

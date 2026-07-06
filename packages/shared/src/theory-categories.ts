@@ -104,6 +104,7 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-a1-noun-modifiers-de': 'syntax',
   'es-a1-coordination-basic': 'syntax',
   'es-a1-porque-para': 'syntax',
+  'es-a1-prepositions-a-en': 'pairs',
 
   // --- Spanish (A2) ---
   'es-a2-present-irregular-stem-changes': 'tenses',
@@ -128,6 +129,10 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-a2-si-present-conditional': 'moods',
   'es-a2-exclamatives-impersonals': 'syntax',
   'es-a2-connectors': 'syntax',
+  'es-a2-indefinites-double-negation': 'syntax',
+  'es-a2-por-para': 'pairs',
+  'es-a2-mente-adverbs': 'morphology',
+  'es-a2-adjective-apocopation': 'morphology',
   'es-a2-comparatives-superlatives': 'syntax',
 
   // --- Spanish (B1/B2 grammar) ---

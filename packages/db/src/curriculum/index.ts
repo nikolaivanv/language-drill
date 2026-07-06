@@ -108,11 +108,12 @@ const LANGUAGE_PREFIX_BY_LANGUAGE: Readonly<Record<string, string>> = {
 };
 
 // TR is now full-A1/A2 (Yedi İklim parity, 2026-05-28); B1/B2 remain disabled.
-// ES is at full PCIC A1+A2 parity (2026-07-06): 21 A1 + 23 A2 grammar points.
+// ES is at full PCIC A1+A2 parity plus the B&B reverse-coverage additions
+// (2026-07-06): 22 A1 + 27 A2 grammar points.
 // DE is still TEMPORARILY REDUCED (2026-05-10) to match the entries currently
 // uncommented in de.ts.
 const PER_LANGUAGE_GRAMMAR_MIN: Readonly<Record<string, Record<string, number>>> = {
-  ES: { A1: 21, A2: 23, B1: 5, B2: 5 },
+  ES: { A1: 22, A2: 27, B1: 5, B2: 5 },
   DE: { A1: 0, A2: 0, B1: 0, B2: 0 },
   TR: { A1: 26, A2: 14, B1: 10, B2: 0 },
 };
