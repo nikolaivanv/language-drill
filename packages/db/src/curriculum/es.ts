@@ -1159,7 +1159,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     cefrLevel: A1,
     language: ES,
     examplesPositive: ['el pan', 'la manzana roja'],
-    examplesNegative: ['*el agua fría (should be "la agua fría")'],
+    examplesNegative: ['*la agua fría (agua takes "el" before its stressed a-, but stays feminine: el agua fría)'],
     commonErrors: [
       'Missing the special article rule for stressed-a feminine nouns ("el agua", not "*la agua", but still feminine — "el agua fría").',
       'Confusing "fruta" (fruit, generic) with "fruto" (fruit of a plant/tree).',
@@ -1245,7 +1245,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     examplesPositive: ['la cabeza', 'el dolor de estómago'],
     examplesNegative: ['*la estómago'],
     commonErrors: [
-      'Mismatching article gender on -a-ending masculine nouns ("*la estómago" instead of "el estómago").',
+      'Assuming body-part nouns are feminine by default ("*la estómago" instead of "el estómago").',
       'Confusing "sentirse mal" (to feel unwell) with "sentir" (to feel/regret, transitive).',
     ],
   },
