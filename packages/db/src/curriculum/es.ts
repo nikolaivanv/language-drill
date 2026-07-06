@@ -56,6 +56,134 @@ const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   // A1 (PCIC-aligned; Tasks 2–4)
   // ---------------------------------------------------------------------------
+  {
+    key: 'es-a1-noun-gender',
+    kind: 'grammar',
+    name: 'Noun gender',
+    description:
+      'Noun gender: masculine -o / feminine -a, nouns in other vowels or consonants learned with their article, common exceptions (el problema, el día, la mano, la foto), and heteronym pairs (el padre / la madre).',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['El problema es difícil.', 'Me duele la mano derecha.'],
+    examplesNegative: ['*La problema es difícil.'],
+    commonErrors: [
+      'Treating every noun in -a as feminine ("*la problema", "*la día").',
+      'Treating every noun in -o as masculine ("*el mano").',
+      'Guessing the gender of nouns in -e or a consonant instead of learning it with the article.',
+    ],
+  },
+  {
+    key: 'es-a1-noun-plural',
+    kind: 'grammar',
+    name: 'Noun plural',
+    description:
+      'Plural formation: add -s after an unstressed vowel, add -es after a consonant or stressed vowel (país → países), and change a final z to c before -es (lápiz → lápices).',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['Visité tres países interesantes.', 'Hay muchas ciudades grandes en España.'],
+    examplesNegative: ['*Hay muchas ciudads grandes en España.'],
+    commonErrors: [
+      'Adding only -s to nouns ending in a consonant instead of -es ("*ciudads" for "ciudades").',
+      'Leaving país unchanged in the plural instead of adding -es ("*los país" instead of "los países").',
+      'Forgetting to change z to c before adding -es ("*lapizes" instead of "lápices").',
+    ],
+  },
+  {
+    key: 'es-a1-gender-agreement',
+    kind: 'grammar',
+    name: 'Noun-adjective agreement',
+    description:
+      'Agreement of descriptive adjectives with the noun in gender and number, including gentilicios like español/española that add -a versus invariable ones like marroquí, and the normal postnominal position of these adjectives.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['Tengo un amigo español y una amiga española.', 'El chico marroquí y la chica marroquí viven aquí.'],
+    examplesNegative: ['*Tengo una amiga español.'],
+    commonErrors: [
+      'Forgetting to add -a to gentilicios like español, inglés, or alemán in the feminine ("*una amiga español").',
+      'Wrongly adding -a to invariable gentilicios ending in -í, such as marroquí ("*una amiga marroquía").',
+      'Placing the adjective before the noun by analogy with English word order ("*una española amiga").',
+    ],
+  },
+  {
+    key: 'es-a1-articles',
+    kind: 'grammar',
+    name: 'Definite and indefinite articles',
+    description:
+      'Definite articles el/la/los/las and indefinite un/una/unos/unas; the contractions al and del; the article required before the subject of gustar; and its omission after impersonal hay.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['Vamos al cine y volvemos del trabajo a las ocho.', 'Me gusta la música clásica.'],
+    examplesNegative: ['*Hay la leche en la nevera.'],
+    commonErrors: [
+      'Failing to contract de + el and a + el into del and al ("*de el libro" instead of "del libro").',
+      'Omitting the article before the subject of gustar ("*Me gusta chocolate" instead of "me gusta el chocolate").',
+      'Inserting an article after impersonal hay ("*hay la leche" instead of "hay leche").',
+    ],
+  },
+  {
+    key: 'es-a1-demonstratives',
+    kind: 'grammar',
+    name: 'Demonstratives',
+    description:
+      'Demonstrative adjectives/pronouns este/ese/aquel (and neuter esto/eso/aquello) marking near-speaker, near-listener, and distant deixis; demonstratives replace rather than combine with the definite article.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['Este libro es mío.', '¿Qué es eso que tienes en la mano?'],
+    examplesNegative: ['*El este libro es mío.'],
+    commonErrors: [
+      'Combining a demonstrative with the definite article ("*el este libro" instead of "este libro").',
+      'Using the neuter esto/eso/aquello to refer to a specific person or noun instead of the gendered form ("*esto es mi profesor" instead of "este es mi profesor").',
+      'Treating ese and aquel as fully interchangeable regardless of distance from speaker and listener.',
+    ],
+  },
+  {
+    key: 'es-a1-possessives-atonic',
+    kind: 'grammar',
+    name: 'Possessive adjectives (short forms)',
+    description:
+      'Short-form possessives mi/tu/su/nuestro/vuestro, agreeing in number and, for nuestro/vuestro, gender with the thing possessed; placed before the noun with no article; and the several possible meanings of su/sus.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['Nuestra casa es grande.', '¿Dónde está tu coche?'],
+    examplesNegative: ['*La mi casa es grande.'],
+    commonErrors: [
+      'Using a possessive where Spanish prefers the definite article, especially with body parts ("*me duele mi cabeza" instead of "me duele la cabeza").',
+      'Wrongly making mi/tu/su agree in gender the way nuestro/vuestro do ("*mia hermana" instead of "mi hermana").',
+      'Assuming su can only mean "his," missing that it also covers "her," "your" (usted/ustedes), and "their."',
+    ],
+  },
+  {
+    key: 'es-a1-subject-pronouns',
+    kind: 'grammar',
+    name: 'Subject pronouns',
+    description:
+      'Subject pronouns yo, tú, él/ella, usted, nosotros/as, vosotros/as, ellos/ellas, ustedes; normally omitted because the verb ending marks the subject, and used only for emphasis, contrast, or after ser.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['Hablo español y un poco de inglés.', 'Yo estudio biología, pero él estudia física.'],
+    examplesNegative: ['*Yo hablo español y yo vivo en Madrid y yo trabajo mucho.'],
+    commonErrors: [
+      'Inserting a subject pronoun before every verb by analogy with English ("*yo hablo, yo vivo, yo trabajo" instead of just conjugating the verb).',
+      'Omitting the pronoun in a context that needs it for contrast between two different subjects.',
+      'Confusing tú and usted register, using tú with strangers or authority figures where usted is expected.',
+    ],
+  },
+  {
+    key: 'es-a1-interrogatives',
+    kind: 'grammar',
+    name: 'Question words',
+    description:
+      'Interrogative words qué, quién(es), cuánto/a/os/as, dónde, cómo, and por qué, all written with an accent; verb-subject word order after them; and yes/no questions formed by intonation or inversion, with no helper verb.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['¿Dónde vives?', '¿Cuántas manzanas quieres?'],
+    examplesNegative: ['*¿Donde tú vives?'],
+    commonErrors: [
+      'Forgetting the written accent on question words ("donde" instead of "dónde").',
+      'Keeping subject-verb order instead of inverting after a question word ("*¿Dónde tú vives?" instead of "¿Dónde vives?").',
+      'Trying to form yes/no questions with a helper verb as in English instead of inversion or rising intonation ("¿Vives aquí?").',
+    ],
+  },
 
   // ---------------------------------------------------------------------------
   // A2 (PCIC-aligned; Tasks 5–7)

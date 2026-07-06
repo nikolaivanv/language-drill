@@ -82,6 +82,16 @@ export function getTheoryCategory(id: TheoryCategoryId): TheoryCategory {
  * intentionally omitted so they fall through to `FALLBACK_CATEGORY_ID`.
  */
 const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
+  // --- Spanish (A1) ---
+  'es-a1-noun-gender': 'articles',
+  'es-a1-noun-plural': 'morphology',
+  'es-a1-gender-agreement': 'articles',
+  'es-a1-articles': 'articles',
+  'es-a1-demonstratives': 'pronouns',
+  'es-a1-possessives-atonic': 'pronouns',
+  'es-a1-subject-pronouns': 'pronouns',
+  'es-a1-interrogatives': 'syntax',
+
   // --- Spanish (B1/B2 grammar) ---
   'es-b1-present-subjunctive': 'moods',
   'es-b1-conditional': 'moods',

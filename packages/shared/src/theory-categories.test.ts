@@ -14,6 +14,15 @@ const VALID_IDS = new Set<TheoryCategoryId>(
 // Mirror of the module-private map, kept here so the test pins the intended
 // key→category bindings (a drift in the source map fails this assertion).
 const EXPECTED_KEY_CATEGORY: Record<string, TheoryCategoryId> = {
+  // Spanish A1
+  "es-a1-noun-gender": "articles",
+  "es-a1-noun-plural": "morphology",
+  "es-a1-gender-agreement": "articles",
+  "es-a1-articles": "articles",
+  "es-a1-demonstratives": "pronouns",
+  "es-a1-possessives-atonic": "pronouns",
+  "es-a1-subject-pronouns": "pronouns",
+  "es-a1-interrogatives": "syntax",
   "es-b1-present-subjunctive": "moods",
   "es-b1-conditional": "moods",
   "es-b1-llevar-time-expressions": "syntax",
