@@ -121,6 +121,13 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-a2-personal-a': 'syntax',
   'es-a2-reflexive-verbs': 'pronouns',
   'es-a2-gustar-type-verbs': 'syntax',
+  'es-a2-articles-use': 'articles',
+  'es-a2-possessives-tonic': 'pronouns',
+  'es-a2-todo-otro-quantifiers': 'syntax',
+  'es-a2-temporal-clauses': 'syntax',
+  'es-a2-si-present-conditional': 'moods',
+  'es-a2-exclamatives-impersonals': 'syntax',
+  'es-a2-connectors': 'syntax',
   'es-a2-comparatives-superlatives': 'syntax',
 
   // --- Spanish (B1/B2 grammar) ---
