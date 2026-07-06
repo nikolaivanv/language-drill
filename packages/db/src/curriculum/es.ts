@@ -1530,6 +1530,116 @@ const esCurriculum: readonly GrammarPoint[] = [
     ],
     prerequisiteKeys: ['es-a1-ser-estar-basic'],
   },
+  {
+    key: 'es-b2-relative-clauses-advanced',
+    kind: 'grammar',
+    name: 'Advanced relative clauses',
+    description:
+      'Explicativas set off by commas (mi vecina, que es médica,); el/la/los/las que after a preposition (la casa de la que te hablé); quien(es) with or without an antecedent; donde relatives; lo que; and the indicative/subjunctive contrast (busco un piso que tiene/tenga terraza).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Mi vecina, que es médica, trabaja en el hospital central.',
+      'Esa es la casa de la que te hablé el otro día.',
+      'No conozco a nadie con quien pueda compartir esto.',
+      'No entendí nada de lo que dijeron en la reunión.',
+      'Quiero mudarme a una ciudad donde haya menos tráfico.',
+      'Busco un piso que tenga terraza y esté bien comunicado.',
+    ],
+    examplesNegative: ['*La casa que te hablé es muy bonita.'],
+    commonErrors: [
+      'Stranding the preposition instead of fronting it with the relative pronoun ("*la casa que te hablé" instead of "la casa de la que te hablé"), calquing English relative clauses.',
+      'Using the indicative in a relative clause whose antecedent is not yet identified ("*busco un piso que tiene terraza" instead of "que tenga terraza" when no specific flat is in mind).',
+      'Omitting the comma that marks an explicativa, collapsing it into a restrictive reading and changing the meaning of the sentence.',
+    ],
+  },
+  {
+    key: 'es-b2-subjunctive-compound',
+    kind: 'grammar',
+    name: 'Compound subjunctive: perfect and pluperfect',
+    description:
+      'Perfect subjunctive haya + participle for a completed action viewed with doubt, emotion, or future anteriority (No es verdad que haya escrito eso; cuando se haya marchado); pluperfect subjunctive hubiera/hubiese + participle outside counterfactual si-clauses.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'No es verdad que haya escrito esa carta.',
+      'Te llamaré en cuanto se haya marchado el jefe.',
+      'Ojalá hubiera sabido la verdad antes.',
+    ],
+    examplesNegative: ['*No es verdad que ha escrito esa carta.'],
+    commonErrors: [
+      'Using the indicative present perfect ("ha escrito") instead of the perfect subjunctive ("haya escrito") after a trigger that requires the subjunctive.',
+      'Confusing haya + participle (perfect, anchored to the present or a future point) with hubiera/hubiese + participle (pluperfect, anchored to the past).',
+      'Assuming hubiera/hubiese only occurs in si-clauses and missing its independent uses in wishes, concessions, and negated assertions about the past.',
+    ],
+    prerequisiteKeys: ['es-b1-present-subjunctive', 'es-b2-past-subjunctive'],
+  },
+  {
+    key: 'es-b2-subjunctive-negated-opinion',
+    kind: 'grammar',
+    name: 'Subjunctive after negated opinion and assertion',
+    description:
+      'Negation flips the mood of an opinion or assertion clause: no creo que + subjunctive (vs. creo que + indicative); no es cierto/verdad que + subjunctive; and negated verbs of saying (No me dijo que hubiera venido).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Creo que Marta tiene razón.',
+      'No creo que Marta tenga razón.',
+      'No es verdad que hayan aprobado la ley.',
+      'No me dijo que hubiera venido a la fiesta.',
+    ],
+    examplesNegative: ['*No creo que Marta tiene razón.'],
+    commonErrors: [
+      'Keeping the indicative after "no creo que" by analogy with the affirmative "creo que + indicative", instead of switching to the subjunctive under negation.',
+      'Treating "no es cierto/verdad que" as a plain statement of fact and using the indicative instead of the subjunctive it requires.',
+      'Using the indicative instead of the subjunctive when relaying a negated assertion about a past event ("*no me dijo que había venido" as a denial, instead of "no me dijo que hubiera venido").',
+    ],
+    prerequisiteKeys: ['es-b1-present-subjunctive'],
+  },
+  {
+    key: 'es-b2-subjunctive-temporal-concessive',
+    kind: 'grammar',
+    name: 'Subjunctive in temporal and concessive connectors',
+    description:
+      'En cuanto, tan pronto como, apenas, una vez que, hasta que, mientras take the subjunctive only for future/posteriority (en cuanto llegues) vs. indicative for past/habitual reference (apenas llegué); aunque/a pesar de que + subjunctive for a non-factual concession; por mucho/más que + subjunctive.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'En cuanto termine el informe, te lo envío.',
+      'Apenas llegué a casa, comenzó a llover.',
+      'Aunque no lo creas, es la pura verdad.',
+      'Por mucho que insistas, no voy a cambiar de opinión.',
+    ],
+    examplesNegative: ['*En cuanto llegarás, te lo diré.'],
+    commonErrors: [
+      'Using the future indicative after a temporal connector with future reference instead of the present subjunctive ("*en cuanto llegarás" instead of "en cuanto llegues").',
+      'Overgeneralizing the subjunctive to a habitual or completed past temporal clause, where the indicative is required ("*apenas llegara a casa, comenzó a llover" instead of "apenas llegué a casa").',
+      'Using the indicative after "aunque" for a hypothetical, not-yet-known concession instead of the subjunctive ("*aunque no lo crees, es la verdad" instead of "aunque no lo creas").',
+    ],
+    prerequisiteKeys: ['es-b1-subjunctive-adverbial'],
+  },
+  {
+    key: 'es-b2-conditional-connectors',
+    kind: 'grammar',
+    name: 'Conditional connectors beyond si',
+    description:
+      'Por si (acaso) + indicative ("in case"); siempre que/siempre y cuando/con tal de que/a condición de que + subjunctive ("provided that"); salvo si/excepto si + indicative; a no ser que/salvo que + subjunctive ("unless").',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Llévate el paraguas por si acaso llueve.',
+      'Iré a la fiesta con tal de que tú también vayas.',
+      'Aceptaré el trabajo siempre y cuando el sueldo sea justo.',
+      'Saldremos a la hora prevista, salvo si hay un imprevisto.',
+      'No cambiaré de opinión a no ser que me des una buena razón.',
+    ],
+    examplesNegative: ['*Llévate el paraguas por si acaso llueva.'],
+    commonErrors: [
+      'Using the present subjunctive after "por si (acaso)", which is not permitted — only the indicative, or occasionally the imperfect subjunctive, is used ("*por si acaso llueva" instead of "por si acaso llueve").',
+      'Using the indicative after "con tal de que" or "siempre y cuando" instead of the subjunctive these connectors require ("*con tal de que vienes" instead of "con tal de que vengas").',
+      'Confusing "salvo si" (indicative, like a plain if-clause) with "salvo que" (subjunctive, "unless"), producing the wrong mood for the connector.',
+    ],
+  },
 
   // ---------------------------------------------------------------------------
   // Vocab umbrellas — kind: 'vocab'

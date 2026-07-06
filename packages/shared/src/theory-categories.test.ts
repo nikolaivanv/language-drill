@@ -89,6 +89,12 @@ const EXPECTED_KEY_CATEGORY: Record<string, TheoryCategoryId> = {
   "es-b1-que-vs-cual": "pairs",
   "es-b1-ser-estar-uses": "pairs",
   "es-b1-indirect-questions": "syntax",
+  // Spanish (B2 additions)
+  "es-b2-relative-clauses-advanced": "syntax",
+  "es-b2-subjunctive-compound": "moods",
+  "es-b2-subjunctive-negated-opinion": "moods",
+  "es-b2-subjunctive-temporal-concessive": "moods",
+  "es-b2-conditional-connectors": "moods",
   // Turkish A1
   "tr-a1-vowel-harmony": "orthography",
   "tr-a1-stem-changes": "orthography",
