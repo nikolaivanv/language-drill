@@ -1265,6 +1265,154 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Using the plain present of deber for advice instead of the softened conditional deberías ("*debes hacer ejercicio" as advice instead of "deberías hacer ejercicio").',
     ],
   },
+  {
+    key: 'es-b1-aspectual-periphrases',
+    kind: 'grammar',
+    name: 'Aspectual periphrases: dejar de, ponerse a, estar a punto de, seguir + gerundio',
+    description:
+      'Aspectual periphrases dejar de + infinitivo (to stop doing), ponerse a + infinitivo (to start doing), estar a punto de + infinitivo (to be about to), and seguir + gerundio (to keep on doing).',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Dejé de fumar hace dos años.',
+      'Se puso a llorar en cuanto se enteró de la noticia.',
+      'Estábamos a punto de salir cuando empezó a llover.',
+      'Sigue trabajando en la misma empresa desde 2010.',
+    ],
+    examplesNegative: ['*Dejé fumar hace dos años.'],
+    commonErrors: [
+      'Dropping the preposition "de" after "dejar" ("*dejé fumar" instead of "dejé de fumar").',
+      'Following "seguir" with the bare infinitive instead of the gerund ("*sigue trabajar" instead of "sigue trabajando").',
+      'Confusing the inceptive "ponerse a + infinitivo" (to start doing) with "volver a + infinitivo" (to do again), producing the wrong aspectual meaning.',
+    ],
+  },
+  {
+    key: 'es-b1-verb-preposition-regime',
+    kind: 'grammar',
+    name: 'Verb + preposition regime',
+    description:
+      'Fixed prepositional regime of common verbs: hablar de, pensar en, soñar con, depender de; double complementation with invitar a + infinitivo (Me invitó a cenar).',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Siempre habla de sus viajes por Sudamérica.',
+      'No dejo de pensar en el examen de mañana.',
+      'Anoche soñé con mi antiguo colegio.',
+      'Me invitó a cenar el sábado.',
+    ],
+    examplesNegative: ['*Pienso de ti todo el día.'],
+    commonErrors: [
+      'Calquing English "think of/about" as "*pensar de" instead of the correct "pensar en".',
+      'Using "de" instead of "con" after "soñar" ("*soñé de mi antiguo colegio" instead of "soñé con mi antiguo colegio").',
+      'Omitting the "a" before the infinitive after "invitar" ("*me invitó cenar" instead of "me invitó a cenar").',
+    ],
+  },
+  {
+    key: 'es-b1-discourse-connectors',
+    kind: 'grammar',
+    name: 'Discourse connectors: sin embargo, o sea que, causal como, por + infinitivo, aunque + indicative',
+    description:
+      'Sin embargo (however); resumptive o sea que / así (es) que (so); fronted causal como (Como no venías, empecé…); causal por + infinitivo (Lo hizo por no molestarte); concessive aunque + indicative for a known fact (Aunque llueve, salgo).',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Estudió mucho; sin embargo, suspendió el examen.',
+      'Como no venías, empecé a cenar sin ti.',
+      'Lo hizo por no molestarte.',
+      'Aunque llueve, vamos a salir igualmente.',
+    ],
+    examplesNegative: ['*Empecé a cenar sin ti como no venías.'],
+    commonErrors: [
+      'Placing causal "como" after the main clause instead of fronting it at the head of the sentence ("*empecé a cenar como no venías" instead of "como no venías, empecé a cenar").',
+      'Using the subjunctive after "aunque" for a known, factual concession instead of the indicative ("*aunque llueva, salimos" when it is already raining, instead of "aunque llueve, salimos").',
+      'Confusing the resumptive "o sea que" ("so"/"in other words") with the causal "porque" ("because"), reversing cause and consequence.',
+    ],
+  },
+  {
+    key: 'es-b1-superlatives-comparisons',
+    kind: 'grammar',
+    name: 'Superlatives and comparisons: el más/menos…de, -ísimo, igual de…que, más/menos de',
+    description:
+      'Relative superlative el más/menos + adjective + de (el restaurante más caro de la ciudad); elative suffix -ísimo (buenísimo, riquísimo); equality igual de + adjective + que; and más/menos de before a quantity (más de cien euros).',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Es el restaurante más caro de la ciudad.',
+      'Esta sopa está riquísima.',
+      'Es igual de alto que su hermano.',
+      'Tiene más de cien libros en casa.',
+    ],
+    examplesNegative: ['*Es el restaurante más caro que la ciudad.'],
+    commonErrors: [
+      'Using "que" instead of "de" after a relative superlative ("*el más caro que la ciudad" instead of "el más caro de la ciudad").',
+      'Forgetting the spelling change that adds "qu" before -ísimo on adjectives ending in -co ("*ricísimo" instead of "riquísimo").',
+      'Using "más/menos que" before a bare quantity instead of "más/menos de" ("*tiene más que cien libros" instead of "tiene más de cien libros").',
+    ],
+  },
+  {
+    key: 'es-b1-que-vs-cual',
+    kind: 'grammar',
+    name: 'Qué vs. cuál/cuáles',
+    description:
+      'Qué asks for a definition or category (¿Qué es la democracia?), while cuál/cuáles selects from a set (¿Cuál prefieres?); in standard European Spanish cuál is not used directly before a noun (¿qué libro…?, not *¿cuál libro…?); prepositions precede the interrogative, and adónde asks where to.',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      '¿Qué es la democracia?',
+      '¿Cuál de estos dos prefieres?',
+      '¿Qué libro estás leyendo?',
+      '¿Con quién vas al cine?',
+      '¿Adónde vamos este verano?',
+    ],
+    examplesNegative: ['*¿Cuál libro estás leyendo?'],
+    commonErrors: [
+      'Using "cuál" directly before a noun in standard European Spanish instead of "qué" ("*¿cuál libro quieres?" instead of "¿qué libro quieres?").',
+      'Stranding the preposition at the end of the question, as in English, instead of fronting it with the interrogative ("*¿Quién vas al cine con?" instead of "¿Con quién vas al cine?").',
+      'Using "cuál" instead of "qué" when asking for the definition of an abstract concept ("*¿Cuál es el amor?" instead of "¿Qué es el amor?").',
+    ],
+  },
+  {
+    key: 'es-b1-ser-estar-uses',
+    kind: 'grammar',
+    name: 'Ser/estar special uses: impersonal time, estar de + occupation, estar a + price/date',
+    description:
+      'Impersonal ser for time of day (Es tarde, Es de noche); estar de + noun for a temporary occupation (Está de camarero); estar a + a fluctuating price or the date (Estamos a quince, Están a tres euros el kilo); and parecer + adjective vs. impersonal parece que + indicative.',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Ya es de noche; deberíamos volver a casa.',
+      'Mi hermano está de camarero este verano.',
+      'Hoy estamos a quince de mayo.',
+      'Parece que va a llover esta tarde.',
+    ],
+    examplesNegative: ['*Está tarde para llamarla.'],
+    commonErrors: [
+      'Using "estar" instead of "ser" for the impersonal time-of-day construction ("*está tarde" instead of "es tarde").',
+      'Omitting "de" after "estar" when naming a temporary job or role ("*está camarero" instead of "está de camarero").',
+      'Using "ser" instead of "estar" to state today\'s date ("*somos a quince" instead of "estamos a quince").',
+    ],
+  },
+  {
+    key: 'es-b1-indirect-questions',
+    kind: 'grammar',
+    name: 'Indirect questions: si, qué, cuándo, dónde + clause or infinitivo',
+    description:
+      'Reported yes/no questions with si (No sé si voy); indirect wh-questions with qué/cuándo/dónde followed by a finite clause or, with same-subject reference, a bare infinitive (No sé qué hacer, Pregúntale dónde está).',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'No sé si ir a la fiesta esta noche.',
+      'No sé qué hacer con tanto tiempo libre.',
+      'Pregúntale dónde está la parada del autobús.',
+      'No sabía cuándo empezaba la película.',
+    ],
+    examplesNegative: ['*No sé hacer qué con tanto tiempo libre.'],
+    commonErrors: [
+      'Putting the interrogative word after the infinitive instead of before it in an indirect question ("*no sé hacer qué" instead of "no sé qué hacer").',
+      'Dropping the written accent on "qué" in an indirect question, which collapses it into the unrelated "tener que" construction ("no sabía que hacer" read as an obligation, instead of the correctly accented "no sabía qué hacer").',
+      'Using "que" instead of "si" to introduce an indirect yes/no question ("*no sé que voy a la fiesta" instead of "no sé si voy a la fiesta").',
+    ],
+  },
 
   // ---------------------------------------------------------------------------
   // B2

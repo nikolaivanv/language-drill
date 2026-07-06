@@ -155,6 +155,13 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-b1-subjunctive-adverbial': 'moods',
   'es-b1-reported-speech': 'syntax',
   'es-b1-deber-obligation-probability': 'pairs',
+  'es-b1-aspectual-periphrases': 'syntax',
+  'es-b1-verb-preposition-regime': 'syntax',
+  'es-b1-discourse-connectors': 'syntax',
+  'es-b1-superlatives-comparisons': 'syntax',
+  'es-b1-que-vs-cual': 'pairs',
+  'es-b1-ser-estar-uses': 'pairs',
+  'es-b1-indirect-questions': 'syntax',
 
   // --- Turkish A1 ---
   'tr-a1-vowel-harmony': 'orthography',
