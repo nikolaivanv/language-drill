@@ -19,7 +19,7 @@ const EXPECTED_KEY_CATEGORY: Record<string, TheoryCategoryId> = {
   "es-b1-llevar-time-expressions": "syntax",
   "es-b1-relative-clauses": "syntax",
   "es-b1-passive-se": "syntax",
-  "es-b1-comparatives-superlatives": "syntax",
+  "es-a2-comparatives-superlatives": "syntax",
   "es-b2-past-subjunctive": "moods",
   "es-b2-compound-tenses": "tenses",
   "es-b2-conditional-perfect": "moods",

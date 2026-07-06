@@ -11,13 +11,12 @@
  * genitive / dative cases, agglutinative suffixes) groups into meaningful
  * buckets rather than collapsing into `other`.
  *
- * `KEY_TO_CATEGORY` covers the curriculum entries that are currently
- * uncommented (live) — the ES B1/B2 grammar points and the full TR A1/A2/B1
- * grammar set. It is expected to grow as more curriculum entries are
- * uncommented: the commented-out ES A1/A2 points and the entire DE curriculum
- * are intentionally absent for now, and non-`grammar` kinds (`vocab`,
- * `dictation`, `free-writing`) are intentionally omitted so they fall through
- * to `other`.
+ * `KEY_TO_CATEGORY` covers the curriculum entries that are currently live —
+ * the ES A1/A2/B1/B2 grammar points and the full TR A1/A2/B1 grammar set. It
+ * is expected to grow as more curriculum entries land: the entire DE
+ * curriculum is intentionally absent for now, and non-`grammar` kinds
+ * (`vocab`, `dictation`, `free-writing`) are intentionally omitted so they
+ * fall through to `other`.
  */
 
 /**
@@ -89,7 +88,7 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-b1-llevar-time-expressions': 'syntax',
   'es-b1-relative-clauses': 'syntax',
   'es-b1-passive-se': 'syntax',
-  'es-b1-comparatives-superlatives': 'syntax',
+  'es-a2-comparatives-superlatives': 'syntax',
   'es-b2-past-subjunctive': 'moods',
   'es-b2-compound-tenses': 'tenses',
   'es-b2-conditional-perfect': 'moods',

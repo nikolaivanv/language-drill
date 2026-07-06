@@ -115,13 +115,13 @@ describe('assertCurriculumInvariants', () => {
 
   it('throws when a per-language grammar count drops below the minimum', () => {
     // ES A1 minimum is temporarily 0 (see PER_LANGUAGE_GRAMMAR_MIN), so this
-    // test now drops ES B1 (still required: 6). Restore to ES A1 when the A1
-    // entries are uncommented.
+    // test now drops ES B1 (still required: 5). Restore to ES A1 when the A1
+    // minimum is raised (Task 9).
     const trimmed = ALL_CURRICULA
       .filter((e) => !(e.language === 'ES' && e.cefrLevel === 'B1'))
       .map((e) => ({ ...e, prerequisiteKeys: undefined }));
     expect(() => assertCurriculumInvariants(trimmed)).toThrow(
-      /ES B1 grammar count 0 below minimum 6/,
+      /ES B1 grammar count 0 below minimum 5/,
     );
   });
 });
@@ -513,17 +513,17 @@ describe('per-language counts', () => {
     return { grammar, vocab, dictation, freeWriting };
   }
 
-  // ES/DE are TEMPORARILY REDUCED (2026-05-10): assertions match the
-  // currently-active curriculum subset. Restore the original ≥4/≥5/≥6/≥5
-  // assertions and vocab.toBe(3) for ES/DE when their A1/A2 entries are
-  // uncommented. TR (2026-05-28) is now at full Yedi İklim A1+A2 parity
-  // (26 A1 + 14 A2 grammar + 10 themed vocab umbrellas); B1/B2 remain disabled.
+  // ES A1/A2 restoration to PCIC parity is underway (Tasks 2–9): the A1/A2
+  // assertions below are floors, not exact, until Task 9 tightens them to
+  // ≥21/≥23. DE is still TEMPORARILY REDUCED (2026-05-10). TR (2026-05-28) is
+  // now at full Yedi İklim A1+A2 parity (26 A1 + 14 A2 grammar + 10 themed
+  // vocab umbrellas); B1/B2 remain disabled.
 
-  it('Spanish meets minimums (B1 + B2 only while A1/A2 are disabled), has 2 vocab umbrellas, 2 dictation umbrellas, and 12 free-writing umbrellas', () => {
+  it('Spanish meets minimums (A1/A2 restoration in progress), has 2 vocab umbrellas, 2 dictation umbrellas, and 12 free-writing umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting } = countsFor(esCurriculum);
-    expect(grammar.A1).toBe(0);
-    expect(grammar.A2).toBe(0);
-    expect(grammar.B1).toBeGreaterThanOrEqual(6);
+    expect(grammar.A1).toBeGreaterThanOrEqual(0);
+    expect(grammar.A2).toBeGreaterThanOrEqual(1);
+    expect(grammar.B1).toBeGreaterThanOrEqual(5);
     expect(grammar.B2).toBeGreaterThanOrEqual(5);
     expect(vocab).toBe(2);
     // es-b1-dictation + es-b2-dictation (Phase 2 dictation generation pipeline).

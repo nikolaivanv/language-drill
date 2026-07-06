@@ -2,14 +2,12 @@ import { CefrLevel, Language } from '@language-drill/shared';
 
 import type { GrammarPoint } from './types';
 
-// TEMPORARILY REDUCED (2026-05-10): ES A1 + A2 grammar entries and the A2
-// vocab umbrella are commented out so the prod scheduler stops generating
-// them. To restore: uncomment the A1/A2 sections below, restore A1/A2 in the
-// destructure, bump ES back in PER_LANGUAGE_GRAMMAR_MIN (curriculum/index.ts),
-// restore ES A2 entries in SEED_KEY_TO_GRAMMAR_POINT (seed-exercises.ts), and
-// re-enable the per-language counts assertions for Spanish (curriculum.test.ts).
+// ES A1/A2 restored at full PCIC parity (2026-07-06): level placement follows
+// the Plan Curricular del Instituto Cervantes Gramática A1-A2 inventory;
+// content is grounded in Butt & Benjamin, A New Reference Grammar of Modern
+// Spanish. See docs/superpowers/specs/2026-07-06-es-a1-a2-pcic-curriculum-design.md.
 const ES = Language.ES;
-const { B1, B2 } = CefrLevel;
+const { A1, A2, B1, B2 } = CefrLevel;
 
 /**
  * Per-language curriculum version. Bump in the same commit as any edit to
@@ -45,166 +43,39 @@ const { B1, B2 } = CefrLevel;
  *
  * `2026-06-17` clears saturated-dedup suppression on the stuck free-writing
  * cells so they re-evaluate under the lowered target.
+ *
+ * `2026-07-06`: ES A1/A2 restored and expanded to PCIC parity (21 A1 + 23 A2
+ * grammar points, 10 vocab + 2 dictation + 6 free-writing umbrellas);
+ * `es-b1-comparatives-superlatives` re-leveled to `es-a2-comparatives-superlatives`
+ * per PCIC 2.5/6.1/15.3.8. Bump enumerates all new cells and clears any
+ * suppression left from the 2026-05-10 reduction.
  */
-export const CURRICULUM_VERSION_ES = '2026-06-17';
+export const CURRICULUM_VERSION_ES = '2026-07-06';
 
 const esCurriculum: readonly GrammarPoint[] = [
-  /*
   // ---------------------------------------------------------------------------
-  // A1
+  // A1 (PCIC-aligned; Tasks 2–4)
   // ---------------------------------------------------------------------------
-  {
-    key: 'es-a1-present-indicative-regular',
-    personRotation: true,
-    kind: 'grammar',
-    name: 'Present indicative — regular verbs',
-    description:
-      'Conjugation of regular -ar, -er, -ir verbs in the present indicative across all six persons.',
-    cefrLevel: A1,
-    language: ES,
-    examplesPositive: ['Yo hablo español todos los días.', 'Nosotros comemos a las dos.'],
-    examplesNegative: ['*Yo habla español todos los días.'],
-    commonErrors: [
-      'Using the third-person form for first person (e.g. "yo habla" instead of "yo hablo").',
-      'Confusing -er and -ir endings in the nosotros form.',
-    ],
-  },
-  {
-    key: 'es-a1-ser-estar-basic',
-    personRotation: true,
-    kind: 'grammar',
-    name: 'ser vs. estar — basic uses',
-    description:
-      'Choosing ser for identity, origin, and inherent traits vs. estar for location and temporary states.',
-    cefrLevel: A1,
-    language: ES,
-    examplesPositive: ['Soy de México.', 'Estoy cansado hoy.'],
-    examplesNegative: ['*Estoy de México.'],
-    commonErrors: [
-      'Using estar for nationality or profession ("*estoy mexicano").',
-      'Using ser for temporary location or mood ("*soy en casa").',
-    ],
-  },
-  {
-    key: 'es-a1-articles',
-    kind: 'grammar',
-    name: 'Definite and indefinite articles',
-    description:
-      'Selecting el/la/los/las and un/una/unos/unas to match noun gender and number.',
-    cefrLevel: A1,
-    language: ES,
-    examplesPositive: ['El libro está en la mesa.', 'Compré unas manzanas.'],
-    examplesNegative: ['*El mesa está limpia.'],
-    commonErrors: [
-      'Assigning English-style invariant "the" instead of matching gender.',
-      'Forgetting that "agua" takes "el" in the singular despite being feminine.',
-    ],
-  },
-  {
-    key: 'es-a1-gender-agreement',
-    kind: 'grammar',
-    name: 'Noun–adjective gender and number agreement',
-    description:
-      'Inflecting adjectives to match the gender and number of the noun they modify.',
-    cefrLevel: A1,
-    language: ES,
-    examplesPositive: ['Una casa pequeña.', 'Los coches rojos son rápidos.'],
-    examplesNegative: ['*Una casa pequeño.'],
-    commonErrors: [
-      'Leaving adjectives in masculine singular by default.',
-      'Failing to pluralise adjectives that follow plural nouns.',
-    ],
-  },
 
   // ---------------------------------------------------------------------------
-  // A2
+  // A2 (PCIC-aligned; Tasks 5–7)
   // ---------------------------------------------------------------------------
   {
-    key: 'es-a2-preterite-regular',
-    personRotation: true,
+    key: 'es-a2-comparatives-superlatives',
     kind: 'grammar',
-    name: 'Preterite — regular verbs',
+    name: 'Comparatives',
     description:
-      'Regular preterite (simple past) endings for -ar, -er, -ir verbs to narrate completed actions.',
+      'Comparisons of superiority, inferiority, and equality: más/menos ... que, tan ... como, tanto/a/os/as ... como, and the irregular comparatives mejor, peor, mayor, menor.',
     cefrLevel: A2,
     language: ES,
-    examplesPositive: ['Ayer hablé con mi madre.', 'Comimos en el parque el sábado.'],
-    examplesNegative: ['*Ayer hablo con mi madre.'],
+    examplesPositive: ['Madrid es más grande que Sevilla.', 'Juan es tan alto como yo.'],
+    examplesNegative: ['*Madrid es más grande de Sevilla.'],
     commonErrors: [
-      'Confusing preterite endings with present tense (no accent on stressed final vowel).',
-      'Mixing -er and -ir endings in the third person plural.',
-    ],
-    prerequisiteKeys: ['es-a1-present-indicative-regular'],
-  },
-  {
-    key: 'es-a2-preterite-irregular',
-    personRotation: true,
-    kind: 'grammar',
-    name: 'Preterite — irregular verbs',
-    description:
-      'Irregular preterite stems and endings: ser/ir (fui), hacer (hice), tener (tuve), poder (pude), decir (dije), etc.',
-    cefrLevel: A2,
-    language: ES,
-    examplesPositive: ['Ayer fui al cine.', 'No pudimos terminar a tiempo.'],
-    examplesNegative: ['*Ayer fuí al cine.'],
-    commonErrors: [
-      'Adding regular endings to irregular stems ("*tení" instead of "tuve").',
-      'Adding accent marks to irregular preterite forms that do not take them.',
-      'Confusing the shared form of ser and ir in the preterite.',
-    ],
-    prerequisiteKeys: ['es-a2-preterite-regular'],
-  },
-  {
-    key: 'es-a2-imperfect',
-    personRotation: true,
-    kind: 'grammar',
-    name: 'Imperfect tense',
-    description:
-      'Using the imperfect for habitual past actions, ongoing past states, and background description.',
-    cefrLevel: A2,
-    language: ES,
-    examplesPositive: ['Cuando era niño, jugaba al fútbol.', 'Llovía mucho aquel día.'],
-    examplesNegative: ['*Cuando era niño, jugué al fútbol todos los días.'],
-    commonErrors: [
-      'Using preterite for habitual or ongoing past actions where imperfect is required.',
-      'Forgetting that ser, ir, and ver are the only fully irregular imperfects.',
-    ],
-    prerequisiteKeys: ['es-a2-preterite-regular'],
-  },
-  {
-    key: 'es-a2-gustar-type-verbs',
-    personRotation: true,
-    kind: 'grammar',
-    name: 'gustar-type verbs',
-    description:
-      'Reverse-construction verbs (gustar, encantar, doler, faltar, importar) that agree with the thing liked, not the experiencer.',
-    cefrLevel: A2,
-    language: ES,
-    examplesPositive: ['Me gustan las películas españolas.', 'A ella le encanta el chocolate.'],
-    examplesNegative: ['*Yo gusto las películas españolas.'],
-    commonErrors: [
-      'Conjugating gustar as if the speaker were the subject ("*yo gusto").',
-      'Forgetting plural agreement when the liked thing is plural ("*me gusta los libros").',
-      'Omitting the indirect-object pronoun (me/te/le/nos/os/les).',
+      'Using "de" instead of "que" in comparisons ("*más alto de mí").',
+      'Saying "más bueno" instead of the suppletive form "mejor".',
+      'Using "tan" before a noun where "tanto/a/os/as" is required ("*tan problemas como").',
     ],
   },
-  {
-    key: 'es-a2-reflexive-verbs',
-    personRotation: true,
-    kind: 'grammar',
-    name: 'Reflexive verbs',
-    description:
-      'Pairing reflexive pronouns (me, te, se, nos, os, se) with verbs whose action returns to the subject.',
-    cefrLevel: A2,
-    language: ES,
-    examplesPositive: ['Me levanto a las siete.', 'Se llama Carlos.'],
-    examplesNegative: ['*Levanto a las siete.'],
-    commonErrors: [
-      'Dropping the reflexive pronoun for daily-routine verbs.',
-      'Misplacing the pronoun after the verb in finite tenses ("*levantome").',
-    ],
-  },
-  */
 
   // ---------------------------------------------------------------------------
   // B1
@@ -307,21 +178,6 @@ const esCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Using the English-style "ser + past participle" passive where "se" is more idiomatic.',
       'Failing to make the verb agree with the plural noun in passive-se ("*se vende coches").',
-    ],
-  },
-  {
-    key: 'es-b1-comparatives-superlatives',
-    kind: 'grammar',
-    name: 'Comparatives and superlatives',
-    description:
-      'más/menos ... que, tan ... como, the absolute superlative -ísimo, and irregular forms (mejor, peor, mayor, menor).',
-    cefrLevel: B1,
-    language: ES,
-    examplesPositive: ['Madrid es más grande que Sevilla.', 'Esta tarta está buenísima.'],
-    examplesNegative: ['*Madrid es más grande de Sevilla.'],
-    commonErrors: [
-      'Using "de" instead of "que" in comparisons ("*más alto de mí").',
-      'Saying "más bueno" instead of the suppletive form "mejor".',
     ],
   },
 
@@ -444,23 +300,6 @@ const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   // Vocab umbrellas — kind: 'vocab'
   // ---------------------------------------------------------------------------
-  /*
-  {
-    key: 'es-a2-everyday-vocab',
-    kind: 'vocab',
-    name: 'Everyday vocabulary (A2)',
-    description:
-      'High-frequency Spanish vocabulary for daily routines, food, family, weather, and basic shopping.',
-    cefrLevel: A2,
-    language: ES,
-    examplesPositive: ['desayunar', 'la panadería'],
-    examplesNegative: ['*el panadería'],
-    commonErrors: [
-      'Confusing false friends like "embarazada" (pregnant) with "embarrassed".',
-      'Mismatching gender on common nouns such as "el problema" (masculine despite -a).',
-    ],
-  },
-  */
   {
     key: 'es-b1-environment-vocab',
     kind: 'vocab',
