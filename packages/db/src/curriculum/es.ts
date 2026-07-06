@@ -745,7 +745,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Article use and omission',
     description:
-      'Article use/omission: the generic article with abstract/mass nouns; el/un before feminine tonic-a nouns (el aula) despite feminine gender; the definite article for clothing/possessions; and indefinite-article omission before unqualified professions after ser, restored once qualified.',
+      'Article use/omission: the generic article with abstract/mass nouns; el/un before feminine tonic-a nouns (el aula) despite feminine gender; the definite article for clothing/possessions; and no article with professions (Es profesora) or unspecified mass/plural objects (Bebe agua).',
     cefrLevel: A2,
     language: ES,
     examplesPositive: [
@@ -753,12 +753,14 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Mi hermana es profesora, pero es una profesora muy exigente.',
       'Antes de salir, se puso el abrigo y los guantes.',
       'El chocolate es malo para los perros.',
+      'Bebe agua con las comidas.',
     ],
     examplesNegative: ['*La aula de física está al final del pasillo.', '*Mi hermana es una profesora.'],
     commonErrors: [
       'Using la instead of el before singular feminine nouns beginning with a stressed a- or ha- sound ("*la aula", "*la águila"), even though the noun stays grammatically feminine (las aulas, las águilas).',
       'Inserting a possessive where Spanish uses the definite article for clothing and personal belongings ("*se puso su abrigo" instead of "se puso el abrigo").',
       'Adding un/una before an unqualified profession noun after ser, on the model of English "she is a teacher" ("*es una profesora" for plain "es profesora"), then forgetting the article reappears once the noun is qualified ("es una profesora excelente").',
+      'Adding an unneeded article with unspecified mass or plural objects ("*Bebo el agua con cada comida" when no specific water is meant).',
     ],
   },
   {
@@ -872,7 +874,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Connectors: e/u substitution, por eso, entonces',
     description:
-      'Substitution of y with e before a word beginning with a stressed i- sound (Fernando e Ignacio) but not before hie- (agua y hielo); substitution of o with u before a word beginning with o- or ho- (diez u once); and por eso / entonces to introduce a result or consequence.',
+      'Substitution of y with e before a word beginning with an /i/ vowel sound (Fernando e Ignacio) but not before the hie- glide (agua y hielo); substitution of o with u before a word beginning with o- or ho- (diez u once); and por eso / entonces to introduce a result or consequence.',
     cefrLevel: A2,
     language: ES,
     examplesPositive: [
@@ -888,7 +890,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       '*Compramos agua e hielo para la fiesta.',
     ],
     commonErrors: [
-      'Failing to change y to e before a word beginning with a stressed i- sound ("*Fernando y Ignacio" instead of "Fernando e Ignacio").',
+      'Failing to change y to e before a word beginning with an /i/ vowel sound ("*Fernando y Ignacio" instead of "Fernando e Ignacio").',
       'Over-applying the e-substitution to words beginning with the diphthong hie-, which keep y ("*agua e hielo" instead of "agua y hielo").',
       'Failing to change o to u before a word beginning with o- or ho- ("*diez o once" instead of "diez u once").',
     ],
