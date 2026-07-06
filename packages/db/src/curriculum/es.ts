@@ -259,10 +259,10 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Gustar-type verbs',
     description:
-      'Gustar-type construction: indirect object pronoun (me/te/le/nos/os/les) + gusta with a singular noun or infinitive subject, or gustan with a plural noun subject; the subject noun takes the definite article: me gusta el chocolate, nos gusta bailar.',
+      'Basic likes and dislikes with gustar: me/te gusta + singular noun or infinitive, me/te gustan + plural noun. The thing liked is the grammatical subject and takes the definite article (Me gusta la paella).',
     cefrLevel: A1,
     language: ES,
-    examplesPositive: ['Me gusta el café por la mañana.', 'A mis padres les gustan los libros de historia.'],
+    examplesPositive: ['Me gusta el café por la mañana.', 'Te gusta el café por la mañana.'],
     examplesNegative: ['*Me gustan bailar.'],
     commonErrors: [
       'Treating gustar like a regular subject-verb construction, e.g. "*yo gusto el café" instead of "me gusta el café", forgetting that the person who likes something is the indirect object, not the subject.',
