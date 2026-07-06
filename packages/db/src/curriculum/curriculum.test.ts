@@ -114,14 +114,11 @@ describe('assertCurriculumInvariants', () => {
   });
 
   it('throws when a per-language grammar count drops below the minimum', () => {
-    // ES A1 minimum is temporarily 0 (see PER_LANGUAGE_GRAMMAR_MIN), so this
-    // test now drops ES B1 (still required: 6). Restore to ES A1 when the A1
-    // entries are uncommented.
     const trimmed = ALL_CURRICULA
-      .filter((e) => !(e.language === 'ES' && e.cefrLevel === 'B1'))
+      .filter((e) => !(e.language === 'ES' && e.cefrLevel === 'A1'))
       .map((e) => ({ ...e, prerequisiteKeys: undefined }));
     expect(() => assertCurriculumInvariants(trimmed)).toThrow(
-      /ES B1 grammar count 0 below minimum 6/,
+      /ES A1 grammar count 0 below minimum 22/,
     );
   });
 });
@@ -513,23 +510,24 @@ describe('per-language counts', () => {
     return { grammar, vocab, dictation, freeWriting };
   }
 
-  // ES/DE are TEMPORARILY REDUCED (2026-05-10): assertions match the
-  // currently-active curriculum subset. Restore the original ≥4/≥5/≥6/≥5
-  // assertions and vocab.toBe(3) for ES/DE when their A1/A2 entries are
-  // uncommented. TR (2026-05-28) is now at full Yedi İklim A1+A2 parity
-  // (26 A1 + 14 A2 grammar + 10 themed vocab umbrellas); B1/B2 remain disabled.
+  // ES is at full PCIC A1+A2 parity plus the Task 12 B&B reverse-coverage
+  // additions (2026-07-06): 22 A1 + 27 A2 grammar points. DE is still
+  // TEMPORARILY REDUCED (2026-05-10). TR (2026-05-28) is now at full Yedi
+  // İklim A1+A2 parity (26 A1 + 14 A2 grammar + 10 themed vocab umbrellas);
+  // B1/B2 remain disabled.
 
-  it('Spanish meets minimums (B1 + B2 only while A1/A2 are disabled), has 2 vocab umbrellas, 2 dictation umbrellas, and 12 free-writing umbrellas', () => {
+  it('Spanish is at full PCIC A1+A2 parity, has 12 vocab umbrellas, 4 dictation umbrellas, and 18 free-writing umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting } = countsFor(esCurriculum);
-    expect(grammar.A1).toBe(0);
-    expect(grammar.A2).toBe(0);
-    expect(grammar.B1).toBeGreaterThanOrEqual(6);
+    expect(grammar.A1).toBeGreaterThanOrEqual(22);
+    expect(grammar.A2).toBeGreaterThanOrEqual(27);
+    expect(grammar.B1).toBeGreaterThanOrEqual(5);
     expect(grammar.B2).toBeGreaterThanOrEqual(5);
-    expect(vocab).toBe(2);
-    // es-b1-dictation + es-b2-dictation (Phase 2 dictation generation pipeline).
-    expect(dictation).toBe(2);
-    // 6 × B1 + 6 × B2 free-writing topic umbrellas (Phase 2 free-writing generation).
-    expect(freeWriting).toBe(12);
+    // 5 A1 + 5 A2 themed umbrellas + es-b1-environment-vocab + es-b2-abstract-noun-vocab.
+    expect(vocab).toBe(12);
+    // es-a1-dictation + es-a2-dictation + es-b1-dictation + es-b2-dictation (Phase 2 dictation generation pipeline).
+    expect(dictation).toBe(4);
+    // 3 × A1 + 3 × A2 + 6 × B1 + 6 × B2 free-writing topic umbrellas (Phase 2 free-writing generation).
+    expect(freeWriting).toBe(18);
   });
 
   it('German is fully disabled (no grammar entries, no vocab or dictation umbrellas)', () => {
@@ -558,10 +556,12 @@ describe('per-language counts', () => {
 });
 
 describe('free-writing topic umbrellas', () => {
-  it("has 6 free-writing topic umbrellas per ES B1 and B2", () => {
-    const fw = esCurriculum.filter((e) => e.kind === "free-writing");
-    expect(fw.filter((e) => e.cefrLevel === "B1")).toHaveLength(6);
-    expect(fw.filter((e) => e.cefrLevel === "B2")).toHaveLength(6);
+  it('has 3 free-writing topic umbrellas per ES A1 and A2, and 6 per B1 and B2', () => {
+    const fw = esCurriculum.filter((e) => e.kind === 'free-writing');
+    expect(fw.filter((e) => e.cefrLevel === 'A1')).toHaveLength(3);
+    expect(fw.filter((e) => e.cefrLevel === 'A2')).toHaveLength(3);
+    expect(fw.filter((e) => e.cefrLevel === 'B1')).toHaveLength(6);
+    expect(fw.filter((e) => e.cefrLevel === 'B2')).toHaveLength(6);
     for (const e of fw) {
       expect(e.freeWriting?.register).toBeDefined();
     }
@@ -740,6 +740,16 @@ describe('theory category coverage', () => {
     const nonGrammar = trCurriculum.filter((p) => p.kind !== 'grammar');
     expect(nonGrammar.length).toBeGreaterThan(0);
     expect(nonGrammar.every((p) => resolveTheoryCategory(p.key) === 'other')).toBe(true);
+  });
+
+  // ES is now live end-to-end (49 A1/A2 + 10 B1/B2 grammar points, all mapped),
+  // so it gets the same non-other guarantee as TR above.
+  it('maps every live ES grammar point to a non-other category', () => {
+    const unmapped = esCurriculum
+      .filter((p) => p.kind === 'grammar')
+      .filter((p) => resolveTheoryCategory(p.key) === 'other')
+      .map((p) => p.key);
+    expect(unmapped).toEqual([]);
   });
 });
 

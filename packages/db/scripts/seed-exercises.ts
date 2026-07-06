@@ -685,19 +685,21 @@ export const SEED_EXERCISES: SeedExercise[] = [
 // replace the umbrellas with frequency-band rows; the discriminator on
 // GrammarPoint.kind, not a string-suffix sniff, is what later code branches on.
 
-// TEMPORARILY REDUCED (2026-05-10): mappings for currently-disabled curriculum
-// entries are commented out so the resolution test in seed-exercises.test.ts
-// keeps passing. Restore each commented line when the matching grammar point
-// is uncommented in es.ts/de.ts/tr.ts, and bump the entry count in the test.
+// TEMPORARILY REDUCED (2026-05-10): mappings for DE's currently-disabled
+// curriculum entries are commented out so the resolution test in
+// seed-exercises.test.ts keeps passing. Restore each commented line when the
+// matching grammar point is uncommented in de.ts, and bump the entry count in
+// the test. ES is at full PCIC A1+A2 parity (2026-07-06) — its mappings below
+// are all active.
 export const SEED_KEY_TO_GRAMMAR_POINT: Readonly<Record<string, string>> = {
   // Spanish
-  // 'es-cloze-a2-1': 'es-a2-preterite-irregular',
+  'es-cloze-a2-1': 'es-a2-preterite-irregular',
   'es-cloze-b1-1': 'es-b1-present-subjunctive',
   'es-cloze-b2-1': 'es-b2-conditional-perfect',
-  // 'es-translation-a2-1': 'es-a2-gustar-type-verbs',
+  'es-translation-a2-1': 'es-a2-gustar-type-verbs',
   'es-translation-b1-1': 'es-b1-llevar-time-expressions',
   'es-translation-b2-1': 'es-b2-past-subjunctive',
-  // 'es-vocab-a2-1': 'es-a2-everyday-vocab',
+  'es-vocab-a2-1': 'es-a2-vocab-time-daily-routine',
   'es-vocab-b1-1': 'es-b1-environment-vocab',
   'es-vocab-b2-1': 'es-b2-abstract-noun-vocab',
   // German — fully disabled
@@ -886,12 +888,12 @@ export async function tagExistingSeeds(db: Db): Promise<{
   alreadyTagged: number;
   untaggedEnSeeds: number;
 }> {
-  // SEED_KEY_TO_GRAMMAR_POINT is temporarily reduced (see comment on the
-  // constant). Non-EN seeds whose mapping is currently commented out remain in
-  // the catalogue intentionally — filter them out before handing the list to
-  // planSeedTags so its strict "every non-EN seed must have a mapping" guard
-  // still catches real drift. Restore the unfiltered call when the commented
-  // mappings are reinstated.
+  // SEED_KEY_TO_GRAMMAR_POINT is temporarily reduced for DE only (see comment
+  // on the constant). Non-EN seeds whose mapping is currently commented out
+  // remain in the catalogue intentionally — filter them out before handing
+  // the list to planSeedTags so its strict "every non-EN seed must have a
+  // mapping" guard still catches real drift. Restore the unfiltered call when
+  // the commented DE mappings are reinstated.
   const activeNonEnKeys = new Set(Object.keys(SEED_KEY_TO_GRAMMAR_POINT));
   const seedsForTagging = SEED_EXERCISES.filter(
     (seed) => seed.language === 'EN' || activeNonEnKeys.has(seed.key),

@@ -11,13 +11,12 @@
  * genitive / dative cases, agglutinative suffixes) groups into meaningful
  * buckets rather than collapsing into `other`.
  *
- * `KEY_TO_CATEGORY` covers the curriculum entries that are currently
- * uncommented (live) — the ES B1/B2 grammar points and the full TR A1/A2/B1
- * grammar set. It is expected to grow as more curriculum entries are
- * uncommented: the commented-out ES A1/A2 points and the entire DE curriculum
- * are intentionally absent for now, and non-`grammar` kinds (`vocab`,
- * `dictation`, `free-writing`) are intentionally omitted so they fall through
- * to `other`.
+ * `KEY_TO_CATEGORY` covers the curriculum entries that are currently live —
+ * the ES A1/A2/B1/B2 grammar points and the full TR A1/A2/B1 grammar set. It
+ * is expected to grow as more curriculum entries land: the entire DE
+ * curriculum is intentionally absent for now, and non-`grammar` kinds
+ * (`vocab`, `dictation`, `free-writing`) are intentionally omitted so they
+ * fall through to `other`.
  */
 
 /**
@@ -83,13 +82,65 @@ export function getTheoryCategory(id: TheoryCategoryId): TheoryCategory {
  * intentionally omitted so they fall through to `FALLBACK_CATEGORY_ID`.
  */
 const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
+  // --- Spanish (A1) ---
+  'es-a1-noun-gender': 'articles',
+  'es-a1-noun-plural': 'morphology',
+  'es-a1-gender-agreement': 'articles',
+  'es-a1-articles': 'articles',
+  'es-a1-demonstratives': 'pronouns',
+  'es-a1-possessives-atonic': 'pronouns',
+  'es-a1-subject-pronouns': 'pronouns',
+  'es-a1-interrogatives': 'syntax',
+  'es-a1-present-indicative-regular': 'tenses',
+  'es-a1-present-irregular-core': 'tenses',
+  'es-a1-ser-estar-basic': 'pairs',
+  'es-a1-hay-estar': 'pairs',
+  'es-a1-gustar-basic': 'syntax',
+  'es-a1-querer-poder-infinitive': 'syntax',
+  'es-a1-numbers-ordinals': 'morphology',
+  'es-a1-quantifiers-muy-mucho': 'pairs',
+  'es-a1-negation-tampoco': 'syntax',
+  'es-a1-relative-que-basic': 'syntax',
+  'es-a1-noun-modifiers-de': 'syntax',
+  'es-a1-coordination-basic': 'syntax',
+  'es-a1-porque-para': 'syntax',
+  'es-a1-prepositions-a-en': 'pairs',
+
+  // --- Spanish (A2) ---
+  'es-a2-present-irregular-stem-changes': 'tenses',
+  'es-a2-preterite-regular': 'tenses',
+  'es-a2-preterite-irregular': 'tenses',
+  'es-a2-imperfect': 'tenses',
+  'es-a2-preterito-perfecto': 'tenses',
+  'es-a2-imperative-affirmative': 'moods',
+  'es-a2-estar-gerundio': 'tenses',
+  'es-a2-ir-a-future': 'tenses',
+  'es-a2-periphrases-obligation-aspect': 'syntax',
+  'es-a2-direct-object-pronouns': 'pronouns',
+  'es-a2-indirect-object-pronouns-se': 'pronouns',
+  'es-a2-tonic-pronouns-prepositions': 'pronouns',
+  'es-a2-personal-a': 'syntax',
+  'es-a2-reflexive-verbs': 'pronouns',
+  'es-a2-gustar-type-verbs': 'syntax',
+  'es-a2-articles-use': 'articles',
+  'es-a2-possessives-tonic': 'pronouns',
+  'es-a2-todo-otro-quantifiers': 'syntax',
+  'es-a2-temporal-clauses': 'syntax',
+  'es-a2-si-present-conditional': 'moods',
+  'es-a2-exclamatives-impersonals': 'syntax',
+  'es-a2-connectors': 'syntax',
+  'es-a2-indefinites-double-negation': 'syntax',
+  'es-a2-por-para': 'pairs',
+  'es-a2-mente-adverbs': 'morphology',
+  'es-a2-adjective-apocopation': 'morphology',
+  'es-a2-comparatives-superlatives': 'syntax',
+
   // --- Spanish (B1/B2 grammar) ---
   'es-b1-present-subjunctive': 'moods',
   'es-b1-conditional': 'moods',
   'es-b1-llevar-time-expressions': 'syntax',
   'es-b1-relative-clauses': 'syntax',
   'es-b1-passive-se': 'syntax',
-  'es-b1-comparatives-superlatives': 'syntax',
   'es-b2-past-subjunctive': 'moods',
   'es-b2-compound-tenses': 'tenses',
   'es-b2-conditional-perfect': 'moods',
