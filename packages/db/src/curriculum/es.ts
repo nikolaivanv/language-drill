@@ -49,8 +49,14 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * `es-b1-comparatives-superlatives` re-leveled to `es-a2-comparatives-superlatives`
  * per PCIC 2.5/6.1/15.3.8. Bump enumerates all new cells and clears any
  * suppression left from the 2026-05-10 reduction.
+ *
+ * `2026-07-07`: ES B1/B2 expanded to PCIC B1-B2 parity (14 new B1 + 18 new B2
+ * grammar points; 5 existing points rescoped — pluperfect moved out of
+ * es-b2-compound-tenses to a new B1 point). Bump enumerates the new cells and
+ * clears suppression on the rescoped cells so they re-run under the new
+ * descriptions. See docs/superpowers/specs/2026-07-06-es-b1-b2-pcic-curriculum-design.md.
  */
-export const CURRICULUM_VERSION_ES = '2026-07-06';
+export const CURRICULUM_VERSION_ES = '2026-07-07';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -1023,10 +1029,14 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Present subjunctive',
     description:
-      'Present subjunctive after expressions of wish, doubt, emotion, and impersonal opinion (querer que, espero que, dudar que, es importante que).',
+      'Present subjunctive: forms (incl. inherited stem changes) after wish, doubt, emotion, and impersonal-judgement triggers (querer que, espero que, dudo que, es importante que), and in independent uses with ojalá (que) and quizá / tal vez.',
     cefrLevel: B1,
     language: ES,
-    examplesPositive: ['Espero que estés bien.', 'Quiero que vengas a la fiesta.'],
+    examplesPositive: [
+      'Espero que estés bien.',
+      'Quiero que vengas a la fiesta.',
+      'Ojalá que encuentres trabajo pronto.',
+    ],
     examplesNegative: ['*Espero que estás bien.'],
     commonErrors: [
       'Using the indicative after expressions that require subjunctive (querer que, esperar que).',
@@ -1047,13 +1057,16 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Conditional simple',
     description:
-      'Conditional tense for hypothetical situations, polite requests, and reported speech ("dijo que vendría").',
+      'Conditional simple: regular forms and the irregular stems shared with the future (tendría, haría, podría), used for polite requests (¿Podrías ayudarme?), modest opinions (yo diría que...), and advice (deberías + infinitive).',
     cefrLevel: B1,
     language: ES,
-    examplesPositive: ['Yo iría contigo si pudiera.', '¿Podrías ayudarme, por favor?'],
-    examplesNegative: ['*Yo iré contigo si pudiera.'],
+    examplesPositive: [
+      'Yo diría que deberías consultar a un especialista antes de tomar esa decisión.',
+      '¿Podrías ayudarme, por favor?',
+    ],
+    examplesNegative: ['*Deberías que consultes a un médico.'],
     commonErrors: [
-      'Substituting the future tense for the conditional in hypothetical statements.',
+      'Using the present or future tense instead of the conditional to soften a request (e.g. "¿Puedes ayudarme?" instead of "¿Podrías ayudarme?").',
       'Forgetting the irregular stems shared with the future (tendría, haría, podría).',
     ],
     sentenceConstructionSuitable: true,
@@ -1062,14 +1075,16 @@ const esCurriculum: readonly GrammarPoint[] = [
   {
     key: 'es-b1-llevar-time-expressions',
     kind: 'grammar',
-    name: 'Time expressions with llevar and hace ... que',
+    name: 'Duration and time-span expressions',
     description:
-      '"Llevo + period + gerund" and "hace + period + que + present" to express how long an action has been ongoing.',
+      'Duration and time-span expressions: llevar + period + gerund (Llevo dos años estudiando), hace + period + que + present, tardar + period + en + infinitive (Tardé dos horas en llegar), and dentro de + period for time from now.',
     cefrLevel: B1,
     language: ES,
     examplesPositive: [
       'Llevo dos años estudiando español.',
       'Hace tres meses que vivo aquí.',
+      'Tardamos casi tres horas en montar el armario nuevo.',
+      'Dentro de dos semanas empezará el nuevo semestre.',
     ],
     examplesNegative: ['*He estudiado español por dos años.'],
     commonErrors: [
@@ -1083,17 +1098,22 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Relative clauses',
     description:
-      'Linking clauses with que, quien(es), donde, and lo que; restrictive vs. non-restrictive uses.',
+      'Restrictive relative clauses in the indicative: que vs quien (a quien for human objects: el chico a quien saludaste), donde with an expressed antecedent, and the restriction that proper names and tonic pronouns reject restrictive relatives.',
     cefrLevel: B1,
     language: ES,
     examplesPositive: [
-      'El libro que leí ayer es interesante.',
-      'La mujer con quien hablé es mi vecina.',
+      'El compañero a quien recomendé para el puesto empieza mañana.',
+      'La vecina que me prestó el taladro se mudó la semana pasada.',
+      'Volvimos al café donde nos conocimos hace diez años.',
     ],
-    examplesNegative: ['*El libro cual leí ayer es interesante.'],
+    examplesNegative: [
+      '*Juan que vive aquí es mi vecino.',
+      '*Los hombres quienes dijeron eso mintieron.',
+    ],
     commonErrors: [
-      'Using "cual" without an article in restrictive relative clauses.',
-      'Choosing "quien" for inanimate antecedents.',
+      'Using "quien(es)" in a restrictive clause without a preceding preposition (e.g. "*los hombres quienes dijeron eso" instead of "que dijeron eso").',
+      'Choosing "quien" for inanimate antecedents instead of "que".',
+      'Attaching a restrictive relative clause directly after a proper name or tonic pronoun (e.g. "*Juan que vive aquí").',
     ],
     sentenceConstructionSuitable: true,
   },
@@ -1147,16 +1167,17 @@ const esCurriculum: readonly GrammarPoint[] = [
       ],
     },
     kind: 'grammar',
-    name: 'Compound tenses with haber',
+    name: 'Future perfect',
     description:
-      'Perfect tenses beyond the pretérito perfecto: pluperfect (había terminado), future perfect (habré llegado), and conditional perfect groundwork — all formed with haber + invariable past participle.',
+      'Future perfect: habré + past participle for actions completed before a future reference point (Cuando lleguemos ya se habrá ido) and for probability about the recent past (Habrá tenido problemas).',
     cefrLevel: B2,
     language: ES,
-    examplesPositive: ['Habíamos terminado antes de las ocho.', 'Para mañana habré llegado.'],
-    examplesNegative: ['*Yo soy terminado el trabajo.'],
+    examplesPositive: ['Para mañana habré llegado.', 'Ya habrá llegado a casa a estas horas.'],
+    examplesNegative: ['*Cuando lleguemos, ya se irá.'],
     commonErrors: [
-      'Forming the perfect with "ser" or "estar" instead of "haber".',
-      'Inflecting the past participle for gender or number when used with haber.',
+      'Using the simple future where anteriority to another future event is required (e.g. "*cuando lleguemos, ya se irá" instead of "ya se habrá ido").',
+      'Forming the future perfect with "ser" or "estar" instead of "haber".',
+      'Inflecting the past participle for gender or number when used with haber (e.g. "*habrá llegada").',
     ],
     prerequisiteKeys: ['es-a2-preterito-perfecto'],
   },
