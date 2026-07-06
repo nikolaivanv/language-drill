@@ -99,6 +99,11 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-a1-querer-poder-infinitive': 'syntax',
   'es-a1-numbers-ordinals': 'morphology',
   'es-a1-quantifiers-muy-mucho': 'pairs',
+  'es-a1-negation-tampoco': 'syntax',
+  'es-a1-relative-que-basic': 'syntax',
+  'es-a1-noun-modifiers-de': 'syntax',
+  'es-a1-coordination-basic': 'syntax',
+  'es-a1-porque-para': 'syntax',
 
   // --- Spanish (B1/B2 grammar) ---
   'es-b1-present-subjunctive': 'moods',

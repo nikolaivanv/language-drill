@@ -318,6 +318,91 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Using muy before a verb instead of mucho, e.g. "*me gusta muy" instead of "me gusta mucho".',
     ],
   },
+  {
+    key: 'es-a1-negation-tampoco',
+    kind: 'grammar',
+    name: 'Negation with no, sí/no answers, and también/tampoco',
+    description:
+      'Sentence negation with no placed immediately before the verb; sí/no as short answers to yes/no questions; and the también/tampoco pair for agreeing with a preceding affirmative (también) or negative (tampoco) statement.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['No tengo hermanos.', 'Me gusta el café, y a Marta también.', 'No bebo alcohol, y mi hermano tampoco.'],
+    examplesNegative: ['*Tampoco no tengo coche.'],
+    commonErrors: [
+      'Using también instead of tampoco to agree with a negative statement, e.g. "*no tengo hermanos, y él también" instead of "y él tampoco".',
+      'Producing a double preceding negative by combining tampoco with no, e.g. "*tampoco no tengo coche" instead of "tampoco tengo coche" or "no tengo coche tampoco".',
+      'Answering a negative question with just "no" and dropping the second no before the verb, e.g. answering "¿no tienes coche?" with "No, tengo" instead of "No, no tengo".',
+    ],
+  },
+  {
+    key: 'es-a1-relative-que-basic',
+    kind: 'grammar',
+    name: 'Relative clauses with que (restrictive)',
+    description:
+      'Restrictive relative clauses with the invariable pronoun que, used to identify a noun as the clause subject or direct object, with the relativized verb in the present indicative; que is obligatory and can never be omitted the way English "that/which" often is.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['El chico que vive aquí es mi primo.', 'El libro que leo es muy interesante.'],
+    examplesNegative: ['*El libro leo es muy interesante.'],
+    commonErrors: [
+      'Omitting que when it functions as a direct object, by analogy with English relative-pronoun deletion, e.g. "*el libro leo" instead of "el libro que leo".',
+      'Treating que as if it changes form to agree with the antecedent\'s gender or number, when it is actually invariable.',
+      'Separating the antecedent from its que-clause, e.g. "*el chico es simpático que vive aquí" instead of keeping them together: "el chico que vive aquí es simpático".',
+    ],
+  },
+  {
+    key: 'es-a1-noun-modifiers-de',
+    kind: 'grammar',
+    name: 'Noun modifiers with de and con',
+    description:
+      'Noun-modifying de: compound nouns without an article (el libro de español), possessive de contracted with the article (la página del libro), and con describing a permanent feature a noun has (una casa con jardín).',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['Tengo un libro de español.', 'La página del libro está rota.', 'Vivo en una casa con jardín.'],
+    examplesNegative: ['*La página de el libro está rota.'],
+    commonErrors: [
+      'Failing to contract de + el to del, e.g. "*la página de el libro" instead of "la página del libro".',
+      'Using con instead of de to attach a noun modifier describing what something is made of or its type, e.g. "*un libro con español" instead of "un libro de español".',
+      'Inserting an article after de in a compound noun, e.g. "*un libro de el español" instead of "un libro de español".',
+    ],
+  },
+  {
+    key: 'es-a1-coordination-basic',
+    kind: 'grammar',
+    name: 'Basic coordinators: y, o, pero, ni, unos...otros',
+    description:
+      'Basic sentence coordinators: y (and) and o (or) linking two items or clauses, pero (but) contrasting two clauses, ni...ni joining two negated elements, and the correlative unos...otros contrasting two parts of a group.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: [
+      'Estudio español y trabajo en un banco.',
+      'No como carne ni pescado.',
+      'Unos vecinos son simpáticos, otros no.',
+      'Quiero salir, pero llueve mucho.',
+    ],
+    examplesNegative: ['*Como carne ni pescado.'],
+    commonErrors: [
+      'Using ni to join two items after an affirmative verb without a preceding negative, e.g. "*como carne ni pescado" instead of "no como carne ni pescado".',
+      'Using o instead of the correlative unos...otros when contrasting two parts of a group, e.g. "*unos vecinos son simpáticos o no" instead of "unos vecinos son simpáticos, otros no".',
+      'Confusing pero with y when the two ideas contrast rather than simply add on, e.g. "*quiero salir y llueve mucho" instead of "quiero salir, pero llueve mucho".',
+    ],
+  },
+  {
+    key: 'es-a1-porque-para',
+    kind: 'grammar',
+    name: 'Porque, para + infinitive, and por qué',
+    description:
+      'Porque (because) introducing a cause with an indicative verb, para + infinitive expressing purpose, and the porque/por qué contrast: porque (one word) states a reason while por qué (two words, stressed qué) asks or reports why.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['No voy a la fiesta porque estoy cansado.', 'Estudio español para viajar a México.', '¿Por qué llegas tarde?'],
+    examplesNegative: ['*Estudio español para viajo a México.'],
+    commonErrors: [
+      'Following para with a conjugated verb instead of the infinitive when the subject stays the same, e.g. "*estudio español para viajo a México" instead of "estudio español para viajar a México".',
+      'Using para + infinitive to express a cause instead of a purpose, e.g. "*estoy cansado para trabajar mucho" (intending "because I work a lot") instead of "estoy cansado porque trabajo mucho".',
+      'Confusing porque and por qué, e.g. "*no sé porque llegas tarde" instead of "no sé por qué llegas tarde" when reporting the reason for something.',
+    ],
+  },
 
   // ---------------------------------------------------------------------------
   // A2 (PCIC-aligned; Tasks 5–7)
