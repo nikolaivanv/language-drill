@@ -4,6 +4,35 @@ A living log of known issues to address. Add new entries at the top; mark as res
 
 ---
 
+## No brake or alert on Anthropic API spend in the scheduled generation path
+
+- **Status:** open — deferred until the self-revealing-targets exercise fix lands (`docs/findings/2026-07-07-self-revealing-target-elicitation.md`)
+- **Discovered:** 2026-07-07 (the ES `2026-07-07` curriculum initial fill spent ~$117 in one 80-minute run and drained the Anthropic credit balance to $0.61 — zero alerts fired at any layer)
+- **Scope:** `infra/lambda/src/generation/scheduler.ts:54` (`SCHEDULER_PER_CELL_COST_CAP_USD = 0.5`), `packages/db/src/generation/run-one-cell.ts` (`args.maxCostUsd` accepted but never read), `packages/db/scripts/generate-exercises.ts:360` (the only place a cost cap is actually enforced — CLI local-run path), `infra/lib/constructs/alerts.ts` (AWS-only budget + anomaly detection), `infra/lambda/src/generation/handler.ts` / `metrics.ts` (where a cost metric would be emitted)
+- **Severity:** high — a single curriculum bump can fan out hundreds of cells and spend an unbounded amount against the Anthropic account in one nightly run, with no runtime stop and no alerting before or after
+
+**Root cause (three independent gaps that lined up):**
+
+1. **The per-cell cap is decorative on the scheduled path.** The scheduler puts `maxCostUsd: 0.50` into every SQS job message and the Lambda handler threads it into `runOneCell` — but `runOneCell` never compares accumulated cost against it. The `skipped-cost-cap` status only exists on the CLI path (`generate-exercises.ts:360`, run-level `totalCostUsd >= args.maxCostUsd` between cells). Evidence from the 2026-07-07 run: **124 of 187 jobs exceeded $0.50** (avg $0.63, max $1.49).
+2. **The scheduler has no run-level ceiling.** Nothing limits how many cells one nightly run enqueues (a curriculum bump enqueued 187) or their projected total cost.
+3. **No layer observes Anthropic spend.** AWS Budgets + Cost Anomaly Detection (`AlertsConstruct`) see AWS spend only — Anthropic billing never touches Cost Explorer. CloudWatch alarms cover Lambda errors/DLQ/CellFailed — all 187 jobs *succeeded*, so nothing fired. Per-job `cost_usd_estimate` is written to `generation_jobs` and then nothing reads it. (Anthropic-console spend alerts are a manual, account-level backstop — none were configured to fire here.)
+
+Had the balance been ~$1 lower, tail jobs would have died on credit-exhausted API errors instead — visible as failed jobs + DLQ alarms, self-recovering next nightly run (see "Generation failures self-recover" behavior), but with the same silent overspend up to that point.
+
+**Remediation (in priority order):**
+
+1. **Enforce the cap that already travels in the message:** in `runOneCell`, stop issuing further draft batches once accumulated `estimateCostUsd` crosses `args.maxCostUsd`; finish the cell with the drafts already produced (or `skipped-cost-cap` if nothing was). The plumbing exists end-to-end; only the comparison is missing. Unit-test in `run-one-cell` tests.
+2. **Run-level ceiling in the scheduler:** cap projected cost (or cell count) per nightly run and carry the remainder to subsequent nights, so an initial fill spreads over days instead of one unbounded fan-out. Log what was deferred.
+3. **Emit Anthropic cost as a CloudWatch metric** (per-job `costUsd` from the handler; the value is already computed) and alarm on the daily sum via `AlertsConstruct`'s SNS topic — closes the "Anthropic spend is invisible" gap with data the pipeline already has.
+4. **Anthropic console spend alert** (manual, account-level) as a defense-in-depth backstop.
+
+Note: `cost_usd_estimate` is the pipeline's own pricing-table estimate; the real invoice can differ (prompt-caching discounts), but the 2026-07-07 estimate matched the observed balance drain to the right order of magnitude.
+
+**Owner:** unassigned
+**Tracking:** none yet — open a GitHub issue when prioritizing
+
+---
+
 ## Generator leaks the target form into the `context` field for "form-named" grammar points (`contextSpoilsAnswer`)
 
 - **Status:** open
