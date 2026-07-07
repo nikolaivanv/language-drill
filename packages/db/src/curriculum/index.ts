@@ -257,6 +257,28 @@ export function assertCurriculumInvariants(
       );
     }
 
+    // 9h. elicitationSeedValues (the curated target-form pool) is present iff
+    //     the point is self-revealing. A self-revealing point with no pool
+    //     would seed nothing (empty band); a pool without the flag is dead
+    //     config.
+    if (
+      entry.selfRevealingElicitation &&
+      (!entry.elicitationSeedValues || entry.elicitationSeedValues.length === 0)
+    ) {
+      throw new Error(
+        `Curriculum invariant violated: '${entry.key}' has selfRevealingElicitation but no elicitationSeedValues`,
+      );
+    }
+    if (
+      entry.elicitationSeedValues &&
+      entry.elicitationSeedValues.length > 0 &&
+      !entry.selfRevealingElicitation
+    ) {
+      throw new Error(
+        `Curriculum invariant violated: '${entry.key}' has elicitationSeedValues but no selfRevealingElicitation`,
+      );
+    }
+
     // 9e. freeWriting config is present iff the entry is a free-writing umbrella.
     if (entry.kind === 'free-writing' && !entry.freeWriting) {
       throw new Error(
