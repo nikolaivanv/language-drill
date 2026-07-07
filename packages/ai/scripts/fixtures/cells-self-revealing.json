@@ -1,0 +1,7 @@
+[
+  { "language": "ES", "cefrLevel": "A1", "exerciseType": "cloze",        "grammarPointKey": "es-a1-numbers-ordinals" },
+  { "language": "ES", "cefrLevel": "A1", "exerciseType": "translation",  "grammarPointKey": "es-a1-numbers-ordinals" },
+  { "language": "ES", "cefrLevel": "A1", "exerciseType": "vocab_recall", "grammarPointKey": "es-a1-vocab-family-people" },
+  { "language": "TR", "cefrLevel": "A1", "exerciseType": "cloze",        "grammarPointKey": "tr-a1-numbers-ordinals" },
+  { "language": "TR", "cefrLevel": "A1", "exerciseType": "translation",  "grammarPointKey": "tr-a1-numbers-ordinals" }
+]
