@@ -14,5 +14,11 @@ export default defineConfig({
     // there to abort genuinely stuck async tests. 120 s gives comfortable
     // headroom under CI contention.
     hookTimeout: 120_000,
+    // Same contention problem at the per-test level: under a parallel turbo
+    // run (web's jsdom suites co-running), timer-sensitive tests (email
+    // sender/dispatcher) starve past vitest's 5 s default and fail as flake —
+    // green standalone and at --concurrency=1. 30 s is pure headroom: fake
+    // timers don't consume wall time, and genuinely stuck tests still abort.
+    testTimeout: 30_000,
   },
 });
