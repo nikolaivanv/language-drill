@@ -1,7 +1,7 @@
 # Finding: self-revealing targets (numbers, ordinals, concrete vocab) can't survive the spoilage veto — and collapse onto one exemplar
 
 **Date:** 2026-07-07 (ES `2026-07-07` curriculum initial-fill run; TR confirmed same day)
-**Status:** FIX IMPLEMENTED (branch worktree-self-revealing-elicitation) — eval:gen + prod re-fill pending
+**Status:** FIX IMPLEMENTED + EVAL PASSED (branch worktree-self-revealing-elicitation) — prod re-fill pending (post-merge ops checklist in the plan)
 **Surfaced by:** ES A1–B2 run analysis — `es:a1:cloze:es-a1-numbers-ordinals` approved 1/20 (5%); user then flagged TR A1 "far too many üçüncü", confirmed in prod
 
 ## Problem
@@ -88,3 +88,25 @@ still rejects the new shape — mirror in `validation-prompts.ts`, bump both
 | es:a2:cloze:es-a2-temporal-clauses | 13% | 4 | spoilage (+known context-leak class) |
 | tr:a1:cloze:tr-a1-numbers-ordinals | — | 20 (at target) | identity collapse |
 | tr:a1:translation:tr-a1-numbers-ordinals | — | 20 (at target) | identity collapse (18/20 üçüncü) |
+
+## Eval results (pre-merge, 2026-07-07)
+
+`pnpm eval:gen` run `self-revealing-postfix` (summary JSON:
+`packages/ai/eval-runs/self-revealing-postfix.json`): 5 cells (the table
+above minus the already-covered vocab cells, plus ES/TR translation) × 8
+drafts × 2 identical `repo` arms — both arms run the NEW pipeline; the run
+measures the fixed pipeline's absolute quality on the previously failing
+cells, against the prod baseline recorded above.
+
+| Metric | Prod baseline (2026-07-07 run) | Post-fix eval |
+|---|---|---|
+| approval rate on these cells | 5–30% | **98.75%** (79/80 auto-approved) |
+| `context-spoils-answer` rejections | dominant reason (14/20 on ES numbers cloze alone) | **1 in 80 drafts** |
+| flagged | heavy (e.g. 18/30 on temporal-clauses) | 0 |
+| parser failures | — | 0 |
+
+Cost: $1.15. Acceptance criteria from the plan (context-spoils ≈ 0,
+approval ≥ 50%/cell) met with wide margin. Caveat (noted in the plan): the
+eval harness does not thread per-draft `seedWords`, so the run exercised the
+generic digit-form directive; the pinned-value rotation is covered by unit
+tests and gets verified in prod after the first post-merge nightly run.
