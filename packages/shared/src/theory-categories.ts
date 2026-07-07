@@ -235,6 +235,12 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'tr-a2-pekistirme': 'morphology',
   'tr-a2-purpose-icin-uzere': 'syntax',
   'tr-a2-reported-speech': 'syntax',
+  // A2 G&K reverse-audit additions (2026-07-10)
+  'tr-a2-spatial-postpositions': 'syntax',
+  'tr-a2-past-copula': 'tenses',
+  'tr-a2-clitics-da-bile': 'syntax',
+  'tr-a2-with-without-li-siz': 'morphology',
+  'tr-a2-enumerator-tane': 'syntax',
 
   // --- Turkish B1 ---
   'tr-b1-past-continuous-iyordu': 'tenses',
@@ -251,6 +257,9 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'tr-b1-converb-while-yken': 'syntax',
   'tr-b1-since-converb': 'syntax',
   'tr-b1-participles-dik-acak': 'syntax',
+  // B1 G&K reverse-audit additions (2026-07-10)
+  'tr-b1-copula-ol': 'syntax',
+  'tr-b1-olarak': 'syntax',
 };
 
 /**
