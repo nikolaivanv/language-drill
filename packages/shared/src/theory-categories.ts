@@ -251,6 +251,29 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'tr-b1-converb-while-yken': 'syntax',
   'tr-b1-since-converb': 'syntax',
   'tr-b1-participles-dik-acak': 'syntax',
+
+  // --- Turkish B2 ---
+  'tr-b2-participle-aorist': 'syntax',
+  'tr-b2-participle-mis': 'syntax',
+  'tr-b2-converb-until': 'syntax',
+  'tr-b2-compound-past-hikaye': 'tenses',
+  'tr-b2-compound-evidential-rivayet': 'tenses',
+  'tr-b2-temporal-when': 'syntax',
+  'tr-b2-proportion-assoon': 'syntax',
+  'tr-b2-duration-throughout': 'syntax',
+  'tr-b2-causal-subordinate': 'syntax',
+  'tr-b2-reported-statements': 'syntax',
+  'tr-b2-reported-questions': 'syntax',
+  'tr-b2-reported-directives': 'syntax',
+  // Combined voice is derivational morphology on the stem (like the B1 voices).
+  'tr-b2-double-voice': 'morphology',
+  'tr-b2-concessive': 'syntax',
+  'tr-b2-instead-of': 'syntax',
+  'tr-b2-conditional-formal': 'moods',
+  'tr-b2-aspectual-verbs': 'syntax',
+  // Generalizing/assumption -DIr is epistemic modality; "as if" is a clause.
+  'tr-b2-dir-generalizing': 'moods',
+  'tr-b2-as-if-gibi': 'syntax',
 };
 
 /**

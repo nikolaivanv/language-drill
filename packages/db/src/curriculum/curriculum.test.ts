@@ -450,7 +450,7 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
     ).toBeUndefined();
   });
 
-  it('the full TR clozeUnsuitable set is exactly these nineteen points', () => {
+  it('the full TR clozeUnsuitable set is exactly these thirty-four points', () => {
     const flagged = trCurriculum
       .filter((g) => g.clozeUnsuitable === true)
       .map((g) => g.key)
@@ -476,6 +476,22 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
         'tr-b1-passive-voice',
         'tr-b1-reciprocal-voice',
         'tr-b1-reflexive-voice-kendi',
+        // B2 (clause-linking / bipartite / under-constrained blanks)
+        'tr-b2-converb-until',
+        'tr-b2-temporal-when',
+        'tr-b2-proportion-assoon',
+        'tr-b2-duration-throughout',
+        'tr-b2-causal-subordinate',
+        'tr-b2-reported-statements',
+        'tr-b2-reported-questions',
+        'tr-b2-reported-directives',
+        'tr-b2-double-voice',
+        'tr-b2-concessive',
+        'tr-b2-instead-of',
+        'tr-b2-conditional-formal',
+        'tr-b2-aspectual-verbs',
+        'tr-b2-dir-generalizing',
+        'tr-b2-as-if-gibi',
       ].sort(),
     );
   });
@@ -578,12 +594,14 @@ describe('per-language counts', () => {
     expect(dictation).toBe(0);
   });
 
-  it('Turkish is at full Yedi İklim A1 + A2 + B1 parity (B2 disabled), has 15 vocab umbrellas, 3 dictation umbrellas, and 9 free-writing umbrellas', () => {
+  it('Turkish is at full Yedi İklim A1 + A2 + B1 + B2 parity, has 15 vocab umbrellas, 3 dictation umbrellas, and 9 free-writing umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting } = countsFor(trCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(26);
     expect(grammar.A2).toBeGreaterThanOrEqual(14);
     expect(grammar.B1).toBe(11);
-    expect(grammar.B2).toBe(0);
+    // B2 (2026-07-09): 17 Yedi İklim exam points + 2 G&K reverse-audit additions.
+    // Grammar-only cycle — no B2 vocab/dictation/free-writing umbrellas.
+    expect(grammar.B2).toBe(19);
     // 5 A1 + 5 A2 + 5 B1 themed vocab umbrellas.
     expect(vocab).toBe(15);
     // tr-a1 + tr-a2 + tr-b1 dictation.
