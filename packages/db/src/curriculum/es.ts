@@ -55,8 +55,14 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * es-b2-compound-tenses to a new B1 point). Bump enumerates the new cells and
  * clears suppression on the rescoped cells so they re-run under the new
  * descriptions. See docs/superpowers/specs/2026-07-06-es-b1-b2-pcic-curriculum-design.md.
+ *
+ * 2026-07-08: digit-form elicitation for es-a1-numbers-ordinals
+ * (selfRevealingElicitation + curated value pool). Bump re-enqueues every
+ * below-target ES cell and clears low-yield suppression on the cells starved
+ * by the 2026-07-07 run: es-a1-numbers-ordinals cloze (pool 1), es-a1-fw-a-day
+ * (2), es-a1-vocab-family-people (2), plus the thin A1 vocab/cloze cells.
  */
-export const CURRICULUM_VERSION_ES = '2026-07-07';
+export const CURRICULUM_VERSION_ES = '2026-07-08';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -306,6 +312,16 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Leaving -cientos in the masculine regardless of the noun\'s gender, e.g. "*doscientos mujeres" instead of "doscientas mujeres".',
       'Forgetting to drop the final -o of primero/tercero before a masculine singular noun, e.g. "*el primero piso" instead of "el primer piso".',
       'Using uno instead of the shortened un before a masculine noun in compound numbers, e.g. "*veintiuno libros" instead of "veintiún libros".',
+    ],
+    selfRevealingElicitation: 'digit-form',
+    elicitationSeedValues: [
+      'primer', 'primera', 'segundo', 'segunda', 'tercer', 'tercera',
+      'cuarto', 'cuarta', 'quinto', 'sexta', 'séptimo', 'octava',
+      'noveno', 'décima',
+      'veintiún', 'veintiuna', 'treinta y un', 'cuarenta y una',
+      'doscientos', 'doscientas', 'trescientas', 'cuatrocientos',
+      'quinientas', 'seiscientos', 'setecientas', 'ochocientos',
+      'novecientas', 'ciento un',
     ],
   },
   {

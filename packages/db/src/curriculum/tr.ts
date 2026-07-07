@@ -127,8 +127,14 @@ const { A1, A2, B1 } = CefrLevel;
  * the validator rejected (23% approval). Predicate-nominal seeds professions /
  * roles / nationalities / adjectives that form natural copular predicates. Bump
  * clears suppression so the cell re-runs with the predicate seed.
+ * 2026-07-08: digit-form elicitation for tr-a1-numbers-ordinals
+ * (selfRevealingElicitation + curated value pool) after the identity-space
+ * collapse (18/20 approved translations contained 'üçüncü'). Bump clears
+ * suppression so below-target TR cells re-run; the collapsed numbers-ordinals
+ * rows must ALSO be demoted (pnpm demote:pool) or the cells stay at target
+ * and never regenerate.
  */
-export const CURRICULUM_VERSION_TR = '2026-06-30';
+export const CURRICULUM_VERSION_TR = '2026-07-08';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -758,6 +764,15 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Failing to soften final t→d in dört before the ordinal suffix (*dörtüncü instead of dördüncü).',
     ],
     prerequisiteKeys: ['tr-a1-vowel-harmony'],
+    selfRevealingElicitation: 'digit-form',
+    elicitationSeedValues: [
+      'birinci', 'ikinci', 'üçüncü', 'dördüncü', 'beşinci', 'altıncı',
+      'yedinci', 'sekizinci', 'dokuzuncu', 'onuncu', 'on birinci',
+      'on ikinci', 'yirminci', 'otuzuncu', 'kırkıncı', 'ellinci',
+      'altmışıncı', 'yüzüncü',
+      'yüz yirmi üç', 'iki yüz elli', 'üç yüz kırk beş', 'beş yüz on',
+      'bin dokuz yüz', 'iki bin yirmi altı',
+    ],
   },
   {
     key: 'tr-a1-possessive-suffixes',
