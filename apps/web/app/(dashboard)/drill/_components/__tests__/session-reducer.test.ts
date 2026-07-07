@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { EvaluationResult } from '@language-drill/shared';
+import { CefrLevel, type EvaluationResult } from '@language-drill/shared';
 import type {
   CreateSessionResponse,
   ExerciseResponse,
@@ -26,7 +26,7 @@ const sampleItems: ExerciseResponse[] = [
     id: 'ex-0',
     type: 'cloze',
     language: 'EN',
-    difficulty: 'B1',
+    difficulty: CefrLevel.B1,
     grammarPointKey: null,
     contentJson: { sentence: 'I ___ home', options: ['go', 'went'] },
   },
@@ -34,7 +34,7 @@ const sampleItems: ExerciseResponse[] = [
     id: 'ex-1',
     type: 'cloze',
     language: 'EN',
-    difficulty: 'B1',
+    difficulty: CefrLevel.B1,
     grammarPointKey: null,
     contentJson: { sentence: 'She ___ tired', options: ['is', 'are'] },
   },
@@ -42,6 +42,7 @@ const sampleItems: ExerciseResponse[] = [
 
 const sampleCreateResponse: CreateSessionResponse = {
   id: '11111111-1111-1111-1111-111111111111',
+  difficulty: CefrLevel.B1,
   exercises: sampleItems,
 };
 
@@ -637,6 +638,7 @@ describe('sessionReducer / sessionErrors', () => {
 
   const createResponseWithGrammarKeys: CreateSessionResponse = {
     id: sampleCreateResponse.id,
+    difficulty: CefrLevel.B1,
     exercises: itemsWithGrammarKeys,
   };
 

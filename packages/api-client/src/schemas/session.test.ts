@@ -55,6 +55,7 @@ describe('CreateSessionResponseSchema', () => {
   it('parses a valid create-session response', () => {
     const data = {
       id: '123e4567-e89b-12d3-a456-426614174000',
+      difficulty: 'B1',
       exercises: [
         {
           id: 'abc-123',
@@ -75,6 +76,7 @@ describe('CreateSessionResponseSchema', () => {
   it('accepts an empty exercises array', () => {
     const data = {
       id: '123e4567-e89b-12d3-a456-426614174000',
+      difficulty: 'B1',
       exercises: [],
     };
     const result = CreateSessionResponseSchema.parse(data);
@@ -85,6 +87,7 @@ describe('CreateSessionResponseSchema', () => {
     expect(() =>
       CreateSessionResponseSchema.parse({
         id: 'not-a-uuid',
+        difficulty: 'B1',
         exercises: [],
       }),
     ).toThrow();

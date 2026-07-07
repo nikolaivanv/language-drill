@@ -20,6 +20,10 @@ export type CreateSessionRequest = z.infer<typeof CreateSessionRequestSchema>;
 // Response body for POST /sessions
 export const CreateSessionResponseSchema = z.object({
   id: z.string().uuid(),
+  // The difficulty the session was ACTUALLY created at. For a targeted drill
+  // the server derives it from the grammar-point key (es-a2-… → A2), which can
+  // differ from the requested (profile) difficulty.
+  difficulty: z.nativeEnum(CefrLevel),
   exercises: z.array(ExerciseResponseSchema),
 });
 
