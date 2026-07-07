@@ -300,6 +300,45 @@ describe('curriculum conjugationSeedKind (nominal-inflection points seed from th
       expect(getGrammarPoint(key)?.conjugationSeedKind).toBeUndefined();
     }
   });
+
+  it('throws when a self-revealing point has no elicitationSeedValues pool', () => {
+    expect(() =>
+      assertCurriculumInvariants([
+        {
+          key: 'tr-a1-synthetic-numbers',
+          kind: 'grammar',
+          name: 'Synthetic numbers',
+          description: 'Synthetic entry for self-revealing invariant testing.',
+          cefrLevel: 'A1',
+          language: Language.TR,
+          examplesPositive: ['a', 'b'],
+          examplesNegative: ['*c'],
+          commonErrors: ['e'],
+          selfRevealingElicitation: 'digit-form',
+          // elicitationSeedValues intentionally omitted.
+        },
+      ]),
+    ).toThrow(/elicitationSeedValues/);
+  });
+
+  it('throws when elicitationSeedValues is set without selfRevealingElicitation', () => {
+    expect(() =>
+      assertCurriculumInvariants([
+        {
+          key: 'tr-a1-synthetic-numbers',
+          kind: 'grammar',
+          name: 'Synthetic numbers',
+          description: 'Synthetic entry for self-revealing invariant testing.',
+          cefrLevel: 'A1',
+          language: Language.TR,
+          examplesPositive: ['a', 'b'],
+          examplesNegative: ['*c'],
+          commonErrors: ['e'],
+          elicitationSeedValues: ['birinci'],
+        },
+      ]),
+    ).toThrow(/selfRevealingElicitation/);
+  });
 });
 
 describe('curriculum personRotation flag (migrated to coverageSpec — Task 4)', () => {

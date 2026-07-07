@@ -341,12 +341,15 @@ export async function fetchPriorFreeWritingTitles(
 }
 
 /**
- * Pulls the frequency seeds already anchored in this cell's live pool (R5.3),
- * read from the writer-only `content_json.seedWord` field that
- * `validateAndInsertWithRetry` persisted (task 14). Scoped to the same cell +
- * review-status set as the dedup index, so the returned set is exactly the
- * lemmas a fresh batch should avoid re-proposing. Returns lemmas (deduped by
- * the caller's `Set`); empty when nothing in the cell carries a seed.
+ * Pulls the frequency (or curated elicitation-values) seeds already anchored
+ * in this cell's live pool (R5.3), read from the writer-only
+ * `content_json.seedWord` field that `validateAndInsertWithRetry` persisted
+ * (task 14). Scoped to the same cell + review-status set as the dedup index,
+ * so the returned set is exactly the values a fresh batch should avoid
+ * re-proposing. Shared by `seedKind: 'frequency'` and `seedKind:
+ * 'elicitation-values'` cells — both persist the seed under the same field,
+ * so one query serves both. Returns values (deduped by the caller's `Set`);
+ * empty when nothing in the cell carries a seed.
  */
 async function fetchPriorSeeds(
   db: Db,
@@ -461,7 +464,18 @@ async function fetchPriorNounSeeds(
  */
 export function seedKindFor(
   cell: Cell,
-): 'frequency' | 'verb' | 'noun' | 'predicate-nominal' | null {
+): 'frequency' | 'verb' | 'noun' | 'predicate-nominal' | 'elicitation-values' | null {
+  if (
+    (cell.exerciseType === ExerciseType.CLOZE ||
+      cell.exerciseType === ExerciseType.TRANSLATION) &&
+    cell.grammarPoint.selfRevealingElicitation
+  ) {
+    // Self-revealing point (numbers/ordinals): rotate over the curated
+    // target-form pool instead of the frequency band — the target form IS the
+    // diversity axis. Frequency seeding let the model collapse onto one value
+    // ('üçüncü' in 18/20 approved TR translations).
+    return 'elicitation-values';
+  }
   if (
     cell.exerciseType === ExerciseType.CLOZE ||
     cell.exerciseType === ExerciseType.TRANSLATION ||
@@ -517,6 +531,16 @@ export async function buildSeedWords(
     // pool's distinct-identity space exhausts. Band is CUMULATIVE from rank 1 so
     // an A1 cell still has a wide noun inventory to vary over.
     const band = await loadNounBand(db, cell.language, 1, window.rankMax);
+    return pickSeeds({ band, batchSeed, count, exclude: priorSeeds });
+  }
+
+  if (kind === 'elicitation-values') {
+    // Self-revealing target: seed each ordinal with a distinct target written
+    // form from the curated curriculum pool (mirrors the predicate-nominal
+    // curated pool). Bounded: once the live pool covers it, pickSeeds returns
+    // nulls and the cell stops — pools are sized in the curriculum to exceed
+    // the cell target.
+    const band = cell.grammarPoint.elicitationSeedValues ?? [];
     return pickSeeds({ band, batchSeed, count, exclude: priorSeeds });
   }
 
@@ -695,8 +719,16 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     // needless query.
     const seedKind = seedKindFor(cell);
     const priorSeeds: ReadonlySet<string> =
-      seedKind === 'frequency'
-        ? new Set(await fetchPriorSeeds(db, cell))
+      seedKind === 'frequency' || seedKind === 'elicitation-values'
+        ? // Both the frequency band and the curated elicitation-values pool key
+          // the live-pool exclude on the bare `content_json.seedWord`
+          // (validate-and-insert.ts persists it identically for both), so they
+          // share `fetchPriorSeeds`. Without this, a re-run of a below-target
+          // flagged cell never sees its own live pool and keeps re-picking
+          // values already anchored — the bounded-pool termination
+          // (`pickSeeds` returning nulls once the pool is covered) never
+          // engages.
+          new Set(await fetchPriorSeeds(db, cell))
         : // Both noun and predicate-nominal cells key the live-pool exclude on the
           // bare lemma/seedWord (the noun/predicate is the diversity axis), so they
           // share `fetchPriorNounSeeds`.

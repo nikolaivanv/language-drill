@@ -134,6 +134,31 @@ export type GrammarPoint = Readonly<{
    */
   conjugationSeedWords?: readonly string[];
   /**
+   * Marks a point whose target forms are semantically self-revealing: any
+   * natural elicitation must convey the target's meaning (numbers, ordinals),
+   * so the validator's default reading of "the context conveys the answer"
+   * rejects every draft (es-a1-numbers-ordinals cloze approved 1/20 on
+   * 2026-07-07). 'digit-form' sanctions presenting the target as digits or
+   * numerals ("3.º", "200", "123") while the learner produces the written
+   * form — the actually-tested skill (agreement/apocope/harmony) is not
+   * revealed by digits. Generation injects a strict per-draft directive;
+   * validation appends a scoring note exempting the digit cue from
+   * contextSpoilsAnswer. See
+   * docs/findings/2026-07-07-self-revealing-target-elicitation.md.
+   */
+  selfRevealingElicitation?: 'digit-form';
+  /**
+   * Curated rotation pool of target written forms for a self-revealing point
+   * (e.g. 'tercero', 'doscientas', 'üçüncü', 'yüz yirmi üç'). Drives per-draft
+   * seed rotation exactly like conjugationSeedWords drives predicate-nominal
+   * conjugation cells — the identity-diversity axis that stops the pool
+   * collapsing onto one exemplar ("üçüncü kat" ×18/20 approved translations).
+   * Size it to comfortably exceed the cell target (the pool is bounded; once
+   * the live pool covers it, pickSeeds returns nulls and the cell stops).
+   * REQUIRED non-empty iff selfRevealingElicitation is set (invariant 9h).
+   */
+  elicitationSeedValues?: readonly string[];
+  /**
    * Declarative coverage spec (Pool Coverage Controller, Phase 2) — which
    * categorical axes a diverse approved set should vary along, and an absolute
    * min approved-count floor per value. Replaces the old `personRotation` flag:

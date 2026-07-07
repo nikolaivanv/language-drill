@@ -184,7 +184,14 @@ function renderRecentStems(recentStems: readonly string[]): string {
 // `breakdown` rule now forbids model deliberation / self-correction / check
 // marks leaking into the learner-visible breakdown (locative conjugation was
 // shipping breakdowns like "…back vowel i → e… wait: iş has back vowel? No —…✓").
-export const GENERATION_PROMPT_VERSION = "generate@2026-06-30";
+// 2026-07-08: self-revealing digit-form directive for flagged numbers/
+// ordinals cloze/translation cells (`grammarPoint.selfRevealingElicitation
+// === 'digit-form'`). These points can't use a written-word seed without
+// leaking the answer (the target IS the written form), so the per-draft
+// user prompt now demands digit/numeral presentation instead, pinned to the
+// seeded value when one is supplied. Lives entirely in the per-draft user
+// prompt — the cached system template is untouched.
+export const GENERATION_PROMPT_VERSION = "generate@2026-07-08";
 
 /**
  * Wording differs per type so Claude reads it the way the cell is constrained:
@@ -602,8 +609,31 @@ export function buildGenerationUserPrompt(
   // conjugatable verb and substitution re-opens the dedup-collapse we fixed.
   // All other types keep the LOOSE constraint: anchor on the seed but allow a
   // similar-frequency substitute when it doesn't fit the grammar point.
+  // Self-revealing target (numbers/ordinals): the ONLY sanctioned elicitation
+  // is a digit/numeral cue — the written form is what the learner produces.
+  // Lives in the per-draft user prompt (uncached; system prompt stays
+  // byte-identical). When seeded, the target value is pinned (strict, like
+  // conjugation); when unseeded (CLI/eval paths pass no seedWords) the
+  // directive still applies, just without a pinned value.
+  const digitForm =
+    inputs.grammarPoint.selfRevealingElicitation === "digit-form" &&
+    (inputs.exerciseType === ExerciseType.CLOZE ||
+      inputs.exerciseType === ExerciseType.TRANSLATION);
+  const digitFormBlock = digitForm
+    ? inputs.exerciseType === ExerciseType.TRANSLATION
+      ? `${
+          seedWord && seedWord.length > 0
+            ? `The target form is "${seedWord}" — the reference translation must contain exactly this form (with correct agreement); do not substitute another value. `
+            : ""
+        }Write the number/order as DIGITS in the source text (e.g. "the 3rd floor", "200 chairs", "in 1923") — never spelled out in the source language — so the learner must produce the written target-language form themselves. Vary the noun and scenario; do not reuse a noun or template from earlier exercises in this batch.\n\n`
+      : `${
+          seedWord && seedWord.length > 0
+            ? `The target form is "${seedWord}" — use exactly this value; do not substitute another. `
+            : ""
+        }Present the quantity/order ONLY as digits or numerals in the visible text (e.g. "3.º", "3.", "200", "123"), typically as the parenthetical hint — NEVER as the written word. The learner produces the written form (with correct agreement/gender/harmony) from the digit cue; the digit cue is the sanctioned elicitation for this cell, not an answer leak. Vary the noun and scenario; do not reuse a noun or template from earlier exercises in this batch.\n\n`
+    : "";
   const seedBlock =
-    seedWord && seedWord.length > 0
+    !digitForm && seedWord && seedWord.length > 0
       ? inputs.exerciseType === ExerciseType.CONJUGATION
         ? // Strict: the seed IS the word to inflect. No substitution escape hatch —
           // the picker already guarantees an inflectable word, and substitution
@@ -630,7 +660,7 @@ export function buildGenerationUserPrompt(
 
 Topic domain: ${domain}
 
-${modeBlock}${coverageBlock}${seedBlock}Use the ${toolName} tool.`;
+${modeBlock}${coverageBlock}${digitFormBlock}${seedBlock}Use the ${toolName} tool.`;
 }
 
 // ---------------------------------------------------------------------------

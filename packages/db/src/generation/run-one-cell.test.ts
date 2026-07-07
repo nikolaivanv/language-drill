@@ -360,6 +360,36 @@ describe('seedKindFor', () => {
   it('returns null for vocab_recall', () => {
     expect(seedKindFor(cellOf(ExerciseType.VOCAB_RECALL))).toBeNull();
   });
+
+  it('returns elicitation-values for a flagged cloze cell', () => {
+    const cell = cellOf(ExerciseType.CLOZE);
+    const flagged: Cell = {
+      ...cell,
+      grammarPoint: {
+        ...cell.grammarPoint,
+        selfRevealingElicitation: 'digit-form' as const,
+        elicitationSeedValues: ['birinci', 'ikinci', 'üçüncü'],
+      },
+    };
+    expect(seedKindFor(flagged)).toBe('elicitation-values');
+  });
+
+  it('returns elicitation-values for a flagged translation cell', () => {
+    const cell = cellOf(ExerciseType.TRANSLATION);
+    const flagged: Cell = {
+      ...cell,
+      grammarPoint: {
+        ...cell.grammarPoint,
+        selfRevealingElicitation: 'digit-form' as const,
+        elicitationSeedValues: ['birinci'],
+      },
+    };
+    expect(seedKindFor(flagged)).toBe('elicitation-values');
+  });
+
+  it('still returns frequency for unflagged cloze', () => {
+    expect(seedKindFor(cellOf(ExerciseType.CLOZE))).toBe('frequency');
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -1293,6 +1323,43 @@ describe('buildSeedWords — predicate-nominal (curated pool, no DB)', () => {
   it('excludes prior predicate seeds (lemma-keyed exclude)', async () => {
     const reseeded = (await buildSeedWords(throwingDb, copularCell(), 3, 'seed-p', new Set(['doctor'])))!;
     expect(reseeded).not.toContain('doctor');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buildSeedWords — elicitation-values path. UNGATED (no DB): a self-revealing
+// flagged cell (e.g. numbers/ordinals) seeds from the curated
+// `elicitationSeedValues` pool on the grammar point, so this branch never
+// queries the DB either — reuses the same throwing-db proof as the
+// predicate-nominal suite above.
+// ---------------------------------------------------------------------------
+
+describe('buildSeedWords — elicitation-values (curated pool, no DB)', () => {
+  const throwingDb = new Proxy(
+    {},
+    {
+      get() {
+        throw new Error('buildSeedWords queried the DB on the elicitation-values path');
+      },
+    },
+  ) as unknown as Db;
+
+  it('seeds a flagged cell from elicitationSeedValues without touching the db', async () => {
+    const cell = buildTestCell();
+    const flagged: Cell = {
+      ...cell,
+      grammarPoint: {
+        ...cell.grammarPoint,
+        selfRevealingElicitation: 'digit-form' as const,
+        elicitationSeedValues: ['birinci', 'ikinci', 'üçüncü', 'dördüncü'],
+      },
+    };
+    const seeds = await buildSeedWords(throwingDb, flagged, 3, 'seed-a', new Set());
+    expect(seeds).toHaveLength(3);
+    for (const s of seeds ?? []) {
+      expect(['birinci', 'ikinci', 'üçüncü', 'dördüncü']).toContain(s);
+    }
+    expect(new Set(seeds).size).toBe(3); // distinct values — the rotation axis
   });
 });
 

@@ -273,7 +273,11 @@ describe("buildGenerationSystemPrompt", () => {
     // ("predicate to use" from a curated pool, not "noun to inflect"), and the
     // renderConjugationSection `breakdown` rule now forbids model deliberation /
     // self-correction leaking into the learner-visible breakdown.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-06-30");
+    // Bumped 2026-07-08 — self-revealing digit-form directive: flagged
+    // numbers/ordinals cloze/translation cells now get a per-draft
+    // digit-only-presentation directive (pinned to the seeded target value
+    // when seeded) instead of the ordinary loose seed block.
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-08");
     // Tasks 7–9: pin the new guardrail phrases in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "every content word MUST be high-frequency everyday vocabulary at or below CEFR {{cefrLevel}}",
@@ -754,6 +758,47 @@ describe("buildGenerationUserPrompt", () => {
     expect(prompt).not.toContain("noun to inflect");
     expect(prompt).not.toContain("verb to conjugate");
     expect(prompt).not.toContain("choose a related content word"); // strict — no escape hatch
+  });
+});
+
+describe("buildGenerationUserPrompt — self-revealing digit-form directive", () => {
+  const flaggedInputs: GenerationPromptInputs = {
+    ...baseInputs,
+    grammarPoint: {
+      ...baseInputs.grammarPoint,
+      selfRevealingElicitation: "digit-form" as const,
+      elicitationSeedValues: ["tercero", "doscientas"],
+    },
+  };
+
+  it("pins the seeded target value and demands digit-only presentation (cloze)", () => {
+    const prompt = buildGenerationUserPrompt(flaggedInputs, 0, null, "tercero");
+    expect(prompt).toContain('The target form is "tercero"');
+    expect(prompt).toContain("digits");
+    // The generic loose-seed block must NOT also appear:
+    expect(prompt).not.toContain("Build this exercise around the word");
+  });
+
+  it("emits a generic digit-form directive when unseeded (CLI/eval path)", () => {
+    const prompt = buildGenerationUserPrompt(flaggedInputs, 0, null, null);
+    expect(prompt).toContain("digits");
+    expect(prompt).toContain("written form");
+  });
+
+  it("translation variant demands digits in the SOURCE text", () => {
+    const trInputs: GenerationPromptInputs = {
+      ...flaggedInputs,
+      exerciseType: ExerciseType.TRANSLATION,
+    };
+    const prompt = buildGenerationUserPrompt(trInputs, 0, null, "doscientas");
+    expect(prompt).toContain('The target form is "doscientas"');
+    expect(prompt).toContain("source");
+  });
+
+  it("unflagged cloze is byte-identical to before (loose seed block)", () => {
+    const prompt = buildGenerationUserPrompt(baseInputs, 0, null, "mesa");
+    expect(prompt).toContain('Build this exercise around the word "mesa"');
+    expect(prompt).not.toContain("target form");
   });
 });
 
