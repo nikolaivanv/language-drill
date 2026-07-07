@@ -2138,6 +2138,12 @@ const trCurriculum: readonly GrammarPoint[] = [
   // §25.4.1(iv) (aorist participle inside a relative clause).
   {
     key: 'tr-b2-participle-aorist',
+    // clozeUnsuitable: the aorist -Ar/-mAz adjectival participle is a
+    // semi-lexicalized set (akar su, çıkmaz sokak); a whole-word blank is
+    // under-constrained (which verb yields an -Ar/-mAz adjective here?) and
+    // risks testing the finite aorist tense instead (grammarPointMatch=false).
+    // Translation ("running water" → akar su) carries it.
+    clozeUnsuitable: true,
     kind: 'grammar',
     name: 'Aorist participle -Ar / -Ir / -mAz (adjectival)',
     description:
@@ -2477,15 +2483,14 @@ const trCurriculum: readonly GrammarPoint[] = [
   // the last suffix), §13.2.1.1 (double causative), §8.2.1 (allomorphy).
   {
     key: 'tr-b2-double-voice',
+    // No conjugation cell: combined voice is DERIVATIONAL suffix-stacking, not a
+    // person/tense paradigm. A conjugation drill fixes one inflectional category
+    // (§ renderConjugationSection) but can't pin WHICH voice combination
+    // (causative-of-causative vs causative+passive vs reciprocal+causative), so
+    // it is a category mismatch. The stacking rule is drilled by
+    // sentence_construction + translation instead (mirrors B1 passive-voice).
     clozeUnsuitable: true,
     sentenceConstructionSuitable: true,
-    conjugationSuitable: true,
-    coverageSpec: {
-      axes: [
-        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
-        { name: 'polarity', floors: { affirmative: 18, negative: 12 } },
-      ],
-    },
     kind: 'grammar',
     name: 'Combined voice (birleşik çatı)',
     description:

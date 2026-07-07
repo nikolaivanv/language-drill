@@ -450,7 +450,7 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
     ).toBeUndefined();
   });
 
-  it('the full TR clozeUnsuitable set is exactly these thirty-four points', () => {
+  it('the full TR clozeUnsuitable set is exactly these thirty-five points', () => {
     const flagged = trCurriculum
       .filter((g) => g.clozeUnsuitable === true)
       .map((g) => g.key)
@@ -477,6 +477,7 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
         'tr-b1-reciprocal-voice',
         'tr-b1-reflexive-voice-kendi',
         // B2 (clause-linking / bipartite / under-constrained blanks)
+        'tr-b2-participle-aorist',
         'tr-b2-converb-until',
         'tr-b2-temporal-when',
         'tr-b2-proportion-assoon',
