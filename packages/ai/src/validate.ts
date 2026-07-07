@@ -90,7 +90,7 @@ export const VALIDATION_TOOL: Anthropic.Tool = {
       contextSpoilsAnswer: {
         type: "boolean",
         description:
-          "True if the draft's `instructions` or `context` field gives away the answer — names the required suffix/form, states the rule's outcome, or otherwise lets the learner write the answer without engaging with the blank. Naming the rule category (e.g. 'vowel harmony', 'plural agreement after a numeral') is acceptable; stating the outcome (e.g. 'front vowel (e) requires -ler suffix' for a blank that takes -ler) is not. Auto-approval requires this to be false.",
+          "True if the draft's `instructions` or `context` field gives away the answer — names the required suffix/form, states the rule's outcome, or otherwise lets the learner write the answer without engaging with the blank. Naming the rule category (e.g. 'vowel harmony', 'plural agreement after a numeral') is acceptable; stating the outcome (e.g. 'front vowel (e) requires -ler suffix' for a blank that takes -ler) is not. Auto-approval requires this to be false. Exception: when the user prompt carries a scoring note declaring a digit-form or definition-based elicitation as intended for this cell, that declared cue is NOT spoilage.",
       },
       levelMatch: {
         type: "boolean",

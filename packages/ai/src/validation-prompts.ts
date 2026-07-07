@@ -70,7 +70,12 @@ function renderBulletList(items: readonly string[]): string {
 // the levelMatch dimension to judge against the curriculum scope (ground truth)
 // instead of the model's own sense of the level. Changes the registered
 // template — needs a Langfuse push per env.
-export const VALIDATION_PROMPT_VERSION = "validate@2026-06-19";
+// 2026-07-08: added the flag-gated self-revealing-target note (cloze +
+// translation) and the kind-gated vocab_recall note to the per-draft USER
+// prompt (not the cached VALIDATION_SYSTEM_PROMPT_TEMPLATE — that stays
+// byte-identical). Bumped so Langfuse cohorts new-vs-old validator traces;
+// no Langfuse push needed since the system template itself is unchanged.
+export const VALIDATION_PROMPT_VERSION = "validate@2026-07-08";
 
 export const VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language exercises for {{language}} learners at CEFR {{cefrLevel}}. Your job is to validate one already-generated exercise that targets the grammar point: {{grammarPointName}}.
 
@@ -218,6 +223,28 @@ function clozeCellScoringNote(grammarPointKey: string): string {
   return "";
 }
 
+// Self-revealing targets (numbers/ordinals — see
+// docs/findings/2026-07-07-self-revealing-target-elicitation.md): the target's
+// meaning cannot be conveyed without identifying it, so the digit-form cue is
+// the sanctioned elicitation. Gated on the curriculum flag (not a key list) so
+// future flagged points inherit it. Applies to cloze AND translation drafts.
+function selfRevealingScoringNote(spec: GenerationSpec): string {
+  if (spec.grammarPoint.selfRevealingElicitation !== "digit-form") return "";
+  return `
+
+**Scoring note for this self-revealing-target cell:** the target is a number/ordinal whose meaning CANNOT be conveyed without identifying it. A digit or numeral cue in the visible text (e.g. "3.º", "3.", "200", "123", digits in a translation source sentence) is the INTENDED elicitation for this cell — do NOT set contextSpoilsAnswer=true because digits identify which value the learner must write. The tested skill is producing the WRITTEN form with correct agreement/apocope/gender/harmony (tercer vs tercero, doscientas, üçüncü), which digits do not reveal. Still set contextSpoilsAnswer=true if the written word form itself appears anywhere in the visible text. Score all other dimensions normally; a clean digit-cued draft is 0.8+, not spoiled.`;
+}
+
+// vocab_recall's task IS meaning→word retrieval: a definition that picks out
+// exactly one headword is the exercise working as designed, not spoilage.
+// Spoilage for vocab is ORTHOGRAPHIC only. Gated on kind (all vocab cells).
+function vocabRecallScoringNote(spec: GenerationSpec): string {
+  if (spec.grammarPoint.kind !== "vocab") return "";
+  return `
+
+**Scoring note for vocab_recall:** the Prompt is a meaning-based definition whose JOB is to pick out exactly one headword — do NOT set contextSpoilsAnswer=true because the definition identifies the expected word, however precise the definition is. Set contextSpoilsAnswer=true ONLY for orthographic reveals: the expected word (in any inflection) appearing in the prompt, hints, or example sentence; first/last-letter or letter-count hints; partial spellings. A precise unambiguous definition with meaning-only hints is a GOOD exercise (0.8+), not a spoiled one.`;
+}
+
 function buildClozeValidationUserPrompt(
   content: ClozeContent,
   spec: GenerationSpec,
@@ -230,7 +257,7 @@ function buildClozeValidationUserPrompt(
 **Correct Answer:** ${content.correctAnswer}
 ${content.acceptableAnswers && content.acceptableAnswers.length > 0 ? `**Acceptable Answers (also accepted):** ${content.acceptableAnswers.join(", ")}` : "**Acceptable Answers (also accepted):** (none declared — `correctAnswer` must be the only plausible fill)"}
 ${content.options ? `**Options:** ${content.options.join(", ")}` : ""}
-${content.context ? `**Context:** ${content.context}` : ""}${clozeCellScoringNote(spec.grammarPoint.key)}
+${content.context ? `**Context:** ${content.context}` : ""}${clozeCellScoringNote(spec.grammarPoint.key)}${selfRevealingScoringNote(spec)}
 
 Score the dimensions in the system prompt and submit via the tool.`;
 }
@@ -245,7 +272,7 @@ function buildTranslationValidationUserPrompt(
 **Instructions:** ${content.instructions}
 **Source Text (${content.sourceLanguage}):** ${content.sourceText}
 **Target Language:** ${content.targetLanguage}
-**Reference Translation:** ${content.referenceTranslation}
+**Reference Translation:** ${content.referenceTranslation}${selfRevealingScoringNote(spec)}
 
 Score the dimensions in the system prompt and submit via the tool.`;
 }
@@ -261,7 +288,7 @@ function buildVocabRecallValidationUserPrompt(
 **Prompt:** ${content.prompt}
 **Expected Word:** ${content.expectedWord}
 **Hints:** ${content.hints.join("; ")}
-**Example Sentence:** ${content.exampleSentence}
+**Example Sentence:** ${content.exampleSentence}${vocabRecallScoringNote(spec)}
 
 Score the dimensions in the system prompt and submit via the tool.`;
 }

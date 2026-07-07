@@ -465,6 +465,75 @@ describe("buildValidationUserPrompt", () => {
 });
 
 // ---------------------------------------------------------------------------
+// self-revealing / vocab_recall scoring notes (Task 5)
+// ---------------------------------------------------------------------------
+
+describe("self-revealing / vocab_recall scoring notes", () => {
+  const flaggedSpec: GenerationSpec = {
+    ...baseSpec,
+    grammarPoint: {
+      ...baseSpec.grammarPoint,
+      selfRevealingElicitation: "digit-form" as const,
+      elicitationSeedValues: ["tercero"],
+    },
+  };
+
+  const clozeContent: ClozeContent = {
+    type: ExerciseType.CLOZE,
+    instructions: "Fill in the blank with the correct ordinal form.",
+    sentence: "Vivo en el 3.º piso.",
+    correctAnswer: "tercer",
+  };
+
+  const translationContent: TranslationContent = {
+    type: ExerciseType.TRANSLATION,
+    instructions: "Translate to Spanish.",
+    sourceText: "I live on the 3rd floor.",
+    sourceLanguage: Language.EN,
+    targetLanguage: Language.ES,
+    referenceTranslation: "Vivo en el tercer piso.",
+  };
+
+  const vocabRecallContent: VocabRecallContent = {
+    type: ExerciseType.VOCAB_RECALL,
+    instructions: "Provide the Spanish word.",
+    prompt: "The mood used after expressions of doubt or wish.",
+    expectedWord: "subjuntivo",
+    hints: ["Starts with 's'", "9 letters"],
+    exampleSentence: "El subjuntivo es importante.",
+  };
+
+  it("cloze prompt for a flagged cell carries the digit-form exemption", () => {
+    const prompt = buildValidationUserPrompt(makeDraft(clozeContent), flaggedSpec);
+    expect(prompt).toContain("self-revealing-target");
+    expect(prompt).toContain("do NOT set contextSpoilsAnswer=true");
+  });
+
+  it("translation prompt for a flagged cell carries the exemption", () => {
+    const prompt = buildValidationUserPrompt(
+      makeDraft(translationContent),
+      flaggedSpec,
+    );
+    expect(prompt).toContain("self-revealing-target");
+  });
+
+  it("unflagged cloze prompt is unchanged", () => {
+    const prompt = buildValidationUserPrompt(makeDraft(clozeContent), baseSpec);
+    expect(prompt).not.toContain("self-revealing-target");
+  });
+
+  it("vocab_recall prompt for a vocab-kind point carries the meaning-vs-orthography note", () => {
+    const vocabSpec: GenerationSpec = {
+      ...baseSpec,
+      grammarPoint: { ...baseSpec.grammarPoint, kind: "vocab" as const },
+    };
+    const prompt = buildValidationUserPrompt(makeDraft(vocabRecallContent), vocabSpec);
+    expect(prompt).toContain("Scoring note for vocab_recall");
+    expect(prompt).toContain("orthographic");
+  });
+});
+
+// ---------------------------------------------------------------------------
 // buildValidationUserPrompt — coverage directive (Task 3)
 // ---------------------------------------------------------------------------
 
