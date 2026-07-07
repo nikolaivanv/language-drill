@@ -461,7 +461,18 @@ async function fetchPriorNounSeeds(
  */
 export function seedKindFor(
   cell: Cell,
-): 'frequency' | 'verb' | 'noun' | 'predicate-nominal' | null {
+): 'frequency' | 'verb' | 'noun' | 'predicate-nominal' | 'elicitation-values' | null {
+  if (
+    (cell.exerciseType === ExerciseType.CLOZE ||
+      cell.exerciseType === ExerciseType.TRANSLATION) &&
+    cell.grammarPoint.selfRevealingElicitation
+  ) {
+    // Self-revealing point (numbers/ordinals): rotate over the curated
+    // target-form pool instead of the frequency band — the target form IS the
+    // diversity axis. Frequency seeding let the model collapse onto one value
+    // ('üçüncü' in 18/20 approved TR translations).
+    return 'elicitation-values';
+  }
   if (
     cell.exerciseType === ExerciseType.CLOZE ||
     cell.exerciseType === ExerciseType.TRANSLATION ||
@@ -517,6 +528,16 @@ export async function buildSeedWords(
     // pool's distinct-identity space exhausts. Band is CUMULATIVE from rank 1 so
     // an A1 cell still has a wide noun inventory to vary over.
     const band = await loadNounBand(db, cell.language, 1, window.rankMax);
+    return pickSeeds({ band, batchSeed, count, exclude: priorSeeds });
+  }
+
+  if (kind === 'elicitation-values') {
+    // Self-revealing target: seed each ordinal with a distinct target written
+    // form from the curated curriculum pool (mirrors the predicate-nominal
+    // curated pool). Bounded: once the live pool covers it, pickSeeds returns
+    // nulls and the cell stops — pools are sized in the curriculum to exceed
+    // the cell target.
+    const band = cell.grammarPoint.elicitationSeedValues ?? [];
     return pickSeeds({ band, batchSeed, count, exclude: priorSeeds });
   }
 
