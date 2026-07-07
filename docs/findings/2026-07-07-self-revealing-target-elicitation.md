@@ -1,7 +1,7 @@
 # Finding: self-revealing targets (numbers, ordinals, concrete vocab) can't survive the spoilage veto — and collapse onto one exemplar
 
 **Date:** 2026-07-07 (ES `2026-07-07` curriculum initial-fill run; TR confirmed same day)
-**Status:** OPEN — fix planned next (generate↔validate contract change, both prompts together)
+**Status:** FIX IMPLEMENTED (branch worktree-self-revealing-elicitation) — eval:gen + prod re-fill pending
 **Surfaced by:** ES A1–B2 run analysis — `es:a1:cloze:es-a1-numbers-ordinals` approved 1/20 (5%); user then flagged TR A1 "far too many üçüncü", confirmed in prod
 
 ## Problem

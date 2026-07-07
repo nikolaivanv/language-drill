@@ -341,12 +341,15 @@ export async function fetchPriorFreeWritingTitles(
 }
 
 /**
- * Pulls the frequency seeds already anchored in this cell's live pool (R5.3),
- * read from the writer-only `content_json.seedWord` field that
- * `validateAndInsertWithRetry` persisted (task 14). Scoped to the same cell +
- * review-status set as the dedup index, so the returned set is exactly the
- * lemmas a fresh batch should avoid re-proposing. Returns lemmas (deduped by
- * the caller's `Set`); empty when nothing in the cell carries a seed.
+ * Pulls the frequency (or curated elicitation-values) seeds already anchored
+ * in this cell's live pool (R5.3), read from the writer-only
+ * `content_json.seedWord` field that `validateAndInsertWithRetry` persisted
+ * (task 14). Scoped to the same cell + review-status set as the dedup index,
+ * so the returned set is exactly the values a fresh batch should avoid
+ * re-proposing. Shared by `seedKind: 'frequency'` and `seedKind:
+ * 'elicitation-values'` cells — both persist the seed under the same field,
+ * so one query serves both. Returns values (deduped by the caller's `Set`);
+ * empty when nothing in the cell carries a seed.
  */
 async function fetchPriorSeeds(
   db: Db,
@@ -716,8 +719,16 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     // needless query.
     const seedKind = seedKindFor(cell);
     const priorSeeds: ReadonlySet<string> =
-      seedKind === 'frequency'
-        ? new Set(await fetchPriorSeeds(db, cell))
+      seedKind === 'frequency' || seedKind === 'elicitation-values'
+        ? // Both the frequency band and the curated elicitation-values pool key
+          // the live-pool exclude on the bare `content_json.seedWord`
+          // (validate-and-insert.ts persists it identically for both), so they
+          // share `fetchPriorSeeds`. Without this, a re-run of a below-target
+          // flagged cell never sees its own live pool and keeps re-picking
+          // values already anchored — the bounded-pool termination
+          // (`pickSeeds` returning nulls once the pool is covered) never
+          // engages.
+          new Set(await fetchPriorSeeds(db, cell))
         : // Both noun and predicate-nominal cells key the live-pool exclude on the
           // bare lemma/seedWord (the noun/predicate is the diversity axis), so they
           // share `fetchPriorNounSeeds`.
