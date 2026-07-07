@@ -16,6 +16,7 @@ import {
   compatibleTypes,
 } from '@language-drill/db';
 import { db } from '../db';
+import { approvedStatusFilter, audioReadyFilter } from '../lib/exercise-filters';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
 import {
@@ -269,6 +270,73 @@ progress.get('/progress/curriculum', async (c) => {
     now,
   });
   return c.json({ language, ...result });
+});
+
+// ---------------------------------------------------------------------------
+// GET /progress/points/:key — targeted-drill facts for ONE grammar point,
+// regardless of the user's active level. Consumed by the theory detail page's
+// "drill this point" block. `exerciseCounts` applies the exact same filters as
+// POST /sessions' pool pull (approved + audio-ready + the point's OWN level),
+// so a mode rendered from these counts can never 422 with
+// INSUFFICIENT_EXERCISES on launch.
+// ---------------------------------------------------------------------------
+progress.get('/progress/points/:key', async (c) => {
+  const key = c.req.param('key');
+  const point = getGrammarPoint(key);
+  if (!point) {
+    return c.json({ error: 'Unknown grammar point', code: 'NOT_FOUND' }, 404);
+  }
+  const userId = c.get('userId');
+
+  const [countRows, masteryRows] = await Promise.all([
+    db
+      .select({ type: exercises.type, n: sql<number>`count(*)::int` })
+      .from(exercises)
+      .where(
+        and(
+          eq(exercises.language, point.language),
+          eq(exercises.difficulty, point.cefrLevel),
+          eq(exercises.grammarPointKey, key),
+          approvedStatusFilter(exercises),
+          audioReadyFilter(exercises),
+        ),
+      )
+      .groupBy(exercises.type),
+    db
+      .select({
+        masteryScore: userGrammarMastery.masteryScore,
+        confidence: userGrammarMastery.confidence,
+        evidenceCount: userGrammarMastery.evidenceCount,
+        lastPracticedAt: userGrammarMastery.lastPracticedAt,
+      })
+      .from(userGrammarMastery)
+      .where(
+        and(
+          eq(userGrammarMastery.userId, userId),
+          eq(userGrammarMastery.grammarPointKey, key),
+        ),
+      )
+      .limit(1),
+  ]);
+
+  const exerciseCounts: Record<string, number> = {};
+  for (const r of countRows) {
+    if (r.type) exerciseCounts[r.type] = Number(r.n);
+  }
+
+  const m = masteryRows[0];
+  return c.json({
+    grammarPointKey: key,
+    exerciseCounts,
+    mastery: m
+      ? {
+          masteryScore: m.masteryScore,
+          confidence: m.confidence,
+          evidenceCount: m.evidenceCount,
+          lastPracticedAt: m.lastPracticedAt,
+        }
+      : null,
+  });
 });
 
 export default progress;
