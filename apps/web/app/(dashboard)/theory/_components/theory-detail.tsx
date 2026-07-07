@@ -21,6 +21,8 @@ import {
   TheoryBrowseAllButton,
   TopicSwitcherSheet,
 } from '../../../../components/theory/topic-switcher-sheet';
+import { grammarPointKeyForTopicId } from '../../../../lib/theory-topic-map';
+import { DrillThisPoint } from './drill-this-point';
 
 type TheoryDetailProps = {
   topicId: string;
@@ -75,6 +77,10 @@ export function TheoryDetail({ topicId, language, fetchFn }: TheoryDetailProps) 
   const sectionIds = topic ? topic.sections.map((s) => s.id) : [];
   // Hook called unconditionally (empty ids until the topic loads).
   const activeSectionId = useScrollSpy(sectionIds, scrollRef);
+
+  // Targeted-drill key for the loaded topic. Derived from the LOADED topic's
+  // id (not the route param) so the block always matches the article shown.
+  const drillKey = topic ? grammarPointKeyForTopicId(topic.id, language) : null;
 
   const handleJump = useCallback((id: string) => {
     const root = scrollRef.current;
@@ -146,6 +152,9 @@ export function TheoryDetail({ topicId, language, fetchFn }: TheoryDetailProps) 
               language={language}
               onSwitchTopic={goToTopic}
             />
+            {drillKey && (
+              <DrillThisPoint grammarPointKey={drillKey} fetchFn={fetchFn} />
+            )}
             {isMobile && (
               <TheoryBrowseAllButton
                 count={allTopics.length}
