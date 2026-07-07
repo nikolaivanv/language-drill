@@ -133,8 +133,13 @@ const { A1, A2, B1 } = CefrLevel;
  * suppression so below-target TR cells re-run; the collapsed numbers-ordinals
  * rows must ALSO be demoted (pnpm demote:pool) or the cells stay at target
  * and never regenerate.
+ * 2026-07-10: G&K reverse-audit fills — 5 A2 + 2 B1 core gaps found missing vs
+ * Göksel & Kerslake: spatial relational postpositions (evin önünde), nominal
+ * past/evidential copula (hastaydım), focus clitics dA/bile, -lI/-sIz, enumerator
+ * tane; suppletive ol-, olarak. Bump enumerates the new cells + clears
+ * suppression. See docs/superpowers/specs/2026-07-10-tr-audit-gap-fills-design.md.
  */
-export const CURRICULUM_VERSION_TR = '2026-07-08';
+export const CURRICULUM_VERSION_TR = '2026-07-10';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -1747,6 +1752,149 @@ const trCurriculum: readonly GrammarPoint[] = [
     // cloze/translation cells instead.
   },
 
+  // ---------------------------------------------------------------------------
+  // A2 — G&K reverse-audit fills (2026-07-10). Core A1–B2 constructions found
+  // missing in the all-chapters Göksel & Kerslake sweep. See
+  // docs/superpowers/specs/2026-07-10-tr-audit-gap-fills-design.md.
+  // ---------------------------------------------------------------------------
+
+  // G&K §17.3.1 (Group-1 relational-noun postpositions), §17.3.1.1 (genitive
+  // complement), §17.3.1.3 (üst-/yan-/ara- notes; the -n- buffer before case).
+  {
+    key: 'tr-a2-spatial-postpositions',
+    kind: 'grammar',
+    name: 'Spatial postpositions (evin önünde, masanın üstünde)',
+    description:
+      'Relational nouns ön/arka/üst/alt/iç/yan/ara/karşı in a genitive-possessive frame + a case set by meaning: location -DA (masanın üstünde), motion-to -(y)A (yanıma), motion-from -DAn (altından). A pronominal -n- buffers the 3sg possessive before case (önü-n-de).',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: [
+      'Dolabın arkasında bir şey var mı? (Is there anything behind the cupboard?)',
+      'Küçük kız yanıma geldi. (The little girl came over to me — motion-to, dative -(y)A.)',
+      'Kanepenin altından bir fare çıktı. (A mouse ran out from under the sofa — ablative -DAn.)',
+      'Kalemi kitabın üstüne koy. (Put the pen on top of the book — motion-to, üstüne.)',
+    ],
+    examplesNegative: [
+      '*ev önünde (wrong — the complement takes the genitive: evin önünde)',
+      '*masanın üstünde koy (wrong case — putting something onto needs the dative: masanın üstüne koy)',
+    ],
+    commonErrors: [
+      'Omitting the genitive on the complement (ev önünde → evin önünde).',
+      'Dropping the -n- buffer / possessive on the relational noun (masanın üstde → üstünde).',
+      'Using the locative where motion needs the dative/ablative (üstünde koy → üstüne koy).',
+    ],
+    prerequisiteKeys: ['tr-a1-genitive-possessive', 'tr-a1-ablative-dative'],
+  },
+  // G&K §8.3.2 (copular -(y)DI / -(y)mIş), §8.4 (group-1 person markers),
+  // §21.3.4.1 (nominal past vardı/yoktu vs oldu).
+  {
+    key: 'tr-a2-past-copula',
+    coverageSpec: {
+      axes: [{ name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } }],
+    },
+    kind: 'grammar',
+    name: 'Past & evidential copula on nominals (-(y)DI / -(y)mIş)',
+    description:
+      'The past of "to be" on non-verbal predicates: -(y)DI (hastaydım, evdeydik, güzeldi) with group-1 endings and a -y- buffer after a vowel; past existence vardı/yoktu; evidential -(y)mIş (hastaymış) with group-2 endings. Not the verbal -DI past.',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: [
+      'Dün çok hastaydım. (I was very ill yesterday.)',
+      'Biz o zaman öğrenciydik. (We were students back then.)',
+      'Eskiden burada bir lokanta vardı. (There used to be a restaurant here — past existence.)',
+      'Yorgunmuş, o yüzden gelmemiş. (She was apparently tired, so she didn\'t come — evidential -(y)mIş.)',
+    ],
+    examplesNegative: [
+      '*hastadım (wrong — a nominal predicate needs the copula with a -y- buffer after the vowel: hastaydım)',
+      '*hastaydıyım (wrong — -(y)DI takes group-1 endings: hastaydım, not group-2 -yIm)',
+    ],
+    commonErrors: [
+      'Attaching the verbal past -DI directly to a nominal (hastadım → hastaydım).',
+      'Mixing person-marker groups after -(y)DI (hastaydıyım → hastaydım).',
+      'Forgetting the -y- buffer after a vowel (hastadı → hastaydı).',
+    ],
+    prerequisiteKeys: ['tr-a1-personal-suffixes', 'tr-a1-var-yok'],
+  },
+  // G&K §11.1.1.2 (additive dA), §11.1.1.1 (bile), §28.3.2 (X dA Y dA).
+  {
+    key: 'tr-a2-clitics-da-bile',
+    clozeUnsuitable: true,
+    kind: 'grammar',
+    name: 'Focus clitics dA "too/also" & bile "even"',
+    description:
+      'Second-position focus clitics: dA "too/also" (a separate word, 2-way de/da, never devoiced — ben de geliyorum; enumerating X dA Y dA "both…and"), and invariable bile "even/already" (çocuklar bile biliyor; gördüm bile). Distinct from the locative suffix -DA.',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: [
+      'Ben de geliyorum. (I\'m coming too.)',
+      'Ayşe de Semra da geldi. (Both Ayşe and Semra came.)',
+      'Çocuklar bile biliyor. (Even the children know.)',
+      'O filmi gördüm bile. (I\'ve already seen that film — post-verbal bile.)',
+    ],
+    examplesNegative: [
+      '*evde [meaning "the house too"] (wrong — the additive is a separate word: ev de; evde is the locative "at the house")',
+      '*De ben geliyorum (wrong placement — dA follows the focused word: Ben de geliyorum)',
+    ],
+    commonErrors: [
+      'Confusing the additive clitic dA (separate word, de/da) with the locative suffix -DA (attached, 4-way, devoiced -ta/-te).',
+      'Placing dA/bile before the focused word or clause-finally regardless of focus.',
+      'Harmonising or attaching bile (bila / çocuklarbile) — it is an invariable separate word.',
+    ],
+    prerequisiteKeys: ['tr-a1-locative'],
+  },
+  // G&K §7.2.2.2 (-lI "with/having", -sIz "without").
+  {
+    key: 'tr-a2-with-without-li-siz',
+    clozeUnsuitable: true,
+    kind: 'grammar',
+    name: 'Adjective suffixes -lI "with" / -sIz "without"',
+    description:
+      'Productive adjective-forming suffixes with 4-way harmony: -lI "with/having/characterized by" (şekerli, tuzlu, evli, dikkatli) and its antonym -sIz "without/lacking" (şekersiz, işsiz, sensiz, arabasız). Stem-final devoicing still applies (kitap → kitaplı).',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: [
+      'Şekerli çay içiyorum. (I\'m drinking sugared tea.)',
+      'Ben kahveyi şekersiz severim. (I like my coffee without sugar.)',
+      'Amcam iki yıldır işsiz. (My uncle has been unemployed for two years.)',
+      'Sensiz çok sıkıldım. (I got very bored without you.)',
+    ],
+    examplesNegative: [
+      '*şekerlı (wrong — -lI is 4-way; after e it is -li: şekerli)',
+      '*şeker değil kahve [for "coffee without sugar"] (wrong — "without" is the privative -sIz: şekersiz kahve)',
+    ],
+    commonErrors: [
+      'Using 2-way instead of 4-way harmony (tuzli / sütsuz → tuzlu / sütsüz).',
+      'Expressing "without" with değil/yok instead of the privative -sIz (şeker değil → şekersiz).',
+      'Confusing descriptive -lI/-sIz ("with/without") with adverbial -CA.',
+    ],
+    prerequisiteKeys: ['tr-a1-vowel-harmony'],
+  },
+  // G&K §15.8 (the enumerator tane and measure/type terms).
+  {
+    key: 'tr-a2-enumerator-tane',
+    kind: 'grammar',
+    name: 'Enumerator tane (üç tane elma)',
+    description:
+      'The general counter tane for discrete non-human nouns, between a numeral (or kaç) and the noun: üç tane elma, kaç tane?, on tane tabak. The counted noun stays singular (no -lAr). Optional (yedi tane iskemle ~ yedi iskemle); combines with distributives (ikişer tane).',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: [
+      'Marketten üç tane elma aldım. (I bought three apples from the shop.)',
+      'Kaç tane kitap istiyorsun? (How many books do you want?)',
+      'Masada on tane tabak var. (There are ten plates on the table.)',
+    ],
+    examplesNegative: [
+      '*üç tane elmalar (wrong — a noun after a numeral stays singular: üç tane elma)',
+      '*tane üç elma (wrong order — numeral + tane + noun: üç tane elma)',
+    ],
+    commonErrors: [
+      'Pluralising the counted noun (beş tane kitaplar → beş tane kitap).',
+      'Using tane with human nouns where kişi is natural (üç tane öğretmen → üç öğretmen / üç kişi).',
+      'Wrong order (tane üç elma → üç tane elma).',
+    ],
+    prerequisiteKeys: ['tr-a1-numbers-ordinals'],
+  },
+
 
   // ===========================================================================
   // B1 — authored fresh from Yedi İklim B1, grounded in Göksel & Kerslake.
@@ -2122,6 +2270,66 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Forgetting the genitive on the relative-clause subject (benim okuduğum).',
     ],
     prerequisiteKeys: ['tr-a2-relative-an'],
+  },
+
+  // ---------------------------------------------------------------------------
+  // B1 — G&K reverse-audit fills (2026-07-10).
+  // ---------------------------------------------------------------------------
+
+  // G&K §12.1.1.3 (ol- supplies the copula outside present/past), §13.3
+  // (auxiliary verbs), §21.3.4.1 ("become" oldu vs stative -(y)DI).
+  {
+    key: 'tr-b1-copula-ol',
+    clozeUnsuitable: true,
+    sentenceConstructionSuitable: true,
+    kind: 'grammar',
+    name: 'Suppletive copula ol- (be / become)',
+    description:
+      'ol- supplies the copula for every tense the -(y)- copula lacks: future (öğretmen olacağım), necessity (evde olmalıyım), conditional (zengin olsam), aorist/habitual (olur/oluyor), non-finite (olan, olarak). Dynamic oldu/olmuş = "became/got" vs stative -(y)DI "was".',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Büyüyünce doktor olacağım. (When I grow up I will be a doctor — future.)',
+      'Yarın sabah burada olmalıyım. (I must be here tomorrow morning — necessity.)',
+      "Ahmet 1994'te başkan oldu. (Ahmet became president in 1994 — dynamic \"become\".)",
+      'Bir arabamız olsa her yere giderdik. (If we had a car we\'d go everywhere — existential ol-.)',
+    ],
+    examplesNegative: [
+      '*öğretmeneceğim (wrong — a nominal predicate needs ol- to carry the future: öğretmen olacağım)',
+      '*evdemeliyim (wrong — -mAlI attaches to ol-, not the noun: evde olmalıyım)',
+    ],
+    commonErrors: [
+      'Attaching verbal tense/mood directly to a noun or locative (öğretmeneceğim → öğretmen olacağım).',
+      'Stacking -mAlI on the predicate instead of on ol- (evdemeliyim → evde olmalıyım).',
+      'Confusing stative "was" (-(y)DI: başkanıydı) with dynamic "became" (oldu: başkan oldu).',
+    ],
+    prerequisiteKeys: ['tr-a1-personal-suffixes', 'tr-a1-future', 'tr-a2-ability-necessity'],
+  },
+  // G&K §16.1.9 (olarak: role/capacity + adverbialiser of derived adjectives).
+  {
+    key: 'tr-b1-olarak',
+    kind: 'grammar',
+    name: 'olarak "as / in the capacity of"',
+    description:
+      'olarak (ol- + -ArAk) marks a role/capacity after a bare noun (avukat olarak çalışıyor "works as a lawyer"; aile olarak) and adverbialises derived adjectives that can\'t stand alone as adverbs (yazılı olarak "in writing", bilimsel olarak, geçici olarak). The complement takes no case.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Bunu sana arkadaş olarak söylüyorum. (I\'m telling you this as a friend.)',
+      'Bu sandığı masa olarak kullanıyoruz. (We\'re using this chest as a table.)',
+      'Raporu yazılı olarak sundular. (They submitted the report in writing.)',
+      'Sonuç olarak herkes memnun kaldı. (As a result, everyone was satisfied.)',
+    ],
+    examplesNegative: [
+      '*avukat gibi çalışıyor [for "works as a lawyer"] (wrong — gibi = "like/resembling"; a role/capacity is olarak: avukat olarak)',
+      '*avukatı olarak (wrong — olarak takes a bare noun, no case: avukat olarak)',
+    ],
+    commonErrors: [
+      'Using gibi/kadar (similarity) for a role/capacity that needs olarak.',
+      'Case-marking the complement of olarak (avukatı olarak → avukat olarak).',
+      'Dropping olarak where a derived adjective needs it to be an adverb (bilimsel anlattı → bilimsel olarak anlattı).',
+    ],
+    prerequisiteKeys: ['tr-a2-gibi-kadar', 'tr-a1-gore-bence'],
   },
 
   // ---------------------------------------------------------------------------
