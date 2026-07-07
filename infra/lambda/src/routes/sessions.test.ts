@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Hono } from 'hono';
-import { CreateSessionRequestSchema, levelsAtOrBelow } from './sessions';
+import { CreateSessionRequestSchema, levelsAtOrBelow, resolveSessionDifficulty } from './sessions';
 import { CefrLevel, Language } from '@language-drill/shared';
 import { isFreeWritingDay, FREE_WRITING_CADENCE_DAYS } from '../lib/today-plan';
 
@@ -70,6 +70,11 @@ const mockUpdateWhere = vi.fn((_cond?: unknown) => ({ returning: mockUpdateRetur
 const mockSet = vi.fn((_payload?: unknown) => ({ where: mockUpdateWhere }));
 const mockUpdate = vi.fn((_table?: unknown) => ({ set: mockSet }));
 
+// Default: unknown key (prereqsOf yields [], no difficulty derivation). Tests
+// stub curriculum hits via mockImplementationOnce — the Once form only, so
+// nothing bleeds past vi.clearAllMocks() into later tests.
+const mockGetGrammarPoint = vi.fn((_key: string): unknown => undefined);
+
 vi.mock('../db', () => ({
   db: {
     select: () => mockSelect(),
@@ -134,9 +139,7 @@ vi.mock('@language-drill/db', () => ({
     language: 'language',
     startedAt: 'started_at',
   },
-  // getGrammarPoint is a pure in-memory function — return undefined for unknown
-  // keys so prereqsOf yields [] and the prereq penalty doesn't fire in tests.
-  getGrammarPoint: (_key: string) => undefined,
+  getGrammarPoint: (key: string) => mockGetGrammarPoint(key),
 }));
 
 // Mock the review-status filter so we can count calls per route. The
@@ -215,6 +218,25 @@ describe('levelsAtOrBelow', () => {
     expect(levelsAtOrBelow(CefrLevel.C2)).toEqual([
       CefrLevel.A1, CefrLevel.A2, CefrLevel.B1, CefrLevel.B2, CefrLevel.C1, CefrLevel.C2,
     ]);
+  });
+});
+
+describe('resolveSessionDifficulty', () => {
+  it('returns the requested difficulty when no grammarPointKey is given', () => {
+    expect(resolveSessionDifficulty(CefrLevel.B1, undefined)).toBe(CefrLevel.B1);
+  });
+
+  it('returns the requested difficulty for a key not in the curriculum', () => {
+    // mockGetGrammarPoint default → undefined
+    expect(resolveSessionDifficulty(CefrLevel.B1, 'es-zz-not-real')).toBe(CefrLevel.B1);
+  });
+
+  it("returns the point's own level for a curriculum key", () => {
+    mockGetGrammarPoint.mockImplementationOnce(() => ({
+      key: 'es-a2-ser-vs-estar',
+      cefrLevel: CefrLevel.A2,
+    }));
+    expect(resolveSessionDifficulty(CefrLevel.B1, 'es-a2-ser-vs-estar')).toBe(CefrLevel.A2);
   });
 });
 
@@ -660,6 +682,94 @@ describe('POST /sessions', () => {
     // via the approvedStatusFilter helper in baseWhere — the canary for the
     // untargeted path moved to the UNION-ALL inline predicate.
     expect(mockApprovedStatusFilter).toHaveBeenCalled();
+  });
+
+  function targetedRow(id: string, difficulty: string) {
+    return {
+      id,
+      type: 'cloze',
+      language: 'ES',
+      difficulty,
+      grammarPointKey: 'es-a2-ser-vs-estar',
+      contentJson: { sentence: `___ ${id}`, options: ['a', 'b'] },
+      audioS3Key: null,
+      createdAt: new Date(),
+    };
+  }
+
+  it('targeted: derives the session difficulty from the grammar-point key (B1 request → A2 session)', async () => {
+    // resolveSessionDifficulty is the FIRST getGrammarPoint call in the request;
+    // later prereqsOf calls fall through to the undefined default.
+    mockGetGrammarPoint.mockImplementationOnce(() => ({
+      key: 'es-a2-ser-vs-estar',
+      cefrLevel: 'A2',
+      prerequisiteKeys: [],
+    }));
+    // buildRankContext: mastery + errors → empty
+    mockSelectAwait.mockResolvedValueOnce([]);
+    mockSelectAwait.mockResolvedValueOnce([]);
+    // Targeted over-fetch satisfies the request outright (5 ≥ exerciseCount) → no top-up pull.
+    mockLimit.mockResolvedValueOnce(
+      ['t1', 't2', 't3', 't4', 't5'].map((id) => targetedRow(id, 'A2')),
+    );
+    mockReturning.mockResolvedValueOnce([{ id: 'session-uuid-targeted' }]);
+
+    const res = await app.request(
+      '/sessions',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          language: 'ES',
+          difficulty: 'B1',
+          exerciseCount: 5,
+          grammarPointKey: 'es-a2-ser-vs-estar',
+        }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.id).toBe('session-uuid-targeted');
+    // The response reports the difficulty the session was ACTUALLY created at.
+    expect(body.difficulty).toBe('A2');
+    // The persisted session row stores the derived difficulty, not the request's B1.
+    expect(mockValues).toHaveBeenCalledWith(
+      expect.objectContaining({ difficulty: 'A2' }),
+    );
+  });
+
+  it('targeted: keeps the requested difficulty when the key is not in the curriculum', async () => {
+    // mockGetGrammarPoint default → undefined (no curriculum hit)
+    mockSelectAwait.mockResolvedValueOnce([]);
+    mockSelectAwait.mockResolvedValueOnce([]);
+    mockLimit.mockResolvedValueOnce(
+      ['t1', 't2', 't3', 't4', 't5'].map((id) => targetedRow(id, 'B1')),
+    );
+    mockReturning.mockResolvedValueOnce([{ id: 'session-uuid-passthrough' }]);
+
+    const res = await app.request(
+      '/sessions',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          language: 'ES',
+          difficulty: 'B1',
+          exerciseCount: 5,
+          grammarPointKey: 'es-a2-ser-vs-estar',
+        }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.difficulty).toBe('B1');
+    expect(mockValues).toHaveBeenCalledWith(
+      expect.objectContaining({ difficulty: 'B1' }),
+    );
   });
 });
 

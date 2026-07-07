@@ -61,6 +61,22 @@ export const CreateSessionRequestSchema = z.object({
   grammarPointKey: z.string().min(1).optional(),
 });
 
+/**
+ * Effective difficulty for a session. A targeted drill must filter the pool at
+ * the grammar point's OWN CEFR level (the key encodes it: `es-a2-…` → A2) —
+ * the client sends the profile level, which can differ when the drill is
+ * launched from a cross-level surface (theory detail page, /progress
+ * next-level preview). Unknown keys keep the requested difficulty, so a stale
+ * or malformed key degrades to today's behavior instead of a new 4xx.
+ */
+export function resolveSessionDifficulty(
+  requested: CefrLevel,
+  grammarPointKey: string | undefined,
+): CefrLevel {
+  if (!grammarPointKey) return requested;
+  return getGrammarPoint(grammarPointKey)?.cefrLevel ?? requested;
+}
+
 // ---------------------------------------------------------------------------
 // Router
 // ---------------------------------------------------------------------------
@@ -88,7 +104,8 @@ sessions.post('/sessions', async (c) => {
     );
   }
 
-  const { language, difficulty, exerciseCount, exerciseType, grammarPointKey } = bodyResult.data;
+  const { language, exerciseCount, exerciseType, grammarPointKey } = bodyResult.data;
+  const difficulty = resolveSessionDifficulty(bodyResult.data.difficulty, grammarPointKey);
   const userId = c.get('userId');
   const now = new Date();
 
@@ -303,7 +320,7 @@ async function insertSessionAndBuildManifest(params: {
     })),
   );
 
-  return { id: inserted[0].id, exercises };
+  return { id: inserted[0].id, difficulty, exercises };
 }
 
 // ---------------------------------------------------------------------------
