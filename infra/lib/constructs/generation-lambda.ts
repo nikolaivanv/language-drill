@@ -35,12 +35,20 @@ export interface GenerationLambdaConstructProps {
   additionalEnv?: Record<string, string>;
   /** SNS topic for the Lambda-errors alarm action. */
   readonly alarmTopic?: sns.ITopic;
+  /**
+   * Daily Anthropic-spend alarm threshold in USD. Fires when the summed
+   * `CellCostUsd` metric over a day crosses this. Defaults to 50 — headroom
+   * over a full 60-cell run (~$38 at the recent ~$0.63/cell) while still
+   * catching a runaway fan-out.
+   */
+  readonly dailyCostAlarmUsd?: number;
 }
 
 export class GenerationLambdaConstruct extends Construct {
   public readonly handler: lambda.NodejsFunction;
   public readonly errorsAlarm: cloudwatch.Alarm;
   public readonly cellFailuresAlarm: cloudwatch.Alarm;
+  public readonly dailyCostAlarm: cloudwatch.Alarm;
 
   constructor(
     scope: Construct,
@@ -188,10 +196,42 @@ export class GenerationLambdaConstruct extends Construct {
       },
     );
 
+    // Anthropic daily-spend alarm: sums the per-cell `CellCostUsd` metric the
+    // handler emits over a day and fires when total generation spend crosses
+    // the threshold. Closes the "Anthropic spend is invisible" gap that let the
+    // 2026-07-07 $117 overspend fire zero alerts (AWS Budgets / Cost Anomaly
+    // Detection see AWS spend only; every one of that run's cells SUCCEEDED, so
+    // neither the Errors nor the CellFailures alarm fired). Same env dimension
+    // as CellFailuresAlarm — a mismatch would silently watch nothing.
+    this.dailyCostAlarm = new cloudwatch.Alarm(
+      this,
+      'GenerationDailyCostAlarm',
+      {
+        metric: new cloudwatch.Metric({
+          namespace: 'LanguageDrill/Generation',
+          metricName: 'CellCostUsd',
+          dimensionsMap: { env: langfuseEnv },
+          period: Duration.days(1),
+          statistic: cloudwatch.Stats.SUM,
+        }),
+        threshold: props.dailyCostAlarmUsd ?? 50,
+        evaluationPeriods: 1,
+        comparisonOperator:
+          cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        alarmDescription:
+          'Phase 4 (exercise gen): estimated Anthropic spend across all cells ' +
+          'in one day exceeded the daily cost threshold (default $50). Catches ' +
+          'a runaway fan-out that the CellFailures alarm misses because the ' +
+          'cells all succeed.',
+      },
+    );
+
     if (props.alarmTopic) {
       const snsAction = new cwactions.SnsAction(props.alarmTopic);
       this.errorsAlarm.addAlarmAction(snsAction);
       this.cellFailuresAlarm.addAlarmAction(snsAction);
+      this.dailyCostAlarm.addAlarmAction(snsAction);
     }
   }
 }
