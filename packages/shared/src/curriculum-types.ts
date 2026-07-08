@@ -145,8 +145,17 @@ export type GrammarPoint = Readonly<{
    * validation appends a scoring note exempting the digit cue from
    * contextSpoilsAnswer. See
    * docs/findings/2026-07-07-self-revealing-target-elicitation.md.
+   *
+   * 'base-word-cue' is the same disease for DERIVED forms (appreciative
+   * suffixes: es-b2-appreciative-suffixes cloze approved 4/41 on 2026-07-08,
+   * 23 context-spoils-answer rejects): the target cannot be elicited without
+   * identifying its base word. The sanctioned elicitation is a parenthetical
+   * BASE-word cue ("(silla)" for answer "sillita") — the tested skill
+   * (choosing the suffix from the context's nuance and forming it with the
+   * right allomorph/gender) is not revealed by the base word. The derived
+   * form itself must never appear in the visible text.
    */
-  selfRevealingElicitation?: 'digit-form';
+  selfRevealingElicitation?: 'digit-form' | 'base-word-cue';
   /**
    * Curated rotation pool of target written forms for a self-revealing point
    * (e.g. 'tercero', 'doscientas', 'üçüncü', 'yüz yirmi üç'). Drives per-draft

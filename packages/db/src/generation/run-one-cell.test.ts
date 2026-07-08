@@ -390,6 +390,21 @@ describe('seedKindFor', () => {
   it('still returns frequency for unflagged cloze', () => {
     expect(seedKindFor(cellOf(ExerciseType.CLOZE))).toBe('frequency');
   });
+
+  it('returns elicitation-values for a base-word-cue cloze cell (variant-agnostic gate)', () => {
+    // The gate keys on the flag's truthiness, not its value — every
+    // selfRevealingElicitation variant seeds from the curated pool.
+    const cell = cellOf(ExerciseType.CLOZE);
+    const flagged: Cell = {
+      ...cell,
+      grammarPoint: {
+        ...cell.grammarPoint,
+        selfRevealingElicitation: 'base-word-cue' as const,
+        elicitationSeedValues: ['sillita', 'hotelucho'],
+      },
+    };
+    expect(seedKindFor(flagged)).toBe('elicitation-values');
+  });
 });
 
 // ---------------------------------------------------------------------------

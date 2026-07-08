@@ -758,8 +758,9 @@ describe('SQS handler — observability flush + trace scope', () => {
     expect(ctx.cefrLevel).toBe('B1');
     expect(ctx.exerciseType).toBe('cloze');
     // The version string is the literal from packages/ai/src/generation-prompts.ts.
-    // Match the date-stamped format `generate@YYYY-MM-DD` without locking the date.
-    expect(ctx.promptVersion).toMatch(/^generate@\d{4}-\d{2}-\d{2}$/);
+    // Match the date-stamped format `generate@YYYY-MM-DD` without locking the
+    // date; the optional single-letter suffix is a second bump on the same day.
+    expect(ctx.promptVersion).toMatch(/^generate@\d{4}-\d{2}-\d{2}[a-z]?$/);
   });
 
   it('LANGFUSE_PUBLIC_KEY unset (default) → batchItemFailures shape is byte-identical to pre-spec', async () => {

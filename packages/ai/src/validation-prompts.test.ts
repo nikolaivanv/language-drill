@@ -533,6 +533,52 @@ describe("self-revealing / vocab_recall scoring notes", () => {
   });
 });
 
+describe("self-revealing base-word-cue scoring note", () => {
+  const baseCueSpec: GenerationSpec = {
+    ...baseSpec,
+    grammarPoint: {
+      ...baseSpec.grammarPoint,
+      selfRevealingElicitation: "base-word-cue" as const,
+      elicitationSeedValues: ["sillita"],
+    },
+  };
+
+  const clozeContent: ClozeContent = {
+    type: ExerciseType.CLOZE,
+    instructions: "Fill in the blank with the appreciative form of the cued word.",
+    sentence: "El bebé dormía en su ___. (silla)",
+    correctAnswer: "sillita",
+  };
+
+  it("cloze prompt for a flagged cell exempts the base-word cue from contextSpoilsAnswer", () => {
+    const prompt = buildValidationUserPrompt(makeDraft(clozeContent), baseCueSpec);
+    expect(prompt).toContain("BASE-word cue");
+    expect(prompt).toContain("do NOT set contextSpoilsAnswer=true");
+    // The digit-form note must not leak into base-word-cue cells:
+    expect(prompt).not.toContain("digit or numeral cue");
+  });
+
+  it("still demands spoilage when the derived form itself is visible", () => {
+    const prompt = buildValidationUserPrompt(makeDraft(clozeContent), baseCueSpec);
+    expect(prompt).toContain("derived form");
+    expect(prompt).toContain("Still set contextSpoilsAnswer=true");
+  });
+
+  it("digit-form cells keep their own note, unchanged", () => {
+    const digitSpec: GenerationSpec = {
+      ...baseSpec,
+      grammarPoint: {
+        ...baseSpec.grammarPoint,
+        selfRevealingElicitation: "digit-form" as const,
+        elicitationSeedValues: ["tercero"],
+      },
+    };
+    const prompt = buildValidationUserPrompt(makeDraft(clozeContent), digitSpec);
+    expect(prompt).toContain("digit or numeral cue");
+    expect(prompt).not.toContain("BASE-word cue");
+  });
+});
+
 // ---------------------------------------------------------------------------
 // buildValidationUserPrompt — coverage directive (Task 3)
 // ---------------------------------------------------------------------------

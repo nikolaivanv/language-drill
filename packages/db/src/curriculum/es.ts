@@ -73,8 +73,16 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * subjunctive, subjunctive-adverbial, exclamatives). Bump enumerates the new
  * cells and clears suppression on the rescoped ones so they re-run under the
  * widened descriptions.
+ *
+ * `2026-07-10`: base-word-cue elicitation for es-b2-appreciative-suffixes
+ * (selfRevealingElicitation + curated B&B ch. 43 pool) — the 2026-07-08 run
+ * approved 4/41 with 23 context-spoils-answer rejects because the model had
+ * no sanctioned cue for derived forms. Bump also clears low-yield suppression
+ * on the cells starved by that run: es-a2-temporal-clauses cloze (2/26),
+ * es-a1-demonstratives cloze (2/9), es-a2-articles-use cloze (1/7),
+ * es-a1-fw-a-day (0/3).
  */
-export const CURRICULUM_VERSION_ES = '2026-07-09';
+export const CURRICULUM_VERSION_ES = '2026-07-10';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -2444,6 +2452,30 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Coining novel diminutives outside the safe -ito/-ón pattern, producing non-words a native speaker would not recognize ("*dormitorito" from dormitorio is not Spanish).',
       'Overapplying the -c-/-ec- allomorph to words that take a plain -ito/-ita ("*sillacita" instead of "sillita"), instead of reserving it for words ending in -n/-r or in -e/ie-ue.',
       'Assuming augmentatives like -ón are freely productive and inventing new coinages, rather than sticking to established, recognized forms.',
+    ],
+    // The derived form cannot be elicited without identifying the base word
+    // (2026-07-08 run: 4/41 approved, 23 context-spoils-answer). The cue is
+    // the parenthetical BASE word; the pool holds only transparent, B&B ch. 43
+    // attested derivations (no lexicalized portazo/bolsillo/cajón class, no
+    // forms already saturated in the approved pool: sillita, cajita, besito,
+    // casucha, palmita, pulgarcito, barcucho, segundito).
+    selfRevealingElicitation: 'base-word-cue',
+    elicitationSeedValues: [
+      // -ito/-ita, plain (B&B 43.2.1(3), 43.2.2)
+      'casita', 'perrito', 'pajarito', 'botellita', 'bolsita', 'cosita',
+      'momentito', 'paquetito', 'abuelita', 'hermanita', 'armarito',
+      'gordito', 'tontito', 'igualito', 'cerquita', 'despacito', 'poquito',
+      // -cito/-ecito allomorph after -n/-r, -e, or ie/ue (B&B 43.2.1(1)–(2))
+      'mujercita', 'cochecito', 'madrecita', 'padrecito', 'puentecito',
+      'piedrecita', 'siestecita', 'viejecito', 'cafecito', 'florecita',
+      'solecito', 'vocecita', 'pececito', 'mayorcito', 'pobrecito',
+      'parquecito', 'barecito',
+      // -ón augmentative (B&B 43.3a)
+      'solterón', 'cabezón', 'notición', 'chuletón', 'fortunón',
+      // -azo augmentative / blow-with-object (B&B 43.3a)
+      'cochazo', 'exitazo', 'golazo', 'profesorazo', 'catarrazo', 'codazo',
+      // -ucho pejorative (B&B 43.4)
+      'hotelucho',
     ],
   },
 

@@ -75,7 +75,11 @@ function renderBulletList(items: readonly string[]): string {
 // prompt (not the cached VALIDATION_SYSTEM_PROMPT_TEMPLATE — that stays
 // byte-identical). Bumped so Langfuse cohorts new-vs-old validator traces;
 // no Langfuse push needed since the system template itself is unchanged.
-export const VALIDATION_PROMPT_VERSION = "validate@2026-07-08";
+// 2026-07-08a: base-word-cue variant of the self-revealing note (derived-form
+// points, appreciative suffixes): the parenthetical BASE-word cue is the
+// sanctioned elicitation; spoilage only if the derived form itself is
+// visible. Per-draft user prompt only — no Langfuse push needed.
+export const VALIDATION_PROMPT_VERSION = "validate@2026-07-08a";
 
 export const VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language exercises for {{language}} learners at CEFR {{cefrLevel}}. Your job is to validate one already-generated exercise that targets the grammar point: {{grammarPointName}}.
 
@@ -229,10 +233,17 @@ function clozeCellScoringNote(grammarPointKey: string): string {
 // the sanctioned elicitation. Gated on the curriculum flag (not a key list) so
 // future flagged points inherit it. Applies to cloze AND translation drafts.
 function selfRevealingScoringNote(spec: GenerationSpec): string {
-  if (spec.grammarPoint.selfRevealingElicitation !== "digit-form") return "";
-  return `
+  if (spec.grammarPoint.selfRevealingElicitation === "digit-form") {
+    return `
 
 **Scoring note for this self-revealing-target cell:** the target is a number/ordinal whose meaning CANNOT be conveyed without identifying it. A digit or numeral cue in the visible text (e.g. "3.º", "3.", "200", "123", digits in a translation source sentence) is the INTENDED elicitation for this cell — do NOT set contextSpoilsAnswer=true because digits identify which value the learner must write. The tested skill is producing the WRITTEN form with correct agreement/apocope/gender/harmony (tercer vs tercero, doscientas, üçüncü), which digits do not reveal. Still set contextSpoilsAnswer=true if the written word form itself appears anywhere in the visible text. Score all other dimensions normally; a clean digit-cued draft is 0.8+, not spoiled.`;
+  }
+  if (spec.grammarPoint.selfRevealingElicitation === "base-word-cue") {
+    return `
+
+**Scoring note for this self-revealing-target cell:** the target is a DERIVED form (appreciative suffix) that cannot be elicited without identifying its base word. A parenthetical BASE-word cue in the visible text (e.g. "(silla)" when the answer is "sillita") is the INTENDED elicitation for this cell — do NOT set contextSpoilsAnswer=true because the base word appears. The tested skill is choosing the suffix from the context's nuance and forming it with the correct allomorph and gender (mujercita, cochecito, notición), which the base word does not reveal. Still set contextSpoilsAnswer=true if the derived form itself appears anywhere in the visible text (including inside the parenthetical cue). Reject an answer that is a novel coinage rather than an established form, and flag genuine nuance ambiguity where a DIFFERENT established suffixed form of the same base fits the context equally well. Score all other dimensions normally; a clean base-cued draft is 0.8+, not spoiled.`;
+  }
+  return "";
 }
 
 // vocab_recall's task IS meaning→word retrieval: a definition that picks out

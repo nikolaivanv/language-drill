@@ -110,3 +110,29 @@ approval ≥ 50%/cell) met with wide margin. Caveat (noted in the plan): the
 eval harness does not thread per-draft `seedWords`, so the run exercised the
 generic digit-form directive; the pinned-value rotation is covered by unit
 tests and gets verified in prod after the first post-merge nightly run.
+
+## Addendum (2026-07-08): second variant — `base-word-cue` for derived forms
+
+The same disease hit `es:b2:cloze:es-b2-appreciative-suffixes` in the
+2026-07-08 run: **4/41 approved (10%)**, 23 `context-spoils-answer` rejects,
+13 low-quality. A derived form (sillita, casucha, notición) cannot be
+elicited without identifying its base word; with no sanctioned channel the
+model improvised three cue styles — answer in the cue `(portazo)`, both
+options `(portazo / puerta)`, or a base cue for a LEXICALIZED form
+(`(puerta)` → portazo, which has a stem change) — two of which auto-fail
+and the third of which the validator correctly rejects. Unseeded, the batch
+also collapsed onto the curriculum example (portazo in 14/41 drafts).
+
+Fix mirrors the digit-form machinery exactly (same flag, second variant):
+`selfRevealingElicitation: 'base-word-cue'` + a curated
+`elicitationSeedValues` pool of B&B ch. 43 **attested, transparent**
+derivations only (no portazo/bolsillo/cajón lexicalized class). The
+sanctioned elicitation is the parenthetical BASE word (`(silla)` →
+sillita); the tested skill — choosing the suffix from the context's nuance
+and forming it with the right allomorph/gender — is not revealed by the
+base word. `seedKindFor` needed no change (it gates on flag truthiness).
+
+Eval (`base-word-cue-verify`, 2 cells × 8 drafts × 2 identical repo arms):
+**31/32 approved (96.9%)**, 1 context-spoils-answer, 0 flagged, $0.48.
+Same caveat as above: the harness doesn't thread per-draft seedWords, so
+the run exercised the generic directive; pinned rotation is unit-tested.
