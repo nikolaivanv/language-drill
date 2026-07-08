@@ -321,6 +321,27 @@ typecheck-invisible allowlists.
 
 ---
 
+## 7b. Doc-status refresh — `docs/exercise-strategy.md` (final task, post-implementation)
+
+After the feature lands, correct the stale `**Status:**` lines in the exercise
+catalogue (several already-shipped types still read "Not yet implemented"). Verify each
+against the `ExerciseType` enum / generation pipeline before editing — do not mark
+anything done that isn't actually wired:
+
+- **#4 Sentence Construction** → `Implemented` (`SENTENCE_CONSTRUCTION` live, generated).
+- **#6 Paragraph / Free Writing** → `Implemented` (`FREE_WRITING` live, generated + evaluated).
+- **#7 Listening Comprehension** → `Partially implemented` — the **Dictation** sub-type
+  is live (`DICTATION`, hand-seeded + Polly audio); comprehension-questions and
+  gap-fill-from-audio sub-types are **not** yet built. State this explicitly; do NOT
+  mark the whole type done.
+- **#14 Conjugation / Inflection Drill** → `Implemented` (`CONJUGATION` live,
+  deterministic-first grading), keeping the "scaffolding / remediation sub-mode" framing.
+- **#10 Contextual Paraphrase** → `Implemented` (this feature).
+
+Keep each section's existing prose; only the `**Status:**` line changes (plus a short
+parenthetical for #7's partial state). Consider also reflecting these in the
+"Implementation Order" section if it reads as inconsistent after the edits.
+
 ## 8. Rollout / ordering notes
 
 - This is additive: no existing exercise, cell, or stored row changes.
