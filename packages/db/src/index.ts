@@ -70,6 +70,10 @@ export { chunk } from './lib/chunk';
 export { synthesizeToS3, dictationAudioKey } from './lib/polly-synth';
 export type { SynthesizeToS3Args } from './lib/polly-synth';
 
+// Read practice (audio shadowing) — voice map + content-addressed key +
+// text normalization + duration estimate helpers.
+export * from './lib/reading-audio';
+
 // Phase 5 — pool target sizing. Consumed by the admin pool-status endpoint
 // (`infra/lambda/src/routes/admin.ts`) which derives a cell's refill target
 // from its observed 7-day depletion rate.
