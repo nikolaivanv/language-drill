@@ -1168,6 +1168,8 @@ export default function ReadPage() {
           entry={annotatedEntry}
           bank={state.bank}
           intensity={state.intensity}
+          entryId={state.activeEntryId}
+          fetchFn={fetchFn}
           activeWord={state.activeWord}
           deepCard={state.deepCard}
           calibration={{
