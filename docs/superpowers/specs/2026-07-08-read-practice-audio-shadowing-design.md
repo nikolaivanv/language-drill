@@ -116,9 +116,9 @@ SSE — so it does *not* belong on the annotate-stream Lambda). Flow:
 ### 4. Voice selection
 
 Reuse the per-language neural voice map from `packages/ai/src/generate.ts`. Reading
-supports the app's taught languages (EN/ES/TR/DE); add any missing neural voice (the
-map currently lists ES/TR/DE — add English). Voice is deterministic per language so
-the content hash is stable.
+supports ES/DE/TR as target languages only (no EN reading-practice surface, so no
+English voice is needed — see resolved open question 3 below). Voice is deterministic
+per language so the content hash is stable: ES→Lucia, DE→Vicki, TR→Burcu.
 
 ### 5. Long-passage guard (Polly neural 3000-char cap)
 
@@ -177,10 +177,19 @@ User clicks "Listen"
 
 ## Open questions (for spec review)
 
-1. `read_tts` free/boosted limit numbers.
-2. Should the global AI kill-switch / daily cap gate `read_tts`, or leave TTS outside
-   the Claude-cost brakes? (Recommendation: leave outside.)
-3. English neural voice choice for the voice map.
+1. **Resolved.** `read_tts` free/boosted limit numbers: **50/day free, 500/day
+   boosted** — same shape as the other metered AI buckets (`ai_evaluation`,
+   `read_annotation`, `read_span_annotation`) in `infra/lambda/src/usage/limits.ts`.
+2. **Resolved.** The global AI kill-switch / daily cap (`AI_KILL_SWITCH`,
+   `AI_GLOBAL_DAILY_CAP` in `infra/lambda/src/usage/global-capacity.ts`) does **not**
+   gate `read_tts` — TTS stays outside the Claude-cost brakes, per the recommendation
+   above (Polly is cheap and results are content-hash cached, so it doesn't need the
+   same emergency brake as Claude spend).
+3. **Resolved — moot.** No English voice is needed: read practice only supports
+   ES/DE/TR as target languages (there is no EN reading-practice surface), so
+   §4's "add English" note does not apply. The reading voice map is ES→Lucia,
+   DE→Vicki, TR→Burcu (all Amazon Polly neural voices), matching the existing
+   per-language voice map in `packages/ai/src/generate.ts`.
 
 ## Rollout / ripple notes
 
