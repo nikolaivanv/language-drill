@@ -67,9 +67,13 @@ describe('enumerateCurriculumCells', () => {
   it('pairs grammar points only with cloze, translation, sentence_construction, or conjugation (never vocab_recall)', () => {
     for (const cell of cells) {
       if (cell.grammarPoint.kind === 'grammar') {
-        expect([ExerciseType.CLOZE, ExerciseType.TRANSLATION, ExerciseType.SENTENCE_CONSTRUCTION, ExerciseType.CONJUGATION]).toContain(
-          cell.exerciseType,
-        );
+        expect([
+          ExerciseType.CLOZE,
+          ExerciseType.TRANSLATION,
+          ExerciseType.SENTENCE_CONSTRUCTION,
+          ExerciseType.CONJUGATION,
+          ExerciseType.CONTEXTUAL_PARAPHRASE,
+        ]).toContain(cell.exerciseType);
       }
     }
   });
@@ -309,5 +313,14 @@ describe('compatibleTypes (exported)', () => {
   it('vocab → vocab_recall', () => {
     const point = makeGrammarPoint({ key: 'tr-a1-vocab', kind: 'vocab' });
     expect(compatibleTypes(point)).toEqual([ExerciseType.VOCAB_RECALL]);
+  });
+
+  it("compatibleTypes returns contextual_paraphrase for a paraphrase umbrella", () => {
+    const umbrella = {
+      key: "es-b1-paraphrase",
+      kind: "paraphrase",
+      paraphrase: { seeds: ["a"] },
+    } as never;
+    expect(compatibleTypes(umbrella)).toEqual([ExerciseType.CONTEXTUAL_PARAPHRASE]);
   });
 });
