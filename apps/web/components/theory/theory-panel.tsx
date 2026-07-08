@@ -146,7 +146,12 @@ export function TheoryPanel({
                 </>
               )}
               {topic && (
-                <TheoryHubLink topicId={topic.id} title={topic.title} />
+                // `internalTopicId` is the route/lookup SLUG (e.g.
+                // `b1-present-subjunctive`) — the exact id the same-page drawer
+                // resolved against. `topic.id` is the content-JSON id, which
+                // for DB-backed topics carries the language prefix
+                // (`es-b1-present-subjunctive`) and 404s at `/theory/<id>`.
+                <TheoryHubLink topicId={internalTopicId} title={topic.title} />
               )}
             </div>
             {topic && <div className="t-small">{topic.subtitle}</div>}

@@ -369,6 +369,42 @@ describe('TheoryDetail footer', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// Container height: the loaded article needs a fixed-height `.theory-detail`
+// (its internal `.theory-scroll` scrolls + drives scroll-spy). The
+// loading/error/empty states have NO internal scroller, so that fixed height
+// would clip their content and let it paint over the shell footer parked at
+// the box's bottom edge (the not-found topic list overlapping the footer). In
+// those states the box must instead grow with content — signalled by the
+// `theory-detail--flow` modifier.
+// ---------------------------------------------------------------------------
+
+describe('TheoryDetail container height', () => {
+  it('keeps the fixed-height container (no flow modifier) for the loaded article', async () => {
+    renderDetail(makeFetch());
+    await screen.findByRole('heading', { level: 1, name: 'der dativ' }, FIND);
+
+    const root = document.querySelector('.theory-detail')!;
+    expect(root.classList.contains('theory-detail--flow')).toBe(false);
+  });
+
+  it('lets the container grow (flow modifier) in the not-found/empty state', async () => {
+    renderDetail(makeFetch({ topicStatus: 404 }));
+    await screen.findByText(/no theory written yet for/i, undefined, FIND);
+
+    const root = document.querySelector('.theory-detail')!;
+    expect(root.classList.contains('theory-detail--flow')).toBe(true);
+  });
+
+  it('lets the container grow (flow modifier) in the error state', async () => {
+    renderDetail(makeFetch({ topicStatus: 500 }));
+    await screen.findByText(/couldn't load theory/i, undefined, FIND);
+
+    const root = document.querySelector('.theory-detail')!;
+    expect(root.classList.contains('theory-detail--flow')).toBe(true);
+  });
+});
+
 // Small helper: find a button with the given accessible name inside a container.
 function within_(
   container: HTMLElement,
