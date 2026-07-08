@@ -138,8 +138,11 @@ const { A1, A2, B1 } = CefrLevel;
  * past/evidential copula (hastaydım), focus clitics dA/bile, -lI/-sIz, enumerator
  * tane; suppletive ol-, olarak. Bump enumerates the new cells + clears
  * suppression. See docs/superpowers/specs/2026-07-10-tr-audit-gap-fills-design.md.
+ * 2026-07-10a: adds the `kind: 'paraphrase'` umbrella (`tr-b1-paraphrase`) that
+ * owns the new contextual-paraphrase generation cell; the bump enumerates it on
+ * the next scheduler tick.
  */
-export const CURRICULUM_VERSION_TR = '2026-07-10';
+export const CURRICULUM_VERSION_TR = '2026-07-10a';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -2819,6 +2822,46 @@ const trCurriculum: readonly GrammarPoint[] = [
       'No future/conditional form.',
     ],
     freeWriting: { register: 'neutral' },
+  },
+
+  // ---------------------------------------------------------------------------
+  // Paraphrase umbrellas — kind: 'paraphrase' (Phase 2 contextual-paraphrase generation)
+  // ---------------------------------------------------------------------------
+  {
+    key: 'tr-b1-paraphrase',
+    kind: 'paraphrase',
+    name: 'Başka türlü söyle — paraphrase (B1)',
+    description:
+      'Rewrite a B1 Turkish sentence under one constraint: avoid a given word, shift register, or simplify for an audience — preserving meaning while reaching for synonyms and alternative structures.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Source "Bu filmi çok beğendim" → without «beğenmek»: "Bu film gerçekten hoşuma gitti."',
+      'Source "Tuzu uzatır mısın?" → formal register: "Tuzu uzatabilir misiniz acaba?"',
+    ],
+    examplesNegative: ['*A rewrite that changes the meaning of the source.'],
+    commonErrors: [
+      'Using a banned word in a different suffixed form.',
+      'Changing register but also changing what is said.',
+    ],
+    paraphrase: {
+      seeds: [
+        'a complaint to a landlord',
+        'describing a childhood memory',
+        'asking a colleague for a deadline extension',
+        'giving directions to a tourist',
+        'declining an invitation politely',
+        'explaining why you are late',
+        'recommending a restaurant',
+        'apologising for a mistake at work',
+        'describing your morning routine',
+        'asking for a refund in a shop',
+        'inviting a friend to an event',
+        'summarising a film you saw',
+        'asking a neighbor to lower the noise',
+        'thanking a teacher for their help',
+      ],
+    },
   },
 
 ];
