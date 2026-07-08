@@ -482,9 +482,35 @@ button:hover .lk-arr {
 }
 .theory-header-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: 10px;
   margin-top: 4px;
+}
+.theory-hub-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--color-ink-mute);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+.theory-hub-link:hover {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--color-rule-strong);
+}
+.theory-hub-link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.theory-hub-link-icon {
+  flex-shrink: 0;
 }
 .theory-close {
   appearance: none;
