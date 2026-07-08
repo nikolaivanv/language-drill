@@ -6,6 +6,7 @@ import {
   Language,
   type ClozeContent,
   type ConjugationContent,
+  type ContextualParaphraseContent,
   type TranslationContent,
   type VocabRecallContent,
   type SentenceConstructionContent,
@@ -461,6 +462,22 @@ describe("buildValidationUserPrompt", () => {
     expect(msg).toContain("Validate this Sentence Construction exercise");
     expect(msg).toContain("present subjunctive");
     expect(msg).toContain("Espero que vengas.");
+  });
+
+  it("validation prompt for contextual_paraphrase checks meaning preservation + banned-term exclusion", () => {
+    const content: ContextualParaphraseContent = {
+      type: ExerciseType.CONTEXTUAL_PARAPHRASE,
+      instructions: "Rewrite.",
+      sourceText: "Me gusta el café.",
+      constraintKind: "avoid",
+      bannedTerms: ["gustar"],
+      constraintLabel: "Say this without «gustar».",
+      referenceParaphrases: ["Disfruto del café.", "Adoro el café."],
+    };
+    const spec = { ...baseSpec, exerciseType: ExerciseType.CONTEXTUAL_PARAPHRASE };
+    const prompt = buildValidationUserPrompt(makeDraft(content), spec);
+    expect(prompt).toMatch(/meaning/i);
+    expect(prompt).toMatch(/gustar/);
   });
 });
 

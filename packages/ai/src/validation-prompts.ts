@@ -18,6 +18,7 @@ import {
   type CefrLevel,
   type ClozeContent,
   type ConjugationContent,
+  type ContextualParaphraseContent,
   coverageAxesFor,
   type CoverageAxis,
   ExerciseType,
@@ -79,7 +80,10 @@ function renderBulletList(items: readonly string[]): string {
 // points, appreciative suffixes): the parenthetical BASE-word cue is the
 // sanctioned elicitation; spoilage only if the derived form itself is
 // visible. Per-draft user prompt only — no Langfuse push needed.
-export const VALIDATION_PROMPT_VERSION = "validate@2026-07-08a";
+// 2026-07-09: added the contextual_paraphrase validation user prompt (new
+// ExerciseType). Per-draft user prompt only — no Langfuse push needed since
+// the cached system template is unchanged.
+export const VALIDATION_PROMPT_VERSION = "validate@2026-07-09";
 
 export const VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language exercises for {{language}} learners at CEFR {{cefrLevel}}. Your job is to validate one already-generated exercise that targets the grammar point: {{grammarPointName}}.
 
@@ -330,6 +334,35 @@ ${registerLine}
 Score the dimensions in the system prompt. Treat the exercise as well-formed only if the prompt is unambiguous and solvable at the target level, AND every model answer genuinely satisfies the prompt (keywords used / goal met / target structure used) at the target CEFR level. If a model answer does not exercise the grammar point, set grammarPointMatch=false. Submit via the tool.`;
 }
 
+function buildContextualParaphraseValidationUserPrompt(
+  content: ContextualParaphraseContent,
+  spec: GenerationSpec,
+): string {
+  const constraintDetail =
+    content.constraintKind === "avoid"
+      ? `Banned terms (must appear in the source, must NOT appear in any paraphrase): ${(content.bannedTerms ?? []).join(", ")}`
+      : content.constraintKind === "register"
+        ? `Target register: ${content.targetRegister}`
+        : `Simplify for: ${content.audience}`;
+  return `Validate this ${spec.language} contextual-paraphrase exercise (CEFR ${spec.cefrLevel}).
+
+Source sentence: ${content.sourceText}
+Constraint kind: ${content.constraintKind}
+${constraintDetail}
+Task shown to learner: ${content.constraintLabel}
+Reference paraphrases:
+${content.referenceParaphrases.map((p, i) => `${i + 1}. ${p}`).join("\n")}
+
+Reject (flag) the exercise if ANY of the following hold:
+- The meaning cannot be preserved under the constraint, or the only faithful rewrite is the source itself.
+- constraintKind 'avoid': a banned term is absent from the source, OR appears in any reference paraphrase, OR has no reasonable ${spec.language} synonym/circumlocution at CEFR ${spec.cefrLevel}.
+- constraintKind 'register': the source is already in the target register (no shift to perform), or a reference paraphrase changes the propositional content.
+- constraintKind 'simplify': a reference paraphrase omits information or is not simpler for the stated audience.
+- Any reference paraphrase is ungrammatical, unnatural, or above/below CEFR ${spec.cefrLevel}.
+- The source sentence is unnatural, or the constraintLabel leaks a finished paraphrase.
+Otherwise approve it.`;
+}
+
 export function buildConjugationValidationUserPrompt(
   content: ConjugationContent,
   spec: GenerationSpec,
@@ -415,6 +448,9 @@ export function buildValidationUserPrompt(
       break;
     case ExerciseType.CONJUGATION:
       base = buildConjugationValidationUserPrompt(content, spec);
+      break;
+    case ExerciseType.CONTEXTUAL_PARAPHRASE:
+      base = buildContextualParaphraseValidationUserPrompt(content, spec);
       break;
     case ExerciseType.DICTATION:
       throw new Error(
