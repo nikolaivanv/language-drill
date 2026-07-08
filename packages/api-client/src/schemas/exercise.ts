@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CefrLevel } from '@language-drill/shared';
 
 // Exercise response from GET /exercises and GET /exercises/:id
 export const ExerciseResponseSchema = z.object({
@@ -21,6 +22,12 @@ export type ExerciseResponse = z.infer<typeof ExerciseResponseSchema>;
 export const ExerciseSetResponseSchema = z.object({
   exercises: z.array(ExerciseResponseSchema),
   available: z.number().int().nonnegative(),
+  // The difficulty the set was ACTUALLY pulled at. For a grammarPoint-targeted
+  // request the server derives it from the point's own CEFR level, which can
+  // differ from the requested (profile) difficulty. Optional so a client built
+  // against this schema stays compatible with an already-deployed API that
+  // predates this field (Vercel preview deploys point at the live API).
+  difficulty: z.nativeEnum(CefrLevel).optional(),
 });
 
 export type ExerciseSetResponse = z.infer<typeof ExerciseSetResponseSchema>;

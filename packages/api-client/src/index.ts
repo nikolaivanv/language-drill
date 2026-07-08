@@ -64,9 +64,13 @@ export {
   RadarAxisKeyEnum,
   RadarAxisSchema,
   ProgressRadarResponseSchema,
+  PointMasterySnapshotSchema,
+  PointDrillInfoResponseSchema,
   type RadarAxisKey,
   type RadarAxis,
   type ProgressRadarResponse,
+  type PointMasterySnapshot,
+  type PointDrillInfoResponse,
 } from './schemas/progress';
 export {
   TodayPlanItemStatusEnum,
@@ -190,6 +194,7 @@ export {
   useProgressRadar,
   type UseProgressRadarParams,
 } from './hooks/useProgress';
+export { usePointDrillInfo, type UsePointDrillInfoParams } from './hooks/usePointDrillInfo';
 export { useInsightsErrors, type UseInsightsErrorsParams } from './hooks/useInsights';
 export {
   ErrorTrendThemeSchema,

@@ -21,6 +21,8 @@ import {
   TheoryBrowseAllButton,
   TopicSwitcherSheet,
 } from '../../../../components/theory/topic-switcher-sheet';
+import { grammarPointKeyForTopicId } from '../../../../lib/theory-topic-map';
+import { DrillThisPoint } from './drill-this-point';
 
 type TheoryDetailProps = {
   topicId: string;
@@ -75,6 +77,13 @@ export function TheoryDetail({ topicId, language, fetchFn }: TheoryDetailProps) 
   const sectionIds = topic ? topic.sections.map((s) => s.id) : [];
   // Hook called unconditionally (empty ids until the topic loads).
   const activeSectionId = useScrollSpy(sectionIds, scrollRef);
+
+  // Targeted-drill key for the loaded topic. Derived from the route's topicId
+  // (the canonical `theory_topics.topic_id` slug, e.g. `a2-ser-vs-estar`) —
+  // NOT from `topic.id`: DB-backed content JSON embeds the FULL grammar-point
+  // key there (`es-a2-ser-vs-estar`), which would double the language prefix.
+  // Gated on `topic` so the block only mounts alongside a loaded article.
+  const drillKey = topic ? grammarPointKeyForTopicId(topicId, language) : null;
 
   const handleJump = useCallback((id: string) => {
     const root = scrollRef.current;
@@ -146,6 +155,9 @@ export function TheoryDetail({ topicId, language, fetchFn }: TheoryDetailProps) 
               language={language}
               onSwitchTopic={goToTopic}
             />
+            {drillKey && (
+              <DrillThisPoint grammarPointKey={drillKey} fetchFn={fetchFn} />
+            )}
             {isMobile && (
               <TheoryBrowseAllButton
                 count={allTopics.length}

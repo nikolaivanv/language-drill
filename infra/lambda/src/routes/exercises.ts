@@ -41,6 +41,7 @@ import {
 } from '@language-drill/ai';
 import { db } from '../db';
 import { approvedStatusFilter, audioReadyFilter, freshFirstOrderBy } from '../lib/exercise-filters';
+import { resolveTargetedDifficulty } from '../lib/targeted-difficulty';
 import {
   conjugationSignature,
   dedupeBySignature,
@@ -276,9 +277,15 @@ exercises.get('/exercises/set', async (c) => {
     );
   }
 
-  const { language, difficulty, type, grammarPoint: grammarPointKey, count } = parsed.data;
+  const { language, difficulty: requestedDifficulty, type, grammarPoint: grammarPointKey, count } = parsed.data;
   const userId = c.get('userId');
   const target = count ?? CONJUGATION_SET_DEFAULT;
+
+  // A grammar-point-targeted pull filters at the point's OWN level, not the
+  // caller's profile level — mirrors POST /sessions (see
+  // lib/targeted-difficulty.ts). Untargeted pulls (no grammarPoint) are
+  // unaffected: resolveTargetedDifficulty passes the requested value through.
+  const difficulty = resolveTargetedDifficulty(requestedDifficulty, grammarPointKey);
 
   const conditions = [
     eq(exercisesTable.language, language),
@@ -325,7 +332,7 @@ exercises.get('/exercises/set', async (c) => {
     }),
   );
 
-  return c.json({ exercises: exercisesOut, available: exercisesOut.length });
+  return c.json({ exercises: exercisesOut, available: exercisesOut.length, difficulty });
 });
 
 // ---------------------------------------------------------------------------

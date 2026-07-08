@@ -18,6 +18,7 @@ import { computeSkillMovements, type SkillHistoryRow } from '../lib/debrief/skil
 import { db } from '../db';
 import { approvedStatusFilter, audioReadyFilter, freshFirstOrderBy } from '../lib/exercise-filters';
 import { mergeSessionRows } from '../lib/session-selection';
+import { resolveTargetedDifficulty } from '../lib/targeted-difficulty';
 import { presignAudioUrl } from '../lib/audio-url';
 import { withAudioUrl } from '../lib/dictation-content';
 import { authMiddleware } from '../middleware/auth';
@@ -61,6 +62,13 @@ export const CreateSessionRequestSchema = z.object({
   grammarPointKey: z.string().min(1).optional(),
 });
 
+// resolveSessionDifficulty is shared with GET /exercises/set (routes/exercises.ts)
+// so the two grammar-point-targeted pulls cannot drift; see the doc comment on
+// `resolveTargetedDifficulty` in lib/targeted-difficulty.ts for the rationale.
+// Re-exported under its original name so existing imports (sessions.test.ts)
+// keep working.
+export { resolveTargetedDifficulty as resolveSessionDifficulty } from '../lib/targeted-difficulty';
+
 // ---------------------------------------------------------------------------
 // Router
 // ---------------------------------------------------------------------------
@@ -88,7 +96,8 @@ sessions.post('/sessions', async (c) => {
     );
   }
 
-  const { language, difficulty, exerciseCount, exerciseType, grammarPointKey } = bodyResult.data;
+  const { language, exerciseCount, exerciseType, grammarPointKey } = bodyResult.data;
+  const difficulty = resolveTargetedDifficulty(bodyResult.data.difficulty, grammarPointKey);
   const userId = c.get('userId');
   const now = new Date();
 
@@ -303,7 +312,7 @@ async function insertSessionAndBuildManifest(params: {
     })),
   );
 
-  return { id: inserted[0].id, exercises };
+  return { id: inserted[0].id, difficulty, exercises };
 }
 
 // ---------------------------------------------------------------------------

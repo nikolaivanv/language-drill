@@ -15,6 +15,7 @@ import { inArray, sql } from 'drizzle-orm';
  *   - routes/fluency.ts:   POST /fluency/attempts (exercise lookup)
  *   - routes/fluency.ts:   POST /fluency/session (raw-SQL eligibility query —
  *     adds the predicate inline rather than calling this helper)
+ *   - routes/progress.ts:  GET /progress/points/:key (counts)
  *
  * Sites that intentionally do NOT filter:
  *   - routes/sessions.ts:  GET /sessions/today Path A (manifest hydration)
