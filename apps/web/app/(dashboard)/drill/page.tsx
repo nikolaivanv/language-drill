@@ -183,7 +183,11 @@ function PracticePageContent() {
           };
     createSession.mutate(config, {
       onSuccess: (data) => {
-        track('drill_started', { language: activeLanguage, cefr: difficulty });
+        // A targeted session may have been re-leveled by the server (the
+        // grammar point's own CEFR level wins over the profile level) —
+        // reflect the level the session was actually created at.
+        if (data.difficulty !== difficulty) setDifficulty(data.difficulty);
+        track('drill_started', { language: activeLanguage, cefr: data.difficulty });
         dispatch({ type: 'CREATE_SUCCEEDED', session: data });
         // Reflect the live session in the URL so a full page reload (e.g.
         // toggling Chrome device emulation, an accidental refresh) resumes it

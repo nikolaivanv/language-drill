@@ -74,6 +74,7 @@ const SESSION_ID = '11111111-1111-1111-1111-111111111111';
 
 const SAMPLE_MANIFEST = {
   id: SESSION_ID,
+  difficulty: CefrLevel.B1,
   exercises: [0, 1, 2, 3, 4].map(makeClozeExercise),
 };
 
@@ -232,6 +233,18 @@ describe('PracticePage', () => {
         `/drill?resume=${SESSION_ID}`,
         { scroll: false },
       );
+    });
+
+    it('reflects the server-derived difficulty when the session was re-leveled', () => {
+      // Server re-levels a targeted create (grammar point's own CEFR wins);
+      // the page must adopt the level the session was actually created at.
+      setCreateMock((_vars, opts) =>
+        opts.onSuccess?.({ ...SAMPLE_MANIFEST, difficulty: CefrLevel.A1 }),
+      );
+      renderWithProviders(<PracticePage />);
+      expect(screen.getByLabelText(/drill level/i)).toHaveValue('A1');
+      // Adopting the server level must not re-fire session creation.
+      expect(createMutate).toHaveBeenCalledTimes(1);
     });
 
     it('progress bar starts at 0 (idle, item 0)', () => {
