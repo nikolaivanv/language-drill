@@ -200,6 +200,11 @@ export function DeepWordCardBody({
     .map((f) => `${f.label} ${f.value}`)
     .join(' · ');
 
+  // Base English gloss: prefer the skim `WordFlag.gloss` (flagged words) for
+  // continuity with the quick card, else fall back to the deep card's own
+  // `baseGloss` — the only source for a manually selected (non-flagged) word.
+  const displayGloss = gloss ?? card.baseGloss;
+
   return (
     <>
       {/* Header — inflected surface form is the headword (Req 6.1) */}
@@ -219,12 +224,13 @@ export function DeepWordCardBody({
           <span className="ml-auto" />
           <span className="t-mono text-[11px] text-accent">{card.cefr}</span>
         </div>
-        {/* Base English gloss carried over from the skim card (e.g. "to eat"),
-         *  so the concise meaning shown in the quick card stays visible in the
-         *  full state. Mirrors the skim card's gloss line (Req 6.1). */}
-        {gloss && (
+        {/* Base English gloss (e.g. "to eat") — from the skim card for flagged
+         *  words, or the deep card's own `baseGloss` for manually selected
+         *  words. Keeps the concise meaning visible in the full state, mirroring
+         *  the skim card's gloss line (Req 6.1). */}
+        {displayGloss && (
           <p data-testid="deep-word-gloss" className="t-body text-ink-2 mt-[4px]">
-            {gloss}
+            {displayGloss}
           </p>
         )}
         <div className="t-mono mt-[3px] text-[10px] text-ink-mute">
@@ -424,6 +430,10 @@ function str(value: unknown): string | undefined {
 export function DeepCardPartial({ partial }: { partial: Partial<DeepCard> }) {
   const p = partial as Record<string, unknown>;
   const surface = str(p.surface);
+  // Base English gloss (word cards) — shown under the headword as soon as it
+  // streams in, so a manually selected word (which has no skim preview) sees
+  // its meaning without waiting for the full card.
+  const baseGloss = str(p.baseGloss);
   // Primary meaning — whichever of the three card shapes has streamed in.
   const meaning =
     str(p.contextualSense) ?? str(p.idiomaticMeaning) ?? str(p.translation);
@@ -439,7 +449,7 @@ export function DeepCardPartial({ partial }: { partial: Partial<DeepCard> }) {
     : 'literal';
 
   // Nothing displayable yet → keep the instant-open skeleton (Req 9.3).
-  if (!surface && !meaning && !secondary) {
+  if (!surface && !baseGloss && !meaning && !secondary) {
     return <DeepCardSkeleton />;
   }
 
@@ -463,6 +473,11 @@ export function DeepCardPartial({ partial }: { partial: Partial<DeepCard> }) {
             aria-hidden
             className="block h-[20px] w-[120px] rounded-sm bg-paper-3 animate-pulse"
           />
+        )}
+        {baseGloss && (
+          <p data-testid="deep-word-gloss" className="t-body text-ink-2 mt-[4px]">
+            {baseGloss}
+          </p>
         )}
       </div>
 

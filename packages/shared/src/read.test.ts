@@ -145,6 +145,7 @@ const validWordCard: DeepWordCard = {
 // Word card exercising every optional section (Req 6.2–6.4, 7.1).
 const fullWordCard: DeepWordCard = {
   ...validWordCard,
+  baseGloss: "village",
   inflection: { forms: [{ label: "plural", value: "aldeas" }] },
   morphology: {
     root: "aldea",
@@ -197,6 +198,28 @@ describe("DeepWordCardSchema", () => {
   it("rejects a card missing a required core field", () => {
     const { definition: _omitted, ...bad } = validWordCard;
     expect(DeepWordCardSchema.safeParse(bad).success).toBe(false);
+  });
+
+  // `baseGloss` is the short base English meaning of the lemma (e.g. "to eat").
+  // It must be OPTIONAL: word cards already persisted before the field existed
+  // (in `read_entries.span_annotations` / `user_vocabulary.card`) carry no
+  // `baseGloss`, and `DeepCardSchema.parse` runs on every reopen — a required
+  // field would throw and break History + saved vocab.
+  it("treats baseGloss as optional (backward-compatible with stored cards)", () => {
+    expect("baseGloss" in validWordCard).toBe(false);
+    expect(DeepWordCardSchema.safeParse(validWordCard).success).toBe(true);
+  });
+
+  it("preserves baseGloss when present", () => {
+    const result = DeepWordCardSchema.safeParse({ ...validWordCard, baseGloss: "village" });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.baseGloss).toBe("village");
+  });
+
+  it("rejects an empty baseGloss", () => {
+    expect(
+      DeepWordCardSchema.safeParse({ ...validWordCard, baseGloss: "" }).success,
+    ).toBe(false);
   });
 });
 

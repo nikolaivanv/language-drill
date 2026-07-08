@@ -194,6 +194,10 @@ describe("span tools", () => {
     };
     expect(word.properties.type.enum).toEqual(["word"]);
     expect(word.required).toContain("type");
+    // The base English gloss is always required of the model so manually
+    // selected (non-flagged) words — which have no skim gloss to borrow —
+    // still get a short meaning on the card.
+    expect(word.required).toContain("baseGloss");
 
     const phrase = READ_SPAN_PHRASE_TOOL.input_schema as {
       properties: { type: { enum: string[] } };
@@ -218,7 +222,11 @@ describe("READ_SPAN_SYSTEM_PROMPT", () => {
   });
 
   it("pins the version constant", () => {
-    expect(READ_SPAN_PROMPT_VERSION).toBe("read-span@2026-05-28");
+    expect(READ_SPAN_PROMPT_VERSION).toBe("read-span@2026-07-09");
+  });
+
+  it("documents the base English gloss for word cards", () => {
+    expect(READ_SPAN_SYSTEM_PROMPT).toMatch(/baseGloss/);
   });
 
   it("carries per-language morphology guidance for Turkish and German (Req 7)", () => {
