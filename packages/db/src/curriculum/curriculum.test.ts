@@ -339,6 +339,25 @@ describe('curriculum conjugationSeedKind (nominal-inflection points seed from th
       ]),
     ).toThrow(/selfRevealingElicitation/);
   });
+
+  it('rejects a paraphrase umbrella with no paraphrase config', () => {
+    expect(() =>
+      assertCurriculumInvariants([
+        {
+          key: 'es-b1-paraphrase',
+          kind: 'paraphrase',
+          name: 'Paraphrase (B1)',
+          description: 'x',
+          cefrLevel: 'B1',
+          language: Language.ES,
+          examplesPositive: ['a', 'b'],
+          examplesNegative: ['*c'],
+          commonErrors: ['d'],
+          // paraphrase config intentionally missing
+        } as never,
+      ]),
+    ).toThrow(/paraphrase/i);
+  });
 });
 
 describe('self-revealing elicitation — flagged entries', () => {
