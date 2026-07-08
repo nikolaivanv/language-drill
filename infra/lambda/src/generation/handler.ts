@@ -32,6 +32,7 @@ import {
 import { SendMessageBatchCommand, SQSClient } from '@aws-sdk/client-sqs';
 import {
   createObservedClaudeClient,
+  estimateCostUsd,
   flushObservability,
   GENERATION_PROMPT_VERSION,
   withLlmTrace,
@@ -43,7 +44,7 @@ import {
   parseGenerationJobMessage,
 } from './job-message';
 import { errMessage, summarizeResult } from './log';
-import { emitCellOutcomeMetric } from './metrics';
+import { emitCellCostMetric, emitCellOutcomeMetric } from './metrics';
 
 // ---------------------------------------------------------------------------
 // Cold-start singletons
@@ -329,7 +330,14 @@ export async function handler(
       // Application-failure signal (distinct from the runtime Errors metric):
       // emit one CellFailed point per terminal outcome. 'skipped-cost-cap'
       // self-suppresses inside the emitter.
-      emitCellOutcomeMetric(result.status, process.env.LANGFUSE_ENV ?? 'dev');
+      const metricEnv = process.env.LANGFUSE_ENV ?? 'dev';
+      emitCellOutcomeMetric(result.status, metricEnv);
+      // Anthropic-spend signal: emit this cell's estimated cost so the daily
+      // SUM alarm (GenerationDailyCostAlarm) can see total generation spend.
+      // Derived from the accumulated `tokenUsage` rather than `result.costUsd`
+      // so a `failed` cell (which reports costUsd=0 but carries real usage)
+      // still contributes the tokens it burned before failing.
+      emitCellCostMetric(estimateCostUsd(result.tokenUsage), metricEnv);
 
       // Result dispatch. Req 2.4 amendment: terminal failures (audit row
       // already has the verdict) are NOT pushed to batchItemFailures —

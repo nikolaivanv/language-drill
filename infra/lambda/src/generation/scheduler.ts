@@ -56,6 +56,33 @@ const SLOW_QUERY_WARNING_MS = 30_000;
 /** SQS `SendMessageBatch` hard limit. */
 const MAX_BATCH_SIZE = 10;
 
+/**
+ * Run-level ceiling: the maximum number of under-target cells one scheduler
+ * tick enqueues. Overridable via `SCHEDULER_MAX_CELLS_PER_RUN` (positive int).
+ *
+ * This is the brake the 2026-07-07 incident lacked — a curriculum bump fanned
+ * out 187 cells in one run and spent ~$117 with no runtime stop. Capping the
+ * fan-out bounds a single night's Anthropic spend (~cap × recent avg cost/cell);
+ * deferred cells are still under-target next night, so they re-enqueue with no
+ * persistence needed — an initial fill self-spreads over ceil(total / cap)
+ * nights. See docs/tech-debt.md "No brake or alert on Anthropic API spend".
+ */
+const DEFAULT_MAX_CELLS_PER_RUN = 60;
+
+/**
+ * Resolve the run-level cell cap from the environment, falling back to
+ * `DEFAULT_MAX_CELLS_PER_RUN`. A non-numeric, zero, or negative value is ignored
+ * (uses the default) so a fat-fingered env var can never *disable* the brake.
+ */
+function resolveMaxCellsPerRun(): number {
+  const raw = process.env['SCHEDULER_MAX_CELLS_PER_RUN'];
+  if (raw === undefined) return DEFAULT_MAX_CELLS_PER_RUN;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isInteger(parsed) && parsed > 0
+    ? parsed
+    : DEFAULT_MAX_CELLS_PER_RUN;
+}
+
 // ---------------------------------------------------------------------------
 // Cold-start singletons
 // ---------------------------------------------------------------------------
@@ -249,6 +276,30 @@ export async function handler(): Promise<void> {
         });
         break;
     }
+  }
+
+  // 5b. Run-level ceiling: cap how many under-target cells this tick enqueues
+  //     so one nightly fan-out can't spend an unbounded amount against the
+  //     Anthropic account. Sort by `need` descending (emptiest cells fill
+  //     first) with a deterministic `cellKey` tie-break, then keep the first
+  //     `cap`. Deferred cells stay under-target and re-enqueue on a later run —
+  //     no persistence, an initial fill self-spreads over ceil(total/cap)
+  //     nights. Applied on `undersized` BEFORE the coverage-targets map below
+  //     so it composes with the Phase-2 coverage controller.
+  const cap = resolveMaxCellsPerRun();
+  if (undersized.length > cap) {
+    undersized.sort(
+      (a, b) => b.need - a.need || a.cell.cellKey.localeCompare(b.cell.cellKey),
+    );
+    const deferredCount = undersized.length - cap;
+    undersized.length = cap;
+    log({
+      level: 'info',
+      cap,
+      enqueuedThisRun: cap,
+      deferredCount,
+      message: 'run-level cell cap applied — deferring cells to a later run',
+    });
   }
 
   // 6. Empty-curriculum-slice fast path (Req 4.9): nothing to enqueue →

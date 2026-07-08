@@ -29,6 +29,13 @@ export interface SchedulerLambdaConstructProps {
   /** Defaults to `events.Schedule.cron({ minute: '0', hour: '4' })` (04:00 UTC daily). */
   scheduleExpression?: events.Schedule;
   additionalEnv?: Record<string, string>;
+  /**
+   * Run-level ceiling: max under-target cells enqueued per tick, injected as
+   * `SCHEDULER_MAX_CELLS_PER_RUN`. Omit to use the scheduler code default (60).
+   * Changing it is a one-line CDK deploy — it bounds a single night's Anthropic
+   * spend by limiting the fan-out (docs/tech-debt.md spend-brake entry).
+   */
+  maxCellsPerRun?: number;
 }
 
 export class SchedulerLambdaConstruct extends Construct {
@@ -81,6 +88,9 @@ export class SchedulerLambdaConstruct extends Construct {
         ...(props.additionalEnv ?? {}),
         DATABASE_URL: databaseUrl.secretValue.unsafeUnwrap(),
         GENERATION_QUEUE_URL: props.queue.queueUrl,
+        ...(props.maxCellsPerRun !== undefined
+          ? { SCHEDULER_MAX_CELLS_PER_RUN: String(props.maxCellsPerRun) }
+          : {}),
       },
     });
 
