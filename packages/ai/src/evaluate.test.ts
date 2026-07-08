@@ -9,6 +9,7 @@ import type {
   TranslationContent,
   VocabRecallContent,
   SentenceConstructionContent,
+  ContextualParaphraseContent,
 } from "@language-drill/shared";
 import {
   buildUserPrompt,
@@ -958,6 +959,29 @@ describe("buildUserPrompt — sentence construction", () => {
     expect(msg).toContain("neutral");
     expect(msg).toMatch(/do NOT require a match/i);
     expect(msg).toContain(content.modelAnswers[0]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buildUserPrompt — contextual paraphrase
+// ---------------------------------------------------------------------------
+
+describe("buildUserPrompt — contextual paraphrase", () => {
+  const content: ContextualParaphraseContent = {
+    type: ExerciseType.CONTEXTUAL_PARAPHRASE,
+    instructions: "Rewrite.",
+    sourceText: "Me gusta el café.",
+    constraintKind: "avoid",
+    bannedTerms: ["gustar"],
+    constraintLabel: "Say this without «gustar».",
+    referenceParaphrases: ["Disfruto del café."],
+  };
+
+  it("renders a contextual_paraphrase exercise with the constraint + reference paraphrases", () => {
+    const prompt = buildUserPrompt(content, "Adoro el café.", Language.ES, CefrLevel.B1);
+    expect(prompt).toMatch(/Me gusta el café/);
+    expect(prompt).toMatch(/gustar/);
+    expect(prompt).toMatch(/Adoro el café/);
   });
 });
 
