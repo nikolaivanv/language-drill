@@ -197,7 +197,11 @@ function renderRecentStems(recentStems: readonly string[]): string {
 // so the sanctioned cue is the parenthetical BASE word ("(silla)" → sillita);
 // the derived form itself must never appear in the visible text. Pinned to
 // the seeded target form when one is supplied. Per-draft user prompt only.
-export const GENERATION_PROMPT_VERSION = "generate@2026-07-08a";
+// 2026-07-09: contextual_paraphrase guidance section (`{{contextualParaphraseSection}}`,
+// spliced after `{{sentenceConstructionSection}}`) plus a per-draft
+// avoid/register/simplify constraint-kind rotation (`contextualParaphraseConstraintForOrdinal`)
+// so a batch covers all three constraint kinds.
+export const GENERATION_PROMPT_VERSION = "generate@2026-07-09";
 
 /**
  * Wording differs per type so Claude reads it the way the cell is constrained:
@@ -254,6 +258,36 @@ This is a sentence_construction exercise: there is NO blank — the learner writ
   - \`keywords\`: put 3–4 everyday content words at or below CEFR ${cefrLevel} in \`keywords\`; the learner must use ALL of them in one sentence and the combination must force ${grammarPointName}. Every model answer must actually use every keyword.
   - \`situation\`: give a concrete one-line scenario in \`prompt\` (something said, a problem to react to) so the natural response exercises ${grammarPointName}; leave \`keywords\` empty.
   - \`grammar_target\`: name the structure in \`targetStructure\` AND give a concrete mini-scenario or seed content in \`prompt\`. The structure label alone is NOT enough to constrain the answer — this mode is the most prone to over-open prompts, so always anchor it to a situation.
+
+`;
+}
+
+/**
+ * Contextual-paraphrase-only guidance block. Mirrors
+ * `renderSentenceConstructionSection`: returns "" for every other type so
+ * non-paraphrase prompts stay byte-identical (preserving their Anthropic
+ * cache prefix and Langfuse cohort), and for a contextual_paraphrase cell
+ * returns a section ending in `\n\n` so the template's
+ * `{{contextualParaphraseSection}}## Output` splices cleanly.
+ */
+function renderContextualParaphraseSection(
+  exerciseType: ExerciseType,
+  language: string,
+  cefrLevel: string,
+): string {
+  if (exerciseType !== ExerciseType.CONTEXTUAL_PARAPHRASE) return "";
+  return `## Contextual-paraphrase specifics (this exercise type)
+
+This is a contextual_paraphrase exercise: there is NO blank. You author a natural ${language} \`sourceText\` sentence at CEFR ${cefrLevel} and ONE transformation constraint; the learner rewrites the sentence to satisfy the constraint while preserving meaning. The cloze/blank rules above do not apply; the **anti-leak**, vocabulary-band, and **Safe, neutral topics** rules DO apply, adapted as follows:
+
+- **The meaning MUST be preservable under the constraint.** Never author a source + constraint whose only faithful rewrite is the source itself, or which forces a meaning change. A competent learner must be able to produce at least two distinct valid paraphrases.
+- **Per constraint kind (the user message selects one per draft):**
+  - \`avoid\`: put the banned word(s)/structure(s) in \`bannedTerms\`; they MUST occur in \`sourceText\` and MUST NOT occur in any \`referenceParaphrases\`. Choose a term that has real ${language} synonyms or a circumlocution route at CEFR ${cefrLevel} — never a function word with no paraphrase.
+  - \`register\`: set \`targetRegister\`; the source must be in a clearly DIFFERENT register, and the rewrite changes register (address forms, politeness, lexis) WITHOUT changing the propositional content.
+  - \`simplify\`: set \`audience\`; the rewrite conveys the same information in language appropriate for that audience.
+- **\`referenceParaphrases\` (2–3) must each be fully grammatical ${language} at CEFR ${cefrLevel}, preserve the source meaning, and satisfy the constraint.** They are the learner's reveal hint and the validator's evidence that the task is solvable.
+- **Plain text only — no markdown.** \`instructions\`, \`sourceText\`, and \`constraintLabel\` render verbatim; use no emphasis markup.
+- **Do not spoil.** \`constraintLabel\` names the transformation; it must not hand the learner a finished paraphrase.
 
 `;
 }
@@ -356,7 +390,7 @@ export const GENERATION_SYSTEM_PROMPT_TEMPLATE = `You are an expert language exe
 - One exercise per tool call. Do not batch multiple inside one tool call.
 - You MUST use the provided tool. Do not return plain text.
 
-{{sentenceConstructionSection}}{{conjugationSection}}## Output
+{{sentenceConstructionSection}}{{contextualParaphraseSection}}{{conjugationSection}}## Output
 
 Use the {{toolName}} tool with all required fields populated.`;
 
@@ -406,6 +440,11 @@ export function computeGenerationPromptVars(
       language,
       cefrLevel,
       grammarPoint.name,
+    ),
+    contextualParaphraseSection: renderContextualParaphraseSection(
+      exerciseType,
+      language,
+      cefrLevel,
     ),
     conjugationSection: renderConjugationSection(
       exerciseType,
@@ -586,6 +625,21 @@ export function sentenceConstructionModeForOrdinal(
 }
 
 // ---------------------------------------------------------------------------
+// Contextual-paraphrase constraint-kind rotation
+// ---------------------------------------------------------------------------
+
+const CONTEXTUAL_PARAPHRASE_CONSTRAINTS = ["avoid", "register", "simplify"] as const;
+
+/** Deterministic constraint-kind rotation so a batch covers all three kinds. */
+export function contextualParaphraseConstraintForOrdinal(
+  ordinal: number,
+): (typeof CONTEXTUAL_PARAPHRASE_CONSTRAINTS)[number] {
+  return CONTEXTUAL_PARAPHRASE_CONSTRAINTS[
+    ordinal % CONTEXTUAL_PARAPHRASE_CONSTRAINTS.length
+  ];
+}
+
+// ---------------------------------------------------------------------------
 // User prompt — short per-draft message; the system prompt is the heavy lift.
 // ---------------------------------------------------------------------------
 
@@ -682,12 +736,16 @@ export function buildGenerationUserPrompt(
     inputs.exerciseType === ExerciseType.SENTENCE_CONSTRUCTION
       ? `Use prompt mode: ${sentenceConstructionModeForOrdinal(ordinal)}.\n\n`
       : "";
+  const paraphraseBlock =
+    inputs.exerciseType === ExerciseType.CONTEXTUAL_PARAPHRASE
+      ? `Use constraint kind: ${contextualParaphraseConstraintForOrdinal(ordinal)}.\n\n`
+      : "";
   const coverageBlock = renderCoverageBlock(inputs, ordinal, coverageTargets);
   return `Produce exercise #${ordinal + 1}.
 
 Topic domain: ${domain}
 
-${modeBlock}${coverageBlock}${digitFormBlock}${baseWordCueBlock}${seedBlock}Use the ${toolName} tool.`;
+${modeBlock}${paraphraseBlock}${coverageBlock}${digitFormBlock}${baseWordCueBlock}${seedBlock}Use the ${toolName} tool.`;
 }
 
 // ---------------------------------------------------------------------------

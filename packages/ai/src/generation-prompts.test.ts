@@ -28,6 +28,7 @@ import {
   capPriorPoolSurfaces,
   computeGenerationPromptVars,
   sentenceConstructionModeForOrdinal,
+  contextualParaphraseConstraintForOrdinal,
   tailRecentStems,
   type GenerationPromptInputs,
 } from "./generation-prompts.js";
@@ -283,7 +284,10 @@ describe("buildGenerationSystemPrompt", () => {
     // derived-form points (appreciative suffixes) cue the parenthetical BASE
     // word and pin the seeded target form; the derived form never appears in
     // the visible text.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-08a");
+    // Bumped 2026-07-09 — contextual_paraphrase guidance section spliced
+    // after the sentence-construction section, plus a per-draft
+    // avoid/register/simplify constraint-kind rotation.
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-09");
     // Tasks 7–9: pin the new guardrail phrases in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "every content word MUST be high-frequency everyday vocabulary at or below CEFR {{cefrLevel}}",
@@ -615,6 +619,16 @@ describe("GENERATION_SYSTEM_PROMPT_TEMPLATE byte parity", () => {
     // the template and the in-code builder cannot diverge on conjugation cells.
     await assertParity(
       { ...baseInputs, exerciseType: ExerciseType.CONJUGATION },
+      ["primera frase"],
+    );
+  });
+
+  it("contextual_paraphrase (the paraphrase-specific section is spliced before ## Output)", async () => {
+    // Locks byte parity through the non-empty `{{contextualParaphraseSection}}`
+    // branch so the template and the in-code builder cannot diverge on
+    // contextual_paraphrase cells.
+    await assertParity(
+      { ...baseInputs, exerciseType: ExerciseType.CONTEXTUAL_PARAPHRASE },
       ["primera frase"],
     );
   });
@@ -1099,6 +1113,24 @@ describe("computeGenerationPromptVars — conjugationSection", () => {
     );
     expect(vars.sentenceConstructionSection).toBe("");
   });
+
+  it("leaves contextualParaphraseSection empty for a non-paraphrase cell (mutually exclusive sections)", () => {
+    const vars = computeGenerationPromptVars(
+      { ...baseInputs, exerciseType: ExerciseType.CONJUGATION },
+      [],
+    );
+    expect(vars.contextualParaphraseSection).toBe("");
+  });
+
+  it("populates contextualParaphraseSection for a contextual_paraphrase cell", () => {
+    const vars = computeGenerationPromptVars(
+      { ...baseInputs, exerciseType: ExerciseType.CONTEXTUAL_PARAPHRASE },
+      [],
+    );
+    expect(vars.contextualParaphraseSection).toContain(
+      "Contextual-paraphrase specifics",
+    );
+  });
 });
 
 describe("sentenceConstructionModeForOrdinal", () => {
@@ -1107,6 +1139,15 @@ describe("sentenceConstructionModeForOrdinal", () => {
     expect(sentenceConstructionModeForOrdinal(1)).toBe("situation");
     expect(sentenceConstructionModeForOrdinal(2)).toBe("grammar_target");
     expect(sentenceConstructionModeForOrdinal(3)).toBe("keywords");
+  });
+});
+
+describe("contextualParaphraseConstraintForOrdinal", () => {
+  it("rotates avoid → register → simplify", () => {
+    expect(contextualParaphraseConstraintForOrdinal(0)).toBe("avoid");
+    expect(contextualParaphraseConstraintForOrdinal(1)).toBe("register");
+    expect(contextualParaphraseConstraintForOrdinal(2)).toBe("simplify");
+    expect(contextualParaphraseConstraintForOrdinal(3)).toBe("avoid");
   });
 });
 
@@ -1137,6 +1178,38 @@ describe("buildGenerationUserPrompt — sentence_construction", () => {
     const cloze = { ...inputs, exerciseType: ExerciseType.CLOZE };
     const msg = buildGenerationUserPrompt(cloze as never, 0, null);
     expect(msg).not.toContain("prompt mode:");
+  });
+});
+
+describe("buildGenerationUserPrompt — contextual_paraphrase", () => {
+  it("names the constraint kind for the ordinal", () => {
+    const prompt = buildGenerationUserPrompt(
+      { ...baseInputs, exerciseType: ExerciseType.CONTEXTUAL_PARAPHRASE },
+      1, // ordinal 1 → register
+      null,
+    );
+    expect(prompt).toMatch(/constraint kind: register/i);
+  });
+
+  it("rotates the constraint kind across ordinals 0/2", () => {
+    const avoidPrompt = buildGenerationUserPrompt(
+      { ...baseInputs, exerciseType: ExerciseType.CONTEXTUAL_PARAPHRASE },
+      0,
+      null,
+    );
+    expect(avoidPrompt).toMatch(/constraint kind: avoid/i);
+
+    const simplifyPrompt = buildGenerationUserPrompt(
+      { ...baseInputs, exerciseType: ExerciseType.CONTEXTUAL_PARAPHRASE },
+      2,
+      null,
+    );
+    expect(simplifyPrompt).toMatch(/constraint kind: simplify/i);
+  });
+
+  it("does not add a constraint-kind line for other types", () => {
+    const msg = buildGenerationUserPrompt(baseInputs, 1, null);
+    expect(msg).not.toContain("constraint kind:");
   });
 });
 
