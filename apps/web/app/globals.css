@@ -1176,6 +1176,14 @@ button:hover .lk-arr {
   height: calc(100dvh - 72px);
   min-height: 0;
 }
+/* Loading / error / empty states have no internal `.theory-scroll`, so the
+   hard height above would clip their content and let it paint over the shell
+   footer parked at the box's bottom edge (the not-found topic list overlapping
+   the footer). Let the box grow with content, filling the viewport at minimum. */
+.theory-detail--flow {
+  height: auto;
+  min-height: calc(100dvh - 72px);
+}
 .theory-detail-header {
   flex-shrink: 0;
   padding-bottom: var(--spacing-s-4);
@@ -1192,6 +1200,10 @@ button:hover .lk-arr {
      .theory-scroll stays the scroller (scroll-spy depends on it). */
   .theory-detail {
     height: calc(100dvh - 152px - env(safe-area-inset-bottom));
+  }
+  .theory-detail--flow {
+    height: auto;
+    min-height: calc(100dvh - 152px - env(safe-area-inset-bottom));
   }
   .theory-detail-body {
     margin-top: var(--spacing-s-4);

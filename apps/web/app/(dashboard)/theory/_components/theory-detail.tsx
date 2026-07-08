@@ -108,7 +108,12 @@ export function TheoryDetail({ topicId, language, fetchFn }: TheoryDetailProps) 
   }, [topicId]);
 
   return (
-    <div className="theory-detail">
+    // The fixed-height container is required only for the loaded article (its
+    // internal `.theory-scroll` scrolls and drives scroll-spy). The
+    // loading/error/empty states have no internal scroller, so the fixed
+    // height would clip their content over the shell footer — `--flow` lets
+    // the box grow with content instead.
+    <div className={`theory-detail${topic ? '' : ' theory-detail--flow'}`}>
       <header className="theory-detail-header">
         <Link href="/theory" className="theory-detail-back t-small text-ink-soft hover:text-ink">
           ← theory library
