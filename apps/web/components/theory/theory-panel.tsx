@@ -15,6 +15,7 @@ import {
   TopicSwitcherSheet,
 } from './topic-switcher-sheet';
 import { TheoryTitleSwitch } from './theory-title-switch';
+import { TheoryHubLink } from './theory-hub-link';
 import { useBodyScrollLock } from '../../lib/hooks/use-body-scroll-lock';
 import { useFocusTrap } from '../../lib/hooks/use-focus-trap';
 import { useScrollSpy } from '../../lib/hooks/use-scroll-spy';
@@ -143,6 +144,9 @@ export function TheoryPanel({
                   </h2>
                   {topic && <Chip>{topic.cefr}</Chip>}
                 </>
+              )}
+              {topic && (
+                <TheoryHubLink topicId={topic.id} title={topic.title} />
               )}
             </div>
             {topic && <div className="t-small">{topic.subtitle}</div>}

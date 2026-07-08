@@ -73,6 +73,23 @@ describe('TheoryPanel', () => {
     expect(labelEl?.textContent).toBe('el subjuntivo');
   });
 
+  it('renders a link to open the topic in the theory hub (new tab)', () => {
+    render(
+      <TheoryPanel
+        topicId="subjunctive"
+        language={Language.ES}
+        triggerEl={null}
+        onClose={vi.fn()}
+      />,
+      { wrapper: Wrapper },
+    );
+    const link = screen.getByRole('link', {
+      name: /open el subjuntivo in theory hub \(new tab\)/i,
+    });
+    expect(link).toHaveAttribute('href', '/theory/subjunctive');
+    expect(link).toHaveAttribute('target', '_blank');
+  });
+
   it('calls onClose when Escape is pressed', () => {
     const onClose = vi.fn();
     render(
@@ -181,6 +198,11 @@ describe('TheoryPanel', () => {
     expect(
       within(dialog).getByText('pretérito vs. imperfecto'),
     ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole('link', {
+        name: /open pretérito vs\. imperfecto in theory hub \(new tab\)/i,
+      }),
+    ).toHaveAttribute('href', '/theory/preterite-imperfect');
   });
 
   it('renders the empty state when the topic does not exist for the language', () => {
