@@ -450,7 +450,7 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
     ).toBeUndefined();
   });
 
-  it('the full TR clozeUnsuitable set is exactly these thirty-five points', () => {
+  it('the full TR clozeUnsuitable set is exactly these thirty-eight points', () => {
     const flagged = trCurriculum
       .filter((g) => g.clozeUnsuitable === true)
       .map((g) => g.key)
@@ -468,6 +468,9 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
         'tr-a2-reflexive-reciprocal-pronouns',
         'tr-a2-suffix-order-buffers',
         'tr-a2-relative-an',
+        // A2 audit additions (near-synonym / placement-clitic / semantic-choice blanks)
+        'tr-a2-clitics-da-bile',
+        'tr-a2-with-without-li-siz',
         'tr-b1-converb-while-yken',
         'tr-b1-participles-dik-acak',
         'tr-b1-since-converb',
@@ -476,6 +479,8 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
         'tr-b1-passive-voice',
         'tr-b1-reciprocal-voice',
         'tr-b1-reflexive-voice-kendi',
+        // B1 audit addition (ol- across free TAM under-constrains a single blank)
+        'tr-b1-copula-ol',
         // B2 (clause-linking / bipartite / under-constrained blanks)
         'tr-b2-participle-aorist',
         'tr-b2-converb-until',
@@ -598,9 +603,12 @@ describe('per-language counts', () => {
   it('Turkish is at full Yedi İklim A1 + A2 + B1 + B2 parity, has 15 vocab umbrellas, 3 dictation umbrellas, and 9 free-writing umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting } = countsFor(trCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(26);
-    expect(grammar.A2).toBeGreaterThanOrEqual(14);
-    expect(grammar.B1).toBe(11);
-    // B2 (2026-07-09): 17 Yedi İklim exam points + 2 G&K reverse-audit additions.
+    // A2 gained 5 G&K reverse-audit points (2026-07-10): spatial postpositions,
+    // nominal past copula, dA/bile clitics, -lI/-sIz, tane → 27.
+    expect(grammar.A2).toBeGreaterThanOrEqual(27);
+    // B1 gained 2 audit points (2026-07-10): suppletive ol-, olarak → 13.
+    expect(grammar.B1).toBe(13);
+    // B2 (2026-07-11): 17 Yedi İklim exam points + 2 G&K reverse-audit additions.
     // Grammar-only cycle — no B2 vocab/dictation/free-writing umbrellas.
     expect(grammar.B2).toBe(19);
     // 5 A1 + 5 A2 + 5 B1 themed vocab umbrellas.

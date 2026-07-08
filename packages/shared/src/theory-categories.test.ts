@@ -158,6 +158,12 @@ const EXPECTED_KEY_CATEGORY: Record<string, TheoryCategoryId> = {
   "tr-a2-pekistirme": "morphology",
   "tr-a2-purpose-icin-uzere": "syntax",
   "tr-a2-reported-speech": "syntax",
+  // Turkish A2 (audit additions)
+  "tr-a2-spatial-postpositions": "syntax",
+  "tr-a2-past-copula": "tenses",
+  "tr-a2-clitics-da-bile": "syntax",
+  "tr-a2-with-without-li-siz": "morphology",
+  "tr-a2-enumerator-tane": "syntax",
   // Turkish B1
   "tr-b1-past-continuous-iyordu": "tenses",
   "tr-b1-real-conditional": "moods",
@@ -170,6 +176,9 @@ const EXPECTED_KEY_CATEGORY: Record<string, TheoryCategoryId> = {
   "tr-b1-converb-while-yken": "syntax",
   "tr-b1-since-converb": "syntax",
   "tr-b1-participles-dik-acak": "syntax",
+  // Turkish B1 (audit additions)
+  "tr-b1-copula-ol": "syntax",
+  "tr-b1-olarak": "syntax",
   // Turkish B2
   "tr-b2-participle-aorist": "syntax",
   "tr-b2-participle-mis": "syntax",
