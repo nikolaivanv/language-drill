@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
 import { useSearchParams } from 'next/navigation';
@@ -102,17 +102,15 @@ function ConjugationPageContent() {
 
   // A grammarPoint-targeted set may have been re-leveled by the server (the
   // point's own CEFR level wins over the requested/profile difficulty — see
-  // resolveTargetedDifficulty in the lambda). Adopt it into the level display
-  // so the pill reads the level the set was ACTUALLY pulled at, mirroring how
-  // /drill's create-session onSuccess adopts `data.difficulty`. `difficulty`
-  // is optional on the response (compat with an already-deployed API that
-  // predates this field), so this only fires once the server has shipped it.
-  useEffect(() => {
-    if (!grammarPointKey) return;
-    if (!setData?.difficulty) return;
-    if (setData.difficulty === difficulty) return;
-    setLevel(setData.difficulty);
-  }, [grammarPointKey, setData?.difficulty, difficulty]);
+  // resolveTargetedDifficulty in the lambda). Reflect that in the level pill
+  // and the recap WITHOUT feeding it back into the query input: `difficulty`
+  // is part of useExerciseSet's query key, so a setLevel here would spawn a
+  // redundant refetch whose transition unmounts the exercise pane (and any
+  // in-progress typed answer) mid-session. `setData.difficulty` is optional on
+  // the response (compat with an already-deployed API that predates this
+  // field), so display falls back to the requested level until it ships.
+  const displayLevel =
+    grammarPointKey && setData?.difficulty ? setData.difficulty : difficulty;
 
   const onSubmit = async (answer: string, _meta: SubmissionMeta) => {
     const exercise = exercises[index];
@@ -213,7 +211,9 @@ function ConjugationPageContent() {
       <ConjugationReview
         items={reviewItems}
         language={activeLanguage}
-        difficulty={difficulty}
+        // Display usage: the recap header should report the level the set was
+        // ACTUALLY pulled at (the effective, possibly re-leveled one).
+        difficulty={displayLevel}
         durationSeconds={
           finishedAt ? Math.max(0, Math.floor((finishedAt - sessionStart) / 1000)) : 0
         }
@@ -267,7 +267,7 @@ function ConjugationPageContent() {
           theory link on its own line. */}
       <div className="mb-s-6 flex flex-col gap-s-3">
         <div className="flex flex-wrap items-center gap-s-3">
-          <DrillMeta level={difficulty} baseline={baseline} onLevelChange={onLevelChange} />
+          <DrillMeta level={displayLevel} baseline={baseline} onLevelChange={onLevelChange} />
           <Link
             href="/fluency?type=conjugation"
             className="ml-auto t-small text-ink-2 no-underline transition-colors hover:text-ink"
