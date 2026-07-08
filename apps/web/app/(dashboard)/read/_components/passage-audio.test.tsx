@@ -33,4 +33,14 @@ describe('PassageAudio', () => {
     await userEvent.click(screen.getByRole('button', { name: /listen/i }));
     await waitFor(() => expect(screen.getByText(/too long/i)).toBeInTheDocument());
   });
+
+  it('shows a neutral unavailable state when presigning fails (reason ok, no audioUrl)', async () => {
+    const fetchFn = vi.fn(async () => ({
+      json: async () => ({ audioUrl: null, durationSec: 0, reason: 'ok' }),
+    }));
+    renderWith(fetchFn);
+    await userEvent.click(screen.getByRole('button', { name: /listen/i }));
+    await waitFor(() => expect(screen.getByText(/try again later/i)).toBeInTheDocument());
+    expect(screen.queryByText(/too long/i)).not.toBeInTheDocument();
+  });
 });

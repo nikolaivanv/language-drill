@@ -48,10 +48,18 @@ export function PassageAudio({ entryId, fetchFn }: { entryId: string; fetchFn: A
     );
   }
 
-  if (data?.reason === 'too_long' || !data?.audioUrl) {
+  if (data?.reason === 'too_long') {
     return (
       <span className="t-small inline-flex min-h-[44px] items-center gap-[6px] text-ink-mute">
         audio unavailable — passage too long to narrate
+      </span>
+    );
+  }
+
+  if (!data?.audioUrl) {
+    return (
+      <span className="t-small inline-flex min-h-[44px] items-center gap-[6px] text-ink-mute">
+        audio unavailable — try again later
       </span>
     );
   }

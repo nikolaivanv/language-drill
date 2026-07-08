@@ -917,6 +917,48 @@ describe('POST /read/:entryId/audio', () => {
     expect(mockHeadObjectExists).not.toHaveBeenCalled();
     expect(mockSynthesizeReadingAudio).not.toHaveBeenCalled();
   });
+
+  it('cold cache: synthesizes, presigns, and meters read_tts usage under the daily cap', async () => {
+    // Plan lookup (defaults to 'free' — row absent), then the entry hit —
+    // owned row with no audioS3Key yet, so resolveReadAudio takes the
+    // HeadObject-miss → synth → record-usage → persist-key → presign path.
+    mockLimit.mockResolvedValueOnce([]);
+    mockLimit.mockResolvedValueOnce([
+      {
+        id: '33333333-3333-3333-3333-333333333333',
+        language: 'ES',
+        text: 'Hola mundo, esto es una prueba corta.',
+        audioS3Key: null,
+      },
+    ]);
+    mockHeadObjectExists.mockResolvedValueOnce(false);
+    // countRecentTts resolves via the awaited `.where()` (COUNT-style query);
+    // 0 is well under the free-plan read_tts limit (50).
+    whereResolved = [{ count: 0 }];
+    mockPresignAudioUrl.mockResolvedValueOnce('https://signed');
+
+    const res = await app.request(
+      '/read/33333333-3333-3333-3333-333333333333/audio',
+      { method: 'POST' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body).toMatchObject({ reason: 'ok', audioUrl: 'https://signed' });
+    expect(mockHeadObjectExists).toHaveBeenCalledTimes(1);
+    expect(mockSynthesizeReadingAudio).toHaveBeenCalledTimes(1);
+
+    // The usage insert fired with the EXACT `read_tts` bucket literal — a
+    // `read-tts` typo in the route's counter/insert closures would fail this
+    // assertion (mirrors the text_generation usage-insert assertion style in
+    // read.generate.test.ts).
+    const usageInsert = valuesArgs().find((row) => row.eventType === 'read_tts');
+    expect(usageInsert).toMatchObject({
+      userId: 'user_123',
+      eventType: 'read_tts',
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------
