@@ -18,6 +18,7 @@ import { computeSkillMovements, type SkillHistoryRow } from '../lib/debrief/skil
 import { db } from '../db';
 import { approvedStatusFilter, audioReadyFilter, freshFirstOrderBy } from '../lib/exercise-filters';
 import { mergeSessionRows } from '../lib/session-selection';
+import { resolveTargetedDifficulty } from '../lib/targeted-difficulty';
 import { presignAudioUrl } from '../lib/audio-url';
 import { withAudioUrl } from '../lib/dictation-content';
 import { authMiddleware } from '../middleware/auth';
@@ -61,21 +62,12 @@ export const CreateSessionRequestSchema = z.object({
   grammarPointKey: z.string().min(1).optional(),
 });
 
-/**
- * Effective difficulty for a session. A targeted drill must filter the pool at
- * the grammar point's OWN CEFR level (the key encodes it: `es-a2-…` → A2) —
- * the client sends the profile level, which can differ when the drill is
- * launched from a cross-level surface (theory detail page, /progress
- * next-level preview). Unknown keys keep the requested difficulty, so a stale
- * or malformed key degrades to today's behavior instead of a new 4xx.
- */
-export function resolveSessionDifficulty(
-  requested: CefrLevel,
-  grammarPointKey: string | undefined,
-): CefrLevel {
-  if (!grammarPointKey) return requested;
-  return getGrammarPoint(grammarPointKey)?.cefrLevel ?? requested;
-}
+// resolveSessionDifficulty is shared with GET /exercises/set (routes/exercises.ts)
+// so the two grammar-point-targeted pulls cannot drift; see the doc comment on
+// `resolveTargetedDifficulty` in lib/targeted-difficulty.ts for the rationale.
+// Re-exported under its original name so existing imports (sessions.test.ts)
+// keep working.
+export { resolveTargetedDifficulty as resolveSessionDifficulty } from '../lib/targeted-difficulty';
 
 // ---------------------------------------------------------------------------
 // Router
@@ -105,7 +97,7 @@ sessions.post('/sessions', async (c) => {
   }
 
   const { language, exerciseCount, exerciseType, grammarPointKey } = bodyResult.data;
-  const difficulty = resolveSessionDifficulty(bodyResult.data.difficulty, grammarPointKey);
+  const difficulty = resolveTargetedDifficulty(bodyResult.data.difficulty, grammarPointKey);
   const userId = c.get('userId');
   const now = new Date();
 

@@ -365,4 +365,20 @@ describe('ConjugationPage — grammarPoint targeting', () => {
       expect.not.objectContaining({ grammarPointKey: expect.anything() }),
     );
   });
+
+  it('adopts a server re-leveled difficulty into the level display (cross-level theory-page launch)', () => {
+    // Profile baseline is ES/B1 (see providerWrapper); a grammarPoint targeting
+    // an A2 point must re-level the display to A2, mirroring how /drill's
+    // create-session onSuccess adopts a re-leveled `data.difficulty`.
+    mockSearchParamsString = 'grammarPoint=es-a2-ser-vs-estar';
+    mockUseExerciseSet.mockReturnValue(
+      setReturn([CONJUGATION_EXERCISE], {
+        data: { exercises: [CONJUGATION_EXERCISE], available: 1, difficulty: CefrLevel.A2 },
+      }),
+    );
+
+    renderWithProviders(<ConjugationPage />);
+
+    expect(screen.getByRole('combobox')).toHaveValue(CefrLevel.A2);
+  });
 });

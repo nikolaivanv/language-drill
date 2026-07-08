@@ -72,6 +72,21 @@ describe('DrillThisPoint', () => {
     );
   });
 
+  it('renders a sentence-construction chip when the pool stocks it', async () => {
+    renderBlock(
+      makeFetch({
+        ...INFO,
+        exerciseCounts: { ...INFO.exerciseCounts, sentence_construction: 2 },
+      }),
+    );
+    await screen.findByRole('link', { name: /mixed drill/i }, FIND);
+
+    expect(screen.getByRole('link', { name: 'sentence construction' })).toHaveAttribute(
+      'href',
+      '/drill?start=quick&grammarPoint=es-a2-ser-vs-estar&exerciseType=sentence_construction',
+    );
+  });
+
   it('shows the mastery readout when mastery exists', async () => {
     renderBlock(makeFetch(INFO));
     await screen.findByRole('link', { name: /mixed drill/i }, FIND);

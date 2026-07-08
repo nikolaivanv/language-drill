@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
 import { useSearchParams } from 'next/navigation';
@@ -99,6 +99,20 @@ function ConjugationPageContent() {
 
   const exercises = setData?.exercises ?? [];
   const submit = useSubmitAnswer({ fetchFn });
+
+  // A grammarPoint-targeted set may have been re-leveled by the server (the
+  // point's own CEFR level wins over the requested/profile difficulty — see
+  // resolveTargetedDifficulty in the lambda). Adopt it into the level display
+  // so the pill reads the level the set was ACTUALLY pulled at, mirroring how
+  // /drill's create-session onSuccess adopts `data.difficulty`. `difficulty`
+  // is optional on the response (compat with an already-deployed API that
+  // predates this field), so this only fires once the server has shipped it.
+  useEffect(() => {
+    if (!grammarPointKey) return;
+    if (!setData?.difficulty) return;
+    if (setData.difficulty === difficulty) return;
+    setLevel(setData.difficulty);
+  }, [grammarPointKey, setData?.difficulty, difficulty]);
 
   const onSubmit = async (answer: string, _meta: SubmissionMeta) => {
     const exercise = exercises[index];

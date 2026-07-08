@@ -525,6 +525,51 @@ describe('GET /exercises/set', () => {
     const body = (await res.json()) as AnyJson;
     expect(body.code).toBe('VALIDATION_ERROR');
   });
+
+  // -------------------------------------------------------------------------
+  // grammarPoint-targeted difficulty override (Fix A) — mirrors POST /sessions'
+  // resolveSessionDifficulty via the shared lib/targeted-difficulty helper.
+  // -------------------------------------------------------------------------
+
+  it('known grammarPoint key: WHERE filters at the point\'s own level and the response echoes it', async () => {
+    const { getGrammarPoint: mockGetGrammarPoint } = await import('@language-drill/db');
+    (mockGetGrammarPoint as ReturnType<typeof vi.fn>).mockReturnValueOnce({
+      key: 'es-a2-ser-vs-estar',
+      cefrLevel: 'A2',
+    });
+    mockLimit.mockResolvedValueOnce([conj(1, 'a', 'a1', 'ben')]);
+
+    const res = await app.request(
+      '/exercises/set?language=ES&difficulty=B1&grammarPoint=es-a2-ser-vs-estar',
+      undefined,
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.difficulty).toBe('A2');
+    // mockWhere captures the conditions array passed to `and(...conditions)`;
+    // eq is the real drizzle eq, so inspect the serialized call args for the
+    // point's derived level rather than the requested B1.
+    expect(mockWhere).toHaveBeenCalled();
+    const whereArgs = mockWhere.mock.calls[0];
+    expect(JSON.stringify(whereArgs)).toContain('A2');
+  });
+
+  it('unknown grammarPoint key: keeps the requested difficulty', async () => {
+    // getGrammarPoint default (see mock factory) → undefined → no curriculum hit.
+    mockLimit.mockResolvedValueOnce([conj(1, 'a', 'a1', 'ben')]);
+
+    const res = await app.request(
+      '/exercises/set?language=ES&difficulty=B1&grammarPoint=es-zz-not-real',
+      undefined,
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.difficulty).toBe('B1');
+  });
 });
 
 // ---------------------------------------------------------------------------

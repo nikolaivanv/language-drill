@@ -275,10 +275,12 @@ progress.get('/progress/curriculum', async (c) => {
 // ---------------------------------------------------------------------------
 // GET /progress/points/:key — targeted-drill facts for ONE grammar point,
 // regardless of the user's active level. Consumed by the theory detail page's
-// "drill this point" block. `exerciseCounts` applies the exact same filters as
-// POST /sessions' pool pull (approved + audio-ready + the point's OWN level),
-// so a mode rendered from these counts can never 422 with
-// INSUFFICIENT_EXERCISES on launch.
+// "drill this point" block. `exerciseCounts` applies the exact same predicates
+// as POST /sessions' pool pull (approved + audio-ready + the point's OWN
+// level), so counts > 0 make a rendered mode's launch unlikely to dead-end —
+// not impossible: POST /sessions can still 422 with INSUFFICIENT_EXERCISES if
+// the whole same-level, type-filtered pool is smaller than the requested
+// exerciseCount (this endpoint reports presence, not a lower bound on N).
 // ---------------------------------------------------------------------------
 progress.get('/progress/points/:key', async (c) => {
   const key = c.req.param('key');

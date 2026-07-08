@@ -22,8 +22,12 @@ export const CreateSessionResponseSchema = z.object({
   id: z.string().uuid(),
   // The difficulty the session was ACTUALLY created at. For a targeted drill
   // the server derives it from the grammar-point key (es-a2-… → A2), which can
-  // differ from the requested (profile) difficulty.
-  difficulty: z.nativeEnum(CefrLevel),
+  // differ from the requested (profile) difficulty. Optional: a Vercel PREVIEW
+  // deploy of the web app points at the already-deployed API, which won't
+  // carry this field until the corresponding Lambda merges — a required field
+  // would brick session creation in previews (and break a Lambda-only
+  // rollback) until both sides ship together.
+  difficulty: z.nativeEnum(CefrLevel).optional(),
   exercises: z.array(ExerciseResponseSchema),
 });
 
