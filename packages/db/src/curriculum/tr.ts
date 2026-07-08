@@ -2846,24 +2846,23 @@ const trCurriculum: readonly GrammarPoint[] = [
     ],
     paraphrase: {
       seeds: [
-        'a complaint to a landlord',
-        'describing a childhood memory',
-        'asking a colleague for a deadline extension',
-        'giving directions to a tourist',
-        'declining an invitation politely',
-        'explaining why you are late',
-        'recommending a restaurant',
-        'apologising for a mistake at work',
-        'describing your morning routine',
-        'asking for a refund in a shop',
-        'inviting a friend to an event',
-        'summarising a film you saw',
-        'asking a neighbor to lower the noise',
-        'thanking a teacher for their help',
+        'bargaining with a vendor at a bazaar',
+        'asking a neighbour for help moving furniture',
+        'describing how a national holiday is celebrated at home',
+        'complaining about a noisy neighbour upstairs',
+        'asking a pharmacist for advice about a headache',
+        'turning down a wedding invitation',
+        'negotiating the price of a taxi ride',
+        'explaining a family tradition to a foreign friend',
+        'asking a shopkeeper to hold an item until payday',
+        'describing a power outage that ruined an evening',
+        'convincing a friend to try a new dish',
+        'explaining why you missed a family gathering',
+        'asking a landlord to fix a broken heater before winter',
+        'describing the atmosphere of a crowded tea house',
       ],
     },
   },
-
 ];
 
 export { trCurriculum };
