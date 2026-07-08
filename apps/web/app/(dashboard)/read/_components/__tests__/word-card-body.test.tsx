@@ -73,6 +73,57 @@ describe('DeepWordCardBody — core fields (Req 6.1)', () => {
     );
     expect(screen.getByText('tense aorist')).toBeInTheDocument();
   });
+
+  it('renders the base English gloss carried over from the skim card when provided', () => {
+    // The quick/skim card shows a short English meaning (e.g. "to eat"); it
+    // must stay visible once the full deep card resolves.
+    render(
+      <DeepWordCardBody
+        card={FULL_CARD}
+        gloss="to come"
+        inBank={false}
+        onSave={noop}
+        onSkip={noop}
+      />,
+    );
+    expect(screen.getByText('to come')).toBeInTheDocument();
+  });
+
+  it('omits the gloss line when neither a skim gloss nor a card baseGloss is present', () => {
+    render(
+      <DeepWordCardBody card={MINIMAL_CARD} inBank={false} onSave={noop} onSkip={noop} />,
+    );
+    expect(screen.queryByTestId('deep-word-gloss')).not.toBeInTheDocument();
+  });
+
+  it("falls back to the card's own baseGloss when no skim gloss is provided (non-flagged word)", () => {
+    // A manually selected word has no skim WordFlag, so the base meaning must
+    // come from the deep card itself.
+    render(
+      <DeepWordCardBody
+        card={{ ...MINIMAL_CARD, baseGloss: 'house' }}
+        inBank={false}
+        onSave={noop}
+        onSkip={noop}
+      />,
+    );
+    expect(screen.getByTestId('deep-word-gloss')).toHaveTextContent('house');
+  });
+
+  it('prefers the skim gloss over the card baseGloss when both exist (continuity, no flicker)', () => {
+    render(
+      <DeepWordCardBody
+        card={{ ...MINIMAL_CARD, baseGloss: 'dwelling' }}
+        gloss="home"
+        inBank={false}
+        onSave={noop}
+        onSkip={noop}
+      />,
+    );
+    const line = screen.getByTestId('deep-word-gloss');
+    expect(line).toHaveTextContent('home');
+    expect(line).not.toHaveTextContent('dwelling');
+  });
 });
 
 describe('DeepWordCardBody — morphology (Req 6.3, 7.1)', () => {
