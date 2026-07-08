@@ -6,6 +6,7 @@ export type MeteredEventType =
   | 'ai_evaluation'
   | 'read_annotation'
   | 'read_span_annotation'
+  | 'read_tts'
   | 'text_generation'
   | 'writing_helper';
 
@@ -15,6 +16,7 @@ export const BASE_DAILY_LIMITS: Record<MeteredEventType, number> = {
   ai_evaluation: 50,
   read_annotation: 50,
   read_span_annotation: 150,
+  read_tts: 50,
   text_generation: 20,
   writing_helper: 50,
 };
