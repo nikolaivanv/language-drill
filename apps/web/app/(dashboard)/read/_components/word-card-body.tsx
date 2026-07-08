@@ -175,12 +175,22 @@ function CollapsibleRow({
 
 export function DeepWordCardBody({
   card,
+  gloss,
   inBank,
   onSave,
   onSkip,
   skipRef,
 }: {
   card: DeepWordCard;
+  /**
+   * The short English meaning (e.g. "to eat") carried over from the skim
+   * `WordFlag.gloss`. The deep card's own schema has no base gloss — only the
+   * contextual "here" sense and the target-language definition — so without
+   * this the concise English meaning shown in the quick card would vanish when
+   * the full card resolves. Rendered under the header, mirroring the skim card;
+   * omitted when absent (deep cards opened on a non-flagged selection).
+   */
+  gloss?: string;
   inBank: boolean;
   onSave: () => void;
   onSkip: () => void;
@@ -209,6 +219,14 @@ export function DeepWordCardBody({
           <span className="ml-auto" />
           <span className="t-mono text-[11px] text-accent">{card.cefr}</span>
         </div>
+        {/* Base English gloss carried over from the skim card (e.g. "to eat"),
+         *  so the concise meaning shown in the quick card stays visible in the
+         *  full state. Mirrors the skim card's gloss line (Req 6.1). */}
+        {gloss && (
+          <p data-testid="deep-word-gloss" className="t-body text-ink-2 mt-[4px]">
+            {gloss}
+          </p>
+        )}
         <div className="t-mono mt-[3px] text-[10px] text-ink-mute">
           #{card.freq.toLocaleString('en-US')}
           {card.lemma !== card.surface && <> · {card.lemma}</>}
@@ -551,6 +569,7 @@ export function DeepCardError({
 
 export function DeepCardContent({
   slice,
+  gloss,
   inBank,
   onSave,
   onSkip,
@@ -560,6 +579,8 @@ export function DeepCardContent({
   resolveTheoryHref,
 }: {
   slice: DeepCardSlice;
+  /** Base English gloss from the skim `WordFlag`, forwarded to the word card. */
+  gloss?: string;
   inBank: boolean;
   onSave: () => void;
   onSkip: () => void;
@@ -591,6 +612,7 @@ export function DeepCardContent({
         return (
           <DeepWordCardBody
             card={card}
+            gloss={gloss}
             inBank={inBank}
             onSave={onSave}
             onSkip={onSkip}

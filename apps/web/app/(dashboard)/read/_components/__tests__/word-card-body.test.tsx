@@ -73,6 +73,28 @@ describe('DeepWordCardBody — core fields (Req 6.1)', () => {
     );
     expect(screen.getByText('tense aorist')).toBeInTheDocument();
   });
+
+  it('renders the base English gloss carried over from the skim card when provided', () => {
+    // The quick/skim card shows a short English meaning (e.g. "to eat"); it
+    // must stay visible once the full deep card resolves.
+    render(
+      <DeepWordCardBody
+        card={FULL_CARD}
+        gloss="to come"
+        inBank={false}
+        onSave={noop}
+        onSkip={noop}
+      />,
+    );
+    expect(screen.getByText('to come')).toBeInTheDocument();
+  });
+
+  it('omits the gloss line when no gloss is supplied', () => {
+    render(
+      <DeepWordCardBody card={MINIMAL_CARD} inBank={false} onSave={noop} onSkip={noop} />,
+    );
+    expect(screen.queryByTestId('deep-word-gloss')).not.toBeInTheDocument();
+  });
 });
 
 describe('DeepWordCardBody — morphology (Req 6.3, 7.1)', () => {
