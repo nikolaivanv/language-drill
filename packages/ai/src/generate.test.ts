@@ -27,6 +27,7 @@ import {
   generateOneDraft,
   parseGeneratedClozeDraft,
   parseGeneratedConjugationDraft,
+  parseGeneratedContextualParaphraseDraft,
   parseGeneratedDictationDraft,
   parseGeneratedFreeWritingDraft,
   parseGeneratedSentenceConstructionDraft,
@@ -962,6 +963,65 @@ describe("parseGeneratedSentenceConstructionDraft", () => {
       spec,
     );
     expect(out.keywords).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseGeneratedContextualParaphraseDraft
+// ---------------------------------------------------------------------------
+
+describe("parseGeneratedContextualParaphraseDraft", () => {
+  const spec = { exerciseType: ExerciseType.CONTEXTUAL_PARAPHRASE } as never;
+
+  it("parses an avoid-constraint draft", () => {
+    const out = parseGeneratedContextualParaphraseDraft(
+      {
+        instructions: "Rewrite the sentence.",
+        sourceText: "Me gusta mucho el café por la mañana.",
+        constraintKind: "avoid",
+        bannedTerms: ["gustar"],
+        constraintLabel: "Say this without using «gustar».",
+        referenceParaphrases: [
+          "Disfruto mucho del café por la mañana.",
+          "Adoro tomar café por la mañana.",
+        ],
+      },
+      spec,
+    );
+    expect(out.type).toBe(ExerciseType.CONTEXTUAL_PARAPHRASE);
+    expect(out.constraintKind).toBe("avoid");
+    expect(out.bannedTerms).toEqual(["gustar"]);
+    expect(out.referenceParaphrases).toHaveLength(2);
+  });
+
+  it("rejects an avoid draft with no bannedTerms", () => {
+    expect(() =>
+      parseGeneratedContextualParaphraseDraft(
+        {
+          instructions: "Rewrite.",
+          sourceText: "X.",
+          constraintKind: "avoid",
+          constraintLabel: "Avoid.",
+          referenceParaphrases: ["a", "b"],
+        },
+        spec,
+      ),
+    ).toThrow(/bannedTerms/);
+  });
+
+  it("rejects a register draft with no targetRegister", () => {
+    expect(() =>
+      parseGeneratedContextualParaphraseDraft(
+        {
+          instructions: "Rewrite.",
+          sourceText: "X.",
+          constraintKind: "register",
+          constraintLabel: "Formal.",
+          referenceParaphrases: ["a", "b"],
+        },
+        spec,
+      ),
+    ).toThrow(/targetRegister/);
   });
 });
 

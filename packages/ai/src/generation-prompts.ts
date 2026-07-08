@@ -738,6 +738,10 @@ export function canonicalSurface(content: ExerciseContent): string {
       // lemma+targetForm+pronoun uniquely identifies the item within a cell.
       // `subject` is optional on legacy rows; fall back to an empty segment.
       return `${normaliseSurface(content.lemma)}::${normaliseSurface(content.targetForm)}::${normaliseSurface(content.subject?.pronoun ?? "")}`;
+    case ExerciseType.CONTEXTUAL_PARAPHRASE:
+      // The source sentence is the dedup surface: no two paraphrase exercises
+      // in a cell may reuse the same sentence, regardless of constraint kind.
+      return normaliseSurface(content.sourceText);
     default: {
       const _exhaustive: never = content;
       throw new Error(
