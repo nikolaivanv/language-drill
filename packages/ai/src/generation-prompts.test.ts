@@ -249,7 +249,9 @@ describe("buildGenerationSystemPrompt", () => {
   it("carries a bumped, correctly-formatted GENERATION_PROMPT_VERSION", () => {
     // R1.7 / R2.6 / R7.4 — the coordinated prompt edit must ship a
     // `generate@YYYY-MM-DD` version so Langfuse cohorts old vs new traces.
-    expect(GENERATION_PROMPT_VERSION).toMatch(/^generate@\d{4}-\d{2}-\d{2}$/);
+    // Optional single-letter suffix = second bump on the same day (mirrors
+    // the CURRICULUM_VERSION_<LANG> convention in curriculum.test.ts).
+    expect(GENERATION_PROMPT_VERSION).toMatch(/^generate@\d{4}-\d{2}-\d{2}[a-z]?$/);
     // Bumped 2026-06-16 — two same-day edits share this cohort: (1) the
     // sentence-construction "Plain text only — no markdown" rule (the generator
     // leaked `**keyword**` emphasis into the plain-text `prompt` field, rendered
@@ -277,7 +279,11 @@ describe("buildGenerationSystemPrompt", () => {
     // numbers/ordinals cloze/translation cells now get a per-draft
     // digit-only-presentation directive (pinned to the seeded target value
     // when seeded) instead of the ordinary loose seed block.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-08");
+    // Bumped 2026-07-08a — self-revealing base-word-cue directive: flagged
+    // derived-form points (appreciative suffixes) cue the parenthetical BASE
+    // word and pin the seeded target form; the derived form never appears in
+    // the visible text.
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-08a");
     // Tasks 7–9: pin the new guardrail phrases in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "every content word MUST be high-frequency everyday vocabulary at or below CEFR {{cefrLevel}}",
@@ -798,6 +804,53 @@ describe("buildGenerationUserPrompt — self-revealing digit-form directive", ()
   it("unflagged cloze is byte-identical to before (loose seed block)", () => {
     const prompt = buildGenerationUserPrompt(baseInputs, 0, null, "mesa");
     expect(prompt).toContain('Build this exercise around the word "mesa"');
+    expect(prompt).not.toContain("target form");
+  });
+});
+
+describe("buildGenerationUserPrompt — self-revealing base-word-cue directive", () => {
+  const flaggedInputs: GenerationPromptInputs = {
+    ...baseInputs,
+    grammarPoint: {
+      ...baseInputs.grammarPoint,
+      selfRevealingElicitation: "base-word-cue" as const,
+      elicitationSeedValues: ["sillita", "hotelucho"],
+    },
+  };
+
+  it("pins the seeded target form and demands a parenthetical BASE-word cue (cloze)", () => {
+    const prompt = buildGenerationUserPrompt(flaggedInputs, 0, null, "sillita");
+    expect(prompt).toContain('The target form is "sillita"');
+    expect(prompt).toContain("BASE word");
+    // Neither the loose seed block nor the digit-form directive may leak in:
+    expect(prompt).not.toContain("Build this exercise around the word");
+    expect(prompt).not.toContain("digits");
+  });
+
+  it("emits a generic base-word-cue directive when unseeded (CLI/eval path)", () => {
+    const prompt = buildGenerationUserPrompt(flaggedInputs, 0, null, null);
+    expect(prompt).toContain("BASE word");
+    expect(prompt).toContain("derived form");
+  });
+
+  it("translation variant conveys the nuance in the SOURCE text and pins the reference form", () => {
+    const trInputs: GenerationPromptInputs = {
+      ...flaggedInputs,
+      exerciseType: ExerciseType.TRANSLATION,
+    };
+    const prompt = buildGenerationUserPrompt(trInputs, 0, null, "hotelucho");
+    expect(prompt).toContain('The target form is "hotelucho"');
+    expect(prompt).toContain("source");
+    expect(prompt).not.toContain("digits");
+  });
+
+  it("conjugation cells are unaffected by the flag (no directive, no seed misread)", () => {
+    const conjInputs: GenerationPromptInputs = {
+      ...flaggedInputs,
+      exerciseType: ExerciseType.CONJUGATION,
+    };
+    const prompt = buildGenerationUserPrompt(conjInputs, 0, null, "hablar");
+    expect(prompt).not.toContain("BASE word");
     expect(prompt).not.toContain("target form");
   });
 });

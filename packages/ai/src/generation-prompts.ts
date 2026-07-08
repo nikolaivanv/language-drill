@@ -191,7 +191,13 @@ function renderRecentStems(recentStems: readonly string[]): string {
 // user prompt now demands digit/numeral presentation instead, pinned to the
 // seeded value when one is supplied. Lives entirely in the per-draft user
 // prompt — the cached system template is untouched.
-export const GENERATION_PROMPT_VERSION = "generate@2026-07-08";
+// 2026-07-08a: self-revealing base-word-cue directive for flagged derived-form
+// points (`selfRevealingElicitation === 'base-word-cue'`, appreciative
+// suffixes). The target cannot be elicited without identifying its base word,
+// so the sanctioned cue is the parenthetical BASE word ("(silla)" → sillita);
+// the derived form itself must never appear in the visible text. Pinned to
+// the seeded target form when one is supplied. Per-draft user prompt only.
+export const GENERATION_PROMPT_VERSION = "generate@2026-07-08a";
 
 /**
  * Wording differs per type so Claude reads it the way the cell is constrained:
@@ -632,8 +638,29 @@ export function buildGenerationUserPrompt(
             : ""
         }Present the quantity/order ONLY as digits or numerals in the visible text (e.g. "3.º", "3.", "200", "123"), typically as the parenthetical hint — NEVER as the written word. The learner produces the written form (with correct agreement/gender/harmony) from the digit cue; the digit cue is the sanctioned elicitation for this cell, not an answer leak. Vary the noun and scenario; do not reuse a noun or template from earlier exercises in this batch.\n\n`
     : "";
+  // Self-revealing derived-form target (appreciative suffixes): the ONLY
+  // sanctioned elicitation is a parenthetical BASE-word cue — the learner
+  // chooses and forms the suffix from the context's nuance. Same placement
+  // and pinning rules as the digit-form block above.
+  const baseWordCue =
+    inputs.grammarPoint.selfRevealingElicitation === "base-word-cue" &&
+    (inputs.exerciseType === ExerciseType.CLOZE ||
+      inputs.exerciseType === ExerciseType.TRANSLATION);
+  const baseWordCueBlock = baseWordCue
+    ? inputs.exerciseType === ExerciseType.TRANSLATION
+      ? `${
+          seedWord && seedWord.length > 0
+            ? `The target form is "${seedWord}" — the reference translation must contain exactly this derived form; do not substitute another. `
+            : ""
+        }Write a source sentence whose meaning naturally elicits the derived form — express the nuance explicitly in the source (e.g. "a nice little chair", "a huge success", "a shabby run-down hotel") so the suffix choice is forced. The derived form must never appear in the source text. Vary the scenario; do not reuse a noun or template from earlier exercises in this batch.\n\n`
+      : `${
+          seedWord && seedWord.length > 0
+            ? `The target form is "${seedWord}" — the answer must be exactly this form; do not substitute another. `
+            : ""
+        }Cue the learner with the BASE word in parentheses after the sentence — e.g. "(silla)" when the answer is "sillita" — NEVER the derived form itself, and the derived form must not appear anywhere in the visible text. The base-word cue is the sanctioned elicitation for this cell, not an answer leak: the tested skill is choosing the suffix from the context's nuance and forming it with the correct allomorph and gender. Craft the context so the intended nuance (smallness/affection, augmentative force, or pejorative shabbiness) is unmistakable and no other established suffixed form of the same base fits. Vary the scenario; do not reuse a noun or template from earlier exercises in this batch.\n\n`
+    : "";
   const seedBlock =
-    !digitForm && seedWord && seedWord.length > 0
+    !digitForm && !baseWordCue && seedWord && seedWord.length > 0
       ? inputs.exerciseType === ExerciseType.CONJUGATION
         ? // Strict: the seed IS the word to inflect. No substitution escape hatch —
           // the picker already guarantees an inflectable word, and substitution
@@ -660,7 +687,7 @@ export function buildGenerationUserPrompt(
 
 Topic domain: ${domain}
 
-${modeBlock}${coverageBlock}${digitFormBlock}${seedBlock}Use the ${toolName} tool.`;
+${modeBlock}${coverageBlock}${digitFormBlock}${baseWordCueBlock}${seedBlock}Use the ${toolName} tool.`;
 }
 
 // ---------------------------------------------------------------------------

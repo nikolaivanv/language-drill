@@ -341,6 +341,33 @@ describe('curriculum conjugationSeedKind (nominal-inflection points seed from th
   });
 });
 
+describe('self-revealing elicitation — flagged entries', () => {
+  // es-b2-appreciative-suffixes: the derived form cannot be elicited without
+  // identifying the base word, so the cell uses the base-word-cue convention
+  // (2026-07-08 run: 4/41 approved, 23 context-spoils-answer rejects).
+  it('es-b2-appreciative-suffixes uses base-word-cue with a curated pool', () => {
+    const entry = getGrammarPoint('es-b2-appreciative-suffixes');
+    expect(entry?.selfRevealingElicitation).toBe('base-word-cue');
+    // Bounded pool = the cell's capacity; must be big enough to be worth
+    // running (mirrors the digit-form pools: ES 28, TR 24).
+    expect(entry?.elicitationSeedValues?.length ?? 0).toBeGreaterThanOrEqual(30);
+  });
+
+  it('the appreciative pool holds only transparent derivations — lexicalized forms stay recognition-only', () => {
+    const entry = getGrammarPoint('es-b2-appreciative-suffixes');
+    // These are "entirely new words" (B&B 43.2.3e / 43.3b): opaque stem or
+    // lexicalized meaning a learner cannot transparently produce from the base.
+    for (const lexicalized of ['portazo', 'bolsillo', 'sillón', 'cajón', 'ratón', 'bombilla']) {
+      expect(entry?.elicitationSeedValues).not.toContain(lexicalized);
+    }
+    // Forms already saturated in the approved pool are excluded so the seed
+    // rotation doesn't regenerate near-duplicates of existing exercises.
+    for (const alreadyPooled of ['sillita', 'cajita', 'besito', 'casucha', 'palmita', 'pulgarcito']) {
+      expect(entry?.elicitationSeedValues).not.toContain(alreadyPooled);
+    }
+  });
+});
+
 describe('curriculum personRotation flag (migrated to coverageSpec — Task 4)', () => {
   // The `personRotation` field has been migrated to `coverageSpec` in Task 4 of
   // the Pool Coverage Controller Phase 2 migration. Active entries no longer have
