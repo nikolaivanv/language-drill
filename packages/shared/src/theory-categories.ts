@@ -105,6 +105,8 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-a1-coordination-basic': 'syntax',
   'es-a1-porque-para': 'syntax',
   'es-a1-prepositions-a-en': 'pairs',
+  'es-a1-present-yo-go': 'tenses',
+  'es-a1-locative-prepositions': 'syntax',
 
   // --- Spanish (A2) ---
   'es-a2-present-irregular-stem-changes': 'tenses',
@@ -134,6 +136,12 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-a2-mente-adverbs': 'morphology',
   'es-a2-adjective-apocopation': 'morphology',
   'es-a2-comparatives-superlatives': 'syntax',
+  'es-a2-preterite-strong-stems': 'tenses',
+  'es-a2-preterite-stem-spelling': 'tenses',
+  'es-a2-saber-poder-ability': 'pairs',
+  'es-a2-hace-ago': 'syntax',
+  'es-a2-cada-mismo': 'syntax',
+  'es-a2-diacritic-pairs': 'orthography',
 
   // --- Spanish (B1/B2 grammar) ---
   'es-b1-present-subjunctive': 'moods',
@@ -162,6 +170,12 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-b1-que-vs-cual': 'pairs',
   'es-b1-ser-estar-uses': 'pairs',
   'es-b1-indirect-questions': 'syntax',
+  'es-b1-nominalizers': 'syntax',
+  'es-b1-impersonal-plural': 'syntax',
+  'es-b1-reciprocal-se': 'pronouns',
+  'es-b1-preterite-imperfect-meaning': 'tenses',
+  'es-b1-influence-verbs-infinitive': 'syntax',
+  'es-b1-ser-location-events': 'pairs',
 
   // --- Spanish (B2 additions) ---
   'es-b2-relative-clauses-advanced': 'syntax',
@@ -182,6 +196,14 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-b2-quantifiers-advanced': 'syntax',
   'es-b2-cleft-sentences': 'syntax',
   'es-b2-appreciative-suffixes': 'morphology',
+  'es-b2-conditional-conjecture': 'moods',
+  'es-b2-reported-speech-backshift': 'syntax',
+  'es-b2-cuyo': 'syntax',
+  'es-b2-nosotros-imperative': 'moods',
+  'es-b2-gradual-gerund': 'syntax',
+  'es-b2-perception-verbs': 'syntax',
+  'es-b2-correlative-comparison': 'syntax',
+  'es-b2-adjective-position': 'syntax',
 
   // --- Turkish A1 ---
   'tr-a1-vowel-harmony': 'orthography',
