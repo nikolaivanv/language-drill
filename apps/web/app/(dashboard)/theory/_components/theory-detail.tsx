@@ -78,9 +78,12 @@ export function TheoryDetail({ topicId, language, fetchFn }: TheoryDetailProps) 
   // Hook called unconditionally (empty ids until the topic loads).
   const activeSectionId = useScrollSpy(sectionIds, scrollRef);
 
-  // Targeted-drill key for the loaded topic. Derived from the LOADED topic's
-  // id (not the route param) so the block always matches the article shown.
-  const drillKey = topic ? grammarPointKeyForTopicId(topic.id, language) : null;
+  // Targeted-drill key for the loaded topic. Derived from the route's topicId
+  // (the canonical `theory_topics.topic_id` slug, e.g. `a2-ser-vs-estar`) —
+  // NOT from `topic.id`: DB-backed content JSON embeds the FULL grammar-point
+  // key there (`es-a2-ser-vs-estar`), which would double the language prefix.
+  // Gated on `topic` so the block only mounts alongside a loaded article.
+  const drillKey = topic ? grammarPointKeyForTopicId(topicId, language) : null;
 
   const handleJump = useCallback((id: string) => {
     const root = scrollRef.current;

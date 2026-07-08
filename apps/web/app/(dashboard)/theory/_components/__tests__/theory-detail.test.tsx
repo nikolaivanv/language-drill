@@ -94,7 +94,7 @@ const LIST_TOPICS = [
   { id: 'der-akkusativ', title: 'der akkusativ', cefr: 'A2' },
 ];
 
-type FetchOpts = { topicStatus?: number; drillInfo?: unknown };
+type FetchOpts = { topicStatus?: number; drillInfo?: unknown; topicBody?: unknown };
 
 // One fetch that dispatches by URL shape: `/theory/DE/<id>` → the single topic,
 // `/theory/DE` → the list, `/progress/points/<key>` → the drill-info lookup. A
@@ -102,8 +102,14 @@ type FetchOpts = { topicStatus?: number; drillInfo?: unknown };
 // (how `createAuthenticatedFetch` surfaces 4xx/5xx). `drillInfo` left
 // undefined means "unknown point" — the endpoint 404s and the drill block
 // hides itself, so all pre-existing tests (which don't pass `drillInfo`) keep
-// rendering the page without it.
-function makeFetch({ topicStatus = 200, drillInfo }: FetchOpts = {}): AuthenticatedFetch {
+// rendering the page without it. `topicBody` defaults to `TOPIC_BODY` but can
+// be overridden to simulate real DB payloads whose `id` is the FULL
+// grammar-point key rather than the route slug.
+function makeFetch({
+  topicStatus = 200,
+  drillInfo,
+  topicBody = TOPIC_BODY,
+}: FetchOpts = {}): AuthenticatedFetch {
   return vi.fn<AuthenticatedFetch>(async (input: RequestInfo | URL) => {
     const url = typeof input === 'string' ? input : input.toString();
     if (url.startsWith('/progress/points/')) {
@@ -118,7 +124,7 @@ function makeFetch({ topicStatus = 200, drillInfo }: FetchOpts = {}): Authentica
       if (topicStatus !== 200) {
         throw errorWithStatus('topic request failed', topicStatus);
       }
-      return jsonResponse(TOPIC_BODY);
+      return jsonResponse(topicBody);
     }
     return jsonResponse({ topics: LIST_TOPICS });
   }) as unknown as AuthenticatedFetch;
@@ -271,6 +277,27 @@ describe('TheoryDetail drill block', () => {
     await screen.findByRole('heading', { level: 1, name: 'der dativ' }, FIND);
 
     expect(screen.queryByRole('link', { name: /mixed drill/i })).not.toBeInTheDocument();
+  });
+
+  it('derives the drill key from the route topicId, not the topic body id (DB payloads embed the full key)', async () => {
+    // Real DB-backed payloads carry the FULL grammar-point key as `id`
+    // (`de-der-dativ`), unlike the route slug (`der-dativ`). The drill-info
+    // request must not double the language prefix (`de-de-der-dativ`).
+    const fetchFn = makeFetch({
+      topicBody: { ...TOPIC_BODY, id: 'de-der-dativ' },
+      drillInfo: {
+        grammarPointKey: 'de-der-dativ',
+        exerciseCounts: { cloze: 3 },
+        mastery: null,
+      },
+    });
+    renderDetail(fetchFn);
+    await screen.findByRole('heading', { level: 1, name: 'der dativ' }, FIND);
+
+    await screen.findByRole('link', { name: /mixed drill/i }, FIND);
+    const calls = (fetchFn as unknown as ReturnType<typeof vi.fn>).mock.calls.map((c) => String(c[0]));
+    expect(calls).toContain('/progress/points/de-der-dativ');
+    expect(calls.some((u) => u.includes('de-de-der-dativ'))).toBe(false);
   });
 });
 
