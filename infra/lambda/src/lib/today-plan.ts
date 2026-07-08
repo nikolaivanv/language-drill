@@ -37,6 +37,10 @@ export const ESTIMATED_MINUTES_BY_TYPE: Record<ExerciseType, number> = {
   // session plan; 2 min is a sensible default for the rare path that
   // ever surfaces a conjugation row.
   [ExerciseType.CONJUGATION]: 2,
+  // Contextual paraphrase is opt-in (v1: not auto-composed into the default
+  // plan — see CORE_TYPE_CYCLE/BACKFILL_TYPE_PRIORITY below); 3 min is a
+  // sensible default for the rare path that ever surfaces a paraphrase row.
+  [ExerciseType.CONTEXTUAL_PARAPHRASE]: 3,
 };
 
 // ---------------------------------------------------------------------------
@@ -58,6 +62,8 @@ export const ITEM_COUNT_BY_TYPE: Record<ExerciseType, number> = {
   [ExerciseType.FREE_WRITING]: 1,
   // One conjugation prompt per drill (single-form production exercise).
   [ExerciseType.CONJUGATION]: 1,
+  // One paraphrase prompt per drill.
+  [ExerciseType.CONTEXTUAL_PARAPHRASE]: 2,
 };
 
 // ---------------------------------------------------------------------------
