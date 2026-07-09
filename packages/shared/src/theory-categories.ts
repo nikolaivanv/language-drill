@@ -138,6 +138,7 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-a2-comparatives-superlatives': 'syntax',
   'es-a2-preterite-strong-stems': 'tenses',
   'es-a2-preterite-stem-spelling': 'tenses',
+  'es-a2-preterite-yo-spelling': 'tenses',
   'es-a2-saber-poder-ability': 'pairs',
   'es-a2-hace-ago': 'syntax',
   'es-a2-cada-mismo': 'syntax',

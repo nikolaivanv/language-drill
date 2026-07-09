@@ -248,12 +248,20 @@ export function assertCurriculumInvariants(
         `Curriculum invariant violated: '${entry.key}' is conjugationSeedKind 'predicate-nominal' but has no conjugationSeedWords`,
       );
     }
+    // conjugationSeedWords is a curated seed pool. Allowed on 'predicate-nominal'
+    // (the copular predicate pool, required above) AND on verb-morphology points
+    // (kind undefined or 'verb') whose target verb set is small and closed —
+    // e.g. es-a1-present-yo-go: the curated list REPLACES the DB frequency band
+    // so the generator can't pick off-target verbs (a 3sg "hace" doesn't exercise
+    // the irregular yo-form). A pool on 'noun'/'none' is dead config.
     if (
       entry.conjugationSeedWords &&
-      entry.conjugationSeedKind !== 'predicate-nominal'
+      entry.conjugationSeedKind !== 'predicate-nominal' &&
+      entry.conjugationSeedKind !== 'verb' &&
+      entry.conjugationSeedKind !== undefined
     ) {
       throw new Error(
-        `Curriculum invariant violated: '${entry.key}' has conjugationSeedWords but conjugationSeedKind is not 'predicate-nominal'`,
+        `Curriculum invariant violated: '${entry.key}' has conjugationSeedWords but conjugationSeedKind '${entry.conjugationSeedKind}' does not support a curated pool (allowed: 'predicate-nominal', 'verb')`,
       );
     }
 

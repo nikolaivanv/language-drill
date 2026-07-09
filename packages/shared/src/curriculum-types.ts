@@ -122,14 +122,21 @@ export type GrammarPoint = Readonly<{
    */
   conjugationSeedKind?: 'verb' | 'noun' | 'predicate-nominal' | 'none';
   /**
-   * Curated predicate pool for a `conjugationSeedKind: 'predicate-nominal'`
-   * cell: professions, roles, nationalities, and predicate adjectives that form
-   * natural copular sentences ("Ben doktorum", "Sen yorgunsun"). Replaces the
-   * generic DB noun band, whose concrete object nouns make nonsensical copular
-   * predicates. REQUIRED (non-empty) iff
-   * `conjugationSeedKind === 'predicate-nominal'`; meaningless on any other kind
-   * (enforced by a curriculum invariant). Each ordinal varies the predicate
-   * (the lexical diversity axis); the grammatical person stays driven by
+   * Curated seed pool for a CONJUGATION cell, replacing the DB band. Two uses,
+   * both enforced by a curriculum invariant:
+   *   - `conjugationSeedKind: 'predicate-nominal'` — professions, roles,
+   *     nationalities, and predicate adjectives that form natural copular
+   *     sentences ("Ben doktorum", "Sen yorgunsun"), instead of the generic noun
+   *     band whose concrete object nouns make nonsensical predicates. REQUIRED
+   *     (non-empty) for this kind.
+   *   - verb-morphology points (kind undefined or `'verb'`) with a small, closed
+   *     target-verb set (e.g. es-a1-present-yo-go) — a curated VERB list that
+   *     replaces the frequency band so the generator can't pick off-target verbs
+   *     (a 3sg "hace" doesn't exercise the irregular yo-form). Keyed on
+   *     `(lemma, person)` like the DB verb path. Size it to comfortably exceed
+   *     the largest single-person floor or the cell exhausts early.
+   * Forbidden on 'noun'/'none' (dead config). Each ordinal varies the seed (the
+   * lexical diversity axis); the grammatical person stays driven by
    * `coverageSpec`/`coverageTargets`.
    */
   conjugationSeedWords?: readonly string[];

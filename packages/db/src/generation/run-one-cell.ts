@@ -558,13 +558,22 @@ export async function buildSeedWords(
     return pickSeeds({ band, batchSeed, count, exclude: priorSeeds });
   }
 
-  // Verb conjugation: at-or-below-level verbs (CUMULATIVE band from rank 1), keyed
-  // on (lemma, person). Persons come from the ordinal's coverage target.
+  // Verb conjugation: keyed on (lemma, person). Persons come from the ordinal's
+  // coverage target. A narrow point with a small, closed target-verb set supplies
+  // `conjugationSeedWords` — a curated verb list that REPLACES the frequency band
+  // so the generator can't wander onto off-target verbs (e.g. a 3sg "hace" for the
+  // es-a1-present-yo-go point doesn't exercise the irregular yo-form, so the
+  // validator rejects it). Otherwise draw the at-or-below-level DB verb band
+  // (CUMULATIVE from rank 1).
   const persons = Array.from(
     { length: count },
     (_, ordinal) => coverageTargets?.[ordinal]?.person ?? null,
   );
-  const band = await loadVerbBand(db, cell.language, 1, window.rankMax);
+  const curatedVerbs = cell.grammarPoint.conjugationSeedWords;
+  const band =
+    curatedVerbs && curatedVerbs.length > 0
+      ? curatedVerbs
+      : await loadVerbBand(db, cell.language, 1, window.rankMax);
   return pickConjugationSeeds({ band, batchSeed, count, persons, exclude: priorSeeds });
 }
 

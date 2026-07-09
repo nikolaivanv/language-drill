@@ -1342,6 +1342,61 @@ describe('buildSeedWords — predicate-nominal (curated pool, no DB)', () => {
 });
 
 // ---------------------------------------------------------------------------
+// buildSeedWords — curated VERB pool. UNGATED (no DB): a verb-morphology point
+// with a closed target-verb set (e.g. es-a1-present-yo-go) supplies
+// `conjugationSeedWords`, which REPLACES the DB frequency band so the generator
+// can't wander onto off-target verbs. Keyed on (lemma, person) like the DB verb
+// path. The stub db throws if touched, asserting the no-DB-query contract.
+// ---------------------------------------------------------------------------
+
+describe('buildSeedWords — curated verb pool (no DB)', () => {
+  const throwingDb = new Proxy(
+    {},
+    {
+      get() {
+        throw new Error('buildSeedWords queried the DB on the curated-verb path');
+      },
+    },
+  ) as unknown as Db;
+
+  const curatedVerbCell = (): Cell => {
+    const clozeCell = buildTestCell();
+    return {
+      ...clozeCell,
+      exerciseType: ExerciseType.CONJUGATION,
+      grammarPoint: {
+        ...clozeCell.grammarPoint,
+        // conjugationSeedKind omitted → verb path; curated list constrains it.
+        conjugationSeedWords: ['hacer', 'poner', 'tener'],
+      },
+      cellKey: 'es:a1:conjugation:es-a1-present-yo-go',
+    };
+  };
+
+  it('seeds from the curated verb pool without touching the DB', async () => {
+    const targets = [{ person: '1sg' }, { person: '1sg' }, { person: '1sg' }];
+    const seeds = await buildSeedWords(throwingDb, curatedVerbCell(), 3, 'seed-v', new Set(), targets);
+    expect(seeds).toBeDefined();
+    const chosen = seeds!.filter((s): s is string => typeof s === 'string');
+    expect(chosen.length).toBe(3);
+    for (const s of chosen) expect(['hacer', 'poner', 'tener']).toContain(s);
+  });
+
+  it('excludes prior (lemma|person) seeds', async () => {
+    const targets = [{ person: '1sg' }, { person: '1sg' }, { person: '1sg' }];
+    const reseeded = (await buildSeedWords(
+      throwingDb,
+      curatedVerbCell(),
+      3,
+      'seed-v',
+      new Set(['hacer|1sg']),
+      targets,
+    ))!;
+    expect(reseeded).not.toContain('hacer');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // buildSeedWords — elicitation-values path. UNGATED (no DB): a self-revealing
 // flagged cell (e.g. numbers/ordinals) seeds from the curated
 // `elicitationSeedValues` pool on the grammar point, so this branch never

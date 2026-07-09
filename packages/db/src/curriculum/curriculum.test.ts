@@ -291,6 +291,32 @@ describe('curriculum conjugationSeedKind (nominal-inflection points seed from th
     ).toThrow(/conjugationSeedWords/);
   });
 
+  it('allows a curated verb pool on a verb-morphology point (conjugationSeedWords, no predicate-nominal flag)', () => {
+    // The seed-words invariant must ACCEPT conjugationSeedWords on a verb point.
+    // (This synthetic single-entry set still trips the unrelated grammar-count
+    // floor, so assert only that the seed-words rule itself does not fire — the
+    // real-curriculum validity test covers the full positive path.)
+    expect(() =>
+      assertCurriculumInvariants([
+        {
+          key: 'es-a1-synthetic-curated-verb',
+          kind: 'grammar',
+          name: 'Synthetic curated verb pool',
+          description: 'Synthetic entry for curated-verb-pool invariant testing.',
+          cefrLevel: 'A1',
+          language: Language.ES,
+          examplesPositive: ['a', 'b'],
+          examplesNegative: ['*c'],
+          commonErrors: ['e'],
+          conjugationSuitable: true,
+          // conjugationSeedKind omitted → defaults to the verb path; a closed
+          // target-verb set is a legitimate curated pool here.
+          conjugationSeedWords: ['hacer', 'poner', 'tener'],
+        },
+      ]),
+    ).not.toThrow(/conjugationSeedWords/);
+  });
+
   it('verb-morphology conjugation points keep the default verb seed (no flag)', () => {
     for (const key of [
       'tr-a2-aorist',
@@ -582,7 +608,9 @@ describe('per-language counts', () => {
   }
 
   // ES is at full PCIC A1-B2 parity plus the 2026-07-09 Butt & Benjamin gap
-  // audit (22 extra points): 24 A1 + 33 A2 + 25 B1 + 31 B2 grammar points.
+  // audit (22 extra points): 24 A1 + 34 A2 + 25 B1 + 31 B2 grammar points.
+  // (2026-07-11: A2 33→34 — es-a2-preterite-stem-spelling split into a
+  // 3rd-person point + the new es-a2-preterite-yo-spelling.)
   // DE is still TEMPORARILY REDUCED (2026-05-10). TR (2026-05-28) is now at
   // full Yedi İklim A1+A2 parity (26 A1 + 14 A2 grammar + 10 themed vocab
   // umbrellas); B1/B2 remain disabled.
@@ -590,7 +618,7 @@ describe('per-language counts', () => {
   it('Spanish is at full PCIC A1–B2 parity (+ B&B gap audit), has 12 vocab umbrellas, 4 dictation umbrellas, and 18 free-writing umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting } = countsFor(esCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(24);
-    expect(grammar.A2).toBeGreaterThanOrEqual(33);
+    expect(grammar.A2).toBeGreaterThanOrEqual(34);
     expect(grammar.B1).toBeGreaterThanOrEqual(25);
     expect(grammar.B2).toBeGreaterThanOrEqual(31);
     // 5 A1 + 5 A2 themed umbrellas + es-b1-environment-vocab + es-b2-abstract-noun-vocab.
