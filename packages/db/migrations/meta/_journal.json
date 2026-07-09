@@ -253,6 +253,13 @@
       "when": 1783549991578,
       "tag": "0035_large_pandemic",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1783637182488,
+      "tag": "0036_curious_shape",
+      "breakpoints": true
     }
   ]
 }

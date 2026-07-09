@@ -115,10 +115,10 @@ function baseOpts(
 // ---------------------------------------------------------------------------
 
 describe("PROMPTS manifest", () => {
-  it("contains exactly seventeen entries — one per registered Langfuse prompt", () => {
+  it("contains exactly eighteen entries — one per registered Langfuse prompt", () => {
     // Bumps here are intentional: adding/removing a prompt should be a
     // PR-level conversation, not silently slip past the test gate.
-    expect(PROMPTS).toHaveLength(17);
+    expect(PROMPTS).toHaveLength(18);
   });
 
   it("registers every surface listed in design Component 4", () => {
@@ -142,7 +142,14 @@ describe("PROMPTS manifest", () => {
         "dictation-eval",
         "dictation-generate",
         "dictation-validate",
+        "vocab-target-generate",
       ]),
+    );
+  });
+
+  it("includes the vocab-target generation prompt", () => {
+    expect(PROMPTS.map((p) => p.name)).toContain(
+      "vocab-target-generate-system-prompt",
     );
   });
 
