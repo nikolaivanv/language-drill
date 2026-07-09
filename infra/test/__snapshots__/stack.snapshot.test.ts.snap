@@ -2146,6 +2146,37 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
       },
       "Type": "AWS::CloudWatch::Alarm",
     },
+    "GenerationLambdaWrapGenerationDailyCostAlarmCDEBB717": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "AlertsAlertsTopic96BD0900",
+          },
+        ],
+        "AlarmDescription": "Phase 4 (exercise gen): estimated Anthropic spend across all cells in one day exceeded the daily cost threshold (default $50). Catches a runaway fan-out that the CellFailures alarm misses because the cells all succeed.",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Dimensions": [
+          {
+            "Name": "env",
+            "Value": "prod",
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "CellCostUsd",
+        "Namespace": "LanguageDrill/Generation",
+        "Period": 86400,
+        "Statistic": "Sum",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Threshold": 50,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
     "GenerationLambdaWrapGenerationErrorsAlarm3DD6FF6D": {
       "Properties": {
         "AlarmActions": [
@@ -3050,6 +3081,36 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
                   ],
                 },
               ],
+            },
+            {
+              "Action": [
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "StorageContentBucket858D6C32",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": "polly:SynthesizeSpeech",
+              "Effect": "Allow",
+              "Resource": "*",
             },
             {
               "Action": [

@@ -11,6 +11,7 @@ import {
   type TranslationContent,
   type VocabRecallContent,
   type SentenceConstructionContent,
+  type ContextualParaphraseContent,
   type CefrLevel,
   type Language,
   ExerciseType,
@@ -207,6 +208,30 @@ ${registerLine}
 Evaluate the user's sentence. Judge grammatical accuracy and naturalness; fold into **Task Achievement** whether the prompt was satisfied — for keywords mode every keyword is used, for situation mode the communicative goal is met, for grammar_target mode the target structure is used. Reward complexity beyond the minimum. Flag errors outside the target structure too (do not ignore a wrong article because the target was the subjunctive).`;
 }
 
+function buildContextualParaphraseUserPrompt(
+  exercise: ContextualParaphraseContent,
+  userAnswer: string,
+  language: Language,
+  difficulty: CefrLevel,
+): string {
+  const constraintDetail =
+    exercise.constraintKind === "avoid"
+      ? `The learner must NOT use these words/structures: ${(exercise.bannedTerms ?? []).join(", ")}.`
+      : exercise.constraintKind === "register"
+        ? `The rewrite must be in ${exercise.targetRegister} register.`
+        : `The rewrite must be simplified for: ${exercise.audience}.`;
+  return `Evaluate this ${language} contextual-paraphrase answer at CEFR ${difficulty}.
+
+Original sentence: ${exercise.sourceText}
+Task: ${exercise.constraintLabel}
+Constraint: ${constraintDetail}
+Model paraphrases (for reference — accept any valid alternative): ${exercise.referenceParaphrases.join(" / ")}
+
+Learner's paraphrase: ${userAnswer}
+
+Score taskAchievement on BOTH meaning preservation AND constraint adherence: a rewrite that changes the meaning OR violates the constraint (uses a banned term / wrong register / not simplified) scores low on taskAchievement even if otherwise fluent. Score grammarAccuracy on the rewrite's grammar and vocabularyRange on the lexis reached for (reward valid synonyms/circumlocution). List concrete errors with corrections.`;
+}
+
 /**
  * Authoritative grammar grounding for the evaluator, resolved by the caller
  * from the exercise's `grammarPointKey` (the curriculum lives in
@@ -280,6 +305,9 @@ export function buildUserPrompt(
       break;
     case ExerciseType.SENTENCE_CONSTRUCTION:
       base = buildSentenceConstructionUserPrompt(exercise, userAnswer, language, difficulty);
+      break;
+    case ExerciseType.CONTEXTUAL_PARAPHRASE:
+      base = buildContextualParaphraseUserPrompt(exercise, userAnswer, language, difficulty);
       break;
     case ExerciseType.DICTATION:
       throw new Error(

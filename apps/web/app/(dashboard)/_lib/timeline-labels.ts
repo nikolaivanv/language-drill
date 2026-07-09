@@ -32,6 +32,7 @@ const TYPE_LABELS: Record<ExerciseType, string> = {
   [ExerciseType.DICTATION]: 'dictation',
   [ExerciseType.FREE_WRITING]: 'free writing',
   [ExerciseType.CONJUGATION]: 'conjugation',
+  [ExerciseType.CONTEXTUAL_PARAPHRASE]: 'paraphrase',
 };
 
 export function typeLabel(type: ExerciseType): string {

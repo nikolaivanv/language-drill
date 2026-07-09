@@ -225,23 +225,37 @@ export function AudioPlayer({ src, waveform, durationSec }: AudioPlayerProps) {
               : 'cursor-pointer focus-visible:shadow-[0_0_0_2px_var(--color-paper),0_0_0_4px_var(--color-ink)]'
           }`}
         >
-          {waveform.map((h, i) => {
-            const played = (i + 0.5) / waveform.length <= progress;
-            return (
-              <span
-                key={i}
-                aria-hidden
-                className={`pointer-events-none rounded-[2px] ${
-                  played ? 'bg-accent' : 'bg-rule-strong'
-                }`}
-                style={{
-                  flex: 1,
-                  minWidth: 2,
-                  height: `${Math.max(10, h * 100)}%`,
-                }}
+          {waveform.length === 0 ? (
+            <div
+              data-testid="progress-track"
+              aria-hidden
+              className="absolute inset-x-0 top-1/2 h-[4px] -translate-y-1/2 overflow-hidden rounded-full bg-rule-strong"
+            >
+              <div
+                data-testid="progress-fill"
+                className="h-full rounded-full bg-accent"
+                style={{ width: `${progress * 100}%` }}
               />
-            );
-          })}
+            </div>
+          ) : (
+            waveform.map((h, i) => {
+              const played = (i + 0.5) / waveform.length <= progress;
+              return (
+                <span
+                  key={i}
+                  aria-hidden
+                  className={`pointer-events-none rounded-[2px] ${
+                    played ? 'bg-accent' : 'bg-rule-strong'
+                  }`}
+                  style={{
+                    flex: 1,
+                    minWidth: 2,
+                    height: `${Math.max(10, h * 100)}%`,
+                  }}
+                />
+              );
+            })
+          )}
           {/* Hover playhead: a faint accent tick previewing where a click lands. */}
           {!disabled && hoverFrac !== null && !dragging && (
             <span

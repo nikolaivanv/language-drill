@@ -338,6 +338,7 @@ describe('WordPopover — deep-card progressive preview (Req 1.2)', () => {
           span: SPAN,
           partial: {
             surface: 'aldea',
+            baseGloss: 'village',
             contextualSense: 'a small rural settlement',
             definition: 'pueblo pequeño',
             definitionLabel: 'Español',
@@ -348,6 +349,9 @@ describe('WordPopover — deep-card progressive preview (Req 1.2)', () => {
     // The fields received so far are visible (the contextual sense is rendered
     // inside typographic quotes, so match on a substring).
     expect(screen.getByTestId('deep-card-partial')).toBeInTheDocument();
+    // The base English gloss streams in for a non-flagged word (no skim card),
+    // so the meaning is visible without waiting for the full card to resolve.
+    expect(screen.getByText('village')).toBeInTheDocument();
     expect(screen.getByText(/a small rural settlement/)).toBeInTheDocument();
     expect(screen.getByText('pueblo pequeño')).toBeInTheDocument();
     // …it still signals that generation is ongoing…

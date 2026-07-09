@@ -1,5 +1,5 @@
 {
-  "id": "47942739-139e-4be5-a7d9-bf08d8fbc31e",
+  "id": "f307eaa6-4b5a-4d56-bd4b-27b63a8f6ada",
   "prevId": "1d4e0f3c-4187-4215-aa0b-85f6f1e5679e",
   "version": "7",
   "dialect": "postgresql",
@@ -1609,6 +1609,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "audio_s3_key": {
+          "name": "audio_s3_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "pasted_at": {
           "name": "pasted_at",
           "type": "timestamp with time zone",
@@ -3010,156 +3016,6 @@
           ]
         }
       },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.vocab_target": {
-      "name": "vocab_target",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "language": {
-          "name": "language",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "umbrella_key": {
-          "name": "umbrella_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "cefr_level": {
-          "name": "cefr_level",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "lemma": {
-          "name": "lemma",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "display_form": {
-          "name": "display_form",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "gloss": {
-          "name": "gloss",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "example_sentence": {
-          "name": "example_sentence",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "freq_rank": {
-          "name": "freq_rank",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "tier": {
-          "name": "tier",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'flagged'"
-        },
-        "source": {
-          "name": "source",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'llm'"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "vocab_target_lang_umbrella_lemma_idx": {
-          "name": "vocab_target_lang_umbrella_lemma_idx",
-          "columns": [
-            {
-              "expression": "language",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "umbrella_key",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "lemma",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "vocab_target_browse_idx": {
-          "name": "vocab_target_browse_idx",
-          "columns": [
-            {
-              "expression": "language",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "umbrella_key",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
