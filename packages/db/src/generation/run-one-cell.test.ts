@@ -1411,7 +1411,14 @@ describe('buildSeedWords — contextual_paraphrase (curated pool, no DB)', () =>
     } as never;
     const seeds = await buildSeedWords(throwingDb, cell, 2, 'batch-1', new Set());
     expect(seeds).toHaveLength(2);
-    expect(seeds!.every((s) => s === null || ['scenario-a', 'scenario-b', 'scenario-c'].includes(s))).toBe(true);
+    const pool = ['scenario-a', 'scenario-b', 'scenario-c'];
+    const nonNull = seeds!.filter((s) => s !== null);
+    // At least one non-null seed proves this drew from the umbrella's
+    // paraphrase.seeds pool rather than silently falling back to an empty
+    // band (which would make pickSeeds return all-null and this assertion
+    // would go dark).
+    expect(nonNull.length).toBeGreaterThan(0);
+    expect(nonNull.every((s) => pool.includes(s as string))).toBe(true);
   });
 });
 

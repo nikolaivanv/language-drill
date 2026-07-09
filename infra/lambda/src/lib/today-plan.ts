@@ -63,7 +63,7 @@ export const ITEM_COUNT_BY_TYPE: Record<ExerciseType, number> = {
   // One conjugation prompt per drill (single-form production exercise).
   [ExerciseType.CONJUGATION]: 1,
   // One paraphrase prompt per drill.
-  [ExerciseType.CONTEXTUAL_PARAPHRASE]: 2,
+  [ExerciseType.CONTEXTUAL_PARAPHRASE]: 1,
 };
 
 // ---------------------------------------------------------------------------
