@@ -14,6 +14,7 @@
     "db:studio": "drizzle-kit studio",
     "generate:exercises": "npx tsx scripts/generate-exercises.ts",
     "generate:theory": "npx tsx scripts/generate-theory.ts",
+    "generate:vocab-targets": "npx tsx scripts/generate-vocab-targets.ts",
     "review:flagged": "npx tsx scripts/review-flagged.ts",
     "review:flagged-theory": "npx tsx scripts/review-flagged-theory.ts",
     "revalidate:cloze": "npx tsx scripts/revalidate-cloze-pool.ts",
