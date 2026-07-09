@@ -284,10 +284,11 @@ describe("buildGenerationSystemPrompt", () => {
     // derived-form points (appreciative suffixes) cue the parenthetical BASE
     // word and pin the seeded target form; the derived form never appears in
     // the visible text.
-    // Bumped 2026-07-09 — contextual_paraphrase guidance section spliced
-    // after the sentence-construction section, plus a per-draft
-    // avoid/register/simplify constraint-kind rotation.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-09");
+    // Bumped 2026-07-10 — contextual_paraphrase seed injected as a strict
+    // scenario directive in the per-draft user prompt (replacing the generic
+    // word/substitution framing). (2026-07-09 added the paraphrase guidance
+    // section + constraint-kind rotation.)
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-10");
     // Tasks 7–9: pin the new guardrail phrases in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "every content word MUST be high-frequency everyday vocabulary at or below CEFR {{cefrLevel}}",
@@ -1210,6 +1211,22 @@ describe("buildGenerationUserPrompt — contextual_paraphrase", () => {
   it("does not add a constraint-kind line for other types", () => {
     const msg = buildGenerationUserPrompt(baseInputs, 1, null);
     expect(msg).not.toContain("constraint kind:");
+  });
+
+  it("renders a paraphrase seed as a strict scenario directive, not the generic word framing", () => {
+    // The paraphrase seed is a SCENARIO from the curated paraphrase.seeds pool —
+    // the identity-diversity axis. It must be framed as a scenario (not a "word")
+    // with no substitution escape hatch, mirroring the strict conjugation seed.
+    const prompt = buildGenerationUserPrompt(
+      { ...baseInputs, exerciseType: ExerciseType.CONTEXTUAL_PARAPHRASE },
+      0,
+      null,
+      "a complaint to a landlord",
+    );
+    expect(prompt).toContain('scenario: "a complaint to a landlord"');
+    // The generic word-oriented seed block + its substitution escape hatch must NOT appear:
+    expect(prompt).not.toContain("Build this exercise around the word");
+    expect(prompt).not.toContain("choose a related content word");
   });
 });
 
