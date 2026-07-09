@@ -332,7 +332,7 @@ it('includes the vocab-target generation prompt', () => {
 - [ ] **Step 6: Run tests to verify they pass**
 
 Run: `pnpm --filter @language-drill/ai test -- vocab-target-prompts bootstrap-prompts`
-Expected: PASS. Also run `pnpm --filter @language-drill/ai typecheck` (catches the removed `cefrHintOmitted`).
+Expected: PASS. Also run `pnpm --filter @language-drill/ai typecheck` to confirm the new module typechecks.
 
 - [ ] **Step 7: Commit**
 
