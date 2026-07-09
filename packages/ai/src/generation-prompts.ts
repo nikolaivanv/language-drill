@@ -201,7 +201,12 @@ function renderRecentStems(recentStems: readonly string[]): string {
 // spliced after `{{sentenceConstructionSection}}`) plus a per-draft
 // avoid/register/simplify constraint-kind rotation (`contextualParaphraseConstraintForOrdinal`)
 // so a batch covers all three constraint kinds.
-export const GENERATION_PROMPT_VERSION = "generate@2026-07-09";
+// 2026-07-10: contextual_paraphrase seed injected as a strict SCENARIO directive
+// (per-draft user prompt), replacing the generic "build around the word … or
+// substitute a similar-frequency word" framing that let the model discard the
+// curated scenario seed and collapse the scenario-diversity axis. Code-side
+// (user prompt) only — the system template is unchanged, so no Langfuse push.
+export const GENERATION_PROMPT_VERSION = "generate@2026-07-10";
 
 /**
  * Wording differs per type so Claude reads it the way the cell is constrained:
@@ -730,7 +735,16 @@ export function buildGenerationUserPrompt(
             inputs.grammarPoint.conjugationSeedKind === "predicate-nominal"
             ? `The predicate is "${seedWord}" (a profession, role, nationality, or adjective). The drill states that the subject IS "${seedWord}": inflect "${seedWord}" with the correct personal/copular suffix for the target person (e.g. "${seedWord}" → 1sg "…${seedWord}+(y)Im"). Use exactly this word — do not substitute another.\n\n`
             : `The verb to conjugate is "${seedWord}". Use exactly this verb — do not substitute another.\n\n`
-        : `Build this exercise around the word "${seedWord}". If "${seedWord}" does not fit ${inputs.grammarPoint.name} naturally, choose a related content word of similar frequency instead.\n\n`
+        : inputs.exerciseType === ExerciseType.CONTEXTUAL_PARAPHRASE
+          ? // Strict: the seed is a SCENARIO drawn from the curated `paraphrase.seeds`
+            // pool — the identity-diversity axis for this cell. Frame it as a scenario
+            // (NOT a "word") with no substitution escape hatch, so each ordinal's
+            // distinct scenario yields a distinct source sentence. The generic loose
+            // seed block's "word" wording and "similar frequency" substitution are
+            // nonsensical for a scenario phrase and would let the model discard the
+            // seed, collapsing the very diversity axis this seed enforces.
+            `Set this exercise in the following scenario: "${seedWord}". The source sentence you author must fit this scenario naturally. Use exactly this scenario — do not substitute another.\n\n`
+          : `Build this exercise around the word "${seedWord}". If "${seedWord}" does not fit ${inputs.grammarPoint.name} naturally, choose a related content word of similar frequency instead.\n\n`
       : "";
   const modeBlock =
     inputs.exerciseType === ExerciseType.SENTENCE_CONSTRUCTION
