@@ -55,6 +55,15 @@ vi.mock('@language-drill/api-client', () => ({
   // Under-review highlight source (Req 13.2) — default to no active lemmas so
   // existing reader assertions are unaffected.
   useActiveReviewLemmas: () => ({ data: { lemmas: [], surfaces: [] } }),
+  // "Listen" control (Task 9) — idle by default so existing reader
+  // assertions are unaffected; not the focus of this test file.
+  useReadAudio: () => ({
+    mutate: vi.fn(),
+    data: undefined,
+    isPending: false,
+    isError: false,
+    reset: vi.fn(),
+  }),
   createAuthenticatedFetch: vi.fn(() => vi.fn()),
 }));
 

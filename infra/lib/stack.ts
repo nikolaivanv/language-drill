@@ -1,4 +1,5 @@
 import { Stack, StackProps, CfnOutput, Tags } from "aws-cdk-lib";
+import * as iam from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 import { AlertsConstruct } from "./constructs/alerts";
 import { LambdaConstruct } from "./constructs/lambda";
@@ -97,6 +98,16 @@ export class LanguageDrillStack extends Stack {
     const queue = new QueueConstruct(this, "Queue");
 
     storage.bucket.grantRead(lambda.handler);
+
+    // On-demand reading-audio synthesis: Polly + write/head into the content bucket.
+    storage.bucket.grantPut(lambda.handler);
+    lambda.handler.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["polly:SynthesizeSpeech"],
+        resources: ["*"], // Polly has no resource-level ARN
+      }),
+    );
+
     queue.queue.grantSendMessages(lambda.handler);
 
     // Phase 4 — generation pipeline (SQS + consumer Lambda + scheduler).
