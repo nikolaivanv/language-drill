@@ -395,6 +395,13 @@ export function AnnotatedView({
           )}
         </div>
 
+        {/* Listen / audio — own full-width row */}
+        {entryId && fetchFn ? (
+          <div className="mb-[18px]">
+            <PassageAudio entryId={entryId} fetchFn={fetchFn} />
+          </div>
+        ) : null}
+
         {/* Calibration */}
         <div className="border-b border-dashed border-rule pb-[14px] mb-[22px]">
           <CalibrationStrip
@@ -489,11 +496,17 @@ export function AnnotatedView({
             )}
           </div>
           <div className="flex items-center gap-[8px]">
-            {entryId && fetchFn ? <PassageAudio entryId={entryId} fetchFn={fetchFn} /> : null}
             <span className="t-micro text-ink-mute">highlight</span>
             <IntensityToggle value={intensity} onChange={onIntensityChange} />
           </div>
         </div>
+
+        {/* Listen / audio — own full-width row so the expanded player never overlaps the header */}
+        {entryId && fetchFn ? (
+          <div className="mb-[18px]">
+            <PassageAudio entryId={entryId} fetchFn={fetchFn} />
+          </div>
+        ) : null}
 
         {/* Calibration */}
         <div className="border-b border-dashed border-rule pb-[14px] mb-[22px]">
