@@ -74,6 +74,14 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * cells and clears suppression on the rescoped ones so they re-run under the
  * widened descriptions.
  *
+ * `2026-07-11`: ES conjugation verb-selection fix. Curated `conjugationSeedWords`
+ * pin four preterite/present points (es-a1-present-yo-go, es-a2-preterite-irregular,
+ * es-a2-preterite-strong-stems, es-a2-preterite-stem-spelling) to their target verb
+ * sets — the 2026-07-09 run wandered onto off-target verbs (5–40% approval). Split
+ * es-a2-preterite-stem-spelling: yo-form -qué/-gué/-cé changes moved to the new
+ * es-a2-preterite-yo-spelling (disjoint diagnostic person from the 3rd-person
+ * changes). Bump also clears low-yield suppression on the starved conjugation cells.
+ *
  * `2026-07-10`: base-word-cue elicitation for es-b2-appreciative-suffixes
  * (selfRevealingElicitation + curated B&B ch. 43 pool) — the 2026-07-08 run
  * approved 4/41 with 23 context-spoils-answer rejects because the model had
@@ -86,7 +94,7 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * (`es-b1-paraphrase`, `es-b2-paraphrase`) that own the new contextual-paraphrase
  * generation cells; the bump enumerates them on the next scheduler tick.
  */
-export const CURRICULUM_VERSION_ES = '2026-07-10a';
+export const CURRICULUM_VERSION_ES = '2026-07-11';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -280,10 +288,22 @@ const esCurriculum: readonly GrammarPoint[] = [
     ],
     prerequisiteKeys: ['es-a1-present-indicative-regular'],
     coverageSpec: {
-      axes: [
-        { name: 'person', floors: { '1sg': 10, '3sg': 5, '3pl': 5 } },
-      ],
+      // 1sg ONLY: for pure -go/-zco verbs the irregularity lives entirely in the
+      // yo-form; 3sg/3pl are regular (hace, conoce) and don't exercise the point,
+      // so the 2026-07-09 run approved 0/13 non-1sg conjugation drafts. Contrast
+      // with the other persons is carried by this point's cloze/translation cells.
+      axes: [{ name: 'person', floors: { '1sg': 12 } }],
     },
+    // Closed target-verb set: the conjugation generator drew random verbs from the
+    // frequency band and picked off-target ones (e.g. valer, or regular 3sg forms),
+    // so 18/20 drafts were rejected on 2026-07-09. This curated list replaces the
+    // band (see buildSeedWords). targetOverride sizes the point to the list so no
+    // conjugation ordinal is left unseeded (point-wide: also caps cloze/translation).
+    conjugationSeedWords: [
+      'tener', 'hacer', 'poner', 'salir', 'venir', 'decir',
+      'traer', 'oír', 'conocer', 'caer', 'parecer', 'conducir',
+    ],
+    targetOverride: 12,
     conjugationSuitable: true,
   },
   {
@@ -595,6 +615,13 @@ const esCurriculum: readonly GrammarPoint[] = [
         { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '3pl': 5 } },
       ],
     },
+    // Closed target set matching the description: the 2026-07-09 run wandered onto
+    // out-of-scope verbs (salir — fully regular; poder/castigar — belong to
+    // strong-stems / orthographic points), so 14/40 drafts were rejected for
+    // grammar-point mismatch. Curated verbs pin the generator to this point's
+    // paradigm; 7 verbs × 5 persons comfortably exceeds the level target (no
+    // targetOverride needed). ser/ir both listed (shared fui/fue forms).
+    conjugationSeedWords: ['tener', 'hacer', 'estar', 'ser', 'ir', 'ver', 'dar'],
     conjugationSuitable: true,
   },
   {
@@ -622,33 +649,86 @@ const esCurriculum: readonly GrammarPoint[] = [
         { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '3pl': 5 } },
       ],
     },
+    // Same wandering bug as es-a2-preterite-irregular (40% conjugation approval on
+    // 2026-07-09): pin to the strong-stem verbs named in the description so the
+    // generator stops drilling regular verbs. 9 verbs × 5 persons exceeds target.
+    conjugationSeedWords: [
+      'poder', 'poner', 'saber', 'querer', 'venir',
+      'decir', 'traer', 'conducir', 'producir',
+    ],
     conjugationSuitable: true,
   },
   {
+    // Narrowed 2026-07-11: this point formerly bundled 3rd-person vowel/y changes
+    // (3sg/3pl) with yo-form -qué/-gué/-cé spelling changes (1sg). The two have
+    // DISJOINT diagnostic persons, but the seed picker assigns person independently
+    // of the verb — so a 1sg -car verb kept landing on a 3sg target (buscó, regular)
+    // and vice-versa, giving 19% approval. Split: the -qué/-gué/-cé family moved to
+    // the new es-a2-preterite-yo-spelling; this point now covers 3rd-person only.
     key: 'es-a2-preterite-stem-spelling',
     kind: 'grammar',
-    name: 'Preterite — vowel and spelling changes',
+    name: 'Preterite — third-person vowel and y changes',
     description:
-      'Third-person vowel changes of -ir verbs in the preterite (pidió/pidieron, durmió/durmieron, sintió); y-insertion in vowel-stem -er/-ir verbs (leyó, oyó, cayó, construyó); and yo-form spelling changes -qué/-gué/-cé (busqué, llegué, empecé).',
+      'Third-person preterite changes: e→i / o→u stem-vowel shift in -ir verbs (pidió/pidieron, durmió/durmieron, sintió, siguió) and y between vowels in vowel-stem -er/-ir verbs (leyó/leyeron, oyó, cayó, construyó). Only 3sg/3pl are affected; the other persons are regular.',
     cefrLevel: A2,
     language: ES,
     examplesPositive: [
       'Pidió un café y se durmió en el sofá.',
-      'Ayer llegué tarde y busqué otra ruta.',
-      'Leyó la noticia dos veces.',
+      'Leyó la noticia y siguió trabajando.',
+      'Prefirieron quedarse y no me creyeron.',
     ],
-    examplesNegative: ['*Pedió un café.', '*Ayer llegé tarde.', '*Leió la noticia.'],
+    examplesNegative: ['*Pedió un café.', '*Se dormió en el sofá.', '*Leió la noticia.'],
     commonErrors: [
       'Keeping the infinitive vowel in the third person, producing "*pedió" or "*dormió" instead of "pidió" and "durmió".',
       'Writing i instead of y between vowels, producing "*leió" or "*oió" instead of "leyó" and "oyó".',
-      'Missing the yo-form spelling change, producing "*llegé", "*buscé", or "*empezé" instead of "llegué", "busqué", and "empecé".',
+      'Applying the third-person change to other persons, producing "*pidí" or "*durmí" instead of the regular "pedí" and "dormí".',
     ],
     prerequisiteKeys: ['es-a2-preterite-regular'],
     coverageSpec: {
-      axes: [
-        { name: 'person', floors: { '1sg': 6, '3sg': 6, '3pl': 6 } },
-      ],
+      // 3sg/3pl ONLY — the change surfaces nowhere else; curated verbs are all
+      // diagnostic in both, so verb↔person always aligns. targetOverride sizes the
+      // point (2 persons) to a bounded pool.
+      axes: [{ name: 'person', floors: { '3sg': 8, '3pl': 8 } }],
     },
+    conjugationSeedWords: [
+      'pedir', 'servir', 'seguir', 'repetir', 'sentir', 'preferir', 'dormir',
+      'morir', 'leer', 'creer', 'oír', 'caer', 'construir', 'huir',
+    ],
+    targetOverride: 16,
+    conjugationSuitable: true,
+  },
+  {
+    // Added 2026-07-11 (split from es-a2-preterite-stem-spelling): the yo-form
+    // orthographic changes, whose only diagnostic person is 1sg.
+    key: 'es-a2-preterite-yo-spelling',
+    kind: 'grammar',
+    name: 'Preterite — yo-form spelling changes (-qué/-gué/-cé)',
+    description:
+      'First-person singular preterite spelling changes that keep the stem sound: -car→-qué (buscar→busqué, tocar→toqué), -gar→-gué (llegar→llegué, pagar→pagué), -zar→-cé (empezar→empecé, cruzar→crucé). Only the yo-form changes; the other persons are regular (buscó, llegó, empezó).',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Ayer llegué tarde y busqué otra ruta.',
+      'Empecé el trabajo y toqué el piano.',
+      'Pagué la cuenta y crucé la calle.',
+    ],
+    examplesNegative: ['*Ayer llegé tarde.', '*Empezé el trabajo.', '*Buscé la llave.'],
+    commonErrors: [
+      'Dropping the spelling change and writing the plain stem: "*llegé", "*buscé", or "*empezé" instead of "llegué", "busqué", and "empecé".',
+      'Spreading the yo-form change to other persons, producing "*buscó" with qu ("*busqó") or "*empezó" as "*empecó".',
+      'Confusing -zar: writing "*empezé" or "*cruzé" instead of "empecé" and "crucé".',
+    ],
+    prerequisiteKeys: ['es-a2-preterite-regular'],
+    coverageSpec: {
+      // 1sg ONLY — the orthographic change surfaces only in the yo-form.
+      axes: [{ name: 'person', floors: { '1sg': 15 } }],
+    },
+    conjugationSeedWords: [
+      'buscar', 'sacar', 'tocar', 'explicar', 'practicar', 'llegar', 'pagar',
+      'jugar', 'entregar', 'apagar', 'empezar', 'cruzar', 'almorzar',
+      'organizar', 'realizar',
+    ],
+    targetOverride: 15,
     conjugationSuitable: true,
   },
   {
