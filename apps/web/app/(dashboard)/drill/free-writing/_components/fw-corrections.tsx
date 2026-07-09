@@ -43,6 +43,7 @@ export function FwCorrections({ evaluation, original, onCompare, onBack }: FwCor
         free writing · corrections
       </div>
       <div
+        className="fw-corrections-head"
         style={{
           display: 'flex',
           alignItems: 'flex-end',
@@ -84,6 +85,7 @@ export function FwCorrections({ evaluation, original, onCompare, onBack }: FwCor
       </p>
 
       <div
+        className="fw-two-col"
         style={{
           display: 'grid',
           gridTemplateColumns: '1fr 360px',

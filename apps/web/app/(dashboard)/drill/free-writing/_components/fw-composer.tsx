@@ -97,7 +97,7 @@ export function FwComposer({ content, language, value, onChange, examMode, submi
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 28 }}>
+      <div className="fw-two-col" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 28 }}>
         {/* Writing column */}
         <div>
           {/* Compact prompt banner */}
@@ -158,6 +158,7 @@ export function FwComposer({ content, language, value, onChange, examMode, submi
               </div>
             )}
             <div
+              className="fw-composer-footer"
               style={{
                 display: 'flex',
                 alignItems: 'center',
