@@ -207,6 +207,8 @@ describe('resolveCells', () => {
         expect(cell.exerciseType).toBe(ExerciseType.DICTATION);
       } else if (cell.grammarPoint.kind === 'free-writing') {
         expect(cell.exerciseType).toBe(ExerciseType.FREE_WRITING);
+      } else if (cell.grammarPoint.kind === 'paraphrase') {
+        expect(cell.exerciseType).toBe(ExerciseType.CONTEXTUAL_PARAPHRASE);
       } else {
         expect([ExerciseType.CLOZE, ExerciseType.TRANSLATION, ExerciseType.SENTENCE_CONSTRUCTION, ExerciseType.CONJUGATION]).toContain(cell.exerciseType);
       }

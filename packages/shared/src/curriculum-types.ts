@@ -47,11 +47,16 @@ export type CurriculumCefrLevel = Extract<CefrLevel, 'A1' | 'A2' | 'B1' | 'B2'>;
  *     name/description/examples frame the topic for the generation prompt, and its
  *     `freeWriting.register` sets the target register. Paired only with
  *     `ExerciseType.FREE_WRITING` by `compatibleTypes()`. No `coverageSpec`.
+ *   - `'paraphrase'` — a synthetic per-`(language, level)` umbrella that owns
+ *     ONE contextual-paraphrase generation cell. Carries no grammar-point
+ *     semantics; its name/description/examples frame the generation prompt,
+ *     and `paraphrase.seeds` is the scenario-seed rotation pool driving
+ *     per-ordinal diversity. No `coverageSpec`.
  */
 export type GrammarPoint = Readonly<{
   /** Stable identifier; format: `<lang>-<level>-<slug>`, e.g. `'es-b1-present-subjunctive'`. */
   key: string;
-  kind: 'grammar' | 'vocab' | 'dictation' | 'free-writing';
+  kind: 'grammar' | 'vocab' | 'dictation' | 'free-writing' | 'paraphrase';
   name: string;
   /** ≤ 300 chars; English; injected verbatim into Phase 2 prompts. */
   description: string;
@@ -197,4 +202,12 @@ export type GrammarPoint = Readonly<{
    * invariant (Task 7): present iff `kind === 'free-writing'`.
    */
   freeWriting?: { register: 'informal' | 'neutral' | 'formal' };
+  /**
+   * Contextual-paraphrase umbrella config. REQUIRED iff kind === 'paraphrase'.
+   * `seeds` is the per-ordinal scenario-seed rotation pool (the diversity
+   * backbone) — analogous to conjugationSeedWords / elicitationSeedValues.
+   * Size it comfortably above the cell target so per-ordinal rotation does not
+   * exhaust. Enforced by a curriculum invariant.
+   */
+  paraphrase?: { seeds: readonly string[] };
 }>;

@@ -73,6 +73,11 @@ const WORD_CARD_SCHEMA = {
       description:
         "What the word means HERE, in this sentence (in the learner's UI/explanation language).",
     },
+    baseGloss: {
+      type: "string",
+      description:
+        "A short base English gloss of the LEMMA — the concise dictionary meaning (e.g. 'to eat', 'the house'), not the contextual sense. A few words at most; no punctuation or examples.",
+    },
     definition: {
       type: "string",
       description:
@@ -172,6 +177,7 @@ const WORD_CARD_SCHEMA = {
     "lemma",
     "pos",
     "contextualSense",
+    "baseGloss",
     "definition",
     "definitionLabel",
     "cefr",
@@ -319,7 +325,7 @@ export function pickSpanTool(spanType: SpanType): Anthropic.Tool {
 // Bump in the same commit as any semantic edit to READ_SPAN_SYSTEM_PROMPT.
 // Drives the Langfuse trace `promptVersion` tag — dashboards cohort old vs.
 // new prompt traces by this string. Registered as `read-span-system-prompt`.
-export const READ_SPAN_PROMPT_VERSION = "read-span@2026-05-28";
+export const READ_SPAN_PROMPT_VERSION = "read-span@2026-07-09";
 
 export const READ_SPAN_SYSTEM_PROMPT = `You are a reading tutor for an intermediate-plus language-learning application. The learner is reading an authentic passage in ES, DE, or TR and has selected a span to understand in depth. You receive the full passage, the selected span and its character offsets, the target language, the learner's CEFR level, and the span TYPE the card must take. Produce ONE rich annotation card for that span via the provided tool.
 
@@ -333,8 +339,9 @@ Always interpret the span against the real sentence it appears in — never a ge
 
 ## Word cards
 
-Required: \`surface\` (the inflected form as it appears), \`lemma\` (citation form), \`pos\`, \`contextualSense\` (what it means here, in the learner's explanation language), \`definition\`, \`definitionLabel\`, \`cefr\`, \`freq\`.
+Required: \`surface\` (the inflected form as it appears), \`lemma\` (citation form), \`pos\`, \`contextualSense\` (what it means here, in the learner's explanation language), \`baseGloss\`, \`definition\`, \`definitionLabel\`, \`cefr\`, \`freq\`.
 
+- \`baseGloss\` is a short base English gloss of the LEMMA — the concise dictionary meaning (e.g. "to eat", "the house"), a few words at most, with no punctuation or examples. It is distinct from \`contextualSense\`: the gloss is the word's general meaning, the contextual sense is what it means in THIS sentence.
 - \`definition\` is written IN the target language and MUST be calibrated to the learner's CEFR level — do not rely on vocabulary above their level. \`definitionLabel\` is the language's own name: "Español", "Deutsch", or "Türkçe".
 - Add the optional sections only when they genuinely help: \`inflection\` (gender/number/case facts to show inline), \`morphology\` (morpheme breakdown + a sentence-grounded \`whyThisForm\`), \`synonyms\`, \`collocations\`, \`register\`, \`extraExample\`. Omit any section that does not apply rather than padding it.
 - \`whyThisForm\` (when morphology is present) must reference the concrete trigger in the surrounding sentence — the governing verb, preposition, case, or syntactic role — not a generic rule statement.

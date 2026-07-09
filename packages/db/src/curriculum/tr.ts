@@ -138,8 +138,11 @@ const { A1, A2, B1 } = CefrLevel;
  * past/evidential copula (hastaydım), focus clitics dA/bile, -lI/-sIz, enumerator
  * tane; suppletive ol-, olarak. Bump enumerates the new cells + clears
  * suppression. See docs/superpowers/specs/2026-07-10-tr-audit-gap-fills-design.md.
+ * 2026-07-10a: adds the `kind: 'paraphrase'` umbrella (`tr-b1-paraphrase`) that
+ * owns the new contextual-paraphrase generation cell; the bump enumerates it on
+ * the next scheduler tick.
  */
-export const CURRICULUM_VERSION_TR = '2026-07-10';
+export const CURRICULUM_VERSION_TR = '2026-07-10a';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -2821,6 +2824,45 @@ const trCurriculum: readonly GrammarPoint[] = [
     freeWriting: { register: 'neutral' },
   },
 
+  // ---------------------------------------------------------------------------
+  // Paraphrase umbrellas — kind: 'paraphrase' (Phase 2 contextual-paraphrase generation)
+  // ---------------------------------------------------------------------------
+  {
+    key: 'tr-b1-paraphrase',
+    kind: 'paraphrase',
+    name: 'Başka türlü söyle — paraphrase (B1)',
+    description:
+      'Rewrite a B1 Turkish sentence under one constraint: avoid a given word, shift register, or simplify for an audience — preserving meaning while reaching for synonyms and alternative structures.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Source "Bu filmi çok beğendim" → without «beğenmek»: "Bu film gerçekten hoşuma gitti."',
+      'Source "Tuzu uzatır mısın?" → formal register: "Tuzu uzatabilir misiniz acaba?"',
+    ],
+    examplesNegative: ['*A rewrite that changes the meaning of the source.'],
+    commonErrors: [
+      'Using a banned word in a different suffixed form.',
+      'Changing register but also changing what is said.',
+    ],
+    paraphrase: {
+      seeds: [
+        'bargaining with a vendor at a bazaar',
+        'asking a neighbour for help moving furniture',
+        'describing how a national holiday is celebrated at home',
+        'complaining about a noisy neighbour upstairs',
+        'asking a pharmacist for advice about a headache',
+        'turning down a wedding invitation',
+        'negotiating the price of a taxi ride',
+        'explaining a family tradition to a foreign friend',
+        'asking a shopkeeper to hold an item until payday',
+        'describing a power outage that ruined an evening',
+        'convincing a friend to try a new dish',
+        'explaining why you missed a family gathering',
+        'asking a landlord to fix a broken heater before winter',
+        'describing the atmosphere of a crowded tea house',
+      ],
+    },
+  },
 ];
 
 export { trCurriculum };

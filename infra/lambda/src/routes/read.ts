@@ -32,6 +32,9 @@ import { getEffectivePlan, isAdmin } from '../usage/plan';
 import { checkGlobalCapacity } from '../usage/global-capacity';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
+import { resolveReadAudio, type ReadAudioDeps } from '../lib/read-audio-service';
+import { headObjectExists, synthesizeReadingAudio } from '../lib/reading-audio-synth';
+import { presignAudioUrl } from '../lib/audio-url';
 
 // Mirrors the answer-eval submit route: read the key once at module scope and
 // fall back to '' so a missing key surfaces as a 502 at call time rather than
@@ -417,6 +420,112 @@ read.get('/read/entries/:id', async (c) => {
     length: row.length ?? null,
     prompt: row.prompt ?? null,
   });
+});
+
+// ---------------------------------------------------------------------------
+// POST /read/:entryId/audio — lazy, content-addressed reading-audio resolution
+// ---------------------------------------------------------------------------
+// Pure branching logic lives in `resolveReadAudio` (read-audio-service.ts);
+// this handler only wires the real DB/AWS dependencies and maps the result
+// to HTTP. Ownership is enforced in loadEntry's WHERE clause — unknown /
+// cross-user / malformed-UUID all collapse to 404 ENTRY_NOT_FOUND with
+// `Cache-Control: no-store`, mirroring GET /read/entries/:id. Deliberately
+// does NOT call checkGlobalCapacity — TTS cost is metered by its own
+// `read_tts` bucket and is outside the global Claude-cost brake.
+// ---------------------------------------------------------------------------
+read.post('/read/:entryId/audio', async (c) => {
+  const entryId = c.req.param('entryId');
+  const userId = c.get('userId');
+
+  const idResult = z.string().uuid().safeParse(entryId);
+  if (!idResult.success) {
+    c.header('Cache-Control', 'no-store');
+    return c.json(
+      { error: 'Reading not found', code: 'ENTRY_NOT_FOUND' },
+      404,
+    );
+  }
+
+  const plan = await getEffectivePlan(userId);
+  const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+  const deps: ReadAudioDeps = {
+    loadEntry: async (id, uid) => {
+      const [row] = await db
+        .select({
+          id: readEntries.id,
+          language: readEntries.language,
+          text: readEntries.text,
+          audioS3Key: readEntries.audioS3Key,
+        })
+        .from(readEntries)
+        .where(and(eq(readEntries.id, id), eq(readEntries.userId, uid)))
+        .limit(1);
+      return row ?? null;
+    },
+    // Mirrors the `POST /read/generate` daily-cap COUNT pattern above
+    // (`count()` aggregate + `Number(...)`), not a `rows.length` count.
+    countRecentTts: async (uid) => {
+      const [{ count: recentCount }] = await db
+        .select({ count: count() })
+        .from(usageEvents)
+        .where(
+          and(
+            eq(usageEvents.userId, uid),
+            eq(usageEvents.eventType, 'read_tts'),
+            gte(usageEvents.createdAt, dayAgo),
+          ),
+        );
+      return Number(recentCount);
+    },
+    limit: () => limitFor('read_tts', plan),
+    headObjectExists,
+    synthesize: synthesizeReadingAudio,
+    recordTtsUsage: async (uid, id) => {
+      await db.insert(usageEvents).values({
+        userId: uid,
+        eventType: 'read_tts',
+        metadata: { entryId: id },
+      });
+    },
+    persistKey: async (id, key) => {
+      await db
+        .update(readEntries)
+        .set({ audioS3Key: key })
+        .where(eq(readEntries.id, id));
+    },
+    presign: presignAudioUrl,
+  };
+
+  const result = await resolveReadAudio(entryId, userId, deps);
+
+  switch (result.kind) {
+    case 'not_found':
+      c.header('Cache-Control', 'no-store');
+      return c.json(
+        { error: 'Reading not found', code: 'ENTRY_NOT_FOUND' },
+        404,
+      );
+    case 'rate_limited':
+      return c.json(
+        { error: 'Daily audio limit reached', code: 'RATE_LIMIT_EXCEEDED' },
+        429,
+      );
+    case 'too_long':
+      return c.json(
+        { audioUrl: null, durationSec: 0, reason: 'too_long' as const },
+        200,
+      );
+    case 'ok':
+      return c.json(
+        {
+          audioUrl: result.audioUrl,
+          durationSec: result.durationSec,
+          reason: 'ok' as const,
+        },
+        200,
+      );
+  }
 });
 
 // ---------------------------------------------------------------------------

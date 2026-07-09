@@ -107,6 +107,7 @@ export {
   DeleteVocabularyCardResponseSchema,
   GenerateReadingTextRequestSchema,
   GenerateReadingTextResponseSchema,
+  ReadAudioResponseSchema,
   WordFlagSchema,
   FlaggedMapSchema,
   DeepCardSchema,
@@ -130,6 +131,7 @@ export {
   type DeleteVocabularyCardResponse,
   type GenerateReadingTextRequest,
   type GenerateReadingTextResponse,
+  type ReadAudioResponse,
   type WordFlag,
   type FlaggedMap,
   type DeepCard,
@@ -231,6 +233,10 @@ export {
   useGenerateReadingText,
   type UseGenerateReadingTextOptions,
 } from './hooks/useGenerateReadingText';
+export {
+  useReadAudio,
+  type UseReadAudioOptions,
+} from './hooks/useReadAudio';
 export {
   useReadAnnotateSpanStream,
   type UseReadAnnotateSpanStreamOptions,

@@ -5,7 +5,7 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from 'vitest';
 
-import { emitCellOutcomeMetric } from './metrics';
+import { emitCellCostMetric, emitCellOutcomeMetric } from './metrics';
 
 let consoleLogSpy: MockInstance<typeof console.log>;
 
@@ -54,5 +54,33 @@ describe('emitCellOutcomeMetric (generation)', () => {
     expect(directive['Namespace']).toBe('LanguageDrill/Generation');
     expect(directive['Dimensions']).toEqual([['env']]);
     expect(directive['Metrics']).toEqual([{ Name: 'CellFailed' }]);
+  });
+});
+
+describe('emitCellCostMetric (generation)', () => {
+  it('emits the cost as the CellCostUsd value', () => {
+    emitCellCostMetric(0.6321, 'prod');
+    expect(soleEmittedRecord()['CellCostUsd']).toBe(0.6321);
+  });
+
+  it('emits a zero-cost point (e.g. skipped-cost-cap / precheck-fail)', () => {
+    emitCellCostMetric(0, 'prod');
+    const record = soleEmittedRecord();
+    expect(record['CellCostUsd']).toBe(0);
+  });
+
+  it('emits the EMF envelope with the LanguageDrill/Generation namespace and env dimension', () => {
+    emitCellCostMetric(1.49, 'dev');
+    const record = soleEmittedRecord();
+    expect(record['env']).toBe('dev');
+    expect(record['CellCostUsd']).toBe(1.49);
+    const aws = record['_aws'] as Record<string, unknown>;
+    expect(typeof aws['Timestamp']).toBe('number');
+    const directives = aws['CloudWatchMetrics'] as Array<Record<string, unknown>>;
+    expect(directives).toHaveLength(1);
+    const directive = directives[0]!;
+    expect(directive['Namespace']).toBe('LanguageDrill/Generation');
+    expect(directive['Dimensions']).toEqual([['env']]);
+    expect(directive['Metrics']).toEqual([{ Name: 'CellCostUsd', Unit: 'None' }]);
   });
 });

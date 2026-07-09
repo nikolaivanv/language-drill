@@ -87,6 +87,10 @@ describe('resolveCellTarget', () => {
     expect(resolveCellTarget(makeCell(ExerciseType.VOCAB_RECALL, CefrLevel.B2))).toBe(10);
   });
 
+  it('has a target for contextual_paraphrase', () => {
+    expect(CELL_TARGET_DEFAULTS[ExerciseType.CONTEXTUAL_PARAPHRASE]).toBeDefined();
+  });
+
   it('uses the constrained A1/A2 defaults for sentence_construction', () => {
     // Pilot brake lifted 2026-06-08 (the constrained-prompt fix is validated for
     // single-construction points). SC resolves like cloze/translation again:

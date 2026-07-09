@@ -341,6 +341,42 @@ export async function fetchPriorFreeWritingTitles(
 }
 
 /**
+ * Distinct paraphrase source sentences already approved/flagged in this cell,
+ * fed into the generation prompt as an avoid-list (cross-run dedup). The dedup
+ * surface for contextual_paraphrase is the source sentence, so without this the
+ * generator re-proposes the same sentence every run and `exercises_dedup_idx`
+ * rejects it. Deterministically ordered, capped so the prompt stays bounded.
+ */
+export async function fetchPriorParaphraseSurfaces(
+  db: Db,
+  cell: Cell,
+): Promise<readonly string[]> {
+  const rows = await db
+    .select({ src: sql<string>`content_json->>'sourceText'` })
+    .from(exercises)
+    .where(
+      and(
+        eq(exercises.language, cell.language),
+        eq(exercises.difficulty, cell.cefrLevel),
+        eq(exercises.type, cell.exerciseType),
+        eq(exercises.grammarPointKey, cell.grammarPoint.key),
+        inArray(exercises.reviewStatus, [
+          'auto-approved',
+          'manual-approved',
+          'flagged',
+        ]),
+        sql`content_json ? 'sourceText'`,
+      ),
+    )
+    .groupBy(sql`content_json->>'sourceText'`)
+    .orderBy(sql`content_json->>'sourceText'`)
+    .limit(60);
+  return rows
+    .map((r) => r.src)
+    .filter((s): s is string => typeof s === 'string' && s.length > 0);
+}
+
+/**
  * Pulls the frequency (or curated elicitation-values) seeds already anchored
  * in this cell's live pool (R5.3), read from the writer-only
  * `content_json.seedWord` field that `validateAndInsertWithRetry` persisted
@@ -494,6 +530,12 @@ export function seedKindFor(
     if (seedKind === 'predicate-nominal') return 'predicate-nominal';
     return 'verb';
   }
+  if (cell.exerciseType === ExerciseType.CONTEXTUAL_PARAPHRASE) {
+    // Curated scenario-seed rotation from the umbrella's paraphrase.seeds pool,
+    // reusing the elicitation-values path: persisted as content_json.seedWord and
+    // excluded cross-run via fetchPriorSeeds — the identity-diversity axis.
+    return 'elicitation-values';
+  }
   return null;
 }
 
@@ -539,8 +581,13 @@ export async function buildSeedWords(
     // form from the curated curriculum pool (mirrors the predicate-nominal
     // curated pool). Bounded: once the live pool covers it, pickSeeds returns
     // nulls and the cell stops — pools are sized in the curriculum to exceed
-    // the cell target.
-    const band = cell.grammarPoint.elicitationSeedValues ?? [];
+    // the cell target. A contextual_paraphrase cell shares this path but draws
+    // from the umbrella's `paraphrase.seeds` scenario pool instead — the
+    // identity-diversity axis for that exercise type.
+    const band =
+      cell.exerciseType === ExerciseType.CONTEXTUAL_PARAPHRASE
+        ? (cell.grammarPoint.paraphrase?.seeds ?? [])
+        : (cell.grammarPoint.elicitationSeedValues ?? []);
     return pickSeeds({ band, batchSeed, count, exclude: priorSeeds });
   }
 
@@ -718,7 +765,9 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
         ? await fetchPriorVocabRecallSurfaces(db, cell)
         : cell.exerciseType === ExerciseType.FREE_WRITING
           ? await fetchPriorFreeWritingTitles(db, cell)
-          : undefined;
+          : cell.exerciseType === ExerciseType.CONTEXTUAL_PARAPHRASE
+            ? await fetchPriorParaphraseSurfaces(db, cell)
+            : undefined;
 
     // Seed cloze/translation with at-level content words, verb conjugation with
     // at-or-below-level verbs (keyed on (lemma, person)), and nominal-inflection

@@ -42,3 +42,11 @@ describe('writing_helper bucket', () => {
     expect(limitFor('writing_helper', 'boosted')).toBe(500);
   });
 });
+
+describe('read_tts limits', () => {
+  it('meters read_tts at 50 free / 500 boosted', () => {
+    expect(BASE_DAILY_LIMITS.read_tts).toBe(50);
+    expect(limitFor('read_tts', 'free')).toBe(50);
+    expect(limitFor('read_tts', 'boosted')).toBe(500);
+  });
+});

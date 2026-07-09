@@ -174,6 +174,7 @@ export function WordPopover({
       ) : deepCard && deepCard.status !== 'idle' ? (
         <DeepCardContent
           slice={deepCard}
+          gloss={entry?.gloss}
           inBank={inBank}
           onSave={onSave}
           onSkip={onSkip}

@@ -121,7 +121,7 @@ Every exercise must pass the **production test**: does the learner construct lan
 
 ### 4. Sentence Construction (from prompts)
 
-**Status:** Not yet implemented
+**Status:** Implemented
 
 **What it targets:**
 - Grammar range (primary) — spontaneous production of target structures
@@ -193,7 +193,7 @@ Every exercise must pass the **production test**: does the learner construct lan
 
 ### 6. Paragraph / Free Writing
 
-**Status:** Not yet implemented
+**Status:** Implemented
 
 **What it targets:**
 - Writing (macro-skill) — all sub-competencies
@@ -240,7 +240,7 @@ Every exercise must pass the **production test**: does the learner construct lan
 
 ### 7. Listening Comprehension
 
-**Status:** Not yet implemented (requires AWS Polly integration)
+**Status:** Partially implemented — Dictation sub-type live (Polly audio); comprehension-questions and gap-fill-from-audio not yet built
 
 **What it targets:**
 - Listening (macro-skill) — comprehension of spoken language
@@ -359,7 +359,7 @@ Every exercise must pass the **production test**: does the learner construct lan
 
 ### 10. Contextual Paraphrase
 
-**Status:** Not yet implemented
+**Status:** Implemented
 
 **What it targets:**
 - Vocabulary depth (primary) — synonyms, circumlocution, range
@@ -507,7 +507,7 @@ Every exercise must pass the **production test**: does the learner construct lan
 
 ### 14. Conjugation / Inflection Drill
 
-**Status:** Not yet implemented — **scaffolding / remediation sub-mode, not standalone practice**
+**Status:** Implemented (deterministic-first grading) — **scaffolding / remediation sub-mode, not standalone practice**
 
 > The one type that deliberately fails the standalone production test. A decontextualized paradigm drill is exactly the mechanical work Anki and dedicated conjugation trainers already do well, and it sits *below* the intermediate plateau the app targets. We include it not as top-level practice but as **morphology repair** — surfaced when evaluation shows the learner chose the right structure but *formed* it wrong — mirroring how multiple choice is "used only as scaffolding within harder exercises, never as standalone practice."
 
@@ -612,6 +612,8 @@ The order balances three factors: learning impact (does this exercise type produ
 Already implemented: Cloze, Translation, Vocabulary Recall
 
 These three cover grammar accuracy, grammar range, and vocabulary — the foundation. The app is usable with just these, though limited.
+
+> This phasing reflects original sequencing intent, not current status. Phases 2–3's text types — Sentence Construction, Free Writing, Contextual Paraphrase, and the Conjugation/Inflection Drill scaffolding — have since shipped, and Phase 5's listening entry point is covered by the Dictation sub-type (Polly audio). Error Correction, Picture Description, Dialogue Completion, Mini-Essay, Task-Based Role-Play, and full Speaking remain unimplemented; see each catalogue entry's `Status` line above.
 
 ### Phase 2 — Deeper production
 1. **Sentence Construction** — high learning impact, low technical complexity. Reuses the same Claude evaluation pipeline. Bridges the gap between guided (cloze) and free (paragraph) production.

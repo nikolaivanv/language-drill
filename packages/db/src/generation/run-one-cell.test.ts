@@ -405,6 +405,14 @@ describe('seedKindFor', () => {
     };
     expect(seedKindFor(flagged)).toBe('elicitation-values');
   });
+
+  it("returns 'elicitation-values' for a paraphrase cell (scenario-seed rotation)", () => {
+    const cell = {
+      exerciseType: ExerciseType.CONTEXTUAL_PARAPHRASE,
+      grammarPoint: { kind: 'paraphrase', paraphrase: { seeds: ['s1', 's2'] } },
+    } as never;
+    expect(seedKindFor(cell)).toBe('elicitation-values');
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -1430,6 +1438,42 @@ describe('buildSeedWords — elicitation-values (curated pool, no DB)', () => {
       expect(['birinci', 'ikinci', 'üçüncü', 'dördüncü']).toContain(s);
     }
     expect(new Set(seeds).size).toBe(3); // distinct values — the rotation axis
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buildSeedWords — contextual_paraphrase path. UNGATED (no DB): the paraphrase
+// umbrella seeds from the curated `paraphrase.seeds` scenario pool via the
+// same `elicitation-values` kind, so this branch never queries the DB either
+// — reuses the same throwing-db proof as the suites above.
+// ---------------------------------------------------------------------------
+
+describe('buildSeedWords — contextual_paraphrase (curated pool, no DB)', () => {
+  it('draws paraphrase seeds from paraphrase.seeds without touching the db', async () => {
+    const throwingDb = new Proxy(
+      {},
+      {
+        get() {
+          throw new Error('buildSeedWords queried the DB on the contextual_paraphrase path');
+        },
+      },
+    ) as unknown as Db;
+    const cell = {
+      language: 'es',
+      cefrLevel: 'B1',
+      exerciseType: ExerciseType.CONTEXTUAL_PARAPHRASE,
+      grammarPoint: { kind: 'paraphrase', paraphrase: { seeds: ['scenario-a', 'scenario-b', 'scenario-c'] } },
+    } as never;
+    const seeds = await buildSeedWords(throwingDb, cell, 2, 'batch-1', new Set());
+    expect(seeds).toHaveLength(2);
+    const pool = ['scenario-a', 'scenario-b', 'scenario-c'];
+    const nonNull = seeds!.filter((s) => s !== null);
+    // At least one non-null seed proves this drew from the umbrella's
+    // paraphrase.seeds pool rather than silently falling back to an empty
+    // band (which would make pickSeeds return all-null and this assertion
+    // would go dark).
+    expect(nonNull.length).toBeGreaterThan(0);
+    expect(nonNull.every((s) => pool.includes(s as string))).toBe(true);
   });
 });
 

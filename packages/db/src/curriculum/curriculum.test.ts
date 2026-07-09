@@ -365,6 +365,25 @@ describe('curriculum conjugationSeedKind (nominal-inflection points seed from th
       ]),
     ).toThrow(/selfRevealingElicitation/);
   });
+
+  it('rejects a paraphrase umbrella with no paraphrase config', () => {
+    expect(() =>
+      assertCurriculumInvariants([
+        {
+          key: 'es-b1-paraphrase',
+          kind: 'paraphrase',
+          name: 'Paraphrase (B1)',
+          description: 'x',
+          cefrLevel: 'B1',
+          language: Language.ES,
+          examplesPositive: ['a', 'b'],
+          examplesNegative: ['*c'],
+          commonErrors: ['d'],
+          // paraphrase config intentionally missing
+        } as never,
+      ]),
+    ).toThrow(/paraphrase/i);
+  });
 });
 
 describe('self-revealing elicitation — flagged entries', () => {
@@ -593,6 +612,7 @@ describe('per-language counts', () => {
     let vocab = 0;
     let dictation = 0;
     let freeWriting = 0;
+    let paraphrase = 0;
     for (const entry of curriculum) {
       if (entry.kind === 'grammar') {
         grammar[entry.cefrLevel]++;
@@ -600,11 +620,13 @@ describe('per-language counts', () => {
         vocab++;
       } else if (entry.kind === 'dictation') {
         dictation++;
+      } else if (entry.kind === 'paraphrase') {
+        paraphrase++;
       } else {
         freeWriting++;
       }
     }
-    return { grammar, vocab, dictation, freeWriting };
+    return { grammar, vocab, dictation, freeWriting, paraphrase };
   }
 
   // ES is at full PCIC A1-B2 parity plus the 2026-07-09 Butt & Benjamin gap
@@ -615,8 +637,8 @@ describe('per-language counts', () => {
   // full Yedi İklim A1+A2 parity (26 A1 + 14 A2 grammar + 10 themed vocab
   // umbrellas); B1/B2 remain disabled.
 
-  it('Spanish is at full PCIC A1–B2 parity (+ B&B gap audit), has 12 vocab umbrellas, 4 dictation umbrellas, and 18 free-writing umbrellas', () => {
-    const { grammar, vocab, dictation, freeWriting } = countsFor(esCurriculum);
+  it('Spanish is at full PCIC A1–B2 parity (+ B&B gap audit), has 12 vocab umbrellas, 4 dictation umbrellas, 18 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
+    const { grammar, vocab, dictation, freeWriting, paraphrase } = countsFor(esCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(24);
     expect(grammar.A2).toBeGreaterThanOrEqual(34);
     expect(grammar.B1).toBeGreaterThanOrEqual(25);
@@ -627,6 +649,8 @@ describe('per-language counts', () => {
     expect(dictation).toBe(4);
     // 3 × A1 + 3 × A2 + 6 × B1 + 6 × B2 free-writing topic umbrellas (Phase 2 free-writing generation).
     expect(freeWriting).toBe(18);
+    // es-b1-paraphrase + es-b2-paraphrase (Phase 2 contextual-paraphrase generation).
+    expect(paraphrase).toBe(2);
   });
 
   it('German is fully disabled (no grammar entries, no vocab or dictation umbrellas)', () => {
@@ -639,8 +663,8 @@ describe('per-language counts', () => {
     expect(dictation).toBe(0);
   });
 
-  it('Turkish is at full Yedi İklim A1 + A2 + B1 parity (B2 disabled), has 15 vocab umbrellas, 3 dictation umbrellas, and 9 free-writing umbrellas', () => {
-    const { grammar, vocab, dictation, freeWriting } = countsFor(trCurriculum);
+  it('Turkish is at full Yedi İklim A1 + A2 + B1 parity (B2 disabled), has 15 vocab umbrellas, 3 dictation umbrellas, 9 free-writing umbrellas, and 1 paraphrase umbrella', () => {
+    const { grammar, vocab, dictation, freeWriting, paraphrase } = countsFor(trCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(26);
     // A2 gained 5 G&K reverse-audit points (2026-07-10): spatial postpositions,
     // nominal past copula, dA/bile clitics, -lI/-sIz, tane → 27.
@@ -654,6 +678,8 @@ describe('per-language counts', () => {
     expect(dictation).toBe(3);
     // 3 A1 + 3 A2 + 3 B1 free-writing topic umbrellas.
     expect(freeWriting).toBe(9);
+    // tr-b1-paraphrase (Phase 2 contextual-paraphrase generation); B2 disabled so no tr-b2-paraphrase.
+    expect(paraphrase).toBe(1);
   });
 });
 

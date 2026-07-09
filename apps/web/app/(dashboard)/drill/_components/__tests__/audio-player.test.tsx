@@ -135,4 +135,16 @@ describe('AudioPlayer', () => {
       durSpy.mockRestore();
     }
   });
+
+  it('renders a continuous progress track when waveform is empty', () => {
+    render(<AudioPlayer src="blob:x" waveform={[]} durationSec={10} />);
+    expect(screen.getByTestId('progress-track')).toBeInTheDocument();
+    expect(screen.queryByTestId('progress-fill')).toBeInTheDocument();
+    // Amplitude bars should not be rendered in the empty case.
+  });
+
+  it('still renders amplitude bars for a non-empty waveform', () => {
+    render(<AudioPlayer src="blob:x" waveform={[0.2, 0.8, 0.5]} durationSec={10} />);
+    expect(screen.queryByTestId('progress-track')).not.toBeInTheDocument();
+  });
 });

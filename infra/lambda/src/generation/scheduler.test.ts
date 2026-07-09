@@ -845,3 +845,120 @@ describe('scheduler handler', () => {
     expect(personValues).toContain('2pl');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Run-level cell cap (spend brake). The scheduler caps how many under-target
+// cells one tick enqueues so a single nightly fan-out can't spend unbounded
+// against the Anthropic account (docs/tech-debt.md spend-brake entry).
+// ---------------------------------------------------------------------------
+
+describe('scheduler run-level cell cap', () => {
+  afterEach(() => {
+    delete process.env['SCHEDULER_MAX_CELLS_PER_RUN'];
+  });
+
+  /** All jobIds enqueued across every batch, in order. */
+  function enqueuedJobIds(): string[] {
+    return capturedBatches()
+      .flatMap(decodeBatch)
+      .map((m) => parseGenerationJobMessage(m).jobId);
+  }
+
+  function capLogLine(): Record<string, unknown> | undefined {
+    return findLogLine(
+      (e) =>
+        typeof e['message'] === 'string' &&
+        (e['message'] as string).includes('cell cap applied'),
+    );
+  }
+
+  it('caps enqueued cells at SCHEDULER_MAX_CELLS_PER_RUN and logs the deferred count', async () => {
+    process.env['SCHEDULER_MAX_CELLS_PER_RUN'] = '3';
+    // Empty rows → every round-1 cell is under target; there are far more than 3.
+    const total = allRoundOneCells().length;
+    expect(total).toBeGreaterThan(3);
+    mockGroupBy.mockResolvedValueOnce([]);
+
+    await handler();
+
+    expect(enqueuedJobIds()).toHaveLength(3);
+    const log = capLogLine();
+    expect(log).toBeDefined();
+    expect(log!['cap']).toBe(3);
+    expect(log!['enqueuedThisRun']).toBe(3);
+    expect(log!['deferredCount']).toBe(total - 3);
+  });
+
+  it('enqueues the most under-target cells first (need desc, cellKey tie-break)', async () => {
+    // Five subjects with distinct `need` values; everything else at target.
+    const subjects = cellsWithGlobalTarget().slice(0, 5);
+    expect(subjects).toHaveLength(5);
+    // approved → need (= TARGET_PER_CELL − approved): s1 has the largest need,
+    // s3 the second largest. cap = 2 must pick exactly those two, in that order.
+    const approvedByKey = new Map<string, number>([
+      [subjects[0].cellKey, 45], // need 5
+      [subjects[1].cellKey, 10], // need 40  ← 1st
+      [subjects[2].cellKey, 30], // need 20
+      [subjects[3].cellKey, 20], // need 30  ← 2nd
+      [subjects[4].cellKey, 40], // need 10
+    ]);
+    const rows = allRoundOneCells().map((cell) => ({
+      language: cell.language,
+      difficulty: cell.cefrLevel,
+      type: cell.exerciseType,
+      grammarPointKey: cell.grammarPoint.key,
+      approved: approvedByKey.get(cell.cellKey) ?? resolveCellTarget(cell),
+    }));
+    mockGroupBy.mockResolvedValueOnce(rows);
+    process.env['SCHEDULER_MAX_CELLS_PER_RUN'] = '2';
+
+    await handler();
+
+    const today = new Date().toISOString().slice(0, 10);
+    const batchSeed = `scheduled-${today}`;
+    const jobIdFor = (cell: Cell) =>
+      deterministicUuid([cell.cellKey, batchSeed].join('|'));
+
+    // Highest need first, then second-highest — the other three deferred.
+    expect(enqueuedJobIds()).toEqual([
+      jobIdFor(subjects[1]),
+      jobIdFor(subjects[3]),
+    ]);
+    expect(capLogLine()!['deferredCount']).toBe(3);
+  });
+
+  it('does not cap or log when under-target cells are at or below the cap', async () => {
+    process.env['SCHEDULER_MAX_CELLS_PER_RUN'] = '100';
+    const undertargetKeys = new Set(
+      allRoundOneCells()
+        .slice(0, 25)
+        .map((c) => c.cellKey),
+    );
+    mockGroupBy.mockResolvedValueOnce(
+      rowsToFillAllCellsExcept(undertargetKeys, 10),
+    );
+
+    await handler();
+
+    expect(enqueuedJobIds()).toHaveLength(25);
+    expect(capLogLine()).toBeUndefined();
+  });
+
+  it('ignores a non-positive / non-numeric override and falls back to the default (60)', async () => {
+    process.env['SCHEDULER_MAX_CELLS_PER_RUN'] = 'not-a-number';
+    // 25 under target < default 60 → no cap, no deferred log, all enqueued.
+    const undertargetKeys = new Set(
+      allRoundOneCells()
+        .slice(0, 25)
+        .map((c) => c.cellKey),
+    );
+    mockGroupBy.mockResolvedValueOnce(
+      rowsToFillAllCellsExcept(undertargetKeys, 10),
+    );
+
+    await handler();
+
+    expect(enqueuedJobIds()).toHaveLength(25);
+    expect(capLogLine()).toBeUndefined();
+  });
+});

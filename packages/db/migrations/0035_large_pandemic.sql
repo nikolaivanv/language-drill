@@ -1,0 +1,1 @@
+ALTER TABLE "read_entries" ADD COLUMN "audio_s3_key" text;

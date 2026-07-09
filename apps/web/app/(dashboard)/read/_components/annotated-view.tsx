@@ -24,13 +24,14 @@ import type {
   ReadingCategory,
   ReadingTextLength,
 } from '@language-drill/shared';
-import type { SavedVocabItem } from '@language-drill/api-client';
+import type { AuthenticatedFetch, SavedVocabItem } from '@language-drill/api-client';
 import { AdjustBar } from './adjust-bar';
 import { AnnotatedText, type SpanSelection } from './annotated-text';
 import { ZeroFlaggedStrip } from './annotated-footer';
 import { CalibrationStrip } from './calibration-strip';
 import { CollectBar } from './collect-bar';
 import { IntensityToggle } from './intensity-toggle';
+import { PassageAudio } from './passage-audio';
 import { ProvenanceHeader } from './provenance-header';
 import { WordBankRail } from './word-bank-rail';
 import { WordBankSheet } from './word-bank-sheet';
@@ -70,6 +71,10 @@ type Props = {
   entry: AnnotatedEntry;
   bank: string[];
   intensity: Intensity;
+  /** Persisted entry id, for the "Listen" audio control (Task 9). `null`/absent ⇒ no persisted entry yet, control is hidden. */
+  entryId?: string | null;
+  /** Authenticated fetcher for the audio mutation. Absent ⇒ control is hidden (matches `entryId`). */
+  fetchFn?: AuthenticatedFetch;
   activeWord: ActiveWord | null;
   /** On-demand deep-annotation state machine (Req 3, 9.3, 9.4, 11.4). */
   deepCard: DeepCardSlice;
@@ -159,6 +164,8 @@ export function AnnotatedView({
   entry,
   bank,
   intensity,
+  entryId,
+  fetchFn,
   activeWord,
   deepCard,
   calibration,
@@ -482,6 +489,7 @@ export function AnnotatedView({
             )}
           </div>
           <div className="flex items-center gap-[8px]">
+            {entryId && fetchFn ? <PassageAudio entryId={entryId} fetchFn={fetchFn} /> : null}
             <span className="t-micro text-ink-mute">highlight</span>
             <IntensityToggle value={intensity} onChange={onIntensityChange} />
           </div>
