@@ -89,4 +89,52 @@ describe('runOneUmbrella', () => {
     });
     expect(out.rows[0]).toMatchObject({ freqRank: null, tier: 'extended' });
   });
+
+  it('dedups a case-variant lemma and drops words matching the avoid-list case-insensitively', async () => {
+    const client = mockClient([
+      { displayForm: 'el pan', lemma: 'pan', gloss: 'bread', exampleSentence: 'Compro pan fresco.' },
+      { displayForm: 'el Pan', lemma: 'Pan', gloss: 'bread', exampleSentence: 'Me gusta el Pan.' }, // case-variant dup → dropped
+      { displayForm: 'la leche', lemma: 'leche', gloss: 'milk', exampleSentence: 'Bebo leche fría.' }, // avoid-listed → dropped
+    ]);
+    const db = mockDb({ pan: 400 });
+
+    const out = await runOneUmbrella({
+      db: db as never,
+      client: client as never,
+      umbrella,
+      wordCount: 3,
+      avoidWords: ['LECHE'],
+    });
+
+    expect(out.rawCount).toBe(3);
+    expect(out.keptCount).toBe(1);
+    expect(out.rows.map((r) => r.lemma)).toEqual(['pan']);
+  });
+
+  it('parses words out of prose wrapped around the JSON payload', async () => {
+    const client = {
+      messages: {
+        create: vi.fn().mockResolvedValue({
+          content: [
+            {
+              type: 'text',
+              text: 'Here are the words:\n{"words":[{"displayForm":"el pan","lemma":"pan","gloss":"bread","exampleSentence":"Compro pan fresco."}]}\nHope that helps!',
+            },
+          ],
+        }),
+      },
+    };
+    const db = mockDb({ pan: 400 });
+
+    const out = await runOneUmbrella({
+      db: db as never,
+      client: client as never,
+      umbrella,
+      wordCount: 1,
+      avoidWords: [],
+    });
+
+    expect(out.keptCount).toBe(1);
+    expect(out.rows[0]).toMatchObject({ lemma: 'pan' });
+  });
 });

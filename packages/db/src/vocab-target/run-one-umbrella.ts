@@ -101,7 +101,8 @@ export async function runOneUmbrella(
     .map((w) => validateProposedWord(w))
     .filter((w): w is ProposedWord => w !== null);
 
-  // De-dup within this batch and against the avoid-list (case-insensitive).
+  // De-dup within this batch and against the avoid-list (case-insensitive);
+  // stricter than the DB's case-sensitive unique index, by design.
   const avoid = new Set(avoidWords.map((w) => w.toLowerCase()));
   const seen = new Set<string>();
   const deduped = valid.filter((w) => {

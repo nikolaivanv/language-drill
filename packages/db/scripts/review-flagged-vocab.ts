@@ -66,7 +66,8 @@ async function main(): Promise<void> {
       exampleSentence: vocabTarget.exampleSentence,
     })
     .from(vocabTarget)
-    .where(and(eq(vocabTarget.language, 'ES'), eq(vocabTarget.status, 'flagged')));
+    .where(and(eq(vocabTarget.language, 'ES'), eq(vocabTarget.status, 'flagged')))
+    .orderBy(vocabTarget.umbrellaKey, vocabTarget.freqRank);
 
   process.stdout.write(`${rows.length} flagged ES vocab target(s):\n`);
   for (const r of rows) {
