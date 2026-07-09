@@ -23,6 +23,8 @@ function idleMessage(type: ExerciseType): string {
       return "write freely · then grade it";
     case ExerciseType.CONJUGATION:
       return "type the correct form · think about the ending";
+    case ExerciseType.CONTEXTUAL_PARAPHRASE:
+      return "say it another way · keep the meaning";
     default: {
       const _exhaustive: never = type;
       throw new Error(`unknown ExerciseType: ${String(_exhaustive)}`);
@@ -114,6 +116,18 @@ function evaluatedMessage(type: ExerciseType, score: number): string {
           return "close · check the suffix pattern for this tense";
         case "reset":
           return "tricky form · let's drill the paradigm";
+      }
+      break;
+    case ExerciseType.CONTEXTUAL_PARAPHRASE:
+      switch (tier) {
+        case "praise":
+          return "same meaning, fresh wording · excellent";
+        case "light":
+          return "good paraphrase · one small tweak";
+        case "encourage":
+          return "close · keep the meaning and try again";
+        case "reset":
+          return "tricky · let's rebuild the rewrite";
       }
       break;
     default: {
