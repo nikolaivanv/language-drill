@@ -49,8 +49,13 @@ export { playlists, playlistItems } from './playlists';
 export { invitations, usageEvents } from './access';
 export { generationJobs } from './generation';
 export type { GenerationJob, NewGenerationJob } from './generation';
-export { vocabLemma } from './vocab';
-export type { VocabLemma, NewVocabLemma } from './vocab';
+export { vocabLemma, vocabTarget } from './vocab';
+export type {
+  VocabLemma,
+  NewVocabLemma,
+  VocabTarget,
+  NewVocabTarget,
+} from './vocab';
 export { theoryTopics, theoryGenerationJobs } from './theory';
 export type {
   TheoryTopic,
