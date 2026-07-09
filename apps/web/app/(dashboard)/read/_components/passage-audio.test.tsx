@@ -49,6 +49,9 @@ describe('PassageAudio', () => {
     renderWith(fetchFn);
     const listen = screen.getByRole('button', { name: /listen/i });
     expect(listen.querySelector('svg')).toBeInTheDocument();
+    // Guards the review fix: must force pill radius over the design-system
+    // Button's default rounded-sm (cn() is a plain join, no tailwind-merge).
+    expect(listen.className).toContain('!rounded-pill');
   });
 
   it('shows a spinner while preparing audio', async () => {

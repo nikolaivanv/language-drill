@@ -42,7 +42,7 @@ export function PassageAudio({
   }, [entryId, reset]);
 
   // Design-system chip button, kept as a pill for the Listen affordance.
-  const controlClass = 'rounded-pill min-h-[44px]';
+  const controlClass = '!rounded-pill !min-h-[44px]';
 
   if (!opened) {
     return (
