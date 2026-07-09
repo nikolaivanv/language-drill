@@ -478,10 +478,19 @@ describe('AnnotatedView — Listen audio control placement', () => {
     ).toBeTruthy();
   });
 
-  it('renders the audio control on mobile', () => {
+  it('renders the audio control on mobile, after the header word-bank chip', () => {
     mockIsMobile.mockReturnValue(true);
     render(<AnnotatedView {...audioProps} />);
-    expect(screen.getByTestId('passage-audio')).toBeInTheDocument();
+    const audio = screen.getByTestId('passage-audio');
+    expect(audio).toBeInTheDocument();
+    // baseProps has 1 flagged word, so showRail is true and the mobile header
+    // renders the "word bank · N" chip. The audio row sits below the header,
+    // so the marker follows the chip in document order — guards against a
+    // future mobile-only edit silently moving the row above the header.
+    const wordBank = screen.getByRole('button', { name: /word bank/i });
+    expect(
+      wordBank.compareDocumentPosition(audio) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it('hides the audio control when there is no persisted entry', () => {
