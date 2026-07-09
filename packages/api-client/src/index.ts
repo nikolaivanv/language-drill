@@ -481,3 +481,17 @@ export {
   type EmailPreferences,
   type UpdateWeeklySummaryInput,
 } from './schemas/email';
+export {
+  CoverageStateSchema,
+  VocabTopicSummarySchema,
+  VocabTopicsResponseSchema,
+  VocabWordSchema,
+  VocabTopicDetailSchema,
+  type CoverageState,
+  type VocabTopicSummary,
+  type VocabTopicsResponse,
+  type VocabWord,
+  type VocabTopicDetail,
+} from './schemas/vocab';
+export { useVocabTopics, type UseVocabTopicsParams } from './hooks/useVocabTopics';
+export { useVocabTopicDetail, type UseVocabTopicDetailParams } from './hooks/useVocabTopicDetail';
