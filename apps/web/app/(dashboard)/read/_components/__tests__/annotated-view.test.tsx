@@ -469,7 +469,13 @@ describe('AnnotatedView — Listen audio control placement', () => {
     const intensity = screen.getByRole('radiogroup'); // IntensityToggle lives in the header cluster
     // Audio precedes the calibration eyebrow, and is a sibling row (not inside the intensity/header cluster).
     expect(audio).toBeInTheDocument();
-    expect(intensity.contains(audio)).toBe(false);
+    // New layout: the audio row sits AFTER the header block (which contains the
+    // IntensityToggle), so the audio marker follows the toggle in document order.
+    // In the old layout it preceded the toggle inside the header cluster — this
+    // assertion fails there, so it genuinely guards the relocation.
+    expect(
+      intensity.compareDocumentPosition(audio) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it('renders the audio control on mobile', () => {
