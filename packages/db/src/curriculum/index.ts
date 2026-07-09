@@ -291,6 +291,19 @@ export function assertCurriculumInvariants(
       );
     }
 
+    // 9i. paraphrase config is present iff the entry is a paraphrase umbrella,
+    // and its seed pool is non-empty.
+    if (entry.kind === 'paraphrase' && (!entry.paraphrase || entry.paraphrase.seeds.length === 0)) {
+      throw new Error(
+        `Curriculum invariant violated: '${entry.key}' is kind 'paraphrase' but has no non-empty paraphrase.seeds`,
+      );
+    }
+    if (entry.kind !== 'paraphrase' && entry.paraphrase) {
+      throw new Error(
+        `Curriculum invariant violated: '${entry.key}' has paraphrase config but is not kind 'paraphrase'`,
+      );
+    }
+
     // 9d. coverageSpec (Phase 2): axis applicability, unique axes, legal floor
     //     keys, positive-integer floors. `personRotation` is gone; a person axis
     //     here is the old flag.

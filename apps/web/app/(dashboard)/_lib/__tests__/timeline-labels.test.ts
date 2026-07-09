@@ -6,6 +6,10 @@ describe('typeLabel', () => {
   it('labels sentence_construction', () => {
     expect(typeLabel(ExerciseType.SENTENCE_CONSTRUCTION)).toBe('sentence construction');
   });
+
+  it('labels contextual_paraphrase', () => {
+    expect(typeLabel(ExerciseType.CONTEXTUAL_PARAPHRASE)).toBe('paraphrase');
+  });
 });
 
 describe('composeTitle', () => {

@@ -70,6 +70,11 @@ export const CELL_TARGET_DEFAULTS: Record<
   // reachable per topic; breadth comes from more curated topic umbrellas. A1/A2
   // are set for TR free-writing (2026-06-17).
   [ExerciseType.FREE_WRITING]: { A1: 5, A2: 5, B1: 5, B2: 5 },
+  // Contextual paraphrase is a B1+ production drill (register/formality
+  // rewrites; not authored below B1). Capped low (8) like free_writing: a
+  // single grammar-point cell has a narrow distinct-source-sentence surface,
+  // so a high target would just grind the dedup index.
+  [ExerciseType.CONTEXTUAL_PARAPHRASE]: { B1: 8, B2: 8 },
 };
 
 /**

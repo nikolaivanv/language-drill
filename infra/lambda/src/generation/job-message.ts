@@ -111,6 +111,7 @@ const VALID_EXERCISE_TYPES: ReadonlySet<string> = new Set([
   ExerciseType.DICTATION,
   ExerciseType.FREE_WRITING,
   ExerciseType.CONJUGATION,
+  ExerciseType.CONTEXTUAL_PARAPHRASE,
 ]);
 
 const COUNT_MIN = 1;

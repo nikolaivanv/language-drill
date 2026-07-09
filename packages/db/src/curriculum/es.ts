@@ -81,8 +81,12 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * on the cells starved by that run: es-a2-temporal-clauses cloze (2/26),
  * es-a1-demonstratives cloze (2/9), es-a2-articles-use cloze (1/7),
  * es-a1-fw-a-day (0/3).
+ *
+ * `2026-07-10a`: adds the two `kind: 'paraphrase'` umbrellas
+ * (`es-b1-paraphrase`, `es-b2-paraphrase`) that own the new contextual-paraphrase
+ * generation cells; the bump enumerates them on the next scheduler tick.
  */
-export const CURRICULUM_VERSION_ES = '2026-07-10';
+export const CURRICULUM_VERSION_ES = '2026-07-10a';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -3010,6 +3014,78 @@ const esCurriculum: readonly GrammarPoint[] = [
     examplesNegative: ['*Work-life balance.'],
     commonErrors: ['Abstract platitudes with no concrete strategies.'],
     freeWriting: { register: 'neutral' },
+  },
+
+  // ---------------------------------------------------------------------------
+  // Paraphrase umbrellas — kind: 'paraphrase' (Phase 2 contextual-paraphrase generation)
+  // ---------------------------------------------------------------------------
+  {
+    key: 'es-b1-paraphrase',
+    kind: 'paraphrase',
+    name: 'Paraphrase — say it another way (B1)',
+    description:
+      'Rewrite a B1 sentence under one constraint: avoid a given word, shift register, or simplify for an audience — preserving meaning while reaching for synonyms and alternative structures.',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Source "Me encanta el cine" → without «encantar»: "Disfruto muchísimo del cine."',
+      'Source "¿Me pasas la sal?" → formal register: "¿Sería tan amable de pasarme la sal?"',
+    ],
+    examplesNegative: ['*A rewrite that changes the meaning of the source.'],
+    commonErrors: [
+      'Using a banned word in a different inflected form.',
+      'Changing register but also changing what is said.',
+    ],
+    paraphrase: {
+      seeds: [
+        'a complaint to a landlord',
+        'describing a childhood memory',
+        'asking a colleague for a deadline extension',
+        'giving directions to a tourist',
+        'declining an invitation politely',
+        'explaining why you are late',
+        'recommending a restaurant',
+        'apologising for a mistake at work',
+        'describing your morning routine',
+        'asking for a refund in a shop',
+        'inviting a friend to an event',
+        'summarising a film you saw',
+      ],
+    },
+  },
+  {
+    key: 'es-b2-paraphrase',
+    kind: 'paraphrase',
+    name: 'Paraphrase — say it another way (B2)',
+    description:
+      'Rewrite a B2 sentence under one constraint: avoid a given word, shift register up or down, or simplify a nuanced point for a lay audience — preserving the full propositional content.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Source "El desempleo ha aumentado considerablemente" → without «aumentar»: "El desempleo ha crecido de forma notable."',
+      'Source "Necesitamos abordar este problema cuanto antes" → simplify for a child: "Tenemos que solucionar esto pronto."',
+    ],
+    examplesNegative: ['*A rewrite that drops part of the original claim.'],
+    commonErrors: [
+      'Simplifying so much that a key nuance is lost.',
+      'Swapping in a near-synonym that shifts the meaning slightly.',
+    ],
+    paraphrase: {
+      seeds: [
+        'summarising a news article for a friend',
+        'explaining a company policy change to staff',
+        'writing a formal complaint to a public office',
+        'giving constructive feedback to a colleague',
+        'defending an unpopular opinion in a debate',
+        'explaining a legal clause in plain language',
+        'pitching a project idea to a manager',
+        'describing a health issue to a doctor',
+        'negotiating a salary raise',
+        'explaining why a plan failed to a client',
+        'writing a reference letter for a former employee',
+        'proposing a compromise in a disagreement',
+      ],
+    },
   },
 ];
 
