@@ -19,9 +19,18 @@ vi.mock('../../../../../components/shell/active-language-provider', () => ({
 }));
 
 // Audio-control placement tests only need a marker — the real PassageAudio
-// needs a QueryClient + audio hook we don't want to wire up here.
+// needs a QueryClient + audio hook we don't want to wire up here. Exposes the
+// `floating`/`floatingSuppressed` props as data attributes so the mobile
+// floating-control wiring test (below) can assert on them without needing
+// the real component.
 vi.mock('../passage-audio', () => ({
-  PassageAudio: () => <div data-testid="passage-audio" />,
+  PassageAudio: (props: { floating?: boolean; floatingSuppressed?: boolean }) => (
+    <div
+      data-testid="passage-audio"
+      data-floating={String(props.floating ?? false)}
+      data-suppressed={String(props.floatingSuppressed ?? false)}
+    />
+  ),
 }));
 
 beforeEach(() => {
@@ -497,5 +506,27 @@ describe('AnnotatedView — Listen audio control placement', () => {
     mockIsMobile.mockReturnValue(false);
     render(<AnnotatedView {...baseProps} />); // baseProps has no entryId/fetchFn
     expect(screen.queryByTestId('passage-audio')).not.toBeInTheDocument();
+  });
+
+  it('enables floating on mobile and suppresses it while a bottom sheet is open', () => {
+    mockIsMobile.mockReturnValue(true);
+    const { rerender } = render(<AnnotatedView {...audioProps} />);
+    expect(screen.getByTestId('passage-audio')).toHaveAttribute('data-floating', 'true');
+    expect(screen.getByTestId('passage-audio')).toHaveAttribute('data-suppressed', 'false');
+
+    // A loaded/loading deep card opens the word sheet (cardOpen) → floating is
+    // suppressed. The 'loading' slice must carry a `span` — annotated-view
+    // reads deepCard.span when deepActive.
+    rerender(
+      <AnnotatedView
+        {...audioProps}
+        deepCard={{
+          status: 'loading',
+          span: { start: 0, end: 5, type: 'word', x: 100, y: 50 },
+          partial: {},
+        }}
+      />,
+    );
+    expect(screen.getByTestId('passage-audio')).toHaveAttribute('data-suppressed', 'true');
   });
 });

@@ -259,15 +259,6 @@ export function AnnotatedView({
     </div>
   );
 
-  // Listen / audio — own full-width row so the expanded player never overlaps
-  // the header (shared verbatim between the mobile and desktop branches below).
-  const audioRow =
-    entryId && fetchFn ? (
-      <div className="mb-[18px]">
-        <PassageAudio entryId={entryId} fetchFn={fetchFn} />
-      </div>
-    ) : null;
-
   // Mobile (≤760px) swaps the sticky rail + anchored popover for bottom sheets:
   // a toolbar chip opens the bank sheet, a word tap opens the word sheet. The
   // reducer's `activeWord` state (and the same open/close handlers) is reused —
@@ -344,6 +335,24 @@ export function AnnotatedView({
   // the loaded deep card.
   const chromeDeepCard: DeepCardSlice | undefined = deepActive ? deepCard : undefined;
   const cardOpen = deepActive || (activeFlag !== null && activeWord !== null);
+
+  // Listen / audio — own full-width row so the expanded player never overlaps
+  // the header (shared verbatim between the mobile and desktop branches below).
+  // On mobile a floating transport appears once this row scrolls out of view;
+  // it is suppressed whenever a bottom sheet (word card / bank) covers the
+  // lower screen. Defined after `cardOpen` so `floatingSuppressed` can read it.
+  const audioRow =
+    entryId && fetchFn ? (
+      <div className="mb-[18px]">
+        <PassageAudio
+          entryId={entryId}
+          fetchFn={fetchFn}
+          floating
+          floatingSuppressed={cardOpen || bankSheetOpen}
+        />
+      </div>
+    ) : null;
+
   const anchor = deepActive
     ? { x: deepCard.span.x, y: deepCard.span.y }
     : activeWord
