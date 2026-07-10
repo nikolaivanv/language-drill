@@ -93,8 +93,18 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * `2026-07-10a`: adds the two `kind: 'paraphrase'` umbrellas
  * (`es-b1-paraphrase`, `es-b2-paraphrase`) that own the new contextual-paraphrase
  * generation cells; the bump enumerates them on the next scheduler tick.
+ *
+ * `2026-07-11a`: marks three paradigm-contrast grammar points `clozeUnsuitable`
+ * (es-a1-possessives-atonic, es-a1-locative-prepositions, es-a2-temporal-clauses).
+ * Each targets a closed set whose members all fit a bare blank, so the cloze cell
+ * is a flag-factory: the 2026-07-10 run approved 0/16, ~1/8, and 2/20 respectively
+ * (127 flagged cloze rows across the three, ~$1.3 of nightly waste) while their
+ * translation cells stay healthy (15/18/28 approved). Dropping the cloze cell
+ * routes the points to translation only; the bump also clears the low-yield
+ * suppression these cloze cells keep tripping (which prior bumps only re-ran into
+ * the same failure — dropping the cell is the actual fix, not re-running it).
  */
-export const CURRICULUM_VERSION_ES = '2026-07-11';
+export const CURRICULUM_VERSION_ES = '2026-07-11a';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -196,6 +206,13 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Wrongly making mi/tu/su agree in gender the way nuestro/vuestro do ("*mia hermana" instead of "mi hermana").',
       'Assuming su can only mean "his," missing that it also covers "her," "your" (usted/ustedes), and "their."',
     ],
+    // clozeUnsuitable (2026-07-11a): a paradigm-contrast point — mi/tu/su/nuestro
+    // all fit a bare blank, so a cloze cannot force a single answer without a
+    // disambiguating cue the generator does not reliably supply. The 2026-07-10
+    // run flagged 10/12 cloze drafts as ambiguous; pool stands at 10 approved /
+    // 32 flagged cloze vs 18 approved / 9 flagged translation. Translation gives
+    // the possessor for free, so it carries the point.
+    clozeUnsuitable: true,
   },
   {
     key: 'es-a1-subject-pronouns',
@@ -534,6 +551,12 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Adding de after entre, producing "*entre de las dos calles" instead of "entre las dos calles".',
     ],
     prerequisiteKeys: ['es-a1-hay-estar'],
+    // clozeUnsuitable (2026-07-11a): a paradigm-contrast point — encima/debajo/
+    // delante/detrás all fit a bare blank, and blanking only the first word
+    // strands the linking "de". The 2026-07-10 run approved 0/16 cloze drafts;
+    // pool stands at 4 approved / 28 flagged cloze vs 15 approved / 4 flagged
+    // translation. Translation supplies the position for free, so it carries it.
+    clozeUnsuitable: true,
   },
 
   // ---------------------------------------------------------------------------
@@ -1118,6 +1141,13 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Confusing desde (a starting point) with desde hace (a length of time): "*vivo aquí desde tres años" instead of "vivo aquí desde hace tres años".',
       'Dropping the accent on interrogative cuándo in direct or indirect questions, confusing it with the unaccented conjunction cuando ("*no sé cuando llega" instead of "no sé cuándo llega").',
     ],
+    // clozeUnsuitable (2026-07-11a): a paradigm-contrast point — antes de /
+    // después de (and cuando/desde/hasta) both fit a bare blank, so real-world
+    // inference, not grammar, decides the answer. The 2026-07-10 run flagged
+    // 16/20 cloze drafts as ambiguous; pool stands at 12 approved / 67 flagged
+    // cloze vs 28 approved / 9 flagged translation. Translation fixes the
+    // connector via the source sentence, so it carries the point.
+    clozeUnsuitable: true,
   },
   {
     key: 'es-a2-hace-ago',
