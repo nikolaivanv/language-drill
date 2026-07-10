@@ -772,7 +772,7 @@ describe('ReadPage — streaming annotate flow', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
     // Already banked → the skim card shows the saved/undo affordance.
-    fireEvent.click(screen.getByRole('button', { name: /✓ saved · undo/i }));
+    fireEvent.click(screen.getByRole('button', { name: /✓ saved · remove/i }));
 
     expect(deleteVocabMutate).toHaveBeenCalledWith(
       'vocab-aldea',
@@ -1071,7 +1071,7 @@ describe('ReadPage — deep annotation flow (Req 3, 9.4, 11)', () => {
     // Confirmation toast + the card footer flipped to the saved state.
     expect(screen.getByRole('status')).toHaveTextContent(/saved.*to vocabulary/i);
     expect(
-      screen.getByRole('button', { name: /✓ saved · undo/i }),
+      screen.getByRole('button', { name: /✓ saved · remove/i }),
     ).toBeInTheDocument();
   });
 

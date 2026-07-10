@@ -342,7 +342,7 @@ export function AnnotatedView({
   // The loaded deep slice, if any (kept whole so its `span` narrows for save).
   const loadedDeep = deepCard.status === 'loaded' ? deepCard : null;
   // Whether the open deep card's span is the just-saved one — drives the
-  // card footer's "✓ saved · undo" state (Req 8.4).
+  // card footer's "✓ saved · remove" state (Req 8.4).
   const deepCardSaved =
     savedSpan !== null &&
     deepCard.status !== 'idle' &&

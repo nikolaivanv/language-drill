@@ -61,10 +61,10 @@ describe('WordPopover — save / skip / Escape', () => {
     expect(onSave).toHaveBeenCalledTimes(1);
   });
 
-  it('shows the "✓ saved · undo" accent button when inBank is true', () => {
+  it('shows the "✓ saved · remove" accent button when inBank is true', () => {
     const onSave = vi.fn();
     render(<WordPopover {...baseProps} inBank={true} onSave={onSave} />);
-    const button = screen.getByRole('button', { name: /✓ saved · undo/i });
+    const button = screen.getByRole('button', { name: /✓ saved · remove/i });
     expect(button).toBeInTheDocument();
     fireEvent.click(button);
     expect(onSave).toHaveBeenCalledTimes(1);
@@ -228,7 +228,7 @@ describe('WordCardBody — shared content (extracted from the popover)', () => {
       />,
     );
     expect(
-      screen.getByRole('button', { name: /✓ saved · undo/i }),
+      screen.getByRole('button', { name: /✓ saved · remove/i }),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^close$/i })).toBeInTheDocument();
   });

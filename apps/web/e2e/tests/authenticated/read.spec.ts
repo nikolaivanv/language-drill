@@ -341,7 +341,7 @@ test('saving a word card raises the toast, flips the footer, and undoes from the
   const toast = page.getByRole('status').filter({ hasText: /saved.*to vocabulary/i });
   await expect(toast).toBeVisible();
   await expect(
-    page.getByRole('button', { name: /✓ saved · undo/i }),
+    page.getByRole('button', { name: /✓ saved · remove/i }),
   ).toBeVisible();
 
   // Undo from the toast → footer reverts to "save", toast goes away.

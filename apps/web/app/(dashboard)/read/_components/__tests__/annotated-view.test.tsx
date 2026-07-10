@@ -316,7 +316,7 @@ describe('AnnotatedView — deep-card save / undo (Req 8.4, 8.5)', () => {
         onUndoCard={onUndoCard}
       />,
     );
-    fireEvent.click(screen.getByRole('button', { name: /✓ saved · undo/i }));
+    fireEvent.click(screen.getByRole('button', { name: /✓ saved · remove/i }));
     expect(onUndoCard).toHaveBeenCalledTimes(1);
   });
 });
