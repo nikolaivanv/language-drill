@@ -29,6 +29,17 @@
   -webkit-touch-callout: none;
 }
 
+/* NO-BREAK — wraps a word `<button>` together with the leading punctuation of
+ * the following separator (e.g. a sentence-final period). A `<button>` is an
+ * ATOMIC inline-block (browsers coerce `display: inline` on form controls), so
+ * the line breaker may wrap between the word and the adjacent separator text
+ * node, orphaning the "." to the next line. `nowrap` on the wrapper suppresses
+ * that break; the space that follows (rendered outside the wrapper) still wraps
+ * normally, so only the punctuation is pinned to its word. */
+.noBreak {
+  white-space: nowrap;
+}
+
 /* SUBTLE — dotted accent underline */
 .subtle {
   text-decoration: underline dotted var(--color-accent);

@@ -165,6 +165,13 @@ function QueueView({ data }: { data: HubOverview }) {
             />
           </div>
         </Card>
+
+        {/* Persistent entry to the saved-vocabulary bank. The bank is otherwise
+            only linked from the empty state + the post-session summary, so it's
+            unreachable whenever a queue is waiting — this keeps it one tap away. */}
+        <Button href="/review/bank" variant="ghost" className="w-full">
+          browse vocabulary →
+        </Button>
       </div>
     </div>
   );

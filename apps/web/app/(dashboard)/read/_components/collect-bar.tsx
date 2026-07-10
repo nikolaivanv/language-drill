@@ -1,18 +1,16 @@
 'use client';
 
 // ---------------------------------------------------------------------------
-// CollectBar — flagged/saved counts + save-text / add-to-vocabulary CTA
+// CollectBar — flagged/saved counts + a single "save text" CTA
 // ---------------------------------------------------------------------------
-// Props: flaggedCount, savedCount, onSaveToLibrary, canSaveToLibrary,
-//        onAddToVocabulary, saving
+// The "save text" button keeps the *passage* in your reading library. Words are
+// NOT collected here: each looked-up word auto-saves to your vocabulary the
+// moment its card resolves (that's what `savedCount` tallies), so there's no
+// batch "add N to vocabulary" step — the words are already in.
 //
-// The "save text" button keeps the *passage* in your reading library — it does
-// NOT save the collected words (those are saved per-word from the cards). It's
-// only actionable for an unsaved passage; once the text is in the library it's
-// disabled so it isn't a confusing no-op (`canSaveToLibrary === false`).
-//
-// When savedCount === 0: single "save text" button.
-// When savedCount > 0: ghost "save text" + primary "add N to vocabulary →".
+// "save text" is only actionable for an unsaved passage; once the text is in
+// the library (or auto-persisted by the first word save) it disables and reads
+// "text saved" so it isn't a confusing no-op (`canSaveToLibrary === false`).
 // ---------------------------------------------------------------------------
 
 import { Button } from '../../../../components/ui/button';
@@ -23,7 +21,6 @@ type Props = {
   onSaveToLibrary: () => void;
   /** False once the passage is already in the library (nothing left to save). */
   canSaveToLibrary?: boolean;
-  onAddToVocabulary: () => void;
   saving?: boolean;
 };
 
@@ -32,7 +29,6 @@ export function CollectBar({
   savedCount,
   onSaveToLibrary,
   canSaveToLibrary = true,
-  onAddToVocabulary,
   saving = false,
 }: Props) {
   const saveTextLabel = canSaveToLibrary ? 'save text' : 'text saved';
@@ -43,38 +39,15 @@ export function CollectBar({
         {flaggedCount} flagged · {savedCount} saved
       </span>
 
-      {/* Right: actions */}
-      <div className="flex items-center gap-[8px]">
-        {savedCount > 0 ? (
-          <>
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={saving || !canSaveToLibrary}
-              onClick={onSaveToLibrary}
-            >
-              {saveTextLabel}
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              disabled={saving}
-              onClick={onAddToVocabulary}
-            >
-              add {savedCount} to vocabulary →
-            </Button>
-          </>
-        ) : (
-          <Button
-            variant="primary"
-            size="sm"
-            disabled={saving || !canSaveToLibrary}
-            onClick={onSaveToLibrary}
-          >
-            {saveTextLabel}
-          </Button>
-        )}
-      </div>
+      {/* Right: save the passage to the library (words save themselves). */}
+      <Button
+        variant="primary"
+        size="sm"
+        disabled={saving || !canSaveToLibrary}
+        onClick={onSaveToLibrary}
+      >
+        {saveTextLabel}
+      </Button>
     </div>
   );
 }

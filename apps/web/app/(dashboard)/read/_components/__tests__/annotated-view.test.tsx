@@ -91,8 +91,8 @@ describe('AnnotatedView — flagged ≥ 1', () => {
     expect(screen.getByText('~B1+ calibration')).toBeInTheDocument();
     expect(screen.getByText('word bank')).toBeInTheDocument();
     // The legacy footer "save N to bank →" button is gone — bank saves persist
-    // immediately, so the explicit save action was redundant. The redesigned
-    // CollectBar now renders the flagged/saved tally + library/vocab actions.
+    // immediately, so the explicit save action was redundant. The CollectBar
+    // now renders the flagged/saved tally + a single "save text" action.
     expect(
       screen.queryByRole('button', { name: /save \d+ to bank/i }),
     ).not.toBeInTheDocument();

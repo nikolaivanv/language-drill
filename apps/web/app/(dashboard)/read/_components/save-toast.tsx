@@ -32,7 +32,7 @@ export function SaveToast({ count, onSeeNextSession, onDismiss }: Props) {
       >
         ✓
       </span>
-      <p className="t-small flex-1 leading-[1.45]">
+      <p className="flex-1 text-[12px] leading-[1.45] text-paper">
         <strong className="font-semibold">
           {count} {count === 1 ? 'word' : 'words'} added
         </strong>{' '}
@@ -40,15 +40,14 @@ export function SaveToast({ count, onSeeNextSession, onDismiss }: Props) {
         <br />
         your next session will weave them in.
       </p>
-      <Button variant="default" size="sm" onClick={onSeeNextSession}>
+      <Button variant="inverse" size="sm" onClick={onSeeNextSession}>
         see next session
       </Button>
       <button
         type="button"
         aria-label="dismiss"
         onClick={onDismiss}
-        className="flex h-[24px] w-[24px] cursor-pointer items-center justify-center border-none bg-transparent p-0 text-[18px] leading-none"
-        style={{ color: 'rgba(250, 247, 241, 0.5)' }}
+        className="flex h-[24px] w-[24px] cursor-pointer items-center justify-center border-none bg-transparent p-0 text-[18px] leading-none text-paper/50 transition-colors hover:text-paper"
       >
         ×
       </button>
@@ -90,18 +89,17 @@ export function VocabSaveToast({
       >
         ✓
       </span>
-      <p className="t-small flex-1 leading-[1.45]">
+      <p className="flex-1 text-[12px] leading-[1.45] text-paper">
         saved <strong className="font-semibold">“{label}”</strong> to vocabulary.
       </p>
-      <Button variant="default" size="sm" onClick={onUndo}>
+      <Button variant="inverse" size="sm" onClick={onUndo}>
         undo
       </Button>
       <button
         type="button"
         aria-label="dismiss"
         onClick={onDismiss}
-        className="flex h-[24px] w-[24px] cursor-pointer items-center justify-center border-none bg-transparent p-0 text-[18px] leading-none"
-        style={{ color: 'rgba(250, 247, 241, 0.5)' }}
+        className="flex h-[24px] w-[24px] cursor-pointer items-center justify-center border-none bg-transparent p-0 text-[18px] leading-none text-paper/50 transition-colors hover:text-paper"
       >
         ×
       </button>
