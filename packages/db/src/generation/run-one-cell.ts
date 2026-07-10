@@ -567,8 +567,9 @@ async function fetchPriorNounSeeds(
  * now that PoS is DB-backed — previously ES-only). NOMINAL-inflection points
  * (`conjugationSeedKind: 'noun'` — possessive/case/copula) decline a noun, not a
  * verb, so their conjugation cell seeds from the NOUN band instead. The legacy
- * `'none'` opts out of seeding entirely. vocab_recall/free-writing/etc. are
- * unseeded.
+ * `'none'` opts out of seeding entirely. vocab_recall now seeds from the
+ * curated `vocab_target` list (Spec 2) — an umbrella with no approved targets
+ * falls back to unseeded free generation. free-writing/etc. remain unseeded.
  */
 export function seedKindFor(
   cell: Cell,
@@ -621,8 +622,10 @@ export function seedKindFor(
 /**
  * Builds the per-ordinal seed list for a cell (R5.1), or `undefined` for
  * non-seeded types. Loads the candidate band from `vocab_lemma` (DB-backed),
- * then delegates to the deterministic pickers. The `exclude` set (live-pool
- * seeds) is supplied by the caller via `fetchPriorSeeds`/`fetchPriorConjugationSeeds`.
+ * then delegates to the deterministic pickers — except the `vocab-target`
+ * path (VOCAB_RECALL), which loads its band from the umbrella's approved
+ * `vocab_target` rows instead. The `exclude` set (live-pool seeds) is
+ * supplied by the caller via `fetchPriorSeeds`/`fetchPriorConjugationSeeds`.
  */
 export async function buildSeedWords(
   db: Db,

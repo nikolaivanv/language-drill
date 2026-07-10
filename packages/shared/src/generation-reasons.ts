@@ -34,8 +34,8 @@
  * - Reject branch (drafts discarded without a row): {@link LowQualityReject},
  *   {@link ContextSpoilsAnswer}, {@link CulturalIssue},
  *   {@link VowelHarmonyAllomorph}, {@link ParserFailure},
- *   {@link ValidatorParseFailure}. These are the only codes that can key
- *   `generation_jobs.rejection_reason_counts`.
+ *   {@link ValidatorParseFailure}, {@link SeedTargetMismatch}. These are the
+ *   only codes that can key `generation_jobs.rejection_reason_counts`.
  * - Flag branch (drafts inserted with `review_status = 'flagged'`):
  *   {@link LowQualityFlag}, {@link Ambiguous}, {@link LevelMismatch},
  *   {@link GrammarPointMismatch}, {@link MalformedSurfaceForm},
@@ -61,7 +61,7 @@ export enum GenerationReasonCode {
   /**
    * A seeded `vocab_recall` draft's `expectedWord` didn't normalize-match its
    * curated seed word — the model drifted off the target. Applied by
-   * `vocabSeedMismatchReason` (`packages/db`) after the LLM routing decision.
+   * `vocabSeedMismatch` (`packages/db`) after the LLM routing decision.
    */
   SeedTargetMismatch = "seed-target-mismatch",
 

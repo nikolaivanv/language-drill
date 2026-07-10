@@ -242,19 +242,31 @@ export async function handler(): Promise<void> {
       cell.exerciseType === ExerciseType.VOCAB_RECALL
         ? vocabCoverageByUmbrella.get(`${cell.language}|${cell.grammarPoint.key}`)
         : undefined;
-    const usingTargets = vocabCoverage !== undefined && vocabCoverage.approvedTargets > 0;
     // Coverage-aware for seeded vocab umbrellas: measure progress as distinct
     // covered targets vs total approved targets, so decideEnqueue yields
-    // need = |uncovered targets| and skip-target-reached fires when all covered.
-    const approvedInPool = usingTargets
-      ? vocabCoverage!.coveredTargets
-      : (approvedByCell.get(cell.cellKey) ?? 0);
+    // need = |uncovered targets| and skip-target-reached fires when all
+    // covered. Narrowed together in one branch (rather than re-testing
+    // `usingTargets` as a boolean later) so `vocabCoverage` stays typed as
+    // defined without a non-null assertion.
+    let usingTargets: boolean;
+    let approvedInPool: number;
+    let target: number;
+    if (vocabCoverage !== undefined && vocabCoverage.approvedTargets > 0) {
+      usingTargets = true;
+      approvedInPool = vocabCoverage.coveredTargets;
+      // R3: per-cell target — for a target-seeded umbrella, the target IS
+      // the umbrella's approved-target count.
+      target = vocabCoverage.approvedTargets;
+    } else {
+      usingTargets = false;
+      approvedInPool = approvedByCell.get(cell.cellKey) ?? 0;
+      // R3: per-cell target (override → table → TARGET_PER_CELL) instead of
+      // the flat global, so narrow A1/A2 cells stop grinding an unreachable 50.
+      target = resolveCellTarget(cell);
+    }
     const recentJob = recentJobByCell.get(cell.cellKey) ?? null;
     const curriculumVersionOnDisk =
       CURRICULUM_VERSION_BY_LANGUAGE[cell.language as LearningLanguage];
-    // R3: per-cell target (override → table → TARGET_PER_CELL) instead of the
-    // flat global, so narrow A1/A2 cells stop grinding an unreachable 50.
-    const target = usingTargets ? vocabCoverage!.approvedTargets : resolveCellTarget(cell);
     const decision = decideEnqueue(
       cell,
       approvedInPool,
