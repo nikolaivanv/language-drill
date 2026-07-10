@@ -528,8 +528,9 @@ test('Escape dismisses the open deep card (Req 9.6)', async ({ page }) => {
   // The desktop popover handles Escape via a *local* onKeyDown, and opening by
   // mouse leaves focus on the word in the passage (the popover isn't
   // auto-focused). So drive the keyboard-dismiss path the way a keyboard user
-  // would: with focus inside the card. The in-card "skip" control is a stable
-  // focus target — pressing Escape there bubbles to the popover's handler.
-  await page.getByRole('button', { name: 'skip' }).press('Escape');
+  // would: with focus inside the card. Tapping the word auto-saves it, so the
+  // in-card dismiss control reads "close" (the saved-state label for the same
+  // `skipRef` button) — pressing Escape there bubbles to the popover's handler.
+  await page.getByRole('button', { name: 'close' }).press('Escape');
   await expect(page.getByText('pueblo pequeño')).toHaveCount(0);
 });
