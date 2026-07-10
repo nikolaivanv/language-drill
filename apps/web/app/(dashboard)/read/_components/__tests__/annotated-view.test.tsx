@@ -529,4 +529,13 @@ describe('AnnotatedView — Listen audio control placement', () => {
     );
     expect(screen.getByTestId('passage-audio')).toHaveAttribute('data-suppressed', 'true');
   });
+
+  it('suppresses floating when the word-bank sheet is open (mobile)', async () => {
+    mockIsMobile.mockReturnValue(true);
+    render(<AnnotatedView {...audioProps} />);
+    expect(screen.getByTestId('passage-audio')).toHaveAttribute('data-suppressed', 'false');
+    // Open the word-bank sheet via the header chip → bankSheetOpen → suppressed.
+    fireEvent.click(screen.getByRole('button', { name: /word bank/i }));
+    expect(screen.getByTestId('passage-audio')).toHaveAttribute('data-suppressed', 'true');
+  });
 });

@@ -79,4 +79,30 @@ describe('FloatingAudioControl', () => {
     scrollPastAnchor();
     expect(screen.queryByRole('group', { name: /audio controls/i })).not.toBeInTheDocument();
   });
+
+  it('reserves <main> bottom padding only once the pill is shown', () => {
+    function MainHarness() {
+      const anchorRef = React.useRef<HTMLDivElement | null>(null);
+      return (
+        <main data-testid="scroller">
+          <div ref={anchorRef} data-testid="anchor" />
+          <FloatingAudioControl
+            anchorRef={anchorRef}
+            playing={false}
+            progress={0}
+            onToggle={() => {}}
+            onSeekBy={() => {}}
+          />
+        </main>
+      );
+    }
+    render(<MainHarness />);
+    const main = screen.getByTestId('scroller');
+    expect(main.style.paddingBottom).toBe(''); // not reserved before reveal
+    scrollPastAnchor(); // reuse the existing helper
+    // jsdom's CSSOM folds the two literal px terms in the calc() expression
+    // (64 + 114 = 178) rather than preserving the source string verbatim, so
+    // assert on the safe-area-aware calc it actually produces.
+    expect(main.style.paddingBottom).toBe('calc(178px + env(safe-area-inset-bottom))');
+  });
 });

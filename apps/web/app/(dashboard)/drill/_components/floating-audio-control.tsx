@@ -28,19 +28,10 @@ export function FloatingAudioControl({
 }: FloatingAudioControlProps) {
   const [pastAnchor, setPastAnchor] = React.useState(false);
 
-  // Reveal once the inline player has scrolled up out of the viewport, and
-  // reserve scroll room so the passage's last content clears the pinned pill.
+  // Reveal once the inline player has scrolled up out of the viewport.
   React.useEffect(() => {
     const anchor = anchorRef.current;
     if (!anchor) return;
-
-    const scroller = anchor.closest('main');
-    const prevPad = scroller?.style.paddingBottom ?? '';
-    if (scroller) {
-      // Base tab-bar clearance (mirrors app-shell) + room for the pill.
-      scroller.style.paddingBottom = 'calc(64px + env(safe-area-inset-bottom) + 114px)';
-    }
-
     const io = new IntersectionObserver(
       ([entry]) => {
         // Reveal only when the anchor has left the TOP of the viewport (scrolled
@@ -50,12 +41,23 @@ export function FloatingAudioControl({
       { threshold: 0 },
     );
     io.observe(anchor);
-
-    return () => {
-      io.disconnect();
-      if (scroller) scroller.style.paddingBottom = prevPad;
-    };
+    return () => io.disconnect();
   }, [anchorRef]);
+
+  // Reserve scroll room only while the pill is visible, so the passage's last
+  // content clears the pinned control. A short passage that never reveals the
+  // pill keeps its natural height (no spurious bottom whitespace/scrollbar).
+  React.useEffect(() => {
+    if (!pastAnchor || suppressed) return;
+    const scroller = anchorRef.current?.closest('main');
+    if (!scroller) return;
+    const prevPad = scroller.style.paddingBottom;
+    // Base tab-bar clearance (mirrors app-shell) + room for the pill.
+    scroller.style.paddingBottom = 'calc(64px + env(safe-area-inset-bottom) + 114px)';
+    return () => {
+      scroller.style.paddingBottom = prevPad;
+    };
+  }, [pastAnchor, suppressed, anchorRef]);
 
   if (suppressed || !pastAnchor || typeof document === 'undefined') return null;
 
