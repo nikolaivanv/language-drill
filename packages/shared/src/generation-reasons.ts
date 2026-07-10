@@ -58,6 +58,12 @@ export enum GenerationReasonCode {
   ParserFailure = "parser-failure",
   /** The validator returned a malformed tool call on first validation. */
   ValidatorParseFailure = "validator-parse-failure",
+  /**
+   * A seeded `vocab_recall` draft's `expectedWord` didn't normalize-match its
+   * curated seed word — the model drifted off the target. Applied by
+   * `vocabSeedMismatchReason` (`packages/db`) after the LLM routing decision.
+   */
+  SeedTargetMismatch = "seed-target-mismatch",
 
   // -- Flag branch ----------------------------------------------------------
   /** 0.5 <= qualityScore < 0.7 → flagged. */
@@ -112,6 +118,7 @@ export const REASON_LABELS: Record<GenerationReasonCode, string> = {
   [GenerationReasonCode.ParserFailure]: "Parser failure (retry exhausted)",
   [GenerationReasonCode.ValidatorParseFailure]:
     "Validator parse failure (malformed response)",
+  [GenerationReasonCode.SeedTargetMismatch]: "Seed-target mismatch",
   [GenerationReasonCode.LowQualityFlag]: "Low quality score (<0.7)",
   [GenerationReasonCode.Ambiguous]: "Ambiguous",
   [GenerationReasonCode.LevelMismatch]: "Level mismatch",
@@ -133,6 +140,7 @@ export const REJECTED_BRANCH_CODES: readonly GenerationReasonCode[] = [
   GenerationReasonCode.VowelHarmonyAllomorph,
   GenerationReasonCode.ParserFailure,
   GenerationReasonCode.ValidatorParseFailure,
+  GenerationReasonCode.SeedTargetMismatch,
 ];
 
 /**
