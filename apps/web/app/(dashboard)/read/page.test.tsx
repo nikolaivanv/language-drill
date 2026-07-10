@@ -1052,10 +1052,8 @@ describe('ReadPage — deep annotation flow (Req 3, 9.4, 11)', () => {
       deleteImpl: (_vars, opts) => opts?.onSuccess?.({ id: VOCAB_ID }),
     });
     renderPage();
+    // Tapping the word auto-saves it (default-add); no manual save click.
     fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
-    fireEvent.click(
-      screen.getByRole('button', { name: /\+ save to vocabulary/i }),
-    );
   }
 
   it('saving a resolved word card posts it to vocabulary and shows the toast (Req 8.4)', () => {
@@ -1112,6 +1110,100 @@ describe('ReadPage — deep annotation flow (Req 3, 9.4, 11)', () => {
     );
   });
 
+  it('auto-saves a resolved single-word card on tap — no manual click (default-add)', () => {
+    setEntries(ENTRIES_3);
+    setEntry(FULL_ENTRY);
+    stubSpanCompleteOnStart(DEEP_ALDEA);
+    setVocabMutations({
+      saveImpl: (_vars, opts) => opts?.onSuccess?.({ id: VOCAB_ID }),
+    });
+    renderPage();
+
+    // A single tap resolves the deep word card AND banks it — no save button.
+    fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
+
+    expect(saveVocabMutate).toHaveBeenCalledTimes(1);
+    expect(saveVocabMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ card: DEEP_ALDEA, sourceReadEntryId: ENTRY_ID }),
+      expect.any(Object),
+    );
+    // Footer already shows the saved state; the manual save label is absent.
+    expect(
+      screen.getByRole('button', { name: /✓ saved · remove/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /\+ save to vocabulary/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('does not double-save when an already-saved word is re-tapped (cache hit)', () => {
+    setEntries(ENTRIES_3);
+    setEntry(FULL_ENTRY);
+    stubSpanCompleteOnStart(DEEP_ALDEA);
+    setVocabMutations({
+      saveImpl: (_vars, opts) => opts?.onSuccess?.({ id: VOCAB_ID }),
+    });
+    renderPage();
+
+    // First tap: streams, resolves, auto-saves once.
+    fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
+    expect(spanStart).toHaveBeenCalledTimes(1);
+    expect(saveVocabMutate).toHaveBeenCalledTimes(1);
+
+    // Re-tap the same span: served from the session cache, no new stream, so the
+    // resolve effect never re-fires and the word is not saved again.
+    fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
+    expect(spanStart).toHaveBeenCalledTimes(1);
+    expect(saveVocabMutate).toHaveBeenCalledTimes(1);
+  });
+
+  it('does NOT auto-save a resolved phrase card (words only)', () => {
+    // Phrase-card shape mirrors `validPhraseCard` in packages/shared/src/read.test.ts.
+    const DEEP_PHRASE_CARD: DeepCard = {
+      type: 'phrase',
+      surface: 'aldea grande',
+      literal: 'village big',
+      idiomaticMeaning: 'a large village',
+      register: 'neutral, everyday',
+    };
+    setEntries(ENTRIES_3);
+    setEntry(FULL_ENTRY);
+    // Tapping 'aldea' fires the stream; stub it to resolve as a PHRASE card.
+    stubSpanCompleteOnStart(DEEP_PHRASE_CARD);
+    setVocabMutations({
+      saveImpl: (_vars, opts) => opts?.onSuccess?.({ id: VOCAB_ID }),
+    });
+    renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
+
+    // No auto-save; the manual phrase-save affordance is still present.
+    expect(saveVocabMutate).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole('button', { name: /\+ save phrase/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('removes an auto-saved word from within the card via "✓ saved · remove"', () => {
+    setEntries(ENTRIES_3);
+    setEntry(FULL_ENTRY);
+    stubSpanCompleteOnStart(DEEP_ALDEA);
+    setVocabMutations({
+      saveImpl: (_vars, opts) => opts?.onSuccess?.({ id: VOCAB_ID }),
+      deleteImpl: (_vars, opts) => opts?.onSuccess?.({ id: VOCAB_ID }),
+    });
+    renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
+    fireEvent.click(screen.getByRole('button', { name: /✓ saved · remove/i }));
+
+    expect(deleteVocabMutate).toHaveBeenCalledWith(VOCAB_ID, expect.any(Object));
+    // Footer reverts to the manual-save label after removal.
+    expect(
+      screen.getByRole('button', { name: /\+ save to vocabulary/i }),
+    ).toBeInTheDocument();
+  });
+
   // Regression: a deep card can resolve ANY tapped word, but the passage word
   // bank only holds flagged words (bank ⊆ flagged, enforced server-side). Saving
   // a NON-flagged word must save to vocabulary WITHOUT attempting the bank PUT —
@@ -1139,9 +1231,6 @@ describe('ReadPage — deep annotation flow (Req 3, 9.4, 11)', () => {
     });
     renderPage();
     fireEvent.click(screen.getByRole('button', { name: 'grande' }));
-    fireEvent.click(
-      screen.getByRole('button', { name: /\+ save to vocabulary/i }),
-    );
 
     // Vocab save still happens and confirms…
     expect(saveVocabMutate).toHaveBeenCalledWith(
@@ -1171,7 +1260,6 @@ describe('ReadPage — deep annotation flow (Req 3, 9.4, 11)', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: /annotate →/i }));
     fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
-    fireEvent.click(screen.getByRole('button', { name: /\+ save to vocabulary/i }));
 
     // The source text is persisted (with the banked word) so it lands in history…
     expect(saveMutate).toHaveBeenCalledWith(
