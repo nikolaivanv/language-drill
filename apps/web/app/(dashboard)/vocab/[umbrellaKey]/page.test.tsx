@@ -129,6 +129,14 @@ describe('VocabDetailPage', () => {
     );
   });
 
+  it('links back to the vocab topic list', async () => {
+    mockUseVocabTopicDetail.mockReturnValue(loaded(detail()));
+    await renderPage(params());
+
+    const back = screen.getByRole('link', { name: /back to vocabulary coverage/i });
+    expect(back).toHaveAttribute('href', '/vocab');
+  });
+
   it('hides the gloss until tapped', async () => {
     mockUseVocabTopicDetail.mockReturnValue(loaded(detail()));
     await renderPage(params());

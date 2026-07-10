@@ -1,6 +1,7 @@
 'use client';
 
 import { use, useMemo } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
 import { createAuthenticatedFetch, useVocabTopicDetail } from '@language-drill/api-client';
 import { Chip } from '../../../../components/ui/chip';
@@ -40,7 +41,13 @@ export default function VocabDetailPage({ params }: VocabDetailPageProps) {
     <div className="space-y-s-5">
       <header className="flex items-center justify-between gap-3">
         <div>
-          <div className="t-micro">vocabulary coverage</div>
+          <Link
+            href="/vocab"
+            aria-label="Back to vocabulary coverage"
+            className="inline-flex items-center gap-1 text-[11px] font-medium uppercase tracking-[1.2px] text-ink-mute transition-colors hover:text-ink"
+          >
+            <span aria-hidden="true">&larr;</span> vocabulary coverage
+          </Link>
           <div className="mt-[4px] flex items-baseline gap-2">
             <h1 className="t-display-l">{data.name}</h1>
             <Chip className="t-mono">{data.cefrLevel}</Chip>
