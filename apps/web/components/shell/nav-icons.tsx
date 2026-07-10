@@ -78,22 +78,3 @@ export function TheoryIcon() {
     </svg>
   );
 }
-
-// A 3×3 coverage-heatmap swatch for the vocab coverage hub — deliberately
-// distinct from the stacked-cards ReviewIcon ("my vocabulary"), the 2×2
-// TheoryIcon grid, and the ascending-bars ProgressIcon.
-export function VocabIcon() {
-  return (
-    <svg {...SHARED_PROPS} aria-hidden="true">
-      <rect x="2" y="2" width="3.2" height="3.2" rx="0.8" />
-      <rect x="6.4" y="2" width="3.2" height="3.2" rx="0.8" />
-      <rect x="10.8" y="2" width="3.2" height="3.2" rx="0.8" />
-      <rect x="2" y="6.4" width="3.2" height="3.2" rx="0.8" />
-      <rect x="6.4" y="6.4" width="3.2" height="3.2" rx="0.8" />
-      <rect x="10.8" y="6.4" width="3.2" height="3.2" rx="0.8" />
-      <rect x="2" y="10.8" width="3.2" height="3.2" rx="0.8" />
-      <rect x="6.4" y="10.8" width="3.2" height="3.2" rx="0.8" />
-      <rect x="10.8" y="10.8" width="3.2" height="3.2" rx="0.8" />
-    </svg>
-  );
-}
