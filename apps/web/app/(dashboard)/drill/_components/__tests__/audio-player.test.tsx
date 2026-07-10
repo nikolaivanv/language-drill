@@ -1,11 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import { AudioPlayer } from '../audio-player';
+import { mockIntersectionObserverInstances } from '../../../../../vitest.setup';
+
+let mockIsMobile = false;
+vi.mock('../../../../../lib/responsive', () => ({
+  useIsMobile: () => mockIsMobile,
+}));
 
 beforeEach(() => {
   // jsdom doesn't implement media playback.
   vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
   vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
+  mockIsMobile = false;
+  mockIntersectionObserverInstances.length = 0;
 });
 
 /** jsdom returns a zero-size rect; give the seek slider a real width so the
@@ -146,5 +154,63 @@ describe('AudioPlayer', () => {
   it('still renders amplitude bars for a non-empty waveform', () => {
     render(<AudioPlayer src="blob:x" waveform={[0.2, 0.8, 0.5]} durationSec={10} />);
     expect(screen.queryByTestId('progress-track')).not.toBeInTheDocument();
+  });
+});
+
+describe('AudioPlayer floating control', () => {
+  function revealFloating() {
+    const io = mockIntersectionObserverInstances[mockIntersectionObserverInstances.length - 1];
+    act(() => {
+      io.callback(
+        [{ isIntersecting: false, boundingClientRect: { top: -200 } } as unknown as IntersectionObserverEntry],
+        io as unknown as IntersectionObserver,
+      );
+    });
+  }
+
+  it('does not render the floating twin on desktop', () => {
+    mockIsMobile = false;
+    render(<AudioPlayer src="blob:x" waveform={[]} durationSec={47} floating />);
+    expect(mockIntersectionObserverInstances).toHaveLength(0);
+    expect(screen.queryByRole('group', { name: /audio controls/i })).not.toBeInTheDocument();
+  });
+
+  it('does not render the floating twin when floating is not set', () => {
+    mockIsMobile = true;
+    render(<AudioPlayer src="blob:x" waveform={[]} durationSec={47} />);
+    expect(mockIntersectionObserverInstances).toHaveLength(0);
+  });
+
+  it('reveals the floating twin on mobile once scrolled past', () => {
+    mockIsMobile = true;
+    render(<AudioPlayer src="blob:x" waveform={[]} durationSec={47} floating />);
+    expect(screen.queryByRole('group', { name: /audio controls/i })).not.toBeInTheDocument();
+    revealFloating();
+    expect(screen.getByRole('group', { name: /audio controls/i })).toBeInTheDocument();
+  });
+
+  it('floating +10 / -10 move the same shared progress and clamp', () => {
+    mockIsMobile = true;
+    render(<AudioPlayer src="blob:x" waveform={[]} durationSec={47} floating />);
+    revealFloating();
+    const group = screen.getByRole('group', { name: /audio controls/i });
+    const slider = screen.getByRole('slider', { name: /seek/i });
+
+    fireEvent.click(within(group).getByRole('button', { name: /forward 10 seconds/i }));
+    expect(slider).toHaveAttribute('aria-valuenow', '10');
+
+    fireEvent.click(within(group).getByRole('button', { name: /back 10 seconds/i }));
+    expect(slider).toHaveAttribute('aria-valuenow', '0');
+
+    // Clamp at the low end: another back-10 from zero stays at zero.
+    fireEvent.click(within(group).getByRole('button', { name: /back 10 seconds/i }));
+    expect(slider).toHaveAttribute('aria-valuenow', '0');
+  });
+
+  it('hides the floating twin when floatingSuppressed', () => {
+    mockIsMobile = true;
+    render(<AudioPlayer src="blob:x" waveform={[]} durationSec={47} floating floatingSuppressed />);
+    revealFloating();
+    expect(screen.queryByRole('group', { name: /audio controls/i })).not.toBeInTheDocument();
   });
 });
