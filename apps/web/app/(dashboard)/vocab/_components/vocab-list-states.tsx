@@ -10,9 +10,9 @@ function StateFrame({ children }: { children: React.ReactNode }) {
         margin: '24px 0',
         padding: 32,
         textAlign: 'center',
-        background: 'var(--card)',
-        border: '1px dashed var(--rule)',
-        borderRadius: 'var(--r-lg)',
+        background: 'var(--color-card)',
+        border: '1px dashed var(--color-rule)',
+        borderRadius: 'var(--radius-lg)',
       }}
     >
       {children}

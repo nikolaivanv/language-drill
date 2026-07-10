@@ -14,6 +14,7 @@ describe('deriveWordCoverage', () => {
     expect(deriveWordCoverage({ attempts: 3, bestScore: 0.9 })).toBe('practiced-strong');
     expect(deriveWordCoverage({ attempts: 2, bestScore: 0.5 })).toBe('practiced-weak');
     expect(deriveWordCoverage({ attempts: 1, bestScore: 0.7 })).toBe('practiced-strong');
+    expect(deriveWordCoverage({ attempts: 2, bestScore: null })).toBe('practiced-weak');
   });
 });
 
