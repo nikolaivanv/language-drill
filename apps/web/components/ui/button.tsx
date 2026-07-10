@@ -2,7 +2,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { cn } from '../../lib/cn';
 
-export type ButtonVariant = 'default' | 'primary' | 'ghost' | 'chip';
+export type ButtonVariant = 'default' | 'primary' | 'ghost' | 'chip' | 'inverse';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps
@@ -36,6 +36,13 @@ const variantClasses: Record<ButtonVariant, string> = {
     'border border-rule-strong bg-transparent text-ink-2 hover:bg-paper-2 hover:text-ink',
   // Bordered pill control on paper/card — the sole intended bg-card exception.
   chip: 'border border-rule bg-card text-ink hover:border-ink hover:bg-paper-2',
+  // Inverse — a control that sits on an inverted `bg-ink` surface (the read
+  // toasts). Foreground uses paper-family tokens, which pair with `ink` in BOTH
+  // themes (ink/paper flip together), so it stays legible whether the ink
+  // surface is dark (light theme) or cream (dark theme). The page-tuned
+  // `default`/`ghost` variants use ink-family text and go invisible here.
+  inverse:
+    'border border-paper/30 bg-transparent text-paper hover:border-paper/50 hover:bg-paper/10',
 };
 
 // `mobile:` floors give every button a ≥44px square tap target at ≤760px

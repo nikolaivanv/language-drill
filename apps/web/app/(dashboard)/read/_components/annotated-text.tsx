@@ -391,8 +391,21 @@ export function AnnotatedText({
     <span ref={rootRef}>
       {tokens.map((token, i) => {
         if (token.kind === 'sep') {
-          return <React.Fragment key={i}>{token.raw}</React.Fragment>;
+          // Leading punctuation (the run before the first whitespace, e.g. the
+          // "." in ". ") is pinned to the PRECEDING word by its no-break wrapper
+          // below, so drop it here to avoid rendering it twice. The remaining
+          // whitespace stays a normal line-break opportunity.
+          const prev = tokens[i - 1];
+          const raw =
+            prev && prev.kind === 'word'
+              ? token.raw.slice(leadingPunct(token.raw).length)
+              : token.raw;
+          return <React.Fragment key={i}>{raw}</React.Fragment>;
         }
+        // Pull the following separator's leading punctuation into this word's
+        // no-break wrapper so a sentence-final "." can't orphan to the next line.
+        const next = tokens[i + 1];
+        const glued = next && next.kind === 'sep' ? leadingPunct(next.raw) : '';
         const flag = flaggedMap[token.key];
         const isFlagged = Boolean(flag);
         const inBank = bankSet.has(token.key) || Boolean(savedWordKeys?.has(token.key));
@@ -406,29 +419,38 @@ export function AnnotatedText({
               underReview.surfaces.has(token.key)),
         );
         return (
-          <button
-            key={i}
-            type="button"
-            data-word={token.key}
-            data-idx={i}
-            className={cn(
-              styles.word,
-              // Highlight classes apply to flagged words only; non-flagged
-              // words stay visually plain but remain interactive.
-              isFlagged && styles[intensity],
-              isFlagged && inBank && styles.saved,
-              isUnderReview && styles.underReview,
-              isActive && styles.active,
-              inSelection && styles.selecting,
-            )}
-            onMouseDown={(e) => handleMouseDown(i, e)}
-            onMouseEnter={(e) => handleMouseEnter(i, e)}
-            onClick={(e) => handleClick(token, e)}
-          >
-            {token.raw}
-          </button>
+          <span key={i} className={styles.noBreak}>
+            <button
+              type="button"
+              data-word={token.key}
+              data-idx={i}
+              className={cn(
+                styles.word,
+                // Highlight classes apply to flagged words only; non-flagged
+                // words stay visually plain but remain interactive.
+                isFlagged && styles[intensity],
+                isFlagged && inBank && styles.saved,
+                isUnderReview && styles.underReview,
+                isActive && styles.active,
+                inSelection && styles.selecting,
+              )}
+              onMouseDown={(e) => handleMouseDown(i, e)}
+              onMouseEnter={(e) => handleMouseEnter(i, e)}
+              onClick={(e) => handleClick(token, e)}
+            >
+              {token.raw}
+            </button>
+            {glued}
+          </span>
         );
       })}
     </span>
   );
+}
+
+// Leading run of non-whitespace characters in a separator's raw text — the
+// punctuation (".", ",", "”", ")", …) that directly abuts the preceding word.
+// Empty when the separator starts with whitespace (a plain inter-word space).
+function leadingPunct(raw: string): string {
+  return /^\S*/.exec(raw)?.[0] ?? '';
 }

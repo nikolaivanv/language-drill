@@ -152,9 +152,7 @@ type Props = {
    * not the collected words).
    */
   canSaveToLibrary?: boolean;
-  /** Save the passage AND push its banked words into the vocabulary. */
-  onAddToVocabulary?: () => void;
-  /** True while a library/vocabulary save is in flight. */
+  /** True while a library save is in flight. */
   saving?: boolean;
   /** Native language name for the provenance subline + tags. */
   languageLabel: string;
@@ -192,7 +190,6 @@ export function AnnotatedView({
   savedCount,
   onSaveToLibrary,
   canSaveToLibrary = true,
-  onAddToVocabulary,
   saving,
   languageLabel,
 }: Props) {
@@ -253,7 +250,6 @@ export function AnnotatedView({
         savedCount={savedCount}
         onSaveToLibrary={() => onSaveToLibrary?.()}
         canSaveToLibrary={canSaveToLibrary}
-        onAddToVocabulary={() => onAddToVocabulary?.()}
         saving={saving}
       />
     </div>

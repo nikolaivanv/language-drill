@@ -1042,13 +1042,6 @@ export default function ReadPage() {
     );
   };
 
-  // "Add N to vocabulary" — the same save path; the banked words are already in
-  // `state.bank`, so persisting the entry pushes them into the vocabulary
-  // pipeline (the server materializes vocab rows from the bank on save).
-  const handleAddToVocabulary = () => {
-    handleSaveToLibrary();
-  };
-
   const handleHistoryOpen = (entryId: string) => {
     dispatch({ type: 'LOAD_ENTRY', entryId });
   };
@@ -1230,7 +1223,6 @@ export default function ReadPage() {
             state.activeEntryId === null &&
             annotate.state.phase === 'complete'
           }
-          onAddToVocabulary={handleAddToVocabulary}
           saving={saveEntry.isPending}
           languageLabel={languageLabel}
         />
