@@ -28,9 +28,13 @@ function SpeakerIcon() {
 export function PassageAudio({
   entryId,
   fetchFn,
+  floating = false,
+  floatingSuppressed = false,
 }: {
   entryId: string;
   fetchFn: AuthenticatedFetch;
+  floating?: boolean;
+  floatingSuppressed?: boolean;
 }) {
   const { mutate, data, isPending, isError, reset } = useReadAudio({ fetchFn });
   const [opened, setOpened] = React.useState(false);
@@ -97,5 +101,13 @@ export function PassageAudio({
     );
   }
 
-  return <AudioPlayer src={data.audioUrl} waveform={[]} durationSec={data.durationSec} />;
+  return (
+    <AudioPlayer
+      src={data.audioUrl}
+      waveform={[]}
+      durationSec={data.durationSec}
+      floating={floating}
+      floatingSuppressed={floatingSuppressed}
+    />
+  );
 }
