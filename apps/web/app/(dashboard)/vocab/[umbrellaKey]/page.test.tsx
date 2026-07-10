@@ -133,8 +133,8 @@ describe('VocabDetailPage', () => {
     mockUseVocabTopicDetail.mockReturnValue(loaded(detail()));
     await renderPage(params());
 
-    const back = screen.getByRole('link', { name: /back to vocabulary coverage/i });
-    expect(back).toHaveAttribute('href', '/vocab');
+    const back = screen.getByRole('link', { name: /back to all topics/i });
+    expect(back).toHaveAttribute('href', '/progress?tab=words');
   });
 
   it('hides the gloss until tapped', async () => {
@@ -166,8 +166,8 @@ describe('VocabDetailPage', () => {
     expect(screen.getByRole('status')).toBeInTheDocument();
     // Back link stays reachable while loading — the user is never trapped.
     expect(
-      screen.getByRole('link', { name: /back to vocabulary coverage/i }),
-    ).toHaveAttribute('href', '/vocab');
+      screen.getByRole('link', { name: /back to all topics/i }),
+    ).toHaveAttribute('href', '/progress?tab=words');
 
     mockUseVocabTopicDetail.mockReturnValue({
       data: undefined,
@@ -179,8 +179,8 @@ describe('VocabDetailPage', () => {
     expect(screen.getByText(/couldn't load/i)).toBeInTheDocument();
     // …and on error, so a failed topic load doesn't strand the user.
     expect(
-      screen.getByRole('link', { name: /back to vocabulary coverage/i }),
-    ).toHaveAttribute('href', '/vocab');
+      screen.getByRole('link', { name: /back to all topics/i }),
+    ).toHaveAttribute('href', '/progress?tab=words');
 
     fireEvent.click(screen.getByRole('button', { name: /try again/i }));
     expect(mockRefetch).toHaveBeenCalled();
