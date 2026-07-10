@@ -1,11 +1,17 @@
 'use client';
 
 import * as React from 'react';
+import { useIsMobile } from '../../../../lib/responsive';
+import { FloatingAudioControl } from './floating-audio-control';
 
 export interface AudioPlayerProps {
   src: string | undefined;
   waveform: number[];
   durationSec: number;
+  /** Render a mobile-only floating transport once the inline player scrolls away. */
+  floating?: boolean;
+  /** Hide the floating transport (e.g. while a bottom sheet is open). */
+  floatingSuppressed?: boolean;
 }
 
 function clamp01(x: number): number {
@@ -18,9 +24,17 @@ function fractionFromClientX(clientX: number, rect: DOMRect): number {
   return clamp01((clientX - rect.left) / rect.width);
 }
 
-export function AudioPlayer({ src, waveform, durationSec }: AudioPlayerProps) {
+export function AudioPlayer({
+  src,
+  waveform,
+  durationSec,
+  floating = false,
+  floatingSuppressed = false,
+}: AudioPlayerProps) {
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const waveRef = React.useRef<HTMLDivElement | null>(null);
+  const rootRef = React.useRef<HTMLDivElement | null>(null);
+  const isMobile = useIsMobile();
   const [playing, setPlaying] = React.useState(false);
   const [slow, setSlow] = React.useState(false);
   const [progress, setProgress] = React.useState(0); // 0..1 playhead
@@ -100,6 +114,15 @@ export function AudioPlayer({ src, waveform, durationSec }: AudioPlayerProps) {
     setProgress(f);
   }
 
+  // Seek relative to the current position, used by the floating ±10 controls.
+  function seekBy(deltaSec: number) {
+    if (disabled) return;
+    const d = liveDuration();
+    const cur = progress * d;
+    const next = Math.min(d, Math.max(0, cur + deltaSec));
+    seekToFraction(d > 0 ? next / d : 0);
+  }
+
   function waveRect(): DOMRect | null {
     return waveRef.current?.getBoundingClientRect() ?? null;
   }
@@ -175,7 +198,7 @@ export function AudioPlayer({ src, waveform, durationSec }: AudioPlayerProps) {
   const valueNow = Math.round(progress * dur);
 
   return (
-    <div className="rounded-lg border border-rule bg-paper-2 p-s-4 sm:p-s-5">
+    <div ref={rootRef} className="rounded-lg border border-rule bg-paper-2 p-s-4 sm:p-s-5">
       <audio
         ref={audioRef}
         src={src}
@@ -299,6 +322,17 @@ export function AudioPlayer({ src, waveform, durationSec }: AudioPlayerProps) {
           0.75× slow
         </button>
       </div>
+
+      {floating && isMobile && !disabled && (
+        <FloatingAudioControl
+          anchorRef={rootRef}
+          playing={playing}
+          progress={progress}
+          onToggle={togglePlay}
+          onSeekBy={seekBy}
+          suppressed={floatingSuppressed}
+        />
+      )}
     </div>
   );
 }
