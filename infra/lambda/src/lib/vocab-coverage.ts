@@ -5,6 +5,11 @@
  * user never answered it, and `practiced-*` once answered (strong vs weak by best
  * score). See docs/superpowers/specs/2026-07-09-vocab-coverage-hub-design.md.
  */
+import { normalizeWord } from '@language-drill/shared';
+
+// Re-exported so existing importers (routes/vocab.ts, tests) keep their
+// `../lib/vocab-coverage` import path; the single source of truth is shared.
+export { normalizeWord };
 
 export type CoverageState =
   | 'not-yet'
@@ -21,15 +26,6 @@ export function deriveWordCoverage(stat: ExerciseWordStat | undefined): Coverage
   if (stat.attempts === 0) return 'untested';
   if (stat.bestScore !== null && stat.bestScore >= STRONG_SCORE) return 'practiced-strong';
   return 'practiced-weak';
-}
-
-const ARTICLES = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas']);
-
-export function normalizeWord(s: string): string {
-  const lowered = s.trim().toLowerCase();
-  const tokens = lowered.split(/\s+/);
-  if (tokens.length > 1 && ARTICLES.has(tokens[0])) return tokens.slice(1).join(' ');
-  return lowered;
 }
 
 export function pickWordStat(

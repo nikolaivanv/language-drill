@@ -169,6 +169,46 @@ describe('decideEnqueue — table-driven cases', () => {
     expect(decision).toEqual({ kind: 'enqueue', need: TARGET_PER_CELL - 20 });
   });
 
+  it('skips low-yield for a non-target-seeded cell (unchanged)', () => {
+    // targetSeeded defaults to false → existing behavior preserved.
+    const decision = decideEnqueue(
+      ROUND_1_CELL,
+      20,
+      TARGET_PER_CELL,
+      makeRecentJob({ approvedCount: 1, requestedCount: 5 }),
+      CURRENT_VERSION,
+    );
+    expect(decision).toEqual({ kind: 'skip-low-yield' });
+  });
+
+  it('does NOT skip low-yield for a target-seeded vocab cell with uncovered targets', () => {
+    // approvedInPool 28 < target 30 → need 2; low-yield would fire, but
+    // targetSeeded exempts it so the coverage tail keeps converging.
+    const decision = decideEnqueue(
+      ROUND_1_CELL,
+      28,
+      30,
+      makeRecentJob({ approvedCount: 1, requestedCount: 5 }),
+      CURRENT_VERSION,
+      true,
+    );
+    expect(decision).toEqual({ kind: 'enqueue', need: 2 });
+  });
+
+  it('still suppresses a target-seeded cell on saturated-dedup (backstop intact)', () => {
+    // dedupGivenUp high + approved low → saturated-dedup fires regardless of
+    // targetSeeded (steps 5-6 remain a genuine backstop).
+    const decision = decideEnqueue(
+      ROUND_1_CELL,
+      20,
+      30,
+      makeRecentJob({ approvedCount: 0, requestedCount: 10, dedupGivenUpCount: 6 }),
+      CURRENT_VERSION,
+      true,
+    );
+    expect(decision).toEqual({ kind: 'skip-saturated-dedup' });
+  });
+
   it('case 6: saturated-dedup + curriculum match → skip-saturated-dedup (R6.2)', () => {
     // requestedCount=20 → ceil(0.5 * 20) = 10, ceil(0.3 * 20) = 6.
     // dedupGivenUp=12 ≥ 10 AND approvedCount=5 < 6 → saturated.

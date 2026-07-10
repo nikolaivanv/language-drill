@@ -519,6 +519,13 @@ export * from "./review";
 export * from "./tokenize";
 
 // ---------------------------------------------------------------------------
+// Canonical vocab surface-form normalization (coverage read model + generation
+// seed matching)
+// ---------------------------------------------------------------------------
+
+export * from "./vocab-normalize";
+
+// ---------------------------------------------------------------------------
 // Shared CORS allow-list (Hono middleware + Function URL CORS)
 // ---------------------------------------------------------------------------
 

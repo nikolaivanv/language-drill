@@ -17,7 +17,12 @@
  *      `skip-saturated-dedup` on the same tick (R4.1)
  *   5. Saturated-dedup (reactive: low approved + dedup-heavy) →
  *      `skip-saturated-dedup` (R6.2; beats low-yield)
- *   6. Low-yield → `skip-low-yield` (R1.4)
+ *   6. Low-yield → `skip-low-yield` (R1.4). Skipped entirely when
+ *      `targetSeeded` is true — a coverage-converging vocab cell whose tail
+ *      (<=2 uncovered targets) approves <LOW_YIELD_THRESHOLD by construction
+ *      must not be suppressed, or the last uncovered targets strand until a
+ *      curriculum bump. Saturated-dedup (steps 4-5) still applies as the
+ *      real backstop.
  *   7. Otherwise → `enqueue` with `need = target - approvedInPool`
  *
  * R3: the per-cell `target` is supplied by the caller (`resolveCellTarget` in
@@ -118,6 +123,16 @@ export type EnqueueDecision =
  *                                 missing (safe default: enqueue — never
  *                                 permanently disable a cell on missing
  *                                 metadata).
+ * @param targetSeeded             Whether this cell's generation is seeded
+ *                                 from curated coverage targets (vocab
+ *                                 umbrella cells with `vocab_target` rows).
+ *                                 When `true`, step 7 (low-yield) is skipped
+ *                                 — a coverage-converging cell's tail
+ *                                 (<=2 uncovered targets) approves fewer
+ *                                 than `LOW_YIELD_THRESHOLD` by construction,
+ *                                 so the low-yield suppression would strand
+ *                                 the last targets until a curriculum bump.
+ *                                 Saturated-dedup (steps 5-6) still applies.
  * @returns An `EnqueueDecision` discriminated union the handler switches on.
  */
 export function decideEnqueue(
@@ -126,6 +141,7 @@ export function decideEnqueue(
   target: number,
   recentJob: RecentJob | null,
   curriculumVersionOnDisk: string | undefined,
+  targetSeeded = false,
 ): EnqueueDecision {
   // 1. Round-1 narrowing (Req 4.5). C1 / C2 curriculum entries are skipped
   //    silently — the consumer Lambda's guard (Req 2.7) is defense-in-depth
@@ -207,7 +223,14 @@ export function decideEnqueue(
 
   // 7. Low-yield (R1.4). The recent job produced fewer than
   //    LOW_YIELD_THRESHOLD net new approved exercises — the cell is stuck.
-  if (recentJob.approvedCount < LOW_YIELD_THRESHOLD) {
+  //    Exempt target-seeded (coverage-converging) vocab cells: their tail
+  //    (<=2 uncovered targets) approves <LOW_YIELD_THRESHOLD by construction,
+  //    so low-yield would strand the last targets until a curriculum bump.
+  //    By this point `need > 0` (step 2 already returned skip-target-reached
+  //    otherwise), so the exemption only keeps a genuinely-uncovered cell live.
+  //    Saturated-dedup (steps 5-6) still applies — a cell that truly can't
+  //    generate new distinct words is still suppressed.
+  if (!targetSeeded && recentJob.approvedCount < LOW_YIELD_THRESHOLD) {
     return { kind: 'skip-low-yield' };
   }
 

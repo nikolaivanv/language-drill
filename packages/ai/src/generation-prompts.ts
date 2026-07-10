@@ -744,7 +744,13 @@ export function buildGenerationUserPrompt(
             // nonsensical for a scenario phrase and would let the model discard the
             // seed, collapsing the very diversity axis this seed enforces.
             `Set this exercise in the following scenario: "${seedWord}". The source sentence you author must fit this scenario naturally. Use exactly this scenario — do not substitute another.\n\n`
-          : `Build this exercise around the word "${seedWord}". If "${seedWord}" does not fit ${inputs.grammarPoint.name} naturally, choose a related content word of similar frequency instead.\n\n`
+          : inputs.exerciseType === ExerciseType.VOCAB_RECALL
+            ? // Strict: the seed IS the target word. No substitution escape hatch —
+              // the seed comes from the curated vocab_target list and coverage only
+              // registers when expectedWord matches it (Spec 2). The anti-leak rule
+              // (system prompt) still forbids the clue from containing the word.
+              `The target word (expectedWord) MUST be exactly "${seedWord}". Write a clue or definition that elicits "${seedWord}" without revealing it — the clue must NOT contain "${seedWord}". Do not substitute another word.\n\n`
+            : `Build this exercise around the word "${seedWord}". If "${seedWord}" does not fit ${inputs.grammarPoint.name} naturally, choose a related content word of similar frequency instead.\n\n`
       : "";
   const modeBlock =
     inputs.exerciseType === ExerciseType.SENTENCE_CONSTRUCTION

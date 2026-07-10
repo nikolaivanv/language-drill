@@ -50,7 +50,7 @@ import {
 import { createDb, type Db } from '../client';
 import { ALL_CURRICULA } from '../curriculum';
 import type { CurriculumCefrLevel } from '../curriculum';
-import { exerciseTags, exercises, generationJobs, vocabLemma } from '../schema/index';
+import { exerciseTags, exercises, generationJobs, vocabLemma, vocabTarget } from '../schema/index';
 // The mock client lives in scripts/ because its fixtures do; cross-boundary
 // import is acceptable for test infrastructure.
 import { createMockAnthropicClient } from '../../scripts/generate-exercises-mock-client';
@@ -357,8 +357,8 @@ describe('seedKindFor', () => {
     expect(seedKindFor(unseededCell)).toBeNull();
   });
 
-  it('returns null for vocab_recall', () => {
-    expect(seedKindFor(cellOf(ExerciseType.VOCAB_RECALL))).toBeNull();
+  it('returns vocab-target for vocab_recall', () => {
+    expect(seedKindFor(cellOf(ExerciseType.VOCAB_RECALL))).toBe('vocab-target');
   });
 
   it('returns elicitation-values for a flagged cloze cell', () => {
@@ -1214,10 +1214,18 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
         { language: 'ES', lemma: 'libro', rank: 2650, posAll: ['NOUN'], source: 'wiktextract' },
         { language: 'ES', lemma: 'mesa', rank: 2750, posAll: ['NOUN'], source: 'wiktextract' },
       ]);
+      await seedDb.delete(vocabTarget);
+      await seedDb.insert(vocabTarget).values([
+        { language: 'ES', umbrellaKey: 'es-vt-test', cefrLevel: 'A1', lemma: 'manzana', displayForm: 'la manzana', gloss: 'apple', exampleSentence: 'Como una manzana.', freqRank: 800, tier: 'core', status: 'approved', source: 'llm' },
+        { language: 'ES', umbrellaKey: 'es-vt-test', cefrLevel: 'A1', lemma: 'pan', displayForm: 'el pan', gloss: 'bread', exampleSentence: 'Compro pan.', freqRank: 300, tier: 'core', status: 'approved', source: 'llm' },
+      ]);
     });
 
     afterAll(async () => {
-      if (seedDb) await seedDb.delete(vocabLemma);
+      if (seedDb) {
+        await seedDb.delete(vocabLemma);
+        await seedDb.delete(vocabTarget);
+      }
     });
 
     it('seeds a cloze cell with one slot per ordinal from DB band', async () => {
@@ -1239,13 +1247,26 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
       expect(seeds).toHaveLength(3);
     });
 
-    it('does NOT seed a vocab_recall cell (returns undefined)', async () => {
+    it('does NOT seed a vocab_recall cell whose umbrella has no approved targets', async () => {
+      const clozeCell = buildTestCell(); // its grammarPoint is not a vocab umbrella
+      const vocabCell: Cell = { ...clozeCell, exerciseType: ExerciseType.VOCAB_RECALL };
+      expect(await buildSeedWords(seedDb, vocabCell, 5, 'seed-batch', new Set())).toBeUndefined();
+    });
+
+    it('seeds a vocab_recall cell from approved vocab_target rows, uncovered first', async () => {
       const clozeCell = buildTestCell();
       const vocabCell: Cell = {
         ...clozeCell,
         exerciseType: ExerciseType.VOCAB_RECALL,
+        grammarPoint: { ...clozeCell.grammarPoint, key: 'es-vt-test' },
+        cellKey: 'es:a1:vocab_recall:es-vt-test',
       };
-      expect(await buildSeedWords(seedDb, vocabCell, 5, 'seed-batch', new Set())).toBeUndefined();
+      const seeds = await buildSeedWords(seedDb, vocabCell, 2, 'seed-batch', new Set());
+      expect(seeds).toBeDefined();
+      const chosen = seeds!.filter((s): s is string => typeof s === 'string');
+      // Both approved targets are uncovered (no exercises seeded yet); priority
+      // order is by tier then freqRank, so 'pan' (rank 300) precedes 'manzana' (800).
+      expect(chosen).toEqual(['pan', 'manzana']);
     });
 
     it('excludes prior seeds (cross-run dedup, R5.3)', async () => {
