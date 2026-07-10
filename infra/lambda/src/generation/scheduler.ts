@@ -261,6 +261,7 @@ export async function handler(): Promise<void> {
       target,
       recentJob,
       curriculumVersionOnDisk,
+      usingTargets,
     );
     switch (decision.kind) {
       case 'enqueue':
