@@ -34,20 +34,40 @@ export default function VocabDetailPage({ params }: VocabDetailPageProps) {
     [data],
   );
 
-  if (isLoading) return <VocabListLoading />;
-  if (isError || !data) return <VocabListError onRetry={() => void refetch()} />;
+  // Rendered in every state (loading, error, loaded) so a slow or failed
+  // topic fetch never strands the user without a way back to the list.
+  const backLink = (
+    <Link
+      href="/vocab"
+      aria-label="Back to vocabulary coverage"
+      className="inline-flex items-center gap-1 text-[11px] font-medium uppercase tracking-[1.2px] text-ink-mute transition-colors hover:text-ink"
+    >
+      <span aria-hidden="true">&larr;</span> vocabulary coverage
+    </Link>
+  );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-s-5">
+        {backLink}
+        <VocabListLoading />
+      </div>
+    );
+  }
+  if (isError || !data) {
+    return (
+      <div className="space-y-s-5">
+        {backLink}
+        <VocabListError onRetry={() => void refetch()} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-s-5">
       <header className="flex items-center justify-between gap-3">
         <div>
-          <Link
-            href="/vocab"
-            aria-label="Back to vocabulary coverage"
-            className="inline-flex items-center gap-1 text-[11px] font-medium uppercase tracking-[1.2px] text-ink-mute transition-colors hover:text-ink"
-          >
-            <span aria-hidden="true">&larr;</span> vocabulary coverage
-          </Link>
+          {backLink}
           <div className="mt-[4px] flex items-baseline gap-2">
             <h1 className="t-display-l">{data.name}</h1>
             <Chip className="t-mono">{data.cefrLevel}</Chip>

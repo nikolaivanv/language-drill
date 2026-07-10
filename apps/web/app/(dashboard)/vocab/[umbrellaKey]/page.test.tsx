@@ -164,6 +164,10 @@ describe('VocabDetailPage', () => {
     });
     const { rerender } = await renderPage(params());
     expect(screen.getByRole('status')).toBeInTheDocument();
+    // Back link stays reachable while loading — the user is never trapped.
+    expect(
+      screen.getByRole('link', { name: /back to vocabulary coverage/i }),
+    ).toHaveAttribute('href', '/vocab');
 
     mockUseVocabTopicDetail.mockReturnValue({
       data: undefined,
@@ -173,6 +177,10 @@ describe('VocabDetailPage', () => {
     });
     await rerenderPage(rerender, params());
     expect(screen.getByText(/couldn't load/i)).toBeInTheDocument();
+    // …and on error, so a failed topic load doesn't strand the user.
+    expect(
+      screen.getByRole('link', { name: /back to vocabulary coverage/i }),
+    ).toHaveAttribute('href', '/vocab');
 
     fireEvent.click(screen.getByRole('button', { name: /try again/i }));
     expect(mockRefetch).toHaveBeenCalled();
