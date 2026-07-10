@@ -22,6 +22,7 @@ import {
 
 const TAB_LABELS: Record<ProgressTabId, string> = {
   map: 'map',
+  words: 'words',
   shape: 'shape',
   fluency: 'fluency',
   history: 'history',
@@ -36,6 +37,7 @@ export type ProgressTabsProps = {
 export function ProgressTabs({ active, onChange, children }: ProgressTabsProps) {
   const buttonRefs = useRef<Record<ProgressTabId, HTMLButtonElement | null>>({
     map: null,
+    words: null,
     shape: null,
     fluency: null,
     history: null,
