@@ -110,7 +110,7 @@ export function WordCardBody({
           size="sm"
           onClick={onSave}
         >
-          {inBank ? '✓ saved · undo' : '+ save to bank'}
+          {inBank ? '✓ saved · remove' : '+ save to bank'}
         </Button>
       </div>
     </>
@@ -353,7 +353,7 @@ export function DeepWordCardBody({
           {inBank ? 'close' : 'skip'}
         </Button>
         <Button variant={inBank ? 'ghost' : 'primary'} size="sm" onClick={onSave}>
-          {inBank ? '✓ saved · undo' : '+ save to vocabulary'}
+          {inBank ? '✓ saved · remove' : '+ save to vocabulary'}
         </Button>
       </div>
     </>

@@ -208,6 +208,15 @@ export default function ReadPage() {
   // hook-state→reducer mirror effect has the full `DeepSpan` (type/x/y) to
   // dispatch with, matched by start/end to the open card.
   const openDeepSpanRef = useRef<DeepSpan | null>(null);
+  // Latest "auto-save this resolved single word unless it's already saved"
+  // closure, invoked by the deep-stream mirror effect on resolve. Held in a ref
+  // so that effect stays keyed only on `spanStreamState` (fires once per
+  // resolve) while still calling the current handler with fresh bank/saved
+  // state. Default-add on lookup: a looked-up word lands in the bank; the user
+  // removes rather than saves.
+  const maybeAutoSaveWordRef = useRef<(card: DeepCard, span: DeepSpan) => void>(
+    () => {},
+  );
   // Deep card → vocabulary save + undo (Req 8.4, 8.5). Independent of the entry
   // bank and of entry `spanAnnotations` (Req 11.7).
   const saveVocab = useSaveVocabularyCard({ fetchFn });
@@ -370,6 +379,8 @@ export default function ReadPage() {
       }
     } else if (spanStreamState.phase === 'complete') {
       dispatch({ type: 'DEEP_CARD_RESOLVED', span, card: spanStreamState.card });
+      // Default-add: bank the word the moment its lookup resolves.
+      maybeAutoSaveWordRef.current(spanStreamState.card, span);
     } else if (spanStreamState.phase === 'error') {
       const error: AnnotateError = {
         code: spanStreamState.error.code,
@@ -844,6 +855,18 @@ export default function ReadPage() {
     if (deepSaved?.wordKey) keys.add(deepSaved.wordKey);
     return keys;
   }, [savedVocab, deepSaved]);
+
+  // Default-add on lookup: auto-save a resolved single-word deep card to the
+  // word bank. Words only — phrases/sentences keep their manual save button.
+  // Only ever ADDS: an already-saved word (still shown saved, or a re-tap) is a
+  // no-op, so a passive lookup never toggles a word back out. Reuses
+  // handleSaveCard, so flagged-vs-non-flagged bank routing and lazy entry
+  // creation are unchanged.
+  maybeAutoSaveWordRef.current = (card, span) => {
+    if (card.type !== 'word') return;
+    if (savedWordKeys.has(card.surface.toLowerCase())) return;
+    handleSaveCard(card, span);
+  };
 
   // Unsave (✕) a row from the word-bank panel: delete the vocabulary record
   // (server also drops the now-orphaned FSRS review card), drop it from the

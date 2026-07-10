@@ -201,7 +201,7 @@ describe('DeepWordCardBody — save/skip footer', () => {
     rerender(
       <DeepWordCardBody card={MINIMAL_CARD} inBank onSave={onSave} onSkip={onSkip} />,
     );
-    expect(screen.getByRole('button', { name: '✓ saved · undo' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '✓ saved · remove' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'close' })).toBeInTheDocument();
   });
 });
