@@ -185,7 +185,7 @@ export function FwBrief({ content, examMode, onToggleExam, onBegin }: FwBriefPro
           </div>
 
           {/* Action row */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 22 }}>
+          <div className="fw-action-row" style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 22 }}>
             <button className="btn primary lg" onClick={onBegin}>
               begin writing →
             </button>

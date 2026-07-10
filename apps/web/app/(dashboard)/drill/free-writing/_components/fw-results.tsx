@@ -90,7 +90,7 @@ export function FwResults({ evaluation, onCorrections, onCompare, onAnother }: F
           </div>
 
           {/* Action buttons */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 22 }}>
+          <div className="fw-action-row" style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 22 }}>
             <button className="btn primary lg" onClick={onCorrections}>
               see corrections →
             </button>
