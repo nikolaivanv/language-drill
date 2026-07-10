@@ -259,6 +259,15 @@ export function AnnotatedView({
     </div>
   );
 
+  // Listen / audio — own full-width row so the expanded player never overlaps
+  // the header (shared verbatim between the mobile and desktop branches below).
+  const audioRow =
+    entryId && fetchFn ? (
+      <div className="mb-[18px]">
+        <PassageAudio entryId={entryId} fetchFn={fetchFn} />
+      </div>
+    ) : null;
+
   // Mobile (≤760px) swaps the sticky rail + anchored popover for bottom sheets:
   // a toolbar chip opens the bank sheet, a word tap opens the word sheet. The
   // reducer's `activeWord` state (and the same open/close handlers) is reused —
@@ -395,6 +404,9 @@ export function AnnotatedView({
           )}
         </div>
 
+        {/* Listen / audio — own full-width row */}
+        {audioRow}
+
         {/* Calibration */}
         <div className="border-b border-dashed border-rule pb-[14px] mb-[22px]">
           <CalibrationStrip
@@ -489,11 +501,13 @@ export function AnnotatedView({
             )}
           </div>
           <div className="flex items-center gap-[8px]">
-            {entryId && fetchFn ? <PassageAudio entryId={entryId} fetchFn={fetchFn} /> : null}
             <span className="t-micro text-ink-mute">highlight</span>
             <IntensityToggle value={intensity} onChange={onIntensityChange} />
           </div>
         </div>
+
+        {/* Listen / audio — own full-width row so the expanded player never overlaps the header */}
+        {audioRow}
 
         {/* Calibration */}
         <div className="border-b border-dashed border-rule pb-[14px] mb-[22px]">

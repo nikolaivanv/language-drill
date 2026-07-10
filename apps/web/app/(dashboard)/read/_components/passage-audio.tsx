@@ -2,9 +2,36 @@
 
 import * as React from 'react';
 import { useReadAudio, type AuthenticatedFetch } from '@language-drill/api-client';
+import { Button } from '../../../../components/ui/button';
 import { AudioPlayer } from '../../drill/_components/audio-player';
 
-export function PassageAudio({ entryId, fetchFn }: { entryId: string; fetchFn: AuthenticatedFetch }) {
+// Speaker + sound-wave glyph (from the read-proto Listen control).
+function SpeakerIcon() {
+  return (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M11 5 6 9H2v6h4l5 4z" />
+      <path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" />
+    </svg>
+  );
+}
+
+export function PassageAudio({
+  entryId,
+  fetchFn,
+}: {
+  entryId: string;
+  fetchFn: AuthenticatedFetch;
+}) {
   const { mutate, data, isPending, isError, reset } = useReadAudio({ fetchFn });
   const [opened, setOpened] = React.useState(false);
 
@@ -14,27 +41,33 @@ export function PassageAudio({ entryId, fetchFn }: { entryId: string; fetchFn: A
     reset();
   }, [entryId, reset]);
 
-  const buttonClass =
-    't-small inline-flex min-h-[44px] flex-none items-center gap-[6px] rounded-pill border border-rule bg-card px-[14px] font-medium text-ink transition-colors hover:border-ink disabled:opacity-40';
+  // Design-system chip button, kept as a pill for the Listen affordance.
+  const controlClass = '!rounded-pill !min-h-[44px]';
 
   if (!opened) {
     return (
-      <button
-        type="button"
-        className={buttonClass}
+      <Button
+        variant="chip"
+        size="sm"
+        className={controlClass}
         onClick={() => {
           setOpened(true);
           mutate({ entryId });
         }}
       >
+        <SpeakerIcon />
         Listen
-      </button>
+      </Button>
     );
   }
 
   if (isPending) {
     return (
-      <span className="t-small inline-flex min-h-[44px] items-center gap-[6px] text-ink-mute">
+      <span className="t-small inline-flex min-h-[44px] items-center gap-[8px] text-ink-mute">
+        <span
+          aria-hidden="true"
+          className="inline-block h-[12px] w-[12px] animate-spin rounded-full border border-rule border-t-accent"
+        />
         preparing audio…
       </span>
     );
@@ -42,9 +75,9 @@ export function PassageAudio({ entryId, fetchFn }: { entryId: string; fetchFn: A
 
   if (isError) {
     return (
-      <button type="button" className={buttonClass} onClick={() => mutate({ entryId })}>
+      <Button variant="chip" size="sm" className={controlClass} onClick={() => mutate({ entryId })}>
         retry audio
-      </button>
+      </Button>
     );
   }
 

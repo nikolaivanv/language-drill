@@ -43,4 +43,22 @@ describe('PassageAudio', () => {
     await waitFor(() => expect(screen.getByText(/try again later/i)).toBeInTheDocument());
     expect(screen.queryByText(/too long/i)).not.toBeInTheDocument();
   });
+
+  it('renders a speaker icon in the idle Listen button', () => {
+    const fetchFn = vi.fn();
+    renderWith(fetchFn);
+    const listen = screen.getByRole('button', { name: /listen/i });
+    expect(listen.querySelector('svg')).toBeInTheDocument();
+    // Guards the review fix: must force pill radius over the design-system
+    // Button's default rounded-sm (cn() is a plain join, no tailwind-merge).
+    expect(listen.className).toContain('!rounded-pill');
+  });
+
+  it('shows a spinner while preparing audio', async () => {
+    const fetchFn = vi.fn(() => new Promise(() => {})) as unknown as Parameters<typeof renderWith>[0];
+    const { container } = renderWith(fetchFn);
+    await userEvent.click(screen.getByRole('button', { name: /listen/i }));
+    expect(await screen.findByText(/preparing audio/i)).toBeInTheDocument();
+    expect(container.querySelector('.animate-spin')).toBeInTheDocument();
+  });
 });

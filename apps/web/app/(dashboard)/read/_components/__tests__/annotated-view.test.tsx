@@ -18,6 +18,12 @@ vi.mock('../../../../../components/shell/active-language-provider', () => ({
   useActiveLanguage: () => ({ activeLanguage: 'ES' }),
 }));
 
+// Audio-control placement tests only need a marker — the real PassageAudio
+// needs a QueryClient + audio hook we don't want to wire up here.
+vi.mock('../passage-audio', () => ({
+  PassageAudio: () => <div data-testid="passage-audio" />,
+}));
+
 beforeEach(() => {
   mockIsMobile.mockReturnValue(false);
 });
@@ -450,5 +456,46 @@ describe('AnnotatedView — span-select forwarding', () => {
     // mirror the browser and consume the listener (no second emit).
     fireEvent.click(screen.getByRole('button', { name: 'grande' }));
     expect(onSpanSelect).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('AnnotatedView — Listen audio control placement', () => {
+  const audioProps = { ...baseProps, entryId: 'entry-1', fetchFn: (() => {}) as never };
+
+  it('renders the audio control (desktop) before the calibration strip, not in the header cluster', () => {
+    mockIsMobile.mockReturnValue(false);
+    render(<AnnotatedView {...audioProps} />);
+    const audio = screen.getByTestId('passage-audio');
+    const intensity = screen.getByRole('radiogroup'); // IntensityToggle lives in the header cluster
+    // Audio precedes the calibration eyebrow, and is a sibling row (not inside the intensity/header cluster).
+    expect(audio).toBeInTheDocument();
+    // New layout: the audio row sits AFTER the header block (which contains the
+    // IntensityToggle), so the audio marker follows the toggle in document order.
+    // In the old layout it preceded the toggle inside the header cluster — this
+    // assertion fails there, so it genuinely guards the relocation.
+    expect(
+      intensity.compareDocumentPosition(audio) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it('renders the audio control on mobile, after the header word-bank chip', () => {
+    mockIsMobile.mockReturnValue(true);
+    render(<AnnotatedView {...audioProps} />);
+    const audio = screen.getByTestId('passage-audio');
+    expect(audio).toBeInTheDocument();
+    // baseProps has 1 flagged word, so showRail is true and the mobile header
+    // renders the "word bank · N" chip. The audio row sits below the header,
+    // so the marker follows the chip in document order — guards against a
+    // future mobile-only edit silently moving the row above the header.
+    const wordBank = screen.getByRole('button', { name: /word bank/i });
+    expect(
+      wordBank.compareDocumentPosition(audio) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it('hides the audio control when there is no persisted entry', () => {
+    mockIsMobile.mockReturnValue(false);
+    render(<AnnotatedView {...baseProps} />); // baseProps has no entryId/fetchFn
+    expect(screen.queryByTestId('passage-audio')).not.toBeInTheDocument();
   });
 });
