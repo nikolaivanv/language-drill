@@ -782,6 +782,26 @@ describe("buildGenerationUserPrompt", () => {
   });
 });
 
+describe("buildGenerationUserPrompt — vocab_recall seed directive", () => {
+  it("pins expectedWord to the seed and forbids substitution", () => {
+    // 2026-07-10: vocab_recall cells are now seeded from the curated
+    // vocab_target list (Tasks 1-3) — coverage only registers when
+    // expectedWord matches the seed, so the loose substitution escape hatch
+    // (which lets the model pick "a related content word of similar
+    // frequency") would defeat convergence. This must be strict, like the
+    // conjugation and contextual_paraphrase directives above.
+    const vocabInputs: GenerationPromptInputs = {
+      ...baseInputs,
+      exerciseType: ExerciseType.VOCAB_RECALL,
+    };
+    const out = buildGenerationUserPrompt(vocabInputs, 0, null, "manzana");
+    expect(out).toContain("manzana");
+    expect(out).toMatch(/must be exactly/i);
+    // Must NOT offer the loose frequency-substitution escape hatch.
+    expect(out).not.toContain("similar frequency");
+  });
+});
+
 describe("buildGenerationUserPrompt — self-revealing digit-form directive", () => {
   const flaggedInputs: GenerationPromptInputs = {
     ...baseInputs,
