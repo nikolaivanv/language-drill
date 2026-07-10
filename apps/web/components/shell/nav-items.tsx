@@ -7,6 +7,7 @@ import {
   ReadIcon,
   ReviewIcon,
   TheoryIcon,
+  VocabIcon,
   ProgressIcon,
 } from './nav-icons';
 import { useReviewDueCount } from './use-review-due-count';
@@ -19,14 +20,16 @@ export interface NavDestination {
 }
 
 // Single source of nav truth, shared by the desktop rail (`NavItems`) and the
-// mobile tab-bar. `review` (spaced practice) and `theory` (reference) sit
-// between `read` and `progress` — the surfaces you reach between drills.
+// mobile tab-bar. `review` (spaced practice), `theory` (reference), and
+// `vocab` (coverage hub) sit between `read` and `progress` — the surfaces you
+// reach between drills.
 export const NAV_DESTINATIONS: NavDestination[] = [
   { href: '/home', label: 'today', icon: <TodayIcon /> },
   { href: '/drill', label: 'drill', icon: <DrillIcon /> },
   { href: '/read', label: 'read', icon: <ReadIcon /> },
   { href: '/review', label: 'my vocabulary', mobileLabel: 'vocab', icon: <ReviewIcon /> },
   { href: '/theory', label: 'theory', icon: <TheoryIcon /> },
+  { href: '/vocab', label: 'vocab coverage', mobileLabel: 'coverage', icon: <VocabIcon /> },
   { href: '/progress', label: 'progress', icon: <ProgressIcon /> },
 ];
 

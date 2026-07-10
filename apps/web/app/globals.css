@@ -1273,3 +1273,48 @@ button:hover .lk-arr {
     transition: none;
   }
 }
+
+/* ─── Vocab: word cell coverage states ───
+   The topic-detail grid tile (VocabWordCell). `data-state` mirrors
+   CoverageState from the vocab API and drives a tint per state, using the
+   real @theme color tokens defined above (never the --card/--rule/--r-lg
+   shorthand debris some older prototype components reference — those aren't
+   registered custom properties). not-yet reads muted/greyed (nothing
+   generated yet); untested is the plain card surface (approved, unpracticed);
+   practiced-weak/-strong reuse the existing hilite (amber) and ok (green)
+   tokens rather than inventing new color/radius tokens. */
+.vocab-cell {
+  display: block;
+  width: 100%;
+  padding: var(--spacing-s-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-rule);
+  background: var(--color-card);
+  cursor: pointer;
+  transition: background-color 150ms ease-out, border-color 150ms ease-out;
+}
+.vocab-cell:hover {
+  border-color: var(--color-rule-strong);
+}
+.vocab-cell[data-state='not-yet'] {
+  background: var(--color-paper-2);
+  border-color: var(--color-rule);
+  opacity: 0.7;
+}
+.vocab-cell[data-state='untested'] {
+  background: var(--color-card);
+  border-color: var(--color-rule);
+}
+.vocab-cell[data-state='practiced-weak'] {
+  background: var(--color-hilite-soft);
+  border-color: var(--color-hilite);
+}
+.vocab-cell[data-state='practiced-strong'] {
+  background: var(--color-ok-soft);
+  border-color: var(--color-ok);
+}
+@media (prefers-reduced-motion: reduce) {
+  .vocab-cell {
+    transition: none;
+  }
+}
