@@ -13,6 +13,7 @@ import {
   useErrorTrends,
   useCurriculumMap,
   useInsightsErrors,
+  useVocabTopics,
   type RadarAxis,
 } from '@language-drill/api-client';
 import { CefrLevel, Language, type LearningLanguage } from '@language-drill/shared';
@@ -20,6 +21,7 @@ import { useActiveLanguage } from '../../../components/shell/active-language-pro
 import { ProgressHeader } from './_components/progress-header';
 import { ProgressTabs } from './_components/progress-tabs';
 import { MapTab } from './_components/map-tab';
+import { WordsTab } from './_components/words-tab';
 import { ShapeTab } from './_components/shape-tab';
 import { FluencyTab } from './_components/fluency-tab';
 import { HistoryTab } from './_components/history-tab';
@@ -40,6 +42,7 @@ export default function ProgressPage() {
   const history = useErrorTrends({ fetchFn, language: activeLanguage });
   const curriculum = useCurriculumMap({ fetchFn, language: activeLanguage });
   const insights = useInsightsErrors({ fetchFn, language: activeLanguage });
+  const vocabTopics = useVocabTopics({ fetchFn, language: activeLanguage });
 
   // Read proficiency level from the language-profiles cache rather than
   // refetching — the dashboard layout already populated it.
@@ -110,6 +113,16 @@ export default function ProgressPage() {
             errorThemes={insights.data?.themes ?? []}
             onAdvance={handleAdvance}
             advancing={update.isPending}
+          />
+        )}
+        {tab === 'words' && (
+          <WordsTab
+            data={vocabTopics.data}
+            isLoading={vocabTopics.isLoading}
+            isError={vocabTopics.isError}
+            onRetry={() => {
+              void vocabTopics.refetch();
+            }}
           />
         )}
         {tab === 'shape' && (

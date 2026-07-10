@@ -3,18 +3,19 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { ProgressTabs } from '../progress-tabs';
 
 describe('ProgressTabs', () => {
-  it('renders four tabs with the right labels and roles', () => {
+  it('renders five tabs with the right labels and roles', () => {
     render(
       <ProgressTabs active="map" onChange={() => {}}>
         <div>panel</div>
       </ProgressTabs>,
     );
     const tabs = screen.getAllByRole('tab');
-    expect(tabs).toHaveLength(4);
+    expect(tabs).toHaveLength(5);
     expect(tabs[0]).toHaveProperty('textContent', 'map');
-    expect(tabs[1]).toHaveProperty('textContent', 'shape');
-    expect(tabs[2]).toHaveProperty('textContent', 'fluency');
-    expect(tabs[3]).toHaveProperty('textContent', 'history');
+    expect(tabs[1]).toHaveProperty('textContent', 'words');
+    expect(tabs[2]).toHaveProperty('textContent', 'shape');
+    expect(tabs[3]).toHaveProperty('textContent', 'fluency');
+    expect(tabs[4]).toHaveProperty('textContent', 'history');
   });
 
   it('marks the active tab via aria-selected and exposes a tabpanel', () => {
@@ -104,7 +105,7 @@ describe('ProgressTabs', () => {
     fireEvent.keyDown(screen.getAllByRole('tab', { name: 'shape' })[1], {
       key: 'ArrowLeft',
     });
-    expect(onChange).toHaveBeenCalledWith('map'); // goes to map (left of shape)
+    expect(onChange).toHaveBeenCalledWith('words'); // words is left of shape
   });
 
   it('Home jumps to the first tab and End jumps to the last', () => {

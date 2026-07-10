@@ -45,7 +45,7 @@ export function ReadIcon() {
 }
 
 export function ReviewIcon() {
-  // Stacked cards (flashcards) — matches the "my vocabulary" label.
+  // Stacked cards (flashcards) — matches the "review" label.
   return (
     <svg {...SHARED_PROPS} aria-hidden="true">
       <rect x="4" y="5.5" width="9" height="7" rx="1.3" />
@@ -75,25 +75,6 @@ export function TheoryIcon() {
       <rect x="9" y="2" width="5" height="5" rx="1" />
       <rect x="2" y="9" width="5" height="5" rx="1" />
       <rect x="9" y="9" width="5" height="5" rx="1" />
-    </svg>
-  );
-}
-
-// A 3×3 coverage-heatmap swatch for the vocab coverage hub — deliberately
-// distinct from the stacked-cards ReviewIcon ("my vocabulary"), the 2×2
-// TheoryIcon grid, and the ascending-bars ProgressIcon.
-export function VocabIcon() {
-  return (
-    <svg {...SHARED_PROPS} aria-hidden="true">
-      <rect x="2" y="2" width="3.2" height="3.2" rx="0.8" />
-      <rect x="6.4" y="2" width="3.2" height="3.2" rx="0.8" />
-      <rect x="10.8" y="2" width="3.2" height="3.2" rx="0.8" />
-      <rect x="2" y="6.4" width="3.2" height="3.2" rx="0.8" />
-      <rect x="6.4" y="6.4" width="3.2" height="3.2" rx="0.8" />
-      <rect x="10.8" y="6.4" width="3.2" height="3.2" rx="0.8" />
-      <rect x="2" y="10.8" width="3.2" height="3.2" rx="0.8" />
-      <rect x="6.4" y="10.8" width="3.2" height="3.2" rx="0.8" />
-      <rect x="10.8" y="10.8" width="3.2" height="3.2" rx="0.8" />
     </svg>
   );
 }

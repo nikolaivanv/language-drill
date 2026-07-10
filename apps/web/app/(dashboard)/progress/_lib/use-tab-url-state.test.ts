@@ -31,6 +31,12 @@ describe('useTabUrlState', () => {
     expect(result.current.tab).toBe('fluency');
   });
 
+  it("returns 'words' when ?tab=words", () => {
+    mockSearchParams = new URLSearchParams('tab=words');
+    const { result } = renderHook(() => useTabUrlState());
+    expect(result.current.tab).toBe('words');
+  });
+
   it("returns 'history' when ?tab=history", () => {
     mockSearchParams = new URLSearchParams('tab=history');
     const { result } = renderHook(() => useTabUrlState());

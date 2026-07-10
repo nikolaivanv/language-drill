@@ -27,23 +27,21 @@ vi.mock('next/link', () => ({
 }));
 
 describe('NavItems', () => {
-  it('exposes the primary destinations in order (review, theory, vocab between read and progress)', () => {
+  it('exposes the primary destinations in order (review + theory between read and progress)', () => {
     expect(NAV_DESTINATIONS.map((d) => d.href)).toEqual([
       '/home',
       '/drill',
       '/read',
       '/review',
       '/theory',
-      '/vocab',
       '/progress',
     ]);
     expect(NAV_DESTINATIONS.map((d) => d.label)).toEqual([
       'today',
       'drill',
       'read',
-      'my vocabulary',
+      'review',
       'theory',
-      'vocab coverage',
       'progress',
     ]);
   });
@@ -59,11 +57,9 @@ describe('NavItems', () => {
     }
   });
 
-  it('includes a distinct /vocab coverage destination', () => {
-    const vocab = NAV_DESTINATIONS.find((d) => d.href === '/vocab');
-    expect(vocab).toBeDefined();
-    expect(vocab?.label).toBe('vocab coverage');
-    // must not collide with the existing /review "my vocabulary" label
-    expect(NAV_DESTINATIONS.filter((d) => d.label === 'my vocabulary').length).toBe(1);
+  it('has no standalone /vocab destination and no "vocab" in any label', () => {
+    expect(NAV_DESTINATIONS.find((d) => d.href === '/vocab')).toBeUndefined();
+    expect(NAV_DESTINATIONS.filter((d) => d.label.includes('vocab')).length).toBe(0);
+    expect(NAV_DESTINATIONS.filter((d) => d.href === '/review').length).toBe(1);
   });
 });

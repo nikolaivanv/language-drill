@@ -38,11 +38,11 @@ export default function VocabDetailPage({ params }: VocabDetailPageProps) {
   // topic fetch never strands the user without a way back to the list.
   const backLink = (
     <Link
-      href="/vocab"
-      aria-label="Back to vocabulary coverage"
+      href="/progress?tab=words"
+      aria-label="Back to all topics"
       className="inline-flex items-center gap-1 text-[11px] font-medium uppercase tracking-[1.2px] text-ink-mute transition-colors hover:text-ink"
     >
-      <span aria-hidden="true">&larr;</span> vocabulary coverage
+      <span aria-hidden="true">&larr;</span> all topics
     </Link>
   );
 
