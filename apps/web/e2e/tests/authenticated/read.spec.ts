@@ -327,14 +327,11 @@ test('saving a word card raises the toast, flips the footer, and undoes from the
   await mockReadApi(page);
   await openSeededEntry(page);
 
-  // Tap → deep word card resolves.
+  // Tap → deep word card resolves AND auto-saves (default-add), so the
+  // confirmation toast + saved footer appear with no manual click.
   await page.getByRole('button', { name: 'aldea' }).click();
   await expect(page.getByText('pueblo pequeño')).toBeVisible();
 
-  // Save → confirmation toast + footer flips to the saved state.
-  await page
-    .getByRole('button', { name: /\+ save to vocabulary/i })
-    .click();
   // A word-card save persists to BOTH vocabulary and the passage word bank, so
   // two toasts share role="status" (VocabSaveToast + the entry SaveToast).
   // Scope to the vocabulary confirmation so the locator stays unambiguous.
@@ -382,10 +379,9 @@ test('an on-demand (non-flagged) save appears in the word-bank panel and ✕ rem
   const rail = page.getByRole('complementary');
   await expect(rail.getByText(/tap a word to see its meaning/i)).toBeVisible();
 
-  // Tap the UNFLAGGED word ("tranquila") and save its deep card.
+  // Tap the UNFLAGGED word ("tranquila") — it auto-saves its deep card.
   await page.getByRole('button', { name: 'tranquila' }).click();
   await expect(page.getByText('tranquilo/a')).toBeVisible();
-  await page.getByRole('button', { name: /\+ save to vocabulary/i }).click();
 
   // It now shows in the panel — the reported bug (on-demand saves were dropped).
   await expect(rail.getByRole('listitem')).toHaveCount(1);
