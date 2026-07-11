@@ -119,6 +119,21 @@ describe("AnnotateStreamLambdaConstruct", () => {
     });
   });
 
+  // The prompt-fallback alarm requires the fallback to RECUR (2 datapoints in a
+  // 30-min window) before paging — a single transient cold-fetch timeout is
+  // tolerated by design (see prompt-fallback-alarm.ts).
+  it("alarms only on a recurring prompt-fallback (2-of-6, annotate surface)", () => {
+    template.hasResourceProperties("AWS::CloudWatch::Alarm", {
+      MetricName: "annotate-prompt-fallback",
+      Namespace: "LanguageDrill/dev",
+      Threshold: 1,
+      EvaluationPeriods: 6,
+      DatapointsToAlarm: 2,
+      ComparisonOperator: "GreaterThanOrEqualToThreshold",
+      TreatMissingData: "notBreaching",
+    });
+  });
+
   it("creates an AI-failure metric filter + alarm (annotate surface, threshold 5)", () => {
     template.hasResourceProperties("AWS::Logs::MetricFilter", {
       MetricTransformations: Match.arrayWith([
