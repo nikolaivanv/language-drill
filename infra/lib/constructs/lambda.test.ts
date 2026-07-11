@@ -81,6 +81,14 @@ describe("LambdaConstruct — Langfuse env + IAM (Req 8.1 / 8.2)", () => {
     template.hasResourceProperties("AWS::CloudWatch::Alarm", {
       MetricName: "api-prompt-fallback",
       Namespace: "LanguageDrill/dev",
+      // Recurring-only: 2 breaching datapoints in a 30-min window before paging;
+      // a single transient cold-fetch timeout is tolerated (see
+      // prompt-fallback-alarm.ts).
+      Threshold: 1,
+      EvaluationPeriods: 6,
+      DatapointsToAlarm: 2,
+      ComparisonOperator: "GreaterThanOrEqualToThreshold",
+      TreatMissingData: "notBreaching",
     });
   });
 
