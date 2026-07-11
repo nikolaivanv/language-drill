@@ -103,8 +103,18 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * routes the points to translation only; the bump also clears the low-yield
  * suppression these cloze cells keep tripping (which prior bumps only re-ran into
  * the same failure — dropping the cell is the actual fix, not re-running it).
+ *
+ * `2026-07-11b`: fixes the two worst cells of the 2026-07-11 run.
+ * (1) es-a2-present-irregular-stem-changes approved 0/15 conjugation, 0/5 cloze,
+ * 1/6 translation because the coverageSpec floored 1pl — the "boot" person where
+ * the diphthong disappears (pensamos/podemos are regular) — and the conjugation
+ * cell drew non-stem-changing verbs from the band (echar, saber, tener). Fix drops
+ * the 1pl floor and pins a curated e→ie/o→ue/e→i/u→ue verb pool. (2) es-a1-
+ * demonstratives approved 0/7 cloze with 6/7 flagged ambiguous (este/ese/aquel all
+ * fit a bare blank) — marked clozeUnsuitable, routing it to translation only. The
+ * bump clears low-yield suppression on both starved cells so they re-run.
  */
-export const CURRICULUM_VERSION_ES = '2026-07-11a';
+export const CURRICULUM_VERSION_ES = '2026-07-11b';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -190,6 +200,14 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Using the neuter esto/eso/aquello to refer to a specific person or noun instead of the gendered form ("*esto es mi profesor" instead of "este es mi profesor").',
       'Treating ese and aquel as fully interchangeable regardless of distance from speaker and listener.',
     ],
+    // clozeUnsuitable (2026-07-11b): a paradigm-contrast point — este/ese/aquel all
+    // fit a bare blank ("___ hombre es mi jefe"), so the deixis distance the point
+    // teaches is exactly the information a single blank cannot pin down without a
+    // spatial cue the generator doesn't reliably supply. The 2026-07-10 bump re-ran
+    // the cloze cell and it failed again: the 2026-07-11 run approved 0/7 with 6/7
+    // flagged ambiguous. Translation gives the deixis for free via this/that/those,
+    // so it carries the point (sibling of es-a1-possessives-atonic).
+    clozeUnsuitable: true,
   },
   {
     key: 'es-a1-possessives-atonic',
@@ -584,10 +602,33 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Missing the orthographic g→j or gu→g change in the yo-form of -ger/-gir/-guir verbs, producing "*cogo" or "*seguo" instead of "cojo" and "sigo".',
     ],
     coverageSpec: {
+      // 1pl DROPPED (2026-07-11b): the stem change vanishes in nosotros/vosotros
+      // (the "boot" exception — pensamos/podemos/pedimos are regular), so every
+      // 1pl draft is definitionally off-target for a point whose whole content is
+      // the diphthong. The 2026-07-11 run floored 1pl and approved 0/all of them
+      // across cloze/translation/conjugation (grammar-point-mismatch flags).
       axes: [
-        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '3pl': 5 } },
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '3pl': 5 } },
       ],
     },
+    // Curated stem-changing verb pool (2026-07-11b): the conjugation generator drew
+    // verbs from the frequency band and picked non-stem-changers — the 2026-07-11
+    // run seeded "echar" (fully regular) and "saber"/"tener" (whose only present
+    // irregularity is the yo-form / 1pl is regular), so 0/15 conjugation drafts were
+    // approved. This closed list REPLACES the band (buildSeedWords, verb path) with
+    // genuine e→ie / o→ue / e→i / u→ue verbs that diphthongize in every floored
+    // person. yo-only irregulars (saber/dar) and -go verbs (tener/venir/decir) are
+    // deliberately excluded — they belong to es-a1-present-yo-go, not here.
+    conjugationSeedWords: [
+      // e→ie
+      'pensar', 'querer', 'entender', 'empezar', 'cerrar', 'preferir', 'perder',
+      // o→ue
+      'poder', 'volver', 'dormir', 'contar', 'encontrar', 'recordar',
+      // e→i
+      'pedir', 'seguir',
+      // u→ue
+      'jugar',
+    ],
     conjugationSuitable: true,
   },
   {
