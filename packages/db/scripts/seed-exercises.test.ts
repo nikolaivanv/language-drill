@@ -76,12 +76,11 @@ describe('planSkillTopics', () => {
 });
 
 describe('planSeedTags', () => {
-  it('returns one tag per active mapping plus 10 untagged EN seeds (DE still reduced)', () => {
-    // SEED_KEY_TO_GRAMMAR_POINT is temporarily reduced for DE only (see
-    // seed-exercises.ts). Filter SEED_EXERCISES to only EN seeds and seeds
-    // whose mapping is still active so the happy-path assertion remains
-    // meaningful. Restore the unfiltered call (and the original 27 / 10
-    // expectations) when the commented-out DE mappings are uncommented.
+  it('returns one tag per active mapping plus 10 untagged EN seeds (free-writing seeds are intentionally unmapped)', () => {
+    // Free-writing seeds (all languages) and the disabled TR B1/B2 seeds
+    // have no mapping by design — filter to EN seeds plus actively-mapped
+    // seeds, mirroring tagExistingSeeds, so the happy-path assertion stays
+    // meaningful.
     const activeNonEnKeys = new Set(Object.keys(SEED_KEY_TO_GRAMMAR_POINT));
     const activeSeeds = SEED_EXERCISES.filter(
       (s) => s.language === 'EN' || activeNonEnKeys.has(s.key),
@@ -120,8 +119,8 @@ describe('planSeedTags', () => {
 });
 
 describe('SEED_KEY_TO_GRAMMAR_POINT', () => {
-  it('has exactly 12 active entries (reduced from 27 while DE curriculum is disabled)', () => {
-    expect(Object.keys(SEED_KEY_TO_GRAMMAR_POINT)).toHaveLength(12);
+  it('has exactly 21 active entries (DE restored 2026-07-12; TR B1/B2 still reduced)', () => {
+    expect(Object.keys(SEED_KEY_TO_GRAMMAR_POINT)).toHaveLength(21);
   });
 
   it('contains no EN keys (EN seeds are intentionally untagged)', () => {
