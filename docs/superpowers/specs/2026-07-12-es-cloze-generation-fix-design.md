@@ -39,6 +39,16 @@ Grounding facts:
 - The cloze `context` field is **internal-only** — `apps/web/.../drill/_components/cloze-exercise.tsx`
   never renders it; its test destructures `context` out and proves the component
   works without it. So neutralizing it has **zero learner-facing impact**.
+  > **CORRECTION (post final-review):** this premise was wrong. `context` IS
+  > learner-facing — `ClozePrompt` (`apps/web/components/drill/cloze-prompt.tsx:88-94`),
+  > reached via `_components/cloze-exercise.tsx`, renders it as an eyebrow micro-tag.
+  > The earlier grep inspected the wrong component. Decision unchanged (truly omit),
+  > but with eyes open: new cloze cards drop the tag (it was often the spoiler);
+  > stored rows still show it via the back-compat-optional `ClozeContent.context`.
+  > Enforcement also required a hard `additionalProperties: false` guard on the cloze
+  > tool schema **and** sweeping the `context` field-refs from the system-prompt
+  > template — so `push-prompts` per env IS needed post-merge (the "code-only,
+  > no push-prompts" simplification is void).
 - The validator already vetoes spoilage on `context`/`instructions` and handles a
   null `context` (`content.context ? … : ""`). No validator logic change needed.
 
