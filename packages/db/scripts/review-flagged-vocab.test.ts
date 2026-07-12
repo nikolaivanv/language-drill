@@ -1,5 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { formatFlaggedRow } from './review-flagged-vocab';
+import { Language } from '@language-drill/shared';
+import { formatFlaggedRow, parseLanguage } from './review-flagged-vocab';
+
+describe('review-flagged-vocab parseLanguage', () => {
+  it('defaults to ES', () => {
+    expect(parseLanguage([])).toBe(Language.ES);
+  });
+  it('parses a valid learning language', () => {
+    expect(parseLanguage(['--language', 'tr'])).toBe(Language.TR);
+  });
+  it('rejects EN', () => {
+    expect(() => parseLanguage(['--language', 'en'])).toThrow();
+  });
+});
 
 describe('formatFlaggedRow', () => {
   it('renders a compact review line', () => {
