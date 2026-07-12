@@ -1,16 +1,9 @@
-// TEMPORARILY DISABLED (2026-05-10): all DE curriculum entries are commented
-// out so the prod scheduler stops generating German exercises. To restore:
-//   1. Uncomment the array body below.
-//   2. Restore the destructure / imports below.
-//   3. Bump DE back in PER_LANGUAGE_GRAMMAR_MIN (curriculum/index.ts).
-//   4. Restore the DE entries in SEED_KEY_TO_GRAMMAR_POINT (seed-exercises.ts).
-//   5. Re-enable the per-language counts test for German (curriculum.test.ts).
-// import { CefrLevel, Language } from '@language-drill/shared';
+import { CefrLevel, Language } from '@language-drill/shared';
 
 import type { GrammarPoint } from './types';
 
-// const DE = Language.DE;
-// const { A1, A2, B1, B2 } = CefrLevel;
+const DE = Language.DE;
+const { A1, A2, B1, B2 } = CefrLevel;
 
 /**
  * Per-language curriculum version. Bump in the same commit as any edit to
@@ -20,51 +13,107 @@ import type { GrammarPoint } from './types';
  * generation_jobs row for each cell — when they differ, any
  * "saturated-dedup" or "low-yield" suppression on that cell clears, on the
  * assumption that the curriculum edit may have unblocked the search space.
+ *
+ * `2026-07-12`: DE re-enabled (disabled since 2026-05-10) and expanded to
+ * full Menschen A1–B1 / Sicher! B2 parity: 18 A1 + 29 A2 + 25 B1 + 26 B2
+ * grammar points plus the three restored vocab umbrellas. Sources:
+ * `docs/analysis/de-menschen-toc-inventory.md` (Goethe proxy) and
+ * `docs/analysis/de-curriculum-hammer-coverage-audit-2026-07-12.md` (Hammer
+ * reverse-coverage audit; all HIGH and most MEDIUM gaps authored). 15 of the
+ * 20 pre-disable draft keys are retained (5 with rescoped descriptions);
+ * `de-b1-modal-verbs-past` is dropped — superseded by
+ * `de-a2-praeteritum-modals` at the Menschen A2 L20 placement. Design/plan:
+ * `docs/superpowers/plans/2026-07-12-de-a1-b2-curriculum.md`.
  */
-export const CURRICULUM_VERSION_DE = '2026-05-23';
+export const CURRICULUM_VERSION_DE = '2026-07-12';
 
 const deCurriculum: readonly GrammarPoint[] = [
-  /*
   // ---------------------------------------------------------------------------
-  // A1
+  // A1 (Menschen A1 + Hammer audit; 18 points)
   // ---------------------------------------------------------------------------
   {
-    key: 'de-a1-present-indicative',
-    personRotation: true,
+    key: 'de-a1-present-regular',
     kind: 'grammar',
-    name: 'Present indicative',
+    name: 'Present tense: regular conjugation',
     description:
-      'Conjugation of regular and stem-changing verbs in the present tense across all six persons.',
+      'Present-tense endings -e/-st/-t/-en/-t/-en on regular verbs, with -e- inserted before -st/-t after stems in -t/-d (arbeitest, findet), only -t added after stems in -s/-ß/-z (du heißt), and -eln verbs dropping the stem e in the ich-form (ich sammle).',
     cefrLevel: A1,
     language: DE,
-    examplesPositive: ['Ich wohne in Berlin.', 'Er fährt jeden Tag mit dem Bus.'],
-    examplesNegative: ['*Er fahrt jeden Tag mit dem Bus.'],
-    commonErrors: [
-      'Forgetting the e→i / a→ä stem change in second and third person singular.',
-      'Using English-style auxiliary "do" ("*ich tue wohnen").',
+    examplesPositive: [
+      'Ich wohne in Berlin und arbeite zu Hause.',
+      'Findest du den Film gut?',
+      'Wie heißt du?',
     ],
+    examplesNegative: ['*Du arbeitst heute viel.', '*Er wohnen in Hamburg.'],
+    commonErrors: [
+      'Dropping the -e- insertion after t/d stems ("*du arbeitst", "*er findt" instead of "du arbeitest", "er findet").',
+      'Adding a full -st after s/ß/z stems ("*du heißst" instead of "du heißt").',
+      'Using the plural ending -en for er/sie/es ("*er wohnen in Hamburg").',
+      'Using an English-style auxiliary "do" for questions and negation instead of plain verb-first/verb-second forms.',
+    ],
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '3pl': 5 } },
+      ],
+    },
+    conjugationSuitable: true,
+    sentenceConstructionSuitable: true,
   },
   {
-    key: 'de-a1-articles-nominative',
+    key: 'de-a1-present-irregular',
     kind: 'grammar',
-    name: 'Definite and indefinite articles — nominative',
+    name: 'Present tense: sein, haben and stem-changing verbs',
     description:
-      'Choosing der/die/das and ein/eine for the subject of a sentence according to noun gender.',
+      'Present tense of sein, haben, werden and wissen, plus stem-changing verbs in the du- and er/sie/es-forms: e→i (sprechen→spricht), e→ie (lesen→liest), a→ä (fahren→fährt). The stem change never appears in the ich-form or the plural.',
     cefrLevel: A1,
     language: DE,
-    examplesPositive: ['Der Hund schläft.', 'Eine Frau steht an der Tür.'],
-    examplesNegative: ['*Das Hund schläft.'],
+    examplesPositive: [
+      'Er fährt jeden Tag mit dem Bus.',
+      'Du sprichst sehr gut Deutsch.',
+      'Sie ist müde und hat Hunger.',
+    ],
+    examplesNegative: ['*Er fahrt jeden Tag mit dem Bus.', '*Du lest gern Bücher.'],
     commonErrors: [
-      'Defaulting to "der" for unfamiliar nouns.',
-      'Treating English-cognate nouns as masculine without checking gender.',
+      'Keeping the plain stem in the du/er forms ("*er fahrt", "*du sprechst" instead of "er fährt", "du sprichst").',
+      'Extending the stem change to the ich-form or the plural ("*ich fähre", "*wir sprichen").',
+      'Regularizing sein and haben ("*du habst" instead of "du hast").',
+      'Regularizing wissen ("*ich wisse" instead of "ich weiß").',
+    ],
+    prerequisiteKeys: ['de-a1-present-regular'],
+    coverageSpec: {
+      // 2sg/3sg only: those are the persons where the stem change surfaces —
+      // the ich-form and the plural are regular for the a→ä / e→i(e) classes.
+      axes: [{ name: 'person', floors: { '2sg': 8, '3sg': 8 } }],
+    },
+    conjugationSuitable: true,
+    // Closed target set: the frequency band would hand the generator regular
+    // verbs whose present-tense forms don't exercise the point.
+    conjugationSeedWords: [
+      'sein',
+      'haben',
+      'werden',
+      'wissen',
+      'sprechen',
+      'essen',
+      'geben',
+      'nehmen',
+      'helfen',
+      'treffen',
+      'lesen',
+      'sehen',
+      'fahren',
+      'schlafen',
+      'laufen',
+      'tragen',
+      'waschen',
     ],
   },
   {
     key: 'de-a1-noun-gender',
     kind: 'grammar',
-    name: 'Noun gender (der/die/das)',
+    name: 'Noun gender (der/das/die)',
     description:
-      'Memorising and applying the three grammatical genders of German nouns alongside common gender-derivation patterns (-ung → die, -chen → das).',
+      'Memorising and applying the three grammatical genders of German nouns alongside common gender-derivation patterns (-ung → die, -chen → das, -er agent nouns → der).',
     cefrLevel: A1,
     language: DE,
     examplesPositive: ['die Wohnung', 'das Mädchen'],
@@ -72,7 +121,146 @@ const deCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Assigning masculine to people regardless of suffix (e.g. "*der Mädchen").',
       'Ignoring suffix-based gender rules for -ung, -heit, -keit (all feminine).',
+      'Treating English-cognate nouns as masculine without checking gender.',
     ],
+  },
+  {
+    key: 'de-a1-plural-formation',
+    kind: 'grammar',
+    name: 'Noun plurals',
+    description:
+      'Noun plural classes: -e (der Tisch → Tische, often with umlaut: die Stadt → Städte), -er with umlaut (das Buch → Bücher), -(e)n (die Lampe → Lampen), -s (das Auto → Autos), and zero ending with or without umlaut (der Apfel → Äpfel); feminines in -e almost always take -n.',
+    cefrLevel: A1,
+    language: DE,
+    examplesPositive: [
+      'Die Bücher liegen auf dem Tisch.',
+      'Wir haben zwei Autos und drei Fahrräder.',
+    ],
+    examplesNegative: ['*Ich brauche zwei Buchs.'],
+    commonErrors: [
+      'Adding English -s to every noun ("*die Buchs", "*die Stadts").',
+      'Forgetting the umlaut in the plural ("*die Apfel" instead of "die Äpfel").',
+      'Leaving the noun unchanged because a number word is present ("*drei Buch").',
+    ],
+  },
+  {
+    key: 'de-a1-articles-nominative',
+    kind: 'grammar',
+    name: 'Definite, indefinite and negative articles — nominative',
+    description:
+      'Choosing der/das/die, ein/ein/eine and the negative article kein/kein/keine for the subject of a sentence according to noun gender.',
+    cefrLevel: A1,
+    language: DE,
+    examplesPositive: [
+      'Der Hund schläft.',
+      'Eine Frau steht an der Tür.',
+      'Das ist kein Problem.',
+    ],
+    examplesNegative: ['*Das Hund schläft.'],
+    commonErrors: [
+      'Defaulting to "der" for unfamiliar nouns.',
+      'Treating English-cognate nouns as masculine without checking gender.',
+      'Failing to match kein to the noun\'s gender ("*kein Frau" instead of "keine Frau").',
+    ],
+  },
+  {
+    key: 'de-a1-accusative',
+    kind: 'grammar',
+    name: 'Accusative case for direct objects',
+    description:
+      'Accusative marks the direct object: only the masculine forms change (der → den, ein → einen, kein → keinen, mein → meinen); feminine, neuter and plural forms look like the nominative.',
+    cefrLevel: A1,
+    language: DE,
+    examplesPositive: ['Ich sehe den Bus.', 'Sie hat einen Bruder und eine Schwester.'],
+    examplesNegative: ['*Ich sehe der Bus.'],
+    commonErrors: [
+      'Leaving the masculine article in the nominative ("*Ich habe ein Hund" instead of "einen Hund").',
+      'Over-applying -en to feminine or neuter objects ("*Sie hat einen Katze").',
+      'Marking a fronted subject as accusative because it is not in first position.',
+    ],
+    prerequisiteKeys: ['de-a1-articles-nominative'],
+  },
+  {
+    key: 'de-a1-dative',
+    kind: 'grammar',
+    name: 'Dative case: forms and core uses',
+    description:
+      'Dative forms dem/der/dem/den (+ -n on plural nouns) and einem/einer/einem, used after location prepositions answering wo? (in der Stadt) and with dative verbs like helfen, danken, gefallen, gehören, schmecken.',
+    cefrLevel: A1,
+    language: DE,
+    examplesPositive: [
+      'Wir wohnen in der Stadt.',
+      'Das Fahrrad gehört dem Kind.',
+      'Ich helfe meinen Eltern gern.',
+    ],
+    examplesNegative: ['*Ich helfe meine Eltern gern.'],
+    commonErrors: [
+      'Using accusative objects with dative verbs ("*Ich helfe dich" instead of "Ich helfe dir").',
+      'Forgetting the extra -n on dative plural nouns ("*mit den Kinder" instead of "mit den Kindern").',
+      'Using the accusative for a static location ("*Wir wohnen in die Stadt").',
+    ],
+    prerequisiteKeys: ['de-a1-accusative'],
+  },
+  {
+    key: 'de-a1-personal-pronouns',
+    kind: 'grammar',
+    name: 'Personal pronouns (nominative, accusative, dative)',
+    description:
+      'Personal pronoun paradigm across cases (ich–mich–mir, du–dich–dir, er–ihn–ihm …); er/es/sie also refer to things according to grammatical gender; informal du/ihr vs formal Sie.',
+    cefrLevel: A1,
+    language: DE,
+    examplesPositive: [
+      'Der Tisch ist neu. Er war teuer.',
+      'Ich sehe dich, aber ich helfe zuerst ihm.',
+    ],
+    examplesNegative: ['*Der Tisch ist neu. Es war teuer.'],
+    commonErrors: [
+      'Referring to all inanimate nouns with es instead of matching grammatical gender ("*Die Tasche? Es ist hier.").',
+      'Confusing accusative and dative pronoun forms ("*Kannst du mich helfen?" instead of "mir").',
+      'Mixing informal du and formal Sie within the same utterance.',
+    ],
+    prerequisiteKeys: ['de-a1-dative'],
+  },
+  {
+    key: 'de-a1-possessive-articles',
+    kind: 'grammar',
+    name: 'Possessive articles',
+    description:
+      'Possessive articles mein, dein, sein, ihr, unser, euer, Ihr with ein-word endings in nominative and accusative: the choice of sein vs ihr follows the possessor, the ending follows the possessed noun.',
+    cefrLevel: A1,
+    language: DE,
+    examplesPositive: [
+      'Das ist meine Schwester.',
+      'Maria sucht ihren Schlüssel, und Peter sucht seinen.',
+    ],
+    examplesNegative: ['*Das ist mein Schwester.'],
+    commonErrors: [
+      'Choosing sein/ihr by the gender of the possessed noun instead of the possessor ("*Maria sucht seinen Schlüssel" for her own key).',
+      'Dropping the feminine/plural ending ("*mein Schwester" instead of "meine Schwester").',
+      'Keeping the full stem of euer before endings ("*euere Kinder" instead of "eure Kinder").',
+    ],
+    prerequisiteKeys: ['de-a1-articles-nominative'],
+  },
+  {
+    key: 'de-a1-questions',
+    kind: 'grammar',
+    name: 'W-questions, yes/no questions and doch',
+    description:
+      'W-questions with wer, was, wo, wohin, woher, wann, wie, warum keep the verb in second position; yes/no questions put the finite verb first; doch answers a negative question positively.',
+    cefrLevel: A1,
+    language: DE,
+    examplesPositive: [
+      'Woher kommst du?',
+      'Hast du heute Zeit?',
+      'Hast du keine Zeit? — Doch, ich habe Zeit.',
+    ],
+    examplesNegative: ['*Wo du wohnst?'],
+    commonErrors: [
+      'Leaving the verb at the end or in third position in W-questions ("*Wo du wohnst?").',
+      'Answering a negative question with ja instead of doch.',
+      'Calquing English do-support instead of inverting ("*Tust du kommen heute?").',
+    ],
+    sentenceConstructionSuitable: true,
   },
   {
     key: 'de-a1-v2-word-order',
@@ -89,353 +277,166 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Counting "und"-coordinated phrases as occupying position 1.',
     ],
   },
-
-  // ---------------------------------------------------------------------------
-  // A2
-  // ---------------------------------------------------------------------------
   {
-    key: 'de-a2-perfekt-with-haben',
-    personRotation: true,
+    key: 'de-a1-negation',
     kind: 'grammar',
-    name: 'Perfekt with haben',
+    name: 'Negation: nicht vs kein and the position of nicht',
     description:
-      'Forming the present perfect with "haben + past participle" for transitive verbs and most intransitives, with the participle at the end.',
-    cefrLevel: A2,
-    language: DE,
-    examplesPositive: ['Ich habe ein Buch gelesen.', 'Wir haben gestern gearbeitet.'],
-    examplesNegative: ['*Ich bin ein Buch gelesen.'],
-    commonErrors: [
-      'Using sein with transitive verbs ("*ich bin ein Buch gelesen").',
-      'Putting the past participle in the middle of the clause instead of the final position.',
-    ],
-    prerequisiteKeys: ['de-a1-present-indicative'],
-    sentenceConstructionSuitable: true,
-  },
-  {
-    key: 'de-a2-perfekt-with-sein',
-    personRotation: true,
-    kind: 'grammar',
-    name: 'Perfekt with sein',
-    description:
-      'Using "sein + past participle" for verbs of motion and change of state (gehen, fahren, kommen, werden, bleiben, sein).',
-    cefrLevel: A2,
-    language: DE,
-    examplesPositive: ['Ich bin nach Berlin gefahren.', 'Sie ist müde geworden.'],
-    examplesNegative: ['*Ich habe nach Berlin gefahren.'],
-    commonErrors: [
-      'Defaulting to haben for motion verbs ("*ich habe gegangen").',
-      'Forgetting that "sein" itself takes "sein" in the Perfekt ("*ich habe gewesen").',
-    ],
-    prerequisiteKeys: ['de-a2-perfekt-with-haben'],
-  },
-  {
-    key: 'de-a2-akkusativ-prepositions',
-    kind: 'grammar',
-    name: 'Akkusativ prepositions',
-    description:
-      'Prepositions that always take the accusative: durch, für, gegen, ohne, um, bis. Article and adjective endings change accordingly.',
-    cefrLevel: A2,
-    language: DE,
-    examplesPositive: ['Ich gehe durch den Park.', 'Das ist für meinen Bruder.'],
-    examplesNegative: ['*Ich gehe durch dem Park.'],
-    commonErrors: [
-      'Using dative endings on accusative-only prepositions.',
-      'Forgetting to change "der" to "den" in masculine accusative.',
-    ],
-  },
-  {
-    key: 'de-a2-dativ-prepositions',
-    kind: 'grammar',
-    name: 'Dativ prepositions',
-    description:
-      'Prepositions that always take the dative: aus, bei, mit, nach, seit, von, zu, gegenüber. Article forms shift to dem/der/dem/den.',
-    cefrLevel: A2,
-    language: DE,
-    examplesPositive: ['Ich fahre mit dem Bus.', 'Sie kommt aus der Schweiz.'],
-    examplesNegative: ['*Ich fahre mit den Bus.'],
-    commonErrors: [
-      'Using accusative endings after mit/nach/zu.',
-      'Forgetting plural dative -n on the noun ("*mit den Kinder").',
-    ],
-  },
-  {
-    key: 'de-a2-separable-prefix-verbs',
-    personRotation: true,
-    kind: 'grammar',
-    name: 'Separable-prefix verbs',
-    description:
-      'Detaching the prefix of separable verbs (aufstehen, einkaufen, mitnehmen) and placing it at the end of the main clause.',
-    cefrLevel: A2,
-    language: DE,
-    examplesPositive: ['Ich stehe um sieben Uhr auf.', 'Wir kaufen heute ein.'],
-    examplesNegative: ['*Ich aufstehe um sieben Uhr.'],
-    commonErrors: [
-      'Failing to separate the prefix in main clauses.',
-      'Separating the prefix in subordinate clauses, where it stays attached.',
-    ],
-    prerequisiteKeys: ['de-a1-v2-word-order'],
-  },
-
-  // ---------------------------------------------------------------------------
-  // B1
-  // ---------------------------------------------------------------------------
-  {
-    key: 'de-b1-relative-pronouns',
-    kind: 'grammar',
-    name: 'Relative pronouns and clauses',
-    description:
-      'Using der/die/das and dessen/deren as relative pronouns whose case matches the role inside the relative clause; verb goes to the end.',
-    cefrLevel: B1,
+      'kein negates nouns that would carry an indefinite or no article (Ich habe keine Zeit); nicht negates everything else and stands late in the clause — before predicate adjectives, prepositional complements or the specifically negated constituent.',
+    cefrLevel: A1,
     language: DE,
     examplesPositive: [
-      'Der Mann, der dort steht, ist mein Vater.',
-      'Das Buch, das ich lese, ist spannend.',
+      'Ich habe kein Auto.',
+      'Der Film ist nicht interessant.',
+      'Ich komme heute nicht.',
     ],
-    examplesNegative: ['*Der Mann, der dort steht ist mein Vater.'],
+    examplesNegative: ['*Ich habe nicht ein Auto.', '*Ich nicht komme heute.'],
     commonErrors: [
-      'Choosing the relative pronoun by the antecedent\'s gender alone, ignoring the case role inside the clause.',
-      'Forgetting verb-final word order in relative clauses.',
+      'Using nicht ein instead of kein ("*Ich habe nicht ein Auto").',
+      'Placing nicht directly after the subject, English-style ("*Ich nicht verstehe das").',
+      'Putting nicht in the middle of the clause where it must stand at the end ("*Ich komme nicht heute" when the whole event is negated).',
     ],
     prerequisiteKeys: ['de-a1-articles-nominative'],
   },
   {
-    key: 'de-b1-dass-clause-perfekt',
+    key: 'de-a1-zero-article',
     kind: 'grammar',
-    name: 'dass-clauses with the Perfekt',
+    name: 'Zero article: professions, nationalities and indefinite plurals',
     description:
-      'Embedding a Perfekt clause under "dass" so that both the past participle and the auxiliary go to the end, in that order.',
-    cefrLevel: B1,
+      'No article before professions, nationalities and religions after sein/werden (Ich bin Lehrerin, Er wird Arzt), before indefinite plurals and mass nouns (Wir haben Äpfel — English "some"), and with languages; the article returns with an adjective (Sie ist eine gute Ärztin).',
+    cefrLevel: A1,
     language: DE,
     examplesPositive: [
-      'Ich glaube, dass er das Buch gelesen hat.',
-      'Sie sagt, dass wir zu spät gekommen sind.',
+      'Ich bin Lehrerin.',
+      'Er wird Arzt.',
+      'Wir haben Äpfel und Brot gekauft.',
     ],
-    examplesNegative: ['*Ich glaube, dass er hat das Buch gelesen.'],
+    examplesNegative: ['*Ich bin eine Lehrerin.', '*Er wird ein Arzt.'],
     commonErrors: [
-      'Keeping V2 order inside the dass-clause.',
-      'Reversing the auxiliary–participle order ("*hat gelesen" final instead of "gelesen hat").',
+      'Inserting ein/eine before a bare profession or nationality by English interference ("*Ich bin ein Student").',
+      'Adding an article to indefinite plurals or mass nouns where German uses none ("Wir brauchen Milch", not "*Wir brauchen eine Milch").',
+      'Dropping the article even when the noun is qualified by an adjective ("*Sie ist gute Ärztin").',
     ],
-    prerequisiteKeys: ['de-a2-perfekt-with-haben'],
+    prerequisiteKeys: ['de-a1-articles-nominative'],
   },
   {
-    key: 'de-b1-modal-verbs-past',
-    personRotation: true,
+    key: 'de-a1-modal-verbs-present',
     kind: 'grammar',
-    name: 'Modal verbs in the Präteritum',
+    name: 'Modal verbs in the present + verb bracket',
     description:
-      'Forming past-tense modals (konnte, musste, durfte, sollte, wollte, mochte) and pairing them with a final infinitive in main clauses.',
-    cefrLevel: B1,
+      'Present tense of können, wollen, müssen, dürfen, sollen, mögen and the möchte-forms: irregular singular without endings in 1sg/3sg (ich kann, er kann), regular plural, and the verb bracket with the bare infinitive at the end of the clause.',
+    cefrLevel: A1,
     language: DE,
-    examplesPositive: ['Ich konnte gestern nicht kommen.', 'Wir mussten lange warten.'],
-    examplesNegative: ['*Ich kann gestern nicht kommen.'],
-    commonErrors: [
-      'Using the Perfekt with modals where Präteritum is more idiomatic.',
-      'Forgetting that the umlaut drops in the simple past (können → konnte, not "*könnte" outside Konjunktiv II).',
+    examplesPositive: [
+      'Ich kann heute nicht kommen.',
+      'Möchtest du einen Kaffee trinken?',
+      'Wir müssen morgen früh aufstehen.',
     ],
+    examplesNegative: ['*Er kannt gut schwimmen.', '*Ich will gehen nach Hause.'],
+    commonErrors: [
+      'Adding -t to the 3sg ("*er kannt", "*sie musst" instead of "er kann", "sie muss").',
+      'Placing the infinitive right after the modal instead of clause-finally ("*Ich will gehen nach Hause").',
+      'Keeping the umlaut of the infinitive in the singular ("*ich könne" for "ich kann").',
+      'Using zu before the infinitive after a modal ("*Ich muss zu arbeiten").',
+    ],
+    prerequisiteKeys: ['de-a1-present-regular'],
+    coverageSpec: {
+      // The singular is where the irregular stem lives; plural forms are regular.
+      axes: [{ name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5 } }],
+    },
+    conjugationSuitable: true,
+    conjugationSeedWords: ['können', 'wollen', 'müssen', 'dürfen', 'sollen', 'mögen'],
     sentenceConstructionSuitable: true,
   },
   {
-    key: 'de-b1-two-way-prepositions',
+    key: 'de-a1-imperative',
     kind: 'grammar',
-    name: 'Two-way prepositions (Wechselpräpositionen)',
+    name: 'Imperative (Sie, du, ihr)',
     description:
-      'an, auf, hinter, in, neben, über, unter, vor, zwischen — accusative for direction (wohin?), dative for location (wo?).',
-    cefrLevel: B1,
+      'Imperatives: Sie-form with pronoun (Gehen Sie!), du-form without -st and usually without -e (Geh!, Nimm!, Fahr! — e→i(e) change kept, a→ä umlaut dropped), ihr-form = stem + -t (Geht!); sein is irregular (Sei ruhig!, Seien Sie …).',
+    cefrLevel: A1,
     language: DE,
     examplesPositive: [
-      'Ich gehe in die Schule. (direction → Akk.)',
-      'Ich bin in der Schule. (location → Dat.)',
+      'Nehmen Sie bitte Platz!',
+      'Geh nach Hause und schlaf gut!',
+      'Kommt her, Kinder!',
     ],
-    examplesNegative: ['*Ich gehe in der Schule.'],
+    examplesNegative: ['*Gehst nach Hause!', '*Fähr langsamer!'],
     commonErrors: [
-      'Defaulting to dative because the noun denotes a place.',
-      'Choosing case by the verb stem instead of by direction-vs-location.',
+      'Keeping the -st ending in the du-imperative ("*Gehst nach Hause!").',
+      'Keeping the a→ä umlaut in the du-imperative ("*Fähr langsamer!" instead of "Fahr langsamer!").',
+      'Dropping the e→i stem change ("*Nehm das Buch!" instead of "Nimm das Buch!").',
+      'Omitting Sie in the formal imperative ("*Nehmen Platz, bitte!").',
     ],
-    prerequisiteKeys: ['de-a2-akkusativ-prepositions', 'de-a2-dativ-prepositions'],
+    prerequisiteKeys: ['de-a1-present-irregular'],
   },
   {
-    key: 'de-b1-passive-werden',
+    key: 'de-a1-temporal-prepositions',
     kind: 'grammar',
-    name: 'Passive with werden',
+    name: 'Temporal prepositions',
     description:
-      '"werden + past participle" passive: present, past, and Perfekt forms; agent introduced with "von" and instrument with "durch".',
-    cefrLevel: B1,
+      'Time prepositions: am + days/parts of the day (am Montag, am Abend), um + clock time, im + months/seasons, von … bis and ab for spans, vor/nach/in + dative and für + accusative for relative time (in einer Stunde, für zwei Tage).',
+    cefrLevel: A1,
     language: DE,
     examplesPositive: [
-      'Das Haus wird gebaut.',
-      'Der Brief wurde von ihr geschrieben.',
+      'Der Kurs beginnt am Montag um neun Uhr.',
+      'Im Sommer fahren wir ans Meer.',
+      'Der Zug kommt in zehn Minuten.',
     ],
-    examplesNegative: ['*Das Haus ist gebaut von ihr.'],
+    examplesNegative: ['*Ich habe an Montag Zeit.'],
     commonErrors: [
-      'Confusing the werden-passive with the sein-Zustandspassiv (resultant state).',
-      'Using "bei" or "mit" instead of "von" for the agent.',
+      'Using the uncontracted an/in where am/im is required ("*an Montag", "*in Juli").',
+      'Calquing English "at night" ("*an der Nacht" instead of "in der Nacht").',
+      'Using um for days or dates ("*um Montag" instead of "am Montag").',
     ],
   },
   {
-    key: 'de-b1-subordinate-conjunctions',
+    key: 'de-a1-es-gibt',
     kind: 'grammar',
-    name: 'Subordinating conjunctions and verb-final order',
+    name: 'es gibt + accusative',
     description:
-      'weil, obwohl, wenn, als, damit, ob, während, bevor, nachdem trigger verb-final order in the subordinate clause.',
-    cefrLevel: B1,
+      'es gibt + accusative for existence and availability (Es gibt einen Park in der Nähe); gibt stays invariable singular regardless of what follows; contrast with sein for the location of known items.',
+    cefrLevel: A1,
     language: DE,
     examplesPositive: [
-      'Ich bleibe zu Hause, weil ich krank bin.',
-      'Obwohl es regnet, gehen wir spazieren.',
+      'Es gibt hier einen guten Bäcker.',
+      'Gibt es noch Karten für heute Abend?',
     ],
-    examplesNegative: ['*Ich bleibe zu Hause, weil ich bin krank.'],
+    examplesNegative: ['*Es gibt ein Park in der Nähe.', '*Es geben viele Restaurants.'],
     commonErrors: [
-      'Keeping V2 order after weil and obwohl.',
-      'Confusing als (a one-off past event) with wenn (repeated or future).',
+      'Using the nominative after es gibt ("*Es gibt ein Park" instead of "einen Park").',
+      'Pluralizing the verb ("*Es geben viele Restaurants").',
+      'Using es gibt to locate a known, specific item where sein is idiomatic ("Wo ist meine Brille?", not "*Wo gibt es meine Brille?").',
     ],
-    sentenceConstructionSuitable: true,
+    prerequisiteKeys: ['de-a1-accusative'],
+    targetOverride: 12,
   },
-
-  // ---------------------------------------------------------------------------
-  // B2
-  // ---------------------------------------------------------------------------
   {
-    key: 'de-b2-konjunktiv-ii',
-    personRotation: true,
+    key: 'de-a1-praeteritum-sein-haben',
     kind: 'grammar',
-    name: 'Konjunktiv II',
+    name: 'Präteritum of sein and haben (war, hatte)',
     description:
-      'Konjunktiv II for hypothetical and counterfactual statements, polite requests, and irrealis conditionals — built with würde + infinitive or umlauted simple-past stems.',
-    cefrLevel: B2,
+      'Simple-past forms war and hatte (plus es gab) — the standard way to talk about past states even in speech, where most other verbs use the Perfekt: ich war, du warst, er war; ich hatte, wir hatten.',
+    cefrLevel: A1,
     language: DE,
     examplesPositive: [
-      'Wenn ich Zeit hätte, würde ich kommen.',
-      'Ich hätte gerne einen Kaffee.',
+      'Gestern war ich krank.',
+      'Wir hatten keine Zeit.',
+      'Früher gab es hier einen Markt.',
     ],
-    examplesNegative: ['*Wenn ich Zeit habe, würde ich kommen.'],
+    examplesNegative: ['*Wir waren keine Zeit.', '*Ihr waren zu spät.'],
     commonErrors: [
-      'Pairing a real-conditional present indicative with the Konjunktiv II main clause.',
-      'Overusing würde + infinitive where umlauted strong-verb forms (käme, ginge) are more idiomatic.',
+      'Choosing war/hatte by calquing English "was" ("*Ich war Hunger" instead of "Ich hatte Hunger").',
+      'Wrong person endings ("*ihr waren" instead of "ihr wart").',
+      'Using the wordy Perfekt "ist gewesen / hat gehabt" where war/hatte is the idiomatic choice.',
     ],
-    prerequisiteKeys: ['de-b1-modal-verbs-past'],
-    sentenceConstructionSuitable: true,
+    coverageSpec: {
+      axes: [{ name: 'person', floors: { '1sg': 3, '3sg': 3 } }],
+    },
+    conjugationSuitable: true,
+    conjugationSeedWords: ['sein', 'haben'],
+    targetOverride: 15,
   },
-  {
-    key: 'de-b2-genitive-prepositions',
-    kind: 'grammar',
-    name: 'Genitiv prepositions',
-    description:
-      'Formal-register prepositions taking the genitive: während, wegen, trotz, statt, anstatt, innerhalb, außerhalb, aufgrund.',
-    cefrLevel: B2,
-    language: DE,
-    examplesPositive: [
-      'Während des Sommers reisen wir oft.',
-      'Trotz des schlechten Wetters gingen wir spazieren.',
-    ],
-    examplesNegative: ['*Während dem Sommer reisen wir oft.'],
-    commonErrors: [
-      'Using dative after wegen/trotz/während (acceptable colloquially but flagged in formal writing).',
-      'Forgetting the -s/-es genitive ending on masculine and neuter singular nouns.',
-    ],
-  },
-  {
-    key: 'de-b2-konjunktiv-i',
-    kind: 'grammar',
-    name: 'Konjunktiv I (reported speech)',
-    description:
-      'Konjunktiv I (er sage, er habe, er sei) for indirect speech in journalistic and formal registers; substitution by Konjunktiv II when forms coincide with the indicative.',
-    cefrLevel: B2,
-    language: DE,
-    examplesPositive: [
-      'Der Minister sagte, er habe keine Zeit.',
-      'Sie behauptet, sie sei krank.',
-    ],
-    examplesNegative: ['*Der Minister sagte, er hat keine Zeit. (in formal news writing)'],
-    commonErrors: [
-      'Using the indicative in formal indirect speech.',
-      'Failing to switch to Konjunktiv II when Konjunktiv I would coincide with the indicative.',
-    ],
-    prerequisiteKeys: ['de-b2-konjunktiv-ii'],
-  },
-  {
-    key: 'de-b2-extended-attributes',
-    kind: 'grammar',
-    name: 'Extended participial attributes',
-    description:
-      'Pre-nominal participial constructions ("der von uns gekaufte Wagen") that compress relative clauses into a single noun phrase — common in formal writing.',
-    cefrLevel: B2,
-    language: DE,
-    examplesPositive: [
-      'Der von uns gekaufte Wagen ist teuer.',
-      'Die im Park spielenden Kinder sind laut.',
-    ],
-    examplesNegative: ['*Der gekaufte von uns Wagen ist teuer.'],
-    commonErrors: [
-      'Misordering the modifier elements before the participle.',
-      'Failing to inflect the participle for case, gender, and number.',
-    ],
-    prerequisiteKeys: ['de-b1-relative-pronouns'],
-  },
-  {
-    key: 'de-b2-nominalization',
-    kind: 'grammar',
-    name: 'Nominalisation',
-    description:
-      'Turning verbs and adjectives into nouns ("das Lesen", "das Gute") — capitalisation, neuter gender, and idiomatic use in formal writing.',
-    cefrLevel: B2,
-    language: DE,
-    examplesPositive: ['Das Lesen macht Spaß.', 'Das Gute an dieser Idee ist die Einfachheit.'],
-    examplesNegative: ['*das gute an dieser idee'],
-    commonErrors: [
-      'Failing to capitalise the nominalised form.',
-      'Assigning the wrong gender (nominalised infinitives are always neuter).',
-    ],
-  },
-
-  // ---------------------------------------------------------------------------
-  // Vocab umbrellas — kind: 'vocab'
-  // ---------------------------------------------------------------------------
-  {
-    key: 'de-a2-housing-vocab',
-    kind: 'vocab',
-    name: 'Housing and home vocabulary (A2)',
-    description:
-      'Everyday vocabulary for housing, rooms, furniture, and household chores typical of A2 communication.',
-    cefrLevel: A2,
-    language: DE,
-    examplesPositive: ['die Wohnung', 'der Kühlschrank'],
-    examplesNegative: ['*das Wohnung'],
-    commonErrors: [
-      'Treating compound nouns as separate words ("*Kühl Schrank").',
-      'Confusing der Stuhl (chair) with der Sessel (armchair).',
-    ],
-  },
-  {
-    key: 'de-b1-environment-vocab',
-    kind: 'vocab',
-    name: 'Environment and society vocabulary (B1)',
-    description:
-      'Vocabulary covering environment, society, work, and current-affairs topics typical of B1 discussions.',
-    cefrLevel: B1,
-    language: DE,
-    examplesPositive: ['die Umwelt', 'der Klimawandel'],
-    examplesNegative: ['*das Umwelt'],
-    commonErrors: [
-      'Calquing English ("*Klima Wechsel" instead of "Klimawandel").',
-      'Confusing "die Umwelt" (the environment) with "die Umgebung" (surroundings).',
-    ],
-  },
-  {
-    key: 'de-b2-academic-noun-vocab',
-    kind: 'vocab',
-    name: 'Academic abstract noun vocabulary (B2)',
-    description:
-      'Abstract and academic-register nouns for argumentation, analysis, and essay writing typical of B2 work.',
-    cefrLevel: B2,
-    language: DE,
-    examplesPositive: ['die Nachhaltigkeit', 'die Entwicklung'],
-    examplesNegative: ['*der Nachhaltigkeit'],
-    commonErrors: [
-      'Mistakes on -ung / -heit / -keit gender (all feminine).',
-      'Calquing English derived nouns instead of using the standard German equivalent.',
-    ],
-  },
-  */
 ];
 
 export { deCurriculum };
