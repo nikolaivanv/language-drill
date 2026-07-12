@@ -133,6 +133,10 @@ describe("buildGenerationSystemPrompt", () => {
     // concrete pattern-match anchors, not paraphrased advice.
     expect(prompt).toContain("Sınıfta sekiz ___ var");
     expect(prompt).toContain("Vowel harmony: front vowel (e) requires -ler suffix");
+    // 2026-07-12: cloze `context` field removed — the template must no longer
+    // invite the model to populate it.
+    expect(prompt).not.toContain("and `context` fields");
+    expect(prompt).not.toContain("`sentence`, `context`");
   });
 
   it("includes the TR indefinite-noun-compound cloze format rule (2026-06-23)", async () => {

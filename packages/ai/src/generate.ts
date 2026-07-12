@@ -154,6 +154,7 @@ export const CLOZE_GENERATION_TOOL: Anthropic.Tool = {
       },
     },
     required: ["instructions", "sentence", "correctAnswer"],
+    additionalProperties: false,
   },
 };
 

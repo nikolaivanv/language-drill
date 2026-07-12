@@ -211,6 +211,10 @@ describe("parseGeneratedClozeDraft glossEn", () => {
     );
   });
 
+  it("locks additionalProperties:false so the model cannot emit context (2026-07-12)", () => {
+    expect(CLOZE_GENERATION_TOOL.input_schema.additionalProperties).toBe(false);
+  });
+
   it("still parses a stray context input for back-compat (stored rows)", () => {
     const content = parseGeneratedClozeDraft(
       { ...validClozeInput, context: "legacy framing" },
