@@ -206,7 +206,7 @@ function renderRecentStems(recentStems: readonly string[]): string {
 // substitute a similar-frequency word" framing that let the model discard the
 // curated scenario seed and collapse the scenario-diversity axis. Code-side
 // (user prompt) only — the system template is unchanged, so no Langfuse push.
-export const GENERATION_PROMPT_VERSION = "generate@2026-07-10";
+export const GENERATION_PROMPT_VERSION = "generate@2026-07-12";
 
 /**
  * Wording differs per type so Claude reads it the way the cell is constrained:

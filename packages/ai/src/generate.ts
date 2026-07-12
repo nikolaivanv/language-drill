@@ -142,11 +142,6 @@ export const CLOZE_GENERATION_TOOL: Anthropic.Tool = {
         description:
           "Optional multiple-choice distractors (3–4 items). When present, must include the correctAnswer.",
       },
-      context: {
-        type: "string",
-        description:
-          "Optional one-line framing shown above the sentence. May name the grammar category being tested (e.g. 'vowel harmony', 'noun-numeral agreement') but MUST NOT state the rule's outcome or otherwise reveal the answer. 'Vowel harmony: front vowel (e) requires -ler suffix' is forbidden — it tells the learner the answer. 'Plural agreement after a numeral' is acceptable. Same constraint applies to `instructions`.",
-      },
       topicHint: {
         type: "string",
         description:
@@ -155,7 +150,7 @@ export const CLOZE_GENERATION_TOOL: Anthropic.Tool = {
       glossEn: {
         type: "string",
         description:
-          "Optional one-line English gloss shown above the sentence as a disambiguation device — chiefly for Turkish accusative (definiteness-marking) clozes where a short L2-only sentence cannot force the case. Include it for CEFR A1–A2; omit it for B1+. It MUST convey meaning/case WITHOUT stating the rule's outcome or naming the required form: 'I drink the coffee' is allowed; 'use the accusative -yi' is forbidden (same anti-spoil constraint as `context`).",
+          "Optional one-line English gloss shown above the sentence as a disambiguation device — chiefly for Turkish accusative (definiteness-marking) clozes where a short L2-only sentence cannot force the case. Include it for CEFR A1–A2; omit it for B1+. It MUST convey meaning/case WITHOUT stating the rule's outcome or naming the required form: 'I drink the coffee' is allowed; 'use the accusative -yi' is forbidden (it must not state the rule's outcome or name the required form).",
       },
     },
     required: ["instructions", "sentence", "correctAnswer"],
