@@ -202,7 +202,7 @@ describe('GET /admin/flags', () => {
     // list query (join) then count query, in Promise.all order
     queryQueue.push([{
       id: 'f1', status: 'open', category: 'wrong_answer', note: 'bad', createdAt: new Date('2026-06-18T00:00:00Z'), resolvedAt: null,
-      exerciseId: 'ex1', submissionId: 'h1',
+      exerciseId: 'ex1', submissionId: 'h1', sessionId: 's1',
       exLanguage: 'ES', exLevel: 'B1', exType: 'cloze', exGrammar: 'es-b1-x', exReviewStatus: 'auto-approved', exContent: { type: 'cloze' },
       responseJson: { userAnswer: 'mi respuesta', evaluation: { score: 1, feedback: 'ok' } },
     }]);
@@ -211,7 +211,7 @@ describe('GET /admin/flags', () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as { items: Array<Record<string, unknown>>; total: number };
     expect(body.total).toBe(1);
-    expect(body.items[0]).toMatchObject({ id: 'f1', userAnswer: 'mi respuesta', exerciseId: 'ex1' });
+    expect(body.items[0]).toMatchObject({ id: 'f1', userAnswer: 'mi respuesta', exerciseId: 'ex1', submissionId: 'h1', sessionId: 's1' });
     expect((body.items[0].exercise as Record<string, unknown>).reviewStatus).toBe('auto-approved');
   });
 });

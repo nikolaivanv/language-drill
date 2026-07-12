@@ -31,6 +31,7 @@ export const UserFlagQueueItemSchema = z.object({
   resolvedAt: z.string().nullable(),
   exerciseId: z.string(),
   submissionId: z.string(),
+  sessionId: z.string().nullable(),
   exercise: z.object({
     language: z.string().nullable(),
     level: z.string().nullable(),
