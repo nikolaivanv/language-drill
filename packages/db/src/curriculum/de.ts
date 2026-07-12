@@ -62,7 +62,7 @@ const deCurriculum: readonly GrammarPoint[] = [
   {
     key: 'de-a1-present-irregular',
     kind: 'grammar',
-    name: 'Present tense: sein, haben and stem-changing verbs',
+    name: 'Present tense: sein, haben, werden, wissen and stem-changing verbs',
     description:
       'Present tense of sein, haben, werden and wissen, plus stem-changing verbs in the du- and er/sie/es-forms: e→i (sprechen→spricht), e→ie (lesen→liest), a→ä (fahren→fährt). The stem change never appears in the ich-form or the plural.',
     cefrLevel: A1,
@@ -77,7 +77,7 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Keeping the plain stem in the du/er forms ("*er fahrt", "*du sprechst" instead of "er fährt", "du sprichst").',
       'Extending the stem change to the ich-form or the plural ("*ich fähre", "*wir sprichen").',
       'Regularizing sein and haben ("*du habst" instead of "du hast").',
-      'Regularizing wissen ("*ich wisse" instead of "ich weiß").',
+      'Regularizing wissen ("*du wisst", "*er wisst" instead of "du weißt", "er weiß").',
     ],
     prerequisiteKeys: ['de-a1-present-regular'],
     coverageSpec: {
@@ -119,7 +119,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     examplesPositive: ['die Wohnung', 'das Mädchen'],
     examplesNegative: ['*der Mädchen'],
     commonErrors: [
-      'Assigning masculine to people regardless of suffix (e.g. "*der Mädchen").',
+      'Overriding grammatical gender with natural gender ("*die Mädchen" as a singular instead of "das Mädchen").',
       'Ignoring suffix-based gender rules for -ung, -heit, -keit (all feminine).',
       'Treating English-cognate nouns as masculine without checking gender.',
     ],
@@ -185,7 +185,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Dative case: forms and core uses',
     description:
-      'Dative forms dem/der/dem/den (+ -n on plural nouns) and einem/einer/einem, used after location prepositions answering wo? (in der Stadt) and with dative verbs like helfen, danken, gefallen, gehören, schmecken.',
+      'Dative forms dem/der/dem/den (+ -n on plural nouns unless the plural already ends in -n or -s) and einem/einer/einem, used after location prepositions answering wo? (in der Stadt) and with dative verbs like helfen, danken, gefallen, gehören, schmecken.',
     cefrLevel: A1,
     language: DE,
     examplesPositive: [
@@ -237,7 +237,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Choosing sein/ihr by the gender of the possessed noun instead of the possessor ("*Maria sucht seinen Schlüssel" for her own key).',
       'Dropping the feminine/plural ending ("*mein Schwester" instead of "meine Schwester").',
-      'Keeping the full stem of euer before endings ("*euere Kinder" instead of "eure Kinder").',
+      'Failing to decline euer ("*euer Kinder" instead of "eure Kinder").',
     ],
     prerequisiteKeys: ['de-a1-articles-nominative'],
   },
@@ -274,7 +274,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     examplesNegative: ['*Heute ich gehe ins Kino.'],
     commonErrors: [
       'Calquing English SVO when a fronted adverb pushes the subject after the verb.',
-      'Counting "und"-coordinated phrases as occupying position 1.',
+      'Treating a clause-initial conjunction (und, aber, denn) as filling position 1 and inverting ("*Und gehe ich ins Kino" instead of "Und ich gehe ins Kino").',
     ],
   },
   {
@@ -336,7 +336,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Adding -t to the 3sg ("*er kannt", "*sie musst" instead of "er kann", "sie muss").',
       'Placing the infinitive right after the modal instead of clause-finally ("*Ich will gehen nach Hause").',
-      'Keeping the umlaut of the infinitive in the singular ("*ich könne" for "ich kann").',
+      'Keeping the umlaut of the infinitive in the singular ("*er könnt", "*sie müsst" instead of "er kann", "sie muss").',
       'Using zu before the infinitive after a modal ("*Ich muss zu arbeiten").',
     ],
     prerequisiteKeys: ['de-a1-present-regular'],
@@ -462,7 +462,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Perfekt with sein',
     description:
-      'Using "sein + past participle" for verbs of motion and change of state (gehen, fahren, kommen, werden, bleiben, sein).',
+      'Using "sein + past participle" for verbs of motion and change of state (gehen, fahren, kommen, werden) plus the exceptions bleiben and sein.',
     cefrLevel: A2,
     language: DE,
     examplesPositive: ['Ich bin nach Berlin gefahren.', 'Sie ist müde geworden.'],
@@ -560,7 +560,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Defaulting to the dative because the noun denotes a place, even with motion toward it ("*Ich gehe in der Schule").',
       'Choosing the case by the preposition instead of by the direction-vs-location question.',
-      'Missing the standard contractions ("*in dem Kino" for a plain location where "im Kino" is idiomatic).',
+      'Missing the standard contractions ("in dem Kino" for a plain location where "im Kino" is idiomatic).',
     ],
     prerequisiteKeys: ['de-a1-dative'],
   },
@@ -569,7 +569,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Adjective declension after ein/kein/possessives',
     description:
-      'Mixed declension after ein-words: the adjective carries the gender signal where ein has no ending (ein neuer Tisch, ein neues Haus) and -en elsewhere (einen neuen Tisch, mit einem neuen Auto); feminine takes -e (eine neue Lampe).',
+      'Mixed declension after ein-words: the adjective carries the gender signal where ein has no ending (ein neuer Tisch, ein neues Haus) and -en elsewhere (einen neuen Tisch, mit einem neuen Auto); feminine nominative/accusative takes -e (eine neue Lampe).',
     cefrLevel: A2,
     language: DE,
     examplesPositive: [
@@ -611,7 +611,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Adjective declension without an article',
     description:
-      'Strong declension with no article: the adjective itself carries the article ending (frischer Fisch, frisches Brot, kalte Milch, mit kaltem Wasser, trotz guter Argumente) — common with food, materials and plurals.',
+      'Strong declension with no article: the adjective carries the article ending (frischer Fisch, frisches Brot, mit kaltem Wasser) except in the masculine/neuter genitive singular, which takes -en (trotz guten Wetters) — common with food, materials and plurals.',
     cefrLevel: A2,
     language: DE,
     examplesPositive: [
@@ -853,7 +853,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Using wie after a comparative ("*größer wie" instead of "größer als").',
       'Building the comparative analytically with mehr ("*mehr interessant" instead of "interessanter").',
-      'Skipping the umlaut ("*alter" for "älter", "*am grossten").',
+      'Skipping the umlaut ("*alter" for "älter", "*am großten" for "am größten").',
     ],
   },
   {
@@ -889,7 +889,7 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Hast du etwas gehört? — Nein, nichts.',
       'Niemand war zu Hause.',
     ],
-    examplesNegative: ['*Man dürfen hier nicht rauchen.', '*Ich habe niemand gesehen. (in careful writing)'],
+    examplesNegative: ['*Man dürfen hier nicht rauchen.', '*Niemanden war zu Hause.'],
     commonErrors: [
       'Using a plural verb with man ("*man dürfen").',
       'Replacing man with du/Sie in general statements by English interference.',
@@ -945,7 +945,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'seit + present tense',
     description:
-      'Situations that began in the past and still hold take the PRESENT tense with seit/schon (Ich wohne seit drei Jahren hier), where English uses the perfect ("I have lived"); the Perfekt with seit implies the situation ended.',
+      'Situations that began in the past and still hold take the PRESENT tense with seit/schon (Ich wohne seit drei Jahren hier) where English uses the perfect; negated or repeated events take the Perfekt instead (Ich habe ihn seit Jahren nicht gesehen).',
     cefrLevel: A2,
     language: DE,
     examplesPositive: [
@@ -1163,14 +1163,14 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Plusquamperfekt and nachdem',
     description:
-      'Past-before-past with hatte/war + participle (Ich hatte schon gegessen); nachdem enforces the tense sequence Plusquamperfekt in the nachdem-clause + Präteritum/Perfekt in the main clause.',
+      'Past-before-past with hatte/war + participle; nachdem pairs the Plusquamperfekt with a Präteritum/Perfekt main clause (Nachdem wir gegessen hatten, gingen wir …) and the Perfekt with a present/future main clause (Nachdem ich gegessen habe, gehe ich …).',
     cefrLevel: B1,
     language: DE,
     examplesPositive: [
       'Nachdem wir gegessen hatten, gingen wir spazieren.',
       'Ich war schon eingeschlafen, als du angerufen hast.',
     ],
-    examplesNegative: ['*Nachdem wir aßen, gingen wir spazieren.', '*Nachdem wir gegessen hatten, waren wir spazieren gegangen.'],
+    examplesNegative: ['*Nachdem wir aßen, gingen wir spazieren.', '*Nachdem wir gegessen haben, gingen wir spazieren.'],
     commonErrors: [
       'Using the same tense in both clauses with nachdem ("*Nachdem wir aßen, gingen wir …").',
       'Choosing hatte vs war against the verb\'s Perfekt auxiliary ("*Ich hatte eingeschlafen").',
@@ -1248,7 +1248,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Purpose: um … zu vs damit',
     description:
-      'Purpose clauses: um … zu + infinitive when the subjects are identical (Ich lerne Deutsch, um in Berlin zu arbeiten), damit + full clause when they differ (…, damit meine Kinder dort studieren können).',
+      'Purpose clauses: um … zu + infinitive requires identical subjects and is preferred there (Ich lerne Deutsch, um in Berlin zu arbeiten); damit + full clause is obligatory when the subjects differ (…, damit meine Kinder dort studieren können) and possible when they match.',
     cefrLevel: B1,
     language: DE,
     examplesPositive: [
@@ -1390,7 +1390,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Skipping the declension ending on the participle ("*die lachende Kinder").',
       'Using Partizip I where the meaning is completed/passive ("*das kochende Ei" for a boiled egg).',
-      'Building Partizip I from the stem instead of the infinitive ("*lachend-" is correct, "*lachtend" is not).',
+      'Building Partizip I from something other than infinitive + -d ("lachend" is correct, "*lachtend" is not).',
     ],
     prerequisiteKeys: ['de-a2-past-participle-formation', 'de-a2-adjective-declension-definite'],
   },
@@ -1420,7 +1420,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Consequence and reason adverbs (darum, deswegen, nämlich …)',
     description:
-      'Consequence adverbs darum/deswegen/deshalb/daher/aus diesem Grund occupy position 1 with inversion; nämlich gives a reason and never stands first (Ich bleibe zu Hause, ich bin nämlich krank); contrast with weil/da clauses.',
+      'Consequence adverbs darum/deswegen/deshalb/daher/aus diesem Grund typically open the clause and trigger inversion (they can also stand in the Mittelfeld); nämlich gives a reason and never stands first (Ich bleibe zu Hause, ich bin nämlich krank).',
     cefrLevel: B1,
     language: DE,
     examplesPositive: [
@@ -1461,7 +1461,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Modal particles I (denn, doch, eigentlich, ja, mal)',
     description:
-      'Core spoken-German particles: denn softens questions (Was machst du denn?), doch marks contradiction or urging (Komm doch mit!), eigentlich adds a casual "by the way", ja signals shared knowledge (Das ist ja teuer!), mal casualizes requests (Guck mal!).',
+      'Core spoken-German particles: denn softens questions (Was machst du denn?), doch marks contradiction or urging (Komm doch mit!), eigentlich adds a casual "by the way", ja marks shared knowledge or surprise (Du weißt ja, wie das ist; Das ist ja teuer!), mal casualizes requests (Guck mal!).',
     cefrLevel: B1,
     language: DE,
     examplesPositive: [
@@ -1469,7 +1469,7 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Komm doch mit!',
       'Das ist ja interessant!',
     ],
-    examplesNegative: ['*Denn was machst du hier?'],
+    examplesNegative: ['*Denn was machst du hier? (denn as a softening particle cannot be fronted)'],
     commonErrors: [
       'Fronting the particle ("*Denn was machst du?" — particles live in the Mittelfeld).',
       'Using denn outside questions in its particle sense.',
@@ -1493,7 +1493,7 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Er zieht sich die Schuhe an.',
       'Die Mutter putzt dem Kind die Nase.',
     ],
-    examplesNegative: ['*Ich wasche meine Hände.', '*Er zieht seine Schuhe sich an.'],
+    examplesNegative: ['*Ich wasche mich die Hände.', '*Er zieht seine Schuhe sich an.'],
     commonErrors: [
       'Using the possessive by English interference ("*Ich wasche meine Hände" — grammatical but unidiomatic; the target pattern is "mir die Hände").',
       'Choosing the accusative reflexive instead of the dative ("*Ich wasche mich die Hände").',
@@ -1506,7 +1506,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Directional adverbs hin and her',
     description:
-      'hin = away from the speaker, her = toward the speaker; compounds with prepositions (hinein/herein, hinaus/heraus, hinauf/herunter; colloquial rein/raus/runter) and as separable prefixes; split questions Wo … hin? / Wo … her?.',
+      'hin = away from the speaker, her = toward the speaker; compounds with prepositions (hinein/herein, hinaus/heraus, hinauf/herauf, hinunter/herunter; colloquial rein/raus/runter) and as separable prefixes; split questions Wo … hin? / Wo … her?.',
     cefrLevel: B1,
     language: DE,
     examplesPositive: [
@@ -1527,7 +1527,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'schon, noch, erst',
     description:
-      'The time-scalar triad: schon = already/earlier than expected, noch = still (noch nicht = not yet, nicht mehr = no longer), erst = only/not until (Er kommt erst um zehn); erst counts time where nur counts amounts.',
+      'The time-scalar triad: schon = already/earlier than expected, noch = still (noch nicht = not yet, nicht mehr = no longer), erst = only/not until (Er kommt erst um zehn); erst implies less/later than expected with more to come (erst drei Seiten), while nur is plain restriction.',
     cefrLevel: B1,
     language: DE,
     examplesPositive: [
@@ -1556,7 +1556,7 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Sie ist gerade dabei, die Koffer zu packen.',
       'Ich bin beim Kochen.',
     ],
-    examplesNegative: ['*Ich bin lesend ein Buch.', '*Ich bin lesen.'],
+    examplesNegative: ['*Ich bin lesend ein Buch.', '*Ich bin ein Buch lesen.'],
     commonErrors: [
       'Calquing English be + -ing with sein + participle ("*Ich bin lesend").',
       'Overusing the am-progressive in formal writing ("Ich bin am Lesen" is colloquial/regional).',
@@ -1869,7 +1869,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Consecutive relations (sodass, so … dass, infolgedessen)',
     description:
-      'Result clauses: sodass (…, sodass wir absagen mussten), split so + adjective … dass (Es war so laut, dass …), main-clause folglich/infolgedessen/demzufolge with inversion, and negative-result zu … als dass + Konjunktiv II.',
+      'Result clauses: sodass (…, sodass wir absagen mussten), split so + adjective … dass (Es war so laut, dass …), main-clause folglich/infolgedessen/demzufolge with inversion, and negative-result zu … als dass (usually with Konjunktiv II).',
     cefrLevel: B2,
     language: DE,
     examplesPositive: [
@@ -1881,7 +1881,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Doubling so with sodass ("*so laut, sodass" — the split pattern takes plain dass).',
       'V2 order inside the sodass-clause.',
-      'Indicative after als dass (the pattern requires Konjunktiv II).',
+      'Missing the Konjunktiv II that careful usage prefers after als dass ("…, als dass man es schnell lösen könnte").',
     ],
     prerequisiteKeys: ['de-b1-subordinate-conjunctions'],
   },
@@ -1984,7 +1984,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     ],
     examplesNegative: ['*eine Entscheidung machen', '*zur Verfügung sein'],
     commonErrors: [
-      'Calquing English make/take ("*eine Entscheidung machen", "*einen Fehler tun").',
+      'Calquing English make ("*eine Entscheidung machen") or choosing the wrong light verb ("*einen Fehler tun").',
       'Swapping the fixed verb ("*zur Verfügung sein" instead of "stehen").',
       'Changing the fixed article or preposition ("*in der Frage kommen").',
     ],
@@ -2025,7 +2025,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     ],
     examplesNegative: ['*Ich habe keinen Stift, aber du hast ein.', '*Manche Kollege arbeiten im Homeoffice.'],
     commonErrors: [
-      'Using the article form instead of the pronoun form ("*du hast ein" instead of "einen/eins").',
+      'Using the article form instead of the pronoun form ("*du hast ein" instead of "einen"; neuter antecedents take "eins").',
       'Leaving mancher/sämtliche undeclined.',
       'Missing welche as the partitive pronoun for mass nouns.',
     ],
