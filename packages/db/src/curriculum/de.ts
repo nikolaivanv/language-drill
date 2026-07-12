@@ -1564,6 +1564,611 @@ const deCurriculum: readonly GrammarPoint[] = [
     ],
     targetOverride: 15,
   },
+  // ---------------------------------------------------------------------------
+  // B2 (Sicher! + Hammer audit; 26 points)
+  // ---------------------------------------------------------------------------
+  {
+    key: 'de-b2-konjunktiv-ii',
+    kind: 'grammar',
+    name: 'Konjunktiv II: the full meaning system',
+    description:
+      'Konjunktiv II across its meanings: unreal present conditions (Wenn ich Zeit hätte, würde ich kommen), unreal wishes (Wenn ich das doch wüsste!), unreal comparisons with als ob, and verb-first conditionals (Hätte ich Zeit, …); synthetic forms (käme, wüsste, ginge) vs würde + infinitive.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Wenn ich Zeit hätte, würde ich kommen.',
+      'Er tut so, als ob er nichts wüsste.',
+      'Hätte ich das gewusst, wäre ich zu Hause geblieben.',
+    ],
+    examplesNegative: ['*Wenn ich Zeit habe, würde ich kommen.', '*Wenn ich Zeit hätte, ich würde kommen.'],
+    commonErrors: [
+      'Pairing a real-conditional present indicative with a Konjunktiv II main clause.',
+      'Using würde + infinitive in the wenn-clause where the synthetic form is standard ("wenn ich Zeit hätte", not "*wenn ich Zeit haben würde").',
+      'Failing to invert after a fronted conditional clause ("*Hätte ich Zeit, ich würde kommen").',
+      'Indicative after als ob in careful usage ("*als ob er nichts weiß").',
+    ],
+    prerequisiteKeys: ['de-b1-konjunktiv-ii-past'],
+    sentenceConstructionSuitable: true,
+  },
+  {
+    key: 'de-b2-genitive-prepositions',
+    kind: 'grammar',
+    name: 'Formal genitive prepositions',
+    description:
+      'Formal-register prepositions with the genitive: aufgrund, infolge, anhand, bezüglich, hinsichtlich, anlässlich, mangels, (an)statt, während, angesichts; dative substitution (wegen dem …) is colloquial and flagged in formal writing.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Aufgrund des schlechten Wetters wurde das Konzert abgesagt.',
+      'Anhand der Daten lässt sich der Trend erklären.',
+      'Während des Sommers reisen wir oft.',
+    ],
+    examplesNegative: ['*Aufgrund dem schlechten Wetter wurde das Konzert abgesagt.'],
+    commonErrors: [
+      'Using dative after these prepositions in formal writing ("*aufgrund dem Wetter").',
+      'Forgetting the -s/-es genitive ending on masculine and neuter singular nouns.',
+      'Overusing wegen in formal texts where aufgrund/infolge fits the register better.',
+    ],
+    prerequisiteKeys: ['de-b1-genitive'],
+  },
+  {
+    key: 'de-b2-konjunktiv-i',
+    kind: 'grammar',
+    name: 'Konjunktiv I (reported speech)',
+    description:
+      'Konjunktiv I (er sage, er habe, er sei) for indirect speech in journalistic and formal registers; substitution by Konjunktiv II when forms coincide with the indicative; indirect questions (ob/W-word) and commands (solle, möge) in reported speech.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Der Minister sagte, er habe keine Zeit.',
+      'Sie behauptet, sie sei krank.',
+      'Er fragte, ob wir kämen, und sagte, wir sollten warten.',
+    ],
+    examplesNegative: ['*Der Minister sagte, er hat keine Zeit. (in formal news writing)'],
+    commonErrors: [
+      'Using the indicative in formal indirect speech.',
+      'Failing to switch to Konjunktiv II when Konjunktiv I would coincide with the indicative ("sie haben" → "sie hätten").',
+      'Backshifting tenses English-style instead of using the subjunctive system.',
+    ],
+    prerequisiteKeys: ['de-b2-konjunktiv-ii'],
+  },
+  {
+    key: 'de-b2-extended-attributes',
+    kind: 'grammar',
+    name: 'Extended participial attributes',
+    description:
+      'Pre-nominal participial constructions ("der von uns gekaufte Wagen") that compress relative clauses into a single noun phrase — common in formal writing.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Der von uns gekaufte Wagen ist teuer.',
+      'Die im Park spielenden Kinder sind laut.',
+    ],
+    examplesNegative: ['*Der gekaufte von uns Wagen ist teuer.'],
+    commonErrors: [
+      'Misordering the modifier elements before the participle.',
+      'Failing to inflect the participle for case, gender, and number.',
+    ],
+    prerequisiteKeys: ['de-b1-relative-pronouns', 'de-b1-participles-as-adjectives'],
+  },
+  {
+    key: 'de-b2-nominalization',
+    kind: 'grammar',
+    name: 'Nominalization and nominal style',
+    description:
+      'Turning verbs and adjectives into nouns (das Lesen, die Verbesserung, das Gute) and converting between verbal and nominal style: beim Lesen = während man liest, zur Verbesserung = um … zu verbessern; capitalization and neuter gender of nominalized infinitives.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Beim Lesen vergesse ich die Zeit.',
+      'Zur Verbesserung der Qualität wurden neue Regeln eingeführt.',
+      'Das Gute an dieser Idee ist die Einfachheit.',
+    ],
+    examplesNegative: ['*das lesen macht Spaß', '*die Lesen'],
+    commonErrors: [
+      'Failing to capitalise the nominalised form ("*das lesen").',
+      'Assigning the wrong gender (nominalised infinitives are always neuter).',
+      'Translating a nominal phrase word-for-word into clumsy verbal style instead of restructuring.',
+    ],
+    prerequisiteKeys: ['de-b1-zu-infinitive'],
+  },
+  {
+    key: 'de-b2-zustandspassiv',
+    kind: 'grammar',
+    name: 'Zustandspassiv (sein-passive)',
+    description:
+      'sein + past participle for the resulting state (Das Fenster ist geöffnet) vs werden + participle for the process (Das Fenster wird geöffnet); past state with war; only sensible for verbs whose result persists.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Das Fenster ist geöffnet — es ist frisch hier.',
+      'Der Tisch war schon gedeckt, als die Gäste kamen.',
+    ],
+    examplesNegative: ['*Das Fenster ist von Maria geöffnet, sieh mal! (agent with state reading)'],
+    commonErrors: [
+      'Using the sein-passive for an ongoing process ("*Das Haus ist gerade gebaut" instead of "wird gerade gebaut").',
+      'Adding an agent phrase to a pure state ("ist geöffnet" resists "von Maria").',
+      'Confusing the Zustandspassiv with the Perfekt of sein-verbs ("er ist gefahren" is active Perfekt, not a passive).',
+    ],
+    prerequisiteKeys: ['de-b1-passive-werden'],
+  },
+  {
+    key: 'de-b2-passive-alternatives',
+    kind: 'grammar',
+    name: 'Passive alternatives and subjectless passives',
+    description:
+      'Alternatives to the werden-passive: man, sich lassen (Das Problem lässt sich lösen), -bar adjectives (lösbar), sein + zu + infinitive (Der Antrag ist bis Freitag einzureichen), bekommen-passive for dative recipients; subjectless passives (Es wird getanzt; Ihm wurde geholfen).',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Das Problem lässt sich leicht lösen.',
+      'Der Antrag ist bis Freitag einzureichen.',
+      'Ihm wurde sofort geholfen.',
+      'Sie bekam das Buch geschenkt.',
+    ],
+    examplesNegative: ['*Er wurde geholfen.', '*Das Problem lässt sich leicht gelöst.'],
+    commonErrors: [
+      'Promoting a dative object to subject ("*Er wurde geholfen" instead of "Ihm wurde geholfen").',
+      'Using a participle after sich lassen ("*lässt sich gelöst" — the pattern takes the infinitive).',
+      'Reading sein + zu as ability only ("ist einzureichen" usually = must be handed in).',
+    ],
+    prerequisiteKeys: ['de-b1-passive-werden', 'de-a2-lassen'],
+  },
+  {
+    key: 'de-b2-subjective-modals',
+    kind: 'grammar',
+    name: 'Subjective (epistemic) modal verbs',
+    description:
+      'Modals as speaker judgments: muss (near-certain deduction), dürfte (probable), könnte/kann (possible), soll (hearsay: reportedly), will (unverified self-claim); past reference with the perfect infinitive (Er muss krank gewesen sein; Sie will nichts gewusst haben).',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Er muss krank gewesen sein — sein Auto stand den ganzen Tag vor dem Haus.',
+      'Das dürfte stimmen.',
+      'Der Zeuge will nichts gesehen haben.',
+      'Das Restaurant soll ausgezeichnet sein.',
+    ],
+    examplesNegative: ['*Er musste krank gewesen sein. (for a present deduction about the past)'],
+    commonErrors: [
+      'Expressing a deduction about the past with a past-tense modal instead of modal + perfect infinitive ("Er muss … gewesen sein", not "*Er musste … sein").',
+      'Confusing hearsay soll with obligation soll and self-claim will with future/intent will.',
+      'Reading dürfte as permission — epistemically it grades probability.',
+    ],
+    prerequisiteKeys: ['de-a2-praeteritum-modals'],
+  },
+  {
+    key: 'de-b2-modal-perfect-word-order',
+    kind: 'grammar',
+    name: 'Modal Perfekt and double-infinitive order',
+    description:
+      'Perfekt of modals uses the infinitive, not a participle (Ich habe kommen müssen); Konjunktiv II past with modals (Er hätte es machen können); in subordinate clauses the finite auxiliary precedes the double infinitive (…, dass er es hätte machen können).',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Ich habe gestern arbeiten müssen.',
+      'Du hättest mich anrufen können!',
+      'Es ärgert mich, dass ich so lange habe warten müssen.',
+    ],
+    examplesNegative: ['*Ich habe gestern arbeiten gemusst.', '*…, dass ich so lange warten müssen habe.'],
+    commonErrors: [
+      'Using the participle gemusst/gekonnt after an infinitive ("*habe arbeiten gemusst").',
+      'Putting the auxiliary last in subordinate clauses with a double infinitive ("*dass ich warten müssen habe" instead of "habe warten müssen").',
+      'Avoiding the construction entirely and losing the counterfactual reading ("du konntest anrufen" ≠ "du hättest anrufen können").',
+    ],
+    prerequisiteKeys: ['de-b1-konjunktiv-ii-past'],
+    // The point IS the cluster order — a single blank cannot test it.
+    clozeUnsuitable: true,
+  },
+  {
+    key: 'de-b2-futur-ii',
+    kind: 'grammar',
+    name: 'Futur II',
+    description:
+      'werden + perfect infinitive for what will be completed by a future point (Bis Montag werde ich den Bericht geschrieben haben) and — more often — for confident assumptions about the past (Er wird den Zug verpasst haben).',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Bis Montag werde ich den Bericht geschrieben haben.',
+      'Sie wird den Zug verpasst haben — deshalb ist sie nicht da.',
+    ],
+    examplesNegative: ['*Bis Montag werde ich den Bericht schreiben haben.', '*Er wird verpasst den Zug haben.'],
+    commonErrors: [
+      'Building the perfect infinitive with the bare infinitive ("*schreiben haben" instead of "geschrieben haben").',
+      'Choosing haben/sein against the verb\'s Perfekt auxiliary ("*Sie wird angekommen haben").',
+      'Missing the conjectural reading and translating it as pure future.',
+    ],
+    prerequisiteKeys: ['de-b1-futur-i'],
+    targetOverride: 15,
+  },
+  {
+    key: 'de-b2-causal-connectors',
+    kind: 'grammar',
+    name: 'Causal relations three ways (weil/da — denn — wegen/aufgrund)',
+    description:
+      'Expressing cause across styles: subordinate weil/da (verb-final), coordinating denn and adverbial deshalb/daher/folglich (main clauses), and nominal wegen/aufgrund + genitive with a nominalized noun (wegen des starken Regens = weil es stark regnete).',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Da die Nachfrage gestiegen ist, wurden die Preise erhöht.',
+      'Wegen des starken Regens fällt das Konzert aus.',
+      'Die Nachfrage stieg, folglich wurden die Preise erhöht.',
+    ],
+    examplesNegative: ['*Wegen es stark regnete, fällt das Konzert aus.', '*Denn es regnete, blieben wir zu Hause.'],
+    commonErrors: [
+      'Putting a full clause after wegen ("*wegen es regnete") instead of a nominal phrase.',
+      'Fronting a denn-clause (denn coordinates and cannot open the sentence pair).',
+      'Failing to convert verb → noun when switching to nominal style ("wegen des Regens", not "*wegen regnen").',
+    ],
+    prerequisiteKeys: ['de-b1-reason-consequence-connectors', 'de-b2-nominalization'],
+  },
+  {
+    key: 'de-b2-temporal-connectors',
+    kind: 'grammar',
+    name: 'Temporal relations: clause vs preposition',
+    description:
+      'Converting temporal clauses to nominal phrases and back: während/bevor/nachdem/seit/bis + clause ↔ während + G, vor/nach/seit/bis zu + D + (nominalized) noun; bei + D for simultaneity (beim Einsteigen = während man einsteigt).',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Nach dem Essen gingen wir spazieren. = Nachdem wir gegessen hatten, gingen wir spazieren.',
+      'Beim Einsteigen bitte die Fahrkarte bereithalten.',
+      'Vor der Abreise müssen wir noch packen.',
+    ],
+    examplesNegative: ['*Nach wir gegessen hatten, gingen wir spazieren.', '*Während dem Konzert. (formal register)'],
+    commonErrors: [
+      'Using a preposition with a full clause ("*nach wir gegessen hatten" — needs nachdem).',
+      'Confusing the conjunction nachdem with the preposition nach.',
+      'Wrong case in the nominal variant (während + genitive in formal style, vor/nach + dative).',
+    ],
+    prerequisiteKeys: ['de-b1-plusquamperfekt-nachdem', 'de-b2-nominalization'],
+  },
+  {
+    key: 'de-b2-conditional-connectors',
+    kind: 'grammar',
+    name: 'Conditional relations: wenn/falls, verb-first, bei + noun',
+    description:
+      'Conditions across styles: wenn/falls clauses, unintroduced verb-first conditionals (Sollten Sie Fragen haben, …), nominal bei + D / im Falle + G (bei schlechtem Wetter = wenn das Wetter schlecht ist), and es sei denn / sonst for exceptions.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Sollten Sie Fragen haben, melden Sie sich jederzeit.',
+      'Bei schlechtem Wetter findet das Fest drinnen statt.',
+      'Beeil dich, sonst verpassen wir den Zug.',
+    ],
+    examplesNegative: ['*Bei das Wetter ist schlecht, bleiben wir hier.', '*Wenn Sie sollten Fragen haben, …'],
+    commonErrors: [
+      'Combining wenn with the verb-first pattern ("*Wenn sollten Sie Fragen haben").',
+      'Putting a clause after bei ("*bei das Wetter ist schlecht").',
+      'Misreading es sei denn ("unless") as "that is".',
+    ],
+    prerequisiteKeys: ['de-b2-konjunktiv-ii'],
+  },
+  {
+    key: 'de-b2-concessive-connectors',
+    kind: 'grammar',
+    name: 'Concessive relations (obwohl — trotzdem — trotz)',
+    description:
+      'Concession across styles: obwohl/obgleich clauses, main-clause trotzdem/dennoch with inversion, nominal trotz + genitive, two-part zwar … aber, and intensified selbst/auch wenn ("even if").',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Trotz des Verbots wurde weiter geraucht.',
+      'Zwar war das Hotel teuer, aber es hat sich gelohnt.',
+      'Selbst wenn du recht hast, solltest du höflicher sein.',
+    ],
+    examplesNegative: ['*Trotz es verboten war, wurde geraucht.', '*Obwohl war das Hotel teuer, …'],
+    commonErrors: [
+      'Putting a clause after trotz ("*trotz es verboten war" — needs obwohl).',
+      'Treating trotzdem as a subordinating conjunction ("*Trotzdem es regnete, …" in standard German).',
+      'Dropping the aber half after zwar.',
+    ],
+    prerequisiteKeys: ['de-b1-subordinate-conjunctions', 'de-b1-genitive'],
+  },
+  {
+    key: 'de-b2-consecutive-connectors',
+    kind: 'grammar',
+    name: 'Consecutive relations (sodass, so … dass, infolgedessen)',
+    description:
+      'Result clauses: sodass (…, sodass wir absagen mussten), split so + adjective … dass (Es war so laut, dass …), main-clause folglich/infolgedessen/demzufolge with inversion, and negative-result zu … als dass + Konjunktiv II.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Es regnete stark, sodass das Spiel abgebrochen wurde.',
+      'Es war so laut, dass ich nichts verstehen konnte.',
+      'Das Problem ist zu komplex, als dass man es schnell lösen könnte.',
+    ],
+    examplesNegative: ['*Es war so laut, sodass ich nichts verstehen konnte.', '*Es regnete stark, sodass wurde das Spiel abgebrochen.'],
+    commonErrors: [
+      'Doubling so with sodass ("*so laut, sodass" — the split pattern takes plain dass).',
+      'V2 order inside the sodass-clause.',
+      'Indicative after als dass (the pattern requires Konjunktiv II).',
+    ],
+    prerequisiteKeys: ['de-b1-subordinate-conjunctions'],
+  },
+  {
+    key: 'de-b2-modal-connectors',
+    kind: 'grammar',
+    name: 'Modal relations: indem, dadurch dass, durch',
+    description:
+      'Expressing means/manner: indem + clause (Man lernt eine Sprache, indem man sie spricht), dadurch, dass … as its correlate variant, nominal durch + accusative (durch tägliches Üben), and negative-manner ohne dass/ohne … zu.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Man lernt eine Sprache, indem man sie täglich spricht.',
+      'Durch tägliches Üben verbessert sich die Aussprache.',
+      'Er verließ den Raum, ohne dass es jemand bemerkte.',
+    ],
+    examplesNegative: ['*Man lernt eine Sprache, indem spricht man sie.', '*Durch man übt täglich, …'],
+    commonErrors: [
+      'V2 order after indem.',
+      'Putting a clause after durch ("*durch man übt").',
+      'Confusing temporal indem (dated) with instrumental indem — modern usage is instrumental.',
+    ],
+    prerequisiteKeys: ['de-b1-statt-ohne-zu', 'de-b2-nominalization'],
+  },
+  {
+    key: 'de-b2-adversative-connectors',
+    kind: 'grammar',
+    name: 'Adversative relations (während, wohingegen, dagegen)',
+    description:
+      'Contrasting two facts: adversative während/wohingegen clauses (Er ist sparsam, während sie gern Geld ausgibt), main-clause dagegen/hingegen/jedoch/allerdings, and nominal im Gegensatz zu + dative.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Er ist sehr sparsam, während sie gern Geld ausgibt.',
+      'Im Gegensatz zu seinem Bruder ist er eher ruhig.',
+      'Die Miete ist hoch; dagegen sind die Nebenkosten günstig.',
+    ],
+    examplesNegative: ['*Im Gegensatz zu sein Bruder ist er ruhig.', '*Er ist sparsam, während sie gibt gern Geld aus.'],
+    commonErrors: [
+      'V2 order in the während-clause.',
+      'Wrong case after im Gegensatz zu (dative required).',
+      'Reading adversative während as temporal "while" only.',
+    ],
+    prerequisiteKeys: ['de-b1-subordinate-conjunctions'],
+  },
+  {
+    key: 'de-b2-dass-equivalents',
+    kind: 'grammar',
+    name: 'dass-clauses and their equivalents',
+    description:
+      'Replacing dass-clauses: zu-infinitive when the subjects are identical (Ich hoffe, dass ich … → Ich hoffe, … zu …), nominal phrases (Ich hoffe auf eine baldige Antwort), and obligatory/optional correlates (es, darauf/damit …, dass).',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Ich hoffe, dich bald wiederzusehen.',
+      'Wir freuen uns darauf, dass ihr uns besucht.',
+      'Ich hoffe auf eine baldige Antwort.',
+    ],
+    examplesNegative: ['*Ich hoffe, dass ich dich bald wiederzusehen.', '*Wir freuen uns, dass ihr uns besucht, darauf.'],
+    commonErrors: [
+      'Mixing dass and the zu-infinitive in one clause ("*dass ich … wiederzusehen").',
+      'Dropping an obligatory correlate ("Wir freuen uns darauf, dass …" — some verbs require da(r)+preposition).',
+      'Using the zu-infinitive when the subjects differ.',
+    ],
+    prerequisiteKeys: ['de-b1-zu-infinitive', 'de-a2-verb-preposition-complements'],
+  },
+  {
+    key: 'de-b2-relatives-advanced',
+    kind: 'grammar',
+    name: 'Advanced relative clauses (was, wo(r)-, wer)',
+    description:
+      'was as relative after alles/etwas/nichts/das and superlatives, and after whole clauses (…, was mich überrascht hat); wo(r) + preposition for clause antecedents; generalizing wer …, (der) … ("whoever"); derjenige, der as heavy antecedent.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Alles, was er sagte, stimmte.',
+      'Sie hat sofort geantwortet, was mich gefreut hat.',
+      'Wer zu spät kommt, muss draußen warten.',
+    ],
+    examplesNegative: ['*Alles, das er sagte, stimmte.', '*Sie hat sofort geantwortet, das mich gefreut hat.'],
+    commonErrors: [
+      'Using das instead of was after alles/etwas/nichts ("*alles, das …").',
+      'Using a das-relative for a whole-clause antecedent ("*…, das mich gefreut hat" for "was …").',
+      'Inserting an unneeded resumptive der after wer when cases match ("Wer zu spät kommt, muss …" needs no der).',
+    ],
+    prerequisiteKeys: ['de-b1-relative-pronouns'],
+  },
+  {
+    key: 'de-b2-noun-verb-collocations',
+    kind: 'grammar',
+    name: 'Noun-verb collocations (Funktionsverbgefüge)',
+    description:
+      'Fixed noun-verb pairs of formal German: eine Entscheidung treffen, zur Verfügung stehen/stellen, in Frage kommen, Bescheid geben, sich Mühe geben, Kritik üben an, eine Rolle spielen — the noun carries the meaning, the verb and its article/preposition are fixed.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Wir müssen bald eine Entscheidung treffen.',
+      'Der Raum steht Ihnen ab Montag zur Verfügung.',
+      'Gib mir bitte Bescheid, wenn du ankommst.',
+    ],
+    examplesNegative: ['*eine Entscheidung machen', '*zur Verfügung sein'],
+    commonErrors: [
+      'Calquing English make/take ("*eine Entscheidung machen", "*einen Fehler tun").',
+      'Swapping the fixed verb ("*zur Verfügung sein" instead of "stehen").',
+      'Changing the fixed article or preposition ("*in der Frage kommen").',
+    ],
+  },
+  {
+    key: 'de-b2-fixed-prepositions',
+    kind: 'grammar',
+    name: 'Nouns and adjectives with fixed prepositions',
+    description:
+      'Nouns and adjectives governing a fixed preposition + case: die Angst vor + D, der Grund für + A, die Antwort auf + A, stolz auf + A, abhängig von + D, zufrieden mit + D; da(r)-correlates introduce dependent clauses (stolz darauf, dass …).',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Sie ist stolz auf ihre Arbeit.',
+      'Es gibt keinen Grund für diese Aufregung.',
+      'Er ist stolz darauf, die Prüfung bestanden zu haben.',
+    ],
+    examplesNegative: ['*Sie ist stolz über ihre Arbeit.', '*die Angst über Spinnen'],
+    commonErrors: [
+      'Transferring the English preposition ("*stolz über", "*abhängig auf").',
+      'Wrong case after the fixed preposition ("*stolz auf ihrer Arbeit").',
+      'Dropping the da(r)-correlate before a dass-clause where the noun/adjective requires it.',
+    ],
+    prerequisiteKeys: ['de-a2-verb-preposition-complements'],
+  },
+  {
+    key: 'de-b2-indefinite-pronouns',
+    kind: 'grammar',
+    name: 'Indefinite pronouns II (irgend-, mancher, sämtliche …)',
+    description:
+      'The extended indefinite system: irgend- compounds (irgendjemand, irgendwo, irgendein-), mancher (declined like dieser), mehrere, einige, sämtliche, beide, and einer/keiner/welche as stand-alone pronouns (Hast du Milch? — Ja, es ist noch welche da).',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Irgendjemand hat für dich angerufen.',
+      'Manche Kollegen arbeiten lieber im Homeoffice.',
+      'Brauchst du einen Stift? — Ich habe keinen.',
+    ],
+    examplesNegative: ['*Ich habe keinen Stift, aber du hast ein.', '*Manche Kollege arbeiten im Homeoffice.'],
+    commonErrors: [
+      'Using the article form instead of the pronoun form ("*du hast ein" instead of "einen/eins").',
+      'Leaving mancher/sämtliche undeclined.',
+      'Missing welche as the partitive pronoun for mass nouns.',
+    ],
+    prerequisiteKeys: ['de-a2-indefinite-pronouns-basic'],
+  },
+  {
+    key: 'de-b2-word-formation',
+    kind: 'grammar',
+    name: 'Word formation: suffixes, prefixes, Fugen-s',
+    description:
+      'Productive derivation: noun suffixes -ung/-heit/-keit/-schaft/-nis, negating prefixes un-/miss-, adjective suffixes -lich/-ig/-isch/-bar/-los/-voll/-frei, adverbial -weise (glücklicherweise), and the linking -s- in compounds (Arbeitszimmer, Liebeslied).',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Die Freundlichkeit der Mitarbeiter ist beeindruckend.',
+      'Glücklicherweise war der Fehler vermeidbar.',
+      'Das Arbeitszimmer ist im ersten Stock.',
+    ],
+    examplesNegative: ['*die Freundlichheit', '*das Arbeitzimmer'],
+    commonErrors: [
+      'Choosing -heit vs -keit wrongly ("*Freundlichheit" — adjectives in -lich/-ig take -keit).',
+      'Dropping the Fugen-s ("*Arbeitzimmer" instead of "Arbeitszimmer").',
+      'Confusing -lich and -ig pairs with distinct meanings.',
+    ],
+  },
+  {
+    key: 'de-b2-mittelfeld-word-order',
+    kind: 'grammar',
+    name: 'Mittelfeld word order (TeKaMoLo, pronouns, nicht)',
+    description:
+      'Ordering inside the verb bracket: pronouns come first (acc before dat for two pronouns), then noun phrases; adverbials default to temporal–causal–modal–local (TeKaMoLo); nicht stands before the element it negates, otherwise late.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Ich habe ihn gestern wegen des Termins kurz im Büro gesehen.',
+      'Sie hat es mir gestern erklärt.',
+    ],
+    examplesNegative: ['*Ich habe gestern ihn im Büro kurz gesehen.', '*Sie hat mir es gestern erklärt.'],
+    commonErrors: [
+      'Placing a full adverbial before an unstressed pronoun ("*gestern ihn").',
+      'Dative-before-accusative with two pronouns ("*mir es" instead of "es mir").',
+      'Rigidly applying TeKaMoLo when focus structure demands another order — the default is a tendency, not law.',
+    ],
+    prerequisiteKeys: ['de-a2-dative-accusative-objects'],
+    // A word-order meta rule: no single blank can test constituent ordering.
+    clozeUnsuitable: true,
+  },
+  {
+    key: 'de-b2-text-reference-words',
+    kind: 'grammar',
+    name: 'Text reference words (Verweiswörter)',
+    description:
+      'Cohesion devices that point across sentences: da(r)-compounds (dabei, dafür, damit, darauf) picking up a previous clause, dies/das as sentence anaphors, solch-/derartig for kind reference, and deshalb/dadurch as cause links in running text.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Die Firma will Stellen abbauen. Dagegen protestieren die Mitarbeiter.',
+      'Er hat sofort zugesagt. Das hat mich überrascht.',
+      'Wir mussten umplanen; dabei half uns die neue Software.',
+    ],
+    examplesNegative: ['*Die Firma will Stellen abbauen. Gegen es protestieren die Mitarbeiter.'],
+    commonErrors: [
+      'Using preposition + es instead of the da(r)-compound ("*gegen es" instead of "dagegen").',
+      'Ambiguous das without a clear antecedent clause.',
+      'Repeating the full noun phrase where a reference word makes the text idiomatic.',
+    ],
+    prerequisiteKeys: ['de-a2-verb-preposition-complements'],
+    // Several reference words fit a bare blank; translation carries the point.
+    clozeUnsuitable: true,
+    targetOverride: 15,
+  },
+  {
+    key: 'de-b2-modal-particles-advanced',
+    kind: 'grammar',
+    name: 'Modal particles II (halt, eben, wohl, schon, bloß)',
+    description:
+      'Advanced particle meanings: halt/eben mark resigned acceptance (Das ist halt so), wohl a supposition (Er ist wohl schon weg), schon concessive reassurance (Das wird schon klappen), bloß/nur urgency in warnings and wishes (Sag das bloß nicht!), etwa alarmed questions.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Das ist halt so — da kann man nichts machen.',
+      'Er ist wohl schon nach Hause gegangen.',
+      'Das wird schon klappen!',
+    ],
+    examplesNegative: ['*Halt das ist so.'],
+    commonErrors: [
+      'Fronting the particle ("*Halt das ist so").',
+      'Reading wohl as "well" instead of supposition.',
+      'Confusing warning bloß with plain nur.',
+    ],
+    prerequisiteKeys: ['de-b1-modal-particles-basic'],
+    clozeUnsuitable: true,
+    targetOverride: 12,
+  },
+
+  // ---------------------------------------------------------------------------
+  // Vocab umbrellas — kind: 'vocab'
+  // ---------------------------------------------------------------------------
+  {
+    key: 'de-a2-housing-vocab',
+    kind: 'vocab',
+    name: 'Housing and home vocabulary (A2)',
+    description:
+      'Everyday vocabulary for housing, rooms, furniture, and household chores typical of A2 communication.',
+    cefrLevel: A2,
+    language: DE,
+    examplesPositive: ['die Wohnung', 'der Kühlschrank'],
+    examplesNegative: ['*das Wohnung'],
+    commonErrors: [
+      'Treating compound nouns as separate words ("*Kühl Schrank").',
+      'Confusing der Stuhl (chair) with der Sessel (armchair).',
+    ],
+  },
+  {
+    key: 'de-b1-environment-vocab',
+    kind: 'vocab',
+    name: 'Environment and society vocabulary (B1)',
+    description:
+      'Vocabulary covering environment, society, work, and current-affairs topics typical of B1 discussions.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: ['die Umwelt', 'der Klimawandel'],
+    examplesNegative: ['*das Umwelt'],
+    commonErrors: [
+      'Calquing English ("*Klima Wechsel" instead of "Klimawandel").',
+      'Confusing "die Umwelt" (the environment) with "die Umgebung" (surroundings).',
+    ],
+  },
+  {
+    key: 'de-b2-academic-noun-vocab',
+    kind: 'vocab',
+    name: 'Academic abstract noun vocabulary (B2)',
+    description:
+      'Abstract and academic-register nouns for argumentation, analysis, and essay writing typical of B2 work.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: ['die Nachhaltigkeit', 'die Entwicklung'],
+    examplesNegative: ['*der Nachhaltigkeit'],
+    commonErrors: [
+      'Mistakes on -ung / -heit / -keit gender (all feminine).',
+      'Calquing English derived nouns instead of using the standard German equivalent.',
+    ],
+  },
 ];
 
 export { deCurriculum };
