@@ -113,8 +113,17 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * demonstratives approved 0/7 cloze with 6/7 flagged ambiguous (este/ese/aquel all
  * fit a bare blank) — marked clozeUnsuitable, routing it to translation only. The
  * bump clears low-yield suppression on both starved cells so they re-run.
+ *
+ * `2026-07-12a`: clears low-yield suppression after the generation-prompt fix in
+ * PR #565 (`generate@2026-07-12`). Two ES cloze cells sat at 0 approved all-time —
+ * es-a1-quantifiers-muy-mucho (4/4 rejected context-spoils-answer) and
+ * es-a2-present-irregular-stem-changes (0/5 cloze; the 07-11b fix repaired only its
+ * conjugation/translation cells). Root cause was the cloze `context` field spoiling
+ * the answer plus register-inappropriate frequency-band seeds — both now fixed
+ * generator-side (context field removed + hard schema guard; seed self-filters
+ * register/level). This bump re-runs both starved cloze cells on the fixed prompt.
  */
-export const CURRICULUM_VERSION_ES = '2026-07-11b';
+export const CURRICULUM_VERSION_ES = '2026-07-12a';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
