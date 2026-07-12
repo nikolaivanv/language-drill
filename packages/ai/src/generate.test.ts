@@ -198,6 +198,30 @@ describe("parseGeneratedClozeDraft glossEn", () => {
       ),
     ).toThrow(/glossEn/);
   });
+
+  it("no longer offers a context field on the cloze tool schema (anti-spoil, 2026-07-12)", () => {
+    const props = CLOZE_GENERATION_TOOL.input_schema.properties as Record<
+      string,
+      unknown
+    >;
+    expect(props.context).toBeUndefined();
+    // glossEn description must not dangle a reference to the removed field.
+    expect((props.glossEn as { description: string }).description).not.toContain(
+      "`context`",
+    );
+  });
+
+  it("locks additionalProperties:false so the model cannot emit context (2026-07-12)", () => {
+    expect(CLOZE_GENERATION_TOOL.input_schema.additionalProperties).toBe(false);
+  });
+
+  it("still parses a stray context input for back-compat (stored rows)", () => {
+    const content = parseGeneratedClozeDraft(
+      { ...validClozeInput, context: "legacy framing" },
+      baseSpec,
+    );
+    expect(content.context).toBe("legacy framing");
+  });
 });
 
 // ---------------------------------------------------------------------------

@@ -133,6 +133,10 @@ describe("buildGenerationSystemPrompt", () => {
     // concrete pattern-match anchors, not paraphrased advice.
     expect(prompt).toContain("Sınıfta sekiz ___ var");
     expect(prompt).toContain("Vowel harmony: front vowel (e) requires -ler suffix");
+    // 2026-07-12: cloze `context` field removed — the template must no longer
+    // invite the model to populate it.
+    expect(prompt).not.toContain("and `context` fields");
+    expect(prompt).not.toContain("`sentence`, `context`");
   });
 
   it("includes the TR indefinite-noun-compound cloze format rule (2026-06-23)", async () => {
@@ -288,7 +292,10 @@ describe("buildGenerationSystemPrompt", () => {
     // scenario directive in the per-draft user prompt (replacing the generic
     // word/substitution framing). (2026-07-09 added the paraphrase guidance
     // section + constraint-kind rotation.)
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-10");
+    // Bumped 2026-07-12 — cloze `context` field dropped from the tool schema
+    // (anti-spoil) and the injected seed self-filters register-specific /
+    // above-level frequency words.
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-12");
     // Tasks 7–9: pin the new guardrail phrases in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "every content word MUST be high-frequency everyday vocabulary at or below CEFR {{cefrLevel}}",
@@ -705,7 +712,10 @@ describe("buildGenerationUserPrompt", () => {
     expect(seeded).toContain('Build this exercise around the word "viajar".');
     // Loose: names the grammar point and offers a similar-frequency substitute.
     expect(seeded).toContain(baseInputs.grammarPoint.name);
-    expect(seeded).toContain("a related content word of similar frequency");
+    expect(seeded).toContain("of similar frequency");
+    // 2026-07-12: register/level self-filter for off-band frequency seeds.
+    expect(seeded).toContain("register-specific");
+    expect(seeded).toContain(baseInputs.cefrLevel);
   });
 
   it("omits the seed line — byte-identical to the unseeded output — when seed is null/absent", () => {
