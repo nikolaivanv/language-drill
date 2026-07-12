@@ -1026,6 +1026,544 @@ const deCurriculum: readonly GrammarPoint[] = [
     // several orders are contextually licensed. Translation carries the point.
     clozeUnsuitable: true,
   },
+  // ---------------------------------------------------------------------------
+  // B1 (Menschen B1 + Hammer audit; 25 points)
+  // ---------------------------------------------------------------------------
+  {
+    key: 'de-b1-praeteritum',
+    kind: 'grammar',
+    name: 'Präteritum (full paradigm)',
+    description:
+      'Simple past of weak verbs (-te-: machte, arbeitete), strong verbs with ablaut (kam, ging, schrieb) and mixed verbs (brachte, wusste, dachte); no ending in 1sg/3sg. The written-narrative tense, while conversation prefers the Perfekt.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Er kam spät nach Hause und sagte kein Wort.',
+      'Wir arbeiteten damals in einer kleinen Firma.',
+    ],
+    examplesNegative: ['*Er kommte spät nach Hause.', '*Ich kamte zu spät.'],
+    commonErrors: [
+      'Regularizing strong verbs ("*er kommte", "*sie gehte" instead of "er kam", "sie ging").',
+      'Adding a 3sg -t ("*er kamt" instead of "er kam").',
+      'Mixing ablaut and -te ("*ich kamte", "*er schriebte").',
+      'Using -te forms without the linking -e- after t/d stems ("*er arbeitte").',
+    ],
+    prerequisiteKeys: ['de-a2-praeteritum-modals'],
+    coverageSpec: {
+      axes: [{ name: 'person', floors: { '1sg': 5, '3sg': 5, '3pl': 5 } }],
+    },
+    conjugationSuitable: true,
+  },
+  {
+    key: 'de-b1-relative-pronouns',
+    kind: 'grammar',
+    name: 'Relative clauses: dative, genitive and with prepositions',
+    description:
+      'Relative pronouns in the dative (dem/der/denen), the genitive (dessen/deren) and after prepositions (die Stadt, in der ich wohne): gender/number from the antecedent, case from the role inside the clause; the preposition moves in front of the pronoun.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Der Freund, dem ich oft helfe, wohnt in Köln.',
+      'Die Stadt, in der ich wohne, ist sehr grün.',
+      'Der Mann, dessen Auto vor der Tür steht, ist unser Nachbar.',
+    ],
+    examplesNegative: ['*Die Stadt, ich wohne in der, ist grün.', '*Der Mann, deren Auto dort steht, ist unser Nachbar.'],
+    commonErrors: [
+      'Stranding the preposition English-style ("*die Stadt, die ich wohne in").',
+      'Choosing dessen/deren by the possessed noun instead of the antecedent ("*der Mann, deren Auto …").',
+      'Using the dative plural denen incorrectly as a singular form.',
+    ],
+    prerequisiteKeys: ['de-a2-relative-clauses-nom-acc'],
+  },
+  {
+    key: 'de-b1-dass-clause-perfekt',
+    kind: 'grammar',
+    name: 'dass-clauses with the Perfekt',
+    description:
+      'Embedding a Perfekt clause under "dass" so that both the past participle and the auxiliary go to the end, in that order.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Ich glaube, dass er das Buch gelesen hat.',
+      'Sie sagt, dass wir zu spät gekommen sind.',
+    ],
+    examplesNegative: ['*Ich glaube, dass er hat das Buch gelesen.'],
+    commonErrors: [
+      'Keeping V2 order inside the dass-clause.',
+      'Reversing the auxiliary–participle order ("*hat gelesen" final instead of "gelesen hat").',
+    ],
+    prerequisiteKeys: ['de-a2-perfekt-with-haben'],
+  },
+  {
+    key: 'de-b1-two-way-prepositions',
+    kind: 'grammar',
+    name: 'Placement verbs: stellen/stehen, legen/liegen, hängen',
+    description:
+      'Verb pairs with two-way prepositions: transitive placement verbs take the accusative (stellen, legen, setzen, hängen, stecken — Ich stelle die Vase auf den Tisch), their stative partners take the dative (stehen, liegen, sitzen, hängen — Die Vase steht auf dem Tisch).',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Ich stelle die Vase auf den Tisch. — Die Vase steht auf dem Tisch.',
+      'Er legt das Buch auf das Regal. — Das Buch liegt auf dem Regal.',
+    ],
+    examplesNegative: ['*Ich stelle die Vase auf dem Tisch.', '*Die Vase steht auf den Tisch.'],
+    commonErrors: [
+      'Choosing the case by the noun instead of by placement-vs-state.',
+      'Using legen/stellen interchangeably regardless of the object\'s orientation (upright → stellen, flat → legen).',
+      'Using the transitive verb intransitively ("*Das Buch legt auf dem Tisch").',
+    ],
+    prerequisiteKeys: ['de-a2-two-way-prepositions-core'],
+  },
+  {
+    key: 'de-b1-passive-werden',
+    kind: 'grammar',
+    name: 'Passive: past tenses and with modals',
+    description:
+      'Passive beyond the present: Präteritum (wurde eingeführt), Perfekt with worden (ist eingeführt worden), and with modals (muss ausgefüllt werden); agent with von (people/causers), durch (means/intermediary).',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Der Brief wurde gestern geschrieben.',
+      'Das Gesetz ist 2002 eingeführt worden.',
+      'Das Formular muss vollständig ausgefüllt werden.',
+    ],
+    examplesNegative: ['*Das Gesetz ist eingeführt geworden.', '*Das Formular muss ausgefüllt sein werden.'],
+    commonErrors: [
+      'Using geworden instead of worden in the passive Perfekt ("*ist eingeführt geworden").',
+      'Ordering the verb cluster with the modal wrongly ("*muss werden ausgefüllt").',
+      'Using bei or mit for the agent instead of von/durch.',
+    ],
+    prerequisiteKeys: ['de-a2-passive-present'],
+  },
+  {
+    key: 'de-b1-subordinate-conjunctions',
+    kind: 'grammar',
+    name: 'Subordinating conjunctions and verb-final order',
+    description:
+      'Verb-final subordinate clauses with obwohl (vs main-clause trotzdem), da, während, bevor, falls, sobald, solange, seitdem and bis; the comma is obligatory, and a fronted subordinate clause counts as position 1 (verb next).',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Obwohl es regnet, gehen wir spazieren.',
+      'Ich rufe dich an, sobald ich zu Hause bin.',
+      'Es regnet, trotzdem gehen wir spazieren.',
+    ],
+    examplesNegative: ['*Ich bleibe zu Hause, obwohl ich bin krank.', '*Obwohl es regnet, wir gehen spazieren.'],
+    commonErrors: [
+      'Keeping V2 order after the conjunction ("*obwohl ich bin krank").',
+      'Failing to invert after a fronted subordinate clause ("*Obwohl es regnet, wir gehen …").',
+      'Confusing subordinating obwohl with adverbial trotzdem ("*Trotzdem es regnet, gehen wir …").',
+      'Confusing als (single past event) with wenn (repeated or future).',
+    ],
+    prerequisiteKeys: ['de-a2-weil-deshalb'],
+    sentenceConstructionSuitable: true,
+  },
+  {
+    key: 'de-b1-plusquamperfekt-nachdem',
+    kind: 'grammar',
+    name: 'Plusquamperfekt and nachdem',
+    description:
+      'Past-before-past with hatte/war + participle (Ich hatte schon gegessen); nachdem enforces the tense sequence Plusquamperfekt in the nachdem-clause + Präteritum/Perfekt in the main clause.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Nachdem wir gegessen hatten, gingen wir spazieren.',
+      'Ich war schon eingeschlafen, als du angerufen hast.',
+    ],
+    examplesNegative: ['*Nachdem wir aßen, gingen wir spazieren.', '*Nachdem wir gegessen hatten, waren wir spazieren gegangen.'],
+    commonErrors: [
+      'Using the same tense in both clauses with nachdem ("*Nachdem wir aßen, gingen wir …").',
+      'Choosing hatte vs war against the verb\'s Perfekt auxiliary ("*Ich hatte eingeschlafen").',
+      'Overusing the Plusquamperfekt for simple past events without anteriority.',
+    ],
+    prerequisiteKeys: ['de-a2-perfekt-with-sein', 'de-b1-praeteritum'],
+    sentenceConstructionSuitable: true,
+  },
+  {
+    key: 'de-b1-futur-i',
+    kind: 'grammar',
+    name: 'Futur I',
+    description:
+      'werden + infinitive for predictions, promises and resolutions (Ich werde dich nie vergessen); plain present + time adverb for scheduled future events (Morgen fahre ich nach Köln); werden + wohl expresses an assumption.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Ich werde dich nie vergessen.',
+      'Nächstes Jahr werden wir ein Haus bauen.',
+      'Er wird wohl noch im Büro sein.',
+    ],
+    examplesNegative: ['*Ich werde fahre morgen nach Köln.', '*Morgen ich werde nach Köln fahren.'],
+    commonErrors: [
+      'Conjugating both verbs ("*ich werde fahre").',
+      'Forcing Futur I where German idiomatically uses the present ("Morgen fahre ich …" is the neutral choice).',
+      'Using wollen as a future auxiliary by English "will" interference ("*Ich will morgen arbeiten" for a plain prediction).',
+    ],
+    prerequisiteKeys: ['de-a1-present-irregular'],
+  },
+  {
+    key: 'de-b1-konjunktiv-ii-past',
+    kind: 'grammar',
+    name: 'Konjunktiv II past (hätte/wäre + participle)',
+    description:
+      'Counterfactual past: hätte/wäre + past participle for missed opportunities, regrets and unreal past conditions (Wenn ich das gewusst hätte, wäre ich früher gekommen); auxiliary choice mirrors the Perfekt.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Wenn ich das gewusst hätte, wäre ich früher gekommen.',
+      'Ich hätte dich fast nicht erkannt!',
+      'An deiner Stelle hätte ich anders reagiert.',
+    ],
+    examplesNegative: ['*Wenn ich das wusste, wäre ich früher gekommen.', '*Ich hätte früher gekommen.'],
+    commonErrors: [
+      'Using the indicative Präteritum in the wenn-clause ("*Wenn ich das wusste …").',
+      'Choosing hätte for sein-verbs ("*ich hätte gekommen" instead of "ich wäre gekommen").',
+      'Building a würde-form with a participle ("*ich würde gekommen").',
+    ],
+    prerequisiteKeys: ['de-a2-konjunktiv-ii-polite'],
+    sentenceConstructionSuitable: true,
+  },
+  {
+    key: 'de-b1-zu-infinitive',
+    kind: 'grammar',
+    name: 'Infinitive with zu',
+    description:
+      'zu-infinitive clauses after verbs (versuchen, vergessen, anfangen), nouns (Lust, Zeit, Angst) and adjectives (wichtig, schwierig); zu splits separable verbs (anzurufen); nicht/nur brauchen + zu; bare infinitive stays after modals and gehen/sehen/hören/lassen.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Ich habe vergessen, dich anzurufen.',
+      'Es ist wichtig, jeden Tag zu üben.',
+      'Du brauchst nicht zu kommen.',
+    ],
+    examplesNegative: ['*Ich habe vergessen, dich zu anrufen.', '*Ich muss zu arbeiten.'],
+    commonErrors: [
+      'Placing zu before instead of inside a separable verb ("*zu anrufen" for "anzurufen").',
+      'Adding zu after modals ("*Ich muss zu arbeiten").',
+      'Using an English gerund pattern instead of the zu-infinitive ("*Ich habe Lust schwimmend").',
+    ],
+    prerequisiteKeys: ['de-a2-separable-prefix-verbs'],
+  },
+  {
+    key: 'de-b1-um-zu-damit',
+    kind: 'grammar',
+    name: 'Purpose: um … zu vs damit',
+    description:
+      'Purpose clauses: um … zu + infinitive when the subjects are identical (Ich lerne Deutsch, um in Berlin zu arbeiten), damit + full clause when they differ (…, damit meine Kinder dort studieren können).',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Ich lerne Deutsch, um in Berlin zu arbeiten.',
+      'Sie erklärt es langsam, damit alle sie verstehen.',
+    ],
+    examplesNegative: ['*Ich lerne Deutsch, um meine Kinder in Berlin arbeiten.', '*Ich lerne Deutsch, damit ich in Berlin zu arbeiten.'],
+    commonErrors: [
+      'Using um … zu with different subjects ("*…, um meine Kinder dort studieren").',
+      'Putting zu into a damit-clause ("*damit ich zu arbeiten").',
+      'Using für + infinitive by English interference ("*für zu arbeiten").',
+    ],
+    prerequisiteKeys: ['de-b1-zu-infinitive'],
+    sentenceConstructionSuitable: true,
+  },
+  {
+    key: 'de-b1-statt-ohne-zu',
+    kind: 'grammar',
+    name: '(an)statt/ohne … zu and (an)statt/ohne dass',
+    description:
+      'Infinitive clauses (an)statt … zu ("instead of doing") and ohne … zu ("without doing") with identical subjects; (an)statt dass / ohne dass with a full clause when the subjects differ.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Er ging, ohne ein Wort zu sagen.',
+      'Statt zu helfen, schaute er nur zu.',
+      'Sie half mir, ohne dass ich fragen musste.',
+    ],
+    examplesNegative: ['*Er ging ohne zu sagen ein Wort.', '*Er ging, ohne sagen ein Wort.'],
+    commonErrors: [
+      'Calquing the English gerund ("*ohne sagend").',
+      'Word order inside the infinitive clause — the zu-infinitive must be final ("*ohne zu sagen ein Wort").',
+      'Using ohne … zu when the subjects differ (needs ohne dass).',
+    ],
+    prerequisiteKeys: ['de-b1-zu-infinitive'],
+  },
+  {
+    key: 'de-b1-two-part-conjunctions',
+    kind: 'grammar',
+    name: 'Two-part conjunctions',
+    description:
+      'Paired connectors: nicht nur … sondern auch, sowohl … als auch, weder … noch (negative without nicht), entweder … oder, zwar … aber, je … desto/umso (+ comparative; je-clause verb-final, desto-clause with inversion).',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Sie spricht nicht nur Spanisch, sondern auch Türkisch.',
+      'Je mehr ich lerne, desto besser verstehe ich die Grammatik.',
+      'Er isst weder Fleisch noch Fisch.',
+    ],
+    examplesNegative: ['*Er isst nicht weder Fleisch noch Fisch.', '*Je mehr ich lerne, desto ich verstehe besser.'],
+    commonErrors: [
+      'Adding nicht to weder … noch ("*isst nicht weder …").',
+      'Wrong word order after desto — comparative + verb + subject ("*desto ich verstehe besser").',
+      'Mixing the pairs ("*sowohl … oder", "*entweder … noch").',
+    ],
+    prerequisiteKeys: ['de-a2-nicht-sondern'],
+    // Bipartite constructions leak the blank: the visible half identifies the
+    // hidden half, so a cloze cell only tests recall of a fixed collocation.
+    clozeUnsuitable: true,
+  },
+  {
+    key: 'de-b1-genitive',
+    kind: 'grammar',
+    name: 'Genitive case',
+    description:
+      'Genitive for possession/attribution: des/der/des/der + -(e)s on masculine and neuter nouns (der Titel des Buches), adjective ending -en, proper-name -s (Marias Auto); everyday genitive prepositions trotz, wegen, innerhalb, außerhalb; von-paraphrase in casual speech.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Der Titel des Buches gefällt mir.',
+      'Trotz des schlechten Wetters gingen wir spazieren.',
+      'Das ist Marias Auto.',
+    ],
+    examplesNegative: ['*Der Titel des Buch gefällt mir.', '*das Auto von des Mannes'],
+    commonErrors: [
+      'Dropping the -(e)s on masculine/neuter nouns ("*des Buch", "*des Mann").',
+      'Using dative after wegen/trotz in formal writing ("*wegen dem Regen" — colloquial only).',
+      'Stacking von onto a genitive ("*von des Mannes").',
+      'Using an apostrophe in proper-name genitives ("*Maria\'s Auto" — German writes "Marias Auto").',
+    ],
+    prerequisiteKeys: ['de-a2-adjective-declension-definite'],
+  },
+  {
+    key: 'de-b1-n-declension',
+    kind: 'grammar',
+    name: 'n-declension (weak masculine nouns)',
+    description:
+      'Weak masculines (der Junge, Kollege, Student, Herr, Mensch, Nachbar, Name) take -(e)n in every case except the nominative singular: mit dem Kollegen, den Studenten, des Namens.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Ich habe den neuen Kollegen gefragt.',
+      'Kennst du Herrn Müller?',
+      'Der Name des Studenten fehlt auf der Liste.',
+    ],
+    examplesNegative: ['*Ich habe den neuen Kollege gefragt.', '*Kennst du Herr Müller? (as object)'],
+    commonErrors: [
+      'Leaving the noun bare outside the nominative ("*den Kollege", "*mit dem Student").',
+      'Forgetting Herrn in oblique cases ("*für Herr Müller").',
+      'Over-applying -n to regular masculines ("*den Tischen" in the singular).',
+    ],
+    prerequisiteKeys: ['de-a1-dative'],
+  },
+  {
+    key: 'de-b1-adjectives-as-nouns',
+    kind: 'grammar',
+    name: 'Adjectives as nouns',
+    description:
+      'Nominalized adjectives and participles keep adjective declension but are capitalized: der/die Bekannte vs ein Bekannter, die Deutschen, das Wichtigste; neuter abstracts after etwas/nichts/viel take -es (etwas Neues, nichts Besonderes).',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Ein Bekannter von mir wohnt in Wien.',
+      'Gibt es etwas Neues?',
+      'Das Wichtigste kommt zum Schluss.',
+    ],
+    examplesNegative: ['*Ein Bekannte von mir wohnt in Wien.', '*etwas neues'],
+    commonErrors: [
+      'Freezing one form instead of declining ("*ein Bekannte", "*die Deutsche" for the plural).',
+      'Lowercasing the nominalized adjective ("*etwas neues").',
+      'Missing -es after etwas/nichts ("*etwas Neue").',
+    ],
+    prerequisiteKeys: ['de-a2-adjective-declension-definite'],
+  },
+  {
+    key: 'de-b1-participles-as-adjectives',
+    kind: 'grammar',
+    name: 'Participles as adjectives',
+    description:
+      'Partizip I (infinitive + -d: die lachenden Kinder — ongoing) and Partizip II (das gekochte Ei — completed/passive) used attributively with regular adjective endings.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Die lachenden Kinder spielen im Hof.',
+      'Ich nehme ein weich gekochtes Ei.',
+      'Der Kurs bietet faszinierende Einblicke.',
+    ],
+    examplesNegative: ['*die lachende Kinder', '*das kochende Ei (meaning a boiled egg)'],
+    commonErrors: [
+      'Skipping the declension ending on the participle ("*die lachende Kinder").',
+      'Using Partizip I where the meaning is completed/passive ("*das kochende Ei" for a boiled egg).',
+      'Building Partizip I from the stem instead of the infinitive ("*lachend-" is correct, "*lachtend" is not).',
+    ],
+    prerequisiteKeys: ['de-a2-past-participle-formation', 'de-a2-adjective-declension-definite'],
+  },
+  {
+    key: 'de-b1-comparison-attributive',
+    kind: 'grammar',
+    name: 'Attributive comparatives/superlatives + declension after quantifiers',
+    description:
+      'Declined comparative and superlative attributes (ein besseres Angebot, der schönste Tag, mit größerem Interesse) and adjective declension after quantifiers: weak -en after alle, strong endings after viele/einige/mehrere/wenige (alle guten Freunde vs viele gute Freunde).',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Wir haben ein besseres Angebot bekommen.',
+      'Das war der schönste Tag des Jahres.',
+      'Viele gute Freunde haben geholfen — alle guten Ideen kamen von ihnen.',
+    ],
+    examplesNegative: ['*ein besser Angebot', '*alle gute Freunde'],
+    commonErrors: [
+      'Leaving the comparative undeclined in attributive position ("*ein besser Angebot").',
+      'Using am -sten attributively ("*der am schönsten Tag" instead of "der schönste Tag").',
+      'Strong endings after alle ("*alle gute Freunde") or weak after viele ("*viele guten Freunde" in standard usage).',
+    ],
+    prerequisiteKeys: ['de-a2-comparison', 'de-a2-adjective-declension-definite'],
+  },
+  {
+    key: 'de-b1-reason-consequence-connectors',
+    kind: 'grammar',
+    name: 'Consequence and reason adverbs (darum, deswegen, nämlich …)',
+    description:
+      'Consequence adverbs darum/deswegen/deshalb/daher/aus diesem Grund occupy position 1 with inversion; nämlich gives a reason and never stands first (Ich bleibe zu Hause, ich bin nämlich krank); contrast with weil/da clauses.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Ich war krank, deswegen bin ich zu Hause geblieben.',
+      'Ich bleibe zu Hause, ich bin nämlich krank.',
+      'Aus diesem Grund haben wir den Termin verschoben.',
+    ],
+    examplesNegative: ['*Nämlich ich bin krank.', '*Deswegen ich bin zu Hause geblieben.'],
+    commonErrors: [
+      'Fronting nämlich ("*Nämlich ich bin krank").',
+      'Failing to invert after darum/deswegen/daher.',
+      'Treating nämlich as "namely" only and missing its because-reading.',
+    ],
+    prerequisiteKeys: ['de-a2-weil-deshalb'],
+  },
+  {
+    key: 'de-b1-es-expressions',
+    kind: 'grammar',
+    name: 'Expressions with es',
+    description:
+      'es as impersonal subject (es regnet, es ist spät, wie geht es dir?), fixed expressions (es tut mir leid, es gibt), and placeholder es for a following clause (Es freut mich, dass du kommst), which disappears when the clause is fronted.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Es regnet schon den ganzen Tag.',
+      'Es freut mich, dass du kommst.',
+      'Dass du kommst, freut mich.',
+    ],
+    examplesNegative: ['*Dass du kommst, es freut mich.', '*Mir tut leid.'],
+    commonErrors: [
+      'Keeping the placeholder es after fronting the clause ("*Dass du kommst, es freut mich").',
+      'Dropping es from fixed impersonal expressions ("*Mir tut leid" instead of "Es tut mir leid").',
+      'Calquing English "it" for weather with another pronoun.',
+    ],
+  },
+  {
+    key: 'de-b1-modal-particles-basic',
+    kind: 'grammar',
+    name: 'Modal particles I (denn, doch, eigentlich, ja, mal)',
+    description:
+      'Core spoken-German particles: denn softens questions (Was machst du denn?), doch marks contradiction or urging (Komm doch mit!), eigentlich adds a casual "by the way", ja signals shared knowledge (Das ist ja teuer!), mal casualizes requests (Guck mal!).',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Was machst du denn hier?',
+      'Komm doch mit!',
+      'Das ist ja interessant!',
+    ],
+    examplesNegative: ['*Denn was machst du hier?'],
+    commonErrors: [
+      'Fronting the particle ("*Denn was machst du?" — particles live in the Mittelfeld).',
+      'Using denn outside questions in its particle sense.',
+      'Omitting particles entirely, which makes requests and questions sound abrupt.',
+    ],
+    // Several particles are licensed in most slots, so a bare blank is
+    // unrecoverable; translation + theory carry the point.
+    clozeUnsuitable: true,
+    targetOverride: 15,
+  },
+  {
+    key: 'de-b1-dative-reflexive-body',
+    kind: 'grammar',
+    name: 'Body parts: definite article + dative (reflexive)',
+    description:
+      'With body parts and clothing German uses the definite article plus a dative (reflexive) pronoun instead of a possessive: Ich wasche mir die Hände; Er zieht sich die Jacke an; Sie hat ihm die Haare geschnitten.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Ich wasche mir die Hände.',
+      'Er zieht sich die Schuhe an.',
+      'Die Mutter putzt dem Kind die Nase.',
+    ],
+    examplesNegative: ['*Ich wasche meine Hände.', '*Er zieht seine Schuhe sich an.'],
+    commonErrors: [
+      'Using the possessive by English interference ("*Ich wasche meine Hände" — grammatical but unidiomatic; the target pattern is "mir die Hände").',
+      'Choosing the accusative reflexive instead of the dative ("*Ich wasche mich die Hände").',
+    ],
+    prerequisiteKeys: ['de-a2-reflexive-verbs'],
+    targetOverride: 15,
+  },
+  {
+    key: 'de-b1-hin-her',
+    kind: 'grammar',
+    name: 'Directional adverbs hin and her',
+    description:
+      'hin = away from the speaker, her = toward the speaker; compounds with prepositions (hinein/herein, hinaus/heraus, hinauf/herunter; colloquial rein/raus/runter) and as separable prefixes; split questions Wo … hin? / Wo … her?.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Komm herein!',
+      'Er ging die Treppe hinauf.',
+      'Wo kommst du her? — Und wo gehst du hin?',
+    ],
+    examplesNegative: ['*Geh herein! (speaker is outside)', '*Komm hinein! (speaker is inside)'],
+    commonErrors: [
+      'Swapping the perspective — hin with motion toward the speaker and her with motion away.',
+      'Dropping hin/her where the verb needs a direction ("*Er ging die Treppe" without hinauf/hinunter).',
+      'Treating rein/raus as formal register (they are colloquial variants).',
+    ],
+    prerequisiteKeys: ['de-a2-separable-prefix-verbs'],
+  },
+  {
+    key: 'de-b1-schon-noch-erst',
+    kind: 'grammar',
+    name: 'schon, noch, erst',
+    description:
+      'The time-scalar triad: schon = already/earlier than expected, noch = still (noch nicht = not yet, nicht mehr = no longer), erst = only/not until (Er kommt erst um zehn); erst counts time where nur counts amounts.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Bist du schon fertig? — Nein, noch nicht.',
+      'Er kommt erst um zehn Uhr.',
+      'Sie wohnt nicht mehr hier.',
+    ],
+    examplesNegative: ['*Er kommt nur um zehn Uhr. (meaning "not until ten")', '*Ich bin noch nicht mehr fertig.'],
+    commonErrors: [
+      'Using nur for "not until" ("*Er kommt nur um zehn" instead of "erst um zehn").',
+      'Confusing noch nicht (not yet) with nicht mehr (no longer).',
+      'Dropping schon/noch and losing the expectation contrast the sentence needs.',
+    ],
+    targetOverride: 15,
+  },
+  {
+    key: 'de-b1-progressive-equivalents',
+    kind: 'grammar',
+    name: 'Expressing the English progressive',
+    description:
+      'German has no progressive tense; ongoing actions use gerade (Ich lese gerade), (gerade) dabei sein, etwas zu tun, or beim + nominalized infinitive (Ich bin beim Kochen); the plain present otherwise covers both English simple and progressive.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Ich lese gerade ein gutes Buch.',
+      'Sie ist gerade dabei, die Koffer zu packen.',
+      'Ich bin beim Kochen.',
+    ],
+    examplesNegative: ['*Ich bin lesend ein Buch.', '*Ich bin lesen.'],
+    commonErrors: [
+      'Calquing English be + -ing with sein + participle ("*Ich bin lesend").',
+      'Overusing the am-progressive in formal writing ("Ich bin am Lesen" is colloquial/regional).',
+      'Missing gerade where the ongoing nuance matters.',
+    ],
+    targetOverride: 15,
+  },
 ];
 
 export { deCurriculum };
