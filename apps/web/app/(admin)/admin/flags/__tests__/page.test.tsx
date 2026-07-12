@@ -19,7 +19,7 @@ import FlagsPage from '../page';
 
 const sampleFlag = {
   id: 'f1', status: 'open', category: 'wrong_answer', note: 'reference looks wrong',
-  createdAt: '2026-06-18T00:00:00.000Z', resolvedAt: null, exerciseId: 'ex1', submissionId: 'h1',
+  createdAt: '2026-06-18T00:00:00.000Z', resolvedAt: null, exerciseId: 'ex1', submissionId: 'h1', sessionId: 's1',
   exercise: { language: 'ES', level: 'B1', type: 'cloze', grammarPointKey: 'es-b1-x', reviewStatus: 'auto-approved', contentJson: { type: 'cloze', prompt: 'Yo ___ feliz', answer: 'soy' } },
   userAnswer: 'estoy', evaluation: { score: 0, feedback: 'Not quite' },
 };
@@ -33,6 +33,21 @@ describe('FlagsPage', () => {
     expect(screen.getByText(/reference looks wrong/i)).toBeInTheDocument();
     expect(screen.getByText(/estoy/)).toBeInTheDocument();
     expect(screen.getByText(/not quite/i)).toBeInTheDocument();
+  });
+
+  it('renders copyable session, exercise, and evaluation ids', () => {
+    mockUseQueue.mockReturnValue({ isLoading: false, isError: false, data: { items: [sampleFlag], total: 1 } });
+    render(<FlagsPage />);
+    expect(screen.getByRole('button', { name: /copy session id/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /copy exercise id/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /copy eval id/i })).toBeInTheDocument();
+  });
+
+  it('omits the session id chip when there is no session', () => {
+    mockUseQueue.mockReturnValue({ isLoading: false, isError: false, data: { items: [{ ...sampleFlag, sessionId: null }], total: 1 } });
+    render(<FlagsPage />);
+    expect(screen.queryByRole('button', { name: /copy session id/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /copy exercise id/i })).toBeInTheDocument();
   });
 
   it('calls reject', () => {
