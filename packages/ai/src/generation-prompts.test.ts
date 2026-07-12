@@ -705,7 +705,10 @@ describe("buildGenerationUserPrompt", () => {
     expect(seeded).toContain('Build this exercise around the word "viajar".');
     // Loose: names the grammar point and offers a similar-frequency substitute.
     expect(seeded).toContain(baseInputs.grammarPoint.name);
-    expect(seeded).toContain("a related content word of similar frequency");
+    expect(seeded).toContain("of similar frequency");
+    // 2026-07-12: register/level self-filter for off-band frequency seeds.
+    expect(seeded).toContain("register-specific");
+    expect(seeded).toContain(baseInputs.cefrLevel);
   });
 
   it("omits the seed line — byte-identical to the unseeded output — when seed is null/absent", () => {

@@ -750,7 +750,7 @@ export function buildGenerationUserPrompt(
               // registers when expectedWord matches it (Spec 2). The anti-leak rule
               // (system prompt) still forbids the clue from containing the word.
               `The target word (expectedWord) MUST be exactly "${seedWord}". Write a clue or definition that elicits "${seedWord}" without revealing it — the clue must NOT contain "${seedWord}". Do not substitute another word.\n\n`
-            : `Build this exercise around the word "${seedWord}". If "${seedWord}" does not fit ${inputs.grammarPoint.name} naturally, choose a related content word of similar frequency instead.\n\n`
+            : `Build this exercise around the word "${seedWord}". If "${seedWord}" does not fit ${inputs.grammarPoint.name} naturally, or is register-specific (military, legal, medical, administrative, or literary), or sits above CEFR ${inputs.cefrLevel}, choose an everyday, level-appropriate content word of similar frequency instead. The word you use and the whole sentence must stay within the CEFR ${inputs.cefrLevel} vocabulary band.\n\n`
       : "";
   const modeBlock =
     inputs.exerciseType === ExerciseType.SENTENCE_CONSTRUCTION
