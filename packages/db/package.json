@@ -29,6 +29,7 @@
     "seed:exercises": "npx tsx scripts/seed-exercises.ts",
     "seed:dictation": "npx tsx scripts/seed-dictation.ts",
     "seed:vocab": "npx tsx scripts/seed-vocab.ts",
+    "seed:gloss-cache": "npx tsx scripts/seed-gloss-cache.ts",
     "cleanup:zombies": "npx tsx scripts/cleanup-zombie-jobs.ts",
     "test": "vitest run"
   },
