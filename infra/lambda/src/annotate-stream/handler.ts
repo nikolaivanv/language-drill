@@ -28,8 +28,9 @@ import {
   Language,
   READ_TEXT_MAX_CHARS,
 } from "@language-drill/shared";
-import type { LearningLanguage } from "@language-drill/shared";
+import type { CefrLevel, LearningLanguage } from "@language-drill/shared";
 import { usageEvents } from "@language-drill/db";
+import type { NewGlossCacheRow } from "@language-drill/db";
 import {
   ANNOTATE_SYSTEM_PROMPT_VERSION,
   AnnotateStreamMaxTokensError,
@@ -45,6 +46,8 @@ import { getEffectivePlan, isAdmin } from "../usage/plan";
 import { checkGlobalCapacity } from "../usage/global-capacity";
 import { verifyClerkJwt } from "./jwt";
 import { buildCandidateList } from "./pipeline";
+import type { Candidate } from "./pipeline";
+import { lookupGlossCache, upsertGlossCacheRows, wordFlagFromCacheRow } from "./gloss-cache";
 import { createSseWriter } from "./sse";
 import type { SseWriter } from "./sse";
 import { handleDeepSpan } from "./deep-flow";
@@ -208,6 +211,48 @@ export const handler = awslambda.streamifyResponse<
       return;
     }
 
+    // Step 8.5: gloss-cache split — serve hits instantly, send only misses to
+    // Claude. A lookup failure degrades to "all misses" (an honest, if slower,
+    // result) rather than failing the request.
+    const lookupLemmas = candidates
+      .map((c) => c.lemma)
+      .filter((l): l is string => l !== null);
+    let cacheRows: Awaited<ReturnType<typeof lookupGlossCache>>;
+    try {
+      cacheRows = await lookupGlossCache(learningLanguage, lookupLemmas);
+    } catch (err) {
+      console.error("[annotate-stream] gloss-cache lookup failed", err);
+      cacheRows = new Map();
+    }
+
+    const misses: Candidate[] = [];
+    let flaggedCount = 0;
+    for (const c of candidates) {
+      const row = c.lemma !== null ? cacheRows.get(c.lemma) : undefined;
+      const flag = row ? wordFlagFromCacheRow(row, c.matchedForm, c.effectiveRank) : null;
+      if (flag) {
+        writer.writeEvent("flag", flag);
+        flaggedCount++;
+      } else {
+        misses.push(c);
+      }
+    }
+    console.log("[annotate-stream] gloss-cache split", {
+      candidateCount: candidates.length,
+      cachedCount: flaggedCount,
+      missCount: misses.length,
+      claudeSkipped: misses.length === 0,
+    });
+
+    // All-hit short-circuit: no Claude call, no usage_events row (mirrors the
+    // empty-candidate path above — a fully-cached passage costs nothing).
+    if (misses.length === 0) {
+      writer.writeTerminal("done", { flaggedCount });
+      console.log("[annotate-stream] done (fully cached)", { flaggedCount });
+      await writer.close();
+      return;
+    }
+
     // Step 9: client-disconnect → abort upstream Claude stream (Req 4.9).
     // ALSO: soft-deadline at 25 s. The Lambda timeout is 29 s, but if Claude
     // streaming runs past 25 s we want to abort it ourselves AND write a
@@ -232,7 +277,7 @@ export const handler = awslambda.streamifyResponse<
     // The trace context lives in AsyncLocalStorage; the Proxy reads it
     // at the start of `messages.stream` (design.md §Tracing model).
     const requestId = event.requestContext?.requestId ?? "local";
-    let flaggedCount = 0;
+    const mintedRows: NewGlossCacheRow[] = [];
     try {
       await withLlmTrace(
         {
@@ -244,7 +289,7 @@ export const handler = awslambda.streamifyResponse<
           language: learningLanguage,
           cefrLevel: calibration.cefr,
           exerciseType: "reading",
-          candidateCount: candidates.length,
+          candidateCount: misses.length,
         },
         async () => {
           const client = createObservedClaudeClient(ANTHROPIC_API_KEY);
@@ -252,12 +297,27 @@ export const handler = awslambda.streamifyResponse<
             text,
             language: learningLanguage,
             proficiencyLevel: calibration.cefr,
-            candidates,
+            candidates: misses,
             signal: abort.signal,
           })) {
             if (ev.kind === "flag") {
               writer.writeEvent("flag", ev.flag);
               flaggedCount++;
+              if (ev.flag.lemma) {
+                mintedRows.push({
+                  language: learningLanguage,
+                  lemma: ev.flag.lemma,
+                  baseGloss: ev.flag.gloss,
+                  pos: ev.flag.pos,
+                  // `WordFlag.cefr` is a Zod string-literal union (module-init
+                  // cycle defense — see read.ts); the DB column's `$type<CefrLevel>()`
+                  // is the nominal enum with identical string values.
+                  cefr: ev.flag.cefr as CefrLevel,
+                  freqRank: ev.flag.freq,
+                  source: "skim",
+                  promptVersion: ANNOTATE_SYSTEM_PROMPT_VERSION,
+                });
+              }
             }
           }
         },
@@ -302,6 +362,21 @@ export const handler = awslambda.streamifyResponse<
     }
     // Iterator completed cleanly — no need to fire the deadline anymore.
     clearTimeout(deadlineTimer);
+
+    // Write miss results through to the shared cache (best-effort — the user
+    // already has their flags; a cache write failure is backend-only).
+    // Dedupe by (language, lemma) keeping the LAST occurrence: two different
+    // surface forms of the same lemma (e.g. "banco" / "bancos") can both be
+    // misses in the same request, and the upsert's per-batch (language,
+    // lemma) uniqueness would otherwise throw ("ON CONFLICT DO UPDATE command
+    // cannot affect row a second time"), silently dropping the whole
+    // best-effort batch.
+    const dedupedRows = [...new Map(mintedRows.map((r) => [`${r.language}:${r.lemma}`, r])).values()];
+    try {
+      await upsertGlossCacheRows(dedupedRows);
+    } catch (err) {
+      console.error("[annotate-stream] gloss-cache write-through failed", err);
+    }
 
     // Step 11: insert the usage_events row AFTER the iterator finishes
     // successfully. A throw here MUST NOT cascade into a terminal `error` —
