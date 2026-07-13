@@ -154,6 +154,34 @@ describe('TranslationExercise', () => {
       expect(screen.queryByRole('button', { name: 'The' })).toBeNull();
     });
 
+    it('offers a working retry when the hint fetch fails', async () => {
+      const fetchFn = vi
+        .fn()
+        .mockRejectedValueOnce(new Error('network'))
+        .mockResolvedValueOnce({
+          json: async () => ({
+            cached: false,
+            units: [{ text: 'ready', hintable: true, lemma: 'hazır' }],
+          }),
+        });
+      renderTranslation({
+        content: hintContent,
+        language: Language.TR,
+        exerciseId: 'ex-err',
+        fetchFn,
+      });
+      fireEvent.click(screen.getByRole('button', { name: /need a hint/i }));
+      // First fetch fails → a retry control appears (the toggle has unmounted).
+      const retry = await screen.findByRole('button', { name: /try again/i });
+      expect(fetchFn).toHaveBeenCalledTimes(1);
+      // Retrying re-fires the fetch and the hints load.
+      fireEvent.click(retry);
+      await waitFor(() => expect(fetchFn).toHaveBeenCalledTimes(2));
+      expect(
+        await screen.findByRole('button', { name: 'ready' }),
+      ).toBeInTheDocument();
+    });
+
     it('old gloss/half-reference ladder is gone but full-answer remains', () => {
       renderTranslation({ content: hintContent, language: Language.TR });
       expect(
