@@ -260,6 +260,13 @@
       "when": 1783637182488,
       "tag": "0036_curious_shape",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1783971232014,
+      "tag": "0037_burly_medusa",
+      "breakpoints": true
     }
   ]
 }
