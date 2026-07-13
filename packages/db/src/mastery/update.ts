@@ -70,7 +70,7 @@ export function updateMastery(
 
   // Asymmetric observation weight: gains scale with difficulty (reward hard
   // correct), losses scale with INVERSE difficulty (punish easy errors).
-  const ew = obs.evidenceWeight == null ? 1 : Math.min(1, Math.max(0, obs.evidenceWeight));
+  const ew = obs.evidenceWeight == null ? 1 : clamp01(obs.evidenceWeight);
   const obsW = (obs.score >= prev.masteryScore ? dw : DW_PIVOT - dw) * ew;
 
   const masteryScore = clamp01(

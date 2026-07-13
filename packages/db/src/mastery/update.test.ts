@@ -94,16 +94,19 @@ describe('updateMastery evidenceWeight', () => {
   });
 
   it('replayHistory honors per-row evidenceWeight', () => {
-    const rows = [
-      { grammarPointKey: 'g', score: 1, difficulty: CefrLevel.A1, evaluatedAt: at, evidenceWeight: 0.1 },
+    // Second observation is a MISS (score 0 < prior masteryScore 1), so the
+    // threaded evidenceWeight is load-bearing: a down-weighted miss must move
+    // mastery LESS than a full-weight miss. (Both series use the same seed,
+    // so an all-hits series would pass even with evidenceWeight deleted.)
+    const downWeighted = [
+      { grammarPointKey: 'g', score: 1, difficulty: CefrLevel.A1, evaluatedAt: d('2026-07-01') },
+      { grammarPointKey: 'g', score: 0, difficulty: CefrLevel.A1, evaluatedAt: d('2026-07-02'), evidenceWeight: 0.1 },
     ];
-    const heavy = [
-      { grammarPointKey: 'g', score: 1, difficulty: CefrLevel.A1, evaluatedAt: at },
+    const fullWeight = [
+      { grammarPointKey: 'g', score: 1, difficulty: CefrLevel.A1, evaluatedAt: d('2026-07-01') },
+      { grammarPointKey: 'g', score: 0, difficulty: CefrLevel.A1, evaluatedAt: d('2026-07-02') },
     ];
-    // first observation seeds directly (prev===null), so both equal; add a 2nd
-    rows.push({ grammarPointKey: 'g', score: 1, difficulty: CefrLevel.A1, evaluatedAt: new Date('2026-07-02'), evidenceWeight: 0.1 });
-    heavy.push({ grammarPointKey: 'g', score: 1, difficulty: CefrLevel.A1, evaluatedAt: new Date('2026-07-02') });
-    expect(replayHistory(rows).get('g')!.masteryScore)
-      .toBeLessThanOrEqual(replayHistory(heavy).get('g')!.masteryScore);
+    expect(replayHistory(downWeighted).get('g')!.masteryScore)
+      .toBeGreaterThan(replayHistory(fullWeight).get('g')!.masteryScore);
   });
 });
