@@ -1,4 +1,4 @@
-import type { Language, CefrLevel } from "@language-drill/shared";
+import type { Language } from "@language-drill/shared";
 
 // Bump in the same commit as any semantic edit below (CLAUDE.md "Prompt Editing").
 export const WORD_HINT_PROMPT_VERSION = "word-hint@2026-07-13";
