@@ -40,7 +40,8 @@ export type LlmFeature =
   | "generate"
   | "validate"
   | "generate-theory"
-  | "validate-theory";
+  | "validate-theory"
+  | "word-hint";
 
 export type LlmEnv = "prod" | "dev";
 
@@ -175,6 +176,7 @@ export const TOOL_NAME_TO_FEATURE: ReadonlyMap<string, LlmFeature> = new Map([
   ["submit_validation_result", "validate"],
   ["submit_theory_topic", "generate-theory"],
   ["submit_theory_validation_result", "validate-theory"],
+  ["submit_word_hints", "word-hint"],
 ] as const);
 
 // ---------------------------------------------------------------------------

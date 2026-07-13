@@ -43,7 +43,6 @@ import {
   WORD_HINT_PROMPT_VERSION,
   WORD_HINT_REQUEST_TIMEOUT_MS,
   WORD_HINT_MAX_RETRIES,
-  type LlmFeature,
 } from '@language-drill/ai';
 import { db } from '../db';
 import { approvedStatusFilter, audioReadyFilter, freshFirstOrderBy } from '../lib/exercise-filters';
@@ -1142,7 +1141,7 @@ exercises.post('/exercises/:id/word-hints', async (c) => {
             exerciseId: id,
             language: exercise.language as Language,
             cefrLevel: exercise.difficulty as CefrLevel,
-            feature: 'word-hint' as LlmFeature,
+            feature: 'word-hint',
             promptVersion: WORD_HINT_PROMPT_VERSION,
           },
           () => generateWordHints(client, {

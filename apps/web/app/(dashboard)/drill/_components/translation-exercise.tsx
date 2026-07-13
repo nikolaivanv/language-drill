@@ -192,9 +192,21 @@ export function TranslationExercise({
             <p className="t-small text-ink-mute">loading hints&hellip;</p>
           )}
           {wordHints.isError && (
-            <p className="t-small text-accent-2">
-              couldn&rsquo;t load hints &mdash; try again
-            </p>
+            <div className="flex flex-wrap items-center gap-s-2">
+              <p className="t-small text-accent-2">couldn&rsquo;t load hints</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (exerciseId && !wordHints.isPending) {
+                    wordHints.mutate({ exerciseId });
+                  }
+                }}
+                disabled={isLocked || wordHints.isPending}
+              >
+                try again
+              </Button>
+            </div>
           )}
           {wordHints.data && (
             <>
