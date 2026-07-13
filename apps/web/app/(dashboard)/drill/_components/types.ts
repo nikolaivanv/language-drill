@@ -4,6 +4,7 @@ export type SubmissionMeta = {
   usedMc?: boolean;
   hintLevel?: 0 | 1 | 2 | 3;
   hintCount?: number;
+  hintUsage?: { wordsRevealed: number; fullAnswerRevealed: boolean };
 };
 
 /**

@@ -92,6 +92,7 @@ export function ExercisePane({
         nextLabel={nextLabel}
         exerciseId={exercise.id}
         coach={coach}
+        fetchFn={fetchFn}
       />
     );
   }

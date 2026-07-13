@@ -16,6 +16,9 @@ export {
   type FreeWritingEvaluationResponse,
   ExplainResponseSchema,
   type ExplainResponse,
+  WordHintUnitSchema,
+  WordHintsResponseSchema,
+  type WordHintsResponse,
 } from './schemas/exercise';
 export {
   LanguageProfileSchema,
@@ -151,6 +154,7 @@ export {
   type SubmitFreeWritingParams,
   type UseSubmitFreeWritingOptions,
 } from './hooks/useSubmitFreeWriting';
+export { useWordHints, type UseWordHintsOptions } from './hooks/useWordHints';
 export {
   useExplainSubmission,
   type ExplainSubmissionParams,
