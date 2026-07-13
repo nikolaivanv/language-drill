@@ -46,6 +46,7 @@ import { limitFor } from "../usage/limits";
 import { getEffectivePlan, isAdmin } from "../usage/plan";
 import { checkGlobalCapacity } from "../usage/global-capacity";
 import { resolveSpanType } from "../routes/read-span-utils";
+import { upsertGlossCacheRows } from "./gloss-cache";
 import type { ResponseStream, SseWriter } from "./sse";
 import type { AnnotateSpanStreamRequest } from "./handler";
 import type { LambdaFunctionURLEvent } from "aws-lambda";
@@ -330,6 +331,32 @@ export async function handleDeepSpan(args: HandleDeepSpanArgs): Promise<void> {
         .where(and(eq(readEntries.id, entryId), eq(readEntries.userId, userId)));
     } catch (err) {
       console.error("[annotate-span] span_annotations write-back failed", err);
+    }
+  }
+
+  // Feed the shared gloss cache from the resolved base gloss (word cards only).
+  // Best-effort: the card already streamed to the client; a cache write failure
+  // is backend-only. Older cards predate `baseGloss` and are skipped.
+  if (card.type === "word" && typeof card.baseGloss === "string" && card.baseGloss.trim() !== "") {
+    try {
+      await upsertGlossCacheRows([
+        {
+          language: learningLanguage,
+          lemma: card.lemma,
+          baseGloss: card.baseGloss,
+          pos: card.pos,
+          // `DeepCard.cefr` is a Zod string-literal union (module-init cycle
+          // defense — see read.ts); the DB column's `$type<CefrLevel>()` is
+          // the nominal enum with identical string values (house convention,
+          // e.g. routes/read.ts:726, annotate-stream/handler.ts:312-315).
+          cefr: card.cefr as CefrLevel,
+          freqRank: card.freq ?? null,
+          source: "deep",
+          promptVersion: READ_SPAN_PROMPT_VERSION,
+        },
+      ]);
+    } catch (err) {
+      console.error("[annotate-span] gloss-cache write-through failed", err);
     }
   }
 
