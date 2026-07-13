@@ -134,15 +134,21 @@ answer (`grading.ts:94`, `scheduler.ts:119`). The main drill path is the
 continuous-weight analogue.
 
 - **Accept hint usage on submit.** Extend `SubmitAnswerSchema`
-  (`exercises.ts:77`) with an optional hint-usage field; thread through
+  (`exercises.ts:77`) with an optional **structured** hint-usage field
+  `{ wordsRevealed: number, fullAnswerRevealed: boolean }` (not a bare count),
+  so grading can weight word-reveals and full-answer differently; thread through
   `SubmitAnswerParams` + body builder (`packages/api-client/.../useExercise.ts`)
   and stop dropping `meta` in `drill/page.tsx` handleSubmit.
 - **Apply a deterministic down-weight.** Thread an `evidenceWeight ∈ (0,1]`
   from `applyGrammarMastery` (`exercises.ts:130`) into `updateMastery`, applied
   to the observation weight `obsW` at `packages/db/src/mastery/update.ts:70`.
   A hinted-correct answer moves mastery less while confidence still accrues via
-  `evidenceCount`. Full-answer reveal weights more heavily than a single-word
-  reveal; exact curve is a tuning detail for the plan.
+  `evidenceCount`. **Curve** (single named constants, tunable):
+  - no hints → `1.0`
+  - per word revealed → `−0.15` each, floored at `0.4`
+    (`weight = max(0.4, 1 − 0.15 × wordsRevealed)`)
+  - full-answer reveal → `0.1`, which **overrides** the word-count term
+    (they saw the answer, so the item carries almost no unaided evidence).
 - **Persist for replay.** Store hint usage on `userExerciseHistory` (small
   schema add) so `replayHistory` / the backfill CLI (`update.ts:86`) recompute
   with the same penalty instead of defaulting to weight `1.0`.
