@@ -93,6 +93,12 @@ vi.mock("@language-drill/ai", () => {
     withLlmTrace: <T>(_ctx: unknown, fn: () => T | Promise<T>) => Promise.resolve(fn()),
     READ_SPAN_PROMPT_VERSION: "read-span@test",
     ReadSpanStreamMaxTokensError: ReadSpanStreamMaxTokensErrorStub,
+    // Faithful re-implementation of the real helper (packages/ai/src/annotate.ts)
+    // so the proper-noun write-skip is exercised against real matching logic.
+    isProperNounPos: (pos: string) => {
+      const compact = pos.toLowerCase().replace(/[\s_-]/g, "");
+      return compact.includes("propernoun") || compact === "propn";
+    },
   };
 });
 
@@ -559,6 +565,29 @@ describe("handleDeepSpan — gloss-cache write-through (base-gloss cache Task 5)
       definitionLabel: "Español",
       cefr: "B1",
       freq: 4200,
+    };
+    streamSpanImpl.set(scriptedStream([{ key: "type", value: "word" }], card));
+
+    const { writer } = makeWriter();
+    await handleDeepSpan(buildArgs({}, writer));
+
+    expect(mockUpsertGlossCacheRows).not.toHaveBeenCalled();
+  });
+
+  it("does not cache a proper-noun word card (would leak into the skim pass)", async () => {
+    dbResults.push([{ count: 0 }]); // rate-limit
+    dbResults.push([{ proficiencyLevel: "B1" }]); // profile
+    const card = {
+      type: "word",
+      surface: "Berlin",
+      lemma: "Berlin",
+      pos: "proper noun",
+      contextualSense: "the German capital",
+      baseGloss: "Berlin",
+      definition: "...",
+      definitionLabel: "Deutsch",
+      cefr: "A1",
+      freq: 1,
     };
     streamSpanImpl.set(scriptedStream([{ key: "type", value: "word" }], card));
 

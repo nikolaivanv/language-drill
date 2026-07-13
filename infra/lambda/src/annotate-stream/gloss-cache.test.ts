@@ -44,4 +44,12 @@ describe('wordFlagFromCacheRow', () => {
     const flag = wordFlagFromCacheRow({ ...baseRow, cefr: null }, 'banco', 4200);
     expect(flag).toBeNull();
   });
+
+  it('returns null for a proper-noun row (never surfaced as a skim highlight)', () => {
+    // A proper noun can enter the cache via the deep path (a tapped name);
+    // it must never be served as a skim flag. Covers the tagged spellings.
+    for (const pos of ['proper noun', 'proper-noun', 'PROPN']) {
+      expect(wordFlagFromCacheRow({ ...baseRow, pos }, 'berlin', 4200)).toBeNull();
+    }
+  });
 });

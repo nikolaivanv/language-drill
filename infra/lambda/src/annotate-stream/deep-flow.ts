@@ -33,6 +33,7 @@ import { and, count, eq, gte, sql } from "drizzle-orm";
 import { CefrLevel, type DeepCard, type LearningLanguage } from "@language-drill/shared";
 import {
   createObservedClaudeClient,
+  isProperNounPos,
   READ_SPAN_PROMPT_VERSION,
   ReadSpanStreamMaxTokensError,
   streamSpan,
@@ -336,8 +337,15 @@ export async function handleDeepSpan(args: HandleDeepSpanArgs): Promise<void> {
 
   // Feed the shared gloss cache from the resolved base gloss (word cards only).
   // Best-effort: the card already streamed to the client; a cache write failure
-  // is backend-only. Older cards predate `baseGloss` and are skipped.
-  if (card.type === "word" && typeof card.baseGloss === "string" && card.baseGloss.trim() !== "") {
+  // is backend-only. Older cards predate `baseGloss` and are skipped. Proper
+  // nouns are excluded so a tapped name never leaks into the skim highlight
+  // pass (Req 2.4) — the deep card is still produced for the user.
+  if (
+    card.type === "word" &&
+    typeof card.baseGloss === "string" &&
+    card.baseGloss.trim() !== "" &&
+    !isProperNounPos(card.pos)
+  ) {
     try {
       await upsertGlossCacheRows([
         {
