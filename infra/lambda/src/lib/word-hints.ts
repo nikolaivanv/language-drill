@@ -31,3 +31,12 @@ export async function resolveWordHints(
   await deps.meter();
   return { units, cached: false };
 }
+
+export type HintUsage = { wordsRevealed: number; fullAnswerRevealed: boolean };
+
+/** Down-weight curve (spec §Grading): 1.0 baseline; −0.15/word floored at 0.4; full-answer → 0.1. */
+export function evidenceWeightFromHints(usage: HintUsage | undefined): number {
+  if (!usage) return 1;
+  if (usage.fullAnswerRevealed) return 0.1;
+  return Math.max(0.4, 1 - 0.15 * Math.max(0, usage.wordsRevealed));
+}

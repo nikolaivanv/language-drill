@@ -48,7 +48,7 @@ import {
 import { db } from '../db';
 import { approvedStatusFilter, audioReadyFilter, freshFirstOrderBy } from '../lib/exercise-filters';
 import { resolveTargetedDifficulty } from '../lib/targeted-difficulty';
-import { resolveWordHints } from '../lib/word-hints';
+import { resolveWordHints, evidenceWeightFromHints } from '../lib/word-hints';
 import {
   conjugationSignature,
   dedupeBySignature,
@@ -89,6 +89,10 @@ export const SubmitAnswerSchema = z.object({
   // rationale.
   answer: z.string().min(1).max(EXERCISE_ANSWER_MAX_CHARS),
   sessionId: z.string().uuid().optional(),
+  hintUsage: z.object({
+    wordsRevealed: z.number().int().nonnegative(),
+    fullAnswerRevealed: z.boolean(),
+  }).optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -140,6 +144,7 @@ async function applyGrammarMastery(opts: {
   grammarPointKey: string | null;
   difficulty: CefrLevel;
   score: number;
+  evidenceWeight?: number;
 }): Promise<void> {
   if (!opts.grammarPointKey) return;
   try {
@@ -164,6 +169,7 @@ async function applyGrammarMastery(opts: {
       score: opts.score,
       difficulty: opts.difficulty,
       at,
+      evidenceWeight: opts.evidenceWeight,
     });
 
     await db
@@ -390,7 +396,8 @@ exercises.post('/exercises/:id/submit', async (c) => {
       400,
     );
   }
-  const { answer: userAnswer, sessionId } = bodyResult.data;
+  const { answer: userAnswer, sessionId, hintUsage } = bodyResult.data;
+  const evidenceWeight = evidenceWeightFromHints(hintUsage);
 
   // 2. Fetch exercise by ID. Deliberately no `audioReadyFilter` here: grading
   // needs no audio, and the serve/discovery paths already gate exposure, so an
@@ -489,6 +496,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
       score,
       responseJson: { userAnswer, evaluation: result },
       evaluatedAt: new Date(),
+      evidenceWeight,
     });
 
     await applyGrammarMastery({
@@ -497,6 +505,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
       grammarPointKey: exercise.grammarPointKey,
       difficulty: exercise.difficulty as CefrLevel,
       score,
+      evidenceWeight,
     });
 
     return c.json({ ...result, submissionId });
@@ -540,6 +549,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
         score: 1,
         responseJson: { userAnswer, evaluation: result },
         evaluatedAt: new Date(),
+        evidenceWeight,
       });
 
       await applyGrammarMastery({
@@ -548,6 +558,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
         grammarPointKey: exercise.grammarPointKey,
         difficulty: exercise.difficulty as CefrLevel,
         score: 1,
+        evidenceWeight,
       });
 
       return c.json({ ...result, submissionId });
@@ -658,6 +669,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
         score: evaluation.overallScore,
         responseJson: { userAnswer, evaluation },
         evaluatedAt: new Date(),
+        evidenceWeight,
       });
 
       await recordErrorObservations(db, {
@@ -712,6 +724,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
       score: result.score,
       responseJson: { userAnswer, evaluation: stamped },
       evaluatedAt: new Date(),
+      evidenceWeight,
     });
 
     await recordErrorObservations(db, {
@@ -755,6 +768,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
       grammarPointKey: exercise.grammarPointKey,
       difficulty: exercise.difficulty as CefrLevel,
       score: result.score,
+      evidenceWeight,
     });
 
     return c.json({ ...stamped, submissionId });
