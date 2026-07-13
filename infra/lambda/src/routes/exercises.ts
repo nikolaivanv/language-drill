@@ -3,9 +3,9 @@ import { Hono } from 'hono';
 import type { Context } from 'hono';
 import { z } from 'zod';
 import { eq, and, gte, count } from 'drizzle-orm';
-import { Language, CefrLevel, ExerciseType, isFreeWritingContent, isConjugationContent, isClozeContent, isVocabRecallContent, gradeFluencyAnswer, EXERCISE_ANSWER_MAX_CHARS } from '@language-drill/shared';
+import { Language, CefrLevel, ExerciseType, isFreeWritingContent, isConjugationContent, isClozeContent, isVocabRecallContent, isTranslationContent, gradeFluencyAnswer, EXERCISE_ANSWER_MAX_CHARS } from '@language-drill/shared';
 import type { LearningLanguage } from '@language-drill/shared';
-import type { DictationContent, ExerciseContent, FreeWritingContent, EvaluationResult } from '@language-drill/shared';
+import type { DictationContent, ExerciseContent, FreeWritingContent, EvaluationResult, WordHintUnit } from '@language-drill/shared';
 import {
   exercises as exercisesTable,
   practiceSessions,
@@ -15,6 +15,7 @@ import {
   grammarPointsAtOrBelow,
   userGrammarMastery,
   updateMastery,
+  exerciseWordHints,
 } from '@language-drill/db';
 import {
   createObservedClaudeClient,
@@ -38,10 +39,16 @@ import {
   WRITING_HELPER_MAX_RETRIES,
   withLlmTrace,
   ContentRejectedError,
+  generateWordHints,
+  WORD_HINT_PROMPT_VERSION,
+  WORD_HINT_REQUEST_TIMEOUT_MS,
+  WORD_HINT_MAX_RETRIES,
+  type LlmFeature,
 } from '@language-drill/ai';
 import { db } from '../db';
 import { approvedStatusFilter, audioReadyFilter, freshFirstOrderBy } from '../lib/exercise-filters';
 import { resolveTargetedDifficulty } from '../lib/targeted-difficulty';
+import { resolveWordHints } from '../lib/word-hints';
 import {
   conjugationSignature,
   dedupeBySignature,
@@ -1056,5 +1063,104 @@ exercises.post('/exercises/:id/start-my-paragraph', (c) =>
     generate: generateStartMyParagraph,
   }),
 );
+
+class WordHintLimitError extends Error {
+  constructor(
+    public status: 429 | 503,
+    public code: string,
+  ) {
+    super(code);
+  }
+}
+
+exercises.post('/exercises/:id/word-hints', async (c) => {
+  const id = c.req.param('id');
+  const userId = c.get('userId');
+
+  const rows = await db.select().from(exercisesTable).where(eq(exercisesTable.id, id)).limit(1);
+  const exercise = rows[0];
+  if (!exercise) return c.json({ error: 'Exercise not found', code: 'NOT_FOUND' }, 404);
+  const content = exercise.contentJson as ExerciseContent;
+  if (!isTranslationContent(content)) {
+    return c.json({ error: 'Word hints are only available for translation exercises', code: 'UNSUPPORTED' }, 400);
+  }
+
+  try {
+    const result = await resolveWordHints({
+      readCache: async () => {
+        const hit = await db
+          .select({ units: exerciseWordHints.unitsJson })
+          .from(exerciseWordHints)
+          .where(eq(exerciseWordHints.exerciseId, id))
+          .limit(1);
+        return hit[0]?.units ?? null;
+      },
+      checkLimit: async () => {
+        const plan = await getEffectivePlan(userId);
+        const capacity = await checkGlobalCapacity({ plan, admin: isAdmin(userId) });
+        if (capacity !== 'ok') throw new WordHintLimitError(503, 'GLOBAL_CAPACITY');
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const [{ count: todayCount }] = await db
+          .select({ count: count() })
+          .from(usageEvents)
+          .where(and(
+            eq(usageEvents.userId, userId),
+            eq(usageEvents.eventType, 'translation_word_hint'),
+            gte(usageEvents.createdAt, oneDayAgo),
+          ));
+        if (Number(todayCount) >= limitFor('translation_word_hint', plan)) {
+          throw new WordHintLimitError(429, 'RATE_LIMIT_EXCEEDED');
+        }
+      },
+      generate: async () => {
+        const client = createObservedClaudeClient(ANTHROPIC_API_KEY, {
+          timeout: WORD_HINT_REQUEST_TIMEOUT_MS,
+          maxRetries: WORD_HINT_MAX_RETRIES,
+        });
+        const requestId =
+          (c.env?.event as { requestContext?: { requestId?: string } } | undefined)
+            ?.requestContext?.requestId ?? 'local';
+        return withLlmTrace(
+          {
+            env: (process.env.LANGFUSE_ENV ?? 'dev') as 'prod' | 'dev',
+            requestId,
+            userId,
+            exerciseId: id,
+            language: exercise.language as Language,
+            cefrLevel: exercise.difficulty as CefrLevel,
+            feature: 'word-hint' as LlmFeature,
+            promptVersion: WORD_HINT_PROMPT_VERSION,
+          },
+          () => generateWordHints(client, {
+            sourceText: content.sourceText,
+            referenceTranslation: content.referenceTranslation,
+            sourceLanguage: content.sourceLanguage,
+            targetLanguage: content.targetLanguage,
+          }),
+        );
+      },
+      writeCache: async (units: WordHintUnit[]) => {
+        await db.insert(exerciseWordHints)
+          .values({ exerciseId: id, unitsJson: units })
+          .onConflictDoNothing({ target: exerciseWordHints.exerciseId });
+      },
+      meter: async () => {
+        await db.insert(usageEvents).values({
+          userId,
+          eventType: 'translation_word_hint',
+          metadata: { exerciseId: id, language: exercise.language },
+        });
+      },
+    });
+    return c.json(result);
+  } catch (err) {
+    if (err instanceof WordHintLimitError) {
+      const msg = err.status === 429 ? 'Daily word-hint limit exceeded' : 'AI temporarily at capacity';
+      return c.json({ error: msg, code: err.code }, err.status);
+    }
+    console.error('[word-hints] generation failed:', err);
+    return c.json({ error: 'Could not generate hints', code: 'AI_UNAVAILABLE' }, 502);
+  }
+});
 
 export default exercises;
