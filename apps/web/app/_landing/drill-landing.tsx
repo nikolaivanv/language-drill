@@ -7,18 +7,19 @@
 // positioning section. The design's dev-only "tweaks" panel is dropped; CTAs
 // route into the Clerk sign-up / sign-in flows.
 
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import Link from 'next/link';
 import './landing.css';
-import { DBrand, type BankWord } from './landing-chrome';
+import { DBrand, DeepAnnotationCard, type BankWord } from './landing-chrome';
 import { PracticeCarousel } from './practice-carousel';
 import { ChatGPTCompare } from './chatgpt-compare';
 import {
   D_CLOZE,
   D_LANGS,
-  D_SEED_VOCAB,
+  D_READING,
   D_SOON,
   type ClozeItem,
+  type DeepCard,
   type LandingLang,
 } from './landing-data';
 import { LegalLinks } from '../../components/legal/legal-links';
@@ -279,7 +280,7 @@ function DrillHero() {
     <header style={{ paddingTop: 60, paddingBottom: 74 }}>
       <div className="df-wrap df-hero">
         <div>
-          <div className="df-eyebrow">Read · Save · Review · Produce</div>
+          <div className="df-eyebrow">Produce, don’t recognise</div>
           <h1 className="df-h1" style={{ marginTop: 18 }}>
             Stop reviewing&nbsp;words.
             <br />
@@ -305,6 +306,23 @@ function DrillHero() {
           >
             watch the demo type, miss, and self-correct — that’s production →
           </div>
+          <div className="hero-langs">
+            <span className="hero-langs-lbl">On the floor now</span>
+            <div className="hero-langs-row">
+              {D_LANGS.map((l) => (
+                <span key={l.id} className="hero-lang-pill">
+                  <b>{l.label}</b>
+                  <span className="tag">{l.tag}</span>
+                </span>
+              ))}
+              <span className="hero-langs-soon">soon</span>
+              {D_SOON.map((l) => (
+                <span key={l.tag} className="hero-lang-soon">
+                  {l.tag}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
         <ProductionDemo defaultLang={DEFAULT_LANG} />
       </div>
@@ -312,165 +330,206 @@ function DrillHero() {
   );
 }
 
-/* ───────────────── connective loop strip ───────────────── */
+/* ───────────── academic-rigour stat band ───────────── */
 
-function LoopStrip() {
-  const steps: [string, string, string][] = [
-    ['01', 'Read', 'Real text, a notch above your level.'],
-    ['02', 'Save', 'Tap a word → it lands in your bank.'],
-    ['03', 'Review', 'Saved words come back, spaced.'],
-    ['04', 'Produce', 'Type the form. No multiple choice.'],
+function DRigourBand() {
+  const stats = [
+    { big: <>3</>, l1: 'Languages', l2: 'Spanish · German · Turkish' },
+    {
+      big: (
+        <>
+          A1<span style={{ color: 'var(--accent)' }}>–</span>B2
+        </>
+      ),
+      l1: 'CEFR levels,',
+      l2: 'end to end',
+    },
+    { big: <>298</>, l1: 'Grammar lessons,', l2: 'one per point' },
+    {
+      big: (
+        <>
+          20,000<span style={{ color: 'var(--accent)' }}>+</span>
+        </>
+      ),
+      l1: 'Production exercises',
+      l2: 'in the pool',
+    },
   ];
-  return (
-    <section className="df-section" id="how" style={{ scrollMarginTop: 80 }}>
-      <div className="df-wrap">
-        <div className="df-eyebrow2">One loop</div>
-        <h2 className="df-h2" style={{ marginTop: 14 }}>
-          Four moves, then again.
-        </h2>
-        <div
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginTop: 40 }}
-          className="loop-grid"
-        >
-          {steps.map(([n, h, b]) => (
-            <div key={n} className="df-card">
-              <div className="df-mono-num">{n}</div>
-              <div
-                style={{
-                  fontFamily: 'var(--t-display)',
-                  fontSize: 21,
-                  color: 'var(--df-ink)',
-                  marginTop: 10,
-                }}
-              >
-                {h}
-              </div>
-              <p
-                style={{
-                  color: 'var(--df-ink2)',
-                  fontSize: 14,
-                  lineHeight: 1.55,
-                  marginTop: 8,
-                  marginBottom: 0,
-                }}
-              >
-                {b}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ───────────── vocabulary review (fed by bank) ───────────── */
-
-interface Review {
-  w: string;
-  lang: string;
-  gloss: string;
-  due: string;
-  isNew?: boolean;
-}
-
-function VocabReview({ bank }: { bank: BankWord[] }) {
-  const [graded, setGraded] = useState<Record<string, string>>({});
-  const fromBank: Review[] = bank.map((b) => ({
-    w: b.w,
-    lang: b.lang,
-    gloss: b.gloss,
-    due: 'just added',
-    isNew: true,
-  }));
-  const list: Review[] = [...fromBank.slice().reverse(), ...D_SEED_VOCAB];
-  const grade = (key: string, label: string) => setGraded((g) => ({ ...g, [key]: label }));
-
   return (
     <section className="df-section">
       <div className="df-wrap">
-        <div className="df-eyebrow2">Saved words become reviews</div>
+        <div className="df-eyebrow2">Built on real grammar</div>
         <h2 className="df-h2" style={{ marginTop: 14, maxWidth: 720 }}>
-          Your deck builds itself from what you actually read.
+          Every drill traces back to a grammar you can trust.
         </h2>
         <p
           style={{
             color: 'var(--df-ink2)',
             fontSize: 17,
             lineHeight: 1.6,
-            maxWidth: 560,
+            maxWidth: 600,
             marginTop: 16,
           }}
         >
-          Every word you save drops into a spaced queue. Grade your recall and drill schedules it —
-          misses come back sooner, wins drift later.
+          Grounded in an authoritative curriculum, calibrated to your CEFR level, and rewritten the
+          moment the data says an item fell short.
         </p>
+        <div className="ar-stats" style={{ marginTop: 40 }}>
+          {stats.map((s, i) => (
+            <div key={i} className="ar-stat">
+              <div className="ar-stat-big">{s.big}</div>
+              <div className="ar-stat-lab">
+                {s.l1}
+                <br />
+                {s.l2}
+              </div>
+            </div>
+          ))}
+        </div>
+        <Link href="/academic-rigour" className="df-rigour-link">
+          See how the material is made <span aria-hidden="true">→</span>
+        </Link>
+      </div>
+    </section>
+  );
+}
 
-        <div style={{ display: 'grid', gap: 12, marginTop: 36, maxWidth: 720 }}>
-          {bank.length === 0 && (
-            <div
+/* ───────── reading: deep annotation (fed into the deck) ───────── */
+
+function DeepAnnotationShowcase() {
+  const tokens = D_READING.tokens;
+  const wordIdx = tokens.reduce<number[]>(
+    (acc, t, i) => (typeof t === 'object' ? [...acc, i] : acc),
+    [],
+  );
+  // open on "limana", the case-marked example, like the app screenshot
+  const [sel, setSel] = useState<number>(wordIdx[3] ?? wordIdx[0] ?? 0);
+  const [saved, setSaved] = useState<Record<string, boolean>>({});
+  const selTok = tokens[sel];
+  const selCard: DeepCard | null = typeof selTok === 'object' ? selTok : null;
+  const toggle = (w: string) => setSaved((s) => ({ ...s, [w]: !s[w] }));
+  const savedCount = Object.values(saved).filter(Boolean).length;
+
+  return (
+    <section className="df-section">
+      <div className="df-wrap">
+        <div className="df-read-grid" style={{ alignItems: 'start' }}>
+          <div>
+            <div className="df-eyebrow2">Where the words come from</div>
+            <h2 className="df-h2" style={{ marginTop: 14 }}>
+              Read real text. Tap any word for the full breakdown.
+            </h2>
+            <p
               style={{
-                fontFamily: 'var(--t-mono)',
-                fontSize: 12,
-                color: 'var(--df-mute)',
-                padding: '2px 2px 8px',
+                color: 'var(--df-ink2)',
+                fontSize: 17,
+                lineHeight: 1.6,
+                maxWidth: 560,
+                marginTop: 16,
               }}
             >
-              ↑ save a word from the passage above and watch it appear here.
+              No baby sentences. Every word in the passage is one tap from a deep note — meaning in
+              context, a target-language definition, the morphology broken out — and one more into
+              your deck. Your vocabulary builds itself from what you actually read.
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '38px 0 16px' }}>
+              <span
+                style={{
+                  fontFamily: 'var(--t-mono)',
+                  fontSize: 11,
+                  letterSpacing: '1.4px',
+                  textTransform: 'uppercase',
+                  color: 'var(--df-mute)',
+                }}
+              >
+                {D_READING.title}
+              </span>
+              <span style={{ width: 4, height: 4, borderRadius: 4, background: 'var(--df-line)' }} />
+              <span style={{ fontSize: 12, color: 'var(--df-mute)' }}>{D_READING.source}</span>
+              <span className="df-chip-dark" style={{ marginLeft: 'auto' }}>
+                {D_READING.tag} · {D_READING.cefr}
+              </span>
             </div>
-          )}
-          {list.map((v, i) => {
-            const key = v.w + '-' + i;
-            const g = graded[key];
-            const nextDue =
-              g === 'Again'
-                ? 'back in 1 min'
-                : g === 'Good'
-                  ? 'in 3 days'
-                  : g === 'Easy'
-                    ? 'in 8 days'
-                    : v.due;
-            return (
-              <div key={key} className={'vocab-card' + (v.isNew && !g ? ' vocab-new' : '')}>
-                <span className="vocab-flag">{v.lang}</span>
-                <div>
-                  <div
-                    style={{
-                      fontFamily: 'var(--t-display)',
-                      fontSize: 21,
-                      fontWeight: 500,
-                      color: 'var(--df-ink)',
-                      letterSpacing: '-0.3px',
-                    }}
-                  >
-                    {v.w}
-                  </div>
-                  <div style={{ fontSize: 13, color: 'var(--df-ink2)', marginTop: 2 }}>
-                    {v.gloss}
-                    <span
-                      style={{
-                        fontFamily: 'var(--t-mono)',
-                        fontSize: 11,
-                        color: g ? 'var(--ok)' : v.isNew ? 'var(--accent)' : 'var(--df-mute)',
-                        marginLeft: 10,
-                      }}
+            <div
+              style={{
+                borderLeft: '2px solid color-mix(in oklab, var(--accent) 40%, var(--df-line))',
+                paddingLeft: 26,
+              }}
+            >
+              <p className="df-passage">
+                {tokens.map((tk, i) =>
+                  typeof tk === 'string' ? (
+                    <Fragment key={i}>{tk}</Fragment>
+                  ) : (
+                    <button
+                      key={i}
+                      className={'df-word' + (sel === i ? ' on' : '')}
+                      onClick={() => setSel(i)}
                     >
-                      {g ? '✓ ' + nextDue : v.isNew ? '● ' + v.due : nextDue}
-                    </span>
-                  </div>
-                </div>
-                <div className="vocab-grade">
-                  <button className="again" onClick={() => grade(key, 'Again')}>
-                    Again
-                  </button>
-                  <button onClick={() => grade(key, 'Good')}>Good</button>
-                  <button className="easy" onClick={() => grade(key, 'Easy')}>
-                    Easy
-                  </button>
+                      {tk.surface}
+                    </button>
+                  ),
+                )}
+              </p>
+            </div>
+            <div
+              style={{
+                marginTop: 20,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                fontSize: 12,
+                color: 'var(--df-mute)',
+              }}
+            >
+              <span
+                style={{ width: 16, borderBottom: '2px dotted var(--accent)', display: 'inline-block' }}
+              />
+              {wordIdx.length} words annotated · tap to open
+              {savedCount > 0 ? ' · ' + savedCount + ' saved' : ''}
+            </div>
+          </div>
+          <aside className="df-rail">
+            {selCard ? (
+              <DeepAnnotationCard
+                card={selCard}
+                key={sel}
+                saved={!!saved[selCard.surface]}
+                onToggle={() => toggle(selCard.surface)}
+              />
+            ) : (
+              <div className="df-hint">
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  style={{ margin: '0 auto 12px', display: 'block' }}
+                >
+                  <path
+                    d="M5 12h11M11 7l6 5-6 5"
+                    stroke="var(--accent)"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <div
+                  style={{
+                    fontSize: 15,
+                    color: 'var(--df-ink2)',
+                    maxWidth: 230,
+                    margin: '0 auto',
+                    lineHeight: 1.55,
+                  }}
+                >
+                  Tap any{' '}
+                  <span style={{ color: 'var(--accent)', fontWeight: 500 }}>underlined word</span>. It
+                  explains itself right here — then save it with one tap.
                 </div>
               </div>
-            );
-          })}
+            )}
+          </aside>
         </div>
       </div>
     </section>
@@ -709,7 +768,7 @@ function DFooter() {
       >
         <DBrand />
         <div style={{ fontSize: 12, color: 'var(--df-mute)' }}>
-          © 2026 drill · read, save, produce
+          © 2026 drill · type it, don’t tap it
         </div>
         <Link href="/sign-in" className="df-footlink">
           Sign in →
@@ -735,9 +794,13 @@ export function DrillLanding() {
         <div className="df-wrap df-top-inner">
           <DBrand />
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <Link href="/academic-rigour" className="vs-navlink">
+              Academic rigour
+            </Link>
             <a href="#vs-chatgpt" className="vs-navlink">
               Why not ChatGPT?
             </a>
+            <span style={{ width: 1, height: 20, background: 'var(--df-line)', margin: '0 2px' }} />
             <Link href="/sign-in" className="df-signin">
               Sign in
             </Link>
@@ -748,9 +811,9 @@ export function DrillLanding() {
         </div>
       </div>
       <DrillHero />
-      <LoopStrip />
+      <DRigourBand />
       <PracticeCarousel defaultLang={DEFAULT_LANG} bank={bank} onSave={onSave} />
-      <VocabReview bank={bank} />
+      <DeepAnnotationShowcase />
       <WhyProduce />
       <ChatGPTCompare />
       <DLangBand />

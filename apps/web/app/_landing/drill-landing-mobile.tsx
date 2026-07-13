@@ -11,11 +11,11 @@
 // CTAs route into the Clerk sign-up / sign-in flows (the design's dev-only
 // "compare directions" footer link is dropped).
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import './landing.css';
 import { ProductionDemo } from './drill-landing';
-import { DBrand, DLangRail, ReadingNote, type BankWord } from './landing-chrome';
+import { DBrand, DLangRail, DeepAnnotationCard, ReadingNote, type BankWord } from './landing-chrome';
 import { MChatGPT } from './chatgpt-compare-mobile';
 import {
   D_CLOZE,
@@ -23,8 +23,9 @@ import {
   D_MODES,
   D_PASSAGES,
   D_PRACTICE,
-  D_SEED_VOCAB,
+  D_READING,
   D_SOON,
+  type DeepCard,
   type LandingLang,
   type PracticeMode,
   type PracticeModeId,
@@ -40,7 +41,7 @@ function MTopBar() {
     <div className="dfm-top">
       <DBrand />
       <div className="dfm-actions">
-        <Link href="/sign-in" className="dfm-signin">
+        <Link href="/sign-in" className="dfm-signin-btn">
           Sign in
         </Link>
         <Link href="/sign-up" className="dfm-signup">
@@ -55,7 +56,7 @@ function MTopBar() {
 function MHero() {
   return (
     <header className="dfm-wrap dfm-hero">
-      <div className="dfm-eyebrow">Read · Save · Review · Produce</div>
+      <div className="dfm-eyebrow">Produce, don’t recognise</div>
       <h1 className="dfm-h1">
         Stop reviewing&nbsp;words. Start{' '}
         <span style={{ color: 'var(--accent)' }}>producing</span> them.
@@ -73,38 +74,71 @@ function MHero() {
         <span className="ln" /> <span style={{ flexShrink: 0 }}>watch it type, miss & self-correct</span>{' '}
         <span className="ln" />
       </div>
+      <div className="hero-langs">
+        <span className="hero-langs-lbl">On the floor now</span>
+        <div className="hero-langs-row">
+          {D_LANGS.map((l) => (
+            <span key={l.id} className="hero-lang-pill">
+              <b>{l.label}</b>
+              <span className="tag">{l.tag}</span>
+            </span>
+          ))}
+          <span className="hero-langs-soon">soon</span>
+          {D_SOON.map((l) => (
+            <span key={l.tag} className="hero-lang-soon">
+              {l.tag}
+            </span>
+          ))}
+        </div>
+      </div>
       <ProductionDemo defaultLang={DEFAULT_LANG} />
     </header>
   );
 }
 
-/* ── one loop: Read → Save → Review → Produce ── */
-function MLoop() {
-  const steps: [string, string, string][] = [
-    ['01', 'Read', 'Real text, a notch above your level.'],
-    ['02', 'Save', 'Tap a word → it lands in your bank.'],
-    ['03', 'Review', 'Saved words come back, spaced.'],
-    ['04', 'Produce', 'Type the form. No multiple choice.'],
+/* ── academic-rigour stat band ── */
+function MRigourBand() {
+  const stats: [ReactNode, string, string][] = [
+    [<>3</>, 'Languages', 'ES · DE · TR'],
+    [
+      <>
+        A1<span style={{ color: 'var(--accent)' }}>–</span>B2
+      </>,
+      'CEFR levels',
+      'end to end',
+    ],
+    [<>298</>, 'Grammar lessons', 'one per point'],
+    [
+      <>
+        20,000<span style={{ color: 'var(--accent)' }}>+</span>
+      </>,
+      'Production exercises',
+      'in the pool',
+    ],
   ];
   return (
-    <section className="dfm-wrap dfm-section" id="how" style={{ scrollMarginTop: 64 }}>
-      <div className="dfm-eyebrow2">One loop</div>
-      <h2 className="dfm-h2">Four moves, then again.</h2>
-      <div className="dfm-stack">
-        {steps.map(([n, h, b]) => (
-          <div key={n} className="dfm-loop-row">
-            <div className="dfm-loop-n">{n}</div>
-            <div>
-              <div style={{ fontFamily: 'var(--t-display)', fontSize: 18, color: 'var(--df-ink)' }}>
-                {h}
-              </div>
-              <p style={{ color: 'var(--df-ink2)', fontSize: 14, lineHeight: 1.5, margin: '6px 0 0' }}>
-                {b}
-              </p>
+    <section className="dfm-wrap dfm-section">
+      <div className="dfm-eyebrow2">Built on real grammar</div>
+      <h2 className="dfm-h2">Every drill traces back to a grammar you can trust.</h2>
+      <p className="dfm-lead">
+        Grounded in an authoritative curriculum, calibrated to your CEFR level, and rewritten the
+        moment the data says an item fell short.
+      </p>
+      <div className="dfm-stats">
+        {stats.map(([big, l1, l2], i) => (
+          <div key={i} className="dfm-stat">
+            <div className="dfm-stat-big">{big}</div>
+            <div className="dfm-stat-lab">
+              {l1}
+              <br />
+              {l2}
             </div>
           </div>
         ))}
       </div>
+      <Link href="/academic-rigour" className="dfm-rigour-link">
+        See how the material is made →
+      </Link>
     </section>
   );
 }
@@ -572,104 +606,67 @@ function MPractice({
   );
 }
 
-/* ── vocabulary review, fed by the bank ── */
-interface Review {
-  w: string;
-  lang: string;
-  gloss: string;
-  due: string;
-  isNew?: boolean;
-}
-
-function MVocab({ bank }: { bank: BankWord[] }) {
-  const [graded, setGraded] = useState<Record<string, string>>({});
-  const fromBank: Review[] = bank.map((b) => ({
-    w: b.w,
-    lang: b.lang,
-    gloss: b.gloss,
-    due: 'just added',
-    isNew: true,
-  }));
-  const list: Review[] = [...fromBank.slice().reverse(), ...D_SEED_VOCAB];
-  const grade = (key: string, label: string) => setGraded((g) => ({ ...g, [key]: label }));
+/* ── reading: deep annotation, note stacks below the passage ── */
+function MDeepAnno() {
+  const tokens = D_READING.tokens;
+  const wordIdx = tokens.reduce<number[]>(
+    (acc, t, i) => (typeof t === 'object' ? [...acc, i] : acc),
+    [],
+  );
+  const [sel, setSel] = useState<number>(wordIdx[3] ?? wordIdx[0] ?? 0);
+  const [saved, setSaved] = useState<Record<string, boolean>>({});
+  const selTok = tokens[sel];
+  const selCard: DeepCard | null = typeof selTok === 'object' ? selTok : null;
+  const toggle = (w: string) => setSaved((s) => ({ ...s, [w]: !s[w] }));
 
   return (
     <section className="dfm-wrap dfm-section">
-      <div className="dfm-eyebrow2">Saved words become reviews</div>
-      <h2 className="dfm-h2">Your deck builds itself from what you read.</h2>
+      <div className="dfm-eyebrow2">Where the words come from</div>
+      <h2 className="dfm-h2">Read real text. Tap any word.</h2>
       <p className="dfm-lead">
-        Every word you save drops into a spaced queue. Grade your recall and drill schedules it —
-        misses come back sooner, wins drift later.
+        Every word in the passage is one tap from a deep note — meaning in context, a target-language
+        definition, the morphology broken out — and one more into your deck.
       </p>
 
-      <div className="dfm-stack">
-        {bank.length === 0 && (
-          <div
-            style={{
-              fontFamily: 'var(--t-mono)',
-              fontSize: 12,
-              color: 'var(--df-mute)',
-              padding: '0 2px 2px',
-            }}
-          >
-            ↑ save a word from the passage above and watch it appear here.
-          </div>
+      <div className="dfm-read-meta" style={{ marginTop: 22 }}>
+        <span className="ttl">{D_READING.title}</span>
+        <span style={{ width: 4, height: 4, borderRadius: 4, background: 'var(--df-line)' }} />
+        <span className="src">{D_READING.source}</span>
+        <span className="df-chip-dark" style={{ marginLeft: 'auto' }}>
+          {D_READING.tag} · {D_READING.cefr}
+        </span>
+      </div>
+
+      <div className="dfm-passage">
+        <p className="df-passage" style={{ fontSize: 20 }}>
+          {tokens.map((tk, i) =>
+            typeof tk === 'string' ? (
+              <Fragment key={i}>{tk}</Fragment>
+            ) : (
+              <button
+                key={i}
+                className={'df-word' + (sel === i ? ' on' : '')}
+                onClick={() => setSel(i)}
+              >
+                {tk.surface}
+              </button>
+            ),
+          )}
+        </p>
+      </div>
+      <div className="dfm-read-foot">
+        <span className="dash" /> {wordIdx.length} words annotated · tap to open
+      </div>
+
+      <div className="dfm-note-wrap">
+        {selCard && (
+          <DeepAnnotationCard
+            card={selCard}
+            key={sel}
+            saved={!!saved[selCard.surface]}
+            onToggle={() => toggle(selCard.surface)}
+          />
         )}
-        {list.map((v, i) => {
-          const key = v.w + '-' + i;
-          const g = graded[key];
-          const nextDue =
-            g === 'Again'
-              ? 'back in 1 min'
-              : g === 'Good'
-                ? 'in 3 days'
-                : g === 'Easy'
-                  ? 'in 8 days'
-                  : v.due;
-          return (
-            <div key={key} className={'dfm-vocab' + (v.isNew && !g ? ' is-new' : '')}>
-              <div className="dfm-vocab-head">
-                <span className="dfm-vocab-flag">{v.lang}</span>
-                <div style={{ minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontFamily: 'var(--t-display)',
-                      fontSize: 20,
-                      fontWeight: 500,
-                      color: 'var(--df-ink)',
-                      letterSpacing: '-0.3px',
-                    }}
-                  >
-                    {v.w}
-                  </div>
-                  <div style={{ fontSize: 13, color: 'var(--df-ink2)', marginTop: 2 }}>
-                    {v.gloss}
-                    <span
-                      style={{
-                        fontFamily: 'var(--t-mono)',
-                        fontSize: 11,
-                        color: g ? 'var(--ok)' : v.isNew ? 'var(--accent)' : 'var(--df-mute)',
-                        marginLeft: 8,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {g ? '✓ ' + nextDue : v.isNew ? '● ' + v.due : nextDue}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div className="dfm-vocab-grade">
-                <button className="again" onClick={() => grade(key, 'Again')}>
-                  Again
-                </button>
-                <button onClick={() => grade(key, 'Good')}>Good</button>
-                <button className="easy" onClick={() => grade(key, 'Easy')}>
-                  Easy
-                </button>
-              </div>
-            </div>
-          );
-        })}
       </div>
     </section>
   );
@@ -808,7 +805,7 @@ function MFooter() {
   return (
     <footer className="dfm-footer">
       <DBrand />
-      <div className="meta">© 2026 drill · read, save, produce</div>
+      <div className="meta">© 2026 drill · type it, don’t tap it</div>
       <Link href="/sign-in">Sign in →</Link>
       <LegalLinks className="mt-s-3 landing-legal-links" />
     </footer>
@@ -824,9 +821,9 @@ export function DrillLandingMobile() {
     <div className="df dfm">
       <MTopBar />
       <MHero />
-      <MLoop />
+      <MRigourBand />
       <MPractice defaultLang={DEFAULT_LANG} bank={bank} onSave={onSave} />
-      <MVocab bank={bank} />
+      <MDeepAnno />
       <MWhy />
       <MChatGPT />
       <MLangBand />

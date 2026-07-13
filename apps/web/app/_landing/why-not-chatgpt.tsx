@@ -204,7 +204,7 @@ export function WhyNotPage() {
         >
           <DBrand />
           <div style={{ fontSize: 12, color: 'var(--df-mute)' }}>
-            © 2026 drill · read, save, produce
+            © 2026 drill · type it, don’t tap it
           </div>
           <Link href="/" className="df-footlink">
             ← back to home

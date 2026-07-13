@@ -165,7 +165,7 @@ export function WhyNotMobile() {
 
       <footer className="dfm-footer">
         <DBrand />
-        <div className="meta">© 2026 drill · read, save, produce</div>
+        <div className="meta">© 2026 drill · type it, don’t tap it</div>
         <Link href="/">← back to home</Link>
         <LegalLinks className="mt-s-3 landing-legal-links" />
       </footer>
