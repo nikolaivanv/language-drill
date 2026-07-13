@@ -59,7 +59,7 @@ export const ANNOTATE_TOOL: Anthropic.Tool = {
             gloss: {
               type: "string",
               description:
-                "Brief English meaning, lowercase, ≤ 80 characters.",
+                "Brief English meaning, lowercase, ≤ 80 characters. When the lemma has two common senses, list the top 1–2 separated by '; ' (e.g. 'bench; bank').",
             },
             freq: {
               type: "integer",
@@ -87,7 +87,7 @@ export const ANNOTATE_TOOL: Anthropic.Tool = {
 // Bump in the same commit as any semantic edit to ANNOTATE_SYSTEM_PROMPT.
 // Drives the Langfuse trace `promptVersion` tag — dashboards cohort old vs.
 // new prompt traces by this string.
-export const ANNOTATE_SYSTEM_PROMPT_VERSION = "annotate@2026-05-26";
+export const ANNOTATE_SYSTEM_PROMPT_VERSION = "annotate@2026-07-13";
 
 export const ANNOTATE_SYSTEM_PROMPT = `You are a reading-level assistant for an intermediate-plus language-learning application. You receive a passage in ES, DE, or TR AND a server-selected list of words from that passage. For EACH word in the list, produce one highlight entry — lemma, part of speech, English gloss, frequency rank, and CEFR band — and submit the full set via the provided tool. This is a lightweight highlight pass: it marks words worth a closer look. Do NOT produce example sentences, definitions, or any other long-form fields — a separate on-demand pass enriches a word when the learner taps it.
 
@@ -110,7 +110,7 @@ Each flagged item MUST include a \`matchedForm\`: the EXACT lowercased surface f
 The other fields:
 - \`lemma\`: the dictionary headword (citation form) — verb infinitive, masculine singular adjective, singular noun.
 - \`pos\`: part of speech ("noun", "verb", "adjective", "adverb", etc.).
-- \`gloss\`: a brief English meaning, lowercase, ≤ 80 characters.
+- \`gloss\`: a brief English meaning, lowercase, ≤ 80 characters. When the lemma has two common senses, list the top 1–2 separated by "; " (e.g. "bench; bank").
 - \`freq\`: a non-negative integer corpus rank (rarer = larger).
 - \`cefr\`: one of "A1", "A2", "B1", "B2", "C1", "C2".
 
