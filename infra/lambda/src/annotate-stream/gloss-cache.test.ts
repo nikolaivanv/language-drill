@@ -1,4 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+// Mock `../db` before importing the helper: `./gloss-cache` imports the real
+// db client (`../db`), which throws at import when `DATABASE_URL` is unset.
+// Every other lambda test mocks `../db` for the same reason; this pure-function
+// test needs no live DB, so a stub keeps it runnable without `DATABASE_URL`
+// (turbo's `test` task does not pass that env var through).
+vi.mock('../db', () => ({ db: {} }));
+
 import { wordFlagFromCacheRow } from './gloss-cache';
 import type { GlossCacheRow } from '@language-drill/db';
 import { CefrLevel, Language } from '@language-drill/shared';
