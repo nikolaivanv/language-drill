@@ -73,3 +73,37 @@ describe('replayHistory', () => {
     expect(a.get('k')!.masteryScore).toBeCloseTo(b.get('k')!.masteryScore, 10);
   });
 });
+
+describe('updateMastery evidenceWeight', () => {
+  const prev = { masteryScore: 0.5, confidence: 0.5, evidenceCount: 3, lastPracticedAt: new Date('2026-07-01') };
+  const at = new Date('2026-07-01'); // same day → no decay
+
+  it('a down-weighted correct answer moves mastery less than a full-weight one', () => {
+    const full = updateMastery(prev, { score: 1, difficulty: CefrLevel.A1, at });
+    const hinted = updateMastery(prev, { score: 1, difficulty: CefrLevel.A1, at, evidenceWeight: 0.1 });
+    expect(hinted.masteryScore).toBeLessThan(full.masteryScore);
+    expect(hinted.masteryScore).toBeGreaterThan(prev.masteryScore);
+    // confidence still grows via evidenceCount regardless of weight
+    expect(hinted.confidence).toBe(full.confidence);
+  });
+
+  it('evidenceWeight defaults to 1 (unchanged behavior)', () => {
+    const a = updateMastery(prev, { score: 1, difficulty: CefrLevel.A1, at });
+    const b = updateMastery(prev, { score: 1, difficulty: CefrLevel.A1, at, evidenceWeight: 1 });
+    expect(a.masteryScore).toBe(b.masteryScore);
+  });
+
+  it('replayHistory honors per-row evidenceWeight', () => {
+    const rows = [
+      { grammarPointKey: 'g', score: 1, difficulty: CefrLevel.A1, evaluatedAt: at, evidenceWeight: 0.1 },
+    ];
+    const heavy = [
+      { grammarPointKey: 'g', score: 1, difficulty: CefrLevel.A1, evaluatedAt: at },
+    ];
+    // first observation seeds directly (prev===null), so both equal; add a 2nd
+    rows.push({ grammarPointKey: 'g', score: 1, difficulty: CefrLevel.A1, evaluatedAt: new Date('2026-07-02'), evidenceWeight: 0.1 });
+    heavy.push({ grammarPointKey: 'g', score: 1, difficulty: CefrLevel.A1, evaluatedAt: new Date('2026-07-02') });
+    expect(replayHistory(rows).get('g')!.masteryScore)
+      .toBeLessThanOrEqual(replayHistory(heavy).get('g')!.masteryScore);
+  });
+});
