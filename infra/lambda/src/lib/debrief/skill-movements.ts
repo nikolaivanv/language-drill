@@ -14,6 +14,7 @@ export type SkillHistoryRow = {
   score: number;
   difficulty: CefrLevel;
   evaluatedAt: Date;
+  evidenceWeight?: number;
 };
 
 // Tunable banding constants (design spec).
@@ -43,7 +44,13 @@ export function confidenceBand(confidence: number): 'high' | 'low' {
 }
 
 function toHistoryRow(r: SkillHistoryRow): HistoryRow {
-  return { grammarPointKey: r.grammarPointKey, score: r.score, difficulty: r.difficulty, evaluatedAt: r.evaluatedAt };
+  return {
+    grammarPointKey: r.grammarPointKey,
+    score: r.score,
+    difficulty: r.difficulty,
+    evaluatedAt: r.evaluatedAt,
+    evidenceWeight: r.evidenceWeight,
+  };
 }
 
 /**

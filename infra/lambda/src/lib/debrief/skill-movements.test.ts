@@ -76,6 +76,26 @@ describe('computeSkillMovements', () => {
     expect(out[0].grammarPointKey).toBe('gp-b');
   });
 
+  it('carries evidenceWeight into the replay: a down-weighted miss avoids a slip band', () => {
+    // Same prior-hit + session-miss shape as the "slip" test above, but the
+    // session row is re-run with a heavy hint penalty (evidenceWeight 0.01).
+    // Genuinely discriminating: deleting the evidenceWeight threading would
+    // make both branches replay identically and both come out 'slip'.
+    const rows: SkillHistoryRow[] = [
+      { id: 'p1', grammarPointKey: 'gp-a', score: 0.9, difficulty: CefrLevel.B2, evaluatedAt: at('2026-06-10T04:00:00Z') },
+      { id: 's1', grammarPointKey: 'gp-a', score: 0.1, difficulty: CefrLevel.B2, evaluatedAt: at('2026-06-16T04:00:00Z') },
+    ];
+    const fullWeight = computeSkillMovements({ rows, sessionRowIds: new Set(['s1']), labels: new Map([['gp-a', 'Point A']]) });
+    expect(fullWeight[0].band).toBe('slip');
+
+    const downWeighted = computeSkillMovements({
+      rows: rows.map((r) => (r.id === 's1' ? { ...r, evidenceWeight: 0.01 } : r)),
+      sessionRowIds: new Set(['s1']),
+      labels: new Map([['gp-a', 'Point A']]),
+    });
+    expect(downWeighted[0].band).toBe('steady');
+  });
+
   it('orders movers before steady, deterministically', () => {
     const rows: SkillHistoryRow[] = [
       { id: 'p1', grammarPointKey: 'gp-a', score: 0.6, difficulty: CefrLevel.B2, evaluatedAt: at('2026-06-10T00:00:00Z') },

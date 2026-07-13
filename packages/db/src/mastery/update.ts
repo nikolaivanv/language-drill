@@ -16,6 +16,8 @@ export type MasteryObservation = {
   score: number; // 0..1
   difficulty: CefrLevel;
   at: Date;
+  /** Multiplier in (0,1] shrinking this observation's evidence weight (hint penalty). Default 1. */
+  evidenceWeight?: number;
 };
 
 export type HistoryRow = {
@@ -23,6 +25,7 @@ export type HistoryRow = {
   score: number;
   difficulty: CefrLevel;
   evaluatedAt: Date;
+  evidenceWeight?: number;
 };
 
 // Mirrors progress-aggregation.ts DIFFICULTY_WEIGHTS — keep in sync.
@@ -67,7 +70,8 @@ export function updateMastery(
 
   // Asymmetric observation weight: gains scale with difficulty (reward hard
   // correct), losses scale with INVERSE difficulty (punish easy errors).
-  const obsW = obs.score >= prev.masteryScore ? dw : DW_PIVOT - dw;
+  const ew = obs.evidenceWeight == null ? 1 : clamp01(obs.evidenceWeight);
+  const obsW = (obs.score >= prev.masteryScore ? dw : DW_PIVOT - dw) * ew;
 
   const masteryScore = clamp01(
     (priorW * prev.masteryScore + obsW * obs.score) / (priorW + obsW),
@@ -94,7 +98,12 @@ export function replayHistory(
     const prev = out.get(r.grammarPointKey) ?? null;
     out.set(
       r.grammarPointKey,
-      updateMastery(prev, { score: r.score, difficulty: r.difficulty, at: r.evaluatedAt }),
+      updateMastery(prev, {
+        score: r.score,
+        difficulty: r.difficulty,
+        at: r.evaluatedAt,
+        evidenceWeight: r.evidenceWeight,
+      }),
     );
   }
   return out;

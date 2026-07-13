@@ -1,5 +1,7 @@
 import { boolean, index, integer, jsonb, pgTable, primaryKey, real, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
+import type { WordHintUnit } from '@language-drill/shared';
+
 import { exercises } from './exercises';
 import { practiceSessions } from './sessions';
 import { users } from './users';
@@ -14,6 +16,8 @@ export const userExerciseHistory = pgTable(
     score: real('score'), // 0.0–1.0
     responseJson: jsonb('response_json'), // user's answer + Claude evaluation output
     evaluatedAt: timestamp('evaluated_at'),
+    // Hint-penalty multiplier applied to this row's mastery observation (null → 1.0).
+    evidenceWeight: real('evidence_weight'),
   },
   (table) => ({
     // Index for progress queries: filter by user, order by most recent
@@ -149,3 +153,14 @@ export const errorObservations = pgTable(
 
 export type ErrorObservation = typeof errorObservations.$inferSelect;
 export type NewErrorObservation = typeof errorObservations.$inferInsert;
+
+/** Permanent per-exercise cache of the translation word-hint map (cross-user). */
+export const exerciseWordHints = pgTable('exercise_word_hints', {
+  exerciseId: uuid('exercise_id')
+    .primaryKey()
+    .references(() => exercises.id, { onDelete: 'cascade' }),
+  unitsJson: jsonb('units_json').$type<WordHintUnit[]>().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type ExerciseWordHints = typeof exerciseWordHints.$inferSelect;

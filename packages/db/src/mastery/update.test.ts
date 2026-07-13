@@ -73,3 +73,40 @@ describe('replayHistory', () => {
     expect(a.get('k')!.masteryScore).toBeCloseTo(b.get('k')!.masteryScore, 10);
   });
 });
+
+describe('updateMastery evidenceWeight', () => {
+  const prev = { masteryScore: 0.5, confidence: 0.5, evidenceCount: 3, lastPracticedAt: new Date('2026-07-01') };
+  const at = new Date('2026-07-01'); // same day → no decay
+
+  it('a down-weighted correct answer moves mastery less than a full-weight one', () => {
+    const full = updateMastery(prev, { score: 1, difficulty: CefrLevel.A1, at });
+    const hinted = updateMastery(prev, { score: 1, difficulty: CefrLevel.A1, at, evidenceWeight: 0.1 });
+    expect(hinted.masteryScore).toBeLessThan(full.masteryScore);
+    expect(hinted.masteryScore).toBeGreaterThan(prev.masteryScore);
+    // confidence still grows via evidenceCount regardless of weight
+    expect(hinted.confidence).toBe(full.confidence);
+  });
+
+  it('evidenceWeight defaults to 1 (unchanged behavior)', () => {
+    const a = updateMastery(prev, { score: 1, difficulty: CefrLevel.A1, at });
+    const b = updateMastery(prev, { score: 1, difficulty: CefrLevel.A1, at, evidenceWeight: 1 });
+    expect(a.masteryScore).toBe(b.masteryScore);
+  });
+
+  it('replayHistory honors per-row evidenceWeight', () => {
+    // Second observation is a MISS (score 0 < prior masteryScore 1), so the
+    // threaded evidenceWeight is load-bearing: a down-weighted miss must move
+    // mastery LESS than a full-weight miss. (Both series use the same seed,
+    // so an all-hits series would pass even with evidenceWeight deleted.)
+    const downWeighted = [
+      { grammarPointKey: 'g', score: 1, difficulty: CefrLevel.A1, evaluatedAt: d('2026-07-01') },
+      { grammarPointKey: 'g', score: 0, difficulty: CefrLevel.A1, evaluatedAt: d('2026-07-02'), evidenceWeight: 0.1 },
+    ];
+    const fullWeight = [
+      { grammarPointKey: 'g', score: 1, difficulty: CefrLevel.A1, evaluatedAt: d('2026-07-01') },
+      { grammarPointKey: 'g', score: 0, difficulty: CefrLevel.A1, evaluatedAt: d('2026-07-02') },
+    ];
+    expect(replayHistory(downWeighted).get('g')!.masteryScore)
+      .toBeGreaterThan(replayHistory(fullWeight).get('g')!.masteryScore);
+  });
+});

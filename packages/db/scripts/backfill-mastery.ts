@@ -47,6 +47,7 @@ async function main() {
       score: userExerciseHistory.score,
       difficulty: exercises.difficulty,
       evaluatedAt: userExerciseHistory.evaluatedAt,
+      evidenceWeight: userExerciseHistory.evidenceWeight,
     })
     .from(userExerciseHistory)
     .innerJoin(exercises, eq(userExerciseHistory.exerciseId, exercises.id))
@@ -68,6 +69,7 @@ async function main() {
       score: r.score as number,
       difficulty: r.difficulty,
       evaluatedAt: new Date(r.evaluatedAt as Date),
+      evidenceWeight: r.evidenceWeight ?? undefined,
     });
     byUserLang.set(k, list);
   }
