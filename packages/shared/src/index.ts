@@ -127,6 +127,17 @@ export type TranslationContent = {
   topicHint?: string;
 };
 
+/**
+ * One unit of a translation word-hint map: an ordered slice of the source
+ * sentence. `hintable:false` units (articles, function words, punctuation)
+ * carry no lemma and are not tappable in the UI.
+ */
+export type WordHintUnit = {
+  text: string;
+  hintable: boolean;
+  lemma?: string;
+};
+
 export type VocabRecallContent = {
   type: ExerciseType.VOCAB_RECALL;
   instructions: string;
