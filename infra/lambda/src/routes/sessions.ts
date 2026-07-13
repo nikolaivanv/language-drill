@@ -1107,6 +1107,7 @@ sessions.get('/sessions/:id/debrief', async (c) => {
         difficulty: exercisesTable.difficulty,
         score: userExerciseHistory.score,
         evaluatedAt: userExerciseHistory.evaluatedAt,
+        evidenceWeight: userExerciseHistory.evidenceWeight,
       })
       .from(userExerciseHistory)
       .innerJoin(exercisesTable, eq(userExerciseHistory.exerciseId, exercisesTable.id))
@@ -1126,6 +1127,7 @@ sessions.get('/sessions/:id/debrief', async (c) => {
       score: r.score as number,
       difficulty: r.difficulty as CefrLevel,
       evaluatedAt: r.evaluatedAt as Date,
+      evidenceWeight: r.evidenceWeight ?? undefined,
     }));
     const sessionRowIds = new Set(histRows.filter((r) => r.sessionId === session.id).map((r) => r.id));
     skillMovements = computeSkillMovements({ rows, sessionRowIds, labels: affectedLabels });
