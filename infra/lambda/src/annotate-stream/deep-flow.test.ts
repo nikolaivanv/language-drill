@@ -107,6 +107,16 @@ vi.mock("../usage/global-capacity", () => ({
   checkGlobalCapacity: vi.fn(async () => "ok"),
 }));
 
+// Gloss-cache write-through (Task 5). Only `upsertGlossCacheRows` is exercised
+// by this file's tests; stub it in isolation so the deep flow's best-effort
+// write-through can be asserted without touching the real db-backed module.
+const { mockUpsertGlossCacheRows } = vi.hoisted(() => ({
+  mockUpsertGlossCacheRows: vi.fn(),
+}));
+vi.mock("./gloss-cache", () => ({
+  upsertGlossCacheRows: mockUpsertGlossCacheRows,
+}));
+
 import { runDeepSpanPreModel, handleDeepSpan } from "./deep-flow";
 import type { HandleDeepSpanArgs } from "./deep-flow";
 import { CefrLevel, Language } from "@language-drill/shared";
@@ -196,6 +206,7 @@ beforeEach(() => {
   dbInserts.length = 0;
   vi.mocked(getEffectivePlan).mockReset().mockResolvedValue("free");
   vi.mocked(checkGlobalCapacity).mockReset().mockResolvedValue("ok");
+  mockUpsertGlossCacheRows.mockReset();
 });
 
 /** An async generator yielding scripted `field` events then a terminal `done`. */
@@ -496,5 +507,64 @@ describe("handleDeepSpan — model stage failure (Req 1.8, 2.6)", () => {
     expect(calls.terminals).toHaveLength(1);
     expect(calls.terminals[0].type).toBe("error");
     expect(dbInserts).toHaveLength(0);
+  });
+});
+
+describe("handleDeepSpan — gloss-cache write-through (base-gloss cache Task 5)", () => {
+  it("writes a resolved word card baseGloss through to the gloss cache", async () => {
+    dbResults.push([{ count: 0 }]); // rate-limit
+    dbResults.push([{ proficiencyLevel: "B1" }]); // profile
+    const card = {
+      type: "word",
+      surface: "bancos",
+      lemma: "banco",
+      pos: "noun",
+      contextualSense: "financial institution",
+      baseGloss: "bench; bank",
+      definition: "...",
+      definitionLabel: "Español",
+      cefr: "B1",
+      freq: 4200,
+    };
+    streamSpanImpl.set(scriptedStream([{ key: "type", value: "word" }], card));
+
+    const { writer } = makeWriter();
+    await handleDeepSpan(buildArgs({}, writer));
+
+    expect(mockUpsertGlossCacheRows).toHaveBeenCalledTimes(1);
+    expect(mockUpsertGlossCacheRows).toHaveBeenCalledWith([
+      {
+        language: Language.ES,
+        lemma: "banco",
+        baseGloss: "bench; bank",
+        pos: "noun",
+        cefr: "B1",
+        freqRank: 4200,
+        source: "deep",
+        promptVersion: expect.any(String),
+      },
+    ]);
+  });
+
+  it("does not write when the resolved card has no baseGloss (older snapshot)", async () => {
+    dbResults.push([{ count: 0 }]); // rate-limit
+    dbResults.push([{ proficiencyLevel: "B1" }]); // profile
+    const card = {
+      type: "word",
+      surface: "bancos",
+      lemma: "banco",
+      pos: "noun",
+      contextualSense: "financial institution",
+      definition: "...",
+      definitionLabel: "Español",
+      cefr: "B1",
+      freq: 4200,
+    };
+    streamSpanImpl.set(scriptedStream([{ key: "type", value: "word" }], card));
+
+    const { writer } = makeWriter();
+    await handleDeepSpan(buildArgs({}, writer));
+
+    expect(mockUpsertGlossCacheRows).not.toHaveBeenCalled();
   });
 });

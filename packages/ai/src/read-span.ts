@@ -76,7 +76,7 @@ const WORD_CARD_SCHEMA = {
     baseGloss: {
       type: "string",
       description:
-        "A short base English gloss of the LEMMA — the concise dictionary meaning (e.g. 'to eat', 'the house'), not the contextual sense. A few words at most; no punctuation or examples.",
+        "A short base English gloss of the LEMMA — the concise dictionary meaning (e.g. 'to eat', 'the house'), not the contextual sense. When the lemma has two common senses, list the top 1–2 separated by '; ' (e.g. 'bench; bank'). A few words at most; no punctuation beyond the separator; no examples.",
     },
     definition: {
       type: "string",
@@ -325,7 +325,7 @@ export function pickSpanTool(spanType: SpanType): Anthropic.Tool {
 // Bump in the same commit as any semantic edit to READ_SPAN_SYSTEM_PROMPT.
 // Drives the Langfuse trace `promptVersion` tag — dashboards cohort old vs.
 // new prompt traces by this string. Registered as `read-span-system-prompt`.
-export const READ_SPAN_PROMPT_VERSION = "read-span@2026-07-09";
+export const READ_SPAN_PROMPT_VERSION = "read-span@2026-07-13";
 
 export const READ_SPAN_SYSTEM_PROMPT = `You are a reading tutor for an intermediate-plus language-learning application. The learner is reading an authentic passage in ES, DE, or TR and has selected a span to understand in depth. You receive the full passage, the selected span and its character offsets, the target language, the learner's CEFR level, and the span TYPE the card must take. Produce ONE rich annotation card for that span via the provided tool.
 

@@ -222,7 +222,7 @@ describe("READ_SPAN_SYSTEM_PROMPT", () => {
   });
 
   it("pins the version constant", () => {
-    expect(READ_SPAN_PROMPT_VERSION).toBe("read-span@2026-07-09");
+    expect(READ_SPAN_PROMPT_VERSION).toBe("read-span@2026-07-13");
   });
 
   it("documents the base English gloss for word cards", () => {

@@ -20,6 +20,8 @@ const {
   mockFlushObservability,
   mockWithLlmTrace,
   mockSelectWhereArgs,
+  mockLookupGlossCache,
+  mockUpsertGlossCacheRows,
   streamAnnotationImpl,
 } = vi.hoisted(() => {
   // The impl optionally receives the same (client, input) the real
@@ -41,6 +43,12 @@ const {
     // array (one entry per `.where()` call); tests inspect `.at(-1)`.
     mockSelectWhereArgs: [] as unknown[],
     mockFlushObservability: vi.fn<() => Promise<void>>(() => Promise.resolve()),
+    // Gloss-cache split (Task 4): lookup returns a Map<lemma, row>; upsert is
+    // the write-through spy. Defaulted to an empty map in `beforeEach` so
+    // pre-existing tests (which never touch the cache) see "all misses" —
+    // the original pre-Task-4 behaviour.
+    mockLookupGlossCache: vi.fn(),
+    mockUpsertGlossCacheRows: vi.fn(),
     // Transparent passthrough by default — Langfuse is disabled in vitest,
     // so this matches production no-op behaviour. Tests can `.mock.calls`
     // to inspect the captured `LlmTraceContext`.
@@ -98,6 +106,29 @@ vi.mock("./jwt", () => ({
 
 vi.mock("./pipeline", () => ({
   buildCandidateList: (input: unknown) => mockBuildCandidateList(input),
+}));
+
+// Gloss-cache split (Task 4). `wordFlagFromCacheRow` is re-exported as the
+// real (pure) synthesis logic — only the two DB-touching functions are
+// mocked — so the partition logic in the handler is exercised for real.
+vi.mock("./gloss-cache", () => ({
+  lookupGlossCache: (...args: unknown[]) => mockLookupGlossCache(...args),
+  upsertGlossCacheRows: (...args: unknown[]) => mockUpsertGlossCacheRows(...args),
+  wordFlagFromCacheRow: (
+    row: { cefr: string | null; lemma: string; pos: string; baseGloss: string },
+    matchedForm: string,
+    freq: number,
+  ) =>
+    row.cefr === null
+      ? null
+      : {
+          matchedForm,
+          lemma: row.lemma,
+          pos: row.pos,
+          gloss: row.baseGloss,
+          freq,
+          cefr: row.cefr,
+        },
 }));
 
 vi.mock("@language-drill/ai", () => {
@@ -346,6 +377,10 @@ beforeEach(() => {
   mockBuildCandidateList.mockReset();
   mockUsageCount.mockReset().mockResolvedValue([{ count: 5 }]);
   mockUsageInsertValues.mockReset();
+  // Default: empty cache → every candidate is a miss, matching pre-Task-4
+  // behaviour for tests that don't set up the gloss cache themselves.
+  mockLookupGlossCache.mockReset().mockResolvedValue(new Map());
+  mockUpsertGlossCacheRows.mockReset().mockResolvedValue(undefined);
   mockReadEntriesUpdate.mockReset();
   mockStreamSpan.mockReset();
   mockSelectWhereArgs.length = 0;
@@ -486,6 +521,257 @@ describe("annotate-stream handler — empty candidates (Req 1.6 / 2.5)", () => {
     const frames = parseSseFrames();
     expect(frames.map((f) => f.event)).toEqual(["meta", "done"]);
     expect(mockUsageInsertValues).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Task 4: gloss-cache split — serve hits, miss-only Claude, write-through
+// ---------------------------------------------------------------------------
+
+describe("annotate-stream handler — gloss-cache split", () => {
+  it("serves a cache hit without calling Claude and skips metering when all candidates hit", async () => {
+    mockBuildCandidateList.mockResolvedValueOnce({
+      candidates: [{ matchedForm: "bancos", lemma: "banco", effectiveRank: 4200 }],
+      calibration: { cefr: "B1", top: 5000 },
+    });
+    mockLookupGlossCache.mockResolvedValueOnce(
+      new Map([
+        [
+          "banco",
+          {
+            language: "es",
+            lemma: "banco",
+            baseGloss: "bench; bank",
+            pos: "noun",
+            cefr: "B1",
+            freqRank: 4200,
+            source: "seed",
+            promptVersion: null,
+          },
+        ],
+      ]),
+    );
+    const setStream = vi.fn();
+    // Must NOT be called — a fully-cached passage never touches Claude.
+    streamAnnotationImpl.set(async function* () {
+      setStream();
+    });
+
+    await handler(
+      buildPostEvent({ text: PASSAGE, language: "ES" }),
+      makeResponseStream(),
+      {} as never,
+    );
+
+    const frames = parseSseFrames();
+    expect(frames.map((f) => f.event)).toEqual(["meta", "flag", "done"]);
+    const flagFrame = frames[1].data as { matchedForm: string; gloss: string; freq: number };
+    expect(flagFrame).toMatchObject({ matchedForm: "bancos", gloss: "bench; bank", freq: 4200 });
+    expect(frames[2].data).toEqual({ flaggedCount: 1 });
+    expect(setStream).not.toHaveBeenCalled();
+    expect(mockUsageInsertValues).not.toHaveBeenCalled();
+    expect(mockUpsertGlossCacheRows).not.toHaveBeenCalled();
+  });
+
+  it("sends only misses to Claude and writes their flags through to the cache", async () => {
+    mockBuildCandidateList.mockResolvedValueOnce({
+      candidates: [
+        { matchedForm: "bancos", lemma: "banco", effectiveRank: 4200 },
+        { matchedForm: "aldea", lemma: "aldea", effectiveRank: 6100 },
+      ],
+      calibration: { cefr: "B1", top: 5000 },
+    });
+    mockLookupGlossCache.mockResolvedValueOnce(
+      new Map([
+        [
+          "banco",
+          {
+            language: "es",
+            lemma: "banco",
+            baseGloss: "bench; bank",
+            pos: "noun",
+            cefr: "B1",
+            freqRank: 4200,
+            source: "seed",
+            promptVersion: null,
+          },
+        ],
+      ]),
+    );
+    let received: { candidates: unknown } | undefined;
+    streamAnnotationImpl.set(async function* (_client, input) {
+      received = input as { candidates: unknown };
+      yield {
+        kind: "flag",
+        flag: {
+          matchedForm: "aldea",
+          lemma: "aldea",
+          pos: "noun",
+          gloss: "small village",
+          freq: 6100,
+          cefr: "B2",
+        },
+      };
+      yield { kind: "done", flaggedCount: 1 };
+    });
+
+    await handler(
+      buildPostEvent({ text: PASSAGE, language: "ES" }),
+      makeResponseStream(),
+      {} as never,
+    );
+
+    expect(received?.candidates).toEqual([
+      { matchedForm: "aldea", lemma: "aldea", effectiveRank: 6100 },
+    ]);
+
+    const frames = parseSseFrames();
+    expect(frames.filter((f) => f.event === "flag")).toHaveLength(2); // 1 hit + 1 miss
+    expect(frames.at(-1)).toMatchObject({ event: "done" });
+    expect(mockUsageInsertValues).toHaveBeenCalledTimes(1); // Claude ran → metered
+    expect(mockUpsertGlossCacheRows).toHaveBeenCalledWith([
+      {
+        language: "ES",
+        lemma: "aldea",
+        baseGloss: "small village",
+        pos: "noun",
+        cefr: "B2",
+        freqRank: 6100,
+        source: "skim",
+        promptVersion: expect.any(String),
+      },
+    ]);
+  });
+
+  it("dedupes minted rows by lemma before write-through, keeping the last occurrence", async () => {
+    // Two different surface forms of the same lemma are both misses; naively
+    // pushing both flags into `mintedRows` would violate the upsert's
+    // per-batch (language, lemma) uniqueness (Postgres: "ON CONFLICT DO
+    // UPDATE command cannot affect row a second time"), silently dropping
+    // the whole write-through batch (best-effort → swallowed).
+    mockBuildCandidateList.mockResolvedValueOnce({
+      candidates: [
+        { matchedForm: "banco", lemma: "banco", effectiveRank: 4200 },
+        { matchedForm: "bancos", lemma: "banco", effectiveRank: 4200 },
+      ],
+      calibration: { cefr: "B1", top: 5000 },
+    });
+    // Empty cache (default) → both are misses.
+    streamAnnotationImpl.set(async function* () {
+      yield {
+        kind: "flag",
+        flag: {
+          matchedForm: "banco",
+          lemma: "banco",
+          pos: "noun",
+          gloss: "bank",
+          freq: 4200,
+          cefr: "B1",
+        },
+      };
+      yield {
+        kind: "flag",
+        flag: {
+          matchedForm: "bancos",
+          lemma: "banco",
+          pos: "noun",
+          gloss: "bank (pl.)",
+          freq: 4200,
+          cefr: "B1",
+        },
+      };
+      yield { kind: "done", flaggedCount: 2 };
+    });
+
+    await handler(
+      buildPostEvent({ text: PASSAGE, language: "ES" }),
+      makeResponseStream(),
+      {} as never,
+    );
+
+    expect(mockUpsertGlossCacheRows).toHaveBeenCalledTimes(1);
+    const rows = mockUpsertGlossCacheRows.mock.calls[0][0] as Array<{ lemma: string; baseGloss: string }>;
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ lemma: "banco", baseGloss: "bank (pl.)" });
+  });
+
+  it("lookup failure degrades to all-misses instead of failing the request", async () => {
+    mockBuildCandidateList.mockResolvedValueOnce({
+      candidates: [{ matchedForm: "aldea", lemma: "aldea", effectiveRank: 6100 }],
+      calibration: { cefr: "B1", top: 5000 },
+    });
+    mockLookupGlossCache.mockRejectedValueOnce(new Error("Neon down"));
+    streamAnnotationImpl.set(async function* () {
+      yield { kind: "flag", flag: ALDEA_FLAG };
+      yield { kind: "done", flaggedCount: 1 };
+    });
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await handler(
+      buildPostEvent({ text: PASSAGE, language: "ES" }),
+      makeResponseStream(),
+      {} as never,
+    );
+
+    const frames = parseSseFrames();
+    expect(frames.map((f) => f.event)).toEqual(["meta", "flag", "done"]);
+    expect(mockUsageInsertValues).toHaveBeenCalledTimes(1);
+    expect(errSpy).toHaveBeenCalledWith(
+      "[annotate-stream] gloss-cache lookup failed",
+      expect.any(Error),
+    );
+
+    errSpy.mockRestore();
+  });
+
+  it("logs the gloss-cache split with candidate/cached/miss counts", async () => {
+    mockBuildCandidateList.mockResolvedValueOnce({
+      candidates: [
+        { matchedForm: "bancos", lemma: "banco", effectiveRank: 4200 },
+        { matchedForm: "aldea", lemma: "aldea", effectiveRank: 6100 },
+      ],
+      calibration: { cefr: "B1", top: 5000 },
+    });
+    mockLookupGlossCache.mockResolvedValueOnce(
+      new Map([
+        [
+          "banco",
+          {
+            language: "es",
+            lemma: "banco",
+            baseGloss: "bench; bank",
+            pos: "noun",
+            cefr: "B1",
+            freqRank: 4200,
+            source: "seed",
+            promptVersion: null,
+          },
+        ],
+      ]),
+    );
+    streamAnnotationImpl.set(async function* () {
+      yield { kind: "flag", flag: ALDEA_FLAG };
+      yield { kind: "done", flaggedCount: 1 };
+    });
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await handler(
+      buildPostEvent({ text: PASSAGE, language: "ES" }),
+      makeResponseStream(),
+      {} as never,
+    );
+
+    expect(logSpy).toHaveBeenCalledWith(
+      "[annotate-stream] gloss-cache split",
+      expect.objectContaining({
+        candidateCount: 2,
+        cachedCount: 1,
+        missCount: 1,
+        claudeSkipped: false,
+      }),
+    );
+
+    logSpy.mockRestore();
   });
 });
 
