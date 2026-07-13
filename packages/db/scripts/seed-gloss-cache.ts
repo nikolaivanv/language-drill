@@ -2,7 +2,7 @@
  * One-off backfill of gloss_cache from user_vocabulary. Dry-run by default.
  *   pnpm --filter @language-drill/db seed:gloss-cache            # dry run
  *   pnpm --filter @language-drill/db seed:gloss-cache --apply
- *   pnpm --filter @language-drill/db seed:gloss-cache --apply --language es --limit 5000
+ *   pnpm --filter @language-drill/db seed:gloss-cache --apply --language ES --limit 5000
  * Read-only over user_vocabulary; upserts with onConflictDoNothing so it never
  * clobbers a live-minted entry and is safe to re-run.
  */
@@ -27,7 +27,10 @@ async function main() {
   const db = createDb(databaseUrl);
 
   const apply = process.argv.includes('--apply');
-  const language = arg('language') as LearningLanguage | undefined;
+  const languageArg = arg('language');
+  const language = languageArg
+    ? (languageArg.toUpperCase() as LearningLanguage)
+    : undefined;
   const limit = arg('limit') ? Number(arg('limit')) : undefined;
 
   const q = db

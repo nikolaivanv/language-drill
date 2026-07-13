@@ -49,4 +49,14 @@ describe('deriveSeedRows', () => {
     expect(out).toHaveLength(1);
     expect(out[0].baseGloss).toBe('bench; bank');
   });
+
+  it('dedupes per (language, lemma): source precedence outranks recency', () => {
+    // Deep row is OLDER but must still beat a NEWER skim row — proves the
+    // dedupe isn't just picking the most-recently-added row.
+    const deepOld = row({ gloss: 'ctx', card: wordCard('bench; bank'), addedAt: new Date(1) });
+    const skimNew = row({ gloss: 'bench', card: null, addedAt: new Date(2) });
+    const out = deriveSeedRows([deepOld, skimNew]);
+    expect(out).toHaveLength(1);
+    expect(out[0].baseGloss).toBe('bench; bank');
+  });
 });

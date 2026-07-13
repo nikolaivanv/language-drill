@@ -16,8 +16,8 @@ type Picked = { row: NewGlossCacheRow; preferDeep: boolean; addedAt: Date };
 
 /** Resolve the clean base gloss for one vocab row, or null to skip it. */
 function baseGlossOf(r: SeedVocabRow): { value: string; preferDeep: boolean } | null {
-  if (r.card && (r.card as { type?: string }).type === 'word') {
-    const bg = (r.card as { baseGloss?: unknown }).baseGloss;
+  if (r.card && r.card.type === 'word') {
+    const bg = r.card.baseGloss;
     if (typeof bg === 'string' && bg.trim() !== '') return { value: bg, preferDeep: true };
     return null; // deep row whose gloss is contextual — never fall back to it
   }
