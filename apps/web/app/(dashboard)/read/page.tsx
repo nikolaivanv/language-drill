@@ -203,7 +203,14 @@ export default function ReadPage() {
         active !== null &&
         active.start === span.start &&
         active.end === span.end;
-      maybeAutoSaveWordRef.current(card, span, { background: !isActive });
+      // Thread the word's OWN entry (span.entryId, captured when its lookup was
+      // started) so a background resolve links + banks against that entry, not
+      // whichever entry is on screen now — the user may have opened another
+      // entry mid-lookup (LOAD_ENTRY doesn't abort the stream).
+      maybeAutoSaveWordRef.current(card, span, {
+        background: !isActive,
+        entryId: span.entryId,
+      });
       if (!span.entryId) return;
       const existing = queryClient.getQueryData<ReadEntryResponse>([
         'readEntry',
@@ -238,7 +245,7 @@ export default function ReadPage() {
     (
       card: DeepCard,
       span: Pick<DeepSpan, 'start' | 'end'>,
-      opts?: { background?: boolean },
+      opts?: { background?: boolean; entryId?: string },
     ) => void
   >(() => {});
   // Deep card → vocabulary save + undo (Req 8.4, 8.5). Independent of the entry
@@ -750,10 +757,22 @@ export default function ReadPage() {
     // `background: true` for a switched-away word whose detached stream resolved
     // while a different card is on screen: bank the word (vocab POST + bank +
     // optimistic panel patch) WITHOUT moving the open card's saved footer/toast.
-    opts?: { background?: boolean },
+    // `entryId` is the word's OWN source entry (from its span). It defaults to
+    // the active entry — for the on-screen card and manual saves those coincide,
+    // but a background word from an entry the user has since navigated away from
+    // must link to its own entry, not the one now on screen.
+    opts?: { background?: boolean; entryId?: string },
   ) => {
     if (card.type === 'sentence') return;
     const word = card.type === 'word' ? card.surface.toLowerCase() : null;
+
+    // The entry this word belongs to, and whether that is the entry currently on
+    // screen. Only when they match is the in-memory bank/flagged state valid for
+    // it (and only then may the open-card footer move).
+    const sourceEntryId = opts?.entryId ?? state.activeEntryId;
+    const targetsActiveEntry =
+      sourceEntryId !== null && sourceEntryId === state.activeEntryId;
+    const updatesOpenCard = !opts?.background && targetsActiveEntry;
 
     // A deep card can resolve ANY tapped word, not just the auto-flagged ones.
     // The passage word bank, however, only holds flagged words: the server
@@ -775,7 +794,7 @@ export default function ReadPage() {
         { language: activeLanguage, card, sourceReadEntryId },
         {
           onSuccess: ({ id }) => {
-            if (!opts?.background) {
+            if (updatesOpenCard) {
               setDeepSaved({ start: span.start, end: span.end, vocabId: id, wordKey: word, banked });
               setVocabToast({ label: card.surface });
             }
@@ -795,18 +814,28 @@ export default function ReadPage() {
       );
     };
 
-    // Already-persisted entry: bank the word (PUT) if it's a flagged word that's
-    // new to the bank, then link vocab.
-    if (state.activeEntryId !== null) {
+    // The word belongs to the entry on screen (or a manual/foreground save):
+    // bank the word (PUT) if it's a flagged word new to the bank, then link vocab.
+    // (The redundant null check narrows `sourceEntryId` to a string for TS.)
+    if (targetsActiveEntry && sourceEntryId !== null) {
       const banked = bankableWord !== null && !state.bank.includes(bankableWord);
       if (banked) {
         dispatch({ type: 'TOGGLE_BANK_WORD', word: bankableWord });
         updateBank.mutate(
-          { id: state.activeEntryId, language: activeLanguage, bank: [...state.bank, bankableWord] },
+          { id: sourceEntryId, language: activeLanguage, bank: [...state.bank, bankableWord] },
           { onError: () => dispatch({ type: 'SHOW_INLINE_ERROR', kind: 'bank' }) },
         );
       }
-      saveVocabLinked(state.activeEntryId, banked);
+      saveVocabLinked(sourceEntryId, banked);
+      return;
+    }
+
+    // A background word whose source entry is NOT the one on screen (the user
+    // navigated away mid-lookup): link the vocab to ITS OWN entry and skip
+    // banking entirely — the active entry's bank/flagged state is unrelated, and
+    // that entry isn't loaded to bank into.
+    if (sourceEntryId !== null) {
+      saveVocabLinked(sourceEntryId, false);
       return;
     }
 

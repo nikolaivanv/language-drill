@@ -1272,6 +1272,42 @@ describe('ReadPage — deep annotation flow (Req 3, 9.4, 11)', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('links a background word to its ORIGINAL entry, not the one now on screen', () => {
+    // The user looked a word up in entry A, then opened entry B before the
+    // lookup finished. The detached resolve must link the vocab to A (its
+    // span.entryId) and must NOT bank it into B (whose flagged set / bank state
+    // is unrelated).
+    const OTHER_ENTRY_ID = '22222222-2222-2222-2222-222222222222';
+    setEntries(ENTRIES_3);
+    setEntry(FULL_ENTRY); // active entry on screen = ENTRY_ID (the "B" entry)
+    setVocabMutations({
+      saveImpl: (_vars, opts) => opts?.onSuccess?.({ id: VOCAB_ID }),
+    });
+    renderPage();
+
+    // 'aldea' resolved in a DIFFERENT entry (A) resolves in the background.
+    act(() => {
+      lastSpanOnResolved?.(DEEP_ALDEA, {
+        language: Language.ES,
+        text: 'aldea grande',
+        start: 0,
+        end: 5,
+        entryId: OTHER_ENTRY_ID,
+      });
+    });
+
+    // Vocab links to the ORIGINAL entry A…
+    expect(saveVocabMutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        card: DEEP_ALDEA,
+        sourceReadEntryId: OTHER_ENTRY_ID,
+      }),
+      expect.any(Object),
+    );
+    // …and it is never banked into the entry currently on screen.
+    expect(updateBankMutate).not.toHaveBeenCalled();
+  });
+
   it('does NOT auto-save a resolved phrase card (words only)', () => {
     // Phrase-card shape mirrors `validPhraseCard` in packages/shared/src/read.test.ts.
     const DEEP_PHRASE_CARD: DeepCard = {
