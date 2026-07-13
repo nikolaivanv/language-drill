@@ -8,7 +8,7 @@ export const CoverageAxisSchema = z.object({
 
 export const CurriculumEntrySchema = z.object({
   key: z.string(),
-  kind: z.enum(['grammar', 'vocab', 'dictation', 'free-writing']),
+  kind: z.enum(['grammar', 'vocab', 'dictation', 'free-writing', 'paraphrase']),
   name: z.string(),
   description: z.string(),
   cefrLevel: z.enum(['A1', 'A2', 'B1', 'B2']),

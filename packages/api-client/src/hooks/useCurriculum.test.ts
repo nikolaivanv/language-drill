@@ -21,8 +21,15 @@ const payload = {
       coverageSpec: { axes: [{ name: 'person', floors: { '1sg': 2 } }] },
       freeWritingRegister: null, exerciseTypes: ['cloze', 'translation'],
     },
+    {
+      key: 'es-b1-paraphrase', kind: 'paraphrase', name: 'Paraphrase (B1)', description: 'desc',
+      cefrLevel: 'B1', language: 'ES', examplesPositive: ['a'], examplesNegative: ['*c'],
+      commonErrors: ['e'], prerequisiteKeys: [], targetOverride: null,
+      clozeUnsuitable: false, sentenceConstructionSuitable: false, conjugationSuitable: false,
+      coverageSpec: null, freeWritingRegister: null, exerciseTypes: [],
+    },
   ],
-  total: 1,
+  total: 2,
   curriculumVersionByLanguage: { ES: 'es@1', DE: 'de@1', TR: 'tr@1' },
 };
 
