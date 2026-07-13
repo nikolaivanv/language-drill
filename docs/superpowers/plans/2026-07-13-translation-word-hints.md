@@ -1333,14 +1333,16 @@ function handleSubmit() {
         )}
       </>
     )}
-    {!fullAnswerShown ? (
-      <Button variant="ghost" size="sm" className="self-start" onClick={() => setFullAnswerShown(true)} disabled={isLocked}>
-        reveal full answer
-      </Button>
-    ) : (
-      <p className="t-small text-ink-mute">{content.referenceTranslation}</p>
-    )}
   </div>
+)}
+
+{/* full-answer give-up exit — always available, independent of word-hint mode */}
+{!fullAnswerShown ? (
+  <Button variant="ghost" size="sm" className="self-start" onClick={() => setFullAnswerShown(true)} disabled={isLocked}>
+    reveal full answer
+  </Button>
+) : (
+  <p className="t-small text-ink-mute">{content.referenceTranslation}</p>
 )}
 ```
 
