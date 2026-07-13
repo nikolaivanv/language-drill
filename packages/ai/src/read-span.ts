@@ -67,7 +67,11 @@ const WORD_CARD_SCHEMA = {
       description: "The inflected surface form exactly as it appears in the passage.",
     },
     lemma: { type: "string", description: "Dictionary headword (citation form)." },
-    pos: { type: "string", description: "Part of speech (e.g. 'noun', 'verb')." },
+    pos: {
+      type: "string",
+      description:
+        "Part of speech (e.g. 'noun', 'verb'). For a named entity — a person, place, organization, or brand — use 'proper noun' (still produce the full card).",
+    },
     contextualSense: {
       type: "string",
       description:
@@ -325,7 +329,7 @@ export function pickSpanTool(spanType: SpanType): Anthropic.Tool {
 // Bump in the same commit as any semantic edit to READ_SPAN_SYSTEM_PROMPT.
 // Drives the Langfuse trace `promptVersion` tag — dashboards cohort old vs.
 // new prompt traces by this string. Registered as `read-span-system-prompt`.
-export const READ_SPAN_PROMPT_VERSION = "read-span@2026-07-13";
+export const READ_SPAN_PROMPT_VERSION = "read-span@2026-07-14";
 
 export const READ_SPAN_SYSTEM_PROMPT = `You are a reading tutor for an intermediate-plus language-learning application. The learner is reading an authentic passage in ES, DE, or TR and has selected a span to understand in depth. You receive the full passage, the selected span and its character offsets, the target language, the learner's CEFR level, and the span TYPE the card must take. Produce ONE rich annotation card for that span via the provided tool.
 

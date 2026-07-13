@@ -8,6 +8,7 @@ import {
   type GlossCacheRow,
   type NewGlossCacheRow,
 } from '@language-drill/db';
+import { isProperNounPos } from '@language-drill/ai';
 import type { LearningLanguage, WordFlag } from '@language-drill/shared';
 
 import { db } from '../db';
@@ -38,6 +39,10 @@ export function wordFlagFromCacheRow(
   freq: number,
 ): (WordFlag & { matchedForm: string }) | null {
   if (row.cefr === null) return null;
+  // Never surface a proper noun as a skim highlight (Req 2.4). A name can reach
+  // the cache via the deep path (a tapped entity); the skim pass must not
+  // re-highlight it, so treat such a row as a cache miss.
+  if (isProperNounPos(row.pos)) return null;
   return {
     matchedForm,
     lemma: row.lemma,

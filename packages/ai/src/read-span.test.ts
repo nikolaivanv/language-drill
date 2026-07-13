@@ -209,6 +209,15 @@ describe("span tools", () => {
     };
     expect(sentence.properties.type.enum).toEqual(["sentence"]);
   });
+
+  it("word card `pos` instructs tagging named entities as proper nouns", () => {
+    // So the gloss cache can exclude tapped names from the skim highlight pass
+    // (a deep card is still produced for the user; only its pos label changes).
+    const word = READ_SPAN_WORD_TOOL.input_schema as {
+      properties: { pos: { description: string } };
+    };
+    expect(word.properties.pos.description.toLowerCase()).toContain("proper noun");
+  });
 });
 
 describe("READ_SPAN_SYSTEM_PROMPT", () => {
@@ -222,7 +231,7 @@ describe("READ_SPAN_SYSTEM_PROMPT", () => {
   });
 
   it("pins the version constant", () => {
-    expect(READ_SPAN_PROMPT_VERSION).toBe("read-span@2026-07-13");
+    expect(READ_SPAN_PROMPT_VERSION).toBe("read-span@2026-07-14");
   });
 
   it("documents the base English gloss for word cards", () => {

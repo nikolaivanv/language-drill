@@ -1,3 +1,4 @@
+import { isProperNounPos } from '@language-drill/ai';
 import type { CefrLevel, DeepCard, LearningLanguage } from '@language-drill/shared';
 import type { NewGlossCacheRow } from '../schema/gloss-cache';
 
@@ -29,6 +30,9 @@ export function deriveSeedRows(rows: SeedVocabRow[]): NewGlossCacheRow[] {
   const best = new Map<string, Picked>();
   for (const r of rows) {
     if (r.pos === 'phrase') continue;
+    // Never seed a proper noun — a named entity must not become a skim
+    // highlight (Req 2.4). Matches the deep write-through + serve-side guards.
+    if (isProperNounPos(r.pos)) continue;
     if (r.cefrBand === null) continue;
     const bg = baseGlossOf(r);
     if (bg === null) continue;

@@ -42,6 +42,12 @@ describe('deriveSeedRows', () => {
     expect(deriveSeedRows([row({ gloss: 'contextual', card: wordCard() })])).toEqual([]);
   });
 
+  it('skips proper-noun rows (never seed a named entity as studyable vocab)', () => {
+    for (const pos of ['proper noun', 'proper-noun', 'PROPN']) {
+      expect(deriveSeedRows([row({ lemma: 'berlin', pos })])).toEqual([]);
+    }
+  });
+
   it('dedupes per (language, lemma): deep-source and most-recent win', () => {
     const skimOld = row({ gloss: 'bench', card: null, addedAt: new Date(1) });
     const deepNew = row({ gloss: 'ctx', card: wordCard('bench; bank'), addedAt: new Date(2) });
