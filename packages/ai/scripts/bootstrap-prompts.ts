@@ -75,6 +75,8 @@ import {
   VALIDATION_SYSTEM_PROMPT_TEMPLATE,
   VOCAB_TARGET_GENERATION_PROMPT_VERSION,
   VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE,
+  WORD_HINT_SYSTEM_PROMPT,
+  WORD_HINT_PROMPT_VERSION,
   getLangfuse,
 } from "../src/index.js";
 
@@ -219,6 +221,12 @@ export const PROMPTS: readonly PromptManifestEntry[] = [
     text: VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE,
     version: VOCAB_TARGET_GENERATION_PROMPT_VERSION,
     surface: "vocab-target-generate",
+  },
+  {
+    name: "word-hint-system-prompt",
+    text: WORD_HINT_SYSTEM_PROMPT,
+    version: WORD_HINT_PROMPT_VERSION,
+    surface: "word-hint",
   },
 ];
 

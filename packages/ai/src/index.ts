@@ -116,6 +116,20 @@ export {
   buildStartMyParagraphUserPrompt,
 } from "./writing-helper-prompts.js";
 export {
+  generateWordHints,
+  parseWordHints,
+  WORD_HINT_TOOL,
+  WORD_HINT_TOOL_NAME,
+  WORD_HINT_REQUEST_TIMEOUT_MS,
+  WORD_HINT_MAX_RETRIES,
+  type WordHintInput,
+} from "./word-hint.js";
+export {
+  WORD_HINT_SYSTEM_PROMPT,
+  WORD_HINT_PROMPT_VERSION,
+  buildWordHintUserPrompt,
+} from "./word-hint-prompts.js";
+export {
   ANNOTATE_SYSTEM_PROMPT,
   ANNOTATE_SYSTEM_PROMPT_VERSION,
   ANNOTATE_TOOL,
