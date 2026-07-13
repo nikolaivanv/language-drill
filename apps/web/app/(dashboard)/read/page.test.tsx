@@ -1166,6 +1166,112 @@ describe('ReadPage — deep annotation flow (Req 3, 9.4, 11)', () => {
     expect(saveVocabMutate).toHaveBeenCalledTimes(1);
   });
 
+  it('banks a word whose lookup resolves in the background after switching away', () => {
+    // 'grande' occupies offsets [6,12) in 'aldea grande' — a distinct word the
+    // user switched TO 'aldea' before it finished. Its stream now runs detached
+    // and resolves via `onResolved`, which must still bank it (matching the
+    // dismiss-before-complete behavior).
+    const DEEP_GRANDE: DeepCard = {
+      type: 'word',
+      surface: 'grande',
+      lemma: 'grande',
+      pos: 'adjective',
+      contextualSense: 'large (here: sizeable)',
+      definition: 'de gran tamaño',
+      definitionLabel: 'Español',
+      cefr: CefrLevel.B1,
+      freq: 1200,
+    };
+    const GRANDE_SPAN: SpanReq = {
+      language: Language.ES,
+      text: 'aldea grande',
+      start: 6,
+      end: 12,
+      entryId: ENTRY_ID,
+    };
+
+    setEntries(ENTRIES_3);
+    setEntry(FULL_ENTRY);
+    // Open 'aldea' and keep it streaming (loading) — the user is about to switch.
+    stubSpanStreamingOnStart({ contextualSense: 'a small rural settlement' });
+    setVocabMutations({
+      saveImpl: (_vars, opts) => opts?.onSuccess?.({ id: VOCAB_ID }),
+    });
+    renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
+    // Nothing banked yet: the open word hasn't resolved.
+    expect(saveVocabMutate).not.toHaveBeenCalled();
+
+    // The switched-away word 'grande' resolves in the background via onResolved.
+    act(() => {
+      lastSpanOnResolved?.(DEEP_GRANDE, GRANDE_SPAN);
+    });
+
+    expect(saveVocabMutate).toHaveBeenCalledTimes(1);
+    expect(saveVocabMutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        card: DEEP_GRANDE,
+        sourceReadEntryId: ENTRY_ID,
+      }),
+      expect.any(Object),
+    );
+  });
+
+  it('a background resolve does not clobber the OPEN card\'s saved footer', () => {
+    // The open card is saved (deepSaved === its span). A slower switched-away
+    // word then resolves in the background: it must be banked (data), but must
+    // NOT steal the open card's "✓ saved" footer (UI-only state stays put).
+    const DEEP_GRANDE: DeepCard = {
+      type: 'word',
+      surface: 'grande',
+      lemma: 'grande',
+      pos: 'adjective',
+      contextualSense: 'large (here: sizeable)',
+      definition: 'de gran tamaño',
+      definitionLabel: 'Español',
+      cefr: CefrLevel.B1,
+      freq: 1200,
+    };
+    const GRANDE_SPAN: SpanReq = {
+      language: Language.ES,
+      text: 'aldea grande',
+      start: 6,
+      end: 12,
+      entryId: ENTRY_ID,
+    };
+
+    setEntries(ENTRIES_3);
+    setEntry(FULL_ENTRY);
+    stubSpanCompleteOnStart(DEEP_ALDEA);
+    setVocabMutations({
+      saveImpl: (_vars, opts) => opts?.onSuccess?.({ id: VOCAB_ID }),
+    });
+    renderPage();
+
+    // Open + auto-save 'aldea' — its footer shows the saved state.
+    fireEvent.click(screen.getByRole('button', { name: 'aldea' }));
+    expect(saveVocabMutate).toHaveBeenCalledTimes(1);
+    expect(
+      screen.getByRole('button', { name: /✓ saved · remove/i }),
+    ).toBeInTheDocument();
+
+    // A switched-away 'grande' resolves in the background.
+    act(() => {
+      lastSpanOnResolved?.(DEEP_GRANDE, GRANDE_SPAN);
+    });
+
+    // It banked (data side effect fired)…
+    expect(saveVocabMutate).toHaveBeenCalledTimes(2);
+    // …but the OPEN 'aldea' card's saved footer is untouched.
+    expect(
+      screen.getByRole('button', { name: /✓ saved · remove/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /\+ save to vocabulary/i }),
+    ).not.toBeInTheDocument();
+  });
+
   it('does NOT auto-save a resolved phrase card (words only)', () => {
     // Phrase-card shape mirrors `validPhraseCard` in packages/shared/src/read.test.ts.
     const DEEP_PHRASE_CARD: DeepCard = {
