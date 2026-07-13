@@ -105,6 +105,7 @@ export type SubmitAnswerParams = {
   exerciseId: string;
   answer: string;
   sessionId?: string;
+  hintUsage?: { wordsRevealed: number; fullAnswerRevealed: boolean };
 };
 
 export type UseSubmitAnswerOptions = {
@@ -113,9 +114,10 @@ export type UseSubmitAnswerOptions = {
 
 export function useSubmitAnswer({ fetchFn }: UseSubmitAnswerOptions) {
   return useMutation<SubmitResultResponse, Error, SubmitAnswerParams>({
-    mutationFn: async ({ exerciseId, answer, sessionId }) => {
-      const body: { answer: string; sessionId?: string } = { answer };
+    mutationFn: async ({ exerciseId, answer, sessionId, hintUsage }) => {
+      const body: { answer: string; sessionId?: string; hintUsage?: SubmitAnswerParams['hintUsage'] } = { answer };
       if (sessionId !== undefined) body.sessionId = sessionId;
+      if (hintUsage !== undefined) body.hintUsage = hintUsage;
       const response = await fetchFn(`/exercises/${exerciseId}/submit`, {
         method: 'POST',
         body: JSON.stringify(body),

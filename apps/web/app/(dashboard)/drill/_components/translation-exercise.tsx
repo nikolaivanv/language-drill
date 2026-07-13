@@ -5,7 +5,9 @@ import type {
   EvaluationError,
   LearningLanguage,
   TranslationContent,
+  WordHintUnit,
 } from '@language-drill/shared';
+import { useWordHints, type AuthenticatedFetch } from '@language-drill/api-client';
 import {
   AccentPicker,
   Button,
@@ -15,7 +17,6 @@ import {
 import { useAnswerDraft } from '../../../../lib/drill/use-answer-draft';
 import { submitOnModEnter } from '../../../../lib/drill/keyboard';
 import { translationVerdict } from '../../../../lib/drill/verdict-tier';
-import { lookupGloss } from '../../../../lib/translation/gloss-en';
 import { useDrillAction } from './drill-action-context';
 import { FeedbackShell, type CoachNudge } from './feedback-shell';
 import { GlossedText } from './glossed-text';
@@ -36,46 +37,14 @@ export interface TranslationExerciseProps {
   /** Coach nudge shown at the bottom of the feedback card when the current item
    *  is a known weak spot. Omit when the item is not a weak spot. */
   coach?: CoachNudge | null;
+  /** Authenticated fetch, used to lazily fetch the per-word hint map when the
+   *  learner opts into "need a hint". Omitted in tests/contexts that don't
+   *  need it (the mutation throws if invoked without one). */
+  fetchFn?: AuthenticatedFetch;
 }
 
 function isAccentLanguage(lang: string): lang is 'ES' | 'DE' | 'TR' {
   return lang === 'ES' || lang === 'DE' || lang === 'TR';
-}
-
-/**
- * Find the first whitespace-separated source token that has a gloss entry.
- * Returns the lemma (cleaned) and gloss text, or null if none found.
- */
-function firstGloss(
-  sourceText: string,
-): { lemma: string; gloss: string } | null {
-  const tokens = sourceText.split(/\s+/);
-  for (const raw of tokens) {
-    const entry = lookupGloss(raw);
-    if (entry) {
-      const lemma = raw.toLowerCase().replace(/^[^\p{L}]+|[^\p{L}]+$/gu, '');
-      return { lemma, gloss: entry.gloss };
-    }
-  }
-  return null;
-}
-
-/**
- * Slice the reference translation at the nearest whitespace boundary to
- * the midpoint, suffixed with an ellipsis.
- */
-function halfReference(text: string): string {
-  if (text.length === 0) return '…';
-  const mid = Math.ceil(text.length / 2);
-  // Look for whitespace at or after mid first; fall back to before.
-  let cut = text.indexOf(' ', mid);
-  if (cut === -1) {
-    cut = text.lastIndexOf(' ', mid);
-  }
-  if (cut === -1) {
-    cut = mid;
-  }
-  return `${text.slice(0, cut)}…`;
 }
 
 const SEVERITY_COLOR: Record<EvaluationError['severity'], string> = {
@@ -92,9 +61,9 @@ export function TranslationExercise({
   nextLabel,
   exerciseId,
   coach,
+  fetchFn,
 }: TranslationExerciseProps) {
   const [answer, setAnswer, clearDraft] = useAnswerDraft(exerciseId);
-  const [hintCount, setHintCount] = React.useState<0 | 1 | 2 | 3>(0);
   const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
 
   React.useEffect(() => {
@@ -104,31 +73,38 @@ export function TranslationExercise({
   const isLocked = submission.kind !== 'idle';
   const showAccentPicker = isAccentLanguage(language);
 
-  const gloss = React.useMemo(
-    () => firstGloss(content.sourceText),
-    [content.sourceText],
-  );
-  const halfRef = React.useMemo(
-    () => halfReference(content.referenceTranslation),
-    [content.referenceTranslation],
-  );
+  const wordHints = useWordHints({
+    fetchFn:
+      fetchFn ??
+      (async () => {
+        throw new Error('no fetchFn');
+      }),
+  });
+  const [hintsOpen, setHintsOpen] = React.useState(false);
+  const [revealed, setRevealed] = React.useState<Set<number>>(new Set());
+  const [fullAnswerShown, setFullAnswerShown] = React.useState(false);
 
-  function handleHint() {
-    setHintCount((prev) => {
-      if (prev >= 3) return prev;
-      return ((prev + 1) as 0 | 1 | 2 | 3);
-    });
+  function openHints() {
+    setHintsOpen(true);
+    if (!wordHints.data && !wordHints.isPending && exerciseId) {
+      wordHints.mutate({ exerciseId });
+    }
+  }
+  function revealUnit(idx: number) {
+    setRevealed((prev) => new Set(prev).add(idx));
   }
 
   function handleSubmit() {
     if (!answer.trim() || isLocked) return;
-    onSubmit(answer, { hintCount });
+    onSubmit(answer, {
+      hintUsage: { wordsRevealed: revealed.size, fullAnswerRevealed: fullAnswerShown },
+    });
     clearDraft();
   }
 
   const canSubmit = answer.trim().length > 0;
 
-  // On mobile, publish the submit CTA to the sticky action bar; the "show me a
+  // On mobile, publish the submit CTA to the sticky action bar; the "need a
   // hint" control stays inline in the body. FeedbackShell owns the next action.
   const { active, setPrimaryAction } = useDrillAction();
   React.useEffect(() => {
@@ -140,8 +116,17 @@ export function TranslationExercise({
       disabled: !canSubmit || isLocked,
       loading: submission.kind === 'submitting',
     });
-    // handleSubmit closes over answer/hintCount — both listed.
-  }, [active, setPrimaryAction, submission.kind, canSubmit, isLocked, answer, hintCount]);
+    // handleSubmit closes over answer/revealed/fullAnswerShown — all listed.
+  }, [
+    active,
+    setPrimaryAction,
+    submission.kind,
+    canSubmit,
+    isLocked,
+    answer,
+    revealed,
+    fullAnswerShown,
+  ]);
 
   return (
     <div className="flex flex-col gap-s-4">
@@ -189,34 +174,93 @@ export function TranslationExercise({
         )}
       </div>
 
-      {hintCount > 0 && (
-        <div className="flex flex-col gap-s-2">
-          {hintCount >= 1 && gloss && (
-            <p className="t-small text-ink-mute">
-              {gloss.lemma} &mdash; {gloss.gloss}
-            </p>
-          )}
-          {(hintCount >= 2 || (hintCount >= 1 && !gloss)) && (
-            <p className="t-small text-ink-mute">{halfRef}</p>
-          )}
-          {hintCount >= 3 && (
-            <p className="t-small text-ink-mute">
-              {content.referenceTranslation}
-            </p>
-          )}
-        </div>
-      )}
-
-      {hintCount < 3 && (
+      {!hintsOpen && (
         <Button
           variant="ghost"
           size="sm"
           className="self-start"
-          onClick={handleHint}
+          onClick={openHints}
           disabled={isLocked}
         >
-          show me a hint
+          need a hint
         </Button>
+      )}
+
+      {hintsOpen && (
+        <div className="flex flex-col gap-s-3">
+          {wordHints.isPending && (
+            <p className="t-small text-ink-mute">loading hints&hellip;</p>
+          )}
+          {wordHints.isError && (
+            <p className="t-small text-accent-2">
+              couldn&rsquo;t load hints &mdash; try again
+            </p>
+          )}
+          {wordHints.data && (
+            <>
+              <p className="t-small text-ink-mute">
+                tap a word to reveal its dictionary form
+              </p>
+              <p className="t-body">
+                {wordHints.data.units.map((u: WordHintUnit, i: number) => {
+                  const space = i > 0 ? ' ' : '';
+                  if (!u.hintable) {
+                    return (
+                      <span key={i} className="text-ink-mute">
+                        {space}
+                        {u.text}
+                      </span>
+                    );
+                  }
+                  return (
+                    <React.Fragment key={i}>
+                      {space}
+                      <button
+                        type="button"
+                        aria-label={u.text}
+                        onClick={() => revealUnit(i)}
+                        className="rounded-sm px-[2px] underline decoration-dotted underline-offset-2 hover:bg-[var(--color-hilite-soft)]"
+                      >
+                        {u.text}
+                      </button>
+                    </React.Fragment>
+                  );
+                })}
+              </p>
+              {revealed.size > 0 && (
+                <ul className="flex flex-col gap-s-1">
+                  {[...revealed]
+                    .sort((a, b) => a - b)
+                    .map((i) => (
+                      <li key={i} className="t-small">
+                        <span className="text-ink-mute">
+                          {wordHints.data!.units[i].text} &rarr;{' '}
+                        </span>
+                        <span className="text-ink">
+                          {wordHints.data!.units[i].lemma}
+                        </span>
+                      </li>
+                    ))}
+                </ul>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* full-answer give-up exit — always available, independent of word-hint mode */}
+      {!fullAnswerShown ? (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="self-start"
+          onClick={() => setFullAnswerShown(true)}
+          disabled={isLocked}
+        >
+          reveal full answer
+        </Button>
+      ) : (
+        <p className="t-small text-ink-mute">{content.referenceTranslation}</p>
       )}
 
       {!active && submission.kind !== 'evaluated' && (
@@ -241,7 +285,6 @@ export function TranslationExercise({
               tier={verdict.tier}
               label={verdict.label}
               scoreChipText={`${Math.round(submission.result.score * 100)}%`}
-              hintLevel={hintCount}
               coach={coach}
               onNext={onNext}
               nextLabel={nextLabel}

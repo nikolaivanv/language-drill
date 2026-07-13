@@ -163,3 +163,17 @@ export type FreeWritingEvaluationResponse = z.infer<typeof FreeWritingEvaluation
 export const ExplainResponseSchema = z.object({ explanation: z.string() });
 
 export type ExplainResponse = z.infer<typeof ExplainResponseSchema>;
+
+// Response from POST /exercises/:id/word-hints (translation click-to-reveal hints)
+export const WordHintUnitSchema = z.object({
+  text: z.string(),
+  hintable: z.boolean(),
+  lemma: z.string().optional(),
+});
+
+export const WordHintsResponseSchema = z.object({
+  units: z.array(WordHintUnitSchema),
+  cached: z.boolean(),
+});
+
+export type WordHintsResponse = z.infer<typeof WordHintsResponseSchema>;

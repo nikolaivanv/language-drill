@@ -6,8 +6,9 @@
 // /why-not-chatgpt page can import them without a circular dependency on the
 // landing root.
 
+import { Fragment } from 'react';
 import Link from 'next/link';
-import { D_LANGS, type Token } from './landing-data';
+import { D_LANGS, type Token, type DeepCard } from './landing-data';
 
 export interface BankWord {
   w: string;
@@ -156,6 +157,116 @@ export function ReadingNote({
       >
         {saved ? '✓ saved to vocabulary' : '+ save to vocabulary'}
       </button>
+    </div>
+  );
+}
+
+// The full DeepWordCard the reading-annotation showcase renders: surface form,
+// contextual sense, target-language definition, morphology breakdown, extras.
+// When `onToggle` is provided the card is savable; otherwise it reads as already
+// in the deck. Shared by the desktop showcase and the mobile reflow.
+export function DeepAnnotationCard({
+  card,
+  onToggle,
+  saved,
+}: {
+  card: DeepCard;
+  onToggle?: () => void;
+  saved?: boolean;
+}) {
+  return (
+    <div className="da-card">
+      <div className="da-head">
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+          <span className="da-surface">{card.surface}</span>
+          <span className="da-pos">{card.pos}</span>
+          <span style={{ marginLeft: 'auto' }} />
+          <span className="da-cefr">{card.cefr}</span>
+        </div>
+        <p className="da-gloss">{card.gloss}</p>
+        <div className="da-freq">
+          #{card.freq.toLocaleString('en-US')}
+          {card.lemma !== card.surface ? ' · ' + card.lemma : ''}
+        </div>
+        {card.inflection && <div className="da-infl">{card.inflection}</div>}
+      </div>
+      <div className="da-body">
+        <div>
+          <span className="da-micro">here</span>
+          <p className="da-here">“{card.here}”</p>
+        </div>
+        <div style={{ marginTop: 12 }}>
+          <div className="da-micro">{card.defLabel}</div>
+          <p className="da-def">{card.def}</p>
+        </div>
+        <div style={{ marginTop: 14 }}>
+          <div className="da-micro" style={{ marginBottom: 6 }}>
+            morphology
+          </div>
+          <div className="da-root">
+            root <span style={{ fontWeight: 600, color: 'var(--df-ink)' }}>{card.morph.root}</span>
+            {card.morph.rootGloss && (
+              <span style={{ color: 'var(--df-mute)' }}> — {card.morph.rootGloss}</span>
+            )}
+          </div>
+          <div className="da-segs">
+            {card.morph.segments.map((s, i) => (
+              <Fragment key={i}>
+                {i > 0 && (
+                  <span className="da-plus" aria-hidden="true">
+                    +
+                  </span>
+                )}
+                <div className="da-seg">
+                  <div className="da-seg-m">{s.morph}</div>
+                  <div className="da-seg-f">{s.function}</div>
+                </div>
+              </Fragment>
+            ))}
+          </div>
+          <p className="da-why">
+            <span className="da-why-tag">why this form</span>
+            {card.morph.why}
+          </p>
+        </div>
+        {(card.synonyms || card.register) && (
+          <div className="da-extras">
+            {card.synonyms && (
+              <div className="da-extra">
+                <span className="da-micro">synonyms</span>
+                <div className="da-syn">
+                  {card.synonyms.map((s, i) => (
+                    <span key={i}>
+                      <b>{s.word}</b> — {s.note}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {card.register && (
+              <div className="da-extra">
+                <span className="da-micro">register</span>
+                <p className="da-reg">{card.register}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      <div className="da-foot">
+        {onToggle ? (
+          <>
+            <span className="da-foot-note">one more tap → your deck</span>
+            <button className={'da-save-btn' + (saved ? ' on' : '')} onClick={onToggle}>
+              {saved ? '✓ saved · remove' : '+ save to vocabulary'}
+            </button>
+          </>
+        ) : (
+          <>
+            <span className="da-foot-note">saved from your reading</span>
+            <span className="da-saved">✓ in vocabulary</span>
+          </>
+        )}
+      </div>
     </div>
   );
 }

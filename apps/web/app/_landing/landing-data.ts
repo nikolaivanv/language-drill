@@ -362,3 +362,128 @@ export const WN_KEEP: [string, string][] = [
   ['Open-ended talk', 'Free conversation with no syllabus. Rambling practice when you just want to chat.'],
   ['Explain a curveball', 'Paste a weird sentence from the wild and get it unpicked on the spot.'],
 ];
+
+/* ─── Deep annotation (Read → save keeps the full note, not a bare flashcard) ───
+   Mirrors the app's DeepWordCard: surface form, contextual "here" sense, a
+   target-language definition, a morphology breakdown + "why this form", extras.
+   Ported from the design handoff (landing/drill-data.jsx, D_READING). */
+
+export interface DeepSeg {
+  morph: string;
+  function: string;
+}
+
+export interface DeepCard {
+  tag: string;
+  surface: string;
+  lemma: string;
+  pos: string;
+  cefr: string;
+  gloss: string;
+  freq: number;
+  inflection: string;
+  here: string;
+  defLabel: string;
+  def: string;
+  morph: {
+    root: string;
+    rootGloss: string;
+    segments: DeepSeg[];
+    why: string;
+  };
+  synonyms?: { word: string; note: string }[] | null;
+  register?: string;
+}
+
+export interface DeepPassage {
+  title: string;
+  source: string;
+  cefr: string;
+  tag: string;
+  tokens: (string | DeepCard)[];
+}
+
+// A real passage where ANY word opens a full deep note (a Turkish A2 beach scene).
+export const D_READING: DeepPassage = {
+  title: 'Deniz günü',
+  source: 'özgün metin',
+  cefr: 'A2',
+  tag: 'TR',
+  tokens: [
+    'Bugün hava çok güzel. ',
+    {
+      tag: 'TR', surface: 'Gökyüzü', lemma: 'gökyüzü', pos: 'isim', cefr: 'A2', gloss: 'the sky',
+      freq: 4120, inflection: 'tekil gökyüzü', here: 'the blue sky above the sea', defLabel: 'Türkçe',
+      def: 'Yeryüzünün üstünde görünen mavi boşluk.',
+      morph: {
+        root: 'gök', rootGloss: 'sky',
+        segments: [
+          { morph: 'gök', function: 'root · sky' },
+          { morph: 'yüz', function: 'face' },
+          { morph: '-ü', function: 'possessive buffer' },
+        ],
+        why: 'A compound — gök (sky) + yüz (face), literally “the face of the sky,” bound with a possessive -ü.',
+      },
+    },
+    ' mavi ve güneş ',
+    {
+      tag: 'TR', surface: 'parlıyor', lemma: 'parlamak', pos: 'fiil', cefr: 'A2', gloss: 'is shining',
+      freq: 3510, inflection: 'kök parla- · şimdiki zaman', here: 'the sun is shining right now', defLabel: 'Türkçe',
+      def: '“parlamak” fiilinin şimdiki zaman, 3. tekil kişi biçimi.',
+      morph: {
+        root: 'parla-', rootGloss: 'to shine',
+        segments: [
+          { morph: 'parl(a)', function: 'root · shine' },
+          { morph: '-ıyor', function: 'present continuous' },
+        ],
+        why: 'The -ıyor progressive marks an action happening now; the stem vowel drops before it (parla- → parlı-).',
+      },
+    },
+    '. Küçük bir ',
+    {
+      tag: 'TR', surface: 'teknemiz', lemma: 'tekne', pos: 'isim', cefr: 'A2', gloss: 'our boat',
+      freq: 2190, inflection: 'tekil tekne', here: 'the small boat the family owns', defLabel: 'Türkçe',
+      def: '“tekne” + birinci çoğul iyelik: bize ait olan tekne.',
+      morph: {
+        root: 'tekne', rootGloss: 'boat',
+        segments: [
+          { morph: 'tekne', function: 'root · boat' },
+          { morph: '-miz', function: '1pl possessive · our' },
+        ],
+        why: '-miz attaches to a noun to mean “our”: tekne (boat) → teknemiz (our boat).',
+      },
+    },
+    ' var. Sabah erken ',
+    {
+      tag: 'TR', surface: 'limana', lemma: 'liman', pos: 'isim', cefr: 'A2', gloss: 'harbor, port',
+      freq: 2800, inflection: 'tekil liman · çoğul limanlar',
+      here: 'to the harbor — where the family is heading in the morning', defLabel: 'Türkçe',
+      def: 'Teknelerin durduğu, denize yakın özel bir yer.',
+      morph: {
+        root: 'liman', rootGloss: 'harbor, port',
+        segments: [
+          { morph: 'liman', function: 'root · harbor' },
+          { morph: '-a', function: "dative (-a) · 'to/toward'" },
+        ],
+        why: 'The verb gidiyoruz (we are going) needs a destination — the dative case. After a back vowel the dative surfaces as -a: liman → limana (to the harbor).',
+      },
+      synonyms: [{ word: 'iskele', note: 'jetty, quay — a smaller docking point' }],
+    },
+    ' gidiyoruz. Denizde ',
+    {
+      tag: 'TR', surface: 'yüzüyoruz', lemma: 'yüzmek', pos: 'fiil', cefr: 'A2', gloss: 'we are swimming',
+      freq: 1980, inflection: 'kök yüz- · şimdiki zaman', here: 'we are swimming near the island', defLabel: 'Türkçe',
+      def: '“yüzmek” fiilinin şimdiki zaman, birinci çoğul biçimi.',
+      morph: {
+        root: 'yüz-', rootGloss: 'to swim',
+        segments: [
+          { morph: 'yüz', function: 'root · swim' },
+          { morph: '-üyor', function: 'present continuous' },
+          { morph: '-uz', function: '1pl · we' },
+        ],
+        why: 'Two suffixes stack: -üyor (happening now) + -uz (we). Vowel harmony rounds them to ü/u after yüz.',
+      },
+    },
+    ' ve adaya bakıyoruz.',
+  ],
+};

@@ -34,8 +34,9 @@ export {
   fluencyAttempts,
   userGrammarMastery,
   errorObservations,
+  exerciseWordHints,
 } from './progress';
-export type { ErrorObservation, NewErrorObservation } from './progress';
+export type { ErrorObservation, NewErrorObservation, ExerciseWordHints } from './progress';
 export { practiceSessions } from './sessions';
 export {
   readEntries,

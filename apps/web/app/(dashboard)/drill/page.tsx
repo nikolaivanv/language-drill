@@ -263,6 +263,7 @@ function PracticePageContent() {
         exerciseId: item.id,
         answer: trimmed,
         sessionId: state.session.id,
+        hintUsage: meta.hintUsage,
       },
       {
         onSuccess: (result) => {

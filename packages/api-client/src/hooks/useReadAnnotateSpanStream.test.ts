@@ -86,6 +86,57 @@ function genThenHang(
   })();
 }
 
+/** A hand-driven SSE channel: an async iterable whose frames are pushed on
+ * demand via `emit`, and which ends when `close` is called. Lets a test
+ * interleave two concurrent streams (start word1, start word2, then complete
+ * word1 late) with deterministic ordering. */
+function makeChannel(): {
+  iterable: AsyncIterable<{ type: string; data: string }>;
+  emit: (f: { type: string; data: string }) => void;
+  close: () => void;
+} {
+  const queue: Array<{ type: string; data: string }> = [];
+  let wake: (() => void) | null = null;
+  let closed = false;
+  const iterable = (async function* () {
+    while (true) {
+      while (queue.length > 0) yield queue.shift()!;
+      if (closed) return;
+      await new Promise<void>((resolve) => {
+        wake = resolve;
+      });
+    }
+  })();
+  return {
+    iterable,
+    emit(f) {
+      queue.push(f);
+      wake?.();
+      wake = null;
+    },
+    close() {
+      closed = true;
+      wake?.();
+      wake = null;
+    },
+  };
+}
+
+/** Flush pending micro- + macro-tasks so a hand-driven channel's generator
+ * body advances past an `emit`, letting a test assert on the *absence* of a
+ * state change (a superseded stream's frame must be a reducer no-op). */
+async function flush(): Promise<void> {
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+}
+
+const SPAN1: Span = { language: Language.ES, text: 'La aldea grande.', start: 3, end: 8 };
+const SPAN2: Span = { language: Language.ES, text: 'La aldea grande.', start: 9, end: 15 };
+
+const WORD1_CARD: DeepCard = { ...WORD_CARD, surface: 'aldea', lemma: 'aldea' };
+const WORD2_CARD: DeepCard = { ...WORD_CARD, surface: 'grande', lemma: 'grande' };
+
 function makeOptions(onResolved = vi.fn()) {
   return {
     baseUrl: 'https://stub-fn-url/',
@@ -276,6 +327,117 @@ describe('useReadAnnotateSpanStream — abort', () => {
 
     expect(capturedSignal?.aborted).toBe(true);
     expect(result.current.state.phase).toBe('idle');
+  });
+});
+
+describe('useReadAnnotateSpanStream — switch mid-stream detaches (does not abort)', () => {
+  it('starting a second stream leaves the first running; both fire onResolved, state follows the second', async () => {
+    const onResolved = vi.fn();
+    const ch1 = makeChannel();
+    const ch2 = makeChannel();
+    const signals: Array<AbortSignal | undefined> = [];
+    let call = 0;
+    mockFetchSseImpl.value = (init) => {
+      signals.push(init.signal ?? undefined);
+      call += 1;
+      return call === 1 ? ch1.iterable : ch2.iterable;
+    };
+
+    const { result } = renderHook(() =>
+      useReadAnnotateSpanStream(makeOptions(onResolved)),
+    );
+
+    // Open word1 and let it stream a field.
+    act(() => {
+      result.current.start(SPAN1);
+    });
+    await waitFor(() => expect(signals.length).toBe(1));
+    act(() => ch1.emit(frame('field', { key: 'type', value: 'word' })));
+
+    // Switch to word2 before word1 completes.
+    act(() => {
+      result.current.start(SPAN2);
+    });
+    await waitFor(() => expect(signals.length).toBe(2));
+
+    // The first stream must NOT have been aborted — it stays alive to complete.
+    expect(signals[0]?.aborted).toBe(false);
+
+    // Visible state follows word2.
+    act(() => ch2.emit(frame('field', { key: 'definition', value: 'W2DEF' })));
+    await waitFor(() => {
+      if (result.current.state.phase !== 'streaming') throw new Error('not streaming');
+      expect(result.current.state.span).toEqual(SPAN2);
+    });
+
+    // A stray late field from the superseded word1 must not pollute word2's
+    // partial. (Snapshot into a fresh local at each checkpoint so TS re-widens
+    // the union — `result.current.state` narrowing would otherwise leak across
+    // the phase transitions below.)
+    act(() => ch1.emit(frame('field', { key: 'definition', value: 'W1STALE' })));
+    await flush();
+    const afterStale = result.current.state;
+    if (afterStale.phase !== 'streaming') throw new Error('not streaming');
+    expect((afterStale.partial as Record<string, unknown>).definition).toBe('W2DEF');
+    expect(afterStale.span).toEqual(SPAN2);
+
+    // word1 completes LATE: onResolved fires for word1, but the visible state is
+    // NOT overwritten (still streaming word2).
+    act(() => {
+      ch1.emit(frame('done', { card: WORD1_CARD }));
+      ch1.close();
+    });
+    await waitFor(() => expect(onResolved).toHaveBeenCalledWith(WORD1_CARD, SPAN1));
+    const afterWord1Done = result.current.state;
+    expect(afterWord1Done.phase).toBe('streaming');
+    if (afterWord1Done.phase === 'streaming') {
+      expect(afterWord1Done.span).toEqual(SPAN2);
+    }
+
+    // word2 completes: state → complete with word2's card; onResolved fires for word2.
+    act(() => {
+      ch2.emit(frame('done', { card: WORD2_CARD }));
+      ch2.close();
+    });
+    await waitFor(() => expect(result.current.state.phase).toBe('complete'));
+    const finalState = result.current.state;
+    if (finalState.phase !== 'complete') throw new Error('phase guard');
+    expect(finalState.card).toEqual(WORD2_CARD);
+    expect(onResolved).toHaveBeenCalledWith(WORD2_CARD, SPAN2);
+    expect(onResolved).toHaveBeenCalledTimes(2);
+  });
+
+  it('abort() cancels BOTH the detached and the active stream', async () => {
+    const onResolved = vi.fn();
+    const ch1 = makeChannel();
+    const ch2 = makeChannel();
+    const signals: Array<AbortSignal | undefined> = [];
+    let call = 0;
+    mockFetchSseImpl.value = (init) => {
+      signals.push(init.signal ?? undefined);
+      call += 1;
+      return call === 1 ? ch1.iterable : ch2.iterable;
+    };
+
+    const { result } = renderHook(() =>
+      useReadAnnotateSpanStream(makeOptions(onResolved)),
+    );
+    act(() => {
+      result.current.start(SPAN1);
+    });
+    await waitFor(() => expect(signals.length).toBe(1));
+    act(() => {
+      result.current.start(SPAN2);
+    });
+    await waitFor(() => expect(signals.length).toBe(2));
+
+    act(() => {
+      result.current.abort();
+    });
+
+    expect(signals[0]?.aborted).toBe(true);
+    expect(signals[1]?.aborted).toBe(true);
+    expect(onResolved).not.toHaveBeenCalled();
   });
 });
 
