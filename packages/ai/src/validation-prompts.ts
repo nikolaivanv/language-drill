@@ -83,7 +83,7 @@ function renderBulletList(items: readonly string[]): string {
 // 2026-07-09: added the contextual_paraphrase validation user prompt (new
 // ExerciseType). Per-draft user prompt only — no Langfuse push needed since
 // the cached system template is unchanged.
-export const VALIDATION_PROMPT_VERSION = "validate@2026-07-09";
+export const VALIDATION_PROMPT_VERSION = "validate@2026-07-14";
 
 export const VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language exercises for {{language}} learners at CEFR {{cefrLevel}}. Your job is to validate one already-generated exercise that targets the grammar point: {{grammarPointName}}.
 
@@ -252,12 +252,36 @@ function selfRevealingScoringNote(spec: GenerationSpec): string {
 
 // vocab_recall's task IS meaning→word retrieval: a definition that picks out
 // exactly one headword is the exercise working as designed, not spoilage.
-// Spoilage for vocab is ORTHOGRAPHIC only. Gated on kind (all vocab cells).
+// Spoilage for vocab is ORTHOGRAPHIC and confined to the PROMPT/HINTS.
+//
+// The exampleSentence is NOT a spoiler surface: the drill UI only reveals it at
+// the deepest opt-in hint level and masks the expected word to `___` first
+// (hint-row.tsx `maskExampleSentence`); the full sentence appears only AFTER
+// submission, as post-answer usage. So the expected word appearing in the
+// example is by design — 53% of the auto-approved pool has it. The prior rule
+// listing "example sentence" as an orthographic reveal contradicted both the UI
+// and the pool (it made the validator inconsistently reject otherwise-fine
+// drafts), so it is scoped to prompt/hints only.
+//
+// The grammarPointMatch clause aligns the validator with the curriculum the
+// generator is already driven by: a vocab umbrella is a SEMANTIC DOMAIN (its
+// coverageSpec can mandate verbs/adjectives — e.g. food-drink floors verb:2,
+// adjective:2), so POS is not a grammarPointMatch criterion. Without this, the
+// validator invents a "food-drink ⇒ noun" heuristic and flags curriculum-mandated
+// verbs/adjectives (içmek, acı) as grammarPointMatch=false — a generate↔validate
+// contract split that kept those cells at ~0% approval. Kept SURGICAL (single
+// dimension, no "pre-vetted/curated/good" framing) because a broader pro-context
+// block was verified to make the validator miss orthographic spoilers and
+// spuriously level-flag clean drafts. Level-mismatch on genuinely rare/over-level
+// headwords is handled by curriculum curation (drop extended-tier targets), not
+// here; ambiguous, levelMatch, qualityScore are untouched.
 function vocabRecallScoringNote(spec: GenerationSpec): string {
   if (spec.grammarPoint.kind !== "vocab") return "";
   return `
 
-**Scoring note for vocab_recall:** the Prompt is a meaning-based definition whose JOB is to pick out exactly one headword — do NOT set contextSpoilsAnswer=true because the definition identifies the expected word, however precise the definition is. Set contextSpoilsAnswer=true ONLY for orthographic reveals: the expected word (in any inflection) appearing in the prompt, hints, or example sentence; first/last-letter or letter-count hints; partial spellings. A precise unambiguous definition with meaning-only hints is a GOOD exercise (0.8+), not a spoiled one.`;
+**Scoring note for vocab_recall:** the Prompt is a meaning-based definition whose JOB is to pick out exactly one headword — do NOT set contextSpoilsAnswer=true because the definition identifies the expected word, however precise the definition is. Set contextSpoilsAnswer=true ONLY for orthographic reveals in the PROMPT or HINTS: the expected word (in any inflection) appearing there; first/last-letter or letter-count hints; partial spellings. The exampleSentence is a post-answer usage illustration (the UI masks the word before submission), so the expected word appearing in the example sentence is NOT contextSpoilsAnswer. A precise unambiguous definition with meaning-only hints is a GOOD exercise (0.8+), not a spoiled one.
+
+**grammarPointMatch for vocab_recall:** a vocab umbrella is a SEMANTIC DOMAIN (e.g. food & drink, transport & places), NOT a part of speech. A domain-appropriate verb (içmek "to drink"), adjective (acı "spicy"), or adverb is on-target — set grammarPointMatch=false ONLY when the headword is outside that domain, never merely because it is not a noun. Judge every other dimension (levelMatch, ambiguous, contextSpoilsAnswer, qualityScore) exactly as defined above, unchanged.`;
 }
 
 function buildClozeValidationUserPrompt(

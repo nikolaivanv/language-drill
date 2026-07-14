@@ -548,6 +548,36 @@ describe("self-revealing / vocab_recall scoring notes", () => {
     expect(prompt).toContain("Scoring note for vocab_recall");
     expect(prompt).toContain("orthographic");
   });
+
+  it("vocab_recall note relaxes grammarPointMatch for in-domain non-nouns only, leaving other dims explicitly unchanged", () => {
+    const vocabSpec: GenerationSpec = {
+      ...baseSpec,
+      cefrLevel: CefrLevel.A1,
+      grammarPoint: { ...baseSpec.grammarPoint, kind: "vocab" as const },
+    };
+    const prompt = buildValidationUserPrompt(makeDraft(vocabRecallContent), vocabSpec);
+    // POS deference: a vocab umbrella is a semantic domain, not a part of speech.
+    expect(prompt).toContain("a vocab umbrella is a SEMANTIC DOMAIN");
+    expect(prompt).toContain("never merely because it is not a noun");
+    // Surgical: every other dimension is explicitly left unchanged (no over-correction).
+    expect(prompt).toContain(
+      "Judge every other dimension (levelMatch, ambiguous, contextSpoilsAnswer, qualityScore) exactly as defined above, unchanged.",
+    );
+    // The note must NOT reintroduce the pro-approval framing that broke spoiler/level scoring.
+    expect(prompt).not.toContain("pre-vetted");
+    // Orthographic spoilage is confined to prompt/hints; a word in the example
+    // sentence is not a spoiler (the UI masks it pre-submit).
+    expect(prompt).toContain("orthographic reveals in the PROMPT or HINTS");
+    expect(prompt).toContain(
+      "the expected word appearing in the example sentence is NOT contextSpoilsAnswer",
+    );
+  });
+
+  it("non-vocab point gets no vocab scoring note", () => {
+    const prompt = buildValidationUserPrompt(makeDraft(vocabRecallContent), baseSpec);
+    expect(prompt).not.toContain("Scoring note for vocab_recall");
+    expect(prompt).not.toContain("a vocab umbrella is a SEMANTIC DOMAIN");
+  });
 });
 
 describe("self-revealing base-word-cue scoring note", () => {
