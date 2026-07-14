@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { VocabWord } from '@language-drill/api-client';
 import { Chip } from '../../../../components/ui/chip';
+import { revealWordInExample } from '../../../../lib/drill/example-sentence';
 
 type VocabWordCellProps = {
   word: VocabWord;
@@ -32,7 +33,9 @@ export function VocabWordCell({ word }: VocabWordCellProps) {
       {revealed ? (
         <div className="mt-1 text-[13px]">
           <div className="text-ink-soft">{word.gloss}</div>
-          <div className="mt-[2px] italic text-ink-mute">{word.exampleSentence}</div>
+          <div className="mt-[2px] italic text-ink-mute">
+            {revealWordInExample(word.exampleSentence, word.displayForm)}
+          </div>
         </div>
       ) : null}
     </button>

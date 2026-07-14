@@ -5,6 +5,7 @@ import type { LearningLanguage, VocabRecallContent } from '@language-drill/share
 import type { AuthenticatedFetch } from '@language-drill/api-client';
 import { AccentPicker, Button, Input } from '../../../../components/ui';
 import { VocabPromptCard } from '../../../../components/drill/vocab-prompt';
+import { revealWordInExample } from '../../../../lib/drill/example-sentence';
 import { parseConfusions } from '../../../../lib/drill/parse-confusions';
 import { useAnswerDraft } from '../../../../lib/drill/use-answer-draft';
 import { submitOnEnter } from '../../../../lib/drill/keyboard';
@@ -155,7 +156,12 @@ export function VocabExercise({
               <div className="flex flex-col gap-s-4">
                 <p className="t-display-m">{content.expectedWord}</p>
                 {content.exampleSentence && (
-                  <p className="t-body-l">{content.exampleSentence}</p>
+                  <p className="t-body-l">
+                    {revealWordInExample(
+                      content.exampleSentence,
+                      content.expectedWord,
+                    )}
+                  </p>
                 )}
                 {submission.result.feedback &&
                   (submission.result.evaluationSource === 'deterministic' &&
