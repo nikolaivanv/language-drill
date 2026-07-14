@@ -20,6 +20,7 @@ import {
 import type { AuthenticatedFetch, DebriefItem } from '@language-drill/api-client';
 import { Card, Chip } from '../../../../../components/ui';
 import { splitClozeSentence } from '../../../../../lib/drill/cloze-blank';
+import { revealWordInExample } from '../../../../../lib/drill/example-sentence';
 import { FlagExerciseControl } from '../../_components/flag-exercise-control';
 import { ConjugationFeatureBundle } from '../../../../../components/drill/conjugation-feature-bundle';
 import { DictationBody } from './dictation-body';
@@ -382,7 +383,9 @@ function VocabBody({ item, content }: VocabBodyProps) {
             {content.expectedWord}
           </div>
           {content.exampleSentence.length > 0 && (
-            <p className="t-small mt-s-2">{content.exampleSentence}</p>
+            <p className="t-small mt-s-2">
+              {revealWordInExample(content.exampleSentence, content.expectedWord)}
+            </p>
           )}
         </div>
       </div>

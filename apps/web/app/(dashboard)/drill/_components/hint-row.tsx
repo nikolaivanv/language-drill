@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '../../../../components/ui/button';
+import { hideWordInExample } from '../../../../lib/drill/example-sentence';
 import { letterCountLabel } from '../../../../lib/drill/syllabify';
 
 export interface HintRowProps {
@@ -8,16 +9,6 @@ export interface HintRowProps {
   exampleSentence?: string;
   level: 0 | 1 | 2 | 3;
   onAdvance: () => void;
-}
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function maskExampleSentence(sentence: string, word: string): string {
-  if (!word) return sentence;
-  const pattern = new RegExp(`\\b${escapeRegExp(word)}\\b`, 'iu');
-  return sentence.replace(new RegExp(pattern.source, 'giu'), '___');
 }
 
 export function HintRow({
@@ -34,7 +25,7 @@ export function HintRow({
   const maxLevel = showL3 ? 3 : 2;
   const maskedExampleSentence =
     level >= 3 && exampleSentence
-      ? maskExampleSentence(exampleSentence, expectedWord)
+      ? hideWordInExample(exampleSentence, expectedWord)
       : '';
 
   return (
