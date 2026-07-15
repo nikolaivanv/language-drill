@@ -151,6 +151,7 @@ export function TheoryDetail({ topicId, language, fetchFn }: TheoryDetailProps) 
             activeSectionId={activeSectionId}
             onJump={handleJump}
             language={language}
+            currentTopicId={topicId}
             onSwitchTopic={goToTopic}
             fetchFn={fetchFn}
           />

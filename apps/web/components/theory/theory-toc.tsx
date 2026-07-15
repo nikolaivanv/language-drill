@@ -7,16 +7,24 @@ import { useIsMobile } from '../../lib/responsive';
 import { cn } from '../../lib/cn';
 import type { TheoryTopic } from './types';
 
-// Above this many "other topics" the flat list becomes a scroll-hunt, so we
-// surface a text filter. Below it, the list fits at a glance and the filter
-// would just be chrome.
-const OTHER_TOPICS_FILTER_THRESHOLD = 8;
+// Above this many topics the flat list becomes a scroll-hunt, so we surface a
+// text filter. Below it, the list fits at a glance and the filter would just be
+// chrome.
+const TOPICS_FILTER_THRESHOLD = 8;
 
 type TheoryTocProps = {
   topic: TheoryTopic;
   activeSectionId: string;
   onJump: (sectionId: string) => void;
   language: LearningLanguage;
+  /**
+   * The slug of the topic currently on screen (the id the parent navigates
+   * with — `internalTopicId` in the panel, the route `topicId` on the detail
+   * page). Used to highlight the current topic in the list and keep it in
+   * place. NOT `topic.id`: DB-backed content JSON can carry a language-prefixed
+   * id (`es-b2-…`) that wouldn't match the un-prefixed list/route slugs.
+   */
+  currentTopicId: string;
   onSwitchTopic: (topicId: string) => void;
   fetchFn?: AuthenticatedFetch;
 };
@@ -26,15 +34,20 @@ export function TheoryToc({
   activeSectionId,
   onJump,
   language,
+  currentTopicId,
   onSwitchTopic,
   fetchFn,
 }: TheoryTocProps) {
   const { topics: allTopics } = useTheoryTopics({ language, fetchFn });
-  const others = allTopics.filter((t) => t.id !== topic.id);
+  // The current topic stays IN the list (highlighted) rather than being
+  // filtered out, so browsing topic-by-topic keeps your place instead of
+  // hiding where you are. The block only earns its keep when there is at least
+  // one *other* topic to switch to.
+  const hasOtherTopics = allTopics.some((t) => t.id !== currentTopicId);
   // A text filter earns its place only once the list is long enough to scroll.
   const [topicQuery, setTopicQuery] = useState('');
-  const showFilter = others.length > OTHER_TOPICS_FILTER_THRESHOLD;
-  const visibleOthers = showFilter ? filterTopics(others, topicQuery) : others;
+  const showFilter = allTopics.length > TOPICS_FILTER_THRESHOLD;
+  const visibleTopics = showFilter ? filterTopics(allTopics, topicQuery) : allTopics;
   // Desktop → vertical 240px sidebar with section tabs *and* an "other topics"
   // list. Mobile (≤760px) → a single horizontal scroll-spy strip of in-page
   // sections (driven by the `.theory-toc` @media overrides in globals.css), and
@@ -72,7 +85,7 @@ export function TheoryToc({
     <div className="theory-other-empty t-small">no topics match</div>
   );
   const showEmptyHint =
-    showFilter && topicQuery.trim() !== '' && visibleOthers.length === 0;
+    showFilter && topicQuery.trim() !== '' && visibleTopics.length === 0;
 
   return (
     <nav
@@ -98,20 +111,24 @@ export function TheoryToc({
         })}
       </ul>
 
-      {!isMobile && others.length > 0 && (
+      {!isMobile && hasOtherTopics && (
         <div className="theory-other">
-          <div className="t-micro">other topics</div>
+          <div className="t-micro">all topics</div>
           {showFilter && filterInput}
-          {visibleOthers.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              className="theory-otherbtn"
-              onClick={() => onSwitchTopic(t.id)}
-            >
-              {topicLabel(t.title)}
-            </button>
-          ))}
+          {visibleTopics.map((t) => {
+            const isCurrent = t.id === currentTopicId;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                className={cn('theory-otherbtn', isCurrent && 'active')}
+                aria-current={isCurrent ? 'true' : undefined}
+                onClick={() => onSwitchTopic(t.id)}
+              >
+                {topicLabel(t.title)}
+              </button>
+            );
+          })}
           {showEmptyHint && emptyHint}
         </div>
       )}

@@ -596,15 +596,24 @@ button:hover .lk-arr {
   text-align: left;
   background: transparent;
   border: 0;
+  border-left: 2px solid transparent;
   padding: 6px 10px;
   font-size: 13px;
   color: var(--color-ink-soft);
   cursor: pointer;
-  transition: color 0.15s ease, background 0.15s ease;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
 .theory-otherbtn:hover {
   color: var(--color-ink);
   background: var(--color-paper-3);
+}
+/* The topic currently on screen stays in the list, marked like the active
+   "jump to" section so you can see where you are and keep browsing from there. */
+.theory-otherbtn.active {
+  color: var(--color-ink);
+  background: var(--color-paper-3);
+  border-left-color: var(--color-accent);
+  font-weight: 500;
 }
 /* Compact filter input for a long "other topics" list — sits between the
    header and the rows inside the 240px sidebar. */
