@@ -128,6 +128,7 @@ const EXPECTED_KEY_CATEGORY: Record<string, TheoryCategoryId> = {
   "de-a1-temporal-prepositions": "cases",
   "de-a1-es-gibt": "syntax",
   "de-a1-praeteritum-sein-haben": "tenses",
+  "de-a1-numbers-ordinals": "morphology",
   // German A2
   "de-a2-perfekt-with-haben": "tenses",
   "de-a2-perfekt-with-sein": "tenses",
@@ -158,6 +159,8 @@ const EXPECTED_KEY_CATEGORY: Record<string, TheoryCategoryId> = {
   "de-a2-wissen-kennen": "pairs",
   "de-a2-demonstratives-welch": "pronouns",
   "de-a2-dative-accusative-objects": "syntax",
+  "de-a2-measure-expressions": "syntax",
+  "de-a2-quantifiers-other": "pronouns",
   // German B1
   "de-b1-praeteritum": "tenses",
   "de-b1-relative-pronouns": "syntax",
@@ -184,6 +187,8 @@ const EXPECTED_KEY_CATEGORY: Record<string, TheoryCategoryId> = {
   "de-b1-hin-her": "morphology",
   "de-b1-schon-noch-erst": "pairs",
   "de-b1-progressive-equivalents": "tenses",
+  "de-b1-articles-use": "articles",
+  "de-b1-adjective-case-government": "cases",
   // German B2
   "de-b2-konjunktiv-ii": "moods",
   "de-b2-genitive-prepositions": "cases",
@@ -211,6 +216,7 @@ const EXPECTED_KEY_CATEGORY: Record<string, TheoryCategoryId> = {
   "de-b2-mittelfeld-word-order": "syntax",
   "de-b2-text-reference-words": "syntax",
   "de-b2-modal-particles-advanced": "syntax",
+  "de-b2-verb-prefixes": "morphology",
   // Turkish A1
   "tr-a1-vowel-harmony": "orthography",
   "tr-a1-stem-changes": "orthography",

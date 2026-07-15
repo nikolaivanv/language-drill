@@ -635,8 +635,9 @@ describe('per-language counts', () => {
   // 3rd-person point + the new es-a2-preterite-yo-spelling.)
   // (2026-07-15: B2 31→32 — es-b2-remote-conditionals fills the B&B ch. 29.3
   // gap between es-b1-conditional and es-b2-past-subjunctive.)
-  // DE was re-enabled 2026-07-12 at full Menschen A1–B1 / Sicher! B2 parity
-  // (18 A1 + 29 A2 + 25 B1 + 26 B2 grammar). TR (2026-05-28) is now at
+  // DE was re-enabled 2026-07-12 at full Menschen A1–B1 / Sicher! B2 parity,
+  // then expanded 2026-07-16 by the Hammer gap triage to 19 A1 + 31 A2 +
+  // 27 B1 + 27 B2 grammar. TR (2026-05-28) is now at
   // full Yedi İklim A1+A2 parity (26 A1 + 14 A2 grammar + 10 themed vocab
   // umbrellas); B1/B2 remain disabled.
 
@@ -658,10 +659,10 @@ describe('per-language counts', () => {
 
   it('German is at full Menschen A1–B1 / Sicher! B2 parity and has 3 vocab umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting, paraphrase } = countsFor(deCurriculum);
-    expect(grammar.A1).toBeGreaterThanOrEqual(18);
-    expect(grammar.A2).toBeGreaterThanOrEqual(29);
-    expect(grammar.B1).toBeGreaterThanOrEqual(25);
-    expect(grammar.B2).toBeGreaterThanOrEqual(26);
+    expect(grammar.A1).toBeGreaterThanOrEqual(19);
+    expect(grammar.A2).toBeGreaterThanOrEqual(31);
+    expect(grammar.B1).toBeGreaterThanOrEqual(27);
+    expect(grammar.B2).toBeGreaterThanOrEqual(27);
     // de-a2-housing-vocab + de-b1-environment-vocab + de-b2-academic-noun-vocab.
     // The themed vocab track and the dictation / free-writing / paraphrase
     // umbrellas are a follow-up PR (see the 2026-07-12 plan doc).

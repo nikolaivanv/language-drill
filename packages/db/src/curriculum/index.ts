@@ -113,7 +113,7 @@ const LANGUAGE_PREFIX_BY_LANGUAGE: Readonly<Record<string, string>> = {
 // Sicher! B2 parity: 18 A1 + 29 A2 + 25 B1 + 26 B2 grammar points.
 const PER_LANGUAGE_GRAMMAR_MIN: Readonly<Record<string, Record<string, number>>> = {
   ES: { A1: 22, A2: 27, B1: 19, B2: 23 },
-  DE: { A1: 18, A2: 29, B1: 25, B2: 26 },
+  DE: { A1: 19, A2: 31, B1: 27, B2: 27 },
   TR: { A1: 26, A2: 14, B1: 10, B2: 0 },
 };
 
