@@ -189,11 +189,15 @@ export function assertCurriculumInvariants(
       );
     }
 
-    // 8. description.length <= 300 (raised from 200: Turkish points were jammed
-    //    against the old cap; descriptions are injected verbatim into prompts).
-    if (entry.description.length > 300) {
+    // 8. description.length <= 450 (raised from 200 for Turkish, then from 300
+    //    on 2026-07-16: 22 ES points sat at ≥280 and the DE gap-triage folds
+    //    push several planned points past 300 — authors were trimming
+    //    pedagogical content to fit. Descriptions are injected verbatim into
+    //    generation/validation/theory prompts, so the cap exists to keep them
+    //    summaries rather than essays; ~450 ≈ 100 extra tokens per call).
+    if (entry.description.length > 450) {
       throw new Error(
-        `Curriculum invariant violated: '${entry.key}' description exceeds 300 characters (got ${entry.description.length})`,
+        `Curriculum invariant violated: '${entry.key}' description exceeds 450 characters (got ${entry.description.length})`,
       );
     }
 
