@@ -58,10 +58,16 @@ function loadBookIndex(bookDir: string): BookIndex {
  */
 function buildToc(index: BookIndex): TocEntry[] {
   const toc: TocEntry[] = [];
+  const seen = new Set<string>();
   for (const file of index.files) {
     toc.push({ anchor: file.anchor, title: file.title, level: 1, parent: null });
+    seen.add(file.anchor);
     const lastAtLevel = new Map<number, string>([[1, file.anchor]]);
     for (const section of file.sections ?? []) {
+      // Same dedupe as the prompt path: front-matter files can repeat the
+      // chapter anchor as a section anchor.
+      if (seen.has(section.anchor)) continue;
+      seen.add(section.anchor);
       const parent = lastAtLevel.get(section.level - 1) ?? file.anchor;
       toc.push({
         anchor: section.anchor,
