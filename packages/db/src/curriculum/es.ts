@@ -130,8 +130,17 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * framed as politeness) and es-b2-past-subjunctive (protasis only, framed as
  * triggers) — no topic taught the two-clause construction itself. Bump
  * enumerates the new cells on the next scheduler tick.
+ *
+ * `2026-07-16`: the B&B book-coverage ledger retrofit (all 44 chapters,
+ * 448 triaged gaps — see docs/analysis/es-bb-book-coverage-audit-2026-07-16.md)
+ * adds four points the ledger found unclaimed: es-a1-telling-time (B&B 36.10.1;
+ * PCIC A1 "la hora"), es-b1-collective-agreement (B&B 2.3.1: la gente dice),
+ * es-b1-adjective-de-infinitive (B&B 38.8.12: fácil de leer vs es fácil leer),
+ * and es-b2-aspectual-se (B&B 30.9: me comí toda la pizza), plus fold
+ * widenings on existing points encoding the triage's fold verdicts. Bump
+ * enumerates the new cells on the next scheduler tick.
  */
-export const CURRICULUM_VERSION_ES = '2026-07-15a';
+export const CURRICULUM_VERSION_ES = '2026-07-16';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -592,6 +601,28 @@ const esCurriculum: readonly GrammarPoint[] = [
     // pool stands at 4 approved / 28 flagged cloze vs 15 approved / 4 flagged
     // translation. Translation supplies the position for free, so it carries it.
     clozeUnsuitable: true,
+  },
+  {
+    key: 'es-a1-telling-time',
+    kind: 'grammar',
+    name: 'Telling the time',
+    description:
+      'Clock time with ser: singular for one o\'clock (Es la una) vs. plural for all other hours (Son las tres), fractions y cuarto / y media / menos veinte, asking ¿Qué hora es?, and scheduling with a + article (La clase es a las ocho). Includes approximations like a eso de las dos.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: [
+      '¿Qué hora es? — Son las tres y media.',
+      'Es la una menos cuarto.',
+      'La clase empieza a las ocho.',
+      'Llegaré a eso de las dos.',
+    ],
+    examplesNegative: ['*Son la una.', '*Es las tres y media.'],
+    commonErrors: [
+      'Using the plural with one o\'clock ("*son la una" instead of "es la una").',
+      'Using the singular for hours after one ("*es las tres" instead of "son las tres").',
+      'Using en instead of a to schedule an event ("*la reunión es en las ocho" instead of "la reunión es a las ocho").',
+    ],
+    prerequisiteKeys: ['es-a1-numbers-ordinals'],
   },
 
   // ---------------------------------------------------------------------------
@@ -1944,6 +1975,48 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Using "que" instead of "si" to introduce an indirect yes/no question ("*no sé que voy a la fiesta" instead of "no sé si voy a la fiesta").',
     ],
   },
+  {
+    key: 'es-b1-collective-agreement',
+    kind: 'grammar',
+    name: 'Number agreement with collective nouns',
+    description:
+      'Singular verb after collective nouns where English uses a plural: la gente dice, todo el mundo sabe, la policía busca, el equipo juega. After collective + de + plural noun (la mayoría de los vecinos), plural agreement is usual (creen).',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'La gente dice que el barrio ha cambiado mucho.',
+      'Todo el mundo sabe la respuesta.',
+      'La policía busca a los ladrones del banco.',
+      'La mayoría de los vecinos creen que es buena idea.',
+    ],
+    examplesNegative: ['*La gente dicen que es verdad.'],
+    commonErrors: [
+      'Using a plural verb with gente ("*la gente dicen" instead of "la gente dice").',
+      'Using a plural verb with todo el mundo ("*todo el mundo saben" instead of "todo el mundo sabe").',
+      'Making the predicate adjective plural with a singular collective ("*la gente están cansados" instead of "la gente está cansada").',
+    ],
+  },
+  {
+    key: 'es-b1-adjective-de-infinitive',
+    kind: 'grammar',
+    name: 'Fácil/difícil de + infinitive',
+    description:
+      'Adjective + de + infinitive when the sentence subject is the understood object of the infinitive (Este libro es fácil de leer; Su conducta es difícil de comprender), vs. the impersonal pattern es + adjective + infinitive with the object expressed after the verb and no de (Es difícil comprender su conducta). Works with fácil, difícil, imposible, duro, complicado.',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Este libro es fácil de leer.',
+      'Su conducta es difícil de comprender.',
+      'Es difícil comprender su conducta.',
+      'Esa mancha es imposible de quitar.',
+    ],
+    examplesNegative: ['*Es difícil de encontrar trabajo aquí.'],
+    commonErrors: [
+      'Inserting de in the impersonal pattern ("*es difícil de encontrar trabajo" instead of "es difícil encontrar trabajo").',
+      'Omitting de when the subject is the understood object ("*este libro es fácil leer" instead of "este libro es fácil de leer").',
+      'Adding a redundant object pronoun after the infinitive ("*su conducta es difícil de comprenderla" instead of "su conducta es difícil de comprender").',
+    ],
+  },
 
   // ---------------------------------------------------------------------------
   // B2
@@ -2676,6 +2749,28 @@ const esCurriculum: readonly GrammarPoint[] = [
       // -ucho pejorative (B&B 43.4)
       'hotelucho',
     ],
+  },
+  {
+    key: 'es-b2-aspectual-se',
+    kind: 'grammar',
+    name: 'Aspectual se (comerse, beberse, saberse)',
+    description:
+      'Reflexive pronoun on transitive verbs of consumption, perception, and knowledge to stress complete or remarkable consumption of a specific, quantified object: Me comí toda la pizza, Se bebió el café de un trago, Me sé todos los verbos, Se fuma tres paquetes al día. Requires a specific direct object (contrast bare Como pizza); distinct from agentless accidental se (Se me cayó).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Me comí toda la pizza yo solo.',
+      'Se bebió el café de un trago.',
+      'Me sé todos los verbos irregulares.',
+      'Se leyó la novela entera en una tarde.',
+    ],
+    examplesNegative: ['*Me comí pizza.'],
+    commonErrors: [
+      'Using aspectual se with a bare, unquantified object ("*me comí pizza" instead of "comí pizza" or "me comí una pizza entera").',
+      'Mismatching the pronoun and the subject person ("*se comí toda la pizza" instead of "me comí toda la pizza").',
+      'Confusing deliberate aspectual se (se bebió el vino) with the accidental se + dative construction for mishaps (se le cayó el vino).',
+    ],
+    prerequisiteKeys: ['es-a2-reflexive-verbs'],
   },
 
   // ---------------------------------------------------------------------------
