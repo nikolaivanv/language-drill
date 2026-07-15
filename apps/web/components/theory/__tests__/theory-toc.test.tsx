@@ -79,6 +79,7 @@ describe('TheoryToc', () => {
         activeSectionId="what"
         onJump={vi.fn()}
         language={Language.ES}
+        currentTopicId="subjunctive"
         onSwitchTopic={vi.fn()}
       />,
       { wrapper: Wrapper },
@@ -98,6 +99,7 @@ describe('TheoryToc', () => {
         activeSectionId="when"
         onJump={vi.fn()}
         language={Language.ES}
+        currentTopicId="subjunctive"
         onSwitchTopic={vi.fn()}
       />,
       { wrapper: Wrapper },
@@ -117,6 +119,7 @@ describe('TheoryToc', () => {
         activeSectionId="what"
         onJump={onJump}
         language={Language.ES}
+        currentTopicId="subjunctive"
         onSwitchTopic={vi.fn()}
       />,
       { wrapper: Wrapper },
@@ -132,13 +135,14 @@ describe('TheoryToc', () => {
         activeSectionId="what"
         onJump={vi.fn()}
         language={Language.ES}
+        currentTopicId="subjunctive"
         onSwitchTopic={vi.fn()}
         fetchFn={listFetch(ES_TOPICS)}
       />,
       { wrapper: Wrapper },
     );
     // ES has 3 topics; subjunctive is current, so 2 others should appear.
-    expect(await screen.findByText(/other topics/i)).toBeInTheDocument();
+    expect(await screen.findByText(/all topics/i)).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /pretérito vs\. imperfecto/i }),
     ).toBeInTheDocument();
@@ -156,11 +160,12 @@ describe('TheoryToc', () => {
         activeSectionId="what"
         onJump={vi.fn()}
         language={Language.DE}
+        currentTopicId="subjunctive"
         onSwitchTopic={vi.fn()}
       />,
       { wrapper: Wrapper },
     );
-    expect(screen.queryByText(/other topics/i)).toBeNull();
+    expect(screen.queryByText(/all topics/i)).toBeNull();
   });
 
   it('calls onSwitchTopic with the chosen id when an "other topics" button is clicked', async () => {
@@ -171,6 +176,7 @@ describe('TheoryToc', () => {
         activeSectionId="what"
         onJump={vi.fn()}
         language={Language.ES}
+        currentTopicId="subjunctive"
         onSwitchTopic={onSwitchTopic}
         fetchFn={listFetch(ES_TOPICS)}
       />,
@@ -189,6 +195,7 @@ describe('TheoryToc', () => {
         activeSectionId="what"
         onJump={vi.fn()}
         language={Language.ES}
+        currentTopicId="subjunctive"
         onSwitchTopic={vi.fn()}
         fetchFn={listFetch(ES_TOPICS)}
       />,
@@ -198,7 +205,51 @@ describe('TheoryToc', () => {
     expect(nav).not.toHaveClass('theory-toc-strip');
     // Sidebar-only chrome: the "jump to" label and the stacked "other topics".
     expect(screen.getByText(/jump to/i)).toBeInTheDocument();
-    expect(await screen.findByText(/other topics/i)).toBeInTheDocument();
+    expect(await screen.findByText(/all topics/i)).toBeInTheDocument();
+  });
+
+  describe('current topic in the list', () => {
+    it('keeps the current topic in the list, marked as current', async () => {
+      render(
+        <TheoryToc
+          topic={mockTopic}
+          activeSectionId="what"
+          onJump={vi.fn()}
+          language={Language.ES}
+          currentTopicId="subjunctive"
+          onSwitchTopic={vi.fn()}
+          fetchFn={listFetch(ES_TOPICS)}
+        />,
+        { wrapper: Wrapper },
+      );
+      // The current topic ('el subjuntivo') is NOT filtered out — it stays in
+      // the list so browsing keeps its place, and it's flagged aria-current.
+      const current = await screen.findByRole('button', {
+        name: /el subjuntivo/i,
+      });
+      expect(current.getAttribute('aria-current')).toBe('true');
+      expect(current).toHaveClass('active');
+    });
+
+    it('does not mark other topics as current', async () => {
+      render(
+        <TheoryToc
+          topic={mockTopic}
+          activeSectionId="what"
+          onJump={vi.fn()}
+          language={Language.ES}
+          currentTopicId="subjunctive"
+          onSwitchTopic={vi.fn()}
+          fetchFn={listFetch(ES_TOPICS)}
+        />,
+        { wrapper: Wrapper },
+      );
+      const other = await screen.findByRole('button', {
+        name: /el condicional/i,
+      });
+      expect(other.getAttribute('aria-current')).toBeNull();
+      expect(other).not.toHaveClass('active');
+    });
   });
 
   describe('other-topics filter (long lists)', () => {
@@ -211,6 +262,7 @@ describe('TheoryToc', () => {
           activeSectionId="what"
           onJump={vi.fn()}
           language={Language.ES}
+          currentTopicId="subjunctive"
           onSwitchTopic={vi.fn()}
           fetchFn={listFetch(ES_TOPICS)}
         />,
@@ -229,6 +281,7 @@ describe('TheoryToc', () => {
           activeSectionId="what"
           onJump={vi.fn()}
           language={Language.DE}
+          currentTopicId="subjunctive"
           onSwitchTopic={vi.fn()}
           fetchFn={listFetch(MANY_TOPICS)}
         />,
@@ -255,6 +308,7 @@ describe('TheoryToc', () => {
           activeSectionId="what"
           onJump={vi.fn()}
           language={Language.DE}
+          currentTopicId="subjunctive"
           onSwitchTopic={vi.fn()}
           fetchFn={listFetch(MANY_TOPICS)}
         />,
@@ -281,6 +335,7 @@ describe('TheoryToc', () => {
           activeSectionId="what"
           onJump={vi.fn()}
           language={Language.DE}
+          currentTopicId="subjunctive"
           onSwitchTopic={onSwitchTopic}
           fetchFn={listFetch(MANY_TOPICS)}
         />,
@@ -301,6 +356,7 @@ describe('TheoryToc', () => {
           activeSectionId="what"
           onJump={vi.fn()}
           language={Language.DE}
+          currentTopicId="subjunctive"
           onSwitchTopic={vi.fn()}
           fetchFn={listFetch(MANY_TOPICS)}
         />,
@@ -330,6 +386,7 @@ describe('TheoryToc', () => {
           activeSectionId="what"
           onJump={vi.fn()}
           language={Language.ES}
+          currentTopicId="subjunctive"
           onSwitchTopic={vi.fn()}
         />,
         { wrapper: Wrapper },
@@ -338,7 +395,7 @@ describe('TheoryToc', () => {
       expect(nav).toHaveClass('theory-toc-strip');
       // The vertical-only chrome is dropped on the strip.
       expect(screen.queryByText(/jump to/i)).toBeNull();
-      expect(screen.queryByText(/other topics/i)).toBeNull();
+      expect(screen.queryByText(/all topics/i)).toBeNull();
     });
 
     it('keeps jump-to-section: clicking a tab calls onJump', () => {
@@ -349,6 +406,7 @@ describe('TheoryToc', () => {
           activeSectionId="what"
           onJump={onJump}
           language={Language.ES}
+          currentTopicId="subjunctive"
           onSwitchTopic={vi.fn()}
         />,
         { wrapper: Wrapper },
@@ -364,6 +422,7 @@ describe('TheoryToc', () => {
           activeSectionId="when"
           onJump={vi.fn()}
           language={Language.ES}
+          currentTopicId="subjunctive"
           onSwitchTopic={vi.fn()}
         />,
         { wrapper: Wrapper },
@@ -383,6 +442,7 @@ describe('TheoryToc', () => {
           activeSectionId="what"
           onJump={vi.fn()}
           language={Language.ES}
+          currentTopicId="subjunctive"
           onSwitchTopic={vi.fn()}
         />,
         { wrapper: Wrapper },
@@ -409,6 +469,7 @@ describe('TheoryToc', () => {
           activeSectionId="what"
           onJump={vi.fn()}
           language={Language.DE}
+          currentTopicId="subjunctive"
           onSwitchTopic={vi.fn()}
           fetchFn={listFetch(MANY_TOPICS)}
         />,

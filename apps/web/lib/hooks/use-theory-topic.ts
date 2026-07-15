@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   type AuthenticatedFetch,
   parseTheoryTopicJson,
@@ -23,6 +23,13 @@ export type UseTheoryTopicResult = {
   isLoading: boolean;
   isError: boolean;
   error: Error | null;
+  /**
+   * True while a *different* topic's data is being fetched but the previously
+   * loaded topic is still on screen (via `keepPreviousData`). Lets the caller
+   * dim the content during a switch without unmounting the surrounding chrome
+   * (the left nav), so switching topics never "reloads the whole page".
+   */
+  isPlaceholder: boolean;
 };
 
 const STALE_TIME_MS = 5 * 60 * 1000;
@@ -44,6 +51,10 @@ export function useTheoryTopic({
     queryKey: ['theory', 'topic', language, topicId],
     enabled: fetchFn !== undefined,
     staleTime: STALE_TIME_MS,
+    // Keep the last topic's data on screen while the next one loads, so an
+    // in-place topic switch (panel drawer / detail route) never blanks the
+    // body out to a loading spinner and remounts the left nav underneath it.
+    placeholderData: keepPreviousData,
     retry: (failureCount, error) => {
       const status = statusOf(error);
       // 4xx (incl. 404) — terminal, don't retry. 5xx — retry once.
@@ -60,12 +71,24 @@ export function useTheoryTopic({
   });
 
   if (fetchFn === undefined) {
-    return { topic: null, isLoading: false, isError: false, error: null };
+    return {
+      topic: null,
+      isLoading: false,
+      isError: false,
+      error: null,
+      isPlaceholder: false,
+    };
   }
 
   if (dbQuery.error && statusOf(dbQuery.error) === 404) {
     // 404 is "no row for this slug yet" — surface as the empty state, not an error.
-    return { topic: null, isLoading: false, isError: false, error: null };
+    return {
+      topic: null,
+      isLoading: false,
+      isError: false,
+      error: null,
+      isPlaceholder: false,
+    };
   }
 
   return {
@@ -73,5 +96,6 @@ export function useTheoryTopic({
     isLoading: dbQuery.isLoading,
     isError: dbQuery.isError,
     error: dbQuery.error,
+    isPlaceholder: dbQuery.isPlaceholderData,
   };
 }

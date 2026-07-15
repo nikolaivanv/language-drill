@@ -174,6 +174,7 @@ export function TheoryPanel({
               activeSectionId={activeSectionId}
               onJump={handleJump}
               language={language}
+              currentTopicId={internalTopicId}
               onSwitchTopic={switchTopic}
               fetchFn={fetchFn}
             />

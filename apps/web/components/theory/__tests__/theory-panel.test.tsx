@@ -238,7 +238,11 @@ describe('TheoryPanel', () => {
     const dialog = document.body.querySelector(
       '[role="dialog"]',
     ) as HTMLElement;
-    expect(within(dialog).getByText('el subjuntivo')).toBeInTheDocument();
+    // The title (heading) — the topic also appears as a highlighted row in the
+    // "all topics" nav list, so scope to the heading to avoid a double match.
+    expect(
+      within(dialog).getByRole('heading', { name: 'el subjuntivo' }),
+    ).toBeInTheDocument();
 
     // Click the "other topic" button for preterite vs. imperfecto.
     fireEvent.click(
@@ -252,7 +256,7 @@ describe('TheoryPanel', () => {
     const dialogAfter = document.body.querySelector('[role="dialog"]');
     expect(dialogAfter).toBe(dialog);
     expect(
-      within(dialog).getByText('pretérito vs. imperfecto'),
+      within(dialog).getByRole('heading', { name: 'pretérito vs. imperfecto' }),
     ).toBeInTheDocument();
     expect(
       within(dialog).getByRole('link', {
