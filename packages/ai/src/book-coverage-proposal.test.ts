@@ -51,17 +51,37 @@ describe("parseBookCoverageProposal", () => {
     expect(() => parseBookCoverageProposal(bad, ANCHORS, KEYS)).toThrow(/duplicate/);
   });
 
-  it("rejects zero or multiple decision kinds on one section", () => {
+  it("rejects a section with no decision kind at all", () => {
     expect(() =>
       parseBookCoverageProposal({ sections: [{ anchor: "29-1" }] }, ANCHORS, KEYS),
-    ).toThrow(/exactly one/);
-    expect(() =>
+    ).toThrow(/no decision/);
+  });
+
+  it("resolves multiple decision kinds by precedence gap > points > excluded", () => {
+    // A gap is a flag for human review — when the model hedges, keep the flag
+    // rather than fail the whole chapter (a real Hammer ch. 11 run emitted all
+    // three kinds on one section and dead-loop retried).
+    expect(
       parseBookCoverageProposal(
-        { sections: [{ anchor: "29-1", excluded: "x", gap: "y" }] },
+        {
+          sections: [
+            { anchor: "29-1", excluded: "x", gap: "y" },
+            {
+              anchor: "29-2",
+              points: ["es-a2-si-present-conditional"],
+              gap: "z",
+            },
+            { anchor: "29-3", points: ["es-a2-si-present-conditional"], excluded: "w" },
+          ],
+        },
         ANCHORS,
         KEYS,
       ),
-    ).toThrow(/exactly one/);
+    ).toEqual([
+      { anchor: "29-1", gap: "y" },
+      { anchor: "29-2", gap: "z" },
+      { anchor: "29-3", points: ["es-a2-si-present-conditional"] },
+    ]);
   });
 
   it("rejects empty points arrays and blank reasons", () => {

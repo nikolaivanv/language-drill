@@ -11,7 +11,7 @@
 
 import type Anthropic from "@anthropic-ai/sdk";
 
-export const BOOK_COVERAGE_PROPOSAL_PROMPT_VERSION = "book-coverage@2026-07-15";
+export const BOOK_COVERAGE_PROPOSAL_PROMPT_VERSION = "book-coverage@2026-07-15b";
 export const PROPOSE_BOOK_COVERAGE_TOOL_NAME = "propose_book_coverage";
 const PROPOSAL_MODEL = "claude-sonnet-4-6";
 const PROPOSAL_MAX_TOKENS = 8192;
@@ -32,6 +32,7 @@ Rules:
 - Excluded reasons are short but real. Use these categories where they fit: 'C1+', 'regional/dialectal', 'receptive-only', 'lexical, not grammatical', 'chapter intro', 'front matter', or 'folded into <key>' when another point's description or commonErrors explicitly absorbs it.
 - When unsure between "excluded" and "gap", prefer "gap" — a false gap costs one minute of human review; a false exclusion hides a hole permanently.
 - Decide every section you are given, including the chapter heading itself ('chapter intro' is a fine exclusion when the content lives in subsections).
+- Set exactly ONE of points / excluded / gap per section — never two or three together.
 - Do not invent sections or anchors.
 
 Call the ${PROPOSE_BOOK_COVERAGE_TOOL_NAME} tool with one decision per section.`;
@@ -139,13 +140,15 @@ export function parseBookCoverageProposal(
     if (!allowedAnchors.has(anchor)) throw new Error(`unknown anchor '${anchor}'`);
     if (seen.has(anchor)) throw new Error(`duplicate decision for anchor '${anchor}'`);
     seen.add(anchor);
-    const kinds = (["points", "excluded", "gap"] as const).filter(
+    // Precedence gap > points > excluded when the model hedges with several
+    // kinds on one section: a gap is a review flag, so keeping it loses
+    // nothing, whereas throwing dead-loops the retry (observed on a real
+    // Hammer ch. 11 run). Zero kinds is still an error.
+    const kinds = (["gap", "points", "excluded"] as const).filter(
       (k) => raw[k] !== undefined,
     );
-    if (kinds.length !== 1) {
-      throw new Error(
-        `anchor '${anchor}' must have exactly one of points/excluded/gap, got ${kinds.length}`,
-      );
+    if (kinds.length === 0) {
+      throw new Error(`anchor '${anchor}' has no decision (points/excluded/gap)`);
     }
     if (kinds[0] === "points") {
       if (
