@@ -9,20 +9,28 @@ import { Language } from '@language-drill/shared';
 // `id`. DB-backed topics embed the FULL grammar-point key (`es-b1-…`) as their
 // JSON `id`, and `/theory/<id>` resolves against the unprefixed `topic_id`
 // column — so a prefixed link 404s ("no theory written yet") even though the
-// drawer rendered the topic fine. Static topics keep id === slug, so the
-// divergence only surfaces by mocking a prefixed content id here.
-vi.mock('../../../content/theory', () => ({
-  getStaticTheoryTopic: (_language: unknown, topicId: string) =>
+// drawer rendered the topic fine. We mock the topic hook to return a topic
+// whose content `id` diverges from the lookup slug, surfacing the divergence.
+vi.mock('../../../lib/hooks/use-theory-topic', () => ({
+  useTheoryTopic: ({ topicId }: { topicId: string }) =>
     topicId === 'b1-present-subjunctive'
       ? {
-          id: 'es-b1-present-subjunctive', // full grammar-point key (DB JSON shape)
-          title: 'present subjunctive',
-          subtitle: 'the subjunctive mood',
-          cefr: 'B1',
-          sections: [],
+          topic: {
+            id: 'es-b1-present-subjunctive', // full grammar-point key (DB JSON shape)
+            title: 'present subjunctive',
+            subtitle: 'the subjunctive mood',
+            cefr: 'B1',
+            sections: [],
+          },
+          isLoading: false,
+          isError: false,
+          error: null,
         }
-      : null,
-  listStaticTheoryTopics: () => [],
+      : { topic: null, isLoading: false, isError: false, error: null },
+}));
+
+vi.mock('../../../lib/hooks/use-theory-topics', () => ({
+  useTheoryTopics: () => ({ topics: [], isLoading: false, isError: false, error: null }),
 }));
 
 vi.mock('../../../lib/responsive', () => ({

@@ -54,7 +54,45 @@ describe('useTheoryTopics', () => {
     queryClient = buildQueryClient();
   });
 
-  it('returns the static list (alpha-sorted by title) when DB returns []', async () => {
+  it('returns [] synchronously without fetchFn (graceful degradation)', () => {
+    const { result } = renderHook(
+      () => useTheoryTopics({ language: Language.ES }),
+      { wrapper: buildWrapper(queryClient) },
+    );
+
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.isError).toBe(false);
+    expect(result.current.error).toBeNull();
+    expect(result.current.topics).toEqual([]);
+  });
+
+  it('returns the DB list alpha-sorted by title', async () => {
+    const fetchFn = vi.fn<AuthenticatedFetch>().mockResolvedValue(
+      jsonResponse({
+        topics: [
+          { id: 'db-zzz', title: 'zzz-tail', cefr: 'B2' },
+          { id: 'db-mmm', title: 'mmm-middle', cefr: 'B1' },
+          { id: 'db-aaa', title: 'aaa-head', cefr: 'A2' },
+        ],
+      }),
+    );
+
+    const { result } = renderHook(
+      () => useTheoryTopics({ language: Language.ES, fetchFn }),
+      { wrapper: buildWrapper(queryClient) },
+    );
+
+    await waitFor(() => expect(result.current.topics).toHaveLength(3));
+
+    expect(result.current.topics.map((t) => t.title)).toEqual([
+      'aaa-head',
+      'mmm-middle',
+      'zzz-tail',
+    ]);
+    expect(result.current.isError).toBe(false);
+  });
+
+  it('returns [] when DB returns []', async () => {
     const fetchFn = vi
       .fn<AuthenticatedFetch>()
       .mockResolvedValue(jsonResponse({ topics: [] }));
@@ -66,66 +104,11 @@ describe('useTheoryTopics', () => {
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    // Static ES titles: 'el condicional' < 'el subjuntivo' < 'pretérito vs. imperfecto'
-    expect(result.current.topics.map((t) => t.id)).toEqual([
-      'conditional',
-      'subjunctive',
-      'preterite-imperfect',
-    ]);
+    expect(result.current.topics).toEqual([]);
     expect(result.current.isError).toBe(false);
   });
 
-  it('returns only the DB list (sorted) when the static registry is empty (DE)', async () => {
-    const fetchFn = vi.fn<AuthenticatedFetch>().mockResolvedValue(
-      jsonResponse({
-        topics: [
-          { id: 'topic-b', title: 'b-title', cefr: 'B1' },
-          { id: 'topic-a', title: 'a-title', cefr: 'B1' },
-        ],
-      }),
-    );
-
-    const { result } = renderHook(
-      () => useTheoryTopics({ language: Language.DE, fetchFn }),
-      { wrapper: buildWrapper(queryClient) },
-    );
-
-    await waitFor(() => expect(result.current.topics).toHaveLength(2));
-
-    expect(result.current.topics.map((t) => t.title)).toEqual([
-      'a-title',
-      'b-title',
-    ]);
-  });
-
-  it('keeps the static entry on id collision (static wins)', async () => {
-    // DB tries to override `subjunctive` with a different title — static must
-    // take precedence per Req 5.2.
-    const fetchFn = vi.fn<AuthenticatedFetch>().mockResolvedValue(
-      jsonResponse({
-        topics: [
-          { id: 'subjunctive', title: 'DB OVERRIDE — should NOT appear', cefr: 'B2' },
-        ],
-      }),
-    );
-
-    const { result } = renderHook(
-      () => useTheoryTopics({ language: Language.ES, fetchFn }),
-      { wrapper: buildWrapper(queryClient) },
-    );
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-    const subj = result.current.topics.find((t) => t.id === 'subjunctive');
-    expect(subj?.title).toBe('el subjuntivo');
-    expect(
-      result.current.topics.some((t) => t.title.includes('DB OVERRIDE')),
-    ).toBe(false);
-    // Total = 3 static topics (DB override deduped).
-    expect(result.current.topics).toHaveLength(3);
-  });
-
-  it('falls back to the static-only list when the DB query errors', async () => {
+  it('surfaces the error and an empty list when the DB query errors', async () => {
     const fetchFn = vi
       .fn<AuthenticatedFetch>()
       .mockRejectedValue(errorWithStatus('Internal error', 500));
@@ -137,58 +120,8 @@ describe('useTheoryTopics', () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true));
 
-    // Static floor: the three ES topics still render.
-    expect(result.current.topics.map((t) => t.id).sort()).toEqual(
-      ['conditional', 'preterite-imperfect', 'subjunctive'].sort(),
-    );
+    expect(result.current.topics).toEqual([]);
     expect(result.current.error).not.toBeNull();
-  });
-
-  it('returns the static list synchronously without fetchFn (graceful degradation)', () => {
-    const { result } = renderHook(
-      () => useTheoryTopics({ language: Language.ES }),
-      { wrapper: buildWrapper(queryClient) },
-    );
-
-    expect(result.current.isLoading).toBe(false);
-    expect(result.current.isError).toBe(false);
-    expect(result.current.error).toBeNull();
-    expect(result.current.topics).toHaveLength(3);
-    // Static-only result is still alpha-sorted by title.
-    expect(result.current.topics.map((t) => t.id)).toEqual([
-      'conditional',
-      'subjunctive',
-      'preterite-imperfect',
-    ]);
-  });
-
-  it('sorts a mixed static + DB list by title across 4 sources', async () => {
-    // DB contributes two new topics: 'aaa' (should sort first) and 'zzz'
-    // (should sort last). Static contributes 'el condicional', 'el subjuntivo',
-    // 'pretérito vs. imperfecto'. Total = 5 topics.
-    const fetchFn = vi.fn<AuthenticatedFetch>().mockResolvedValue(
-      jsonResponse({
-        topics: [
-          { id: 'db-zzz', title: 'zzz-tail', cefr: 'B2' },
-          { id: 'db-aaa', title: 'aaa-head', cefr: 'A2' },
-        ],
-      }),
-    );
-
-    const { result } = renderHook(
-      () => useTheoryTopics({ language: Language.ES, fetchFn }),
-      { wrapper: buildWrapper(queryClient) },
-    );
-
-    await waitFor(() => expect(result.current.topics).toHaveLength(5));
-
-    expect(result.current.topics.map((t) => t.title)).toEqual([
-      'aaa-head',
-      'el condicional',
-      'el subjuntivo',
-      'pretérito vs. imperfecto',
-      'zzz-tail',
-    ]);
   });
 
   it('carries category + order through from DB topics', async () => {
@@ -236,18 +169,5 @@ describe('useTheoryTopics', () => {
 
     expect(result.current.topics[0].category).toBe('other');
     expect(result.current.topics[0].order).toBeNull();
-  });
-
-  it("gives static (editorial-override) topics category 'other' and order null", () => {
-    const { result } = renderHook(
-      () => useTheoryTopics({ language: Language.ES }),
-      { wrapper: buildWrapper(queryClient) },
-    );
-
-    expect(result.current.topics).toHaveLength(3);
-    for (const topic of result.current.topics) {
-      expect(topic.category).toBe('other');
-      expect(topic.order).toBeNull();
-    }
   });
 });

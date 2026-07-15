@@ -14,9 +14,65 @@ vi.mock('../../../lib/responsive', () => ({
   useIsMobile: () => mockIsMobile(),
 }));
 
-// TheoryPanel consumes `useTheoryTopic` (TanStack Query) — provider required
-// in scope. Tests omit `fetchFn`, so the hook degrades to static-only and
-// `useQuery` stays `enabled: false`.
+// Theory content now comes exclusively from the DB. Mock the topic/list hooks
+// with a fixed set of ES fixtures so the panel's rendering, hub link, and
+// topic-switching can be exercised without a fetch. Any non-ES language
+// resolves to no topic / an empty list (the "coming soon" empty state).
+const { esTopics } = vi.hoisted(() => ({
+  esTopics: {
+    subjunctive: {
+      id: 'subjunctive',
+      title: 'el subjuntivo',
+      subtitle: 'the subjunctive mood',
+      cefr: 'B1',
+      sections: [],
+    },
+    'preterite-imperfect': {
+      id: 'preterite-imperfect',
+      title: 'pretérito vs. imperfecto',
+      subtitle: '',
+      cefr: 'B1',
+      sections: [],
+    },
+    conditional: {
+      id: 'conditional',
+      title: 'el condicional',
+      subtitle: '',
+      cefr: 'B1',
+      sections: [],
+    },
+  } as Record<string, { id: string; title: string; subtitle: string; cefr: string; sections: [] }>,
+}));
+
+vi.mock('../../../lib/hooks/use-theory-topic', () => ({
+  useTheoryTopic: ({ language, topicId }: { language: string; topicId: string }) => ({
+    topic: language === 'ES' ? (esTopics[topicId] ?? null) : null,
+    isLoading: false,
+    isError: false,
+    error: null,
+  }),
+}));
+
+vi.mock('../../../lib/hooks/use-theory-topics', () => ({
+  useTheoryTopics: ({ language }: { language: string }) => ({
+    topics:
+      language === 'ES'
+        ? Object.values(esTopics).map((t) => ({
+            id: t.id,
+            title: t.title,
+            cefr: t.cefr,
+            category: 'other' as const,
+            order: null,
+          }))
+        : [],
+    isLoading: false,
+    isError: false,
+    error: null,
+  }),
+}));
+
+// TheoryPanel renders inside a QueryClientProvider in the real app; keep one in
+// scope for nested consumers even though the theory hooks are mocked.
 function Wrapper({ children }: { children: ReactNode }) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },

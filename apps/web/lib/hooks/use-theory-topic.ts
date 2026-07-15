@@ -4,7 +4,6 @@ import {
   parseTheoryTopicJson,
 } from '@language-drill/api-client';
 import type { LearningLanguage } from '@language-drill/shared';
-import { getStaticTheoryTopic } from '../../content/theory';
 import { renderTheoryTopicJson } from '../../components/theory/render-json';
 import type { TheoryTopic } from '../../components/theory/types';
 
@@ -12,9 +11,9 @@ export type UseTheoryTopicParams = {
   language: LearningLanguage;
   topicId: string;
   /**
-   * Optional. When omitted the hook degrades to static-only (no `useQuery`,
-   * returns `null` if no static match). Lets sync-only call paths consume the
-   * same hook without manufacturing an `AuthenticatedFetch`.
+   * Optional. When omitted the hook has nothing to fetch and returns `null`
+   * (no `useQuery`). Lets sync-only call paths consume the same hook without
+   * manufacturing an `AuthenticatedFetch`.
    */
   fetchFn?: AuthenticatedFetch;
 };
@@ -41,11 +40,9 @@ export function useTheoryTopic({
   topicId,
   fetchFn,
 }: UseTheoryTopicParams): UseTheoryTopicResult {
-  const staticTopic = getStaticTheoryTopic(language, topicId);
-
   const dbQuery = useQuery<TheoryTopic, Error>({
     queryKey: ['theory', 'topic', language, topicId],
-    enabled: staticTopic === null && fetchFn !== undefined,
+    enabled: fetchFn !== undefined,
     staleTime: STALE_TIME_MS,
     retry: (failureCount, error) => {
       const status = statusOf(error);
@@ -61,10 +58,6 @@ export function useTheoryTopic({
       return renderTheoryTopicJson(parsed);
     },
   });
-
-  if (staticTopic) {
-    return { topic: staticTopic, isLoading: false, isError: false, error: null };
-  }
 
   if (fetchFn === undefined) {
     return { topic: null, isLoading: false, isError: false, error: null };
