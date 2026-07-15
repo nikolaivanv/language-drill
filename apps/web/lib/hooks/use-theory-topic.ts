@@ -1,6 +1,8 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   type AuthenticatedFetch,
+  type RelatedTheoryTopics,
+  parseRelatedTheoryTopics,
   parseTheoryTopicJson,
 } from '@language-drill/api-client';
 import type { LearningLanguage } from '@language-drill/shared';
@@ -20,6 +22,12 @@ export type UseTheoryTopicParams = {
 
 export type UseTheoryTopicResult = {
   topic: TheoryTopic | null;
+  /**
+   * Server-derived related topics (prereq edges + theory category), already
+   * filtered to topics with an approved page. Null when the payload predates
+   * the enrichment or it failed to parse — never blocks the topic itself.
+   */
+  related: RelatedTheoryTopics | null;
   isLoading: boolean;
   isError: boolean;
   error: Error | null;
@@ -47,7 +55,7 @@ export function useTheoryTopic({
   topicId,
   fetchFn,
 }: UseTheoryTopicParams): UseTheoryTopicResult {
-  const dbQuery = useQuery<TheoryTopic, Error>({
+  const dbQuery = useQuery<{ topic: TheoryTopic; related: RelatedTheoryTopics | null }, Error>({
     queryKey: ['theory', 'topic', language, topicId],
     enabled: fetchFn !== undefined,
     staleTime: STALE_TIME_MS,
@@ -66,13 +74,17 @@ export function useTheoryTopic({
       const res = await fetchFn!(`/theory/${language}/${encodeURIComponent(topicId)}`);
       const json: unknown = await res.json();
       const parsed = parseTheoryTopicJson(json);
-      return renderTheoryTopicJson(parsed);
+      return {
+        topic: renderTheoryTopicJson(parsed),
+        related: parseRelatedTheoryTopics(json),
+      };
     },
   });
 
   if (fetchFn === undefined) {
     return {
       topic: null,
+      related: null,
       isLoading: false,
       isError: false,
       error: null,
@@ -84,6 +96,7 @@ export function useTheoryTopic({
     // 404 is "no row for this slug yet" — surface as the empty state, not an error.
     return {
       topic: null,
+      related: null,
       isLoading: false,
       isError: false,
       error: null,
@@ -92,7 +105,8 @@ export function useTheoryTopic({
   }
 
   return {
-    topic: dbQuery.data ?? null,
+    topic: dbQuery.data?.topic ?? null,
+    related: dbQuery.data?.related ?? null,
     isLoading: dbQuery.isLoading,
     isError: dbQuery.isError,
     error: dbQuery.error,

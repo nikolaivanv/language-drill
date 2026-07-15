@@ -4,6 +4,11 @@ import { and, count, eq, inArray, sql } from 'drizzle-orm';
 import { theoryTopics, curriculumOrderOf } from '@language-drill/db';
 import { parseTheoryTopicJson, resolveTheoryCategory } from '@language-drill/shared';
 import { db } from '../db';
+import {
+  deriveRelatedGrammarPoints,
+  type RelatedTheoryTopics,
+  type RelatedTopicRef,
+} from '../lib/theory-related';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
 
@@ -22,6 +27,45 @@ const APPROVED_STATUSES = ['auto-approved', 'manual-approved'] as const;
 const theory = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 theory.use('/theory/*', authMiddleware);
+
+// ---------------------------------------------------------------------------
+// Related-topics enrichment: keep only candidates that actually have an
+// approved theory page, so the client never renders a dead link. Related
+// links are an enhancement — on any failure the topic still renders, with
+// empty groups.
+// ---------------------------------------------------------------------------
+async function filterApprovedRelated(
+  lang: z.infer<typeof LANGUAGE_SCHEMA>,
+  related: RelatedTheoryTopics,
+): Promise<RelatedTheoryTopics> {
+  const slugs = [...related.buildsOn, ...related.leadsTo, ...related.siblings].map(
+    (r) => r.topicId,
+  );
+  if (slugs.length === 0) return related;
+  try {
+    const rows = await db
+      .select({ topicId: theoryTopics.topicId })
+      .from(theoryTopics)
+      .where(
+        and(
+          eq(theoryTopics.language, lang),
+          inArray(theoryTopics.topicId, slugs),
+          inArray(theoryTopics.reviewStatus, [...APPROVED_STATUSES]),
+        ),
+      );
+    const approved = new Set(rows.map((r) => r.topicId));
+    const keep = (refs: RelatedTopicRef[]) => refs.filter((r) => approved.has(r.topicId));
+    return {
+      buildsOn: keep(related.buildsOn),
+      leadsTo: keep(related.leadsTo),
+      siblings: keep(related.siblings),
+    };
+  } catch (dbError) {
+    const message = dbError instanceof Error ? dbError.message : String(dbError);
+    console.error(`theory: related-topics approved-filter failed for ${lang}: ${message}`);
+    return { buildsOn: [], leadsTo: [], siblings: [] };
+  }
+}
 
 // ---------------------------------------------------------------------------
 // GET /theory/:lang/:topicId — return one approved theory topic as raw
@@ -60,7 +104,15 @@ theory.get('/theory/:lang/:topicId', async (c) => {
     const row = rows[0];
     try {
       const parsed = parseTheoryTopicJson(row.contentJson);
-      return c.json(parsed);
+      // Additive enrichment: `related` is derived per-request from curriculum
+      // data (prereq edges + theory category), NOT stored in content_json —
+      // the generated-content contract stays untouched and clients that
+      // predate the field ignore it (parseTheoryTopicJson picks known keys).
+      const related = await filterApprovedRelated(
+        lang,
+        deriveRelatedGrammarPoints(lang, topicId),
+      );
+      return c.json({ ...parsed, related });
     } catch (parseError) {
       const message =
         parseError instanceof Error ? parseError.message : String(parseError);

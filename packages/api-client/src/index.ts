@@ -295,11 +295,16 @@ export {
   TheoryCoverageRowSchema,
   TheoryCoverageResponseSchema,
   PoolStatusTheoryItemSchema,
+  RelatedTopicRefSchema,
+  RelatedTheoryTopicsSchema,
+  parseRelatedTheoryTopics,
   type TheoryListItem,
   type TheoryListResponse,
   type TheoryCoverageRow,
   type TheoryCoverageResponse,
   type PoolStatusTheoryItem,
+  type RelatedTopicRef,
+  type RelatedTheoryTopics,
 } from './schemas/theory';
 export {
   parseTheoryTopicJson,

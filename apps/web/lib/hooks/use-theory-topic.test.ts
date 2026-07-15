@@ -97,6 +97,55 @@ describe('useTheoryTopic', () => {
     expect(fetchFn.mock.calls[0]?.[0]).toBe('/theory/ES/b1-test-topic');
   });
 
+  it('parses the additive `related` field alongside the topic', async () => {
+    const related = {
+      buildsOn: [{ topicId: 'b1-conditional', title: 'Conditional simple', cefr: 'B1' }],
+      leadsTo: [],
+      siblings: [],
+    };
+    const fetchFn = vi
+      .fn<AuthenticatedFetch>()
+      .mockResolvedValue(jsonResponse({ ...VALID_TOPIC_JSON, related }));
+
+    const { result } = renderHook(
+      () =>
+        useTheoryTopic({
+          language: Language.ES,
+          topicId: 'b1-test-topic',
+          fetchFn,
+        }),
+      { wrapper: buildWrapper(queryClient) },
+    );
+
+    await waitFor(() => expect(result.current.topic).not.toBeNull());
+    expect(result.current.related).toEqual(related);
+  });
+
+  it('returns related: null when the payload predates the enrichment or it is malformed', async () => {
+    const fetchFn = vi
+      .fn<AuthenticatedFetch>()
+      .mockResolvedValueOnce(jsonResponse(VALID_TOPIC_JSON))
+      .mockResolvedValueOnce(
+        jsonResponse({ ...VALID_TOPIC_JSON, related: { buildsOn: 'not-an-array' } }),
+      );
+
+    const first = renderHook(
+      () =>
+        useTheoryTopic({ language: Language.ES, topicId: 'b1-test-topic', fetchFn }),
+      { wrapper: buildWrapper(queryClient) },
+    );
+    await waitFor(() => expect(first.result.current.topic).not.toBeNull());
+    expect(first.result.current.related).toBeNull();
+
+    const second = renderHook(
+      () =>
+        useTheoryTopic({ language: Language.ES, topicId: 'b1-other-topic', fetchFn }),
+      { wrapper: buildWrapper(queryClient) },
+    );
+    await waitFor(() => expect(second.result.current.topic).not.toBeNull());
+    expect(second.result.current.related).toBeNull();
+  });
+
   it('surfaces 404 as { topic: null, isError: false }', async () => {
     const fetchFn = vi
       .fn<AuthenticatedFetch>()

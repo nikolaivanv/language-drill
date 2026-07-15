@@ -61,3 +61,40 @@ export const PoolStatusTheoryItemSchema = z.object({
 });
 
 export type PoolStatusTheoryItem = z.infer<typeof PoolStatusTheoryItemSchema>;
+
+// ---------------------------------------------------------------------------
+// Related-topics enrichment on GET /theory/:lang/:topicId. The server derives
+// this per-request from curriculum data (prereq edges + theory category) and
+// spreads it NEXT TO the TheoryTopicJson body — it is not part of the stored
+// content contract, so it gets its own schema here rather than a field in
+// `parseTheoryTopicJson`.
+// ---------------------------------------------------------------------------
+
+export const RelatedTopicRefSchema = z.object({
+  topicId: z.string(),
+  title: z.string(),
+  cefr: z.string(),
+});
+
+export const RelatedTheoryTopicsSchema = z.object({
+  buildsOn: z.array(RelatedTopicRefSchema),
+  leadsTo: z.array(RelatedTopicRefSchema),
+  siblings: z.array(RelatedTopicRefSchema),
+});
+
+export type RelatedTopicRef = z.infer<typeof RelatedTopicRefSchema>;
+export type RelatedTheoryTopics = z.infer<typeof RelatedTheoryTopicsSchema>;
+
+/**
+ * Lenient extractor: pulls `related` off a raw single-topic response body.
+ * Returns null when the field is missing (server predates the enrichment) or
+ * malformed — related links are an enhancement and must never block the topic
+ * from rendering.
+ */
+export function parseRelatedTheoryTopics(input: unknown): RelatedTheoryTopics | null {
+  if (typeof input !== 'object' || input === null || !('related' in input)) return null;
+  const result = RelatedTheoryTopicsSchema.safeParse(
+    (input as { related: unknown }).related,
+  );
+  return result.success ? result.data : null;
+}
