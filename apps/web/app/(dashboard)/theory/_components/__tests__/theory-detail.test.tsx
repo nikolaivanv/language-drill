@@ -157,6 +157,9 @@ function renderDetail(
 beforeEach(() => {
   vi.clearAllMocks();
   mockIntersectionObserverInstances.length = 0;
+  // Topic switching now updates the URL via the History API; reset it so a
+  // pathname assertion doesn't inherit a prior test's push.
+  window.history.replaceState(null, '', '/theory/der-dativ');
 });
 
 describe('TheoryDetail', () => {
@@ -218,7 +221,7 @@ describe('TheoryDetail', () => {
     ).not.toHaveAttribute('aria-current');
   });
 
-  it('renders TheoryEmpty with router-wired other-topic links on a 404', async () => {
+  it('renders TheoryEmpty with other-topic links on a 404', async () => {
     renderDetail(makeFetch({ topicStatus: 404 }));
 
     // Empty-state copy from theory-empty.tsx (the not-found branch).
@@ -232,13 +235,32 @@ describe('TheoryDetail', () => {
     ).toBeInTheDocument();
   });
 
-  it('navigates to the chosen topic when an other-topic link is clicked', async () => {
-    renderDetail(makeFetch({ topicStatus: 404 }));
-    const other = await screen.findByRole('button', { name: /der akkusativ/i }, FIND);
+  it('switches topics in place — no router push, TOC stays mounted, URL updated', async () => {
+    const fetchFn = makeFetch();
+    renderDetail(fetchFn);
+    await screen.findByRole('heading', { level: 1, name: 'der dativ' }, FIND);
 
-    fireEvent.click(other);
+    // The sibling lives in the TOC "all topics" list.
+    const sibling = await screen.findByRole('button', { name: /der akkusativ/i }, FIND);
+    fireEvent.click(sibling);
 
-    expect(mockPush).toHaveBeenCalledWith('/theory/der-akkusativ');
+    // No Next navigation — that would remount the page and blank the TOC.
+    expect(mockPush).not.toHaveBeenCalled();
+    // The URL is updated shallowly instead (deep-link / refresh still resolve).
+    expect(window.location.pathname).toBe('/theory/der-akkusativ');
+    // keepPreviousData keeps the article on screen, so the nav never unmounts
+    // into the whole-body loading state.
+    expect(
+      screen.getByRole('navigation', { name: /theory sections/i }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/loading theory/i)).toBeNull();
+    // The new topic is fetched.
+    await vi.waitFor(() => {
+      const urls = (fetchFn as unknown as { mock: { calls: unknown[][] } }).mock.calls.map(
+        (c) => String(c[0]),
+      );
+      expect(urls).toContain('/theory/DE/der-akkusativ');
+    });
   });
 
   it('renders the error state when the topic request fails (non-404)', async () => {
@@ -279,7 +301,7 @@ describe('TheoryDetail drill block', () => {
     expect(screen.queryByRole('link', { name: /mixed drill/i })).not.toBeInTheDocument();
   });
 
-  it('renders the related-topics block and navigates on chip click', async () => {
+  it('renders the related-topics block and switches topic in place on chip click', async () => {
     const related = {
       buildsOn: [{ topicId: 'der-akkusativ', title: 'der akkusativ', cefr: 'A2' }],
       leadsTo: [],
@@ -297,7 +319,10 @@ describe('TheoryDetail drill block', () => {
     expect(chip).toBeTruthy();
 
     fireEvent.click(chip!);
-    expect(mockPush).toHaveBeenCalledWith('/theory/der-akkusativ');
+    // Switches in place (like every topic switch here) — no Next navigation,
+    // just a shallow URL update.
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(window.location.pathname).toBe('/theory/der-akkusativ');
   });
 
   it('renders no related-topics block when the payload has none (pre-enrichment server)', async () => {
