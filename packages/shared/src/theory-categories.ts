@@ -153,7 +153,7 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-b2-past-subjunctive': 'moods',
   'es-b2-compound-tenses': 'tenses',
   'es-b2-conditional-perfect': 'moods',
-  'es-b2-complex-conditionals': 'syntax',
+  'es-b2-complex-conditionals': 'moods',
   'es-b2-remote-conditionals': 'moods',
   'es-b2-nuanced-ser-estar': 'pairs',
 
