@@ -715,6 +715,18 @@ button:hover .lk-arr {
   padding: var(--spacing-s-6) var(--spacing-s-7);
   position: relative;
 }
+/* While an in-place topic switch is fetching, the previous article stays on
+   screen (keepPreviousData); a faint dim signals the new one is loading without
+   blanking the column or unmounting the nav. */
+.theory-scroll--switching {
+  opacity: 0.55;
+  transition: opacity 0.15s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .theory-scroll--switching {
+    transition: none;
+  }
+}
 .theory-section {
   padding: var(--spacing-s-5) 0;
   border-bottom: 1px dashed var(--color-rule);
