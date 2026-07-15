@@ -630,9 +630,11 @@ describe('per-language counts', () => {
   }
 
   // ES is at full PCIC A1-B2 parity plus the 2026-07-09 Butt & Benjamin gap
-  // audit (22 extra points): 24 A1 + 34 A2 + 25 B1 + 31 B2 grammar points.
+  // audit (22 extra points): 24 A1 + 34 A2 + 25 B1 + 32 B2 grammar points.
   // (2026-07-11: A2 33→34 — es-a2-preterite-stem-spelling split into a
   // 3rd-person point + the new es-a2-preterite-yo-spelling.)
+  // (2026-07-15: B2 31→32 — es-b2-remote-conditionals fills the B&B ch. 29.3
+  // gap between es-b1-conditional and es-b2-past-subjunctive.)
   // DE is still TEMPORARILY REDUCED (2026-05-10). TR (2026-05-28) is now at
   // full Yedi İklim A1+A2 parity (26 A1 + 14 A2 grammar + 10 themed vocab
   // umbrellas); B1/B2 remain disabled.
@@ -642,7 +644,7 @@ describe('per-language counts', () => {
     expect(grammar.A1).toBeGreaterThanOrEqual(24);
     expect(grammar.A2).toBeGreaterThanOrEqual(34);
     expect(grammar.B1).toBeGreaterThanOrEqual(25);
-    expect(grammar.B2).toBeGreaterThanOrEqual(31);
+    expect(grammar.B2).toBeGreaterThanOrEqual(32);
     // 5 A1 + 5 A2 themed umbrellas + es-b1-environment-vocab + es-b2-abstract-noun-vocab.
     expect(vocab).toBe(12);
     // es-a1-dictation + es-a2-dictation + es-b1-dictation + es-b2-dictation (Phase 2 dictation generation pipeline).

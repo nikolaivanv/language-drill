@@ -122,8 +122,16 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * the answer plus register-inappropriate frequency-band seeds — both now fixed
  * generator-side (context field removed + hard schema guard; seed self-filters
  * register/level). This bump re-runs both starved cloze cells on the fixed prompt.
+ *
+ * `2026-07-15a`: adds `es-b2-remote-conditionals` (B&B ch. 29.3 "remote
+ * conditions": si + imperfect subjunctive → conditional simple). The 2026-07-09
+ * gap audit covered open (A2) and unfulfilled (B2 complex-conditionals) types
+ * but left the type-2 pattern split across es-b1-conditional (apodosis only,
+ * framed as politeness) and es-b2-past-subjunctive (protasis only, framed as
+ * triggers) — no topic taught the two-clause construction itself. Bump
+ * enumerates the new cells on the next scheduler tick.
  */
-export const CURRICULUM_VERSION_ES = '2026-07-12a';
+export const CURRICULUM_VERSION_ES = '2026-07-15a';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -2073,6 +2081,33 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Mixing tenses across the two clauses (e.g. simple conditional in the result clause).',
     ],
     prerequisiteKeys: ['es-b2-past-subjunctive', 'es-b2-conditional-perfect'],
+  },
+  {
+    key: 'es-b2-remote-conditionals',
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 15, '2sg': 15, '3sg': 15, '1pl': 15, '3pl': 15 } },
+      ],
+    },
+    kind: 'grammar',
+    name: 'Remote conditional sentences',
+    description:
+      'Hypothetical conditionals: "si + imperfect subjunctive, conditional simple" (Si tuviera dinero, lo compraría) for unlikely or contrary-to-fact conditions; -ra and -se forms are interchangeable after si; includes "if I were you" (Si yo fuera tú / Yo que tú, + conditional).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Yo iría contigo si pudiera.',
+      'Si fuera millonario, te compraría un yate.',
+      'Si pagaras ahora, costaría menos.',
+      'Si yo fuera tú, me callaría.',
+    ],
+    examplesNegative: ['*Si tendría dinero, lo compraría.', '*Si tenía dinero, lo compraría.'],
+    commonErrors: [
+      'Using the imperfect indicative in the if-clause by transfer from English/French ("*si tenía dinero, lo compraría" instead of "si tuviera dinero") — that pattern is only correct as a reported open condition in the past (Dijo que me pagaría si había terminado).',
+      'Using the conditional in the if-clause ("*si estaría" instead of "si estuviera") — a regional/sub-standard pattern learners should not imitate.',
+      'Using the present subjunctive after si ("*si tenga tiempo, viajaría" instead of "si tuviera tiempo").',
+    ],
+    prerequisiteKeys: ['es-b1-conditional', 'es-b2-past-subjunctive'],
   },
   {
     key: 'es-b2-nuanced-ser-estar',
