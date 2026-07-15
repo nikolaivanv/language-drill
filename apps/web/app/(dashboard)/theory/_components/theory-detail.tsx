@@ -4,7 +4,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { track } from '../../../../lib/analytics/track';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import type { LearningLanguage } from '@language-drill/shared';
+import {
+  getTheoryCategory,
+  resolveTheoryCategory,
+  FALLBACK_CATEGORY_ID,
+  type LearningLanguage,
+} from '@language-drill/shared';
 import type { AuthenticatedFetch } from '@language-drill/api-client';
 import { useTheoryTopic } from '../../../../lib/hooks/use-theory-topic';
 import { useTheoryTopics } from '../../../../lib/hooks/use-theory-topics';
@@ -21,6 +26,7 @@ import {
   TheoryBrowseAllButton,
   TopicSwitcherSheet,
 } from '../../../../components/theory/topic-switcher-sheet';
+import { RelatedTopics } from '../../../../components/theory/related-topics';
 import { grammarPointKeyForTopicId } from '../../../../lib/theory-topic-map';
 import { DrillThisPoint } from './drill-this-point';
 
@@ -49,7 +55,7 @@ export function TheoryDetail({ topicId, language, fetchFn }: TheoryDetailProps) 
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const isMobile = useIsMobile();
 
-  const { topic, isLoading, isError } = useTheoryTopic({
+  const { topic, related, isLoading, isError } = useTheoryTopic({
     language,
     topicId,
     fetchFn,
@@ -84,6 +90,13 @@ export function TheoryDetail({ topicId, language, fetchFn }: TheoryDetailProps) 
   // key there (`es-a2-ser-vs-estar`), which would double the language prefix.
   // Gated on `topic` so the block only mounts alongside a loaded article.
   const drillKey = topic ? grammarPointKeyForTopicId(topicId, language) : null;
+
+  // Sibling-group heading for the related-topics block ("more in moods &
+  // conditionals"). Null when the point's category is the 'other' fallback —
+  // the server sends no siblings for it anyway.
+  const relatedCategoryId = drillKey ? resolveTheoryCategory(drillKey) : FALLBACK_CATEGORY_ID;
+  const relatedCategoryLabel =
+    relatedCategoryId === FALLBACK_CATEGORY_ID ? null : getTheoryCategory(relatedCategoryId).label;
 
   const handleJump = useCallback((id: string) => {
     const root = scrollRef.current;
@@ -163,6 +176,13 @@ export function TheoryDetail({ topicId, language, fetchFn }: TheoryDetailProps) 
             />
             {drillKey && (
               <DrillThisPoint grammarPointKey={drillKey} fetchFn={fetchFn} />
+            )}
+            {related && (
+              <RelatedTopics
+                related={related}
+                categoryLabel={relatedCategoryLabel}
+                onSwitchTopic={goToTopic}
+              />
             )}
             {isMobile && (
               <TheoryBrowseAllButton

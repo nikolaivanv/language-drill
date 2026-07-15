@@ -279,6 +279,34 @@ describe('TheoryDetail drill block', () => {
     expect(screen.queryByRole('link', { name: /mixed drill/i })).not.toBeInTheDocument();
   });
 
+  it('renders the related-topics block and navigates on chip click', async () => {
+    const related = {
+      buildsOn: [{ topicId: 'der-akkusativ', title: 'der akkusativ', cefr: 'A2' }],
+      leadsTo: [],
+      siblings: [],
+    };
+    renderDetail(makeFetch({ topicBody: { ...TOPIC_BODY, related } }));
+
+    // Scope to the aria-labelled section — 'der akkusativ' also appears in the
+    // TOC's other-topics navigation. Chip textContent includes the CEFR badge,
+    // so match by inclusion rather than the exact-match within_ helper.
+    const section = await screen.findByRole('region', { name: 'related topics' }, FIND);
+    const chip = Array.from(section.querySelectorAll('button')).find((el) =>
+      el.textContent?.includes('der akkusativ'),
+    );
+    expect(chip).toBeTruthy();
+
+    fireEvent.click(chip!);
+    expect(mockPush).toHaveBeenCalledWith('/theory/der-akkusativ');
+  });
+
+  it('renders no related-topics block when the payload has none (pre-enrichment server)', async () => {
+    renderDetail(makeFetch());
+    await screen.findByRole('heading', { level: 1, name: 'der dativ' }, FIND);
+
+    expect(screen.queryByRole('region', { name: 'related topics' })).not.toBeInTheDocument();
+  });
+
   it('derives the drill key from the route topicId, not the topic body id (DB payloads embed the full key)', async () => {
     // Real DB-backed payloads carry the FULL grammar-point key as `id`
     // (`de-der-dativ`), unlike the route slug (`der-dativ`). The drill-info
