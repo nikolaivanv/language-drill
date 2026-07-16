@@ -84,17 +84,38 @@ describe("parseBookCoverageProposal", () => {
     ]);
   });
 
-  it("rejects empty points arrays and blank reasons", () => {
+  it("ignores null and blank hedge kinds next to a real decision", () => {
+    // A real B&B ch. 8 run emitted `"gap": null` beside a valid points claim;
+    // null/blank must not win precedence (or the chapter dead-loop retries).
+    expect(
+      parseBookCoverageProposal(
+        {
+          sections: [
+            { anchor: "29-1", points: ["es-a2-si-present-conditional"], gap: null },
+            { anchor: "29-2", excluded: "C1+", gap: "  " },
+          ],
+        },
+        ANCHORS,
+        KEYS,
+      ),
+    ).toEqual([
+      { anchor: "29-1", points: ["es-a2-si-present-conditional"] },
+      { anchor: "29-2", excluded: "C1+" },
+    ]);
+  });
+
+  it("rejects empty points arrays and blank-only decisions", () => {
     expect(() =>
       parseBookCoverageProposal({ sections: [{ anchor: "29-1", points: [] }] }, ANCHORS, KEYS),
     ).toThrow(/non-empty/);
+    // A blank reason with no other kind now reads as "no decision at all".
     expect(() =>
       parseBookCoverageProposal(
         { sections: [{ anchor: "29-1", excluded: "  " }] },
         ANCHORS,
         KEYS,
       ),
-    ).toThrow(/non-empty/);
+    ).toThrow(/no decision/);
   });
 });
 

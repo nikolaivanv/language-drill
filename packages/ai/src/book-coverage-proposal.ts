@@ -143,10 +143,14 @@ export function parseBookCoverageProposal(
     // Precedence gap > points > excluded when the model hedges with several
     // kinds on one section: a gap is a review flag, so keeping it loses
     // nothing, whereas throwing dead-loops the retry (observed on a real
-    // Hammer ch. 11 run). Zero kinds is still an error.
-    const kinds = (["gap", "points", "excluded"] as const).filter(
-      (k) => raw[k] !== undefined,
-    );
+    // Hammer ch. 11 run). A null or blank-string kind is treated as absent —
+    // models also hedge with `"gap": null` next to a real claim (observed on
+    // B&B ch. 8), which must not shadow it. Zero kinds is still an error.
+    const kinds = (["gap", "points", "excluded"] as const).filter((k) => {
+      const value = raw[k];
+      if (value === undefined || value === null) return false;
+      return !(typeof value === "string" && value.trim().length === 0);
+    });
     if (kinds.length === 0) {
       throw new Error(`anchor '${anchor}' has no decision (points/excluded/gap)`);
     }
