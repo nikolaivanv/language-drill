@@ -2026,7 +2026,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Open / real conditional -(I)rsA',
     description:
-      'Real future condition: aorist + -sA on the if-clause (gelirse, yağarsa, olursa), main clause aorist or -(y)AcAK. A genuine possibility — contrast hypothetical -sA / counterfactual -sAydI.',
+      'Real future condition: aorist + -sA on the if-clause (gelirse, yağarsa, olursa), main clause aorist or -(y)AcAK. A genuine possibility — contrast hypothetical -sA / counterfactual -sAydI. With nominal predicates ol- is optional: yorgun olursam ≈ yorgunsam, olmazsa ≈ değilse/yoksa; -mIş and -(I)yor likewise take -(y)sA directly (satılmışsa = satılmış olursa).',
     cefrLevel: B1,
     language: TR,
     examplesPositive: [
@@ -2035,6 +2035,8 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Acele edersek yetişiriz. (If we hurry we will make it.)',
       'Onu görürsen selam söyle. (If you see him, say hello — volitional main clause.)',
       'Beğenmezsen geri verebilirsin. (If you do not like it you can give it back — negative -mezse.)',
+      'Toplantı hâlâ sürüyor olursa beklerim. (If the meeting is still going on I will wait — -mIş/-(I)yor/-(y)AcAk + olursa layers relative tense onto the open condition: anneleri gelmemiş olursa = "if their mother hasn\'t come by then".)',
+      'Acele et, yoksa geç kalırsın. (Hurry up, or else you will be late — yoksa / aksi halde "otherwise" stands in for a negated repeat of the condition.)',
     ],
     examplesNegative: [
       '*Yağmur yağsa pikniğe gitmeyiz. (for a real possibility — hypothetical -sA reads as a wish/unlikely; the open conditional is "yağarsa".)',
@@ -2097,7 +2099,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Conditional & wish -sA / -sAydI / -(y)sA',
     description:
-      'Verbal -sA (wish/hypothetical), -sAydI (past counterfactual), and copular -(y)sA ("if it is", real condition). "Keşke" + -sA(ydI) marks wishes and regrets.',
+      'Verbal -sA (wish/hypothetical), -sAydI (past counterfactual), and copular -(y)sA ("if it is", real condition). -(y)sA also attaches to tensed verb forms (geldiyse, geliyorsa, gelecekse) and var/yok/değil for a condition knowable from context, often backing an inference or request (Meşgulsen rahatsız etmeyeyim). "Keşke" + -sA(ydI) marks wishes and regrets.',
     cefrLevel: B1,
     language: TR,
     examplesPositive: [
@@ -2105,6 +2107,9 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Vaktim olsaydı, gelirdim. (If I had had time, I would have come — counterfactual.)',
       'Hava güzelse yürüyelim. (If the weather is nice, let us walk — real condition, copular -(y)sA.)',
       'Param olsa, bir ev alırdım. (If I had money, I would buy a house.)',
+      'Bu konuda kime danışsam acaba? (I wonder who I should consult about this — a 1st-person -sA question is deliberative, usually with acaba.)',
+      'Üniversiteyi kazansaydı / kazanmış olsaydı, babası ona ev tutacaktı. (If he had got into university, his father would have rented him a flat — -mIş olsaydI is interchangeable with plain -sAydI.)',
+      'Çalışsa da/bile sınavı geçemez. (Even if he studies he cannot pass — -sA + dA/bile = concessive "even if"; doubled çalışsa da çalışmasa da = "whether he studies or not".)',
     ],
     examplesNegative: [
       '*Vaktim olsa, geldim. (wrong — counterfactual needs -sAydI + aorist-past main clause: olsaydı, gelirdim)',
@@ -2187,6 +2192,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Çocuğu uyuttum. (I put the child to sleep — uyu → uyut.)',
       'Suyu kaynattım. (I boiled the water — kayna → kaynat.)',
       'Onu güldürdün. (You made him laugh — gül → güldür.)',
+      'Gök gürültüsü hayvanları ürkütüyor. (The thunder frightens the animals — emotion-verb causatives promote the stimulus to subject; likewise korkut- "scare" and sevindir-: Bu haber beni çok sevindirdi.)',
     ],
     examplesNegative: [
       '*yaztır- (wrong allomorph — consonant-final yaz takes -DIr: yazdır-)',
@@ -2309,6 +2315,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Ben çocukken burası bir bahçeydi. (When I was a child, this was a garden.)',
       'O konuşurken herkes sustu. (While he was speaking, everyone fell silent.)',
       'Sen uyurken telefon çaldı. (The phone rang while you were sleeping.)',
+      'Herkes filme bayılırken ben sıkıldım. (While everyone adored the film, I was bored — aorist + -(y)ken can also contrast two situations, "while/whereas".)',
     ],
     examplesNegative: [
       '*Geldiyken ekmek aldım. (wrong — -ken attaches to the aorist/imperfective base, not -DI past: gelirken)',
@@ -2358,7 +2365,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Non-subject relative -DIK / -(y)AcAK + possessive',
     description:
-      'Object/oblique relatives: -DIK (non-future) and -(y)AcAK (prospective) + a possessive agreeing with the clause subject: okuduğum kitap, gideceğimiz şehir. Contrast subject relative -(y)An (A2).',
+      'Object/oblique relatives: -DIK (non-future) and -(y)AcAK (prospective) + a possessive agreeing with the clause subject: okuduğum kitap, gideceğimiz şehir. Contrast subject relative -(y)An (A2). Determiners and numerals follow the relative clause: Jale\'nin sevdiği iki yer ("the two places Jale likes"), not *iki Jale\'nin sevdiği yer.',
     cefrLevel: B1,
     language: TR,
     examplesPositive: [
@@ -2401,6 +2408,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Yarın sabah burada olmalıyım. (I must be here tomorrow morning — necessity.)',
       "Ahmet 1994'te başkan oldu. (Ahmet became president in 1994 — dynamic \"become\".)",
       'Bir arabamız olsa her yere giderdik. (If we had a car we\'d go everywhere — existential ol-.)',
+      'Kapı açık, evde olmalılar. (The door is open — they must be at home; olmalı on a nominal also expresses deduction from evidence, not just obligation.)',
     ],
     examplesNegative: [
       '*öğretmeneceğim (wrong — a nominal predicate needs ol- to carry the future: öğretmen olacağım)',
