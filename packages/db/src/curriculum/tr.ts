@@ -147,8 +147,13 @@ const { A1, A2, B1 } = CefrLevel;
  * `validate@2026-07-16`: definitions that equally fit istasyon/gar or
  * alışveriş merkezi/mağaza can now enumerate the alternates in the new
  * vocab `acceptableAnswers` content field instead of flagging ambiguous.
+ * 2026-07-17: adds a person (2sg/2pl) + polarity coverageSpec to
+ * tr-a1-imperative — the unspec'd pool had collapsed onto affirmative 2sg
+ * (bare stem), so 2pl/formal -(y)In and the negative -mA halves of the point
+ * were never drilled. Bump clears target-reached suppression so the imperative
+ * cells re-run under the floors.
  */
-export const CURRICULUM_VERSION_TR = '2026-07-16a';
+export const CURRICULUM_VERSION_TR = '2026-07-17';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -501,6 +506,17 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-imperative',
+    coverageSpec: {
+      axes: [
+        // The A1 imperative paradigm is 2sg (bare stem: gel!) vs 2pl/formal
+        // -(y)In (gelin!). Partial person floors — 3rd-person commands are the
+        // optative/-sIn territory of tr-a2-optative, never targeted here.
+        { name: 'person', floors: { '2sg': 8, '2pl': 8 } },
+        // Negative imperative (stem + -mA: gelme!/gelmeyin!) is the high-value
+        // drill — without a floor the pool collapses to affirmative commands.
+        { name: 'polarity', floors: { affirmative: 10, negative: 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Imperative (Emir)',
     description:
