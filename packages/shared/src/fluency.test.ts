@@ -55,6 +55,12 @@ describe("gradeFluencyAnswer — vocab", () => {
     expect(gradeFluencyAnswer(vocab(), "Pequeño")).toBe(true);
     expect(gradeFluencyAnswer(vocab(), "grande")).toBe(false);
   });
+  it("accepts any acceptableAnswers entry (near-synonym headwords)", () => {
+    const c = vocab({ expectedWord: "istasyon", acceptableAnswers: ["gar"] });
+    expect(gradeFluencyAnswer(c, "gar")).toBe(true);
+    expect(gradeFluencyAnswer(c, "istasyon")).toBe(true);
+    expect(gradeFluencyAnswer(c, "durak")).toBe(false);
+  });
 });
 
 describe("gradeFluencyAnswer — unsupported type", () => {

@@ -92,7 +92,8 @@ export function gradeFluencyAnswer(content: ExerciseContent, answer: string): bo
   }
 
   if (isVocabRecallContent(content)) {
-    return matchesAccepted(content.expectedWord, answer);
+    const accepted = [content.expectedWord, ...(content.acceptableAnswers ?? [])];
+    return accepted.some((a) => matchesAccepted(a, answer));
   }
 
   if (isConjugationContent(content)) {

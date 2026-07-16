@@ -228,6 +228,12 @@ export const VOCAB_RECALL_GENERATION_TOOL: Anthropic.Tool = {
         description:
           "The target lexeme the learner should produce. Usually a single word, but a short multi-word lexeme (e.g. 'medio ambiente', 'cambio climático', 'efecto invernadero') is allowed when the curriculum names one. Use the canonical headword form: no leading/trailing whitespace, no internal whitespace runs longer than a single space, and no surrounding articles unless the article is part of the lexeme itself.",
       },
+      acceptableAnswers: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Optional. Every OTHER headword the prompt/definition picks out equally well — true near-synonyms a learner could defend given only the definition (e.g. 'gar' when expectedWord is 'istasyon' and the definition describes a station). Canonical headword forms, same conventions as expectedWord; do NOT repeat expectedWord here. Omit when the definition picks out exactly one headword.",
+      },
       hints: {
         type: "array",
         items: { type: "string" },
@@ -879,6 +885,7 @@ export function parseGeneratedVocabRecallDraft(
   const instructions = requireString(input, "instructions", ctx);
   const prompt = requireString(input, "prompt", ctx);
   const expectedWordRaw = requireString(input, "expectedWord", ctx);
+  const acceptableAnswersRaw = optionalStringArray(input, "acceptableAnswers", ctx);
   const hints = requireStringArray(input, "hints", ctx);
   const exampleSentence = requireString(input, "exampleSentence", ctx);
   const topicHint = optionalString(input, "topicHint", ctx);
@@ -895,11 +902,26 @@ export function parseGeneratedVocabRecallDraft(
     );
   }
 
+  // Same canonical-surface normalisation as expectedWord, so grading and
+  // display agree on a single form for each alternate headword.
+  const acceptableAnswers = acceptableAnswersRaw?.map((raw, i) => {
+    const normalized = raw.trim().replace(/\s+/g, " ");
+    if (normalized.length === 0) {
+      throw new Error(
+        `${ctx}: invalid acceptableAnswers[${i}]: must contain non-whitespace characters`,
+      );
+    }
+    return normalized;
+  });
+
   return {
     type: ExerciseType.VOCAB_RECALL,
     instructions,
     prompt,
     expectedWord,
+    ...(acceptableAnswers !== undefined && acceptableAnswers.length > 0
+      ? { acceptableAnswers }
+      : {}),
     hints,
     exampleSentence,
     ...(topicHint !== undefined ? { topicHint } : {}),
