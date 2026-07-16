@@ -142,7 +142,7 @@ const { A1, A2, B1 } = CefrLevel;
  * owns the new contextual-paraphrase generation cell; the bump enumerates it on
  * the next scheduler tick.
  */
-export const CURRICULUM_VERSION_TR = '2026-07-10a';
+export const CURRICULUM_VERSION_TR = '2026-07-16';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -1017,6 +1017,38 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Assuming daha is obligatory: when an ablative standard is present, daha is often dropped ("ondan ucuz" = cheaper than that).',
     ],
     prerequisiteKeys: ['tr-a1-ablative-dative'],
+  },
+  // G&K §16.4.1.1 (location in time: clock time, days, dates). Added by the
+  // 2026-07-16 book-coverage triage — the whole time-telling system had no
+  // owning point (the ES ledger pass surfaced the same gap → es-a1-telling-time).
+  // No sentenceConstructionSuitable: multi-frame (locative vs geçe/kala vs
+  // caseless days), so a single-construction prompt would be ambiguous.
+  {
+    key: 'tr-a1-clock-time-dates',
+    kind: 'grammar',
+    name: 'Clock time and dates (saat üçte, ikiyi beş geçe)',
+    description:
+      'Telling time and dating events: locative on the hour (saat üçte, on buçukta) and on years/months (1995\'te, şubatta); past the hour = accusative + geçe (ikiyi beş geçe), to the hour = dative + kala (dörde yirmi kala), çeyrek for quarters; days of the week stay caseless (çarşamba günü gidiyorum). saat is optional and precedes the numeral.',
+    cefrLevel: A1,
+    language: TR,
+    examplesPositive: [
+      'Toplantı saat altıda başlıyor. (The meeting starts at six o\'clock — locative on the hour.)',
+      'Film on buçukta bitti. (The film ended at half past ten — buçuk carries the locative.)',
+      'İkiyi beş geçe geldi. (He came at five past two — accusative + geçe.)',
+      'Dörde yirmi kala çıktık. (We left at twenty to four — dative + kala.)',
+      'Çarşamba günü Konya\'ya gidiyorum. (I\'m going to Konya on Wednesday — no case on the day.)',
+      '1995\'te doğdum. (I was born in 1995 — locative on the year.)',
+    ],
+    examplesNegative: [
+      '*Çarşambada geliyorum. (wrong — days of the week take no locative: "çarşamba (günü) geliyorum")',
+      '*iki beş geçe (wrong — the hour takes the accusative before geçe: "ikiyi beş geçe")',
+    ],
+    commonErrors: [
+      'Adding the locative to days of the week ("çarşambada") — days stay caseless (çarşamba günü).',
+      'Dropping the accusative before geçe or the dative before kala ("iki beş geçe" → "ikiyi beş geçe"; "dört yirmi kala" → "dörde yirmi kala").',
+      'Placing saat after the numeral ("üç saatte" = "in three hours", a duration — clock time is "saat üçte").',
+    ],
+    prerequisiteKeys: ['tr-a1-locative', 'tr-a1-numbers-ordinals'],
   },
 
   // ---------------------------------------------------------------------------
@@ -1897,6 +1929,34 @@ const trCurriculum: readonly GrammarPoint[] = [
     ],
     prerequisiteKeys: ['tr-a1-numbers-ordinals'],
   },
+  // G&K §28.3.4.1 (ama, fakat, ancak, yalnız 'but'). Added by the 2026-07-16
+  // book-coverage triage — the highest-frequency Turkish conjunction had no
+  // owning point (ama appeared only inside a free-writing sample sentence).
+  // Sibling of tr-a2-causal-connectors in shape and level.
+  {
+    key: 'tr-a2-adversative-connectors',
+    kind: 'grammar',
+    name: 'Adversative connectors (ama, fakat, ancak, yalnız)',
+    description:
+      'Adversative "but": ama and fakat are interchangeable and conjoin conflicting clauses (gezmek istiyor ama zamanı yok); discourse-connective ama can also close the clause in speech (Okuyamadım ama.). ancak and yalnız introduce a disadvantage or limitation and open their sentence; as plain adverbs the same words mean "only".',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: [
+      'Semra hep gezmek istiyor ama zamanı yok. (Semra always wants to travel, but she has no time.)',
+      'Sonbahar geldi fakat ağaçlar hâlâ yeşil. (Autumn is here, but the trees are still green.)',
+      'Kitabı hevesle aldım. Okuyamadım ama. (I bought the book eagerly. Haven\'t managed to read it, though — clause-final ama, informal.)',
+      'Çok iyi bir mimar. Ancak müşterilerini kaçırıyor. (He\'s a very good architect. But he loses his customers.)',
+      'Sıcak ama bunaltıcı olmayan bir hava. (Hot but not suffocating weather — ama between adjectives.)',
+    ],
+    examplesNegative: [
+      '*Geldi ama çünkü yorgundu. (wrong — ama marks contrast, çünkü marks cause; pick one: "Geldi ama yorgundu" or "Gelmedi çünkü yorgundu")',
+    ],
+    commonErrors: [
+      'Reaching for çünkü/bu yüzden where the relation is contrast, not cause — "but" is ama/fakat.',
+      'Treating ancak/yalnız as free variants of ama — they mainly introduce an inability, failure or disadvantage, and start the sentence.',
+      'Forgetting that only ama (not fakat) can sit at the very end of the clause in informal speech (Okuyamadım ama.).',
+    ],
+  },
 
 
   // ===========================================================================
@@ -2333,6 +2393,100 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Dropping olarak where a derived adjective needs it to be an adverb (bilimsel anlattı → bilimsel olarak anlattı).',
     ],
     prerequisiteKeys: ['tr-a2-gibi-kadar', 'tr-a1-gore-bence'],
+  },
+  // G&K §17.3.2 (Group 2 possessive-marked postpositions: abstract relations).
+  // Added by the 2026-07-16 book-coverage triage. Distinct from
+  // tr-a2-spatial-postpositions (Group 1): the case on the postposition is
+  // FIXED per item and the complement stays bare (except genitive-attracting
+  // pronouns), vs Group 1's meaning-driven variable case.
+  {
+    key: 'tr-b1-abstract-postpositions',
+    sentenceConstructionSuitable: true,
+    kind: 'grammar',
+    name: 'Abstract postpositions (hakkında, yüzünden, sayesinde)',
+    description:
+      'Abstract Group-2 postpositions: bare noun + fixed possessive-marked form — hakkında "about", yüzünden "because of" (unwelcome cause), sayesinde "thanks to" (welcome cause), yerine "instead of", boyunca "along/throughout", konusunda "on the subject of". Complement stays caseless (bu film hakkında), but personal pronouns take genitive (benim hakkımda, onun yüzünden).',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Bu film hakkında ne düşünüyorsun? (What do you think about this film?)',
+      'Trafik yüzünden geç kaldık. (We were late because of the traffic — unwelcome cause.)',
+      'Senin sayende işi buldum. (I found the job thanks to you — genitive on the pronoun.)',
+      'Çay yerine kahve içelim. (Let\'s drink coffee instead of tea.)',
+      'Yol boyunca hiç konuşmadık. (We didn\'t talk at all along the way.)',
+      'Benim hakkımda ne dediler? (What did they say about me? — 1sg possessive on hak.)',
+    ],
+    examplesNegative: [
+      '*Filmden hakkında konuştuk. (wrong — the complement stays caseless: "film hakkında")',
+      '*Sınavı kazandım senin yüzünden. (wrong register — yüzünden is for unwelcome causes; a welcome cause is sayesinde: "senin sayende")',
+    ],
+    commonErrors: [
+      'Case-marking the complement ("filmden hakkında") — Group-2 postpositions take a bare noun.',
+      'Swapping yüzünden and sayesinde — yüzünden blames (bad outcome), sayesinde credits (good outcome).',
+      'Using bare pronoun + postposition ("ben hakkında") — pronouns take the genitive and the possessive shifts person: benim hakkımda, senin hakkında.',
+    ],
+    prerequisiteKeys: ['tr-a2-spatial-postpositions', 'tr-a1-genitive-possessive'],
+  },
+  // G&K §26.3.14 (reason converbs). Added by the 2026-07-16 book-coverage
+  // triage — tr-a2-causal-connectors' own commonErrors defer to "the B1
+  // -DIğI için form", which did not exist until this point (the exact failure
+  // mode the ledger was built to catch).
+  {
+    key: 'tr-b1-reason-digi-icin',
+    sentenceConstructionSuitable: true,
+    kind: 'grammar',
+    name: 'Reason clauses -DIğI / -(y)AcAğI için ("because")',
+    description:
+      'Nominalised reason clause: personal participle + için — geldiğim için "because I came", yağdığı için "because it rained"; future cause takes -(y)AcAğI (para yetmeyeceği için "as the money won\'t be enough"). The subordinate verb carries the possessive agreement; no çünkü in the same clause. -DIğIndAn (dolayı) is a formal equivalent.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Bana kızdığın için öyle söylüyorsun. (You\'re saying that because you\'re angry with me.)',
+      'Yağmur yağdığı için maç ertelendi. (The match was postponed because it rained.)',
+      'Bu para yetmeyeceği için borç isteyeceğim. (As this money won\'t be enough, I\'ll ask for a loan.)',
+      'Hasta olduğum için gelemedim. (I couldn\'t come because I was ill.)',
+    ],
+    examplesNegative: [
+      '*Geç kaldım için özür dilerim. (wrong — için needs the nominalised participle, not a finite verb: "geç kaldığım için")',
+      '*Çünkü hasta olduğum için gelemedim. (wrong — çünkü and -DIğI için double-mark the reason; use one.)',
+    ],
+    commonErrors: [
+      'Attaching için to a finite verb ("geç kaldım için") — the clause must be nominalised: geç kaldığım için.',
+      'Dropping the possessive agreement ("geldiği için" when the subject is "I") — the participle agrees: geldiğim için.',
+      'Doubling the reason marker with çünkü ("çünkü … -DIğI için") — finite çünkü and nominalised -DIğI için are alternatives, not partners.',
+    ],
+    prerequisiteKeys: ['tr-b1-participles-dik-acak', 'tr-a2-causal-connectors'],
+  },
+  // G&K §26.3.16 (i)–(ii) (temporal 'when' converbs). Added by the 2026-07-16
+  // book-coverage triage: -mAdAn önce/-DIktAn sonra, -(y)ken and -(y)AlI/
+  // -DIğIndAn beri each had a point, but plain "when" had none. Two allied
+  // forms fill one meaning slot (cf. tr-b1-since-converb), so SC stays viable.
+  {
+    key: 'tr-b1-when-converbs',
+    sentenceConstructionSuitable: true,
+    kind: 'grammar',
+    name: '"When" clauses -(y)IncA / -DIğIndA',
+    description:
+      '"When" clauses: -(y)IncA for a sequential trigger — the main event follows (yağmur başlayınca içeri girdik "when it started to rain, we went inside"; invariant, no person marking); -DIğIndA / -DIğI zaman when the main situation is ongoing at that moment (uçaktan indiğimizde kar yağıyordu "when we got off the plane it was snowing"; participle + possessive agreement).',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Yağmur yağmaya başlayınca içeri girdik. (When it began to rain, we went inside — sequential -(y)IncA.)',
+      'Eve gelince beni ara. (Call me when you get home.)',
+      'Uçaktan indiğimizde kar yağıyordu. (When we got off the plane, it was snowing — ongoing background.)',
+      'Onu gördüğüm zaman çok mutlu oldum. (When I saw him, I was very happy.)',
+      'Haberi duyunca hemen aradı. (When she heard the news, she called at once.)',
+    ],
+    examplesNegative: [
+      '*Ben gelinceyim... (wrong — -(y)IncA never takes person marking: "ben gelince")',
+      '*Eve geldiğinde zaman ara. (wrong — -DIğIndA and -DIğI zaman are alternatives, not stackable: "geldiğinde" or "geldiği zaman")',
+    ],
+    commonErrors: [
+      'Adding person suffixes to -(y)IncA (*gelinceyim) — it is invariant; the person lives in the main clause (or use -DIğImdA).',
+      'Stacking -DIğIndA with zaman ("geldiğinde zaman") — pick one: geldiğinde or geldiği zaman.',
+      'Dropping the possessive agreement in -DIğIndA clauses ("uçaktan indiğinde" for "when WE landed" → indiğimizde).',
+    ],
+    prerequisiteKeys: ['tr-a2-converb-temporal', 'tr-b1-participles-dik-acak'],
   },
 
   // ---------------------------------------------------------------------------
