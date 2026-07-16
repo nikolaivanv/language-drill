@@ -118,7 +118,7 @@ describe('assertCurriculumInvariants', () => {
       .filter((e) => !(e.language === 'ES' && e.cefrLevel === 'A1'))
       .map((e) => ({ ...e, prerequisiteKeys: undefined }));
     expect(() => assertCurriculumInvariants(trimmed)).toThrow(
-      /ES A1 grammar count 0 below minimum 22/,
+      /ES A1 grammar count 0 below minimum 23/,
     );
   });
 });
