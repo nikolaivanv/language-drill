@@ -37,6 +37,7 @@ const EXPECTED_KEY_CATEGORY: Record<string, TheoryCategoryId> = {
   "es-a1-coordination-basic": "syntax",
   "es-a1-porque-para": "syntax",
   "es-a1-prepositions-a-en": "pairs",
+  "es-a1-telling-time": "syntax",
   "es-a2-present-irregular-stem-changes": "tenses",
   "es-a2-preterite-regular": "tenses",
   "es-a2-preterite-irregular": "tenses",
@@ -90,6 +91,8 @@ const EXPECTED_KEY_CATEGORY: Record<string, TheoryCategoryId> = {
   "es-b1-que-vs-cual": "pairs",
   "es-b1-ser-estar-uses": "pairs",
   "es-b1-indirect-questions": "syntax",
+  "es-b1-collective-agreement": "syntax",
+  "es-b1-adjective-de-infinitive": "syntax",
   // Spanish (B2 additions)
   "es-b2-relative-clauses-advanced": "syntax",
   "es-b2-subjunctive-compound": "moods",
@@ -109,6 +112,7 @@ const EXPECTED_KEY_CATEGORY: Record<string, TheoryCategoryId> = {
   "es-b2-quantifiers-advanced": "syntax",
   "es-b2-cleft-sentences": "syntax",
   "es-b2-appreciative-suffixes": "morphology",
+  "es-b2-aspectual-se": "pronouns",
   // Turkish A1
   "tr-a1-vowel-harmony": "orthography",
   "tr-a1-stem-changes": "orthography",

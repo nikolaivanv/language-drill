@@ -88,12 +88,12 @@ describe('assertCurriculumInvariants', () => {
   });
 
   it('throws on an over-long description', () => {
-    const broken = mutateAt(FIRST_ES_INDEX, { description: 'x'.repeat(301) });
-    expect(() => assertCurriculumInvariants(broken)).toThrow(/exceeds 300 characters/);
+    const broken = mutateAt(FIRST_ES_INDEX, { description: 'x'.repeat(451) });
+    expect(() => assertCurriculumInvariants(broken)).toThrow(/exceeds 450 characters/);
   });
 
   it('allows a description between the old and new caps', () => {
-    const ok = mutateAt(FIRST_ES_INDEX, { description: 'x'.repeat(250) });
+    const ok = mutateAt(FIRST_ES_INDEX, { description: 'x'.repeat(350) });
     expect(() => assertCurriculumInvariants(ok)).not.toThrow();
   });
 
@@ -118,7 +118,7 @@ describe('assertCurriculumInvariants', () => {
       .filter((e) => !(e.language === 'ES' && e.cefrLevel === 'A1'))
       .map((e) => ({ ...e, prerequisiteKeys: undefined }));
     expect(() => assertCurriculumInvariants(trimmed)).toThrow(
-      /ES A1 grammar count 0 below minimum 22/,
+      /ES A1 grammar count 0 below minimum 23/,
     );
   });
 });

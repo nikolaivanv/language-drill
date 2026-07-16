@@ -58,10 +58,18 @@ function loadBookIndex(bookDir: string): BookIndex {
  */
 function buildToc(index: BookIndex): TocEntry[] {
   const toc: TocEntry[] = [];
+  const seen = new Set<string>();
   for (const file of index.files) {
     toc.push({ anchor: file.anchor, title: file.title, level: 1, parent: null });
+    seen.add(file.anchor);
     const lastAtLevel = new Map<number, string>([[1, file.anchor]]);
     for (const section of file.sections ?? []) {
+      // Same dedupe as the prompt path: front-matter files can repeat the
+      // chapter anchor as a section anchor. Blank anchors are EPUB-conversion
+      // artifacts (seen in the B&B mirror's ch. 44 '@' heading) — skip them
+      // everywhere or the ledger grows an empty-string key.
+      if (!section.anchor || seen.has(section.anchor)) continue;
+      seen.add(section.anchor);
       const parent = lastAtLevel.get(section.level - 1) ?? file.anchor;
       toc.push({
         anchor: section.anchor,
@@ -149,10 +157,19 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  // Dedupe by anchor — some front-matter files repeat the chapter anchor as a
+  // section anchor (seen in the Hammer mirror), which would make the model
+  // (correctly) decide the same anchor twice and trip the parser's duplicate
+  // guard.
+  const seenAnchors = new Set<string>();
   const sections = [
     { anchor: file.anchor, title: file.title },
     ...(file.sections ?? []).map((s) => ({ anchor: s.anchor, title: s.title })),
-  ];
+  ].filter(
+    (s) =>
+      s.anchor.length > 0 &&
+      (seenAnchors.has(s.anchor) ? false : (seenAnchors.add(s.anchor), true)),
+  );
 
   const client = createClaudeClient(requireEnv("ANTHROPIC_API_KEY"));
   const proposals = await proposeBookCoverage(client, {

@@ -108,12 +108,13 @@ const LANGUAGE_PREFIX_BY_LANGUAGE: Readonly<Record<string, string>> = {
 };
 
 // TR is now full-A1/A2 (Yedi İklim parity, 2026-05-28); B1/B2 remain disabled.
-// ES is now at full PCIC A1-B2 parity (2026-07-07): 22 A1 + 27 A2 + 19 B1 +
-// 23 B2 grammar points. DE is the only language that remains reduced.
+// ES is at full PCIC A1-B2 parity (2026-07-07) plus the four B&B
+// book-coverage-ledger additions (2026-07-16): 23 A1 + 27 A2 + 21 B1 +
+// 24 B2 grammar-point floors. DE is the only language that remains reduced.
 // DE is still TEMPORARILY REDUCED (2026-05-10) to match the entries currently
 // uncommented in de.ts.
 const PER_LANGUAGE_GRAMMAR_MIN: Readonly<Record<string, Record<string, number>>> = {
-  ES: { A1: 22, A2: 27, B1: 19, B2: 23 },
+  ES: { A1: 23, A2: 27, B1: 21, B2: 24 },
   DE: { A1: 0, A2: 0, B1: 0, B2: 0 },
   TR: { A1: 26, A2: 14, B1: 10, B2: 0 },
 };
@@ -189,11 +190,15 @@ export function assertCurriculumInvariants(
       );
     }
 
-    // 8. description.length <= 300 (raised from 200: Turkish points were jammed
-    //    against the old cap; descriptions are injected verbatim into prompts).
-    if (entry.description.length > 300) {
+    // 8. description.length <= 450 (raised from 200 for Turkish, then from 300
+    //    on 2026-07-16: 22 ES points sat at ≥280 and the DE gap-triage folds
+    //    push several planned points past 300 — authors were trimming
+    //    pedagogical content to fit. Descriptions are injected verbatim into
+    //    generation/validation/theory prompts, so the cap exists to keep them
+    //    summaries rather than essays; ~450 ≈ 100 extra tokens per call).
+    if (entry.description.length > 450) {
       throw new Error(
-        `Curriculum invariant violated: '${entry.key}' description exceeds 300 characters (got ${entry.description.length})`,
+        `Curriculum invariant violated: '${entry.key}' description exceeds 450 characters (got ${entry.description.length})`,
       );
     }
 

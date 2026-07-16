@@ -107,6 +107,7 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-a1-prepositions-a-en': 'pairs',
   'es-a1-present-yo-go': 'tenses',
   'es-a1-locative-prepositions': 'syntax',
+  'es-a1-telling-time': 'syntax',
 
   // --- Spanish (A2) ---
   'es-a2-present-irregular-stem-changes': 'tenses',
@@ -176,6 +177,8 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-b1-impersonal-plural': 'syntax',
   'es-b1-reciprocal-se': 'pronouns',
   'es-b1-preterite-imperfect-meaning': 'tenses',
+  'es-b1-collective-agreement': 'syntax',
+  'es-b1-adjective-de-infinitive': 'syntax',
   'es-b1-influence-verbs-infinitive': 'syntax',
   'es-b1-ser-location-events': 'pairs',
 
@@ -202,6 +205,7 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-b2-reported-speech-backshift': 'syntax',
   'es-b2-cuyo': 'syntax',
   'es-b2-nosotros-imperative': 'moods',
+  'es-b2-aspectual-se': 'pronouns',
   'es-b2-gradual-gerund': 'syntax',
   'es-b2-perception-verbs': 'syntax',
   'es-b2-correlative-comparison': 'syntax',
