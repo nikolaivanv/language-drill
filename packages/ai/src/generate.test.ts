@@ -27,6 +27,7 @@ import {
   generateOneDraft,
   parseGeneratedClozeDraft,
   parseGeneratedConjugationDraft,
+  parseGeneratedVocabRecallDraft,
   parseGeneratedContextualParaphraseDraft,
   parseGeneratedDictationDraft,
   parseGeneratedFreeWritingDraft,
@@ -221,6 +222,48 @@ describe("parseGeneratedClozeDraft glossEn", () => {
       baseSpec,
     );
     expect(content.context).toBe("legacy framing");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseGeneratedVocabRecallDraft — optional acceptableAnswers (2026-07-16)
+// ---------------------------------------------------------------------------
+
+describe("parseGeneratedVocabRecallDraft acceptableAnswers", () => {
+  it("exposes acceptableAnswers as an optional property on the vocab tool schema", () => {
+    const props = VOCAB_RECALL_GENERATION_TOOL.input_schema.properties as Record<
+      string,
+      unknown
+    >;
+    expect(props.acceptableAnswers).toBeDefined();
+    expect(VOCAB_RECALL_GENERATION_TOOL.input_schema.required).not.toContain(
+      "acceptableAnswers",
+    );
+  });
+
+  it("parses acceptableAnswers when present, normalising each like expectedWord", () => {
+    const content = parseGeneratedVocabRecallDraft(
+      { ...validVocabInput, acceptableAnswers: ["  gar ", "tren  istasyonu"] },
+      baseSpec,
+    );
+    expect(content.acceptableAnswers).toEqual(["gar", "tren istasyonu"]);
+  });
+
+  it("omits acceptableAnswers entirely when absent or empty (key not present)", () => {
+    expect("acceptableAnswers" in parseGeneratedVocabRecallDraft(validVocabInput, baseSpec)).toBe(false);
+    expect(
+      "acceptableAnswers" in
+        parseGeneratedVocabRecallDraft({ ...validVocabInput, acceptableAnswers: [] }, baseSpec),
+    ).toBe(false);
+  });
+
+  it("rejects a whitespace-only acceptableAnswers entry", () => {
+    expect(() =>
+      parseGeneratedVocabRecallDraft(
+        { ...validVocabInput, acceptableAnswers: ["gar", "   "] },
+        baseSpec,
+      ),
+    ).toThrow(/acceptableAnswers\[1\]/);
   });
 });
 

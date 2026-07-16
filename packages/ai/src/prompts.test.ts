@@ -26,7 +26,7 @@ describe("attribution prompt wiring", () => {
   });
 
   it("version is bumped to today", () => {
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-07-05.1");
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-07-16");
   });
 
   it("requires morpheme-level verification before declaring an answer correct", () => {

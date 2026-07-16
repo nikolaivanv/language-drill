@@ -141,8 +141,18 @@ const { A1, A2, B1 } = CefrLevel;
  * 2026-07-10a: adds the `kind: 'paraphrase'` umbrella (`tr-b1-paraphrase`) that
  * owns the new contextual-paraphrase generation cell; the bump enumerates it on
  * the next scheduler tick.
+ * 2026-07-16a: clears low-yield suppression on the A1 vocab cells (home-objects
+ * approved 2/6 on 2026-07-16; transport-places 3/8 with 3 ambiguous flags)
+ * after the vocab_recall near-synonym rule in `generate@2026-07-16` /
+ * `validate@2026-07-16`: definitions that equally fit istasyon/gar or
+ * alışveriş merkezi/mağaza can now enumerate the alternates in the new
+ * vocab `acceptableAnswers` content field instead of flagging ambiguous.
+ * 2026-07-16b: 5 new points from the G&K book-coverage triage (clock time,
+ * adversative connectors, abstract postpositions, -DIğI için reason clauses,
+ * "when" converbs) + 63 fold widenings across 38 points; see
+ * docs/analysis/tr-gk-book-coverage-audit-2026-07-16.md.
  */
-export const CURRICULUM_VERSION_TR = '2026-07-16';
+export const CURRICULUM_VERSION_TR = '2026-07-16b';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------

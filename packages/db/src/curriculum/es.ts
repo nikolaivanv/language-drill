@@ -139,8 +139,16 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * and es-b2-aspectual-se (B&B 30.9: me comí toda la pizza), plus fold
  * widenings on existing points encoding the triage's fold verdicts. Bump
  * enumerates the new cells on the next scheduler tick.
+ *
+ * `2026-07-16a`: clears low-yield suppression on es-b2-perception-verbs cloze
+ * (approved 2/9 on 2026-07-16; chronic — 19/50 → 10/31 → 8/21 → 2/13 → 2/11 →
+ * 2/9) after the form-contrast cloze rule in `generate@2026-07-16` /
+ * `validate@2026-07-16`: drafts kept listing BOTH the infinitive and the
+ * gerund in `acceptableAnswers` (the taught contrast), which the validator
+ * flags as ambiguous; context must now force exactly one form. If yield does
+ * not recover on the new prompt, the fallback is `clozeUnsuitable: true`.
  */
-export const CURRICULUM_VERSION_ES = '2026-07-16';
+export const CURRICULUM_VERSION_ES = '2026-07-16a';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
