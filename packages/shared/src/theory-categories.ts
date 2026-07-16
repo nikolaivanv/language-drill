@@ -239,6 +239,7 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'tr-a1-gore-bence': 'syntax',
   'tr-a1-beri-dir': 'syntax',
   'tr-a1-comparative-superlative': 'syntax',
+  'tr-a1-clock-time-dates': 'syntax',
 
   // --- Turkish A2 ---
   'tr-a2-indefinite-compound': 'morphology',
@@ -258,6 +259,7 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'tr-a2-gibi-kadar': 'syntax',
   'tr-a2-correlative-conjunctions': 'syntax',
   'tr-a2-causal-connectors': 'syntax',
+  'tr-a2-adversative-connectors': 'syntax',
   'tr-a2-possessive-case-stacking': 'morphology',
   'tr-a2-ca-suffix': 'morphology',
   'tr-a2-pekistirme': 'morphology',
@@ -288,6 +290,9 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   // B1 G&K reverse-audit additions (2026-07-10)
   'tr-b1-copula-ol': 'syntax',
   'tr-b1-olarak': 'syntax',
+  'tr-b1-abstract-postpositions': 'syntax',
+  'tr-b1-reason-digi-icin': 'syntax',
+  'tr-b1-when-converbs': 'syntax',
 };
 
 /**
