@@ -6,7 +6,7 @@ import { DrillLandingMobile } from './_landing/drill-landing-mobile';
 import { LandingDarkCanvas } from './_landing/landing-dark-canvas';
 
 export const metadata: Metadata = {
-  title: 'drill — read, save, produce',
+  title: 'drill — type it, don’t tap it',
   description:
     'Read real prose, save the words you trip on, and drill them back by typing the answer — not picking it. drill grades every keystroke and coaches the miss on the spot.',
 };

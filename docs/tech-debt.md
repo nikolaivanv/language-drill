@@ -6,7 +6,8 @@ A living log of known issues to address. Add new entries at the top; mark as res
 
 ## No brake or alert on Anthropic API spend in the scheduled generation path
 
-- **Status:** open — deferred until the self-revealing-targets exercise fix lands (`docs/findings/2026-07-07-self-revealing-target-elicitation.md`)
+- **Status:** partially resolved 2026-07-08 — remediations **2** (run-level scheduler ceiling) and **3** (Anthropic-cost CloudWatch metric + daily-sum alarm) shipped; remediations **1** (per-cell cap enforcement in `runOneCell`) and **4** (manual Anthropic-console alert) remain **open**. See Resolution below.
+- **Status (original):** open — deferred until the self-revealing-targets exercise fix lands (`docs/findings/2026-07-07-self-revealing-target-elicitation.md`)
 - **Discovered:** 2026-07-07 (the ES `2026-07-07` curriculum initial fill spent ~$117 in one 80-minute run and drained the Anthropic credit balance to $0.61 — zero alerts fired at any layer)
 - **Scope:** `infra/lambda/src/generation/scheduler.ts:54` (`SCHEDULER_PER_CELL_COST_CAP_USD = 0.5`), `packages/db/src/generation/run-one-cell.ts` (`args.maxCostUsd` accepted but never read), `packages/db/scripts/generate-exercises.ts:360` (the only place a cost cap is actually enforced — CLI local-run path), `infra/lib/constructs/alerts.ts` (AWS-only budget + anomaly detection), `infra/lambda/src/generation/handler.ts` / `metrics.ts` (where a cost metric would be emitted)
 - **Severity:** high — a single curriculum bump can fan out hundreds of cells and spend an unbounded amount against the Anthropic account in one nightly run, with no runtime stop and no alerting before or after
@@ -30,6 +31,13 @@ Note: `cost_usd_estimate` is the pipeline's own pricing-table estimate; the real
 
 **Owner:** unassigned
 **Tracking:** none yet — open a GitHub issue when prioritizing
+
+**Resolution (2026-07-08, remediations 2 + 3):** Design in `docs/superpowers/specs/2026-07-08-generation-spend-brake-design.md`.
+
+1. **Run-level ceiling (remediation 2).** `infra/lambda/src/generation/scheduler.ts` now caps how many under-target cells one tick enqueues (`SCHEDULER_MAX_CELLS_PER_RUN`, default `DEFAULT_MAX_CELLS_PER_RUN = 60`; a non-positive/non-numeric override falls back to the default so the brake can't be disabled by a typo). When `undersized.length > cap`, cells are sorted by `need` descending (emptiest first) with a `cellKey` tie-break and sliced to `cap`; a structured log line records `cap` / `enqueuedThisRun` / `deferredCount`. No persistence — deferred cells stay under-target and re-enqueue next run, so a ~187-cell initial fill self-spreads over ~4 nights. Wired as an optional `maxCellsPerRun` prop on `SchedulerLambdaConstruct` (the stack passes nothing → code default).
+2. **Anthropic-cost metric + daily alarm (remediation 3).** `emitCellCostMetric` (`infra/lambda/src/generation/metrics.ts`) emits per-cell `CellCostUsd` EMF (namespace `LanguageDrill/Generation`, `env` dimension); the handler calls it with `estimateCostUsd(result.tokenUsage)` for **every** terminal outcome (so a `failed` cell's burned tokens still count). `GenerationDailyCostAlarm` (`infra/lib/constructs/generation-lambda.ts`) alarms on the daily `Sum` crossing `dailyCostAlarmUsd` (default $50) via the existing `AlertsConstruct` SNS topic — the first layer that observes Anthropic spend (AWS Budgets / Cost Anomaly Detection see AWS spend only, and all 187 cells of the incident *succeeded*).
+
+**Still open:** remediation 1 (compare accumulated cost against `args.maxCostUsd` inside `runOneCell` — mirror the outcome pool's `earlyBailed` circuit breaker; the per-cell overshoot is minor next to the fan-out, hence deferred) and remediation 4 (manual Anthropic-console account-level spend alert).
 
 ---
 

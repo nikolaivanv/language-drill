@@ -18,6 +18,7 @@ import {
   type CefrLevel,
   type ClozeContent,
   type ConjugationContent,
+  type ContextualParaphraseContent,
   coverageAxesFor,
   type CoverageAxis,
   ExerciseType,
@@ -75,7 +76,23 @@ function renderBulletList(items: readonly string[]): string {
 // prompt (not the cached VALIDATION_SYSTEM_PROMPT_TEMPLATE — that stays
 // byte-identical). Bumped so Langfuse cohorts new-vs-old validator traces;
 // no Langfuse push needed since the system template itself is unchanged.
-export const VALIDATION_PROMPT_VERSION = "validate@2026-07-08";
+// 2026-07-08a: base-word-cue variant of the self-revealing note (derived-form
+// points, appreciative suffixes): the parenthetical BASE-word cue is the
+// sanctioned elicitation; spoilage only if the derived form itself is
+// visible. Per-draft user prompt only — no Langfuse push needed.
+// 2026-07-09: added the contextual_paraphrase validation user prompt (new
+// ExerciseType). Per-draft user prompt only — no Langfuse push needed since
+// the cached system template is unchanged.
+// 2026-07-16: mirrors generate@2026-07-16 (generate↔validate contract split).
+// (a) Form-contrast exception on the `ambiguous` dimension: for a point that
+// contrasts two forms with different meanings (es-b2-perception-verbs
+// infinitive vs. gerund), enumerating both in acceptableAnswers IS ambiguous,
+// and a context-forced single-form draft must NOT be flagged for omitting the
+// other alternant. (b) vocab_recall may cure a near-synonym-ambiguous
+// definition by enumerating the alternates in the NEW acceptableAnswers
+// field (rendered in the per-draft user prompt). Template edit → Langfuse
+// push per env.
+export const VALIDATION_PROMPT_VERSION = "validate@2026-07-16";
 
 export const VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language exercises for {{language}} learners at CEFR {{cefrLevel}}. Your job is to validate one already-generated exercise that targets the grammar point: {{grammarPointName}}.
 
@@ -116,7 +133,8 @@ Score conservatively — a flagged draft costs a human ~30 seconds of review; an
    - **0.8** — publishable with one cosmetic edit.
    - **0.65** — borderline; clear issue but salvageable. Routes to FLAGGED.
    - **0.5** — unusable; reject. Routes to REJECTED.
-2. **ambiguous** (boolean): more than one substantively-correct answer? For **cloze**, true when multiple lexemes/forms satisfy the grammar point in this sentence AND \`acceptableAnswers\` does not enumerate them. For **translation**, surface variation is fine; structurally different correct translations is ambiguous. For **vocab_recall**, the prompt must pick out exactly one headword.
+2. **ambiguous** (boolean): more than one substantively-correct answer? For **cloze**, true when multiple lexemes/forms satisfy the grammar point in this sentence AND \`acceptableAnswers\` does not enumerate them. For **translation**, surface variation is fine; structurally different correct translations is ambiguous. For **vocab_recall**, the prompt must pick out exactly one headword — or, when the language has true near-synonyms that the definition admits equally (e.g. TR \`istasyon\`/\`gar\` for a station definition), \`acceptableAnswers\` must enumerate every defensible alternate; enumerated near-synonyms cure the ambiguity, a missing defensible alternate does not.
+   - **Form-contrast exception (cloze):** when the grammar point itself CONTRASTS two forms with DIFFERENT meanings (e.g. ES perception verbs: infinitive = completed event vs. gerund = caught in progress), enumeration does NOT cure ambiguity — listing both contrasting forms in \`acceptableAnswers\` teaches that they are interchangeable and IS \`ambiguous\`. A good draft forces exactly one of the contrasting forms via sentence context (durativity/completion cues) and lists neither contrast alternant in \`acceptableAnswers\`; do not flag such a context-forced draft merely for omitting the other contrasting form. A blank on the conjugated perception verb instead of the infinitive/gerund slot is \`grammarPointMatch: false\` (it tests tense selection).
    - "Sınıfta sekiz ___ var." / \`correctAnswer: "öğrenci"\` — sandalye, kalem, kitap, defter all satisfy no-plural-after-numeral equally; needs \`acceptableAnswers\`.
    - "Evde yeni ___ var. Onlar çok güzel." / \`correctAnswer: "perdeler"\` — perdeler, kitaplar, çiçekler, lambalar all fit "plural + positive descriptor"; the follow-on doesn't disambiguate. Needs \`acceptableAnswers\` or tighter framing ("Onları yıkamayı unutma" picks out perdeler).
    - "Ben çok mutlu___" / \`correctAnswer: "um"\` or \`"yum"\` — buffer-consonant blank: vowel-final stem "mutlu" + 1sg copular \`-Im\` requires buffer \`-y-\`. Without \`acceptableAnswers\` listing both ("um" and "yum"), or embedding \`-y-\` in the visible stem as "mutluy___", set \`ambiguous = true\` AND add \`'buffer-consonant ambiguous blank'\` to \`flaggedReasons\`.
@@ -229,20 +247,51 @@ function clozeCellScoringNote(grammarPointKey: string): string {
 // the sanctioned elicitation. Gated on the curriculum flag (not a key list) so
 // future flagged points inherit it. Applies to cloze AND translation drafts.
 function selfRevealingScoringNote(spec: GenerationSpec): string {
-  if (spec.grammarPoint.selfRevealingElicitation !== "digit-form") return "";
-  return `
+  if (spec.grammarPoint.selfRevealingElicitation === "digit-form") {
+    return `
 
 **Scoring note for this self-revealing-target cell:** the target is a number/ordinal whose meaning CANNOT be conveyed without identifying it. A digit or numeral cue in the visible text (e.g. "3.º", "3.", "200", "123", digits in a translation source sentence) is the INTENDED elicitation for this cell — do NOT set contextSpoilsAnswer=true because digits identify which value the learner must write. The tested skill is producing the WRITTEN form with correct agreement/apocope/gender/harmony (tercer vs tercero, doscientas, üçüncü), which digits do not reveal. Still set contextSpoilsAnswer=true if the written word form itself appears anywhere in the visible text. Score all other dimensions normally; a clean digit-cued draft is 0.8+, not spoiled.`;
+  }
+  if (spec.grammarPoint.selfRevealingElicitation === "base-word-cue") {
+    return `
+
+**Scoring note for this self-revealing-target cell:** the target is a DERIVED form (appreciative suffix) that cannot be elicited without identifying its base word. A parenthetical BASE-word cue in the visible text (e.g. "(silla)" when the answer is "sillita") is the INTENDED elicitation for this cell — do NOT set contextSpoilsAnswer=true because the base word appears. The tested skill is choosing the suffix from the context's nuance and forming it with the correct allomorph and gender (mujercita, cochecito, notición), which the base word does not reveal. Still set contextSpoilsAnswer=true if the derived form itself appears anywhere in the visible text (including inside the parenthetical cue). Reject an answer that is a novel coinage rather than an established form, and flag genuine nuance ambiguity where a DIFFERENT established suffixed form of the same base fits the context equally well. Score all other dimensions normally; a clean base-cued draft is 0.8+, not spoiled.`;
+  }
+  return "";
 }
 
 // vocab_recall's task IS meaning→word retrieval: a definition that picks out
 // exactly one headword is the exercise working as designed, not spoilage.
-// Spoilage for vocab is ORTHOGRAPHIC only. Gated on kind (all vocab cells).
+// Spoilage for vocab is ORTHOGRAPHIC and confined to the PROMPT/HINTS.
+//
+// The exampleSentence is NOT a spoiler surface: the drill UI only reveals it at
+// the deepest opt-in hint level and masks the expected word to `___` first
+// (hint-row.tsx `maskExampleSentence`); the full sentence appears only AFTER
+// submission, as post-answer usage. So the expected word appearing in the
+// example is by design — 53% of the auto-approved pool has it. The prior rule
+// listing "example sentence" as an orthographic reveal contradicted both the UI
+// and the pool (it made the validator inconsistently reject otherwise-fine
+// drafts), so it is scoped to prompt/hints only.
+//
+// The grammarPointMatch clause aligns the validator with the curriculum the
+// generator is already driven by: a vocab umbrella is a SEMANTIC DOMAIN (its
+// coverageSpec can mandate verbs/adjectives — e.g. food-drink floors verb:2,
+// adjective:2), so POS is not a grammarPointMatch criterion. Without this, the
+// validator invents a "food-drink ⇒ noun" heuristic and flags curriculum-mandated
+// verbs/adjectives (içmek, acı) as grammarPointMatch=false — a generate↔validate
+// contract split that kept those cells at ~0% approval. Kept SURGICAL (single
+// dimension, no "pre-vetted/curated/good" framing) because a broader pro-context
+// block was verified to make the validator miss orthographic spoilers and
+// spuriously level-flag clean drafts. Level-mismatch on genuinely rare/over-level
+// headwords is handled by curriculum curation (drop extended-tier targets), not
+// here; ambiguous, levelMatch, qualityScore are untouched.
 function vocabRecallScoringNote(spec: GenerationSpec): string {
   if (spec.grammarPoint.kind !== "vocab") return "";
   return `
 
-**Scoring note for vocab_recall:** the Prompt is a meaning-based definition whose JOB is to pick out exactly one headword — do NOT set contextSpoilsAnswer=true because the definition identifies the expected word, however precise the definition is. Set contextSpoilsAnswer=true ONLY for orthographic reveals: the expected word (in any inflection) appearing in the prompt, hints, or example sentence; first/last-letter or letter-count hints; partial spellings. A precise unambiguous definition with meaning-only hints is a GOOD exercise (0.8+), not a spoiled one.`;
+**Scoring note for vocab_recall:** the Prompt is a meaning-based definition whose JOB is to pick out exactly one headword — do NOT set contextSpoilsAnswer=true because the definition identifies the expected word, however precise the definition is. Set contextSpoilsAnswer=true ONLY for orthographic reveals in the PROMPT or HINTS: the expected word (in any inflection) appearing there; first/last-letter or letter-count hints; partial spellings. The exampleSentence is a post-answer usage illustration (the UI masks the word before submission), so the expected word appearing in the example sentence is NOT contextSpoilsAnswer. A precise unambiguous definition with meaning-only hints is a GOOD exercise (0.8+), not a spoiled one.
+
+**grammarPointMatch for vocab_recall:** a vocab umbrella is a SEMANTIC DOMAIN (e.g. food & drink, transport & places), NOT a part of speech. A domain-appropriate verb (içmek "to drink"), adjective (acı "spicy"), or adverb is on-target — set grammarPointMatch=false ONLY when the headword is outside that domain, never merely because it is not a noun. Judge every other dimension (levelMatch, ambiguous, contextSpoilsAnswer, qualityScore) exactly as defined above, unchanged.`;
 }
 
 function buildClozeValidationUserPrompt(
@@ -287,6 +336,7 @@ function buildVocabRecallValidationUserPrompt(
 **Instructions:** ${content.instructions}
 **Prompt:** ${content.prompt}
 **Expected Word:** ${content.expectedWord}
+**Acceptable Answers (near-synonyms also accepted):** ${content.acceptableAnswers && content.acceptableAnswers.length > 0 ? content.acceptableAnswers.join(", ") : "(none declared — the definition must pick out `Expected Word` alone)"}
 **Hints:** ${content.hints.join("; ")}
 **Example Sentence:** ${content.exampleSentence}${vocabRecallScoringNote(spec)}
 
@@ -317,6 +367,35 @@ ${registerLine}
 **Model answers:** ${content.modelAnswers.join(" | ")}
 
 Score the dimensions in the system prompt. Treat the exercise as well-formed only if the prompt is unambiguous and solvable at the target level, AND every model answer genuinely satisfies the prompt (keywords used / goal met / target structure used) at the target CEFR level. If a model answer does not exercise the grammar point, set grammarPointMatch=false. Submit via the tool.`;
+}
+
+function buildContextualParaphraseValidationUserPrompt(
+  content: ContextualParaphraseContent,
+  spec: GenerationSpec,
+): string {
+  const constraintDetail =
+    content.constraintKind === "avoid"
+      ? `Banned terms (must appear in the source, must NOT appear in any paraphrase): ${(content.bannedTerms ?? []).join(", ")}`
+      : content.constraintKind === "register"
+        ? `Target register: ${content.targetRegister}`
+        : `Simplify for: ${content.audience}`;
+  return `Validate this ${spec.language} contextual-paraphrase exercise (CEFR ${spec.cefrLevel}).
+
+Source sentence: ${content.sourceText}
+Constraint kind: ${content.constraintKind}
+${constraintDetail}
+Task shown to learner: ${content.constraintLabel}
+Reference paraphrases:
+${content.referenceParaphrases.map((p, i) => `${i + 1}. ${p}`).join("\n")}
+
+Reject (flag) the exercise if ANY of the following hold:
+- The meaning cannot be preserved under the constraint, or the only faithful rewrite is the source itself.
+- constraintKind 'avoid': a banned term is absent from the source, OR appears in any reference paraphrase, OR has no reasonable ${spec.language} synonym/circumlocution at CEFR ${spec.cefrLevel}.
+- constraintKind 'register': the source is already in the target register (no shift to perform), or a reference paraphrase changes the propositional content.
+- constraintKind 'simplify': a reference paraphrase omits information or is not simpler for the stated audience.
+- Any reference paraphrase is ungrammatical, unnatural, or above/below CEFR ${spec.cefrLevel}.
+- The source sentence is unnatural, or the constraintLabel leaks a finished paraphrase.
+Otherwise approve it.`;
 }
 
 export function buildConjugationValidationUserPrompt(
@@ -404,6 +483,9 @@ export function buildValidationUserPrompt(
       break;
     case ExerciseType.CONJUGATION:
       base = buildConjugationValidationUserPrompt(content, spec);
+      break;
+    case ExerciseType.CONTEXTUAL_PARAPHRASE:
+      base = buildContextualParaphraseValidationUserPrompt(content, spec);
       break;
     case ExerciseType.DICTATION:
       throw new Error(

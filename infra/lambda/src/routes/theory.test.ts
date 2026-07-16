@@ -84,6 +84,18 @@ vi.mock('@language-drill/db', () => ({
     )[key],
 }));
 
+// The single-topic route enriches the response with related topics derived
+// from curriculum data. The derivation has its own pure-data test
+// (lib/theory-related.test.ts); here it is mocked so route tests cover only
+// the wiring + the approved-only filter. Default: no candidates (so the
+// second db query is skipped and `related` comes back empty).
+const mockDeriveRelated = vi.fn<() => import('../lib/theory-related').RelatedTheoryTopics>(
+  () => ({ buildsOn: [], leadsTo: [], siblings: [] }),
+);
+vi.mock('../lib/theory-related', () => ({
+  deriveRelatedGrammarPoints: (...args: unknown[]) => mockDeriveRelated(...(args as [])),
+}));
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyJson = Record<string, any>;
 
@@ -260,6 +272,89 @@ describe('GET /theory/:lang/:topicId — error paths', () => {
     expect(mockOrderBy).toHaveBeenCalled();
     const body = (await res.json()) as AnyJson;
     expect(body.title).toBe('fresh title');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /theory/:lang/:topicId — related-topics enrichment
+// ---------------------------------------------------------------------------
+
+describe('GET /theory/:lang/:topicId — related topics', () => {
+  let app: Hono;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const mod = await import('./theory');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  const primeTopicRow = () => {
+    mockLimit.mockResolvedValueOnce([
+      { id: '00000000-0000-0000-0000-000000000001', contentJson: validTopicJson },
+    ]);
+  };
+
+  it('keeps only related candidates that have an approved theory row', async () => {
+    primeTopicRow();
+    mockDeriveRelated.mockReturnValueOnce({
+      buildsOn: [{ topicId: 'b1-conditional', title: 'Conditional simple', cefr: 'B1' }],
+      leadsTo: [
+        { topicId: 'b2-remote-conditionals', title: 'Remote conditional sentences', cefr: 'B2' },
+      ],
+      siblings: [
+        { topicId: 'b2-past-subjunctive', title: 'Past (imperfect) subjunctive', cefr: 'B2' },
+      ],
+    });
+    // Approved-filter query (terminates at `.where`): only two of the three
+    // candidates have an approved page.
+    mockTotalResolver.mockResolvedValueOnce([
+      { topicId: 'b1-conditional' },
+      { topicId: 'b2-past-subjunctive' },
+    ]);
+
+    const res = await app.request('/theory/ES/b1-test-topic', undefined, authEnv);
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.related).toEqual({
+      buildsOn: [{ topicId: 'b1-conditional', title: 'Conditional simple', cefr: 'B1' }],
+      leadsTo: [],
+      siblings: [
+        { topicId: 'b2-past-subjunctive', title: 'Past (imperfect) subjunctive', cefr: 'B2' },
+      ],
+    });
+  });
+
+  it('returns empty groups without a second query when there are no candidates', async () => {
+    primeTopicRow();
+    // Default mockDeriveRelated → no candidates.
+    const res = await app.request('/theory/ES/b1-test-topic', undefined, authEnv);
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.related).toEqual({ buildsOn: [], leadsTo: [], siblings: [] });
+    expect(mockTotalResolver).not.toHaveBeenCalled();
+  });
+
+  it('degrades to empty groups (topic still renders) when the approved-filter query fails', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    primeTopicRow();
+    mockDeriveRelated.mockReturnValueOnce({
+      buildsOn: [{ topicId: 'b1-conditional', title: 'Conditional simple', cefr: 'B1' }],
+      leadsTo: [],
+      siblings: [],
+    });
+    mockTotalResolver.mockRejectedValueOnce(new Error('db down'));
+
+    const res = await app.request('/theory/ES/b1-test-topic', undefined, authEnv);
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.title).toBe('a small B1 theory topic');
+    expect(body.related).toEqual({ buildsOn: [], leadsTo: [], siblings: [] });
+    expect(errorSpy).toHaveBeenCalled();
+    errorSpy.mockRestore();
   });
 });
 

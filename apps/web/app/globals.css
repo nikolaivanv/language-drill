@@ -482,9 +482,35 @@ button:hover .lk-arr {
 }
 .theory-header-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: 10px;
   margin-top: 4px;
+}
+.theory-hub-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--color-ink-mute);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+.theory-hub-link:hover {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--color-rule-strong);
+}
+.theory-hub-link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.theory-hub-link-icon {
+  flex-shrink: 0;
 }
 .theory-close {
   appearance: none;
@@ -570,15 +596,24 @@ button:hover .lk-arr {
   text-align: left;
   background: transparent;
   border: 0;
+  border-left: 2px solid transparent;
   padding: 6px 10px;
   font-size: 13px;
   color: var(--color-ink-soft);
   cursor: pointer;
-  transition: color 0.15s ease, background 0.15s ease;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
 .theory-otherbtn:hover {
   color: var(--color-ink);
   background: var(--color-paper-3);
+}
+/* The topic currently on screen stays in the list, marked like the active
+   "jump to" section so you can see where you are and keep browsing from there. */
+.theory-otherbtn.active {
+  color: var(--color-ink);
+  background: var(--color-paper-3);
+  border-left-color: var(--color-accent);
+  font-weight: 500;
 }
 /* Compact filter input for a long "other topics" list — sits between the
    header and the rows inside the 240px sidebar. */
@@ -679,6 +714,18 @@ button:hover .lk-arr {
   scroll-behavior: smooth;
   padding: var(--spacing-s-6) var(--spacing-s-7);
   position: relative;
+}
+/* While an in-place topic switch is fetching, the previous article stays on
+   screen (keepPreviousData); a faint dim signals the new one is loading without
+   blanking the column or unmounting the nav. */
+.theory-scroll--switching {
+  opacity: 0.55;
+  transition: opacity 0.15s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .theory-scroll--switching {
+    transition: none;
+  }
 }
 .theory-section {
   padding: var(--spacing-s-5) 0;
@@ -1150,6 +1197,14 @@ button:hover .lk-arr {
   height: calc(100dvh - 72px);
   min-height: 0;
 }
+/* Loading / error / empty states have no internal `.theory-scroll`, so the
+   hard height above would clip their content and let it paint over the shell
+   footer parked at the box's bottom edge (the not-found topic list overlapping
+   the footer). Let the box grow with content, filling the viewport at minimum. */
+.theory-detail--flow {
+  height: auto;
+  min-height: calc(100dvh - 72px);
+}
 .theory-detail-header {
   flex-shrink: 0;
   padding-bottom: var(--spacing-s-4);
@@ -1166,6 +1221,10 @@ button:hover .lk-arr {
      .theory-scroll stays the scroller (scroll-spy depends on it). */
   .theory-detail {
     height: calc(100dvh - 152px - env(safe-area-inset-bottom));
+  }
+  .theory-detail--flow {
+    height: auto;
+    min-height: calc(100dvh - 152px - env(safe-area-inset-bottom));
   }
   .theory-detail-body {
     margin-top: var(--spacing-s-4);
@@ -1232,6 +1291,51 @@ button:hover .lk-arr {
 }
 @media (prefers-reduced-motion: reduce) {
   .gloss-tooltip {
+    transition: none;
+  }
+}
+
+/* ─── Vocab: word cell coverage states ───
+   The topic-detail grid tile (VocabWordCell). `data-state` mirrors
+   CoverageState from the vocab API and drives a tint per state, using the
+   real @theme color tokens defined above (never the --card/--rule/--r-lg
+   shorthand debris some older prototype components reference — those aren't
+   registered custom properties). not-yet reads muted/greyed (nothing
+   generated yet); untested is the plain card surface (approved, unpracticed);
+   practiced-weak/-strong reuse the existing hilite (amber) and ok (green)
+   tokens rather than inventing new color/radius tokens. */
+.vocab-cell {
+  display: block;
+  width: 100%;
+  padding: var(--spacing-s-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-rule);
+  background: var(--color-card);
+  cursor: pointer;
+  transition: background-color 150ms ease-out, border-color 150ms ease-out;
+}
+.vocab-cell:hover {
+  border-color: var(--color-rule-strong);
+}
+.vocab-cell[data-state='not-yet'] {
+  background: var(--color-paper-2);
+  border-color: var(--color-rule);
+  opacity: 0.7;
+}
+.vocab-cell[data-state='untested'] {
+  background: var(--color-card);
+  border-color: var(--color-rule);
+}
+.vocab-cell[data-state='practiced-weak'] {
+  background: var(--color-hilite-soft);
+  border-color: var(--color-hilite);
+}
+.vocab-cell[data-state='practiced-strong'] {
+  background: var(--color-ok-soft);
+  border-color: var(--color-ok);
+}
+@media (prefers-reduced-motion: reduce) {
+  .vocab-cell {
     transition: none;
   }
 }

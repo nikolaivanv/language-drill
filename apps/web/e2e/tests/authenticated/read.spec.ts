@@ -327,21 +327,18 @@ test('saving a word card raises the toast, flips the footer, and undoes from the
   await mockReadApi(page);
   await openSeededEntry(page);
 
-  // Tap → deep word card resolves.
+  // Tap → deep word card resolves AND auto-saves (default-add), so the
+  // confirmation toast + saved footer appear with no manual click.
   await page.getByRole('button', { name: 'aldea' }).click();
   await expect(page.getByText('pueblo pequeño')).toBeVisible();
 
-  // Save → confirmation toast + footer flips to the saved state.
-  await page
-    .getByRole('button', { name: /\+ save to vocabulary/i })
-    .click();
   // A word-card save persists to BOTH vocabulary and the passage word bank, so
   // two toasts share role="status" (VocabSaveToast + the entry SaveToast).
   // Scope to the vocabulary confirmation so the locator stays unambiguous.
   const toast = page.getByRole('status').filter({ hasText: /saved.*to vocabulary/i });
   await expect(toast).toBeVisible();
   await expect(
-    page.getByRole('button', { name: /✓ saved · undo/i }),
+    page.getByRole('button', { name: /✓ saved · remove/i }),
   ).toBeVisible();
 
   // Undo from the toast → footer reverts to "save", toast goes away.
@@ -382,10 +379,9 @@ test('an on-demand (non-flagged) save appears in the word-bank panel and ✕ rem
   const rail = page.getByRole('complementary');
   await expect(rail.getByText(/tap a word to see its meaning/i)).toBeVisible();
 
-  // Tap the UNFLAGGED word ("tranquila") and save its deep card.
+  // Tap the UNFLAGGED word ("tranquila") — it auto-saves its deep card.
   await page.getByRole('button', { name: 'tranquila' }).click();
   await expect(page.getByText('tranquilo/a')).toBeVisible();
-  await page.getByRole('button', { name: /\+ save to vocabulary/i }).click();
 
   // It now shows in the panel — the reported bug (on-demand saves were dropped).
   await expect(rail.getByRole('listitem')).toHaveCount(1);
@@ -532,8 +528,9 @@ test('Escape dismisses the open deep card (Req 9.6)', async ({ page }) => {
   // The desktop popover handles Escape via a *local* onKeyDown, and opening by
   // mouse leaves focus on the word in the passage (the popover isn't
   // auto-focused). So drive the keyboard-dismiss path the way a keyboard user
-  // would: with focus inside the card. The in-card "skip" control is a stable
-  // focus target — pressing Escape there bubbles to the popover's handler.
-  await page.getByRole('button', { name: 'skip' }).press('Escape');
+  // would: with focus inside the card. Tapping the word auto-saves it, so the
+  // in-card dismiss control reads "close" (the saved-state label for the same
+  // `skipRef` button) — pressing Escape there bubbles to the popover's handler.
+  await page.getByRole('button', { name: 'close' }).press('Escape');
   await expect(page.getByText('pueblo pequeño')).toHaveCount(0);
 });

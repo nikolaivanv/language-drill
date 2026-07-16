@@ -4,6 +4,7 @@ import * as React from 'react';
 import {
   isClozeContent,
   isConjugationContent,
+  isContextualParaphraseContent,
   isDictationContent,
   isSentenceConstructionContent,
   isTranslationContent,
@@ -14,6 +15,7 @@ import {
 import type { AuthenticatedFetch, ExerciseResponse } from '@language-drill/api-client';
 import { ClozeExercise } from './cloze-exercise';
 import { ConjugationExercise } from './conjugation-exercise';
+import { ContextualParaphraseExercise } from './contextual-paraphrase-exercise';
 import { DictationExercise } from './dictation-exercise';
 import { SentenceConstructionExercise } from './sentence-construction-exercise';
 import { TranslationExercise } from './translation-exercise';
@@ -90,6 +92,7 @@ export function ExercisePane({
         nextLabel={nextLabel}
         exerciseId={exercise.id}
         coach={coach}
+        fetchFn={fetchFn}
       />
     );
   }
@@ -130,6 +133,22 @@ export function ExercisePane({
   if (isSentenceConstructionContent(content)) {
     return (
       <SentenceConstructionExercise
+        key={exercise.id}
+        content={content}
+        language={language}
+        submission={submission}
+        onSubmit={onSubmit}
+        onNext={onNext}
+        nextLabel={nextLabel}
+        exerciseId={exercise.id}
+        coach={coach}
+      />
+    );
+  }
+
+  if (isContextualParaphraseContent(content)) {
+    return (
+      <ContextualParaphraseExercise
         key={exercise.id}
         content={content}
         language={language}

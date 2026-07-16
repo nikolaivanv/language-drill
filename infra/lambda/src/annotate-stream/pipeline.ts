@@ -14,8 +14,10 @@
  *
  * Phase 3: rarest-first cap. After post-filter we sort by `effectiveRank`
  * descending and take CANDIDATE_LIMIT (50 — see the constant for the
- * slim-card latency rationale). `effectiveRank` is stripped from the
- * returned shape; the SSE wire only carries `matchedForm` + `lemma`.
+ * slim-card latency rationale). `effectiveRank` is retained on the returned
+ * candidates (the handler uses it to populate `WordFlag.freq` on cache
+ * hits with the authoritative server rank) even though the SSE wire only
+ * echoes `matchedForm` + `lemma` back to the client.
  *
  * For ES/TR the pre-filter also drops capitalized non-sentence-initial tokens
  * as likely proper nouns before candidate selection (Req 2.2); German is
@@ -87,6 +89,7 @@ const UPPERCASE_START_RE = /^\p{Lu}/u;
 export type Candidate = {
   matchedForm: string;
   lemma: string | null;
+  effectiveRank: number;
 };
 
 export type Calibration = {
@@ -167,8 +170,7 @@ export async function buildCandidateList(
 
   // ---- Pre-filter: tokenize → dedupe → rank-gate (Req 1.1, 1.4, 1.5) ----
   const seen = new Set<string>();
-  type Survivor = Candidate & { effectiveRank: number };
-  const survivors: Survivor[] = [];
+  const survivors: Candidate[] = [];
 
   // Proper-noun pre-filter state (Req 2.2/2.3). `atSentenceStart` tracks
   // whether the next word token begins a sentence so a sentence-initial
@@ -231,18 +233,13 @@ export async function buildCandidateList(
       (c.lemma === null || !vocabKeys.has(c.lemma)),
   );
 
-  // ---- Rarest-first cap (Req 2.4) ----
-  // Stable sort by `effectiveRank` descending. Ties keep first-seen order
-  // since survivors was built in pre-filter (i.e. token) order — Array.sort
-  // is stable in modern V8/Node.
+  // Rarest-first cap (Req 2.4). Stable sort by `effectiveRank` descending —
+  // ties keep first-seen order since survivors was built in pre-filter (i.e.
+  // token) order, and Array.sort is stable in modern V8/Node. `effectiveRank`
+  // is retained on the returned candidates so the handler can populate
+  // WordFlag.freq for cache hits from the authoritative server rank.
   afterVocab.sort((a, b) => b.effectiveRank - a.effectiveRank);
-  const capped = afterVocab.slice(0, CANDIDATE_LIMIT);
-
-  // Strip `effectiveRank` — the SSE wire shape carries only matchedForm + lemma.
-  const candidates: Candidate[] = capped.map((c) => ({
-    matchedForm: c.matchedForm,
-    lemma: c.lemma,
-  }));
+  const candidates: Candidate[] = afterVocab.slice(0, CANDIDATE_LIMIT);
 
   return { candidates, calibration };
 }

@@ -5,10 +5,9 @@ import type { LearningLanguage } from '@language-drill/shared';
 import type { AuthenticatedFetch } from '@language-drill/api-client';
 import { useTheoryTopic } from '../../lib/hooks/use-theory-topic';
 
-// `topicId` is `string` (not the closed `TheoryTopicId` enum) because
-// DB-backed theory topics — generated from the curriculum — are not part
-// of the hand-authored static registry. `useTheoryTopic` accepts any
-// string and decides whether to render based on static-or-DB lookup.
+// `topicId` is a free-form `string`: DB-backed theory topics are generated
+// from the curriculum and keyed by their `topic_id` slug. `useTheoryTopic`
+// accepts any string and decides whether to render based on the DB lookup.
 type TheoryTriggerProps = {
   topicId: string;
   language: LearningLanguage;

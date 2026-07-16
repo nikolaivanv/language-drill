@@ -18,6 +18,21 @@ vi.mock('../../../../../components/shell/active-language-provider', () => ({
   useActiveLanguage: () => ({ activeLanguage: 'ES' }),
 }));
 
+// Audio-control placement tests only need a marker — the real PassageAudio
+// needs a QueryClient + audio hook we don't want to wire up here. Exposes the
+// `floating`/`floatingSuppressed` props as data attributes so the mobile
+// floating-control wiring test (below) can assert on them without needing
+// the real component.
+vi.mock('../passage-audio', () => ({
+  PassageAudio: (props: { floating?: boolean; floatingSuppressed?: boolean }) => (
+    <div
+      data-testid="passage-audio"
+      data-floating={String(props.floating ?? false)}
+      data-suppressed={String(props.floatingSuppressed ?? false)}
+    />
+  ),
+}));
+
 beforeEach(() => {
   mockIsMobile.mockReturnValue(false);
 });
@@ -76,8 +91,8 @@ describe('AnnotatedView — flagged ≥ 1', () => {
     expect(screen.getByText('~B1+ calibration')).toBeInTheDocument();
     expect(screen.getByText('word bank')).toBeInTheDocument();
     // The legacy footer "save N to bank →" button is gone — bank saves persist
-    // immediately, so the explicit save action was redundant. The redesigned
-    // CollectBar now renders the flagged/saved tally + library/vocab actions.
+    // immediately, so the explicit save action was redundant. The CollectBar
+    // now renders the flagged/saved tally + a single "save text" action.
     expect(
       screen.queryByRole('button', { name: /save \d+ to bank/i }),
     ).not.toBeInTheDocument();
@@ -316,7 +331,7 @@ describe('AnnotatedView — deep-card save / undo (Req 8.4, 8.5)', () => {
         onUndoCard={onUndoCard}
       />,
     );
-    fireEvent.click(screen.getByRole('button', { name: /✓ saved · undo/i }));
+    fireEvent.click(screen.getByRole('button', { name: /✓ saved · remove/i }));
     expect(onUndoCard).toHaveBeenCalledTimes(1);
   });
 });
@@ -450,5 +465,77 @@ describe('AnnotatedView — span-select forwarding', () => {
     // mirror the browser and consume the listener (no second emit).
     fireEvent.click(screen.getByRole('button', { name: 'grande' }));
     expect(onSpanSelect).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('AnnotatedView — Listen audio control placement', () => {
+  const audioProps = { ...baseProps, entryId: 'entry-1', fetchFn: (() => {}) as never };
+
+  it('renders the audio control (desktop) before the calibration strip, not in the header cluster', () => {
+    mockIsMobile.mockReturnValue(false);
+    render(<AnnotatedView {...audioProps} />);
+    const audio = screen.getByTestId('passage-audio');
+    const intensity = screen.getByRole('radiogroup'); // IntensityToggle lives in the header cluster
+    // Audio precedes the calibration eyebrow, and is a sibling row (not inside the intensity/header cluster).
+    expect(audio).toBeInTheDocument();
+    // New layout: the audio row sits AFTER the header block (which contains the
+    // IntensityToggle), so the audio marker follows the toggle in document order.
+    // In the old layout it preceded the toggle inside the header cluster — this
+    // assertion fails there, so it genuinely guards the relocation.
+    expect(
+      intensity.compareDocumentPosition(audio) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it('renders the audio control on mobile, after the header word-bank chip', () => {
+    mockIsMobile.mockReturnValue(true);
+    render(<AnnotatedView {...audioProps} />);
+    const audio = screen.getByTestId('passage-audio');
+    expect(audio).toBeInTheDocument();
+    // baseProps has 1 flagged word, so showRail is true and the mobile header
+    // renders the "word bank · N" chip. The audio row sits below the header,
+    // so the marker follows the chip in document order — guards against a
+    // future mobile-only edit silently moving the row above the header.
+    const wordBank = screen.getByRole('button', { name: /word bank/i });
+    expect(
+      wordBank.compareDocumentPosition(audio) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it('hides the audio control when there is no persisted entry', () => {
+    mockIsMobile.mockReturnValue(false);
+    render(<AnnotatedView {...baseProps} />); // baseProps has no entryId/fetchFn
+    expect(screen.queryByTestId('passage-audio')).not.toBeInTheDocument();
+  });
+
+  it('enables floating on mobile and suppresses it while a bottom sheet is open', () => {
+    mockIsMobile.mockReturnValue(true);
+    const { rerender } = render(<AnnotatedView {...audioProps} />);
+    expect(screen.getByTestId('passage-audio')).toHaveAttribute('data-floating', 'true');
+    expect(screen.getByTestId('passage-audio')).toHaveAttribute('data-suppressed', 'false');
+
+    // A loaded/loading deep card opens the word sheet (cardOpen) → floating is
+    // suppressed. The 'loading' slice must carry a `span` — annotated-view
+    // reads deepCard.span when deepActive.
+    rerender(
+      <AnnotatedView
+        {...audioProps}
+        deepCard={{
+          status: 'loading',
+          span: { start: 0, end: 5, type: 'word', x: 100, y: 50 },
+          partial: {},
+        }}
+      />,
+    );
+    expect(screen.getByTestId('passage-audio')).toHaveAttribute('data-suppressed', 'true');
+  });
+
+  it('suppresses floating when the word-bank sheet is open (mobile)', async () => {
+    mockIsMobile.mockReturnValue(true);
+    render(<AnnotatedView {...audioProps} />);
+    expect(screen.getByTestId('passage-audio')).toHaveAttribute('data-suppressed', 'false');
+    // Open the word-bank sheet via the header chip → bankSheetOpen → suppressed.
+    fireEvent.click(screen.getByRole('button', { name: /word bank/i }));
+    expect(screen.getByTestId('passage-audio')).toHaveAttribute('data-suppressed', 'true');
   });
 });

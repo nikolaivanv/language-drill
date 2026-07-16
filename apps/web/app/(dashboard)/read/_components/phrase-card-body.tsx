@@ -118,7 +118,7 @@ export function PhraseCardBody({
           {inBank ? 'close' : 'skip'}
         </Button>
         <Button variant={inBank ? 'ghost' : 'primary'} size="sm" onClick={onSave}>
-          {inBank ? '✓ saved · undo' : '+ save phrase'}
+          {inBank ? '✓ saved · remove' : '+ save phrase'}
         </Button>
       </div>
     </>

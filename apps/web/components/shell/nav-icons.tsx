@@ -45,7 +45,7 @@ export function ReadIcon() {
 }
 
 export function ReviewIcon() {
-  // Stacked cards (flashcards) — matches the "my vocabulary" label.
+  // Stacked cards (flashcards) — matches the "review" label.
   return (
     <svg {...SHARED_PROPS} aria-hidden="true">
       <rect x="4" y="5.5" width="9" height="7" rx="1.3" />

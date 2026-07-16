@@ -61,10 +61,10 @@ describe('WordPopover — save / skip / Escape', () => {
     expect(onSave).toHaveBeenCalledTimes(1);
   });
 
-  it('shows the "✓ saved · undo" accent button when inBank is true', () => {
+  it('shows the "✓ saved · remove" accent button when inBank is true', () => {
     const onSave = vi.fn();
     render(<WordPopover {...baseProps} inBank={true} onSave={onSave} />);
-    const button = screen.getByRole('button', { name: /✓ saved · undo/i });
+    const button = screen.getByRole('button', { name: /✓ saved · remove/i });
     expect(button).toBeInTheDocument();
     fireEvent.click(button);
     expect(onSave).toHaveBeenCalledTimes(1);
@@ -228,7 +228,7 @@ describe('WordCardBody — shared content (extracted from the popover)', () => {
       />,
     );
     expect(
-      screen.getByRole('button', { name: /✓ saved · undo/i }),
+      screen.getByRole('button', { name: /✓ saved · remove/i }),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^close$/i })).toBeInTheDocument();
   });
@@ -338,6 +338,7 @@ describe('WordPopover — deep-card progressive preview (Req 1.2)', () => {
           span: SPAN,
           partial: {
             surface: 'aldea',
+            baseGloss: 'village',
             contextualSense: 'a small rural settlement',
             definition: 'pueblo pequeño',
             definitionLabel: 'Español',
@@ -348,6 +349,9 @@ describe('WordPopover — deep-card progressive preview (Req 1.2)', () => {
     // The fields received so far are visible (the contextual sense is rendered
     // inside typographic quotes, so match on a substring).
     expect(screen.getByTestId('deep-card-partial')).toBeInTheDocument();
+    // The base English gloss streams in for a non-flagged word (no skim card),
+    // so the meaning is visible without waiting for the full card to resolve.
+    expect(screen.getByText('village')).toBeInTheDocument();
     expect(screen.getByText(/a small rural settlement/)).toBeInTheDocument();
     expect(screen.getByText('pueblo pequeño')).toBeInTheDocument();
     // …it still signals that generation is ongoing…

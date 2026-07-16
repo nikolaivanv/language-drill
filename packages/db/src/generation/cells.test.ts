@@ -39,20 +39,29 @@ describe('enumerateCurriculumCells', () => {
     expect(cells.length).toBeGreaterThan(0);
   });
 
-  it('produces 2 cells per grammar entry (cloze + translation), 1 per vocab entry (vocab_recall), and 1 per dictation umbrella (dictation), minus one per clozeUnsuitable point, plus one per sentenceConstructionSuitable point, plus one per conjugationSuitable point', () => {
+  it('produces 2 cells per grammar entry (cloze + translation), 1 per vocab entry (vocab_recall), 1 per dictation umbrella (dictation), and 1 per paraphrase umbrella (contextual_paraphrase), minus one per clozeUnsuitable point, plus one per sentenceConstructionSuitable point, plus one per conjugationSuitable point', () => {
     const grammarCount = ALL_CURRICULA.filter((g) => g.kind === 'grammar').length;
     const vocabCount = ALL_CURRICULA.filter((g) => g.kind === 'vocab').length;
     // A dictation umbrella yields exactly one cell (dictation only).
     const dictationCount = ALL_CURRICULA.filter((g) => g.kind === 'dictation').length;
     // A free-writing umbrella yields exactly one cell (free_writing only).
     const fwCount = ALL_CURRICULA.filter((g) => g.kind === 'free-writing').length;
+    // A paraphrase umbrella yields exactly one cell (contextual_paraphrase only).
+    const paraphraseCount = ALL_CURRICULA.filter((g) => g.kind === 'paraphrase').length;
     // A clozeUnsuitable grammar point yields 1 cell (translation) instead of 2,
     // so each flagged point drops the total by exactly one.
     const flaggedCount = ALL_CURRICULA.filter((g) => g.clozeUnsuitable === true).length;
     const scCount = ALL_CURRICULA.filter((g) => g.sentenceConstructionSuitable === true).length;
     const conjugationCount = ALL_CURRICULA.filter((g) => g.conjugationSuitable === true).length;
     expect(cells).toHaveLength(
-      grammarCount * 2 + vocabCount + dictationCount + fwCount - flaggedCount + scCount + conjugationCount,
+      grammarCount * 2 +
+        vocabCount +
+        dictationCount +
+        fwCount +
+        paraphraseCount -
+        flaggedCount +
+        scCount +
+        conjugationCount,
     );
   });
 
@@ -67,9 +76,13 @@ describe('enumerateCurriculumCells', () => {
   it('pairs grammar points only with cloze, translation, sentence_construction, or conjugation (never vocab_recall)', () => {
     for (const cell of cells) {
       if (cell.grammarPoint.kind === 'grammar') {
-        expect([ExerciseType.CLOZE, ExerciseType.TRANSLATION, ExerciseType.SENTENCE_CONSTRUCTION, ExerciseType.CONJUGATION]).toContain(
-          cell.exerciseType,
-        );
+        expect([
+          ExerciseType.CLOZE,
+          ExerciseType.TRANSLATION,
+          ExerciseType.SENTENCE_CONSTRUCTION,
+          ExerciseType.CONJUGATION,
+          ExerciseType.CONTEXTUAL_PARAPHRASE,
+        ]).toContain(cell.exerciseType);
       }
     }
   });
@@ -309,5 +322,14 @@ describe('compatibleTypes (exported)', () => {
   it('vocab → vocab_recall', () => {
     const point = makeGrammarPoint({ key: 'tr-a1-vocab', kind: 'vocab' });
     expect(compatibleTypes(point)).toEqual([ExerciseType.VOCAB_RECALL]);
+  });
+
+  it("compatibleTypes returns contextual_paraphrase for a paraphrase umbrella", () => {
+    const umbrella = {
+      key: "es-b1-paraphrase",
+      kind: "paraphrase",
+      paraphrase: { seeds: ["a"] },
+    } as never;
+    expect(compatibleTypes(umbrella)).toEqual([ExerciseType.CONTEXTUAL_PARAPHRASE]);
   });
 });

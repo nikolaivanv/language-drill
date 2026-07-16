@@ -50,7 +50,7 @@ import {
 import { createDb, type Db } from '../client';
 import { ALL_CURRICULA } from '../curriculum';
 import type { CurriculumCefrLevel } from '../curriculum';
-import { exerciseTags, exercises, generationJobs, vocabLemma } from '../schema/index';
+import { exerciseTags, exercises, generationJobs, vocabLemma, vocabTarget } from '../schema/index';
 // The mock client lives in scripts/ because its fixtures do; cross-boundary
 // import is acceptable for test infrastructure.
 import { createMockAnthropicClient } from '../../scripts/generate-exercises-mock-client';
@@ -357,8 +357,8 @@ describe('seedKindFor', () => {
     expect(seedKindFor(unseededCell)).toBeNull();
   });
 
-  it('returns null for vocab_recall', () => {
-    expect(seedKindFor(cellOf(ExerciseType.VOCAB_RECALL))).toBeNull();
+  it('returns vocab-target for vocab_recall', () => {
+    expect(seedKindFor(cellOf(ExerciseType.VOCAB_RECALL))).toBe('vocab-target');
   });
 
   it('returns elicitation-values for a flagged cloze cell', () => {
@@ -389,6 +389,29 @@ describe('seedKindFor', () => {
 
   it('still returns frequency for unflagged cloze', () => {
     expect(seedKindFor(cellOf(ExerciseType.CLOZE))).toBe('frequency');
+  });
+
+  it('returns elicitation-values for a base-word-cue cloze cell (variant-agnostic gate)', () => {
+    // The gate keys on the flag's truthiness, not its value — every
+    // selfRevealingElicitation variant seeds from the curated pool.
+    const cell = cellOf(ExerciseType.CLOZE);
+    const flagged: Cell = {
+      ...cell,
+      grammarPoint: {
+        ...cell.grammarPoint,
+        selfRevealingElicitation: 'base-word-cue' as const,
+        elicitationSeedValues: ['sillita', 'hotelucho'],
+      },
+    };
+    expect(seedKindFor(flagged)).toBe('elicitation-values');
+  });
+
+  it("returns 'elicitation-values' for a paraphrase cell (scenario-seed rotation)", () => {
+    const cell = {
+      exerciseType: ExerciseType.CONTEXTUAL_PARAPHRASE,
+      grammarPoint: { kind: 'paraphrase', paraphrase: { seeds: ['s1', 's2'] } },
+    } as never;
+    expect(seedKindFor(cell)).toBe('elicitation-values');
   });
 });
 
@@ -1191,10 +1214,18 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
         { language: 'ES', lemma: 'libro', rank: 2650, posAll: ['NOUN'], source: 'wiktextract' },
         { language: 'ES', lemma: 'mesa', rank: 2750, posAll: ['NOUN'], source: 'wiktextract' },
       ]);
+      await seedDb.delete(vocabTarget);
+      await seedDb.insert(vocabTarget).values([
+        { language: 'ES', umbrellaKey: 'es-vt-test', cefrLevel: 'A1', lemma: 'manzana', displayForm: 'la manzana', gloss: 'apple', exampleSentence: 'Como una manzana.', freqRank: 800, tier: 'core', status: 'approved', source: 'llm' },
+        { language: 'ES', umbrellaKey: 'es-vt-test', cefrLevel: 'A1', lemma: 'pan', displayForm: 'el pan', gloss: 'bread', exampleSentence: 'Compro pan.', freqRank: 300, tier: 'core', status: 'approved', source: 'llm' },
+      ]);
     });
 
     afterAll(async () => {
-      if (seedDb) await seedDb.delete(vocabLemma);
+      if (seedDb) {
+        await seedDb.delete(vocabLemma);
+        await seedDb.delete(vocabTarget);
+      }
     });
 
     it('seeds a cloze cell with one slot per ordinal from DB band', async () => {
@@ -1216,13 +1247,26 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
       expect(seeds).toHaveLength(3);
     });
 
-    it('does NOT seed a vocab_recall cell (returns undefined)', async () => {
+    it('does NOT seed a vocab_recall cell whose umbrella has no approved targets', async () => {
+      const clozeCell = buildTestCell(); // its grammarPoint is not a vocab umbrella
+      const vocabCell: Cell = { ...clozeCell, exerciseType: ExerciseType.VOCAB_RECALL };
+      expect(await buildSeedWords(seedDb, vocabCell, 5, 'seed-batch', new Set())).toBeUndefined();
+    });
+
+    it('seeds a vocab_recall cell from approved vocab_target rows, uncovered first', async () => {
       const clozeCell = buildTestCell();
       const vocabCell: Cell = {
         ...clozeCell,
         exerciseType: ExerciseType.VOCAB_RECALL,
+        grammarPoint: { ...clozeCell.grammarPoint, key: 'es-vt-test' },
+        cellKey: 'es:a1:vocab_recall:es-vt-test',
       };
-      expect(await buildSeedWords(seedDb, vocabCell, 5, 'seed-batch', new Set())).toBeUndefined();
+      const seeds = await buildSeedWords(seedDb, vocabCell, 2, 'seed-batch', new Set());
+      expect(seeds).toBeDefined();
+      const chosen = seeds!.filter((s): s is string => typeof s === 'string');
+      // Both approved targets are uncovered (no exercises seeded yet); priority
+      // order is by tier then freqRank, so 'pan' (rank 300) precedes 'manzana' (800).
+      expect(chosen).toEqual(['pan', 'manzana']);
     });
 
     it('excludes prior seeds (cross-run dedup, R5.3)', async () => {
@@ -1327,6 +1371,61 @@ describe('buildSeedWords — predicate-nominal (curated pool, no DB)', () => {
 });
 
 // ---------------------------------------------------------------------------
+// buildSeedWords — curated VERB pool. UNGATED (no DB): a verb-morphology point
+// with a closed target-verb set (e.g. es-a1-present-yo-go) supplies
+// `conjugationSeedWords`, which REPLACES the DB frequency band so the generator
+// can't wander onto off-target verbs. Keyed on (lemma, person) like the DB verb
+// path. The stub db throws if touched, asserting the no-DB-query contract.
+// ---------------------------------------------------------------------------
+
+describe('buildSeedWords — curated verb pool (no DB)', () => {
+  const throwingDb = new Proxy(
+    {},
+    {
+      get() {
+        throw new Error('buildSeedWords queried the DB on the curated-verb path');
+      },
+    },
+  ) as unknown as Db;
+
+  const curatedVerbCell = (): Cell => {
+    const clozeCell = buildTestCell();
+    return {
+      ...clozeCell,
+      exerciseType: ExerciseType.CONJUGATION,
+      grammarPoint: {
+        ...clozeCell.grammarPoint,
+        // conjugationSeedKind omitted → verb path; curated list constrains it.
+        conjugationSeedWords: ['hacer', 'poner', 'tener'],
+      },
+      cellKey: 'es:a1:conjugation:es-a1-present-yo-go',
+    };
+  };
+
+  it('seeds from the curated verb pool without touching the DB', async () => {
+    const targets = [{ person: '1sg' }, { person: '1sg' }, { person: '1sg' }];
+    const seeds = await buildSeedWords(throwingDb, curatedVerbCell(), 3, 'seed-v', new Set(), targets);
+    expect(seeds).toBeDefined();
+    const chosen = seeds!.filter((s): s is string => typeof s === 'string');
+    expect(chosen.length).toBe(3);
+    for (const s of chosen) expect(['hacer', 'poner', 'tener']).toContain(s);
+  });
+
+  it('excludes prior (lemma|person) seeds', async () => {
+    const targets = [{ person: '1sg' }, { person: '1sg' }, { person: '1sg' }];
+    const reseeded = (await buildSeedWords(
+      throwingDb,
+      curatedVerbCell(),
+      3,
+      'seed-v',
+      new Set(['hacer|1sg']),
+      targets,
+    ))!;
+    expect(reseeded).not.toContain('hacer');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // buildSeedWords — elicitation-values path. UNGATED (no DB): a self-revealing
 // flagged cell (e.g. numbers/ordinals) seeds from the curated
 // `elicitationSeedValues` pool on the grammar point, so this branch never
@@ -1360,6 +1459,42 @@ describe('buildSeedWords — elicitation-values (curated pool, no DB)', () => {
       expect(['birinci', 'ikinci', 'üçüncü', 'dördüncü']).toContain(s);
     }
     expect(new Set(seeds).size).toBe(3); // distinct values — the rotation axis
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buildSeedWords — contextual_paraphrase path. UNGATED (no DB): the paraphrase
+// umbrella seeds from the curated `paraphrase.seeds` scenario pool via the
+// same `elicitation-values` kind, so this branch never queries the DB either
+// — reuses the same throwing-db proof as the suites above.
+// ---------------------------------------------------------------------------
+
+describe('buildSeedWords — contextual_paraphrase (curated pool, no DB)', () => {
+  it('draws paraphrase seeds from paraphrase.seeds without touching the db', async () => {
+    const throwingDb = new Proxy(
+      {},
+      {
+        get() {
+          throw new Error('buildSeedWords queried the DB on the contextual_paraphrase path');
+        },
+      },
+    ) as unknown as Db;
+    const cell = {
+      language: 'es',
+      cefrLevel: 'B1',
+      exerciseType: ExerciseType.CONTEXTUAL_PARAPHRASE,
+      grammarPoint: { kind: 'paraphrase', paraphrase: { seeds: ['scenario-a', 'scenario-b', 'scenario-c'] } },
+    } as never;
+    const seeds = await buildSeedWords(throwingDb, cell, 2, 'batch-1', new Set());
+    expect(seeds).toHaveLength(2);
+    const pool = ['scenario-a', 'scenario-b', 'scenario-c'];
+    const nonNull = seeds!.filter((s) => s !== null);
+    // At least one non-null seed proves this drew from the umbrella's
+    // paraphrase.seeds pool rather than silently falling back to an empty
+    // band (which would make pickSeeds return all-null and this assertion
+    // would go dark).
+    expect(nonNull.length).toBeGreaterThan(0);
+    expect(nonNull.every((s) => pool.includes(s as string))).toBe(true);
   });
 });
 

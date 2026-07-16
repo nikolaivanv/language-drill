@@ -188,6 +188,29 @@ export default function ReadPage() {
     baseUrl: process.env.NEXT_PUBLIC_ANNOTATE_STREAM_URL ?? '',
     getToken,
     onResolved: (card, span) => {
+      // Default-add: bank the resolved word the moment its lookup completes —
+      // for the card on screen AND for a card the user switched away from (its
+      // stream now runs detached but still resolves here). Firing from
+      // `onResolved` rather than the state-mirror effect is what makes the
+      // switched-away word bank, since a detached stream never drives the hook
+      // state. A detached ("background") resolve — one whose span no longer
+      // matches the active span (`openDeepSpanRef`, set synchronously on each
+      // `start()`) — banks the word but leaves the open card's footer/toast
+      // untouched. Runs before the `entryId` guard so a fresh unsaved paste
+      // banks too. See `maybeAutoSaveWordRef` for words-only / no-op-if-saved.
+      const active = openDeepSpanRef.current;
+      const isActive =
+        active !== null &&
+        active.start === span.start &&
+        active.end === span.end;
+      // Thread the word's OWN entry (span.entryId, captured when its lookup was
+      // started) so a background resolve links + banks against that entry, not
+      // whichever entry is on screen now — the user may have opened another
+      // entry mid-lookup (LOAD_ENTRY doesn't abort the stream).
+      maybeAutoSaveWordRef.current(card, span, {
+        background: !isActive,
+        entryId: span.entryId,
+      });
       if (!span.entryId) return;
       const existing = queryClient.getQueryData<ReadEntryResponse>([
         'readEntry',
@@ -208,6 +231,23 @@ export default function ReadPage() {
   // hook-state→reducer mirror effect has the full `DeepSpan` (type/x/y) to
   // dispatch with, matched by start/end to the open card.
   const openDeepSpanRef = useRef<DeepSpan | null>(null);
+  // Latest "auto-save this resolved single word unless it's already saved"
+  // closure, invoked by the deep-stream mirror effect on resolve. Held in a ref
+  // so that effect stays keyed only on `spanStreamState` (fires once per
+  // resolve) while still calling the current handler with fresh bank/saved
+  // state. Default-add on lookup: a looked-up word lands in the bank; the user
+  // removes rather than saves.
+  // Span is narrowed to `start`/`end` (the only fields the save path reads) so
+  // the hook's `onResolved` — which carries an `AnnotateSpanRequest`, not the
+  // full click-anchored `DeepSpan` — can call it directly for a detached word.
+  // `background` marks a switched-away word (footer/toast stay put; see below).
+  const maybeAutoSaveWordRef = useRef<
+    (
+      card: DeepCard,
+      span: Pick<DeepSpan, 'start' | 'end'>,
+      opts?: { background?: boolean; entryId?: string },
+    ) => void
+  >(() => {});
   // Deep card → vocabulary save + undo (Req 8.4, 8.5). Independent of the entry
   // bank and of entry `spanAnnotations` (Req 11.7).
   const saveVocab = useSaveVocabularyCard({ fetchFn });
@@ -369,6 +409,10 @@ export default function ReadPage() {
         dispatch({ type: 'DEEP_CARD_FIELD', span, key, value });
       }
     } else if (spanStreamState.phase === 'complete') {
+      // Land the resolved card in the visible slice + session map. The auto-save
+      // (default-add) is driven from the hook's `onResolved` instead, so a word
+      // the user switched away from — whose detached stream never reaches this
+      // effect — is still banked.
       dispatch({ type: 'DEEP_CARD_RESOLVED', span, card: spanStreamState.card });
     } else if (spanStreamState.phase === 'error') {
       const error: AnnotateError = {
@@ -707,9 +751,28 @@ export default function ReadPage() {
   // The FK requires the entry to exist first, so on a fresh paste we POST the
   // entry, then save the linked vocab in its onSuccess. Sentence cards are not
   // savable (Req 5.4/8.6) — guarded here and server-side.
-  const handleSaveCard = (card: DeepCard, span: DeepSpan) => {
+  const handleSaveCard = (
+    card: DeepCard,
+    span: Pick<DeepSpan, 'start' | 'end'>,
+    // `background: true` for a switched-away word whose detached stream resolved
+    // while a different card is on screen: bank the word (vocab POST + bank +
+    // optimistic panel patch) WITHOUT moving the open card's saved footer/toast.
+    // `entryId` is the word's OWN source entry (from its span). It defaults to
+    // the active entry — for the on-screen card and manual saves those coincide,
+    // but a background word from an entry the user has since navigated away from
+    // must link to its own entry, not the one now on screen.
+    opts?: { background?: boolean; entryId?: string },
+  ) => {
     if (card.type === 'sentence') return;
     const word = card.type === 'word' ? card.surface.toLowerCase() : null;
+
+    // The entry this word belongs to, and whether that is the entry currently on
+    // screen. Only when they match is the in-memory bank/flagged state valid for
+    // it (and only then may the open-card footer move).
+    const sourceEntryId = opts?.entryId ?? state.activeEntryId;
+    const targetsActiveEntry =
+      sourceEntryId !== null && sourceEntryId === state.activeEntryId;
+    const updatesOpenCard = !opts?.background && targetsActiveEntry;
 
     // A deep card can resolve ANY tapped word, not just the auto-flagged ones.
     // The passage word bank, however, only holds flagged words: the server
@@ -731,8 +794,10 @@ export default function ReadPage() {
         { language: activeLanguage, card, sourceReadEntryId },
         {
           onSuccess: ({ id }) => {
-            setDeepSaved({ start: span.start, end: span.end, vocabId: id, wordKey: word, banked });
-            setVocabToast({ label: card.surface });
+            if (updatesOpenCard) {
+              setDeepSaved({ start: span.start, end: span.end, vocabId: id, wordKey: word, banked });
+              setVocabToast({ label: card.surface });
+            }
             // Surface the save in the word-bank panel immediately (Req: show all
             // saved words, flagged or on-demand). Append to match the server's
             // oldest-first order; replace any prior row for the same surface.
@@ -749,18 +814,28 @@ export default function ReadPage() {
       );
     };
 
-    // Already-persisted entry: bank the word (PUT) if it's a flagged word that's
-    // new to the bank, then link vocab.
-    if (state.activeEntryId !== null) {
+    // The word belongs to the entry on screen (or a manual/foreground save):
+    // bank the word (PUT) if it's a flagged word new to the bank, then link vocab.
+    // (The redundant null check narrows `sourceEntryId` to a string for TS.)
+    if (targetsActiveEntry && sourceEntryId !== null) {
       const banked = bankableWord !== null && !state.bank.includes(bankableWord);
       if (banked) {
         dispatch({ type: 'TOGGLE_BANK_WORD', word: bankableWord });
         updateBank.mutate(
-          { id: state.activeEntryId, language: activeLanguage, bank: [...state.bank, bankableWord] },
+          { id: sourceEntryId, language: activeLanguage, bank: [...state.bank, bankableWord] },
           { onError: () => dispatch({ type: 'SHOW_INLINE_ERROR', kind: 'bank' }) },
         );
       }
-      saveVocabLinked(state.activeEntryId, banked);
+      saveVocabLinked(sourceEntryId, banked);
+      return;
+    }
+
+    // A background word whose source entry is NOT the one on screen (the user
+    // navigated away mid-lookup): link the vocab to ITS OWN entry and skip
+    // banking entirely — the active entry's bank/flagged state is unrelated, and
+    // that entry isn't loaded to bank into.
+    if (sourceEntryId !== null) {
+      saveVocabLinked(sourceEntryId, false);
       return;
     }
 
@@ -844,6 +919,18 @@ export default function ReadPage() {
     if (deepSaved?.wordKey) keys.add(deepSaved.wordKey);
     return keys;
   }, [savedVocab, deepSaved]);
+
+  // Default-add on lookup: auto-save a resolved single-word deep card to the
+  // word bank. Words only — phrases/sentences keep their manual save button.
+  // Only ever ADDS: an already-saved word (still shown saved, or a re-tap) is a
+  // no-op, so a passive lookup never toggles a word back out. Reuses
+  // handleSaveCard, so flagged-vs-non-flagged bank routing and lazy entry
+  // creation are unchanged.
+  maybeAutoSaveWordRef.current = (card, span, opts) => {
+    if (card.type !== 'word') return;
+    if (savedWordKeys.has(card.surface.toLowerCase())) return;
+    handleSaveCard(card, span, opts);
+  };
 
   // Unsave (✕) a row from the word-bank panel: delete the vocabulary record
   // (server also drops the now-orphaned FSRS review card), drop it from the
@@ -1019,13 +1106,6 @@ export default function ReadPage() {
     );
   };
 
-  // "Add N to vocabulary" — the same save path; the banked words are already in
-  // `state.bank`, so persisting the entry pushes them into the vocabulary
-  // pipeline (the server materializes vocab rows from the bank on save).
-  const handleAddToVocabulary = () => {
-    handleSaveToLibrary();
-  };
-
   const handleHistoryOpen = (entryId: string) => {
     dispatch({ type: 'LOAD_ENTRY', entryId });
   };
@@ -1168,6 +1248,8 @@ export default function ReadPage() {
           entry={annotatedEntry}
           bank={state.bank}
           intensity={state.intensity}
+          entryId={state.activeEntryId}
+          fetchFn={fetchFn}
           activeWord={state.activeWord}
           deepCard={state.deepCard}
           calibration={{
@@ -1205,7 +1287,6 @@ export default function ReadPage() {
             state.activeEntryId === null &&
             annotate.state.phase === 'complete'
           }
-          onAddToVocabulary={handleAddToVocabulary}
           saving={saveEntry.isPending}
           languageLabel={languageLabel}
         />

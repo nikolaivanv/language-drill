@@ -17,6 +17,7 @@ import {
   type CefrLevel,
   type ClozeContent,
   type ConjugationContent,
+  type ContextualParaphraseContent,
   type CoverageTarget,
   type DictationContent,
   type ExerciseContent,
@@ -97,6 +98,7 @@ export const TOOL_NAME_BY_TYPE: Readonly<Record<ExerciseType, string>> = Object.
   dictation: "submit_dictation_exercise",
   free_writing: "submit_free_writing_exercise",
   conjugation: "submit_conjugation_exercise",
+  contextual_paraphrase: "submit_contextual_paraphrase_exercise",
 });
 
 // ---------------------------------------------------------------------------
@@ -140,11 +142,6 @@ export const CLOZE_GENERATION_TOOL: Anthropic.Tool = {
         description:
           "Optional multiple-choice distractors (3–4 items). When present, must include the correctAnswer.",
       },
-      context: {
-        type: "string",
-        description:
-          "Optional one-line framing shown above the sentence. May name the grammar category being tested (e.g. 'vowel harmony', 'noun-numeral agreement') but MUST NOT state the rule's outcome or otherwise reveal the answer. 'Vowel harmony: front vowel (e) requires -ler suffix' is forbidden — it tells the learner the answer. 'Plural agreement after a numeral' is acceptable. Same constraint applies to `instructions`.",
-      },
       topicHint: {
         type: "string",
         description:
@@ -153,10 +150,11 @@ export const CLOZE_GENERATION_TOOL: Anthropic.Tool = {
       glossEn: {
         type: "string",
         description:
-          "Optional one-line English gloss shown above the sentence as a disambiguation device — chiefly for Turkish accusative (definiteness-marking) clozes where a short L2-only sentence cannot force the case. Include it for CEFR A1–A2; omit it for B1+. It MUST convey meaning/case WITHOUT stating the rule's outcome or naming the required form: 'I drink the coffee' is allowed; 'use the accusative -yi' is forbidden (same anti-spoil constraint as `context`).",
+          "Optional one-line English gloss shown above the sentence as a disambiguation device — chiefly for Turkish accusative (definiteness-marking) clozes where a short L2-only sentence cannot force the case. Include it for CEFR A1–A2; omit it for B1+. It MUST convey meaning/case WITHOUT stating the rule's outcome or naming the required form: 'I drink the coffee' is allowed; 'use the accusative -yi' is forbidden (it must not state the rule's outcome or name the required form).",
       },
     },
     required: ["instructions", "sentence", "correctAnswer"],
+    additionalProperties: false,
   },
 };
 
@@ -229,6 +227,12 @@ export const VOCAB_RECALL_GENERATION_TOOL: Anthropic.Tool = {
         type: "string",
         description:
           "The target lexeme the learner should produce. Usually a single word, but a short multi-word lexeme (e.g. 'medio ambiente', 'cambio climático', 'efecto invernadero') is allowed when the curriculum names one. Use the canonical headword form: no leading/trailing whitespace, no internal whitespace runs longer than a single space, and no surrounding articles unless the article is part of the lexeme itself.",
+      },
+      acceptableAnswers: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Optional. Every OTHER headword the prompt/definition picks out equally well — true near-synonyms a learner could defend given only the definition (e.g. 'gar' when expectedWord is 'istasyon' and the definition describes a station). Canonical headword forms, same conventions as expectedWord; do NOT repeat expectedWord here. Omit when the definition picks out exactly one headword.",
       },
       hints: {
         type: "array",
@@ -363,6 +367,72 @@ export const SENTENCE_CONSTRUCTION_GENERATION_TOOL: Anthropic.Tool = {
   },
 };
 
+export const CONTEXTUAL_PARAPHRASE_GENERATION_TOOL: Anthropic.Tool = {
+  name: TOOL_NAME_BY_TYPE.contextual_paraphrase,
+  description:
+    "Submit a single contextual-paraphrase exercise: a source sentence plus one transformation constraint (avoid a word/structure, shift register, or simplify for an audience) and 2–3 model paraphrases.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      instructions: {
+        type: "string",
+        description:
+          "Short imperative telling the learner to rewrite the sentence to satisfy the constraint while keeping the meaning.",
+      },
+      sourceText: {
+        type: "string",
+        description:
+          "The sentence the learner must rewrite, in the target language, natural at the target CEFR level.",
+      },
+      constraintKind: {
+        type: "string",
+        enum: ["avoid", "register", "simplify"],
+        description:
+          "The transformation required. Set this to the constraintKind named in the user message.",
+      },
+      bannedTerms: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "REQUIRED and non-empty when constraintKind is 'avoid': the word(s)/structure(s) that MUST appear in sourceText and MUST NOT appear in any valid paraphrase. Omit otherwise.",
+      },
+      targetRegister: {
+        type: "string",
+        enum: ["informal", "neutral", "formal"],
+        description:
+          "REQUIRED when constraintKind is 'register': the register the rewrite must adopt (must differ from the source's register). Omit otherwise.",
+      },
+      audience: {
+        type: "string",
+        description:
+          "REQUIRED when constraintKind is 'simplify': the audience to simplify for (e.g. 'a child', 'a non-expert'). Omit otherwise.",
+      },
+      constraintLabel: {
+        type: "string",
+        description:
+          "The task line shown to the learner, phrased in English, e.g. 'Say this without using «gustar»' or 'Rewrite this in a formal register'.",
+      },
+      referenceParaphrases: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "2 or 3 distinct, natural target-language paraphrases that preserve the source meaning AND satisfy the constraint (for 'avoid', none may contain any bannedTerm). These prove the task is solvable and seed the learner's reveal hint.",
+      },
+      topicHint: {
+        type: "string",
+        description: "Optional topic theme (e.g. 'travel', 'work', 'family').",
+      },
+    },
+    required: [
+      "instructions",
+      "sourceText",
+      "constraintKind",
+      "constraintLabel",
+      "referenceParaphrases",
+    ],
+  },
+};
+
 export const DICTATION_GENERATION_TOOL: Anthropic.Tool = {
   name: "submit_dictation_exercise",
   description:
@@ -471,6 +541,7 @@ export const GENERATION_TOOL_BY_TYPE: Readonly<Record<ExerciseType, Anthropic.To
   dictation: DICTATION_GENERATION_TOOL,
   free_writing: FREE_WRITING_GENERATION_TOOL,
   conjugation: CONJUGATION_GENERATION_TOOL,
+  contextual_paraphrase: CONTEXTUAL_PARAPHRASE_GENERATION_TOOL,
 });
 
 // ---------------------------------------------------------------------------
@@ -814,6 +885,7 @@ export function parseGeneratedVocabRecallDraft(
   const instructions = requireString(input, "instructions", ctx);
   const prompt = requireString(input, "prompt", ctx);
   const expectedWordRaw = requireString(input, "expectedWord", ctx);
+  const acceptableAnswersRaw = optionalStringArray(input, "acceptableAnswers", ctx);
   const hints = requireStringArray(input, "hints", ctx);
   const exampleSentence = requireString(input, "exampleSentence", ctx);
   const topicHint = optionalString(input, "topicHint", ctx);
@@ -830,11 +902,26 @@ export function parseGeneratedVocabRecallDraft(
     );
   }
 
+  // Same canonical-surface normalisation as expectedWord, so grading and
+  // display agree on a single form for each alternate headword.
+  const acceptableAnswers = acceptableAnswersRaw?.map((raw, i) => {
+    const normalized = raw.trim().replace(/\s+/g, " ");
+    if (normalized.length === 0) {
+      throw new Error(
+        `${ctx}: invalid acceptableAnswers[${i}]: must contain non-whitespace characters`,
+      );
+    }
+    return normalized;
+  });
+
   return {
     type: ExerciseType.VOCAB_RECALL,
     instructions,
     prompt,
     expectedWord,
+    ...(acceptableAnswers !== undefined && acceptableAnswers.length > 0
+      ? { acceptableAnswers }
+      : {}),
     hints,
     exampleSentence,
     ...(topicHint !== undefined ? { topicHint } : {}),
@@ -961,6 +1048,88 @@ export function parseGeneratedSentenceConstructionDraft(
       ? { register: register as SentenceConstructionContent["register"] }
       : {}),
     modelAnswers,
+    ...(topicHint !== undefined ? { topicHint } : {}),
+  };
+}
+
+const PARAPHRASE_CONSTRAINT_KINDS: ReadonlySet<string> = new Set([
+  "avoid",
+  "register",
+  "simplify",
+]);
+
+export function parseGeneratedContextualParaphraseDraft(
+  input: unknown,
+  _spec: GenerationSpec,
+): ContextualParaphraseContent {
+  const ctx = "contextual_paraphrase draft";
+  if (!isObject(input)) {
+    throw new Error(`${ctx}: must be an object, got ${typeof input}`);
+  }
+  const instructions = requireString(input, "instructions", ctx);
+  const sourceText = requireString(input, "sourceText", ctx);
+  const constraintKind = requireString(input, "constraintKind", ctx);
+  const bannedTerms = optionalStringArray(input, "bannedTerms", ctx);
+  const targetRegister = optionalString(input, "targetRegister", ctx);
+  const audience = optionalString(input, "audience", ctx);
+  const constraintLabel = requireString(input, "constraintLabel", ctx);
+  const referenceParaphrases = requireStringArray(input, "referenceParaphrases", ctx);
+  const topicHint = optionalString(input, "topicHint", ctx);
+
+  if (!PARAPHRASE_CONSTRAINT_KINDS.has(constraintKind)) {
+    throw new Error(
+      `${ctx}: invalid constraintKind: must be one of avoid|register|simplify, got ${JSON.stringify(constraintKind)}`,
+    );
+  }
+  if (sourceText.trim().length === 0) {
+    throw new Error(`${ctx}: invalid sourceText: must contain non-whitespace characters`);
+  }
+  if (constraintKind === "avoid" && (!bannedTerms || bannedTerms.length === 0)) {
+    throw new Error(
+      `${ctx}: invalid bannedTerms: constraintKind 'avoid' requires a non-empty bannedTerms array`,
+    );
+  }
+  if (constraintKind === "register" && targetRegister === undefined) {
+    throw new Error(
+      `${ctx}: invalid targetRegister: constraintKind 'register' requires targetRegister`,
+    );
+  }
+  if (
+    targetRegister !== undefined &&
+    !REGISTERS.has(targetRegister) // REGISTERS Set already defined for sentence_construction
+  ) {
+    throw new Error(
+      `${ctx}: invalid targetRegister: must be one of informal|neutral|formal, got ${JSON.stringify(targetRegister)}`,
+    );
+  }
+  if (constraintKind === "simplify" && (audience === undefined || audience.trim().length === 0)) {
+    throw new Error(
+      `${ctx}: invalid audience: constraintKind 'simplify' requires a non-empty audience`,
+    );
+  }
+  if (referenceParaphrases.length < 2 || referenceParaphrases.length > 3) {
+    throw new Error(
+      `${ctx}: invalid referenceParaphrases: expected 2–3 entries, got ${referenceParaphrases.length}`,
+    );
+  }
+  for (let i = 0; i < referenceParaphrases.length; i++) {
+    if (referenceParaphrases[i].trim().length === 0) {
+      throw new Error(`${ctx}: invalid referenceParaphrases[${i}]: must contain non-whitespace characters`);
+    }
+  }
+
+  return {
+    type: ExerciseType.CONTEXTUAL_PARAPHRASE,
+    instructions,
+    sourceText,
+    constraintKind: constraintKind as ContextualParaphraseContent["constraintKind"],
+    ...(constraintKind === "avoid" && bannedTerms ? { bannedTerms } : {}),
+    ...(targetRegister !== undefined
+      ? { targetRegister: targetRegister as ContextualParaphraseContent["targetRegister"] }
+      : {}),
+    ...(audience !== undefined ? { audience } : {}),
+    constraintLabel,
+    referenceParaphrases,
     ...(topicHint !== undefined ? { topicHint } : {}),
   };
 }
@@ -1372,6 +1541,8 @@ function parseToolInput(
       return parseGeneratedSentenceConstructionDraft(input, spec);
     case ExerciseType.CONJUGATION:
       return parseGeneratedConjugationDraft(input, spec);
+    case ExerciseType.CONTEXTUAL_PARAPHRASE:
+      return parseGeneratedContextualParaphraseDraft(input, spec);
     case ExerciseType.DICTATION:
       // Unreachable: generateOneDraft routes dictation to parseGeneratedDictationDraft
       // (which needs the ordinal) before reaching parseToolInput. Kept defensive.

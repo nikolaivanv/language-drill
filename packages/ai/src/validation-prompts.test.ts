@@ -6,6 +6,7 @@ import {
   Language,
   type ClozeContent,
   type ConjugationContent,
+  type ContextualParaphraseContent,
   type TranslationContent,
   type VocabRecallContent,
   type SentenceConstructionContent,
@@ -199,6 +200,10 @@ describe("buildValidationSystemPrompt", () => {
     // accommodate this intentional behavioural addition while still
     // guarding against unintentional future bloat.
     //
+    // validate@2026-07-16 added the form-contrast exception and the
+    // vocab_recall near-synonym escape valve to the `ambiguous` dimension
+    // (~1,150 bytes, mirrors generate@2026-07-16). Ceiling raised to 7,500.
+    //
     // We assert on the TEMPLATE literal, not the rendered output, because:
     //   - The template is what Langfuse stores and what Anthropic's
     //     prompt-cache keys on byte-for-byte.
@@ -206,7 +211,7 @@ describe("buildValidationSystemPrompt", () => {
     //     (descriptions, examples, common errors, CEFR descriptors) which
     //     varies by language/level and is not what the NFR budgets — those
     //     substitutions are already counted against the API per-call.
-    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(6100);
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(7500);
   });
 });
 
@@ -462,6 +467,22 @@ describe("buildValidationUserPrompt", () => {
     expect(msg).toContain("present subjunctive");
     expect(msg).toContain("Espero que vengas.");
   });
+
+  it("validation prompt for contextual_paraphrase checks meaning preservation + banned-term exclusion", () => {
+    const content: ContextualParaphraseContent = {
+      type: ExerciseType.CONTEXTUAL_PARAPHRASE,
+      instructions: "Rewrite.",
+      sourceText: "Me gusta el café.",
+      constraintKind: "avoid",
+      bannedTerms: ["gustar"],
+      constraintLabel: "Say this without «gustar».",
+      referenceParaphrases: ["Disfruto del café.", "Adoro el café."],
+    };
+    const spec = { ...baseSpec, exerciseType: ExerciseType.CONTEXTUAL_PARAPHRASE };
+    const prompt = buildValidationUserPrompt(makeDraft(content), spec);
+    expect(prompt).toMatch(/meaning/i);
+    expect(prompt).toMatch(/gustar/);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -530,6 +551,82 @@ describe("self-revealing / vocab_recall scoring notes", () => {
     const prompt = buildValidationUserPrompt(makeDraft(vocabRecallContent), vocabSpec);
     expect(prompt).toContain("Scoring note for vocab_recall");
     expect(prompt).toContain("orthographic");
+  });
+
+  it("vocab_recall note relaxes grammarPointMatch for in-domain non-nouns only, leaving other dims explicitly unchanged", () => {
+    const vocabSpec: GenerationSpec = {
+      ...baseSpec,
+      cefrLevel: CefrLevel.A1,
+      grammarPoint: { ...baseSpec.grammarPoint, kind: "vocab" as const },
+    };
+    const prompt = buildValidationUserPrompt(makeDraft(vocabRecallContent), vocabSpec);
+    // POS deference: a vocab umbrella is a semantic domain, not a part of speech.
+    expect(prompt).toContain("a vocab umbrella is a SEMANTIC DOMAIN");
+    expect(prompt).toContain("never merely because it is not a noun");
+    // Surgical: every other dimension is explicitly left unchanged (no over-correction).
+    expect(prompt).toContain(
+      "Judge every other dimension (levelMatch, ambiguous, contextSpoilsAnswer, qualityScore) exactly as defined above, unchanged.",
+    );
+    // The note must NOT reintroduce the pro-approval framing that broke spoiler/level scoring.
+    expect(prompt).not.toContain("pre-vetted");
+    // Orthographic spoilage is confined to prompt/hints; a word in the example
+    // sentence is not a spoiler (the UI masks it pre-submit).
+    expect(prompt).toContain("orthographic reveals in the PROMPT or HINTS");
+    expect(prompt).toContain(
+      "the expected word appearing in the example sentence is NOT contextSpoilsAnswer",
+    );
+  });
+
+  it("non-vocab point gets no vocab scoring note", () => {
+    const prompt = buildValidationUserPrompt(makeDraft(vocabRecallContent), baseSpec);
+    expect(prompt).not.toContain("Scoring note for vocab_recall");
+    expect(prompt).not.toContain("a vocab umbrella is a SEMANTIC DOMAIN");
+  });
+});
+
+describe("self-revealing base-word-cue scoring note", () => {
+  const baseCueSpec: GenerationSpec = {
+    ...baseSpec,
+    grammarPoint: {
+      ...baseSpec.grammarPoint,
+      selfRevealingElicitation: "base-word-cue" as const,
+      elicitationSeedValues: ["sillita"],
+    },
+  };
+
+  const clozeContent: ClozeContent = {
+    type: ExerciseType.CLOZE,
+    instructions: "Fill in the blank with the appreciative form of the cued word.",
+    sentence: "El bebé dormía en su ___. (silla)",
+    correctAnswer: "sillita",
+  };
+
+  it("cloze prompt for a flagged cell exempts the base-word cue from contextSpoilsAnswer", () => {
+    const prompt = buildValidationUserPrompt(makeDraft(clozeContent), baseCueSpec);
+    expect(prompt).toContain("BASE-word cue");
+    expect(prompt).toContain("do NOT set contextSpoilsAnswer=true");
+    // The digit-form note must not leak into base-word-cue cells:
+    expect(prompt).not.toContain("digit or numeral cue");
+  });
+
+  it("still demands spoilage when the derived form itself is visible", () => {
+    const prompt = buildValidationUserPrompt(makeDraft(clozeContent), baseCueSpec);
+    expect(prompt).toContain("derived form");
+    expect(prompt).toContain("Still set contextSpoilsAnswer=true");
+  });
+
+  it("digit-form cells keep their own note, unchanged", () => {
+    const digitSpec: GenerationSpec = {
+      ...baseSpec,
+      grammarPoint: {
+        ...baseSpec.grammarPoint,
+        selfRevealingElicitation: "digit-form" as const,
+        elicitationSeedValues: ["tercero"],
+      },
+    };
+    const prompt = buildValidationUserPrompt(makeDraft(clozeContent), digitSpec);
+    expect(prompt).toContain("digit or numeral cue");
+    expect(prompt).not.toContain("BASE-word cue");
   });
 });
 

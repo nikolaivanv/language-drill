@@ -191,7 +191,33 @@ function renderRecentStems(recentStems: readonly string[]): string {
 // user prompt now demands digit/numeral presentation instead, pinned to the
 // seeded value when one is supplied. Lives entirely in the per-draft user
 // prompt — the cached system template is untouched.
-export const GENERATION_PROMPT_VERSION = "generate@2026-07-08";
+// 2026-07-08a: self-revealing base-word-cue directive for flagged derived-form
+// points (`selfRevealingElicitation === 'base-word-cue'`, appreciative
+// suffixes). The target cannot be elicited without identifying its base word,
+// so the sanctioned cue is the parenthetical BASE word ("(silla)" → sillita);
+// the derived form itself must never appear in the visible text. Pinned to
+// the seeded target form when one is supplied. Per-draft user prompt only.
+// 2026-07-09: contextual_paraphrase guidance section (`{{contextualParaphraseSection}}`,
+// spliced after `{{sentenceConstructionSection}}`) plus a per-draft
+// avoid/register/simplify constraint-kind rotation (`contextualParaphraseConstraintForOrdinal`)
+// so a batch covers all three constraint kinds.
+// 2026-07-10: contextual_paraphrase seed injected as a strict SCENARIO directive
+// (per-draft user prompt), replacing the generic "build around the word … or
+// substitute a similar-frequency word" framing that let the model discard the
+// curated scenario seed and collapse the scenario-diversity axis. Code-side
+// (user prompt) only — the system template is unchanged, so no Langfuse push.
+// 2026-07-16: (a) form-contrast cloze rule after the 07-16 run analysis
+// (es-b2-perception-verbs cloze approved 2/9; 7 ambiguous flags): when the
+// grammar point CONTRASTS two forms with different meanings, the generic
+// "enumerate alternants in acceptableAnswers" escape hatch is forbidden —
+// context must force exactly one form, and the blank must sit on the contrast
+// slot (not the conjugated perception verb). (b) vocab_recall near-synonym
+// rule (TR A1 vocab flag loop: istasyon/gar, alışveriş merkezi): tighten the
+// definition or enumerate every defensible headword in the NEW vocab
+// `acceptableAnswers` field. Template edits → Langfuse push per env; mirrored
+// in validation-prompts.ts (validate@2026-07-16) per the generate↔validate
+// contract-split rule.
+export const GENERATION_PROMPT_VERSION = "generate@2026-07-16";
 
 /**
  * Wording differs per type so Claude reads it the way the cell is constrained:
@@ -248,6 +274,36 @@ This is a sentence_construction exercise: there is NO blank — the learner writ
   - \`keywords\`: put 3–4 everyday content words at or below CEFR ${cefrLevel} in \`keywords\`; the learner must use ALL of them in one sentence and the combination must force ${grammarPointName}. Every model answer must actually use every keyword.
   - \`situation\`: give a concrete one-line scenario in \`prompt\` (something said, a problem to react to) so the natural response exercises ${grammarPointName}; leave \`keywords\` empty.
   - \`grammar_target\`: name the structure in \`targetStructure\` AND give a concrete mini-scenario or seed content in \`prompt\`. The structure label alone is NOT enough to constrain the answer — this mode is the most prone to over-open prompts, so always anchor it to a situation.
+
+`;
+}
+
+/**
+ * Contextual-paraphrase-only guidance block. Mirrors
+ * `renderSentenceConstructionSection`: returns "" for every other type so
+ * non-paraphrase prompts stay byte-identical (preserving their Anthropic
+ * cache prefix and Langfuse cohort), and for a contextual_paraphrase cell
+ * returns a section ending in `\n\n` so the template's
+ * `{{contextualParaphraseSection}}## Output` splices cleanly.
+ */
+function renderContextualParaphraseSection(
+  exerciseType: ExerciseType,
+  language: string,
+  cefrLevel: string,
+): string {
+  if (exerciseType !== ExerciseType.CONTEXTUAL_PARAPHRASE) return "";
+  return `## Contextual-paraphrase specifics (this exercise type)
+
+This is a contextual_paraphrase exercise: there is NO blank. You author a natural ${language} \`sourceText\` sentence at CEFR ${cefrLevel} and ONE transformation constraint; the learner rewrites the sentence to satisfy the constraint while preserving meaning. The cloze/blank rules above do not apply; the **anti-leak**, vocabulary-band, and **Safe, neutral topics** rules DO apply, adapted as follows:
+
+- **The meaning MUST be preservable under the constraint.** Never author a source + constraint whose only faithful rewrite is the source itself, or which forces a meaning change. A competent learner must be able to produce at least two distinct valid paraphrases.
+- **Per constraint kind (the user message selects one per draft):**
+  - \`avoid\`: put the banned word(s)/structure(s) in \`bannedTerms\`; they MUST occur in \`sourceText\` and MUST NOT occur in any \`referenceParaphrases\`. Choose a term that has real ${language} synonyms or a circumlocution route at CEFR ${cefrLevel} — never a function word with no paraphrase.
+  - \`register\`: set \`targetRegister\`; the source must be in a clearly DIFFERENT register, and the rewrite changes register (address forms, politeness, lexis) WITHOUT changing the propositional content.
+  - \`simplify\`: set \`audience\`; the rewrite conveys the same information in language appropriate for that audience.
+- **\`referenceParaphrases\` (2–3) must each be fully grammatical ${language} at CEFR ${cefrLevel}, preserve the source meaning, and satisfy the constraint.** They are the learner's reveal hint and the validator's evidence that the task is solvable.
+- **Plain text only — no markdown.** \`instructions\`, \`sourceText\`, and \`constraintLabel\` render verbatim; use no emphasis markup.
+- **Do not spoil.** \`constraintLabel\` names the transformation; it must not hand the learner a finished paraphrase.
 
 `;
 }
@@ -326,8 +382,8 @@ export const GENERATION_SYSTEM_PROMPT_TEMPLATE = `You are an expert language exe
 {{levelScopeSection}}{{priorPoolSection}}## Hard constraints
 
 - **The learner must produce the answer themselves.** Two failure modes are forbidden:
-  - **Ambiguous blank.** For a cloze, the answer must be uniquely produced. Either (a) the surrounding sentence constrains the blank so only one specific lexeme/form plausibly fits — every other candidate is ruled out by something explicit in the sentence — OR (b) for grammar-shape clozes where many lexemes satisfy the rule, you populate \`acceptableAnswers\` with every lexeme that fits. Sentences like "Sınıfta sekiz ___ var" ("There are eight ___ in the classroom") are forbidden without \`acceptableAnswers\`, because chair, student, book, pencil, and many other nouns all satisfy the rule equally. Likewise "Evde yeni ___ var. Onlar çok güzel." is forbidden with \`correctAnswer: "perdeler"\` alone — curtains, books, lamps, flowers all satisfy "plural, positive descriptor" equally; the "Onlar çok güzel" follow-on signals plurality but not which lexeme. Either constrain the sentence ("Evde yeni ___ var. Onları yıkamayı unutma." — "don't forget to wash them" picks out "perdeler") or list every plausible lexeme in \`acceptableAnswers\`. For translation, the reference translation must be the dominant rendering — minor variants are accepted at evaluation time, but the source text must not admit two structurally different correct translations. For vocab_recall, the prompt/definition must pick out exactly one headword.
-  - **Spoiled blank.** The \`instructions\` and \`context\` fields may name the grammar category being tested (e.g. "vowel harmony", "noun-numeral agreement") but MUST NOT state the rule's outcome, name the required suffix/form, or otherwise let the learner produce the answer without engaging with the blank. "Vowel harmony: front vowel (e) requires -ler suffix" above "Odada pencere___ açık" is forbidden — it tells the learner the answer is "-ler". "Plural agreement after a numeral" above "Sınıfta sekiz ___ var" is acceptable — it names the rule type without giving the form.
+  - **Ambiguous blank.** For a cloze, the answer must be uniquely produced. Either (a) the surrounding sentence constrains the blank so only one specific lexeme/form plausibly fits — every other candidate is ruled out by something explicit in the sentence — OR (b) for grammar-shape clozes where many lexemes satisfy the rule, you populate \`acceptableAnswers\` with every lexeme that fits. Sentences like "Sınıfta sekiz ___ var" ("There are eight ___ in the classroom") are forbidden without \`acceptableAnswers\`, because chair, student, book, pencil, and many other nouns all satisfy the rule equally. Likewise "Evde yeni ___ var. Onlar çok güzel." is forbidden with \`correctAnswer: "perdeler"\` alone — curtains, books, lamps, flowers all satisfy "plural, positive descriptor" equally; the "Onlar çok güzel" follow-on signals plurality but not which lexeme. Either constrain the sentence ("Evde yeni ___ var. Onları yıkamayı unutma." — "don't forget to wash them" picks out "perdeler") or list every plausible lexeme in \`acceptableAnswers\`. For translation, the reference translation must be the dominant rendering — minor variants are accepted at evaluation time, but the source text must not admit two structurally different correct translations. For vocab_recall, the prompt/definition must pick out exactly one headword — or, when the target language has true near-synonyms that any natural definition admits equally, \`acceptableAnswers\` must enumerate every other defensible headword (see the **vocab_recall near-synonyms** rule below). Escape hatch (b) is for interchangeable fills only — when the grammar point itself CONTRASTS the competing forms, see the **Form-contrast clozes** rule below instead.
+  - **Spoiled blank.** The \`instructions\` field may name the grammar category being tested (e.g. "vowel harmony", "noun-numeral agreement") but MUST NOT state the rule's outcome, name the required suffix/form, or otherwise let the learner produce the answer without engaging with the blank. "Vowel harmony: front vowel (e) requires -ler suffix" above "Odada pencere___ açık" is forbidden — it tells the learner the answer is "-ler". "Plural agreement after a numeral" above "Sınıfta sekiz ___ var" is acceptable — it names the rule type without giving the form.
 - **Blank granularity — the \`___\` blank is the WHOLE inflected word.** In every language, the \`___\` in \`sentence\` stands for the entire inflected surface form, and \`correctAnswer\` is that complete word — never a bare suffix/inflection fragment (\`yi\`, \`en\`, \`t\`) and never a stem with the blank attached (\`kahve___\`, \`vol___\`). When the stem mutates at its boundary under the target inflection, the displayed text MUST NOT reveal the mutated stem; the learner produces the whole mutated form as the answer:
   - **TR** consonant softening / buffer consonants: \`kahve\` → \`kahveyi\`, \`kitap\` → \`kitabı\`, \`köpek\` → \`köpeğe\`. Blank the whole word — "Annem her sabah ___ içiyor. (kahve)" → \`kahveyi\` — never "Annem her sabah kahve___ içiyor." → \`yi\`.
   - **ES** stem-changing / irregular / orthographic shifts: \`volver\` → \`vuelven\`, \`tener\` → \`tengo\`, \`buscar\` → \`busqué\`. Never "vol___" → \`vemos\`: a shown stem both spoils the word and is wrong for stressed/irregular forms.
@@ -338,19 +394,21 @@ export const GENERATION_SYSTEM_PROMPT_TEMPLATE = `You are an expert language exe
 - **Turkish possessive-suffix clozes — overt possessor pronoun, citation-form hint.** For a TR cloze whose grammar point is the possessive (İyelik) suffix, an overt genitive possessor pronoun (\`benim\` / \`senin\` / \`onun\` / \`bizim\` / \`sizin\` / \`onların\`) MUST appear in the \`sentence\` to fix the person — without it a sentence-initial or bare possessed noun admits every person (\`evim\` / \`evin\` / \`evi\`…) and the blank is \`ambiguous\`. The parenthetical hint MUST be the possessed noun's citation (dictionary) form, NEVER the inflected answer — \`(el)\` with answer \`elim\`, never \`(elim)\` (which spoils the blank). \`instructions\` stay generic ("Fill in the blank with the correct possessive form of the word in parentheses"), and the possessed noun MUST be a concrete, high-frequency A1 noun in a SINGLE simple clause — do NOT stack genitive + locative + progressive scaffolding around it (forbidden: "Biz şehrin merkezinde oturuyoruz. ___ çok büyük. (ev)"; prefer "Bu benim ___ . (el)" → \`elim\` or "Senin ___ nerede? (araba)" → \`araban\`). The answer is the WHOLE inflected noun, with vowel harmony applied and the 3sg -s- buffer / dropped 1-2p buffer vowel after vowel-final stems (\`araba\` → \`arabam\`, \`araba\` → \`arabası\`). Across a batch, ROTATE the possessor person (cover 1sg / 2sg / 3sg / 1pl, and 2pl / 3pl where natural) and vary the predicate and scene — do NOT reuse a single frame (e.g. not five \`Bizim ___ çok büyük\`). PREFER vowel-final stems (\`araba\`, \`kapı\`, \`oda\`, \`kedi\`, \`çanta\`) for a good share of the batch: they alone exercise the cell's diagnostic forms — the 3sg \`-s-\` buffer (\`arabası\`) and the dropped 1-2p buffer vowel (\`araba\` → \`arabam\`); a batch built only on consonant-final stems (\`ev\` → \`evim\` / \`evi\`) never tests them.
 - **Turkish indefinite-noun-compound clozes — bare-head hint, nominative answer, no case-stacking.** For a TR cloze whose grammar point is the indefinite noun compound (belirtisiz isim tamlaması: bare modifier + head taking 3sg \`-(s)I\`, e.g. \`otobüs bileti\`, \`şehir merkezi\`), the modifier noun MUST already appear in the \`sentence\` and **ONLY the head noun is blanked**; the parenthetical hint MUST be the head noun's citation (dictionary) form, NEVER the full compound or the inflected answer — \`(oda)\` with answer \`odası\`, never \`(otel odası)\` (a copying task) nor \`(odası)\` (spoils the blank). The answer is the head + \`-(s)I\` in the **nominative** — do NOT stack case onto it (forbidden: \`merkezini\`, \`tarifini\`, \`sözleşmesini\`): case-stacking conflates this point with tr-a2-possessive-case-stacking and buries the \`-(s)I\` marker inside the case form. Do NOT blank the whole two-word compound, and do NOT omit the parenthetical head — a bare "...bir ___ var" with no head given admits many compounds (\`adres bilgisi\` / \`telefon numarası\` / \`posta kodu\`) and is \`ambiguous\`. **No article hugging the compound:** do NOT place \`bir\` (nor \`yeni bir\` / \`taze bir\` / \`düz bir\`) immediately before the modifier noun or the blank — \`bir şeker ___\`, \`yeni bir uygulama ___\`, \`taze bir ekmek ___\`, and a bare \`bir ___\` all read as "a [modifier]" + a stray head and misparse the compound. The modifier sits BARE directly before the blanked head, exactly like the clean frames \`kurabiye ___ (tarif)\` → \`tarifi\`, \`masa ___ (örtü)\` → \`örtüsü\`, \`sinema ___ (bilet)\` → \`bileti\`. **One-word answer:** the answer is exactly ONE word — the head + \`-(s)I\`; a two-word answer (\`basın toplantısı\`, \`destek programı\`) means you blanked the whole compound and is malformed. **Modifier is a literal word in the \`sentence\`:** never leave the modifier only in the parenthetical hint — \`Bu telefona bir ___ lazım. (destek)\` has no modifier in the sentence and is malformed. Keep both nouns concrete, picturable, and high-frequency at or below the cell level — home / kitchen / street / school objects; avoid abstract, administrative, medical, or media register (\`yetki\`, \`belge\`, \`sözleşme\`, \`başvuru\`, \`basın\`, \`mide ilacı\`, \`hava tahmini\`). If MC \`options\` are supplied they MUST pin a single correct compound (no two options both valid).
 - **Turkish gemination / stem-change translations — force the vowel suffix, enumerate synonyms.** For a TR translation whose grammar point is consonant-doubling (gemination: \`hak\`→\`hakkım\`, \`sır\`→\`sırrım\`, \`hat\`→\`hattı\`) or a stem change, the alternation only surfaces when a **vowel-initial** suffix attaches, so the English source MUST force the target noun into a vowel-suffixed form — a possessive ("my/your/our right" → \`hakkım\`) or a definite object (accusative → \`hattı\`) — and MUST NOT use a frame the learner can render suffixless ("This is a secret" → \`Bu bir sır\` bypasses the rule entirely). Keep the source a **single short clause** at the cell level — do NOT reach for reported speech, verbal-noun + genitive stacks, or low-frequency lexemes just to force the form (that drives \`level-mismatch\`). Because a synonym or number variant often dodges the alternation (\`ağrı kesici\` for \`ağrı ilacı\`, \`haklarımı\` for \`hakkımı\`, \`karşıtı\` for \`zıddı\`), either the source must rule them out or \`acceptableAnswers\` MUST list every plausible rendering.
-- **Do not leak the answer in the visible text (anti-leak).** Apart from the parenthetical citation hint — which is the word to *inflect*, not the answer form — nothing in the visible \`sentence\`, \`context\`, \`glossEn\`, or \`instructions\` may let the learner write the blank without engaging the grammar point. Concretely forbidden: the target's inflected form (or the bare lexeme, when the task is lexical) appearing elsewhere in the sentence; an L1 gloss or near-synonym that names the exact target word; a cue phrase that makes the fill mechanical. Negative example — "Bu ___ çok eski. Bu kitabı dün aldım. (kitap)" leaks "kitabı" in the next clause, and a \`glossEn\` like "I drink the coffee (kahveyi)" that spells out the inflected form is forbidden. This is the generator-side guard for the validator's \`contextSpoilsAnswer\` veto, which remains in force.
+- **Do not leak the answer in the visible text (anti-leak).** Apart from the parenthetical citation hint — which is the word to *inflect*, not the answer form — nothing in the visible \`sentence\`, \`glossEn\`, or \`instructions\` may let the learner write the blank without engaging the grammar point. Concretely forbidden: the target's inflected form (or the bare lexeme, when the task is lexical) appearing elsewhere in the sentence; an L1 gloss or near-synonym that names the exact target word; a cue phrase that makes the fill mechanical. Negative example — "Bu ___ çok eski. Bu kitabı dün aldım. (kitap)" leaks "kitabı" in the next clause, and a \`glossEn\` like "I drink the coffee (kahveyi)" that spells out the inflected form is forbidden. This is the generator-side guard for the validator's \`contextSpoilsAnswer\` veto, which remains in force.
 - **Stay on target.** The blank MUST require the cell's declared grammar point ({{grammarPointName}}) to solve — not merely a related or incidentally-present construction. A fill that happens to obey the rule while actually testing a different grammar-point key is off-target: e.g. in a \`tr-a1-vowel-harmony\` cell, a blank whose answer is the locative \`-DA\` ("evde") tests locative *selection* — its own grammar point — and only incidentally obeys vowel harmony, so it does not drill harmony. Choose a blank that cannot be solved without applying {{grammarPointName}}. This is the generator-side guard for the validator's \`grammarPointMatch=false\` flag.
-- **One correct fill, or enumerate them.** Before finalizing, verify that exactly one form fills the blank — or that \`acceptableAnswers\` lists every form that does. If a competent learner could defend a second word/form as correct given only the visible context, the draft is ambiguous: either tighten the sentence so only one fits, or enumerate all of them in \`acceptableAnswers\`. Do not ship a lone \`correctAnswer\` when the context admits synonyms or alternative inflections. In particular, a translation whose source admits more than one natural rendering, and an alternant-bearing cloze where two near-synonymous forms both fit (e.g. \`koşa koşa\`/\`koşarak\`, \`gezmek\`/\`gezme\`), MUST enumerate every valid form in \`acceptableAnswers\` rather than ship a lone \`correctAnswer\`. This reinforces the **Ambiguous blank** rule above and reduces the validator's \`ambiguous\` flag.
+- **One correct fill, or enumerate them.** Before finalizing, verify that exactly one form fills the blank — or that \`acceptableAnswers\` lists every form that does. If a competent learner could defend a second word/form as correct given only the visible context, the draft is ambiguous: either tighten the sentence so only one fits, or enumerate all of them in \`acceptableAnswers\`. Do not ship a lone \`correctAnswer\` when the context admits synonyms or alternative inflections. In particular, a translation whose source admits more than one natural rendering, and an alternant-bearing cloze where two near-synonymous forms both fit (e.g. \`koşa koşa\`/\`koşarak\`, \`gezmek\`/\`gezme\`), MUST enumerate every valid form in \`acceptableAnswers\` rather than ship a lone \`correctAnswer\`. This reinforces the **Ambiguous blank** rule above and reduces the validator's \`ambiguous\` flag. Enumeration is ONLY for near-synonymous alternants (same meaning, either form fine) — it is FORBIDDEN for the contrasting pair of a form-contrast point (next rule).
+- **Form-contrast clozes — force one alternant via context; never enumerate both.** When the grammar point itself CONTRASTS two forms with DIFFERENT meanings — e.g. ES perception verbs (\`ver\`/\`oír\` + object + infinitive = completed event vs. + gerund = action caught in progress) — the two forms are NOT interchangeable near-synonyms, and listing both in \`acceptableAnswers\` teaches the learner they are interchangeable, which is exactly the error the point exists to correct. Instead: (a) the \`sentence\` context MUST force exactly ONE of the contrasting forms — build in a completion or caught-mid-action cue: "La vi ___ y luego salir corriendo" (one completed event followed by another) forces the infinitive, as does a count of completed occurrences ("Lo oí ___ tres veces"); "Cuando entré en la sala, los vi ___ todavía" ("todavía" pins the action as still in progress at that moment) forces the gerund, as does an interrupted-scene cue ("La oí ___ mientras pasaba por delante de su puerta, y seguía igual una hora después"); (b) the other contrasting form MUST NOT appear in \`acceptableAnswers\` (forms outside the contrast that genuinely also fit still belong there); (c) the \`___\` blank MUST sit on the contrast slot itself (the infinitive/gerund), NEVER on the conjugated perception verb — blanking \`vi\`/\`veía\` tests tense selection, a different grammar point ("Stay on target" above). If you cannot build a context that forces one reading, discard the draft and write a different scene — do NOT fall back to enumerating both forms.
 - Vocabulary band: every content word MUST be high-frequency everyday vocabulary at or below CEFR {{cefrLevel}}. The target grammatical form/construction is the ONLY element that may be challenging; the target construction itself is exempt from this band. Do NOT introduce non-target words or structures above {{cefrLevel}} (including above-level subordination that is not the grammar point under test) — an item must test the grammar point, never incidental vocabulary.
 - **Safe, neutral topics.** Avoid weapons/explosives (e.g. \`bomba\`), alcohol and other substances, violence, and culturally-sensitive or stereotyping topics. Prefer neutral everyday contexts: home, food, daily routine, travel, weather, study/work.
 - **vocab_recall hints MUST NOT reveal the target word (anti-leak).** For a vocab_recall exercise, every \`hints\` entry must describe meaning, usage, register, or a topical association — NEVER its orthographic shape. Forbidden: the starting or ending letter ("Starts with 'd'"), the letter count or syllable breakdown ("2 syllables: dük-kan"), any partial spelling or fill-in-the-blank skeleton ("kah___tı", "d u r a _"), a near-rhyme that spells it out, or the word appearing (in any inflected form) inside \`exampleSentence\`. A learner must recall the word from its meaning, not reconstruct it letter-by-letter — hints that narrow it to a single spelling are the generator-side cause of the validator's \`contextSpoilsAnswer\` veto. Good hint: "the meal eaten first thing in the morning"; bad hint: "k-a-h-v-a-l-t-ı". Also: \`exampleSentence\` should use the word naturally but MUST blank or omit it if showing it would give the prompt's answer away.
+- **vocab_recall near-synonyms — tighten the definition or enumerate them.** PREFER writing the \`prompt\`/definition so exactly one headword fits: name a distinguishing feature (a *gar* serves long-distance trains, a *metro istasyonu* is underground, a *durak* is a roadside stop) rather than a feature the near-synonyms share ("a place where you board trains"). When the target language has true near-synonyms that any natural level-appropriate definition admits equally (TR \`istasyon\`/\`gar\`, \`alışveriş merkezi\`/\`çarşı\`; ES \`coche\`/\`carro\`/\`auto\`), set \`expectedWord\` to the most common one and enumerate every other defensible headword in \`acceptableAnswers\` — a learner who produces \`gar\` for a station definition answered correctly. \`hints\` must narrow by MEANING toward the expected word, never orthographically (anti-leak rule above stays in force).
 - **Cell-level coverage for \`tr-a1-vowel-harmony\`.** This cell drills BOTH 2-way (low-vowel e/a) AND 4-way (high-vowel i/ı/u/ü) harmony. Drafts that only test the plural suffix -lAr/-lEr cover one half of the grammar point and are forbidden in the cell-wide majority. Across a batch for this cell: (a) at least three of the four high-vowel slots (i, ı, u, ü) MUST be exercised by non-plural suffixes (accusative -(y)I, locative -DA on a high-vowel stem, possessive -(s)I, dative -(y)A on a high-vowel stem, past -DI); (b) both low-vowel slots (e and a) MUST appear at least once; (c) the plural suffix -lAr/-lEr MUST NOT be the blanked element in more than 50% of the batch. This constraint applies only to cells targeting \`tr-a1-vowel-harmony\` — other cells are unconstrained on this axis.
 - Do not produce an exercise that resembles any of these existing stems:
 {{recentStemsBlock}}
 - One exercise per tool call. Do not batch multiple inside one tool call.
 - You MUST use the provided tool. Do not return plain text.
 
-{{sentenceConstructionSection}}{{conjugationSection}}## Output
+{{sentenceConstructionSection}}{{contextualParaphraseSection}}{{conjugationSection}}## Output
 
 Use the {{toolName}} tool with all required fields populated.`;
 
@@ -400,6 +458,11 @@ export function computeGenerationPromptVars(
       language,
       cefrLevel,
       grammarPoint.name,
+    ),
+    contextualParaphraseSection: renderContextualParaphraseSection(
+      exerciseType,
+      language,
+      cefrLevel,
     ),
     conjugationSection: renderConjugationSection(
       exerciseType,
@@ -580,6 +643,21 @@ export function sentenceConstructionModeForOrdinal(
 }
 
 // ---------------------------------------------------------------------------
+// Contextual-paraphrase constraint-kind rotation
+// ---------------------------------------------------------------------------
+
+const CONTEXTUAL_PARAPHRASE_CONSTRAINTS = ["avoid", "register", "simplify"] as const;
+
+/** Deterministic constraint-kind rotation so a batch covers all three kinds. */
+export function contextualParaphraseConstraintForOrdinal(
+  ordinal: number,
+): (typeof CONTEXTUAL_PARAPHRASE_CONSTRAINTS)[number] {
+  return CONTEXTUAL_PARAPHRASE_CONSTRAINTS[
+    ordinal % CONTEXTUAL_PARAPHRASE_CONSTRAINTS.length
+  ];
+}
+
+// ---------------------------------------------------------------------------
 // User prompt — short per-draft message; the system prompt is the heavy lift.
 // ---------------------------------------------------------------------------
 
@@ -632,8 +710,29 @@ export function buildGenerationUserPrompt(
             : ""
         }Present the quantity/order ONLY as digits or numerals in the visible text (e.g. "3.º", "3.", "200", "123"), typically as the parenthetical hint — NEVER as the written word. The learner produces the written form (with correct agreement/gender/harmony) from the digit cue; the digit cue is the sanctioned elicitation for this cell, not an answer leak. Vary the noun and scenario; do not reuse a noun or template from earlier exercises in this batch.\n\n`
     : "";
+  // Self-revealing derived-form target (appreciative suffixes): the ONLY
+  // sanctioned elicitation is a parenthetical BASE-word cue — the learner
+  // chooses and forms the suffix from the context's nuance. Same placement
+  // and pinning rules as the digit-form block above.
+  const baseWordCue =
+    inputs.grammarPoint.selfRevealingElicitation === "base-word-cue" &&
+    (inputs.exerciseType === ExerciseType.CLOZE ||
+      inputs.exerciseType === ExerciseType.TRANSLATION);
+  const baseWordCueBlock = baseWordCue
+    ? inputs.exerciseType === ExerciseType.TRANSLATION
+      ? `${
+          seedWord && seedWord.length > 0
+            ? `The target form is "${seedWord}" — the reference translation must contain exactly this derived form; do not substitute another. `
+            : ""
+        }Write a source sentence whose meaning naturally elicits the derived form — express the nuance explicitly in the source (e.g. "a nice little chair", "a huge success", "a shabby run-down hotel") so the suffix choice is forced. The derived form must never appear in the source text. Vary the scenario; do not reuse a noun or template from earlier exercises in this batch.\n\n`
+      : `${
+          seedWord && seedWord.length > 0
+            ? `The target form is "${seedWord}" — the answer must be exactly this form; do not substitute another. `
+            : ""
+        }Cue the learner with the BASE word in parentheses after the sentence — e.g. "(silla)" when the answer is "sillita" — NEVER the derived form itself, and the derived form must not appear anywhere in the visible text. The base-word cue is the sanctioned elicitation for this cell, not an answer leak: the tested skill is choosing the suffix from the context's nuance and forming it with the correct allomorph and gender. Craft the context so the intended nuance (smallness/affection, augmentative force, or pejorative shabbiness) is unmistakable and no other established suffixed form of the same base fits. Vary the scenario; do not reuse a noun or template from earlier exercises in this batch.\n\n`
+    : "";
   const seedBlock =
-    !digitForm && seedWord && seedWord.length > 0
+    !digitForm && !baseWordCue && seedWord && seedWord.length > 0
       ? inputs.exerciseType === ExerciseType.CONJUGATION
         ? // Strict: the seed IS the word to inflect. No substitution escape hatch —
           // the picker already guarantees an inflectable word, and substitution
@@ -649,18 +748,37 @@ export function buildGenerationUserPrompt(
             inputs.grammarPoint.conjugationSeedKind === "predicate-nominal"
             ? `The predicate is "${seedWord}" (a profession, role, nationality, or adjective). The drill states that the subject IS "${seedWord}": inflect "${seedWord}" with the correct personal/copular suffix for the target person (e.g. "${seedWord}" → 1sg "…${seedWord}+(y)Im"). Use exactly this word — do not substitute another.\n\n`
             : `The verb to conjugate is "${seedWord}". Use exactly this verb — do not substitute another.\n\n`
-        : `Build this exercise around the word "${seedWord}". If "${seedWord}" does not fit ${inputs.grammarPoint.name} naturally, choose a related content word of similar frequency instead.\n\n`
+        : inputs.exerciseType === ExerciseType.CONTEXTUAL_PARAPHRASE
+          ? // Strict: the seed is a SCENARIO drawn from the curated `paraphrase.seeds`
+            // pool — the identity-diversity axis for this cell. Frame it as a scenario
+            // (NOT a "word") with no substitution escape hatch, so each ordinal's
+            // distinct scenario yields a distinct source sentence. The generic loose
+            // seed block's "word" wording and "similar frequency" substitution are
+            // nonsensical for a scenario phrase and would let the model discard the
+            // seed, collapsing the very diversity axis this seed enforces.
+            `Set this exercise in the following scenario: "${seedWord}". The source sentence you author must fit this scenario naturally. Use exactly this scenario — do not substitute another.\n\n`
+          : inputs.exerciseType === ExerciseType.VOCAB_RECALL
+            ? // Strict: the seed IS the target word. No substitution escape hatch —
+              // the seed comes from the curated vocab_target list and coverage only
+              // registers when expectedWord matches it (Spec 2). The anti-leak rule
+              // (system prompt) still forbids the clue from containing the word.
+              `The target word (expectedWord) MUST be exactly "${seedWord}". Write a clue or definition that elicits "${seedWord}" without revealing it — the clue must NOT contain "${seedWord}". Do not substitute another word.\n\n`
+            : `Build this exercise around the word "${seedWord}". If "${seedWord}" does not fit ${inputs.grammarPoint.name} naturally, or is register-specific (military, legal, medical, administrative, or literary), or sits above CEFR ${inputs.cefrLevel}, choose an everyday, level-appropriate content word of similar frequency instead. The word you use and the whole sentence must stay within the CEFR ${inputs.cefrLevel} vocabulary band.\n\n`
       : "";
   const modeBlock =
     inputs.exerciseType === ExerciseType.SENTENCE_CONSTRUCTION
       ? `Use prompt mode: ${sentenceConstructionModeForOrdinal(ordinal)}.\n\n`
+      : "";
+  const paraphraseBlock =
+    inputs.exerciseType === ExerciseType.CONTEXTUAL_PARAPHRASE
+      ? `Use constraint kind: ${contextualParaphraseConstraintForOrdinal(ordinal)}.\n\n`
       : "";
   const coverageBlock = renderCoverageBlock(inputs, ordinal, coverageTargets);
   return `Produce exercise #${ordinal + 1}.
 
 Topic domain: ${domain}
 
-${modeBlock}${coverageBlock}${digitFormBlock}${seedBlock}Use the ${toolName} tool.`;
+${modeBlock}${paraphraseBlock}${coverageBlock}${digitFormBlock}${baseWordCueBlock}${seedBlock}Use the ${toolName} tool.`;
 }
 
 // ---------------------------------------------------------------------------
@@ -711,6 +829,10 @@ export function canonicalSurface(content: ExerciseContent): string {
       // lemma+targetForm+pronoun uniquely identifies the item within a cell.
       // `subject` is optional on legacy rows; fall back to an empty segment.
       return `${normaliseSurface(content.lemma)}::${normaliseSurface(content.targetForm)}::${normaliseSurface(content.subject?.pronoun ?? "")}`;
+    case ExerciseType.CONTEXTUAL_PARAPHRASE:
+      // The source sentence is the dedup surface: no two paraphrase exercises
+      // in a cell may reuse the same sentence, regardless of constraint kind.
+      return normaliseSurface(content.sourceText);
     default: {
       const _exhaustive: never = content;
       throw new Error(

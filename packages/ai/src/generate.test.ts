@@ -27,6 +27,8 @@ import {
   generateOneDraft,
   parseGeneratedClozeDraft,
   parseGeneratedConjugationDraft,
+  parseGeneratedVocabRecallDraft,
+  parseGeneratedContextualParaphraseDraft,
   parseGeneratedDictationDraft,
   parseGeneratedFreeWritingDraft,
   parseGeneratedSentenceConstructionDraft,
@@ -196,6 +198,72 @@ describe("parseGeneratedClozeDraft glossEn", () => {
         baseSpec,
       ),
     ).toThrow(/glossEn/);
+  });
+
+  it("no longer offers a context field on the cloze tool schema (anti-spoil, 2026-07-12)", () => {
+    const props = CLOZE_GENERATION_TOOL.input_schema.properties as Record<
+      string,
+      unknown
+    >;
+    expect(props.context).toBeUndefined();
+    // glossEn description must not dangle a reference to the removed field.
+    expect((props.glossEn as { description: string }).description).not.toContain(
+      "`context`",
+    );
+  });
+
+  it("locks additionalProperties:false so the model cannot emit context (2026-07-12)", () => {
+    expect(CLOZE_GENERATION_TOOL.input_schema.additionalProperties).toBe(false);
+  });
+
+  it("still parses a stray context input for back-compat (stored rows)", () => {
+    const content = parseGeneratedClozeDraft(
+      { ...validClozeInput, context: "legacy framing" },
+      baseSpec,
+    );
+    expect(content.context).toBe("legacy framing");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseGeneratedVocabRecallDraft — optional acceptableAnswers (2026-07-16)
+// ---------------------------------------------------------------------------
+
+describe("parseGeneratedVocabRecallDraft acceptableAnswers", () => {
+  it("exposes acceptableAnswers as an optional property on the vocab tool schema", () => {
+    const props = VOCAB_RECALL_GENERATION_TOOL.input_schema.properties as Record<
+      string,
+      unknown
+    >;
+    expect(props.acceptableAnswers).toBeDefined();
+    expect(VOCAB_RECALL_GENERATION_TOOL.input_schema.required).not.toContain(
+      "acceptableAnswers",
+    );
+  });
+
+  it("parses acceptableAnswers when present, normalising each like expectedWord", () => {
+    const content = parseGeneratedVocabRecallDraft(
+      { ...validVocabInput, acceptableAnswers: ["  gar ", "tren  istasyonu"] },
+      baseSpec,
+    );
+    expect(content.acceptableAnswers).toEqual(["gar", "tren istasyonu"]);
+  });
+
+  it("omits acceptableAnswers entirely when absent or empty (key not present)", () => {
+    expect("acceptableAnswers" in parseGeneratedVocabRecallDraft(validVocabInput, baseSpec)).toBe(false);
+    expect(
+      "acceptableAnswers" in
+        parseGeneratedVocabRecallDraft({ ...validVocabInput, acceptableAnswers: [] }, baseSpec),
+    ).toBe(false);
+  });
+
+  it("rejects a whitespace-only acceptableAnswers entry", () => {
+    expect(() =>
+      parseGeneratedVocabRecallDraft(
+        { ...validVocabInput, acceptableAnswers: ["gar", "   "] },
+        baseSpec,
+      ),
+    ).toThrow(/acceptableAnswers\[1\]/);
   });
 });
 
@@ -962,6 +1030,65 @@ describe("parseGeneratedSentenceConstructionDraft", () => {
       spec,
     );
     expect(out.keywords).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseGeneratedContextualParaphraseDraft
+// ---------------------------------------------------------------------------
+
+describe("parseGeneratedContextualParaphraseDraft", () => {
+  const spec = { exerciseType: ExerciseType.CONTEXTUAL_PARAPHRASE } as never;
+
+  it("parses an avoid-constraint draft", () => {
+    const out = parseGeneratedContextualParaphraseDraft(
+      {
+        instructions: "Rewrite the sentence.",
+        sourceText: "Me gusta mucho el café por la mañana.",
+        constraintKind: "avoid",
+        bannedTerms: ["gustar"],
+        constraintLabel: "Say this without using «gustar».",
+        referenceParaphrases: [
+          "Disfruto mucho del café por la mañana.",
+          "Adoro tomar café por la mañana.",
+        ],
+      },
+      spec,
+    );
+    expect(out.type).toBe(ExerciseType.CONTEXTUAL_PARAPHRASE);
+    expect(out.constraintKind).toBe("avoid");
+    expect(out.bannedTerms).toEqual(["gustar"]);
+    expect(out.referenceParaphrases).toHaveLength(2);
+  });
+
+  it("rejects an avoid draft with no bannedTerms", () => {
+    expect(() =>
+      parseGeneratedContextualParaphraseDraft(
+        {
+          instructions: "Rewrite.",
+          sourceText: "X.",
+          constraintKind: "avoid",
+          constraintLabel: "Avoid.",
+          referenceParaphrases: ["a", "b"],
+        },
+        spec,
+      ),
+    ).toThrow(/bannedTerms/);
+  });
+
+  it("rejects a register draft with no targetRegister", () => {
+    expect(() =>
+      parseGeneratedContextualParaphraseDraft(
+        {
+          instructions: "Rewrite.",
+          sourceText: "X.",
+          constraintKind: "register",
+          constraintLabel: "Formal.",
+          referenceParaphrases: ["a", "b"],
+        },
+        spec,
+      ),
+    ).toThrow(/targetRegister/);
   });
 });
 

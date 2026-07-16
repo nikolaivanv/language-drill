@@ -94,6 +94,39 @@ describe('GenerationLambdaConstruct', () => {
     });
   });
 
+  it('creates the daily-cost alarm (LanguageDrill/Generation CellCostUsd, env dim, sum > $50/day)', () => {
+    template.hasResourceProperties('AWS::CloudWatch::Alarm', {
+      Namespace: 'LanguageDrill/Generation',
+      MetricName: 'CellCostUsd',
+      Statistic: 'Sum',
+      Period: 86400,
+      Threshold: 50,
+      ComparisonOperator: 'GreaterThanThreshold',
+      TreatMissingData: 'notBreaching',
+      EvaluationPeriods: 1,
+      Dimensions: Match.arrayWith([
+        Match.objectLike({ Name: 'env', Value: 'dev' }),
+      ]),
+    });
+  });
+
+  it('honours a custom dailyCostAlarmUsd threshold', () => {
+    const app = new App();
+    const stack = new Stack(app, 'CostThresholdStack');
+    const queue = new sqs.Queue(stack, 'StubQueue');
+    new GenerationLambdaConstruct(stack, 'GenerationLambda', {
+      queue,
+      secretsPrefix: 'language-drill-dev',
+      envName: 'dev',
+      reservedConcurrency: 3,
+      dailyCostAlarmUsd: 120,
+    });
+    Template.fromStack(stack).hasResourceProperties('AWS::CloudWatch::Alarm', {
+      MetricName: 'CellCostUsd',
+      Threshold: 120,
+    });
+  });
+
   it('IAM policies grant access to DATABASE_URL, ANTHROPIC_API_KEY, and the two Langfuse secrets only', () => {
     const policies = template.findResources('AWS::IAM::Policy');
     const serialized = JSON.stringify(policies);

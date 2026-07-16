@@ -207,6 +207,7 @@ vi.mock('@language-drill/db', () => ({
     length: 'length',
     prompt: 'prompt',
     pastedAt: 'pasted_at',
+    audioS3Key: 'audio_s3_key',
   },
   userVocabulary: {
     id: 'id',
@@ -240,6 +241,39 @@ vi.mock('@language-drill/db', () => ({
     language: 'language',
     lemma: 'lemma',
   },
+  // Pure helpers consumed by `../lib/read-audio-service` (Task 5). Real values
+  // (mirrors `packages/db/src/lib/reading-audio.ts`) so resolveReadAudio's
+  // language/voice lookup + normalization behave exactly as in production.
+  READING_VOICE_BY_LANGUAGE: {
+    ES: { voiceId: 'Lucia', languageCode: 'es-ES' },
+    DE: { voiceId: 'Vicki', languageCode: 'de-DE' },
+    TR: { voiceId: 'Burcu', languageCode: 'tr-TR' },
+  },
+  POLLY_NEURAL_MAX_CHARS: 3000,
+  normalizePassageText: (text: string) => text.trim().replace(/\s+/g, ' '),
+  readingAudioKey: (language: string, voiceId: string, normalizedText: string) =>
+    `reading/${language}-${voiceId}-${normalizedText.length}.mp3`,
+  estimateDurationSec: (normalizedText: string) =>
+    Math.max(1, Math.ceil((normalizedText.length === 0 ? 0 : normalizedText.split(' ').length) / 2.5)),
+}));
+
+// `../lib/reading-audio-synth` and `../lib/audio-url` wrap real AWS SDK calls
+// (Polly/S3) — stub both so route tests never touch AWS. Neither is exercised
+// by the two /read/:entryId/audio tests below (the fixture entry already has
+// an audioS3Key), but stubbing keeps import-time side effects out of scope.
+const mockPresignAudioUrl = vi.fn((_key: string) => Promise.resolve('https://signed'));
+vi.mock('../lib/audio-url', () => ({
+  presignAudioUrl: (key: string) => mockPresignAudioUrl(key),
+}));
+
+const mockHeadObjectExists = vi.fn((_key: string) => Promise.resolve(false));
+const mockSynthesizeReadingAudio = vi.fn(
+  (_args: { text: string; key: string; voiceId: string; languageCode: string }) => Promise.resolve(),
+);
+vi.mock('../lib/reading-audio-synth', () => ({
+  headObjectExists: (key: string) => mockHeadObjectExists(key),
+  synthesizeReadingAudio: (args: { text: string; key: string; voiceId: string; languageCode: string }) =>
+    mockSynthesizeReadingAudio(args),
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -787,6 +821,143 @@ describe('GET /read/entries/:id', () => {
     const body = (await res.json()) as AnyJson;
     expect(body.code).toBe('ENTRY_NOT_FOUND');
     expect(mockLimit).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /read/:entryId/audio — lazy reading-audio resolution (Task 6)
+// ---------------------------------------------------------------------------
+// Wiring/HTTP-mapping only — the branch matrix (cold-cache synth, cross-user
+// HeadObject hit, too_long, rate_limited) is already covered by Task 5's unit
+// tests against the pure `resolveReadAudio`. `getEffectivePlan` runs before
+// `resolveReadAudio` and issues its OWN `db.select(...).limit(1)` (the users
+// table), so each test below arranges TWO `mockLimit` resolutions in order:
+// plan lookup first, then the entry lookup.
+// ---------------------------------------------------------------------------
+
+describe('POST /read/:entryId/audio', () => {
+  let app: Hono;
+
+  const authEnv = {
+    event: {
+      requestContext: {
+        authorizer: { jwt: { claims: { sub: 'user_123' } } },
+      },
+    },
+  };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    resetTxCapture();
+    mockPresignAudioUrl.mockClear();
+    mockHeadObjectExists.mockClear();
+    mockSynthesizeReadingAudio.mockClear();
+    const mod = await import('./read');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  it('404s for an unknown entry', async () => {
+    // Plan lookup (defaults to 'free' — row absent), then entry lookup empty.
+    mockLimit.mockResolvedValueOnce([]);
+    mockLimit.mockResolvedValueOnce([]);
+
+    const res = await app.request(
+      '/read/22222222-2222-2222-2222-222222222222/audio',
+      { method: 'POST' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(404);
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBe('ENTRY_NOT_FOUND');
+    expect(mockPresignAudioUrl).not.toHaveBeenCalled();
+  });
+
+  it('returns 404 + Cache-Control: no-store for a malformed UUID (no DB call)', async () => {
+    const res = await app.request(
+      '/read/not-a-uuid/audio',
+      { method: 'POST' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(404);
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBe('ENTRY_NOT_FOUND');
+    expect(mockLimit).not.toHaveBeenCalled();
+  });
+
+  it('returns a presigned url for an already-synthesized entry', async () => {
+    // Plan lookup (defaults to 'free' — row absent), then the entry hit —
+    // audioS3Key already set, so resolveReadAudio skips HeadObject/synthesis
+    // and goes straight to presign.
+    mockLimit.mockResolvedValueOnce([]);
+    mockLimit.mockResolvedValueOnce([
+      {
+        id: '11111111-1111-1111-1111-111111111111',
+        language: 'ES',
+        text: 'Hola mundo',
+        audioS3Key: 'reading/x.mp3',
+      },
+    ]);
+    mockPresignAudioUrl.mockResolvedValueOnce('https://signed');
+
+    const res = await app.request(
+      '/read/11111111-1111-1111-1111-111111111111/audio',
+      { method: 'POST' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body).toMatchObject({ reason: 'ok', audioUrl: expect.any(String) });
+    expect(mockPresignAudioUrl).toHaveBeenCalledWith('reading/x.mp3');
+    expect(mockHeadObjectExists).not.toHaveBeenCalled();
+    expect(mockSynthesizeReadingAudio).not.toHaveBeenCalled();
+  });
+
+  it('cold cache: synthesizes, presigns, and meters read_tts usage under the daily cap', async () => {
+    // Plan lookup (defaults to 'free' — row absent), then the entry hit —
+    // owned row with no audioS3Key yet, so resolveReadAudio takes the
+    // HeadObject-miss → synth → record-usage → persist-key → presign path.
+    mockLimit.mockResolvedValueOnce([]);
+    mockLimit.mockResolvedValueOnce([
+      {
+        id: '33333333-3333-3333-3333-333333333333',
+        language: 'ES',
+        text: 'Hola mundo, esto es una prueba corta.',
+        audioS3Key: null,
+      },
+    ]);
+    mockHeadObjectExists.mockResolvedValueOnce(false);
+    // countRecentTts resolves via the awaited `.where()` (COUNT-style query);
+    // 0 is well under the free-plan read_tts limit (50).
+    whereResolved = [{ count: 0 }];
+    mockPresignAudioUrl.mockResolvedValueOnce('https://signed');
+
+    const res = await app.request(
+      '/read/33333333-3333-3333-3333-333333333333/audio',
+      { method: 'POST' },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body).toMatchObject({ reason: 'ok', audioUrl: 'https://signed' });
+    expect(mockHeadObjectExists).toHaveBeenCalledTimes(1);
+    expect(mockSynthesizeReadingAudio).toHaveBeenCalledTimes(1);
+
+    // The usage insert fired with the EXACT `read_tts` bucket literal — a
+    // `read-tts` typo in the route's counter/insert closures would fail this
+    // assertion (mirrors the text_generation usage-insert assertion style in
+    // read.generate.test.ts).
+    const usageInsert = valuesArgs().find((row) => row.eventType === 'read_tts');
+    expect(usageInsert).toMatchObject({
+      userId: 'user_123',
+      eventType: 'read_tts',
+    });
   });
 });
 

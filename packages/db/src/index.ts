@@ -40,6 +40,16 @@ export {
 } from './curriculum';
 export type { CurriculumCefrLevel, GrammarPoint } from './curriculum';
 
+// Book-coverage ledger (dev-time metadata; see the 2026-07-15 design doc).
+// Enforced by book-coverage.test.ts; exported only for the propose:book-coverage
+// CLI in packages/ai/scripts — no Lambda path may import it.
+export { validateBookCoverage } from './curriculum/book-coverage';
+export type {
+  BookCoverageLedger,
+  CoverageDecision,
+  TocEntry,
+} from './curriculum/book-coverage';
+
 // Helpers that Phase 1 deliberately left internal-only. Phase 2 promotes them
 // because they cross the package boundary: deterministicUuid is the hash
 // behind exerciseDraftId in packages/ai/src/generate.ts, and assertValidCellKey
@@ -69,6 +79,10 @@ export { chunk } from './lib/chunk';
 // PR2 audio-synth Lambda (infra/lambda) can consume it via this barrel.
 export { synthesizeToS3, dictationAudioKey } from './lib/polly-synth';
 export type { SynthesizeToS3Args } from './lib/polly-synth';
+
+// Read practice (audio shadowing) — voice map + content-addressed key +
+// text normalization + duration estimate helpers.
+export * from './lib/reading-audio';
 
 // Phase 5 — pool target sizing. Consumed by the admin pool-status endpoint
 // (`infra/lambda/src/routes/admin.ts`) which derives a cell's refill target

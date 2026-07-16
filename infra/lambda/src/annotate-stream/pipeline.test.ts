@@ -150,7 +150,7 @@ describe("buildCandidateList — basic pre-filter behaviour", () => {
 
     expect(result.calibration).toEqual({ cefr: CefrLevel.B1, top: 3000 });
     expect(result.candidates).toEqual([
-      { matchedForm: "aldea", lemma: "aldea" },
+      { matchedForm: "aldea", lemma: "aldea", effectiveRank: 4200 },
     ]);
   });
 
@@ -206,7 +206,7 @@ describe("buildCandidateList — graceful vocab failure (task 23b)", () => {
     });
 
     expect(result.candidates).toEqual([
-      { matchedForm: "aldea", lemma: "aldea" },
+      { matchedForm: "aldea", lemma: "aldea", effectiveRank: 4200 },
     ]);
     expect(errSpy).toHaveBeenCalledWith(
       "[annotate-stream] vocab query failed",
@@ -367,5 +367,18 @@ describe("buildCandidateList — slim cap + proper-noun pre-filter (Req 1.2, 1.4
     });
 
     expect(result.candidates).toEqual([]);
+  });
+
+  it("returns effectiveRank on each candidate", async () => {
+    const { candidates } = await buildCandidateList({
+      userId: "u1",
+      language: Language.ES,
+      text: "La aldea recibió al pintor con indiferencia.",
+    });
+    expect(candidates.length).toBeGreaterThan(0);
+    for (const c of candidates) {
+      expect(typeof c.effectiveRank).toBe("number");
+      expect(c.effectiveRank).toBeGreaterThanOrEqual(0);
+    }
   });
 });

@@ -3,6 +3,7 @@ import { Language, ExerciseType } from '@language-drill/shared';
 import {
   topicIdForGrammarPointKey,
   exerciseTypeHasTheory,
+  grammarPointKeyForTopicId,
 } from '../theory-topic-map';
 
 describe('topicIdForGrammarPointKey', () => {
@@ -67,5 +68,16 @@ describe('exerciseTypeHasTheory', () => {
     expect(exerciseTypeHasTheory('some_new_type')).toBe(true);
     expect(exerciseTypeHasTheory(null)).toBe(true);
     expect(exerciseTypeHasTheory(undefined)).toBe(true);
+  });
+});
+
+describe('grammarPointKeyForTopicId', () => {
+  it('prefixes the topic id with the lowercased language', () => {
+    expect(grammarPointKeyForTopicId('a2-ser-vs-estar', Language.ES)).toBe('es-a2-ser-vs-estar');
+  });
+
+  it('returns null for a missing topic id', () => {
+    expect(grammarPointKeyForTopicId(null, Language.ES)).toBeNull();
+    expect(grammarPointKeyForTopicId('', Language.ES)).toBeNull();
   });
 });

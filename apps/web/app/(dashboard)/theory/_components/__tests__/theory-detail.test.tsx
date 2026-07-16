@@ -94,20 +94,37 @@ const LIST_TOPICS = [
   { id: 'der-akkusativ', title: 'der akkusativ', cefr: 'A2' },
 ];
 
-type FetchOpts = { topicStatus?: number };
+type FetchOpts = { topicStatus?: number; drillInfo?: unknown; topicBody?: unknown };
 
 // One fetch that dispatches by URL shape: `/theory/DE/<id>` → the single topic,
-// `/theory/DE` → the list. A non-200 `topicStatus` rejects the topic request
-// with a status-carrying error (how `createAuthenticatedFetch` surfaces 4xx/5xx).
-function makeFetch({ topicStatus = 200 }: FetchOpts = {}): AuthenticatedFetch {
+// `/theory/DE` → the list, `/progress/points/<key>` → the drill-info lookup. A
+// non-200 `topicStatus` rejects the topic request with a status-carrying error
+// (how `createAuthenticatedFetch` surfaces 4xx/5xx). `drillInfo` left
+// undefined means "unknown point" — the endpoint 404s and the drill block
+// hides itself, so all pre-existing tests (which don't pass `drillInfo`) keep
+// rendering the page without it. `topicBody` defaults to `TOPIC_BODY` but can
+// be overridden to simulate real DB payloads whose `id` is the FULL
+// grammar-point key rather than the route slug.
+function makeFetch({
+  topicStatus = 200,
+  drillInfo,
+  topicBody = TOPIC_BODY,
+}: FetchOpts = {}): AuthenticatedFetch {
   return vi.fn<AuthenticatedFetch>(async (input: RequestInfo | URL) => {
     const url = typeof input === 'string' ? input : input.toString();
+    if (url.startsWith('/progress/points/')) {
+      if (drillInfo === undefined) {
+        // Default: unknown point → the block must hide itself.
+        throw errorWithStatus('not found', 404);
+      }
+      return jsonResponse(drillInfo);
+    }
     const isTopicReq = /\/theory\/[^/]+\/[^/]+$/.test(url);
     if (isTopicReq) {
       if (topicStatus !== 200) {
         throw errorWithStatus('topic request failed', topicStatus);
       }
-      return jsonResponse(TOPIC_BODY);
+      return jsonResponse(topicBody);
     }
     return jsonResponse({ topics: LIST_TOPICS });
   }) as unknown as AuthenticatedFetch;
@@ -140,6 +157,9 @@ function renderDetail(
 beforeEach(() => {
   vi.clearAllMocks();
   mockIntersectionObserverInstances.length = 0;
+  // Topic switching now updates the URL via the History API; reset it so a
+  // pathname assertion doesn't inherit a prior test's push.
+  window.history.replaceState(null, '', '/theory/der-dativ');
 });
 
 describe('TheoryDetail', () => {
@@ -201,7 +221,7 @@ describe('TheoryDetail', () => {
     ).not.toHaveAttribute('aria-current');
   });
 
-  it('renders TheoryEmpty with router-wired other-topic links on a 404', async () => {
+  it('renders TheoryEmpty with other-topic links on a 404', async () => {
     renderDetail(makeFetch({ topicStatus: 404 }));
 
     // Empty-state copy from theory-empty.tsx (the not-found branch).
@@ -215,13 +235,32 @@ describe('TheoryDetail', () => {
     ).toBeInTheDocument();
   });
 
-  it('navigates to the chosen topic when an other-topic link is clicked', async () => {
-    renderDetail(makeFetch({ topicStatus: 404 }));
-    const other = await screen.findByRole('button', { name: /der akkusativ/i }, FIND);
+  it('switches topics in place — no router push, TOC stays mounted, URL updated', async () => {
+    const fetchFn = makeFetch();
+    renderDetail(fetchFn);
+    await screen.findByRole('heading', { level: 1, name: 'der dativ' }, FIND);
 
-    fireEvent.click(other);
+    // The sibling lives in the TOC "all topics" list.
+    const sibling = await screen.findByRole('button', { name: /der akkusativ/i }, FIND);
+    fireEvent.click(sibling);
 
-    expect(mockPush).toHaveBeenCalledWith('/theory/der-akkusativ');
+    // No Next navigation — that would remount the page and blank the TOC.
+    expect(mockPush).not.toHaveBeenCalled();
+    // The URL is updated shallowly instead (deep-link / refresh still resolve).
+    expect(window.location.pathname).toBe('/theory/der-akkusativ');
+    // keepPreviousData keeps the article on screen, so the nav never unmounts
+    // into the whole-body loading state.
+    expect(
+      screen.getByRole('navigation', { name: /theory sections/i }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/loading theory/i)).toBeNull();
+    // The new topic is fetched.
+    await vi.waitFor(() => {
+      const urls = (fetchFn as unknown as { mock: { calls: unknown[][] } }).mock.calls.map(
+        (c) => String(c[0]),
+      );
+      expect(urls).toContain('/theory/DE/der-akkusativ');
+    });
   });
 
   it('renders the error state when the topic request fails (non-404)', async () => {
@@ -230,6 +269,88 @@ describe('TheoryDetail', () => {
     expect(
       await screen.findByText(/couldn't load theory/i, undefined, FIND),
     ).toBeInTheDocument();
+  });
+});
+
+describe('TheoryDetail drill block', () => {
+  it('renders the drill block (keyed off the topic id + language) when the point has exercises', async () => {
+    const fetchFn = makeFetch({
+      drillInfo: {
+        grammarPointKey: 'de-der-dativ',
+        exerciseCounts: { cloze: 3 },
+        mastery: null,
+      },
+    });
+    renderDetail(fetchFn);
+    await screen.findByRole('heading', { level: 1, name: 'der dativ' }, FIND);
+
+    const mixed = await screen.findByRole('link', { name: /mixed drill/i }, FIND);
+    expect(mixed).toHaveAttribute(
+      'href',
+      '/drill?start=quick&grammarPoint=de-der-dativ',
+    );
+    // The drill-info request derived the key from topicId + language.
+    const calls = (fetchFn as unknown as ReturnType<typeof vi.fn>).mock.calls.map((c) => String(c[0]));
+    expect(calls).toContain('/progress/points/de-der-dativ');
+  });
+
+  it('renders no drill block when the point lookup 404s', async () => {
+    renderDetail(makeFetch()); // no drillInfo → the endpoint rejects
+    await screen.findByRole('heading', { level: 1, name: 'der dativ' }, FIND);
+
+    expect(screen.queryByRole('link', { name: /mixed drill/i })).not.toBeInTheDocument();
+  });
+
+  it('renders the related-topics block and switches topic in place on chip click', async () => {
+    const related = {
+      buildsOn: [{ topicId: 'der-akkusativ', title: 'der akkusativ', cefr: 'A2' }],
+      leadsTo: [],
+      siblings: [],
+    };
+    renderDetail(makeFetch({ topicBody: { ...TOPIC_BODY, related } }));
+
+    // Scope to the aria-labelled section — 'der akkusativ' also appears in the
+    // TOC's other-topics navigation. Chip textContent includes the CEFR badge,
+    // so match by inclusion rather than the exact-match within_ helper.
+    const section = await screen.findByRole('region', { name: 'related topics' }, FIND);
+    const chip = Array.from(section.querySelectorAll('button')).find((el) =>
+      el.textContent?.includes('der akkusativ'),
+    );
+    expect(chip).toBeTruthy();
+
+    fireEvent.click(chip!);
+    // Switches in place (like every topic switch here) — no Next navigation,
+    // just a shallow URL update.
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(window.location.pathname).toBe('/theory/der-akkusativ');
+  });
+
+  it('renders no related-topics block when the payload has none (pre-enrichment server)', async () => {
+    renderDetail(makeFetch());
+    await screen.findByRole('heading', { level: 1, name: 'der dativ' }, FIND);
+
+    expect(screen.queryByRole('region', { name: 'related topics' })).not.toBeInTheDocument();
+  });
+
+  it('derives the drill key from the route topicId, not the topic body id (DB payloads embed the full key)', async () => {
+    // Real DB-backed payloads carry the FULL grammar-point key as `id`
+    // (`de-der-dativ`), unlike the route slug (`der-dativ`). The drill-info
+    // request must not double the language prefix (`de-de-der-dativ`).
+    const fetchFn = makeFetch({
+      topicBody: { ...TOPIC_BODY, id: 'de-der-dativ' },
+      drillInfo: {
+        grammarPointKey: 'de-der-dativ',
+        exerciseCounts: { cloze: 3 },
+        mastery: null,
+      },
+    });
+    renderDetail(fetchFn);
+    await screen.findByRole('heading', { level: 1, name: 'der dativ' }, FIND);
+
+    await screen.findByRole('link', { name: /mixed drill/i }, FIND);
+    const calls = (fetchFn as unknown as ReturnType<typeof vi.fn>).mock.calls.map((c) => String(c[0]));
+    expect(calls).toContain('/progress/points/de-der-dativ');
+    expect(calls.some((u) => u.includes('de-de-der-dativ'))).toBe(false);
   });
 });
 
@@ -298,6 +419,42 @@ describe('TheoryDetail footer', () => {
     expect(document.querySelector('.theory-scroll')).toBeNull();
     expect(screen.queryByText(FOOTER_COPY)).not.toBeInTheDocument();
     expect(screen.getByTestId('shell-footer-suppressed').textContent).toBe('false');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Container height: the loaded article needs a fixed-height `.theory-detail`
+// (its internal `.theory-scroll` scrolls + drives scroll-spy). The
+// loading/error/empty states have NO internal scroller, so that fixed height
+// would clip their content and let it paint over the shell footer parked at
+// the box's bottom edge (the not-found topic list overlapping the footer). In
+// those states the box must instead grow with content — signalled by the
+// `theory-detail--flow` modifier.
+// ---------------------------------------------------------------------------
+
+describe('TheoryDetail container height', () => {
+  it('keeps the fixed-height container (no flow modifier) for the loaded article', async () => {
+    renderDetail(makeFetch());
+    await screen.findByRole('heading', { level: 1, name: 'der dativ' }, FIND);
+
+    const root = document.querySelector('.theory-detail')!;
+    expect(root.classList.contains('theory-detail--flow')).toBe(false);
+  });
+
+  it('lets the container grow (flow modifier) in the not-found/empty state', async () => {
+    renderDetail(makeFetch({ topicStatus: 404 }));
+    await screen.findByText(/no theory written yet for/i, undefined, FIND);
+
+    const root = document.querySelector('.theory-detail')!;
+    expect(root.classList.contains('theory-detail--flow')).toBe(true);
+  });
+
+  it('lets the container grow (flow modifier) in the error state', async () => {
+    renderDetail(makeFetch({ topicStatus: 500 }));
+    await screen.findByText(/couldn't load theory/i, undefined, FIND);
+
+    const root = document.querySelector('.theory-detail')!;
+    expect(root.classList.contains('theory-detail--flow')).toBe(true);
   });
 });
 

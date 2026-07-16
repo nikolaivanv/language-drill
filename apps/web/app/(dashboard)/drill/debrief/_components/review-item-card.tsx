@@ -4,12 +4,14 @@ import * as React from 'react';
 import {
   isClozeContent,
   isConjugationContent,
+  isContextualParaphraseContent,
   isDictationContent,
   isSentenceConstructionContent,
   isTranslationContent,
   isVocabRecallContent,
   type ClozeContent,
   type ConjugationContent,
+  type ContextualParaphraseContent,
   type ExerciseContent,
   type SentenceConstructionContent,
   type TranslationContent,
@@ -18,6 +20,7 @@ import {
 import type { AuthenticatedFetch, DebriefItem } from '@language-drill/api-client';
 import { Card, Chip } from '../../../../../components/ui';
 import { splitClozeSentence } from '../../../../../lib/drill/cloze-blank';
+import { revealWordInExample } from '../../../../../lib/drill/example-sentence';
 import { FlagExerciseControl } from '../../_components/flag-exercise-control';
 import { ConjugationFeatureBundle } from '../../../../../components/drill/conjugation-feature-bundle';
 import { DictationBody } from './dictation-body';
@@ -92,6 +95,8 @@ export function ReviewItemCard({ index, item, fetchFn }: ReviewItemCardProps) {
             <DictationBody item={item} content={content} />
           ) : isConjugationContent(content) ? (
             <ConjugationBody item={item} content={content} />
+          ) : isContextualParaphraseContent(content) ? (
+            <ContextualParaphraseBody item={item} content={content} />
           ) : null}
           {fetchFn && item.submissionId !== null && (
             <FlagExerciseControl
@@ -378,7 +383,9 @@ function VocabBody({ item, content }: VocabBodyProps) {
             {content.expectedWord}
           </div>
           {content.exampleSentence.length > 0 && (
-            <p className="t-small mt-s-2">{content.exampleSentence}</p>
+            <p className="t-small mt-s-2">
+              {revealWordInExample(content.exampleSentence, content.expectedWord)}
+            </p>
           )}
         </div>
       </div>
@@ -513,6 +520,72 @@ function SentenceConstructionBody({ item, content }: SentenceConstructionBodyPro
           {content.modelAnswers.length > 1 && (
             <p className="t-small mt-s-2 text-ink-mute">
               e.g. {content.modelAnswers.slice(1).join(' / ')}
+            </p>
+          )}
+        </div>
+      </div>
+      {item.evaluation?.feedback && (
+        <p className="t-small mt-s-3">{item.evaluation.feedback}</p>
+      )}
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Contextual paraphrase body — source sentence + constraint label, "your
+// paraphrase" cell + reference paraphrase(s)
+// ---------------------------------------------------------------------------
+
+interface ContextualParaphraseBodyProps {
+  item: DebriefItem;
+  content: ContextualParaphraseContent;
+}
+
+function ContextualParaphraseBody({ item, content }: ContextualParaphraseBodyProps) {
+  const isCorrect = item.status === 'correct';
+  return (
+    <>
+      <p className="t-small italic mb-s-2">"{content.sourceText}"</p>
+      <p className="t-small mb-s-2 text-ink-mute">{content.constraintLabel}</p>
+      <div className="grid grid-cols-2 mobile:grid-cols-1 gap-s-3">
+        <div className="rounded-md p-s-3 bg-paper-2">
+          <div className="t-micro">your paraphrase</div>
+          <div
+            className="mt-s-2"
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 16,
+              lineHeight: 1.4,
+              textDecoration: isCorrect ? 'none' : 'line-through',
+              color: isCorrect ? 'var(--color-ok)' : 'var(--color-accent-2)',
+            }}
+          >
+            {item.userAnswer ?? ''}
+          </div>
+        </div>
+        <div
+          className="rounded-md p-s-3"
+          style={{
+            background: isCorrect ? 'transparent' : 'var(--color-ok-soft)',
+            border: isCorrect ? '1px dashed var(--color-rule)' : 'none',
+          }}
+        >
+          <div className="t-micro">
+            {isCorrect ? 'one accepted form' : 'reference'}
+          </div>
+          <div
+            className="mt-s-2"
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 16,
+              lineHeight: 1.4,
+            }}
+          >
+            {content.referenceParaphrases[0] ?? ''}
+          </div>
+          {content.referenceParaphrases.length > 1 && (
+            <p className="t-small mt-s-2 text-ink-mute">
+              e.g. {content.referenceParaphrases.slice(1).join(' / ')}
             </p>
           )}
         </div>

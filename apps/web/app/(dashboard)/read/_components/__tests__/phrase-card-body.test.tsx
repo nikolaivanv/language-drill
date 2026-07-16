@@ -89,7 +89,7 @@ describe('PhraseCardBody — save/skip footer (Req 8.4)', () => {
       <PhraseCardBody card={FULL_CARD} inBank onSave={onSave} onSkip={onSkip} />,
     );
     expect(
-      screen.getByRole('button', { name: '✓ saved · undo' }),
+      screen.getByRole('button', { name: '✓ saved · remove' }),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'close' })).toBeInTheDocument();
   });

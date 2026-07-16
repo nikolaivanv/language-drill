@@ -133,6 +133,9 @@ vi.mock('@language-drill/db', () => ({
     difficulty: 'difficulty',
     language: 'language',
     contentJson: 'content_json',
+    grammarPointKey: 'grammar_point_key',
+    reviewStatus: 'review_status',
+    audioS3Key: 'audio_s3_key',
   },
   userExerciseHistory: {
     userId: 'user_id',
@@ -631,6 +634,97 @@ describe('GET /progress/curriculum', () => {
     // errorSample — accusative has a recent error sample; vowel-harmony does not
     expect(acc.errorSample).toEqual({ wrongText: 'kitabi', correction: 'kitabı' });
     expect(vh.errorSample).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /progress/points/:key
+// ---------------------------------------------------------------------------
+
+describe('GET /progress/points/:key', () => {
+  let app: Hono;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const mod = await import('./progress');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  it('returns 401 for unauthenticated requests', async () => {
+    const res = await app.request(
+      '/progress/points/tr-a2-possessive-case-stacking',
+      undefined,
+      unauthEnv,
+    );
+    expect(res.status).toBe(401);
+  });
+
+  it('returns 404 NOT_FOUND for a key not in the curriculum', async () => {
+    const res = await app.request(
+      '/progress/points/tr-b9-not-a-point',
+      undefined,
+      authEnv,
+    );
+    expect(res.status).toBe(404);
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBe('NOT_FOUND');
+  });
+
+  it('returns per-type approved counts and the mastery snapshot', async () => {
+    // Query 1: counts GROUP BY type
+    mockReviewWhere.mockImplementationOnce(() =>
+      makeChainResult([
+        { type: 'cloze', n: 12 },
+        { type: 'translation', n: 8 },
+      ]),
+    );
+    // Query 2: mastery row
+    mockReviewWhere.mockImplementationOnce(() =>
+      makeChainResult([
+        {
+          masteryScore: 0.82,
+          confidence: 0.9,
+          evidenceCount: 10,
+          lastPracticedAt: new Date('2026-07-01T00:00:00.000Z'),
+        },
+      ]),
+    );
+
+    const res = await app.request(
+      '/progress/points/tr-a2-possessive-case-stacking',
+      undefined,
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body).toEqual({
+      grammarPointKey: 'tr-a2-possessive-case-stacking',
+      exerciseCounts: { cloze: 12, translation: 8 },
+      mastery: {
+        masteryScore: 0.82,
+        confidence: 0.9,
+        evidenceCount: 10,
+        lastPracticedAt: '2026-07-01T00:00:00.000Z',
+      },
+    });
+  });
+
+  it('returns empty counts and mastery: null for a never-practiced point with no pool', async () => {
+    mockReviewWhere.mockImplementationOnce(() => makeChainResult([]));
+    mockReviewWhere.mockImplementationOnce(() => makeChainResult([]));
+
+    const res = await app.request(
+      '/progress/points/tr-a1-vowel-harmony',
+      undefined,
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.exerciseCounts).toEqual({});
+    expect(body.mastery).toBeNull();
   });
 });
 

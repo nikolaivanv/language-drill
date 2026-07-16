@@ -35,6 +35,7 @@ import {
 } from '@language-drill/db';
 import {
   COVERAGE_AXIS_VALUES,
+  ExerciseType,
   type CoverageAxis,
   type LearningLanguage,
 } from '@language-drill/shared';
@@ -46,6 +47,7 @@ import { resolveCellTarget } from './cell-targets';
 import { decideCoverageTargets } from './coverage-decision';
 import { loadMostRecentSucceededJobPerCell } from './recent-jobs';
 import { decideEnqueue } from './scheduler-decision';
+import { loadVocabTargetCoveragePerUmbrella } from './vocab-target-coverage';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -55,6 +57,33 @@ const SCHEDULER_PER_CELL_COST_CAP_USD = 0.5;
 const SLOW_QUERY_WARNING_MS = 30_000;
 /** SQS `SendMessageBatch` hard limit. */
 const MAX_BATCH_SIZE = 10;
+
+/**
+ * Run-level ceiling: the maximum number of under-target cells one scheduler
+ * tick enqueues. Overridable via `SCHEDULER_MAX_CELLS_PER_RUN` (positive int).
+ *
+ * This is the brake the 2026-07-07 incident lacked — a curriculum bump fanned
+ * out 187 cells in one run and spent ~$117 with no runtime stop. Capping the
+ * fan-out bounds a single night's Anthropic spend (~cap × recent avg cost/cell);
+ * deferred cells are still under-target next night, so they re-enqueue with no
+ * persistence needed — an initial fill self-spreads over ceil(total / cap)
+ * nights. See docs/tech-debt.md "No brake or alert on Anthropic API spend".
+ */
+const DEFAULT_MAX_CELLS_PER_RUN = 60;
+
+/**
+ * Resolve the run-level cell cap from the environment, falling back to
+ * `DEFAULT_MAX_CELLS_PER_RUN`. A non-numeric, zero, or negative value is ignored
+ * (uses the default) so a fat-fingered env var can never *disable* the brake.
+ */
+function resolveMaxCellsPerRun(): number {
+  const raw = process.env['SCHEDULER_MAX_CELLS_PER_RUN'];
+  if (raw === undefined) return DEFAULT_MAX_CELLS_PER_RUN;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isInteger(parsed) && parsed > 0
+    ? parsed
+    : DEFAULT_MAX_CELLS_PER_RUN;
+}
 
 // ---------------------------------------------------------------------------
 // Cold-start singletons
@@ -192,6 +221,12 @@ export async function handler(): Promise<void> {
   //     cells that have a `coverageSpec`.
   const approvedCoverageByCell = await loadApprovedCoverageCountsPerCell(db);
 
+  // 4c. Spec 2: per-umbrella vocab_target coverage (approved-target count +
+  //     distinct-covered count). Drives coverage-aware need for vocab_recall
+  //     cells whose umbrella has approved targets, so curated-word coverage
+  //     converges to 100% then the cell stops.
+  const vocabCoverageByUmbrella = await loadVocabTargetCoveragePerUmbrella(db);
+
   // 5. Decide per cell. `decideEnqueue` is pure — see scheduler-decision.ts
   //    for the precedence rules. Aggregate counters per skip reason so the
   //    final summary log surfaces the imbalance.
@@ -203,19 +238,42 @@ export async function handler(): Promise<void> {
     c2: 0,
   };
   for (const cell of allCells) {
-    const approvedInPool = approvedByCell.get(cell.cellKey) ?? 0;
+    const vocabCoverage =
+      cell.exerciseType === ExerciseType.VOCAB_RECALL
+        ? vocabCoverageByUmbrella.get(`${cell.language}|${cell.grammarPoint.key}`)
+        : undefined;
+    // Coverage-aware for seeded vocab umbrellas: measure progress as distinct
+    // covered targets vs total approved targets, so decideEnqueue yields
+    // need = |uncovered targets| and skip-target-reached fires when all
+    // covered. Narrowed together in one branch (rather than re-testing
+    // `usingTargets` as a boolean later) so `vocabCoverage` stays typed as
+    // defined without a non-null assertion.
+    let usingTargets: boolean;
+    let approvedInPool: number;
+    let target: number;
+    if (vocabCoverage !== undefined && vocabCoverage.approvedTargets > 0) {
+      usingTargets = true;
+      approvedInPool = vocabCoverage.coveredTargets;
+      // R3: per-cell target — for a target-seeded umbrella, the target IS
+      // the umbrella's approved-target count.
+      target = vocabCoverage.approvedTargets;
+    } else {
+      usingTargets = false;
+      approvedInPool = approvedByCell.get(cell.cellKey) ?? 0;
+      // R3: per-cell target (override → table → TARGET_PER_CELL) instead of
+      // the flat global, so narrow A1/A2 cells stop grinding an unreachable 50.
+      target = resolveCellTarget(cell);
+    }
     const recentJob = recentJobByCell.get(cell.cellKey) ?? null;
     const curriculumVersionOnDisk =
       CURRICULUM_VERSION_BY_LANGUAGE[cell.language as LearningLanguage];
-    // R3: per-cell target (override → table → TARGET_PER_CELL) instead of the
-    // flat global, so narrow A1/A2 cells stop grinding an unreachable 50.
-    const target = resolveCellTarget(cell);
     const decision = decideEnqueue(
       cell,
       approvedInPool,
       target,
       recentJob,
       curriculumVersionOnDisk,
+      usingTargets,
     );
     switch (decision.kind) {
       case 'enqueue':
@@ -249,6 +307,30 @@ export async function handler(): Promise<void> {
         });
         break;
     }
+  }
+
+  // 5b. Run-level ceiling: cap how many under-target cells this tick enqueues
+  //     so one nightly fan-out can't spend an unbounded amount against the
+  //     Anthropic account. Sort by `need` descending (emptiest cells fill
+  //     first) with a deterministic `cellKey` tie-break, then keep the first
+  //     `cap`. Deferred cells stay under-target and re-enqueue on a later run —
+  //     no persistence, an initial fill self-spreads over ceil(total/cap)
+  //     nights. Applied on `undersized` BEFORE the coverage-targets map below
+  //     so it composes with the Phase-2 coverage controller.
+  const cap = resolveMaxCellsPerRun();
+  if (undersized.length > cap) {
+    undersized.sort(
+      (a, b) => b.need - a.need || a.cell.cellKey.localeCompare(b.cell.cellKey),
+    );
+    const deferredCount = undersized.length - cap;
+    undersized.length = cap;
+    log({
+      level: 'info',
+      cap,
+      enqueuedThisRun: cap,
+      deferredCount,
+      message: 'run-level cell cap applied — deferring cells to a later run',
+    });
   }
 
   // 6. Empty-curriculum-slice fast path (Req 4.9): nothing to enqueue →

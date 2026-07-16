@@ -28,6 +28,7 @@ import {
   capPriorPoolSurfaces,
   computeGenerationPromptVars,
   sentenceConstructionModeForOrdinal,
+  contextualParaphraseConstraintForOrdinal,
   tailRecentStems,
   type GenerationPromptInputs,
 } from "./generation-prompts.js";
@@ -132,6 +133,10 @@ describe("buildGenerationSystemPrompt", () => {
     // concrete pattern-match anchors, not paraphrased advice.
     expect(prompt).toContain("Sınıfta sekiz ___ var");
     expect(prompt).toContain("Vowel harmony: front vowel (e) requires -ler suffix");
+    // 2026-07-12: cloze `context` field removed — the template must no longer
+    // invite the model to populate it.
+    expect(prompt).not.toContain("and `context` fields");
+    expect(prompt).not.toContain("`sentence`, `context`");
   });
 
   it("includes the TR indefinite-noun-compound cloze format rule (2026-06-23)", async () => {
@@ -249,7 +254,9 @@ describe("buildGenerationSystemPrompt", () => {
   it("carries a bumped, correctly-formatted GENERATION_PROMPT_VERSION", () => {
     // R1.7 / R2.6 / R7.4 — the coordinated prompt edit must ship a
     // `generate@YYYY-MM-DD` version so Langfuse cohorts old vs new traces.
-    expect(GENERATION_PROMPT_VERSION).toMatch(/^generate@\d{4}-\d{2}-\d{2}$/);
+    // Optional single-letter suffix = second bump on the same day (mirrors
+    // the CURRICULUM_VERSION_<LANG> convention in curriculum.test.ts).
+    expect(GENERATION_PROMPT_VERSION).toMatch(/^generate@\d{4}-\d{2}-\d{2}[a-z]?$/);
     // Bumped 2026-06-16 — two same-day edits share this cohort: (1) the
     // sentence-construction "Plain text only — no markdown" rule (the generator
     // leaked `**keyword**` emphasis into the plain-text `prompt` field, rendered
@@ -277,7 +284,18 @@ describe("buildGenerationSystemPrompt", () => {
     // numbers/ordinals cloze/translation cells now get a per-draft
     // digit-only-presentation directive (pinned to the seeded target value
     // when seeded) instead of the ordinary loose seed block.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-08");
+    // Bumped 2026-07-08a — self-revealing base-word-cue directive: flagged
+    // derived-form points (appreciative suffixes) cue the parenthetical BASE
+    // word and pin the seeded target form; the derived form never appears in
+    // the visible text.
+    // Bumped 2026-07-10 — contextual_paraphrase seed injected as a strict
+    // scenario directive in the per-draft user prompt (replacing the generic
+    // word/substitution framing). (2026-07-09 added the paraphrase guidance
+    // section + constraint-kind rotation.)
+    // Bumped 2026-07-12 — cloze `context` field dropped from the tool schema
+    // (anti-spoil) and the injected seed self-filters register-specific /
+    // above-level frequency words.
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-16");
     // Tasks 7–9: pin the new guardrail phrases in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "every content word MUST be high-frequency everyday vocabulary at or below CEFR {{cefrLevel}}",
@@ -612,6 +630,16 @@ describe("GENERATION_SYSTEM_PROMPT_TEMPLATE byte parity", () => {
       ["primera frase"],
     );
   });
+
+  it("contextual_paraphrase (the paraphrase-specific section is spliced before ## Output)", async () => {
+    // Locks byte parity through the non-empty `{{contextualParaphraseSection}}`
+    // branch so the template and the in-code builder cannot diverge on
+    // contextual_paraphrase cells.
+    await assertParity(
+      { ...baseInputs, exerciseType: ExerciseType.CONTEXTUAL_PARAPHRASE },
+      ["primera frase"],
+    );
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -684,7 +712,10 @@ describe("buildGenerationUserPrompt", () => {
     expect(seeded).toContain('Build this exercise around the word "viajar".');
     // Loose: names the grammar point and offers a similar-frequency substitute.
     expect(seeded).toContain(baseInputs.grammarPoint.name);
-    expect(seeded).toContain("a related content word of similar frequency");
+    expect(seeded).toContain("of similar frequency");
+    // 2026-07-12: register/level self-filter for off-band frequency seeds.
+    expect(seeded).toContain("register-specific");
+    expect(seeded).toContain(baseInputs.cefrLevel);
   });
 
   it("omits the seed line — byte-identical to the unseeded output — when seed is null/absent", () => {
@@ -761,6 +792,26 @@ describe("buildGenerationUserPrompt", () => {
   });
 });
 
+describe("buildGenerationUserPrompt — vocab_recall seed directive", () => {
+  it("pins expectedWord to the seed and forbids substitution", () => {
+    // 2026-07-10: vocab_recall cells are now seeded from the curated
+    // vocab_target list (Tasks 1-3) — coverage only registers when
+    // expectedWord matches the seed, so the loose substitution escape hatch
+    // (which lets the model pick "a related content word of similar
+    // frequency") would defeat convergence. This must be strict, like the
+    // conjugation and contextual_paraphrase directives above.
+    const vocabInputs: GenerationPromptInputs = {
+      ...baseInputs,
+      exerciseType: ExerciseType.VOCAB_RECALL,
+    };
+    const out = buildGenerationUserPrompt(vocabInputs, 0, null, "manzana");
+    expect(out).toContain("manzana");
+    expect(out).toMatch(/must be exactly/i);
+    // Must NOT offer the loose frequency-substitution escape hatch.
+    expect(out).not.toContain("similar frequency");
+  });
+});
+
 describe("buildGenerationUserPrompt — self-revealing digit-form directive", () => {
   const flaggedInputs: GenerationPromptInputs = {
     ...baseInputs,
@@ -798,6 +849,53 @@ describe("buildGenerationUserPrompt — self-revealing digit-form directive", ()
   it("unflagged cloze is byte-identical to before (loose seed block)", () => {
     const prompt = buildGenerationUserPrompt(baseInputs, 0, null, "mesa");
     expect(prompt).toContain('Build this exercise around the word "mesa"');
+    expect(prompt).not.toContain("target form");
+  });
+});
+
+describe("buildGenerationUserPrompt — self-revealing base-word-cue directive", () => {
+  const flaggedInputs: GenerationPromptInputs = {
+    ...baseInputs,
+    grammarPoint: {
+      ...baseInputs.grammarPoint,
+      selfRevealingElicitation: "base-word-cue" as const,
+      elicitationSeedValues: ["sillita", "hotelucho"],
+    },
+  };
+
+  it("pins the seeded target form and demands a parenthetical BASE-word cue (cloze)", () => {
+    const prompt = buildGenerationUserPrompt(flaggedInputs, 0, null, "sillita");
+    expect(prompt).toContain('The target form is "sillita"');
+    expect(prompt).toContain("BASE word");
+    // Neither the loose seed block nor the digit-form directive may leak in:
+    expect(prompt).not.toContain("Build this exercise around the word");
+    expect(prompt).not.toContain("digits");
+  });
+
+  it("emits a generic base-word-cue directive when unseeded (CLI/eval path)", () => {
+    const prompt = buildGenerationUserPrompt(flaggedInputs, 0, null, null);
+    expect(prompt).toContain("BASE word");
+    expect(prompt).toContain("derived form");
+  });
+
+  it("translation variant conveys the nuance in the SOURCE text and pins the reference form", () => {
+    const trInputs: GenerationPromptInputs = {
+      ...flaggedInputs,
+      exerciseType: ExerciseType.TRANSLATION,
+    };
+    const prompt = buildGenerationUserPrompt(trInputs, 0, null, "hotelucho");
+    expect(prompt).toContain('The target form is "hotelucho"');
+    expect(prompt).toContain("source");
+    expect(prompt).not.toContain("digits");
+  });
+
+  it("conjugation cells are unaffected by the flag (no directive, no seed misread)", () => {
+    const conjInputs: GenerationPromptInputs = {
+      ...flaggedInputs,
+      exerciseType: ExerciseType.CONJUGATION,
+    };
+    const prompt = buildGenerationUserPrompt(conjInputs, 0, null, "hablar");
+    expect(prompt).not.toContain("BASE word");
     expect(prompt).not.toContain("target form");
   });
 });
@@ -1046,6 +1144,24 @@ describe("computeGenerationPromptVars — conjugationSection", () => {
     );
     expect(vars.sentenceConstructionSection).toBe("");
   });
+
+  it("leaves contextualParaphraseSection empty for a non-paraphrase cell (mutually exclusive sections)", () => {
+    const vars = computeGenerationPromptVars(
+      { ...baseInputs, exerciseType: ExerciseType.CONJUGATION },
+      [],
+    );
+    expect(vars.contextualParaphraseSection).toBe("");
+  });
+
+  it("populates contextualParaphraseSection for a contextual_paraphrase cell", () => {
+    const vars = computeGenerationPromptVars(
+      { ...baseInputs, exerciseType: ExerciseType.CONTEXTUAL_PARAPHRASE },
+      [],
+    );
+    expect(vars.contextualParaphraseSection).toContain(
+      "Contextual-paraphrase specifics",
+    );
+  });
 });
 
 describe("sentenceConstructionModeForOrdinal", () => {
@@ -1054,6 +1170,15 @@ describe("sentenceConstructionModeForOrdinal", () => {
     expect(sentenceConstructionModeForOrdinal(1)).toBe("situation");
     expect(sentenceConstructionModeForOrdinal(2)).toBe("grammar_target");
     expect(sentenceConstructionModeForOrdinal(3)).toBe("keywords");
+  });
+});
+
+describe("contextualParaphraseConstraintForOrdinal", () => {
+  it("rotates avoid → register → simplify", () => {
+    expect(contextualParaphraseConstraintForOrdinal(0)).toBe("avoid");
+    expect(contextualParaphraseConstraintForOrdinal(1)).toBe("register");
+    expect(contextualParaphraseConstraintForOrdinal(2)).toBe("simplify");
+    expect(contextualParaphraseConstraintForOrdinal(3)).toBe("avoid");
   });
 });
 
@@ -1084,6 +1209,54 @@ describe("buildGenerationUserPrompt — sentence_construction", () => {
     const cloze = { ...inputs, exerciseType: ExerciseType.CLOZE };
     const msg = buildGenerationUserPrompt(cloze as never, 0, null);
     expect(msg).not.toContain("prompt mode:");
+  });
+});
+
+describe("buildGenerationUserPrompt — contextual_paraphrase", () => {
+  it("names the constraint kind for the ordinal", () => {
+    const prompt = buildGenerationUserPrompt(
+      { ...baseInputs, exerciseType: ExerciseType.CONTEXTUAL_PARAPHRASE },
+      1, // ordinal 1 → register
+      null,
+    );
+    expect(prompt).toMatch(/constraint kind: register/i);
+  });
+
+  it("rotates the constraint kind across ordinals 0/2", () => {
+    const avoidPrompt = buildGenerationUserPrompt(
+      { ...baseInputs, exerciseType: ExerciseType.CONTEXTUAL_PARAPHRASE },
+      0,
+      null,
+    );
+    expect(avoidPrompt).toMatch(/constraint kind: avoid/i);
+
+    const simplifyPrompt = buildGenerationUserPrompt(
+      { ...baseInputs, exerciseType: ExerciseType.CONTEXTUAL_PARAPHRASE },
+      2,
+      null,
+    );
+    expect(simplifyPrompt).toMatch(/constraint kind: simplify/i);
+  });
+
+  it("does not add a constraint-kind line for other types", () => {
+    const msg = buildGenerationUserPrompt(baseInputs, 1, null);
+    expect(msg).not.toContain("constraint kind:");
+  });
+
+  it("renders a paraphrase seed as a strict scenario directive, not the generic word framing", () => {
+    // The paraphrase seed is a SCENARIO from the curated paraphrase.seeds pool —
+    // the identity-diversity axis. It must be framed as a scenario (not a "word")
+    // with no substitution escape hatch, mirroring the strict conjugation seed.
+    const prompt = buildGenerationUserPrompt(
+      { ...baseInputs, exerciseType: ExerciseType.CONTEXTUAL_PARAPHRASE },
+      0,
+      null,
+      "a complaint to a landlord",
+    );
+    expect(prompt).toContain('scenario: "a complaint to a landlord"');
+    // The generic word-oriented seed block + its substitution escape hatch must NOT appear:
+    expect(prompt).not.toContain("Build this exercise around the word");
+    expect(prompt).not.toContain("choose a related content word");
   });
 });
 

@@ -105,6 +105,9 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-a1-coordination-basic': 'syntax',
   'es-a1-porque-para': 'syntax',
   'es-a1-prepositions-a-en': 'pairs',
+  'es-a1-present-yo-go': 'tenses',
+  'es-a1-locative-prepositions': 'syntax',
+  'es-a1-telling-time': 'syntax',
 
   // --- Spanish (A2) ---
   'es-a2-present-irregular-stem-changes': 'tenses',
@@ -134,6 +137,13 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-a2-mente-adverbs': 'morphology',
   'es-a2-adjective-apocopation': 'morphology',
   'es-a2-comparatives-superlatives': 'syntax',
+  'es-a2-preterite-strong-stems': 'tenses',
+  'es-a2-preterite-stem-spelling': 'tenses',
+  'es-a2-preterite-yo-spelling': 'tenses',
+  'es-a2-saber-poder-ability': 'pairs',
+  'es-a2-hace-ago': 'syntax',
+  'es-a2-cada-mismo': 'syntax',
+  'es-a2-diacritic-pairs': 'orthography',
 
   // --- Spanish (B1/B2 grammar) ---
   'es-b1-present-subjunctive': 'moods',
@@ -144,7 +154,8 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-b2-past-subjunctive': 'moods',
   'es-b2-compound-tenses': 'tenses',
   'es-b2-conditional-perfect': 'moods',
-  'es-b2-complex-conditionals': 'syntax',
+  'es-b2-complex-conditionals': 'moods',
+  'es-b2-remote-conditionals': 'moods',
   'es-b2-nuanced-ser-estar': 'pairs',
 
   // --- Spanish (B1 additions) ---
@@ -162,6 +173,14 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-b1-que-vs-cual': 'pairs',
   'es-b1-ser-estar-uses': 'pairs',
   'es-b1-indirect-questions': 'syntax',
+  'es-b1-nominalizers': 'syntax',
+  'es-b1-impersonal-plural': 'syntax',
+  'es-b1-reciprocal-se': 'pronouns',
+  'es-b1-preterite-imperfect-meaning': 'tenses',
+  'es-b1-collective-agreement': 'syntax',
+  'es-b1-adjective-de-infinitive': 'syntax',
+  'es-b1-influence-verbs-infinitive': 'syntax',
+  'es-b1-ser-location-events': 'pairs',
 
   // --- Spanish (B2 additions) ---
   'es-b2-relative-clauses-advanced': 'syntax',
@@ -182,6 +201,15 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'es-b2-quantifiers-advanced': 'syntax',
   'es-b2-cleft-sentences': 'syntax',
   'es-b2-appreciative-suffixes': 'morphology',
+  'es-b2-conditional-conjecture': 'moods',
+  'es-b2-reported-speech-backshift': 'syntax',
+  'es-b2-cuyo': 'syntax',
+  'es-b2-nosotros-imperative': 'moods',
+  'es-b2-aspectual-se': 'pronouns',
+  'es-b2-gradual-gerund': 'syntax',
+  'es-b2-perception-verbs': 'syntax',
+  'es-b2-correlative-comparison': 'syntax',
+  'es-b2-adjective-position': 'syntax',
 
   // --- Turkish A1 ---
   'tr-a1-vowel-harmony': 'orthography',
@@ -211,6 +239,7 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'tr-a1-gore-bence': 'syntax',
   'tr-a1-beri-dir': 'syntax',
   'tr-a1-comparative-superlative': 'syntax',
+  'tr-a1-clock-time-dates': 'syntax',
 
   // --- Turkish A2 ---
   'tr-a2-indefinite-compound': 'morphology',
@@ -230,6 +259,7 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'tr-a2-gibi-kadar': 'syntax',
   'tr-a2-correlative-conjunctions': 'syntax',
   'tr-a2-causal-connectors': 'syntax',
+  'tr-a2-adversative-connectors': 'syntax',
   'tr-a2-possessive-case-stacking': 'morphology',
   'tr-a2-ca-suffix': 'morphology',
   'tr-a2-pekistirme': 'morphology',
@@ -260,6 +290,9 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   // B1 G&K reverse-audit additions (2026-07-10)
   'tr-b1-copula-ol': 'syntax',
   'tr-b1-olarak': 'syntax',
+  'tr-b1-abstract-postpositions': 'syntax',
+  'tr-b1-reason-digi-icin': 'syntax',
+  'tr-b1-when-converbs': 'syntax',
 
   // --- Turkish B2 ---
   'tr-b2-participle-aorist': 'syntax',
@@ -267,10 +300,8 @@ const KEY_TO_CATEGORY: Readonly<Record<string, TheoryCategoryId>> = {
   'tr-b2-converb-until': 'syntax',
   'tr-b2-compound-past-hikaye': 'tenses',
   'tr-b2-compound-evidential-rivayet': 'tenses',
-  'tr-b2-temporal-when': 'syntax',
   'tr-b2-proportion-assoon': 'syntax',
   'tr-b2-duration-throughout': 'syntax',
-  'tr-b2-causal-subordinate': 'syntax',
   'tr-b2-reported-statements': 'syntax',
   'tr-b2-reported-questions': 'syntax',
   'tr-b2-reported-directives': 'syntax',

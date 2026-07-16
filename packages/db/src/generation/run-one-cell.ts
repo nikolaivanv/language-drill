@@ -38,6 +38,7 @@ import {
   type CoverageTarget,
   type CoverageTags,
   type LearningLanguage,
+  normalizeWord,
 } from '@language-drill/shared';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 
@@ -52,6 +53,7 @@ import {
   exercises,
   generationJobs,
   skillTopics,
+  vocabTarget,
 } from '../schema/index';
 
 import type { Cell } from './cells';
@@ -61,6 +63,10 @@ import { pickConjugationSeeds, pickSeeds } from './seed-picker';
 import { VOCAB_MAX_PER_WORD } from './validate-and-insert';
 import { loadFrequencyBand, loadNounBand, loadVerbBand } from './vocab-band';
 import { runValidatorPool } from './validator-pool';
+import {
+  computeUncoveredTargetBand,
+  pickTargetSeeds,
+} from './vocab-target-seed';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -304,6 +310,72 @@ export async function fetchPriorVocabRecallSurfaces(
 }
 
 /**
+ * Approved vocab targets for an umbrella, priority-ordered: `core` → `common`
+ * → `extended` tier, then ascending `freqRank` (nulls last). The seed band is
+ * built from this order so a partial batch covers the most important words
+ * first. Empty when the umbrella has no approved targets (→ data-driven gate:
+ * buildSeedWords returns undefined → unseeded free generation, unchanged).
+ */
+export async function loadApprovedVocabTargets(
+  db: Db,
+  language: string,
+  umbrellaKey: string,
+): Promise<readonly { lemma: string; displayForm: string }[]> {
+  const rows = await db
+    .select({
+      lemma: vocabTarget.lemma,
+      displayForm: vocabTarget.displayForm,
+      tier: vocabTarget.tier,
+      freqRank: vocabTarget.freqRank,
+    })
+    .from(vocabTarget)
+    .where(
+      and(
+        eq(vocabTarget.language, language),
+        eq(vocabTarget.umbrellaKey, umbrellaKey),
+        eq(vocabTarget.status, 'approved'),
+      ),
+    );
+  const tierRank = (t: string): number =>
+    t === 'core' ? 0 : t === 'common' ? 1 : 2;
+  return [...rows]
+    .sort((a, b) => {
+      const dt = tierRank(a.tier) - tierRank(b.tier);
+      if (dt !== 0) return dt;
+      return (a.freqRank ?? Number.MAX_SAFE_INTEGER) - (b.freqRank ?? Number.MAX_SAFE_INTEGER);
+    })
+    .map((r) => ({ lemma: r.lemma, displayForm: r.displayForm }));
+}
+
+/**
+ * Normalized `expectedWord`s already APPROVED (auto/manual — matches the Spec-1
+ * coverage read model's APPROVED_STATUSES, NOT flagged) in this vocab_recall
+ * cell. This is the authoritative "covered" set: it captures both new seeded
+ * exercises and the legacy pool that carries no seedWord, so we never re-seed a
+ * word an old free-gen exercise already tests.
+ */
+export async function loadCoveredVocabWords(db: Db, cell: Cell): Promise<Set<string>> {
+  const rows = await db
+    .select({ surface: sql<string>`content_json->>'expectedWord'` })
+    .from(exercises)
+    .where(
+      and(
+        eq(exercises.language, cell.language),
+        eq(exercises.difficulty, cell.cefrLevel),
+        eq(exercises.type, cell.exerciseType),
+        eq(exercises.grammarPointKey, cell.grammarPoint.key),
+        inArray(exercises.reviewStatus, ['auto-approved', 'manual-approved']),
+        sql`content_json ? 'expectedWord'`,
+      ),
+    );
+  const set = new Set<string>();
+  for (const r of rows) {
+    if (typeof r.surface === 'string' && r.surface) set.add(normalizeWord(r.surface));
+  }
+  return set;
+}
+
+/**
  * Distinct free_writing titles already approved/flagged in this cell, fed into
  * the generation prompt as an avoid-list (cross-run dedup). The dedup surface
  * for free_writing is the title, so without this the generator re-proposes the
@@ -337,6 +409,42 @@ export async function fetchPriorFreeWritingTitles(
     .limit(60);
   return rows
     .map((r) => r.title)
+    .filter((s): s is string => typeof s === 'string' && s.length > 0);
+}
+
+/**
+ * Distinct paraphrase source sentences already approved/flagged in this cell,
+ * fed into the generation prompt as an avoid-list (cross-run dedup). The dedup
+ * surface for contextual_paraphrase is the source sentence, so without this the
+ * generator re-proposes the same sentence every run and `exercises_dedup_idx`
+ * rejects it. Deterministically ordered, capped so the prompt stays bounded.
+ */
+export async function fetchPriorParaphraseSurfaces(
+  db: Db,
+  cell: Cell,
+): Promise<readonly string[]> {
+  const rows = await db
+    .select({ src: sql<string>`content_json->>'sourceText'` })
+    .from(exercises)
+    .where(
+      and(
+        eq(exercises.language, cell.language),
+        eq(exercises.difficulty, cell.cefrLevel),
+        eq(exercises.type, cell.exerciseType),
+        eq(exercises.grammarPointKey, cell.grammarPoint.key),
+        inArray(exercises.reviewStatus, [
+          'auto-approved',
+          'manual-approved',
+          'flagged',
+        ]),
+        sql`content_json ? 'sourceText'`,
+      ),
+    )
+    .groupBy(sql`content_json->>'sourceText'`)
+    .orderBy(sql`content_json->>'sourceText'`)
+    .limit(60);
+  return rows
+    .map((r) => r.src)
     .filter((s): s is string => typeof s === 'string' && s.length > 0);
 }
 
@@ -459,12 +567,13 @@ async function fetchPriorNounSeeds(
  * now that PoS is DB-backed — previously ES-only). NOMINAL-inflection points
  * (`conjugationSeedKind: 'noun'` — possessive/case/copula) decline a noun, not a
  * verb, so their conjugation cell seeds from the NOUN band instead. The legacy
- * `'none'` opts out of seeding entirely. vocab_recall/free-writing/etc. are
- * unseeded.
+ * `'none'` opts out of seeding entirely. vocab_recall now seeds from the
+ * curated `vocab_target` list (Spec 2) — an umbrella with no approved targets
+ * falls back to unseeded free generation. free-writing/etc. remain unseeded.
  */
 export function seedKindFor(
   cell: Cell,
-): 'frequency' | 'verb' | 'noun' | 'predicate-nominal' | 'elicitation-values' | null {
+): 'frequency' | 'verb' | 'noun' | 'predicate-nominal' | 'elicitation-values' | 'vocab-target' | null {
   if (
     (cell.exerciseType === ExerciseType.CLOZE ||
       cell.exerciseType === ExerciseType.TRANSLATION) &&
@@ -494,14 +603,29 @@ export function seedKindFor(
     if (seedKind === 'predicate-nominal') return 'predicate-nominal';
     return 'verb';
   }
+  if (cell.exerciseType === ExerciseType.CONTEXTUAL_PARAPHRASE) {
+    // Curated scenario-seed rotation from the umbrella's paraphrase.seeds pool,
+    // reusing the elicitation-values path: persisted as content_json.seedWord and
+    // excluded cross-run via fetchPriorSeeds — the identity-diversity axis.
+    return 'elicitation-values';
+  }
+  if (cell.exerciseType === ExerciseType.VOCAB_RECALL) {
+    // Seed the target word from the curated vocab_target list, preferring
+    // uncovered targets so coverage converges (Spec 2). buildSeedWords returns
+    // undefined when the umbrella has no approved targets, restoring today's
+    // free generation for un-authored umbrellas (the data-driven gate).
+    return 'vocab-target';
+  }
   return null;
 }
 
 /**
  * Builds the per-ordinal seed list for a cell (R5.1), or `undefined` for
  * non-seeded types. Loads the candidate band from `vocab_lemma` (DB-backed),
- * then delegates to the deterministic pickers. The `exclude` set (live-pool
- * seeds) is supplied by the caller via `fetchPriorSeeds`/`fetchPriorConjugationSeeds`.
+ * then delegates to the deterministic pickers — except the `vocab-target`
+ * path (VOCAB_RECALL), which loads its band from the umbrella's approved
+ * `vocab_target` rows instead. The `exclude` set (live-pool seeds) is
+ * supplied by the caller via `fetchPriorSeeds`/`fetchPriorConjugationSeeds`.
  */
 export async function buildSeedWords(
   db: Db,
@@ -513,6 +637,14 @@ export async function buildSeedWords(
 ): Promise<readonly (string | null)[] | undefined> {
   const kind = seedKindFor(cell);
   if (kind === null) return undefined;
+
+  if (kind === 'vocab-target') {
+    const targets = await loadApprovedVocabTargets(db, cell.language, cell.grammarPoint.key);
+    if (targets.length === 0) return undefined; // no curated list → free gen
+    const covered = await loadCoveredVocabWords(db, cell);
+    const band = computeUncoveredTargetBand(targets, covered);
+    return pickTargetSeeds({ band, count, exclude: priorSeeds });
+  }
 
   const window = cefrRankWindow(cell.cefrLevel);
 
@@ -539,8 +671,13 @@ export async function buildSeedWords(
     // form from the curated curriculum pool (mirrors the predicate-nominal
     // curated pool). Bounded: once the live pool covers it, pickSeeds returns
     // nulls and the cell stops — pools are sized in the curriculum to exceed
-    // the cell target.
-    const band = cell.grammarPoint.elicitationSeedValues ?? [];
+    // the cell target. A contextual_paraphrase cell shares this path but draws
+    // from the umbrella's `paraphrase.seeds` scenario pool instead — the
+    // identity-diversity axis for that exercise type.
+    const band =
+      cell.exerciseType === ExerciseType.CONTEXTUAL_PARAPHRASE
+        ? (cell.grammarPoint.paraphrase?.seeds ?? [])
+        : (cell.grammarPoint.elicitationSeedValues ?? []);
     return pickSeeds({ band, batchSeed, count, exclude: priorSeeds });
   }
 
@@ -558,13 +695,22 @@ export async function buildSeedWords(
     return pickSeeds({ band, batchSeed, count, exclude: priorSeeds });
   }
 
-  // Verb conjugation: at-or-below-level verbs (CUMULATIVE band from rank 1), keyed
-  // on (lemma, person). Persons come from the ordinal's coverage target.
+  // Verb conjugation: keyed on (lemma, person). Persons come from the ordinal's
+  // coverage target. A narrow point with a small, closed target-verb set supplies
+  // `conjugationSeedWords` — a curated verb list that REPLACES the frequency band
+  // so the generator can't wander onto off-target verbs (e.g. a 3sg "hace" for the
+  // es-a1-present-yo-go point doesn't exercise the irregular yo-form, so the
+  // validator rejects it). Otherwise draw the at-or-below-level DB verb band
+  // (CUMULATIVE from rank 1).
   const persons = Array.from(
     { length: count },
     (_, ordinal) => coverageTargets?.[ordinal]?.person ?? null,
   );
-  const band = await loadVerbBand(db, cell.language, 1, window.rankMax);
+  const curatedVerbs = cell.grammarPoint.conjugationSeedWords;
+  const band =
+    curatedVerbs && curatedVerbs.length > 0
+      ? curatedVerbs
+      : await loadVerbBand(db, cell.language, 1, window.rankMax);
   return pickConjugationSeeds({ band, batchSeed, count, persons, exclude: priorSeeds });
 }
 
@@ -709,7 +855,9 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
         ? await fetchPriorVocabRecallSurfaces(db, cell)
         : cell.exerciseType === ExerciseType.FREE_WRITING
           ? await fetchPriorFreeWritingTitles(db, cell)
-          : undefined;
+          : cell.exerciseType === ExerciseType.CONTEXTUAL_PARAPHRASE
+            ? await fetchPriorParaphraseSurfaces(db, cell)
+            : undefined;
 
     // Seed cloze/translation with at-level content words, verb conjugation with
     // at-or-below-level verbs (keyed on (lemma, person)), and nominal-inflection
@@ -719,15 +867,17 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     // needless query.
     const seedKind = seedKindFor(cell);
     const priorSeeds: ReadonlySet<string> =
-      seedKind === 'frequency' || seedKind === 'elicitation-values'
-        ? // Both the frequency band and the curated elicitation-values pool key
-          // the live-pool exclude on the bare `content_json.seedWord`
-          // (validate-and-insert.ts persists it identically for both), so they
-          // share `fetchPriorSeeds`. Without this, a re-run of a below-target
-          // flagged cell never sees its own live pool and keeps re-picking
-          // values already anchored — the bounded-pool termination
-          // (`pickSeeds` returning nulls once the pool is covered) never
-          // engages.
+      seedKind === 'frequency' ||
+      seedKind === 'elicitation-values' ||
+      seedKind === 'vocab-target'
+        ? // The frequency band, the curated elicitation-values pool, and the
+          // vocab-target pool all key the live-pool exclude on the bare
+          // `content_json.seedWord` (validate-and-insert.ts persists it
+          // identically for all three), so they share `fetchPriorSeeds`.
+          // Without this, a re-run of a below-target flagged cell never sees
+          // its own live pool and keeps re-picking values already anchored —
+          // the bounded-pool termination (`pickSeeds`/`pickTargetSeeds`
+          // returning nulls once the pool is covered) never engages.
           new Set(await fetchPriorSeeds(db, cell))
         : // Both noun and predicate-nominal cells key the live-pool exclude on the
           // bare lemma/seedWord (the noun/predicate is the diversity axis), so they

@@ -35,6 +35,7 @@ const mockUseCurriculumMap = vi.fn();
 const mockUseInsightsErrors = vi.fn();
 const mockUseGetPreferences = vi.fn();
 const mockUseUpdateLanguages = vi.fn();
+const mockUseVocabTopics = vi.fn();
 
 vi.mock('@language-drill/api-client', () => ({
   useProgressRadar: (...args: unknown[]) => mockUseProgressRadar(...args),
@@ -45,6 +46,7 @@ vi.mock('@language-drill/api-client', () => ({
   useInsightsErrors: (...args: unknown[]) => mockUseInsightsErrors(...args),
   useGetPreferences: (...args: unknown[]) => mockUseGetPreferences(...args),
   useUpdateLanguages: (...args: unknown[]) => mockUseUpdateLanguages(...args),
+  useVocabTopics: (...args: unknown[]) => mockUseVocabTopics(...args),
   createAuthenticatedFetch: vi.fn(() => vi.fn()),
 }));
 
@@ -214,6 +216,12 @@ beforeEach(() => {
     data: { themes: [] },
     isLoading: false,
     error: null,
+    refetch: vi.fn(),
+  });
+  mockUseVocabTopics.mockReturnValue({
+    data: { topics: [] },
+    isLoading: false,
+    isError: false,
     refetch: vi.fn(),
   });
 });
@@ -409,5 +417,32 @@ describe('ProgressPage', () => {
     expect(keys).toContainEqual(['curriculumMap', Language.TR]);
     expect(keys).toContainEqual(['todayPlan', Language.TR]);
     expect(keys).toContainEqual(['progressRadar', Language.TR]);
+  });
+
+  it('renders the words (vocab coverage) tab with topic rows when ?tab=words', () => {
+    mockSearchParams = new URLSearchParams('tab=words');
+    mockUseVocabTopics.mockReturnValue({
+      data: {
+        topics: [
+          {
+            umbrellaKey: 'es-a1-vocab-food-drink',
+            name: 'Food and drink (A1)',
+            cefrLevel: 'A1',
+            wordCount: 30,
+            available: 12,
+            practiced: 5,
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
+
+    renderPage();
+
+    const wordsTab = screen.getByRole('tab', { name: 'words' });
+    expect(wordsTab.getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByText('Food and drink (A1)')).toBeInTheDocument();
   });
 });

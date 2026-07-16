@@ -50,6 +50,7 @@ export const readEntries = pgTable(
     cefr: text('cefr').$type<CefrLevel>(),
     length: text('length').$type<ReadingTextLength>(),
     prompt: text('prompt'),
+    audioS3Key: text('audio_s3_key'),
     pastedAt: timestamp('pasted_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({

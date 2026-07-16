@@ -5,12 +5,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 // ---------------------------------------------------------------------------
 // useTabUrlState — reload-safe, shareable tab state for the Progress page.
-// Reads `?tab=` from the URL (narrowed to the four known ids) and updates
+// Reads `?tab=` from the URL (narrowed to the five known ids) and updates
 // it via `router.replace` so the back button isn't polluted with tab toggles.
 // Design reference: design.md §"Component 3 — ProgressTabs"
 // ---------------------------------------------------------------------------
 
-export const PROGRESS_TAB_IDS = ['map', 'shape', 'fluency', 'history'] as const;
+export const PROGRESS_TAB_IDS = ['map', 'words', 'shape', 'fluency', 'history'] as const;
 export type ProgressTabId = (typeof PROGRESS_TAB_IDS)[number];
 
 const DEFAULT_TAB: ProgressTabId = 'map';

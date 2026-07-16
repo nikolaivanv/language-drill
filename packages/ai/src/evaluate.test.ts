@@ -9,6 +9,7 @@ import type {
   TranslationContent,
   VocabRecallContent,
   SentenceConstructionContent,
+  ContextualParaphraseContent,
 } from "@language-drill/shared";
 import {
   buildUserPrompt,
@@ -283,7 +284,7 @@ describe("EVALUATION_SYSTEM_PROMPT", () => {
   it("bumps EVALUATION_SYSTEM_PROMPT_VERSION for the verification-discipline rules", () => {
     // `.1` suffix: main's evaluate@2026-07-05 (PR #523 optional-elements rule)
     // is a different prompt body — same-day bumps must not share a cohort tag.
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-07-05.1");
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-07-16");
   });
 });
 
@@ -958,6 +959,29 @@ describe("buildUserPrompt — sentence construction", () => {
     expect(msg).toContain("neutral");
     expect(msg).toMatch(/do NOT require a match/i);
     expect(msg).toContain(content.modelAnswers[0]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buildUserPrompt — contextual paraphrase
+// ---------------------------------------------------------------------------
+
+describe("buildUserPrompt — contextual paraphrase", () => {
+  const content: ContextualParaphraseContent = {
+    type: ExerciseType.CONTEXTUAL_PARAPHRASE,
+    instructions: "Rewrite.",
+    sourceText: "Me gusta el café.",
+    constraintKind: "avoid",
+    bannedTerms: ["gustar"],
+    constraintLabel: "Say this without «gustar».",
+    referenceParaphrases: ["Disfruto del café."],
+  };
+
+  it("renders a contextual_paraphrase exercise with the constraint + reference paraphrases", () => {
+    const prompt = buildUserPrompt(content, "Adoro el café.", Language.ES, CefrLevel.B1);
+    expect(prompt).toMatch(/Me gusta el café/);
+    expect(prompt).toMatch(/gustar/);
+    expect(prompt).toMatch(/Adoro el café/);
   });
 });
 

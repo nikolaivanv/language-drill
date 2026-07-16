@@ -136,13 +136,30 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * past/evidential copula (hastaydım), focus clitics dA/bile, -lI/-sIz, enumerator
  * tane; suppletive ol-, olarak. Bump enumerates the new cells + clears
  * suppression. See docs/superpowers/specs/2026-07-10-tr-audit-gap-fills-design.md.
- * 2026-07-11: TR B2 enabled — 19 grammar points from Yedi İklim B2 (Units 1–8),
+ * 2026-07-10a: adds the `kind: 'paraphrase'` umbrella (`tr-b1-paraphrase`) that
+ * owns the new contextual-paraphrase generation cell; the bump enumerates it on
+ * the next scheduler tick.
+ * 2026-07-16a: clears low-yield suppression on the A1 vocab cells (home-objects
+ * approved 2/6 on 2026-07-16; transport-places 3/8 with 3 ambiguous flags)
+ * after the vocab_recall near-synonym rule in `generate@2026-07-16` /
+ * `validate@2026-07-16`: definitions that equally fit istasyon/gar or
+ * alışveriş merkezi/mağaza can now enumerate the alternates in the new
+ * vocab `acceptableAnswers` content field instead of flagging ambiguous.
+ * 2026-07-16b: 5 new points from the G&K book-coverage triage (clock time,
+ * adversative connectors, abstract postpositions, -DIğI için reason clauses,
+ * "when" converbs) + 63 fold widenings across 38 points; see
+ * docs/analysis/tr-gk-book-coverage-audit-2026-07-16.md.
+ * 2026-07-17: TR B2 enabled — 17 grammar points from Yedi İklim B2 (Units 1–8),
  * grouped by function and deduped vs A1–B1, plus two G&K reverse-audit additions
- * (-DIr generalizing, "as if" -mIş gibi). Grammar-only (no B2 vocab/dictation/
- * free-writing). Bump enumerates the new B2 cells + clears any suppression. See
+ * (-DIr generalizing, "as if" -mIş gibi). Two points from the original 19 were
+ * dropped as already taught at B1 by the 2026-07-16b book-coverage cycle
+ * (temporal-when → tr-b1-when-converbs, causal-subordinate →
+ * tr-b1-reason-digi-icin) and two re-scoped around it (instead-of,
+ * duration-throughout). Grammar-only (no B2 vocab/dictation/free-writing).
+ * Bump enumerates the new B2 cells + clears any suppression. See
  * docs/superpowers/specs/2026-07-07-tr-b2-curriculum-design.md.
  */
-export const CURRICULUM_VERSION_TR = '2026-07-11';
+export const CURRICULUM_VERSION_TR = '2026-07-17';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -295,6 +312,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Öğrenciler çalışkanlar.', // 3pl, human subject → optional -lAr — the students are hardworking
       'Ben hastayım.', // 1sg after a vowel-final stem → buffer -y-: hasta + -yım (I am ill)
       'Çok iyiyiz.', // 1pl after a vowel-final stem → buffer -y-: iyi + -yiz (we are very well)
+      'Kim o? — Benim!', // pronoun predicate complement — the suffix agrees with the pronoun, not the subject: "It's me" (not *Ayşe ben)
     ],
     examplesNegative: [
       '*Ben öğretmen.', // dropped the obligatory 1sg -(y)Im
@@ -315,7 +333,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Plural suffix -lAr',
     description:
-      'Plural -lar/-ler attaches by vowel harmony (kitaplar, evler). It is not added after a numeral or quantifiers like çok/her/birkaç, which already imply number (üç kitap, çok ev).',
+      'Plural -lar/-ler attaches by vowel harmony (kitaplar, evler). It is not added after a numeral or quantifiers like çok/her/birkaç, which already imply number (üç kitap, çok ev). These quantified subjects keep the predicate singular too: Birçok kişi çocukluğunu düşünmez, not *düşünmezler.',
     cefrLevel: A1,
     language: TR,
     examplesPositive: [
@@ -323,6 +341,8 @@ const trCurriculum: readonly GrammarPoint[] = [
       'üç kitap (three books)',
       'evler (houses — front-vowel -ler after e)',
       'çok kitap (a lot of books — singular head after çok)',
+      "Ahmet'ler gelmedi. (Ahmet and his family/group didn't come — -lAr on a name means the household; kin terms take the possessive BEFORE plural: ablamlar.)",
+      'kırk yaşlarında (about forty — on time/place words -lAr gives approximation: buralarda = around here)',
     ],
     examplesNegative: [
       '*üç kitaplar',
@@ -351,6 +371,8 @@ const trCurriculum: readonly GrammarPoint[] = [
       'evde (at home)',
       'sokakta (on the street)',
       'Ali işte. (Ali is at work — voiceless ş, so -te.)',
+      'dört yaşında bir çocuk (a four-year-old child — a locative phrase can modify an indefinite noun, typically for age/size/style)',
+      'haftada iki kez (twice a week — quantified frequency puts the locative on the time unit: ayda bir = once a month)',
     ],
     examplesNegative: [
       '*sokakda',
@@ -409,7 +431,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Verbal negation -mA',
     description:
-      'Verbal negation -ma/-me between stem and tense. Before -(I)yor it fuses as -mIyor with the vowel raised and harmonised: gel- → gelmiyor, oku- → okumuyor.',
+      'Verbal negation -ma/-me between stem and tense. Before -(I)yor it fuses as -mIyor with the vowel raised and harmonised: gel- → gelmiyor, oku- → okumuyor. Some time adverbs shift sense with a negative predicate: artık = "no longer" (Artık evimiz yok), daha/henüz = "not yet" (Daha hazır değilim), bir daha = "(n)ever again" (Bir daha gelmem).',
     cefrLevel: A1,
     language: TR,
     examplesPositive: [
@@ -450,12 +472,14 @@ const trCurriculum: readonly GrammarPoint[] = [
     examplesNegative: [
       '*Dün eve gitdim.',
       '*Filmi izledisin. (wrong person ending — -DI uses the group-1 endings: izledin, not izledisin.)',
+      '*Acıkıyorum. (wrong for "I\'m hungry now" — entry-into-state verbs express a current state with -DI: "Acıktım".)',
     ],
     commonErrors: [
       'Forgetting consonant assimilation (-d → -t after voiceless stems).',
       'Confusing -DI (witnessed) with the -mIş evidential past.',
       'Using the present/aorist (group-2) personal endings on -DI: *gittisin instead of gittin — -DI takes the group-1 set (-m, -n, -k, -nIz).',
       'Confusing the verbal past -DI (geldim) with the past copula -(y)DI on nominal / adjectival predicates (hastaydım, evdeydik).',
+      'Using -(I)yor for a current state with entry-into-state verbs — the state is expressed with -DI: Acıktım = "I\'m hungry", Susadım = "I\'m thirsty", Yoruldum = "I\'m tired" (not *acıkıyorum); posture verbs split event/state the same way (oturdu "sat down" vs oturuyordu "was sitting").',
     ],
     prerequisiteKeys: ['tr-a1-vowel-harmony'],
   },
@@ -507,11 +531,13 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Okuyun! (Read! — vowel stem + -yun)',
       'Gelme! (Don\'t come! — 2sg negative, stem + -mA)',
       'Burada bekleyin. (Wait here. — 2pl/formal, vowel stem + -y- + -in)',
+      'Sakın unutma! (Mind you don\'t forget! — the warning adverb sakın reinforces a negative imperative/optative and must co-occur with -mA: Sakın geç kalmayalım!)',
     ],
     examplesNegative: [
       '*Gele! (wrong — 2sg imperative is the bare stem "gel", not "gele")',
       '*Gel yok. (wrong — "don\'t come" is not formed with yok; the negative imperative is stem + -mA: "Gelme!")',
       '*Gelün! (wrong — -In harmonises to the stem vowel; after "gel" it is -in: "Gelin!")',
+      '*Sakın geç kal! (wrong — sakın requires a negative verb in -mA: "Sakın geç kalma!")',
     ],
     commonErrors: [
       'Adding the -y- buffer to consonant-final stems (*gelyin instead of gelin).',
@@ -536,6 +562,9 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Nerede oturuyorsun? (Where do you live?)',
       'Dün sinemaya gittin mi? (Did you go to the cinema yesterday? — past: the -n ending is on the verb, mı is bare.)',
       'Evde süt var mı? (Is there milk at home? — yes/no question on var.)',
+      'Çay mı kahve mi istersin? (Do you want tea or coffee? — alternative questions repeat mI after each option, optionally joined by yoksa: Çay mı yoksa kahve mi?)',
+      'Ankara\'ya mı gidiyorsun? (Is it ANKARA you\'re going to? — mI attaches directly to a focused non-predicate constituent, which moves before the verb.)',
+      'Acaba yarın yağmur yağacak mı? (I wonder if it will rain tomorrow — invariable acaba adds an "I wonder" tone to any question, usually sentence-initially or -finally.)',
     ],
     examplesNegative: [
       '*Sen öğrencisin mi? (wrong — the person ending attaches to mI, not the predicate: "Sen öğrenci misin?")',
@@ -567,6 +596,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Bu çay değil. (This is not tea.)',
       'Evde değilim. (I am not at home.)',
       'Bu senin telefonun, değil mi? (This is your phone, isn\'t it? — değil mi = tag question.)',
+      'Elma değil, armut yiyorum. (I\'m eating pears, not apples — değil also negates a single constituent contrastively, replacing a repeated predicate: Büyük değil, küçük bir elma istemiştim.)',
     ],
     examplesNegative: [
       '*Ben öğretmen yokum. (wrong — nominal predicates are negated with "değil", not "yok": "öğretmen değilim")',
@@ -614,7 +644,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Accusative -(y)I for definite objects',
     description:
-      'Definite direct objects take accusative -(y)I. Indefinite ones (bir kitap, or a bare noun right before the verb) stay unmarked; proper names and pronouns are inherently definite and take it.',
+      'Definite direct objects take accusative -(y)I. Indefinite ones (bir kitap, or a bare noun right before the verb) stay unmarked; proper names and pronouns are inherently definite and take it. A specific indefinite may optionally take -(y)I too: bir kitap arıyorum (any book) vs bir kitabı arıyorum (a particular book in mind).',
     cefrLevel: A1,
     language: TR,
     examplesPositive: [
@@ -627,11 +657,15 @@ const trCurriculum: readonly GrammarPoint[] = [
     examplesNegative: [
       '*Kitap okudum, çok beğendim. (when "the book" is meant)',
       "*Ali gördüm. (proper-name object is inherently definite → \"Ali'yi gördüm\")",
+      '*Ali doktorlar sevmez. (wrong — a plural generic object takes the accusative: "Ali doktorları sevmez".)',
+      '*Kitap dün okudum. (wrong — an unmarked object stays right before the verb: "Dün kitap okudum" or "Kitabı dün okudum".)',
     ],
     commonErrors: [
       'Marking every direct object with -(y)I regardless of definiteness.',
       'Failing to use -y- as a buffer consonant after a vowel-final stem.',
       "Omitting accusative on inherently-definite objects — proper names and pronouns (*Ali gördüm / *sen seviyorum → Ali'yi gördüm / seni seviyorum).",
+      'Leaving a plural generic object unmarked: a bare singular generic stays unmarked (Sen çocuk sevmezsin), but a plural generic object must take the accusative (Ali doktorları sevmez, not *doktorlar sevmez).',
+      'Moving a non-case-marked object away from the verb — it must stay immediately preverbal or take the accusative (*kitap dün okudum → dün kitap okudum or kitabı dün okudum).',
     ],
     prerequisiteKeys: ['tr-a1-vowel-harmony'],
   },
@@ -644,7 +678,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Ablative -DAn and dative -(y)A',
     description:
-      'Ablative -dan/-den/-tan/-ten ("from") and dative -a/-e ("to/for"); both harmonise and the dative buffers with -y- after vowels.',
+      'Ablative -dan/-den/-tan/-ten ("from") and dative -a/-e ("to/for"); both harmonise and the dative buffers with -y- after vowels. Many verbs govern a fixed case: dative with inan-, güven-, bin-, yardım et- (bana inan, otobüse bindim); ablative with kork-, hoşlan-, nefret et-, bık- (köpekten korkuyorum).',
     cefrLevel: A1,
     language: TR,
     examplesPositive: [
@@ -652,15 +686,18 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Ankara\'ya gidiyorum.',
       'Anneme çiçek aldım. (I bought flowers for my mother — dative -e marks the recipient.)',
       'Uçaktan indik. (We got off the plane — ablative -tan, voiceless k forces -t-.)',
+      'tahtadan bir masa (a table made of wood — the ablative also marks material: altından bir yüzük = a ring of gold)',
     ],
     examplesNegative: [
       '*Ankara gidiyorum.',
       '*Kitapdan bir sayfa okudum. (wrong — after voiceless p the ablative is -tan/-ten: "Kitaptan bir sayfa okudum".)',
+      '*Seni inanıyorum. (wrong — inan- governs the dative: "Sana inanıyorum".)',
     ],
     commonErrors: [
       'Dropping the dative case on the goal of motion.',
       'Confusing ablative -DAn with locative -DA.',
       'Writing the ablative as -dan/-den after a voiceless consonant (p, ç, t, k, s, ş, h, f) instead of assimilating to -tan/-ten: *kitapdan → kitaptan.',
+      'Calquing English transitives with the accusative on fixed-case verbs (*köpeği korkuyorum, *seni inanıyorum instead of köpekten korkuyorum, sana inanıyorum).',
     ],
     prerequisiteKeys: ['tr-a1-vowel-harmony', 'tr-a1-locative'],
   },
@@ -677,6 +714,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Türkiye\'nin başkenti',
       'Evin kapısı açık. (The door of the house is open — buffer -n- in the genitive, -s- in the 3sg possessive.)',
       'Onun bir kedisi var. (He/She has a cat — the possessive on the head is obligatory in var sentences.)',
+      'dergilerin hepsi (all of the magazines — partitives use the same construction: paranın yarısı = half of the money, öğrencilerin çoğu = most of the students)',
     ],
     examplesNegative: [
       '*öğretmen kitabı (when "the teacher\'s book" is meant)',
@@ -704,6 +742,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Burada bekleyelim. (Let us wait here.)',
       'Bu kitaplar çok pahalı. (These books are very expensive — the determiner stays "bu"; plural is on the noun.)',
       'Bunu sevdim. (I liked this one — pronoun "bu" + accusative with the -n- buffer.)',
+      'Aşağısı çok dağınık. (It\'s very untidy downstairs — the burası/orası pattern extends to directional adverbs: içerisi, dışarısı, aşağısı, yukarısı.)',
     ],
     examplesNegative: [
       '*Bu uzak. (when meaning "this place is far" — "bu" modifies a noun; the noun for "this place" is "burası": "Burası uzak.")',
@@ -741,6 +780,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Forgetting the irregular -n- buffer before case suffixes in 3rd person: onu, ona, onun, onda, ondan (not *ou, *oa).',
       'Regularising the irregular dative of ben/sen: writing *bene / *sene instead of bana / sana.',
       'Using the regular genitive -in on 1st-person pronouns (*benin, *bizin) instead of the irregular -Im forms benim, bizim.',
+      'Overusing overt subject pronouns English-style: person marking on the predicate already identifies the subject, so neutral statements drop the pronoun (Geliyorum, not Ben geliyorum) — also across sentences once the referent is clear (Bugün Ayşe\'yi gördüm. Sana selam söyledi. — no "O" needed); overt ben/sen etc. signals contrast, focus or a new topic.',
     ],
   },
   {
@@ -763,6 +803,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       '*yüz ve yirmi üç. (wrong — compound numbers juxtapose without "ve": "yüz yirmi üç")',
       '*ikiinci (wrong — the suffix\'s initial vowel drops after a vowel-final stem → ikinci)',
       '*dörtüncü (wrong — final t softens to d before the vowel suffix → dördüncü)',
+      '*bir genç adam (for a neutral "a young man" — the article bir follows the adjective: "genç bir adam")',
     ],
     commonErrors: [
       'Inserting "ve" between parts of a compound number ("yüz ve yirmi üç" instead of "yüz yirmi üç").',
@@ -770,6 +811,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Pluralising the noun after a numeral ("üç kitaplar" — see tr-a1-plural-suffix).',
       'Doubling the vowel after a vowel-final stem (*ikiinci, *altııncı) — the suffix\'s initial (I) drops here: ikinci, altıncı.',
       'Failing to soften final t→d in dört before the ordinal suffix (*dörtüncü instead of dördüncü).',
+      'Defaulting to bir + adjective + noun order for a neutral indefinite (*bir genç adam): as the article, bir follows the adjective (genç bir adam, açık bir pencere); pre-adjective bir reads as the numeral "one".',
     ],
     prerequisiteKeys: ['tr-a1-vowel-harmony'],
     selfRevealingElicitation: 'digit-form',
@@ -859,6 +901,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Akşamdan sonra yağmur yağdı. (After evening it rained.)',
       'Benden önce geldi. (He arrived before me — pronoun + ablative: ben → benden.)',
       'Beş dakika önce çıktı. (She left five minutes ago — "X önce" = "X ago".)',
+      'Önce duş aldım, sonra kahvaltı ettim. (First I showered, then I had breakfast — bare önce/sonra sequence whole sentences with no noun.)',
     ],
     examplesNegative: [
       '*Yemek sonra çay içeriz. (wrong — önce / sonra need the noun in the ablative: "yemekten sonra")',
@@ -921,6 +964,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Omitting -ki when a case-marked phrase modifies a noun ("masada kitap" instead of "masadaki kitap").',
       '-ki does not take normal vowel harmony ("evdeki", "masadaki", never *evdekı / *masadekı). The only exception is after dün/gün, where it becomes -kü (dünkü, bugünkü).',
+      'Placing a determiner before the -ki phrase when it should modify the head noun: öbür gazetedeki resim = "the picture in the OTHER paper"; for "the other picture in the paper" the determiner follows: gazetedeki öbür resim.',
     ],
     prerequisiteKeys: ['tr-a1-locative'],
   },
@@ -963,7 +1007,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: '-DEn beri / -DIr (since / for)',
     description:
-      'Duration up to now/then. -DEn beri = "since" a point AND "for" a span (sabahtan beri; üç günden beri). -DIr = "for" a span, on the period noun (iki saattir). Predicate stays ongoing (-iyor).',
+      'Duration up to now/then. -DEn beri = "since" a point AND "for" a span (sabahtan beri; üç günden beri). -DIr = "for" a span, on the period noun (iki saattir). Predicate stays ongoing (-iyor). A completed duration or a distance is a bare noun phrase (Dün iki saat bekledim; Beş kilometre yürüdük) — -DIr / -DEn beri only for spans still continuing.',
     cefrLevel: A1,
     language: TR,
     examplesPositive: [
@@ -1017,6 +1061,38 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Assuming daha is obligatory: when an ablative standard is present, daha is often dropped ("ondan ucuz" = cheaper than that).',
     ],
     prerequisiteKeys: ['tr-a1-ablative-dative'],
+  },
+  // G&K §16.4.1.1 (location in time: clock time, days, dates). Added by the
+  // 2026-07-16 book-coverage triage — the whole time-telling system had no
+  // owning point (the ES ledger pass surfaced the same gap → es-a1-telling-time).
+  // No sentenceConstructionSuitable: multi-frame (locative vs geçe/kala vs
+  // caseless days), so a single-construction prompt would be ambiguous.
+  {
+    key: 'tr-a1-clock-time-dates',
+    kind: 'grammar',
+    name: 'Clock time and dates (saat üçte, ikiyi beş geçe)',
+    description:
+      'Telling time and dating events: locative on the hour (saat üçte, on buçukta) and on years/months (1995\'te, şubatta); past the hour = accusative + geçe (ikiyi beş geçe), to the hour = dative + kala (dörde yirmi kala), çeyrek for quarters; days of the week stay caseless (çarşamba günü gidiyorum). saat is optional and precedes the numeral.',
+    cefrLevel: A1,
+    language: TR,
+    examplesPositive: [
+      'Toplantı saat altıda başlıyor. (The meeting starts at six o\'clock — locative on the hour.)',
+      'Film on buçukta bitti. (The film ended at half past ten — buçuk carries the locative.)',
+      'İkiyi beş geçe geldi. (He came at five past two — accusative + geçe.)',
+      'Dörde yirmi kala çıktık. (We left at twenty to four — dative + kala.)',
+      'Çarşamba günü Konya\'ya gidiyorum. (I\'m going to Konya on Wednesday — no case on the day.)',
+      '1995\'te doğdum. (I was born in 1995 — locative on the year.)',
+    ],
+    examplesNegative: [
+      '*Çarşambada geliyorum. (wrong — days of the week take no locative: "çarşamba (günü) geliyorum")',
+      '*iki beş geçe (wrong — the hour takes the accusative before geçe: "ikiyi beş geçe")',
+    ],
+    commonErrors: [
+      'Adding the locative to days of the week ("çarşambada") — days stay caseless (çarşamba günü).',
+      'Dropping the accusative before geçe or the dative before kala ("iki beş geçe" → "ikiyi beş geçe"; "dört yirmi kala" → "dörde yirmi kala").',
+      'Placing saat after the numeral ("üç saatte" = "in three hours", a duration — clock time is "saat üçte").',
+    ],
+    prerequisiteKeys: ['tr-a1-locative', 'tr-a1-numbers-ordinals'],
   },
 
   // ---------------------------------------------------------------------------
@@ -1152,7 +1228,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Indefinite noun compound (belirtisiz isim tamlaması)',
     description:
-      'Indefinite N+N compound: only the HEAD takes 3sg -(s)I, first noun bare — otobüs bileti, şehir merkezi (vs definite şehrin merkezi). Case stacks after -(s)I via the -n- buffer: merkezine.',
+      "Indefinite N+N compound: only the HEAD takes 3sg -(s)I, first noun bare — otobüs bileti, şehir merkezi (vs definite şehrin merkezi). Case stacks after -(s)I via the -n- buffer: merkezine. Nested compounds keep each head's -(s)I (İngiliz Edebiyatı Bölümü); a compound serving as head takes -(s)I only once (Polonya gölge tiyatrosu, not *tiyatrosusu).",
     cefrLevel: A2,
     language: TR,
     examplesPositive: [
@@ -1162,18 +1238,21 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Türkçe dersi (a Turkish lesson)',
       'Dün şehir merkezine gittim. (I went to the city centre yesterday — case on the head: merkez-i-n-e.)',
       'Otobüs biletini kaybettim. (I lost the bus ticket — accusative on the head: bilet-i-n-i.)',
+      'göz hastalıkları hastanesi (an eye-diseases hospital — a compound modifying another compound; each head keeps its own -(s)I)',
     ],
     examplesNegative: [
       '*şehrin merkezi for the kind "city centre" (that is "the centre OF THE city" — a definite/genitive compound; the bare kind is "şehir merkezi")',
       '*otobüsün bileti for a generic "bus ticket" (genitive marks one specific bus\'s ticket; the kind is "otobüs bileti")',
       '*şehir merkez (wrong — the head must take -(s)I: şehir merkezi)',
       '*şehir merkeze (wrong — case stacks AFTER -(s)I with the -n- buffer: şehir merkezine)',
+      '*masa güzel örtüsü (wrong — nothing can intervene between the members; modifiers precede the whole compound: güzel bir masa örtüsü)',
     ],
     commonErrors: [
       'Marking the first noun with the genitive when no specific possessor is meant: "otobüs bileti" (a kind of ticket), not "*otobüsün bileti" (one specific bus\'s ticket). Genitive ⇒ definite compound (şehrin merkezi); bare first noun ⇒ indefinite compound (şehir merkezi).',
       'Dropping the -(s)I marker on the head (*şehir merkez → şehir merkezi).',
       'Forgetting the -s- buffer when the head ends in a vowel (el çanta-sı, not *el çantaı).',
       'Adding case directly to the head without the -n- buffer (*merkeze → merkezine): the compound -(s)I behaves like a 3sg possessive, so case takes -n- (merkez-i-n-e).',
+      "Inserting an adjective or determiner between the compound's members (*masa güzel örtüsü) — modifiers precede the WHOLE compound: güzel bir masa örtüsü, ilginç çocuk kitapları.",
     ],
     prerequisiteKeys: [
       'tr-a1-possessive-suffixes',
@@ -1254,6 +1333,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Biraz dinlenelim mi? (Shall we rest a bit? — 1pl consultative.)',
       'Başlayayım mı? (Shall I begin? — vowel stem başla- takes the -y- buffer: başla-y-ayım.)',
       "Geç kalmayalım. (Let's not be late — negative 1pl.)",
+      "Bakalım kim kazanacak. (Let's see who will win — the frozen 1pl optative bakalım frames an anticipated question without seeking an answer.)",
     ],
     examplesNegative: [
       '*Ben gidelim. (wrong person — 1sg is "gideyim"; "gidelim" is 1pl "let\'s go".)',
@@ -1284,19 +1364,22 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Herkes geldi. (Everyone came — herkes takes a SINGULAR verb, not *geldiler.)',
       'Kimse gelmedi. (No one came — the negative verb is obligatory; literally "anyone came-not".)',
       'Hiçbir şey görmedim. (I saw nothing / I did not see anything.)',
-      'Hiçbirini beğenmedim. (I did not like any of them — case + -n- buffer: hiçbir-i-n-i.)',
+      'Bu ilaçlardan hiçbirini beğenmedim. (I did not like any of these medicines — case + -n- buffer: hiçbir-i-n-i; an ablative-marked set forms the partitive: arkadaşlarımdan biri "one of my friends". As direct object the -(s)I head obligatorily takes the accusative.)',
       'Herkese yardım ettim. (I helped everyone — dative on herkes.)',
+      'Çamaşır makinesi bozuldu, yenisini aldık. (The washing machine broke down; we bought a new one — the same -(s)I pronominalises adjectives, numerals and determiners: yenisi, eskisi, ikisi (de), hangisi, başkası.)',
     ],
     examplesNegative: [
       '*Kimse geldi. for "nobody came" (wrong — Turkish requires a negative verb: "Kimse gelmedi".)',
       '*Herkes geldiler. (wrong — herkes is grammatically singular: "Herkes geldi".)',
       '*Hiçbir şey gördüm. (wrong — needs the negative verb: "Hiçbir şey görmedim".)',
+      '*Karısından asla özür diler. (wrong — asla is a negative-polarity item like kimse: it requires a negative verb → "Karısından asla özür dilemez".)',
     ],
     commonErrors: [
       'Calquing English "nobody / nothing came" with a positive verb (*Kimse geldi, *Hiçbir şey oldu) — kimse / hiçbiri / hiçbir / hiçbir şey demand a negative verb (-mA), değil, or yok: Kimse gelmedi, Hiçbir şey yok.',
       'Giving herkes a plural verb (*Herkes geldiler) — it always takes singular agreement (Herkes geldi).',
       'Dropping case / the -n- buffer on these pronouns: kimseyi, kimseye, hiçbirine, hiçbirini, hepsine, hepsini (not *hiçbiriye, *hepsiye).',
       'Confusing biri "someone / one of them" with her biri "each one" and hiçbiri "none of them".',
+      'Forgetting that the adverb asla "never" obeys the same negative-polarity rule — it needs -mA, değil or yok: Karısından asla özür dilemez ("he never apologizes"), not *asla özür diler.',
     ],
     prerequisiteKeys: ['tr-a1-negation', 'tr-a1-var-yok', 'tr-a1-personal-pronouns'],
   },
@@ -1466,12 +1549,13 @@ const trCurriculum: readonly GrammarPoint[] = [
       '*Eve geldim ve yemek yedim. (overuses finite "ve" coordination where a converb is more idiomatic: "Eve gelip yemek yedim.")',
       '*Eve geldip yemek yedim. (wrong — the converb verb takes no tense and stays bare: "Eve gelip yemek yedim".)',
       '*Annem yapıp ben kurdum. (wrong — -(y)Ip needs the same subject for both verbs → use finite coordination: "Annem yaptı ve ben kurdum".)',
+      '*Onunla hiçbir zaman görüşmeyip konuşamadık. (wrong — in a -(y)Ip chain the final negative scopes over the whole chain: görüşüp konuşamadık.)',
     ],
     commonErrors: [
       'Defaulting to "ve" coordination instead of using converbs to link clauses.',
       'Confusing -(y)Ip (sequence: did X, then Y) with -(y)ArAk (manner: did Y by/while doing X).',
       'Treating -mAdAn ("without doing") as ordinary verbal negation rather than an adverbial converb.',
-      'Putting tense/person on the converb verb (*geldip) — the converb stays bare; only the final main verb is inflected for the whole chain.',
+      'Putting tense/person on the converb verb (*geldip) — the converb stays bare; only the final main verb is inflected for the whole chain, including negation: Onunla hiçbir zaman görüşüp konuşamadık ("we never managed to meet and talk"), not *görüşmeyip.',
       'Using -(y)Ip / -(y)ArAk when the two clauses have different subjects — these converbs normally require the same subject; use finite coordination instead.',
     ],
     prerequisiteKeys: ['tr-a1-present-continuous'],
@@ -1515,11 +1599,12 @@ const trCurriculum: readonly GrammarPoint[] = [
     language: TR,
     examplesPositive: [
       'Okumak çok eğlenceli. (Reading is very fun — -mAk.)',
-      'Yüzmek istiyorum. (I want to swim — -mAk as object.)',
+      'Yüzmek istiyorum. (I want to swim — -mAk as object; also before yerine: ders çalışmak yerine televizyon izledi "he watched TV instead of studying".)',
       'Onun gelmesi zor. (His coming is difficult — -mA with possessive.)',
       'Bu yürüyüş güzeldi. (This walk was nice — -Iş lexicalised.)',
       'Gelmek istiyorum. (I want to come — same subject, so plain -mAk.)',
       'Onun gelmesini istiyorum. (I want him to come — different subject, so -mA + possessive + accusative.)',
+      "Kardeşimin gelme ihtimali var. (There's a chance my brother will come — a -mA verbal noun modifying a -(s)I compound head; -mA is preferred over -mAk in this slot.)",
     ],
     examplesNegative: [
       '*Onun gelme zor. (wrong — -mA action nouns take a possessive suffix when used as an embedded subject: "Onun gelmesi zor".)',
@@ -1569,7 +1654,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Similarity and equality (gibi, kadar)',
     description:
-      'gibi ("like") and kadar ("as…as") follow the compared noun (aslan gibi); pronouns take the genitive before both (benim gibi, senin kadar). kadar also marks approximate quantity.',
+      'gibi ("like") and kadar ("as…as") follow the compared noun (aslan gibi); pronouns take the genitive before both (benim gibi, senin kadar). kadar also marks approximate quantity. After a finite clause, gibi + gel- with a dative experiencer = "seem (to someone)": Bana haklısın gibi geliyor; after -mIş, gibi makes "as if" clauses, optionally with sanki: (Sanki) hayalet görmüş gibi sapsarı oldu.',
     cefrLevel: A2,
     language: TR,
     examplesPositive: [
@@ -1578,6 +1663,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Senin kadar uzun. (As tall as you.)',
       'Bir saat kadar bekledim. (I waited about an hour.)',
       'Benim kadar çalışmıyor. (He doesn\'t work as much as I do — kadar attracts the genitive on ben, like gibi.)',
+      'O kadar yorgundum ki hemen uyudum. (I was so tired that I fell asleep at once — o kadar/öyle … ki expresses result, "so … that".)',
     ],
     examplesNegative: [
       '*Ben gibi düşünüyor. (wrong — with a pronoun, gibi requires the genitive: "benim gibi", not "ben gibi".)',
@@ -1622,7 +1708,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Causal connectors (çünkü, bu yüzden, bu sebeple)',
     description:
-      'Causal connectors: çünkü "because" (cause follows; informal — can also sit at the END of the clause), bu yüzden / bu sebeple "for that reason, so" (consequence follows the connector).',
+      'Causal connectors: çünkü "because" (cause follows; informal — can also sit at the END of the clause), bu yüzden / bu sebeple "for that reason, so" (consequence follows the connector). madem(ki) "since / seeing that" fronts a reason both speakers already know, with a question or suggestion following: Madem yorgunsun, evde kal.',
     cefrLevel: A2,
     language: TR,
     examplesPositive: [
@@ -1645,7 +1731,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Derivational -CA (manner adverbs, language names)',
     description:
-      "Derivational -CA (-ca/-ce/-ça/-çe, harmonised; -ç- after voiceless stems): manner adverbs (yavaşça), '-ish' forms (çocukça), and language names used adverbially (Türkçe = Turkish / in Turkish).",
+      "Derivational -CA (-ca/-ce/-ça/-çe, harmonised; -ç- after voiceless stems): manner adverbs (yavaşça), '-ish' forms (çocukça), and language names used adverbially (Türkçe = Turkish / in Turkish). Many simple adjectives also work bare as manner adverbs (güzel söyledi, zor yürüyor); derived/foreign adjectives instead need bir şekilde/biçimde or olarak (bilimsel olarak).",
     cefrLevel: A2,
     language: TR,
     examplesPositive: [
@@ -1672,7 +1758,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Reduplication intensifier (Pekiştirme)',
     description:
-      "Intensifier reduplication: prefix = stem's first consonant+vowel + fixed p/s/r/m (vowel-initial stems take p: apaçık), then stem: bembeyaz, kıpkırmızı, yepyeni. Consonant is lexical; no çok/en.",
+      "Intensifier reduplication: prefix = stem's first consonant+vowel + fixed p/s/r/m (vowel-initial stems take p: apaçık), then stem: bembeyaz, kıpkırmızı, yepyeni. Consonant is lexical; no çok/en. Distinct: FULL-word doubling makes adverbs/quantity phrases, not intensified adjectives — yavaş yavaş 'slowly', sık sık 'often', kapı kapı 'door to door', çeşit çeşit yemek 'all kinds of dishes'.",
     cefrLevel: A2,
     language: TR,
     examplesPositive: [
@@ -1708,6 +1794,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Tam çıkmak üzereydim. (I was just about to leave.)',
       'Geç kalmamak için erken çıktım. (I left early in order not to be late — negative purpose -mAmAk için.)',
       'Çocuğun anlaması için yavaş konuştum. (I spoke slowly so that the child would understand — different subject → -mAsI için.)',
+      "Kışın üşümeyelim diye kalorifer yaptırdık. (We had heating installed so we won't be cold in winter — colloquial finite purpose: optative + diye, informal alternative to -mAk için.)",
     ],
     examplesNegative: [
       '*Çalışırım için Almanya\'ya gitti. (wrong — purpose uses the infinitive: "çalışmak için", not a finite verb form.)',
@@ -1726,7 +1813,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Reported speech (diye + dolaylı anlatım)',
     description:
-      'Reported speech: direct quote + de- (dedi) or diye + reporting verb (sormak, söylemek). söyle- takes only integrated clauses: -DIğInI söyledi; reported command -mAsInI iste-/söyle-.',
+      'Reported speech: direct quote + de- (dedi) or diye + reporting verb (sormak, söylemek). söyle- takes only integrated clauses: -DIğInI söyledi; reported command -mAsInI iste-/söyle-. A quoted thought + diye before a non-reporting verb gives the reason, "thinking that": Yağmur yağacak diye şemsiye aldım.',
     cefrLevel: A2,
     language: TR,
     examplesPositive: [
@@ -1734,8 +1821,9 @@ const trCurriculum: readonly GrammarPoint[] = [
       '"Hayır" diye cevap verdim. (I answered, "No".)',
       'Geleceğini söyledi. (He said he would come — integrated form.)',
       'Gelmemi istedi. (He told me to come — reported imperative.)',
-      '"Çok yorgunum" dedi. (She said, "I\'m very tired." — dedi / de- is the everyday verb for quoting; no diye needed.)',
+      '"Çok yorgunum" dedi. (She said, "I\'m very tired." — dedi / de- is the everyday verb for quoting; no diye needed. de- may also precede the quote with ki: Suzan dedi ki: "Artık dayanamıyorum." — the ki-clause always follows the verb.)',
       'Annem gelmemi söyledi. (My mother told me to come — söyle- + -mA + possessive + accusative.)',
+      'Elif kalıp kalmayacağını söyledi mi? (Has Elif said whether or not she\'ll stay? — a reported yes/no clause doubles the verb with -(y)Ip + the negated -(y)AcAğInI/-DIğInI form.)',
     ],
     examplesNegative: [
       '*"Yarın gelir misin?" sordu. (wrong — diye is required to mark the reported clause: "\\"Yarın gelir misin?\\" diye sordu.")',
@@ -1776,15 +1864,19 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Küçük kız yanıma geldi. (The little girl came over to me — motion-to, dative -(y)A.)',
       'Kanepenin altından bir fare çıktı. (A mouse ran out from under the sofa — ablative -DAn.)',
       'Kalemi kitabın üstüne koy. (Put the pen on top of the book — motion-to, üstüne.)',
+      'Evle okul arasında bir park var. (There is a park between the house and the school — arasında conjoins its two complements with -(y)lA/ile; the possessive agrees with the second: seninle benim aramda.)',
+      "Can'ın arabası evin önünde. (Can's car is in front of the house — a locative-marked postpositional phrase can stand alone as the predicate.)",
     ],
     examplesNegative: [
       '*ev önünde (wrong — the complement takes the genitive: evin önünde)',
       '*masanın üstünde koy (wrong case — putting something onto needs the dative: masanın üstüne koy)',
+      '*iki saatin içinde (wrong — a non-specific/durational complement stays bare: iki saat içinde "within two hours")',
     ],
     commonErrors: [
       'Omitting the genitive on the complement (ev önünde → evin önünde).',
       'Dropping the -n- buffer / possessive on the relational noun (masanın üstde → üstünde).',
       'Using the locative where motion needs the dative/ablative (üstünde koy → üstüne koy).',
+      'Forcing the genitive onto non-specific, generic or metaphorical complements — these stay bare, with 3sg possessive on the postposition: iki saat içinde ("within two hours"), kardeşler arasında, ter içinde (not *iki saatin içinde).',
     ],
     prerequisiteKeys: ['tr-a1-genitive-possessive', 'tr-a1-ablative-dative'],
   },
@@ -1833,6 +1925,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Ayşe de Semra da geldi. (Both Ayşe and Semra came.)',
       'Çocuklar bile biliyor. (Even the children know.)',
       'O filmi gördüm bile. (I\'ve already seen that film — post-verbal bile.)',
+      '(Her) iki çocuk da uyumuş. (Both children had gone to sleep — dA after a numeral-modified noun phrase gives the definite "both/all" reading.)',
     ],
     examplesNegative: [
       '*evde [meaning "the house too"] (wrong — the additive is a separate word: ev de; evde is the locative "at the house")',
@@ -1852,7 +1945,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Adjective suffixes -lI "with" / -sIz "without"',
     description:
-      'Productive adjective-forming suffixes with 4-way harmony: -lI "with/having/characterized by" (şekerli, tuzlu, evli, dikkatli) and its antonym -sIz "without/lacking" (şekersiz, işsiz, sensiz, arabasız). Stem-final devoicing still applies (kitap → kitaplı).',
+      'Productive adjective-forming suffixes with 4-way harmony: -lI "with/having/characterized by" (şekerli, tuzlu, evli, dikkatli) and its antonym -sIz "without/lacking" (şekersiz, işsiz, sensiz, arabasız). Stem-final devoicing still applies (kitap → kitaplı). Sibling -lIk on numeral+noun makes measure/"for" adjectivals: beş metrelik bir kablo (a five-metre cable), iki kişilik masa (a table for two).',
     cefrLevel: A2,
     language: TR,
     examplesPositive: [
@@ -1878,13 +1971,14 @@ const trCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Enumerator tane (üç tane elma)',
     description:
-      'The general counter tane for discrete non-human nouns, between a numeral (or kaç) and the noun: üç tane elma, kaç tane?, on tane tabak. The counted noun stays singular (no -lAr). Optional (yedi tane iskemle ~ yedi iskemle); combines with distributives (ikişer tane).',
+      'The general counter tane for discrete non-human nouns, between a numeral (or kaç) and the noun: üç tane elma, kaç tane?, on tane tabak. The counted noun stays singular (no -lAr). Optional (yedi tane iskemle ~ yedi iskemle); combines with distributives (ikişer tane). Mass nouns (su, müzik) reject numerals/kaç/birkaç unless a measure or type is meant (birkaç bira = bottles); biraz takes mass nouns (biraz su), not count nouns.',
     cefrLevel: A2,
     language: TR,
     examplesPositive: [
       'Marketten üç tane elma aldım. (I bought three apples from the shop.)',
       'Kaç tane kitap istiyorsun? (How many books do you want?)',
       'Masada on tane tabak var. (There are ten plates on the table.)',
+      'Bunlardan iki tane alayım. (Let me take two of these — ablative partitive with a tane/measure head: şu elmadan bir kilo "a kilo of those apples".)',
     ],
     examplesNegative: [
       '*üç tane elmalar (wrong — a noun after a numeral stays singular: üç tane elma)',
@@ -1896,6 +1990,34 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Wrong order (tane üç elma → üç tane elma).',
     ],
     prerequisiteKeys: ['tr-a1-numbers-ordinals'],
+  },
+  // G&K §28.3.4.1 (ama, fakat, ancak, yalnız 'but'). Added by the 2026-07-16
+  // book-coverage triage — the highest-frequency Turkish conjunction had no
+  // owning point (ama appeared only inside a free-writing sample sentence).
+  // Sibling of tr-a2-causal-connectors in shape and level.
+  {
+    key: 'tr-a2-adversative-connectors',
+    kind: 'grammar',
+    name: 'Adversative connectors (ama, fakat, ancak, yalnız)',
+    description:
+      'Adversative "but": ama and fakat are interchangeable and conjoin conflicting clauses (gezmek istiyor ama zamanı yok); discourse-connective ama can also close the clause in speech (Okuyamadım ama.). ancak and yalnız introduce a disadvantage or limitation and open their sentence; as plain adverbs the same words mean "only".',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: [
+      'Semra hep gezmek istiyor ama zamanı yok. (Semra always wants to travel, but she has no time.)',
+      'Sonbahar geldi fakat ağaçlar hâlâ yeşil. (Autumn is here, but the trees are still green.)',
+      'Kitabı hevesle aldım. Okuyamadım ama. (I bought the book eagerly. Haven\'t managed to read it, though — clause-final ama, informal.)',
+      'Çok iyi bir mimar. Ancak müşterilerini kaçırıyor. (He\'s a very good architect. But he loses his customers.)',
+      'Sıcak ama bunaltıcı olmayan bir hava. (Hot but not suffocating weather — ama between adjectives.)',
+    ],
+    examplesNegative: [
+      '*Geldi ama çünkü yorgundu. (wrong — ama marks contrast, çünkü marks cause; pick one: "Geldi ama yorgundu" or "Gelmedi çünkü yorgundu")',
+    ],
+    commonErrors: [
+      'Reaching for çünkü/bu yüzden where the relation is contrast, not cause — "but" is ama/fakat.',
+      'Treating ancak/yalnız as free variants of ama — they mainly introduce an inability, failure or disadvantage, and start the sentence.',
+      'Forgetting that only ama (not fakat) can sit at the very end of the clause in informal speech (Okuyamadım ama.).',
+    ],
   },
 
 
@@ -1921,7 +2043,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Open / real conditional -(I)rsA',
     description:
-      'Real future condition: aorist + -sA on the if-clause (gelirse, yağarsa, olursa), main clause aorist or -(y)AcAK. A genuine possibility — contrast hypothetical -sA / counterfactual -sAydI.',
+      'Real future condition: aorist + -sA on the if-clause (gelirse, yağarsa, olursa), main clause aorist or -(y)AcAK. A genuine possibility — contrast hypothetical -sA / counterfactual -sAydI. With nominal predicates ol- is optional: yorgun olursam ≈ yorgunsam, olmazsa ≈ değilse/yoksa; -mIş and -(I)yor likewise take -(y)sA directly (satılmışsa = satılmış olursa).',
     cefrLevel: B1,
     language: TR,
     examplesPositive: [
@@ -1930,6 +2052,8 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Acele edersek yetişiriz. (If we hurry we will make it.)',
       'Onu görürsen selam söyle. (If you see him, say hello — volitional main clause.)',
       'Beğenmezsen geri verebilirsin. (If you do not like it you can give it back — negative -mezse.)',
+      'Toplantı hâlâ sürüyor olursa beklerim. (If the meeting is still going on I will wait — -mIş/-(I)yor/-(y)AcAk + olursa layers relative tense onto the open condition: anneleri gelmemiş olursa = "if their mother hasn\'t come by then".)',
+      'Acele et, yoksa geç kalırsın. (Hurry up, or else you will be late — yoksa / aksi halde "otherwise" stands in for a negated repeat of the condition.)',
     ],
     examplesNegative: [
       '*Yağmur yağsa pikniğe gitmeyiz. (for a real possibility — hypothetical -sA reads as a wish/unlikely; the open conditional is "yağarsa".)',
@@ -1992,7 +2116,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Conditional & wish -sA / -sAydI / -(y)sA',
     description:
-      'Verbal -sA (wish/hypothetical), -sAydI (past counterfactual), and copular -(y)sA ("if it is", real condition). "Keşke" + -sA(ydI) marks wishes and regrets.',
+      'Verbal -sA (wish/hypothetical), -sAydI (past counterfactual), and copular -(y)sA ("if it is", real condition). -(y)sA also attaches to tensed verb forms (geldiyse, geliyorsa, gelecekse) and var/yok/değil for a condition knowable from context, often backing an inference or request (Meşgulsen rahatsız etmeyeyim). "Keşke" + -sA(ydI) marks wishes and regrets.',
     cefrLevel: B1,
     language: TR,
     examplesPositive: [
@@ -2000,6 +2124,9 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Vaktim olsaydı, gelirdim. (If I had had time, I would have come — counterfactual.)',
       'Hava güzelse yürüyelim. (If the weather is nice, let us walk — real condition, copular -(y)sA.)',
       'Param olsa, bir ev alırdım. (If I had money, I would buy a house.)',
+      'Bu konuda kime danışsam acaba? (I wonder who I should consult about this — a 1st-person -sA question is deliberative, usually with acaba.)',
+      'Üniversiteyi kazansaydı / kazanmış olsaydı, babası ona ev tutacaktı. (If he had got into university, his father would have rented him a flat — -mIş olsaydI is interchangeable with plain -sAydI.)',
+      'Çalışsa da/bile sınavı geçemez. (Even if he studies he cannot pass — -sA + dA/bile = concessive "even if"; doubled çalışsa da çalışmasa da = "whether he studies or not".)',
     ],
     examplesNegative: [
       '*Vaktim olsa, geldim. (wrong — counterfactual needs -sAydI + aorist-past main clause: olsaydı, gelirdim)',
@@ -2082,6 +2209,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Çocuğu uyuttum. (I put the child to sleep — uyu → uyut.)',
       'Suyu kaynattım. (I boiled the water — kayna → kaynat.)',
       'Onu güldürdün. (You made him laugh — gül → güldür.)',
+      'Gök gürültüsü hayvanları ürkütüyor. (The thunder frightens the animals — emotion-verb causatives promote the stimulus to subject; likewise korkut- "scare" and sevindir-: Bu haber beni çok sevindirdi.)',
     ],
     examplesNegative: [
       '*yaztır- (wrong allomorph — consonant-final yaz takes -DIr: yazdır-)',
@@ -2204,6 +2332,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Ben çocukken burası bir bahçeydi. (When I was a child, this was a garden.)',
       'O konuşurken herkes sustu. (While he was speaking, everyone fell silent.)',
       'Sen uyurken telefon çaldı. (The phone rang while you were sleeping.)',
+      'Herkes filme bayılırken ben sıkıldım. (While everyone adored the film, I was bored — aorist + -(y)ken can also contrast two situations, "while/whereas".)',
     ],
     examplesNegative: [
       '*Geldiyken ekmek aldım. (wrong — -ken attaches to the aorist/imperfective base, not -DI past: gelirken)',
@@ -2253,7 +2382,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Non-subject relative -DIK / -(y)AcAK + possessive',
     description:
-      'Object/oblique relatives: -DIK (non-future) and -(y)AcAK (prospective) + a possessive agreeing with the clause subject: okuduğum kitap, gideceğimiz şehir. Contrast subject relative -(y)An (A2).',
+      'Object/oblique relatives: -DIK (non-future) and -(y)AcAK (prospective) + a possessive agreeing with the clause subject: okuduğum kitap, gideceğimiz şehir. Contrast subject relative -(y)An (A2). Determiners and numerals follow the relative clause: Jale\'nin sevdiği iki yer ("the two places Jale likes"), not *iki Jale\'nin sevdiği yer.',
     cefrLevel: B1,
     language: TR,
     examplesPositive: [
@@ -2438,34 +2567,6 @@ const trCurriculum: readonly GrammarPoint[] = [
     ],
     prerequisiteKeys: ['tr-a2-mis-evidential', 'tr-b1-past-continuous-iyordu'],
   },
-  // G&K §26.3.16(i)(ii) (-(y)IncA, -DIğIndA / -DIğI zaman / -DIğI sırada "when"),
-  // §26.2.3(iv) (future reference keeps -DIK unless future-relative-to-main).
-  {
-    key: 'tr-b2-temporal-when',
-    clozeUnsuitable: true,
-    kind: 'grammar',
-    name: 'Temporal "when" -DIğI(ndA) / -AcAğI zaman, -(y)IncA',
-    description:
-      '"When / at the time that" clauses: -DIK/-AcAK + possessive + a time word — -DIğI(ndA) zaman/sırada, -AcAğI zaman/sırada — and the converb -(y)IncA. They foreground an ongoing main situation. Future still takes -DIK unless the clause is future relative to the main verb.',
-    cefrLevel: B2,
-    language: TR,
-    examplesPositive: [
-      'Uçaktan indiğimizde kar yağıyordu. (When we got off the plane it was snowing — -DIğIndA.)',
-      'Misafirler geldiği zaman onlara kahve ikram edeceğiz. (When the guests come we\'ll offer them coffee — future main, -DIK.)',
-      'Eve gelince beni ara. (Call me when you get home — -(y)IncA.)',
-      'Ben çıkacağım sırada elektrikler kesildi. (Just as I was about to leave, the power went out — -AcAğI sırada.)',
-    ],
-    examplesNegative: [
-      '*Yarın geleceğim zaman ararım (wrong — future reference still takes -DIK unless future-relative-to-main: geldiğim zaman)',
-      '*geldik zaman (wrong — -DIK needs a possessive agreeing with the subject: geldiğim zaman)',
-    ],
-    commonErrors: [
-      'Defaulting to -AcAğI zaman for any future "when" (geleceğim zaman) where -DIK is required (geldiğim zaman).',
-      'Dropping the possessive on -DIK/-AcAK (geldik zaman → geldiğim zaman).',
-      'Using -(y)IncA for an ongoing backdrop where -DIğIndA / -DIğI sırada is apt (sequential vs simultaneous).',
-    ],
-    prerequisiteKeys: ['tr-b1-participles-dik-acak'],
-  },
   // G&K §26.3.11 (-DIkçA proportionality), §26.3.16(iv) (-Ar…-mAz "as soon as"),
   // §26.3.16(viii) (-DIkçA "whenever").
   {
@@ -2494,58 +2595,34 @@ const trCurriculum: readonly GrammarPoint[] = [
     ],
     prerequisiteKeys: ['tr-a2-aorist'],
   },
-  // G&K §17.3.2 / §17.3.2.1 (boyunca, süresince on a noun), §26.3.16(ix)
-  // (-DIğI sürece "as long as", -DIK only).
+  // G&K §17.3.2 / §17.3.2.1 (süresince on a noun), §26.3.16(ix)
+  // (-DIğI sürece "as long as", -DIK only). Re-scoped 2026-07-17: bare
+  // boyunca is taught at B1 (tr-b1-abstract-postpositions, #587); this point
+  // owns the formal süresince and the verbal -DIğI sürece converb.
   {
     key: 'tr-b2-duration-throughout',
     clozeUnsuitable: true,
     kind: 'grammar',
-    name: 'Duration "throughout / as long as" (boyunca, süresince, -DIğI sürece)',
+    name: 'Duration "throughout / as long as" (süresince, -DIğI sürece)',
     description:
-      '"Throughout / as long as": boyunca and süresince are postpositions on a bare noun (yıl boyunca, konferans süresince); -DIğI sürece is a converb on a verb (yaşadığım sürece, -DIK only). boyunca stresses long duration.',
+      '"Throughout / as long as" beyond B1 boyunca: süresince is its formal twin on a bare noun (konferans süresince "throughout the lecture"); -DIğI sürece is the converb on a verb (yaşadığım sürece "as long as I live" — -DIK only, never -AcAK).',
     cefrLevel: B2,
     language: TR,
     examplesPositive: [
-      'Konferans boyunca fısıldaştılar. (They whispered throughout the lecture.)',
+      'Konferans süresince fısıldaştılar. (They whispered throughout the lecture.)',
       'Yokluğum süresince komşum kediye baktı. (During my absence my neighbour looked after the cat.)',
       'Ben yaşadığım sürece bu evi satmayacağım. (As long as I live I won\'t sell this house.)',
     ],
     examplesNegative: [
-      '*yıla boyunca (wrong — boyunca takes a bare noun, no case: yıl boyunca)',
+      '*yıla süresince (wrong — süresince takes a bare noun, no case: yıl süresince)',
       '*yaşayacağım sürece (wrong — sürece takes the -DIK participle, not -AcAK: yaşadığım sürece)',
     ],
     commonErrors: [
-      'Case-marking the complement of boyunca / süresince (yıla boyunca → yıl boyunca).',
-      'Using durational boyunca on a verb participle instead of -DIğI sürece (yaşadığım boyunca).',
+      'Case-marking the complement of süresince (yıla süresince → yıl süresince).',
+      'Using durational boyunca/süresince on a verb participle instead of -DIğI sürece (yaşadığım boyunca).',
       'Using -AcAK with sürece (yaşayacağım sürece → yaşadığım sürece).',
     ],
-    prerequisiteKeys: ['tr-a1-beri-dir', 'tr-b1-participles-dik-acak'],
-  },
-  // G&K §26.3.14 (Reason: -DIğI için / -AcAğI için, ablative -DIğIndAn).
-  {
-    key: 'tr-b2-causal-subordinate',
-    clozeUnsuitable: true,
-    kind: 'grammar',
-    name: 'Causal clause "because" -DIğI için / -DIğIndAn',
-    description:
-      '"Because" as a subordinate clause: -DIK/-AcAK + possessive + için (geç kaldığı için), or the ablative -DIğIndAn / -AcAğIndAn (kaçırdığından). Contrast A2 coordinating çünkü / -DAn dolayı; and purpose -mAk için ("in order to").',
-    cefrLevel: B2,
-    language: TR,
-    examplesPositive: [
-      'Bana kızdığın için öyle söylüyorsun. (You\'re saying that because you\'re angry with me.)',
-      'Bu para yetmeyeceği için borç isteyeceğim. (As this money won\'t be enough, I\'ll ask for a loan — -AcAK.)',
-      'Otobüsü kaçırdığından toplantıya geç kaldı. (Because he missed the bus he was late — ablative -DIğIndAn.)',
-    ],
-    examplesNegative: [
-      '*geç kaldı için (wrong — needs the participle + possessive: geç kaldığı için)',
-      '*geç kalmak için [for "because he was late"] (wrong — -mAk için = purpose "in order to be late"; cause is -DIK için: geç kaldığı için)',
-    ],
-    commonErrors: [
-      'Omitting the possessive on the participle (geç kaldı için → geç kaldığı için).',
-      'Confusing causal -DIK için with purpose -mAk için.',
-      'Stacking çünkü with -DIK için (çünkü geç kaldığı için) — pick one.',
-    ],
-    prerequisiteKeys: ['tr-a2-causal-connectors', 'tr-b1-participles-dik-acak'],
+    prerequisiteKeys: ['tr-b1-abstract-postpositions', 'tr-b1-participles-dik-acak'],
   },
   // G&K §24.4.3 / §24.4.3.1 (indirect statements: -DIK/-AcAK + poss + acc),
   // §24.4.7 (copular predicates nominalised with ol-).
@@ -2689,21 +2766,23 @@ const trCurriculum: readonly GrammarPoint[] = [
     ],
     prerequisiteKeys: ['tr-b1-participles-dik-acak', 'tr-a2-nominalization'],
   },
-  // G&K §26.3.15 (Substitution: -mAk yerine, -AcAğInA / -AcAğI yerde),
-  // §26.3.10 (Preference: -mAktAnsA).
+  // G&K §26.3.15 (Substitution: -AcAğInA / -AcAğI yerde), §26.3.10
+  // (Preference: -mAktAnsA). Re-scoped 2026-07-17: the basic -mAk yerine frame
+  // is taught at A2 (tr-a2-nominalization example since the G&K book-coverage
+  // folds, #587); this point owns the two harder frames.
   {
     key: 'tr-b2-instead-of',
     clozeUnsuitable: true,
     kind: 'grammar',
-    name: '"Instead of / rather than" (-mAk yerine, -mAktAnsA, -AcAğInA)',
+    name: '"Rather than" (-mAktAnsA, -AcAğInA / -AcAğI yerde)',
     description:
-      '"Instead of / rather than": -mAk yerine (bare infinitive + yerine: gitmek yerine), -mAktAnsA (ablative + ise: beklemektense), and -AcAğInA / -AcAğI yerde (future participle + dative / yerde: ağlayacağına gül).',
+      '"Rather than / instead of" beyond the A2 -mAk yerine frame: -mAktAnsA (ablative + ise: beklemektense "rather than waiting") and -AcAğInA / -AcAğI yerde (future participle + dative / yerde: ağlayacağına gül "laugh instead of crying"). Both attach to the rejected alternative.',
     cefrLevel: B2,
     language: TR,
     examplesPositive: [
-      'Ders çalışmak yerine oyun oynadı. (Instead of studying he played games.)',
       'Burada beklemektense yürüyelim. (Rather than waiting here, let\'s walk.)',
       'Ağlayacağına bir çözüm bul. (Instead of crying, find a solution — -AcAğInA.)',
+      'Televizyon seyredeceğin yerde kitap oku. (Read a book instead of watching TV — -AcAğI yerde.)',
     ],
     examplesNegative: [
       '*ağladığına [for "instead of crying (expected)"] (wrong — a substituted future action takes -AcAK: ağlayacağına)',
@@ -2847,6 +2926,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Yarın sabah burada olmalıyım. (I must be here tomorrow morning — necessity.)',
       "Ahmet 1994'te başkan oldu. (Ahmet became president in 1994 — dynamic \"become\".)",
       'Bir arabamız olsa her yere giderdik. (If we had a car we\'d go everywhere — existential ol-.)',
+      'Kapı açık, evde olmalılar. (The door is open — they must be at home; olmalı on a nominal also expresses deduction from evidence, not just obligation.)',
     ],
     examplesNegative: [
       '*öğretmeneceğim (wrong — a nominal predicate needs ol- to carry the future: öğretmen olacağım)',
@@ -2884,6 +2964,100 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Dropping olarak where a derived adjective needs it to be an adverb (bilimsel anlattı → bilimsel olarak anlattı).',
     ],
     prerequisiteKeys: ['tr-a2-gibi-kadar', 'tr-a1-gore-bence'],
+  },
+  // G&K §17.3.2 (Group 2 possessive-marked postpositions: abstract relations).
+  // Added by the 2026-07-16 book-coverage triage. Distinct from
+  // tr-a2-spatial-postpositions (Group 1): the case on the postposition is
+  // FIXED per item and the complement stays bare (except genitive-attracting
+  // pronouns), vs Group 1's meaning-driven variable case.
+  {
+    key: 'tr-b1-abstract-postpositions',
+    sentenceConstructionSuitable: true,
+    kind: 'grammar',
+    name: 'Abstract postpositions (hakkında, yüzünden, sayesinde)',
+    description:
+      'Abstract Group-2 postpositions: bare noun + fixed possessive-marked form — hakkında "about", yüzünden "because of" (unwelcome cause), sayesinde "thanks to" (welcome cause), yerine "instead of", boyunca "along/throughout", konusunda "on the subject of". Complement stays caseless (bu film hakkında), but personal pronouns take genitive (benim hakkımda, onun yüzünden).',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Bu film hakkında ne düşünüyorsun? (What do you think about this film?)',
+      'Trafik yüzünden geç kaldık. (We were late because of the traffic — unwelcome cause.)',
+      'Senin sayende işi buldum. (I found the job thanks to you — genitive on the pronoun.)',
+      'Çay yerine kahve içelim. (Let\'s drink coffee instead of tea.)',
+      'Yol boyunca hiç konuşmadık. (We didn\'t talk at all along the way.)',
+      'Benim hakkımda ne dediler? (What did they say about me? — 1sg possessive on hak.)',
+    ],
+    examplesNegative: [
+      '*Filmden hakkında konuştuk. (wrong — the complement stays caseless: "film hakkında")',
+      '*Sınavı kazandım senin yüzünden. (wrong register — yüzünden is for unwelcome causes; a welcome cause is sayesinde: "senin sayende")',
+    ],
+    commonErrors: [
+      'Case-marking the complement ("filmden hakkında") — Group-2 postpositions take a bare noun.',
+      'Swapping yüzünden and sayesinde — yüzünden blames (bad outcome), sayesinde credits (good outcome).',
+      'Using bare pronoun + postposition ("ben hakkında") — pronouns take the genitive and the possessive shifts person: benim hakkımda, senin hakkında.',
+    ],
+    prerequisiteKeys: ['tr-a2-spatial-postpositions', 'tr-a1-genitive-possessive'],
+  },
+  // G&K §26.3.14 (reason converbs). Added by the 2026-07-16 book-coverage
+  // triage — tr-a2-causal-connectors' own commonErrors defer to "the B1
+  // -DIğI için form", which did not exist until this point (the exact failure
+  // mode the ledger was built to catch).
+  {
+    key: 'tr-b1-reason-digi-icin',
+    sentenceConstructionSuitable: true,
+    kind: 'grammar',
+    name: 'Reason clauses -DIğI / -(y)AcAğI için ("because")',
+    description:
+      'Nominalised reason clause: personal participle + için — geldiğim için "because I came", yağdığı için "because it rained"; future cause takes -(y)AcAğI (para yetmeyeceği için "as the money won\'t be enough"). The subordinate verb carries the possessive agreement; no çünkü in the same clause. -DIğIndAn (dolayı) is a formal equivalent.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Bana kızdığın için öyle söylüyorsun. (You\'re saying that because you\'re angry with me.)',
+      'Yağmur yağdığı için maç ertelendi. (The match was postponed because it rained.)',
+      'Bu para yetmeyeceği için borç isteyeceğim. (As this money won\'t be enough, I\'ll ask for a loan.)',
+      'Hasta olduğum için gelemedim. (I couldn\'t come because I was ill.)',
+    ],
+    examplesNegative: [
+      '*Geç kaldım için özür dilerim. (wrong — için needs the nominalised participle, not a finite verb: "geç kaldığım için")',
+      '*Çünkü hasta olduğum için gelemedim. (wrong — çünkü and -DIğI için double-mark the reason; use one.)',
+    ],
+    commonErrors: [
+      'Attaching için to a finite verb ("geç kaldım için") — the clause must be nominalised: geç kaldığım için.',
+      'Dropping the possessive agreement ("geldiği için" when the subject is "I") — the participle agrees: geldiğim için.',
+      'Doubling the reason marker with çünkü ("çünkü … -DIğI için") — finite çünkü and nominalised -DIğI için are alternatives, not partners.',
+    ],
+    prerequisiteKeys: ['tr-b1-participles-dik-acak', 'tr-a2-causal-connectors'],
+  },
+  // G&K §26.3.16 (i)–(ii) (temporal 'when' converbs). Added by the 2026-07-16
+  // book-coverage triage: -mAdAn önce/-DIktAn sonra, -(y)ken and -(y)AlI/
+  // -DIğIndAn beri each had a point, but plain "when" had none. Two allied
+  // forms fill one meaning slot (cf. tr-b1-since-converb), so SC stays viable.
+  {
+    key: 'tr-b1-when-converbs',
+    sentenceConstructionSuitable: true,
+    kind: 'grammar',
+    name: '"When" clauses -(y)IncA / -DIğIndA',
+    description:
+      '"When" clauses: -(y)IncA for a sequential trigger — the main event follows (yağmur başlayınca içeri girdik "when it started to rain, we went inside"; invariant, no person marking); -DIğIndA / -DIğI zaman when the main situation is ongoing at that moment (uçaktan indiğimizde kar yağıyordu "when we got off the plane it was snowing"; participle + possessive agreement).',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Yağmur yağmaya başlayınca içeri girdik. (When it began to rain, we went inside — sequential -(y)IncA.)',
+      'Eve gelince beni ara. (Call me when you get home.)',
+      'Uçaktan indiğimizde kar yağıyordu. (When we got off the plane, it was snowing — ongoing background.)',
+      'Onu gördüğüm zaman çok mutlu oldum. (When I saw him, I was very happy.)',
+      'Haberi duyunca hemen aradı. (When she heard the news, she called at once.)',
+    ],
+    examplesNegative: [
+      '*Ben gelinceyim... (wrong — -(y)IncA never takes person marking: "ben gelince")',
+      '*Eve geldiğinde zaman ara. (wrong — -DIğIndA and -DIğI zaman are alternatives, not stackable: "geldiğinde" or "geldiği zaman")',
+    ],
+    commonErrors: [
+      'Adding person suffixes to -(y)IncA (*gelinceyim) — it is invariant; the person lives in the main clause (or use -DIğImdA).',
+      'Stacking -DIğIndA with zaman ("geldiğinde zaman") — pick one: geldiğinde or geldiği zaman.',
+      'Dropping the possessive agreement in -DIğIndA clauses ("uçaktan indiğinde" for "when WE landed" → indiğimizde).',
+    ],
+    prerequisiteKeys: ['tr-a2-converb-temporal', 'tr-b1-participles-dik-acak'],
   },
 
   // ---------------------------------------------------------------------------
@@ -3375,6 +3549,45 @@ const trCurriculum: readonly GrammarPoint[] = [
     freeWriting: { register: 'neutral' },
   },
 
+  // ---------------------------------------------------------------------------
+  // Paraphrase umbrellas — kind: 'paraphrase' (Phase 2 contextual-paraphrase generation)
+  // ---------------------------------------------------------------------------
+  {
+    key: 'tr-b1-paraphrase',
+    kind: 'paraphrase',
+    name: 'Başka türlü söyle — paraphrase (B1)',
+    description:
+      'Rewrite a B1 Turkish sentence under one constraint: avoid a given word, shift register, or simplify for an audience — preserving meaning while reaching for synonyms and alternative structures.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Source "Bu filmi çok beğendim" → without «beğenmek»: "Bu film gerçekten hoşuma gitti."',
+      'Source "Tuzu uzatır mısın?" → formal register: "Tuzu uzatabilir misiniz acaba?"',
+    ],
+    examplesNegative: ['*A rewrite that changes the meaning of the source.'],
+    commonErrors: [
+      'Using a banned word in a different suffixed form.',
+      'Changing register but also changing what is said.',
+    ],
+    paraphrase: {
+      seeds: [
+        'bargaining with a vendor at a bazaar',
+        'asking a neighbour for help moving furniture',
+        'describing how a national holiday is celebrated at home',
+        'complaining about a noisy neighbour upstairs',
+        'asking a pharmacist for advice about a headache',
+        'turning down a wedding invitation',
+        'negotiating the price of a taxi ride',
+        'explaining a family tradition to a foreign friend',
+        'asking a shopkeeper to hold an item until payday',
+        'describing a power outage that ruined an evening',
+        'convincing a friend to try a new dish',
+        'explaining why you missed a family gathering',
+        'asking a landlord to fix a broken heater before winter',
+        'describing the atmosphere of a crowded tea house',
+      ],
+    },
+  },
 ];
 
 export { trCurriculum };

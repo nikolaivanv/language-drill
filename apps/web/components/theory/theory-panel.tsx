@@ -15,6 +15,7 @@ import {
   TopicSwitcherSheet,
 } from './topic-switcher-sheet';
 import { TheoryTitleSwitch } from './theory-title-switch';
+import { TheoryHubLink } from './theory-hub-link';
 import { useBodyScrollLock } from '../../lib/hooks/use-body-scroll-lock';
 import { useFocusTrap } from '../../lib/hooks/use-focus-trap';
 import { useScrollSpy } from '../../lib/hooks/use-scroll-spy';
@@ -144,6 +145,14 @@ export function TheoryPanel({
                   {topic && <Chip>{topic.cefr}</Chip>}
                 </>
               )}
+              {topic && (
+                // `internalTopicId` is the route/lookup SLUG (e.g.
+                // `b1-present-subjunctive`) — the exact id the same-page drawer
+                // resolved against. `topic.id` is the content-JSON id, which
+                // for DB-backed topics carries the language prefix
+                // (`es-b1-present-subjunctive`) and 404s at `/theory/<id>`.
+                <TheoryHubLink topicId={internalTopicId} title={topic.title} />
+              )}
             </div>
             {topic && <div className="t-small">{topic.subtitle}</div>}
           </div>
@@ -165,6 +174,7 @@ export function TheoryPanel({
               activeSectionId={activeSectionId}
               onJump={handleJump}
               language={language}
+              currentTopicId={internalTopicId}
               onSwitchTopic={switchTopic}
               fetchFn={fetchFn}
             />

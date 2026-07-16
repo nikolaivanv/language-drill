@@ -40,7 +40,7 @@ describe('NavItems', () => {
       'today',
       'drill',
       'read',
-      'my vocabulary',
+      'review',
       'theory',
       'progress',
     ]);
@@ -55,5 +55,11 @@ describe('NavItems', () => {
       const link = screen.getByRole('link', { name: dest.label });
       expect(link).toHaveAttribute('href', dest.href);
     }
+  });
+
+  it('has no standalone /vocab destination and no "vocab" in any label', () => {
+    expect(NAV_DESTINATIONS.find((d) => d.href === '/vocab')).toBeUndefined();
+    expect(NAV_DESTINATIONS.filter((d) => d.label.includes('vocab')).length).toBe(0);
+    expect(NAV_DESTINATIONS.filter((d) => d.href === '/review').length).toBe(1);
   });
 });

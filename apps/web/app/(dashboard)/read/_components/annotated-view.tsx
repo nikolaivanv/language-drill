@@ -24,13 +24,14 @@ import type {
   ReadingCategory,
   ReadingTextLength,
 } from '@language-drill/shared';
-import type { SavedVocabItem } from '@language-drill/api-client';
+import type { AuthenticatedFetch, SavedVocabItem } from '@language-drill/api-client';
 import { AdjustBar } from './adjust-bar';
 import { AnnotatedText, type SpanSelection } from './annotated-text';
 import { ZeroFlaggedStrip } from './annotated-footer';
 import { CalibrationStrip } from './calibration-strip';
 import { CollectBar } from './collect-bar';
 import { IntensityToggle } from './intensity-toggle';
+import { PassageAudio } from './passage-audio';
 import { ProvenanceHeader } from './provenance-header';
 import { WordBankRail } from './word-bank-rail';
 import { WordBankSheet } from './word-bank-sheet';
@@ -70,6 +71,10 @@ type Props = {
   entry: AnnotatedEntry;
   bank: string[];
   intensity: Intensity;
+  /** Persisted entry id, for the "Listen" audio control (Task 9). `null`/absent ⇒ no persisted entry yet, control is hidden. */
+  entryId?: string | null;
+  /** Authenticated fetcher for the audio mutation. Absent ⇒ control is hidden (matches `entryId`). */
+  fetchFn?: AuthenticatedFetch;
   activeWord: ActiveWord | null;
   /** On-demand deep-annotation state machine (Req 3, 9.3, 9.4, 11.4). */
   deepCard: DeepCardSlice;
@@ -147,9 +152,7 @@ type Props = {
    * not the collected words).
    */
   canSaveToLibrary?: boolean;
-  /** Save the passage AND push its banked words into the vocabulary. */
-  onAddToVocabulary?: () => void;
-  /** True while a library/vocabulary save is in flight. */
+  /** True while a library save is in flight. */
   saving?: boolean;
   /** Native language name for the provenance subline + tags. */
   languageLabel: string;
@@ -159,6 +162,8 @@ export function AnnotatedView({
   entry,
   bank,
   intensity,
+  entryId,
+  fetchFn,
   activeWord,
   deepCard,
   calibration,
@@ -185,7 +190,6 @@ export function AnnotatedView({
   savedCount,
   onSaveToLibrary,
   canSaveToLibrary = true,
-  onAddToVocabulary,
   saving,
   languageLabel,
 }: Props) {
@@ -246,7 +250,6 @@ export function AnnotatedView({
         savedCount={savedCount}
         onSaveToLibrary={() => onSaveToLibrary?.()}
         canSaveToLibrary={canSaveToLibrary}
-        onAddToVocabulary={() => onAddToVocabulary?.()}
         saving={saving}
       />
     </div>
@@ -328,6 +331,24 @@ export function AnnotatedView({
   // the loaded deep card.
   const chromeDeepCard: DeepCardSlice | undefined = deepActive ? deepCard : undefined;
   const cardOpen = deepActive || (activeFlag !== null && activeWord !== null);
+
+  // Listen / audio — own full-width row so the expanded player never overlaps
+  // the header (shared verbatim between the mobile and desktop branches below).
+  // On mobile a floating transport appears once this row scrolls out of view;
+  // it is suppressed whenever a bottom sheet (word card / bank) covers the
+  // lower screen. Defined after `cardOpen` so `floatingSuppressed` can read it.
+  const audioRow =
+    entryId && fetchFn ? (
+      <div className="mb-[18px]">
+        <PassageAudio
+          entryId={entryId}
+          fetchFn={fetchFn}
+          floating
+          floatingSuppressed={cardOpen || bankSheetOpen}
+        />
+      </div>
+    ) : null;
+
   const anchor = deepActive
     ? { x: deepCard.span.x, y: deepCard.span.y }
     : activeWord
@@ -342,7 +363,7 @@ export function AnnotatedView({
   // The loaded deep slice, if any (kept whole so its `span` narrows for save).
   const loadedDeep = deepCard.status === 'loaded' ? deepCard : null;
   // Whether the open deep card's span is the just-saved one — drives the
-  // card footer's "✓ saved · undo" state (Req 8.4).
+  // card footer's "✓ saved · remove" state (Req 8.4).
   const deepCardSaved =
     savedSpan !== null &&
     deepCard.status !== 'idle' &&
@@ -387,6 +408,9 @@ export function AnnotatedView({
             </button>
           )}
         </div>
+
+        {/* Listen / audio — own full-width row */}
+        {audioRow}
 
         {/* Calibration */}
         <div className="border-b border-dashed border-rule pb-[14px] mb-[22px]">
@@ -486,6 +510,9 @@ export function AnnotatedView({
             <IntensityToggle value={intensity} onChange={onIntensityChange} />
           </div>
         </div>
+
+        {/* Listen / audio — own full-width row so the expanded player never overlaps the header */}
+        {audioRow}
 
         {/* Calibration */}
         <div className="border-b border-dashed border-rule pb-[14px] mb-[22px]">

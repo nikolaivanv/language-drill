@@ -1,0 +1,119 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import { act } from '@testing-library/react';
+import { mockIntersectionObserverInstances } from '../../../../vitest.setup';
+import userEvent from '@testing-library/user-event';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React from 'react';
+import { PassageAudio } from './passage-audio';
+
+let mockIsMobile = false;
+vi.mock('../../../../lib/responsive', () => ({
+  useIsMobile: () => mockIsMobile,
+}));
+
+beforeEach(() => {
+  mockIsMobile = false;
+  mockIntersectionObserverInstances.length = 0;
+  vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+  vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
+});
+
+function renderWith(
+  fetchFn: unknown,
+  props?: { floating?: boolean; floatingSuppressed?: boolean },
+) {
+  const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+  return render(
+    <QueryClientProvider client={qc}>
+      <PassageAudio entryId="e1" fetchFn={fetchFn as never} {...props} />
+    </QueryClientProvider>,
+  );
+}
+
+describe('PassageAudio', () => {
+  it('fetches and mounts the player on click', async () => {
+    const fetchFn = vi.fn(async () => ({
+      json: async () => ({ audioUrl: 'https://signed/x.mp3', durationSec: 12, reason: 'ok' }),
+    }));
+    renderWith(fetchFn);
+    await userEvent.click(screen.getByRole('button', { name: /listen/i }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'play' })).toBeInTheDocument());
+    expect(fetchFn).toHaveBeenCalledWith('/read/e1/audio', { method: 'POST' });
+  });
+
+  it('shows an unavailable state when the passage is too long', async () => {
+    const fetchFn = vi.fn(async () => ({
+      json: async () => ({ audioUrl: null, durationSec: 0, reason: 'too_long' }),
+    }));
+    renderWith(fetchFn);
+    await userEvent.click(screen.getByRole('button', { name: /listen/i }));
+    await waitFor(() => expect(screen.getByText(/too long/i)).toBeInTheDocument());
+  });
+
+  it('shows a neutral unavailable state when presigning fails (reason ok, no audioUrl)', async () => {
+    const fetchFn = vi.fn(async () => ({
+      json: async () => ({ audioUrl: null, durationSec: 0, reason: 'ok' }),
+    }));
+    renderWith(fetchFn);
+    await userEvent.click(screen.getByRole('button', { name: /listen/i }));
+    await waitFor(() => expect(screen.getByText(/try again later/i)).toBeInTheDocument());
+    expect(screen.queryByText(/too long/i)).not.toBeInTheDocument();
+  });
+
+  it('renders a speaker icon in the idle Listen button', () => {
+    const fetchFn = vi.fn();
+    renderWith(fetchFn);
+    const listen = screen.getByRole('button', { name: /listen/i });
+    expect(listen.querySelector('svg')).toBeInTheDocument();
+    // Guards the review fix: must force pill radius over the design-system
+    // Button's default rounded-sm (cn() is a plain join, no tailwind-merge).
+    expect(listen.className).toContain('!rounded-pill');
+  });
+
+  it('shows a spinner while preparing audio', async () => {
+    const fetchFn = vi.fn(() => new Promise(() => {})) as unknown as Parameters<typeof renderWith>[0];
+    const { container } = renderWith(fetchFn);
+    await userEvent.click(screen.getByRole('button', { name: /listen/i }));
+    expect(await screen.findByText(/preparing audio/i)).toBeInTheDocument();
+    expect(container.querySelector('.animate-spin')).toBeInTheDocument();
+  });
+
+  it('forwards floating to the mobile audio player once ready', async () => {
+    mockIsMobile = true;
+    const fetchFn = vi.fn(async () => ({
+      json: async () => ({ audioUrl: 'https://signed/x.mp3', durationSec: 12, reason: 'ok' }),
+    }));
+    renderWith(fetchFn, { floating: true });
+    await userEvent.click(screen.getByRole('button', { name: /listen/i }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'play' })).toBeInTheDocument());
+
+    const io = mockIntersectionObserverInstances[mockIntersectionObserverInstances.length - 1];
+    act(() => {
+      io.callback(
+        [{ isIntersecting: false, boundingClientRect: { top: -200 } } as unknown as IntersectionObserverEntry],
+        io as unknown as IntersectionObserver,
+      );
+    });
+    expect(screen.getByRole('group', { name: /audio controls/i })).toBeInTheDocument();
+  });
+
+  it('suppresses the floating control when floatingSuppressed is set', async () => {
+    mockIsMobile = true;
+    const fetchFn = vi.fn(async () => ({
+      json: async () => ({ audioUrl: 'https://signed/x.mp3', durationSec: 12, reason: 'ok' }),
+    }));
+    renderWith(fetchFn, { floating: true, floatingSuppressed: true });
+    await userEvent.click(screen.getByRole('button', { name: /listen/i }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'play' })).toBeInTheDocument());
+
+    const io = mockIntersectionObserverInstances[mockIntersectionObserverInstances.length - 1];
+    act(() => {
+      io.callback(
+        [{ isIntersecting: false, boundingClientRect: { top: -200 } } as unknown as IntersectionObserverEntry],
+        io as unknown as IntersectionObserver,
+      );
+    });
+    expect(screen.queryByRole('group', { name: /audio controls/i })).not.toBeInTheDocument();
+  });
+});

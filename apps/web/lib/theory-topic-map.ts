@@ -47,3 +47,16 @@ export function topicIdForGrammarPointKey(
   const rest = grammarPointKey.slice(prefix.length);
   return rest === '' ? null : rest;
 }
+
+// Inverse of `topicIdForGrammarPointKey`: derives the grammar-point key from a
+// theory topic id by prefixing the lowercased language (`a2-ser-vs-estar` +
+// ES → `es-a2-ser-vs-estar`). Purely a string transform — it does NOT check
+// that the key exists in the curriculum; `GET /progress/points/:key` 404s for
+// unknown keys and the caller hides the drill block on error.
+export function grammarPointKeyForTopicId(
+  topicId: string | null | undefined,
+  language: LearningLanguage,
+): string | null {
+  if (!topicId) return null;
+  return `${language.toLowerCase()}-${topicId}`;
+}

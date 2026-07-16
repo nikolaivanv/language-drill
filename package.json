@@ -1,5 +1,6 @@
 {
   "name": "language-drill",
+  "license": "MIT",
   "private": true,
   "packageManager": "pnpm@9.15.4",
   "scripts": {

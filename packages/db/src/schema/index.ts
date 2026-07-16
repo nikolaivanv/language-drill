@@ -34,8 +34,9 @@ export {
   fluencyAttempts,
   userGrammarMastery,
   errorObservations,
+  exerciseWordHints,
 } from './progress';
-export type { ErrorObservation, NewErrorObservation } from './progress';
+export type { ErrorObservation, NewErrorObservation, ExerciseWordHints } from './progress';
 export { practiceSessions } from './sessions';
 export {
   readEntries,
@@ -49,8 +50,13 @@ export { playlists, playlistItems } from './playlists';
 export { invitations, usageEvents } from './access';
 export { generationJobs } from './generation';
 export type { GenerationJob, NewGenerationJob } from './generation';
-export { vocabLemma } from './vocab';
-export type { VocabLemma, NewVocabLemma } from './vocab';
+export { vocabLemma, vocabTarget } from './vocab';
+export type {
+  VocabLemma,
+  NewVocabLemma,
+  VocabTarget,
+  NewVocabTarget,
+} from './vocab';
 export { theoryTopics, theoryGenerationJobs } from './theory';
 export type {
   TheoryTopic,
@@ -60,6 +66,8 @@ export type {
 } from './theory';
 export { adminAuditLog } from './audit';
 export { exerciseFlags } from './exercise-flags';
+export { glossCache } from './gloss-cache';
+export type { GlossCacheRow, NewGlossCacheRow } from './gloss-cache';
 export type { ExerciseFlag, NewExerciseFlag } from './exercise-flags';
 export { emailPreferences, sentEmails } from './email';
 export type {

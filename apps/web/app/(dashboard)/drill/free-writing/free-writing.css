@@ -181,10 +181,34 @@
 /* Small uppercase section label. */
 .rv-h { font-size: 11px; color: var(--color-ink-mute); text-transform: uppercase; letter-spacing: 1.2px; font-weight: 500; }
 
-/* Brief/results two-column layout collapses to one column on mobile. The
-   `!important` overrides the inline `grid-template-columns` set on the element. */
+/* ── Mobile: every rail-based surface collapses to a single column ──────────
+   Each surface's grid lists its main content first and the rail <aside> second
+   in DOM order, so a one-column grid naturally stacks the rail BELOW the content
+   (matching the mobile design — no side-by-side columns, no horizontal scroll).
+   The `!important` overrides the inline `grid-template-columns` set on each
+   element. */
 @media (max-width: 760px) {
-  .fw-brief-grid { grid-template-columns: 1fr !important; }
+  .fw-brief-grid,
+  .fw-two-col { grid-template-columns: 1fr !important; }
+
+  /* Compare view: stack "your text" above "improved" instead of side-by-side. */
+  .fw-compare { grid-template-columns: 1fr; }
+
+  /* Let the struck original → green fix pair wrap rather than force a single
+     nowrap unit that overflows the phone (desktop keeps nowrap — it has the
+     horizontal room to hold each pair together). */
+  .fw-err { white-space: normal; }
+
+  /* Action rows that are a nowrap flex row on desktop become full-width stacked
+     buttons so a long label can't overflow a narrow viewport. */
+  .fw-action-row { flex-direction: column; align-items: stretch; }
+  .fw-action-row .btn { width: 100%; margin-left: 0 !important; }
+
+  /* Composer editor footer (word counter + grade button) and the corrections
+     heading (title + severity tags) stack vertically instead of squeezing into
+     one space-between row. */
+  .fw-composer-footer,
+  .fw-corrections-head { flex-direction: column; align-items: stretch; gap: 12px; }
 }
 
 /* Active (open) state for a helper toggle button. The `.fw-helppanel` and

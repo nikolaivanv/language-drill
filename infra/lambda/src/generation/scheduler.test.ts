@@ -52,7 +52,23 @@ const hoisted = vi.hoisted(() => {
     Promise.resolve({}),
   );
   const mockGroupBy = vi.fn<() => Promise<ApprovedRow[]>>();
-  const mockWhere = vi.fn(() => ({ groupBy: mockGroupBy }));
+  // `loadVocabTargetCoveragePerUmbrella`'s two reads terminate at `.where(...)`
+  // (no `.groupBy()`) and are awaited directly, unlike the approved-counts
+  // aggregate above which chains `.groupBy()`. `mockWhere` returns an object
+  // that is BOTH chainable (`.groupBy`, for the approved-counts query) AND
+  // thenable — the `then` defers to `mockWhereResult`, which is only invoked
+  // when the caller awaits the where-result directly, so the two query shapes
+  // share one mocked chain without one consuming the other's queued values.
+  const mockWhereResult = vi.fn<() => Promise<unknown[]>>(() =>
+    Promise.resolve([]),
+  );
+  const mockWhere = vi.fn(() => ({
+    groupBy: mockGroupBy,
+    then: (
+      resolve: (value: unknown[]) => void,
+      reject?: (reason: unknown) => void,
+    ) => mockWhereResult().then(resolve, reject),
+  }));
   const mockFrom = vi.fn(() => ({ where: mockWhere }));
   const mockSelect = vi.fn(() => ({ from: mockFrom }));
   // R6.2 / R1.4 — the `loadMostRecentSucceededJobPerCell` query goes through
@@ -65,13 +81,14 @@ const hoisted = vi.hoisted(() => {
     mockSqsSend,
     mockGroupBy,
     mockWhere,
+    mockWhereResult,
     mockFrom,
     mockSelect,
     mockExecute,
   };
 });
 
-const { mockSqsSend, mockGroupBy, mockExecute } = hoisted;
+const { mockSqsSend, mockGroupBy, mockExecute, mockWhereResult } = hoisted;
 
 // `SQSClient` and `SendMessageBatchCommand` are invoked with `new`, so they
 // must be real constructor functions.
@@ -140,6 +157,12 @@ beforeEach(() => {
   // Default: no recent succeeded jobs → no R6 suppression possible → every
   // cell schedulable subject only to the approvedInPool check.
   mockExecute.mockResolvedValue({ rows: [] });
+  // Default: no approved vocab targets for any umbrella → every vocab_recall
+  // cell falls through to the pre-existing resolveCellTarget(10) + raw
+  // approved-pool count path (Spec 2 coverage-aware path is opt-in per
+  // umbrella). Tests exercising the coverage-aware path override with
+  // `.mockResolvedValueOnce` (targets first, then vocab_recall exercise rows).
+  mockWhereResult.mockResolvedValue([]);
   consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 });
 
@@ -249,6 +272,20 @@ function rowsToFillAllCellsExcept(
     });
   }
   return rows;
+}
+
+/** First Round-1 `vocab_recall` cell for `es-a1-vocab-food-drink` — a stable,
+ *  real curriculum umbrella used by the Spec 2 coverage-aware `need` tests. */
+function esFoodDrinkVocabCell(): Cell {
+  const cell = allRoundOneCells().find(
+    (c) =>
+      c.exerciseType === 'vocab_recall' &&
+      c.grammarPoint.key === 'es-a1-vocab-food-drink',
+  );
+  if (cell === undefined) {
+    throw new Error('es-a1-vocab-food-drink vocab_recall cell not in curriculum');
+  }
+  return cell;
 }
 
 /**
@@ -843,5 +880,229 @@ describe('scheduler handler', () => {
     expect(subjectMsg!.spec.coverageTargets).toHaveLength(subjectMsg!.spec.count);
     const personValues = subjectMsg!.spec.coverageTargets!.map((t) => t.person);
     expect(personValues).toContain('2pl');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Run-level cell cap (spend brake). The scheduler caps how many under-target
+// cells one tick enqueues so a single nightly fan-out can't spend unbounded
+// against the Anthropic account (docs/tech-debt.md spend-brake entry).
+// ---------------------------------------------------------------------------
+
+describe('scheduler run-level cell cap', () => {
+  afterEach(() => {
+    delete process.env['SCHEDULER_MAX_CELLS_PER_RUN'];
+  });
+
+  /** All jobIds enqueued across every batch, in order. */
+  function enqueuedJobIds(): string[] {
+    return capturedBatches()
+      .flatMap(decodeBatch)
+      .map((m) => parseGenerationJobMessage(m).jobId);
+  }
+
+  function capLogLine(): Record<string, unknown> | undefined {
+    return findLogLine(
+      (e) =>
+        typeof e['message'] === 'string' &&
+        (e['message'] as string).includes('cell cap applied'),
+    );
+  }
+
+  it('caps enqueued cells at SCHEDULER_MAX_CELLS_PER_RUN and logs the deferred count', async () => {
+    process.env['SCHEDULER_MAX_CELLS_PER_RUN'] = '3';
+    // Empty rows → every round-1 cell is under target; there are far more than 3.
+    const total = allRoundOneCells().length;
+    expect(total).toBeGreaterThan(3);
+    mockGroupBy.mockResolvedValueOnce([]);
+
+    await handler();
+
+    expect(enqueuedJobIds()).toHaveLength(3);
+    const log = capLogLine();
+    expect(log).toBeDefined();
+    expect(log!['cap']).toBe(3);
+    expect(log!['enqueuedThisRun']).toBe(3);
+    expect(log!['deferredCount']).toBe(total - 3);
+  });
+
+  it('enqueues the most under-target cells first (need desc, cellKey tie-break)', async () => {
+    // Five subjects with distinct `need` values; everything else at target.
+    const subjects = cellsWithGlobalTarget().slice(0, 5);
+    expect(subjects).toHaveLength(5);
+    // approved → need (= TARGET_PER_CELL − approved): s1 has the largest need,
+    // s3 the second largest. cap = 2 must pick exactly those two, in that order.
+    const approvedByKey = new Map<string, number>([
+      [subjects[0].cellKey, 45], // need 5
+      [subjects[1].cellKey, 10], // need 40  ← 1st
+      [subjects[2].cellKey, 30], // need 20
+      [subjects[3].cellKey, 20], // need 30  ← 2nd
+      [subjects[4].cellKey, 40], // need 10
+    ]);
+    const rows = allRoundOneCells().map((cell) => ({
+      language: cell.language,
+      difficulty: cell.cefrLevel,
+      type: cell.exerciseType,
+      grammarPointKey: cell.grammarPoint.key,
+      approved: approvedByKey.get(cell.cellKey) ?? resolveCellTarget(cell),
+    }));
+    mockGroupBy.mockResolvedValueOnce(rows);
+    process.env['SCHEDULER_MAX_CELLS_PER_RUN'] = '2';
+
+    await handler();
+
+    const today = new Date().toISOString().slice(0, 10);
+    const batchSeed = `scheduled-${today}`;
+    const jobIdFor = (cell: Cell) =>
+      deterministicUuid([cell.cellKey, batchSeed].join('|'));
+
+    // Highest need first, then second-highest — the other three deferred.
+    expect(enqueuedJobIds()).toEqual([
+      jobIdFor(subjects[1]),
+      jobIdFor(subjects[3]),
+    ]);
+    expect(capLogLine()!['deferredCount']).toBe(3);
+  });
+
+  it('does not cap or log when under-target cells are at or below the cap', async () => {
+    process.env['SCHEDULER_MAX_CELLS_PER_RUN'] = '100';
+    const undertargetKeys = new Set(
+      allRoundOneCells()
+        .slice(0, 25)
+        .map((c) => c.cellKey),
+    );
+    mockGroupBy.mockResolvedValueOnce(
+      rowsToFillAllCellsExcept(undertargetKeys, 10),
+    );
+
+    await handler();
+
+    expect(enqueuedJobIds()).toHaveLength(25);
+    expect(capLogLine()).toBeUndefined();
+  });
+
+  it('ignores a non-positive / non-numeric override and falls back to the default (60)', async () => {
+    process.env['SCHEDULER_MAX_CELLS_PER_RUN'] = 'not-a-number';
+    // 25 under target < default 60 → no cap, no deferred log, all enqueued.
+    const undertargetKeys = new Set(
+      allRoundOneCells()
+        .slice(0, 25)
+        .map((c) => c.cellKey),
+    );
+    mockGroupBy.mockResolvedValueOnce(
+      rowsToFillAllCellsExcept(undertargetKeys, 10),
+    );
+
+    await handler();
+
+    expect(enqueuedJobIds()).toHaveLength(25);
+    expect(capLogLine()).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Spec 2 — coverage-aware `need` for seeded vocab_recall umbrellas. When an
+// umbrella has approved `vocab_target` rows, the handler overrides
+// `(approvedInPool, target)` fed into the unchanged `decideEnqueue` with
+// `(distinctCoveredCount, approvedTargetCount)` instead of the raw
+// approved-pool count + the flat `resolveCellTarget` (10) cap.
+// ---------------------------------------------------------------------------
+
+describe('scheduler Spec 2: vocab-target coverage-aware need', () => {
+  it('a vocab_recall cell with approved targets uses coverage-based need, not the raw approved count or the flat resolveCellTarget cap', async () => {
+    const subject = esFoodDrinkVocabCell();
+    const subjectKeys = new Set([subject.cellKey]);
+    // Raw approved-pool count for the subject is 0 (irrelevant once targets
+    // exist) — every other cell sits at its resolved target.
+    mockGroupBy.mockResolvedValueOnce(rowsToFillAllCellsExcept(subjectKeys, 0));
+
+    // 1st bare-where read: 3 approved vocab_target rows for the umbrella.
+    mockWhereResult.mockResolvedValueOnce([
+      { language: subject.language, umbrellaKey: subject.grammarPoint.key, lemma: 'manzana', displayForm: 'la manzana' },
+      { language: subject.language, umbrellaKey: subject.grammarPoint.key, lemma: 'pan', displayForm: 'el pan' },
+      { language: subject.language, umbrellaKey: subject.grammarPoint.key, lemma: 'agua', displayForm: 'el agua' },
+    ]);
+    // 2nd bare-where read: approved vocab_recall exercises covering 2 of the
+    // 3 targets ('manzana' directly, 'el pan' normalizes to 'pan').
+    mockWhereResult.mockResolvedValueOnce([
+      { language: subject.language, umbrellaKey: subject.grammarPoint.key, word: 'manzana' },
+      { language: subject.language, umbrellaKey: subject.grammarPoint.key, word: 'el pan' },
+    ]);
+
+    await handler();
+
+    const messages = capturedBatches()
+      .flatMap(decodeBatch)
+      .map((m) => parseGenerationJobMessage(m));
+    const subjectMsg = messages.find(
+      (m) =>
+        m.spec.grammarPointKey === subject.grammarPoint.key &&
+        m.spec.cefrLevel === subject.cefrLevel &&
+        m.spec.language === subject.language &&
+        m.spec.exerciseType === subject.exerciseType,
+    );
+    expect(subjectMsg).toBeDefined();
+    // target=3 (approvedTargets), approvedInPool=2 (coveredTargets) → need=1.
+    // The flat resolveCellTarget(10) − 0 raw-approved would have yielded 10.
+    expect(subjectMsg!.spec.count).toBe(1);
+  });
+
+  it('stops enqueuing once every approved target is covered, even though the raw approved-pool count is below the flat cap', async () => {
+    const subject = esFoodDrinkVocabCell();
+    const subjectKeys = new Set([subject.cellKey]);
+    // Raw approved-pool count is 2 — well below the flat vocab_recall
+    // target (10) — but every one of the umbrella's 2 approved targets is
+    // covered, so the coverage-aware target (2) is already reached.
+    mockGroupBy.mockResolvedValueOnce(rowsToFillAllCellsExcept(subjectKeys, 2));
+
+    mockWhereResult.mockResolvedValueOnce([
+      { language: subject.language, umbrellaKey: subject.grammarPoint.key, lemma: 'manzana', displayForm: 'la manzana' },
+      { language: subject.language, umbrellaKey: subject.grammarPoint.key, lemma: 'pan', displayForm: 'el pan' },
+    ]);
+    mockWhereResult.mockResolvedValueOnce([
+      { language: subject.language, umbrellaKey: subject.grammarPoint.key, word: 'manzana' },
+      { language: subject.language, umbrellaKey: subject.grammarPoint.key, word: 'el pan' },
+    ]);
+
+    await handler();
+
+    const messages = capturedBatches()
+      .flatMap(decodeBatch)
+      .map((m) => parseGenerationJobMessage(m));
+    const subjectMsg = messages.find(
+      (m) =>
+        m.spec.grammarPointKey === subject.grammarPoint.key &&
+        m.spec.cefrLevel === subject.cefrLevel &&
+        m.spec.language === subject.language &&
+        m.spec.exerciseType === subject.exerciseType,
+    );
+    expect(subjectMsg).toBeUndefined();
+  });
+
+  it('a vocab_recall cell whose umbrella has zero approved targets falls through unchanged to resolveCellTarget + the raw approved-pool count', async () => {
+    const subject = esFoodDrinkVocabCell();
+    const subjectKeys = new Set([subject.cellKey]);
+    mockGroupBy.mockResolvedValueOnce(rowsToFillAllCellsExcept(subjectKeys, 4));
+    // Default beforeEach `mockWhereResult.mockResolvedValue([])` already gives
+    // zero approved targets for every umbrella; explicit here for clarity.
+    mockWhereResult.mockResolvedValueOnce([]);
+    mockWhereResult.mockResolvedValueOnce([]);
+
+    await handler();
+
+    const messages = capturedBatches()
+      .flatMap(decodeBatch)
+      .map((m) => parseGenerationJobMessage(m));
+    const subjectMsg = messages.find(
+      (m) =>
+        m.spec.grammarPointKey === subject.grammarPoint.key &&
+        m.spec.cefrLevel === subject.cefrLevel &&
+        m.spec.language === subject.language &&
+        m.spec.exerciseType === subject.exerciseType,
+    );
+    expect(subjectMsg).toBeDefined();
+    // resolveCellTarget(subject) is the flat vocab_recall cap (10); raw
+    // approved-pool count is 4 → need = 6.
+    expect(subjectMsg!.spec.count).toBe(resolveCellTarget(subject) - 4);
   });
 });

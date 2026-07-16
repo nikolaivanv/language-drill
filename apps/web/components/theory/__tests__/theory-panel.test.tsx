@@ -14,9 +14,65 @@ vi.mock('../../../lib/responsive', () => ({
   useIsMobile: () => mockIsMobile(),
 }));
 
-// TheoryPanel consumes `useTheoryTopic` (TanStack Query) — provider required
-// in scope. Tests omit `fetchFn`, so the hook degrades to static-only and
-// `useQuery` stays `enabled: false`.
+// Theory content now comes exclusively from the DB. Mock the topic/list hooks
+// with a fixed set of ES fixtures so the panel's rendering, hub link, and
+// topic-switching can be exercised without a fetch. Any non-ES language
+// resolves to no topic / an empty list (the "coming soon" empty state).
+const { esTopics } = vi.hoisted(() => ({
+  esTopics: {
+    subjunctive: {
+      id: 'subjunctive',
+      title: 'el subjuntivo',
+      subtitle: 'the subjunctive mood',
+      cefr: 'B1',
+      sections: [],
+    },
+    'preterite-imperfect': {
+      id: 'preterite-imperfect',
+      title: 'pretérito vs. imperfecto',
+      subtitle: '',
+      cefr: 'B1',
+      sections: [],
+    },
+    conditional: {
+      id: 'conditional',
+      title: 'el condicional',
+      subtitle: '',
+      cefr: 'B1',
+      sections: [],
+    },
+  } as Record<string, { id: string; title: string; subtitle: string; cefr: string; sections: [] }>,
+}));
+
+vi.mock('../../../lib/hooks/use-theory-topic', () => ({
+  useTheoryTopic: ({ language, topicId }: { language: string; topicId: string }) => ({
+    topic: language === 'ES' ? (esTopics[topicId] ?? null) : null,
+    isLoading: false,
+    isError: false,
+    error: null,
+  }),
+}));
+
+vi.mock('../../../lib/hooks/use-theory-topics', () => ({
+  useTheoryTopics: ({ language }: { language: string }) => ({
+    topics:
+      language === 'ES'
+        ? Object.values(esTopics).map((t) => ({
+            id: t.id,
+            title: t.title,
+            cefr: t.cefr,
+            category: 'other' as const,
+            order: null,
+          }))
+        : [],
+    isLoading: false,
+    isError: false,
+    error: null,
+  }),
+}));
+
+// TheoryPanel renders inside a QueryClientProvider in the real app; keep one in
+// scope for nested consumers even though the theory hooks are mocked.
 function Wrapper({ children }: { children: ReactNode }) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -71,6 +127,23 @@ describe('TheoryPanel', () => {
     expect(labelledBy).toBeTruthy();
     const labelEl = document.getElementById(labelledBy!);
     expect(labelEl?.textContent).toBe('el subjuntivo');
+  });
+
+  it('renders a link to open the topic in the theory hub (new tab)', () => {
+    render(
+      <TheoryPanel
+        topicId="subjunctive"
+        language={Language.ES}
+        triggerEl={null}
+        onClose={vi.fn()}
+      />,
+      { wrapper: Wrapper },
+    );
+    const link = screen.getByRole('link', {
+      name: /open el subjuntivo in theory hub \(new tab\)/i,
+    });
+    expect(link).toHaveAttribute('href', '/theory/subjunctive');
+    expect(link).toHaveAttribute('target', '_blank');
   });
 
   it('calls onClose when Escape is pressed', () => {
@@ -165,7 +238,11 @@ describe('TheoryPanel', () => {
     const dialog = document.body.querySelector(
       '[role="dialog"]',
     ) as HTMLElement;
-    expect(within(dialog).getByText('el subjuntivo')).toBeInTheDocument();
+    // The title (heading) — the topic also appears as a highlighted row in the
+    // "all topics" nav list, so scope to the heading to avoid a double match.
+    expect(
+      within(dialog).getByRole('heading', { name: 'el subjuntivo' }),
+    ).toBeInTheDocument();
 
     // Click the "other topic" button for preterite vs. imperfecto.
     fireEvent.click(
@@ -179,8 +256,13 @@ describe('TheoryPanel', () => {
     const dialogAfter = document.body.querySelector('[role="dialog"]');
     expect(dialogAfter).toBe(dialog);
     expect(
-      within(dialog).getByText('pretérito vs. imperfecto'),
+      within(dialog).getByRole('heading', { name: 'pretérito vs. imperfecto' }),
     ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole('link', {
+        name: /open pretérito vs\. imperfecto in theory hub \(new tab\)/i,
+      }),
+    ).toHaveAttribute('href', '/theory/preterite-imperfect');
   });
 
   it('renders the empty state when the topic does not exist for the language', () => {

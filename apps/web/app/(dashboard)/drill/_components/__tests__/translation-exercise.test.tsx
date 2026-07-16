@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   ExerciseType,
   Language,
@@ -16,6 +17,13 @@ import {
   useDrillAction,
   type DrillPrimaryAction,
 } from '../drill-action-context';
+
+function withQueryClient(children: React.ReactNode) {
+  const qc = new QueryClient();
+  return (
+    <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+  );
+}
 
 const baseContent: TranslationContent = {
   type: ExerciseType.TRANSLATION,
@@ -51,7 +59,10 @@ function renderTranslation(overrides: Partial<TranslationExerciseProps> = {}) {
     onNext: vi.fn(),
     ...overrides,
   };
-  return { props, ...render(<TranslationExercise {...props} />) };
+  return {
+    props,
+    ...render(withQueryClient(<TranslationExercise {...props} />)),
+  };
 }
 
 describe('TranslationExercise — answer draft', () => {
@@ -108,72 +119,90 @@ describe('TranslationExercise', () => {
     });
   });
 
-  describe('hint progression', () => {
-    it('starts with no hint paragraphs visible and the hint button shown', () => {
-      renderTranslation();
-      expect(
-        screen.getByRole('button', { name: /show me a hint/i }),
-      ).toBeInTheDocument();
-      // None of the hint LINES are rendered yet. (Note: the gloss text
-      // "only just; almost not" is also embedded as a hidden tooltip span
-      // inside the source paragraph by GlossedText, so we cannot assert its
-      // total absence — we assert absence of the specific "lemma — gloss"
-      // formatted hint paragraph, plus absence of the half + full reference.)
-      expect(
-        screen.queryByText(/barely\s+—\s+only just; almost not/u),
-      ).not.toBeInTheDocument();
-      expect(
-        screen.queryByText(/Apenas puedo permitírmelo…/u),
-      ).not.toBeInTheDocument();
-      expect(
-        screen.queryByText('Apenas puedo permitírmelo ahora mismo.'),
-      ).not.toBeInTheDocument();
+  describe('word hints', () => {
+    const hintContent: TranslationContent = {
+      type: ExerciseType.TRANSLATION,
+      instructions: 'Translate',
+      sourceText: 'The students are ready',
+      sourceLanguage: Language.EN,
+      targetLanguage: Language.TR,
+      referenceTranslation: 'Öğrenciler hazır',
+    };
+
+    it('fetches once on "need a hint" and reveals a lemma on word click', async () => {
+      const fetchFn = vi.fn().mockResolvedValue({
+        json: async () => ({
+          cached: false,
+          units: [
+            { text: 'The', hintable: false },
+            { text: 'students', hintable: true, lemma: 'öğrenci' },
+            { text: 'are ready', hintable: true, lemma: 'hazır' },
+          ],
+        }),
+      });
+      renderTranslation({
+        content: hintContent,
+        language: Language.TR,
+        exerciseId: 'ex-1',
+        fetchFn,
+      });
+      fireEvent.click(screen.getByRole('button', { name: /need a hint/i }));
+      await waitFor(() => expect(fetchFn).toHaveBeenCalledTimes(1));
+      // hintable word is a button; non-hintable is not
+      fireEvent.click(await screen.findByRole('button', { name: 'students' }));
+      expect(await screen.findByText('öğrenci')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'The' })).toBeNull();
     });
 
-    it('reveals progressive hints L1 -> L2 -> L3 and hides the button after the third click', () => {
+    it('offers a working retry when the hint fetch fails', async () => {
+      const fetchFn = vi
+        .fn()
+        .mockRejectedValueOnce(new Error('network'))
+        .mockResolvedValueOnce({
+          json: async () => ({
+            cached: false,
+            units: [{ text: 'ready', hintable: true, lemma: 'hazır' }],
+          }),
+        });
+      renderTranslation({
+        content: hintContent,
+        language: Language.TR,
+        exerciseId: 'ex-err',
+        fetchFn,
+      });
+      fireEvent.click(screen.getByRole('button', { name: /need a hint/i }));
+      // First fetch fails → a retry control appears (the toggle has unmounted).
+      const retry = await screen.findByRole('button', { name: /try again/i });
+      expect(fetchFn).toHaveBeenCalledTimes(1);
+      // Retrying re-fires the fetch and the hints load.
+      fireEvent.click(retry);
+      await waitFor(() => expect(fetchFn).toHaveBeenCalledTimes(2));
+      expect(
+        await screen.findByRole('button', { name: 'ready' }),
+      ).toBeInTheDocument();
+    });
+
+    it('old gloss/half-reference ladder is gone but full-answer remains', () => {
+      renderTranslation({ content: hintContent, language: Language.TR });
+      expect(
+        screen.queryByRole('button', { name: /show me a hint/i }),
+      ).toBeNull();
+      expect(
+        screen.getByRole('button', { name: /reveal full answer/i }),
+      ).toBeInTheDocument();
+    });
+
+    it('reveals the full reference translation on "reveal full answer"', () => {
       renderTranslation();
-      const hintBtn = () =>
-        screen.getByRole('button', { name: /show me a hint/i });
-
-      // L1: gloss line for the first glossed source token (lemma — gloss).
-      // The lemma is "barely" with gloss "only just; almost not". The
-      // separator is an em dash (U+2014).
-      fireEvent.click(hintBtn());
-      expect(screen.getByText(/barely\s+—\s+only just; almost not/u))
-        .toBeInTheDocument();
-      // Half-reference and full reference must NOT yet be visible.
-      expect(
-        screen.queryByText(/Apenas puedo permitírmelo…/u),
-      ).not.toBeInTheDocument();
       expect(
         screen.queryByText('Apenas puedo permitírmelo ahora mismo.'),
       ).not.toBeInTheDocument();
-
-      // L2: gloss line stays + half-reference appears (text + ellipsis U+2026).
-      fireEvent.click(hintBtn());
-      expect(screen.getByText(/barely\s+—\s+only just; almost not/u))
-        .toBeInTheDocument();
-      expect(
-        screen.getByText(/Apenas puedo permitírmelo…/u),
-      ).toBeInTheDocument();
-      // Full reference still not shown.
-      expect(
-        screen.queryByText('Apenas puedo permitírmelo ahora mismo.'),
-      ).not.toBeInTheDocument();
-
-      // L3: full reference appears, and the hint button unmounts entirely.
-      fireEvent.click(hintBtn());
-      expect(screen.getByText(/barely\s+—\s+only just; almost not/u))
-        .toBeInTheDocument();
-      expect(
-        screen.getByText(/Apenas puedo permitírmelo…/u),
-      ).toBeInTheDocument();
+      fireEvent.click(
+        screen.getByRole('button', { name: /reveal full answer/i }),
+      );
       expect(
         screen.getByText('Apenas puedo permitírmelo ahora mismo.'),
       ).toBeInTheDocument();
-      expect(
-        screen.queryByRole('button', { name: /show me a hint/i }),
-      ).not.toBeInTheDocument();
     });
   });
 
@@ -346,26 +375,28 @@ describe('TranslationExercise', () => {
         return null;
       }
       const utils = render(
-        <DrillActionProvider active>
-          <TranslationExercise
-            content={baseContent}
-            language={Language.ES}
-            submission={idleSubmission}
-            onSubmit={onSubmit}
-            onNext={vi.fn()}
-            {...overrides}
-          />
-          <Capture />
-        </DrillActionProvider>,
+        withQueryClient(
+          <DrillActionProvider active>
+            <TranslationExercise
+              content={baseContent}
+              language={Language.ES}
+              submission={idleSubmission}
+              onSubmit={onSubmit}
+              onNext={vi.fn()}
+              {...overrides}
+            />
+            <Capture />
+          </DrillActionProvider>,
+        ),
       );
       return { onSubmit, getCaptured: () => captured, ...utils };
     }
 
-    it('omits the inline submit button but keeps the hint button inline', () => {
+    it('omits the inline submit button but keeps the "need a hint" button inline', () => {
       renderActive();
       expect(screen.queryByRole('button', { name: 'submit' })).toBeNull();
       expect(
-        screen.getByRole('button', { name: 'show me a hint' }),
+        screen.getByRole('button', { name: /need a hint/i }),
       ).toBeInTheDocument();
     });
 
@@ -381,7 +412,9 @@ describe('TranslationExercise', () => {
       action?.onClick();
       expect(onSubmit).toHaveBeenCalledWith(
         'apenas puedo',
-        expect.objectContaining({ hintCount: 0 }),
+        expect.objectContaining({
+          hintUsage: { wordsRevealed: 0, fullAnswerRevealed: false },
+        }),
       );
     });
   });

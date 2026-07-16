@@ -336,3 +336,15 @@ export const GenerateReadingTextResponseSchema = z.object({
 export type GenerateReadingTextResponse = z.infer<
   typeof GenerateReadingTextResponseSchema
 >;
+
+// ---------------------------------------------------------------------------
+// POST /read/:entryId/audio — Polly TTS for shadowing (Task 6/7)
+// ---------------------------------------------------------------------------
+
+export const ReadAudioResponseSchema = z.object({
+  audioUrl: z.string().url().nullable(),
+  durationSec: z.number(),
+  reason: z.enum(['ok', 'too_long']),
+});
+
+export type ReadAudioResponse = z.infer<typeof ReadAudioResponseSchema>;

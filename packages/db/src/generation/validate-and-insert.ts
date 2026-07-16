@@ -53,6 +53,7 @@ import type { Cell } from './cells';
 import { applicableCoverageTags } from './coverage-tags';
 import { applyDeterministicChecks } from './deterministic-checks';
 import { routeValidationResult } from './routing';
+import { vocabSeedMismatch } from './vocab-seed-check';
 
 const MAX_DEDUP_RETRIES = 3;
 
@@ -361,8 +362,19 @@ export async function validateAndInsertWithRetry(
       opts.cell.language,
     );
 
+    // Seed-match gate (Spec 2): a seeded vocab_recall draft that drifted off
+    // its curated target is rejected here (not inserted), so an approved
+    // exercise always covers its seed. The target is re-seeded next run.
+    const seedMismatch = vocabSeedMismatch(currentDraft.contentJson, seedWord);
+    const gatedDecision = seedMismatch
+      ? {
+          reviewStatus: 'rejected' as const,
+          flaggedReasons: [seedMismatch, ...decision.flaggedReasons],
+        }
+      : decision;
+
     // ---- Rejected branch ------------------------------------------------
-    if (decision.reviewStatus === 'rejected') {
+    if (gatedDecision.reviewStatus === 'rejected') {
       // If we're already retrying a dedup-collided slot, dispatch another
       // retry; if we've exhausted retries, give up on this slot.
       if (firstAttemptDeduped && attempt < MAX_DEDUP_RETRIES) {
@@ -409,12 +421,13 @@ export async function validateAndInsertWithRetry(
           }
         : {
             terminalStatus: 'rejected',
-            // `decision.flaggedReasons` is non-empty here: the rejected branch
-            // is only entered on a low-quality / context-spoils / cultural
-            // veto (or a deterministic-harmony downgrade), each of which
-            // pushes at least one reason in `routeValidationResult` /
-            // `applyDeterministicChecks`.
-            rejectionReasons: decision.flaggedReasons,
+            // `gatedDecision.flaggedReasons` is non-empty here: the rejected
+            // branch is only entered on a low-quality / context-spoils /
+            // cultural veto (or a deterministic-harmony downgrade / seed
+            // mismatch), each of which pushes at least one reason in
+            // `routeValidationResult` / `applyDeterministicChecks` /
+            // `vocabSeedMismatch`.
+            rejectionReasons: gatedDecision.flaggedReasons,
             extraUsage,
             extraProduced,
             validatedCount,
@@ -463,11 +476,11 @@ export async function validateAndInsertWithRetry(
             topicDomain: opts.args.topicDomain,
             generationSource: 'claude-realtime' as const,
             modelId: GENERATION_MODEL,
-            reviewStatus: decision.reviewStatus,
+            reviewStatus: gatedDecision.reviewStatus,
             qualityScore: result.qualityScore,
             flaggedReasons:
-              decision.flaggedReasons.length > 0
-                ? decision.flaggedReasons
+              gatedDecision.flaggedReasons.length > 0
+                ? gatedDecision.flaggedReasons
                 : null,
             coverageTags: applicableCoverageTags(opts.cell, result.coverage),
             generatedAt: opts.generatedAt,
@@ -487,7 +500,7 @@ export async function validateAndInsertWithRetry(
 
       const terminalStatus = firstAttemptDeduped
         ? ('first-attempt-dedup-then-success' as const)
-        : decision.reviewStatus === 'auto-approved'
+        : gatedDecision.reviewStatus === 'auto-approved'
           ? ('inserted-approved' as const)
           : ('inserted-flagged' as const);
 
@@ -496,7 +509,7 @@ export async function validateAndInsertWithRetry(
         // Safe narrow: `routeValidationResult` never returns 'manual-approved'
         // (only the review CLI's `tryApprove` sets that). The 'rejected' case
         // is already handled by the early return above.
-        terminalReviewStatus: decision.reviewStatus as 'auto-approved' | 'flagged',
+        terminalReviewStatus: gatedDecision.reviewStatus as 'auto-approved' | 'flagged',
         realizedCoverage: result.coverage,
         // The id just inserted (== opts.draft.id on attempt 0, or the retry id
         // after a dedup retry). Lets the generation handler enqueue audio synth

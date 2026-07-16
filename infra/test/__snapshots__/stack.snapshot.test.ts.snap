@@ -260,9 +260,10 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
             "Ref": "AlertsAlertsTopic96BD0900",
           },
         ],
-        "AlarmDescription": "Langfuse prompt registry served the in-repo fallback for a non-keys_unset reason (timeout / fetch_error) — the live prompt may have vanished or Langfuse is unreachable. See CLAUDE.md §Prompt Editing.",
+        "AlarmDescription": "Langfuse prompt registry served the in-repo fallback for a non-keys_unset reason (timeout / fetch_error) at least twice within 30 min — the live prompt may have vanished or Langfuse is unreachable. A single isolated fallback (transient cold-fetch timeout) is tolerated by design. See CLAUDE.md §Prompt Editing.",
         "ComparisonOperator": "GreaterThanOrEqualToThreshold",
-        "EvaluationPeriods": 1,
+        "DatapointsToAlarm": 2,
+        "EvaluationPeriods": 6,
         "MetricName": "annotate-prompt-fallback",
         "Namespace": "LanguageDrill/prod",
         "Period": 300,
@@ -2146,6 +2147,37 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
       },
       "Type": "AWS::CloudWatch::Alarm",
     },
+    "GenerationLambdaWrapGenerationDailyCostAlarmCDEBB717": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "AlertsAlertsTopic96BD0900",
+          },
+        ],
+        "AlarmDescription": "Phase 4 (exercise gen): estimated Anthropic spend across all cells in one day exceeded the daily cost threshold (default $50). Catches a runaway fan-out that the CellFailures alarm misses because the cells all succeed.",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Dimensions": [
+          {
+            "Name": "env",
+            "Value": "prod",
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "CellCostUsd",
+        "Namespace": "LanguageDrill/Generation",
+        "Period": 86400,
+        "Statistic": "Sum",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Threshold": 50,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
     "GenerationLambdaWrapGenerationErrorsAlarm3DD6FF6D": {
       "Properties": {
         "AlarmActions": [
@@ -2614,9 +2646,10 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
             "Ref": "AlertsAlertsTopic96BD0900",
           },
         ],
-        "AlarmDescription": "Langfuse prompt registry served the in-repo fallback for a non-keys_unset reason (timeout / fetch_error) — the live prompt may have vanished or Langfuse is unreachable. See CLAUDE.md §Prompt Editing.",
+        "AlarmDescription": "Langfuse prompt registry served the in-repo fallback for a non-keys_unset reason (timeout / fetch_error) at least twice within 30 min — the live prompt may have vanished or Langfuse is unreachable. A single isolated fallback (transient cold-fetch timeout) is tolerated by design. See CLAUDE.md §Prompt Editing.",
         "ComparisonOperator": "GreaterThanOrEqualToThreshold",
-        "EvaluationPeriods": 1,
+        "DatapointsToAlarm": 2,
+        "EvaluationPeriods": 6,
         "MetricName": "api-prompt-fallback",
         "Namespace": "LanguageDrill/prod",
         "Period": 300,
@@ -3050,6 +3083,36 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
                   ],
                 },
               ],
+            },
+            {
+              "Action": [
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "StorageContentBucket858D6C32",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": "polly:SynthesizeSpeech",
+              "Effect": "Allow",
+              "Resource": "*",
             },
             {
               "Action": [

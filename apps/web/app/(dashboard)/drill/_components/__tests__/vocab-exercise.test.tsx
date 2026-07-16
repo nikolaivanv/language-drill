@@ -162,6 +162,23 @@ describe('VocabExercise', () => {
     });
   });
 
+  describe('evaluated state — example sentence reveal', () => {
+    it('fills a pre-blanked example with the word in the post-answer card', () => {
+      renderVocab({
+        content: {
+          ...baseContent,
+          expectedWord: 'padre',
+          exampleSentence: 'Mi ___ trabaja todos los días.',
+        },
+        submission: evaluatedAt(1.0),
+      });
+      expect(
+        screen.getByText('Mi padre trabaja todos los días.'),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/Mi ___ trabaja/)).not.toBeInTheDocument();
+    });
+  });
+
   describe('evaluated state — confusions parsing (Req 8.2, 8.3)', () => {
     it('renders the confusions heading and pair list when feedback parses', () => {
       const { container } = renderVocab({

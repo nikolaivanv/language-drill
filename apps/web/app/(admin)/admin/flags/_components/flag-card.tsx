@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import type { UserFlagQueueItem } from '@language-drill/api-client';
+import { CopyId } from '../../../../../components/admin/copy-id';
 
 const CATEGORY_LABEL: Record<string, string> = {
   wrong_answer: 'Accepted answer is wrong',
@@ -33,6 +34,12 @@ export function FlagCard({ flag, onReject, onDismiss, disabled }: FlagCardProps)
         {ex.grammarPointKey && <span>· {ex.grammarPointKey}</span>}
         <span>· status: {ex.reviewStatus ?? '—'}</span>
         {flag.createdAt && <span>· {new Date(flag.createdAt).toLocaleString()}</span>}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-s-1">
+        {flag.sessionId && <CopyId id={flag.sessionId} label="session" />}
+        <CopyId id={flag.exerciseId} label="exercise" />
+        <CopyId id={flag.submissionId} label="eval" />
       </div>
 
       {flag.note && <p className="text-[13px] text-ink">"{flag.note}"</p>}

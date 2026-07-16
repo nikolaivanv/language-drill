@@ -14,8 +14,10 @@
     "db:studio": "drizzle-kit studio",
     "generate:exercises": "npx tsx scripts/generate-exercises.ts",
     "generate:theory": "npx tsx scripts/generate-theory.ts",
+    "generate:vocab-targets": "npx tsx scripts/generate-vocab-targets.ts",
     "review:flagged": "npx tsx scripts/review-flagged.ts",
     "review:flagged-theory": "npx tsx scripts/review-flagged-theory.ts",
+    "review:flagged-vocab": "npx tsx scripts/review-flagged-vocab.ts",
     "revalidate:cloze": "npx tsx scripts/revalidate-cloze-pool.ts",
     "dedupe:conjugation": "npx tsx scripts/dedupe-conjugation-pool.ts",
     "demote:pool": "npx tsx scripts/demote-cell-pool.ts",
@@ -27,6 +29,7 @@
     "seed:exercises": "npx tsx scripts/seed-exercises.ts",
     "seed:dictation": "npx tsx scripts/seed-dictation.ts",
     "seed:vocab": "npx tsx scripts/seed-vocab.ts",
+    "seed:gloss-cache": "npx tsx scripts/seed-gloss-cache.ts",
     "cleanup:zombies": "npx tsx scripts/cleanup-zombie-jobs.ts",
     "test": "vitest run"
   },

@@ -5,10 +5,24 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Language } from '@language-drill/shared';
 import { TheoryTrigger } from '../theory-trigger';
 
-// Components consume `useTheoryTopic` via TanStack Query — every render needs
-// a QueryClientProvider in scope. Tests omit `fetchFn`, so the hook degrades
-// to static-only and `useQuery` stays `enabled: false`; the provider is still
-// required because the hook always calls `useQuery`.
+// Theory content now comes exclusively from the DB via `useTheoryTopic`. Mock
+// that hook to supply a fixture topic so the trigger's render/omit behavior can
+// be exercised without a fetch: ES/'subjunctive' resolves; any other
+// language/slug returns no topic.
+vi.mock('../../../lib/hooks/use-theory-topic', () => ({
+  useTheoryTopic: ({ language, topicId }: { language: string; topicId: string }) => ({
+    topic:
+      language === 'ES' && topicId === 'subjunctive'
+        ? { id: 'subjunctive', title: 'el subjuntivo', subtitle: '', cefr: 'B1', sections: [] }
+        : null,
+    isLoading: false,
+    isError: false,
+    error: null,
+  }),
+}));
+
+// The trigger renders inside a QueryClientProvider in the real app; keep one in
+// scope so nested consumers stay happy even though the hook itself is mocked.
 function Wrapper({ children }: { children: ReactNode }) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -62,10 +76,10 @@ describe('TheoryTrigger', () => {
   });
 
   it('renders nothing when the topic does not exist for the language', () => {
-    // 'subjunctive' is mapped, but DE registry is empty, so no topic exists.
+    // No DE topic resolves for this slug, so the hook returns no topic.
     const { container } = render(
       <TheoryTrigger
-        topicId={'subjunctive' as never}
+        topicId="subjunctive"
         language={Language.DE}
         onOpen={vi.fn()}
       />,

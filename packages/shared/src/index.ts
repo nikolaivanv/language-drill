@@ -84,6 +84,7 @@ export enum ExerciseType {
   DICTATION = "dictation",
   FREE_WRITING = "free_writing",
   CONJUGATION = "conjugation",
+  CONTEXTUAL_PARAPHRASE = "contextual_paraphrase",
 }
 
 export type ClozeContent = {
@@ -126,11 +127,30 @@ export type TranslationContent = {
   topicHint?: string;
 };
 
+/**
+ * One unit of a translation word-hint map: an ordered slice of the source
+ * sentence. `hintable:false` units (articles, function words, punctuation)
+ * carry no lemma and are not tappable in the UI.
+ */
+export type WordHintUnit = {
+  text: string;
+  hintable: boolean;
+  lemma?: string;
+};
+
 export type VocabRecallContent = {
   type: ExerciseType.VOCAB_RECALL;
   instructions: string;
   prompt: string;
   expectedWord: string;
+  /**
+   * Optional. Every additional headword the prompt/definition picks out
+   * equally well — true near-synonyms a learner could defend given only the
+   * definition (e.g. TR istasyon/gar for a station definition). Mirrors the
+   * cloze field: the grader accepts any entry here as fully correct, and
+   * `expectedWord` is NOT auto-included in this list.
+   */
+  acceptableAnswers?: string[];
   hints: string[];
   exampleSentence: string;
   topicHint?: string;
@@ -253,6 +273,27 @@ export type ConjugationContent = {
   topicHint?: string;
 };
 
+export type ContextualParaphraseContent = {
+  type: ExerciseType.CONTEXTUAL_PARAPHRASE;
+  instructions: string;
+  /** The sentence the learner must rewrite. */
+  sourceText: string;
+  /** Which transformation is required. Drives rendering + eval framing. */
+  constraintKind: "avoid" | "register" | "simplify";
+  /** avoid: words/structures that must NOT appear in the answer (≥1 when kind==="avoid"). */
+  bannedTerms?: string[];
+  /** register: the register the rewrite must adopt (required when kind==="register"). */
+  targetRegister?: "informal" | "neutral" | "formal";
+  /** simplify: the audience to simplify for, e.g. "a child" (required when kind==="simplify"). */
+  audience?: string;
+  /** Rendered task shown to the learner, e.g. "Say this without using «gustar»". */
+  constraintLabel: string;
+  /** 2–3 model paraphrases that satisfy the constraint AND preserve meaning.
+   *  Used by the validator and the reveal hint. */
+  referenceParaphrases: string[];
+  topicHint?: string;
+};
+
 export type ExerciseContent =
   | ClozeContent
   | TranslationContent
@@ -260,7 +301,8 @@ export type ExerciseContent =
   | SentenceConstructionContent
   | DictationContent
   | FreeWritingContent
-  | ConjugationContent;
+  | ConjugationContent
+  | ContextualParaphraseContent;
 
 export type Exercise = {
   id: string;
@@ -306,6 +348,12 @@ export function isConjugationContent(
   content: ExerciseContent,
 ): content is ConjugationContent {
   return content.type === ExerciseType.CONJUGATION;
+}
+
+export function isContextualParaphraseContent(
+  content: ExerciseContent,
+): content is ContextualParaphraseContent {
+  return content.type === ExerciseType.CONTEXTUAL_PARAPHRASE;
 }
 
 // ---------------------------------------------------------------------------
@@ -488,6 +536,13 @@ export * from "./review";
 // ---------------------------------------------------------------------------
 
 export * from "./tokenize";
+
+// ---------------------------------------------------------------------------
+// Canonical vocab surface-form normalization (coverage read model + generation
+// seed matching)
+// ---------------------------------------------------------------------------
+
+export * from "./vocab-normalize";
 
 // ---------------------------------------------------------------------------
 // Shared CORS allow-list (Hono middleware + Function URL CORS)

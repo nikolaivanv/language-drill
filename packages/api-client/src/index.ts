@@ -16,6 +16,9 @@ export {
   type FreeWritingEvaluationResponse,
   ExplainResponseSchema,
   type ExplainResponse,
+  WordHintUnitSchema,
+  WordHintsResponseSchema,
+  type WordHintsResponse,
 } from './schemas/exercise';
 export {
   LanguageProfileSchema,
@@ -64,9 +67,13 @@ export {
   RadarAxisKeyEnum,
   RadarAxisSchema,
   ProgressRadarResponseSchema,
+  PointMasterySnapshotSchema,
+  PointDrillInfoResponseSchema,
   type RadarAxisKey,
   type RadarAxis,
   type ProgressRadarResponse,
+  type PointMasterySnapshot,
+  type PointDrillInfoResponse,
 } from './schemas/progress';
 export {
   TodayPlanItemStatusEnum,
@@ -103,6 +110,7 @@ export {
   DeleteVocabularyCardResponseSchema,
   GenerateReadingTextRequestSchema,
   GenerateReadingTextResponseSchema,
+  ReadAudioResponseSchema,
   WordFlagSchema,
   FlaggedMapSchema,
   DeepCardSchema,
@@ -126,6 +134,7 @@ export {
   type DeleteVocabularyCardResponse,
   type GenerateReadingTextRequest,
   type GenerateReadingTextResponse,
+  type ReadAudioResponse,
   type WordFlag,
   type FlaggedMap,
   type DeepCard,
@@ -145,6 +154,7 @@ export {
   type SubmitFreeWritingParams,
   type UseSubmitFreeWritingOptions,
 } from './hooks/useSubmitFreeWriting';
+export { useWordHints, type UseWordHintsOptions } from './hooks/useWordHints';
 export {
   useExplainSubmission,
   type ExplainSubmissionParams,
@@ -190,6 +200,7 @@ export {
   useProgressRadar,
   type UseProgressRadarParams,
 } from './hooks/useProgress';
+export { usePointDrillInfo, type UsePointDrillInfoParams } from './hooks/usePointDrillInfo';
 export { useInsightsErrors, type UseInsightsErrorsParams } from './hooks/useInsights';
 export {
   ErrorTrendThemeSchema,
@@ -226,6 +237,10 @@ export {
   useGenerateReadingText,
   type UseGenerateReadingTextOptions,
 } from './hooks/useGenerateReadingText';
+export {
+  useReadAudio,
+  type UseReadAudioOptions,
+} from './hooks/useReadAudio';
 export {
   useReadAnnotateSpanStream,
   type UseReadAnnotateSpanStreamOptions,
@@ -280,11 +295,16 @@ export {
   TheoryCoverageRowSchema,
   TheoryCoverageResponseSchema,
   PoolStatusTheoryItemSchema,
+  RelatedTopicRefSchema,
+  RelatedTheoryTopicsSchema,
+  parseRelatedTheoryTopics,
   type TheoryListItem,
   type TheoryListResponse,
   type TheoryCoverageRow,
   type TheoryCoverageResponse,
   type PoolStatusTheoryItem,
+  type RelatedTopicRef,
+  type RelatedTheoryTopics,
 } from './schemas/theory';
 export {
   parseTheoryTopicJson,
@@ -470,3 +490,17 @@ export {
   type EmailPreferences,
   type UpdateWeeklySummaryInput,
 } from './schemas/email';
+export {
+  CoverageStateSchema,
+  VocabTopicSummarySchema,
+  VocabTopicsResponseSchema,
+  VocabWordSchema,
+  VocabTopicDetailSchema,
+  type CoverageState,
+  type VocabTopicSummary,
+  type VocabTopicsResponse,
+  type VocabWord,
+  type VocabTopicDetail,
+} from './schemas/vocab';
+export { useVocabTopics, type UseVocabTopicsParams } from './hooks/useVocabTopics';
+export { useVocabTopicDetail, type UseVocabTopicDetailParams } from './hooks/useVocabTopicDetail';

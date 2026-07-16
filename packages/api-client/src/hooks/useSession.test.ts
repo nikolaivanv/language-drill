@@ -69,6 +69,7 @@ const SAMPLE_EXERCISE = {
 
 const SAMPLE_RESPONSE = {
   id: '11111111-2222-3333-4444-555555555555',
+  difficulty: 'B1',
   exercises: [SAMPLE_EXERCISE],
 };
 

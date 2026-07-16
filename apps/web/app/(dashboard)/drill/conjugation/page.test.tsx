@@ -365,4 +365,28 @@ describe('ConjugationPage — grammarPoint targeting', () => {
       expect.not.objectContaining({ grammarPointKey: expect.anything() }),
     );
   });
+
+  it('shows a server re-leveled difficulty in the level display WITHOUT re-feeding the query (cross-level theory-page launch)', () => {
+    // Profile baseline is ES/B1 (see providerWrapper); a grammarPoint targeting
+    // an A2 point must re-level the DISPLAY to A2 while the query input stays
+    // B1 — feeding the effective level back into useExerciseSet would change
+    // its query key, resetting `data` to undefined mid-refetch and unmounting
+    // the exercise pane (discarding any in-progress typed answer).
+    mockSearchParamsString = 'grammarPoint=es-a2-ser-vs-estar';
+    mockUseExerciseSet.mockReturnValue(
+      setReturn([CONJUGATION_EXERCISE], {
+        data: { exercises: [CONJUGATION_EXERCISE], available: 1, difficulty: CefrLevel.A2 },
+      }),
+    );
+
+    renderWithProviders(<ConjugationPage />);
+
+    // (1) Display reflects the level the set was ACTUALLY pulled at.
+    expect(screen.getByRole('combobox')).toHaveValue(CefrLevel.A2);
+    // (2) The query input did NOT change — every call kept the requested B1.
+    expect(mockUseExerciseSet.mock.calls.length).toBeGreaterThan(0);
+    for (const [args] of mockUseExerciseSet.mock.calls) {
+      expect(args).toMatchObject({ difficulty: CefrLevel.B1 });
+    }
+  });
 });

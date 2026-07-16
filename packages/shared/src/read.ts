@@ -113,6 +113,12 @@ export const DeepWordCardSchema = z.object({
   lemma: z.string().min(1),
   pos: z.string().min(1),
   contextualSense: z.string().min(1),
+  // Short base English gloss of the lemma (e.g. "to eat", "the house") — the
+  // dictionary meaning, distinct from `contextualSense` (what it means HERE).
+  // Optional for backward-compatibility: cards persisted before this field
+  // existed carry no `baseGloss` and are re-parsed on every reopen. The model
+  // tool schema requires it, so newly generated cards always populate it.
+  baseGloss: z.string().min(1).optional(),
   definition: z.string().min(1),
   definitionLabel: z.string().min(1),
   cefr: CefrEnum,

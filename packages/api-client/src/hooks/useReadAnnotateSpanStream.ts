@@ -130,33 +130,56 @@ export function useReadAnnotateSpanStream(
 ): UseReadAnnotateSpanStreamReturn {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
 
-  // The active controller. `start()` aborts any prior controller before
-  // creating a new one, so a rapid second tap can't leak a background iterator.
-  const controllerRef = useRef<AbortController | null>(null);
+  // Every in-flight stream's controller. `start()` no longer aborts the prior
+  // stream — a superseded ("detached") stream keeps running so its resolved
+  // card can still be banked, matching the dismiss-before-complete behavior:
+  // opening a word's gloss banks it however you leave the card. `abort()` /
+  // `reset()` cancel every live stream; each stream removes its own controller
+  // when it settles.
+  const controllersRef = useRef<Set<AbortController>>(new Set());
+  // Monotonic id of the newest stream + the id currently allowed to drive the
+  // exposed reducer state. Only the newest ("active") stream dispatches into the
+  // reducer; a detached stream suppresses its reducer dispatches (so a late
+  // frame can't corrupt the visible card) but still fires `onResolved`, which is
+  // what banks the switched-away word.
+  const streamSeqRef = useRef(0);
+  const activeStreamRef = useRef(0);
 
   const start = useCallback(
     (input: AnnotateSpanRequest) => {
-      controllerRef.current?.abort();
+      const streamId = (streamSeqRef.current += 1);
+      activeStreamRef.current = streamId;
       const controller = new AbortController();
-      controllerRef.current = controller;
+      controllersRef.current.add(controller);
 
       dispatch({ type: "START", span: input });
-      void runStream(opts, input, controller, dispatch);
+      // Gate reducer dispatches to the active stream. `runStream` calls
+      // `onResolved` independently of this, so a detached stream still resolves
+      // (and banks) even though its frames no longer touch the visible state.
+      const guardedDispatch = (action: Action): void => {
+        if (activeStreamRef.current === streamId) dispatch(action);
+      };
+      void runStream(opts, input, controller, guardedDispatch).finally(() => {
+        controllersRef.current.delete(controller);
+      });
     },
     [opts],
   );
 
-  const abort = useCallback(() => {
-    controllerRef.current?.abort();
-    controllerRef.current = null;
-    dispatch({ type: "ABORTED" });
+  const cancelAll = useCallback(() => {
+    for (const controller of controllersRef.current) controller.abort();
+    controllersRef.current.clear();
   }, []);
 
+  const abort = useCallback(() => {
+    cancelAll();
+    dispatch({ type: "ABORTED" });
+  }, [cancelAll]);
+
   const reset = useCallback(() => {
-    controllerRef.current?.abort();
-    controllerRef.current = null;
+    cancelAll();
     dispatch({ type: "RESET" });
-  }, []);
+  }, [cancelAll]);
 
   return { state, start, abort, reset };
 }

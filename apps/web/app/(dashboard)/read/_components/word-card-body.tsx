@@ -110,7 +110,7 @@ export function WordCardBody({
           size="sm"
           onClick={onSave}
         >
-          {inBank ? '✓ saved · undo' : '+ save to bank'}
+          {inBank ? '✓ saved · remove' : '+ save to bank'}
         </Button>
       </div>
     </>
@@ -175,12 +175,22 @@ function CollapsibleRow({
 
 export function DeepWordCardBody({
   card,
+  gloss,
   inBank,
   onSave,
   onSkip,
   skipRef,
 }: {
   card: DeepWordCard;
+  /**
+   * The short English meaning (e.g. "to eat") carried over from the skim
+   * `WordFlag.gloss`. The deep card's own schema has no base gloss — only the
+   * contextual "here" sense and the target-language definition — so without
+   * this the concise English meaning shown in the quick card would vanish when
+   * the full card resolves. Rendered under the header, mirroring the skim card;
+   * omitted when absent (deep cards opened on a non-flagged selection).
+   */
+  gloss?: string;
   inBank: boolean;
   onSave: () => void;
   onSkip: () => void;
@@ -189,6 +199,11 @@ export function DeepWordCardBody({
   const inflectionLine = card.inflection?.forms
     .map((f) => `${f.label} ${f.value}`)
     .join(' · ');
+
+  // Base English gloss: prefer the skim `WordFlag.gloss` (flagged words) for
+  // continuity with the quick card, else fall back to the deep card's own
+  // `baseGloss` — the only source for a manually selected (non-flagged) word.
+  const displayGloss = gloss ?? card.baseGloss;
 
   return (
     <>
@@ -209,6 +224,15 @@ export function DeepWordCardBody({
           <span className="ml-auto" />
           <span className="t-mono text-[11px] text-accent">{card.cefr}</span>
         </div>
+        {/* Base English gloss (e.g. "to eat") — from the skim card for flagged
+         *  words, or the deep card's own `baseGloss` for manually selected
+         *  words. Keeps the concise meaning visible in the full state, mirroring
+         *  the skim card's gloss line (Req 6.1). */}
+        {displayGloss && (
+          <p data-testid="deep-word-gloss" className="t-body text-ink-2 mt-[4px]">
+            {displayGloss}
+          </p>
+        )}
         <div className="t-mono mt-[3px] text-[10px] text-ink-mute">
           #{card.freq.toLocaleString('en-US')}
           {card.lemma !== card.surface && <> · {card.lemma}</>}
@@ -329,7 +353,7 @@ export function DeepWordCardBody({
           {inBank ? 'close' : 'skip'}
         </Button>
         <Button variant={inBank ? 'ghost' : 'primary'} size="sm" onClick={onSave}>
-          {inBank ? '✓ saved · undo' : '+ save to vocabulary'}
+          {inBank ? '✓ saved · remove' : '+ save to vocabulary'}
         </Button>
       </div>
     </>
@@ -406,6 +430,10 @@ function str(value: unknown): string | undefined {
 export function DeepCardPartial({ partial }: { partial: Partial<DeepCard> }) {
   const p = partial as Record<string, unknown>;
   const surface = str(p.surface);
+  // Base English gloss (word cards) — shown under the headword as soon as it
+  // streams in, so a manually selected word (which has no skim preview) sees
+  // its meaning without waiting for the full card.
+  const baseGloss = str(p.baseGloss);
   // Primary meaning — whichever of the three card shapes has streamed in.
   const meaning =
     str(p.contextualSense) ?? str(p.idiomaticMeaning) ?? str(p.translation);
@@ -421,7 +449,7 @@ export function DeepCardPartial({ partial }: { partial: Partial<DeepCard> }) {
     : 'literal';
 
   // Nothing displayable yet → keep the instant-open skeleton (Req 9.3).
-  if (!surface && !meaning && !secondary) {
+  if (!surface && !baseGloss && !meaning && !secondary) {
     return <DeepCardSkeleton />;
   }
 
@@ -445,6 +473,11 @@ export function DeepCardPartial({ partial }: { partial: Partial<DeepCard> }) {
             aria-hidden
             className="block h-[20px] w-[120px] rounded-sm bg-paper-3 animate-pulse"
           />
+        )}
+        {baseGloss && (
+          <p data-testid="deep-word-gloss" className="t-body text-ink-2 mt-[4px]">
+            {baseGloss}
+          </p>
         )}
       </div>
 
@@ -551,6 +584,7 @@ export function DeepCardError({
 
 export function DeepCardContent({
   slice,
+  gloss,
   inBank,
   onSave,
   onSkip,
@@ -560,6 +594,8 @@ export function DeepCardContent({
   resolveTheoryHref,
 }: {
   slice: DeepCardSlice;
+  /** Base English gloss from the skim `WordFlag`, forwarded to the word card. */
+  gloss?: string;
   inBank: boolean;
   onSave: () => void;
   onSkip: () => void;
@@ -591,6 +627,7 @@ export function DeepCardContent({
         return (
           <DeepWordCardBody
             card={card}
+            gloss={gloss}
             inBank={inBank}
             onSave={onSave}
             onSkip={onSkip}

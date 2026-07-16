@@ -11,6 +11,7 @@ import {
   type TranslationContent,
   type VocabRecallContent,
   type SentenceConstructionContent,
+  type ContextualParaphraseContent,
   type CefrLevel,
   type Language,
   ExerciseType,
@@ -46,7 +47,11 @@ const CEFR_DESCRIPTOR_BULLETS = (
 // `.1` suffix: PR #523 independently bumped to evaluate@2026-07-05 for the
 // optional-elements anti-anchoring rule; this body additionally carries the
 // Verification Discipline section, so it needs its own cohort tag.
-export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-07-05.1";
+// 2026-07-16: vocab_recall answers matching the new content `acceptableAnswers`
+// field (near-synonym headwords, e.g. TR istasyon/gar) are fully correct; the
+// per-answer vocab user prompt now renders the field. System-prompt sentence
+// added → Langfuse push per env.
+export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-07-16";
 
 export const EVALUATION_SYSTEM_PROMPT = `You are an expert language evaluator for a language-learning application. Your role is to evaluate user answers to language exercises with precision and pedagogical insight.
 
@@ -103,7 +108,7 @@ Be strict but fair. Minor errors that do not impede communication are "minor" se
 
 For cloze exercises, focus primarily on whether the correct word/form was provided. The user message lists a **Correct Answer** and an **Acceptable Answers** field. An answer that matches **any** entry in either field (case-insensitive, modulo trailing punctuation) is fully correct — score 1.0, no errors. Only fall back to holistic judgement when the user's answer matches neither and you must decide whether it is still grammatically and semantically valid in the sentence.
 For translation exercises, evaluate the full translation holistically — multiple correct translations exist.
-For vocabulary recall exercises, check if the target word was produced and used appropriately.`;
+For vocabulary recall exercises, check if the target word was produced and used appropriately. The user message may list an **Acceptable Answers** field of near-synonym headwords the definition picks out equally well — an answer matching any entry there (case-insensitive, modulo trailing punctuation) is fully correct, exactly like the expected word.`;
 
 // ---------------------------------------------------------------------------
 // User prompt builders
@@ -168,12 +173,13 @@ function buildVocabRecallUserPrompt(
 **Instructions:** ${content.instructions}
 **Prompt:** ${content.prompt}
 **Expected Word:** ${content.expectedWord}
+**Acceptable Answers:** ${content.acceptableAnswers && content.acceptableAnswers.length > 0 ? content.acceptableAnswers.join(", ") : "(none — only `Expected Word` is the target headword)"}
 **Hints:** ${content.hints.join("; ")}
 **Example Sentence:** ${content.exampleSentence}
 
 **User's Answer:** ${userAnswer}
 
-Evaluate the user's answer. Check if they produced the expected word or a valid synonym. Consider spelling accuracy.`;
+Evaluate the user's answer. If it matches **Expected Word** or any entry in **Acceptable Answers**, it is fully correct. Otherwise check whether it is a valid synonym used appropriately. Consider spelling accuracy.`;
 }
 
 function buildSentenceConstructionUserPrompt(
@@ -205,6 +211,30 @@ ${registerLine}
 **User's Answer:** ${userAnswer}
 
 Evaluate the user's sentence. Judge grammatical accuracy and naturalness; fold into **Task Achievement** whether the prompt was satisfied — for keywords mode every keyword is used, for situation mode the communicative goal is met, for grammar_target mode the target structure is used. Reward complexity beyond the minimum. Flag errors outside the target structure too (do not ignore a wrong article because the target was the subjunctive).`;
+}
+
+function buildContextualParaphraseUserPrompt(
+  exercise: ContextualParaphraseContent,
+  userAnswer: string,
+  language: Language,
+  difficulty: CefrLevel,
+): string {
+  const constraintDetail =
+    exercise.constraintKind === "avoid"
+      ? `The learner must NOT use these words/structures: ${(exercise.bannedTerms ?? []).join(", ")}.`
+      : exercise.constraintKind === "register"
+        ? `The rewrite must be in ${exercise.targetRegister} register.`
+        : `The rewrite must be simplified for: ${exercise.audience}.`;
+  return `Evaluate this ${language} contextual-paraphrase answer at CEFR ${difficulty}.
+
+Original sentence: ${exercise.sourceText}
+Task: ${exercise.constraintLabel}
+Constraint: ${constraintDetail}
+Model paraphrases (for reference — accept any valid alternative): ${exercise.referenceParaphrases.join(" / ")}
+
+Learner's paraphrase: ${userAnswer}
+
+Score taskAchievement on BOTH meaning preservation AND constraint adherence: a rewrite that changes the meaning OR violates the constraint (uses a banned term / wrong register / not simplified) scores low on taskAchievement even if otherwise fluent. Score grammarAccuracy on the rewrite's grammar and vocabularyRange on the lexis reached for (reward valid synonyms/circumlocution). List concrete errors with corrections.`;
 }
 
 /**
@@ -280,6 +310,9 @@ export function buildUserPrompt(
       break;
     case ExerciseType.SENTENCE_CONSTRUCTION:
       base = buildSentenceConstructionUserPrompt(exercise, userAnswer, language, difficulty);
+      break;
+    case ExerciseType.CONTEXTUAL_PARAPHRASE:
+      base = buildContextualParaphraseUserPrompt(exercise, userAnswer, language, difficulty);
       break;
     case ExerciseType.DICTATION:
       throw new Error(

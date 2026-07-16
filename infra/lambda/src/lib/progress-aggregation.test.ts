@@ -70,6 +70,10 @@ describe('axisForExerciseType', () => {
   it('maps conjugation to the grammar axis', () => {
     expect(axisForExerciseType(ExerciseType.CONJUGATION)).toBe('grammar');
   });
+
+  it('maps contextual_paraphrase to the writing axis', () => {
+    expect(axisForExerciseType(ExerciseType.CONTEXTUAL_PARAPHRASE)).toBe('writing');
+  });
 });
 
 describe('difficultyWeight', () => {

@@ -73,27 +73,7 @@ describe('useTheoryTopic', () => {
     queryClient = buildQueryClient();
   });
 
-  it('returns the static topic sync without calling fetchFn (static hit)', async () => {
-    const fetchFn = vi.fn<AuthenticatedFetch>();
-
-    const { result } = renderHook(
-      () =>
-        useTheoryTopic({
-          language: Language.ES,
-          topicId: 'subjunctive',
-          fetchFn,
-        }),
-      { wrapper: buildWrapper(queryClient) },
-    );
-
-    expect(result.current.topic).not.toBeNull();
-    expect(result.current.topic?.id).toBe('subjunctive');
-    expect(result.current.isLoading).toBe(false);
-    expect(result.current.isError).toBe(false);
-    expect(fetchFn).not.toHaveBeenCalled();
-  });
-
-  it('renders the DB-fetched topic on static miss + 200', async () => {
+  it('renders the DB-fetched topic on 200', async () => {
     const fetchFn = vi
       .fn<AuthenticatedFetch>()
       .mockResolvedValue(jsonResponse(VALID_TOPIC_JSON));
@@ -115,6 +95,55 @@ describe('useTheoryTopic', () => {
     expect(result.current.isError).toBe(false);
     expect(fetchFn).toHaveBeenCalledTimes(1);
     expect(fetchFn.mock.calls[0]?.[0]).toBe('/theory/ES/b1-test-topic');
+  });
+
+  it('parses the additive `related` field alongside the topic', async () => {
+    const related = {
+      buildsOn: [{ topicId: 'b1-conditional', title: 'Conditional simple', cefr: 'B1' }],
+      leadsTo: [],
+      siblings: [],
+    };
+    const fetchFn = vi
+      .fn<AuthenticatedFetch>()
+      .mockResolvedValue(jsonResponse({ ...VALID_TOPIC_JSON, related }));
+
+    const { result } = renderHook(
+      () =>
+        useTheoryTopic({
+          language: Language.ES,
+          topicId: 'b1-test-topic',
+          fetchFn,
+        }),
+      { wrapper: buildWrapper(queryClient) },
+    );
+
+    await waitFor(() => expect(result.current.topic).not.toBeNull());
+    expect(result.current.related).toEqual(related);
+  });
+
+  it('returns related: null when the payload predates the enrichment or it is malformed', async () => {
+    const fetchFn = vi
+      .fn<AuthenticatedFetch>()
+      .mockResolvedValueOnce(jsonResponse(VALID_TOPIC_JSON))
+      .mockResolvedValueOnce(
+        jsonResponse({ ...VALID_TOPIC_JSON, related: { buildsOn: 'not-an-array' } }),
+      );
+
+    const first = renderHook(
+      () =>
+        useTheoryTopic({ language: Language.ES, topicId: 'b1-test-topic', fetchFn }),
+      { wrapper: buildWrapper(queryClient) },
+    );
+    await waitFor(() => expect(first.result.current.topic).not.toBeNull());
+    expect(first.result.current.related).toBeNull();
+
+    const second = renderHook(
+      () =>
+        useTheoryTopic({ language: Language.ES, topicId: 'b1-other-topic', fetchFn }),
+      { wrapper: buildWrapper(queryClient) },
+    );
+    await waitFor(() => expect(second.result.current.topic).not.toBeNull());
+    expect(second.result.current.related).toBeNull();
   });
 
   it('surfaces 404 as { topic: null, isError: false }', async () => {
@@ -194,28 +223,12 @@ describe('useTheoryTopic', () => {
     expect(result.current.error?.message).toMatch(/sections/);
   });
 
-  it('returns the static topic without fetchFn (graceful degradation, static hit)', () => {
+  it('returns { topic: null, isLoading: false } without fetchFn (graceful degradation)', () => {
     const { result } = renderHook(
       () =>
         useTheoryTopic({
           language: Language.ES,
-          topicId: 'subjunctive',
-        }),
-      { wrapper: buildWrapper(queryClient) },
-    );
-
-    expect(result.current.topic).not.toBeNull();
-    expect(result.current.topic?.id).toBe('subjunctive');
-    expect(result.current.isLoading).toBe(false);
-    expect(result.current.isError).toBe(false);
-  });
-
-  it('returns { topic: null, isLoading: false } without fetchFn (graceful degradation, static miss)', () => {
-    const { result } = renderHook(
-      () =>
-        useTheoryTopic({
-          language: Language.ES,
-          topicId: 'not-in-registry',
+          topicId: 'b1-present-subjunctive',
         }),
       { wrapper: buildWrapper(queryClient) },
     );

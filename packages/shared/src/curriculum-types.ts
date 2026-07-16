@@ -47,11 +47,16 @@ export type CurriculumCefrLevel = Extract<CefrLevel, 'A1' | 'A2' | 'B1' | 'B2'>;
  *     name/description/examples frame the topic for the generation prompt, and its
  *     `freeWriting.register` sets the target register. Paired only with
  *     `ExerciseType.FREE_WRITING` by `compatibleTypes()`. No `coverageSpec`.
+ *   - `'paraphrase'` — a synthetic per-`(language, level)` umbrella that owns
+ *     ONE contextual-paraphrase generation cell. Carries no grammar-point
+ *     semantics; its name/description/examples frame the generation prompt,
+ *     and `paraphrase.seeds` is the scenario-seed rotation pool driving
+ *     per-ordinal diversity. No `coverageSpec`.
  */
 export type GrammarPoint = Readonly<{
   /** Stable identifier; format: `<lang>-<level>-<slug>`, e.g. `'es-b1-present-subjunctive'`. */
   key: string;
-  kind: 'grammar' | 'vocab' | 'dictation' | 'free-writing';
+  kind: 'grammar' | 'vocab' | 'dictation' | 'free-writing' | 'paraphrase';
   name: string;
   /** ≤ 300 chars; English; injected verbatim into Phase 2 prompts. */
   description: string;
@@ -122,14 +127,21 @@ export type GrammarPoint = Readonly<{
    */
   conjugationSeedKind?: 'verb' | 'noun' | 'predicate-nominal' | 'none';
   /**
-   * Curated predicate pool for a `conjugationSeedKind: 'predicate-nominal'`
-   * cell: professions, roles, nationalities, and predicate adjectives that form
-   * natural copular sentences ("Ben doktorum", "Sen yorgunsun"). Replaces the
-   * generic DB noun band, whose concrete object nouns make nonsensical copular
-   * predicates. REQUIRED (non-empty) iff
-   * `conjugationSeedKind === 'predicate-nominal'`; meaningless on any other kind
-   * (enforced by a curriculum invariant). Each ordinal varies the predicate
-   * (the lexical diversity axis); the grammatical person stays driven by
+   * Curated seed pool for a CONJUGATION cell, replacing the DB band. Two uses,
+   * both enforced by a curriculum invariant:
+   *   - `conjugationSeedKind: 'predicate-nominal'` — professions, roles,
+   *     nationalities, and predicate adjectives that form natural copular
+   *     sentences ("Ben doktorum", "Sen yorgunsun"), instead of the generic noun
+   *     band whose concrete object nouns make nonsensical predicates. REQUIRED
+   *     (non-empty) for this kind.
+   *   - verb-morphology points (kind undefined or `'verb'`) with a small, closed
+   *     target-verb set (e.g. es-a1-present-yo-go) — a curated VERB list that
+   *     replaces the frequency band so the generator can't pick off-target verbs
+   *     (a 3sg "hace" doesn't exercise the irregular yo-form). Keyed on
+   *     `(lemma, person)` like the DB verb path. Size it to comfortably exceed
+   *     the largest single-person floor or the cell exhausts early.
+   * Forbidden on 'noun'/'none' (dead config). Each ordinal varies the seed (the
+   * lexical diversity axis); the grammatical person stays driven by
    * `coverageSpec`/`coverageTargets`.
    */
   conjugationSeedWords?: readonly string[];
@@ -145,8 +157,17 @@ export type GrammarPoint = Readonly<{
    * validation appends a scoring note exempting the digit cue from
    * contextSpoilsAnswer. See
    * docs/findings/2026-07-07-self-revealing-target-elicitation.md.
+   *
+   * 'base-word-cue' is the same disease for DERIVED forms (appreciative
+   * suffixes: es-b2-appreciative-suffixes cloze approved 4/41 on 2026-07-08,
+   * 23 context-spoils-answer rejects): the target cannot be elicited without
+   * identifying its base word. The sanctioned elicitation is a parenthetical
+   * BASE-word cue ("(silla)" for answer "sillita") — the tested skill
+   * (choosing the suffix from the context's nuance and forming it with the
+   * right allomorph/gender) is not revealed by the base word. The derived
+   * form itself must never appear in the visible text.
    */
-  selfRevealingElicitation?: 'digit-form';
+  selfRevealingElicitation?: 'digit-form' | 'base-word-cue';
   /**
    * Curated rotation pool of target written forms for a self-revealing point
    * (e.g. 'tercero', 'doscientas', 'üçüncü', 'yüz yirmi üç'). Drives per-draft
@@ -181,4 +202,12 @@ export type GrammarPoint = Readonly<{
    * invariant (Task 7): present iff `kind === 'free-writing'`.
    */
   freeWriting?: { register: 'informal' | 'neutral' | 'formal' };
+  /**
+   * Contextual-paraphrase umbrella config. REQUIRED iff kind === 'paraphrase'.
+   * `seeds` is the per-ordinal scenario-seed rotation pool (the diversity
+   * backbone) — analogous to conjugationSeedWords / elicitationSeedValues.
+   * Size it comfortably above the cell target so per-ordinal rotation does not
+   * exhaust. Enforced by a curriculum invariant.
+   */
+  paraphrase?: { seeds: readonly string[] };
 }>;

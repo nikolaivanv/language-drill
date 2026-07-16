@@ -58,12 +58,29 @@ export function addPromptFallbackAlarm(
       statistic: cloudwatch.Stats.SUM,
     }),
     threshold: 1,
-    evaluationPeriods: 1,
+    // Require the fallback to RECUR (2 breaching datapoints within a 30-min
+    // window) before paging, rather than firing on a single datapoint.
+    //
+    // Why M-of-N and not just a higher `evaluationPeriods`: the registry's
+    // warn line is deduped once per Lambda instance per prompt name
+    // (`warnedNames` in prompts-registry.ts, never cleared in prod), so this
+    // metric increments at most once per instance lifetime. A benign transient
+    // — a single cold-cache Langfuse fetch that exceeds the 250 ms budget while
+    // the in-repo fallback (byte-identical to the live prompt) is served — thus
+    // shows up as ONE isolated datapoint and no longer pages. A genuine
+    // emergency (prompt deleted/unlabeled, Langfuse unreachable) keeps failing
+    // every 5-min cache miss, so fresh instances re-warn and cross 2 datapoints
+    // within the window. `NOT_BREACHING` for missing data keeps idle periods
+    // quiet. 30-min detection latency is acceptable: the fallback is graceful,
+    // so a recurring fallback is a correctness/observability concern, not a
+    // user-facing outage.
+    evaluationPeriods: 6,
+    datapointsToAlarm: 2,
     comparisonOperator:
       cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
     treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
     alarmDescription:
-      "Langfuse prompt registry served the in-repo fallback for a non-keys_unset reason (timeout / fetch_error) — the live prompt may have vanished or Langfuse is unreachable. See CLAUDE.md §Prompt Editing.",
+      "Langfuse prompt registry served the in-repo fallback for a non-keys_unset reason (timeout / fetch_error) at least twice within 30 min — the live prompt may have vanished or Langfuse is unreachable. A single isolated fallback (transient cold-fetch timeout) is tolerated by design. See CLAUDE.md §Prompt Editing.",
   });
 
   if (opts.alarmTopic) {

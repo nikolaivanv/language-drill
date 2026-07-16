@@ -88,12 +88,12 @@ describe('assertCurriculumInvariants', () => {
   });
 
   it('throws on an over-long description', () => {
-    const broken = mutateAt(FIRST_ES_INDEX, { description: 'x'.repeat(301) });
-    expect(() => assertCurriculumInvariants(broken)).toThrow(/exceeds 300 characters/);
+    const broken = mutateAt(FIRST_ES_INDEX, { description: 'x'.repeat(451) });
+    expect(() => assertCurriculumInvariants(broken)).toThrow(/exceeds 450 characters/);
   });
 
   it('allows a description between the old and new caps', () => {
-    const ok = mutateAt(FIRST_ES_INDEX, { description: 'x'.repeat(250) });
+    const ok = mutateAt(FIRST_ES_INDEX, { description: 'x'.repeat(350) });
     expect(() => assertCurriculumInvariants(ok)).not.toThrow();
   });
 
@@ -118,7 +118,7 @@ describe('assertCurriculumInvariants', () => {
       .filter((e) => !(e.language === 'ES' && e.cefrLevel === 'A1'))
       .map((e) => ({ ...e, prerequisiteKeys: undefined }));
     expect(() => assertCurriculumInvariants(trimmed)).toThrow(
-      /ES A1 grammar count 0 below minimum 22/,
+      /ES A1 grammar count 0 below minimum 23/,
     );
   });
 });
@@ -291,6 +291,32 @@ describe('curriculum conjugationSeedKind (nominal-inflection points seed from th
     ).toThrow(/conjugationSeedWords/);
   });
 
+  it('allows a curated verb pool on a verb-morphology point (conjugationSeedWords, no predicate-nominal flag)', () => {
+    // The seed-words invariant must ACCEPT conjugationSeedWords on a verb point.
+    // (This synthetic single-entry set still trips the unrelated grammar-count
+    // floor, so assert only that the seed-words rule itself does not fire — the
+    // real-curriculum validity test covers the full positive path.)
+    expect(() =>
+      assertCurriculumInvariants([
+        {
+          key: 'es-a1-synthetic-curated-verb',
+          kind: 'grammar',
+          name: 'Synthetic curated verb pool',
+          description: 'Synthetic entry for curated-verb-pool invariant testing.',
+          cefrLevel: 'A1',
+          language: Language.ES,
+          examplesPositive: ['a', 'b'],
+          examplesNegative: ['*c'],
+          commonErrors: ['e'],
+          conjugationSuitable: true,
+          // conjugationSeedKind omitted → defaults to the verb path; a closed
+          // target-verb set is a legitimate curated pool here.
+          conjugationSeedWords: ['hacer', 'poner', 'tener'],
+        },
+      ]),
+    ).not.toThrow(/conjugationSeedWords/);
+  });
+
   it('verb-morphology conjugation points keep the default verb seed (no flag)', () => {
     for (const key of [
       'tr-a2-aorist',
@@ -338,6 +364,52 @@ describe('curriculum conjugationSeedKind (nominal-inflection points seed from th
         },
       ]),
     ).toThrow(/selfRevealingElicitation/);
+  });
+
+  it('rejects a paraphrase umbrella with no paraphrase config', () => {
+    expect(() =>
+      assertCurriculumInvariants([
+        {
+          key: 'es-b1-paraphrase',
+          kind: 'paraphrase',
+          name: 'Paraphrase (B1)',
+          description: 'x',
+          cefrLevel: 'B1',
+          language: Language.ES,
+          examplesPositive: ['a', 'b'],
+          examplesNegative: ['*c'],
+          commonErrors: ['d'],
+          // paraphrase config intentionally missing
+        } as never,
+      ]),
+    ).toThrow(/paraphrase/i);
+  });
+});
+
+describe('self-revealing elicitation — flagged entries', () => {
+  // es-b2-appreciative-suffixes: the derived form cannot be elicited without
+  // identifying the base word, so the cell uses the base-word-cue convention
+  // (2026-07-08 run: 4/41 approved, 23 context-spoils-answer rejects).
+  it('es-b2-appreciative-suffixes uses base-word-cue with a curated pool', () => {
+    const entry = getGrammarPoint('es-b2-appreciative-suffixes');
+    expect(entry?.selfRevealingElicitation).toBe('base-word-cue');
+    // Bounded pool = the cell's capacity; must be big enough to be worth
+    // running (mirrors the digit-form pools: ES 28, TR 24).
+    expect(entry?.elicitationSeedValues?.length ?? 0).toBeGreaterThanOrEqual(30);
+  });
+
+  it('the appreciative pool holds only transparent derivations — lexicalized forms stay recognition-only', () => {
+    const entry = getGrammarPoint('es-b2-appreciative-suffixes');
+    // These are "entirely new words" (B&B 43.2.3e / 43.3b): opaque stem or
+    // lexicalized meaning a learner cannot transparently produce from the base.
+    for (const lexicalized of ['portazo', 'bolsillo', 'sillón', 'cajón', 'ratón', 'bombilla']) {
+      expect(entry?.elicitationSeedValues).not.toContain(lexicalized);
+    }
+    // Forms already saturated in the approved pool are excluded so the seed
+    // rotation doesn't regenerate near-duplicates of existing exercises.
+    for (const alreadyPooled of ['sillita', 'cajita', 'besito', 'casucha', 'palmita', 'pulgarcito']) {
+      expect(entry?.elicitationSeedValues).not.toContain(alreadyPooled);
+    }
   });
 });
 
@@ -450,7 +522,7 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
     ).toBeUndefined();
   });
 
-  it('the full TR clozeUnsuitable set is exactly these thirty-eight points', () => {
+  it('the full TR clozeUnsuitable set is exactly these thirty-six points', () => {
     const flagged = trCurriculum
       .filter((g) => g.clozeUnsuitable === true)
       .map((g) => g.key)
@@ -484,10 +556,8 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
         // B2 (clause-linking / bipartite / under-constrained blanks)
         'tr-b2-participle-aorist',
         'tr-b2-converb-until',
-        'tr-b2-temporal-when',
         'tr-b2-proportion-assoon',
         'tr-b2-duration-throughout',
-        'tr-b2-causal-subordinate',
         'tr-b2-reported-statements',
         'tr-b2-reported-questions',
         'tr-b2-reported-directives',
@@ -557,6 +627,7 @@ describe('per-language counts', () => {
     let vocab = 0;
     let dictation = 0;
     let freeWriting = 0;
+    let paraphrase = 0;
     for (const entry of curriculum) {
       if (entry.kind === 'grammar') {
         grammar[entry.cefrLevel]++;
@@ -564,30 +635,39 @@ describe('per-language counts', () => {
         vocab++;
       } else if (entry.kind === 'dictation') {
         dictation++;
+      } else if (entry.kind === 'paraphrase') {
+        paraphrase++;
       } else {
         freeWriting++;
       }
     }
-    return { grammar, vocab, dictation, freeWriting };
+    return { grammar, vocab, dictation, freeWriting, paraphrase };
   }
 
-  // ES is now at full PCIC A1-B2 parity (2026-07-07): 22 A1 + 27 A2 + 19 B1 +
-  // 23 B2 grammar points. DE is still TEMPORARILY REDUCED (2026-05-10). TR
-  // (2026-05-28) is now at full Yedi İklim A1+A2 parity (26 A1 + 14 A2
-  // grammar + 10 themed vocab umbrellas); B1/B2 remain disabled.
+  // ES is at full PCIC A1-B2 parity plus the 2026-07-09 Butt & Benjamin gap
+  // audit (22 extra points): 24 A1 + 34 A2 + 25 B1 + 32 B2 grammar points.
+  // (2026-07-11: A2 33→34 — es-a2-preterite-stem-spelling split into a
+  // 3rd-person point + the new es-a2-preterite-yo-spelling.)
+  // (2026-07-15: B2 31→32 — es-b2-remote-conditionals fills the B&B ch. 29.3
+  // gap between es-b1-conditional and es-b2-past-subjunctive.)
+  // DE is still TEMPORARILY REDUCED (2026-05-10). TR (2026-05-28) is now at
+  // full Yedi İklim A1+A2 parity (26 A1 + 14 A2 grammar + 10 themed vocab
+  // umbrellas); B1/B2 remain disabled.
 
-  it('Spanish is at full PCIC A1–B2 parity, has 12 vocab umbrellas, 4 dictation umbrellas, and 18 free-writing umbrellas', () => {
-    const { grammar, vocab, dictation, freeWriting } = countsFor(esCurriculum);
-    expect(grammar.A1).toBeGreaterThanOrEqual(22);
-    expect(grammar.A2).toBeGreaterThanOrEqual(27);
-    expect(grammar.B1).toBeGreaterThanOrEqual(19);
-    expect(grammar.B2).toBeGreaterThanOrEqual(23);
+  it('Spanish is at full PCIC A1–B2 parity (+ B&B gap audit), has 12 vocab umbrellas, 4 dictation umbrellas, 18 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
+    const { grammar, vocab, dictation, freeWriting, paraphrase } = countsFor(esCurriculum);
+    expect(grammar.A1).toBeGreaterThanOrEqual(24);
+    expect(grammar.A2).toBeGreaterThanOrEqual(34);
+    expect(grammar.B1).toBeGreaterThanOrEqual(25);
+    expect(grammar.B2).toBeGreaterThanOrEqual(32);
     // 5 A1 + 5 A2 themed umbrellas + es-b1-environment-vocab + es-b2-abstract-noun-vocab.
     expect(vocab).toBe(12);
     // es-a1-dictation + es-a2-dictation + es-b1-dictation + es-b2-dictation (Phase 2 dictation generation pipeline).
     expect(dictation).toBe(4);
     // 3 × A1 + 3 × A2 + 6 × B1 + 6 × B2 free-writing topic umbrellas (Phase 2 free-writing generation).
     expect(freeWriting).toBe(18);
+    // es-b1-paraphrase + es-b2-paraphrase (Phase 2 contextual-paraphrase generation).
+    expect(paraphrase).toBe(2);
   });
 
   it('German is fully disabled (no grammar entries, no vocab or dictation umbrellas)', () => {
@@ -600,23 +680,28 @@ describe('per-language counts', () => {
     expect(dictation).toBe(0);
   });
 
-  it('Turkish is at full Yedi İklim A1 + A2 + B1 + B2 parity, has 15 vocab umbrellas, 3 dictation umbrellas, and 9 free-writing umbrellas', () => {
-    const { grammar, vocab, dictation, freeWriting } = countsFor(trCurriculum);
+  it('Turkish is at full Yedi İklim A1 + A2 + B1 + B2 parity, has 15 vocab umbrellas, 3 dictation umbrellas, 9 free-writing umbrellas, and 1 paraphrase umbrella', () => {
+    const { grammar, vocab, dictation, freeWriting, paraphrase } = countsFor(trCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(26);
     // A2 gained 5 G&K reverse-audit points (2026-07-10): spatial postpositions,
     // nominal past copula, dA/bile clitics, -lI/-sIz, tane → 27.
     expect(grammar.A2).toBeGreaterThanOrEqual(27);
-    // B1 gained 2 audit points (2026-07-10): suppletive ol-, olarak → 13.
-    expect(grammar.B1).toBe(13);
-    // B2 (2026-07-11): 17 Yedi İklim exam points + 2 G&K reverse-audit additions.
-    // Grammar-only cycle — no B2 vocab/dictation/free-writing umbrellas.
-    expect(grammar.B2).toBe(19);
+    // B1 gained 2 audit points (2026-07-10): suppletive ol-, olarak → 13;
+    // +3 G&K book-coverage-ledger points (2026-07-16): abstract postpositions,
+    // -DIğI için reason clauses, "when" converbs → 16.
+    expect(grammar.B1).toBe(16);
+    // B2 (2026-07-17): 15 Yedi İklim exam points + 2 G&K reverse-audit additions
+    // (two of the original 19 dropped as now taught at B1 by the 2026-07-16b
+    // book-coverage cycle). Grammar-only — no B2 vocab/dictation/free-writing.
+    expect(grammar.B2).toBe(17);
     // 5 A1 + 5 A2 + 5 B1 themed vocab umbrellas.
     expect(vocab).toBe(15);
     // tr-a1 + tr-a2 + tr-b1 dictation.
     expect(dictation).toBe(3);
     // 3 A1 + 3 A2 + 3 B1 free-writing topic umbrellas.
     expect(freeWriting).toBe(9);
+    // tr-b1-paraphrase (Phase 2 contextual-paraphrase generation); the B2 cycle is grammar-only, so no tr-b2-paraphrase.
+    expect(paraphrase).toBe(1);
   });
 });
 
@@ -758,7 +843,7 @@ describe('coverageSpec invariants', () => {
 describe('grammarPointsAtOrBelow', () => {
   it('returns TR A1+A2 grammar points (only) for TR at A2', () => {
     const pts = grammarPointsAtOrBelow('TR', 'A2');
-    expect(pts.length).toBeGreaterThanOrEqual(40); // 26 A1 + 14 A2
+    expect(pts.length).toBeGreaterThanOrEqual(42); // 27 A1 + 15 A2
     expect(pts.every((p) => p.kind === 'grammar')).toBe(true);
     expect(pts.every((p) => p.language === 'TR')).toBe(true);
     expect(pts.every((p) => p.cefrLevel === 'A1' || p.cefrLevel === 'A2')).toBe(true);
