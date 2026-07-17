@@ -185,6 +185,8 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * 2026-07-17d: themed vocab umbrellas at B2 (5 new: work-professional,
  * science-technology, society-politics, culture-arts, global-issues) —
  * the B2 vocab track that the B2 grammar cycle deferred. Enqueues 5 vocab cells.
+ * 2026-07-18: adds a comparison-axis coverageSpec to
+ * tr-a1-comparative-superlative.
  */
 export const CURRICULUM_VERSION_TR = '2026-07-18';
 

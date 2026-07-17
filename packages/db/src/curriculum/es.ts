@@ -174,6 +174,8 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * `2026-07-17b`: themed vocab umbrellas at B1/B2 (8 new: 4 B1, 4 B2 — the
  * existing es-b1-environment-vocab / es-b2-abstract-noun-vocab kept as one
  * theme of their levels). Enqueues the 8 new vocab cells.
+ * `2026-07-18`: adds a comparison-axis coverageSpec to
+ * es-a2-comparatives-superlatives.
  */
 export const CURRICULUM_VERSION_ES = '2026-07-18';
 

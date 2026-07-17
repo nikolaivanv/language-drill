@@ -622,7 +622,9 @@ function renderCoverageBlock(
         `If ${inputs.grammarPoint.name} cannot naturally express this person, use the closest natural person instead.`,
     );
   }
-  for (const axis of ["number", "case", "polarity", "wordClass", "sentenceType", "comparison"] as const) {
+  for (const axis of Object.keys(COVERAGE_DIRECTIVE_BY_AXIS) as Array<
+    keyof typeof COVERAGE_DIRECTIVE_BY_AXIS
+  >) {
     const v = target[axis];
     if (v) parts.push(COVERAGE_DIRECTIVE_BY_AXIS[axis](v));
   }

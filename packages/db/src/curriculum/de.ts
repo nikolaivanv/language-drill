@@ -65,6 +65,7 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * 2026-07-17b: themed vocab umbrellas A1–B2 (17 new: 5 A1, 4 A2, 4 B1, 4 B2 —
  * each level keeps its prior broad umbrella as one theme). Re-enqueues the
  * three broad-umbrella cells and enqueues the 17 new vocab cells.
+ * 2026-07-18: adds a comparison-axis coverageSpec to de-a2-comparison.
  */
 export const CURRICULUM_VERSION_DE = '2026-07-18';
 
