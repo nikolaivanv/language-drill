@@ -2565,6 +2565,9 @@ const trCurriculum: readonly GrammarPoint[] = [
     // under-constrained (which verb yields an -Ar/-mAz adjective here?) and
     // risks testing the finite aorist tense instead (grammarPointMatch=false).
     // Translation ("running water" → akar su) carries it.
+    // No coverageSpec: the -Ar vs -mAz contrast is word-internal derivation —
+    // sentence polarity does NOT track it (çıkmaz sokak sits in an affirmative
+    // sentence), so no coverage axis can express it (cf. the -lI/-sIz note).
     clozeUnsuitable: true,
     kind: 'grammar',
     name: 'Aorist participle -Ar / -Ir / -mAz (adjectival)',
@@ -2747,6 +2750,9 @@ const trCurriculum: readonly GrammarPoint[] = [
   {
     key: 'tr-b2-duration-throughout',
     clozeUnsuitable: true,
+    // No coverageSpec: person is form-relevant only for the -DIğI sürece half
+    // (süresince takes a bare noun) — a person pin would be half-effective /
+    // construction-forcing (same exclusion as tr-b1-since-converb).
     kind: 'grammar',
     name: 'Duration "throughout / as long as" (süresince, -DIğI sürece)',
     description:
@@ -2774,6 +2780,18 @@ const trCurriculum: readonly GrammarPoint[] = [
   {
     key: 'tr-b2-reported-statements',
     clozeUnsuitable: true,
+    coverageSpec: {
+      axes: [
+        // The possessive agreeing with the REPORTED subject is the point
+        // (geleceğimi vs geleceğini — the examplesNegative trap); unpinned
+        // drafts collapse to 3sg "…-DIğInI söyledi". Same paradigm shape as
+        // tr-b1-participles-dik-acak.
+        {
+          name: 'person',
+          floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 },
+        },
+      ],
+    },
     kind: 'grammar',
     name: 'Indirect statements (-DIK/-AcAK olduğunu söylemek)',
     description:
@@ -2800,6 +2818,17 @@ const trCurriculum: readonly GrammarPoint[] = [
   {
     key: 'tr-b2-reported-questions',
     clozeUnsuitable: true,
+    coverageSpec: {
+      axes: [
+        // Same possessive-agreement machinery as reported-statements
+        // (gelip gelmeyeceğimi / -eceğini); person pins the reported subject
+        // across the paradigm.
+        {
+          name: 'person',
+          floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 },
+        },
+      ],
+    },
     kind: 'grammar',
     name: 'Indirect questions (-Ip …-mADIğInI / wh + -DIK)',
     description:
@@ -2827,6 +2856,17 @@ const trCurriculum: readonly GrammarPoint[] = [
   {
     key: 'tr-b2-reported-directives',
     clozeUnsuitable: true,
+    coverageSpec: {
+      axes: [
+        // The -mA nominal's possessive marks the directive's addressee
+        // (gitmemi / gitmeni / gitmenizi); unpinned drafts collapse onto
+        // 1sg-told-me frames.
+        {
+          name: 'person',
+          floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 },
+        },
+      ],
+    },
     kind: 'grammar',
     name: 'Reported commands, requests & wishes (-mAsInI istemek/söylemek)',
     description:
@@ -2889,6 +2929,9 @@ const trCurriculum: readonly GrammarPoint[] = [
   {
     key: 'tr-b2-concessive',
     clozeUnsuitable: true,
+    // No coverageSpec: three frames (hâlde / -mAsInA rağmen / noun + rağmen)
+    // — multi-construction; the claimed traps are the dative and possessive
+    // morphology, not person agreement.
     kind: 'grammar',
     name: 'Concessive "although / despite" (-DIğI hâlde, -mAsInA rağmen)',
     description:
@@ -2918,6 +2961,9 @@ const trCurriculum: readonly GrammarPoint[] = [
   {
     key: 'tr-b2-instead-of',
     clozeUnsuitable: true,
+    // No coverageSpec: -mAktAnsA is person-less; only the -AcAğInA half
+    // inflects — a person pin would force one construction (half-effective,
+    // same exclusion as tr-b1-since-converb).
     kind: 'grammar',
     name: '"Rather than" (-mAktAnsA, -AcAğInA / -AcAğI yerde)',
     description:
