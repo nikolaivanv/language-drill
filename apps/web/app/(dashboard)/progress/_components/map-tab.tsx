@@ -61,12 +61,13 @@ function StateDot({ state }: { state: CurriculumMapPoint['state'] }) {
 
 function SpineNode({
   state,
-  order,
+  position,
 }: {
   state: CurriculumMapPoint['state'];
-  order: number;
+  /** 1-based position within the level's list (not the raw curriculum order). */
+  position: number;
 }) {
-  const label = state === 'solid' ? '✓' : String(order).padStart(2, '0');
+  const label = state === 'solid' ? '✓' : String(position).padStart(2, '0');
   const isSolid = state === 'solid';
   const isLearning = state === 'learning';
 
@@ -148,14 +149,17 @@ function MasteryBar({
 
 function SpineRow({
   point,
+  position,
   isLast,
   onSelect,
 }: {
   point: CurriculumMapPoint;
+  /** 1-based position within the level's list (drives the spine-node number). */
+  position: number;
   isLast: boolean;
   onSelect?: (point: CurriculumMapPoint) => void;
 }) {
-  const { state, order, name, mastery, errorProne, recentErrorCount, prereqUnmet, prereqNames, lastPracticedAt } = point;
+  const { state, name, mastery, errorProne, recentErrorCount, prereqUnmet, prereqNames, lastPracticedAt } = point;
   const isNotStarted = state === 'not-started';
   const bodyOpacity = prereqUnmet && isNotStarted ? 0.6 : 1;
 
@@ -185,7 +189,7 @@ function SpineRow({
     <li className="flex gap-[14px]">
       {/* Rail */}
       <div className="flex flex-shrink-0 flex-col items-center">
-        <SpineNode state={state} order={order} />
+        <SpineNode state={state} position={position} />
         {!isLast && (
           <div
             style={{
@@ -311,12 +315,14 @@ function SpineRow({
 
 function CollapsedRunRow({
   entry,
+  positionByKey,
   isLast,
   expanded,
   onToggle,
   onSelect,
 }: {
   entry: Extract<MapEntry, { kind: 'run' }>;
+  positionByKey: ReadonlyMap<string, number>;
   isLast: boolean;
   expanded: boolean;
   onToggle: () => void;
@@ -329,6 +335,7 @@ function CollapsedRunRow({
           <SpineRow
             key={pt.key}
             point={pt}
+            position={positionByKey.get(pt.key) ?? 0}
             isLast={isLast && i === entry.points.length - 1}
             onSelect={onSelect}
           />
@@ -648,6 +655,11 @@ export function MapTab({
       {/* Spine list */}
       {activeLevel && (() => {
         const entries = collapseSolidRuns(activeLevel.points);
+        // 1-based position within THIS level's list — resets per level, so A1
+        // and A2 both start at 01 (the raw `order` is a whole-language index).
+        const positionByKey = new Map(
+          activeLevel.points.map((p, i) => [p.key, i + 1] as const),
+        );
         let runCounter = -1;
         return (
           <ul
@@ -658,7 +670,7 @@ export function MapTab({
               const isLast = i === entries.length - 1;
               if (entry.kind === 'point') {
                 return (
-                  <SpineRow key={entry.point.key} point={entry.point} isLast={isLast} onSelect={setSelected} />
+                  <SpineRow key={entry.point.key} point={entry.point} position={positionByKey.get(entry.point.key) ?? 0} isLast={isLast} onSelect={setSelected} />
                 );
               }
               // run entry
@@ -668,6 +680,7 @@ export function MapTab({
                 <CollapsedRunRow
                   key={`run-${i}`}
                   entry={entry}
+                  positionByKey={positionByKey}
                   isLast={isLast}
                   expanded={expandedRuns.has(runIdx)}
                   onToggle={() => { toggleRun(runIdx); }}
