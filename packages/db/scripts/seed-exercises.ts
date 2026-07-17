@@ -685,12 +685,10 @@ export const SEED_EXERCISES: SeedExercise[] = [
 // replace the umbrellas with frequency-band rows; the discriminator on
 // GrammarPoint.kind, not a string-suffix sniff, is what later code branches on.
 
-// TEMPORARILY REDUCED (2026-05-10): mappings for DE's currently-disabled
-// curriculum entries are commented out so the resolution test in
-// seed-exercises.test.ts keeps passing. Restore each commented line when the
-// matching grammar point is uncommented in de.ts, and bump the entry count in
-// the test. ES is at full PCIC A1+A2 parity (2026-07-06) — its mappings below
-// are all active.
+// DE mappings restored 2026-07-12 with the re-enabled DE curriculum. The
+// remaining commented lines are TR B1/B2 seeds whose curriculum keys are
+// still disabled. Free-writing seeds are intentionally absent from this map
+// for every language (see the filter in tagExistingSeeds).
 export const SEED_KEY_TO_GRAMMAR_POINT: Readonly<Record<string, string>> = {
   // Spanish
   'es-cloze-a2-1': 'es-a2-preterite-irregular',
@@ -702,16 +700,16 @@ export const SEED_KEY_TO_GRAMMAR_POINT: Readonly<Record<string, string>> = {
   'es-vocab-a2-1': 'es-a2-vocab-time-daily-routine',
   'es-vocab-b1-1': 'es-b1-environment-vocab',
   'es-vocab-b2-1': 'es-b2-abstract-noun-vocab',
-  // German — fully disabled
-  // 'de-cloze-a2-1': 'de-a2-perfekt-with-sein',
-  // 'de-cloze-b1-1': 'de-b1-relative-pronouns',
-  // 'de-cloze-b2-1': 'de-b2-konjunktiv-ii',
-  // 'de-translation-a2-1': 'de-a2-akkusativ-prepositions',
-  // 'de-translation-b1-1': 'de-b1-dass-clause-perfekt',
-  // 'de-translation-b2-1': 'de-b2-genitive-prepositions',
-  // 'de-vocab-a2-1': 'de-a2-housing-vocab',
-  // 'de-vocab-b1-1': 'de-b1-environment-vocab',
-  // 'de-vocab-b2-1': 'de-b2-academic-noun-vocab',
+  // German — re-enabled 2026-07-12 (full Menschen/Sicher! curriculum)
+  'de-cloze-a2-1': 'de-a2-perfekt-with-sein',
+  'de-cloze-b1-1': 'de-b1-relative-pronouns',
+  'de-cloze-b2-1': 'de-b2-konjunktiv-ii',
+  'de-translation-a2-1': 'de-a2-akkusativ-prepositions',
+  'de-translation-b1-1': 'de-b1-dass-clause-perfekt',
+  'de-translation-b2-1': 'de-b2-genitive-prepositions',
+  'de-vocab-a2-1': 'de-a2-housing-vocab',
+  'de-vocab-b1-1': 'de-b1-environment-vocab',
+  'de-vocab-b2-1': 'de-b2-academic-noun-vocab',
   // Turkish — di'li past + questions relocated to A1 (2026-05-28). The A2 vocab
   // seed (kütüphane = library) maps to the city-shopping themed umbrella after
   // the 2026-06-07 everyday-vocab split.
@@ -888,12 +886,12 @@ export async function tagExistingSeeds(db: Db): Promise<{
   alreadyTagged: number;
   untaggedEnSeeds: number;
 }> {
-  // SEED_KEY_TO_GRAMMAR_POINT is temporarily reduced for DE only (see comment
-  // on the constant). Non-EN seeds whose mapping is currently commented out
-  // remain in the catalogue intentionally — filter them out before handing
-  // the list to planSeedTags so its strict "every non-EN seed must have a
-  // mapping" guard still catches real drift. Restore the unfiltered call when
-  // the commented DE mappings are reinstated.
+  // Non-EN seeds without a mapping remain in the catalogue intentionally —
+  // today that is the free-writing seeds (all languages; free-writing cells
+  // are owned by curriculum umbrellas, not seed tags) plus the disabled TR
+  // B1/B2 seeds. Filter them out before handing the list to planSeedTags so
+  // its strict "every non-EN seed must have a mapping" guard still catches
+  // real drift on the mapped seed types.
   const activeNonEnKeys = new Set(Object.keys(SEED_KEY_TO_GRAMMAR_POINT));
   const seedsForTagging = SEED_EXERCISES.filter(
     (seed) => seed.language === 'EN' || activeNonEnKeys.has(seed.key),

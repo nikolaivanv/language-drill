@@ -110,12 +110,11 @@ const LANGUAGE_PREFIX_BY_LANGUAGE: Readonly<Record<string, string>> = {
 // TR is now full-A1/A2 (Yedi İklim parity, 2026-05-28); B1/B2 remain disabled.
 // ES is at full PCIC A1-B2 parity (2026-07-07) plus the four B&B
 // book-coverage-ledger additions (2026-07-16): 23 A1 + 27 A2 + 21 B1 +
-// 24 B2 grammar-point floors. DE is the only language that remains reduced.
-// DE is still TEMPORARILY REDUCED (2026-05-10) to match the entries currently
-// uncommented in de.ts.
+// 24 B2 grammar-point floors. DE was re-enabled 2026-07-12 at full Menschen
+// A1–B1 / Sicher! B2 parity: 18 A1 + 29 A2 + 25 B1 + 26 B2 grammar points.
 const PER_LANGUAGE_GRAMMAR_MIN: Readonly<Record<string, Record<string, number>>> = {
   ES: { A1: 23, A2: 27, B1: 21, B2: 24 },
-  DE: { A1: 0, A2: 0, B1: 0, B2: 0 },
+  DE: { A1: 19, A2: 31, B1: 27, B2: 27 },
   TR: { A1: 27, A2: 15, B1: 13, B2: 17 },
 };
 
