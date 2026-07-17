@@ -8,8 +8,10 @@
  *
  * Required env: ANTHROPIC_API_KEY, DATABASE_URL.
  * Usage: pnpm --filter @language-drill/db generate:vocab-targets \
- *          [--language ES] [--level A1] [--word-count 30]
+ *          [--language ES] [--level A1] [--word-count 30] [--umbrella <key>]
  * Defaults to ES A1 when --language/--level are omitted (original behaviour).
+ * `--umbrella <key>` restricts the run to a single umbrella in that scope
+ * (surgical top-up without re-growing the whole level).
  */
 
 import { fileURLToPath } from 'node:url';
@@ -95,6 +97,29 @@ export function parseLanguage(argv: readonly string[]): LearningLanguage {
   return upper as LearningLanguage;
 }
 
+export function parseUmbrella(argv: readonly string[]): string | undefined {
+  return parseFlag(argv, '--umbrella');
+}
+
+/**
+ * Narrow a resolved umbrella list to a single key (surgical top-up of one
+ * umbrella without re-running — and over-growing — its whole level). Undefined
+ * key ⇒ the full list. Throws if the key isn't a vocab umbrella in scope.
+ */
+export function filterUmbrellaByKey(
+  umbrellas: readonly GrammarPoint[],
+  key: string | undefined,
+): GrammarPoint[] {
+  if (key === undefined) return [...umbrellas];
+  const match = umbrellas.filter((u) => u.key === key);
+  if (match.length === 0) {
+    throw new Error(
+      `--umbrella "${key}" is not a vocab umbrella in the selected language/level scope`,
+    );
+  }
+  return match;
+}
+
 export function parseLevel(argv: readonly string[]): CefrLevelType {
   const raw = parseFlag(argv, '--level');
   if (raw === undefined) return DEFAULT_LEVEL;
@@ -114,13 +139,18 @@ async function main(): Promise<void> {
   const wordCount = parseWordCount(argv);
   const language = parseLanguage(argv);
   const level = parseLevel(argv);
+  const umbrellaKey = parseUmbrella(argv);
 
   const db = createDb(databaseUrl);
   const client = createClaudeClient(anthropicApiKey);
-  const umbrellas = resolveVocabUmbrellas(ALL_CURRICULA, language, level);
+  const umbrellas = filterUmbrellaByKey(
+    resolveVocabUmbrellas(ALL_CURRICULA, language, level),
+    umbrellaKey,
+  );
 
   process.stdout.write(
-    `Authoring ${umbrellas.length} ${language} ${level} vocab umbrella(s), ~${wordCount} words each.\n`,
+    `Authoring ${umbrellas.length} ${language} ${level} vocab umbrella(s)` +
+      `${umbrellaKey ? ` (filtered to ${umbrellaKey})` : ''}, ~${wordCount} words each.\n`,
   );
 
   for (const umbrella of umbrellas) {
