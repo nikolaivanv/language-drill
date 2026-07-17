@@ -149,17 +149,41 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * adversative connectors, abstract postpositions, -DIğI için reason clauses,
  * "when" converbs) + 63 fold widenings across 38 points; see
  * docs/analysis/tr-gk-book-coverage-audit-2026-07-16.md.
- * 2026-07-17: TR B2 enabled — 17 grammar points from Yedi İklim B2 (Units 1–8),
+ * 2026-07-17: adds a person (2sg/2pl) + polarity coverageSpec to
+ * tr-a1-imperative — the unspec'd pool had collapsed onto affirmative 2sg
+ * (bare stem), so 2pl/formal -(y)In and the negative -mA halves of the point
+ * were never drilled. Bump clears target-reached suppression so the imperative
+ * cells re-run under the floors.
+ * 2026-07-17a: Tier-1 of the full-curriculum coverageSpec audit
+ * (docs/analysis/coverage-spec-audit-2026-07-17.md) — adds specs to five
+ * spec-less points whose paradigm halves were collapse-prone (personal-
+ * pronouns person×case incl. the bana/onu irregulars; optative 1sg/1pl +
+ * polarity; spatial-postpositions 3-case split; participles-dik-acak and
+ * reason-digi-icin possessive-agreement paradigms) and closes the
+ * tr-a1-future polarity gap (gelmeyecek claimed core; only finite tense
+ * without polarity). Bump clears target-reached suppression so the touched
+ * cells re-run under the floors; at-target cells additionally need
+ * demote:pool (see docs/curriculum-authoring.md retrofit section).
+ * 2026-07-17b: Tier-2 of the coverageSpec audit, floors confirmed against
+ * measured prod-pool collapse before commit — vowel-harmony (case; the
+ * translation pool was 43/43 plural pairs), questions (person; miyim/miyiz/
+ * misiniz absent), demonstratives (case; zero -n--buffer forms),
+ * gore-bence (person; ~85% Bence), relative-an (polarity 28/2),
+ * indefinite-pronouns (polarity 51/9), reflexive-reciprocal-pronouns
+ * (person; 3rd-person dominated). Bump clears suppression; collapsed cells
+ * are demoted post-deploy per the audit's demote list.
+ * 2026-07-17c: TR B2 enabled — 17 grammar points from Yedi İklim B2 (Units 1–8),
  * grouped by function and deduped vs A1–B1, plus two G&K reverse-audit additions
  * (-DIr generalizing, "as if" -mIş gibi). Two points from the original 19 were
  * dropped as already taught at B1 by the 2026-07-16b book-coverage cycle
  * (temporal-when → tr-b1-when-converbs, causal-subordinate →
  * tr-b1-reason-digi-icin) and two re-scoped around it (instead-of,
  * duration-throughout). Grammar-only (no B2 vocab/dictation/free-writing).
+ * New points authored WITH coverageSpecs per docs/curriculum-authoring.md.
  * Bump enumerates the new B2 cells + clears any suppression. See
  * docs/superpowers/specs/2026-07-07-tr-b2-curriculum-design.md.
  */
-export const CURRICULUM_VERSION_TR = '2026-07-17';
+export const CURRICULUM_VERSION_TR = '2026-07-17c';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -167,6 +191,16 @@ const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   {
     key: 'tr-a1-vowel-harmony',
+    coverageSpec: {
+      axes: [
+        // Forces both harmony patterns via case suffixes: 4-way -(y)I/-(y)A
+        // (accusative/dative) + 2-way -DA/-DAn (locative/ablative). The
+        // 2026-07-17 audit found the translation pool 43/43 "X-lar ve Y-ler"
+        // plural pairs — exactly the plural-suffix collapse the generation
+        // prompt's cell-level rule warns against.
+        { name: 'case', floors: { accusative: 4, dative: 4, locative: 4, ablative: 4 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Vowel harmony',
     description:
@@ -489,6 +523,10 @@ const trCurriculum: readonly GrammarPoint[] = [
     coverageSpec: {
       axes: [
         { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
+        // The raised negative (gelmeyecek) is claimed core; every sibling
+        // finite tense carries polarity — future was the only one without
+        // (2026-07-17 spec audit). Floors mirror dili-past's 6/6.
+        { name: 'polarity', floors: { affirmative: 6, negative: 6 } },
       ],
     },
     kind: 'grammar',
@@ -519,6 +557,17 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-imperative',
+    coverageSpec: {
+      axes: [
+        // The A1 imperative paradigm is 2sg (bare stem: gel!) vs 2pl/formal
+        // -(y)In (gelin!). Partial person floors — 3rd-person commands are the
+        // optative/-sIn territory of tr-a2-optative, never targeted here.
+        { name: 'person', floors: { '2sg': 8, '2pl': 8 } },
+        // Negative imperative (stem + -mA: gelme!/gelmeyin!) is the high-value
+        // drill — without a floor the pool collapses to affirmative commands.
+        { name: 'polarity', floors: { affirmative: 10, negative: 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Imperative (Emir)',
     description:
@@ -549,6 +598,15 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-questions',
+    coverageSpec: {
+      axes: [
+        // In nominal/present predicates mI carries the person ending —
+        // miyim/misin/miyiz/misiniz are distinct fused surfaces. Pool audit
+        // 2026-07-17: bare 3sg "…mı?" dominant, 1sg/1pl/2pl absent. 3pl
+        // unfloored (least natural on the clitic).
+        { name: 'person', floors: { '1sg': 3, '2sg': 5, '3sg': 4, '1pl': 3, '2pl': 5 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Question formation (mı + WH-words)',
     description:
@@ -729,6 +787,14 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-demonstratives',
+    coverageSpec: {
+      axes: [
+        // Pronominal case forms take the -n- buffer (bunu, buna) — the
+        // claimed trap. Pool audit 2026-07-17: 40/40 rows nominative
+        // (bu/burası determiners), zero case-marked pronouns.
+        { name: 'case', floors: { nominative: 6, accusative: 5, dative: 5 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Demonstratives (bu / şu / o, burası / şurası / orası)',
     description:
@@ -757,6 +823,18 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-personal-pronouns',
+    coverageSpec: {
+      axes: [
+        // The irregulars live at specific person×case cells: dative bana/sana,
+        // genitive benim/bizim, 3rd-person -n- buffer (onu/ona/onda/ondan) —
+        // dative/genitive weighted because that's where the irregulars are.
+        {
+          name: 'case',
+          floors: { nominative: 3, accusative: 3, dative: 4, genitive: 4, locative: 2, ablative: 2 },
+        },
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Personal pronouns and their case forms',
     description:
@@ -970,6 +1048,15 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-gore-bence',
+    coverageSpec: {
+      axes: [
+        // The -CE paradigm (bence/sence/bizce/sizce) and pronoun+göre forms
+        // (bana/sana/ona göre) are the whole surface variation. Pool audit
+        // 2026-07-17: ~85% "Bence …" (1sg collapse). Safe to pin because the
+        // surviving surface is translation, where the L1 prompt fixes person.
+        { name: 'person', floors: { '1sg': 4, '2sg': 3, '3sg': 3, '1pl': 3, '2pl': 3 } },
+      ],
+    },
     kind: 'grammar',
     name: '-A göre, bence ("according to / in my opinion")',
     description:
@@ -1149,6 +1236,18 @@ const trCurriculum: readonly GrammarPoint[] = [
   // tr-b1-reciprocal-voice). Most "self / each other" senses use these.
   {
     key: 'tr-a2-reflexive-reciprocal-pronouns',
+    coverageSpec: {
+      axes: [
+        // kendi + possessive is a full person paradigm (kendim, kendin,
+        // kendisi, kendimiz…), as is birbir- (birbirimizi/birbirinizi).
+        // Pool audit 2026-07-17: 3rd-person dominated (kendim/kendin rare).
+        // Translation-only surface, so the person pin is safe.
+        {
+          name: 'person',
+          floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 },
+        },
+      ],
+    },
     // clozeUnsuitable (2026-06-21): a single blank leaves the case
     // under-constrained — birbirine / birbirini / birbiriyle all fit with no
     // acceptableAnswers (same trap as the voice / stacking points). 2026-06-21
@@ -1320,6 +1419,17 @@ const trCurriculum: readonly GrammarPoint[] = [
   // sense, which our imperative point (A1) does not cover.
   {
     key: 'tr-a2-optative',
+    coverageSpec: {
+      axes: [
+        // Same collapse shape as tr-a1-imperative (PR #588): the two live
+        // forms are 1sg -(y)AyIm and 1pl -(y)AlIm — partial floors only
+        // (2nd/3rd person are archaic / belong to imperative & -sIn).
+        { name: 'person', floors: { '1sg': 8, '1pl': 8 } },
+        // Negative -mAyAyIm/-mAyAlIm is claimed core; without a floor the
+        // pool collapses to affirmative suggestions.
+        { name: 'polarity', floors: { affirmative: 10, negative: 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Optative / volitional -(y)AyIm / -(y)AlIm ("let me / let\'s")',
     description:
@@ -1353,6 +1463,14 @@ const trCurriculum: readonly GrammarPoint[] = [
   // require a negative verb), §12.2.2 (herkes takes singular agreement).
   {
     key: 'tr-a2-indefinite-pronouns',
+    coverageSpec: {
+      axes: [
+        // Two claimed halves: NPIs requiring a negative verb (kimse, hiçbiri)
+        // vs the non-NPI members (biri, herkes, hepsi). Pool audit
+        // 2026-07-17: 51/9 negative-skewed — the positive half starved.
+        { name: 'polarity', floors: { affirmative: 12, negative: 12 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Indefinite & quantifier pronouns (biri / herkes / hiçbir / kimse / hepsi)',
     description:
@@ -1621,6 +1739,14 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a2-relative-an',
+    coverageSpec: {
+      axes: [
+        // The negative participle -mAyAn (with its -y- buffer trap *gelmeen)
+        // is claimed core. Pool audit 2026-07-17: translation 28/2
+        // affirmative-collapsed.
+        { name: 'polarity', floors: { affirmative: 18, negative: 12 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Subject relative -(y)An / -(y)En',
     description:
@@ -1853,6 +1979,14 @@ const trCurriculum: readonly GrammarPoint[] = [
   // complement), §17.3.1.3 (üst-/yan-/ara- notes; the -n- buffer before case).
   {
     key: 'tr-a2-spatial-postpositions',
+    coverageSpec: {
+      axes: [
+        // The 3-case split IS the point: location -DA (üstünde), motion-to
+        // -(y)A (yanıma), motion-from -DAn (altından). Unpinned drafts
+        // collapse to static-location locative.
+        { name: 'case', floors: { locative: 12, dative: 9, ablative: 9 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Spatial postpositions (evin önünde, masanın üstünde)',
     description:
@@ -2379,6 +2513,17 @@ const trCurriculum: readonly GrammarPoint[] = [
     key: 'tr-b1-participles-dik-acak',
     clozeUnsuitable: true,
     sentenceConstructionSuitable: true,
+    coverageSpec: {
+      axes: [
+        // The possessive agreeing with the clause subject IS the point
+        // (okuduğum kitap / gideceğimiz şehir); 1sg/3sg collapse expected
+        // without floors.
+        {
+          name: 'person',
+          floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 },
+        },
+      ],
+    },
     kind: 'grammar',
     name: 'Non-subject relative -DIK / -(y)AcAK + possessive',
     description:
@@ -3005,6 +3150,17 @@ const trCurriculum: readonly GrammarPoint[] = [
   {
     key: 'tr-b1-reason-digi-icin',
     sentenceConstructionSuitable: true,
+    coverageSpec: {
+      axes: [
+        // The subordinate verb carries possessive agreement with its subject
+        // (geldiğim için / geldiği için); the commonError is dropping it —
+        // floors force the whole paradigm.
+        {
+          name: 'person',
+          floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 },
+        },
+      ],
+    },
     kind: 'grammar',
     name: 'Reason clauses -DIğI / -(y)AcAğI için ("because")',
     description:
