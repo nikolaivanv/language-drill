@@ -442,6 +442,8 @@ const COVERAGE_AXIS_DIRECTIVE: Record<CoverageAxis, string> = {
     "- `coverage.polarity`: whether the target sentence is affirmative or negative.",
   sentenceType:
     "- `coverage.sentenceType`: the clause type of the target sentence (declarative/interrogative/imperative).",
+  comparison:
+    "- `coverage.comparison`: the comparison construction the target realizes (comparative/superlative/equative/less). Report what the draft ACTUALLY produced, not what was requested.",
 };
 
 function renderCoverageDirective(spec: GenerationSpec): string {

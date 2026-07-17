@@ -128,6 +128,17 @@ describe("VALIDATION_TOOL", () => {
     expect(coverageProps).toHaveProperty("case");
     expect(coverageProps).toHaveProperty("number");
   });
+
+  it("coverage properties include the comparison axis", () => {
+    const coverageProps = (
+      VALIDATION_TOOL.input_schema as {
+        properties: {
+          coverage: { properties: Record<string, unknown> };
+        };
+      }
+    ).properties.coverage.properties;
+    expect(coverageProps).toHaveProperty("comparison");
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -637,5 +648,14 @@ describe("parseValidationResult — coverage", () => {
       coverage: { case: "dative", number: "plural" },
     });
     expect(r.coverage).toEqual({ case: "dative", number: "plural" });
+  });
+
+  it("keeps a valid comparison value and drops an illegal one", () => {
+    expect(
+      parseValidationResult({ ...base, coverage: { comparison: "superlative" } }).coverage,
+    ).toEqual({ comparison: "superlative" });
+    expect(
+      parseValidationResult({ ...base, coverage: { comparison: "bogus" } }).coverage,
+    ).toEqual({});
   });
 });

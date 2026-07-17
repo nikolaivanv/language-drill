@@ -42,6 +42,12 @@ export const CASE_CODES = [
   "genitive",
 ] as const;
 export const NUMBER_CODES = ["singular", "plural"] as const;
+export const COMPARISON_CODES = [
+  "comparative",
+  "superlative",
+  "equative",
+  "less",
+] as const;
 
 export type PersonCode = (typeof PERSON_CODES)[number];
 export type WordClassCode = (typeof WORD_CLASS_CODES)[number];
@@ -49,6 +55,7 @@ export type PolarityCode = (typeof POLARITY_CODES)[number];
 export type SentenceTypeCode = (typeof SENTENCE_TYPE_CODES)[number];
 export type CaseCode = (typeof CASE_CODES)[number];
 export type NumberCode = (typeof NUMBER_CODES)[number];
+export type ComparisonCode = (typeof COMPARISON_CODES)[number];
 
 export type CoverageAxis =
   | "person"
@@ -56,7 +63,8 @@ export type CoverageAxis =
   | "case"
   | "wordClass"
   | "polarity"
-  | "sentenceType";
+  | "sentenceType"
+  | "comparison";
 
 /** The realized coverage values for one exercise; partial — only applicable
  *  axes are ever set. Stored verbatim in `exercises.coverage_tags`. */
@@ -67,6 +75,7 @@ export type CoverageTags = {
   wordClass?: WordClassCode;
   polarity?: PolarityCode;
   sentenceType?: SentenceTypeCode;
+  comparison?: ComparisonCode;
 };
 
 /**
@@ -111,6 +120,7 @@ export const COVERAGE_AXIS_VALUES: Record<CoverageAxis, readonly string[]> = {
   wordClass: WORD_CLASS_CODES,
   polarity: POLARITY_CODES,
   sentenceType: SENTENCE_TYPE_CODES,
+  comparison: COMPARISON_CODES,
 };
 
 /** Canonical axis ordering so `coverageAxesFor` output is stable and matches
@@ -122,6 +132,7 @@ const AXIS_ORDER: readonly CoverageAxis[] = [
   "wordClass",
   "polarity",
   "sentenceType",
+  "comparison",
 ];
 
 /**

@@ -155,6 +155,12 @@ export const VALIDATION_TOOL: Anthropic.Tool = {
             description:
               "Grammatical case realized by the target form (nominative/accusative/dative/locative/ablative/genitive).",
           },
+          comparison: {
+            type: "string",
+            enum: [...COVERAGE_AXIS_VALUES.comparison],
+            description:
+              "Comparison construction realized by the target: comparative (superiority), superlative, equative (equality), or less (inferiority).",
+          },
         },
       },
     },
