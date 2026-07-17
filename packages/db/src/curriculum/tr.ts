@@ -3,15 +3,13 @@ import { CefrLevel, Language } from '@language-drill/shared';
 import type { GrammarPoint } from './types';
 
 // TR curriculum aligned to Yedi İklim A1+A2 parity (2026-05-28) plus B1
-// (2026-06-19) and two 2026-06-20 G&K reverse-coverage passes:
-// 27 A1 + 22 A2 + 11 B1 grammar entries, 15 themed vocab
-// umbrellas (5 each A1/A2/B1), 3 dictation, 9 free-writing. B2 grammar/vocab
-// remain out (separate cycle). To enable B2: author the B2 section below, raise
-// TR's B2 floor in PER_LANGUAGE_GRAMMAR_MIN (curriculum/index.ts), restore TR B2
-// entries in SEED_KEY_TO_GRAMMAR_POINT (seed-exercises.ts), and update the
-// per-language counts assertions for Turkish (curriculum.test.ts).
+// (2026-06-19), B2 (2026-07-07), and G&K reverse-coverage passes:
+// 27 A1 + 22 A2 + 11 B1 + 19 B2 grammar entries, 15 themed vocab
+// umbrellas (5 each A1/A2/B1), 3 dictation, 9 free-writing. B2 is grammar-only
+// this cycle (no B2 vocab/dictation/free-writing umbrellas). See
+// docs/superpowers/specs/2026-07-07-tr-b2-curriculum-design.md.
 const TR = Language.TR;
-const { A1, A2, B1 } = CefrLevel;
+const { A1, A2, B1, B2 } = CefrLevel;
 
 /**
  * Per-language curriculum version. Bump in the same commit as any edit to
@@ -174,8 +172,18 @@ const { A1, A2, B1 } = CefrLevel;
  * indefinite-pronouns (polarity 51/9), reflexive-reciprocal-pronouns
  * (person; 3rd-person dominated). Bump clears suppression; collapsed cells
  * are demoted post-deploy per the audit's demote list.
+ * 2026-07-17c: TR B2 enabled — 17 grammar points from Yedi İklim B2 (Units 1–8),
+ * grouped by function and deduped vs A1–B1, plus two G&K reverse-audit additions
+ * (-DIr generalizing, "as if" -mIş gibi). Two points from the original 19 were
+ * dropped as already taught at B1 by the 2026-07-16b book-coverage cycle
+ * (temporal-when → tr-b1-when-converbs, causal-subordinate →
+ * tr-b1-reason-digi-icin) and two re-scoped around it (instead-of,
+ * duration-throughout). Grammar-only (no B2 vocab/dictation/free-writing).
+ * New points authored WITH coverageSpecs per docs/curriculum-authoring.md.
+ * Bump enumerates the new B2 cells + clears any suppression. See
+ * docs/superpowers/specs/2026-07-07-tr-b2-curriculum-design.md.
  */
-export const CURRICULUM_VERSION_TR = '2026-07-17b';
+export const CURRICULUM_VERSION_TR = '2026-07-17c';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -2539,6 +2547,553 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Forgetting the genitive on the relative-clause subject (benim okuduğum).',
     ],
     prerequisiteKeys: ['tr-a2-relative-an'],
+  },
+
+  // ===========================================================================
+  // B2 grammar (2026-07-07). Yedi İklim B2 (Units 1–8), grouped by function and
+  // deduped vs A1–B1; plus two G&K reverse-audit additions (#18 -DIr, #19 "as
+  // if"). Author-time grounding in Göksel & Kerslake — § anchors per point.
+  // See docs/superpowers/specs/2026-07-07-tr-b2-curriculum-design.md.
+  // ===========================================================================
+
+  // G&K §7.2.1.1 (aorist / -mAz / -(y)AsI as derivational adjectives),
+  // §25.4.1(iv) (aorist participle inside a relative clause).
+  {
+    key: 'tr-b2-participle-aorist',
+    // clozeUnsuitable: the aorist -Ar/-mAz adjectival participle is a
+    // semi-lexicalized set (akar su, çıkmaz sokak); a whole-word blank is
+    // under-constrained (which verb yields an -Ar/-mAz adjective here?) and
+    // risks testing the finite aorist tense instead (grammarPointMatch=false).
+    // Translation ("running water" → akar su) carries it.
+    // No coverageSpec: the -Ar vs -mAz contrast is word-internal derivation —
+    // sentence polarity does NOT track it (çıkmaz sokak sits in an affirmative
+    // sentence), so no coverage axis can express it (cf. the -lI/-sIz note).
+    clozeUnsuitable: true,
+    kind: 'grammar',
+    name: 'Aorist participle -Ar / -Ir / -mAz (adjectival)',
+    description:
+      'Aorist as a bare tenseless adjective before a noun: -Ar/-Ir (akar su, çalar saat), negative -mAz (çıkmaz sokak, inanılmaz). Also the receding -AsI "worthy of" (görülesi, frozen kahrolası) — recognition only. No tense/person/agreement.',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'akar su (running water — ak- + fixed attributive -Ar)',
+      'çıkmaz sokak (a dead-end street — çık- + negative -mAz)',
+      'İnanılmaz bir manzara gördük. (We saw an unbelievable view — inan-ıl-maz.)',
+      'görülesi yerler (places worth seeing — receding -AsI, recognition only)',
+    ],
+    examplesNegative: [
+      '*çıkmıyor sokak (wrong — the attributive aorist is fixed and tenseless, not the finite negative: çıkmaz sokak)',
+      '*akmaz su (wrong allomorph and sense — monosyllabic ak- takes positive -Ar: akar su)',
+    ],
+    commonErrors: [
+      'Treating the attributive aorist as a finite verb (adding tense/person): çıkmıyor sokak for çıkmaz sokak.',
+      'Wrong aorist allomorph on the stem (akmaz / aker for akar).',
+      'Over-producing the receding -AsI "worthy of" as if productive (yenilesi yemek) — living uses are frozen (kahrolası) or the -AsIyA adverb.',
+    ],
+    prerequisiteKeys: ['tr-a2-aorist', 'tr-a2-relative-an'],
+  },
+  // G&K §25.4.1(i) and §25.4.1.1 (reduced -mIş olan participle), §7.2.1.1
+  // (lexicalised -mIş: geçmiş, dolmuş).
+  {
+    key: 'tr-b2-participle-mis',
+    kind: 'grammar',
+    name: 'Resultative participle -mIş (adjectival)',
+    description:
+      '-mIş as a bare resultative/perfective adjective before a noun (a reduced "-mIş olan" relative): pişmiş yemek, okunmuş kitap, geçmiş yıllar, dondurulmuş (passive) gıda. No evidential force — contrast the finite evidential -mIş (A2).',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'pişmiş yemek (cooked food — resultative -mIş, no hearsay)',
+      'okunmuş bir kitap (an already-read book)',
+      'geçmiş yıllar (past years — lexicalised geçmiş)',
+      'Yemeğini yemiş bebek ağlamaz. (A baby that has eaten its food doesn\'t cry.)',
+    ],
+    examplesNegative: [
+      '*dondurmuş gıda (for "frozen food" — the food is frozen, not freezing; needs the passive: dondurulmuş gıda)',
+      '*pişiyor yemek (wrong — the reduced participle is -mIş, not the finite progressive: pişmiş yemek)',
+    ],
+    commonErrors: [
+      'Reading the attributive -mIş as evidential/hearsay ("food that reportedly cooked") — as a participle it is purely resultative.',
+      'Using active -mIş where a passive resultative is meant (dondurmuş vs dondurulmuş).',
+      'Confusing it with the finite evidential -mIş predicate (gelmiş "s/he apparently came").',
+    ],
+    prerequisiteKeys: ['tr-a2-mis-evidential', 'tr-b1-participles-dik-acak'],
+  },
+  // G&K §26.3.16(vii) (-(y)IncAyA kadar / -AnA kadar "until / by the time"),
+  // §26.3.8(iv) (-mAksIzIn "without", formal twin of -mAdAn).
+  {
+    key: 'tr-b2-converb-until',
+    clozeUnsuitable: true,
+    kind: 'grammar',
+    name: 'Converbs "until" -(y)IncAyA kadar / -AnA kadar & "without" -mAksIzIn',
+    description:
+      '"Until" converbs -(y)IncAyA kadar / -AnA kadar (also "by the time": bitinceye kadar) — the converb takes dative -(y)A before kadar. Plus formal "without" -mAksIzIn (durmaksızın), the written twin of A2 -mAdAn.',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'Sen gelinceye kadar bekleyeceğim. (I will wait until you come.)',
+      'Bu iş bitinceye kadar hepimiz yaşlanacağız. (We\'ll all grow old by the time this work is finished.)',
+      'Ölene kadar burada kalmak istiyordu. (She wanted to stay here until she died — -AnA kadar.)',
+      'Durmaksızın çalıştı. (He worked without stopping — formal -mAksIzIn.)',
+    ],
+    examplesNegative: [
+      '*gelince kadar (wrong — the converb takes dative -(y)A before kadar: gelinceye kadar)',
+      '*vurmaksızın girdi [in casual speech] (register mismatch — everyday Turkish uses -mAdAn: vurmadan girdi)',
+    ],
+    commonErrors: [
+      'Dropping the dative -(y)A: "gelince kadar" instead of "gelinceye kadar".',
+      'Using formal -mAksIzIn in casual register where -mAdAn is the neutral choice.',
+      'Mis-segmenting -mAksIzIn as -mA + … (yapmasızın) — the form is fixed: yapmaksızın.',
+    ],
+    prerequisiteKeys: ['tr-a2-converbs', 'tr-a2-converb-temporal'],
+  },
+  // G&K §8.3.2 (past copula -(y)DI attaches to all position-3 TAM suffixes),
+  // §8.2.3.3, §21.2.1 (-mIştI), §21.2.3 (-AcAktI), §21.4.2.2 (-mAlIydI).
+  {
+    key: 'tr-b2-compound-past-hikaye',
+    conjugationSuitable: true,
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
+        { name: 'polarity', floors: { affirmative: 18, negative: 12 } },
+      ],
+    },
+    kind: 'grammar',
+    name: 'Compound past "hikâye" — copula -(y)DI on all tenses',
+    description:
+      'Past copula -(y)DI on any tense base (one rule): pluperfect -mIştI, past habitual/unreal aorist -ArdI, future-in-past -AcAktI, past necessitative -mAlIydI, past conditional -sAydI. Group-1 person endings; the -y- drops after a consonant. (B1 taught only -Iyordu.)',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'Ben geldiğimde o çoktan gitmişti. (When I arrived he had already left — pluperfect -mIştI.)',
+      'Çocukken her yaz denize giderdik. (As children we would go to the seaside every summer — past habitual -ArdI.)',
+      'Tam çıkacaktım ki telefon çaldı. (I was just about to leave when the phone rang — future-in-past -AcAktI.)',
+      'Daha erken kalkmalıydın. (You should have got up earlier — past necessitative -mAlIydI.)',
+    ],
+    examplesNegative: [
+      '*gelmiştir [for "had come"] (wrong — the second element is the past copula -(y)DI, not the generalizing -DIr: gelmişti)',
+      '*giderdimsin (wrong person set — -(y)DI takes group-1 endings: giderdin)',
+    ],
+    commonErrors: [
+      'Stacking two tense markers instead of the copula (*gidiyorduyor for gidiyordu).',
+      'Using group-2 (-sIn) endings after -(y)DI instead of group-1 (-n): gelmiştin, not gelmiştinsin.',
+      'Keeping the -y- buffer after a consonant (*yemişyti for yemişti).',
+    ],
+    prerequisiteKeys: ['tr-b1-past-continuous-iyordu', 'tr-a2-aorist'],
+  },
+  // G&K §8.3.2 (evidential copula -(y)mIş on all position-3 suffixes except -DI),
+  // §21.4.3 (reportative / inferential meaning; copula is tense-neutral).
+  {
+    key: 'tr-b2-compound-evidential-rivayet',
+    conjugationSuitable: true,
+    coverageSpec: {
+      axes: [
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
+        { name: 'polarity', floors: { affirmative: 18, negative: 12 } },
+      ],
+    },
+    kind: 'grammar',
+    name: 'Compound evidential "rivayet" — copula -(y)mIş on all tenses',
+    description:
+      'Evidential copula -(y)mIş on any tense base except -DI: -Iyormuş (hearsay present), -ArmIş (habitual), -AcAkmIş (future), -mAlIymIş (necessity). Tense-neutral; adds report/inference. Group-2 person endings. (A2 had only the finite -mIş.)',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'Ahmet çok iyi Almanca biliyormuş. (Apparently Ahmet knows German very well — -Iyormuş.)',
+      'Eskiden burada otururlarmış. (They say they used to live here — habitual -ArmIş.)',
+      'Yarın gelecekmiş. (Supposedly he will come tomorrow — future -AcAkmIş.)',
+      'Ona göre daha çok çalışmalıymışız. (According to her we ought to work harder — -mAlIymIş.)',
+    ],
+    examplesNegative: [
+      '*geldimiş (wrong — -(y)mIş does not attach to -DI; the reportative past is the finite -mIş: gelmiş)',
+      '*geliyormuşdum (wrong person set — -(y)mIş takes group-2 endings: geliyormuşum)',
+    ],
+    commonErrors: [
+      'Attaching -(y)mIş to -DI (*geldimiş) instead of using the finite -mIş (gelmiş).',
+      'Double-marking evidentiality (*geliyormuşmuş).',
+      'Using group-1 endings after -(y)mIş (geliyormuşdum) instead of group-2 (geliyormuşum).',
+    ],
+    prerequisiteKeys: ['tr-a2-mis-evidential', 'tr-b1-past-continuous-iyordu'],
+  },
+  // G&K §26.3.11 (-DIkçA proportionality), §26.3.16(iv) (-Ar…-mAz "as soon as"),
+  // §26.3.16(viii) (-DIkçA "whenever").
+  {
+    key: 'tr-b2-proportion-assoon',
+    clozeUnsuitable: true,
+    kind: 'grammar',
+    name: 'Proportion -DIkçA & "as soon as" -Ar…-mAz',
+    description:
+      '-DIkçA "as / the more … the more" (okudukça öğreniyorum; also "whenever"), and the fixed -Ar…-mAz "as soon as" frame — the positive aorist plus the negative aorist of the same verb (gelir gelmez), with no person marking.',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'Okudukça daha çok öğreniyorum. (The more I read, the more I learn.)',
+      'Su kaynar kaynamaz altını kıs. (As soon as the water boils, lower the heat.)',
+      'Onu gördükçe anneni hatırlıyorum. (Whenever I see him I remember your mother.)',
+      'Beni görür görmez kaçtı. (He fled as soon as he saw me.)',
+    ],
+    examplesNegative: [
+      '*gelir gelir (wrong — the "as soon as" frame is positive + NEGATIVE aorist: gelir gelmez)',
+      '*gelirim gelmezim (wrong — the -Ar…-mAz frame takes no person marking: gelir gelmez)',
+    ],
+    commonErrors: [
+      'Breaking the fixed positive + negative aorist pattern of -Ar…-mAz (gelir gelir / geldi gitmez).',
+      'Adding person endings to -Ar…-mAz (gelirim gelmezim).',
+      'Confusing scalar -DIkçA ("the more") with immediate-sequence -Ar…-mAz ("the moment").',
+    ],
+    prerequisiteKeys: ['tr-a2-aorist'],
+  },
+  // G&K §17.3.2 / §17.3.2.1 (süresince on a noun), §26.3.16(ix)
+  // (-DIğI sürece "as long as", -DIK only). Re-scoped 2026-07-17: bare
+  // boyunca is taught at B1 (tr-b1-abstract-postpositions, #587); this point
+  // owns the formal süresince and the verbal -DIğI sürece converb.
+  {
+    key: 'tr-b2-duration-throughout',
+    clozeUnsuitable: true,
+    // No coverageSpec: person is form-relevant only for the -DIğI sürece half
+    // (süresince takes a bare noun) — a person pin would be half-effective /
+    // construction-forcing (same exclusion as tr-b1-since-converb).
+    kind: 'grammar',
+    name: 'Duration "throughout / as long as" (süresince, -DIğI sürece)',
+    description:
+      '"Throughout / as long as" beyond B1 boyunca: süresince is its formal twin on a bare noun (konferans süresince "throughout the lecture"); -DIğI sürece is the converb on a verb (yaşadığım sürece "as long as I live" — -DIK only, never -AcAK).',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'Konferans süresince fısıldaştılar. (They whispered throughout the lecture.)',
+      'Yokluğum süresince komşum kediye baktı. (During my absence my neighbour looked after the cat.)',
+      'Ben yaşadığım sürece bu evi satmayacağım. (As long as I live I won\'t sell this house.)',
+    ],
+    examplesNegative: [
+      '*yıla süresince (wrong — süresince takes a bare noun, no case: yıl süresince)',
+      '*yaşayacağım sürece (wrong — sürece takes the -DIK participle, not -AcAK: yaşadığım sürece)',
+    ],
+    commonErrors: [
+      'Case-marking the complement of süresince (yıla süresince → yıl süresince).',
+      'Using durational boyunca/süresince on a verb participle instead of -DIğI sürece (yaşadığım boyunca).',
+      'Using -AcAK with sürece (yaşayacağım sürece → yaşadığım sürece).',
+    ],
+    prerequisiteKeys: ['tr-b1-abstract-postpositions', 'tr-b1-participles-dik-acak'],
+  },
+  // G&K §24.4.3 / §24.4.3.1 (indirect statements: -DIK/-AcAK + poss + acc),
+  // §24.4.7 (copular predicates nominalised with ol-).
+  {
+    key: 'tr-b2-reported-statements',
+    clozeUnsuitable: true,
+    coverageSpec: {
+      axes: [
+        // The possessive agreeing with the REPORTED subject is the point
+        // (geleceğimi vs geleceğini — the examplesNegative trap); unpinned
+        // drafts collapse to 3sg "…-DIğInI söyledi". Same paradigm shape as
+        // tr-b1-participles-dik-acak.
+        {
+          name: 'person',
+          floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 },
+        },
+      ],
+    },
+    kind: 'grammar',
+    name: 'Indirect statements (-DIK/-AcAK olduğunu söylemek)',
+    description:
+      'Indirect statements: the quoted verb becomes a -DIK (non-future) / -AcAK (future) noun clause + possessive (agreeing with the reported subject) + accusative, under söylemek/belirtmek; nominal/copular predicates use "olduğunu". Person backshifts.',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'Yarın geleceğini söyledi. (He said he would come tomorrow — future -AcAK.)',
+      'Onu tanıdığını söyledi. (She said she knew him — -DIK.)',
+      'Hasta olduğunu söyledi. (He said he was ill — copular predicate via olduğunu.)',
+    ],
+    examplesNegative: [
+      '*Geleceğimi söyledi [for "he said HE would come"] (wrong possessive — must agree with the reported 3sg subject: geleceğini)',
+      '*Hasta olduğu söyledi (wrong — the possessive-marked object clause takes the accusative: hasta olduğunu)',
+    ],
+    commonErrors: [
+      'Keeping the direct-quote possessive (geleceğimi) instead of switching to the reported subject (geleceğini).',
+      'Dropping the accusative on the -DIK/-AcAK object clause (olduğunu → olduğu).',
+      'Keeping a finite copula for nominal predicates (hastayım) instead of nominalising with ol- (hasta olduğunu).',
+    ],
+    prerequisiteKeys: ['tr-a2-reported-speech', 'tr-b1-participles-dik-acak'],
+  },
+  // G&K §24.4.3.2 (indirect questions: yes/no -Ip…-mADIğInI; wh + -DIK/-AcAK).
+  {
+    key: 'tr-b2-reported-questions',
+    clozeUnsuitable: true,
+    coverageSpec: {
+      axes: [
+        // Same possessive-agreement machinery as reported-statements
+        // (gelip gelmeyeceğimi / -eceğini); person pins the reported subject
+        // across the paradigm.
+        {
+          name: 'person',
+          floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 },
+        },
+      ],
+    },
+    kind: 'grammar',
+    name: 'Indirect questions (-Ip …-mADIğInI / wh + -DIK)',
+    description:
+      'Indirect questions: yes/no → -Ip …-mADIğInI (gelip gelmediğini sordu) — the mI particle disappears; wh-questions keep the question word and nominalise the verb with -DIK/-AcAK + possessive + accusative (ne zaman geleceğini sordu, nerede olduğunu bilmiyorum).',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'Gelip gelmeyeceğimi sordu. (He asked whether I would come or not — yes/no frame.)',
+      'Ne zaman geleceğimi sordu. (He asked when I would come — wh + -AcAK.)',
+      'Nerede olduğunu bilmiyorum. (I don\'t know where he is — wh + olduğunu.)',
+    ],
+    examplesNegative: [
+      '*Gelecek mi olduğunu sordu (wrong — the mI particle is replaced by the -Ip…-mA frame: gelip gelmeyeceğimi sordu)',
+      '*Ne zaman geleceksini sordu (wrong — the wh-clause must nominalise: geleceğimi)',
+    ],
+    commonErrors: [
+      'Carrying the mI particle into a reported yes/no question instead of the -Ip…-mA frame.',
+      'Leaving the wh-question finite (geleceksin) instead of nominalising (geleceğimi).',
+      'Mis-ordering the -Ip frame (affirmative stem + -Ip, negative stem carries -DIK/-AcAK + poss + acc).',
+    ],
+    prerequisiteKeys: ['tr-b2-reported-statements', 'tr-a1-questions'],
+  },
+  // G&K §24.4.2.2 (directives use the -mA action nominal, not -DIK; addressee
+  // ablative with iste-/rica et-, dative with söyle-).
+  {
+    key: 'tr-b2-reported-directives',
+    clozeUnsuitable: true,
+    coverageSpec: {
+      axes: [
+        // The -mA nominal's possessive marks the directive's addressee
+        // (gitmemi / gitmeni / gitmenizi); unpinned drafts collapse onto
+        // 1sg-told-me frames.
+        {
+          name: 'person',
+          floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 },
+        },
+      ],
+    },
+    kind: 'grammar',
+    name: 'Reported commands, requests & wishes (-mAsInI istemek/söylemek)',
+    description:
+      'Reported commands/requests/wishes use the -mA action nominal (+ possessive + accusative), not -DIK: Gitmemi söyledi "he told me to go", Gelmenizi istiyorum. Reported necessity is a fact → -mAsI gerektiğini söyledi. iste-/rica et- take an ablative addressee, söyle- a dative.',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'Gitmemi söyledi. (He told me to go — imperative → -mA.)',
+      'Gelmenizi istiyorum. (I want you to come — request → -mA.)',
+      'Gitmem gerektiğini söyledi. (He said I had to go — reported necessity → -DIK.)',
+    ],
+    examplesNegative: [
+      '*Gittiğimi söyledi [for "he told me to go"] (wrong — -DIK means "he said that I went"; a directive takes -mA: gitmemi söyledi)',
+      '*Gelmeniz istiyorum (wrong — the -mA object clause takes the accusative: gelmenizi)',
+    ],
+    commonErrors: [
+      'Using -DIK for a directive (gittiğimi söyledi) instead of -mA (gitmemi söyledi).',
+      'Omitting the accusative on the -mA clause (gelmenizi → gelmeniz).',
+      'Mismatching the addressee frame: benden rica etti (ablative) vs bana söyledi (dative).',
+    ],
+    prerequisiteKeys: ['tr-b2-reported-statements', 'tr-a2-nominalization'],
+  },
+  // G&K §13.2.4 (combinations of voice suffixes: fixed order + transitivity of
+  // the last suffix), §13.2.1.1 (double causative), §8.2.1 (allomorphy).
+  {
+    key: 'tr-b2-double-voice',
+    // No conjugation cell: combined voice is DERIVATIONAL suffix-stacking, not a
+    // person/tense paradigm. A conjugation drill fixes one inflectional category
+    // (§ renderConjugationSection) but can't pin WHICH voice combination
+    // (causative-of-causative vs causative+passive vs reciprocal+causative), so
+    // it is a category mismatch. The stacking rule is drilled by
+    // sentence_construction + translation instead (mirrors B1 passive-voice).
+    clozeUnsuitable: true,
+    sentenceConstructionSuitable: true,
+    kind: 'grammar',
+    name: 'Combined voice (birleşik çatı)',
+    description:
+      'Stacking voice suffixes in the fixed order reflexive/reciprocal → causative(+causative) → passive: causative-of-causative (yaptır- → yaptırt-), causative+passive (yaptırıldı), reciprocal+causative (görüştür-). The last suffix sets transitivity; only a passive may follow a passive.',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'Bütün öğrencilere resim yaptırıldı. (All the students were made to draw — causative + passive.)',
+      'Baba çocukları öpüştürdü. (The father made the children kiss each other — reciprocal + causative.)',
+      'Onları görüştürdü. (She put them in touch / made them meet — reciprocal + causative.)',
+      'Mektubu bana yazdırttı. (He had someone make me write the letter — double causative.)',
+    ],
+    examplesNegative: [
+      '*yapıldırdı (wrong order — nothing but a passive may follow a passive; the causative must precede it: yaptırıldı)',
+      '*yaptırdırdı (wrong allomorph — a stem in -tIr/-dIr takes -t for the next causative: yaptırt-)',
+    ],
+    commonErrors: [
+      'Wrong stacking order (causative after passive, or reciprocal after causative).',
+      'Adding a non-passive suffix onto a passive stem (only a second passive may follow).',
+      'Wrong second-causative allomorph (yaptırdır- instead of yaptırt-).',
+    ],
+    prerequisiteKeys: ['tr-b1-causative-voice', 'tr-b1-passive-voice', 'tr-b1-reciprocal-voice'],
+  },
+  // G&K §26.3.3 (Concession: -DIK/-AcAK hâlde, -mAsInA rağmen/karşın),
+  // §17.2.2(v) (-A rağmen / -A karşın dative postpositions).
+  {
+    key: 'tr-b2-concessive',
+    clozeUnsuitable: true,
+    // No coverageSpec: three frames (hâlde / -mAsInA rağmen / noun + rağmen)
+    // — multi-construction; the claimed traps are the dative and possessive
+    // morphology, not person agreement.
+    kind: 'grammar',
+    name: 'Concessive "although / despite" (-DIğI hâlde, -mAsInA rağmen)',
+    description:
+      '"Although / despite": -DIK/-AcAK + possessive + hâlde (gerektiği hâlde), -mA + possessive + dative + rağmen/karşın (olmasına rağmen), and -A rağmen on a bare noun (hastalığına rağmen). hâlde takes no case; rağmen governs the dative.',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'Yardım etmesi gerektiği hâlde hiçbir şey yapmadı. (Although he should have helped, he did nothing.)',
+      'Kötü şeyler yapmış olmasına rağmen onu severim. (Despite her having done bad things, I like her.)',
+      'Hastalığına rağmen çalışıyor. (She works in spite of her illness — -A rağmen on a noun.)',
+    ],
+    examplesNegative: [
+      '*olması rağmen (wrong — rağmen governs the dative: olmasına rağmen)',
+      '*gerek hâlde (wrong — hâlde takes -DIK + possessive: gerektiği hâlde)',
+    ],
+    commonErrors: [
+      'Omitting the dative required by rağmen / karşın (olması rağmen → olmasına rağmen).',
+      'Dropping the possessive on -DIK hâlde (gerek hâlde → gerektiği hâlde).',
+      'Contaminating hâlde with için (gerektiği için hâlde).',
+    ],
+    prerequisiteKeys: ['tr-b1-participles-dik-acak', 'tr-a2-nominalization'],
+  },
+  // G&K §26.3.15 (Substitution: -AcAğInA / -AcAğI yerde), §26.3.10
+  // (Preference: -mAktAnsA). Re-scoped 2026-07-17: the basic -mAk yerine frame
+  // is taught at A2 (tr-a2-nominalization example since the G&K book-coverage
+  // folds, #587); this point owns the two harder frames.
+  {
+    key: 'tr-b2-instead-of',
+    clozeUnsuitable: true,
+    // No coverageSpec: -mAktAnsA is person-less; only the -AcAğInA half
+    // inflects — a person pin would force one construction (half-effective,
+    // same exclusion as tr-b1-since-converb).
+    kind: 'grammar',
+    name: '"Rather than" (-mAktAnsA, -AcAğInA / -AcAğI yerde)',
+    description:
+      '"Rather than / instead of" beyond the A2 -mAk yerine frame: -mAktAnsA (ablative + ise: beklemektense "rather than waiting") and -AcAğInA / -AcAğI yerde (future participle + dative / yerde: ağlayacağına gül "laugh instead of crying"). Both attach to the rejected alternative.',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'Burada beklemektense yürüyelim. (Rather than waiting here, let\'s walk.)',
+      'Ağlayacağına bir çözüm bul. (Instead of crying, find a solution — -AcAğInA.)',
+      'Televizyon seyredeceğin yerde kitap oku. (Read a book instead of watching TV — -AcAğI yerde.)',
+    ],
+    examplesNegative: [
+      '*ağladığına [for "instead of crying (expected)"] (wrong — a substituted future action takes -AcAK: ağlayacağına)',
+      '*beklemekten yürüyelim (wrong — the "rather than" form needs the -sA/ise element: beklemektense)',
+    ],
+    commonErrors: [
+      'Using -DIK where -AcAK is needed for the substituted action (ağladığına → ağlayacağına).',
+      'Dropping the conditional element of -mAktAnsA (beklemekten → beklemektense).',
+      'Mixing the frames (-AcAğInA yerine / -AcAğI yerine).',
+    ],
+    prerequisiteKeys: ['tr-a2-nominalization', 'tr-b1-participles-dik-acak'],
+  },
+  // G&K §27.6.1 (formal conditionals: -DIğI takdirde [-DIK only],
+  // -mAsI hâlinde / durumunda), §26.3.4 (Condition).
+  {
+    key: 'tr-b2-conditional-formal',
+    clozeUnsuitable: true,
+    kind: 'grammar',
+    name: 'Formal conditionals (-DIğI takdirde, -mAsI hâlinde / durumunda)',
+    description:
+      'Formal (written/official) conditionals: -DIğI takdirde (-DIK only, never -AcAK: başvurduğunuz takdirde), -mAsI hâlinde and -mAsI durumunda (-mA + possessive: gecikmesi hâlinde). Meaning ≈ aorist + -sA but register-marked.',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'Başvurunuz zamanında ulaştığı takdirde değerlendirilecektir. (If your application arrives on time it will be considered.)',
+      'Ödeme gecikmesi hâlinde faiz uygulanır. (In case of late payment, interest is charged.)',
+      'Kurallara uyulmaması durumunda üyelik iptal edilir. (If the rules are not followed, membership is cancelled.)',
+    ],
+    examplesNegative: [
+      '*başvuracağınız takdirde (wrong — takdirde takes -DIK, never -AcAK: başvurduğunuz takdirde)',
+      '*gecikme hâlinde (wrong — needs the possessive on -mA: gecikmesi hâlinde)',
+    ],
+    commonErrors: [
+      'Using -AcAK with takdirde (başvuracağınız takdirde → başvurduğunuz takdirde).',
+      'Dropping the possessive on the -mA noun (gecikme hâlinde → gecikmesi hâlinde).',
+      'Using these formal forms in casual speech where -sA is expected.',
+    ],
+    prerequisiteKeys: ['tr-b1-real-conditional', 'tr-b1-participles-dik-acak'],
+  },
+  // G&K §13.3.1.1 (converb + auxiliary compound verbs), §8.2.3.2 (Position-2:
+  // -(y)Iver, -(y)Ayaz düşeyazdı), §13.3 (bound vs free auxiliaries).
+  {
+    key: 'tr-b2-aspectual-verbs',
+    clozeUnsuitable: true,
+    kind: 'grammar',
+    name: 'Aspectual compound verbs (-(y)Iver, -(y)Ip dur/kal, -(y)Akal)',
+    description:
+      'Aspectual compound verbs = converb + auxiliary. Bound: -(y)Iver (do quickly: gidiver), -(y)Akal (be frozen: donakaldı), -(y)Ayaz (almost: düşeyazdı), -(y)Agel (over time). Free: -(y)Ip dur- (keep on: bakıp durdu), -(y)Ip kal- (be left: uyuyup kaldı). Only -Iver is fully productive.',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'Şu pencereyi kapayıver. (Just close that window — -(y)Iver, quick/easy.)',
+      'Söylediklerini duyunca donakaldık. (We were stunned when we heard — frozen -(y)Akal.)',
+      'Çocuk bütün gün bakıp durdu. (The child kept staring all day — free -(y)Ip dur-.)',
+      'Yorgunluktan uyuyup kaldık. (We were left fast asleep from exhaustion — -(y)Ip kal-.)',
+    ],
+    examplesNegative: [
+      '*donukaldı (wrong converb vowel — -kal takes -(y)A: donakaldı)',
+      '*gider durdu (wrong — the free auxiliary needs the -(y)Ip converb: gidip durdu)',
+    ],
+    commonErrors: [
+      'Wrong converb vowel: -(y)I vs -(y)A per auxiliary (donukaldı / gideverdi).',
+      'Omitting -(y)Ip with a free auxiliary (gider durdu → gidip durdu).',
+      'Over-producing frozen auxiliaries (-(y)Ayaz, -(y)Agel, -(y)Akal) as if productive — only -(y)Iver is fully productive.',
+    ],
+    prerequisiteKeys: ['tr-a2-converbs', 'tr-a2-aorist'],
+  },
+  // Reverse-audit addition. G&K §8.3.3 (generalizing -DIr), §21.4.1.1
+  // (assumption / probability modality).
+  {
+    key: 'tr-b2-dir-generalizing',
+    clozeUnsuitable: true,
+    kind: 'grammar',
+    name: 'Generalizing / assumption copula -DIr',
+    description:
+      'Copular -DIr: (a) assumption/probability in speech (O şimdi evdedir "she\'s probably home"), (b) neutral generalization / definition in formal register (Türkiye\'nin başkenti Ankara\'dır; …kaynamaktadır). Non-past; distinct from hearsay -mIş.',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'O şu an evdedir. (She\'s probably home right now — assumption.)',
+      'Türkiye\'nin başkenti Ankara\'dır. (The capital of Turkey is Ankara — formal statement of fact.)',
+      'Bu su içilebilir niteliktedir. (This water is of drinkable quality — formal register.)',
+    ],
+    examplesNegative: [
+      '*Ankara\'dır güzel (wrong placement — -DIr sits on the predicate: Ankara güzeldir)',
+      '*Dün evdeydir (wrong — -DIr is non-past; past assumption is evde olmalıydı)',
+    ],
+    commonErrors: [
+      'Confusing assumption -DIr (probability) with evidential -mIş (hearsay).',
+      'Using -DIr in casual speech for a plain known fact where the bare predicate is natural (evdedir → evde).',
+      'Attaching -DIr to a past predicate (evdeydir).',
+    ],
+    prerequisiteKeys: ['tr-a1-personal-suffixes', 'tr-a2-mis-evidential'],
+  },
+  // Reverse-audit addition. G&K §26.1.5 / §26.3.8 (non-factual "as if":
+  // (sanki) …-mIş gibi).
+  {
+    key: 'tr-b2-as-if-gibi',
+    clozeUnsuitable: true,
+    kind: 'grammar',
+    name: '"As if" (sanki) …-mIş gibi',
+    description:
+      '"As if": (sanki) + -mIş gibi — a hypothetical/counterfactual manner clause on evidential -mIş + gibi (hayalet görmüş gibi bakıyor). Non-factual; sanki optionally flags it. An ongoing pretence uses -(I)yormuş gibi.',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'Bana hayalet görmüş gibi baktı. (He looked at me as if he\'d seen a ghost.)',
+      'Sanki hiçbir şey olmamış gibi konuşuyor. (He talks as if nothing had happened.)',
+      'Beni duymuyormuş gibi yaptı. (She acted as if she couldn\'t hear me — -Iyormuş gibi.)',
+    ],
+    examplesNegative: [
+      '*gördü gibi (wrong — "as if" builds on the participle -mIş, not the finite past: görmüş gibi)',
+      '*görmüş kadar [for "as if he saw"] (wrong postposition — the "as if" frame uses gibi, not kadar)',
+    ],
+    commonErrors: [
+      'Using a finite verb before gibi instead of -mIş (gördü gibi → görmüş gibi).',
+      'Confusing "as if" -mIş gibi with real comparison gibi (aslan gibi güçlü).',
+      'Forgetting -(I)yormuş gibi for an ongoing pretence (duymuyor gibi vs duymuyormuş gibi).',
+    ],
+    prerequisiteKeys: ['tr-a2-gibi-kadar', 'tr-a2-mis-evidential'],
   },
 
   // ---------------------------------------------------------------------------

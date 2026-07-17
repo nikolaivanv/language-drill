@@ -522,7 +522,7 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
     ).toBeUndefined();
   });
 
-  it('the full TR clozeUnsuitable set is exactly these twenty-two points', () => {
+  it('the full TR clozeUnsuitable set is exactly these thirty-six points', () => {
     const flagged = trCurriculum
       .filter((g) => g.clozeUnsuitable === true)
       .map((g) => g.key)
@@ -553,6 +553,21 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
         'tr-b1-reflexive-voice-kendi',
         // B1 audit addition (ol- across free TAM under-constrains a single blank)
         'tr-b1-copula-ol',
+        // B2 (clause-linking / bipartite / under-constrained blanks)
+        'tr-b2-participle-aorist',
+        'tr-b2-converb-until',
+        'tr-b2-proportion-assoon',
+        'tr-b2-duration-throughout',
+        'tr-b2-reported-statements',
+        'tr-b2-reported-questions',
+        'tr-b2-reported-directives',
+        'tr-b2-double-voice',
+        'tr-b2-concessive',
+        'tr-b2-instead-of',
+        'tr-b2-conditional-formal',
+        'tr-b2-aspectual-verbs',
+        'tr-b2-dir-generalizing',
+        'tr-b2-as-if-gibi',
       ].sort(),
     );
   });
@@ -665,7 +680,7 @@ describe('per-language counts', () => {
     expect(dictation).toBe(0);
   });
 
-  it('Turkish is at full Yedi İklim A1 + A2 + B1 parity (B2 disabled), has 15 vocab umbrellas, 3 dictation umbrellas, 9 free-writing umbrellas, and 1 paraphrase umbrella', () => {
+  it('Turkish is at full Yedi İklim A1 + A2 + B1 + B2 parity, has 15 vocab umbrellas, 3 dictation umbrellas, 9 free-writing umbrellas, and 1 paraphrase umbrella', () => {
     const { grammar, vocab, dictation, freeWriting, paraphrase } = countsFor(trCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(26);
     // A2 gained 5 G&K reverse-audit points (2026-07-10): spatial postpositions,
@@ -675,14 +690,17 @@ describe('per-language counts', () => {
     // +3 G&K book-coverage-ledger points (2026-07-16): abstract postpositions,
     // -DIğI için reason clauses, "when" converbs → 16.
     expect(grammar.B1).toBe(16);
-    expect(grammar.B2).toBe(0);
+    // B2 (2026-07-17): 15 Yedi İklim exam points + 2 G&K reverse-audit additions
+    // (two of the original 19 dropped as now taught at B1 by the 2026-07-16b
+    // book-coverage cycle). Grammar-only — no B2 vocab/dictation/free-writing.
+    expect(grammar.B2).toBe(17);
     // 5 A1 + 5 A2 + 5 B1 themed vocab umbrellas.
     expect(vocab).toBe(15);
     // tr-a1 + tr-a2 + tr-b1 dictation.
     expect(dictation).toBe(3);
     // 3 A1 + 3 A2 + 3 B1 free-writing topic umbrellas.
     expect(freeWriting).toBe(9);
-    // tr-b1-paraphrase (Phase 2 contextual-paraphrase generation); B2 disabled so no tr-b2-paraphrase.
+    // tr-b1-paraphrase (Phase 2 contextual-paraphrase generation); the B2 cycle is grammar-only, so no tr-b2-paraphrase.
     expect(paraphrase).toBe(1);
   });
 });
