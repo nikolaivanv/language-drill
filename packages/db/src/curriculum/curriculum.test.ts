@@ -691,14 +691,16 @@ describe('per-language counts', () => {
   // full Yedi İklim A1+A2 parity (26 A1 + 14 A2 grammar + 10 themed vocab
   // umbrellas); B1/B2 remain disabled.
 
-  it('Spanish is at full PCIC A1–B2 parity (+ B&B gap audit), has 12 vocab umbrellas, 4 dictation umbrellas, 18 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
+  it('Spanish is at full PCIC A1–B2 parity (+ B&B gap audit), has 20 vocab umbrellas, 4 dictation umbrellas, 18 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting, paraphrase } = countsFor(esCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(24);
     expect(grammar.A2).toBeGreaterThanOrEqual(34);
     expect(grammar.B1).toBeGreaterThanOrEqual(25);
     expect(grammar.B2).toBeGreaterThanOrEqual(32);
-    // 5 A1 + 5 A2 themed umbrellas + es-b1-environment-vocab + es-b2-abstract-noun-vocab.
-    expect(vocab).toBe(12);
+    // 5 A1 + 5 A2 themed umbrellas + 4 B1 + 4 B2 themed umbrellas (2026-07-17
+    // expansion) + es-b1-environment-vocab + es-b2-abstract-noun-vocab kept as
+    // one theme of their levels.
+    expect(vocab).toBe(20);
     // es-a1-dictation + es-a2-dictation + es-b1-dictation + es-b2-dictation (Phase 2 dictation generation pipeline).
     expect(dictation).toBe(4);
     // 3 × A1 + 3 × A2 + 6 × B1 + 6 × B2 free-writing topic umbrellas (Phase 2 free-writing generation).
@@ -707,22 +709,23 @@ describe('per-language counts', () => {
     expect(paraphrase).toBe(2);
   });
 
-  it('German is at full Menschen A1–B1 / Sicher! B2 parity and has 3 vocab umbrellas', () => {
+  it('German is at full Menschen A1–B1 / Sicher! B2 parity and has 20 vocab umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting, paraphrase } = countsFor(deCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(19);
     expect(grammar.A2).toBeGreaterThanOrEqual(31);
     expect(grammar.B1).toBeGreaterThanOrEqual(27);
     expect(grammar.B2).toBeGreaterThanOrEqual(27);
-    // de-a2-housing-vocab + de-b1-environment-vocab + de-b2-academic-noun-vocab.
-    // The themed vocab track and the dictation / free-writing / paraphrase
-    // umbrellas are a follow-up PR (see the 2026-07-12 plan doc).
-    expect(vocab).toBe(3);
+    // 5 A1 + 5 A2 + 5 B1 + 5 B2 themed umbrellas (2026-07-17 expansion):
+    // each level keeps its original broad umbrella (housing / environment /
+    // academic-noun) as one of its themes. Dictation / free-writing /
+    // paraphrase umbrellas remain a follow-up (see the 2026-07-12 plan doc).
+    expect(vocab).toBe(20);
     expect(dictation).toBe(0);
     expect(freeWriting).toBe(0);
     expect(paraphrase).toBe(0);
   });
 
-  it('Turkish is at full Yedi İklim A1 + A2 + B1 + B2 parity, has 15 vocab umbrellas, 3 dictation umbrellas, 9 free-writing umbrellas, and 1 paraphrase umbrella', () => {
+  it('Turkish is at full Yedi İklim A1 + A2 + B1 + B2 parity, has 20 vocab umbrellas, 3 dictation umbrellas, 9 free-writing umbrellas, and 1 paraphrase umbrella', () => {
     const { grammar, vocab, dictation, freeWriting, paraphrase } = countsFor(trCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(26);
     // A2 gained 5 G&K reverse-audit points (2026-07-10): spatial postpositions,
@@ -734,10 +737,11 @@ describe('per-language counts', () => {
     expect(grammar.B1).toBe(16);
     // B2 (2026-07-17): 15 Yedi İklim exam points + 2 G&K reverse-audit additions
     // (two of the original 19 dropped as now taught at B1 by the 2026-07-16b
-    // book-coverage cycle). Grammar-only — no B2 vocab/dictation/free-writing.
+    // book-coverage cycle). B2 dictation/free-writing remain out of scope; B2
+    // vocab umbrellas added 2026-07-17.
     expect(grammar.B2).toBe(17);
-    // 5 A1 + 5 A2 + 5 B1 themed vocab umbrellas.
-    expect(vocab).toBe(15);
+    // 5 A1 + 5 A2 + 5 B1 + 5 B2 themed umbrellas (2026-07-17 expansion).
+    expect(vocab).toBe(20);
     // tr-a1 + tr-a2 + tr-b1 dictation.
     expect(dictation).toBe(3);
     // 3 A1 + 3 A2 + 3 B1 free-writing topic umbrellas.

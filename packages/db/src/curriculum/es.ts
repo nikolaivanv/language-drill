@@ -171,8 +171,11 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * opinion (polarity 99/99 negative), nominalizers (number; 100% singular),
  * aspectual-se (person; authored pre-pool). es-b2-cuyo / passive-voice /
  * se-middle-accidental measured healthy — deliberately left spec-less.
+ * `2026-07-17b`: themed vocab umbrellas at B1/B2 (8 new: 4 B1, 4 B2 — the
+ * existing es-b1-environment-vocab / es-b2-abstract-noun-vocab kept as one
+ * theme of their levels). Enqueues the 8 new vocab cells.
  */
-export const CURRICULUM_VERSION_ES = '2026-07-17a';
+export const CURRICULUM_VERSION_ES = '2026-07-17b';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -3352,6 +3355,133 @@ const esCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Confusing "actualmente" (currently) with "actually" — use "en realidad" or "de hecho" for the latter.',
       'Overusing nominalisations from English ("*la realización" for "the fact that").',
+    ],
+  },
+
+  // ---------------------------------------------------------------------------
+  // Themed B1/B2 umbrellas (2026-07-17 expansion), mirroring the DE/TR B-level
+  // split: es-b1-environment-vocab and es-b2-abstract-noun-vocab above remain
+  // one theme of their levels; these narrow the rest of the B1/B2 topic space.
+  // coverageSpec: intentionally none — open noun-dominant identity space
+  // (matches the existing ES vocab-umbrella decision).
+  // ---------------------------------------------------------------------------
+  {
+    key: 'es-b1-vocab-media-news',
+    kind: 'vocab',
+    name: 'Media and news (B1)',
+    description:
+      'B1 vocabulary for news reporting, media formats, and current-events discussion.',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: ['la noticia', 'el periódico'],
+    examplesNegative: ['*el noticia'],
+    commonErrors: [
+      'Mismatching article gender on -a nouns ("*el noticia" instead of "la noticia").',
+      'Confusing "el periódico" (newspaper) with "la revista" (magazine).',
+    ],
+  },
+  {
+    key: 'es-b1-vocab-education-career',
+    kind: 'vocab',
+    name: 'Education and career (B1)',
+    description:
+      'B1 vocabulary for study paths, qualifications, and career development.',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: ['el título', 'la formación'],
+    examplesNegative: ['*el formación'],
+    commonErrors: [
+      'Mismatching article gender on -ión nouns ("*el formación" instead of "la formación").',
+      'Confusing "la carrera" (a degree programme, or a career) with "el curso" (a single course or academic year).',
+    ],
+  },
+  {
+    key: 'es-b1-vocab-emotions-relationships',
+    kind: 'vocab',
+    name: 'Emotions and relationships (B1)',
+    description:
+      'B1 vocabulary for feelings, interpersonal relationships, and everyday conflict.',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: ['la confianza', 'el enfado'],
+    examplesNegative: ['*la enfado'],
+    commonErrors: [
+      'Mismatching article gender on -o nouns ("*la enfado" instead of "el enfado").',
+      'Confusing "soportar" (to put up with) with "apoyar" (to support, false friend of "to support").',
+    ],
+  },
+  {
+    key: 'es-b1-vocab-opinions-society',
+    kind: 'vocab',
+    name: 'Opinions and society (B1)',
+    description:
+      'B1 vocabulary for expressing views, discussing social issues, and public life.',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: ['la opinión', 'la sociedad'],
+    examplesNegative: ['*el opinión'],
+    commonErrors: [
+      'Mismatching article gender on -ión nouns ("*el opinión" instead of "la opinión").',
+      'Calquing English with "*en mi opinión que" instead of "en mi opinión, ..." or "opino que ...".',
+    ],
+  },
+  {
+    key: 'es-b2-vocab-work-professional',
+    kind: 'vocab',
+    name: 'Professional life (B2)',
+    description:
+      'B2 vocabulary for workplace processes, contracts, and professional communication.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: ['el contrato', 'la plantilla'],
+    examplesNegative: ['*el plantilla'],
+    commonErrors: [
+      'Mismatching article gender on -a nouns ("*el plantilla" instead of "la plantilla").',
+      'Confusing "despedir" (to dismiss/fire someone) with "despedirse" (to say goodbye).',
+    ],
+  },
+  {
+    key: 'es-b2-vocab-science-technology',
+    kind: 'vocab',
+    name: 'Science and technology (B2)',
+    description:
+      'B2 vocabulary for research, technology, innovation, and digitalisation.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: ['la investigación', 'el avance'],
+    examplesNegative: ['*el investigación'],
+    commonErrors: [
+      'Mismatching article gender on -ión nouns ("*el investigación" instead of "la investigación").',
+      'Confusing "el dato" (a piece of data — a false friend of English "date") with "la fecha" (a calendar date).',
+    ],
+  },
+  {
+    key: 'es-b2-vocab-society-politics',
+    kind: 'vocab',
+    name: 'Society and politics (B2)',
+    description:
+      'B2 vocabulary for political institutions, civic life, and social debates.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: ['el gobierno', 'la ciudadanía'],
+    examplesNegative: ['*la gobierno'],
+    commonErrors: [
+      'Mismatching article gender on -o nouns ("*la gobierno" instead of "el gobierno").',
+      'Confusing "la política" (politics/policy) with "el político" (a politician, the person).',
+    ],
+  },
+  {
+    key: 'es-b2-vocab-culture-arts',
+    kind: 'vocab',
+    name: 'Culture and arts (B2)',
+    description: 'B2 vocabulary for arts, cultural life, and artistic criticism.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: ['la exposición', 'la crítica'],
+    examplesNegative: ['*el exposición'],
+    commonErrors: [
+      'Mismatching article gender on -ión nouns ("*el exposición" instead of "la exposición").',
+      'Confusing "la obra" (a work, e.g. of art) with "el trabajo" (work/job, in the general sense).',
     ],
   },
 
