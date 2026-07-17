@@ -95,8 +95,13 @@ dev branch — pull the prod connection string explicitly).
 1. **Pre-flight:** verify `vocab_lemma` has usable DE coverage for the
    frequency-anchor join; sanity-check ES/TR bands. Thin DE bands are a
    blocker to resolve (and report) before DE runs.
-2. **Author:** `generate:vocab-targets` for ES A2, TR A2, TR B1, DE A2,
-   DE B1, DE B2 — default ~30 words per umbrella → `flagged` rows.
+2. **Author:** `generate:vocab-targets` for ES A2, TR A2, TR B1 — default
+   ~30 words per umbrella → `flagged` rows. The existing DE broad umbrellas
+   are **deferred to post-merge**: the authoring CLI always proposes ~30 new
+   words per umbrella per run, so curating them now and re-running their
+   levels post-merge would double-size them (~60 words) relative to their
+   new themed siblings (~30). One run per scope, after the scope's full
+   umbrella set exists.
 3. **Triage → spot-check → approve:** per the review decision above;
    `review:flagged-vocab --approve-all` per language after user OK.
 4. **Dedupe sweep (DE):** PR #563's legacy duplicate `vocab_recall`
