@@ -147,8 +147,20 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * gerund in `acceptableAnswers` (the taught contrast), which the validator
  * flags as ambiguous; context must now force exactly one form. If yield does
  * not recover on the new prompt, the fallback is `clozeUnsuitable: true`.
+ *
+ * `2026-07-17`: Tier-1 of the full-curriculum coverageSpec audit
+ * (docs/analysis/coverage-spec-audit-2026-07-17.md) — adds specs to eight
+ * spec-less points whose paradigm halves were collapse-prone:
+ * present-irregular-core (the only conjugation-paradigm point without one),
+ * possessives-atonic, imperative-affirmative (tú vs usted/ustedes — the
+ * direct analogue of the collapsed TR imperative), reflexive-verbs,
+ * gustar-type-verbs (person + number), imperative-negative-pronouns and
+ * nosotros-imperative (polarity), reciprocal-se (1pl/3pl partial). Bump
+ * clears target-reached suppression so the touched cells re-run under the
+ * floors; at-target cells additionally need demote:pool (see
+ * docs/curriculum-authoring.md retrofit section).
  */
-export const CURRICULUM_VERSION_ES = '2026-07-16a';
+export const CURRICULUM_VERSION_ES = '2026-07-17';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -264,6 +276,14 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a1-possessives-atonic',
+    coverageSpec: {
+      axes: [
+        // Possessor-person paradigm mi/tu/su/nuestro; su-ambiguity needs 3sg
+        // drilled apart from the mi default, nuestro is the only
+        // gender-agreeing form. Partial floors (no 3pl: su covers it).
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Possessive adjectives (short forms)',
     description:
@@ -351,6 +371,15 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a1-present-irregular-core',
+    coverageSpec: {
+      axes: [
+        // Full suppletive paradigms (soy/eres/es…, voy/vas/va…) are the
+        // content — the only conjugation-paradigm point that shipped
+        // spec-less (2026-07-17 audit). Sum 25 grows the A1 cell to 25,
+        // matching es-a1-present-indicative-regular.
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '3pl': 5 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Present indicative of ser, estar, haber, and ir',
     description:
@@ -976,6 +1005,15 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-imperative-affirmative',
+    coverageSpec: {
+      axes: [
+        // Direct analogue of the collapsed TR imperative (PR #588): tú
+        // (incl. the eight irregulars di/haz/pon…) vs subjunctive-based
+        // usted/ustedes are different morphologies. No polarity axis — the
+        // negative imperative is es-b1-imperative-negative-pronouns.
+        { name: 'person', floors: { '2sg': 10, '3sg': 8, '3pl': 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Affirmative imperative',
     description:
@@ -1177,6 +1215,14 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-reflexive-verbs',
+    coverageSpec: {
+      axes: [
+        // The pronoun must agree in person with the subject (me levanto /
+        // nos levantamos — commonError '*nos levanta'); collapse to 3sg se
+        // or 1sg me guts the paradigm.
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '3pl': 5 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Reflexive verbs',
     description:
@@ -1200,6 +1246,16 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-gustar-type-verbs',
+    coverageSpec: {
+      axes: [
+        // The full experiencer series me/te/le/nos/les IS the A2 delta over
+        // es-a1-gustar-basic; person here pins the dative experiencer.
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '3pl': 5 } },
+        // The verb agrees with the thing liked, not the person (le duelen
+        // los pies — commonError '*me duele los pies').
+        { name: 'number', floors: { singular: 8, plural: 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Gustar-type verbs (extended)',
     description:
@@ -1746,6 +1802,14 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b1-reciprocal-se',
+    coverageSpec: {
+      axes: [
+        // nos vs se reciprocals (commonError '*mi hermano y yo me ayudamos'
+        // → nos ayudamos); reciprocals need plural subjects, so partial
+        // floors — 1pl/3pl only.
+        { name: 'person', floors: { '1pl': 8, '3pl': 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Reciprocal se (each other)',
     description:
@@ -1856,6 +1920,15 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b1-imperative-negative-pronouns',
+    coverageSpec: {
+      axes: [
+        // The point is built on the polarity contrast: proclisis + subjunctive
+        // switch (no se lo digas) vs enclisis + written accent (díselo).
+        // Unpinned generation collapses to affirmative (TR-imperative failure
+        // mode, PR #588). Negative-weighted: it is the headline half.
+        { name: 'polarity', floors: { affirmative: 8, negative: 10 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Negative imperative and clitic pronoun placement',
     description:
@@ -2411,6 +2484,15 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b2-nosotros-imperative',
+    coverageSpec: {
+      axes: [
+        // Both poles have distinct surface behavior: -s drop before the
+        // enclitic (sentémonos) vs proclitic negative (no nos sentemos) —
+        // commonError 3 is exactly the negative-clitic trap. Person axis
+        // pointless (1pl by definition).
+        { name: 'polarity', floors: { affirmative: 8, negative: 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Nosotros imperative (¡Empecemos!)',
     description:

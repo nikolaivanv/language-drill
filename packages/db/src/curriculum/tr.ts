@@ -156,8 +156,18 @@ const { A1, A2, B1 } = CefrLevel;
  * (bare stem), so 2pl/formal -(y)In and the negative -mA halves of the point
  * were never drilled. Bump clears target-reached suppression so the imperative
  * cells re-run under the floors.
+ * 2026-07-17a: Tier-1 of the full-curriculum coverageSpec audit
+ * (docs/analysis/coverage-spec-audit-2026-07-17.md) — adds specs to five
+ * spec-less points whose paradigm halves were collapse-prone (personal-
+ * pronouns person×case incl. the bana/onu irregulars; optative 1sg/1pl +
+ * polarity; spatial-postpositions 3-case split; participles-dik-acak and
+ * reason-digi-icin possessive-agreement paradigms) and closes the
+ * tr-a1-future polarity gap (gelmeyecek claimed core; only finite tense
+ * without polarity). Bump clears target-reached suppression so the touched
+ * cells re-run under the floors; at-target cells additionally need
+ * demote:pool (see docs/curriculum-authoring.md retrofit section).
  */
-export const CURRICULUM_VERSION_TR = '2026-07-17';
+export const CURRICULUM_VERSION_TR = '2026-07-17a';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -487,6 +497,10 @@ const trCurriculum: readonly GrammarPoint[] = [
     coverageSpec: {
       axes: [
         { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 } },
+        // The raised negative (gelmeyecek) is claimed core; every sibling
+        // finite tense carries polarity — future was the only one without
+        // (2026-07-17 spec audit). Floors mirror dili-past's 6/6.
+        { name: 'polarity', floors: { affirmative: 6, negative: 6 } },
       ],
     },
     kind: 'grammar',
@@ -766,6 +780,18 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-personal-pronouns',
+    coverageSpec: {
+      axes: [
+        // The irregulars live at specific person×case cells: dative bana/sana,
+        // genitive benim/bizim, 3rd-person -n- buffer (onu/ona/onda/ondan) —
+        // dative/genitive weighted because that's where the irregulars are.
+        {
+          name: 'case',
+          floors: { nominative: 3, accusative: 3, dative: 4, genitive: 4, locative: 2, ablative: 2 },
+        },
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Personal pronouns and their case forms',
     description:
@@ -1329,6 +1355,17 @@ const trCurriculum: readonly GrammarPoint[] = [
   // sense, which our imperative point (A1) does not cover.
   {
     key: 'tr-a2-optative',
+    coverageSpec: {
+      axes: [
+        // Same collapse shape as tr-a1-imperative (PR #588): the two live
+        // forms are 1sg -(y)AyIm and 1pl -(y)AlIm — partial floors only
+        // (2nd/3rd person are archaic / belong to imperative & -sIn).
+        { name: 'person', floors: { '1sg': 8, '1pl': 8 } },
+        // Negative -mAyAyIm/-mAyAlIm is claimed core; without a floor the
+        // pool collapses to affirmative suggestions.
+        { name: 'polarity', floors: { affirmative: 10, negative: 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Optative / volitional -(y)AyIm / -(y)AlIm ("let me / let\'s")',
     description:
@@ -1862,6 +1899,14 @@ const trCurriculum: readonly GrammarPoint[] = [
   // complement), §17.3.1.3 (üst-/yan-/ara- notes; the -n- buffer before case).
   {
     key: 'tr-a2-spatial-postpositions',
+    coverageSpec: {
+      axes: [
+        // The 3-case split IS the point: location -DA (üstünde), motion-to
+        // -(y)A (yanıma), motion-from -DAn (altından). Unpinned drafts
+        // collapse to static-location locative.
+        { name: 'case', floors: { locative: 12, dative: 9, ablative: 9 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Spatial postpositions (evin önünde, masanın üstünde)',
     description:
@@ -2388,6 +2433,17 @@ const trCurriculum: readonly GrammarPoint[] = [
     key: 'tr-b1-participles-dik-acak',
     clozeUnsuitable: true,
     sentenceConstructionSuitable: true,
+    coverageSpec: {
+      axes: [
+        // The possessive agreeing with the clause subject IS the point
+        // (okuduğum kitap / gideceğimiz şehir); 1sg/3sg collapse expected
+        // without floors.
+        {
+          name: 'person',
+          floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 },
+        },
+      ],
+    },
     kind: 'grammar',
     name: 'Non-subject relative -DIK / -(y)AcAK + possessive',
     description:
@@ -2513,6 +2569,17 @@ const trCurriculum: readonly GrammarPoint[] = [
   {
     key: 'tr-b1-reason-digi-icin',
     sentenceConstructionSuitable: true,
+    coverageSpec: {
+      axes: [
+        // The subordinate verb carries possessive agreement with its subject
+        // (geldiğim için / geldiği için); the commonError is dropping it —
+        // floors force the whole paradigm.
+        {
+          name: 'person',
+          floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 },
+        },
+      ],
+    },
     kind: 'grammar',
     name: 'Reason clauses -DIğI / -(y)AcAğI için ("because")',
     description:
