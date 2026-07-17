@@ -161,6 +161,22 @@ describe("conjugation fluency grading", () => {
     expect(gradeFluencyAnswer(c, "Evlerimizden")).toBe(true);
     expect(gradeFluencyAnswer(c, "evlerimizdan")).toBe(false); // wrong harmony: -dan vs -den
   });
+  it("grades a multi-word German NP target (DE nominal declension)", () => {
+    // German marks case on the article/adjective, so the stored target is a
+    // full NP — grading must survive whitespace, case folding, and umlauts.
+    const c = conj({
+      lemma: "Tisch",
+      lemmaGloss: "table",
+      featureBundle: "Akkusativ · Singular · Maskulinum · unbestimmter Artikel",
+      targetForm: "einen neuen Tisch",
+      breakdown: "ein → einen (Akk. mask.) + neu → neuen (-en nach ein-) + Tisch",
+      exampleSentences: ["Ich kaufe einen neuen Tisch."],
+    });
+    expect(gradeFluencyAnswer(c, "einen neuen Tisch")).toBe(true);
+    expect(gradeFluencyAnswer(c, "  Einen   neuen   tisch. ")).toBe(true); // whitespace + case fold + trailing period
+    expect(gradeFluencyAnswer(c, "ein neuer Tisch")).toBe(false); // nominative — wrong case
+    expect(gradeFluencyAnswer(c, "einen neuen Tische")).toBe(false); // spurious -e on the noun
+  });
 });
 
 describe("eligibility helpers + constants", () => {

@@ -662,7 +662,17 @@ export async function buildSeedWords(
     // couple of nouns (e.g. ablative-dative collapsed onto okul/uçak) and the
     // pool's distinct-identity space exhausts. Band is CUMULATIVE from rank 1 so
     // an A1 cell still has a wide noun inventory to vary over.
-    const band = await loadNounBand(db, cell.language, 1, window.rankMax);
+    //
+    // A narrow point whose valid nouns form a small CLOSED class supplies
+    // `conjugationSeedWords` — a curated list that REPLACES the band, exactly
+    // like the curated-verb override below (an arbitrary band noun cannot
+    // exercise de-b1-n-declension: only weak masculines like Student/Kollege
+    // take the -(e)n endings, so off-list nouns are off-target by definition).
+    const curatedNouns = cell.grammarPoint.conjugationSeedWords;
+    const band =
+      curatedNouns && curatedNouns.length > 0
+        ? curatedNouns
+        : await loadNounBand(db, cell.language, 1, window.rankMax);
     return pickSeeds({ band, batchSeed, count, exclude: priorSeeds });
   }
 
