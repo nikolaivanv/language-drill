@@ -38,8 +38,23 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * -in derivation, -ns genitives, name apostrophes, predicate nominatives,
  * bare accusative time, als-role phrases, gern-ladder, stem-drop adjective
  * spelling, indefinite place adverbs, vorher/danach adverb tier).
+ * 2026-07-17: authoring-time coverageSpec pass per docs/curriculum-authoring.md
+ * (the tr-a1-imperative collapse, PR #588, made the spec decision mandatory
+ * for new points): 35 specs added across A1 (5), A2 (13), B1 (12), B2 (5) —
+ * declension/case paradigms (adjective endings ×3, n-declension, personal
+ * pronouns, relatives, extended attributes), the wo?/wohin? two-way
+ * contrasts, verb-person paradigms with German syncretism respected (1sg=3sg
+ * Präteritum forms skipped; stem-change floors on 2sg/3sg only), imperative
+ * persons (Sie/du/ihr/wir), and number floors where gender — not a coverage
+ * axis — is the unpinnable residual. Two existing specs widened
+ * (praeteritum-sein-haben +2pl per its own *ihr waren commonError;
+ * b1-praeteritum +2sg — 1sg=3sg made "full paradigm" two surfaces). ~68
+ * points deliberately spec-less (word-order rules, connector/lexical choice,
+ * gender-only variation; de-a2-comparison's adjective-vs-adverb split needs
+ * the vocab-only wordClass axis — unpinnable on grammar points). No pools
+ * exist yet, so no demotes needed anywhere.
  */
-export const CURRICULUM_VERSION_DE = '2026-07-16';
+export const CURRICULUM_VERSION_DE = '2026-07-17';
 
 const deCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -159,6 +174,14 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a1-articles-nominative',
+    coverageSpec: {
+      axes: [
+        // kein/keine is a claimed core half and inflects (commonError *kein
+        // Frau); unpinned drafts collapse to affirmative der/ein. Gender is
+        // not a coverage axis — the der/die/das half stays unpinnable.
+        { name: 'polarity', floors: { affirmative: 12, negative: 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Definite, indefinite and negative articles — nominative',
     description:
@@ -197,6 +220,13 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a1-dative',
+    coverageSpec: {
+      axes: [
+        // The dative-plural den + -n (commonError *mit den Kinder) is a
+        // distinct surface; pools collapse to singular without a floor.
+        { name: 'number', floors: { singular: 12, plural: 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Dative case: forms and core uses',
     description:
@@ -218,6 +248,14 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a1-personal-pronouns',
+    coverageSpec: {
+      axes: [
+        // The ich–mich–mir case paradigm IS the point; nominative is the
+        // model default, the acc/dat forms (commonError *Kannst du mich
+        // helfen?) need floors.
+        { name: 'case', floors: { nominative: 4, accusative: 8, dative: 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Personal pronouns (nominative, accusative, dative)',
     description:
@@ -239,6 +277,14 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a1-possessive-articles',
+    coverageSpec: {
+      axes: [
+        // person = the possessor: all seven are claimed; the euer-declension
+        // trap lives only at 2pl, the sein-vs-ihr trap at 3sg.
+        { name: 'person', floors: { '1sg': 3, '2sg': 3, '3sg': 4, '1pl': 2, '2pl': 3, '3pl': 2 } },
+        { name: 'case', floors: { nominative: 10, accusative: 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Possessive articles',
     description:
@@ -370,6 +416,14 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a1-imperative',
+    coverageSpec: {
+      axes: [
+        // The exact TR-imperative failure mode (PR #588: collapsed to 100%
+        // 2sg): Sie-imperative = 3pl, ihr = 2pl, wir-suggestion = 1pl — all
+        // claimed by name/description and all distinct surfaces.
+        { name: 'person', floors: { '2sg': 6, '2pl': 4, '3pl': 6, '1pl': 4 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Imperative (Sie, du, ihr)',
     description:
@@ -454,7 +508,9 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Using the wordy Perfekt "ist gewesen / hat gehabt" where war/hatte is the idiomatic choice.',
     ],
     coverageSpec: {
-      axes: [{ name: 'person', floors: { '1sg': 3, '3sg': 3 } }],
+      // 2pl floor added 2026-07-17: the entry's own commonError is
+      // "*ihr waren instead of ihr wart" — unreachable without it.
+      axes: [{ name: 'person', floors: { '1sg': 3, '3sg': 3, '2pl': 3 } }],
     },
     conjugationSuitable: true,
     conjugationSeedWords: ['sein', 'haben'],
@@ -558,6 +614,13 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a2-dativ-prepositions',
+    coverageSpec: {
+      axes: [
+        // The plural slot of dem/der/dem/den + the -n trap (*mit den
+        // Kinder) starves without a floor — same shape as de-a1-dative.
+        { name: 'number', floors: { singular: 14, plural: 10 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Dativ prepositions',
     description:
@@ -590,6 +653,13 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a2-two-way-prepositions-core',
+    coverageSpec: {
+      axes: [
+        // The wohin?-accusative vs wo?-dative contrast IS the point (ins vs
+        // im); equal floors keep both halves of every pair in the pool.
+        { name: 'case', floors: { accusative: 12, dative: 12 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Two-way prepositions: location vs direction',
     description:
@@ -611,6 +681,13 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a2-adjective-declension-indefinite',
+    coverageSpec: {
+      axes: [
+        // ein neuer / einen neuen / mit einem neuen — three claimed case
+        // cells with different endings. Gender is unpinnable (no axis).
+        { name: 'case', floors: { nominative: 8, accusative: 8, dative: 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Adjective declension after ein/kein/possessives',
     description:
@@ -634,6 +711,15 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a2-adjective-declension-definite',
+    coverageSpec: {
+      axes: [
+        // -e in nominative singular vs -en everywhere else; the plural trap
+        // (*die kleine Kinder) needs its own floor or pools collapse onto
+        // nominative-singular -e.
+        { name: 'case', floors: { nominative: 8, accusative: 8, dative: 6 } },
+        { name: 'number', floors: { plural: 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Adjective declension after der/das/die',
     description:
@@ -655,6 +741,14 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a2-adjective-declension-zero',
+    coverageSpec: {
+      axes: [
+        // Strong endings across cases (frischer/frisches, mit kaltem
+        // Wasser — commonError *mit kalten Wasser); the claimed genitive
+        // -en (trotz guten Wetters) gets a small floor.
+        { name: 'case', floors: { nominative: 6, accusative: 6, dative: 8, genitive: 3 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Adjective declension without an article',
     description:
@@ -759,6 +853,13 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a2-relative-clauses-nom-acc',
+    coverageSpec: {
+      axes: [
+        // Subject relatives are the natural default; the accusative relative
+        // (commonError *der Film, der ich gesehen habe) needs an equal floor.
+        { name: 'case', floors: { nominative: 12, accusative: 12 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Relative clauses: nominative and accusative',
     description:
@@ -779,6 +880,13 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a2-reflexive-verbs',
+    coverageSpec: {
+      axes: [
+        // The collapse default IS 3sg sich (commonError "*ich freue sich"),
+        // so the floors sit on the non-sich persons; 3sg/3pl come free.
+        { name: 'person', floors: { '1sg': 6, '2sg': 6, '1pl': 6, '2pl': 5 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Reflexive verbs',
     description:
@@ -824,6 +932,14 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a2-konjunktiv-ii-polite',
+    coverageSpec: {
+      axes: [
+        // Person-differentiated formulas: Ich hätte gern (1sg), Könntest
+        // du (2sg), Könnten Sie / Sie sollten (3pl) — collapse to one
+        // formula is likely without floors.
+        { name: 'person', floors: { '1sg': 8, '2sg': 6, '3pl': 6 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Konjunktiv II for wishes and polite requests',
     description:
@@ -845,6 +961,13 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a2-passive-present',
+    coverageSpec: {
+      axes: [
+        // Both examplesPositive are singular "wird …" — plural passives
+        // (werden + participle) are a distinct surface and the starved half.
+        { name: 'number', floors: { singular: 12, plural: 10 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Present passive (werden + participle)',
     description:
@@ -887,6 +1010,10 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a2-comparison',
+    // No coverageSpec: the two claimed halves — adjective comparison vs the
+    // adverbial gern → lieber → am liebsten ladder — would want a wordClass
+    // split, but wordClass is a vocab-only axis (invariant), and degree
+    // (comparative vs superlative) has no axis at all. Both unpinnable.
     kind: 'grammar',
     name: 'Comparative and superlative',
     description:
@@ -927,6 +1054,13 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a2-indefinite-pronouns-basic',
+    coverageSpec: {
+      axes: [
+        // The declined forms are claimed content (jemanden/jemandem,
+        // einen/einem for man); nominative man-frames are the default.
+        { name: 'case', floors: { nominative: 10, accusative: 6, dative: 6 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Basic indefinite pronouns (man, jemand, etwas …)',
     description:
@@ -947,6 +1081,13 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a2-lassen',
+    coverageSpec: {
+      axes: [
+        // The lässt stem change surfaces only at 2sg/3sg (commonError
+        // *er lasst); other persons are regular and come free.
+        { name: 'person', floors: { '2sg': 6, '3sg': 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'lassen + infinitive',
     description:
@@ -1033,6 +1174,14 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a2-demonstratives-welch',
+    coverageSpec: {
+      axes: [
+        // Declined forms beyond the all-nominative examples are claimed
+        // (denselben Fehler, im selben Haus); collapse risk is
+        // nominative-only dieser/welcher.
+        { name: 'case', floors: { nominative: 8, accusative: 8, dative: 6 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Demonstratives and question articles (dieser, welcher, was für ein)',
     description:
@@ -1101,6 +1250,13 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a2-quantifiers-other',
+    coverageSpec: {
+      axes: [
+        // The number-conditioned split is core: viel Zeit (undeclined mass)
+        // vs viele Freunde (declined plural); jeder + sg verb vs alle + pl.
+        { name: 'number', floors: { singular: 12, plural: 12 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Quantifiers: jeder, alle, viel(e), ein paar, ander-',
     description:
@@ -1146,12 +1302,25 @@ const deCurriculum: readonly GrammarPoint[] = [
     ],
     prerequisiteKeys: ['de-a2-praeteritum-modals'],
     coverageSpec: {
-      axes: [{ name: 'person', floors: { '1sg': 5, '3sg': 5, '3pl': 5 } }],
+      // 2sg floor added 2026-07-17: 1sg = 3sg in the Präteritum (kam/machte),
+      // so the old floors reached only two distinct surfaces — the -st ending
+      // (du kamst, du arbeitetest) was unfloored despite "full paradigm".
+      axes: [{ name: 'person', floors: { '1sg': 5, '2sg': 4, '3sg': 5, '3pl': 5 } }],
     },
     conjugationSuitable: true,
   },
   {
     key: 'de-b1-relative-pronouns',
+    coverageSpec: {
+      axes: [
+        // dem/der/denen and dessen/deren are the claimed content; nom/acc
+        // relatives live in the A2 prerequisite, so floors target dat/gen
+        // only. number pins dem-vs-denen / dessen-vs-deren; gender
+        // unpinnable.
+        { name: 'case', floors: { dative: 8, genitive: 6 } },
+        { name: 'number', floors: { singular: 8, plural: 5 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Relative clauses: dative, genitive and with prepositions',
     description:
@@ -1192,6 +1361,14 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-b1-two-way-prepositions',
+    coverageSpec: {
+      axes: [
+        // The acc/dat alternation IS the point: transitive placement verbs
+        // (auf den Tisch stellen) vs their stative partners (auf dem Tisch
+        // stehen); equal floors keep both halves of every pair.
+        { name: 'case', floors: { accusative: 10, dative: 10 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Placement verbs: stellen/stehen, legen/liegen, hängen',
     description:
@@ -1212,6 +1389,15 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-b1-passive-werden',
+    coverageSpec: {
+      axes: [
+        // All three examplesPositive are 3sg singular — plural passives
+        // (wurden / sind … worden / müssen … werden) are distinct surfaces.
+        // Tense/construction variety has no axis; person floors rejected
+        // (1st/2nd-person passives are unnatural filler).
+        { name: 'number', floors: { singular: 8, plural: 6 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Passive: past tenses and with modals',
     description:
@@ -1256,6 +1442,14 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-b1-plusquamperfekt-nachdem',
+    coverageSpec: {
+      axes: [
+        // hatte/hattest/hatten, war/warst/waren are distinct surfaces; 1sg
+        // omitted (1sg = 3sg in Präteritum-based forms — no contrast).
+        // hatte-vs-war is the verb's Perfekt auxiliary: lexical, unpinnable.
+        { name: 'person', floors: { '2sg': 4, '3sg': 5, '3pl': 5 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Plusquamperfekt and nachdem',
     description:
@@ -1277,6 +1471,14 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-b1-futur-i',
+    coverageSpec: {
+      axes: [
+        // werden is irregular exactly at 2sg/3sg (wirst/wird) and the
+        // *ich werde fahre double-conjugation trap must be tested across
+        // persons; unpinned drafts collapse to ich werde / er wird.
+        { name: 'person', floors: { '1sg': 4, '2sg': 5, '3sg': 5, '1pl': 4 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Futur I',
     description:
@@ -1298,6 +1500,15 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-b1-konjunktiv-ii-past',
+    coverageSpec: {
+      axes: [
+        // Counterfactual-regret prompts skew hard to 1sg (all three examples
+        // are ich-anchored); hättest/wärst and hätten/wären are distinct
+        // surfaces. hätte-vs-wäre mirrors the Perfekt auxiliary — lexical,
+        // unpinnable.
+        { name: 'person', floors: { '1sg': 5, '2sg': 4, '3sg': 5, '3pl': 4 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Konjunktiv II past (hätte/wäre + participle)',
     description:
@@ -1429,6 +1640,14 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-b1-n-declension',
+    coverageSpec: {
+      axes: [
+        // The whole point is a case paradigm: -(e)n in every case except
+        // nominative singular, plus genitive -ns (des Namens). The small
+        // nominative floor covers the over-application trap (bare form).
+        { name: 'case', floors: { nominative: 3, accusative: 7, dative: 7, genitive: 4 } },
+      ],
+    },
     kind: 'grammar',
     name: 'n-declension (weak masculine nouns)',
     description:
@@ -1450,6 +1669,15 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-b1-adjectives-as-nouns',
+    coverageSpec: {
+      axes: [
+        // Plural nominalizations are claimed (commonError "*die Deutsche
+        // for the plural") and endings shift with case (einem Bekannten).
+        // der-vs-ein article type and gender halves unpinnable.
+        { name: 'number', floors: { singular: 8, plural: 6 } },
+        { name: 'case', floors: { nominative: 5, accusative: 5, dative: 4 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Adjectives as nouns',
     description:
@@ -1492,6 +1720,15 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-b1-comparison-attributive',
+    coverageSpec: {
+      axes: [
+        // The quantifier rule (alle guten vs viele gute) only exists in the
+        // plural — a singular-collapsed pool never exercises it; declined
+        // comparatives vary by case (mit größerem Interesse).
+        { name: 'number', floors: { singular: 6, plural: 8 } },
+        { name: 'case', floors: { nominative: 4, accusative: 5, dative: 5 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Attributive comparatives/superlatives + declension after quantifiers',
     description:
@@ -1578,6 +1815,14 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-b1-dative-reflexive-body',
+    coverageSpec: {
+      axes: [
+        // The mir/mich contrast is only audible at 1sg/2sg (dir/dich) —
+        // 3sg sich is case-syncretic and tests nothing, so a 3sg-collapsed
+        // pool is worthless. Sum 13 ≤ targetOverride 15.
+        { name: 'person', floors: { '1sg': 4, '2sg': 3, '3sg': 4, '1pl': 2 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Dative of involvement: body parts and benefactives',
     description:
@@ -1621,6 +1866,15 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-b1-schon-noch-erst',
+    coverageSpec: {
+      axes: [
+        // The negative pairs (noch nicht / nicht mehr) are named core
+        // content and their confusion is a listed commonError;
+        // default-affirmative generation starves exactly that contrast.
+        // Sum 13 ≤ targetOverride 15.
+        { name: 'polarity', floors: { affirmative: 8, negative: 5 } },
+      ],
+    },
     kind: 'grammar',
     name: 'schon, noch, erst',
     description:
@@ -1686,6 +1940,14 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-b1-adjective-case-government',
+    coverageSpec: {
+      axes: [
+        // The dative experiencer varies across persons in the entry's own
+        // examples (Mir ist kalt / Ich bin dir dankbar / seinem Vater
+        // ähnlich); collapse risk is mir-everywhere.
+        { name: 'person', floors: { '1sg': 4, '2sg': 3, '3sg': 4 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Adjectives with dative complements; Mir ist kalt',
     description:
@@ -1711,6 +1973,14 @@ const deCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   {
     key: 'de-b2-konjunktiv-ii',
+    coverageSpec: {
+      axes: [
+        // The synthetic-vs-würde decision plays out per person (hätte/
+        // hättest/hätten…) and all three examples are 1sg/3sg; floors keep
+        // 2sg counterfactuals and plural forms in the pool. Sum 32 ≤ 50.
+        { name: 'person', floors: { '1sg': 8, '2sg': 6, '3sg': 8, '1pl': 4, '3pl': 6 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Konjunktiv II: the full meaning system',
     description:
@@ -1734,6 +2004,14 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-b2-genitive-prepositions',
+    coverageSpec: {
+      axes: [
+        // Case is fixed (genitive) and gender unpinnable — number is the
+        // one pinnable dimension: des + -s singular vs der + -Ø plural
+        // (aufgrund des Wetters vs anhand der Daten).
+        { name: 'number', floors: { singular: 10, plural: 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Formal genitive prepositions',
     description:
@@ -1755,6 +2033,14 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-b2-konjunktiv-i',
+    coverageSpec: {
+      axes: [
+        // 3sg sei/habe vs 3pl→Konjunktiv-II backoff (sie haben → sie
+        // hätten) vs 1sg (coincides → K2) are all distinct surfaces; the
+        // claimed backoff rule never appears in a 3sg-collapsed pool.
+        { name: 'person', floors: { '3sg': 12, '3pl': 10, '1sg': 4, '1pl': 4 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Konjunktiv I (reported speech)',
     description:
@@ -1776,6 +2062,15 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-b2-extended-attributes',
+    coverageSpec: {
+      axes: [
+        // "Inflect the participle for case, gender, and number" is the named
+        // trap, yet both examples are nominative — den/dem/der … gekauften
+        // need floors. Gender is the unpinnable residual.
+        { name: 'case', floors: { nominative: 8, accusative: 8, dative: 8, genitive: 5 } },
+        { name: 'number', floors: { singular: 8, plural: 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Extended participial attributes',
     description:
@@ -2158,6 +2453,14 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-b2-indefinite-pronouns',
+    coverageSpec: {
+      axes: [
+        // The declined stand-alone forms are the claimed traps (einen/
+        // keinen/einem/manchem); nominative-collapsed frames never elicit
+        // them. Genitive omitted (marginal for these pronouns).
+        { name: 'case', floors: { nominative: 8, accusative: 10, dative: 6 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Indefinite pronouns II (irgend-, mancher, sämtliche …)',
     description:
