@@ -707,16 +707,17 @@ describe('per-language counts', () => {
     expect(paraphrase).toBe(2);
   });
 
-  it('German is at full Menschen A1–B1 / Sicher! B2 parity and has 3 vocab umbrellas', () => {
+  it('German is at full Menschen A1–B1 / Sicher! B2 parity and has 20 vocab umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting, paraphrase } = countsFor(deCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(19);
     expect(grammar.A2).toBeGreaterThanOrEqual(31);
     expect(grammar.B1).toBeGreaterThanOrEqual(27);
     expect(grammar.B2).toBeGreaterThanOrEqual(27);
-    // de-a2-housing-vocab + de-b1-environment-vocab + de-b2-academic-noun-vocab.
-    // The themed vocab track and the dictation / free-writing / paraphrase
-    // umbrellas are a follow-up PR (see the 2026-07-12 plan doc).
-    expect(vocab).toBe(3);
+    // 5 A1 + 5 A2 + 5 B1 + 5 B2 themed umbrellas (2026-07-17 expansion):
+    // each level keeps its original broad umbrella (housing / environment /
+    // academic-noun) as one of its themes. Dictation / free-writing /
+    // paraphrase umbrellas remain a follow-up (see the 2026-07-12 plan doc).
+    expect(vocab).toBe(20);
     expect(dictation).toBe(0);
     expect(freeWriting).toBe(0);
     expect(paraphrase).toBe(0);

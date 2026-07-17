@@ -2629,6 +2629,89 @@ const deCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   // Vocab umbrellas — kind: 'vocab'
   // ---------------------------------------------------------------------------
+  // coverageSpec: intentionally none on the umbrellas below (open noun-dominant
+  // identity space; matches the ES/TR vocab-umbrella decision) — except
+  // food-drink, floored like tr-a1-vocab-food-drink.
+  {
+    key: 'de-a1-vocab-family-people',
+    kind: 'vocab',
+    name: 'Family and people (A1)',
+    description:
+      'Core A1 vocabulary for family members, people, and basic personal descriptions.',
+    cefrLevel: A1,
+    language: DE,
+    examplesPositive: ['die Mutter', 'der ältere Bruder'],
+    examplesNegative: ['*der Mutter (as nominative)'],
+    commonErrors: [
+      'Mismatching article gender on family nouns ("*der Mutter" as subject).',
+      'Confusing "die Eltern" (parents) with "die Verwandten" (relatives).',
+    ],
+  },
+  {
+    key: 'de-a1-vocab-food-drink',
+    kind: 'vocab',
+    name: 'Food and drink (A1)',
+    description:
+      'Core A1 vocabulary for staple foods, fruit, vegetables, and everyday drinks.',
+    cefrLevel: A1,
+    language: DE,
+    coverageSpec: {
+      // wordClass diversity: food/drink vocab is noun-dominant, with a few verbs
+      // (eat/drink) and adjectives (tastes). Floors sum to the vocab target (10).
+      axes: [{ name: 'wordClass', floors: { noun: 6, verb: 2, adjective: 2 } }],
+    },
+    examplesPositive: ['das Brot', 'der Kaffee'],
+    examplesNegative: ['*die Brot (wrong gender)'],
+    commonErrors: [
+      'Mismatching article gender on food nouns ("*die Brot" instead of "das Brot").',
+      'Confusing "der Saft" (juice) with "die Soße" (sauce).',
+    ],
+  },
+  {
+    key: 'de-a1-vocab-home-objects',
+    kind: 'vocab',
+    name: 'Home and objects (A1)',
+    description:
+      'Core A1 vocabulary for rooms, furniture, and everyday household objects.',
+    cefrLevel: A1,
+    language: DE,
+    examplesPositive: ['der Tisch', 'das Bett'],
+    examplesNegative: ['*der Bett (wrong gender)'],
+    commonErrors: [
+      'Mismatching article gender on furniture nouns ("*der Bett" instead of "das Bett").',
+      'Confusing "der Schrank" (cupboard/wardrobe) with "das Regal" (shelf).',
+    ],
+  },
+  {
+    key: 'de-a1-vocab-city-transport',
+    kind: 'vocab',
+    name: 'City and transport (A1)',
+    description:
+      'Core A1 vocabulary for places in town, means of transport, and simple directions.',
+    cefrLevel: A1,
+    language: DE,
+    examplesPositive: ['der Bahnhof', 'die Straße'],
+    examplesNegative: ['*das Bahnhof (wrong gender)'],
+    commonErrors: [
+      'Mismatching article gender on transport nouns ("*das Bahnhof" instead of "der Bahnhof").',
+      'Confusing "die Straße" (street) with "der Weg" (way/path).',
+    ],
+  },
+  {
+    key: 'de-a1-vocab-weather-clothing',
+    kind: 'vocab',
+    name: 'Weather and clothing (A1)',
+    description:
+      'Core A1 vocabulary for weather conditions, seasons, and everyday clothing items.',
+    cefrLevel: A1,
+    language: DE,
+    examplesPositive: ['die Jacke', 'der Regen'],
+    examplesNegative: ['*das Regen (wrong gender)'],
+    commonErrors: [
+      'Mismatching article gender on weather nouns ("*das Regen" instead of "der Regen").',
+      'Confusing "die Jacke" (jacket) with "der Mantel" (coat).',
+    ],
+  },
   {
     key: 'de-a2-housing-vocab',
     kind: 'vocab',
@@ -2642,6 +2725,65 @@ const deCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Treating compound nouns as separate words ("*Kühl Schrank").',
       'Confusing der Stuhl (chair) with der Sessel (armchair).',
+    ],
+  },
+  {
+    key: 'de-a2-vocab-work-school',
+    kind: 'vocab',
+    name: 'Work and school (A2)',
+    description:
+      'A2 vocabulary for jobs, workplaces, school subjects, and everyday study activities.',
+    cefrLevel: A2,
+    language: DE,
+    examplesPositive: ['der Beruf', 'die Prüfung'],
+    examplesNegative: ['*das Beruf (wrong gender)'],
+    commonErrors: [
+      'Mismatching article gender on work/school nouns ("*das Beruf" instead of "der Beruf").',
+      'Confusing "die Schule" (school, the institution) with "der Unterricht" (lessons/class time).',
+    ],
+  },
+  {
+    key: 'de-a2-vocab-city-shopping',
+    kind: 'vocab',
+    name: 'City and shopping (A2)',
+    description:
+      'A2 vocabulary for shops, services, money, and everyday shopping activities.',
+    cefrLevel: A2,
+    language: DE,
+    examplesPositive: ['das Geschäft', 'die Kasse'],
+    examplesNegative: ['*der Geschäft (wrong gender)'],
+    commonErrors: [
+      'Mismatching article gender on shopping nouns ("*der Geschäft" instead of "das Geschäft").',
+      'Confusing "billig" (cheap) with "günstig" (good value) in price contexts.',
+    ],
+  },
+  {
+    key: 'de-a2-vocab-health-body',
+    kind: 'vocab',
+    name: 'Health and body (A2)',
+    description:
+      'A2 vocabulary for body parts, common symptoms, and everyday health complaints.',
+    cefrLevel: A2,
+    language: DE,
+    examplesPositive: ['der Kopf', 'die Schmerzen'],
+    examplesNegative: ['*das Kopf (wrong gender)'],
+    commonErrors: [
+      'Mismatching article gender on body nouns ("*das Kopf" instead of "der Kopf").',
+      'Confusing "krank sein" (to be ill) with "sich fühlen" (to feel) when describing symptoms.',
+    ],
+  },
+  {
+    key: 'de-a2-vocab-travel-nature',
+    kind: 'vocab',
+    name: 'Travel and nature (A2)',
+    description: 'A2 vocabulary for travel, landscapes, and the outdoors.',
+    cefrLevel: A2,
+    language: DE,
+    examplesPositive: ['der Berg', 'die Reise'],
+    examplesNegative: ['*das Berg (wrong gender)'],
+    commonErrors: [
+      'Mismatching article gender on nature nouns ("*das Berg" instead of "der Berg").',
+      'Confusing "die Reise" (trip/journey) with "die Fahrt" (ride/drive).',
     ],
   },
   {
@@ -2660,6 +2802,66 @@ const deCurriculum: readonly GrammarPoint[] = [
     ],
   },
   {
+    key: 'de-b1-vocab-media-news',
+    kind: 'vocab',
+    name: 'Media and news (B1)',
+    description:
+      'B1 vocabulary for news reporting, media formats, and current-events discussion.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: ['der Bericht', 'die Zeitschrift'],
+    examplesNegative: ['*das Bericht (wrong gender)'],
+    commonErrors: [
+      'Mismatching article gender on media nouns ("*das Bericht" instead of "der Bericht").',
+      'Confusing "die Zeitung" (newspaper) with "die Zeitschrift" (magazine).',
+    ],
+  },
+  {
+    key: 'de-b1-vocab-education-career',
+    kind: 'vocab',
+    name: 'Education and career (B1)',
+    description:
+      'B1 vocabulary for study paths, qualifications, and career development.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: ['der Abschluss', 'die Ausbildung'],
+    examplesNegative: ['*das Abschluss (wrong gender)'],
+    commonErrors: [
+      'Mismatching article gender on education nouns ("*das Abschluss" instead of "der Abschluss").',
+      'Confusing "die Ausbildung" (vocational training) with "das Studium" (university study).',
+    ],
+  },
+  {
+    key: 'de-b1-vocab-emotions-relationships',
+    kind: 'vocab',
+    name: 'Emotions and relationships (B1)',
+    description:
+      'B1 vocabulary for feelings, interpersonal relationships, and everyday conflict.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: ['die Beziehung', 'der Streit'],
+    examplesNegative: ['*das Streit (wrong gender)'],
+    commonErrors: [
+      'Mismatching article gender on relationship nouns ("*das Streit" instead of "der Streit").',
+      'Confusing reflexive "sich fühlen" (to feel) with transitive "fühlen" used without the reflexive pronoun.',
+    ],
+  },
+  {
+    key: 'de-b1-vocab-opinions-society',
+    kind: 'vocab',
+    name: 'Opinions and society (B1)',
+    description:
+      'B1 vocabulary for expressing views, discussing social issues, and public life.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: ['die Meinung', 'die Gesellschaft'],
+    examplesNegative: ['*der Meinung (as nominative)'],
+    commonErrors: [
+      'Mismatching article gender/case on opinion nouns ("*der Meinung" as a nominative subject instead of "die Meinung").',
+      'Calquing English with "*in meiner Meinung" instead of "meiner Meinung nach".',
+    ],
+  },
+  {
     key: 'de-b2-academic-noun-vocab',
     kind: 'vocab',
     name: 'Academic abstract noun vocabulary (B2)',
@@ -2672,6 +2874,66 @@ const deCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Mistakes on -ung / -heit / -keit gender (all feminine).',
       'Calquing English derived nouns instead of using the standard German equivalent.',
+    ],
+  },
+  {
+    key: 'de-b2-vocab-work-professional',
+    kind: 'vocab',
+    name: 'Professional life (B2)',
+    description:
+      'B2 vocabulary for workplace processes, contracts, and professional communication.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: ['der Vertrag', 'die Kündigung'],
+    examplesNegative: ['*das Vertrag (wrong gender)'],
+    commonErrors: [
+      'Mismatching article gender on professional-life nouns ("*das Vertrag" instead of "der Vertrag").',
+      'Confusing "kündigen" (to terminate a contract / resign) with "entlassen" (to dismiss someone).',
+    ],
+  },
+  {
+    key: 'de-b2-vocab-science-technology',
+    kind: 'vocab',
+    name: 'Science and technology (B2)',
+    description:
+      'B2 vocabulary for research, technology, innovation, and digitalisation.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: ['die Forschung', 'der Fortschritt'],
+    examplesNegative: ['*das Fortschritt (wrong gender)'],
+    commonErrors: [
+      'Mismatching article gender on science/tech nouns ("*das Fortschritt" instead of "der Fortschritt").',
+      'Confusing "die Erfindung" (invention) with "die Entdeckung" (discovery).',
+    ],
+  },
+  {
+    key: 'de-b2-vocab-society-politics',
+    kind: 'vocab',
+    name: 'Society and politics (B2)',
+    description:
+      'B2 vocabulary for political institutions, civic life, and social debates.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: ['die Regierung', 'der Bürger'],
+    examplesNegative: ['*das Regierung (wrong gender)'],
+    commonErrors: [
+      'Mismatching article gender on political nouns ("*das Regierung" instead of "die Regierung").',
+      'Confusing "die Politik" (politics/policy) with "der Politiker" (a politician).',
+    ],
+  },
+  {
+    key: 'de-b2-vocab-culture-media',
+    kind: 'vocab',
+    name: 'Culture and media (B2)',
+    description:
+      'B2 vocabulary for arts, cultural life, and media criticism.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: ['die Ausstellung', 'die Kritik'],
+    examplesNegative: ['*der Ausstellung (as nominative)'],
+    commonErrors: [
+      'Mismatching article gender/case on culture nouns ("*der Ausstellung" as a nominative subject instead of "die Ausstellung").',
+      'Confusing "die Kritik" (criticism/review) with "die Kunst" (art, the general field).',
     ],
   },
 ];
