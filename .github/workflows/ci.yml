@@ -32,8 +32,15 @@ jobs:
       - uses: dorny/paths-filter@v3
         id: filter
         with:
-          # picomatch semantics: a changed file matches `code` if it matches `**`
-          # AND neither exclusion — i.e. any file that is NOT *.md and NOT docs/**.
+          # A changed file counts as `code` if it matches `**` AND neither
+          # exclusion — i.e. any file that is NOT *.md and NOT docs/**.
+          # `predicate-quantifier: every` is REQUIRED for that AND: dorny's
+          # default combines a filter's patterns with `.some()` (OR) and has no
+          # gitignore-style negation, so with the default the bare `**` matches
+          # every file and `code` is always 'true' — the `!` exclusions never
+          # subtract, and the heavy-job gate below never skips. `every` forces
+          # all three patterns to hold, so `!**/*.md` / `!docs/**` truly exclude.
+          predicate-quantifier: 'every'
           filters: |
             code:
               - '**'
