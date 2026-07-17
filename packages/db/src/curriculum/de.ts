@@ -62,8 +62,11 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * conjugationSeedWords like 'verb' does). Case coverage axes drive the
  * per-draft case; the noun seed drives lexical variety; gender rides the
  * seeded noun. Bump enumerates the four new CONJUGATION cells.
+ * 2026-07-17b: themed vocab umbrellas A1–B2 (17 new: 5 A1, 4 A2, 4 B1, 4 B2 —
+ * each level keeps its prior broad umbrella as one theme). Re-enqueues the
+ * three broad-umbrella cells and enqueues the 17 new vocab cells.
  */
-export const CURRICULUM_VERSION_DE = '2026-07-17a';
+export const CURRICULUM_VERSION_DE = '2026-07-17b';
 
 const deCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------

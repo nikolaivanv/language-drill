@@ -171,8 +171,11 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * opinion (polarity 99/99 negative), nominalizers (number; 100% singular),
  * aspectual-se (person; authored pre-pool). es-b2-cuyo / passive-voice /
  * se-middle-accidental measured healthy — deliberately left spec-less.
+ * `2026-07-17b`: themed vocab umbrellas at B1/B2 (8 new: 4 B1, 4 B2 — the
+ * existing es-b1-environment-vocab / es-b2-abstract-noun-vocab kept as one
+ * theme of their levels). Enqueues the 8 new vocab cells.
  */
-export const CURRICULUM_VERSION_ES = '2026-07-17a';
+export const CURRICULUM_VERSION_ES = '2026-07-17b';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -3389,7 +3392,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     examplesNegative: ['*el formación'],
     commonErrors: [
       'Mismatching article gender on -ión nouns ("*el formación" instead of "la formación").',
-      'Confusing "la carrera" (degree course/career) with "el carro" (cart/car, false friend of "career").',
+      'Confusing "la carrera" (a degree programme, or a career) with "el curso" (a single course or academic year).',
     ],
   },
   {
@@ -3449,7 +3452,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     examplesNegative: ['*el investigación'],
     commonErrors: [
       'Mismatching article gender on -ión nouns ("*el investigación" instead of "la investigación").',
-      'Confusing "el dato" (a piece of data) with "la fecha" (date on a calendar, false friend of "date").',
+      'Confusing "el dato" (a piece of data — a false friend of English "date") with "la fecha" (a calendar date).',
     ],
   },
   {

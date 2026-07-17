@@ -182,8 +182,11 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * New points authored WITH coverageSpecs per docs/curriculum-authoring.md.
  * Bump enumerates the new B2 cells + clears any suppression. See
  * docs/superpowers/specs/2026-07-07-tr-b2-curriculum-design.md.
+ * 2026-07-17d: themed vocab umbrellas at B2 (5 new: work-professional,
+ * science-technology, society-politics, culture-arts, global-issues) —
+ * the B2 vocab track that the B2 grammar cycle deferred. Enqueues 5 vocab cells.
  */
-export const CURRICULUM_VERSION_TR = '2026-07-17c';
+export const CURRICULUM_VERSION_TR = '2026-07-17d';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -3524,7 +3527,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     examplesNegative: ['*verimli lik'],
     commonErrors: [
       'Mis-segmenting the -lIk suffix on a derived adjective (verimlilik, not *verimli lik).',
-      'Confusing personel (staff/personnel, French loan) with kişisel (personal, an unrelated native+Arabic derivation) — similar sound, different meaning.',
+      'Confusing personel (staff/personnel, French loan) with kişisel (personal, from native "kişi" + the suffix "-sel") — similar sound, different meaning.',
     ],
   },
   {
