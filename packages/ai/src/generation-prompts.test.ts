@@ -168,6 +168,20 @@ describe("buildGenerationSystemPrompt", () => {
     expect(prompt).toContain("vowel-initial");
   });
 
+  it("includes the vocab_recall kinship side-disambiguation rule (2026-07-17)", async () => {
+    // Root-cause fix for TR family-vocab clues (amca/dayı marked wrong on a
+    // side-neutral gloss): a side-specific kin term needs the side named in the
+    // definition, or both terms enumerated in acceptableAnswers; and the gloss
+    // must not describe a different relation than the answer denotes.
+    const prompt = await buildGenerationSystemPrompt(baseInputs, []);
+    expect(prompt).toContain("vocab_recall kinship terms");
+    expect(prompt).toContain("father's brother"); // amca
+    expect(prompt).toContain("mother's brother"); // dayı
+    expect(prompt).toContain("side-NEUTRAL");
+    // the wrong-relation guard (a cousin gloss for dayı, teyze for hala)
+    expect(prompt).toContain("that is a cousin");
+  });
+
   it("pins the R2.3 / R3.B.7 hard-constraint bullets added in cluster B", async () => {
     // Independent rules that all live under "Hard constraints" and
     // were added together. Pin each so a future edit can't silently drop
