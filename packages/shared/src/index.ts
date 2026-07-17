@@ -124,6 +124,17 @@ export type TranslationContent = {
   sourceLanguage: Language;
   targetLanguage: Language;
   referenceTranslation: string;
+  /**
+   * Optional. Every OTHER structurally-distinct rendering of the source that is
+   * equally correct — not mere surface variation, but a different construction
+   * a learner could legitimately produce (e.g. TR "In my opinion…" → both
+   * `Bence …` (pronoun+-CE adverb) and `Bana göre …` (dative+göre)). The
+   * evaluator accepts any entry here as fully correct, and enumerating them
+   * clears the validator's `ambiguous` flag. `referenceTranslation` is the
+   * anchor and is NOT auto-included in this list. Mirrors the cloze /
+   * vocab_recall `acceptableAnswers` contract.
+   */
+  acceptableAnswers?: string[];
   topicHint?: string;
 };
 

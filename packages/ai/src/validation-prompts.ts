@@ -92,7 +92,15 @@ function renderBulletList(items: readonly string[]): string {
 // definition by enumerating the alternates in the NEW acceptableAnswers
 // field (rendered in the per-draft user prompt). Template edit → Langfuse
 // push per env.
-export const VALIDATION_PROMPT_VERSION = "validate@2026-07-17";
+// 2026-07-18 (validate@2026-07-18): mirrors generate@2026-07-18. TranslationContent
+// gained an `acceptableAnswers` field, now rendered in the translation user
+// prompt; the `ambiguous` dimension for translation is now "structurally
+// different renderings are ambiguous ONLY when acceptableAnswers doesn't
+// enumerate them" (enumeration cures it, exactly as for cloze). Fixes the
+// tr-a1-gore-bence collapse where every "In my opinion" translation was flagged
+// ambiguous (Bence vs. Bana göre) with no way to enumerate. Template edit →
+// Langfuse push per env.
+export const VALIDATION_PROMPT_VERSION = "validate@2026-07-18";
 
 export const VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language exercises for {{language}} learners at CEFR {{cefrLevel}}. Your job is to validate one already-generated exercise that targets the grammar point: {{grammarPointName}}.
 
@@ -133,12 +141,12 @@ Score conservatively — a flagged draft costs a human ~30 seconds of review; an
    - **0.8** — publishable with one cosmetic edit.
    - **0.65** — borderline; clear issue but salvageable. Routes to FLAGGED.
    - **0.5** — unusable; reject. Routes to REJECTED.
-2. **ambiguous** (boolean): more than one substantively-correct answer? For **cloze**, true when multiple lexemes/forms satisfy the grammar point in this sentence AND \`acceptableAnswers\` does not enumerate them. For **translation**, surface variation is fine; structurally different correct translations is ambiguous. For **vocab_recall**, the prompt must pick out exactly one headword — or, when the language has true near-synonyms that the definition admits equally (e.g. TR \`istasyon\`/\`gar\` for a station definition), \`acceptableAnswers\` must enumerate every defensible alternate; enumerated near-synonyms cure the ambiguity, a missing defensible alternate does not.
+2. **ambiguous** (boolean): more than one substantively-correct answer? For **cloze**, true when multiple lexemes/forms satisfy the grammar point in this sentence AND \`acceptableAnswers\` does not enumerate them. For **translation**, surface variation is fine; two or more structurally-different correct renderings are ambiguous ONLY when \`acceptableAnswers\` does not enumerate them — enumeration cures it exactly as for cloze (e.g. TR "In my opinion…" → both \`Bence …\` and \`Bana göre …\`; listing the alternative, or wording the source to force one structure, is NOT ambiguous). For **vocab_recall**, the prompt must pick out exactly one headword — or, when the language has true near-synonyms that the definition admits equally (e.g. TR \`istasyon\`/\`gar\` for a station definition), \`acceptableAnswers\` must enumerate every defensible alternate; enumerated near-synonyms cure the ambiguity, a missing defensible alternate does not.
    - **Form-contrast exception (cloze):** when the grammar point itself CONTRASTS two forms with DIFFERENT meanings (e.g. ES perception verbs: infinitive = completed event vs. gerund = caught in progress), enumeration does NOT cure ambiguity — listing both contrasting forms in \`acceptableAnswers\` teaches that they are interchangeable and IS \`ambiguous\`. A good draft forces exactly one of the contrasting forms via sentence context (durativity/completion cues) and lists neither contrast alternant in \`acceptableAnswers\`; do not flag such a context-forced draft merely for omitting the other contrasting form. A blank on the conjugated perception verb instead of the infinitive/gerund slot is \`grammarPointMatch: false\` (it tests tense selection).
    - "Sınıfta sekiz ___ var." / \`correctAnswer: "öğrenci"\` — sandalye, kalem, kitap, defter all satisfy no-plural-after-numeral equally; needs \`acceptableAnswers\`.
    - "Evde yeni ___ var. Onlar çok güzel." / \`correctAnswer: "perdeler"\` — perdeler, kitaplar, çiçekler, lambalar all fit "plural + positive descriptor"; the follow-on doesn't disambiguate. Needs \`acceptableAnswers\` or tighter framing ("Onları yıkamayı unutma" picks out perdeler).
    - "Ben çok mutlu___" / \`correctAnswer: "um"\` or \`"yum"\` — buffer-consonant blank: vowel-final stem "mutlu" + 1sg copular \`-Im\` requires buffer \`-y-\`. Without \`acceptableAnswers\` listing both ("um" and "yum"), or embedding \`-y-\` in the visible stem as "mutluy___", set \`ambiguous = true\` AND add \`'buffer-consonant ambiguous blank'\` to \`flaggedReasons\`.
-   - Translation: no clean production example yet (non-binding); judge "structurally different correct translations" against the spec.
+   - Translation: "In my opinion…" / ref \`Bence bu doğru.\` — IS ambiguous with empty \`acceptableAnswers\` (equally-correct \`Bana göre bu doğru.\` unlisted), NOT ambiguous once it is listed. A source forcing one structure ("In his opinion…" → only \`Ona göre…\`) needs no list.
 3. **contextSpoilsAnswer** (boolean): does the draft's \`instructions\` or \`context\` state the rule's outcome, name the required suffix/form, or otherwise let the learner write the answer without engaging with the blank? Naming the rule category is fine ("vowel harmony", "plural agreement after a numeral"); stating the outcome is not. Also true when \`context\` exhaustively enumerates every member of the closed set of forms the grammar point selects between. \`true\` is a hard veto.
    - "Vowel harmony: stem 'çocuk' (u = back, unrounded → -lar)" / blank "lar" — context derives the answer from the stem.
    - "Use -da/-de after voiced consonants, -ta/-te after voiceless" / blank one of "-da/-de/-ta/-te" — closed set exhaustively enumerated.
@@ -323,7 +331,8 @@ function buildTranslationValidationUserPrompt(
 **Instructions:** ${content.instructions}
 **Source Text (${content.sourceLanguage}):** ${content.sourceText}
 **Target Language:** ${content.targetLanguage}
-**Reference Translation:** ${content.referenceTranslation}${selfRevealingScoringNote(spec)}
+**Reference Translation:** ${content.referenceTranslation}
+${content.acceptableAnswers && content.acceptableAnswers.length > 0 ? `**Acceptable Answers (structurally-different renderings, also accepted):** ${content.acceptableAnswers.join(", ")}` : "**Acceptable Answers (structurally-different renderings, also accepted):** (none declared — the source must admit only one natural structure)"}${selfRevealingScoringNote(spec)}
 
 Score the dimensions in the system prompt and submit via the tool.`;
 }

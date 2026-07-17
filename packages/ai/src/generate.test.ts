@@ -27,6 +27,7 @@ import {
   generateOneDraft,
   parseGeneratedClozeDraft,
   parseGeneratedConjugationDraft,
+  parseGeneratedTranslationDraft,
   parseGeneratedVocabRecallDraft,
   parseGeneratedContextualParaphraseDraft,
   parseGeneratedDictationDraft,
@@ -261,6 +262,68 @@ describe("parseGeneratedVocabRecallDraft acceptableAnswers", () => {
     expect(() =>
       parseGeneratedVocabRecallDraft(
         { ...validVocabInput, acceptableAnswers: ["gar", "   "] },
+        baseSpec,
+      ),
+    ).toThrow(/acceptableAnswers\[1\]/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseGeneratedTranslationDraft — optional acceptableAnswers (2026-07-18)
+// Enumerating structurally-different renderings (e.g. TR Bence / Bana göre) so
+// the validator no longer false-flags them `ambiguous`.
+// ---------------------------------------------------------------------------
+
+describe("parseGeneratedTranslationDraft acceptableAnswers", () => {
+  it("exposes acceptableAnswers as an optional string[] on the translation tool schema", () => {
+    const props = TRANSLATION_GENERATION_TOOL.input_schema.properties as Record<
+      string,
+      { type: string; items?: { type: string } }
+    >;
+    expect(props.acceptableAnswers).toBeDefined();
+    expect(props.acceptableAnswers.type).toBe("array");
+    expect(props.acceptableAnswers.items?.type).toBe("string");
+    // Optional — must NOT be in the required set.
+    expect(
+      (TRANSLATION_GENERATION_TOOL.input_schema.required as string[]) ?? [],
+    ).not.toContain("acceptableAnswers");
+  });
+
+  it("parses acceptableAnswers verbatim when present (whole-sentence renderings, not normalised)", () => {
+    const content = parseGeneratedTranslationDraft(
+      {
+        ...validTranslationInput,
+        acceptableAnswers: ["Bana göre bu doğru.", "Bence bu doğru."],
+      },
+      baseSpec,
+    );
+    expect(content.acceptableAnswers).toEqual([
+      "Bana göre bu doğru.",
+      "Bence bu doğru.",
+    ]);
+  });
+
+  it("omits acceptableAnswers entirely when absent or empty (key not present)", () => {
+    expect(
+      "acceptableAnswers" in
+        parseGeneratedTranslationDraft(validTranslationInput, baseSpec),
+    ).toBe(false);
+    expect(
+      "acceptableAnswers" in
+        parseGeneratedTranslationDraft(
+          { ...validTranslationInput, acceptableAnswers: [] },
+          baseSpec,
+        ),
+    ).toBe(false);
+  });
+
+  it("rejects a whitespace-only acceptableAnswers entry", () => {
+    expect(() =>
+      parseGeneratedTranslationDraft(
+        {
+          ...validTranslationInput,
+          acceptableAnswers: ["Bana göre bu doğru.", "   "],
+        },
         baseSpec,
       ),
     ).toThrow(/acceptableAnswers\[1\]/);

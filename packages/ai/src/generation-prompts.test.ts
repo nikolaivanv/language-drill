@@ -309,7 +309,10 @@ describe("buildGenerationSystemPrompt", () => {
     // Bumped 2026-07-12 — cloze `context` field dropped from the tool schema
     // (anti-spoil) and the injected seed self-filters register-specific /
     // above-level frequency words.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-17");
+    // Bumped 2026-07-18 — translation `acceptableAnswers`: the Ambiguous-blank
+    // rule now REQUIRES enumerating structurally-different renderings (or
+    // forcing one structure via person) instead of forbidding them.
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-18");
     // Tasks 7–9: pin the new guardrail phrases in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "every content word MUST be high-frequency everyday vocabulary at or below CEFR {{cefrLevel}}",
