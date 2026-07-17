@@ -239,6 +239,7 @@ describe("level scope in the validation prompt", () => {
     const prompt = await buildValidationSystemPrompt({ ...trClozeSpec, exerciseType: ExerciseType.VOCAB_RECALL, grammarPoint: vocab, cefrLevel: CefrLevel.A1 });
     expect(prompt).not.toContain("Grammar in this learner's scope");
   });
+
 });
 
 // ---------------------------------------------------------------------------
@@ -581,6 +582,22 @@ describe("self-revealing / vocab_recall scoring notes", () => {
     const prompt = buildValidationUserPrompt(makeDraft(vocabRecallContent), baseSpec);
     expect(prompt).not.toContain("Scoring note for vocab_recall");
     expect(prompt).not.toContain("a vocab umbrella is a SEMANTIC DOMAIN");
+  });
+
+  it("vocab_recall note carries the kinship side-disambiguation guidance (2026-07-17)", () => {
+    // Mirror of the generation-side kinship rule: a side-neutral gloss on a
+    // side-specific TR kin term (amca/dayı, hala/teyze) must be flagged
+    // ambiguous, and a gloss naming a different relation is factually wrong.
+    const vocabSpec: GenerationSpec = {
+      ...baseSpec,
+      grammarPoint: { ...baseSpec.grammarPoint, kind: "vocab" as const },
+    };
+    const prompt = buildValidationUserPrompt(makeDraft(vocabRecallContent), vocabSpec);
+    expect(prompt).toContain("Kinship definitions for vocab_recall");
+    expect(prompt).toContain("side-NEUTRAL gloss");
+    // the wrong-relation guard: a cousin gloss for dayı, or teyze for hala
+    expect(prompt).toContain("that is a cousin");
+    expect(prompt).toContain("lower qualityScore below 0.5");
   });
 });
 
