@@ -691,14 +691,16 @@ describe('per-language counts', () => {
   // full Yedi İklim A1+A2 parity (26 A1 + 14 A2 grammar + 10 themed vocab
   // umbrellas); B1/B2 remain disabled.
 
-  it('Spanish is at full PCIC A1–B2 parity (+ B&B gap audit), has 12 vocab umbrellas, 4 dictation umbrellas, 18 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
+  it('Spanish is at full PCIC A1–B2 parity (+ B&B gap audit), has 20 vocab umbrellas, 4 dictation umbrellas, 18 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting, paraphrase } = countsFor(esCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(24);
     expect(grammar.A2).toBeGreaterThanOrEqual(34);
     expect(grammar.B1).toBeGreaterThanOrEqual(25);
     expect(grammar.B2).toBeGreaterThanOrEqual(32);
-    // 5 A1 + 5 A2 themed umbrellas + es-b1-environment-vocab + es-b2-abstract-noun-vocab.
-    expect(vocab).toBe(12);
+    // 5 A1 + 5 A2 themed umbrellas + 4 B1 + 4 B2 themed umbrellas (2026-07-17
+    // expansion) + es-b1-environment-vocab + es-b2-abstract-noun-vocab kept as
+    // one theme of their levels.
+    expect(vocab).toBe(20);
     // es-a1-dictation + es-a2-dictation + es-b1-dictation + es-b2-dictation (Phase 2 dictation generation pipeline).
     expect(dictation).toBe(4);
     // 3 × A1 + 3 × A2 + 6 × B1 + 6 × B2 free-writing topic umbrellas (Phase 2 free-writing generation).
