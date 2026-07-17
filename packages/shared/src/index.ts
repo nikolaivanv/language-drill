@@ -143,6 +143,14 @@ export type VocabRecallContent = {
   instructions: string;
   prompt: string;
   expectedWord: string;
+  /**
+   * Optional. Every additional headword the prompt/definition picks out
+   * equally well — true near-synonyms a learner could defend given only the
+   * definition (e.g. TR istasyon/gar for a station definition). Mirrors the
+   * cloze field: the grader accepts any entry here as fully correct, and
+   * `expectedWord` is NOT auto-included in this list.
+   */
+  acceptableAnswers?: string[];
   hints: string[];
   exampleSentence: string;
   topicHint?: string;

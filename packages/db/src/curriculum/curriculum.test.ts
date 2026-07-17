@@ -678,8 +678,10 @@ describe('per-language counts', () => {
     // A2 gained 5 G&K reverse-audit points (2026-07-10): spatial postpositions,
     // nominal past copula, dA/bile clitics, -lI/-sIz, tane → 27.
     expect(grammar.A2).toBeGreaterThanOrEqual(27);
-    // B1 gained 2 audit points (2026-07-10): suppletive ol-, olarak → 13.
-    expect(grammar.B1).toBe(13);
+    // B1 gained 2 audit points (2026-07-10): suppletive ol-, olarak → 13;
+    // +3 G&K book-coverage-ledger points (2026-07-16): abstract postpositions,
+    // -DIğI için reason clauses, "when" converbs → 16.
+    expect(grammar.B1).toBe(16);
     expect(grammar.B2).toBe(0);
     // 5 A1 + 5 A2 + 5 B1 themed vocab umbrellas.
     expect(vocab).toBe(15);
@@ -830,7 +832,7 @@ describe('coverageSpec invariants', () => {
 describe('grammarPointsAtOrBelow', () => {
   it('returns TR A1+A2 grammar points (only) for TR at A2', () => {
     const pts = grammarPointsAtOrBelow('TR', 'A2');
-    expect(pts.length).toBeGreaterThanOrEqual(40); // 26 A1 + 14 A2
+    expect(pts.length).toBeGreaterThanOrEqual(42); // 27 A1 + 15 A2
     expect(pts.every((p) => p.kind === 'grammar')).toBe(true);
     expect(pts.every((p) => p.language === 'TR')).toBe(true);
     expect(pts.every((p) => p.cefrLevel === 'A1' || p.cefrLevel === 'A2')).toBe(true);

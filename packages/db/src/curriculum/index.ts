@@ -115,7 +115,7 @@ const LANGUAGE_PREFIX_BY_LANGUAGE: Readonly<Record<string, string>> = {
 const PER_LANGUAGE_GRAMMAR_MIN: Readonly<Record<string, Record<string, number>>> = {
   ES: { A1: 23, A2: 27, B1: 21, B2: 24 },
   DE: { A1: 19, A2: 31, B1: 27, B2: 27 },
-  TR: { A1: 26, A2: 14, B1: 10, B2: 0 },
+  TR: { A1: 27, A2: 15, B1: 13, B2: 0 },
 };
 
 /**

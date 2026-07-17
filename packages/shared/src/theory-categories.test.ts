@@ -249,6 +249,7 @@ const EXPECTED_KEY_CATEGORY: Record<string, TheoryCategoryId> = {
   "tr-a1-gore-bence": "syntax",
   "tr-a1-beri-dir": "syntax",
   "tr-a1-comparative-superlative": "syntax",
+  "tr-a1-clock-time-dates": "syntax",
   // Turkish A2
   "tr-a2-indefinite-compound": "morphology",
   "tr-a2-suffix-order-buffers": "morphology",
@@ -267,6 +268,7 @@ const EXPECTED_KEY_CATEGORY: Record<string, TheoryCategoryId> = {
   "tr-a2-gibi-kadar": "syntax",
   "tr-a2-correlative-conjunctions": "syntax",
   "tr-a2-causal-connectors": "syntax",
+  "tr-a2-adversative-connectors": "syntax",
   "tr-a2-ca-suffix": "morphology",
   "tr-a2-pekistirme": "morphology",
   "tr-a2-purpose-icin-uzere": "syntax",
@@ -292,6 +294,9 @@ const EXPECTED_KEY_CATEGORY: Record<string, TheoryCategoryId> = {
   // Turkish B1 (audit additions)
   "tr-b1-copula-ol": "syntax",
   "tr-b1-olarak": "syntax",
+  "tr-b1-abstract-postpositions": "syntax",
+  "tr-b1-reason-digi-icin": "syntax",
+  "tr-b1-when-converbs": "syntax",
 };
 
 describe("THEORY_CATEGORIES — taxonomy invariants", () => {

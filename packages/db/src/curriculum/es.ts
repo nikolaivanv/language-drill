@@ -139,8 +139,40 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * and es-b2-aspectual-se (B&B 30.9: me comí toda la pizza), plus fold
  * widenings on existing points encoding the triage's fold verdicts. Bump
  * enumerates the new cells on the next scheduler tick.
+ *
+ * `2026-07-16a`: clears low-yield suppression on es-b2-perception-verbs cloze
+ * (approved 2/9 on 2026-07-16; chronic — 19/50 → 10/31 → 8/21 → 2/13 → 2/11 →
+ * 2/9) after the form-contrast cloze rule in `generate@2026-07-16` /
+ * `validate@2026-07-16`: drafts kept listing BOTH the infinitive and the
+ * gerund in `acceptableAnswers` (the taught contrast), which the validator
+ * flags as ambiguous; context must now force exactly one form. If yield does
+ * not recover on the new prompt, the fallback is `clozeUnsuitable: true`.
+ *
+ * `2026-07-17`: Tier-1 of the full-curriculum coverageSpec audit
+ * (docs/analysis/coverage-spec-audit-2026-07-17.md) — adds specs to eight
+ * spec-less points whose paradigm halves were collapse-prone:
+ * present-irregular-core (the only conjugation-paradigm point without one),
+ * possessives-atonic, imperative-affirmative (tú vs usted/ustedes — the
+ * direct analogue of the collapsed TR imperative), reflexive-verbs,
+ * gustar-type-verbs (person + number), imperative-negative-pronouns and
+ * nosotros-imperative (polarity), reciprocal-se (1pl/3pl partial). Bump
+ * clears target-reached suppression so the touched cells re-run under the
+ * floors; at-target cells additionally need demote:pool (see
+ * docs/curriculum-authoring.md retrofit section).
+ *
+ * `2026-07-17a`: Tier-2 of the coverageSpec audit, floors confirmed against
+ * measured prod-pool collapse before commit — gustar-basic (number + te
+ * floor; te was absent), gender-agreement + articles (number ~10% plural),
+ * subject-pronouns (person; yo/él only), negation-tampoco (polarity 38/2),
+ * telling-time (number; authored pre-pool), direct/indirect-object-pronouns
+ * (number; prophylactic — pools measured healthy, no demote),
+ * tonic-pronouns-prepositions (person; sí/consigo nearly absent),
+ * possessives-tonic (person; suyo/nuestro absent), subjunctive-negated-
+ * opinion (polarity 99/99 negative), nominalizers (number; 100% singular),
+ * aspectual-se (person; authored pre-pool). es-b2-cuyo / passive-voice /
+ * se-middle-accidental measured healthy — deliberately left spec-less.
  */
-export const CURRICULUM_VERSION_ES = '2026-07-16';
+export const CURRICULUM_VERSION_ES = '2026-07-17a';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -190,6 +222,14 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a1-gender-agreement',
+    coverageSpec: {
+      axes: [
+        // Gender is not a coverage axis, so number is the pinnable half —
+        // plural agreement (españoles, marroquíes, invariable-plural traps)
+        // was ~10% of the pool (2026-07-17 audit).
+        { name: 'number', floors: { singular: 6, plural: 6 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Noun-adjective agreement',
     description:
@@ -212,6 +252,14 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a1-articles',
+    coverageSpec: {
+      axes: [
+        // Four of the eight claimed forms are plural (los/las/unos/unas);
+        // pool audit 2026-07-17: ~12% plural. Contractions al/del are
+        // singular-only, so singular keeps an equal floor.
+        { name: 'number', floors: { singular: 6, plural: 6 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Definite and indefinite articles',
     description:
@@ -256,6 +304,14 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a1-possessives-atonic',
+    coverageSpec: {
+      axes: [
+        // Possessor-person paradigm mi/tu/su/nuestro; su-ambiguity needs 3sg
+        // drilled apart from the mi default, nuestro is the only
+        // gender-agreeing form. Partial floors (no 3pl: su covers it).
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Possessive adjectives (short forms)',
     description:
@@ -280,6 +336,14 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a1-subject-pronouns',
+    coverageSpec: {
+      axes: [
+        // The full pronoun set is claimed; contrast/emphasis drafts collapse
+        // onto yo-vs-él/ella pairs (pool audit 2026-07-17: only yo and
+        // él/ella attested).
+        { name: 'person', floors: { '1sg': 4, '2sg': 4, '3sg': 4, '1pl': 4, '3pl': 4 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Subject pronouns',
     description:
@@ -343,6 +407,15 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a1-present-irregular-core',
+    coverageSpec: {
+      axes: [
+        // Full suppletive paradigms (soy/eres/es…, voy/vas/va…) are the
+        // content — the only conjugation-paradigm point that shipped
+        // spec-less (2026-07-17 audit). Sum 25 grows the A1 cell to 25,
+        // matching es-a1-present-indicative-regular.
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '3pl': 5 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Present indicative of ser, estar, haber, and ir',
     description:
@@ -438,6 +511,15 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a1-gustar-basic',
+    coverageSpec: {
+      axes: [
+        // gusta vs gustan agreement with the thing liked is the core form
+        // contrast; person guarantees the te half (pool audit 2026-07-17:
+        // te entirely absent — every row "me gusta(n)").
+        { name: 'number', floors: { singular: 8, plural: 8 } },
+        { name: 'person', floors: { '1sg': 8, '2sg': 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Gustar-type verbs',
     description:
@@ -521,6 +603,14 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a1-negation-tampoco',
+    coverageSpec: {
+      axes: [
+        // For a point named "negation" generation goes ~all-negative (pool
+        // audit 2026-07-17: 38/2) — the también (affirmative-agreement) half
+        // needs the explicit floor.
+        { name: 'polarity', floors: { affirmative: 6, negative: 12 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Negation with no, sí/no answers, and también/tampoco',
     description:
@@ -667,6 +757,14 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a1-telling-time',
+    coverageSpec: {
+      axes: [
+        // Es la una vs son las tres: a random hour makes the singular frame
+        // ~1/12 of drafts, yet both listed commonErrors hinge on the
+        // contrast. Plural-weighted floor keeps the natural majority.
+        { name: 'number', floors: { singular: 6, plural: 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Telling the time',
     description:
@@ -968,6 +1066,15 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-imperative-affirmative',
+    coverageSpec: {
+      axes: [
+        // Direct analogue of the collapsed TR imperative (PR #588): tú
+        // (incl. the eight irregulars di/haz/pon…) vs subjunctive-based
+        // usted/ustedes are different morphologies. No polarity axis — the
+        // negative imperative is es-b1-imperative-negative-pronouns.
+        { name: 'person', floors: { '2sg': 10, '3sg': 8, '3pl': 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Affirmative imperative',
     description:
@@ -1075,6 +1182,15 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-direct-object-pronouns',
+    coverageSpec: {
+      axes: [
+        // lo/la/los/las agree with the replaced noun; gender is not an axis,
+        // number is the pinnable half. Prophylactic: the 2026-07-17 audit
+        // found ~25% plural (floors met) — the spec guards future churn, no
+        // demote was needed.
+        { name: 'number', floors: { singular: 8, plural: 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Direct object pronouns',
     description:
@@ -1098,6 +1214,14 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-indirect-object-pronouns-se',
+    coverageSpec: {
+      axes: [
+        // le→se and les→se both need drilling. Prophylactic: the 2026-07-17
+        // audit found le/les well balanced (floors met) — the spec guards
+        // future churn, no demote was needed.
+        { name: 'number', floors: { singular: 8, plural: 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Indirect object pronouns and se',
     description:
@@ -1120,6 +1244,14 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-tonic-pronouns-prepositions',
+    coverageSpec: {
+      axes: [
+        // mí/ti (+ conmigo/contigo) vs reflexive 3rd-person sí (mismo)/
+        // consigo — three claimed person forms with distinct surfaces. Pool
+        // audit 2026-07-17: mí/ti healthy, 3sg nearly absent (~2 rows).
+        { name: 'person', floors: { '1sg': 8, '2sg': 8, '3sg': 6 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Tonic pronouns after prepositions',
     description:
@@ -1169,6 +1301,14 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-reflexive-verbs',
+    coverageSpec: {
+      axes: [
+        // The pronoun must agree in person with the subject (me levanto /
+        // nos levantamos — commonError '*nos levanta'); collapse to 3sg se
+        // or 1sg me guts the paradigm.
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '3pl': 5 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Reflexive verbs',
     description:
@@ -1192,6 +1332,16 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-gustar-type-verbs',
+    coverageSpec: {
+      axes: [
+        // The full experiencer series me/te/le/nos/les IS the A2 delta over
+        // es-a1-gustar-basic; person here pins the dative experiencer.
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '3pl': 5 } },
+        // The verb agrees with the thing liked, not the person (le duelen
+        // los pies — commonError '*me duele los pies').
+        { name: 'number', floors: { singular: 8, plural: 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Gustar-type verbs (extended)',
     description:
@@ -1239,6 +1389,14 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-possessives-tonic',
+    coverageSpec: {
+      axes: [
+        // The possessor paradigm mío/tuyo/suyo/nuestro; the suyo-ambiguity
+        // commonError needs 3sg drilled apart from the mío default. Pool
+        // audit 2026-07-17: mío/tuyo only — suyo and nuestro absent.
+        { name: 'person', floors: { '1sg': 6, '2sg': 6, '3sg': 6, '1pl': 6 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Stressed possessives (mío, tuyo, suyo)',
     description:
@@ -1673,6 +1831,14 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b1-nominalizers',
+    coverageSpec: {
+      axes: [
+        // el que/la de agree in number with the omitted noun (los que /
+        // las de); gender is not an axis, number is the pinnable half. Pool
+        // audit 2026-07-17: 100% singular across both cells.
+        { name: 'number', floors: { singular: 8, plural: 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Nominalizers el de / el que ("the one...")',
     description:
@@ -1738,6 +1904,14 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b1-reciprocal-se',
+    coverageSpec: {
+      axes: [
+        // nos vs se reciprocals (commonError '*mi hermano y yo me ayudamos'
+        // → nos ayudamos); reciprocals need plural subjects, so partial
+        // floors — 1pl/3pl only.
+        { name: 'person', floors: { '1pl': 8, '3pl': 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Reciprocal se (each other)',
     description:
@@ -1848,6 +2022,15 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b1-imperative-negative-pronouns',
+    coverageSpec: {
+      axes: [
+        // The point is built on the polarity contrast: proclisis + subjunctive
+        // switch (no se lo digas) vs enclisis + written accent (díselo).
+        // Unpinned generation collapses to affirmative (TR-imperative failure
+        // mode, PR #588). Negative-weighted: it is the headline half.
+        { name: 'polarity', floors: { affirmative: 8, negative: 10 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Negative imperative and clitic pronoun placement',
     description:
@@ -2403,6 +2586,15 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b2-nosotros-imperative',
+    coverageSpec: {
+      axes: [
+        // Both poles have distinct surface behavior: -s drop before the
+        // enclitic (sentémonos) vs proclitic negative (no nos sentemos) —
+        // commonError 3 is exactly the negative-clitic trap. Person axis
+        // pointless (1pl by definition).
+        { name: 'polarity', floors: { affirmative: 8, negative: 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Nosotros imperative (¡Empecemos!)',
     description:
@@ -2446,6 +2638,15 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b2-subjunctive-negated-opinion',
+    coverageSpec: {
+      axes: [
+        // The polarity flip IS the point: no creo que + subjunctive vs creo
+        // que + indicative — different target forms (tenga vs tiene). Pool
+        // audit 2026-07-17: 99/99 negative; the indicative half of the
+        // contrast did not exist in the pool.
+        { name: 'polarity', floors: { negative: 10, affirmative: 8 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Subjunctive after negated opinion and assertion',
     description:
@@ -2947,6 +3148,15 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b2-aspectual-se',
+    coverageSpec: {
+      axes: [
+        // Fully personal reflexive (me comí / te bebiste / se comió …);
+        // commonError 2 is the pronoun-subject mismatch (*se comí). Spec
+        // authored BEFORE the pool fills (0 approved rows at 2026-07-17) —
+        // the docs/curriculum-authoring.md happy path.
+        { name: 'person', floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '3pl': 5 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Aspectual se (comerse, beberse, saberse)',
     description:
