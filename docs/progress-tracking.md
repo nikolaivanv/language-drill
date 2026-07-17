@@ -9,6 +9,38 @@ All progress maps to **CEFR** (A1–C2) — the framework underlying IELTS, DELE
 
 ---
 
+## Implementation status (read this first)
+
+This document mixes the **shipped** progress system with the **original vision** for it.
+Where the two diverge, the shipped behavior wins and is flagged inline with a
+> **Shipped:** … / **Roadmap:** … callout.
+
+The canonical spec for what's live is
+[`docs/superpowers/specs/2026-06-13-personalized-drill-plan-design.md`](superpowers/specs/2026-06-13-personalized-drill-plan-design.md) §3.
+Source of truth in code:
+
+| Concern | File |
+|---|---|
+| Mastery update rule | `packages/db/src/mastery/update.ts` |
+| Point classification + level readiness | `infra/lambda/src/lib/curriculum-map.ts` |
+| Map API route | `infra/lambda/src/routes/progress.ts` |
+| Map UI | `apps/web/app/(dashboard)/progress/_components/map-tab.tsx` |
+
+**What's shipped today:** per-grammar-point mastery + confidence (`user_grammar_mastery`),
+a three-state Map tab (solid / learning / not-started) with a recent-error badge, and an
+opt-in "add the next level" prompt gated on a solid-ratio threshold.
+
+**What's still roadmap (design intent, not built):** per-*competency* and per-*macro-skill*
+rollups, the CEFR probability distribution + confidence interval, vocabulary
+frequency-band coverage, exam-readiness prediction, and true time-decay of mastery
+(the Ebbinghaus forgetting curve). The tables `user_competency_mastery`,
+`user_cefr_estimates`, `user_exam_readiness`, and `user_vocabulary` below are **design-doc
+only** — they do not exist in the schema. The live schema is `user_grammar_mastery` +
+`error_observations`, with the active CEFR level stored on
+`user_language_profiles.proficiency_level`.
+
+---
+
 ## The Skill Taxonomy (3 Layers)
 
 ### Layer 1 — Macro-skills (what exams test)
@@ -101,20 +133,59 @@ mastery ∈ [0.0, 1.0]   — estimated ability on this competency
 confidence ∈ [0.0, 1.0] — how sure we are (more evidence = higher confidence)
 ```
 
-**Update rule (simplified Bayesian):**
-- Correct answer on a hard exercise → larger mastery increase
-- Error on an easy exercise → larger mastery decrease
-- Recent evidence is weighted more than old (exponential decay)
-- Confidence grows with evidence count, decays with time since last attempt
+> **Shipped** (`packages/db/src/mastery/update.ts` → `updateMastery`): an
+> **asymmetric, difficulty-weighted, recency-decayed Bayesian average**. On every
+> exercise submit the new graded `score ∈ [0,1]` is folded into the prior:
+>
+> ```
+> decay   = exp(-daysSinceLastPractice / 30)     // 30-day half-life on the PRIOR's weight
+> priorW  = prev.evidenceCount * decay
+> obsW    = (score >= prev.mastery ? dw : 2.0 - dw) * evidenceWeight
+> mastery = (priorW * prev.mastery + obsW * score) / (priorW + obsW)
+> ```
+>
+> - **Difficulty weight `dw`** rewards harder exercises: A1 = 0.5, A2 = 0.7, B1 = 0.9,
+>   B2 = 1.1, C1 = 1.3, C2 = 1.5.
+> - **Asymmetric:** a *gain* (`score ≥ prior`) is weighted by `dw`; a *loss* by the
+>   inverse `2.0 − dw`. At A1 an error therefore carries weight **1.5 vs 0.5** for a
+>   correct — errors hurt ~3× more than corrects help, and cheap (low-CEFR) errors are
+>   punished hardest.
+> - **`evidenceWeight ∈ (0,1]`** shrinks an observation when hints were used.
+> - **Confidence is evidence-count only:** `confidence = 1 − exp(-n / 5)` (n=1 → 0.18,
+>   n=5 → 0.63, n=8 → 0.80). It grows monotonically with attempts and **does not
+>   time-decay.**
 
 This is inspired by Item Response Theory (IRT) — the same psychometric model that IELTS and DELE use to calibrate their questions.
 
 **Forgetting curve:**
+> **Roadmap — not implemented.** There is no standalone time-decay of a point's
+> *displayed* mastery; a point's mastery is frozen between attempts. Decay only enters
+> *indirectly* — the 30-day half-life above shrinks how much the **prior** counts on the
+> **next** update, so a long gap lets fresh evidence dominate. The Ebbinghaus-style
+> read-time decay, mastery-dependent decay rate, and derived spaced-repetition schedule
+> below are design intent, not built:
 - Mastery decays over time without practice (based on Ebbinghaus curve)
 - Rate of decay is slower for high-mastery items (well-consolidated knowledge)
 - Spaced repetition scheduling is derived from this decay estimate
 
 ### CEFR level estimation
+
+> **Shipped:** there is no probability-distribution estimate per macro-skill yet. The
+> live model is simpler and grammar-point-only. Each point is classified from its
+> mastery row (`infra/lambda/src/lib/curriculum-map.ts`):
+>
+> - `solid` ⟺ `mastery ≥ 0.8` **AND** `confidence ≥ 0.6` (both gates)
+> - `learning` = has evidence but fails a gate
+> - `not-started` = no attempts
+>
+> A level is **ready to advance** when `solidCount / total ≥ 0.8` (`READINESS_RATIO`)
+> across the active level's points. That surfaces an **opt-in** "add the next level"
+> prompt on the Map tab — it is never automatic, and the ladder is capped at B2
+> (`nextCefrLevel` over `['A1','A2','B1','B2']`; C1/C2 return null). Advancing sets
+> `user_language_profiles.proficiency_level`. Note this is a *solid-fraction* trigger,
+> **not** the probability distribution described below.
+>
+> **Roadmap** — the per-macro-skill distribution + confidence interval:
 
 CEFR level per macro-skill is estimated as:
 
@@ -171,6 +242,17 @@ These are academic-oriented exams, heavily reading/vocabulary focused. Our readi
 ---
 
 ## Progress Data Model
+
+> **Shipped vs. design-doc.** Only `user_grammar_mastery` exists in the schema (and its
+> real columns differ slightly — see below). `error_observations` (recent-error source
+> for the Map badge) is shipped but omitted from the original sketch. `grammar_points`,
+> `competencies`, `user_competency_mastery`, `user_vocabulary`, `user_cefr_estimates`,
+> and `user_exam_readiness` are **not built** — they are the roadmap data model.
+>
+> The live `user_grammar_mastery` (`packages/db/src/schema/progress.ts`) is keyed on
+> `(user_id, grammar_point_key)` — a text curriculum key, not a `grammar_point_id` FK —
+> with columns `language`, `mastery_score`, `confidence`, `evidence_count`,
+> `last_practiced_at`, `updated_at`.
 
 ```sql
 -- Granular grammar knowledge units
@@ -248,8 +330,26 @@ Speaking   ████░░░░░░  A2   Writing   ███████�
 ### 2. Skill radar chart
 A spider/radar chart with 6 axes: Listening, Reading, Writing, Speaking, Vocabulary, Grammar. Each axis shows the CEFR level as a 0–100 score. Immediately shows imbalances (e.g. strong reader, weak speaker).
 
-### 3. Grammar mastery map
-A grid of grammar points organized by level (A1 → C2). Color-coded:
+### 3. Grammar mastery map (the "Map tab")
+
+> **Shipped** (`apps/web/app/(dashboard)/progress/_components/map-tab.tsx`): a vertical
+> list of the active level's grammar points, each with a progress bar. It uses the
+> three-state spine, **not** a green/yellow/red percentage grid:
+>
+> - **Bar length** = the raw `mastery_score` (`Math.round(mastery * 100)%`) — nothing else.
+> - **Bar color / tag** = state: ink + `SOLID`, or accent + `LEARNING`; not-started points
+>   render without a filled bar.
+> - **`⚠ N×` badge** = `recentErrorCount`, the number of error observations logged for that
+>   point in the **last 30 days** (`error_observations`, `ERROR_WINDOW_DAYS = 30`), shown
+>   when ≥ 2. It is **independent of state** — a solid point can still carry the warning —
+>   and it is *not* an attempt count or "exercises remaining."
+> - A per-level **readiness strip** shows `solidCount / total` and, at ≥ 80%, the
+>   opt-in "add the next level" button (see CEFR level estimation above).
+>
+> A point can show a **full bar but still read LEARNING** when mastery is maxed but
+> confidence hasn't cleared 0.6 (i.e. too few attempts). The green/yellow/red grid below
+> is the original design and is **not** what shipped:
+
 - Green (>80%): mastered
 - Yellow (40–80%): in progress / growth zone
 - Red (<40%): not started or weak

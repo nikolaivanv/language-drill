@@ -251,6 +251,12 @@ localhost. Full guide: `docs/testing.md` → "Verifying UI changes in a browser"
 
 The core differentiator. Full design: `docs/progress-tracking.md`.
 
+> **As-shipped differs from the vision below.** The bullets here describe design
+> intent; the live system is narrower (grammar-point mastery only, no competency /
+> macro-skill rollups, no CEFR probability distribution, no read-time Ebbinghaus decay).
+> See the "Implementation status" section of `docs/progress-tracking.md` for what's
+> actually built vs. roadmap, with the source-of-truth files.
+
 **Spine: CEFR (A1–C2).** All progress maps here; exam readiness (IELTS, DELE, Goethe, YDS) is derived automatically.
 
 **3-layer skill taxonomy:**
