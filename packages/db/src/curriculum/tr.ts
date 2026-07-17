@@ -166,8 +166,16 @@ const { A1, A2, B1 } = CefrLevel;
  * without polarity). Bump clears target-reached suppression so the touched
  * cells re-run under the floors; at-target cells additionally need
  * demote:pool (see docs/curriculum-authoring.md retrofit section).
+ * 2026-07-17b: Tier-2 of the coverageSpec audit, floors confirmed against
+ * measured prod-pool collapse before commit — vowel-harmony (case; the
+ * translation pool was 43/43 plural pairs), questions (person; miyim/miyiz/
+ * misiniz absent), demonstratives (case; zero -n--buffer forms),
+ * gore-bence (person; ~85% Bence), relative-an (polarity 28/2),
+ * indefinite-pronouns (polarity 51/9), reflexive-reciprocal-pronouns
+ * (person; 3rd-person dominated). Bump clears suppression; collapsed cells
+ * are demoted post-deploy per the audit's demote list.
  */
-export const CURRICULUM_VERSION_TR = '2026-07-17a';
+export const CURRICULUM_VERSION_TR = '2026-07-17b';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -175,6 +183,16 @@ const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   {
     key: 'tr-a1-vowel-harmony',
+    coverageSpec: {
+      axes: [
+        // Forces both harmony patterns via case suffixes: 4-way -(y)I/-(y)A
+        // (accusative/dative) + 2-way -DA/-DAn (locative/ablative). The
+        // 2026-07-17 audit found the translation pool 43/43 "X-lar ve Y-ler"
+        // plural pairs — exactly the plural-suffix collapse the generation
+        // prompt's cell-level rule warns against.
+        { name: 'case', floors: { accusative: 4, dative: 4, locative: 4, ablative: 4 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Vowel harmony',
     description:
@@ -572,6 +590,15 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-questions',
+    coverageSpec: {
+      axes: [
+        // In nominal/present predicates mI carries the person ending —
+        // miyim/misin/miyiz/misiniz are distinct fused surfaces. Pool audit
+        // 2026-07-17: bare 3sg "…mı?" dominant, 1sg/1pl/2pl absent. 3pl
+        // unfloored (least natural on the clitic).
+        { name: 'person', floors: { '1sg': 3, '2sg': 5, '3sg': 4, '1pl': 3, '2pl': 5 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Question formation (mı + WH-words)',
     description:
@@ -752,6 +779,14 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-demonstratives',
+    coverageSpec: {
+      axes: [
+        // Pronominal case forms take the -n- buffer (bunu, buna) — the
+        // claimed trap. Pool audit 2026-07-17: 40/40 rows nominative
+        // (bu/burası determiners), zero case-marked pronouns.
+        { name: 'case', floors: { nominative: 6, accusative: 5, dative: 5 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Demonstratives (bu / şu / o, burası / şurası / orası)',
     description:
@@ -1005,6 +1040,15 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a1-gore-bence',
+    coverageSpec: {
+      axes: [
+        // The -CE paradigm (bence/sence/bizce/sizce) and pronoun+göre forms
+        // (bana/sana/ona göre) are the whole surface variation. Pool audit
+        // 2026-07-17: ~85% "Bence …" (1sg collapse). Safe to pin because the
+        // surviving surface is translation, where the L1 prompt fixes person.
+        { name: 'person', floors: { '1sg': 4, '2sg': 3, '3sg': 3, '1pl': 3, '2pl': 3 } },
+      ],
+    },
     kind: 'grammar',
     name: '-A göre, bence ("according to / in my opinion")',
     description:
@@ -1184,6 +1228,18 @@ const trCurriculum: readonly GrammarPoint[] = [
   // tr-b1-reciprocal-voice). Most "self / each other" senses use these.
   {
     key: 'tr-a2-reflexive-reciprocal-pronouns',
+    coverageSpec: {
+      axes: [
+        // kendi + possessive is a full person paradigm (kendim, kendin,
+        // kendisi, kendimiz…), as is birbir- (birbirimizi/birbirinizi).
+        // Pool audit 2026-07-17: 3rd-person dominated (kendim/kendin rare).
+        // Translation-only surface, so the person pin is safe.
+        {
+          name: 'person',
+          floors: { '1sg': 5, '2sg': 5, '3sg': 5, '1pl': 5, '2pl': 5, '3pl': 5 },
+        },
+      ],
+    },
     // clozeUnsuitable (2026-06-21): a single blank leaves the case
     // under-constrained — birbirine / birbirini / birbiriyle all fit with no
     // acceptableAnswers (same trap as the voice / stacking points). 2026-06-21
@@ -1399,6 +1455,14 @@ const trCurriculum: readonly GrammarPoint[] = [
   // require a negative verb), §12.2.2 (herkes takes singular agreement).
   {
     key: 'tr-a2-indefinite-pronouns',
+    coverageSpec: {
+      axes: [
+        // Two claimed halves: NPIs requiring a negative verb (kimse, hiçbiri)
+        // vs the non-NPI members (biri, herkes, hepsi). Pool audit
+        // 2026-07-17: 51/9 negative-skewed — the positive half starved.
+        { name: 'polarity', floors: { affirmative: 12, negative: 12 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Indefinite & quantifier pronouns (biri / herkes / hiçbir / kimse / hepsi)',
     description:
@@ -1667,6 +1731,14 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a2-relative-an',
+    coverageSpec: {
+      axes: [
+        // The negative participle -mAyAn (with its -y- buffer trap *gelmeen)
+        // is claimed core. Pool audit 2026-07-17: translation 28/2
+        // affirmative-collapsed.
+        { name: 'polarity', floors: { affirmative: 18, negative: 12 } },
+      ],
+    },
     kind: 'grammar',
     name: 'Subject relative -(y)An / -(y)En',
     description:
