@@ -3505,6 +3505,90 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
 
   // ---------------------------------------------------------------------------
+  // Themed B2 umbrellas (2026-07-17 expansion), mirroring the ES/DE B-level
+  // split; grounded in Yedi İklim B2 unit topics (work life, values, current
+  // affairs). commonErrors favour suffix/vowel-harmony traps and
+  // Arabic/French loanword confusions.
+  // coverageSpec: intentionally none — open noun-dominant identity space
+  // (matches the existing TR vocab-umbrella decision).
+  // ---------------------------------------------------------------------------
+  {
+    key: 'tr-b2-vocab-work-professional',
+    kind: 'vocab',
+    name: 'Work & professional life vocabulary (B2)',
+    description:
+      'B2 Turkish vocabulary for professional life: career progress, workplace performance, and staff relations.',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: ['terfi (promotion)', 'verimlilik (efficiency/productivity)'],
+    examplesNegative: ['*verimli lik'],
+    commonErrors: [
+      'Mis-segmenting the -lIk suffix on a derived adjective (verimlilik, not *verimli lik).',
+      'Confusing personel (staff/personnel, French loan) with kişisel (personal, an unrelated native+Arabic derivation) — similar sound, different meaning.',
+    ],
+  },
+  {
+    key: 'tr-b2-vocab-science-technology',
+    kind: 'vocab',
+    name: 'Science & technology vocabulary (B2)',
+    description:
+      'B2 Turkish vocabulary for science and technology: research, invention, and technological development.',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: ['icat (invention)', 'gelişme (development)'],
+    examplesNegative: ['*gelişme si'],
+    commonErrors: [
+      'Detaching the buffer -s- third-person possessive suffix (gelişmesi, not *gelişme si).',
+      'Confusing icat (invention, Arabic loan — to create something new) with keşif (discovery, Arabic loan — to find something already existing).',
+    ],
+  },
+  {
+    key: 'tr-b2-vocab-society-politics',
+    kind: 'vocab',
+    name: 'Society & politics vocabulary (B2)',
+    description:
+      'B2 Turkish vocabulary for society and politics: government, citizenship, and civic debate.',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: ['hükümet (government)', 'vatandaş (citizen)'],
+    examplesNegative: ['*vatandaş lık'],
+    commonErrors: [
+      'Detaching the -lIk suffix that derives an abstract noun from an agent noun (vatandaşlık, not *vatandaş lık).',
+      'Confusing hükümet (the government, an institution — Arabic loan) with devlet (the state — Arabic loan); both are used loosely by learners.',
+    ],
+  },
+  {
+    key: 'tr-b2-vocab-culture-arts',
+    kind: 'vocab',
+    name: 'Culture & arts vocabulary (B2)',
+    description:
+      'B2 Turkish vocabulary for culture and the arts: artistic works, exhibitions, and critical commentary.',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: ['eser (work of art)', 'resim (painting/picture)'],
+    examplesNegative: ['*resim i'],
+    commonErrors: [
+      'Missing the vowel-drop when suffixing resim (resmi "its picture", not *resim i or *resimi) — the second vowel elides before a vowel-initial suffix.',
+      'Confusing resmi (its picture, from resim) with resmî (official, an unrelated Arabic loan) — a classic homograph trap in unmarked Turkish spelling.',
+    ],
+  },
+  {
+    key: 'tr-b2-vocab-global-issues',
+    kind: 'vocab',
+    name: 'Global issues vocabulary (B2)',
+    description:
+      'B2 Turkish vocabulary for global issues: climate, sustainability, and international migration.',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: ['iklim (climate)', 'sürdürülebilirlik (sustainability)'],
+    examplesNegative: ['*sürdürülebilir lik'],
+    commonErrors: [
+      'Mis-segmenting the -lIk suffix on a long derived adjective (sürdürülebilirlik, not *sürdürülebilir lik).',
+      'Confusing göç (migration, native Turkish, general sense) with hicret (migration, Arabic loan, narrow religious/historical register) — not interchangeable.',
+    ],
+  },
+
+  // ---------------------------------------------------------------------------
   // Dictation umbrellas — kind: 'dictation' (Phase 2 generation pipeline)
   // ---------------------------------------------------------------------------
   {

@@ -725,7 +725,7 @@ describe('per-language counts', () => {
     expect(paraphrase).toBe(0);
   });
 
-  it('Turkish is at full Yedi İklim A1 + A2 + B1 + B2 parity, has 15 vocab umbrellas, 3 dictation umbrellas, 9 free-writing umbrellas, and 1 paraphrase umbrella', () => {
+  it('Turkish is at full Yedi İklim A1 + A2 + B1 + B2 parity, has 20 vocab umbrellas, 3 dictation umbrellas, 9 free-writing umbrellas, and 1 paraphrase umbrella', () => {
     const { grammar, vocab, dictation, freeWriting, paraphrase } = countsFor(trCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(26);
     // A2 gained 5 G&K reverse-audit points (2026-07-10): spatial postpositions,
@@ -737,10 +737,11 @@ describe('per-language counts', () => {
     expect(grammar.B1).toBe(16);
     // B2 (2026-07-17): 15 Yedi İklim exam points + 2 G&K reverse-audit additions
     // (two of the original 19 dropped as now taught at B1 by the 2026-07-16b
-    // book-coverage cycle). Grammar-only — no B2 vocab/dictation/free-writing.
+    // book-coverage cycle). B2 dictation/free-writing remain out of scope; B2
+    // vocab umbrellas added 2026-07-17.
     expect(grammar.B2).toBe(17);
-    // 5 A1 + 5 A2 + 5 B1 themed vocab umbrellas.
-    expect(vocab).toBe(15);
+    // 5 A1 + 5 A2 + 5 B1 + 5 B2 themed umbrellas (2026-07-17 expansion).
+    expect(vocab).toBe(20);
     // tr-a1 + tr-a2 + tr-b1 dictation.
     expect(dictation).toBe(3);
     // 3 A1 + 3 A2 + 3 B1 free-writing topic umbrellas.
