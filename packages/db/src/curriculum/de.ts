@@ -2925,11 +2925,11 @@ const deCurriculum: readonly GrammarPoint[] = [
     ],
   },
   {
-    key: 'de-b2-vocab-culture-media',
+    key: 'de-b2-vocab-culture-arts',
     kind: 'vocab',
-    name: 'Culture and media (B2)',
+    name: 'Culture and the arts (B2)',
     description:
-      'B2 vocabulary for arts, cultural life, and media criticism.',
+      'B2 vocabulary for the arts, cultural life, and artistic criticism.',
     cefrLevel: B2,
     language: DE,
     examplesPositive: ['die Ausstellung', 'die Kritik'],
