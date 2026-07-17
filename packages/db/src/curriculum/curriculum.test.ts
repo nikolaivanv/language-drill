@@ -492,6 +492,20 @@ describe('curriculum personRotation flag (migrated to coverageSpec — Task 4)',
   });
 });
 
+describe('comparison coverageSpec floors', () => {
+  const cases: Array<[string, Record<string, number>]> = [
+    ['tr-a1-comparative-superlative', { comparative: 12, superlative: 6, less: 2 }],
+    ['de-a2-comparison', { comparative: 14, superlative: 10, equative: 6 }],
+    ['es-a2-comparatives-superlatives', { comparative: 14, less: 8, equative: 8 }],
+  ];
+  it.each(cases)('%s carries the expected comparison floors', (key, floors) => {
+    const gp = getGrammarPoint(key);
+    const axis = gp?.coverageSpec?.axes.find((a) => a.name === 'comparison');
+    expect(axis, `${key}: missing comparison axis`).toBeDefined();
+    expect(axis?.floors).toEqual(floors);
+  });
+});
+
 describe('curriculum clozeUnsuitable flag — specific entries', () => {
   it('flags the four bipartite TR-A2 grammar points', () => {
     const flaggedKeys = [

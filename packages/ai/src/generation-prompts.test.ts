@@ -1429,6 +1429,13 @@ describe("renderCoverageBlock (via buildGenerationUserPrompt)", () => {
     expect(out).toContain("dative");
     expect(out).toContain("plural");
   });
+  it("emits a comparison directive when the target sets it", () => {
+    const out = buildGenerationUserPrompt(covInputs(), 0, null, null, [
+      { comparison: "superlative" },
+    ]);
+    expect(out).toContain("superlative");
+    expect(out).toMatch(/comparison/i);
+  });
 });
 
 // ---------------------------------------------------------------------------

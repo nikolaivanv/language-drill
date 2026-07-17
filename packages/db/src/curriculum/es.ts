@@ -174,8 +174,10 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * `2026-07-17b`: themed vocab umbrellas at B1/B2 (8 new: 4 B1, 4 B2 — the
  * existing es-b1-environment-vocab / es-b2-abstract-noun-vocab kept as one
  * theme of their levels). Enqueues the 8 new vocab cells.
+ * `2026-07-18`: adds a comparison-axis coverageSpec to
+ * es-a2-comparatives-superlatives.
  */
-export const CURRICULUM_VERSION_ES = '2026-07-17b';
+export const CURRICULUM_VERSION_ES = '2026-07-18';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -1694,6 +1696,12 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Saying "más bueno" instead of the suppletive form "mejor".',
       'Using "tan" before a noun where "tanto/a/os/as" is required ("*tan problemas como").',
     ],
+    // coverageSpec: `comparison` axis (added 2026-07-18). Superlative lives at
+    // B1 (es-b1-superlatives-comparisons), so this A2 point floors only
+    // comparative / less / equative.
+    coverageSpec: {
+      axes: [{ name: 'comparison', floors: { comparative: 14, less: 8, equative: 8 } }],
+    },
   },
   {
     key: 'es-a2-diacritic-pairs',

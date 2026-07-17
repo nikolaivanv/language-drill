@@ -25,6 +25,7 @@ describe("coverage axis constants", () => {
   it("COVERAGE_AXIS_VALUES lists every axis", () => {
     expect(Object.keys(COVERAGE_AXIS_VALUES).sort()).toEqual([
       "case",
+      "comparison",
       "number",
       "person",
       "polarity",
@@ -43,6 +44,15 @@ describe("coverage axis constants", () => {
       "genitive",
     ]);
     expect(COVERAGE_AXIS_VALUES.number).toEqual(["singular", "plural"]);
+  });
+
+  it("exposes the comparison axis values", () => {
+    expect(COVERAGE_AXIS_VALUES.comparison).toEqual([
+      "comparative",
+      "superlative",
+      "equative",
+      "less",
+    ]);
   });
 });
 
@@ -111,6 +121,17 @@ describe("coverageAxesFor", () => {
     expect(coverageAxesFor(ExerciseType.CONJUGATION, spec)).toEqual([
       "number",
       "polarity",
+    ]);
+  });
+
+  it("grammar cloze with a comparison spec → polarity + sentenceType + comparison (comparison last)", () => {
+    const comparisonSpec: CoverageSpec = {
+      axes: [{ name: "comparison", floors: { comparative: 12, superlative: 6, less: 2 } }],
+    };
+    expect(coverageAxesFor(ExerciseType.CLOZE, comparisonSpec)).toEqual([
+      "polarity",
+      "sentenceType",
+      "comparison",
     ]);
   });
 });

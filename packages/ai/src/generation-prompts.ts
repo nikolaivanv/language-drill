@@ -595,6 +595,8 @@ const COVERAGE_DIRECTIVE_BY_AXIS: Record<
     `The target sentence MUST be ${v} (${v === "negative" ? "negated" : "a positive statement"}).`,
   wordClass: (v) => `The target word the learner must produce MUST be a ${v}.`,
   sentenceType: (v) => `The target sentence MUST be ${v} in clause type.`,
+  comparison: (v) =>
+    `The target sentence MUST express the comparison as ${v} (comparative = superiority "more/-er … than"; superlative = "the most/-est"; equative = equality "as … as"; less = inferiority "less … than"). If the grammar point cannot naturally express this construction, use the closest natural one.`,
 };
 
 /**
@@ -620,7 +622,9 @@ function renderCoverageBlock(
         `If ${inputs.grammarPoint.name} cannot naturally express this person, use the closest natural person instead.`,
     );
   }
-  for (const axis of ["number", "case", "polarity", "wordClass", "sentenceType"] as const) {
+  for (const axis of Object.keys(COVERAGE_DIRECTIVE_BY_AXIS) as Array<
+    keyof typeof COVERAGE_DIRECTIVE_BY_AXIS
+  >) {
     const v = target[axis];
     if (v) parts.push(COVERAGE_DIRECTIVE_BY_AXIS[axis](v));
   }
