@@ -151,6 +151,77 @@ describe('MapTab', () => {
     expect(screen.getByText(/grammar points solid/i)).toBeDefined();
   });
 
+  it('numbers points 1-based by position within the level, not the raw curriculum order', () => {
+    // Prod `order` is a 0-based whole-language index, so the first point's raw
+    // order is 0. The spine node must show "01" (position), never "00" (order).
+    const data: CurriculumMapResponse = {
+      language: Language.TR,
+      activeLevel: 'A1',
+      levels: [
+        {
+          level: 'A1',
+          solidCount: 0,
+          total: 3,
+          readyToAdvance: false,
+          isPreview: false,
+          points: [
+            pt('tr-a1-a', 'Alpha', 0, 'learning'),
+            pt('tr-a1-b', 'Beta', 1, 'learning'),
+            pt('tr-a1-c', 'Gamma', 2, 'not-started'),
+          ],
+        },
+      ],
+    };
+    render(
+      <MapTab
+        data={data}
+        isLoading={false}
+        error={null}
+        onRetry={noop}
+        errorThemes={[]}
+      />,
+    );
+    expect(screen.queryByText('00')).toBeNull();
+    expect(screen.getByText('01')).toBeDefined();
+    expect(screen.getByText('02')).toBeDefined();
+    expect(screen.getByText('03')).toBeDefined();
+  });
+
+  it('shows ✓ instead of a number for a solid point, and numbers resume by position after it', () => {
+    // A solid point still consumes a position slot, so the next point is "03"
+    // even though the solid one renders ✓ — matching the 01,02,✓,04 look.
+    const data: CurriculumMapResponse = {
+      language: Language.TR,
+      activeLevel: 'A1',
+      levels: [
+        {
+          level: 'A1',
+          solidCount: 1,
+          total: 3,
+          readyToAdvance: false,
+          isPreview: false,
+          points: [
+            pt('tr-a1-a', 'Alpha', 0, 'learning'),
+            pt('tr-a1-b', 'Beta', 1, 'solid'),
+            pt('tr-a1-c', 'Gamma', 2, 'learning'),
+          ],
+        },
+      ],
+    };
+    render(
+      <MapTab
+        data={data}
+        isLoading={false}
+        error={null}
+        onRetry={noop}
+        errorThemes={[]}
+      />,
+    );
+    expect(screen.getByText('01')).toBeDefined();
+    expect(screen.queryByText('02')).toBeNull(); // position 2 is the solid ✓
+    expect(screen.getByText('03')).toBeDefined();
+  });
+
   it('renders the learning point name', () => {
     render(
       <MapTab
