@@ -186,7 +186,7 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * science-technology, society-politics, culture-arts, global-issues) —
  * the B2 vocab track that the B2 grammar cycle deferred. Enqueues 5 vocab cells.
  */
-export const CURRICULUM_VERSION_TR = '2026-07-17d';
+export const CURRICULUM_VERSION_TR = '2026-07-18';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -1151,6 +1151,9 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Assuming daha is obligatory: when an ablative standard is present, daha is often dropped ("ondan ucuz" = cheaper than that).',
     ],
     prerequisiteKeys: ['tr-a1-ablative-dative'],
+    coverageSpec: {
+      axes: [{ name: 'comparison', floors: { comparative: 12, superlative: 6, less: 2 } }],
+    },
   },
   // G&K §16.4.1.1 (location in time: clock time, days, dates). Added by the
   // 2026-07-16 book-coverage triage — the whole time-telling system had no

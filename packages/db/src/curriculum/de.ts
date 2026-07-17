@@ -66,7 +66,7 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * each level keeps its prior broad umbrella as one theme). Re-enqueues the
  * three broad-umbrella cells and enqueues the 17 new vocab cells.
  */
-export const CURRICULUM_VERSION_DE = '2026-07-17b';
+export const CURRICULUM_VERSION_DE = '2026-07-18';
 
 const deCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -1035,10 +1035,6 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a2-comparison',
-    // No coverageSpec: the two claimed halves — adjective comparison vs the
-    // adverbial gern → lieber → am liebsten ladder — would want a wordClass
-    // split, but wordClass is a vocab-only axis (invariant), and degree
-    // (comparative vs superlative) has no axis at all. Both unpinnable.
     kind: 'grammar',
     name: 'Comparative and superlative',
     description:
@@ -1056,6 +1052,12 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Building the comparative analytically with mehr ("*mehr interessant" instead of "interessanter").',
       'Skipping the umlaut ("*alter" for "älter", "*am großten" for "am größten").',
     ],
+    // coverageSpec: the `comparison` axis (added 2026-07-18) pins the
+    // comparative/superlative/equative split that has no other coverage axis.
+    // `less` is omitted — this point teaches no inferiority construction.
+    coverageSpec: {
+      axes: [{ name: 'comparison', floors: { comparative: 14, superlative: 10, equative: 6 } }],
+    },
   },
   {
     key: 'de-a2-nicht-sondern',
