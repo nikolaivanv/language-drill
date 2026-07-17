@@ -297,6 +297,24 @@ const EXPECTED_KEY_CATEGORY: Record<string, TheoryCategoryId> = {
   "tr-b1-abstract-postpositions": "syntax",
   "tr-b1-reason-digi-icin": "syntax",
   "tr-b1-when-converbs": "syntax",
+  // Turkish B2
+  "tr-b2-participle-aorist": "syntax",
+  "tr-b2-participle-mis": "syntax",
+  "tr-b2-converb-until": "syntax",
+  "tr-b2-compound-past-hikaye": "tenses",
+  "tr-b2-compound-evidential-rivayet": "tenses",
+  "tr-b2-proportion-assoon": "syntax",
+  "tr-b2-duration-throughout": "syntax",
+  "tr-b2-reported-statements": "syntax",
+  "tr-b2-reported-questions": "syntax",
+  "tr-b2-reported-directives": "syntax",
+  "tr-b2-double-voice": "morphology",
+  "tr-b2-concessive": "syntax",
+  "tr-b2-instead-of": "syntax",
+  "tr-b2-conditional-formal": "moods",
+  "tr-b2-aspectual-verbs": "syntax",
+  "tr-b2-dir-generalizing": "moods",
+  "tr-b2-as-if-gibi": "syntax",
 };
 
 describe("THEORY_CATEGORIES — taxonomy invariants", () => {
