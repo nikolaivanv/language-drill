@@ -92,7 +92,7 @@ function renderBulletList(items: readonly string[]): string {
 // definition by enumerating the alternates in the NEW acceptableAnswers
 // field (rendered in the per-draft user prompt). Template edit → Langfuse
 // push per env.
-export const VALIDATION_PROMPT_VERSION = "validate@2026-07-16";
+export const VALIDATION_PROMPT_VERSION = "validate@2026-07-17";
 
 export const VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language exercises for {{language}} learners at CEFR {{cefrLevel}}. Your job is to validate one already-generated exercise that targets the grammar point: {{grammarPointName}}.
 
@@ -414,7 +414,7 @@ export function buildConjugationValidationUserPrompt(
 **Example sentences:** ${content.exampleSentences.join(" / ")}
 
 Check, and reject (low quality) if any fails:
-1. Is "${content.targetForm}" the EXACTLY correct ${spec.language} form for that lemma + feature bundle, including all diacritics? An incorrect stored form mis-grades every learner.
+1. Is "${content.targetForm}" the EXACTLY correct ${spec.language} form for that lemma + feature bundle, including all diacritics? An incorrect stored form mis-grades every learner. For nominal points in languages that mark case/number on the article/adjective rather than the noun (German declension), the target is legitimately a multi-word NP ("einen neuen Tisch", "kaltem Wasser") — do NOT reject it for not being a single word; instead verify every word of the phrase (article type, adjective ending, noun form) is correct for the stated case/number and the noun's gender.
 2. Does the feature bundle correspond to the grammar point's inflectional category (tense/mood for verbs; case/number/possessive for nominals) — it must not drift to a different category?
 3. Are all "acceptable variants" genuinely fully-correct alternatives (not near-misses or common errors)?
 4. Does the feature bundle avoid leaking the answer, and do the example sentences use the form correctly and naturally at this level?

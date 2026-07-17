@@ -74,7 +74,13 @@ export function pickSeeds(opts: PickSeedsOptions): (string | null)[] {
     let pick: string | null = null;
     for (let step = 0; step < band.length; step++) {
       const lemma = band[(start + step) % band.length];
-      if (excludeLc.has(lemma) || chosen.has(lemma)) continue;
+      // Compare case-folded on BOTH sides (the exclude set is already folded
+      // above): German nouns are capitalized in the band and in stored prior
+      // seeds, so a raw-lemma lookup would never match and prior DE seeds
+      // would be re-proposed forever (pickConjugationSeeds already folds
+      // both sides of its `${lemma}|${person}` keys). Falsy entries are
+      // unusable as seeds — skip them.
+      if (!lemma || excludeLc.has(lemma.toLowerCase()) || chosen.has(lemma)) continue;
       pick = lemma;
       chosen.add(lemma);
       break;

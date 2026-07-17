@@ -210,7 +210,7 @@ describe('curriculum conjugationSeedKind (nominal-inflection points seed from th
   // exception — it makes a "subject IS <predicate>" sentence, so it uses
   // 'predicate-nominal' instead (see the separate describe below). No point
   // currently uses the legacy 'none'.
-  it('the full conjugationSeedKind:"noun" set is exactly these five TR case/possessive points', () => {
+  it('the full conjugationSeedKind:"noun" set is exactly these five TR case/possessive points + four DE declension points', () => {
     const nounSeeded = ALL_CURRICULA.filter((g) => g.conjugationSeedKind === 'noun')
       .map((g) => g.key)
       .sort();
@@ -221,8 +221,41 @@ describe('curriculum conjugationSeedKind (nominal-inflection points seed from th
         'tr-a1-locative',
         'tr-a1-possessive-suffixes',
         'tr-a2-possessive-case-stacking',
+        // DE nominal-inflection cells (2026-07-17): NP-shaped targets — case
+        // marked on the article/adjective, gender rides the seeded noun.
+        'de-a2-adjective-declension-indefinite',
+        'de-a2-adjective-declension-definite',
+        'de-a2-adjective-declension-zero',
+        'de-b1-n-declension',
       ].sort(),
     );
+  });
+
+  it('de-b1-n-declension seeds from a curated closed weak-masculine pool', () => {
+    // Weak masculines are a small closed class — an arbitrary band noun cannot
+    // exercise the -(e)n endings, so the curated pool REPLACES the noun band
+    // (the 'noun'-kind analogue of the curated-verb override).
+    const point = ALL_CURRICULA.find((g) => g.key === 'de-b1-n-declension');
+    const pool = point?.conjugationSeedWords ?? [];
+    // Sized above the case-floor sum (3+7+7+4 = 21) so the lemma-keyed exclude
+    // has some room before it exhausts; saturation is then handled by the
+    // scheduler's dedup give-up.
+    expect(pool.length).toBeGreaterThanOrEqual(18);
+    // All entries are capitalized German nouns.
+    for (const w of pool) expect(w, w).toMatch(/^[A-ZÄÖÜ][a-zäöüß]+$/);
+  });
+
+  it('the DE adjective-declension noun-seeded points draw from the band (no curated pool)', () => {
+    // Their identity space is the open noun inventory — a curated pool would
+    // only shrink it. Only the closed-class n-declension curates.
+    for (const key of [
+      'de-a2-adjective-declension-indefinite',
+      'de-a2-adjective-declension-definite',
+      'de-a2-adjective-declension-zero',
+    ]) {
+      const point = ALL_CURRICULA.find((g) => g.key === key);
+      expect(point?.conjugationSeedWords, key).toBeUndefined();
+    }
   });
 
   it('no point uses the legacy unseeded conjugationSeedKind:"none"', () => {
@@ -270,7 +303,9 @@ describe('curriculum conjugationSeedKind (nominal-inflection points seed from th
     ).toThrow(/conjugationSeedWords/);
   });
 
-  it('throws when conjugationSeedWords is set without conjugationSeedKind predicate-nominal', () => {
+  it('throws when conjugationSeedWords is set on a kind with no curated-pool support', () => {
+    // 'noun' joined the allowed kinds on 2026-07-17 (closed-class n-declension
+    // pools); 'none' remains the only kind where a pool is dead config.
     expect(() =>
       assertCurriculumInvariants([
         {
@@ -284,7 +319,7 @@ describe('curriculum conjugationSeedKind (nominal-inflection points seed from th
           examplesNegative: ['*c'],
           commonErrors: ['e'],
           conjugationSuitable: true,
-          conjugationSeedKind: 'noun',
+          conjugationSeedKind: 'none',
           conjugationSeedWords: ['doktor'],
         },
       ]),

@@ -1371,6 +1371,52 @@ describe('buildSeedWords — predicate-nominal (curated pool, no DB)', () => {
 });
 
 // ---------------------------------------------------------------------------
+// buildSeedWords — curated NOUN pool. UNGATED (no DB): a nominal point whose
+// valid nouns form a small CLOSED class (de-b1-n-declension: weak masculines)
+// supplies `conjugationSeedWords`, which REPLACES the DB noun band — a band
+// noun is off-target by definition. Lemma-keyed like the band noun path. The
+// stub db throws if touched, asserting the no-DB-query contract.
+// ---------------------------------------------------------------------------
+
+describe('buildSeedWords — curated noun pool (no DB)', () => {
+  const throwingDb = new Proxy(
+    {},
+    {
+      get() {
+        throw new Error('buildSeedWords queried the DB on the curated-noun path');
+      },
+    },
+  ) as unknown as Db;
+
+  const nDeclensionCell = (): Cell => {
+    const clozeCell = buildTestCell();
+    return {
+      ...clozeCell,
+      exerciseType: ExerciseType.CONJUGATION,
+      grammarPoint: {
+        ...clozeCell.grammarPoint,
+        conjugationSeedKind: 'noun',
+        conjugationSeedWords: ['Student', 'Kollege', 'Junge'],
+      },
+      cellKey: 'de:b1:conjugation:de-n-declension-test',
+    };
+  };
+
+  it('the curated pool replaces the noun band without touching the DB', async () => {
+    const seeds = await buildSeedWords(throwingDb, nDeclensionCell(), 3, 'seed-nn', new Set());
+    expect(seeds).toBeDefined();
+    const chosen = seeds!.filter((s): s is string => typeof s === 'string');
+    expect(chosen.length).toBe(3);
+    for (const s of chosen) expect(['Student', 'Kollege', 'Junge']).toContain(s);
+  });
+
+  it('excludes prior noun seeds (lemma-keyed exclude)', async () => {
+    const reseeded = (await buildSeedWords(throwingDb, nDeclensionCell(), 3, 'seed-nn', new Set(['student'])))!;
+    expect(reseeded).not.toContain('Student');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // buildSeedWords — curated VERB pool. UNGATED (no DB): a verb-morphology point
 // with a closed target-verb set (e.g. es-a1-present-yo-go) supplies
 // `conjugationSeedWords`, which REPLACES the DB frequency band so the generator

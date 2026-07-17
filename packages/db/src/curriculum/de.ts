@@ -53,8 +53,17 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * gender-only variation; de-a2-comparison's adjective-vs-adverb split needs
  * the vocab-only wordClass axis — unpinnable on grammar points). No pools
  * exist yet, so no demotes needed anywhere.
+ * 2026-07-17a: DE nominal-inflection conjugation cells — flags the three
+ * adjective-declension points + n-declension conjugationSuitable with
+ * conjugationSeedKind 'noun' (TR nominal precedent). Targets are full NPs
+ * (einen neuen Tisch) since German marks case on the article/adjective;
+ * n-declension seeds from a curated closed weak-masculine pool (the noun
+ * band would be off-target by definition — 'noun' now honors
+ * conjugationSeedWords like 'verb' does). Case coverage axes drive the
+ * per-draft case; the noun seed drives lexical variety; gender rides the
+ * seeded noun. Bump enumerates the four new CONJUGATION cells.
  */
-export const CURRICULUM_VERSION_DE = '2026-07-17';
+export const CURRICULUM_VERSION_DE = '2026-07-17a';
 
 const deCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -681,6 +690,11 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a2-adjective-declension-indefinite',
+    // Nominal conjugation cell (2026-07-17): declines a band-seeded noun into
+    // a full NP (einen neuen Tisch) — case driven by the coverage axis below,
+    // lexical variety by the noun seed, gender by the seeded noun.
+    conjugationSuitable: true,
+    conjugationSeedKind: 'noun',
     coverageSpec: {
       axes: [
         // ein neuer / einen neuen / mit einem neuen — three claimed case
@@ -711,6 +725,10 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a2-adjective-declension-definite',
+    // Nominal conjugation cell (2026-07-17): den neuen Tisch / die neuen
+    // Tische — see -indefinite for the seeding/axis split.
+    conjugationSuitable: true,
+    conjugationSeedKind: 'noun',
     coverageSpec: {
       axes: [
         // -e in nominative singular vs -en everywhere else; the plural trap
@@ -741,6 +759,10 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a2-adjective-declension-zero',
+    // Nominal conjugation cell (2026-07-17): article-less NP with strong
+    // endings (kaltem Wasser, frisches Brot) — see -indefinite.
+    conjugationSuitable: true,
+    conjugationSeedKind: 'noun',
     coverageSpec: {
       axes: [
         // Strong endings across cases (frischer/frisches, mit kaltem
@@ -1640,6 +1662,17 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-b1-n-declension',
+    // Nominal conjugation cell (2026-07-17): declines the weak masculine
+    // itself (der Student → den Studenten). Weak masculines are a small
+    // CLOSED class, so the curated pool below REPLACES the noun band —
+    // an arbitrary band noun is off-target by definition.
+    conjugationSuitable: true,
+    conjugationSeedKind: 'noun',
+    conjugationSeedWords: [
+      'Student', 'Kollege', 'Herr', 'Junge', 'Name', 'Mensch', 'Kunde',
+      'Nachbar', 'Präsident', 'Polizist', 'Journalist', 'Tourist', 'Experte',
+      'Löwe', 'Affe', 'Bär', 'Held', 'Fotograf', 'Architekt', 'Patient',
+    ],
     coverageSpec: {
       axes: [
         // The whole point is a case paradigm: -(e)n in every case except

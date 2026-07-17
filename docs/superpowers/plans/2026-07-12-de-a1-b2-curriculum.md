@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Author the full DE A1–B2 grammar curriculum (98 grammar points + 3 restored vocab umbrellas) in `packages/db/src/curriculum/de.ts`, re-enabling the language that was disabled on 2026-05-10.
+**Goal:** Author the full DE A1–B2 grammar curriculum (104 grammar points — 98 original + 6 from the accepted 2026-07-15 gap triage, `docs/analysis/de-gap-triage-2026-07-15.md` + 3 restored vocab umbrellas) in `packages/db/src/curriculum/de.ts`, re-enabling the language that was disabled on 2026-05-10.
 
 **Architecture:** Data-only change plus its ripple: `de.ts` entries, `PER_LANGUAGE_GRAMMAR_MIN`, curriculum count tests, `SEED_KEY_TO_GRAMMAR_POINT`, and the theory-category map (source + test mirror). Point design comes from `docs/analysis/de-menschen-toc-inventory.md` (Goethe proxy) + `docs/analysis/de-curriculum-hammer-coverage-audit-2026-07-12.md` (HIGH + MEDIUM gaps), with the approved level split: introductory point at the Menschen level, full-system point higher (ES PR #529 precedent).
 
@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- Every entry satisfies `assertCurriculumInvariants`: key `^de-(a1|a2|b1|b2)-[a-z0-9-]+$`, level matches key infix, `description.length <= 300`, `examplesPositive >= 2`, `examplesNegative >= 1` each starting `*`, `commonErrors >= 1`, prerequisites resolve in-language.
+- Every entry satisfies `assertCurriculumInvariants`: key `^de-(a1|a2|b1|b2)-[a-z0-9-]+$`, level matches key infix, `description.length <= 450` (cap raised in PR #584), `examplesPositive >= 2`, `examplesNegative >= 1` each starting `*`, `commonErrors >= 1`, prerequisites resolve in-language.
 - `CURRICULUM_VERSION_DE` → `'2026-07-12'` in the same commit as the entries (CLAUDE.md rule), with a doc-comment paragraph explaining the bump (ES file style).
 - Descriptions in English; German examples with correct orthography (ß/umlauts, noun capitalization).
 - `sentenceConstructionSuitable` only on single-construction points ([[sentence-construction-multi-construction-unsuitable]]).
@@ -25,28 +25,30 @@
 
 Sources: `M-A1/A2/B1 L<n>` = Menschen lesson; `S L<n>` = Sicher! lesson; `H §x` = Hammer section; `AUDIT-H/M` = Hammer audit HIGH/MEDIUM item. Flags: `conj` = conjugationSuitable (+person floors), `SC` = sentenceConstructionSuitable, `noCloze` = clozeUnsuitable, `tgt=N` = targetOverride, `seeds[...]` = conjugationSeedWords. KEEP = existing draft key retained (rescope noted).
 
-### A1 — 18 grammar points
+### A1 — 19 grammar points
 
 1. `de-a1-present-regular` — Present tense: regular conjugation. Endings -e/-st/-t/-en/-t/-en; -e- epenthesis on t/d stems (arbeitest, findet); -s/-z stems (heißt); -eln (sammle). [M-A1 L1–2; H §10.1.2] conj, person floors {1sg:5, 2sg:5, 3sg:5, 1pl:5, 3pl:5}, SC.
 2. `de-a1-present-irregular` — Present tense: sein/haben/werden/wissen + stem-changing verbs (e→i sprechen/geben/nehmen/essen, e→ie lesen/sehen, a→ä fahren/schlafen/laufen/tragen). Change only in 2sg/3sg. [M-A1 L3; H §10.1.3] conj, seeds[sein, haben, werden, wissen, sprechen, essen, geben, nehmen, helfen, treffen, lesen, sehen, fahren, schlafen, laufen, tragen, waschen], person floors {2sg:8, 3sg:8} (diagnostic persons), prereq: present-regular.
-3. `de-a1-noun-gender` — KEEP as drafted (suffix rules -ung/-heit/-keit → die, -chen/-lein → das, -er agents → der).
+3. `de-a1-noun-gender` — KEEP as drafted (suffix rules -ung/-heit/-keit → die, -chen/-lein → das, -er agents → der). **[+triage 2026-07-15:** add feminine -in derivation (Lehrer/Lehrerin). [H §1.1.7]**]**
 4. `de-a1-plural-formation` — Plural types: -e(+uml), -er(+uml), -(e)n, -s, zero(+uml); -n plural for -e nouns. [M-A1 L6; H §1.2].
-5. `de-a1-articles-nominative` — KEEP; rescope description to include negative article kein/keine. [M-A1 L4–5; H §4.1].
+5. `de-a1-articles-nominative` — KEEP; rescope description to include negative article kein/keine. [M-A1 L4–5; H §4.1]. **[+triage 2026-07-15:** add predicate nominative after sein/werden/bleiben (Er ist ein guter Lehrer, never *einen). [H §2.1.3, §16.6.1]**]**
 6. `de-a1-accusative` — Accusative for direct objects: only masculine changes (den/einen/keinen/meinen). [M-A1 L6; H §2.2] prereq: articles-nominative.
 7. `de-a1-dative` — Dative article forms dem/der/dem/den+-n; after location prepositions (wo? in der Stadt) and dative verbs (helfen, danken, gefallen, gehören, schmecken). [M-A1 L13/15; H §2.5, §16.4.2] prereq: accusative.
-8. `de-a1-personal-pronouns` — Personal pronoun paradigm nom/acc/dat (ich–mich–mir …); er/es/sie for inanimates by gender; du/ihr/Sie address. [M-A1 L4/15/20; H §3.1, §3.3].
+8. `de-a1-personal-pronouns` — Personal pronoun paradigm nom/acc/dat (ich–mich–mir …); er/es/sie for inanimates by gender; du/ihr/Sie address. [M-A1 L4/15/20; H §3.1, §3.3]. **[+triage 2026-07-15:** commonError: grammatical vs natural gender agreement (das Mädchen … es/sie). [H §1.1.12]**]**
 9. `de-a1-possessive-articles` — mein/dein/sein/ihr/unser/euer/Ihr; ein-word endings in nom + acc; sein vs ihr by possessor gender. [M-A1 L3/14, M-A2 L1; H §5.2].
 10. `de-a1-questions` — W-questions (wer/was/wo/wohin/woher/wann/wie/warum) with V2; yes/no questions with V1; ja/nein/doch answers. [M-A1 L1/3; H §5.3, §19.1] SC.
 11. `de-a1-v2-word-order` — KEEP as drafted (V2, fronting, verb bracket). [M-A1 L7–8; H §19.1–19.2].
-12. `de-a1-negation` — nicht vs kein: kein negates indefinite/bare nouns; nicht placement (clause-final for verbs, before predicate adjectives/complements, before the focused constituent). [AUDIT-H; M-A1 L2/5; H §19.6, §5.5.16].
-13. `de-a1-zero-article` — No article for professions/nationalities after sein/werden (Ich bin Lehrerin), plural indefinites ("some/any"), materials/languages. [AUDIT-H; H §4.8].
-14. `de-a1-modal-verbs-present` — können/wollen/müssen/dürfen/sollen/mögen + möchte-forms: sg irregularities (kann/kannst), verb bracket with final infinitive. [M-A1 L7/9/17/18/21; H §15.1] conj, seeds[können, wollen, müssen, dürfen, sollen, mögen], person floors {1sg:5, 2sg:5, 3sg:5}, SC.
-15. `de-a1-imperative` — Sie-imperative (Gehen Sie!), du-imperative (Geh!/Nimm!/Fahr!), ihr-imperative (Geht!); sein (Sei/Seid/Seien Sie). [M-A1 L18/20; H §14.1.1].
-16. `de-a1-temporal-prepositions` — Time: am + day/part-of-day, um + clock, im + month/season, von … bis, ab, vor/nach/in + dative, für + accusative. [M-A1 L8/11/12/16; H §4.5, §18].
+12. `de-a1-negation` — nicht vs kein: kein negates indefinite/bare nouns; nicht placement (clause-final for verbs, before predicate adjectives/complements, before the focused constituent). [AUDIT-H; M-A1 L2/5; H §19.6, §5.5.16]. **[+triage 2026-07-15:** add intensified negation gar nicht / gar kein / überhaupt nicht. [H §9.1.15]**]**
+13. `de-a1-zero-article` — No article for professions/nationalities after sein/werden (Ich bin Lehrerin), plural indefinites ("some/any"), materials/languages. [AUDIT-H; H §4.8]. **[+triage 2026-07-15:** add als-phrases (als Kind, als Lehrerin arbeiten). [H §4.8.4]**]**
+14. `de-a1-modal-verbs-present` — können/wollen/müssen/dürfen/sollen/mögen + möchte-forms: sg irregularities (kann/kannst), verb bracket with final infinitive. [M-A1 L7/9/17/18/21; H §15.1] conj, seeds[können, wollen, müssen, dürfen, sollen, mögen], person floors {1sg:5, 2sg:5, 3sg:5}, SC. **[+triage 2026-07-15:** commonError: no können with sensation verbs (Ich sehe es); add Sollen wir …? suggestions. [H §15.3.5, §15.6.2]**]**
+15. `de-a1-imperative` — Sie-imperative (Gehen Sie!), du-imperative (Geh!/Nimm!/Fahr!), ihr-imperative (Geht!); sein (Sei/Seid/Seien Sie). [M-A1 L18/20; H §14.1.1]. **[+triage 2026-07-15:** add sign infinitive commands (Nicht rauchen!) and wir-imperative (Gehen wir!). [H §11.3.3, §14.1.2]**]**
+16. `de-a1-temporal-prepositions` — Time: am + day/part-of-day, um + clock, im + month/season, von … bis, ab, vor/nach/in + dative, für + accusative. [M-A1 L8/11/12/16; H §4.5, §18]. **[+triage 2026-07-15:** add prepositionless accusative time phrases (jeden Tag, den ganzen Abend, nächste Woche). [H §2.2.2]**]**
 17. `de-a1-es-gibt` — es gibt + accusative for existence; contrast with sein. [AUDIT-M; H §16.2.5] tgt=12.
 18. `de-a1-praeteritum-sein-haben` — war/hatte (+ es gab): the only A1 simple-past forms. [M-A1 L19; H §10.2.2] conj, seeds[sein, haben], person floors {1sg:3, 3sg:3}, tgt=15.
 
-### A2 — 29 grammar points
+19. `de-a1-numbers-ordinals` — Cardinal numbers (compound forms, Million/Milliarde, year-reading), eins/ein/einer distribution, ordinals -te/-ste (irregular erste/dritte/siebte) + written `8.` notation, dates (am 8. Mai / Montag, den 5. Juni), -mal adverbs (einmal, zweimal), decimal comma + basic fractions, arithmetic (plus/mal/durch … ist/macht). [TRIAGE; H §8.1.1–8.1.2, §8.2, §8.3.1, §8.4.3–8.4.4, §8.5.3] — mirrors es/tr-a1-numbers-ordinals.
+
+### A2 — 31 grammar points
 
 1. `de-a2-perfekt-with-haben` — KEEP (SC already set).
 2. `de-a2-perfekt-with-sein` — KEEP.
@@ -55,32 +57,35 @@ Sources: `M-A1/A2/B1 L<n>` = Menschen lesson; `S L<n>` = Sicher! lesson; `H §x`
 5. `de-a2-dativ-prepositions` — KEEP.
 6. `de-a2-separable-prefix-verbs` — KEEP.
 7. `de-a2-two-way-prepositions-core` — an/auf/hinter/in/neben/über/unter/vor/zwischen: accusative for direction (wohin?), dative for location (wo?). [M-A2 L2; H §18.3] (Placement-verb pairs stay in the B1 point.)
-8. `de-a2-adjective-declension-indefinite` — After ein/kein/possessives (mixed declension). [M-A2 L4; H §6.1].
+8. `de-a2-adjective-declension-indefinite` — After ein/kein/possessives (mixed declension). [M-A2 L4; H §6.1]. **[+triage 2026-07-15:** commonErrors: stem drops (dunkel→dunkle, teuer→teure), hoch→hoh-, endingless color loans (rosa, lila). [H §6.1.5]**]**
 9. `de-a2-adjective-declension-definite` — After der/das/die (weak declension: -e/-en). [M-A2 L5; H §6.1.2].
 10. `de-a2-adjective-declension-zero` — No article (strong declension: adjective carries the article ending; frischer Fisch, mit kaltem Wasser). [M-A2 L9; H §6.1.2–6.1.3].
-11. `de-a2-weil-deshalb` — Cause with weil (verb-final) vs consequence with deshalb (inversion); denn (position 0). [M-A2 L8; H §17.4, §19.1] SC.
+11. `de-a2-weil-deshalb` — Cause with weil (verb-final) vs consequence with deshalb (inversion); denn (position 0). [M-A2 L8; H §17.4, §19.1] SC. **[+triage 2026-07-15:** commonError: denn (causal, pos. 0) vs dann (temporal). [H §7.3.3]**]**
 12. `de-a2-dass-clauses` — dass-complement clauses, verb-final; comma. [M-A2 L10; H §17.2.1] SC.
 13. `de-a2-wenn-als` — als = single past event; wenn = repeated/present/future events and conditions. [M-A2 L12/13; H §17.3.1] pairs-type contrast.
 14. `de-a2-indirect-questions` — ob for yes/no, W-word for information questions; verb-final. [M-A2 L16; H §14.4.4].
 15. `de-a2-relative-clauses-nom-acc` — der/das/die relatives in nominative + accusative; verb-final; commas. [M-A2 L23; H §5.4.1] prereq: articles.
-16. `de-a2-reflexive-verbs` — sich-verbs with accusative reflexive (sich freuen, sich duschen); mich/dich/sich forms. [M-A2 L11; H §3.2, §16.3.5].
+16. `de-a2-reflexive-verbs` — sich-verbs with accusative reflexive (sich freuen, sich duschen); mich/dich/sich forms. [M-A2 L11; H §3.2, §16.3.5]. **[+triage 2026-07-15:** add reciprocal use: plural sich = each other, einander (+ miteinander), gegenseitig disambiguator. [H §3.2.3]**]**
 17. `de-a2-praeteritum-modals` — konnte/musste/durfte/wollte/sollte/mochte: umlaut drop + -te; final infinitive. Replaces the dropped B1 draft. [M-A2 L20; H §10.6] conj, seeds[können, müssen, dürfen, wollen, sollen, mögen], person floors {1sg:4, 3sg:4}, SC.
 18. `de-a2-konjunktiv-ii-polite` — würde + infinitive, könnte/sollte/hätte gern for wishes, suggestions, polite requests (no conditionals yet). [M-A1 L24 + M-A2 L7; H §14.5.3] prereq: modal-verbs-present.
 19. `de-a2-passive-present` — Present werden-passive (Das Päckchen wird gepackt); focus on process, agent optional. [M-A2 L14; H §13.1] SC.
 20. `de-a2-verb-preposition-complements` — Verbs with fixed prepositions (warten auf + A, sich interessieren für, träumen von); question/pronoun adverbs worauf/darauf for things vs preposition + pronoun for people. [M-A2 L18; H §16.5, §3.5].
-21. `de-a2-comparison` — Comparative -er / superlative am -sten with umlaut (älter, größer); irregular gut/gern/viel; als vs (genauso) wie. [M-A1 L22; H §6.5] (A2 per PCIC-analog placement, matching ES re-level.)
+21. `de-a2-comparison` — Comparative -er / superlative am -sten with umlaut (älter, größer); irregular gut/gern/viel; als vs (genauso) wie. [M-A1 L22; H §6.5] (A2 per PCIC-analog placement, matching ES re-level.) **[+triage 2026-07-15:** add the preference ladder gern → lieber → am liebsten as explicit construction. [H §7.4.4]**]**
 22. `de-a2-nicht-sondern` — sondern after negation (corrective "but"), aber elsewhere; nicht nur … sondern auch preview. [AUDIT-M; H §17.1.1] pairs-type contrast.
 23. `de-a2-indefinite-pronouns-basic` — man (+ one-verb 3sg), jemand/niemand, etwas/nichts, alles/alle. [AUDIT-M; H §5.5.18/.15/.9/.22].
 24. `de-a2-lassen` — lassen + infinitive: have something done (Ich lasse mein Fahrrad reparieren), permit (Sie lässt ihn fahren); Lass uns … suggestions. [M-A2 L21; H §13.4.6, §11.3.1].
 25. `de-a2-destination-prepositions` — "to": nach + city/country, zu + person/institution, in + enterable place (acc), an + edge/water (acc), auf + island/event. [AUDIT-H; M-A2 L17/19; H §18.5] prereq: two-way-prepositions-core.
 26. `de-a2-seit-present` — seit/schon + present for started-in-past-still-true states (Ich wohne seit drei Jahren hier — never Perfekt). [AUDIT-H; H §12.1.2, §18.2.7] tgt=12.
 27. `de-a2-wissen-kennen` — wissen + clause (facts) vs kennen + NP (acquaintance) vs können (skills). [AUDIT-M; H §15.3.3] pairs-type contrast.
-28. `de-a2-demonstratives-welch` — dies- (declined like der), demonstrative der/das/die, question article welch-, was für ein. [M-A2 L21; AUDIT-M; H §5.1, §5.3].
-29. `de-a2-dative-accusative-objects` — Two-object verbs (geben, schenken, zeigen): noun objects dat-before-acc; pronoun objects acc-before-dat; pronouns before nouns. [M-A2 L15; H §19.4] noCloze (order rule — a blank cannot test ordering).
+28. `de-a2-demonstratives-welch` — dies- (declined like der), demonstrative der/das/die, question article welch-, was für ein. [M-A2 L21; AUDIT-M; H §5.1, §5.3]. **[+triage 2026-07-15:** add so ein / solch-, derselbe (declension), jener register note. [H §5.1.3, §5.1.5–5.1.6]**]**
+29. `de-a2-dative-accusative-objects` — Two-object verbs (geben, schenken, zeigen): noun objects dat-before-acc; pronoun objects acc-before-dat; pronouns before nouns. [M-A2 L15; H §19.4] noCloze (order rule — a blank cannot test ordering). **[+triage 2026-07-15:** note double-accusative kosten/fragen/lehren (Das kostet mich viel Zeit). [H §16.3.3]**]**
 
-### B1 — 25 grammar points
+30. `de-a2-measure-expressions` — Singular measure nouns after numerals (zwei Pfund, drei Glas Bier), apposition case in measure phrases (eine Tasse heißer Kaffee), halb vs die Hälfte + anderthalb, distributive je (je zwei) and distributive article (zweimal die Woche, 3 Euro das Kilo), EN-plural → DE-singular divergences. [TRIAGE; H §1.2.7–1.2.8, §2.7.1, §8.3.2, §8.4.1, §4.7]
+31. `de-a2-quantifiers-other` — jeder (full declension), alle, viel/viele vs wenig/wenige (declined vs undeclined), ein paar / ein bisschen / ein wenig (undeclined; ein paar vs ein Paar), ander- (declension; der andere / etwas anderes). [TRIAGE; H §5.5.12, §5.5.25, §5.5.5–5.5.6, §5.5.2] — mirrors es-a2-todo-otro-quantifiers.
 
-1. `de-b1-praeteritum` — Full Präteritum: weak -te-, strong ablaut, mixed verbs (brachte, wusste); written-narrative register vs spoken Perfekt. [M-A2 L24 + M-B1 L2; H §10.2, §12.2.2] conj, person floors {1sg:5, 3sg:5, 3pl:5}, prereq: praeteritum-modals.
+### B1 — 27 grammar points
+
+1. `de-b1-praeteritum` — Full Präteritum: weak -te-, strong ablaut, mixed verbs (brachte, wusste); written-narrative register vs spoken Perfekt. [M-A2 L24 + M-B1 L2; H §10.2, §12.2.2] conj, person floors {1sg:5, 3sg:5, 3pl:5}, prereq: praeteritum-modals. **[+triage 2026-07-15:** note seit + Präteritum for continuing-at-that-time states. [H §12.2.4]**]**
 2. `de-b1-relative-pronouns` — KEEP; rescope to dative/genitive (dessen/deren) and preposition + relative (mit dem, auf die); nom/acc now lives at A2. prereq: de-a2-relative-clauses-nom-acc.
 3. `de-b1-dass-clause-perfekt` — KEEP (verb clusters in subordinate clauses: participle + auxiliary order).
 4. `de-b1-two-way-prepositions` — KEEP; rescope to placement-verb pairs stellen/stehen, legen/liegen, setzen/sitzen, hängen (tr./intr.), stecken + case choice. prereq: de-a2-two-way-prepositions-core.
@@ -88,25 +93,28 @@ Sources: `M-A1/A2/B1 L<n>` = Menschen lesson; `S L<n>` = Sicher! lesson; `H §x`
 6. `de-b1-subordinate-conjunctions` — KEEP; rescope list to obwohl/trotzdem contrast, da, während, bevor, falls, sobald, solange, seitdem, bis. [M-B1 L4/6/8; AUDIT-M sobald/solange; H §17.3–17.6] SC stays.
 7. `de-b1-plusquamperfekt-nachdem` — hatte/war + participle; nachdem with tense-sequence rule (Plusquamperfekt → Präteritum/Perfekt). [M-B1 L11; H §12.4, §17.3.4] SC.
 8. `de-b1-futur-i` — werden + infinitive for predictions/promises/resolutions; present + adverb for scheduled future; wohl + Futur = assumption. [M-B1 L5; H §12.3].
-9. `de-b1-konjunktiv-ii-past` — hätte/wäre + participle: counterfactual past conditionals, regrets, missed opportunities. [M-B1 L10; H §14.3.1] SC, prereq: de-a2-konjunktiv-ii-polite.
-10. `de-b1-zu-infinitive` — zu-infinitive after verbs (versuchen, vergessen), nouns (Lust, Zeit), adjectives (wichtig); comma rules; nicht/nur brauchen + zu; bare infinitive with modals/gehen/sehen/hören/lassen contrast. [M-B1 L7/16; H §11.2–11.3].
+9. `de-b1-konjunktiv-ii-past` — hätte/wäre + participle: counterfactual past conditionals, regrets, missed opportunities. [M-B1 L10; H §14.3.1] SC, prereq: de-a2-konjunktiv-ii-polite. **[+triage 2026-07-15:** add beinahe/fast + pluperfect KII (Ich wäre beinahe gefallen). [H §14.5.5]**]**
+10. `de-b1-zu-infinitive` — zu-infinitive after verbs (versuchen, vergessen), nouns (Lust, Zeit), adjectives (wichtig); comma rules; nicht/nur brauchen + zu; bare infinitive with modals/gehen/sehen/hören/lassen contrast. [M-B1 L7/16; H §11.2–11.3]. **[+triage 2026-07-15:** clarify extraposition default (infinitive clause after the main clause). [H §11.2.1]**]**
 11. `de-b1-um-zu-damit` — Purpose: um … zu (same subject) vs damit (different subject). [M-B1 L24; H §14.5.2, §17.5.1] SC.
 12. `de-b1-statt-ohne-zu` — (an)statt … zu / ohne … zu + infinitive; (an)statt dass / ohne dass for different subjects. [M-B1 L23; H §11.2.6].
-13. `de-b1-two-part-conjunctions` — nicht nur … sondern auch, sowohl … als auch, weder … noch, entweder … oder, zwar … aber, je … desto/umso (+ comparative, word order). [M-B1 L15/18/19; H §17.1] noCloze (bipartite: the other half leaks the blank).
-14. `de-b1-genitive` — Genitive case: -(e)s masculine/neuter, adjective declension, proper-name -s, common genitive prepositions trotz/wegen/innerhalb/außerhalb; von-paraphrase register note. [M-B1 L12/13/21; H §1.3.5, §2.3–2.4] prereq: de-a2-adjective-declension-definite.
-15. `de-b1-n-declension` — Weak masculines (der Junge/Kollege/Student/Herr/Mensch/Name): -(e)n in every case except nom sg. [M-B1 L1; H §1.3.2].
+13. `de-b1-two-part-conjunctions` — nicht nur … sondern auch, sowohl … als auch, weder … noch, entweder … oder, zwar … aber, je … desto/umso (+ comparative, word order). [M-B1 L15/18/19; H §17.1] noCloze (bipartite: the other half leaks the blank). **[+triage 2026-07-15:** add und zwar ('namely') note. [H §9.1.35]**]**
+14. `de-b1-genitive` — Genitive case: -(e)s masculine/neuter, adjective declension, proper-name -s, common genitive prepositions trotz/wegen/innerhalb/außerhalb; von-paraphrase register note. [M-B1 L12/13/21; H §1.3.5, §2.3–2.4] prereq: de-a2-adjective-declension-definite. **[+triage 2026-07-15:** add proper-name apostrophe (Fritz' Schwester), title declension note, temporal fixed genitives (eines Tages). [H §1.3.6, §2.3.2–2.3.3]**]**
+15. `de-b1-n-declension` — Weak masculines (der Junge/Kollege/Student/Herr/Mensch/Name): -(e)n in every case except nom sg. [M-B1 L1; H §1.3.2]. **[+triage 2026-07-15:** make the -ns genitive subtype explicit (des Namens; Gedanke, Wille) + das Herz. [H §1.3.3]**]**
 16. `de-b1-adjectives-as-nouns` — der/die Bekannte, ein Deutscher, das Wichtigste, etwas Neues/nichts Besonderes: noun capitalization + adjective declension retained. [M-B1 L1; H §6.2].
 17. `de-b1-participles-as-adjectives` — Partizip I (faszinierende Einblicke) and Partizip II (versteckte Talente) as attributive adjectives with normal declension. [M-B1 L14; H §11.5.1] prereq: past-participle-formation.
 18. `de-b1-comparison-attributive` — Declined comparative/superlative attributes (ein besseres Angebot, der schönste Tag) + declension after alle/viele/einige/manche/wenige. [M-B1 L9; AUDIT-M §6.1.4; H §6.5, §6.1.4] prereq: de-a2-comparison.
 19. `de-b1-reason-consequence-connectors` — darum/deswegen/daher/aus diesem Grund (consequence, inversion) vs nämlich (reason, position 3, never first); vs weil/da. [M-B1 L13; H §7.4.3, §17.4] prereq: de-a2-weil-deshalb.
 20. `de-b1-es-expressions` — Impersonal/placeholder es: weather (es regnet), es geht mir, es tut mir leid, es gibt review, correlate es (Es freut mich, dass …) and when es drops. [M-B1 L17; H §3.6, §16.2.4].
 21. `de-b1-modal-particles-basic` — denn (questions), doch (contradiction/encouragement), eigentlich (by-the-way), ja (shared knowledge), mal (softener). [M-B1 L19; H §9.1] noCloze (several particles fit most blanks), tgt=15.
-22. `de-b1-dative-reflexive-body` — Definite article + dative (reflexive) for body parts/clothing: Ich wasche mir die Hände; Er zieht sich die Jacke an. [AUDIT-M; H §4.6, §16.4.3] tgt=15.
+22. `de-b1-dative-reflexive-body` — Definite article + dative (reflexive) for body parts/clothing: Ich wasche mir die Hände; Er zieht sich die Jacke an. [AUDIT-M; H §4.6, §16.4.3] tgt=15. **[+triage 2026-07-15:** widen to dative-of-involvement: benefactive/possessor datives beyond body parts (Er trägt ihr den Koffer). [H §2.5.2]**]**
 23. `de-b1-hin-her` — Direction from speaker (hin) vs toward speaker (her); compounds hinein/heraus/hinauf/herunter (+ colloquial rein/raus); wohin/woher split (Wo kommst du her?). [AUDIT-M; H §7.2].
 24. `de-b1-schon-noch-erst` — schon (already), noch (still), erst (only/not until), noch nicht / nicht mehr pairs; erst vs nur. [AUDIT-M; H §7.3.1, §9.1.12] pairs-type contrast.
 25. `de-b1-progressive-equivalents` — English progressive → gerade, (gerade) dabei sein, zu + Inf, beim + nominalized infinitive. [AUDIT-M; H §12.5] tgt=15.
 
-### B2 — 26 grammar points
+26. `de-b1-articles-use` — Article use beyond the A1 paradigms: definite article in generalizations (Der Mensch …), with abstract nouns/substances/meals/diseases/languages/institutions (general vs partial sense), geographical names (die Schweiz vs neuter zero; mountains/rivers/streets always), adjective-qualified names (das heutige Deutschland), article instead of possessive (Er hob die Hand). [TRIAGE; H §4.2.1–4.2.2, §4.3, §4.4.1, §4.4.3, §4.6.2, §4.7] — mirrors es-a2-articles-use. prereq: de-a1-zero-article.
+27. `de-b1-adjective-case-government` — Adjectives with dative complements (ähnlich, behilflich, dankbar, wichtig + person), impersonal sensation datives (Mir ist kalt/langweilig — never *Ich bin kalt), the small accusative set (gewohnt, leid, los, satt, wert), dative with zu + adjective (Das ist mir zu teuer). [TRIAGE; H §6.3.1–6.3.2, §2.5.4]
+
+### B2 — 27 grammar points
 
 1. `de-b2-konjunktiv-ii` — KEEP; rescope to the full meaning system: unreal conditions (present), wishes (Wenn ich doch …!), unreal comparisons (als ob + KII), verb-first conditionals (Hätte ich Zeit, …); würde vs synthetic forms (käme, wüsste). [S L3/L6; H §14.2–14.3, §14.5.1] prereq updated → de-b1-konjunktiv-ii-past.
 2. `de-b2-konjunktiv-i` — KEEP (indirect speech; KII fallback; indirect questions/commands with solle/möge). [S L7; H §14.4].
@@ -114,26 +122,28 @@ Sources: `M-A1/A2/B1 L<n>` = Menschen lesson; `S L<n>` = Sicher! lesson; `H §x`
 4. `de-b2-extended-attributes` — KEEP. [S L12; H §6.1.6] prereq: de-b1-participles-as-adjectives.
 5. `de-b2-nominalization` — KEEP; rescope to verbal↔nominal style transformations (nominalized infinitives/adjectives, beim Lesen, zur Verbesserung) as Sicher's Nominalisierung units. [S L5/L8; H §11.4, §20.2].
 6. `de-b2-zustandspassiv` — sein-passive (Das Fenster ist geöffnet) vs werden-passive (wird geöffnet): result state vs process. [S L2; H §13.2] pairs-type contrast, prereq: de-b1-passive-werden.
-7. `de-b2-passive-alternatives` — man, sich lassen (lässt sich lösen), -bar adjectives, sein + zu + Inf, bekommen-passive; subjectless passive (Es wird getanzt / Ihm wird geholfen — dative stays). [S L10; AUDIT-M bekommen; H §13.4, §13.1.4].
+7. `de-b2-passive-alternatives` — man, sich lassen (lässt sich lösen), -bar adjectives, sein + zu + Inf, bekommen-passive; subjectless passive (Es wird getanzt / Ihm wird geholfen — dative stays). [S L10; AUDIT-M bekommen; H §13.4, §13.1.4]. **[+triage 2026-07-15:** add the Funktionsverbgefüge passive pattern (Anwendung finden, zur Aufführung kommen). [H §13.4.4]**]**
 8. `de-b2-subjective-modals` — Epistemic modals: muss (certain), dürfte (probable), könnte/kann (possible), soll (hearsay), will (claim); + Infinitiv II for past reference (Er muss krank gewesen sein). [AUDIT-H; S L8; H §15.2.2, §15.5.2, §15.6.3, §15.7.2].
 9. `de-b2-modal-perfect-word-order` — Perfekt of modals (hat kommen müssen), KII past with modals (hätte machen können), verb-cluster order in subclauses (…, dass er es hätte machen können). [AUDIT-H; H §15.1.1, §11.3.2, §19.1.3] noCloze (order rule), prereq: de-b1-konjunktiv-ii-past.
 10. `de-b2-futur-ii` — werden + Infinitiv II: completed-by-then future and past conjecture (Er wird es vergessen haben). [S L5; H §12.3] prereq: de-b1-futur-i, tgt=15.
 11. `de-b2-causal-connectors` — Causal three ways: weil/da (subclause), denn/nämlich/deshalb-family (main clause), wegen/aufgrund + gen (nominal). [S L2; H §17.4] prereq: de-b1-reason-consequence-connectors.
-12. `de-b2-temporal-connectors` — Temporal relations verbal↔nominal: während/bevor/nachdem/seit/bis ↔ während/vor/nach/seit/bis zu + noun; bei + nominalization. [S L4; H §17.3, §18].
+12. `de-b2-temporal-connectors` — Temporal relations verbal↔nominal: während/bevor/nachdem/seit/bis ↔ während/vor/nach/seit/bis zu + noun; bei + nominalization. [S L4; H §17.3, §18]. **[+triage 2026-07-15:** add the adverb tier vorher/zuvor, danach/nachher/darauf. [H §7.3.4]**]**
 13. `de-b2-conditional-connectors` — Conditions: wenn/falls, verb-first clauses, bei + noun, im Falle (+gen), es sei denn, sonst/andernfalls. [S L3/L8; H §14.3.2–14.3.3].
 14. `de-b2-concessive-connectors` — Concession: obwohl/obgleich, trotzdem/dennoch, trotz + gen, zwar … aber, selbst wenn, so + adj + auch. [S L8; H §17.6].
-15. `de-b2-consecutive-connectors` — Result: sodass / so … dass, folglich/infolgedessen, zu … als dass (+ KII). [S L9; H §17.5.2–17.5.3].
+15. `de-b2-consecutive-connectors` — Result: sodass / so … dass, folglich/infolgedessen, zu … als dass (+ KII). [S L9; H §17.5.2–17.5.3]. **[+triage 2026-07-15:** spelling note sodass vs so dass. [H §21.3.5]**]**
 16. `de-b2-modal-connectors` — Means/manner: indem, dadurch dass, durch + noun/nominalization; ohne dass/ohne zu as negative-manner. [S L11; H §17.7] prereq: de-b1-statt-ohne-zu.
-17. `de-b2-adversative-connectors` — Contrast: während (adversative), wohingegen, im Gegensatz zu/dagegen/hingegen; jedoch/allerdings. [S L12; H §17.1.1, §17.3.7].
+17. `de-b2-adversative-connectors` — Contrast: während (adversative), wohingegen, im Gegensatz zu/dagegen/hingegen; jedoch/allerdings. [S L12; H §17.1.1, §17.3.7]. **[+triage 2026-07-15:** add wobei (spoken concessive-adversative). [H §17.3.8]**]**
 18. `de-b2-dass-equivalents` — dass-clause ↔ zu-infinitive (subject-identity rules) ↔ nominal phrase; obligatory/optional correlates (es, darauf/damit …, dass). [S L3; H §17.2, §11.2.2–11.2.3].
-19. `de-b2-relatives-advanced` — was after alles/etwas/nichts/superlatives and whole clauses, wo(r)+prep relatives, generalizing wer/was …, (der)jenige, der. [S L7; H §5.4.3–5.4.5] prereq: de-b1-relative-pronouns.
+19. `de-b2-relatives-advanced` — was after alles/etwas/nichts/superlatives and whole clauses, wo(r)+prep relatives, generalizing wer/was …, (der)jenige, der. [S L7; H §5.4.3–5.4.5] prereq: de-b1-relative-pronouns. **[+triage 2026-07-15:** add wo-relatives after place/time nouns (die Stadt, wo …). [H §5.4.6]**]**
 20. `de-b2-noun-verb-collocations` — Funktionsverbgefüge: eine Entscheidung treffen, zur Verfügung stehen, in Frage kommen, Bescheid geben, sich Mühe geben; verb-noun bond + article choice. [S L5/L9; H §19.7.2].
 21. `de-b2-fixed-prepositions` — Nouns and adjectives with fixed prepositions (die Angst vor, der Grund für, stolz auf, abhängig von, verantwortlich für) + da(r)-correlate clauses. [S L6/L7; H §6.4, §16.5] prereq: de-a2-verb-preposition-complements.
-22. `de-b2-indefinite-pronouns` — irgend-family (irgendjemand, irgendwo, irgendein-), mancher, mehrere, einige, sämtliche, beide, einer/keiner as pronouns (declension). [S L11; H §5.5].
+22. `de-b2-indefinite-pronouns` — irgend-family (irgendjemand, irgendwo, irgendein-), mancher, mehrere, einige, sämtliche, beide, einer/keiner as pronouns (declension). [S L11; H §5.5]. **[+triage 2026-07-15:** add indefinite place adverbs irgendwo/überall/nirgendwo/anderswo. [H §7.1.5]**]**
 23. `de-b2-word-formation` — Noun suffixes (-ung, -heit/-keit, -schaft, -nis), noun/adjective prefixes (un-, miss-, ur-), adjective suffixes (-lich, -ig, -isch, -bar, -los, -voll), adverb -weise, Fugen-s in compounds. [S L1/2/3/4/9/12; H §20].
-24. `de-b2-mittelfeld-word-order` — Mittelfeld: pronoun cluster before nouns, TeKaMoLo default for adverbials, nicht placement II, Nachfeld basics. [S L1; AUDIT-M §19.4–19.5; H §19] noCloze (order rule).
+24. `de-b2-mittelfeld-word-order` — Mittelfeld: pronoun cluster before nouns, TeKaMoLo default for adverbials, nicht placement II, Nachfeld basics. [S L1; AUDIT-M §19.4–19.5; H §19] noCloze (order rule). **[+triage 2026-07-15:** add Vorfeld-as-topic (given-before-new) to the description. [H §19.2.2]**]**
 25. `de-b2-text-reference-words` — Verweiswörter: dabei/dazu/damit/dafür anaphora, dies/das across sentences, solch-/derartig, hier + preposition. [S L3; H §3.5, §5.1] noCloze (multiple reference words fit most blanks), tgt=15.
 26. `de-b2-modal-particles-advanced` — halt/eben (resignation), wohl (supposition), schon (concessive reassurance), bloß/nur (warnings/wishes), etwa (alarmed question). [AUDIT-M; H §9.1] noCloze, tgt=12, prereq: de-b1-modal-particles-basic.
+
+27. `de-b2-verb-prefixes` — Inseparable prefix semantics (be- transitivizing, ent- removal, er- achievement/change-of-state, ver- completion/wrongly/change, zer- 'to pieces') and variable prefixes with separable/inseparable meaning contrast (durch-, über-, um-, unter-, wieder-, voll-: umfahren vs umfáhren), incl. participle/zu consequences. [TRIAGE; H §20.5, §20.7] prereq: de-a2-separable-prefix-verbs, de-a2-past-participle-formation.
 
 ### Vocab umbrellas — restore the 3 drafts unchanged
 
@@ -151,40 +161,40 @@ Sources: `M-A1/A2/B1 L<n>` = Menschen lesson; `S L<n>` = Sicher! lesson; `H §x`
 - [ ] **Step 4:** `cd .claude/worktrees/de-curriculum && pnpm install && pnpm build`
 - [ ] **Step 5:** Baseline green: `pnpm --filter @language-drill/db test` — expect pass.
 
-### Task 2: Author A1 (18 points) + file scaffolding
+### Task 2: Author A1 (19 points) + file scaffolding
 
 **Files:**
 - Modify: `packages/db/src/curriculum/de.ts` (whole file rewrite)
 
-**Interfaces:** Produces the 18 A1 `GrammarPoint` literals per the design list above; restores `import { CefrLevel, Language } from '@language-drill/shared';` and the `const DE = Language.DE; const { A1, A2, B1, B2 } = CefrLevel;` destructure; deletes the "TEMPORARILY DISABLED" header; sets `CURRICULUM_VERSION_DE = '2026-07-12'` with a doc-comment paragraph (ES style) describing the re-enable.
+**Interfaces:** Produces the 19 A1 `GrammarPoint` literals per the design list above; restores `import { CefrLevel, Language } from '@language-drill/shared';` and the `const DE = Language.DE; const { A1, A2, B1, B2 } = CefrLevel;` destructure; deletes the "TEMPORARILY DISABLED" header; sets `CURRICULUM_VERSION_DE` to the authoring date (`'YYYY-MM-DD'`, same-commit rule) with a doc-comment paragraph (ES style) describing the re-enable.
 
 - [ ] **Step 1:** Rewrite `de.ts` header + A1 section. Each entry follows the ES house style (see `es.ts:123–210`): 2–3 positive examples, 1–2 `*`-prefixed negatives, 2–4 commonErrors naming the concrete wrong form, flags exactly as the design list specifies. Keep the three KEEP-drafts' text, applying only the noted rescopes.
 - [ ] **Step 2:** Run `pnpm --filter @language-drill/db test -- curriculum` — the counts test still expects DE disabled; expect ONLY that failure (invariants must pass). Fix any invariant failure now.
-- [ ] **Step 3:** Commit `feat(curriculum): DE A1 grammar points (18)` — after asserting `git branch --show-current` = `feat/de-a1-b2-curriculum`.
+- [ ] **Step 3:** Commit `feat(curriculum): DE A1 grammar points (19)` — after asserting `git branch --show-current` = `feat/de-a1-b2-curriculum`.
 
-### Task 3: Author A2 (29 points)
+### Task 3: Author A2 (31 points)
 
 **Files:** Modify: `packages/db/src/curriculum/de.ts`
 
-- [ ] **Step 1:** Append the A2 section per the design list (5 KEEPs verbatim + 24 new).
+- [ ] **Step 1:** Append the A2 section per the design list (5 KEEPs verbatim + 26 new, incl. the 2 TRIAGE points).
 - [ ] **Step 2:** Same test run; same expectation (only the disabled-counts test red).
-- [ ] **Step 3:** Commit `feat(curriculum): DE A2 grammar points (29)`.
+- [ ] **Step 3:** Commit `feat(curriculum): DE A2 grammar points (31)`.
 
-### Task 4: Author B1 (25 points)
+### Task 4: Author B1 (27 points)
 
 **Files:** Modify: `packages/db/src/curriculum/de.ts`
 
 - [ ] **Step 1:** Append B1 per design list — 5 KEEPs with the noted rescopes (relative-pronouns, two-way-prepositions, passive-werden, subordinate-conjunctions get new descriptions/examples; dass-clause-perfekt verbatim). `de-b1-modal-verbs-past` is NOT carried over.
 - [ ] **Step 2:** Test run as above.
-- [ ] **Step 3:** Commit `feat(curriculum): DE B1 grammar points (25)`.
+- [ ] **Step 3:** Commit `feat(curriculum): DE B1 grammar points (27)`.
 
-### Task 5: Author B2 (26 points) + vocab umbrellas
+### Task 5: Author B2 (27 points) + vocab umbrellas
 
 **Files:** Modify: `packages/db/src/curriculum/de.ts`
 
 - [ ] **Step 1:** Append B2 per design list (5 KEEPs, rescopes as noted, `de-b2-konjunktiv-ii.prerequisiteKeys` → `['de-b1-konjunktiv-ii-past']`) + the 3 vocab umbrellas verbatim from the draft.
 - [ ] **Step 2:** Test run.
-- [ ] **Step 3:** Commit `feat(curriculum): DE B2 grammar points (26) + restored vocab umbrellas`.
+- [ ] **Step 3:** Commit `feat(curriculum): DE B2 grammar points (27) + restored vocab umbrellas`.
 
 ### Task 6: Ripple — enable DE everywhere
 
@@ -193,8 +203,8 @@ Sources: `M-A1/A2/B1 L<n>` = Menschen lesson; `S L<n>` = Sicher! lesson; `H §x`
 - Modify: `packages/db/src/curriculum/curriculum.test.ts` ("German is fully disabled" test + header comments ~line 632-641)
 - Modify: `packages/db/scripts/seed-exercises.ts` (uncomment the 9 DE entries in SEED_KEY_TO_GRAMMAR_POINT)
 
-- [ ] **Step 1:** `PER_LANGUAGE_GRAMMAR_MIN.DE = { A1: 18, A2: 29, B1: 25, B2: 26 }`; update the stale comment block above it.
-- [ ] **Step 2:** Replace the disabled-test with a parity test mirroring the ES/TR shape: grammar floors (>=18/29/25/26), `vocab` toBe(3), `dictation` toBe(0) — comment that dictation/free-writing/paraphrase umbrellas are the follow-up PR.
+- [ ] **Step 1:** `PER_LANGUAGE_GRAMMAR_MIN.DE = { A1: 19, A2: 31, B1: 27, B2: 27 }`; update the stale comment block above it.
+- [ ] **Step 2:** Replace the disabled-test with a parity test mirroring the ES/TR shape: grammar floors (>=19/31/27/27), `vocab` toBe(3), `dictation` toBe(0) — comment that dictation/free-writing/paraphrase umbrellas are the follow-up PR.
 - [ ] **Step 3:** Uncomment the DE seed-map entries (`de-cloze-a2-1` → `de-a2-perfekt-with-sein` … `de-vocab-b2-1` → `de-b2-academic-noun-vocab` — all 9 keys survive in the new design). Check how `de-free-writing-b1-city-vs-country` (seed-exercises.ts:630) is mapped; if it needs a grammar-point key and has none, map or exclude it deliberately and note why.
 - [ ] **Step 4:** `grep -rn "de\.ts\|TEMPORARILY\|DE.*disabled\|disabled.*DE" packages/ infra/ apps/ --include="*.ts" -i | grep -v dist | grep -v node_modules` — restore any other DE gating found (e.g. onboarding language lists, scheduler tests, `curriculum.test.ts:108` cross-language example). Fix what the grep surfaces.
 - [ ] **Step 5:** `pnpm --filter @language-drill/db test` — everything green now.
@@ -206,9 +216,24 @@ Sources: `M-A1/A2/B1 L<n>` = Menschen lesson; `S L<n>` = Sicher! lesson; `H §x`
 - Modify: `packages/shared/src/theory-categories.ts` (KEY_TO_CATEGORY + doc comment saying DE is now live)
 - Modify: `packages/shared/src/theory-categories.test.ts` (EXPECTED_KEY_CATEGORY mirror)
 
-- [ ] **Step 1:** Add all 98 DE grammar keys to both maps. Category assignments: tense/aspect points → `tenses`; Konjunktiv/imperative/conditional points → `moods`; contrast points (wenn-als, wissen-kennen, nicht-sondern, schon-noch-erst, zustandspassiv, seit-present, wenn/als) → `pairs`; declension/case points (accusative, dative, genitive, n-declension, adjective declensions, plural) → `cases` or `morphology` (inflection classes → `morphology`; case usage → `cases`); word-order/clause/conjunction/infinitive points → `syntax`; pronoun/article points → `pronouns`/`articles`; word-formation → `morphology`; passives → `syntax` (match ES precedent for es passives — check `es-b1-passive-se` binding first and follow it).
+- [ ] **Step 1:** Add all 104 DE grammar keys to both maps (incl. the 6 TRIAGE points: numbers-ordinals → morphology, measure-expressions → syntax, quantifiers-other → pronouns, articles-use → articles, adjective-case-government → cases, verb-prefixes → morphology). Category assignments: tense/aspect points → `tenses`; Konjunktiv/imperative/conditional points → `moods`; contrast points (wenn-als, wissen-kennen, nicht-sondern, schon-noch-erst, zustandspassiv, seit-present, wenn/als) → `pairs`; declension/case points (accusative, dative, genitive, n-declension, adjective declensions, plural) → `cases` or `morphology` (inflection classes → `morphology`; case usage → `cases`); word-order/clause/conjunction/infinitive points → `syntax`; pronoun/article points → `pronouns`/`articles`; word-formation → `morphology`; passives → `syntax` (match ES precedent for es passives — check `es-b1-passive-se` binding first and follow it).
 - [ ] **Step 2:** `pnpm --filter @language-drill/shared test` — green.
 - [ ] **Step 3:** Commit `feat(theory): category map for the DE curriculum`.
+
+### Task 7b: Book-coverage ledger — `book-coverage/de.ts` (DE pilot)
+
+Converts the 2026-07-15 audit + triage into the first registered ledger, making
+`book-coverage.test.ts` live for German (design:
+`docs/superpowers/specs/2026-07-15-book-coverage-ledger-design.md`).
+
+**Files:**
+- Create: `packages/db/src/curriculum/book-coverage/de.ts`
+- Modify: `packages/db/src/curriculum/book-coverage/index.ts` (register in `BOOK_COVERAGE_LEDGERS`)
+
+- [ ] **Step 1:** Generate the TOC snapshot: `pnpm --filter @language-drill/ai propose:book-coverage --book-dir /Users/seal/dev/language-tools/German/german-grammar-book/german-grammar-md --language de --emit-toc`; paste as `DE_BOOK_TOC`.
+- [ ] **Step 2:** Build the decisions map from `docs/analysis/de-book-coverage-ledger-draft-2026-07-15.ts.txt`: keep `points:`/`excluded:` rows (flip the four over-flags from triage §D.3 — `5-5-19`, `9-1-2`, `7-4-3`, `21-5-2`/`21-5-3` — to plain claims); replace every `// GAP` row with its verdict from `docs/analysis/de-gap-triage-2026-07-15.md` (NEW → `points:` on the new key, FOLD → `points:` on the fold target, EXCLUDE → `excluded:` with the Section-C reason). Compress front-matter chapters with `excludedSubtree`.
+- [ ] **Step 3:** Register the ledger; `pnpm --filter @language-drill/db test` — `book-coverage.test.ts` must pass (every anchor decided, no dangling keys); review the console unclaimed-points listing (expect ~0 after the triage).
+- [ ] **Step 4:** Commit `feat(curriculum): DE book-coverage ledger (Hammer)` — branch-assert first.
 
 ### Task 8: Linguistic-accuracy review (ES PR #529 precedent)
 
@@ -224,7 +249,7 @@ Sources: `M-A1/A2/B1 L<n>` = Menschen lesson; `S L<n>` = Sicher! lesson; `H §x`
 
 ## Self-review notes
 
-- Spec coverage: every Menschen/Sicher consolidated-inventory grammar item maps to a point above or is deliberately absorbed (A1 word-formation items → de-b2-word-formation covers the system; A1 numbers/ordinals → deferred, ES-style numbers point possible later; montags-adverbs → vocab-track material; A2 temporal preps über/von…an/zwischen → absorbed as examples into de-a1-temporal-prepositions' commonErrors during authoring or dropped as low-value). All 6 audit HIGH items have points (zero-article, negation, destination-prepositions, seit-present, subjective-modals, modal-perfect-word-order). Audit MEDIUMs: all included except measurement-phrases (deferred, noted in audit doc).
+- Spec coverage: every Menschen/Sicher consolidated-inventory grammar item maps to a point above or is deliberately absorbed (A1 word-formation items → de-b2-word-formation covers the system; A1 numbers/ordinals → now IN (de-a1-numbers-ordinals, 2026-07-15 triage); montags-adverbs → vocab-track material; A2 temporal preps über/von…an/zwischen → absorbed as examples into de-a1-temporal-prepositions' commonErrors during authoring or dropped as low-value). All 6 audit HIGH items have points (zero-article, negation, destination-prepositions, seit-present, subjective-modals, modal-perfect-word-order). Audit MEDIUMs: all included — measurement-phrases landed as de-a2-measure-expressions (2026-07-15 triage).
 - The dropped key `de-b1-modal-verbs-past` may orphan stale pool rows from the pre-2026-05-10 era — acceptable; DE pool is stale and small.
 - Key format check: all new keys match `^de-(a1|a2|b1|b2)-[a-z0-9-]+$`.
 - Prerequisite graph resolves: every referenced key exists in the lists above, same language.
