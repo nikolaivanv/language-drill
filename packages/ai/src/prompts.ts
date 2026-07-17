@@ -51,7 +51,12 @@ const CEFR_DESCRIPTOR_BULLETS = (
 // field (near-synonym headwords, e.g. TR istasyon/gar) are fully correct; the
 // per-answer vocab user prompt now renders the field. System-prompt sentence
 // added → Langfuse push per env.
-export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-07-16";
+// 2026-07-18: TranslationContent gained `acceptableAnswers` (structurally-
+// different renderings, e.g. TR Bence / Bana göre); the per-answer TRANSLATION
+// user prompt now renders them as equally-correct. USER-prompt-only edit — the
+// cached system template is unchanged, so this ships with the code deploy and
+// needs NO separate Langfuse push (bumped only to cohort eval traces).
+export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-07-18";
 
 export const EVALUATION_SYSTEM_PROMPT = `You are an expert language evaluator for a language-learning application. Your role is to evaluate user answers to language exercises with precision and pedagogical insight.
 
@@ -150,12 +155,12 @@ function buildTranslationUserPrompt(
 **Source Text (${content.sourceLanguage}):** ${content.sourceText}
 **Target Language:** ${content.targetLanguage}
 **Reference Translation:** ${content.referenceTranslation}
-
+${content.acceptableAnswers && content.acceptableAnswers.length > 0 ? `**Acceptable Answers (structurally-different renderings, each fully correct):** ${content.acceptableAnswers.join(", ")}` : ""}
 **User's Translation:** ${userAnswer}
 
 Evaluate the user's translation. Multiple valid translations may exist — do not penalize for stylistic differences. Focus on accuracy of meaning, grammar, and natural phrasing in the target language.
 
-The Reference Translation is ONE acceptable answer, not the required wording. When the user picks a different word, synonym, or phrasing, judge it on its OWN merits — do NOT record an error (not even a stylistic one) merely for differing from the reference, and never rewrite the user's word to match the reference's spelling or morphology. Before flagging any inflection or suffix as an error, first restate the user's OWN stem and confirm the form is genuinely wrong for THAT stem (e.g. for vowel harmony, name the user's stem and its actual last vowel) — not merely different from the reference's stem. Only list an error when the user's own sentence is itself incorrect.
+The Reference Translation is ONE acceptable answer, not the required wording; any Acceptable Answer listed above is equally correct (they are different valid constructions — e.g. TR \`Bence…\` vs \`Bana göre…\` — not the only options). When the user picks a different word, synonym, or phrasing, judge it on its OWN merits — do NOT record an error (not even a stylistic one) merely for differing from the reference, and never rewrite the user's word to match the reference's spelling or morphology. Before flagging any inflection or suffix as an error, first restate the user's OWN stem and confirm the form is genuinely wrong for THAT stem (e.g. for vowel harmony, name the user's stem and its actual last vowel) — not merely different from the reference's stem. Only list an error when the user's own sentence is itself incorrect.
 
 Grammatically OPTIONAL elements are equally correct whether included or omitted — optional in BOTH directions, regardless of which choice the reference makes. This covers: subject pronouns in pro-drop languages (Turkish ben/sen/o/biz/siz, Spanish yo/tú/…) where the verb ending already marks the person; possessive pronouns doubled by a possessive suffix (Turkish "benim arkadaşım" and plain "arkadaşım" are both correct); and the Turkish indefinite article "bir" before a non-specific object, in affirmative and negative sentences alike. Including such an element the reference omits, or omitting one the reference includes, is NOT an error of any type or severity, is NOT a naturalness or pragmatics issue, MUST NOT lower score or taskAchievement, and must not be mentioned as a shortcoming in feedback. A subject pronoun that is grammatically required in the source language (e.g. English) carries no emphasis and does NOT oblige the translation to include one; a disambiguating annotation in the source such as "You (plural)" only clarifies the English word and likewise demands no explicit pronoun. If the user's translation differs from the reference ONLY in such optional elements, it is fully correct — score it exactly as you would an exact match of the reference, with no partial deduction. Treat these elements as wrong only when the exercise instructions explicitly drill the distinction or their presence/absence genuinely changes the meaning.`;
 }

@@ -284,7 +284,8 @@ describe("EVALUATION_SYSTEM_PROMPT", () => {
   it("bumps EVALUATION_SYSTEM_PROMPT_VERSION for the verification-discipline rules", () => {
     // `.1` suffix: main's evaluate@2026-07-05 (PR #523 optional-elements rule)
     // is a different prompt body — same-day bumps must not share a cohort tag.
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-07-16");
+    // 2026-07-18: translation user prompt now renders `acceptableAnswers`.
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-07-18");
   });
 });
 

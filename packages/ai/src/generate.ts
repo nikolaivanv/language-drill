@@ -190,6 +190,12 @@ export const TRANSLATION_GENERATION_TOOL: Anthropic.Tool = {
         description:
           "A canonical correct translation. Other valid translations are accepted at evaluation time; this is the anchor.",
       },
+      acceptableAnswers: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Every OTHER structurally-distinct rendering that is equally correct — a different construction, not a surface tweak. REQUIRED whenever the source admits more than one natural rendering (e.g. TR 'In my opinion…' → both 'Bence …' and 'Bana göre …'). Do NOT repeat referenceTranslation here. Omit only when the source admits exactly one structure.",
+      },
       topicHint: {
         type: "string",
         description:
@@ -831,6 +837,7 @@ export function parseGeneratedTranslationDraft(
   const sourceLanguageRaw = requireString(input, "sourceLanguage", ctx);
   const targetLanguageRaw = requireString(input, "targetLanguage", ctx);
   const referenceTranslation = requireString(input, "referenceTranslation", ctx);
+  const acceptableAnswers = optionalStringArray(input, "acceptableAnswers", ctx);
   const topicHint = optionalString(input, "topicHint", ctx);
 
   if (!ALL_LANGUAGE_CODES.has(sourceLanguageRaw)) {
@@ -861,6 +868,15 @@ export function parseGeneratedTranslationDraft(
       `${ctx}: invalid referenceTranslation: must be non-empty`,
     );
   }
+  if (acceptableAnswers !== undefined) {
+    for (let i = 0; i < acceptableAnswers.length; i++) {
+      if (acceptableAnswers[i].trim().length === 0) {
+        throw new Error(
+          `${ctx}: invalid acceptableAnswers[${i}]: must contain non-whitespace characters`,
+        );
+      }
+    }
+  }
 
   return {
     type: ExerciseType.TRANSLATION,
@@ -869,6 +885,9 @@ export function parseGeneratedTranslationDraft(
     sourceLanguage: sourceLanguageRaw as Language,
     targetLanguage: targetLanguageRaw as Language,
     referenceTranslation,
+    ...(acceptableAnswers !== undefined && acceptableAnswers.length > 0
+      ? { acceptableAnswers }
+      : {}),
     ...(topicHint !== undefined ? { topicHint } : {}),
   };
 }

@@ -414,6 +414,28 @@ describe("buildValidationUserPrompt", () => {
     expect(prompt).toContain(
       "**Reference Translation:** Espero que llegues a tiempo.",
     );
+    // With no acceptableAnswers, the validator is told the source must admit
+    // only one structure (so structural alternatives can't be silently ignored).
+    expect(prompt).toContain(
+      "**Acceptable Answers (structurally-different renderings, also accepted):** (none declared",
+    );
+  });
+
+  it("renders translation acceptableAnswers so enumeration can cure the ambiguous flag", () => {
+    const content: TranslationContent = {
+      type: ExerciseType.TRANSLATION,
+      instructions: "Translate to Turkish.",
+      sourceText: "In my opinion, this is right.",
+      sourceLanguage: Language.EN,
+      targetLanguage: Language.ES,
+      referenceTranslation: "Bence bu doğru.",
+      acceptableAnswers: ["Bana göre bu doğru."],
+    };
+    const prompt = buildValidationUserPrompt(makeDraft(content), baseSpec);
+
+    expect(prompt).toContain(
+      "**Acceptable Answers (structurally-different renderings, also accepted):** Bana göre bu doğru.",
+    );
   });
 
   it("renders a vocab_recall draft with every documented field + Spec preamble", () => {
