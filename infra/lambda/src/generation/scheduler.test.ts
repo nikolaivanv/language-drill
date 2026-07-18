@@ -892,6 +892,7 @@ describe('scheduler handler', () => {
 describe('scheduler run-level cell cap', () => {
   afterEach(() => {
     delete process.env['SCHEDULER_MAX_CELLS_PER_RUN'];
+    delete process.env['SCHEDULER_MAX_CELLS_PER_LANGUAGE'];
   });
 
   /** All jobIds enqueued across every batch, in order. */
@@ -905,7 +906,7 @@ describe('scheduler run-level cell cap', () => {
     return findLogLine(
       (e) =>
         typeof e['message'] === 'string' &&
-        (e['message'] as string).includes('cell cap applied'),
+        (e['message'] as string).includes('cap applied'),
     );
   }
 
@@ -981,9 +982,9 @@ describe('scheduler run-level cell cap', () => {
     expect(capLogLine()).toBeUndefined();
   });
 
-  it('ignores a non-positive / non-numeric override and falls back to the default (60)', async () => {
+  it('ignores a non-positive / non-numeric override and falls back to the default (120)', async () => {
     process.env['SCHEDULER_MAX_CELLS_PER_RUN'] = 'not-a-number';
-    // 25 under target < default 60 → no cap, no deferred log, all enqueued.
+    // 25 under target < default 120 → no cap, no deferred log, all enqueued.
     const undertargetKeys = new Set(
       allRoundOneCells()
         .slice(0, 25)
@@ -997,6 +998,45 @@ describe('scheduler run-level cell cap', () => {
 
     expect(enqueuedJobIds()).toHaveLength(25);
     expect(capLogLine()).toBeUndefined();
+  });
+
+  it('caps a flooding language and reserves a slot for another (per-language fair-share)', async () => {
+    // Global cap 3, per-language cap 2. DE floods with 3 max-need cells; ES has
+    // 3 slightly-lower-need cells. A global-only cap would take all 3 DE cells;
+    // the per-language cap forces DE down to 2 and hands the 3rd slot to ES.
+    process.env['SCHEDULER_MAX_CELLS_PER_RUN'] = '3';
+    process.env['SCHEDULER_MAX_CELLS_PER_LANGUAGE'] = '2';
+    const globalTarget = cellsWithGlobalTarget();
+    const de = globalTarget.filter((c) => c.language === 'DE').slice(0, 3);
+    const es = globalTarget.filter((c) => c.language === 'ES').slice(0, 3);
+    expect(de).toHaveLength(3);
+    expect(es).toHaveLength(3);
+    const approvedByKey = new Map<string, number>();
+    for (const c of de) approvedByKey.set(c.cellKey, 0); // need 50 (highest)
+    for (const c of es) approvedByKey.set(c.cellKey, 10); // need 40
+    const rows = allRoundOneCells().map((cell) => ({
+      language: cell.language,
+      difficulty: cell.cefrLevel,
+      type: cell.exerciseType,
+      grammarPointKey: cell.grammarPoint.key,
+      approved: approvedByKey.get(cell.cellKey) ?? resolveCellTarget(cell),
+    }));
+    mockGroupBy.mockResolvedValueOnce(rows);
+
+    await handler();
+
+    const byLang = capturedBatches()
+      .flatMap(decodeBatch)
+      .map((m) => parseGenerationJobMessage(m))
+      .reduce<Record<string, number>>((acc, m) => {
+        acc[m.spec.language] = (acc[m.spec.language] ?? 0) + 1;
+        return acc;
+      }, {});
+    expect(byLang).toEqual({ DE: 2, ES: 1 });
+    const log = capLogLine();
+    expect(log!['perLanguageCap']).toBe(2);
+    expect(log!['enqueuedByLanguage']).toEqual({ DE: 2, ES: 1 });
+    expect(log!['deferredCount']).toBe(3);
   });
 });
 
