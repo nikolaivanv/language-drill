@@ -59,6 +59,27 @@ export async function runGeneratorPool(opts: {
   const results = new Map<number, Slot>();
   let nextOrdinal = 0;
 
+  const runOrdinal = async (ordinal: number): Promise<void> => {
+    const result = await generateOneDraft(client, spec, ordinal, signal);
+    results.set(ordinal, result);
+  };
+
+  // Prompt-cache priming. Every draft in a cell shares one system+tool prefix
+  // tagged `cache_control: ephemeral`. An Anthropic cache entry only becomes
+  // readable once the response that wrote it starts streaming, so releasing all
+  // `concurrency` workers at once makes the entire opening wave a cold cache
+  // WRITE (1.25x input price) instead of a READ (0.1x). On small-`need` top-up
+  // cells the whole cell fits in one wave, so with concurrency 5 nothing is ever
+  // read back — the dominant driver of the low prompt-cache hit rate measured on
+  // the generate/validate paths (see docs/tech-debt.md → "Prompt caching").
+  // Running ordinal 0 alone writes the prefix once; ordinals 1..N-1 then read it
+  // warm. Costs one draft of latency per cell (a background nightly job).
+  if (count > 0) {
+    if (signal?.aborted) throw new Error('Aborted by user (SIGINT)');
+    await runOrdinal(0);
+    nextOrdinal = 1;
+  }
+
   const worker = async (): Promise<void> => {
     for (;;) {
       if (signal?.aborted) throw new Error('Aborted by user (SIGINT)');
@@ -68,8 +89,7 @@ export async function runGeneratorPool(opts: {
       // `Map.set(ordinal, …)` skip locking.
       const ordinal = nextOrdinal++;
       if (ordinal >= count) return;
-      const result = await generateOneDraft(client, spec, ordinal, signal);
-      results.set(ordinal, result);
+      await runOrdinal(ordinal);
     }
   };
 

@@ -178,6 +178,41 @@ describe('runGeneratorPool', () => {
     expect(result.drafts).toHaveLength(10);
   });
 
+  it('primes the shared prompt-cache prefix: ordinal 0 completes before any other ordinal starts', async () => {
+    // Every draft in a cell shares one system+tool prefix cached via
+    // cache_control: ephemeral. An Anthropic cache entry only becomes readable
+    // once the response that wrote it starts streaming, so the pool must run
+    // ordinal 0 alone (writing the prefix) before fanning out the rest (which
+    // then read it warm). Assert the ordering directly: ordinal 0 ends before
+    // any other ordinal begins. Without priming, ordinal 0's slow call would
+    // overlap the wave and later starts would be recorded before `end-0`.
+    const events: string[] = [];
+    mockGenerateOneDraft.mockImplementation(async (_client, _spec, ordinal) => {
+      events.push(`start-${ordinal}`);
+      await delay(ordinal === 0 ? 20 : 5);
+      events.push(`end-${ordinal}`);
+      return makeDraftResult(ordinal);
+    });
+
+    await runGeneratorPool({
+      client: mockClient,
+      spec,
+      count: 5,
+      concurrency: 5,
+    });
+
+    const end0 = events.indexOf('end-0');
+    expect(end0).toBeGreaterThanOrEqual(0);
+    const laterStarts = events
+      .map((e, i) => ({ e, i }))
+      .filter(({ e }) => e.startsWith('start-') && e !== 'start-0')
+      .map(({ i }) => i);
+    expect(laterStarts).toHaveLength(4);
+    for (const i of laterStarts) {
+      expect(i).toBeGreaterThan(end0);
+    }
+  });
+
   it('preserves ordinal order in the drafts array under out-of-order completion', async () => {
     // Higher-ordinal calls resolve first — exercises the ordinal-indexed
     // result map + post-walk reassembly.

@@ -62,6 +62,40 @@ export async function runValidatorPool(opts: {
   const results = new Map<number, ValidatorPoolEntry>();
   let nextOrdinal = 0;
 
+  const runOrdinal = async (ordinal: number): Promise<void> => {
+    try {
+      const validation = await validateDraft(
+        client,
+        drafts[ordinal],
+        spec,
+        signal,
+      );
+      results.set(ordinal, validation);
+    } catch (err) {
+      // R8.2/R8.4: a malformed validator response is isolated to this
+      // ordinal; everything else (transport, abort) rejects the pool.
+      if (err instanceof ValidationParseError) {
+        results.set(ordinal, { kind: 'parse-failed', message: err.message });
+      } else {
+        throw err;
+      }
+    }
+  };
+
+  // Prompt-cache priming. Every draft in a cell is validated against one shared
+  // system+tool prefix tagged `cache_control: ephemeral`. An Anthropic cache
+  // entry only becomes readable once the response that wrote it starts
+  // streaming, so releasing all `concurrency` workers at once makes the entire
+  // opening wave a cold cache WRITE (1.25x input price) instead of a READ
+  // (0.1x). Running ordinal 0 alone writes the prefix once; ordinals 1..N-1 then
+  // read it warm. Mirrors `generator-pool.ts`; see docs/tech-debt.md →
+  // "Prompt caching" for the measurement that motivated this.
+  if (drafts.length > 0) {
+    if (signal?.aborted) throw new Error('Aborted by user (SIGINT)');
+    await runOrdinal(0);
+    nextOrdinal = 1;
+  }
+
   const worker = async (): Promise<void> => {
     for (;;) {
       if (signal?.aborted) throw new Error('Aborted by user (SIGINT)');
@@ -71,23 +105,7 @@ export async function runValidatorPool(opts: {
       // `Map.set(ordinal, …)` skip locking.
       const ordinal = nextOrdinal++;
       if (ordinal >= drafts.length) return;
-      try {
-        const validation = await validateDraft(
-          client,
-          drafts[ordinal],
-          spec,
-          signal,
-        );
-        results.set(ordinal, validation);
-      } catch (err) {
-        // R8.2/R8.4: a malformed validator response is isolated to this
-        // ordinal; everything else (transport, abort) rejects the pool.
-        if (err instanceof ValidationParseError) {
-          results.set(ordinal, { kind: 'parse-failed', message: err.message });
-        } else {
-          throw err;
-        }
-      }
+      await runOrdinal(ordinal);
     }
   };
 

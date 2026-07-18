@@ -4,6 +4,55 @@ A living log of known issues to address. Add new entries at the top; mark as res
 
 ---
 
+## Prompt caching: cold-wave writes on the generation pools; evaluation tool defeats its own cache
+
+- **Status:** partially resolved 2026-07-18 — the generate/validate cold-wave (remediation **1**) is **fixed** (per-cell prefix priming in both worker pools); the evaluation tool (remediation **2**) and annotate min-prefix (remediation **3**) remain **open by decision** (negligible token share). See Resolution below.
+- **Discovered:** 2026-07-18 (triaging an Anthropic "low prompt-cache hit rate" warning email against Langfuse `usageByType` data)
+- **Scope:** `packages/db/src/generation/generator-pool.ts` + `validator-pool.ts` (the cold-wave, **fixed**); `packages/ai/src/evaluate.ts:40-117,416` (`buildEvaluationTool` — per-exercise tool enum, **open**); `packages/ai/src/annotate.ts` (Haiku 4096-token min-prefix, **open**)
+- **Severity:** low — caching already works (overall ~73% hit over the 14 days to 2026-07-18); this is cost/efficiency headroom on the input-token bill and the metric Anthropic flagged, not a correctness issue
+
+**Measurement (Langfuse `usageByType`, 14 days to 2026-07-18, input-side token millions; hit = cache_read / (cache_read + cache_creation + input)):**
+
+| Surface | read | write | input | hit | reads/write | share of input tokens |
+|---|--:|--:|--:|--:|--:|--:|
+| generate | 108.3 | 27.7 | 9.6 | 74% | 3.9× | 62% |
+| validate | 64.0 | 12.4 | 12.6 | 72% | 5.2× | 38% |
+| evaluate | 0.30 | 0.27 | 0.48 | **29%** | 1.1× | 0.4% |
+| annotate-span | 0.49 | 0.05 | 0.17 | 69% | 10× | 0.3% |
+| annotate | 0 | 0 | 0.02 | **0%** | — | <0.1% |
+| **overall** | 173.0 | 40.5 | 22.8 | **73%** | 4.3× | 100% |
+
+`generate` + `validate` are **99.8% of all input tokens**. The daily trend is bimodal: big backfill days (07-07/17/18) hit 79–84%; small top-up days (07-14/15: 22–23%) crater. That's the cold-wave (below), and the recent run of low-volume days is what tripped Anthropic's warning.
+
+**Root cause (three independent gaps):**
+
+1. **Cold-wave on the generation pools (the dominant, fixed one).** `runGeneratorPool` / `runValidatorPool` fan out `MAX_*_CONCURRENCY = 5` workers that all start together. Every draft in a cell shares one `cache_control: ephemeral` system+tool prefix, but an Anthropic cache entry is only readable once the response that wrote it *starts streaming* — so all 5 workers in the opening wave miss and pay the 1.25× write. On a small-`need` top-up cell (deficit ≲ 5), the whole cell is one wave → ~0% reads. On a fresh cell (`need`≈`TARGET_PER_CELL = 50`) the 5 writes amortize over ~45 reads → ~90%. Hence the bimodal trend.
+2. **`evaluate` defeats its own cache.** `buildEvaluationTool(attributionKeys)` embeds the exercise's in-scope grammar-point keys as a closed `enum`. Render order is `tools → system → messages` and the cache breakpoint is on the system block, so the key covers the tools before it. The tool schema is different for almost every submission → the tools+system prefix is unique per request → every eval is a cold write, never read (reads≈writes, 1.1×; 29% hit). `claude-sonnet-5`, per-user path.
+3. **`annotate` never caches.** Haiku 4.5's minimum cacheable prefix is 4096 tokens; the annotate system prompt is evidently shorter, so `cache_control` silently no-ops (`cache_creation: 0`, no error).
+
+**Remediation:**
+
+1. **Per-cell prefix priming (done).** Run ordinal 0 of each pool alone, then release the remaining workers — the first draft writes the shared prefix, the rest read it warm. Makes concurrency irrelevant to caching; recovers the low-volume-day cratering. Chosen over lowering concurrency (adds wall-clock to the 120-cell run) and over a `max_tokens:0` pre-warm (extra request to maintain).
+2. **`evaluate` tool (open, deferred).** Make the tool static: drop the `grammarPointKey` closed `enum` to a plain `string` and validate keys server-side in `parseEvaluationResult` (the valid keys are already listed in the user message). **Deferred by decision 2026-07-18:** evaluate is 0.4% of input tokens — fixing it will not move the org metric, and the closed enum is a real quality guard we'd be trading for cache-ability.
+3. **`annotate` min-prefix (open, deferred).** Either accept no caching (it's <0.1% of tokens) or lift the prefix over 4096 tokens. Not worth touching.
+
+**Why the fix is worth it (remediation 1 only):** lifting generate+validate from ~73% to the ~85–90% the big days already hit converts on the order of ~15–20M write-tokens/14d into reads (writes 1.25×, reads 0.1×) — ~$100–150/month at `claude-sonnet-4-6` pricing — and clears the low-hit-rate warning. Modest but free once shipped.
+
+**Resolution (2026-07-18, remediation 1):** `runGeneratorPool` and `runValidatorPool` now prime ordinal 0 before spawning the worker fan-out (a shared `runOrdinal(ordinal)` closure called once for ordinal 0, then by each worker for `nextOrdinal++ ≥ 1`). No change to results, ordering, usage aggregation, abort semantics, or the validator's `ValidationParseError` per-ordinal isolation — only the scheduling of the first call. Covered by a new `'primes the shared prompt-cache prefix: ordinal 0 completes before any other ordinal starts'` test in each pool suite (asserts `end-0` precedes every other `start-*`); full generation suite green (186 passed). The `MAX_*_CONCURRENCY = 5` knobs are unchanged.
+
+**Still open:** remediations 2 (evaluate tool) and 3 (annotate prefix), both deferred as negligible token share — revisit only if the per-user evaluation volume grows materially.
+
+**Owner:** unassigned
+**Tracking:** none yet — open a GitHub issue if remediation 2/3 is ever prioritized
+**References:**
+- Langfuse `usageByType` breakdown (14 days to 2026-07-18), grouped by observation `name` — the measurement table above.
+- `packages/db/src/generation/generator-pool.ts` / `validator-pool.ts` — the primed pools.
+- `packages/ai/src/evaluate.ts:40-117` (`buildEvaluationTool`), `:416` (call site) — the varying-tool cache-defeat.
+- `packages/ai/src/observability.ts:359-402` — where per-call `cache_creation_input_tokens` / `cache_read_input_tokens` are recorded (the source of the breakdown).
+- Anthropic prompt-caching semantics: cache readability begins at first stream; 1.25× write / 0.1× read; Haiku 4096-token min prefix.
+
+---
+
 ## No brake or alert on Anthropic API spend in the scheduled generation path
 
 - **Status:** partially resolved 2026-07-08 — remediations **2** (run-level scheduler ceiling) and **3** (Anthropic-cost CloudWatch metric + daily-sum alarm) shipped; remediations **1** (per-cell cap enforcement in `runOneCell`) and **4** (manual Anthropic-console alert) remain **open**. See Resolution below.

@@ -176,6 +176,42 @@ describe('runValidatorPool', () => {
     expect(results.size).toBe(10);
   });
 
+  it('primes the shared prompt-cache prefix: ordinal 0 completes before any other ordinal starts', async () => {
+    // Every draft in a cell shares one system+tool prefix cached via
+    // cache_control: ephemeral. An Anthropic cache entry only becomes readable
+    // once the response that wrote it starts streaming, so the pool must run
+    // ordinal 0 alone (writing the prefix) before fanning out the rest (which
+    // then read it warm). Assert the ordering directly: ordinal 0 ends before
+    // any other ordinal begins.
+    const events: string[] = [];
+    mockValidateDraft.mockImplementation(async (_client, draft) => {
+      const ordinal = Number(draft.id.split('-')[1]);
+      events.push(`start-${ordinal}`);
+      await delay(ordinal === 0 ? 20 : 5);
+      events.push(`end-${ordinal}`);
+      return makeResult(ordinal);
+    });
+
+    const drafts = makeDrafts(5);
+    await runValidatorPool({
+      drafts,
+      client: mockClient,
+      spec,
+      concurrency: 5,
+    });
+
+    const end0 = events.indexOf('end-0');
+    expect(end0).toBeGreaterThanOrEqual(0);
+    const laterStarts = events
+      .map((e, i) => ({ e, i }))
+      .filter(({ e }) => e.startsWith('start-') && e !== 'start-0')
+      .map(({ i }) => i);
+    expect(laterStarts).toHaveLength(4);
+    for (const i of laterStarts) {
+      expect(i).toBeGreaterThan(end0);
+    }
+  });
+
   it('keys results by ordinal under out-of-order completion', async () => {
     // Per-ordinal delay decreasing with ordinal — higher-ordinal calls resolve
     // first, exercising the out-of-order result-map keying.
