@@ -46,10 +46,12 @@ import {
 // ---------------------------------------------------------------------------
 
 /**
- * Authoritative model id for the theory validator. Aliased to
- * `GENERATION_MODEL` so the generator and validator stay on the same
- * Sonnet revision. Asserted equal in `theory-validate.test.ts` (Task 6) —
- * a literal mismatch fails CI.
+ * Authoritative model id for the theory validator. Deliberately pinned to
+ * Sonnet while `THEORY_GENERATION_MODEL` runs Opus — a different model
+ * checking the generator's work is an independent-reviewer property we
+ * want to keep, and the validator's structured-verdict task is well within
+ * Sonnet's capability. Aliased to `GENERATION_MODEL` (also Sonnet) so the
+ * exercise-side pricing constants keep covering validator cost estimates.
  */
 export const THEORY_VALIDATION_MODEL = GENERATION_MODEL;
 

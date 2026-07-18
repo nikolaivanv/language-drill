@@ -71,7 +71,7 @@ type StubOpts = {
 function makeStubClient(toolUseInput: unknown, opts: StubOpts = {}): Anthropic {
   return {
     messages: {
-      create: async () => ({
+      create: vi.fn(async () => ({
         content: [
           {
             type: "tool_use",
@@ -93,7 +93,7 @@ function makeStubClient(toolUseInput: unknown, opts: StubOpts = {}): Anthropic {
         role: "assistant",
         model: "claude-sonnet-4-6",
         stop_sequence: null,
-      }),
+      })),
     },
   } as unknown as Anthropic;
 }
@@ -216,9 +216,39 @@ describe("theory-generate / pure helpers", () => {
   // -------------------------------------------------------------------------
 
   describe("theory-generate model pin (Req 8.3)", () => {
-    it("THEORY_GENERATION_MODEL aliases GENERATION_MODEL and is pinned to claude-sonnet-4-6", () => {
-      expect(THEORY_GENERATION_MODEL).toBe(GENERATION_MODEL);
-      expect(THEORY_GENERATION_MODEL).toBe("claude-sonnet-4-6");
+    it("THEORY_GENERATION_MODEL is pinned to claude-opus-4-8 (deliberately decoupled from GENERATION_MODEL)", () => {
+      expect(THEORY_GENERATION_MODEL).toBe("claude-opus-4-8");
+      // The exercise generator stays on Sonnet — theory intentionally runs a
+      // stronger model (one page per cell, filled once, cost immaterial).
+      expect(GENERATION_MODEL).toBe("claude-sonnet-4-6");
+    });
+
+    it("sends no sampling parameters (temperature is rejected with a 400 on Opus 4.8)", async () => {
+      const client = makeStubClient(subjunctiveFixture);
+      await generateTheoryTopic(client, baseSpec);
+      const callArgs = (
+        client.messages.create as ReturnType<typeof vi.fn>
+      ).mock.calls[0][0] as Record<string, unknown>;
+      expect(callArgs.model).toBe(THEORY_GENERATION_MODEL);
+      expect(callArgs).not.toHaveProperty("temperature");
+      expect(callArgs).not.toHaveProperty("top_p");
+      expect(callArgs).not.toHaveProperty("top_k");
+    });
+
+    it("threads validatorFeedback into the user prompt on a feedback retry", async () => {
+      const client = makeStubClient(subjunctiveFixture);
+      await generateTheoryTopic(client, baseSpec, {
+        validatorFeedback: ["wrong gender label on Wetter", "table row 2 typo"],
+      });
+      const callArgs = (
+        client.messages.create as ReturnType<typeof vi.fn>
+      ).mock.calls[0][0] as {
+        messages: Array<{ content: string }>;
+      };
+      const userText = callArgs.messages[0].content;
+      expect(userText).toContain("wrong gender label on Wetter");
+      expect(userText).toContain("table row 2 typo");
+      expect(userText).toContain("rejected by the quality validator");
     });
   });
 });
@@ -240,7 +270,7 @@ describe("theory-generate / generateTheoryTopic", () => {
     expect(draft.topicId).toBe(
       deriveTheoryTopicId(baseSpec.grammarPoint.key),
     );
-    expect(draft.metadata.modelId).toBe(GENERATION_MODEL);
+    expect(draft.metadata.modelId).toBe(THEORY_GENERATION_MODEL);
     expect(draft.contentJson).toEqual(subjunctiveFixture);
     expect(draft.metadata.inputTokens).toBe(1500);
     expect(draft.metadata.outputTokens).toBe(800);

@@ -7,15 +7,16 @@
  * Anthropic tool schema (`THEORY_GENERATION_TOOL`), and the async entry point
  * `generateTheoryTopic` which performs one Claude call per theory cell.
  *
- * Model pinning: `THEORY_GENERATION_MODEL` is aliased to `GENERATION_MODEL`
- * from `./generate` so the exercise and theory generators stay on the same
- * Sonnet revision. A cross-file equality assertion (Task 7) fails CI if one
- * generator is bumped without the other.
+ * Model pinning: `THEORY_GENERATION_MODEL` is deliberately DECOUPLED from the
+ * exercise generator's `GENERATION_MODEL` (Sonnet). Theory runs on Opus: one
+ * page per cell, generated once and kept forever, so per-cell cost is
+ * immaterial — while the observed failure mode (dense morphology tables,
+ * noun-gender labels; see the 2026-07-18 tr-b2/de-b2 incident) is exactly a
+ * model-capability ceiling. The validator stays on Sonnet as an independent
+ * cross-model check.
  *
- * Temperature 0.4 (vs. the exercise generator's 0.7) — theory pages prioritize
- * factual accuracy and editorial consistency over surface diversity; a single
- * page is produced per `(language, grammarPoint, batchSeed)` cell, so there
- * is no in-batch dedup pressure to motivate higher sampling.
+ * No sampling parameters: Opus 4.8 rejects `temperature`/`top_p`/`top_k`
+ * with a 400 — the call sends none.
  *
  * The Phase 3 validator path is intentionally not wired here: Phase 2 inserts
  * drafts as `auto-approved` and the Phase 3 patch will add a separate
@@ -33,7 +34,6 @@ import {
 } from "@language-drill/shared";
 
 import { addUsage, ZERO_USAGE, type ClaudeUsageBreakdown } from "./cost-model.js";
-import { GENERATION_MODEL } from "./generate.js";
 import {
   buildTheorySystemPrompt,
   buildTheoryUserPrompt,
@@ -47,24 +47,24 @@ import {
 export const THEORY_TOOL_NAME = "submit_theory_topic" as const;
 
 /**
- * Aliased to the exercise generator's `GENERATION_MODEL`. Bumping one without
- * the other fails the cross-file equality assertion added in Task 7.
+ * Deliberately decoupled from the exercise generator's `GENERATION_MODEL`
+ * (Sonnet): theory cells are one-page-forever, so the stronger model's cost
+ * is immaterial, and hard B2 morphology cells (vowel-harmony tables, noun
+ * gender) sit at Sonnet's capability ceiling. Keep the validator on Sonnet
+ * (`THEORY_VALIDATION_MODEL`) — the cross-model check is a feature.
+ *
+ * NOTE: Opus 4.8 rejects sampling parameters (`temperature` et al.) with a
+ * 400; the generate call sends none. It also has no `-fast`/date-suffixed
+ * variants — this exact id is the API alias.
  */
-export const THEORY_GENERATION_MODEL = GENERATION_MODEL;
-
-/**
- * Lower than the exercise generator's 0.7 — theory prioritizes accuracy and a
- * consistent editorial voice over surface diversity (one page per cell).
- */
-export const THEORY_GENERATION_TEMPERATURE = 0.4 as const;
+export const THEORY_GENERATION_MODEL = "claude-opus-4-8" as const;
 
 export const THEORY_GENERATION_MAX_TOKENS = 8192 as const;
 
 /**
  * Additional regeneration attempts on a malformed draft before the cell is
  * recorded as failed (Req 1.3). Default 2 → up to 3 total Claude calls. The
- * malformed failure is intermittent at temperature 0.4, so a re-roll usually
- * parses. Overridable per-call via `generateTheoryTopic`'s `opts.maxRetries`
+ * malformed failure is intermittent, so a re-roll usually parses. Overridable per-call via `generateTheoryTopic`'s `opts.maxRetries`
  * (used by unit tests); production passes the default.
  */
 export const THEORY_GENERATION_MAX_RETRIES = 2 as const;
@@ -384,7 +384,17 @@ function readUsage(response: Anthropic.Message): ClaudeUsageBreakdown {
 export async function generateTheoryTopic(
   client: Anthropic,
   spec: TheoryGenerationSpec,
-  opts: { maxRetries?: number } = {},
+  opts: {
+    maxRetries?: number;
+    /**
+     * Validator flag/reject reasons from a prior draft of the same cell.
+     * When set, the user prompt instructs the model to fix each listed
+     * issue — the orchestrator's one feedback-driven regenerate pass
+     * (`runOneTheoryCell`). The system prompt is unchanged, so the second
+     * call reads it from the prompt cache.
+     */
+    validatorFeedback?: readonly string[];
+  } = {},
 ): Promise<TheoryGenerateResult> {
   // Top guards. The cast through `Language` mirrors generate.ts:520 — TS
   // would otherwise reject the EN comparison as tautologically false because
@@ -408,7 +418,7 @@ export async function generateTheoryTopic(
   };
 
   const systemText = await buildTheorySystemPrompt(promptInputs);
-  const userText = buildTheoryUserPrompt(promptInputs);
+  const userText = buildTheoryUserPrompt(promptInputs, opts.validatorFeedback);
 
   const maxRetries = opts.maxRetries ?? THEORY_GENERATION_MAX_RETRIES;
   // Mirror `buildTheoryCellKey` (@language-drill/db) — `<lang>:<level>:<gp-key>`
@@ -417,16 +427,19 @@ export async function generateTheoryTopic(
   const cellKey =
     `${spec.language}:${spec.cefrLevel}:${spec.grammarPoint.key}`.toLowerCase();
 
-  // Regenerate on a malformed draft (Req 1.3): the failure is intermittent at
-  // temperature 0.4, so a re-roll usually parses. Usage is summed across every
+  // Regenerate on a malformed draft (Req 1.3): the failure is intermittent,
+  // so a re-roll usually parses. Usage is summed across every
   // attempt (Req 2.3) — failed attempts fold in via the caught error below,
   // the winning attempt at the success return.
   let cumulativeUsage: ClaudeUsageBreakdown = ZERO_USAGE;
 
   for (let attempt = 0; ; attempt++) {
     try {
+      // No `temperature` (Opus 4.8 returns a 400 on any sampling param) and
+      // no `thinking` (forced tool_choice is incompatible with thinking; on
+      // Opus 4.8 omitting the field means thinking-off).
       const response = await client.messages.create({
-        model: GENERATION_MODEL,
+        model: THEORY_GENERATION_MODEL,
         max_tokens: THEORY_GENERATION_MAX_TOKENS,
         system: [
           {
@@ -438,7 +451,6 @@ export async function generateTheoryTopic(
         messages: [{ role: "user" as const, content: userText }],
         tools: [THEORY_GENERATION_TOOL],
         tool_choice: { type: "tool" as const, name: THEORY_TOOL_NAME },
-        temperature: THEORY_GENERATION_TEMPERATURE,
       });
 
       // Capture usage BEFORE any parse/validation throw (Req 2.1) so a
@@ -481,7 +493,7 @@ export async function generateTheoryTopic(
           contentJson,
           metadata: {
             grammarPointKey: spec.grammarPoint.key,
-            modelId: GENERATION_MODEL,
+            modelId: THEORY_GENERATION_MODEL,
             inputTokens:
               usage.inputTokens +
               usage.cacheCreationInputTokens +

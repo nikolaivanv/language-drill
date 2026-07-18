@@ -114,8 +114,8 @@ describe("buildTheorySystemPrompt", () => {
 describe("THEORY_GENERATION_PROMPT_VERSION", () => {
   // Bumped in the same change as the R1.5 output-format hardening so Langfuse
   // dashboards cohort the new prompt traces separately from the old.
-  it("is the dated version for the malformed-sections hardening", () => {
-    expect(THEORY_GENERATION_PROMPT_VERSION).toBe("theory-generate@2026-06-02");
+  it("is the dated version for the Opus generator + validator-feedback retry", () => {
+    expect(THEORY_GENERATION_PROMPT_VERSION).toBe("theory-generate@2026-07-18");
   });
 });
 
@@ -183,6 +183,25 @@ describe("buildTheoryUserPrompt", () => {
     expect(buildTheoryUserPrompt(TEST_INPUT)).toBe(
       `Produce the theory page for ${entry.name} (${entry.key}) at CEFR ${entry.cefrLevel}.`,
     );
+  });
+
+  it("an empty feedback array renders identically to no feedback", () => {
+    expect(buildTheoryUserPrompt(TEST_INPUT, [])).toBe(
+      buildTheoryUserPrompt(TEST_INPUT),
+    );
+  });
+
+  it("appends validator feedback as a bulleted fix-list after the base instruction", () => {
+    const withFeedback = buildTheoryUserPrompt(TEST_INPUT, [
+      "reason one",
+      "reason two",
+    ]);
+    expect(withFeedback.startsWith(buildTheoryUserPrompt(TEST_INPUT))).toBe(
+      true,
+    );
+    expect(withFeedback).toContain("rejected by the quality validator");
+    expect(withFeedback).toContain("- reason one");
+    expect(withFeedback).toContain("- reason two");
   });
 });
 

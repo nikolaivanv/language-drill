@@ -5,6 +5,14 @@
  * INSERTs the theory_topics row (or skips it for the rejected branch).
  * Cell-isolated try/catch — a single bad cell never halts the run.
  *
+ * A non-approved first verdict (flagged or rejected) triggers ONE
+ * feedback-driven regenerate: the validator's reasons are fed back into the
+ * generator's user prompt, the second draft is re-validated, and the better
+ * of the two outcomes wins (approved > flagged > rejected, then
+ * qualityScore; ties keep the first draft). The retry is skipped when the
+ * projected cost would exceed `args.maxCostUsd` and is best-effort — any
+ * throw inside it preserves the first outcome.
+ *
  * Structural mirror of `packages/db/src/generation/run-one-cell.ts` minus
  * the per-ordinal loop and dedup-retry helper — theory is one page per
  * cell (Req 5.1), so there is no batch iteration. The partial unique
@@ -26,10 +34,10 @@
  *                      audit row closes with the Phase 2 cell-already-
  *                      filled message (Req 4.7).
  *
- * Two SIGINT recheck points (Req 4.8) — once between generator and
- * validator (so an abort skips the validator's tokens) and once between
- * validator and INSERT (so an abort skips the DB write but reports
- * accumulated generator + validator tokens honestly).
+ * Three SIGINT recheck points (Req 4.8) — between generator and validator
+ * (an abort skips the validator's tokens), between validator and the
+ * feedback retry, and after the retry ahead of the INSERT (an abort skips
+ * the DB write but reports accumulated tokens honestly).
  *
  * The `auditRowExists` flag on `failClosed` distinguishes precheck
  * failures (audit row never INSERTed) from in-flight failures (audit row
@@ -38,10 +46,12 @@
 
 import type Anthropic from '@anthropic-ai/sdk';
 import {
-  GENERATION_MODEL,
+  OPUS_4_8_PRICING,
+  THEORY_GENERATION_MODEL,
   ZERO_USAGE,
   addUsage,
   estimateCostUsd,
+  estimateCostUsdAt,
   generateTheoryTopic,
   TheoryDraftMalformedError,
   validateTheoryDraft,
@@ -56,7 +66,10 @@ import { assertValidTheoryCellKey } from '../lib/theory-cell-key';
 import { theoryGenerationJobs, theoryTopics } from '../schema/index';
 
 import type { TheoryCell } from './cells';
-import { routeTheoryValidationResult } from './routing';
+import {
+  routeTheoryValidationResult,
+  type TheoryRoutingDecision,
+} from './routing';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -64,6 +77,47 @@ import { routeTheoryValidationResult } from './routing';
 
 /** theory_generation_jobs.error_message column truncates at 1000 chars. */
 const ERROR_MESSAGE_MAX_LENGTH = 1000;
+
+/**
+ * Mixed-model cost: generator tokens bill at Opus list pricing
+ * (`THEORY_GENERATION_MODEL` = claude-opus-4-8), validator tokens at Sonnet.
+ */
+function theoryCellCostUsd(
+  genUsage: ClaudeUsageBreakdown,
+  valUsage: ClaudeUsageBreakdown,
+): number {
+  const raw =
+    estimateCostUsdAt(OPUS_4_8_PRICING, genUsage) + estimateCostUsd(valUsage);
+  return Math.round(raw * 10000) / 10000;
+}
+
+/** Outcome ordering for the feedback-retry's best-of-two selection. */
+const REVIEW_STATUS_RANK: Record<
+  TheoryRoutingDecision['reviewStatus'],
+  number
+> = {
+  rejected: 0,
+  flagged: 1,
+  'auto-approved': 2,
+};
+
+/**
+ * True when the retry's outcome should replace the first attempt's:
+ * a strictly better review status, or the same status with a strictly
+ * higher quality score. Ties keep the first draft (stable preference).
+ */
+function retryOutcomeIsBetter(
+  retryDecision: TheoryRoutingDecision,
+  retryValidation: TheoryValidationResult,
+  firstDecision: TheoryRoutingDecision,
+  firstValidation: TheoryValidationResult,
+): boolean {
+  const rankDelta =
+    REVIEW_STATUS_RANK[retryDecision.reviewStatus] -
+    REVIEW_STATUS_RANK[firstDecision.reviewStatus];
+  if (rankDelta !== 0) return rankDelta > 0;
+  return retryValidation.qualityScore > firstValidation.qualityScore;
+}
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -107,7 +161,7 @@ export type TheoryCellResult = {
   insertedCount: 0 | 1;
   /** 1 when the partial unique index rejected the INSERT (cell already filled). */
   skippedCount: 0 | 1;
-  /** Generator usage from the single Claude call. */
+  /** Total usage across generator + validator calls (incl. any feedback retry). */
   tokenUsage: ClaudeUsageBreakdown;
   costUsd: number;
   durationMs: number;
@@ -130,7 +184,8 @@ export async function runOneTheoryCell(
     return failClosed({
       cell,
       jobId,
-      tokenUsage: ZERO_USAGE,
+      genUsage: ZERO_USAGE,
+      valUsage: ZERO_USAGE,
       durationMs: Date.now() - startedAt,
       errorMessage: 'Aborted by user (SIGINT)',
       auditRowExists: false,
@@ -148,7 +203,8 @@ export async function runOneTheoryCell(
     return failClosed({
       cell,
       jobId,
-      tokenUsage: ZERO_USAGE,
+      genUsage: ZERO_USAGE,
+      valUsage: ZERO_USAGE,
       durationMs: Date.now() - startedAt,
       errorMessage: message,
       auditRowExists: false,
@@ -170,7 +226,8 @@ export async function runOneTheoryCell(
     return failClosed({
       cell,
       jobId,
-      tokenUsage: ZERO_USAGE,
+      genUsage: ZERO_USAGE,
+      valUsage: ZERO_USAGE,
       durationMs: Date.now() - startedAt,
       errorMessage: 'Audit row id collision (job already ran)',
       auditRowExists: false,
@@ -185,7 +242,11 @@ export async function runOneTheoryCell(
     batchSeed: args.batchSeed,
   };
 
-  let tokenUsage: ClaudeUsageBreakdown = ZERO_USAGE;
+  // Generator and validator usage are tracked separately because they run
+  // on different models: the generator bills at Opus list pricing, the
+  // validator at Sonnet. `addUsage(genUsage, valUsage)` is the audit total.
+  let genUsage: ClaudeUsageBreakdown = ZERO_USAGE;
+  let valUsage: ClaudeUsageBreakdown = ZERO_USAGE;
 
   // 4. Wrap the generation + INSERT steps in an outer try/catch so any
   //    unexpected throw still closes the audit row.
@@ -195,7 +256,8 @@ export async function runOneTheoryCell(
       return failClosed({
         cell,
         jobId,
-        tokenUsage: ZERO_USAGE,
+        genUsage: ZERO_USAGE,
+      valUsage: ZERO_USAGE,
         durationMs: Date.now() - startedAt,
         errorMessage: 'Aborted by user (SIGINT)',
         auditRowExists: true,
@@ -211,7 +273,7 @@ export async function runOneTheoryCell(
     let draft;
     try {
       const result = await generateTheoryTopic(client, spec);
-      tokenUsage = result.tokenUsage;
+      genUsage = result.tokenUsage;
       draft = result.draft;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -220,7 +282,8 @@ export async function runOneTheoryCell(
       return failClosed({
         cell,
         jobId,
-        tokenUsage: failureUsage,
+        genUsage: failureUsage,
+        valUsage: ZERO_USAGE,
         durationMs: Date.now() - startedAt,
         errorMessage: message,
         auditRowExists: true,
@@ -237,7 +300,8 @@ export async function runOneTheoryCell(
       return failClosed({
         cell,
         jobId,
-        tokenUsage,
+        genUsage,
+        valUsage,
         durationMs: Date.now() - startedAt,
         errorMessage: 'Aborted by user (SIGINT)',
         auditRowExists: true,
@@ -257,13 +321,14 @@ export async function runOneTheoryCell(
         spec,
       );
       validationResult = result;
-      tokenUsage = addUsage(tokenUsage, validatorUsage);
+      valUsage = addUsage(valUsage, validatorUsage);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       return failClosed({
         cell,
         jobId,
-        tokenUsage,
+        genUsage,
+        valUsage,
         durationMs: Date.now() - startedAt,
         errorMessage: message,
         auditRowExists: true,
@@ -278,7 +343,8 @@ export async function runOneTheoryCell(
       return failClosed({
         cell,
         jobId,
-        tokenUsage,
+        genUsage,
+        valUsage,
         durationMs: Date.now() - startedAt,
         errorMessage: 'Aborted by user (SIGINT)',
         auditRowExists: true,
@@ -288,9 +354,86 @@ export async function runOneTheoryCell(
 
     // 7. Route the validation result. The router is pure — no I/O — so
     //    it cannot throw and does not need its own SIGINT recheck.
-    const decision = routeTheoryValidationResult(validationResult);
+    let decision = routeTheoryValidationResult(validationResult);
 
-    const costUsd = estimateCostUsd(tokenUsage);
+    // 7b. One feedback-driven regenerate on a non-approved first verdict.
+    //     The validator's reasons go back into the generator's user prompt;
+    //     the second draft is re-validated and the better of the two
+    //     outcomes wins (approved > flagged > rejected, then qualityScore).
+    //     Guards: at most one retry, skip when the projected second attempt
+    //     would blow the per-cell cost cap, skip on abort. A throw anywhere
+    //     in the retry keeps the first outcome — the retry is best-effort
+    //     and must never lose an already-materialized flagged draft.
+    if (decision.reviewStatus !== 'auto-approved' && !signal?.aborted) {
+      const costSoFar = theoryCellCostUsd(genUsage, valUsage);
+      if (costSoFar * 2 <= args.maxCostUsd) {
+        console.log(
+          JSON.stringify({
+            level: 'info',
+            cellKey: cell.cellKey,
+            firstVerdict: decision.reviewStatus,
+            message: 'theory draft not approved — regenerating with validator feedback',
+          }),
+        );
+        try {
+          const retryGen = await generateTheoryTopic(client, spec, {
+            validatorFeedback: decision.flaggedReasons,
+          });
+          genUsage = addUsage(genUsage, retryGen.tokenUsage);
+          if (!signal?.aborted) {
+            const { result: retryValidation, tokenUsage: retryValUsage } =
+              await validateTheoryDraft(client, retryGen.draft, spec);
+            valUsage = addUsage(valUsage, retryValUsage);
+            const retryDecision = routeTheoryValidationResult(retryValidation);
+            if (
+              retryOutcomeIsBetter(
+                retryDecision,
+                retryValidation,
+                decision,
+                validationResult,
+              )
+            ) {
+              draft = retryGen.draft;
+              validationResult = retryValidation;
+              decision = retryDecision;
+            }
+          }
+        } catch (err) {
+          // Bill malformed retry attempts honestly; otherwise swallow — the
+          // first draft's verdict stands.
+          if (err instanceof TheoryDraftMalformedError) {
+            genUsage = addUsage(genUsage, err.tokenUsage);
+          }
+          console.log(
+            JSON.stringify({
+              level: 'warn',
+              cellKey: cell.cellKey,
+              error: err instanceof Error ? err.message : String(err),
+              message: 'feedback retry failed — keeping first verdict',
+            }),
+          );
+        }
+      }
+    }
+
+    // SIGINT recheck #3 — the feedback retry can add two more Claude calls
+    // after recheck #2; keep the invariant that an abort never reaches the
+    // DB write while still reporting every token the retry burned.
+    if (signal?.aborted) {
+      return failClosed({
+        cell,
+        jobId,
+        genUsage,
+        valUsage,
+        durationMs: Date.now() - startedAt,
+        errorMessage: 'Aborted by user (SIGINT)',
+        auditRowExists: true,
+        db,
+      });
+    }
+
+    const tokenUsage = addUsage(genUsage, valUsage);
+    const costUsd = theoryCellCostUsd(genUsage, valUsage);
     const inputTokensUsed =
       tokenUsage.inputTokens +
       tokenUsage.cacheCreationInputTokens +
@@ -349,7 +492,7 @@ export async function runOneTheoryCell(
           cefrLevel: cell.cefrLevel,
           contentJson: draft.contentJson,
           generationSource: 'claude-realtime',
-          modelId: GENERATION_MODEL,
+          modelId: THEORY_GENERATION_MODEL,
           reviewStatus: 'flagged',
           qualityScore: validationResult.qualityScore,
           flaggedReasons: decision.flaggedReasons,
@@ -396,7 +539,7 @@ export async function runOneTheoryCell(
             cefrLevel: cell.cefrLevel,
             contentJson: draft.contentJson,
             generationSource: 'claude-realtime',
-            modelId: GENERATION_MODEL,
+            modelId: THEORY_GENERATION_MODEL,
             reviewStatus: 'auto-approved',
             qualityScore: validationResult.qualityScore,
             flaggedReasons: null,
@@ -470,7 +613,8 @@ export async function runOneTheoryCell(
     return failClosed({
       cell,
       jobId,
-      tokenUsage,
+      genUsage,
+      valUsage,
       durationMs: Date.now() - startedAt,
       errorMessage: message,
       auditRowExists: true,
@@ -486,7 +630,10 @@ export async function runOneTheoryCell(
 async function failClosed(opts: {
   cell: TheoryCell;
   jobId: string;
-  tokenUsage: ClaudeUsageBreakdown;
+  /** Generator-side usage (bills at Opus pricing). */
+  genUsage: ClaudeUsageBreakdown;
+  /** Validator-side usage (bills at Sonnet pricing). */
+  valUsage: ClaudeUsageBreakdown;
   durationMs: number;
   errorMessage: string;
   auditRowExists: boolean;
@@ -498,17 +645,18 @@ async function failClosed(opts: {
   // attempt(s) burned instead of leaving the columns NULL. Fail-open
   // (NFR Reliability) — if the (pure) cost math ever throws, the cell still
   // records as 'failed' with the usage columns left unset (NULL).
+  const totalUsage = addUsage(opts.genUsage, opts.valUsage);
   let inputTokensUsed: number | undefined;
   let outputTokensUsed: number | undefined;
   let costUsdEstimate: string | undefined;
   let costUsd = 0;
   try {
     inputTokensUsed =
-      opts.tokenUsage.inputTokens +
-      opts.tokenUsage.cacheCreationInputTokens +
-      opts.tokenUsage.cacheReadInputTokens;
-    outputTokensUsed = opts.tokenUsage.outputTokens;
-    costUsd = estimateCostUsd(opts.tokenUsage);
+      totalUsage.inputTokens +
+      totalUsage.cacheCreationInputTokens +
+      totalUsage.cacheReadInputTokens;
+    outputTokensUsed = totalUsage.outputTokens;
+    costUsd = theoryCellCostUsd(opts.genUsage, opts.valUsage);
     costUsdEstimate = costUsd.toFixed(4);
   } catch {
     // Leave usage columns NULL; never let accounting fail the run.
@@ -533,7 +681,7 @@ async function failClosed(opts: {
     status: 'failed',
     insertedCount: 0,
     skippedCount: 0,
-    tokenUsage: opts.tokenUsage,
+    tokenUsage: totalUsage,
     costUsd,
     durationMs: opts.durationMs,
     errorMessage: truncatedMessage,

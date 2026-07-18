@@ -17,6 +17,7 @@
 
 import type Anthropic from '@anthropic-ai/sdk';
 import {
+  THEORY_GENERATION_MODEL,
   THEORY_TOOL_NAME,
   THEORY_VALIDATION_TOOL_NAME,
 } from '@language-drill/ai';
@@ -116,8 +117,18 @@ const TEST_KEY_PREFIX = 'es-b1-test-rotc-';
 type MockClientOpts = {
   /** Generator response payload. Default: `subjunctiveFixture`. */
   generatorInput?: unknown;
+  /**
+   * Per-call generator payload queue (retry tests). Overrides
+   * `generatorInput`; sticks on the last entry once exhausted.
+   */
+  generatorInputs?: unknown[];
   /** Validator response payload. Default: auto-approved fixture. */
   validatorInput?: unknown;
+  /**
+   * Per-call validator payload queue (retry tests). Overrides
+   * `validatorInput`; sticks on the last entry once exhausted.
+   */
+  validatorInputs?: unknown[];
   /**
    * When set, overrides the validator response's `tool_use.name` —
    * triggers `validateTheoryDraft`'s "Unexpected tool name" branch.
@@ -149,10 +160,15 @@ type MockClientOpts = {
 function makeMockClient(
   opts: MockClientOpts = {},
 ): { client: Anthropic; create: ReturnType<typeof vi.fn> } {
-  const generatorInput = opts.generatorInput ?? subjunctiveFixture;
-  const validatorInput = opts.validatorInput ?? VALIDATION_AUTO_APPROVED;
+  const generatorQueue =
+    opts.generatorInputs ?? [opts.generatorInput ?? subjunctiveFixture];
+  const validatorQueue =
+    opts.validatorInputs ?? [opts.validatorInput ?? VALIDATION_AUTO_APPROVED];
   const validatorToolName =
     opts.validatorToolName ?? THEORY_VALIDATION_TOOL_NAME;
+
+  let generatorCalls = 0;
+  let validatorCalls = 0;
 
   const create = vi
     .fn()
@@ -164,6 +180,9 @@ function makeMockClient(
           if (opts.validatorThrows) {
             throw new Error('Mock validator: synthetic API failure');
           }
+          const validatorInput =
+            validatorQueue[Math.min(validatorCalls, validatorQueue.length - 1)];
+          validatorCalls += 1;
           return {
             content: [
               {
@@ -190,6 +209,9 @@ function makeMockClient(
 
         // Generator branch (default — covers unknown tool names too, which
         // is the Phase 2 behavior any pre-existing caller relied on).
+        const generatorInput =
+          generatorQueue[Math.min(generatorCalls, generatorQueue.length - 1)];
+        generatorCalls += 1;
         opts.onGeneratorReturn?.();
         return {
           content: [
@@ -317,7 +339,7 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
           .where(eq(theoryTopics.grammarPointKey, cell.grammarPoint.key));
         expect(topicRows).toHaveLength(1);
         expect(topicRows[0].reviewStatus).toBe('auto-approved');
-        expect(topicRows[0].modelId).toBe('claude-sonnet-4-5');
+        expect(topicRows[0].modelId).toBe(THEORY_GENERATION_MODEL);
         expect(topicRows[0].generationSource).toBe('claude-realtime');
 
         const jobRows = await db
@@ -751,6 +773,238 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
         expect(jobRows[0].errorMessage).toBe(
           'first factual error; second factual error',
         );
+      },
+    );
+
+    // -----------------------------------------------------------------------
+    // Feedback-driven regenerate — one retry on a non-approved first verdict
+    // -----------------------------------------------------------------------
+
+    it(
+      'regenerates with validator feedback and inserts the approved retry draft',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        const cell = buildTestCell();
+        // First validation flags, second approves — the retry draft wins.
+        const { client, create } = makeMockClient({
+          validatorInputs: [VALIDATION_FLAGGED, VALIDATION_AUTO_APPROVED],
+        });
+        const jobId = randomUUID();
+
+        const result = await runOneTheoryCell({
+          db,
+          client,
+          cell,
+          args: { batchSeed: 'test', maxCostUsd: 1.0 },
+          jobId,
+          trigger: 'cli',
+        });
+
+        expect(result.status).toBe('succeeded');
+        expect(result.insertedCount).toBe(1);
+        // gen + validate, then feedback-gen + validate.
+        expect(create).toHaveBeenCalledTimes(4);
+
+        // The second generator call carries the first validator's reasons in
+        // its user prompt.
+        const secondGenArgs = create.mock.calls[2][0] as {
+          tool_choice?: { name?: string };
+          messages: Array<{ content: string }>;
+        };
+        expect(secondGenArgs.tool_choice?.name).toBe(THEORY_TOOL_NAME);
+        expect(secondGenArgs.messages[0].content).toContain(
+          'rejected by the quality validator',
+        );
+        expect(secondGenArgs.messages[0].content).toContain(
+          'voice is too encouraging',
+        );
+
+        const topicRows = await db
+          .select()
+          .from(theoryTopics)
+          .where(eq(theoryTopics.grammarPointKey, cell.grammarPoint.key));
+        expect(topicRows).toHaveLength(1);
+        expect(topicRows[0].reviewStatus).toBe('auto-approved');
+        expect(topicRows[0].flaggedReasons).toBeNull();
+
+        const jobRows = await db
+          .select()
+          .from(theoryGenerationJobs)
+          .where(eq(theoryGenerationJobs.id, jobId));
+        expect(jobRows[0].approved).toBe(true);
+        expect(jobRows[0].flagged).toBe(false);
+        // Audit tokens cover all four calls: 2 × generator (1500/800) +
+        // 2 × validator (800/200).
+        expect(jobRows[0].inputTokensUsed).toBe(2 * 1500 + 2 * 800);
+        expect(jobRows[0].outputTokensUsed).toBe(2 * 800 + 2 * 200);
+      },
+    );
+
+    it(
+      'a rejected first draft can be rescued by an approved retry draft',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        const cell = buildTestCell();
+        const { client, create } = makeMockClient({
+          validatorInputs: [VALIDATION_REJECTED, VALIDATION_AUTO_APPROVED],
+        });
+        const jobId = randomUUID();
+
+        const result = await runOneTheoryCell({
+          db,
+          client,
+          cell,
+          args: { batchSeed: 'test', maxCostUsd: 1.0 },
+          jobId,
+          trigger: 'cli',
+        });
+
+        expect(result.status).toBe('succeeded');
+        expect(result.insertedCount).toBe(1);
+        expect(create).toHaveBeenCalledTimes(4);
+
+        const topicRows = await db
+          .select()
+          .from(theoryTopics)
+          .where(eq(theoryTopics.grammarPointKey, cell.grammarPoint.key));
+        expect(topicRows).toHaveLength(1);
+        expect(topicRows[0].reviewStatus).toBe('auto-approved');
+
+        const jobRows = await db
+          .select()
+          .from(theoryGenerationJobs)
+          .where(eq(theoryGenerationJobs.id, jobId));
+        expect(jobRows[0].approved).toBe(true);
+        expect(jobRows[0].rejected).toBe(false);
+      },
+    );
+
+    it(
+      'keeps the first flagged draft when the retry is no better (equal verdict + score)',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        const cell = buildTestCell();
+        // Both validations flag with the same score — tie keeps the first
+        // draft; the cell still lands as flagged.
+        const { client, create } = makeMockClient({
+          validatorInputs: [VALIDATION_FLAGGED, VALIDATION_FLAGGED],
+        });
+        const jobId = randomUUID();
+
+        const result = await runOneTheoryCell({
+          db,
+          client,
+          cell,
+          args: { batchSeed: 'test', maxCostUsd: 1.0 },
+          jobId,
+          trigger: 'cli',
+        });
+
+        expect(result.status).toBe('succeeded');
+        expect(result.insertedCount).toBe(1);
+        expect(create).toHaveBeenCalledTimes(4);
+
+        const topicRows = await db
+          .select()
+          .from(theoryTopics)
+          .where(eq(theoryTopics.grammarPointKey, cell.grammarPoint.key));
+        expect(topicRows).toHaveLength(1);
+        expect(topicRows[0].reviewStatus).toBe('flagged');
+
+        const jobRows = await db
+          .select()
+          .from(theoryGenerationJobs)
+          .where(eq(theoryGenerationJobs.id, jobId));
+        expect(jobRows[0].flagged).toBe(true);
+      },
+    );
+
+    it(
+      'skips the retry when the cost cap cannot fund a second attempt',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        const cell = buildTestCell();
+        const { client, create } = makeMockClient({
+          validatorInputs: [VALIDATION_FLAGGED, VALIDATION_AUTO_APPROVED],
+        });
+        const jobId = randomUUID();
+
+        // First attempt costs ~$0.033 (generator 1500/800 at Opus pricing +
+        // validator 800/200 at Sonnet); the retry gate needs
+        // costSoFar * 2 <= maxCostUsd, so $0.05 blocks it.
+        const result = await runOneTheoryCell({
+          db,
+          client,
+          cell,
+          args: { batchSeed: 'test', maxCostUsd: 0.05 },
+          jobId,
+          trigger: 'cli',
+        });
+
+        expect(result.status).toBe('succeeded');
+        expect(result.insertedCount).toBe(1);
+        // No retry: generator + validator only.
+        expect(create).toHaveBeenCalledTimes(2);
+
+        const topicRows = await db
+          .select()
+          .from(theoryTopics)
+          .where(eq(theoryTopics.grammarPointKey, cell.grammarPoint.key));
+        expect(topicRows[0].reviewStatus).toBe('flagged');
+      },
+    );
+
+    it(
+      'keeps the first flagged outcome when the retry generator dies on malformed drafts',
+      { timeout: TEST_TIMEOUT_MS },
+      async () => {
+        const malformed = {
+          id: 'x',
+          title: 't',
+          subtitle: 's',
+          cefr: 'B1',
+          sections: [],
+        };
+        const cell = buildTestCell();
+        // First generator call is fine; every retry-generation attempt is
+        // malformed (generateTheoryTopic burns its 3-call budget and throws).
+        const { client, create } = makeMockClient({
+          generatorInputs: [subjunctiveFixture, malformed, malformed, malformed],
+          validatorInputs: [VALIDATION_FLAGGED],
+        });
+        const jobId = randomUUID();
+
+        const result = await runOneTheoryCell({
+          db,
+          client,
+          cell,
+          args: { batchSeed: 'test', maxCostUsd: 1.0 },
+          jobId,
+          trigger: 'cli',
+        });
+
+        // Retry failure is best-effort — the first flagged outcome stands.
+        expect(result.status).toBe('succeeded');
+        expect(result.insertedCount).toBe(1);
+        // gen + validate + 3 malformed retry-generation attempts.
+        expect(create).toHaveBeenCalledTimes(5);
+
+        const topicRows = await db
+          .select()
+          .from(theoryTopics)
+          .where(eq(theoryTopics.grammarPointKey, cell.grammarPoint.key));
+        expect(topicRows).toHaveLength(1);
+        expect(topicRows[0].reviewStatus).toBe('flagged');
+
+        const jobRows = await db
+          .select()
+          .from(theoryGenerationJobs)
+          .where(eq(theoryGenerationJobs.id, jobId));
+        expect(jobRows[0].flagged).toBe(true);
+        // Malformed retry attempts still bill: 4 × generator (1500/800) +
+        // 1 × validator (800/200).
+        expect(jobRows[0].inputTokensUsed).toBe(4 * 1500 + 800);
+        expect(jobRows[0].outputTokensUsed).toBe(4 * 800 + 200);
       },
     );
 

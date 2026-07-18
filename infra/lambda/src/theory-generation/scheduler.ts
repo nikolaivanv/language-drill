@@ -43,11 +43,15 @@ import type { TheoryGenerationJobMessage } from './job-message';
 // ---------------------------------------------------------------------------
 
 /**
- * Half the exercise scheduler's $0.50 cap. Theory averages ~$0.07/cell at
- * Sonnet 4.5 list pricing (docs/theory-generation-plan.md §5); $0.25 leaves
- * comfortable headroom while keeping a runaway prompt bounded.
+ * Sized for the Opus generator + one validator-feedback retry: theory
+ * averaged ~$0.07/cell on Sonnet; the Opus generator (~1.7× Sonnet list
+ * pricing) puts a single attempt around $0.10–0.12, and a flagged/rejected
+ * first draft triggers one feedback-driven regenerate (`runOneTheoryCell`
+ * gates the retry on `costSoFar * 2 <= maxCostUsd`, so the cap must leave
+ * room for a doubled spend). $0.60 bounds a runaway prompt while never
+ * suppressing the retry on a normal-sized cell.
  */
-const SCHEDULER_PER_CELL_COST_CAP_USD = 0.25;
+const SCHEDULER_PER_CELL_COST_CAP_USD = 0.6;
 
 /** Telemetry-only threshold; not a hard budget. */
 const SLOW_QUERY_WARNING_MS = 30_000;
