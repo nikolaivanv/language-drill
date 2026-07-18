@@ -43,6 +43,7 @@ import { SendMessageBatchCommand, SQSClient } from '@aws-sdk/client-sqs';
 import { inArray, sql } from 'drizzle-orm';
 
 import type { GenerationJobMessage } from './job-message';
+import { selectCellsWithinCaps } from './cell-selection';
 import { resolveCellTarget } from './cell-targets';
 import { decideCoverageTargets } from './coverage-decision';
 import { loadMostRecentSucceededJobPerCell } from './recent-jobs';
@@ -68,8 +69,25 @@ const MAX_BATCH_SIZE = 10;
  * deferred cells are still under-target next night, so they re-enqueue with no
  * persistence needed — an initial fill self-spreads over ceil(total / cap)
  * nights. See docs/tech-debt.md "No brake or alert on Anthropic API spend".
+ *
+ * Raised 60 → 120 (2026-07-18) alongside the per-language cap below, to clear
+ * the German book-coverage backlog without parking every ES/TR top-up for a
+ * week — see docs/analysis/generation-run-2026-07-18.md.
  */
-const DEFAULT_MAX_CELLS_PER_RUN = 60;
+const DEFAULT_MAX_CELLS_PER_RUN = 120;
+
+/**
+ * Per-language fair-share ceiling: the maximum number of cells any single
+ * language contributes to one run, before redistribution. Overridable via
+ * `SCHEDULER_MAX_CELLS_PER_LANGUAGE` (positive int).
+ *
+ * The global cap alone lets one language's expansion monopolize the whole run
+ * (the 2026-07-18 run went 100% German, parking every ES/TR top-up). This
+ * ceiling guarantees the other languages at least `globalCap − perLangCap`
+ * slots under contention; unused slots still redistribute to a language with a
+ * bigger backlog, so no capacity is wasted. See `selectCellsWithinCaps`.
+ */
+const DEFAULT_MAX_CELLS_PER_LANGUAGE = 50;
 
 /**
  * Resolve the run-level cell cap from the environment, falling back to
@@ -83,6 +101,20 @@ function resolveMaxCellsPerRun(): number {
   return Number.isInteger(parsed) && parsed > 0
     ? parsed
     : DEFAULT_MAX_CELLS_PER_RUN;
+}
+
+/**
+ * Resolve the per-language cap from the environment, falling back to
+ * `DEFAULT_MAX_CELLS_PER_LANGUAGE`. Same fat-finger guard as
+ * `resolveMaxCellsPerRun` — a bad value can never disable the fairness cap.
+ */
+function resolveMaxCellsPerLanguage(): number {
+  const raw = process.env['SCHEDULER_MAX_CELLS_PER_LANGUAGE'];
+  if (raw === undefined) return DEFAULT_MAX_CELLS_PER_LANGUAGE;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isInteger(parsed) && parsed > 0
+    ? parsed
+    : DEFAULT_MAX_CELLS_PER_LANGUAGE;
 }
 
 // ---------------------------------------------------------------------------
@@ -309,34 +341,38 @@ export async function handler(): Promise<void> {
     }
   }
 
-  // 5b. Run-level ceiling: cap how many under-target cells this tick enqueues
-  //     so one nightly fan-out can't spend an unbounded amount against the
-  //     Anthropic account. Sort by `need` descending (emptiest cells fill
-  //     first) with a deterministic `cellKey` tie-break, then keep the first
-  //     `cap`. Deferred cells stay under-target and re-enqueue on a later run —
-  //     no persistence, an initial fill self-spreads over ceil(total/cap)
-  //     nights. Applied on `undersized` BEFORE the coverage-targets map below
-  //     so it composes with the Phase-2 coverage controller.
+  // 5b. Run-level ceiling + per-language fair-share cap: bound one night's
+  //     Anthropic spend AND stop a single language's expansion from starving
+  //     the others. `selectCellsWithinCaps` reserves each language its share
+  //     (need-descending, cellKey tie-break), trims by need under contention,
+  //     and redistributes any unused global slots — see cell-selection.ts.
+  //     Deferred cells stay under-target and re-enqueue on a later run.
+  //     Applied BEFORE the coverage-targets map below so it composes with the
+  //     Phase-2 coverage controller.
   const cap = resolveMaxCellsPerRun();
-  if (undersized.length > cap) {
-    undersized.sort(
-      (a, b) => b.need - a.need || a.cell.cellKey.localeCompare(b.cell.cellKey),
-    );
-    const deferredCount = undersized.length - cap;
-    undersized.length = cap;
+  const perLanguageCap = resolveMaxCellsPerLanguage();
+  const {
+    selected: selectedCells,
+    deferredCount,
+    enqueuedByLanguage,
+  } = selectCellsWithinCaps(undersized, cap, perLanguageCap);
+  if (deferredCount > 0) {
     log({
       level: 'info',
       cap,
-      enqueuedThisRun: cap,
+      perLanguageCap,
+      enqueuedThisRun: selectedCells.length,
+      enqueuedByLanguage,
       deferredCount,
-      message: 'run-level cell cap applied — deferring cells to a later run',
+      message:
+        'run-level + per-language cap applied — deferring cells to a later run',
     });
   }
 
   // 6. Empty-curriculum-slice fast path (Req 4.9): nothing to enqueue →
   //    don't even open an SQS connection. Suppression summary still emitted
   //    so the operator can see *why* nothing was enqueued.
-  if (undersized.length === 0) {
+  if (selectedCells.length === 0) {
     log({
       level: 'info',
       enqueued: 0,
@@ -349,7 +385,7 @@ export async function handler(): Promise<void> {
 
   // 6. Build messages. `jobId = deterministicUuid(cellKey | batchSeed)` makes
   //    same-day re-fires produce identical IDs (Req 4.4 + Req 4.3.4).
-  const messages: GenerationJobMessage[] = undersized.map(({ cell, need }) => {
+  const messages: GenerationJobMessage[] = selectedCells.map(({ cell, need }) => {
     const base = {
       jobId: deterministicUuid([cell.cellKey, batchSeed].join('|')),
       trigger: 'scheduled' as const,

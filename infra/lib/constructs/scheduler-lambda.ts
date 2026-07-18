@@ -31,11 +31,18 @@ export interface SchedulerLambdaConstructProps {
   additionalEnv?: Record<string, string>;
   /**
    * Run-level ceiling: max under-target cells enqueued per tick, injected as
-   * `SCHEDULER_MAX_CELLS_PER_RUN`. Omit to use the scheduler code default (60).
+   * `SCHEDULER_MAX_CELLS_PER_RUN`. Omit to use the scheduler code default (120).
    * Changing it is a one-line CDK deploy — it bounds a single night's Anthropic
    * spend by limiting the fan-out (docs/tech-debt.md spend-brake entry).
    */
   maxCellsPerRun?: number;
+  /**
+   * Per-language fair-share ceiling: max cells any single language contributes
+   * per tick (before redistribution), injected as
+   * `SCHEDULER_MAX_CELLS_PER_LANGUAGE`. Omit to use the scheduler code default
+   * (50). Stops one language's curriculum expansion from monopolizing the run.
+   */
+  maxCellsPerLanguage?: number;
 }
 
 export class SchedulerLambdaConstruct extends Construct {
@@ -90,6 +97,13 @@ export class SchedulerLambdaConstruct extends Construct {
         GENERATION_QUEUE_URL: props.queue.queueUrl,
         ...(props.maxCellsPerRun !== undefined
           ? { SCHEDULER_MAX_CELLS_PER_RUN: String(props.maxCellsPerRun) }
+          : {}),
+        ...(props.maxCellsPerLanguage !== undefined
+          ? {
+              SCHEDULER_MAX_CELLS_PER_LANGUAGE: String(
+                props.maxCellsPerLanguage,
+              ),
+            }
           : {}),
       },
     });
