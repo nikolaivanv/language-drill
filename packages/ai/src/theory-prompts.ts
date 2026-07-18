@@ -47,7 +47,7 @@ function renderBulletList(items: readonly string[]): string {
 // system prompt (this file's `buildTheorySystemPrompt`). Drives the
 // Langfuse trace `promptVersion` tag — dashboards cohort old vs. new
 // prompt traces by this string.
-export const THEORY_GENERATION_PROMPT_VERSION = "theory-generate@2026-06-02";
+export const THEORY_GENERATION_PROMPT_VERSION = "theory-generate@2026-07-18";
 
 /**
  * Phase-2 Langfuse-registered template. Identical to the body
@@ -148,6 +148,25 @@ export async function buildTheorySystemPrompt(
 // User prompt — short per-call message; the system prompt is the heavy lift.
 // ---------------------------------------------------------------------------
 
-export function buildTheoryUserPrompt(inputs: TheoryPromptInputs): string {
-  return `Produce the theory page for ${inputs.grammarPoint.name} (${inputs.grammarPoint.key}) at CEFR ${inputs.cefrLevel}.`;
+export function buildTheoryUserPrompt(
+  inputs: TheoryPromptInputs,
+  /**
+   * Validator flag/reject reasons from a prior draft of the same cell —
+   * present only on the orchestrator's feedback-driven regenerate pass.
+   * Lives in the user prompt (not the Langfuse-registered system template)
+   * so the retry instruction ships with the code deploy and the system
+   * prompt stays byte-stable for the prompt cache.
+   */
+  validatorFeedback?: readonly string[],
+): string {
+  const base = `Produce the theory page for ${inputs.grammarPoint.name} (${inputs.grammarPoint.key}) at CEFR ${inputs.cefrLevel}.`;
+  if (validatorFeedback === undefined || validatorFeedback.length === 0) {
+    return base;
+  }
+  const bullets = validatorFeedback.map((reason) => `- ${reason}`).join("\n");
+  return `${base}
+
+A previous draft of this page was rejected by the quality validator. Write a fresh page that fixes every issue below, and re-check the rest of the page (especially every table row) for the same class of error:
+
+${bullets}`;
 }

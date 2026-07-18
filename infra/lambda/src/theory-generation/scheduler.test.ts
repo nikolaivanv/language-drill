@@ -283,11 +283,12 @@ describe('theory scheduler handler', () => {
     }
 
     // Every message parses cleanly and carries the scheduled trigger + the
-    // 0.25 maxCostUsd from SCHEDULER_PER_CELL_COST_CAP_USD.
+    // 0.6 maxCostUsd from SCHEDULER_PER_CELL_COST_CAP_USD (Opus generator
+    // + headroom for the one validator-feedback retry).
     const parsed = allMessages.map((m) => parseTheoryGenerationJobMessage(m));
     for (const m of parsed) {
       expect(m.trigger).toBe('scheduled');
-      expect(m.maxCostUsd).toBe(0.25);
+      expect(m.maxCostUsd).toBe(0.6);
     }
   });
 

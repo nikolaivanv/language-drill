@@ -5,6 +5,8 @@ import {
   addUsage,
   estimateCostUsd,
   type ClaudeUsageBreakdown,
+  OPUS_4_8_PRICING,
+  estimateCostUsdAt,
 } from "./cost-model.js";
 import {
   buildCostDetails,
@@ -212,5 +214,42 @@ describe("cost reconciliation — buildCostDetails ↔ estimateCostUsd (Req 4 AC
       cache_read_input: 3,
       output: 4,
     });
+  });
+});
+
+describe("OPUS_4_8_PRICING / estimateCostUsdAt", () => {
+  it("prices Opus at $5/$25 per MTok with 125%/10% cache write/read rates", () => {
+    expect(OPUS_4_8_PRICING.inputUsdPerToken).toBeCloseTo(5 / 1_000_000, 12);
+    expect(OPUS_4_8_PRICING.outputUsdPerToken).toBeCloseTo(25 / 1_000_000, 12);
+    expect(OPUS_4_8_PRICING.cacheWriteUsdPerToken).toBeCloseTo(
+      6.25 / 1_000_000,
+      12,
+    );
+    expect(OPUS_4_8_PRICING.cacheReadUsdPerToken).toBeCloseTo(
+      0.5 / 1_000_000,
+      12,
+    );
+  });
+
+  it("estimateCostUsdAt(SONNET_4_5_PRICING, u) equals estimateCostUsd(u)", () => {
+    const usage = {
+      inputTokens: 123_456,
+      cacheCreationInputTokens: 7_890,
+      cacheReadInputTokens: 45_000,
+      outputTokens: 9_999,
+    };
+    expect(estimateCostUsdAt(SONNET_4_5_PRICING, usage)).toBe(
+      estimateCostUsd(usage),
+    );
+  });
+
+  it("prices 1M input + 1M output at $30 for Opus", () => {
+    const usage = {
+      inputTokens: 1_000_000,
+      cacheCreationInputTokens: 0,
+      cacheReadInputTokens: 0,
+      outputTokens: 1_000_000,
+    };
+    expect(estimateCostUsdAt(OPUS_4_8_PRICING, usage)).toBe(30);
   });
 });

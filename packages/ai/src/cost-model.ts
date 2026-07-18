@@ -19,6 +19,21 @@ export const SONNET_4_5_PRICING = Object.freeze({
   outputUsdPerToken: 15.0 / 1_000_000,
 });
 
+/**
+ * Opus-tier list pricing (USD per token), verified 2026-07-18: Opus 4.8
+ * lists at $5/$25 per MTok. Used by the theory generator
+ * (`THEORY_GENERATION_MODEL` = claude-opus-4-8) cost estimates; everything
+ * else in the pipeline stays Sonnet-priced via `SONNET_4_5_PRICING`.
+ */
+export const OPUS_4_8_PRICING = Object.freeze({
+  inputUsdPerToken: 5.0 / 1_000_000, // base
+  cacheWriteUsdPerToken: 6.25 / 1_000_000, // 125% of base
+  cacheReadUsdPerToken: 0.5 / 1_000_000, // 10% of base
+  outputUsdPerToken: 25.0 / 1_000_000,
+});
+
+export type ClaudePricing = typeof SONNET_4_5_PRICING;
+
 export type ClaudeUsageBreakdown = {
   /** Non-cached input tokens; billed at base rate. */
   inputTokens: number;
@@ -50,12 +65,20 @@ export function addUsage(
   };
 }
 
-/** Pure: returns USD cost rounded to 4 decimal places. */
-export function estimateCostUsd(usage: ClaudeUsageBreakdown): number {
+/** Pure: returns USD cost at the given pricing, rounded to 4 decimal places. */
+export function estimateCostUsdAt(
+  pricing: ClaudePricing,
+  usage: ClaudeUsageBreakdown,
+): number {
   const raw =
-    usage.inputTokens * SONNET_4_5_PRICING.inputUsdPerToken +
-    usage.cacheCreationInputTokens * SONNET_4_5_PRICING.cacheWriteUsdPerToken +
-    usage.cacheReadInputTokens * SONNET_4_5_PRICING.cacheReadUsdPerToken +
-    usage.outputTokens * SONNET_4_5_PRICING.outputUsdPerToken;
+    usage.inputTokens * pricing.inputUsdPerToken +
+    usage.cacheCreationInputTokens * pricing.cacheWriteUsdPerToken +
+    usage.cacheReadInputTokens * pricing.cacheReadUsdPerToken +
+    usage.outputTokens * pricing.outputUsdPerToken;
   return Math.round(raw * 10000) / 10000;
+}
+
+/** Pure: returns USD cost at Sonnet list pricing, rounded to 4 decimal places. */
+export function estimateCostUsd(usage: ClaudeUsageBreakdown): number {
+  return estimateCostUsdAt(SONNET_4_5_PRICING, usage);
 }

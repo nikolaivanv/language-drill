@@ -212,7 +212,9 @@ export type { GenerationPromptInputs } from "./generation-prompts.js";
 
 export {
   SONNET_4_5_PRICING,
+  OPUS_4_8_PRICING,
   estimateCostUsd,
+  estimateCostUsdAt,
   addUsage,
   ZERO_USAGE,
 } from "./cost-model.js";
@@ -256,7 +258,6 @@ export type { DeterministicVerdict, TurkishVowel } from "./turkish-harmony.js";
 export {
   THEORY_TOOL_NAME,
   THEORY_GENERATION_MODEL,
-  THEORY_GENERATION_TEMPERATURE,
   THEORY_GENERATION_MAX_TOKENS,
   THEORY_GENERATION_MAX_RETRIES,
   THEORY_GENERATION_TOOL,
