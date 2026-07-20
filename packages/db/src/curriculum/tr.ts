@@ -188,7 +188,7 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * 2026-07-18: adds a comparison-axis coverageSpec to
  * tr-a1-comparative-superlative.
  */
-export const CURRICULUM_VERSION_TR = '2026-07-18';
+export const CURRICULUM_VERSION_TR = '2026-07-20';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -2908,7 +2908,17 @@ const trCurriculum: readonly GrammarPoint[] = [
     // it is a category mismatch. The stacking rule is drilled by
     // sentence_construction + translation instead (mirrors B1 passive-voice).
     clozeUnsuitable: true,
-    sentenceConstructionSuitable: true,
+    // Combined voice bundles THREE distinct constructions (causative-of-causative,
+    // causative+passive, reciprocal+causative). A sentence_construction prompt
+    // can't pin WHICH one, so drafts scatter across constructions and — worse —
+    // the model commonly ships a single-causative form (kestirdi), which is a B1
+    // construction, not combined voice: the SC surface produced wrong-grammar-
+    // point content (grammar-point-mismatch, lifetime ~43%). Per the
+    // multi-construction rule (single-construction points only get SC), this
+    // point is SC-unsuitable. Drill via translation, where the English source
+    // fixes the target combination. (Translation still needs a base-verb-seed +
+    // no-cross-combination-enumeration generation fix — tracked separately.)
+    sentenceConstructionSuitable: false,
     kind: 'grammar',
     name: 'Combined voice (birleşik çatı)',
     description:
@@ -3244,6 +3254,15 @@ const trCurriculum: readonly GrammarPoint[] = [
   // forms fill one meaning slot (cf. tr-b1-since-converb), so SC stays viable.
   {
     key: 'tr-b1-when-converbs',
+    // -(y)IncA (sequential trigger) and -DIğIndA (ongoing background) are a
+    // CONTRAST pair with different meanings, so a cloze must force exactly one
+    // via main-clause aspect AND — for -DIğIndA — pin the possessive person
+    // (gittiğimde 1sg vs gittiğinde 3sg), which the sentence rarely fixes. Two
+    // stacked ambiguities make the blank irreducibly under-determined: drafts
+    // list both converbs in acceptableAnswers (teaching them as interchangeable)
+    // and leave -DIğIndA's person open (lifetime cloze ~38%, degrading). Drill
+    // via translation (the L1 source fixes both aspect and person) + SC.
+    clozeUnsuitable: true,
     sentenceConstructionSuitable: true,
     kind: 'grammar',
     name: '"When" clauses -(y)IncA / -DIğIndA',
