@@ -571,7 +571,7 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
     ).toBeUndefined();
   });
 
-  it('the full TR clozeUnsuitable set is exactly these thirty-six points', () => {
+  it('the full TR clozeUnsuitable set is exactly these thirty-seven points', () => {
     const flagged = trCurriculum
       .filter((g) => g.clozeUnsuitable === true)
       .map((g) => g.key)
@@ -595,6 +595,9 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
         'tr-b1-converb-while-yken',
         'tr-b1-participles-dik-acak',
         'tr-b1-since-converb',
+        // -(y)IncA vs -DIğIndA contrast + -DIğIndA person agreement: a single
+        // blank can't force both; drill via translation + SC (2026-07-20).
+        'tr-b1-when-converbs',
         'tr-b1-causative-voice',
         'tr-b1-obligation-periphrases',
         'tr-b1-passive-voice',

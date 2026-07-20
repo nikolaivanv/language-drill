@@ -67,7 +67,7 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * three broad-umbrella cells and enqueues the 17 new vocab cells.
  * 2026-07-18: adds a comparison-axis coverageSpec to de-a2-comparison.
  */
-export const CURRICULUM_VERSION_DE = '2026-07-18';
+export const CURRICULUM_VERSION_DE = '2026-07-20';
 
 const deCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -2192,6 +2192,17 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-b2-subjective-modals',
+    // The epistemic modals form a CONTRAST set graded by certainty/evidence
+    // (muss near-certain, dürfte probable, könnte possible, soll hearsay, will
+    // self-claim). A single blank cannot force exactly one — two modals are
+    // usually both defensible from context — so cloze drafts either enumerate
+    // the contrasting modals in acceptableAnswers (teaching them as
+    // interchangeable, the very error this point corrects) or omit a defensible
+    // one; both are flagged `ambiguous` (lifetime cloze ~13-41%). Drill via
+    // translation, where the English evidential stance fixes the modal
+    // ("must have" → muss, "is said to" → soll, "claims to" → will). Mirrors
+    // the sibling de-b2-modal-perfect-word-order, also clozeUnsuitable.
+    clozeUnsuitable: true,
     kind: 'grammar',
     name: 'Subjective (epistemic) modal verbs',
     description:
