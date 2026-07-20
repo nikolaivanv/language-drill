@@ -561,6 +561,15 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
     expect(getGrammarPoint('tr-b1-dictation')?.targetOverride).toBe(30);
   });
 
+  it('caps tr-b2-double-voice translation volume via targetOverride (2026-07-20a)', () => {
+    // Combined voice is translation-only (SC retired #604) and caps low
+    // (~8–17%): an eval:gen A/B of a natural-English-frame generation rule
+    // cleared the ambiguity/mismatch flags but did NOT lift approval (8% → 8%),
+    // because combined voice has no clean English equivalent. Cap the target so
+    // the scheduler stops grinding the B2 default (50) into low-quality waste.
+    expect(getGrammarPoint('tr-b2-double-voice')?.targetOverride).toBe(15);
+  });
+
   it('leaves tr-a2-indefinite-compound uncapped — its translation surface is healthy', () => {
     // The cloze quality fix lives in the generation prompt (bare-head hint,
     // nominative answer, no case-stacking). targetOverride is point-wide and

@@ -188,7 +188,7 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * 2026-07-18: adds a comparison-axis coverageSpec to
  * tr-a1-comparative-superlative.
  */
-export const CURRICULUM_VERSION_TR = '2026-07-20';
+export const CURRICULUM_VERSION_TR = '2026-07-20a';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -2916,9 +2916,18 @@ const trCurriculum: readonly GrammarPoint[] = [
     // point content (grammar-point-mismatch, lifetime ~43%). Per the
     // multi-construction rule (single-construction points only get SC), this
     // point is SC-unsuitable. Drill via translation, where the English source
-    // fixes the target combination. (Translation still needs a base-verb-seed +
-    // no-cross-combination-enumeration generation fix — tracked separately.)
+    // fixes the target combination.
     sentenceConstructionSuitable: false,
+    // Low-yield cap. A combined-voice translation-generation rule (natural
+    // English frame + one combination per draft) was A/B'd via eval:gen
+    // (2026-07-20): it cleared the ambiguity / grammar-point-mismatch flags but
+    // did NOT lift approval (8% → 8%, flags just converted to low-quality
+    // rejects) — combined voice has no clean English equivalent, so the
+    // translation surface caps ~8–17%. Rather than chase the B2-default 50
+    // forever (burning generation every night), cap the target so the cell stops
+    // re-enqueuing once it holds a small, servable pool. A durable fix would be
+    // splitting this into single-construction sub-points — tracked separately.
+    targetOverride: 15,
     kind: 'grammar',
     name: 'Combined voice (birleşik çatı)',
     description:
