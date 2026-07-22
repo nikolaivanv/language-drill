@@ -34,7 +34,8 @@
     "eval:seed": "dotenv -e .env -- pnpm --filter @language-drill/ai eval:seed",
     "eval": "dotenv -e .env -- pnpm --filter @language-drill/ai eval",
     "eval:gen:export": "dotenv -e .env -- pnpm --filter @language-drill/ai eval:gen:export",
-    "eval:gen": "dotenv -e .env -- pnpm --filter @language-drill/ai eval:gen"
+    "eval:gen": "dotenv -e .env -- pnpm --filter @language-drill/ai eval:gen",
+    "qa:sample": "dotenv -e .env -- pnpm --filter @language-drill/ai qa:sample"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

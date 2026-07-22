@@ -386,7 +386,7 @@ type AnthropicResponseUsage = {
  * through `Reflect.get`. Streaming responses (`messages.stream`) skip
  * the wrapper because evaluate uses non-stream tool-use only.
  */
-function wrapForUsageCapture(
+export function wrapForUsageCapture(
   client: Anthropic,
   sink: { current: ClaudeUsageBreakdown | undefined },
 ): Anthropic {

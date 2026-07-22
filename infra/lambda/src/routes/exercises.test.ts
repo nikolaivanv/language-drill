@@ -72,54 +72,78 @@ const mockUpdateMastery = vi.fn((prev: unknown, _obs: unknown) => ({
   lastPracticedAt: new Date('2026-01-01'),
 }));
 
-const mockGrammarPointsAtOrBelow = vi.fn(() => [] as { key: string; name: string }[]);
+const mockGrammarPointsAtOrBelow = vi.fn(
+  (_language?: string | null, _difficulty?: string | null) => [] as { key: string; name: string }[],
+);
 
-vi.mock('@language-drill/db', () => ({
-  users: { id: 'id' },
-  exercises: { reviewStatus: 'review_status', type: 'type', audioS3Key: 'audio_s3_key', grammarPointKey: 'grammar_point_key', language: 'language', difficulty: 'difficulty' },
-  userExerciseHistory: { id: 'id', userId: 'user_id', exerciseId: 'exercise_id' },
-  usageEvents: {},
-  errorObservations: { exerciseHistoryId: 'exercise_history_id' },
-  practiceSessions: {
-    id: 'id',
-    userId: 'user_id',
-    completedAt: 'completed_at',
-    exerciseIds: 'exercise_ids',
-  },
-  userGrammarMastery: {
-    userId: 'user_id',
-    grammarPointKey: 'grammar_point_key',
-    masteryScore: 'mastery_score',
-    confidence: 'confidence',
-    evidenceCount: 'evidence_count',
-    lastPracticedAt: 'last_practiced_at',
-  },
-  updateMastery: (prev: unknown, obs: unknown) => mockUpdateMastery(prev, obs),
-  getGrammarPoint: vi.fn(() => undefined),
-  grammarPointsAtOrBelow: (...args: Parameters<typeof mockGrammarPointsAtOrBelow>) => mockGrammarPointsAtOrBelow(...args),
-  // Real mapping used by lib/errors/record via @language-drill/db import
-  errorObservationsFromEvaluation: (
-    errors: Array<{ type: string; severity: string; text: string; correction: string; grammarPointKey?: string | null }> | undefined,
-    ctx: { userId: string; language: string; exerciseId: string; sessionId: string | null; exerciseHistoryId: string; exerciseType: string; hostGrammarPointKey: string | null; occurredAt: Date },
-  ) => {
-    if (!errors || errors.length === 0) return [];
-    return errors.map((e) => ({
-      userId: ctx.userId,
-      language: ctx.language,
-      exerciseId: ctx.exerciseId,
-      sessionId: ctx.sessionId,
-      exerciseHistoryId: ctx.exerciseHistoryId,
-      exerciseType: ctx.exerciseType,
-      hostGrammarPointKey: ctx.hostGrammarPointKey,
-      errorGrammarPointKey: e.grammarPointKey ?? null,
-      errorType: e.type,
-      severity: e.severity,
-      wrongText: e.text,
-      correction: e.correction,
-      occurredAt: ctx.occurredAt,
-    }));
-  },
-}));
+vi.mock('@language-drill/db', () => {
+  // Declared inside the factory (rather than reusing the top-level
+  // mockGrammarPointsAtOrBelow pattern) so resolveEvaluationGuidance below
+  // can share the exact same vi.fn instance that tests mutate via
+  // `const { getGrammarPoint } = await import('@language-drill/db')`.
+  const getGrammarPoint = vi.fn(
+    (_key?: string) => undefined as { name: string; description: string; commonErrors: string[] } | undefined,
+  );
+  return {
+    users: { id: 'id' },
+    exercises: { reviewStatus: 'review_status', type: 'type', audioS3Key: 'audio_s3_key', grammarPointKey: 'grammar_point_key', language: 'language', difficulty: 'difficulty' },
+    userExerciseHistory: { id: 'id', userId: 'user_id', exerciseId: 'exercise_id' },
+    usageEvents: {},
+    errorObservations: { exerciseHistoryId: 'exercise_history_id' },
+    practiceSessions: {
+      id: 'id',
+      userId: 'user_id',
+      completedAt: 'completed_at',
+      exerciseIds: 'exercise_ids',
+    },
+    userGrammarMastery: {
+      userId: 'user_id',
+      grammarPointKey: 'grammar_point_key',
+      masteryScore: 'mastery_score',
+      confidence: 'confidence',
+      evidenceCount: 'evidence_count',
+      lastPracticedAt: 'last_practiced_at',
+    },
+    updateMastery: (prev: unknown, obs: unknown) => mockUpdateMastery(prev, obs),
+    getGrammarPoint,
+    grammarPointsAtOrBelow: (...args: Parameters<typeof mockGrammarPointsAtOrBelow>) => mockGrammarPointsAtOrBelow(...args),
+    // Mirrors packages/db/src/evaluation-guidance.ts so the route mock exercises
+    // the same shape without pulling in the real @language-drill/db module.
+    resolveEvaluationGuidance: (exercise: { grammarPointKey: string | null; language: string | null; difficulty: string | null }) => {
+      const grammarPoint = exercise.grammarPointKey ? getGrammarPoint(exercise.grammarPointKey) : undefined;
+      const grammarGuidance = grammarPoint
+        ? { name: grammarPoint.name, description: grammarPoint.description, commonErrors: grammarPoint.commonErrors }
+        : undefined;
+      const attributionKeys =
+        exercise.language === 'EN'
+          ? []
+          : mockGrammarPointsAtOrBelow(exercise.language, exercise.difficulty).map((p: { key: string; name: string }) => ({ key: p.key, name: p.name }));
+      return { grammarGuidance, attributionKeys };
+    },
+    // Real mapping used by lib/errors/record via @language-drill/db import
+    errorObservationsFromEvaluation: (
+      errors: Array<{ type: string; severity: string; text: string; correction: string; grammarPointKey?: string | null }> | undefined,
+      ctx: { userId: string; language: string; exerciseId: string; sessionId: string | null; exerciseHistoryId: string; exerciseType: string; hostGrammarPointKey: string | null; occurredAt: Date },
+    ) => {
+      if (!errors || errors.length === 0) return [];
+      return errors.map((e) => ({
+        userId: ctx.userId,
+        language: ctx.language,
+        exerciseId: ctx.exerciseId,
+        sessionId: ctx.sessionId,
+        exerciseHistoryId: ctx.exerciseHistoryId,
+        exerciseType: ctx.exerciseType,
+        hostGrammarPointKey: ctx.hostGrammarPointKey,
+        errorGrammarPointKey: e.grammarPointKey ?? null,
+        errorType: e.type,
+        severity: e.severity,
+        wrongText: e.text,
+        correction: e.correction,
+        occurredAt: ctx.occurredAt,
+      }));
+    },
+  };
+});
 
 // Mock the review-status filter so we can assert the route invokes it.
 // The actual SQL behaviour (partial-index hit, predicate ordering) is
