@@ -312,7 +312,11 @@ describe("buildGenerationSystemPrompt", () => {
     // Bumped 2026-07-18 — translation `acceptableAnswers`: the Ambiguous-blank
     // rule now REQUIRES enumerating structurally-different renderings (or
     // forcing one structure via person) instead of forbidding them.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-18");
+    // Bumped 2026-07-22 — sentence_construction person target must land on the
+    // SUBJECT, not the addressee: fixes the situation-mode "reply as du"
+    // miscompile that shipped incoherent du-subject model answers
+    // (generation-run-2026-07-22.md). Section value only — no Langfuse push.
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-22");
     // Tasks 7–9: pin the new guardrail phrases in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "every content word MUST be high-frequency everyday vocabulary at or below CEFR {{cefrLevel}}",
@@ -347,6 +351,13 @@ describe("buildGenerationSystemPrompt", () => {
     // scenario, not ship the structure label alone.
     expect(sc).toContain("`grammar_target`");
     expect(sc).toContain("structure label alone is NOT enough");
+    // 2026-07-22: person target must land on the SUBJECT, not the addressee —
+    // the "reply as du" miscompile that produced incoherent du-subject model
+    // answers on situation-mode SC (see generation-run-2026-07-22.md).
+    expect(sc).toContain(
+      "Target person is the SUBJECT of the sentence the learner writes",
+    );
+    expect(sc).toContain("register/addressee cue, NOT the subject");
     // The grammar-point name is baked in (it is itself one flat template var).
     expect(sc).toContain(grammarPoint.name);
 
