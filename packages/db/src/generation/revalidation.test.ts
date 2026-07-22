@@ -9,6 +9,7 @@ import type { ValidationResult } from '@language-drill/ai';
 
 import {
   decideDemotion,
+  decidePromotion,
   reconstructDraftAndSpec,
   type CandidateRow,
 } from './revalidation';
@@ -389,5 +390,95 @@ describe('decideDemotion', () => {
     // Same wrong-harmony content, but bare 2-arg call → pure LLM routing only.
     const action = decideDemotion('auto-approved', passingResult);
     expect(action.kind).toBe('no-change');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// decidePromotion — one-off flagged-pool recovery (PR #606 SC over-flag fix)
+// ---------------------------------------------------------------------------
+
+describe('decidePromotion', () => {
+  it('promotes flagged → manual-approved when the corrected validator now passes', () => {
+    const action = decidePromotion('flagged', passingResult);
+    expect(action.kind).toBe('promote');
+    if (action.kind !== 'promote') return;
+    expect(action.from).toBe('flagged');
+    expect(action.to).toBe('manual-approved');
+  });
+
+  it('no-change when the fixed validator still marks the row ambiguous (residual defect stays flagged)', () => {
+    const action = decidePromotion('flagged', makeResult({ ambiguous: true }));
+    expect(action.kind).toBe('no-change');
+  });
+
+  it('no-change when the fixed validator would now REJECT (promote never lowers status)', () => {
+    // e.g. a #607 `du`-miscompile the corrected validator scores below the
+    // reject floor — it must stay flagged, not silently drop to rejected.
+    const action = decidePromotion('flagged', makeResult({ qualityScore: 0.2 }));
+    expect(action.kind).toBe('no-change');
+  });
+
+  it('no-change on a borderline flag (0.5..0.7) — not yet auto-approvable', () => {
+    const action = decidePromotion('flagged', makeResult({ qualityScore: 0.6 }));
+    expect(action.kind).toBe('no-change');
+  });
+
+  it('skips auto-approved (already served, not a promote candidate)', () => {
+    const action = decidePromotion('auto-approved', passingResult);
+    expect(action.kind).toBe('skip');
+    if (action.kind !== 'skip') return;
+    expect(action.reason).toBe('auto-approved');
+  });
+
+  it('skips manual-approved (human decision, not re-litigated)', () => {
+    const action = decidePromotion('manual-approved', passingResult);
+    expect(action.kind).toBe('skip');
+    if (action.kind !== 'skip') return;
+    expect(action.reason).toBe('manual-approved');
+  });
+
+  it('skips rejected (hard veto — a promote pass does not resurrect it)', () => {
+    const action = decidePromotion('rejected' as ReviewStatus, passingResult);
+    expect(action.kind).toBe('skip');
+    if (action.kind !== 'skip') return;
+    expect(action.reason).toBe('rejected');
+  });
+
+  // The deterministic gate runs inside decidePromotion when content + language
+  // are supplied, on the same footing as decideDemotion and the live path.
+  function clz(sentence: string, correctAnswer: string) {
+    return {
+      type: ExerciseType.CLOZE,
+      instructions: 'Fill in the blank.',
+      sentence,
+      correctAnswer,
+    };
+  }
+
+  it('deterministic: does NOT promote a flagged row whose content trips a deterministic gate, even when the LLM passes', () => {
+    // LLM approves, but wrong vowel harmony (domatler) → deterministic veto
+    // routes to rejected, so the promote pass leaves it flagged.
+    const action = decidePromotion(
+      'flagged',
+      passingResult,
+      clz('Pazarda taze domat___ satıyorlar.', 'ler'),
+      Language.TR,
+    );
+    expect(action.kind).toBe('no-change');
+  });
+
+  it('deterministic: promotes a flagged row when the LLM passes and content clears the gate', () => {
+    const action = decidePromotion(
+      'flagged',
+      passingResult,
+      clz('Sokakta ev___ var.', 'ler'),
+      Language.TR,
+    );
+    expect(action.kind).toBe('promote');
+  });
+
+  it('backward-compat: bare 2-arg call skips the deterministic gate (pure LLM routing)', () => {
+    const action = decidePromotion('flagged', passingResult);
+    expect(action.kind).toBe('promote');
   });
 });
