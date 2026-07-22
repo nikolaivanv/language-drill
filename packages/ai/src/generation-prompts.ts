@@ -227,7 +227,7 @@ function renderRecentStems(recentStems: readonly string[]): string {
 // translations). Mirrored in validation-prompts.ts (validate@2026-07-18):
 // the validator now sees translation `acceptableAnswers` and enumeration cures
 // the `ambiguous` flag.
-export const GENERATION_PROMPT_VERSION = "generate@2026-07-18";
+export const GENERATION_PROMPT_VERSION = "generate@2026-07-22";
 
 /**
  * Wording differs per type so Claude reads it the way the cell is constrained:
@@ -284,6 +284,7 @@ This is a sentence_construction exercise: there is NO blank — the learner writ
   - \`keywords\`: put 3–4 everyday content words at or below CEFR ${cefrLevel} in \`keywords\`; the learner must use ALL of them in one sentence and the combination must force ${grammarPointName}. Every model answer must actually use every keyword.
   - \`situation\`: give a concrete one-line scenario in \`prompt\` (something said, a problem to react to) so the natural response exercises ${grammarPointName}; leave \`keywords\` empty.
   - \`grammar_target\`: name the structure in \`targetStructure\` AND give a concrete mini-scenario or seed content in \`prompt\`. The structure label alone is NOT enough to constrain the answer — this mode is the most prone to over-open prompts, so always anchor it to a situation.
+- **Target person is the SUBJECT of the sentence the learner writes — never the addressee.** When the per-draft message sets a target grammatical person, every model answer's main-clause subject MUST be that person. A \`du\`/\`Sie\`/\`vous\` you use in \`prompt\` to *address* the learner is a register/addressee cue, NOT the subject — do not let it become the grammatical subject of the answer. To hit a 2nd-person target, author a scenario where the learner produces a sentence ABOUT the addressee as subject (giving advice or an instruction — "Your friend is ill; tell them what they must do" -> "Du musst im Bett bleiben"), NEVER a "your friend asks what YOU want" scenario whose natural answer is 1st-person \`ich\` and contradicts a 2nd-person target. A model answer whose subject does not match the target person (e.g. \`Du musst arbeiten\` offered as a reply meaning "I must work") is incoherent — re-frame the scenario so the target person is the natural subject; if you cannot at CEFR ${cefrLevel}, fall back to the closest person the scenario makes natural rather than shipping a mismatched answer.
 
 `;
 }
