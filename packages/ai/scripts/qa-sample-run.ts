@@ -237,8 +237,12 @@ export function parseQaArgs(argv: string[]): QaArgs {
   });
   if (!values.language) throw new Error("[qa-sample] --language is required");
   return {
-    language: values.language,
-    cefr: values.cefr,
+    // `language`/`difficulty` are stored UPPERCASE in the pool (e.g. 'ES', 'A1'),
+    // so normalize here — otherwise `--language es` silently matches 0 rows and
+    // looks like an empty pool rather than a case mismatch. Exercise `type` is
+    // stored lowercase, so `--type` is left as-is.
+    language: values.language.toUpperCase(),
+    cefr: values.cefr?.toUpperCase(),
     perPoint: Number(values["per-point"]),
     grammarPoint: values["grammar-point"],
     types: values.type ? values.type.split(",").map((s) => s.trim()) : [...QA_SAMPLE_TYPES],

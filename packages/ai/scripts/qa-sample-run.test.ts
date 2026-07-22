@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { samplePerPoint, mulberry32, type PoolRow } from "./qa-sample-run.js";
+import { samplePerPoint, mulberry32, parseQaArgs, type PoolRow } from "./qa-sample-run.js";
 
 function row(id: string, gp: string): PoolRow {
   return { id, type: "cloze", language: "TR", difficulty: "A1", grammarPointKey: gp, contentJson: {} };
@@ -81,5 +81,28 @@ describe("buildReport", () => {
     expect(report.summary.ambiguityNotes).toBe(1);
     expect(report.flags).toHaveLength(1);
     expect(report.ambiguity).toHaveLength(1);
+  });
+});
+
+describe("parseQaArgs", () => {
+  it("uppercases --language and --cefr (pool stores them uppercase)", () => {
+    const args = parseQaArgs(["--language", "es", "--cefr", "a1"]);
+    expect(args.language).toBe("ES");
+    expect(args.cefr).toBe("A1");
+  });
+
+  it("leaves already-uppercase --language/--cefr unchanged", () => {
+    const args = parseQaArgs(["--language", "TR", "--cefr", "B2"]);
+    expect(args.language).toBe("TR");
+    expect(args.cefr).toBe("B2");
+  });
+
+  it("leaves --type lowercase (pool stores types lowercase)", () => {
+    const args = parseQaArgs(["--language", "es", "--type", "cloze,translation"]);
+    expect(args.types).toEqual(["cloze", "translation"]);
+  });
+
+  it("throws when --language is missing", () => {
+    expect(() => parseQaArgs(["--cefr", "a1"])).toThrow(/--language is required/);
   });
 });
