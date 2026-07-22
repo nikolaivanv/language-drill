@@ -83,21 +83,20 @@ describe("renderLearnerView", () => {
     expect(view).not.toContain("git- + -er");
   });
 
-  it("vocab_recall: shows prompt, hides expectedWord/acceptableAnswers", () => {
+  it("vocab_recall: omits exampleSentence + hints even when they contain the target word", () => {
     const c: VocabRecallContent = {
       type: ExerciseType.VOCAB_RECALL,
-      instructions: "Name the word for this definition.",
-      prompt: "A place where trains stop.",
-      expectedWord: "istasyon",
-      acceptableAnswers: ["gar"],
-      hints: ["Starts with i"],
-      exampleSentence: "Trenim burada bekliyor.",
+      instructions: "Nombra la palabra para esta definición.",
+      prompt: "Un lugar donde vives.",
+      expectedWord: "casa",
+      acceptableAnswers: ["hogar"],
+      hints: ["empieza con c", "casa"],
+      exampleSentence: "Mi casa es grande.",
     };
     const view = renderLearnerView(c);
-    expect(view).toContain("A place where trains stop.");
-    expect(view).toContain("Name the word for this definition.");
-    expect(view).not.toContain("istasyon");
-    expect(view).not.toContain("gar");
+    expect(view).toContain("Un lugar donde vives.");
+    expect(view).not.toContain("casa");
+    expect(view).not.toContain("hogar");
   });
 
   it("contextual_paraphrase: shows sourceText/constraintLabel, hides referenceParaphrases", () => {
@@ -167,6 +166,15 @@ describe("classifyVerdicts", () => {
       "false_negative",
       "false_positive",
     ]);
+  });
+
+  it("confidence exactly at the gate (0.7) is NOT low → false_negative still emitted", () => {
+    // gate is strict `< MIN_CORRECT_CONFIDENCE (0.7)`, so 0.7 is on the confident side
+    expect(classifyVerdicts({ correct: LOW, wrong: LOW, alt: null }, 0.7)).toEqual(["false_negative"]);
+  });
+
+  it("low_confidence_solve fires even when correct + alt already pass", () => {
+    expect(classifyVerdicts({ correct: HIGH, wrong: LOW, alt: HIGH }, 0.5)).toEqual(["low_confidence_solve"]);
   });
 });
 

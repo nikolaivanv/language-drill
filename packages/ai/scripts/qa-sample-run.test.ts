@@ -72,6 +72,7 @@ describe("buildReport", () => {
     const report = buildReport(records, {
       language: "TR", cefr: "A1", perPoint: 2, sampledCount: 2, seed: 1,
       model: "claude-opus-4-8", costUsd: 0.12, startedAt: "2026-07-22T00:00:00.000Z",
+      costCapped: false,
     });
     expect(report.summary.sampled).toBe(2);
     expect(report.summary.flagged).toBe(1);

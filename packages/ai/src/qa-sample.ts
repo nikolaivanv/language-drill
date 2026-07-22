@@ -28,10 +28,13 @@ export function renderLearnerView(content: ExerciseContent): string {
       break;
     }
     case ExerciseType.VOCAB_RECALL: {
+      // Baseline learner view only. `exampleSentence` and `hints` are OMITTED:
+      // in production `hints` are never rendered and the example is an opt-in
+      // hint shown with the target word masked. ~70% of stored examples contain
+      // the answer word verbatim, so including them here would hand the solver
+      // the answer and defeat the QA signal for this type.
       lines.push(content.instructions);
       lines.push(content.prompt);
-      if (content.exampleSentence) lines.push(`Example: ${content.exampleSentence}`);
-      if (content.hints?.length) lines.push(`Hints: ${content.hints.join(", ")}`);
       break;
     }
     case ExerciseType.SENTENCE_CONSTRUCTION: {

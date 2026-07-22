@@ -26,6 +26,7 @@ import {
   renderLearnerView,
   FAIL_THRESHOLD,
   PASS_THRESHOLD,
+  QA_CRAFTER_MODEL,
   ZERO_USAGE,
   type ClaudeUsageBreakdown,
   type ProbeScores,
@@ -120,7 +121,7 @@ export type QaFlagRecord = {
 export type QaRunReport = {
   meta: {
     language: string; cefr: string | null; perPoint: number; sampledCount: number;
-    seed: number; model: string; costUsd: number; startedAt: string;
+    seed: number; model: string; costUsd: number; startedAt: string; costCapped: boolean;
   };
   summary: {
     sampled: number; flagged: number;
@@ -370,9 +371,10 @@ async function main(): Promise<void> {
     perPoint: args.perPoint,
     sampledCount: sampled.length,
     seed: args.seed,
-    model: args.model ?? "claude-opus-4-8",
+    model: args.model ?? QA_CRAFTER_MODEL,
     costUsd: estimateCostUsd(usage),
     startedAt,
+    costCapped,
   }, errors);
 
   const name = args.out ?? `qa-${args.language}-${args.cefr ?? "all"}-${startedAt}`;
