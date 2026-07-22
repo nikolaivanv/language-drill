@@ -55,8 +55,11 @@ function shuffle<T>(items: T[], rng: () => number): T[] {
  * given (rows-set, perPoint, seed).
  */
 export function samplePerPoint(rows: PoolRow[], perPoint: number, seed: number): PoolRow[] {
+  // Sort by id first so the result depends only on (row-set, perPoint, seed) —
+  // never on the arrival order of `rows` (the DB query has no stable ORDER BY).
+  const sorted = rows.slice().sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   const groups = new Map<string, PoolRow[]>();
-  for (const r of rows) {
+  for (const r of sorted) {
     const key = r.grammarPointKey ?? " null";
     const g = groups.get(key);
     if (g) g.push(r);

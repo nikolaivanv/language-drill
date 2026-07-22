@@ -30,8 +30,11 @@ describe("samplePerPoint", () => {
   });
 
   it("is reproducible for the same seed and order-independent of input shuffling", () => {
-    expect(samplePerPoint(rows, 1, 99).map((r) => r.id))
-      .toEqual(samplePerPoint(rows, 1, 99).map((r) => r.id));
+    const idsBefore = rows.map((r) => r.id);
+    const fromOriginal = samplePerPoint(rows, 1, 99).map((r) => r.id);
+    const fromPermuted = samplePerPoint([...rows].reverse(), 1, 99).map((r) => r.id);
+    expect(fromPermuted).toEqual(fromOriginal);
+    expect(rows.map((r) => r.id)).toEqual(idsBefore);
   });
 
   it("groups rows with a null grammarPointKey under a single bucket", () => {
