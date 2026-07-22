@@ -5,6 +5,8 @@ import type {
   TranslationContent,
   SentenceConstructionContent,
   ConjugationContent,
+  VocabRecallContent,
+  ContextualParaphraseContent,
 } from "@language-drill/shared";
 import { renderLearnerView } from "./qa-sample.js";
 
@@ -72,5 +74,39 @@ describe("renderLearnerView", () => {
     expect(view).toContain("geniş zaman · 1. çoğul");
     expect(view).not.toContain("gideriz");
     expect(view).not.toContain("git- + -er");
+  });
+
+  it("vocab_recall: shows prompt, hides expectedWord/acceptableAnswers", () => {
+    const c: VocabRecallContent = {
+      type: ExerciseType.VOCAB_RECALL,
+      instructions: "Name the word for this definition.",
+      prompt: "A place where trains stop.",
+      expectedWord: "istasyon",
+      acceptableAnswers: ["gar"],
+      hints: ["Starts with i"],
+      exampleSentence: "Trenim burada bekliyor.",
+    };
+    const view = renderLearnerView(c);
+    expect(view).toContain("A place where trains stop.");
+    expect(view).toContain("Name the word for this definition.");
+    expect(view).not.toContain("istasyon");
+    expect(view).not.toContain("gar");
+  });
+
+  it("contextual_paraphrase: shows sourceText/constraintLabel, hides referenceParaphrases", () => {
+    const c: ContextualParaphraseContent = {
+      type: ExerciseType.CONTEXTUAL_PARAPHRASE,
+      instructions: "Rewrite the sentence.",
+      sourceText: "Me gusta mucho el chocolate.",
+      constraintKind: "avoid",
+      bannedTerms: ["gustar"],
+      constraintLabel: "Say this without using «gustar».",
+      referenceParaphrases: ["El chocolate me encanta.", "Adoro el chocolate."],
+    };
+    const view = renderLearnerView(c);
+    expect(view).toContain("Me gusta mucho el chocolate.");
+    expect(view).toContain("Say this without using «gustar».");
+    expect(view).not.toContain("El chocolate me encanta.");
+    expect(view).not.toContain("Adoro el chocolate.");
   });
 });
