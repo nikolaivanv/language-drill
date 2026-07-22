@@ -45,3 +45,40 @@ describe("samplePerPoint", () => {
     expect(samplePerPoint(nulls, 1, 3)).toHaveLength(1);
   });
 });
+
+import { buildReport, type QaFlagRecord } from "./qa-sample-run.js";
+
+describe("buildReport", () => {
+  const records: QaFlagRecord[] = [
+    {
+      exerciseId: "e1", grammarPointKey: "gp-1", type: "cloze", language: "TR", cefr: "A1",
+      flags: ["false_negative"], ambiguous: false, ambiguityNote: "",
+      answers: { correct: "x", wrong: "y", alt: null },
+      confidence: 0.95,
+      verdicts: { correct: { score: 0.2, band: "fail" }, wrong: { score: 0.1, band: "fail" }, alt: null },
+      promptSeen: "Fill the blank. ___",
+    },
+    {
+      exerciseId: "e2", grammarPointKey: "gp-1", type: "cloze", language: "TR", cefr: "A1",
+      flags: [], ambiguous: true, ambiguityNote: "unclear which tense",
+      answers: { correct: "a", wrong: "b", alt: "c" },
+      confidence: 0.9,
+      verdicts: { correct: { score: 0.9, band: "pass" }, wrong: { score: 0.1, band: "fail" }, alt: { score: 0.9, band: "pass" } },
+      promptSeen: "Fill the blank. ___",
+    },
+  ];
+
+  it("summarizes flagged counts, byReason, byType, and ambiguity notes", () => {
+    const report = buildReport(records, {
+      language: "TR", cefr: "A1", perPoint: 2, sampledCount: 2, seed: 1,
+      model: "claude-opus-4-8", costUsd: 0.12, startedAt: "2026-07-22T00:00:00.000Z",
+    });
+    expect(report.summary.sampled).toBe(2);
+    expect(report.summary.flagged).toBe(1);
+    expect(report.summary.byReason.false_negative).toBe(1);
+    expect(report.summary.byType.cloze).toBe(1);
+    expect(report.summary.ambiguityNotes).toBe(1);
+    expect(report.flags).toHaveLength(1);
+    expect(report.ambiguity).toHaveLength(1);
+  });
+});
