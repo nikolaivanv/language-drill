@@ -11,6 +11,10 @@ import { getGrammarPoint } from "@language-drill/db";
 import type { ExerciseDraft, GenerationSpec } from "./generate.js";
 import { GENERATION_MODEL } from "./generate.js";
 import {
+  buildValidationUserPrompt,
+  VALIDATION_SYSTEM_PROMPT_TEMPLATE,
+} from "./validation-prompts.js";
+import {
   parseValidationResult,
   validateDraft,
   ValidationParseError,
@@ -657,5 +661,58 @@ describe("parseValidationResult — coverage", () => {
     expect(
       parseValidationResult({ ...base, coverage: { comparison: "bogus" } }).coverage,
     ).toEqual({});
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Sentence-construction validation: `ambiguous` + low-quality scoped to the
+// open-production exercise type (fix/sc-validator-ambiguous-overflag).
+// Pool-wide the validator false-flagged 81% of SC drafts `ambiguous` by
+// applying the cloze single-answer rubric to free production. These guard the
+// SC carve-out in the system prompt (item 2) and the SC user-prompt note.
+// ---------------------------------------------------------------------------
+
+describe("sentence_construction validation prompt", () => {
+  const scContent: ExerciseContent = {
+    type: ExerciseType.SENTENCE_CONSTRUCTION,
+    promptMode: "situation",
+    instructions:
+      "Write one sentence in German using a modal verb in the present tense.",
+    prompt:
+      "Your friend asks what you (du) want to do tonight. Say what you would like to do.",
+    modelAnswers: [
+      "Ich möchte heute Abend einen Film sehen.",
+      "Ich will heute Abend zu Hause bleiben.",
+    ],
+  } as unknown as ExerciseContent;
+
+  it("system prompt scopes `ambiguous` for sentence_construction to the prompt, not the answer space", () => {
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain(
+      "For **sentence_construction**, `ambiguous` is about the PROMPT, not the answer space",
+    );
+    // The carve-out must explicitly disavow the open-production over-flag.
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain(
+      "Never set it merely because multiple valid sentences exist",
+    );
+  });
+
+  it("SC user prompt appends the open-production scoring note with the target level interpolated", () => {
+    const prompt = buildValidationUserPrompt(makeDraft(scContent), {
+      ...baseSpec,
+      exerciseType: ExerciseType.SENTENCE_CONSTRUCTION,
+    });
+    expect(prompt).toContain("**Scoring note for sentence_construction:**");
+    expect(prompt).toContain("this is OPEN PRODUCTION");
+    // ${spec.cefrLevel} must be interpolated (user prompts are not Langfuse-compiled).
+    expect(prompt).toContain(`clearly ABOVE ${baseSpec.cefrLevel}`);
+    expect(prompt).not.toContain("{{cefrLevel}}");
+    // The "unambiguous" wording that reinforced the over-flag is gone.
+    expect(prompt).toContain("the prompt is self-consistent and solvable");
+    expect(prompt).not.toContain("the prompt is unambiguous and solvable");
+  });
+
+  it("does not leak the SC scoring note into a cloze user prompt", () => {
+    const prompt = buildValidationUserPrompt(makeDraft(clozeContent), baseSpec);
+    expect(prompt).not.toContain("**Scoring note for sentence_construction:**");
   });
 });

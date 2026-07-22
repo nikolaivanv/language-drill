@@ -204,6 +204,11 @@ describe("buildValidationSystemPrompt", () => {
     // vocab_recall near-synonym escape valve to the `ambiguous` dimension
     // (~1,150 bytes, mirrors generate@2026-07-16). Ceiling raised to 7,500.
     //
+    // validate@2026-07-22 added the sentence_construction carve-out to the
+    // `ambiguous` dimension — scoping it to the PROMPT rather than the open
+    // answer space, which pool-wide was false-flagging 81 % of SC drafts
+    // `ambiguous` (~680 bytes). Ceiling raised to 8,500.
+    //
     // We assert on the TEMPLATE literal, not the rendered output, because:
     //   - The template is what Langfuse stores and what Anthropic's
     //     prompt-cache keys on byte-for-byte.
@@ -211,7 +216,7 @@ describe("buildValidationSystemPrompt", () => {
     //     (descriptions, examples, common errors, CEFR descriptors) which
     //     varies by language/level and is not what the NFR budgets — those
     //     substitutions are already counted against the API per-call.
-    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(7500);
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(8500);
   });
 });
 

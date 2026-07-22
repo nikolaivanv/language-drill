@@ -100,7 +100,7 @@ function renderBulletList(items: readonly string[]): string {
 // tr-a1-gore-bence collapse where every "In my opinion" translation was flagged
 // ambiguous (Bence vs. Bana göre) with no way to enumerate. Template edit →
 // Langfuse push per env.
-export const VALIDATION_PROMPT_VERSION = "validate@2026-07-18";
+export const VALIDATION_PROMPT_VERSION = "validate@2026-07-22";
 
 export const VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language exercises for {{language}} learners at CEFR {{cefrLevel}}. Your job is to validate one already-generated exercise that targets the grammar point: {{grammarPointName}}.
 
@@ -141,7 +141,7 @@ Score conservatively — a flagged draft costs a human ~30 seconds of review; an
    - **0.8** — publishable with one cosmetic edit.
    - **0.65** — borderline; clear issue but salvageable. Routes to FLAGGED.
    - **0.5** — unusable; reject. Routes to REJECTED.
-2. **ambiguous** (boolean): more than one substantively-correct answer? For **cloze**, true when multiple lexemes/forms satisfy the grammar point in this sentence AND \`acceptableAnswers\` does not enumerate them. For **translation**, surface variation is fine; two or more structurally-different correct renderings are ambiguous ONLY when \`acceptableAnswers\` does not enumerate them — enumeration cures it exactly as for cloze (e.g. TR "In my opinion…" → both \`Bence …\` and \`Bana göre …\`; listing the alternative, or wording the source to force one structure, is NOT ambiguous). For **vocab_recall**, the prompt must pick out exactly one headword — or, when the language has true near-synonyms that the definition admits equally (e.g. TR \`istasyon\`/\`gar\` for a station definition), \`acceptableAnswers\` must enumerate every defensible alternate; enumerated near-synonyms cure the ambiguity, a missing defensible alternate does not.
+2. **ambiguous** (boolean): more than one substantively-correct answer? For **cloze**, true when multiple lexemes/forms satisfy the grammar point in this sentence AND \`acceptableAnswers\` does not enumerate them. For **translation**, surface variation is fine; two or more structurally-different correct renderings are ambiguous ONLY when \`acceptableAnswers\` does not enumerate them — enumeration cures it exactly as for cloze (e.g. TR "In my opinion…" → both \`Bence …\` and \`Bana göre …\`; listing the alternative, or wording the source to force one structure, is NOT ambiguous). For **vocab_recall**, the prompt must pick out exactly one headword — or, when the language has true near-synonyms that the definition admits equally (e.g. TR \`istasyon\`/\`gar\` for a station definition), \`acceptableAnswers\` must enumerate every defensible alternate; enumerated near-synonyms cure the ambiguity, a missing defensible alternate does not. For **sentence_construction**, \`ambiguous\` is about the PROMPT, not the answer space: open production legitimately has many correct sentences (different modals, lexis, word order, polarity), and that is the task design — it is NOT \`ambiguous\`, and no \`acceptableAnswers\` enumeration is expected or possible. Set \`ambiguous = true\` ONLY when the PROMPT itself is self-contradictory (e.g. it instructs "reply as \`du\`" — a register/addressee cue — while the situation requires a first-person \`ich\` answer, so no coherent single sentence satisfies it) or so under-specified the learner cannot tell what structure to produce. Never set it merely because multiple valid sentences exist, or because the model answers differ in lexis, word order, or polarity.
    - **Form-contrast exception (cloze):** when the grammar point itself CONTRASTS two forms with DIFFERENT meanings (e.g. ES perception verbs: infinitive = completed event vs. gerund = caught in progress), enumeration does NOT cure ambiguity — listing both contrasting forms in \`acceptableAnswers\` teaches that they are interchangeable and IS \`ambiguous\`. A good draft forces exactly one of the contrasting forms via sentence context (durativity/completion cues) and lists neither contrast alternant in \`acceptableAnswers\`; do not flag such a context-forced draft merely for omitting the other contrasting form. A blank on the conjugated perception verb instead of the infinitive/gerund slot is \`grammarPointMatch: false\` (it tests tense selection).
    - "Sınıfta sekiz ___ var." / \`correctAnswer: "öğrenci"\` — sandalye, kalem, kitap, defter all satisfy no-plural-after-numeral equally; needs \`acceptableAnswers\`.
    - "Evde yeni ___ var. Onlar çok güzel." / \`correctAnswer: "perdeler"\` — perdeler, kitaplar, çiçekler, lambalar all fit "plural + positive descriptor"; the follow-on doesn't disambiguate. Needs \`acceptableAnswers\` or tighter framing ("Onları yıkamayı unutma" picks out perdeler).
@@ -304,6 +304,24 @@ function vocabRecallScoringNote(spec: GenerationSpec): string {
 **Kinship definitions for vocab_recall:** when the target language lexicalizes a kin relation more finely than English — most sharply by SIDE of the family (TR \`amca\` father's brother vs \`dayı\` mother's brother; \`hala\` father's sister vs \`teyze\` mother's sister; \`babaanne\` father's mother vs \`anneanne\` mother's mother) — a side-NEUTRAL gloss ("your father's OR mother's brother", "your parent's sister") is true of BOTH terms equally, so it does NOT pick out the single \`expectedWord\`: set ambiguous=true UNLESS the other defensible term is listed in acceptableAnswers. A gloss that names the side ("your MOTHER's brother" → \`dayı\`) is unambiguous — do not flag it. A generic term that is genuinely side-neutral in the target language (TR \`büyükanne\`/\`dede\`, \`kuzen\`, \`akraba\`) legitimately takes a side-neutral gloss — do not flag those. Separately: if the definition describes a DIFFERENT relation than the \`expectedWord\` denotes (glossing \`dayı\` as "the child of your mother's brother" — that is a cousin, \`kuzen\`; or \`hala\` as "your mother's sister" — that is \`teyze\`), the clue is factually wrong for its answer — set ambiguous=true and lower qualityScore below 0.5 (a mislabeled clue is not a servable exercise).`;
 }
 
+// ---------------------------------------------------------------------------
+// Sentence-construction scoring note (appended to the SC user prompt).
+//
+// SC is OPEN PRODUCTION. The generic `ambiguous` test and a strict reading of
+// model-answer consistency both mis-fire here: pool-wide, 81 % of flagged SC
+// drafts carried `ambiguous` (vs 4 % for deterministic conjugation), and most
+// of the co-occurring `low-quality` flags were the validator nitpicking model
+// answers for optional words / varied modals / mixed polarity — all expected
+// in free production. This note scopes qualityScore + low-quality reasons to
+// the exercise type; the `ambiguous` dimension itself is scoped in the system
+// prompt (item 2). See docs/analysis/generation-run-2026-07-22.md.
+// ---------------------------------------------------------------------------
+function sentenceConstructionScoringNote(spec: GenerationSpec): string {
+  return `
+
+**Scoring note for sentence_construction:** this is OPEN PRODUCTION. Do NOT dock qualityScore below 0.7, and do NOT add a low-quality flaggedReason, merely because the model answers add optional words (e.g. \`zu Hause\`, \`heute Abend\`), use different modals/polarity, or vary word order — that variation is expected and correct. Reserve concerns for: a self-contradictory or under-specified PROMPT; a model answer that is incoherent or off-target for the prompt (e.g. a \`du\`-subject sentence where the situation requires a first-person \`ich\` reply); or a model answer using a structure clearly ABOVE ${spec.cefrLevel} (e.g. a \`weil\`/\`dass\` subordinate clause or \`also\`-coordination at A1 → set levelMatch=false). A prompt whose \`du\`/\`Sie\` is a register/addressee cue is fine; only flag when it is mis-compiled into the grammatical subject and yields an incoherent answer.`;
+}
+
 function buildClozeValidationUserPrompt(
   content: ClozeContent,
   spec: GenerationSpec,
@@ -375,9 +393,9 @@ function buildSentenceConstructionValidationUserPrompt(
 ${keywordsLine}
 ${structureLine}
 ${registerLine}
-**Model answers:** ${content.modelAnswers.join(" | ")}
+**Model answers:** ${content.modelAnswers.join(" | ")}${sentenceConstructionScoringNote(spec)}
 
-Score the dimensions in the system prompt. Treat the exercise as well-formed only if the prompt is unambiguous and solvable at the target level, AND every model answer genuinely satisfies the prompt (keywords used / goal met / target structure used) at the target CEFR level. If a model answer does not exercise the grammar point, set grammarPointMatch=false. Submit via the tool.`;
+Score the dimensions in the system prompt. Treat the exercise as well-formed only if the prompt is self-consistent and solvable at the target level, AND every model answer genuinely satisfies the prompt (keywords used / goal met / target structure used) at the target CEFR level. If a model answer does not exercise the grammar point, set grammarPointMatch=false. Submit via the tool.`;
 }
 
 function buildContextualParaphraseValidationUserPrompt(
