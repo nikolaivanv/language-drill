@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { ExerciseType } from "@language-drill/shared";
 import type {
   ClozeContent,
@@ -8,7 +8,14 @@ import type {
   VocabRecallContent,
   ContextualParaphraseContent,
 } from "@language-drill/shared";
-import { renderLearnerView, classifyVerdicts } from "./qa-sample.js";
+import type Anthropic from "@anthropic-ai/sdk";
+import {
+  renderLearnerView,
+  classifyVerdicts,
+  parseProbe,
+  craftProbeAnswers,
+  QA_CRAFTER_TOOL_NAME,
+} from "./qa-sample.js";
 
 describe("renderLearnerView", () => {
   it("cloze: shows sentence + instructions, hides correctAnswer/acceptableAnswers", () => {
@@ -160,5 +167,74 @@ describe("classifyVerdicts", () => {
       "false_negative",
       "false_positive",
     ]);
+  });
+});
+
+describe("parseProbe", () => {
+  const valid = {
+    correct: "gideriz",
+    correctConfidence: 0.95,
+    wrong: "gidiyoruz",
+    alt: null,
+    ambiguous: false,
+    ambiguityNote: "",
+  };
+
+  it("accepts a well-formed probe", () => {
+    expect(parseProbe(valid)).toEqual(valid);
+  });
+
+  it("coerces a missing alt to null", () => {
+    const { alt, ...noAlt } = valid;
+    expect(parseProbe(noAlt).alt).toBeNull();
+  });
+
+  it("rejects out-of-range confidence", () => {
+    expect(() => parseProbe({ ...valid, correctConfidence: 1.5 })).toThrow();
+  });
+
+  it("rejects a non-string correct answer", () => {
+    expect(() => parseProbe({ ...valid, correct: 42 })).toThrow();
+  });
+});
+
+describe("craftProbeAnswers", () => {
+  it("calls the forced tool and returns the parsed probe + usage", async () => {
+    const toolInput = {
+      correct: "Bence geç.",
+      correctConfidence: 0.9,
+      wrong: "Bence geçti.",
+      alt: "Bana göre geç.",
+      ambiguous: false,
+      ambiguityNote: "",
+    };
+    const create = vi.fn().mockResolvedValue({
+      stop_reason: "tool_use",
+      content: [{ type: "tool_use", name: QA_CRAFTER_TOOL_NAME, input: toolInput }],
+      usage: { input_tokens: 100, output_tokens: 50, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 },
+    });
+    const client = { messages: { create } } as unknown as Anthropic;
+
+    const { probe, usage } = await craftProbeAnswers(client, {
+      learnerView: "Translate: In my opinion, it is late.",
+      language: "TR",
+      cefrLevel: "A2",
+      exerciseType: "translation",
+    });
+
+    expect(probe.alt).toBe("Bana göre geç.");
+    expect(usage.inputTokens).toBe(100);
+    expect(usage.outputTokens).toBe(50);
+    // the learner view must reach the model; the reference answer must not be injected by us
+    const callArg = create.mock.calls[0][0];
+    expect(JSON.stringify(callArg)).toContain("In my opinion, it is late.");
+  });
+
+  it("throws when no tool_use block is returned", async () => {
+    const create = vi.fn().mockResolvedValue({ stop_reason: "end_turn", content: [], usage: null });
+    const client = { messages: { create } } as unknown as Anthropic;
+    await expect(
+      craftProbeAnswers(client, { learnerView: "x", language: "TR", cefrLevel: "A1", exerciseType: "cloze" }),
+    ).rejects.toThrow();
   });
 });

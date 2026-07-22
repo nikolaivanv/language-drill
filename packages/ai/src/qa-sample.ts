@@ -1,5 +1,7 @@
+import type Anthropic from "@anthropic-ai/sdk";
 import { ExerciseType } from "@language-drill/shared";
 import type { ExerciseContent } from "@language-drill/shared";
+import { ZERO_USAGE, type ClaudeUsageBreakdown } from "./cost-model.js";
 
 /**
  * Render exactly what a learner sees for one exercise, as plain text — the
@@ -115,4 +117,134 @@ export function classifyVerdicts(
   if (lowConfidence) flags.push("low_confidence_solve");
 
   return flags;
+}
+
+export const QA_SAMPLE_PROMPT_VERSION = "qa-sample@2026-07-22";
+export const QA_CRAFTER_MODEL = "claude-opus-4-8" as const;
+export const QA_CRAFTER_TOOL_NAME = "submit_probe_answers";
+const QA_CRAFTER_MAX_TOKENS = 1024;
+
+export const QA_SAMPLE_SYSTEM_PROMPT_TEMPLATE = `You are a meticulous language-exercise QA solver. You are shown EXACTLY what a learner sees for one exercise — never a reference answer. Your job is to craft three probe answers so we can check whether the automated evaluator behaves correctly:
+
+1. correct — your single best, fully-correct answer to the task.
+2. wrong — a plausible answer a real learner at this level might give that is genuinely INCORRECT for the targeted skill (a real error, not gibberish).
+3. alt — a DIFFERENT but equally-correct answer (a distinct construction or true synonym), if one legitimately exists; otherwise null. Do not invent a forced variant.
+
+Also report:
+- correctConfidence — 0..1, how sure you are that "correct" is unambiguously right given ONLY what the learner sees. Lower it when the task is under-specified or could have several defensible answers.
+- ambiguous / ambiguityNote — reasoning as a learner at the stated CEFR level: would they know what is being asked? Set ambiguous=true with a one-line reason only if the TASK or its instructions are genuinely unclear. This is separate from your confidence.
+
+Answer in the exercise's target language. Call the ${QA_CRAFTER_TOOL_NAME} tool.`;
+
+export function buildQaCrafterUserPrompt(params: {
+  learnerView: string;
+  language: string;
+  cefrLevel: string;
+  exerciseType: string;
+}): string {
+  return `Language: ${params.language} · Level: ${params.cefrLevel} · Type: ${params.exerciseType}
+
+Exactly what the learner sees:
+"""
+${params.learnerView}
+"""
+
+Craft the three probe answers.`;
+}
+
+const QA_CRAFTER_TOOL: Anthropic.Tool = {
+  name: QA_CRAFTER_TOOL_NAME,
+  description: "Submit the three probe answers plus confidence and ambiguity assessment.",
+  input_schema: {
+    type: "object",
+    properties: {
+      correct: { type: "string" },
+      correctConfidence: { type: "number", minimum: 0, maximum: 1 },
+      wrong: { type: "string" },
+      alt: { type: ["string", "null"] },
+      ambiguous: { type: "boolean" },
+      ambiguityNote: { type: "string" },
+    },
+    required: ["correct", "correctConfidence", "wrong", "ambiguous", "ambiguityNote"],
+  },
+};
+
+export type QaProbe = {
+  correct: string;
+  correctConfidence: number;
+  wrong: string;
+  alt: string | null;
+  ambiguous: boolean;
+  ambiguityNote: string;
+};
+
+function isObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+/** Pure validator for the crafter tool output. Throws on any illegality. */
+export function parseProbe(input: unknown): QaProbe {
+  if (!isObject(input)) throw new Error("probe must be an object");
+  const { correct, correctConfidence, wrong, alt, ambiguous, ambiguityNote } = input;
+  if (typeof correct !== "string" || correct === "") throw new Error("probe.correct must be a non-empty string");
+  if (typeof wrong !== "string" || wrong === "") throw new Error("probe.wrong must be a non-empty string");
+  if (typeof correctConfidence !== "number" || correctConfidence < 0 || correctConfidence > 1) {
+    throw new Error("probe.correctConfidence must be a number in [0,1]");
+  }
+  if (alt !== undefined && alt !== null && typeof alt !== "string") {
+    throw new Error("probe.alt must be a string or null");
+  }
+  return {
+    correct,
+    correctConfidence,
+    wrong,
+    alt: typeof alt === "string" && alt !== "" ? alt : null,
+    ambiguous: ambiguous === true,
+    ambiguityNote: typeof ambiguityNote === "string" ? ambiguityNote : "",
+  };
+}
+
+function readUsage(response: Anthropic.Message): ClaudeUsageBreakdown {
+  const u = response.usage;
+  return {
+    inputTokens: u.input_tokens ?? 0,
+    outputTokens: u.output_tokens ?? 0,
+    cacheReadInputTokens: u.cache_read_input_tokens ?? 0,
+    cacheCreationInputTokens: u.cache_creation_input_tokens ?? 0,
+  };
+}
+
+/** Call Claude with the forced tool; return the parsed probe + token usage. */
+export async function craftProbeAnswers(
+  client: Anthropic,
+  params: {
+    learnerView: string;
+    language: string;
+    cefrLevel: string;
+    exerciseType: string;
+    model?: string;
+  },
+  signal?: AbortSignal,
+): Promise<{ probe: QaProbe; usage: ClaudeUsageBreakdown }> {
+  const response = await client.messages.create(
+    {
+      model: params.model ?? QA_CRAFTER_MODEL,
+      max_tokens: QA_CRAFTER_MAX_TOKENS,
+      system: [
+        { type: "text" as const, text: QA_SAMPLE_SYSTEM_PROMPT_TEMPLATE, cache_control: { type: "ephemeral" as const } },
+      ],
+      messages: [{ role: "user" as const, content: buildQaCrafterUserPrompt(params) }],
+      tools: [QA_CRAFTER_TOOL],
+      tool_choice: { type: "tool" as const, name: QA_CRAFTER_TOOL_NAME },
+    },
+    { signal },
+  );
+  const usage = response.usage ? readUsage(response) : ZERO_USAGE;
+  const toolUse = response.content.find(
+    (b): b is Anthropic.ToolUseBlock => b.type === "tool_use",
+  );
+  if (!toolUse) {
+    throw new Error(`qa-craft: no tool_use block (stop_reason ${response.stop_reason})`);
+  }
+  return { probe: parseProbe(toolUse.input), usage };
 }

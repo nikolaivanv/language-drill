@@ -403,3 +403,17 @@ export {
   buildVocabTargetUserPrompt,
 } from "./vocab-target-prompts.js";
 export type { VocabTargetUserPromptInput } from "./vocab-target-prompts.js";
+
+export {
+  renderLearnerView,
+  classifyVerdicts,
+  craftProbeAnswers,
+  parseProbe,
+  PASS_THRESHOLD,
+  FAIL_THRESHOLD,
+  MIN_CORRECT_CONFIDENCE,
+  QA_CRAFTER_MODEL,
+  QA_CRAFTER_TOOL_NAME,
+  QA_SAMPLE_PROMPT_VERSION,
+} from "./qa-sample.js";
+export type { QaProbe, QaFlagReason, ProbeScores } from "./qa-sample.js";
