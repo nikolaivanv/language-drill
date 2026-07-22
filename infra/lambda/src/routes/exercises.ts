@@ -4,7 +4,6 @@ import type { Context } from 'hono';
 import { z } from 'zod';
 import { eq, and, gte, count } from 'drizzle-orm';
 import { Language, CefrLevel, ExerciseType, isFreeWritingContent, isConjugationContent, isClozeContent, isVocabRecallContent, isTranslationContent, gradeFluencyAnswer, EXERCISE_ANSWER_MAX_CHARS } from '@language-drill/shared';
-import type { LearningLanguage } from '@language-drill/shared';
 import type { DictationContent, ExerciseContent, FreeWritingContent, EvaluationResult, WordHintUnit } from '@language-drill/shared';
 import {
   exercises as exercisesTable,
@@ -12,7 +11,7 @@ import {
   userExerciseHistory,
   usageEvents,
   getGrammarPoint,
-  grammarPointsAtOrBelow,
+  resolveEvaluationGuidance,
   userGrammarMastery,
   updateMastery,
   exerciseWordHints,
@@ -105,33 +104,6 @@ exercises.use('/exercises/*', authMiddleware);
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-/** Curriculum grounding + closed attribution key set for the evaluator.
- * Shared by the submit and explain paths so both feed Claude identically. */
-function resolveEvaluationGuidance(exercise: {
-  grammarPointKey: string | null;
-  language: string | null;
-  difficulty: string | null;
-}) {
-  const grammarPoint = exercise.grammarPointKey
-    ? getGrammarPoint(exercise.grammarPointKey)
-    : undefined;
-  const grammarGuidance = grammarPoint
-    ? {
-        name: grammarPoint.name,
-        description: grammarPoint.description,
-        commonErrors: grammarPoint.commonErrors,
-      }
-    : undefined;
-  const attributionKeys =
-    exercise.language === Language.EN
-      ? []
-      : grammarPointsAtOrBelow(
-          exercise.language as LearningLanguage,
-          exercise.difficulty as string,
-        ).map((p) => ({ key: p.key, name: p.name }));
-  return { grammarGuidance, attributionKeys };
-}
 
 /**
  * Best-effort per-grammar-point Bayesian mastery update.

@@ -40,6 +40,8 @@ export {
 } from './curriculum';
 export type { CurriculumCefrLevel, GrammarPoint } from './curriculum';
 
+export { resolveEvaluationGuidance } from './evaluation-guidance.js';
+
 // Book-coverage ledger (dev-time metadata; see the 2026-07-15 design doc).
 // Enforced by book-coverage.test.ts; exported only for the propose:book-coverage
 // CLI in packages/ai/scripts — no Lambda path may import it.
