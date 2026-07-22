@@ -8,7 +8,7 @@ import type {
   VocabRecallContent,
   ContextualParaphraseContent,
 } from "@language-drill/shared";
-import { renderLearnerView } from "./qa-sample.js";
+import { renderLearnerView, classifyVerdicts } from "./qa-sample.js";
 
 describe("renderLearnerView", () => {
   it("cloze: shows sentence + instructions, hides correctAnswer/acceptableAnswers", () => {
@@ -108,5 +108,57 @@ describe("renderLearnerView", () => {
     expect(view).toContain("Say this without using «gustar».");
     expect(view).not.toContain("El chocolate me encanta.");
     expect(view).not.toContain("Adoro el chocolate.");
+  });
+});
+
+describe("classifyVerdicts", () => {
+  const HIGH = 0.9; // PASS band
+  const LOW = 0.2; // FAIL band
+  const MID = 0.6; // dead zone
+  const CONF = 0.95;
+
+  it("clean exercise: correct passes, wrong fails, alt passes → no flags", () => {
+    expect(classifyVerdicts({ correct: HIGH, wrong: LOW, alt: HIGH }, CONF)).toEqual([]);
+  });
+
+  it("false_negative: correct answer lands in FAIL band", () => {
+    expect(classifyVerdicts({ correct: LOW, wrong: LOW, alt: HIGH }, CONF)).toEqual(["false_negative"]);
+  });
+
+  it("false_positive: wrong answer lands in PASS band", () => {
+    expect(classifyVerdicts({ correct: HIGH, wrong: HIGH, alt: HIGH }, CONF)).toEqual(["false_positive"]);
+  });
+
+  it("acceptable_answers_gap: alt lands in FAIL band", () => {
+    expect(classifyVerdicts({ correct: HIGH, wrong: LOW, alt: LOW }, CONF)).toEqual(["acceptable_answers_gap"]);
+  });
+
+  it("dead-zone scores produce no correct/alt flag", () => {
+    expect(classifyVerdicts({ correct: MID, wrong: LOW, alt: MID }, CONF)).toEqual([]);
+  });
+
+  it("null alt is skipped (no acceptable_answers_gap possible)", () => {
+    expect(classifyVerdicts({ correct: HIGH, wrong: LOW, alt: null }, CONF)).toEqual([]);
+  });
+
+  it("confidence gate: low confidence suppresses false_negative + aA_gap, emits low_confidence_solve, keeps false_positive", () => {
+    const flags = classifyVerdicts({ correct: LOW, wrong: HIGH, alt: LOW }, 0.5);
+    expect(flags).toContain("low_confidence_solve");
+    expect(flags).toContain("false_positive");
+    expect(flags).not.toContain("false_negative");
+    expect(flags).not.toContain("acceptable_answers_gap");
+  });
+
+  it("boundary: exactly 0.8 passes and exactly 0.4 fails → clean case, no flags", () => {
+    // correct=0.8 is PASS (>=0.8); wrong=0.4 is FAIL (<=0.4) → the intended outcome.
+    expect(classifyVerdicts({ correct: 0.8, wrong: 0.4, alt: null }, CONF)).toEqual([]);
+  });
+
+  it("boundary: correct=0.4 fails, wrong=0.8 passes → both defect flags in emission order", () => {
+    // Emission order is stable: false_negative before false_positive.
+    expect(classifyVerdicts({ correct: 0.4, wrong: 0.8, alt: null }, CONF)).toEqual([
+      "false_negative",
+      "false_positive",
+    ]);
   });
 });

@@ -64,3 +64,55 @@ export function renderLearnerView(content: ExerciseContent): string {
   }
   return lines.join("\n");
 }
+
+/** Score at/above which the evaluator is treated as accepting the answer. */
+export const PASS_THRESHOLD = 0.8;
+/** Score at/below which the evaluator is treated as rejecting the answer. */
+export const FAIL_THRESHOLD = 0.4;
+/** Below this self-reported confidence, correct/alt flags are suppressed. */
+export const MIN_CORRECT_CONFIDENCE = 0.7;
+
+export type QaFlagReason =
+  | "false_negative"
+  | "false_positive"
+  | "acceptable_answers_gap"
+  | "low_confidence_solve";
+
+export type ProbeScores = {
+  correct: number;
+  wrong: number;
+  /** null when the exercise has a single canonical answer (no alt crafted). */
+  alt: number | null;
+};
+
+type Band = "pass" | "fail" | "deadzone";
+function band(score: number): Band {
+  if (score >= PASS_THRESHOLD) return "pass";
+  if (score <= FAIL_THRESHOLD) return "fail";
+  return "deadzone";
+}
+
+/**
+ * Map probe scores to defect reasons. Only *clear* band crossings flag; dead-zone
+ * scores never flag. The confidence gate suppresses correct/alt-derived flags
+ * (shaky ground truth) but never the false_positive signal (a wrong answer being
+ * accepted is independent of how sure the solver was about the correct answer).
+ * Emission order is stable: false_negative, false_positive, acceptable_answers_gap,
+ * then low_confidence_solve.
+ */
+export function classifyVerdicts(
+  scores: ProbeScores,
+  correctConfidence: number,
+): QaFlagReason[] {
+  const flags: QaFlagReason[] = [];
+  const lowConfidence = correctConfidence < MIN_CORRECT_CONFIDENCE;
+
+  if (!lowConfidence && band(scores.correct) === "fail") flags.push("false_negative");
+  if (band(scores.wrong) === "pass") flags.push("false_positive");
+  if (!lowConfidence && scores.alt !== null && band(scores.alt) === "fail") {
+    flags.push("acceptable_answers_gap");
+  }
+  if (lowConfidence) flags.push("low_confidence_solve");
+
+  return flags;
+}
