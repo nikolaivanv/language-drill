@@ -218,7 +218,7 @@ describe("buildValidationSystemPrompt", () => {
     // validate@2026-07-23 added the Tense-determinacy (cloze) sub-bullet to
     // the `ambiguous` dimension — an anchorless non-present finite-verb
     // blank is same-lexeme tense ambiguity unless a temporal anchor forces
-    // the past (~900 bytes, mirrors generate@2026-07-23). Ceiling raised to
+    // the past (~1.2KB, mirrors generate@2026-07-23). Ceiling raised to
     // 9,500.
     //
     // We assert on the TEMPLATE literal, not the rendered output, because:
