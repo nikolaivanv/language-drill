@@ -21,6 +21,7 @@ import {
   buildValidationUserPrompt,
   computeValidationPromptVars,
   VALIDATION_SYSTEM_PROMPT_TEMPLATE,
+  VALIDATION_PROMPT_VERSION,
 } from "./validation-prompts.js";
 import { applyTemplate } from "./prompts-registry.js";
 
@@ -173,6 +174,11 @@ describe("buildValidationSystemPrompt", () => {
     expect(prompt).toContain("mutlu");
     expect(prompt).toContain("buffer-consonant ambiguous blank");
 
+    // 2026-07-23 tense-determinacy: an anchorless non-present finite-verb blank
+    // is same-lexeme tense ambiguity, cured by anchor-or-present (not enumeration).
+    expect(prompt).toContain("Tense-determinacy (cloze)");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-07-23");
+
     // R3.A — the three contextSpoilsAnswer triples added in task 8.
     expect(prompt).toContain("çocuk");
     expect(prompt).toContain("-da/-de");
@@ -209,6 +215,12 @@ describe("buildValidationSystemPrompt", () => {
     // answer space, which pool-wide was false-flagging 81 % of SC drafts
     // `ambiguous` (~680 bytes). Ceiling raised to 8,500.
     //
+    // validate@2026-07-23 added the Tense-determinacy (cloze) sub-bullet to
+    // the `ambiguous` dimension — an anchorless non-present finite-verb
+    // blank is same-lexeme tense ambiguity unless a temporal anchor forces
+    // the past (~900 bytes, mirrors generate@2026-07-23). Ceiling raised to
+    // 9,500.
+    //
     // We assert on the TEMPLATE literal, not the rendered output, because:
     //   - The template is what Langfuse stores and what Anthropic's
     //     prompt-cache keys on byte-for-byte.
@@ -216,7 +228,7 @@ describe("buildValidationSystemPrompt", () => {
     //     (descriptions, examples, common errors, CEFR descriptors) which
     //     varies by language/level and is not what the NFR budgets — those
     //     substitutions are already counted against the API per-call.
-    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(8500);
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(9500);
   });
 });
 
