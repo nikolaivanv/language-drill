@@ -316,7 +316,16 @@ describe("buildGenerationSystemPrompt", () => {
     // SUBJECT, not the addressee: fixes the situation-mode "reply as du"
     // miscompile that shipped incoherent du-subject model answers
     // (generation-run-2026-07-22.md). Section value only — no Langfuse push.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-22");
+    // Bumped 2026-07-23 — tense-determinacy rule for finite-verb cloze blanks:
+    // a non-present correctAnswer in an anchorless stem is a false-negative trap
+    // (the present/habitual reading is equally valid). Fixes the systemic
+    // es-b1-influence-verbs-infinitive failure (docs/.../2026-07-23-cloze-tense-determinacy).
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-23");
+    // Tense-determinacy rule pinned in the cached template prefix.
+    expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
+      "Tense determinacy on finite-verb blanks",
+    );
+    expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain("todos los días");
     // Tasks 7–9: pin the new guardrail phrases in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "every content word MUST be high-frequency everyday vocabulary at or below CEFR {{cefrLevel}}",
