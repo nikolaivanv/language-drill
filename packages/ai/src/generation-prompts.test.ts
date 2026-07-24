@@ -320,7 +320,12 @@ describe("buildGenerationSystemPrompt", () => {
     // a non-present correctAnswer in an anchorless stem is a false-negative trap
     // (the present/habitual reading is equally valid). Fixes the systemic
     // es-b1-influence-verbs-infinitive failure (docs/.../2026-07-23-cloze-tense-determinacy).
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-23");
+    // Bumped 2026-07-24 — context-cued tense/aspect cloze rule: for points whose
+    // grammar target is which tense to use (de-a2-seit-present: seit + present),
+    // `instructions` must stay generic and NOT name the tense; the sentence's
+    // time context forces it. Naming the tense spoiled the answer
+    // (contextSpoilsAnswer, 7/8 rejected → eval:gen 1/8→8/8 approved, +25pp).
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-24");
     // Tense-determinacy rule pinned in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "Tense determinacy on finite-verb blanks",
