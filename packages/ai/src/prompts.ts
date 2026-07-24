@@ -56,7 +56,12 @@ const CEFR_DESCRIPTOR_BULLETS = (
 // user prompt now renders them as equally-correct. USER-prompt-only edit — the
 // cached system template is unchanged, so this ships with the code deploy and
 // needs NO separate Langfuse push (bumped only to cohort eval traces).
-export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-07-18";
+// 2026-07-24: cloze + vocab_recall USER prompts gained an information-asymmetry /
+// anti-anchoring block (the learner never saw Correct Answer / Acceptable Answers /
+// Context; judge the answer on the visible prompt, do not invent context to defend
+// the reference). USER-prompt-only edit — cached system template unchanged, ships
+// with the code deploy, NO Langfuse push; version bumped only to cohort traces.
+export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-07-24";
 
 export const EVALUATION_SYSTEM_PROMPT = `You are an expert language evaluator for a language-learning application. Your role is to evaluate user answers to language exercises with precision and pedagogical insight.
 
@@ -138,7 +143,9 @@ ${content.options ? `**Options:** ${content.options.join(", ")}` : ""}
 
 **User's Answer:** ${userAnswer}
 
-Evaluate the user's answer. If it matches **Correct Answer** or any entry in **Acceptable Answers**, score 1.0 with no errors. Otherwise consider whether it is still grammatically and semantically valid in the sentence and award partial or full credit as appropriate.`;
+Evaluate the user's answer. If it matches **Correct Answer** or any entry in **Acceptable Answers**, score 1.0 with no errors. Otherwise consider whether it is still grammatically and semantically valid in the sentence and award partial or full credit as appropriate.
+
+The learner saw ONLY the **Sentence** (with the blank), the **Instructions**, and the **Options** if listed — NOT the **Correct Answer**, **Acceptable Answers**, or **Context**. Judge the user's answer as a response to what they actually saw. **Correct Answer** / **Acceptable Answers** are the intended fill and your reference, but not the only admissible answer: if the user's answer is grammatically and semantically valid in the visible sentence — and among the **Options** when options are shown — it is fully correct (score 1.0, no error), even when it differs from **Correct Answer**. Do NOT invent unstated context — a specific time, past event, place, or referent that is not present in the visible sentence — to justify marking a valid answer wrong. When the visible sentence does not itself fix the tense/aspect/number, any form the sentence licenses is correct: e.g. for "El portero no ___ entrar al edificio sin identificación" both the present "deja" (a standing rule) and the preterite "dejó" are correct, because nothing in the sentence forces one tense.`;
 }
 
 function buildTranslationUserPrompt(
@@ -184,7 +191,9 @@ function buildVocabRecallUserPrompt(
 
 **User's Answer:** ${userAnswer}
 
-Evaluate the user's answer. If it matches **Expected Word** or any entry in **Acceptable Answers**, it is fully correct. Otherwise check whether it is a valid synonym used appropriately. Consider spelling accuracy.`;
+Evaluate the user's answer. If it matches **Expected Word** or any entry in **Acceptable Answers**, it is fully correct. Otherwise check whether it is a valid synonym used appropriately. Consider spelling accuracy.
+
+The learner saw ONLY the **Prompt** and **Hints** — NOT the **Expected Word** or **Acceptable Answers**. A word the learner produces that genuinely fits the prompt/definition and is used appropriately is fully correct even if it is not the **Expected Word** and not listed in **Acceptable Answers**; judge it on whether it satisfies what the learner saw, not on whether it matches the reference. Do NOT mark a valid synonym wrong merely for differing from the **Expected Word**.`;
 }
 
 function buildSentenceConstructionUserPrompt(
