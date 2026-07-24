@@ -893,6 +893,8 @@ describe('scheduler run-level cell cap', () => {
   afterEach(() => {
     delete process.env['SCHEDULER_MAX_CELLS_PER_RUN'];
     delete process.env['SCHEDULER_MAX_CELLS_PER_LANGUAGE'];
+    delete process.env['SCHEDULER_FINISHING_NEED_THRESHOLD'];
+    delete process.env['SCHEDULER_FINISHING_RESERVE_SLOTS'];
   });
 
   /** All jobIds enqueued across every batch, in order. */
@@ -934,7 +936,8 @@ describe('scheduler run-level cell cap', () => {
     // approved → need (= TARGET_PER_CELL − approved): s1 has the largest need,
     // s3 the second largest. cap = 2 must pick exactly those two, in that order.
     const approvedByKey = new Map<string, number>([
-      [subjects[0].cellKey, 45], // need 5
+      [subjects[0].cellKey, 43], // need 7  (was 45 / need 5 — keep it a MAIN cell
+                                 //          so this test still checks need-desc)
       [subjects[1].cellKey, 10], // need 40  ← 1st
       [subjects[2].cellKey, 30], // need 20
       [subjects[3].cellKey, 20], // need 30  ← 2nd
@@ -963,6 +966,73 @@ describe('scheduler run-level cell cap', () => {
       jobIdFor(subjects[3]),
     ]);
     expect(capLogLine()!['deferredCount']).toBe(3);
+  });
+
+  it('reserves a slot for a near-complete finisher under contention', async () => {
+    // Global cap 3, default perLang 50 / T=5 / R=8. Three DE cells at need 50
+    // plus one DE finisher at need 3. A pure need-desc cap 3 would take the
+    // three need-50 cells and defer the finisher; the reserve keeps it.
+    process.env['SCHEDULER_MAX_CELLS_PER_RUN'] = '3';
+    const de = cellsWithGlobalTarget()
+      .filter((c) => c.language === 'DE')
+      .slice(0, 4);
+    expect(de).toHaveLength(4);
+    const approvedByKey = new Map<string, number>([
+      [de[0].cellKey, 0], // need 50
+      [de[1].cellKey, 0], // need 50
+      [de[2].cellKey, 0], // need 50
+      [de[3].cellKey, 47], // need 3 — finisher
+    ]);
+    const rows = allRoundOneCells().map((cell) => ({
+      language: cell.language,
+      difficulty: cell.cefrLevel,
+      type: cell.exerciseType,
+      grammarPointKey: cell.grammarPoint.key,
+      approved: approvedByKey.get(cell.cellKey) ?? resolveCellTarget(cell),
+    }));
+    mockGroupBy.mockResolvedValueOnce(rows);
+
+    await handler();
+
+    const today = new Date().toISOString().slice(0, 10);
+    const jobIdFor = (cell: Cell) =>
+      deterministicUuid([cell.cellKey, `scheduled-${today}`].join('|'));
+    const ids = enqueuedJobIds();
+    expect(ids).toHaveLength(3);
+    expect(ids).toContain(jobIdFor(de[3])); // finisher reserved, not deferred
+    const log = capLogLine();
+    expect(log!['finishingThreshold']).toBe(5);
+    expect(log!['finishingReserveSlots']).toBe(8);
+    expect(log!['deferredCount']).toBe(1);
+  });
+
+  it('ignores a non-numeric finishing override and falls back to the defaults', async () => {
+    process.env['SCHEDULER_FINISHING_NEED_THRESHOLD'] = 'nope';
+    process.env['SCHEDULER_FINISHING_RESERVE_SLOTS'] = '-4';
+    process.env['SCHEDULER_MAX_CELLS_PER_RUN'] = '3';
+    const de = cellsWithGlobalTarget()
+      .filter((c) => c.language === 'DE')
+      .slice(0, 4);
+    const approvedByKey = new Map<string, number>([
+      [de[0].cellKey, 0],
+      [de[1].cellKey, 0],
+      [de[2].cellKey, 0],
+      [de[3].cellKey, 47], // need 3 — still a finisher under the DEFAULT T=5
+    ]);
+    const rows = allRoundOneCells().map((cell) => ({
+      language: cell.language,
+      difficulty: cell.cefrLevel,
+      type: cell.exerciseType,
+      grammarPointKey: cell.grammarPoint.key,
+      approved: approvedByKey.get(cell.cellKey) ?? resolveCellTarget(cell),
+    }));
+    mockGroupBy.mockResolvedValueOnce(rows);
+
+    await handler();
+
+    const log = capLogLine();
+    expect(log!['finishingThreshold']).toBe(5); // fell back to default
+    expect(log!['finishingReserveSlots']).toBe(8); // fell back to default
   });
 
   it('does not cap or log when under-target cells are at or below the cap', async () => {

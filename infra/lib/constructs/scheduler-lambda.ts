@@ -43,6 +43,19 @@ export interface SchedulerLambdaConstructProps {
    * (50). Stops one language's curriculum expansion from monopolizing the run.
    */
   maxCellsPerLanguage?: number;
+  /**
+   * Finishing-reserve eligibility floor: cells need at most this many more
+   * exemplars to close, injected as `SCHEDULER_FINISHING_NEED_THRESHOLD`.
+   * Omit to use the scheduler code default (5).
+   */
+  finishingNeedThreshold?: number;
+  /**
+   * Finishing-reserve budget: max cells reserved (before the per-language
+   * cap) for closing near-complete cells, injected as
+   * `SCHEDULER_FINISHING_RESERVE_SLOTS`. Omit to use the scheduler code
+   * default (8).
+   */
+  finishingReserveSlots?: number;
 }
 
 export class SchedulerLambdaConstruct extends Construct {
@@ -102,6 +115,20 @@ export class SchedulerLambdaConstruct extends Construct {
           ? {
               SCHEDULER_MAX_CELLS_PER_LANGUAGE: String(
                 props.maxCellsPerLanguage,
+              ),
+            }
+          : {}),
+        ...(props.finishingNeedThreshold !== undefined
+          ? {
+              SCHEDULER_FINISHING_NEED_THRESHOLD: String(
+                props.finishingNeedThreshold,
+              ),
+            }
+          : {}),
+        ...(props.finishingReserveSlots !== undefined
+          ? {
+              SCHEDULER_FINISHING_RESERVE_SLOTS: String(
+                props.finishingReserveSlots,
               ),
             }
           : {}),
