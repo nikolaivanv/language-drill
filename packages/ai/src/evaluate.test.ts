@@ -228,7 +228,7 @@ describe("buildUserPrompt", () => {
     const prompt = buildUserPrompt(clozeContent, "went", Language.EN, CefrLevel.B1);
 
     expect(prompt).not.toContain("Grammar Point Reference");
-    expect(prompt.toLowerCase()).not.toContain("do not invent");
+    expect(prompt.toLowerCase()).not.toContain("do not invent rules");
   });
 
   it("throws for a dictation exercise (not evaluated via this path)", () => {
@@ -285,7 +285,8 @@ describe("EVALUATION_SYSTEM_PROMPT", () => {
     // `.1` suffix: main's evaluate@2026-07-05 (PR #523 optional-elements rule)
     // is a different prompt body — same-day bumps must not share a cohort tag.
     // 2026-07-18: translation user prompt now renders `acceptableAnswers`.
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-07-18");
+    // 2026-07-24: cloze + vocab_recall anti-anchoring blocks; user-builder-only.
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-07-24");
   });
 });
 
