@@ -90,6 +90,22 @@ const DEFAULT_MAX_CELLS_PER_RUN = 120;
 const DEFAULT_MAX_CELLS_PER_LANGUAGE = 50;
 
 /**
+ * Finishing reserve (2026-07-24): a cell with `need ≤` this threshold is
+ * "near-complete" and eligible for the closest-first reserve carved before the
+ * fair-share pass. Overridable via `SCHEDULER_FINISHING_NEED_THRESHOLD`.
+ * See docs/analysis/generation-run-2026-07-24.md and `selectCellsWithinCaps`.
+ */
+const DEFAULT_FINISHING_NEED_THRESHOLD = 5;
+
+/**
+ * Up to this many global slots per run are reserved for finishers, closest-to-
+ * done first, so near-complete cells close instead of being perpetually
+ * outranked by the chronic high-need tail. Overridable via
+ * `SCHEDULER_FINISHING_RESERVE_SLOTS`.
+ */
+const DEFAULT_FINISHING_RESERVE_SLOTS = 8;
+
+/**
  * Resolve the run-level cell cap from the environment, falling back to
  * `DEFAULT_MAX_CELLS_PER_RUN`. A non-numeric, zero, or negative value is ignored
  * (uses the default) so a fat-fingered env var can never *disable* the brake.
@@ -115,6 +131,30 @@ function resolveMaxCellsPerLanguage(): number {
   return Number.isInteger(parsed) && parsed > 0
     ? parsed
     : DEFAULT_MAX_CELLS_PER_LANGUAGE;
+}
+
+/**
+ * Resolve the finishing-reserve need threshold from the environment. Same
+ * fat-finger guard as the cap resolvers — a non-positive / non-numeric value
+ * falls back to the default so the reserve can never be silently disabled.
+ */
+function resolveFinishingThreshold(): number {
+  const raw = process.env['SCHEDULER_FINISHING_NEED_THRESHOLD'];
+  if (raw === undefined) return DEFAULT_FINISHING_NEED_THRESHOLD;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isInteger(parsed) && parsed > 0
+    ? parsed
+    : DEFAULT_FINISHING_NEED_THRESHOLD;
+}
+
+/** Resolve the finishing-reserve slot count from the environment (same guard). */
+function resolveFinishingReserveSlots(): number {
+  const raw = process.env['SCHEDULER_FINISHING_RESERVE_SLOTS'];
+  if (raw === undefined) return DEFAULT_FINISHING_RESERVE_SLOTS;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isInteger(parsed) && parsed > 0
+    ? parsed
+    : DEFAULT_FINISHING_RESERVE_SLOTS;
 }
 
 // ---------------------------------------------------------------------------
@@ -351,16 +391,26 @@ export async function handler(): Promise<void> {
   //     Phase-2 coverage controller.
   const cap = resolveMaxCellsPerRun();
   const perLanguageCap = resolveMaxCellsPerLanguage();
+  const finishingThreshold = resolveFinishingThreshold();
+  const finishingReserveSlots = resolveFinishingReserveSlots();
   const {
     selected: selectedCells,
     deferredCount,
     enqueuedByLanguage,
-  } = selectCellsWithinCaps(undersized, cap, perLanguageCap);
+  } = selectCellsWithinCaps(
+    undersized,
+    cap,
+    perLanguageCap,
+    finishingThreshold,
+    finishingReserveSlots,
+  );
   if (deferredCount > 0) {
     log({
       level: 'info',
       cap,
       perLanguageCap,
+      finishingThreshold,
+      finishingReserveSlots,
       enqueuedThisRun: selectedCells.length,
       enqueuedByLanguage,
       deferredCount,
