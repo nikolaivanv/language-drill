@@ -10,8 +10,13 @@
  *      filled every slot for days, parking every other language's top-ups —
  *      see docs/analysis/generation-run-2026-07-18.md.
  *
- * Selection is a two-phase fair-share with redistribution:
+ * Selection runs in execution order — finishing reserve first, then the
+ * per-language fair-share pass:
  *
+ *   - **Finishing reserve (phase 0):** before the fair-share runs, carve up to
+ *     `finishingReserveSlots` slots for near-complete cells (`need ≤
+ *     finishingThreshold`), closest-to-done first, so a cell one draft from
+ *     target isn't perpetually outranked by the chronic high-need tail.
  *   - **Reserve:** per language, keep the `perLangCap` highest-need cells. This
  *     is the anti-starvation guarantee — every language gets its share first.
  *   - **Contention trim:** if the reserved picks alone exceed the global cap
@@ -21,10 +26,6 @@
  *     languages had little to do), fill the remainder from the leftover cells
  *     by need — so a night where only one language has work still fills to the
  *     global cap. No wasted capacity; fairness is enforced only under contention.
- *   - **Finishing reserve (phase 0):** before the fair-share runs, carve up to
- *     `finishingReserveSlots` slots for near-complete cells (`need ≤
- *     finishingThreshold`), closest-to-done first, so a cell one draft from
- *     target isn't perpetually outranked by the chronic high-need tail.
  *
  * Deterministic: cells sort by `need` descending, `cellKey` ascending as the
  * tie-break. No clock, no randomness.
@@ -131,6 +132,10 @@ export function selectCellsWithinCaps<T extends CellNeed>(
   }
 
   // Phase 0 — finishing reserve, closest-to-done first, bounded by the global cap.
+  // This is a GLOBAL reserve (optimizes total cells-closed-per-run), not a
+  // per-language guarantee: under finisher contention exceeding
+  // `finishingReserveSlots`, a given language's finisher may lose out to a
+  // closer-to-done finisher from another language and wait for a later run.
   finishers.sort(byNeedAsc);
   const reserveCount = Math.min(
     finishingReserveSlots,

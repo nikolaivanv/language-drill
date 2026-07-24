@@ -207,4 +207,16 @@ describe('selectCellsWithinCaps', () => {
     expect(r.selected).toHaveLength(7); // all 7 fit
     expect(r.deferredCount).toBe(0);
   });
+
+  it('lets a language’s main overflow redistribute past perLangCap when another is near-saturated', () => {
+    // DE has 60 main cells (need 20) — 10 over the 50 per-language cap. ES is
+    // all finishers (need 2), so it reserves zero main slots; DE main overflow
+    // redistributes into the freed budget and exceeds perLangCap.
+    const deMain = items('DE', 60, 20);
+    const esFinishers = items('ES', 5, 2);
+    const r = selectCellsWithinCaps([...deMain, ...esFinishers], 120, 50, 5, 8);
+    const by = langsOf(r.selected);
+    expect(by['DE']).toBe(60); // all 60 DE main served — past the 50 cap
+    expect(r.selected).toHaveLength(65);
+  });
 });

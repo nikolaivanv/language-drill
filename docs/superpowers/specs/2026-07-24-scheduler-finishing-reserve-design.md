@@ -57,7 +57,7 @@ The two new params are resolved in `scheduler.ts` from the environment, mirrorin
 - `SCHEDULER_FINISHING_NEED_THRESHOLD` — default **5**
 - `SCHEDULER_FINISHING_RESERVE_SLOTS` — default **8**
 
-`T = 5` catches 6 of the 8 current DE SC cells directly in the reserve; `weil-deshalb` (need 7) rides the fair-share + redistribute path and closes within a night or two as budget frees up. `R = 8` is small enough not to distort the main fill while covering the current finisher-starvation case. Both are design-tunable via env with no redeploy.
+`T = 5` catches 6 of the 8 current DE SC cells directly in the reserve; `weil-deshalb` (need 7) rides the fair-share + redistribute path and closes within a night or two as budget frees up. `R = 8` is small enough not to distort the main fill while covering the current finisher-starvation case. Both are tunable via a one-line CDK prop change + deploy, exactly like the sibling `maxCellsPerRun`/`maxCellsPerLanguage` caps.
 
 ### Preserved invariants
 

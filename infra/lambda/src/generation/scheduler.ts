@@ -137,6 +137,10 @@ function resolveMaxCellsPerLanguage(): number {
  * Resolve the finishing-reserve need threshold from the environment. Same
  * fat-finger guard as the cap resolvers — a non-positive / non-numeric value
  * falls back to the default so the reserve can never be silently disabled.
+ * Note: the guard only bounds the lower side. An over-large configured value
+ * would sweep most cells into the finisher bucket (which is exempt from the
+ * per-language cap) — acceptable given there is no console tuning today, but
+ * worth knowing if a very large value is ever configured via CDK.
  */
 function resolveFinishingThreshold(): number {
   const raw = process.env['SCHEDULER_FINISHING_NEED_THRESHOLD'];

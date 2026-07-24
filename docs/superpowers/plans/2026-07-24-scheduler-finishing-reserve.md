@@ -45,28 +45,37 @@ Add these cases inside the existing `describe('selectCellsWithinCaps', …)` blo
 
 ```ts
   it('reserves closest-to-done finishers under contention (today’s scenario)', () => {
-    // 58 DE main cells (need 20) + 8 DE finishers (need 1..5) + 50 ES finishers
-    // (need 2). globalCap 120, perLangCap 50, T=5, R=8.
-    const deMain = items('DE', 58, 20);
+    // Genuine contention: 128 under-target cells for a 120 cap.
+    //   DE  50 main (need 20) + 8 finishers (need 1..5)
+    //   ES  50 finishers (need 2)   ← near-saturated language
+    //   TR  20 main (need 20)
+    // Under the OLD pure fair-share the reserved set (DE 50 + ES 50 + TR 20)
+    // hits exactly the 120 cap, redistribution never fires, DE is pinned at 50
+    // and every DE finisher is deferred. The finishing reserve + finisher
+    // exclusion from the per-language cap must fix both.
+    const deMain = items('DE', 50, 20);
     const deFinishers: CellNeed[] = Array.from({ length: 8 }, (_, i) => ({
       cell: { language: 'DE', cellKey: `de:fin:${String(i).padStart(3, '0')}` },
       need: (i % 5) + 1, // needs 1..5
     }));
     const esFinishers = items('ES', 50, 2);
-    const under = [...deMain, ...deFinishers, ...esFinishers];
+    const trMain = items('TR', 20, 20);
+    const under = [...deMain, ...deFinishers, ...esFinishers, ...trMain];
 
     const r = selectCellsWithinCaps(under, 120, 50, 5, 8);
 
-    // No language starves: every DE finisher (need ≤ 5) is served.
+    // No DE finisher starves: every one (need ≤ 5) is served.
     const selectedKeys = new Set(r.selected.map((s) => s.cell.cellKey));
     for (const f of deFinishers) {
       expect(selectedKeys.has(f.cell.cellKey)).toBe(true);
     }
-    // DE high-need overflow redistributes past the 50-cell reserve because ES
-    // finishers no longer consume ES’s per-language reserve.
+    // DE high-need overflow is no longer pinned at 50: ES finishers stop
+    // consuming ES's per-language reserve, so DE's own finishers push it past 50.
     const by = langsOf(r.selected);
-    expect(by['DE']).toBeGreaterThan(50);
+    expect(by['DE']).toBe(58); // 50 main + 8 finishers
+    expect(by['TR']).toBe(20); // main backlog fully served
     expect(r.selected).toHaveLength(120);
+    expect(r.deferredCount).toBe(8); // 8 ES finishers deferred
   });
 
   it('guarantees the finishing reserve even when main cells alone exceed the cap', () => {
