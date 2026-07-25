@@ -46,6 +46,12 @@ new LanguageDrillStack(app, "LanguageDrillStack", {
     "https://www.langdrill.app",
   ],
   enableScheduledJobs: true,
+  // TEMPORARY (2026-07-25): pause the nightly exercise pre-generation cron to
+  // stop background Anthropic spend while the API budget is unfunded. This drops
+  // only the exercise-refill EventBridge rule; the weekly theory-generation cron
+  // and email cron stay on `enableScheduledJobs`. Revert (delete this line) in a
+  // follow-up PR to resume nightly generation.
+  enableScheduledExerciseGeneration: false,
   adminUserIds: process.env.ADMIN_USER_IDS,
   aiKillSwitch: process.env.AI_KILL_SWITCH,
   aiGlobalDailyCap: process.env.AI_GLOBAL_DAILY_CAP,
