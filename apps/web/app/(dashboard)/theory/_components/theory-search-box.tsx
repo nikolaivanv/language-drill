@@ -54,7 +54,7 @@ export function TheorySearchBox({ value, onChange }: TheorySearchBoxProps) {
         strokeWidth="1.6"
         strokeLinecap="round"
         aria-hidden="true"
-        style={{ position: 'absolute', left: 14, top: 14, color: 'var(--ink-mute)' }}
+        style={{ position: 'absolute', left: 14, top: 14, color: 'var(--color-ink-mute)' }}
       >
         <circle cx="7" cy="7" r="4.5" />
         <path d="M10.5 10.5l3 3" />
@@ -88,11 +88,11 @@ export function TheorySearchBox({ value, onChange }: TheorySearchBoxProps) {
             right: 12,
             top: 10,
             fontSize: 10,
-            color: 'var(--ink-mute)',
+            color: 'var(--color-ink-mute)',
             padding: '3px 7px',
-            border: '1px solid var(--rule)',
+            border: '1px solid var(--color-rule)',
             borderRadius: 4,
-            background: 'var(--paper-2)',
+            background: 'var(--color-paper-2)',
           }}
         >
           ⌘K

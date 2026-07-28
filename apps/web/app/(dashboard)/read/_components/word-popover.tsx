@@ -138,7 +138,7 @@ export function WordPopover({
         zIndex: 30,
         background: 'var(--color-card)',
         border: '1px solid var(--color-ink)',
-        borderRadius: 'var(--r-md, 6px)',
+        borderRadius: 'var(--radius-md)',
         boxShadow: 'var(--shadow-3)',
         animation: 'fade .18s ease both',
       }}
