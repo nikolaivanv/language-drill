@@ -137,7 +137,7 @@ import {
   enumerateCurriculumCells,
   type Cell,
 } from '@language-drill/db';
-import type { LearningLanguage } from '@language-drill/shared';
+import { TOPIC_DOMAINS, type LearningLanguage } from '@language-drill/shared';
 import { handler } from './scheduler';
 import { parseGenerationJobMessage } from './job-message';
 import { resolveCellTarget } from './cell-targets';
@@ -742,6 +742,54 @@ describe('scheduler handler', () => {
     );
     expect(subjectMsg).toBeDefined();
     expect(subjectMsg!.spec.coverageTargets).toBeUndefined();
+  });
+
+  // -------------------------------------------------------------------------
+  // Component A2 — topic diversity: every enqueued cell gets topicTargets
+  // -------------------------------------------------------------------------
+
+  it('attaches per-draft topicTargets to every enqueued cell, with and without a coverageSpec', async () => {
+    const withSpec = firstCoverageSpecClozeCell();
+    const withoutSpec = firstNoCoverageSpecClozeCell();
+    const subjectKeys = new Set([withSpec.cellKey, withoutSpec.cellKey]);
+    mockGroupBy.mockResolvedValueOnce(rowsToFillAllCellsExcept(subjectKeys, 0));
+    // Default mockExecute ({ rows: [] }) covers recent-jobs, coverage, and the
+    // new topic-counts load — an empty approved-pool topic distribution.
+
+    await handler();
+
+    const messages = capturedBatches()
+      .flatMap(decodeBatch)
+      .map((m) => parseGenerationJobMessage(m));
+    expect(messages.length).toBeGreaterThan(0);
+
+    for (const m of messages) {
+      expect(m.spec.topicTargets).toHaveLength(m.spec.count);
+      for (const d of m.spec.topicTargets ?? []) {
+        expect(TOPIC_DOMAINS).toContain(d);
+      }
+    }
+
+    const withSpecMsg = messages.find(
+      (m) =>
+        m.spec.grammarPointKey === withSpec.grammarPoint.key &&
+        m.spec.cefrLevel === withSpec.cefrLevel &&
+        m.spec.language === withSpec.language &&
+        m.spec.exerciseType === withSpec.exerciseType,
+    );
+    const withoutSpecMsg = messages.find(
+      (m) =>
+        m.spec.grammarPointKey === withoutSpec.grammarPoint.key &&
+        m.spec.cefrLevel === withoutSpec.cefrLevel &&
+        m.spec.language === withoutSpec.language &&
+        m.spec.exerciseType === withoutSpec.exerciseType,
+    );
+    expect(withSpecMsg).toBeDefined();
+    expect(withoutSpecMsg).toBeDefined();
+    // withSpecMsg also carries coverageTargets; withoutSpecMsg never does —
+    // topicTargets is independent of that and present on both.
+    expect(withSpecMsg!.spec.topicTargets).toBeDefined();
+    expect(withoutSpecMsg!.spec.topicTargets).toBeDefined();
   });
 
   it('Phase 2: version-matched give-up suppresses a zero-yield person bucket', async () => {
