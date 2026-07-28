@@ -827,7 +827,9 @@ export function canonicalSurface(content: ExerciseContent): string {
       // as an exact duplicate.
       return `${normaliseSurface(content.expectedWord)}::${normaliseSurface(content.prompt)}`;
     case ExerciseType.SENTENCE_CONSTRUCTION:
-      return normaliseSurface(content.prompt);
+      // Key on the primary elicited sentence, not the instructional prompt:
+      // reworded instructions that funnel to the same answer are redundant.
+      return normaliseSurface(content.modelAnswers[0] ?? content.prompt);
     case ExerciseType.DICTATION:
       // The reference transcription is the dedup surface (drives `_dedupKey`
       // and in-batch duplicate detection).

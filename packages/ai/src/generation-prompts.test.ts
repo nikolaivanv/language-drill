@@ -1069,16 +1069,22 @@ describe("canonicalSurface", () => {
 // ---------------------------------------------------------------------------
 
 describe("canonicalSurface — sentence_construction", () => {
-  it("keys on the normalised prompt text", () => {
-    expect(
+  it("keys on the normalised primary model answer, not the prompt", () => {
+    const key = (prompt: string, primary: string) =>
       canonicalSurface({
         type: ExerciseType.SENTENCE_CONSTRUCTION,
         instructions: "x",
         promptMode: "grammar_target",
-        prompt: "  Usá  el  Subjuntivo.  ",
-        modelAnswers: ["a", "b"],
-      }),
-    ).toBe("usa el subjuntivo.");
+        prompt,
+        modelAnswers: [primary, "otra frase"],
+      });
+
+    // Different prompt wording, identical elicited answer → SAME key (clones collide).
+    expect(key("Usá el condicional.", "Iría a la playa.")).toBe(
+      key("Escribe una frase en condicional.", "Iría a la playa."),
+    );
+    // Diacritics/whitespace normalised.
+    expect(key("p1", "  Iría   a la playa. ")).toBe("iria a la playa.");
   });
 });
 
