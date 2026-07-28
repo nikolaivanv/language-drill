@@ -28,6 +28,7 @@ import {
   deterministicUuid,
   type GrammarPoint,
   type SentenceConstructionContent,
+  TOPIC_HINT_VALUES,
   type TranslationContent,
   type VocabRecallContent,
 } from "@language-drill/shared";
@@ -146,6 +147,7 @@ export const CLOZE_GENERATION_TOOL: Anthropic.Tool = {
         type: "string",
         description:
           "Optional topic theme (e.g. 'travel', 'work', 'family').",
+        enum: [...TOPIC_HINT_VALUES],
       },
       glossEn: {
         type: "string",
@@ -200,6 +202,7 @@ export const TRANSLATION_GENERATION_TOOL: Anthropic.Tool = {
         type: "string",
         description:
           "Optional topic theme (e.g. 'travel', 'work', 'family').",
+        enum: [...TOPIC_HINT_VALUES],
       },
     },
     required: [
@@ -255,6 +258,7 @@ export const VOCAB_RECALL_GENERATION_TOOL: Anthropic.Tool = {
         type: "string",
         description:
           "Optional topic theme (e.g. 'travel', 'work', 'family').",
+        enum: [...TOPIC_HINT_VALUES],
       },
     },
     required: [
@@ -312,7 +316,11 @@ export const CONJUGATION_GENERATION_TOOL: Anthropic.Tool = {
       },
       breakdown: { type: "string", description: "Morphological breakdown for post-answer teaching: stem + ending (ES/DE) or stem + ordered suffix gloss (TR)." },
       exampleSentences: { type: "array", items: { type: "string" }, description: "1-2 short, natural sentences using the target form in context." },
-      topicHint: { type: "string", description: "Optional topic theme." },
+      topicHint: {
+        type: "string",
+        description: "Optional topic theme.",
+        enum: [...TOPIC_HINT_VALUES],
+      },
     },
     required: ["instructions", "lemma", "lemmaGloss", "featureBundle", "features", "targetForm", "breakdown", "exampleSentences"],
   },
@@ -367,6 +375,7 @@ export const SENTENCE_CONSTRUCTION_GENERATION_TOOL: Anthropic.Tool = {
       topicHint: {
         type: "string",
         description: "Optional topic theme (e.g. 'travel', 'work', 'family').",
+        enum: [...TOPIC_HINT_VALUES],
       },
     },
     required: ["instructions", "promptMode", "prompt", "modelAnswers"],
@@ -427,6 +436,7 @@ export const CONTEXTUAL_PARAPHRASE_GENERATION_TOOL: Anthropic.Tool = {
       topicHint: {
         type: "string",
         description: "Optional topic theme (e.g. 'travel', 'work', 'family').",
+        enum: [...TOPIC_HINT_VALUES],
       },
     },
     required: [
@@ -532,6 +542,7 @@ export const FREE_WRITING_GENERATION_TOOL: Anthropic.Tool = {
       topicHint: {
         type: "string",
         description: "Optional one-word topical theme (e.g. 'trabajo', 'viajes').",
+        enum: [...TOPIC_HINT_VALUES],
       },
     },
     required: ["instructions", "title", "task", "domain", "requiredElements"],
@@ -562,6 +573,11 @@ export type GenerationSpec = {
   grammarPoint: GrammarPoint;
   /** CLI passthrough; current prompts ignore the value (resolved decision #3). */
   topicDomain: string | null;
+  /**
+   * Per-draft topic-domain assignment (deficit water-fill). Length === count
+   * when present. Overrides the cell-wide `topicDomain` per ordinal.
+   */
+  topicTargets?: readonly string[];
   /** 1..200; CLI default is 50. */
   count: number;
   /** Default `'phase-2-default'` from the CLI. Bump to add 50 more drafts to a cell. */
@@ -608,6 +624,20 @@ export type GenerationSpec = {
    */
   coverageTargets?: readonly CoverageTarget[];
 };
+
+/**
+ * Resolves the topic domain to steer a single draft toward: the per-ordinal
+ * `topicTargets` entry when present, falling back to the cell-wide
+ * `topicDomain`. Used at the user-prompt call site in `generateOneDraft` so
+ * per-draft topic diversity (deficit water-fill) overrides the cell default
+ * without disturbing callers that never populate `topicTargets`.
+ */
+export function resolveTopicDomain(
+  spec: Pick<GenerationSpec, "topicDomain" | "topicTargets">,
+  ordinal: number,
+): string | null {
+  return spec.topicTargets?.[ordinal] ?? spec.topicDomain;
+}
 
 export type ExerciseDraft = {
   /** Deterministic UUID — see `exerciseDraftId` (Task 8). */
@@ -1389,7 +1419,7 @@ export async function generateOneDraft(
       : buildGenerationUserPrompt(
           promptInputs,
           ordinal,
-          spec.topicDomain,
+          resolveTopicDomain(spec, ordinal),
           spec.seedWords?.[ordinal] ?? null,
           spec.coverageTargets,
         );

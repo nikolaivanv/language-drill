@@ -6,6 +6,7 @@ import {
   isClozeContent,
   isTranslationContent,
   isVocabRecallContent,
+  TOPIC_HINT_VALUES,
   type VocabRecallContent,
 } from "@language-drill/shared";
 import { getGrammarPoint } from "@language-drill/db";
@@ -33,6 +34,7 @@ import {
   parseGeneratedDictationDraft,
   parseGeneratedFreeWritingDraft,
   parseGeneratedSentenceConstructionDraft,
+  resolveTopicDomain,
   type GenerationSpec,
 } from "./generate.js";
 
@@ -1584,5 +1586,37 @@ describe("parseGeneratedConjugationDraft", () => {
     );
     expect(out.subject).toBeUndefined();
     expect(out.features).toHaveLength(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// resolveTopicDomain (Task 5 / Components A3, A4)
+// ---------------------------------------------------------------------------
+
+describe("resolveTopicDomain", () => {
+  it("uses the per-draft topicTargets value when present", () => {
+    const spec = { topicDomain: null, topicTargets: ["travel", "food"] } as never;
+    expect(resolveTopicDomain(spec, 1)).toBe("food");
+  });
+
+  it("falls back to the cell-wide topicDomain when no target for the ordinal", () => {
+    const spec = { topicDomain: "mixed", topicTargets: ["travel"] } as never;
+    expect(resolveTopicDomain(spec, 5)).toBe("mixed");
+  });
+
+  it("returns null when neither is set", () => {
+    const spec = { topicDomain: null } as never;
+    expect(resolveTopicDomain(spec, 0)).toBeNull();
+  });
+});
+
+describe("topicHint schema constraint", () => {
+  it("constrains the SC tool's topicHint to the vocabulary", () => {
+    const prop = (
+      SENTENCE_CONSTRUCTION_GENERATION_TOOL as never as {
+        input_schema: { properties: { topicHint: { enum?: string[] } } };
+      }
+    ).input_schema.properties.topicHint;
+    expect(prop.enum).toEqual([...TOPIC_HINT_VALUES]);
   });
 });
