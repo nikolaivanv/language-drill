@@ -16,6 +16,7 @@ import {
   COVERAGE_AXIS_VALUES,
   ExerciseType,
   Language,
+  TOPIC_DOMAINS,
   type CoverageAxis,
   type CoverageTarget,
   type LearningLanguage,
@@ -62,6 +63,12 @@ export type GenerationJobMessage = {
      * and non-spec scheduled cells.
      */
     coverageTargets?: CoverageTarget[];
+    /**
+     * Per-draft topic-domain assignment (deficit water-fill). When present,
+     * length MUST === `count`; each value is a domain from TOPIC_DOMAINS.
+     * Applies to all exercise types; orthogonal to the cell-wide `topicDomain`.
+     */
+    topicTargets?: string[];
   };
   /** Cell-level cost cap in USD. (0, 100). */
   maxCostUsd: number;
@@ -165,6 +172,10 @@ export function parseGenerationJobMessage(
   );
   const batchSeed = requireBatchSeed(specValue, 'spec.batchSeed');
   const coverageTargets = optionalCoverageTargets(specValue, count);
+  const topicTargets = optionalTopicTargets(
+    (specValue as Record<string, unknown>)['topicTargets'],
+    count,
+  );
 
   const maxCostUsd = requireMaxCostUsd(input, 'maxCostUsd');
 
@@ -182,6 +193,7 @@ export function parseGenerationJobMessage(
       count,
       batchSeed,
       ...(coverageTargets !== undefined ? { coverageTargets } : {}),
+      ...(topicTargets !== undefined ? { topicTargets } : {}),
     },
     maxCostUsd,
   };
@@ -365,6 +377,33 @@ function optionalCoverageTargets(
     out.push(target);
   }
   return out;
+}
+
+const TOPIC_DOMAIN_SET: ReadonlySet<string> = new Set(TOPIC_DOMAINS);
+
+function optionalTopicTargets(
+  raw: unknown,
+  count: number,
+): string[] | undefined {
+  if (raw === undefined || raw === null) return undefined;
+  if (!Array.isArray(raw)) {
+    throw new Error(
+      `spec.topicTargets: expected array or undefined, got ${describe(raw)}`,
+    );
+  }
+  if (raw.length !== count) {
+    throw new Error(
+      `spec.topicTargets: expected length === spec.count (${count}), got ${raw.length}`,
+    );
+  }
+  return raw.map((v) => {
+    if (typeof v !== 'string' || !TOPIC_DOMAIN_SET.has(v)) {
+      throw new Error(
+        `spec.topicTargets: illegal domain ${JSON.stringify(v)}`,
+      );
+    }
+    return v;
+  });
 }
 
 function requireMaxCostUsd(
