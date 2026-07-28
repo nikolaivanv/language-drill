@@ -307,6 +307,7 @@ export async function handler(
                 topicDomain: parsed.spec.topicDomain,
                 maxCostUsd: parsed.maxCostUsd,
                 coverageTargets: parsed.spec.coverageTargets,
+                topicTargets: parsed.spec.topicTargets,
               },
               jobId: parsed.jobId,
               trigger: parsed.trigger,

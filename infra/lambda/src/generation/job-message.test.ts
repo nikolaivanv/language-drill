@@ -3,6 +3,7 @@ import {
   CefrLevel,
   ExerciseType,
   Language,
+  TOPIC_DOMAINS,
   type LearningLanguage,
 } from '@language-drill/shared';
 
@@ -397,6 +398,58 @@ describe("coverageTargets parsing", () => {
     expect(() =>
       parseGenerationJobMessage(valid({ coverageTargets: [{ person: "9sg" }, { person: "1sg" }] })),
     ).toThrow(/illegal value/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseGenerationJobMessage — topicTargets
+// ---------------------------------------------------------------------------
+
+describe('parseGenerationJobMessage — topicTargets', () => {
+  function makeValidJob(over: Record<string, unknown> = {}): unknown {
+    return {
+      jobId: '11111111-1111-1111-1111-111111111111',
+      trigger: 'scheduled',
+      spec: {
+        language: 'TR',
+        cefrLevel: 'A1',
+        exerciseType: 'cloze',
+        grammarPointKey: 'tr-a1-x',
+        topicDomain: null,
+        count: 2,
+        batchSeed: 's',
+        ...over,
+      },
+      maxCostUsd: 0.5,
+    };
+  }
+
+  it('accepts topicTargets of length === count with legal domains', () => {
+    const msg = makeValidJob({ count: 2, topicTargets: ['travel', 'food'] });
+    const parsed = parseGenerationJobMessage(msg);
+    expect(parsed.spec.topicTargets).toEqual(['travel', 'food']);
+  });
+
+  it('rejects topicTargets whose length !== count', () => {
+    const msg = makeValidJob({ count: 2, topicTargets: ['travel'] });
+    expect(() => parseGenerationJobMessage(msg)).toThrow();
+  });
+
+  it('rejects topicTargets with an unknown domain', () => {
+    const msg = makeValidJob({ count: 1, topicTargets: ['nonsense'] });
+    expect(() => parseGenerationJobMessage(msg)).toThrow();
+  });
+
+  it('omits topicTargets when absent', () => {
+    const msg = makeValidJob({ count: 1 });
+    expect(parseGenerationJobMessage(msg).spec.topicTargets).toBeUndefined();
+  });
+
+  it('every TOPIC_DOMAINS value is individually accepted as a length-1 target', () => {
+    for (const domain of TOPIC_DOMAINS) {
+      const msg = makeValidJob({ count: 1, topicTargets: [domain] });
+      expect(parseGenerationJobMessage(msg).spec.topicTargets).toEqual([domain]);
+    }
   });
 });
 

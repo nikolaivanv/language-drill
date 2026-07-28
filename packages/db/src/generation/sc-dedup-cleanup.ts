@@ -1,0 +1,101 @@
+/**
+ * Pure regrouping logic for the SC (sentence_construction) dedup cleanup.
+ *
+ * Background: `canonicalSurface` for `sentence_construction` used to key on
+ * the instructional prompt; a fix re-keyed it onto the primary model answer
+ * (`modelAnswers[0]`) instead, since two reworded instructions that funnel to
+ * the same answer are redundant. Rows already in the pool were inserted (and
+ * their `_dedupKey` stamped) under the OLD prompt-based key, so the live
+ * unique index no longer reflects their true collisions — this module
+ * regroups the existing approved/flagged pool on the NEW key and decides
+ * which rows to keep vs. demote, and which survivors need `_dedupKey`
+ * backfilled to the recomputed value.
+ *
+ * Kept pure (no DB, no I/O) so it can be unit tested directly; the CLI
+ * (`scripts/dedup-sc-pool.ts`) fetches rows and applies the resulting plan.
+ */
+
+import { canonicalSurface } from "@language-drill/ai";
+import type { SentenceConstructionContent } from "@language-drill/shared";
+
+export type ScRow = {
+  id: string;
+  language: string;
+  difficulty: string;
+  grammarPointKey: string;
+  reviewStatus: string;
+  qualityScore: number | null;
+  createdAt: Date;
+  contentJson: SentenceConstructionContent & { _dedupKey?: string };
+};
+
+export type CleanupPlan = {
+  toDemote: string[];
+  toBackfill: Array<{ id: string; newKey: string }>;
+  /** Row ids whose `canonicalSurface` computation threw (legacy/corrupt content) — left untouched. */
+  skipped: string[];
+};
+
+const APPROVED = new Set(["auto-approved", "manual-approved"]);
+
+/** Higher is a better survivor: [is-approved, qualityScore, -createdAt.getTime()]. */
+function survivorRank(r: ScRow): [number, number, number] {
+  return [
+    APPROVED.has(r.reviewStatus) ? 1 : 0,
+    r.qualityScore ?? -1,
+    -r.createdAt.getTime(), // older wins → negate so "higher is better"
+  ];
+}
+
+function better(a: ScRow, b: ScRow): ScRow {
+  const [a1, a2, a3] = survivorRank(a);
+  const [b1, b2, b3] = survivorRank(b);
+  if (a1 !== b1) return a1 > b1 ? a : b;
+  if (a2 !== b2) return a2 > b2 ? a : b;
+  return a3 >= b3 ? a : b;
+}
+
+/** Wraps `canonicalSurface` so one legacy/corrupt row can't abort the whole sweep. */
+function surfaceOf(r: ScRow): string | null {
+  try {
+    return canonicalSurface(r.contentJson);
+  } catch {
+    return null;
+  }
+}
+
+export function groupSentenceConstructionDuplicates(
+  rows: ScRow[],
+): CleanupPlan {
+  const skipped: string[] = [];
+  const groups = new Map<string, ScRow[]>();
+  for (const r of rows) {
+    const surface = surfaceOf(r);
+    if (surface === null) {
+      skipped.push(r.id);
+      continue;
+    }
+    const key = [r.language, r.difficulty, r.grammarPointKey, surface].join(
+      " ",
+    );
+    const bucket = groups.get(key);
+    if (bucket) bucket.push(r);
+    else groups.set(key, [r]);
+  }
+
+  const toDemote: string[] = [];
+  const toBackfill: Array<{ id: string; newKey: string }> = [];
+  for (const group of groups.values()) {
+    const survivor = group.reduce(better);
+    // Already computed successfully above (the row is in `groups`), so this
+    // recomputation cannot throw.
+    const newKey = surfaceOf(survivor) as string;
+    if (survivor.contentJson._dedupKey !== newKey) {
+      toBackfill.push({ id: survivor.id, newKey });
+    }
+    for (const r of group) {
+      if (r.id !== survivor.id) toDemote.push(r.id);
+    }
+  }
+  return { toDemote, toBackfill, skipped };
+}

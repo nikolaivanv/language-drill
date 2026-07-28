@@ -36,6 +36,8 @@ import {
 import {
   COVERAGE_AXIS_VALUES,
   ExerciseType,
+  isTopicDomain,
+  TOPIC_DOMAINS,
   type CoverageAxis,
   type LearningLanguage,
 } from '@language-drill/shared';
@@ -48,6 +50,7 @@ import { resolveCellTarget } from './cell-targets';
 import { decideCoverageTargets } from './coverage-decision';
 import { loadMostRecentSucceededJobPerCell } from './recent-jobs';
 import { decideEnqueue } from './scheduler-decision';
+import { decideTopicTargets } from './topic-decision';
 import { loadVocabTargetCoveragePerUmbrella } from './vocab-target-coverage';
 
 // ---------------------------------------------------------------------------
@@ -232,6 +235,53 @@ async function loadApprovedCoverageCountsPerCell(
 }
 
 // ---------------------------------------------------------------------------
+// loadApprovedTopicCountsPerCell
+// ---------------------------------------------------------------------------
+
+/**
+ * Component A2: approved-pool topic-domain distribution per cell, for
+ * `decideTopicTargets`. Keyed by `cell_key` → { domain → count }. Applies to
+ * ALL cells (not gated on `coverageSpec`) — legacy/unknown `topicHint` values
+ * bucket as `'other'` via `isTopicDomain`.
+ */
+async function loadApprovedTopicCountsPerCell(
+  db: Db,
+): Promise<Map<string, Record<string, number>>> {
+  const result = await db.execute(sql`
+    SELECT language, difficulty, type, grammar_point_key AS grammar_point_key,
+           COALESCE(content_json->>'topicHint', 'other') AS topic_hint,
+           COUNT(*)::int AS n
+    FROM exercises
+    WHERE review_status IN ('auto-approved', 'manual-approved')
+    GROUP BY language, difficulty, type, grammar_point_key, topic_hint
+  `);
+
+  type Row = {
+    language: string;
+    difficulty: string;
+    type: string;
+    grammar_point_key: string;
+    topic_hint: string;
+    n: number;
+  };
+  const rows = result.rows as unknown as Row[];
+  const map = new Map<string, Record<string, number>>();
+  for (const row of rows) {
+    const key = buildCellKeyFromRow({
+      language: row.language,
+      difficulty: row.difficulty,
+      type: row.type,
+      grammarPointKey: row.grammar_point_key,
+    });
+    const domain = isTopicDomain(row.topic_hint) ? row.topic_hint : 'other';
+    const bucket = map.get(key) ?? {};
+    bucket[domain] = (bucket[domain] ?? 0) + row.n;
+    map.set(key, bucket);
+  }
+  return map;
+}
+
+// ---------------------------------------------------------------------------
 // Handler
 // ---------------------------------------------------------------------------
 
@@ -296,6 +346,10 @@ export async function handler(): Promise<void> {
   //     cell (all axes via LATERAL unnest). Feeds `decideCoverageTargets` for
   //     cells that have a `coverageSpec`.
   const approvedCoverageByCell = await loadApprovedCoverageCountsPerCell(db);
+
+  // 4b-2. Component A2: approved-pool topic-domain distribution per cell —
+  //       applies to ALL cells (no coverageSpec gate), unlike 4b above.
+  const approvedTopicByCell = await loadApprovedTopicCountsPerCell(db);
 
   // 4c. Spec 2: per-umbrella vocab_target coverage (approved-target count +
   //     distinct-covered count). Drives coverage-aware need for vocab_recall
@@ -440,6 +494,15 @@ export async function handler(): Promise<void> {
   // 6. Build messages. `jobId = deterministicUuid(cellKey | batchSeed)` makes
   //    same-day re-fires produce identical IDs (Req 4.4 + Req 4.3.4).
   const messages: GenerationJobMessage[] = selectedCells.map(({ cell, need }) => {
+    // Component A2: per-draft topic-domain assignment — applies to every
+    // cell, independent of `coverageSpec`, so it must be folded into `base`
+    // before the coverage guard below (which early-returns `base` for
+    // no-coverageSpec cells).
+    const topicTargets = decideTopicTargets({
+      domains: TOPIC_DOMAINS,
+      need,
+      approvedByDomain: approvedTopicByCell.get(cell.cellKey) ?? {},
+    });
     const base = {
       jobId: deterministicUuid([cell.cellKey, batchSeed].join('|')),
       trigger: 'scheduled' as const,
@@ -451,6 +514,7 @@ export async function handler(): Promise<void> {
         topicDomain: null,
         count: need,
         batchSeed,
+        ...(topicTargets.length > 0 ? { topicTargets } : {}),
       },
       maxCostUsd: SCHEDULER_PER_CELL_COST_CAP_USD,
     };

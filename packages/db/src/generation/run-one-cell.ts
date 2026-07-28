@@ -238,6 +238,7 @@ export type RunOneCellInput = {
      * (CLI/admin and non-spec cells).
      */
     coverageTargets?: readonly CoverageTarget[];
+    topicTargets?: readonly string[];
   };
   /** Caller-supplied audit-row id. CLI: `randomUUID()`. Scheduler: `deterministicUuid([cellKey, batchSeed].join('|'))`. */
   jobId: string;
@@ -925,6 +926,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       levelScopePoints: grammarPointsAtOrBelow(cell.language, cell.cefrLevel),
       seedWords,
       coverageTargets: args.coverageTargets,
+      topicTargets: args.topicTargets,
     };
 
     const batch = await runGeneratorPool({

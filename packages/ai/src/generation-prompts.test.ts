@@ -27,6 +27,7 @@ import {
   canonicalSurface,
   capPriorPoolSurfaces,
   computeGenerationPromptVars,
+  renderSentenceConstructionSection,
   sentenceConstructionModeForOrdinal,
   contextualParaphraseConstraintForOrdinal,
   tailRecentStems,
@@ -325,7 +326,10 @@ describe("buildGenerationSystemPrompt", () => {
     // `instructions` must stay generic and NOT name the tense; the sentence's
     // time context forces it. Naming the tense spoiled the answer
     // (contextSpoilsAnswer, 7/8 rejected → eval:gen 1/8→8/8 approved, +25pp).
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-24");
+    // Bumped 2026-07-28 — sentence_construction scenario-diversity rule: the
+    // generator must honor the assigned topic domain and vary the scenario
+    // across drafts, not default to free time / travel wish-lists.
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-28");
     // Tense-determinacy rule pinned in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "Tense determinacy on finite-verb blanks",
@@ -387,6 +391,22 @@ describe("buildGenerationSystemPrompt", () => {
       );
       expect(other).not.toContain("## Sentence-construction specifics");
     }
+  });
+
+  it("SC section — scenario diversity", () => {
+    const section = renderSentenceConstructionSection(
+      ExerciseType.SENTENCE_CONSTRUCTION,
+      "Spanish",
+      CefrLevel.B1,
+      grammarPoint.name,
+    );
+    expect(section).toMatch(/vary the scenario/i);
+    expect(section).toMatch(/topic domain/i);
+    expect(section).toMatch(/do not default/i);
+  });
+
+  it("bumps the generation prompt version to 2026-07-28", () => {
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-28");
   });
 
   it("adds the conjugation section ONLY for conjugation, absent for other types", async () => {
@@ -725,6 +745,12 @@ describe("buildGenerationUserPrompt", () => {
   it("renders the supplied topicDomain", () => {
     const prompt = buildGenerationUserPrompt(baseInputs, 0, "travel");
     expect(prompt).toContain("Topic domain: travel");
+  });
+
+  it("softens the topic-domain directive with a deviation-permission clause", () => {
+    const prompt = buildGenerationUserPrompt(baseInputs, 0, "travel");
+    expect(prompt).toMatch(/prefer this everyday domain/i);
+    expect(prompt).toMatch(/if the grammar point does not fit it naturally/i);
   });
 
   it("displays the ordinal as 1-indexed", () => {
@@ -1069,16 +1095,22 @@ describe("canonicalSurface", () => {
 // ---------------------------------------------------------------------------
 
 describe("canonicalSurface — sentence_construction", () => {
-  it("keys on the normalised prompt text", () => {
-    expect(
+  it("keys on the normalised primary model answer, not the prompt", () => {
+    const key = (prompt: string, primary: string) =>
       canonicalSurface({
         type: ExerciseType.SENTENCE_CONSTRUCTION,
         instructions: "x",
         promptMode: "grammar_target",
-        prompt: "  Usá  el  Subjuntivo.  ",
-        modelAnswers: ["a", "b"],
-      }),
-    ).toBe("usa el subjuntivo.");
+        prompt,
+        modelAnswers: [primary, "otra frase"],
+      });
+
+    // Different prompt wording, identical elicited answer → SAME key (clones collide).
+    expect(key("Usá el condicional.", "Iría a la playa.")).toBe(
+      key("Escribe una frase en condicional.", "Iría a la playa."),
+    );
+    // Diacritics/whitespace normalised.
+    expect(key("p1", "  Iría   a la playa. ")).toBe("iria a la playa.");
   });
 });
 

@@ -608,6 +608,38 @@ describe('SQS handler', () => {
       }),
     );
   });
+
+  it('spec.topicTargets is threaded through to runOneCell args', async () => {
+    mockCheckAuditRowState.mockResolvedValueOnce({ status: 'absent' });
+    mockRunOneCell.mockResolvedValueOnce({
+      ...cellResultBase(),
+      status: 'succeeded',
+      insertedCount: 2,
+    });
+
+    const topicTargets = ['travel', 'food'];
+    const msg = validMessage();
+    // topicTargets.length must equal spec.count per the parser contract.
+    msg.spec.count = 2;
+    (
+      msg.spec as typeof msg.spec & { topicTargets: typeof topicTargets }
+    ).topicTargets = topicTargets;
+
+    const event = eventWith([
+      recordWith(JSON.stringify(msg), 'msg-topic-targets'),
+    ]);
+    const result = await handler(event, fakeContext());
+
+    expect(result.batchItemFailures).toEqual([]);
+    expect(mockRunOneCell).toHaveBeenCalledTimes(1);
+    expect(mockRunOneCell).toHaveBeenCalledWith(
+      expect.objectContaining({
+        args: expect.objectContaining({
+          topicTargets: ['travel', 'food'],
+        }),
+      }),
+    );
+  });
 });
 
 // ---------------------------------------------------------------------------

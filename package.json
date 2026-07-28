@@ -24,6 +24,7 @@
     "revalidate:cloze": "dotenv -e .env -- pnpm --filter @language-drill/db revalidate:cloze",
     "revalidate:sc-promote": "dotenv -e .env -- pnpm --filter @language-drill/db revalidate:sc-promote",
     "dedupe:conjugation": "dotenv -e .env -- pnpm --filter @language-drill/db dedupe:conjugation",
+    "dedup:sc-pool": "dotenv -e .env -- pnpm --filter @language-drill/db dedup:sc-pool",
     "demote:pool": "dotenv -e .env -- pnpm --filter @language-drill/db demote:pool",
     "backfill:coverage-tags": "dotenv -e .env -- pnpm --filter @language-drill/db backfill:coverage-tags",
     "backfill:conjugation": "dotenv -e .env -- pnpm --filter @language-drill/db backfill:conjugation",
