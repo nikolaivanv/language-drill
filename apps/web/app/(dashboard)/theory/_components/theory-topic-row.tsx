@@ -28,7 +28,7 @@ export function TheoryTopicRow({ topic, query }: TheoryTopicRowProps) {
         {parts ? (
           <>
             {parts.before}
-            <mark className="bg-[var(--hilite-soft)] p-0 text-inherit">
+            <mark className="bg-[var(--color-hilite-band)] p-0 text-inherit">
               {parts.match}
             </mark>
             {parts.after}
