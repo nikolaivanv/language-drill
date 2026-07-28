@@ -747,6 +747,12 @@ describe("buildGenerationUserPrompt", () => {
     expect(prompt).toContain("Topic domain: travel");
   });
 
+  it("softens the topic-domain directive with a deviation-permission clause", () => {
+    const prompt = buildGenerationUserPrompt(baseInputs, 0, "travel");
+    expect(prompt).toMatch(/prefer this everyday domain/i);
+    expect(prompt).toMatch(/if the grammar point does not fit it naturally/i);
+  });
+
   it("displays the ordinal as 1-indexed", () => {
     expect(buildGenerationUserPrompt(baseInputs, 0, null)).toContain(
       "Produce exercise #1.",

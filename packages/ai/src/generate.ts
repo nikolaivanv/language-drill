@@ -1413,9 +1413,13 @@ export async function generateOneDraft(
         : await buildGenerationSystemPrompt(promptInputs, []));
 
   const userText = isDictation
-    ? buildDictationGenerationUserPrompt(promptInputs, ordinal, spec.topicDomain, spec.batchSeed, spec.seedWords?.[ordinal] ?? null)
+    ? // Per-draft topic steering (resolveTopicDomain) does not apply to dictation —
+      // this builder uses the cell-wide spec.topicDomain directly.
+      buildDictationGenerationUserPrompt(promptInputs, ordinal, spec.topicDomain, spec.batchSeed, spec.seedWords?.[ordinal] ?? null)
     : isFreeWriting
-      ? buildFreeWritingGenerationUserPrompt(promptInputs, ordinal)
+      ? // Per-draft topic steering (resolveTopicDomain) does not apply to free_writing —
+        // this builder does not take a topic domain at all (topic comes from the cell-wide spec elsewhere).
+        buildFreeWritingGenerationUserPrompt(promptInputs, ordinal)
       : buildGenerationUserPrompt(
           promptInputs,
           ordinal,

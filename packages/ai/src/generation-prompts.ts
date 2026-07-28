@@ -797,6 +797,7 @@ export function buildGenerationUserPrompt(
   return `Produce exercise #${ordinal + 1}.
 
 Topic domain: ${domain}
+Prefer this everyday domain when building the exercise; if the grammar point does not fit it naturally, use the closest domain that does.
 
 ${modeBlock}${paraphraseBlock}${coverageBlock}${digitFormBlock}${baseWordCueBlock}${seedBlock}Use the ${toolName} tool.`;
 }
