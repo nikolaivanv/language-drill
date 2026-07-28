@@ -33,6 +33,11 @@
 
   --color-hilite: #f4d35e;
   --color-hilite-soft: #fbeeb6;
+  /* Inline highlight band (.hilite, in-title search marks). Separate from
+     --color-hilite-soft, which doubles as a *block* tint and therefore goes
+     near-black on dark; an inline band sitting on a dark card has to stay
+     visibly amber. Same value here on light. */
+  --color-hilite-band: #fbeeb6;
 
   --color-ok: #5b8a5a;
   --color-ok-soft: #d8e6d3;
@@ -113,6 +118,10 @@ html.dark {
 
   --color-hilite: #f4d35e;
   --color-hilite-soft: #3a3320;
+  /* Translucent amber rather than an opaque swatch, so the band works over
+     both --color-card and --color-paper. At 0.40 over the card it clears 3:1
+     against the surface while cream --color-ink text on top stays ~4.7:1. */
+  --color-hilite-band: rgba(244, 211, 94, 0.4);
 
   --color-ok: #86b97c;
   --color-ok-soft: #26301f;
@@ -145,6 +154,7 @@ html.dark .df {
   --color-ink: #1a1612;
   --color-rule: #d8d0bf;
   --color-hilite-soft: #fbeeb6;
+  --color-hilite-band: #fbeeb6;
   --color-card: #ffffff;
 }
 
@@ -237,8 +247,8 @@ html.landing-dark body {
   background: linear-gradient(
     180deg,
     transparent 55%,
-    var(--color-hilite-soft) 55%,
-    var(--color-hilite-soft) 95%,
+    var(--color-hilite-band) 55%,
+    var(--color-hilite-band) 95%,
     transparent 95%
   );
   padding: 0 3px;
@@ -1135,7 +1145,7 @@ button:hover .lk-arr {
   font-size: 15px;
 }
 .theory-switcher-mark {
-  background: var(--color-hilite-soft);
+  background: var(--color-hilite-band);
   color: var(--color-ink);
   padding: 0;
 }
