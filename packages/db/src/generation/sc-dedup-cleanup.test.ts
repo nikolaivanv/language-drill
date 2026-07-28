@@ -77,4 +77,26 @@ describe("groupSentenceConstructionDuplicates", () => {
     ]);
     expect(plan.toBackfill).toEqual([{ id: "s", newKey: "iria a la playa." }]);
   });
+
+  it("skips a row whose contentJson makes canonicalSurface throw, instead of crashing", () => {
+    const plan = groupSentenceConstructionDuplicates([
+      row({ id: "good" }),
+      row({
+        id: "bad",
+        // Legacy/corrupt row: `modelAnswers` missing entirely. canonicalSurface's
+        // `content.modelAnswers[0]` access throws a TypeError for this shape —
+        // the sweep must skip it, not crash.
+        contentJson: {
+          type: ExerciseType.SENTENCE_CONSTRUCTION,
+          instructions: "x",
+          promptMode: "grammar_target",
+          prompt: "p",
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+      }),
+    ]);
+    expect(plan.skipped).toEqual(["bad"]);
+    expect(plan.toDemote).not.toContain("bad");
+    expect(plan.toBackfill.map((b) => b.id)).not.toContain("bad");
+  });
 });

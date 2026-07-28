@@ -28,10 +28,16 @@
  *
  * Defaults to DRY-RUN; pass --apply to write.
  *
+ * `--limit` truncates the fetched rows by id order with no guarantee that a
+ * duplicate cluster isn't split across the limit boundary — combined with
+ * `--apply` this can silently leave true duplicates un-demoted in the live
+ * pool. `--limit` is therefore for DRY-RUN inspection only; passing it
+ * together with `--apply` is refused (see the guard in `main`).
+ *
  * Usage:
  *   pnpm dedup:sc-pool
  *   pnpm dedup:sc-pool -- --language ES --cefr B1
- *   pnpm dedup:sc-pool -- --language ES --cefr B1 --limit 500
+ *   pnpm dedup:sc-pool -- --language ES --cefr B1 --limit 500   # dry-run inspection only
  *   pnpm dedup:sc-pool -- --apply
  *
  * Required env: DATABASE_URL.
@@ -171,6 +177,20 @@ async function applyPlan(db: Db, plan: CleanupPlan): Promise<void> {
 async function main(): Promise<void> {
   const args = parseDedupScArgs(process.argv.slice(2));
 
+  if (args.apply && args.limit !== null) {
+    console.error(
+      '\n[dedup-sc-pool] REFUSING to run: --apply combined with --limit is unsafe.\n' +
+        '  --limit truncates the fetched rows by id order with no guarantee that a\n' +
+        '  duplicate cluster stays together — a group can straddle the limit\n' +
+        '  boundary, leaving true duplicates un-demoted in the live pool while the\n' +
+        '  tool reports success.\n' +
+        '  --limit is intended for DRY-RUN inspection only. Re-run either:\n' +
+        '    - without --limit (scans the full matching set), or\n' +
+        '    - without --apply (dry-run with --limit for inspection).\n',
+    );
+    process.exit(1);
+  }
+
   const databaseUrl = process.env['DATABASE_URL'];
   if (!databaseUrl) {
     console.error('DATABASE_URL is not set');
@@ -200,8 +220,23 @@ async function main(): Promise<void> {
       `  rows scanned:     ${rows.length}\n` +
       `  to demote:        ${plan.toDemote.length}\n` +
       `  to backfill key:  ${plan.toBackfill.length}\n` +
+      `  skipped (bad row): ${plan.skipped.length}\n` +
       `  mode:             ${args.apply ? 'APPLIED' : 'DRY-RUN (no writes)'}\n`,
   );
+
+  if (plan.skipped.length > 0) {
+    process.stderr.write(
+      `\n[dedup-sc-pool] WARNING: ${plan.skipped.length} row(s) had content that ` +
+        `canonicalSurface() could not parse (legacy/corrupt content_json) and were ` +
+        `left untouched:\n`,
+    );
+    for (const id of plan.skipped.slice(0, 10)) {
+      process.stderr.write(`  ${id}\n`);
+    }
+    if (plan.skipped.length > 10) {
+      process.stderr.write(`  …and ${plan.skipped.length - 10} more\n`);
+    }
+  }
 
   if (plan.toDemote.length > 0) {
     process.stdout.write('\nDemotions (sample):\n');
