@@ -45,7 +45,7 @@ export function TheoryGroup({
           className="flex w-full items-baseline justify-between border-b border-rule bg-transparent px-[18px] py-[10px] text-left text-ink"
         >
           <span className="flex items-baseline gap-2">
-            <span style={{ fontFamily: 'var(--t-display)', fontSize: 17, fontWeight: 500 }}>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: 17, fontWeight: 500 }}>
               {group.label}
             </span>
             <span className="t-mono text-[10px] text-ink-mute">{group.topics.length}</span>
