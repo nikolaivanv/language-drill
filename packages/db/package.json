@@ -21,6 +21,7 @@
     "revalidate:cloze": "npx tsx scripts/revalidate-cloze-pool.ts",
     "revalidate:sc-promote": "npx tsx scripts/revalidate-sc-promote-pool.ts",
     "dedupe:conjugation": "npx tsx scripts/dedupe-conjugation-pool.ts",
+    "dedup:sc-pool": "npx tsx scripts/dedup-sc-pool.ts",
     "demote:pool": "npx tsx scripts/demote-cell-pool.ts",
     "backfill:coverage-tags": "npx tsx scripts/backfill-coverage-tags.ts",
     "backfill:conjugation": "npx tsx scripts/backfill-conjugation-structure.ts",
