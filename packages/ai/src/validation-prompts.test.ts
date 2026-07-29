@@ -177,7 +177,12 @@ describe("buildValidationSystemPrompt", () => {
     // 2026-07-23 tense-determinacy: an anchorless non-present finite-verb blank
     // is same-lexeme tense ambiguity, cured by anchor-or-present (not enumeration).
     expect(prompt).toContain("Tense-determinacy (cloze)");
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-07-23");
+    // 2026-07-30 — a habitual/iterative cue forbids the preterite but licenses
+    // BOTH present and IMPERFECT, so an anchorless PRESENT answer under a
+    // habitual cue is ALSO ambiguous (deja/dejaba); present is safe only with a
+    // present anchor.
+    expect(prompt).toContain("the imperfect fits identically");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-07-30");
 
     // R3.A — the three contextSpoilsAnswer triples added in task 8.
     expect(prompt).toContain("çocuk");
@@ -221,6 +226,13 @@ describe("buildValidationSystemPrompt", () => {
     // the past (~1.2KB, mirrors generate@2026-07-23). Ceiling raised to
     // 9,500.
     //
+    // validate@2026-07-30 corrected the imperfect gap in that sub-bullet: a
+    // habitual/iterative cue forbids the preterite but licenses BOTH present
+    // and the IMPERFECT (past-habitual), so an anchorless PRESENT answer under
+    // a habitual cue is ALSO `ambiguous` (deja/dejaba) — present is safe only
+    // with a present anchor (~650 bytes, mirrors generate@2026-07-30). Ceiling
+    // raised to 10,500.
+    //
     // We assert on the TEMPLATE literal, not the rendered output, because:
     //   - The template is what Langfuse stores and what Anthropic's
     //     prompt-cache keys on byte-for-byte.
@@ -228,7 +240,7 @@ describe("buildValidationSystemPrompt", () => {
     //     (descriptions, examples, common errors, CEFR descriptors) which
     //     varies by language/level and is not what the NFR budgets — those
     //     substitutions are already counted against the API per-call.
-    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(9500);
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(10500);
   });
 });
 

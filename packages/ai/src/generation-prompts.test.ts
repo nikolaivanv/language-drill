@@ -329,12 +329,23 @@ describe("buildGenerationSystemPrompt", () => {
     // Bumped 2026-07-28 — sentence_construction scenario-diversity rule: the
     // generator must honor the assigned topic domain and vary the scenario
     // across drafts, not default to free time / travel wish-lists.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-28");
+    // Bumped 2026-07-30 — imperfect fix to the tense-determinacy rule: a
+    // habitual/iterative cue (por las noches, todos los días…) forbids the
+    // preterite but licenses BOTH present and IMPERFECT (past-habitual), so it
+    // does NOT force the present. An anchorless present answer under a habitual
+    // cue is present↔imperfect ambiguous (deja/dejaba) — fixes the
+    // es-b1-influence-verbs-infinitive "no me deja dormir por las noches"
+    // false-negative on `dejaba`.
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-30");
     // Tense-determinacy rule pinned in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "Tense determinacy on finite-verb blanks",
     );
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain("todos los días");
+    // 2026-07-30 — the imperfect (past-habitual) is licensed by habitual cues,
+    // so a bare habitual adverbial does NOT force the present.
+    expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain("IMPERFECT");
+    expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain("A bare habitual adverbial is NOT a present anchor");
     // Tasks 7–9: pin the new guardrail phrases in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "every content word MUST be high-frequency everyday vocabulary at or below CEFR {{cefrLevel}}",
@@ -405,8 +416,8 @@ describe("buildGenerationSystemPrompt", () => {
     expect(section).toMatch(/do not default/i);
   });
 
-  it("bumps the generation prompt version to 2026-07-28", () => {
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-28");
+  it("bumps the generation prompt version to 2026-07-30", () => {
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-30");
   });
 
   it("adds the conjugation section ONLY for conjugation, absent for other types", async () => {
