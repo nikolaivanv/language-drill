@@ -61,7 +61,14 @@ const CEFR_DESCRIPTOR_BULLETS = (
 // Context; judge the answer on the visible prompt, do not invent context to defend
 // the reference). USER-prompt-only edit — cached system template unchanged, ships
 // with the code deploy, NO Langfuse push; version bumped only to cohort traces.
-export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-07-24";
+// 2026-08-01: the cloze **Options** list is now rendered only when the caller
+// reports the learner actually revealed it (`optionsRevealed`). The UI keeps the
+// option chips collapsed behind a "show answer options" toggle, so the 2026-07-24
+// block was asserting the learner saw a list they never opened — and its
+// "among the Options" over-accept guard was marking valid free-production answers
+// wrong, quoting the hidden list back at them. USER-prompt-only edit — cached
+// system template unchanged, ships with the code deploy, NO Langfuse push.
+export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-08-01";
 
 export const EVALUATION_SYSTEM_PROMPT = `You are an expert language evaluator for a language-learning application. Your role is to evaluate user answers to language exercises with precision and pedagogical insight.
 
@@ -129,7 +136,26 @@ function buildClozeUserPrompt(
   userAnswer: string,
   language: Language,
   difficulty: CefrLevel,
+  optionsRevealed: boolean,
 ): string {
+  // A cloze may carry a multiple-choice `options` set, but the UI keeps it
+  // COLLAPSED behind a "show answer options" toggle — so a stored option list
+  // is not evidence the learner saw one. Only render it (and only apply the
+  // "must be among the Options" narrowing) when the caller confirms the reveal.
+  // Otherwise the list is pure anchoring bait: it caused valid free-production
+  // answers to be marked wrong and quoted back at the learner as options they
+  // "should have stuck to", which they were never shown.
+  const showOptions =
+    optionsRevealed && Array.isArray(content.options) && content.options.length > 0;
+
+  const visibilityClause = showOptions
+    ? `The learner saw ONLY the **Sentence** (with the blank), the **Instructions**, and the **Options** listed above — NOT the **Correct Answer**, **Acceptable Answers**, or **Context**.`
+    : `The learner saw ONLY the **Sentence** (with the blank) and the **Instructions** — NOT the **Correct Answer**, **Acceptable Answers**, or **Context**. This was free production: the learner was NOT shown any list of candidate options, so never fault them for answering "outside" a set of choices, and never tell the learner they should have picked from provided options.`;
+
+  const admissibilityClause = showOptions
+    ? `if the user's answer is grammatically and semantically valid in the visible sentence — and among the **Options** when options are shown — it is fully correct (score 1.0, no error), even when it differs from **Correct Answer**`
+    : `if the user's answer is grammatically and semantically valid in the visible sentence, it is fully correct (score 1.0, no error), even when it differs from **Correct Answer** and even when it uses a different verb or lexical item entirely`;
+
   return `## Exercise Type: Cloze (Fill in the Blank)
 **Language:** ${language}
 **Target CEFR Level:** ${difficulty}
@@ -139,13 +165,13 @@ function buildClozeUserPrompt(
 **Correct Answer:** ${content.correctAnswer}
 **Acceptable Answers:** ${content.acceptableAnswers && content.acceptableAnswers.length > 0 ? content.acceptableAnswers.join(", ") : "(none — only `Correct Answer` is accepted as fully correct)"}
 ${content.context ? `**Context:** ${content.context}` : ""}
-${content.options ? `**Options:** ${content.options.join(", ")}` : ""}
+${showOptions ? `**Options:** ${content.options!.join(", ")}` : ""}
 
 **User's Answer:** ${userAnswer}
 
 Evaluate the user's answer. If it matches **Correct Answer** or any entry in **Acceptable Answers**, score 1.0 with no errors. Otherwise consider whether it is still grammatically and semantically valid in the sentence and award partial or full credit as appropriate.
 
-The learner saw ONLY the **Sentence** (with the blank), the **Instructions**, and the **Options** if listed — NOT the **Correct Answer**, **Acceptable Answers**, or **Context**. Judge the user's answer as a response to what they actually saw. **Correct Answer** / **Acceptable Answers** are the intended fill and your reference, but not the only admissible answer: if the user's answer is grammatically and semantically valid in the visible sentence — and among the **Options** when options are shown — it is fully correct (score 1.0, no error), even when it differs from **Correct Answer**. Do NOT invent unstated context — a specific time, past event, place, or referent that is not present in the visible sentence — to justify marking a valid answer wrong. When the visible sentence does not itself fix the tense/aspect/number, any form the sentence licenses is correct: e.g. for "El portero no ___ entrar al edificio sin identificación" both the present "deja" (a standing rule) and the preterite "dejó" are correct, because nothing in the sentence forces one tense.`;
+${visibilityClause} Judge the user's answer as a response to what they actually saw. **Correct Answer** / **Acceptable Answers** are the intended fill and your reference, but not the only admissible answer: ${admissibilityClause}. Do NOT invent unstated context — a specific time, past event, place, or referent that is not present in the visible sentence — to justify marking a valid answer wrong. When the visible sentence does not itself fix the tense/aspect/number, any form the sentence licenses is correct: e.g. for "El portero no ___ entrar al edificio sin identificación" both the present "deja" (a standing rule) and the preterite "dejó" are correct, because nothing in the sentence forces one tense.`;
 }
 
 function buildTranslationUserPrompt(
@@ -302,6 +328,11 @@ ${errorBullets}`;
  * appended so the evaluator grounds its feedback in the curriculum. When
  * `attributionKeys` is supplied, a 'Grammar points in scope' block is appended
  * so the evaluator can attribute each error to a closed set of curriculum keys.
+ *
+ * `visibility.optionsRevealed` reports whether the learner actually opened the
+ * cloze option chips (they are collapsed by default in the UI). It defaults to
+ * `false` — the UI's own default, and the safe posture: an evaluator that does
+ * not know the options were shown must judge the answer as free production.
  */
 export function buildUserPrompt(
   exercise: ExerciseContent,
@@ -310,11 +341,18 @@ export function buildUserPrompt(
   difficulty: CefrLevel,
   grammarGuidance?: GrammarGuidance,
   attributionKeys?: readonly AttributionKey[],
+  visibility?: { optionsRevealed?: boolean },
 ): string {
   let base: string;
   switch (exercise.type) {
     case ExerciseType.CLOZE:
-      base = buildClozeUserPrompt(exercise, userAnswer, language, difficulty);
+      base = buildClozeUserPrompt(
+        exercise,
+        userAnswer,
+        language,
+        difficulty,
+        visibility?.optionsRevealed ?? false,
+      );
       break;
     case ExerciseType.TRANSLATION:
       base = buildTranslationUserPrompt(exercise, userAnswer, language, difficulty);

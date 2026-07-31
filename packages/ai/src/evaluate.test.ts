@@ -91,7 +91,17 @@ const validEvaluationInput = {
 
 describe("buildUserPrompt", () => {
   it("builds a cloze prompt with all fields", () => {
-    const prompt = buildUserPrompt(clozeContent, "went", Language.EN, CefrLevel.B1);
+    // `optionsRevealed` — the option chips are collapsed by default in the UI,
+    // so the list only renders when the learner opened it.
+    const prompt = buildUserPrompt(
+      clozeContent,
+      "went",
+      Language.EN,
+      CefrLevel.B1,
+      undefined,
+      undefined,
+      { optionsRevealed: true },
+    );
 
     expect(prompt).toContain("Exercise Type: Cloze");
     expect(prompt).toContain("Language:** EN");
@@ -286,7 +296,8 @@ describe("EVALUATION_SYSTEM_PROMPT", () => {
     // is a different prompt body — same-day bumps must not share a cohort tag.
     // 2026-07-18: translation user prompt now renders `acceptableAnswers`.
     // 2026-07-24: cloze + vocab_recall anti-anchoring blocks; user-builder-only.
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-07-24");
+    // 2026-08-01: cloze Options render only when revealed; user-builder-only.
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-08-01");
   });
 });
 

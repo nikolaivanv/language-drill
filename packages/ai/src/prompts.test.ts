@@ -26,7 +26,7 @@ describe("attribution prompt wiring", () => {
   });
 
   it("version is bumped to today", () => {
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-07-24");
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-08-01");
   });
 
   it("requires morpheme-level verification before declaring an answer correct", () => {
@@ -84,5 +84,87 @@ describe("anti-anchoring blocks", () => {
   it("vocab_recall prompt judges a valid synonym on the visible prompt, not the reference", () => {
     const out = buildUserPrompt(vocab as any, "guardia", "ES" as any, "B1" as any);
     expect(out).toContain("judge it on whether it satisfies what the learner saw");
+  });
+});
+
+// Cloze `options` are an opt-in scaffold in the UI — hidden behind a "show
+// answer options" toggle, and revealing them is what sets the submit flag. The
+// prompt must not claim the learner saw a list they never opened, nor apply the
+// "must be among the Options" narrowing to a free-production answer.
+describe("cloze options visibility", () => {
+  const clozeWithOptions: ClozeContent = {
+    type: ExerciseType.CLOZE,
+    instructions: "Fill in the blank.",
+    sentence: "Yo siempre ___ en el baño antes de salir de casa.",
+    correctAnswer: "me miro",
+    options: ["me miro", "te miras", "se mira", "nos miramos"],
+  };
+
+  it("omits the option list entirely when the learner did not reveal it", () => {
+    const out = buildUserPrompt(
+      clozeWithOptions as any,
+      "me ducho",
+      "ES" as any,
+      "B1" as any,
+      undefined,
+      undefined,
+      { optionsRevealed: false },
+    );
+    expect(out).not.toContain("**Options:**");
+    expect(out).not.toContain("te miras");
+    // The over-accept guard from PR #612 must not fire — it is only legitimate
+    // when the learner actually saw the options.
+    expect(out).not.toContain("among the **Options**");
+  });
+
+  it("tells the evaluator not to fault the learner for an off-list answer when options were hidden", () => {
+    const out = buildUserPrompt(
+      clozeWithOptions as any,
+      "me ducho",
+      "ES" as any,
+      "B1" as any,
+      undefined,
+      undefined,
+      { optionsRevealed: false },
+    );
+    expect(out).toContain("was NOT shown any list of candidate options");
+    expect(out).toMatch(/never tell the learner they should have picked from/i);
+  });
+
+  it("defaults to hidden when the caller says nothing (UI default is collapsed)", () => {
+    const out = buildUserPrompt(clozeWithOptions as any, "me ducho", "ES" as any, "B1" as any);
+    expect(out).not.toContain("**Options:**");
+    expect(out).toContain("was NOT shown any list of candidate options");
+  });
+
+  it("renders the options and keeps the among-options guard once revealed", () => {
+    const out = buildUserPrompt(
+      clozeWithOptions as any,
+      "me ducho",
+      "ES" as any,
+      "B1" as any,
+      undefined,
+      undefined,
+      { optionsRevealed: true },
+    );
+    expect(out).toContain("**Options:** me miro, te miras, se mira, nos miramos");
+    expect(out).toContain("among the **Options**");
+    expect(out).not.toContain("was NOT shown any list of candidate options");
+  });
+
+  it("does not claim options exist for an optionless cloze, revealed or not", () => {
+    const bare: ClozeContent = {
+      type: ExerciseType.CLOZE,
+      instructions: "Fill in the blank.",
+      sentence: "El portero no ___ entrar.",
+      correctAnswer: "dejó",
+    };
+    for (const optionsRevealed of [true, false]) {
+      const out = buildUserPrompt(bare as any, "deja", "ES" as any, "B1" as any, undefined, undefined, {
+        optionsRevealed,
+      });
+      expect(out).not.toContain("**Options:**");
+      expect(out).not.toContain("among the **Options**");
+    }
   });
 });

@@ -106,6 +106,13 @@ export type SubmitAnswerParams = {
   answer: string;
   sessionId?: string;
   hintUsage?: { wordsRevealed: number; fullAnswerRevealed: boolean };
+  /**
+   * CLOZE only: whether the learner opened the "show answer options" panel.
+   * The evaluator holds an answer to the option list only when this is true —
+   * omitted/false means the answer is judged as free production against the
+   * visible sentence. Never send `true` unless the chips were actually shown.
+   */
+  optionsRevealed?: boolean;
 };
 
 export type UseSubmitAnswerOptions = {
@@ -114,10 +121,16 @@ export type UseSubmitAnswerOptions = {
 
 export function useSubmitAnswer({ fetchFn }: UseSubmitAnswerOptions) {
   return useMutation<SubmitResultResponse, Error, SubmitAnswerParams>({
-    mutationFn: async ({ exerciseId, answer, sessionId, hintUsage }) => {
-      const body: { answer: string; sessionId?: string; hintUsage?: SubmitAnswerParams['hintUsage'] } = { answer };
+    mutationFn: async ({ exerciseId, answer, sessionId, hintUsage, optionsRevealed }) => {
+      const body: {
+        answer: string;
+        sessionId?: string;
+        hintUsage?: SubmitAnswerParams['hintUsage'];
+        optionsRevealed?: boolean;
+      } = { answer };
       if (sessionId !== undefined) body.sessionId = sessionId;
       if (hintUsage !== undefined) body.hintUsage = hintUsage;
+      if (optionsRevealed !== undefined) body.optionsRevealed = optionsRevealed;
       const response = await fetchFn(`/exercises/${exerciseId}/submit`, {
         method: 'POST',
         body: JSON.stringify(body),

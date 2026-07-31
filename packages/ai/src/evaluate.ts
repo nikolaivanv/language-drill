@@ -145,6 +145,18 @@ export type EvaluateAnswerInput = {
    */
   attributionKeys?: readonly AttributionKey[];
   /**
+   * CLOZE only: whether the learner actually revealed the multiple-choice
+   * option chips. They are collapsed behind a "show answer options" toggle in
+   * the UI, so a stored `options` array does NOT mean the learner saw one —
+   * without this flag the evaluator was told the learner picked from a list it
+   * then held them to, marking valid free-production answers wrong.
+   *
+   * Defaults to `false` (the UI's own default and the safe posture): an
+   * evaluator that cannot confirm the reveal must judge the answer as free
+   * production against the visible sentence alone.
+   */
+  optionsRevealed?: boolean;
+  /**
    * Phase-2: bypass the Langfuse registry and use this verbatim as the
    * system prompt. Used by `pnpm eval` (the eval runner) to evaluate
    * dataset items against a candidate prompt. When set, the trace's
@@ -344,6 +356,7 @@ export async function evaluateAnswer(
     difficulty,
     grammarGuidance,
     attributionKeys,
+    optionsRevealed,
     systemPromptOverride,
     modelOverride,
     thinkingOverride,
@@ -356,6 +369,7 @@ export async function evaluateAnswer(
     difficulty,
     grammarGuidance,
     attributionKeys,
+    { optionsRevealed },
   );
 
   // Resolve the system prompt. Three paths:
