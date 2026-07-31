@@ -290,6 +290,40 @@ describe('PracticePage', () => {
       );
     });
 
+    // The option chips are collapsed by default. Telling the evaluator the
+    // learner saw them when they didn't makes it mark valid off-list answers
+    // wrong and quote the hidden list back at them.
+    it('sends optionsRevealed:false when the learner never opened the option chips', () => {
+      setSubmitMock((_vars, opts) => opts.onSuccess?.(mockEval(0.97)));
+      renderWithProviders(<PracticePage />);
+
+      fireEvent.change(screen.getByRole('textbox'), {
+        target: { value: 'centre' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+
+      expect(submitMutate).toHaveBeenCalledWith(
+        expect.objectContaining({ optionsRevealed: false }),
+        expect.any(Object),
+      );
+    });
+
+    it('sends optionsRevealed:true once the learner opens the option chips', () => {
+      setSubmitMock((_vars, opts) => opts.onSuccess?.(mockEval(0.97)));
+      renderWithProviders(<PracticePage />);
+
+      fireEvent.click(screen.getByText(/show answer options/i));
+      fireEvent.change(screen.getByRole('textbox'), {
+        target: { value: 'centre' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: /^submit$/i }));
+
+      expect(submitMutate).toHaveBeenCalledWith(
+        expect.objectContaining({ optionsRevealed: true }),
+        expect.any(Object),
+      );
+    });
+
     it('click "next" after evaluation → exercise pane shows manifest item 1; progress reflects 1/5', () => {
       setSubmitMock((_vars, opts) => opts.onSuccess?.(mockEval(0.97)));
       renderWithProviders(<PracticePage />);

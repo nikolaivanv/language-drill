@@ -264,6 +264,11 @@ function PracticePageContent() {
         answer: trimmed,
         sessionId: state.session.id,
         hintUsage: meta.hintUsage,
+        // Cloze option chips are collapsed by default; `usedMc` is set the
+        // moment the learner opens them. Without this the evaluator assumes a
+        // stored option list was on screen and marks valid off-list answers
+        // wrong, citing options the learner never saw.
+        optionsRevealed: meta.usedMc ?? false,
       },
       {
         onSuccess: (result) => {

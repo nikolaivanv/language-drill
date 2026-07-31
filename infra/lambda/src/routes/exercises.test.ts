@@ -745,6 +745,72 @@ describe('POST /exercises/:id/submit', () => {
     );
   });
 
+  // The cloze option chips are collapsed behind a "show answer options" toggle,
+  // so a stored `options` array is NOT evidence the learner saw one. The client
+  // reports the reveal; absent, the evaluator must judge free production.
+  it('defaults optionsRevealed to false when the client omits it', async () => {
+    mockLimit.mockResolvedValueOnce([sampleExercise]);
+    mockWhere
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }))
+      .mockResolvedValueOnce([{ count: 5 }] as never);
+    mockEvaluateAnswer.mockResolvedValueOnce(sampleEvaluation);
+
+    const res = await app.request(
+      '/exercises/abc-123/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'I ran to the store' }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    expect(mockEvaluateAnswer).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ optionsRevealed: false }),
+    );
+  });
+
+  it('forwards optionsRevealed: true when the learner opened the option chips', async () => {
+    mockLimit.mockResolvedValueOnce([sampleExercise]);
+    mockWhere
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }))
+      .mockResolvedValueOnce([{ count: 5 }] as never);
+    mockEvaluateAnswer.mockResolvedValueOnce(sampleEvaluation);
+
+    const res = await app.request(
+      '/exercises/abc-123/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'went', optionsRevealed: true }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(200);
+    expect(mockEvaluateAnswer).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ optionsRevealed: true }),
+    );
+  });
+
+  it('rejects a non-boolean optionsRevealed', async () => {
+    const res = await app.request(
+      '/exercises/abc-123/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'went', optionsRevealed: 'yes' }),
+      },
+      authEnv,
+    );
+
+    expect(res.status).toBe(400);
+    expect(mockEvaluateAnswer).not.toHaveBeenCalled();
+  });
+
   it('returns 404 when exercise does not exist', async () => {
     mockLimit.mockResolvedValueOnce([]);
 

@@ -91,6 +91,11 @@ export const SubmitAnswerSchema = z.object({
     wordsRevealed: z.number().int().nonnegative(),
     fullAnswerRevealed: z.boolean(),
   }).optional(),
+  // CLOZE only: did the learner open the "show answer options" panel? The chips
+  // are collapsed by default, so the evaluator must not be told the learner
+  // chose from a list unless they actually saw it. Absent → false (the UI
+  // default), which makes the evaluator judge the answer as free production.
+  optionsRevealed: z.boolean().optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -367,7 +372,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
       400,
     );
   }
-  const { answer: userAnswer, sessionId, hintUsage } = bodyResult.data;
+  const { answer: userAnswer, sessionId, hintUsage, optionsRevealed = false } = bodyResult.data;
   const evidenceWeight = evidenceWeightFromHints(hintUsage);
 
   // 2. Fetch exercise by ID. Deliberately no `audioReadyFilter` here: grading
@@ -518,7 +523,10 @@ exercises.post('/exercises/:id/submit', async (c) => {
         exerciseId: id,
         sessionId,
         score: 1,
-        responseJson: { userAnswer, evaluation: result },
+        // `optionsRevealed` rides along so a later /explain re-evaluation of
+        // this deterministic submission builds the same prompt the learner's
+        // view justifies (see the explain route below).
+        responseJson: { userAnswer, evaluation: result, optionsRevealed },
         evaluatedAt: new Date(),
         evidenceWeight,
       });
@@ -681,6 +689,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
               difficulty: exercise.difficulty as CefrLevel,
               grammarGuidance,
               attributionKeys,
+              optionsRevealed,
             }),
     );
     const stamped = { ...result, evaluationSource: 'llm' as const };
@@ -800,6 +809,7 @@ exercises.post('/exercises/:id/submissions/:submissionId/explain', async (c) => 
     userAnswer?: string;
     evaluation?: EvaluationResult;
     explanation?: string;
+    optionsRevealed?: boolean;
   };
 
   if (responseJson.evaluation?.evaluationSource !== 'deterministic') {
@@ -890,6 +900,9 @@ exercises.post('/exercises/:id/submissions/:submissionId/explain', async (c) => 
           difficulty: exercise.difficulty as CefrLevel,
           grammarGuidance,
           attributionKeys,
+          // Submissions recorded before this field existed have no flag —
+          // default to hidden, matching the UI's collapsed default.
+          optionsRevealed: responseJson.optionsRevealed ?? false,
         }),
     );
 
