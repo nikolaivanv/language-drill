@@ -132,7 +132,7 @@ When you understand A + B + C, everything else is supporting machinery.
   server-gated in `admin/layout.tsx`).
 - Convention: `_components/`, `_lib/`, `_state/` folders are feature-private;
   `page.tsx` files are mostly `'use client'` orchestrators.
-- Auth: `middleware.ts` (Clerk) protects everything except landing, sign-in/up,
+- Auth: `proxy.ts` (Clerk) protects everything except landing, sign-in/up,
   invite, webhooks. Tokens are minted with `getToken({ template: 'api' })`.
 - E2E tests live in `apps/web/e2e/` (Playwright; see `docs/testing.md`).
 

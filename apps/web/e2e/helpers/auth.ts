@@ -132,7 +132,7 @@ export interface SignInProgrammaticallyOptions {
  *
  * The Clerk helper requires that the page have navigated to a route that
  * loads Clerk's frontend before being called. We navigate to `/sign-in`
- * (a public route in `apps/web/middleware.ts`).
+ * (a public route in `apps/web/proxy.ts`).
  */
 export async function signInProgrammatically(
   page: Page,
