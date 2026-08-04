@@ -22,7 +22,11 @@ export default withSentryConfig(nextConfig, {
   widenClientFileUpload: true,
   sourcemaps: { deleteSourcemapsAfterUpload: true },
   release: { name: process.env.VERCEL_GIT_COMMIT_SHA },
-  disableLogger: true,
+  // Tree-shakes Sentry's own debug logging out of the bundle. Next 16 builds
+  // with Turbopack by default, where Sentry does not apply build-time
+  // instrumentation, so this currently no-ops — it is kept so the intent
+  // survives a `--webpack` build.
+  webpack: { treeshake: { removeDebugLogging: true } },
   // Route Sentry envelopes (errors + replay) through a same-origin tunnel so
   // ad-blockers can't drop them. `true` generates a randomized route per build
   // (harder to pattern-match than a fixed path). Runs as a Vercel function.
