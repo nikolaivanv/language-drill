@@ -13,26 +13,26 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@aws-sdk/client-polly": "^3.1068.0",
-    "@aws-sdk/client-s3": "^3.1068.0",
-    "@aws-sdk/client-sqs": "^3.1044.0",
-    "@aws-sdk/s3-request-presigner": "^3.1068.0",
-    "@clerk/backend": "^3.4.7",
-    "@hono/node-server": "^1.19.14",
+    "@aws-sdk/client-polly": "^3.1103.0",
+    "@aws-sdk/client-s3": "^3.1103.0",
+    "@aws-sdk/client-sqs": "^3.1103.0",
+    "@aws-sdk/s3-request-presigner": "^3.1103.0",
+    "@clerk/backend": "^3.15.1",
+    "@hono/node-server": "^1.19.17",
     "@language-drill/ai": "workspace:*",
     "@language-drill/db": "workspace:*",
     "@language-drill/email": "workspace:*",
     "@language-drill/shared": "workspace:*",
     "drizzle-orm": "^0.45.2",
-    "hono": "^4.12.15",
-    "svix": "^1.92.2",
+    "hono": "^4.13.0",
+    "svix": "^1.99.1",
     "ts-fsrs": "^5.4.1",
-    "zod": "^3.23.0"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.0",
-    "tsx": "^4.0.0",
-    "typescript": "^5.0.0",
-    "vitest": "^4.1.5"
+    "@types/aws-lambda": "^8.10.162",
+    "tsx": "^4.23.5",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
   }
 }

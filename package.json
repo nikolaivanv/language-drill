@@ -39,16 +39,16 @@
     "qa:sample": "dotenv -e .env -- pnpm --filter @language-drill/ai qa:sample"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.59.1",
-    "@typescript-eslint/parser": "^8.59.1",
-    "concurrently": "^9.2.1",
+    "@types/node": "^22.20.1",
+    "@typescript-eslint/eslint-plugin": "^8.66.0",
+    "@typescript-eslint/parser": "^8.66.0",
+    "concurrently": "^9.2.4",
     "dotenv-cli": "^11.0.0",
-    "eslint": "^9.0.0",
-    "prettier": "^3.8.3",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "latest",
+    "prettier": "^3.9.6",
     "turbo": "latest",
-    "typescript": "^5.0.0",
-    "eslint-config-next": "latest"
+    "typescript": "^5.9.3"
   },
   "pnpm": {
     "overrides": {
