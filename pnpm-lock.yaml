@@ -184,9 +184,6 @@ importers:
       '@clerk/backend':
         specifier: ^3.15.1
         version: 3.15.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@hono/node-server':
-        specifier: ^1.19.17
-        version: 1.19.17(hono@4.13.0)
       '@language-drill/ai':
         specifier: workspace:*
         version: link:../../packages/ai
@@ -215,6 +212,9 @@ importers:
         specifier: ^3.25.76
         version: 3.25.76
     devDependencies:
+      '@hono/node-server':
+        specifier: ^1.19.17
+        version: 1.19.17(hono@4.13.0)
       '@types/aws-lambda':
         specifier: ^8.10.162
         version: 8.10.162
