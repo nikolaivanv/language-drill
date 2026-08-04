@@ -3185,7 +3185,7 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
             "Arn",
           ],
         },
-        "Runtime": "nodejs22.x",
+        "Runtime": "nodejs24.x",
         "Tags": [
           {
             "Key": "env",

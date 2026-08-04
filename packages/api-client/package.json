@@ -13,19 +13,19 @@
   },
   "dependencies": {
     "@language-drill/shared": "workspace:*",
-    "@tanstack/react-query": "^5.100.6",
-    "zod": "^3.0.0"
+    "@tanstack/react-query": "^5.101.4",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.2",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "@vitejs/plugin-react": "^6.0.1",
-    "jsdom": "^29.1.0",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
-    "typescript": "^5.0.0",
-    "vite": "^8.0.10",
-    "vitest": "^4.1.5"
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.0.5",
+    "jsdom": "^29.1.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "typescript": "^5.9.3",
+    "vite": "^8.2.0",
+    "vitest": "^4.1.10"
   }
 }
