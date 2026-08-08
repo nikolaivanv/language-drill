@@ -28,8 +28,11 @@ import {
   findStaleMasteryRows,
   planStaleMasteryDeletions,
   summarize,
+  formatDiffReport,
+  pointKey,
   run,
   type StaleMasteryRow,
+  type MasteryShift,
 } from './backfill-mastery';
 
 const STATE: MasteryState = {
@@ -196,6 +199,141 @@ describe('summarize', () => {
     });
     expect(msg).not.toContain('delete');
     expect(msg).not.toContain('Delete');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// formatDiffReport — every pre-existing row lands in exactly ONE of
+// rebuilt / deleted / stale (the invariant the --apply review gate relies
+// on; see the doc comment on formatDiffReport for why `stale` must be a set
+// difference against BOTH other buckets, not just `rebuiltKeys`).
+// ---------------------------------------------------------------------------
+
+describe('formatDiffReport — the three-way partition invariant', () => {
+  // "rebuilt" has no standalone printed count in the report — its size is
+  // the number of `shifts` fed in with a non-null `from`, which each test
+  // below constructs explicitly and asserts against directly (`knownRebuiltCount`).
+
+  const deletedCount = (report: string): number => {
+    const m = report.match(/deleted — existing rows removed outright[^:]*:\s*(\d+)/);
+    if (!m) throw new Error(`no 'deleted' line found in report:\n${report}`);
+    return Number(m[1]);
+  };
+
+  const staleCount = (report: string): number => {
+    const m = report.match(/stale \(neither rebuilt nor deleted\)[^:]*:\s*(\d+)/);
+    if (!m) throw new Error(`no 'stale' line found in report:\n${report}`);
+    return Number(m[1]);
+  };
+
+  it('partitions every pre-existing row into exactly one of rebuilt / deleted / stale', () => {
+    // Three pre-existing rows, one per bucket, each on a distinct grammar
+    // point so the buckets can't accidentally collide by construction:
+    //   - es-a1-preterite   → REBUILT (appears in `shifts` with from !== null)
+    //   - es-a1-imperfect   → DELETED (appears in `deleted`)
+    //   - es-a1-subjunctive → STALE   (appears in neither)
+    const rebuiltShift: MasteryShift = {
+      userId: 'user-1',
+      grammarPointKey: 'es-a1-preterite',
+      from: 0.5,
+      fromConfidence: 0.4,
+      to: 0.6,
+    };
+    const deletedRow: StaleMasteryRow = {
+      userId: 'user-1',
+      language: 'ES',
+      grammarPointKey: 'es-a1-imperfect',
+    };
+    const existingKeys = new Set([
+      pointKey('user-1', 'es-a1-preterite'),
+      pointKey('user-1', 'es-a1-imperfect'),
+      pointKey('user-1', 'es-a1-subjunctive'),
+    ]);
+
+    const report = formatDiffReport({
+      shifts: [rebuiltShift],
+      existingKeys,
+      deleted: [deletedRow],
+    });
+
+    // Known by construction: exactly one row was fed into `shifts`.
+    const knownRebuiltCount = 1;
+    const deleted = deletedCount(report);
+    const stale = staleCount(report);
+
+    // The invariant: the three bucket sizes sum to the input size. If a row
+    // were double-counted into two buckets (the bug this suite pins), this
+    // sum would exceed existingKeys.size.
+    expect(knownRebuiltCount + deleted + stale).toBe(existingKeys.size);
+    expect(deleted).toBe(1);
+    expect(stale).toBe(1);
+  });
+
+  it('does not report a deleted row as stale (the specific miscount the 2026-08-09 fix corrected)', () => {
+    // A single pre-existing row that is deleted and NOT rebuilt. The pre-fix
+    // rule computed `stale` as "absent from `rebuiltKeys`" alone, so a
+    // deleted-but-never-rebuilt row was ALSO counted as stale — double
+    // counting the same row into both the "deleted" and "stale" lines.
+    const deletedRow: StaleMasteryRow = {
+      userId: 'user-1',
+      language: 'ES',
+      grammarPointKey: 'es-a1-imperfect',
+    };
+    const existingKeys = new Set([pointKey('user-1', 'es-a1-imperfect')]);
+
+    const report = formatDiffReport({
+      shifts: [],
+      existingKeys,
+      deleted: [deletedRow],
+    });
+
+    expect(deletedCount(report)).toBe(1);
+    expect(staleCount(report)).toBe(0);
+  });
+
+  it('reports a row that is neither rebuilt nor deleted as stale, so the bucket is not silently empty', () => {
+    const existingKeys = new Set([pointKey('user-1', 'es-a1-subjunctive')]);
+
+    const report = formatDiffReport({
+      shifts: [],
+      existingKeys,
+      deleted: [],
+    });
+
+    expect(staleCount(report)).toBe(1);
+    expect(deletedCount(report)).toBe(0);
+  });
+
+  it('names all three buckets and lists deleted rows individually, since deletion is irreversible', () => {
+    const deleted: StaleMasteryRow[] = [
+      { userId: 'user-1', language: 'ES', grammarPointKey: 'es-a1-imperfect' },
+      { userId: 'user-2', language: 'TR', grammarPointKey: 'tr-a1-possessive' },
+    ];
+    const existingKeys = new Set([
+      pointKey('user-1', 'es-a1-imperfect'),
+      pointKey('user-2', 'tr-a1-possessive'),
+      pointKey('user-1', 'es-a1-subjunctive'), // stale
+    ]);
+
+    const report = formatDiffReport({
+      shifts: [],
+      existingKeys,
+      deleted,
+    });
+
+    // All three buckets are named in the report...
+    expect(report).toMatch(/deleted — existing rows removed outright/);
+    expect(report).toMatch(/stale \(neither rebuilt nor deleted\)/);
+    // ...and the deleted rows are listed individually, not just counted —
+    // an operator reviewing an --apply run needs to see exactly which rows
+    // are about to be removed.
+    expect(report).toContain('Deleted rows (2)');
+    expect(report).toContain('es-a1-imperfect');
+    expect(report).toContain('ES');
+    expect(report).toContain('user-1');
+    expect(report).toContain('tr-a1-possessive');
+    expect(report).toContain('TR');
+    expect(report).toContain('user-2');
   });
 });
 
