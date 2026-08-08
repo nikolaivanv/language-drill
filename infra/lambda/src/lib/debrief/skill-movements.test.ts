@@ -96,6 +96,29 @@ describe('computeSkillMovements', () => {
     expect(downWeighted[0].band).toBe('steady');
   });
 
+  it('does not band a flawless session as a slip against a single-observation prior', () => {
+    // The real rows from production session ec7dd00f-8c41-4d0e-ad5e-d7aa4b45ebc1
+    // (es-b1-impersonal-plural). Every session answer is at or above
+    // CORRECT_THRESHOLD (0.7), so the debrief header read "5 of 5 · 100%".
+    // Before the neutral-prior seeding, the lone 1.0 prior pinned mastery at
+    // 1.000 and this replayed to 0.927 — banding a perfect session 'slip'.
+    const rows: SkillHistoryRow[] = [
+      { id: 'p1', grammarPointKey: 'gp-a', score: 1,    difficulty: CefrLevel.B1, evaluatedAt: at('2026-07-29T22:29:17.763Z') },
+      { id: 's1', grammarPointKey: 'gp-a', score: 0.82, difficulty: CefrLevel.B1, evaluatedAt: at('2026-08-08T17:57:51.737Z') },
+      { id: 's2', grammarPointKey: 'gp-a', score: 0.92, difficulty: CefrLevel.B1, evaluatedAt: at('2026-08-08T18:00:09.790Z') },
+      { id: 's3', grammarPointKey: 'gp-a', score: 1,    difficulty: CefrLevel.B1, evaluatedAt: at('2026-08-08T18:03:37.818Z') },
+      { id: 's4', grammarPointKey: 'gp-a', score: 0.88, difficulty: CefrLevel.B1, evaluatedAt: at('2026-08-08T18:05:29.227Z') },
+      { id: 's5', grammarPointKey: 'gp-a', score: 1,    difficulty: CefrLevel.B1, evaluatedAt: at('2026-08-08T18:06:11.554Z') },
+    ];
+    const out = computeSkillMovements({
+      rows,
+      sessionRowIds: new Set(['s1', 's2', 's3', 's4', 's5']),
+      labels: new Map([['gp-a', 'Point A']]),
+    });
+    expect(out[0].band).not.toBe('slip');
+    expect(out[0].band).toBe('strong-gain'); // 0.8214 → 0.9021, Δ +0.0807
+  });
+
   it('orders movers before steady, deterministically', () => {
     const rows: SkillHistoryRow[] = [
       { id: 'p1', grammarPointKey: 'gp-a', score: 0.6, difficulty: CefrLevel.B2, evaluatedAt: at('2026-06-10T00:00:00Z') },
