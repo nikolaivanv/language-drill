@@ -213,6 +213,7 @@ async function applyDemotion(
       reviewStatus: action.to,
       flaggedReasons: action.reasons,
       qualityScore,
+      ...(action.to === 'rejected' ? { demotionReason: 'quality' as const } : {}),
     })
     .where(eq(exercises.id, rowId));
 }

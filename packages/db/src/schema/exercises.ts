@@ -28,6 +28,13 @@ export const exercises = pgTable(
     qualityScore: real('quality_score'),
     reviewStatus: text('review_status').notNull().default('auto-approved'),
     flaggedReasons: jsonb('flagged_reasons').$type<GenerationReason[]>(),
+    // Why this row left the pool. NULL for rows that were never demoted, and
+    // for `flagged` rows (unadjudicated — pre-judging them would discard
+    // evidence on a suspicion). 'quality' | 'learner-flag' mark the row's
+    // learner attempts as non-evidence (see packages/db/src/lib/evidence.ts);
+    // 'duplicate' | 'pool-hygiene' leave them counting — the item was
+    // answerable, it just should not be served again.
+    demotionReason: text('demotion_reason'),
     generatedAt: timestamp('generated_at', { withTimezone: true }),
     // Realized coverage values per axis (person/wordClass/polarity/sentenceType)
     // for pool-diversity monitoring (Pool Coverage Controller, Phase 0). Written

@@ -274,6 +274,13 @@
       "when": 1783980946453,
       "tag": "0038_calm_omega_red",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1786212235042,
+      "tag": "0039_wise_the_renegades",
+      "breakpoints": true
     }
   ]
 }

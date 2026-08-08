@@ -131,6 +131,7 @@ vi.mock('@language-drill/db', () => ({
     errorGrammarPointKey: 'error_grammar_point_key',
     hostGrammarPointKey: 'host_grammar_point_key',
     occurredAt: 'occurred_at',
+    exerciseId: 'exercise_id',
   },
   usageEvents: {},
   practiceSessions: {
@@ -140,6 +141,17 @@ vi.mock('@language-drill/db', () => ({
     startedAt: 'started_at',
   },
   getGrammarPoint: (key: string) => mockGetGrammarPoint(key),
+  // rank-context.ts (used by POST /sessions via buildRankContext) imports
+  // `exercises` + `scoringEvidenceFilter` straight from `@language-drill/db`
+  // rather than through `../lib/exercise-filters` — mirrored here so
+  // `Promise.all`'s error-count query doesn't throw on an undefined call.
+  // Reusing `mockScoringEvidenceFilter` (declared below, referenced here via
+  // Vitest's mock-prefix hoisting) is intentional: in production
+  // `../lib/exercise-filters` just re-exports the same `@language-drill/db`
+  // function, so one spy tracking both import paths matches reality — see
+  // the assertions at lines ~3149/3224, both on GET routes that never call
+  // buildRankContext, so this addition doesn't change their counts.
+  scoringEvidenceFilter: (table: unknown) => mockScoringEvidenceFilter(table),
 }));
 
 // Mock the review-status filter so we can count calls per route. The
@@ -154,11 +166,13 @@ const mockAudioReadyFilter = vi.fn((table: unknown) => ({
   table,
 }));
 const mockFreshFirstOrderBy = vi.fn((userId: string) => ({ __mockToken: 'fresh-first-order-by', userId }));
+const mockScoringEvidenceFilter = vi.fn((table: unknown) => ({ __mockToken: 'scoring-evidence-filter', table }));
 vi.mock('../lib/exercise-filters', () => ({
   APPROVED_STATUSES: ['auto-approved', 'manual-approved'] as const,
   approvedStatusFilter: (table: unknown) => mockApprovedStatusFilter(table),
   audioReadyFilter: (table: unknown) => mockAudioReadyFilter(table),
   freshFirstOrderBy: (userId: string) => mockFreshFirstOrderBy(userId),
+  scoringEvidenceFilter: (table: unknown) => mockScoringEvidenceFilter(table),
 }));
 
 // presignAudioUrl hits the AWS SDK and is env-gated (returns null when
@@ -2750,6 +2764,13 @@ describe('GET /sessions/:id/debrief', () => {
     expect(callArg.sessionRowIds.has('hist-prior-1')).toBe(false);
     expect(callArg.labels.get('es-b1-subjunctive')).toBeDefined();
 
+    // The histRows replay behind skill movements is the one call site in this
+    // route that excludes defect-demoted attempts (scoringEvidenceFilter) —
+    // proves the boundary behaviourally rather than resting on hand-reading
+    // the diff. Contrast the debrief item-list hydration test below, which
+    // must NOT call it.
+    expect(mockScoringEvidenceFilter).toHaveBeenCalled();
+
     // No-numbers contract: every value in every movement is a string, not a number.
     // Also 'from'/'to' raw scores must NOT appear (only banded strings leak out).
     for (const m of body.skillMovements as Array<Record<string, unknown>>) {
@@ -3133,6 +3154,11 @@ describe('review_status non-filter — GET /sessions/today Path A', () => {
     expect(mockApprovedStatusFilter).not.toHaveBeenCalled();
     // Path A doesn't run the UNION-ALL pool sample either.
     expect(mockExecute).not.toHaveBeenCalled();
+    // scoringEvidenceFilter IS called once per /sessions/today request — but
+    // only via the unconditional errorRows query in Query 1's Promise.all,
+    // not via Path A's own hydrate-by-manifest-ID query. If Path A's hydrate
+    // query had also been (wrongly) filtered, this would be 2.
+    expect(mockScoringEvidenceFilter).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -3202,5 +3228,11 @@ describe('review_status non-filter — GET /sessions/:id/debrief', () => {
     expect(itemIds).toContain(FLAGGED_FIXTURE_ID);
     // Debrief hydration is unfiltered — helper not invoked.
     expect(mockApprovedStatusFilter).not.toHaveBeenCalled();
+    // The item-list hydration query is a manifest read (deliberate
+    // non-filter, same as Path A) and this fixture carries no
+    // grammar_point_key, so affectedLabels stays empty and the histRows
+    // skill-movement replay — the one call site that DOES filter — never
+    // runs either.
+    expect(mockScoringEvidenceFilter).not.toHaveBeenCalled();
   });
 });

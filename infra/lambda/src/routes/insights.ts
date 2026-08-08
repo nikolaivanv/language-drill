@@ -4,6 +4,7 @@ import { and, eq, gte, isNotNull } from 'drizzle-orm';
 import { Language } from '@language-drill/shared';
 import { errorObservations, userExerciseHistory, exercises, getGrammarPoint } from '@language-drill/db';
 import { db } from '../db';
+import { scoringEvidenceFilter } from '../lib/exercise-filters';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
 import { rankRecurringErrors, attachGrammarPointNames, type RecurringErrorInput } from '../lib/errors/recurring';
@@ -45,11 +46,13 @@ insights.get('/insights/errors', async (c) => {
       occurredAt: errorObservations.occurredAt,
     })
     .from(errorObservations)
+    .innerJoin(exercises, eq(errorObservations.exerciseId, exercises.id))
     .where(
       and(
         eq(errorObservations.userId, userId),
         eq(errorObservations.language, language),
         gte(errorObservations.occurredAt, since),
+        scoringEvidenceFilter(exercises),
       ),
     );
 
@@ -101,11 +104,13 @@ insights.get('/insights/error-trends', async (c) => {
       occurredAt: errorObservations.occurredAt,
     })
     .from(errorObservations)
+    .innerJoin(exercises, eq(errorObservations.exerciseId, exercises.id))
     .where(
       and(
         eq(errorObservations.userId, userId),
         eq(errorObservations.language, language),
         gte(errorObservations.occurredAt, since),
+        scoringEvidenceFilter(exercises),
       ),
     );
 
@@ -122,6 +127,7 @@ insights.get('/insights/error-trends', async (c) => {
         eq(exercises.language, language),
         gte(userExerciseHistory.evaluatedAt, since),
         isNotNull(exercises.grammarPointKey),
+        scoringEvidenceFilter(exercises),
       ),
     );
 

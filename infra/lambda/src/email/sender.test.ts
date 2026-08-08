@@ -57,6 +57,11 @@ vi.mock('@language-drill/db', () => {
     userGrammarMastery: { userId: 'user_id', grammarPointKey: 'grammar_point_key', score: 'score' },
     exercises: { id: 'id', grammarPointKey: 'grammar_point_key', language: 'language' },
     getGrammarPoint: vi.fn(() => ({ label: 'Some Point' })),
+    // gather.ts's rawHistory query composes this into its WHERE clause via
+    // and(...); the select chain above is fully mocked (rows come from
+    // historyRows/masteryRows regardless of the WHERE argument), so a stub
+    // token is enough — it only needs to be a non-undefined value.
+    scoringEvidenceFilter: () => ({ __mockToken: 'scoring-evidence-filter' }),
   };
 });
 

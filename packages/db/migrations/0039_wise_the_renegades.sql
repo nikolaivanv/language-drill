@@ -1,0 +1,1 @@
+ALTER TABLE "exercises" ADD COLUMN "demotion_reason" text;

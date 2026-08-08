@@ -126,3 +126,7 @@ export type {
 // plus a backfill row-builder. Used by the Lambda write path and the
 // backfill CLI (both import these pure functions from the barrel).
 export * from './errors/observations';
+
+// Evidence eligibility — which demoted exercises' attempts still count toward
+// learner scoring. Consumed by the Lambda read paths and the mastery backfill.
+export * from './lib/evidence';
