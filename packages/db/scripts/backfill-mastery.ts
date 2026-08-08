@@ -54,6 +54,23 @@ async function main() {
     .where(and(...where))
     .orderBy(asc(userExerciseHistory.evaluatedAt));
 
+  // Existing stored mastery, for the old→new diff. Keyed the same way the
+  // upsert's conflict target is: (userId, grammarPointKey).
+  const existingRows = await db
+    .select({
+      userId: userGrammarMastery.userId,
+      grammarPointKey: userGrammarMastery.grammarPointKey,
+      masteryScore: userGrammarMastery.masteryScore,
+    })
+    .from(userGrammarMastery);
+
+  const existingByKey = new Map<string, number>();
+  for (const r of existingRows) {
+    if (r.userId && r.grammarPointKey && r.masteryScore != null) {
+      existingByKey.set(`${r.userId}:${r.grammarPointKey}`, r.masteryScore);
+    }
+  }
+
   // Group rows per (user, language); replayHistory folds per grammar point.
   type Key = string; // `${userId} ${language}`
   const byUserLang = new Map<Key, HistoryRow[]>();
@@ -75,12 +92,16 @@ async function main() {
   }
 
   let upserts = 0;
+  type Shift = { userId: string; grammarPointKey: string; from: number | null; to: number };
+  const shifts: Shift[] = [];
   for (const [k, history] of byUserLang) {
     const [userId] = k.split(' ');
     const language = langOf.get(k)!;
     const finalStates = replayHistory(history);
     for (const [grammarPointKey, s] of finalStates) {
       upserts += 1;
+      const priorScore = existingByKey.get(`${userId}:${grammarPointKey}`) ?? null;
+      shifts.push({ userId: userId!, grammarPointKey, from: priorScore, to: s.masteryScore });
       if (!apply) continue;
       await db
         .insert(userGrammarMastery)
@@ -112,6 +133,43 @@ async function main() {
     `${apply ? 'Wrote' : '[dry-run] Would write'} ${upserts} mastery rows ` +
       `across ${byUserLang.size} (user,language) groups from ${rows.length} history rows.`,
   );
+
+  const changed = shifts.filter(
+    (s) => s.from !== null && Math.abs(s.to - s.from) > 1e-6,
+  ) as Array<Shift & { from: number }>;
+  const absDelta = (s: { from: number; to: number }) => Math.abs(s.to - s.from);
+  const mean =
+    changed.length === 0
+      ? 0
+      : changed.reduce((acc, s) => acc + absDelta(s), 0) / changed.length;
+  const max = changed.reduce((acc, s) => Math.max(acc, absDelta(s)), 0);
+  const brandNew = shifts.filter((s) => s.from === null).length;
+
+  console.log(
+    `Diff: ${changed.length} moved, ${brandNew} new, ` +
+      `mean |Δ| ${mean.toFixed(4)}, max |Δ| ${max.toFixed(4)}.`,
+  );
+
+  const fmt = (s: Shift) =>
+    `  ${s.grammarPointKey.padEnd(38)} ${(s.from ?? 0).toFixed(3)} → ${s.to.toFixed(3)}` +
+    `  (${s.from === null ? 'new' : (s.to - s.from >= 0 ? '+' : '') + (s.to - s.from).toFixed(3)})`;
+
+  console.log('\nTop 20 largest shifts:');
+  for (const s of [...changed].sort((a, b) => absDelta(b) - absDelta(a)).slice(0, 20)) {
+    console.log(fmt(s));
+  }
+
+  // Selection ranks weakest-first, so this is the list that actually decides
+  // what gets served next. Compare the two orderings, not just the values.
+  console.log('\nWeakest 20 BEFORE:');
+  for (const s of changed.slice().sort((a, b) => a.from - b.from).slice(0, 20)) {
+    console.log(fmt(s));
+  }
+  console.log('\nWeakest 20 AFTER:');
+  for (const s of changed.slice().sort((a, b) => a.to - b.to).slice(0, 20)) {
+    console.log(fmt(s));
+  }
+
   process.exit(0);
 }
 
