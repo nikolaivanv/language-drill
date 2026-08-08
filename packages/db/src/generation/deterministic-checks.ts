@@ -3,10 +3,19 @@
  *
  * `routeValidationResult` maps the LLM `ValidationResult` to a `(reviewStatus,
  * flaggedReasons)` pair. `applyDeterministicChecks` runs immediately after it
- * and can only **downgrade** that decision based on the pure, non-LLM Turkish
- * checker (`checkTurkishCloze` in `@language-drill/ai`): a provable
- * vowel-harmony error → `rejected`; a suspected malformed surface form →
- * `flagged`. It never upgrades.
+ * and can only **downgrade** that decision based on pure, non-LLM checkers in
+ * `@language-drill/ai`. It never upgrades.
+ *
+ * Two checkers run:
+ *
+ * - `checkTurkishCloze` (Turkish cloze only): a provable vowel-harmony error →
+ *   `rejected`; a suspected malformed surface form → `flagged`.
+ * - `checkClozeOverlap` (any-language cloze): the `correctAnswer` restates the
+ *   stem word beside the blank, so substituting it duplicates that word →
+ *   `rejected` when the answer is multi-word (provable), `flagged` when it is
+ *   a single word (adjacent repetition can be a real construction). Added
+ *   2026-08-08 after 38 such rows were found live in the prod pool, approved at
+ *   0.85-0.9 by the LLM validator.
  *
  * This is the SINGLE place the verdict→routing precedence lives. Both the live
  * generation path (`validate-and-insert.ts`) and the revalidation CLI
@@ -22,16 +31,30 @@ import {
   isClozeContent,
   Language,
 } from '@language-drill/shared';
-import { checkTurkishCloze } from '@language-drill/ai';
+import { checkClozeOverlap, checkTurkishCloze } from '@language-drill/ai';
 
 import type { ReviewStatus, RoutingDecision } from './routing';
 
 /**
- * Combine the LLM routing decision with the deterministic Turkish checker.
+ * Downgrade `auto-approved` to `flagged`; keep an already-`flagged`/`rejected`
+ * status. Never upgrades — the deterministic gate is one-directional.
+ */
+function downgradeToFlagged(status: ReviewStatus): ReviewStatus {
+  return status === 'auto-approved' ? 'flagged' : status;
+}
+
+/**
+ * Combine the LLM routing decision with the deterministic checkers.
  *
  * Pass-through (returns `decision` semantically unchanged) when the draft is
- * non-Turkish, not a cloze, or the checker returns `ok` / `not-applicable`.
+ * not a cloze or every applicable checker returns `ok` / `not-applicable`.
  *
+ * Answer/stem overlap is evaluated first and applies to every language: a
+ * `certain` overlap is a provable structural defect (the exercise is
+ * unanswerable as printed), so it rejects outright regardless of the LLM
+ * `qualityScore`, and no later check can matter.
+ *
+ * Then, for Turkish:
  * - `wrong-harmony` → `rejected`, deterministic reason **prepended** (it is the
  *   dominant cause), regardless of the LLM `qualityScore`.
  * - `non-word-stem` → deterministic reason **appended**; `auto-approved`
@@ -42,7 +65,33 @@ export function applyDeterministicChecks(
   content: ExerciseContent,
   language: Language,
 ): RoutingDecision {
-  if (language !== Language.TR || !isClozeContent(content)) {
+  if (!isClozeContent(content)) {
+    return decision;
+  }
+
+  const overlap = checkClozeOverlap(content);
+  if (overlap.kind === 'answer-stem-overlap') {
+    // The broken substitution goes in `detail`; the code stays bounded.
+    const detail = `answer "${content.correctAnswer}" restates "${overlap.token}" ${overlap.side} the blank → "${overlap.substituted}"`;
+    if (overlap.confidence === 'certain') {
+      return {
+        reviewStatus: 'rejected',
+        flaggedReasons: [
+          { code: GenerationReasonCode.AnswerStemOverlap, detail },
+          ...decision.flaggedReasons,
+        ],
+      };
+    }
+    decision = {
+      reviewStatus: downgradeToFlagged(decision.reviewStatus),
+      flaggedReasons: [
+        ...decision.flaggedReasons,
+        { code: GenerationReasonCode.SuspectedAnswerStemOverlap, detail },
+      ],
+    };
+  }
+
+  if (language !== Language.TR) {
     return decision;
   }
 
@@ -74,13 +123,9 @@ export function applyDeterministicChecks(
         code: GenerationReasonCode.MalformedSurfaceForm,
         detail: verdict.reconstructed,
       };
-      // Downgrade only; never upgrade an already-flagged/rejected decision.
-      const reviewStatus: ReviewStatus =
-        decision.reviewStatus === 'auto-approved'
-          ? 'flagged'
-          : decision.reviewStatus;
       return {
-        reviewStatus,
+        // Downgrade only; never upgrade an already-flagged/rejected decision.
+        reviewStatus: downgradeToFlagged(decision.reviewStatus),
         flaggedReasons: [...decision.flaggedReasons, reason],
       };
     }

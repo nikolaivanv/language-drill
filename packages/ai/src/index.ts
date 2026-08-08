@@ -255,6 +255,9 @@ export {
 } from "./turkish-harmony.js";
 export type { DeterministicVerdict, TurkishVowel } from "./turkish-harmony.js";
 
+export { checkClozeOverlap } from "./cloze-overlap.js";
+export type { ClozeOverlapVerdict } from "./cloze-overlap.js";
+
 export {
   THEORY_TOOL_NAME,
   THEORY_GENERATION_MODEL,

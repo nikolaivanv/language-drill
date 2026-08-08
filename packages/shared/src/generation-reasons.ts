@@ -34,12 +34,13 @@
  * - Reject branch (drafts discarded without a row): {@link LowQualityReject},
  *   {@link ContextSpoilsAnswer}, {@link CulturalIssue},
  *   {@link VowelHarmonyAllomorph}, {@link ParserFailure},
- *   {@link ValidatorParseFailure}, {@link SeedTargetMismatch}. These are the
- *   only codes that can key `generation_jobs.rejection_reason_counts`.
+ *   {@link ValidatorParseFailure}, {@link SeedTargetMismatch},
+ *   {@link AnswerStemOverlap}. These are the only codes that can key
+ *   `generation_jobs.rejection_reason_counts`.
  * - Flag branch (drafts inserted with `review_status = 'flagged'`):
  *   {@link LowQualityFlag}, {@link Ambiguous}, {@link LevelMismatch},
  *   {@link GrammarPointMismatch}, {@link MalformedSurfaceForm},
- *   {@link ValidatorNote}.
+ *   {@link SuspectedAnswerStemOverlap}, {@link ValidatorNote}.
  */
 export enum GenerationReasonCode {
   // -- Reject branch --------------------------------------------------------
@@ -64,6 +65,13 @@ export enum GenerationReasonCode {
    * `vocabSeedMismatch` (`packages/db`) after the LLM routing decision.
    */
   SeedTargetMismatch = "seed-target-mismatch",
+  /**
+   * Deterministic cloze answer/stem overlap → rejected. The multi-word
+   * `correctAnswer` restates the stem word next to the blank, so substituting
+   * it duplicates that word ("prefiero ___ del escaparate" / "el del" →
+   * "prefiero el del del escaparate"). `detail` holds the broken substitution.
+   */
+  AnswerStemOverlap = "answer-stem-overlap",
 
   // -- Flag branch ----------------------------------------------------------
   /** 0.5 <= qualityScore < 0.7 → flagged. */
@@ -79,6 +87,14 @@ export enum GenerationReasonCode {
    * the reconstructed surface form.
    */
   MalformedSurfaceForm = "malformed-surface-form",
+  /**
+   * Deterministic suspected cloze answer/stem overlap → flagged. Same shape as
+   * {@link AnswerStemOverlap} but with a single-word `correctAnswer`, where
+   * adjacent repetition can be a real construction (TR reduplication "ikişer
+   * ikişer", DE "die Frau, die die Tür öffnete") — so it is kept for review
+   * rather than discarded. `detail` holds the substitution.
+   */
+  SuspectedAnswerStemOverlap = "suspected-answer-stem-overlap",
   /** Free-form validator `flaggedReasons` note. `detail` holds the prose. */
   ValidatorNote = "validator-note",
 
@@ -119,6 +135,10 @@ export const REASON_LABELS: Record<GenerationReasonCode, string> = {
   [GenerationReasonCode.ValidatorParseFailure]:
     "Validator parse failure (malformed response)",
   [GenerationReasonCode.SeedTargetMismatch]: "Seed-target mismatch",
+  [GenerationReasonCode.AnswerStemOverlap]:
+    "Answer restates a stem word beside the blank",
+  [GenerationReasonCode.SuspectedAnswerStemOverlap]:
+    "Suspected answer/stem overlap beside the blank",
   [GenerationReasonCode.LowQualityFlag]: "Low quality score (<0.7)",
   [GenerationReasonCode.Ambiguous]: "Ambiguous",
   [GenerationReasonCode.LevelMismatch]: "Level mismatch",
@@ -141,6 +161,7 @@ export const REJECTED_BRANCH_CODES: readonly GenerationReasonCode[] = [
   GenerationReasonCode.ParserFailure,
   GenerationReasonCode.ValidatorParseFailure,
   GenerationReasonCode.SeedTargetMismatch,
+  GenerationReasonCode.AnswerStemOverlap,
 ];
 
 /**
