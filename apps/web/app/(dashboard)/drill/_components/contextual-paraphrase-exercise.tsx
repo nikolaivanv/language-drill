@@ -136,6 +136,7 @@ export function ContextualParaphraseExercise({
       <div className="flex flex-col gap-s-3">
         <Textarea
           ref={textareaRef}
+          variant="answer"
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
           onKeyDown={submitOnModEnter(handleSubmit)}
