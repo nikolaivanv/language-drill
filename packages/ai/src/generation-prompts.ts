@@ -773,9 +773,7 @@ export function buildGenerationUserPrompt(
     (inputs.exerciseType === ExerciseType.CLOZE ||
       inputs.exerciseType === ExerciseType.TRANSLATION) &&
     seedWord
-      ? inputs.grammarPoint.constructionVariants?.find(
-          (v) => v.id === seedWord,
-        )
+      ? inputs.grammarPoint.constructionVariants?.find((v) => v.id === seedWord)
       : undefined;
   const seedBlock =
     !digitForm && !baseWordCue && seedWord && seedWord.length > 0
@@ -788,36 +786,36 @@ export function buildGenerationUserPrompt(
           ? `This exercise MUST use the following sub-construction of ${inputs.grammarPoint.name}: ${constructionVariant.directive}. Write an English source sentence that naturally elicits exactly this sub-construction — the source must not telegraph a different one, and must not lean on the point's most common pattern. Use exactly this sub-construction; do not substitute another.\n\n`
           : `This exercise MUST use the following sub-construction of ${inputs.grammarPoint.name}: ${constructionVariant.directive}. Use exactly this sub-construction; do not substitute another, and do not fall back to the point's most common pattern.\n\n`
         : inputs.exerciseType === ExerciseType.CONJUGATION
-        ? // Strict: the seed IS the word to inflect. No substitution escape hatch —
-          // the picker already guarantees an inflectable word, and substitution
-          // would re-open the dedup-collapse we are fixing. Nominal-inflection
-          // points (conjugationSeedKind: 'noun') decline a NOUN, not a verb, so the
-          // directive names the right word class to avoid confusing the author.
-          inputs.grammarPoint.conjugationSeedKind === "noun"
-          ? `The noun to inflect is "${seedWord}". Use exactly this noun — do not substitute another.\n\n`
-          : // Copular personal-suffix point: the seed is a PREDICATE (profession /
-            // role / nationality / adjective), and the drill makes a "subject IS
-            // <predicate>" sentence. Name the word class so the author treats it as
-            // a predicate nominal rather than an object noun to decline.
-            inputs.grammarPoint.conjugationSeedKind === "predicate-nominal"
-            ? `The predicate is "${seedWord}" (a profession, role, nationality, or adjective). The drill states that the subject IS "${seedWord}": inflect "${seedWord}" with the correct personal/copular suffix for the target person (e.g. "${seedWord}" → 1sg "…${seedWord}+(y)Im"). Use exactly this word — do not substitute another.\n\n`
-            : `The verb to conjugate is "${seedWord}". Use exactly this verb — do not substitute another.\n\n`
-        : inputs.exerciseType === ExerciseType.CONTEXTUAL_PARAPHRASE
-          ? // Strict: the seed is a SCENARIO drawn from the curated `paraphrase.seeds`
-            // pool — the identity-diversity axis for this cell. Frame it as a scenario
-            // (NOT a "word") with no substitution escape hatch, so each ordinal's
-            // distinct scenario yields a distinct source sentence. The generic loose
-            // seed block's "word" wording and "similar frequency" substitution are
-            // nonsensical for a scenario phrase and would let the model discard the
-            // seed, collapsing the very diversity axis this seed enforces.
-            `Set this exercise in the following scenario: "${seedWord}". The source sentence you author must fit this scenario naturally. Use exactly this scenario — do not substitute another.\n\n`
-          : inputs.exerciseType === ExerciseType.VOCAB_RECALL
-            ? // Strict: the seed IS the target word. No substitution escape hatch —
-              // the seed comes from the curated vocab_target list and coverage only
-              // registers when expectedWord matches it (Spec 2). The anti-leak rule
-              // (system prompt) still forbids the clue from containing the word.
-              `The target word (expectedWord) MUST be exactly "${seedWord}". Write a clue or definition that elicits "${seedWord}" without revealing it — the clue must NOT contain "${seedWord}". Do not substitute another word.\n\n`
-            : `Build this exercise around the word "${seedWord}". If "${seedWord}" does not fit ${inputs.grammarPoint.name} naturally, or is register-specific (military, legal, medical, administrative, or literary), or sits above CEFR ${inputs.cefrLevel}, choose an everyday, level-appropriate content word of similar frequency instead. The word you use and the whole sentence must stay within the CEFR ${inputs.cefrLevel} vocabulary band.\n\n`
+          ? // Strict: the seed IS the word to inflect. No substitution escape hatch —
+            // the picker already guarantees an inflectable word, and substitution
+            // would re-open the dedup-collapse we are fixing. Nominal-inflection
+            // points (conjugationSeedKind: 'noun') decline a NOUN, not a verb, so the
+            // directive names the right word class to avoid confusing the author.
+            inputs.grammarPoint.conjugationSeedKind === "noun"
+            ? `The noun to inflect is "${seedWord}". Use exactly this noun — do not substitute another.\n\n`
+            : // Copular personal-suffix point: the seed is a PREDICATE (profession /
+              // role / nationality / adjective), and the drill makes a "subject IS
+              // <predicate>" sentence. Name the word class so the author treats it as
+              // a predicate nominal rather than an object noun to decline.
+              inputs.grammarPoint.conjugationSeedKind === "predicate-nominal"
+              ? `The predicate is "${seedWord}" (a profession, role, nationality, or adjective). The drill states that the subject IS "${seedWord}": inflect "${seedWord}" with the correct personal/copular suffix for the target person (e.g. "${seedWord}" → 1sg "…${seedWord}+(y)Im"). Use exactly this word — do not substitute another.\n\n`
+              : `The verb to conjugate is "${seedWord}". Use exactly this verb — do not substitute another.\n\n`
+          : inputs.exerciseType === ExerciseType.CONTEXTUAL_PARAPHRASE
+            ? // Strict: the seed is a SCENARIO drawn from the curated `paraphrase.seeds`
+              // pool — the identity-diversity axis for this cell. Frame it as a scenario
+              // (NOT a "word") with no substitution escape hatch, so each ordinal's
+              // distinct scenario yields a distinct source sentence. The generic loose
+              // seed block's "word" wording and "similar frequency" substitution are
+              // nonsensical for a scenario phrase and would let the model discard the
+              // seed, collapsing the very diversity axis this seed enforces.
+              `Set this exercise in the following scenario: "${seedWord}". The source sentence you author must fit this scenario naturally. Use exactly this scenario — do not substitute another.\n\n`
+            : inputs.exerciseType === ExerciseType.VOCAB_RECALL
+              ? // Strict: the seed IS the target word. No substitution escape hatch —
+                // the seed comes from the curated vocab_target list and coverage only
+                // registers when expectedWord matches it (Spec 2). The anti-leak rule
+                // (system prompt) still forbids the clue from containing the word.
+                `The target word (expectedWord) MUST be exactly "${seedWord}". Write a clue or definition that elicits "${seedWord}" without revealing it — the clue must NOT contain "${seedWord}". Do not substitute another word.\n\n`
+              : `Build this exercise around the word "${seedWord}". If "${seedWord}" does not fit ${inputs.grammarPoint.name} naturally, or is register-specific (military, legal, medical, administrative, or literary), or sits above CEFR ${inputs.cefrLevel}, choose an everyday, level-appropriate content word of similar frequency instead. The word you use and the whole sentence must stay within the CEFR ${inputs.cefrLevel} vocabulary band.\n\n`
       : "";
   const modeBlock =
     inputs.exerciseType === ExerciseType.SENTENCE_CONSTRUCTION
