@@ -1,4 +1,8 @@
-import { exercises as exercisesTable, userExerciseHistory } from '@language-drill/db';
+import {
+  exercises as exercisesTable,
+  userExerciseHistory,
+  scoringEvidenceFilter,
+} from '@language-drill/db';
 import { inArray, sql } from 'drizzle-orm';
 
 /**
@@ -65,3 +69,23 @@ export function freshFirstOrderBy(userId: string) {
       and ${userExerciseHistory.userId} = ${userId}
   ) asc nulls first, random()`;
 }
+
+/**
+ * Re-exported from `@language-drill/db` so every serve-path and scoring
+ * predicate is reachable from one module. Distinct from
+ * `approvedStatusFilter`: that one decides what may be *served*, this one
+ * decides what may be *scored*.
+ *
+ * Scoring call sites (must use `scoringEvidenceFilter`):
+ *   - routes/progress.ts:  GET /progress/radar
+ *   - routes/insights.ts:  error observations + attempt counts
+ *   - routes/sessions.ts:  GET /sessions/:id/debrief skill movements
+ *   - email/gather.ts:     weekly summary accuracy
+ *
+ * Sites that intentionally do NOT filter:
+ *   - routes/admin.ts (all)      — admin surfaces show raw truth
+ *   - session debrief item lists — a record of what you did, not a score
+ *   - routes/user-export.ts      — portability means the complete record
+ *   - serve paths                — already gated by `approvedStatusFilter`
+ */
+export { scoringEvidenceFilter };
