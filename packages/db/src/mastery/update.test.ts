@@ -5,12 +5,61 @@ import { updateMastery, replayHistory, type MasteryState } from './update';
 const d = (s: string) => new Date(s);
 
 describe('updateMastery', () => {
-  it('initializes from the first observation', () => {
+  it('initializes from the first observation, shrunk toward the neutral prior', () => {
     const next = updateMastery(null, { score: 0.8, difficulty: CefrLevel.B1, at: d('2026-01-01') });
-    expect(next.masteryScore).toBeCloseTo(0.8, 5);
+    expect(next.masteryScore).toBeCloseTo(0.97 / 1.4, 5); // ≈ 0.6929
     expect(next.evidenceCount).toBe(1);
     expect(next.confidence).toBeCloseTo(1 - Math.exp(-1 / 5), 5);
     expect(next.lastPracticedAt).toEqual(d('2026-01-01'));
+  });
+
+  it('seeds a first observation against a neutral prior instead of taking it raw', () => {
+    // Weighted average of NEUTRAL_PRIOR (0.5, weight PRIOR_PSEUDO_COUNT 0.5)
+    // and the observation (weight = difficulty weight, B1 = 0.9, since
+    // 1.0 >= 0.5 takes the reward branch):
+    //   (0.5 * 0.5 + 0.9 * 1.0) / (0.5 + 0.9) = 1.15 / 1.4 = 0.8214...
+    const next = updateMastery(null, { score: 1, difficulty: CefrLevel.B1, at: d('2026-01-01') });
+    expect(next.masteryScore).toBeCloseTo(1.15 / 1.4, 5);
+    expect(next.masteryScore).toBeLessThan(1); // the point of the change
+  });
+
+  it('leaves room to move in BOTH directions after a first observation', () => {
+    const perfect = updateMastery(null, { score: 1, difficulty: CefrLevel.B1, at: d('2026-01-01') });
+    const zero = updateMastery(null, { score: 0, difficulty: CefrLevel.B1, at: d('2026-01-01') });
+    expect(perfect.masteryScore).toBeLessThan(1);
+    expect(zero.masteryScore).toBeGreaterThan(0);
+  });
+
+  it('treats NEUTRAL_PRIOR as the fixed point of the seeding rule', () => {
+    // A first observation of exactly 0.5 cannot move off the prior, at any
+    // difficulty — the average of 0.5 and 0.5 is 0.5 for every weighting.
+    for (const level of [CefrLevel.A1, CefrLevel.B1, CefrLevel.C2]) {
+      const next = updateMastery(null, { score: 0.5, difficulty: level, at: d('2026-01-01') });
+      expect(next.masteryScore).toBeCloseTo(0.5, 10);
+    }
+  });
+
+  it('seeds a perfect first answer higher on a harder item', () => {
+    const at = d('2026-01-01');
+    const a1 = updateMastery(null, { score: 1, difficulty: CefrLevel.A1, at });
+    const c2 = updateMastery(null, { score: 1, difficulty: CefrLevel.C2, at });
+    expect(c2.masteryScore).toBeGreaterThan(a1.masteryScore);
+    expect(a1.masteryScore).toBeCloseTo(0.75, 5);  // (0.25 + 0.5) / 1.0
+    expect(c2.masteryScore).toBeCloseTo(0.875, 5); // (0.25 + 1.5) / 2.0
+  });
+
+  it('does not let the pseudo-count leak into evidence or confidence', () => {
+    const next = updateMastery(null, { score: 1, difficulty: CefrLevel.B1, at: d('2026-01-01') });
+    expect(next.evidenceCount).toBe(1);
+    expect(next.confidence).toBeCloseTo(1 - Math.exp(-1 / 5), 10);
+  });
+
+  it('pulls a hinted first observation toward the neutral prior', () => {
+    const at = d('2026-01-01');
+    const full = updateMastery(null, { score: 1, difficulty: CefrLevel.B1, at });
+    const hinted = updateMastery(null, { score: 1, difficulty: CefrLevel.B1, at, evidenceWeight: 0.1 });
+    expect(hinted.masteryScore).toBeLessThan(full.masteryScore);
+    expect(hinted.masteryScore).toBeGreaterThan(0.5);
   });
 
   it('rewards a correct answer on a hard item more than on an easy item', () => {
