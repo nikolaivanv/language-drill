@@ -94,7 +94,7 @@ different trace:
 |---|---|---|
 | `revalidate-cloze-pool.ts:213-214` | `reviewStatus` **+ `flaggedReasons`** | yes — reasons present |
 | `admin.ts:939-953` moderation reject | `reviewStatus` (from `flagged`, reasons already set) | yes — reasons present |
-| `exercise-flags.ts:148` learner flag upheld | `reviewStatus` only | yes — via `exercise_flags.status='rejected'` + `admin_audit_log` `user_flag.reject` |
+| `exercise-flags.ts:148` learner flag upheld | `reviewStatus` only | yes — via `exercise_flags.status='resolved_rejected'` + `admin_audit_log` `user_flag.reject` |
 | `demote-cell-pool.ts:126` | `reviewStatus` only | **no** |
 | `dedup-sc-pool.ts:158` | `reviewStatus` only | **no** |
 
@@ -131,7 +131,7 @@ UPDATE exercises SET demotion_reason = 'quality'
 UPDATE exercises SET demotion_reason = 'learner-flag'
  WHERE demotion_reason IS NULL
    AND id IN (
-     SELECT exercise_id FROM exercise_flags WHERE status = 'rejected'
+     SELECT exercise_id FROM exercise_flags WHERE status = 'resolved_rejected'
      UNION
      SELECT target_id::uuid FROM admin_audit_log
       WHERE action = 'user_flag.reject' AND target_type = 'exercise'
