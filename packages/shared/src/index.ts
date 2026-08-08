@@ -602,6 +602,12 @@ export type { ConstructionVariant, CurriculumCefrLevel, GrammarPoint } from "./c
 export * from "./coverage";
 
 // ---------------------------------------------------------------------------
+// Construction variants — deficit-ranked picker for sub-construction seeding
+// ---------------------------------------------------------------------------
+
+export * from "./construction-variant-seed";
+
+// ---------------------------------------------------------------------------
 // Fluency mode — deterministic grader + locked constants
 // ---------------------------------------------------------------------------
 
