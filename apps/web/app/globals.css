@@ -212,6 +212,21 @@ html.landing-dark body {
   letter-spacing: -0.2px;
   color: var(--color-ink);
 }
+/* The learner's own sentence, inside an answer field. Set in the same display
+   serif as the prompt (.t-display-m) so the pair reads as two halves of one
+   sentence — at 14px sans the answer looked like form metadata under a
+   headline. Sized just under the prompt so the prompt still leads, and at 400
+   rather than 500 so the typed text stays lighter than the question. The
+   generous line-height gives accents (cómodos, aún, öğrenci) room to be
+   proof-read against the accent picker. Sans stays for chips, labels and
+   buttons — that contrast is what makes the pairing legible. */
+.t-answer {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 25px;
+  line-height: 1.45;
+  letter-spacing: -0.2px;
+}
 .t-body-l {
   font-size: 17px;
   line-height: 1.55;
@@ -379,6 +394,10 @@ button:hover .lk-arr {
   .t-display-m {
     font-size: 22px;
     line-height: 1.2;
+  }
+  /* Steps down with .t-display-m so the answer never outgrows its prompt. */
+  .t-answer {
+    font-size: 20px;
   }
 }
 

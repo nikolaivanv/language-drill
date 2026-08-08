@@ -125,16 +125,15 @@ export function DictationExercise({
         <Textarea
           id="dictation-answer"
           ref={inputRef}
-          rows={3}
+          // The dictation field is the page's writing surface; `answer` is the
+          // shared display-serif treatment it used to hand-roll inline.
+          variant="answer"
           value={answer}
           spellCheck={false}
           readOnly={isLocked}
           disabled={isLocked}
           onChange={(e) => setAnswer(e.target.value)}
           onKeyDown={submitOnModEnter(handleSubmit)}
-          // The dictation field is the page's writing surface — set it in the
-          // display serif at a larger size (the prototype's transcription look).
-          style={{ fontFamily: 'var(--font-display)', fontSize: 22, lineHeight: 1.5 }}
           className={isLocked ? 'opacity-60' : undefined}
         />
         {isAccentLanguage(language) && (
