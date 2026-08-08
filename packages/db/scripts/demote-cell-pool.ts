@@ -24,9 +24,9 @@
  * Defaults to DRY-RUN; pass --apply to write.
  *
  * Usage:
- *   pnpm demote:pool -- --language TR --cefr A1 --type cloze --grammar-point tr-a1-numbers-ordinals
- *   pnpm demote:pool -- --language TR --cefr A1 --type cloze --grammar-point tr-a1-numbers-ordinals --content-ilike üçüncü
- *   pnpm demote:pool -- --language TR --cefr A1 --type cloze --grammar-point tr-a1-numbers-ordinals --apply
+ *   pnpm demote:pool -- --language TR --cefr A1 --type cloze --grammar-point tr-a1-numbers-ordinals --reason quality
+ *   pnpm demote:pool -- --language TR --cefr A1 --type cloze --grammar-point tr-a1-numbers-ordinals --content-ilike üçüncü --reason quality
+ *   pnpm demote:pool -- --language TR --cefr A1 --type cloze --grammar-point tr-a1-numbers-ordinals --reason quality --apply
  *
  * Required env: DATABASE_URL.
  */
@@ -35,6 +35,7 @@ import { and, eq, inArray, sql } from 'drizzle-orm';
 
 import { createDb } from '../src/client';
 import { exercises } from '../src/schema';
+import { DEMOTION_REASONS, type DemotionReason } from '../src/lib/evidence';
 
 // ---------------------------------------------------------------------------
 // Args
@@ -47,6 +48,7 @@ export type DemoteArgs = {
   grammarPoint: string;
   contentIlike: string | null;
   apply: boolean;
+  reason: DemotionReason;
 };
 
 export function parseDemoteArgs(argv: readonly string[]): DemoteArgs {
@@ -63,6 +65,15 @@ export function parseDemoteArgs(argv: readonly string[]): DemoteArgs {
     throw new Error('--language, --cefr, --type, --grammar-point are required');
   }
 
+  const reason = get('--reason');
+  if (!reason || !(DEMOTION_REASONS as readonly string[]).includes(reason)) {
+    throw new Error(
+      `--reason is required and must be one of: ${DEMOTION_REASONS.join(' | ')}. ` +
+        `It decides whether learners keep credit for attempts on these rows — ` +
+        `'quality' and 'learner-flag' revoke it, 'duplicate' and 'pool-hygiene' keep it.`,
+    );
+  }
+
   return {
     language: language.toUpperCase(),
     cefr: cefr.toUpperCase(),
@@ -70,6 +81,7 @@ export function parseDemoteArgs(argv: readonly string[]): DemoteArgs {
     grammarPoint,
     contentIlike: get('--content-ilike'),
     apply: argv.includes('--apply'),
+    reason: reason as DemotionReason,
   };
 }
 
@@ -123,10 +135,20 @@ async function main(): Promise<void> {
   }
 
   for (const r of rows) {
-    await db.update(exercises).set({ reviewStatus: 'rejected' }).where(eq(exercises.id, r.id));
+    await db
+      .update(exercises)
+      .set({ reviewStatus: 'rejected', demotionReason: args.reason })
+      .where(eq(exercises.id, r.id));
   }
 
-  console.log(`[demote-pool] demoted ${rows.length} rows to 'rejected'.`);
+  console.log(`[demote-pool] demoted ${rows.length} rows to 'rejected' (reason: ${args.reason}).`);
+
+  if (args.reason === 'quality' || args.reason === 'learner-flag') {
+    console.log(
+      '[demote-pool] These attempts no longer count as learner evidence. ' +
+        'Stored mastery is now stale — run `pnpm backfill:mastery --apply` against this database.',
+    );
+  }
 }
 
 // Skip auto-execution when imported by tests.

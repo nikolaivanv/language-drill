@@ -937,7 +937,7 @@ async function resolveExerciseFlagged(
 ): Promise<ResolveOutcome> {
   const setValues = action === 'approve'
     ? { reviewStatus: 'manual-approved' as const, flaggedReasons: null }
-    : { reviewStatus: 'rejected' as const };
+    : { reviewStatus: 'rejected' as const, demotionReason: 'quality' as const };
   try {
     const updated = await db
       .update(exercises)
@@ -949,7 +949,7 @@ async function resolveExerciseFlagged(
     if (action === 'approve' && isUniqueViolation(err)) {
       await db
         .update(exercises)
-        .set({ reviewStatus: 'rejected' as const })
+        .set({ reviewStatus: 'rejected' as const, demotionReason: 'quality' as const })
         .where(and(eq(exercises.id, id), eq(exercises.reviewStatus, 'flagged')));
       return 'demoted';
     }

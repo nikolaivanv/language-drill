@@ -155,7 +155,10 @@ async function applyPlan(db: Db, plan: CleanupPlan): Promise<void> {
   // partial unique index), THEN backfill survivors — so no two indexed rows
   // ever momentarily share a `_dedupKey`.
   for (const id of plan.toDemote) {
-    await db.update(exercises).set({ reviewStatus: 'rejected' }).where(eq(exercises.id, id));
+    await db
+      .update(exercises)
+      .set({ reviewStatus: 'rejected', demotionReason: 'duplicate' })
+      .where(eq(exercises.id, id));
   }
   for (const { id, newKey } of plan.toBackfill) {
     const [existing] = await db

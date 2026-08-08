@@ -365,7 +365,7 @@ export async function tryApprove(
     if (isUniqueViolation(err)) {
       await db
         .update(exercises)
-        .set({ reviewStatus: 'rejected' })
+        .set({ reviewStatus: 'rejected', demotionReason: 'quality' })
         .where(
           and(
             eq(exercises.id, row.id),
@@ -385,7 +385,7 @@ export async function tryApprove(
 export async function rejectRow(db: Db, row: FlaggedRow): Promise<void> {
   await db
     .update(exercises)
-    .set({ reviewStatus: 'rejected' })
+    .set({ reviewStatus: 'rejected', demotionReason: 'quality' })
     .where(
       and(eq(exercises.id, row.id), eq(exercises.reviewStatus, 'flagged')),
     );
