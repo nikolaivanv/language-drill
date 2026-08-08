@@ -88,27 +88,54 @@ export const CELL_TARGET_DEFAULTS: Record<
 export const GIVE_UP_MIN_ATTEMPTS = 2;
 
 /**
+ * Minimum approved exercises a single construction variant should reach before
+ * the cell is considered done. Four is enough for a variant to appear in a
+ * learner's rotation without letting a 6-variant point balloon its cell target.
+ */
+export const MIN_PER_VARIANT = 4;
+
+/**
  * Resolve the generation target for a cell. Pure. Order: an explicit
- * `targetOverride` wins outright; otherwise the `(type, level)` table value (or
- * the `TARGET_PER_CELL` fallback) is raised, if needed, to cover the largest
- * single-axis floor sum in the cell's `coverageSpec`. One approved exercise
+ * `targetOverride` wins outright — but if the point also declares
+ * `constructionVariants`, the override must be large enough to let every
+ * variant reach `MIN_PER_VARIANT`; a too-small override would silently starve
+ * the rarer variants (they'd never accumulate), so this throws at authoring
+ * time instead of under-filling at generation time. Absent an override, the
+ * `(type, level)` table value (or the `TARGET_PER_CELL` fallback) is raised,
+ * if needed, to cover the largest single-axis floor sum in the cell's
+ * `coverageSpec` and the `constructionVariants` floor. One approved exercise
  * realizes one value per axis, so an axis whose floors sum to F needs ≥ F
  * exercises; taking the MAX over axes (never the product) guarantees headroom
  * for the tightest axis without multiplying axes together. Replaces the former
  * person-rotation 1.5× multiplier with exact floor arithmetic.
  */
 export function resolveCellTarget(cell: Cell): number {
+  const variants = cell.grammarPoint.constructionVariants;
+  const variantFloor = variants ? variants.length * MIN_PER_VARIANT : 0;
+
   const override = cell.grammarPoint.targetOverride;
-  if (override !== undefined) return override;
+  if (override !== undefined) {
+    // targetOverride wins outright, so a too-small override would silently
+    // starve variants that can never reach MIN_PER_VARIANT. Fail loudly at
+    // authoring time instead.
+    if (variants && override < variantFloor) {
+      throw new Error(
+        `targetOverride ${override} cannot cover ${variants.length} constructionVariants (needs >= ${variantFloor})`,
+      );
+    }
+    return override;
+  }
+
   const fromTable = CELL_TARGET_DEFAULTS[cell.exerciseType][cell.cefrLevel];
   const base = fromTable ?? TARGET_PER_CELL;
   const spec = cell.grammarPoint.coverageSpec;
-  if (!spec) return base;
   let maxAxisFloorSum = 0;
-  for (const axis of spec.axes) {
-    let sum = 0;
-    for (const floor of Object.values(axis.floors)) sum += (floor as number) ?? 0;
-    if (sum > maxAxisFloorSum) maxAxisFloorSum = sum;
+  if (spec) {
+    for (const axis of spec.axes) {
+      let sum = 0;
+      for (const floor of Object.values(axis.floors)) sum += (floor as number) ?? 0;
+      if (sum > maxAxisFloorSum) maxAxisFloorSum = sum;
+    }
   }
-  return Math.max(base, maxAxisFloorSum);
+  return Math.max(base, maxAxisFloorSum, variantFloor);
 }

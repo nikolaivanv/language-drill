@@ -11,6 +11,7 @@ import type { Cell, CurriculumCefrLevel } from '@language-drill/db';
 
 import {
   CELL_TARGET_DEFAULTS,
+  MIN_PER_VARIANT,
   resolveCellTarget,
 } from './cell-targets';
 import { TARGET_PER_CELL } from './scheduler-decision';
@@ -137,6 +138,54 @@ describe('resolveCellTarget', () => {
     expect(
       resolveCellTarget(makeCell(ExerciseType.CLOZE, CefrLevel.A1, 12)),
     ).toBe(12);
+  });
+});
+
+describe('resolveCellTarget — construction variants', () => {
+  const variantsOf = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({ id: `v-${i}`, directive: `d${i}` }));
+
+  it('raises the target to cover MIN_PER_VARIANT per variant', () => {
+    const target = resolveCellTarget({
+      exerciseType: ExerciseType.CLOZE,
+      cefrLevel: 'B1',
+      grammarPoint: { constructionVariants: variantsOf(20) },
+    } as never);
+    expect(target).toBeGreaterThanOrEqual(20 * MIN_PER_VARIANT);
+  });
+
+  it('leaves the base target alone when the variant floor is lower', () => {
+    const withVariants = resolveCellTarget({
+      exerciseType: ExerciseType.CLOZE,
+      cefrLevel: 'B1',
+      grammarPoint: { constructionVariants: variantsOf(3) },
+    } as never);
+    const without = resolveCellTarget({
+      exerciseType: ExerciseType.CLOZE,
+      cefrLevel: 'B1',
+      grammarPoint: {},
+    } as never);
+    expect(withVariants).toBe(without);
+  });
+
+  it('throws when targetOverride cannot cover the variant floor', () => {
+    expect(() =>
+      resolveCellTarget({
+        exerciseType: ExerciseType.CLOZE,
+        cefrLevel: 'B1',
+        grammarPoint: { targetOverride: 6, constructionVariants: variantsOf(5) },
+      } as never),
+    ).toThrow(/targetOverride 6 cannot cover 5 constructionVariants/);
+  });
+
+  it('accepts a targetOverride that does cover the floor', () => {
+    expect(
+      resolveCellTarget({
+        exerciseType: ExerciseType.CLOZE,
+        cefrLevel: 'B1',
+        grammarPoint: { targetOverride: 20, constructionVariants: variantsOf(5) },
+      } as never),
+    ).toBe(20);
   });
 });
 
