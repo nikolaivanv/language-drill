@@ -108,6 +108,12 @@ Order matters. New points pick up the new rule the moment the Lambda deploys, bu
 
 The backfill (`packages/db/scripts/backfill-mastery.ts`) already exists, is idempotent, recomputes each row from scratch, and reads only `user_exercise_history` — which this change never touches, so the operation is repeatable and recoverable.
 
+> **Gap the plan must close.** The script's dry-run today prints only a row
+> *count* (`[dry-run] Would write N mastery rows …`). It never reads the
+> existing `user_grammar_mastery` values, so it cannot produce the old→new
+> diff that step 3's review gate depends on. Adding that reporting is a
+> prerequisite task, not an optional extra.
+
 ## Blast radius
 
 Everything downstream reads `masteryScore`. In dependency order:
@@ -138,7 +144,7 @@ Everything downstream reads `masteryScore`. In dependency order:
   - the seed table above (at minimum `1.0` and `0.0` at A1/B1/C2, plus the `0.5` fixed point);
   - `evidenceCount === 1` and `confidence === confidenceFor(1)` after one observation (guards against the pseudo-count leaking into evidence);
   - a hinted first observation seeds closer to `NEUTRAL_PRIOR` than an unhinted one;
-- **Expect existing test churn.** The fix touches only the `prev === null` branch, but *any* test whose sequence starts from a fresh point inherits a different first value, so its later expectations shift too. Known affected: the `replayHistory` cases in `update.test.ts`, and in `skill-movements.test.ts` the `evidenceWeight` case (its `p1` seeds `0.775` rather than `0.9` at B2, which may move the `slip`/`steady` assertions) and the ordering case. Each must be **re-derived from the new rule and re-justified** — not merely updated until green, since a mechanically-refreshed expectation can hide a real regression.
+- **Existing test churn — measured, not predicted.** A throwaway application of the change was run against both suites. Exactly **one** test breaks: `update.test.ts` → `'initializes from the first observation'`, which asserts `masteryScore ≈ 0.8` for a first score of `0.8` and now yields `0.6929` at B1. Every other case survives, including all 11 in `skill-movements.test.ts` — the ones that fold from a fresh point are written as *relative* comparisons (`toBeGreaterThan`, band identity) rather than absolute values, so the shifted seed moves both sides equally. When updating that one test, re-derive the expectation from the new rule rather than pasting the observed number, so the assertion still encodes intent.
 - **Regression test** replaying session `ec7dd00f`'s six real rows and asserting the band is no longer `slip`.
 - **Backfill dry-run** against production: report how many points move, the mean and max absolute shift, and the top-20 reshuffle in weakest-first rank order.
 - Full gate before push: `pnpm lint && pnpm typecheck && pnpm test`.
