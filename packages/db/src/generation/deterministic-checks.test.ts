@@ -199,3 +199,106 @@ describe('whole-word TR cloze — R1.5 no harmony-gate regression', () => {
     });
   }
 });
+
+// ---------------------------------------------------------------------------
+// Answer/stem overlap (2026-08-08). Language-agnostic, unlike the TR harmony
+// gate: 38 rows across ES + DE were live in prod with a `correctAnswer` that
+// restated the stem word beside the blank, all approved at 0.85-0.9 by the LLM
+// validator. Certain (multi-word answer) → rejected; suspected (single-word,
+// where adjacent repetition can be a real construction) → flagged.
+// ---------------------------------------------------------------------------
+
+// Real demoted prod rows.
+const OVERLAP_ES = cloze(
+  'No me gusta este abrigo; prefiero ___ del escaparate.',
+  'el del',
+);
+const OVERLAP_DE = cloze('Ich habe ___ Bruder.', 'einen Bruder');
+const OVERLAP_SINGLE = cloze('Mein Vater ist ___ Arzt.', 'Arzt');
+const CLEAN_ES = cloze('Mi batería está casi vacía; voy a usar ___ Ana.', 'la de');
+
+describe('applyDeterministicChecks — answer/stem overlap', () => {
+  it('rejects a multi-word overlap in a NON-Turkish cloze', () => {
+    const out = applyDeterministicChecks(approved(), OVERLAP_ES, Language.ES);
+    expect(out.reviewStatus).toBe('rejected');
+    expect(out.flaggedReasons[0].code).toBe(
+      GenerationReasonCode.AnswerStemOverlap,
+    );
+    // The broken substitution is the evidence an operator needs.
+    expect(out.flaggedReasons[0].detail).toContain(
+      'prefiero el del del escaparate.',
+    );
+  });
+
+  it('rejects regardless of language (DE)', () => {
+    expect(
+      applyDeterministicChecks(approved(), OVERLAP_DE, Language.DE)
+        .reviewStatus,
+    ).toBe('rejected');
+  });
+
+  it('prepends its reason ahead of pre-existing LLM reasons', () => {
+    const llmReason = { code: GenerationReasonCode.Ambiguous };
+    const out = applyDeterministicChecks(
+      approved([llmReason]),
+      OVERLAP_ES,
+      Language.ES,
+    );
+    expect(out.flaggedReasons.map((r) => r.code)).toEqual([
+      GenerationReasonCode.AnswerStemOverlap,
+      GenerationReasonCode.Ambiguous,
+    ]);
+  });
+
+  it('only FLAGS a single-word overlap — adjacent repetition can be real', () => {
+    const out = applyDeterministicChecks(
+      approved(),
+      OVERLAP_SINGLE,
+      Language.DE,
+    );
+    expect(out.reviewStatus).toBe('flagged');
+    expect(out.flaggedReasons.map((r) => r.code)).toEqual([
+      GenerationReasonCode.SuspectedAnswerStemOverlap,
+    ]);
+  });
+
+  it('never upgrades an already-rejected decision on a suspected overlap', () => {
+    const rejected: RoutingDecision = {
+      reviewStatus: 'rejected',
+      flaggedReasons: [{ code: GenerationReasonCode.LowQualityReject }],
+    };
+    expect(
+      applyDeterministicChecks(rejected, OVERLAP_SINGLE, Language.DE)
+        .reviewStatus,
+    ).toBe('rejected');
+  });
+
+  it('passes a clean non-Turkish cloze through untouched', () => {
+    const decision = approved();
+    expect(applyDeterministicChecks(decision, CLEAN_ES, Language.ES)).toEqual(
+      decision,
+    );
+  });
+
+  it('leaves non-cloze content untouched', () => {
+    const translation = {
+      type: ExerciseType.TRANSLATION,
+      instructions: 'Translate.',
+      sourceText: 'I prefer the one from the shop window.',
+      sourceLanguage: Language.EN,
+      targetLanguage: Language.ES,
+      referenceTranslation: 'Prefiero el del escaparate.',
+    } as unknown as ExerciseContent;
+    const decision = approved();
+    expect(
+      applyDeterministicChecks(decision, translation, Language.ES),
+    ).toEqual(decision);
+  });
+
+  it('still applies the TR harmony gate alongside the overlap check', () => {
+    // Overlap check is inert here; the harmony verdict must survive.
+    const out = applyDeterministicChecks(approved(), WRONG_HARMONY, Language.TR);
+    expect(out.reviewStatus).toBe('rejected');
+    expect(out.flaggedReasons[0]).toEqual(HARMONY);
+  });
+});

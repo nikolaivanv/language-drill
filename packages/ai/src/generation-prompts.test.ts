@@ -336,7 +336,11 @@ describe("buildGenerationSystemPrompt", () => {
     // cue is present↔imperfect ambiguous (deja/dejaba) — fixes the
     // es-b1-influence-verbs-infinitive "no me deja dormir por las noches"
     // false-negative on `dejaba`.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-30");
+    // Bumped 2026-08-08 — substitute-back rule: a `correctAnswer` may not
+    // restate the stem word beside the blank ("prefiero ___ del escaparate." /
+    // "el del" → "prefiero el del del escaparate"), and a zero-form target
+    // (zero article) must blank the whole slot including the noun.
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-08");
     // Tense-determinacy rule pinned in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "Tense determinacy on finite-verb blanks",
@@ -416,8 +420,24 @@ describe("buildGenerationSystemPrompt", () => {
     expect(section).toMatch(/do not default/i);
   });
 
-  it("bumps the generation prompt version to 2026-07-30", () => {
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-07-30");
+  it("bumps the generation prompt version to 2026-08-08", () => {
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-08");
+  });
+
+  it("pins the substitute-back rule in the cached template prefix", () => {
+    // Deterministically enforced by `checkClozeOverlap`; the prompt rule exists
+    // so the generator stops burning retry slots on drafts that will be
+    // rejected outright.
+    expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
+      "Substitute your answer back before submitting",
+    );
+    expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
+      "prefiero **el del del** escaparate",
+    );
+    // Zero-form targets: blank the whole slot including the noun.
+    expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
+      'never "Mein Vater ist ___ Arzt."',
+    );
   });
 
   it("adds the conjugation section ONLY for conjugation, absent for other types", async () => {
