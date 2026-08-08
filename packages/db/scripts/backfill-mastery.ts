@@ -61,13 +61,20 @@ async function main() {
       userId: userGrammarMastery.userId,
       grammarPointKey: userGrammarMastery.grammarPointKey,
       masteryScore: userGrammarMastery.masteryScore,
+      confidence: userGrammarMastery.confidence,
     })
     .from(userGrammarMastery);
 
-  const existingByKey = new Map<string, number>();
+  // `confidence` is carried alongside the score because `solid` is a
+  // TWO-condition predicate (see the lost-solid count below); scoring alone
+  // cannot tell whether a point was ever solid to begin with.
+  const existingByKey = new Map<string, { masteryScore: number; confidence: number }>();
   for (const r of existingRows) {
     if (r.userId && r.grammarPointKey && r.masteryScore != null) {
-      existingByKey.set(`${r.userId}:${r.grammarPointKey}`, r.masteryScore);
+      existingByKey.set(`${r.userId}:${r.grammarPointKey}`, {
+        masteryScore: r.masteryScore,
+        confidence: r.confidence ?? 0,
+      });
     }
   }
 
@@ -92,7 +99,13 @@ async function main() {
   }
 
   let upserts = 0;
-  type Shift = { userId: string; grammarPointKey: string; from: number | null; to: number };
+  type Shift = {
+    userId: string;
+    grammarPointKey: string;
+    from: number | null;
+    fromConfidence: number | null;
+    to: number;
+  };
   const shifts: Shift[] = [];
   for (const [k, history] of byUserLang) {
     const [userId] = k.split(' ');
@@ -100,8 +113,14 @@ async function main() {
     const finalStates = replayHistory(history);
     for (const [grammarPointKey, s] of finalStates) {
       upserts += 1;
-      const priorScore = existingByKey.get(`${userId}:${grammarPointKey}`) ?? null;
-      shifts.push({ userId, grammarPointKey, from: priorScore, to: s.masteryScore });
+      const prior = existingByKey.get(`${userId}:${grammarPointKey}`) ?? null;
+      shifts.push({
+        userId,
+        grammarPointKey,
+        from: prior ? prior.masteryScore : null,
+        fromConfidence: prior ? prior.confidence : null,
+        to: s.masteryScore,
+      });
       if (!apply) continue;
       await db
         .insert(userGrammarMastery)
@@ -149,7 +168,15 @@ async function main() {
   // map cell color, solidCount, the readyToAdvance banner, and prereqUnmet on
   // downstream points. This change compresses thin points toward 0.5, so
   // `solid` can only be LOST here, never gained.
-  const lostSolid = changed.filter((s) => s.from >= 0.8 && s.to < 0.8).length;
+  // Both conditions matter: a point scoring >=0.8 with confidence <0.6 was
+  // never `solid`, so dropping below 0.8 costs nothing. Counting on score
+  // alone over-reports — and it over-reports exactly where this change bites,
+  // since confidence >=0.6 needs ~5+ observations while the points that move
+  // most are the thin, low-confidence ones. `confidence` only ever grows with
+  // evidenceCount, so a point that was solid can lose it only via the score.
+  const lostSolid = changed.filter(
+    (s) => s.from >= 0.8 && (s.fromConfidence ?? 0) >= 0.6 && s.to < 0.8,
+  ).length;
   // rank.ts PREREQ_THRESHOLD=0.3 gates whether a point counts as satisfied
   // prerequisite evidence for downstream points.
   const crossedPrereq = changed.filter((s) => (s.from >= 0.3) !== (s.to >= 0.3)).length;
