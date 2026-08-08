@@ -46,11 +46,13 @@ insights.get('/insights/errors', async (c) => {
       occurredAt: errorObservations.occurredAt,
     })
     .from(errorObservations)
+    .innerJoin(exercises, eq(errorObservations.exerciseId, exercises.id))
     .where(
       and(
         eq(errorObservations.userId, userId),
         eq(errorObservations.language, language),
         gte(errorObservations.occurredAt, since),
+        scoringEvidenceFilter(exercises),
       ),
     );
 

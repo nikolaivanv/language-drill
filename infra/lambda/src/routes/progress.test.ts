@@ -481,12 +481,16 @@ describe('GET /progress/radar — review evidence', () => {
 //   1. profile: .from(userLanguageProfiles).where(...).limit(1)
 //   2. theory:  .from(theoryTopics).where(...)   ← NEW (Phase 2)
 //   3. mastery: .from(userGrammarMastery).where(...)
-//   4. errors:  .from(errorObservations).where(...).groupBy(...)
+//   4. errors:  .from(errorObservations).innerJoin(exercises, ...).where(...).groupBy(...)
+//      ← the innerJoin (added for scoringEvidenceFilter) routes this one
+//      through mockInnerJoin → mockWhere instead of mockReviewWhere.
 //
-// We drive each via mockImplementationOnce on mockReviewWhere (the plain
-// `.from().where()` terminal). The profile + theory calls are sequential;
-// mastery and errors run in Promise.all so they consume the 3rd and 4th
-// queued impl.
+// Queries 1-3 are driven via mockImplementationOnce on mockReviewWhere (the
+// plain `.from().where()` terminal); query 4 is driven via mockImplementationOnce
+// on mockWhere (the innerJoin-path terminal), both returning makeChainResult(...)
+// so `.groupBy()` resolves. The profile + theory calls are sequential; mastery
+// and errors run in Promise.all so they consume the 3rd queued mockReviewWhere
+// impl and the 1st queued mockWhere impl respectively.
 // ---------------------------------------------------------------------------
 
 describe('GET /progress/curriculum', () => {
@@ -520,8 +524,8 @@ describe('GET /progress/curriculum', () => {
         },
       ]),
     );
-    // 4. Errors → accusative has ≥2 recent errors
-    mockReviewWhere.mockImplementationOnce(() =>
+    // 4. Errors → accusative has ≥2 recent errors (innerJoin path → mockWhere)
+    mockWhere.mockImplementationOnce(() =>
       makeChainResult([
         { key: 'tr-a1-accusative-definite-object', n: 3, wrongText: null, correction: null },
       ]),
@@ -563,8 +567,8 @@ describe('GET /progress/curriculum', () => {
     mockReviewWhere.mockImplementationOnce(() => makeChainResult([]));
     // 3. No mastery
     mockReviewWhere.mockImplementationOnce(() => makeChainResult([]));
-    // 4. No errors
-    mockReviewWhere.mockImplementationOnce(() => makeChainResult([]));
+    // 4. No errors (innerJoin path → mockWhere)
+    mockWhere.mockImplementationOnce(() => makeChainResult([]));
 
     const res = await app.request('/progress/curriculum?language=TR', undefined, authEnv);
     expect(res.status).toBe(200);
@@ -608,8 +612,8 @@ describe('GET /progress/curriculum', () => {
         },
       ]),
     );
-    // 4. Errors → accusative has ≥2 errors + a sample
-    mockReviewWhere.mockImplementationOnce(() =>
+    // 4. Errors → accusative has ≥2 errors + a sample (innerJoin path → mockWhere)
+    mockWhere.mockImplementationOnce(() =>
       makeChainResult([
         {
           key: 'tr-a1-accusative-definite-object',

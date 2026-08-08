@@ -461,11 +461,13 @@ sessions.get('/sessions/today', async (c) => {
         n: sql<number>`COUNT(*)::int`,
       })
       .from(errorObservations)
+      .innerJoin(exercisesTable, eq(errorObservations.exerciseId, exercisesTable.id))
       .where(
         and(
           eq(errorObservations.userId, userId),
           eq(errorObservations.language, language),
           gte(errorObservations.occurredAt, errorSince),
+          scoringEvidenceFilter(exercisesTable),
         ),
       )
       .groupBy(

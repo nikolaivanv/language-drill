@@ -2752,6 +2752,13 @@ describe('GET /sessions/:id/debrief', () => {
     expect(callArg.sessionRowIds.has('hist-prior-1')).toBe(false);
     expect(callArg.labels.get('es-b1-subjunctive')).toBeDefined();
 
+    // The histRows replay behind skill movements is the one call site in this
+    // route that excludes defect-demoted attempts (scoringEvidenceFilter) —
+    // proves the boundary behaviourally rather than resting on hand-reading
+    // the diff. Contrast the debrief item-list hydration test below, which
+    // must NOT call it.
+    expect(mockScoringEvidenceFilter).toHaveBeenCalled();
+
     // No-numbers contract: every value in every movement is a string, not a number.
     // Also 'from'/'to' raw scores must NOT appear (only banded strings leak out).
     for (const m of body.skillMovements as Array<Record<string, unknown>>) {
@@ -3135,6 +3142,11 @@ describe('review_status non-filter — GET /sessions/today Path A', () => {
     expect(mockApprovedStatusFilter).not.toHaveBeenCalled();
     // Path A doesn't run the UNION-ALL pool sample either.
     expect(mockExecute).not.toHaveBeenCalled();
+    // scoringEvidenceFilter IS called once per /sessions/today request — but
+    // only via the unconditional errorRows query in Query 1's Promise.all,
+    // not via Path A's own hydrate-by-manifest-ID query. If Path A's hydrate
+    // query had also been (wrongly) filtered, this would be 2.
+    expect(mockScoringEvidenceFilter).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -3204,5 +3216,11 @@ describe('review_status non-filter — GET /sessions/:id/debrief', () => {
     expect(itemIds).toContain(FLAGGED_FIXTURE_ID);
     // Debrief hydration is unfiltered — helper not invoked.
     expect(mockApprovedStatusFilter).not.toHaveBeenCalled();
+    // The item-list hydration query is a manifest read (deliberate
+    // non-filter, same as Path A) and this fixture carries no
+    // grammar_point_key, so affectedLabels stays empty and the histRows
+    // skill-movement replay — the one call site that DOES filter — never
+    // runs either.
+    expect(mockScoringEvidenceFilter).not.toHaveBeenCalled();
   });
 });

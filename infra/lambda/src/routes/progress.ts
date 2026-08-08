@@ -203,11 +203,13 @@ progress.get('/progress/curriculum', async (c) => {
         correction: sql<string | null>`(array_agg(${errorObservations.correction} ORDER BY ${errorObservations.occurredAt} DESC))[1]`,
       })
       .from(errorObservations)
+      .innerJoin(exercises, eq(errorObservations.exerciseId, exercises.id))
       .where(
         and(
           eq(errorObservations.userId, userId),
           eq(errorObservations.language, language),
           gte(errorObservations.occurredAt, errorSince),
+          scoringEvidenceFilter(exercises),
         ),
       )
       .groupBy(

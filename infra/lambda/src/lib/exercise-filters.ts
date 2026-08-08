@@ -78,8 +78,11 @@ export function freshFirstOrderBy(userId: string) {
  *
  * Scoring call sites (must use `scoringEvidenceFilter`):
  *   - routes/progress.ts:  GET /progress/radar
+ *   - routes/progress.ts:  GET /progress/curriculum errorRows
  *   - routes/insights.ts:  error observations + attempt counts
+ *   - routes/insights.ts:  GET /insights/errors
  *   - routes/sessions.ts:  GET /sessions/:id/debrief skill movements
+ *   - routes/sessions.ts:  GET /sessions/today errorRows
  *   - email/gather.ts:     weekly summary accuracy
  *
  * Sites that intentionally do NOT filter:
@@ -87,5 +90,13 @@ export function freshFirstOrderBy(userId: string) {
  *   - session debrief item lists — a record of what you did, not a score
  *   - routes/user-export.ts      — portability means the complete record
  *   - serve paths                — already gated by `approvedStatusFilter`
+ *   - routes/sessions.ts:  POST /sessions/:id/complete countRows (sessions.ts:327-333)
+ *     — explicit human ruling, not an oversight. `correct_count` is a record
+ *     of that sitting: what the learner actually did that day, the same
+ *     boundary already drawn for debrief item lists and activity counts.
+ *     And because the value is persisted (`practice_sessions.correct_count`),
+ *     filtering would only change *future* sessions' counts, making old and
+ *     new session summaries mean different things — worse than the status
+ *     quo, not better.
  */
 export { scoringEvidenceFilter };
