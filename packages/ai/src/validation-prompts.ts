@@ -100,7 +100,7 @@ function renderBulletList(items: readonly string[]): string {
 // tr-a1-gore-bence collapse where every "In my opinion" translation was flagged
 // ambiguous (Bence vs. Bana göre) with no way to enumerate. Template edit →
 // Langfuse push per env.
-export const VALIDATION_PROMPT_VERSION = "validate@2026-07-30";
+export const VALIDATION_PROMPT_VERSION = "validate@2026-08-08";
 
 export const VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language exercises for {{language}} learners at CEFR {{cefrLevel}}. Your job is to validate one already-generated exercise that targets the grammar point: {{grammarPointName}}.
 
@@ -155,6 +155,7 @@ Score conservatively — a flagged draft costs a human ~30 seconds of review; an
 4. **levelMatch** (boolean): If a grammar-scope list is provided above, use it as the ground truth for what a {{cefrLevel}} learner has studied; if no list is provided, judge against your general knowledge of {{cefrLevel}} expectations. Set \`false\` only if the exercise REQUIRES a grammatical construction clearly ABOVE the learner's level, or is trivially below {{cefrLevel}}. Do NOT set \`false\` merely because a construction is within or below the learner's scope but is not the target point — anything within or below the learner's scope is fair game. Obligatory morphology inherent to {{language}} is part of the language at every level and is never "above level".
 5. **grammarPointMatch** (boolean): does this actually test {{grammarPointName}}?
    - Set \`false\` when the blank's construction is a different grammar-point key from the cell's declared point, **even when grammatically related**. Example: \`correctAnswer: "da"\` in a \`tr-a1-vowel-harmony\` cell tests locative \`-DA\` (belongs in \`tr-a1-locative\`) — the suffix incidentally obeys vowel harmony but the blank tests locative selection. The grammar-point-key boundary is the rule, not the broader grammar family.
+   - **Multi-construction points.** Many points cover several constructions (the ES impersonal plural covers hearsay \`dicen que…\`, the agentless \`llaman a la puerta\`, the adversity \`me robaron la cartera\`, and the \`uno + 3sg\` generic; the DE purpose point covers both \`um … zu\` and \`damit\`). ANY construction described in the grammar-point description is on-target. Set grammarPointMatch=false only when the draft tests a genuinely DIFFERENT grammar-point key — not merely because it is not the point’s most common pattern, and never because the point’s name happens to quote one exemplar. A draft exercising a rarely-seen construction of the point is exactly what the pool needs; rejecting it re-collapses the pool onto the prototype.
 6. **culturalIssues** (array of strings): stereotyping, sensitive content, exclusion. Empty array when none.
 7. **flaggedReasons** (array of strings): anything else a reviewer should know.
    - Cell over-concentration: when validating a draft for \`tr-a1-vowel-harmony\` (or any grammar-shape cell with multiple surface forms) where the blank tests the plural suffix \`-lAr/-lEr\`, add \`'cell over-concentrated on plural suffix'\`. Soft signal — does not change routing for this draft; aggregates at review time so a >50 % rate surfaces the imbalance.
