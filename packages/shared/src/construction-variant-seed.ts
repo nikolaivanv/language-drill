@@ -34,8 +34,14 @@ export type PickVariantSeedsOptions = {
 /**
  * One variant id per ordinal, most-starved first. NEVER returns null: an
  * unseeded slot would fall back to free generation, which is the frame collapse
- * this picker exists to remove. When every variant is at or over quota the
- * assignment keeps cycling in share order.
+ * this picker exists to remove.
+ *
+ * The non-null guarantee holds without a defensive fallback: the deficits sum
+ * to `sum(max(0, quota_i - coverage_i)) >= sum(quota_i - coverage_i) ==
+ * poolAfterBatch - totalCovered == count` before any picks are made, and each
+ * pick decrements exactly one deficit by 1. After `k < count` picks the sum is
+ * still `>= count - k >= 1`, so some deficit is always strictly positive when
+ * the loop looks for `best` — there is always a variant left to seed.
  */
 export function pickVariantSeeds(opts: PickVariantSeedsOptions): string[] {
   const { variants, coverage, count } = opts;
@@ -63,11 +69,6 @@ export function pickVariantSeeds(opts: PickVariantSeedsOptions): string[] {
       // Strict `>` keeps curriculum order as the tie-break, which makes the
       // whole picker deterministic without hashing.
       if (deficits[i] > deficits[best]) best = i;
-    }
-    if (deficits[best] <= 0) {
-      // Everything is at or over quota (a saturated cell being topped up).
-      // Cycle in share order rather than emitting a null/unseeded slot.
-      best = ordinal % variants.length;
     }
     result.push(variants[best].id);
     deficits[best] -= 1;

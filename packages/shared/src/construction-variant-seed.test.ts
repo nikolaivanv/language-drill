@@ -48,7 +48,12 @@ describe('pickVariantSeeds', () => {
     expect(counts['uno-generic']).toBe(2);
   });
 
-  it('keeps cycling in share order when every variant is over quota', () => {
+  it('keeps ranking by share when every variant has equal absolute coverage', () => {
+    // Equal absolute coverage (500 each) is not equal *relative* coverage: at
+    // 3/1/1/1 shares, hearsay's fair share of the post-batch pool (1002) still
+    // sits far above 500, while the three unweighted variants (334 each) are
+    // already past theirs. Every slot goes to the variant furthest below its
+    // share — hearsay, all four times — not a round-robin cycle.
     const out = pickVariantSeeds({
       variants: VARIANTS,
       coverage: new Map([
@@ -59,8 +64,7 @@ describe('pickVariantSeeds', () => {
       ]),
       count: 4,
     });
-    expect(out).toHaveLength(4);
-    expect(out.every((s) => typeof s === 'string' && s.length > 0)).toBe(true);
+    expect(out).toEqual(['hearsay', 'hearsay', 'hearsay', 'hearsay']);
   });
 
   it('ignores coverage keys that are not declared variants (legacy seedWords)', () => {
