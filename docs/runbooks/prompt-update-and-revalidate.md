@@ -488,3 +488,31 @@ issues.
   --from <pattern-introduction-date> ...`).
 - Big demotion runs (>10% of a cell) deserve a one-line note in the PR
   description: how many rows demoted, total cost, peak cell impact.
+
+---
+
+## 7. Rebuild learner mastery
+
+A quality demotion revokes the learner's credit for attempts on the demoted
+rows, but `user_grammar_mastery` is stored state — it keeps the old values
+until it is replayed. The read-time surfaces (radar, coach, debrief, weekly
+email) re-derive per request and need no action.
+
+```bash
+pnpm backfill:mastery              # dry-run: prints how many rows would change
+pnpm backfill:mastery --apply
+```
+
+Run it against every environment whose pool you demoted in. Skip only if
+the demotion used `--reason duplicate` or `--reason pool-hygiene` — those
+keep counting as evidence, so mastery is unaffected.
+
+This can also **delete** rows, not just rewrite them: if every attempt a
+learner ever made on a grammar point turns out to have been on an exercise
+you just demoted for `quality` or `learner-flag`, the replay produces no
+surviving evidence for that `(user, language, grammarPointKey)` triple, and
+the stale `user_grammar_mastery` row is deleted rather than left showing a
+score nothing will ever recompute. The dry-run output reports upsert and
+delete counts separately, so check both before applying. If a delete looks
+wrong, `--include-demoted` is the rollback path — it restores the
+pre-backfill behaviour (all attempts count, nothing gets deleted).
