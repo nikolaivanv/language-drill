@@ -292,14 +292,17 @@ git commit -m "feat(curriculum): add constructionVariants field and invariant 9i
 ### Task 2: The deficit-ranked variant picker (pure)
 
 **Files:**
-- Create: `packages/db/src/generation/construction-variant-seed.ts`
-- Create: `packages/db/src/generation/construction-variant-seed.test.ts`
+- Create: `packages/shared/src/construction-variant-seed.ts`
+- Create: `packages/shared/src/construction-variant-seed.test.ts`
+- Modify: `packages/shared/src/index.ts` (re-export)
 
 **Interfaces:**
-- Consumes: `ConstructionVariant` from `@language-drill/shared` (Task 1).
+- Consumes: `ConstructionVariant` from `./curriculum-types` (Task 1).
 - Produces: `pickVariantSeeds(opts: PickVariantSeedsOptions): string[]` where
   `PickVariantSeedsOptions = { variants: readonly ConstructionVariant[]; coverage: ReadonlyMap<string, number>; count: number }`.
-  Returns exactly `count` variant ids, never `null`. Task 3 calls it.
+  Returns exactly `count` variant ids, never `null`. Tasks 3 and 7 both import it from `@language-drill/shared`.
+
+**Why `packages/shared` and not `packages/db`** (ruling, 2026-08-08): the picker is pure and its only dependency is `ConstructionVariant`, which already lives in shared. Both `packages/db` and `packages/ai` import shared, so a single home removes the duplication that would otherwise be forced by the rule that `packages/ai` must never import `@language-drill/db`. It does NOT live beside `seed-picker.ts` in db, despite the naming similarity.
 
 **Why no cell target is passed:** quotas are computed against `totalCovered + count`, which self-normalizes toward the declared shares as the pool grows. `resolveCellTarget` lives in `@language-drill/lambda`, and `packages/db` must not depend on it.
 
@@ -307,7 +310,7 @@ git commit -m "feat(curriculum): add constructionVariants field and invariant 9i
 
 - [ ] **Step 1: Write the failing tests**
 
-Create `packages/db/src/generation/construction-variant-seed.test.ts`:
+Create `packages/shared/src/construction-variant-seed.test.ts`:
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -399,19 +402,21 @@ describe('pickVariantSeeds', () => {
 - [ ] **Step 2: Run the tests to verify they fail**
 
 ```bash
-pnpm --filter @language-drill/db test -- construction-variant-seed.test.ts
+pnpm --filter @language-drill/shared test -- construction-variant-seed.test.ts
 ```
 
 Expected: FAIL — "Failed to resolve import ./construction-variant-seed".
 
 - [ ] **Step 3: Write the implementation**
 
-Create `packages/db/src/generation/construction-variant-seed.ts`:
+Create `packages/shared/src/construction-variant-seed.ts`:
 
 ```ts
 /**
- * packages/db — Deficit-ranked picker for construction-variant seeding
- * (construction variants, 2026-08-08 spec).
+ * packages/shared — Deficit-ranked picker for construction-variant seeding
+ * (construction variants, 2026-08-08 spec). Lives in shared, not db, because
+ * `packages/ai`'s eval harness needs it too and may never import
+ * `@language-drill/db`.
  *
  * Unlike `pickSeeds` / `pickTargetSeeds`, whose band entries are one-shot
  * identities excluded once used, a construction variant is a BUCKET that needs
@@ -428,7 +433,7 @@ Create `packages/db/src/generation/construction-variant-seed.ts`:
  * Pure function — no I/O. Deterministic: identical inputs, identical output.
  */
 
-import type { ConstructionVariant } from '@language-drill/shared';
+import type { ConstructionVariant } from './curriculum-types';
 
 export type PickVariantSeedsOptions = {
   /** The point's declared variants, in curriculum order (ties break on it). */
@@ -485,20 +490,29 @@ export function pickVariantSeeds(opts: PickVariantSeedsOptions): string[] {
 }
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [ ] **Step 4: Re-export from the package index**
 
-```bash
-pnpm --filter @language-drill/db test -- construction-variant-seed.test.ts
+Add to `packages/shared/src/index.ts`, following whatever convention that file already uses for its other modules:
+
+```ts
+export * from './construction-variant-seed';
 ```
 
-Expected: PASS, 7 tests green.
+- [ ] **Step 5: Run the tests to verify they pass**
 
-- [ ] **Step 5: Commit**
+```bash
+pnpm --filter @language-drill/shared test -- construction-variant-seed.test.ts
+pnpm --filter @language-drill/shared build
+```
+
+Expected: PASS, 7 tests green. The build is required so `packages/db` and `packages/ai` resolve the new export through shared's `dist` in later tasks.
+
+- [ ] **Step 6: Commit**
 
 ```bash
 git branch --show-current   # must print feat/construction-variants
-git add packages/db/src/generation/construction-variant-seed.ts packages/db/src/generation/construction-variant-seed.test.ts
-git commit -m "feat(generation): add deficit-ranked construction-variant picker"
+git add packages/shared/src/construction-variant-seed.ts packages/shared/src/construction-variant-seed.test.ts packages/shared/src/index.ts
+git commit -m "feat(shared): add deficit-ranked construction-variant picker"
 ```
 
 ---
@@ -510,7 +524,7 @@ git commit -m "feat(generation): add deficit-ranked construction-variant picker"
 - Test: `packages/db/src/generation/run-one-cell.test.ts`
 
 **Interfaces:**
-- Consumes: `pickVariantSeeds` (Task 2), `GrammarPoint.constructionVariants` (Task 1).
+- Consumes: `pickVariantSeeds` from `@language-drill/shared` (Task 2), `GrammarPoint.constructionVariants` (Task 1).
 - Produces: `seedKindFor` may now return `'construction-variants'`; `loadVariantCoverage(db, cell): Promise<Map<string, number>>`. Task 6 relies on nothing here; Task 7 re-implements the seeding inline for the eval harness.
 
 **Note on `priorSeeds`:** the `'construction-variants'` kind deliberately does NOT join the `fetchPriorSeeds` exclude group. That set exists to stop one-shot identities being re-proposed; excluding a variant after one use is exactly the stall this design avoids. Coverage arrives through `loadVariantCoverage` instead.
@@ -674,10 +688,10 @@ In `buildSeedWords`, immediately after the `if (kind === 'vocab-target') { … }
   }
 ```
 
-Add the import at the top of the file:
+Add the import at the top of the file (the picker lives in shared, not beside `seed-picker.ts`):
 
 ```ts
-import { pickVariantSeeds } from './construction-variant-seed';
+import { pickVariantSeeds } from '@language-drill/shared';
 ```
 
 - [ ] **Step 6: Confirm the `priorSeeds` routing needs no change**
@@ -1085,10 +1099,12 @@ git commit -m "feat(generation): size cell targets to the construction-variant f
 - Test: `packages/ai/scripts/eval-gen-run.test.ts`
 
 **Interfaces:**
-- Consumes: `pickVariantSeeds` — but `packages/ai` may NOT import `@language-drill/db`. Copy the 30-line pure function into `packages/ai/scripts/eval-gen-run.ts` as a local helper named `pickVariantSeedsForEval`, with a comment pointing at `packages/db/src/generation/construction-variant-seed.ts` as the source of truth. Duplication is the correct call here: the alternative is a package dependency that breaks CI.
-- Produces: `ArmStats.variantCounts: Record<string, number>`; `GenEvalSummary.variantDeltas: Record<string, { baseline: number; candidate: number }>`.
+- Consumes: `pickVariantSeeds` from `@language-drill/shared` (Task 2) — imported, NOT copied. `packages/ai` already depends on shared; it is only `@language-drill/db` that it may never import.
+- Produces: `ArmStats.variantCounts: Record<string, number>`; `GenEvalSummary.variantDeltas: Record<string, { baseline: number; candidate: number }>`; a per-arm `seedConstructionVariants: boolean` on `GenCellArmExecutorParams`.
 
 **Why this task is not optional:** `makeRealArmExecutor` builds its `GenerationSpec` with no `seedWords` (L469), so today every eval draft generates unseeded. Without this task an A/B on a variant point would compare two identical unseeded arms and show no movement — the run would look like a clean negative result while measuring nothing.
+
+**Why the arm-level switch** (ruling, 2026-08-08): if BOTH arms seed variants, the A/B is degenerate — same prompt source, same seeding, byte-identical runs, zero delta by construction. The baseline arm must reproduce today's real behaviour (unseeded) and the candidate arm the new one (variant-seeded), so the measured delta is exactly the change under test.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1112,14 +1128,19 @@ describe('eval-gen construction-variant seeding', () => {
     ],
   };
 
-  it('assigns a variant to every draft ordinal', () => {
-    const seeds = pickVariantSeedsForEval(grammarPoint.constructionVariants, 5);
+  it('seeds a variant per ordinal when the arm has seeding enabled', () => {
+    const seeds = seedWordsForArm(grammarPoint, 5, true);
     expect(seeds).toHaveLength(5);
     expect(new Set(seeds)).toEqual(new Set(['hearsay', 'adversity']));
   });
 
-  it('returns no seeds for a point without variants', () => {
-    expect(pickVariantSeedsForEval(undefined, 5)).toBeUndefined();
+  it('seeds nothing when the arm has seeding disabled (baseline arm)', () => {
+    expect(seedWordsForArm(grammarPoint, 5, false)).toBeUndefined();
+  });
+
+  it('seeds nothing for a point without variants', () => {
+    expect(seedWordsForArm({ ...grammarPoint, constructionVariants: undefined }, 5, true))
+      .toBeUndefined();
   });
 
   it('counts realized variants per arm', () => {
@@ -1141,65 +1162,55 @@ Match `computeArmStats`'s real name and signature from the neighbouring tests in
 pnpm --filter @language-drill/ai test -- eval-gen-run.test.ts
 ```
 
-Expected: FAIL — `pickVariantSeedsForEval` is not defined.
+Expected: FAIL — `seedWordsForArm` is not defined.
 
-- [ ] **Step 3: Add the local seeder**
+- [ ] **Step 3: Add the arm seeder**
 
-In `packages/ai/scripts/eval-gen-run.ts`:
+In `packages/ai/scripts/eval-gen-run.ts`, importing the picker from shared (do NOT re-implement it):
 
 ```ts
+import { pickVariantSeeds, type GrammarPoint } from "@language-drill/shared";
+
 /**
- * Eval-local copy of `pickVariantSeeds`
- * (packages/db/src/generation/construction-variant-seed.ts — the source of
- * truth). Duplicated rather than imported because `packages/ai` must never
- * depend on `@language-drill/db`: that import passes locally and fails CI with
- * TS2307. The eval has no live pool, so coverage is empty and the assignment
- * reduces to a share-weighted round robin.
+ * Per-ordinal seeds for one eval arm. The BASELINE arm passes
+ * `seedConstructionVariants: false` to reproduce today's unseeded behaviour;
+ * the CANDIDATE arm passes true. Without that asymmetry both arms would render
+ * the identical prompt and the A/B would report a zero delta by construction.
+ *
+ * The eval has no live pool, so coverage is empty and `pickVariantSeeds`
+ * reduces to a share-weighted round robin over the point's variants.
  */
-export function pickVariantSeedsForEval(
-  variants: readonly ConstructionVariant[] | undefined,
-  count: number,
+export function seedWordsForArm(
+  grammarPoint: GrammarPoint,
+  draftsPerCell: number,
+  seedConstructionVariants: boolean,
 ): string[] | undefined {
-  if (!variants || variants.length === 0 || count <= 0) return undefined;
-  const totalShare = variants.reduce((sum, v) => sum + (v.share ?? 1), 0);
-  const deficits = variants.map((v) => (count * (v.share ?? 1)) / totalShare);
-  const result: string[] = [];
-  for (let ordinal = 0; ordinal < count; ordinal++) {
-    let best = 0;
-    for (let i = 1; i < variants.length; i++) {
-      if (deficits[i] > deficits[best]) best = i;
-    }
-    if (deficits[best] <= 0) best = ordinal % variants.length;
-    result.push(variants[best].id);
-    deficits[best] -= 1;
-  }
-  return result;
+  if (!seedConstructionVariants) return undefined;
+  const variants = grammarPoint.constructionVariants;
+  if (!variants || variants.length === 0) return undefined;
+  return pickVariantSeeds({ variants, coverage: new Map(), count: draftsPerCell });
 }
 ```
 
-- [ ] **Step 4: Pass the seeds into the arm's `GenerationSpec`**
+- [ ] **Step 4: Thread the flag through the arm executor**
 
-In `makeRealArmExecutor`, add to the spec literal (after `batchSeed`):
-
-```ts
-      seedWords: pickVariantSeedsForEval(
-        grammarPoint.constructionVariants,
-        draftsPerCell,
-      ),
-```
-
-- [ ] **Step 5: Record the realized variant per draft**
-
-Add `variantId?: string` to `DraftOutcome`, and in the draft loop of `makeRealArmExecutor`:
+Add `seedConstructionVariants: boolean` to `GenCellArmExecutorParams` (~L404). In `makeRealArmExecutor`, destructure it and compute the seeds once:
 
 ```ts
-    const variantSeeds = pickVariantSeedsForEval(
-      grammarPoint.constructionVariants,
+    const variantSeeds = seedWordsForArm(
+      grammarPoint,
       draftsPerCell,
+      seedConstructionVariants,
     );
 ```
 
-then when pushing each outcome, include `variantId: variantSeeds?.[index]` (the loop needs an index — convert `for (const draft of batch.drafts)` to `batch.drafts.entries()`).
+Add `seedWords: variantSeeds,` to the `GenerationSpec` literal (after `batchSeed`).
+
+At the orchestrator call sites, pass `false` for the baseline arm and `true` for the candidate arm.
+
+- [ ] **Step 5: Record the realized variant per draft**
+
+Add `variantId?: string` to `DraftOutcome`. When pushing each outcome, include `variantId: variantSeeds?.[index]` — the loop needs an index, so convert `for (const draft of batch.drafts)` to iterate `batch.drafts.entries()`.
 
 Add `variantCounts: Record<string, number>` to `ArmStats` and fold it in the stats function:
 
@@ -1625,7 +1636,7 @@ pnpm --filter @language-drill/ai eval:gen \
   --runName construction-variants-2026-08-08
 ```
 
-Both arms are `repo` because the change is in the **user** prompt and the curriculum, not in a swappable system-prompt source — the arms differ only in whether variants are seeded, which the candidate arm now does automatically. If both arms come out identical, that is the signal that Task 7's seeding is not actually reaching the spec; investigate before trusting the result.
+Both arms are `repo` because the change is in the **user** prompt and the curriculum, not in a swappable system-prompt source. The arms differ only in Task 7's `seedConstructionVariants` flag: baseline `false` (today's unseeded behaviour), candidate `true`. If the two arms come out identical, that flag is not reaching the spec — investigate before trusting the result, because identical arms mean the run measured nothing.
 
 - [ ] **Step 5: Read the result and decide**
 
