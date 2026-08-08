@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import type { DebriefResponse } from '@language-drill/api-client';
+import type { SkillMovement } from '@language-drill/shared';
 import { DebriefHeader } from '../debrief-header';
 
 // ---------------------------------------------------------------------------
@@ -26,42 +27,59 @@ function makeDebrief(overrides: Partial<DebriefResponse> = {}): DebriefResponse 
 }
 
 // ---------------------------------------------------------------------------
-// Title varies by accuracy tier (Req 3.2–3.4)
+// Title + subline vary by skill movement (movement-summary.ts)
 // ---------------------------------------------------------------------------
 
-describe('DebriefHeader — title by accuracy tier', () => {
-  it('renders "nice work." for accuracy >= 0.8 (high tier)', () => {
-    render(<DebriefHeader debrief={makeDebrief({ correctCount: 5, attemptedCount: 5 })} />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('nice work.');
+const mv = (band: SkillMovement['band'], key: string): SkillMovement => ({
+  grammarPointKey: key,
+  label: `Point ${key}`,
+  band,
+  confidence: 'high',
+});
+
+describe('DebriefHeader — movement title', () => {
+  it('renders the gained title when a skill gained', () => {
+    render(<DebriefHeader debrief={makeDebrief({ skillMovements: [mv('gain', 'a')] })} />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('solid session.');
+    expect(screen.getByText('one skill gained · nothing slipped')).toBeInTheDocument();
   });
 
-  it('renders "nice work." at the 0.8 boundary (8 of 10)', () => {
-    render(<DebriefHeader debrief={makeDebrief({ correctCount: 8, attemptedCount: 10, exerciseCount: 10 })} />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('nice work.');
+  it('renders the slipped title when a skill slipped with no gain', () => {
+    render(<DebriefHeader debrief={makeDebrief({ skillMovements: [mv('slip', 'a')] })} />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('worth another look.');
   });
 
-  it('renders "good attempt." for 0.5 <= accuracy < 0.8 (mid tier)', () => {
-    render(<DebriefHeader debrief={makeDebrief({ correctCount: 3, attemptedCount: 5 })} />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('good attempt.');
+  it('renders the none title when nothing was graded', () => {
+    render(<DebriefHeader debrief={makeDebrief({ skillMovements: [] })} />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('session done.');
+  });
+});
+
+describe('DebriefHeader — factual line', () => {
+  it('renders the item count without a skipped clause at zero', () => {
+    render(<DebriefHeader debrief={makeDebrief({ exerciseCount: 5, skippedCount: 0 })} />);
+    expect(screen.getByText('5 items')).toBeInTheDocument();
   });
 
-  it('renders "good attempt." at the 0.5 boundary (5 of 10)', () => {
-    render(<DebriefHeader debrief={makeDebrief({ correctCount: 5, attemptedCount: 10, exerciseCount: 10 })} />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('good attempt.');
+  it('appends the skipped clause when skippedCount > 0', () => {
+    render(<DebriefHeader debrief={makeDebrief({ exerciseCount: 5, skippedCount: 2 })} />);
+    expect(screen.getByText('5 items · 2 skipped')).toBeInTheDocument();
   });
+});
 
-  it('renders "back next time?" for accuracy < 0.5 (low tier)', () => {
-    render(<DebriefHeader debrief={makeDebrief({ correctCount: 1, attemptedCount: 5 })} />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('back next time?');
-  });
-
-  it('renders "back next time?" when attemptedCount === 0', () => {
-    render(<DebriefHeader debrief={makeDebrief({
-      correctCount: 0,
-      attemptedCount: 0,
-      skippedCount: 5,
-    })} />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('back next time?');
+describe('DebriefHeader — no accuracy percentage', () => {
+  // The regression guard for this change: the header must never again put a
+  // percentage next to a movement verdict.
+  it('renders no percent sign, whatever the counts', () => {
+    const { container } = render(
+      <DebriefHeader
+        debrief={makeDebrief({
+          correctCount: 5, attemptedCount: 5, exerciseCount: 5,
+          skillMovements: [mv('slip', 'a')],
+        })}
+      />,
+    );
+    expect(container.textContent).not.toContain('%');
   });
 });
 
@@ -98,63 +116,6 @@ describe('DebriefHeader — duration formatting', () => {
       <DebriefHeader debrief={makeDebrief({ durationSeconds: -10 })} />,
     );
     expect(container.textContent).toContain('session done · 0:00');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Body line — "you got X of Y · accuracy Z%[ · N skipped]" (Req 3.1, 3.5)
-// ---------------------------------------------------------------------------
-
-describe('DebriefHeader — body line', () => {
-  it('renders "you got 4 of 5 · accuracy 80%" for a 4/5 attempt', () => {
-    const { container } = render(
-      <DebriefHeader debrief={makeDebrief({ correctCount: 4, attemptedCount: 5, exerciseCount: 5, skippedCount: 0 })} />,
-    );
-    expect(container.textContent).toContain('you got 4 of 5');
-    expect(container.textContent).toContain('accuracy 80%');
-    // No skipped suffix when skippedCount === 0
-    expect(container.textContent).not.toContain('skipped');
-  });
-
-  it('appends " · N skipped" when skippedCount > 0', () => {
-    const { container } = render(
-      <DebriefHeader debrief={makeDebrief({
-        correctCount: 2,
-        attemptedCount: 3,
-        exerciseCount: 5,
-        skippedCount: 2,
-      })} />,
-    );
-    expect(container.textContent).toContain('you got 2 of 5');
-    expect(container.textContent).toContain('accuracy 67%');
-    expect(container.textContent).toContain('2 skipped');
-  });
-
-  it('renders accuracy as "—" when attemptedCount === 0', () => {
-    const { container } = render(
-      <DebriefHeader debrief={makeDebrief({
-        correctCount: 0,
-        attemptedCount: 0,
-        exerciseCount: 5,
-        skippedCount: 5,
-      })} />,
-    );
-    expect(container.textContent).toContain('accuracy —');
-    expect(container.textContent).toContain('5 skipped');
-  });
-
-  it('rounds accuracy via Math.round (e.g., 7/10 → 70%)', () => {
-    const { container } = render(
-      <DebriefHeader debrief={makeDebrief({ correctCount: 7, attemptedCount: 10, exerciseCount: 10 })} />,
-    );
-    expect(container.textContent).toContain('accuracy 70%');
-  });
-
-  it('rounds accuracy via Math.round (e.g., 1/3 ≈ 33%)', () => {
-    const { container } = render(
-      <DebriefHeader debrief={makeDebrief({ correctCount: 1, attemptedCount: 3, exerciseCount: 3 })} />,
-    );
-    expect(container.textContent).toContain('accuracy 33%');
   });
 });
 
