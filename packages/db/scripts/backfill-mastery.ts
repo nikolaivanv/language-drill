@@ -3,12 +3,13 @@
 // rule the live submit path uses. Idempotent — recomputes each row from
 // scratch. Dry-run by default; pass --apply to write.
 //
-//   pnpm backfill:mastery [--apply] [--user=<id>] [--language=ES|DE|TR|EN]
+//   pnpm backfill:mastery [--apply] [--user=<id>] [--language=ES|DE|TR|EN] [--include-demoted]
 import { and, asc, eq, isNotNull } from 'drizzle-orm';
 import { CefrLevel } from '@language-drill/shared';
 import { createDb } from '../src/client';
 import { exercises, userExerciseHistory, userGrammarMastery } from '../src/schema';
 import { replayHistory, type HistoryRow } from '../src/mastery/update';
+import { scoringEvidenceFilter } from '../src/lib/evidence';
 
 function arg(name: string): string | undefined {
   const hit = process.argv.find((a) => a.startsWith(`--${name}=`));
@@ -17,6 +18,11 @@ function arg(name: string): string | undefined {
 const apply = process.argv.includes('--apply');
 const userFilter = arg('user');
 const languageFilter = arg('language');
+// Attempts on exercises later demoted for a defect are excluded by default —
+// the learner was marked down for the item's fault. `--include-demoted`
+// restores the pre-2026-08 behaviour and is the rollback path: re-running with
+// it rewrites mastery back to the unfiltered values.
+const includeDemoted = process.argv.includes('--include-demoted');
 
 const isCefr = (v: string | null): v is CefrLevel =>
   v != null && (Object.values(CefrLevel) as string[]).includes(v);
@@ -38,6 +44,7 @@ async function main() {
   ];
   if (userFilter) where.push(eq(userExerciseHistory.userId, userFilter));
   if (languageFilter) where.push(eq(exercises.language, languageFilter));
+  if (!includeDemoted) where.push(scoringEvidenceFilter(exercises));
 
   const rows = await db
     .select({
@@ -110,7 +117,8 @@ async function main() {
 
   console.log(
     `${apply ? 'Wrote' : '[dry-run] Would write'} ${upserts} mastery rows ` +
-      `across ${byUserLang.size} (user,language) groups from ${rows.length} history rows.`,
+      `across ${byUserLang.size} (user,language) groups from ${rows.length} history rows ` +
+      `(${includeDemoted ? 'including' : 'excluding'} attempts on defect-demoted exercises).`,
   );
   process.exit(0);
 }

@@ -16,7 +16,7 @@ import { rankPlanCandidates, reasonFor, type PointMastery, type RankContext } fr
 import { buildRankContext } from '../lib/mastery/rank-context';
 import { computeSkillMovements, type SkillHistoryRow } from '../lib/debrief/skill-movements.js';
 import { db } from '../db';
-import { approvedStatusFilter, audioReadyFilter, freshFirstOrderBy } from '../lib/exercise-filters';
+import { approvedStatusFilter, audioReadyFilter, freshFirstOrderBy, scoringEvidenceFilter } from '../lib/exercise-filters';
 import { mergeSessionRows } from '../lib/session-selection';
 import { resolveTargetedDifficulty } from '../lib/targeted-difficulty';
 import { presignAudioUrl } from '../lib/audio-url';
@@ -1119,6 +1119,7 @@ sessions.get('/sessions/:id/debrief', async (c) => {
           isNotNull(userExerciseHistory.score),
           isNotNull(userExerciseHistory.evaluatedAt),
           isNotNull(exercisesTable.difficulty),
+          scoringEvidenceFilter(exercisesTable),
         ),
       );
     const rows: SkillHistoryRow[] = histRows.map((r) => ({

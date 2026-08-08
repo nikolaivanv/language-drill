@@ -154,11 +154,13 @@ const mockAudioReadyFilter = vi.fn((table: unknown) => ({
   table,
 }));
 const mockFreshFirstOrderBy = vi.fn((userId: string) => ({ __mockToken: 'fresh-first-order-by', userId }));
+const mockScoringEvidenceFilter = vi.fn((table: unknown) => ({ __mockToken: 'scoring-evidence-filter', table }));
 vi.mock('../lib/exercise-filters', () => ({
   APPROVED_STATUSES: ['auto-approved', 'manual-approved'] as const,
   approvedStatusFilter: (table: unknown) => mockApprovedStatusFilter(table),
   audioReadyFilter: (table: unknown) => mockAudioReadyFilter(table),
   freshFirstOrderBy: (userId: string) => mockFreshFirstOrderBy(userId),
+  scoringEvidenceFilter: (table: unknown) => mockScoringEvidenceFilter(table),
 }));
 
 // presignAudioUrl hits the AWS SDK and is env-gated (returns null when

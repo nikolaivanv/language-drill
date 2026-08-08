@@ -190,6 +190,11 @@ vi.mock('@language-drill/db', () => ({
   curriculumOrderOf: (key: string) => TR_FIXTURE_ORDER.get(key) ?? 0,
   // Phase 2: compatibleTypes — stub returns cloze+translation for all fixture points
   compatibleTypes: (_p: unknown) => ['cloze', 'translation'],
+  // scoringEvidenceFilter is a WHERE-clause predicate; the query chain below is
+  // entirely mocked (rows come from mockWhere/mockReviewWhere regardless of the
+  // WHERE argument), so a stub token is enough — it only needs to be a
+  // non-undefined value that real drizzle-orm's `and()` accepts.
+  scoringEvidenceFilter: (_table: unknown) => ({ __mockToken: 'scoring-evidence-filter' }),
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

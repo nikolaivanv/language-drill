@@ -2,6 +2,7 @@ import {
   userExerciseHistory,
   userGrammarMastery,
   exercises,
+  scoringEvidenceFilter,
   type Db,
 } from '@language-drill/db';
 import { and, eq, gte, lt, isNotNull } from 'drizzle-orm';
@@ -34,6 +35,7 @@ export async function gatherSummary(
         gte(userExerciseHistory.evaluatedAt, start),
         lt(userExerciseHistory.evaluatedAt, end),
         isNotNull(userExerciseHistory.evaluatedAt),
+        scoringEvidenceFilter(exercises),
       ),
     );
 
