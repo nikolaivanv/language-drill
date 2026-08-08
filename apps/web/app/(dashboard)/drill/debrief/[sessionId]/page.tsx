@@ -6,7 +6,6 @@ import {
   createAuthenticatedFetch,
   useSessionDebrief,
 } from '@language-drill/api-client';
-import { accuracyTier } from '../../../../../lib/drill/accuracy-tier';
 import { track } from '../../../../../lib/analytics/track';
 import { DebriefHeader } from '../_components/debrief-header';
 import { SkillMovementsPanel } from '../_components/skill-movements-panel';
@@ -75,12 +74,7 @@ export default function DebriefPage({ params }: DebriefPageProps) {
             ))}
           </div>
 
-          <DebriefFooter
-            tier={accuracyTier(
-              query.data.correctCount,
-              query.data.attemptedCount,
-            )}
-          />
+          <DebriefFooter />
         </>
       )}
     </div>

@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '../../../../../components/ui';
-import type { AccuracyTier } from '../../../../../lib/drill/accuracy-tier';
 
 // ---------------------------------------------------------------------------
 // DebriefFooter — three-action row at the bottom of the debrief page.
@@ -14,17 +13,9 @@ import type { AccuracyTier } from '../../../../../lib/drill/accuracy-tier';
 //
 // Mobile (≤760px): stacked column — primary first, ghost second,
 //   then the link centered below.
-//
-// The `tier` prop is accepted now so future copy variants (e.g. a celebrate
-// CTA on high tier) can land without a breaking signature change.
 // ---------------------------------------------------------------------------
 
-export interface DebriefFooterProps {
-  // Reserved for future tier-keyed copy variants.
-  tier: AccuracyTier;
-}
-
-export function DebriefFooter(_props: DebriefFooterProps) {
+export function DebriefFooter() {
   const router = useRouter();
 
   return (

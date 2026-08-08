@@ -150,9 +150,10 @@ describe('DebriefPage', () => {
 
       renderPage();
 
-      // Header — tier-keyed display title (4/5 → 80% → high tier → "nice work.")
+      // Header — movement-keyed display title. This fixture carries no
+      // skillMovements, so the session reports as ungraded.
       expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent(
-        'nice work.',
+        'session done.',
       );
 
       // No tab switcher in the DOM.
