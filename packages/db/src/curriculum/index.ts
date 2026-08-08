@@ -1,4 +1,9 @@
-import { COVERAGE_AXIS_VALUES, Language, type LearningLanguage } from '@language-drill/shared';
+import {
+  COVERAGE_AXIS_VALUES,
+  Language,
+  MIN_PER_VARIANT,
+  type LearningLanguage,
+} from '@language-drill/shared';
 
 import deCurriculum, { CURRICULUM_VERSION_DE } from './de';
 import esCurriculum, { CURRICULUM_VERSION_ES } from './es';
@@ -337,6 +342,19 @@ export function assertCurriculumInvariants(
         if (variant.share !== undefined && !(variant.share > 0)) {
           throw new Error(
             `Curriculum invariant violated: '${entry.key}' constructionVariant '${variant.id}' share must be > 0`,
+          );
+        }
+      }
+      // targetOverride, when present alongside constructionVariants, must be
+      // large enough for every variant to reach MIN_PER_VARIANT. Caught here
+      // (authoring time) rather than in resolveCellTarget (scheduler-time,
+      // uncaught, runs for every cell in the nightly loop) so a misconfigured
+      // point fails CI instead of aborting the whole scheduling run.
+      if (entry.targetOverride !== undefined) {
+        const requiredMin = entry.constructionVariants.length * MIN_PER_VARIANT;
+        if (entry.targetOverride < requiredMin) {
+          throw new Error(
+            `Curriculum invariant violated: '${entry.key}' has targetOverride ${entry.targetOverride} but needs >= ${requiredMin} to cover ${entry.constructionVariants.length} constructionVariants (MIN_PER_VARIANT=${MIN_PER_VARIANT})`,
           );
         }
       }

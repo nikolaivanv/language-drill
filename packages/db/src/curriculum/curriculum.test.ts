@@ -575,6 +575,48 @@ describe('constructionVariants invariants', () => {
       );
     }
   });
+
+  it('rejects a targetOverride too small to cover the variant floor (MIN_PER_VARIANT)', () => {
+    // 5 variants * MIN_PER_VARIANT (4) = 20; an override of 6 can't cover it.
+    expect(() =>
+      assertCurriculumInvariants([
+        {
+          ...base,
+          targetOverride: 6,
+          constructionVariants: [
+            { id: 'a-id', directive: 'x' },
+            { id: 'b-id', directive: 'y' },
+            { id: 'c-id', directive: 'z' },
+            { id: 'd-id', directive: 'w' },
+            { id: 'e-id', directive: 'v' },
+          ],
+        },
+      ] as never),
+    ).toThrow(
+      /has targetOverride 6 but needs >= 20 to cover 5 constructionVariants/,
+    );
+  });
+
+  it('accepts a targetOverride that covers the variant floor', () => {
+    // Invariant 10 (per-language grammar count minimums) may throw for a single-entry
+    // fixture; we only care that no targetOverride/constructionVariants-related error is thrown.
+    try {
+      assertCurriculumInvariants([
+        {
+          ...base,
+          targetOverride: 20,
+          constructionVariants: [
+            { id: 'hearsay-dicen-que', directive: 'x', share: 3 },
+            { id: 'adversity-experiencer', directive: 'y' },
+          ],
+        },
+      ] as never);
+    } catch (e) {
+      expect((e as Error).message).not.toMatch(
+        /constructionVariants|malformed constructionVariant|duplicate constructionVariant|empty directive|share must be|targetOverride/,
+      );
+    }
+  });
 });
 
 describe('curriculum personRotation flag (migrated to coverageSpec — Task 4)', () => {

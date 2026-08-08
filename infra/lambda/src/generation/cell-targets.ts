@@ -24,7 +24,7 @@
  *      also subject to the floor raise above.
  */
 
-import { ExerciseType } from '@language-drill/shared';
+import { ExerciseType, MIN_PER_VARIANT } from '@language-drill/shared';
 import type { Cell, CurriculumCefrLevel } from '@language-drill/db';
 
 import { TARGET_PER_CELL } from './scheduler-decision';
@@ -88,43 +88,32 @@ export const CELL_TARGET_DEFAULTS: Record<
 export const GIVE_UP_MIN_ATTEMPTS = 2;
 
 /**
- * Minimum approved exercises a single construction variant should reach before
- * the cell is considered done. Four is enough for a variant to appear in a
- * learner's rotation without letting a 6-variant point balloon its cell target.
- */
-export const MIN_PER_VARIANT = 4;
-
-/**
  * Resolve the generation target for a cell. Pure. Order: an explicit
- * `targetOverride` wins outright — but if the point also declares
- * `constructionVariants`, the override must be large enough to let every
- * variant reach `MIN_PER_VARIANT`; a too-small override would silently starve
- * the rarer variants (they'd never accumulate), so this throws at authoring
- * time instead of under-filling at generation time. Absent an override, the
- * `(type, level)` table value (or the `TARGET_PER_CELL` fallback) is raised,
- * if needed, to cover the largest single-axis floor sum in the cell's
- * `coverageSpec` and the `constructionVariants` floor. One approved exercise
- * realizes one value per axis, so an axis whose floors sum to F needs ≥ F
- * exercises; taking the MAX over axes (never the product) guarantees headroom
- * for the tightest axis without multiplying axes together. Replaces the former
- * person-rotation 1.5× multiplier with exact floor arithmetic.
+ * `targetOverride` wins outright — including over the `constructionVariants`
+ * floor below. A `targetOverride` too small to let every declared variant
+ * reach `MIN_PER_VARIANT` (imported from `@language-drill/shared`) is a
+ * curriculum-authoring mistake, not something this scheduler-time resolver
+ * can safely reject: `resolveCellTarget` runs uncaught inside the nightly
+ * scheduler's per-cell loop (`infra/lambda/src/generation/scheduler.ts`), so
+ * throwing here would abort the entire run for every language over one
+ * misconfigured point. That combination is instead caught at authoring time
+ * by `assertCurriculumInvariants` (`packages/db/src/curriculum/index.ts`,
+ * the `constructionVariants` block), which the curriculum test suite runs on
+ * every commit. Absent an override, the `(type, level)` table value (or the
+ * `TARGET_PER_CELL` fallback) is raised, if needed, to cover the largest
+ * single-axis floor sum in the cell's `coverageSpec` and the
+ * `constructionVariants` floor. One approved exercise realizes one value per
+ * axis, so an axis whose floors sum to F needs ≥ F exercises; taking the MAX
+ * over axes (never the product) guarantees headroom for the tightest axis
+ * without multiplying axes together. Replaces the former person-rotation
+ * 1.5× multiplier with exact floor arithmetic.
  */
 export function resolveCellTarget(cell: Cell): number {
   const variants = cell.grammarPoint.constructionVariants;
   const variantFloor = variants ? variants.length * MIN_PER_VARIANT : 0;
 
   const override = cell.grammarPoint.targetOverride;
-  if (override !== undefined) {
-    // targetOverride wins outright, so a too-small override would silently
-    // starve variants that can never reach MIN_PER_VARIANT. Fail loudly at
-    // authoring time instead.
-    if (variants && override < variantFloor) {
-      throw new Error(
-        `targetOverride ${override} cannot cover ${variants.length} constructionVariants (needs >= ${variantFloor})`,
-      );
-    }
-    return override;
-  }
+  if (override !== undefined) return override;
 
   const fromTable = CELL_TARGET_DEFAULTS[cell.exerciseType][cell.cefrLevel];
   const base = fromTable ?? TARGET_PER_CELL;

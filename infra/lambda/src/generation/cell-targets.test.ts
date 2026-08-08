@@ -5,13 +5,12 @@
  * invariants the resolver exists to enforce.
  */
 
-import { CefrLevel, ExerciseType, Language } from '@language-drill/shared';
+import { CefrLevel, ExerciseType, Language, MIN_PER_VARIANT } from '@language-drill/shared';
 import { describe, expect, it } from 'vitest';
 import type { Cell, CurriculumCefrLevel } from '@language-drill/db';
 
 import {
   CELL_TARGET_DEFAULTS,
-  MIN_PER_VARIANT,
   resolveCellTarget,
 } from './cell-targets';
 import { TARGET_PER_CELL } from './scheduler-decision';
@@ -166,26 +165,6 @@ describe('resolveCellTarget — construction variants', () => {
       grammarPoint: {},
     } as never);
     expect(withVariants).toBe(without);
-  });
-
-  it('throws when targetOverride cannot cover the variant floor', () => {
-    expect(() =>
-      resolveCellTarget({
-        exerciseType: ExerciseType.CLOZE,
-        cefrLevel: 'B1',
-        grammarPoint: { targetOverride: 6, constructionVariants: variantsOf(5) },
-      } as never),
-    ).toThrow(/targetOverride 6 cannot cover 5 constructionVariants/);
-  });
-
-  it('accepts a targetOverride that does cover the floor', () => {
-    expect(
-      resolveCellTarget({
-        exerciseType: ExerciseType.CLOZE,
-        cefrLevel: 'B1',
-        grammarPoint: { targetOverride: 20, constructionVariants: variantsOf(5) },
-      } as never),
-    ).toBe(20);
   });
 });
 

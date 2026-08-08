@@ -21,6 +21,20 @@
 
 import type { ConstructionVariant } from './curriculum-types';
 
+/**
+ * Minimum approved exercises a single construction variant should reach before
+ * the cell is considered done. Four is enough for a variant to appear in a
+ * learner's rotation without letting a 6-variant point balloon its cell target.
+ *
+ * Lives in shared (not `@language-drill/lambda`, where the one runtime
+ * consumer `resolveCellTarget` lives) because `packages/db`'s curriculum
+ * invariants also need it at authoring time — a `targetOverride` too small to
+ * cover `constructionVariants.length * MIN_PER_VARIANT` is rejected by
+ * `assertCurriculumInvariants` (packages/db/src/curriculum/index.ts) rather
+ * than by a runtime throw, since `db` cannot depend on `lambda`.
+ */
+export const MIN_PER_VARIANT = 4;
+
 export type PickVariantSeedsOptions = {
   /** The point's declared variants, in curriculum order (ties break on it). */
   variants: readonly ConstructionVariant[];
