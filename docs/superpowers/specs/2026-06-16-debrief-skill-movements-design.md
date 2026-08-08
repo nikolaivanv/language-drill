@@ -25,7 +25,7 @@ So this is a **surfacing job**, not a modeling job, and it closes an inconsisten
 | First-ever-practiced point | Distinct **`New · first evidence`** state (not a "gain") |
 | Rows shown | **Movers only** (gain/slip/new), ordered by movement magnitude; steady points collapse to a `N held steady` summary line |
 | Band thresholds | `|Δ| < 0.02` Steady · `+0.02…0.08` Gain · `≥ +0.08` Strong gain · `≤ −0.02` Slipped (tunable constants) |
-| Confidence cue | `high` when point `confidence ≥ 0.6`, else `low` (tunable) |
+| Confidence cue | `high` when **`min(before, after)` `confidence ≥ 0.6`**, else `low` (tunable) |
 | API payload | band + confidence only — **no `from`/`to` numbers** (banding done server-side) |
 
 ## Architecture
@@ -71,6 +71,7 @@ Deliberately **no `from`/`to`** — banding is server-side so the client cannot 
 - **First-ever practice** (no prior evidence rows for the point) → `band: 'new'`, regardless of magnitude.
 - **Multiple exercises on one point in the session** → one aggregated movement (the replay folds them).
 - **Only steady movement** → no mover rows; show just `N held steady` (or hide the panel if that reads as empty — plan decides, default: show the steady line).
+- **Slip against a thin prior** → the panel welds the confidence cue to the band ("slipped · we're confident"), so the cue must describe the *delta*, which is only as good as its weaker end — hence `min(before, after)` rather than `after` alone. This matters because `updateMastery` seeds a first-ever row to its raw score: one perfect answer pins the point at 1.0 and every later movement can only be down. Observed in prod session `ec7dd00f` — five **correct** answers (header: "5 of 5 · 100%") replayed 1.0 → 0.927 and rendered "slipped · we're confident" off a single-sample baseline. The unearned-ceiling bias itself is left to the mastery model (out of scope below).
 
 ## Out of scope
 - Per-exercise inline delta cue (rejected — noisy, gamified feel).

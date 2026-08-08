@@ -43,6 +43,23 @@ export function confidenceBand(confidence: number): 'high' | 'low' {
   return confidence >= CONFIDENCE_HIGH_CUTOFF ? 'high' : 'low';
 }
 
+/**
+ * Confidence in the *movement*, not in the post-session estimate. The panel
+ * renders this welded to the band ("slipped · we're confident"), so it has to
+ * describe the delta — and a delta is only as trustworthy as its weaker end.
+ * A point sitting on a single prior observation has an unearned baseline (the
+ * first-ever row seeds mastery to its raw score, so one perfect answer pins the
+ * point at 1.0 and the only available movement is down); banding that drop
+ * "we're confident" overstates what one sample can support. `before === null`
+ * is the 'new' band, which has no delta to qualify — fall back to the estimate.
+ */
+export function movementConfidence(
+  before: number | null,
+  after: number,
+): 'high' | 'low' {
+  return confidenceBand(before === null ? after : Math.min(before, after));
+}
+
 function toHistoryRow(r: SkillHistoryRow): HistoryRow {
   return {
     grammarPointKey: r.grammarPointKey,
@@ -82,7 +99,7 @@ export function computeSkillMovements(params: {
       grammarPointKey: key,
       label,
       band: masteryBand(before ? before.masteryScore : null, after.masteryScore),
-      confidence: confidenceBand(after.confidence),
+      confidence: movementConfidence(before ? before.confidence : null, after.confidence),
     });
   }
   out.sort((a, b) => BAND_ORDER[a.band] - BAND_ORDER[b.band] || a.label.localeCompare(b.label));
