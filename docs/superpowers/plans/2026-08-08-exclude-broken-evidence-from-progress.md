@@ -47,7 +47,7 @@
 - `packages/db/package.json`, root `package.json` — `backfill:demotion-reason` script.
 - `docs/runbooks/prompt-update-and-revalidate.md`, `CLAUDE.md` — document the new step and CLI.
 
-**A note on testing read paths — a deliberate deviation from the spec.** Spec §6 asks for "one case per filtered surface (mocked db)". That test cannot work: the Lambda route tests mock the `db` module, so the mock returns its canned rows regardless of the `WHERE` clause. A mocked route test would pass whether or not the predicate is applied. Verification is therefore split three ways: the predicate's rendered SQL is unit-tested (Task 2), the four call sites are guarded structurally (Task 2 Step 7), and the behavioural proof is the prod before/after diff (Task 7). Do not write mocked route tests that appear to verify filtering — they would be theatre. Spec §6's admin-pool-status non-regression check is covered by running `admin.test.ts` in Task 3 Step 8.
+**A note on testing read paths — a deliberate deviation from the spec.** Spec §6 asks for "one case per filtered surface (mocked db)". That test cannot work: the Lambda route tests mock the `db` module, so the mock returns its canned rows regardless of the `WHERE` clause. A mocked route test would pass whether or not the predicate is applied. Verification is therefore split three ways: the predicate's rendered SQL is unit-tested (Task 2), the four call sites are guarded structurally (Task 5 Step 6), and the behavioural proof is the prod before/after diff (Task 7). Do not write mocked route tests that appear to verify filtering — they would be theatre. Spec §6's admin-pool-status non-regression check is covered by running `admin.test.ts` in Task 3 Step 8.
 
 ---
 
@@ -108,7 +108,7 @@ git commit -m "feat(db): add exercises.demotion_reason column"
 - Create: `packages/db/src/lib/evidence.test.ts`
 - Modify: `packages/db/src/index.ts` (add export near the mastery exports, ~line 118)
 - Modify: `infra/lambda/src/lib/exercise-filters.ts`
-- Modify: `infra/lambda/src/lib/exercise-filters.test.ts`
+- Modify: `infra/lambda/src/lib/exercise-filters.test.ts` (Task 5 adds the call-site guard; Task 2 only verifies it still passes)
 
 **Interfaces:**
 - Consumes: `exercises.demotionReason` (Task 1).
@@ -291,8 +291,7 @@ The call-site guard test that pins the four scoring surfaces lives in Task 5, al
 ```bash
 pnpm build && pnpm --filter @language-drill/db typecheck && pnpm --filter @language-drill/lambda typecheck
 git add packages/db/src/lib/evidence.ts packages/db/src/lib/evidence.test.ts \
-        packages/db/src/index.ts infra/lambda/src/lib/exercise-filters.ts \
-        infra/lambda/src/lib/exercise-filters.test.ts
+        packages/db/src/index.ts infra/lambda/src/lib/exercise-filters.ts
 git commit -m "feat(db): add scoring-evidence predicate for demoted exercises"
 ```
 
