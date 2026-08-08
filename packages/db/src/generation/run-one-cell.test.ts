@@ -415,6 +415,68 @@ describe('seedKindFor', () => {
   });
 });
 
+describe('seedKindFor — construction variants', () => {
+  const variants = [
+    { id: 'hearsay', directive: 'hearsay' },
+    { id: 'adversity', directive: 'adversity' },
+  ];
+
+  it('routes a cloze cell with variants to construction-variants', () => {
+    expect(
+      seedKindFor({
+        language: 'ES',
+        cefrLevel: 'B1',
+        exerciseType: ExerciseType.CLOZE,
+        grammarPoint: { kind: 'grammar', constructionVariants: variants },
+      } as never),
+    ).toBe('construction-variants');
+  });
+
+  it('routes a translation cell with variants to construction-variants', () => {
+    expect(
+      seedKindFor({
+        language: 'ES',
+        cefrLevel: 'B1',
+        exerciseType: ExerciseType.TRANSLATION,
+        grammarPoint: { kind: 'grammar', constructionVariants: variants },
+      } as never),
+    ).toBe('construction-variants');
+  });
+
+  it('leaves a cloze cell without variants on the frequency band', () => {
+    expect(
+      seedKindFor({
+        language: 'ES',
+        cefrLevel: 'B1',
+        exerciseType: ExerciseType.CLOZE,
+        grammarPoint: { kind: 'grammar' },
+      } as never),
+    ).toBe('frequency');
+  });
+
+  it('does not divert a conjugation cell that happens to declare variants', () => {
+    expect(
+      seedKindFor({
+        language: 'ES',
+        cefrLevel: 'B1',
+        exerciseType: ExerciseType.CONJUGATION,
+        grammarPoint: { kind: 'grammar', constructionVariants: variants },
+      } as never),
+    ).toBe('verb');
+  });
+
+  it('ignores an empty variants array', () => {
+    expect(
+      seedKindFor({
+        language: 'ES',
+        cefrLevel: 'B1',
+        exerciseType: ExerciseType.CLOZE,
+        grammarPoint: { kind: 'grammar', constructionVariants: [] },
+      } as never),
+    ).toBe('frequency');
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
