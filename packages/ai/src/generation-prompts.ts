@@ -766,9 +766,28 @@ export function buildGenerationUserPrompt(
             : ""
         }Cue the learner with the BASE word in parentheses after the sentence — e.g. "(silla)" when the answer is "sillita" — NEVER the derived form itself, and the derived form must not appear anywhere in the visible text. The base-word cue is the sanctioned elicitation for this cell, not an answer leak: the tested skill is choosing the suffix from the context's nuance and forming it with the correct allomorph and gender. Craft the context so the intended nuance (smallness/affection, augmentative force, or pejorative shabbiness) is unmistakable and no other established suffixed form of the same base fits. Vary the scenario; do not reuse a noun or template from earlier exercises in this batch.\n\n`
     : "";
+  // A construction-variant seed is the variant's `id`, not a content word: look
+  // up its directive so the per-draft block names the sub-construction. Only
+  // cloze/translation seed this way (see `seedKindFor`).
+  const constructionVariant =
+    (inputs.exerciseType === ExerciseType.CLOZE ||
+      inputs.exerciseType === ExerciseType.TRANSLATION) &&
+    seedWord
+      ? inputs.grammarPoint.constructionVariants?.find(
+          (v) => v.id === seedWord,
+        )
+      : undefined;
   const seedBlock =
     !digitForm && !baseWordCue && seedWord && seedWord.length > 0
-      ? inputs.exerciseType === ExerciseType.CONJUGATION
+      ? constructionVariant
+        ? // Strict: the sub-construction IS the diversity axis for this cell.
+          // No substitution escape hatch — the loose frequency wording's
+          // "choose a word of similar frequency instead" is what let the model
+          // discard the frame and collapse the pool onto the prototype.
+          inputs.exerciseType === ExerciseType.TRANSLATION
+          ? `This exercise MUST use the following sub-construction of ${inputs.grammarPoint.name}: ${constructionVariant.directive}. Write an English source sentence that naturally elicits exactly this sub-construction — the source must not telegraph a different one, and must not lean on the point's most common pattern. Use exactly this sub-construction; do not substitute another.\n\n`
+          : `This exercise MUST use the following sub-construction of ${inputs.grammarPoint.name}: ${constructionVariant.directive}. Use exactly this sub-construction; do not substitute another, and do not fall back to the point's most common pattern.\n\n`
+        : inputs.exerciseType === ExerciseType.CONJUGATION
         ? // Strict: the seed IS the word to inflect. No substitution escape hatch —
           // the picker already guarantees an inflectable word, and substitution
           // would re-open the dedup-collapse we are fixing. Nominal-inflection
