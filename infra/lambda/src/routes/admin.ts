@@ -772,7 +772,7 @@ type ContentOutcome = 'demoted' | 'rejected' | 'not_found' | 'already_resolved';
 async function transitionContentExercise(id: string, toStatus: 'flagged' | 'rejected'): Promise<ContentOutcome> {
   const updated = await db
     .update(exercises)
-    .set({ reviewStatus: toStatus })
+    .set({ reviewStatus: toStatus, ...(toStatus === 'rejected' ? { demotionReason: 'quality' as const } : {}) })
     .where(and(eq(exercises.id, id), inArray(exercises.reviewStatus, [...APPROVED_STATUSES])))
     .returning({ id: exercises.id });
   if (updated.length > 0) return toStatus === 'flagged' ? 'demoted' : 'rejected';
@@ -1225,7 +1225,12 @@ admin.post('/admin/revalidate', async (c) => {
     if (apply) {
       await db
         .update(exercises)
-        .set({ reviewStatus: action.to, flaggedReasons: action.reasons, qualityScore: result.qualityScore })
+        .set({
+          reviewStatus: action.to,
+          flaggedReasons: action.reasons,
+          qualityScore: result.qualityScore,
+          ...(action.to === 'rejected' ? { demotionReason: 'quality' as const } : {}),
+        })
         .where(eq(exercises.id, row.id));
     }
     demotions.push({ id: row.id, from: action.from, to: action.to, reasons: action.reasons.map(formatReason) });
