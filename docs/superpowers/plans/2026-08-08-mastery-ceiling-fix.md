@@ -33,6 +33,8 @@
 
 **Known conflict:** Task 3 edits `skill-movements.test.ts`, which is also edited on the unmerged branch `fix/debrief-movement-confidence`. Both append tests to the same `describe('computeSkillMovements')` block. Whichever merges second will need a trivial conflict resolution — keep **both** test blocks; they assert different things (band vs. confidence cue).
 
+**Known conflict, part 2 — a stale rationale, not a code collision.** `fix/debrief-movement-confidence` also touches two prose spots that describe `updateMastery` in the present tense: the `movementConfidence` JSDoc in `infra/lambda/src/lib/debrief/skill-movements.ts`, and a bullet in `docs/superpowers/specs/2026-06-16-debrief-skill-movements-design.md`. Both currently assert "`updateMastery` seeds a first-ever row to its raw score: one perfect answer pins the point at 1.0 and every later movement can only be down." This plan makes that statement false — the two branches are behaviorally compatible (do not change any behavior to reconcile them), but whichever branch merges **second** must rewrite both spots to past tense: "used to seed a first-ever row to its raw score …, fixed by the 2026-08-08 neutral-prior change." `min(before, after)` remains useful afterwards regardless — a one-row baseline still carries `confidenceFor(1) = 0.181`, so the confidence gate still has something to bite on.
+
 ---
 
 ### Task 1: Seed the first observation against a neutral prior
@@ -321,13 +323,15 @@ Replace the single closing `console.log(...)` with:
   }
 ```
 
-- [ ] **Step 4: Verify the script still typechecks and runs**
+- [ ] **Step 4: Verify the script still runs**
 
-```bash
-pnpm --filter @language-drill/db typecheck
-```
-
-Expected: PASS.
+> **Correction (2026-08-08 final review):** `pnpm --filter @language-drill/db typecheck`
+> does **not** verify this script. `packages/db/tsconfig.json` has
+> `"include": ["src"]` and `packages/db/package.json` lints `src/**/*.ts` only
+> — `scripts/backfill-mastery.ts` is outside both, so it is neither
+> typechecked nor linted by the repo gates. `pnpm --filter @language-drill/db typecheck`
+> passing is not evidence this script is sound; the real verification for
+> this file is the manual dry-run that follows.
 
 Then dry-run it against the **local dev** database (`.env`'s `DATABASE_URL` is the Neon *dev* branch — never production at this step):
 
@@ -455,6 +459,13 @@ Open a PR describing the ceiling problem, the 86/137 production figure, and the 
 
 Squash-merge (project default), editing the squash message down to the PR summary rather than the auto-generated bullet list. Merging triggers the deploy pipeline; wait for the CDK deploy to finish so the Lambda runs the new rule before any backfill.
 
+> **Operational sequencing note.** Between deploy and `--apply` there is a
+> transient split-brain: the debrief replays `user_exercise_history` and so
+> uses the new rule immediately, while today-plan ranking and `/progress`
+> read the stored `user_grammar_mastery` table and keep the old ceilings
+> until the backfill applies. This is harmless and self-resolving, but do
+> Steps 3-5 in one sitting rather than leaving days between them.
+
 - [ ] **Step 4: Dry-run the backfill against production and review**
 
 Production is **not** the `.env` database (that is the Neon dev branch). Fetch the production string from AWS Secrets Manager (`aws --region eu-central-1 secretsmanager get-secret-value --secret-id language-drill/DATABASE_URL --query SecretString --output text`), or from the Neon console — project `twilight-smoke-01114337`, branch `br-green-waterfall-ancrvpr5`. Supply it explicitly and never commit it:
@@ -465,9 +476,9 @@ DATABASE_URL='<production Neon connection string>' \
 ```
 
 Review before applying:
-- `Diff:` line — expect roughly 137 rows in scope and a large `moved` count.
+- `Diff:` line — expect roughly 137 rows in scope and a large `moved` count. Also check the `lost 'solid'` / `crossed the prereq threshold` / `stale (not rebuilt)` counts: the first two are the user-visible-state changes worth sanity-checking by hand (map color, readyToAdvance, prereqUnmet); a nonzero `stale` count means some existing rows weren't rebuilt at all (grammar-point rename / re-keyed exercise) and is worth a follow-up, not a blocker.
 - Top-20 shifts — the biggest movers should be points with **few** history rows. A large shift on a heavily-evidenced point means something is wrong; stop and investigate.
-- **Weakest-20 before vs after** — this is the decision. It is what selection ranks on, so it determines what gets served next. If the two lists are broadly similar, apply. If the ordering is unrecognizable, stop and take it back to the spec author — the response is a design decision, not an improvisation.
+- **Weakest-20 before vs after** — a **proxy** for served order, not the served order itself: `rank.ts` priority is `gap * prereqPenalty + errorTerm` plus a `GROWTH_BOOST` inside a middle mastery band (0.3-0.7), which this change pushes points toward — so priority is non-monotonic in `masteryScore` and a point can gain priority discontinuously even as its score drops. Treat the two lists as a sanity check: if they're broadly similar, apply. If the ordering is unrecognizable, stop and take it back to the spec author — the response is a design decision, not an improvisation. Note this is not a one-way door either way: the backfill is a pure function of `user_exercise_history` (untouched by this change), so a bad outcome is recoverable by reverting the rule and re-running.
 
 - [ ] **Step 5: Apply**
 

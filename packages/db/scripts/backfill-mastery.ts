@@ -101,7 +101,7 @@ async function main() {
     for (const [grammarPointKey, s] of finalStates) {
       upserts += 1;
       const priorScore = existingByKey.get(`${userId}:${grammarPointKey}`) ?? null;
-      shifts.push({ userId: userId!, grammarPointKey, from: priorScore, to: s.masteryScore });
+      shifts.push({ userId, grammarPointKey, from: priorScore, to: s.masteryScore });
       if (!apply) continue;
       await db
         .insert(userGrammarMastery)
@@ -145,9 +145,37 @@ async function main() {
   const max = changed.reduce((acc, s) => Math.max(acc, absDelta(s)), 0);
   const brandNew = shifts.filter((s) => s.from === null).length;
 
+  // `solid` (curriculum-map.ts SOLID_MASTERY=0.8, SOLID_CONFIDENCE=0.6) drives
+  // map cell color, solidCount, the readyToAdvance banner, and prereqUnmet on
+  // downstream points. This change compresses thin points toward 0.5, so
+  // `solid` can only be LOST here, never gained.
+  const lostSolid = changed.filter((s) => s.from >= 0.8 && s.to < 0.8).length;
+  // rank.ts PREREQ_THRESHOLD=0.3 gates whether a point counts as satisfied
+  // prerequisite evidence for downstream points.
+  const crossedPrereq = changed.filter((s) => (s.from >= 0.3) !== (s.to >= 0.3)).length;
+
+  // Rows the rebuild does NOT cover: existing user_grammar_mastery keys with
+  // no corresponding row in `shifts`. These arise from grammar-point key
+  // renames or exercises whose grammarPointKey was nulled/re-keyed — the
+  // history query above INNER-JOINs exercises and requires a non-null key,
+  // so such rows are silently skipped and keep their old ceiling forever.
+  const staleNotRebuilt = existingByKey.size - shifts.filter((s) => s.from !== null).length;
+
   console.log(
     `Diff: ${changed.length} moved, ${brandNew} new, ` +
       `mean |Δ| ${mean.toFixed(4)}, max |Δ| ${max.toFixed(4)}.`,
+  );
+  console.log(
+    `  lost 'solid' (masteryScore>=0.8 && confidence>=0.6, drives map color / ` +
+      `solidCount / readyToAdvance / downstream prereqUnmet): ${lostSolid}`,
+  );
+  console.log(
+    `  crossed the prereq threshold (masteryScore>=0.3, gates downstream ` +
+      `prerequisite evidence in rank.ts): ${crossedPrereq}`,
+  );
+  console.log(
+    `  stale (not rebuilt) — existing rows this run never touched, e.g. from ` +
+      `a grammar-point rename or a nulled/re-keyed exercise: ${staleNotRebuilt}`,
   );
 
   const fmt = (s: Shift) =>
@@ -159,8 +187,13 @@ async function main() {
     console.log(fmt(s));
   }
 
-  // Selection ranks weakest-first, so this is the list that actually decides
-  // what gets served next. Compare the two orderings, not just the values.
+  // This is a PROXY for served order, not the served order itself: rank.ts
+  // priority is `gap * prereqPenalty + errorTerm`, and it adds a GROWTH_BOOST
+  // when effective mastery falls inside a middle band (0.3-0.7), so priority
+  // is non-monotonic in masteryScore. Because this change pushes thin points
+  // toward 0.5 — i.e. into that band — a point moving e.g. 0.75 -> 0.70 can
+  // gain priority discontinuously. Compare the two orderings as a sanity
+  // check, not as the decisive signal.
   console.log('\nWeakest 20 BEFORE:');
   for (const s of changed.slice().sort((a, b) => a.from - b.from).slice(0, 20)) {
     console.log(fmt(s));

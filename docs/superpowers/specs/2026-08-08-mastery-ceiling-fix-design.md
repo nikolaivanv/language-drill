@@ -129,6 +129,7 @@ Everything downstream reads `masteryScore`. In dependency order:
 - **First observation with a hint penalty** (`evidenceWeight < 1`) → shrinks `obsW`, pulling the seed *toward* `NEUTRAL_PRIOR`. Desirable: a hinted first answer is weaker evidence.
 - **`clamp01` on the first observation** — for a well-formed `obs.score ∈ [0,1]` the weighted average of it and `NEUTRAL_PRIOR` is necessarily in `[0,1]`, so the clamp stops being load-bearing there. It is **not** removed: `obs.score` is not validated at the call site, so the clamp still guards malformed input as well as later observations.
 - **A point whose only row is a `0.0`** → seeds `0.156` (B1) rather than `0.0`, so it is no longer pinned at the floor either. The fix is symmetric by construction.
+- **The reward/punish pivot is `NEUTRAL_PRIOR` (`0.5`), not `CORRECT_THRESHOLD` (`0.7`)** — `updateMastery`'s branch is `obs.score >= base.masteryScore`, and for a first observation `base.masteryScore` is `NEUTRAL_PRIOR`. So a first answer scoring `0.6` — *incorrect* by the app's own `CORRECT_THRESHOLD` — still takes the reward branch and seeds `0.55` at A1 / `0.575` at C2, not the punish branch. The consequences are benign: the curve stays continuous, strictly increasing in score, and monotone in difficulty either side of `0.5`. Recorded here so a future reader doesn't trip over the two thresholds looking like they should coincide and don't.
 
 ## Out of scope
 

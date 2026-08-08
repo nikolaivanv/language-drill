@@ -116,6 +116,14 @@ describe('computeSkillMovements', () => {
       labels: new Map([['gp-a', 'Point A']]),
     });
     expect(out[0].band).not.toBe('slip');
+    // `not.toBe('slip')` above is the actual regression being pinned; keep it.
+    // This exact-band assertion is brittle by comparison: the real delta is
+    // 0.080675 against STRONG_GAIN_DELTA = 0.08 — ~0.8% headroom. A future
+    // nudge to DIFFICULTY_WEIGHTS, HALFLIFE_DAYS, or PRIOR_PSEUDO_COUNT can
+    // flip this to 'gain' without the ec7dd00f regression coming back. If
+    // this line fails on its own (the `not.toBe('slip')` line above still
+    // passing), that's threshold drift, not a real regression — re-derive
+    // the expected band rather than assuming something broke.
     expect(out[0].band).toBe('strong-gain'); // 0.8214 → 0.9021, Δ +0.0807
   });
 
