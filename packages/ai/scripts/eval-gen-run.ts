@@ -543,7 +543,23 @@ export function makeRealArmExecutor(client: Anthropic): GenCellArmExecutor {
     let usage: ClaudeUsageBreakdown = batch.tokenUsage;
     const outcomes: DraftOutcome[] = [];
 
-    for (const [index, draft] of batch.drafts.entries()) {
+    // `batch.drafts` is ordinal-COMPACTED, not ordinal-indexed: `generateBatch`
+    // (generate.ts) walks ordinal 0..count-1 and pushes successes into
+    // `drafts` (in ascending ordinal order) while routing failures to the
+    // separate `malformedDrafts` array — so `drafts[i]`'s true ordinal equals
+    // `i` only when no malformed draft precedes it. `ExerciseDraft` carries no
+    // ordinal of its own, so we reconstruct the true ordinal by walking
+    // forward and skipping every ordinal known to be malformed. Getting this
+    // wrong silently mislabels `variantId` (e.g. a draft generated under
+    // variant B's directive gets tagged variant A) without any crash or test
+    // failure — exactly the number Task 12 spends real money reading.
+    const malformedOrdinals = new Set(
+      batch.malformedDrafts.map((m) => m.ordinal),
+    );
+    let ordinal = 0;
+
+    for (const draft of batch.drafts) {
+      while (malformedOrdinals.has(ordinal)) ordinal++;
       const { result, tokenUsage } = await validateDraft(
         client,
         draft,
@@ -559,15 +575,24 @@ export function makeRealArmExecutor(client: Anthropic): GenCellArmExecutor {
         // (the whole point of the GenerationReason reason-codes refactor).
         reasons: flaggedReasons.map((r) => r.code),
         // The variant this draft was seeded with, if any (undefined for an
-        // unseeded arm/draft) — `variantSeeds[ordinal]` lines up with
-        // `batch.drafts[ordinal]` since both are indexed by generation order.
-        variantId: variantSeeds?.[index],
+        // unseeded arm/draft) — keyed on the true ordinal, not the compacted
+        // array index.
+        variantId: variantSeeds?.[ordinal],
       });
+      ordinal++;
     }
 
     // Each malformed draft is a distinct parser-failure outcome (Req 4.4).
-    for (let i = 0; i < batch.malformedDrafts.length; i++) {
-      outcomes.push({ bucket: "parser-failure", reasons: ["parser-failure"] });
+    // Stamped with its own variantId (from its true `ordinal`, which
+    // `MalformedDraft` does carry) so a variant whose every draft fails to
+    // parse still shows up in `variantCounts` — distinct from a variant that
+    // was never seeded at all, which is the whole point of measuring this.
+    for (const malformed of batch.malformedDrafts) {
+      outcomes.push({
+        bucket: "parser-failure",
+        reasons: ["parser-failure"],
+        variantId: variantSeeds?.[malformed.ordinal],
+      });
     }
 
     return { outcomes, usage };

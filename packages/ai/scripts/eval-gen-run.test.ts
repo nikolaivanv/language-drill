@@ -741,6 +741,127 @@ describe("makeRealArmExecutor — classification + cost folding", () => {
       spec.seedWords,
     );
   });
+
+  it("attributes variantId by the TRUE ordinal, not the malformed-compacted array index (interleaved malformed draft)", async () => {
+    const grammarPoint = {
+      key: "es-b1-impersonal-plural",
+      kind: "grammar" as const,
+      name: "Impersonal third-person plural",
+      description: "Agentless third-person plural.",
+      cefrLevel: "B1",
+      language: "ES",
+      examplesPositive: ["Dicen que llueve.", "Me robaron la cartera."],
+      examplesNegative: ["*Mi cartera fue robada."],
+      commonErrors: ["Forcing a ser-passive."],
+      constructionVariants: [
+        { id: "hearsay", directive: "hearsay — dicen que" },
+        { id: "adversity", directive: "adversity — me robaron" },
+      ],
+    };
+    const cell: CellDescriptor = {
+      language: Language.ES,
+      cefrLevel: CefrLevel.B1,
+      exerciseType: ExerciseType.CLOZE,
+      grammarPointKey: grammarPoint.key,
+    };
+
+    // `pickVariantSeeds` is real (unmocked) and deterministic: for these two
+    // equal-share variants and count=3 it returns
+    // ['hearsay', 'adversity', 'hearsay'] for ordinals 0, 1, 2 respectively
+    // (deficit-ranked round robin — see construction-variant-seed.ts).
+    // Ordinal 0 ('hearsay') is malformed, so `batch.drafts` holds only the
+    // successful ordinals 1 ('adversity') and 2 ('hearsay'), compacted to
+    // array indices 0 and 1. A naive array-index lookup would swap these.
+    mockGenerateBatch.mockResolvedValue({
+      drafts: [{ id: "d-ord1" }, { id: "d-ord2" }] as ExerciseDraft[],
+      tokenUsage: ZERO_USAGE,
+      malformedDrafts: [
+        { ordinal: 0, errorMessage: "Draft ordinal=0 malformed: bad json" },
+      ],
+    } satisfies GenerateBatchResult);
+    mockValidateDraft.mockResolvedValue({
+      result: approveResult(),
+      tokenUsage: ZERO_USAGE,
+    });
+
+    const executor = makeRealArmExecutor({} as never);
+    const arm = await executor({
+      cell,
+      grammarPoint,
+      systemPromptOverride: "SYSTEM",
+      draftsPerCell: 3,
+      batchSeed: "eval-gen",
+      seedConstructionVariants: true,
+    });
+
+    const [ord1Outcome, ord2Outcome] = arm.outcomes.filter(
+      (o) => o.bucket !== "parser-failure",
+    );
+    // True ordinals: d-ord1 is ordinal 1 ('adversity'), d-ord2 is ordinal 2
+    // ('hearsay'). The compacted array indices (0, 1) would instead yield
+    // ('hearsay', 'adversity') — the bug this test catches.
+    expect(ord1Outcome.variantId).toBe("adversity");
+    expect(ord2Outcome.variantId).toBe("hearsay");
+  });
+
+  it("stamps variantId on a malformed-draft outcome, so a variant whose every draft fails to parse still appears in variantCounts", async () => {
+    const grammarPoint = {
+      key: "es-b1-impersonal-plural",
+      kind: "grammar" as const,
+      name: "Impersonal third-person plural",
+      description: "Agentless third-person plural.",
+      cefrLevel: "B1",
+      language: "ES",
+      examplesPositive: ["Dicen que llueve.", "Me robaron la cartera."],
+      examplesNegative: ["*Mi cartera fue robada."],
+      commonErrors: ["Forcing a ser-passive."],
+      constructionVariants: [
+        { id: "hearsay", directive: "hearsay — dicen que" },
+        { id: "adversity", directive: "adversity — me robaron" },
+      ],
+    };
+    const cell: CellDescriptor = {
+      language: Language.ES,
+      cefrLevel: CefrLevel.B1,
+      exerciseType: ExerciseType.CLOZE,
+      grammarPointKey: grammarPoint.key,
+    };
+
+    // count=2, 2 equal-share variants → deterministic ['hearsay', 'adversity']
+    // for ordinals 0, 1. Ordinal 0 ('hearsay') is the ONLY draft seeded with
+    // that variant, and it's malformed — so 'hearsay' has zero well-formed
+    // outcomes. Without variantId on the parser-failure outcome, 'hearsay'
+    // would be indistinguishable from a variant that was never seeded.
+    mockGenerateBatch.mockResolvedValue({
+      drafts: [{ id: "d-ord1" }] as ExerciseDraft[],
+      tokenUsage: ZERO_USAGE,
+      malformedDrafts: [
+        { ordinal: 0, errorMessage: "Draft ordinal=0 malformed: bad json" },
+      ],
+    } satisfies GenerateBatchResult);
+    mockValidateDraft.mockResolvedValue({
+      result: approveResult(),
+      tokenUsage: ZERO_USAGE,
+    });
+
+    const executor = makeRealArmExecutor({} as never);
+    const arm = await executor({
+      cell,
+      grammarPoint,
+      systemPromptOverride: "SYSTEM",
+      draftsPerCell: 2,
+      batchSeed: "eval-gen",
+      seedConstructionVariants: true,
+    });
+
+    const parserFailure = arm.outcomes.find(
+      (o) => o.bucket === "parser-failure",
+    );
+    expect(parserFailure?.variantId).toBe("hearsay");
+
+    const stats = computeArmStats([arm]);
+    expect(stats.variantCounts).toEqual({ hearsay: 1, adversity: 1 });
+  });
 });
 
 // ---------------------------------------------------------------------------
