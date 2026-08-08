@@ -43,6 +43,13 @@ const HALFLIFE_DAYS = 30;
 const PRIOR_BASE = 1.0;
 const K_EVIDENCE = 5; // confidence = 1 - exp(-n / K_EVIDENCE)
 
+// A first observation is folded against a weak virtual prior rather than taken
+// raw, so one lucky (or unlucky) answer cannot pin a point at 1.0 / 0.0 and
+// leave the model nowhere to move but back. The pseudo-count is a WEIGHT, not
+// evidence — it never reaches `evidenceCount` or `confidence`.
+const NEUTRAL_PRIOR = 0.5;
+const PRIOR_PSEUDO_COUNT = 0.5;
+
 const clamp01 = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x);
 const confidenceFor = (n: number) => 1 - Math.exp(-n / K_EVIDENCE);
 
@@ -52,31 +59,31 @@ export function updateMastery(
 ): MasteryState {
   const dw = DIFFICULTY_WEIGHTS[obs.difficulty];
 
-  if (prev === null) {
-    return {
-      masteryScore: clamp01(obs.score),
-      confidence: confidenceFor(1),
-      evidenceCount: 1,
-      lastPracticedAt: obs.at,
-    };
-  }
+  // `lastPracticedAt: obs.at` ⇒ days = 0 ⇒ decay = 1, so the virtual prior
+  // enters at its full (already small) weight.
+  const base: MasteryState = prev ?? {
+    masteryScore: NEUTRAL_PRIOR,
+    confidence: 0,
+    evidenceCount: PRIOR_PSEUDO_COUNT,
+    lastPracticedAt: obs.at,
+  };
 
   const days = Math.max(
     0,
-    (obs.at.getTime() - prev.lastPracticedAt.getTime()) / MS_PER_DAY,
+    (obs.at.getTime() - base.lastPracticedAt.getTime()) / MS_PER_DAY,
   );
   const decay = Math.exp(-days / HALFLIFE_DAYS);
-  const priorW = PRIOR_BASE * prev.evidenceCount * decay;
+  const priorW = PRIOR_BASE * base.evidenceCount * decay;
 
   // Asymmetric observation weight: gains scale with difficulty (reward hard
   // correct), losses scale with INVERSE difficulty (punish easy errors).
   const ew = obs.evidenceWeight == null ? 1 : clamp01(obs.evidenceWeight);
-  const obsW = (obs.score >= prev.masteryScore ? dw : DW_PIVOT - dw) * ew;
+  const obsW = (obs.score >= base.masteryScore ? dw : DW_PIVOT - dw) * ew;
 
   const masteryScore = clamp01(
-    (priorW * prev.masteryScore + obsW * obs.score) / (priorW + obsW),
+    (priorW * base.masteryScore + obsW * obs.score) / (priorW + obsW),
   );
-  const evidenceCount = prev.evidenceCount + 1;
+  const evidenceCount = (prev?.evidenceCount ?? 0) + 1;
 
   return {
     masteryScore,

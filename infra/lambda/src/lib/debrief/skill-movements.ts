@@ -47,11 +47,16 @@ export function confidenceBand(confidence: number): 'high' | 'low' {
  * Confidence in the *movement*, not in the post-session estimate. The panel
  * renders this welded to the band ("slipped · we're confident"), so it has to
  * describe the delta — and a delta is only as trustworthy as its weaker end.
- * A point sitting on a single prior observation has an unearned baseline (the
- * first-ever row seeds mastery to its raw score, so one perfect answer pins the
- * point at 1.0 and the only available movement is down); banding that drop
- * "we're confident" overstates what one sample can support. `before === null`
- * is the 'new' band, which has no delta to qualify — fall back to the estimate.
+ * A point sitting on a single prior observation has a thin baseline, and
+ * banding its movement "we're confident" overstates what one sample can
+ * support. This originally mattered most because `updateMastery` seeded a
+ * first-ever row to its raw score — one perfect answer pinned the point at 1.0
+ * and the only available movement was down. That ceiling was fixed separately
+ * (the 2026-08-08 neutral-prior seeding), so the pathological case is gone;
+ * the gate still earns its place, because a one-row baseline carries
+ * `confidenceFor(1) = 0.181` no matter which way the delta points.
+ * `before === null` is the 'new' band, which has no delta to qualify — fall
+ * back to the estimate.
  */
 export function movementConfidence(
   before: number | null,
