@@ -597,7 +597,7 @@ export * from "./theory-categories";
 // ---------------------------------------------------------------------------
 
 export { deterministicUuid } from "./deterministic-uuid";
-export type { CurriculumCefrLevel, GrammarPoint } from "./curriculum-types";
+export type { ConstructionVariant, CurriculumCefrLevel, GrammarPoint } from "./curriculum-types";
 
 export * from "./coverage";
 

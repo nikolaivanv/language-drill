@@ -295,6 +295,53 @@ export function assertCurriculumInvariants(
       );
     }
 
+    // 9j. constructionVariants — the curated sub-construction rotation pool for
+    //     a multi-construction point. Only meaningful on grammar points (a
+    //     vocab/dictation umbrella has no cloze/translation construction to
+    //     vary), needs ≥2 entries to rotate at all, and cannot coexist with
+    //     selfRevealingElicitation because both claim the single seed slot.
+    if (entry.constructionVariants) {
+      if (entry.kind !== 'grammar') {
+        throw new Error(
+          `Curriculum invariant violated: '${entry.key}' has constructionVariants but is not kind 'grammar'`,
+        );
+      }
+      if (entry.constructionVariants.length < 2) {
+        throw new Error(
+          `Curriculum invariant violated: '${entry.key}' needs at least 2 constructionVariants to rotate (has ${entry.constructionVariants.length})`,
+        );
+      }
+      if (entry.selfRevealingElicitation) {
+        throw new Error(
+          `Curriculum invariant violated: '${entry.key}' cannot combine constructionVariants with selfRevealingElicitation — both claim the seed slot`,
+        );
+      }
+      const seenVariantIds = new Set<string>();
+      for (const variant of entry.constructionVariants) {
+        if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(variant.id)) {
+          throw new Error(
+            `Curriculum invariant violated: '${entry.key}' has malformed constructionVariant id '${variant.id}' (expected kebab-case)`,
+          );
+        }
+        if (seenVariantIds.has(variant.id)) {
+          throw new Error(
+            `Curriculum invariant violated: '${entry.key}' has duplicate constructionVariant id '${variant.id}'`,
+          );
+        }
+        seenVariantIds.add(variant.id);
+        if (variant.directive.trim().length === 0) {
+          throw new Error(
+            `Curriculum invariant violated: '${entry.key}' constructionVariant '${variant.id}' has an empty directive`,
+          );
+        }
+        if (variant.share !== undefined && !(variant.share > 0)) {
+          throw new Error(
+            `Curriculum invariant violated: '${entry.key}' constructionVariant '${variant.id}' share must be > 0`,
+          );
+        }
+      }
+    }
+
     // 9e. freeWriting config is present iff the entry is a free-writing umbrella.
     if (entry.kind === 'free-writing' && !entry.freeWriting) {
       throw new Error(

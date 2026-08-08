@@ -53,6 +53,26 @@ export type CurriculumCefrLevel = Extract<CefrLevel, 'A1' | 'A2' | 'B1' | 'B2'>;
  *     and `paraphrase.seeds` is the scenario-seed rotation pool driving
  *     per-ordinal diversity. No `coverageSpec`.
  */
+/**
+ * One sub-construction of a multi-construction grammar point (e.g. the hearsay
+ * `dicen que…` vs. the adversity `me robaron la cartera` readings of the ES
+ * impersonal plural). Drives per-ordinal rotation for CLOZE/TRANSLATION cells:
+ * without it the generator collapses the whole pool onto the point's most
+ * prototypical member (43/50 `Dicen` clozes, 49/50 `dicen que` translations).
+ * See docs/superpowers/specs/2026-08-08-construction-variants-design.md.
+ */
+export type ConstructionVariant = Readonly<{
+  /** kebab-case, stable — persisted as `content_json.seedWord` and used as the
+   *  coverage key, so renaming one resets that variant's measured coverage. */
+  id: string;
+  /** Strict prompt text naming the sub-construction, with an exemplar. Injected
+   *  verbatim into the per-draft user prompt. */
+  directive: string;
+  /** Relative weight, default 1. The prototype keeps a plurality without
+   *  owning the pool: share 3 against three share-1 variants targets 50%. */
+  share?: number;
+}>;
+
 export type GrammarPoint = Readonly<{
   /** Stable identifier; format: `<lang>-<level>-<slug>`, e.g. `'es-b1-present-subjunctive'`. */
   key: string;
@@ -179,6 +199,15 @@ export type GrammarPoint = Readonly<{
    * REQUIRED non-empty iff selfRevealingElicitation is set (invariant 9h).
    */
   elicitationSeedValues?: readonly string[];
+  /**
+   * Curated sub-construction rotation for a multi-construction point. Present
+   * ⇒ CLOZE and TRANSLATION cells for this point seed from the variant pool
+   * instead of the frequency band, and each draft carries a strict directive
+   * naming its variant. Mutually exclusive with `selfRevealingElicitation`
+   * (both claim the single seed slot). ≥2 entries, unique kebab-case ids —
+   * enforced by curriculum invariant 9j. Only valid on `kind: 'grammar'`.
+   */
+  constructionVariants?: readonly ConstructionVariant[];
   /**
    * Declarative coverage spec (Pool Coverage Controller, Phase 2) — which
    * categorical axes a diverse approved set should vary along, and an absolute
