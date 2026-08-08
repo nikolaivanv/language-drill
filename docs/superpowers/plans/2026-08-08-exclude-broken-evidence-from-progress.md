@@ -279,42 +279,14 @@ and append at the end of the file:
 export { scoringEvidenceFilter };
 ```
 
-- [ ] **Step 7: Add the call-site guard test**
+- [ ] **Step 7: Verify the re-export compiles**
 
-Append to `infra/lambda/src/lib/exercise-filters.test.ts`:
+Run: `pnpm build && pnpm --filter @language-drill/lambda exec vitest run src/lib/exercise-filters.test.ts`
+Expected: PASS — the pre-existing `freshFirstOrderBy` test still passes and the new re-export resolves.
 
-```ts
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+The call-site guard test that pins the four scoring surfaces lives in Task 5, alongside the code it guards — writing it here would commit a knowingly-failing test and violate the project's "tests must pass before moving to the next task" rule.
 
-// The route tests mock the db module, so a mocked query returns its canned rows
-// no matter what the WHERE clause says — a behavioural test cannot prove the
-// predicate is applied. This guards the next-best thing: that each scoring
-// surface still references it, so removing the filter fails a test rather than
-// silently regressing every learner's scores.
-const SCORING_SURFACES = [
-  '../routes/progress.ts',
-  '../routes/insights.ts',
-  '../routes/sessions.ts',
-  '../email/gather.ts',
-];
-
-describe('scoringEvidenceFilter call sites', () => {
-  it.each(SCORING_SURFACES)('%s filters broken-exercise evidence', (rel) => {
-    const src = readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8');
-    expect(src).toContain('scoringEvidenceFilter');
-  });
-});
-```
-
-- [ ] **Step 8: Run it to verify it fails**
-
-Run: `pnpm --filter @language-drill/lambda exec vitest run src/lib/exercise-filters.test.ts`
-Expected: FAIL — all four `scoringEvidenceFilter call sites` cases fail (the surfaces are wired in Task 5). The pre-existing `freshFirstOrderBy` test still passes.
-
-This is a deliberate red test spanning two tasks. Leave it failing; Task 5 turns it green. Do not run the full suite green-gate until Task 5 is done.
-
-- [ ] **Step 9: Build, typecheck, commit**
+- [ ] **Step 8: Build, typecheck, commit**
 
 ```bash
 pnpm build && pnpm --filter @language-drill/db typecheck && pnpm --filter @language-drill/lambda typecheck
@@ -815,10 +787,36 @@ and add to the `rawHistory` `and(...)`, after `isNotNull(userExerciseHistory.eva
 
 `rawMastery` needs no change — it reads `user_grammar_mastery`, which the backfill has already corrected.
 
-- [ ] **Step 6: Run the guard test from Task 2**
+- [ ] **Step 6: Add the call-site guard test**
+
+Append to `infra/lambda/src/lib/exercise-filters.test.ts` (add the two `node:` imports at the top of the file, beside the existing imports):
+
+```ts
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+// The route tests mock the db module, so a mocked query returns its canned rows
+// no matter what the WHERE clause says — a behavioural test cannot prove the
+// predicate is applied. This guards the next-best thing: that each scoring
+// surface still references it, so deleting the filter fails a test rather than
+// silently regressing every learner's scores.
+const SCORING_SURFACES = [
+  '../routes/progress.ts',
+  '../routes/insights.ts',
+  '../routes/sessions.ts',
+  '../email/gather.ts',
+];
+
+describe('scoringEvidenceFilter call sites', () => {
+  it.each(SCORING_SURFACES)('%s filters broken-exercise evidence', (rel) => {
+    const src = readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8');
+    expect(src).toContain('scoringEvidenceFilter');
+  });
+});
+```
 
 Run: `pnpm build && pnpm --filter @language-drill/lambda exec vitest run src/lib/exercise-filters.test.ts`
-Expected: PASS — all four `scoringEvidenceFilter call sites` cases now green.
+Expected: PASS — all four cases green, because Steps 2-5 wired the surfaces. If a case fails, that surface was missed; wire it rather than removing the case.
 
 - [ ] **Step 7: Run the full gate**
 
@@ -830,7 +828,7 @@ Report the actual counts (X passed, Y failed). Do not proceed with failures.
 - [ ] **Step 8: Commit**
 
 ```bash
-git add packages/db/scripts/backfill-mastery.ts infra/lambda/src/routes/progress.ts \
+git add packages/db/scripts/backfill-mastery.ts infra/lambda/src/lib/exercise-filters.test.ts infra/lambda/src/routes/progress.ts \
         infra/lambda/src/routes/insights.ts infra/lambda/src/routes/sessions.ts \
         infra/lambda/src/email/gather.ts
 git commit -m "feat: exclude defect-demoted attempts from mastery and progress surfaces"
