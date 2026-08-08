@@ -96,6 +96,51 @@ describe('computeSkillMovements', () => {
     expect(downWeighted[0].band).toBe('steady');
   });
 
+  it('reports low confidence for a slip measured against a single-observation prior', () => {
+    // Regression: prod session ec7dd00f (es-b1-impersonal-plural). One prior row
+    // at 1.0 pins mastery to the ceiling with confidence ~0.18; five *correct*
+    // answers (all >= CORRECT_THRESHOLD, so the header reads "5 of 5 · 100%")
+    // then replay to ~0.927 with confidence ~0.70. Banding as 'slip' is honest,
+    // but the badge must not claim "we're confident" about a delta whose
+    // baseline is a single sample — confidence is bounded by the weaker side.
+    const rows: SkillHistoryRow[] = [
+      { id: 'p1', grammarPointKey: 'gp-a', score: 1, difficulty: CefrLevel.B1, evaluatedAt: at('2026-07-29T22:29:17.763Z') },
+      { id: 's1', grammarPointKey: 'gp-a', score: 0.82, difficulty: CefrLevel.B1, evaluatedAt: at('2026-08-08T17:57:51.737Z') },
+      { id: 's2', grammarPointKey: 'gp-a', score: 0.92, difficulty: CefrLevel.B1, evaluatedAt: at('2026-08-08T18:00:09.790Z') },
+      { id: 's3', grammarPointKey: 'gp-a', score: 1, difficulty: CefrLevel.B1, evaluatedAt: at('2026-08-08T18:03:37.818Z') },
+      { id: 's4', grammarPointKey: 'gp-a', score: 0.88, difficulty: CefrLevel.B1, evaluatedAt: at('2026-08-08T18:05:29.227Z') },
+      { id: 's5', grammarPointKey: 'gp-a', score: 1, difficulty: CefrLevel.B1, evaluatedAt: at('2026-08-08T18:06:11.554Z') },
+    ];
+    const out = computeSkillMovements({
+      rows,
+      sessionRowIds: new Set(['s1', 's2', 's3', 's4', 's5']),
+      labels: new Map([['gp-a', 'Point A']]),
+    });
+    expect(out[0].band).toBe('slip');
+    // after.confidence alone is ~0.70 → would band 'high'; before.confidence is
+    // ~0.18, so the movement is only an early signal.
+    expect(out[0].confidence).toBe('low');
+  });
+
+  it('keeps high confidence when both sides of the delta are well-evidenced', () => {
+    // Counterpart to the test above: enough prior rows that before.confidence
+    // clears the cutoff too, so gating on the weaker side must NOT downgrade it.
+    const prior: SkillHistoryRow[] = Array.from({ length: 8 }, (_, i) => ({
+      id: `p${i}`,
+      grammarPointKey: 'gp-a',
+      score: 0.9,
+      difficulty: CefrLevel.B1,
+      evaluatedAt: at(`2026-08-0${i + 1}T04:00:00Z`),
+    }));
+    const rows: SkillHistoryRow[] = [
+      ...prior,
+      { id: 's1', grammarPointKey: 'gp-a', score: 0.1, difficulty: CefrLevel.B1, evaluatedAt: at('2026-08-09T04:00:00Z') },
+    ];
+    const out = computeSkillMovements({ rows, sessionRowIds: new Set(['s1']), labels: new Map([['gp-a', 'Point A']]) });
+    expect(out[0].band).toBe('slip');
+    expect(out[0].confidence).toBe('high');
+  });
+
   it('orders movers before steady, deterministically', () => {
     const rows: SkillHistoryRow[] = [
       { id: 'p1', grammarPointKey: 'gp-a', score: 0.6, difficulty: CefrLevel.B2, evaluatedAt: at('2026-06-10T00:00:00Z') },
