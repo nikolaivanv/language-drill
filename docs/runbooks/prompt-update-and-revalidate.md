@@ -522,17 +522,23 @@ score nothing will ever recompute. The dry-run output reports upsert and
 delete counts separately, so check both before applying.
 
 If a delete looks wrong, `--include-demoted` **prevents future deletes** and
-rewrites mastery back to the unfiltered values for that run — but it does
-**not** retroactively resurrect a row a *prior* run already deleted. In
-particular, it cannot restore a row that only ever existed via incidental
-mastery folding (`infra/lambda/src/lib/mastery/incidental-fold.ts` — an
-evaluator error attributed to a grammar point other than the exercise's host
-point, which has no `user_exercise_history` row of its own to replay from):
-the replay can't see incidental observations at all, filtered or not, so the
-upsert loop never recreates them regardless of `--include-demoted`. Such a
-row only comes back if the learner practices that point again, or via a
-manual insert. (The backfill itself no longer deletes this kind of row —
-see the 2026-08-09 fix — but earlier runs may already have.)
+rewrites mastery back to the unfiltered values for that run. For an ordinary
+row — one whose grammar point has `user_exercise_history` rows naming it —
+that is enough to bring a previously deleted row back: the unfiltered replay
+still produces the point, so the upsert loop recreates it with its
+pre-filter score. Recovery is not guaranteed to be *byte*-identical (the
+score is recomputed from whatever history exists now), but the row returns.
+
+The one case `--include-demoted` **cannot** recover is a row that only ever
+existed via incidental mastery folding
+(`infra/lambda/src/lib/mastery/incidental-fold.ts` — an evaluator error
+attributed to a grammar point other than the exercise's host point, which has
+no `user_exercise_history` row of its own to replay from). The replay can't
+see incidental observations at all, filtered or not, so no flag makes the
+upsert loop recreate them. Such a row only comes back if the learner
+practices that point again, or via a manual insert. (The backfill itself no
+longer deletes this kind of row — see the 2026-08-09 fix — but earlier runs
+may already have.)
 
 **TOCTOU window.** The script snapshots `user_grammar_mastery` before it
 reads history, which narrows but does not eliminate the race between a live

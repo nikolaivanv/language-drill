@@ -84,6 +84,9 @@ export function freshFirstOrderBy(userId: string) {
  *   - routes/sessions.ts:  GET /sessions/:id/debrief skill movements
  *   - routes/sessions.ts:  GET /sessions/today errorRows
  *   - email/gather.ts:     weekly summary accuracy
+ *   - lib/mastery/rank-context.ts: POST /sessions error counts — the twin of
+ *     the GET /sessions/today errorRows query; without it the two disagreed
+ *     and the same point could show `error-fix` on one screen but not the other
  *
  * Sites that intentionally do NOT filter:
  *   - routes/admin.ts (all)      — admin surfaces show raw truth
