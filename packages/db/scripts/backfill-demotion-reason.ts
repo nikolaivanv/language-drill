@@ -15,6 +15,19 @@
  * legitimate evidence, and Task 3 makes this the last cohort that can be
  * ambiguous.
  *
+ * Second known gap, not classifiable by this script and not a bug: generation
+ * time itself inserts `reviewStatus: 'rejected'` rows with a NULL
+ * `demotion_reason` — see `packages/db/src/generation/validate-and-insert.ts`,
+ * which writes validator-rejected drafts straight to 'rejected' without ever
+ * setting the field. Those rows are harmless for scoring (never served, never
+ * attempted, so there is no evidence to mis-include or mis-exclude), but they
+ * permanently keep the "0 unclassified rejected rows" invariant below from
+ * ever holding exactly, and a re-run of this script would misfile them as
+ * 'pool-hygiene' — which would be a lie (they were quality vetoes, just from
+ * the generation-time validator rather than a demotion CLI). Do not chase a
+ * nonzero `remaining` count here without first checking whether the leftover
+ * rows are generation-time inserts.
+ *
  * Dry-run by default; pass --apply to write. Idempotent.
  *
  * Required env: DATABASE_URL.

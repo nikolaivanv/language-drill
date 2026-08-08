@@ -4,7 +4,13 @@
 // sync. Accepts `db` as a parameter so unit tests can inject a mock without
 // touching module-level imports.
 import { and, eq, gte, sql } from 'drizzle-orm';
-import { userGrammarMastery, errorObservations, getGrammarPoint } from '@language-drill/db';
+import {
+  userGrammarMastery,
+  errorObservations,
+  exercises as exercisesTable,
+  scoringEvidenceFilter,
+  getGrammarPoint,
+} from '@language-drill/db';
 import type { RankContext, PointMastery } from './rank';
 
 /**
@@ -46,11 +52,19 @@ export async function buildRankContext(
         n: sql<number>`COUNT(*)::int`,
       })
       .from(errorObservations)
+      // Twin of the byte-identical errorRows query in routes/sessions.ts
+      // GET /sessions/today — joined to exercises so scoringEvidenceFilter can
+      // exclude errors observed on defect-demoted exercises. Without this join
+      // POST /sessions ranked and labelled (`error-fix`) on unfiltered counts
+      // while GET /sessions/today used filtered ones, so the same point could
+      // show `error-fix` on one screen and not the other.
+      .innerJoin(exercisesTable, eq(errorObservations.exerciseId, exercisesTable.id))
       .where(
         and(
           eq(errorObservations.userId, userId),
           eq(errorObservations.language, language),
           gte(errorObservations.occurredAt, errorSince),
+          scoringEvidenceFilter(exercisesTable),
         ),
       )
       .groupBy(

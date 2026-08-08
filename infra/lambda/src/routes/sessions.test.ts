@@ -131,6 +131,7 @@ vi.mock('@language-drill/db', () => ({
     errorGrammarPointKey: 'error_grammar_point_key',
     hostGrammarPointKey: 'host_grammar_point_key',
     occurredAt: 'occurred_at',
+    exerciseId: 'exercise_id',
   },
   usageEvents: {},
   practiceSessions: {
@@ -140,6 +141,17 @@ vi.mock('@language-drill/db', () => ({
     startedAt: 'started_at',
   },
   getGrammarPoint: (key: string) => mockGetGrammarPoint(key),
+  // rank-context.ts (used by POST /sessions via buildRankContext) imports
+  // `exercises` + `scoringEvidenceFilter` straight from `@language-drill/db`
+  // rather than through `../lib/exercise-filters` — mirrored here so
+  // `Promise.all`'s error-count query doesn't throw on an undefined call.
+  // Reusing `mockScoringEvidenceFilter` (declared below, referenced here via
+  // Vitest's mock-prefix hoisting) is intentional: in production
+  // `../lib/exercise-filters` just re-exports the same `@language-drill/db`
+  // function, so one spy tracking both import paths matches reality — see
+  // the assertions at lines ~3149/3224, both on GET routes that never call
+  // buildRankContext, so this addition doesn't change their counts.
+  scoringEvidenceFilter: (table: unknown) => mockScoringEvidenceFilter(table),
 }));
 
 // Mock the review-status filter so we can count calls per route. The

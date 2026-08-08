@@ -936,7 +936,7 @@ async function resolveExerciseFlagged(
   action: 'approve' | 'reject',
 ): Promise<ResolveOutcome> {
   const setValues = action === 'approve'
-    ? { reviewStatus: 'manual-approved' as const, flaggedReasons: null }
+    ? { reviewStatus: 'manual-approved' as const, flaggedReasons: null, demotionReason: null }
     : { reviewStatus: 'rejected' as const, demotionReason: 'quality' as const };
   try {
     const updated = await db
@@ -947,9 +947,13 @@ async function resolveExerciseFlagged(
     if (updated.length > 0) return action === 'approve' ? 'approved' : 'rejected';
   } catch (err) {
     if (action === 'approve' && isUniqueViolation(err)) {
+      // Collided with exercises_dedup_idx — an equivalent row is already
+      // live in this cell, so this one is a REDUNDANT copy, not a defect.
+      // 'duplicate' keeps learners' past attempts on it counting as evidence
+      // (NON_EVIDENCE_DEMOTION_REASONS only excludes 'quality'/'learner-flag').
       await db
         .update(exercises)
-        .set({ reviewStatus: 'rejected' as const, demotionReason: 'quality' as const })
+        .set({ reviewStatus: 'rejected' as const, demotionReason: 'duplicate' as const })
         .where(and(eq(exercises.id, id), eq(exercises.reviewStatus, 'flagged')));
       return 'demoted';
     }

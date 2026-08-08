@@ -35,7 +35,7 @@ import { and, eq, inArray, sql } from 'drizzle-orm';
 
 import { createDb } from '../src/client';
 import { exercises } from '../src/schema';
-import { DEMOTION_REASONS, type DemotionReason } from '../src/lib/evidence';
+import { DEMOTION_REASONS, NON_EVIDENCE_DEMOTION_REASONS, type DemotionReason } from '../src/lib/evidence';
 
 // ---------------------------------------------------------------------------
 // Args
@@ -143,7 +143,7 @@ async function main(): Promise<void> {
 
   console.log(`[demote-pool] demoted ${rows.length} rows to 'rejected' (reason: ${args.reason}).`);
 
-  if (args.reason === 'quality' || args.reason === 'learner-flag') {
+  if ((NON_EVIDENCE_DEMOTION_REASONS as readonly DemotionReason[]).includes(args.reason)) {
     console.log(
       '[demote-pool] These attempts no longer count as learner evidence. ' +
         'Stored mastery is now stale — run `pnpm backfill:mastery --apply` against this database.',

@@ -206,8 +206,12 @@ async function applyPromotion(
     .update(exercises)
     .set({
       reviewStatus: 'manual-approved',
-      // Mirror the admin approve path — a promoted row carries no flags.
+      // Mirror the admin approve path — a promoted row carries no flags and
+      // no stale demotion reason (matters if this row was ever demoted and
+      // later re-promoted; a leftover reason would silently exclude every
+      // future attempt on it from scoring).
       flaggedReasons: null,
+      demotionReason: null,
       qualityScore,
     })
     .where(and(eq(exercises.id, rowId), eq(exercises.reviewStatus, 'flagged')));

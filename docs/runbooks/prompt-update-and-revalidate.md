@@ -495,8 +495,14 @@ issues.
 
 A quality demotion revokes the learner's credit for attempts on the demoted
 rows, but `user_grammar_mastery` is stored state — it keeps the old values
-until it is replayed. The read-time surfaces (radar, coach, debrief, weekly
-email) re-derive per request and need no action.
+until it is replayed. Of the read-time surfaces, radar, coach, and debrief
+re-derive per request and need no action — but the **weekly email is a
+partial exception**: `infra/lambda/src/email/gather.ts` reads *stored*
+`user_grammar_mastery` rows for weak-spot selection, so a stale row can steer
+a learner's weekly email toward (or away from) the wrong grammar point until
+you re-run the backfill below.
+
+Run it while the app is quiet if you can (see the TOCTOU note below for why).
 
 ```bash
 pnpm backfill:mastery              # dry-run: prints how many rows would change
@@ -513,6 +519,30 @@ you just demoted for `quality` or `learner-flag`, the replay produces no
 surviving evidence for that `(user, language, grammarPointKey)` triple, and
 the stale `user_grammar_mastery` row is deleted rather than left showing a
 score nothing will ever recompute. The dry-run output reports upsert and
-delete counts separately, so check both before applying. If a delete looks
-wrong, `--include-demoted` is the rollback path — it restores the
-pre-backfill behaviour (all attempts count, nothing gets deleted).
+delete counts separately, so check both before applying.
+
+If a delete looks wrong, `--include-demoted` **prevents future deletes** and
+rewrites mastery back to the unfiltered values for that run — but it does
+**not** retroactively resurrect a row a *prior* run already deleted. In
+particular, it cannot restore a row that only ever existed via incidental
+mastery folding (`infra/lambda/src/lib/mastery/incidental-fold.ts` — an
+evaluator error attributed to a grammar point other than the exercise's host
+point, which has no `user_exercise_history` row of its own to replay from):
+the replay can't see incidental observations at all, filtered or not, so the
+upsert loop never recreates them regardless of `--include-demoted`. Such a
+row only comes back if the learner practices that point again, or via a
+manual insert. (The backfill itself no longer deletes this kind of row —
+see the 2026-08-09 fix — but earlier runs may already have.)
+
+**TOCTOU window.** The script snapshots `user_grammar_mastery` before it
+reads history, which narrows but does not eliminate the race between a live
+submission and this script's read — prefer running it when traffic is low
+(e.g. off-peak hours) rather than mid-day.
+
+**Demotions performed through the admin UI** (upholding a learner flag,
+content moderation reject, or `POST /admin/revalidate`) also revoke evidence
+via the same `demotionReason` mechanism as this runbook's CLI-driven
+revalidation passes, but those routes print no reminder to re-run the
+backfill. If you demoted anything through the admin UI, treat it the same as
+a CLI revalidation pass and run `pnpm backfill:mastery --apply` afterward —
+nothing else will prompt you to.

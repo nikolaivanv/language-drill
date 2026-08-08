@@ -17,9 +17,19 @@ describe('freshFirstOrderBy', () => {
 
 // The route tests mock the db module, so a mocked query returns its canned rows
 // no matter what the WHERE clause says — a behavioural test cannot prove the
-// predicate is applied. This guards the next-best thing: that each scoring
-// surface still references it, so deleting the filter fails a test rather than
-// silently regressing every learner's scores.
+// predicate is applied. This guards the next-best thing: that each FILE
+// hosting a scoring surface still references the filter somewhere in it.
+//
+// This is a file-level guard, not a per-call-site one: `exercise-filters.ts`'s
+// own doc comment lists SEVEN scoring call sites living across these FOUR
+// files (progress.ts and insights.ts have two each, sessions.ts has two,
+// gather.ts has one). A single `toContain('scoringEvidenceFilter')` per file
+// passes as long as ONE call site in that file still uses it — dropping the
+// filter from up to three of the seven while leaving a fourth intact would
+// not fail this test. Widening it to a real per-call-site check would mean
+// asserting on line numbers or AST shape, which is more brittle than the
+// behavioural test this file already can't do; the trade-off accepted here
+// is coarse-but-durable over precise-but-fragile.
 const SCORING_SURFACES = [
   '../routes/progress.ts',
   '../routes/insights.ts',
