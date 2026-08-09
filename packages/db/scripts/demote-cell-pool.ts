@@ -33,6 +33,7 @@
 
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 
+import type { Db } from '../src/client';
 import { createDb } from '../src/client';
 import { exercises } from '../src/schema';
 import { DEMOTION_REASONS, NON_EVIDENCE_DEMOTION_REASONS, type DemotionReason } from '../src/lib/evidence';
@@ -99,20 +100,27 @@ export function parseDemoteArgs(argv: readonly string[]): DemoteArgs {
 }
 
 // ---------------------------------------------------------------------------
-// main
+// Row selection (extracted so it can be unit-tested against a mocked Db)
 // ---------------------------------------------------------------------------
 
-async function main(): Promise<void> {
-  const args = parseDemoteArgs(process.argv.slice(2));
+export type SelectRowsArgs = Pick<
+  DemoteArgs,
+  'language' | 'cefr' | 'type' | 'grammarPoint' | 'contentIlike' | 'limit'
+>;
 
-  const databaseUrl = process.env['DATABASE_URL'];
-  if (!databaseUrl) {
-    console.error('DATABASE_URL is not set');
-    process.exit(1);
-  }
-
-  const db = createDb(databaseUrl);
-
+/**
+ * Selects the approved rows matching a cell (+ optional content filter),
+ * capped to the oldest `limit` rows when set. Dry-run and --apply in
+ * `main()` both call this exact function once and share its result, so the
+ * printed count always matches what --apply would actually demote. Oldest-
+ * first (`ORDER BY created_at ASC`) keeps the most recently generated — and
+ * so most prompt-current — rows in the pool. Without a limit, no ORDER BY /
+ * LIMIT is applied at all — identical query to before the flag existed.
+ */
+export async function selectRowsToDemote(
+  db: Db,
+  args: SelectRowsArgs,
+): Promise<{ id: string; contentJson: unknown }[]> {
   const filters = [
     eq(exercises.language, args.language),
     eq(exercises.difficulty, args.cefr),
@@ -129,15 +137,27 @@ async function main(): Promise<void> {
     .from(exercises)
     .where(and(...filters));
 
-  // Dry-run and --apply both select through this same query, capped
-  // identically, so the printed count always matches what --apply would
-  // actually demote. When --limit is set, cap oldest-first (ORDER BY
-  // created_at ASC) so the most recently generated — and so most
-  // prompt-current — rows stay in the pool. Without --limit this is the
-  // same unordered, uncapped query as before the flag existed.
-  const rows = args.limit !== null
+  return args.limit !== null
     ? await baseQuery.orderBy(asc(exercises.createdAt)).limit(args.limit)
     : await baseQuery;
+}
+
+// ---------------------------------------------------------------------------
+// main
+// ---------------------------------------------------------------------------
+
+async function main(): Promise<void> {
+  const args = parseDemoteArgs(process.argv.slice(2));
+
+  const databaseUrl = process.env['DATABASE_URL'];
+  if (!databaseUrl) {
+    console.error('DATABASE_URL is not set');
+    process.exit(1);
+  }
+
+  const db = createDb(databaseUrl);
+
+  const rows = await selectRowsToDemote(db, args);
 
   const scope = `${args.language}/${args.cefr}/${args.type}/${args.grammarPoint}` +
     (args.contentIlike ? ` (content ILIKE '%${args.contentIlike}%')` : '') +
