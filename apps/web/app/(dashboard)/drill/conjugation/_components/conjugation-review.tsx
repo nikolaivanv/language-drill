@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import type { CefrLevel, LearningLanguage } from '@language-drill/shared';
 import type { AuthenticatedFetch, DebriefItem } from '@language-drill/api-client';
 import { Button } from '../../../../../components/ui';
 import { ConjugationReviewHeader } from './conjugation-review-header';
@@ -10,8 +9,6 @@ import { ReviewItemCard } from '../../debrief/_components/review-item-card';
 export interface ConjugationReviewProps {
   /** Items answered in this open-ended sitting, in answer order. */
   items: DebriefItem[];
-  language: LearningLanguage;
-  difficulty: CefrLevel;
   durationSeconds: number;
   fetchFn: AuthenticatedFetch;
   /** Restart the loop with a fresh exercise + empty review. */

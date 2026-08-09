@@ -58,14 +58,13 @@ export interface MovementSummary {
 
 export function movementSummary(
   movements: readonly SkillMovement[],
+  attemptedCount: number,
 ): MovementSummary;
 ```
 
 `SkillMovement` is imported from `@language-drill/shared` (the same type the panel uses).
 
-> **Signature note.** `movementSummary` takes movements **only** — not the session counts. The subline describes movement shape and never mentions items or skips, and the factual line is assembled in the header from `exerciseCount` / `skippedCount`. Keeping counts out of the summary keeps it a pure function of the payload's bands and makes the six states exhaustively testable from a single input.
->
-> This means state `none` is inferred from `movements.length === 0` rather than read from a skip count. That inference holds because `computeSkillMovements` emits one movement per grammar point the session's **graded** items touched: an all-skipped session yields `[]`, and any graded session yields at least one movement. If that invariant ever changes server-side, rule 1's subline ("nothing graded this round") becomes a lie — so the debrief route test asserting `skillMovements: []` for an all-skipped session is load-bearing for this copy.
+> **Signature note (revised post-review).** `movementSummary` takes `attemptedCount` alongside movements — it is **not** a pure function of movements alone. The original design inferred state `none` from `movements.length === 0` on the theory that `computeSkillMovements` emits one movement per grammar point the session's graded items touched, so an empty array could only mean nothing was graded. That inference turned out to be fragile within one implementation cycle: a session whose graded items all carry a null `grammar_point_key` also yields an empty movement list, which would render "nothing answered." on a session that was, in fact, graded. `attemptedCount` is the independent signal that disambiguates the two empty-movements cases — see the precedence table below.
 
 ### State precedence — first match wins
 
@@ -73,17 +72,17 @@ A session can be several shapes at once, so order is part of the contract:
 
 | # | Condition | Title | Subline shape |
 |---|---|---|---|
-| 1 | `movements.length === 0` | `session done.` | `nothing graded this round` |
+| 1 | `movements.length === 0` **and** `attemptedCount === 0` | `nothing answered.` | `every item skipped this round` |
 | 2 | gain **and** slip present | `mixed session.` | `two gained · one slipped` |
 | 3 | slip, no gain | `worth another look.` | `one slipped` |
 | 4 | gain, no slip | `solid session.` | `one skill gained · nothing slipped` |
 | 5 | only `new` (no gain, no slip) | `new ground.` | `two skills · first evidence` |
-| 6 | otherwise (all `steady`) | `steady session.` | `nothing shifted much — that's normal` |
+| 6 | otherwise (`movements.length === 0` with `attemptedCount > 0`, or all `steady`) | `steady session.` | `no skill moved far enough to call` |
 
 - **Gain** = `strong-gain` **or** `gain`. The two are not distinguished in the header; the panel already separates them.
-- **`new` never changes the title** when it appears alongside a gain or a slip — it is mentioned in the subline only. Rule 5 fires solely when `new` is the only mover.
+- Rule 5 fires solely when `new` is the only mover; when `new` appears alongside a gain or a slip, rules 2–4 fire first and `new` is silently absent from the subline.
 - **Rule 3 is the tone decision**: an unoffset slip is named. It is the one state that could feel punishing, and it is stated plainly rather than buried behind a gain.
-- Rule 6 is the catch-all: reachable only when every movement is `steady`.
+- Rule 6 is the catch-all: reachable either when every movement is `steady`, or when movements are empty but the learner attempted at least one item (the `attemptedCount` hardening — see the signature note above).
 
 ### Number words
 
@@ -108,25 +107,22 @@ The factual line uses `exerciseCount` for items and omits the `· N skipped` cla
 
 ### Deletions
 
-Once the header stops calling it, `accuracyTier` has no live consumer:
+`DebriefFooterProps.tier` — **dead today**: `DebriefFooter(_props)` ignores it, retained "for future tier-keyed copy variants" that never arrived. Remove the prop and the import. Likewise the `accuracyTier(...)` call and import in `drill/debrief/[sessionId]/page.tsx` — the debrief header no longer needs it.
 
-- `apps/web/lib/drill/accuracy-tier.ts` + `apps/web/lib/drill/__tests__/accuracy-tier.test.ts` — delete.
-- `DebriefFooterProps.tier` — **dead today**: `DebriefFooter(_props)` ignores it, retained "for future tier-keyed copy variants" that never arrived. Remove the prop and the import.
-- the `accuracyTier(...)` call and import in `drill/debrief/[sessionId]/page.tsx`.
-
-Its doc comment claims three consumers (header, Debrief tab narrative, what's-next router); only the header is real. Verify with a repo-wide grep before deleting rather than trusting the comment.
+`apps/web/lib/drill/accuracy-tier.ts` itself is **not** deleted (revised post-review): the conjugation review surface's mid-flight fix gave it a second, real consumer — `ConjugationReviewHeader` — so it stays, scoped to that one client-local surface. See "Out of scope" below.
 
 ## Edge cases
 
-- **All items skipped / nothing graded** → the debrief route emits `skillMovements: []` → state `none`, title `session done.`. The factual line still reports `N items · N skipped`, so the session is accounted for.
+- **All items skipped / nothing attempted** → the debrief route emits `skillMovements: []` and `attemptedCount: 0` → state `none`, title `nothing answered.`. The factual line still reports `N items · N skipped`, so the session is accounted for.
+- **Graded session with no movements** (e.g. every attempted item's grammar point is null) → `skillMovements: []` but `attemptedCount > 0` → state `steady`, not `none`. This is the hardening added after a review pass caught the pure-`movements.length === 0` inference as fragile; see the signature note above.
 - **Movements present but all `steady`** → state `steady`. Distinct from `none`: the learner did graded work, it just did not move anything. The panel independently shows its `N held steady` line.
 - **A single point both gained and slipped** — impossible: `computeSkillMovements` emits one aggregated movement per grammar point.
 - **Many movers** (say 4 gained, 3 slipped) → subline stays one line: `four gained · three slipped`. No truncation needed; the panel carries the detail.
-- **`skillMovements` absent from an older cached payload** → the schema defaults it to `[]` (`debrief.ts:67`), so the header degrades to `session done.` rather than throwing.
+- **`skillMovements` absent from an older cached payload** → the schema defaults it to `[]` (`debrief.ts:67`); combined with `attemptedCount`, the header degrades to `none` or `steady` rather than throwing.
 
 ## Out of scope
 
-- The **conjugation review** surface (`conjugation-review.tsx`) passes `skillMovements: []` — it keeps whatever header it has; no movement headline there.
+- The **conjugation review** surface regressed during this work: it initially reused `DebriefHeader` with a synthetic empty-movements payload, and — before the `attemptedCount` hardening existed — started claiming "nothing graded this round" immediately after grading real answers. It now has its own `ConjugationReviewHeader` and does not call `movementSummary` at all. `accuracy-tier.ts` (see "Deletions" above) survives, but **scoped to that one surface only** — conjugation practice is client-local, open-ended, and tracks no server-side mastery, so accuracy is the only signal it has. Its header deliberately renders **no accuracy percentage**: only the tier title plus a factual `you got X of Y` line, matching the "accuracy percentage removed" decision for the debrief header above.
 - `correctCount` / accuracy anywhere outside the debrief header: admin triage, the today-plan tile, `practice_sessions.correct_count`, and the API payload all stay.
 - `CORRECT_THRESHOLD` and the per-item `✓ correct` chips on the review cards — unchanged. The chips are per-item verdicts, not a session-level judgement.
 - Band thresholds, the confidence cue, and any server-side movement logic.
@@ -144,6 +140,7 @@ Its doc comment claims three consumers (header, Debrief tab narrative, what's-ne
 
 **New:**
 - `apps/web/lib/drill/movement-summary.ts` (+ `__tests__/movement-summary.test.ts`)
+- `apps/web/app/(dashboard)/drill/conjugation/_components/conjugation-review-header.tsx` (+ test) — added mid-flight, see "Out of scope" above.
 
 **Modified:**
 - `apps/web/app/(dashboard)/drill/debrief/_components/debrief-header.tsx`
@@ -151,7 +148,7 @@ Its doc comment claims three consumers (header, Debrief tab narrative, what's-ne
 - `apps/web/app/(dashboard)/drill/debrief/[sessionId]/page.tsx` (drop the `accuracyTier` call)
 - `apps/web/app/(dashboard)/drill/debrief/_components/__tests__/debrief-header.test.tsx`
 - `apps/web/app/(dashboard)/drill/debrief/[sessionId]/page.test.tsx`
+- `apps/web/app/(dashboard)/drill/conjugation/_components/conjugation-review.tsx` (stopped reusing `DebriefHeader`; renders `ConjugationReviewHeader` instead)
+- `apps/web/app/(dashboard)/drill/conjugation/page.tsx`
 
-**Deleted:**
-- `apps/web/lib/drill/accuracy-tier.ts`
-- `apps/web/lib/drill/__tests__/accuracy-tier.test.ts`
+**Deleted:** none. `apps/web/lib/drill/accuracy-tier.ts` (+ its test) was originally slated for deletion here but survives — see "Deletions" above.

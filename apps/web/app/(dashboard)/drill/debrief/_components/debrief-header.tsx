@@ -28,9 +28,10 @@ function formatDuration(totalSeconds: number): string {
 }
 
 export function DebriefHeader({ debrief }: DebriefHeaderProps) {
-  const { exerciseCount, skippedCount, durationSeconds, skillMovements } = debrief;
+  const { exerciseCount, skippedCount, durationSeconds, skillMovements, attemptedCount } =
+    debrief;
 
-  const { title, subline } = movementSummary(skillMovements);
+  const { title, subline } = movementSummary(skillMovements, attemptedCount);
 
   // Factual, verdict-free. Skips need somewhere to be accounted for.
   const factualLine =

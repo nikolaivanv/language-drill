@@ -210,10 +210,6 @@ function ConjugationPageContent() {
     return (
       <ConjugationReview
         items={reviewItems}
-        language={activeLanguage}
-        // Display usage: the recap header should report the level the set was
-        // ACTUALLY pulled at (the effective, possibly re-leveled one).
-        difficulty={displayLevel}
         durationSeconds={
           finishedAt ? Math.max(0, Math.floor((finishedAt - sessionStart) / 1000)) : 0
         }

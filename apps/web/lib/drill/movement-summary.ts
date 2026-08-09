@@ -25,8 +25,8 @@ export interface MovementSummary {
   subline: string;
 }
 
-export const STATE_TITLE: Record<MovementState, string> = {
-  none: 'session done.',
+const STATE_TITLE: Record<MovementState, string> = {
+  none: 'nothing answered.',
   mixed: 'mixed session.',
   slipped: 'worth another look.',
   gained: 'solid session.',
@@ -50,6 +50,7 @@ function pluralSkills(n: number): string {
 
 export function movementSummary(
   movements: readonly SkillMovement[],
+  attemptedCount: number,
 ): MovementSummary {
   const gained = movements.filter(
     (m) => m.band === 'gain' || m.band === 'strong-gain',
@@ -59,12 +60,20 @@ export function movementSummary(
 
   // First match wins. `new` never decides the title when a gain or slip is
   // present — it only reaches rule 5 as the sole mover.
+  //
+  // `none` requires BOTH an empty movement list AND zero attempts. A session
+  // whose graded items all carry a null grammar_point_key also yields an
+  // empty movement list, so `movements.length === 0` alone is not proof
+  // nothing was graded — it already produced one false "nothing graded this
+  // round" claim on a genuinely graded session. `attemptedCount` is the
+  // independent signal that rules that out; when items were attempted but
+  // nothing moved, rule 6 (steady) reports it instead.
   let state: MovementState;
   let subline: string;
 
-  if (movements.length === 0) {
+  if (movements.length === 0 && attemptedCount === 0) {
     state = 'none';
-    subline = 'nothing graded this round';
+    subline = 'every item skipped this round';
   } else if (gained > 0 && slipped > 0) {
     state = 'mixed';
     subline = `${count(gained)} gained · ${count(slipped)} slipped`;
@@ -79,7 +88,7 @@ export function movementSummary(
     subline = `${pluralSkills(fresh)} · first evidence`;
   } else {
     state = 'steady';
-    subline = "nothing shifted much — that's normal";
+    subline = 'no skill moved far enough to call';
   }
 
   return { state, title: STATE_TITLE[state], subline };

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { CefrLevel, ExerciseType, Language } from '@language-drill/shared';
 import type { DebriefResponse } from '@language-drill/api-client';
+import type { SkillMovement } from '@language-drill/shared';
 import DebriefPage from './page';
 
 // ---------------------------------------------------------------------------
@@ -85,6 +86,13 @@ function makeClozeItem(index: number, overrides: Record<string, unknown> = {}) {
   };
 }
 
+const GAIN_MOVEMENT: SkillMovement = {
+  grammarPointKey: 'es-b1-subjuntivo',
+  label: 'Subjuntivo',
+  band: 'gain',
+  confidence: 'high',
+};
+
 function makeDebriefResponse(
   overrides: Partial<DebriefResponse> = {},
 ): DebriefResponse {
@@ -100,7 +108,7 @@ function makeDebriefResponse(
     attemptedCount: 5,
     skippedCount: 0,
     items: [0, 1, 2, 3, 4].map((i) => makeClozeItem(i)) as DebriefResponse['items'],
-    skillMovements: [],
+    skillMovements: [GAIN_MOVEMENT],
     ...overrides,
   };
 }
@@ -150,10 +158,10 @@ describe('DebriefPage', () => {
 
       renderPage();
 
-      // Header — movement-keyed display title. This fixture carries no
-      // skillMovements, so the session reports as ungraded.
+      // Header — movement-keyed display title. This fixture carries one
+      // "gain" skillMovement, so the session reports as a solid session.
       expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent(
-        'session done.',
+        'solid session.',
       );
 
       // No tab switcher in the DOM.
@@ -167,6 +175,21 @@ describe('DebriefPage', () => {
       for (const label of ['#1', '#2', '#3', '#4', '#5']) {
         expect(screen.getByText(label)).toBeInTheDocument();
       }
+    });
+
+    it('renders the "nothing answered" headline when nothing was attempted', async () => {
+      mockUseSessionDebrief.mockReturnValue({
+        data: makeDebriefResponse({ skillMovements: [], attemptedCount: 0 }),
+        isPending: false,
+        isError: false,
+        error: null,
+      });
+
+      renderPage();
+
+      expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent(
+        'nothing answered.',
+      );
     });
 
     it('review cards are rendered in manifest order without any tab interaction', async () => {

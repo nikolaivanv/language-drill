@@ -49,9 +49,22 @@ describe('DebriefHeader — movement title', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('worth another look.');
   });
 
-  it('renders the none title when nothing was graded', () => {
-    render(<DebriefHeader debrief={makeDebrief({ skillMovements: [] })} />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('session done.');
+  it('renders the none title when nothing was attempted', () => {
+    render(
+      <DebriefHeader
+        debrief={makeDebrief({ skillMovements: [], attemptedCount: 0 })}
+      />,
+    );
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('nothing answered.');
+  });
+
+  it('renders the steady title when movements are empty but items were attempted', () => {
+    render(
+      <DebriefHeader
+        debrief={makeDebrief({ skillMovements: [], attemptedCount: 5 })}
+      />,
+    );
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('steady session.');
   });
 });
 

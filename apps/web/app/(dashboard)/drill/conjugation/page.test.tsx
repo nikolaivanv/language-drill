@@ -320,7 +320,7 @@ describe('ConjugationPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /finish session/i }));
 
-    // Reuses the real DebriefHeader summary line.
+    // Conjugation's own ConjugationReviewHeader accuracy line.
     expect(screen.getByText(/you got 1 of 1/i)).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /practice more/i }),
