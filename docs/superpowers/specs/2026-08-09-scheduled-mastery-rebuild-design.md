@@ -92,7 +92,22 @@ sources:
 | source | score | difficulty | timestamp |
 |---|---|---|---|
 | `user_exercise_history × exercises` | `history.score` | `exercises.difficulty` | `evaluated_at` |
-| `error_observations × exercises` | `SEVERITY_SCORE[severity]` (minor 0.4, major 0) | `exercises.difficulty` | `occurred_at` |
+| `error_observations × exercises` | `SEVERITY_SCORE[severity]` (minor 0.4, major 0) | **the violated point's `cefrLevel`** via `getGrammarPoint(errorGrammarPointKey)` — *not* the host exercise's difficulty | `occurred_at` |
+
+**Correction (2026-08-09, caught in review of Task 4).** An earlier draft of this
+table said the incidental row's difficulty is `exercises.difficulty`. That is
+wrong, and wrong in a way that would have defeated the whole design. The live
+path (`infra/lambda/src/routes/exercises.ts`) folds each incidental observation
+at `getGrammarPoint(obs.grammarPointKey).cefrLevel` — the CEFR level of the
+point that was *violated* — and `continue`s past any point missing from the
+curriculum. Because `updateMastery` weights a losing observation by
+`DW_PIVOT - dw`, difficulty is load-bearing: a major error on a fresh A1 point
+folds to 0.1250 at A1 but 0.1786 at B2. And the bias is systematic, not
+occasional — attribution keys come from `grammarPointsAtOrBelow(language,
+exercise.difficulty)`, so an incidental point is at or below the host's
+difficulty by construction, meaning the host-difficulty version would
+*systematically under-penalize* on every non-A1 exercise. The replay must
+perform the same curriculum lookup and the same skip.
 
 Three details separate faithful from approximately-faithful:
 
@@ -110,6 +125,21 @@ reproduce that: group by `(exercise_history_id, error_grammar_point_key)`, take
 the minimum severity score, and exclude rows where `error_grammar_point_key` is
 NULL or equals `host_grammar_point_key`. Without the grouping, a submission
 with three errors on one point folds three observations instead of one.
+
+**Exercise types whose submit path actually folds.** The free-writing branch of
+`POST /exercises/:id/submit` calls `recordErrorObservations` and then returns —
+it never calls `incidentalObservations`, so free-writing errors have **never**
+contributed to mastery. Their `error_observations` rows are nonetheless fully
+eligible for the query above (free-writing exercises carry a non-null umbrella
+`grammar_point_key`, and their errors carry attributed curriculum keys). Left
+unscoped, the replay would inject penalties the live path never applied, and the
+nightly diff would never settle to zero.
+
+The observation query is therefore scoped to the exercise types whose submit
+path folds incidentally. Whether free-writing errors *should* count toward
+grammar mastery is a real product question, but it is a **change to the live
+path**, not part of making the replay faithful — so it is out of scope here and
+recorded as a follow-up.
 
 **Evidence eligibility.** `scoringEvidenceFilter` applies to the observation
 query too. An error recorded against a defect-demoted exercise is exactly as
