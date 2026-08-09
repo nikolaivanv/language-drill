@@ -190,6 +190,11 @@ vi.mock('@language-drill/db', () => ({
   curriculumOrderOf: (key: string) => TR_FIXTURE_ORDER.get(key) ?? 0,
   // Phase 2: compatibleTypes — stub returns cloze+translation for all fixture points
   compatibleTypes: (_p: unknown) => ['cloze', 'translation'],
+  // scoringEvidenceFilter is a WHERE-clause predicate; the query chain below is
+  // entirely mocked (rows come from mockWhere/mockReviewWhere regardless of the
+  // WHERE argument), so a stub token is enough — it only needs to be a
+  // non-undefined value that real drizzle-orm's `and()` accepts.
+  scoringEvidenceFilter: (_table: unknown) => ({ __mockToken: 'scoring-evidence-filter' }),
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -476,12 +481,16 @@ describe('GET /progress/radar — review evidence', () => {
 //   1. profile: .from(userLanguageProfiles).where(...).limit(1)
 //   2. theory:  .from(theoryTopics).where(...)   ← NEW (Phase 2)
 //   3. mastery: .from(userGrammarMastery).where(...)
-//   4. errors:  .from(errorObservations).where(...).groupBy(...)
+//   4. errors:  .from(errorObservations).innerJoin(exercises, ...).where(...).groupBy(...)
+//      ← the innerJoin (added for scoringEvidenceFilter) routes this one
+//      through mockInnerJoin → mockWhere instead of mockReviewWhere.
 //
-// We drive each via mockImplementationOnce on mockReviewWhere (the plain
-// `.from().where()` terminal). The profile + theory calls are sequential;
-// mastery and errors run in Promise.all so they consume the 3rd and 4th
-// queued impl.
+// Queries 1-3 are driven via mockImplementationOnce on mockReviewWhere (the
+// plain `.from().where()` terminal); query 4 is driven via mockImplementationOnce
+// on mockWhere (the innerJoin-path terminal), both returning makeChainResult(...)
+// so `.groupBy()` resolves. The profile + theory calls are sequential; mastery
+// and errors run in Promise.all so they consume the 3rd queued mockReviewWhere
+// impl and the 1st queued mockWhere impl respectively.
 // ---------------------------------------------------------------------------
 
 describe('GET /progress/curriculum', () => {
@@ -515,8 +524,8 @@ describe('GET /progress/curriculum', () => {
         },
       ]),
     );
-    // 4. Errors → accusative has ≥2 recent errors
-    mockReviewWhere.mockImplementationOnce(() =>
+    // 4. Errors → accusative has ≥2 recent errors (innerJoin path → mockWhere)
+    mockWhere.mockImplementationOnce(() =>
       makeChainResult([
         { key: 'tr-a1-accusative-definite-object', n: 3, wrongText: null, correction: null },
       ]),
@@ -558,8 +567,8 @@ describe('GET /progress/curriculum', () => {
     mockReviewWhere.mockImplementationOnce(() => makeChainResult([]));
     // 3. No mastery
     mockReviewWhere.mockImplementationOnce(() => makeChainResult([]));
-    // 4. No errors
-    mockReviewWhere.mockImplementationOnce(() => makeChainResult([]));
+    // 4. No errors (innerJoin path → mockWhere)
+    mockWhere.mockImplementationOnce(() => makeChainResult([]));
 
     const res = await app.request('/progress/curriculum?language=TR', undefined, authEnv);
     expect(res.status).toBe(200);
@@ -603,8 +612,8 @@ describe('GET /progress/curriculum', () => {
         },
       ]),
     );
-    // 4. Errors → accusative has ≥2 errors + a sample
-    mockReviewWhere.mockImplementationOnce(() =>
+    // 4. Errors → accusative has ≥2 errors + a sample (innerJoin path → mockWhere)
+    mockWhere.mockImplementationOnce(() =>
       makeChainResult([
         {
           key: 'tr-a1-accusative-definite-object',

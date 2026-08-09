@@ -19,7 +19,15 @@ vi.mock('@language-drill/db', () => ({
     errorGrammarPointKey: 'error_grammar_point_key',
     hostGrammarPointKey: 'host_grammar_point_key',
     occurredAt: 'occurred_at',
+    exerciseId: 'exercise_id',
   },
+  exercises: {
+    id: 'id',
+    demotionReason: 'demotion_reason',
+  },
+  // Real predicate isn't exercised (drizzle-orm is mocked below) — a sentinel
+  // is enough to prove the call site wires it into the errors query's where().
+  scoringEvidenceFilter: () => ({ __scoringEvidenceFilter: true }),
   getGrammarPoint: (key: string) => {
     if (key === 'es-b1-subjunctive') {
       return { prerequisiteKeys: ['es-a2-present-indicative'] };
@@ -50,10 +58,13 @@ function makeMockDb(
   masteryRows: Array<{ grammarPointKey: string; masteryScore: number; lastPracticedAt: string }>,
   errorRows: Array<{ key: string | null; n: number }>,
 ) {
-  // The builder chains: db.select().from().where() → masteryRows (Promise)
-  // and db.select().from().where().groupBy() → errorRows (Promise).
+  // The builder chains:
+  //   mastery: db.select().from().where() → masteryRows (Promise)
+  //   errors:  db.select().from().innerJoin().where().groupBy() → errorRows (Promise)
   // We intercept by tracking call order: first select call → mastery chain,
-  // second select call → error chain.
+  // second select call → error chain. `mockFrom`'s `where` covers the mastery
+  // chain directly; its `innerJoin` covers the errors chain, which joins to
+  // `exercises` before `.where(scoringEvidenceFilter(...))`.
   let callCount = 0;
 
   const mockGroupBy = vi.fn(() => Promise.resolve(errorRows));
@@ -64,13 +75,21 @@ function makeMockDb(
       return Promise.resolve(masteryRows).then(resolve, reject);
     },
   }));
-  const mockFrom = vi.fn(() => ({ where: mockWhere }));
+  const mockInnerJoin = vi.fn(() => ({ where: mockWhere }));
+  const mockFrom = vi.fn(() => ({ where: mockWhere, innerJoin: mockInnerJoin }));
   const mockSelect = vi.fn(() => {
     callCount++;
     return { from: mockFrom };
   });
 
-  return { db: { select: mockSelect }, mockSelect, mockWhere, mockGroupBy, callCount: () => callCount };
+  return {
+    db: { select: mockSelect },
+    mockSelect,
+    mockWhere,
+    mockGroupBy,
+    mockInnerJoin,
+    callCount: () => callCount,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -136,10 +155,8 @@ describe('buildRankContext', () => {
     // Track which selects were called
     const selectCalls: string[] = [];
     let masteryResolve!: (v: unknown) => void;
-    let errorResolve!: (v: unknown) => void;
 
     const masteryPromise = new Promise((res) => { masteryResolve = res; });
-    const errorPromise = new Promise((res) => { errorResolve = res; });
     let errorGroupByResolve!: (v: unknown) => void;
     const errorGroupByPromise = new Promise((res) => { errorGroupByResolve = res; });
 
@@ -148,20 +165,22 @@ describe('buildRankContext', () => {
       select: () => {
         selectCallCount++;
         const callNum = selectCallCount;
+        const where = () => ({
+          groupBy: () => {
+            selectCalls.push(`error-${callNum}`);
+            errorGroupByResolve([]);
+            return errorGroupByPromise;
+          },
+          then(resolve: (v: unknown) => void, _reject: (e: unknown) => void) {
+            selectCalls.push(`mastery-${callNum}`);
+            masteryResolve([]);
+            return masteryPromise.then(resolve, _reject);
+          },
+        });
         return {
           from: () => ({
-            where: () => ({
-              groupBy: () => {
-                selectCalls.push(`error-${callNum}`);
-                errorGroupByResolve([]);
-                return errorGroupByPromise;
-              },
-              then(resolve: (v: unknown) => void, _reject: (e: unknown) => void) {
-                selectCalls.push(`mastery-${callNum}`);
-                masteryResolve([]);
-                return masteryPromise.then(resolve, _reject);
-              },
-            }),
+            where,
+            innerJoin: () => ({ where }),
           }),
         };
       },

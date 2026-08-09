@@ -488,3 +488,67 @@ issues.
   --from <pattern-introduction-date> ...`).
 - Big demotion runs (>10% of a cell) deserve a one-line note in the PR
   description: how many rows demoted, total cost, peak cell impact.
+
+---
+
+## 7. Rebuild learner mastery
+
+A quality demotion revokes the learner's credit for attempts on the demoted
+rows, but `user_grammar_mastery` is stored state — it keeps the old values
+until it is replayed. Of the read-time surfaces, radar, coach, and debrief
+re-derive per request and need no action — but the **weekly email is a
+partial exception**: `infra/lambda/src/email/gather.ts` reads *stored*
+`user_grammar_mastery` rows for weak-spot selection, so a stale row can steer
+a learner's weekly email toward (or away from) the wrong grammar point until
+you re-run the backfill below.
+
+Run it while the app is quiet if you can (see the TOCTOU note below for why).
+
+```bash
+pnpm backfill:mastery              # dry-run: prints how many rows would change
+pnpm backfill:mastery --apply
+```
+
+Run it against every environment whose pool you demoted in. Skip only if
+the demotion used `--reason duplicate` or `--reason pool-hygiene` — those
+keep counting as evidence, so mastery is unaffected.
+
+This can also **delete** rows, not just rewrite them: if every attempt a
+learner ever made on a grammar point turns out to have been on an exercise
+you just demoted for `quality` or `learner-flag`, the replay produces no
+surviving evidence for that `(user, language, grammarPointKey)` triple, and
+the stale `user_grammar_mastery` row is deleted rather than left showing a
+score nothing will ever recompute. The dry-run output reports upsert and
+delete counts separately, so check both before applying.
+
+If a delete looks wrong, `--include-demoted` **prevents future deletes** and
+rewrites mastery back to the unfiltered values for that run. For an ordinary
+row — one whose grammar point has `user_exercise_history` rows naming it —
+that is enough to bring a previously deleted row back: the unfiltered replay
+still produces the point, so the upsert loop recreates it with its
+pre-filter score. Recovery is not guaranteed to be *byte*-identical (the
+score is recomputed from whatever history exists now), but the row returns.
+
+The one case `--include-demoted` **cannot** recover is a row that only ever
+existed via incidental mastery folding
+(`infra/lambda/src/lib/mastery/incidental-fold.ts` — an evaluator error
+attributed to a grammar point other than the exercise's host point, which has
+no `user_exercise_history` row of its own to replay from). The replay can't
+see incidental observations at all, filtered or not, so no flag makes the
+upsert loop recreate them. Such a row only comes back if the learner
+practices that point again, or via a manual insert. (The backfill itself no
+longer deletes this kind of row — see the 2026-08-09 fix — but earlier runs
+may already have.)
+
+**TOCTOU window.** The script snapshots `user_grammar_mastery` before it
+reads history, which narrows but does not eliminate the race between a live
+submission and this script's read — prefer running it when traffic is low
+(e.g. off-peak hours) rather than mid-day.
+
+**Demotions performed through the admin UI** (upholding a learner flag,
+content moderation reject, or `POST /admin/revalidate`) also revoke evidence
+via the same `demotionReason` mechanism as this runbook's CLI-driven
+revalidation passes, but those routes print no reminder to re-run the
+backfill. If you demoted anything through the admin UI, treat it the same as
+a CLI revalidation pass and run `pnpm backfill:mastery --apply` afterward —
+nothing else will prompt you to.

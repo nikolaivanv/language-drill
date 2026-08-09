@@ -145,7 +145,7 @@ app.post('/admin/flags/:id/reject', async (c) => {
   // Wrap the two writes in a transaction: exercise rejection + flag resolution must both land
   // or neither, so the pool and flag state stay consistent.
   await db.transaction(async (tx) => {
-    await tx.update(exercises).set({ reviewStatus: 'rejected' }).where(eq(exercises.id, flag.exerciseId)).returning({ id: exercises.id });
+    await tx.update(exercises).set({ reviewStatus: 'rejected', demotionReason: 'learner-flag' }).where(eq(exercises.id, flag.exerciseId)).returning({ id: exercises.id });
     await tx.update(exerciseFlags).set({ status: 'resolved_rejected', resolvedBy: c.get('userId'), resolvedAt: new Date() })
       .where(eq(exerciseFlags.id, id)).returning({ id: exerciseFlags.id });
   });

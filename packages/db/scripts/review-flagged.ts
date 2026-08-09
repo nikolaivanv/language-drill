@@ -356,16 +356,19 @@ export async function tryApprove(
   try {
     await db
       .update(exercises)
-      .set({ reviewStatus: 'manual-approved', flaggedReasons: null })
+      .set({ reviewStatus: 'manual-approved', flaggedReasons: null, demotionReason: null })
       .where(
         and(eq(exercises.id, row.id), eq(exercises.reviewStatus, 'flagged')),
       );
     return 'approved';
   } catch (err) {
     if (isUniqueViolation(err)) {
+      // Collided with exercises_dedup_idx — an equivalent row already lives
+      // in this cell, so this one is a REDUNDANT copy, not a defect.
+      // 'duplicate' keeps learners' past attempts on it counting as evidence.
       await db
         .update(exercises)
-        .set({ reviewStatus: 'rejected' })
+        .set({ reviewStatus: 'rejected', demotionReason: 'duplicate' })
         .where(
           and(
             eq(exercises.id, row.id),
@@ -385,7 +388,7 @@ export async function tryApprove(
 export async function rejectRow(db: Db, row: FlaggedRow): Promise<void> {
   await db
     .update(exercises)
-    .set({ reviewStatus: 'rejected' })
+    .set({ reviewStatus: 'rejected', demotionReason: 'quality' })
     .where(
       and(eq(exercises.id, row.id), eq(exercises.reviewStatus, 'flagged')),
     );
