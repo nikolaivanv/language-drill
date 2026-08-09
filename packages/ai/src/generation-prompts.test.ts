@@ -1040,6 +1040,12 @@ describe("construction-variant directive", () => {
     // hatch ("choose a word of similar frequency instead") that would let the
     // model discard the construction.
     expect(prompt).not.toContain("Build this exercise around the word");
+    // 2026-08-09: eval:gen A/B showed the bare MUST-use directive tripping
+    // contextSpoilsAnswer (17-point approval drop) — the directive must also
+    // forbid announcing the construction in the visible text.
+    expect(prompt).toContain(
+      "Do not name or hint at the sub-construction in `instructions` or the surrounding sentence",
+    );
   });
 
   it("adds the source-side clause for a translation draft", () => {
@@ -1050,6 +1056,10 @@ describe("construction-variant directive", () => {
       "adversity",
     );
     expect(prompt).toContain("English source");
+    // Same concealment clause, worded for the source-side surface.
+    expect(prompt).toContain(
+      "Do not name or hint at the sub-construction in `instructions` or the English source itself",
+    );
   });
 
   it("falls back to the loose frequency wording when the seed is not a variant id", () => {

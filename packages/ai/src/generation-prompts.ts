@@ -781,10 +781,19 @@ export function buildGenerationUserPrompt(
         ? // Strict: the sub-construction IS the diversity axis for this cell.
           // No substitution escape hatch — the loose frequency wording's
           // "choose a word of similar frequency instead" is what let the model
-          // discard the frame and collapse the pool onto the prototype.
+          // discard the frame and collapse the pool onto the prototype. Also
+          // forbids naming/hinting the construction in the visible text: an
+          // eval:gen A/B (2026-08-09) paired this branch with a 17-point
+          // approval drop concentrated in contextSpoilsAnswer rejections
+          // versus an unseeded baseline. The draft text wasn't inspected, so
+          // the mechanism isn't confirmed, but the bare MUST-use directive is
+          // the most plausible source of pressure toward announcing the
+          // construction — this clause closes that hole without softening
+          // the MUST, and reinforces the system prompt's Spoiled-blank rule
+          // rather than replacing it.
           inputs.exerciseType === ExerciseType.TRANSLATION
-          ? `This exercise MUST use the following sub-construction of ${inputs.grammarPoint.name}: ${constructionVariant.directive}. Write an English source sentence that naturally elicits exactly this sub-construction — the source must not telegraph a different one, and must not lean on the point's most common pattern. Use exactly this sub-construction; do not substitute another.\n\n`
-          : `This exercise MUST use the following sub-construction of ${inputs.grammarPoint.name}: ${constructionVariant.directive}. Use exactly this sub-construction; do not substitute another, and do not fall back to the point's most common pattern.\n\n`
+          ? `This exercise MUST use the following sub-construction of ${inputs.grammarPoint.name}: ${constructionVariant.directive}. Write an English source sentence that naturally elicits exactly this sub-construction — the source must not telegraph a different one, and must not lean on the point's most common pattern. Use exactly this sub-construction; do not substitute another. Do not name or hint at the sub-construction in \`instructions\` or the English source itself — the learner must recognize and produce it from the source alone, not read it off the page.\n\n`
+          : `This exercise MUST use the following sub-construction of ${inputs.grammarPoint.name}: ${constructionVariant.directive}. Use exactly this sub-construction; do not substitute another, and do not fall back to the point's most common pattern. Do not name or hint at the sub-construction in \`instructions\` or the surrounding sentence — the learner must recognize and produce it from the blank's context alone, not read it off the page.\n\n`
         : inputs.exerciseType === ExerciseType.CONJUGATION
           ? // Strict: the seed IS the word to inflect. No substitution escape hatch —
             // the picker already guarantees an inflectable word, and substitution
