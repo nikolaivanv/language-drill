@@ -540,16 +540,29 @@ still produces the point, so the upsert loop recreates it with its
 pre-filter score. Recovery is not guaranteed to be *byte*-identical (the
 score is recomputed from whatever history exists now), but the row returns.
 
-The one case `--include-demoted` **cannot** recover is a row that only ever
-existed via incidental mastery folding
-(`infra/lambda/src/lib/mastery/incidental-fold.ts` — an evaluator error
+Before this change, `--include-demoted` **could not** recover a row that only
+ever existed via incidental mastery folding
+(`packages/db/src/mastery/incidental-fold.ts` — an evaluator error
 attributed to a grammar point other than the exercise's host point, which has
-no `user_exercise_history` row of its own to replay from). The replay can't
-see incidental observations at all, filtered or not, so no flag makes the
-upsert loop recreate them. Such a row only comes back if the learner
-practices that point again, or via a manual insert. (The backfill itself no
-longer deletes this kind of row — see the 2026-08-09 fix — but earlier runs
-may already have.)
+no `user_exercise_history` row of its own to replay from): the replay
+couldn't see incidental observations at all, filtered or not, so no flag made
+the upsert loop recreate them. Rows lost to that gap during earlier runs are
+still gone — worth keeping in mind when reading old incident notes.
+
+That gap is closed: the replay now reconstructs incidental observations from
+`error_observations`, so `--include-demoted` **can** recreate such a row too,
+with a score recomputed from whatever evidence survives. The remaining limit
+is precise — recovery depends on the backing `error_observations` rows still
+existing. That table cascades from `user_exercise_history`, so if the
+originating history row was deleted, the evidence is genuinely gone and no
+flag recovers it.
+
+(An incidental-only point whose every backing observation sits on a
+defect-demoted exercise is now deleted **deliberately**, even without
+`--include-demoted` — the replay treats it exactly like an ordinary row with
+zero surviving evidence. That's the intended effect of this fix, not a
+regression to guard against; see `findStaleMasteryRows` in
+`packages/db/src/mastery/rebuild.ts`.)
 
 **TOCTOU window.** The script snapshots `user_grammar_mastery` before it
 reads history, which narrows but does not eliminate the race between a live
