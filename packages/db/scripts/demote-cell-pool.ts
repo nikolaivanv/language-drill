@@ -31,8 +31,9 @@
  * Required env: DATABASE_URL.
  */
 
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 
+import type { Db } from '../src/client';
 import { createDb } from '../src/client';
 import { exercises } from '../src/schema';
 import { DEMOTION_REASONS, NON_EVIDENCE_DEMOTION_REASONS, type DemotionReason } from '../src/lib/evidence';
@@ -49,6 +50,8 @@ export type DemoteArgs = {
   contentIlike: string | null;
   apply: boolean;
   reason: DemotionReason;
+  /** Cap the number of rows demoted (oldest first). null = no cap. */
+  limit: number | null;
 };
 
 export function parseDemoteArgs(argv: readonly string[]): DemoteArgs {
@@ -74,6 +77,24 @@ export function parseDemoteArgs(argv: readonly string[]): DemoteArgs {
     );
   }
 
+  let limit: number | null = null;
+  if (argv.includes('--limit')) {
+    // `get()` alone can't tell "flag absent" from "flag present, no value" —
+    // both return null. That ambiguity is harmless for the other flags here,
+    // but for `--limit` it is dangerous: `--limit` as the final token would
+    // silently resolve to "no cap" and demote an entire matching cell instead
+    // of throwing. Check presence explicitly and require a value.
+    const rawLimit = get('--limit');
+    if (rawLimit === null) {
+      throw new Error('--limit requires a value (e.g. --limit 28) — given with no argument');
+    }
+    const parsed = Number(rawLimit);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      throw new Error(`--limit must be a positive integer (got '${rawLimit}')`);
+    }
+    limit = parsed;
+  }
+
   return {
     language: language.toUpperCase(),
     cefr: cefr.toUpperCase(),
@@ -82,7 +103,51 @@ export function parseDemoteArgs(argv: readonly string[]): DemoteArgs {
     contentIlike: get('--content-ilike'),
     apply: argv.includes('--apply'),
     reason: reason as DemotionReason,
+    limit,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Row selection (extracted so it can be unit-tested against a mocked Db)
+// ---------------------------------------------------------------------------
+
+export type SelectRowsArgs = Pick<
+  DemoteArgs,
+  'language' | 'cefr' | 'type' | 'grammarPoint' | 'contentIlike' | 'limit'
+>;
+
+/**
+ * Selects the approved rows matching a cell (+ optional content filter),
+ * capped to the oldest `limit` rows when set. Dry-run and --apply in
+ * `main()` both call this exact function once and share its result, so the
+ * printed count always matches what --apply would actually demote. Oldest-
+ * first (`ORDER BY created_at ASC`) keeps the most recently generated — and
+ * so most prompt-current — rows in the pool. Without a limit, no ORDER BY /
+ * LIMIT is applied at all — identical query to before the flag existed.
+ */
+export async function selectRowsToDemote(
+  db: Db,
+  args: SelectRowsArgs,
+): Promise<{ id: string; contentJson: unknown }[]> {
+  const filters = [
+    eq(exercises.language, args.language),
+    eq(exercises.difficulty, args.cefr),
+    eq(exercises.type, args.type),
+    eq(exercises.grammarPointKey, args.grammarPoint),
+    inArray(exercises.reviewStatus, ['auto-approved', 'manual-approved']),
+  ];
+  if (args.contentIlike) {
+    filters.push(sql`${exercises.contentJson}::text ILIKE ${'%' + args.contentIlike + '%'}`);
+  }
+
+  const baseQuery = db
+    .select({ id: exercises.id, contentJson: exercises.contentJson })
+    .from(exercises)
+    .where(and(...filters));
+
+  return args.limit !== null
+    ? await baseQuery.orderBy(asc(exercises.createdAt)).limit(args.limit)
+    : await baseQuery;
 }
 
 // ---------------------------------------------------------------------------
@@ -100,24 +165,11 @@ async function main(): Promise<void> {
 
   const db = createDb(databaseUrl);
 
-  const filters = [
-    eq(exercises.language, args.language),
-    eq(exercises.difficulty, args.cefr),
-    eq(exercises.type, args.type),
-    eq(exercises.grammarPointKey, args.grammarPoint),
-    inArray(exercises.reviewStatus, ['auto-approved', 'manual-approved']),
-  ];
-  if (args.contentIlike) {
-    filters.push(sql`${exercises.contentJson}::text ILIKE ${'%' + args.contentIlike + '%'}`);
-  }
-
-  const rows = await db
-    .select({ id: exercises.id, contentJson: exercises.contentJson })
-    .from(exercises)
-    .where(and(...filters));
+  const rows = await selectRowsToDemote(db, args);
 
   const scope = `${args.language}/${args.cefr}/${args.type}/${args.grammarPoint}` +
-    (args.contentIlike ? ` (content ILIKE '%${args.contentIlike}%')` : '');
+    (args.contentIlike ? ` (content ILIKE '%${args.contentIlike}%')` : '') +
+    (args.limit !== null ? ` (limit ${args.limit}, oldest first)` : '');
 
   console.log(
     `[demote-pool] ${args.apply ? 'APPLY' : 'DRY-RUN'} — ${scope}: ${rows.length} approved rows match` +

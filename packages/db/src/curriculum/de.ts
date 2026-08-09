@@ -66,8 +66,45 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * each level keeps its prior broad umbrella as one theme). Re-enqueues the
  * three broad-umbrella cells and enqueues the 17 new vocab cells.
  * 2026-07-18: adds a comparison-axis coverageSpec to de-a2-comparison.
+ * 2026-08-08: declares `constructionVariants` on the eleven DE points whose
+ * pools had collapsed onto a single sub-construction, so the per-draft
+ * rotation spreads generation across the sub-uses each point's description
+ * already claims to teach (construction variants,
+ * docs/superpowers/specs/2026-08-08-construction-variants-design.md).
+ * Collapse-sweep points: de-b1-um-zu-damit (49/50 clozes answered `damit` —
+ * `um … zu`, half the point, was never generated), de-a2-wenn-als (28/29
+ * `als`), de-a2-nicht-sondern, de-a2-indirect-questions,
+ * de-b2-adversative-connectors, de-b2-causal-connectors (also RENAMED — the
+ * old "Causal relations three ways (weil/da — denn — wegen/aufgrund)" quoted
+ * three of the four described branches and dropped the adverbial one, and the
+ * name reaches the generation prompt twice), de-b2-conditional-connectors,
+ * de-b2-modal-connectors, de-b2-relatives-advanced. Plus the two
+ * sub-inspection points, whose approved rows were read directly because every
+ * answer on them IS the marker: de-b1-es-expressions (31/49 clozes and 22/48
+ * translations are the one fixed idiom `es tut mir leid`; placeholder-es only
+ * 3/49 in cloze) and de-a2-lassen (ZERO `Lass uns …` in 56 rows — one of the
+ * three described uses never generated; causative/permissive also split
+ * per-cell 15/9 in cloze vs. 3/24 in translation).
+ * Also REMOVES the person coverageSpec on de-a2-lassen (added 2026-07-17), the
+ * only one of the eleven points that had one. Its 3sg floor is unresolvable
+ * against the `lass-uns-suggestion` variant — `Lass uns …` is a fixed
+ * 2nd-person imperative — and the two seeders never consult each other, so
+ * affected drafts carry two contradictory directives; they degrade toward the
+ * variant, because the person directive ends in an escape hatch and the
+ * variant directive does not. The axis is NOT being called redundant: it
+ * produced the entire current pool (every approved row postdates its addition
+ * and is person-tagged), so that pool cannot measure life without it. Its work
+ * moves into the causative/permissive directives, which now pin the subject to
+ * du / 3sg so the lässt stem change is still exercised.
+ * Bump clears target-reached / low-yield suppression so the touched CLOZE and
+ * TRANSLATION cells re-run under the rotation. Note the limit: `seedKindFor`
+ * (packages/db/src/generation/run-one-cell.ts) gates variant seeding to those
+ * two exercise types, so SENTENCE_CONSTRUCTION cells are untouched by this
+ * mechanism — de-b1-um-zu-damit's 47 approved SC rows keep whatever
+ * distribution they have. At-target cloze/translation cells additionally need
+ * demote:pool (see docs/curriculum-authoring.md retrofit section).
  */
-export const CURRICULUM_VERSION_DE = '2026-07-20';
+export const CURRICULUM_VERSION_DE = '2026-08-08';
 
 const deCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -850,6 +887,28 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Wenn ich Zeit habe, koche ich gern.',
       'Immer wenn es regnet, bleiben wir zu Hause.',
     ],
+    constructionVariants: [
+      {
+        id: 'als-single-past-event',
+        directive:
+          'als for ONE completed event or period in the past, where wenn is wrong (Als ich in Passau ankam, sah ich sie auf dem Bahnsteig)',
+      },
+      {
+        id: 'wenn-repeated-past',
+        directive:
+          '(immer) wenn for a REPEATED past action — "whenever", where als is impossible (Immer wenn es regnete, blieben wir zu Hause)',
+      },
+      {
+        id: 'wenn-present-future-time',
+        directive:
+          'wenn = "when" pointing at present or future time (Ich bringe es dir, wenn ich morgen vorbeikomme)',
+      },
+      {
+        id: 'wenn-condition',
+        directive:
+          'wenn = "if" introducing a condition rather than a time (Wenn ich Zeit habe, koche ich gern)',
+      },
+    ],
     examplesNegative: ['*Wenn ich ein Kind war, wohnten wir auf dem Land.'],
     commonErrors: [
       'Using wenn for a one-off past event ("*Wenn ich ein Kind war …").',
@@ -869,6 +928,21 @@ const deCurriculum: readonly GrammarPoint[] = [
     examplesPositive: [
       'Ich weiß nicht, ob er heute kommt.',
       'Können Sie mir sagen, wie lange die Fahrt dauert?',
+    ],
+    // Only two variants: ob vs W-word is the whole construction contrast this
+    // point describes. Splitting the W-word branch further (wo/wann vs. the
+    // phrasal wie lange/wie viel) would vary lexis, not construction.
+    constructionVariants: [
+      {
+        id: 'ob-yes-no',
+        directive:
+          'an indirect YES/NO question with ob, where English "if/whether" tempts a wrong wenn (Ich weiß nicht, ob er heute kommt)',
+      },
+      {
+        id: 'w-word-information',
+        directive:
+          'an indirect INFORMATION question introduced by the W-word itself — wo, wann, wer, wie lange, warum — with the finite verb last (Können Sie mir sagen, wie lange die Fahrt dauert?)',
+      },
     ],
     examplesNegative: ['*Ich weiß nicht, ob kommt er heute.', '*Ich weiß nicht, wenn er kommt. (for "whether")'],
     commonErrors: [
@@ -1073,6 +1147,28 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Der Kurs ist schwer, aber interessant.',
       'Sie spricht nicht nur Deutsch, sondern auch Türkisch.',
     ],
+    constructionVariants: [
+      {
+        id: 'sondern-corrective',
+        directive:
+          'sondern correcting an explicit negation — nicht X, sondern Y, where Y replaces the negated X (Ich komme nicht aus Spanien, sondern aus Portugal)',
+      },
+      {
+        id: 'aber-after-negation',
+        directive:
+          'aber after a NEGATED first element that it does not correct, because both halves hold at once (Er ist nicht reich, aber ehrlich)',
+      },
+      {
+        id: 'aber-plain-contrast',
+        directive:
+          'aber joining two affirmative clauses or elements whose content simply clashes, with no negation anywhere (Der Kurs ist schwer, aber interessant)',
+      },
+      {
+        id: 'nicht-nur-sondern-auch',
+        directive:
+          'the additive pair nicht nur … sondern auch, which adds rather than corrects (Sie spricht nicht nur Deutsch, sondern auch Türkisch)',
+      },
+    ],
     examplesNegative: ['*Ich komme nicht aus Spanien, aber aus Portugal.'],
     commonErrors: [
       'Using aber after a negation where sondern corrects it ("*nicht aus Spanien, aber aus Portugal").',
@@ -1109,13 +1205,27 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-a2-lassen',
-    coverageSpec: {
-      axes: [
-        // The lässt stem change surfaces only at 2sg/3sg (commonError
-        // *er lasst); other persons are regular and come free.
-        { name: 'person', floors: { '2sg': 6, '3sg': 8 } },
-      ],
-    },
+    // coverageSpec REMOVED 2026-08-08 (was: person floors 2sg 6 / 3sg 8, to
+    // force the lässt stem change).
+    //
+    // Reason: it is unresolvable against the `lass-uns-suggestion` variant
+    // below. `Lass uns …` is a fixed 2nd-person imperative with no person
+    // choice, so a draft seeded "target person: 3sg" AND "MUST use Lass uns …"
+    // carries two contradictory directives from two seeders that never consult
+    // each other. It does not degrade at random: the person directive ends with
+    // an escape hatch ("If … cannot naturally express this person, use the
+    // closest natural person instead", generation-prompts.ts) while the variant
+    // directive is strict, so drafts degrade toward the variant and the person
+    // floors quietly go unmet on that share of the batch.
+    //
+    // NOT dropped as redundant. The axis cannot be evaluated from this pool,
+    // because it produced the entire pool: every approved row postdates
+    // 2026-07-17 (when the axis was added) and every one is person-tagged, so
+    // "all the clozes already answer lässt" measures the axis working, not the
+    // axis being unnecessary. There is no unaided baseline to appeal to.
+    // Its work therefore moves INTO the variant directives, which pin the
+    // causative and permissive subjects to du / 3sg so the stem change is still
+    // exercised — see the `constructionVariants` below.
     kind: 'grammar',
     name: 'lassen + infinitive',
     description:
@@ -1126,6 +1236,28 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Ich lasse mein Fahrrad reparieren.',
       'Meine Eltern lassen mich nicht ausgehen.',
       'Lass uns ins Kino gehen!',
+    ],
+    // Sub-inspection point (2026-08-08): every answer here IS `lässt`, so the
+    // collapse sweep could not see it. Reading the 56 approved prod rows found
+    // ZERO `Lass uns …` — one of the three described uses is never generated —
+    // and a per-cell split (cloze 15 causative / 9 permissive, translation
+    // 3 causative / 24 permissive) that no single cell balances.
+    constructionVariants: [
+      {
+        id: 'causative-have-done',
+        directive:
+          'causative lassen — having something done by someone else; subject du or 3sg so the lässt stem change surfaces (Lässt du dein Fahrrad reparieren?; Sie lässt sich die Haare schneiden)',
+      },
+      {
+        id: 'permissive-let-someone',
+        directive:
+          'permissive lassen — letting or not letting a named person or animal do something; subject du or 3sg so the lässt stem change surfaces (Er lässt mich nicht ausgehen)',
+      },
+      {
+        id: 'lass-uns-suggestion',
+        directive:
+          'the imperative Lass uns / Lasst uns / Lassen Sie uns + infinitive, proposing a joint action ("let\'s …") (Lass uns heute Abend ins Kino gehen!)',
+      },
     ],
     examplesNegative: ['*Ich lasse mein Fahrrad zu reparieren.', '*Er lasst mich fahren.'],
     commonErrors: [
@@ -1590,6 +1722,25 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Ich lerne Deutsch, um in Berlin zu arbeiten.',
       'Sie erklärt es langsam, damit alle sie verstehen.',
     ],
+    constructionVariants: [
+      {
+        id: 'um-zu-same-subject',
+        directive:
+          'um … zu + infinitive for a purpose whose subject is the SAME as the main clause (Ich lerne Deutsch, um in Berlin zu arbeiten) — the preferred form when subjects match',
+        share: 2,
+      },
+      {
+        id: 'damit-different-subject',
+        directive:
+          'damit + full clause where the subjects DIFFER, so um … zu is ungrammatical (Ich spare Geld, damit meine Kinder studieren können)',
+        share: 2,
+      },
+      {
+        id: 'damit-modal-outcome',
+        directive:
+          'damit + a modal verb clause expressing an enabled outcome (…, damit wir pünktlich ankommen können)',
+      },
+    ],
     examplesNegative: ['*Ich lerne Deutsch, um meine Kinder in Berlin arbeiten.', '*Ich lerne Deutsch, damit ich in Berlin zu arbeiten.'],
     commonErrors: [
       'Using um … zu with different subjects ("*…, um meine Kinder dort studieren").',
@@ -1820,6 +1971,37 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Es regnet schon den ganzen Tag.',
       'Es freut mich, dass du kommst.',
       'Dass du kommst, freut mich.',
+    ],
+    // Sub-inspection point (2026-08-08): every answer here IS the marker, so
+    // the collapse sweep could not see it. Reading the 97 approved prod rows
+    // showed 31/49 clozes and 22/48 translations are the single fixed idiom
+    // `es tut mir leid`, with placeholder-es at 3/49 in the cloze cell.
+    constructionVariants: [
+      {
+        id: 'impersonal-weather-time',
+        directive:
+          'es as the impersonal subject of a weather or time/state verb, referring to nothing at all (Es regnet schon den ganzen Tag; Es wird spät)',
+      },
+      {
+        id: 'es-geht-wellbeing',
+        directive:
+          'the wie geht es …? frame for asking or reporting how someone is (Wie geht es dir? — Mir geht es gut)',
+      },
+      {
+        id: 'es-gibt-existential',
+        directive:
+          'the fixed existential es gibt + ACCUSATIVE, invariable in the singular however many things exist (In unserer Stadt gibt es viele Fahrradwege)',
+      },
+      {
+        id: 'es-tut-mir-leid-fixed',
+        directive:
+          'a fixed impersonal expression with an experiencer dative — es tut mir leid, es fällt mir schwer, es geht mir um … (Es tut mir leid, dass ich so spät komme)',
+      },
+      {
+        id: 'placeholder-es-clause',
+        directive:
+          'placeholder es holding the subject slot for a following dass-clause or zu-infinitive (Es freut mich, dass du kommst; Es ist wichtig, jeden Tag zu üben)',
+      },
     ],
     examplesNegative: ['*Dass du kommst, es freut mich.', '*Mir tut leid.'],
     commonErrors: [
@@ -2270,7 +2452,12 @@ const deCurriculum: readonly GrammarPoint[] = [
   {
     key: 'de-b2-causal-connectors',
     kind: 'grammar',
-    name: 'Causal relations three ways (weil/da — denn — wegen/aufgrund)',
+    // Renamed 2026-08-08: the old name ("Causal relations three ways
+    // (weil/da — denn — wegen/aufgrund)") quoted three of the four described
+    // branches and silently dropped the adverbial one — and the name reaches
+    // the generation prompt twice, so it re-anchored the pool away from
+    // deshalb/daher/folglich. The branches now live in the variants below.
+    name: 'Causal relations across four styles: subordinate, coordinating, adverbial, nominal',
     description:
       'Expressing cause across styles: subordinate weil/da (verb-final), coordinating denn and adverbial deshalb/daher/folglich (main clauses), and nominal wegen/aufgrund + genitive with a nominalized noun (wegen des starken Regens = weil es stark regnete).',
     cefrLevel: B2,
@@ -2279,6 +2466,28 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Da die Nachfrage gestiegen ist, wurden die Preise erhöht.',
       'Wegen des starken Regens fällt das Konzert aus.',
       'Die Nachfrage stieg, folglich wurden die Preise erhöht.',
+    ],
+    constructionVariants: [
+      {
+        id: 'weil-da-subordinate',
+        directive:
+          'a subordinate causal clause with weil or da and the finite verb LAST (Da die Nachfrage gestiegen ist, wurden die Preise erhöht)',
+      },
+      {
+        id: 'denn-coordinating',
+        directive:
+          'coordinating denn joining two MAIN clauses — no inversion, and the denn-half can never come first (Wir blieben zu Hause, denn es regnete stark)',
+      },
+      {
+        id: 'deshalb-consequence-adverb',
+        directive:
+          'the adverbial style: deshalb/daher/folglich opening the consequence clause and forcing inversion (Die Nachfrage stieg, folglich wurden die Preise erhöht)',
+      },
+      {
+        id: 'wegen-aufgrund-nominal',
+        directive:
+          'nominal style — wegen or aufgrund + GENITIVE with a nominalized noun instead of a clause (Wegen des starken Regens fällt das Konzert aus)',
+      },
     ],
     examplesNegative: ['*Wegen es stark regnete, fällt das Konzert aus.', '*Denn es regnete, blieben wir zu Hause.'],
     commonErrors: [
@@ -2322,6 +2531,38 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Sollten Sie Fragen haben, melden Sie sich jederzeit.',
       'Bei schlechtem Wetter findet das Fest drinnen statt.',
       'Beeil dich, sonst verpassen wir den Zug.',
+    ],
+    constructionVariants: [
+      {
+        id: 'wenn-clause',
+        directive:
+          'a plain wenn-clause stating the condition, verb-final, optionally picked up by dann (Wenn das Wetter schlecht ist, (dann) bleiben wir zu Hause)',
+      },
+      {
+        id: 'falls-open-condition',
+        directive:
+          'falls, which marks the clause as an open CONDITION and rules out the "whenever" reading wenn would allow (Falls ich nach Berlin komme, besuche ich sie)',
+      },
+      {
+        id: 'verb-first-conditional',
+        directive:
+          'the unintroduced verb-first conditional with no conjunction at all, typically with sollte (Sollten Sie Fragen haben, melden Sie sich jederzeit)',
+      },
+      {
+        id: 'bei-nominal-condition',
+        directive:
+          'the nominal style bei + DATIVE or im Falle + GENITIVE instead of a clause (Bei schlechtem Wetter findet das Fest drinnen statt)',
+      },
+      {
+        id: 'es-sei-denn-unless',
+        directive:
+          'es sei denn(, dass …) for the exception that cancels the statement — "unless" (Ich komme um zwei, es sei denn, ich werde aufgehalten)',
+      },
+      {
+        id: 'sonst-otherwise',
+        directive:
+          'main-clause sonst naming what happens if the condition is NOT met, with inversion (Beeil dich, sonst verpassen wir den Zug)',
+      },
     ],
     examplesNegative: ['*Bei das Wetter ist schlecht, bleiben wir hier.', '*Wenn Sie sollten Fragen haben, …'],
     commonErrors: [
@@ -2387,6 +2628,28 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Durch tägliches Üben verbessert sich die Aussprache.',
       'Er verließ den Raum, ohne dass es jemand bemerkte.',
     ],
+    constructionVariants: [
+      {
+        id: 'indem-clause',
+        directive:
+          'instrumental indem + a verb-final clause, English "by …-ing" (Man lernt eine Sprache, indem man sie täglich spricht)',
+      },
+      {
+        id: 'dadurch-dass-correlate',
+        directive:
+          'the split correlate dadurch …, dass … — dadurch in the main clause, the means in a dass-clause (Er hat sich dadurch gerettet, dass er aus dem Fenster gesprungen ist)',
+      },
+      {
+        id: 'durch-nominal',
+        directive:
+          'nominal durch + ACCUSATIVE naming the means without a clause, often a nominalized verb (Durch tägliches Üben verbessert sich die Aussprache)',
+      },
+      {
+        id: 'ohne-negative-manner',
+        directive:
+          'negative manner — ohne dass + clause when the subjects differ, ohne … zu when they match (Er verließ den Raum, ohne dass es jemand bemerkte)',
+      },
+    ],
     examplesNegative: ['*Man lernt eine Sprache, indem spricht man sie.', '*Durch man übt täglich, …'],
     commonErrors: [
       'V2 order after indem.',
@@ -2408,6 +2671,28 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Im Gegensatz zu seinem Bruder ist er eher ruhig.',
       'Die Miete ist hoch; dagegen sind die Nebenkosten günstig.',
       'Das Essen war gut, wobei der Service etwas langsam war.',
+    ],
+    constructionVariants: [
+      {
+        id: 'waehrend-adversative-clause',
+        directive:
+          'adversative während (or formal wohingegen) + a verb-final clause contrasting two facts, NOT the temporal "while" (Er ist sehr sparsam, während sie gern Geld ausgibt)',
+      },
+      {
+        id: 'dagegen-main-clause-adverb',
+        directive:
+          'the contrast carried by a main-clause adverb dagegen/hingegen/jedoch/allerdings, which triggers inversion (Die Miete ist hoch; dagegen sind die Nebenkosten günstig)',
+      },
+      {
+        id: 'im-gegensatz-zu-nominal',
+        directive:
+          'nominal im Gegensatz zu + DATIVE, contrasting two entities without a second clause (Im Gegensatz zu seinem Bruder ist er eher ruhig)',
+      },
+      {
+        id: 'wobei-qualifying-afterthought',
+        directive:
+          'wobei attaching a qualifying afterthought that softens the preceding statement (Das Essen war gut, wobei der Service etwas langsam war)',
+      },
     ],
     examplesNegative: ['*Im Gegensatz zu sein Bruder ist er ruhig.', '*Er ist sparsam, während sie gibt gern Geld aus.'],
     commonErrors: [
@@ -2451,6 +2736,38 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Sie hat sofort geantwortet, was mich gefreut hat.',
       'Wer zu spät kommt, muss draußen warten.',
       'Das ist die Stadt, wo ich geboren wurde.',
+    ],
+    constructionVariants: [
+      {
+        id: 'was-after-indefinite',
+        directive:
+          'was as the relative after a neuter indefinite — alles, etwas, nichts, das — or after a superlative, where das would be wrong (Alles, was er sagte, stimmte)',
+      },
+      {
+        id: 'was-after-whole-clause',
+        directive:
+          'supplementary was relativizing the WHOLE preceding clause, not a noun (Sie hat sofort geantwortet, was mich sehr gefreut hat)',
+      },
+      {
+        id: 'wor-preposition',
+        directive:
+          'wo(r) + preposition — worauf, womit, worüber — where a preposition governs the was-relative (Es gibt nichts, womit man diese Ablehnung begründen könnte)',
+      },
+      {
+        id: 'wo-place-time',
+        directive:
+          'wo relativizing a PLACE, or a time expression, as an alternative to preposition + der (die Stadt, wo ich wohne; in dem Moment, wo er die Tür aufmachte)',
+      },
+      {
+        id: 'wer-generalizing',
+        directive:
+          'generalizing wer …, (der) … meaning "whoever", with no noun antecedent at all (Wer zu spät kommt, muss draußen warten)',
+      },
+      {
+        id: 'derjenige-der',
+        directive:
+          'the heavy demonstrative antecedent derjenige/diejenigen followed by a der-relative (Diejenigen, die in den hinteren Reihen saßen, konnten nichts sehen)',
+      },
     ],
     examplesNegative: ['*Alles, das er sagte, stimmte.', '*Sie hat sofort geantwortet, das mich gefreut hat.'],
     commonErrors: [

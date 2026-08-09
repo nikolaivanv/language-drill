@@ -1,0 +1,6 @@
+[
+  { "language": "ES", "cefrLevel": "B1", "exerciseType": "cloze", "grammarPointKey": "es-b1-impersonal-plural" },
+  { "language": "ES", "cefrLevel": "B1", "exerciseType": "translation", "grammarPointKey": "es-b1-impersonal-plural" },
+  { "language": "DE", "cefrLevel": "B1", "exerciseType": "cloze", "grammarPointKey": "de-b1-um-zu-damit" },
+  { "language": "TR", "cefrLevel": "A2", "exerciseType": "cloze", "grammarPointKey": "tr-a2-adversative-connectors" }
+]

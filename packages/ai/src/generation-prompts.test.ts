@@ -999,6 +999,90 @@ describe("buildGenerationUserPrompt — self-revealing base-word-cue directive",
   });
 });
 
+describe("construction-variant directive", () => {
+  const variantGrammarPoint = {
+    key: "es-b1-impersonal-plural",
+    kind: "grammar" as const,
+    name: "Impersonal third-person plural",
+    description: "Agentless third-person plural.",
+    cefrLevel: "B1" as const,
+    language: "ES" as const,
+    examplesPositive: ["Dicen que llueve.", "Me robaron la cartera."],
+    examplesNegative: ["*Mi cartera fue robada."],
+    commonErrors: ["Forcing a ser-passive."],
+    constructionVariants: [
+      { id: "hearsay", directive: "hearsay report — `dicen que…`" },
+      {
+        id: "adversity",
+        directive: "a mishap the speaker suffered — `me robaron la cartera`",
+      },
+    ],
+  };
+
+  const variantInputs = {
+    language: "ES",
+    cefrLevel: "B1",
+    grammarPoint: variantGrammarPoint,
+    priorPoolSurfaces: undefined,
+    levelScopePoints: [],
+  };
+
+  it("emits the matching variant directive for a cloze draft", () => {
+    const prompt = buildGenerationUserPrompt(
+      { ...variantInputs, exerciseType: ExerciseType.CLOZE } as never,
+      0,
+      "home",
+      "adversity",
+    );
+    expect(prompt).toContain("a mishap the speaker suffered");
+    expect(prompt).toContain("do not substitute another");
+    // The loose frequency-seed wording must NOT appear — it offers an escape
+    // hatch ("choose a word of similar frequency instead") that would let the
+    // model discard the construction.
+    expect(prompt).not.toContain("Build this exercise around the word");
+    // 2026-08-09: eval:gen A/B showed the bare MUST-use directive tripping
+    // contextSpoilsAnswer (17-point approval drop) — the directive must also
+    // forbid announcing the construction in the visible text.
+    expect(prompt).toContain(
+      "Do not name or hint at the sub-construction in `instructions` or the surrounding sentence",
+    );
+  });
+
+  it("adds the source-side clause for a translation draft", () => {
+    const prompt = buildGenerationUserPrompt(
+      { ...variantInputs, exerciseType: ExerciseType.TRANSLATION } as never,
+      0,
+      "home",
+      "adversity",
+    );
+    expect(prompt).toContain("English source");
+    // Same concealment clause, worded for the source-side surface.
+    expect(prompt).toContain(
+      "Do not name or hint at the sub-construction in `instructions` or the English source itself",
+    );
+  });
+
+  it("falls back to the loose frequency wording when the seed is not a variant id", () => {
+    const prompt = buildGenerationUserPrompt(
+      { ...variantInputs, exerciseType: ExerciseType.CLOZE } as never,
+      0,
+      "home",
+      "restaurante",
+    );
+    expect(prompt).toContain("Build this exercise around the word");
+  });
+
+  it("emits no seed block when the ordinal has no seed", () => {
+    const prompt = buildGenerationUserPrompt(
+      { ...variantInputs, exerciseType: ExerciseType.CLOZE } as never,
+      0,
+      "home",
+      null,
+    );
+    expect(prompt).not.toContain("sub-construction");
+  });
+});
+
 // ---------------------------------------------------------------------------
 // canonicalSurface
 // ---------------------------------------------------------------------------

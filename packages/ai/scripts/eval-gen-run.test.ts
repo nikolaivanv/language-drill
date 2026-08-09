@@ -40,6 +40,7 @@ import {
 } from "../src/index.js";
 import { sha8 } from "../src/prompts-registry.js";
 import {
+  computeArmStats,
   computeGenDiff,
   isCellResolutionError,
   loadCellDataset,
@@ -50,6 +51,7 @@ import {
   resolveCell,
   resolveGenerationPromptSource,
   runGenEval,
+  seedWordsForArm,
   type ArmResult,
   type CellDescriptor,
   type DraftOutcome,
@@ -516,6 +518,26 @@ describe("runGenEval", () => {
     expect(executor).toHaveBeenCalledTimes(2);
     expect(result.costCapped).toBe(false);
   });
+
+  it("passes seedConstructionVariants: false to the baseline call and true to the candidate call", async () => {
+    // The baseline arm must reproduce today's real unseeded behaviour and the
+    // candidate arm the new variant-seeded one — otherwise both arms render
+    // the identical prompt and the A/B reports a zero delta by construction
+    // (ruling, 2026-08-08; see seedWordsForArm's doc comment).
+    const seen: GenCellArmExecutorParams[] = [];
+    const executor: GenCellArmExecutor = vi.fn(async (p) => {
+      seen.push(p);
+      return armResult();
+    });
+
+    await runGenEval(runOpts({ executor, dataset: TR_CELLS.slice(0, 1) }));
+
+    // One cell → [baseline call, candidate call], in that order (see the
+    // executor calls in runGenEval).
+    expect(seen).toHaveLength(2);
+    expect(seen[0].seedConstructionVariants).toBe(false);
+    expect(seen[1].seedConstructionVariants).toBe(true);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -608,6 +630,7 @@ describe("makeRealArmExecutor — classification + cost folding", () => {
       systemPromptOverride: "SYSTEM PROMPT BODY",
       draftsPerCell: 3,
       batchSeed: "eval-gen",
+      seedConstructionVariants: false,
     });
 
     // --- Classification: one of each bucket, in draft order then malformed.
@@ -647,6 +670,197 @@ describe("makeRealArmExecutor — classification + cost folding", () => {
     expect(estimateCostUsd(arm.usage)).toBeGreaterThan(
       estimateCostUsd(GEN_USAGE),
     );
+  });
+
+  it("seeds construction-variant ids into the GenerationSpec only when seedConstructionVariants is true, and stamps variantId per draft", async () => {
+    const grammarPoint = {
+      key: "es-b1-impersonal-plural",
+      kind: "grammar" as const,
+      name: "Impersonal third-person plural",
+      description: "Agentless third-person plural.",
+      cefrLevel: "B1",
+      language: "ES",
+      examplesPositive: ["Dicen que llueve.", "Me robaron la cartera."],
+      examplesNegative: ["*Mi cartera fue robada."],
+      commonErrors: ["Forcing a ser-passive."],
+      constructionVariants: [
+        { id: "hearsay", directive: "hearsay — dicen que" },
+        { id: "adversity", directive: "adversity — me robaron" },
+      ],
+    };
+    const cell: CellDescriptor = {
+      language: Language.ES,
+      cefrLevel: CefrLevel.B1,
+      exerciseType: ExerciseType.CLOZE,
+      grammarPointKey: grammarPoint.key,
+    };
+
+    mockGenerateBatch.mockResolvedValue({
+      drafts: [{ id: "d1" }, { id: "d2" }] as ExerciseDraft[],
+      tokenUsage: ZERO_USAGE,
+      malformedDrafts: [],
+    } satisfies GenerateBatchResult);
+    mockValidateDraft.mockResolvedValue({
+      result: approveResult(),
+      tokenUsage: ZERO_USAGE,
+    });
+
+    const executor = makeRealArmExecutor({} as never);
+
+    // Baseline (seeding disabled): today's real unseeded behaviour — no
+    // seedWords on the spec, no variantId on any outcome.
+    const baseline = await executor({
+      cell,
+      grammarPoint,
+      systemPromptOverride: "SYSTEM",
+      draftsPerCell: 2,
+      batchSeed: "eval-gen",
+      seedConstructionVariants: false,
+    });
+    expect(mockGenerateBatch.mock.calls[0][1].seedWords).toBeUndefined();
+    expect(baseline.outcomes.every((o) => o.variantId === undefined)).toBe(
+      true,
+    );
+
+    mockGenerateBatch.mockClear();
+
+    // Candidate (seeding enabled): seedWords carries one variant id per
+    // ordinal, and each outcome is stamped with the variant that produced it.
+    const candidate = await executor({
+      cell,
+      grammarPoint,
+      systemPromptOverride: "SYSTEM",
+      draftsPerCell: 2,
+      batchSeed: "eval-gen",
+      seedConstructionVariants: true,
+    });
+    const spec = mockGenerateBatch.mock.calls[0][1];
+    expect(spec.seedWords).toHaveLength(2);
+    expect(new Set(spec.seedWords)).toEqual(new Set(["hearsay", "adversity"]));
+    expect(candidate.outcomes.map((o) => o.variantId)).toEqual(
+      spec.seedWords,
+    );
+  });
+
+  it("attributes variantId by the TRUE ordinal, not the malformed-compacted array index (interleaved malformed draft)", async () => {
+    const grammarPoint = {
+      key: "es-b1-impersonal-plural",
+      kind: "grammar" as const,
+      name: "Impersonal third-person plural",
+      description: "Agentless third-person plural.",
+      cefrLevel: "B1",
+      language: "ES",
+      examplesPositive: ["Dicen que llueve.", "Me robaron la cartera."],
+      examplesNegative: ["*Mi cartera fue robada."],
+      commonErrors: ["Forcing a ser-passive."],
+      constructionVariants: [
+        { id: "hearsay", directive: "hearsay — dicen que" },
+        { id: "adversity", directive: "adversity — me robaron" },
+      ],
+    };
+    const cell: CellDescriptor = {
+      language: Language.ES,
+      cefrLevel: CefrLevel.B1,
+      exerciseType: ExerciseType.CLOZE,
+      grammarPointKey: grammarPoint.key,
+    };
+
+    // `pickVariantSeeds` is real (unmocked) and deterministic: for these two
+    // equal-share variants and count=3 it returns
+    // ['hearsay', 'adversity', 'hearsay'] for ordinals 0, 1, 2 respectively
+    // (deficit-ranked round robin — see construction-variant-seed.ts).
+    // Ordinal 0 ('hearsay') is malformed, so `batch.drafts` holds only the
+    // successful ordinals 1 ('adversity') and 2 ('hearsay'), compacted to
+    // array indices 0 and 1. A naive array-index lookup would swap these.
+    mockGenerateBatch.mockResolvedValue({
+      drafts: [{ id: "d-ord1" }, { id: "d-ord2" }] as ExerciseDraft[],
+      tokenUsage: ZERO_USAGE,
+      malformedDrafts: [
+        { ordinal: 0, errorMessage: "Draft ordinal=0 malformed: bad json" },
+      ],
+    } satisfies GenerateBatchResult);
+    mockValidateDraft.mockResolvedValue({
+      result: approveResult(),
+      tokenUsage: ZERO_USAGE,
+    });
+
+    const executor = makeRealArmExecutor({} as never);
+    const arm = await executor({
+      cell,
+      grammarPoint,
+      systemPromptOverride: "SYSTEM",
+      draftsPerCell: 3,
+      batchSeed: "eval-gen",
+      seedConstructionVariants: true,
+    });
+
+    const [ord1Outcome, ord2Outcome] = arm.outcomes.filter(
+      (o) => o.bucket !== "parser-failure",
+    );
+    // True ordinals: d-ord1 is ordinal 1 ('adversity'), d-ord2 is ordinal 2
+    // ('hearsay'). The compacted array indices (0, 1) would instead yield
+    // ('hearsay', 'adversity') — the bug this test catches.
+    expect(ord1Outcome.variantId).toBe("adversity");
+    expect(ord2Outcome.variantId).toBe("hearsay");
+  });
+
+  it("stamps variantId on a malformed-draft outcome, so a variant whose every draft fails to parse still appears in variantCounts", async () => {
+    const grammarPoint = {
+      key: "es-b1-impersonal-plural",
+      kind: "grammar" as const,
+      name: "Impersonal third-person plural",
+      description: "Agentless third-person plural.",
+      cefrLevel: "B1",
+      language: "ES",
+      examplesPositive: ["Dicen que llueve.", "Me robaron la cartera."],
+      examplesNegative: ["*Mi cartera fue robada."],
+      commonErrors: ["Forcing a ser-passive."],
+      constructionVariants: [
+        { id: "hearsay", directive: "hearsay — dicen que" },
+        { id: "adversity", directive: "adversity — me robaron" },
+      ],
+    };
+    const cell: CellDescriptor = {
+      language: Language.ES,
+      cefrLevel: CefrLevel.B1,
+      exerciseType: ExerciseType.CLOZE,
+      grammarPointKey: grammarPoint.key,
+    };
+
+    // count=2, 2 equal-share variants → deterministic ['hearsay', 'adversity']
+    // for ordinals 0, 1. Ordinal 0 ('hearsay') is the ONLY draft seeded with
+    // that variant, and it's malformed — so 'hearsay' has zero well-formed
+    // outcomes. Without variantId on the parser-failure outcome, 'hearsay'
+    // would be indistinguishable from a variant that was never seeded.
+    mockGenerateBatch.mockResolvedValue({
+      drafts: [{ id: "d-ord1" }] as ExerciseDraft[],
+      tokenUsage: ZERO_USAGE,
+      malformedDrafts: [
+        { ordinal: 0, errorMessage: "Draft ordinal=0 malformed: bad json" },
+      ],
+    } satisfies GenerateBatchResult);
+    mockValidateDraft.mockResolvedValue({
+      result: approveResult(),
+      tokenUsage: ZERO_USAGE,
+    });
+
+    const executor = makeRealArmExecutor({} as never);
+    const arm = await executor({
+      cell,
+      grammarPoint,
+      systemPromptOverride: "SYSTEM",
+      draftsPerCell: 2,
+      batchSeed: "eval-gen",
+      seedConstructionVariants: true,
+    });
+
+    const parserFailure = arm.outcomes.find(
+      (o) => o.bucket === "parser-failure",
+    );
+    expect(parserFailure?.variantId).toBe("hearsay");
+
+    const stats = computeArmStats([arm]);
+    expect(stats.variantCounts).toEqual({ hearsay: 1, adversity: 1 });
   });
 });
 
@@ -871,5 +1085,125 @@ describe("renderMarkdownSummary", () => {
     const normal = renderMarkdownSummary(computeGenDiff(sampleRun(false)));
     expect(capped).toContain("cost cap reached");
     expect(normal).not.toContain("cost cap reached");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Construction-variant seeding (Task 7) — seedWordsForArm, ArmStats.variantCounts,
+// GenEvalSummary.variantDeltas, and the markdown block that surfaces them.
+//
+// The arm-level `seedConstructionVariants` flag exists because seeding BOTH
+// arms would make the A/B degenerate (same prompt source, same seeding, zero
+// delta by construction). Baseline reproduces today's real unseeded
+// behaviour; candidate seeds from the point's declared variants — see
+// `seedWordsForArm`'s doc comment in eval-gen-run.ts.
+// ---------------------------------------------------------------------------
+
+describe("eval-gen construction-variant seeding", () => {
+  const variantGrammarPoint = {
+    key: "es-b1-impersonal-plural",
+    kind: "grammar" as const,
+    name: "Impersonal third-person plural",
+    description: "Agentless third-person plural.",
+    cefrLevel: "B1",
+    language: "ES",
+    examplesPositive: ["Dicen que llueve.", "Me robaron la cartera."],
+    examplesNegative: ["*Mi cartera fue robada."],
+    commonErrors: ["Forcing a ser-passive."],
+    constructionVariants: [
+      { id: "hearsay", directive: "hearsay — dicen que" },
+      { id: "adversity", directive: "adversity — me robaron" },
+    ],
+  };
+
+  it("seeds a variant per ordinal when the arm has seeding enabled", () => {
+    const seeds = seedWordsForArm(variantGrammarPoint, 5, true);
+    expect(seeds).toHaveLength(5);
+    expect(new Set(seeds)).toEqual(new Set(["hearsay", "adversity"]));
+  });
+
+  it("seeds nothing when the arm has seeding disabled (baseline arm)", () => {
+    expect(seedWordsForArm(variantGrammarPoint, 5, false)).toBeUndefined();
+  });
+
+  it("seeds nothing for a point without variants", () => {
+    expect(
+      seedWordsForArm(
+        { ...variantGrammarPoint, constructionVariants: undefined },
+        5,
+        true,
+      ),
+    ).toBeUndefined();
+  });
+
+  it("counts realized variants per arm", () => {
+    const stats = computeArmStats([
+      armOf(
+        [
+          { bucket: "auto-approved", reasons: [], variantId: "hearsay" },
+          { bucket: "auto-approved", reasons: [], variantId: "adversity" },
+          {
+            bucket: "flagged",
+            reasons: ["ambiguous"],
+            variantId: "adversity",
+          },
+        ],
+        0,
+      ),
+    ]);
+    expect(stats.variantCounts).toEqual({ hearsay: 1, adversity: 2 });
+  });
+
+  it("rolls per-arm variantCounts into GenEvalSummary.variantDeltas", () => {
+    const run: GenEvalRunResult = {
+      runName: "variant-run",
+      baseline: { source: "repo", sha: "base1234" },
+      candidate: { source: "cand", sha: "cand5678" },
+      datasetName: "cells.json",
+      startedAt: "2026-08-08T00:00:00.000Z",
+      draftsPerCell: 2,
+      costCapped: false,
+      cells: [
+        {
+          cellKey: "ES|B1|cloze|es-b1-impersonal-plural",
+          // Baseline is unseeded — no variantId on any outcome.
+          baseline: armOf([AO, AO], 0),
+          candidate: armOf(
+            [
+              { bucket: "auto-approved", reasons: [], variantId: "hearsay" },
+              {
+                bucket: "auto-approved",
+                reasons: [],
+                variantId: "adversity",
+              },
+            ],
+            0,
+          ),
+        },
+      ],
+      errors: [],
+    };
+
+    const summary = computeGenDiff(run);
+    expect(summary.baselineStats.variantCounts).toEqual({});
+    expect(summary.candidateStats.variantCounts).toEqual({
+      hearsay: 1,
+      adversity: 1,
+    });
+    expect(summary.variantDeltas).toEqual({
+      hearsay: { baseline: 0, candidate: 1 },
+      adversity: { baseline: 0, candidate: 1 },
+    });
+
+    const md = renderMarkdownSummary(summary);
+    expect(md).toContain("## Construction variants");
+    expect(md).toContain("| hearsay | 0 | 1 |");
+    expect(md).toContain("| adversity | 0 | 1 |");
+  });
+
+  it("renders an empty construction-variants section when no draft carries a variantId", () => {
+    const md = renderMarkdownSummary(computeGenDiff(sampleRun()));
+    expect(md).toContain("## Construction variants");
+    expect(md).toContain("_(none)_");
   });
 });

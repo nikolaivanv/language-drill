@@ -32,6 +32,7 @@ import {
 } from '@language-drill/ai';
 import {
   ExerciseType,
+  pickVariantSeeds,
   type CoverageAxis,
   type CoverageOutcome,
   type CoverageSpec,
@@ -377,6 +378,39 @@ export async function loadCoveredVocabWords(db: Db, cell: Cell): Promise<Set<str
 }
 
 /**
+ * Live approved count per `constructionVariants` id in this cell, read from the
+ * writer-only `content_json.seedWord` field. APPROVED statuses only (matching
+ * `loadCoveredVocabWords`): a flagged draft is not pool coverage. Legacy rows
+ * carry a frequency word here rather than a variant id; `pickVariantSeeds`
+ * ignores keys it does not recognise.
+ */
+export async function loadVariantCoverage(
+  db: Db,
+  cell: Cell,
+): Promise<Map<string, number>> {
+  const rows = await db
+    .select({ seed: sql<string>`content_json->>'seedWord'` })
+    .from(exercises)
+    .where(
+      and(
+        eq(exercises.language, cell.language),
+        eq(exercises.difficulty, cell.cefrLevel),
+        eq(exercises.type, cell.exerciseType),
+        eq(exercises.grammarPointKey, cell.grammarPoint.key),
+        inArray(exercises.reviewStatus, ['auto-approved', 'manual-approved']),
+        sql`content_json ? 'seedWord'`,
+      ),
+    );
+  const counts = new Map<string, number>();
+  for (const r of rows) {
+    if (typeof r.seed === 'string' && r.seed.length > 0) {
+      counts.set(r.seed, (counts.get(r.seed) ?? 0) + 1);
+    }
+  }
+  return counts;
+}
+
+/**
  * Distinct free_writing titles already approved/flagged in this cell, fed into
  * the generation prompt as an avoid-list (cross-run dedup). The dedup surface
  * for free_writing is the title, so without this the generator re-proposes the
@@ -574,7 +608,8 @@ async function fetchPriorNounSeeds(
  */
 export function seedKindFor(
   cell: Cell,
-): 'frequency' | 'verb' | 'noun' | 'predicate-nominal' | 'elicitation-values' | 'vocab-target' | null {
+): | 'frequency' | 'verb' | 'noun' | 'predicate-nominal' | 'elicitation-values'
+  | 'vocab-target' | 'construction-variants' | null {
   if (
     (cell.exerciseType === ExerciseType.CLOZE ||
       cell.exerciseType === ExerciseType.TRANSLATION) &&
@@ -585,6 +620,18 @@ export function seedKindFor(
     // diversity axis. Frequency seeding let the model collapse onto one value
     // ('üçüncü' in 18/20 approved TR translations).
     return 'elicitation-values';
+  }
+  if (
+    (cell.exerciseType === ExerciseType.CLOZE ||
+      cell.exerciseType === ExerciseType.TRANSLATION) &&
+    cell.grammarPoint.constructionVariants &&
+    cell.grammarPoint.constructionVariants.length > 0
+  ) {
+    // Multi-construction point: the SUB-CONSTRUCTION is the diversity axis, not
+    // the content word. A frequency seed gets absorbed into the complement
+    // (`restaurante`, `iglesia`) while the frame stays free and collapses onto
+    // the prototype — 43/50 `Dicen` clozes for es-b1-impersonal-plural.
+    return 'construction-variants';
   }
   if (
     cell.exerciseType === ExerciseType.CLOZE ||
@@ -645,6 +692,18 @@ export async function buildSeedWords(
     const covered = await loadCoveredVocabWords(db, cell);
     const band = computeUncoveredTargetBand(targets, covered);
     return pickTargetSeeds({ band, count, exclude: priorSeeds });
+  }
+
+  if (kind === 'construction-variants') {
+    // Deficit-ranked over the point's curated sub-constructions. `priorSeeds`
+    // is deliberately unused: it is a one-shot exclude set, and excluding a
+    // variant after a single use would stall the cell after one batch.
+    const coverage = await loadVariantCoverage(db, cell);
+    return pickVariantSeeds({
+      variants: cell.grammarPoint.constructionVariants ?? [],
+      coverage,
+      count,
+    });
   }
 
   const window = cefrRankWindow(cell.cefrLevel);

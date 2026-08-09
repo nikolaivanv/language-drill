@@ -12,7 +12,9 @@
  *      level default; wins outright (R3.2).
  *   2. `CELL_TARGET_DEFAULTS[exerciseType][cefrLevel]` — the level-appropriate
  *      default, raised if needed to cover the largest single-axis floor sum in
- *      the cell's `coverageSpec` (floor-driven target: see `resolveCellTarget`).
+ *      the cell's `coverageSpec`, and separately raised to cover
+ *      `constructionVariants.length * MIN_PER_VARIANT` when the point declares
+ *      variants (floor-driven target: see `resolveCellTarget`).
  *      Cloze/translation taper at A1/A2 (limited lexical space at the lower
  *      levels) and leave B1/B2 unset; vocab_recall is capped LOW (10) at every
  *      level for token efficiency — a single "everyday" umbrella exhausts its
@@ -24,7 +26,7 @@
  *      also subject to the floor raise above.
  */
 
-import { ExerciseType } from '@language-drill/shared';
+import { ExerciseType, MIN_PER_VARIANT } from '@language-drill/shared';
 import type { Cell, CurriculumCefrLevel } from '@language-drill/db';
 
 import { TARGET_PER_CELL } from './scheduler-decision';
@@ -89,26 +91,42 @@ export const GIVE_UP_MIN_ATTEMPTS = 2;
 
 /**
  * Resolve the generation target for a cell. Pure. Order: an explicit
- * `targetOverride` wins outright; otherwise the `(type, level)` table value (or
- * the `TARGET_PER_CELL` fallback) is raised, if needed, to cover the largest
- * single-axis floor sum in the cell's `coverageSpec`. One approved exercise
- * realizes one value per axis, so an axis whose floors sum to F needs ≥ F
- * exercises; taking the MAX over axes (never the product) guarantees headroom
- * for the tightest axis without multiplying axes together. Replaces the former
- * person-rotation 1.5× multiplier with exact floor arithmetic.
+ * `targetOverride` wins outright — including over the `constructionVariants`
+ * floor below. A `targetOverride` too small to let every declared variant
+ * reach `MIN_PER_VARIANT` (imported from `@language-drill/shared`) is a
+ * curriculum-authoring mistake, not something this scheduler-time resolver
+ * can safely reject: `resolveCellTarget` runs uncaught inside the nightly
+ * scheduler's per-cell loop (`infra/lambda/src/generation/scheduler.ts`), so
+ * throwing here would abort the entire run for every language over one
+ * misconfigured point. That combination is instead caught at authoring time
+ * by `assertCurriculumInvariants` (`packages/db/src/curriculum/index.ts`,
+ * the `constructionVariants` block), which the curriculum test suite runs on
+ * every commit. Absent an override, the `(type, level)` table value (or the
+ * `TARGET_PER_CELL` fallback) is raised, if needed, to cover the largest
+ * single-axis floor sum in the cell's `coverageSpec` and the
+ * `constructionVariants` floor. One approved exercise realizes one value per
+ * axis, so an axis whose floors sum to F needs ≥ F exercises; taking the MAX
+ * over axes (never the product) guarantees headroom for the tightest axis
+ * without multiplying axes together. Replaces the former person-rotation
+ * 1.5× multiplier with exact floor arithmetic.
  */
 export function resolveCellTarget(cell: Cell): number {
+  const variants = cell.grammarPoint.constructionVariants;
+  const variantFloor = variants ? variants.length * MIN_PER_VARIANT : 0;
+
   const override = cell.grammarPoint.targetOverride;
   if (override !== undefined) return override;
+
   const fromTable = CELL_TARGET_DEFAULTS[cell.exerciseType][cell.cefrLevel];
   const base = fromTable ?? TARGET_PER_CELL;
   const spec = cell.grammarPoint.coverageSpec;
-  if (!spec) return base;
   let maxAxisFloorSum = 0;
-  for (const axis of spec.axes) {
-    let sum = 0;
-    for (const floor of Object.values(axis.floors)) sum += (floor as number) ?? 0;
-    if (sum > maxAxisFloorSum) maxAxisFloorSum = sum;
+  if (spec) {
+    for (const axis of spec.axes) {
+      let sum = 0;
+      for (const floor of Object.values(axis.floors)) sum += (floor as number) ?? 0;
+      if (sum > maxAxisFloorSum) maxAxisFloorSum = sum;
+    }
   }
-  return Math.max(base, maxAxisFloorSum);
+  return Math.max(base, maxAxisFloorSum, variantFloor);
 }

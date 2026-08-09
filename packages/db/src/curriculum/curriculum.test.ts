@@ -448,6 +448,177 @@ describe('self-revealing elicitation — flagged entries', () => {
   });
 });
 
+describe('constructionVariants invariants', () => {
+  const base = {
+    key: 'es-b1-test-point',
+    kind: 'grammar' as const,
+    name: 'Test point',
+    description: 'A test point.',
+    cefrLevel: 'B1',
+    language: 'ES',
+    examplesPositive: ['uno', 'dos'],
+    examplesNegative: ['*tres'],
+    commonErrors: ['an error'],
+  };
+
+  it('rejects fewer than two variants', () => {
+    expect(() =>
+      assertCurriculumInvariants([
+        { ...base, constructionVariants: [{ id: 'only-one', directive: 'x' }] },
+      ] as never),
+    ).toThrow(/at least 2 constructionVariants/);
+  });
+
+  it('rejects duplicate variant ids', () => {
+    expect(() =>
+      assertCurriculumInvariants([
+        {
+          ...base,
+          constructionVariants: [
+            { id: 'dup', directive: 'x' },
+            { id: 'dup', directive: 'y' },
+          ],
+        },
+      ] as never),
+    ).toThrow(/duplicate constructionVariant id 'dup'/);
+  });
+
+  it('rejects a non-kebab-case variant id', () => {
+    expect(() =>
+      assertCurriculumInvariants([
+        {
+          ...base,
+          constructionVariants: [
+            { id: 'Not Kebab', directive: 'x' },
+            { id: 'fine-id', directive: 'y' },
+          ],
+        },
+      ] as never),
+    ).toThrow(/malformed constructionVariant id 'Not Kebab'/);
+  });
+
+  it('rejects an empty directive', () => {
+    expect(() =>
+      assertCurriculumInvariants([
+        {
+          ...base,
+          constructionVariants: [
+            { id: 'a-id', directive: '' },
+            { id: 'b-id', directive: 'y' },
+          ],
+        },
+      ] as never),
+    ).toThrow(/empty directive/);
+  });
+
+  it('rejects a non-positive share', () => {
+    expect(() =>
+      assertCurriculumInvariants([
+        {
+          ...base,
+          constructionVariants: [
+            { id: 'a-id', directive: 'x', share: 0 },
+            { id: 'b-id', directive: 'y' },
+          ],
+        },
+      ] as never),
+    ).toThrow(/share must be > 0/);
+  });
+
+  it('rejects constructionVariants on a non-grammar entry', () => {
+    expect(() =>
+      assertCurriculumInvariants([
+        {
+          ...base,
+          kind: 'vocab' as const,
+          constructionVariants: [
+            { id: 'a-id', directive: 'x' },
+            { id: 'b-id', directive: 'y' },
+          ],
+        },
+      ] as never),
+    ).toThrow(/constructionVariants but is not kind 'grammar'/);
+  });
+
+  it('rejects constructionVariants alongside selfRevealingElicitation', () => {
+    expect(() =>
+      assertCurriculumInvariants([
+        {
+          ...base,
+          selfRevealingElicitation: 'digit-form' as const,
+          elicitationSeedValues: ['tercero'],
+          constructionVariants: [
+            { id: 'a-id', directive: 'x' },
+            { id: 'b-id', directive: 'y' },
+          ],
+        },
+      ] as never),
+    ).toThrow(/cannot combine constructionVariants with selfRevealingElicitation/);
+  });
+
+  it('accepts a well-formed pair', () => {
+    // Invariant 10 (per-language grammar count minimums) may throw for a single-entry
+    // fixture; we only care that no constructionVariants-related error is thrown.
+    try {
+      assertCurriculumInvariants([
+        {
+          ...base,
+          constructionVariants: [
+            { id: 'hearsay-dicen-que', directive: 'x', share: 3 },
+            { id: 'adversity-experiencer', directive: 'y' },
+          ],
+        },
+      ] as never);
+    } catch (e) {
+      expect((e as Error).message).not.toMatch(
+        /constructionVariants|malformed constructionVariant|duplicate constructionVariant|empty directive|share must be/,
+      );
+    }
+  });
+
+  it('rejects a targetOverride too small to cover the variant floor (MIN_PER_VARIANT)', () => {
+    // 5 variants * MIN_PER_VARIANT (4) = 20; an override of 6 can't cover it.
+    expect(() =>
+      assertCurriculumInvariants([
+        {
+          ...base,
+          targetOverride: 6,
+          constructionVariants: [
+            { id: 'a-id', directive: 'x' },
+            { id: 'b-id', directive: 'y' },
+            { id: 'c-id', directive: 'z' },
+            { id: 'd-id', directive: 'w' },
+            { id: 'e-id', directive: 'v' },
+          ],
+        },
+      ] as never),
+    ).toThrow(
+      /has targetOverride 6 but needs >= 20 to cover 5 constructionVariants/,
+    );
+  });
+
+  it('accepts a targetOverride that covers the variant floor', () => {
+    // Invariant 10 (per-language grammar count minimums) may throw for a single-entry
+    // fixture; we only care that no targetOverride/constructionVariants-related error is thrown.
+    try {
+      assertCurriculumInvariants([
+        {
+          ...base,
+          targetOverride: 20,
+          constructionVariants: [
+            { id: 'hearsay-dicen-que', directive: 'x', share: 3 },
+            { id: 'adversity-experiencer', directive: 'y' },
+          ],
+        },
+      ] as never);
+    } catch (e) {
+      expect((e as Error).message).not.toMatch(
+        /constructionVariants|malformed constructionVariant|duplicate constructionVariant|empty directive|share must be|targetOverride/,
+      );
+    }
+  });
+});
+
 describe('curriculum personRotation flag (migrated to coverageSpec — Task 4)', () => {
   // The `personRotation` field has been migrated to `coverageSpec` in Task 4 of
   // the Pool Coverage Controller Phase 2 migration. Active entries no longer have

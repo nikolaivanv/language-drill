@@ -182,7 +182,11 @@ describe("buildValidationSystemPrompt", () => {
     // habitual cue is ALSO ambiguous (deja/dejaba); present is safe only with a
     // present anchor.
     expect(prompt).toContain("the imperfect fits identically");
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-07-30");
+    // 2026-08-08 — multi-construction points: the grammarPointMatch clause
+    // grew a sub-bullet clarifying that ANY construction described in the
+    // point's description is on-target (see the dedicated describe block
+    // below for the exact prose assertions).
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-08");
 
     // R3.A — the three contextSpoilsAnswer triples added in task 8.
     expect(prompt).toContain("çocuk");
@@ -233,6 +237,13 @@ describe("buildValidationSystemPrompt", () => {
     // with a present anchor (~650 bytes, mirrors generate@2026-07-30). Ceiling
     // raised to 10,500.
     //
+    // validate@2026-08-08 added a "Multi-construction points" sub-bullet to
+    // the `grammarPointMatch` dimension: ANY construction described in the
+    // grammar-point description is on-target, so the validator stops
+    // re-collapsing generation's construction-variant fix by flagging
+    // rarely-seen constructions as a mismatch (~400 bytes). Ceiling raised
+    // to 11,000.
+    //
     // We assert on the TEMPLATE literal, not the rendered output, because:
     //   - The template is what Langfuse stores and what Anthropic's
     //     prompt-cache keys on byte-for-byte.
@@ -240,7 +251,7 @@ describe("buildValidationSystemPrompt", () => {
     //     (descriptions, examples, common errors, CEFR descriptors) which
     //     varies by language/level and is not what the NFR budgets — those
     //     substitutions are already counted against the API per-call.
-    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(10500);
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(11000);
   });
 });
 
@@ -873,5 +884,27 @@ describe("buildValidationUserPrompt — dictation guard", () => {
     expect(() =>
       buildValidationUserPrompt(dictationDraft, specFor(ExerciseType.DICTATION, false)),
     ).toThrow("Dictation exercises are not validated via this path");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Multi-construction grammarPointMatch guidance (Task 5)
+// ---------------------------------------------------------------------------
+
+describe("multi-construction grammarPointMatch guidance", () => {
+  it("tells the validator that any construction in the description is on-target", () => {
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain(
+      'ANY construction described in the grammar-point description is on-target',
+    );
+  });
+
+  it("names the failure mode it is preventing", () => {
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain(
+      'not merely because it is not the point’s most common pattern',
+    );
+  });
+
+  it("bumps the prompt version to today", () => {
+    expect(VALIDATION_PROMPT_VERSION).toBe('validate@2026-08-08');
   });
 });

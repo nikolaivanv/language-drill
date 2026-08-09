@@ -29,7 +29,12 @@ import { parseArgs } from "node:util";
 
 import type Anthropic from "@anthropic-ai/sdk";
 
-import { CefrLevel, ExerciseType, Language } from "@language-drill/shared";
+import {
+  CefrLevel,
+  ExerciseType,
+  Language,
+  pickVariantSeeds,
+} from "@language-drill/shared";
 import type { GrammarPoint } from "@language-drill/shared";
 import {
   buildCellKey,
@@ -208,11 +213,16 @@ export type DraftBucket =
 /**
  * One classified draft. `reasons` are the canonical `GenerationReasonCode`
  * strings from `routeValidationResult` (the bounded `code`, not the free-form
- * `detail`); a malformed draft carries `["parser-failure"]`.
+ * `detail`); a malformed draft carries `["parser-failure"]`. `variantId` is
+ * the construction-variant id this draft was seeded with (from
+ * `seedWordsForArm`) — `undefined` for an unseeded arm/draft (baseline, or a
+ * point without `constructionVariants`), and for parser-failure outcomes
+ * (the seed never reaches a validated draft).
  */
 export type DraftOutcome = {
   bucket: DraftBucket;
   reasons: string[];
+  variantId?: string;
 };
 
 /**
@@ -247,6 +257,9 @@ export type ArmStats = {
   approvalRate: number;
   rejectionReasonCounts: Record<string, number>;
   flagTagCounts: Record<string, number>;
+  /** Realized draft count per construction-variant id (Task 7), across every
+   *  bucket — an arm without seeding (or a point without variants) is `{}`. */
+  variantCounts: Record<string, number>;
   costUsd: number;
 };
 
@@ -274,6 +287,9 @@ export type GenEvalSummary = {
   approvalRateDelta: number;
   reasonDeltas: Record<string, { baseline: number; candidate: number }>;
   flagDeltas: Record<string, { baseline: number; candidate: number }>;
+  /** Per-construction-variant realized-draft counts (Task 7), keyed the same
+   *  way as `reasonDeltas`/`flagDeltas`. Empty when neither arm seeded. */
+  variantDeltas: Record<string, { baseline: number; candidate: number }>;
   costUsd: { baseline: number; candidate: number };
   errors: Array<{ cellKey: string; error: string }>;
   perCell?: Array<{ cellKey: string; baseline: ArmStats; candidate: ArmStats }>;
@@ -396,6 +412,34 @@ export function renderSystemPrompt(
   return text;
 }
 
+/**
+ * Per-ordinal construction-variant seeds for one eval arm (Task 7). The
+ * BASELINE arm passes `seedConstructionVariants: false` to reproduce today's
+ * real unseeded behaviour; the CANDIDATE arm passes `true`. Without that
+ * asymmetry both arms would render the identical prompt and the A/B would
+ * report a zero delta by construction (ruling, 2026-08-08) — the whole point
+ * of this eval is to measure the effect of seeding, so one arm must stay
+ * unseeded as the control.
+ *
+ * The eval has no live pool, so `coverage` is always empty and
+ * `pickVariantSeeds` reduces to a share-weighted round robin over the point's
+ * declared variants.
+ */
+export function seedWordsForArm(
+  grammarPoint: GrammarPoint,
+  draftsPerCell: number,
+  seedConstructionVariants: boolean,
+): string[] | undefined {
+  if (!seedConstructionVariants) return undefined;
+  const variants = grammarPoint.constructionVariants;
+  if (!variants || variants.length === 0) return undefined;
+  return pickVariantSeeds({
+    variants,
+    coverage: new Map(),
+    count: draftsPerCell,
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Arm executor — generate N drafts under one prompt, validate + classify each.
 // ---------------------------------------------------------------------------
@@ -404,6 +448,12 @@ export function renderSystemPrompt(
 export type GenCellArmExecutorParams = {
   cell: CellDescriptor;
   grammarPoint: GrammarPoint;
+  /**
+   * Whether this arm should seed the point's declared construction variants
+   * (Task 7). `false` for the baseline arm (today's real unseeded
+   * behaviour), `true` for the candidate arm — see `seedWordsForArm`.
+   */
+  seedConstructionVariants: boolean;
   /**
    * The system prompt body already rendered for this cell + arm — passed
    * through to `GenerationSpec.systemPromptOverride` so the resolved prompt
@@ -461,11 +511,17 @@ export function makeRealArmExecutor(client: Anthropic): GenCellArmExecutor {
   return async ({
     cell,
     grammarPoint,
+    seedConstructionVariants,
     systemPromptOverride,
     draftsPerCell,
     batchSeed,
     signal,
   }: GenCellArmExecutorParams): Promise<ArmResult> => {
+    const variantSeeds = seedWordsForArm(
+      grammarPoint,
+      draftsPerCell,
+      seedConstructionVariants,
+    );
     const spec: GenerationSpec = {
       // EN is rejected at `resolveCell`, so this narrowing cast is safe; the
       // generator also guards EN at runtime.
@@ -477,6 +533,7 @@ export function makeRealArmExecutor(client: Anthropic): GenCellArmExecutor {
       count: draftsPerCell,
       batchSeed,
       systemPromptOverride,
+      seedWords: variantSeeds,
     };
 
     const batch = await generateBatch(client, spec, signal);
@@ -486,7 +543,23 @@ export function makeRealArmExecutor(client: Anthropic): GenCellArmExecutor {
     let usage: ClaudeUsageBreakdown = batch.tokenUsage;
     const outcomes: DraftOutcome[] = [];
 
+    // `batch.drafts` is ordinal-COMPACTED, not ordinal-indexed: `generateBatch`
+    // (generate.ts) walks ordinal 0..count-1 and pushes successes into
+    // `drafts` (in ascending ordinal order) while routing failures to the
+    // separate `malformedDrafts` array — so `drafts[i]`'s true ordinal equals
+    // `i` only when no malformed draft precedes it. `ExerciseDraft` carries no
+    // ordinal of its own, so we reconstruct the true ordinal by walking
+    // forward and skipping every ordinal known to be malformed. Getting this
+    // wrong silently mislabels `variantId` (e.g. a draft generated under
+    // variant B's directive gets tagged variant A) without any crash or test
+    // failure — exactly the number Task 12 spends real money reading.
+    const malformedOrdinals = new Set(
+      batch.malformedDrafts.map((m) => m.ordinal),
+    );
+    let ordinal = 0;
+
     for (const draft of batch.drafts) {
+      while (malformedOrdinals.has(ordinal)) ordinal++;
       const { result, tokenUsage } = await validateDraft(
         client,
         draft,
@@ -501,12 +574,25 @@ export function makeRealArmExecutor(client: Anthropic): GenCellArmExecutor {
         // free-form `detail` — so reason/flag buckets stay bounded-cardinality
         // (the whole point of the GenerationReason reason-codes refactor).
         reasons: flaggedReasons.map((r) => r.code),
+        // The variant this draft was seeded with, if any (undefined for an
+        // unseeded arm/draft) — keyed on the true ordinal, not the compacted
+        // array index.
+        variantId: variantSeeds?.[ordinal],
       });
+      ordinal++;
     }
 
     // Each malformed draft is a distinct parser-failure outcome (Req 4.4).
-    for (let i = 0; i < batch.malformedDrafts.length; i++) {
-      outcomes.push({ bucket: "parser-failure", reasons: ["parser-failure"] });
+    // Stamped with its own variantId (from its true `ordinal`, which
+    // `MalformedDraft` does carry) so a variant whose every draft fails to
+    // parse still shows up in `variantCounts` — distinct from a variant that
+    // was never seeded at all, which is the whole point of measuring this.
+    for (const malformed of batch.malformedDrafts) {
+      outcomes.push({
+        bucket: "parser-failure",
+        reasons: ["parser-failure"],
+        variantId: variantSeeds?.[malformed.ordinal],
+      });
     }
 
     return { outcomes, usage };
@@ -654,6 +740,9 @@ export async function runGenEval(opts: {
       const baselineResult = await executor({
         cell,
         grammarPoint,
+        // Baseline stays unseeded — it must reproduce today's real behaviour
+        // so the candidate's seeding is the only variable under test.
+        seedConstructionVariants: false,
         systemPromptOverride: baselinePrompt,
         draftsPerCell: args.draftsPerCell,
         batchSeed,
@@ -662,6 +751,9 @@ export async function runGenEval(opts: {
       const candidateResult = await executor({
         cell,
         grammarPoint,
+        // Candidate seeds the point's declared construction variants —
+        // the change this eval exists to measure (Task 7).
+        seedConstructionVariants: true,
         systemPromptOverride: candidatePrompt,
         draftsPerCell: args.draftsPerCell,
         batchSeed,
@@ -719,9 +811,14 @@ export async function runGenEval(opts: {
  * `rejectionReasonCounts`; `flagged` drafts' tags into `flagTagCounts`;
  * `parser-failure` drafts contribute their `"parser-failure"` reason to
  * `flagTagCounts` (its own key), so a malformed-draft spike is visible in the
- * flag distribution (Req 5.2, 5.3).
+ * flag distribution (Req 5.2, 5.3). `variantCounts` (Task 7) tallies every
+ * outcome's `variantId` regardless of bucket, so a flagged/rejected draft
+ * still counts toward its variant's realized share.
+ *
+ * Exported (not just used internally by `computeGenDiff`) so tests can assert
+ * the fold directly against hand-built `ArmResult`s.
  */
-function computeArmStats(results: ArmResult[]): ArmStats {
+export function computeArmStats(results: ArmResult[]): ArmStats {
   let totalDrafts = 0;
   let autoApproved = 0;
   let flagged = 0;
@@ -729,6 +826,7 @@ function computeArmStats(results: ArmResult[]): ArmStats {
   let parserFailure = 0;
   const rejectionReasonCounts: Record<string, number> = {};
   const flagTagCounts: Record<string, number> = {};
+  const variantCounts: Record<string, number> = {};
   let usage: ClaudeUsageBreakdown = ZERO_USAGE;
 
   const bump = (counts: Record<string, number>, reasons: string[]): void => {
@@ -741,6 +839,10 @@ function computeArmStats(results: ArmResult[]): ArmStats {
     usage = addUsage(usage, r.usage);
     for (const outcome of r.outcomes) {
       totalDrafts++;
+      if (outcome.variantId) {
+        variantCounts[outcome.variantId] =
+          (variantCounts[outcome.variantId] ?? 0) + 1;
+      }
       switch (outcome.bucket) {
         case "auto-approved":
           autoApproved++;
@@ -770,6 +872,7 @@ function computeArmStats(results: ArmResult[]): ArmStats {
     approvalRate: totalDrafts > 0 ? autoApproved / totalDrafts : 0,
     rejectionReasonCounts,
     flagTagCounts,
+    variantCounts,
     costUsd: estimateCostUsd(usage),
   };
 }
@@ -822,6 +925,10 @@ export function computeGenDiff(run: GenEvalRunResult): GenEvalSummary {
     flagDeltas: buildDeltas(
       baselineStats.flagTagCounts,
       candidateStats.flagTagCounts,
+    ),
+    variantDeltas: buildDeltas(
+      baselineStats.variantCounts,
+      candidateStats.variantCounts,
     ),
     costUsd: {
       baseline: baselineStats.costUsd,
@@ -905,6 +1012,11 @@ export function renderMarkdownSummary(summary: GenEvalSummary): string {
       lines.push(`| ${key} | ${deltas[key].baseline} | ${deltas[key].candidate} |`);
     }
   };
+
+  // Construction-variant spread (Task 7) — placed right after the
+  // approval-rate/bucket table so a reviewer can see whether seeding actually
+  // diversified the pool without opening the JSON.
+  deltaTable("Construction variants", summary.variantDeltas, "variant");
 
   deltaTable("Rejection reasons", summary.reasonDeltas, "reason");
   deltaTable("Flag tags", summary.flagDeltas, "tag");

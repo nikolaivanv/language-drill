@@ -597,9 +597,15 @@ export * from "./theory-categories";
 // ---------------------------------------------------------------------------
 
 export { deterministicUuid } from "./deterministic-uuid";
-export type { CurriculumCefrLevel, GrammarPoint } from "./curriculum-types";
+export type { ConstructionVariant, CurriculumCefrLevel, GrammarPoint } from "./curriculum-types";
 
 export * from "./coverage";
+
+// ---------------------------------------------------------------------------
+// Construction variants — deficit-ranked picker for sub-construction seeding
+// ---------------------------------------------------------------------------
+
+export * from "./construction-variant-seed";
 
 // ---------------------------------------------------------------------------
 // Fluency mode — deterministic grader + locked constants

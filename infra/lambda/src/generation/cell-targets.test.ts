@@ -5,7 +5,7 @@
  * invariants the resolver exists to enforce.
  */
 
-import { CefrLevel, ExerciseType, Language } from '@language-drill/shared';
+import { CefrLevel, ExerciseType, Language, MIN_PER_VARIANT } from '@language-drill/shared';
 import { describe, expect, it } from 'vitest';
 import type { Cell, CurriculumCefrLevel } from '@language-drill/db';
 
@@ -137,6 +137,34 @@ describe('resolveCellTarget', () => {
     expect(
       resolveCellTarget(makeCell(ExerciseType.CLOZE, CefrLevel.A1, 12)),
     ).toBe(12);
+  });
+});
+
+describe('resolveCellTarget — construction variants', () => {
+  const variantsOf = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({ id: `v-${i}`, directive: `d${i}` }));
+
+  it('raises the target to cover MIN_PER_VARIANT per variant', () => {
+    const target = resolveCellTarget({
+      exerciseType: ExerciseType.CLOZE,
+      cefrLevel: 'B1',
+      grammarPoint: { constructionVariants: variantsOf(20) },
+    } as never);
+    expect(target).toBeGreaterThanOrEqual(20 * MIN_PER_VARIANT);
+  });
+
+  it('leaves the base target alone when the variant floor is lower', () => {
+    const withVariants = resolveCellTarget({
+      exerciseType: ExerciseType.CLOZE,
+      cefrLevel: 'B1',
+      grammarPoint: { constructionVariants: variantsOf(3) },
+    } as never);
+    const without = resolveCellTarget({
+      exerciseType: ExerciseType.CLOZE,
+      cefrLevel: 'B1',
+      grammarPoint: {},
+    } as never);
+    expect(withVariants).toBe(without);
   });
 });
 

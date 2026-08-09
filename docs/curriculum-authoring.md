@@ -120,6 +120,45 @@ at-target cell has no deficit, so the floors never fire.
       points anyway).
 - [ ] If retrofitting: demote plan for already-filled cells.
 
+## `constructionVariants`: two gotchas from the 2026-08-08 rollout
+
+`constructionVariants` (`packages/shared/src/curriculum-types.ts`) rotates
+cloze/translation drafts across a point's curated sub-constructions instead of
+letting free generation collapse onto one prototype — see
+`docs/superpowers/specs/2026-08-08-construction-variants-design.md`. Two
+mistakes cost real rework during that rollout; check for both when authoring
+variants on a new point.
+
+**`share` must clear `MIN_PER_VARIANT` at the level's base target, not just
+the variant count.** `resolveCellTarget` raises the cell target to
+`variants.length * MIN_PER_VARIANT` (4), which only guarantees every variant's
+quota clears the floor when shares are uniform. With a non-uniform `share`,
+a variant's real quota is `target * share / Σshare` — so the *smallest* share
+on the point is what has to clear 4, not the average. Giving one variant
+`share: 3` on an A1/A2 point (base target 20/30) pushes `target / Σshare`
+under 4 for every share-1 sibling, starving the rarer variants below the
+floor even though the point-level check passes. It is tempting to reach for
+non-uniform `share` anyway — the prototype construction genuinely "should"
+keep a plurality — and the plan's own draft proposed `share: 2`/`3` weighting
+on several A2 TR points on exactly that reasoning; it was reverted to uniform
+shares during authoring once the arithmetic was checked (`fa9ee3d4`). Rule of
+thumb: only weight a variant above 1 on a B1/B2 point (base target 50), and
+hand-check `target / Σshare >= MIN_PER_VARIANT` before committing a
+non-uniform share.
+
+**`constructionVariants` and `coverageSpec` must never encode the same axis.**
+Both mechanisms emit an independent `MUST` clause into the same per-draft
+prompt, and nothing reconciles them — `renderCoverageBlock`'s output and the
+variant directive are concatenated blind in `generation-prompts.ts`.
+`es-b1-imperative-negative-pronouns` shipped with a `coverageSpec.polarity`
+floor *and* variants that each hard-code a polarity (`no + subjunctive...`),
+producing a self-contradictory affirmative/negative `MUST` pair on a large
+share of drafts; the model drops one of the two, corrupting whichever
+mechanism it drops (fixed at `50a24a49`). Before adding `constructionVariants`
+to a point that already has a `coverageSpec`, audit the spec for any axis a
+variant already hard-codes (most often `polarity` or `sentenceType`) and drop
+that axis from the spec — the variants subsume it.
+
 ## Related
 
 - `docs/pool-coverage-controller.md` — mechanism design (phases, controller)

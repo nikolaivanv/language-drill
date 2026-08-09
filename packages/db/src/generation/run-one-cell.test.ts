@@ -59,6 +59,7 @@ import type { Cell } from './cells';
 import {
   buildSeedWords,
   fetchPriorVocabRecallSurfaces,
+  loadVariantCoverage,
   runOneCell,
   seedKindFor,
   tallyCoverageOutcome,
@@ -412,6 +413,68 @@ describe('seedKindFor', () => {
       grammarPoint: { kind: 'paraphrase', paraphrase: { seeds: ['s1', 's2'] } },
     } as never;
     expect(seedKindFor(cell)).toBe('elicitation-values');
+  });
+});
+
+describe('seedKindFor — construction variants', () => {
+  const variants = [
+    { id: 'hearsay', directive: 'hearsay' },
+    { id: 'adversity', directive: 'adversity' },
+  ];
+
+  it('routes a cloze cell with variants to construction-variants', () => {
+    expect(
+      seedKindFor({
+        language: 'ES',
+        cefrLevel: 'B1',
+        exerciseType: ExerciseType.CLOZE,
+        grammarPoint: { kind: 'grammar', constructionVariants: variants },
+      } as never),
+    ).toBe('construction-variants');
+  });
+
+  it('routes a translation cell with variants to construction-variants', () => {
+    expect(
+      seedKindFor({
+        language: 'ES',
+        cefrLevel: 'B1',
+        exerciseType: ExerciseType.TRANSLATION,
+        grammarPoint: { kind: 'grammar', constructionVariants: variants },
+      } as never),
+    ).toBe('construction-variants');
+  });
+
+  it('leaves a cloze cell without variants on the frequency band', () => {
+    expect(
+      seedKindFor({
+        language: 'ES',
+        cefrLevel: 'B1',
+        exerciseType: ExerciseType.CLOZE,
+        grammarPoint: { kind: 'grammar' },
+      } as never),
+    ).toBe('frequency');
+  });
+
+  it('does not divert a conjugation cell that happens to declare variants', () => {
+    expect(
+      seedKindFor({
+        language: 'ES',
+        cefrLevel: 'B1',
+        exerciseType: ExerciseType.CONJUGATION,
+        grammarPoint: { kind: 'grammar', constructionVariants: variants },
+      } as never),
+    ).toBe('verb');
+  });
+
+  it('ignores an empty variants array', () => {
+    expect(
+      seedKindFor({
+        language: 'ES',
+        cefrLevel: 'B1',
+        exerciseType: ExerciseType.CLOZE,
+        grammarPoint: { kind: 'grammar', constructionVariants: [] },
+      } as never),
+    ).toBe('frequency');
   });
 });
 
@@ -1318,6 +1381,138 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
       };
       const reseeded = (await buildSeedWords(seedDb, nounConjCell, 2, 'seed-n', new Set(['libro'])))!;
       expect(reseeded).not.toContain('libro');
+    });
+  },
+);
+
+// ---------------------------------------------------------------------------
+// loadVariantCoverage / buildSeedWords — construction-variants path (DB-backed
+// deficit ranking). Own describe block (not folded into the band-selection
+// suite above) so its fixture rows — real `exercises` inserts scoped to a
+// synthetic grammar-point key, not the DB-lemma bands the other suite seeds —
+// get their own isolated setup/teardown against the shared `exercises` table.
+// ---------------------------------------------------------------------------
+
+describe.skipIf(!process.env['TEST_DATABASE_URL'])(
+  'loadVariantCoverage / buildSeedWords — construction variants',
+  () => {
+    let seedDb: Db;
+    const CV_GRAMMAR_POINT_KEY = 'es-test-construction-variants';
+    const CV_VARIANTS = [
+      { id: 'hearsay', directive: 'hearsay' },
+      { id: 'adversity', directive: 'adversity' },
+      { id: 'presentational', directive: 'presentational' },
+    ];
+
+    function constructionVariantCell(): Cell {
+      const base = buildTestCell();
+      return {
+        ...base,
+        grammarPoint: {
+          ...base.grammarPoint,
+          key: CV_GRAMMAR_POINT_KEY,
+          constructionVariants: CV_VARIANTS,
+        },
+        cellKey: `es:b1:cloze:${CV_GRAMMAR_POINT_KEY}`,
+      };
+    }
+
+    async function insertVariantRow(
+      seedWord: string,
+      reviewStatus: 'auto-approved' | 'manual-approved' | 'flagged',
+    ): Promise<void> {
+      // No `_dedupKey` on this content, so `exercises_dedup_idx` (partial,
+      // gated on `content_json ? '_dedupKey'`) never applies — rows sharing a
+      // seedWord (deliberately, to exercise count aggregation) insert freely.
+      await seedDb.insert(exercises).values({
+        id: randomUUID(),
+        type: ExerciseType.CLOZE,
+        language: Language.ES,
+        difficulty: 'B1',
+        contentJson: { seedWord },
+        grammarPointKey: CV_GRAMMAR_POINT_KEY,
+        generationSource: 'claude-realtime',
+        modelId: 'claude-sonnet-4-5',
+        reviewStatus,
+        generatedAt: new Date('2026-04-01T00:00:00Z'),
+      });
+    }
+
+    beforeAll(async () => {
+      seedDb = createDb(process.env['TEST_DATABASE_URL']!);
+      await seedDb.delete(exercises).where(eq(exercises.grammarPointKey, CV_GRAMMAR_POINT_KEY));
+      // Deliberately lopsided, mirroring the real es-b1-impersonal-plural
+      // collapse (49/50 approved rows on one construction):
+      //   hearsay:       5 approved  → saturated, well above its fair share.
+      //   adversity:     1 approved  → under-covered.
+      //   presentational: 0 approved, but 1 FLAGGED — must still read as
+      //     uncovered, since a flagged draft is not pool coverage (the same
+      //     APPROVED_STATUSES contract `loadCoveredVocabWords` uses).
+      // Plus one legacy row whose seedWord is a frequency word, not a
+      // declared variant id — must not corrupt the variant counts above.
+      for (let i = 0; i < 5; i++) await insertVariantRow('hearsay', 'auto-approved');
+      await insertVariantRow('adversity', 'auto-approved');
+      await insertVariantRow('presentational', 'flagged');
+      await insertVariantRow('perro', 'auto-approved');
+    });
+
+    afterAll(async () => {
+      if (seedDb) {
+        await seedDb.delete(exercises).where(eq(exercises.grammarPointKey, CV_GRAMMAR_POINT_KEY));
+      }
+    });
+
+    it('counts only APPROVED rows per variant id, and does not let a legacy seedWord corrupt the tally', async () => {
+      const coverage = await loadVariantCoverage(seedDb, constructionVariantCell());
+      // Aggregation distinguishes 5 rows from 1 row rather than collapsing to
+      // "seen/not seen" — this is what deficit ranking needs to work at all.
+      expect(coverage.get('hearsay')).toBe(5);
+      expect(coverage.get('adversity')).toBe(1);
+      // The flagged row for 'presentational' must NOT be counted: the status
+      // filter is the same APPROVED-only contract as loadCoveredVocabWords.
+      expect(coverage.get('presentational')).toBeUndefined();
+      // The legacy frequency-word row is counted under its own key (the
+      // loader doesn't know which keys are declared variant ids — that
+      // filtering is `pickVariantSeeds`'s job per its doc comment), but it
+      // must not have been folded into any real variant's count.
+      expect(coverage.get('perro')).toBe(1);
+      expect(coverage.get('hearsay')).not.toBe(6);
+    });
+
+    it('deficit-ranks seeds so the saturated variant does not dominate and the uncovered one is favored', async () => {
+      const seeds = await buildSeedWords(seedDb, constructionVariantCell(), 3, 'seed-cv', new Set());
+      expect(seeds).toBeDefined();
+      expect(seeds).toHaveLength(3);
+      const chosen = seeds!.filter((s): s is string => typeof s === 'string');
+      expect(chosen).toHaveLength(3); // never null (pickVariantSeeds' non-null guarantee)
+      // 'hearsay' (5 approved, already saturated) gets none of this batch.
+      expect(chosen).not.toContain('hearsay');
+      // 'presentational' (0 approved — the flagged row doesn't count) is the
+      // most starved and so gets strictly more slots than 'adversity' (1
+      // approved) — "uncovered first".
+      const presentationalCount = chosen.filter((s) => s === 'presentational').length;
+      const adversityCount = chosen.filter((s) => s === 'adversity').length;
+      expect(presentationalCount).toBeGreaterThan(adversityCount);
+      expect(presentationalCount + adversityCount).toBe(3);
+    });
+
+    it('never joins the priorSeeds exclude set — a construction-variants cell ignores its exclude arg entirely', async () => {
+      // Excluding 'presentational' (the most-starved id) must NOT remove it
+      // from the output: coverage, not a one-shot exclude set, drives this
+      // picker. This is the behavioral proof of the brief's Note on
+      // priorSeeds — the routing itself is unit-tested in seedKindFor and the
+      // ternary is read-verified, but this confirms buildSeedWords actually
+      // ignores the argument for this kind rather than merely happening to
+      // receive an empty set at the runOneCell call site.
+      const seeds = await buildSeedWords(
+        seedDb,
+        constructionVariantCell(),
+        3,
+        'seed-cv',
+        new Set(['presentational']),
+      );
+      const chosen = seeds!.filter((s): s is string => typeof s === 'string');
+      expect(chosen).toContain('presentational');
     });
   },
 );
