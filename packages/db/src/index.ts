@@ -128,6 +128,11 @@ export type {
 export { SEVERITY_SCORE, incidentalObservations } from './mastery/incidental-fold';
 export type { IncidentalObs } from './mastery/incidental-fold';
 
+// Mastery rebuild core. Shared by the `backfill:mastery` CLI and the nightly
+// rebuild Lambda so both apply identical logic — see
+// docs/superpowers/specs/2026-08-09-scheduled-mastery-rebuild-design.md.
+export * from './mastery/rebuild';
+
 // Error observations — pure mapping from evaluation errors to insert rows,
 // plus a backfill row-builder. Used by the Lambda write path and the
 // backfill CLI (both import these pure functions from the barrel).

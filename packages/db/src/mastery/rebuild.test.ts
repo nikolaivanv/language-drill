@@ -5,7 +5,7 @@
  * rule flagged a row stale whenever the SURVIVING (filtered) replay produced
  * no entry for it — but absence from a filtered replay has causes other than
  * demotion, chiefly `incidentalObservations()`
- * (infra/lambda/src/lib/mastery/incidental-fold.ts), which writes a
+ * (packages/db/src/mastery/incidental-fold.ts), which writes a
  * `user_grammar_mastery` row for a grammar point that has ZERO
  * `user_exercise_history` rows naming it at all. The old rule deleted those
  * rows unconditionally; this suite pins the fix (diff the UNFILTERED replay
@@ -21,9 +21,9 @@
  */
 import { describe, it, expect } from 'vitest';
 import { CefrLevel } from '@language-drill/shared';
-import type { Db } from '../src/client';
-import { userExerciseHistory, userGrammarMastery } from '../src/schema';
-import type { MasteryState } from '../src/mastery/update';
+import type { Db } from '../client';
+import { userExerciseHistory, userGrammarMastery } from '../schema';
+import type { MasteryState } from './update';
 import {
   findStaleMasteryRows,
   planStaleMasteryDeletions,
@@ -33,7 +33,7 @@ import {
   run,
   type StaleMasteryRow,
   type MasteryShift,
-} from './backfill-mastery';
+} from './rebuild';
 
 const STATE: MasteryState = {
   masteryScore: 0.8,
@@ -82,7 +82,7 @@ describe('findStaleMasteryRows', () => {
 
   // The Critical-1 regression case: a mastery row for a grammar point with NO
   // history rows naming it at all — the incidental-fold shape
-  // (infra/lambda/src/lib/mastery/incidental-fold.ts writes mastery for
+  // (packages/db/src/mastery/incidental-fold.ts writes mastery for
   // errors attributed to a point OTHER than the submission's host exercise,
   // with zero `user_exercise_history` rows for that point). The OLD rule
   // ("stale iff absent from the surviving/filtered replay") deleted this row,
