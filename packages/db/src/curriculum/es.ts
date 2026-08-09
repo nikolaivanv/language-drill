@@ -194,6 +194,15 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * rows passive-or-impersonal se, 94 sharing one locative frame, zero `se
  * le/les`, zero `uno se`) and es-b2-se-middle-accidental (99/99 rows accidental
  * se + dative, zero agentless middle se, zero motion-verb `se de matización`).
+ * Also REMOVES the polarity coverageSpec added to
+ * es-b1-imperative-negative-pronouns on 2026-07-17. Its four construction
+ * variants each hard-code a polarity, so the spec's per-draft "MUST be
+ * affirmative/negative" directive and the variant's "MUST use this
+ * sub-construction" directive would land in the same user prompt from two
+ * seeders that never consult each other, contradicting each other on a large
+ * share of drafts. The variants subsume the old floors (~33/17 at target 50 vs
+ * floors of 10/8). Only this one point overlapped: of the 41 ES points with a
+ * coverageSpec, it is the sole one that also declares constructionVariants.
  * Bump clears target-reached / low-yield suppression so the touched cells
  * re-run under the rotation; at-target cells additionally need demote:pool
  * (see docs/curriculum-authoring.md retrofit section).
@@ -2323,15 +2332,24 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b1-imperative-negative-pronouns',
-    coverageSpec: {
-      axes: [
-        // The point is built on the polarity contrast: proclisis + subjunctive
-        // switch (no se lo digas) vs enclisis + written accent (díselo).
-        // Unpinned generation collapses to affirmative (TR-imperative failure
-        // mode, PR #588). Negative-weighted: it is the headline half.
-        { name: 'polarity', floors: { affirmative: 8, negative: 10 } },
-      ],
-    },
+    // NO coverageSpec — deliberately. This point carried a polarity axis
+    // (affirmative 8 / negative 10, added 2026-07-17) until the
+    // constructionVariants below were authored on 2026-08-08. The two
+    // mechanisms cannot coexist HERE, because every one of these four variants
+    // hard-codes a polarity: `renderCoverageBlock` emits "The target sentence
+    // MUST be <polarity>" for every ordinal on a spec'd cell, the variant
+    // directive emits its own "MUST use the following sub-construction",
+    // and the two are concatenated into the same per-draft user prompt
+    // (packages/ai/src/generation-prompts.ts) from two seeders that never
+    // consult each other — `pickVariantSeeds` reads variant coverage,
+    // `coverageTargets` come from the coverageSpec deficit. Drafts would carry
+    // a self-contradictory MUST/MUST pair and the model would silently drop
+    // one, corrupting that mechanism's measured coverage.
+    // The variants subsume the floors the spec existed to enforce: at the B1
+    // cloze target of 50 the rotation yields ~33 negative / ~17 affirmative,
+    // far above the old 10 / 8. Do NOT restore the spec while these variants
+    // stand. (A coverageSpec on an axis NO variant encodes — person, number —
+    // remains fine; the defect is the overlap, not the coexistence.)
     kind: 'grammar',
     name: 'Negative imperative and clitic pronoun placement',
     description:
