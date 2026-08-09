@@ -523,7 +523,7 @@ function fakeDb(params: {
     exerciseType?: string;
   }>;
   existing: unknown[];
-}): Db {
+}): Db & { insertCalls: number; deleteCalls: number } {
   const observationRows = params.observations
     .filter(
       (o) =>
@@ -541,6 +541,9 @@ function fakeDb(params: {
       difficulty: o.difficulty,
       demotionReason: o.demotionReason,
     }));
+
+  let insertCalls = 0;
+  let deleteCalls = 0;
 
   return {
     select: (_proj: unknown) => ({
@@ -572,12 +575,24 @@ function fakeDb(params: {
       },
     }),
     insert: (_table: unknown) => ({
-      values: (_v: unknown) => ({ onConflictDoUpdate: (_o: unknown) => Promise.resolve() }),
+      values: (_v: unknown) => {
+        insertCalls += 1;
+        return { onConflictDoUpdate: (_o: unknown) => Promise.resolve() };
+      },
     }),
     delete: (_table: unknown) => ({
-      where: (_w: unknown) => Promise.resolve(),
+      where: (_w: unknown) => {
+        deleteCalls += 1;
+        return Promise.resolve();
+      },
     }),
-  } as unknown as Db;
+    get insertCalls() {
+      return insertCalls;
+    },
+    get deleteCalls() {
+      return deleteCalls;
+    },
+  } as unknown as Db & { insertCalls: number; deleteCalls: number };
 }
 
 describe('run — the existing-mastery snapshot is taken before the history query (Important-2 TOCTOU fix)', () => {
@@ -994,6 +1009,97 @@ describe('run — an incidental-only mastery row is deleted once every observati
       { userId: 'user-1', language: 'TR', grammarPointKey: 'tr-a1-possessive-suffixes' },
     );
     expect(result.deletes).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Task 5 — delete-count circuit breaker. Deletion is the only irreversible
+// thing run() does, and a later task runs this nightly and unattended, so a
+// delete count that looks systemic must stop the whole run rather than guess.
+// ---------------------------------------------------------------------------
+
+describe('delete circuit breaker', () => {
+  const at = new Date('2026-01-01');
+  // Same shape as the single-deletion fixture just above (incidental-only
+  // evidence, all demoted 'quality'), repeated for three points (p1/p2/p3) to
+  // get three deletions out of one run. tr-a1-locative is the DIFFERENT,
+  // non-demoted point carrying real host history in the same (user,
+  // language) group — required so survivingStatesByGroup isn't empty for
+  // this group; without it, planStaleMasteryDeletions's run-level
+  // empty-surviving-group guard skips deletion for an unrelated reason and
+  // these tests would pass without ever reaching the breaker logic they
+  // target.
+  const threeDeletable = {
+    history: [
+      { userId: 'user-1', language: 'TR', grammarPointKey: 'tr-a1-locative', score: 0.9,
+        difficulty: 'A1', evaluatedAt: at, evidenceWeight: null, demotionReason: null },
+    ],
+    observations: [
+      { userId: 'user-1', language: 'TR', hostGrammarPointKey: 'host',
+        errorGrammarPointKey: 'tr-a1-negation', severity: 'major', occurredAt: at,
+        exerciseHistoryId: 'h1', difficulty: 'A1', demotionReason: 'quality' },
+      { userId: 'user-1', language: 'TR', hostGrammarPointKey: 'host',
+        errorGrammarPointKey: 'tr-a1-questions', severity: 'major', occurredAt: at,
+        exerciseHistoryId: 'h2', difficulty: 'A1', demotionReason: 'quality' },
+      { userId: 'user-1', language: 'TR', hostGrammarPointKey: 'host',
+        errorGrammarPointKey: 'tr-a1-imperative', severity: 'major', occurredAt: at,
+        exerciseHistoryId: 'h3', difficulty: 'A1', demotionReason: 'quality' },
+    ],
+    existing: [
+      { userId: 'user-1', language: 'TR', grammarPointKey: 'tr-a1-locative' },
+      { userId: 'user-1', language: 'TR', grammarPointKey: 'tr-a1-negation' },
+      { userId: 'user-1', language: 'TR', grammarPointKey: 'tr-a1-questions' },
+      { userId: 'user-1', language: 'TR', grammarPointKey: 'tr-a1-imperative' },
+    ],
+  };
+
+  it('applies normally when deletions are at the threshold', async () => {
+    const result = await run(fakeDb(threeDeletable), {
+      apply: true,
+      includeDemoted: false,
+      maxDeletes: 3,
+    });
+    expect(result.aborted).toBe(false);
+    expect(result.deletes).toBe(3);
+  });
+
+  it('writes NOTHING when deletions exceed the threshold', async () => {
+    const db = fakeDb(threeDeletable);
+    const result = await run(db, { apply: true, includeDemoted: false, maxDeletes: 2 });
+    expect(result.aborted).toBe(true);
+    // The counts and diff are still the real computed values — the caller
+    // needs them to log exactly what was refused.
+    expect(result.deletes).toBe(3);
+    // The whole run aborts — no partial apply. Upserts must not have run
+    // either, or the state left behind would be the hardest one to reason
+    // about: some points rebuilt, none of the untrustworthy ones removed.
+    expect(db.insertCalls).toBe(0);
+    expect(db.deleteCalls).toBe(0);
+  });
+
+  it('is unbounded when maxDeletes is null', async () => {
+    const result = await run(fakeDb(threeDeletable), {
+      apply: true,
+      includeDemoted: false,
+      maxDeletes: null,
+    });
+    expect(result.aborted).toBe(false);
+    expect(result.deletes).toBe(3);
+  });
+
+  it('is never aborted on a dry run, regardless of delete count', async () => {
+    // apply: false must never report aborted: true, even with a maxDeletes
+    // that the (unapplied) delete count would exceed — a dry-run computes
+    // deletions but writes nothing anyway, so reporting it as aborted would
+    // misrepresent an ordinary preview as a refusal, hiding the real count
+    // the operator needs in order to decide.
+    const result = await run(fakeDb(threeDeletable), {
+      apply: false,
+      includeDemoted: false,
+      maxDeletes: 0,
+    });
+    expect(result.aborted).toBe(false);
+    expect(result.deletes).toBe(3);
   });
 });
 

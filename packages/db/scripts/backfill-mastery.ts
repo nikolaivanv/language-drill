@@ -39,7 +39,10 @@ async function main(): Promise<void> {
   }
 
   const db = createDb(databaseUrl);
-  const result = await run(db, { apply, userFilter, languageFilter, includeDemoted });
+  // maxDeletes stays null here: this CLI is human-gated by the dry-run its
+  // operator reads (and the --apply confirmation) before ever writing, unlike
+  // the scheduled unattended run, which sets a real threshold.
+  const result = await run(db, { apply, userFilter, languageFilter, includeDemoted, maxDeletes: null });
 
   console.log(
     summarize({

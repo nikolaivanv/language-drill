@@ -341,6 +341,14 @@ export type RunOptions = {
   userFilter?: string;
   languageFilter?: string;
   includeDemoted: boolean;
+  /**
+   * Abort the run if it would delete more than this many mastery rows. `null`
+   * or absent means unbounded. The scheduled Lambda sets it; the CLI leaves it
+   * null because a human reads its dry-run first. Deletion is the only
+   * irreversible thing this does, so an unattended run stops rather than
+   * guessing when the count looks systemic.
+   */
+  maxDeletes?: number | null;
 };
 
 export type RunResult = {
@@ -357,6 +365,17 @@ export type RunResult = {
   historyRowCount: number;
   /** Old→new movement, for `formatDiffReport`. */
   diff: DiffReportInput;
+  /**
+   * True when the delete-count circuit breaker tripped: `apply` was set,
+   * `maxDeletes` was a number, and the computed deletions exceeded it. When
+   * `aborted` is true, NOTHING was written — not the deletes, and not the
+   * upserts either, so the run can never partially apply. `upserts`,
+   * `deletes`, and `diff` are still the real computed values, so the caller
+   * can log exactly what it refused. Always `false` when `apply` is false —
+   * a dry-run never writes regardless of the computed delete count, so
+   * reporting it as aborted would misrepresent a normal preview as a refusal.
+   */
+  aborted: boolean;
 };
 
 function pushToGroup<T>(map: Map<GroupKey, T[]>, key: GroupKey, value: T): void {
@@ -634,6 +653,16 @@ export async function run(db: Db, opts: RunOptions): Promise<RunResult> {
     existingRows,
   });
 
+  // --- Delete-count circuit breaker ---------------------------------------
+  // `null`/absent maxDeletes is unbounded (current behaviour). When set and
+  // exceeded on an --apply run, the WHOLE run writes nothing — not the
+  // deletes, and not the upserts either — so a tripped breaker can never
+  // leave a partial apply behind. Computed here, before either write loop,
+  // so both can be guarded on it; the counts and diff below are still the
+  // real computed values regardless, so the caller can log what was refused.
+  const maxDeletes = opts.maxDeletes ?? null;
+  const aborted = apply && maxDeletes !== null && staleRows.length > maxDeletes;
+
   let upserts = 0;
   // One shift per upserted point — recorded even in dry-run mode, since the
   // dry-run diff is the whole point of the review gate.
@@ -651,7 +680,7 @@ export async function run(db: Db, opts: RunOptions): Promise<RunResult> {
         fromConfidence: prior ? prior.confidence : null,
         to: s.masteryScore,
       });
-      if (!apply) continue;
+      if (!apply || aborted) continue;
       await db
         .insert(userGrammarMastery)
         .values({
@@ -678,7 +707,7 @@ export async function run(db: Db, opts: RunOptions): Promise<RunResult> {
     }
   }
 
-  if (apply) {
+  if (apply && !aborted) {
     for (const row of staleRows) {
       await db
         .delete(userGrammarMastery)
@@ -705,5 +734,6 @@ export async function run(db: Db, opts: RunOptions): Promise<RunResult> {
       existingKeys: new Set(existingByKey.keys()),
       deleted: staleRows,
     },
+    aborted,
   };
 }
