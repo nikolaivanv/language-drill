@@ -205,6 +205,15 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * read directly because every answer on it IS the marker: 98 of 100 rows are
  * noun-complement role/capacity and only 2 are the derived-adjective
  * adverbialiser, both the same lexeme `geçici olarak`.
+ * TWO described sub-uses were deliberately left unpinned because a higher-level
+ * point already owns them, and pinning them would hand a fifth of an A2 cell to
+ * a B2 construction: the (sanki) -mIş gibi "as if" clause on tr-a2-gibi-kadar
+ * (owned by tr-b2-as-if-gibi) is dropped outright, and the integrated
+ * -DIğInI söyledi variant on tr-a2-reported-speech is capped at a 3sg reported
+ * subject (the person-backshift paradigm is tr-b2-indirect-statements, which
+ * has its own person coverageSpec). Both B2 points name their A2 counterpart as
+ * a prerequisite. The A2 descriptions that claim this material should probably
+ * be trimmed to match; that is a separate description edit.
  * All shares are left UNIFORM. Weighting the prototype up would privilege the
  * exact construction that already owns each pool; on tr-a2-adversative-connectors
  * `ama` still keeps a natural ~2/3 plurality because it is licensed by two of
@@ -1839,8 +1848,9 @@ const trCurriculum: readonly GrammarPoint[] = [
     // gibi, translation 23 kadar / 7 gibi). THREE of the point's described
     // sub-uses have zero rows in either cell: approximate-quantity kadar, the
     // gibi gel- "seem to someone" idiom, and the (sanki) -mIş gibi "as if"
-    // clause. Uniform shares — these are five separate constructions sharing
-    // two markers, not a prototype plus satellites.
+    // clause — the last of which is left to its own B2 point (see the note
+    // under the variants). Uniform shares — these are four separate
+    // constructions sharing two markers, not a prototype plus satellites.
     constructionVariants: [
       {
         id: 'gibi-similarity',
@@ -1862,11 +1872,13 @@ const trCurriculum: readonly GrammarPoint[] = [
         directive:
           'the idiom gibi gel- with a dative experiencer, "it seems to someone", after a FINITE clause (Bana haklısın gibi geliyor)',
       },
-      {
-        id: 'mis-gibi-as-if',
-        directive:
-          '"as if" manner clause: a verb in -mIş / -(y)mIş followed by gibi, optionally opened by sanki (Sanki hayalet görmüş gibi sapsarı oldu)',
-      },
+      // DELIBERATELY NOT a variant: the (sanki) …-mIş gibi "as if" clause, even
+      // though this description's tail claims it. It has its own dedicated B2
+      // point, tr-b2-as-if-gibi, which lists tr-a2-gibi-kadar as a
+      // prerequisite. Pinning it here would hand a fifth of an A2 cell to a B2
+      // construction and duplicate that point's pool. The description tail
+      // should probably be trimmed to match; that is a description edit with
+      // its own review, out of scope here.
     ],
     examplesNegative: [
       '*Ben gibi düşünüyor. (wrong — with a pronoun, gibi requires the genitive: "benim gibi", not "ben gibi".)',
@@ -2077,6 +2089,12 @@ const trCurriculum: readonly GrammarPoint[] = [
     // NOTE the mechanism's reach: variant seeding is gated to CLOZE and
     // TRANSLATION (seedKindFor), so this point's 26 approved
     // sentence_construction rows keep whatever distribution they have.
+    // `integrated-digini-soyledi` deliberately pins the reported subject to
+    // 3sg and stops there: the person-backshift paradigm and copular olduğunu
+    // belong to the B2 point tr-b2-indirect-statements, which carries its own
+    // person coverageSpec and names this point as a prerequisite. A2 needs the
+    // form only to make commonError #3 ("söylemek with a direct quotation")
+    // drillable.
     constructionVariants: [
       {
         id: 'direct-quote-dedi',
@@ -2091,7 +2109,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       {
         id: 'integrated-digini-soyledi',
         directive:
-          'an INTEGRATED reported statement — no quotation marks — with -DIğInI or -(y)AcAğInI + söyle- (Geleceğini söyledi; Hasta olduğunu söyledi)',
+          'an INTEGRATED reported statement — no quotation marks — with -DIğInI or -(y)AcAğInI as the object of söyle-, reported subject 3rd-person singular (Geleceğini söyledi)',
       },
       {
         id: 'reported-command-masini',
