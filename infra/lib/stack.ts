@@ -18,6 +18,7 @@ import { TheorySchedulerLambdaConstruct } from "./constructs/theory-scheduler-la
 import { EmailQueueConstruct } from "./constructs/email-queue";
 import { EmailDispatcherLambdaConstruct } from "./constructs/email-dispatcher-lambda";
 import { EmailSenderLambdaConstruct } from "./constructs/email-sender-lambda";
+import { MasteryRebuildLambdaConstruct } from "./constructs/mastery-rebuild-lambda";
 
 export interface LanguageDrillStackProps extends StackProps {
   envName: "prod" | "dev";
@@ -224,6 +225,16 @@ export class LanguageDrillStack extends Stack {
       // web app (there is no separate dev web domain); adjust if one is added.
       emailAppUrl: "https://langdrill.app",
       alarmTopic: alerts.topic,
+    });
+
+    // Nightly mastery rebuild — replays evidence so stored
+    // user_grammar_mastery self-heals after an admin demotion revokes
+    // evidence. DATABASE_URL only, no AI cost, so it is NOT gated on
+    // enableScheduledExerciseGeneration (that flag exists to pause Anthropic
+    // spend).
+    new MasteryRebuildLambdaConstruct(this, "MasteryRebuildWrap", {
+      secretsPrefix: props.secretsPrefix,
+      enableScheduledJobs: props.enableScheduledJobs,
     });
 
     new CfnOutput(this, "ApiUrl", {
