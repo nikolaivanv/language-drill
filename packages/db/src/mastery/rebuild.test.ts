@@ -22,8 +22,9 @@
 import { describe, it, expect } from 'vitest';
 import { CefrLevel } from '@language-drill/shared';
 import type { Db } from '../client';
-import { userExerciseHistory, userGrammarMastery } from '../schema';
-import type { MasteryState } from './update';
+import { errorObservations, userExerciseHistory, userGrammarMastery } from '../schema';
+import { updateMastery, type MasteryState } from './update';
+import { SEVERITY_SCORE } from './incidental-fold';
 import {
   findStaleMasteryRows,
   planStaleMasteryDeletions,
@@ -354,6 +355,7 @@ type FakeRunResult = {
 function makeFakeDb(params: {
   historyRows: unknown[];
   existingMasteryRows: unknown[];
+  observationRows?: unknown[];
 }): FakeRunResult {
   const inserts: unknown[] = [];
   let deleteCalls = 0;
@@ -369,6 +371,16 @@ function makeFakeDb(params: {
             innerJoin: (_t: unknown, _on: unknown) => ({
               where: (_w: unknown) => ({
                 orderBy: (_o: unknown) => Promise.resolve(params.historyRows),
+              }),
+            }),
+          };
+        }
+        if (table === errorObservations) {
+          fromCallOrder.push('observations');
+          return {
+            innerJoin: (_t: unknown, _on: unknown) => ({
+              where: (_w: unknown) => ({
+                orderBy: (_o: unknown) => Promise.resolve(params.observationRows ?? []),
               }),
             }),
           };
@@ -424,6 +436,96 @@ function historyRow(overrides: Partial<Record<string, unknown>> = {}) {
   };
 }
 
+/**
+ * Minimal fake `Db` answering the three `select().from()` shapes `run()`
+ * issues (mastery snapshot, history query, error-observations query) plus
+ * the insert/delete calls, for the incidental-observation-focused tests
+ * below. Simpler than `makeFakeDb`'s `FakeRunResult` wrapper — these tests
+ * only care about `run()`'s return value, not call counts.
+ *
+ * The observations branch emulates what the REAL query in `run()` returns
+ * from Postgres — not a raw pass-through of the fixture. Two things a raw
+ * pass-through would get wrong:
+ *   1. The `.select({ grammarPointKey: errorObservations.errorGrammarPointKey, ... })`
+ *      projection renames the column on the way out, so callers here supply
+ *      fixtures shaped like the raw row (`errorGrammarPointKey`,
+ *      `hostGrammarPointKey`) and this helper performs the same rename.
+ *   2. The `WHERE isNotNull(errorGrammarPointKey) AND errorGrammarPointKey <>
+ *      hostGrammarPointKey` predicate is evaluated by Postgres before any row
+ *      reaches `run()` — including the NULL-yields-not-true behaviour of
+ *      `<>` — so it's applied here too. Without this, tests asserting the
+ *      exclusion (host-attributed error, null-attributed error) would pass
+ *      or fail for the wrong reason depending on unrelated code, since
+ *      `run()` itself has no JS-level re-check (it trusts the query).
+ */
+function fakeDb(params: {
+  history: unknown[];
+  observations: Array<{
+    userId: string;
+    language: string;
+    hostGrammarPointKey: string | null;
+    errorGrammarPointKey: string | null;
+    severity: string;
+    occurredAt: Date;
+    exerciseHistoryId: string;
+    difficulty: string;
+    demotionReason: string | null;
+  }>;
+  existing: unknown[];
+}): Db {
+  const observationRows = params.observations
+    .filter(
+      (o) => o.errorGrammarPointKey != null && o.errorGrammarPointKey !== o.hostGrammarPointKey,
+    )
+    .map((o) => ({
+      userId: o.userId,
+      language: o.language,
+      grammarPointKey: o.errorGrammarPointKey,
+      severity: o.severity,
+      occurredAt: o.occurredAt,
+      exerciseHistoryId: o.exerciseHistoryId,
+      difficulty: o.difficulty,
+      demotionReason: o.demotionReason,
+    }));
+
+  return {
+    select: (_proj: unknown) => ({
+      from: (table: unknown) => {
+        if (table === userExerciseHistory) {
+          return {
+            innerJoin: (_t: unknown, _on: unknown) => ({
+              where: (_w: unknown) => ({
+                orderBy: (_o: unknown) => Promise.resolve(params.history),
+              }),
+            }),
+          };
+        }
+        if (table === errorObservations) {
+          return {
+            innerJoin: (_t: unknown, _on: unknown) => ({
+              where: (_w: unknown) => ({
+                orderBy: (_o: unknown) => Promise.resolve(observationRows),
+              }),
+            }),
+          };
+        }
+        if (table === userGrammarMastery) {
+          return {
+            where: (_w: unknown) => Promise.resolve(params.existing),
+          };
+        }
+        throw new Error(`unexpected table in fake db.select().from(): ${String(table)}`);
+      },
+    }),
+    insert: (_table: unknown) => ({
+      values: (_v: unknown) => ({ onConflictDoUpdate: (_o: unknown) => Promise.resolve() }),
+    }),
+    delete: (_table: unknown) => ({
+      where: (_w: unknown) => Promise.resolve(),
+    }),
+  } as unknown as Db;
+}
+
 describe('run — the existing-mastery snapshot is taken before the history query (Important-2 TOCTOU fix)', () => {
   it('queries user_grammar_mastery before user_exercise_history', async () => {
     const fake = makeFakeDb({
@@ -431,7 +533,11 @@ describe('run — the existing-mastery snapshot is taken before the history quer
       existingMasteryRows: [],
     });
     await run(fake.db, { apply: false, includeDemoted: false });
-    expect(fake.fromCallOrder).toEqual(['mastery', 'history']);
+    // A third query (error_observations, Task 4) now runs right after
+    // history — same TOCTOU-narrowing rationale doesn't apply to it (it
+    // reconstructs a DIFFERENT source of evidence, not a re-read of mastery),
+    // so it's fine for it to land after both.
+    expect(fake.fromCallOrder).toEqual(['mastery', 'history', 'observations']);
   });
 });
 
@@ -575,5 +681,137 @@ describe('run — zero-evidence stale-row deletion, end to end against a fake Db
     expect(result.deletes).toBe(0);
     expect(fake.deleteCalls).toBe(0);
     expect(fake.masteryQueried).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Incidental observations folded into the replay (Task 4) — the fidelity
+// fix: `error_observations` reconstructs the incidental fold the live submit
+// path applies but `user_exercise_history` alone cannot replay, since
+// incidental observations leave no history row naming the point they hit.
+// ---------------------------------------------------------------------------
+
+describe('incidental observations in the replay', () => {
+  it('folds an incidental observation for a point with no host history', async () => {
+    // The point exists only because an evaluator error was attributed to it.
+    // Before this change the replay never saw it and the row looked stale.
+    const result = await run(fakeDb({
+      history: [],
+      observations: [
+        { userId: 'u1', language: 'TR', hostGrammarPointKey: 'host', errorGrammarPointKey: 'p',
+          severity: 'major', occurredAt: new Date('2026-01-01'), exerciseHistoryId: 'h1',
+          difficulty: 'A1', demotionReason: null },
+      ],
+      existing: [],
+    }), { apply: false, includeDemoted: false });
+
+    const shift = result.diff.shifts.find((s) => s.grammarPointKey === 'p');
+    expect(shift).toBeDefined();
+    expect(result.deletes).toBe(0);
+  });
+
+  it('collapses multiple errors on one point within a submission to the worst score', async () => {
+    // incidentalObservations() takes the worst severity per (submission, point).
+    // Folding three observations instead of one would triple-count the penalty.
+    const obs = (severity: 'major' | 'minor') => ({
+      userId: 'u1', language: 'TR', hostGrammarPointKey: 'host', errorGrammarPointKey: 'p',
+      severity, occurredAt: new Date('2026-01-01'), exerciseHistoryId: 'h1',
+      difficulty: 'A1', demotionReason: null,
+    });
+    const result = await run(fakeDb({
+      history: [], observations: [obs('minor'), obs('major'), obs('minor')], existing: [],
+    }), { apply: false, includeDemoted: false });
+
+    expect(result.historyRowCount).toBe(1);
+  });
+
+  it('ignores an error attributed to the host point itself', async () => {
+    // Already reflected in the submission score; folding it again double-penalizes.
+    const result = await run(fakeDb({
+      history: [],
+      observations: [
+        { userId: 'u1', language: 'TR', hostGrammarPointKey: 'p', errorGrammarPointKey: 'p',
+          severity: 'major', occurredAt: new Date('2026-01-01'), exerciseHistoryId: 'h1',
+          difficulty: 'A1', demotionReason: null },
+      ],
+      existing: [],
+    }), { apply: false, includeDemoted: false });
+
+    expect(result.historyRowCount).toBe(0);
+  });
+
+  it('excludes an observation recorded against a defect-demoted exercise', async () => {
+    const result = await run(fakeDb({
+      history: [],
+      observations: [
+        { userId: 'u1', language: 'TR', hostGrammarPointKey: 'host', errorGrammarPointKey: 'p',
+          severity: 'major', occurredAt: new Date('2026-01-01'), exerciseHistoryId: 'h1',
+          difficulty: 'A1', demotionReason: 'quality' },
+      ],
+      existing: [],
+    }), { apply: false, includeDemoted: false });
+
+    expect(result.historyRowCount).toBe(0);
+  });
+
+  it('ignores an observation with no attributed grammar point', async () => {
+    const result = await run(fakeDb({
+      history: [],
+      observations: [
+        { userId: 'u1', language: 'TR', hostGrammarPointKey: 'host', errorGrammarPointKey: null,
+          severity: 'major', occurredAt: new Date('2026-01-01'), exerciseHistoryId: 'h1',
+          difficulty: 'A1', demotionReason: null },
+      ],
+      existing: [],
+    }), { apply: false, includeDemoted: false });
+
+    expect(result.historyRowCount).toBe(0);
+  });
+
+  it('is idempotent — replaying identical inputs twice yields identical shifts', async () => {
+    const inputs = {
+      history: [
+        { userId: 'u1', language: 'TR', grammarPointKey: 'p', score: 0.9, difficulty: 'A1',
+          evaluatedAt: new Date('2026-01-01'), evidenceWeight: null, demotionReason: null },
+      ],
+      observations: [
+        { userId: 'u1', language: 'TR', hostGrammarPointKey: 'p', errorGrammarPointKey: 'q',
+          severity: 'minor' as const, occurredAt: new Date('2026-01-01'), exerciseHistoryId: 'h1',
+          difficulty: 'A1', demotionReason: null },
+      ],
+      existing: [],
+    };
+    const a = await run(fakeDb(inputs), { apply: false, includeDemoted: false });
+    const b = await run(fakeDb(inputs), { apply: false, includeDemoted: false });
+    expect(a.diff.shifts).toEqual(b.diff.shifts);
+    expect(a.deletes).toBe(b.deletes);
+  });
+
+  it('matches what the live submit path folds call-by-call', async () => {
+    // The live path: applyGrammarMastery(host) then, for each incidental
+    // observation, applyGrammarMastery(incidental) — each folding into the
+    // stored row. A faithful replay of the same events must land on the same
+    // number. If this drifts, every nightly rebuild silently rewrites scores.
+    const at = new Date('2026-01-01');
+    const live = updateMastery(
+      updateMastery(null, { score: 0.9, difficulty: CefrLevel.A1, at }),
+      { score: SEVERITY_SCORE.minor, difficulty: CefrLevel.A1, at },
+    );
+
+    const result = await run(fakeDb({
+      history: [
+        { userId: 'u1', language: 'TR', grammarPointKey: 'p', score: 0.9, difficulty: 'A1',
+          evaluatedAt: at, evidenceWeight: null, demotionReason: null },
+      ],
+      observations: [
+        { userId: 'u1', language: 'TR', hostGrammarPointKey: 'host', errorGrammarPointKey: 'p',
+          severity: 'minor', occurredAt: at, exerciseHistoryId: 'h1',
+          difficulty: 'A1', demotionReason: null },
+      ],
+      existing: [],
+    }), { apply: false, includeDemoted: false });
+
+    const shift = result.diff.shifts.find((s) => s.grammarPointKey === 'p')!;
+    expect(shift.to).toBeCloseTo(live.masteryScore, 10);
   });
 });

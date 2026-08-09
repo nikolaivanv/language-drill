@@ -1,8 +1,9 @@
-import { and, asc, eq, isNotNull, type SQL } from 'drizzle-orm';
+import { and, asc, eq, isNotNull, ne, type SQL } from 'drizzle-orm';
 import { CefrLevel } from '@language-drill/shared';
 import { type Db } from '../client';
-import { exercises, userExerciseHistory, userGrammarMastery } from '../schema';
+import { errorObservations, exercises, userExerciseHistory, userGrammarMastery } from '../schema';
 import { replayHistory, type HistoryRow, type MasteryState } from './update';
+import { SEVERITY_SCORE } from './incidental-fold';
 import { NON_EVIDENCE_DEMOTION_REASONS } from '../lib/evidence';
 
 const isCefr = (v: string | null): v is CefrLevel =>
@@ -421,6 +422,36 @@ export async function run(db: Db, opts: RunOptions): Promise<RunResult> {
     .where(and(...where))
     .orderBy(asc(userExerciseHistory.evaluatedAt));
 
+  // --- Incidental observations --------------------------------------------
+  // The live submit path folds evaluator errors attributed to points OTHER
+  // than the exercise's own into mastery (see incidentalObservations). Those
+  // produce NO user_exercise_history row, so a history-only replay silently
+  // discards them. error_observations persists the same errors, so the replay
+  // reconstructs them here. Demotion reason travels as data, exactly as the
+  // history query does, so both replays can be diffed.
+  const obsWhere = [
+    isNotNull(errorObservations.errorGrammarPointKey),
+    ne(errorObservations.errorGrammarPointKey, errorObservations.hostGrammarPointKey),
+  ];
+  if (userFilter) obsWhere.push(eq(errorObservations.userId, userFilter));
+  if (languageFilter) obsWhere.push(eq(errorObservations.language, languageFilter));
+
+  const observationRows = await db
+    .select({
+      userId: errorObservations.userId,
+      language: errorObservations.language,
+      grammarPointKey: errorObservations.errorGrammarPointKey,
+      severity: errorObservations.severity,
+      occurredAt: errorObservations.occurredAt,
+      exerciseHistoryId: errorObservations.exerciseHistoryId,
+      difficulty: exercises.difficulty,
+      demotionReason: exercises.demotionReason,
+    })
+    .from(errorObservations)
+    .innerJoin(exercises, eq(errorObservations.exerciseId, exercises.id))
+    .where(and(...obsWhere))
+    .orderBy(asc(errorObservations.occurredAt));
+
   // Group into per-(user,language) history lists — twice: every
   // replay-eligible row ("unfiltered"), and only the subset whose exercise
   // wasn't demoted for a defect ("surviving"). `replayHistory` then folds
@@ -446,6 +477,45 @@ export async function run(db: Db, opts: RunOptions): Promise<RunResult> {
     };
     pushToGroup(unfilteredByGroup, k, entry);
     if (!isNonEvidenceReason(r.demotionReason)) pushToGroup(survivingByGroup, k, entry);
+  }
+
+  // Collapse to one observation per (submission, point), worst score wins —
+  // mirroring incidentalObservations(), which folds a submission's errors on
+  // the same point into a single worst-severity observation. Without this a
+  // submission flagging three errors on one point would fold three penalties.
+  const worstPerSubmission = new Map<string, {
+    userId: string; language: string; grammarPointKey: string;
+    score: number; difficulty: CefrLevel; occurredAt: Date; demotionReason: string | null;
+  }>();
+  for (const r of observationRows) {
+    if (!r.userId || !r.language || !r.grammarPointKey) continue;
+    if (!isCefr(r.difficulty)) continue;
+    const severity = r.severity as 'major' | 'minor';
+    const score = SEVERITY_SCORE[severity];
+    if (score === undefined) continue;
+    const key = `${r.exerciseHistoryId} ${r.grammarPointKey}`;
+    const prev = worstPerSubmission.get(key);
+    if (prev === undefined || score < prev.score) {
+      worstPerSubmission.set(key, {
+        userId: r.userId, language: r.language, grammarPointKey: r.grammarPointKey,
+        score, difficulty: r.difficulty, occurredAt: new Date(r.occurredAt as Date),
+        demotionReason: r.demotionReason,
+      });
+    }
+  }
+
+  for (const o of worstPerSubmission.values()) {
+    const k: GroupKey = `${o.userId} ${o.language}`;
+    langOf.set(k, o.language);
+    const entry: HistoryRow = {
+      grammarPointKey: o.grammarPointKey,
+      score: o.score,
+      difficulty: o.difficulty,
+      evaluatedAt: o.occurredAt,
+      sourceRank: 1,
+    };
+    pushToGroup(unfilteredByGroup, k, entry);
+    if (!isNonEvidenceReason(o.demotionReason)) pushToGroup(survivingByGroup, k, entry);
   }
 
   const unfilteredStatesByGroup = new Map<GroupKey, Map<string, MasteryState>>();
