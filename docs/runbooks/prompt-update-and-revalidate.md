@@ -502,6 +502,17 @@ partial exception**: `infra/lambda/src/email/gather.ts` reads *stored*
 a learner's weekly email toward (or away from) the wrong grammar point until
 you re-run the backfill below.
 
+A nightly Lambda now runs this same rebuild at 03:00 UTC, so a manual run
+below is only needed when the correction can't wait until the next night's
+pass — an urgent fix, or verifying the fix landed right now instead of
+tomorrow morning. The manual commands remain the tool for that immediate
+case, and for `--include-demoted` rollback (see below). Because the rebuild
+can delete rows (see below), the scheduled run has a circuit breaker: if a
+night's replay would delete more than `MASTERY_REBUILD_MAX_DELETES` (default
+5) rows, it writes nothing at all and raises an alarm instead of silently
+mass-deleting. The CLI has no such cap — it's deliberately unbounded because
+a human reads its dry-run output before deciding to `--apply`.
+
 Run it while the app is quiet if you can (see the TOCTOU note below for why).
 
 ```bash
@@ -549,6 +560,9 @@ submission and this script's read — prefer running it when traffic is low
 content moderation reject, or `POST /admin/revalidate`) also revoke evidence
 via the same `demotionReason` mechanism as this runbook's CLI-driven
 revalidation passes, but those routes print no reminder to re-run the
-backfill. If you demoted anything through the admin UI, treat it the same as
-a CLI revalidation pass and run `pnpm backfill:mastery --apply` afterward —
-nothing else will prompt you to.
+backfill. This staleness is now bounded at 24 hours by the nightly Lambda
+(§ above), which replays every learner's evidence at 03:00 UTC regardless of
+how the demotion was triggered. If you demoted anything through the admin UI
+and the correction can't wait for that run, treat it the same as a CLI
+revalidation pass and run `pnpm backfill:mastery --apply` yourself — nothing
+else will prompt you to sooner.
