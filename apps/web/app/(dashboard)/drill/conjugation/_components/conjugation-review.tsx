@@ -2,13 +2,9 @@
 
 import Link from 'next/link';
 import type { CefrLevel, LearningLanguage } from '@language-drill/shared';
-import type {
-  AuthenticatedFetch,
-  DebriefItem,
-  DebriefResponse,
-} from '@language-drill/api-client';
+import type { AuthenticatedFetch, DebriefItem } from '@language-drill/api-client';
 import { Button } from '../../../../../components/ui';
-import { DebriefHeader } from '../../debrief/_components/debrief-header';
+import { ConjugationReviewHeader } from './conjugation-review-header';
 import { ReviewItemCard } from '../../debrief/_components/review-item-card';
 
 export interface ConjugationReviewProps {
@@ -22,40 +18,25 @@ export interface ConjugationReviewProps {
   onPracticeMore: () => void;
 }
 
-// The conjugation "finish session" recap. Reuses the real debrief presenters
-// (DebriefHeader + per-item ReviewItemCard) from a client-accumulated item
-// list — no server session, so there is intentionally no "what moved" skill
-// panel (cross-session movement is server-computed and unavailable here).
+// The conjugation "finish session" recap. Built from a client-accumulated
+// item list — no server session, so it uses its own accuracy-based header
+// (ConjugationReviewHeader) instead of the movement-driven debrief header;
+// per-item detail still reuses the real ReviewItemCard presenter.
 export function ConjugationReview({
   items,
-  language,
-  difficulty,
   durationSeconds,
   fetchFn,
   onPracticeMore,
 }: ConjugationReviewProps) {
   const correctCount = items.filter((i) => i.status === 'correct').length;
-  // Conjugation has no skips — every accumulated item was attempted. The
-  // started/completed timestamps are unused by DebriefHeader (it reads only
-  // counts + durationSeconds), so epoch placeholders satisfy the type cheaply.
-  const debrief: DebriefResponse = {
-    id: 'conjugation-local',
-    language,
-    difficulty,
-    startedAt: new Date(0).toISOString(),
-    completedAt: new Date(0).toISOString(),
-    durationSeconds,
-    exerciseCount: items.length,
-    correctCount,
-    attemptedCount: items.length,
-    skippedCount: 0,
-    items,
-    skillMovements: [],
-  };
 
   return (
     <div className="p-s-6">
-      <DebriefHeader debrief={debrief} />
+      <ConjugationReviewHeader
+        correctCount={correctCount}
+        totalCount={items.length}
+        durationSeconds={durationSeconds}
+      />
 
       <div className="mt-s-6 flex flex-col gap-s-3">
         {items.map((item, index) => (
