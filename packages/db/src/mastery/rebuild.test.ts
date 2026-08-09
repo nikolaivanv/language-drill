@@ -998,25 +998,33 @@ describe('run — an incidental-only mastery row is deleted once every observati
 });
 
 // ---------------------------------------------------------------------------
-// sourceRank — pins that the literal `sourceRank: 1` rebuild.ts stamps onto
-// incidental HistoryRow entries (line ~610) is load-bearing for
-// replayHistory's fold order, not decorative. Every test above that exercises
-// a same-timestamp host+incidental pair passes today whether or not
-// `sourceRank: 1` is present, because rebuild.ts's two push loops (history
-// rows, then worstPerSubmission entries — see run()) always hand
-// replayHistory the host entry before the incidental one, and Array#sort is
-// stable, so insertion order alone already produces the correct fold order.
-// A `run()`-level test can't discriminate "correct because of sourceRank"
-// from "correct because of push order" for that reason — the fake DB's row
-// order doesn't control which of rebuild.ts's two loops runs first. This
-// test instead calls replayHistory directly with the two rows in the
-// OPPOSITE (incidental-first) array order, which run() never actually
-// produces today, to prove sourceRank — not array position — decides fold
-// order when timestamps tie.
+// replayHistory — direct call with the two rows fed in the OPPOSITE
+// (incidental-first) array order, which run() never actually produces today.
+//
+// Honesty note (this test does NOT isolate rebuild.ts's `sourceRank: 1`
+// stamp, despite its structure suggesting otherwise):
+//   1. Every `run()`-level test in this file passes whether or not
+//      `sourceRank: 1` is present on rebuild.ts's incidental HistoryRow
+//      entries (line ~610), because rebuild.ts's two push loops (history
+//      rows, then worstPerSubmission entries — see run()) always hand
+//      replayHistory the host entry before the incidental one, and
+//      Array#sort is stable — so insertion order alone already produces
+//      host-first fold order, regardless of sourceRank.
+//   2. This test bypasses run() entirely and constructs its own HistoryRow
+//      fixtures with a literal `sourceRank: 1` baked in, so it can't detect
+//      whether rebuild.ts's production code still stamps that value on
+//      incidental entries. Confirmed by mutation: deleting `sourceRank: 1`
+//      from packages/db/src/mastery/rebuild.ts leaves this test (and the
+//      whole suite) passing.
+// sourceRank is nonetheless correct and worth keeping — it defends against a
+// future reordering of rebuild.ts's two push loops, a change nothing in
+// this file would currently catch. It IS directly pinned at the
+// replayHistory level by the ordering tests in
+// packages/db/src/mastery/update.test.ts.
 // ---------------------------------------------------------------------------
 
 describe('replayHistory — sourceRank pins host-before-incidental fold order independent of array order', () => {
-  it('folds a same-timestamp host/incidental pair host-first via sourceRank even when fed incidental-first', () => {
+  it('folds a same-timestamp host/incidental pair host-first', () => {
     const at = new Date('2026-01-01T00:00:00Z');
     const host: HistoryRow = {
       grammarPointKey: 'p',
