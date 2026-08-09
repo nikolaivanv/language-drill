@@ -122,6 +122,12 @@ export type {
   HistoryRow,
 } from './mastery/update';
 
+// Incidental error→mastery fold. Lives here rather than in infra/lambda so the
+// replay in ./mastery/rebuild can reuse the same SEVERITY_SCORE the live submit
+// path folds with — two copies would drift and make rebuilds unfaithful.
+export { SEVERITY_SCORE, incidentalObservations } from './mastery/incidental-fold';
+export type { IncidentalObs } from './mastery/incidental-fold';
+
 // Error observations — pure mapping from evaluation errors to insert rows,
 // plus a backfill row-builder. Used by the Lambda write path and the
 // backfill CLI (both import these pure functions from the barrel).
