@@ -547,3 +547,181 @@ Summarize: the six states, what was deleted, and the gate results. Do **not** pu
 - **Do not move banding to the client.** `band` is computed server-side specifically so the client cannot render mastery numbers. `movement-summary.ts` reads bands; it never derives them.
 - **The lowercase-copy test is a real constraint.** Every new string must be lowercase, including after any punctuation.
 - If a test fails for a reason you did not expect, report it — do not adjust the assertion to match the output.
+
+---
+
+### Task 5: Restore an accuracy headline for the conjugation recap
+
+**Added after Task 4's gate caught a regression this plan caused.**
+
+`ConjugationReview` reuses `DebriefHeader` and feeds it a synthetic `DebriefResponse` with `skillMovements: []`, because conjugation practice is entirely client-local and has no server-computed movements. After Task 2 that surface renders `session done. / nothing graded this round` immediately after the learner was graded.
+
+The spec listed conjugation review as out of scope on the claim it "keeps whatever header it has". That was wrong — it shares the component. The spec's own caveat named the mechanism: state `none` is *inferred* from an empty movements array, valid only while every graded session yields at least one movement. This surface breaks that invariant.
+
+**Decision (user):** conjugation keeps an accuracy-based headline, because it tracks no mastery and accuracy is genuinely the only signal it has. `DebriefHeader` stays purely movement-driven; the two surfaces decouple.
+
+**Files:**
+- Restore: `apps/web/lib/drill/accuracy-tier.ts`, `apps/web/lib/drill/__tests__/accuracy-tier.test.ts`
+- Create: `apps/web/app/(dashboard)/drill/conjugation/_components/conjugation-review-header.tsx` (+ test)
+- Modify: `apps/web/app/(dashboard)/drill/conjugation/_components/conjugation-review.tsx`
+
+**Interfaces:**
+- Consumes: `accuracyTier`, `TIER_TITLE` from `lib/drill/accuracy-tier`.
+- Produces: `export function ConjugationReviewHeader(props: { correctCount: number; totalCount: number; durationSeconds: number })`.
+
+- [ ] **Step 1: Restore the accuracy tier from git**
+
+```bash
+git show fc2e69e5^:apps/web/lib/drill/accuracy-tier.ts > apps/web/lib/drill/accuracy-tier.ts
+mkdir -p apps/web/lib/drill/__tests__
+git show fc2e69e5^:apps/web/lib/drill/__tests__/accuracy-tier.test.ts > apps/web/lib/drill/__tests__/accuracy-tier.test.ts
+```
+
+Then **fix the restored doc comment** — it is stale in two ways. Replace the opening block of `accuracy-tier.ts` with:
+
+```ts
+// Accuracy tiers for the CONJUGATION practice recap only.
+//
+// The main session debrief is movement-keyed (see lib/drill/movement-summary.ts):
+// accuracy drives nothing adaptive there, and putting a percentage beside a
+// mastery verdict is what let "you got 5 of 5 · accuracy 100%" sit above a
+// "slipped" row. Conjugation practice is client-local and tracks no mastery, so
+// accuracy is the only signal it has — hence this survives, scoped to it.
+//
+// Tier boundaries:
+//   accuracy >= 0.8        → 'high' → "nice work."
+//   0.5 <= accuracy < 0.8  → 'mid'  → "good attempt."
+//   accuracy < 0.5         → 'low'  → "back next time?"
+//   attemptedCount <= 0    → 'low'  (no-items fallback)
+```
+
+Leave the function bodies and `TIER_TITLE` exactly as restored. The restored test file needs no change.
+
+- [ ] **Step 2: Write the failing header test**
+
+Create `apps/web/app/(dashboard)/drill/conjugation/_components/__tests__/conjugation-review-header.test.tsx`:
+
+```tsx
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { ConjugationReviewHeader } from '../conjugation-review-header';
+
+describe('ConjugationReviewHeader', () => {
+  it('renders the tier title and the count line', () => {
+    render(<ConjugationReviewHeader correctCount={1} totalCount={1} durationSeconds={65} />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('nice work.');
+    expect(screen.getByText(/you got 1 of 1/i)).toBeInTheDocument();
+  });
+
+  it('renders the mid tier for a partial score', () => {
+    render(<ConjugationReviewHeader correctCount={3} totalCount={5} durationSeconds={0} />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('good attempt.');
+  });
+
+  it('renders no percent sign', () => {
+    const { container } = render(
+      <ConjugationReviewHeader correctCount={1} totalCount={3} durationSeconds={0} />,
+    );
+    expect(container.textContent).not.toContain('%');
+  });
+
+  it('formats the duration as m:ss', () => {
+    render(<ConjugationReviewHeader correctCount={1} totalCount={1} durationSeconds={65} />);
+    expect(screen.getByText(/1:05/)).toBeInTheDocument();
+  });
+});
+```
+
+- [ ] **Step 3: Run it and confirm it fails**
+
+```bash
+pnpm --filter @language-drill/web exec vitest run "app/(dashboard)/drill/conjugation/_components/__tests__/conjugation-review-header.test.tsx"
+```
+
+Expected: FAIL — module does not exist.
+
+- [ ] **Step 4: Create the header component**
+
+`apps/web/app/(dashboard)/drill/conjugation/_components/conjugation-review-header.tsx`:
+
+```tsx
+import { accuracyTier, TIER_TITLE } from '../../../../../lib/drill/accuracy-tier';
+
+// Header for the conjugation practice recap. Deliberately NOT the debrief
+// header: that one reports skill movement, and conjugation practice is
+// client-local with no mastery data to report. Accuracy is the only signal
+// this surface has. No percentage is rendered — the tier carries the verdict.
+
+export interface ConjugationReviewHeaderProps {
+  correctCount: number;
+  totalCount: number;
+  durationSeconds: number;
+}
+
+/** `m:ss` — minutes unpadded, seconds zero-padded. */
+function formatDuration(totalSeconds: number): string {
+  const safe = Math.max(0, Math.floor(totalSeconds));
+  const minutes = Math.floor(safe / 60);
+  const seconds = safe % 60;
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+export function ConjugationReviewHeader({
+  correctCount,
+  totalCount,
+  durationSeconds,
+}: ConjugationReviewHeaderProps) {
+  const title = TIER_TITLE[accuracyTier(correctCount, totalCount)];
+
+  return (
+    <header>
+      <div className="t-micro">session done · {formatDuration(durationSeconds)}</div>
+      <h1 className="t-display-xl mt-s-1">{title}</h1>
+      <p className="t-body-l mt-s-3">you got {correctCount} of {totalCount}</p>
+    </header>
+  );
+}
+```
+
+Verify the relative import depth against a sibling in the same directory rather than assuming.
+
+- [ ] **Step 5: Rewire `conjugation-review.tsx`**
+
+Remove the `DebriefHeader` import, the `DebriefResponse` import if now unused, and the **entire** synthetic `const debrief: DebriefResponse = {...}` block with its explanatory comment — it exists solely to feed `DebriefHeader`. Keep the `correctCount` calculation. Render instead:
+
+```tsx
+      <ConjugationReviewHeader
+        correctCount={correctCount}
+        totalCount={items.length}
+        durationSeconds={durationSeconds}
+      />
+```
+
+`ReviewItemCard` still takes `items` directly and is unchanged.
+
+- [ ] **Step 6: Verify**
+
+```bash
+pnpm --filter @language-drill/web exec vitest run "app/(dashboard)/drill/conjugation" "app/(dashboard)/drill/debrief" lib/drill
+```
+
+Expected: PASS. `conjugation/page.test.tsx`'s `finish session opens the review recap with accuracy + practice-more` must pass **without editing it** — restoring the copy is the fix. If that test still fails, the header markup does not match what it asserts; fix the component, not the test.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git branch --show-current   # must be feat/debrief-movement-headline
+git add -A
+git commit -m "fix(conjugation): give the practice recap its own accuracy header
+
+ConjugationReview reused DebriefHeader with a synthetic payload carrying
+skillMovements: [], so once the debrief headline became movement-driven
+the conjugation recap read 'session done. / nothing graded this round'
+immediately after the learner was graded.
+
+Conjugation practice is client-local and tracks no mastery, so accuracy
+is the only signal it has. Give it its own header and restore
+accuracy-tier scoped to that surface; the debrief header stays purely
+movement-driven. The synthetic DebriefResponse existed only to feed the
+shared header and is gone."
+```
