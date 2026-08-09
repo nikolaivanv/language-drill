@@ -176,8 +176,29 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * theme of their levels). Enqueues the 8 new vocab cells.
  * `2026-07-18`: adds a comparison-axis coverageSpec to
  * es-a2-comparatives-superlatives.
+ *
+ * `2026-08-08`: declares `constructionVariants` on the fifteen ES points whose
+ * pools had collapsed onto a single sub-construction, so the per-draft
+ * rotation spreads generation across the sub-uses each point's description
+ * already claims to teach (construction variants,
+ * docs/superpowers/specs/2026-08-08-construction-variants-design.md).
+ * Collapse-sweep points: es-b1-impersonal-plural (43/50 clozes answered
+ * `Dicen`, 49/50 translations `Dicen que…`; also renamed — the old name quoted
+ * that exemplar and the name is injected into the generation prompt twice),
+ * es-b1-que-vs-cual, es-b2-sino-adversatives, es-b2-comparatives-advanced,
+ * es-b2-consecutives-intensity, es-a2-por-para, es-b2-verbs-of-change,
+ * es-b1-imperative-negative-pronouns, es-a1-porque-para, es-a1-hay-estar,
+ * es-a1-ser-estar-basic, es-a1-quantifiers-muy-mucho, es-a1-coordination-basic.
+ * Plus the two sub-inspection points, whose approved rows were read directly
+ * because every answer on them IS the marker `se`: es-b1-passive-se (100/100
+ * rows passive-or-impersonal se, 94 sharing one locative frame, zero `se
+ * le/les`, zero `uno se`) and es-b2-se-middle-accidental (99/99 rows accidental
+ * se + dative, zero agentless middle se, zero motion-verb `se de matización`).
+ * Bump clears target-reached / low-yield suppression so the touched cells
+ * re-run under the rotation; at-target cells additionally need demote:pool
+ * (see docs/curriculum-authoring.md retrofit section).
  */
-export const CURRICULUM_VERSION_ES = '2026-07-18';
+export const CURRICULUM_VERSION_ES = '2026-08-08';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -493,6 +514,43 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Using estar for identity or profession, e.g. "*yo estoy profesor" instead of "yo soy profesor".',
       'Answering "¿Cómo estás?" with the wrong copula, saying "*soy bien" instead of "estoy bien".',
     ],
+    // Butt & Benjamin 33.2.1 (ser for identity, profession, nationality),
+    // 33.2.4 (ser de for origin and material), 33.2.2 (ser + adjectives of
+    // inherent nature), 33.3.2 (estar for location), 33.3.1 + 33.3.5 (estar
+    // for states, including estar bien/mal).
+    // Uniform shares: the point is the ser/estar contrast itself, and this is
+    // an A1 cell (target 20) where a share-3 member would drop the rest to
+    // ~2.9 approved each, below MIN_PER_VARIANT.
+    // Clock time with ser is in the description but is NOT rotated here — it
+    // has its own point, es-a1-telling-time, with its own cells and coverage
+    // spec, and duplicating it would cost a fifth of this pool. See the report.
+    constructionVariants: [
+      {
+        id: 'ser-identity-profession-origin',
+        directive:
+          'ser saying who or what someone is — name, profession, nationality, or origin with de (Soy profesora y soy de Colombia)',
+      },
+      {
+        id: 'ser-inherent-adjective',
+        directive:
+          'ser + an adjective naming inherent character or a defining quality (Mi hermana es muy simpática; El examen es difícil)',
+      },
+      {
+        id: 'ser-material-de',
+        directive:
+          'ser de + a material, saying what something is made of (La mesa es de madera)',
+      },
+      {
+        id: 'estar-location',
+        directive:
+          'estar giving the physical location of a person or thing (Mi hermano está en el hospital; El libro está en la mesa)',
+      },
+      {
+        id: 'estar-condition',
+        directive:
+          'estar + an adjective or bien/mal naming a temporary physical or emotional condition (Está enfermo; Hoy estoy muy bien)',
+      },
+    ],
   },
   {
     key: 'es-a1-hay-estar',
@@ -512,6 +570,40 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Using hay with a definite article, demonstrative, or possessive, e.g. "*hay el banco" instead of "está el banco" or simply "hay un banco".',
       'Using estar for an indefinite noun that has not been mentioned before, e.g. "*está una farmacia cerca" instead of "hay una farmacia cerca".',
       'Trying to pluralize hay to agree with a plural noun, e.g. "*han dos bancos" instead of the invariable "hay dos bancos".',
+    ],
+    // Butt & Benjamin 34.2.1 (hay: invariable, third person only), 34.3.1
+    // (a definite article, possessive or demonstrative normally requires
+    // estar), 34.3.2 (abstract, non-locatable nouns like problema/accidente
+    // take only hay, while mobile things and people can take estar), 34.3.3
+    // (bare partitive nouns and numerals take only hay).
+    // Uniform shares — a two-way contrast point on an A1 cell (target 20),
+    // where a share-3 member would starve the rest below MIN_PER_VARIANT.
+    constructionVariants: [
+      {
+        id: 'hay-indefinite-existential',
+        directive:
+          'hay introducing something not yet mentioned, with an indefinite article (Hay un banco en esta calle)',
+      },
+      {
+        id: 'hay-bare-noun-or-number',
+        directive:
+          'invariable hay with NO article — a bare mass noun or a numeral, never pluralized (Hay leche en la nevera; Hay dos bancos aquí)',
+      },
+      {
+        id: 'hay-abstract-noun',
+        directive:
+          'hay with an abstract, non-locatable noun such as problema, ruido or accidente, where estar is impossible (Hay un problema con la reserva)',
+      },
+      {
+        id: 'estar-definite-location',
+        directive:
+          'estar locating a thing already identified by a definite article, possessive or demonstrative (El banco está al lado de la farmacia; Mis llaves están en la mesa)',
+      },
+      {
+        id: 'estar-indefinite-locatable',
+        directive:
+          'estar with an indefinite but movable person or thing whose existence is taken for granted (Dos policías están en la puerta esperándote)',
+      },
     ],
   },
   {
@@ -605,6 +697,32 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Leaving mucho/poco unagreed with a feminine or plural noun, e.g. "*mucho gente" instead of "mucha gente".',
       'Using muy before a verb instead of mucho, e.g. "*me gusta muy" instead of "me gusta mucho".',
     ],
+    // Butt & Benjamin 10.12 (mucho/poco: marked for gender and number as
+    // adjectives, invariable as adverbs after a verb) and 35.4.2 (muy as the
+    // reduced form of mucho used before adjectives and adverbs, never alone
+    // and never before a verb).
+    // Only three variants: muy + adjective and muy + adverb are ONE
+    // construction (a degree adverb over a gradable word), so splitting them
+    // would be lexical variation dressed up as a construction. Uniform shares
+    // — all three are comparably frequent, and this point exists to hold them
+    // apart, so weighting one to 3 would recreate the collapse being fixed.
+    constructionVariants: [
+      {
+        id: 'quantifier-agreeing-with-noun',
+        directive:
+          'mucho, poco or bastante used as an adjective before a noun, agreeing with it in gender and number (Tengo mucha hambre; Quedan pocos días)',
+      },
+      {
+        id: 'muy-intensifier',
+        directive:
+          'invariable muy immediately before an adjective or an adverb (Este libro es muy interesante; Habla muy despacio)',
+      },
+      {
+        id: 'mucho-after-verb',
+        directive:
+          'invariable mucho used adverbially AFTER a verb, where muy is impossible (Me gusta mucho; Trabaja mucho)',
+      },
+    ],
   },
   {
     key: 'es-a1-negation-tampoco',
@@ -695,6 +813,40 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Using o instead of the correlative unos...otros when contrasting two parts of a group, e.g. "*unos vecinos son simpáticos o no" instead of "unos vecinos son simpáticos, otros no".',
       'Confusing pero with y when the two ideas contrast rather than simply add on, e.g. "*quiero salir y llueve mucho" instead of "quiero salir, pero llueve mucho".',
     ],
+    // Butt & Benjamin 37.3 (y), 37.2 (o), 37.1 (pero contrasting without
+    // correcting), 27.5.4 (ni … ni, which requires a preceding negative),
+    // 10.4.2 + 10.13 (the unos … otros correlative).
+    // Uniform shares: y is by far the most frequent coordinator in the
+    // language, but it is also the trivially acquired one and the member the
+    // pool already over-produces — giving it share 3 would reinforce exactly
+    // the collapse this rotation exists to break.
+    constructionVariants: [
+      {
+        id: 'y-additive',
+        directive:
+          'y linking two clauses or two items that simply add up (Estudio español y trabajo en un banco)',
+      },
+      {
+        id: 'o-alternative',
+        directive:
+          'o offering a choice between two items or clauses (¿Quieres té o café?; Vamos al cine o nos quedamos en casa)',
+      },
+      {
+        id: 'pero-contrast',
+        directive:
+          'pero joining two clauses whose content clashes (Quiero salir, pero llueve mucho)',
+      },
+      {
+        id: 'ni-ni-negated',
+        directive:
+          'ni joining two negated elements after a negative verb, never after an affirmative one (No como carne ni pescado)',
+      },
+      {
+        id: 'unos-otros-correlative',
+        directive:
+          'the correlative unos … otros contrasting two parts of one group (Unos vecinos son simpáticos, otros no)',
+      },
+    ],
   },
   {
     key: 'es-a1-porque-para',
@@ -710,6 +862,35 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Following para with a conjugated verb instead of the infinitive when the subject stays the same, e.g. "*estudio español para viajo a México" instead of "estudio español para viajar a México".',
       'Using para + infinitive to express a cause instead of a purpose, e.g. "*estoy cansado para trabajar mucho" (intending "because I work a lot") instead of "estoy cansado porque trabajo mucho".',
       'Confusing porque and por qué, e.g. "*no sé porque llegas tarde" instead of "no sé por qué llegas tarde" when reporting the reason for something.',
+    ],
+    // Butt & Benjamin 37.5.1 (porque + indicative for cause), 38.16.2 +
+    // 37.8 (para + infinitive for purpose, same subject), 28.10 (por qué,
+    // stressed and written apart, vs. the conjunction porque), 28.4.2 (por qué
+    // in indirect questions). Uniform shares: porque is the most frequent of
+    // the three in the language, but this is an A1 cell (target 20) and a
+    // share-3 member would drop the others to ~3.3 approved each, below
+    // MIN_PER_VARIANT — and this point exists precisely to hold the three apart.
+    constructionVariants: [
+      {
+        id: 'porque-cause',
+        directive:
+          'porque, one word, introducing the cause with an indicative verb (No voy a la fiesta porque estoy cansado)',
+      },
+      {
+        id: 'para-infinitive-purpose',
+        directive:
+          'para + INFINITIVE stating what an action is for, with the same subject throughout (Estudio español para viajar a México)',
+      },
+      {
+        id: 'por-que-direct-question',
+        directive:
+          'por qué, two words with a stressed qué, opening a direct question (¿Por qué llegas tarde?)',
+      },
+      {
+        id: 'por-que-indirect-report',
+        directive:
+          'por qué, still two words, inside a reported/indirect question after a verb like saber or entender (No sé por qué llegas tarde)',
+      },
     ],
   },
   {
@@ -1635,6 +1816,49 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Using por instead of para to mark who something is intended for, e.g. "*este regalo es por ti" instead of "este regalo es para ti".',
       'Rendering English "for + time period" with para (or overusing por) when Spanish uses durante, desde hace, or nothing, producing "*estuve en Roma para dos semanas" instead of "estuve en Roma dos semanas".',
     ],
+    // Butt & Benjamin 38.17.1 (por = because of), 38.17.5 (exchange /
+    // substitution), 38.17.3 + 38.17.9 (means / channel), 38.17.15 (por as a
+    // preposition of place: through, around, vague location), 38.16.2 +
+    // 38.16.9 (para: destination/recipient, para in time phrases = deadline).
+    // Uniform shares: with four por variants against two para ones the pool
+    // already sits at ~67/33, and a share-3 por member would take it to 75/25
+    // on a point whose whole purpose is the por/para contrast.
+    // NOT rotated, though the description lists them: por for DURATION (por dos
+    // años) — the point's own fourth commonError warns learners off it — and
+    // fetching a por pan, which is Peninsular-only and lexically confined to
+    // ir/venir/salir. See the task-8 report.
+    constructionVariants: [
+      {
+        id: 'por-cause-reason',
+        directive:
+          'por marking the cause or motive behind an action or state (Lo hice por ti; Cerraron la carretera por la nieve)',
+      },
+      {
+        id: 'por-exchange',
+        directive:
+          'por marking an exchange or substitution — what was given up for what (Cambié mi coche por uno nuevo; Te cambio mi bocadillo por el tuyo)',
+      },
+      {
+        id: 'por-means-channel',
+        directive:
+          'por marking the means or channel through which something travels or is learnt (Me enteré por un amigo; Te lo mando por correo)',
+      },
+      {
+        id: 'por-through-or-around',
+        directive:
+          'por of place — movement through, or a vague location rather than a point (Caminamos por el parque; Las llaves estarán por aquí)',
+      },
+      {
+        id: 'para-recipient',
+        directive:
+          'para marking the person something is intended for (Este regalo es para ti; He guardado un trozo para tu hermano)',
+      },
+      {
+        id: 'para-deadline',
+        directive:
+          'para fixing a deadline — the point in time by which something must be ready (Lo necesito para el lunes)',
+      },
+    ],
   },
   {
     key: 'es-a2-mente-adverbs',
@@ -1890,11 +2114,44 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Failing to make the verb agree with the plural noun in passive-se ("*se vende coches").',
       'Doubling se to make a pronominal verb impersonal ("*se se levanta temprano" instead of "uno se levanta temprano").',
     ],
+    // Sub-inspection 2026-08-08 (prod, 100 approved rows read directly — this
+    // point is invisible to the answer-frequency sweep because every answer IS
+    // `se`). Result: collapsed. All 100 rows are passive se or impersonal se,
+    // and 94 of them open with the same "En este/esta X …" locative frame.
+    // The two remaining described sub-uses appear ZERO times: not one row uses
+    // impersonal se with a human object (se le/les), and not one uses uno with
+    // a pronominal verb. Butt & Benjamin 32.4 (passive se and its agreement),
+    // 32.6.2-32.6.3 (impersonal se, always singular), 32.5 + 32.6.3 note 2
+    // (the 'special' construction: human direct object takes le/les), 30.11
+    // (uno is obligatory because two ses cannot co-occur).
+    constructionVariants: [
+      {
+        id: 'passive-se-agreeing',
+        directive:
+          'passive se with the verb AGREEING with the thing acted on, which is the grammatical subject (Se venden coches usados; Se alquila una habitación)',
+        share: 3,
+      },
+      {
+        id: 'impersonal-se-singular',
+        directive:
+          'impersonal se for what people in general do, verb always SINGULAR and no noun subject (En España se cena tarde; Aquí se vive bien)',
+      },
+      {
+        id: 'impersonal-se-human-object',
+        directive:
+          'impersonal se acting on a specific HUMAN object, which takes le/les (Se le nota cansada; Se les ve contentos)',
+      },
+      {
+        id: 'uno-with-pronominal-verb',
+        directive:
+          'uno/una + an already pronominal verb, since two ses cannot co-occur (Uno se levanta temprano; Una se cansa de repetirlo)',
+      },
+    ],
   },
   {
     key: 'es-b1-impersonal-plural',
     kind: 'grammar',
-    name: 'Impersonal third-person plural (dicen que...)',
+    name: 'Impersonal third-person plural for unspecified agents',
     description:
       'Agentless third-person plural for unspecified people: dicen que... (people say), llaman a la puerta (someone is at the door), me robaron la cartera (my wallet was stolen) — the everyday alternative to a passive, used even when only one unknown person acted. Related generics: uno/una + 3sg verb (Uno nunca sabe; una for female speakers) and informal impersonal tú (Si lo piensas, es increíble); uno/se preferred in formal register.',
     cefrLevel: B1,
@@ -1910,6 +2167,39 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Forcing a ser-passive where Spanish prefers the impersonal plural, producing "*mi cartera fue robada" instead of "me robaron la cartera".',
       'Inserting ellos, which cancels the impersonal reading — "ellos dicen que..." points at specific people; the impersonal is bare "dicen que...".',
       'Using the singular for an unknown agent, producing "*llama a la puerta" instead of "llaman a la puerta" when the caller is unidentified.',
+    ],
+    // Pool audit 2026-08-08 (prod): 43/50 clozes answered `Dicen`, 49/50
+    // translations were `Dicen que…`; the uno/una and impersonal-tú generics the
+    // description promises appeared zero times. Butt & Benjamin 32.7.3
+    // (impersonal 3pl), 32.7.1 (uno/una), 32.7.2 (impersonal tú), 32.2.3a
+    // (active 3pl as the everyday alternative to a ser-passive).
+    constructionVariants: [
+      {
+        id: 'hearsay-dicen-que',
+        directive:
+          'a hearsay report the speaker has not verified — bare 3pl reporting verb + que (Dicen que va a llover)',
+        share: 3,
+      },
+      {
+        id: 'unknown-agent-event',
+        directive:
+          'an event whose agent is unknown and unnamed — 3pl with no subject (Llaman a la puerta; Te llaman por teléfono)',
+      },
+      {
+        id: 'adversity-experiencer',
+        directive:
+          'a mishap the speaker suffered, with the victim as a dative/accusative clitic — 3pl where English would use a passive (Me robaron la cartera en el metro)',
+      },
+      {
+        id: 'uno-generic',
+        directive:
+          'the uno/una + 3sg generic for a truth about people in general (Uno nunca sabe qué puede pasar); use una when the speaker is female',
+      },
+      {
+        id: 'impersonal-tu',
+        directive:
+          'informal impersonal tú addressing people in general, not the listener (Si lo piensas, es increíble)',
+      },
     ],
     prerequisiteKeys: ['es-b1-passive-se'],
   },
@@ -2054,6 +2344,37 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Attaching the pronoun to a negative imperative instead of placing it before the verb ("*no vete" instead of "no te vayas").',
       'Using the plain affirmative imperative form after "no" instead of switching to the subjunctive ("*no ven" instead of "no vengas").',
       'Dropping the written accent when two pronouns are added to an affirmative imperative ("*diselo" instead of "díselo").',
+    ],
+    // Butt & Benjamin 21.3 (negative imperative = present subjunctive), 21.4 +
+    // 14.3.2 (proclisis after no, enclisis on the affirmative), 14.5 + 21.4
+    // (two-clitic clusters and the written accent they force), 14.9.1 (le → se
+    // before lo/la). Splits are by clitic count as well as polarity because the
+    // one- vs. two-clitic contrast is what carries the accent rule.
+    // The negative half takes share 3, matching both the point's headline and
+    // the direction of the polarity coverageSpec above; the affirmative floor
+    // of 8 stays comfortably reachable (B1 cloze target 50 × 1/3 ≈ 16).
+    constructionVariants: [
+      {
+        id: 'negative-single-clitic',
+        directive:
+          'no + present subjunctive with ONE proclitic pronoun before the verb (No te vayas todavía; No lo toques)',
+        share: 3,
+      },
+      {
+        id: 'negative-double-clitic',
+        directive:
+          'no + present subjunctive with TWO proclitics in the order indirect-then-direct (No me lo digas; No se lo ocultes a tu hermana)',
+      },
+      {
+        id: 'affirmative-single-enclitic',
+        directive:
+          'affirmative tú imperative with exactly ONE pronoun attached to the end (Llámame mañana; Siéntate aquí)',
+      },
+      {
+        id: 'affirmative-double-enclitic-accent',
+        directive:
+          'affirmative imperative with TWO enclitics, which forces a written accent on the stressed syllable (Díselo; Dámelas)',
+      },
     ],
     prerequisiteKeys: ['es-a2-imperative-affirmative'],
   },
@@ -2251,6 +2572,39 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Using "cuál" directly before a noun in standard European Spanish instead of "qué" ("*¿cuál libro quieres?" instead of "¿qué libro quieres?").',
       'Stranding the preposition at the end of the question, as in English, instead of fronting it with the interrogative ("*¿Quién vas al cine con?" instead of "¿Con quién vas al cine?").',
       'Using "cuál" instead of "qué" when asking for the definition of an abstract concept ("*¿Cuál es el amor?" instead of "¿Qué es el amor?").',
+    ],
+    // Butt & Benjamin 28.3.1 (cuál = 'which one of a set'), 28.3.3 (cuál is not
+    // adjectival in European Spanish), 28.4.1b (qué before a noun), 28.2 +
+    // 28.5 (preposition fronted with the interrogative), 28.9 (adónde).
+    // Uniform shares deliberately: this is a two-way contrast point, and
+    // weighting either qué member to 3 would push cuál — the marked, harder
+    // member the point is named for — down to ~14% of the pool.
+    constructionVariants: [
+      {
+        id: 'que-definition-of-concept',
+        directive:
+          'qué asking what kind of thing something is, i.e. for a definition or category (¿Qué es la democracia?)',
+      },
+      {
+        id: 'cual-selection-from-set',
+        directive:
+          'cuál/cuáles as a pronoun selecting one member of a known set (¿Cuál de estos dos prefieres?; ¿Cuáles te llevas?)',
+      },
+      {
+        id: 'que-before-noun',
+        directive:
+          'qué used adjectivally, directly before a noun, where European Spanish forbids cuál (¿Qué libro estás leyendo?)',
+      },
+      {
+        id: 'fronted-preposition',
+        directive:
+          'a preposition fronted with the interrogative, never stranded at the end (¿Con quién vas al cine?; ¿De qué habláis?)',
+      },
+      {
+        id: 'adonde-direction',
+        directive:
+          'adónde asking where TO, with a verb of motion (¿Adónde vamos este verano?) — not dónde, which asks where something is',
+      },
     ],
   },
   {
@@ -2775,6 +3129,48 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Using hacerse for an involuntary or unwanted change instead of volverse ("*se hizo loco" instead of "se volvió loco").',
       'Reaching for convertirse en with an adjective instead of a noun phrase ("*se convirtió en triste" instead of "se puso triste").',
     ],
+    // One variant per verb of becoming in Butt & Benjamin 31.3: 31.3.1
+    // (ponerse), 31.3.2 (volverse), 31.3.3 (hacerse), 31.3.4 (llegar a ser),
+    // 31.3.5 (convertirse en), 31.3.6 (quedarse and the slightly more formal
+    // plain quedar — B&B treats them together, so they share one variant).
+    // ponerse takes share 3 as the most frequent of the set (B&B lists it
+    // first; brief mood/appearance changes are the everyday case).
+    // NOT rotated: resultar (31.3.7), which the description mentions only in
+    // passing and which reports an outcome or impression rather than a change
+    // undergone by the subject. See the task-8 report.
+    constructionVariants: [
+      {
+        id: 'ponerse-temporary-state',
+        directive:
+          'ponerse + adjective for a brief change of mood, health or appearance (Cuando se enteró de la noticia, se puso muy triste)',
+        share: 3,
+      },
+      {
+        id: 'hacerse-voluntary-conversion',
+        directive:
+          'hacerse for a lasting conversion the subject brought about — profession, religion, politics (Se hizo abogado después de diez años de estudio)',
+      },
+      {
+        id: 'volverse-involuntary-change',
+        directive:
+          'volverse for a lasting change of character the subject did not choose (Con la edad, mi padre se ha vuelto muy desconfiado)',
+      },
+      {
+        id: 'quedarse-state-left-by-event',
+        directive:
+          'quedarse (or the slightly more formal plain quedar) for the state an event leaves someone in (Se quedó sordo tras el accidente; quedó ciego)',
+      },
+      {
+        id: 'convertirse-en-transformation',
+        directive:
+          'convertirse en + NOUN for a total transformation into something else (La oruga se convirtió en mariposa)',
+      },
+      {
+        id: 'llegar-a-ser-slow-outcome',
+        directive:
+          'llegar a ser for a hard-won outcome reached through a slow process (Trabajó muchísimo y llegó a ser director general)',
+      },
+    ],
   },
 
   {
@@ -2799,6 +3195,46 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Dropping the dative pronoun and losing the "unintentional/it happened to me" nuance ("se perdió tu dinero" instead of "se me perdió tu dinero").',
       'Using the ir imperative "ve" to tell someone to leave/go away, instead of the irse imperative "vete" ("*ve ya, es tarde" instead of "vete ya, es tarde").',
       'Over-pronominalizing verbs that are already intransitive ("*se empezó la película" instead of "empezó la película") — empezar, terminar, mejorar, hervir, subir/bajar (prices) take no se.',
+    ],
+    // Sub-inspection 2026-08-08 (prod, 99 approved rows read directly).
+    // Result: total collapse onto accidental se + dative. All 99 rows carry a
+    // dative clitic, and 73 of them use one of just four verbs (caer, perder,
+    // olvidar, romper). Middle se with no dative (Se abrió la ventana) appears
+    // ZERO times; so does the se de matización on motion verbs (Me voy ya;
+    // ¿Te vienes?) that the description names.
+    // Butt & Benjamin 30.10 (pronominal verbs with inanimate subjects — the
+    // spontaneous reading), 30.4.1 (intransitive pronominals such as
+    // preocuparse, enamorarse), 14.8 + 30.7.26b (dative of interest; the verb
+    // agrees with the thing, and a third person takes le/les), 30.6a + 30.6.5 /
+    // 30.6.12 (irse, venirse stress departure), 30.6b + 30.6.2 / 30.6.9
+    // (caerse, salirse mark an untimely or accidental action).
+    constructionVariants: [
+      {
+        id: 'accidental-se-dative',
+        directive:
+          'accidental se + a dative clitic for a mishap, the verb agreeing with the THING, not the person (Se me perdió tu dinero; Se le cayeron las llaves)',
+        share: 3,
+      },
+      {
+        id: 'middle-se-spontaneous-thing',
+        directive:
+          'a transitive verb turned pronominal for an event that just happens to a THING, with no agent and no dative (La ventana se abrió con el viento)',
+      },
+      {
+        id: 'middle-se-person-experiencer',
+        directive:
+          'the pronominal form of a psych verb, with a PERSON as subject undergoing the state (Se preocupa por todo; Se enamoró de ella en un mes)',
+      },
+      {
+        id: 'motion-se-departure',
+        directive:
+          'irse/venirse adding a departure nuance the plain verb lacks (Me voy ya, que es tarde; ¿Por qué no te vienes conmigo?)',
+      },
+      {
+        id: 'motion-se-untimely',
+        directive:
+          'caerse/salirse marking an action as untimely or accidental, with NO dative clitic (El niño se cayó de la bici; El agua se salía de la bañera)',
+      },
     ],
   },
 
@@ -2919,6 +3355,44 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Leaving "tanto" invariable before a noun instead of agreeing in gender and number ("*tanto personas vinieron" instead of "tantas personas vinieron").',
       'Confusing this consequence construction with the A2 equality comparison tan/tanto…como, blending the two into ungrammatical hybrids.',
     ],
+    // Butt & Benjamin 6.15.1 (tan/tanto forms and their agreement), 37.9
+    // (de manera/modo que + indicative for result, subjunctive for intention),
+    // 37.11.11a (por lo tanto / por consiguiente as formal 'as a result',
+    // distinct from everyday por eso / entonces in 37.11.11d-e), 6.15.4
+    // (… como para + infinitive).
+    constructionVariants: [
+      {
+        id: 'tan-adjective-que',
+        directive:
+          'tan + adjective or adverb + que introducing the consequence (Hablaba tan rápido que no entendíamos nada)',
+        share: 3,
+      },
+      {
+        id: 'tanto-noun-agreement',
+        directive:
+          'tanto/tanta/tantos/tantas + noun + que, the quantifier agreeing with the noun (Vinieron tantas personas que no cupimos en la sala)',
+      },
+      {
+        id: 'tanto-verb-invariable',
+        directive:
+          'invariable tanto after a verb + que, quantifying the action itself (Corrió tanto que se quedó sin aliento)',
+      },
+      {
+        id: 'de-manera-que-result',
+        directive:
+          'de manera/modo que + INDICATIVE reporting an actual result, not an intention (Llegamos tarde, de manera que perdimos el tren)',
+      },
+      {
+        id: 'por-lo-tanto-formal',
+        directive:
+          'formal por lo tanto / por consiguiente linking two sentences (No teníamos billetes; por lo tanto, decidimos volver a casa)',
+      },
+      {
+        id: 'enough-or-too-para-infinitive',
+        directive:
+          'suficiente(s)/bastante/demasiado + (como) para + infinitive for "enough/too … to" (Ha vendido suficientes coches como para ganarse el viaje)',
+      },
+    ],
   },
 
   {
@@ -2940,6 +3414,32 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Using pero instead of sino when the first clause is being corrected, not merely qualified ("*no es antipático, pero tímido" instead of "sino tímido").',
       'Omitting "que" before a finite verb after sino ("*sino estoy dispuesto a ayudarlo" instead of "sino que estoy dispuesto a ayudarlo").',
       'Using sino outside a negative context, where only pero is possible ("*habla francés, sino mal" instead of "pero mal").',
+    ],
+    // Butt & Benjamin 37.1 (pero/sino: sino corrects a negated remark, sino que
+    // before a finite verb, no solo… sino que…; pero where the first statement
+    // is NOT withdrawn) and 37.11.3 (no obstante as a formal 'nevertheless').
+    constructionVariants: [
+      {
+        id: 'sino-phrase-correction',
+        directive:
+          'sino replacing the element a preceding negation withdrew, joining two phrases (No es antipático sino tímido; No quiero vino sino agua)',
+        share: 3,
+      },
+      {
+        id: 'sino-que-finite-verb',
+        directive:
+          'sino que before a finite verb, typically in no solo… sino que… (No solo le creo, sino que estoy dispuesto a ayudarlo)',
+      },
+      {
+        id: 'pero-after-negation',
+        directive:
+          'pero after a negative first clause that is contrasted, not corrected — sino is impossible here (No tiene dinero, pero es feliz)',
+      },
+      {
+        id: 'no-obstante-formal',
+        directive:
+          'no obstante as a formal, literary "nevertheless" opening the contrasting clause (No obstante, decidieron seguir adelante)',
+      },
     ],
   },
 
@@ -3011,6 +3511,45 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Leaving mucho/poco invariable before más/menos/mayor/menor + noun ("*mucho más casas" instead of "muchas más casas") — they agree in gender and number (muchos menos hijos, mucha mayor velocidad).',
       'Treating "superior/inferior a" like "más/menos que" and inserting "que" instead of "a" ("*superior que la competencia" instead of "superior a la competencia").',
       'Using "que" instead of "de" before a quantified noun phrase after multiplicatives ("*el doble que habitantes" instead of "el doble de habitantes") — "que" is correct only before a comparison target ("gana el doble que yo").',
+    ],
+    // Butt & Benjamin 6.6 keeps neuter `de lo que` (genderless second term:
+    // verb phrase, adjective) apart from gendered `del/de la/de los/de las que`
+    // (second clause with a gendered direct object) — two distinct forms, not
+    // one with varying lexis, and the source of the point's headline error.
+    // Also 6.5 (más de + quantity), 6.2/6.8 (superior/inferior a),
+    // 6.15.2 (igual que), 6.1 (bare más N que N).
+    constructionVariants: [
+      {
+        id: 'de-lo-que-clausal',
+        directive:
+          'invariable de lo que before a second clause with a genderless second term — adjective or verb phrase (Es más caro de lo que pensaba)',
+        share: 3,
+      },
+      {
+        id: 'gendered-del-que',
+        directive:
+          'del/de la/de los/de las que agreeing with a gendered noun when the second clause has its own verb (Ha traído más harina de la que necesitamos)',
+      },
+      {
+        id: 'superior-inferior-a',
+        directive:
+          'superior/inferior + a (never que) for a comparison of rank or quality (Su rendimiento fue superior al de la competencia)',
+      },
+      {
+        id: 'multiplicative',
+        directive:
+          'multiplicative comparison — el doble/el triple de + noun, or N veces más que (Esta ciudad tiene el doble de habitantes que la nuestra)',
+      },
+      {
+        id: 'igual-que-equality',
+        directive:
+          'igual que asserting that two things are the same, not merely comparable (Piensa igual que su padre)',
+      },
+      {
+        id: 'mas-noun-que-noun',
+        directive:
+          'bare más/menos + noun + que + noun pitting two nouns against each other under one verb (Hay más revistas que libros)',
+      },
     ],
   },
 
