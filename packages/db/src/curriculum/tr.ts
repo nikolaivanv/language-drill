@@ -205,20 +205,28 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * read directly because every answer on it IS the marker: 98 of 100 rows are
  * noun-complement role/capacity and only 2 are the derived-adjective
  * adverbialiser, both the same lexeme `geçici olarak`.
- * TWO described sub-uses were deliberately left unpinned because a higher-level
- * point already owns them, and pinning them would hand a fifth of an A2 cell to
- * a B2 construction: the (sanki) -mIş gibi "as if" clause on tr-a2-gibi-kadar
- * (owned by tr-b2-as-if-gibi) is dropped outright, and the integrated
- * -DIğInI söyledi variant on tr-a2-reported-speech is capped at a 3sg reported
- * subject (the person-backshift paradigm is tr-b2-indirect-statements, which
- * has its own person coverageSpec). Both B2 points name their A2 counterpart as
- * a prerequisite. The A2 descriptions that claim this material should probably
- * be trimmed to match; that is a separate description edit.
+ * THREE described sub-uses are held back from their full range, because a B2
+ * point already owns that range with its own six-person coverageSpec and an
+ * unpinned A2 variant would hand a fifth of an A2 cell to a B2 drill:
+ *   - tr-a2-gibi-kadar: the (sanki) -mIş gibi "as if" clause is dropped as a
+ *     variant outright — tr-b2-as-if-gibi is that construction entire, and
+ *     names tr-a2-gibi-kadar as a prerequisite.
+ *   - tr-a2-reported-speech: `integrated-digini-soyledi` is capped at a 3sg
+ *     reported subject (paradigm owned by tr-b2-reported-statements, which
+ *     names this point as a prerequisite).
+ *   - tr-a2-reported-speech: `reported-command-masini` is capped at a 1sg
+ *     addressee, the person all of this point's own examples use (range owned
+ *     by tr-b2-reported-directives).
+ * The A2 descriptions that claim this material should probably be trimmed to
+ * match — a cap on a variant does not stop a draft being produced against the
+ * description text, so the level fix is porous until then. That is a separate
+ * curriculum decision, deliberately not made here.
  * All shares are left UNIFORM. Weighting the prototype up would privilege the
  * exact construction that already owns each pool; on tr-a2-adversative-connectors
- * `ama` still keeps a natural ~2/3 plurality because it is licensed by two of
- * the three variants. None of the five points carries a coverageSpec, so there
- * is no axis-vs-variant collision to resolve here.
+ * the partition itself already runs toward `ama`, which is licensed by two of
+ * the three variants, so weighting on top would compound the collapse rather
+ * than correct an asymmetry. None of the five points carries a coverageSpec, so
+ * there is no axis-vs-variant collision to resolve here.
  * Also RENAMES three names that reach the generation prompt twice and were
  * steering it: tr-a2-causal-connectors (old name enumerated two of three
  * described relations, dropping madem(ki)), tr-a2-reported-speech (old name
@@ -2089,12 +2097,19 @@ const trCurriculum: readonly GrammarPoint[] = [
     // NOTE the mechanism's reach: variant seeding is gated to CLOZE and
     // TRANSLATION (seedKindFor), so this point's 26 approved
     // sentence_construction rows keep whatever distribution they have.
-    // `integrated-digini-soyledi` deliberately pins the reported subject to
-    // 3sg and stops there: the person-backshift paradigm and copular olduğunu
-    // belong to the B2 point tr-b2-indirect-statements, which carries its own
-    // person coverageSpec and names this point as a prerequisite. A2 needs the
-    // form only to make commonError #3 ("söylemek with a direct quotation")
-    // drillable.
+    // TWO variants here deliberately pin a person and stop there, because a B2
+    // point owns the full paradigm and carries its own six-person coverageSpec:
+    //   - `integrated-digini-soyledi` → reported subject 3sg. The
+    //     person-backshift paradigm and copular olduğunu belong to
+    //     tr-b2-reported-statements, which names this point as a prerequisite.
+    //     A2 needs the form only to make commonError #3 ("söylemek with a
+    //     direct quotation") drillable.
+    //   - `reported-command-masini` → addressee 1sg, the person all four of
+    //     this point's own examplesPositive and commonError #4 use. The
+    //     gitmemi/gitmeni/gitmenizi range belongs to tr-b2-reported-directives.
+    //     That point does NOT list this one as a prerequisite (it names
+    //     tr-b2-reported-statements and tr-a2-nominalization), so the
+    //     "B2 owns it" signal is weaker here — hence a cap, not a drop.
     constructionVariants: [
       {
         id: 'direct-quote-dedi',
@@ -2114,7 +2129,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       {
         id: 'reported-command-masini',
         directive:
-          'a reported COMMAND or request: -mA + possessive + accusative as the object of iste- or söyle- (Gelmemi istedi; Annem erken dönmemi söyledi)',
+          'a reported COMMAND or request: -mA + possessive + accusative as the object of iste- or söyle-, addressee 1st-person singular (Gelmemi istedi; Annem erken dönmemi söyledi)',
       },
       {
         id: 'diye-thought-reason',
@@ -2321,9 +2336,10 @@ const trCurriculum: readonly GrammarPoint[] = [
     // Shares deliberately UNIFORM. The obvious weighting (share 3 or 2 on
     // ama/fakat clause-conjoining, per the original brief) would privilege the
     // exact construction that already owns 100% of the pool, which is the
-    // collapse this change exists to undo. Uniform still leaves `ama` a natural
-    // plurality: it is the licensed marker in two of the three variants, so it
-    // lands at roughly two thirds without any thumb on the scale.
+    // collapse this change exists to undo. The partition already runs toward
+    // `ama` on its own: two of the three variants license it (one of them
+    // sharing that slot with fakat), so two thirds is its ceiling, not its
+    // expected share — no thumb on the scale needed.
     constructionVariants: [
       {
         id: 'ama-fakat-conjoining',
