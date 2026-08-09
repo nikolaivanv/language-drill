@@ -20,10 +20,12 @@
  *     `review-flagged.test.ts`.
  */
 import { describe, it, expect } from 'vitest';
-import { CefrLevel } from '@language-drill/shared';
+import { and } from 'drizzle-orm';
+import { PgDialect } from 'drizzle-orm/pg-core';
+import { CefrLevel, ExerciseType } from '@language-drill/shared';
 import type { Db } from '../client';
 import { errorObservations, userExerciseHistory, userGrammarMastery } from '../schema';
-import { updateMastery, type MasteryState } from './update';
+import { updateMastery, replayHistory, type MasteryState, type HistoryRow } from './update';
 import { SEVERITY_SCORE } from './incidental-fold';
 import {
   findStaleMasteryRows,
@@ -32,6 +34,7 @@ import {
   formatDiffReport,
   pointKey,
   run,
+  incidentalObservationsWhere,
   type StaleMasteryRow,
   type MasteryShift,
 } from './rebuild';
@@ -101,9 +104,9 @@ describe('findStaleMasteryRows', () => {
       { userId: 'user-1', language: 'TR', grammarPointKey: 'tr-a1-locative' },
       // Written by incidentalObservations() from an error attributed to a
       // DIFFERENT point than the host exercise — no history row anywhere
-      // names 'tr-a1-possessive' directly, so it never appears in either
+      // names 'tr-a1-possessive-suffixes' directly, so it never appears in either
       // replay map above.
-      { userId: 'user-1', language: 'TR', grammarPointKey: 'tr-a1-possessive' },
+      { userId: 'user-1', language: 'TR', grammarPointKey: 'tr-a1-possessive-suffixes' },
     ];
 
     const stale = findStaleMasteryRows(unfilteredStatesByGroup, survivingStatesByGroup, existingRows);
@@ -308,11 +311,11 @@ describe('formatDiffReport — the three-way partition invariant', () => {
   it('names all three buckets and lists deleted rows individually, since deletion is irreversible', () => {
     const deleted: StaleMasteryRow[] = [
       { userId: 'user-1', language: 'ES', grammarPointKey: 'es-a1-imperfect' },
-      { userId: 'user-2', language: 'TR', grammarPointKey: 'tr-a1-possessive' },
+      { userId: 'user-2', language: 'TR', grammarPointKey: 'tr-a1-possessive-suffixes' },
     ];
     const existingKeys = new Set([
       pointKey('user-1', 'es-a1-imperfect'),
-      pointKey('user-2', 'tr-a1-possessive'),
+      pointKey('user-2', 'tr-a1-possessive-suffixes'),
       pointKey('user-1', 'es-a1-subjunctive'), // stale
     ]);
 
@@ -332,9 +335,51 @@ describe('formatDiffReport — the three-way partition invariant', () => {
     expect(report).toContain('es-a1-imperfect');
     expect(report).toContain('ES');
     expect(report).toContain('user-1');
-    expect(report).toContain('tr-a1-possessive');
+    expect(report).toContain('tr-a1-possessive-suffixes');
     expect(report).toContain('TR');
     expect(report).toContain('user-2');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// incidentalObservationsWhere — SQL-render tests
+// ---------------------------------------------------------------------------
+//
+// `run()`'s error_observations query is exercised elsewhere in this file
+// against a mocked `Db`, which cannot execute a real WHERE predicate — the
+// `fakeDb()` helper below performs the host-match and null-attribution
+// exclusions itself in JS (see its doc comment), so a test that only goes
+// through `run()` + `fakeDb()` can pass or fail independent of whether
+// `incidentalObservationsWhere` actually builds those predicates: deleting
+// one of the three conditions from the source would not fail any test that
+// only touches the mock. These tests render the builder's REAL SQL instead —
+// the same pattern `evidence.test.ts` uses to pin `scoringEvidenceFilter`.
+describe('incidentalObservationsWhere', () => {
+  it('excludes host-attributed errors via a host-vs-error <> comparison', () => {
+    const { sql } = new PgDialect().sqlToQuery(and(...incidentalObservationsWhere({}))!);
+    const lower = sql.toLowerCase();
+    expect(lower).toContain('error_grammar_point_key');
+    expect(lower).toContain('host_grammar_point_key');
+    // Both columns appear on either side of a <>, not just present somewhere
+    // in the rendered SQL — pins the actual comparison, not just column
+    // presence (e.g. from the isNotNull predicate alone).
+    expect(lower).toMatch(/error_grammar_point_key"\s*<>\s*"error_observations"\."host_grammar_point_key"/);
+  });
+
+  it('requires the violated point to be attributed (IS NOT NULL)', () => {
+    const { sql } = new PgDialect().sqlToQuery(and(...incidentalObservationsWhere({}))!);
+    expect(sql.toLowerCase()).toContain('is not null');
+  });
+
+  it('excludes free-writing observations by binding the exercise-type value as a bound param', () => {
+    // error_observations.exercise_type is `.notNull()` in the schema (see
+    // packages/db/src/schema/progress.ts), so this `<>` has no NULL-semantics
+    // hole the way the host-vs-error `<>` deliberately does (see the doc
+    // comment on `incidentalObservationsWhere` in rebuild.ts) — every row has
+    // a real exercise_type value to compare against.
+    const { sql, params } = new PgDialect().sqlToQuery(and(...incidentalObservationsWhere({}))!);
+    expect(sql.toLowerCase()).toContain('exercise_type');
+    expect(params).toContain(ExerciseType.FREE_WRITING);
   });
 });
 
@@ -450,13 +495,17 @@ function historyRow(overrides: Partial<Record<string, unknown>> = {}) {
  *      projection renames the column on the way out, so callers here supply
  *      fixtures shaped like the raw row (`errorGrammarPointKey`,
  *      `hostGrammarPointKey`) and this helper performs the same rename.
- *   2. The `WHERE isNotNull(errorGrammarPointKey) AND errorGrammarPointKey <>
- *      hostGrammarPointKey` predicate is evaluated by Postgres before any row
- *      reaches `run()` — including the NULL-yields-not-true behaviour of
- *      `<>` — so it's applied here too. Without this, tests asserting the
- *      exclusion (host-attributed error, null-attributed error) would pass
- *      or fail for the wrong reason depending on unrelated code, since
- *      `run()` itself has no JS-level re-check (it trusts the query).
+ *   2. `incidentalObservationsWhere`'s three predicates (host-match,
+ *      null-attribution, free-writing) are evaluated by Postgres before any
+ *      row reaches `run()` — including the NULL-yields-not-true behaviour of
+ *      `<>` — so they're applied here too. Without this, tests asserting an
+ *      exclusion (host-attributed error, null-attributed error,
+ *      free-writing) would pass or fail for the wrong reason depending on
+ *      unrelated code, since `run()` itself has no JS-level re-check (it
+ *      trusts the query). The `incidentalObservationsWhere` suite above pins
+ *      the real predicates' rendered SQL directly; this emulation exists so
+ *      `run()`-level tests aren't silently fooled by a mock that lets
+ *      everything through.
  */
 function fakeDb(params: {
   history: unknown[];
@@ -470,12 +519,17 @@ function fakeDb(params: {
     exerciseHistoryId: string;
     difficulty: string;
     demotionReason: string | null;
+    /** Defaults to a non-free-writing type when omitted. */
+    exerciseType?: string;
   }>;
   existing: unknown[];
 }): Db {
   const observationRows = params.observations
     .filter(
-      (o) => o.errorGrammarPointKey != null && o.errorGrammarPointKey !== o.hostGrammarPointKey,
+      (o) =>
+        o.errorGrammarPointKey != null &&
+        o.errorGrammarPointKey !== o.hostGrammarPointKey &&
+        (o.exerciseType ?? ExerciseType.CLOZE) !== ExerciseType.FREE_WRITING,
     )
     .map((o) => ({
       userId: o.userId,
@@ -581,7 +635,7 @@ describe('run — zero-evidence stale-row deletion, end to end against a fake Db
   it('does NOT delete an incidental-fold-style mastery row that has zero history rows', async () => {
     const fake = makeFakeDb({
       // Only the host point (tr-a1-locative) has ANY history row. No row
-      // anywhere names 'tr-a1-possessive' — it only exists in
+      // anywhere names 'tr-a1-possessive-suffixes' — it only exists in
       // user_grammar_mastery because incidentalObservations() wrote it
       // directly from an evaluator error on an unrelated submission.
       historyRows: [
@@ -589,7 +643,7 @@ describe('run — zero-evidence stale-row deletion, end to end against a fake Db
       ],
       existingMasteryRows: [
         { userId: 'user-1', language: 'TR', grammarPointKey: 'tr-a1-locative' },
-        { userId: 'user-1', language: 'TR', grammarPointKey: 'tr-a1-possessive' },
+        { userId: 'user-1', language: 'TR', grammarPointKey: 'tr-a1-possessive-suffixes' },
       ],
     });
 
@@ -695,17 +749,21 @@ describe('incidental observations in the replay', () => {
   it('folds an incidental observation for a point with no host history', async () => {
     // The point exists only because an evaluator error was attributed to it.
     // Before this change the replay never saw it and the row looked stale.
+    // 'tr-a1-locative' — a real curriculum key — is required here: the
+    // grouping loop calls `getGrammarPoint(r.grammarPointKey)` and `continue`s
+    // on a miss, so a fixture using a fake key like 'p' silently drops the
+    // observation and this test fails for the wrong reason.
     const result = await run(fakeDb({
       history: [],
       observations: [
-        { userId: 'u1', language: 'TR', hostGrammarPointKey: 'host', errorGrammarPointKey: 'p',
+        { userId: 'u1', language: 'TR', hostGrammarPointKey: 'host', errorGrammarPointKey: 'tr-a1-locative',
           severity: 'major', occurredAt: new Date('2026-01-01'), exerciseHistoryId: 'h1',
           difficulty: 'A1', demotionReason: null },
       ],
       existing: [],
     }), { apply: false, includeDemoted: false });
 
-    const shift = result.diff.shifts.find((s) => s.grammarPointKey === 'p');
+    const shift = result.diff.shifts.find((s) => s.grammarPointKey === 'tr-a1-locative');
     expect(shift).toBeDefined();
     expect(result.deletes).toBe(0);
   });
@@ -713,9 +771,19 @@ describe('incidental observations in the replay', () => {
   it('collapses multiple errors on one point within a submission to the worst score', async () => {
     // incidentalObservations() takes the worst severity per (submission, point).
     // Folding three observations instead of one would triple-count the penalty.
+    //
+    // Asserting only `historyRowCount === 1` is too weak: flipping the
+    // source's `score < prev.score` to `score > prev.score` still collapses
+    // three observations to one row either way (the dedup key is the same
+    // regardless of which severity wins) — it would just silently pick the
+    // BEST severity (minor, 0.4) instead of the worst (major, 0.0), turning a
+    // major error into a 0.4 minor penalty while staying green. Pin the
+    // actual folded value too, against a live-fold simulation using the
+    // violated point's own level (SEVERITY_SCORE.major @ A1).
+    const at = new Date('2026-01-01');
     const obs = (severity: 'major' | 'minor') => ({
-      userId: 'u1', language: 'TR', hostGrammarPointKey: 'host', errorGrammarPointKey: 'p',
-      severity, occurredAt: new Date('2026-01-01'), exerciseHistoryId: 'h1',
+      userId: 'u1', language: 'TR', hostGrammarPointKey: 'host', errorGrammarPointKey: 'tr-a1-locative',
+      severity, occurredAt: at, exerciseHistoryId: 'h1',
       difficulty: 'A1', demotionReason: null,
     });
     const result = await run(fakeDb({
@@ -723,6 +791,11 @@ describe('incidental observations in the replay', () => {
     }), { apply: false, includeDemoted: false });
 
     expect(result.historyRowCount).toBe(1);
+    const shift = result.diff.shifts.find((s) => s.grammarPointKey === 'tr-a1-locative')!;
+    expect(shift.to).toBeCloseTo(
+      updateMastery(null, { score: SEVERITY_SCORE.major, difficulty: CefrLevel.A1, at }).masteryScore,
+      10,
+    );
   });
 
   it('ignores an error attributed to the host point itself', async () => {
@@ -768,7 +841,43 @@ describe('incidental observations in the replay', () => {
     expect(result.historyRowCount).toBe(0);
   });
 
-  it('is idempotent — replaying identical inputs twice yields identical shifts', async () => {
+  it('excludes an observation recorded on a free-writing exercise', async () => {
+    // POST /exercises/:id/submit's free-writing branch calls
+    // recordErrorObservations and then returns — it never reaches
+    // incidentalObservations(), so free-writing errors have NEVER folded
+    // into mastery on the live path. Replaying these rows here would inject
+    // a penalty the live path never applied, and the nightly diff would
+    // never settle to zero on an account with free-writing history.
+    const result = await run(fakeDb({
+      history: [],
+      observations: [
+        { userId: 'u1', language: 'TR', hostGrammarPointKey: 'host', errorGrammarPointKey: 'tr-a1-locative',
+          severity: 'major', occurredAt: new Date('2026-01-01'), exerciseHistoryId: 'h1',
+          difficulty: 'A1', demotionReason: null, exerciseType: ExerciseType.FREE_WRITING },
+      ],
+      existing: [],
+    }), { apply: false, includeDemoted: false });
+
+    expect(result.historyRowCount).toBe(0);
+  });
+
+  // What this pins, precisely: `run()` is a pure function of the rows a fake
+  // `Db` hands it, and each call below builds a FRESH `fakeDb()` from the
+  // same plain-object `inputs` — so this only catches nondeterminism
+  // internal to a single replay (Map iteration order, `Array#sort` producing
+  // different orderings across runs, floating-point order-of-operations
+  // drift). It is NOT a test of the operationally meaningful claim the name
+  // suggests — "rebuild the DB, then rebuild it again against what was just
+  // written, and confirm the second pass is a no-op" — because that requires
+  // the SECOND `run()` to read back the mastery rows the FIRST `run()`
+  // wrote, and `fakeDb()`'s `insert().values().onConflictDoUpdate()` is a
+  // no-op stub that never feeds written rows back into a subsequent
+  // `select().from(userGrammarMastery)` (see its definition above: `where`
+  // always resolves `params.existing`, fixed at construction). Reaching the
+  // real claim would need a stateful fake that captures inserts and serves
+  // them back out, which is out of scope here — this test is a narrower,
+  // honest sibling of it.
+  it('is deterministic — replaying identical inputs twice against independent fakes yields identical shifts', async () => {
     const inputs = {
       history: [
         { userId: 'u1', language: 'TR', grammarPointKey: 'p', score: 0.9, difficulty: 'A1',
@@ -792,26 +901,157 @@ describe('incidental observations in the replay', () => {
     // observation, applyGrammarMastery(incidental) — each folding into the
     // stored row. A faithful replay of the same events must land on the same
     // number. If this drifts, every nightly rebuild silently rewrites scores.
+    //
+    // Host difficulty is B2 while the violated point ('tr-a1-locative') is
+    // A1 — deliberately different. The incidental fold must be scored at the
+    // VIOLATED point's own cefrLevel (A1), not at the host exercise's
+    // difficulty column (B2): that is the exact bug this test exists to
+    // catch (see the grouping loop's `point.cefrLevel` lookup in rebuild.ts).
+    // Setting host === violated difficulty would make this test pass whether
+    // or not the code performs that lookup at all.
     const at = new Date('2026-01-01');
     const live = updateMastery(
-      updateMastery(null, { score: 0.9, difficulty: CefrLevel.A1, at }),
-      { score: SEVERITY_SCORE.minor, difficulty: CefrLevel.A1, at },
+      updateMastery(null, { score: 0.9, difficulty: CefrLevel.B2, at }),   // host observation, host difficulty
+      { score: SEVERITY_SCORE.minor, difficulty: CefrLevel.A1, at },        // incidental, VIOLATED point's level
     );
 
     const result = await run(fakeDb({
       history: [
-        { userId: 'u1', language: 'TR', grammarPointKey: 'p', score: 0.9, difficulty: 'A1',
+        { userId: 'u1', language: 'TR', grammarPointKey: 'tr-a1-locative', score: 0.9, difficulty: 'B2',
           evaluatedAt: at, evidenceWeight: null, demotionReason: null },
       ],
       observations: [
-        { userId: 'u1', language: 'TR', hostGrammarPointKey: 'host', errorGrammarPointKey: 'p',
+        // hostGrammarPointKey deliberately differs from errorGrammarPointKey
+        // (a different exercise's own point) so this row survives the
+        // host-match exclusion. difficulty: 'B2' here is the HOST exercise's
+        // column — the code must ignore it and look up tr-a1-locative's own
+        // level (A1) instead.
+        { userId: 'u1', language: 'TR', hostGrammarPointKey: 'host', errorGrammarPointKey: 'tr-a1-locative',
           severity: 'minor', occurredAt: at, exerciseHistoryId: 'h1',
-          difficulty: 'A1', demotionReason: null },
+          difficulty: 'B2', demotionReason: null },
       ],
       existing: [],
     }), { apply: false, includeDemoted: false });
 
-    const shift = result.diff.shifts.find((s) => s.grammarPointKey === 'p')!;
+    const shift = result.diff.shifts.find((s) => s.grammarPointKey === 'tr-a1-locative')!;
     expect(shift.to).toBeCloseTo(live.masteryScore, 10);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Task 4 deletion vector — an incidental-only mastery row whose backing
+// error_observations are ALL later demoted loses its only evidence and is
+// now deleted, where before Task 4 it was invisible to both replays and
+// survived untouched (see the doc comment on findStaleMasteryRows, the
+// paragraph beginning "That is no longer true.").
+// ---------------------------------------------------------------------------
+
+describe('run — an incidental-only mastery row is deleted once every observation backing it is demoted (Task 4 deletion vector)', () => {
+  // This is DELIBERATE, NEW destructive behaviour that arrived with Task 4,
+  // not a pre-existing guarantee. Before incidental observations fed the
+  // UNFILTERED replay too, a point with zero host history and only
+  // incidental evidence was absent from BOTH replays regardless of
+  // demotionReason (pinned above by 'does NOT delete an incidental-fold-
+  // style mastery row that has zero history rows') and so could never be
+  // flagged stale, no matter how untrustworthy its evidence was. Task 4
+  // makes such a point visible to the unfiltered replay whenever its
+  // error_observations rows survive at all — so once ALL of them carry a
+  // NON_EVIDENCE_DEMOTION_REASON ('quality' or 'learner-flag'), the point now
+  // satisfies findStaleMasteryRows's two conditions (present unfiltered,
+  // absent from surviving) and is deleted, exactly as a host-only point in
+  // the same situation already was. This is "intended justice" per the
+  // rebuild.ts doc comment, but nothing before this test exercised it
+  // end-to-end through run() — a regression here would silently resurrect
+  // the pre-Task-4 blind spot.
+  it('deletes a pre-existing mastery row whose only evidence is an incidental observation on a quality-demoted exercise', async () => {
+    const at = new Date('2026-01-01');
+    const result = await run(fakeDb({
+      history: [
+        // A DIFFERENT, non-demoted point in the same (user, language) group,
+        // required so survivingStatesByGroup isn't empty for this group —
+        // otherwise planStaleMasteryDeletions's run-level empty-input guard
+        // (pinned by 'skips a run with zero surviving-history groups...'
+        // above) would skip deletion for an unrelated reason and this test
+        // would pass without ever reaching the deletion logic it targets.
+        { userId: 'user-1', language: 'TR', grammarPointKey: 'tr-a1-locative', score: 0.9,
+          difficulty: 'A1', evaluatedAt: at, evidenceWeight: null, demotionReason: null },
+      ],
+      observations: [
+        // The ONLY evidence for tr-a1-possessive-suffixes anywhere: an incidental
+        // observation recorded against an exercise later demoted 'quality'.
+        // No user_exercise_history row anywhere names tr-a1-possessive-suffixes.
+        { userId: 'user-1', language: 'TR', hostGrammarPointKey: 'host',
+          errorGrammarPointKey: 'tr-a1-possessive-suffixes', severity: 'major', occurredAt: at,
+          exerciseHistoryId: 'h1', difficulty: 'A1', demotionReason: 'quality' },
+      ],
+      existing: [
+        { userId: 'user-1', language: 'TR', grammarPointKey: 'tr-a1-locative' },
+        { userId: 'user-1', language: 'TR', grammarPointKey: 'tr-a1-possessive-suffixes' },
+      ],
+    }), { apply: true, includeDemoted: false });
+
+    expect(result.diff.deleted).toContainEqual(
+      { userId: 'user-1', language: 'TR', grammarPointKey: 'tr-a1-possessive-suffixes' },
+    );
+    expect(result.deletes).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// sourceRank — pins that the literal `sourceRank: 1` rebuild.ts stamps onto
+// incidental HistoryRow entries (line ~610) is load-bearing for
+// replayHistory's fold order, not decorative. Every test above that exercises
+// a same-timestamp host+incidental pair passes today whether or not
+// `sourceRank: 1` is present, because rebuild.ts's two push loops (history
+// rows, then worstPerSubmission entries — see run()) always hand
+// replayHistory the host entry before the incidental one, and Array#sort is
+// stable, so insertion order alone already produces the correct fold order.
+// A `run()`-level test can't discriminate "correct because of sourceRank"
+// from "correct because of push order" for that reason — the fake DB's row
+// order doesn't control which of rebuild.ts's two loops runs first. This
+// test instead calls replayHistory directly with the two rows in the
+// OPPOSITE (incidental-first) array order, which run() never actually
+// produces today, to prove sourceRank — not array position — decides fold
+// order when timestamps tie.
+// ---------------------------------------------------------------------------
+
+describe('replayHistory — sourceRank pins host-before-incidental fold order independent of array order', () => {
+  it('folds a same-timestamp host/incidental pair host-first via sourceRank even when fed incidental-first', () => {
+    const at = new Date('2026-01-01T00:00:00Z');
+    const host: HistoryRow = {
+      grammarPointKey: 'p',
+      score: 0.9,
+      difficulty: CefrLevel.B2,
+      evaluatedAt: at,
+      // sourceRank omitted — defaults to 0, matching the host push loop in
+      // run(), which never sets it.
+    };
+    const incidental: HistoryRow = {
+      grammarPointKey: 'p',
+      score: SEVERITY_SCORE.major,
+      difficulty: CefrLevel.A1,
+      evaluatedAt: at,
+      sourceRank: 1, // the exact literal rebuild.ts's worstPerSubmission loop sets.
+    };
+
+    // Fed incidental-first: if replayHistory consulted array position instead
+    // of sourceRank, this would fold incidental, then host.
+    const actual = replayHistory([incidental, host]).get('p')!;
+
+    const hostFirst = updateMastery(
+      updateMastery(null, { score: host.score, difficulty: host.difficulty, at }),
+      { score: incidental.score, difficulty: incidental.difficulty, at },
+    );
+    const incidentalFirst = updateMastery(
+      updateMastery(null, { score: incidental.score, difficulty: incidental.difficulty, at }),
+      { score: host.score, difficulty: host.difficulty, at },
+    );
+
+    // Sanity check: the fixture must make the two orders actually diverge,
+    // or nothing below can discriminate between them.
+    expect(hostFirst.masteryScore).not.toBeCloseTo(incidentalFirst.masteryScore, 6);
+
+    expect(actual.masteryScore).toBeCloseTo(hostFirst.masteryScore, 10);
+    expect(actual.masteryScore).not.toBeCloseTo(incidentalFirst.masteryScore, 6);
   });
 });

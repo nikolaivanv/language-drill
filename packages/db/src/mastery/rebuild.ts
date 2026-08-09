@@ -1,10 +1,11 @@
 import { and, asc, eq, isNotNull, ne, type SQL } from 'drizzle-orm';
-import { CefrLevel } from '@language-drill/shared';
+import { CefrLevel, ExerciseType } from '@language-drill/shared';
 import { type Db } from '../client';
 import { errorObservations, exercises, userExerciseHistory, userGrammarMastery } from '../schema';
 import { replayHistory, type HistoryRow, type MasteryState } from './update';
 import { SEVERITY_SCORE } from './incidental-fold';
 import { NON_EVIDENCE_DEMOTION_REASONS } from '../lib/evidence';
+import { getGrammarPoint } from '../curriculum';
 
 const isCefr = (v: string | null): v is CefrLevel =>
   v != null && (Object.values(CefrLevel) as string[]).includes(v);
@@ -62,15 +63,33 @@ export type MasteryShift = {
  * A pre-existing `user_grammar_mastery` row is stale when BOTH:
  *
  *   1. the UNFILTERED replay — every replay-eligible `user_exercise_history`
- *      row, regardless of `demotionReason` — produced an entry for its
- *      `(user, language, grammarPointKey)` triple. This proves real history
- *      rows once named the point directly (as opposed to the point only ever
- *      having received *incidental* mastery folds — see
- *      `packages/db/src/mastery/incidental-fold.ts` — which write a
- *      `user_grammar_mastery` row from an evaluator error attributed to a
- *      point OTHER than the submission's host exercise, with zero history
- *      rows naming that point at all. Such a row is absent from the
- *      unfiltered replay too, so this check correctly never touches it).
+ *      row AND every replay-eligible `error_observations` row (Task 4),
+ *      regardless of `demotionReason` — produced an entry for its
+ *      `(user, language, grammarPointKey)` triple.
+ *
+ *      Before Task 4, a point that only ever received *incidental* mastery
+ *      folds (see `packages/db/src/mastery/incidental-fold.ts` — an
+ *      evaluator error attributed to a point OTHER than the submission's
+ *      host exercise, writing a `user_grammar_mastery` row with ZERO
+ *      `user_exercise_history` rows naming that point) was absent from the
+ *      unfiltered replay too, so this check never touched it — it looked
+ *      like a point this backfill script couldn't see at all.
+ *
+ *      That is no longer true. Task 4 reconstructs incidental observations
+ *      from `error_observations` and folds them into BOTH replay lists, so
+ *      an incidental-only point now DOES appear in the unfiltered replay
+ *      whenever its backing `error_observations` rows survived (i.e. weren't
+ *      lost to a pre-Task-4 submission or a `recordErrorObservations`
+ *      failure — see that function's "best-effort" comment). Consequence: a
+ *      point whose only evidence is incidental observations, all recorded
+ *      against exercises later demoted for a defect, now satisfies BOTH
+ *      conditions below and IS deleted — where before Task 4 it silently
+ *      survived. This is intended: an incidental error observed only on a
+ *      defect-demoted exercise is exactly as untrustworthy as an incidental
+ *      error on a defect-demoted exercise's own host score. A point with
+ *      genuinely zero `error_observations` rows backing it (the pre-Task-4
+ *      case, or a `recordErrorObservations` failure) is still absent from
+ *      both replays and still left untouched by this check.
  *   2. the SURVIVING replay — only rows whose exercise's `demotionReason`
  *      isn't in `NON_EVIDENCE_DEMOTION_REASONS` — produced NO entry for the
  *      same triple. Every real history row that named this point has since
@@ -148,14 +167,19 @@ export function summarize(params: {
   upserts: number;
   deletes: number;
   groupCount: number;
+  /** See `RunResult.historyRowCount` — merges host history rows and folded
+   *  incidental observations, so "history rows" below is a slight misnomer
+   *  kept for output stability; the doc comment on `RunResult` is the source
+   *  of truth for what this number actually counts. */
   historyRowCount: number;
   includeDemoted: boolean;
 }): string {
   const { apply, upserts, deletes, groupCount, historyRowCount, includeDemoted } = params;
   const base =
     `${apply ? 'Wrote' : '[dry-run] Would write'} ${upserts} mastery rows ` +
-    `across ${groupCount} (user,language) groups from ${historyRowCount} history rows ` +
-    `(${includeDemoted ? 'including' : 'excluding'} attempts on defect-demoted exercises).`;
+    `across ${groupCount} (user,language) groups from ${historyRowCount} evidence rows ` +
+    `(host history + folded incidental observations; ` +
+    `${includeDemoted ? 'including' : 'excluding'} attempts on defect-demoted exercises).`;
   if (includeDemoted) return base;
   return (
     base +
@@ -323,6 +347,13 @@ export type RunResult = {
   upserts: number;
   deletes: number;
   groupCount: number;
+  /**
+   * Total evidence rows folded into the upserted (surviving, or unfiltered
+   * under `--include-demoted`) replay — the sum of `user_exercise_history`
+   * host rows AND merged incidental observations reconstructed from
+   * `error_observations` (Task 4). Despite the name, this is not purely a
+   * `user_exercise_history` row count; see `summarize()`, which renders it.
+   */
   historyRowCount: number;
   /** Old→new movement, for `formatDiffReport`. */
   diff: DiffReportInput;
@@ -332,6 +363,49 @@ function pushToGroup<T>(map: Map<GroupKey, T[]>, key: GroupKey, value: T): void 
   const list = map.get(key);
   if (list) list.push(value);
   else map.set(key, [value]);
+}
+
+/**
+ * The `error_observations` WHERE clause `run()` uses to reconstruct
+ * incidental observations, extracted so it can be unit-tested against its
+ * rendered SQL (a mocked `Db` cannot execute a real predicate — see
+ * `rebuild.test.ts`'s `incidentalObservationsWhere` suite, which pins this
+ * exact text/param shape the way `evidence.test.ts` pins
+ * `scoringEvidenceFilter`).
+ *
+ * Three predicates, always present:
+ *   1. `IS NOT NULL` on the violated point — an observation with no
+ *      attribution carries no evidence to fold.
+ *   2. `<>` excluding host-attributed errors — already reflected in the
+ *      submission's own score; folding them again would double-penalize.
+ *      SQL `<>` yields NULL (not true) when either side is NULL, so this
+ *      predicate ALSO excludes any row whose `host_grammar_point_key` is
+ *      NULL — matching the live `incidentalObservations()`, which returns
+ *      `[]` outright when `hostGrammarPointKey === null`. This is load-
+ *      bearing, not an oversight: do not add an explicit null guard here,
+ *      it would be redundant with what `<>` already does.
+ *   3. `<>` excluding free-writing observations — the free-writing branch of
+ *      `POST /exercises/:id/submit` calls `recordErrorObservations` and then
+ *      `return`s; it never calls `incidentalObservations`, so free-writing
+ *      errors have NEVER contributed to mastery live. Folding them here
+ *      would inject a penalty the live path never applied and the nightly
+ *      diff would never settle to zero on an account with free-writing
+ *      history. Whether free-writing errors *should* count is a real
+ *      product question — but it is a change to the LIVE path, deliberately
+ *      out of scope for this replay-fidelity fix.
+ */
+export function incidentalObservationsWhere(params: {
+  userFilter?: string;
+  languageFilter?: string;
+}): SQL[] {
+  const where: SQL[] = [
+    isNotNull(errorObservations.errorGrammarPointKey),
+    ne(errorObservations.errorGrammarPointKey, errorObservations.hostGrammarPointKey),
+    ne(errorObservations.exerciseType, ExerciseType.FREE_WRITING),
+  ];
+  if (params.userFilter) where.push(eq(errorObservations.userId, params.userFilter));
+  if (params.languageFilter) where.push(eq(errorObservations.language, params.languageFilter));
+  return where;
 }
 
 /**
@@ -429,22 +503,30 @@ export async function run(db: Db, opts: RunOptions): Promise<RunResult> {
   // discards them. error_observations persists the same errors, so the replay
   // reconstructs them here. Demotion reason travels as data, exactly as the
   // history query does, so both replays can be diffed.
-  const obsWhere = [
-    isNotNull(errorObservations.errorGrammarPointKey),
-    ne(errorObservations.errorGrammarPointKey, errorObservations.hostGrammarPointKey),
-  ];
-  if (userFilter) obsWhere.push(eq(errorObservations.userId, userFilter));
-  if (languageFilter) obsWhere.push(eq(errorObservations.language, languageFilter));
+  //
+  // Note: no `exercises.difficulty` in this projection. Unlike the host
+  // fold above, the live incidental fold
+  // (`infra/lambda/src/routes/exercises.ts`, the `incidentalObservations`
+  // loop) scores each observation at the VIOLATED point's own
+  // `getGrammarPoint(...).cefrLevel`, not the host exercise's difficulty —
+  // see the grouping loop below, which performs the same curriculum lookup.
+  const obsWhere = incidentalObservationsWhere({ userFilter, languageFilter });
 
   const observationRows = await db
     .select({
       userId: errorObservations.userId,
-      language: errorObservations.language,
+      // exercises.language, not errorObservations.language: both are the
+      // same denormalized value today, but selecting the joined table's
+      // column keeps this symmetric with the host-history query above,
+      // which groups by exercises.language. A future divergence between the
+      // two columns (e.g. a casing bug on one write path) would otherwise
+      // silently split one (user, point) into two group keys and race two
+      // upserts on the same onConflict target.
+      language: exercises.language,
       grammarPointKey: errorObservations.errorGrammarPointKey,
       severity: errorObservations.severity,
       occurredAt: errorObservations.occurredAt,
       exerciseHistoryId: errorObservations.exerciseHistoryId,
-      difficulty: exercises.difficulty,
       demotionReason: exercises.demotionReason,
     })
     .from(errorObservations)
@@ -483,13 +565,26 @@ export async function run(db: Db, opts: RunOptions): Promise<RunResult> {
   // mirroring incidentalObservations(), which folds a submission's errors on
   // the same point into a single worst-severity observation. Without this a
   // submission flagging three errors on one point would fold three penalties.
+  //
+  // Difficulty: the VIOLATED point's own `cefrLevel`, via the same
+  // `getGrammarPoint` lookup the live fold performs — NOT the host
+  // exercise's difficulty. `updateMastery` weights a losing observation by
+  // `DW_PIVOT - dw`, so this is load-bearing: a major error on a fresh point
+  // folds to 0.1250 at A1 but 0.1786 at B2, and attribution keys always come
+  // from `grammarPointsAtOrBelow(language, exercise.difficulty)`, so an
+  // incidental point is always at or below the host's difficulty — using
+  // the host's difficulty here would systematically under-penalize on every
+  // non-A1 exercise. A point missing from the curriculum (renamed/removed
+  // key) is skipped entirely, matching the live loop's `continue`, so it
+  // cannot mint a mastery row the live path would never write.
   const worstPerSubmission = new Map<string, {
     userId: string; language: string; grammarPointKey: string;
     score: number; difficulty: CefrLevel; occurredAt: Date; demotionReason: string | null;
   }>();
   for (const r of observationRows) {
     if (!r.userId || !r.language || !r.grammarPointKey) continue;
-    if (!isCefr(r.difficulty)) continue;
+    const point = getGrammarPoint(r.grammarPointKey);
+    if (!point) continue;
     const severity = r.severity as 'major' | 'minor';
     const score = SEVERITY_SCORE[severity];
     if (score === undefined) continue;
@@ -498,7 +593,7 @@ export async function run(db: Db, opts: RunOptions): Promise<RunResult> {
     if (prev === undefined || score < prev.score) {
       worstPerSubmission.set(key, {
         userId: r.userId, language: r.language, grammarPointKey: r.grammarPointKey,
-        score, difficulty: r.difficulty, occurredAt: new Date(r.occurredAt as Date),
+        score, difficulty: point.cefrLevel as CefrLevel, occurredAt: new Date(r.occurredAt as Date),
         demotionReason: r.demotionReason,
       });
     }
