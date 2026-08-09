@@ -102,6 +102,14 @@ describe('parseDemoteArgs — limit', () => {
   it('rejects a negative limit', () => {
     expect(() => parseDemoteArgs([...base, '--limit', '-3'])).toThrow(/--limit/);
   });
+
+  it('rejects --limit given as the final token with no value, rather than silently disabling the cap', () => {
+    // `get()` returns null both when a flag is absent and when it's the last
+    // token in argv. Without an explicit presence check, `--limit` at the end
+    // of a command line would silently fall back to "no cap" and demote an
+    // entire matching cell instead of the intended N-row slice.
+    expect(() => parseDemoteArgs([...base, '--limit'])).toThrow(/--limit/);
+  });
 });
 
 // ---------------------------------------------------------------------------

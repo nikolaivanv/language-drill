@@ -77,9 +77,17 @@ export function parseDemoteArgs(argv: readonly string[]): DemoteArgs {
     );
   }
 
-  const rawLimit = get('--limit');
   let limit: number | null = null;
-  if (rawLimit !== null) {
+  if (argv.includes('--limit')) {
+    // `get()` alone can't tell "flag absent" from "flag present, no value" —
+    // both return null. That ambiguity is harmless for the other flags here,
+    // but for `--limit` it is dangerous: `--limit` as the final token would
+    // silently resolve to "no cap" and demote an entire matching cell instead
+    // of throwing. Check presence explicitly and require a value.
+    const rawLimit = get('--limit');
+    if (rawLimit === null) {
+      throw new Error('--limit requires a value (e.g. --limit 28) — given with no argument');
+    }
     const parsed = Number(rawLimit);
     if (!Number.isInteger(parsed) || parsed <= 0) {
       throw new Error(`--limit must be a positive integer (got '${rawLimit}')`);

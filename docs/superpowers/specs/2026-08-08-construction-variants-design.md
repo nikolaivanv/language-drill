@@ -134,7 +134,10 @@ picker without touching the coverage-axis vocabulary.
 validator knows as "Impersonal third-person plural **(dicen que...)**" is a
 `grammarPointMatch=false` candidate. A generation-side structural fix is nullified when the
 validate prompt still rejects the new shape, so `packages/ai/src/validation-prompts.ts` takes
-the mirror edit and both `GENERATION_PROMPT_VERSION` and `VALIDATION_PROMPT_VERSION` bump.
+the mirror edit and `VALIDATION_PROMPT_VERSION` bumps. `GENERATION_PROMPT_VERSION` does **not**
+bump for this change: the sub-construction directive lives in the per-draft *user* prompt, which
+is not Langfuse-registered and ships with the code deploy, not a prompt push — see Verification →
+"Version bumps" below.
 
 **Name anchoring.** Point `name` reaches the prompt twice. Names that embed a single member
 (`Impersonal third-person plural (dicen que...)`) get audited in the same pass and rewritten
@@ -216,8 +219,11 @@ and the sync builder must still pass).
 
 **Version bumps.** `CURRICULUM_VERSION_ES` / `_DE` / `_TR` all bump (also clears the
 scheduler's skip-low-yield suppression, which only clears on a curriculum bump);
-`GENERATION_PROMPT_VERSION` and `VALIDATION_PROMPT_VERSION` bump; Langfuse push for both
-prompts, prod and dev, after merge.
+`VALIDATION_PROMPT_VERSION` bumps and gets a Langfuse push, prod and dev, after merge.
+`GENERATION_PROMPT_VERSION` does **not** bump and there is **no** Langfuse push for the
+generation prompt: the sub-construction directive lives in the per-draft *user* prompt, which is
+not Langfuse-registered — it ships with the code deploy. `GENERATION_SYSTEM_PROMPT_TEMPLATE`
+itself is untouched by this change, so its byte-parity snapshot test must still pass unchanged.
 
 ## Rollout
 
@@ -236,11 +242,83 @@ Repass recipe, per affected cell, once generation resumes:
 
 1. **Backfill variant ids** onto the approved rows that are cheaply classifiable — for the
    collapsed frame this is a regex (`^\s*Dicen que`, `^\s*damit`, `^\s*ama`). Rows that
-   resist classification stay null and simply do not count toward any variant.
-2. **Demote the over-covered surplus** with `pnpm demote:pool --language ES --cefr B1 --type
-   cloze --grammar-point es-b1-impersonal-plural --content-ilike 'Dicen que%'` (dry-run
-   first; `--apply` to write). The CLI has no `--limit`, so capping a frame at N rather than
-   clearing it needs either an id list or a `--limit` flag added — decide in the plan.
+   resist classification stay null and simply do not count toward any variant. There is **no
+   CLI for this** — `pickVariantSeeds` computes `poolAfterBatch` purely from declared-variant
+   coverage (`content_json->>'seedWord'` matching a known variant id;
+   `packages/shared/src/construction-variant-seed.ts:67-71`), so an unbackfilled legacy row is
+   invisible to it: the row still occupies an approved slot (counts toward the cell's
+   `target − approved` need), but contributes to no variant's quota. Skip this step and the
+   scheduler thinks every variant is at zero coverage while the cell is simultaneously near
+   target, so `hearsay-dicen-que` — the variant the prototype rows already satisfy — gets its
+   full deficit-ranked share computed *on top of* rows that already satisfy it, re-creating the
+   same collapse the mechanism exists to fix.
+
+   Do it as manual SQL against the Neon branch (the project already does this for one-off
+   content repairs — see the manual-theory-page-authoring precedent). The field to match
+   differs by exercise type: cloze rows store the answer in `correctAnswer` (the collapsed
+   `es-b1-impersonal-plural` cloze answer is the bare string `Dicen`, not `Dicen que` — the blank
+   replaces the word), translation rows store it in `referenceTranslation` (where `Dicen que…`
+   does appear as running text). Worked example, translation rows, against the **dev** branch
+   first:
+
+   ```sql
+   UPDATE exercises
+   SET content_json = jsonb_set(content_json, '{seedWord}', '"hearsay-dicen-que"')
+   WHERE language = 'ES'
+     AND difficulty = 'B1'
+     AND type = 'translation'
+     AND grammar_point_key = 'es-b1-impersonal-plural'
+     AND review_status IN ('auto-approved', 'manual-approved')
+     AND content_json->>'referenceTranslation' ~ '^\s*Dicen que'
+     AND content_json->>'seedWord' IS NULL;  -- don't clobber a row already backfilled
+   ```
+
+   Run as a read-only `SELECT count(*)` first to sanity-check the row count against the known
+   collapse figures (49/50 translation, 43/50 cloze) before the `UPDATE`.
+
+2. **Demote the over-covered surplus** — now runnable as written, against the current CLI
+   (`packages/db/scripts/demote-cell-pool.ts`). Worked for the translation frame, where
+   `Dicen que` genuinely appears as running text (`referenceTranslation`) and so is a real
+   substring of `content_json::text` — see the caution below before reusing this shape for the
+   cloze frame, where it is not:
+
+   ```
+   pnpm demote:pool -- --language ES --cefr B1 --type translation \
+     --grammar-point es-b1-impersonal-plural --content-ilike 'Dicen que' \
+     --reason pool-hygiene --limit 28
+   # inspect the dry-run output, then:
+   pnpm demote:pool -- --language ES --cefr B1 --type translation \
+     --grammar-point es-b1-impersonal-plural --content-ilike 'Dicen que' \
+     --reason pool-hygiene --limit 28 --apply
+   ```
+
+   `--reason` is **required** by the current CLI (`demote-cell-pool.ts:71-79`) — it throws
+   without it. Use **`pool-hygiene`**: these rows are not defective, they over-represent one
+   construction, so `pool-hygiene` (like `duplicate`) leaves the learner's practice history and
+   mastery evidence intact. `quality` and `learner-flag` **revoke** that credit for every past
+   attempt on the demoted rows and require a `pnpm backfill:mastery --apply` re-run to recover —
+   do not use them here; that's a data-integrity mistake, not a style choice.
+
+   `--limit` caps the demotion at the oldest N matching rows rather than clearing the whole
+   frame — 28 above is worked from the B1 translation cell's numbers: target 50,
+   `hearsay-dicen-que`'s fair share is `50 × 3/7 ≈ 21` (share 3 of 7 total share across the
+   point's 5 variants), and 49 rows currently carry that variant, so demoting the oldest 28
+   brings it back near quota and frees exactly the room the other four variants need. Recompute
+   the number per cell — it is not a universal constant.
+
+   **`--content-ilike` is an unanchored substring match**, not the `^\s*Dicen que` anchor step 1
+   uses: it compiles to `content_json::text ILIKE '%Dicen que%'` (`demote-cell-pool.ts:131-132`)
+   against the *entire* JSON blob, not a single field. Two consequences: (a) it would also match
+   a row whose primary construction is something else but which happens to list `Dicen que…` in
+   `acceptableAnswers`, and (b) it does **not** transfer across exercise types — the cloze
+   frame's answer is the bare word `Dicen` (the blank replaces it; `Dicen que` never appears
+   together), so the cloze equivalent needs a field-scoped pattern instead, e.g.
+   `--content-ilike '"correctAnswer": "Dicen"'` (matches the serialized key/value pair as
+   Postgres's `jsonb::text` cast renders it — a space after the colon — avoiding an unrelated
+   verb like `predicen` that merely contains `dicen` as a substring). The
+   dry-run prints only the first 5 matched rows' `content_json` — read them before passing
+   `--apply`; do not trust the row count alone.
+
 3. **Resume the nightly** and confirm the following morning that the freed slots refilled
    across variants, not back into the prototype.
 

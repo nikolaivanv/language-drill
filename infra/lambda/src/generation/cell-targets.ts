@@ -12,7 +12,9 @@
  *      level default; wins outright (R3.2).
  *   2. `CELL_TARGET_DEFAULTS[exerciseType][cefrLevel]` — the level-appropriate
  *      default, raised if needed to cover the largest single-axis floor sum in
- *      the cell's `coverageSpec` (floor-driven target: see `resolveCellTarget`).
+ *      the cell's `coverageSpec`, and separately raised to cover
+ *      `constructionVariants.length * MIN_PER_VARIANT` when the point declares
+ *      variants (floor-driven target: see `resolveCellTarget`).
  *      Cloze/translation taper at A1/A2 (limited lexical space at the lower
  *      levels) and leave B1/B2 unset; vocab_recall is capped LOW (10) at every
  *      level for token efficiency — a single "everyday" umbrella exhausts its
