@@ -26,6 +26,14 @@ export type HistoryRow = {
   difficulty: CefrLevel;
   evaluatedAt: Date;
   evidenceWeight?: number;
+  /**
+   * Which writer produced this observation: 0 = host (the exercise's own
+   * grammar point), 1 = incidental (an evaluator error attributed to another
+   * point). Absent means host. Used only as a tie-break so a merged replay
+   * folds in the same order the live submit path did — host score first, then
+   * the incidental fold.
+   */
+  sourceRank?: 0 | 1;
 };
 
 // Mirrors progress-aggregation.ts DIFFICULTY_WEIGHTS — keep in sync.
@@ -98,7 +106,9 @@ export function replayHistory(
   rows: readonly HistoryRow[],
 ): Map<string, MasteryState> {
   const sorted = [...rows].sort(
-    (a, b) => a.evaluatedAt.getTime() - b.evaluatedAt.getTime(),
+    (a, b) =>
+      a.evaluatedAt.getTime() - b.evaluatedAt.getTime() ||
+      (a.sourceRank ?? 0) - (b.sourceRank ?? 0),
   );
   const out = new Map<string, MasteryState>();
   for (const r of sorted) {
