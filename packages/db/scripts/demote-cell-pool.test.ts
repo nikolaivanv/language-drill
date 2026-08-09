@@ -20,7 +20,7 @@ describe('parseDemoteArgs', () => {
     expect(args).toEqual({
       language: 'TR', cefr: 'A1', type: 'cloze',
       grammarPoint: 'tr-a1-numbers-ordinals',
-      contentIlike: null, apply: false, reason: 'quality',
+      contentIlike: null, apply: false, reason: 'quality', limit: null,
     });
   });
 
@@ -67,5 +67,28 @@ describe('parseDemoteArgs', () => {
       ]);
       expect(args.reason).toBe(reason);
     }
+  });
+});
+
+describe('parseDemoteArgs — limit', () => {
+  // `--reason` is required by the current CLI; include it in every fixture.
+  const base = ['--language', 'ES', '--cefr', 'B1', '--type', 'cloze',
+                '--grammar-point', 'es-b1-impersonal-plural',
+                '--reason', 'pool-hygiene'];
+
+  it('defaults limit to null', () => {
+    expect(parseDemoteArgs(base).limit).toBeNull();
+  });
+
+  it('parses a numeric limit', () => {
+    expect(parseDemoteArgs([...base, '--limit', '28']).limit).toBe(28);
+  });
+
+  it('rejects a non-numeric limit', () => {
+    expect(() => parseDemoteArgs([...base, '--limit', 'many'])).toThrow(/--limit/);
+  });
+
+  it('rejects a negative limit', () => {
+    expect(() => parseDemoteArgs([...base, '--limit', '-3'])).toThrow(/--limit/);
   });
 });

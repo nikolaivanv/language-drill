@@ -31,7 +31,7 @@
  * Required env: DATABASE_URL.
  */
 
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 
 import { createDb } from '../src/client';
 import { exercises } from '../src/schema';
@@ -49,6 +49,8 @@ export type DemoteArgs = {
   contentIlike: string | null;
   apply: boolean;
   reason: DemotionReason;
+  /** Cap the number of rows demoted (oldest first). null = no cap. */
+  limit: number | null;
 };
 
 export function parseDemoteArgs(argv: readonly string[]): DemoteArgs {
@@ -74,6 +76,16 @@ export function parseDemoteArgs(argv: readonly string[]): DemoteArgs {
     );
   }
 
+  const rawLimit = get('--limit');
+  let limit: number | null = null;
+  if (rawLimit !== null) {
+    const parsed = Number(rawLimit);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      throw new Error(`--limit must be a positive integer (got '${rawLimit}')`);
+    }
+    limit = parsed;
+  }
+
   return {
     language: language.toUpperCase(),
     cefr: cefr.toUpperCase(),
@@ -82,6 +94,7 @@ export function parseDemoteArgs(argv: readonly string[]): DemoteArgs {
     contentIlike: get('--content-ilike'),
     apply: argv.includes('--apply'),
     reason: reason as DemotionReason,
+    limit,
   };
 }
 
@@ -111,13 +124,24 @@ async function main(): Promise<void> {
     filters.push(sql`${exercises.contentJson}::text ILIKE ${'%' + args.contentIlike + '%'}`);
   }
 
-  const rows = await db
+  const baseQuery = db
     .select({ id: exercises.id, contentJson: exercises.contentJson })
     .from(exercises)
     .where(and(...filters));
 
+  // Dry-run and --apply both select through this same query, capped
+  // identically, so the printed count always matches what --apply would
+  // actually demote. When --limit is set, cap oldest-first (ORDER BY
+  // created_at ASC) so the most recently generated — and so most
+  // prompt-current — rows stay in the pool. Without --limit this is the
+  // same unordered, uncapped query as before the flag existed.
+  const rows = args.limit !== null
+    ? await baseQuery.orderBy(asc(exercises.createdAt)).limit(args.limit)
+    : await baseQuery;
+
   const scope = `${args.language}/${args.cefr}/${args.type}/${args.grammarPoint}` +
-    (args.contentIlike ? ` (content ILIKE '%${args.contentIlike}%')` : '');
+    (args.contentIlike ? ` (content ILIKE '%${args.contentIlike}%')` : '') +
+    (args.limit !== null ? ` (limit ${args.limit}, oldest first)` : '');
 
   console.log(
     `[demote-pool] ${args.apply ? 'APPLY' : 'DRY-RUN'} — ${scope}: ${rows.length} approved rows match` +
