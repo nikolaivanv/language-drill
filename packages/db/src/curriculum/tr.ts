@@ -187,8 +187,43 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * the B2 vocab track that the B2 grammar cycle deferred. Enqueues 5 vocab cells.
  * 2026-07-18: adds a comparison-axis coverageSpec to
  * tr-a1-comparative-superlative.
+ * 2026-08-08: declares `constructionVariants` on five TR points whose pools had
+ * collapsed onto a single sub-construction, so the per-draft rotation spreads
+ * generation across the sub-uses each point's description already claims to
+ * teach (construction variants,
+ * docs/superpowers/specs/2026-08-08-construction-variants-design.md).
+ * Collapse-sweep points, all measured against the approved prod pool:
+ * tr-a2-adversative-connectors (30/30 clozes AND 30/30 translations answer
+ * `ama`; fakat, ancak and yalnız never generated), tr-a2-causal-connectors
+ * (30/30 translations `bu yüzden`; çünkü and madem(ki) never generated),
+ * tr-a2-reported-speech (27/30 clozes `diye`, 28/30 translations the single
+ * frame `"…?" diye sordu`; integrated -DIğInI söyledi absent from translations,
+ * reason-giving `… diye` absent everywhere), tr-a2-gibi-kadar (all 60 rows are
+ * plain similarity gibi or plain equality kadar — approximate-quantity kadar,
+ * the gibi gel- "seem" idiom and the (sanki) -mIş gibi "as if" clause all at
+ * zero). Plus the sub-inspection point tr-b1-olarak, whose approved rows were
+ * read directly because every answer on it IS the marker: 98 of 100 rows are
+ * noun-complement role/capacity and only 2 are the derived-adjective
+ * adverbialiser, both the same lexeme `geçici olarak`.
+ * All shares are left UNIFORM. Weighting the prototype up would privilege the
+ * exact construction that already owns each pool; on tr-a2-adversative-connectors
+ * `ama` still keeps a natural ~2/3 plurality because it is licensed by two of
+ * the three variants. None of the five points carries a coverageSpec, so there
+ * is no axis-vs-variant collision to resolve here.
+ * Also RENAMES three names that reach the generation prompt twice and were
+ * steering it: tr-a2-causal-connectors (old name enumerated two of three
+ * described relations, dropping madem(ki)), tr-a2-reported-speech (old name
+ * fronted `diye` alone, and the pool followed it), and tr-b1-olarak (old gloss
+ * "as / in the capacity of" named only the noun-complement half).
+ * Bump clears target-reached / low-yield suppression so the touched CLOZE and
+ * TRANSLATION cells re-run under the rotation. Note the limit: `seedKindFor`
+ * (packages/db/src/generation/run-one-cell.ts) gates variant seeding to those
+ * two exercise types, so tr-a2-reported-speech's 26 approved
+ * sentence_construction rows are untouched by this mechanism. At-target
+ * cloze/translation cells additionally need demote:pool (see
+ * docs/curriculum-authoring.md retrofit section).
  */
-export const CURRICULUM_VERSION_TR = '2026-07-20a';
+export const CURRICULUM_VERSION_TR = '2026-08-08';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -1799,6 +1834,40 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Benim kadar çalışmıyor. (He doesn\'t work as much as I do — kadar attracts the genitive on ben, like gibi.)',
       'O kadar yorgundum ki hemen uyudum. (I was so tired that I fell asleep at once — o kadar/öyle … ki expresses result, "so … that".)',
     ],
+    // Collapse measured 2026-08-08 on the prod pool: all 60 approved rows are
+    // the plain similarity gibi or the plain equality kadar (cloze 22 kadar / 8
+    // gibi, translation 23 kadar / 7 gibi). THREE of the point's described
+    // sub-uses have zero rows in either cell: approximate-quantity kadar, the
+    // gibi gel- "seem to someone" idiom, and the (sanki) -mIş gibi "as if"
+    // clause. Uniform shares — these are five separate constructions sharing
+    // two markers, not a prototype plus satellites.
+    constructionVariants: [
+      {
+        id: 'gibi-similarity',
+        directive:
+          'gibi "like" following the noun phrase it compares against, asserting resemblance (Bir aslan gibi güçlü; Benim gibi düşünüyor — a pronoun complement must be genitive)',
+      },
+      {
+        id: 'kadar-equality',
+        directive:
+          'kadar "as … as" modifying an adjective or adverb, asserting an EQUAL degree (Senin kadar uzun; Bugün Demet kadar hızlı koştum — a pronoun complement must be genitive)',
+      },
+      {
+        id: 'kadar-approximate-quantity',
+        directive:
+          'kadar after a measure or numeral expression to mean "about, roughly" — quantity, not comparison (Bir saat kadar bekledim; on beş kadar hasta)',
+      },
+      {
+        id: 'gibi-gel-seem',
+        directive:
+          'the idiom gibi gel- with a dative experiencer, "it seems to someone", after a FINITE clause (Bana haklısın gibi geliyor)',
+      },
+      {
+        id: 'mis-gibi-as-if',
+        directive:
+          '"as if" manner clause: a verb in -mIş / -(y)mIş followed by gibi, optionally opened by sanki (Sanki hayalet görmüş gibi sapsarı oldu)',
+      },
+    ],
     examplesNegative: [
       '*Ben gibi düşünüyor. (wrong — with a pronoun, gibi requires the genitive: "benim gibi", not "ben gibi".)',
       '*Ben kadar uzun. (wrong — kadar attracts the genitive on this pronoun just like gibi: "benim kadar uzun".)',
@@ -1840,7 +1909,11 @@ const trCurriculum: readonly GrammarPoint[] = [
   {
     key: 'tr-a2-causal-connectors',
     kind: 'grammar',
-    name: 'Causal connectors (çünkü, bu yüzden, bu sebeple)',
+    // RENAMED 2026-08-08: the old 'Causal connectors (çünkü, bu yüzden, bu
+    // sebeple)' enumerated two of the point's three described relations and
+    // silently dropped madem(ki). The name reaches the generation prompt twice,
+    // so the omission was load-bearing, not cosmetic (cf. de-b2-causal-connectors).
+    name: 'Causal connectors: cause (çünkü), consequence (bu yüzden / bu sebeple), shared premise (madem ki)',
     description:
       'Causal connectors: çünkü "because" (cause follows; informal — can also sit at the END of the clause), bu yüzden / bu sebeple "for that reason, so" (consequence follows the connector). madem(ki) "since / seeing that" fronts a reason both speakers already know, with a question or suggestion following: Madem yorgunsun, evde kal.',
     cefrLevel: A2,
@@ -1850,6 +1923,36 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Yağmur yağıyordu, bu yüzden dışarı çıkmadık. (It was raining, so we didn\'t go out.)',
       'Sınavım var, bu sebeple gelemem. (I have an exam, so I can\'t come.)',
       'Gelemedim. Çok yorgundum çünkü. (I couldn\'t come. Because I was very tired — informal clause-final çünkü.)',
+    ],
+    // Collapse measured 2026-08-08 on the prod pool: 30/30 approved
+    // translations use `bu yüzden`, and the cloze cell is the same
+    // bu yüzden / bu sebeple pair. çünkü — the point's first-named connector —
+    // and madem(ki) have never been generated in either cell.
+    // Uniform shares: this is a genuine three-way relation contrast (cause /
+    // consequence / shared premise), so no member gets privileged. bu yüzden
+    // and bu sebeple stay inside ONE variant because they are synonyms — the
+    // choice between them is lexis, not construction.
+    constructionVariants: [
+      {
+        id: 'cunku-clause-initial',
+        directive:
+          'çünkü opening the SECOND clause, so the cause follows the connector (Geç kaldım çünkü trafik vardı)',
+      },
+      {
+        id: 'cunku-clause-final',
+        directive:
+          'informal clause-final çünkü, sitting at the very END of the sentence that gives the cause (Antalya\'ya gidemedim. Param yoktu çünkü.)',
+      },
+      {
+        id: 'bu-yuzden-consequence',
+        directive:
+          'bu yüzden or bu sebeple, where the CONSEQUENCE follows the connector (Yağmur yağıyordu, bu yüzden dışarı çıkmadık)',
+      },
+      {
+        id: 'madem-shared-premise',
+        directive:
+          'madem or mademki fronting a reason both speakers already know, with a question or a suggestion as the main clause (Madem yorgunsun, evde kal; Madem biliyordun neden söylemedin?)',
+      },
     ],
     examplesNegative: [
       '*Geç kaldım için trafik vardı. (wrong — between two finite clauses use çünkü; bare "için" requires a nominalised clause — that is the B1 -DIğI için form.)',
@@ -1945,7 +2048,11 @@ const trCurriculum: readonly GrammarPoint[] = [
   {
     key: 'tr-a2-reported-speech',
     kind: 'grammar',
-    name: 'Reported speech (diye + dolaylı anlatım)',
+    // RENAMED 2026-08-08: the old 'Reported speech (diye + dolaylı anlatım)'
+    // fronted one of the point's four described constructions, and the pool
+    // followed it (27/30 clozes answer `diye`; 28/30 translations are
+    // `"…?" diye sordu`). The name reaches the generation prompt twice.
+    name: 'Reported speech (dolaylı anlatım): quoting with de-/diye and integrating with -DIğInI söyledi',
     description:
       'Reported speech: direct quote + de- (dedi) or diye + reporting verb (sormak, söylemek). söyle- takes only integrated clauses: -DIğInI söyledi; reported command -mAsInI iste-/söyle-. A quoted thought + diye before a non-reporting verb gives the reason, "thinking that": Yağmur yağacak diye şemsiye aldım.',
     cefrLevel: A2,
@@ -1958,6 +2065,44 @@ const trCurriculum: readonly GrammarPoint[] = [
       '"Çok yorgunum" dedi. (She said, "I\'m very tired." — dedi / de- is the everyday verb for quoting; no diye needed. de- may also precede the quote with ki: Suzan dedi ki: "Artık dayanamıyorum." — the ki-clause always follows the verb.)',
       'Annem gelmemi söyledi. (My mother told me to come — söyle- + -mA + possessive + accusative.)',
       'Elif kalıp kalmayacağını söyledi mi? (Has Elif said whether or not she\'ll stay? — a reported yes/no clause doubles the verb with -(y)Ip + the negated -(y)AcAğInI/-DIğInI form.)',
+    ],
+    // Collapse measured 2026-08-08 on the prod pool: 27/30 approved clozes
+    // answer `diye`, and 28/30 approved translations are the single frame
+    // `"<yes/no question>?" diye sordu`. Integrated -DIğInI/-(y)AcAğInI söyledi
+    // appears in ZERO translations, bare `dedi` in one, and the reason-giving
+    // `… diye` before a non-reporting verb in none of the 60 rows.
+    // Uniform shares: four genuinely distinct constructions plus one
+    // marker-sharing but structurally separate use (diye-thought-reason);
+    // none is a prototype the others are variations of.
+    // NOTE the mechanism's reach: variant seeding is gated to CLOZE and
+    // TRANSLATION (seedKindFor), so this point's 26 approved
+    // sentence_construction rows keep whatever distribution they have.
+    constructionVariants: [
+      {
+        id: 'direct-quote-dedi',
+        directive:
+          'a direct quotation immediately followed by de- and nothing else — no diye ("Çok yorgunum" dedi)',
+      },
+      {
+        id: 'diye-reporting-verb',
+        directive:
+          'a direct quotation + diye + a reporting verb OTHER than de-, where diye is obligatory ("Yarın gelir misin?" diye sordu; "Hayır" diye cevap verdi)',
+      },
+      {
+        id: 'integrated-digini-soyledi',
+        directive:
+          'an INTEGRATED reported statement — no quotation marks — with -DIğInI or -(y)AcAğInI + söyle- (Geleceğini söyledi; Hasta olduğunu söyledi)',
+      },
+      {
+        id: 'reported-command-masini',
+        directive:
+          'a reported COMMAND or request: -mA + possessive + accusative as the object of iste- or söyle- (Gelmemi istedi; Annem erken dönmemi söyledi)',
+      },
+      {
+        id: 'diye-thought-reason',
+        directive:
+          'a quoted thought + diye standing before a NON-reporting verb, giving the reason the subject acted — "thinking that" (Yağmur yağacak diye şemsiye aldım)',
+      },
     ],
     examplesNegative: [
       '*"Yarın gelir misin?" sordu. (wrong — diye is required to mark the reported clause: "\\"Yarın gelir misin?\\" diye sordu.")',
@@ -2151,6 +2296,32 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Kitabı hevesle aldım. Okuyamadım ama. (I bought the book eagerly. Haven\'t managed to read it, though — clause-final ama, informal.)',
       'Çok iyi bir mimar. Ancak müşterilerini kaçırıyor. (He\'s a very good architect. But he loses his customers.)',
       'Sıcak ama bunaltıcı olmayan bir hava. (Hot but not suffocating weather — ama between adjectives.)',
+    ],
+    // Collapse measured 2026-08-08 on the prod pool: 30/30 approved clozes and
+    // 30/30 approved translations answer `ama`. fakat, ancak and yalnız — three
+    // quarters of the point's name — have never been generated.
+    // Shares deliberately UNIFORM. The obvious weighting (share 3 or 2 on
+    // ama/fakat clause-conjoining, per the original brief) would privilege the
+    // exact construction that already owns 100% of the pool, which is the
+    // collapse this change exists to undo. Uniform still leaves `ama` a natural
+    // plurality: it is the licensed marker in two of the three variants, so it
+    // lands at roughly two thirds without any thumb on the scale.
+    constructionVariants: [
+      {
+        id: 'ama-fakat-conjoining',
+        directive:
+          'ama or fakat conjoining two finite clauses whose content conflicts (Semra hep gezmek istiyor ama zamanı yok)',
+      },
+      {
+        id: 'ancak-yalniz-limitation',
+        directive:
+          'ancak or yalnız OPENING a following sentence to introduce an inability, failure or drawback (Çok iyi bir mimar. Ancak müşterilerini kaçırıyor.)',
+      },
+      {
+        id: 'clause-final-ama',
+        directive:
+          'discourse-connective ama placed at the very END of a second, separately-uttered clause — informal speech (Kitabı hevesle aldım. Okuyamadım ama.)',
+      },
     ],
     examplesNegative: [
       '*Geldi ama çünkü yorgundu. (wrong — ama marks contrast, çünkü marks cause; pick one: "Geldi ama yorgundu" or "Gelmedi çünkü yorgundu")',
@@ -3161,7 +3332,11 @@ const trCurriculum: readonly GrammarPoint[] = [
   {
     key: 'tr-b1-olarak',
     kind: 'grammar',
-    name: 'olarak "as / in the capacity of"',
+    // RENAMED 2026-08-08: the old 'olarak "as / in the capacity of"' glossed
+    // only the noun-complement half of the point and left the derived-adjective
+    // adverbialiser unnamed. The name reaches the generation prompt twice, and
+    // the pool matched the name rather than the description (see below).
+    name: 'olarak: role/capacity after a bare noun, and adverbialiser of derived adjectives',
     description:
       'olarak (ol- + -ArAk) marks a role/capacity after a bare noun (avukat olarak çalışıyor "works as a lawyer"; aile olarak) and adverbialises derived adjectives that can\'t stand alone as adverbs (yazılı olarak "in writing", bilimsel olarak, geçici olarak). The complement takes no case.',
     cefrLevel: B1,
@@ -3171,6 +3346,40 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Bu sandığı masa olarak kullanıyoruz. (We\'re using this chest as a table.)',
       'Raporu yazılı olarak sundular. (They submitted the report in writing.)',
       'Sonuç olarak herkes memnun kaldı. (As a result, everyone was satisfied.)',
+    ],
+    // Sub-inspection point (2026-08-08): every answer here IS `olarak`, so the
+    // collapse sweep was blind to it. Reading the 100 approved prod rows
+    // directly (50 cloze + 50 translation) found 98 of them on the
+    // noun-complement side and just TWO on the adverbialiser side — both the
+    // same lexeme, `geçici olarak`, both cloze. Zero `yazılı olarak`, zero
+    // `bilimsel olarak`, zero collective `aile olarak` used as such. So the
+    // second described use is effectively ungenerated: variants ARE needed.
+    // The two noun-complement variants are one category in G&K (16.1.9 (ii)(a),
+    // "status or classification"); they are split here because inside that
+    // category the pool piles onto human-occupation stems (~65% of the
+    // noun-complement rows are "works as / serves as <job>"), so the
+    // object-classification use needs its own slot to survive. Uniform shares.
+    constructionVariants: [
+      {
+        id: 'role-of-person',
+        directive:
+          'olarak naming the capacity a PERSON acts in — job, relationship or standing (Yerel hastanede doktor olarak çalışıyor; Bunu sana arkadaş olarak söylüyorum)',
+      },
+      {
+        id: 'classify-or-use-as',
+        directive:
+          'olarak classifying a THING or pressing it into a function it was not made for (Şimdilik bu sandığı masa olarak kullanıyoruz; Bu görüntüleri bir belirti olarak değerlendirdiler)',
+      },
+      {
+        id: 'derived-adjective-adverb',
+        directive:
+          'olarak turning a DERIVED adjective into an adverb, where the bare adjective cannot modify the verb (Raporu yazılı olarak sundular; Bu sorunu bilimsel olarak araştırmalıyız)',
+      },
+      {
+        id: 'collective-group',
+        directive:
+          'olarak after a group noun to mark COLLECTIVE involvement — "as a X, together" (Aile olarak müziğe meraklıyız; Ekip olarak bu karara katılıyoruz)',
+      },
     ],
     examplesNegative: [
       '*avukat gibi çalışıyor [for "works as a lawyer"] (wrong — gibi = "like/resembling"; a role/capacity is olarak: avukat olarak)',
