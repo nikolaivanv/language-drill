@@ -1,12 +1,16 @@
-// Single source of truth for the three header tiers used on the post-session
-// debrief screen. Reused by the header (title), the Debrief tab narrative, and
-// the what's-next router (high → /progress, else → /drill).
+// Accuracy tiers for the CONJUGATION practice recap only.
 //
-// Tier boundaries match Req 3.2–3.4:
-//   accuracy ≥ 0.8           → 'high' → "nice work."
-//   0.5 ≤ accuracy < 0.8     → 'mid'  → "good attempt."
-//   accuracy < 0.5           → 'low'  → "back next time?"
-//   attemptedCount ≤ 0       → 'low'  (all-skipped fallback)
+// The main session debrief is movement-keyed (see lib/drill/movement-summary.ts):
+// accuracy drives nothing adaptive there, and putting a percentage beside a
+// mastery verdict is what let "you got 5 of 5 · accuracy 100%" sit above a
+// "slipped" row. Conjugation practice is client-local and tracks no mastery, so
+// accuracy is the only signal it has — hence this survives, scoped to it.
+//
+// Tier boundaries:
+//   accuracy >= 0.8        → 'high' → "nice work."
+//   0.5 <= accuracy < 0.8  → 'mid'  → "good attempt."
+//   accuracy < 0.5         → 'low'  → "back next time?"
+//   attemptedCount <= 0    → 'low'  (no-items fallback)
 
 export type AccuracyTier = 'high' | 'mid' | 'low';
 

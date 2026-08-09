@@ -42,12 +42,12 @@ beforeEach(() => {
 
 describe('DebriefFooter — action labels', () => {
   it('renders "practice more" primary button', () => {
-    render(<DebriefFooter tier="high" />);
+    render(<DebriefFooter />);
     expect(screen.getByRole('button', { name: 'practice more' })).toBeDefined();
   });
 
   it('renders "see your progress →" as a link-arrow link', () => {
-    render(<DebriefFooter tier="high" />);
+    render(<DebriefFooter />);
     const link = screen.getByRole('link', { name: /see your progress/ });
     expect(link).toBeDefined();
     expect(link).toHaveClass('link-arrow');
@@ -55,12 +55,12 @@ describe('DebriefFooter — action labels', () => {
   });
 
   it('renders "done" ghost button', () => {
-    render(<DebriefFooter tier="high" />);
+    render(<DebriefFooter />);
     expect(screen.getByRole('button', { name: 'done' })).toBeDefined();
   });
 
   it('renders exactly two buttons (practice more + done)', () => {
-    render(<DebriefFooter tier="high" />);
+    render(<DebriefFooter />);
     expect(screen.getAllByRole('button')).toHaveLength(2);
   });
 });
@@ -71,19 +71,19 @@ describe('DebriefFooter — action labels', () => {
 
 describe('DebriefFooter — router push targets', () => {
   it('clicking "practice more" pushes /drill hub (Req 6.2)', () => {
-    render(<DebriefFooter tier="high" />);
+    render(<DebriefFooter />);
     fireEvent.click(screen.getByRole('button', { name: 'practice more' }));
     expect(pushMock).toHaveBeenCalledExactlyOnceWith('/drill');
   });
 
   it('"see your progress" link points to /progress (Req 6.3)', () => {
-    render(<DebriefFooter tier="mid" />);
+    render(<DebriefFooter />);
     const link = screen.getByRole('link', { name: /see your progress/ });
     expect(link).toHaveAttribute('href', '/progress');
   });
 
   it('clicking "done" pushes / (Req 6.4)', () => {
-    render(<DebriefFooter tier="low" />);
+    render(<DebriefFooter />);
     fireEvent.click(screen.getByRole('button', { name: 'done' }));
     expect(pushMock).toHaveBeenCalledExactlyOnceWith('/');
   });
@@ -95,14 +95,14 @@ describe('DebriefFooter — router push targets', () => {
 
 describe('DebriefFooter — desktop layout', () => {
   it('renders the progress link with link-arrow class', () => {
-    render(<DebriefFooter tier="high" />);
+    render(<DebriefFooter />);
     expect(
       screen.getByRole('link', { name: /see your progress/ }),
     ).toHaveClass('link-arrow');
   });
 
   it('practice more has variant=primary; done has variant=ghost', () => {
-    render(<DebriefFooter tier="high" />);
+    render(<DebriefFooter />);
     // Primary button carries btn-primary class; ghost carries btn-ghost
     // (exact class names depend on Button implementation — test by role/name only).
     expect(screen.getByRole('button', { name: 'practice more' })).toBeDefined();
@@ -110,7 +110,7 @@ describe('DebriefFooter — desktop layout', () => {
   });
 
   it('desktop DOM order: ghost "done" appears before primary "practice more" in the button group', () => {
-    render(<DebriefFooter tier="high" />);
+    render(<DebriefFooter />);
     const buttons = screen.getAllByRole('button');
     // In the DOM, "done" (ghost) must come before "practice more" (primary)
     // so that on desktop the natural flex order renders [done] [practice more].
@@ -120,33 +120,9 @@ describe('DebriefFooter — desktop layout', () => {
   });
 
   it('mobile stacking: primary "practice more" has mobile:order-first class', () => {
-    render(<DebriefFooter tier="high" />);
+    render(<DebriefFooter />);
     const practiceBtn = screen.getByRole('button', { name: 'practice more' });
     // mobile:order-first ensures practice more stacks on top on mobile
     expect(practiceBtn.className).toContain('mobile:order-first');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Tier prop is accepted and does not affect routing in v1
-// ---------------------------------------------------------------------------
-
-describe('DebriefFooter — tier prop accepted', () => {
-  it('accepts tier="high" without throwing or changing route targets', () => {
-    render(<DebriefFooter tier="high" />);
-    fireEvent.click(screen.getByRole('button', { name: 'practice more' }));
-    expect(pushMock).toHaveBeenCalledWith('/drill');
-  });
-
-  it('accepts tier="mid" without throwing or changing route targets', () => {
-    render(<DebriefFooter tier="mid" />);
-    fireEvent.click(screen.getByRole('button', { name: 'practice more' }));
-    expect(pushMock).toHaveBeenCalledWith('/drill');
-  });
-
-  it('accepts tier="low" without throwing or changing route targets', () => {
-    render(<DebriefFooter tier="low" />);
-    fireEvent.click(screen.getByRole('button', { name: 'practice more' }));
-    expect(pushMock).toHaveBeenCalledWith('/drill');
   });
 });

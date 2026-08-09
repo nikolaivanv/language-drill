@@ -1,11 +1,13 @@
 import type { DebriefResponse } from '@language-drill/api-client';
-import {
-  accuracyTier,
-  TIER_TITLE,
-} from '../../../../../lib/drill/accuracy-tier';
+import { movementSummary } from '../../../../../lib/drill/movement-summary';
 
-// Editorial header for the post-session debrief screen. Eyebrow + tier-keyed
-// display title + accuracy summary. All copy lowercase per Req 3.7.
+// Editorial header for the post-session debrief screen. Eyebrow + movement-keyed
+// display title + movement subline + a muted factual line. All copy lowercase.
+//
+// The title reports what the session did to the learner's SKILLS, not what
+// fraction of items were right: accuracy is binary at CORRECT_THRESHOLD while
+// mastery is continuous, so an accuracy-keyed title could read "nice work ·
+// 100%" directly above a "slipped" row in the panel below.
 
 export interface DebriefHeaderProps {
   debrief: DebriefResponse;
@@ -26,37 +28,23 @@ function formatDuration(totalSeconds: number): string {
 }
 
 export function DebriefHeader({ debrief }: DebriefHeaderProps) {
-  const {
-    correctCount,
-    attemptedCount,
-    exerciseCount,
-    skippedCount,
-    durationSeconds,
-  } = debrief;
+  const { exerciseCount, skippedCount, durationSeconds, skillMovements, attemptedCount } =
+    debrief;
 
-  const tier = accuracyTier(correctCount, attemptedCount);
-  const title = TIER_TITLE[tier];
+  const { title, subline } = movementSummary(skillMovements, attemptedCount);
 
-  const accuracyDisplay =
-    attemptedCount > 0
-      ? `${Math.round((correctCount / attemptedCount) * 100)}%`
-      : '—';
-
-  // Body line: "you got X of Y · accuracy Z%[ · N skipped]" (Req 3.1, 3.5)
-  const bodyParts = [
-    `you got ${correctCount} of ${exerciseCount}`,
-    `accuracy ${accuracyDisplay}`,
-  ];
-  if (skippedCount > 0) {
-    bodyParts.push(`${skippedCount} skipped`);
-  }
-  const bodyLine = bodyParts.join(' · ');
+  // Factual, verdict-free. Skips need somewhere to be accounted for.
+  const factualLine =
+    skippedCount > 0
+      ? `${exerciseCount} items · ${skippedCount} skipped`
+      : `${exerciseCount} items`;
 
   return (
     <header>
       <div className="t-micro">session done · {formatDuration(durationSeconds)}</div>
       <h1 className="t-display-xl mt-s-1">{title}</h1>
-      <p className="t-body-l mt-s-3">{bodyLine}</p>
+      <p className="t-body-l mt-s-3">{subline}</p>
+      <p className="t-micro text-ink-soft mt-s-2">{factualLine}</p>
     </header>
   );
 }
