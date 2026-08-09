@@ -1505,12 +1505,32 @@ git commit -m "feat(curriculum): author TR construction variants for 4 collapsed
 
 **Why:** the repass caps a collapsed frame at N rows rather than clearing it — 43 sound `dicen que` exercises should not all be discarded and regenerated at cost. Today `--content-ilike 'Dicen que%'` demotes every match.
 
+**The file has changed since this plan was written.** `origin/main` was merged into this branch at `4552a8dd`, bringing a required `--reason` flag. The current `DemoteArgs` is:
+
+```ts
+export type DemoteArgs = {
+  language: string;
+  cefr: string;
+  type: string;
+  grammarPoint: string;
+  contentIlike: string | null;
+  apply: boolean;
+  reason: DemotionReason;   // NEW — required, one of DEMOTION_REASONS
+};
+```
+
+`parseDemoteArgs` validates `--reason` against `DEMOTION_REASONS` and throws with a message explaining that `quality` / `learner-flag` revoke learners' credit for past attempts while `duplicate` / `pool-hygiene` keep it. Add `limit` alongside `reason`; do not disturb it.
+
+**Which reason the repass uses:** `pool-hygiene`. The rows being demoted are not defective — they are correct exercises that happen to over-represent one construction — so learners keep credit for having answered them. Record that in the runbook step of the plan's Rollout section, not in the CLI.
+
 - [ ] **Step 1: Write the failing tests**
 
 ```ts
 describe('parseDemoteArgs — limit', () => {
+  // `--reason` is required by the current CLI; include it in every fixture.
   const base = ['--language', 'ES', '--cefr', 'B1', '--type', 'cloze',
-                '--grammar-point', 'es-b1-impersonal-plural'];
+                '--grammar-point', 'es-b1-impersonal-plural',
+                '--reason', 'pool-hygiene'];
 
   it('defaults limit to null', () => {
     expect(parseDemoteArgs(base).limit).toBeNull();
