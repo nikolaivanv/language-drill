@@ -85,15 +85,24 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * 3/49 in cloze) and de-a2-lassen (ZERO `Lass uns …` in 56 rows — one of the
  * three described uses never generated; causative/permissive also split
  * per-cell 15/9 in cloze vs. 3/24 in translation).
- * Also REMOVES the person coverageSpec on de-a2-lassen (added 2026-07-17). Its
- * 3sg floor contradicts the `lass-uns-suggestion` variant — `Lass uns …` is a
- * fixed 2nd-person imperative — and the two seeders never consult each other,
- * so the model would silently drop one MUST. The axis was redundant anyway:
- * all 27 approved clozes already answered `lässt`, the exact form it existed
- * to force. It is the only one of the eleven points that had a coverageSpec.
- * Bump clears target-reached / low-yield suppression so the touched cells
- * re-run under the rotation; at-target cells additionally need demote:pool
- * (see docs/curriculum-authoring.md retrofit section).
+ * Also REMOVES the person coverageSpec on de-a2-lassen (added 2026-07-17), the
+ * only one of the eleven points that had one. Its 3sg floor is unresolvable
+ * against the `lass-uns-suggestion` variant — `Lass uns …` is a fixed
+ * 2nd-person imperative — and the two seeders never consult each other, so
+ * affected drafts carry two contradictory directives; they degrade toward the
+ * variant, because the person directive ends in an escape hatch and the
+ * variant directive does not. The axis is NOT being called redundant: it
+ * produced the entire current pool (every approved row postdates its addition
+ * and is person-tagged), so that pool cannot measure life without it. Its work
+ * moves into the causative/permissive directives, which now pin the subject to
+ * du / 3sg so the lässt stem change is still exercised.
+ * Bump clears target-reached / low-yield suppression so the touched CLOZE and
+ * TRANSLATION cells re-run under the rotation. Note the limit: `seedKindFor`
+ * (packages/db/src/generation/run-one-cell.ts) gates variant seeding to those
+ * two exercise types, so SENTENCE_CONSTRUCTION cells are untouched by this
+ * mechanism — de-b1-um-zu-damit's 47 approved SC rows keep whatever
+ * distribution they have. At-target cloze/translation cells additionally need
+ * demote:pool (see docs/curriculum-authoring.md retrofit section).
  */
 export const CURRICULUM_VERSION_DE = '2026-08-08';
 
@@ -1197,15 +1206,26 @@ const deCurriculum: readonly GrammarPoint[] = [
   {
     key: 'de-a2-lassen',
     // coverageSpec REMOVED 2026-08-08 (was: person floors 2sg 6 / 3sg 8, to
-    // force the lässt stem change). Two reasons. (1) It collides with the
-    // `lass-uns-suggestion` variant below: `Lass uns …` is a fixed 2nd-person
-    // imperative with no person choice, so a draft seeded "target person: 3sg"
-    // AND "MUST use Lass uns …" gets two contradictory MUSTs from two seeders
-    // that never consult each other, and the model silently drops one.
-    // (2) The axis was empirically redundant — all 27 approved prod clozes
-    // already answered `lässt`, which is the form the axis existed to force;
-    // the causative and permissive variants leave person free and keep
-    // producing it, because 2sg/3sg is where lassen naturally sits.
+    // force the lässt stem change).
+    //
+    // Reason: it is unresolvable against the `lass-uns-suggestion` variant
+    // below. `Lass uns …` is a fixed 2nd-person imperative with no person
+    // choice, so a draft seeded "target person: 3sg" AND "MUST use Lass uns …"
+    // carries two contradictory directives from two seeders that never consult
+    // each other. It does not degrade at random: the person directive ends with
+    // an escape hatch ("If … cannot naturally express this person, use the
+    // closest natural person instead", generation-prompts.ts) while the variant
+    // directive is strict, so drafts degrade toward the variant and the person
+    // floors quietly go unmet on that share of the batch.
+    //
+    // NOT dropped as redundant. The axis cannot be evaluated from this pool,
+    // because it produced the entire pool: every approved row postdates
+    // 2026-07-17 (when the axis was added) and every one is person-tagged, so
+    // "all the clozes already answer lässt" measures the axis working, not the
+    // axis being unnecessary. There is no unaided baseline to appeal to.
+    // Its work therefore moves INTO the variant directives, which pin the
+    // causative and permissive subjects to du / 3sg so the stem change is still
+    // exercised — see the `constructionVariants` below.
     kind: 'grammar',
     name: 'lassen + infinitive',
     description:
@@ -1226,12 +1246,12 @@ const deCurriculum: readonly GrammarPoint[] = [
       {
         id: 'causative-have-done',
         directive:
-          'causative lassen — having something done by someone else, agent unnamed or in a von-phrase (Ich lasse mein Fahrrad reparieren; Sie lässt sich die Haare schneiden)',
+          'causative lassen — having something done by someone else; subject du or 3sg so the lässt stem change surfaces (Lässt du dein Fahrrad reparieren?; Sie lässt sich die Haare schneiden)',
       },
       {
         id: 'permissive-let-someone',
         directive:
-          'permissive lassen — letting or not letting a named person or animal do something (Meine Eltern lassen mich nicht ausgehen)',
+          'permissive lassen — letting or not letting a named person or animal do something; subject du or 3sg so the lässt stem change surfaces (Er lässt mich nicht ausgehen)',
       },
       {
         id: 'lass-uns-suggestion',
