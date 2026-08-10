@@ -1,7 +1,8 @@
-// One-off: rebuild user_grammar_mastery from existing user_exercise_history by
-// replaying each user's attempts (per grammar point) through the same update
-// rule the live submit path uses. Idempotent — recomputes each row from
-// scratch. Dry-run by default; pass --apply to write.
+// One-off: rebuild user_grammar_mastery by replaying each user's evidence —
+// both user_exercise_history (host observations) and error_observations
+// (reconstructed incidental observations) — through the same update rule the
+// live submit path uses. Idempotent — recomputes each row from scratch.
+// Dry-run by default; pass --apply to write.
 //
 //   pnpm backfill:mastery [--apply] [--user=<id>] [--language=ES|DE|TR|EN] [--include-demoted]
 import { createDb } from '../src/client';
@@ -23,13 +24,16 @@ async function main(): Promise<void> {
   // restore pre-2026-08 mastery *values* — scores are always recomputed under
   // the current `updateMastery`, which since 2026-08-08 seeds a first
   // observation against a neutral prior rather than taking its raw score.
-  // It does NOT retroactively restore a `user_grammar_mastery` row that a
-  // PRIOR (buggy) run already deleted for an incidental-fold-only grammar
-  // point — the replay still can't see incidental observations at all (they
-  // have no `user_exercise_history` row to replay from), so the upsert loop
-  // never recreates them regardless of this flag. That kind of row can only
-  // come back by re-running the live submit path (the learner practicing
-  // again) or a manual insert.
+  // The replay DOES reconstruct incidental observations from
+  // `error_observations`, so `--include-demoted` CAN recreate a
+  // `user_grammar_mastery` row that a prior run deleted for an
+  // incidental-fold-only grammar point, with a score recomputed from
+  // whatever evidence survives. The remaining limit is precise: recovery
+  // depends on the backing `error_observations` rows still existing. That
+  // table cascades from `user_exercise_history`, so if the originating
+  // history row was deleted, the evidence is genuinely gone and no flag
+  // recovers it — only re-running the live submit path (the learner
+  // practicing again) or a manual insert brings it back.
   const includeDemoted = process.argv.includes('--include-demoted');
 
   const databaseUrl = process.env['DATABASE_URL'];

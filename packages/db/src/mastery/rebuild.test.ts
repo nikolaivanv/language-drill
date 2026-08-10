@@ -851,10 +851,16 @@ describe('incidental observations in the replay', () => {
   });
 
   it('excludes an observation recorded against a defect-demoted exercise', async () => {
+    // Must use a real curriculum key here, per the trap the test above this
+    // one warns about: `getGrammarPoint()` is consulted and `continue`s on a
+    // miss BEFORE `demotionReason` is ever examined, so a fake key like 'p'
+    // would make `historyRowCount === 0` regardless of whether the demotion
+    // filter exists at all — the test would pass even if this filter were
+    // deleted.
     const result = await run(fakeDb({
       history: [],
       observations: [
-        { userId: 'u1', language: 'TR', hostGrammarPointKey: 'host', errorGrammarPointKey: 'p',
+        { userId: 'u1', language: 'TR', hostGrammarPointKey: 'host', errorGrammarPointKey: 'tr-a1-locative',
           severity: 'major', occurredAt: new Date('2026-01-01'), exerciseHistoryId: 'h1',
           difficulty: 'A1', demotionReason: 'quality' },
       ],
@@ -934,9 +940,25 @@ describe('incidental observations in the replay', () => {
   });
 
   it('matches what the live submit path folds call-by-call', async () => {
-    // The live path: applyGrammarMastery(host) then, for each incidental
-    // observation, applyGrammarMastery(incidental) — each folding into the
-    // stored row. A faithful replay of the same events must land on the same
+    // Within a single submission, live actually folds incidental first and
+    // host last (`incidentalObservations` loop, then the trailing
+    // `applyGrammarMastery(host)` call, in
+    // `infra/lambda/src/routes/exercises.ts`) — but that order never matters:
+    // `incidentalObservations` excludes any error attributed to the host
+    // point, so the host point and a submission's incidental points are
+    // disjoint, and folding is per grammar point.
+    //
+    // This fixture is a different case: the host history below comes from
+    // one exercise (`tr-a1-locative`, via `user_exercise_history`) and the
+    // incidental observation below comes from a SEPARATE exercise (whose own
+    // host point is `host`, unrelated) that happens to violate the same
+    // `tr-a1-locative` point at the identical timestamp. Two different
+    // submissions CAN land evidence on the same point at the same instant, so
+    // fold order here is real and is settled by `sourceRank`'s tie-break
+    // (host rank 0 sorts before incidental rank 1) — hence `live` below
+    // applies the host observation first, then the incidental one, matching
+    // `replayHistory`'s tie-break, not the live submit-path's own internal
+    // ordering. A faithful replay of the same events must land on the same
     // number. If this drifts, every nightly rebuild silently rewrites scores.
     //
     // Host difficulty is B2 while the violated point ('tr-a1-locative') is

@@ -635,6 +635,16 @@ export async function run(db: Db, opts: RunOptions): Promise<RunResult> {
   for (const o of worstPerSubmission.values()) {
     const k: GroupKey = `${o.userId} ${o.language}`;
     langOf.set(k, o.language);
+    // sourceRank: 1 marks this as an incidental entry for replayHistory's
+    // (timestamp, sourceRank) tie-break — host defaults to 0. This does NOT
+    // mirror the live submit path, which folds incidental first and host
+    // last (`infra/lambda/src/routes/exercises.ts`); that live order has no
+    // numeric effect because `incidentalObservations` already excludes any
+    // error attributed to the host point, so the host point and incidental
+    // points in one submission are disjoint and replayHistory folds per
+    // grammar point — the two orders can never touch the same point at the
+    // same instant. sourceRank is defence in depth against that invariant
+    // changing, not a replay of live ordering.
     const entry: HistoryRow = {
       grammarPointKey: o.grammarPointKey,
       score: o.score,

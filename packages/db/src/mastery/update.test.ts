@@ -164,10 +164,16 @@ describe('replayHistory ordering', () => {
   const at = d('2026-01-01');
 
   it('folds a host observation before an incidental one at the same instant', () => {
-    // Same timestamp, opposite order in the input array. The live path applies
-    // the host score first, so both orderings must fold to the host-then-
-    // incidental result — otherwise a rebuild silently disagrees with the
-    // value the submit path wrote.
+    // Same timestamp, opposite order in the input array. sourceRank pins a
+    // deterministic host-then-incidental fold regardless of input order. This
+    // does NOT mirror the live path, which actually folds incidental first
+    // and host last (`infra/lambda/src/routes/exercises.ts`) — that live
+    // order has no numeric effect because `incidentalObservations` excludes
+    // any error attributed to the host point, so within one submission the
+    // host point and incidental points are disjoint and never actually
+    // compete for fold order on the same point. sourceRank is defence in
+    // depth against that invariant changing, and this test just pins that
+    // the tie-break itself is order-independent.
     const host = { grammarPointKey: 'p', score: 1, difficulty: CefrLevel.A1, evaluatedAt: at, sourceRank: 0 as const };
     const incidental = { grammarPointKey: 'p', score: 0, difficulty: CefrLevel.A1, evaluatedAt: at, sourceRank: 1 as const };
 

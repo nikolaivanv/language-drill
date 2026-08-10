@@ -32,6 +32,18 @@ export async function handler(): Promise<void> {
     observations: result.historyRowCount,
     maxDeletes,
   });
+
+  if (result.aborted) {
+    // `summarize({ apply: false, ... })` below reuses the dry-run wording
+    // ("[dry-run] Would write…") purely to describe what the run WOULD have
+    // done — this explicit line comes first so the human reading the log
+    // during an incident sees a refusal, not a preview.
+    console.log(
+      `ABORTED: mastery rebuild would have written ${result.upserts} mastery ` +
+        `rows and deleted ${result.deletes} rows, exceeding the ${maxDeletes}-row ` +
+        `delete threshold. Nothing was written.`,
+    );
+  }
   console.log(summarize({ apply: !result.aborted, upserts: result.upserts, deletes: result.deletes, groupCount: result.groupCount, historyRowCount: result.historyRowCount, includeDemoted: false }));
   console.log(formatDiffReport(result.diff));
 

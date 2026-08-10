@@ -29,9 +29,15 @@ export type HistoryRow = {
   /**
    * Which writer produced this observation: 0 = host (the exercise's own
    * grammar point), 1 = incidental (an evaluator error attributed to another
-   * point). Absent means host. Used only as a tie-break so a merged replay
-   * folds in the same order the live submit path did — host score first, then
-   * the incidental fold.
+   * point). Absent means host. Used only as a tie-break at equal timestamps —
+   * it does NOT mirror the live submit path, which folds incidental first and
+   * host last (`infra/lambda/src/routes/exercises.ts`). That live order has
+   * no effect on the result: `incidentalObservations` already excludes any
+   * error attributed to the host point, so within one submission the host
+   * point and the incidental points are disjoint sets, and this module folds
+   * per grammar point — the two orders can never touch the same point at the
+   * same instant. `sourceRank` is defence in depth against that invariant
+   * changing, not a replay of live ordering.
    */
   sourceRank?: 0 | 1;
 };

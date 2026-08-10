@@ -37,7 +37,7 @@ the *stored* row:
 1. **Host** — the exercise's own `grammar_point_key`. One
    `user_exercise_history` row per submission. Replayable.
 2. **Incidental** — `incidentalObservations()`
-   (`infra/lambda/src/lib/mastery/incidental-fold.ts`) turns evaluator errors
+   (`packages/db/src/mastery/incidental-fold.ts`) turns evaluator errors
    attributed to *other* grammar points into negative evidence for those
    points. **No history row names them** — history records the exercise
    answered, not the rules broken.
@@ -112,11 +112,18 @@ perform the same curriculum lookup and the same skip.
 Three details separate faithful from approximately-faithful:
 
 **Ordering.** `updateMastery` is sequential, asymmetric and recency-decayed, so
-the result depends on the order observations are folded. Incidentals must
-interleave with host observations exactly as they did live. At submit the host
-score is applied first and the incidental fold follows, so **host sorts before
-incidental at equal timestamps**. Sort key: `(timestamp, sourceRank)` with host
-rank 0, incidental rank 1.
+the result depends on the order observations are folded. At submit the
+incidental fold loop runs *before* the host fold — see
+`infra/lambda/src/routes/exercises.ts` (the `incidentalObservations` loop
+precedes the trailing `applyGrammarMastery` call for the host point). This has
+no numeric effect on the replay, and the replay does not need to mirror that
+sequence: `incidentalObservations` already excludes any error whose attributed
+point equals the host point, so within one submission the host point and the
+incidental points are disjoint sets, and `replayHistory` folds per grammar
+point — the two orders can therefore never touch the same point at the same
+instant. `sourceRank` — host rank 0 (the default), incidental rank 1, per
+`(timestamp, sourceRank)` — is defence in depth against that invariant ever
+changing, not an attempt to mirror the live order.
 
 **Per-submission dedup.** `incidentalObservations` drops errors whose
 `grammarPointKey` equals the host point, and collapses multiple errors on the
