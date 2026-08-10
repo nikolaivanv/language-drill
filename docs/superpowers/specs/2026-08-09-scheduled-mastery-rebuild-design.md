@@ -134,19 +134,35 @@ NULL or equals `host_grammar_point_key`. Without the grouping, a submission
 with three errors on one point folds three observations instead of one.
 
 **Exercise types whose submit path actually folds.** The free-writing branch of
-`POST /exercises/:id/submit` calls `recordErrorObservations` and then returns —
-it never calls `incidentalObservations`, so free-writing errors have **never**
-contributed to mastery. Their `error_observations` rows are nonetheless fully
-eligible for the query above (free-writing exercises carry a non-null umbrella
-`grammar_point_key`, and their errors carry attributed curriculum keys). Left
-unscoped, the replay would inject penalties the live path never applied, and the
-nightly diff would never settle to zero.
+`POST /exercises/:id/submit` calls `recordErrorObservations` and then
+**returns before any `applyGrammarMastery` call** — neither the host fold nor
+the `incidentalObservations` loop ever runs for a free-writing submission. So
+free-writing contributes **neither incidental nor host mastery**, ever.
 
-The observation query is therefore scoped to the exercise types whose submit
-path folds incidentally. Whether free-writing errors *should* count toward
-grammar mastery is a real product question, but it is a **change to the live
-path**, not part of making the replay faithful — so it is out of scope here and
-recorded as a follow-up.
+Both of the replay's evidence sources are nonetheless fully eligible-looking
+without an explicit exclusion: a free-writing exercise carries a non-null
+umbrella `grammar_point_key` (so its `user_exercise_history` rows pass the
+host query's existing predicates), and its `error_observations` rows carry
+attributed curriculum keys (so they pass the observation query's existing
+predicates too). Left unscoped on either side, the replay would inject
+penalties or host folds the live path never applied, and the nightly diff
+would never settle to zero on an account with free-writing history.
+
+Therefore **both** queries — the incidental observation query
+(`incidentalObservationsWhere`) and the host history query
+(`hostHistoryWhere`) — carry the same `ne(…, ExerciseType.FREE_WRITING)`
+exclusion. This is deliberately symmetric, not a fix applied to one query and
+assumed to cover the other: the two queries read different tables
+(`error_observations` vs. `user_exercise_history`/`exercises`) and a
+free-writing row is present in both, so each needs its own predicate. A future
+non-folding exercise type — one whose submit path returns before folding, the
+same shape as free-writing today — needs the identical exclusion added in
+*both* places; scoping only one would silently reintroduce this bug for the
+half left unscoped.
+
+Whether free-writing errors *should* count toward grammar mastery is a real
+product question, but it is a **change to the live path**, not part of making
+the replay faithful — so it is out of scope here and recorded as a follow-up.
 
 **Evidence eligibility.** `scoringEvidenceFilter` applies to the observation
 query too. An error recorded against a defect-demoted exercise is exactly as

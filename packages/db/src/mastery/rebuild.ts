@@ -385,6 +385,55 @@ function pushToGroup<T>(map: Map<GroupKey, T[]>, key: GroupKey, value: T): void 
 }
 
 /**
+ * The `user_exercise_history` WHERE clause `run()` uses to select host
+ * replay evidence, extracted (mirroring `incidentalObservationsWhere` below)
+ * so it can be unit-tested against its rendered SQL — a mocked `Db` cannot
+ * execute a real predicate, and without this the free-writing exclusion was
+ * only ever checked by a hand-rolled JS emulation inside the test's `fakeDb`,
+ * which would stay green even if the real predicate named the wrong column.
+ * See `rebuild.test.ts`'s `hostHistoryWhere` suite.
+ *
+ * Five predicates, always present:
+ *   1-4. `IS NOT NULL` on the host grammar point, the score, the evaluation
+ *        timestamp, and the user id — an unscored, unevaluated, or
+ *        unattributed attempt carries no replayable evidence.
+ *   5. `<>` excluding free-writing rows — the free-writing branch of
+ *      `POST /exercises/:id/submit` returns before any `applyGrammarMastery`
+ *      call, host fold included, so a free-writing history row (which does
+ *      carry a non-null umbrella `grammar_point_key`) would otherwise look
+ *      fully eligible and mint a mastery row the live path never wrote. See
+ *      the matching predicate on `incidentalObservationsWhere` and the design
+ *      doc's "Exercise types whose submit path actually folds" section for
+ *      why this exclusion is duplicated on both queries rather than applied
+ *      once.
+ *
+ *      `exercises.type` is nullable (unlike `error_observations.exercise_type`,
+ *      which is `.notNull()`), so this `<>` ALSO excludes any history row
+ *      whose exercise has a NULL `type` — SQL `<>` yields NULL, not true,
+ *      when either side is NULL. No insert path writes a NULL `type` today,
+ *      so this is theoretical; if one ever did, the consequence is score
+ *      drift (the row is silently dropped from replay evidence), not a
+ *      spurious deletion — an excluded row is absent from both the
+ *      unfiltered and surviving replay alike, and `findStaleMasteryRows`
+ *      only deletes a row present in the former and absent from the latter.
+ */
+export function hostHistoryWhere(params: {
+  userFilter?: string;
+  languageFilter?: string;
+}): SQL[] {
+  const where: SQL[] = [
+    isNotNull(exercises.grammarPointKey),
+    isNotNull(userExerciseHistory.score),
+    isNotNull(userExerciseHistory.evaluatedAt),
+    isNotNull(userExerciseHistory.userId),
+    ne(exercises.type, ExerciseType.FREE_WRITING),
+  ];
+  if (params.userFilter) where.push(eq(userExerciseHistory.userId, params.userFilter));
+  if (params.languageFilter) where.push(eq(exercises.language, params.languageFilter));
+  return where;
+}
+
+/**
  * The `error_observations` WHERE clause `run()` uses to reconstruct
  * incidental observations, extracted so it can be unit-tested against its
  * rendered SQL (a mocked `Db` cannot execute a real predicate — see
@@ -489,29 +538,10 @@ export async function run(db: Db, opts: RunOptions): Promise<RunResult> {
   // We need to replay BOTH "every replay-eligible row" and "only surviving
   // evidence" and diff them in memory (see `findStaleMasteryRows`), so the
   // demotion reason travels along as data instead of being applied as a SQL
-  // predicate the way the pre-2026-08 query did it.
-  const where = [
-    isNotNull(exercises.grammarPointKey),
-    isNotNull(userExerciseHistory.score),
-    isNotNull(userExerciseHistory.evaluatedAt),
-    isNotNull(userExerciseHistory.userId),
-    // The free-writing branch of `POST /exercises/:id/submit` writes this
-    // history row and then returns WITHOUT ever calling
-    // `applyGrammarMastery` — not for the host point, not for incidentals
-    // (see the `incidentalObservationsWhere` comment above for the
-    // incidental half of this same fact). So although a free-writing row
-    // carries a non-null `grammar_point_key` (the free-writing umbrella
-    // point) and would otherwise look fully eligible here, replaying it
-    // would MINT a `user_grammar_mastery` row the live app has never
-    // written, and keep moving it after every subsequent free-writing
-    // submission — the nightly diff would never settle to zero on an
-    // account with free-writing history. Whether free-writing should count
-    // toward mastery is a real product question, deliberately deferred; this
-    // is a replay-fidelity exclusion only, not a change to the live path.
-    ne(exercises.type, ExerciseType.FREE_WRITING),
-  ];
-  if (userFilter) where.push(eq(userExerciseHistory.userId, userFilter));
-  if (languageFilter) where.push(eq(exercises.language, languageFilter));
+  // predicate the way the pre-2026-08 query did it. Predicates (including the
+  // free-writing exclusion) live in `hostHistoryWhere`, extracted so they can
+  // be pinned by a rendered-SQL test — see that function's doc comment.
+  const where = hostHistoryWhere({ userFilter, languageFilter });
 
   const rows = await db
     .select({

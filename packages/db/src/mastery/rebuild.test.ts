@@ -35,6 +35,7 @@ import {
   pointKey,
   run,
   incidentalObservationsWhere,
+  hostHistoryWhere,
   type StaleMasteryRow,
   type MasteryShift,
 } from './rebuild';
@@ -380,6 +381,40 @@ describe('incidentalObservationsWhere', () => {
     const { sql, params } = new PgDialect().sqlToQuery(and(...incidentalObservationsWhere({}))!);
     expect(sql.toLowerCase()).toContain('exercise_type');
     expect(params).toContain(ExerciseType.FREE_WRITING);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// hostHistoryWhere — SQL-render tests
+// ---------------------------------------------------------------------------
+//
+// Extracted (2026-08-10) so the host query's free-writing exclusion is pinned
+// the same way `incidentalObservationsWhere` already is above. Before this,
+// `run()` built its `where` array inline, and the free-writing tests in the
+// `run()` suite below only ever exercised it through `fakeDb()`'s hand-rolled
+// JS emulation of the predicate (see that helper's doc comment) — a test
+// suite that would stay green even if the real predicate here named the
+// wrong column or the wrong value. These tests render the builder's REAL SQL
+// instead.
+describe('hostHistoryWhere', () => {
+  it('excludes free-writing rows by binding the exercise-type value as a bound param', () => {
+    // exercises.type is nullable — unlike error_observations.exercise_type,
+    // which is `.notNull()` (see the `incidentalObservationsWhere` free-writing
+    // test above) — so this `<>` also excludes any row whose exercise has a
+    // NULL type. See the doc comment on `hostHistoryWhere` in rebuild.ts for
+    // why that's theoretical (no insert path produces one today) and why the
+    // consequence, if one ever did, is score drift rather than a spurious
+    // deletion.
+    const { sql, params } = new PgDialect().sqlToQuery(and(...hostHistoryWhere({}))!);
+    expect(sql.toLowerCase()).toContain('"type"');
+    expect(params).toContain(ExerciseType.FREE_WRITING);
+  });
+
+  it('requires the host grammar point, score, and evaluatedAt to be attributed (IS NOT NULL)', () => {
+    const { sql } = new PgDialect().sqlToQuery(and(...hostHistoryWhere({}))!);
+    const lower = sql.toLowerCase();
+    expect(lower).toContain('grammar_point_key');
+    expect(lower).toContain('is not null');
   });
 });
 
