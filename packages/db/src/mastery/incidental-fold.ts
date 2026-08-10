@@ -2,7 +2,7 @@ import type { EvaluationError } from '@language-drill/shared';
 
 export type IncidentalObs = { grammarPointKey: string; score: number; at: Date };
 
-const SEVERITY_SCORE: Record<EvaluationError['severity'], number> = {
+export const SEVERITY_SCORE: Record<EvaluationError['severity'], number> = {
   major: 0,
   minor: 0.4,
 };

@@ -159,3 +159,48 @@ describe('updateMastery evidenceWeight', () => {
       .toBeGreaterThan(replayHistory(fullWeight).get('g')!.masteryScore);
   });
 });
+
+describe('replayHistory ordering', () => {
+  const at = d('2026-01-01');
+
+  it('folds a host observation before an incidental one at the same instant', () => {
+    // Same timestamp, opposite order in the input array. sourceRank pins a
+    // deterministic host-then-incidental fold regardless of input order. This
+    // does NOT mirror the live path, which actually folds incidental first
+    // and host last (`infra/lambda/src/routes/exercises.ts`) — that live
+    // order has no numeric effect because `incidentalObservations` excludes
+    // any error attributed to the host point, so within one submission the
+    // host point and incidental points are disjoint and never actually
+    // compete for fold order on the same point. sourceRank is defence in
+    // depth against that invariant changing, and this test just pins that
+    // the tie-break itself is order-independent.
+    const host = { grammarPointKey: 'p', score: 1, difficulty: CefrLevel.A1, evaluatedAt: at, sourceRank: 0 as const };
+    const incidental = { grammarPointKey: 'p', score: 0, difficulty: CefrLevel.A1, evaluatedAt: at, sourceRank: 1 as const };
+
+    const a = replayHistory([host, incidental]).get('p')!;
+    const b = replayHistory([incidental, host]).get('p')!;
+
+    expect(a.masteryScore).toBeCloseTo(b.masteryScore, 10);
+    expect(a.evidenceCount).toBe(2);
+  });
+
+  it('treats a row with no sourceRank as host', () => {
+    const legacy = { grammarPointKey: 'p', score: 1, difficulty: CefrLevel.A1, evaluatedAt: at };
+    const incidental = { grammarPointKey: 'p', score: 0, difficulty: CefrLevel.A1, evaluatedAt: at, sourceRank: 1 as const };
+
+    const withDefault = replayHistory([incidental, legacy]).get('p')!;
+    const explicit = replayHistory([
+      { ...legacy, sourceRank: 0 as const },
+      incidental,
+    ]).get('p')!;
+
+    expect(withDefault.masteryScore).toBeCloseTo(explicit.masteryScore, 10);
+  });
+
+  it('still orders primarily by timestamp', () => {
+    const early = { grammarPointKey: 'p', score: 0, difficulty: CefrLevel.A1, evaluatedAt: d('2026-01-01'), sourceRank: 1 as const };
+    const late = { grammarPointKey: 'p', score: 1, difficulty: CefrLevel.A1, evaluatedAt: d('2026-02-01'), sourceRank: 0 as const };
+    const state = replayHistory([late, early]).get('p')!;
+    expect(state.lastPracticedAt).toEqual(d('2026-02-01'));
+  });
+});

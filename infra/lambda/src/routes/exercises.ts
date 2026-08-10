@@ -15,6 +15,7 @@ import {
   userGrammarMastery,
   updateMastery,
   exerciseWordHints,
+  incidentalObservations,
 } from '@language-drill/db';
 import {
   createObservedClaudeClient,
@@ -55,7 +56,6 @@ import {
   CONJUGATION_SET_FETCH_CAP,
 } from '../lib/exercise-set';
 import { recordErrorObservations, freeWritingErrorsToEvaluationErrors } from '../lib/errors/record';
-import { incidentalObservations } from '../lib/mastery/incidental-fold';
 import { presignAudioUrl } from '../lib/audio-url';
 import { withAudioUrl } from '../lib/dictation-content';
 import { authMiddleware } from '../middleware/auth';

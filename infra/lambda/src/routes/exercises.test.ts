@@ -106,6 +106,27 @@ vi.mock('@language-drill/db', () => {
     },
     updateMastery: (prev: unknown, obs: unknown) => mockUpdateMastery(prev, obs),
     getGrammarPoint,
+    // Real pure logic (mirrors packages/db/src/mastery/incidental-fold.ts) —
+    // the B3 "incidental mastery fold" suite below asserts on the actual
+    // severity→score mapping, not a stand-in, so this is reimplemented here
+    // rather than hand-stubbed like updateMastery above.
+    incidentalObservations: (
+      errors: Array<{ severity: 'major' | 'minor'; grammarPointKey?: string | null }> | undefined,
+      hostGrammarPointKey: string | null,
+      at: Date,
+    ) => {
+      if (!errors || hostGrammarPointKey === null) return [];
+      const SEVERITY_SCORE = { major: 0, minor: 0.4 };
+      const worst = new Map<string, number>();
+      for (const e of errors) {
+        const key = e.grammarPointKey;
+        if (!key || key === hostGrammarPointKey) continue;
+        const score = SEVERITY_SCORE[e.severity];
+        const prev = worst.get(key);
+        if (prev === undefined || score < prev) worst.set(key, score);
+      }
+      return [...worst].map(([grammarPointKey, score]) => ({ grammarPointKey, score, at }));
+    },
     grammarPointsAtOrBelow: (...args: Parameters<typeof mockGrammarPointsAtOrBelow>) => mockGrammarPointsAtOrBelow(...args),
     // Mirrors packages/db/src/evaluation-guidance.ts so the route mock exercises
     // the same shape without pulling in the real @language-drill/db module.
