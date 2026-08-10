@@ -495,6 +495,20 @@ export async function run(db: Db, opts: RunOptions): Promise<RunResult> {
     isNotNull(userExerciseHistory.score),
     isNotNull(userExerciseHistory.evaluatedAt),
     isNotNull(userExerciseHistory.userId),
+    // The free-writing branch of `POST /exercises/:id/submit` writes this
+    // history row and then returns WITHOUT ever calling
+    // `applyGrammarMastery` — not for the host point, not for incidentals
+    // (see the `incidentalObservationsWhere` comment above for the
+    // incidental half of this same fact). So although a free-writing row
+    // carries a non-null `grammar_point_key` (the free-writing umbrella
+    // point) and would otherwise look fully eligible here, replaying it
+    // would MINT a `user_grammar_mastery` row the live app has never
+    // written, and keep moving it after every subsequent free-writing
+    // submission — the nightly diff would never settle to zero on an
+    // account with free-writing history. Whether free-writing should count
+    // toward mastery is a real product question, deliberately deferred; this
+    // is a replay-fidelity exclusion only, not a change to the live path.
+    ne(exercises.type, ExerciseType.FREE_WRITING),
   ];
   if (userFilter) where.push(eq(userExerciseHistory.userId, userFilter));
   if (languageFilter) where.push(eq(exercises.language, languageFilter));

@@ -235,6 +235,7 @@ export class LanguageDrillStack extends Stack {
     new MasteryRebuildLambdaConstruct(this, "MasteryRebuildWrap", {
       secretsPrefix: props.secretsPrefix,
       enableScheduledJobs: props.enableScheduledJobs,
+      alarmTopic: alerts.topic,
     });
 
     new CfnOutput(this, "ApiUrl", {

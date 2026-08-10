@@ -1,5 +1,6 @@
 import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
+import * as sns from 'aws-cdk-lib/aws-sns';
 import { describe, expect, it } from 'vitest';
 
 import { MasteryRebuildLambdaConstruct } from './mastery-rebuild-lambda';
@@ -15,13 +16,20 @@ import { MasteryRebuildLambdaConstruct } from './mastery-rebuild-lambda';
  * MASTERY_REBUILD_MAX_DELETES (defaulting to '5'), no ANTHROPIC_API_KEY —
  * that key intentionally stays out of this Lambda's IAM and env surface so a
  * misconfigured scheduler can never burn the Anthropic budget.
+ *
+ * And the errors alarm: this Lambda runs once/day, so any error (the
+ * delete-count circuit breaker tripping, a DB failure, a timeout) is already
+ * a 100% failure for that day — the alarm must fire on the first error, not
+ * after several days of silent breakage, and must be wired to the shared
+ * SNS alarm topic.
  */
-function buildStack(enableScheduledJobs: boolean): Template {
+function buildStack(enableScheduledJobs: boolean, alarmTopic?: sns.ITopic): Template {
   const app = new App();
   const stack = new Stack(app, 'TestStack');
   new MasteryRebuildLambdaConstruct(stack, 'MasteryRebuildLambda', {
     secretsPrefix: 'language-drill-dev',
     enableScheduledJobs,
+    alarmTopic,
   });
   return Template.fromStack(stack);
 }
@@ -116,6 +124,43 @@ describe('MasteryRebuildLambdaConstruct', () => {
       const fns = template.findResources('AWS::Lambda::Function');
       const serialized = JSON.stringify(fns);
       expect(serialized).not.toContain('ANTHROPIC_API_KEY');
+    });
+  });
+
+  describe('errors alarm', () => {
+    const app = new App();
+    const stack = new Stack(app, 'TestStackWithAlarmTopic');
+    const topic = new sns.Topic(stack, 'AlarmTopic');
+    new MasteryRebuildLambdaConstruct(stack, 'MasteryRebuildLambda', {
+      secretsPrefix: 'language-drill-dev',
+      enableScheduledJobs: true,
+      alarmTopic: topic,
+    });
+    const template = Template.fromStack(stack);
+
+    it('creates exactly one errors alarm on the handler, alarming on the first error (threshold 0, 1-day period)', () => {
+      template.resourceCountIs('AWS::CloudWatch::Alarm', 1);
+      template.hasResourceProperties('AWS::CloudWatch::Alarm', {
+        Threshold: 0,
+        EvaluationPeriods: 1,
+        ComparisonOperator: 'GreaterThanThreshold',
+        TreatMissingData: 'notBreaching',
+        Period: 86400,
+        Statistic: 'Sum',
+      });
+    });
+
+    it('wires the alarm action to the SNS alarm topic', () => {
+      template.hasResourceProperties('AWS::CloudWatch::Alarm', {
+        AlarmActions: Match.arrayWith([Match.objectLike({ Ref: Match.stringLikeRegexp('AlarmTopic') })]),
+      });
+    });
+
+    it('omits the alarm action when no alarmTopic is provided', () => {
+      const noTopicTemplate = buildStack(true);
+      const alarms = noTopicTemplate.findResources('AWS::CloudWatch::Alarm');
+      const serialized = JSON.stringify(alarms);
+      expect(serialized).not.toContain('AlarmActions');
     });
   });
 });

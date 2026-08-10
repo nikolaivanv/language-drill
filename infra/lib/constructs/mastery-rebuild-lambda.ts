@@ -1,11 +1,14 @@
 import * as path from 'path';
 import { Duration } from 'aws-cdk-lib';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as cwactions from 'aws-cdk-lib/aws-cloudwatch-actions';
 import * as events from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import * as lambda from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as sns from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
 
 export interface MasteryRebuildLambdaConstructProps {
@@ -15,6 +18,7 @@ export interface MasteryRebuildLambdaConstructProps {
   maxDeletes?: number;
   /** Defaults to daily 03:00 UTC. */
   scheduleExpression?: events.Schedule;
+  readonly alarmTopic?: sns.ITopic;
 }
 
 /**
@@ -30,6 +34,7 @@ export interface MasteryRebuildLambdaConstructProps {
 export class MasteryRebuildLambdaConstruct extends Construct {
   public readonly handler: lambda.NodejsFunction;
   public readonly rule?: events.Rule;
+  public readonly errorsAlarm: cloudwatch.Alarm;
 
   constructor(scope: Construct, id: string, props: MasteryRebuildLambdaConstructProps) {
     super(scope, id);
@@ -70,6 +75,29 @@ export class MasteryRebuildLambdaConstruct extends Construct {
         targets: [new targets.LambdaFunction(this.handler)],
         description: 'Nightly mastery rebuild — replays evidence so stored mastery self-heals after demotions.',
       });
+    }
+
+    // This Lambda runs once per day, so a single failed invocation is
+    // already a 100% failure rate for that day — unlike the email sender
+    // (many messages/day, threshold 5), any error here deserves same-day
+    // paging. threshold: 0 with GREATER_THAN_THRESHOLD alarms on the first
+    // error (>0), not after five days of silent breakage. The handler
+    // throws on an aborted run (delete-count circuit breaker trip, DB
+    // failure, or timeout) specifically so this metric — and this alarm —
+    // catches it; without it, the breaker's "write nothing and throw"
+    // safety net had no listener.
+    this.errorsAlarm = new cloudwatch.Alarm(this, 'MasteryRebuildErrorsAlarm', {
+      metric: this.handler.metricErrors({ period: Duration.days(1), statistic: cloudwatch.Stats.SUM }),
+      threshold: 0,
+      evaluationPeriods: 1,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      alarmDescription:
+        'Nightly mastery rebuild Lambda errored (runs once/day, so any error is a 100% failure — includes the delete-count circuit breaker tripping and writing nothing).',
+    });
+
+    if (props.alarmTopic) {
+      this.errorsAlarm.addAlarmAction(new cwactions.SnsAction(props.alarmTopic));
     }
   }
 }

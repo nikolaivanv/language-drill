@@ -488,9 +488,9 @@ function historyRow(overrides: Partial<Record<string, unknown>> = {}) {
  * below. Simpler than `makeFakeDb`'s `FakeRunResult` wrapper — these tests
  * only care about `run()`'s return value, not call counts.
  *
- * The observations branch emulates what the REAL query in `run()` returns
- * from Postgres — not a raw pass-through of the fixture. Two things a raw
- * pass-through would get wrong:
+ * The observations AND history branches emulate what the REAL queries in
+ * `run()` return from Postgres — not a raw pass-through of the fixtures.
+ * Things a raw pass-through would get wrong:
  *   1. The `.select({ grammarPointKey: errorObservations.errorGrammarPointKey, ... })`
  *      projection renames the column on the way out, so callers here supply
  *      fixtures shaped like the raw row (`errorGrammarPointKey`,
@@ -506,9 +506,24 @@ function historyRow(overrides: Partial<Record<string, unknown>> = {}) {
  *      the real predicates' rendered SQL directly; this emulation exists so
  *      `run()`-level tests aren't silently fooled by a mock that lets
  *      everything through.
+ *   3. Symmetrically, the host-history query's `ne(exercises.type,
+ *      ExerciseType.FREE_WRITING)` predicate (added alongside the
+ *      observations one — see `run()`'s history `where` array in
+ *      `rebuild.ts`) is emulated here too: `history` fixtures may carry an
+ *      `exerciseType` field (defaulting to non-free-writing) that this
+ *      helper filters on and then strips, exactly like `observations`.
  */
 function fakeDb(params: {
-  history: unknown[];
+  /**
+   * Raw history fixtures. An optional `exerciseType` field (defaulting to a
+   * non-free-writing type, matching the `observations` fixtures below) drives
+   * the same free-writing exclusion the real host-history query now applies
+   * via `ne(exercises.type, ExerciseType.FREE_WRITING)` — this fake emulates
+   * that predicate in JS the same way it already does for `observations`,
+   * then strips the field before returning (the real projection never
+   * selects `exercises.type` either).
+   */
+  history: Array<Record<string, unknown> & { exerciseType?: string }>;
   observations: Array<{
     userId: string;
     language: string;
@@ -524,6 +539,13 @@ function fakeDb(params: {
   }>;
   existing: unknown[];
 }): Db & { insertCalls: number; deleteCalls: number } {
+  const historyRows = params.history
+    .filter((r) => (r.exerciseType ?? ExerciseType.CLOZE) !== ExerciseType.FREE_WRITING)
+    .map((r) => {
+      const { exerciseType: _exerciseType, ...rest } = r;
+      return rest;
+    });
+
   const observationRows = params.observations
     .filter(
       (o) =>
@@ -552,7 +574,7 @@ function fakeDb(params: {
           return {
             innerJoin: (_t: unknown, _on: unknown) => ({
               where: (_w: unknown) => ({
-                orderBy: (_o: unknown) => Promise.resolve(params.history),
+                orderBy: (_o: unknown) => Promise.resolve(historyRows),
               }),
             }),
           };
@@ -950,6 +972,72 @@ describe('incidental observations in the replay', () => {
 
     const shift = result.diff.shifts.find((s) => s.grammarPointKey === 'tr-a1-locative')!;
     expect(shift.to).toBeCloseTo(live.masteryScore, 10);
+  });
+});
+
+describe('run — host history excludes free-writing (Important-2 fix, 2026-08-09)', () => {
+  it('does not replay a free-writing host history row', async () => {
+    // POST /exercises/:id/submit's free-writing branch writes the
+    // user_exercise_history row (and records error observations, and the
+    // usage event) but returns WITHOUT ever calling applyGrammarMastery —
+    // not for the host point either. A free-writing history row DOES carry
+    // a non-null grammar_point_key (the free-writing umbrella point), so
+    // without the exclusion added to run()'s host-history `where` array,
+    // this row would look fully eligible and the rebuild would mint a
+    // user_grammar_mastery row the live app has never written — and keep
+    // moving it after every subsequent free-writing submission, so the
+    // nightly diff would never settle to zero on an account with
+    // free-writing history.
+    //
+    // 'es-a1-fw-my-family' — a real free-writing umbrella key from the ES
+    // curriculum — is used rather than a fake key like 'p', so a failure
+    // here can only mean the free-writing exclusion isn't working, not that
+    // the fixture's key failed some unrelated curriculum lookup.
+    const result = await run(fakeDb({
+      history: [
+        {
+          userId: 'u1',
+          language: 'ES',
+          grammarPointKey: 'es-a1-fw-my-family',
+          score: 0.9,
+          difficulty: 'A1',
+          evaluatedAt: new Date('2026-01-01'),
+          evidenceWeight: null,
+          demotionReason: null,
+          exerciseType: ExerciseType.FREE_WRITING,
+        },
+      ],
+      observations: [],
+      existing: [],
+    }), { apply: false, includeDemoted: false });
+
+    expect(result.historyRowCount).toBe(0);
+    const shift = result.diff.shifts.find((s) => s.grammarPointKey === 'es-a1-fw-my-family');
+    expect(shift).toBeUndefined();
+  });
+
+  it('DOES replay the same row when it is a non-free-writing exercise type (control)', async () => {
+    const result = await run(fakeDb({
+      history: [
+        {
+          userId: 'u1',
+          language: 'ES',
+          grammarPointKey: 'es-a1-fw-my-family',
+          score: 0.9,
+          difficulty: 'A1',
+          evaluatedAt: new Date('2026-01-01'),
+          evidenceWeight: null,
+          demotionReason: null,
+          exerciseType: ExerciseType.CLOZE,
+        },
+      ],
+      observations: [],
+      existing: [],
+    }), { apply: false, includeDemoted: false });
+
+    expect(result.historyRowCount).toBe(1);
+    const shift = result.diff.shifts.find((s) => s.grammarPointKey === 'es-a1-fw-my-family');
+    expect(shift).toBeDefined();
   });
 });
 
