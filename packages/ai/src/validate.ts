@@ -452,6 +452,45 @@ export function parseValidationResult(input: unknown): ValidationResult {
 }
 
 // ---------------------------------------------------------------------------
+// applyCandidateFillerConsistency — self-consistency check (report-only)
+// ---------------------------------------------------------------------------
+
+export const SELF_INCONSISTENT_REASON = "validator-self-inconsistent";
+
+/** Case/whitespace-insensitive membership, matching how a learner's answer
+ *  would be compared against the stored list. */
+function listed(needle: string, haystack: readonly string[]): boolean {
+  const n = needle.trim().toLowerCase();
+  return haystack.some((h) => h.trim().toLowerCase() === n);
+}
+
+/**
+ * `candidateFillers` makes `ambiguous` derivable: an `also-correct` filler that
+ * is not in `acceptableAnswers` contradicts `ambiguous: false`.
+ *
+ * REPORT-ONLY BY DESIGN. This appends a `flaggedReasons` entry and returns a
+ * new result; it must never mutate `ambiguous` or change routing. Flipping
+ * verdicts from an unvetted scratchpad is how #606's over-flagging happened.
+ * Promote to enforcement only once the replay harness shows the enumeration is
+ * trustworthy.
+ */
+export function applyCandidateFillerConsistency(
+  result: ValidationResult,
+  acceptableAnswers: readonly string[] | undefined,
+): ValidationResult {
+  if (result.ambiguous) return result;
+  const accepted = acceptableAnswers ?? [];
+  const contradiction = result.candidateFillers.some(
+    (c) => c.verdict === "also-correct" && !listed(c.filler, accepted),
+  );
+  if (!contradiction) return result;
+  return {
+    ...result,
+    flaggedReasons: [...result.flaggedReasons, SELF_INCONSISTENT_REASON],
+  };
+}
+
+// ---------------------------------------------------------------------------
 // validateDraft — single Claude call. Mirror of `evaluateAnswer`
 // (evaluate.ts:220-272) and `generateBatch`'s per-iter call shape
 // (generate.ts:551-580). Pure with respect to inputs — does NOT mutate
@@ -550,7 +589,14 @@ export async function validateDraft(
     );
   }
 
-  const result = parseValidationResult(toolUseBlock.input);
+  const parsed = parseValidationResult(toolUseBlock.input);
+  const result =
+    draft.contentJson.type === ExerciseType.CLOZE
+      ? applyCandidateFillerConsistency(
+          parsed,
+          draft.contentJson.acceptableAnswers,
+        )
+      : parsed;
   const tokenUsage = readUsage(response);
   return { result, tokenUsage };
 }

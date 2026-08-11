@@ -15,9 +15,11 @@ import {
   VALIDATION_SYSTEM_PROMPT_TEMPLATE,
 } from "./validation-prompts.js";
 import {
+  applyCandidateFillerConsistency,
   buildValidationTool,
   CANDIDATE_FILLER_VERDICTS,
   parseValidationResult,
+  SELF_INCONSISTENT_REASON,
   validateDraft,
   ValidationParseError,
   VALIDATION_MAX_TOKENS,
@@ -817,5 +819,62 @@ describe("sentence_construction validation prompt", () => {
   it("does not leak the SC scoring note into a cloze user prompt", () => {
     const prompt = buildValidationUserPrompt(makeDraft(clozeContent), baseSpec);
     expect(prompt).not.toContain("**Scoring note for sentence_construction:**");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// applyCandidateFillerConsistency
+// ---------------------------------------------------------------------------
+
+describe("applyCandidateFillerConsistency", () => {
+  const result = (over: Partial<ValidationResult>): ValidationResult => ({
+    qualityScore: 0.85, ambiguous: false, contextSpoilsAnswer: false,
+    levelMatch: true, grammarPointMatch: true, culturalIssues: [],
+    flaggedReasons: [], coverage: {}, candidateFillers: [], ...over,
+  });
+
+  it("flags an unlisted also-correct filler when ambiguous is false", () => {
+    const out = applyCandidateFillerConsistency(
+      result({ candidateFillers: [{ filler: "el menos", verdict: "also-correct", reason: "fits" }] }),
+      [],
+    );
+    expect(out.flaggedReasons).toContain(SELF_INCONSISTENT_REASON);
+  });
+
+  it("NEVER mutates ambiguous", () => {
+    const out = applyCandidateFillerConsistency(
+      result({ candidateFillers: [{ filler: "el menos", verdict: "also-correct", reason: "f" }] }),
+      [],
+    );
+    expect(out.ambiguous).toBe(false);
+  });
+
+  it("stays silent when the filler is enumerated in acceptableAnswers", () => {
+    const out = applyCandidateFillerConsistency(
+      result({ candidateFillers: [{ filler: "el menos", verdict: "also-correct", reason: "f" }] }),
+      ["el menos"],
+    );
+    expect(out.flaggedReasons).not.toContain(SELF_INCONSISTENT_REASON);
+  });
+
+  it("stays silent when ambiguous is already true", () => {
+    const out = applyCandidateFillerConsistency(
+      result({ ambiguous: true, candidateFillers: [{ filler: "x", verdict: "also-correct", reason: "f" }] }),
+      [],
+    );
+    expect(out.flaggedReasons).not.toContain(SELF_INCONSISTENT_REASON);
+  });
+
+  it("ignores ruled-out fillers", () => {
+    const out = applyCandidateFillerConsistency(
+      result({ candidateFillers: [{ filler: "x", verdict: "ruled-out", reason: "'ayer' forbids it" }] }),
+      [],
+    );
+    expect(out.flaggedReasons).not.toContain(SELF_INCONSISTENT_REASON);
+  });
+
+  it("is a no-op on an empty candidateFillers array", () => {
+    const out = applyCandidateFillerConsistency(result({}), []);
+    expect(out.flaggedReasons).toEqual([]);
   });
 });
