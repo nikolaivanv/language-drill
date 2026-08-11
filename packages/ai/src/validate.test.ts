@@ -15,6 +15,8 @@ import {
   VALIDATION_SYSTEM_PROMPT_TEMPLATE,
 } from "./validation-prompts.js";
 import {
+  buildValidationTool,
+  CANDIDATE_FILLER_VERDICTS,
   parseValidationResult,
   validateDraft,
   ValidationParseError,
@@ -142,6 +144,60 @@ describe("VALIDATION_TOOL", () => {
       }
     ).properties.coverage.properties;
     expect(coverageProps).toHaveProperty("comparison");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buildValidationTool
+// ---------------------------------------------------------------------------
+
+describe("buildValidationTool", () => {
+  it("puts candidateFillers FIRST in properties and required for cloze", () => {
+    const tool = buildValidationTool(ExerciseType.CLOZE);
+    const schema = tool.input_schema as {
+      properties: Record<string, unknown>;
+      required: string[];
+    };
+    expect(Object.keys(schema.properties)[0]).toBe("candidateFillers");
+    expect(schema.required[0]).toBe("candidateFillers");
+  });
+
+  it("omits candidateFillers for sentence_construction (guards #606)", () => {
+    const tool = buildValidationTool(ExerciseType.SENTENCE_CONSTRUCTION);
+    const schema = tool.input_schema as {
+      properties: Record<string, unknown>;
+      required: string[];
+    };
+    expect(schema.properties).not.toHaveProperty("candidateFillers");
+    expect(schema.required).not.toContain("candidateFillers");
+  });
+
+  it("keeps the seven pre-existing required fields for every type", () => {
+    for (const type of [ExerciseType.CLOZE, ExerciseType.TRANSLATION]) {
+      const schema = buildValidationTool(type).input_schema as {
+        required: string[];
+      };
+      for (const f of [
+        "qualityScore",
+        "ambiguous",
+        "contextSpoilsAnswer",
+        "levelMatch",
+        "grammarPointMatch",
+        "culturalIssues",
+        "flaggedReasons",
+      ]) {
+        expect(schema.required).toContain(f);
+      }
+    }
+  });
+
+  it("constrains verdict to the two-value enum", () => {
+    const schema = buildValidationTool(ExerciseType.CLOZE).input_schema as {
+      properties: { candidateFillers: { items: { properties: { verdict: { enum: string[] } } } } };
+    };
+    expect(schema.properties.candidateFillers.items.properties.verdict.enum).toEqual([
+      ...CANDIDATE_FILLER_VERDICTS,
+    ]);
   });
 });
 

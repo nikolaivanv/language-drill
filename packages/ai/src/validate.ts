@@ -64,117 +64,190 @@ export const VALIDATION_TEMPERATURE = 0.0;
 
 export const VALIDATION_TOOL_NAME = "submit_validation_result";
 
+// ---------------------------------------------------------------------------
+// Candidate fillers — working-out for the ambiguous verdict
+// ---------------------------------------------------------------------------
+
+export const CANDIDATE_FILLER_VERDICTS = ["also-correct", "ruled-out"] as const;
+
+export type CandidateFillerVerdict = (typeof CANDIDATE_FILLER_VERDICTS)[number];
+
+/** One adjudicated candidate fill. Non-load-bearing: never gates routing. */
+export type CandidateFiller = {
+  filler: string;
+  verdict: CandidateFillerVerdict;
+  reason: string;
+};
+
+const CANDIDATE_FILLERS_PROPERTY = {
+  type: "array" as const,
+  description:
+    "Fill this FIRST, before any other field. List 2-4 distinct fillers a " +
+    "competent speaker might write in the blank — including `correctAnswer` " +
+    "itself — and adjudicate each against the VISIBLE sentence alone, never " +
+    "against `correctAnswer`. This is your working-out for `ambiguous`, not a " +
+    "verdict.",
+  items: {
+    type: "object" as const,
+    properties: {
+      filler: { type: "string" as const, description: "The candidate fill." },
+      verdict: {
+        type: "string" as const,
+        enum: [...CANDIDATE_FILLER_VERDICTS],
+        description:
+          "`also-correct`: fully correct on the visible sentence AND satisfies " +
+          "the grammar point. `ruled-out`: something in the visible sentence " +
+          "forbids it.",
+      },
+      reason: {
+        type: "string" as const,
+        description:
+          "For `ruled-out`, quote the span of the visible sentence that forbids " +
+          "it. For `also-correct`, one clause on why it fits.",
+      },
+    },
+    required: ["filler", "verdict", "reason"],
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Existing validation properties (preserved byte-identical for prompt stability)
+// ---------------------------------------------------------------------------
+
 /**
  * Per-property descriptions restate the routing implication from plan §3.1
  * so Claude can self-calibrate while filling the tool input. The actual
  * routing happens in `routeValidationResult`
  * (packages/db/scripts/generate-exercises-validate.ts), not here.
  */
-export const VALIDATION_TOOL: Anthropic.Tool = {
-  name: VALIDATION_TOOL_NAME,
-  description:
-    "Submit the structured validation result for a generated language exercise.",
-  input_schema: {
-    type: "object" as const,
+const EXISTING_VALIDATION_PROPERTIES = {
+  qualityScore: {
+    type: "number",
+    description:
+      "Overall quality from 0.0 to 1.0. Below 0.5 will reject the draft; 0.5–0.7 will flag it for human review; >= 0.7 (with no other failures) auto-approves.",
+  },
+  ambiguous: {
+    type: "boolean",
+    description:
+      "True if more than one substantively different answer would be equally correct. For cloze: true when more than one plausibly-fitting lexeme/form satisfies the targeted grammar point in this sentence AND the draft's `acceptableAnswers` list does not enumerate them (e.g. 'Sınıfta sekiz ___ var' — chair/student/book all fit — with no `acceptableAnswers`). For translation: surface variation is fine, but two structurally different correct translations is ambiguous. For vocab_recall: the prompt must single out exactly one headword.",
+  },
+  contextSpoilsAnswer: {
+    type: "boolean",
+    description:
+      "True if the draft's `instructions` or `context` field gives away the answer — names the required suffix/form, states the rule's outcome, or otherwise lets the learner write the answer without engaging with the blank. Naming the rule category (e.g. 'vowel harmony', 'plural agreement after a numeral') is acceptable; stating the outcome (e.g. 'front vowel (e) requires -ler suffix' for a blank that takes -ler) is not. Auto-approval requires this to be false. Exception: when the user prompt carries a scoring note declaring a digit-form or definition-based elicitation as intended for this cell, that declared cue is NOT spoilage.",
+  },
+  levelMatch: {
+    type: "boolean",
+    description:
+      "True if the exercise sits at the requested CEFR level. False if vocabulary or grammar drifts above or below the target level.",
+  },
+  grammarPointMatch: {
+    type: "boolean",
+    description:
+      "True if the exercise actually tests the target grammar point. False if the targeting is incidental or absent.",
+  },
+  culturalIssues: {
+    type: "array",
+    items: { type: "string" },
+    description:
+      'Free-text descriptions of cultural concerns: stereotyping, sensitive content, exclusion. A single non-empty entry routes the draft to "rejected" regardless of qualityScore — this is intentional. Use sparingly.',
+  },
+  flaggedReasons: {
+    type: "array",
+    items: { type: "string" },
+    description:
+      'Free-text reasons that go into exercises.flagged_reasons when the draft routes to "flagged". Add anything that future-you would want to see when reviewing manually.',
+  },
+  coverage: {
+    type: "object",
+    description:
+      "Realized coverage values for this draft, on the axes the user prompt asks about. Fill ONLY the sub-fields requested for this exercise; omit the rest. These are descriptive tags for pool-diversity monitoring — they never affect approval.",
     properties: {
-      qualityScore: {
-        type: "number",
+      person: {
+        type: "string",
+        enum: [...COVERAGE_AXIS_VALUES.person],
         description:
-          "Overall quality from 0.0 to 1.0. Below 0.5 will reject the draft; 0.5–0.7 will flag it for human review; >= 0.7 (with no other failures) auto-approves.",
+          "Grammatical person/number realized by the target answer (the form the learner must produce).",
       },
-      ambiguous: {
-        type: "boolean",
+      wordClass: {
+        type: "string",
+        enum: [...COVERAGE_AXIS_VALUES.wordClass],
         description:
-          "True if more than one substantively different answer would be equally correct. For cloze: true when more than one plausibly-fitting lexeme/form satisfies the targeted grammar point in this sentence AND the draft's `acceptableAnswers` list does not enumerate them (e.g. 'Sınıfta sekiz ___ var' — chair/student/book all fit — with no `acceptableAnswers`). For translation: surface variation is fine, but two structurally different correct translations is ambiguous. For vocab_recall: the prompt must single out exactly one headword.",
+          "Part of speech of the target word (vocab_recall `expectedWord`).",
       },
-      contextSpoilsAnswer: {
-        type: "boolean",
+      polarity: {
+        type: "string",
+        enum: [...COVERAGE_AXIS_VALUES.polarity],
         description:
-          "True if the draft's `instructions` or `context` field gives away the answer — names the required suffix/form, states the rule's outcome, or otherwise lets the learner write the answer without engaging with the blank. Naming the rule category (e.g. 'vowel harmony', 'plural agreement after a numeral') is acceptable; stating the outcome (e.g. 'front vowel (e) requires -ler suffix' for a blank that takes -ler) is not. Auto-approval requires this to be false. Exception: when the user prompt carries a scoring note declaring a digit-form or definition-based elicitation as intended for this cell, that declared cue is NOT spoilage.",
+          "Whether the target sentence is affirmative or negative.",
       },
-      levelMatch: {
-        type: "boolean",
+      sentenceType: {
+        type: "string",
+        enum: [...COVERAGE_AXIS_VALUES.sentenceType],
         description:
-          "True if the exercise sits at the requested CEFR level. False if vocabulary or grammar drifts above or below the target level.",
+          "Clause type of the target sentence: declarative, interrogative, or imperative.",
       },
-      grammarPointMatch: {
-        type: "boolean",
+      number: {
+        type: "string",
+        enum: [...COVERAGE_AXIS_VALUES.number],
         description:
-          "True if the exercise actually tests the target grammar point. False if the targeting is incidental or absent.",
+          "Grammatical number realized by the target form (singular/plural).",
       },
-      culturalIssues: {
-        type: "array",
-        items: { type: "string" },
+      case: {
+        type: "string",
+        enum: [...COVERAGE_AXIS_VALUES.case],
         description:
-          'Free-text descriptions of cultural concerns: stereotyping, sensitive content, exclusion. A single non-empty entry routes the draft to "rejected" regardless of qualityScore — this is intentional. Use sparingly.',
+          "Grammatical case realized by the target form (nominative/accusative/dative/locative/ablative/genitive).",
       },
-      flaggedReasons: {
-        type: "array",
-        items: { type: "string" },
+      comparison: {
+        type: "string",
+        enum: [...COVERAGE_AXIS_VALUES.comparison],
         description:
-          'Free-text reasons that go into exercises.flagged_reasons when the draft routes to "flagged". Add anything that future-you would want to see when reviewing manually.',
-      },
-      coverage: {
-        type: "object",
-        description:
-          "Realized coverage values for this draft, on the axes the user prompt asks about. Fill ONLY the sub-fields requested for this exercise; omit the rest. These are descriptive tags for pool-diversity monitoring — they never affect approval.",
-        properties: {
-          person: {
-            type: "string",
-            enum: [...COVERAGE_AXIS_VALUES.person],
-            description:
-              "Grammatical person/number realized by the target answer (the form the learner must produce).",
-          },
-          wordClass: {
-            type: "string",
-            enum: [...COVERAGE_AXIS_VALUES.wordClass],
-            description:
-              "Part of speech of the target word (vocab_recall `expectedWord`).",
-          },
-          polarity: {
-            type: "string",
-            enum: [...COVERAGE_AXIS_VALUES.polarity],
-            description:
-              "Whether the target sentence is affirmative or negative.",
-          },
-          sentenceType: {
-            type: "string",
-            enum: [...COVERAGE_AXIS_VALUES.sentenceType],
-            description:
-              "Clause type of the target sentence: declarative, interrogative, or imperative.",
-          },
-          number: {
-            type: "string",
-            enum: [...COVERAGE_AXIS_VALUES.number],
-            description:
-              "Grammatical number realized by the target form (singular/plural).",
-          },
-          case: {
-            type: "string",
-            enum: [...COVERAGE_AXIS_VALUES.case],
-            description:
-              "Grammatical case realized by the target form (nominative/accusative/dative/locative/ablative/genitive).",
-          },
-          comparison: {
-            type: "string",
-            enum: [...COVERAGE_AXIS_VALUES.comparison],
-            description:
-              "Comparison construction realized by the target: comparative (superiority), superlative, equative (equality), or less (inferiority).",
-          },
-        },
+          "Comparison construction realized by the target: comparative (superiority), superlative, equative (equality), or less (inferiority).",
       },
     },
-    required: [
-      "qualityScore",
-      "ambiguous",
-      "contextSpoilsAnswer",
-      "levelMatch",
-      "grammarPointMatch",
-      "culturalIssues",
-      "flaggedReasons",
-    ],
   },
 };
+
+// ---------------------------------------------------------------------------
+// Validation tool builder
+// ---------------------------------------------------------------------------
+
+export function buildValidationTool(exerciseType: ExerciseType): Anthropic.Tool {
+  const isCloze = exerciseType === ExerciseType.CLOZE;
+  return {
+    name: VALIDATION_TOOL_NAME,
+    description:
+      "Submit the structured validation result for a generated language exercise.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        // Ordering is the mechanism: the model emits its candidate search
+        // before the `ambiguous` verdict, so the verdict is conditioned on the
+        // search rather than replacing it. Mirrors evaluate.ts's required
+        // `reasoning` scratchpad as first tool field.
+        ...(isCloze ? { candidateFillers: CANDIDATE_FILLERS_PROPERTY } : {}),
+        ...EXISTING_VALIDATION_PROPERTIES,
+      },
+      required: [
+        ...(isCloze ? ["candidateFillers"] : []),
+        "qualityScore",
+        "ambiguous",
+        "contextSpoilsAnswer",
+        "levelMatch",
+        "grammarPointMatch",
+        "culturalIssues",
+        "flaggedReasons",
+      ],
+    },
+  };
+}
+
+/**
+ * Convenience export: the standard validation tool for cloze exercises.
+ * For other exercise types, use buildValidationTool(exerciseType).
+ */
+export const VALIDATION_TOOL = buildValidationTool(ExerciseType.CLOZE);
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -416,7 +489,7 @@ export async function validateDraft(
         },
       ],
       messages: [{ role: "user" as const, content: userText }],
-      tools: [VALIDATION_TOOL],
+      tools: [buildValidationTool(draft.contentJson.type)],
       tool_choice: { type: "tool" as const, name: VALIDATION_TOOL_NAME },
       temperature: VALIDATION_TEMPERATURE,
     },
