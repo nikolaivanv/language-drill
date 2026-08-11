@@ -1,5 +1,23 @@
 /**
- * Per-cell generation target arithmetic. Pure: no I/O, no env.
+ * Per-cell generation target arithmetic (R3). Pure: no I/O, no env.
+ *
+ * Replaces the flat `TARGET_PER_CELL = 50` the scheduler used to top up every
+ * cell with a target derived from the cell's grammar point and
+ * `(exerciseType, cefrLevel)`, so narrow A1/A2 cells stop grinding an
+ * unreachable 50 into dedup waste.
+ *
+ * Resolution order:
+ *   1. `grammarPoint.targetOverride` — per-point precision knob for a narrow
+ *      point whose realistic distinct-exercise supply is well below the level
+ *      default; wins outright (R3.2).
+ *   2. `CELL_TARGET_DEFAULTS[exerciseType][cefrLevel]` — the level-appropriate
+ *      default, raised if needed to cover the largest single-axis floor sum in
+ *      the cell's `coverageSpec`, and separately raised to cover
+ *      `constructionVariants.length * MIN_PER_VARIANT` when the point declares
+ *      variants (floor-driven target: see `resolveCellTargetFor`).
+ *   3. `TARGET_PER_CELL` — global fallback for any `(type, level)` the table
+ *      leaves unset (e.g. B1/B2 cloze/translation, where 50 stays reachable),
+ *      also subject to the floor raise above.
  *
  * Moved here from `infra/lambda/src/generation/cell-targets.ts` (2026-08-11) for
  * the same reason `MIN_PER_VARIANT` lives in shared: `packages/db` cannot depend
@@ -18,6 +36,12 @@ export const TARGET_PER_CELL = 50;
 /**
  * Default per-cell targets keyed by `(exerciseType, cefrLevel)`. `Partial` on the
  * level axis: an unset level falls through to `TARGET_PER_CELL`.
+ *
+ * Design-tunable — the exact numbers are a design-phase decision (R3.1); the
+ * invariants that matter are (a) narrow A1/A2 cloze/translation cells resolve
+ * below the global 50, and (b) vocab_recall is capped low (10) at every level for
+ * token efficiency (a single umbrella exhausts its distinct-word surface fast;
+ * breadth comes from more cells).
  *
  * Keyed by `` `${ExerciseType}` `` (a template-literal TYPE over the string enum)
  * rather than by the enum value itself. `shared/src/index.ts` re-exports this

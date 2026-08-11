@@ -172,4 +172,7 @@ that axis from the spec — the variants subsume it.
 - `docs/analysis/coverage-spec-audit-2026-07-17.md` — full-curriculum triage of
   every spec-less grammar point (TR + ES; DE pending curriculum re-enable)
 - `packages/shared/src/coverage.ts` — axis/value vocabulary
-- `infra/lambda/src/generation/cell-targets.ts` — target arithmetic, give-up
+- `packages/shared/src/cell-targets.ts` — target arithmetic
+  (`infra/lambda/src/generation/cell-targets.ts` now keeps only the give-up
+  constant `GIVE_UP_MIN_ATTEMPTS` and the `Cell`-typed entry point that
+  delegates here)
