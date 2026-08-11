@@ -31,25 +31,38 @@ export const CELL_TARGET_DEFAULTS: Record<
   `${ExerciseType}`,
   Partial<Record<CurriculumCefrLevel, number>>
 > = {
-  // A1/A2 have a smaller realistic distinct-exercise ceiling than the global 50;
-  // B1/B2 are unset → they fall through to TARGET_PER_CELL.
+  // A1/A2 have a smaller realistic distinct-exercise ceiling than the global
+  // 50; B1/B2 are unset → they fall through to TARGET_PER_CELL.
   cloze: { A1: 20, A2: 30 },
   translation: { A1: 20, A2: 30 },
   sentence_construction: { A1: 20, A2: 30 },
   // A1/A2: narrow grammar-point verb-form space mirrors cloze/translation.
+  // B1/B2: unset → fall through to TARGET_PER_CELL (50 remains reachable).
   conjugation: { A1: 20, A2: 30 },
   // Capped low across every level (2026-06-07): vocab cells are the worst
   // token-efficiency offenders — a single "everyday" umbrella exhausts its
-  // realistic distinct-word surface fast (high dedup-give-up), so chasing the old
-  // 60–75 burned tokens for near-zero net new approvals. Breadth now comes from
-  // splitting into more themed umbrellas, not a high per-cell target.
+  // realistic distinct-word surface fast (high dedup-give-up), so chasing the
+  // old 60–75 burned tokens for near-zero net new approvals. 10 is enough to
+  // give the today-plan's single vocab slot variety across sessions; breadth
+  // now comes from splitting into more themed umbrellas, not a high per-cell
+  // target.
   vocab_recall: { A1: 10, A2: 10, B1: 10, B2: 10 },
-  // B1/B2: 15. A1/A2: 6/10 — the distinct-clip surface is small at low levels.
+  // B1/B2: 15. A1/A2: 6/10 — the distinct-clip surface is small at low levels
+  // (short clips), so a high target just grinds the dedup index; the per-ordinal
+  // domain rotation (dictation-generation-prompts.ts) makes these reachable.
   dictation: { A1: 6, A2: 10, B1: 15, B2: 15 },
-  // Capped LOW (5): the dedup surface is the title, and narrow topics hit heavy
-  // dedup-give-up above ~5 (the 2026-06-16 run stalled at 3 chasing 8).
+  // Free-writing prompts are batch-generated (Phase 2). Capped LOW (5) at every
+  // level: a single (language, level, topic) cell has a tiny distinct-title space
+  // — the dedup surface is the title — so even with the prior-title avoid-list and
+  // angle rotation, narrow topics hit heavy dedup-give-up above ~5 (the 2026-06-16
+  // run stalled at 3 on es-b1-fw-my-town / es-b2-fw-remote-work chasing 8). 5 is
+  // reachable per topic; breadth comes from more curated topic umbrellas. A1/A2
+  // are set for TR free-writing (2026-06-17).
   free_writing: { A1: 5, A2: 5, B1: 5, B2: 5 },
-  // B1+ only; capped low (8) — narrow distinct-source-sentence surface.
+  // Contextual paraphrase is a B1+ production drill (register/formality
+  // rewrites; not authored below B1). Capped low (8) like free_writing: a
+  // single grammar-point cell has a narrow distinct-source-sentence surface,
+  // so a high target would just grind the dedup index.
   contextual_paraphrase: { B1: 8, B2: 8 },
 };
 
@@ -62,20 +75,26 @@ export type CellTargetInput = {
 };
 
 /**
- * Resolve the generation target for a cell. Order: an explicit `targetOverride`
- * wins outright — including over the `constructionVariants` floor. A
- * `targetOverride` too small to let every declared variant reach
- * `MIN_PER_VARIANT` is an authoring mistake caught by
- * `assertCurriculumInvariants`, NOT by a throw here: this runs uncaught inside
- * the nightly scheduler's per-cell loop, so throwing would abort the whole run
- * for every language over one misconfigured point.
- *
- * Absent an override, the `(type, level)` table value (or the `TARGET_PER_CELL`
- * fallback) is raised to cover the largest single-axis floor sum in the
- * `coverageSpec` and the `constructionVariants` floor. One approved exercise
- * realizes one value per axis, so an axis whose floors sum to F needs >= F
- * exercises; taking the MAX over axes (never the product) guarantees headroom
- * for the tightest axis without multiplying axes together.
+ * Resolve the generation target for a cell. Pure. Order: an explicit
+ * `targetOverride` wins outright — including over the `constructionVariants`
+ * floor below. A `targetOverride` too small to let every declared variant
+ * reach `MIN_PER_VARIANT` is a curriculum-authoring mistake, not something
+ * this resolver can safely reject: `resolveCellTarget` (the
+ * `infra/lambda/src/generation/cell-targets.ts` entry point that delegates
+ * here) runs uncaught inside the nightly scheduler's per-cell loop
+ * (`infra/lambda/src/generation/scheduler.ts`), so throwing here would abort
+ * the entire run for every language over one misconfigured point. That
+ * combination is instead caught at authoring time by
+ * `assertCurriculumInvariants` (`packages/db/src/curriculum/index.ts`, the
+ * `constructionVariants` block), which the curriculum test suite runs on
+ * every commit. Absent an override, the `(type, level)` table value (or the
+ * `TARGET_PER_CELL` fallback) is raised, if needed, to cover the largest
+ * single-axis floor sum in the cell's `coverageSpec` and the
+ * `constructionVariants` floor. One approved exercise realizes one value per
+ * axis, so an axis whose floors sum to F needs ≥ F exercises; taking the MAX
+ * over axes (never the product) guarantees headroom for the tightest axis
+ * without multiplying axes together. Replaces the former person-rotation
+ * 1.5× multiplier with exact floor arithmetic.
  */
 export function resolveCellTargetFor(cell: CellTargetInput): number {
   const variants = cell.grammarPoint.constructionVariants;

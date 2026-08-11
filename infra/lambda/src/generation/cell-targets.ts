@@ -14,9 +14,10 @@ export { CELL_TARGET_DEFAULTS } from '@language-drill/shared';
 /**
  * Phase 1 coverage controller — a person bucket is **given up** (excluded from
  * the deficit) when its most recent targeted batch asked for it at least this
- * many times and produced zero approved drafts realizing it. Two honest attempts
- * before suppression; person buckets are small, so a single-attempt miss is too
- * noisy. Cleared by a CURRICULUM_VERSION bump. Design-tunable.
+ * many times and produced zero approved drafts realizing it. Two honest
+ * attempts before suppression; person buckets are small, so a single-attempt
+ * miss is too noisy. Cleared by a CURRICULUM_VERSION bump (same gate as the
+ * cell-level low-yield / saturated-dedup suppression). Design-tunable.
  */
 export const GIVE_UP_MIN_ATTEMPTS = 2;
 
