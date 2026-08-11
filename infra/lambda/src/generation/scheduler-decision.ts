@@ -41,7 +41,7 @@ import type { CoverageOutcome } from '@language-drill/shared';
 
 /** Target approved-exercise count per cell. The scheduler enqueues until each
  *  cell reaches this many auto-approved / manual-approved rows. */
-export const TARGET_PER_CELL = 50;
+export { TARGET_PER_CELL } from '@language-drill/shared';
 
 /**
  * R1.4 — a cell whose most recent succeeded job produced fewer than this many

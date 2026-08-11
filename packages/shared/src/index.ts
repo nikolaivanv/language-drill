@@ -624,3 +624,14 @@ export * from "./skill-movement";
 // ---------------------------------------------------------------------------
 
 export * from "./daily-goal";
+
+// ---------------------------------------------------------------------------
+// Per-cell generation target arithmetic (moved from @language-drill/lambda)
+// ---------------------------------------------------------------------------
+
+export {
+  TARGET_PER_CELL,
+  CELL_TARGET_DEFAULTS,
+  resolveCellTargetFor,
+} from './cell-targets';
+export type { CellTargetInput } from './cell-targets';
