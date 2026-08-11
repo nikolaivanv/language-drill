@@ -8,6 +8,7 @@ import {
   type CandidateRow,
 } from './backfill-variant-seeds';
 import { selectWrites, summarize, type ArtifactEntry } from './backfill-variant-seeds';
+import { applyWrites, applyAndPersist, type Artifact } from './backfill-variant-seeds';
 import type { ClassifierAssignment } from '@language-drill/ai';
 
 const withVariants = {
@@ -208,7 +209,120 @@ describe('summarize', () => {
     expect(s).toContain('v2: 1');
   });
 
+  it('renders the exact per-cell, per-variant table in sorted order', () => {
+    // A substring-only check would still pass if counts were flattened
+    // across cells into one shared map — pin the exact multi-line shape.
+    expect(summarize(entries)).toBe(
+      ['  ES:B1:cloze:p', '    v1: 2', '  ES:B1:translation:p', '    v2: 1'].join('\n'),
+    );
+  });
+
+  it('does NOT merge same-named variants counted in different cells', () => {
+    const crossCell: ArtifactEntry[] = [
+      { id: 'a', cellKey: 'ES:B1:cloze:p', oldSeedWord: null, newSeedWord: 'v1', confidence: 'high' },
+      { id: 'd', cellKey: 'ES:B2:cloze:q', oldSeedWord: null, newSeedWord: 'v1', confidence: 'high' },
+    ];
+    // If counts were keyed only by variant id (ignoring cell), this would
+    // render a single merged 'v1: 2' instead of two separate '1's.
+    expect(summarize(crossCell)).toBe(
+      ['  ES:B1:cloze:p', '    v1: 1', '  ES:B2:cloze:q', '    v1: 1'].join('\n'),
+    );
+  });
+
   it('reports nothing to do for an empty set rather than printing an empty table', () => {
     expect(summarize([])).toContain('no rows');
+  });
+});
+
+describe('applyWrites', () => {
+  const entries: ArtifactEntry[] = [
+    { id: 'a', cellKey: 'cell', oldSeedWord: null, newSeedWord: 'v1', confidence: 'high' },
+    { id: 'b', cellKey: 'cell', oldSeedWord: 'x', newSeedWord: 'v2', confidence: 'high' },
+    { id: 'c', cellKey: 'cell', oldSeedWord: null, newSeedWord: 'v3', confidence: 'high' },
+  ];
+
+  it('applies every entry and reports no failure when all writes succeed', async () => {
+    const written: Array<{ id: string; seedWord: string | null }> = [];
+    const result = await applyWrites(entries, async (id, seedWord) => {
+      written.push({ id, seedWord });
+    });
+    expect(result).toEqual({ appliedCount: 3, failure: null });
+    expect(written).toEqual([
+      { id: 'a', seedWord: 'v1' },
+      { id: 'b', seedWord: 'v2' },
+      { id: 'c', seedWord: 'v3' },
+    ]);
+  });
+
+  it('stops at the first failure and reports how many succeeded before it', async () => {
+    const written: string[] = [];
+    const result = await applyWrites(entries, async (id) => {
+      if (id === 'b') throw new Error('write failed: transient DB error');
+      written.push(id);
+    });
+    expect(result.appliedCount).toBe(1);
+    expect(result.failure).toBe('write failed: transient DB error');
+    // The third entry must never be attempted once the second one threw —
+    // no pressing on into what may be a persistent fault.
+    expect(written).toEqual(['a']);
+  });
+});
+
+describe('applyAndPersist', () => {
+  const baseArtifact: Artifact = {
+    name: 'run',
+    createdAtIso: '2026-08-11T00:00:00.000Z',
+    applied: false,
+    appliedCount: 0,
+    snapshotBranchId: 'br-abc',
+    minConfidence: 'high',
+    entries: [
+      { id: 'a', cellKey: 'cell', oldSeedWord: null, newSeedWord: 'v1', confidence: 'high' },
+      { id: 'b', cellKey: 'cell', oldSeedWord: 'x', newSeedWord: 'v2', confidence: 'high' },
+      { id: 'c', cellKey: 'cell', oldSeedWord: null, newSeedWord: 'v3', confidence: 'high' },
+    ],
+  };
+
+  it('persists the artifact BEFORE any write, and again with the final state after', async () => {
+    const persisted: Artifact[] = [];
+    const result = await applyAndPersist(
+      baseArtifact,
+      async () => {},
+      (a) => persisted.push(a),
+    );
+    expect(result).toEqual({ appliedCount: 3, failure: null });
+    expect(persisted).toHaveLength(2);
+    // First persist happens before any row is touched: unapplied, zero count.
+    expect(persisted[0].applied).toBe(false);
+    expect(persisted[0].appliedCount).toBe(0);
+    // Second persist reflects the completed apply.
+    expect(persisted[1].applied).toBe(true);
+    expect(persisted[1].appliedCount).toBe(3);
+  });
+
+  it('still persists a completed artifact when a write fails partway — the fine-grained revert source must survive the crash', async () => {
+    const persisted: Artifact[] = [];
+    let calls = 0;
+    const result = await applyAndPersist(
+      baseArtifact,
+      async () => {
+        calls++;
+        if (calls === 2) throw new Error('boom');
+      },
+      (a) => persisted.push(a),
+    );
+    expect(result).toEqual({ appliedCount: 1, failure: 'boom' });
+    // Even though the run failed partway, both persists happened — the
+    // artifact on disk reflects exactly the 1 row that was actually written,
+    // not the 3 that were candidates.
+    expect(persisted).toHaveLength(2);
+    expect(persisted[1].applied).toBe(false);
+    expect(persisted[1].appliedCount).toBe(1);
+  });
+
+  it('does not mutate the artifact object passed in', async () => {
+    const snapshot = JSON.parse(JSON.stringify(baseArtifact)) as Artifact;
+    await applyAndPersist(baseArtifact, async () => {}, () => {});
+    expect(baseArtifact).toEqual(snapshot);
   });
 });

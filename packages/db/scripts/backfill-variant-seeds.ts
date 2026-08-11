@@ -237,7 +237,14 @@ export type ArtifactEntry = {
 export type Artifact = {
   name: string;
   createdAtIso: string;
+  /** True only when every entry's write succeeded — false on a partial apply. */
   applied: boolean;
+  /**
+   * How many entries were actually written before either finishing or hitting
+   * a failure. 0 for an unapplied (dry-run) artifact. Distinct from
+   * `entries.length`, which is the full candidate set regardless of outcome.
+   */
+  appliedCount: number;
   snapshotBranchId: string | null;
   minConfidence: 'high' | 'medium';
   entries: ArtifactEntry[];
@@ -349,6 +356,53 @@ async function writeSeed(
     .where(eq(exercises.id, id));
 }
 
+export type ApplyResult = { appliedCount: number; failure: string | null };
+
+/**
+ * Apply each entry's write in order, stopping at the first failure rather
+ * than pressing on into what may be a persistent fault. Returns how many
+ * writes succeeded before either finishing or failing, so the caller can
+ * report a partial apply accurately instead of guessing from a thrown error.
+ */
+export async function applyWrites(
+  entries: readonly ArtifactEntry[],
+  write: (id: string, seedWord: string | null) => Promise<void>,
+): Promise<ApplyResult> {
+  let appliedCount = 0;
+  for (const e of entries) {
+    try {
+      await write(e.id, e.newSeedWord);
+      appliedCount++;
+    } catch (err) {
+      return { appliedCount, failure: err instanceof Error ? err.message : String(err) };
+    }
+  }
+  return { appliedCount, failure: null };
+}
+
+/**
+ * Persist the artifact BEFORE any row is touched — so the fine-grained
+ * revert source exists even if the process dies mid-apply — then run the
+ * writes fail-fast, then persist the final `applied`/`appliedCount` state.
+ * Without the first persist, a crash after row 150 of 300 leaves 150 rows
+ * changed with no artifact to revert them from; the Neon snapshot is still
+ * there as a coarse fallback, but the design promises two independent
+ * undo paths, not one.
+ *
+ * `write` and `persist` are injected so this orchestration is unit-testable
+ * without a real DB connection or filesystem.
+ */
+export async function applyAndPersist(
+  artifact: Artifact,
+  write: (id: string, seedWord: string | null) => Promise<void>,
+  persist: (artifact: Artifact) => void,
+): Promise<ApplyResult> {
+  persist(artifact);
+  const result = await applyWrites(artifact.entries, write);
+  persist({ ...artifact, applied: result.failure === null, appliedCount: result.appliedCount });
+  return result;
+}
+
 async function runRevert(args: BackfillArgs): Promise<void> {
   const artifact = JSON.parse(readFileSync(args.revertFrom!, 'utf8')) as Artifact;
   console.log(`[backfill-variant-seeds] revert: ${artifact.entries.length} entries from ${args.revertFrom}`);
@@ -405,6 +459,12 @@ async function main(): Promise<void> {
       contentJson: (r.contentJson ?? {}) as Record<string, unknown>,
     };
     if (!isEligible(gp, row)) continue;
+    // Display-only grouping key for the artifact and printed summary — NOT
+    // the canonical `buildCellKey`/`generation_jobs.cell_key` format (that
+    // one lowercases language/level; this keeps the DB's stored casing). It
+    // is never joined against `generation_jobs`, so the case mismatch is
+    // harmless; don't "fix" it to match `buildCellKey` without checking
+    // every consumer of the artifact JSON first.
     const cellKey = `${row.language}:${row.difficulty}:${row.type}:${row.grammarPointKey}`;
     let cell = cells.get(cellKey);
     if (!cell) { cell = { gp, rows: [] }; cells.set(cellKey, cell); }
@@ -431,6 +491,16 @@ async function main(): Promise<void> {
         limit(async () => {
           if (estimateCostUsd(usage) >= args.maxCostUsd) {
             // Never truncate silently — a skipped batch is reported, not dropped.
+            //
+            // This is a soft, racy cap, not a hard ceiling: `usage` is read
+            // synchronously before this batch's first await, and `pLimit`
+            // dispatches up to `concurrency` batches synchronously, so up to
+            // `concurrency - 1` batches can already be in flight — reading
+            // the same stale `usage` — before any of them updates it. The
+            // post-run check below turns any resulting overshoot into a
+            // visible warning instead of a silently-blown budget. Do not
+            // "fix" this by serializing dispatch — the same pattern exists
+            // in revalidate-cloze-pool.ts and the tradeoff is intentional.
             failures.push(`${cellKey}: skipped, hit --max-cost-usd ${args.maxCostUsd}`);
             return [] as ArtifactEntry[];
           }
@@ -453,7 +523,8 @@ async function main(): Promise<void> {
   const artifact: Artifact = {
     name: args.name,
     createdAtIso: new Date().toISOString(),
-    applied: args.apply,
+    applied: false,
+    appliedCount: 0,
     snapshotBranchId: args.snapshot,
     minConfidence: args.minConfidence,
     entries,
@@ -464,19 +535,44 @@ async function main(): Promise<void> {
     console.log(`\n[backfill-variant-seeds] ${failures.length} batch failures:`);
     for (const f of failures) console.log(`  ${f}`);
   }
-  console.log(`\n[backfill-variant-seeds] estimated cost $${estimateCostUsd(usage).toFixed(2)}`);
-
-  if (args.apply) {
-    for (const e of entries) await writeSeed(db, e.id, e.newSeedWord);
-    console.log(`[backfill-variant-seeds] APPLIED ${entries.length} rows.`);
-    console.log('[backfill-variant-seeds] Re-run `pnpm audit:collapse --dry-run` and confirm unrecognizedSeedCount fell.');
-  } else {
-    console.log('[backfill-variant-seeds] dry-run: nothing written. Pass --apply --snapshot <branch> to write.');
+  const finalCostUsd = estimateCostUsd(usage);
+  console.log(`\n[backfill-variant-seeds] estimated cost $${finalCostUsd.toFixed(2)}`);
+  if (finalCostUsd > args.maxCostUsd) {
+    // See the comment at the cost-guard check above: this is the visible
+    // side of a known, accepted race — a bounded overshoot, not silent.
+    console.warn(
+      `[backfill-variant-seeds] WARNING: estimated cost $${finalCostUsd.toFixed(2)} exceeded ` +
+        `--max-cost-usd $${args.maxCostUsd.toFixed(2)} by $${(finalCostUsd - args.maxCostUsd).toFixed(2)} — ` +
+        `up to ${Math.max(args.concurrency - 1, 0)} batches can start before an in-flight batch updates the running total.`,
+    );
   }
 
   const out = artifactPath(args.name);
-  writeFileSync(out, JSON.stringify(artifact, null, 2), 'utf8');
-  console.log(`[backfill-variant-seeds] artifact written to ${out}`);
+  const persist = (a: Artifact): void => {
+    writeFileSync(out, JSON.stringify(a, null, 2), 'utf8');
+    console.log(`[backfill-variant-seeds] artifact written to ${out}`);
+  };
+
+  if (args.apply) {
+    // `applyAndPersist` writes the artifact BEFORE touching any row, so a
+    // crash partway through still leaves a revert source on disk.
+    const result = await applyAndPersist(artifact, (id, seedWord) => writeSeed(db, id, seedWord), persist);
+    if (result.failure === null) {
+      console.log(`[backfill-variant-seeds] APPLIED ${result.appliedCount} rows.`);
+      console.log('[backfill-variant-seeds] Re-run `pnpm audit:collapse --dry-run` and confirm unrecognizedSeedCount fell.');
+    } else {
+      console.error(
+        `[backfill-variant-seeds] STOPPED after ${result.appliedCount}/${entries.length} rows — write failed: ${result.failure}`,
+      );
+      console.error(
+        `[backfill-variant-seeds] the artifact at ${out} reflects only the ${result.appliedCount} rows actually ` +
+          `written; revert them with --revert ${out} --apply once the fault is understood.`,
+      );
+    }
+  } else {
+    persist(artifact);
+    console.log('[backfill-variant-seeds] dry-run: nothing written. Pass --apply --snapshot <branch> to write.');
+  }
 }
 
 const isMain =
