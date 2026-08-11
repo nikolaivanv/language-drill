@@ -7,8 +7,8 @@
  * See docs/superpowers/specs/2026-08-11-pool-collapse-audit-design.md.
  *
  * Usage:
- *   pnpm audit:collapse -- --dry-run
- *   pnpm audit:collapse -- --language ES --cefr B1 --max-cost-usd 2
+ *   pnpm audit:collapse --dry-run
+ *   pnpm audit:collapse --language ES --cefr B1 --max-cost-usd 2
  */
 
 import { mkdirSync, writeFileSync } from 'node:fs';
