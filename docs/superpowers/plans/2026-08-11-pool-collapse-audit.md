@@ -1069,8 +1069,15 @@ describe('computeStemMonotony', () => {
     }));
 
   it('reports the most common content lemma and the share of stems containing it', () => {
+    // Only `restaurante` recurs; every other content word appears once, so
+    // there is no df tie for the alphabetical tie-break to resolve.
     const rows = stems([
-      ...Array(6).fill('El restaurante nuevo tiene la mejor paella.'),
+      'El restaurante nuevo tiene la mejor paella.',
+      'Cenamos en el restaurante ayer.',
+      'El restaurante cierra los lunes.',
+      'Mi hermano trabaja en un restaurante.',
+      'El restaurante lleno hoy.',
+      'Buscamos un restaurante barato.',
       'La iglesia es antigua.',
       'El tren llega tarde.',
       'Mi hermana estudia mucho.',
@@ -1084,8 +1091,15 @@ describe('computeStemMonotony', () => {
   });
 
   it('counts a lemma once per stem, not once per occurrence', () => {
-    const rows = stems(['El restaurante del restaurante restaurante.', 'La iglesia.']);
-    expect(computeStemMonotony(ExerciseType.CLOZE, rows)!.count).toBe(1);
+    const rows = stems([
+      'El restaurante del restaurante restaurante.',
+      'La iglesia del pueblo.',
+      'El restaurante nuevo.',
+    ]);
+    const result = computeStemMonotony(ExerciseType.CLOZE, rows)!;
+    expect(result.topLemma).toBe('restaurante');
+    // Two STEMS contain it, though it occurs four times overall.
+    expect(result.count).toBe(2);
   });
 
   it('drops stopwords so function words never dominate', () => {
@@ -2581,7 +2595,9 @@ describe('analyzeCell', () => {
   it('does not flag a diverse cell', () => {
     const diverse = Array.from({ length: 20 }, (_, i) => ({
       correctAnswer: `w${i}`,
-      sentence: `stem ${i}`,
+      // Every content token is unique per row. A `stem ${i}` shape would put the
+      // literal word "stem" in all 20 stems — 100% monotony, flagged correctly.
+      sentence: `frase${i} palabra${i}`,
     }));
     const f = analyzeCell(cell(point(), diverse), opts);
     expect(f.surfaceFlagged).toBe(false);
@@ -2821,6 +2837,12 @@ function declaredButUnrealized(
   variants: VariantSkew | null,
 ): boolean {
   if (spec && spec.shortfalls.length > 0) return true;
+  // `overQuota` is deliberately NOT a trigger here. It fires on ANY imbalance —
+  // an 11/9 split, or 11/10 where exact balance is arithmetically impossible —
+  // so including it would mark almost every variant-bearing cell as pre-empted
+  // and silently suppress triage across the board. Over-representation means the
+  // mechanism IS working, just unevenly; it is reported (see the `unrealized`
+  // render filter below) but it does not stand in for a MISSING mechanism.
   if (variants && (variants.underMin.length > 0 || variants.unrecognizedSeedCount > 0)) return true;
   return false;
 }
@@ -2908,8 +2930,14 @@ const pct = (n: number): string => `${Math.round(n * 100)}%`;
 
 export function renderMarkdown(report: AuditReport): string {
   const confirmed = report.findings.filter((f) => f.verdict?.verdict === 'collapsed');
+  // Must include overQuota: an over-represented-variant-only finding matches no
+  // other section, so omitting it here makes the finding vanish from the report.
   const unrealized = report.findings.filter(
-    (f) => f.specShortfall?.shortfalls.length || f.variantSkew?.underMin.length || f.variantSkew?.unrecognizedSeedCount,
+    (f) =>
+      f.specShortfall?.shortfalls.length ||
+      f.variantSkew?.underMin.length ||
+      f.variantSkew?.overQuota.length ||
+      f.variantSkew?.unrecognizedSeedCount,
   );
   const monotony = report.findings.filter((f) => f.monotonyFlagged && !f.dismissedByLedger);
   const dismissed = report.findings.filter(
@@ -2925,14 +2953,22 @@ export function renderMarkdown(report: AuditReport): string {
     `- Cells scanned: **${report.scanned}**`,
     `- Flagged by a signal: **${report.findings.filter((f) => f.surfaceFlagged || f.monotonyFlagged).length}**`,
     `- Confirmed collapsed: **${confirmed.length}**`,
-    `- Declared but unrealized: **${unrealized.length}**`,
-    `- Dismissed (ledger + triage): **${dismissed.length}**`,
+    // Worded so the two lines do not read as a partition — a cell can legitimately
+    // be in both (a dismissed surface concentration AND an unmet declared floor).
+    `- Cells with a declared-but-unrealized mechanism: **${unrealized.length}**`,
+    `- Cells whose surface/monotony flag was dismissed (ledger + triage): **${dismissed.length}**`,
     `- Triage errors: **${errors.length}**`,
     `- Estimated cost: **$${report.costUsd.toFixed(2)}**`,
     '',
   ];
 
-  if (confirmed.length === 0 && unrealized.length === 0 && monotony.length === 0) {
+  if (
+    confirmed.length === 0 &&
+    unrealized.length === 0 &&
+    monotony.length === 0 &&
+    dismissed.length === 0 &&
+    errors.length === 0
+  ) {
     out.push('No collapse findings. Nothing to act on.', '');
   }
 
@@ -3022,7 +3058,12 @@ export function renderMarkdown(report: AuditReport): string {
       const why = f.dismissedByLedger
         ? 'ledger'
         : `triage: ${f.verdict?.verdict} — ${f.verdict?.rationale}`;
-      out.push(`- \`${f.cellKey}\` — ${why}`);
+      // A dismissed surface concentration does NOT clear an unmet declared floor;
+      // without this cross-reference the entry reads as "this cell is fine".
+      const alsoUnrealized = unrealized.includes(f)
+        ? ' — **also has an unrealized declared mechanism; see above**'
+        : '';
+      out.push(`- \`${f.cellKey}\` — ${why}${alsoUnrealized}`);
     }
     out.push('');
   }
