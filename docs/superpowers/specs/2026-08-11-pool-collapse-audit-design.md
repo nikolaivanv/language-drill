@@ -245,6 +245,51 @@ It pays for itself immediately and independently of generation ever resuming: **
 the #631 repass worklist** — 31 points with variants declared, pool unrepassed, currently an
 outstanding manual task with no inventory.
 
+## Findings from the first production run (2026-08-11)
+
+The read-only sweep and a cost-capped triage trial (DE only, $0.11, 24 verdicts)
+both ran against production. All three acceptance criteria above passed: 752 cells
+scanned, 310 flagged, 184 declared-but-unrealized, and all 31 variant-bearing
+points surfaced under signal 2. Four things the run taught us that this design did
+not anticipate:
+
+**`es-b1-impersonal-plural`'s figures here were stale.** This document predicted
+~100 approved rows with a null `seedWord`. Production actually holds 60 rows with
+`unrecognizedSeedCount = 0` — every row carries a recognized variant id, heavily
+skewed onto `hearsay-dicen-que`. The defect is real but it is *skew*, not
+*unlabelled rows*, so the repass recipe for this point starts from a different
+state than the #631 design assumed. Re-derive per-cell numbers from a fresh sweep
+rather than trusting either document's figures.
+
+**The stem-monotony signal mostly measures a point's own target lexeme.** At the
+original 0.5 threshold it flagged 279 cells; spot-checks showed the majority were
+the grammar point's target word (`dass`, `nachdem`, `if`, `gestern`) appearing in
+every stem at share ≈ 1.0 — correct content, not topic repetition. Those survive
+even a 0.95 threshold, so tuning alone cannot fix it. The default is now 0.85
+(109 flags) as an interim. **The durable fix is to exclude each point's own target
+lexeme from the content-lemma count**, which is the v2 this design deferred as
+"clustering"; it turns out the cheaper fix is lexeme exclusion, not clustering.
+Do not drop the signal — spot-checks also found genuine repetition, one case
+independently corroborating a real variant-skew defect.
+
+**There is no `gender` coverage axis, and the triage prompt has no way to say so.**
+The trial's one questionable verdict recommended `coverage-spec` with axis `case`
+for `de-b1-articles-use`, whose pool is actually concentrated by *gender*. The
+closed axis vocabulary (`person | number | case | wordClass | polarity |
+sentenceType | comparison`) cannot express gender, so the model reached for the
+nearest available axis rather than reporting the vocabulary as insufficient — and
+that recommendation would not work, since `case`'s floors can be satisfied entirely
+with feminine nouns. It was the only `medium`-confidence verdict of the seven,
+which suggests partial self-awareness. Two candidate fixes, neither in this design:
+add a `gender` axis to the shared vocabulary, or give the triage tool an explicit
+"no available mechanism expresses this" escape hatch.
+
+**`sentence_construction` collapse is measured on the wrong side.** Signal 1 reads
+the SC cell's `prompt` — the task framing — because free production has no single
+stored answer. The trial surfaced `de-b1-subordinate-conjunctions`, whose *answers*
+are `obwohl`-heavy while its prompts vary fine. Nothing in the tool can see that.
+A future signal would have to read `modelAnswers`, or sample learner submissions.
+
 ## Out of scope
 
 - **Authoring proposals.** `propose:coverage-spec` already covers that half; this design
