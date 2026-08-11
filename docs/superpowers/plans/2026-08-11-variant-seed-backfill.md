@@ -1109,6 +1109,27 @@ Expected: FAIL — `selectWrites is not exported`.
 
 - [ ] **Step 3: Write the implementation**
 
+> **CORRECTIONS — this task's code block below shipped with three defects, all
+> found during execution and fixed in the committed implementation. Read the
+> shipped file, not this snippet, if they disagree.**
+>
+> 1. **`res.usage` is raw `Anthropic.Usage` (snake_case), not
+>    `ClaudeUsageBreakdown`** — `addUsage(usage, res.usage)` below does not
+>    typecheck. The implementation adds a local `readUsage()` conversion,
+>    mirroring `packages/ai/src/qa-sample.ts`.
+> 2. **The artifact must be persisted BEFORE the apply loop, not after.** As
+>    written below, a write throwing partway through leaves rows changed and the
+>    rollback artifact never written — losing the fine-grained undo for exactly
+>    the partial-failure case it exists for. The implementation persists first
+>    with `applied: false`, fails fast per row, then re-persists final state; it
+>    also adds `appliedCount: number` to `Artifact`.
+> 3. **`--max-cost-usd` is not a hard cap.** `pLimit` dispatches synchronously,
+>    so the first `concurrency` batches all read the same stale running total and
+>    up to `concurrency − 1` can start past the cap. The concurrency model is
+>    deliberately left alone (the same pattern exists in
+>    `revalidate-cloze-pool.ts`); the implementation prints an explicit overshoot
+>    warning instead.
+
 Append to `packages/db/scripts/backfill-variant-seeds.ts`. The imports below go into the **existing import block at the top of the file**:
 
 ```ts
