@@ -20,7 +20,8 @@ import { and, inArray, isNotNull, sql } from 'drizzle-orm';
 
 import { ExerciseType, resolveCellTargetFor } from '@language-drill/shared';
 import type { CoverageTags, CurriculumCefrLevel, GrammarPoint, LearningLanguage } from '@language-drill/shared';
-import { createDb, exercises, getGrammarPoint, requireEnv, isDismissed } from '@language-drill/db';
+import { createDb, exercises, getGrammarPoint, requireEnv, findDismissal } from '@language-drill/db';
+import type { CollapseSignal } from '@language-drill/db';
 import type Anthropic from '@anthropic-ai/sdk';
 
 import {
@@ -29,6 +30,7 @@ import {
   computeSurfaceCollapse,
   computeVariantSkew,
   isSurfaceFlagged,
+  MONOTONY_THRESHOLD_DEFAULT,
   type AuditRow,
   type SpecShortfall,
   type StemMonotony,
@@ -94,7 +96,9 @@ export function parseAuditArgs(argv: string[]): AuditFilters {
       limit: { type: 'string' },
       'min-rows': { type: 'string', default: '15' },
       threshold: { type: 'string', default: '0.65' },
-      'monotony-threshold': { type: 'string', default: '0.85' },
+      // Sourced from the constant so editing the documented default actually
+      // changes the CLI default — a hard-coded literal here silently forked them.
+      'monotony-threshold': { type: 'string', default: String(MONOTONY_THRESHOLD_DEFAULT) },
       'max-cost-usd': { type: 'string', default: '2' },
       'dry-run': { type: 'boolean', default: false },
       name: { type: 'string' },
@@ -107,9 +111,18 @@ export function parseAuditArgs(argv: string[]): AuditFilters {
     console.log(
       'Usage: audit:collapse [--language ES] [--cefr B1] [--type cloze] [--grammar-point <key>]\n' +
         '                     [--limit N] [--min-rows 15] [--threshold 0.65]\n' +
-        '                     [--monotony-threshold 0.85] [--max-cost-usd 2] [--dry-run] [--name <run>]',
+        `                     [--monotony-threshold ${MONOTONY_THRESHOLD_DEFAULT}] [--max-cost-usd 2] [--dry-run] [--name <run>]`,
     );
     process.exit(0);
+  }
+
+  // Fail fast on a typo'd type. Unvalidated, `--type close` matches zero rows and
+  // the run reports "No collapse findings. Nothing to act on." — a clean bill of
+  // health for a query that never ran.
+  if (values.type !== undefined && !EXERCISE_TYPES.has(values.type)) {
+    throw new Error(
+      `--type must be one of ${[...EXERCISE_TYPES].sort().join(', ')}, got '${values.type}'`,
+    );
   }
 
   const minRows = Number(values['min-rows']);
@@ -231,6 +244,17 @@ export type AnalyzeOptions = {
   monotonyThreshold: number;
 };
 
+/** A ledger entry that accounted for one of this cell's flags, flattened for the
+ *  report JSON. Carries `reason` / `dismissedOn` so the markdown can show WHY a
+ *  cell was suppressed instead of the bare word "ledger". */
+export type LedgerNote = {
+  signal: CollapseSignal;
+  /** null = the entry dismisses the cell whatever surface dominates. */
+  surface: string | null;
+  reason: string;
+  dismissedOn: string;
+};
+
 export type CellFinding = {
   cellKey: string;
   grammarPointKey: string;
@@ -244,7 +268,19 @@ export type CellFinding = {
   monotonyFlagged: boolean;
   specShortfall: SpecShortfall | null;
   variantSkew: VariantSkew | null;
+  /**
+   * PER-SIGNAL dismissal state. Kept separate on purpose: collapsing them into a
+   * single boolean meant a `stem-monotony` dismissal also suppressed an
+   * UNDISMISSED answer-surface collapse on the same cell (and vice versa), which
+   * contradicts the ledger's (point, type, surface, signal) key.
+   */
+  surfaceDismissed: boolean;
+  monotonyDismissed: boolean;
+  /** Derived: `surfaceDismissed || monotonyDismissed`. Only the Dismissed
+   *  section may use this — it must never gate a per-signal section or triage. */
   dismissedByLedger: boolean;
+  /** The matched ledger entries, for the Dismissed section's rationale line. */
+  ledgerNotes: LedgerNote[];
   /** Signal 2 already explains this cell — see `analyzeCell`. */
   preempted: boolean;
   needsTriage: boolean;
@@ -293,13 +329,30 @@ export function analyzeCell(cell: AuditCell, opts: AnalyzeOptions): CellFinding 
 
   const preempted = declaredButUnrealized(specShortfall, variantSkew);
 
-  const dismissedByLedger =
-    (surfaceFlagged &&
-      surface !== null &&
-      isDismissed(cell.grammarPoint.key, cell.exerciseType, surface.topSurface, 'answer-surface')) ||
-    (monotonyFlagged &&
-      monotony !== null &&
-      isDismissed(cell.grammarPoint.key, cell.exerciseType, monotony.topLemma, 'stem-monotony'));
+  const surfaceEntry =
+    surfaceFlagged && surface !== null
+      ? findDismissal(cell.grammarPoint.key, cell.exerciseType, surface.topSurface, 'answer-surface')
+      : undefined;
+  const monotonyEntry =
+    monotonyFlagged && monotony !== null
+      ? findDismissal(cell.grammarPoint.key, cell.exerciseType, monotony.topLemma, 'stem-monotony')
+      : undefined;
+
+  const surfaceDismissed = surfaceEntry !== undefined;
+  const monotonyDismissed = monotonyEntry !== undefined;
+  const ledgerNotes: LedgerNote[] = [surfaceEntry, monotonyEntry]
+    .filter((d): d is NonNullable<typeof d> => d !== undefined)
+    .map((d) => ({
+      signal: d.signal,
+      surface: d.surface,
+      reason: d.reason,
+      dismissedOn: d.dismissedOn,
+    }));
+
+  // Each signal is judged against ITS OWN dismissal, so a dismissed monotony flag
+  // cannot swallow a live surface collapse.
+  const liveSurface = surfaceFlagged && !surfaceDismissed;
+  const liveMonotony = monotonyFlagged && !monotonyDismissed;
 
   return {
     cellKey: cell.cellKey,
@@ -314,9 +367,12 @@ export function analyzeCell(cell: AuditCell, opts: AnalyzeOptions): CellFinding 
     monotonyFlagged,
     specShortfall,
     variantSkew,
-    dismissedByLedger,
+    surfaceDismissed,
+    monotonyDismissed,
+    dismissedByLedger: surfaceDismissed || monotonyDismissed,
+    ledgerNotes,
     preempted,
-    needsTriage: (surfaceFlagged || monotonyFlagged) && !dismissedByLedger && !preempted,
+    needsTriage: (liveSurface || liveMonotony) && !preempted,
     verdict: null,
     triageError: null,
   };
@@ -349,19 +405,60 @@ const NEXT_ACTION: Record<string, string> = {
 
 const pct = (n: number): string => `${Math.round(n * 100)}%`;
 
+/**
+ * Which signal a finding is actually being reported ON. The single definition
+ * used by the renderer AND by `main()` when it builds the triage input — they
+ * must agree, or the report explains a cell with numbers from the other signal.
+ */
+export function primarySignal(f: CellFinding): CollapseSignal {
+  return f.surfaceFlagged && !f.surfaceDismissed ? 'answer-surface' : 'stem-monotony';
+}
+
+/** The one-line evidence for whichever signal fired. Monotony supplies most
+ *  flags under `--dry-run`, so printing the surface share there showed a number
+ *  BELOW the flag threshold — or literally `undefined` when `surface` is null. */
+function signalDetail(f: CellFinding): string {
+  const surfaceLine = (s: NonNullable<CellFinding['surface']>): string =>
+    `- Top surface: \`${s.topSurface}\` at **${pct(s.share)}** (${s.topCount}/${s.total})`;
+  const monotonyLine = (m: NonNullable<CellFinding['monotony']>): string =>
+    `- Top stem lemma: \`${m.topLemma}\` in **${pct(m.share)}** of stems (${m.count}/${m.total})`;
+
+  if (primarySignal(f) === 'answer-surface' && f.surface !== null) return surfaceLine(f.surface);
+  if (f.monotony !== null) return monotonyLine(f.monotony);
+  if (f.surface !== null) return surfaceLine(f.surface);
+  return '- No surface or stem detail recorded for this cell.';
+}
+
+/** Ranking key for the flagged sections: the share of the signal that fired, so a
+ *  monotony-driven collapse is not sorted below every surface finding. */
+function signalShare(f: CellFinding): number {
+  if (primarySignal(f) === 'answer-surface' && f.surface !== null) return f.surface.share;
+  return f.monotony?.share ?? f.surface?.share ?? 0;
+}
+
 export function renderMarkdown(report: AuditReport): string {
   const confirmed = report.findings.filter((f) => f.verdict?.verdict === 'collapsed');
   const awaitingTriage = report.findings.filter(
     (f) => f.needsTriage && f.verdict === null && f.triageError === null,
   );
+  // A MISSING mechanism: a declared floor with nothing behind it, a variant too
+  // thin to rotate, or rows carrying no recognized variant id. Exactly the
+  // triggers `declaredButUnrealized` uses — the two lists must stay in step, and
+  // the "every non-trivial finding renders somewhere" test locks that.
   const unrealized = report.findings.filter(
     (f) =>
       f.specShortfall?.shortfalls.length ||
       f.variantSkew?.underMin.length ||
-      f.variantSkew?.overQuota.length ||
       f.variantSkew?.unrecognizedSeedCount,
   );
-  const monotony = report.findings.filter((f) => f.monotonyFlagged && !f.dismissedByLedger);
+  // Realized but UNEVEN. `overQuota` fires on any split that is not exactly even
+  // (11/9 trips it; so does 11/10, where exact balance is impossible), so these
+  // cells are not evidence of a missing mechanism and must never be filed under a
+  // heading that prescribes a demote.
+  const imbalanced = report.findings.filter(
+    (f) => f.variantSkew?.overQuota.length && !unrealized.includes(f),
+  );
+  const monotony = report.findings.filter((f) => f.monotonyFlagged && !f.monotonyDismissed);
   const dismissed = report.findings.filter(
     (f) => f.dismissedByLedger || f.verdict?.verdict === 'legitimate-concentration' || f.verdict?.verdict === 'metric-artifact',
   );
@@ -377,6 +474,7 @@ export function renderMarkdown(report: AuditReport): string {
     `- Confirmed collapsed: **${confirmed.length}**`,
     `- Cells awaiting triage (no verdict yet): **${awaitingTriage.length}**`,
     `- Cells with a declared-but-unrealized mechanism: **${unrealized.length}**`,
+    `- Cells whose declared variants are realized but unevenly spread: **${imbalanced.length}**`,
     `- Cells whose surface/monotony flag was dismissed (ledger + triage): **${dismissed.length}**`,
     `- Triage errors: **${errors.length}**`,
     `- Estimated cost: **$${report.costUsd.toFixed(2)}**`,
@@ -387,6 +485,7 @@ export function renderMarkdown(report: AuditReport): string {
     confirmed.length === 0 &&
     awaitingTriage.length === 0 &&
     unrealized.length === 0 &&
+    imbalanced.length === 0 &&
     monotony.length === 0 &&
     dismissed.length === 0 &&
     errors.length === 0
@@ -396,14 +495,15 @@ export function renderMarkdown(report: AuditReport): string {
 
   if (confirmed.length > 0) {
     out.push('## Confirmed collapsed', '');
-    const ranked = [...confirmed].sort((a, b) => (b.surface?.share ?? 0) - (a.surface?.share ?? 0));
+    const ranked = [...confirmed].sort((a, b) => signalShare(b) - signalShare(a));
     for (const f of ranked) {
       const v = f.verdict!;
       const action = v.mechanism ? NEXT_ACTION[v.mechanism] : 'investigate';
       out.push(
         `### \`${f.cellKey}\` — ${f.grammarPointName}`,
         '',
-        `- Top surface: \`${f.surface?.topSurface}\` at **${pct(f.surface?.share ?? 0)}** (${f.surface?.topCount}/${f.surface?.total})`,
+        `- Signal: **${primarySignal(f)}**`,
+        signalDetail(f),
         `- Approved: ${f.approved} / target ${f.target}`,
         `- Mechanism: **${v.mechanism}**${v.axis ? ` (axis \`${v.axis}\`)` : ''} — confidence ${v.confidence}`,
         v.missingConstructions?.length
@@ -426,23 +526,48 @@ export function renderMarkdown(report: AuditReport): string {
       'Flagged by a signal but not yet judged — expected under `--dry-run`; otherwise the run did not finish.',
       '',
     );
-    const ranked = [...awaitingTriage].sort((a, b) => (b.surface?.share ?? 0) - (a.surface?.share ?? 0));
+    const ranked = [...awaitingTriage].sort((a, b) => signalShare(b) - signalShare(a));
     for (const f of ranked) {
       out.push(
         `### \`${f.cellKey}\` — ${f.grammarPointName}`,
         '',
-        `- Top surface: \`${f.surface?.topSurface}\` at **${pct(f.surface?.share ?? 0)}** (${f.surface?.topCount}/${f.surface?.total})`,
+        `- Signal: **${primarySignal(f)}**`,
+        signalDetail(f),
         `- Approved: ${f.approved} / target ${f.target}`,
         '',
       );
     }
   }
 
+  const variantDetail = (f: CellFinding, includeOverQuota: boolean): string[] => {
+    const lines: string[] = [];
+    for (const s of f.specShortfall?.shortfalls ?? []) {
+      lines.push(`  - \`${s.axis}=${s.value}\`: ${s.actual}/${s.floor}`);
+    }
+    if (!f.variantSkew) return lines;
+    if (f.variantSkew.unrecognizedSeedCount > 0) {
+      lines.push(
+        `  - **${f.variantSkew.unrecognizedSeedCount} rows carry no recognized variant id** — backfill \`content_json.seedWord\` before demoting, or the surplus recomputes against zero coverage.`,
+      );
+    }
+    for (const id of f.variantSkew.underMin) {
+      const v = f.variantSkew.perVariant.find((p) => p.id === id)!;
+      lines.push(`  - variant \`${id}\`: ${v.count} (below MIN_PER_VARIANT)`);
+    }
+    if (includeOverQuota) {
+      for (const id of f.variantSkew.overQuota) {
+        const v = f.variantSkew.perVariant.find((p) => p.id === id)!;
+        lines.push(`  - variant \`${id}\`: ${v.count} over quota ${v.quota.toFixed(1)}`);
+      }
+    }
+    return lines;
+  };
+
   if (unrealized.length > 0) {
     out.push(
       '## Declared-but-unrealized',
       '',
-      'Deterministic — the declared floor is ground truth, no triage involved.',
+      'A declared mechanism the pool has NOT realized — a floor with nothing behind it, a variant too thin to rotate, or rows carrying no recognized variant id. Deterministic: the declared floor is ground truth, no triage involved.',
       '',
     );
     const atTarget = unrealized.filter((f) => f.approved >= f.target);
@@ -454,35 +579,30 @@ export function renderMarkdown(report: AuditReport): string {
       if (group.length === 0) continue;
       out.push(`### ${label}`, '', note, '');
       for (const f of group) {
-        out.push(`- \`${f.cellKey}\` (${f.approved}/${f.target})`);
-        for (const s of f.specShortfall?.shortfalls ?? []) {
-          out.push(`  - \`${s.axis}=${s.value}\`: ${s.actual}/${s.floor}`);
-        }
-        if (f.variantSkew) {
-          if (f.variantSkew.unrecognizedSeedCount > 0) {
-            out.push(
-              `  - **${f.variantSkew.unrecognizedSeedCount} rows carry no recognized variant id** — backfill \`content_json.seedWord\` before demoting, or the surplus recomputes against zero coverage.`,
-            );
-          }
-          for (const id of f.variantSkew.underMin) {
-            const v = f.variantSkew.perVariant.find((p) => p.id === id)!;
-            out.push(`  - variant \`${id}\`: ${v.count} (below MIN_PER_VARIANT)`);
-          }
-          for (const id of f.variantSkew.overQuota) {
-            const v = f.variantSkew.perVariant.find((p) => p.id === id)!;
-            out.push(`  - variant \`${id}\`: ${v.count} over quota ${v.quota.toFixed(1)}`);
-          }
-        }
+        out.push(`- \`${f.cellKey}\` (${f.approved}/${f.target})`, ...variantDetail(f, true));
       }
       out.push('');
     }
+  }
+
+  if (imbalanced.length > 0) {
+    out.push(
+      '## Variant spread uneven (informational)',
+      '',
+      'The declared mechanism IS realized on these cells: every variant clears `MIN_PER_VARIANT` and every row carries a recognized variant id. Some variants simply hold more rows than their fair quota — which any split that is not exactly even will show. **No demote is indicated**; this is imbalance, not absence. The scheduler evens it out as the cell refills.',
+      '',
+    );
+    for (const f of imbalanced) {
+      out.push(`- \`${f.cellKey}\` (${f.approved}/${f.target})`, ...variantDetail(f, true));
+    }
+    out.push('');
   }
 
   if (monotony.length > 0) {
     out.push(
       '## Stem monotony (calibration-phase)',
       '',
-      'Loose threshold by design; #617 may already have fixed part of this. Treat as a hint.',
+      `A hint, not a verdict. The default cutoff (${MONOTONY_THRESHOLD_DEFAULT}) is calibrated, not loose — see \`MONOTONY_THRESHOLD_DEFAULT\` for why raising it further does not help — but a point that correctly drills its own target lexeme sits near 1.0 here by design. #617 may already have fixed part of this.`,
       '',
     );
     for (const f of monotony) {
@@ -496,13 +616,20 @@ export function renderMarkdown(report: AuditReport): string {
   if (dismissed.length > 0) {
     out.push('## Dismissed', '', 'Listed so this report is auditable, not a filtered view.', '');
     for (const f of dismissed) {
-      const why = f.dismissedByLedger
-        ? 'ledger'
-        : `triage: ${f.verdict?.verdict} — ${f.verdict?.rationale}`;
+      // Print the ledger's own `reason` and `dismissedOn`: the bare word "ledger"
+      // made a stale dismissal indistinguishable from a fresh one, and turned this
+      // section into exactly the unauditable filtered view it exists to avoid.
+      const why = f.ledgerNotes.map(
+        (d) =>
+          `ledger [${d.signal}, surface ${d.surface === null ? '*any*' : `\`${d.surface}\``}, ${d.dismissedOn}]: ${d.reason}`,
+      );
+      if (f.verdict?.verdict === 'legitimate-concentration' || f.verdict?.verdict === 'metric-artifact') {
+        why.push(`triage: ${f.verdict.verdict} — ${f.verdict.rationale}`);
+      }
       const alsoUnrealized = unrealized.includes(f)
         ? ' — **also has an unrealized declared mechanism; see above**'
         : '';
-      out.push(`- \`${f.cellKey}\` — ${why}${alsoUnrealized}`);
+      out.push(`- \`${f.cellKey}\` — ${why.join(' · ')}${alsoUnrealized}`);
     }
     out.push('');
   }
@@ -548,7 +675,7 @@ async function main(): Promise<void> {
           exerciseType: cell.exerciseType,
           approved: f.approved,
           target: f.target,
-          signal: f.surfaceFlagged ? 'answer-surface' : 'stem-monotony',
+          signal: primarySignal(f),
           surface: f.surface,
           monotony: f.monotony,
         });

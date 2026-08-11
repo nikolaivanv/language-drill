@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { ExerciseType } from '@language-drill/shared';
 import type { GrammarPoint } from '@language-drill/shared';
+import { MONOTONY_THRESHOLD_DEFAULT } from '../src/collapse-metrics.js';
 import {
   analyzeCell,
   cellKeyOf,
@@ -27,6 +28,21 @@ describe('parseAuditArgs', () => {
     expect(a.minRows).toBe(15);
     expect(a.threshold).toBe(0.65);
     expect(a.dryRun).toBe(false);
+  });
+
+  it('takes the monotony default from the documented constant, not a literal', () => {
+    // A hard-coded '0.85' here meant editing MONOTONY_THRESHOLD_DEFAULT (and its
+    // long calibration rationale) changed nothing the CLI actually used.
+    expect(parseAuditArgs([]).monotonyThreshold).toBe(MONOTONY_THRESHOLD_DEFAULT);
+  });
+
+  it('rejects a --type that is not an ExerciseType', () => {
+    // Unvalidated, a typo yields a zero-row run reported as a clean bill of health.
+    expect(() => parseAuditArgs(['--type', 'close'])).toThrow(/--type/);
+  });
+
+  it('accepts a real exercise type', () => {
+    expect(parseAuditArgs(['--type', 'cloze']).type).toBe('cloze');
   });
 
   it('uppercases the language filter so `--language es` works', () => {
@@ -204,13 +220,51 @@ describe('analyzeCell', () => {
     expect(f.preempted).toBe(false);
   });
 
+  // Surface collapses onto the dismissed `a`, but every stem is lexically unique
+  // so the monotony signal stays quiet — these tests isolate the surface
+  // dismissal. (A shared `x ___ y` stem is 100% monotony, which now correctly
+  // keeps the cell in triage on the OTHER signal.)
+  const dismissedRows = Array.from({ length: 20 }, (_, i) => ({
+    correctAnswer: 'a',
+    sentence: `frase${i} ___ palabra${i}`,
+  }));
+
   it('respects the dismissals ledger', () => {
     const dismissed = point({ key: 'es-a2-personal-a', cefrLevel: 'A2' });
-    const rows = Array.from({ length: 20 }, () => ({ correctAnswer: 'a', sentence: 'x ___ y' }));
-    const f = analyzeCell({ ...cell(dismissed, rows), cefrLevel: 'A2' }, opts);
+    const f = analyzeCell({ ...cell(dismissed, dismissedRows), cefrLevel: 'A2' }, opts);
     expect(f.surfaceFlagged).toBe(true);
+    expect(f.surfaceDismissed).toBe(true);
+    expect(f.monotonyFlagged).toBe(false);
     expect(f.dismissedByLedger).toBe(true);
     expect(f.needsTriage).toBe(false);
+  });
+
+  it('carries the matched ledger entry so the report can print its rationale', () => {
+    const dismissed = point({ key: 'es-a2-personal-a', cefrLevel: 'A2' });
+    const f = analyzeCell({ ...cell(dismissed, dismissedRows), cefrLevel: 'A2' }, opts);
+    expect(f.ledgerNotes).toHaveLength(1);
+    expect(f.ledgerNotes[0].signal).toBe('answer-surface');
+    expect(f.ledgerNotes[0].surface).toBe('a');
+    expect(f.ledgerNotes[0].reason).toMatch(/personal `a`/);
+    expect(f.ledgerNotes[0].dismissedOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('a dismissal on ONE signal does not suppress the other', () => {
+    // `es-b1-ser-location-events` carries a `surface: null` answer-surface
+    // dismissal, so the surface flag is covered whatever dominates. Nothing in the
+    // ledger covers stem-monotony, so that signal must survive — collapsing the
+    // two into one boolean used to drop it from its section AND from triage.
+    const gp = point({ key: 'es-b1-ser-location-events' });
+    const rows = Array.from({ length: 20 }, () => ({
+      correctAnswer: 'es',
+      sentence: 'La reunión es aquí.',
+    }));
+    const f = analyzeCell(cell(gp, rows), opts);
+    expect(f.surfaceFlagged).toBe(true);
+    expect(f.surfaceDismissed).toBe(true);
+    expect(f.monotonyFlagged).toBe(true);
+    expect(f.monotonyDismissed).toBe(false);
+    expect(f.needsTriage).toBe(true);
   });
 
   it('reports spec shortfalls without requesting triage', () => {
@@ -251,7 +305,10 @@ describe('renderMarkdown', () => {
       monotonyFlagged: false,
       specShortfall: null,
       variantSkew: null,
+      surfaceDismissed: false,
+      monotonyDismissed: false,
       dismissedByLedger: false,
+      ledgerNotes: [],
       preempted: false,
       needsTriage: true,
       verdict: null,
@@ -330,10 +387,126 @@ describe('renderMarkdown', () => {
       name: 'run',
       scanned: 1,
       costUsd: 0,
-      findings: [finding({ dismissedByLedger: true, needsTriage: false })],
+      findings: [
+        finding({
+          surfaceDismissed: true,
+          dismissedByLedger: true,
+          ledgerNotes: [
+            {
+              signal: 'answer-surface',
+              surface: 'dicen',
+              reason: 'The marker IS the point.',
+              dismissedOn: '2026-08-11',
+            },
+          ],
+          needsTriage: false,
+        }),
+      ],
     });
     expect(md).toContain('## Dismissed');
     expect(md).toContain('ledger');
+    // The ledger's own words and date, not the bare token 'ledger' — a stale
+    // dismissal has to be visible rather than silently permanent.
+    expect(md).toContain('The marker IS the point.');
+    expect(md).toContain('2026-08-11');
+    expect(md).toContain('`dicen`');
+  });
+
+  it('renders `*any*` for a surface-agnostic ledger entry', () => {
+    const md = renderMarkdown({
+      name: 'run',
+      scanned: 1,
+      costUsd: 0,
+      findings: [
+        finding({
+          surfaceDismissed: true,
+          dismissedByLedger: true,
+          ledgerNotes: [
+            {
+              signal: 'answer-surface',
+              surface: null,
+              reason: 'Any dominant surface here is legitimate.',
+              dismissedOn: '2026-08-11',
+            },
+          ],
+          needsTriage: false,
+        }),
+      ],
+    });
+    expect(md).toContain('*any*');
+  });
+
+  it('a dismissed surface flag does not suppress an undismissed monotony flag', () => {
+    const md = renderMarkdown({
+      name: 'run',
+      scanned: 1,
+      costUsd: 0,
+      findings: [
+        finding({
+          surfaceFlagged: true,
+          surfaceDismissed: true,
+          dismissedByLedger: true,
+          ledgerNotes: [
+            { signal: 'answer-surface', surface: 'ser', reason: 'ser is the point.', dismissedOn: '2026-08-11' },
+          ],
+          monotonyFlagged: true,
+          monotonyDismissed: false,
+          monotony: { topLemma: 'reunión', count: 19, total: 20, share: 0.95 },
+          needsTriage: true,
+        }),
+      ],
+    });
+    expect(md).toContain('## Stem monotony');
+    expect(md).toContain('reunión');
+    // …and it still reaches triage rather than vanishing into the ledger line.
+    expect(md).toContain('## Awaiting triage');
+  });
+
+  it('a dismissed monotony flag does not suppress an undismissed surface collapse', () => {
+    const md = renderMarkdown({
+      name: 'run',
+      scanned: 1,
+      costUsd: 0,
+      findings: [
+        finding({
+          surfaceFlagged: true,
+          surfaceDismissed: false,
+          monotonyFlagged: true,
+          monotonyDismissed: true,
+          dismissedByLedger: true,
+          ledgerNotes: [
+            { signal: 'stem-monotony', surface: 'casa', reason: 'Topic is fixed by design.', dismissedOn: '2026-08-11' },
+          ],
+          monotony: { topLemma: 'casa', count: 19, total: 20, share: 0.95 },
+          needsTriage: true,
+        }),
+      ],
+    });
+    expect(md).toContain('## Awaiting triage');
+    expect(md).toContain('Top surface');
+    expect(md).not.toContain('## Stem monotony');
+  });
+
+  it('reports monotony numbers, not surface numbers, for a monotony-only finding', () => {
+    const md = renderMarkdown({
+      name: 'run',
+      scanned: 1,
+      costUsd: 0,
+      findings: [
+        finding({
+          surface: null,
+          surfaceFlagged: false,
+          monotonyFlagged: true,
+          monotony: { topLemma: 'restaurante', count: 19, total: 20, share: 0.95 },
+          needsTriage: true,
+        }),
+      ],
+    });
+    expect(md).toContain('Signal: **stem-monotony**');
+    expect(md).toContain('Top stem lemma: `restaurante`');
+    // The old renderer printed `Top surface: \`undefined\` at **0%**`.
+    expect(md).not.toContain('undefined');
+    expect(md).not.toContain('Top surface');
   });
 
   it('renders a surface-flagged, not-yet-triaged cell under "Awaiting triage" (dry-run gap)', () => {
@@ -360,7 +533,42 @@ describe('renderMarkdown', () => {
     expect(md).toContain('No collapse findings');
   });
 
+  const overQuotaOnly = (): CellFinding =>
+    finding({
+      surfaceFlagged: false,
+      needsTriage: false,
+      surface: null,
+      variantSkew: {
+        perVariant: [
+          { id: 'hearsay', count: 12, share: 1, quota: 8 },
+          { id: 'adversity', count: 6, share: 1, quota: 8 },
+          { id: 'agentless', count: 6, share: 1, quota: 8 },
+        ],
+        overQuota: ['hearsay'],
+        underMin: [],
+        unrecognizedSeedCount: 0,
+        declaredRows: 24,
+      },
+    });
+
   it('renders an overQuota-only finding rather than dropping it', () => {
+    const md = renderMarkdown({ name: 'run', scanned: 1, costUsd: 0, findings: [overQuotaOnly()] });
+    expect(md).toContain('## Variant spread uneven');
+    expect(md).toContain('hearsay');
+    expect(md).not.toContain('No collapse findings');
+  });
+
+  it('does NOT prescribe a demote for an overQuota-only cell — the mechanism IS realized', () => {
+    // `overQuota` fires on any split that is not exactly even, so an at-target
+    // cell with a healthy 15/13/12/11/9 spread used to land under "At target —
+    // stuck, needs a demote", which destroys approved rows and pays to regenerate.
+    const md = renderMarkdown({ name: 'run', scanned: 1, costUsd: 0, findings: [overQuotaOnly()] });
+    expect(md).not.toContain('demote required');
+    expect(md).not.toContain('## Declared-but-unrealized');
+    expect(md).toContain('No demote is indicated');
+  });
+
+  it('keeps a cell with BOTH a missing mechanism and overQuota in the demote bucket', () => {
     const md = renderMarkdown({
       name: 'run',
       scanned: 1,
@@ -372,21 +580,48 @@ describe('renderMarkdown', () => {
           surface: null,
           variantSkew: {
             perVariant: [
-              { id: 'hearsay', count: 12, share: 1, quota: 8 },
-              { id: 'adversity', count: 6, share: 1, quota: 8 },
-              { id: 'agentless', count: 6, share: 1, quota: 8 },
+              { id: 'hearsay', count: 20, share: 1, quota: 11 },
+              { id: 'adversity', count: 2, share: 1, quota: 11 },
             ],
             overQuota: ['hearsay'],
-            underMin: [],
+            underMin: ['adversity'],
             unrecognizedSeedCount: 0,
-            approved: 24,
+            declaredRows: 22,
           },
         }),
       ],
     });
     expect(md).toContain('## Declared-but-unrealized');
-    expect(md).toContain('hearsay');
-    expect(md).not.toContain('No collapse findings');
+    expect(md).toContain('At target');
+    expect(md).not.toContain('## Variant spread uneven');
+    // The variant detail still lists both sides of the skew.
+    expect(md).toContain('below MIN_PER_VARIANT');
+    expect(md).toContain('over quota');
+  });
+
+  it('puts a below-target unrealized cell in the self-heals bucket, with no demote', () => {
+    const md = renderMarkdown({
+      name: 'run',
+      scanned: 1,
+      costUsd: 0,
+      findings: [
+        finding({
+          approved: 12,
+          target: 50,
+          surfaceFlagged: false,
+          needsTriage: false,
+          specShortfall: {
+            shortfalls: [{ axis: 'person', value: '2pl', floor: 5, actual: 0 }],
+            approved: 12,
+            target: 50,
+            atTarget: false,
+          },
+        }),
+      ],
+    });
+    expect(md).toContain('Below target — self-heals on resume');
+    expect(md).not.toContain('At target — stuck');
+    expect(md).not.toContain('demote required');
   });
 
   it('cross-references a cell that is both dismissed and declared-but-unrealized', () => {
@@ -397,7 +632,11 @@ describe('renderMarkdown', () => {
       findings: [
         finding({
           needsTriage: false,
+          surfaceDismissed: true,
           dismissedByLedger: true,
+          ledgerNotes: [
+            { signal: 'answer-surface', surface: 'dicen', reason: 'Fixed frame.', dismissedOn: '2026-08-11' },
+          ],
           specShortfall: {
             shortfalls: [{ axis: 'person', value: '2pl', floor: 5, actual: 0 }],
             approved: 50,
@@ -410,5 +649,118 @@ describe('renderMarkdown', () => {
     expect(md).toContain('## Declared-but-unrealized');
     expect(md).toContain('## Dismissed');
     expect(md).toContain('also has an unrealized declared mechanism');
+  });
+
+  /**
+   * The section filters are exhaustive ONLY because every `declaredButUnrealized`
+   * trigger is also covered by the `unrealized` / `imbalanced` render predicates —
+   * two lists written independently ~100 lines apart, which produced three
+   * separate "finding renders nowhere" bugs on this branch. This locks the
+   * invariant: any non-trivial finding must appear somewhere in the markdown.
+   */
+  describe('every non-trivial finding renders somewhere', () => {
+    const KEY = 'ES:B1:cloze:es-b1-shape';
+    const variantSkew = (over: Partial<NonNullable<CellFinding['variantSkew']>>) => ({
+      perVariant: [
+        { id: 'hearsay', count: 12, share: 1, quota: 8 },
+        { id: 'adversity', count: 2, share: 1, quota: 8 },
+      ],
+      overQuota: [],
+      underMin: [],
+      unrecognizedSeedCount: 0,
+      declaredRows: 14,
+      ...over,
+    });
+    const quiet = { surfaceFlagged: false, monotonyFlagged: false, needsTriage: false, surface: null };
+    const specShortfall = {
+      shortfalls: [{ axis: 'person' as const, value: '2pl', floor: 5, actual: 0 }],
+      approved: 50,
+      target: 50,
+      atTarget: true,
+    };
+
+    const shapes: Array<[string, Partial<CellFinding>]> = [
+      ['a coverageSpec shortfall only', { ...quiet, specShortfall }],
+      ['an underMin variant only', { ...quiet, variantSkew: variantSkew({ underMin: ['adversity'] }) }],
+      ['an overQuota variant only', { ...quiet, variantSkew: variantSkew({ overQuota: ['hearsay'] }) }],
+      [
+        'unrecognized seed rows only',
+        { ...quiet, variantSkew: variantSkew({ unrecognizedSeedCount: 30 }) },
+      ],
+      [
+        'flagged + preempted',
+        {
+          surfaceFlagged: true,
+          needsTriage: false,
+          preempted: true,
+          variantSkew: variantSkew({ unrecognizedSeedCount: 30 }),
+        },
+      ],
+      [
+        'flagged + dismissed by the ledger',
+        {
+          surfaceFlagged: true,
+          needsTriage: false,
+          surfaceDismissed: true,
+          dismissedByLedger: true,
+          ledgerNotes: [
+            { signal: 'answer-surface' as const, surface: 'dicen', reason: 'Fixed frame.', dismissedOn: '2026-08-11' },
+          ],
+        },
+      ],
+      ['monotony-flagged only', {
+        ...quiet,
+        monotonyFlagged: true,
+        needsTriage: true,
+        monotony: { topLemma: 'restaurante', count: 19, total: 20, share: 0.95 },
+      }],
+      ['needsTriage with no verdict (dry-run)', { needsTriage: true, verdict: null }],
+      [
+        'needsTriage + a collapsed verdict',
+        {
+          verdict: {
+            verdict: 'collapsed' as const,
+            mechanism: 'construction-variants' as const,
+            rationale: 'um…zu is never drilled.',
+            confidence: 'high' as const,
+          },
+        },
+      ],
+      [
+        'needsTriage + a metric-artifact verdict',
+        {
+          verdict: {
+            verdict: 'metric-artifact' as const,
+            rationale: 'The bigram key merged two frames.',
+            confidence: 'medium' as const,
+          },
+        },
+      ],
+      ['needsTriage + a triage error', { triageError: 'skipped — run hit --max-cost-usd 2' }],
+    ];
+
+    for (const [label, over] of shapes) {
+      it(`renders ${label}`, () => {
+        const md = renderMarkdown({
+          name: 'run',
+          scanned: 1,
+          costUsd: 0,
+          findings: [finding({ cellKey: KEY, ...over })],
+        });
+        expect(md, `${label} rendered nowhere`).toContain(KEY);
+        expect(md).not.toContain('No collapse findings');
+      });
+    }
+
+    it('may render a healthy cell nowhere', () => {
+      const md = renderMarkdown({
+        name: 'run',
+        scanned: 1,
+        costUsd: 0,
+        findings: [finding({ cellKey: KEY, ...quiet })],
+      });
+      expect(md).not.toContain(KEY);
+      expect(md).toContain('No collapse findings');
+    });
   });
 });
