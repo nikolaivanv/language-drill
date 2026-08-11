@@ -336,6 +336,25 @@ describe('renderMarkdown', () => {
     expect(md).toContain('ledger');
   });
 
+  it('renders a surface-flagged, not-yet-triaged cell under "Awaiting triage" (dry-run gap)', () => {
+    const md = renderMarkdown({
+      name: 'run',
+      scanned: 1,
+      costUsd: 0,
+      findings: [
+        finding({
+          needsTriage: true,
+          verdict: null,
+          triageError: null,
+          specShortfall: null,
+          variantSkew: null,
+        }),
+      ],
+    });
+    expect(md).toContain('## Awaiting triage');
+    expect(md).not.toContain('No collapse findings');
+  });
+
   it('renders a clean report when nothing is flagged', () => {
     const md = renderMarkdown({ name: 'run', scanned: 100, costUsd: 0, findings: [] });
     expect(md).toContain('No collapse findings');

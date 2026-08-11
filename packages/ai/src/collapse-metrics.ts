@@ -295,12 +295,20 @@ export const STOPWORDS: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * Default flag threshold for stem monotony. Loose on purpose: this signal is
- * calibration-phase (see the 2026-08-11 design doc), and #617's systemic topic
- * steering may already have fixed part of what it measures. The first prod run
- * decides whether this number is useful. Tune via `--monotony-threshold`.
+ * Default flag threshold for stem monotony. Calibration-phase (see the
+ * 2026-08-11 design doc): the first prod sweep flagged 279 cells at 0.5 vs.
+ * 109 at 0.85, but raising the threshold alone can't fix the signal —
+ * spot-checks showed most flags are a point's own target lexeme (`dass`,
+ * `nachdem`, `if`, `gestern`) appearing in every stem at share ≈ 1.0,
+ * surviving even a 0.95 cutoff. A point that drills `dass` correctly has
+ * `dass` in every stem; that's the content working as designed, not topic
+ * monotony. The durable fix is excluding each point's own target lexeme (or
+ * folding connector words into `STOPWORDS`) — a v2 change, out of scope here.
+ * 0.85 keeps the signal rather than dropping it: spot-checks also turned up
+ * genuine topic repetition, one of which independently corroborated a real
+ * variant-skew defect. Tune via `--monotony-threshold`.
  */
-export const MONOTONY_THRESHOLD_DEFAULT = 0.5;
+export const MONOTONY_THRESHOLD_DEFAULT = 0.85;
 
 /** The `content_json` field carrying the exercise's scene text, per type. */
 const STEM_FIELD: Partial<Record<`${ExerciseType}`, string>> = {

@@ -94,7 +94,7 @@ export function parseAuditArgs(argv: string[]): AuditFilters {
       limit: { type: 'string' },
       'min-rows': { type: 'string', default: '15' },
       threshold: { type: 'string', default: '0.65' },
-      'monotony-threshold': { type: 'string', default: '0.5' },
+      'monotony-threshold': { type: 'string', default: '0.85' },
       'max-cost-usd': { type: 'string', default: '2' },
       'dry-run': { type: 'boolean', default: false },
       name: { type: 'string' },
@@ -107,7 +107,7 @@ export function parseAuditArgs(argv: string[]): AuditFilters {
     console.log(
       'Usage: audit:collapse [--language ES] [--cefr B1] [--type cloze] [--grammar-point <key>]\n' +
         '                     [--limit N] [--min-rows 15] [--threshold 0.65]\n' +
-        '                     [--monotony-threshold 0.5] [--max-cost-usd 2] [--dry-run] [--name <run>]',
+        '                     [--monotony-threshold 0.85] [--max-cost-usd 2] [--dry-run] [--name <run>]',
     );
     process.exit(0);
   }
@@ -351,6 +351,9 @@ const pct = (n: number): string => `${Math.round(n * 100)}%`;
 
 export function renderMarkdown(report: AuditReport): string {
   const confirmed = report.findings.filter((f) => f.verdict?.verdict === 'collapsed');
+  const awaitingTriage = report.findings.filter(
+    (f) => f.needsTriage && f.verdict === null && f.triageError === null,
+  );
   const unrealized = report.findings.filter(
     (f) =>
       f.specShortfall?.shortfalls.length ||
@@ -372,6 +375,7 @@ export function renderMarkdown(report: AuditReport): string {
     `- Cells scanned: **${report.scanned}**`,
     `- Flagged by a signal: **${report.findings.filter((f) => f.surfaceFlagged || f.monotonyFlagged).length}**`,
     `- Confirmed collapsed: **${confirmed.length}**`,
+    `- Cells awaiting triage (no verdict yet): **${awaitingTriage.length}**`,
     `- Cells with a declared-but-unrealized mechanism: **${unrealized.length}**`,
     `- Cells whose surface/monotony flag was dismissed (ledger + triage): **${dismissed.length}**`,
     `- Triage errors: **${errors.length}**`,
@@ -381,6 +385,7 @@ export function renderMarkdown(report: AuditReport): string {
 
   if (
     confirmed.length === 0 &&
+    awaitingTriage.length === 0 &&
     unrealized.length === 0 &&
     monotony.length === 0 &&
     dismissed.length === 0 &&
@@ -409,6 +414,25 @@ export function renderMarkdown(report: AuditReport): string {
         f.approved >= f.target
           ? '- ⚠️ Cell is **at target** — **demote required**, it will not self-heal. `need = target − approved` is zero, so the scheduler never revisits it.'
           : '- Cell is below target; it will refill under the new config once generation resumes.',
+        '',
+      );
+    }
+  }
+
+  if (awaitingTriage.length > 0) {
+    out.push(
+      '## Awaiting triage',
+      '',
+      'Flagged by a signal but not yet judged — expected under `--dry-run`; otherwise the run did not finish.',
+      '',
+    );
+    const ranked = [...awaitingTriage].sort((a, b) => (b.surface?.share ?? 0) - (a.surface?.share ?? 0));
+    for (const f of ranked) {
+      out.push(
+        `### \`${f.cellKey}\` — ${f.grammarPointName}`,
+        '',
+        `- Top surface: \`${f.surface?.topSurface}\` at **${pct(f.surface?.share ?? 0)}** (${f.surface?.topCount}/${f.surface?.total})`,
+        `- Approved: ${f.approved} / target ${f.target}`,
         '',
       );
     }
