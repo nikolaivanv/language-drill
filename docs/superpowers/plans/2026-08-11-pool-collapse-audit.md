@@ -2307,8 +2307,8 @@ Create `packages/ai/scripts/audit-collapse.ts`:
  * See docs/superpowers/specs/2026-08-11-pool-collapse-audit-design.md.
  *
  * Usage:
- *   pnpm audit:collapse -- --dry-run
- *   pnpm audit:collapse -- --language ES --cefr B1 --max-cost-usd 2
+ *   pnpm audit:collapse --dry-run
+ *   pnpm audit:collapse --language ES --cefr B1 --max-cost-usd 2
  */
 
 import { parseArgs } from 'node:util';
@@ -3214,7 +3214,7 @@ packages/ai/audit-runs/
 
 `--dry-run` skips every Anthropic call, so this exercises arg parsing, the query, cell assembly, all three signals, and both writers.
 
-Run: `pnpm audit:collapse -- --dry-run --language ES --cefr B1 --name smoke`
+Run: `pnpm audit:collapse --dry-run --language ES --cefr B1 --name smoke`
 Expected: exits 0; prints a cell count; writes `packages/ai/audit-runs/smoke.json` and `smoke.md`. Open the markdown and confirm the Summary section has plausible numbers.
 
 If `DATABASE_URL` is unset the run fails fast with a `requireEnv` error — that is correct behaviour, not a bug.
@@ -3282,7 +3282,7 @@ Get the prod connection string, then:
 
 ```bash
 DATABASE_URL='<prod-connection-string>' \
-  pnpm --filter @language-drill/ai audit:collapse -- --dry-run --name prod-sweep-2026-08-11
+  pnpm --filter @language-drill/ai audit:collapse --dry-run --name prod-sweep-2026-08-11
 ```
 
 Expected: a cell count in the hundreds, exit 0, `packages/ai/audit-runs/prod-sweep-2026-08-11.md` written. No Anthropic calls, so this costs nothing and is safe to repeat while tuning thresholds.
@@ -3311,7 +3311,7 @@ Re-run Step 1 after each adjustment — dry-runs are free.
 
 ```bash
 DATABASE_URL='<prod-connection-string>' ANTHROPIC_API_KEY='<key>' \
-  pnpm --filter @language-drill/ai audit:collapse -- --max-cost-usd 3 --name prod-2026-08-11
+  pnpm --filter @language-drill/ai audit:collapse --max-cost-usd 3 --name prod-2026-08-11
 ```
 
 Expected: roughly $0.50 for a ~50-cell triage queue. Watch the printed queue size before it starts; if it is far above 50, stop and tighten `--threshold` rather than paying for a run dominated by false positives.
