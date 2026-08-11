@@ -7,6 +7,8 @@ import {
   toClassifierRow,
   type CandidateRow,
 } from './backfill-variant-seeds';
+import { selectWrites, summarize, type ArtifactEntry } from './backfill-variant-seeds';
+import type { ClassifierAssignment } from '@language-drill/ai';
 
 const withVariants = {
   key: 'es-b1-que-vs-cual',
@@ -142,5 +144,71 @@ describe('toClassifierRow', () => {
   it('returns null when the content lacks a usable field rather than sending empty text', () => {
     expect(toClassifierRow(row({ contentJson: {} }))).toBeNull();
     expect(toClassifierRow(row({ contentJson: { sentence: 'x ___' } }))).toBeNull();
+  });
+});
+
+describe('selectWrites', () => {
+  const rows: CandidateRow[] = [
+    row({ id: 'a', contentJson: { sentence: 'x ___', correctAnswer: 'Qué', seedWord: 'abran' } }),
+    row({ id: 'b', contentJson: { sentence: 'y ___', correctAnswer: 'Qué' } }),
+    row({ id: 'c', contentJson: { sentence: 'z ___', correctAnswer: 'Qué', seedWord: 'acepto' } }),
+  ];
+
+  const assignments: ClassifierAssignment[] = [
+    { rowId: 'a', variantId: 'que-before-noun', confidence: 'high' },
+    { rowId: 'b', variantId: 'que-definition-of-concept', confidence: 'medium' },
+    { rowId: 'c', variantId: null, confidence: 'low' },
+  ];
+
+  it('writes only high confidence by default, and records the old value', () => {
+    const w = selectWrites(rows, assignments, 'high', 'ES:B1:cloze:es-b1-que-vs-cual');
+    expect(w).toHaveLength(1);
+    expect(w[0]).toEqual({
+      id: 'a',
+      cellKey: 'ES:B1:cloze:es-b1-que-vs-cual',
+      oldSeedWord: 'abran',
+      newSeedWord: 'que-before-noun',
+      confidence: 'high',
+    });
+  });
+
+  it('includes medium when --min-confidence medium is set', () => {
+    const w = selectWrites(rows, assignments, 'medium', 'cell');
+    expect(w.map((e) => e.id).sort()).toEqual(['a', 'b']);
+  });
+
+  it('records a null oldSeedWord rather than omitting it — revert must restore null', () => {
+    const w = selectWrites(rows, assignments, 'medium', 'cell');
+    expect(w.find((e) => e.id === 'b')!.oldSeedWord).toBeNull();
+  });
+
+  it('never writes a null variantId, whatever the confidence', () => {
+    const confident: ClassifierAssignment[] = [{ rowId: 'c', variantId: null, confidence: 'high' }];
+    expect(selectWrites(rows, confident, 'high', 'cell')).toHaveLength(0);
+  });
+
+  it('ignores an assignment whose rowId is not among the rows', () => {
+    const stray: ClassifierAssignment[] = [{ rowId: 'zzz', variantId: 'que-before-noun', confidence: 'high' }];
+    expect(selectWrites(rows, stray, 'high', 'cell')).toHaveLength(0);
+  });
+});
+
+describe('summarize', () => {
+  const entries: ArtifactEntry[] = [
+    { id: 'a', cellKey: 'ES:B1:cloze:p', oldSeedWord: 'abran', newSeedWord: 'v1', confidence: 'high' },
+    { id: 'b', cellKey: 'ES:B1:cloze:p', oldSeedWord: null, newSeedWord: 'v1', confidence: 'high' },
+    { id: 'c', cellKey: 'ES:B1:translation:p', oldSeedWord: 'x', newSeedWord: 'v2', confidence: 'medium' },
+  ];
+
+  it('groups by cell and counts per variant', () => {
+    const s = summarize(entries);
+    expect(s).toContain('ES:B1:cloze:p');
+    expect(s).toContain('v1: 2');
+    expect(s).toContain('ES:B1:translation:p');
+    expect(s).toContain('v2: 1');
+  });
+
+  it('reports nothing to do for an empty set rather than printing an empty table', () => {
+    expect(summarize([])).toContain('no rows');
   });
 });

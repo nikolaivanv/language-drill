@@ -20,9 +20,28 @@
  * Required env: ANTHROPIC_API_KEY, DATABASE_URL.
  */
 
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { CefrLevel, ExerciseType, Language } from '@language-drill/shared';
 import type { GrammarPoint } from '@language-drill/shared';
-import type { ClassifierConfidence, ClassifierRow } from '@language-drill/ai';
+import { and, eq, inArray, isNotNull, sql } from 'drizzle-orm';
+import {
+  ZERO_USAGE,
+  addUsage,
+  classifyVariantSeeds,
+  createClaudeClient,
+  estimateCostUsd,
+  type ClaudeUsageBreakdown,
+  type ClassifierAssignment,
+  type ClassifierConfidence,
+  type ClassifierRow,
+} from '@language-drill/ai';
+import { createDb } from '../src/client';
+import { getGrammarPoint } from '../src/curriculum';
+import { exercises } from '../src/schema';
+import { requireEnv } from '../src/lib/env';
+import { pLimit } from './p-limit';
 
 const DEFAULT_BATCH_SIZE = 20;
 const DEFAULT_CONCURRENCY = 4;
@@ -223,3 +242,248 @@ export type Artifact = {
   minConfidence: 'high' | 'medium';
   entries: ArtifactEntry[];
 };
+
+// ---------------------------------------------------------------------------
+// Decisions
+// ---------------------------------------------------------------------------
+
+const CONFIDENCE_RANK: Record<ClassifierConfidence, number> = { low: 0, medium: 1, high: 2 };
+
+/**
+ * Turn classifier assignments into the concrete writes for one cell.
+ *
+ * A null `variantId` never produces a write regardless of confidence — the
+ * model saying "confidently, none of these" is still a decision not to label.
+ */
+export function selectWrites(
+  rows: readonly CandidateRow[],
+  assignments: readonly ClassifierAssignment[],
+  minConfidence: 'high' | 'medium',
+  cellKey: string,
+): ArtifactEntry[] {
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  const floor = CONFIDENCE_RANK[minConfidence];
+  const out: ArtifactEntry[] = [];
+
+  for (const a of assignments) {
+    if (a.variantId === null) continue;
+    if (CONFIDENCE_RANK[a.confidence] < floor) continue;
+    const row = byId.get(a.rowId);
+    if (!row) continue;
+    const old = row.contentJson.seedWord;
+    out.push({
+      id: row.id,
+      cellKey,
+      oldSeedWord: typeof old === 'string' ? old : null,
+      newSeedWord: a.variantId,
+      confidence: a.confidence,
+    });
+  }
+  return out;
+}
+
+/** Human-readable per-cell, per-variant breakdown for the dry-run output. */
+export function summarize(entries: readonly ArtifactEntry[]): string {
+  if (entries.length === 0) return 'no rows would change';
+  const byCell = new Map<string, Map<string, number>>();
+  for (const e of entries) {
+    let cell = byCell.get(e.cellKey);
+    if (!cell) { cell = new Map(); byCell.set(e.cellKey, cell); }
+    cell.set(e.newSeedWord, (cell.get(e.newSeedWord) ?? 0) + 1);
+  }
+  const lines: string[] = [];
+  for (const [cellKey, variants] of [...byCell.entries()].sort()) {
+    lines.push(`  ${cellKey}`);
+    for (const [variantId, n] of [...variants.entries()].sort()) {
+      lines.push(`    ${variantId}: ${n}`);
+    }
+  }
+  return lines.join('\n');
+}
+
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
+
+function artifactPath(name: string): string {
+  const dir = path.join(process.cwd(), 'backfill-runs');
+  mkdirSync(dir, { recursive: true });
+  return path.join(dir, `${name}.json`);
+}
+
+/**
+ * Convert the SDK's snake_case usage block into the camelCase breakdown
+ * `addUsage`/`estimateCostUsd` expect. Mirrors `readUsage` in qa-sample.ts /
+ * generate.ts — `classifyVariantSeeds` returns the raw `Anthropic.Usage`
+ * shape, not `ClaudeUsageBreakdown`, so this conversion is required rather
+ * than a passthrough.
+ */
+function readUsage(usage: {
+  input_tokens: number;
+  output_tokens: number;
+  cache_creation_input_tokens: number | null;
+  cache_read_input_tokens: number | null;
+}): ClaudeUsageBreakdown {
+  return {
+    inputTokens: usage.input_tokens ?? 0,
+    outputTokens: usage.output_tokens ?? 0,
+    cacheCreationInputTokens: usage.cache_creation_input_tokens ?? 0,
+    cacheReadInputTokens: usage.cache_read_input_tokens ?? 0,
+  };
+}
+
+/** Apply one entry. Keyed on the PRIMARY KEY; nothing is content-matched. */
+async function writeSeed(
+  db: ReturnType<typeof createDb>,
+  id: string,
+  seedWord: string | null,
+): Promise<void> {
+  await db
+    .update(exercises)
+    .set({
+      contentJson:
+        seedWord === null
+          ? sql`content_json - 'seedWord'`
+          : sql`jsonb_set(content_json, '{seedWord}', to_jsonb(${seedWord}::text))`,
+    })
+    .where(eq(exercises.id, id));
+}
+
+async function runRevert(args: BackfillArgs): Promise<void> {
+  const artifact = JSON.parse(readFileSync(args.revertFrom!, 'utf8')) as Artifact;
+  console.log(`[backfill-variant-seeds] revert: ${artifact.entries.length} entries from ${args.revertFrom}`);
+  if (!args.apply) {
+    console.log('[backfill-variant-seeds] dry-run: pass --apply to restore. Sample:');
+    for (const e of artifact.entries.slice(0, 5)) {
+      console.log(`  ${e.id}: ${e.newSeedWord} -> ${e.oldSeedWord ?? '(removed)'}`);
+    }
+    return;
+  }
+  const db = createDb(requireEnv('DATABASE_URL'));
+  for (const e of artifact.entries) await writeSeed(db, e.id, e.oldSeedWord);
+  console.log(`[backfill-variant-seeds] restored ${artifact.entries.length} rows.`);
+}
+
+async function main(): Promise<void> {
+  const args = parseBackfillArgs(process.argv.slice(2));
+  if (args.revertFrom !== null) return runRevert(args);
+
+  const db = createDb(requireEnv('DATABASE_URL'));
+
+  const conditions = [
+    inArray(exercises.reviewStatus, ['auto-approved', 'manual-approved']),
+    inArray(exercises.type, [...ELIGIBLE_TYPES]),
+    isNotNull(exercises.grammarPointKey),
+  ];
+  if (args.language) conditions.push(sql`${exercises.language} = ${args.language}`);
+  if (args.cefrLevel) conditions.push(sql`${exercises.difficulty} = ${args.cefrLevel}`);
+  if (args.grammarPoint) conditions.push(sql`${exercises.grammarPointKey} = ${args.grammarPoint}`);
+
+  const raw = await db
+    .select({
+      id: exercises.id,
+      grammarPointKey: exercises.grammarPointKey,
+      type: exercises.type,
+      language: exercises.language,
+      difficulty: exercises.difficulty,
+      contentJson: exercises.contentJson,
+    })
+    .from(exercises)
+    .where(and(...conditions));
+
+  // Group eligible rows per cell; the classifier's system block is per-point.
+  const cells = new Map<string, { gp: GrammarPoint; rows: CandidateRow[] }>();
+  for (const r of raw) {
+    const gp = r.grammarPointKey ? getGrammarPoint(r.grammarPointKey) : undefined;
+    if (!gp) continue;
+    const row: CandidateRow = {
+      id: r.id,
+      grammarPointKey: r.grammarPointKey!,
+      type: r.type as ExerciseType,
+      language: r.language!,
+      difficulty: r.difficulty!,
+      contentJson: (r.contentJson ?? {}) as Record<string, unknown>,
+    };
+    if (!isEligible(gp, row)) continue;
+    const cellKey = `${row.language}:${row.difficulty}:${row.type}:${row.grammarPointKey}`;
+    let cell = cells.get(cellKey);
+    if (!cell) { cell = { gp, rows: [] }; cells.set(cellKey, cell); }
+    cell.rows.push(row);
+  }
+
+  let cellList = [...cells.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  if (args.limit !== null) cellList = cellList.slice(0, args.limit);
+  console.log(`[backfill-variant-seeds] ${raw.length} rows scanned -> ${cellList.length} cells with eligible rows`);
+
+  const client = createClaudeClient(requireEnv('ANTHROPIC_API_KEY'));
+  const limit = pLimit(args.concurrency);
+  let usage: ClaudeUsageBreakdown = ZERO_USAGE;
+  const entries: ArtifactEntry[] = [];
+  const failures: string[] = [];
+
+  for (const [cellKey, cell] of cellList) {
+    const batches: CandidateRow[][] = [];
+    for (let i = 0; i < cell.rows.length; i += args.batchSize) {
+      batches.push(cell.rows.slice(i, i + args.batchSize));
+    }
+    const results = await Promise.all(
+      batches.map((batch) =>
+        limit(async () => {
+          if (estimateCostUsd(usage) >= args.maxCostUsd) {
+            // Never truncate silently — a skipped batch is reported, not dropped.
+            failures.push(`${cellKey}: skipped, hit --max-cost-usd ${args.maxCostUsd}`);
+            return [] as ArtifactEntry[];
+          }
+          const classifierRows = batch.map(toClassifierRow).filter((r): r is ClassifierRow => r !== null);
+          if (classifierRows.length === 0) return [] as ArtifactEntry[];
+          try {
+            const res = await classifyVariantSeeds(client, cell.gp, classifierRows);
+            usage = addUsage(usage, readUsage(res.usage));
+            return selectWrites(batch, res.assignments, args.minConfidence, cellKey);
+          } catch (err) {
+            failures.push(`${cellKey}: ${err instanceof Error ? err.message : String(err)}`);
+            return [] as ArtifactEntry[];
+          }
+        }),
+      ),
+    );
+    for (const r of results) entries.push(...r);
+  }
+
+  const artifact: Artifact = {
+    name: args.name,
+    createdAtIso: new Date().toISOString(),
+    applied: args.apply,
+    snapshotBranchId: args.snapshot,
+    minConfidence: args.minConfidence,
+    entries,
+  };
+
+  console.log(`\n[backfill-variant-seeds] ${entries.length} rows would be labelled:\n${summarize(entries)}`);
+  if (failures.length > 0) {
+    console.log(`\n[backfill-variant-seeds] ${failures.length} batch failures:`);
+    for (const f of failures) console.log(`  ${f}`);
+  }
+  console.log(`\n[backfill-variant-seeds] estimated cost $${estimateCostUsd(usage).toFixed(2)}`);
+
+  if (args.apply) {
+    for (const e of entries) await writeSeed(db, e.id, e.newSeedWord);
+    console.log(`[backfill-variant-seeds] APPLIED ${entries.length} rows.`);
+    console.log('[backfill-variant-seeds] Re-run `pnpm audit:collapse --dry-run` and confirm unrecognizedSeedCount fell.');
+  } else {
+    console.log('[backfill-variant-seeds] dry-run: nothing written. Pass --apply --snapshot <branch> to write.');
+  }
+
+  const out = artifactPath(args.name);
+  writeFileSync(out, JSON.stringify(artifact, null, 2), 'utf8');
+  console.log(`[backfill-variant-seeds] artifact written to ${out}`);
+}
+
+const isMain =
+  process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1];
+if (isMain) {
+  main().catch((err) => {
+    console.error('[backfill-variant-seeds] unhandled failure:', err);
+    process.exit(1);
+  });
+}
