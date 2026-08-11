@@ -6,11 +6,11 @@
  * `parseValidationResult` lands in Task 7; `validateDraft` lands in Task 8.
  *
  * Mirrors `evaluate.ts` structurally — same `Anthropic.Tool` shape, same
- * `tool_choice` form (Task 8), same cached `system` block (Task 8). The model
- * id is intentionally pinned to the same `claude-sonnet-4-6` constant the
- * generator and evaluator use today (resolved decision #1 in
- * `docs/exercise-generation-plan.md`); the cross-file invariant is asserted in
- * `validate.test.ts` (Task 9).
+ * `tool_choice` form, same cached `system` block, same per-model request
+ * shaping for sampling params and thinking. As of 2026-08-11 the model is
+ * deliberately DECOUPLED from `GENERATION_MODEL` (see `VALIDATION_MODEL`'s
+ * doc comment below) — the old three-way generator/validator/evaluator pin
+ * asserted in `validate.test.ts` no longer holds.
  */
 
 import type Anthropic from "@anthropic-ai/sdk";
@@ -46,14 +46,19 @@ import {
 // ---------------------------------------------------------------------------
 
 /**
- * Authoritative model id for the validator. Asserted equal to
- * `GENERATION_MODEL` (and to evaluate.ts's pinned literal) in
- * `validate.test.ts` so the three Claude paths (generator, validator,
- * evaluator) cannot drift independently.
+ * Validator model. DECOUPLED from `GENERATION_MODEL` as of 2026-08-11: a
+ * validator miss ships a defect to learners and costs a demote-plus-backfill
+ * repass, whereas a generator miss wastes one draft — so the validator is the
+ * cheaper place to spend capability. Same $3/$15 list price as sonnet-4-6.
+ * Gated by `pnpm eval:validator` against the labelled ambiguity fixture;
+ * revert by restoring this one constant.
  */
-export const VALIDATION_MODEL = "claude-sonnet-4-6" as const;
+export const VALIDATION_MODEL = "claude-sonnet-5" as const;
 
-export const VALIDATION_MAX_TOKENS = 1024;
+/** Sized for `candidateFillers` (~150-250 tokens) plus the seven verdict
+ *  fields; 1024 was the pre-enumeration budget and risks truncating the
+ *  forced tool call mid-JSON. Mirrors evaluate.ts's bump for the same reason. */
+export const VALIDATION_MAX_TOKENS = 2048;
 
 /** Strict reviewer: zero diversity, deterministic output. */
 export const VALIDATION_TEMPERATURE = 0.0;
@@ -552,24 +557,38 @@ export async function validateDraft(
         ? buildFreeWritingValidationUserPrompt(draft.contentJson, spec)
         : buildValidationUserPrompt(draft, spec);
 
-  const response = await client.messages.create(
-    {
-      model: VALIDATION_MODEL,
-      max_tokens: VALIDATION_MAX_TOKENS,
-      system: [
-        {
-          type: "text" as const,
-          text: systemText,
-          cache_control: { type: "ephemeral" as const },
-        },
-      ],
-      messages: [{ role: "user" as const, content: userText }],
-      tools: [buildValidationTool(draft.contentJson.type)],
-      tool_choice: { type: "tool" as const, name: VALIDATION_TOOL_NAME },
-      temperature: VALIDATION_TEMPERATURE,
-    },
-    { signal },
+  // Per-model request shaping (see evaluate.ts:399-411 for the same guards):
+  //  - Sonnet 5 / Opus 4.7+ / Fable reject non-default sampling params
+  //    (`temperature: 0` → 400), so temperature only goes to models that take it.
+  //  - Sonnet 5 (and Fable) run ADAPTIVE thinking when `thinking` is omitted —
+  //    send an explicit `disabled` so this stays a model change and not a
+  //    silent thinking change (which would also spend against max_tokens).
+  const effectiveModel = VALIDATION_MODEL;
+  const rejectsSamplingParams = /sonnet-5|opus-4-[7-9]|opus-5|fable/.test(
+    effectiveModel,
   );
+  const omittedThinkingMeansAdaptive = /sonnet-5|opus-5|fable/.test(
+    effectiveModel,
+  );
+
+  const request: Anthropic.MessageCreateParamsNonStreaming = {
+    model: effectiveModel,
+    max_tokens: VALIDATION_MAX_TOKENS,
+    system: [
+      {
+        type: "text" as const,
+        text: systemText,
+        cache_control: { type: "ephemeral" as const },
+      },
+    ],
+    messages: [{ role: "user" as const, content: userText }],
+    tools: [buildValidationTool(draft.contentJson.type)],
+    tool_choice: { type: "tool" as const, name: VALIDATION_TOOL_NAME },
+  };
+  if (!rejectsSamplingParams) request.temperature = VALIDATION_TEMPERATURE;
+  if (omittedThinkingMeansAdaptive) request.thinking = { type: "disabled" };
+
+  const response = await client.messages.create(request, { signal });
 
   const toolUseBlock = response.content.find(
     (block): block is Anthropic.ToolUseBlock => block.type === "tool_use",

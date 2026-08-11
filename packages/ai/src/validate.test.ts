@@ -91,15 +91,12 @@ const validValidationInput: ValidationResult = {
 // ---------------------------------------------------------------------------
 
 describe("VALIDATION_MODEL", () => {
-  it("matches GENERATION_MODEL (cross-file invariant)", () => {
-    expect(VALIDATION_MODEL).toBe(GENERATION_MODEL);
-  });
-
-  it("matches the literal evaluator model pin (three-way invariant)", () => {
-    // evaluate.test.ts:320 asserts the evaluator's call args use this exact
-    // literal. Together with the GENERATION_MODEL assertion above, this pins
-    // all three Claude paths (generator, validator, evaluator) to one model.
-    expect(VALIDATION_MODEL).toBe("claude-sonnet-4-6");
+  // Deliberately DECOUPLED from GENERATION_MODEL. A validator miss ships a
+  // defect to learners and costs a demote-plus-backfill repass; a generator
+  // miss wastes one draft. Precedent: theory-generate.test.ts:219.
+  it("is pinned to claude-sonnet-5 and decoupled from GENERATION_MODEL", () => {
+    expect(VALIDATION_MODEL).toBe("claude-sonnet-5");
+    expect(VALIDATION_MODEL).not.toBe(GENERATION_MODEL);
   });
 });
 
@@ -419,7 +416,8 @@ describe("validateDraft", () => {
     expect(mockCreate).toHaveBeenCalledOnce();
     const callArgs = mockCreate.mock.calls[0][0];
     expect(callArgs.model).toBe(VALIDATION_MODEL);
-    expect(callArgs.temperature).toBe(VALIDATION_TEMPERATURE);
+    // Sonnet 5 rejects non-default sampling params — see the "request shaping
+    // for Sonnet 5" describe block below for the dedicated coverage.
     expect(callArgs.max_tokens).toBe(VALIDATION_MAX_TOKENS);
     expect(callArgs.tools).toEqual([buildValidationTool(ExerciseType.CLOZE)]);
     expect(callArgs.tool_choice).toEqual({
@@ -436,6 +434,66 @@ describe("validateDraft", () => {
     expect(callArgs.messages[0].content).toContain(
       "Validate this Cloze exercise",
     );
+  });
+
+  describe("validateDraft request shaping for Sonnet 5", () => {
+    it("omits temperature (Sonnet 5 rejects non-default sampling params)", async () => {
+      mockCreate.mockResolvedValue({
+        content: [
+          {
+            type: "tool_use",
+            id: "toolu_v_shaping_1",
+            name: VALIDATION_TOOL_NAME,
+            input: validValidationInput,
+          },
+        ],
+        stop_reason: "tool_use",
+        usage: {
+          input_tokens: 1000,
+          cache_creation_input_tokens: 0,
+          cache_read_input_tokens: 0,
+          output_tokens: 200,
+        },
+      });
+
+      await validateDraft(mockClient, makeDraft(clozeContent), baseSpec);
+
+      const callArgs = mockCreate.mock.calls[0][0];
+      expect(callArgs).not.toHaveProperty("temperature");
+    });
+
+    it("sends an explicit thinking: disabled so adaptive does not silently engage", async () => {
+      mockCreate.mockResolvedValue({
+        content: [
+          {
+            type: "tool_use",
+            id: "toolu_v_shaping_2",
+            name: VALIDATION_TOOL_NAME,
+            input: validValidationInput,
+          },
+        ],
+        stop_reason: "tool_use",
+        usage: {
+          input_tokens: 1000,
+          cache_creation_input_tokens: 0,
+          cache_read_input_tokens: 0,
+          output_tokens: 200,
+        },
+      });
+
+      await validateDraft(mockClient, makeDraft(clozeContent), baseSpec);
+
+      const callArgs = mockCreate.mock.calls[0][0];
+      expect(callArgs.thinking).toEqual({ type: "disabled" });
+    });
+
+    it("budgets 2048 max_tokens so candidateFillers cannot truncate the tool call", () => {
+      expect(VALIDATION_MAX_TOKENS).toBe(2048);
+    });
+
+    it("keeps VALIDATION_TEMPERATURE exported at 0.0 even though sonnet-5 doesn't receive it", () => {
+      expect(VALIDATION_TEMPERATURE).toBe(0.0);
+    });
   });
 
   it("defaults missing usage fields to 0", async () => {
