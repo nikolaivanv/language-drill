@@ -6,7 +6,7 @@ import {
 } from '@language-drill/shared';
 import { describe, expect, it } from 'vitest';
 
-import { enumerateCurriculumCells } from '../generation/cells';
+import { compatibleTypes, enumerateCurriculumCells } from '../generation/cells';
 
 import {
   ALL_CURRICULA,
@@ -23,6 +23,7 @@ import {
   trCurriculum,
 } from './index';
 import type { GrammarPoint } from './types';
+import { COLLAPSE_DISMISSALS, findDismissal, isDismissed } from './collapse-dismissals';
 
 /**
  * Returns a shallow clone of ALL_CURRICULA where the entry at `index` has been
@@ -1194,5 +1195,86 @@ describe('TR nominal-inflection conjugation cells (Task 6)', () => {
     expect(types).toContain(ExerciseType.CONJUGATION);
     expect(types).toContain(ExerciseType.TRANSLATION);
     expect(types).not.toContain(ExerciseType.CLOZE);
+  });
+});
+
+describe('collapse dismissals ledger', () => {
+  it('every dismissal names a grammar point that exists', () => {
+    for (const d of COLLAPSE_DISMISSALS) {
+      expect(getGrammarPoint(d.grammarPointKey), `unknown key ${d.grammarPointKey}`).toBeDefined();
+    }
+  });
+
+  it('every dismissal names an exercise type the point actually has a cell for', () => {
+    for (const d of COLLAPSE_DISMISSALS) {
+      const gp = getGrammarPoint(d.grammarPointKey)!;
+      expect(compatibleTypes(gp), `${d.grammarPointKey} has no ${d.type} cell`).toContain(d.type);
+    }
+  });
+
+  it('has no duplicate (point, type, surface, signal) entries', () => {
+    const keys = COLLAPSE_DISMISSALS.map(
+      (d) => `${d.grammarPointKey}|${d.type}|${d.surface ?? '*'}|${d.signal}`,
+    );
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it('every dismissal records a non-empty reason and an ISO date', () => {
+    for (const d of COLLAPSE_DISMISSALS) {
+      expect(d.reason.length, `${d.grammarPointKey} has an empty reason`).toBeGreaterThan(0);
+      expect(d.dismissedOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
+  });
+});
+
+describe('isDismissed', () => {
+  it('dismisses the exact (point, type, surface, signal) combination', () => {
+    expect(isDismissed('es-a2-personal-a', ExerciseType.CLOZE, 'a', 'answer-surface')).toBe(true);
+  });
+
+  it('does NOT dismiss a different dominant surface on the same cell', () => {
+    // The whole reason the ledger is keyed on surface: a later, unrelated
+    // collapse on a dismissed cell must still be reported.
+    expect(isDismissed('es-a2-personal-a', ExerciseType.CLOZE, 'para', 'answer-surface')).toBe(
+      false,
+    );
+  });
+
+  it('does NOT dismiss a different signal on the same surface', () => {
+    expect(isDismissed('es-a2-personal-a', ExerciseType.CLOZE, 'a', 'stem-monotony')).toBe(false);
+  });
+
+  it('does NOT dismiss a different exercise type', () => {
+    expect(isDismissed('es-a2-personal-a', ExerciseType.TRANSLATION, 'a', 'answer-surface')).toBe(
+      false,
+    );
+  });
+
+  it('a null-surface entry dismisses the cell whatever dominates', () => {
+    expect(
+      isDismissed('es-b1-ser-location-events', ExerciseType.CLOZE, 'anything', 'answer-surface'),
+    ).toBe(true);
+  });
+
+  it('returns false for a point with no ledger entry', () => {
+    expect(isDismissed('es-b1-impersonal-plural', ExerciseType.CLOZE, 'dicen', 'answer-surface')).toBe(
+      false,
+    );
+  });
+});
+
+describe('findDismissal', () => {
+  it('returns the matched entry so the report can print its rationale and date', () => {
+    const d = findDismissal('es-a2-personal-a', ExerciseType.CLOZE, 'a', 'answer-surface')!;
+    expect(d.grammarPointKey).toBe('es-a2-personal-a');
+    expect(d.surface).toBe('a');
+    expect(d.reason.length).toBeGreaterThan(0);
+    expect(d.dismissedOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('returns undefined when nothing matches', () => {
+    expect(
+      findDismissal('es-b1-impersonal-plural', ExerciseType.CLOZE, 'dicen', 'answer-surface'),
+    ).toBeUndefined();
   });
 });

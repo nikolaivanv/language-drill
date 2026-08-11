@@ -420,3 +420,45 @@ export {
   QA_SAMPLE_PROMPT_VERSION,
 } from "./qa-sample.js";
 export type { QaProbe, QaFlagReason, ProbeScores } from "./qa-sample.js";
+
+export {
+  DISTRIBUTION_LIMIT,
+  MONOTONY_THRESHOLD_DEFAULT,
+  STOPWORDS,
+  surfaceOf,
+  normalizeSurface,
+  computeSurfaceCollapse,
+  isSurfaceFlagged,
+  computeSpecShortfall,
+  computeVariantSkew,
+  stemOf,
+  computeStemMonotony,
+} from "./collapse-metrics.js";
+export type {
+  AuditRow,
+  SurfaceDistribution,
+  SurfaceFlagOptions,
+  FloorShortfall,
+  SpecShortfall,
+  VariantCoverage,
+  VariantSkew,
+  StemMonotony,
+} from "./collapse-metrics.js";
+
+export {
+  COLLAPSE_TRIAGE_PROMPT_VERSION,
+  COLLAPSE_TRIAGE_MODEL,
+  COLLAPSE_TRIAGE_TOOL_NAME,
+  COLLAPSE_TRIAGE_SYSTEM_PROMPT,
+  COLLAPSE_TRIAGE_TOOL,
+  buildTriageUserPrompt,
+  parseTriageVerdict,
+  triageCell,
+} from "./collapse-triage.js";
+export type {
+  TriageInput,
+  TriageVerdict,
+  CollapseMechanism,
+  CollapseVerdictName,
+  CollapseConfidence,
+} from "./collapse-triage.js";

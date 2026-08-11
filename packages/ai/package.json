@@ -18,6 +18,7 @@
     "propose:coverage-spec": "tsx scripts/propose-coverage-spec.ts",
     "propose:book-coverage": "tsx scripts/propose-book-coverage.ts",
     "qa:sample": "tsx scripts/qa-sample-run.ts",
+    "audit:collapse": "tsx scripts/audit-collapse.ts",
     "dev": "tsc --watch",
     "lint": "eslint src/**/*.ts",
     "typecheck": "tsc --noEmit",
