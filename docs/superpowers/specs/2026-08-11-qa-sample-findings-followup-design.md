@@ -1,8 +1,20 @@
 # Closing the open `qa:sample` prod findings — Design
 
+> **STATUS (2026-08-11): closed by measurement — sections B, C not executed.**
+> The plan's Task 2 gate (§A below) re-measured all four findings against prod
+> at `--seed 1`; after a correction to the method (direct replay by exercise
+> id, not re-sampling — see the record's "Correction" section), all four
+> closed or were dismissed as crafter error. None survived, so **section B**
+> (the `EVALUATION_SYSTEM_PROMPT` obligatory-determiner edit + Langfuse push)
+> and **section C** (the production `jsonb_set` row repair) were **not run**:
+> no prompt change shipped, no Langfuse push happened in either environment,
+> no production row was written. Only §A and §D executed. The outcome of
+> record is `docs/analysis/qa-sample-findings-2026-08-11.md` — read that
+> before treating any part of this spec as pending work.
+
 **Date:** 2026-08-11
 **Branch:** `fix/qa-sample-findings-followup`
-**Status:** approved (design), pending implementation plan
+**Status:** closed 2026-08-11 — gated off by re-measurement; sections A and D executed, sections B and C (evaluator prompt fix, production row repair) not executed. See `docs/analysis/qa-sample-findings-2026-08-11.md`.
 
 ---
 

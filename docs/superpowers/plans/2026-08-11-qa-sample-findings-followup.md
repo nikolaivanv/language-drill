@@ -1,5 +1,21 @@
 # Closing the open `qa:sample` prod findings — Implementation Plan
 
+> **STATUS (2026-08-11): Tasks 3–11 were NOT executed — do not run them.**
+> Task 2's re-measurement gate re-ran all four flagged findings against prod at
+> `--seed 1` and, after a correction to the method (direct replay by exercise
+> id rather than re-sampling), found that all four closed or were dismissed as
+> crafter error. None survived. Per Task 2's own gate logic, that means Tasks
+> 3–10 (the evaluator prompt fix + Langfuse push) and Task 11 (the production
+> `jsonb_set` row repair) are out of scope and were **not done**: no edit to
+> `EVALUATION_SYSTEM_PROMPT`, no `push-prompts` run in any environment, no
+> write to any production `exercises` row. The unchecked `- [ ]` boxes below
+> for those tasks are historical — they describe work that was gated off, not
+> work still pending. The outcome of record is
+> `docs/analysis/qa-sample-findings-2026-08-11.md`; read that first. If a
+> finding reopens later, re-scope from that record and this design, rather
+> than resuming these checkboxes as-is — see the Task 2 annotation below for
+> why the measurement method itself needs correcting before any re-run.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Close the three untouched 2026-07-22 production `qa:sample` findings — re-measure them against today's prompts, stop the evaluator passing answers that omit an obligatory determiner, repair any surviving underdetermined cloze row in place, and make prod QA reports durable records.
@@ -111,6 +127,32 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 ---
 
 ### Task 2: Re-measure the findings at seed 1 against prod
+
+> **Note (added 2026-08-11, after execution): this task's method as written below
+> could not target the flagged rows, and should not be re-run as-is.** Step 4's
+> survival rule ("the same `flags` reason fires on the same `exerciseId`") is
+> unsatisfiable through the CLI as specified: `parseQaArgs`
+> (`packages/ai/scripts/qa-sample-run.ts`) has no `--exercise-id` flag, `qa:sample`
+> samples per grammar point rather than per row, and `--seed` seeds only row
+> *selection* — the Opus answer crafter is a live, unseeded call, so even hitting
+> the right id would not replay the original probe answer. In execution, the three
+> B1 cloze points each draw 2 of 49–50 approved rows (~4% odds of hitting a named
+> id), and none of the three target ids were in fact re-sampled. **What actually
+> produced the verdicts** was a deterministic-replay amendment made after the
+> first draft: a scratchpad script reading each target row's current
+> `content_json` by id directly and replaying the exact original probe strings
+> through `evaluateAnswer`, not this task's sampling commands. See the
+> "Correction to the first draft of this record" section in
+> `docs/analysis/qa-sample-findings-2026-08-11.md` for the full account. Do not
+> re-run the steps below expecting them to reliably hit specific flagged rows —
+> use the replay approach instead. Step 5's verdict vocabulary
+> (`closed by #612`) also pre-commits to a causal attribution before any
+> measurement happens — the record's actual finding is that #612 is the
+> leading candidate for the two B1 cloze closures, established only after
+> comparing it against the shipped diff, not assumed in advance. The steps
+> are left unmodified below as a historical record of what was run (the
+> sampling commands themselves are harmless and did execute successfully;
+> only their power to answer this task's question was the problem).
 
 **This task gates Tasks 3–10 (evaluator fix) and Task 11 (cloze repair).** Total budget ~$1.15.
 

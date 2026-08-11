@@ -22,6 +22,16 @@ moves out of that band. It is **dismissed — crafter error** if the flag depend
 on an "alt" that was never actually a valid alternative in the first place —
 an artifact of the July crafting step, not an evaluator defect.
 
+`classifyVerdicts` (`packages/ai/src/qa-sample.ts:108-123`) additionally gates
+two of the three flag reasons on solver confidence: `acceptable_answers_gap`
+and `false_negative` are suppressed when `correctConfidence < MIN_CORRECT_CONFIDENCE`
+(0.7) — shaky ground truth shouldn't produce a flag. `false_positive` is
+deliberately **ungated**: a wrong answer being accepted is a defect regardless of
+how sure the solver was about the correct answer. This matters here because
+`deber`'s original flag is `acceptable_answers_gap`, a gated reason — checked:
+its July `confidence` was **0.78** (`docs/analysis/qa-run-2026-07-22-prod-es-b1-cloze.json`),
+above the 0.7 gate, so the confidence rule does not change its verdict.
+
 ## Correction to the first draft of this record (fix round 1)
 
 The first version of this record drew its verdicts from `qa:sample`'s re-sampled
@@ -79,7 +89,19 @@ pnpm --filter @language-drill/ai qa:sample --language ES --cefr B1 --type cloze 
 
 All four exited 0, all stayed under their $0.50 caps (`costCapped: false`).
 
-| Run | Report file | Exit | Cost | Sampled ids |
+**"Sampled ids" caveat:** these were read off ephemeral stdout while the runs were
+live and pasted in below. `buildReport` (`packages/ai/scripts/qa-sample-run.ts:143`)
+only serializes rows that flagged (`records.filter(r => r.flags.length > 0)`), and
+all four runs here have `flagged: 0` → `flags: []` — so the committed report files
+under `docs/analysis/` do **not** contain these ids, and the report files
+themselves (`packages/ai/qa-runs/prod-*-2026-08-11-seed1.json`) are gitignored and
+gone with the worktree. The ids below are **not reproducible from any committed
+artifact** and are **not load-bearing for any verdict** — this record's own
+argument (see "Correction" above) is that re-sampled evidence is not what the
+verdicts rest on; the verdicts rest on the direct replay in the next section,
+which reads each target row by id rather than depending on re-sampling.
+
+| Run | Report file | Exit | Cost | Sampled ids (ephemeral stdout, not reproducible from a committed artifact) |
 |---|---|---|---|---|
 | ES A1 smoke (gustar) | `prod-smoke-es-a1-2026-08-11-seed1.json` | 0 | $0.2490 | `8a9dae79…`, `b5fbc236…`, `456079ab…`, `b0b4aac6…`, `09d08beb-fa80-5f79-907a-cd0541f7c874` |
 | deber (pool=49) | `prod-deber-2026-08-11-seed1.json` | 0 | $0.1413 | `249a1125-9b53-57ad-a2d7-bd51073c792c`, `2a9a1a97-94a7-550f-acd7-cd730090c646` |
@@ -141,12 +163,32 @@ worth doing if this closure needs to be relied on later.
 Original: `acceptable_answers_gap` — alt `"Debo"` scored 0.35 (fail).
 Replay: the identical alt now scores **0.75** — out of the fail band, into the
 deadzone (never flags under `classifyVerdicts`). **Closed — did not
-reproduce.** This is a cloze row, and the jump from 0.35 to 0.75 is consistent
-with **PR #620** (`optionsRevealed` now defaults `false`, so the evaluator no
-longer sees the on-screen option list `Debo, Debo de, Debería, Debo de tener`
-and can no longer penalize "Debo" for not matching the intended list entry) —
-a better-fitting explanation than #612, which only touched cloze *generation*
-prompting, not evaluation.
+reproduce.**
+
+Candidate cause, verified against the actual diffs (`git show 0463b009`,
+`git show 1df88e7e`): **PR #612** (`fix(evaluate): anti-anchoring for cloze +
+vocab_recall`, commit `0463b009`) is the leading explanation, not #620. #612
+touched only `packages/ai/src/prompts.ts` (plus its own tests and docs) —
+no generation file — and added exactly the clause this closure needs to
+`buildClozeUserPrompt`, the evaluator's cloze user prompt: *"When the visible
+sentence does not itself fix the tense/aspect/number, any form the sentence
+licenses is correct."* `deber`'s stem ("Ayer rompí el vaso sin querer. ___
+tener más cuidado la próxima vez.") does not fix mood, so `Debo` (indicative,
+"I must") alongside `Debería` (conditional, "I should") is exactly the kind of
+sentence-licensed alternative #612 tells the evaluator to accept.
+
+#612 *also* introduced the "and among the **Options** when options are shown"
+narrowing in the same commit — and this row's `promptSeen` includes an
+`Options:` line (`Debo, Debo de, Debería, Debo de tener`), so at the #612
+baseline the evaluator could see `Debo` was itself a listed option, reinforcing
+rather than blocking the accept. **#620** (commit `1df88e7e`, `optionsRevealed`
+defaulting to `false` so the evaluator no longer sees the option list at all)
+gated that narrowing behind an explicit reveal flag — but the narrowing did not
+exist before #612 shipped it, so #620's removal of it cannot explain movement
+measured against the 2026-07-22 (pre-#612) baseline. #620 is mechanically in
+window and not irrelevant (it changes how the prompt reads for this row today),
+but #612 is the fix that actually closes the gap; #620 only changes the
+presentation of an already-closed case.
 
 ### 3. `collective` — `es-b1-collective-agreement` (`ca70d729-2619-5421-8c5f-16cdd77d4e60`)
 
@@ -156,8 +198,29 @@ deadzone. **Closed — did not reproduce**, by the sampler's own flagging rule
 (deadzone never flags). Caveat worth keeping in view: 0.50 is still far from
 the 0.8 pass band — the evaluator has stopped confidently *rejecting*
 "interpretó" but has not started confidently *accepting* it either. This is a
-real improvement, plausibly also from #620 (options no longer shown), but it
-is a softened defect, not a demonstrably correct evaluation.
+real improvement, most plausibly from **#612** (same tense/aspect-licensing
+clause as `deber` above — "La gente del barrio ___ la nueva señal…" does not
+anchor a tense, so the preterite "interpretó" is sentence-licensed alongside
+the present "interpreta"), not #620.
+
+**#620's mechanism does not apply to this row.** #620's fix was gating the
+cloze `Options:` line (and its "among the Options" narrowing) behind an
+explicit `optionsRevealed` flag — but this row's `content.options` is empty:
+its archived `promptSeen`
+(`docs/analysis/qa-run-2026-07-22-prod-es-b1-cloze.json`, `exerciseId`
+`ca70d729-2619-5421-8c5f-16cdd77d4e60`) is `"Fill in the blank with the
+correct form of the verb in parentheses.\nLa gente del barrio ___ la nueva
+señal de tráfico de manera diferente. (interpretar)"` — no `Options:` line at
+all, and `renderLearnerView` (`packages/ai/src/qa-sample.ts:21`) only emits
+one when `content.options?.length` is truthy. #620's headline mechanism
+("options no longer shown") describes hiding a list that was never present
+for this row in the first place, so it cannot be the cause here. #620 did
+also reword the visibility/admissibility clauses for the optionless case
+(the `showOptions === false` branch's admissibility clause now reads "…it is
+fully correct… even when it uses a different verb or lexical item entirely" —
+see `git show 1df88e7e -- packages/ai/src/prompts.ts`), so it is not wholly
+irrelevant to this row's current prompt text, but "options no longer shown" is
+not why the score moved, because there were never options to show.
 
 ### 4. `adj-de-inf` — `es-b1-adjective-de-infinitive` (`42183fad-caa9-5d8d-b95f-c04104ca2f74`)
 
@@ -184,8 +247,8 @@ nondeterministic draw (n=1) should be trusted:
 | Exercise id | Point | Original reason (score) | Replayed score | Margin from boundary | Confidence | Verdict |
 |---|---|---|---|---|---|---|
 | `09d08beb-fa80-5f79-907a-cd0541f7c874` | es-a1-gustar-basic | `false_positive` (wrong=0.85) | wrong=0.75 (deadzone) | 0.05 below the 0.8 pass line | **provisional** — n=1, within plausible sampling noise of the boundary | **closed — did not reproduce** |
-| `1c8afa03-50f9-566b-9adc-f8578e7b606a` | es-b1-deber-obligation-probability | `acceptable_answers_gap` (alt=0.35) | alt=0.75 (deadzone) | 0.35 above the 0.4 fail line | **convincing** | **closed — did not reproduce** (candidate cause: #620) |
-| `ca70d729-2619-5421-8c5f-16cdd77d4e60` | es-b1-collective-agreement | `acceptable_answers_gap` (alt=0.3) | alt=0.50 (deadzone) | 0.10 above the 0.4 fail line | **provisional** — real improvement, but still far from the pass band | **closed — did not reproduce** (candidate cause: #620; still far from pass) |
+| `1c8afa03-50f9-566b-9adc-f8578e7b606a` | es-b1-deber-obligation-probability | `acceptable_answers_gap` (alt=0.35) | alt=0.75 (deadzone) | 0.35 above the 0.4 fail line | **convincing** | **closed — did not reproduce** (candidate cause: #612, tense/mood-licensing clause; see per-flag section for why #620 is not the mechanism) |
+| `ca70d729-2619-5421-8c5f-16cdd77d4e60` | es-b1-collective-agreement | `acceptable_answers_gap` (alt=0.3) | alt=0.50 (deadzone) | 0.10 above the 0.4 fail line | **provisional** — real improvement, but still far from the pass band | **closed — did not reproduce** (candidate cause: #612, same clause; #620's "options no longer shown" mechanism does not apply — this row has no options; still far from pass) |
 | `42183fad-caa9-5d8d-b95f-c04104ca2f74` | es-b1-adjective-de-infinitive | `acceptable_answers_gap` (alt=0) | alt=0.00 (fail — reproduces by raw rule) | n/a — dismissal is on grammatical grounds, not score margin | **not sampling-dependent** | **dismissed — crafter error, not a pool defect** |
 
 ## Gate outcome for Tasks 3–11
@@ -196,7 +259,10 @@ nondeterministic draw (n=1) should be trusted:
   n=1) — see the confidence column above and the cheap n-replay follow-up
   noted in the per-flag section if this needs firmer confirmation later.
 - **Task 11 (cloze repair): skip.** All three cloze flags are now resolved —
-  two closed (with #620 as the leading candidate explanation, though not
+  two closed (with **#612** as the leading candidate explanation — its
+  tense/mood-licensing clause is exactly on point for both rows; #620 is also
+  in-window but its "options no longer shown" mechanism only applies to the
+  `deber` row, since `collective` never had options to begin with — neither
   independently verified here) and one dismissed as a crafter artifact rather
   than a real gap. None survived; there is nothing for Task 11 to repair.
 
