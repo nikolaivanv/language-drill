@@ -1,11 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { ExerciseType } from '@language-drill/shared';
 import type { GrammarPoint } from '@language-drill/shared';
+import type Anthropic from '@anthropic-ai/sdk';
 import {
   buildTriageUserPrompt,
   parseTriageVerdict,
   COLLAPSE_TRIAGE_SYSTEM_PROMPT,
   COLLAPSE_TRIAGE_TOOL,
+  triageCell,
+  COLLAPSE_TRIAGE_TOOL_NAME,
+  COLLAPSE_TRIAGE_MODEL,
 } from './collapse-triage.js';
 
 const gp: GrammarPoint = {
@@ -181,5 +185,50 @@ describe('parseTriageVerdict', () => {
 describe('COLLAPSE_TRIAGE_TOOL', () => {
   it('forces the four fields the parser requires', () => {
     expect(COLLAPSE_TRIAGE_TOOL.input_schema.required).toEqual(['verdict', 'rationale', 'confidence']);
+  });
+});
+
+const fakeClient = (content: unknown[], stopReason = 'tool_use') =>
+  ({
+    messages: {
+      create: vi.fn().mockResolvedValue({ content, stop_reason: stopReason, usage: { input_tokens: 900, output_tokens: 120 } }),
+    },
+  }) as unknown as Anthropic;
+
+describe('triageCell', () => {
+  const toolUse = {
+    type: 'tool_use',
+    name: COLLAPSE_TRIAGE_TOOL_NAME,
+    id: 't1',
+    input: {
+      verdict: 'collapsed',
+      mechanism: 'construction-variants',
+      missingConstructions: ['um … zu'],
+      rationale: 'um…zu is never drilled.',
+      confidence: 'high',
+    },
+  };
+
+  it('forces the tool and returns the parsed verdict plus usage', async () => {
+    const client = fakeClient([toolUse]);
+    const { verdict, usage } = await triageCell(client, input);
+    expect(verdict.mechanism).toBe('construction-variants');
+    expect(usage.input_tokens).toBe(900);
+
+    const call = (client.messages.create as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(call.model).toBe(COLLAPSE_TRIAGE_MODEL);
+    expect(call.tool_choice).toEqual({ type: 'tool', name: COLLAPSE_TRIAGE_TOOL_NAME });
+    expect(call.system[0].cache_control).toEqual({ type: 'ephemeral' });
+  });
+
+  it('throws a diagnostic error when no tool_use block comes back', async () => {
+    await expect(triageCell(fakeClient([{ type: 'text', text: 'hm' }], 'end_turn'), input)).rejects.toThrow(
+      /no tool_use block .*end_turn/,
+    );
+  });
+
+  it('propagates a parser error for a malformed verdict', async () => {
+    const bad = { ...toolUse, input: { verdict: 'collapsed', rationale: 'x', confidence: 'low' } };
+    await expect(triageCell(fakeClient([bad]), input)).rejects.toThrow(/mechanism/);
   });
 });

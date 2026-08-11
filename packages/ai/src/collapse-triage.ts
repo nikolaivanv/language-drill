@@ -235,3 +235,41 @@ export function parseTriageVerdict(input: unknown): TriageVerdict {
 
   return result;
 }
+
+/**
+ * Call Claude with the forced tool and return the validated verdict plus token
+ * usage (the CLI's cost guard needs it). The system prompt is cache-marked: a
+ * run triages many cells against an identical system block, so prompt caching
+ * makes all but the first call cheap.
+ */
+export async function triageCell(
+  client: Anthropic,
+  input: TriageInput,
+  signal?: AbortSignal,
+): Promise<{ verdict: TriageVerdict; usage: Anthropic.Usage }> {
+  const response = await client.messages.create(
+    {
+      model: COLLAPSE_TRIAGE_MODEL,
+      max_tokens: COLLAPSE_TRIAGE_MAX_TOKENS,
+      system: [
+        {
+          type: 'text' as const,
+          text: COLLAPSE_TRIAGE_SYSTEM_PROMPT,
+          cache_control: { type: 'ephemeral' as const },
+        },
+      ],
+      messages: [{ role: 'user' as const, content: buildTriageUserPrompt(input) }],
+      tools: [COLLAPSE_TRIAGE_TOOL],
+      tool_choice: { type: 'tool' as const, name: COLLAPSE_TRIAGE_TOOL_NAME },
+      temperature: COLLAPSE_TRIAGE_TEMPERATURE,
+    },
+    { signal },
+  );
+  const toolUse = response.content.find(
+    (b): b is Anthropic.ToolUseBlock => b.type === 'tool_use',
+  );
+  if (!toolUse) {
+    throw new Error(`triage: no tool_use block (stop_reason ${response.stop_reason})`);
+  }
+  return { verdict: parseTriageVerdict(toolUse.input), usage: response.usage };
+}

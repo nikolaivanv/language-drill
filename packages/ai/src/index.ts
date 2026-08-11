@@ -444,3 +444,21 @@ export type {
   VariantSkew,
   StemMonotony,
 } from "./collapse-metrics.js";
+
+export {
+  COLLAPSE_TRIAGE_PROMPT_VERSION,
+  COLLAPSE_TRIAGE_MODEL,
+  COLLAPSE_TRIAGE_TOOL_NAME,
+  COLLAPSE_TRIAGE_SYSTEM_PROMPT,
+  COLLAPSE_TRIAGE_TOOL,
+  buildTriageUserPrompt,
+  parseTriageVerdict,
+  triageCell,
+} from "./collapse-triage.js";
+export type {
+  TriageInput,
+  TriageVerdict,
+  CollapseMechanism,
+  CollapseVerdictName,
+  CollapseConfidence,
+} from "./collapse-triage.js";
