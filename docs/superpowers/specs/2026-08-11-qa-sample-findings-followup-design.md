@@ -8,13 +8,15 @@
 > (the `EVALUATION_SYSTEM_PROMPT` obligatory-determiner edit + Langfuse push)
 > and **section C** (the production `jsonb_set` row repair) were **not run**:
 > no prompt change shipped, no Langfuse push happened in either environment,
-> no production row was written. Only §A and §D executed. The outcome of
+> no production row was written. §A and §D both executed — Task 1 archived
+> the reports and gitignored the run directory; Task 12 corrected the project
+> memory, including the #612 attribution, on 2026-08-12. The outcome of
 > record is `docs/analysis/qa-sample-findings-2026-08-11.md` — read that
 > before treating any part of this spec as pending work.
 
 **Date:** 2026-08-11
 **Branch:** `fix/qa-sample-findings-followup`
-**Status:** closed 2026-08-11 — gated off by re-measurement; sections A and D executed, sections B and C (evaluator prompt fix, production row repair) not executed. See `docs/analysis/qa-sample-findings-2026-08-11.md`.
+**Status:** closed 2026-08-11 — gated off by re-measurement; sections A and D both executed (Task 1 archived the reports and gitignored the run directory on 2026-08-11; Task 12 corrected the project memory, including the #612 attribution, on 2026-08-12), sections B and C (evaluator prompt fix, production row repair) gated off and not run. See `docs/analysis/qa-sample-findings-2026-08-11.md`.
 
 ---
 
