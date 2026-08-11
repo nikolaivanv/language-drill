@@ -140,23 +140,15 @@ Replay cost: **$0.2806** (12 `evaluateAnswer` calls).
 ### 1. `gustar` — `es-a1-gustar-basic` (`09d08beb-fa80-5f79-907a-cd0541f7c874`)
 
 Original: `false_positive` — wrong `"No me gusta cerveza."` scored 0.85 (pass).
-Replay: the identical wrong answer now scores **0.75** — out of the pass band,
-into the deadzone. The flag did not fire this time: **closed — did not
-reproduce.** `gustar` is a `translation` exercise (no cloze options in play),
-so neither #612 nor #620 is a mechanical fit; the cause of the movement is
-unexplained (most likely general prompt/model drift between July and now)
-rather than attributable to either shipped fix.
-Caveat — **this closure is provisional, not confirmed**: 0.75 is only **0.05**
-below the 0.8 pass line the original 0.85 crossed, the closest of the three
-deadzone landings in this run. `evaluateAnswer` is a nondeterministic LLM
-call and this replay is n=1; a re-draw landing at 0.80 instead of 0.75 would
-flip the verdict straight back to `false_positive`. One draw this close to the
-boundary cannot distinguish a real behavioural change from ordinary sampling
-noise — contrast `deber` below, where the alt cleared the fail line by 0.35,
-comfortably outside noise range. What would settle it: repeating this single
-probe (`wrong` = `"No me gusta cerveza."` against this row) n times — at
-~$0.02/call — and checking whether it ever lands at ≥0.8. Cheap, not run here;
-worth doing if this closure needs to be relied on later.
+Single replay: 0.75 (deadzone), which read as a closure.
+
+> **SUPERSEDED 2026-08-12 — this finding is OPEN, not closed.** The n=10 replay
+> below reproduces `false_positive` on **3 of 10 draws**. The single 0.75 draw was
+> boundary noise, exactly as the provisional caveat warned.
+
+`gustar` is a `translation` exercise (no cloze options in play), so neither #612
+nor #620 is a mechanical fit — and with the finding now reproducing, there is no
+movement left to attribute to either.
 
 ### 2. `deber` — `es-b1-deber-obligation-probability` (`1c8afa03-50f9-566b-9adc-f8578e7b606a`)
 
@@ -246,18 +238,18 @@ nondeterministic draw (n=1) should be trusted:
 
 | Exercise id | Point | Original reason (score) | Replayed score | Margin from boundary | Confidence | Verdict |
 |---|---|---|---|---|---|---|
-| `09d08beb-fa80-5f79-907a-cd0541f7c874` | es-a1-gustar-basic | `false_positive` (wrong=0.85) | wrong=0.75 (deadzone) | 0.05 below the 0.8 pass line | **provisional** — n=1, within plausible sampling noise of the boundary | **closed — did not reproduce** |
+| `09d08beb-fa80-5f79-907a-cd0541f7c874` | es-a1-gustar-basic | `false_positive` (wrong=0.85) | wrong=0.75 (deadzone) | 0.05 below the 0.8 pass line | **REVERSED n=10** — reproduces on 3/10 draws | **OPEN — see the 2026-08-12 appendix** |
 | `1c8afa03-50f9-566b-9adc-f8578e7b606a` | es-b1-deber-obligation-probability | `acceptable_answers_gap` (alt=0.35) | alt=0.75 (deadzone) | 0.35 above the 0.4 fail line | **convincing** | **closed — did not reproduce** (candidate cause: #612, tense/mood-licensing clause; see per-flag section for why #620 is not the mechanism) |
-| `ca70d729-2619-5421-8c5f-16cdd77d4e60` | es-b1-collective-agreement | `acceptable_answers_gap` (alt=0.3) | alt=0.50 (deadzone) | 0.10 above the 0.4 fail line | **provisional** — real improvement, but still far from the pass band | **closed — did not reproduce** (candidate cause: #612, same clause; #620's "options no longer shown" mechanism does not apply — this row has no options; still far from pass) |
+| `ca70d729-2619-5421-8c5f-16cdd77d4e60` | es-b1-collective-agreement | `acceptable_answers_gap` (alt=0.3) | alt=0.50 (deadzone) | 0.10 above the 0.4 fail line | **CONFIRMED n=10** — 0/10 draws in the fail band (0.45-0.70) | **closed — did not reproduce** (candidate cause: #612, same clause; #620's "options no longer shown" mechanism does not apply — this row has no options; still far from pass) |
 | `42183fad-caa9-5d8d-b95f-c04104ca2f74` | es-b1-adjective-de-infinitive | `acceptable_answers_gap` (alt=0) | alt=0.00 (fail — reproduces by raw rule) | n/a — dismissal is on grammatical grounds, not score margin | **not sampling-dependent** | **dismissed — crafter error, not a pool defect** |
 
 ## Gate outcome for Tasks 3–11
 
-- **`gustar` closed → Tasks 3–10 (evaluator fix) are out of scope; skip them.**
-  Established by direct replay of the exact original defect probe (not
-  inference from a re-sample), though the closure is provisional (0.05 margin,
-  n=1) — see the confidence column above and the cheap n-replay follow-up
-  noted in the per-flag section if this needs firmer confirmation later.
+- ~~**`gustar` closed → Tasks 3–10 (evaluator fix) are out of scope; skip them.**~~
+  **REVERSED 2026-08-12 by the n=10 replay** (see the appendix): the finding
+  reproduces on 3/10 draws, so `gustar` is **open**. Tasks 3–10 were not executed
+  on the strength of the n=1 reading, and the fix they described is **not** the
+  right one anyway — see the appendix for what the n=10 evidence actually shows.
 - **Task 11 (cloze repair): skip.** All three cloze flags are now resolved —
   two closed (with **#612** as the leading candidate explanation — its
   tense/mood-licensing clause is exactly on point for both rows; #620 is also
@@ -270,3 +262,88 @@ nondeterministic draw (n=1) should be trusted:
 
 Sampling runs: $0.5791. Replay: $0.2806. **Total re-measurement spend: $0.8597**
 (budget ~$1.15).
+
+---
+
+# Appendix (2026-08-12): n=10 replay of the two provisional closures
+
+The 2026-08-11 record closed two findings on a **single** replay draw each, and
+labelled both **provisional** because they landed close to the boundary they had
+to cross. This appendix runs the follow-up that record named: replay the one
+decisive probe 10 times and look at the distribution instead of one draw.
+
+Method: same replay path as the primary evidence (each row's current
+`content_json`, `evaluateAnswer` called exactly as `qa-sample-run.ts:scoreAnswer`
+calls it, `optionsRevealed` omitted → `false`), repeated n=10 per probe.
+Cost: **$0.4472** for 20 calls.
+
+| Probe | Row | Answer | Flags at | n=10 scores | In flag band |
+|---|---|---|---|---|---|
+| A | `09d08beb…` es-a1-gustar-basic | `No me gusta cerveza.` (wrong) | ≥ 0.8 | 0.85, 0.75, 0.75, 0.75, 0.75, 0.85, 0.85, 0.75, 0.75, 0.75 | **3/10** |
+| B | `ca70d729…` es-b1-collective-agreement | `interpretó` (alt) | ≤ 0.4 | 0.55, 0.65, 0.70, 0.55, 0.55, 0.55, 0.50, 0.55, 0.50, 0.45 | **0/10** |
+
+## Verdicts, revised
+
+**Probe A — `gustar` is OPEN.** The score is bimodal across exactly two values,
+0.75 and 0.85, and 0.85 is the *original July score*. `classifyVerdicts` pushes
+`false_positive` whenever `band(scores.wrong) === "pass"`, with no confidence
+gate, so **3 of 10 draws re-flag the original defect**. The 2026-08-11 "closed"
+verdict was an artifact of drawing 0.75 once. Nothing was fixed; the finding
+simply fires intermittently, which is why a single sample could not see it.
+
+**Probe B — `collective` closure CONFIRMED.** All 10 draws land 0.45–0.70,
+median 0.55, none in the fail band. The single 0.50 draw was near the low end of
+a stable distribution, not a lucky escape. This closure holds.
+
+## What the n=10 evidence changes about the proposed fix
+
+The original spec proposed adding a paragraph to `EVALUATION_SYSTEM_PROMPT`
+telling the evaluator that determiners the target grammar requires are not
+optional. **That fix would have been aimed at the wrong mechanism.** In
+**10 of 10** draws the evaluator:
+
+- reported the omission as a `grammar` **error** — it is not blind to it, and is
+  not treating the article as an optional element;
+- attributed it to **`es-a1-articles`** (a real curriculum point,
+  `packages/db/src/curriculum/es.ts:289`) — the correct point, not the
+  exercise's own `es-a1-gustar-basic`;
+- explained it correctly (e.g. *"With gustar, the liked noun—even when referring
+  to something in general—takes the definite article"*);
+- and rated it severity **`minor`** in every single draw.
+
+So the defect is **severity/score calibration**, not blindness. The system
+prompt's own rule (`packages/ai/src/prompts.ts:118`) is *"Minor errors that do
+not impede communication are 'minor' severity. Errors that change meaning or
+make the sentence ungrammatical are 'major' severity."* A missing obligatory
+article does not impede communication but arguably does make the sentence
+ungrammatical, so the two halves of that rule pull in opposite directions and
+the evaluator consistently resolves it toward `minor` → score 0.75–0.85.
+
+**Counter-consideration before treating this as a bug.** Bare mass/generic nouns
+with `gustar` are attested colloquially in some varieties, and the same system
+prompt instructs *"Accept regional variations (Latin American vs Peninsular)
+unless specified"* (the `### Spanish (ES)` notes). A defensible reading is that
+`minor` is correct and the real problem is that `qa:sample`'s crafter offered a
+weak "wrong" answer — i.e. closer to the `adj-de-inf` crafter-artifact case than
+to a genuine evaluator defect. Deciding this needs a judgement about the target
+variety, which is a curriculum call, not a measurement one.
+
+**Mitigation already in place, either way.** Because the error is attributed to
+`es-a1-articles`, the incidental-observation fold
+(`infra/lambda/src/routes/exercises.ts:722-725`) records negative evidence
+against the articles point even when the gustar score passes — so a learner
+making this mistake is not getting a clean pass across the board.
+
+## Follow-up options (none executed)
+
+1. **Decide the linguistic question first** — is bare-noun `gustar` acceptable
+   for the target variety? If yes, this is a crafter artifact: dismiss it like
+   `adj-de-inf` and add `"No me gusta cerveza."`-class answers to the crafter's
+   known-weak patterns. If no, proceed to 2.
+2. **If it is a real defect, fix severity, not blindness.** The lever is the
+   severity rule's treatment of grammatical-but-communicative errors, not an
+   "obligatory determiners are not optional" paragraph — the evaluator already
+   applies that. Verify any change with `pnpm eval` before a Langfuse push.
+3. **Note for `qa:sample` generally:** an intermittent defect (here 30%) is
+   invisible to a single-probe run. Findings that matter deserve n>1 before
+   being called closed.
