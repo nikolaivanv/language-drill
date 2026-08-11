@@ -11,15 +11,31 @@
  *   pnpm audit:collapse -- --language ES --cefr B1 --max-cost-usd 2
  */
 
+import { mkdirSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
 import { parseArgs } from 'node:util';
+import { fileURLToPath } from 'node:url';
 
 import { and, inArray, isNotNull, sql } from 'drizzle-orm';
 
 import { ExerciseType, resolveCellTargetFor } from '@language-drill/shared';
 import type { CoverageTags, CurriculumCefrLevel, GrammarPoint, LearningLanguage } from '@language-drill/shared';
-import { createDb, exercises, getGrammarPoint } from '@language-drill/db';
+import { createDb, exercises, getGrammarPoint, requireEnv, isDismissed } from '@language-drill/db';
+import type Anthropic from '@anthropic-ai/sdk';
 
-import type { AuditRow } from '../src/collapse-metrics.js';
+import {
+  computeSpecShortfall,
+  computeStemMonotony,
+  computeSurfaceCollapse,
+  computeVariantSkew,
+  isSurfaceFlagged,
+  type AuditRow,
+  type SpecShortfall,
+  type StemMonotony,
+  type SurfaceDistribution,
+  type VariantSkew,
+} from '../src/collapse-metrics.js';
+import { createClaudeClient, triageCell, type TriageVerdict } from '../src/index.js';
 
 /** One row as loaded from Postgres, before curriculum resolution. */
 export type LoadedRow = {
@@ -207,4 +223,320 @@ export async function loadApprovedRows(
     .where(and(...conditions));
 
   return rows as LoadedRow[];
+}
+
+export type AnalyzeOptions = {
+  minRows: number;
+  threshold: number;
+  monotonyThreshold: number;
+};
+
+export type CellFinding = {
+  cellKey: string;
+  grammarPointKey: string;
+  grammarPointName: string;
+  exerciseType: ExerciseType;
+  approved: number;
+  target: number;
+  surface: SurfaceDistribution | null;
+  surfaceFlagged: boolean;
+  monotony: StemMonotony | null;
+  monotonyFlagged: boolean;
+  specShortfall: SpecShortfall | null;
+  variantSkew: VariantSkew | null;
+  dismissedByLedger: boolean;
+  /** Signal 2 already explains this cell — see `analyzeCell`. */
+  preempted: boolean;
+  needsTriage: boolean;
+  verdict: TriageVerdict | null;
+  triageError: string | null;
+};
+
+/** True when the point declares a mechanism the pool has not realized. */
+function declaredButUnrealized(
+  spec: SpecShortfall | null,
+  variants: VariantSkew | null,
+): boolean {
+  if (spec && spec.shortfalls.length > 0) return true;
+  if (variants && (variants.underMin.length > 0 || variants.unrecognizedSeedCount > 0)) return true;
+  return false;
+}
+
+/**
+ * Run all three signals over one cell and decide whether it needs an LLM call.
+ *
+ * Two things suppress triage, in this order:
+ *   1. PRE-EMPTION — when the point already declares a mechanism the pool has not
+ *      realized, THAT is the finding. Asking the model "should this point have
+ *      construction variants?" about a point that already has them wastes a call
+ *      and invites a confused verdict. Today this is the common case: #631 merged
+ *      inert and the pool repass was never run.
+ *   2. The dismissals ledger — a recorded human judgement that this exact
+ *      concentration is correct.
+ */
+export function analyzeCell(cell: AuditCell, opts: AnalyzeOptions): CellFinding {
+  const surface = computeSurfaceCollapse(cell.exerciseType, cell.rows);
+  const surfaceFlagged = isSurfaceFlagged(surface, opts);
+
+  const monotony = computeStemMonotony(cell.exerciseType, cell.rows);
+  const monotonyFlagged =
+    monotony !== null && monotony.total >= opts.minRows && monotony.share >= opts.monotonyThreshold;
+
+  const specShortfall = computeSpecShortfall(cell.grammarPoint, cell.rows, cell.target);
+  const variantSkew = computeVariantSkew(cell.grammarPoint, cell.rows);
+
+  const preempted = declaredButUnrealized(specShortfall, variantSkew);
+
+  const dismissedByLedger =
+    (surfaceFlagged &&
+      surface !== null &&
+      isDismissed(cell.grammarPoint.key, cell.exerciseType, surface.topSurface, 'answer-surface')) ||
+    (monotonyFlagged &&
+      monotony !== null &&
+      isDismissed(cell.grammarPoint.key, cell.exerciseType, monotony.topLemma, 'stem-monotony'));
+
+  return {
+    cellKey: cell.cellKey,
+    grammarPointKey: cell.grammarPoint.key,
+    grammarPointName: cell.grammarPoint.name,
+    exerciseType: cell.exerciseType,
+    approved: cell.rows.length,
+    target: cell.target,
+    surface,
+    surfaceFlagged,
+    monotony,
+    monotonyFlagged,
+    specShortfall,
+    variantSkew,
+    dismissedByLedger,
+    preempted,
+    needsTriage: (surfaceFlagged || monotonyFlagged) && !dismissedByLedger && !preempted,
+    verdict: null,
+    triageError: null,
+  };
+}
+
+// Sonnet list pricing, USD per million tokens. Indicative only — used for the
+// run's cost guard, not for billing.
+const SONNET_INPUT_USD_PER_MTOK = 3;
+const SONNET_OUTPUT_USD_PER_MTOK = 15;
+
+export function estimateTriageCostUsd(usage: Anthropic.Usage): number {
+  return (
+    (usage.input_tokens / 1_000_000) * SONNET_INPUT_USD_PER_MTOK +
+    (usage.output_tokens / 1_000_000) * SONNET_OUTPUT_USD_PER_MTOK
+  );
+}
+
+export type AuditReport = {
+  name: string;
+  scanned: number;
+  costUsd: number;
+  findings: CellFinding[];
+};
+
+const NEXT_ACTION: Record<string, string> = {
+  'coverage-spec': 'author `coverageSpec`',
+  'construction-variants': 'author `constructionVariants`',
+  'seed-pool': 'add a curated seed pool (`conjugationSeedWords` / `elicitationSeedValues`)',
+};
+
+const pct = (n: number): string => `${Math.round(n * 100)}%`;
+
+export function renderMarkdown(report: AuditReport): string {
+  const confirmed = report.findings.filter((f) => f.verdict?.verdict === 'collapsed');
+  const unrealized = report.findings.filter(
+    (f) => f.specShortfall?.shortfalls.length || f.variantSkew?.underMin.length || f.variantSkew?.unrecognizedSeedCount,
+  );
+  const monotony = report.findings.filter((f) => f.monotonyFlagged && !f.dismissedByLedger);
+  const dismissed = report.findings.filter(
+    (f) => f.dismissedByLedger || f.verdict?.verdict === 'legitimate-concentration' || f.verdict?.verdict === 'metric-artifact',
+  );
+  const errors = report.findings.filter((f) => f.triageError !== null);
+
+  const out: string[] = [
+    `# Pool collapse audit — ${report.name}`,
+    '',
+    '## Summary',
+    '',
+    `- Cells scanned: **${report.scanned}**`,
+    `- Flagged by a signal: **${report.findings.filter((f) => f.surfaceFlagged || f.monotonyFlagged).length}**`,
+    `- Confirmed collapsed: **${confirmed.length}**`,
+    `- Declared but unrealized: **${unrealized.length}**`,
+    `- Dismissed (ledger + triage): **${dismissed.length}**`,
+    `- Triage errors: **${errors.length}**`,
+    `- Estimated cost: **$${report.costUsd.toFixed(2)}**`,
+    '',
+  ];
+
+  if (confirmed.length === 0 && unrealized.length === 0 && monotony.length === 0) {
+    out.push('No collapse findings. Nothing to act on.', '');
+  }
+
+  if (confirmed.length > 0) {
+    out.push('## Confirmed collapsed', '');
+    const ranked = [...confirmed].sort((a, b) => (b.surface?.share ?? 0) - (a.surface?.share ?? 0));
+    for (const f of ranked) {
+      const v = f.verdict!;
+      const action = v.mechanism ? NEXT_ACTION[v.mechanism] : 'investigate';
+      out.push(
+        `### \`${f.cellKey}\` — ${f.grammarPointName}`,
+        '',
+        `- Top surface: \`${f.surface?.topSurface}\` at **${pct(f.surface?.share ?? 0)}** (${f.surface?.topCount}/${f.surface?.total})`,
+        `- Approved: ${f.approved} / target ${f.target}`,
+        `- Mechanism: **${v.mechanism}**${v.axis ? ` (axis \`${v.axis}\`)` : ''} — confidence ${v.confidence}`,
+        v.missingConstructions?.length
+          ? `- Missing: ${v.missingConstructions.map((m) => `\`${m}\``).join(', ')}`
+          : '',
+        `- Rationale: ${v.rationale}`,
+        `- **Next action:** ${action}`,
+        f.approved >= f.target
+          ? '- ⚠️ Cell is **at target** — **demote required**, it will not self-heal. `need = target − approved` is zero, so the scheduler never revisits it.'
+          : '- Cell is below target; it will refill under the new config once generation resumes.',
+        '',
+      );
+    }
+  }
+
+  if (unrealized.length > 0) {
+    out.push(
+      '## Declared-but-unrealized',
+      '',
+      'Deterministic — the declared floor is ground truth, no triage involved.',
+      '',
+    );
+    const atTarget = unrealized.filter((f) => f.approved >= f.target);
+    const belowTarget = unrealized.filter((f) => f.approved < f.target);
+    for (const [label, group, note] of [
+      ['At target — stuck, needs a demote', atTarget, 'These will NOT self-heal.'],
+      ['Below target — self-heals on resume', belowTarget, 'The scheduler will target these on the next batch.'],
+    ] as const) {
+      if (group.length === 0) continue;
+      out.push(`### ${label}`, '', note, '');
+      for (const f of group) {
+        out.push(`- \`${f.cellKey}\` (${f.approved}/${f.target})`);
+        for (const s of f.specShortfall?.shortfalls ?? []) {
+          out.push(`  - \`${s.axis}=${s.value}\`: ${s.actual}/${s.floor}`);
+        }
+        if (f.variantSkew) {
+          if (f.variantSkew.unrecognizedSeedCount > 0) {
+            out.push(
+              `  - **${f.variantSkew.unrecognizedSeedCount} rows carry no recognized variant id** — backfill \`content_json.seedWord\` before demoting, or the surplus recomputes against zero coverage.`,
+            );
+          }
+          for (const id of f.variantSkew.underMin) {
+            const v = f.variantSkew.perVariant.find((p) => p.id === id)!;
+            out.push(`  - variant \`${id}\`: ${v.count} (below MIN_PER_VARIANT)`);
+          }
+          for (const id of f.variantSkew.overQuota) {
+            const v = f.variantSkew.perVariant.find((p) => p.id === id)!;
+            out.push(`  - variant \`${id}\`: ${v.count} over quota ${v.quota.toFixed(1)}`);
+          }
+        }
+      }
+      out.push('');
+    }
+  }
+
+  if (monotony.length > 0) {
+    out.push(
+      '## Stem monotony (calibration-phase)',
+      '',
+      'Loose threshold by design; #617 may already have fixed part of this. Treat as a hint.',
+      '',
+    );
+    for (const f of monotony) {
+      out.push(
+        `- \`${f.cellKey}\`: \`${f.monotony!.topLemma}\` in ${pct(f.monotony!.share)} of stems (${f.monotony!.count}/${f.monotony!.total})`,
+      );
+    }
+    out.push('');
+  }
+
+  if (dismissed.length > 0) {
+    out.push('## Dismissed', '', 'Listed so this report is auditable, not a filtered view.', '');
+    for (const f of dismissed) {
+      const why = f.dismissedByLedger
+        ? 'ledger'
+        : `triage: ${f.verdict?.verdict} — ${f.verdict?.rationale}`;
+      out.push(`- \`${f.cellKey}\` — ${why}`);
+    }
+    out.push('');
+  }
+
+  if (errors.length > 0) {
+    out.push('## Triage errors', '');
+    for (const f of errors) out.push(`- \`${f.cellKey}\` — ${f.triageError}`);
+    out.push('');
+  }
+
+  return out.join('\n');
+}
+
+async function main(): Promise<void> {
+  const filters = parseAuditArgs(process.argv.slice(2));
+  const db = createDb(requireEnv('DATABASE_URL'));
+
+  console.log('[audit-collapse] loading approved rows…');
+  const rows = await loadApprovedRows(db, filters);
+  let cells = groupRowsIntoCells(rows);
+  if (filters.limit !== undefined) cells = cells.slice(0, filters.limit);
+  console.log(`[audit-collapse] ${rows.length} rows → ${cells.length} cells`);
+
+  const findings = cells.map((c) => analyzeCell(c, filters));
+
+  let costUsd = 0;
+  if (!filters.dryRun) {
+    const client = createClaudeClient(requireEnv('ANTHROPIC_API_KEY'));
+    const cellByKey = new Map(cells.map((c) => [c.cellKey, c]));
+    const queue = findings.filter((f) => f.needsTriage);
+    console.log(`[audit-collapse] triaging ${queue.length} cells…`);
+
+    for (const f of queue) {
+      if (costUsd >= filters.maxCostUsd) {
+        // Never silently truncate: an unspoken cap reads as "covered everything".
+        f.triageError = `skipped — run hit --max-cost-usd ${filters.maxCostUsd}`;
+        continue;
+      }
+      const cell = cellByKey.get(f.cellKey)!;
+      try {
+        const { verdict, usage } = await triageCell(client, {
+          grammarPoint: cell.grammarPoint,
+          exerciseType: cell.exerciseType,
+          approved: f.approved,
+          target: f.target,
+          signal: f.surfaceFlagged ? 'answer-surface' : 'stem-monotony',
+          surface: f.surface,
+          monotony: f.monotony,
+        });
+        f.verdict = verdict;
+        costUsd += estimateTriageCostUsd(usage);
+      } catch (err) {
+        f.triageError = err instanceof Error ? err.message : String(err);
+      }
+    }
+  } else {
+    console.log('[audit-collapse] --dry-run: sweep only, no triage calls');
+  }
+
+  const report: AuditReport = { name: filters.name, scanned: cells.length, costUsd, findings };
+  const outDir = path.join(process.cwd(), 'audit-runs');
+  mkdirSync(outDir, { recursive: true });
+  const jsonPath = path.join(outDir, `${filters.name}.json`);
+  const mdPath = path.join(outDir, `${filters.name}.md`);
+  writeFileSync(jsonPath, JSON.stringify(report, null, 2), 'utf8');
+  writeFileSync(mdPath, renderMarkdown(report), 'utf8');
+
+  console.log(`[audit-collapse] wrote ${jsonPath}`);
+  console.log(`[audit-collapse] wrote ${mdPath}`);
+  console.log(`[audit-collapse] estimated cost $${costUsd.toFixed(2)}`);
+}
+
+const isMain =
+  process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1];
+if (isMain) {
+  main().catch((err) => {
+    console.error('[audit-collapse] unhandled failure:', err);
+    process.exit(1);
+  });
 }
