@@ -420,3 +420,27 @@ export {
   QA_SAMPLE_PROMPT_VERSION,
 } from "./qa-sample.js";
 export type { QaProbe, QaFlagReason, ProbeScores } from "./qa-sample.js";
+
+export {
+  DISTRIBUTION_LIMIT,
+  MONOTONY_THRESHOLD_DEFAULT,
+  STOPWORDS,
+  surfaceOf,
+  normalizeSurface,
+  computeSurfaceCollapse,
+  isSurfaceFlagged,
+  computeSpecShortfall,
+  computeVariantSkew,
+  stemOf,
+  computeStemMonotony,
+} from "./collapse-metrics.js";
+export type {
+  AuditRow,
+  SurfaceDistribution,
+  SurfaceFlagOptions,
+  FloorShortfall,
+  SpecShortfall,
+  VariantCoverage,
+  VariantSkew,
+  StemMonotony,
+} from "./collapse-metrics.js";

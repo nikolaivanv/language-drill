@@ -1,10 +1,16 @@
 import { describe, it, expect } from 'vitest';
 import { ExerciseType } from '@language-drill/shared';
+import type { GrammarPoint } from '@language-drill/shared';
 import {
   surfaceOf,
   normalizeSurface,
   computeSurfaceCollapse,
   isSurfaceFlagged,
+  computeSpecShortfall,
+  computeVariantSkew,
+  computeStemMonotony,
+  stemOf,
+  MONOTONY_THRESHOLD_DEFAULT,
   type AuditRow,
 } from './collapse-metrics.js';
 
@@ -141,9 +147,6 @@ describe('isSurfaceFlagged', () => {
   });
 });
 
-import { computeSpecShortfall, computeVariantSkew } from './collapse-metrics.js';
-import type { GrammarPoint } from '@language-drill/shared';
-
 const point = (extra: Partial<GrammarPoint> = {}): GrammarPoint =>
   ({
     key: 'es-b1-test',
@@ -271,5 +274,99 @@ describe('computeVariantSkew', () => {
     const result = computeVariantSkew(variants, rows)!;
     expect(result.overQuota).toEqual([]);
     expect(result.underMin).toEqual([]);
+  });
+});
+
+describe('stemOf', () => {
+  it('reads sentence for cloze', () => {
+    expect(stemOf(ExerciseType.CLOZE, { sentence: 'El ___ es bueno.' })).toBe('El ___ es bueno.');
+  });
+
+  it('reads sourceText for translation — the L1 source, not the reference', () => {
+    expect(
+      stemOf(ExerciseType.TRANSLATION, {
+        sourceText: 'They say it rains.',
+        referenceTranslation: 'Dicen que llueve.',
+      }),
+    ).toBe('They say it rains.');
+  });
+
+  it('reads prompt for sentence_construction', () => {
+    expect(stemOf(ExerciseType.SENTENCE_CONSTRUCTION, { prompt: 'Describe your town.' })).toBe(
+      'Describe your town.',
+    );
+  });
+
+  it('returns null for conjugation — the lemma IS the surface, already signal 1', () => {
+    expect(stemOf(ExerciseType.CONJUGATION, { lemma: 'ir' })).toBeNull();
+  });
+});
+
+describe('computeStemMonotony', () => {
+  const stems = (texts: string[]): AuditRow[] =>
+    texts.map((sentence) => ({
+      id: `id-${Math.random()}`,
+      type: ExerciseType.CLOZE,
+      content: { sentence },
+      coverageTags: null,
+    }));
+
+  it('reports the most common content lemma and the share of stems containing it', () => {
+    const rows = stems([
+      'El restaurante nuevo tiene la mejor paella.',
+      'Cenamos en el restaurante ayer.',
+      'El restaurante cierra los lunes.',
+      'Mi hermano trabaja en un restaurante.',
+      'El restaurante lleno hoy.',
+      'Buscamos un restaurante barato.',
+      'La iglesia es antigua.',
+      'El tren llega tarde.',
+      'Mi hermana estudia mucho.',
+      'El perro duerme.',
+    ]);
+    const result = computeStemMonotony(ExerciseType.CLOZE, rows)!;
+    expect(result.topLemma).toBe('restaurante');
+    expect(result.count).toBe(6);
+    expect(result.total).toBe(10);
+    expect(result.share).toBeCloseTo(0.6, 5);
+  });
+
+  it('counts a lemma once per stem, not once per occurrence', () => {
+    const rows = stems([
+      'El restaurante del restaurante restaurante.',
+      'La iglesia del pueblo.',
+      'El restaurante nuevo.',
+    ]);
+    const result = computeStemMonotony(ExerciseType.CLOZE, rows)!;
+    expect(result.topLemma).toBe('restaurante');
+    // Two STEMS contain it, though it occurs four times overall.
+    expect(result.count).toBe(2);
+  });
+
+  it('drops stopwords so function words never dominate', () => {
+    const rows = stems(['El perro y la casa.', 'El gato y la casa.', 'El pez y la casa.']);
+    const result = computeStemMonotony(ExerciseType.CLOZE, rows)!;
+    expect(result.topLemma).toBe('casa');
+  });
+
+  it('drops the cloze blank marker', () => {
+    const rows = stems(['El ___ come.', 'La ___ duerme.', 'Un ___ salta.']);
+    const result = computeStemMonotony(ExerciseType.CLOZE, rows);
+    expect(result?.topLemma).not.toBe('___');
+  });
+
+  it('returns null when no stem yields a content lemma', () => {
+    expect(computeStemMonotony(ExerciseType.CLOZE, stems(['el la y', 'un una']))).toBeNull();
+  });
+
+  it('returns null for a type with no stem field', () => {
+    const rows: AuditRow[] = [
+      { id: 'a', type: ExerciseType.CONJUGATION, content: { lemma: 'ir' }, coverageTags: null },
+    ];
+    expect(computeStemMonotony(ExerciseType.CONJUGATION, rows)).toBeNull();
+  });
+
+  it('ships a loose default threshold — this signal is calibration-phase', () => {
+    expect(MONOTONY_THRESHOLD_DEFAULT).toBeGreaterThanOrEqual(0.4);
   });
 });

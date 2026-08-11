@@ -266,3 +266,97 @@ export function computeVariantSkew(
     approved,
   };
 }
+
+/**
+ * Function words dropped before counting content lemmas. Deliberately a single
+ * pooled multi-language set rather than per-language lists: a stopword from the
+ * wrong language cannot cause a false NEGATIVE here (it only removes a candidate
+ * that was never going to be the interesting content lemma), and one list is far
+ * cheaper to maintain than four. English is included because translation stems
+ * are the L1 source text.
+ */
+export const STOPWORDS: ReadonlySet<string> = new Set([
+  // EN
+  'the', 'a', 'an', 'and', 'or', 'but', 'of', 'to', 'in', 'on', 'at', 'for', 'with',
+  'is', 'are', 'was', 'were', 'be', 'been', 'it', 'its', 'this', 'that', 'these',
+  'those', 'i', 'you', 'he', 'she', 'we', 'they', 'my', 'your', 'his', 'her', 'our',
+  'their', 'not', 'do', 'does', 'did', 'have', 'has', 'had', 'will', 'would', 'can',
+  // ES
+  'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'pero', 'de',
+  'del', 'a', 'al', 'en', 'con', 'por', 'para', 'que', 'se', 'no', 'es', 'son',
+  'era', 'ser', 'estar', 'esta', 'este', 'mi', 'tu', 'su', 'lo', 'le', 'me', 'te',
+  // DE
+  'der', 'die', 'das', 'den', 'dem', 'des', 'ein', 'eine', 'einen', 'einem', 'eines',
+  'und', 'oder', 'aber', 'von', 'zu', 'im', 'in', 'auf', 'mit', 'für', 'ist', 'sind',
+  'war', 'waren', 'sein', 'nicht', 'ich', 'du', 'er', 'sie', 'es', 'wir', 'ihr',
+  // TR
+  've', 'ile', 'bir', 'bu', 'şu', 'o', 'da', 'de', 'ki', 'için', 'ama', 'ya', 'çok',
+  'ben', 'sen', 'biz', 'siz', 'onlar', 'var', 'yok', 'değil',
+]);
+
+/**
+ * Default flag threshold for stem monotony. Loose on purpose: this signal is
+ * calibration-phase (see the 2026-08-11 design doc), and #617's systemic topic
+ * steering may already have fixed part of what it measures. The first prod run
+ * decides whether this number is useful. Tune via `--monotony-threshold`.
+ */
+export const MONOTONY_THRESHOLD_DEFAULT = 0.5;
+
+/** The `content_json` field carrying the exercise's scene text, per type. */
+const STEM_FIELD: Partial<Record<`${ExerciseType}`, string>> = {
+  cloze: 'sentence',
+  // The L1 SOURCE, not the reference translation: the scene is authored in the
+  // source, and the reference is already signal 1's surface.
+  translation: 'sourceText',
+  sentence_construction: 'prompt',
+  // conjugation is deliberately absent — its lexical head IS the lemma, which
+  // signal 1 already measures. Counting it twice would double-report one defect.
+};
+
+export function stemOf(type: ExerciseType, content: Record<string, unknown>): string | null {
+  const field = STEM_FIELD[type];
+  if (field === undefined) return null;
+  const value = content[field];
+  return typeof value === 'string' ? value : null;
+}
+
+export type StemMonotony = {
+  topLemma: string;
+  /** Stems CONTAINING the lemma — counted once per stem, not per occurrence. */
+  count: number;
+  total: number;
+  share: number;
+};
+
+/**
+ * Share of a cell's stems containing the single most common content lemma. The
+ * cheap end of the metric family: no embeddings, no clustering. If it proves too
+ * blunt, clustering is a v2 and must not block signals 1 and 2.
+ */
+export function computeStemMonotony(
+  type: ExerciseType,
+  rows: readonly AuditRow[],
+): StemMonotony | null {
+  const docFrequency = new Map<string, number>();
+  let total = 0;
+  for (const r of rows) {
+    const stem = stemOf(type, r.content);
+    if (stem === null) continue;
+    total += 1;
+    const content = new Set(
+      tokens(stem).filter(
+        // Drop stopwords, the cloze blank marker, and pure digits.
+        (t) => !STOPWORDS.has(t) && !/^_+$/u.test(t) && !/^\d+$/u.test(t),
+      ),
+    );
+    for (const lemma of content) {
+      docFrequency.set(lemma, (docFrequency.get(lemma) ?? 0) + 1);
+    }
+  }
+  if (total === 0 || docFrequency.size === 0) return null;
+
+  const sorted = [...docFrequency.entries()].sort(
+    (a, b) => (b[1] - a[1]) || a[0].localeCompare(b[0]),
+  );
+  return { topLemma: sorted[0][0], count: sorted[0][1], total, share: sorted[0][1] / total };
+}
