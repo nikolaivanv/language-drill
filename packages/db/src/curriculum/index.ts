@@ -451,3 +451,6 @@ export function assertCurriculumInvariants(
     }
   }
 }
+
+export { COLLAPSE_DISMISSALS, isDismissed } from './collapse-dismissals';
+export type { CollapseDismissal, CollapseSignal } from './collapse-dismissals';

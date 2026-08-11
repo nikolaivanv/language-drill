@@ -52,6 +52,10 @@ export type {
   TocEntry,
 } from './curriculum/book-coverage';
 
+// Collapse-dismissals ledger (dev-time metadata; see the 2026-08-11 design doc).
+export { COLLAPSE_DISMISSALS, isDismissed } from './curriculum/collapse-dismissals';
+export type { CollapseDismissal, CollapseSignal } from './curriculum/collapse-dismissals';
+
 // Helpers that Phase 1 deliberately left internal-only. Phase 2 promotes them
 // because they cross the package boundary: deterministicUuid is the hash
 // behind exerciseDraftId in packages/ai/src/generate.ts, and assertValidCellKey
