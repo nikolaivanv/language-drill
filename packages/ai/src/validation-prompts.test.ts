@@ -190,7 +190,7 @@ describe("buildValidationSystemPrompt", () => {
     // grew a sub-bullet clarifying that ANY construction described in the
     // point's description is on-target (see the dedicated describe block
     // below for the exact prose assertions).
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-11");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-11a");
 
     // R3.A — the three contextSpoilsAnswer triples added in task 8.
     expect(prompt).toContain("çocuk");
@@ -263,7 +263,26 @@ describe("buildValidationSystemPrompt", () => {
     //     (descriptions, examples, common errors, CEFR descriptors) which
     //     varies by language/level and is not what the NFR budgets — those
     //     substitutions are already counted against the API per-call.
-    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(13000);
+    // validate@2026-08-11a added the "fill candidateFillers before deciding
+    // this field" lead-in sub-bullet to the `ambiguous` dimension — instructs
+    // the model to actually populate the report-only `candidateFillers` field
+    // (added in Task 1) before adjudicating ambiguity, adjudicating each
+    // filler against the visible sentence alone and ruling one out only with
+    // a quoted span (~600 bytes). Ceiling raised to 14500.
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(14500);
+  });
+
+  it("instructs cloze validation to fill candidateFillers before deciding ambiguous", () => {
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain(
+      "fill `candidateFillers` before deciding this field",
+    );
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain(
+      "quote the span of the visible sentence that forbids it",
+    );
+  });
+
+  it("pins the bumped validation prompt version", () => {
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-11a");
   });
 });
 
@@ -917,6 +936,6 @@ describe("multi-construction grammarPointMatch guidance", () => {
   });
 
   it("bumps the prompt version to today", () => {
-    expect(VALIDATION_PROMPT_VERSION).toBe('validate@2026-08-11');
+    expect(VALIDATION_PROMPT_VERSION).toBe('validate@2026-08-11a');
   });
 });
