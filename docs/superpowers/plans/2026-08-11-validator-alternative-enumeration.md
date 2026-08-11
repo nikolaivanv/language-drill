@@ -962,8 +962,29 @@ failures, the `rm -rf` was skipped — remove and re-run that package alone.
 
 - [ ] **Step 2: Run the harness for real**
 
-Run: `pnpm --filter @language-drill/ai eval:validator --max-cost-usd 2`
+The `packages/ai` CLIs do **not** load `.env` themselves (same convention as
+`eval-gen-run.ts`, which reads `process.env.ANTHROPIC_API_KEY` directly). A fresh
+worktree also has no `.env` at all — copy it from the main checkout first, then
+invoke through `dotenv-cli`:
+
+```bash
+cp /Users/seal/dev/language-drill/.env .        # gitignored; verify with `git check-ignore .env`
+./node_modules/.bin/dotenv -e .env -- \
+  pnpm --filter @language-drill/ai eval:validator --max-cost-usd 4 --run-name full
+```
+
+Measured cost from a 2-case smoke run: **~$0.025/call**, so the full 31×4 = 124
+calls land near **$3**. Set the cap above that with headroom, and start with
+`--limit 2` to confirm the pipeline before spending the full amount.
+
 Expected: `./eval-runs/validator-<runName>.json` with four arms.
+
+> ⚠️ **The prompt arms must not fetch from Langfuse.** `buildValidationSystemPrompt`
+> resolves its body from Langfuse label `production`, which holds the *pre-change*
+> prompt until the post-merge push. If that fetch succeeds, the `prompt-only` and
+> `both` arms silently run the OLD prompt and the harness reports no prompt effect.
+> Confirm from the run banner that every arm's prompt source is repo-sourced before
+> trusting any number.
 
 - [ ] **Step 3: Apply the merge criterion**
 

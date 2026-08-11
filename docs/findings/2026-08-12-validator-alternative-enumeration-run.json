@@ -1,0 +1,64 @@
+{
+  "runName": "full",
+  "datasetName": "validator-ambiguity-cases.json",
+  "startedAt": "2026-08-11T23:13:54.646Z",
+  "caseCount": 31,
+  "costCapped": false,
+  "arms": [
+    {
+      "arm": "baseline",
+      "modelOverride": "claude-sonnet-4-6",
+      "promptSource": "prior",
+      "templateSha": "343acb0d",
+      "metrics": {
+        "recallOnAmbiguous": 0.7,
+        "falseFlagRateOnClean": 0.18181818181818182,
+        "selfInconsistentRate": 0.03225806451612903,
+        "n": 31
+      },
+      "costUsd": 0.7419,
+      "errors": []
+    },
+    {
+      "arm": "prompt-only",
+      "modelOverride": "claude-sonnet-4-6",
+      "promptSource": "current",
+      "templateSha": "9b65c3e8",
+      "metrics": {
+        "recallOnAmbiguous": 0.65,
+        "falseFlagRateOnClean": 0.09090909090909091,
+        "selfInconsistentRate": 0.06451612903225806,
+        "n": 31
+      },
+      "costUsd": 0.7414,
+      "errors": []
+    },
+    {
+      "arm": "model-only",
+      "promptSource": "prior",
+      "templateSha": "343acb0d",
+      "metrics": {
+        "recallOnAmbiguous": 0.6,
+        "falseFlagRateOnClean": 0.36363636363636365,
+        "selfInconsistentRate": 0.06451612903225806,
+        "n": 31
+      },
+      "costUsd": 0.8863,
+      "errors": []
+    },
+    {
+      "arm": "both",
+      "promptSource": "current",
+      "templateSha": "9b65c3e8",
+      "metrics": {
+        "recallOnAmbiguous": 0.65,
+        "falseFlagRateOnClean": 0.18181818181818182,
+        "selfInconsistentRate": 0.03225806451612903,
+        "n": 31
+      },
+      "costUsd": 0.9027,
+      "errors": []
+    }
+  ],
+  "totalCostUsd": 3.2723
+}
