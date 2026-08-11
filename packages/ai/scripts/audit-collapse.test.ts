@@ -185,6 +185,25 @@ describe('analyzeCell', () => {
     expect(f.needsTriage).toBe(true);
   });
 
+  it('does not pre-empt on overQuota alone — imbalance is not an unrealized mechanism', () => {
+    const withVariants = point({
+      constructionVariants: [
+        { id: 'hearsay', directive: 'H' },
+        { id: 'adversity', directive: 'A' },
+      ],
+    });
+    // 11/9: both variants well above MIN_PER_VARIANT, nothing unrecognized, but
+    // hearsay sits just over its fair quota of 10. A healthy pool.
+    const rows = [
+      ...Array.from({ length: 11 }, () => ({ correctAnswer: 'Dicen', seedWord: 'hearsay' })),
+      ...Array.from({ length: 9 }, () => ({ correctAnswer: 'Dicen', seedWord: 'adversity' })),
+    ];
+    const f = analyzeCell(cell(withVariants, rows), opts);
+    expect(f.variantSkew!.overQuota).toEqual(['hearsay']);
+    expect(f.variantSkew!.underMin).toEqual([]);
+    expect(f.preempted).toBe(false);
+  });
+
   it('respects the dismissals ledger', () => {
     const dismissed = point({ key: 'es-a2-personal-a', cefrLevel: 'A2' });
     const rows = Array.from({ length: 20 }, () => ({ correctAnswer: 'a', sentence: 'x ___ y' }));
@@ -320,5 +339,57 @@ describe('renderMarkdown', () => {
   it('renders a clean report when nothing is flagged', () => {
     const md = renderMarkdown({ name: 'run', scanned: 100, costUsd: 0, findings: [] });
     expect(md).toContain('No collapse findings');
+  });
+
+  it('renders an overQuota-only finding rather than dropping it', () => {
+    const md = renderMarkdown({
+      name: 'run',
+      scanned: 1,
+      costUsd: 0,
+      findings: [
+        finding({
+          surfaceFlagged: false,
+          needsTriage: false,
+          surface: null,
+          variantSkew: {
+            perVariant: [
+              { id: 'hearsay', count: 12, share: 1, quota: 8 },
+              { id: 'adversity', count: 6, share: 1, quota: 8 },
+              { id: 'agentless', count: 6, share: 1, quota: 8 },
+            ],
+            overQuota: ['hearsay'],
+            underMin: [],
+            unrecognizedSeedCount: 0,
+            approved: 24,
+          },
+        }),
+      ],
+    });
+    expect(md).toContain('## Declared-but-unrealized');
+    expect(md).toContain('hearsay');
+    expect(md).not.toContain('No collapse findings');
+  });
+
+  it('cross-references a cell that is both dismissed and declared-but-unrealized', () => {
+    const md = renderMarkdown({
+      name: 'run',
+      scanned: 1,
+      costUsd: 0,
+      findings: [
+        finding({
+          needsTriage: false,
+          dismissedByLedger: true,
+          specShortfall: {
+            shortfalls: [{ axis: 'person', value: '2pl', floor: 5, actual: 0 }],
+            approved: 50,
+            target: 50,
+            atTarget: true,
+          },
+        }),
+      ],
+    });
+    expect(md).toContain('## Declared-but-unrealized');
+    expect(md).toContain('## Dismissed');
+    expect(md).toContain('also has an unrealized declared mechanism');
   });
 });
