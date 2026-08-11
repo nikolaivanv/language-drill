@@ -10,15 +10,23 @@
  * real Anthropic SDK either.
  */
 
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { mkdtempSync, readFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { CefrLevel, ExerciseType, Language } from "@language-drill/shared";
+import type Anthropic from "@anthropic-ai/sdk";
 
+import { CefrLevel, ExerciseType, Language } from "@language-drill/shared";
+import { getGrammarPoint } from "@language-drill/db";
+
+import {
+  VALIDATION_SYSTEM_PROMPT_TEMPLATE,
+  VALIDATION_TOOL_NAME,
+  type GenerationSpec,
+} from "../src/index.js";
 import { SELF_INCONSISTENT_REASON } from "../src/validate.js";
 
 import {
@@ -27,8 +35,10 @@ import {
   computeArmMetrics,
   computeValidatorSummary,
   loadValidatorCases,
+  makeRealValidatorExecutor,
   parseEvalValidatorArgs,
   renderValidatorMarkdownSummary,
+  renderValidatorSystemPrompt,
   runValidatorEval,
   writeValidatorSummaryJson,
   type ValidatorAmbiguityCase,
@@ -194,18 +204,28 @@ describe("ARMS", () => {
     expect(both.modelOverride).toBeUndefined();
   });
 
-  it("pins baseline and model-only to the captured pre-Task-4 prompt", () => {
+  it("sources baseline and model-only from the pre-Task-4 (prior) template", () => {
     const baseline = ARMS.find((a) => a.name === "baseline")!;
     const modelOnly = ARMS.find((a) => a.name === "model-only")!;
-    expect(baseline.systemPromptOverride).toBe(PRIOR_TEMPLATE);
-    expect(modelOnly.systemPromptOverride).toBe(PRIOR_TEMPLATE);
+    expect(baseline.promptSource).toBe("prior");
+    expect(modelOnly.promptSource).toBe("prior");
   });
 
-  it("leaves prompt-only and both on the production default prompt", () => {
+  it("sources prompt-only and both from the current (post-Task-4) template", () => {
     const promptOnly = ARMS.find((a) => a.name === "prompt-only")!;
     const both = ARMS.find((a) => a.name === "both")!;
-    expect(promptOnly.systemPromptOverride).toBeUndefined();
-    expect(both.systemPromptOverride).toBeUndefined();
+    expect(promptOnly.promptSource).toBe("current");
+    expect(both.promptSource).toBe("current");
+  });
+
+  it("every arm declares a promptSource — none is left to fall through to a network fetch", () => {
+    // The bug this guards: an arm with `promptSource` unset (or an optional
+    // `systemPromptOverride` left undefined) would fall through to
+    // `buildValidationSystemPrompt` -> Langfuse. Every arm must always
+    // resolve to an in-repo source.
+    for (const arm of ARMS) {
+      expect(["prior", "current"]).toContain(arm.promptSource);
+    }
   });
 
   it("PRIOR_TEMPLATE is read from the committed fixture, not git", () => {
@@ -296,6 +316,177 @@ const cleanResult = () => ({
   flaggedReasons: [],
   coverage: {},
   candidateFillers: [],
+});
+
+// ---------------------------------------------------------------------------
+// Fix Round 1 regression — the harness's prompt source must ALWAYS be
+// in-repo and must NEVER depend on Langfuse being reachable/unreachable.
+//
+// The bug: `prompt-only`/`both` passed no `systemPromptOverride`, so
+// `validateDraft` called `buildValidationSystemPrompt(spec)`, which fetches
+// from Langfuse (label `production`). When that fetch SUCCEEDS but
+// `production` still holds the pre-Task-4 body (a deliberately-deferred
+// post-merge step — see CLAUDE.md "Prompt Editing"), those two arms would
+// silently run the OLD prompt, producing a false negative on the exact
+// question this harness exists to answer. A test that only checks the ARMS
+// table (as Fix Round 0's did) cannot catch this — the table looked correct;
+// the bug was in `makeRealValidatorExecutor` reaching a network branch at
+// all. These tests exercise the REAL executor end-to-end against a mocked
+// Anthropic client and assert on the literal `system` text it sent.
+// ---------------------------------------------------------------------------
+
+const regressionGrammarPoint = getGrammarPoint("es-b1-nominalizers");
+if (!regressionGrammarPoint) {
+  throw new Error(
+    "test fixture missing: curriculum entry 'es-b1-nominalizers'",
+  );
+}
+
+const regressionSpec: GenerationSpec = {
+  language: Language.ES,
+  cefrLevel: CefrLevel.B1,
+  exerciseType: ExerciseType.CLOZE,
+  grammarPoint: regressionGrammarPoint,
+  topicDomain: null,
+  count: 1,
+  batchSeed: "test",
+};
+
+/** A mocked Anthropic client whose `messages.create` never leaves the
+ *  process — proves the executor makes exactly one call (to this mock), with
+ *  no separate network path to Langfuse. */
+function makeMockAnthropicClient(): {
+  mockCreate: ReturnType<typeof vi.fn>;
+  client: Anthropic;
+} {
+  const mockCreate = vi.fn().mockResolvedValue({
+    content: [
+      {
+        type: "tool_use",
+        id: "toolu_regression_1",
+        name: VALIDATION_TOOL_NAME,
+        input: cleanResult(),
+      },
+    ],
+    stop_reason: "tool_use",
+    usage: {
+      input_tokens: 10,
+      cache_creation_input_tokens: 0,
+      cache_read_input_tokens: 0,
+      output_tokens: 5,
+    },
+  });
+  return {
+    mockCreate,
+    client: { messages: { create: mockCreate } } as unknown as Anthropic,
+  };
+}
+
+describe("prompt source — always in-repo, never Langfuse (Fix Round 1)", () => {
+  for (const arm of ARMS) {
+    it(`arm '${arm.name}' sends the LOCALLY rendered '${arm.promptSource}' template as the system prompt`, async () => {
+      const { mockCreate, client } = makeMockAnthropicClient();
+      const executor = makeRealValidatorExecutor(client);
+      const testCase = makeCase(
+        `regression-${arm.name}`,
+        "clean",
+        regressionGrammarPoint!.key,
+      );
+
+      await executor({ case: testCase, arm });
+
+      expect(mockCreate).toHaveBeenCalledOnce();
+      const callArgs = mockCreate.mock.calls[0][0];
+      const expectedText = renderValidatorSystemPrompt(
+        arm.promptSource === "prior"
+          ? PRIOR_TEMPLATE
+          : VALIDATION_SYSTEM_PROMPT_TEMPLATE,
+        regressionSpec,
+      );
+      expect(callArgs.system[0].text).toBe(expectedText);
+    });
+  }
+
+  it("the 'current' template's rendered text contains the Task-4 candidateFillers instruction; 'prior' does not", () => {
+    // Byte-level proof the two templates actually differ on the thing this
+    // whole branch exists to test — if this assertion ever fails, the two
+    // template sources have drifted into being identical and the harness
+    // would report a zero effect by construction, independent of the
+    // Langfuse bug this suite otherwise guards against.
+    const priorText = renderValidatorSystemPrompt(PRIOR_TEMPLATE, regressionSpec);
+    const currentText = renderValidatorSystemPrompt(
+      VALIDATION_SYSTEM_PROMPT_TEMPLATE,
+      regressionSpec,
+    );
+    expect(priorText).not.toContain("candidateFillers");
+    expect(currentText).toContain("candidateFillers");
+  });
+});
+
+describe("prompt source is independent of Langfuse env vars (the exact Fix Round 1 bug)", () => {
+  const originalPublicKey = process.env.LANGFUSE_PUBLIC_KEY;
+  const originalSecretKey = process.env.LANGFUSE_SECRET_KEY;
+
+  afterEach(() => {
+    if (originalPublicKey === undefined) delete process.env.LANGFUSE_PUBLIC_KEY;
+    else process.env.LANGFUSE_PUBLIC_KEY = originalPublicKey;
+    if (originalSecretKey === undefined) delete process.env.LANGFUSE_SECRET_KEY;
+    else process.env.LANGFUSE_SECRET_KEY = originalSecretKey;
+  });
+
+  it("prompt-only still sends the LOCAL current-template text even with both Langfuse keys present", async () => {
+    // This is the exact scenario that produced the false negative: keys
+    // present -> `getLangfuse()` returns a real client -> a fetch COULD
+    // succeed. The executor must never give that fetch a chance to run.
+    process.env.LANGFUSE_PUBLIC_KEY = "dummy-public-key";
+    process.env.LANGFUSE_SECRET_KEY = "dummy-secret-key";
+
+    const { mockCreate, client } = makeMockAnthropicClient();
+    const executor = makeRealValidatorExecutor(client);
+    const arm = ARMS.find((a) => a.name === "prompt-only")!;
+    const testCase = makeCase(
+      "regression-langfuse-present",
+      "clean",
+      regressionGrammarPoint!.key,
+    );
+
+    await executor({ case: testCase, arm });
+
+    // Exactly one call was made, and it went to our mocked Anthropic client
+    // — never to a Langfuse SDK call. Its text is the byte-identical LOCAL
+    // render of the current template, carrying the candidateFillers
+    // instruction — not whatever Langfuse's `production` label happens to
+    // hold.
+    expect(mockCreate).toHaveBeenCalledOnce();
+    const callArgs = mockCreate.mock.calls[0][0];
+    expect(callArgs.system[0].text).toContain("candidateFillers");
+    expect(callArgs.system[0].text).toBe(
+      renderValidatorSystemPrompt(VALIDATION_SYSTEM_PROMPT_TEMPLATE, regressionSpec),
+    );
+  });
+
+  it("baseline still sends the LOCAL prior-template text (without candidateFillers) even with both Langfuse keys present", async () => {
+    process.env.LANGFUSE_PUBLIC_KEY = "dummy-public-key";
+    process.env.LANGFUSE_SECRET_KEY = "dummy-secret-key";
+
+    const { mockCreate, client } = makeMockAnthropicClient();
+    const executor = makeRealValidatorExecutor(client);
+    const arm = ARMS.find((a) => a.name === "baseline")!;
+    const testCase = makeCase(
+      "regression-langfuse-present-baseline",
+      "clean",
+      regressionGrammarPoint!.key,
+    );
+
+    await executor({ case: testCase, arm });
+
+    expect(mockCreate).toHaveBeenCalledOnce();
+    const callArgs = mockCreate.mock.calls[0][0];
+    expect(callArgs.system[0].text).not.toContain("candidateFillers");
+    expect(callArgs.system[0].text).toBe(
+      renderValidatorSystemPrompt(PRIOR_TEMPLATE, regressionSpec),
+    );
+  });
 });
 
 describe("runValidatorEval", () => {

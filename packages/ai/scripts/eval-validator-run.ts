@@ -44,6 +44,30 @@
  * enforced by accumulating actual `tokenUsage` (not case counting) and
  * stopping at a CASE boundary (all 4 arms for a case, or none) once
  * `--max-cost-usd` is reached — partial results are written, never discarded.
+ *
+ * ## Prompt source: ALWAYS in-repo, NEVER Langfuse (Fix Round 1)
+ *
+ * Every arm's system prompt is rendered LOCALLY from an in-repo template —
+ * `PRIOR_TEMPLATE` (pre-Task-4, read from the committed fixture) or
+ * `VALIDATION_SYSTEM_PROMPT_TEMPLATE` (the current in-repo source, post-
+ * Task-4) — via `applyTemplate(template, computeValidationPromptVars(spec))`,
+ * and the result is ALWAYS passed as `validateDraft`'s `systemPromptOverride`.
+ * `validateDraft` only calls `buildValidationSystemPrompt` (which fetches from
+ * Langfuse, label `production`) when `systemPromptOverride` is undefined — so
+ * a non-empty override deterministically short-circuits that branch, for
+ * every arm, regardless of `LANGFUSE_PUBLIC_KEY`/`LANGFUSE_SECRET_KEY` being
+ * set in the environment.
+ *
+ * This is load-bearing, not cosmetic: the `prompt-only`/`both` arms exist to
+ * measure the in-repo prompt change (Task 4). Langfuse's `production` label
+ * can legitimately lag the repo for days (pushing a new prompt version is a
+ * deliberate, separate post-merge step — see CLAUDE.md "Prompt Editing"). If
+ * those arms fetched from Langfuse and the fetch SUCCEEDED, they would
+ * silently run the OLD prompt body whenever the label hasn't been promoted
+ * yet — a false negative on the exact question this harness exists to
+ * answer, and one that would only be caught by luck (a timed-out fetch
+ * falling back to the in-repo string). Rendering locally makes the harness
+ * correct by construction instead of by network luck.
  */
 
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -60,18 +84,23 @@ import { getGrammarPoint } from "@language-drill/db";
 import {
   ZERO_USAGE,
   addUsage,
+  applyTemplate,
   createClaudeClient,
   estimateCostUsd,
   validateDraft,
+  VALIDATION_SYSTEM_PROMPT_TEMPLATE,
   type ClaudeUsageBreakdown,
   type ExerciseDraft,
   type GenerationSpec,
   type ValidationResult,
 } from "../src/index.js";
-// `SELF_INCONSISTENT_REASON` is not on the `@language-drill/ai` barrel (it's
-// an internal report-only marker, Task 3) — deep-relative import, same
-// pattern `eval-gen-run.ts` uses for `computeGenerationPromptVars` / `sha8`.
+// `SELF_INCONSISTENT_REASON` and `computeValidationPromptVars` are not on the
+// `@language-drill/ai` barrel (the former's an internal report-only marker,
+// Task 3; the latter composes the validator's template vars) — deep-relative
+// import, same pattern `eval-gen-run.ts` uses for `computeGenerationPromptVars`
+// / `sha8`.
 import { SELF_INCONSISTENT_REASON } from "../src/validate.js";
+import { computeValidationPromptVars } from "../src/validation-prompts.js";
 import { sha8 } from "../src/prompts-registry.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -166,7 +195,14 @@ export function loadValidatorCases(raw: string): ValidatorAmbiguityCase[] {
 export type ValidatorArm = {
   name: string;
   modelOverride?: string;
-  systemPromptOverride?: string;
+  /**
+   * Which in-repo template this arm renders — `"prior"` (pre-Task-4,
+   * `PRIOR_TEMPLATE`) or `"current"` (post-Task-4,
+   * `VALIDATION_SYSTEM_PROMPT_TEMPLATE`). Every arm has one; there is no
+   * "no override" arm and never a Langfuse fetch — see the module docstring's
+   * "Prompt source" section.
+   */
+  promptSource: "prior" | "current";
 };
 
 /**
@@ -181,16 +217,47 @@ export const PRIOR_TEMPLATE = readFileSync(
   "utf8",
 );
 
+/**
+ * The two in-repo template bodies an arm can source from. Both are raw
+ * `{{var}}` templates — `renderValidatorSystemPrompt` fills them in per case
+ * — and both live entirely in this process; neither is ever fetched.
+ */
+const PROMPT_TEMPLATES: Record<ValidatorArm["promptSource"], string> = {
+  prior: PRIOR_TEMPLATE,
+  current: VALIDATION_SYSTEM_PROMPT_TEMPLATE,
+};
+
 export const ARMS: ValidatorArm[] = [
-  {
-    name: "baseline",
-    modelOverride: "claude-sonnet-4-6",
-    systemPromptOverride: PRIOR_TEMPLATE,
-  },
-  { name: "prompt-only", modelOverride: "claude-sonnet-4-6" },
-  { name: "model-only", systemPromptOverride: PRIOR_TEMPLATE },
-  { name: "both" },
+  { name: "baseline", modelOverride: "claude-sonnet-4-6", promptSource: "prior" },
+  { name: "prompt-only", modelOverride: "claude-sonnet-4-6", promptSource: "current" },
+  { name: "model-only", promptSource: "prior" },
+  { name: "both", promptSource: "current" },
 ];
+
+/**
+ * Render one of `PROMPT_TEMPLATES` for a specific case's `spec` — the SAME
+ * local substitution `buildValidationSystemPrompt` falls back to when
+ * Langfuse is unreachable (`applyTemplate` + `computeValidationPromptVars`),
+ * just always taken instead of only on fetch failure. Throws if the template
+ * references a `{{var}}` the computed map doesn't provide, so a template/var
+ * drift fails loud here rather than shipping a half-substituted prompt to
+ * Claude.
+ */
+export function renderValidatorSystemPrompt(
+  templateBody: string,
+  spec: GenerationSpec,
+): string {
+  const { text, missingVars } = applyTemplate(
+    templateBody,
+    computeValidationPromptVars(spec),
+  );
+  if (missingVars.length > 0) {
+    throw new Error(
+      `[eval-validator] template references unresolved variables: ${missingVars.join(", ")}`,
+    );
+  }
+  return text;
+}
 
 // ---------------------------------------------------------------------------
 // computeArmMetrics — PURE. No network calls, no Anthropic client. This is
@@ -324,9 +391,37 @@ export function makeRealValidatorExecutor(
   return async ({ case: c, arm, signal }) => {
     const spec = specForCase(c);
     const draft = draftForCase(c);
+
+    // Render this arm's template LOCALLY, per case (vars depend on the
+    // case's language/cefrLevel/grammarPoint) and pass it as
+    // `systemPromptOverride` UNCONDITIONALLY. `validateDraft` only reaches
+    // `buildValidationSystemPrompt` (and therefore Langfuse) when
+    // `systemPromptOverride` is nullish — so this guarantees every arm's
+    // prompt is repo-sourced regardless of `LANGFUSE_PUBLIC_KEY`/
+    // `LANGFUSE_SECRET_KEY` in the environment. See the module docstring's
+    // "Prompt source" section for why this must not be conditional.
+    const systemPromptOverride = renderValidatorSystemPrompt(
+      PROMPT_TEMPLATES[arm.promptSource],
+      spec,
+    );
+    // Self-documenting guard against a future refactor accidentally making
+    // this optional again (e.g. reintroducing an arm with no `promptSource`,
+    // or a code path that skips rendering) — a falsy override here would
+    // silently fall through to the Langfuse-fetching branch. This should be
+    // unreachable; `renderValidatorSystemPrompt` throws before returning an
+    // empty string for any real template.
+    if (!systemPromptOverride) {
+      throw new Error(
+        `[eval-validator] BUG: systemPromptOverride resolved empty for arm ` +
+          `'${arm.name}' (case ${c.id}) — this would fall through to ` +
+          `buildValidationSystemPrompt() and hit Langfuse. Every arm must ` +
+          `render a non-empty in-repo template.`,
+      );
+    }
+
     const { result, tokenUsage } = await validateDraft(client, draft, spec, signal, {
       modelOverride: arm.modelOverride,
-      systemPromptOverride: arm.systemPromptOverride,
+      systemPromptOverride,
     });
     return { result, usage: tokenUsage };
   };
@@ -460,9 +555,13 @@ export async function runValidatorEval(opts: {
 export type ValidatorArmSummary = {
   arm: string;
   modelOverride?: string;
-  /** `sha8` of the resolved system-prompt override, or `"production"` when
-   *  the arm runs the live default (no override). */
-  systemPromptSha: string;
+  /** Which in-repo template fed this arm — `"prior"` or `"current"`. NEVER
+   *  Langfuse; see the module docstring's "Prompt source" section. */
+  promptSource: ValidatorArm["promptSource"];
+  /** `sha8` of the in-repo TEMPLATE body (`PROMPT_TEMPLATES[promptSource]`).
+   *  Constant for the whole run — evidence that this arm's prompt came from
+   *  the repo, not a network fetch, independent of any per-case rendering. */
+  templateSha: string;
   metrics: ArmMetrics;
   costUsd: number;
   errors: Array<{ caseId: string; error: string }>;
@@ -521,9 +620,8 @@ export function computeValidatorSummary(
     return {
       arm: armResult.arm.name,
       modelOverride: armResult.arm.modelOverride,
-      systemPromptSha: armResult.arm.systemPromptOverride
-        ? sha8(armResult.arm.systemPromptOverride)
-        : "production",
+      promptSource: armResult.arm.promptSource,
+      templateSha: sha8(PROMPT_TEMPLATES[armResult.arm.promptSource]),
       metrics,
       costUsd: estimateCostUsd(armResult.usage),
       errors,
@@ -562,6 +660,12 @@ export function renderValidatorMarkdownSummary(
   lines.push(`- **dataset:** ${summary.datasetName}`);
   lines.push(`- **started:** ${summary.startedAt}`);
   lines.push(`- **cases:** ${summary.caseCount}`);
+  lines.push(
+    `- **prompt source:** every arm renders an in-repo template locally ` +
+      `(PRIOR_TEMPLATE or the current VALIDATION_SYSTEM_PROMPT_TEMPLATE) — ` +
+      `Langfuse's \`production\` label is NEVER consulted, so a pending-but-` +
+      `unpushed prompt promotion cannot mask the prompt arm's effect`,
+  );
   if (summary.costCapped) {
     lines.push(
       `- **⚠️ cost cap reached** — partial results (stopped at a case boundary)`,
@@ -569,12 +673,12 @@ export function renderValidatorMarkdownSummary(
   }
   lines.push("");
   lines.push(
-    "| Arm | Model | Prompt sha | Recall (ambiguous) | False-flag (clean) | Self-inconsistent | n | Cost |",
+    "| Arm | Model | Prompt source | Template sha | Recall (ambiguous) | False-flag (clean) | Self-inconsistent | n | Cost |",
   );
-  lines.push("|---|---|---|---|---|---|---|---|");
+  lines.push("|---|---|---|---|---|---|---|---|---|");
   for (const a of summary.arms) {
     lines.push(
-      `| ${a.arm} | ${a.modelOverride ?? "production"} | ${a.systemPromptSha} | ` +
+      `| ${a.arm} | ${a.modelOverride ?? "production"} | repo:${a.promptSource} | ${a.templateSha} | ` +
         `${pct(a.metrics.recallOnAmbiguous)} | ${pct(a.metrics.falseFlagRateOnClean)} | ` +
         `${pct(a.metrics.selfInconsistentRate)} | ${a.metrics.n} | ${usd(a.costUsd)} |`,
     );
@@ -735,11 +839,19 @@ async function main(): Promise<void> {
     `[eval-validator] dataset=${datasetName} cases=${cases.length} ` +
       `(ambiguous=${ambiguousCount}, clean=${cleanCount}) runName=${runName}`,
   );
+  console.log(
+    "[eval-validator] prompt source: every arm renders an in-repo template " +
+      "(PRIOR_TEMPLATE or the current VALIDATION_SYSTEM_PROMPT_TEMPLATE) via " +
+      "systemPromptOverride — Langfuse's `production` label is NEVER " +
+      "consulted, so a pending-but-unpushed prompt promotion cannot mask " +
+      "the prompt arm's effect (Fix Round 1).",
+  );
   console.log("[eval-validator] arms:");
   for (const arm of ARMS) {
+    const templateSha = sha8(PROMPT_TEMPLATES[arm.promptSource]);
     console.log(
       `  - ${arm.name}: model=${arm.modelOverride ?? "production default"}, ` +
-        `prompt=${arm.systemPromptOverride ? `pre-Task-4 baseline (sha ${sha8(arm.systemPromptOverride)})` : "production default"}`,
+        `prompt=repo:${arm.promptSource} (sha ${templateSha}, rendered locally)`,
     );
   }
 
