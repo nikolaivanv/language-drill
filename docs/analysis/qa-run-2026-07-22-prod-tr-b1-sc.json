@@ -1,0 +1,62 @@
+{
+  "meta": {
+    "language": "TR",
+    "cefr": "B1",
+    "perPoint": 2,
+    "sampledCount": 20,
+    "seed": 1,
+    "model": "claude-opus-4-8",
+    "costUsd": 1.6601,
+    "startedAt": "2026-07-22T21:03:52.967Z",
+    "costCapped": false
+  },
+  "summary": {
+    "sampled": 20,
+    "flagged": 1,
+    "byReason": {
+      "low_confidence_solve": 1
+    },
+    "byType": {
+      "sentence_construction": 1
+    },
+    "ambiguityNotes": 0,
+    "lowConfidenceSolves": 1
+  },
+  "flags": [
+    {
+      "exerciseId": "3b497858-226a-5af4-ad0e-06281727a785",
+      "grammarPointKey": "tr-b1-abstract-postpositions",
+      "type": "sentence_construction",
+      "language": "TR",
+      "cefr": "B1",
+      "flags": [
+        "low_confidence_solve"
+      ],
+      "ambiguous": false,
+      "ambiguityNote": "The task clearly asks for a cause-effect sentence using yüzünden linking a bad cause to a bad outcome.",
+      "answers": {
+        "correct": "Otobüsü kaçırdığı yüzünden okula geç kaldı.",
+        "wrong": "Otobüsü kaçırdığı sayesinde okula geç kaldı.",
+        "alt": "Otobüsü kaçırması yüzünden okula geç kaldı."
+      },
+      "confidence": 0.6,
+      "verdicts": {
+        "correct": {
+          "score": 0.85,
+          "band": "pass"
+        },
+        "wrong": {
+          "score": 0.3,
+          "band": "fail"
+        },
+        "alt": {
+          "score": 0.97,
+          "band": "pass"
+        }
+      },
+      "promptSeen": "Write one sentence in Turkish.\nYour friend missed the bus and arrived late to school. Use yüzünden to explain the unwelcome cause. Write one sentence describing what happened and why, using yüzünden to link the cause to the bad outcome.\nTarget structure: yüzünden (unwelcome cause)\nRegister: neutral"
+    }
+  ],
+  "ambiguity": [],
+  "errors": []
+}
