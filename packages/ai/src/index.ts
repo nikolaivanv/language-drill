@@ -226,7 +226,6 @@ export {
   validateDraft,
   parseValidationResult,
   ValidationParseError,
-  VALIDATION_TOOL,
   VALIDATION_TOOL_NAME,
   VALIDATION_MODEL,
   VALIDATION_MAX_TOKENS,

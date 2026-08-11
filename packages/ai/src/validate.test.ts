@@ -23,7 +23,6 @@ import {
   VALIDATION_MAX_TOKENS,
   VALIDATION_MODEL,
   VALIDATION_TEMPERATURE,
-  VALIDATION_TOOL,
   VALIDATION_TOOL_NAME,
   type ValidationResult,
 } from "./validate.js";
@@ -102,52 +101,6 @@ describe("VALIDATION_MODEL", () => {
 });
 
 // ---------------------------------------------------------------------------
-// VALIDATION_TOOL schema
-// ---------------------------------------------------------------------------
-
-describe("VALIDATION_TOOL", () => {
-  it("has the correct tool name", () => {
-    expect(VALIDATION_TOOL.name).toBe(VALIDATION_TOOL_NAME);
-    expect(VALIDATION_TOOL_NAME).toBe("submit_validation_result");
-  });
-
-  it("declares all required fields", () => {
-    const required = (VALIDATION_TOOL.input_schema as { required: string[] })
-      .required;
-    expect(required).toContain("qualityScore");
-    expect(required).toContain("ambiguous");
-    expect(required).toContain("contextSpoilsAnswer");
-    expect(required).toContain("levelMatch");
-    expect(required).toContain("grammarPointMatch");
-    expect(required).toContain("culturalIssues");
-    expect(required).toContain("flaggedReasons");
-  });
-
-  it("coverage properties include case and number axes", () => {
-    const coverageProps = (
-      VALIDATION_TOOL.input_schema as {
-        properties: {
-          coverage: { properties: Record<string, unknown> };
-        };
-      }
-    ).properties.coverage.properties;
-    expect(coverageProps).toHaveProperty("case");
-    expect(coverageProps).toHaveProperty("number");
-  });
-
-  it("coverage properties include the comparison axis", () => {
-    const coverageProps = (
-      VALIDATION_TOOL.input_schema as {
-        properties: {
-          coverage: { properties: Record<string, unknown> };
-        };
-      }
-    ).properties.coverage.properties;
-    expect(coverageProps).toHaveProperty("comparison");
-  });
-});
-
-// ---------------------------------------------------------------------------
 // buildValidationTool
 // ---------------------------------------------------------------------------
 
@@ -173,7 +126,11 @@ describe("buildValidationTool", () => {
   });
 
   it("keeps the seven pre-existing required fields for every type", () => {
-    for (const type of [ExerciseType.CLOZE, ExerciseType.TRANSLATION]) {
+    for (const type of [
+      ExerciseType.CLOZE,
+      ExerciseType.TRANSLATION,
+      ExerciseType.SENTENCE_CONSTRUCTION,
+    ]) {
       const schema = buildValidationTool(type).input_schema as {
         required: string[];
       };
@@ -198,6 +155,37 @@ describe("buildValidationTool", () => {
     expect(schema.properties.candidateFillers.items.properties.verdict.enum).toEqual([
       ...CANDIDATE_FILLER_VERDICTS,
     ]);
+  });
+
+  it("has the correct tool name", () => {
+    const tool = buildValidationTool(ExerciseType.CLOZE);
+    expect(tool.name).toBe(VALIDATION_TOOL_NAME);
+    expect(VALIDATION_TOOL_NAME).toBe("submit_validation_result");
+  });
+
+  it("coverage properties include case and number axes", () => {
+    const tool = buildValidationTool(ExerciseType.CLOZE);
+    const coverageProps = (
+      tool.input_schema as {
+        properties: {
+          coverage: { properties: Record<string, unknown> };
+        };
+      }
+    ).properties.coverage.properties;
+    expect(coverageProps).toHaveProperty("case");
+    expect(coverageProps).toHaveProperty("number");
+  });
+
+  it("coverage properties include the comparison axis", () => {
+    const tool = buildValidationTool(ExerciseType.CLOZE);
+    const coverageProps = (
+      tool.input_schema as {
+        properties: {
+          coverage: { properties: Record<string, unknown> };
+        };
+      }
+    ).properties.coverage.properties;
+    expect(coverageProps).toHaveProperty("comparison");
   });
 });
 
@@ -372,7 +360,7 @@ describe("validateDraft", () => {
     expect(callArgs.model).toBe(VALIDATION_MODEL);
     expect(callArgs.temperature).toBe(VALIDATION_TEMPERATURE);
     expect(callArgs.max_tokens).toBe(VALIDATION_MAX_TOKENS);
-    expect(callArgs.tools).toEqual([VALIDATION_TOOL]);
+    expect(callArgs.tools).toEqual([buildValidationTool(ExerciseType.CLOZE)]);
     expect(callArgs.tool_choice).toEqual({
       type: "tool",
       name: VALIDATION_TOOL_NAME,

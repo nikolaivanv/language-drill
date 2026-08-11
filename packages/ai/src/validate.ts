@@ -243,12 +243,6 @@ export function buildValidationTool(exerciseType: ExerciseType): Anthropic.Tool 
   };
 }
 
-/**
- * Convenience export: the standard validation tool for cloze exercises.
- * For other exercise types, use buildValidationTool(exerciseType).
- */
-export const VALIDATION_TOOL = buildValidationTool(ExerciseType.CLOZE);
-
 // ---------------------------------------------------------------------------
 // Public types
 // ---------------------------------------------------------------------------
