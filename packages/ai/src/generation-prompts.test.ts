@@ -340,7 +340,26 @@ describe("buildGenerationSystemPrompt", () => {
     // restate the stem word beside the blank ("prefiero ___ del escaparate." /
     // "el del" → "prefiero el del del escaparate"), and a zero-form target
     // (zero article) must blank the whole slot including the noun.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-08");
+    // Bumped 2026-08-11 — polarity-determinacy rule for comparative/superlative
+    // cloze blanks: the superlative frame (`de todos`, `de toda la ciudad`) is
+    // SYMMETRIC, so it licenses `más` and `menos` equally and a lone
+    // `correctAnswer` on the polarity slot is a false-negative trap. 12 of the
+    // 14 polarity-slot rows in the live es-b1-superlatives-comparisons pool were
+    // undetermined this way. Cure is an in-stem evaluative anchor, never
+    // enumeration (más/menos are antonyms, not alternants).
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-11");
+    // Polarity-determinacy rule pinned in the cached template prefix.
+    expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
+      "Polarity determinacy on comparative/superlative blanks",
+    );
+    // The symmetric-frame diagnosis is the load-bearing half of the rule.
+    expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain("SYMMETRIC");
+    // Enumeration must be ruled out explicitly — otherwise the generator
+    // reaches for the `acceptableAnswers` escape hatch the Ambiguous-blank
+    // rule offers, which is wrong for an antonym pair.
+    expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain("ANTONYMS");
+    // The two anchored exemplars are the live pool's only well-formed rows.
+    expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain("y por eso lo amamos tanto");
     // Tense-determinacy rule pinned in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "Tense determinacy on finite-verb blanks",
@@ -420,8 +439,8 @@ describe("buildGenerationSystemPrompt", () => {
     expect(section).toMatch(/do not default/i);
   });
 
-  it("bumps the generation prompt version to 2026-08-08", () => {
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-08");
+  it("bumps the generation prompt version to 2026-08-11", () => {
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-11");
   });
 
   it("pins the substitute-back rule in the cached template prefix", () => {

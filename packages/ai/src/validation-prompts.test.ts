@@ -182,11 +182,15 @@ describe("buildValidationSystemPrompt", () => {
     // habitual cue is ALSO ambiguous (deja/dejaba); present is safe only with a
     // present anchor.
     expect(prompt).toContain("the imperfect fits identically");
+    // 2026-08-11 polarity-determinacy: the superlative frame is symmetric, so a
+    // lone `más`/`menos` correctAnswer with no evaluative anchor is ambiguous.
+    expect(prompt).toContain("Polarity-determinacy (cloze)");
+    expect(prompt).toContain("is SYMMETRIC and is NOT an anchor");
     // 2026-08-08 — multi-construction points: the grammarPointMatch clause
     // grew a sub-bullet clarifying that ANY construction described in the
     // point's description is on-target (see the dedicated describe block
     // below for the exact prose assertions).
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-08");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-11");
 
     // R3.A — the three contextSpoilsAnswer triples added in task 8.
     expect(prompt).toContain("çocuk");
@@ -244,6 +248,14 @@ describe("buildValidationSystemPrompt", () => {
     // rarely-seen constructions as a mismatch (~400 bytes). Ceiling raised
     // to 11,000.
     //
+    // validate@2026-08-11 added the Polarity-determinacy (cloze) sub-bullet to
+    // the `ambiguous` dimension — the superlative frame is symmetric, so a
+    // `más`/`menos` blank with no in-stem evaluative anchor is ambiguous in
+    // EITHER direction, enumeration does not cure it (antonyms, not
+    // alternants), and the adjective-swallowing / malformed-word-order
+    // corollaries ride along (~1.6KB, mirrors generate@2026-08-11). Ceiling
+    // raised to 13,000.
+    //
     // We assert on the TEMPLATE literal, not the rendered output, because:
     //   - The template is what Langfuse stores and what Anthropic's
     //     prompt-cache keys on byte-for-byte.
@@ -251,7 +263,7 @@ describe("buildValidationSystemPrompt", () => {
     //     (descriptions, examples, common errors, CEFR descriptors) which
     //     varies by language/level and is not what the NFR budgets — those
     //     substitutions are already counted against the API per-call.
-    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(11000);
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(13000);
   });
 });
 
@@ -905,6 +917,6 @@ describe("multi-construction grammarPointMatch guidance", () => {
   });
 
   it("bumps the prompt version to today", () => {
-    expect(VALIDATION_PROMPT_VERSION).toBe('validate@2026-08-08');
+    expect(VALIDATION_PROMPT_VERSION).toBe('validate@2026-08-11');
   });
 });
