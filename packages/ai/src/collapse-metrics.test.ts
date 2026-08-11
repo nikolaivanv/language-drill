@@ -140,3 +140,136 @@ describe('isSurfaceFlagged', () => {
     expect(isSurfaceFlagged(null, opts)).toBe(false);
   });
 });
+
+import { computeSpecShortfall, computeVariantSkew } from './collapse-metrics.js';
+import type { GrammarPoint } from '@language-drill/shared';
+
+const point = (extra: Partial<GrammarPoint> = {}): GrammarPoint =>
+  ({
+    key: 'es-b1-test',
+    kind: 'grammar',
+    name: 'Test point',
+    description: 'A test point.',
+    cefrLevel: 'B1',
+    language: 'ES',
+    examplesPositive: ['a', 'b'],
+    examplesNegative: ['*c'],
+    commonErrors: ['d'],
+    ...extra,
+  }) as GrammarPoint;
+
+const tagged = (person: string, n: number): AuditRow[] =>
+  Array.from({ length: n }, () => ({
+    id: `id-${person}-${Math.random()}`,
+    type: ExerciseType.CLOZE,
+    content: { correctAnswer: 'x' },
+    coverageTags: { person } as never,
+  }));
+
+const seeded = (seedWord: string | null, n: number): AuditRow[] =>
+  Array.from({ length: n }, () => ({
+    id: `id-${seedWord}-${Math.random()}`,
+    type: ExerciseType.TRANSLATION,
+    content: seedWord === null ? {} : { seedWord },
+    coverageTags: null,
+  }));
+
+describe('computeSpecShortfall', () => {
+  const spec = {
+    coverageSpec: { axes: [{ name: 'person' as const, floors: { '1sg': 5, '3sg': 5, '3pl': 5 } }] },
+  };
+
+  it('returns null for a point with no coverageSpec', () => {
+    expect(computeSpecShortfall(point(), [], 50)).toBeNull();
+  });
+
+  it('reports each declared value under its floor, with the observed count', () => {
+    const rows = [...tagged('1sg', 5), ...tagged('3sg', 2), ...tagged('3pl', 0)];
+    const result = computeSpecShortfall(point(spec), rows, 15)!;
+    expect(result.shortfalls).toEqual([
+      { axis: 'person', value: '3sg', floor: 5, actual: 2 },
+      { axis: 'person', value: '3pl', floor: 5, actual: 0 },
+    ]);
+  });
+
+  it('reports no shortfall when every floor is met', () => {
+    const rows = [...tagged('1sg', 5), ...tagged('3sg', 6), ...tagged('3pl', 5)];
+    expect(computeSpecShortfall(point(spec), rows, 15)!.shortfalls).toEqual([]);
+  });
+
+  it('flags atTarget — the cell that will NOT self-heal without a demote', () => {
+    const rows = [...tagged('1sg', 20), ...tagged('3sg', 0), ...tagged('3pl', 0)];
+    const result = computeSpecShortfall(point(spec), rows, 15)!;
+    expect(result.approved).toBe(20);
+    expect(result.atTarget).toBe(true);
+    expect(result.shortfalls).toHaveLength(2);
+  });
+
+  it('does not flag atTarget when the cell is still filling', () => {
+    expect(computeSpecShortfall(point(spec), tagged('1sg', 5), 50)!.atTarget).toBe(false);
+  });
+
+  it('ignores rows with no coverage tag for the axis', () => {
+    const rows = [...tagged('1sg', 5), ...seeded(null, 3).map((r) => ({ ...r, coverageTags: null }))];
+    const result = computeSpecShortfall(point(spec), rows, 15)!;
+    expect(result.shortfalls.find((s) => s.value === '1sg')).toBeUndefined();
+  });
+});
+
+describe('computeVariantSkew', () => {
+  const variants = point({
+    constructionVariants: [
+      { id: 'hearsay', directive: 'H', share: 3 },
+      { id: 'adversity', directive: 'A' },
+      { id: 'agentless', directive: 'G' },
+      { id: 'uno-generic', directive: 'U' },
+    ],
+  });
+
+  it('returns null for a point with no constructionVariants', () => {
+    expect(computeVariantSkew(point(), [])).toBeNull();
+  });
+
+  it('counts unrecognized and null seedWords separately from declared variants', () => {
+    // The live prod shape after #631 merged inert: 49 legacy rows, zero variant coverage.
+    const rows = [...seeded(null, 40), ...seeded('restaurante', 9)];
+    const result = computeVariantSkew(variants, rows)!;
+    expect(result.unrecognizedSeedCount).toBe(49);
+    expect(result.perVariant.every((v) => v.count === 0)).toBe(true);
+  });
+
+  it('computes each quota from share over the declared-variant pool only', () => {
+    // 12 declared rows, shares 3/1/1/1 → quotas 6/2/2/2. Unrecognized rows excluded.
+    const rows = [...seeded('hearsay', 12), ...seeded(null, 100)];
+    const result = computeVariantSkew(variants, rows)!;
+    expect(result.approved).toBe(12);
+    expect(result.perVariant.find((v) => v.id === 'hearsay')!.quota).toBe(6);
+    expect(result.perVariant.find((v) => v.id === 'adversity')!.quota).toBe(2);
+  });
+
+  it('reports over-quota and under-MIN_PER_VARIANT ids', () => {
+    const rows = [
+      ...seeded('hearsay', 12),
+      ...seeded('adversity', 4),
+      ...seeded('agentless', 2),
+      ...seeded('uno-generic', 2),
+    ];
+    const result = computeVariantSkew(variants, rows)!;
+    // approved = 20, totalShare = 6 → quotas 10 / 3.33 / 3.33 / 3.33.
+    // hearsay 12 > 10 and adversity 4 > 3.33 are both over; the other two are under 4.
+    expect(result.overQuota).toEqual(['hearsay', 'adversity']);
+    expect(result.underMin).toEqual(['agentless', 'uno-generic']); // < MIN_PER_VARIANT
+  });
+
+  it('reports nothing when every variant sits at its quota', () => {
+    const rows = [
+      ...seeded('hearsay', 12),
+      ...seeded('adversity', 4),
+      ...seeded('agentless', 4),
+      ...seeded('uno-generic', 4),
+    ];
+    const result = computeVariantSkew(variants, rows)!;
+    expect(result.overQuota).toEqual([]);
+    expect(result.underMin).toEqual([]);
+  });
+});
