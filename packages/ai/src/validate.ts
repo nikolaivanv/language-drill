@@ -280,6 +280,13 @@ export type ValidationResult = {
    * values present in `COVERAGE_AXIS_VALUES` survive parsing.
    */
   coverage: CoverageTags;
+  /**
+   * The validator's adjudicated candidate fills (cloze only). Strictly
+   * non-load-bearing: `routeValidationResult` ignores it and
+   * `parseValidationResult` coerces anything malformed to `[]`. Present so the
+   * `ambiguous` verdict is conditioned on a search rather than replacing one.
+   */
+  candidateFillers: CandidateFiller[];
 };
 
 export type ValidateDraftResult = {
@@ -360,6 +367,37 @@ function coerceCoverage(raw: Record<string, unknown>): CoverageTags {
   return out as CoverageTags;
 }
 
+/**
+ * Lenient reader for the non-load-bearing `candidateFillers` array. A missing
+ * or non-array value yields `[]`; entries lacking a string `filler` or a
+ * known `verdict` are dropped individually; a missing `reason` defaults to "".
+ * Never throws — a malformed scratchpad must never cost the draft (R8.2).
+ */
+function coerceCandidateFillers(
+  raw: Record<string, unknown>,
+): CandidateFiller[] {
+  const v = raw.candidateFillers;
+  if (!Array.isArray(v)) return [];
+  const out: CandidateFiller[] = [];
+  for (const entry of v) {
+    if (!isObject(entry)) continue;
+    const { filler, verdict, reason } = entry;
+    if (typeof filler !== "string") continue;
+    if (
+      typeof verdict !== "string" ||
+      !(CANDIDATE_FILLER_VERDICTS as readonly string[]).includes(verdict)
+    ) {
+      continue;
+    }
+    out.push({
+      filler,
+      verdict: verdict as CandidateFillerVerdict,
+      reason: typeof reason === "string" ? reason : "",
+    });
+  }
+  return out;
+}
+
 export function parseValidationResult(input: unknown): ValidationResult {
   if (!isObject(input)) {
     throw new ValidationParseError("Validation result must be an object");
@@ -397,6 +435,9 @@ export function parseValidationResult(input: unknown): ValidationResult {
   // Non-load-bearing coverage object — coerced leniently, never throws.
   const coverage = coerceCoverage(raw);
 
+  // Non-load-bearing candidateFillers array — coerced leniently, never throws.
+  const candidateFillers = coerceCandidateFillers(raw);
+
   return {
     qualityScore,
     ambiguous: raw.ambiguous as boolean,
@@ -406,6 +447,7 @@ export function parseValidationResult(input: unknown): ValidationResult {
     culturalIssues,
     flaggedReasons,
     coverage,
+    candidateFillers,
   };
 }
 

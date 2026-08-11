@@ -81,6 +81,7 @@ const validValidationInput: ValidationResult = {
   culturalIssues: [],
   flaggedReasons: [],
   coverage: {},
+  candidateFillers: [],
 };
 
 // ---------------------------------------------------------------------------
@@ -305,6 +306,64 @@ describe("parseValidationResult", () => {
     const { qualityScore: _omit, ...partial } = validValidationInput;
     expect(() => parseValidationResult(partial)).toThrow(ValidationParseError);
     expect(() => parseValidationResult(partial)).toThrow("Invalid qualityScore");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseValidationResult — candidateFillers leniency
+// ---------------------------------------------------------------------------
+
+describe("parseValidationResult — candidateFillers leniency", () => {
+  const base = {
+    qualityScore: 0.8,
+    ambiguous: false,
+    contextSpoilsAnswer: false,
+    levelMatch: true,
+    grammarPointMatch: true,
+    culturalIssues: [],
+    flaggedReasons: [],
+  };
+
+  it("defaults to [] when the field is absent", () => {
+    expect(parseValidationResult(base).candidateFillers).toEqual([]);
+  });
+
+  it("coerces a non-array to [] without throwing", () => {
+    expect(
+      parseValidationResult({ ...base, candidateFillers: "nope" }).candidateFillers,
+    ).toEqual([]);
+  });
+
+  it("drops entries with a missing or non-string filler", () => {
+    const r = parseValidationResult({
+      ...base,
+      candidateFillers: [
+        { filler: "el menos", verdict: "also-correct", reason: "fits" },
+        { verdict: "ruled-out", reason: "no filler key" },
+        { filler: 42, verdict: "ruled-out", reason: "non-string" },
+      ],
+    });
+    expect(r.candidateFillers).toEqual([
+      { filler: "el menos", verdict: "also-correct", reason: "fits" },
+    ]);
+  });
+
+  it("drops entries whose verdict is outside the enum", () => {
+    const r = parseValidationResult({
+      ...base,
+      candidateFillers: [{ filler: "x", verdict: "maybe", reason: "r" }],
+    });
+    expect(r.candidateFillers).toEqual([]);
+  });
+
+  it("defaults a missing reason to the empty string rather than dropping", () => {
+    const r = parseValidationResult({
+      ...base,
+      candidateFillers: [{ filler: "x", verdict: "ruled-out" }],
+    });
+    expect(r.candidateFillers).toEqual([
+      { filler: "x", verdict: "ruled-out", reason: "" },
+    ]);
   });
 });
 
