@@ -67,7 +67,8 @@ export function surfaceOf(
  * Strip punctuation from each token's EDGES only. Word-internal apostrophes and
  * hyphens are preserved deliberately — `Anne'nin`, `e-posta`, and `don't` are
  * single words, and collapsing them would merge distinct TR possessive answers
- * into one bucket. Same rule the `tokenize.ts` reader uses.
+ * into one bucket. Same INTENT as the `tokenize.ts` reader, but an independent
+ * implementation — this one additionally strips `\p{S}` from the edges.
  */
 const EDGE_PUNCT = /^[\p{P}\p{S}]+|[\p{P}\p{S}]+$/gu;
 
@@ -147,6 +148,10 @@ export type FloorShortfall = {
 
 export type SpecShortfall = {
   shortfalls: FloorShortfall[];
+  /** ALL rows in the cell, tagged or not — this is the cell's approved count, the
+   *  same number `atTarget` compares against `target`. Deliberately a different
+   *  denominator from `VariantSkew.declaredRows`, which counts declared-variant
+   *  rows only; the two are serialized side by side in the per-cell JSON. */
   approved: number;
   target: number;
   /**
@@ -199,7 +204,7 @@ export type VariantCoverage = {
   id: string;
   count: number;
   share: number;
-  /** Fair share of the DECLARED-variant pool: `approved * share / totalShare`. */
+  /** Fair share of the DECLARED-variant pool: `declaredRows * share / totalShare`. */
   quota: number;
 };
 
@@ -218,8 +223,13 @@ export type VariantSkew = {
    * simultaneously at target.
    */
   unrecognizedSeedCount: number;
-  /** Rows carrying a declared variant id. Quotas are computed against this. */
-  approved: number;
+  /**
+   * Rows carrying a declared variant id. Quotas are computed against this.
+   * NOT the cell's approved count — `SpecShortfall.approved` is that, and the
+   * two sit side by side in the same per-cell JSON, so this one is named for
+   * its narrower denominator.
+   */
+  declaredRows: number;
 };
 
 /** Declared `constructionVariants` vs. the realized `seedWord` distribution.
@@ -245,7 +255,7 @@ export function computeVariantSkew(
 
   // Only declared variants count toward the pool — a legacy frequency-word seed
   // is not evidence that any variant is covered. Same rule as `pickVariantSeeds`.
-  const approved = variants.reduce((sum, v) => sum + (counts.get(v.id) ?? 0), 0);
+  const declaredRows = variants.reduce((sum, v) => sum + (counts.get(v.id) ?? 0), 0);
   const totalShare = variants.reduce((sum, v) => sum + (v.share ?? 1), 0);
 
   const perVariant: VariantCoverage[] = variants.map((v) => {
@@ -254,7 +264,7 @@ export function computeVariantSkew(
       id: v.id,
       count: counts.get(v.id) ?? 0,
       share,
-      quota: (approved * share) / totalShare,
+      quota: (declaredRows * share) / totalShare,
     };
   });
 
@@ -263,7 +273,7 @@ export function computeVariantSkew(
     overQuota: perVariant.filter((v) => v.count > v.quota).map((v) => v.id),
     underMin: perVariant.filter((v) => v.count < MIN_PER_VARIANT).map((v) => v.id),
     unrecognizedSeedCount,
-    approved,
+    declaredRows,
   };
 }
 
@@ -352,10 +362,10 @@ export function computeStemMonotony(
     if (stem === null) continue;
     total += 1;
     const content = new Set(
-      tokens(stem).filter(
-        // Drop stopwords, the cloze blank marker, and pure digits.
-        (t) => !STOPWORDS.has(t) && !/^_+$/u.test(t) && !/^\d+$/u.test(t),
-      ),
+      // Drop stopwords and pure digits. The cloze blank marker needs no clause of
+      // its own: `_` is U+005F, category `Pc` ⊂ `\p{P}`, so `EDGE_PUNCT` already
+      // strips `___` down to the empty string and `tokens` drops it.
+      tokens(stem).filter((t) => !STOPWORDS.has(t) && !/^\d+$/u.test(t)),
     );
     for (const lemma of content) {
       docFrequency.set(lemma, (docFrequency.get(lemma) ?? 0) + 1);

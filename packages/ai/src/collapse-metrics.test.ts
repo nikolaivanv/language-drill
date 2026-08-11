@@ -10,7 +10,6 @@ import {
   computeVariantSkew,
   computeStemMonotony,
   stemOf,
-  MONOTONY_THRESHOLD_DEFAULT,
   type AuditRow,
 } from './collapse-metrics.js';
 
@@ -213,9 +212,14 @@ describe('computeSpecShortfall', () => {
   });
 
   it('ignores rows with no coverage tag for the axis', () => {
-    const rows = [...tagged('1sg', 5), ...seeded(null, 3).map((r) => ({ ...r, coverageTags: null }))];
+    // 3 tagged `1sg` + 3 untagged against a floor of 5. Deliberately BELOW the
+    // floor: a "count every row" bug would report actual 6 and clear the floor,
+    // so this fixture discriminates where an at-floor one could not.
+    const rows = [...tagged('1sg', 3), ...seeded(null, 3)];
     const result = computeSpecShortfall(point(spec), rows, 15)!;
-    expect(result.shortfalls.find((s) => s.value === '1sg')).toBeUndefined();
+    expect(result.shortfalls).toContainEqual({ axis: 'person', value: '1sg', floor: 5, actual: 3 });
+    // …while `approved` counts ALL rows, tagged or not — it is the cell's size.
+    expect(result.approved).toBe(6);
   });
 });
 
@@ -245,7 +249,7 @@ describe('computeVariantSkew', () => {
     // 12 declared rows, shares 3/1/1/1 → quotas 6/2/2/2. Unrecognized rows excluded.
     const rows = [...seeded('hearsay', 12), ...seeded(null, 100)];
     const result = computeVariantSkew(variants, rows)!;
-    expect(result.approved).toBe(12);
+    expect(result.declaredRows).toBe(12);
     expect(result.perVariant.find((v) => v.id === 'hearsay')!.quota).toBe(6);
     expect(result.perVariant.find((v) => v.id === 'adversity')!.quota).toBe(2);
   });
@@ -258,7 +262,7 @@ describe('computeVariantSkew', () => {
       ...seeded('uno-generic', 2),
     ];
     const result = computeVariantSkew(variants, rows)!;
-    // approved = 20, totalShare = 6 → quotas 10 / 3.33 / 3.33 / 3.33.
+    // declaredRows = 20, totalShare = 6 → quotas 10 / 3.33 / 3.33 / 3.33.
     // hearsay 12 > 10 and adversity 4 > 3.33 are both over; the other two are under 4.
     expect(result.overQuota).toEqual(['hearsay', 'adversity']);
     expect(result.underMin).toEqual(['agentless', 'uno-generic']); // < MIN_PER_VARIANT
@@ -344,15 +348,24 @@ describe('computeStemMonotony', () => {
   });
 
   it('drops stopwords so function words never dominate', () => {
-    const rows = stems(['El perro y la casa.', 'El gato y la casa.', 'El pez y la casa.']);
+    // `el`, `la` and `ventana` all sit at df 3, so the alphabetical tie-break
+    // decides: WITHOUT the stopword drop the winner is `el`. The content word is
+    // deliberately chosen to sort after the stopwords — an at-df-tie fixture whose
+    // content word sorts first would pass with or without the drop.
+    const rows = stems([
+      'El perro mira la ventana.',
+      'El gato rompe la ventana.',
+      'El niño limpia la ventana.',
+    ]);
     const result = computeStemMonotony(ExerciseType.CLOZE, rows)!;
-    expect(result.topLemma).toBe('casa');
+    expect(result.topLemma).toBe('ventana');
   });
 
-  it('drops the cloze blank marker', () => {
-    const rows = stems(['El ___ come.', 'La ___ duerme.', 'Un ___ salta.']);
-    const result = computeStemMonotony(ExerciseType.CLOZE, rows);
-    expect(result?.topLemma).not.toBe('___');
+  it('drops the cloze blank marker entirely — it never becomes a lemma', () => {
+    // Every token here is either a stopword or the blank, so the ONLY way to get
+    // a non-null result is for `___` to survive tokenization at df 3.
+    const rows = stems(['El ___.', 'La ___.', 'Un ___.']);
+    expect(computeStemMonotony(ExerciseType.CLOZE, rows)).toBeNull();
   });
 
   it('returns null when no stem yields a content lemma', () => {
@@ -364,9 +377,5 @@ describe('computeStemMonotony', () => {
       { id: 'a', type: ExerciseType.CONJUGATION, content: { lemma: 'ir' }, coverageTags: null },
     ];
     expect(computeStemMonotony(ExerciseType.CONJUGATION, rows)).toBeNull();
-  });
-
-  it('ships a loose default threshold — this signal is calibration-phase', () => {
-    expect(MONOTONY_THRESHOLD_DEFAULT).toBeGreaterThanOrEqual(0.4);
   });
 });

@@ -82,6 +82,27 @@ export const COLLAPSE_DISMISSALS: readonly CollapseDismissal[] = Object.freeze([
   },
 ]);
 
+/**
+ * The ledger entry accounting for this exact finding, or `undefined`. Returns the
+ * ENTRY, not a boolean, so the caller can render its `reason` and `dismissedOn` —
+ * a dismissal the report shows only as the word "ledger" is exactly the
+ * unauditable filtered view the audit design rejects.
+ */
+export function findDismissal(
+  grammarPointKey: string,
+  type: ExerciseType,
+  surface: string,
+  signal: CollapseSignal,
+): CollapseDismissal | undefined {
+  return COLLAPSE_DISMISSALS.find(
+    (d) =>
+      d.grammarPointKey === grammarPointKey &&
+      d.type === type &&
+      d.signal === signal &&
+      (d.surface === null || d.surface === surface),
+  );
+}
+
 /** True when the ledger already accounts for this exact finding. */
 export function isDismissed(
   grammarPointKey: string,
@@ -89,11 +110,5 @@ export function isDismissed(
   surface: string,
   signal: CollapseSignal,
 ): boolean {
-  return COLLAPSE_DISMISSALS.some(
-    (d) =>
-      d.grammarPointKey === grammarPointKey &&
-      d.type === type &&
-      d.signal === signal &&
-      (d.surface === null || d.surface === surface),
-  );
+  return findDismissal(grammarPointKey, type, surface, signal) !== undefined;
 }

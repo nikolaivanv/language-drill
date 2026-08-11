@@ -23,7 +23,7 @@ import {
   trCurriculum,
 } from './index';
 import type { GrammarPoint } from './types';
-import { COLLAPSE_DISMISSALS, isDismissed } from './collapse-dismissals';
+import { COLLAPSE_DISMISSALS, findDismissal, isDismissed } from './collapse-dismissals';
 
 /**
  * Returns a shallow clone of ALL_CURRICULA where the entry at `index` has been
@@ -1260,5 +1260,21 @@ describe('isDismissed', () => {
     expect(isDismissed('es-b1-impersonal-plural', ExerciseType.CLOZE, 'dicen', 'answer-surface')).toBe(
       false,
     );
+  });
+});
+
+describe('findDismissal', () => {
+  it('returns the matched entry so the report can print its rationale and date', () => {
+    const d = findDismissal('es-a2-personal-a', ExerciseType.CLOZE, 'a', 'answer-surface')!;
+    expect(d.grammarPointKey).toBe('es-a2-personal-a');
+    expect(d.surface).toBe('a');
+    expect(d.reason.length).toBeGreaterThan(0);
+    expect(d.dismissedOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('returns undefined when nothing matches', () => {
+    expect(
+      findDismissal('es-b1-impersonal-plural', ExerciseType.CLOZE, 'dicen', 'answer-surface'),
+    ).toBeUndefined();
   });
 });

@@ -183,7 +183,7 @@ describe('parseTriageVerdict', () => {
 });
 
 describe('COLLAPSE_TRIAGE_TOOL', () => {
-  it('forces the four fields the parser requires', () => {
+  it('forces the three fields the parser requires', () => {
     expect(COLLAPSE_TRIAGE_TOOL.input_schema.required).toEqual(['verdict', 'rationale', 'confidence']);
   });
 });
