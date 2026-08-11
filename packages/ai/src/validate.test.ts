@@ -957,6 +957,7 @@ describe("applyCandidateFillerConsistency", () => {
   it("flags an unlisted also-correct filler when ambiguous is false", () => {
     const out = applyCandidateFillerConsistency(
       result({ candidateFillers: [{ filler: "el menos", verdict: "also-correct", reason: "fits" }] }),
+      "el más",
       [],
     );
     expect(out.flaggedReasons).toContain(SELF_INCONSISTENT_REASON);
@@ -965,6 +966,7 @@ describe("applyCandidateFillerConsistency", () => {
   it("NEVER mutates ambiguous", () => {
     const out = applyCandidateFillerConsistency(
       result({ candidateFillers: [{ filler: "el menos", verdict: "also-correct", reason: "f" }] }),
+      "el más",
       [],
     );
     expect(out.ambiguous).toBe(false);
@@ -973,7 +975,17 @@ describe("applyCandidateFillerConsistency", () => {
   it("stays silent when the filler is enumerated in acceptableAnswers", () => {
     const out = applyCandidateFillerConsistency(
       result({ candidateFillers: [{ filler: "el menos", verdict: "also-correct", reason: "f" }] }),
+      "el más",
       ["el menos"],
+    );
+    expect(out.flaggedReasons).not.toContain(SELF_INCONSISTENT_REASON);
+  });
+
+  it("stays silent when the also-correct filler IS correctAnswer (regression: correctAnswer is always listed as a candidate and always adjudicated also-correct)", () => {
+    const out = applyCandidateFillerConsistency(
+      result({ candidateFillers: [{ filler: "el más", verdict: "also-correct", reason: "it is the correct answer" }] }),
+      "el más",
+      [],
     );
     expect(out.flaggedReasons).not.toContain(SELF_INCONSISTENT_REASON);
   });
@@ -981,6 +993,7 @@ describe("applyCandidateFillerConsistency", () => {
   it("stays silent when ambiguous is already true", () => {
     const out = applyCandidateFillerConsistency(
       result({ ambiguous: true, candidateFillers: [{ filler: "x", verdict: "also-correct", reason: "f" }] }),
+      "correct",
       [],
     );
     expect(out.flaggedReasons).not.toContain(SELF_INCONSISTENT_REASON);
@@ -989,13 +1002,14 @@ describe("applyCandidateFillerConsistency", () => {
   it("ignores ruled-out fillers", () => {
     const out = applyCandidateFillerConsistency(
       result({ candidateFillers: [{ filler: "x", verdict: "ruled-out", reason: "'ayer' forbids it" }] }),
+      "correct",
       [],
     );
     expect(out.flaggedReasons).not.toContain(SELF_INCONSISTENT_REASON);
   });
 
   it("is a no-op on an empty candidateFillers array", () => {
-    const out = applyCandidateFillerConsistency(result({}), []);
+    const out = applyCandidateFillerConsistency(result({}), "correct", []);
     expect(out.flaggedReasons).toEqual([]);
   });
 });

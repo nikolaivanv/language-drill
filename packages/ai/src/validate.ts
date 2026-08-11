@@ -479,7 +479,16 @@ function listed(needle: string, haystack: readonly string[]): boolean {
 
 /**
  * `candidateFillers` makes `ambiguous` derivable: an `also-correct` filler that
- * is not in `acceptableAnswers` contradicts `ambiguous: false`.
+ * is not `correctAnswer` and not in `acceptableAnswers` contradicts
+ * `ambiguous: false`.
+ *
+ * `correctAnswer` is passed explicitly (not read off a draft) so the accepted
+ * set mirrors the contract in `fluency.ts:90`
+ * (`[correctAnswer, ...(acceptableAnswers ?? [])]`) — `acceptableAnswers` is
+ * only the ADDITIONAL answers, and the tool schema always has the model list
+ * `correctAnswer` itself as a candidate (marked `also-correct` by
+ * definition), so omitting it here made the signal fire on nearly every
+ * cloze.
  *
  * REPORT-ONLY BY DESIGN. This appends a `flaggedReasons` entry and returns a
  * new result; it must never mutate `ambiguous` or change routing. Flipping
@@ -489,10 +498,11 @@ function listed(needle: string, haystack: readonly string[]): boolean {
  */
 export function applyCandidateFillerConsistency(
   result: ValidationResult,
+  correctAnswer: string,
   acceptableAnswers: readonly string[] | undefined,
 ): ValidationResult {
   if (result.ambiguous) return result;
-  const accepted = acceptableAnswers ?? [];
+  const accepted = [correctAnswer, ...(acceptableAnswers ?? [])];
   const contradiction = result.candidateFillers.some(
     (c) => c.verdict === "also-correct" && !listed(c.filler, accepted),
   );
@@ -624,6 +634,7 @@ export async function validateDraft(
     draft.contentJson.type === ExerciseType.CLOZE
       ? applyCandidateFillerConsistency(
           parsed,
+          draft.contentJson.correctAnswer,
           draft.contentJson.acceptableAnswers,
         )
       : parsed;
