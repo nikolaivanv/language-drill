@@ -119,11 +119,22 @@ Replay cost: **$0.2806** (12 `evaluateAnswer` calls).
 
 Original: `false_positive` — wrong `"No me gusta cerveza."` scored 0.85 (pass).
 Replay: the identical wrong answer now scores **0.75** — out of the pass band,
-into the deadzone. Directly confirmed, not inferred: **closed — did not
+into the deadzone. The flag did not fire this time: **closed — did not
 reproduce.** `gustar` is a `translation` exercise (no cloze options in play),
 so neither #612 nor #620 is a mechanical fit; the cause of the movement is
 unexplained (most likely general prompt/model drift between July and now)
 rather than attributable to either shipped fix.
+Caveat — **this closure is provisional, not confirmed**: 0.75 is only **0.05**
+below the 0.8 pass line the original 0.85 crossed, the closest of the three
+deadzone landings in this run. `evaluateAnswer` is a nondeterministic LLM
+call and this replay is n=1; a re-draw landing at 0.80 instead of 0.75 would
+flip the verdict straight back to `false_positive`. One draw this close to the
+boundary cannot distinguish a real behavioural change from ordinary sampling
+noise — contrast `deber` below, where the alt cleared the fail line by 0.35,
+comfortably outside noise range. What would settle it: repeating this single
+probe (`wrong` = `"No me gusta cerveza."` against this row) n times — at
+~$0.02/call — and checking whether it ever lands at ≥0.8. Cheap, not run here;
+worth doing if this closure needs to be relied on later.
 
 ### 2. `deber` — `es-b1-deber-obligation-probability` (`1c8afa03-50f9-566b-9adc-f8578e7b606a`)
 
@@ -166,17 +177,24 @@ flagged either run, consistent with correct behavior throughout.)
 
 ## Summary table
 
-| Exercise id | Point | Original reason (score) | Replayed score | Verdict |
-|---|---|---|---|---|
-| `09d08beb-fa80-5f79-907a-cd0541f7c874` | es-a1-gustar-basic | `false_positive` (wrong=0.85) | wrong=0.75 (deadzone) | **closed — did not reproduce** |
-| `1c8afa03-50f9-566b-9adc-f8578e7b606a` | es-b1-deber-obligation-probability | `acceptable_answers_gap` (alt=0.35) | alt=0.75 (deadzone) | **closed — did not reproduce** (candidate cause: #620) |
-| `ca70d729-2619-5421-8c5f-16cdd77d4e60` | es-b1-collective-agreement | `acceptable_answers_gap` (alt=0.3) | alt=0.50 (deadzone) | **closed — did not reproduce** (candidate cause: #620; still far from pass) |
-| `42183fad-caa9-5d8d-b95f-c04104ca2f74` | es-b1-adjective-de-infinitive | `acceptable_answers_gap` (alt=0) | alt=0.00 (fail — reproduces by raw rule) | **dismissed — crafter error, not a pool defect** |
+Closure confidence differs across the three deadzone landings — margin from
+the boundary the original score crossed is a proxy for how much a single
+nondeterministic draw (n=1) should be trusted:
+
+| Exercise id | Point | Original reason (score) | Replayed score | Margin from boundary | Confidence | Verdict |
+|---|---|---|---|---|---|---|
+| `09d08beb-fa80-5f79-907a-cd0541f7c874` | es-a1-gustar-basic | `false_positive` (wrong=0.85) | wrong=0.75 (deadzone) | 0.05 below the 0.8 pass line | **provisional** — n=1, within plausible sampling noise of the boundary | **closed — did not reproduce** |
+| `1c8afa03-50f9-566b-9adc-f8578e7b606a` | es-b1-deber-obligation-probability | `acceptable_answers_gap` (alt=0.35) | alt=0.75 (deadzone) | 0.35 above the 0.4 fail line | **convincing** | **closed — did not reproduce** (candidate cause: #620) |
+| `ca70d729-2619-5421-8c5f-16cdd77d4e60` | es-b1-collective-agreement | `acceptable_answers_gap` (alt=0.3) | alt=0.50 (deadzone) | 0.10 above the 0.4 fail line | **provisional** — real improvement, but still far from the pass band | **closed — did not reproduce** (candidate cause: #620; still far from pass) |
+| `42183fad-caa9-5d8d-b95f-c04104ca2f74` | es-b1-adjective-de-infinitive | `acceptable_answers_gap` (alt=0) | alt=0.00 (fail — reproduces by raw rule) | n/a — dismissal is on grammatical grounds, not score margin | **not sampling-dependent** | **dismissed — crafter error, not a pool defect** |
 
 ## Gate outcome for Tasks 3–11
 
 - **`gustar` closed → Tasks 3–10 (evaluator fix) are out of scope; skip them.**
-  Confirmed by direct replay of the exact original defect probe, not inference.
+  Established by direct replay of the exact original defect probe (not
+  inference from a re-sample), though the closure is provisional (0.05 margin,
+  n=1) — see the confidence column above and the cheap n-replay follow-up
+  noted in the per-flag section if this needs firmer confirmation later.
 - **Task 11 (cloze repair): skip.** All three cloze flags are now resolved —
   two closed (with #620 as the leading candidate explanation, though not
   independently verified here) and one dismissed as a crafter artifact rather
