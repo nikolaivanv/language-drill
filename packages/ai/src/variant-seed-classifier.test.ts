@@ -1,10 +1,14 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import type { GrammarPoint } from '@language-drill/shared';
+import type Anthropic from '@anthropic-ai/sdk';
 import {
   buildClassifierSystemPrompt,
   buildClassifierUserPrompt,
   parseClassifierResult,
   VARIANT_SEED_CLASSIFIER_TOOL,
+  classifyVariantSeeds,
+  VARIANT_SEED_CLASSIFIER_TOOL_NAME,
+  VARIANT_SEED_CLASSIFIER_MODEL,
   type ClassifierRow,
 } from './variant-seed-classifier.js';
 
@@ -161,5 +165,54 @@ describe('parseClassifierResult', () => {
 describe('VARIANT_SEED_CLASSIFIER_TOOL', () => {
   it('requires the assignments array', () => {
     expect(VARIANT_SEED_CLASSIFIER_TOOL.input_schema.required).toEqual(['assignments']);
+  });
+});
+
+const fakeClient = (content: unknown[], stopReason = 'tool_use') =>
+  ({
+    messages: {
+      create: vi.fn().mockResolvedValue({
+        content,
+        stop_reason: stopReason,
+        usage: { input_tokens: 1200, output_tokens: 150 },
+      }),
+    },
+  }) as unknown as Anthropic;
+
+describe('classifyVariantSeeds', () => {
+  const toolUse = {
+    type: 'tool_use',
+    name: VARIANT_SEED_CLASSIFIER_TOOL_NAME,
+    id: 't1',
+    input: {
+      assignments: [
+        { rowId: 'r1', variantId: 'que-definition-of-concept', confidence: 'high' },
+        { rowId: 'r2', variantId: 'que-before-noun', confidence: 'high' },
+      ],
+    },
+  };
+
+  it('forces the tool, caches the system block, and returns assignments plus usage', async () => {
+    const client = fakeClient([toolUse]);
+    const { assignments, usage } = await classifyVariantSeeds(client, gp, rows);
+    expect(assignments).toHaveLength(2);
+    expect(usage.input_tokens).toBe(1200);
+
+    const call = (client.messages.create as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(call.model).toBe(VARIANT_SEED_CLASSIFIER_MODEL);
+    expect(call.temperature).toBe(0);
+    expect(call.tool_choice).toEqual({ type: 'tool', name: VARIANT_SEED_CLASSIFIER_TOOL_NAME });
+    expect(call.system[0].cache_control).toEqual({ type: 'ephemeral' });
+  });
+
+  it('throws a diagnostic error when no tool_use block comes back', async () => {
+    await expect(
+      classifyVariantSeeds(fakeClient([{ type: 'text', text: 'hm' }], 'end_turn'), gp, rows),
+    ).rejects.toThrow(/no tool_use block .*end_turn/);
+  });
+
+  it('propagates a parser error for a malformed result', async () => {
+    const bad = { ...toolUse, input: { assignments: [{ rowId: 'r1', variantId: null, confidence: 'low' }] } };
+    await expect(classifyVariantSeeds(fakeClient([bad]), gp, rows)).rejects.toThrow(/missing/);
   });
 });

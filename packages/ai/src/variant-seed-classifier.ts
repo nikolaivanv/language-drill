@@ -166,3 +166,42 @@ export function parseClassifierResult(
 
   return out;
 }
+
+/**
+ * Call Claude with the forced tool and return validated assignments plus token
+ * usage (the CLI's cost guard needs it). The system block carries the point's
+ * variant list and is identical for every batch within a cell, so it is
+ * cache-marked — a large cell is many calls against one cached prefix.
+ */
+export async function classifyVariantSeeds(
+  client: Anthropic,
+  gp: GrammarPoint,
+  rows: readonly ClassifierRow[],
+  signal?: AbortSignal,
+): Promise<{ assignments: ClassifierAssignment[]; usage: Anthropic.Usage }> {
+  const response = await client.messages.create(
+    {
+      model: VARIANT_SEED_CLASSIFIER_MODEL,
+      max_tokens: VARIANT_SEED_CLASSIFIER_MAX_TOKENS,
+      system: [
+        {
+          type: 'text' as const,
+          text: buildClassifierSystemPrompt(gp),
+          cache_control: { type: 'ephemeral' as const },
+        },
+      ],
+      messages: [{ role: 'user' as const, content: buildClassifierUserPrompt(rows) }],
+      tools: [VARIANT_SEED_CLASSIFIER_TOOL],
+      tool_choice: { type: 'tool' as const, name: VARIANT_SEED_CLASSIFIER_TOOL_NAME },
+      temperature: VARIANT_SEED_CLASSIFIER_TEMPERATURE,
+    },
+    { signal },
+  );
+  const toolUse = response.content.find(
+    (b): b is Anthropic.ToolUseBlock => b.type === 'tool_use',
+  );
+  if (!toolUse) {
+    throw new Error(`classifier: no tool_use block (stop_reason ${response.stop_reason})`);
+  }
+  return { assignments: parseClassifierResult(toolUse.input, gp, rows), usage: response.usage };
+}
