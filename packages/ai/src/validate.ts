@@ -252,6 +252,14 @@ export function buildValidationTool(exerciseType: ExerciseType): Anthropic.Tool 
 // Public types
 // ---------------------------------------------------------------------------
 
+/** Eval-harness escape hatch. Production never sets these — the no-override
+ *  path is byte-identical to before. Mirrors generate.ts's
+ *  `spec.systemPromptOverride` and evaluate.ts's `modelOverride`. */
+export type ValidateDraftOptions = {
+  modelOverride?: string;
+  systemPromptOverride?: string;
+};
+
 export type ValidationResult = {
   /** 0..1 inclusive. */
   qualityScore: number;
@@ -527,6 +535,7 @@ export async function validateDraft(
   draft: ExerciseDraft,
   spec: GenerationSpec,
   signal?: AbortSignal,
+  options?: ValidateDraftOptions,
 ): Promise<ValidateDraftResult> {
   // Top-of-function guard. Keys off `draft.contentJson.type` (not
   // `spec.exerciseType`) so a caller that hands the validator a draft whose
@@ -541,11 +550,13 @@ export async function validateDraft(
 
   const isDictation = draft.contentJson.type === ExerciseType.DICTATION;
   const isFreeWriting = draft.contentJson.type === ExerciseType.FREE_WRITING;
-  const systemText = isDictation
-    ? await buildDictationValidationSystemPrompt(spec)
-    : isFreeWriting
-      ? await buildFreeWritingValidationSystemPrompt(spec)
-      : await buildValidationSystemPrompt(spec);
+  const systemText =
+    options?.systemPromptOverride ??
+    (isDictation
+      ? await buildDictationValidationSystemPrompt(spec)
+      : isFreeWriting
+        ? await buildFreeWritingValidationSystemPrompt(spec)
+        : await buildValidationSystemPrompt(spec));
   // The user-prompt builders take the NARROWED content, so the discriminant
   // must be inlined here — TypeScript cannot narrow a union through a boolean
   // alias (the `isDictation` / `isFreeWriting` consts above only gate the
@@ -563,7 +574,7 @@ export async function validateDraft(
   //  - Sonnet 5 (and Fable) run ADAPTIVE thinking when `thinking` is omitted —
   //    send an explicit `disabled` so this stays a model change and not a
   //    silent thinking change (which would also spend against max_tokens).
-  const effectiveModel = VALIDATION_MODEL;
+  const effectiveModel = options?.modelOverride ?? VALIDATION_MODEL;
   const rejectsSamplingParams = /sonnet-5|opus-4-[7-9]|opus-5|fable/.test(
     effectiveModel,
   );

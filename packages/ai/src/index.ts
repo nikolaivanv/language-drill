@@ -236,6 +236,7 @@ export type {
   CandidateFillerVerdict,
   ValidationResult,
   ValidateDraftResult,
+  ValidateDraftOptions,
 } from "./validate.js";
 
 export {

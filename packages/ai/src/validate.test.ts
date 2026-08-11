@@ -763,6 +763,69 @@ describe("validateDraft", () => {
     expect(capturedSystem).toContain("free-writing PROMPTS");
     expect(result.result.qualityScore).toBe(0.9);
   });
+
+  it("uses modelOverride when supplied", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_v_override_model",
+          name: VALIDATION_TOOL_NAME,
+          input: validValidationInput,
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: { input_tokens: 1000, output_tokens: 200 },
+    });
+
+    await validateDraft(mockClient, makeDraft(clozeContent), baseSpec, undefined, {
+      modelOverride: "claude-sonnet-4-6",
+    });
+
+    expect(mockCreate.mock.calls[0][0].model).toBe("claude-sonnet-4-6");
+  });
+
+  it("sends temperature again when the override model accepts it", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_v_override_temp",
+          name: VALIDATION_TOOL_NAME,
+          input: validValidationInput,
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: { input_tokens: 1000, output_tokens: 200 },
+    });
+
+    await validateDraft(mockClient, makeDraft(clozeContent), baseSpec, undefined, {
+      modelOverride: "claude-sonnet-4-6",
+    });
+
+    expect(mockCreate.mock.calls[0][0].temperature).toBe(0);
+  });
+
+  it("uses systemPromptOverride verbatim, bypassing Langfuse", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_v_override_prompt",
+          name: VALIDATION_TOOL_NAME,
+          input: validValidationInput,
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: { input_tokens: 1000, output_tokens: 200 },
+    });
+
+    await validateDraft(mockClient, makeDraft(clozeContent), baseSpec, undefined, {
+      systemPromptOverride: "OVERRIDDEN",
+    });
+
+    expect(mockCreate.mock.calls[0][0].system[0].text).toBe("OVERRIDDEN");
+  });
 });
 
 // ---------------------------------------------------------------------------
