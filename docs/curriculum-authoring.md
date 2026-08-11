@@ -108,6 +108,10 @@ only assigned to `need` new drafts. The sequence that works
 Skipping step 2 is the classic trap — the bump clears *suppression*, but an
 at-target cell has no deficit, so the floors never fire.
 
+`pnpm audit:collapse` measures exactly this trap: its "Declared-but-unrealized →
+At target" section lists every cell whose declared floors cannot fire because
+the cell has no deficit. Run it before assuming a merged spec took effect.
+
 ## Authoring-time checklist (append to any new-grammar-point work)
 
 - [ ] For each of the 6 axes: claimed? collapse-prone? form-relevant?
@@ -163,6 +167,8 @@ that axis from the spec — the variants subsume it.
 
 - `docs/pool-coverage-controller.md` — mechanism design (phases, controller)
 - `docs/pool-diversity-audit.md` — the 2026-06-13 data audit that motivated it
+- `docs/superpowers/specs/2026-08-11-pool-collapse-audit-design.md` — the
+  `audit:collapse` detector that measures when a spec is missing or unrealized
 - `docs/analysis/coverage-spec-audit-2026-07-17.md` — full-curriculum triage of
   every spec-less grammar point (TR + ES; DE pending curriculum re-enable)
 - `packages/shared/src/coverage.ts` — axis/value vocabulary

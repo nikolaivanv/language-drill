@@ -61,6 +61,9 @@ cdk.out/
 # Eval runner output (packages/ai/scripts/eval-run.ts)
 eval-runs/
 
+# audit:collapse run output (commit interesting runs to docs/analysis/ instead)
+packages/ai/audit-runs/
+
 # Playwright (apps/web/e2e — see docs/testing.md)
 playwright-report/
 test-results/
