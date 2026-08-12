@@ -1,0 +1,62 @@
+{
+  "meta": {
+    "language": "ES",
+    "cefr": "A1",
+    "perPoint": 1,
+    "sampledCount": 5,
+    "seed": 1,
+    "model": "claude-opus-4-8",
+    "costUsd": 0.244,
+    "startedAt": "2026-07-22T18:02:48.159Z",
+    "costCapped": false
+  },
+  "summary": {
+    "sampled": 5,
+    "flagged": 1,
+    "byReason": {
+      "false_positive": 1
+    },
+    "byType": {
+      "translation": 1
+    },
+    "ambiguityNotes": 0,
+    "lowConfidenceSolves": 0
+  },
+  "flags": [
+    {
+      "exerciseId": "09d08beb-fa80-5f79-907a-cd0541f7c874",
+      "grammarPointKey": "es-a1-gustar-basic",
+      "type": "translation",
+      "language": "ES",
+      "cefr": "A1",
+      "flags": [
+        "false_positive"
+      ],
+      "ambiguous": false,
+      "ambiguityNote": "The task clearly asks for a gustar-type construction; the only variation is the optional emphatic \"a mí\".",
+      "answers": {
+        "correct": "No me gusta la cerveza.",
+        "wrong": "No me gusta cerveza.",
+        "alt": "A mí no me gusta la cerveza."
+      },
+      "confidence": 0.95,
+      "verdicts": {
+        "correct": {
+          "score": 1,
+          "band": "pass"
+        },
+        "wrong": {
+          "score": 0.85,
+          "band": "pass"
+        },
+        "alt": {
+          "score": 1,
+          "band": "pass"
+        }
+      },
+      "promptSeen": "Translate the sentence into Spanish, using a gustar-type construction.\n(EN → ES)\nI don't like beer."
+    }
+  ],
+  "ambiguity": [],
+  "errors": []
+}

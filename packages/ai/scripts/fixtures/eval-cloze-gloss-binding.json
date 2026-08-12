@@ -1,0 +1,62 @@
+{
+  "dataset": "eval-cloze-gloss-binding",
+  "description": "Two real prod cloze rows whose learner-visible glossEn contradicts what the evaluator accepted, because the gloss was rendered to the learner but not to the evaluator. expectedOutput is the OBSERVED pre-fix verdict (score 1.0) taken from docs/analysis/qa-run-2026-08-12-prod-es-a1-cloze.json — not a fresh probe: the defect is in the USER prompt, and `systemPromptOverride` cannot restore a pre-fix user prompt, so the committed report is the baseline of record. A good evaluation scores both below PASS_THRESHOLD 0.8 once the gloss is rendered.",
+  "items": [
+    {
+      "seedKey": "es-querer-poder-person-gloss",
+      "note": "Prod row 8a84bbba-7ef0-5d3a-918c-fcf68d19a97b. The learner reads 'I can't eat the soup without salt'; the Spanish alone does not fix the person, so 'puedes' (2nd person) is grammatical and scored 1.0. With the gloss visible it must fail.",
+      "input": {
+        "exercise": {
+          "type": "cloze",
+          "instructions": "Fill in the blank with the correct form of the verb.",
+          "sentence": "No ___ comer la sopa sin sal.",
+          "correctAnswer": "puedo",
+          "acceptableAnswers": ["quiero"],
+          "options": ["puedo", "quiero", "puedes", "quiere"],
+          "context": "Querer and poder with the infinitive",
+          "glossEn": "I can't eat the soup without salt."
+        },
+        "userAnswer": "puedes",
+        "language": "ES",
+        "difficulty": "A1"
+      },
+      "expectedOutput": {
+        "score": 1,
+        "grammarAccuracy": 1,
+        "errors": [],
+        "feedback": "Observed pre-fix baseline: full credit, no errors reported.",
+        "vocabularyRange": "A1",
+        "taskAchievement": 1,
+        "estimatedCefrEvidence": "A1"
+      }
+    },
+    {
+      "seedKey": "es-locative-antonym-gloss",
+      "note": "Prod row f587a1fe-8372-5642-a5d2-f7fecf875093. Glossed 'The park is near the school.' yet acceptableAnswers declares the antonym 'lejos'. Note this row's acceptableAnswers is itself the defect Task 9 repairs — the eval item keeps it as-shipped so the fixture measures the evaluator's behaviour against the row as it existed.",
+      "input": {
+        "exercise": {
+          "type": "cloze",
+          "instructions": "Fill in the blank with the correct compound preposition to complete the location phrase.",
+          "sentence": "El parque está ___ del colegio.",
+          "correctAnswer": "cerca",
+          "acceptableAnswers": ["lejos"],
+          "options": ["cerca", "lejos", "debajo", "encima"],
+          "context": "Locative prepositional phrases",
+          "glossEn": "The park is near the school."
+        },
+        "userAnswer": "lejos",
+        "language": "ES",
+        "difficulty": "A1"
+      },
+      "expectedOutput": {
+        "score": 1,
+        "grammarAccuracy": 1,
+        "errors": [],
+        "feedback": "Observed pre-fix baseline: full credit via the declared acceptableAnswer.",
+        "vocabularyRange": "A1",
+        "taskAchievement": 1,
+        "estimatedCefrEvidence": "A1"
+      }
+    }
+  ]
+}

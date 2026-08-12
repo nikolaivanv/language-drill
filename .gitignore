@@ -64,7 +64,13 @@ eval-runs/
 # audit:collapse run output (commit interesting runs to docs/analysis/ instead)
 packages/ai/audit-runs/
 
-# backfill:variant-seeds rollback artifacts (keep the ones that matter elsewhere)
+# qa:sample run output (commit interesting runs to docs/analysis/ instead)
+packages/ai/qa-runs/
+
+# backfill:variant-seeds rollback artifacts. An APPLIED run's artifact is the
+# only fine-grained record of its rows' original seedWord — isEligible
+# permanently skips already-labelled rows — so back it up before relying on it.
+# Commit the run record to docs/analysis/ instead.
 packages/db/backfill-runs/
 
 # Playwright (apps/web/e2e — see docs/testing.md)

@@ -1,0 +1,153 @@
+{
+  "meta": {
+    "language": "ES",
+    "cefr": "A1",
+    "perPoint": 2,
+    "sampledCount": 50,
+    "seed": 1,
+    "model": "claude-opus-4-8",
+    "costUsd": 1.8058,
+    "startedAt": "2026-08-11T23:08:27.078Z",
+    "costCapped": false
+  },
+  "summary": {
+    "sampled": 50,
+    "flagged": 4,
+    "byReason": {
+      "false_positive": 3,
+      "acceptable_answers_gap": 1
+    },
+    "byType": {
+      "cloze": 4
+    },
+    "ambiguityNotes": 0,
+    "lowConfidenceSolves": 0
+  },
+  "flags": [
+    {
+      "exerciseId": "f587a1fe-8372-5642-a5d2-f7fecf875093",
+      "grammarPointKey": "es-a1-locative-prepositions",
+      "type": "cloze",
+      "language": "ES",
+      "cefr": "A1",
+      "flags": [
+        "false_positive"
+      ],
+      "ambiguous": false,
+      "ambiguityNote": "The meaning \"near\" clearly maps to \"cerca de\"; options and translation make the task unambiguous.",
+      "answers": {
+        "correct": "cerca",
+        "wrong": "lejos",
+        "alt": null
+      },
+      "confidence": 0.99,
+      "verdicts": {
+        "correct": {
+          "score": 1,
+          "band": "pass"
+        },
+        "wrong": {
+          "score": 1,
+          "band": "pass"
+        },
+        "alt": null
+      },
+      "promptSeen": "Fill in the blank with the correct compound preposition to complete the location phrase.\nContext: Locative prepositional phrases\nMeaning: The park is near the school.\nEl parque está ___ del colegio.\nOptions: cerca, lejos, debajo, encima"
+    },
+    {
+      "exerciseId": "c0dd01e8-20a4-55ba-bfbe-b8f6c59c204f",
+      "grammarPointKey": "es-a1-noun-gender",
+      "type": "cloze",
+      "language": "ES",
+      "cefr": "A1",
+      "flags": [
+        "acceptable_answers_gap"
+      ],
+      "ambiguous": false,
+      "ambiguityNote": "The learner knows to pick an article; \"problema\" is masculine despite ending in -a, so \"un\" (or \"el\") fits. Slight ambiguity between indefinite/definite, but \"un\" best matches \"hay + noun\".",
+      "answers": {
+        "correct": "un",
+        "wrong": "una",
+        "alt": "el"
+      },
+      "confidence": 0.9,
+      "verdicts": {
+        "correct": {
+          "score": 1,
+          "band": "pass"
+        },
+        "wrong": {
+          "score": 0,
+          "band": "fail"
+        },
+        "alt": {
+          "score": 0.15,
+          "band": "fail"
+        }
+      },
+      "promptSeen": "Fill in the blank with the correct form of the article.\nContext: Noun gender: irregular masculine noun\nSiempre hay ___ problema con el ordenador.\nOptions: un, una, el, la"
+    },
+    {
+      "exerciseId": "8a84bbba-7ef0-5d3a-918c-fcf68d19a97b",
+      "grammarPointKey": "es-a1-querer-poder-infinitive",
+      "type": "cloze",
+      "language": "ES",
+      "cefr": "A1",
+      "flags": [
+        "false_positive"
+      ],
+      "ambiguous": false,
+      "ambiguityNote": "The English meaning \"I can't\" clearly points to first-person \"puedo\".",
+      "answers": {
+        "correct": "puedo",
+        "wrong": "puedes",
+        "alt": null
+      },
+      "confidence": 0.98,
+      "verdicts": {
+        "correct": {
+          "score": 1,
+          "band": "pass"
+        },
+        "wrong": {
+          "score": 1,
+          "band": "pass"
+        },
+        "alt": null
+      },
+      "promptSeen": "Fill in the blank with the correct form of the verb.\nContext: Querer and poder with the infinitive\nMeaning: I can't eat the soup without salt.\nNo ___ comer la sopa sin sal.\nOptions: puedo, quiero, puedes, quiere"
+    },
+    {
+      "exerciseId": "2ae5181a-9b72-536c-bc88-61a0266849d9",
+      "grammarPointKey": "es-a1-relative-que-basic",
+      "type": "cloze",
+      "language": "ES",
+      "cefr": "A1",
+      "flags": [
+        "false_positive"
+      ],
+      "ambiguous": false,
+      "ambiguityNote": "Clear task: the restrictive relative clause without a preposition requires \"que\".",
+      "answers": {
+        "correct": "que",
+        "wrong": "quien",
+        "alt": null
+      },
+      "confidence": 0.99,
+      "verdicts": {
+        "correct": {
+          "score": 1,
+          "band": "pass"
+        },
+        "wrong": {
+          "score": 0.85,
+          "band": "pass"
+        },
+        "alt": null
+      },
+      "promptSeen": "Fill in the blank with the correct word to complete the relative clause.\nContext: Relative clauses with que (restrictive)\nMeaning: I have a friend who speaks three languages.\nTengo un amigo ___ habla tres idiomas.\nOptions: que, quien, alguno, cual"
+    }
+  ],
+  "ambiguity": [],
+  "errors": []
+}
