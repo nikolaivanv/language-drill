@@ -11,7 +11,12 @@
       "instructions": "Completa la frase con la forma correcta.",
       "sentence": "El examen de matemáticas fue ___ difícil de todos los que hice este año.",
       "correctAnswer": "el más",
-      "options": ["el más", "el menos", "más que", "el más que"],
+      "options": [
+        "el más",
+        "el menos",
+        "más que",
+        "el más que"
+      ],
       "acceptableAnswers": []
     },
     "why": "The superlative frame `de todos los que hice este año` is symmetric; `el menos` is equally correct on the visible text and is shipped as a distractor, not listed in acceptableAnswers."
@@ -495,5 +500,838 @@
       "acceptableAnswers": []
     },
     "why": "\"ikişer ikişer\" is genuine Turkish distributive reduplication (\"two by two\"), a real construction rather than a stem-overlap defect, and no other distributive form fits this stem."
+  },
+  {
+    "id": "tr-a1-vowel-harmony-definiteness-kahve",
+    "label": "ambiguous",
+    "provenance": "learner-flag, prod (tr-a1-vowel-harmony)",
+    "language": "tr",
+    "cefrLevel": "A1",
+    "grammarPointKey": "tr-a1-vowel-harmony",
+    "content": {
+      "type": "cloze",
+      "instructions": "Boşluğu doğru formla tamamlayın.",
+      "sentence": "Ahmet her sabah kahve___ içer.",
+      "correctAnswer": "yi",
+      "acceptableAnswers": []
+    },
+    "why": "her sabah (a habitual/generic frame) licenses the unmarked generic direct object 'kahve' just as validly as the accusative-marked 'kahveyi' (curriculum's own tr-a1-accusative-definite-object rule: a bare noun right before the verb stays unmarked when indefinite); nothing in the sentence establishes a specific, previously-known coffee that would force accusative marking, so the bare/unsuffixed reading is a genuine unlisted competitor to 'yi'."
+  },
+  {
+    "id": "tr-a1-vowel-harmony-definiteness-sut",
+    "label": "ambiguous",
+    "provenance": "learner-flag, prod (tr-a1-vowel-harmony)",
+    "language": "tr",
+    "cefrLevel": "A1",
+    "grammarPointKey": "tr-a1-vowel-harmony",
+    "content": {
+      "type": "cloze",
+      "instructions": "Boşluğu doğru formla tamamlayın.",
+      "sentence": "Ahmet süt___ içti.",
+      "correctAnswer": "ü",
+      "acceptableAnswers": []
+    },
+    "why": "a single past event with no definiteness cue (no prior mention of a specific milk) licenses the unmarked generic object 'süt' ('drank milk', indefinite) exactly as validly as the accusative 'sütü' ('drank the milk'); the curriculum's own tr-a1-accusative-definite-object rule holds a bare preverbal object grammatical when indefinite, so the bare reading is a genuine unlisted competitor."
+  },
+  {
+    "id": "tr-a1-imperative-register-say",
+    "label": "ambiguous",
+    "provenance": "learner-flag, prod (tr-a1-imperative)",
+    "language": "tr",
+    "cefrLevel": "A1",
+    "grammarPointKey": "tr-a1-imperative",
+    "content": {
+      "type": "cloze",
+      "instructions": "Boşluğu doğru formla tamamlayın. (saymak)",
+      "sentence": "Lütfen gölgede ___, hava çok sıcak!",
+      "correctAnswer": "say",
+      "acceptableAnswers": []
+    },
+    "why": "no subject pronoun (sen/siz) or other register cue appears anywhere in the sentence, and 'Lütfen' is used identically in both registers; the formal/2pl imperative 'sayın' is exactly as grammatical here as the stored 2sg bare-stem 'say', and it is not listed as an acceptable answer."
+  },
+  {
+    "id": "tr-a1-plural-suffix-siniftaki-sekiz-uncured",
+    "label": "ambiguous",
+    "provenance": "PR #586, generation-prompts.ts Ambiguous-blank example (quoted verbatim in the diff)",
+    "language": "tr",
+    "cefrLevel": "A1",
+    "grammarPointKey": "tr-a1-plural-suffix",
+    "content": {
+      "type": "cloze",
+      "instructions": "Boşluğu doğru formla tamamlayın.",
+      "sentence": "Sınıfta sekiz ___ var.",
+      "correctAnswer": "öğrenci",
+      "acceptableAnswers": []
+    },
+    "why": "PR #586's own rule names this exact sentence as forbidden without acceptableAnswers: sandalye, kalem, kitap, defter and many other nouns all satisfy 'eight ___ in the classroom' equally, and none is listed as an acceptable answer alongside 'öğrenci'."
+  },
+  {
+    "id": "tr-a1-plural-suffix-evde-yeni-perdeler-uncured",
+    "label": "ambiguous",
+    "provenance": "PR #586, generation-prompts.ts Ambiguous-blank example (quoted verbatim in the diff)",
+    "language": "tr",
+    "cefrLevel": "A1",
+    "grammarPointKey": "tr-a1-plural-suffix",
+    "content": {
+      "type": "cloze",
+      "instructions": "Boşluğu doğru formla tamamlayın.",
+      "sentence": "Evde yeni ___ var. Onlar çok güzel.",
+      "correctAnswer": "perdeler",
+      "acceptableAnswers": []
+    },
+    "why": "PR #586 names this exact sentence as forbidden: perdeler, kitaplar, çiçekler, lambalar all satisfy 'plural, positive descriptor' equally, and the follow-on 'Onlar çok güzel' doesn't disambiguate which plural noun is meant; none of the competitors is listed as an acceptable answer."
+  },
+  {
+    "id": "es-b1-influence-verbs-movil-clase",
+    "label": "ambiguous",
+    "provenance": "authored: tense-unanchored finite verb (#611/#619 pattern)",
+    "language": "es",
+    "cefrLevel": "B1",
+    "grammarPointKey": "es-b1-influence-verbs-infinitive",
+    "content": {
+      "type": "cloze",
+      "instructions": "Completa la frase con la forma correcta del verbo. (dejar)",
+      "sentence": "El profesor no nos ___ usar el móvil en clase.",
+      "correctAnswer": "deja",
+      "acceptableAnswers": []
+    },
+    "why": "no temporal anchor pins this to a specific occasion or a bygone era; the imperfect 'dejaba' (a past teacher's standing rule, e.g. in a reminiscence) is equally correct on the visible sentence and is not listed as an acceptable answer."
+  },
+  {
+    "id": "es-b1-influence-verbs-entrenador-domingos",
+    "label": "ambiguous",
+    "provenance": "authored: tense-unanchored finite verb (#611/#619 pattern)",
+    "language": "es",
+    "cefrLevel": "B1",
+    "grammarPointKey": "es-b1-influence-verbs-infinitive",
+    "content": {
+      "type": "cloze",
+      "instructions": "Completa la frase con la forma correcta del verbo. (hacer)",
+      "sentence": "El entrenador nos ___ entrenar los domingos también.",
+      "correctAnswer": "hace",
+      "acceptableAnswers": []
+    },
+    "why": "'los domingos' is habitual, not a single-occasion marker; the imperfect 'hacía' (a past coach's standing practice) is equally correct on the visible sentence and is not listed as an acceptable answer."
+  },
+  {
+    "id": "es-b1-influence-verbs-jefe-salir-viernes",
+    "label": "ambiguous",
+    "provenance": "authored: tense-unanchored finite verb (#611/#619 pattern)",
+    "language": "es",
+    "cefrLevel": "B1",
+    "grammarPointKey": "es-b1-influence-verbs-infinitive",
+    "content": {
+      "type": "cloze",
+      "instructions": "Completa la frase con la forma correcta del verbo. (dejar)",
+      "sentence": "Mi jefe no me ___ salir temprano los viernes.",
+      "correctAnswer": "deja",
+      "acceptableAnswers": []
+    },
+    "why": "no anchor forces a current-job reading; the imperfect 'dejaba' (a former boss's standing rule) is equally correct on the visible sentence and is not listed as an acceptable answer."
+  },
+  {
+    "id": "es-b1-influence-verbs-dolor-cabeza",
+    "label": "ambiguous",
+    "provenance": "authored: tense-unanchored finite verb (#611/#619 pattern)",
+    "language": "es",
+    "cefrLevel": "B1",
+    "grammarPointKey": "es-b1-influence-verbs-infinitive",
+    "content": {
+      "type": "cloze",
+      "instructions": "Completa la frase con la forma correcta del verbo. (dejar)",
+      "sentence": "El dolor de cabeza no la ___ concentrarse en el trabajo.",
+      "correctAnswer": "deja",
+      "acceptableAnswers": []
+    },
+    "why": "no temporal anchor pins this to now or to a bygone spell of headaches; the imperfect 'dejaba' is equally correct on the visible sentence and is not listed as an acceptable answer."
+  },
+  {
+    "id": "es-a2-imperfect-abuelo-periodico-uncured",
+    "label": "ambiguous",
+    "provenance": "authored: tense-unanchored finite verb (#611/#619 pattern, present competitor)",
+    "language": "es",
+    "cefrLevel": "A2",
+    "grammarPointKey": "es-a2-imperfect",
+    "content": {
+      "type": "cloze",
+      "instructions": "Completa la frase con la forma correcta del verbo. (leer)",
+      "sentence": "Mi abuelo ___ el periódico todas las mañanas.",
+      "correctAnswer": "leía",
+      "acceptableAnswers": []
+    },
+    "why": "in isolation nothing tells us whether the grandfather is alive (present 'lee') or being reminisced about (imperfect 'leía'); the present is equally correct on the visible sentence and is not listed as an acceptable answer."
+  },
+  {
+    "id": "es-a2-imperfect-tia-postres-uncured",
+    "label": "ambiguous",
+    "provenance": "authored: tense-unanchored finite verb (#611/#619 pattern, present competitor)",
+    "language": "es",
+    "cefrLevel": "A2",
+    "grammarPointKey": "es-a2-imperfect",
+    "content": {
+      "type": "cloze",
+      "instructions": "Completa la frase con la forma correcta del verbo. (hacer)",
+      "sentence": "Mi tía ___ postres deliciosos los domingos.",
+      "correctAnswer": "hacía",
+      "acceptableAnswers": []
+    },
+    "why": "no anchor establishes whether this is an ongoing habit (present 'hace') or a retrospective one (imperfect 'hacía'); the present is equally correct on the visible sentence and is not listed as an acceptable answer."
+  },
+  {
+    "id": "de-b1-comparison-berg-hoch-niedrig",
+    "label": "ambiguous",
+    "provenance": "authored: polarity-unanchored superlative (#633 pattern)",
+    "language": "de",
+    "cefrLevel": "B1",
+    "grammarPointKey": "de-b1-comparison-attributive",
+    "content": {
+      "type": "cloze",
+      "instructions": "Ergänze den Satz mit der richtigen Form. (hoch)",
+      "sentence": "Dieser Berg ist der ___ von allen in der Region.",
+      "correctAnswer": "höchste",
+      "acceptableAnswers": []
+    },
+    "why": "the superlative frame 'von allen in der Region' is symmetric; 'der niedrigste' (the lowest) fits exactly as well as the stored 'der höchste' and is not listed as an acceptable answer."
+  },
+  {
+    "id": "de-b1-comparison-uebung-schwierig-leicht",
+    "label": "ambiguous",
+    "provenance": "authored: polarity-unanchored superlative (#633 pattern)",
+    "language": "de",
+    "cefrLevel": "B1",
+    "grammarPointKey": "de-b1-comparison-attributive",
+    "content": {
+      "type": "cloze",
+      "instructions": "Ergänze den Satz mit der richtigen Form. (schwierig)",
+      "sentence": "Diese Übung war die ___ von allen im Kurs.",
+      "correctAnswer": "schwierigste",
+      "acceptableAnswers": []
+    },
+    "why": "the superlative frame 'von allen im Kurs' is symmetric; 'die leichteste' (the easiest) fits exactly as well as the stored 'die schwierigste' and is not listed as an acceptable answer."
+  },
+  {
+    "id": "tr-a1-comparative-superlative-otel-pahali-ucuz",
+    "label": "ambiguous",
+    "provenance": "authored: polarity-unanchored superlative (#633 pattern)",
+    "language": "tr",
+    "cefrLevel": "A1",
+    "grammarPointKey": "tr-a1-comparative-superlative",
+    "content": {
+      "type": "cloze",
+      "instructions": "Boşluğu doğru formla tamamlayın. (pahalı)",
+      "sentence": "Bu otel şehirde en ___ otel.",
+      "correctAnswer": "pahalı",
+      "acceptableAnswers": []
+    },
+    "why": "the superlative frame 'şehirde en ___ otel' is symmetric; 'ucuz' (cheapest) fits exactly as well as the stored 'pahalı' (most expensive) and is not listed as an acceptable answer."
+  },
+  {
+    "id": "de-a1-es-gibt-klassenzimmer-uncured",
+    "label": "ambiguous",
+    "provenance": "authored: underdetermined lexeme (Sınıfta sekiz ___ var. pattern from PR #586)",
+    "language": "de",
+    "cefrLevel": "A1",
+    "grammarPointKey": "de-a1-es-gibt",
+    "content": {
+      "type": "cloze",
+      "instructions": "Ergänze den Satz mit der richtigen Form.",
+      "sentence": "Im Klassenzimmer gibt es acht ___.",
+      "correctAnswer": "Stühle",
+      "acceptableAnswers": []
+    },
+    "why": "Tische, Bücher, Fenster and many other plural nouns all satisfy 'there are eight ___ in the classroom' equally; none is listed as an acceptable answer alongside the stored 'Stühle'."
+  },
+  {
+    "id": "es-a1-hay-nevera-uncured",
+    "label": "ambiguous",
+    "provenance": "authored: underdetermined lexeme (Sınıfta sekiz ___ var. pattern from PR #586)",
+    "language": "es",
+    "cefrLevel": "A1",
+    "grammarPointKey": "es-a1-hay-estar",
+    "content": {
+      "type": "cloze",
+      "instructions": "Completa la frase con la forma correcta.",
+      "sentence": "En la nevera hay tres ___.",
+      "correctAnswer": "manzanas",
+      "acceptableAnswers": []
+    },
+    "why": "huevos, botellas and yogures all satisfy 'there are three ___ in the fridge' equally; none is listed as an acceptable answer alongside the stored 'manzanas'."
+  },
+  {
+    "id": "tr-a1-accusative-answer-stem-overlap-kitabi",
+    "label": "ambiguous",
+    "provenance": "authored: answer-restates-stem (#625 pattern)",
+    "language": "tr",
+    "cefrLevel": "A1",
+    "grammarPointKey": "tr-a1-accusative-definite-object",
+    "content": {
+      "type": "cloze",
+      "instructions": "Boşluğu doğru formla tamamlayın. (yeni kitap)",
+      "sentence": "Ali dün ___ kitabı okudu.",
+      "correctAnswer": "yeni kitabı",
+      "acceptableAnswers": []
+    },
+    "why": "substituting the stored answer back gives 'Ali dün yeni kitabı kitabı okudu'; the only well-formed fill for the printed stem is 'yeni' alone, which is not listed in acceptableAnswers."
+  },
+  {
+    "id": "tr-a1-ablative-answer-stem-overlap-okuldan",
+    "label": "ambiguous",
+    "provenance": "authored: answer-restates-stem (#625 pattern)",
+    "language": "tr",
+    "cefrLevel": "A1",
+    "grammarPointKey": "tr-a1-ablative-dative",
+    "content": {
+      "type": "cloze",
+      "instructions": "Boşluğu doğru formla tamamlayın. (yeni okul)",
+      "sentence": "Ben ___ okuldan geldim.",
+      "correctAnswer": "yeni okuldan",
+      "acceptableAnswers": []
+    },
+    "why": "substituting the stored answer back gives 'Ben yeni okuldan okuldan geldim'; the only well-formed fill for the printed stem is 'yeni' alone, which is not listed in acceptableAnswers."
+  },
+  {
+    "id": "es-b2-perception-verbs-correr-parque-uncured",
+    "label": "ambiguous",
+    "provenance": "authored: form-contrast cloze without a forcing cue (PR #586 rule)",
+    "language": "es",
+    "cefrLevel": "B2",
+    "grammarPointKey": "es-b2-perception-verbs",
+    "content": {
+      "type": "cloze",
+      "instructions": "Completa la frase con la forma correcta del verbo. (correr)",
+      "sentence": "La vi ___ en el parque.",
+      "correctAnswer": "correr",
+      "acceptableAnswers": []
+    },
+    "why": "nothing in the sentence forces a completed-event or caught-mid-action reading; the gerund 'corriendo' (caught her running) is equally correct on the visible sentence and is not listed as an acceptable answer."
+  },
+  {
+    "id": "es-b2-perception-verbs-jugar-jardin-uncured",
+    "label": "ambiguous",
+    "provenance": "authored: form-contrast cloze without a forcing cue (PR #586 rule)",
+    "language": "es",
+    "cefrLevel": "B2",
+    "grammarPointKey": "es-b2-perception-verbs",
+    "content": {
+      "type": "cloze",
+      "instructions": "Completa la frase con la forma correcta del verbo. (jugar)",
+      "sentence": "Oí a los niños ___ en el jardín.",
+      "correctAnswer": "jugar",
+      "acceptableAnswers": []
+    },
+    "why": "nothing in the sentence forces a completed-event or caught-mid-action reading; the gerund 'jugando' (heard them mid-play) is equally correct on the visible sentence and is not listed as an acceptable answer."
+  },
+  {
+    "id": "es-b1-influence-verbs-movil-clase-anchored",
+    "label": "clean",
+    "provenance": "authored: in-stem past anchor (cure of the tense-unanchored pattern)",
+    "language": "es",
+    "cefrLevel": "B1",
+    "grammarPointKey": "es-b1-influence-verbs-infinitive",
+    "content": {
+      "type": "cloze",
+      "instructions": "Completa la frase con la forma correcta del verbo. (dejar)",
+      "sentence": "Ayer el profesor no nos ___ usar el móvil en clase.",
+      "correctAnswer": "dejó",
+      "acceptableAnswers": []
+    },
+    "why": "'ayer' pins this to a single bounded day, forcing the preterite and ruling out both the present (no ongoing-rule reading fits 'ayer') and the imperfect (which would imply a repeated/habitual rule, contradicted by pinpointing one day)."
+  },
+  {
+    "id": "es-b1-influence-verbs-entrenador-semana-pasada-anchored",
+    "label": "clean",
+    "provenance": "authored: explicit past adverbial anchor (cure of the tense-unanchored pattern)",
+    "language": "es",
+    "cefrLevel": "B1",
+    "grammarPointKey": "es-b1-influence-verbs-infinitive",
+    "content": {
+      "type": "cloze",
+      "instructions": "Completa la frase con la forma correcta del verbo. (hacer)",
+      "sentence": "La semana pasada, el entrenador no nos ___ entrenar por la lluvia.",
+      "correctAnswer": "hizo",
+      "acceptableAnswers": []
+    },
+    "why": "'la semana pasada' pins this to one specific past week, forcing the preterite and ruling out both the present (no ongoing-rule reading fits a named past week) and the imperfect (which would imply a standing, repeated rule)."
+  },
+  {
+    "id": "es-a2-imperfect-abuelo-periodico-anchored",
+    "label": "clean",
+    "provenance": "authored: present anchor (cure of the tense-unanchored pattern)",
+    "language": "es",
+    "cefrLevel": "A2",
+    "grammarPointKey": "es-a2-imperfect",
+    "content": {
+      "type": "cloze",
+      "instructions": "Completa la frase con la forma correcta del verbo. (leer)",
+      "sentence": "Hoy en día, mi abuelo ___ el periódico todas las mañanas en su tableta.",
+      "correctAnswer": "lee",
+      "acceptableAnswers": []
+    },
+    "why": "'hoy en día' plus 'en su tableta' anchor a present, ongoing habit — a retrospective imperfect reading ('leía') is incompatible with 'hoy en día' explicitly marking the present era."
+  },
+  {
+    "id": "es-a2-imperfect-tia-postres-anchored",
+    "label": "clean",
+    "provenance": "authored: in-stem past anchor (cure of the tense-unanchored pattern)",
+    "language": "es",
+    "cefrLevel": "A2",
+    "grammarPointKey": "es-a2-imperfect",
+    "content": {
+      "type": "cloze",
+      "instructions": "Completa la frase con la forma correcta del verbo. (hacer)",
+      "sentence": "Cuando vivíamos en el pueblo, mi tía ___ postres deliciosos los domingos.",
+      "correctAnswer": "hacía",
+      "acceptableAnswers": []
+    },
+    "why": "'Cuando vivíamos en el pueblo' (imperfect) explicitly frames a bygone period we no longer live in, forcing the imperfect for a habitual action situated within that period and ruling out the present."
+  },
+  {
+    "id": "de-b1-comparison-berg-anchored",
+    "label": "clean",
+    "provenance": "authored: evaluative-consequence anchor (cure of the polarity-unanchored pattern)",
+    "language": "de",
+    "cefrLevel": "B1",
+    "grammarPointKey": "de-b1-comparison-attributive",
+    "content": {
+      "type": "cloze",
+      "instructions": "Ergänze den Satz mit der richtigen Form. (hoch)",
+      "sentence": "Dieser Berg ist der ___ von allen in der Region, deshalb kommen so viele Wanderer her.",
+      "correctAnswer": "höchste",
+      "acceptableAnswers": []
+    },
+    "why": "'deshalb kommen so viele Wanderer her' (that's why so many hikers come here) is an evaluative consequence that fits only the high pole; 'der niedrigste' would not motivate a flood of hikers."
+  },
+  {
+    "id": "de-b1-comparison-uebung-anchored",
+    "label": "clean",
+    "provenance": "authored: evaluative-consequence anchor (cure of the polarity-unanchored pattern)",
+    "language": "de",
+    "cefrLevel": "B1",
+    "grammarPointKey": "de-b1-comparison-attributive",
+    "content": {
+      "type": "cloze",
+      "instructions": "Ergänze den Satz mit der richtigen Form. (schwierig)",
+      "sentence": "Diese Übung war die ___ von allen im Kurs, deshalb hat niemand sie fertig gelöst.",
+      "correctAnswer": "schwierigste",
+      "acceptableAnswers": []
+    },
+    "why": "'deshalb hat niemand sie fertig gelöst' (that's why nobody finished it) fits only the high-difficulty pole; 'die leichteste' would not explain nobody finishing it."
+  },
+  {
+    "id": "tr-a1-comparative-superlative-otel-anchored",
+    "label": "clean",
+    "provenance": "authored: evaluative-consequence anchor (cure of the polarity-unanchored pattern)",
+    "language": "tr",
+    "cefrLevel": "A1",
+    "grammarPointKey": "tr-a1-comparative-superlative",
+    "content": {
+      "type": "cloze",
+      "instructions": "Boşluğu doğru formla tamamlayın. (pahalı)",
+      "sentence": "Bu otel şehirde en ___ otel, bu yüzden çok az insan kalıyor.",
+      "correctAnswer": "pahalı",
+      "acceptableAnswers": []
+    },
+    "why": "'bu yüzden çok az insan kalıyor' (that's why very few people stay) fits only the high-price pole; 'ucuz' (cheapest) would predict more guests, not fewer."
+  },
+  {
+    "id": "de-a1-es-gibt-klassenzimmer-cured",
+    "label": "clean",
+    "provenance": "authored: enumerated-alternatives cure of the underdetermined-lexeme pattern",
+    "language": "de",
+    "cefrLevel": "A1",
+    "grammarPointKey": "de-a1-es-gibt",
+    "content": {
+      "type": "cloze",
+      "instructions": "Ergänze den Satz mit der richtigen Form.",
+      "sentence": "Im Klassenzimmer gibt es acht ___.",
+      "correctAnswer": "Stühle",
+      "acceptableAnswers": [
+        "Tische",
+        "Bücher",
+        "Fenster"
+      ]
+    },
+    "why": "the sentence is exactly as underdetermined as the uncured version, but every other plausible plural noun (Tische, Bücher, Fenster) is now enumerated in acceptableAnswers, curing the ambiguity."
+  },
+  {
+    "id": "es-a1-hay-nevera-cured",
+    "label": "clean",
+    "provenance": "authored: enumerated-alternatives cure of the underdetermined-lexeme pattern",
+    "language": "es",
+    "cefrLevel": "A1",
+    "grammarPointKey": "es-a1-hay-estar",
+    "content": {
+      "type": "cloze",
+      "instructions": "Completa la frase con la forma correcta.",
+      "sentence": "En la nevera hay tres ___.",
+      "correctAnswer": "manzanas",
+      "acceptableAnswers": [
+        "huevos",
+        "botellas",
+        "yogures"
+      ]
+    },
+    "why": "the sentence is exactly as underdetermined as the uncured version, but every other plausible countable fridge item (huevos, botellas, yogures) is now enumerated in acceptableAnswers, curing the ambiguity."
+  },
+  {
+    "id": "tr-a1-plural-suffix-siniftaki-sekiz-cured",
+    "label": "clean",
+    "provenance": "PR #586, enumerated cure of its own Ambiguous-blank example",
+    "language": "tr",
+    "cefrLevel": "A1",
+    "grammarPointKey": "tr-a1-plural-suffix",
+    "content": {
+      "type": "cloze",
+      "instructions": "Boşluğu doğru formla tamamlayın.",
+      "sentence": "Sınıfta sekiz ___ var.",
+      "correctAnswer": "öğrenci",
+      "acceptableAnswers": [
+        "sandalye",
+        "kalem",
+        "kitap",
+        "defter"
+      ]
+    },
+    "why": "PR #586 names exactly this enumerated set as the cure: sandalye, kalem, kitap and defter are listed in acceptableAnswers alongside 'öğrenci', so no unlisted competitor remains."
+  },
+  {
+    "id": "tr-a1-plural-suffix-evde-yeni-perdeler-cured-enumerated",
+    "label": "clean",
+    "provenance": "PR #586, enumerated cure of its own Ambiguous-blank example",
+    "language": "tr",
+    "cefrLevel": "A1",
+    "grammarPointKey": "tr-a1-plural-suffix",
+    "content": {
+      "type": "cloze",
+      "instructions": "Boşluğu doğru formla tamamlayın.",
+      "sentence": "Evde yeni ___ var. Onlar çok güzel.",
+      "correctAnswer": "perdeler",
+      "acceptableAnswers": [
+        "kitaplar",
+        "çiçekler",
+        "lambalar"
+      ]
+    },
+    "why": "PR #586 names exactly this enumerated set as the cure: kitaplar, çiçekler and lambalar are listed in acceptableAnswers alongside 'perdeler', so no unlisted competitor remains."
+  },
+  {
+    "id": "tr-a1-plural-suffix-evde-yeni-perdeler-cured-tightened",
+    "label": "clean",
+    "provenance": "PR #586, tightened-framing cure of its own Ambiguous-blank example",
+    "language": "tr",
+    "cefrLevel": "A1",
+    "grammarPointKey": "tr-a1-plural-suffix",
+    "content": {
+      "type": "cloze",
+      "instructions": "Boşluğu doğru formla tamamlayın.",
+      "sentence": "Evde yeni ___ var. Onları yıkamayı unutma.",
+      "correctAnswer": "perdeler",
+      "acceptableAnswers": []
+    },
+    "why": "PR #586 names this exact tightened follow-on as the cure: 'Onları yıkamayı unutma' (don't forget to wash them) picks out curtains specifically — books, flowers and lamps are not household items one 'washes' — so no genuine competitor remains even without enumeration."
+  },
+  {
+    "id": "es-a2-preterite-regular-ayer-hable",
+    "label": "clean",
+    "provenance": "authored: explicit past adverbial anchor",
+    "language": "es",
+    "cefrLevel": "A2",
+    "grammarPointKey": "es-a2-preterite-regular",
+    "content": {
+      "type": "cloze",
+      "instructions": "Completa la frase con la forma correcta del verbo. (hablar)",
+      "sentence": "Ayer ___ con mi madre por teléfono.",
+      "correctAnswer": "hablé",
+      "acceptableAnswers": []
+    },
+    "why": "'ayer' alone, with no interrupting or backgrounding clause, names a single bounded past occasion; the imperfect 'hablaba' is not idiomatic as a bare, complete sentence here (it needs a companion event to interrupt), so only the preterite fits."
+  },
+  {
+    "id": "es-a2-preterite-irregular-paris-primera-vez",
+    "label": "clean",
+    "provenance": "authored: explicit past adverbial + entailing 'first time' anchor",
+    "language": "es",
+    "cefrLevel": "A2",
+    "grammarPointKey": "es-a2-preterite-irregular",
+    "content": {
+      "type": "cloze",
+      "instructions": "Completa la frase con la forma correcta del verbo. (ir)",
+      "sentence": "El año pasado ___ a París por primera vez.",
+      "correctAnswer": "fui",
+      "acceptableAnswers": []
+    },
+    "why": "'el año pasado' pins a specific past year and 'por primera vez' entails a single, unrepeated event, which together force the preterite and rule out the imperfect (which would imply a repeated/habitual trip, contradicted by 'por primera vez')."
+  },
+  {
+    "id": "es-b1-preterite-imperfect-meaning-supe-ayer",
+    "label": "clean",
+    "provenance": "authored: entailing narrative context (meaning-shifting verb + explicit anchor)",
+    "language": "es",
+    "cefrLevel": "B1",
+    "grammarPointKey": "es-b1-preterite-imperfect-meaning",
+    "content": {
+      "type": "cloze",
+      "instructions": "Completa la frase con la forma correcta del verbo. (saber)",
+      "sentence": "No sabía que vivías aquí; lo ___ ayer.",
+      "correctAnswer": "supe",
+      "acceptableAnswers": []
+    },
+    "why": "the preceding clause already establishes the earlier state of not-knowing, so the second clause must report the moment of finding out; 'ayer' pins that moment to one day, and the imperfect 'sabía' would be redundant with the already-stated 'No sabía', so only the preterite (found out) fits."
+  },
+  {
+    "id": "de-a2-perfekt-haben-gestern-buch",
+    "label": "clean",
+    "provenance": "authored: fixed sentence structure with participle already shown",
+    "language": "de",
+    "cefrLevel": "A2",
+    "grammarPointKey": "de-a2-perfekt-with-haben",
+    "content": {
+      "type": "cloze",
+      "instructions": "Ergänze den Satz mit der richtigen Form. (haben)",
+      "sentence": "Gestern ___ ich ein Buch gelesen.",
+      "correctAnswer": "habe",
+      "acceptableAnswers": []
+    },
+    "why": "the past participle 'gelesen' is already printed at the end of the sentence, so the blank can only be the Perfekt auxiliary; the Präteritum 'las' would duplicate the participle ungrammatically ('las ... gelesen'), leaving 'habe' as the sole fill."
+  },
+  {
+    "id": "de-a1-praeteritum-gestern-muede",
+    "label": "clean",
+    "provenance": "authored: explicit past adverbial anchor",
+    "language": "de",
+    "cefrLevel": "A1",
+    "grammarPointKey": "de-a1-praeteritum-sein-haben",
+    "content": {
+      "type": "cloze",
+      "instructions": "Ergänze den Satz mit der richtigen Form. (sein)",
+      "sentence": "Gestern ___ ich sehr müde.",
+      "correctAnswer": "war",
+      "acceptableAnswers": []
+    },
+    "why": "'gestern' explicitly pins the state to a single past day; the present 'bin' cannot co-occur with 'gestern', leaving 'war' as the sole grammatical fill."
+  },
+  {
+    "id": "de-a2-perfekt-sein-letzte-woche-berlin",
+    "label": "clean",
+    "provenance": "authored: fixed sentence structure + explicit past adverbial",
+    "language": "de",
+    "cefrLevel": "A2",
+    "grammarPointKey": "de-a2-perfekt-with-sein",
+    "content": {
+      "type": "cloze",
+      "instructions": "Ergänze den Satz mit der richtigen Form. (sein)",
+      "sentence": "Letzte Woche ___ wir nach Berlin gefahren.",
+      "correctAnswer": "sind",
+      "acceptableAnswers": []
+    },
+    "why": "the past participle 'gefahren' is already printed at the end of the sentence and 'fahren' takes 'sein' as its Perfekt auxiliary, so the blank can only be the present-tense 'sind'; no other auxiliary or tense fits the fixed frame."
+  },
+  {
+    "id": "tr-a1-vowel-harmony-kahve-anchored",
+    "label": "clean",
+    "provenance": "authored: definite-establishing relative clause (cure of the definiteness-ambiguity pattern)",
+    "language": "tr",
+    "cefrLevel": "A1",
+    "grammarPointKey": "tr-a1-vowel-harmony",
+    "content": {
+      "type": "cloze",
+      "instructions": "Boşluğu doğru formla tamamlayın. (kahve)",
+      "sentence": "Ahmet her sabah masadaki ___ içer.",
+      "correctAnswer": "kahveyi",
+      "acceptableAnswers": []
+    },
+    "why": "'masadaki' ('the one that's on the table') establishes a specific, previously-locatable coffee, forcing the accusative 'kahveyi' and ruling out the bare/generic reading that made the learner-flagged unanchored version ambiguous."
+  },
+  {
+    "id": "tr-a1-vowel-harmony-sut-anchored",
+    "label": "clean",
+    "provenance": "authored: definite-establishing relative clause (cure of the definiteness-ambiguity pattern)",
+    "language": "tr",
+    "cefrLevel": "A1",
+    "grammarPointKey": "tr-a1-vowel-harmony",
+    "content": {
+      "type": "cloze",
+      "instructions": "Boşluğu doğru formla tamamlayın. (süt)",
+      "sentence": "Ahmet masadaki ___ içti.",
+      "correctAnswer": "sütü",
+      "acceptableAnswers": []
+    },
+    "why": "'masadaki' establishes a specific, previously-locatable milk, forcing the accusative 'sütü' and ruling out the bare/generic reading that made the learner-flagged unanchored version ambiguous."
+  },
+  {
+    "id": "tr-a1-accusative-kitabi-anchored",
+    "label": "clean",
+    "provenance": "authored: definite-establishing relative clause",
+    "language": "tr",
+    "cefrLevel": "A1",
+    "grammarPointKey": "tr-a1-accusative-definite-object",
+    "content": {
+      "type": "cloze",
+      "instructions": "Boşluğu doğru formla tamamlayın. (yeni kitap)",
+      "sentence": "Ali, masada duran ___ okudu.",
+      "correctAnswer": "yeni kitabı",
+      "acceptableAnswers": []
+    },
+    "why": "'masada duran' ('the one sitting on the table') establishes a specific, previously-locatable book, forcing the accusative 'yeni kitabı'; a bare 'yeni kitap' would contradict the definite relative clause pointing to one particular book."
+  },
+  {
+    "id": "es-a1-hay-estar-libros-mesa",
+    "label": "clean",
+    "provenance": "authored: definite-article anchor (hay vs. estar contrast)",
+    "language": "es",
+    "cefrLevel": "A1",
+    "grammarPointKey": "es-a1-hay-estar",
+    "content": {
+      "type": "cloze",
+      "instructions": "Completa la frase con la forma correcta del verbo. (estar)",
+      "sentence": "Los libros ___ en la mesa.",
+      "correctAnswer": "están",
+      "acceptableAnswers": []
+    },
+    "why": "the definite article on 'los libros' marks an already-identified referent, which requires 'estar'; 'hay' never combines with a definite-marked subject ('*hay los libros' is ungrammatical, mirroring the point's own '*hay el banco' negative example), leaving 'están' as the sole fill."
+  },
+  {
+    "id": "de-a2-two-way-prepositions-katze-sitzt",
+    "label": "clean",
+    "provenance": "authored: inherently-locational verb (no directional reading possible)",
+    "language": "de",
+    "cefrLevel": "A2",
+    "grammarPointKey": "de-a2-two-way-prepositions-core",
+    "content": {
+      "type": "cloze",
+      "instructions": "Ergänze den Satz mit der richtigen Form. (der Garten)",
+      "sentence": "Die Katze sitzt in ___ Garten.",
+      "correctAnswer": "dem",
+      "acceptableAnswers": []
+    },
+    "why": "'sitzen' is a purely locational verb with no directional/motion sense (unlike 'laufen' or 'fahren'), so it never combines with the accusative case of a two-way preposition; only the dative 'dem' is grammatical here."
+  },
+  {
+    "id": "de-b1-genitive-trotz-kaelte",
+    "label": "clean",
+    "provenance": "authored: fixed genitive-governing preposition, no adjacent noun to duplicate",
+    "language": "de",
+    "cefrLevel": "B1",
+    "grammarPointKey": "de-b1-genitive",
+    "content": {
+      "type": "cloze",
+      "instructions": "Ergänze den Satz mit der richtigen Form. (die Kälte)",
+      "sentence": "Trotz ___ konnten wir draußen spielen.",
+      "correctAnswer": "der Kälte",
+      "acceptableAnswers": []
+    },
+    "why": "the blank swallows the whole genitive noun phrase and nothing is printed afterward to duplicate, so substituting back reads correctly with a single well-formed fill."
+  },
+  {
+    "id": "es-b1-nominalizers-coche-hermano",
+    "label": "clean",
+    "provenance": "authored: gender-agreement-forced nominalizer, no adjacent overlap",
+    "language": "es",
+    "cefrLevel": "B1",
+    "grammarPointKey": "es-b1-nominalizers",
+    "content": {
+      "type": "cloze",
+      "instructions": "Completa la frase con la forma correcta.",
+      "sentence": "Mi coche es viejo; prefiero ___ de mi hermano, que es nuevo.",
+      "correctAnswer": "el de",
+      "acceptableAnswers": []
+    },
+    "why": "the nominalizer must agree with the masculine singular referent 'coche', so only 'el de' fits; nothing after the blank duplicates the answer."
+  },
+  {
+    "id": "es-a2-personal-a-sara-clase",
+    "label": "clean",
+    "provenance": "authored: cure of the answer-restates-stem pattern (mirrors the PR #625 Tomás cure)",
+    "language": "es",
+    "cefrLevel": "A2",
+    "grammarPointKey": "es-a2-personal-a",
+    "content": {
+      "type": "cloze",
+      "instructions": "Completa la frase con la forma correcta.",
+      "sentence": "Hoy no he visto ___ Sara en clase.",
+      "correctAnswer": "a",
+      "acceptableAnswers": []
+    },
+    "why": "the proper name 'Sara' is already printed after the blank, so the only well-formed fill is the personal 'a' alone; nothing else can grammatically precede an already-printed proper-name object."
+  },
+  {
+    "id": "es-a2-reflexive-verbs-hermana-maquilla",
+    "label": "clean",
+    "provenance": "authored: single clitic forced by person agreement, no adjacent overlap",
+    "language": "es",
+    "cefrLevel": "A2",
+    "grammarPointKey": "es-a2-reflexive-verbs",
+    "content": {
+      "type": "cloze",
+      "instructions": "Completa la frase con la forma correcta. (maquillarse)",
+      "sentence": "Mi hermana siempre ___ maquilla antes de salir.",
+      "correctAnswer": "se",
+      "acceptableAnswers": []
+    },
+    "why": "the subject 'mi hermana' is third-person singular, which takes only the reflexive clitic 'se'; no other clitic agrees, and nothing after the blank duplicates it."
+  },
+  {
+    "id": "tr-a2-distributive-ogretmen-ikiser",
+    "label": "clean",
+    "provenance": "authored: distributive meaning required by the curriculum's own prescriptive rule",
+    "language": "tr",
+    "cefrLevel": "A2",
+    "grammarPointKey": "tr-a2-distributive",
+    "content": {
+      "type": "cloze",
+      "instructions": "Boşluğu doğru formla tamamlayın. (iki)",
+      "sentence": "Öğretmen her öğrenciye ___ kalem dağıttı.",
+      "correctAnswer": "ikişer",
+      "acceptableAnswers": []
+    },
+    "why": "the point's own commonErrors rule a plain numeral with 'her/herkese' ungrammatical for an each-unit reading (its own negative example: '*Herkese bir elma verdim' for 'one each' requires 'birer'), so the distributive 'ikişer' is the sole correct fill for 'two each' here."
+  },
+  {
+    "id": "tr-a1-var-yok-param-yoktu",
+    "label": "clean",
+    "provenance": "authored: explicit past adverbial anchor",
+    "language": "tr",
+    "cefrLevel": "A1",
+    "grammarPointKey": "tr-a1-var-yok",
+    "content": {
+      "type": "cloze",
+      "instructions": "Boşluğu doğru formla tamamlayın. (yok)",
+      "sentence": "Dün hiç param ___.",
+      "correctAnswer": "yoktu",
+      "acceptableAnswers": []
+    },
+    "why": "'dün' pins the state of having no money to a single past day, forcing the past copula 'yoktu' and ruling out the present 'yok'."
+  },
+  {
+    "id": "es-b2-perception-verbs-saltar-secuencia",
+    "label": "clean",
+    "provenance": "PR #586, form-contrast cure template ('one completed event followed by another')",
+    "language": "es",
+    "cefrLevel": "B2",
+    "grammarPointKey": "es-b2-perception-verbs",
+    "content": {
+      "type": "cloze",
+      "instructions": "Completa la frase con la forma correcta del verbo. (saltar)",
+      "sentence": "La vi ___ y luego salir corriendo del parque.",
+      "correctAnswer": "saltar",
+      "acceptableAnswers": []
+    },
+    "why": "'y luego salir corriendo' sequences a second completed action after the first, which is incompatible with the gerund's simultaneous/ongoing reading ('saltando' cannot be sequenced with 'y luego'); only the infinitive 'saltar' fits."
+  },
+  {
+    "id": "es-b2-perception-verbs-jugando-todavia",
+    "label": "clean",
+    "provenance": "PR #586, form-contrast cure template ('todavía pins the action as still in progress')",
+    "language": "es",
+    "cefrLevel": "B2",
+    "grammarPointKey": "es-b2-perception-verbs",
+    "content": {
+      "type": "cloze",
+      "instructions": "Completa la frase con la forma correcta del verbo. (jugar)",
+      "sentence": "Cuando entré en la sala, los vi ___ todavía.",
+      "correctAnswer": "jugando",
+      "acceptableAnswers": []
+    },
+    "why": "'todavía' pins the action as still ongoing at the moment of entering, which the infinitive's completed-event reading cannot express; only the gerund 'jugando' fits."
   }
 ]

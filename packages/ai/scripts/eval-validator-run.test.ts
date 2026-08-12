@@ -123,12 +123,24 @@ describe("computeArmMetrics", () => {
 // ---------------------------------------------------------------------------
 
 describe("loadValidatorCases", () => {
-  it("parses the real fixture into 31 cloze-only cases", () => {
+  // Deliberately NOT pinned to an absolute count: the fixture is a measurement
+  // instrument that is expected to grow (it went 31 -> 82 when the first run
+  // proved underpowered at 1 case = 5-9pp). Pin the invariants that must hold
+  // at any size — cloze-only, both buckets populated, and every case parsed —
+  // so widening the fixture never requires editing this test.
+  it("parses the real fixture into cloze-only cases with both buckets populated", () => {
+    const raw = JSON.parse(readFileSync(FIXTURE_PATH, "utf8")) as unknown[];
     const cases = loadValidatorCases(readFileSync(FIXTURE_PATH, "utf8"));
-    expect(cases).toHaveLength(31);
+    expect(cases).toHaveLength(raw.length); // nothing silently dropped
     expect(cases.every((c) => c.content.type === "cloze")).toBe(true);
-    expect(cases.filter((c) => c.label === "ambiguous")).toHaveLength(20);
-    expect(cases.filter((c) => c.label === "clean")).toHaveLength(11);
+    expect(
+      cases.filter((c) => c.label === "ambiguous").length,
+    ).toBeGreaterThan(0);
+    expect(cases.filter((c) => c.label === "clean").length).toBeGreaterThan(0);
+    expect(
+      cases.filter((c) => c.label === "ambiguous").length +
+        cases.filter((c) => c.label === "clean").length,
+    ).toBe(cases.length); // no third label
   });
 
   it("normalizes the fixture's lowercase language to the uppercase enum", () => {
