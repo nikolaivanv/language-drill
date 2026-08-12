@@ -131,8 +131,23 @@ describe('assertArtifactWritable', () => {
     );
   });
 
+  it('REFUSES to overwrite the artifact of a PARTIAL apply', () => {
+    // A partial apply persists {applied: false, appliedCount: N>0} — those N
+    // rows ARE in production, and this file is the only record of what they
+    // held before. Guarding only on `applied === true` left them unprotected.
+    const partial = JSON.stringify({ applied: false, appliedCount: 2, entries: [] });
+    expect(() => assertArtifactWritable('backfill-runs/x.json', false, () => partial)).toThrow(
+      /refusing to overwrite/,
+    );
+    expect(() => assertArtifactWritable('backfill-runs/x.json', false, () => partial)).toThrow(
+      /--name|--force/,
+    );
+  });
+
   it('permits the overwrite when --force is passed', () => {
+    const partial = JSON.stringify({ applied: false, appliedCount: 2, entries: [] });
     expect(() => assertArtifactWritable('backfill-runs/x.json', true, () => applied)).not.toThrow();
+    expect(() => assertArtifactWritable('backfill-runs/x.json', true, () => partial)).not.toThrow();
   });
 
   it('permits overwriting a dry-run artifact — scratch, nothing to protect', () => {
@@ -240,8 +255,16 @@ describe('entriesToRestore', () => {
     ).toEqual(['a']);
   });
 
-  it('restores nothing from a dry-run artifact', () => {
-    expect(entriesToRestore(artifact({ applied: false, appliedCount: 0 }))).toEqual([]);
+  it('restores EVERY entry from an appliedCount=0 artifact — the crash case', () => {
+    // `applyAndPersist` persists {applied: false, appliedCount: 0} BEFORE the
+    // first row is written, so a crash mid-apply (SIGINT during an 876-row
+    // sequential run) leaves exactly this shape while rows are already
+    // changed. Slicing to 0 made that artifact restore nothing, defeating the
+    // whole point of the pre-write persist. Restoring an unwritten row just
+    // rewrites oldSeedWord onto a row that still has it — a harmless no-op.
+    expect(entriesToRestore(artifact({ applied: false, appliedCount: 0 })).map((e) => e.id)).toEqual(
+      ['a', 'b', 'c'],
+    );
   });
 });
 
@@ -473,6 +496,9 @@ describe('applyAndPersist', () => {
     // Second persist reflects the completed apply.
     expect(persisted[1].applied).toBe(true);
     expect(persisted[1].appliedCount).toBe(3);
+    // And that pre-write artifact — the one a crash would leave behind — must
+    // be able to revert every row the dead run might have written.
+    expect(entriesToRestore(persisted[0]).map((e) => e.id)).toEqual(['a', 'b', 'c']);
   });
 
   it('still persists a completed artifact when a write fails partway — the fine-grained revert source must survive the crash', async () => {

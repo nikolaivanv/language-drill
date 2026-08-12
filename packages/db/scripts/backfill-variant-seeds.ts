@@ -374,9 +374,21 @@ export function parseArtifact(input: unknown): Artifact {
  * partial one wrote only the first `appliedCount` (the fail-fast loop stops at
  * the first failure), and the rest were never written — replaying those is
  * pointless work against a live table.
+ *
+ * The CRASH case is `applied: false, appliedCount: 0`, and it must restore
+ * EVERYTHING, not nothing. `applyAndPersist` persists exactly that state before
+ * the first row is written, precisely so an uncaught death mid-apply (SIGINT
+ * during an 876-row sequential run) still leaves a revertible artifact — a
+ * caught DB error re-persists the true count, so only a crash reaches here. The
+ * state is indistinguishable from a dry-run artifact, so we take the safe
+ * reading: restoring a row that was never written rewrites `oldSeedWord` onto a
+ * row that still has `oldSeedWord`, a harmless no-op, whereas restoring nothing
+ * silently abandons up to every row the crashed run had already changed. Do not
+ * "simplify" this back into `slice(0, 0)`.
  */
 export function entriesToRestore(artifact: Artifact): ArtifactEntry[] {
-  return artifact.applied ? [...artifact.entries] : artifact.entries.slice(0, artifact.appliedCount);
+  if (artifact.applied || artifact.appliedCount === 0) return [...artifact.entries];
+  return artifact.entries.slice(0, artifact.appliedCount);
 }
 
 /**
@@ -390,7 +402,11 @@ export function entriesToRestore(artifact: Artifact): ArtifactEntry[] {
  * second default-named run destroys the previous one's undo source before doing
  * any work at all.
  *
- * A dry-run artifact (`applied: false`) is scratch and may be overwritten.
+ * A PARTIAL apply (`applied: false` with `appliedCount > 0`) is protected too:
+ * it is the only record of the N rows that run did write before it stopped.
+ * Only a genuine dry-run artifact (`applied: false, appliedCount: 0`) is
+ * scratch and may be overwritten.
+ *
  * `read` is injected so this is unit-testable without a filesystem.
  */
 export function assertArtifactWritable(
@@ -408,11 +424,18 @@ export function assertArtifactWritable(
     // Unreadable — not a record of anything, so nothing to protect.
     return;
   }
-  if (!isObject(parsed) || parsed.applied !== true) return;
+  if (!isObject(parsed)) return;
+  const appliedCount = typeof parsed.appliedCount === 'number' ? parsed.appliedCount : 0;
+  // `applied: true` is a completed run; `appliedCount > 0` on an unfinished one
+  // is a PARTIAL apply — both wrote rows to the live table, and this file is
+  // the only record of what those rows held before.
+  if (parsed.applied !== true && appliedCount <= 0) return;
   throw new Error(
-    `refusing to overwrite ${outPath}: it records an APPLIED run (${
+    `refusing to overwrite ${outPath}: it records ${
+      parsed.applied === true ? 'an APPLIED' : 'a PARTIALLY applied'
+    } run (${
       typeof parsed.appliedCount === 'number' ? parsed.appliedCount : '?'
-    } rows) and is the only fine-grained record of those rows' original seedWord — ` +
+    } rows written) and is the only fine-grained record of those rows' original seedWord — ` +
       'already-labelled rows are skipped forever, so a re-run cannot reproduce it. ' +
       'Pass --name <run> to write a separate artifact, or --force to overwrite anyway.',
   );
@@ -588,7 +611,10 @@ async function runRevert(args: BackfillArgs): Promise<void> {
       `from ${args.revertFrom}` +
       (artifact.applied
         ? ' (run completed — every entry was written)'
-        : ` (partial run — only the first appliedCount=${artifact.appliedCount} were written)`),
+        : artifact.appliedCount === 0
+          ? ' (appliedCount=0 — a dry run, or a run that crashed before recording its count;' +
+            ' restoring every entry, which is a no-op for any row never written)'
+          : ` (partial run — only the first appliedCount=${artifact.appliedCount} were written)`),
   );
   if (!args.apply) {
     console.log('[backfill-variant-seeds] dry-run: pass --apply to restore. Sample:');
@@ -785,7 +811,11 @@ async function main(): Promise<void> {
       console.error(
         `[backfill-variant-seeds] the artifact at ${out} records ALL ${entries.length} candidate rows with ` +
           `appliedCount: ${result.appliedCount} — the entries beyond that count were never written. ` +
-          `--revert ${out} --apply restores the first ${result.appliedCount} and leaves the rest alone.`,
+          (result.appliedCount > 0
+            ? `--revert ${out} --apply restores the first ${result.appliedCount} and leaves the rest alone.`
+            : // appliedCount 0 is indistinguishable from a crashed run, so a revert
+              // replays every entry — a no-op here, since nothing was written.
+              `--revert ${out} --apply replays every entry, which is a harmless no-op — no row was written.`),
       );
     }
   } else {
