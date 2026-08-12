@@ -9,6 +9,7 @@ import {
 } from './backfill-variant-seeds';
 import { selectWrites, summarize, type ArtifactEntry } from './backfill-variant-seeds';
 import { applyWrites, applyAndPersist, type Artifact } from './backfill-variant-seeds';
+import { assertArtifactWritable, parseArtifact, entriesToRestore } from './backfill-variant-seeds';
 import type { ClassifierAssignment } from '@language-drill/ai';
 
 const withVariants = {
@@ -86,6 +87,161 @@ describe('parseBackfillArgs', () => {
 
   it('rejects a non-positive --batch-size', () => {
     expect(() => parseBackfillArgs(['--batch-size', '0'])).toThrow(/batch-size/);
+  });
+
+  it('parses --max-cells and its --limit alias into the same field', () => {
+    // The unit differs from every sibling CLI: revalidate:cloze and
+    // backfill:coverage-tags bound ROWS, this bounds CELLS. The alias exists
+    // for muscle memory; both spellings must land in the same place.
+    expect(parseBackfillArgs(['--max-cells', '3']).maxCells).toBe(3);
+    expect(parseBackfillArgs(['--limit', '3']).maxCells).toBe(3);
+    expect(parseBackfillArgs([])).toMatchObject({ maxCells: null });
+    expect(() => parseBackfillArgs(['--max-cells', '0'])).toThrow(/max-cells/);
+  });
+
+  it('validates --grammar-point against the curriculum instead of silently matching nothing', () => {
+    expect(parseBackfillArgs(['--grammar-point', 'es-b1-que-vs-cual']).grammarPoint).toBe(
+      'es-b1-que-vs-cual',
+    );
+    expect(() => parseBackfillArgs(['--grammar-point', 'es-b1-que-vs-kual'])).toThrow(
+      /unknown grammar point/,
+    );
+  });
+
+  it('defaults --force off and parses it on', () => {
+    expect(parseBackfillArgs([]).force).toBe(false);
+    expect(parseBackfillArgs(['--force']).force).toBe(true);
+  });
+});
+
+describe('assertArtifactWritable', () => {
+  const applied = JSON.stringify({ applied: true, appliedCount: 218, entries: [] });
+  const dryRun = JSON.stringify({ applied: false, appliedCount: 0, entries: [] });
+
+  it('REFUSES to overwrite the artifact of an applied run', () => {
+    // That file is the only fine-grained record of those rows' original
+    // seedWord — isEligible skips labelled rows forever, and backfill-runs/ is
+    // gitignored. `persist` writes it as the FIRST action of an --apply, so a
+    // second default-named run would destroy it before doing any work.
+    expect(() => assertArtifactWritable('backfill-runs/x.json', false, () => applied)).toThrow(
+      /refusing to overwrite/,
+    );
+    expect(() => assertArtifactWritable('backfill-runs/x.json', false, () => applied)).toThrow(
+      /--name|--force/,
+    );
+  });
+
+  it('permits the overwrite when --force is passed', () => {
+    expect(() => assertArtifactWritable('backfill-runs/x.json', true, () => applied)).not.toThrow();
+  });
+
+  it('permits overwriting a dry-run artifact — scratch, nothing to protect', () => {
+    expect(() => assertArtifactWritable('backfill-runs/x.json', false, () => dryRun)).not.toThrow();
+  });
+
+  it('permits writing when no artifact exists, or when the existing one is unreadable', () => {
+    expect(() => assertArtifactWritable('backfill-runs/x.json', false, () => null)).not.toThrow();
+    expect(() => assertArtifactWritable('backfill-runs/x.json', false, () => '{oops')).not.toThrow();
+  });
+});
+
+describe('parseArtifact', () => {
+  const ok = {
+    name: 'run',
+    createdAtIso: '2026-08-11T00:00:00.000Z',
+    applied: true,
+    appliedCount: 1,
+    snapshotBranchId: 'br-abc',
+    minConfidence: 'high',
+    entries: [{ id: 'a', cellKey: 'cell', oldSeedWord: 'abran', newSeedWord: 'v1', confidence: 'high' }],
+  };
+
+  it('accepts a well-formed artifact', () => {
+    const a = parseArtifact(ok);
+    expect(a.entries).toHaveLength(1);
+    expect(a.entries[0].oldSeedWord).toBe('abran');
+    expect(a.appliedCount).toBe(1);
+  });
+
+  it('accepts an artifact written before provenance existed, as null', () => {
+    // The production artifacts predate these fields and must stay revertible.
+    const a = parseArtifact(ok);
+    expect(a.classifierPromptVersion).toBeNull();
+    expect(a.classifierModel).toBeNull();
+    expect(parseArtifact({ ...ok, classifierModel: 'claude-sonnet-4-6' }).classifierModel).toBe(
+      'claude-sonnet-4-6',
+    );
+  });
+
+  it('rejects a non-object', () => {
+    expect(() => parseArtifact(null)).toThrow(/object/);
+    expect(() => parseArtifact('{}')).toThrow(/object/);
+  });
+
+  it('rejects a missing entries array', () => {
+    expect(() => parseArtifact({ ...ok, entries: undefined })).toThrow(/entries/);
+  });
+
+  it('rejects an entry with a non-string id', () => {
+    expect(() => parseArtifact({ ...ok, entries: [{ ...ok.entries[0], id: 42 }] })).toThrow(/id/);
+  });
+
+  it('rejects an entry whose oldSeedWord is undefined — the to_jsonb(::text) trap', () => {
+    // With oldSeedWord undefined, drizzle omits the bind parameter and emits
+    // literal `to_jsonb(::text)`, which Postgres rejects as a syntax error —
+    // aborting a restore partway. Fail before the first row instead.
+    const missing = { id: 'a', cellKey: 'cell', newSeedWord: 'v1', confidence: 'high' };
+    expect(() => parseArtifact({ ...ok, entries: [missing] })).toThrow(/oldSeedWord/);
+    expect(() =>
+      parseArtifact({ ...ok, entries: [{ ...ok.entries[0], oldSeedWord: undefined }] }),
+    ).toThrow(/oldSeedWord/);
+  });
+
+  it('accepts a null oldSeedWord — that means "remove the key", not "missing"', () => {
+    const a = parseArtifact({ ...ok, entries: [{ ...ok.entries[0], oldSeedWord: null }] });
+    expect(a.entries[0].oldSeedWord).toBeNull();
+  });
+
+  it('rejects an appliedCount that is not an integer or exceeds the entries', () => {
+    expect(() => parseArtifact({ ...ok, appliedCount: 'lots' })).toThrow(/appliedCount/);
+    expect(() => parseArtifact({ ...ok, appliedCount: 9 })).toThrow(/appliedCount/);
+  });
+});
+
+describe('entriesToRestore', () => {
+  const artifact = (over: Partial<Artifact>): Artifact =>
+    ({
+      name: 'run',
+      createdAtIso: '',
+      applied: true,
+      appliedCount: 3,
+      snapshotBranchId: null,
+      minConfidence: 'high',
+      classifierPromptVersion: null,
+      classifierModel: null,
+      entries: [
+        { id: 'a', cellKey: 'c', oldSeedWord: null, newSeedWord: 'v1', confidence: 'high' },
+        { id: 'b', cellKey: 'c', oldSeedWord: 'x', newSeedWord: 'v2', confidence: 'high' },
+        { id: 'c', cellKey: 'c', oldSeedWord: null, newSeedWord: 'v3', confidence: 'high' },
+      ],
+      ...over,
+    }) as Artifact;
+
+  it('restores every entry of a completed run', () => {
+    expect(entriesToRestore(artifact({})).map((e) => e.id)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('restores only the first appliedCount of a PARTIAL run', () => {
+    // `entries` is always the full candidate set; a partial apply wrote only
+    // the first appliedCount. Replaying the rest is pointless work against a
+    // live table.
+    expect(
+      entriesToRestore(artifact({ applied: false, appliedCount: 1 })).map((e) => e.id),
+    ).toEqual(['a']);
+  });
+
+  it('restores nothing from a dry-run artifact', () => {
+    expect(entriesToRestore(artifact({ applied: false, appliedCount: 0 }))).toEqual([]);
   });
 });
 
@@ -266,6 +422,23 @@ describe('applyWrites', () => {
     // no pressing on into what may be a persistent fault.
     expect(written).toEqual(['a']);
   });
+
+  it('writes oldSeedWord when the revert selector is passed — the same loop, the other direction', async () => {
+    const written: Array<{ id: string; seedWord: string | null }> = [];
+    const result = await applyWrites(
+      entries,
+      async (id, seedWord) => {
+        written.push({ id, seedWord });
+      },
+      (e) => e.oldSeedWord,
+    );
+    expect(result).toEqual({ appliedCount: 3, failure: null });
+    expect(written).toEqual([
+      { id: 'a', seedWord: null },
+      { id: 'b', seedWord: 'x' },
+      { id: 'c', seedWord: null },
+    ]);
+  });
 });
 
 describe('applyAndPersist', () => {
@@ -276,6 +449,8 @@ describe('applyAndPersist', () => {
     appliedCount: 0,
     snapshotBranchId: 'br-abc',
     minConfidence: 'high',
+    classifierPromptVersion: 'variant-seed-classifier@2026-08-11',
+    classifierModel: 'claude-sonnet-4-6',
     entries: [
       { id: 'a', cellKey: 'cell', oldSeedWord: null, newSeedWord: 'v1', confidence: 'high' },
       { id: 'b', cellKey: 'cell', oldSeedWord: 'x', newSeedWord: 'v2', confidence: 'high' },
@@ -312,12 +487,15 @@ describe('applyAndPersist', () => {
       (a) => persisted.push(a),
     );
     expect(result).toEqual({ appliedCount: 1, failure: 'boom' });
-    // Even though the run failed partway, both persists happened — the
-    // artifact on disk reflects exactly the 1 row that was actually written,
-    // not the 3 that were candidates.
+    // Even though the run failed partway, both persists happened. The artifact
+    // on disk still records ALL 3 candidates — `entries` is never trimmed —
+    // with `appliedCount: 1` marking how far the writes actually got. A revert
+    // reads that count and restores only the first entry.
     expect(persisted).toHaveLength(2);
     expect(persisted[1].applied).toBe(false);
     expect(persisted[1].appliedCount).toBe(1);
+    expect(persisted[1].entries).toHaveLength(3);
+    expect(entriesToRestore(persisted[1]).map((e) => e.id)).toEqual(['a']);
   });
 
   it('does not mutate the artifact object passed in', async () => {

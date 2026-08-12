@@ -11,16 +11,23 @@
  * Defaults to dry-run; `--apply` writes and additionally requires `--snapshot
  * <neon-branch-id>` or an explicit `--no-snapshot`.
  *
+ * Every run writes `./backfill-runs/<--name>.json`. Give each applied run its
+ * own `--name`: that artifact is the only fine-grained record of its rows'
+ * original `seedWord`, and overwriting one is refused unless `--force`.
+ *
+ * `--max-cells` bounds CELLS, not rows (`--limit` is an accepted alias) —
+ * the opposite unit from revalidate:cloze / backfill:coverage-tags.
+ *
  * Usage:
  *   pnpm backfill:variant-seeds
  *   pnpm backfill:variant-seeds -- --language ES --grammar-point es-b1-que-vs-cual
- *   pnpm backfill:variant-seeds -- --apply --snapshot br-abc123
+ *   pnpm backfill:variant-seeds -- --apply --snapshot br-abc123 --name prod-es-2026-08-12
  *   pnpm backfill:variant-seeds -- --revert backfill-runs/run.json --apply
  *
  * Required env: ANTHROPIC_API_KEY, DATABASE_URL.
  */
 
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CefrLevel, ExerciseType, Language } from '@language-drill/shared';
@@ -28,6 +35,9 @@ import type { GrammarPoint } from '@language-drill/shared';
 import { and, eq, inArray, isNotNull, sql } from 'drizzle-orm';
 import {
   ZERO_USAGE,
+  ClassifierResultError,
+  VARIANT_SEED_CLASSIFIER_MODEL,
+  VARIANT_SEED_CLASSIFIER_PROMPT_VERSION,
   addUsage,
   classifyVariantSeeds,
   createClaudeClient,
@@ -63,11 +73,20 @@ export type BackfillArgs = {
   revertFrom: string | null;
   /** Neon branch id taken as a pre-apply snapshot; recorded in the artifact. */
   snapshot: string | null;
+  /** Permit overwriting an artifact that records an applied run. */
+  force: boolean;
   language: Language | null;
   cefrLevel: CefrLevel | null;
   grammarPoint: string | null;
   minConfidence: 'high' | 'medium';
-  limit: number | null;
+  /**
+   * Cap on the number of CELLS processed, not rows — unlike `--limit` in
+   * revalidate-cloze-pool.ts / backfill-coverage-tags.ts, which bound rows.
+   * A cell here is a whole (language, level, type, point) bucket, so
+   * `--max-cells 50` is most of the ~61 variant-bearing cells, not a small
+   * probe. `--limit` is kept as an alias for muscle memory.
+   */
+  maxCells: number | null;
   batchSize: number;
   concurrency: number;
   maxCostUsd: number;
@@ -79,11 +98,12 @@ export function parseBackfillArgs(argv: readonly string[]): BackfillArgs {
   let revertFrom: string | null = null;
   let snapshot: string | null = null;
   let noSnapshot = false;
+  let force = false;
   let language: Language | null = null;
   let cefrLevel: CefrLevel | null = null;
   let grammarPoint: string | null = null;
   let minConfidence: 'high' | 'medium' = 'high';
-  let limit: number | null = null;
+  let maxCells: number | null = null;
   let batchSize = DEFAULT_BATCH_SIZE;
   let concurrency = DEFAULT_CONCURRENCY;
   let maxCostUsd = DEFAULT_MAX_COST_USD;
@@ -102,10 +122,17 @@ export function parseBackfillArgs(argv: readonly string[]): BackfillArgs {
     else if (arg === '--apply') apply = true;
     else if (arg === '--dry-run') apply = false;
     else if (arg === '--no-snapshot') noSnapshot = true;
+    else if (arg === '--force') force = true;
     else if (arg === '--snapshot') snapshot = need(arg, argv[++i]);
     else if (arg === '--revert') revertFrom = need(arg, argv[++i]);
-    else if (arg === '--grammar-point') grammarPoint = need(arg, argv[++i]);
     else if (arg === '--name') name = need(arg, argv[++i]);
+    else if (arg === '--grammar-point') {
+      // Validated like --language/--cefr: an unvalidated key silently selects
+      // zero rows, which reads as "nothing to do" rather than "you typo'd".
+      const key = need(arg, argv[++i]);
+      if (!getGrammarPoint(key)) throw new Error(`${arg}: unknown grammar point '${key}'`);
+      grammarPoint = key;
+    }
     else if (arg === '--language' || arg === '--lang') {
       const upper = need(arg, argv[++i]).toUpperCase();
       if (!LANGUAGE_VALUES.has(upper)) {
@@ -126,7 +153,10 @@ export function parseBackfillArgs(argv: readonly string[]): BackfillArgs {
         throw new Error(`--min-confidence: expected high|medium, got '${v}'`);
       }
       minConfidence = v;
-    } else if (arg === '--limit' || arg === '--batch-size' || arg === '--concurrency' || arg === '--max-cost-usd') {
+    } else if (
+      arg === '--max-cells' || arg === '--limit' ||
+      arg === '--batch-size' || arg === '--concurrency' || arg === '--max-cost-usd'
+    ) {
       const parsed = Number(need(arg, argv[++i]));
       if (arg === '--max-cost-usd') {
         if (!Number.isFinite(parsed) || parsed <= 0) throw new Error(`${arg} must be positive`);
@@ -135,17 +165,27 @@ export function parseBackfillArgs(argv: readonly string[]): BackfillArgs {
         if (!Number.isInteger(parsed) || parsed < 1) {
           throw new Error(`${arg} must be a positive integer, got '${parsed}'`);
         }
-        if (arg === '--limit') limit = parsed;
+        if (arg === '--max-cells' || arg === '--limit') maxCells = parsed;
         else if (arg === '--batch-size') batchSize = parsed;
         else concurrency = parsed;
       }
     } else if (arg === '--help' || arg === '-h') {
       console.log(
         'Usage: backfill:variant-seeds [--language ES] [--cefr B1] [--grammar-point <key>]\n' +
-          '       [--min-confidence high|medium] [--limit N] [--batch-size 20]\n' +
-          '       [--concurrency 4] [--max-cost-usd 5] [--name <run>]\n' +
+          '       [--min-confidence high|medium] [--max-cells N] [--batch-size 20]\n' +
+          '       [--concurrency 4] [--max-cost-usd 5] [--name <run>] [--force]\n' +
           '       [--apply --snapshot <neon-branch-id> | --apply --no-snapshot]\n' +
-          '       [--revert <artifact.json> --apply]',
+          '       [--revert <artifact.json> --apply]\n' +
+          '\n' +
+          '  --max-cells N   process at most N CELLS (language:level:type:point), not N rows.\n' +
+          '                  `--limit` is an accepted alias; note it bounds ROWS in the sibling\n' +
+          '                  CLIs (revalidate:cloze, backfill:coverage-tags) but CELLS here.\n' +
+          '                  There are only ~61 variant-bearing cells, so a large N is the pool.\n' +
+          '  --name <run>    artifact filename stem under ./backfill-runs/ (default\n' +
+          '                  `backfill-variant-seeds`). Use it to keep runs from colliding.\n' +
+          '  --force         permit overwriting an artifact that records an APPLIED run.\n' +
+          '                  Refused by default: that file is the only fine-grained record of\n' +
+          '                  those rows\' original seedWord.',
       );
       process.exit(0);
     } else {
@@ -164,8 +204,8 @@ export function parseBackfillArgs(argv: readonly string[]): BackfillArgs {
   }
 
   return {
-    apply, revertFrom, snapshot, language, cefrLevel, grammarPoint,
-    minConfidence, limit, batchSize, concurrency, maxCostUsd, name,
+    apply, revertFrom, snapshot, force, language, cefrLevel, grammarPoint,
+    minConfidence, maxCells, batchSize, concurrency, maxCostUsd, name,
   };
 }
 
@@ -247,8 +287,136 @@ export type Artifact = {
   appliedCount: number;
   snapshotBranchId: string | null;
   minConfidence: 'high' | 'medium';
+  /**
+   * Which classifier produced these labels. The labels are in production and
+   * the prompt/model will move on; without this, an artifact cannot answer
+   * "what decided this row's variant id?". Null on the pre-provenance
+   * artifacts written by the first production passes.
+   */
+  classifierPromptVersion: string | null;
+  classifierModel: string | null;
   entries: ArtifactEntry[];
 };
+
+function isObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null && !Array.isArray(v);
+}
+
+/**
+ * Validating parser for an artifact read back off disk. `--revert` is the one
+ * write path with no dry-run forcing function, so it must not run on a cast:
+ * an entry with `oldSeedWord: undefined` makes drizzle omit the bind parameter
+ * and emit literal `to_jsonb(::text)`, which Postgres rejects — aborting a
+ * restore partway with a raw syntax error. Throw before touching a row instead.
+ *
+ * Deliberately tolerant of missing provenance fields so the artifacts written
+ * by the first production passes stay revertible.
+ */
+export function parseArtifact(input: unknown): Artifact {
+  if (!isObject(input)) throw new Error('artifact must be a JSON object');
+  if (!Array.isArray(input.entries)) throw new Error('artifact needs an `entries` array');
+
+  const entries: ArtifactEntry[] = input.entries.map((raw, i) => {
+    if (!isObject(raw)) throw new Error(`artifact entry ${i}: must be an object`);
+    if (typeof raw.id !== 'string' || raw.id === '') {
+      throw new Error(`artifact entry ${i}: needs a non-empty string \`id\``);
+    }
+    // `undefined` is rejected as explicitly as a wrong type: a missing key is
+    // exactly what would silently become the broken `to_jsonb(::text)` SQL.
+    if (!('oldSeedWord' in raw) || (raw.oldSeedWord !== null && typeof raw.oldSeedWord !== 'string')) {
+      throw new Error(
+        `artifact entry ${i} (${raw.id}): \`oldSeedWord\` must be a string or null, got ${
+          'oldSeedWord' in raw ? typeof raw.oldSeedWord : 'undefined'
+        }`,
+      );
+    }
+    if (typeof raw.newSeedWord !== 'string') {
+      throw new Error(`artifact entry ${i} (${raw.id}): \`newSeedWord\` must be a string`);
+    }
+    const confidence = raw.confidence;
+    if (confidence !== 'high' && confidence !== 'medium' && confidence !== 'low') {
+      throw new Error(`artifact entry ${i} (${raw.id}): unknown confidence '${String(confidence)}'`);
+    }
+    return {
+      id: raw.id,
+      cellKey: typeof raw.cellKey === 'string' ? raw.cellKey : '',
+      oldSeedWord: raw.oldSeedWord,
+      newSeedWord: raw.newSeedWord,
+      confidence,
+    };
+  });
+
+  const applied = input.applied === true;
+  const rawCount = input.appliedCount;
+  if (typeof rawCount !== 'number' || !Number.isInteger(rawCount) || rawCount < 0) {
+    throw new Error('artifact needs an integer `appliedCount`');
+  }
+  if (rawCount > entries.length) {
+    throw new Error(`artifact \`appliedCount\` ${rawCount} exceeds its ${entries.length} entries`);
+  }
+
+  return {
+    name: typeof input.name === 'string' ? input.name : '(unnamed)',
+    createdAtIso: typeof input.createdAtIso === 'string' ? input.createdAtIso : '',
+    applied,
+    appliedCount: rawCount,
+    snapshotBranchId: typeof input.snapshotBranchId === 'string' ? input.snapshotBranchId : null,
+    minConfidence: input.minConfidence === 'medium' ? 'medium' : 'high',
+    classifierPromptVersion:
+      typeof input.classifierPromptVersion === 'string' ? input.classifierPromptVersion : null,
+    classifierModel: typeof input.classifierModel === 'string' ? input.classifierModel : null,
+    entries,
+  };
+}
+
+/**
+ * Which entries a `--revert` must replay. A completed run wrote every entry; a
+ * partial one wrote only the first `appliedCount` (the fail-fast loop stops at
+ * the first failure), and the rest were never written — replaying those is
+ * pointless work against a live table.
+ */
+export function entriesToRestore(artifact: Artifact): ArtifactEntry[] {
+  return artifact.applied ? [...artifact.entries] : artifact.entries.slice(0, artifact.appliedCount);
+}
+
+/**
+ * Refuse to clobber the rollback source of an already-applied run.
+ *
+ * `isEligible` permanently skips a row that already carries a declared variant
+ * id, so once a run is applied, its artifact is the ONLY fine-grained record of
+ * those rows' original `seedWord` — a re-run cannot reproduce it, and
+ * `backfill-runs/` is gitignored, so VCS cannot either. `persist` writes
+ * unconditionally and does so as the FIRST action of an apply, which means a
+ * second default-named run destroys the previous one's undo source before doing
+ * any work at all.
+ *
+ * A dry-run artifact (`applied: false`) is scratch and may be overwritten.
+ * `read` is injected so this is unit-testable without a filesystem.
+ */
+export function assertArtifactWritable(
+  outPath: string,
+  force: boolean,
+  read: (p: string) => string | null,
+): void {
+  if (force) return;
+  const raw = read(outPath);
+  if (raw === null) return;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    // Unreadable — not a record of anything, so nothing to protect.
+    return;
+  }
+  if (!isObject(parsed) || parsed.applied !== true) return;
+  throw new Error(
+    `refusing to overwrite ${outPath}: it records an APPLIED run (${
+      typeof parsed.appliedCount === 'number' ? parsed.appliedCount : '?'
+    } rows) and is the only fine-grained record of those rows' original seedWord — ` +
+      'already-labelled rows are skipped forever, so a re-run cannot reproduce it. ' +
+      'Pass --name <run> to write a separate artifact, or --force to overwrite anyway.',
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Decisions
@@ -367,11 +535,17 @@ export type ApplyResult = { appliedCount: number; failure: string | null };
 export async function applyWrites(
   entries: readonly ArtifactEntry[],
   write: (id: string, seedWord: string | null) => Promise<void>,
+  /**
+   * Which side of the entry to write: the new label when applying, the
+   * recorded original when reverting. Both directions get the same fail-fast
+   * and the same "how far did it get" reporting.
+   */
+  select: (e: ArtifactEntry) => string | null = (e) => e.newSeedWord,
 ): Promise<ApplyResult> {
   let appliedCount = 0;
   for (const e of entries) {
     try {
-      await write(e.id, e.newSeedWord);
+      await write(e.id, select(e));
       appliedCount++;
     } catch (err) {
       return { appliedCount, failure: err instanceof Error ? err.message : String(err) };
@@ -404,23 +578,58 @@ export async function applyAndPersist(
 }
 
 async function runRevert(args: BackfillArgs): Promise<void> {
-  const artifact = JSON.parse(readFileSync(args.revertFrom!, 'utf8')) as Artifact;
-  console.log(`[backfill-variant-seeds] revert: ${artifact.entries.length} entries from ${args.revertFrom}`);
+  // Parsed, not cast: this is the one write path with no --snapshot forcing
+  // function, so a malformed artifact must fail before the first row, not
+  // abort a restore halfway with a raw Postgres error.
+  const artifact = parseArtifact(JSON.parse(readFileSync(args.revertFrom!, 'utf8')));
+  const toRestore = entriesToRestore(artifact);
+  console.log(
+    `[backfill-variant-seeds] revert: ${toRestore.length} of ${artifact.entries.length} entries ` +
+      `from ${args.revertFrom}` +
+      (artifact.applied
+        ? ' (run completed — every entry was written)'
+        : ` (partial run — only the first appliedCount=${artifact.appliedCount} were written)`),
+  );
   if (!args.apply) {
     console.log('[backfill-variant-seeds] dry-run: pass --apply to restore. Sample:');
-    for (const e of artifact.entries.slice(0, 5)) {
+    for (const e of toRestore.slice(0, 5)) {
       console.log(`  ${e.id}: ${e.newSeedWord} -> ${e.oldSeedWord ?? '(removed)'}`);
     }
     return;
   }
   const db = createDb(requireEnv('DATABASE_URL'));
-  for (const e of artifact.entries) await writeSeed(db, e.id, e.oldSeedWord);
-  console.log(`[backfill-variant-seeds] restored ${artifact.entries.length} rows.`);
+  // Same fail-fast + count reporting as the apply path: a restore that stops
+  // partway must say where it stopped, not vanish into main().catch.
+  const result = await applyWrites(
+    toRestore,
+    (id, seedWord) => writeSeed(db, id, seedWord),
+    (e) => e.oldSeedWord,
+  );
+  if (result.failure === null) {
+    console.log(`[backfill-variant-seeds] restored ${result.appliedCount} rows.`);
+    return;
+  }
+  console.error(
+    `[backfill-variant-seeds] STOPPED after restoring ${result.appliedCount}/${toRestore.length} rows — ` +
+      `write failed: ${result.failure}`,
+  );
+  console.error(
+    `[backfill-variant-seeds] the artifact is unchanged; re-running --revert ${args.revertFrom} --apply ` +
+      'once the fault is understood is safe (restoring an already-restored row is a no-op).',
+  );
+  process.exitCode = 1;
 }
 
 async function main(): Promise<void> {
   const args = parseBackfillArgs(process.argv.slice(2));
   if (args.revertFrom !== null) return runRevert(args);
+
+  // Checked FIRST — before any query or any Claude call — because `persist`
+  // overwrites the artifact unconditionally, including as the opening act of
+  // an --apply. Failing here costs nothing; failing later costs the previous
+  // run's only undo source.
+  const out = artifactPath(args.name);
+  assertArtifactWritable(out, args.force, (p) => (existsSync(p) ? readFileSync(p, 'utf8') : null));
 
   const db = createDb(requireEnv('DATABASE_URL'));
 
@@ -472,7 +681,7 @@ async function main(): Promise<void> {
   }
 
   let cellList = [...cells.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-  if (args.limit !== null) cellList = cellList.slice(0, args.limit);
+  if (args.maxCells !== null) cellList = cellList.slice(0, args.maxCells);
   console.log(`[backfill-variant-seeds] ${raw.length} rows scanned -> ${cellList.length} cells with eligible rows`);
 
   const client = createClaudeClient(requireEnv('ANTHROPIC_API_KEY'));
@@ -511,6 +720,14 @@ async function main(): Promise<void> {
             usage = addUsage(usage, readUsage(res.usage));
             return selectWrites(batch, res.assignments, args.minConfidence, cellKey);
           } catch (err) {
+            // A call that reached Anthropic and then failed validation was
+            // still billed. `ClassifierResultError` carries that usage for
+            // exactly this reason: counting only successes would under-report
+            // spend without bound as failures accumulate — unlike the
+            // deliberate, bounded dispatch race above. A transport error
+            // (no ClassifierResultError) never reached the model, so nothing
+            // is charged for it.
+            if (err instanceof ClassifierResultError) usage = addUsage(usage, readUsage(err.usage));
             failures.push(`${cellKey}: ${err instanceof Error ? err.message : String(err)}`);
             return [] as ArtifactEntry[];
           }
@@ -527,6 +744,8 @@ async function main(): Promise<void> {
     appliedCount: 0,
     snapshotBranchId: args.snapshot,
     minConfidence: args.minConfidence,
+    classifierPromptVersion: VARIANT_SEED_CLASSIFIER_PROMPT_VERSION,
+    classifierModel: VARIANT_SEED_CLASSIFIER_MODEL,
     entries,
   };
 
@@ -547,7 +766,6 @@ async function main(): Promise<void> {
     );
   }
 
-  const out = artifactPath(args.name);
   const persist = (a: Artifact): void => {
     writeFileSync(out, JSON.stringify(a, null, 2), 'utf8');
     console.log(`[backfill-variant-seeds] artifact written to ${out}`);
@@ -565,8 +783,9 @@ async function main(): Promise<void> {
         `[backfill-variant-seeds] STOPPED after ${result.appliedCount}/${entries.length} rows — write failed: ${result.failure}`,
       );
       console.error(
-        `[backfill-variant-seeds] the artifact at ${out} reflects only the ${result.appliedCount} rows actually ` +
-          `written; revert them with --revert ${out} --apply once the fault is understood.`,
+        `[backfill-variant-seeds] the artifact at ${out} records ALL ${entries.length} candidate rows with ` +
+          `appliedCount: ${result.appliedCount} — the entries beyond that count were never written. ` +
+          `--revert ${out} --apply restores the first ${result.appliedCount} and leaves the rest alone.`,
       );
     }
   } else {
