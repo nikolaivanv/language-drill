@@ -472,6 +472,7 @@ export {
   buildClassifierUserPrompt,
   parseClassifierResult,
   classifyVariantSeeds,
+  ClassifierResultError,
 } from "./variant-seed-classifier.js";
 export type {
   ClassifierRow,

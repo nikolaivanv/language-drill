@@ -7,6 +7,7 @@ import {
   parseClassifierResult,
   VARIANT_SEED_CLASSIFIER_TOOL,
   classifyVariantSeeds,
+  ClassifierResultError,
   VARIANT_SEED_CLASSIFIER_TOOL_NAME,
   VARIANT_SEED_CLASSIFIER_MODEL,
   type ClassifierRow,
@@ -56,6 +57,8 @@ describe('buildClassifierSystemPrompt', () => {
   });
 });
 
+const escapeRe = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 describe('buildClassifierUserPrompt', () => {
   it('includes each row id, prompt and answer', () => {
     const p = buildClassifierUserPrompt(rows);
@@ -64,6 +67,35 @@ describe('buildClassifierUserPrompt', () => {
     expect(p).toContain('Qué');
     expect(p).toContain('r2');
     expect(p).toContain('¿___ libro estás leyendo?');
+  });
+
+  it('binds each row id to ITS OWN exercise and answer', () => {
+    // Presence checks alone (`toContain` each id, each sentence) all still pass
+    // if the builder emitted every row's content under the NEXT row's id. That
+    // off-by-one is the one link in the misattribution chain the parser cannot
+    // defend: shuffled ids are still valid, unique and complete, so
+    // parseClassifierResult waves them through and the CLI writes the wrong
+    // variant to a real production row BY PRIMARY KEY. Assert the pairing.
+    const paired: ClassifierRow[] = [
+      { rowId: 'r1', prompt: '¿___ es la democracia?', answer: 'Qué' },
+      { rowId: 'r2', prompt: '¿___ libro estás leyendo?', answer: 'Cuál' },
+      { rowId: 'r3', prompt: '¿___ prefieres?', answer: 'Cuáles' },
+    ];
+    const p = buildClassifierUserPrompt(paired);
+    for (const r of paired) {
+      expect(p).toMatch(
+        new RegExp(
+          `\\[${r.rowId}\\]\\s*\\n\\s*exercise: ${escapeRe(r.prompt)}\\s*\\n\\s*answer: ${escapeRe(r.answer)}(\\s|$)`,
+        ),
+      );
+    }
+  });
+
+  it('emits the rows in the order they were given', () => {
+    const p = buildClassifierUserPrompt(rows);
+    expect(p.indexOf('r1')).toBeLessThan(p.indexOf('democracia'));
+    expect(p.indexOf('democracia')).toBeLessThan(p.indexOf('r2'));
+    expect(p.indexOf('r2')).toBeLessThan(p.indexOf('libro'));
   });
 });
 
@@ -214,5 +246,21 @@ describe('classifyVariantSeeds', () => {
   it('propagates a parser error for a malformed result', async () => {
     const bad = { ...toolUse, input: { assignments: [{ rowId: 'r1', variantId: null, confidence: 'low' }] } };
     await expect(classifyVariantSeeds(fakeClient([bad]), gp, rows)).rejects.toThrow(/missing/);
+  });
+
+  it('carries the billed usage on a post-response failure so the caller can charge for it', async () => {
+    // Both failure modes happened AFTER Anthropic answered, so both were paid
+    // for. A caller that only accumulates usage on success under-counts cost
+    // without bound as validation failures accumulate.
+    const bad = { ...toolUse, input: { assignments: [{ rowId: 'r1', variantId: null, confidence: 'low' }] } };
+    await expect(classifyVariantSeeds(fakeClient([bad]), gp, rows)).rejects.toBeInstanceOf(
+      ClassifierResultError,
+    );
+    await expect(classifyVariantSeeds(fakeClient([bad]), gp, rows)).rejects.toMatchObject({
+      usage: { input_tokens: 1200, output_tokens: 150 },
+    });
+    await expect(
+      classifyVariantSeeds(fakeClient([{ type: 'text', text: 'hm' }], 'end_turn'), gp, rows),
+    ).rejects.toMatchObject({ usage: { input_tokens: 1200, output_tokens: 150 } });
   });
 });

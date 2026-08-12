@@ -168,10 +168,32 @@ export function parseClassifierResult(
 }
 
 /**
+ * A call that reached Anthropic and *then* failed — no tool_use block, or a
+ * result the parser rejected. The tokens were billed either way, so the usage
+ * travels with the error: a caller that only accumulates usage on success
+ * under-reports its spend by an unbounded amount when validation failures are
+ * common. (`ClassifierResultError` is deliberately narrower than "any throw
+ * from classifyVariantSeeds" — a transport error never reached the model and
+ * carries nothing to bill.)
+ */
+export class ClassifierResultError extends Error {
+  readonly usage: Anthropic.Usage;
+
+  constructor(message: string, usage: Anthropic.Usage, options?: { cause?: unknown }) {
+    super(message, options);
+    this.name = 'ClassifierResultError';
+    this.usage = usage;
+  }
+}
+
+/**
  * Call Claude with the forced tool and return validated assignments plus token
  * usage (the CLI's cost guard needs it). The system block carries the point's
  * variant list and is identical for every batch within a cell, so it is
  * cache-marked — a large cell is many calls against one cached prefix.
+ *
+ * Post-response failures throw `ClassifierResultError`, which carries the
+ * billed usage.
  */
 export async function classifyVariantSeeds(
   client: Anthropic,
@@ -201,7 +223,18 @@ export async function classifyVariantSeeds(
     (b): b is Anthropic.ToolUseBlock => b.type === 'tool_use',
   );
   if (!toolUse) {
-    throw new Error(`classifier: no tool_use block (stop_reason ${response.stop_reason})`);
+    throw new ClassifierResultError(
+      `classifier: no tool_use block (stop_reason ${response.stop_reason})`,
+      response.usage,
+    );
   }
-  return { assignments: parseClassifierResult(toolUse.input, gp, rows), usage: response.usage };
+  try {
+    return { assignments: parseClassifierResult(toolUse.input, gp, rows), usage: response.usage };
+  } catch (err) {
+    throw new ClassifierResultError(
+      err instanceof Error ? err.message : String(err),
+      response.usage,
+      { cause: err },
+    );
+  }
 }
