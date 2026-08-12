@@ -1,5 +1,5 @@
 {
-  "description": "Precision/recall gate for `audit:gloss --check-fixture`. CONTAMINATED SET (heldOut: false, 10 cases, sourced from docs/superpowers/specs/2026-08-12-gloss-spoilage-audit-design.md): every one of these 10 cases has its glossEn or the parenthetical span that decides its label embedded verbatim in GLOSS_ROW_SYSTEM_PROMPT as a worked example (6 exact gloss matches, 4 via the span alone) — the plan reused the spec's example tables both as few-shot anchors in the prompt and as this fixture. Scoring this set measures whether the judge can repeat its own instructions, NOT whether it generalises to unseen rows. It is kept as a cheap regression guard only — it must never be reported as, or mistaken for, evidence that the judge works. HELD-OUT SET (heldOut: true, 10 cases, queried from prod 2026-08-12, hand-labelled, every span verified absent from the prompt by substring check): this is the real gate. `--check-fixture` scores the two sets separately for exactly this reason — a blended number would hide the contamination.",
+  "description": "Precision/recall gate for `audit:gloss --check-fixture`. CONTAMINATED SET (heldOut: false, 10 cases, sourced from docs/superpowers/specs/2026-08-12-gloss-spoilage-audit-design.md): every one of these 10 cases has its glossEn or the parenthetical span that decides its label embedded verbatim in GLOSS_ROW_SYSTEM_PROMPT as a worked example (6 exact gloss matches, 4 via the span alone) — the plan reused the spec's example tables both as few-shot anchors in the prompt and as this fixture. Scoring this set measures whether the judge can repeat its own instructions, NOT whether it generalises to unseen rows. It is kept as a cheap regression guard only — it must never be reported as, or mistaken for, evidence that the judge works. HELD-OUT SET (heldOut: true, 11 cases, queried from prod 2026-08-12, hand-labelled, every gloss/span verified absent from the prompt by substring check): this is the real gate — 6 spoiled, 5 legitimate. One label (de55dc02) was corrected from legitimate to spoiled 2026-08-12 after its judge disagreement was checked against the generation prompt and found correct (prior mention already forced definiteness, making the added parenthetical redundant reinforcement of the trigger). Case e658e200 was added the same day as the deliberate CONTRAST to that correction: the generation prompt's own SANCTIONED fallback usage (a single sentence, no prior mention, English definite article as the only forcing channel, no parenthetical at all) — it exists to catch the judge over-generalising the de55dc02 correction into flagging correct fallback rows. `--check-fixture` scores the two sets separately for exactly this reason — a blended number would hide the contamination, and an incomplete held-out set would hide over-generalisation.",
   "cases": [
     {
       "id": "a70a9053-0dbe-5aff-87d0-44c34762f736",
@@ -260,6 +260,19 @@
       "expected": "legitimate",
       "heldOut": true,
       "note": "ARGUABLE: \"(party day)\" glosses the compound's meaning and is close to a translation aid for the answer's meaning; it does not name the \"de\" modifier rule outright. Record the judge's reasoning if it disagrees. HELD-OUT: span verified absent from GLOSS_ROW_SYSTEM_PROMPT."
+    },
+    {
+      "id": "e658e200-3ff8-5b2a-a7e1-3af6ecb9d537",
+      "grammarPointKey": "tr-a1-accusative-definite-object",
+      "language": "TR",
+      "cefrLevel": "A1",
+      "sentence": "Ayşe ___ şimdi okuyor. (gazete)",
+      "correctAnswer": "gazeteyi",
+      "instructions": "Fill in the blank with the correct form of the word in parentheses.",
+      "glossEn": "Ayşe is reading the newspaper now.",
+      "expected": "legitimate",
+      "heldOut": true,
+      "note": "The SANCTIONED fallback. A single sentence with no prior mention, so the English definite article in the gloss is the only channel forcing definiteness — structurally the same as the generation prompt's own permitted example (\"Annem ___ içiyor. (kahve)\" / \"My mother is drinking the coffee\" → kahveyi). Contrast with de55dc02, where prior mention already forced definiteness and the added parenthetical was therefore redundant. This case guards against over-generalising that correction into flagging correct fallback rows. Note: unlike every other case in this fixture, this gloss carries NO parenthetical at all — the whole sentence is the disambiguation device. HELD-OUT: gloss verified absent from GLOSS_ROW_SYSTEM_PROMPT."
     }
   ]
 }

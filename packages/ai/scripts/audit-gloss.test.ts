@@ -42,10 +42,10 @@ describe('fixtures/gloss-spoilage-cases.json', () => {
   const heldOut = raw.cases.filter((c) => c.heldOut);
   const contaminated = raw.cases.filter((c) => !c.heldOut);
 
-  it('carries 20 cases total: 10 contaminated (regression guard) + 10 held-out (the gate)', () => {
-    expect(raw.cases).toHaveLength(20);
+  it('carries 21 cases total: 10 contaminated (regression guard) + 11 held-out (the gate)', () => {
+    expect(raw.cases).toHaveLength(21);
     expect(contaminated).toHaveLength(10);
-    expect(heldOut).toHaveLength(10);
+    expect(heldOut).toHaveLength(11);
   });
 
   it('the contaminated set carries 6 known spoilers and 4 known-legitimate rows', () => {
@@ -53,13 +53,23 @@ describe('fixtures/gloss-spoilage-cases.json', () => {
     expect(contaminated.filter((c) => c.expected === 'legitimate')).toHaveLength(4);
   });
 
-  it('the held-out set carries 6 known spoilers and 4 known-legitimate rows', () => {
+  it('the held-out set carries 6 known spoilers and 5 known-legitimate rows', () => {
     // Originally 5/5: de55dc02 (tr-a1-accusative-definite-object) was
     // corrected from "legitimate" to "spoiled" on 2026-08-12 after the
     // judge's reasoning was checked against the generation prompt's
     // definiteness-fallback rule and found correct — see the case's `note`.
+    // Then e658e200 was added as a 6th legitimate case: the generation
+    // prompt's own SANCTIONED definiteness-fallback usage, added specifically
+    // to catch the judge over-generalising the de55dc02 correction.
     expect(heldOut.filter((c) => c.expected === 'spoiled')).toHaveLength(6);
-    expect(heldOut.filter((c) => c.expected === 'legitimate')).toHaveLength(4);
+    expect(heldOut.filter((c) => c.expected === 'legitimate')).toHaveLength(5);
+  });
+
+  it('at least one held-out legitimate case has NO parenthetical at all (e658e200 — the sanctioned fallback)', () => {
+    // Pinned so a future refactor cannot silently reintroduce an assumption
+    // that every fixture gloss carries a "(...)" span.
+    const noParenCases = heldOut.filter((c) => !c.glossEn.includes('('));
+    expect(noParenCases.map((c) => c.id)).toEqual(['e658e200-3ff8-5b2a-a7e1-3af6ecb9d537']);
   });
 
   it('every case carries a gloss, a real exercise id, and an explicit heldOut flag', () => {
@@ -204,17 +214,24 @@ describe('selectRowsToJudge', () => {
 });
 
 describe('loadFixtureCases', () => {
-  it('loads the shipped fixture into 20 well-typed cases (10 held-out + 10 contaminated)', () => {
+  it('loads the shipped fixture into 21 well-typed cases (11 held-out + 10 contaminated)', () => {
     const cases = loadFixtureCases(
       path.join(here, 'fixtures', 'gloss-spoilage-cases.json'),
     );
-    expect(cases).toHaveLength(20);
-    expect(cases.filter((c) => c.heldOut)).toHaveLength(10);
+    expect(cases).toHaveLength(21);
+    expect(cases.filter((c) => c.heldOut)).toHaveLength(11);
     expect(cases.filter((c) => !c.heldOut)).toHaveLength(10);
     for (const c of cases) {
       expect(['spoiled', 'legitimate']).toContain(c.expected);
       expect(c.grammarPointKey.length).toBeGreaterThan(0);
     }
+  });
+
+  it('loads a case whose glossEn has no parenthetical without throwing (loader must not assume every gloss carries a span)', () => {
+    const cases = loadFixtureCases(path.join(here, 'fixtures', 'gloss-spoilage-cases.json'));
+    const noParen = cases.find((c) => c.id === 'e658e200-3ff8-5b2a-a7e1-3af6ecb9d537');
+    expect(noParen).toBeDefined();
+    expect(noParen?.glossEn).not.toContain('(');
   });
 
   it('throws on a fixture missing the cases array', () => {
