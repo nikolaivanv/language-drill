@@ -256,6 +256,14 @@ describe("buildValidationSystemPrompt", () => {
     // corollaries ride along (~1.6KB, mirrors generate@2026-08-11). Ceiling
     // raised to 13,000.
     //
+    // validate@2026-08-12 added the Gloss consistency (cloze) sub-bullet to the
+    // `ambiguous` dimension — when a draft carries `glossEn` (now rendered to
+    // the validator), every `acceptableAnswers` entry must be true under that
+    // gloss; an entry that changes the stated meaning is a defect, not an
+    // alternant, curable by widening the gloss or dropping the entry, with a
+    // carve-out where the point is a FORM and the alternates all realize it
+    // (~1.0KB). Ceiling raised to 14,000.
+    //
     // We assert on the TEMPLATE literal, not the rendered output, because:
     //   - The template is what Langfuse stores and what Anthropic's
     //     prompt-cache keys on byte-for-byte.
@@ -263,7 +271,7 @@ describe("buildValidationSystemPrompt", () => {
     //     (descriptions, examples, common errors, CEFR descriptors) which
     //     varies by language/level and is not what the NFR budgets — those
     //     substitutions are already counted against the API per-call.
-    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(13000);
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(14000);
   });
 });
 
@@ -954,5 +962,17 @@ describe("cloze validation prompt — meaning gloss", () => {
     };
     const out = buildValidationUserPrompt(makeDraft(content), baseSpec);
     expect(out).not.toContain("**Meaning");
+  });
+});
+
+describe("validation template — gloss consistency rule", () => {
+  it("tells the validator a gloss-contradicting acceptableAnswer is ambiguous, with both cures", () => {
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain("Gloss consistency (cloze)");
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE).toMatch(/true \*under that gloss\*/);
+    // Both cures must be stated, or the validator flags without a fix path.
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain("widen the gloss");
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain("I want/can walk");
+    // The form-vs-lexeme carve-out keeps de-a1-zero-article legitimate.
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE).toMatch(/zero article before a profession/);
   });
 });
