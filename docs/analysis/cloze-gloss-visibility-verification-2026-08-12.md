@@ -217,3 +217,97 @@ rows identified by the spec's manual audit were in scope here.
 | **Total** | | **$0.3990** |
 
 Tasks 1–3 (prompt/template edits, unit tests) made no Anthropic API calls.
+
+---
+
+# Appendix — post-deploy confirmation and the production repair (2026-08-12)
+
+Everything above was measured against the in-repo prompts before merge. This
+appendix records what happened after #639 merged (`734f20da`), the Langfuse push
+landed, and the contradictory rows were repaired.
+
+## Langfuse sync (prod only)
+
+`bootstrap-prompts --check` before: `matched=18 mismatched=1 errors=0`, the single
+drift being `validate-system-prompt`. That is the correct blast radius — the
+evaluator change was user-prompt-only and ships with the code deploy, so
+`evaluation-system-prompt` was already in sync.
+
+```
+＋ pushed validate-system-prompt (prior production=v10; localVersion=validate@2026-08-12)
+Summary: pushed=1 skipped=18 errors=0
+```
+
+`--check` after: **exit 0, `matched=19 mismatched=0 errors=0`**.
+**Revert target: v10** (re-point the `production` label there in the Langfuse
+dashboard). Run from a fresh `main` checkout, since `push-prompts` pushes every
+drifted prompt and a stale tree would revert unrelated ones.
+
+**Dev was not pushed.** Dev generation does not apply the gloss-consistency rule
+until the same flow is run against the `language-drill-dev/` secrets.
+
+## Production repair — 19 rows, `content_json` only
+
+No demotion, no mastery rebuild. Verified after the writes:
+`review_status` still `auto-approved` and `demotion_reason` still NULL on all 19.
+
+| Shape | Rows |
+|---|---:|
+| Every entry contradicted → `acceptableAnswers` key removed | 14 |
+| Partially trimmed (contradicting entries only) | 3 |
+| Gloss dropped instead (FORM points, alternates legitimate) | 2 |
+
+The three partial trims: `961d5cc1` keeps `Aquel` (a distal "that", compatible
+with its gloss — only `Este` contradicted); `8ab8565b` and `67006ee0` keep
+`saat sekizde` (the same hour as the gloss, with the optional `saat`).
+
+The audit query now returns **23**, which decomposes as 19 originally legitimate
++ 3 partially trimmed and now consistent + 1 deliberately excluded. The plan
+predicted 19; that was an arithmetic error in the plan — it did not account for
+partial trims retaining both fields, nor for the exclusion below.
+
+### One row excluded, correcting the spec
+
+`d2432ce9-68c4-57bf-9a2a-bf33a781723a` (es-a1-possessives-atonic) is glossed
+"I don't know **your** way to school well.", `correctAnswer: "tu"`,
+`acceptableAnswers: ["su"]`. The spec's appendix listed this as a meaning-flip.
+It is not: Spanish `su` is the **formal** second-person possessive, so
+`su camino` is a legitimate rendering of "your way" and satisfies the rule's own
+test — every entry must be true *under that gloss*. Left untouched.
+
+A stored Cyrillic homoglyph (`dokuzdа` in `8ab8565b`) was removed along with the
+entry containing it.
+
+## Post-repair confirmation — n=10 per probe
+
+Replayed the exact recorded probe strings against each row's **post-repair**
+`content_json`, 10 draws each. Deliberately not a fresh `qa:sample` run: the
+answer crafter is a live unseeded call, so a re-sample invents new probes and
+proves nothing about these strings. The script logged each row's state before
+scoring, so the evidence shows what it measured against.
+
+| Probe | Row state at scoring time | Pre-fix | n=10 scores | In flag band |
+|---|---|---|---|---|
+| `puedes` on `8a84bbba` | gloss present, `acceptableAnswers` removed | **1.0** | 0.3, 0.3, 0.2, 0.3, 0.3, 0.3, 0.3, 0.3, 0.2, 0.2 (median 0.3) | **0/10** |
+| `lejos` on `f587a1fe` | gloss present, `acceptableAnswers` removed | **1.0** | 0.1, 0.15, 0.15, 0.15, 0, 0.1, 0.15, 0, 0.25, 0.1 (median 0.125) | **0/10** |
+
+Zero malformed responses in this run. An earlier attempt aborted on its eighth
+draw because the evaluator returned a tool call with no `score` field, which
+`parseEvaluationResult` correctly rejected; the script gained per-draw tolerance
+with one retry rather than losing a whole sample to a transient formatting
+failure. That earlier partial sample agreed with the final one (7 draws,
+0.15–0.3, 0/7 in band).
+
+Both answers scored **1.0** before this work and now sit far below the 0.8 pass
+threshold on every draw — the n≥10 standard this project adopted after a single
+draw produced a false "closed" verdict elsewhere.
+
+## Cumulative spend, all verification
+
+| Stage | Cost |
+|---|---:|
+| Pre-merge (evaluator A/B + three validator probe runs) | $0.3990 |
+| Post-deploy confirmation (20 evaluator calls, + 7 in the aborted run) | ~$0.35 |
+| **Total** | **~$0.75** |
+
+The 50-exercise `qa:sample` run that found the defect cost a further $1.81.
