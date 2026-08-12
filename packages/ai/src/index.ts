@@ -462,3 +462,20 @@ export type {
   CollapseVerdictName,
   CollapseConfidence,
 } from "./collapse-triage.js";
+
+export {
+  VARIANT_SEED_CLASSIFIER_PROMPT_VERSION,
+  VARIANT_SEED_CLASSIFIER_TOOL_NAME,
+  VARIANT_SEED_CLASSIFIER_MODEL,
+  VARIANT_SEED_CLASSIFIER_TOOL,
+  buildClassifierSystemPrompt,
+  buildClassifierUserPrompt,
+  parseClassifierResult,
+  classifyVariantSeeds,
+  ClassifierResultError,
+} from "./variant-seed-classifier.js";
+export type {
+  ClassifierRow,
+  ClassifierAssignment,
+  ClassifierConfidence,
+} from "./variant-seed-classifier.js";
