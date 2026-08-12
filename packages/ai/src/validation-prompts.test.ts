@@ -190,7 +190,7 @@ describe("buildValidationSystemPrompt", () => {
     // grew a sub-bullet clarifying that ANY construction described in the
     // point's description is on-target (see the dedicated describe block
     // below for the exact prose assertions).
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-11");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-12");
 
     // R3.A — the three contextSpoilsAnswer triples added in task 8.
     expect(prompt).toContain("çocuk");
@@ -917,6 +917,42 @@ describe("multi-construction grammarPointMatch guidance", () => {
   });
 
   it("bumps the prompt version to today", () => {
-    expect(VALIDATION_PROMPT_VERSION).toBe('validate@2026-08-11');
+    expect(VALIDATION_PROMPT_VERSION).toBe('validate@2026-08-12');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Meaning gloss visibility (Task 2)
+// ---------------------------------------------------------------------------
+
+// The validator could not see `glossEn` either, which is how a row glossed
+// "The park is near the school." shipped declaring the antonym "lejos" an
+// acceptable answer: the contradiction was invisible at validation time.
+describe("cloze validation prompt — meaning gloss", () => {
+  it("renders the gloss so the validator can check it against acceptableAnswers", () => {
+    const content: ClozeContent = {
+      type: ExerciseType.CLOZE,
+      instructions: "Fill in the blank with the correct compound preposition.",
+      sentence: "El parque está ___ del colegio.",
+      correctAnswer: "cerca",
+      acceptableAnswers: ["lejos"],
+      glossEn: "The park is near the school.",
+    };
+    const out = buildValidationUserPrompt(makeDraft(content), baseSpec);
+    expect(out).toContain(
+      "**Meaning (shown to the learner):** The park is near the school.",
+    );
+    expect(out).toContain("**Acceptable Answers (also accepted):** lejos");
+  });
+
+  it("omits the Meaning line for an unglossed draft", () => {
+    const content: ClozeContent = {
+      type: ExerciseType.CLOZE,
+      instructions: "Fill in the blank.",
+      sentence: "El portero no ___ entrar.",
+      correctAnswer: "dejó",
+    };
+    const out = buildValidationUserPrompt(makeDraft(content), baseSpec);
+    expect(out).not.toContain("**Meaning");
   });
 });

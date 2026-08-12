@@ -109,7 +109,12 @@ function renderBulletList(items: readonly string[]): string {
 // generic Ambiguous-blank test reads "one lexeme satisfies the grammar point"
 // and both poles satisfy it equally. Enumeration does NOT cure it — antonyms,
 // not alternants. Template edit → Langfuse push per env.
-export const VALIDATION_PROMPT_VERSION = "validate@2026-08-11";
+// 2026-08-12: the cloze validation USER prompt now renders `glossEn` as a
+// "**Meaning (shown to the learner):**" line, so the validator can check
+// `acceptableAnswers` against the gloss. USER-prompt-only in this commit —
+// the cached template gains the enforcing rule in the next commit, which DOES
+// need a Langfuse push.
+export const VALIDATION_PROMPT_VERSION = "validate@2026-08-12";
 
 export const VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language exercises for {{language}} learners at CEFR {{cefrLevel}}. Your job is to validate one already-generated exercise that targets the grammar point: {{grammarPointName}}.
 
@@ -343,6 +348,7 @@ function buildClozeValidationUserPrompt(
 **Spec:** language=${spec.language}, cefrLevel=${spec.cefrLevel}, grammar point=${spec.grammarPoint.key}
 **Instructions:** ${content.instructions}
 **Sentence:** ${content.sentence}
+${typeof content.glossEn === "string" && content.glossEn.length > 0 ? `**Meaning (shown to the learner):** ${content.glossEn}` : ""}
 **Correct Answer:** ${content.correctAnswer}
 ${content.acceptableAnswers && content.acceptableAnswers.length > 0 ? `**Acceptable Answers (also accepted):** ${content.acceptableAnswers.join(", ")}` : "**Acceptable Answers (also accepted):** (none declared — `correctAnswer` must be the only plausible fill)"}
 ${content.options ? `**Options:** ${content.options.join(", ")}` : ""}
