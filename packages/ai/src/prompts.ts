@@ -68,7 +68,15 @@ const CEFR_DESCRIPTOR_BULLETS = (
 // "among the Options" over-accept guard was marking valid free-production answers
 // wrong, quoting the hidden list back at them. USER-prompt-only edit — cached
 // system template unchanged, ships with the code deploy, NO Langfuse push.
-export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-08-01";
+// 2026-08-12: the cloze USER prompt now renders `glossEn` as a
+// "**Meaning (shown to the learner):**" line and treats it as binding — a fill
+// that is grammatical but contradicts the gloss is not correct. The gloss is
+// shown to the learner (cloze-prompt.tsx) but was rendered to no downstream
+// prompt, so #612's "any form the sentence licenses is correct" rule awarded
+// full credit to a wrong person/referent (qa:sample 2026-08-12: "puedes"
+// scored 1.0 against a gloss reading "I can't eat…"). USER-prompt-only edit —
+// cached system template unchanged, ships with the code deploy, NO Langfuse push.
+export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-08-12";
 
 export const EVALUATION_SYSTEM_PROMPT = `You are an expert language evaluator for a language-learning application. Your role is to evaluate user answers to language exercises with precision and pedagogical insight.
 
@@ -148,9 +156,20 @@ function buildClozeUserPrompt(
   const showOptions =
     optionsRevealed && Array.isArray(content.options) && content.options.length > 0;
 
+  // `glossEn` is an English gloss of the sentence's meaning. The generator adds
+  // it at A1/A2 to pin a reading a short L2 sentence cannot force, and the UI
+  // shows it to the learner — so it is part of what they saw and it constrains
+  // the answer. It was previously rendered to neither this prompt nor the
+  // validator's, which is how a row glossed "I can't…" came to accept "quiero".
+  const gloss =
+    typeof content.glossEn === "string" && content.glossEn.length > 0
+      ? content.glossEn
+      : undefined;
+
+  const sawGloss = gloss ? " and the **Meaning** line" : "";
   const visibilityClause = showOptions
-    ? `The learner saw ONLY the **Sentence** (with the blank), the **Instructions**, and the **Options** listed above — NOT the **Correct Answer**, **Acceptable Answers**, or **Context**.`
-    : `The learner saw ONLY the **Sentence** (with the blank) and the **Instructions** — NOT the **Correct Answer**, **Acceptable Answers**, or **Context**. This was free production: the learner was NOT shown any list of candidate options, so never fault them for answering "outside" a set of choices, and never tell the learner they should have picked from provided options.`;
+    ? `The learner saw ONLY the **Sentence** (with the blank), the **Instructions**, and the **Options** listed above${sawGloss} — NOT the **Correct Answer**, **Acceptable Answers**, or **Context**.`
+    : `The learner saw ONLY the **Sentence** (with the blank) and the **Instructions**${sawGloss} — NOT the **Correct Answer**, **Acceptable Answers**, or **Context**. This was free production: the learner was NOT shown any list of candidate options, so never fault them for answering "outside" a set of choices, and never tell the learner they should have picked from provided options.`;
 
   const admissibilityClause = showOptions
     ? `if the user's answer is grammatically and semantically valid in the visible sentence — and among the **Options** when options are shown — it is fully correct (score 1.0, no error), even when it differs from **Correct Answer**`
@@ -162,6 +181,7 @@ function buildClozeUserPrompt(
 
 **Instructions:** ${content.instructions}
 **Sentence:** ${content.sentence}
+${gloss ? `**Meaning (shown to the learner):** ${gloss}` : ""}
 **Correct Answer:** ${content.correctAnswer}
 **Acceptable Answers:** ${content.acceptableAnswers && content.acceptableAnswers.length > 0 ? content.acceptableAnswers.join(", ") : "(none — only `Correct Answer` is accepted as fully correct)"}
 ${content.context ? `**Context:** ${content.context}` : ""}
@@ -171,7 +191,7 @@ ${showOptions ? `**Options:** ${content.options!.join(", ")}` : ""}
 
 Evaluate the user's answer. If it matches **Correct Answer** or any entry in **Acceptable Answers**, score 1.0 with no errors. Otherwise consider whether it is still grammatically and semantically valid in the sentence and award partial or full credit as appropriate.
 
-${visibilityClause} Judge the user's answer as a response to what they actually saw. **Correct Answer** / **Acceptable Answers** are the intended fill and your reference, but not the only admissible answer: ${admissibilityClause}. Do NOT invent unstated context — a specific time, past event, place, or referent that is not present in the visible sentence — to justify marking a valid answer wrong. When the visible sentence does not itself fix the tense/aspect/number, any form the sentence licenses is correct: e.g. for "El portero no ___ entrar al edificio sin identificación" both the present "deja" (a standing rule) and the preterite "dejó" are correct, because nothing in the sentence forces one tense.`;
+${visibilityClause} Judge the user's answer as a response to what they actually saw. **Correct Answer** / **Acceptable Answers** are the intended fill and your reference, but not the only admissible answer: ${admissibilityClause}. Do NOT invent unstated context — a specific time, past event, place, or referent that is not present in the visible sentence — to justify marking a valid answer wrong. When the visible sentence does not itself fix the tense/aspect/number, any form the sentence licenses is correct: e.g. for "El portero no ___ entrar al edificio sin identificación" both the present "deja" (a standing rule) and the preterite "dejó" are correct, because nothing in the sentence forces one tense.${gloss ? ` When a **Meaning** line is present, it is part of what the learner saw and it constrains the answer: a fill that is grammatical in the sentence but contradicts the stated meaning is NOT correct — the Meaning is not "unstated context", it is context the learner was given.` : ""}`;
 }
 
 function buildTranslationUserPrompt(

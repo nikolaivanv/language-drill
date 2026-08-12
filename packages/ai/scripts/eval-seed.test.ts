@@ -106,6 +106,28 @@ describe("fixtures/eval-hard-morphology.json", () => {
   });
 });
 
+describe("fixtures/eval-cloze-gloss-binding.json", () => {
+  it("parses and covers both gloss-binding cases", () => {
+    const raw = JSON.parse(
+      readFileSync(
+        path.join(here, "fixtures", "eval-cloze-gloss-binding.json"),
+        "utf8",
+      ),
+    );
+    const fixture = parseSeedFixture(raw);
+    expect(fixture.dataset).toBe("eval-cloze-gloss-binding");
+    const keys = fixture.items.map((i) => i.seedKey);
+    expect(keys).toContain("es-querer-poder-person-gloss");
+    expect(keys).toContain("es-locative-antonym-gloss");
+    // Every item must carry the gloss under test — without it the fixture
+    // measures nothing.
+    for (const item of fixture.items) {
+      expect((item.input as any).exercise.glossEn).toBeTruthy();
+      expect(item.expectedOutput).toHaveProperty("score", 1);
+    }
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Seeding — idempotent writes
 // ---------------------------------------------------------------------------

@@ -26,7 +26,7 @@ describe("attribution prompt wiring", () => {
   });
 
   it("version is bumped to today", () => {
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-08-01");
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-08-12");
   });
 
   it("requires morpheme-level verification before declaring an answer correct", () => {
@@ -166,5 +166,67 @@ describe("cloze options visibility", () => {
       expect(out).not.toContain("**Options:**");
       expect(out).not.toContain("among the **Options**");
     }
+  });
+});
+
+// A cloze may carry `glossEn` — an English gloss of the sentence's meaning that
+// the generator is told to add at A1/A2 as a disambiguation device, and that the
+// UI shows the learner (apps/web/components/drill/cloze-prompt.tsx). It was
+// rendered to NOBODY downstream, so the evaluator judged a person/tense/referent
+// choice the gloss had already fixed, and #612's "any form the sentence licenses
+// is correct" rule made that a full-credit answer.
+describe("cloze meaning gloss", () => {
+  const glossed: ClozeContent = {
+    type: ExerciseType.CLOZE,
+    instructions: "Fill in the blank with the correct form of the verb.",
+    sentence: "No ___ comer la sopa sin sal.",
+    correctAnswer: "puedo",
+    glossEn: "I can't eat the soup without salt.",
+  };
+
+  it("renders the gloss and labels it as learner-visible", () => {
+    const out = buildUserPrompt(glossed as any, "puedes", "ES" as any, "A1" as any);
+    expect(out).toContain(
+      "**Meaning (shown to the learner):** I can't eat the soup without salt.",
+    );
+  });
+
+  it("names the Meaning line in the visibility clause and makes it binding", () => {
+    const out = buildUserPrompt(glossed as any, "puedes", "ES" as any, "A1" as any);
+    expect(out).toContain("the **Meaning** line");
+    expect(out).toMatch(/contradicts the stated meaning is NOT correct/);
+  });
+
+  it("omits the Meaning line and its binding clause for an unglossed cloze", () => {
+    const bare: ClozeContent = {
+      type: ExerciseType.CLOZE,
+      instructions: "Fill in the blank.",
+      sentence: "El portero no ___ entrar.",
+      correctAnswer: "dejó",
+    };
+    const out = buildUserPrompt(bare as any, "deja", "ES" as any, "B1" as any);
+    expect(out).not.toContain("**Meaning");
+    expect(out).not.toContain("contradicts the stated meaning");
+  });
+
+  it("treats an empty-string gloss as absent", () => {
+    const out = buildUserPrompt(
+      { ...glossed, glossEn: "" } as any,
+      "puedes",
+      "ES" as any,
+      "A1" as any,
+    );
+    expect(out).not.toContain("**Meaning");
+  });
+
+  it("keeps the #612 tense-licensing example for an unglossed cloze", () => {
+    const bare: ClozeContent = {
+      type: ExerciseType.CLOZE,
+      instructions: "Fill in the blank.",
+      sentence: "El portero no ___ entrar al edificio sin identificación.",
+      correctAnswer: "dejó",
+    };
+    const out = buildUserPrompt(bare as any, "deja", "ES" as any, "B1" as any);
+    expect(out).toContain('both the present "deja"');
   });
 });
