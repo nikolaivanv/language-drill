@@ -4,6 +4,14 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
+import {
+  extractParentheticals,
+  hasParenthetical,
+  parseAuditGlossArgs,
+  selectRowsToJudge,
+  type GlossRow,
+} from './audit-gloss.js';
+
 const here = path.dirname(fileURLToPath(import.meta.url));
 
 type FixtureCase = {
@@ -43,5 +51,98 @@ describe('fixtures/gloss-spoilage-cases.json', () => {
     for (const c of raw.cases.filter((x) => x.expected === 'spoiled')) {
       expect(c.glossEn).toContain('(');
     }
+  });
+});
+
+describe('parseAuditGlossArgs', () => {
+  it('defaults to a live run with no filters', () => {
+    const a = parseAuditGlossArgs([]);
+    expect(a.dryRun).toBe(false);
+    expect(a.checkFixture).toBe(false);
+    expect(a.language).toBeUndefined();
+  });
+
+  it('uppercases language and cefr because the pool stores them uppercase', () => {
+    const a = parseAuditGlossArgs(['--language', 'es', '--cefr', 'a1']);
+    expect(a.language).toBe('ES');
+    expect(a.cefr).toBe('A1');
+  });
+
+  it('parses numeric caps', () => {
+    const a = parseAuditGlossArgs(['--limit', '25', '--max-cost-usd', '1.5']);
+    expect(a.limit).toBe(25);
+    expect(a.maxCostUsd).toBe(1.5);
+  });
+
+  it('rejects a non-numeric limit rather than silently yielding NaN', () => {
+    expect(() => parseAuditGlossArgs(['--limit', 'lots'])).toThrow(/limit/);
+  });
+});
+
+describe('hasParenthetical / extractParentheticals', () => {
+  it('detects a parenthetical', () => {
+    expect(hasParenthetical('Today the weather is very bad. (a current condition)')).toBe(true);
+  });
+
+  it('is false for a plain gloss', () => {
+    expect(hasParenthetical('The coffee is on the table.')).toBe(false);
+  });
+
+  it('extracts every parenthetical span including the brackets', () => {
+    expect(
+      extractParentheticals('This lady (near me) is kind (really).'),
+    ).toEqual(['(near me)', '(really)']);
+  });
+
+  it('ignores an unclosed bracket', () => {
+    expect(extractParentheticals('Something (unclosed')).toEqual([]);
+  });
+});
+
+describe('selectRowsToJudge', () => {
+  const row = (id: string, point: string, gloss: string): GlossRow => ({
+    id,
+    grammarPointKey: point,
+    language: 'ES',
+    cefrLevel: 'A1',
+    sentence: 'x ___ y',
+    correctAnswer: 'a',
+    acceptableAnswers: null,
+    instructions: 'Fill in the blank.',
+    glossEn: gloss,
+  });
+
+  it('keeps every row of a point where English encodes the distinction', () => {
+    const rows = [row('1', 'es-a1-demonstratives', 'That tree over there.')];
+    const out = selectRowsToJudge(rows, new Map([['es-a1-demonstratives', true]]));
+    expect(out.map((r) => r.id)).toEqual(['1']);
+  });
+
+  it('drops a plain-gloss row in an excluded point', () => {
+    const rows = [row('1', 'es-a1-ser-estar-basic', 'The coffee is on the table.')];
+    const out = selectRowsToJudge(rows, new Map([['es-a1-ser-estar-basic', false]]));
+    expect(out).toEqual([]);
+  });
+
+  it('KEEPS a parenthetical row even in an excluded point', () => {
+    // This is the rule that catches "(a current condition)" on a ser/estar blank
+    // — the case that proves point-level exclusion alone is not enough.
+    const rows = [
+      row('1', 'es-a1-ser-estar-basic', 'The coffee is on the table.'),
+      row('2', 'es-a1-ser-estar-basic', 'Today the weather is bad. (a current condition)'),
+    ];
+    const out = selectRowsToJudge(rows, new Map([['es-a1-ser-estar-basic', false]]));
+    expect(out.map((r) => r.id)).toEqual(['2']);
+  });
+
+  it('keeps a row whose point has no verdict, rather than silently dropping it', () => {
+    const rows = [row('1', 'es-a1-unknown-point', 'Plain gloss.')];
+    expect(selectRowsToJudge(rows, new Map()).map((r) => r.id)).toEqual(['1']);
+  });
+
+  it('does not duplicate a parenthetical row in an included point', () => {
+    const rows = [row('1', 'es-a1-demonstratives', 'That tree (far away).')];
+    const out = selectRowsToJudge(rows, new Map([['es-a1-demonstratives', true]]));
+    expect(out).toHaveLength(1);
   });
 });
