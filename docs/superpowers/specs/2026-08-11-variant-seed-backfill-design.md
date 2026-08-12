@@ -97,7 +97,13 @@ id anywhere else.
 ### Write mechanics
 
 Every write is `jsonb_set(content_json, '{seedWord}', …)` **keyed on the row's
-primary key**, batched in a transaction per cell.
+primary key**, applied one row at a time in autocommit, stopping at the first
+failure. (An earlier draft of this spec said "batched in a transaction per
+cell"; the shipped code deliberately does not. A per-cell transaction would
+roll a cell back on failure, which sounds safer but is worse here: undo is
+artifact-based, and an artifact whose `appliedCount` says "the first N rows
+were written" is a precise description only if writes commit in order. The
+absence of a transaction is the design, not a regression.)
 
 This is the substantive departure from #631's recipe, which pattern-matches
 content in the `WHERE` clause

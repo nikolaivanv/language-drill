@@ -6,7 +6,9 @@ deliberate first slice on 2026-08-11, then Spanish and German on 2026-08-12 once
 the mechanism and the closed loop had been proven on one language._
 
 **Total: 1,766 rows labelled for $2.33.** Unrecognised-seed rows across the whole
-pool fell from **1,721 to 173**.
+pool fell from **1,939 → 173 across the whole exercise** (**1,721 → 173** as
+measured after the TR pass — 1,721 is the ES+DE+TR baseline taken on 2026-08-12,
+by which point TR had already dropped 246 → 28).
 
 ## Rollback
 
@@ -60,7 +62,13 @@ both passes.
 | ES | 956 → **80** | 26 → 14 | 4 → **30** |
 | DE | 737 → **65** | 18 → 8 | 6 → **22** |
 | TR | 246 → **28** | 7 → 3 | 0 → **10** |
-| **all** | **1,721 → 173** | | |
+| **all** | **1,939 → 173** | | |
+
+The "before" column is each language's own pre-pass measurement, so it sums to
+956 + 737 + 246 = **1,939** — the state before any of this work. The **1,721**
+figure quoted elsewhere is a different measurement time: the same total taken on
+2026-08-12, i.e. 956 + 737 + **28**, after the TR pass had already landed. Both
+are correct; they are not interchangeable.
 
 The arithmetic reconciles exactly: ES+DE had 1,693 unrecognised rows before,
 1,548 were labelled, 145 remain.
