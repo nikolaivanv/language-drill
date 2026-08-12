@@ -200,7 +200,7 @@
   {
     "id": "de-a1-zero-article-answer-stem-overlap-arzt",
     "label": "ambiguous",
-    "provenance": "PR #625, real demoted prod row (\"DE A1 zero article — noun restated\")",
+    "provenance": "PR #625, real demoted prod row (\"DE A1 zero article — noun restated\"); corrected 2026-08-12: why corrected — it previously asserted there was 'no well-formed fill' rather than naming a competing answer; 'ein' is the competitor",
     "language": "de",
     "cefrLevel": "A1",
     "grammarPointKey": "de-a1-zero-article",
@@ -211,7 +211,7 @@
       "correctAnswer": "Arzt",
       "acceptableAnswers": []
     },
-    "why": "Substituting the stored answer back gives \"Mein Vater ist Arzt Arzt\"; the zero-article target has no well-formed fill for a blank positioned before the already-printed noun, which the PR's own cure (blank the whole slot) confirms."
+    "why": "substituting the stored answer back gives 'Mein Vater ist Arzt Arzt'; the only well-formed fill for the printed stem is the indefinite article 'ein' ('Mein Vater ist ein Arzt' is grammatical German), which is not listed in acceptableAnswers."
   },
   {
     "id": "de-a2-two-way-prepositions-answer-stem-overlap-park",
@@ -312,7 +312,7 @@
   {
     "id": "es-a2-articles-use-answer-stem-overlap-enfermero",
     "label": "ambiguous",
-    "provenance": "PR #625, suspected-tier example (\"ES A2 article use — profession restated\")",
+    "provenance": "PR #625, suspected-tier example (\"ES A2 article use — profession restated\"); corrected 2026-08-12: why corrected — it previously named 'the empty string' rather than a competing answer; 'un' is the competitor, licensed because the profession noun is modified",
     "language": "es",
     "cefrLevel": "A2",
     "grammarPointKey": "es-a2-articles-use",
@@ -323,7 +323,7 @@
       "correctAnswer": "enfermero",
       "acceptableAnswers": []
     },
-    "why": "The stem already supplies `enfermero`; Spanish drops the article before an unmodified profession noun after `ser`, so the only well-formed fill is the empty string, which is not represented as an acceptable answer."
+    "why": "the stem already prints 'enfermero', so substituting the stored answer back duplicates it; the well-formed fill for the printed stem is 'un' — Spanish restores the article before a MODIFIED profession noun, and 'en un hospital grande' modifies it, so 'es un enfermero en un hospital grande' is correct. 'un' is not listed in acceptableAnswers."
   },
   {
     "id": "es-b1-superlatives-anchored-parque",
@@ -344,18 +344,18 @@
   {
     "id": "es-b1-superlatives-anchored-mercado",
     "label": "clean",
-    "provenance": "PR #633, named as a well-formed exemplar (the cure)",
+    "provenance": "PR #633, named as a well-formed exemplar (the cure); corrected 2026-08-12: stem corrected — the previous stem 'Este mercado es ___ barato de todo el barrio' yielded ungrammatical Spanish for the stored answer 'más' (a superlative with 'de' requires the article), so the case had no defensible correct answer at all",
     "language": "es",
     "cefrLevel": "B1",
     "grammarPointKey": "es-b1-superlatives-comparisons",
     "content": {
       "type": "cloze",
       "instructions": "Completa la frase con la forma correcta.",
-      "sentence": "Este mercado es ___ barato de todo el barrio, así que venimos aquí cada semana.",
+      "sentence": "Este mercado es el ___ barato de todo el barrio, así que venimos aquí cada semana.",
       "correctAnswer": "más",
       "acceptableAnswers": []
     },
-    "why": "`así que venimos aquí cada semana` (the weekly return) is an evaluative anchor that fits only the positive pole; `menos barato` would not motivate a weekly return."
+    "why": "the article 'el' is now printed before the blank, so 'el más barato de todo el barrio' is well formed and the blank holds only the polarity marker; 'así que venimos aquí cada semana' (the weekly return) is an evaluative anchor that fits only the cheap pole, so 'menos' does not compete."
   },
   {
     "id": "es-b1-superlatives-anchored-pelicula",
@@ -376,7 +376,7 @@
   {
     "id": "es-b1-influence-verbs-anchored-preterite-llegue",
     "label": "clean",
-    "provenance": "PR #611/#612, the well-anchored-preterite exemplar used as the over-correction guard (full sentence from PR #612's verification harness)",
+    "provenance": "PR #611/#612, the well-anchored-preterite exemplar used as the over-correction guard (full sentence from PR #612's verification harness); corrected 2026-08-12: UNSURE adjudicated: stays clean — a punctual 'cuando'+preterite trigger, not merely a bounded interval, is what excludes the imperfect here (closest call in the set)",
     "language": "es",
     "cefrLevel": "B1",
     "grammarPointKey": "es-b1-influence-verbs-infinitive",
@@ -387,7 +387,7 @@
       "correctAnswer": "dejó",
       "acceptableAnswers": []
     },
-    "why": "The in-stem preterite `llegué` forces the past reading; PR #612's behavioral harness confirms the present `deja` scores only 0.25 (stays wrong) on this stem."
+    "why": "'Cuando llegué tarde a la reunión' supplies a punctual triggering event that the main clause must be construed as consequent to, which forces the preterite; PR #612's behavioral harness confirms the present 'deja' scores only 0.25 here. This is the boundary case of the imperfect rule: unlike the bounded-interval-only stems (ayer / la semana pasada), a punctual trigger is present, so 'dejaba' does not compete."
   },
   {
     "id": "es-b1-nominalizers-clean-bateria",
@@ -423,8 +423,8 @@
   },
   {
     "id": "de-a1-accusative-clean-hund",
-    "label": "clean",
-    "provenance": "PR #625, checkClozeOverlap \"no overlap / clean cloze\" fixture",
+    "label": "ambiguous",
+    "provenance": "PR #625, checkClozeOverlap \"no overlap / clean cloze\" fixture; corrected 2026-08-12: relabelled clean -> ambiguous. The original why only checked adjacent stem overlap (a different defect) and never asked whether a second accusative determiner fits",
     "language": "de",
     "cefrLevel": "A1",
     "grammarPointKey": "de-a1-accusative",
@@ -435,12 +435,12 @@
       "correctAnswer": "einen",
       "acceptableAnswers": []
     },
-    "why": "The blank does not restate any word adjacent to it, and no second accusative-article form is equally valid for this stem."
+    "why": "no lemma cue is shown and the sentence stands alone, so 'keinen' ('Ich habe keinen Hund' — I don't have a dog) is a fully correct, complete assertion on the visible text, as are 'den' and 'meinen'; none is listed in acceptableAnswers. Contrast the sibling case whose follow-on sentence presupposes the dog exists and thereby kills 'keinen'."
   },
   {
     "id": "de-a1-accusative-clean-hund-repeated-elsewhere",
     "label": "clean",
-    "provenance": "PR #625, checkClozeOverlap fixture illustrating non-adjacent repetition is fine",
+    "provenance": "PR #625, checkClozeOverlap fixture illustrating non-adjacent repetition is fine; corrected 2026-08-12: why strengthened — this case is clean because of the anaphoric follow-on, not merely because the repetition of 'Hund' is non-adjacent; it is the clean member of a genuine minimal pair with de-a1-accusative-clean-hund",
     "language": "de",
     "cefrLevel": "A1",
     "grammarPointKey": "de-a1-accusative",
@@ -451,12 +451,12 @@
       "correctAnswer": "einen",
       "acceptableAnswers": []
     },
-    "why": "`Hund` recurs in a later, separate sentence rather than immediately after the blank, so it is not a stem-overlap defect and no alternative answer is licensed."
+    "why": "the follow-on 'Der Hund ist sehr süß' presupposes that a dog exists and anaphorically picks it up, which kills the 'keinen' reading that makes the bare sibling ambiguous; 'den'/'meinen' are definite and leave 'Ich habe den Hund.' pragmatically incomplete as an opening assertion (they need a situational referent the text does not supply), so only 'einen' yields a complete, coherent two-sentence text."
   },
   {
     "id": "de-a1-zero-article-cured-arzt",
-    "label": "clean",
-    "provenance": "PR #625, the generation prompt's own cure for the Arzt defect (blank swallows the whole slot)",
+    "label": "ambiguous",
+    "provenance": "PR #625, the generation prompt's own cure for the Arzt defect (blank swallows the whole slot); corrected 2026-08-12: relabelled clean -> ambiguous. PR #625's whole-slot cure fixes the overlap defect and introduces an open-lexical-class defect in its place",
     "language": "de",
     "cefrLevel": "A1",
     "grammarPointKey": "de-a1-zero-article",
@@ -467,7 +467,7 @@
       "correctAnswer": "Arzt",
       "acceptableAnswers": []
     },
-    "why": "The blank swallows the whole zero-article slot including the noun, so substituting back reads correctly and no second fill is equally valid."
+    "why": "'Mein Vater ist ___.' admits any profession noun or predicate adjective, an open class with no enumeration at all: 'Lehrer' is fully correct and unlisted, as are 'Ingenieur', 'Rentner' and 'müde'. Swallowing the whole slot cures the answer-restates-stem defect but replaces it with an underdetermined lexeme."
   },
   {
     "id": "tr-a1-plural-suffix-clean-portakal",
@@ -487,8 +487,8 @@
   },
   {
     "id": "tr-a2-distributive-clean-ikiser",
-    "label": "clean",
-    "provenance": "PR #625, quoted directly in the PR body as a legitimate adjacent-repetition construction",
+    "label": "ambiguous",
+    "provenance": "PR #625, quoted directly in the PR body as a legitimate adjacent-repetition construction; corrected 2026-08-12: relabelled clean -> ambiguous. The original why established that 'ikişer ikişer' is a real construction, which is true but irrelevant — it never asked what ELSE could fill the pre-'ikişer' slot",
     "language": "tr",
     "cefrLevel": "A2",
     "grammarPointKey": "tr-a2-distributive",
@@ -499,12 +499,12 @@
       "correctAnswer": "ikişer",
       "acceptableAnswers": []
     },
-    "why": "\"ikişer ikişer\" is genuine Turkish distributive reduplication (\"two by two\"), a real construction rather than a stem-overlap defect, and no other distributive form fits this stem."
+    "why": "no lemma cue is shown and the blank sits BEFORE the printed 'ikişer', so it is an open adverbial slot: 'sonra' ('Öğrenciler sıraya geçti; sonra ikişer oturdu' — then they sat two by two) is fully correct and idiomatic, as are 'sessizce' and 'yavaşça'; none is listed in acceptableAnswers. The reduplication reading is only one of many fills, not a forced one."
   },
   {
     "id": "tr-a1-vowel-harmony-definiteness-kahve",
     "label": "ambiguous",
-    "provenance": "learner-flag, prod (tr-a1-vowel-harmony)",
+    "provenance": "learner-flag, prod (tr-a1-vowel-harmony); corrected 2026-08-12: why corrected — it previously named the bare form 'kahve' as the competitor, which a glued suffix slot cannot produce; the real competitor is possessive+accusative ('sini')",
     "language": "tr",
     "cefrLevel": "A1",
     "grammarPointKey": "tr-a1-vowel-harmony",
@@ -515,12 +515,12 @@
       "correctAnswer": "yi",
       "acceptableAnswers": []
     },
-    "why": "her sabah (a habitual/generic frame) licenses the unmarked generic direct object 'kahve' just as validly as the accusative-marked 'kahveyi' (curriculum's own tr-a1-accusative-definite-object rule: a bare noun right before the verb stays unmarked when indefinite); nothing in the sentence establishes a specific, previously-known coffee that would force accusative marking, so the bare/unsuffixed reading is a genuine unlisted competitor to 'yi'."
+    "why": "the blank is glued to the stem ('kahve___'), so it is a suffix slot and the bare generic object 'kahve' is not typeable at all. The real unlisted competitor is the 3sg-possessive+accusative: filling 'sini' gives 'Ahmet her sabah kahvesini içer' ('drinks his coffee every morning'), whose possessor is recoverable from the subject Ahmet and which is at least as natural as the stored 'kahveyi' here, since nothing establishes a specific previously-known coffee. 'kahvesini' is not listed in acceptableAnswers."
   },
   {
     "id": "tr-a1-vowel-harmony-definiteness-sut",
     "label": "ambiguous",
-    "provenance": "learner-flag, prod (tr-a1-vowel-harmony)",
+    "provenance": "learner-flag, prod (tr-a1-vowel-harmony); corrected 2026-08-12: why corrected — it previously named the bare form 'süt' as the competitor, which a glued suffix slot cannot produce; the real competitor is possessive+accusative ('ünü')",
     "language": "tr",
     "cefrLevel": "A1",
     "grammarPointKey": "tr-a1-vowel-harmony",
@@ -531,7 +531,7 @@
       "correctAnswer": "ü",
       "acceptableAnswers": []
     },
-    "why": "a single past event with no definiteness cue (no prior mention of a specific milk) licenses the unmarked generic object 'süt' ('drank milk', indefinite) exactly as validly as the accusative 'sütü' ('drank the milk'); the curriculum's own tr-a1-accusative-definite-object rule holds a bare preverbal object grammatical when indefinite, so the bare reading is a genuine unlisted competitor."
+    "why": "the blank is glued to the stem ('süt___'), so it is a suffix slot and the bare generic object 'süt' is not typeable at all. The real unlisted competitor is the 3sg-possessive+accusative: filling 'ünü' gives 'Ahmet sütünü içti' ('drank his milk'), whose possessor is recoverable from the subject Ahmet and which is fully correct on the visible text. 'sütünü' is not listed in acceptableAnswers."
   },
   {
     "id": "tr-a1-imperative-register-say",
@@ -680,50 +680,50 @@
   {
     "id": "de-b1-comparison-berg-hoch-niedrig",
     "label": "ambiguous",
-    "provenance": "authored: polarity-unanchored superlative (#633 pattern)",
+    "provenance": "authored: polarity-unanchored superlative (#633 pattern); corrected 2026-08-12: lemma cue '(hoch)' stripped from instructions. Instructions ARE rendered to the learner (commits 489953f0 drill card / 187c71a1 debrief card), so with the cue shown 'der höchste' was the only form of 'hoch' that fits and the case was not ambiguous at all",
     "language": "de",
     "cefrLevel": "B1",
     "grammarPointKey": "de-b1-comparison-attributive",
     "content": {
       "type": "cloze",
-      "instructions": "Ergänze den Satz mit der richtigen Form. (hoch)",
+      "instructions": "Ergänze den Satz mit der richtigen Form.",
       "sentence": "Dieser Berg ist der ___ von allen in der Region.",
       "correctAnswer": "höchste",
       "acceptableAnswers": []
     },
-    "why": "the superlative frame 'von allen in der Region' is symmetric; 'der niedrigste' (the lowest) fits exactly as well as the stored 'der höchste' and is not listed as an acceptable answer."
+    "why": "the blank swallows the whole superlative adjective and no lemma cue is shown, so the symmetric frame 'von allen in der Region' licenses 'der niedrigste' (the lowest) exactly as well as the stored 'der höchste'; 'der niedrigste' is not listed in acceptableAnswers."
   },
   {
     "id": "de-b1-comparison-uebung-schwierig-leicht",
     "label": "ambiguous",
-    "provenance": "authored: polarity-unanchored superlative (#633 pattern)",
+    "provenance": "authored: polarity-unanchored superlative (#633 pattern); corrected 2026-08-12: lemma cue '(schwierig)' stripped from instructions — rendered instructions (489953f0 / 187c71a1) made the cue determine the answer, leaving nothing ambiguous",
     "language": "de",
     "cefrLevel": "B1",
     "grammarPointKey": "de-b1-comparison-attributive",
     "content": {
       "type": "cloze",
-      "instructions": "Ergänze den Satz mit der richtigen Form. (schwierig)",
+      "instructions": "Ergänze den Satz mit der richtigen Form.",
       "sentence": "Diese Übung war die ___ von allen im Kurs.",
       "correctAnswer": "schwierigste",
       "acceptableAnswers": []
     },
-    "why": "the superlative frame 'von allen im Kurs' is symmetric; 'die leichteste' (the easiest) fits exactly as well as the stored 'die schwierigste' and is not listed as an acceptable answer."
+    "why": "the blank swallows the whole superlative adjective and no lemma cue is shown, so the symmetric frame 'von allen im Kurs' licenses 'die leichteste' (the easiest) exactly as well as the stored 'die schwierigste'; 'die leichteste' is not listed in acceptableAnswers."
   },
   {
     "id": "tr-a1-comparative-superlative-otel-pahali-ucuz",
     "label": "ambiguous",
-    "provenance": "authored: polarity-unanchored superlative (#633 pattern)",
+    "provenance": "authored: polarity-unanchored superlative (#633 pattern); corrected 2026-08-12: lemma cue '(pahalı)' stripped from instructions. The cue was the stored answer VERBATIM, so with instructions rendered (489953f0 / 187c71a1) the case was a trivial copy task, not an ambiguity case; stripping the cue restores a genuine open-adjective superlative slot",
     "language": "tr",
     "cefrLevel": "A1",
     "grammarPointKey": "tr-a1-comparative-superlative",
     "content": {
       "type": "cloze",
-      "instructions": "Boşluğu doğru formla tamamlayın. (pahalı)",
+      "instructions": "Boşluğu doğru formla tamamlayın.",
       "sentence": "Bu otel şehirde en ___ otel.",
       "correctAnswer": "pahalı",
       "acceptableAnswers": []
     },
-    "why": "the superlative frame 'şehirde en ___ otel' is symmetric; 'ucuz' (cheapest) fits exactly as well as the stored 'pahalı' (most expensive) and is not listed as an acceptable answer."
+    "why": "with no lemma cue shown, the symmetric superlative frame 'şehirde en ___ otel' licenses 'ucuz' (cheapest) exactly as well as the stored 'pahalı' (most expensive), and 'ucuz' is not listed in acceptableAnswers."
   },
   {
     "id": "de-a1-es-gibt-klassenzimmer-uncured",
@@ -823,8 +823,8 @@
   },
   {
     "id": "es-b1-influence-verbs-movil-clase-anchored",
-    "label": "clean",
-    "provenance": "authored: in-stem past anchor (cure of the tense-unanchored pattern)",
+    "label": "ambiguous",
+    "provenance": "authored: in-stem past anchor (cure of the tense-unanchored pattern); corrected 2026-08-12: UNSURE adjudicated + relabelled clean -> ambiguous: a bounded past adverbial does not exclude the imperfect for a stative predicate with no punctual trigger",
     "language": "es",
     "cefrLevel": "B1",
     "grammarPointKey": "es-b1-influence-verbs-infinitive",
@@ -835,12 +835,12 @@
       "correctAnswer": "dejó",
       "acceptableAnswers": []
     },
-    "why": "'ayer' pins this to a single bounded day, forcing the preterite and ruling out both the present (no ongoing-rule reading fits 'ayer') and the imperfect (which would imply a repeated/habitual rule, contradicted by pinpointing one day)."
+    "why": "'ayer' bounds a past interval but supplies no punctual triggering event, and 'no dejar usar' is a stative standing permission, so the imperfect 'dejaba' ('Ayer el profesor no nos dejaba usar el móvil en clase' — the rule held throughout yesterday's class) is fully correct on the visible text and is not listed in acceptableAnswers. Same adjudication as the entrenador/'la semana pasada' case."
   },
   {
     "id": "es-b1-influence-verbs-entrenador-semana-pasada-anchored",
-    "label": "clean",
-    "provenance": "authored: explicit past adverbial anchor (cure of the tense-unanchored pattern)",
+    "label": "ambiguous",
+    "provenance": "authored: explicit past adverbial anchor (cure of the tense-unanchored pattern); corrected 2026-08-12: relabelled clean -> ambiguous. The original why asserted that a named past week rules out the imperfect, which is the same over-generalisation PR #619 corrected in the opposite direction",
     "language": "es",
     "cefrLevel": "B1",
     "grammarPointKey": "es-b1-influence-verbs-infinitive",
@@ -851,7 +851,7 @@
       "correctAnswer": "hizo",
       "acceptableAnswers": []
     },
-    "why": "'la semana pasada' pins this to one specific past week, forcing the preterite and ruling out both the present (no ongoing-rule reading fits a named past week) and the imperfect (which would imply a standing, repeated rule)."
+    "why": "'la semana pasada' bounds an extended past interval but supplies no punctual triggering event, and 'no ... hacer entrenar' is stative (a standing non-permission) with a durative cause 'por la lluvia' — precisely the imperfect's environment — so 'hacía' is fully correct on the visible text and is not listed in acceptableAnswers. A bounded past adverbial does not by itself exclude the imperfect (the mirror of the PR #619 bug)."
   },
   {
     "id": "es-a2-imperfect-abuelo-periodico-anchored",
@@ -888,7 +888,7 @@
   {
     "id": "de-b1-comparison-berg-anchored",
     "label": "clean",
-    "provenance": "authored: evaluative-consequence anchor (cure of the polarity-unanchored pattern)",
+    "provenance": "authored: evaluative-consequence anchor (cure of the polarity-unanchored pattern); corrected 2026-08-12: why corrected — the audit was right that the evaluative anchor does no work here; the case is clean because the RENDERED lemma cue (489953f0 / 187c71a1) closes the adjective class, and it is retained deliberately",
     "language": "de",
     "cefrLevel": "B1",
     "grammarPointKey": "de-b1-comparison-attributive",
@@ -899,12 +899,12 @@
       "correctAnswer": "höchste",
       "acceptableAnswers": []
     },
-    "why": "'deshalb kommen so viele Wanderer her' (that's why so many hikers come here) is an evaluative consequence that fits only the high pole; 'der niedrigste' would not motivate a flood of hikers."
+    "why": "the visible lemma cue '(hoch)' is the load-bearing constraint: 'höchste' is the only superlative of 'hoch', so no other adjective can fill the blank. 'deshalb kommen so viele Wanderer her' corroborates the high pole but is not doing the work — a German attributive superlative is one portmanteau word, so the blank always swallows the adjective and only the cue can close the lexical class."
   },
   {
     "id": "de-b1-comparison-uebung-anchored",
     "label": "clean",
-    "provenance": "authored: evaluative-consequence anchor (cure of the polarity-unanchored pattern)",
+    "provenance": "authored: evaluative-consequence anchor (cure of the polarity-unanchored pattern); corrected 2026-08-12: why corrected — clean because the RENDERED lemma cue closes the adjective class, not because of the evaluative anchor; cue retained deliberately",
     "language": "de",
     "cefrLevel": "B1",
     "grammarPointKey": "de-b1-comparison-attributive",
@@ -915,12 +915,12 @@
       "correctAnswer": "schwierigste",
       "acceptableAnswers": []
     },
-    "why": "'deshalb hat niemand sie fertig gelöst' (that's why nobody finished it) fits only the high-difficulty pole; 'die leichteste' would not explain nobody finishing it."
+    "why": "the visible lemma cue '(schwierig)' is the load-bearing constraint: 'schwierigste' is the only superlative of 'schwierig'. 'deshalb hat niemand sie fertig gelöst' corroborates the high-difficulty pole but cannot by itself pin the lexeme, because the German attributive superlative is a single word that the blank necessarily swallows."
   },
   {
     "id": "tr-a1-comparative-superlative-otel-anchored",
     "label": "clean",
-    "provenance": "authored: evaluative-consequence anchor (cure of the polarity-unanchored pattern)",
+    "provenance": "authored: evaluative-consequence anchor (cure of the polarity-unanchored pattern); corrected 2026-08-12: why corrected — clean because the RENDERED lemma cue closes the adjective class; the evaluative anchor alone would leave 'kötü'/'küçük' open",
     "language": "tr",
     "cefrLevel": "A1",
     "grammarPointKey": "tr-a1-comparative-superlative",
@@ -931,12 +931,12 @@
       "correctAnswer": "pahalı",
       "acceptableAnswers": []
     },
-    "why": "'bu yüzden çok az insan kalıyor' (that's why very few people stay) fits only the high-price pole; 'ucuz' (cheapest) would predict more guests, not fewer."
+    "why": "the visible lemma cue '(pahalı)' closes the adjective slot after 'en'. The anchor 'bu yüzden çok az insan kalıyor' corroborates the high-price reading but cannot pin the lexeme on its own — 'kötü' (worst), 'küçük' (smallest) and 'eski' (oldest) would all explain few guests just as well, which is exactly why the cue is retained here."
   },
   {
     "id": "de-a1-es-gibt-klassenzimmer-cured",
-    "label": "clean",
-    "provenance": "authored: enumerated-alternatives cure of the underdetermined-lexeme pattern",
+    "label": "ambiguous",
+    "provenance": "authored: enumerated-alternatives cure of the underdetermined-lexeme pattern; corrected 2026-08-12: relabelled clean -> ambiguous. Deliberately kept alongside the '-uncured' twin: the pair is the fixture's positive evidence that a PARTIAL enumeration is not a cure",
     "language": "de",
     "cefrLevel": "A1",
     "grammarPointKey": "de-a1-es-gibt",
@@ -951,12 +951,12 @@
         "Fenster"
       ]
     },
-    "why": "the sentence is exactly as underdetermined as the uncured version, but every other plausible plural noun (Tische, Bücher, Fenster) is now enumerated in acceptableAnswers, curing the ambiguity."
+    "why": "'Im Klassenzimmer gibt es acht ___' admits an open lexical class, so a four-item list cannot close it: 'Lampen' is fully correct and unlisted, as are 'Computer', 'Pflanzen' and 'Landkarten'. Enumerating three of an open class leaves the ambiguity intact — the list only shortens the tail, it does not terminate it."
   },
   {
     "id": "es-a1-hay-nevera-cured",
-    "label": "clean",
-    "provenance": "authored: enumerated-alternatives cure of the underdetermined-lexeme pattern",
+    "label": "ambiguous",
+    "provenance": "authored: enumerated-alternatives cure of the underdetermined-lexeme pattern; corrected 2026-08-12: relabelled clean -> ambiguous. The blank admits any countable fridge item; three listed alternatives leave an unbounded tail",
     "language": "es",
     "cefrLevel": "A1",
     "grammarPointKey": "es-a1-hay-estar",
@@ -971,12 +971,12 @@
         "yogures"
       ]
     },
-    "why": "the sentence is exactly as underdetermined as the uncured version, but every other plausible countable fridge item (huevos, botellas, yogures) is now enumerated in acceptableAnswers, curing the ambiguity."
+    "why": "'En la nevera hay tres ___' admits an open lexical class, so a three-item list cannot close it: 'naranjas' is fully correct and unlisted, as are 'cervezas', 'tomates' and 'quesos'. Enumeration cures only closed classes."
   },
   {
     "id": "tr-a1-plural-suffix-siniftaki-sekiz-cured",
-    "label": "clean",
-    "provenance": "PR #586, enumerated cure of its own Ambiguous-blank example",
+    "label": "ambiguous",
+    "provenance": "PR #586, enumerated cure of its own Ambiguous-blank example; corrected 2026-08-12: relabelled clean -> ambiguous. PR #586's enumerated cure is itself unsound for an open lexical class; the fixture must record the linguistic fact, not the prompt's claim",
     "language": "tr",
     "cefrLevel": "A1",
     "grammarPointKey": "tr-a1-plural-suffix",
@@ -992,12 +992,12 @@
         "defter"
       ]
     },
-    "why": "PR #586 names exactly this enumerated set as the cure: sandalye, kalem, kitap and defter are listed in acceptableAnswers alongside 'öğrenci', so no unlisted competitor remains."
+    "why": "'Sınıfta sekiz ___ var' admits an open lexical class that four listed nouns cannot close: 'masa' is fully correct and unlisted, as are 'sıra', 'pencere' and 'lamba'. PR #586 offered this enumeration as its own cure, but enumerating four members of an open class does not terminate it."
   },
   {
     "id": "tr-a1-plural-suffix-evde-yeni-perdeler-cured-enumerated",
-    "label": "clean",
-    "provenance": "PR #586, enumerated cure of its own Ambiguous-blank example",
+    "label": "ambiguous",
+    "provenance": "PR #586, enumerated cure of its own Ambiguous-blank example; corrected 2026-08-12: relabelled clean -> ambiguous. PR #586's enumerated cure leaves an unbounded tail of plural household nouns",
     "language": "tr",
     "cefrLevel": "A1",
     "grammarPointKey": "tr-a1-plural-suffix",
@@ -1012,12 +1012,12 @@
         "lambalar"
       ]
     },
-    "why": "PR #586 names exactly this enumerated set as the cure: kitaplar, çiçekler and lambalar are listed in acceptableAnswers alongside 'perdeler', so no unlisted competitor remains."
+    "why": "'Evde yeni ___ var. Onlar çok güzel.' admits an open lexical class that three listed nouns cannot close: 'halılar' is fully correct and unlisted, as are 'koltuklar' and 'tablolar'. The follow-on 'Onlar çok güzel' applies to any of them."
   },
   {
     "id": "tr-a1-plural-suffix-evde-yeni-perdeler-cured-tightened",
-    "label": "clean",
-    "provenance": "PR #586, tightened-framing cure of its own Ambiguous-blank example",
+    "label": "ambiguous",
+    "provenance": "PR #586, tightened-framing cure of its own Ambiguous-blank example; corrected 2026-08-12: relabelled clean -> ambiguous. PR #586 named this tightened follow-on as its cure, but washability selects a category, not a single lexeme",
     "language": "tr",
     "cefrLevel": "A1",
     "grammarPointKey": "tr-a1-plural-suffix",
@@ -1028,12 +1028,12 @@
       "correctAnswer": "perdeler",
       "acceptableAnswers": []
     },
-    "why": "PR #586 names this exact tightened follow-on as the cure: 'Onları yıkamayı unutma' (don't forget to wash them) picks out curtains specifically — books, flowers and lamps are not household items one 'washes' — so no genuine competitor remains even without enumeration."
+    "why": "'Onları yıkamayı unutma' (don't forget to wash them) narrows the class but does not close it: 'havlular' (new towels at home — don't forget to wash them) is fully correct and unlisted, as are 'çarşaflar' and 'örtüler'. A tightened follow-on that still admits a whole category of washable household textiles is not a cure."
   },
   {
     "id": "es-a2-preterite-regular-ayer-hable",
     "label": "clean",
-    "provenance": "authored: explicit past adverbial anchor",
+    "provenance": "authored: explicit past adverbial anchor; corrected 2026-08-12: UNSURE adjudicated: imperfect ruled NOT a competitor here — dynamic activity with no anchoring event, the aspectual-class corollary of the rule that made the entrenador case ambiguous",
     "language": "es",
     "cefrLevel": "A2",
     "grammarPointKey": "es-a2-preterite-regular",
@@ -1044,12 +1044,12 @@
       "correctAnswer": "hablé",
       "acceptableAnswers": []
     },
-    "why": "'ayer' alone, with no interrupting or backgrounding clause, names a single bounded past occasion; the imperfect 'hablaba' is not idiomatic as a bare, complete sentence here (it needs a companion event to interrupt), so only the preterite fits."
+    "why": "'hablar por teléfono' is a dynamic, bounded activity, not a state, so under 'ayer' the imperfect has no habitual reading (a single day blocks it) and no stative reading; its only remaining reading is progressive-background, which requires an anchoring event that the visible text does not supply ('Ayer hablaba con mi madre por teléfono' reads as truncated). By the recoverability rule 'hablaba' does not compete, leaving the preterite 'hablé'."
   },
   {
     "id": "es-a2-preterite-irregular-paris-primera-vez",
     "label": "clean",
-    "provenance": "authored: explicit past adverbial + entailing 'first time' anchor",
+    "provenance": "authored: explicit past adverbial + entailing 'first time' anchor; corrected 2026-08-12: UNSURE adjudicated: imperfect ruled NOT a competitor — 'por primera vez' entails a single unrepeated event",
     "language": "es",
     "cefrLevel": "A2",
     "grammarPointKey": "es-a2-preterite-irregular",
@@ -1060,7 +1060,7 @@
       "correctAnswer": "fui",
       "acceptableAnswers": []
     },
-    "why": "'el año pasado' pins a specific past year and 'por primera vez' entails a single, unrepeated event, which together force the preterite and rule out the imperfect (which would imply a repeated/habitual trip, contradicted by 'por primera vez')."
+    "why": "'el año pasado' bounds the interval and 'por primera vez' entails a single unrepeated event, which blocks the imperfect's habitual reading outright; no anchoring event is present for a progressive-background reading either, so 'iba' does not compete and only the preterite 'fui' fits."
   },
   {
     "id": "es-b1-preterite-imperfect-meaning-supe-ayer",
@@ -1081,7 +1081,7 @@
   {
     "id": "de-a2-perfekt-haben-gestern-buch",
     "label": "clean",
-    "provenance": "authored: fixed sentence structure with participle already shown",
+    "provenance": "authored: fixed sentence structure with participle already shown; corrected 2026-08-12: UNSURE adjudicated: isolated Plusquamperfekt ruled NOT a competitor (recoverability rule) — stays clean",
     "language": "de",
     "cefrLevel": "A2",
     "grammarPointKey": "de-a2-perfekt-with-haben",
@@ -1092,7 +1092,7 @@
       "correctAnswer": "habe",
       "acceptableAnswers": []
     },
-    "why": "the past participle 'gelesen' is already printed at the end of the sentence, so the blank can only be the Perfekt auxiliary; the Präteritum 'las' would duplicate the participle ungrammatically ('las ... gelesen'), leaving 'habe' as the sole fill."
+    "why": "the participle 'gelesen' is already printed, so the blank is the auxiliary slot; the visible cue '(haben)' also admits 'hatte', but 'Gestern hatte ich ein Buch gelesen' is Plusquamperfekt, an anaphoric tense that must be anterior to a later past reference point which nothing in the visible text supplies. Under the recoverability rule (a competitor may not require accommodating a referent the text does not provide) it does not compete, leaving 'habe' as the sole fill."
   },
   {
     "id": "de-a1-praeteritum-gestern-muede",
@@ -1113,7 +1113,7 @@
   {
     "id": "de-a2-perfekt-sein-letzte-woche-berlin",
     "label": "clean",
-    "provenance": "authored: fixed sentence structure + explicit past adverbial",
+    "provenance": "authored: fixed sentence structure + explicit past adverbial; corrected 2026-08-12: UNSURE adjudicated: isolated Plusquamperfekt ruled NOT a competitor (recoverability rule) — stays clean",
     "language": "de",
     "cefrLevel": "A2",
     "grammarPointKey": "de-a2-perfekt-with-sein",
@@ -1124,12 +1124,12 @@
       "correctAnswer": "sind",
       "acceptableAnswers": []
     },
-    "why": "the past participle 'gefahren' is already printed at the end of the sentence and 'fahren' takes 'sein' as its Perfekt auxiliary, so the blank can only be the present-tense 'sind'; no other auxiliary or tense fits the fixed frame."
+    "why": "'gefahren' is printed and 'fahren' takes 'sein', so the blank is the auxiliary slot; the cue '(sein)' also admits 'waren', but 'Letzte Woche waren wir nach Berlin gefahren' is Plusquamperfekt, which needs a later past reference point that the visible text does not supply. Under the recoverability rule it does not compete, leaving 'sind'."
   },
   {
     "id": "tr-a1-vowel-harmony-kahve-anchored",
     "label": "clean",
-    "provenance": "authored: definite-establishing relative clause (cure of the definiteness-ambiguity pattern)",
+    "provenance": "authored: definite-establishing relative clause (cure of the definiteness-ambiguity pattern); corrected 2026-08-12: UNSURE adjudicated: TR added-possessive ruled a genuine competitor (possessor recoverable from the subject); cured by listing 'kahvesini' rather than relabelling, so the case still measures the definiteness anchor",
     "language": "tr",
     "cefrLevel": "A1",
     "grammarPointKey": "tr-a1-vowel-harmony",
@@ -1138,14 +1138,16 @@
       "instructions": "Boşluğu doğru formla tamamlayın. (kahve)",
       "sentence": "Ahmet her sabah masadaki ___ içer.",
       "correctAnswer": "kahveyi",
-      "acceptableAnswers": []
+      "acceptableAnswers": [
+        "kahvesini"
+      ]
     },
-    "why": "'masadaki' ('the one that's on the table') establishes a specific, previously-locatable coffee, forcing the accusative 'kahveyi' and ruling out the bare/generic reading that made the learner-flagged unanchored version ambiguous."
+    "why": "'masadaki' establishes a specific coffee, forcing accusative marking and ruling out the bare generic reading. The one remaining competitor is the 3sg-possessive+accusative 'kahvesini' ('Ahmet her sabah masadaki kahvesini içer'), whose possessor is recoverable from the subject Ahmet — it is now listed in acceptableAnswers. Enumeration is a genuine cure here because the competitor set is a closed grammatical paradigm (accusative vs possessive+accusative), unlike the open lexical classes in the Group D cases."
   },
   {
     "id": "tr-a1-vowel-harmony-sut-anchored",
     "label": "clean",
-    "provenance": "authored: definite-establishing relative clause (cure of the definiteness-ambiguity pattern)",
+    "provenance": "authored: definite-establishing relative clause (cure of the definiteness-ambiguity pattern); corrected 2026-08-12: UNSURE adjudicated: TR added-possessive ruled a genuine competitor; cured by listing 'sütünü'",
     "language": "tr",
     "cefrLevel": "A1",
     "grammarPointKey": "tr-a1-vowel-harmony",
@@ -1154,14 +1156,16 @@
       "instructions": "Boşluğu doğru formla tamamlayın. (süt)",
       "sentence": "Ahmet masadaki ___ içti.",
       "correctAnswer": "sütü",
-      "acceptableAnswers": []
+      "acceptableAnswers": [
+        "sütünü"
+      ]
     },
-    "why": "'masadaki' establishes a specific, previously-locatable milk, forcing the accusative 'sütü' and ruling out the bare/generic reading that made the learner-flagged unanchored version ambiguous."
+    "why": "'masadaki' establishes a specific milk, forcing accusative marking and ruling out the bare generic reading. The 3sg-possessive+accusative 'sütünü' ('Ahmet masadaki sütünü içti') is a genuine competitor whose possessor is recoverable from the subject Ahmet, and it is now listed in acceptableAnswers — a closed two-member paradigm, so enumeration genuinely closes it."
   },
   {
     "id": "tr-a1-accusative-kitabi-anchored",
     "label": "clean",
-    "provenance": "authored: definite-establishing relative clause",
+    "provenance": "authored: definite-establishing relative clause; corrected 2026-08-12: UNSURE adjudicated: TR added-possessive ruled a genuine competitor; cured by listing 'yeni kitabını'",
     "language": "tr",
     "cefrLevel": "A1",
     "grammarPointKey": "tr-a1-accusative-definite-object",
@@ -1170,14 +1174,16 @@
       "instructions": "Boşluğu doğru formla tamamlayın. (yeni kitap)",
       "sentence": "Ali, masada duran ___ okudu.",
       "correctAnswer": "yeni kitabı",
-      "acceptableAnswers": []
+      "acceptableAnswers": [
+        "yeni kitabını"
+      ]
     },
-    "why": "'masada duran' ('the one sitting on the table') establishes a specific, previously-locatable book, forcing the accusative 'yeni kitabı'; a bare 'yeni kitap' would contradict the definite relative clause pointing to one particular book."
+    "why": "'masada duran' establishes a specific book, forcing accusative marking and ruling out bare 'yeni kitap'. The 3sg-possessive+accusative 'yeni kitabını' ('Ali, masada duran yeni kitabını okudu') is a genuine competitor whose possessor is recoverable from the subject Ali, and it is now listed in acceptableAnswers — a closed paradigm, so enumeration closes it."
   },
   {
     "id": "es-a1-hay-estar-libros-mesa",
-    "label": "clean",
-    "provenance": "authored: definite-article anchor (hay vs. estar contrast)",
+    "label": "ambiguous",
+    "provenance": "authored: definite-article anchor (hay vs. estar contrast); corrected 2026-08-12: relabelled clean -> ambiguous. The definite-subject argument only rules out 'hay'; it says nothing about tense, and the stem carries no temporal anchor",
     "language": "es",
     "cefrLevel": "A1",
     "grammarPointKey": "es-a1-hay-estar",
@@ -1188,7 +1194,7 @@
       "correctAnswer": "están",
       "acceptableAnswers": []
     },
-    "why": "the definite article on 'los libros' marks an already-identified referent, which requires 'estar'; 'hay' never combines with a definite-marked subject ('*hay los libros' is ungrammatical, mirroring the point's own '*hay el banco' negative example), leaving 'están' as the sole fill."
+    "why": "the visible cue '(estar)' fixes the lemma but not the tense, and no temporal anchor appears anywhere in the sentence; the imperfect 'estaban' ('the books were on the table') is fully correct on the visible text — as is the future 'estarán' — and neither is listed in acceptableAnswers."
   },
   {
     "id": "de-a2-two-way-prepositions-katze-sitzt",
@@ -1224,8 +1230,8 @@
   },
   {
     "id": "es-b1-nominalizers-coche-hermano",
-    "label": "clean",
-    "provenance": "authored: gender-agreement-forced nominalizer, no adjacent overlap",
+    "label": "ambiguous",
+    "provenance": "authored: gender-agreement-forced nominalizer, no adjacent overlap; corrected 2026-08-12: relabelled clean -> ambiguous. The original why checked gender agreement but missed that the stem prints 'de' immediately after the blank, duplicating the answer's own preposition",
     "language": "es",
     "cefrLevel": "B1",
     "grammarPointKey": "es-b1-nominalizers",
@@ -1236,7 +1242,7 @@
       "correctAnswer": "el de",
       "acceptableAnswers": []
     },
-    "why": "the nominalizer must agree with the masculine singular referent 'coche', so only 'el de' fits; nothing after the blank duplicates the answer."
+    "why": "'de' is already printed after the blank, so substituting the stored 'el de' back gives 'prefiero el de de mi hermano'; the only well-formed fill for the printed stem is 'el' alone, which is not listed in acceptableAnswers. This is the same answer-restates-stem defect as the escaparate case."
   },
   {
     "id": "es-a2-personal-a-sara-clase",
@@ -1272,8 +1278,8 @@
   },
   {
     "id": "tr-a2-distributive-ogretmen-ikiser",
-    "label": "clean",
-    "provenance": "authored: distributive meaning required by the curriculum's own prescriptive rule",
+    "label": "ambiguous",
+    "provenance": "authored: distributive meaning required by the curriculum's own prescriptive rule; corrected 2026-08-12: relabelled clean -> ambiguous. The original why leaned on the point's commonErrors, but a prescriptive curriculum note cannot make a well-formed Turkish sentence incorrect",
     "language": "tr",
     "cefrLevel": "A2",
     "grammarPointKey": "tr-a2-distributive",
@@ -1284,7 +1290,7 @@
       "correctAnswer": "ikişer",
       "acceptableAnswers": []
     },
-    "why": "the point's own commonErrors rule a plain numeral with 'her/herkese' ungrammatical for an each-unit reading (its own negative example: '*Herkese bir elma verdim' for 'one each' requires 'birer'), so the distributive 'ikişer' is the sole correct fill for 'two each' here."
+    "why": "'her öğrenciye' already carries the distribution, so the plain numeral 'iki' — which is also the printed lemma cue verbatim — gives ordinary Turkish: 'Öğretmen her öğrenciye iki kalem dağıttı' (the teacher handed out two pens to each student). 'iki' is fully correct and unlisted. The point's own negative example '*Herkese bir elma verdim' is qualified 'for \"one each\"' and only says a plain numeral reads as a flat count — which is exactly what is wanted once 'her öğrenciye' supplies the distribution."
   },
   {
     "id": "tr-a1-var-yok-param-yoktu",
