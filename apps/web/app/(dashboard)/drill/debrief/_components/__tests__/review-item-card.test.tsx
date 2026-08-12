@@ -239,6 +239,11 @@ describe('ReviewItemCard — cloze incorrect body', () => {
     expect(container.textContent).toContain('Si yo');
     expect(container.textContent).toContain('más tiempo, viajaría a Japón.');
   });
+
+  it('shows the cloze instructions the learner saw', () => {
+    render(<ReviewItemCard index={0} item={clozeItem()} />);
+    expect(screen.getByText('Fill in the blank')).toBeInTheDocument();
+  });
 });
 
 // ---------------------------------------------------------------------------
