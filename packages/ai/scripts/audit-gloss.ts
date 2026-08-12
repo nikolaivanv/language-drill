@@ -13,7 +13,7 @@
  *   pnpm audit:gloss --language ES --cefr A1 --max-cost-usd 2
  */
 
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
@@ -33,6 +33,9 @@ import {
   type PointTriageVerdict,
   type GlossVerdict,
 } from '../src/index.js';
+
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const DEFAULT_FIXTURE_PATH = path.join(SCRIPT_DIR, 'fixtures', 'gloss-spoilage-cases.json');
 
 export type AuditGlossFilters = {
   language?: string;
@@ -485,8 +488,415 @@ function printDryRunEstimate(rows: readonly GlossRow[], pointGroups: Map<string,
   );
 }
 
+// ---------------------------------------------------------------------------
+// --check-fixture — precision/recall gate over 10 known-answer prod rows.
+// Skips the database entirely. See docs/superpowers/sdd/2026-08-12-
+// gloss-spoilage-audit/task-5-brief.md: this is the run that decides whether
+// any verdict from this tool can be trusted.
+// ---------------------------------------------------------------------------
+
+/** Three draws because the judge is a nondeterministic LLM call — a single
+ *  draw near a decision boundary proves nothing (see
+ *  docs/analysis/qa-sample-findings-2026-08-11.md, where a one-draw verdict
+ *  was later reversed by an n=10 replay). */
+export const FIXTURE_DRAWS_PER_CASE = 3;
+
+export type FixtureCase = {
+  id: string;
+  grammarPointKey: string;
+  language: string;
+  cefrLevel: string;
+  sentence: string;
+  correctAnswer: string;
+  instructions: string;
+  glossEn: string;
+  expected: 'spoiled' | 'legitimate';
+  note: string;
+};
+
+const FIXTURE_CASE_STRING_FIELDS = [
+  'id',
+  'grammarPointKey',
+  'language',
+  'cefrLevel',
+  'sentence',
+  'correctAnswer',
+  'instructions',
+  'glossEn',
+  'expected',
+  'note',
+] as const;
+
+/** Reads and structurally validates the fixture. Throws on malformed input —
+ *  a bad fixture must fail loudly, not silently score a shorter set. */
+export function loadFixtureCases(fixturePath: string): FixtureCase[] {
+  const parsed = JSON.parse(readFileSync(fixturePath, 'utf8')) as { cases?: unknown };
+  if (!Array.isArray(parsed.cases)) {
+    throw new Error(`fixture at ${fixturePath} is missing a 'cases' array`);
+  }
+  return parsed.cases.map((raw, i) => {
+    if (typeof raw !== 'object' || raw === null) {
+      throw new Error(`fixture case ${i} is not an object`);
+    }
+    const obj = raw as Record<string, unknown>;
+    for (const field of FIXTURE_CASE_STRING_FIELDS) {
+      if (typeof obj[field] !== 'string' || (obj[field] as string).length === 0) {
+        throw new Error(
+          `fixture case ${i} (${String(obj.id ?? '?')}) missing non-empty string field '${field}'`,
+        );
+      }
+    }
+    const expected = obj.expected as string;
+    if (expected !== 'spoiled' && expected !== 'legitimate') {
+      throw new Error(`fixture case ${i} (${String(obj.id)}) has unknown expected '${expected}'`);
+    }
+    return {
+      id: obj.id as string,
+      grammarPointKey: obj.grammarPointKey as string,
+      language: obj.language as string,
+      cefrLevel: obj.cefrLevel as string,
+      sentence: obj.sentence as string,
+      correctAnswer: obj.correctAnswer as string,
+      instructions: obj.instructions as string,
+      glossEn: obj.glossEn as string,
+      expected,
+      note: obj.note as string,
+    };
+  });
+}
+
+export type FixtureDraw =
+  | {
+      ok: true;
+      verdict: GlossVerdict['verdict'];
+      offendingSpan: string | null;
+      proposedGloss: string | null;
+      loadBearing: boolean;
+      reasoning: string;
+      confidence: GlossVerdict['confidence'];
+    }
+  | { ok: false; error: string };
+
+export type FixtureCaseResult = {
+  id: string;
+  grammarPointKey: string;
+  expected: 'spoiled' | 'legitimate';
+  note: string;
+  draws: FixtureDraw[];
+  spoiledCount: number;
+  legitimateCount: number;
+  borderlineCount: number;
+  errorCount: number;
+  /** The verdict a strict majority (2 of 3) of successful draws agree on, or
+   *  'no-majority' when no single verdict clears that bar (including when
+   *  every draw errored). `borderline` can win a majority — that is
+   *  deliberate: a judge that hedges on a known spoiler has not caught it,
+   *  and reporting `borderline` as the majority (rather than folding it into
+   *  `legitimate`) surfaces the hedge instead of hiding it. */
+  majorityVerdict: GlossVerdict['verdict'] | 'no-majority';
+  /** true only when the majority verdict matches what this case requires:
+   *  'spoiled' for a known spoiler, 'legitimate' for a known-legitimate row.
+   *  A majority of 'borderline' counts as NOT caught for a spoiler. */
+  caughtCorrectly: boolean;
+};
+
+export type FixtureUnresolvedCase = {
+  id: string;
+  grammarPointKey: string;
+  error: string;
+};
+
+/** Strict majority (>50%) of the successful draws; ties and all-error cases
+ *  are reported as 'no-majority' rather than guessed at. */
+export function computeMajorityVerdict(
+  verdicts: readonly GlossVerdict['verdict'][],
+): GlossVerdict['verdict'] | 'no-majority' {
+  if (verdicts.length === 0) return 'no-majority';
+  const counts: Record<GlossVerdict['verdict'], number> = {
+    spoiled: 0,
+    legitimate: 0,
+    borderline: 0,
+  };
+  for (const v of verdicts) counts[v]++;
+  const entries = Object.entries(counts) as [GlossVerdict['verdict'], number][];
+  const max = Math.max(...entries.map(([, c]) => c));
+  const top = entries.filter(([, c]) => c === max);
+  if (top.length !== 1 || max * 2 <= verdicts.length) return 'no-majority';
+  return top[0][0];
+}
+
+export function buildFixtureCaseResult(
+  fixtureCase: FixtureCase,
+  draws: FixtureDraw[],
+): FixtureCaseResult {
+  const okDraws = draws.filter((d): d is Extract<FixtureDraw, { ok: true }> => d.ok);
+  const verdictList = okDraws.map((d) => d.verdict);
+  const spoiledCount = verdictList.filter((v) => v === 'spoiled').length;
+  const legitimateCount = verdictList.filter((v) => v === 'legitimate').length;
+  const borderlineCount = verdictList.filter((v) => v === 'borderline').length;
+  const errorCount = draws.length - okDraws.length;
+  const majorityVerdict = computeMajorityVerdict(verdictList);
+  const caughtCorrectly =
+    fixtureCase.expected === 'spoiled'
+      ? majorityVerdict === 'spoiled'
+      : majorityVerdict === 'legitimate';
+
+  return {
+    id: fixtureCase.id,
+    grammarPointKey: fixtureCase.grammarPointKey,
+    expected: fixtureCase.expected,
+    note: fixtureCase.note,
+    draws,
+    spoiledCount,
+    legitimateCount,
+    borderlineCount,
+    errorCount,
+    majorityVerdict,
+    caughtCorrectly,
+  };
+}
+
+export type FixtureScore = {
+  /** null when no case's majority came out 'spoiled' — precision is
+   *  undefined, not zero, with no positive predictions to be wrong about. */
+  precision: number | null;
+  /** null only if the fixture carries zero known spoilers (never true for
+   *  the shipped fixture, but kept honest for a hypothetical smaller one). */
+  recall: number | null;
+  truePositives: FixtureCaseResult[];
+  /** Known-legitimate rows whose majority came out 'spoiled' — the dangerous
+   *  direction: acting on this would trim a gloss doing real disambiguation
+   *  work. */
+  falsePositives: FixtureCaseResult[];
+  /** Known spoilers whose majority did NOT come out 'spoiled' (legitimate,
+   *  borderline, or no-majority all count as a miss here). */
+  falseNegatives: FixtureCaseResult[];
+  /** Required gate: every case's majority verdict matches its expected
+   *  label. */
+  gatePassed: boolean;
+};
+
+export function scoreFixtureResults(results: readonly FixtureCaseResult[]): FixtureScore {
+  const truePositives = results.filter(
+    (r) => r.expected === 'spoiled' && r.majorityVerdict === 'spoiled',
+  );
+  const falsePositives = results.filter(
+    (r) => r.expected === 'legitimate' && r.majorityVerdict === 'spoiled',
+  );
+  const falseNegatives = results.filter(
+    (r) => r.expected === 'spoiled' && r.majorityVerdict !== 'spoiled',
+  );
+  const predictedSpoiledCount = truePositives.length + falsePositives.length;
+  const actualSpoiledCount = results.filter((r) => r.expected === 'spoiled').length;
+
+  return {
+    precision: predictedSpoiledCount === 0 ? null : truePositives.length / predictedSpoiledCount,
+    recall: actualSpoiledCount === 0 ? null : truePositives.length / actualSpoiledCount,
+    truePositives,
+    falsePositives,
+    falseNegatives,
+    gatePassed: results.length > 0 && results.every((r) => r.caughtCorrectly),
+  };
+}
+
+/**
+ * Runs `judgeGlossRow` `drawsPerCase` times per fixture case. A case whose
+ * `grammarPointKey` fails to resolve is reported in `unresolved`, never
+ * substituted with a different point. Honors `maxCostUsd` mid-run — once hit,
+ * remaining draws are recorded as skipped (not silently omitted) so every
+ * case still gets a result with an accurate error/skip count.
+ */
+export async function runFixtureCheck(
+  client: Anthropic,
+  cases: readonly FixtureCase[],
+  drawsPerCase: number,
+  maxCostUsd: number,
+): Promise<{
+  results: FixtureCaseResult[];
+  unresolved: FixtureUnresolvedCase[];
+  costUsd: number;
+  costCapped: boolean;
+}> {
+  const results: FixtureCaseResult[] = [];
+  const unresolved: FixtureUnresolvedCase[] = [];
+  let costUsd = 0;
+  let costCapped = false;
+
+  for (const fixtureCase of cases) {
+    const gp = getGrammarPoint(fixtureCase.grammarPointKey);
+    if (!gp) {
+      unresolved.push({
+        id: fixtureCase.id,
+        grammarPointKey: fixtureCase.grammarPointKey,
+        error: `grammar point key '${fixtureCase.grammarPointKey}' not found in the live curriculum`,
+      });
+      continue;
+    }
+
+    const draws: FixtureDraw[] = [];
+    for (let i = 0; i < drawsPerCase; i++) {
+      if (costUsd >= maxCostUsd) {
+        costCapped = true;
+        draws.push({ ok: false, error: `skipped — run hit --max-cost-usd ${maxCostUsd}` });
+        continue;
+      }
+      try {
+        const { verdict, usage } = await judgeGlossRow(client, {
+          grammarPoint: gp,
+          language: fixtureCase.language,
+          cefrLevel: fixtureCase.cefrLevel,
+          sentence: fixtureCase.sentence,
+          correctAnswer: fixtureCase.correctAnswer,
+          acceptableAnswers: null,
+          instructions: fixtureCase.instructions,
+          glossEn: fixtureCase.glossEn,
+        });
+        costUsd += estimateCallCostUsd(usage);
+        draws.push({
+          ok: true,
+          verdict: verdict.verdict,
+          offendingSpan: verdict.offendingSpan,
+          proposedGloss: verdict.proposedGloss,
+          loadBearing: verdict.loadBearing,
+          reasoning: verdict.reasoning,
+          confidence: verdict.confidence,
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        draws.push({ ok: false, error: message });
+      }
+    }
+
+    results.push(buildFixtureCaseResult(fixtureCase, draws));
+  }
+
+  return { results, unresolved, costUsd, costCapped };
+}
+
+function printFixtureCheckReport(
+  results: readonly FixtureCaseResult[],
+  unresolved: readonly FixtureUnresolvedCase[],
+  score: FixtureScore,
+  costUsd: number,
+  costCapped: boolean,
+): void {
+  console.log('');
+  console.log('[audit-gloss] === --check-fixture: per-case draws ===');
+  for (const r of results) {
+    console.log('');
+    console.log(`${r.id}  (${r.grammarPointKey})  expected: ${r.expected}`);
+    r.draws.forEach((d, i) => {
+      if (d.ok) {
+        const spanNote = d.verdict === 'spoiled' ? ` | offendingSpan: "${d.offendingSpan}"` : '';
+        console.log(`  draw ${i + 1}: ${d.verdict} (confidence: ${d.confidence})${spanNote}`);
+        console.log(`    reasoning: ${d.reasoning}`);
+      } else {
+        console.log(`  draw ${i + 1}: ERROR — ${d.error}`);
+      }
+    });
+    console.log(
+      `  tally: spoiled=${r.spoiledCount} legitimate=${r.legitimateCount} ` +
+        `borderline=${r.borderlineCount} error=${r.errorCount} → majority: ${r.majorityVerdict} ` +
+        (r.caughtCorrectly ? '(correct)' : '(WRONG)'),
+    );
+  }
+
+  if (unresolved.length > 0) {
+    console.log('');
+    console.log(
+      '[audit-gloss] UNRESOLVED cases (grammar point key not found in the live curriculum — reported, not substituted):',
+    );
+    for (const u of unresolved) {
+      console.log(`  - ${u.id} (${u.grammarPointKey}): ${u.error}`);
+    }
+  }
+
+  console.log('');
+  console.log('[audit-gloss] === --check-fixture: summary ===');
+  console.log(`  precision: ${score.precision === null ? 'n/a' : score.precision.toFixed(2)}`);
+  console.log(`  recall: ${score.recall === null ? 'n/a' : score.recall.toFixed(2)}`);
+
+  if (score.falsePositives.length > 0) {
+    console.log(
+      '  FALSE POSITIVES — legitimate rows flagged spoiled on a majority (the dangerous direction):',
+    );
+    for (const fp of score.falsePositives) {
+      console.log(`    - ${fp.id} (${fp.grammarPointKey})`);
+    }
+  }
+  if (score.falseNegatives.length > 0) {
+    console.log('  MISSED SPOILERS — known spoiler not caught on a majority:');
+    for (const fn of score.falseNegatives) {
+      console.log(`    - ${fn.id} (${fn.grammarPointKey}): majority verdict = ${fn.majorityVerdict}`);
+    }
+  }
+
+  console.log(
+    `  gate ${score.gatePassed ? 'PASSED' : 'FAILED'}: all known spoilers majority-'spoiled' AND all known-legitimate rows majority-'legitimate'`,
+  );
+  console.log(`  cost: $${costUsd.toFixed(2)}${costCapped ? ' (CAPPED — run incomplete, see draws above)' : ''}`);
+}
+
+async function runCheckFixtureMode(filters: AuditGlossFilters): Promise<void> {
+  console.log(
+    '[audit-gloss] --check-fixture: skipping the database, reading scripts/fixtures/gloss-spoilage-cases.json',
+  );
+  const cases = loadFixtureCases(DEFAULT_FIXTURE_PATH);
+  console.log(
+    `[audit-gloss] loaded ${cases.length} fixture cases; running ${FIXTURE_DRAWS_PER_CASE} draws each ` +
+      `(${cases.length * FIXTURE_DRAWS_PER_CASE} calls)…`,
+  );
+
+  const client = createClaudeClient(requireEnv('ANTHROPIC_API_KEY'));
+  const maxCostUsd = filters.maxCostUsd ?? DEFAULT_MAX_COST_USD;
+
+  const { results, unresolved, costUsd, costCapped } = await runFixtureCheck(
+    client,
+    cases,
+    FIXTURE_DRAWS_PER_CASE,
+    maxCostUsd,
+  );
+  const score = scoreFixtureResults(results);
+  printFixtureCheckReport(results, unresolved, score, costUsd, costCapped);
+
+  const outDir = path.join(process.cwd(), 'audit-runs');
+  mkdirSync(outDir, { recursive: true });
+  const name = filters.out ?? 'gloss-fixture-check';
+  const jsonPath = path.join(outDir, `${name}.json`);
+  writeFileSync(
+    jsonPath,
+    JSON.stringify(
+      {
+        meta: {
+          model: GLOSS_SPOILAGE_MODEL,
+          promptVersion: GLOSS_SPOILAGE_PROMPT_VERSION,
+          drawsPerCase: FIXTURE_DRAWS_PER_CASE,
+          costUsd,
+          costCapped,
+          timestamp: new Date().toISOString(),
+          casesTotal: cases.length,
+          casesResolved: results.length,
+        },
+        results,
+        unresolved,
+        score,
+      },
+      null,
+      2,
+    ),
+    'utf8',
+  );
+  console.log(`[audit-gloss] wrote ${jsonPath}`);
+}
+
 async function main(): Promise<void> {
   const filters = parseAuditGlossArgs(process.argv.slice(2));
+
+  if (filters.checkFixture) {
+    await runCheckFixtureMode(filters);
+    return;
+  }
+
   const db = createDb(requireEnv('DATABASE_URL'));
 
   console.log('[audit-gloss] loading approved glossed cloze rows…');

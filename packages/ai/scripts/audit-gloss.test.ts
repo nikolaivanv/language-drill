@@ -5,10 +5,17 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildFixtureCaseResult,
+  computeMajorityVerdict,
   extractParentheticals,
+  FIXTURE_DRAWS_PER_CASE,
   hasParenthetical,
+  loadFixtureCases,
   parseAuditGlossArgs,
+  scoreFixtureResults,
   selectRowsToJudge,
+  type FixtureCaseResult,
+  type FixtureDraw,
   type GlossRow,
 } from './audit-gloss.js';
 
@@ -144,5 +151,168 @@ describe('selectRowsToJudge', () => {
     const rows = [row('1', 'es-a1-demonstratives', 'That tree (far away).')];
     const out = selectRowsToJudge(rows, new Map([['es-a1-demonstratives', true]]));
     expect(out).toHaveLength(1);
+  });
+});
+
+describe('loadFixtureCases', () => {
+  it('loads the shipped fixture into 10 well-typed cases', () => {
+    const cases = loadFixtureCases(
+      path.join(here, 'fixtures', 'gloss-spoilage-cases.json'),
+    );
+    expect(cases).toHaveLength(10);
+    for (const c of cases) {
+      expect(['spoiled', 'legitimate']).toContain(c.expected);
+      expect(c.grammarPointKey.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('throws on a fixture missing the cases array', () => {
+    const tmp = path.join(here, '..', '..', '..', 'node_modules', '.tmp-not-a-real-dir');
+    expect(() => loadFixtureCases(tmp)).toThrow();
+  });
+});
+
+describe('computeMajorityVerdict', () => {
+  it('picks the verdict with a strict 2-of-3 majority', () => {
+    expect(computeMajorityVerdict(['spoiled', 'spoiled', 'legitimate'])).toBe('spoiled');
+    expect(computeMajorityVerdict(['legitimate', 'legitimate', 'legitimate'])).toBe('legitimate');
+  });
+
+  it('lets borderline win a majority rather than folding it into legitimate', () => {
+    expect(computeMajorityVerdict(['borderline', 'borderline', 'spoiled'])).toBe('borderline');
+  });
+
+  it('reports no-majority on a 3-way tie or empty input', () => {
+    expect(computeMajorityVerdict(['spoiled', 'legitimate', 'borderline'])).toBe('no-majority');
+    expect(computeMajorityVerdict([])).toBe('no-majority');
+  });
+});
+
+describe('buildFixtureCaseResult', () => {
+  const baseCase = {
+    id: 'row-1',
+    grammarPointKey: 'es-a1-ser-estar-basic',
+    language: 'ES',
+    cefrLevel: 'A1',
+    sentence: 'Hoy el tiempo ___ muy malo.',
+    correctAnswer: 'está',
+    instructions: 'Fill in the blank.',
+    glossEn: 'Today the weather is very bad. (a current condition)',
+    note: 'test case',
+  };
+
+  const okDraw = (verdict: 'spoiled' | 'legitimate' | 'borderline'): FixtureDraw => ({
+    ok: true,
+    verdict,
+    offendingSpan: verdict === 'spoiled' ? 'a current condition' : null,
+    proposedGloss: null,
+    loadBearing: false,
+    reasoning: 'test reasoning',
+    confidence: 'high',
+  });
+  const errDraw = (): FixtureDraw => ({ ok: false, error: 'boom' });
+
+  it('marks a spoiler CORRECT only when the majority itself is spoiled', () => {
+    const r = buildFixtureCaseResult(
+      { ...baseCase, expected: 'spoiled' },
+      [okDraw('spoiled'), okDraw('spoiled'), okDraw('legitimate')],
+    );
+    expect(r.majorityVerdict).toBe('spoiled');
+    expect(r.caughtCorrectly).toBe(true);
+  });
+
+  it('marks a spoiler WRONG when the majority hedges to borderline', () => {
+    // This is the brief's explicit rule: a judge that hedges on a known
+    // spoiler has not caught it.
+    const r = buildFixtureCaseResult(
+      { ...baseCase, expected: 'spoiled' },
+      [okDraw('borderline'), okDraw('borderline'), okDraw('spoiled')],
+    );
+    expect(r.majorityVerdict).toBe('borderline');
+    expect(r.caughtCorrectly).toBe(false);
+  });
+
+  it('marks a legitimate row WRONG when the majority says spoiled', () => {
+    const r = buildFixtureCaseResult(
+      { ...baseCase, expected: 'legitimate' },
+      [okDraw('spoiled'), okDraw('spoiled'), okDraw('legitimate')],
+    );
+    expect(r.majorityVerdict).toBe('spoiled');
+    expect(r.caughtCorrectly).toBe(false);
+  });
+
+  it('counts errored draws separately without crashing the tally', () => {
+    const r = buildFixtureCaseResult(
+      { ...baseCase, expected: 'spoiled' },
+      [okDraw('spoiled'), okDraw('spoiled'), errDraw()],
+    );
+    expect(r.errorCount).toBe(1);
+    expect(r.spoiledCount).toBe(2);
+    expect(r.majorityVerdict).toBe('spoiled');
+  });
+});
+
+describe('scoreFixtureResults', () => {
+  const result = (
+    id: string,
+    expected: 'spoiled' | 'legitimate',
+    majorityVerdict: FixtureCaseResult['majorityVerdict'],
+  ): FixtureCaseResult => ({
+    id,
+    grammarPointKey: 'es-a1-ser-estar-basic',
+    expected,
+    note: '',
+    draws: [],
+    spoiledCount: majorityVerdict === 'spoiled' ? 2 : 0,
+    legitimateCount: majorityVerdict === 'legitimate' ? 2 : 0,
+    borderlineCount: majorityVerdict === 'borderline' ? 2 : 0,
+    errorCount: 0,
+    majorityVerdict,
+    caughtCorrectly: majorityVerdict === expected,
+  });
+
+  it('passes the gate only when every case is caught correctly', () => {
+    const results = [
+      result('1', 'spoiled', 'spoiled'),
+      result('2', 'legitimate', 'legitimate'),
+    ];
+    const score = scoreFixtureResults(results);
+    expect(score.gatePassed).toBe(true);
+    expect(score.precision).toBe(1);
+    expect(score.recall).toBe(1);
+    expect(score.falsePositives).toEqual([]);
+    expect(score.falseNegatives).toEqual([]);
+  });
+
+  it('flags a false positive when a legitimate row majority-verdicts spoiled', () => {
+    const results = [
+      result('1', 'spoiled', 'spoiled'),
+      result('2', 'legitimate', 'spoiled'),
+    ];
+    const score = scoreFixtureResults(results);
+    expect(score.gatePassed).toBe(false);
+    expect(score.falsePositives.map((r) => r.id)).toEqual(['2']);
+    // 1 true positive out of 2 predicted-spoiled → precision 0.5; recall
+    // stays 1 since the one actual spoiler WAS caught.
+    expect(score.precision).toBe(0.5);
+    expect(score.recall).toBe(1);
+  });
+
+  it('flags a false negative (missed spoiler) without touching precision', () => {
+    const results = [
+      result('1', 'spoiled', 'legitimate'),
+      result('2', 'legitimate', 'legitimate'),
+    ];
+    const score = scoreFixtureResults(results);
+    expect(score.gatePassed).toBe(false);
+    expect(score.falseNegatives.map((r) => r.id)).toEqual(['1']);
+    expect(score.precision).toBeNull(); // no case predicted spoiled at all
+    expect(score.recall).toBe(0);
+  });
+});
+
+describe('FIXTURE_DRAWS_PER_CASE', () => {
+  it('is 3 — enough that a single boundary draw cannot decide a verdict', () => {
+    expect(FIXTURE_DRAWS_PER_CASE).toBe(3);
   });
 });
