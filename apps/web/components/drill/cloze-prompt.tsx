@@ -95,6 +95,14 @@ export function ClozePrompt({
         </span>
       )}
 
+      {/* level 1.5 — the task; must be readable BEFORE answering, because for
+          ~13% of the pool the constraint lives only here (e.g. "either 'de' or
+          nothing"). Rendered unconditionally: a heuristic that suppressed
+          "generic" instructions would silently hide a load-bearing one. */}
+      {content.instructions && content.instructions.length > 0 && (
+        <p className="t-body text-ink-soft">{content.instructions}</p>
+      )}
+
       {/* level 2 (hero) — the sentence; the blank is the live input */}
       <p className="t-display-m">
         {hasBlank ? (

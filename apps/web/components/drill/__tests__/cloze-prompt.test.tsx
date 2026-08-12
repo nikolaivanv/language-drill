@@ -55,4 +55,20 @@ describe('ClozePrompt', () => {
     fireEvent.keyDown(screen.getByRole('textbox', { name: 'fill the blank' }), { key: 'Enter' });
     expect(onEnter).toHaveBeenCalledTimes(1);
   });
+
+  it('renders the instructions above the sentence', () => {
+    render(<Harness />);
+    expect(screen.getByText('fill the gap')).toBeInTheDocument();
+  });
+
+  it('omits the instructions block when instructions are empty', () => {
+    render(<Harness content={{ ...base, instructions: '' }} />);
+    expect(screen.queryByText('fill the gap')).not.toBeInTheDocument();
+  });
+
+  it('places the instructions before the sentence in document order', () => {
+    const { container } = render(<Harness />);
+    const text = container.textContent ?? '';
+    expect(text.indexOf('fill the gap')).toBeLessThan(text.indexOf('kalkar'));
+  });
 });
