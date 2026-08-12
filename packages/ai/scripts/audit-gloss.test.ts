@@ -18,6 +18,7 @@ import {
   type FixtureDraw,
   type GlossRow,
 } from './audit-gloss.js';
+import { GLOSS_ROW_SYSTEM_PROMPT } from '../src/gloss-spoilage.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -30,6 +31,7 @@ type FixtureCase = {
   correctAnswer: string;
   glossEn: string;
   expected: 'spoiled' | 'legitimate';
+  heldOut: boolean;
   note: string;
 };
 
@@ -37,19 +39,35 @@ describe('fixtures/gloss-spoilage-cases.json', () => {
   const raw = JSON.parse(
     readFileSync(path.join(here, 'fixtures', 'gloss-spoilage-cases.json'), 'utf8'),
   ) as { cases: FixtureCase[] };
+  const heldOut = raw.cases.filter((c) => c.heldOut);
+  const contaminated = raw.cases.filter((c) => !c.heldOut);
 
-  it('carries 6 known spoilers and 4 known-legitimate rows', () => {
-    const spoiled = raw.cases.filter((c) => c.expected === 'spoiled');
-    const legit = raw.cases.filter((c) => c.expected === 'legitimate');
-    expect(spoiled).toHaveLength(6);
-    expect(legit).toHaveLength(4);
+  it('carries 20 cases total: 10 contaminated (regression guard) + 10 held-out (the gate)', () => {
+    expect(raw.cases).toHaveLength(20);
+    expect(contaminated).toHaveLength(10);
+    expect(heldOut).toHaveLength(10);
   });
 
-  it('every case carries a gloss and a real exercise id', () => {
+  it('the contaminated set carries 6 known spoilers and 4 known-legitimate rows', () => {
+    expect(contaminated.filter((c) => c.expected === 'spoiled')).toHaveLength(6);
+    expect(contaminated.filter((c) => c.expected === 'legitimate')).toHaveLength(4);
+  });
+
+  it('the held-out set carries 6 known spoilers and 4 known-legitimate rows', () => {
+    // Originally 5/5: de55dc02 (tr-a1-accusative-definite-object) was
+    // corrected from "legitimate" to "spoiled" on 2026-08-12 after the
+    // judge's reasoning was checked against the generation prompt's
+    // definiteness-fallback rule and found correct — see the case's `note`.
+    expect(heldOut.filter((c) => c.expected === 'spoiled')).toHaveLength(6);
+    expect(heldOut.filter((c) => c.expected === 'legitimate')).toHaveLength(4);
+  });
+
+  it('every case carries a gloss, a real exercise id, and an explicit heldOut flag', () => {
     for (const c of raw.cases) {
       expect(c.glossEn.length).toBeGreaterThan(0);
       expect(c.id).toMatch(/^[0-9a-f]{8}-/);
       expect(c.note.length).toBeGreaterThan(0);
+      expect(typeof c.heldOut).toBe('boolean');
     }
   });
 
@@ -57,6 +75,37 @@ describe('fixtures/gloss-spoilage-cases.json', () => {
     // The gate would be vacuous if a "spoiler" case had no leaking span to find.
     for (const c of raw.cases.filter((x) => x.expected === 'spoiled')) {
       expect(c.glossEn).toContain('(');
+    }
+  });
+
+  it('no id repeats across the contaminated and held-out sets', () => {
+    const ids = raw.cases.map((c) => c.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  // This is the regression the fix round exists to prevent: the ORIGINAL
+  // fixture's 1.00/1.00 score turned out to measure whether the judge could
+  // repeat GLOSS_ROW_SYSTEM_PROMPT's own worked examples, not whether it
+  // generalises. These two tests pin the contamination boundary so it can
+  // never silently drift — a held-out case whose span leaks into the prompt
+  // (or a "contaminated" case that turns out to be clean) would invalidate
+  // the corresponding score without anyone noticing.
+  it('every held-out case is absent from GLOSS_ROW_SYSTEM_PROMPT (guards the gate against re-contamination)', () => {
+    for (const c of heldOut) {
+      expect(GLOSS_ROW_SYSTEM_PROMPT).not.toContain(c.glossEn);
+      const span = c.glossEn.match(/\(([^)]*)\)/)?.[1];
+      if (span) {
+        expect(GLOSS_ROW_SYSTEM_PROMPT).not.toContain(span);
+      }
+    }
+  });
+
+  it('every contaminated case really is present in GLOSS_ROW_SYSTEM_PROMPT (documents why it cannot be the gate)', () => {
+    for (const c of contaminated) {
+      const span = c.glossEn.match(/\(([^)]*)\)/)?.[1];
+      const glossPresent = GLOSS_ROW_SYSTEM_PROMPT.includes(c.glossEn);
+      const spanPresent = span !== undefined && GLOSS_ROW_SYSTEM_PROMPT.includes(span);
+      expect(glossPresent || spanPresent).toBe(true);
     }
   });
 });
@@ -155,11 +204,13 @@ describe('selectRowsToJudge', () => {
 });
 
 describe('loadFixtureCases', () => {
-  it('loads the shipped fixture into 10 well-typed cases', () => {
+  it('loads the shipped fixture into 20 well-typed cases (10 held-out + 10 contaminated)', () => {
     const cases = loadFixtureCases(
       path.join(here, 'fixtures', 'gloss-spoilage-cases.json'),
     );
-    expect(cases).toHaveLength(10);
+    expect(cases).toHaveLength(20);
+    expect(cases.filter((c) => c.heldOut)).toHaveLength(10);
+    expect(cases.filter((c) => !c.heldOut)).toHaveLength(10);
     for (const c of cases) {
       expect(['spoiled', 'legitimate']).toContain(c.expected);
       expect(c.grammarPointKey.length).toBeGreaterThan(0);
@@ -198,6 +249,7 @@ describe('buildFixtureCaseResult', () => {
     correctAnswer: 'está',
     instructions: 'Fill in the blank.',
     glossEn: 'Today the weather is very bad. (a current condition)',
+    heldOut: true,
     note: 'test case',
   };
 
@@ -261,6 +313,7 @@ describe('scoreFixtureResults', () => {
     id,
     grammarPointKey: 'es-a1-ser-estar-basic',
     expected,
+    heldOut: true,
     note: '',
     draws: [],
     spoiledCount: majorityVerdict === 'spoiled' ? 2 : 0,

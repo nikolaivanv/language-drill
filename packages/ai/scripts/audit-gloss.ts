@@ -511,6 +511,15 @@ export type FixtureCase = {
   instructions: string;
   glossEn: string;
   expected: 'spoiled' | 'legitimate';
+  /** true for a row genuinely held out from GLOSS_ROW_SYSTEM_PROMPT's own
+   *  worked examples — the only set that can serve as the gate. false marks
+   *  the original 10 cases, which were later found to have their glossEn or
+   *  offending span embedded verbatim in the prompt (see the fixture's
+   *  top-level `description`): scoring them measures whether the judge can
+   *  repeat its own instructions, not whether it generalises. Kept as a
+   *  cheap regression guard only — never reported as evidence the judge
+   *  works. */
+  heldOut: boolean;
   note: string;
 };
 
@@ -550,6 +559,12 @@ export function loadFixtureCases(fixturePath: string): FixtureCase[] {
     if (expected !== 'spoiled' && expected !== 'legitimate') {
       throw new Error(`fixture case ${i} (${String(obj.id)}) has unknown expected '${expected}'`);
     }
+    if (typeof obj.heldOut !== 'boolean') {
+      throw new Error(
+        `fixture case ${i} (${String(obj.id)}) missing boolean field 'heldOut' — every case must ` +
+          'explicitly declare whether it is genuinely held out from the judge prompt',
+      );
+    }
     return {
       id: obj.id as string,
       grammarPointKey: obj.grammarPointKey as string,
@@ -560,6 +575,7 @@ export function loadFixtureCases(fixturePath: string): FixtureCase[] {
       instructions: obj.instructions as string,
       glossEn: obj.glossEn as string,
       expected,
+      heldOut: obj.heldOut,
       note: obj.note as string,
     };
   });
@@ -581,6 +597,10 @@ export type FixtureCaseResult = {
   id: string;
   grammarPointKey: string;
   expected: 'spoiled' | 'legitimate';
+  /** Passed through from `FixtureCase.heldOut` so a result can be scored and
+   *  reported as part of the gate set or the contaminated regression set
+   *  without needing a separate case lookup. */
+  heldOut: boolean;
   note: string;
   draws: FixtureDraw[];
   spoiledCount: number;
@@ -645,6 +665,7 @@ export function buildFixtureCaseResult(
     id: fixtureCase.id,
     grammarPointKey: fixtureCase.grammarPointKey,
     expected: fixtureCase.expected,
+    heldOut: fixtureCase.heldOut,
     note: fixtureCase.note,
     draws,
     spoiledCount,
@@ -773,33 +794,75 @@ export async function runFixtureCheck(
   return { results, unresolved, costUsd, costCapped };
 }
 
+function printFixtureCaseDraws(r: FixtureCaseResult): void {
+  console.log('');
+  console.log(`${r.id}  (${r.grammarPointKey})  expected: ${r.expected}`);
+  r.draws.forEach((d, i) => {
+    if (d.ok) {
+      const spanNote = d.verdict === 'spoiled' ? ` | offendingSpan: "${d.offendingSpan}"` : '';
+      console.log(`  draw ${i + 1}: ${d.verdict} (confidence: ${d.confidence})${spanNote}`);
+      console.log(`    reasoning: ${d.reasoning}`);
+    } else {
+      console.log(`  draw ${i + 1}: ERROR — ${d.error}`);
+    }
+  });
+  console.log(
+    `  tally: spoiled=${r.spoiledCount} legitimate=${r.legitimateCount} ` +
+      `borderline=${r.borderlineCount} error=${r.errorCount} → majority: ${r.majorityVerdict} ` +
+      (r.caughtCorrectly ? '(correct)' : '(WRONG)'),
+  );
+}
+
+function printFixtureScoreSummary(label: string, score: FixtureScore): void {
+  console.log(`  ${label} precision: ${score.precision === null ? 'n/a' : score.precision.toFixed(2)}`);
+  console.log(`  ${label} recall: ${score.recall === null ? 'n/a' : score.recall.toFixed(2)}`);
+  if (score.falsePositives.length > 0) {
+    console.log(
+      `  ${label} FALSE POSITIVES — legitimate rows flagged spoiled on a majority (the dangerous direction):`,
+    );
+    for (const fp of score.falsePositives) {
+      console.log(`    - ${fp.id} (${fp.grammarPointKey})`);
+    }
+  }
+  if (score.falseNegatives.length > 0) {
+    console.log(`  ${label} MISSED SPOILERS — known spoiler not caught on a majority:`);
+    for (const fn of score.falseNegatives) {
+      console.log(`    - ${fn.id} (${fn.grammarPointKey}): majority verdict = ${fn.majorityVerdict}`);
+    }
+  }
+}
+
+/**
+ * Prints per-case draws and the summary for BOTH sets, with the held-out set
+ * clearly marked as the gate and the contaminated set clearly marked as NOT
+ * evidence of generalisation (see `FixtureCase.heldOut` doc comment — the
+ * contaminated 10 have their glossEn or offending span embedded verbatim in
+ * GLOSS_ROW_SYSTEM_PROMPT, so scoring them only measures whether the judge
+ * can repeat its own instructions).
+ */
 function printFixtureCheckReport(
-  results: readonly FixtureCaseResult[],
+  heldOutResults: readonly FixtureCaseResult[],
+  heldOutScore: FixtureScore,
+  contaminatedResults: readonly FixtureCaseResult[],
+  contaminatedScore: FixtureScore,
   unresolved: readonly FixtureUnresolvedCase[],
-  score: FixtureScore,
   costUsd: number,
   costCapped: boolean,
 ): void {
   console.log('');
-  console.log('[audit-gloss] === --check-fixture: per-case draws ===');
-  for (const r of results) {
-    console.log('');
-    console.log(`${r.id}  (${r.grammarPointKey})  expected: ${r.expected}`);
-    r.draws.forEach((d, i) => {
-      if (d.ok) {
-        const spanNote = d.verdict === 'spoiled' ? ` | offendingSpan: "${d.offendingSpan}"` : '';
-        console.log(`  draw ${i + 1}: ${d.verdict} (confidence: ${d.confidence})${spanNote}`);
-        console.log(`    reasoning: ${d.reasoning}`);
-      } else {
-        console.log(`  draw ${i + 1}: ERROR — ${d.error}`);
-      }
-    });
-    console.log(
-      `  tally: spoiled=${r.spoiledCount} legitimate=${r.legitimateCount} ` +
-        `borderline=${r.borderlineCount} error=${r.errorCount} → majority: ${r.majorityVerdict} ` +
-        (r.caughtCorrectly ? '(correct)' : '(WRONG)'),
-    );
-  }
+  console.log(
+    '[audit-gloss] === --check-fixture: HELD-OUT set — THE GATE (spans verified absent from the judge prompt) ===',
+  );
+  for (const r of heldOutResults) printFixtureCaseDraws(r);
+
+  console.log('');
+  console.log(
+    '[audit-gloss] === --check-fixture: CONTAMINATED set — regression guard ONLY, NOT evidence of generalisation ===',
+  );
+  console.log(
+    '[audit-gloss] (every case below has its glossEn or offending span embedded verbatim in GLOSS_ROW_SYSTEM_PROMPT as a worked example)',
+  );
+  for (const r of contaminatedResults) printFixtureCaseDraws(r);
 
   if (unresolved.length > 0) {
     console.log('');
@@ -813,27 +876,13 @@ function printFixtureCheckReport(
 
   console.log('');
   console.log('[audit-gloss] === --check-fixture: summary ===');
-  console.log(`  precision: ${score.precision === null ? 'n/a' : score.precision.toFixed(2)}`);
-  console.log(`  recall: ${score.recall === null ? 'n/a' : score.recall.toFixed(2)}`);
-
-  if (score.falsePositives.length > 0) {
-    console.log(
-      '  FALSE POSITIVES — legitimate rows flagged spoiled on a majority (the dangerous direction):',
-    );
-    for (const fp of score.falsePositives) {
-      console.log(`    - ${fp.id} (${fp.grammarPointKey})`);
-    }
-  }
-  if (score.falseNegatives.length > 0) {
-    console.log('  MISSED SPOILERS — known spoiler not caught on a majority:');
-    for (const fn of score.falseNegatives) {
-      console.log(`    - ${fn.id} (${fn.grammarPointKey}): majority verdict = ${fn.majorityVerdict}`);
-    }
-  }
-
+  console.log('  --- HELD-OUT (the gate) ---');
+  printFixtureScoreSummary('held-out', heldOutScore);
   console.log(
-    `  gate ${score.gatePassed ? 'PASSED' : 'FAILED'}: all known spoilers majority-'spoiled' AND all known-legitimate rows majority-'legitimate'`,
+    `  held-out gate ${heldOutScore.gatePassed ? 'PASSED' : 'FAILED'}: all known spoilers majority-'spoiled' AND all known-legitimate rows majority-'legitimate', on the held-out set`,
   );
+  console.log('  --- CONTAMINATED (regression guard only — NOT evidence of generalisation) ---');
+  printFixtureScoreSummary('contaminated', contaminatedScore);
   console.log(`  cost: $${costUsd.toFixed(2)}${costCapped ? ' (CAPPED — run incomplete, see draws above)' : ''}`);
 }
 
@@ -842,9 +891,12 @@ async function runCheckFixtureMode(filters: AuditGlossFilters): Promise<void> {
     '[audit-gloss] --check-fixture: skipping the database, reading scripts/fixtures/gloss-spoilage-cases.json',
   );
   const cases = loadFixtureCases(DEFAULT_FIXTURE_PATH);
+  const heldOutCases = cases.filter((c) => c.heldOut);
+  const contaminatedCases = cases.filter((c) => !c.heldOut);
   console.log(
-    `[audit-gloss] loaded ${cases.length} fixture cases; running ${FIXTURE_DRAWS_PER_CASE} draws each ` +
-      `(${cases.length * FIXTURE_DRAWS_PER_CASE} calls)…`,
+    `[audit-gloss] loaded ${cases.length} fixture cases (${heldOutCases.length} held-out — the gate, ` +
+      `${contaminatedCases.length} contaminated — regression guard only); running ${FIXTURE_DRAWS_PER_CASE} draws ` +
+      `each (${cases.length * FIXTURE_DRAWS_PER_CASE} calls)…`,
   );
 
   const client = createClaudeClient(requireEnv('ANTHROPIC_API_KEY'));
@@ -856,8 +908,19 @@ async function runCheckFixtureMode(filters: AuditGlossFilters): Promise<void> {
     FIXTURE_DRAWS_PER_CASE,
     maxCostUsd,
   );
-  const score = scoreFixtureResults(results);
-  printFixtureCheckReport(results, unresolved, score, costUsd, costCapped);
+  const heldOutResults = results.filter((r) => r.heldOut);
+  const contaminatedResults = results.filter((r) => !r.heldOut);
+  const heldOutScore = scoreFixtureResults(heldOutResults);
+  const contaminatedScore = scoreFixtureResults(contaminatedResults);
+  printFixtureCheckReport(
+    heldOutResults,
+    heldOutScore,
+    contaminatedResults,
+    contaminatedScore,
+    unresolved,
+    costUsd,
+    costCapped,
+  );
 
   const outDir = path.join(process.cwd(), 'audit-runs');
   mkdirSync(outDir, { recursive: true });
@@ -876,10 +939,11 @@ async function runCheckFixtureMode(filters: AuditGlossFilters): Promise<void> {
           timestamp: new Date().toISOString(),
           casesTotal: cases.length,
           casesResolved: results.length,
+          gate: 'heldOutScore — see below; contaminatedScore is a regression guard only, not evidence of generalisation',
         },
-        results,
+        heldOut: { results: heldOutResults, score: heldOutScore },
+        contaminated: { results: contaminatedResults, score: contaminatedScore },
         unresolved,
-        score,
       },
       null,
       2,

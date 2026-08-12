@@ -1,5 +1,5 @@
 {
-  "description": "Precision/recall gate for `audit:gloss --check-fixture`. Ten real production cloze rows: 6 whose glossEn states the rule trigger/outcome (spoilers) and 4 whose parenthetical supplies only meaning the learner must still convert into a form (legitimate). Sourced from docs/superpowers/specs/2026-08-12-gloss-spoilage-audit-design.md. A run that misses a spoiler or flags a legitimate row must not be trusted: a false positive here means trimming a gloss that was doing real disambiguation work.",
+  "description": "Precision/recall gate for `audit:gloss --check-fixture`. CONTAMINATED SET (heldOut: false, 10 cases, sourced from docs/superpowers/specs/2026-08-12-gloss-spoilage-audit-design.md): every one of these 10 cases has its glossEn or the parenthetical span that decides its label embedded verbatim in GLOSS_ROW_SYSTEM_PROMPT as a worked example (6 exact gloss matches, 4 via the span alone) — the plan reused the spec's example tables both as few-shot anchors in the prompt and as this fixture. Scoring this set measures whether the judge can repeat its own instructions, NOT whether it generalises to unseen rows. It is kept as a cheap regression guard only — it must never be reported as, or mistaken for, evidence that the judge works. HELD-OUT SET (heldOut: true, 10 cases, queried from prod 2026-08-12, hand-labelled, every span verified absent from the prompt by substring check): this is the real gate. `--check-fixture` scores the two sets separately for exactly this reason — a blended number would hide the contamination.",
   "cases": [
     {
       "id": "a70a9053-0dbe-5aff-87d0-44c34762f736",
@@ -11,7 +11,8 @@
       "instructions": "Fill in the blank with the correct form of ser or estar.",
       "glossEn": "Today the weather is very bad. (a current condition)",
       "expected": "spoiled",
-      "note": "Names estar's trigger — a current condition."
+      "heldOut": false,
+      "note": "Names estar's trigger — a current condition. CONTAMINATED: this exact gloss is a worked example in GLOSS_ROW_SYSTEM_PROMPT."
     },
     {
       "id": "0a9c17b2-2fe1-51e8-a438-0e4417c065ad",
@@ -23,7 +24,8 @@
       "instructions": "Fill in the blank with the correct form of ser or estar.",
       "glossEn": "The soup has no flavor. It is without salt (right now).",
       "expected": "spoiled",
-      "note": "\"right now\" names estar's trigger"
+      "heldOut": false,
+      "note": "\"right now\" names estar's trigger. CONTAMINATED: the span \"right now\" appears in GLOSS_ROW_SYSTEM_PROMPT's worked examples."
     },
     {
       "id": "059c0fd3-b7aa-524b-a338-0ca7946a8c3a",
@@ -35,7 +37,8 @@
       "instructions": "Fill in the blank with the correct form of ser or estar.",
       "glossEn": "She is very happy today. (temporary feeling)",
       "expected": "spoiled",
-      "note": "\"temporary\" names estar's trigger"
+      "heldOut": false,
+      "note": "\"temporary\" names estar's trigger. CONTAMINATED: this exact gloss is a worked example in GLOSS_ROW_SYSTEM_PROMPT."
     },
     {
       "id": "0bd0c26b-4a5a-5ef3-bec8-f82fb6840dba",
@@ -47,7 +50,8 @@
       "instructions": "Fill in the blank with the correct present-tense form of the verb in parentheses.",
       "glossEn": "The paper is (located) on the table.",
       "expected": "spoiled",
-      "note": "\"located\" names estar's semantic role"
+      "heldOut": false,
+      "note": "\"located\" names estar's semantic role. CONTAMINATED: this exact gloss is a worked example in GLOSS_ROW_SYSTEM_PROMPT."
     },
     {
       "id": "941d599b-3a47-5fe3-9c2c-992fd1d6fa62",
@@ -59,7 +63,8 @@
       "instructions": "Fill in the blank with the correct demonstrative form.",
       "glossEn": "Do you see that tree (far away) over there?",
       "expected": "spoiled",
-      "note": "Names the deictic distance that IS the distinction"
+      "heldOut": false,
+      "note": "Names the deictic distance that IS the distinction. CONTAMINATED: this exact gloss is a worked example in GLOSS_ROW_SYSTEM_PROMPT."
     },
     {
       "id": "7c7336b1-ae94-53ed-83a4-6d614ee8fd7c",
@@ -71,7 +76,8 @@
       "instructions": "Fill in the blank with the correct article.",
       "glossEn": "I like tomatoes (tomatoes in general).",
       "expected": "spoiled",
-      "note": "Names the generic trigger for the definite article"
+      "heldOut": false,
+      "note": "Names the generic trigger for the definite article. CONTAMINATED: this exact gloss is a worked example in GLOSS_ROW_SYSTEM_PROMPT."
     },
     {
       "id": "0c3fcce2-f474-5c26-b74c-416a3b1abc0f",
@@ -83,7 +89,8 @@
       "instructions": "Fill in the blank with the correct dative article to complete the sentence.",
       "glossEn": "The book belongs to the teacher (female).",
       "expected": "legitimate",
-      "note": "Gender given; the learner still supplies the dative form"
+      "heldOut": false,
+      "note": "Gender given; the learner still supplies the dative form. CONTAMINATED: this exact gloss is a worked example in GLOSS_ROW_SYSTEM_PROMPT."
     },
     {
       "id": "e93d4f85-7f72-5fc9-a261-fc450b76c9b0",
@@ -95,7 +102,8 @@
       "instructions": "Fill in the blank with the correct Konjunktiv II form.",
       "glossEn": "Could you (formal) please tell me where the train station is?",
       "expected": "legitimate",
-      "note": "Register given; the Konjunktiv II form is the tested skill"
+      "heldOut": false,
+      "note": "Register given; the Konjunktiv II form is the tested skill. CONTAMINATED: the span \"formal\" appears in GLOSS_ROW_SYSTEM_PROMPT's worked examples."
     },
     {
       "id": "a1436091-2c5d-5259-b307-9c55d4f73d90",
@@ -107,7 +115,8 @@
       "instructions": "Fill in the blank with the correct reflexive pronoun.",
       "glossEn": "Do you (all) see each other every day at school?",
       "expected": "legitimate",
-      "note": "Addressee number given; the reflexive form is not"
+      "heldOut": false,
+      "note": "Addressee number given; the reflexive form is not. CONTAMINATED: the span \"all\" appears in GLOSS_ROW_SYSTEM_PROMPT's worked examples."
     },
     {
       "id": "9d63d2b5-38c2-5dc1-846f-e2bd94795830",
@@ -119,7 +128,138 @@
       "instructions": "Fill in the blank with the correct form of the adjective in parentheses.",
       "glossEn": "I have two Spanish friends (female) in my class.",
       "expected": "legitimate",
-      "note": "Gender given; the agreement form is the skill"
+      "heldOut": false,
+      "note": "Gender given; the agreement form is the skill. CONTAMINATED: the span \"female\" appears in GLOSS_ROW_SYSTEM_PROMPT's worked examples."
+    },
+    {
+      "id": "5055bab6-9723-58d2-8abf-c91e60efadab",
+      "grammarPointKey": "de-a2-two-way-prepositions-core",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "sentence": "Die Kinder spielen ___ Garten. (der)",
+      "correctAnswer": "im",
+      "instructions": "Fill in the blank with the correct form of the word in parentheses. Pay attention to whether the sentence expresses location or direction.",
+      "glossEn": "The children are playing in the garden. (location)",
+      "expected": "spoiled",
+      "heldOut": true,
+      "note": "The instructions literally ask the learner to decide \"location or direction\"; the gloss answers that question, which is the dative-vs-accusative selector. HELD-OUT: span verified absent from GLOSS_ROW_SYSTEM_PROMPT."
+    },
+    {
+      "id": "41cfceaf-9726-5e21-8412-99bd0eae5564",
+      "grammarPointKey": "es-a2-saber-poder-ability",
+      "language": "ES",
+      "cefrLevel": "A2",
+      "sentence": "Richard ___ hablar tres idiomas: español, inglés y francés.",
+      "correctAnswer": "sabe",
+      "instructions": "Fill in the blank with the correct verb: saber or poder (conjugated correctly).",
+      "glossEn": "Richard can speak three languages: Spanish, English, and French. (a learned skill)",
+      "expected": "spoiled",
+      "heldOut": true,
+      "note": "\"a learned skill\" is saber's selection rule against poder. HELD-OUT: span verified absent from GLOSS_ROW_SYSTEM_PROMPT."
+    },
+    {
+      "id": "eeae177f-7fbf-5f4b-b6f0-130771e5fe0a",
+      "grammarPointKey": "es-a2-por-para",
+      "language": "ES",
+      "cefrLevel": "A2",
+      "sentence": "Compré una docena de huevos ___ dos euros.",
+      "correctAnswer": "por",
+      "instructions": "Fill in the blank with por or para.",
+      "glossEn": "I bought a dozen eggs for two euros (as an exchange/price).",
+      "expected": "spoiled",
+      "heldOut": true,
+      "note": "\"exchange/price\" is por's trigger; English \"for\" alone would not have leaked. HELD-OUT: span verified absent from GLOSS_ROW_SYSTEM_PROMPT."
+    },
+    {
+      "id": "9e794fcf-8cea-54d3-9ba2-006febaefe0a",
+      "grammarPointKey": "es-b1-que-vs-cual",
+      "language": "ES",
+      "cefrLevel": "B1",
+      "sentence": "¿___ es el cambio del dólar hoy?",
+      "correctAnswer": "Cuál",
+      "instructions": "Fill in the blank with qué or cuál.",
+      "glossEn": "What is the dollar exchange rate today? (selecting a specific value from a range)",
+      "expected": "spoiled",
+      "heldOut": true,
+      "note": "\"selecting a specific value from a range\" is cuál's selection rule. HELD-OUT: span verified absent from GLOSS_ROW_SYSTEM_PROMPT."
+    },
+    {
+      "id": "206cf38e-f949-5ca6-ad35-522ad662bcaf",
+      "grammarPointKey": "de-a2-wissen-kennen",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "sentence": "Ich ___ diesen Laden — er verkauft schöne Kronen und anderen Schmuck.",
+      "correctAnswer": "kenne",
+      "instructions": "Fill in the blank with the correct verb: wissen, kennen, or können.",
+      "glossEn": "I know (am familiar with) this shop — it sells nice crowns and other jewellery.",
+      "expected": "spoiled",
+      "heldOut": true,
+      "note": "\"am familiar with\" is kennen's selection rule against wissen. HELD-OUT: span verified absent from GLOSS_ROW_SYSTEM_PROMPT."
+    },
+    {
+      "id": "9b8e8569-83fa-573b-a582-16972e11093e",
+      "grammarPointKey": "es-a2-preterite-stem-spelling",
+      "language": "ES",
+      "cefrLevel": "A2",
+      "sentence": "El bebé canguro ___ del bolsillo de su madre. (caer)",
+      "correctAnswer": "cayó",
+      "instructions": "Fill in the blank with the correct preterite form of the verb in parentheses.",
+      "glossEn": "The baby kangaroo (joey) fell out of its mother's pouch.",
+      "expected": "legitimate",
+      "heldOut": true,
+      "note": "\"(joey)\" is a vocabulary gloss; it says nothing about the preterite stem-spelling change. HELD-OUT: span verified absent from GLOSS_ROW_SYSTEM_PROMPT. Considered a clear-cut legitimate case."
+    },
+    {
+      "id": "d1734fbd-e2f3-5d57-81cc-70ab54336a62",
+      "grammarPointKey": "tr-a1-degil",
+      "language": "TR",
+      "cefrLevel": "A1",
+      "sentence": "Ben ressam ___, boyacıyım.",
+      "correctAnswer": "değilim",
+      "instructions": "Fill in the blank with the correct form of \"değil\" to complete the sentence.",
+      "glossEn": "I am not a painter (artist), I am a house painter.",
+      "expected": "legitimate",
+      "heldOut": true,
+      "note": "\"(artist)\" disambiguates the English word painter; the değil suffix is untouched. HELD-OUT: span verified absent from GLOSS_ROW_SYSTEM_PROMPT. Considered a clear-cut legitimate case."
+    },
+    {
+      "id": "cb73464b-e52c-58e1-bbcc-66fd566ca604",
+      "grammarPointKey": "tr-a1-degil",
+      "language": "TR",
+      "cefrLevel": "A1",
+      "sentence": "Siz şarkıcı ___, değil mi?",
+      "correctAnswer": "değilsiniz",
+      "instructions": "Fill in the blank with the correct form of \"değil\" to complete the sentence.",
+      "glossEn": "You (plural) are not a singer, are you?",
+      "expected": "legitimate",
+      "heldOut": true,
+      "note": "Addressee number is meaning; the learner still supplies the harmonised suffix. HELD-OUT: span verified absent from GLOSS_ROW_SYSTEM_PROMPT. Considered a clear-cut legitimate case."
+    },
+    {
+      "id": "de55dc02-e697-58c0-b2d2-ac8c384cdeb5",
+      "grammarPointKey": "tr-a1-accusative-definite-object",
+      "language": "TR",
+      "cefrLevel": "A1",
+      "sentence": "Masada bir mektup vardı. Annem ___ okudu. (mektup)",
+      "correctAnswer": "mektubu",
+      "instructions": "Fill in the blank with the correct form of the word in parentheses.",
+      "glossEn": "There was a letter on the table. My mother read it (the letter).",
+      "expected": "spoiled",
+      "heldOut": true,
+      "note": "Spoiled: the sentence already forces definiteness by prior mention (the preferred mechanism), so the added \"(the letter)\" is redundant and states the accusative trigger outright. The generation prompt sanctions a definiteness gloss only as a fallback when in-sentence forcing is impractical. Originally mislabelled \"legitimate\" by the plan author; corrected 2026-08-12 after the judge's reasoning was checked against the generation prompt and accepted."
+    },
+    {
+      "id": "d1e18507-837c-57c5-b217-d1d9b0e7e118",
+      "grammarPointKey": "es-a1-noun-modifiers-de",
+      "language": "ES",
+      "cefrLevel": "A1",
+      "sentence": "Es un día ___ fiesta.",
+      "correctAnswer": "de",
+      "instructions": "Fill in the blank with the correct word to complete the phrase.",
+      "glossEn": "It is a holiday (party day).",
+      "expected": "legitimate",
+      "heldOut": true,
+      "note": "ARGUABLE: \"(party day)\" glosses the compound's meaning and is close to a translation aid for the answer's meaning; it does not name the \"de\" modifier rule outright. Record the judge's reasoning if it disagrees. HELD-OUT: span verified absent from GLOSS_ROW_SYSTEM_PROMPT."
     }
   ]
 }
